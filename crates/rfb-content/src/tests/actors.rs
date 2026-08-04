@@ -1,7 +1,7 @@
 use super::*;
 
 #[test]
-fn player_carry_capacity_is_positive_and_monsters_cannot_declare_one() {
+fn player_inventory_capacity_is_positive_and_monsters_cannot_declare_one() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let mut invalid = artifact.content.clone();
     let player = invalid
@@ -9,10 +9,10 @@ fn player_carry_capacity_is_positive_and_monsters_cannot_declare_one() {
         .iter_mut()
         .find(|actor| actor.role == ActorRole::Player)
         .expect("fixture should contain a player actor");
-    player.carry_capacity_tenths_pound = 0;
+    player.inventory_slot_capacity = 0;
     assert!(matches!(
         validate_and_normalize(&mut invalid),
-        Err(ContentError::InvalidActorCarryCapacity(_))
+        Err(ContentError::InvalidActorInventoryCapacity(_))
     ));
 
     let mut invalid = artifact.content.clone();
@@ -21,10 +21,10 @@ fn player_carry_capacity_is_positive_and_monsters_cannot_declare_one() {
         .iter_mut()
         .find(|actor| actor.role == ActorRole::Monster)
         .expect("fixture should contain a monster actor");
-    monster.carry_capacity_tenths_pound = 1;
+    monster.inventory_slot_capacity = 1;
     assert!(matches!(
         validate_and_normalize(&mut invalid),
-        Err(ContentError::InvalidActorCarryCapacity(_))
+        Err(ContentError::InvalidActorInventoryCapacity(_))
     ));
 }
 
@@ -83,7 +83,6 @@ fn melee_routines_require_monsters_and_valid_blow_profiles() {
         .expect("fixture should contain the echo hound");
     hound.role = ActorRole::Player;
     hound.experience_value = 0;
-    hound.carry_capacity_tenths_pound = 100;
     hound.inventory_slot_capacity = 26;
     assert!(matches!(
         validate_and_normalize(&mut invalid),

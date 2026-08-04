@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "ability.detect.repeat",
+  "category": "abilities",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -68,7 +69,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 110,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 800,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -3204,7 +3206,7 @@
           "y": 4
         }
       ],
-      "stateHash": "6a8d1deef7507ddd7f8cc87f26174ffe40e2ab3739404028f7acdd117634a5ce"
+      "stateHash": "db0c288546419a36a326f28f2eac434bc29c240d56717765261afa70aae2b1b9"
     },
     "events": [
       {
@@ -3321,6 +3323,6 @@
         "y": 4
       }
     ],
-    "saveRoundTripStateHash": "6a8d1deef7507ddd7f8cc87f26174ffe40e2ab3739404028f7acdd117634a5ce"
+    "saveRoundTripStateHash": "db0c288546419a36a326f28f2eac434bc29c240d56717765261afa70aae2b1b9"
   }
 }

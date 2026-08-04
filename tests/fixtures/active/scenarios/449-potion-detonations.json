@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "item.potion-detonations",
+  "category": "potions",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "95",
@@ -46,7 +47,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 100,
       "playerCarriedWeightTenthsPound": 444,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1250,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -441,7 +443,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "55cbfb475b7cc18dd80c15234df0bd050453f99f8fd54251497da72b7131c474"
+      "stateHash": "f1fa4d7d7461b35215e276c7b9352ded360fb77670fa479552a432d5efd2e266"
     },
     "events": [
       {

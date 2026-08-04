@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "skill.saving-throw.tinkerer-success",
+  "category": "progression",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "2",
@@ -44,7 +45,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 43,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 900,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -407,7 +409,7 @@
           "y": 3
         }
       ],
-      "stateHash": "4c6e45cafd45ebe61ef0ad08cccc009f16a6bac90b101896910d41ce2bff40ea"
+      "stateHash": "14a860fd238b5375b9193263d8aa5bdf90dfe5dd79f41b60a491baac503ab3fb"
     },
     "events": [
       {

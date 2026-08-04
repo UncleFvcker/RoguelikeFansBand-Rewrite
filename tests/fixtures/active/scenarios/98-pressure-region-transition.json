@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "dungeon.pressure-region-transition",
+  "category": "dungeon",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "49",
@@ -74,7 +75,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9989,
       "playerLevel": 1,
@@ -310,7 +312,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "e6fb346ec6f8a269e69d97fae73a19a3ad35089c68545c9f3bef2b4bec918a92"
+      "stateHash": "34e10937171a09da79fc314a29a21dd6d220cd07a78a7650364e0f65e4f9764b"
     },
     "events": [
       {
@@ -5246,6 +5248,6 @@
         "y": 6
       }
     ],
-    "saveRoundTripStateHash": "e6fb346ec6f8a269e69d97fae73a19a3ad35089c68545c9f3bef2b4bec918a92"
+    "saveRoundTripStateHash": "34e10937171a09da79fc314a29a21dd6d220cd07a78a7650364e0f65e4f9764b"
   }
 }

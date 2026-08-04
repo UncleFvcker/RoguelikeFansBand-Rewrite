@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "dungeon.archive-ttl-expires",
+  "category": "dungeon",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "73",
@@ -99,7 +100,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9979,
       "playerLevel": 1,
@@ -335,7 +337,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "c8ccc2b25bcf821566ad2ff33683774fbbd76b8d37d2a35350e9b75e7d2f56d3"
+      "stateHash": "a82d325cef8f9d476337462b95180cef9165acc44dcc3fb702ef08cf9db50b41"
     },
     "events": [
       {
@@ -5333,6 +5335,6 @@
         "y": 19
       }
     ],
-    "saveRoundTripStateHash": "c8ccc2b25bcf821566ad2ff33683774fbbd76b8d37d2a35350e9b75e7d2f56d3"
+    "saveRoundTripStateHash": "a82d325cef8f9d476337462b95180cef9165acc44dcc3fb702ef08cf9db50b41"
   }
 }

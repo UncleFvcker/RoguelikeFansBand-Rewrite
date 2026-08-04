@@ -205,7 +205,17 @@ RoguelikeFansBand 的新一代重构工程。
 - [Rust 权威可见性与光照 v1](design/visibility-lighting-v1.md)
 - [静态地形 Chunk 渲染 v1](design/terrain-chunk-rendering-v1.md)
 
-当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v169`，共 463 条 exact fixtures、零 waiver，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
+当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v171`，共 462 条 exact fixtures、零 waiver，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
+
+fixture 使用受控的主分类。日常开发只验证或刷新受影响分类；普通 `cargo test -p rfb-contract` 只做快速的 schema、分类、ID 唯一性和契约单元测试，不回放全部场景：
+
+```powershell
+cargo run -p rfb-contract -- list-categories tests/fixtures/active/baseline-policy.json
+cargo run -p rfb-contract -- verify-category tests/fixtures/active/baseline-policy.json inventory equipment
+cargo run -p rfb-contract -- refresh-category tests/fixtures/active/baseline-policy.json inventory equipment
+```
+
+协议投影、全局状态 hash 或共同内容生成发生变化时，才显式运行 `verify-all` / `refresh-all`。里程碑也可以运行 ignored 的完整回放测试：`cargo test -p rfb-contract --test contract_fixtures committed_contract_fixtures_pass -- --ignored`。
 
 确定性命令回放由 [`rfb-replay`](crates/rfb-replay) 提供：正式 `.rfbreplay` 使用带 SHA-256 校验的 MessagePack 容器，JSON 仅用于调试。
 
@@ -448,6 +458,10 @@ Phase 18 地图修订 / contract-v168 将 Outpost 地表扩为 `96×32`，城镇
 
 Phase 19 装备与背包扩展 / contract-v169 将正式原版物品选择扩至 35 项，并建立 26 格共享背包、`container/tool` 槽、装备容器增加 4/8/12 格、箭矢 99 堆叠、护甲/手套近战修正，以及工具双目标装备。工具装入 `tool` 时只贡献挖掘，装入 `weapon` 时完整武器与装备属性生效；`Equip.slotId` 明确选择具体槽实例。协议 1.135、demo 1.163.0、Schema 保持 v61、active baseline 保持 463 条 exact fixtures、零 waiver，content hash 为 `d9e227cc7757ff82a66c7afadf8da2846a1751920f53fa3f1f0a74c640b8a0ac`。详见[Contract v169](design/contract-v169-inventory-containers-tools.md)与[Phase 19](design/phase-19-legacy-item-integration.md)。
 
+contract-v170 将负重改为按有效力量使用 RFB 原版 38 档表动态计算，装备与背包物品共同计重。超重不再拒绝拾取、购买或从 Home 取出；达到容量 120% 后，每额外 20% 施加 1 点速度惩罚。协议 1.136、demo 1.164.0、Schema 保持 v61、active baseline 为 462 条 exact fixtures、零 waiver，content hash 为 `59d9801214e8f62544b9ffa96a0d56cdfd790d248ec04c90a94246a8089eaf8f`。详见 [Contract v170](design/contract-v170-strength-encumbrance.md)。
+
+contract-v171 按固定 RFB 原版来源扩充 Warrens 普通生态：接入 Newt、Rock Lizard、Fruit Bat、Wild Cat、Kobold、Cave Lizard、Large Kobold、Rat-thing、Night Lizard、Hunting Hawk of Julian 与 Chiokovo，并校正 Small Kobold、Mughash 和 Warg 的原版等级、HP、攻击与抗性边界。静态表按 `100 / rarity` 和怪物等级分层；Warg 不再常驻普通 Warrens，Giant White Mouse 等待繁殖/随机移动后再启用。协议与 Schema 不变，demo 升至 1.165.0，active baseline 保持 462 条 exact fixtures，content hash 为 `ab54279248422c2d39dc6e91b8827f6be1f15c4d9ab4c79ee60707e766abbb52`。全局分配、越级、群体、Unique、移动域与特殊怪物能力已拆入 [Warrens 怪物机制清单](design/warrens-monster-mechanism-backlog.md)。详见 [Contract v171](design/contract-v171-warrens-ecology.md)。
+
 ### 本地验证
 
 ```powershell
@@ -521,9 +535,11 @@ $env:RFB_LEGACY_SOURCE = "D:/codex/Frogcomposband/master"; cargo run -p rfb-lega
 cargo run -p rfb-contract -- normalize-snapshot <snapshot.json>
 cargo run -p rfb-contract -- hash-snapshot <snapshot.json>
 cargo run -p rfb-contract -- validate-policy tests/fixtures/active/baseline-policy.json
+cargo run -p rfb-contract -- verify-category tests/fixtures/active/baseline-policy.json <category> [category ...]
+cargo run -p rfb-contract -- refresh-category tests/fixtures/active/baseline-policy.json <category> [category ...]
 ```
 
-当前 463 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
+当前 462 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
 
 ```powershell
 cd web

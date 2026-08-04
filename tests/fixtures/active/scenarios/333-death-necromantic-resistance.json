@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "death.necromantic-resistance-roundtrip",
+  "category": "magic-realms",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -49,7 +50,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 110,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 800,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerStatuses": [
@@ -3238,7 +3240,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "c4554c0a27bf30e44ee720264ee948f08ab941fb6d3271d0b517faa1d14dbd87"
+      "stateHash": "9ef8d3ff1daedffaa11014737e654825ae24506b663cf33f06daa5e86692f197"
     },
     "events": [
       {
@@ -3319,6 +3321,6 @@
         "y": 5
       }
     ],
-    "saveRoundTripStateHash": "c4554c0a27bf30e44ee720264ee948f08ab941fb6d3271d0b517faa1d14dbd87"
+    "saveRoundTripStateHash": "9ef8d3ff1daedffaa11014737e654825ae24506b663cf33f06daa5e86692f197"
   }
 }

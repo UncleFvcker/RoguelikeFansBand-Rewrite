@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "dungeon.regional-spatial-vault-seed-83",
+  "category": "dungeon",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "83",
@@ -118,7 +119,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 10,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9979,
       "playerLevel": 1,
@@ -444,7 +446,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "fcef18ba30b1d7b98ce9b58e2f66124ee4a4b87dd9f2dcbce48a648e9f5c229e"
+      "stateHash": "ac7c0b2b3acec3591e82959fc47a7e42f4799eeaec84239ece808e90f663caf9"
     },
     "events": [
       {
@@ -12015,14 +12017,14 @@
       {
         "step": 15,
         "kind": "player-dead",
-        "stateHash": "fcef18ba30b1d7b98ce9b58e2f66124ee4a4b87dd9f2dcbce48a648e9f5c229e"
+        "stateHash": "ac7c0b2b3acec3591e82959fc47a7e42f4799eeaec84239ece808e90f663caf9"
       },
       {
         "step": 16,
         "kind": "player-dead",
-        "stateHash": "fcef18ba30b1d7b98ce9b58e2f66124ee4a4b87dd9f2dcbce48a648e9f5c229e"
+        "stateHash": "ac7c0b2b3acec3591e82959fc47a7e42f4799eeaec84239ece808e90f663caf9"
       }
     ],
-    "saveRoundTripStateHash": "fcef18ba30b1d7b98ce9b58e2f66124ee4a4b87dd9f2dcbce48a648e9f5c229e"
+    "saveRoundTripStateHash": "ac7c0b2b3acec3591e82959fc47a7e42f4799eeaec84239ece808e90f663caf9"
   }
 }

@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "monster.casting.frequency-fallback",
+  "category": "monsters",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "1",
@@ -48,7 +49,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -299,7 +301,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "85810f0973013cd351e72f3e6a3165705dc2a11e14cee30470f2b36048dcc6e8"
+      "stateHash": "50b52acbbb124d513465b01b40e177eb39ee53f39ce2e6c7020c0ef039c8979b"
     },
     "events": [
       {
@@ -484,6 +486,6 @@
         "y": 3
       }
     ],
-    "saveRoundTripStateHash": "85810f0973013cd351e72f3e6a3165705dc2a11e14cee30470f2b36048dcc6e8"
+    "saveRoundTripStateHash": "50b52acbbb124d513465b01b40e177eb39ee53f39ce2e6c7020c0ef039c8979b"
   }
 }

@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "id": "town.outpost-general-store-purchase",
+  "category": "town",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "42",
@@ -339,6 +340,7 @@
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 724,
       "playerCarryCapacityTenthsPound": 1200,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 999997,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -882,7 +884,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "e89921adb95ad89df2d1b5f96618ac99ed4d51f0078f5fed046f57506ec22591"
+      "stateHash": "e6a6f7e384f1c35ea152915e4d061f5f312a22b2f5ef30ecb0d4352fd63d2c9f"
     },
     "events": [
       {

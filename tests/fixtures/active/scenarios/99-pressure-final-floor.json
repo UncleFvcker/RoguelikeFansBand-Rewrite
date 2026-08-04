@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "dungeon.pressure-final-floor",
+  "category": "dungeon",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "49",
@@ -745,7 +746,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9759,
       "playerLevel": 1,
@@ -981,7 +983,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "0a0545e3f982862a5715152385cb8ea2e66b5c70e43698adb9f306f603e95fbd"
+      "stateHash": "41e08d23a052ea2eeb3263a18e37a4e0fc833deb58edc64090cb34f8e9b4137f"
     },
     "events": [
       {
@@ -6644,6 +6646,6 @@
         "y": 6
       }
     ],
-    "saveRoundTripStateHash": "0a0545e3f982862a5715152385cb8ea2e66b5c70e43698adb9f306f603e95fbd"
+    "saveRoundTripStateHash": "41e08d23a052ea2eeb3263a18e37a4e0fc833deb58edc64090cb34f8e9b4137f"
   }
 }

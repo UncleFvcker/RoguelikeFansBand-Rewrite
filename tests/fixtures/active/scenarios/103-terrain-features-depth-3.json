@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "dungeon.terrain-features-room-depth-3",
+  "category": "dungeon",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "49",
@@ -63,7 +64,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9989,
       "playerLevel": 1,
@@ -299,7 +301,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "393b1a95c69d6e31a4de628bb720274c7b6160900773b94f89e9352ccc72fe69"
+      "stateHash": "7b5f8ccd3d78afbae41ee1b60fd87e5cadc8dd4a3cac05f295e346e122008b48"
     },
     "events": [
       {
@@ -5222,6 +5224,6 @@
         "y": 19
       }
     ],
-    "saveRoundTripStateHash": "393b1a95c69d6e31a4de628bb720274c7b6160900773b94f89e9352ccc72fe69"
+    "saveRoundTripStateHash": "7b5f8ccd3d78afbae41ee1b60fd87e5cadc8dd4a3cac05f295e346e122008b48"
   }
 }

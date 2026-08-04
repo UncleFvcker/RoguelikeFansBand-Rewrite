@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "dungeon.lake-river-layout-seed-131",
+  "category": "dungeon",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "131",
@@ -757,7 +758,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9759,
       "playerLevel": 1,
@@ -993,7 +995,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "b96c94d8dcc513592019af120ac608aa1cf0a0d263f321edb0a43cde2cfaee12"
+      "stateHash": "952941c589ced38b2a2018744a87a73c7a2b73e3eb09c414d40ef500dc55ebd7"
     },
     "events": [
       {
@@ -6669,6 +6671,6 @@
         "y": 8
       }
     ],
-    "saveRoundTripStateHash": "b96c94d8dcc513592019af120ac608aa1cf0a0d263f321edb0a43cde2cfaee12"
+    "saveRoundTripStateHash": "952941c589ced38b2a2018744a87a73c7a2b73e3eb09c414d40ef500dc55ebd7"
   }
 }

@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "item.scroll-recall-pending-save",
+  "category": "scrolls",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "2",
@@ -55,7 +56,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -319,7 +321,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "a29ae4c58c9f881c8b2db1e7c6563e69c5e0e9b2a6c0fc5fae973b6af8f50e23"
+      "stateHash": "4bf35dbfca6fc712345f7b05708878cb250d15971b88d7cbed56521b08ebcc7f"
     },
     "events": [
       {
@@ -1951,6 +1953,6 @@
         "y": 19
       }
     ],
-    "saveRoundTripStateHash": "a29ae4c58c9f881c8b2db1e7c6563e69c5e0e9b2a6c0fc5fae973b6af8f50e23"
+    "saveRoundTripStateHash": "4bf35dbfca6fc712345f7b05708878cb250d15971b88d7cbed56521b08ebcc7f"
   }
 }

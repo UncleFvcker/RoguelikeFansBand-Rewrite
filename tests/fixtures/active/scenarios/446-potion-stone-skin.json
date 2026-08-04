@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "item.potion-stone-skin",
+  "category": "potions",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "92",
@@ -57,7 +58,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 444,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1250,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerStatuses": [
@@ -489,7 +491,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "6e8cbde10540a7d08acf800fd47e7586ff87db350048eb6e7485c1af82a5b071"
+      "stateHash": "9263cc075a28ce75ff374d379827e2da8c5ba51f4a42f23c196a83dd1a3c65c2"
     },
     "events": [
       {

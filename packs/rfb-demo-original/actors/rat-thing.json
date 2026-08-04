@@ -1,0 +1,36 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "formatVersion": 1,
+  "id": "demo.actor.rat-thing",
+  "role": "monster",
+  "nameKey": "actor-demo-rat-thing-name",
+  "descriptionKey": "actor-demo-rat-thing-description",
+  "glyph": "r",
+  "level": 6,
+  "experienceValue": 10,
+  "maxHp": 49,
+  "speed": 120,
+  "attack": 1,
+  "defense": 2,
+  "damageDice": 3,
+  "damageSides": 3,
+  "damageType": "physical",
+  "meleeRoutine": {
+    "blows": [
+      { "methodId": "rfb.blow.bite", "toHit": 20, "damageDice": 3, "damageSides": 3 },
+      { "methodId": "rfb.blow.bite", "toHit": 20, "damageDice": 3, "damageSides": 2 }
+    ]
+  },
+  "monsterCasting": {
+    "frequencyPercent": 11,
+    "abilities": [
+      { "abilityId": "demo.ability.warrens-scare", "weight": 1 }
+    ]
+  },
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1
+  },
+  "tags": ["animal", "evil", "warrens"]
+}

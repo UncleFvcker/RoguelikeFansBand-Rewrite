@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "task.retakeable-resume-and-complete",
+  "category": "tasks",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "27",
@@ -91,7 +92,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9979,
       "playerResistances": [
@@ -318,7 +320,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "084144b646b849553443c113be8b28e971f0637d42494bc08a6dd1df9b55c1ee"
+      "stateHash": "6fba6dec25a95a27e874b45a677da87cf61addc3fe070d88e96b3880f319e4ba"
     },
     "events": [
       {
@@ -5470,6 +5472,6 @@
     "removedEntities": [
       "demo.floor.echo-bounty-rift.task-target.1"
     ],
-    "saveRoundTripStateHash": "084144b646b849553443c113be8b28e971f0637d42494bc08a6dd1df9b55c1ee"
+    "saveRoundTripStateHash": "6fba6dec25a95a27e874b45a677da87cf61addc3fe070d88e96b3880f319e4ba"
   }
 }

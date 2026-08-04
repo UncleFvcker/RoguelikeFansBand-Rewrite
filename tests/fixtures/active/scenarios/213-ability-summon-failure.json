@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "ability.summon.failure-costs-resource",
+  "category": "abilities",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "3",
@@ -43,7 +44,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 110,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 800,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -3147,7 +3149,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "43b32e2bf53c5119925309e8d2427fbf0194a21254b1bb2d1d0d10ae1e96e310"
+      "stateHash": "590e064354e267117ab1bdee36bb4e1c631f43ef71f380ce5a54818649e1c5b7"
     },
     "events": [
       {
@@ -3179,6 +3181,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "43b32e2bf53c5119925309e8d2427fbf0194a21254b1bb2d1d0d10ae1e96e310"
+    "saveRoundTripStateHash": "590e064354e267117ab1bdee36bb4e1c631f43ef71f380ce5a54818649e1c5b7"
   }
 }

@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "task.early-exit-blocked-until-objective",
+  "category": "tasks",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "27",
@@ -45,7 +46,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -266,7 +268,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "5058cffd7edad3e939d6ed5eb89ad58ed3fe9bcaf52040df1d9347fc738f3d64"
+      "stateHash": "e7d8bd41ff5dd02616b92bf216e31bd36368b18cfa7a0a7567b973621265adf9"
     },
     "events": [
       {
@@ -1958,6 +1960,6 @@
         "y": 19
       }
     ],
-    "saveRoundTripStateHash": "5058cffd7edad3e939d6ed5eb89ad58ed3fe9bcaf52040df1d9347fc738f3d64"
+    "saveRoundTripStateHash": "e7d8bd41ff5dd02616b92bf216e31bd36368b18cfa7a0a7567b973621265adf9"
   }
 }

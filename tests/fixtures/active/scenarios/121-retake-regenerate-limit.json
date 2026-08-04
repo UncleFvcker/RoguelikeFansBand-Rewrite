@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "task.retake-regenerates-once-then-blocks",
+  "category": "dungeon",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "27",
@@ -84,7 +85,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9989,
       "playerResistances": [
@@ -328,7 +330,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "d0077b69559098516f1e6ef50f7815abe3fb51789473fd15c58cf740b87f7b53"
+      "stateHash": "78efbfbfbbacef9ae16f85fa6cae8d755236abfd54787d373542d416c1fad9c2"
     },
     "events": [
       {
@@ -7052,6 +7054,6 @@
     "removedEntities": [
       "demo.floor.echo-bounty-rift.task-target.1"
     ],
-    "saveRoundTripStateHash": "d0077b69559098516f1e6ef50f7815abe3fb51789473fd15c58cf740b87f7b53"
+    "saveRoundTripStateHash": "78efbfbfbbacef9ae16f85fa6cae8d755236abfd54787d373542d416c1fad9c2"
   }
 }

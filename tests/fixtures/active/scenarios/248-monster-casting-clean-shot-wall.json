@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "monster.casting.clean-shot-wall",
+  "category": "monsters",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -56,7 +57,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -345,7 +347,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "d777e5de505b33fe6706bdc9eda4b878a76044d8ca0ee9f35d184c0dfc06d6fe"
+      "stateHash": "005ff87da1c62216fde2a5025df80d0c8f0a46ff8fb114b0cb68575a1e7bc53b"
     },
     "events": [
       {

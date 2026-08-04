@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "monster-casting.status.gloom-veil",
+  "category": "monsters",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "2",
@@ -56,7 +57,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerStatuses": [
@@ -345,7 +347,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "91e00efcfd52f1d9859cbe926299a3d8eb761f2420387fcbe6d163fdc488a721"
+      "stateHash": "ef651df5b86aeb0e0d1efa4cc9886468691493bbacf18906a6671e57f462f80a"
     },
     "events": [
       {
@@ -542,6 +544,6 @@
         "y": 3
       }
     ],
-    "saveRoundTripStateHash": "91e00efcfd52f1d9859cbe926299a3d8eb761f2420387fcbe6d163fdc488a721"
+    "saveRoundTripStateHash": "ef651df5b86aeb0e0d1efa4cc9886468691493bbacf18906a6671e57f462f80a"
   }
 }

@@ -6,7 +6,7 @@ fn compiled_catalog_exposes_stable_runtime_indexes() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.163.0");
+    assert_eq!(catalog.pack_version(), "1.165.0");
     assert_eq!(
         catalog
             .town("demo.town.outpost")
@@ -614,9 +614,8 @@ fn compiled_catalog_exposes_stable_runtime_indexes() {
             actor.damage_dice,
             actor.damage_sides,
             actor.speed,
-            actor.carry_capacity_tenths_pound,
         )),
-        Some((2, 1, 1, 2, 110, 100))
+        Some((2, 1, 1, 2, 110))
     );
     assert_eq!(
         catalog

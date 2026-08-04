@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "dungeon.themed-vault-spawns-depth-eligible-group-and-loot",
+  "category": "dungeon",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "47",
@@ -52,7 +53,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -318,7 +320,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "893f48e4cbd63e212604c59c68b1447a47d203552dcc58a0867dda8507ddc933"
+      "stateHash": "04b4cf699adc68483d5119cc3fc9f452164a63067bcd175aa911b73349f2b06d"
     },
     "events": [
       {
@@ -3583,6 +3585,6 @@
         "y": 19
       }
     ],
-    "saveRoundTripStateHash": "893f48e4cbd63e212604c59c68b1447a47d203552dcc58a0867dda8507ddc933"
+    "saveRoundTripStateHash": "04b4cf699adc68483d5119cc3fc9f452164a63067bcd175aa911b73349f2b06d"
   }
 }

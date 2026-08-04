@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "death.genocide-glyph-unique-fatigue",
+  "category": "magic-realms",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "1",
@@ -92,7 +93,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 110,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 800,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 50,
@@ -3207,7 +3209,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "70dc00ec1caa6216578db1da45c50e5eb5511c7345286a971a2275549dbde49e"
+      "stateHash": "b26973835f746922e53ce6959db1cca40a597749325ecab65d2c789846696057"
     },
     "events": [
       {
@@ -3304,6 +3306,6 @@
     "removedEntities": [
       "demo.monster.ember-mote.1"
     ],
-    "saveRoundTripStateHash": "70dc00ec1caa6216578db1da45c50e5eb5511c7345286a971a2275549dbde49e"
+    "saveRoundTripStateHash": "b26973835f746922e53ce6959db1cca40a597749325ecab65d2c789846696057"
   }
 }

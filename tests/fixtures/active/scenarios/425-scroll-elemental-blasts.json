@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "item.scroll-elemental-blasts",
+  "category": "scrolls",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "75",
@@ -230,7 +231,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 444,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1250,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerResistances": [
@@ -676,7 +678,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "f87a2ab8caaa98b83034067e2eee3d796505ede79305c408ec57b21c2efc7061"
+      "stateHash": "dd3f2b36846ee2d6670c2e96cd7e4f1c2acd864f9d6e406fdf21cc5ca3495408"
     },
     "events": [
       {

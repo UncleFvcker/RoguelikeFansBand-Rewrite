@@ -3,6 +3,50 @@ use std::collections::BTreeSet;
 use super::*;
 
 #[test]
+fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let table = artifact
+        .content
+        .encounter_tables
+        .iter()
+        .find(|table| table.id == "demo.encounter-table.warrens")
+        .expect("fixture should contain the Warrens encounter table");
+
+    assert_eq!(
+        table
+            .entries
+            .iter()
+            .map(|entry| (
+                entry.actor_kind_id.as_str(),
+                entry.weight,
+                entry.min_depth,
+                entry.max_depth,
+            ))
+            .collect::<Vec<_>>(),
+        vec![
+            ("demo.actor.cave-lizard", 100, 4, 9),
+            ("demo.actor.chiokovo", 33, 8, 9),
+            ("demo.actor.fruit-bat", 100, 1, 9),
+            ("demo.actor.hunting-hawk-of-julian", 50, 8, 9),
+            ("demo.actor.kobold", 100, 3, 9),
+            ("demo.actor.large-kobold", 100, 5, 9),
+            ("demo.actor.newt", 100, 1, 9),
+            ("demo.actor.night-lizard", 50, 7, 9),
+            ("demo.actor.rat-thing", 100, 6, 9),
+            ("demo.actor.rock-lizard", 100, 1, 9),
+            ("demo.actor.small-kobold", 100, 1, 9),
+            ("demo.actor.wild-cat", 50, 2, 9),
+        ]
+    );
+    assert!(
+        table
+            .entries
+            .iter()
+            .all(|entry| entry.actor_kind_id != "demo.actor.warg")
+    );
+}
+
+#[test]
 fn outpost_has_walls_inner_shops_and_an_exterior_warrens_entrance() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let world = artifact

@@ -1,8 +1,10 @@
 # 待实现内容清单
 
-状态：基于 contract-v1–v149、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
+状态：基于 contract-v1–v171、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
 
 本文件只记录已经在现有设计或原版对比中明确出现、但尚未实现的内容。长期设想仍保留在 [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)，这里用于跟踪可以实际排入后续 contract 的缺口。
+
+contract-v171 已按固定原版来源完成 Warrens 怪物生成审计。全局分配池与 `MONSTER_DIV_16`、两阶段越级、leader-first 群体、`XdY` 朋友数量、Unique/Mughash escort、繁殖与随机移动、门交互、飞行/游泳、随机 HP、特殊近战、怪物光源、地形/物品破坏、完整掉落和 Pest Control Warg 均已拆为可逐项实施的验收边界，详见 [Warrens 怪物机制实现清单](warrens-monster-mechanism-backlog.md)。优先顺序为 W1–W6 的 Warrens 生成真实性，再推进 W7–W13 公共怪物能力；W14 随 Outpost 任务线实施。
 
 ## 当前推进顺序
 

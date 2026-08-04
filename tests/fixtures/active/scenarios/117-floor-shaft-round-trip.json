@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "floor.shaft-round-trip",
+  "category": "dungeon",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "9",
@@ -67,7 +68,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9989,
       "playerLevel": 1,
@@ -322,7 +324,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "996ba71bd0cd3e776fa32f96e7f732b00c392d1446157257c69eff27af54a3c0"
+      "stateHash": "3239f6cf0e90baec0340de3dc3d791d36c6fc96391204ef06b8faecfa97c05ab"
     },
     "events": [
       {
@@ -6797,6 +6799,6 @@
         "y": 19
       }
     ],
-    "saveRoundTripStateHash": "996ba71bd0cd3e776fa32f96e7f732b00c392d1446157257c69eff27af54a3c0"
+    "saveRoundTripStateHash": "3239f6cf0e90baec0340de3dc3d791d36c6fc96391204ef06b8faecfa97c05ab"
   }
 }

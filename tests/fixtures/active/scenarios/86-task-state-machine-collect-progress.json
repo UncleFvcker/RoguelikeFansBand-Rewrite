@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "task.state-machine-collect-progress-save-round-trip",
+  "category": "tasks",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "27",
@@ -45,7 +46,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 10,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -294,7 +296,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "284111af67b8904d842099f9f378f1aabb21f1eaae7bfa3f8118bd1312822780"
+      "stateHash": "caed714866170d786c4e2762f9d22be3dec4eb41742a15ef4f55caec0228f722"
     },
     "events": [
       {
@@ -1936,6 +1938,6 @@
         "y": 4
       }
     ],
-    "saveRoundTripStateHash": "284111af67b8904d842099f9f378f1aabb21f1eaae7bfa3f8118bd1312822780"
+    "saveRoundTripStateHash": "caed714866170d786c4e2762f9d22be3dec4eb41742a15ef4f55caec0228f722"
   }
 }

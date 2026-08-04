@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "death.nether-bolt-beam-path",
+  "category": "magic-realms",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -94,7 +95,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 110,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 800,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 50,
@@ -3197,7 +3199,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "4d79cd8972550a8e8d7acde8d3a40efdf37796e62317181a6d5d24ef5b8dd27b"
+      "stateHash": "b0b0e140eb7c36c6c4ba868613a6bebcef7bfa52d516619b2d0547fcf8c994e7"
     },
     "events": [
       {
@@ -3640,6 +3642,6 @@
       "demo.monster.ember-mote.1",
       "demo.z-entrance-guardian.resonance-descent.1"
     ],
-    "saveRoundTripStateHash": "4d79cd8972550a8e8d7acde8d3a40efdf37796e62317181a6d5d24ef5b8dd27b"
+    "saveRoundTripStateHash": "b0b0e140eb7c36c6c4ba868613a6bebcef7bfa52d516619b2d0547fcf8c994e7"
   }
 }

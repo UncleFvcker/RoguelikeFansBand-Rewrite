@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "terrain.hidden-trap-trigger",
+  "category": "dungeon",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "27",
@@ -47,7 +48,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -309,7 +311,7 @@
           "y": 5
         }
       ],
-      "stateHash": "0cc1a608f735611791ae29863fa9385e19ea4a4e6a8828aeaa5dd1dd2eed736d"
+      "stateHash": "5eee15aff0128726286a28cc0d85ab772e41fa64395d27a5d07428c2b3e59aad"
     },
     "events": [
       {
@@ -1966,6 +1968,6 @@
         "y": 5
       }
     ],
-    "saveRoundTripStateHash": "0cc1a608f735611791ae29863fa9385e19ea4a4e6a8828aeaa5dd1dd2eed736d"
+    "saveRoundTripStateHash": "5eee15aff0128726286a28cc0d85ab772e41fa64395d27a5d07428c2b3e59aad"
   }
 }

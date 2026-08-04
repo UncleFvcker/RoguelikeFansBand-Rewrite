@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "movement.structure.interior-gap",
+  "category": "movement",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "42",
@@ -124,7 +125,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9969,
       "playerLevel": 1,
@@ -362,7 +364,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "db6989443f53611da2ce5ae1794d4ecbfcd31f9f32f527f6aa764e1a26ae4f65"
+      "stateHash": "50564d694942f788ece5bd67c81cef7bbe8a49a1965b79075dbc343440f767d9"
     },
     "events": [
       {

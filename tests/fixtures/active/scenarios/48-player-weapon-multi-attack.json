@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "combat.melee.weapon-multi-attack",
+  "category": "combat",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -122,7 +123,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 85,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9989,
       "playerLevel": 1,
@@ -494,7 +496,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "4024259a7bfe44f6ad70860e1fb3cff386bd6d6b8899fd5b287376ff3434746b"
+      "stateHash": "441458547783f4343aea6c79ab0c95803c35cfc61e4ae2f74e3d371f37955a89"
     },
     "events": [
       {
@@ -598,6 +600,6 @@
         "y": 3
       }
     ],
-    "saveRoundTripStateHash": "4024259a7bfe44f6ad70860e1fb3cff386bd6d6b8899fd5b287376ff3434746b"
+    "saveRoundTripStateHash": "441458547783f4343aea6c79ab0c95803c35cfc61e4ae2f74e3d371f37955a89"
   }
 }

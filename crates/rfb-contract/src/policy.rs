@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use std::{
+    collections::BTreeMap,
     fs,
     path::{Component, Path, PathBuf},
 };
@@ -9,7 +10,7 @@ use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 use crate::{
-    CONTRACT_SCHEMA_VERSION, ContractFixture, LEGACY_BASELINE_COMMIT, snapshot,
+    CONTRACT_SCHEMA_VERSION, ContractFixture, FixtureCategory, LEGACY_BASELINE_COMMIT, snapshot,
     validate_fixture_set,
 };
 
@@ -34,11 +35,45 @@ pub struct BaselineValidationReport {
     pub baseline: String,
     pub fixture_count: usize,
     pub waiver_count: usize,
+    pub category_counts: BTreeMap<FixtureCategory, usize>,
+}
+
+#[derive(Debug, Clone)]
+pub struct ContractFixtureFile {
+    pub path: PathBuf,
+    pub fixture: ContractFixture,
 }
 
 pub fn validate_policy_file(
     policy_path: &Path,
 ) -> Result<BaselineValidationReport, BaselinePolicyError> {
+    let (policy, fixtures) = load_policy_fixture_files_inner(policy_path)?;
+    let mut category_counts = FixtureCategory::ALL
+        .into_iter()
+        .map(|category| (category, 0))
+        .collect::<BTreeMap<_, _>>();
+    for file in &fixtures {
+        *category_counts.entry(file.fixture.category).or_default() += 1;
+    }
+
+    Ok(BaselineValidationReport {
+        baseline: policy.baseline,
+        fixture_count: fixtures.len(),
+        waiver_count: 0,
+        category_counts,
+    })
+}
+
+pub fn load_policy_fixture_files(
+    policy_path: &Path,
+) -> Result<Vec<ContractFixtureFile>, BaselinePolicyError> {
+    let (_, fixtures) = load_policy_fixture_files_inner(policy_path)?;
+    Ok(fixtures)
+}
+
+fn load_policy_fixture_files_inner(
+    policy_path: &Path,
+) -> Result<(BaselinePolicy, Vec<ContractFixtureFile>), BaselinePolicyError> {
     let policy: BaselinePolicy = serde_json::from_slice(&fs::read(policy_path)?)?;
     validate_policy(&policy)?;
     let root = policy_path
@@ -47,32 +82,34 @@ pub fn validate_policy_file(
     let fixture_dir = resolve_child(root, &policy.fixture_directory)?;
     let waiver_dir = resolve_child(root, &policy.waiver_directory)?;
 
-    let fixtures = json_files(&fixture_dir)?
-        .into_iter()
-        .map(|path| {
-            serde_json::from_slice::<ContractFixture>(&fs::read(&path)?).map_err(|error| {
-                BaselinePolicyError::FixtureJson {
-                    path: path.clone(),
-                    error,
-                }
+    let fixtures =
+        json_files(&fixture_dir)?
+            .into_iter()
+            .map(|path| {
+                let fixture = serde_json::from_slice::<ContractFixture>(&fs::read(&path)?)
+                    .map_err(|error| BaselinePolicyError::FixtureJson {
+                        path: path.clone(),
+                        error,
+                    })?;
+                Ok::<_, BaselinePolicyError>(ContractFixtureFile { path, fixture })
             })
-        })
-        .collect::<Result<Vec<_>, _>>()?;
+            .collect::<Result<Vec<_>, _>>()?;
     if fixtures.len() < policy.minimum_fixture_count {
         return Err(BaselinePolicyError::FixtureCount {
             minimum: policy.minimum_fixture_count,
             actual: fixtures.len(),
         });
     }
-    validate_fixture_set(&fixtures)
-        .map_err(|error| BaselinePolicyError::FixtureSet(error.to_string()))?;
+    validate_fixture_set(
+        &fixtures
+            .iter()
+            .map(|file| file.fixture.clone())
+            .collect::<Vec<_>>(),
+    )
+    .map_err(|error| BaselinePolicyError::FixtureSet(error.to_string()))?;
     require_empty_waiver_directory(&waiver_dir)?;
 
-    Ok(BaselineValidationReport {
-        baseline: policy.baseline,
-        fixture_count: fixtures.len(),
-        waiver_count: 0,
-    })
+    Ok((policy, fixtures))
 }
 
 fn validate_policy(policy: &BaselinePolicy) -> Result<(), BaselinePolicyError> {

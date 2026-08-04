@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "dungeon.classic-pit-layout-seed-173",
+  "category": "dungeon",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "173",
@@ -758,7 +759,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9759,
       "playerLevel": 1,
@@ -1040,7 +1042,7 @@
           "y": 4
         }
       ],
-      "stateHash": "df2f961709c47ad8903758593ab0d2b390cf0570338f12b3a5b6e61c202b4160"
+      "stateHash": "782272a4e1ba534e60ccf8c6ac26b7c9800e5287621527a49c243874557adf91"
     },
     "events": [
       {
@@ -13341,6 +13343,6 @@
         "y": 5
       }
     ],
-    "saveRoundTripStateHash": "df2f961709c47ad8903758593ab0d2b390cf0570338f12b3a5b6e61c202b4160"
+    "saveRoundTripStateHash": "782272a4e1ba534e60ccf8c6ac26b7c9800e5287621527a49c243874557adf91"
   }
 }

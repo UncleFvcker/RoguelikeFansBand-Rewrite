@@ -18,7 +18,6 @@
   "digSkill": 24,
   "damageDice": 1,
   "damageSides": 2,
-  "carryCapacityTenthsPound": 100,
   "inventorySlotCapacity": 26,
   "damageType": "physical",
   "tags": ["humanoid", "player-archetype"]

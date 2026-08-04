@@ -91,14 +91,6 @@ test("shop events report localized item names, totals, balances, and rejection r
     }),
     "Purchased 2 Ration of Food for 6 gold. Balance: 241.",
   );
-  assert.equal(
-    formatter.formatEvent({
-      kind: "shop.transaction-unavailable",
-      messageKey: "shop-transaction-unavailable",
-      args: { reason: "over-capacity" },
-    }),
-    "The shop transaction cannot be completed (The purchase would exceed your carrying capacity.).",
-  );
   localization.setLocale("zh-CN");
   assert.equal(
     formatter.formatEvent({

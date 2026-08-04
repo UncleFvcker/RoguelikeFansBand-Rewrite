@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "status.stun.player-melee-penalty",
+  "category": "combat",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -119,7 +120,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerStatuses": [
@@ -444,7 +446,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "93b7bbeb5d80f489283ad0655e3e3e262e2711bde5828c04f298ebec62409aa2"
+      "stateHash": "c4b4e23294e74157f5b5b809d027240891b434c52032400c5a3a7c4f64464529"
     },
     "events": [
       {
@@ -461,6 +463,6 @@
         "y": 3
       }
     ],
-    "saveRoundTripStateHash": "93b7bbeb5d80f489283ad0655e3e3e262e2711bde5828c04f298ebec62409aa2"
+    "saveRoundTripStateHash": "c4b4e23294e74157f5b5b809d027240891b434c52032400c5a3a7c4f64464529"
   }
 }

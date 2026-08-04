@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "floor.one-shot-task-entry-close-and-persist",
+  "category": "tasks",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "27",
@@ -50,7 +51,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -288,7 +290,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "38a41e89165baf65ca78e24a18ad5f38e8dc30e362409136562d9e74c29dce64"
+      "stateHash": "6a2c8e4491da5f61544923fc4242e376e48a9e40ec06cd0b8866dd910842cfb8"
     },
     "events": [
       {
@@ -3553,6 +3555,6 @@
         "y": 3
       }
     ],
-    "saveRoundTripStateHash": "38a41e89165baf65ca78e24a18ad5f38e8dc30e362409136562d9e74c29dce64"
+    "saveRoundTripStateHash": "6a2c8e4491da5f61544923fc4242e376e48a9e40ec06cd0b8866dd910842cfb8"
   }
 }

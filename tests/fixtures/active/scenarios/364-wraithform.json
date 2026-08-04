@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "death.wraithform-wall-passage-roundtrip",
+  "category": "magic-realms",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "31",
@@ -77,7 +78,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 110,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 800,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerStatuses": [
@@ -3218,7 +3220,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "85e6206794788ef7760b9798266a58fb46ee5946ac2e5d6f9755481503babeae"
+      "stateHash": "934fd95638c6105569241665ff22a92c44fa7a1c0ee26eca7093b64107447c75"
     },
     "events": [
       {
@@ -3289,6 +3291,6 @@
         "y": 3
       }
     ],
-    "saveRoundTripStateHash": "85e6206794788ef7760b9798266a58fb46ee5946ac2e5d6f9755481503babeae"
+    "saveRoundTripStateHash": "934fd95638c6105569241665ff22a92c44fa7a1c0ee26eca7093b64107447c75"
   }
 }

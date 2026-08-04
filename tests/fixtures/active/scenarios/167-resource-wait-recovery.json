@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "resource.wait-recovery",
+  "category": "resources",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -43,7 +44,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 110,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 800,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -3147,7 +3149,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "2521b2f6da75bee3a7a8353986383704480cdc3748ad6269e236ab5d81e6f4ef"
+      "stateHash": "7d1e96ad1fd65fb81a76010af3e10819cdb7876439ce75a4a543c94a30e6454a"
     },
     "events": [
       {
@@ -3173,6 +3175,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "2521b2f6da75bee3a7a8353986383704480cdc3748ad6269e236ab5d81e6f4ef"
+    "saveRoundTripStateHash": "7d1e96ad1fd65fb81a76010af3e10819cdb7876439ce75a4a543c94a30e6454a"
   }
 }

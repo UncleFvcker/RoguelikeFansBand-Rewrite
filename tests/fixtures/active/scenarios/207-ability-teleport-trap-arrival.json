@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "ability.teleport.trap-arrival",
+  "category": "abilities",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -56,7 +57,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 110,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 800,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -3153,7 +3155,7 @@
           "y": 3
         }
       ],
-      "stateHash": "b2992c9f8b70230795252437d282687a0150686dc6563328f2b66d26b16c5fda"
+      "stateHash": "b02594bd3c57fc864763e86fe6891a41d9297c6b85afa8654a25ab0c93240165"
     },
     "events": [
       {
@@ -3238,6 +3240,6 @@
         "y": 3
       }
     ],
-    "saveRoundTripStateHash": "b2992c9f8b70230795252437d282687a0150686dc6563328f2b66d26b16c5fda"
+    "saveRoundTripStateHash": "b02594bd3c57fc864763e86fe6891a41d9297c6b85afa8654a25ab0c93240165"
   }
 }

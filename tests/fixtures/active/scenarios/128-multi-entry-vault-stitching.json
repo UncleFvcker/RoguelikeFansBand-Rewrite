@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "dungeon.multi-entry-vault-stitching-seed-93",
+  "category": "dungeon",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "93",
@@ -118,7 +119,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9969,
       "playerLevel": 1,
@@ -394,7 +396,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "ad804885ee4126411896b4ae662ca1875df95179e01ed8b64eca633c7e48c3d7"
+      "stateHash": "32fb9d98b3d604999177b2a3c0c44f7b11fc5a5d9a86d7c480bb3e6491e2ab91"
     },
     "events": [
       {
@@ -11881,6 +11883,6 @@
         "y": 4
       }
     ],
-    "saveRoundTripStateHash": "ad804885ee4126411896b4ae662ca1875df95179e01ed8b64eca633c7e48c3d7"
+    "saveRoundTripStateHash": "32fb9d98b3d604999177b2a3c0c44f7b11fc5a5d9a86d7c480bb3e6491e2ab91"
   }
 }

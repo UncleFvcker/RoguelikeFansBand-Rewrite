@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "id": "floor.warrens-generated-map-seed-42",
+  "category": "dungeon",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "42",
@@ -217,6 +218,7 @@
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 714,
       "playerCarryCapacityTenthsPound": 1200,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 346,
       "playerNutrition": 9939,
       "playerLevel": 1,
@@ -380,28 +382,28 @@
             "x": 46,
             "y": 16
           },
-          "hp": 4,
+          "hp": 7,
           "speed": 110,
           "energyNeed": 100
         },
         {
           "id": "demo.floor.warrens-depth-1.encounter.2",
           "position": {
-            "x": 34,
-            "y": 6
+            "x": 33,
+            "y": 5
           },
-          "hp": 2,
-          "speed": 110,
+          "hp": 3,
+          "speed": 120,
           "energyNeed": 100
         },
         {
           "id": "demo.floor.warrens-depth-1.encounter.3",
           "position": {
-            "x": 24,
-            "y": 16
+            "x": 25,
+            "y": 15
           },
-          "hp": 2,
-          "speed": 110,
+          "hp": 3,
+          "speed": 120,
           "energyNeed": 100
         },
         {
@@ -410,7 +412,7 @@
             "x": 56,
             "y": 6
           },
-          "hp": 4,
+          "hp": 8,
           "speed": 110,
           "energyNeed": 100
         }
@@ -811,7 +813,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "6b7174a14b2e5de5c5511997dc4c2a5d9ac1cf86e379cedb1a3b19a176605b05"
+      "stateHash": "94ac46e93775b6f963713ee75f9d387a354b09c892ebb327e4e0f418ea9235eb"
     },
     "events": [
       {
@@ -6873,6 +6875,6 @@
         "y": 21
       }
     ],
-    "saveRoundTripStateHash": "6b7174a14b2e5de5c5511997dc4c2a5d9ac1cf86e379cedb1a3b19a176605b05"
+    "saveRoundTripStateHash": "94ac46e93775b6f963713ee75f9d387a354b09c892ebb327e4e0f418ea9235eb"
   }
 }

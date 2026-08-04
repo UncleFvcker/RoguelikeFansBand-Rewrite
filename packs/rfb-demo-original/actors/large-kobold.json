@@ -1,0 +1,29 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "formatVersion": 1,
+  "id": "demo.actor.large-kobold",
+  "role": "monster",
+  "nameKey": "actor-demo-large-kobold-name",
+  "descriptionKey": "actor-demo-large-kobold-description",
+  "glyph": "k",
+  "level": 5,
+  "experienceValue": 25,
+  "maxHp": 65,
+  "speed": 110,
+  "attack": 1,
+  "defense": 3,
+  "damageDice": 2,
+  "damageSides": 6,
+  "damageType": "physical",
+  "resistances": { "poison": "resistant" },
+  "lootTableId": "demo.loot-table.large-kobold",
+  "goldDropChancePercent": 20,
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "skeletonItemKindId": "demo.item.skeleton-remains",
+    "corpseWeight": 4,
+    "skeletonWeight": 1
+  },
+  "tags": ["evil", "humanoid", "kobold", "warrens"]
+}

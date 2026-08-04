@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "dungeon.weighted-vault-selects-harmonic-candidate",
+  "category": "dungeon",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "27",
@@ -52,7 +53,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -298,7 +300,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "06e6e38530c872f80e912471a9ea6b872aa7e2aa5a420edff018a92b3b7b0977"
+      "stateHash": "f0edf618c72f6a8aaa215f0b25b547b4d9e3e497e8623a4ac5b2e2e0a88f2f2d"
     },
     "events": [
       {
@@ -3544,6 +3546,6 @@
         "y": 19
       }
     ],
-    "saveRoundTripStateHash": "06e6e38530c872f80e912471a9ea6b872aa7e2aa5a420edff018a92b3b7b0977"
+    "saveRoundTripStateHash": "f0edf618c72f6a8aaa215f0b25b547b4d9e3e497e8623a4ac5b2e2e0a88f2f2d"
   }
 }

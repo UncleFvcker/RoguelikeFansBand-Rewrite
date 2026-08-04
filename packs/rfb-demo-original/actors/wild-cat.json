@@ -1,0 +1,32 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "formatVersion": 1,
+  "id": "demo.actor.wild-cat",
+  "role": "monster",
+  "nameKey": "actor-demo-wild-cat-name",
+  "descriptionKey": "actor-demo-wild-cat-description",
+  "glyph": "f",
+  "level": 2,
+  "experienceValue": 10,
+  "maxHp": 9,
+  "speed": 120,
+  "attack": 1,
+  "defense": 1,
+  "damageDice": 1,
+  "damageSides": 6,
+  "damageType": "physical",
+  "meleeRoutine": {
+    "blows": [
+      { "methodId": "rfb.blow.claw", "toHit": 20, "damageDice": 1, "damageSides": 6 },
+      { "methodId": "rfb.blow.claw", "toHit": 20, "damageDice": 1, "damageSides": 6 }
+    ]
+  },
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "skeletonItemKindId": "demo.item.skeleton-remains",
+    "corpseWeight": 4,
+    "skeletonWeight": 1
+  },
+  "tags": ["animal", "warrens"]
+}

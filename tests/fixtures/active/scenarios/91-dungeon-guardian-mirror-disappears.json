@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "dungeon.other-guardian-mirror-disappears-after-conquest",
+  "category": "dungeon",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "2",
@@ -312,7 +313,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9919,
       "playerResistances": [
@@ -564,7 +566,7 @@
         "conqueredDungeons": 1,
         "completedTasks": 0
       },
-      "stateHash": "31fcad0b221a96bee6cf13561914d296f348ac040e9448451ff6ee355294e324"
+      "stateHash": "d8212f501e2431f9a4ebf242a68cffe8da39312cca58915e91255beadabb98fc"
     },
     "events": [
       {
@@ -6377,6 +6379,6 @@
       "demo.floor.echo-depth-2.region.demo.region.resonance-grotto.encounter.plain.1",
       "demo.guardian.echo-depths.1"
     ],
-    "saveRoundTripStateHash": "31fcad0b221a96bee6cf13561914d296f348ac040e9448451ff6ee355294e324"
+    "saveRoundTripStateHash": "d8212f501e2431f9a4ebf242a68cffe8da39312cca58915e91255beadabb98fc"
   }
 }

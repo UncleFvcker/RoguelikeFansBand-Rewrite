@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "ability.beam-damage-through-actors",
+  "category": "abilities",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -301,7 +302,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 110,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 800,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 2,
@@ -3423,7 +3425,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "7704a778c9a73ead598dca0dc734153a4ba0d0ba4efbdf40862754a9e6f8a81d"
+      "stateHash": "157a961875072af5407f4cbdf5badfb9d8f8258ae2255aa3576a7656a5b2cddb"
     },
     "events": [
       {
@@ -3780,6 +3782,6 @@
     "removedEntities": [
       "demo.monster.ember-mote.1"
     ],
-    "saveRoundTripStateHash": "7704a778c9a73ead598dca0dc734153a4ba0d0ba4efbdf40862754a9e6f8a81d"
+    "saveRoundTripStateHash": "157a961875072af5407f4cbdf5badfb9d8f8258ae2255aa3576a7656a5b2cddb"
   }
 }

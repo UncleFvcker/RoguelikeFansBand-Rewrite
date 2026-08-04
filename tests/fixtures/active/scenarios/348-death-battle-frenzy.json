@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "death.battle-frenzy-independent-durations",
+  "category": "magic-realms",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -52,7 +53,8 @@
       "playerSpeed": 120,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 110,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 800,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerStatuses": [
@@ -3266,7 +3268,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "8e284c88a0ad1dd63a1f6ad25b135c0006cc3c58ee3a1f5d4687a75eae006f4a"
+      "stateHash": "db2d775900bb8734d544f23dd8275483054d5639e94b00a6bf741fce31f09596"
     },
     "events": [
       {
@@ -3351,6 +3353,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "8e284c88a0ad1dd63a1f6ad25b135c0006cc3c58ee3a1f5d4687a75eae006f4a"
+    "saveRoundTripStateHash": "db2d775900bb8734d544f23dd8275483054d5639e94b00a6bf741fce31f09596"
   }
 }

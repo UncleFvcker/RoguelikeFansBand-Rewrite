@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "flags.warding-band-fire-resist",
+  "category": "equipment",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -63,7 +64,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 1,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerResistances": [
@@ -363,7 +365,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "16e1d04c94a2f8f5f01b4104b105f9043f811f78fe1a2a214ec50462ccf940e4"
+      "stateHash": "138d6ad450bf662646dad39094a2b3fe8befe3b99f88f4651dfeebf2b31d1ebb"
     },
     "events": [
       {
@@ -595,6 +597,6 @@
         "y": 3
       }
     ],
-    "saveRoundTripStateHash": "16e1d04c94a2f8f5f01b4104b105f9043f811f78fe1a2a214ec50462ccf940e4"
+    "saveRoundTripStateHash": "138d6ad450bf662646dad39094a2b3fe8befe3b99f88f4651dfeebf2b31d1ebb"
   }
 }

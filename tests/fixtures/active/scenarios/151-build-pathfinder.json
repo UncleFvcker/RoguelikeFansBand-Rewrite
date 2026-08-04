@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "build.pathfinder.initial",
+  "category": "progression",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "44",
@@ -28,7 +29,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 77,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -397,8 +399,8 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "161cd15a3e90e1695378af8de4b8ffa472d1f227a67866f19fdf5e50c9c92fa3"
+      "stateHash": "8a29576a72d878c085dc80029fb407f88e1f4bebc4f111da7915b71c43057fbb"
     },
-    "saveRoundTripStateHash": "161cd15a3e90e1695378af8de4b8ffa472d1f227a67866f19fdf5e50c9c92fa3"
+    "saveRoundTripStateHash": "8a29576a72d878c085dc80029fb407f88e1f4bebc4f111da7915b71c43057fbb"
   }
 }

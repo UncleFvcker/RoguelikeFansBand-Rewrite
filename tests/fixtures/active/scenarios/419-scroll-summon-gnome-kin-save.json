@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "item.scroll-summon-gnome-kin-save",
+  "category": "scrolls",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "71",
@@ -47,7 +48,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 43,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 900,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -420,7 +422,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "c4fff59cf86c631f4a68296f87989281ab5ca53d6a0f1f88393dc9ba102244cb"
+      "stateHash": "8584837f98de21928f80f95dbd9f8950ac62392d7054a747d6274f578c25a27f"
     },
     "events": [
       {
@@ -471,6 +473,6 @@
         "y": 2
       }
     ],
-    "saveRoundTripStateHash": "c4fff59cf86c631f4a68296f87989281ab5ca53d6a0f1f88393dc9ba102244cb"
+    "saveRoundTripStateHash": "8584837f98de21928f80f95dbd9f8950ac62392d7054a747d6274f578c25a27f"
   }
 }

@@ -6,10 +6,42 @@
 
 contract fixture 是规则兼容边界，不能把测试失败简单处理为“刷新预期结果”。政策用于保证每次规则变化只修改真正受影响的场景，同时保留可审查的失败原因。
 
-当前逻辑基线是 `contract-v169`，机器可读政策固定在：
+当前逻辑基线是 `contract-v171`，机器可读政策固定在：
 
 ```text
 tests/fixtures/active/baseline-policy.json
+```
+
+## 分类验证
+
+每条 fixture 必须声明一个受控的主 `category`。分类表示该 fixture 主要保护的行为，不是自由标签；跨系统改动一次选择多个分类即可。当前分类可通过下列命令查询，输出同时给出各类数量：
+
+```powershell
+cargo run -p rfb-contract -- list-categories tests/fixtures/active/baseline-policy.json
+```
+
+日常规则改动只回放相关分类：
+
+```powershell
+cargo run -p rfb-contract -- verify-category tests/fixtures/active/baseline-policy.json inventory equipment
+cargo run -p rfb-contract -- refresh-category tests/fixtures/active/baseline-policy.json inventory equipment
+```
+
+`refresh-category` 会先为选中分类计算全部断言；任一场景计算失败时不会写入该批文件。普通 `cargo test -p rfb-contract` 仍快速检查全部 fixture 的 JSON、schema、分类和 ID 唯一性，但不会运行 462 条完整回放。
+
+只有以下变化默认需要全量回放或刷新：
+
+- contract assertion 或公共 protocol 投影字段变化；
+- 所有场景都可观察到的内容 hash 或 state hash 变化；
+- 公共初始化、RNG、存档往返语义变化；
+- 明确的里程碑验收。
+
+对应命令为：
+
+```powershell
+cargo run -p rfb-contract -- verify-all tests/fixtures/active/baseline-policy.json
+cargo run -p rfb-contract -- refresh-all tests/fixtures/active/baseline-policy.json
+cargo test -p rfb-contract --test contract_fixtures committed_contract_fixtures_pass -- --ignored
 ```
 
 工作树只保留这一份 active fixture 集。历史基线由 Git 提交、tag 或 release artifact 保存，不再复制为 `contract-vN` 目录。

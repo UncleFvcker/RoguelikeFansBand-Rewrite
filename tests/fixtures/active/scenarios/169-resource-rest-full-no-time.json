@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "resource.rest-full-no-time",
+  "category": "resources",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -36,7 +37,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 110,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 800,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -3140,7 +3142,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "bfa24324d50ff19ec081dec80624180178d942f4998a5735fcf871125045da57"
+      "stateHash": "80232206ecb691b74bf64bf66ddc6caec3f074f8f9763f7dc752f4db12210e62"
     },
     "events": [
       {
@@ -3161,6 +3163,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "bfa24324d50ff19ec081dec80624180178d942f4998a5735fcf871125045da57"
+    "saveRoundTripStateHash": "80232206ecb691b74bf64bf66ddc6caec3f074f8f9763f7dc752f4db12210e62"
   }
 }

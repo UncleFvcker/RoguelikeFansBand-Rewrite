@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "ability.progress-save-round-trip",
+  "category": "abilities",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -41,7 +42,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 110,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 800,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -3173,8 +3175,8 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "a58b10ad847ac323b2e4880c8c5340a293a742ebd167f2c7870ab224adb2f500"
+      "stateHash": "0e5298031eafe28aa8518a88d27bb1cb1a48b196caf51c08f17672a42ddcd102"
     },
-    "saveRoundTripStateHash": "a58b10ad847ac323b2e4880c8c5340a293a742ebd167f2c7870ab224adb2f500"
+    "saveRoundTripStateHash": "0e5298031eafe28aa8518a88d27bb1cb1a48b196caf51c08f17672a42ddcd102"
   }
 }

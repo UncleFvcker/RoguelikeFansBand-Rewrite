@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "technique.crescent-cut-cast",
+  "category": "techniques",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "14",
@@ -62,7 +63,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 30,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1100,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -480,7 +482,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "741649779c9674490641ed90ba3593bfbea686d504c814f684417581a822ed19"
+      "stateHash": "d1522614fb62e3f4e99d123a1e087ee1e4b0f2802e01522e7c5fdb34b1d11671"
     },
     "events": [
       {
@@ -577,6 +579,6 @@
         "y": 3
       }
     ],
-    "saveRoundTripStateHash": "741649779c9674490641ed90ba3593bfbea686d504c814f684417581a822ed19"
+    "saveRoundTripStateHash": "d1522614fb62e3f4e99d123a1e087ee1e4b0f2802e01522e7c5fdb34b1d11671"
   }
 }

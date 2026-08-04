@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "item.scroll-protection-from-evil",
+  "category": "scrolls",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -66,7 +67,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerStatuses": [
@@ -360,7 +362,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "da5dada6771090b3e233cb6e376d5a22ff4edd7cdf239070868e21131da8fbbd"
+      "stateHash": "d43ce53cf653ea0de9f74a45ba5e212877a9b3575e2c939b7d0afc6051b6ff96"
     },
     "events": [
       {
@@ -399,6 +401,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "da5dada6771090b3e233cb6e376d5a22ff4edd7cdf239070868e21131da8fbbd"
+    "saveRoundTripStateHash": "d43ce53cf653ea0de9f74a45ba5e212877a9b3575e2c939b7d0afc6051b6ff96"
   }
 }

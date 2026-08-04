@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "item.scroll-summon-human-kin-save",
+  "category": "scrolls",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "70",
@@ -47,7 +48,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 444,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1250,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 4,
@@ -480,7 +482,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "75450a676f0addb871ffdf56d2f7bae09957ad0c08c66cfeb22b2becd0b3fe60"
+      "stateHash": "7873a24b2a45257656a6ea8890176f990b9eab81d8b31fdf24f3d4c3154e50d0"
     },
     "events": [
       {
@@ -541,6 +543,6 @@
         "y": 2
       }
     ],
-    "saveRoundTripStateHash": "75450a676f0addb871ffdf56d2f7bae09957ad0c08c66cfeb22b2becd0b3fe60"
+    "saveRoundTripStateHash": "7873a24b2a45257656a6ea8890176f990b9eab81d8b31fdf24f3d4c3154e50d0"
   }
 }

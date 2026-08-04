@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "monster-casting.damage.cinder-cooldown-lethal",
+  "category": "monsters",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -86,7 +87,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 10,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9989,
       "playerLevel": 1,
@@ -338,7 +340,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "cbab7d26f8907984774a321d97f5e0c0d027f4607590f02dbec8070d1030a8c9"
+      "stateHash": "485b06757467df22f95f36250e8c5735851d3b24fd5b43ed01e1307279663bc9"
     },
     "events": [
       {
@@ -817,6 +819,6 @@
         "y": 3
       }
     ],
-    "saveRoundTripStateHash": "cbab7d26f8907984774a321d97f5e0c0d027f4607590f02dbec8070d1030a8c9"
+    "saveRoundTripStateHash": "485b06757467df22f95f36250e8c5735851d3b24fd5b43ed01e1307279663bc9"
   }
 }

@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "progression.attribute-rfb-bucket",
+  "category": "progression",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "42",
@@ -45,7 +46,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1300,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 6,
@@ -296,7 +298,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "6841df0ef231241f9aa2731e55b6c0c668bd4b3d5ae46bae84c57b405a7ce6fa"
+      "stateHash": "070e6b95ba29d50b3aff68d101246dcf5324eab90226bcc58f671cc66f8de332"
     },
     "events": [
       {
@@ -311,6 +313,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "6841df0ef231241f9aa2731e55b6c0c668bd4b3d5ae46bae84c57b405a7ce6fa"
+    "saveRoundTripStateHash": "070e6b95ba29d50b3aff68d101246dcf5324eab90226bcc58f671cc66f8de332"
   }
 }

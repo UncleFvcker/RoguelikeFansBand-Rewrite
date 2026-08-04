@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "dungeon.maze-only-floor-seed-197",
+  "category": "dungeon",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "197",
@@ -129,7 +130,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9969,
       "playerLevel": 1,
@@ -405,7 +407,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "a0117d1276b0286ed0120b5c3838556e57a15c67aef4ba0768845a1635b4ea31"
+      "stateHash": "b81489385c56e20a2bc90534e2fbbf6044704970f6008f8b01fef8d71419bab0"
     },
     "events": [
       {
@@ -11914,6 +11916,6 @@
         "y": 4
       }
     ],
-    "saveRoundTripStateHash": "a0117d1276b0286ed0120b5c3838556e57a15c67aef4ba0768845a1635b4ea31"
+    "saveRoundTripStateHash": "b81489385c56e20a2bc90534e2fbbf6044704970f6008f8b01fef8d71419bab0"
   }
 }

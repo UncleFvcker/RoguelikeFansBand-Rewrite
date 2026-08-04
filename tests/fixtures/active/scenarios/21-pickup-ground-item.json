@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "item.pickup.ground-stack",
+  "category": "inventory",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "42",
@@ -40,7 +41,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 50,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -306,7 +308,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "e3689213cf4a26a770a28f0b69d955ef82e8fc6470fdaad6e807a1193ef59c31"
+      "stateHash": "55c6797a8f6aaca5ea4c29fb2b9e5185ebf28d80aaba6da4cdc247ad423030e3"
     },
     "events": [
       {
@@ -348,6 +350,6 @@
         "y": 4
       }
     ],
-    "saveRoundTripStateHash": "e3689213cf4a26a770a28f0b69d955ef82e8fc6470fdaad6e807a1193ef59c31"
+    "saveRoundTripStateHash": "55c6797a8f6aaca5ea4c29fb2b9e5185ebf28d80aaba6da4cdc247ad423030e3"
   }
 }

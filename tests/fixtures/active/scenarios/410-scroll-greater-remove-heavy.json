@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "item.scroll-greater-remove-heavy",
+  "category": "scrolls",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "73",
@@ -58,7 +59,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 584,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1250,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -484,7 +486,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "cd455805357777781909e3d3bd8d2c7d26f4ff5a517773cb0e5c625f68965a32"
+      "stateHash": "4460d8560d799e3f1e4db06e99634add9ec2aed957b5f06fa3813f74def6e982"
     },
     "events": [
       {
@@ -515,6 +517,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "cd455805357777781909e3d3bd8d2c7d26f4ff5a517773cb0e5c625f68965a32"
+    "saveRoundTripStateHash": "4460d8560d799e3f1e4db06e99634add9ec2aed957b5f06fa3813f74def6e982"
   }
 }

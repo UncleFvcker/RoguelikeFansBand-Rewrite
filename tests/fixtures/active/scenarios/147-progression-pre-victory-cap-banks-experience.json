@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "progression.pre-victory-cap-banks-experience",
+  "category": "progression",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "42",
@@ -40,7 +41,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 50,
@@ -290,7 +292,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "17b578cefe160630a06affaa68751de6fbc60c309e50594a8dd17963b983c59d"
+      "stateHash": "5246c8b5a470f8a0810049f36d658d1b2205f5aca23ac9b413efb82b8111cb08"
     },
     "events": [
       {
@@ -309,6 +311,6 @@
         "y": 5
       }
     ],
-    "saveRoundTripStateHash": "17b578cefe160630a06affaa68751de6fbc60c309e50594a8dd17963b983c59d"
+    "saveRoundTripStateHash": "5246c8b5a470f8a0810049f36d658d1b2205f5aca23ac9b413efb82b8111cb08"
   }
 }

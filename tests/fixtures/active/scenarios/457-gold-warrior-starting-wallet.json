@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "id": "gold.warrior-starting-wallet",
+  "category": "inventory",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "42",
@@ -238,6 +239,7 @@
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 714,
       "playerCarryCapacityTenthsPound": 1200,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 346,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -775,8 +777,8 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "1ccced4e47b0677f3290be468fe54d993e103252c390a065612795b76e500e95"
+      "stateHash": "09c6f23d8eeb300134436c3af2dc3f60e09a58b604c03fdc3f15b75077401ce3"
     },
-    "saveRoundTripStateHash": "1ccced4e47b0677f3290be468fe54d993e103252c390a065612795b76e500e95"
+    "saveRoundTripStateHash": "09c6f23d8eeb300134436c3af2dc3f60e09a58b604c03fdc3f15b75077401ce3"
   }
 }

@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "monster-casting.breath.cap",
+  "category": "monsters",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -56,7 +57,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -308,7 +310,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "2bd3a849f84082ab2dd29853191132973f702c9eab3780d6d3e24a87c7e9273e"
+      "stateHash": "362c4ea2bba2c67afed29f01f4fc9423f1b1eae374b53d572e43f712db17ad99"
     },
     "events": [
       {
@@ -561,6 +563,6 @@
         "y": 3
       }
     ],
-    "saveRoundTripStateHash": "2bd3a849f84082ab2dd29853191132973f702c9eab3780d6d3e24a87c7e9273e"
+    "saveRoundTripStateHash": "362c4ea2bba2c67afed29f01f4fc9423f1b1eae374b53d572e43f712db17ad99"
   }
 }

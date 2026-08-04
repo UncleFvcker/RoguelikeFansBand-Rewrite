@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "terrain.hidden-trap-search-disarm",
+  "category": "dungeon",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "27",
@@ -57,7 +58,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9989,
       "playerLevel": 1,
@@ -313,7 +315,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "e8b16b3cd47463d1eebec68627a5060c68c7b9f30987ba02e407a8e6bdc6b553"
+      "stateHash": "b941c898974e219823e608c819fc1cbd5a5370c0840bae466d381357d8233193"
     },
     "events": [
       {
@@ -1972,6 +1974,6 @@
         "y": 5
       }
     ],
-    "saveRoundTripStateHash": "e8b16b3cd47463d1eebec68627a5060c68c7b9f30987ba02e407a8e6bdc6b553"
+    "saveRoundTripStateHash": "b941c898974e219823e608c819fc1cbd5a5370c0840bae466d381357d8233193"
   }
 }

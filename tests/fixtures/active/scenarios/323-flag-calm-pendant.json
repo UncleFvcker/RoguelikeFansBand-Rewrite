@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "flags.calm-pendant-paralysis-immune",
+  "category": "equipment",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "4",
@@ -63,7 +64,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 2,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -351,7 +353,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "244a49c3c5d321774bce7474f612b3be0c9e3b1610eb51d3e5c77c24ef0dffae"
+      "stateHash": "b9cb8abfe1cb860532a41f73d0f262620514c6b76d6769b58eba1de7d6d6f311"
     },
     "events": [
       {
@@ -551,6 +553,6 @@
         "y": 3
       }
     ],
-    "saveRoundTripStateHash": "244a49c3c5d321774bce7474f612b3be0c9e3b1610eb51d3e5c77c24ef0dffae"
+    "saveRoundTripStateHash": "b9cb8abfe1cb860532a41f73d0f262620514c6b76d6769b58eba1de7d6d6f311"
   }
 }

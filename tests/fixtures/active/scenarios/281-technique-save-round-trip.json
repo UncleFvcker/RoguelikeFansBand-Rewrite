@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "technique.save-round-trip",
+  "category": "techniques",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -61,7 +62,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 30,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1100,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -451,7 +453,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "55f03ea2631d1744b12fa53d25e3564ae97ffc2e18ab1acb58218f5608ec1042"
+      "stateHash": "c028f02ef793be4b56b40a35e602d2efbde69bccb4315d8e5fc1ac0eec83290a"
     },
     "events": [
       {
@@ -460,6 +462,6 @@
         "args": {}
       }
     ],
-    "saveRoundTripStateHash": "55f03ea2631d1744b12fa53d25e3564ae97ffc2e18ab1acb58218f5608ec1042"
+    "saveRoundTripStateHash": "c028f02ef793be4b56b40a35e602d2efbde69bccb4315d8e5fc1ac0eec83290a"
   }
 }

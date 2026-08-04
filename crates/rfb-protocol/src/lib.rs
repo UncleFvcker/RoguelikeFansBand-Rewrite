@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.135";
+pub const PROTOCOL_VERSION: &str = "1.136";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -1922,6 +1922,8 @@ pub struct PlayerDto {
     #[serde(default)]
     pub carry_capacity_tenths_pound: u32,
     #[serde(default)]
+    pub encumbrance_speed_penalty: u16,
+    #[serde(default)]
     pub inventory_used_slots: u16,
     #[serde(default)]
     pub inventory_slot_capacity: u16,
@@ -3664,6 +3666,7 @@ mod tests {
                 energy_need: 0,
                 carried_weight_tenths_pound: 5,
                 carry_capacity_tenths_pound: 100,
+                encumbrance_speed_penalty: 0,
                 inventory_used_slots: 1,
                 inventory_slot_capacity: 26,
                 base_max_hp: 10,

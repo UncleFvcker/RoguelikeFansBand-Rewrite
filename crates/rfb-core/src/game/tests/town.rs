@@ -200,6 +200,54 @@ fn home_deposit_withdraw_grouping_and_save_are_authoritative() {
 }
 
 #[test]
+fn overburdened_player_can_withdraw_from_home() {
+    let mut game = Game::new_warrens_journey_with_build(42, "demo.build.warrior")
+        .expect("Warrens game should start");
+    game.player.position = Position { x: 42, y: 13 };
+    game.mark_shop_visited_at_player();
+    support::give_inventory_item(&mut game, "test.heavy-stack", "demo.item.burdened-mail");
+    game.items
+        .iter_mut()
+        .find(|item| item.id == "test.heavy-stack")
+        .expect("fixture item should exist")
+        .quantity = 11;
+    let mut stored = game
+        .items
+        .iter()
+        .find(|item| item.kind_id == "demo.item.ration-of-food")
+        .expect("Warrior should carry rations")
+        .clone();
+    stored.id = "test.home-ration".to_owned();
+    stored.quantity = 1;
+    stored.location = ItemLocation::Home {
+        facility_id: HOME_ID.to_owned(),
+    };
+    let item_id = stored.id.clone();
+    game.home_states
+        .get_mut(HOME_ID)
+        .expect("Home should have authoritative state")
+        .inventory
+        .push(stored);
+
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::WithdrawFromHome {
+            facility_id: HOME_ID.to_owned(),
+            item_id,
+            quantity: 1,
+        },
+    );
+
+    assert!(
+        update
+            .events
+            .iter()
+            .any(|event| event.kind == "home.withdraw")
+    );
+    assert!(update.player.carried_weight_tenths_pound > update.player.carry_capacity_tenths_pound);
+}
+
+#[test]
 fn home_inventory_ids_are_reserved_by_the_global_allocator() {
     let mut game = Game::new_warrens_journey_with_build(42, "demo.build.warrior")
         .expect("Warrens game should start");
@@ -834,7 +882,7 @@ fn full_inventory_purchase_is_rejected_atomically() {
 }
 
 #[test]
-fn over_capacity_purchase_and_corpse_sale_are_rejected() {
+fn overburdened_player_can_purchase() {
     let mut game = store_game(42);
     game.gold = 100;
     for item in &mut game.items {
@@ -851,13 +899,20 @@ fn over_capacity_purchase_and_corpse_sale_are_rejected() {
             quantity: 1,
         },
     );
-    assert!(update.events.iter().any(|event| {
-        event
-            .args
-            .get("reason")
-            .is_some_and(|reason| reason == "over-capacity")
+    assert!(
+        update
+            .events
+            .iter()
+            .any(|event| event.kind == "shop.purchase")
+    );
+    assert!(game.items.iter().any(|item| {
+        item.kind_id == "demo.item.brass-lantern" && item.location == ItemLocation::Inventory
     }));
+}
 
+#[test]
+fn corpse_sale_is_rejected() {
+    let mut game = store_game(42);
     support::give_inventory_item(&mut game, "test.corpse", "demo.item.corpse-remains");
     let draws_before = game.rng_draw_counter();
     let update = dispatch_next(

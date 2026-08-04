@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "skill.perception.tinkerer-success",
+  "category": "progression",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "1",
@@ -44,7 +45,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 43,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 900,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -420,7 +422,7 @@
           "y": 5
         }
       ],
-      "stateHash": "f80c3bf12bd02c1c4a095cdb22befe1c018cb5fc93640699bd04dc4983038b7c"
+      "stateHash": "580c42891ffacd63a86ea7930586d9b2188c63619a0b4676aef939506e174cfc"
     },
     "events": [
       {

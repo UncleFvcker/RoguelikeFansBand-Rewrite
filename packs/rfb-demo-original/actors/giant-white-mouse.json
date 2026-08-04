@@ -13,7 +13,7 @@
   "attack": 1,
   "defense": 0,
   "damageDice": 1,
-  "damageSides": 1,
+  "damageSides": 5,
   "damageType": "physical",
   "remains": {
     "chanceDenominator": 3,

@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "status.fear.player-melee-blocked",
+  "category": "combat",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -119,7 +120,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerStatuses": [
@@ -444,7 +446,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "97779d9abb8ad71ee96dddf069099c929a1e1058d8ebf5426ded2e67b0e054f4"
+      "stateHash": "36e13422170d7bf92e434cb0951d7943f3050becca2e8a4dd8090596fc953b2c"
     },
     "events": [
       {
@@ -461,6 +463,6 @@
         "y": 3
       }
     ],
-    "saveRoundTripStateHash": "97779d9abb8ad71ee96dddf069099c929a1e1058d8ebf5426ded2e67b0e054f4"
+    "saveRoundTripStateHash": "36e13422170d7bf92e434cb0951d7943f3050becca2e8a4dd8090596fc953b2c"
   }
 }

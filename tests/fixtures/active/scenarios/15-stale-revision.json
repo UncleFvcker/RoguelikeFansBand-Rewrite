@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "protocol.revision.stale-initial",
+  "category": "system",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "42",
@@ -33,7 +34,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -284,13 +286,13 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "5c7fe29c2e2e0ec6fbdbff19f30b2e1b6035abd42ad79fc4e552757bc5fb12b5"
+      "stateHash": "2c35c5a15af17918dd4f7e02472f2e12a134ff5e1df8a29293c3897bb67447e8"
     },
     "errors": [
       {
         "step": 1,
         "kind": "revision-mismatch",
-        "stateHash": "5c7fe29c2e2e0ec6fbdbff19f30b2e1b6035abd42ad79fc4e552757bc5fb12b5"
+        "stateHash": "2c35c5a15af17918dd4f7e02472f2e12a134ff5e1df8a29293c3897bb67447e8"
       }
     ]
   }

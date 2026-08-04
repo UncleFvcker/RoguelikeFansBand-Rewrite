@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "combat.elemental.cold-resistant",
+  "category": "combat",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -50,7 +51,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerResistances": [
@@ -307,7 +309,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "ca6f5f666a125305c33bd51c7b06d4d926b4c795899f2d28a2bf47a770577350"
+      "stateHash": "54c009ec5a10b1412e876dbfc15c85e63ec849a3333d15eaa60983a204889792"
     },
     "events": [
       {
@@ -335,6 +337,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "ca6f5f666a125305c33bd51c7b06d4d926b4c795899f2d28a2bf47a770577350"
+    "saveRoundTripStateHash": "54c009ec5a10b1412e876dbfc15c85e63ec849a3333d15eaa60983a204889792"
   }
 }

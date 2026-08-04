@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "status.confusion.move-kept",
+  "category": "status-effects",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -73,7 +74,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerStatuses": [
@@ -320,7 +322,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "dae3db8ec16511aeb2e243eeab8bf3e77ed37669e5a4c63da7d9936008db13b8"
+      "stateHash": "cab04e7a2033b5e62dd07460b7b3e6558e9c4b8efad3bc06711e4e2654ad3839"
     },
     "changedCells": [
       {
@@ -332,6 +334,6 @@
         "y": 3
       }
     ],
-    "saveRoundTripStateHash": "dae3db8ec16511aeb2e243eeab8bf3e77ed37669e5a4c63da7d9936008db13b8"
+    "saveRoundTripStateHash": "cab04e7a2033b5e62dd07460b7b3e6558e9c4b8efad3bc06711e4e2654ad3839"
   }
 }

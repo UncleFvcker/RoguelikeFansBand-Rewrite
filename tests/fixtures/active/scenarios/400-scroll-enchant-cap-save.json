@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "item.scroll-enchant-cap-save",
+  "category": "scrolls",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "1",
@@ -55,7 +56,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 25,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -329,7 +331,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "92346f966e084a33eaad9e489c13dda3e0936ac543d19ceb868dc02819787057"
+      "stateHash": "e61eef630f7fb285f0a8c0eb82c63f61cdbfdde35896964aa99f4f5f999b9a57"
     },
     "events": [
       {
@@ -369,6 +371,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "92346f966e084a33eaad9e489c13dda3e0936ac543d19ceb868dc02819787057"
+    "saveRoundTripStateHash": "e61eef630f7fb285f0a8c0eb82c63f61cdbfdde35896964aa99f4f5f999b9a57"
   }
 }

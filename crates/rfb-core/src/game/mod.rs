@@ -337,7 +337,7 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 151] = [
 ];
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_HASH: &str =
-    "d9e227cc7757ff82a66c7afadf8da2846a1751920f53fa3f1f0a74c640b8a0ac";
+    "ab54279248422c2d39dc6e91b8827f6be1f15c4d9ab4c79ee60707e766abbb52";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 pub const STATE_HASH_SCHEMA_VERSION: u16 = 61;
@@ -1607,19 +1607,6 @@ impl Game {
                             quantity,
                         });
                     }
-                    PickUpOutcome::OverCapacity {
-                        kind_id,
-                        quantity,
-                        current_weight,
-                        pickup_weight,
-                        capacity,
-                    } => events.push(DomainEvent::ItemPickupOverCapacity {
-                        target_kind_id: kind_id,
-                        quantity,
-                        current_weight,
-                        pickup_weight,
-                        capacity,
-                    }),
                     PickUpOutcome::InventoryFull {
                         kind_id,
                         quantity,

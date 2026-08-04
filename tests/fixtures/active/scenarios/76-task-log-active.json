@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "task.log-active-and-save-round-trip",
+  "category": "tasks",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "27",
@@ -40,7 +41,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -262,7 +264,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "58c2cd8d55b720e583104bb5e68e93e6487f064c919f40fa1359a70e8b1128da"
+      "stateHash": "3e092c37eed6cccb45f25e5aaf234d18675b742992734939f11a21ca0f5c83d6"
     },
     "events": [
       {
@@ -1892,6 +1894,6 @@
         "y": 19
       }
     ],
-    "saveRoundTripStateHash": "58c2cd8d55b720e583104bb5e68e93e6487f064c919f40fa1359a70e8b1128da"
+    "saveRoundTripStateHash": "3e092c37eed6cccb45f25e5aaf234d18675b742992734939f11a21ca0f5c83d6"
   }
 }

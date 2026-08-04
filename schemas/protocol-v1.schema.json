@@ -6271,6 +6271,13 @@
             }
           ]
         },
+        "encumbranceSpeedPenalty": {
+          "type": "integer",
+          "format": "uint16",
+          "default": 0,
+          "maximum": 65535,
+          "minimum": 0
+        },
         "energyNeed": {
           "type": "integer",
           "format": "int32",

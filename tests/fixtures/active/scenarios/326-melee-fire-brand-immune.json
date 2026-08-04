@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "combat.melee-fire-brand-immune",
+  "category": "equipment",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "42",
@@ -68,7 +69,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 30,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -366,7 +368,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "29c4a747f5eb9a618452ae323c7a692ba5e824b4d4a32b3530514b4ab246ba3f"
+      "stateHash": "0cbe3d1723ffa9ebc924f1c7d9766b2bfd420144f5ac3d3b8128658c8f59e26f"
     },
     "events": [
       {
@@ -454,6 +456,6 @@
         "y": 3
       }
     ],
-    "saveRoundTripStateHash": "29c4a747f5eb9a618452ae323c7a692ba5e824b4d4a32b3530514b4ab246ba3f"
+    "saveRoundTripStateHash": "0cbe3d1723ffa9ebc924f1c7d9766b2bfd420144f5ac3d3b8128658c8f59e26f"
   }
 }

@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "terrain.door-open-close-and-persistence",
+  "category": "dungeon",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "27",
@@ -89,7 +90,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9979,
       "playerLevel": 1,
@@ -345,7 +347,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "1d0682053b569748b04e794699fe3510faf822c2deee6947e42b183b1b23cc3e"
+      "stateHash": "298ba6c279ed2f233597ae5008a5b4229b642bbc3000ecfd486750f0331f248d"
     },
     "events": [
       {
@@ -2027,6 +2029,6 @@
         "y": 4
       }
     ],
-    "saveRoundTripStateHash": "1d0682053b569748b04e794699fe3510faf822c2deee6947e42b183b1b23cc3e"
+    "saveRoundTripStateHash": "298ba6c279ed2f233597ae5008a5b4229b642bbc3000ecfd486750f0331f248d"
   }
 }

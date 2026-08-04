@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "terrain.authoritative-adjacent-interactions",
+  "category": "dungeon",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "27",
@@ -65,7 +66,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9989,
       "playerLevel": 1,
@@ -321,7 +323,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "1dcc86d09f45188c7393b9567ffc770726a28c4cebf4d76e34b72febd420b443"
+      "stateHash": "a19088a76fa2a79c564bdf01a353ecca7a02f49c57f0b27f919cfb80fc45e74e"
     },
     "events": [
       {
@@ -1983,6 +1985,6 @@
         "y": 4
       }
     ],
-    "saveRoundTripStateHash": "1dcc86d09f45188c7393b9567ffc770726a28c4cebf4d76e34b72febd420b443"
+    "saveRoundTripStateHash": "a19088a76fa2a79c564bdf01a353ecca7a02f49c57f0b27f919cfb80fc45e74e"
   }
 }

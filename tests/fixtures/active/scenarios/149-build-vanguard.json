@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "build.vanguard.initial",
+  "category": "progression",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "42",
@@ -28,7 +29,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 444,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1250,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -444,8 +446,8 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "ed1e6c641fb83778d9bd67ee780e1d3351d9b7f97af096d5d68186537bb27288"
+      "stateHash": "5c7acc00ef465dd6a2b2e785463335e257a0796a06d34146e691644d288987fe"
     },
-    "saveRoundTripStateHash": "ed1e6c641fb83778d9bd67ee780e1d3351d9b7f97af096d5d68186537bb27288"
+    "saveRoundTripStateHash": "5c7acc00ef465dd6a2b2e785463335e257a0796a06d34146e691644d288987fe"
   }
 }

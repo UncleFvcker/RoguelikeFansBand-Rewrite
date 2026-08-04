@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "combat.elemental.fire-strong",
+  "category": "combat",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -49,7 +50,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerResistances": [
@@ -306,7 +308,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "fcdbee6a593d2b77e5d8e5114ae33d30b883ec759beee54c7df7f093cf0d92f9"
+      "stateHash": "eb8dd1bece7bff6a912c19d8ef64f10615ed2e738c22e03be1a3f748f313b619"
     },
     "events": [
       {
@@ -334,6 +336,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "fcdbee6a593d2b77e5d8e5114ae33d30b883ec759beee54c7df7f093cf0d92f9"
+    "saveRoundTripStateHash": "eb8dd1bece7bff6a912c19d8ef64f10615ed2e738c22e03be1a3f748f313b619"
   }
 }

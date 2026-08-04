@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "task.stage-collect-advances-to-enter-floor",
+  "category": "tasks",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "27",
@@ -63,7 +64,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 10,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9989,
       "playerResistances": [
@@ -306,7 +308,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "074d4bcc382d3f5f1519a94c5b36c44c853375a32a93cfe201a11c38de2d8976"
+      "stateHash": "3d2697e04e0bdafdb68d5d708db86e597c5382e7e89cb884a23d3f65e9587175"
     },
     "events": [
       {
@@ -1991,6 +1993,6 @@
         "y": 6
       }
     ],
-    "saveRoundTripStateHash": "074d4bcc382d3f5f1519a94c5b36c44c853375a32a93cfe201a11c38de2d8976"
+    "saveRoundTripStateHash": "3d2697e04e0bdafdb68d5d708db86e597c5382e7e89cb884a23d3f65e9587175"
   }
 }

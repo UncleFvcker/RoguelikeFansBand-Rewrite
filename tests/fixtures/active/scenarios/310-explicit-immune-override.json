@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "resistance.explicit-immune-override",
+  "category": "monsters",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -66,7 +67,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 110,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 800,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -3198,7 +3200,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "57b479c8ba40dbf569205e9491482acc560ead3a2c68f287622f77769c987cf5"
+      "stateHash": "3eb51c1ef7736ba2aec9305ddc068619087e109e4ec386e1385069d7f18cb50a"
     },
     "events": [
       {
@@ -3284,6 +3286,6 @@
         "y": 3
       }
     ],
-    "saveRoundTripStateHash": "57b479c8ba40dbf569205e9491482acc560ead3a2c68f287622f77769c987cf5"
+    "saveRoundTripStateHash": "3eb51c1ef7736ba2aec9305ddc068619087e109e4ec386e1385069d7f18cb50a"
   }
 }

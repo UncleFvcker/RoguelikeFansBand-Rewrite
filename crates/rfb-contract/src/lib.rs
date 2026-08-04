@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
-use std::collections::BTreeSet;
+use std::{collections::BTreeSet, fmt, str::FromStr};
 
 use rfb_core::{CoreError, Game, load_built_in_content};
 use rfb_protocol::{
@@ -21,8 +21,8 @@ use thiserror::Error;
 pub mod policy;
 pub mod snapshot;
 
-pub const CONTRACT_SCHEMA_VERSION: u16 = 2;
-pub const ACTIVE_BASELINE: &str = "contract-v169";
+pub const CONTRACT_SCHEMA_VERSION: u16 = 3;
+pub const ACTIVE_BASELINE: &str = "contract-v171";
 pub const ACTIVE_FIXTURE_DIRECTORY: &str = "active";
 pub const LEGACY_BASELINE_COMMIT: &str = "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9";
 pub const ORIGINAL_TEST_WORLD: &str = "demo.world.original-v1";
@@ -34,6 +34,7 @@ pub const WARRENS_TEST_WORLD: &str = "demo.world.warrens-journey";
 pub struct ContractFixture {
     pub schema_version: u16,
     pub id: String,
+    pub category: FixtureCategory,
     pub legacy_commit: String,
     pub determinism: Determinism,
     pub seed: String,
@@ -44,6 +45,99 @@ pub struct ContractFixture {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub assertions: Option<ContractAssertions>,
 }
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum FixtureCategory {
+    Movement,
+    System,
+    Combat,
+    Inventory,
+    Dungeon,
+    Tasks,
+    Campaign,
+    Progression,
+    Abilities,
+    Resources,
+    Monsters,
+    Techniques,
+    StatusEffects,
+    Equipment,
+    MagicRealms,
+    Devices,
+    Scrolls,
+    Potions,
+    Town,
+}
+
+impl FixtureCategory {
+    pub const ALL: [Self; 19] = [
+        Self::Movement,
+        Self::System,
+        Self::Combat,
+        Self::Inventory,
+        Self::Dungeon,
+        Self::Tasks,
+        Self::Campaign,
+        Self::Progression,
+        Self::Abilities,
+        Self::Resources,
+        Self::Monsters,
+        Self::Techniques,
+        Self::StatusEffects,
+        Self::Equipment,
+        Self::MagicRealms,
+        Self::Devices,
+        Self::Scrolls,
+        Self::Potions,
+        Self::Town,
+    ];
+
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Movement => "movement",
+            Self::System => "system",
+            Self::Combat => "combat",
+            Self::Inventory => "inventory",
+            Self::Dungeon => "dungeon",
+            Self::Tasks => "tasks",
+            Self::Campaign => "campaign",
+            Self::Progression => "progression",
+            Self::Abilities => "abilities",
+            Self::Resources => "resources",
+            Self::Monsters => "monsters",
+            Self::Techniques => "techniques",
+            Self::StatusEffects => "status-effects",
+            Self::Equipment => "equipment",
+            Self::MagicRealms => "magic-realms",
+            Self::Devices => "devices",
+            Self::Scrolls => "scrolls",
+            Self::Potions => "potions",
+            Self::Town => "town",
+        }
+    }
+}
+
+impl fmt::Display for FixtureCategory {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str(self.as_str())
+    }
+}
+
+impl FromStr for FixtureCategory {
+    type Err = FixtureCategoryParseError;
+
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        Self::ALL
+            .into_iter()
+            .find(|category| category.as_str() == value)
+            .ok_or_else(|| FixtureCategoryParseError(value.to_owned()))
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Error)]
+#[error("unknown fixture category {0}; use list-categories to see valid categories")]
+pub struct FixtureCategoryParseError(String);
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
@@ -318,6 +412,7 @@ pub struct FinalStateAssertion {
     pub player_carried_weight_tenths_pound: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub player_carry_capacity_tenths_pound: Option<u32>,
+    pub player_encumbrance_speed_penalty: Option<u16>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub player_gold: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -793,6 +888,7 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
             player_energy_need: Some(snapshot.player.energy_need),
             player_carried_weight_tenths_pound: Some(snapshot.player.carried_weight_tenths_pound),
             player_carry_capacity_tenths_pound: Some(snapshot.player.carry_capacity_tenths_pound),
+            player_encumbrance_speed_penalty: Some(snapshot.player.encumbrance_speed_penalty),
             player_gold: Some(snapshot.player.gold),
             player_nutrition: Some(snapshot.player.nutrition),
             player_statuses: snapshot.player.statuses.clone(),

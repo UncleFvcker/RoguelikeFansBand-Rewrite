@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "task.stage-chain-collect-enter-kill-completes",
+  "category": "tasks",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "27",
@@ -138,7 +139,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 10,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9969,
       "playerResistances": [
@@ -400,7 +402,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "50e2d9f92e34776561ccc37869c1fc5776238f78b124d3bc9d486e10c2811812"
+      "stateHash": "2b44b68395cd1cf8b6c74dc39c6c1be52c36c52d89d6980e49539ce03892a44e"
     },
     "events": [
       {
@@ -3930,6 +3932,6 @@
     "removedEntities": [
       "demo.monster.ember-mote.1"
     ],
-    "saveRoundTripStateHash": "50e2d9f92e34776561ccc37869c1fc5776238f78b124d3bc9d486e10c2811812"
+    "saveRoundTripStateHash": "2b44b68395cd1cf8b6c74dc39c6c1be52c36c52d89d6980e49539ce03892a44e"
   }
 }

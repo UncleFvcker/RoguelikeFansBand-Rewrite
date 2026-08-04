@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "ability.effects.insufficient-resource",
+  "category": "abilities",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -67,7 +68,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 110,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 800,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -3199,7 +3201,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "030c1c38e288df63e404badb49bd9ba0bff07d35276b557078abc7de945e07a4"
+      "stateHash": "13e3d663cc093396031954c38a6fd9e47ca07c614b84072bd7036a13b76c0bc9"
     },
     "events": [
       {
@@ -3221,6 +3223,6 @@
         "y": 5
       }
     ],
-    "saveRoundTripStateHash": "030c1c38e288df63e404badb49bd9ba0bff07d35276b557078abc7de945e07a4"
+    "saveRoundTripStateHash": "13e3d663cc093396031954c38a6fd9e47ca07c614b84072bd7036a13b76c0bc9"
   }
 }

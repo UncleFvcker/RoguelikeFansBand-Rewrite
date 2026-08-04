@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "monster-casting.breath.lethal-loop",
+  "category": "monsters",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "3",
@@ -86,7 +87,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 10,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9989,
       "playerLevel": 1,
@@ -338,7 +340,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "ea312be80ada997fc42950434cd38286fdb5e1c266625c90f3a151e93afda5ab"
+      "stateHash": "d04e2ffd2770f91976a3d446b1cd1a3bf2b2c2cc87c4579abeb608b7ebc085ca"
     },
     "events": [
       {
@@ -845,6 +847,6 @@
         "y": 3
       }
     ],
-    "saveRoundTripStateHash": "ea312be80ada997fc42950434cd38286fdb5e1c266625c90f3a151e93afda5ab"
+    "saveRoundTripStateHash": "d04e2ffd2770f91976a3d446b1cd1a3bf2b2c2cc87c4579abeb608b7ebc085ca"
   }
 }

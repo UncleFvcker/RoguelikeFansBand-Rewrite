@@ -7,14 +7,17 @@
   "descriptionKey": "actor-demo-small-kobold-description",
   "glyph": "k",
   "level": 1,
-  "experienceValue": 8,
-  "maxHp": 4,
+  "experienceValue": 10,
+  "maxHp": 8,
   "speed": 110,
   "attack": 1,
   "defense": 1,
   "damageDice": 1,
-  "damageSides": 2,
+  "damageSides": 9,
   "damageType": "physical",
+  "resistances": {
+    "poison": "resistant"
+  },
   "lootTableId": "demo.loot-table.small-kobold",
   "goldDropChancePercent": 20,
   "remains": {
@@ -24,5 +27,5 @@
     "corpseWeight": 4,
     "skeletonWeight": 1
   },
-  "tags": ["humanoid", "kobold", "warrens"]
+  "tags": ["evil", "humanoid", "kobold", "warrens"]
 }

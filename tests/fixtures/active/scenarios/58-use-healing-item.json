@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "item.use.healing-awareness",
+  "category": "inventory",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "42",
@@ -94,7 +95,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 40,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -415,7 +417,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "5778f0b49a0c1bf23896b58d1a347b7bbec9f96c8f6d364b03e7b5bacc729141"
+      "stateHash": "325de536ec59199afac692cde200bae45c11e8a5665b5af7bcca1b97cc750d44"
     },
     "events": [
       {
@@ -457,6 +459,6 @@
         "y": 3
       }
     ],
-    "saveRoundTripStateHash": "5778f0b49a0c1bf23896b58d1a347b7bbec9f96c8f6d364b03e7b5bacc729141"
+    "saveRoundTripStateHash": "325de536ec59199afac692cde200bae45c11e8a5665b5af7bcca1b97cc750d44"
   }
 }

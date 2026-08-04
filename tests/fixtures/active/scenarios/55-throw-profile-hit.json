@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "combat.throw.profile-hit",
+  "category": "combat",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -95,7 +96,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 40,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -405,7 +407,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "59a2681cbae5fc03b1de0b602e20e01cf15234d0b28a45d1634fb1f35bab4f5f"
+      "stateHash": "be29abf1d8be0d4c253a3e06ab4bcfc93eb8ebdda212fb7aa9e59f3f8d003af0"
     },
     "events": [
       {
@@ -483,6 +485,6 @@
         "y": 3
       }
     ],
-    "saveRoundTripStateHash": "59a2681cbae5fc03b1de0b602e20e01cf15234d0b28a45d1634fb1f35bab4f5f"
+    "saveRoundTripStateHash": "be29abf1d8be0d4c253a3e06ab4bcfc93eb8ebdda212fb7aa9e59f3f8d003af0"
   }
 }

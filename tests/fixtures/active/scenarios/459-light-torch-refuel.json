@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "id": "light.torch-refuel",
+  "category": "inventory",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "42",
@@ -65,7 +66,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 30,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -327,7 +329,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "4dd6f214b89e88a472ea38193ff0ea7af90c525999446e2852f4eb50fac67bc8"
+      "stateHash": "b15893ca442834aa4771277c0e21a02e2d104f6339e2f68fd9634d946ebaf3bf"
     },
     "events": [
       {
@@ -351,6 +353,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "4dd6f214b89e88a472ea38193ff0ea7af90c525999446e2852f4eb50fac67bc8"
+    "saveRoundTripStateHash": "b15893ca442834aa4771277c0e21a02e2d104f6339e2f68fd9634d946ebaf3bf"
   }
 }

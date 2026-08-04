@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "monster-casting.status.numbing-grasp",
+  "category": "monsters",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "4",
@@ -62,7 +63,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerStatuses": [
@@ -351,7 +353,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "b27a1af7030f9632ab1d6de6f5c8f6dc4fdaf103a95323b9b5c846673a52e25c"
+      "stateHash": "515446bddfdc2775d247df4efdb3d75d08c73efe822cff3ec7b8feaa3e2eadc5"
     },
     "events": [
       {
@@ -555,6 +557,6 @@
         "y": 3
       }
     ],
-    "saveRoundTripStateHash": "b27a1af7030f9632ab1d6de6f5c8f6dc4fdaf103a95323b9b5c846673a52e25c"
+    "saveRoundTripStateHash": "515446bddfdc2775d247df4efdb3d75d08c73efe822cff3ec7b8feaa3e2eadc5"
   }
 }

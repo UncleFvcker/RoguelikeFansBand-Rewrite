@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "progression.legacy-save-migration",
+  "category": "progression",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "42",
@@ -28,7 +29,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -279,8 +281,8 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "bb69fa000069256294ee2b3d14c4d34d37712a2ad2fe6d43544450916310201a"
+      "stateHash": "4df352fab92907d804d30f4b82fd8ccfece48dc2c6dbb6deb6231d0839d1a34c"
     },
-    "saveRoundTripStateHash": "bb69fa000069256294ee2b3d14c4d34d37712a2ad2fe6d43544450916310201a"
+    "saveRoundTripStateHash": "4df352fab92907d804d30f4b82fd8ccfece48dc2c6dbb6deb6231d0839d1a34c"
   }
 }

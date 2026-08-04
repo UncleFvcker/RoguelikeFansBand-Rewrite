@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "dungeon.regional-group-feature-seed-73",
+  "category": "dungeon",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "73",
@@ -96,7 +97,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9979,
       "playerLevel": 1,
@@ -406,7 +408,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "5fb39ad672a4baaca2571b80948c6bfe2026d90b4470717068f61516d7cb30fe"
+      "stateHash": "c28e47ad3511e4743a23fd7152e4897de8fe48225c3c2272a5e9c8b133dfa40d"
     },
     "events": [
       {
@@ -10222,6 +10224,6 @@
         "y": 19
       }
     ],
-    "saveRoundTripStateHash": "5fb39ad672a4baaca2571b80948c6bfe2026d90b4470717068f61516d7cb30fe"
+    "saveRoundTripStateHash": "c28e47ad3511e4743a23fd7152e4897de8fe48225c3c2272a5e9c8b133dfa40d"
   }
 }

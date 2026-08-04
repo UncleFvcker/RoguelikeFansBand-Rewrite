@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "ability.missing-progress-field-migrates-to-defaults",
+  "category": "abilities",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -38,7 +39,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 110,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 800,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -3170,8 +3172,8 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "2a5b541dc677eca5fe01d9a4b39c6b8ce687ecdb5b7f0510993745fe8f4b5d29"
+      "stateHash": "3dd09433f6bafc35268662c1ce2cd0ce1830d20c7ec1c879dc27ebbc0a9db2e0"
     },
-    "saveRoundTripStateHash": "2a5b541dc677eca5fe01d9a4b39c6b8ce687ecdb5b7f0510993745fe8f4b5d29"
+    "saveRoundTripStateHash": "3dd09433f6bafc35268662c1ce2cd0ce1830d20c7ec1c879dc27ebbc0a9db2e0"
   }
 }

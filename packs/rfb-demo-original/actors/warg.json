@@ -6,14 +6,14 @@
   "nameKey": "actor-demo-warg-name",
   "descriptionKey": "actor-demo-warg-description",
   "glyph": "C",
-  "level": 5,
-  "experienceValue": 30,
-  "maxHp": 9,
+  "level": 14,
+  "experienceValue": 40,
+  "maxHp": 36,
   "speed": 120,
-  "attack": 2,
+  "attack": 3,
   "defense": 2,
   "damageDice": 1,
-  "damageSides": 3,
+  "damageSides": 10,
   "damageType": "physical",
   "remains": {
     "chanceDenominator": 3,
@@ -22,5 +22,5 @@
     "corpseWeight": 4,
     "skeletonWeight": 1
   },
-  "tags": ["animal", "beast", "warrens"]
+  "tags": ["animal", "beast", "evil", "pest-control", "warrens"]
 }

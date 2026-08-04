@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "resource.rest-enemy-interrupt",
+  "category": "resources",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -51,7 +52,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 110,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 800,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -3183,7 +3185,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "3affcb9d7896df641e0f927bbcbf235a645afed274936c86774ca1446eeb335f"
+      "stateHash": "2d7de2cae8272917503772330e265050f8a0dd9e4eaf09b368e236a590268e91"
     },
     "events": [
       {
@@ -3204,6 +3206,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "3affcb9d7896df641e0f927bbcbf235a645afed274936c86774ca1446eeb335f"
+    "saveRoundTripStateHash": "2d7de2cae8272917503772330e265050f8a0dd9e4eaf09b368e236a590268e91"
   }
 }

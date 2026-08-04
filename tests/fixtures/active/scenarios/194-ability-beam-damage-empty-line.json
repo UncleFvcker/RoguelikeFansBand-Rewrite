@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "ability.beam-damage-empty-line",
+  "category": "abilities",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -74,7 +75,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 110,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 800,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -3178,7 +3180,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "aa843643e5489d28e8e26a825af08a310c59f8b4358c72560c8d84613051aa30"
+      "stateHash": "fbdfe41dad932d756077311251e8ea72942c0f391b9beeaaaffe2122173b0ea4"
     },
     "events": [
       {
@@ -3282,6 +3284,6 @@
         "y": 3
       }
     ],
-    "saveRoundTripStateHash": "aa843643e5489d28e8e26a825af08a310c59f8b4358c72560c8d84613051aa30"
+    "saveRoundTripStateHash": "fbdfe41dad932d756077311251e8ea72942c0f391b9beeaaaffe2122173b0ea4"
   }
 }

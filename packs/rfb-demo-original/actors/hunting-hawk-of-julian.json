@@ -1,0 +1,31 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "formatVersion": 1,
+  "id": "demo.actor.hunting-hawk-of-julian",
+  "role": "monster",
+  "nameKey": "actor-demo-hunting-hawk-of-julian-name",
+  "descriptionKey": "actor-demo-hunting-hawk-of-julian-description",
+  "glyph": "B",
+  "level": 8,
+  "experienceValue": 22,
+  "maxHp": 36,
+  "speed": 120,
+  "attack": 2,
+  "defense": 2,
+  "damageDice": 1,
+  "damageSides": 3,
+  "damageType": "physical",
+  "meleeRoutine": {
+    "blows": [
+      { "methodId": "rfb.blow.claw", "toHit": 20, "damageDice": 1, "damageSides": 3 },
+      { "methodId": "rfb.blow.claw", "toHit": 20, "damageDice": 1, "damageSides": 4 },
+      { "methodId": "rfb.blow.bite", "toHit": 20, "damageDice": 1, "damageSides": 5 }
+    ]
+  },
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1
+  },
+  "tags": ["animal", "bird", "flying", "warrens"]
+}

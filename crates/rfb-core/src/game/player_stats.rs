@@ -519,6 +519,17 @@ impl Game {
             })
     }
 
+    pub(super) fn player_carry_capacity_tenths_pound(&self) -> u32 {
+        crate::stats::carry_capacity_tenths_pound(self.effective_player_attributes().strength)
+    }
+
+    pub(super) fn player_encumbrance_speed_penalty(&self) -> i32 {
+        crate::stats::encumbrance_speed_penalty(
+            self.carried_weight_tenths_pound(),
+            self.player_carry_capacity_tenths_pound(),
+        )
+    }
+
     pub(super) fn item_throw_profile(&self, item: &ItemInstance) -> Option<ThrowProfileDto> {
         let definition = self.content.item(&item.kind_id)?;
         definition
@@ -1107,6 +1118,16 @@ impl Game {
                             .saturating_add(i32::from(item.enchantments.to_hit)),
                     );
                 }
+            }
+
+            let encumbrance_penalty = self.player_encumbrance_speed_penalty();
+            if encumbrance_penalty > 0 {
+                pipeline.add(
+                    StatKind::Speed,
+                    StatLayer::Environment,
+                    "rfb.encumbrance",
+                    encumbrance_penalty.saturating_neg(),
+                );
             }
         }
 

@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "affix.dynamic-regeneration-roundtrip",
+  "category": "equipment",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -130,7 +131,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 25,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9989,
       "playerLevel": 1,
@@ -461,7 +463,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "3424eb326b82aae72ffd4ccf70e9ead306a2b1774a8406500696c509d94f80ba"
+      "stateHash": "7c30a61c6ee389c2b83f477af7b0be6fcf095929214c0e37744cc35c236dc723"
     },
     "events": [
       {
@@ -625,6 +627,6 @@
     "removedEntities": [
       "demo.monster.ember-mote.1"
     ],
-    "saveRoundTripStateHash": "3424eb326b82aae72ffd4ccf70e9ead306a2b1774a8406500696c509d94f80ba"
+    "saveRoundTripStateHash": "7c30a61c6ee389c2b83f477af7b0be6fcf095929214c0e37744cc35c236dc723"
   }
 }

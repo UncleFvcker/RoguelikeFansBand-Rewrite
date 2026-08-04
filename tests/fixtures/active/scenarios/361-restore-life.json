@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "death.restore-life-historical-experience",
+  "category": "magic-realms",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -55,7 +56,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 110,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 800,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 42,
@@ -3159,7 +3161,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "4175694d06c0b34eab1f60c7559eef081879a4c613c015e2eeb4d4e39a0bb830"
+      "stateHash": "515deb9cdb4587bc85403389f7dd0e006f8ea009b161970cb003d3dd077bd76d"
     },
     "events": [
       {
@@ -3214,6 +3216,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "4175694d06c0b34eab1f60c7559eef081879a4c613c015e2eeb4d4e39a0bb830"
+    "saveRoundTripStateHash": "515deb9cdb4587bc85403389f7dd0e006f8ea009b161970cb003d3dd077bd76d"
   }
 }

@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "resource.rest-damage-interrupt",
+  "category": "resources",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -81,7 +82,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 110,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 800,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -3185,7 +3187,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "1959d33da33116dbc94c32b4cd0a5aadc17f97898d81645573bf07948d6873e2"
+      "stateHash": "31a3e5a49de04ffd0c94512d373fef1df8808d49d7426b943639e34104e0a14a"
     },
     "events": [
       {
@@ -3232,6 +3234,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "1959d33da33116dbc94c32b4cd0a5aadc17f97898d81645573bf07948d6873e2"
+    "saveRoundTripStateHash": "31a3e5a49de04ffd0c94512d373fef1df8808d49d7426b943639e34104e0a14a"
   }
 }

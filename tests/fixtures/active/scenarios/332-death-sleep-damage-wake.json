@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "death.sleep-damage-wakes-target",
+  "category": "magic-realms",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -85,7 +86,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -336,7 +338,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "e81e9d6f77e3d41a22103289b23ce33400209a6f055ba0daaad7542d5975108c"
+      "stateHash": "6cc7676e43128a293b000b79034838274890e6d334a6209ee3a3dea8b08580d4"
     },
     "events": [
       {
@@ -391,6 +393,6 @@
         "y": 3
       }
     ],
-    "saveRoundTripStateHash": "e81e9d6f77e3d41a22103289b23ce33400209a6f055ba0daaad7542d5975108c"
+    "saveRoundTripStateHash": "6cc7676e43128a293b000b79034838274890e6d334a6209ee3a3dea8b08580d4"
   }
 }

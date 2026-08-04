@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "ability.forget-relearn-preserves-progress",
+  "category": "abilities",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -71,7 +72,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 110,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 800,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -3175,7 +3177,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "64209b918a6ade0d86d4009a420557236fb6107233127990aa8a016ab2364106"
+      "stateHash": "d3c1618ea9a50bccf09b20ef022576ba607b20d073bffedaf1bacc4b1f4888ad"
     },
     "events": [
       {
@@ -3210,6 +3212,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "64209b918a6ade0d86d4009a420557236fb6107233127990aa8a016ab2364106"
+    "saveRoundTripStateHash": "d3c1618ea9a50bccf09b20ef022576ba607b20d073bffedaf1bacc4b1f4888ad"
   }
 }

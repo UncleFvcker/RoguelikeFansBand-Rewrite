@@ -22,4 +22,9 @@ fn committed_active_baseline_policy_is_valid() {
     let report = validate_policy_file(&policy).expect("active baseline policy should validate");
     assert_eq!(report.baseline, ACTIVE_BASELINE);
     assert_eq!(report.waiver_count, 0);
+    assert_eq!(
+        report.category_counts.values().sum::<usize>(),
+        report.fixture_count
+    );
+    assert!(report.category_counts.values().all(|count| *count > 0));
 }

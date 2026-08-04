@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "item.scroll-mass-genocide",
+  "category": "scrolls",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "97",
@@ -117,7 +118,8 @@
       "playerSpeed": 199,
       "playerEnergyNeed": -47,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerStatuses": [
@@ -396,7 +398,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "d6a872cd2c218dcac6094172586d6a818c2b9c507d108895ddcc6c6dda80aa84"
+      "stateHash": "36e4631306fc691592d590e8f21845e3b86f02ea2ad0b47eeb7add8579b6177c"
     },
     "events": [
       {

@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "id": "item.potion-attribute-increase",
+  "category": "potions",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "97",
@@ -90,7 +91,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 444,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1950,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -495,7 +497,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "e18a697f7fc962c9ee6483078253f384b8f8d21e6b9669c5dcbe21ed22a76fb9"
+      "stateHash": "f833e03c6d54129ee81802c6f48b8ca71f59b01d016eb9cf5cee97d46ad394d7"
     },
     "events": [
       {

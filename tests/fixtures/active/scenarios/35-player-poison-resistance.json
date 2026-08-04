@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "status.player.poison-resistance",
+  "category": "combat",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0x000000000000002a",
@@ -78,7 +79,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerResistances": [
@@ -335,7 +337,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "56bb97d6b37ba5506a1acea1ea04e1812668ad325ae244a3bda450aedbae5cf3"
+      "stateHash": "b40ac2b4a5666cab8e84545ec1846048a79af03f8f0c820995ad11d795033ed8"
     },
     "events": [
       {
@@ -418,6 +420,6 @@
         "y": 5
       }
     ],
-    "saveRoundTripStateHash": "56bb97d6b37ba5506a1acea1ea04e1812668ad325ae244a3bda450aedbae5cf3"
+    "saveRoundTripStateHash": "b40ac2b4a5666cab8e84545ec1846048a79af03f8f0c820995ad11d795033ed8"
   }
 }

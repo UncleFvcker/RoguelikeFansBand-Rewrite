@@ -41,6 +41,7 @@ test("Fluent formats locale-specific grammar and plural selection", () => {
       slotCapacity: 26,
       weight: "9.7",
       capacity: "10.0",
+      encumbrance: "",
     }),
     "2 stacks · 2 / 26 slots · 9.7 / 10.0 lb",
   );
@@ -79,8 +80,13 @@ test("Fluent formats locale-specific grammar and plural selection", () => {
       slotCapacity: 26,
       weight: "9.7",
       capacity: "10.0",
+      encumbrance: "",
     }),
     "2 堆 · 背包槽位 2 / 26 · 9.7 / 10.0 磅",
+  );
+  assert.equal(
+    localization.format("inventory-encumbrance-penalty", { penalty: 2 }),
+    "· 超重：速度 -2",
   );
   assert.equal(
     localization.format("ability-resource-value", {

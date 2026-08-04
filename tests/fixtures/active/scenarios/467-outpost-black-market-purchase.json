@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "id": "town.outpost-black-market-purchase",
+  "category": "town",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "42",
@@ -287,6 +288,7 @@
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 729,
       "playerCarryCapacityTenthsPound": 1200,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 958000,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -855,7 +857,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "7e982ad36653f2d26d3e52856947204b00a46e32f88f08b189b7a1b54fb17c0b"
+      "stateHash": "18b180335658b07edf0a4d22b05e10352a1caa7ec81ba975ba8d6de62f7408fb"
     },
     "events": [
       {

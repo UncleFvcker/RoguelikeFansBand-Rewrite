@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "monster.resistance-memory-immune",
+  "category": "monsters",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -63,7 +64,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -358,7 +360,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "75c170b7a6df5730e403c66d9fa6a5cd2ae8548abf0ae631be032bddfdf6e105"
+      "stateHash": "92e6d649bfdf2cc30e9d96838fab467eecfd28fa312d56b85408e545be29539d"
     },
     "events": [
       {
@@ -566,6 +568,6 @@
         "y": 3
       }
     ],
-    "saveRoundTripStateHash": "75c170b7a6df5730e403c66d9fa6a5cd2ae8548abf0ae631be032bddfdf6e105"
+    "saveRoundTripStateHash": "92e6d649bfdf2cc30e9d96838fab467eecfd28fa312d56b85408e545be29539d"
   }
 }

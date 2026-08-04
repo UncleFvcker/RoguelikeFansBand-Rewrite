@@ -130,6 +130,22 @@ export class InventoryPanel {
     const stacks = this.#localization.format("inventory-stack-count", {
       count: inventory.length,
     });
+    const encumbrance = this.#state.status
+      ? this.#state.status.player.encumbranceSpeedPenalty > 0
+        ? this.#localization.format("inventory-encumbrance-penalty", {
+            penalty: this.#state.status.player.encumbranceSpeedPenalty,
+          })
+        : ""
+      : "";
+    this.#dom.inventoryCount.dataset.overburdened = String(
+      Boolean(
+        this.#state.status &&
+          this.#state.status.player.carriedWeightTenthsPound >
+            this.#state.status.player.carryCapacityTenthsPound,
+      ),
+    );
+    this.#dom.inventoryCount.style.color =
+      this.#dom.inventoryCount.dataset.overburdened === "true" ? "#f87171" : "";
     this.#dom.inventoryCount.textContent = this.#state.status
       ? this.#localization.format("inventory-weight-summary", {
           stacks,
@@ -137,6 +153,7 @@ export class InventoryPanel {
           slotCapacity: this.#state.status.player.inventorySlotCapacity,
           weight: formatTenthsPound(this.#state.status.player.carriedWeightTenthsPound),
           capacity: formatTenthsPound(this.#state.status.player.carryCapacityTenthsPound),
+          encumbrance,
         })
       : stacks;
     this.#renderInventoryItems(inventory);

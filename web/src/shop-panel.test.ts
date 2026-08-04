@@ -58,7 +58,6 @@ test("shop rejection reasons and equipped light summaries are localized", () => 
   );
 
   localization.setLocale("zh-CN");
-  assert.equal(shopTransactionReason("over-capacity", localization), "购买后会超过负重上限。");
   assert.equal(equippedLightText([], localization, () => "?"), "未装备");
   localization.setLocale("en-US");
 });

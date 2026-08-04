@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "technique.tempo-cap-clamp",
+  "category": "techniques",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -58,7 +59,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 30,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1100,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -476,7 +478,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "f56152a6c2d17f1619ef0bba7f434a816f41666b62b64c7999d4d6d6fe9cd002"
+      "stateHash": "7e455c475c543aa77627d8c8983ad9c472c3272518d7f5b4f25fb7faddcbe164"
     },
     "events": [
       {
@@ -543,6 +545,6 @@
         "y": 3
       }
     ],
-    "saveRoundTripStateHash": "f56152a6c2d17f1619ef0bba7f434a816f41666b62b64c7999d4d6d6fe9cd002"
+    "saveRoundTripStateHash": "7e455c475c543aa77627d8c8983ad9c472c3272518d7f5b4f25fb7faddcbe164"
   }
 }

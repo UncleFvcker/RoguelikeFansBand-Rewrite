@@ -61,14 +61,12 @@ pub(super) fn validate_actors(
             return Err(ContentError::InvalidActorStats(actor.id.clone()));
         }
         if (actor.role == ActorRole::Player
-            && (actor.carry_capacity_tenths_pound == 0
-                || actor.carry_capacity_tenths_pound > 1_000_000
-                || actor.inventory_slot_capacity == 0
-                || actor.inventory_slot_capacity > 1_000))
-            || (actor.role == ActorRole::Monster
-                && (actor.carry_capacity_tenths_pound != 0 || actor.inventory_slot_capacity != 0))
+            && (actor.inventory_slot_capacity == 0 || actor.inventory_slot_capacity > 1_000))
+            || (actor.role == ActorRole::Monster && actor.inventory_slot_capacity != 0)
         {
-            return Err(ContentError::InvalidActorCarryCapacity(actor.id.clone()));
+            return Err(ContentError::InvalidActorInventoryCapacity(
+                actor.id.clone(),
+            ));
         }
         if actor.awareness.as_ref().is_some_and(|awareness| {
             actor.role != ActorRole::Monster

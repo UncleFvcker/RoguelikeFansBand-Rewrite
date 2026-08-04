@@ -112,6 +112,26 @@ pub const fn stat_index(value: u16) -> u8 {
     }
 }
 
+const ORIGINAL_STRENGTH_CARRY_CAPACITY_DECA_POUNDS: [u16; 38] = [
+    10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 31, 32,
+    32, 33, 33, 34, 34, 35, 35, 36, 36, 37, 37, 38, 38, 39,
+];
+
+#[must_use]
+pub fn carry_capacity_tenths_pound(strength: u16) -> u32 {
+    let index = stat_index(strength).min(PRE_VICTORY_ATTRIBUTE_INDEX_CAP);
+    u32::from(ORIGINAL_STRENGTH_CARRY_CAPACITY_DECA_POUNDS[index as usize]) * 50
+}
+
+#[must_use]
+pub fn encumbrance_speed_penalty(weight: u32, capacity: u32) -> i32 {
+    if weight <= capacity || capacity < 5 {
+        return 0;
+    }
+    let penalty = (weight - capacity) / (capacity / 5);
+    i32::try_from(penalty).unwrap_or(i32::MAX)
+}
+
 #[must_use]
 pub fn modify_attribute_value(value: u16, modifier: i32, cap: u16) -> u16 {
     let mut value = value.clamp(3, cap);
@@ -799,6 +819,27 @@ mod tests {
             modify_attribute_value(VICTORY_ATTRIBUTE_CAP, -60, VICTORY_ATTRIBUTE_CAP),
             PRE_VICTORY_ATTRIBUTE_CAP
         );
+    }
+
+    #[test]
+    fn carrying_capacity_uses_the_original_strength_table_and_caps_at_195_pounds() {
+        assert_eq!(carry_capacity_tenths_pound(3), 500);
+        assert_eq!(carry_capacity_tenths_pound(13), 1_000);
+        assert_eq!(carry_capacity_tenths_pound(17), 1_200);
+        assert_eq!(carry_capacity_tenths_pound(18), 1_250);
+        assert_eq!(
+            carry_capacity_tenths_pound(PRE_VICTORY_ATTRIBUTE_CAP),
+            1_950
+        );
+        assert_eq!(carry_capacity_tenths_pound(VICTORY_ATTRIBUTE_CAP), 1_950);
+    }
+
+    #[test]
+    fn encumbrance_penalty_starts_at_twenty_percent_over_capacity() {
+        assert_eq!(encumbrance_speed_penalty(1_000, 1_000), 0);
+        assert_eq!(encumbrance_speed_penalty(1_199, 1_000), 0);
+        assert_eq!(encumbrance_speed_penalty(1_200, 1_000), 1);
+        assert_eq!(encumbrance_speed_penalty(1_400, 1_000), 2);
     }
 
     #[test]

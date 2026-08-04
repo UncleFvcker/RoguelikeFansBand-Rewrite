@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "resource.rest-turn-limit",
+  "category": "abilities",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -44,7 +45,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 110,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 800,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -3148,7 +3150,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "fd186dba7da52121a0be5a98afabdc5415f298520d9264bc045ca48b71883bc4"
+      "stateHash": "deb4bab41d85210946db8e7645bdcdba7707939f21ffbe586933b9f06347a4b5"
     },
     "events": [
       {
@@ -3176,6 +3178,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "fd186dba7da52121a0be5a98afabdc5415f298520d9264bc045ca48b71883bc4"
+    "saveRoundTripStateHash": "deb4bab41d85210946db8e7645bdcdba7707939f21ffbe586933b9f06347a4b5"
   }
 }

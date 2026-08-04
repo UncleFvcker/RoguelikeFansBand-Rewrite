@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "ability.summon.space-rejection",
+  "category": "abilities",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -199,7 +200,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 110,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 800,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -3290,7 +3292,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "109c7395497a0c5e992fae5295ade11a43a8128330ebd21a967ebbc8ec34008a"
+      "stateHash": "a36555135543682da66629fd7b9a157060ed2e7319bca8922d7bd6365416f391"
     },
     "events": [
       {
@@ -3301,6 +3303,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "109c7395497a0c5e992fae5295ade11a43a8128330ebd21a967ebbc8ec34008a"
+    "saveRoundTripStateHash": "a36555135543682da66629fd7b9a157060ed2e7319bca8922d7bd6365416f391"
   }
 }

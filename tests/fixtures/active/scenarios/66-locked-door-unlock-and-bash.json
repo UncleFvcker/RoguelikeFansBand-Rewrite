@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "terrain.locked-door-deterministic-bash",
+  "category": "dungeon",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "27",
@@ -83,7 +84,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9989,
       "playerLevel": 1,
@@ -339,7 +341,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "a7be3a525fcce6ee57e219f895c3889d9cb94d8e3724741489c1ee6378089b32"
+      "stateHash": "8b347794bd6d6007b77f85c0ebd0fb40ef1b8e29e5ef1165f77fef20ac246983"
     },
     "events": [
       {
@@ -2016,6 +2018,6 @@
         "y": 4
       }
     ],
-    "saveRoundTripStateHash": "a7be3a525fcce6ee57e219f895c3889d9cb94d8e3724741489c1ee6378089b32"
+    "saveRoundTripStateHash": "8b347794bd6d6007b77f85c0ebd0fb40ef1b8e29e5ef1165f77fef20ac246983"
   }
 }

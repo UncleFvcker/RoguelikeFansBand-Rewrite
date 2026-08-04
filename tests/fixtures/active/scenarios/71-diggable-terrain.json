@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "terrain.dig-repeat-and-transform",
+  "category": "dungeon",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "27",
@@ -41,7 +42,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -292,7 +294,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "250bafebc3570386551f4a5b97910230e3887fba4e4247e8619e50d6c92bc5ec"
+      "stateHash": "62eaed9d416d66a8f23635f973fe22e1df5314c25f1d497cf8ac44c32e0d120a"
     },
     "events": [
       {
@@ -324,6 +326,6 @@
         "y": 4
       }
     ],
-    "saveRoundTripStateHash": "250bafebc3570386551f4a5b97910230e3887fba4e4247e8619e50d6c92bc5ec"
+    "saveRoundTripStateHash": "62eaed9d416d66a8f23635f973fe22e1df5314c25f1d497cf8ac44c32e0d120a"
   }
 }

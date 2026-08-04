@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "id": "food.warrior-birth-ration",
+  "category": "inventory",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "42",
@@ -250,6 +251,7 @@
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 704,
       "playerCarryCapacityTenthsPound": 1200,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 346,
       "playerNutrition": 14999,
       "playerLevel": 1,
@@ -787,7 +789,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "433b220ec3db8e0c152e5b827e23f254de94cd2b3dacc89c77903e1bfaf0ac3e"
+      "stateHash": "6ef7aa93f72b2c65710604762c06fb99d9c01e3a9bfa475c97735143c1ac02ad"
     },
     "events": [
       {
@@ -810,6 +812,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "433b220ec3db8e0c152e5b827e23f254de94cd2b3dacc89c77903e1bfaf0ac3e"
+    "saveRoundTripStateHash": "6ef7aa93f72b2c65710604762c06fb99d9c01e3a9bfa475c97735143c1ac02ad"
   }
 }

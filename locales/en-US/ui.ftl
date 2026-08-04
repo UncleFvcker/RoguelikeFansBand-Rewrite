@@ -253,7 +253,8 @@ inventory-stack-count =
         [one] 1 stack
        *[other] { $count } stacks
     }
-inventory-weight-summary = { $stacks } · { $usedSlots } / { $slotCapacity } slots · { $weight } / { $capacity } lb
+inventory-weight-summary = { $stacks } · { $usedSlots } / { $slotCapacity } slots · { $weight } / { $capacity } lb{ $encumbrance }
+inventory-encumbrance-penalty =  · Overburdened: Speed -{ $penalty }
 inventory-empty = Your inventory is empty. Stand on an item and press G to pick it up.
 inventory-quantity = ×{ $quantity }
 inventory-charges = Charges: { $current }/{ $maximum }
@@ -504,7 +505,6 @@ shop-transaction-reason-item-unavailable = That item is no longer available.
 shop-transaction-reason-insufficient-stock = The shop does not have that many.
 shop-transaction-reason-insufficient-quantity = You do not own that many.
 shop-transaction-reason-insufficient-gold = Not enough gold.
-shop-transaction-reason-over-capacity = The purchase would exceed your carrying capacity.
 shop-transaction-reason-inventory-full = The purchase needs more pack slots than you have available.
 shop-transaction-reason-item-illegal = This general store will not buy that item.
 shop-transaction-reason-price-overflow = The price cannot be represented safely.

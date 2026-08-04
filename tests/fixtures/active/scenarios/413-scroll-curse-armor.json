@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "item.scroll-curse-armor",
+  "category": "scrolls",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "89",
@@ -58,7 +59,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 564,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1250,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -485,7 +487,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "c29d9840ea5f518f7fc2b647c488f6f7a6befbfc1365e7d19fc758fff827bf3d"
+      "stateHash": "337130d4175445802865623bf0bbff4ff5170c921512f11be025b89b2651043a"
     },
     "events": [
       {
@@ -515,6 +517,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "c29d9840ea5f518f7fc2b647c488f6f7a6befbfc1365e7d19fc758fff827bf3d"
+    "saveRoundTripStateHash": "337130d4175445802865623bf0bbff4ff5170c921512f11be025b89b2651043a"
   }
 }

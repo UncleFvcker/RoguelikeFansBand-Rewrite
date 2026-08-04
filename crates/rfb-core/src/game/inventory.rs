@@ -178,13 +178,6 @@ pub(super) enum PickUpOutcome {
         kind_id: String,
         quantity: u32,
     },
-    OverCapacity {
-        kind_id: String,
-        quantity: u32,
-        current_weight: u32,
-        pickup_weight: u32,
-        capacity: u32,
-    },
     InventoryFull {
         kind_id: String,
         quantity: u32,
@@ -228,13 +221,6 @@ struct PickUpCommitPlan {
 
 enum PickUpPlan {
     Picked(PickUpCommitPlan),
-    OverCapacity {
-        kind_id: String,
-        quantity: u32,
-        current_weight: u32,
-        pickup_weight: u32,
-        capacity: u32,
-    },
     InventoryFull {
         kind_id: String,
         quantity: u32,
@@ -438,8 +424,6 @@ fn plan_pick_up(
     items: &[ItemInstance],
     item_property_knowledge: &BTreeMap<String, ItemPropertyKnowledgeState>,
     player_position: Position,
-    player_kind_id: &str,
-    current_weight: u32,
     inventory_slot_capacity: u16,
 ) -> Result<PickUpPlan, CoreError> {
     let Some(ground_index) = items
@@ -458,20 +442,6 @@ fn plan_pick_up(
         .item(&kind_id)
         .ok_or_else(|| CoreError::UnknownItem(kind_id.clone()))?;
     let original_quantity = pickup_item.quantity;
-    let pickup_weight = u32::from(definition.weight_tenths_pound).saturating_mul(original_quantity);
-    let capacity = content
-        .actor(player_kind_id)
-        .expect("player actor definition must remain available")
-        .carry_capacity_tenths_pound;
-    if current_weight.saturating_add(pickup_weight) > capacity {
-        return Ok(PickUpPlan::OverCapacity {
-            kind_id,
-            quantity: original_quantity,
-            current_weight,
-            pickup_weight,
-            capacity,
-        });
-    }
 
     let used_slots = inventory_used_slots(items);
     let required_slots = additional_inventory_slots(
@@ -1199,25 +1169,10 @@ impl Game {
             &self.items,
             &self.item_property_knowledge,
             self.player.position,
-            &self.player.kind_id,
-            self.carried_weight_tenths_pound(),
             self.inventory_slot_capacity(),
         )?;
         match plan {
             PickUpPlan::Nothing => Ok(PickUpOutcome::Nothing),
-            PickUpPlan::OverCapacity {
-                kind_id,
-                quantity,
-                current_weight,
-                pickup_weight,
-                capacity,
-            } => Ok(PickUpOutcome::OverCapacity {
-                kind_id,
-                quantity,
-                current_weight,
-                pickup_weight,
-                capacity,
-            }),
             PickUpPlan::InventoryFull {
                 kind_id,
                 quantity,

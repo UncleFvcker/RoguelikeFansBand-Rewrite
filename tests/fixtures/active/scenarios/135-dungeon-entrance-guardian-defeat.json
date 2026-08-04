@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "dungeon.entrance-guardian-defeat-persists",
+  "category": "dungeon",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "42",
@@ -76,7 +77,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 8,
@@ -311,7 +313,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "17086382cc281e0af778a27e84fa1b7415842968898fa2c931ba09a4e206741b"
+      "stateHash": "4de7dea8a8c9ac23058d07977a762921f7404dabdf76bf63ac359a8597d95021"
     },
     "events": [
       {
@@ -472,6 +474,6 @@
     "removedEntities": [
       "demo.z-entrance-guardian.resonance-descent.1"
     ],
-    "saveRoundTripStateHash": "17086382cc281e0af778a27e84fa1b7415842968898fa2c931ba09a4e206741b"
+    "saveRoundTripStateHash": "4de7dea8a8c9ac23058d07977a762921f7404dabdf76bf63ac359a8597d95021"
   }
 }

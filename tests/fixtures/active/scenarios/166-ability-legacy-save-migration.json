@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "ability.legacy-save-migration",
+  "category": "abilities",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -29,7 +30,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 110,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 800,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -3161,8 +3163,8 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "ed63037ac39f7202cf69601f0f8786f00f7fb4a53aacf14de34df5be780ca0cd"
+      "stateHash": "ffdce7e3f05ede6d27cf10f0fb5aa0acd3a4e0c6b08ed7335ece37db29acbb54"
     },
-    "saveRoundTripStateHash": "ed63037ac39f7202cf69601f0f8786f00f7fb4a53aacf14de34df5be780ca0cd"
+    "saveRoundTripStateHash": "ffdce7e3f05ede6d27cf10f0fb5aa0acd3a4e0c6b08ed7335ece37db29acbb54"
   }
 }

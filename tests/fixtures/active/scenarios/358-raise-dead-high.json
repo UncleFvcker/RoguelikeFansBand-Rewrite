@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "death.raise-dead-high-undead-pool",
+  "category": "magic-realms",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "7",
@@ -63,7 +64,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 110,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 800,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 48,
@@ -3209,7 +3211,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "054a30f5d9fd37532020c77ccb39e2eb460630b0e9ef86c93ed3b27bfc70a6b2"
+      "stateHash": "3b704565927e8ad6804f92d5da68886f128cc30dbb5321e5461471a012b63a5a"
     },
     "events": [
       {
@@ -3391,6 +3393,6 @@
         "y": 2
       }
     ],
-    "saveRoundTripStateHash": "054a30f5d9fd37532020c77ccb39e2eb460630b0e9ef86c93ed3b27bfc70a6b2"
+    "saveRoundTripStateHash": "3b704565927e8ad6804f92d5da68886f128cc30dbb5321e5461471a012b63a5a"
   }
 }

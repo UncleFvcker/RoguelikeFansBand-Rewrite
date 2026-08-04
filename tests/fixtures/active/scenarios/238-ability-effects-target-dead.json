@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "ability.effects.target-dead",
+  "category": "abilities",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -60,7 +61,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 110,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 800,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 2,
@@ -3182,7 +3184,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "1729d871bf322e729ca86dbe72e4b7e64a39d2ed6f04a26ee1bd261ac878917f"
+      "stateHash": "a3c0255d8ec5b5277e38f079fe6b023dffa5a8a177dd8211c6fe8fd4d351d0b5"
     },
     "events": [
       {
@@ -3439,6 +3441,6 @@
     "removedEntities": [
       "demo.monster.ember-mote.1"
     ],
-    "saveRoundTripStateHash": "1729d871bf322e729ca86dbe72e4b7e64a39d2ed6f04a26ee1bd261ac878917f"
+    "saveRoundTripStateHash": "a3c0255d8ec5b5277e38f079fe6b023dffa5a8a177dd8211c6fe8fd4d351d0b5"
   }
 }

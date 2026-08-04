@@ -7,14 +7,25 @@
   "descriptionKey": "actor-demo-warrens-keeper-description",
   "glyph": "k",
   "level": 7,
-  "experienceValue": 250,
-  "maxHp": 24,
+  "experienceValue": 100,
+  "maxHp": 150,
   "speed": 110,
-  "attack": 3,
-  "defense": 3,
+  "attack": 1,
+  "defense": 2,
   "damageDice": 1,
-  "damageSides": 4,
+  "damageSides": 10,
   "damageType": "physical",
+  "resistances": {
+    "poison": "resistant"
+  },
+  "meleeRoutine": {
+    "blows": [
+      { "methodId": "rfb.blow.hit", "toHit": 20, "damageDice": 1, "damageSides": 10 },
+      { "methodId": "rfb.blow.hit", "toHit": 20, "damageDice": 1, "damageSides": 10 },
+      { "methodId": "rfb.blow.hit", "toHit": 20, "damageDice": 1, "damageSides": 10 },
+      { "methodId": "rfb.blow.hit", "toHit": 20, "damageDice": 1, "damageSides": 10 }
+    ]
+  },
   "lootTableId": "demo.loot-table.warrens-keeper",
   "remains": {
     "chanceDenominator": 3,
@@ -23,5 +34,5 @@
     "corpseWeight": 4,
     "skeletonWeight": 1
   },
-  "tags": ["guardian", "humanoid", "kobold", "warrens"]
+  "tags": ["evil", "guardian", "humanoid", "kobold", "unique", "warrens"]
 }

@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "dungeon.vault-candidates-fall-back-outside-depth",
+  "category": "dungeon",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "48",
@@ -63,7 +64,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9989,
       "playerLevel": 1,
@@ -299,7 +301,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "45f47363ccb8112c31828c52fa12ceab2349d972386356630678b37bc9c9b081"
+      "stateHash": "40c715896f69a3914bd4b02aef69a8a6ca9ec96753ce101005d1e34ec2c9abb3"
     },
     "events": [
       {
@@ -5218,6 +5220,6 @@
         "y": 19
       }
     ],
-    "saveRoundTripStateHash": "45f47363ccb8112c31828c52fa12ceab2349d972386356630678b37bc9c9b081"
+    "saveRoundTripStateHash": "40c715896f69a3914bd4b02aef69a8a6ca9ec96753ce101005d1e34ec2c9abb3"
   }
 }

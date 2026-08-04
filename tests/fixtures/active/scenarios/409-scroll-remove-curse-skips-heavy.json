@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "item.scroll-remove-curse-skips-heavy",
+  "category": "scrolls",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "71",
@@ -58,7 +59,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 584,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1250,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -485,7 +487,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "236ca63f4bcf6328f589bf395ed6ccfc24e3f3f656991f40a1aa09bc135d1470"
+      "stateHash": "a5e9bfc1e5ff6b01728ad6eaac212fe37b87ad462126b9cd9ee449db0c8e7420"
     },
     "events": [
       {
@@ -514,6 +516,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "236ca63f4bcf6328f589bf395ed6ccfc24e3f3f656991f40a1aa09bc135d1470"
+    "saveRoundTripStateHash": "a5e9bfc1e5ff6b01728ad6eaac212fe37b87ad462126b9cd9ee449db0c8e7420"
   }
 }

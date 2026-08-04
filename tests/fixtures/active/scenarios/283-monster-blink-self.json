@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "monster.blink-self",
+  "category": "monsters",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "9",
@@ -50,7 +51,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -302,7 +304,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "eb26643993e02a5a45e7a80bc816c664a2eabfa7f68d51f4eb709805c7bee9f4"
+      "stateHash": "63f5f949a24b4acc0caafd88b98252db9d7cbd8f85e51f6a2711ad58e88dcfaf"
     },
     "events": [
       {
@@ -446,6 +448,6 @@
         "y": 3
       }
     ],
-    "saveRoundTripStateHash": "eb26643993e02a5a45e7a80bc816c664a2eabfa7f68d51f4eb709805c7bee9f4"
+    "saveRoundTripStateHash": "63f5f949a24b4acc0caafd88b98252db9d7cbd8f85e51f6a2711ad58e88dcfaf"
   }
 }

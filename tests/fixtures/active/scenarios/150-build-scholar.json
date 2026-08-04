@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "build.scholar.initial",
+  "category": "progression",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "43",
@@ -28,7 +29,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 110,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 800,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -3160,8 +3162,8 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "d6aa9fa31db63fbabdbd577e77946a5ef1e6223e5af8f30c81cbb973438bf536"
+      "stateHash": "7b493402c5d3adffb8c3e5416e16b8d7f5cfdc78ce17cfe521904d4f3e81c0e3"
     },
-    "saveRoundTripStateHash": "d6aa9fa31db63fbabdbd577e77946a5ef1e6223e5af8f30c81cbb973438bf536"
+    "saveRoundTripStateHash": "7b493402c5d3adffb8c3e5416e16b8d7f5cfdc78ce17cfe521904d4f3e81c0e3"
   }
 }

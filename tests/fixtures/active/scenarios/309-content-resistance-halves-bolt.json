@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "resistance.content-stamped-summon-halves-bolt",
+  "category": "monsters",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -70,7 +71,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 110,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 800,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -3218,7 +3220,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "125c16a980f086bc0cc391d688f76e5c9d4c20b106d38755a70569fcca41d79e"
+      "stateHash": "0d5d4040ecc0c4bc6baa409b56a04b460db8520e7b225a4ec37628ffa37c4535"
     },
     "events": [
       {
@@ -3402,6 +3404,6 @@
         "y": 2
       }
     ],
-    "saveRoundTripStateHash": "125c16a980f086bc0cc391d688f76e5c9d4c20b106d38755a70569fcca41d79e"
+    "saveRoundTripStateHash": "0d5d4040ecc0c4bc6baa409b56a04b460db8520e7b225a4ec37628ffa37c4535"
   }
 }

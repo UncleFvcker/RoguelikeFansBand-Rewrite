@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "task.counted-kill-reaches-required-and-completes",
+  "category": "tasks",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "27",
@@ -75,7 +76,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 10,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9989,
       "playerLevel": 2,
@@ -297,7 +299,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "2a61bfa816e73c88c0d65aafda1a86b94f24a7fb7d30a23587af5247e50dabde"
+      "stateHash": "d2a625cabab2f852d80211e25e167b328d500233c930d40238d04e7428cd14c0"
     },
     "events": [
       {
@@ -2209,9 +2211,9 @@
       {
         "step": 8,
         "kind": "player-dead",
-        "stateHash": "2a61bfa816e73c88c0d65aafda1a86b94f24a7fb7d30a23587af5247e50dabde"
+        "stateHash": "d2a625cabab2f852d80211e25e167b328d500233c930d40238d04e7428cd14c0"
       }
     ],
-    "saveRoundTripStateHash": "2a61bfa816e73c88c0d65aafda1a86b94f24a7fb7d30a23587af5247e50dabde"
+    "saveRoundTripStateHash": "d2a625cabab2f852d80211e25e167b328d500233c930d40238d04e7428cd14c0"
   }
 }

@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "dungeon.multi-entry-vault-transform-seed-266",
+  "category": "dungeon",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "266",
@@ -130,7 +131,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9969,
       "playerLevel": 1,
@@ -406,7 +408,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "e08da52935099301aa2c3e86c92eff9991829df63d631b1203b8466d70842eec"
+      "stateHash": "b550fc2aff960a562f3e2d663068b80196d21aa7ce80eee1975a2938c81c6d94"
     },
     "events": [
       {
@@ -11920,6 +11922,6 @@
         "y": 5
       }
     ],
-    "saveRoundTripStateHash": "e08da52935099301aa2c3e86c92eff9991829df63d631b1203b8466d70842eec"
+    "saveRoundTripStateHash": "b550fc2aff960a562f3e2d663068b80196d21aa7ce80eee1975a2938c81c6d94"
   }
 }

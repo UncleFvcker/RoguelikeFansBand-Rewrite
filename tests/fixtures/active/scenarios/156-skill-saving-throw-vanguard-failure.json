@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "skill.saving-throw.vanguard-failure",
+  "category": "progression",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "2",
@@ -44,7 +45,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 444,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1250,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -453,7 +455,7 @@
           "y": 3
         }
       ],
-      "stateHash": "abb6f7d782047c5b16a35a8db84bd04ce2091553ff24d2817e41ce732f5414e4"
+      "stateHash": "9d037803bb71ea0f81bdf1c7f7d6c96a8dacc22ec4f45f4eae4827ef2800daaa"
     },
     "events": [
       {

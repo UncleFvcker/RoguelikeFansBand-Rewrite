@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "combat.monster.retaliation-save-round-trip",
+  "category": "combat",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "42",
@@ -64,7 +65,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9989,
       "playerLevel": 2,
@@ -292,7 +294,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "f5efdab8f88d4469e9f99d49092b9a0b020c0b79eac018ae2d573c0558130af8"
+      "stateHash": "9a4b086342d22262dc8b0daf24849cc8507a537c4a84a425b83dc7fbaf24da21"
     },
     "events": [
       {
@@ -464,6 +466,6 @@
     "removedEntities": [
       "demo.monster.ember-mote.1"
     ],
-    "saveRoundTripStateHash": "f5efdab8f88d4469e9f99d49092b9a0b020c0b79eac018ae2d573c0558130af8"
+    "saveRoundTripStateHash": "9a4b086342d22262dc8b0daf24849cc8507a537c4a84a425b83dc7fbaf24da21"
   }
 }

@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "death.death-ray-nonliving-rejection",
+  "category": "magic-realms",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -91,7 +92,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 110,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 800,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 20,
@@ -3217,7 +3219,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "e1260d9b0f4b20a11ed11e1cde25047ef0a0568c51dd3dd1dbda6c0bb77158b3"
+      "stateHash": "353e43d5eca15e0bdc9e492e382726d02863e9f6e786de315abba4458110c805"
     },
     "events": [
       {
@@ -3321,6 +3323,6 @@
         "y": 15
       }
     ],
-    "saveRoundTripStateHash": "e1260d9b0f4b20a11ed11e1cde25047ef0a0568c51dd3dd1dbda6c0bb77158b3"
+    "saveRoundTripStateHash": "353e43d5eca15e0bdc9e492e382726d02863e9f6e786de315abba4458110c805"
   }
 }

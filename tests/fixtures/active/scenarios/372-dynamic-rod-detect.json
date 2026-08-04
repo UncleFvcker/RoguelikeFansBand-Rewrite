@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "item.device.dynamic-rod-detect",
+  "category": "devices",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -80,7 +81,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 57,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 900,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -509,7 +511,7 @@
           "y": 4
         }
       ],
-      "stateHash": "e059d3147d6af8996019a586e6ff0091576e034e0ec17e86aa281235a9158f53"
+      "stateHash": "80fbf5cd9eeef41fc0b83ab788b3119551e229b475a4b460a765a7c60a1282b9"
     },
     "events": [
       {
@@ -581,6 +583,6 @@
         "y": 4
       }
     ],
-    "saveRoundTripStateHash": "e059d3147d6af8996019a586e6ff0091576e034e0ec17e86aa281235a9158f53"
+    "saveRoundTripStateHash": "80fbf5cd9eeef41fc0b83ab788b3119551e229b475a4b460a765a7c60a1282b9"
   }
 }

@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "death.berserk-duration-stats-heal-roundtrip",
+  "category": "magic-realms",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -53,7 +54,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 110,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 800,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerStatuses": [
@@ -3197,7 +3199,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "ebc5d3b47adfb9b911cfa0ecd11b2482658dcfe863cbe38b82fe8b6a64a68732"
+      "stateHash": "1eea63d036cbdc076b77c7cc0153f1161b2b063786e898619a0a8367563a568f"
     },
     "events": [
       {
@@ -3266,6 +3268,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "ebc5d3b47adfb9b911cfa0ecd11b2482658dcfe863cbe38b82fe8b6a64a68732"
+    "saveRoundTripStateHash": "1eea63d036cbdc076b77c7cc0153f1161b2b063786e898619a0a8367563a568f"
   }
 }

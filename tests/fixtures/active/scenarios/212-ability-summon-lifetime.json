@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "ability.summon.lifetime",
+  "category": "abilities",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -63,7 +64,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 110,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 800,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9989,
       "playerLevel": 1,
@@ -3167,7 +3169,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "56790fbbb8856e2fa925bde7d484119b0b83934cd734da9de9d0fe6d96a90492"
+      "stateHash": "9947b3dab598d4c3acf43ab245a95d828642f0f658fc890360f00637cb6814f0"
     },
     "events": [
       {
@@ -3358,6 +3360,6 @@
       "summon.demo.ability.echo-companion.1.0",
       "summon.demo.ability.echo-companion.1.1"
     ],
-    "saveRoundTripStateHash": "56790fbbb8856e2fa925bde7d484119b0b83934cd734da9de9d0fe6d96a90492"
+    "saveRoundTripStateHash": "9947b3dab598d4c3acf43ab245a95d828642f0f658fc890360f00637cb6814f0"
   }
 }

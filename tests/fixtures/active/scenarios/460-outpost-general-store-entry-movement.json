@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "id": "town.outpost-general-store-entry-movement",
+  "category": "town",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "42",
@@ -338,6 +339,7 @@
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 714,
       "playerCarryCapacityTenthsPound": 1200,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 346,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -875,7 +877,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "56731d02aef4316438fcfd58643907d61953892efb2eac73f73ae7a49031ac3d"
+      "stateHash": "172c4356106998844f7d1e49e5b9a724eefce4c1a2f7bd332b8f6af5c798d145"
     },
     "changedCells": [
       {

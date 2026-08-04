@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "loot.monster-carried-item-hidden-and-persistent",
+  "category": "inventory",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "15",
@@ -27,7 +28,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -278,8 +280,8 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "2f4d2b3dd0ab4a81ef13ee121d11ead7d8d08943494f4abe7e6a9e33fdc4dd83"
+      "stateHash": "13a2279cd1b148b9fdbf030ca5111003e90685bc8d95a01c1e6e47ea274b2fbe"
     },
-    "saveRoundTripStateHash": "2f4d2b3dd0ab4a81ef13ee121d11ead7d8d08943494f4abe7e6a9e33fdc4dd83"
+    "saveRoundTripStateHash": "13a2279cd1b148b9fdbf030ca5111003e90685bc8d95a01c1e6e47ea274b2fbe"
   }
 }

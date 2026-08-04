@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "dungeon.layout-cavern-final-seed-93",
+  "category": "dungeon",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "93",
@@ -721,7 +722,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9769,
       "playerLevel": 1,
@@ -1003,7 +1005,7 @@
           "y": 5
         }
       ],
-      "stateHash": "5e79c498d81ac982d4ba79d9f269b13002593dba23af04743cffd163a42cc8d5"
+      "stateHash": "44678151555f9990ac5ff74d8143b3c43720d03d9c568003e7a5f64cf01f8900"
     },
     "events": [
       {
@@ -13122,6 +13124,6 @@
         "y": 4
       }
     ],
-    "saveRoundTripStateHash": "5e79c498d81ac982d4ba79d9f269b13002593dba23af04743cffd163a42cc8d5"
+    "saveRoundTripStateHash": "44678151555f9990ac5ff74d8143b3c43720d03d9c568003e7a5f64cf01f8900"
   }
 }

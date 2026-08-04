@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "monster.drag-onto-trap",
+  "category": "monsters",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -59,7 +60,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -304,7 +306,7 @@
           "y": 2
         }
       ],
-      "stateHash": "99b449ce0864efd8ac3b81f2a109b7925b148b6148a6c3ad8c27bde39a5765e2"
+      "stateHash": "89cdf82a7fda27d92f1cf051c1c735aca80bf9aed7b066f33116be14ff56c4fd"
     },
     "events": [
       {
@@ -503,6 +505,6 @@
         "y": 2
       }
     ],
-    "saveRoundTripStateHash": "99b449ce0864efd8ac3b81f2a109b7925b148b6148a6c3ad8c27bde39a5765e2"
+    "saveRoundTripStateHash": "89cdf82a7fda27d92f1cf051c1c735aca80bf9aed7b066f33116be14ff56c4fd"
   }
 }

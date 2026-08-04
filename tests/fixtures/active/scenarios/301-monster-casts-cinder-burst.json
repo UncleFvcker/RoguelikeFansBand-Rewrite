@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "monster-casting.damage.cinder-burst",
+  "category": "monsters",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "2",
@@ -70,7 +71,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -316,7 +318,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "1cf59c49da083c10bc6cd4e52262758857b0c843328ed93d2d2676dea1611557"
+      "stateHash": "f6e3ed2d4d5dd654beda3bcd89274e2724191645bd5e0cc44ffd7faa6629129f"
     },
     "events": [
       {
@@ -733,6 +735,6 @@
         "y": 3
       }
     ],
-    "saveRoundTripStateHash": "1cf59c49da083c10bc6cd4e52262758857b0c843328ed93d2d2676dea1611557"
+    "saveRoundTripStateHash": "f6e3ed2d4d5dd654beda3bcd89274e2724191645bd5e0cc44ffd7faa6629129f"
   }
 }

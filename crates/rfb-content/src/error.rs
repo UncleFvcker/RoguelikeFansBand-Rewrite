@@ -61,8 +61,8 @@ pub enum ContentError {
     DuplicateDefinitionId(String),
     #[error("actor stats are outside supported limits: {0}")]
     InvalidActorStats(String),
-    #[error("actor carry capacity is invalid for its role: {0}")]
-    InvalidActorCarryCapacity(String),
+    #[error("actor inventory capacity is invalid for its role: {0}")]
+    InvalidActorInventoryCapacity(String),
     #[error("actor melee routine is invalid or requires the monster role: {0}")]
     InvalidMeleeRoutine(String),
     #[error("actor monster casting profile is invalid or references an unsupported ability: {0}")]

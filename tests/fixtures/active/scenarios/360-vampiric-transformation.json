@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "death.vampiric-transformation-race-overlay",
+  "category": "magic-realms",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "17",
@@ -52,7 +53,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 110,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1050,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerStatuses": [
@@ -3216,7 +3218,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "2a1ee5d71e0f19bc7920f0a99d64ffb734dc0ec612127343233704a4327ce585"
+      "stateHash": "c876e1827665a18750574bf5ff0760a6a37d2d901cc2de214e2af71fdc28238d"
     },
     "events": [
       {
@@ -3278,6 +3280,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "2a1ee5d71e0f19bc7920f0a99d64ffb734dc0ec612127343233704a4327ce585"
+    "saveRoundTripStateHash": "c876e1827665a18750574bf5ff0760a6a37d2d901cc2de214e2af71fdc28238d"
   }
 }

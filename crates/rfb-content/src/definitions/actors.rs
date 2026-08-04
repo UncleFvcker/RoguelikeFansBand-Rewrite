@@ -117,8 +117,6 @@ pub struct ActorDefinition {
     pub damage_dice: u16,
     pub damage_sides: u16,
     #[serde(default)]
-    pub carry_capacity_tenths_pound: u32,
-    #[serde(default)]
     pub inventory_slot_capacity: u16,
     #[serde(default)]
     pub damage_type: ActorDamageType,

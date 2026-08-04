@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "task.active-abandon-closes-entry",
+  "category": "tasks",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "27",
@@ -45,7 +46,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -283,7 +285,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "4eba7d4d1f74d14fc2b34fb8772a9d962cd737ef81411c33b8b8d70bb9591d3f"
+      "stateHash": "ee87cffaac061be8ebb8fc7def96231f2a08195043f4d3d3c2c236bd85c626f8"
     },
     "events": [
       {
@@ -3592,6 +3594,6 @@
         "y": 19
       }
     ],
-    "saveRoundTripStateHash": "4eba7d4d1f74d14fc2b34fb8772a9d962cd737ef81411c33b8b8d70bb9591d3f"
+    "saveRoundTripStateHash": "ee87cffaac061be8ebb8fc7def96231f2a08195043f4d3d3c2c236bd85c626f8"
   }
 }

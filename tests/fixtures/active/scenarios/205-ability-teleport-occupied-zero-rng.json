@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "ability.teleport.occupied-zero-rng",
+  "category": "abilities",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -60,7 +61,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 110,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 800,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -3192,7 +3194,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "2b5867d9131c0a96272a2cd3aa183edef30b07e5ebfbcedb3dabeca18b908f0e"
+      "stateHash": "1e5f69c90ca1f0cd485bfae3202d63bc31fb6aaa2ec5711daa3a377a5b56b9a1"
     },
     "events": [
       {
@@ -3213,6 +3215,6 @@
         "y": 3
       }
     ],
-    "saveRoundTripStateHash": "2b5867d9131c0a96272a2cd3aa183edef30b07e5ebfbcedb3dabeca18b908f0e"
+    "saveRoundTripStateHash": "1e5f69c90ca1f0cd485bfae3202d63bc31fb6aaa2ec5711daa3a377a5b56b9a1"
   }
 }

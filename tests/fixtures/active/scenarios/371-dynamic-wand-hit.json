@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "item.device.dynamic-wand-hit",
+  "category": "devices",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -66,7 +67,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 53,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 900,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 2,
@@ -485,7 +487,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "664abc859d3211ad8eee3aac58e6272ddf1c6c51b605435443a0fbf303ae85f2"
+      "stateHash": "0b77281372234307ecc384888f2427ebfd31e3418077fa4f166304ba0ba97abe"
     },
     "events": [
       {
@@ -608,6 +610,6 @@
     "removedEntities": [
       "demo.monster.ember-mote.1"
     ],
-    "saveRoundTripStateHash": "664abc859d3211ad8eee3aac58e6272ddf1c6c51b605435443a0fbf303ae85f2"
+    "saveRoundTripStateHash": "0b77281372234307ecc384888f2427ebfd31e3418077fa4f166304ba0ba97abe"
   }
 }

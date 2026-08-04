@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "save.round-trip.initial-state",
+  "category": "system",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0x0123456789abcdef",
@@ -27,7 +28,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -278,8 +280,8 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "97d6cc5d97ad5c7d74a6922ea55230fb8342b69124a87088b1163534265d1500"
+      "stateHash": "3782f95dafa369f9ac88c67badf8e8948ab36b8b0677f0ad2bd31c5737dba247"
     },
-    "saveRoundTripStateHash": "97d6cc5d97ad5c7d74a6922ea55230fb8342b69124a87088b1163534265d1500"
+    "saveRoundTripStateHash": "3782f95dafa369f9ac88c67badf8e8948ab36b8b0677f0ad2bd31c5737dba247"
   }
 }

@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "summon.command-attack",
+  "category": "monsters",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "89",
@@ -70,7 +71,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -324,7 +326,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "33de45bb03fafd9b59905c75c4739d4d102d574a36be385c2b1efed049d7c426"
+      "stateHash": "bce5c37323533e6cefc3f8de722c3db99a122667ff0fa059a13f5d1e263fe0c7"
     },
     "events": [
       {
@@ -368,6 +370,6 @@
         "y": 3
       }
     ],
-    "saveRoundTripStateHash": "33de45bb03fafd9b59905c75c4739d4d102d574a36be385c2b1efed049d7c426"
+    "saveRoundTripStateHash": "bce5c37323533e6cefc3f8de722c3db99a122667ff0fa059a13f5d1e263fe0c7"
   }
 }

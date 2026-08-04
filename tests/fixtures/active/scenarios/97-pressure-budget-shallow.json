@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "dungeon.pressure-budget-shallow",
+  "category": "dungeon",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "49",
@@ -41,7 +42,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -277,7 +279,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "c10744c6216111577bbf8e27dc990f1ff322f67dcf2b63f2203e32b7d21e68e0"
+      "stateHash": "30bbabf1f4d51169a97bfcaf860fa279376c38b6edd7a715f79828deb9b6e9f4"
     },
     "events": [
       {
@@ -1926,6 +1928,6 @@
         "y": 19
       }
     ],
-    "saveRoundTripStateHash": "c10744c6216111577bbf8e27dc990f1ff322f67dcf2b63f2203e32b7d21e68e0"
+    "saveRoundTripStateHash": "30bbabf1f4d51169a97bfcaf860fa279376c38b6edd7a715f79828deb9b6e9f4"
   }
 }

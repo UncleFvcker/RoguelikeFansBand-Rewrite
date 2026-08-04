@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "combat.melee-kill-dragon",
+  "category": "equipment",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "42",
@@ -62,7 +63,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 40,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -363,7 +365,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "024bd9f9aef2d2747b87eb66a334cea80e4fe5a95efe4eeaa9dc5065cebdcda4"
+      "stateHash": "437a8b9a5dc9be35456298c55f145238e93555107f6476aa615f4a557f892adb"
     },
     "events": [
       {
@@ -475,6 +477,6 @@
         "y": 3
       }
     ],
-    "saveRoundTripStateHash": "024bd9f9aef2d2747b87eb66a334cea80e4fe5a95efe4eeaa9dc5065cebdcda4"
+    "saveRoundTripStateHash": "437a8b9a5dc9be35456298c55f145238e93555107f6476aa615f4a557f892adb"
   }
 }

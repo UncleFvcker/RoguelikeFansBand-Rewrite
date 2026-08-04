@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "monster-casting.psi.lash-resisted",
+  "category": "monsters",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -62,7 +63,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerStatuses": [
@@ -357,7 +359,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "729d902f6eb3255b3e7f984c6b43bc33d45abf0d7ef4c848bc8226bd923af94b"
+      "stateHash": "4527c9df2449704e79e5d667c420aa3d5ebafa52df59067ca5300541b40b30a4"
     },
     "events": [
       {
@@ -542,6 +544,6 @@
         "y": 3
       }
     ],
-    "saveRoundTripStateHash": "729d902f6eb3255b3e7f984c6b43bc33d45abf0d7ef4c848bc8226bd923af94b"
+    "saveRoundTripStateHash": "4527c9df2449704e79e5d667c420aa3d5ebafa52df59067ca5300541b40b30a4"
   }
 }

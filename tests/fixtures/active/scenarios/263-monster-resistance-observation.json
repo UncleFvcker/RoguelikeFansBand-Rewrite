@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "monster.resistance-observation",
+  "category": "monsters",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -63,7 +64,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerResistances": [
@@ -327,7 +329,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "2c08fda7782259edff428b11e0c51b90dcf8d2a2fd6f29a79621c047887eb3fb"
+      "stateHash": "e84c1129e17ef5ce763940a07091285f1cae4372a0e229297e71ab522d5fee2e"
     },
     "events": [
       {
@@ -845,6 +847,6 @@
         "y": 3
       }
     ],
-    "saveRoundTripStateHash": "2c08fda7782259edff428b11e0c51b90dcf8d2a2fd6f29a79621c047887eb3fb"
+    "saveRoundTripStateHash": "e84c1129e17ef5ce763940a07091285f1cae4372a0e229297e71ab522d5fee2e"
   }
 }

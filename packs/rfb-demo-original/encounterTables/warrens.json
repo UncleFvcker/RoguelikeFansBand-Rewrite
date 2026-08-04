@@ -5,21 +5,75 @@
   "rolls": 4,
   "entries": [
     {
-      "actorKindId": "demo.actor.giant-white-mouse",
-      "weight": 5,
-      "minDepth": 1,
-      "maxDepth": 4
-    },
-    {
-      "actorKindId": "demo.actor.small-kobold",
-      "weight": 6,
+      "actorKindId": "demo.actor.newt",
+      "weight": 100,
       "minDepth": 1,
       "maxDepth": 9
     },
     {
-      "actorKindId": "demo.actor.warg",
-      "weight": 3,
+      "actorKindId": "demo.actor.small-kobold",
+      "weight": 100,
+      "minDepth": 1,
+      "maxDepth": 9
+    },
+    {
+      "actorKindId": "demo.actor.rock-lizard",
+      "weight": 100,
+      "minDepth": 1,
+      "maxDepth": 9
+    },
+    {
+      "actorKindId": "demo.actor.fruit-bat",
+      "weight": 100,
+      "minDepth": 1,
+      "maxDepth": 9
+    },
+    {
+      "actorKindId": "demo.actor.wild-cat",
+      "weight": 50,
+      "minDepth": 2,
+      "maxDepth": 9
+    },
+    {
+      "actorKindId": "demo.actor.kobold",
+      "weight": 100,
+      "minDepth": 3,
+      "maxDepth": 9
+    },
+    {
+      "actorKindId": "demo.actor.cave-lizard",
+      "weight": 100,
       "minDepth": 4,
+      "maxDepth": 9
+    },
+    {
+      "actorKindId": "demo.actor.large-kobold",
+      "weight": 100,
+      "minDepth": 5,
+      "maxDepth": 9
+    },
+    {
+      "actorKindId": "demo.actor.rat-thing",
+      "weight": 100,
+      "minDepth": 6,
+      "maxDepth": 9
+    },
+    {
+      "actorKindId": "demo.actor.night-lizard",
+      "weight": 50,
+      "minDepth": 7,
+      "maxDepth": 9
+    },
+    {
+      "actorKindId": "demo.actor.hunting-hawk-of-julian",
+      "weight": 50,
+      "minDepth": 8,
+      "maxDepth": 9
+    },
+    {
+      "actorKindId": "demo.actor.chiokovo",
+      "weight": 33,
+      "minDepth": 8,
       "maxDepth": 9
     }
   ]

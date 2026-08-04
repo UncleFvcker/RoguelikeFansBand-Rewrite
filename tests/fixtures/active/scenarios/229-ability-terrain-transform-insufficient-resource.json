@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "ability.terrain-transform.insufficient-resource",
+  "category": "abilities",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -63,7 +64,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 110,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 800,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -3167,7 +3169,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "aaa63294f33d4104221bbefa9d686052133c1fc0dc616eae848e9beb8fe3b4a2"
+      "stateHash": "6137c3effd37ccf308fa4728203021b479e1296d281b1460c2c1a3161f960a9c"
     },
     "events": [
       {
@@ -3179,6 +3181,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "aaa63294f33d4104221bbefa9d686052133c1fc0dc616eae848e9beb8fe3b4a2"
+    "saveRoundTripStateHash": "6137c3effd37ccf308fa4728203021b479e1296d281b1460c2c1a3161f960a9c"
   }
 }

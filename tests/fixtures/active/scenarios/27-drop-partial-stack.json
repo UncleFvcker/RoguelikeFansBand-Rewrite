@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "item.drop.partial-stack",
+  "category": "inventory",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "42",
@@ -54,7 +55,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 20,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -320,7 +322,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "4ba8fe948bcb954a7255eeb8f457e95c81bac74a332be044a818f18bdcb982ba"
+      "stateHash": "3590dd9d684df79130b237d64fb5c071fa5f8018f9ad794d3d82e3ee9859e132"
     },
     "events": [
       {
@@ -401,6 +403,6 @@
         "y": 3
       }
     ],
-    "saveRoundTripStateHash": "4ba8fe948bcb954a7255eeb8f457e95c81bac74a332be044a818f18bdcb982ba"
+    "saveRoundTripStateHash": "3590dd9d684df79130b237d64fb5c071fa5f8018f9ad794d3d82e3ee9859e132"
   }
 }

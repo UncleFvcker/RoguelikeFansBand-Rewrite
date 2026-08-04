@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "dungeon.entrance-guardian-is-a-soft-gate",
+  "category": "dungeon",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "42",
@@ -41,7 +42,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -277,7 +279,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "56319589fb7e22eec5b68570696cb5031079b2e21fbc3613a31af78f90de2a37"
+      "stateHash": "e1951a12634d5175e5969467e3680f26ac103b6857e0d298b97ef9d716f0965b"
     },
     "events": [
       {
@@ -1926,6 +1928,6 @@
         "y": 19
       }
     ],
-    "saveRoundTripStateHash": "56319589fb7e22eec5b68570696cb5031079b2e21fbc3613a31af78f90de2a37"
+    "saveRoundTripStateHash": "e1951a12634d5175e5969467e3680f26ac103b6857e0d298b97ef9d716f0965b"
   }
 }

@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "ability.area-damage-empty-burst",
+  "category": "abilities",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -70,7 +71,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 110,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 800,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -3174,7 +3176,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "4aad2b73e81e4d7f1f205c468dbf63169f66861ce836e75422a6ad0628b84ac2"
+      "stateHash": "0a89f76a6825603e6aa2313b7564af7a52c9d886b856303825c80f6c87d87b0a"
     },
     "events": [
       {
@@ -3428,6 +3430,6 @@
         "y": 4
       }
     ],
-    "saveRoundTripStateHash": "4aad2b73e81e4d7f1f205c468dbf63169f66861ce836e75422a6ad0628b84ac2"
+    "saveRoundTripStateHash": "0a89f76a6825603e6aa2313b7564af7a52c9d886b856303825c80f6c87d87b0a"
   }
 }

@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "task.counted-kill-progress-save-round-trip",
+  "category": "tasks",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "27",
@@ -52,7 +53,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -283,7 +285,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "3bf39004e4c73588b20b54118606bf9408c624fd1aefaff38ef37b0def842dbb"
+      "stateHash": "30bdd5534ca23fb1d8ae2d1fbae46fa25e033c90d3d9a1890a3a7eb9e2341bad"
     },
     "events": [
       {
@@ -2042,6 +2044,6 @@
         "y": 4
       }
     ],
-    "saveRoundTripStateHash": "3bf39004e4c73588b20b54118606bf9408c624fd1aefaff38ef37b0def842dbb"
+    "saveRoundTripStateHash": "30bdd5534ca23fb1d8ae2d1fbae46fa25e033c90d3d9a1890a3a7eb9e2341bad"
   }
 }

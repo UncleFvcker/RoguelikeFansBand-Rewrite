@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "ability.terrain-transform.failure-costs-resource",
+  "category": "abilities",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "3",
@@ -56,7 +57,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 110,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 800,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -3160,7 +3162,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "b95fba4849210163da6c399bc8b22961b2a34a750e723b9b08192a1f56c59bef"
+      "stateHash": "f30f8e2149df03fa2772b73244a4e8af23b4641bafd5dfbf13e09ebc509bedcd"
     },
     "events": [
       {
@@ -3192,6 +3194,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "b95fba4849210163da6c399bc8b22961b2a34a750e723b9b08192a1f56c59bef"
+    "saveRoundTripStateHash": "f30f8e2149df03fa2772b73244a4e8af23b4641bafd5dfbf13e09ebc509bedcd"
   }
 }

@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "id": "town.outpost-home-deposit",
+  "category": "town",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "42",
@@ -291,6 +292,7 @@
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 704,
       "playerCarryCapacityTenthsPound": 1200,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 346,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -828,7 +830,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "181b81f14d5a354b22d58ca984d4480629f0955a08c6a898f5b28db49cc76efd"
+      "stateHash": "4d609b470f5d1d962e9885ddd357d8666e331bb8c9181e1f903ef881373bfb7d"
     },
     "events": [
       {

@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "monster.resistance-memory-weight",
+  "category": "monsters",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -63,7 +64,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -358,7 +360,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "b354b04fe5dcf03d8fa2d8b3a27b9de5b95d5524aec1c8ff28e68fa848559684"
+      "stateHash": "2d169f5b633cec39d50de415239040e8143537283d25802a1fea1f662c4c8643"
     },
     "events": [
       {
@@ -766,6 +768,6 @@
         "y": 3
       }
     ],
-    "saveRoundTripStateHash": "b354b04fe5dcf03d8fa2d8b3a27b9de5b95d5524aec1c8ff28e68fa848559684"
+    "saveRoundTripStateHash": "2d169f5b633cec39d50de415239040e8143537283d25802a1fea1f662c4c8643"
   }
 }

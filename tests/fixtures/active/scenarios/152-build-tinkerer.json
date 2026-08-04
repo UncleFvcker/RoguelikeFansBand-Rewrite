@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "build.tinkerer.initial",
+  "category": "progression",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "45",
@@ -28,7 +29,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 43,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 900,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -398,8 +400,8 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "d144fbe1eac3580f0ab99b4f600007c64106f9088f4bbd5514bad70169bffbc1"
+      "stateHash": "f39e52ff03fb00464a071384616aaf852f04c18f3b58622db2b42bab113579ad"
     },
-    "saveRoundTripStateHash": "d144fbe1eac3580f0ab99b4f600007c64106f9088f4bbd5514bad70169bffbc1"
+    "saveRoundTripStateHash": "f39e52ff03fb00464a071384616aaf852f04c18f3b58622db2b42bab113579ad"
   }
 }

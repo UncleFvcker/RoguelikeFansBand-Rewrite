@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "item.potion-thermal-resistance",
+  "category": "potions",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "86",
@@ -47,7 +48,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 444,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1250,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerStatuses": [
@@ -499,7 +501,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "d4278f66cc8a3be490c02c09e36a1bb7636d59bdb6fa48df7f04c4113eaf0ac2"
+      "stateHash": "9cd9b9454a07be367949e31ab90520b731fd99a2fa589f6cda3de3ee63636557"
     },
     "events": [
       {
@@ -512,6 +514,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "d4278f66cc8a3be490c02c09e36a1bb7636d59bdb6fa48df7f04c4113eaf0ac2"
+    "saveRoundTripStateHash": "9cd9b9454a07be367949e31ab90520b731fd99a2fa589f6cda3de3ee63636557"
   }
 }

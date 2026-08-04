@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "item.scroll-aggravation",
+  "category": "scrolls",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "89",
@@ -200,7 +201,8 @@
       "playerSpeed": 199,
       "playerEnergyNeed": -47,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerStatuses": [
@@ -526,7 +528,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "1fe33f90b5021dca19be654088171206bcd32ab79ced3eceaa1bb85b052f45fc"
+      "stateHash": "485c5f76e9a3cbe8c7caf88adce39de35029b4bb6e75300866a2205bc7eab181"
     },
     "events": [
       {

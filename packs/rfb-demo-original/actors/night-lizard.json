@@ -1,0 +1,30 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "formatVersion": 1,
+  "id": "demo.actor.night-lizard",
+  "role": "monster",
+  "nameKey": "actor-demo-night-lizard-name",
+  "descriptionKey": "actor-demo-night-lizard-description",
+  "glyph": "R",
+  "level": 7,
+  "experienceValue": 35,
+  "maxHp": 18,
+  "speed": 110,
+  "attack": 1,
+  "defense": 1,
+  "damageDice": 1,
+  "damageSides": 8,
+  "damageType": "physical",
+  "meleeRoutine": {
+    "blows": [
+      { "methodId": "rfb.blow.bite", "toHit": 20, "damageDice": 1, "damageSides": 8 },
+      { "methodId": "rfb.blow.bite", "toHit": 20, "damageDice": 1, "damageSides": 8 }
+    ]
+  },
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1
+  },
+  "tags": ["animal", "reptile", "warrens"]
+}

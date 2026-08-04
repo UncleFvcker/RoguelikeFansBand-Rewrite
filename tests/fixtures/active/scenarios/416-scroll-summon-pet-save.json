@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "item.scroll-summon-pet-save",
+  "category": "scrolls",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "68",
@@ -45,7 +46,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -313,7 +315,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "3834b6da6aa5368ec5adc33df59e7ba8eceb2b5db06b6644ff470dc4ee791c39"
+      "stateHash": "a695d249883c01fa18de2416eb16aaa075907b75cc0c723b09b62a168ad692f0"
     },
     "events": [
       {
@@ -374,6 +376,6 @@
         "y": 2
       }
     ],
-    "saveRoundTripStateHash": "3834b6da6aa5368ec5adc33df59e7ba8eceb2b5db06b6644ff470dc4ee791c39"
+    "saveRoundTripStateHash": "a695d249883c01fa18de2416eb16aaa075907b75cc0c723b09b62a168ad692f0"
   }
 }

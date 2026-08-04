@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "ability.beam-target-out-of-range-zero-rng",
+  "category": "abilities",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -47,7 +48,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 110,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 800,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -3151,7 +3153,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "a679820e5395362ce976c293c52607d8d2df4f7cc8e9e088226e57af2f73f96d"
+      "stateHash": "339438da3dbf14fd909ee74b2969dfaa6c186b1396dbc29e858ee7ac7a951ff0"
     },
     "events": [
       {
@@ -3162,6 +3164,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "a679820e5395362ce976c293c52607d8d2df4f7cc8e9e088226e57af2f73f96d"
+    "saveRoundTripStateHash": "339438da3dbf14fd909ee74b2969dfaa6c186b1396dbc29e858ee7ac7a951ff0"
   }
 }

@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "death.poison-branding-melee-roundtrip",
+  "category": "magic-realms",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -107,7 +108,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 140,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 800,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerStatuses": [
@@ -3336,7 +3338,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "e745171caaf56a3275e31f82511d10be617cc64b7522aed5c451fb1f4c010eeb"
+      "stateHash": "3b249a794f35b7366a233b13ffb2db86aeb7875194db43360b65ec3176a4c2d7"
     },
     "events": [
       {
@@ -3687,6 +3689,6 @@
     "removedEntities": [
       "demo.monster.ember-mote.1"
     ],
-    "saveRoundTripStateHash": "e745171caaf56a3275e31f82511d10be617cc64b7522aed5c451fb1f4c010eeb"
+    "saveRoundTripStateHash": "3b249a794f35b7366a233b13ffb2db86aeb7875194db43360b65ec3176a4c2d7"
   }
 }

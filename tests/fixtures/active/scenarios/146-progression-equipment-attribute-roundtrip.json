@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "progression.equipment-attribute-roundtrip",
+  "category": "progression",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "42",
@@ -87,7 +88,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 55,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9979,
       "playerLevel": 1,
@@ -407,7 +409,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "bf850cf1a8efff153b5085c029c51c1be4c6b060797c65cdb60afe1519f189bf"
+      "stateHash": "a621e2693d5c375fea053d324230bd20aea89b112005e371543b1c1ca1c997a1"
     },
     "events": [
       {
@@ -639,6 +641,6 @@
         "y": 5
       }
     ],
-    "saveRoundTripStateHash": "bf850cf1a8efff153b5085c029c51c1be4c6b060797c65cdb60afe1519f189bf"
+    "saveRoundTripStateHash": "a621e2693d5c375fea053d324230bd20aea89b112005e371543b1c1ca1c997a1"
   }
 }

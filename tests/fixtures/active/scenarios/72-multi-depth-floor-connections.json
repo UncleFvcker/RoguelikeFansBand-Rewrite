@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "floor.multi-depth-connections-and-return-points",
+  "category": "dungeon",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "27",
@@ -67,7 +68,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9989,
       "playerLevel": 1,
@@ -322,7 +324,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "ee00068b0a641834645df45fe60388757a3938d59783ecdd180fed1d7743223b"
+      "stateHash": "a1de2c4769b3e716f4d11e4601271b37bfdff475d2d257dace6dbb98ec8fa4ed"
     },
     "events": [
       {
@@ -6797,6 +6799,6 @@
         "y": 19
       }
     ],
-    "saveRoundTripStateHash": "ee00068b0a641834645df45fe60388757a3938d59783ecdd180fed1d7743223b"
+    "saveRoundTripStateHash": "a1de2c4769b3e716f4d11e4601271b37bfdff475d2d257dace6dbb98ec8fa4ed"
   }
 }

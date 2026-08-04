@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "technique.surging-tempo-self-status",
+  "category": "techniques",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -47,7 +48,8 @@
       "playerSpeed": 120,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 30,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1100,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerStatuses": [
@@ -474,7 +476,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "54144ffc822ed006f151d58b4fe8686fafb79a117a139869dbc6ed2839bac9fb"
+      "stateHash": "e8bf8784a5c8ce81a56c8769a95a756ed02852326f0a3a9942bf8e58a26514a6"
     },
     "events": [
       {
@@ -535,6 +537,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "54144ffc822ed006f151d58b4fe8686fafb79a117a139869dbc6ed2839bac9fb"
+    "saveRoundTripStateHash": "e8bf8784a5c8ce81a56c8769a95a756ed02852326f0a3a9942bf8e58a26514a6"
   }
 }

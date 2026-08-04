@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "status.monster.poison-death",
+  "category": "combat",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0x000000000000002a",
@@ -77,7 +78,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 2,
@@ -318,7 +320,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "a37b26eda900f6f6e04327f06edc6be1e940ca7bd7bbc6db3aa3690836f5a264"
+      "stateHash": "7414c857bc669e9dc15693ed9288c87443ac60b01c8b10ea5df20de8e8bfb346"
     },
     "events": [
       {
@@ -418,6 +420,6 @@
     "removedEntities": [
       "demo.monster.ember-mote.1"
     ],
-    "saveRoundTripStateHash": "a37b26eda900f6f6e04327f06edc6be1e940ca7bd7bbc6db3aa3690836f5a264"
+    "saveRoundTripStateHash": "7414c857bc669e9dc15693ed9288c87443ac60b01c8b10ea5df20de8e8bfb346"
   }
 }

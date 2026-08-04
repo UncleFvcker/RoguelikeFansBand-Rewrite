@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "item.scroll-phase-door",
+  "category": "scrolls",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "64",
@@ -43,7 +44,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 1,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -288,7 +290,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "05bd85407e5472d3e434243b4f415d88583defd296b6ab80367699e60bf56fbb"
+      "stateHash": "f7b831ca564175d70d48c116cfe7637afdd76c1ba35dc43bec8716366db40bbf"
     },
     "events": [
       {
@@ -326,6 +328,6 @@
         "y": 4
       }
     ],
-    "saveRoundTripStateHash": "05bd85407e5472d3e434243b4f415d88583defd296b6ab80367699e60bf56fbb"
+    "saveRoundTripStateHash": "f7b831ca564175d70d48c116cfe7637afdd76c1ba35dc43bec8716366db40bbf"
   }
 }

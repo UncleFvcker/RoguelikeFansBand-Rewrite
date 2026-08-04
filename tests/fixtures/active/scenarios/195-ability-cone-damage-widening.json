@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "ability.cone-damage-widening",
+  "category": "abilities",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -273,7 +274,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 110,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 800,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 2,
@@ -3395,7 +3397,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "f3bc277a5c976175c912079a3fd1a0e77d72689de6d43e563df0aba246fef837"
+      "stateHash": "b961fce74b9932b4cdb5bee7fbe79f7b7bf749935564fe0a3caea8e4d10d4fa4"
     },
     "events": [
       {
@@ -3818,6 +3820,6 @@
     "removedEntities": [
       "demo.monster.ember-mote.1"
     ],
-    "saveRoundTripStateHash": "f3bc277a5c976175c912079a3fd1a0e77d72689de6d43e563df0aba246fef837"
+    "saveRoundTripStateHash": "b961fce74b9932b4cdb5bee7fbe79f7b7bf749935564fe0a3caea8e4d10d4fa4"
   }
 }

@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "item.potion-death",
+  "category": "potions",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "83",
@@ -46,7 +47,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 100,
       "playerCarriedWeightTenthsPound": 444,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1250,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -441,7 +443,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "20a113612c2587c1ed648904861d9baef5cdadc266c112d7c681bdd684a72827"
+      "stateHash": "b371722fa9d4b8225bc216168890c8e6127ad3983ec32c0a07a97b41109b52c5"
     },
     "events": [
       {

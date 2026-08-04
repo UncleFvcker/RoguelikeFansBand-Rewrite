@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "monster.escape-self",
+  "category": "monsters",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "14",
@@ -50,7 +51,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -302,7 +304,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "8c740f2c1ac7eb25dc9d1b2b8c1c13c0900f7fe5aaa42d5b70f0d3b13fab8396"
+      "stateHash": "eb93518839b06918f46870156251e9d04587dd0e63d979611969e361ef288e39"
     },
     "events": [
       {
@@ -446,6 +448,6 @@
         "y": 13
       }
     ],
-    "saveRoundTripStateHash": "8c740f2c1ac7eb25dc9d1b2b8c1c13c0900f7fe5aaa42d5b70f0d3b13fab8396"
+    "saveRoundTripStateHash": "eb93518839b06918f46870156251e9d04587dd0e63d979611969e361ef288e39"
   }
 }

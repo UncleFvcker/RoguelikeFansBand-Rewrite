@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "id": "item.restoration-combinations",
+  "category": "potions",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "98",
@@ -336,7 +337,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 444,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1250,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 3,
@@ -746,7 +748,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "df5f18f9e8e5641a0bd531985491125f88eac81ee31f5872be471d0c9a2753c1"
+      "stateHash": "c25a922f9ebbc8913d6eda75be8cee43f868b98e4ed973e51a3f7b8c9d034f10"
     },
     "events": [
       {

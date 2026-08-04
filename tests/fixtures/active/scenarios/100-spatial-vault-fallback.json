@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "dungeon.spatial-vault-fallback",
+  "category": "dungeon",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "49",
@@ -118,7 +119,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9969,
       "playerLevel": 1,
@@ -354,7 +356,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "77f81902aaba0b6a5d21f781e942b908d77f31a7b20ff237b87c5c0cbb38b951"
+      "stateHash": "c11847a111ce4a43292c788386ebca04e47332fd8985caef3be70e5714802a70"
     },
     "events": [
       {
@@ -5333,6 +5335,6 @@
         "y": 6
       }
     ],
-    "saveRoundTripStateHash": "77f81902aaba0b6a5d21f781e942b908d77f31a7b20ff237b87c5c0cbb38b951"
+    "saveRoundTripStateHash": "c11847a111ce4a43292c788386ebca04e47332fd8985caef3be70e5714802a70"
   }
 }

@@ -263,12 +263,6 @@
         "null"
       ]
     },
-    "carryCapacityTenthsPound": {
-      "default": 0,
-      "format": "uint32",
-      "minimum": 0,
-      "type": "integer"
-    },
     "corpseItemKindId": {
       "default": null,
       "type": [

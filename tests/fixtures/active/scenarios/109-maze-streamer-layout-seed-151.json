@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "dungeon.maze-streamer-layout-seed-151",
+  "category": "dungeon",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "151",
@@ -188,7 +189,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9959,
       "playerResistances": [
@@ -524,7 +526,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "1383d5e3cb6de8fb3c26c590d924b85786c6b4742c761967e7e024367eb45ce3"
+      "stateHash": "b6c02e624f826a4dad154c5a9b73225807dfed0d128504f60e9f39ef0c21f0e9"
     },
     "events": [
       {
@@ -14426,6 +14428,6 @@
         "y": 5
       }
     ],
-    "saveRoundTripStateHash": "1383d5e3cb6de8fb3c26c590d924b85786c6b4742c761967e7e024367eb45ce3"
+    "saveRoundTripStateHash": "b6c02e624f826a4dad154c5a9b73225807dfed0d128504f60e9f39ef0c21f0e9"
   }
 }

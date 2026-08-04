@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "ability.effects.resistant",
+  "category": "abilities",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -66,7 +67,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 110,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 800,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -3235,7 +3237,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "87b8a0fd9d74498329db3de50579a8ddaa64b96d839d51c9803755e611377d4a"
+      "stateHash": "048e5ffaa8b7de95aadb3e93748acb15d70f0cc483fdb2132b2570c07ef0ea2b"
     },
     "events": [
       {
@@ -3408,6 +3410,6 @@
         "y": 5
       }
     ],
-    "saveRoundTripStateHash": "87b8a0fd9d74498329db3de50579a8ddaa64b96d839d51c9803755e611377d4a"
+    "saveRoundTripStateHash": "048e5ffaa8b7de95aadb3e93748acb15d70f0cc483fdb2132b2570c07ef0ea2b"
   }
 }

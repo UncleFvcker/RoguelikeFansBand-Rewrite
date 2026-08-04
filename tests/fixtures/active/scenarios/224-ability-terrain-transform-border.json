@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "ability.terrain-transform.border",
+  "category": "abilities",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -57,7 +58,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 110,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 800,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -3161,7 +3163,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "7548ba8a089cf3cbd86df013ecfb9231cb447d83a6a9dd12b6e4f6da043d647d"
+      "stateHash": "84adff48a450d42a7760754d5e9893b9b0bec3e12e34615b46cc4aa98218eca3"
     },
     "events": [
       {
@@ -3247,6 +3249,6 @@
         "y": 1
       }
     ],
-    "saveRoundTripStateHash": "7548ba8a089cf3cbd86df013ecfb9231cb447d83a6a9dd12b6e4f6da043d647d"
+    "saveRoundTripStateHash": "84adff48a450d42a7760754d5e9893b9b0bec3e12e34615b46cc4aa98218eca3"
   }
 }

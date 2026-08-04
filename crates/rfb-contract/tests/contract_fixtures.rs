@@ -14,6 +14,7 @@ use rfb_protocol::Position;
 use serde_json::json;
 
 #[test]
+#[ignore = "full contract replay is reserved for milestone or global contract validation"]
 fn committed_contract_fixtures_pass() {
     let baseline_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join(format!("../../tests/fixtures/{ACTIVE_FIXTURE_DIRECTORY}"));
@@ -74,6 +75,32 @@ fn committed_contract_fixtures_pass() {
         "contract fixtures failed:\n{}",
         failures.join("\n")
     );
+}
+
+#[test]
+fn committed_contract_fixture_metadata_is_valid() {
+    let baseline_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join(format!("../../tests/fixtures/{ACTIVE_FIXTURE_DIRECTORY}"));
+    let mut paths = fs::read_dir(baseline_root.join("scenarios"))
+        .expect("contract fixture directory should exist")
+        .map(|entry| entry.expect("fixture entry should be readable").path())
+        .filter(|path| {
+            path.extension()
+                .is_some_and(|extension| extension == "json")
+        })
+        .collect::<Vec<_>>();
+    paths.sort();
+    let fixtures = paths
+        .iter()
+        .map(|path| {
+            serde_json::from_slice::<ContractFixture>(
+                &fs::read(path).expect("fixture should be readable"),
+            )
+            .unwrap_or_else(|error| panic!("{}: {error}", path.display()))
+        })
+        .collect::<Vec<_>>();
+
+    validate_fixture_set(&fixtures).expect("fixture metadata should be valid");
 }
 
 #[test]
@@ -138,8 +165,9 @@ fn minimal_warrens_fixture(
     commands: serde_json::Value,
 ) -> ContractFixture {
     serde_json::from_value(json!({
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "id": "town.minimal-contract-helper",
+        "category": "town",
         "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
         "determinism": "exact",
         "seed": "42",

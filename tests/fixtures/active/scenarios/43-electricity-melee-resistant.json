@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "combat.elemental.electricity-resistant",
+  "category": "combat",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -50,7 +51,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerResistances": [
@@ -307,7 +309,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "e8b7281685bb547b8c0b6b7b7dcf58d0f8a488f08e4733d7291f2ea9808af9fd"
+      "stateHash": "f0a67b425cdd295230e06f5664a6ab7a90ee5acdc845f44671ce22bc4dfbaf40"
     },
     "events": [
       {
@@ -335,6 +337,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "e8b7281685bb547b8c0b6b7b7dcf58d0f8a488f08e4733d7291f2ea9808af9fd"
+    "saveRoundTripStateHash": "f0a67b425cdd295230e06f5664a6ab7a90ee5acdc845f44671ce22bc4dfbaf40"
   }
 }

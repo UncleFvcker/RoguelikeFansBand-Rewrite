@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "id": "item.potion-attribute-sustain",
+  "category": "potions",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "96",
@@ -64,7 +65,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 1,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1350,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerResistances": [
@@ -342,7 +344,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "9e1c0114750db4f25df2f5efbfa21c567ed63eb1fa3d0c78abcfcc3c2cdb9baa"
+      "stateHash": "1e0ef4a44703eb5acf88eb3c270ad65a09d1ba4120e033b69a2950d770d5251d"
     },
     "events": [
       {
@@ -367,6 +369,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "9e1c0114750db4f25df2f5efbfa21c567ed63eb1fa3d0c78abcfcc3c2cdb9baa"
+    "saveRoundTripStateHash": "1e0ef4a44703eb5acf88eb3c270ad65a09d1ba4120e033b69a2950d770d5251d"
   }
 }

@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "task.shared-id-progress-crosses-entrances",
+  "category": "tasks",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "27",
@@ -86,7 +87,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9989,
       "playerResistances": [
@@ -313,7 +315,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "36a6da68723b597ccdcfdc43571b7ba0f5c69952e1d1c3c3542789d11347b58d"
+      "stateHash": "3dec562ef256bb20f4ac4df11a07d806406b66cfca39aa61559b3881eb563975"
     },
     "events": [
       {
@@ -5441,6 +5443,6 @@
     "removedEntities": [
       "demo.floor.echo-bounty-rift.task-target.1"
     ],
-    "saveRoundTripStateHash": "36a6da68723b597ccdcfdc43571b7ba0f5c69952e1d1c3c3542789d11347b58d"
+    "saveRoundTripStateHash": "3dec562ef256bb20f4ac4df11a07d806406b66cfca39aa61559b3881eb563975"
   }
 }

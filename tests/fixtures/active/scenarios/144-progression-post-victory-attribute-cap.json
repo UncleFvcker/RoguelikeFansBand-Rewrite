@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "progression.post-victory-attribute-cap",
+  "category": "progression",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "42",
@@ -53,7 +54,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1950,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 51,
@@ -305,7 +307,7 @@
         "completedTasks": 0,
         "victoryTurn": 0
       },
-      "stateHash": "3f160195683a43b07e5232da362a340516da856c3e80e1555ed7aa33becaa335"
+      "stateHash": "58c6da04de8a630708595da9e9e524fe61d97a5cbe4511b969d3f26ff7e02034"
     },
     "events": [
       {
@@ -320,6 +322,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "3f160195683a43b07e5232da362a340516da856c3e80e1555ed7aa33becaa335"
+    "saveRoundTripStateHash": "58c6da04de8a630708595da9e9e524fe61d97a5cbe4511b969d3f26ff7e02034"
   }
 }

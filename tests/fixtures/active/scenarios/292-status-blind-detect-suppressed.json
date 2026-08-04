@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "status.blindness.detect-suppressed",
+  "category": "status-effects",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -89,7 +90,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 110,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 800,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerStatuses": [
@@ -3230,7 +3232,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "c68bd38991167c04b3e0c470c8fa514129f3884497addb8f0122124b14f977d9"
+      "stateHash": "ab28b24b8df7fba9000592521a02695843f3cb567dfd680b1db8c7d0a2889cec"
     },
     "events": [
       {
@@ -3281,6 +3283,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "c68bd38991167c04b3e0c470c8fa514129f3884497addb8f0122124b14f977d9"
+    "saveRoundTripStateHash": "ab28b24b8df7fba9000592521a02695843f3cb567dfd680b1db8c7d0a2889cec"
   }
 }

@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "combat.elemental.acid-resistant",
+  "category": "combat",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -50,7 +51,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerResistances": [
@@ -307,7 +309,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "77c7e4c236772b0270ec68558243a4cc1f15cfee0956742a7e0e4ed895daef79"
+      "stateHash": "7e614bf61d9e2bc841814d0130db55562866fcb004883e8cafa62c354a6f4989"
     },
     "events": [
       {
@@ -335,6 +337,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "77c7e4c236772b0270ec68558243a4cc1f15cfee0956742a7e0e4ed895daef79"
+    "saveRoundTripStateHash": "7e614bf61d9e2bc841814d0130db55562866fcb004883e8cafa62c354a6f4989"
   }
 }

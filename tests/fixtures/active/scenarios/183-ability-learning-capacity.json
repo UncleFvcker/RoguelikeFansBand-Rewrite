@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "ability.learning-capacity-projection",
+  "category": "abilities",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -29,7 +30,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 110,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 800,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -3133,8 +3135,8 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "9c6cab6e9ee0e4ebbc2edc1e616c681d6f30e9263e9a806140e89bd62e468b16"
+      "stateHash": "f118f946a11ba14dcf380cb92f2cb21c403b1bedc4823ee639354ec26208a7ba"
     },
-    "saveRoundTripStateHash": "9c6cab6e9ee0e4ebbc2edc1e616c681d6f30e9263e9a806140e89bd62e468b16"
+    "saveRoundTripStateHash": "f118f946a11ba14dcf380cb92f2cb21c403b1bedc4823ee639354ec26208a7ba"
   }
 }

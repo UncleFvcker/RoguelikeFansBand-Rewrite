@@ -1,0 +1,30 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "formatVersion": 1,
+  "id": "demo.actor.newt",
+  "role": "monster",
+  "nameKey": "actor-demo-newt-name",
+  "descriptionKey": "actor-demo-newt-description",
+  "glyph": "R",
+  "level": 1,
+  "experienceValue": 4,
+  "maxHp": 7,
+  "speed": 110,
+  "attack": 1,
+  "defense": 1,
+  "damageDice": 1,
+  "damageSides": 7,
+  "damageType": "physical",
+  "meleeRoutine": {
+    "blows": [
+      { "methodId": "rfb.blow.bite", "toHit": 20, "damageDice": 1, "damageSides": 7 },
+      { "methodId": "rfb.blow.bite", "toHit": 20, "damageDice": 1, "damageSides": 7 }
+    ]
+  },
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1
+  },
+  "tags": ["animal", "reptile", "warrens"]
+}

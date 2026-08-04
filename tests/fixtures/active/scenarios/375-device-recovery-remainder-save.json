@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "item.device.recovery-remainder-save",
+  "category": "devices",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "61",
@@ -54,7 +55,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 57,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 900,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -428,8 +430,8 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "b6b7a9c9099b32d9bb27c1c9d034b9e65aa00d5073d38c216a4cfbcc2e279324"
+      "stateHash": "e6f81863b4ce995a98247ef498a0d794d39ea05b36e64b26f87b18aa2c9d6191"
     },
-    "saveRoundTripStateHash": "b6b7a9c9099b32d9bb27c1c9d034b9e65aa00d5073d38c216a4cfbcc2e279324"
+    "saveRoundTripStateHash": "e6f81863b4ce995a98247ef498a0d794d39ea05b36e64b26f87b18aa2c9d6191"
   }
 }

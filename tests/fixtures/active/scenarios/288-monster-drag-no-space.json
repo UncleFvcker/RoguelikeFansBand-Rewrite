@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "monster.drag-no-space",
+  "category": "monsters",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -101,7 +102,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -340,7 +342,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "17690bd483850d686e5af01cd79d45f0353ab67bc501b365e055fa27ee7d5df8"
+      "stateHash": "d402fa2e1e574193a9fa12ddc2cf87c78ac57e0db0e8e6c846f814ef5e27baff"
     },
     "events": [
       {
@@ -472,6 +474,6 @@
         "y": 2
       }
     ],
-    "saveRoundTripStateHash": "17690bd483850d686e5af01cd79d45f0353ab67bc501b365e055fa27ee7d5df8"
+    "saveRoundTripStateHash": "d402fa2e1e574193a9fa12ddc2cf87c78ac57e0db0e8e6c846f814ef5e27baff"
   }
 }

@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "combat.monster.melee-routine-order",
+  "category": "combat",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -44,7 +45,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -295,7 +297,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "7063f8fc1f145a7fbdf1372b09bf5b0ddab35e53402062caf64417d09f1070ac"
+      "stateHash": "60a91fda2f4871d400019d230a997d020c3f1f2e002ca3905696509b7ed0152f"
     },
     "events": [
       {
@@ -332,6 +334,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "7063f8fc1f145a7fbdf1372b09bf5b0ddab35e53402062caf64417d09f1070ac"
+    "saveRoundTripStateHash": "60a91fda2f4871d400019d230a997d020c3f1f2e002ca3905696509b7ed0152f"
   }
 }

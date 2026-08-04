@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "combat.elemental.poison-melee-resistant",
+  "category": "combat",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -50,7 +51,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerResistances": [
@@ -307,7 +309,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "f6d81f854bcf46b2ab3852164dbdf045f34ee4260fd04eac26b3a4fd89a80340"
+      "stateHash": "f8039eb0213fcaef2965ac17a62a92b40f89ae1850f4786fc19b84ba9f3299e5"
     },
     "events": [
       {
@@ -335,6 +337,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "f6d81f854bcf46b2ab3852164dbdf045f34ee4260fd04eac26b3a4fd89a80340"
+    "saveRoundTripStateHash": "f8039eb0213fcaef2965ac17a62a92b40f89ae1850f4786fc19b84ba9f3299e5"
   }
 }

@@ -136,7 +136,7 @@ fn pickup_moves_the_ground_stack_into_inventory() {
     assert_eq!(update.inventory[0].id, "demo.item.luminous-shard.1");
     assert_eq!(update.inventory[0].quantity, 5);
     assert_eq!(update.player.carried_weight_tenths_pound, 50);
-    assert_eq!(update.player.carry_capacity_tenths_pound, 100);
+    assert_eq!(update.player.carry_capacity_tenths_pound, 1_000);
     assert_eq!(update.changed_cells.len(), 1);
     assert_eq!(update.changed_cells[0].position, Position { x: 4, y: 3 });
     assert_eq!(update.changed_cells[0].item_id, None);
@@ -144,41 +144,33 @@ fn pickup_moves_the_ground_stack_into_inventory() {
 }
 
 #[test]
-fn pickup_over_capacity_rejects_the_whole_ground_stack() {
+fn pickup_can_make_the_player_overburdened() {
     let mut game = Game::new(42);
     clear_monsters(&mut game);
     game.player.position = Position { x: 6, y: 4 };
-    for kind_id in [
-        "demo.item.luminous-shard",
-        "demo.item.echo-charm",
-        "demo.item.echo-blade",
-        "demo.item.resonance-sling",
-    ] {
-        game.items
-            .iter_mut()
-            .find(|item| item.kind_id == kind_id)
-            .expect("carried fixture item should exist")
-            .location = ItemLocation::Inventory;
-    }
-    assert_eq!(game.carried_weight_tenths_pound(), 100);
+    support::give_inventory_item(&mut game, "test.heavy-stack", "demo.item.burdened-mail");
+    game.items
+        .iter_mut()
+        .find(|item| item.id == "test.heavy-stack")
+        .expect("fixture item should exist")
+        .quantity = 9;
+    assert_eq!(game.carried_weight_tenths_pound(), 1_260);
 
     let update = game
         .dispatch(command(1, 0, GameCommand::PickUp))
-        .expect("over-capacity pickup should resolve as an action");
+        .expect("overburdened pickup should resolve as an action");
 
     let event = &update.events[0];
-    assert_eq!(event.kind, "item.pickup.over-capacity");
-    assert_eq!(event.args["target"], "demo.item.resonance-pellet");
-    assert_eq!(event.args["quantity"], "6");
-    assert_eq!(event.args["currentWeight"], "100");
-    assert_eq!(event.args["pickupWeight"], "12");
-    assert_eq!(event.args["capacity"], "100");
-    assert_eq!(update.player.carried_weight_tenths_pound, 100);
-    assert!(update.items.iter().any(|item| {
-        item.id == "demo.item.resonance-pellet.1"
-            && item.quantity == 6
-            && item.position == Position { x: 6, y: 4 }
-    }));
+    assert_eq!(event.kind, "item.pickup");
+    assert_eq!(update.player.carried_weight_tenths_pound, 1_272);
+    assert_eq!(update.player.encumbrance_speed_penalty, 1);
+    assert_eq!(update.player.speed, 109);
+    assert!(
+        update
+            .inventory
+            .iter()
+            .any(|item| { item.id == "demo.item.resonance-pellet.1" && item.quantity == 6 })
+    );
 }
 
 #[test]

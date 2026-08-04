@@ -1,6 +1,6 @@
 # RFB 全系统梳理与重构实现路线
 
-状态：长期规则实现路线；当前基线为协议 1.135 / contract-v169（P31–P98 进展见 8.3，玩家流程与 Outpost 进展见 Phase 17/18，物品接入见 Phase 19）
+状态：长期规则实现路线；当前基线为协议 1.136 / contract-v171（P31–P98 进展见 8.3，玩家流程与 Outpost 进展见 Phase 17/18，物品接入见 Phase 19，Warrens 怪物机制见 W1–W14 清单）
 
 ## 1. 目的与边界
 
@@ -165,7 +165,7 @@ flowchart TD
 | 怪物定义 | HP、AC、速度、经验、抗性、blow、法术、掉落、标签 | 部分建立 | 扩展 `ActorDefinition` 为角色公共部分 + `MonsterDefinition`，避免玩家和怪物字段无限并集 |
 | 回合与移动 AI | 追踪、视线、气味/flow、保持距离、逃跑、守卫、射击 | 部分建立 | contract-v8 已有八方向 BFS 追踪、占位避让和确定性 tie-breaker；contract-v88 加入内容阈值驱动的保持距离与受伤撤退，contract-v89 加入玩家召唤物 Follow/Attack/Keep Distance/Guard。后续扩展安全路径、气味/flow 和射击 |
 | 怪物施法 | 选择法术、频率、射线检查、召唤和智能学习 | 基础纵切已建立 | contract-v86–v88 已建立频率、有效权重、阵营目标、直接/自身/多格结算、敌我风险、敌对召唤、逆频率冷却和已观察抗性记忆；后续加入协同评分、反制/沉默与更广知识类型 |
-| 群体与生成 | 成群、护卫、朋友、召唤、繁殖、独特和守护者 | 已建立基础版 | contract-v47 的 Vault 固定群体、contract-v48 的同类巢穴、contract-v51 的动态 friends/escort 与 `cluster/ring` formation、contract-v56 的复合 pit、contract-v59 的持久 pack identity 与 `seek/surround/guard-leader`、contract-v82 的玩家友方召唤和 contract-v87 的敌对召唤已建立；后续增加任意形状/散布、更复杂 AI、繁殖、唯一性和种群上限 |
+| 群体与生成 | 成群、护卫、朋友、召唤、繁殖、独特和守护者 | 已建立基础版 | contract-v47 的 Vault 固定群体、contract-v48 的同类巢穴、contract-v51 的动态 friends/escort 与 `cluster/ring` formation、contract-v56 的复合 pit、contract-v59 的持久 pack identity 与 `seek/surround/guard-leader`、contract-v82 的玩家友方召唤和 contract-v87 的敌对召唤已建立；contract-v171 固定 Warrens 支持范围并把全局分配、越级、leader-first 群体、群体骰、繁殖和唯一性拆入[怪物机制清单](warrens-monster-mechanism-backlog.md) |
 | 怪物物品与掉落 | 携带物、偷窃、掉落次数和主题 | 已建立基础版 | contract-v25 已建立真实携带实例、出生生成和统一死亡掉落事务；后续增加偷窃、缴械、怪物拾物、掉落次数和主题 |
 | 怪物回忆 | 观察攻击、抗性、掉落、击杀次数和死亡次数 | 未建立 | `MonsterKnowledge` 与怪物定义分开；观察事件逐项揭示 |
 | 宠物/友好 | 阵营、跟随、命令、维持费用、解散 | 未建立 | `FactionId` + `CompanionState` + 宠物命令；不使用多个 pet/friendly bool 组合 |
@@ -426,6 +426,7 @@ contract-v69 继续完成内容驱动的 dungeon 实例生命周期。`reset-on-
 6. 友好、宠物和命令。
 
 骑乘、捕获、进化、附身和玩家怪物种族延后到普通怪物系统稳定之后。
+Warrens 的下一轮怪物工作按 [Warrens 怪物机制实现清单](warrens-monster-mechanism-backlog.md) 的 W1–W14 推进；先补分配与群体真实性，再补门、移动域、HP、特殊攻击及掉落，避免一次纵切混合多个怪物行为。
 
 ### 阶段 I：城镇、商店、任务与经济
 
@@ -459,13 +460,13 @@ contract-v69 继续完成内容驱动的 dungeon 实例生命周期。`reset-on-
 
 实现自动拾取规则 AST、自动铭文、宏/动作绑定、完整知识菜单、怪物回忆、统计、角色档案、高分、胜利记录和可选 spoiler 工具。最后进行大规模内容录入、性能分析、平衡差分和发行准备。
 
-## 8. contract-v75–v159 阶段性里程碑
+## 8. contract-v75–v171 阶段性里程碑
 
 ### 8.1 基线与完成度判断
 
-当前权威基线为协议 1.135、内容包 1.163.0、contract-v169、save v1 和 state hash Schema v61；内容 hash 为 `d9e227cc7757ff82a66c7afadf8da2846a1751920f53fa3f1f0a74c640b8a0ac`。active baseline 包含 463 个 exact fixtures，零 waiver。v73–v149 建立的规则与内容边界保持；v150–v156 建立 Warrens 玩家流程、角色切片、结果恢复、地图密度和掉落；v157–v168 建立并扩展开放 Outpost、补给、九类设施与 Home；v169 接入 35 项固定原版物品、共享背包容量、容器/工具槽、装备近战修正与工具双槽语义。Original Lab/Echo 与旧 demo builds 留作历史系统回归。Race/Class/Personality、技能成长、出生装备、自然属性、HP 序列、胜利后等级 100 / `18/820` 和装备派生边界保持一致。
+当前权威基线为协议 1.136、内容包 1.165.0、contract-v171、save v1 和 state hash Schema v61；内容 hash 为 `ab54279248422c2d39dc6e91b8827f6be1f15c4d9ab4c79ee60707e766abbb52`。active baseline 包含 462 个 exact fixtures，零 waiver。v73–v149 建立的规则与内容边界保持；v150–v156 建立 Warrens 玩家流程、角色切片、结果恢复、地图密度和掉落；v157–v168 建立并扩展开放 Outpost、补给、九类设施与 Home；v169 接入 35 项固定原版物品、共享背包容量、容器/工具槽、装备近战修正与工具双槽语义；v170 按原版力量表动态计算负重容量，并以超重速度惩罚取代拾取和交易硬拒绝；v171 按固定原版来源把 Warrens 普通生态扩为十二种已支持怪物，并建立 W1–W14 怪物机制实施清单。Original Lab/Echo 与旧 demo builds 留作历史系统回归。Race/Class/Personality、技能成长、出生装备、自然属性、HP 序列、胜利后等级 100 / `18/820` 和装备派生边界保持一致。
 
-这一里程碑代表“规则架构、地牢纵切、角色构筑、玩家/怪物施法循环和首个兼容玩家流程已经成型”，不代表“旧 RFB 已重制完成”。当前 demo 内容包有 68 种 terrain、33 种 actor、140 种 item、3 种 resource、68 个 ability、6 本 ability book、10 个 skill、13 个 skill set、5 个 Race、6 个 Class、3 个 Personality、7 个 build、7 张 encounter table、12 张 loot table、3 张 theme table、1 张 region table、1 张 terrain feature table、6 个 Vault、1 个 town、1 个 town facility、8 个 shop 和 2 个 world。
+这一里程碑代表“规则架构、地牢纵切、角色构筑、玩家/怪物施法循环和首个兼容玩家流程已经成型”，不代表“旧 RFB 已重制完成”。当前 demo 内容包有 68 种 terrain、44 种 actor、140 种 item、3 种 resource、69 个 ability、6 本 ability book、10 个 skill、13 个 skill set、5 个 Race、6 个 Class、3 个 Personality、7 个 build、7 张 encounter table、14 张 loot table、3 张 theme table、1 张 region table、1 张 terrain feature table、6 个 Vault、1 个 town、1 个 town facility、8 个 shop 和 2 个 world。
 
 | 领域 | 阶段性状态 | 与旧 RFB 的当前差距 |
 | --- | --- | --- |

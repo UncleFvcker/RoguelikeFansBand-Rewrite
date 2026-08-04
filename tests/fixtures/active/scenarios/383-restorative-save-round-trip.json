@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "item.restorative-save-round-trip",
+  "category": "inventory",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "62",
@@ -91,7 +92,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 114,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 800,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -3225,7 +3227,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "0d54356755595d196efa88839cbeded673261e88f6af5b1b716ec10ee418286e"
+      "stateHash": "08c2c3e8fc568c35b60fd4eec66e928d1c87fce3a83a08ced0da4d2c326f491e"
     },
     "events": [
       {
@@ -3257,6 +3259,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "0d54356755595d196efa88839cbeded673261e88f6af5b1b716ec10ee418286e"
+    "saveRoundTripStateHash": "08c2c3e8fc568c35b60fd4eec66e928d1c87fce3a83a08ced0da4d2c326f491e"
   }
 }

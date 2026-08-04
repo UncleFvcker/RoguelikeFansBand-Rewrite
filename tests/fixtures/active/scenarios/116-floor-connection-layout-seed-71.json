@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "floor.connection-layout-seed-71",
+  "category": "dungeon",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "71",
@@ -41,7 +42,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -297,7 +299,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "4bef91c034bdb4a3b1d06f735b0153c1ec091709674865478ba24e363aeae230"
+      "stateHash": "cfa0e8c51b7608700ecbc671513bcb54ed05979ba5d6f83daff9462dec1dccc3"
     },
     "events": [
       {
@@ -1927,6 +1929,6 @@
         "y": 19
       }
     ],
-    "saveRoundTripStateHash": "4bef91c034bdb4a3b1d06f735b0153c1ec091709674865478ba24e363aeae230"
+    "saveRoundTripStateHash": "cfa0e8c51b7608700ecbc671513bcb54ed05979ba5d6f83daff9462dec1dccc3"
   }
 }

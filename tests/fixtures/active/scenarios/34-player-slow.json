@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "status.player.slow-scheduler",
+  "category": "combat",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0x000000000000002a",
@@ -71,7 +72,8 @@
       "playerSpeed": 100,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerStatuses": [
@@ -359,7 +361,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "998bcbc234d593b120b3cfcc2fac06b842d146dda89f9eb7f778b6666e292abc"
+      "stateHash": "11a76ba0bdc385dc216bb631dd589e9ba041f9835cb9c642a9b2c4bd35a8d889"
     },
     "events": [
       {
@@ -382,6 +384,6 @@
         "y": 5
       }
     ],
-    "saveRoundTripStateHash": "998bcbc234d593b120b3cfcc2fac06b842d146dda89f9eb7f778b6666e292abc"
+    "saveRoundTripStateHash": "11a76ba0bdc385dc216bb631dd589e9ba041f9835cb9c642a9b2c4bd35a8d889"
   }
 }

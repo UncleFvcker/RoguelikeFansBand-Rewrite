@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "monster.casting.hostile-summon",
+  "category": "monsters",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "18",
@@ -57,7 +58,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -339,7 +341,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "d6014ca52435e748a9b1cc44955e7577bdcf20fff653049601389be5351f690e"
+      "stateHash": "2950537d799a65069e215e1e8d56dd7d13784ee7cfe4781ddb421413effd40c8"
     },
     "events": [
       {
@@ -733,6 +735,6 @@
         "y": 2
       }
     ],
-    "saveRoundTripStateHash": "d6014ca52435e748a9b1cc44955e7577bdcf20fff653049601389be5351f690e"
+    "saveRoundTripStateHash": "2950537d799a65069e215e1e8d56dd7d13784ee7cfe4781ddb421413effd40c8"
   }
 }

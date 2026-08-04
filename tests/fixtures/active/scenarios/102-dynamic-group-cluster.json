@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "dungeon.dynamic-group-cluster-depth-7",
+  "category": "dungeon",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "49",
@@ -107,7 +108,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9979,
       "playerLevel": 1,
@@ -343,7 +345,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "a73e41e60d105eb35778c779c175f4b4a32478445440f58eaff651051e099e59"
+      "stateHash": "ca64d8dc670a225b13b96970eb7da575e7fb6e555a788c40fff97980a1ef4ff6"
     },
     "events": [
       {
@@ -5312,6 +5314,6 @@
         "y": 6
       }
     ],
-    "saveRoundTripStateHash": "a73e41e60d105eb35778c779c175f4b4a32478445440f58eaff651051e099e59"
+    "saveRoundTripStateHash": "ca64d8dc670a225b13b96970eb7da575e7fb6e555a788c40fff97980a1ef4ff6"
   }
 }

@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "item.potion-slowness",
+  "category": "potions",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "82",
@@ -47,7 +48,8 @@
       "playerSpeed": 100,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 444,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1250,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerStatuses": [
@@ -479,7 +481,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "4d630f7e4fa648b1618698f903ee2b6b32961c7ffd04bc3f60a4bf53cb32ab5e"
+      "stateHash": "205a7d132b106eff2af7f4b29c63252e42e1780589c265294ea7e39e8087bac1"
     },
     "events": [
       {
@@ -492,6 +494,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "4d630f7e4fa648b1618698f903ee2b6b32961c7ffd04bc3f60a4bf53cb32ab5e"
+    "saveRoundTripStateHash": "205a7d132b106eff2af7f4b29c63252e42e1780589c265294ea7e39e8087bac1"
   }
 }

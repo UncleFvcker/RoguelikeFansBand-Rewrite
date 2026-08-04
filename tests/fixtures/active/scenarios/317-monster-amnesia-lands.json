@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "monster-casting.misc.amnesia-lands",
+  "category": "monsters",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "28",
@@ -56,7 +57,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -308,7 +310,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "7900ab1cc34a915a12cf2b2c5724a5f258e033a41b6f7d50c84d082bba97e7cf"
+      "stateHash": "9a7c0aeeadb3d6a112807b56f8420a52e82b91fedeecb9a41259891e23396f3e"
     },
     "events": [
       {
@@ -938,6 +940,6 @@
         "y": 3
       }
     ],
-    "saveRoundTripStateHash": "7900ab1cc34a915a12cf2b2c5724a5f258e033a41b6f7d50c84d082bba97e7cf"
+    "saveRoundTripStateHash": "9a7c0aeeadb3d6a112807b56f8420a52e82b91fedeecb9a41259891e23396f3e"
   }
 }

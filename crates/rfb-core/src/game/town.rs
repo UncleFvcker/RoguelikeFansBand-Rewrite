@@ -425,13 +425,6 @@ fn item_is_legal_for_shop(game: &Game, item: &ItemInstance) -> bool {
     })
 }
 
-fn player_carry_capacity(game: &Game) -> u32 {
-    game.content
-        .actor(&game.player.kind_id)
-        .expect("player actor definition must remain available")
-        .carry_capacity_tenths_pound
-}
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct ShopTransactionOutcome {
     pub(crate) shop_id: String,
@@ -950,18 +943,6 @@ impl Game {
         if quantity > available_quantity {
             return Err("insufficient-quantity");
         }
-        let definition = self
-            .content
-            .item(&item.kind_id)
-            .expect("home item kind must remain available");
-        let added_weight = u32::from(definition.weight_tenths_pound).saturating_mul(quantity);
-        if self
-            .carried_weight_tenths_pound()
-            .saturating_add(added_weight)
-            > player_carry_capacity(self)
-        {
-            return Err("over-capacity");
-        }
         if self.inventory_quantity_capacity_for(&item, true) < quantity {
             return Err("inventory-full");
         }
@@ -1034,14 +1015,6 @@ impl Game {
         };
         if self.gold < total_price {
             return Err("insufficient-gold");
-        }
-        let added_weight = u32::from(definition.weight_tenths_pound).saturating_mul(quantity);
-        if self
-            .carried_weight_tenths_pound()
-            .saturating_add(added_weight)
-            > player_carry_capacity(self)
-        {
-            return Err("over-capacity");
         }
         if self.inventory_quantity_capacity_for(&item, false) < quantity {
             return Err("inventory-full");
@@ -1452,20 +1425,13 @@ impl Game {
                             let unit_price =
                                 player_purchase_unit_price(shop, definition.base_value, factor);
                             let affordable = self.gold / unit_price.max(1);
-                            let remaining_capacity = player_carry_capacity(self)
-                                .saturating_sub(self.carried_weight_tenths_pound());
-                            let carryable =
-                                remaining_capacity / u32::from(definition.weight_tenths_pound);
                             let slot_carryable = self.inventory_quantity_capacity_for(item, false);
                             ShopStockItemDto {
                                 id: item.id.clone(),
                                 kind_id: item.kind_id.clone(),
                                 display_name_key: definition.name_key.clone(),
                                 quantity,
-                                maximum_quantity: quantity
-                                    .min(affordable)
-                                    .min(carryable)
-                                    .min(slot_carryable),
+                                maximum_quantity: quantity.min(affordable).min(slot_carryable),
                                 unit_price,
                                 weight_tenths_pound: definition.weight_tenths_pound,
                                 fuel: item.fuel,
@@ -1560,8 +1526,6 @@ impl Game {
                     .home_states
                     .get(&facility.id)
                     .expect("validated home state must remain available");
-                let remaining_capacity =
-                    player_carry_capacity(self).saturating_sub(self.carried_weight_tenths_pound());
                 let mut stored_items = if player_at_entrance {
                     grouped_home_items(self, &state.inventory)
                         .into_iter()
@@ -1570,18 +1534,13 @@ impl Game {
                                 .content
                                 .item(&item.kind_id)
                                 .expect("home item kind must remain available");
-                            let carryable = if definition.weight_tenths_pound == 0 {
-                                quantity
-                            } else {
-                                remaining_capacity / u32::from(definition.weight_tenths_pound)
-                            };
                             let slot_carryable = self.inventory_quantity_capacity_for(item, true);
                             HomeItemDto {
                                 id: item.id.clone(),
                                 kind_id: item.kind_id.clone(),
                                 display_name_key: self.item_display_name_key(&item.kind_id),
                                 quantity,
-                                maximum_quantity: quantity.min(carryable).min(slot_carryable),
+                                maximum_quantity: quantity.min(slot_carryable),
                                 weight_tenths_pound: definition.weight_tenths_pound,
                                 fuel: item.fuel,
                             }

@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "monster.wounded-flee",
+  "category": "monsters",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -58,7 +59,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -309,7 +311,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "f3b01b5fbec03a6a45937f7eaf28ac0ca0b4066c9022f3592b74373c26c5a435"
+      "stateHash": "04128a93829fffa2df569f7a327ec3ab82e1f958a9880b9b87bec90d379953c7"
     },
     "events": [
       {
@@ -336,6 +338,6 @@
         "y": 2
       }
     ],
-    "saveRoundTripStateHash": "f3b01b5fbec03a6a45937f7eaf28ac0ca0b4066c9022f3592b74373c26c5a435"
+    "saveRoundTripStateHash": "04128a93829fffa2df569f7a327ec3ab82e1f958a9880b9b87bec90d379953c7"
   }
 }

@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "task.collect-objective-completes-and-closes-entry",
+  "category": "tasks",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "27",
@@ -55,7 +56,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 10,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9989,
       "playerLevel": 1,
@@ -321,7 +323,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 1
       },
-      "stateHash": "1867721fb634c8c24ef06ac711b55455a05c8215aa442770c93eb77ace50033c"
+      "stateHash": "01a9c2ce5d361100b73c473f5b072350dd333ade35472f87e6ce8e238e32379a"
     },
     "events": [
       {
@@ -3606,6 +3608,6 @@
         "y": 3
       }
     ],
-    "saveRoundTripStateHash": "1867721fb634c8c24ef06ac711b55455a05c8215aa442770c93eb77ace50033c"
+    "saveRoundTripStateHash": "01a9c2ce5d361100b73c473f5b072350dd333ade35472f87e6ce8e238e32379a"
   }
 }

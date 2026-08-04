@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "item.device.natural-recovery-rate",
+  "category": "devices",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "60",
@@ -103,7 +104,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 67,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 900,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9989,
       "playerLevel": 1,
@@ -511,7 +513,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "b8ee9d7ffadd362fda690f11e7b7c4e3a675511fa15da7a9639d3d8bbf59c5dc"
+      "stateHash": "1a577607e2c03630cbe8ed3b7284240589719fbfff05628ac266f6eff493bad5"
     },
     "events": [
       {

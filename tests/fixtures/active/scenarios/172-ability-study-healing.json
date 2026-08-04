@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "ability.study-healing",
+  "category": "abilities",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -38,7 +39,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 110,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 800,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -3142,7 +3144,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "86ea42c7e7e27acad5c09885081ef46d4b17ab478fcc87a7c7e3ecb2a777de26"
+      "stateHash": "b3adfc40dcd7a5c2c79257182884ef36da050ba2e51d95367e013f83a29d8ee9"
     },
     "events": [
       {
@@ -3154,6 +3156,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "86ea42c7e7e27acad5c09885081ef46d4b17ab478fcc87a7c7e3ecb2a777de26"
+    "saveRoundTripStateHash": "b3adfc40dcd7a5c2c79257182884ef36da050ba2e51d95367e013f83a29d8ee9"
   }
 }

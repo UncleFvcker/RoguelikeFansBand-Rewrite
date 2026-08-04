@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "monster-casting.summon.count-dice",
+  "category": "monsters",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "3",
@@ -56,7 +57,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -338,7 +340,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "56c35a9648f267945ae4259fedcb34e407e5361df89cfa03becd34ef82a78eaf"
+      "stateHash": "677edb7f8d34ac3cc92ec3de32c846bec49b1bdbfe7d4f1955c2a5b806c3bf15"
     },
     "events": [
       {
@@ -475,6 +477,6 @@
         "y": 2
       }
     ],
-    "saveRoundTripStateHash": "56c35a9648f267945ae4259fedcb34e407e5361df89cfa03becd34ef82a78eaf"
+    "saveRoundTripStateHash": "677edb7f8d34ac3cc92ec3de32c846bec49b1bdbfe7d4f1955c2a5b806c3bf15"
   }
 }

@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "ability.cooldown-recovers-after-wait",
+  "category": "abilities",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -58,7 +59,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 110,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 800,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -3162,7 +3164,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "3113c5f2ad50cfce48ebc1c6b0fa0e3d6c3619ba75ab5333f46628218689f8ed"
+      "stateHash": "880ef305ccc2abca49ec10a3e1f06accc69251591c3d1181f437d9ec715d2bf2"
     },
     "events": [
       {
@@ -3274,6 +3276,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "3113c5f2ad50cfce48ebc1c6b0fa0e3d6c3619ba75ab5333f46628218689f8ed"
+    "saveRoundTripStateHash": "880ef305ccc2abca49ec10a3e1f06accc69251591c3d1181f437d9ec715d2bf2"
   }
 }

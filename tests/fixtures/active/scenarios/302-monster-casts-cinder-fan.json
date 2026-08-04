@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "monster-casting.damage.cinder-fan",
+  "category": "monsters",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "9",
@@ -56,7 +57,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -308,7 +310,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "ab6b81a3b276fe9ed061d8fd0cedeb0c1b6ddbb6b6209f5aa97e4931c001dc4f"
+      "stateHash": "deb8468fc426af8f80f3d7392274621921afe20ae0bdbf8586d2ec6443c05083"
     },
     "events": [
       {
@@ -589,6 +591,6 @@
         "y": 3
       }
     ],
-    "saveRoundTripStateHash": "ab6b81a3b276fe9ed061d8fd0cedeb0c1b6ddbb6b6209f5aa97e4931c001dc4f"
+    "saveRoundTripStateHash": "deb8468fc426af8f80f3d7392274621921afe20ae0bdbf8586d2ec6443c05083"
   }
 }

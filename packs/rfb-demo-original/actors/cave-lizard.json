@@ -1,0 +1,24 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "formatVersion": 1,
+  "id": "demo.actor.cave-lizard",
+  "role": "monster",
+  "nameKey": "actor-demo-cave-lizard-name",
+  "descriptionKey": "actor-demo-cave-lizard-description",
+  "glyph": "R",
+  "level": 4,
+  "experienceValue": 9,
+  "maxHp": 10,
+  "speed": 110,
+  "attack": 1,
+  "defense": 1,
+  "damageDice": 1,
+  "damageSides": 10,
+  "damageType": "physical",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1
+  },
+  "tags": ["animal", "reptile", "warrens"]
+}

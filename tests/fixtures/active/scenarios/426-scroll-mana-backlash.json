@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "item.scroll-mana-backlash",
+  "category": "scrolls",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "83",
@@ -102,7 +103,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 100,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerResistances": [
@@ -360,7 +362,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "d6e3899a0d3f513833bd84d188b369cd0b62e66d648a9b420a5503b04aa48d2e"
+      "stateHash": "e53e28455843a6f1d082520ed8147f71556684826be5ee4a8b377a3311822011"
     },
     "events": [
       {

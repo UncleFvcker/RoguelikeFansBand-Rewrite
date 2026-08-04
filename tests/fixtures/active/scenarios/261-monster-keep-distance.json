@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "monster.keep-distance",
+  "category": "monsters",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -58,7 +59,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -309,7 +311,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "10e616b3f0ad4027b2eaa1673d3b89d3cbe562add79ae58193721a6ed7aa7a85"
+      "stateHash": "475c7baced0f6812c3b55a525e9bbf30e2a12f94af88b9104077ac26b4916bb5"
     },
     "events": [
       {
@@ -336,6 +338,6 @@
         "y": 2
       }
     ],
-    "saveRoundTripStateHash": "10e616b3f0ad4027b2eaa1673d3b89d3cbe562add79ae58193721a6ed7aa7a85"
+    "saveRoundTripStateHash": "475c7baced0f6812c3b55a525e9bbf30e2a12f94af88b9104077ac26b4916bb5"
   }
 }

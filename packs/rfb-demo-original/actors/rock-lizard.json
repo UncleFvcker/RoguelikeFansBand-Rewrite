@@ -1,0 +1,24 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "formatVersion": 1,
+  "id": "demo.actor.rock-lizard",
+  "role": "monster",
+  "nameKey": "actor-demo-rock-lizard-name",
+  "descriptionKey": "actor-demo-rock-lizard-description",
+  "glyph": "R",
+  "level": 1,
+  "experienceValue": 4,
+  "maxHp": 7,
+  "speed": 110,
+  "attack": 1,
+  "defense": 0,
+  "damageDice": 1,
+  "damageSides": 3,
+  "damageType": "physical",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1
+  },
+  "tags": ["animal", "reptile", "warrens"]
+}

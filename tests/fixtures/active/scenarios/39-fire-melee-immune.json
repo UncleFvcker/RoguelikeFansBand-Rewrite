@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "combat.elemental.fire-immune",
+  "category": "combat",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -49,7 +50,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1000,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerResistances": [
@@ -306,7 +308,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "4d69dc8befd4bbe0b6fd7a2d1d7f10f62bd0427094f5481028c263540ddfc876"
+      "stateHash": "b39cbbd7c51b100598c1c33659268f66a6dfd3a78fcdd7b83e4611ca178be40b"
     },
     "events": [
       {
@@ -334,6 +336,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "4d69dc8befd4bbe0b6fd7a2d1d7f10f62bd0427094f5481028c263540ddfc876"
+    "saveRoundTripStateHash": "b39cbbd7c51b100598c1c33659268f66a6dfd3a78fcdd7b83e4611ca178be40b"
   }
 }

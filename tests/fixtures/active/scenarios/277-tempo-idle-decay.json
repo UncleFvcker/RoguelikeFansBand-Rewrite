@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "technique.tempo-idle-decay",
+  "category": "techniques",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -49,7 +50,8 @@
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 30,
-      "playerCarryCapacityTenthsPound": 100,
+      "playerCarryCapacityTenthsPound": 1100,
+      "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 1,
@@ -426,7 +428,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "8542a238c82de1e72dc26521c38a8c1e09ea41572bdd2fab2d3264b9f1bd1bde"
+      "stateHash": "5822cd029df232aa0b0e29f3bf2625d414d0d945831d34117a2227247927db85"
     },
     "events": [
       {
@@ -445,6 +447,6 @@
         "y": 3
       }
     ],
-    "saveRoundTripStateHash": "8542a238c82de1e72dc26521c38a8c1e09ea41572bdd2fab2d3264b9f1bd1bde"
+    "saveRoundTripStateHash": "5822cd029df232aa0b0e29f3bf2625d414d0d945831d34117a2227247927db85"
   }
 }
