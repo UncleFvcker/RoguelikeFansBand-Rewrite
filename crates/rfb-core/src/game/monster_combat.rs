@@ -2,7 +2,76 @@
 
 use super::*;
 
+pub(super) fn melee_effect_chance(effect: &MeleeBlowEffectDefinition) -> Option<u8> {
+    match effect {
+        MeleeBlowEffectDefinition::Damage { chance_percent, .. }
+        | MeleeBlowEffectDefinition::Poison { chance_percent, .. }
+        | MeleeBlowEffectDefinition::Disease { chance_percent, .. }
+        | MeleeBlowEffectDefinition::DrainAttributes { chance_percent, .. }
+        | MeleeBlowEffectDefinition::Bleeding { chance_percent, .. } => *chance_percent,
+    }
+}
+
+pub(super) fn melee_status(
+    kind_id: &str,
+    duration: u32,
+    source_kind_id: &str,
+) -> StatusApplication {
+    StatusApplication {
+        status: StatusInstance {
+            kind_id: kind_id.to_owned(),
+            intensity: 1,
+            remaining_ticks: duration,
+            source_id: Some(source_kind_id.to_owned()),
+            granted_resistances: BTreeMap::new(),
+            granted_brands: BTreeSet::new(),
+            granted_modifiers: StatModifiersDto::default(),
+            granted_equipment_bonuses: EquipmentBonusesDto::default(),
+            granted_status_immunities: BTreeSet::new(),
+            granted_race_id: None,
+            grants_wall_passage: false,
+            incoming_damage_percent: 100,
+        },
+        stacking: StatusStacking::Extend,
+    }
+}
+
 impl Game {
+    pub(super) fn actor_has_status_immunity(&self, index: usize, status_kind_id: &str) -> bool {
+        self.content
+            .actor(&self.entities[index].kind_id)
+            .is_some_and(|definition| {
+                definition
+                    .status_immunities
+                    .iter()
+                    .any(|immunity| immunity == status_kind_id)
+            })
+            || self.entities[index]
+                .statuses
+                .iter()
+                .any(|status| status.granted_status_immunities.contains(status_kind_id))
+    }
+
+    pub(super) fn apply_actor_melee_status(
+        &mut self,
+        index: usize,
+        status_kind_id: &str,
+        duration: i32,
+        source_kind_id: &str,
+    ) {
+        if duration <= 0 || self.actor_has_status_immunity(index, status_kind_id) {
+            return;
+        }
+        apply_status(
+            &mut self.entities[index].statuses,
+            melee_status(
+                status_kind_id,
+                u32::try_from(duration).unwrap_or(u32::MAX),
+                source_kind_id,
+            ),
+        );
+    }
+
     #[allow(clippy::too_many_arguments)]
     pub(super) fn resolve_monster_damage_to_hostile(
         &mut self,
@@ -125,16 +194,35 @@ impl Game {
         if target.is_player() {
             let source_entity_id = self.entities[source_index].id.clone();
             let player_hp_before = self.player.hp;
-            self.resolve_monster_melee(source_index, events);
-            self.resolve_vengeance_retaliation(
-                &source_entity_id,
-                player_hp_before.saturating_sub(self.player.hp),
-                events,
-                changed,
-                removed_entities,
-            )?;
+            let self_destructs = self.resolve_monster_melee(source_index, events);
+            if self_destructs {
+                if let Some(index) = self
+                    .entities
+                    .iter()
+                    .position(|entity| entity.id == source_entity_id)
+                {
+                    self.resolve_actor_death(
+                        index,
+                        DomainEvent::MonsterSelfDestructed {
+                            source_kind_id: self.entities[index].kind_id.clone(),
+                        },
+                        events,
+                        changed,
+                        removed_entities,
+                    )?;
+                }
+            } else {
+                self.resolve_vengeance_retaliation(
+                    &source_entity_id,
+                    player_hp_before.saturating_sub(self.player.hp),
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+            }
             return Ok(());
         }
+        let source_entity_id = self.entities[source_index].id.clone();
         let source_kind_id = self.entities[source_index].kind_id.clone();
         let definition = self
             .content
@@ -182,46 +270,171 @@ impl Game {
                 continue;
             }
 
-            let raw_damage = self.roll_damage(blow.damage_dice, blow.damage_sides);
-            let resistance = self.entities[target_index]
-                .resistances
-                .level(blow.damage_type);
-            let damage = resolve_armored_damage(
-                raw_damage,
-                blow.damage_type,
-                target_stats.armor_class.value,
-                resistance,
-            );
-            let application = plan_damage_application(
-                &self.entities[target_index],
-                damage,
-                FatalityPolicy::AtOrBelowZero,
-            );
-            commit_damage_application(&mut self.entities[target_index], &application);
-            self.wake_entity_after_damage(target_index, damage.applied, events);
-            if application.fatal {
-                events.push(DomainEvent::MonsterMeleeEntitySlew {
-                    source_kind_id: source_kind_id.clone(),
-                    target_kind_id: target.kind_id().to_owned(),
-                    method_id: blow.method_id,
-                    damage,
-                });
-                let removed = self.entities.remove(target_index);
-                changed.insert(removed.position);
-                removed_entities.push(removed.id);
+            if blow.self_destructs {
+                if let Some(source_index) = self
+                    .entities
+                    .iter()
+                    .position(|entity| entity.id == source_entity_id)
+                {
+                    self.resolve_actor_death(
+                        source_index,
+                        DomainEvent::MonsterSelfDestructed {
+                            source_kind_id: source_kind_id.clone(),
+                        },
+                        events,
+                        changed,
+                        removed_entities,
+                    )?;
+                }
                 break;
             }
-            events.push(DomainEvent::MonsterMeleeEntityHit {
-                source_kind_id: source_kind_id.clone(),
-                target_kind_id: target.kind_id().to_owned(),
-                method_id: blow.method_id,
-                damage,
-            });
+
+            for effect in &blow.effects {
+                if melee_effect_chance(effect)
+                    .is_some_and(|chance| self.rng.bounded(100) >= u64::from(chance))
+                {
+                    continue;
+                }
+                let Some(target_index) = self
+                    .entities
+                    .iter()
+                    .position(|entity| entity.id == target.entity_id() && entity.hp > 0)
+                else {
+                    break;
+                };
+                let damage = match effect {
+                    MeleeBlowEffectDefinition::Damage {
+                        damage_dice,
+                        damage_sides,
+                        damage_type,
+                        armor_mitigated,
+                        ..
+                    } => {
+                        let raw = self.roll_damage(*damage_dice, *damage_sides);
+                        let damage_type = DamageType::from(*damage_type);
+                        let resistance = self.entities[target_index].resistances.level(damage_type);
+                        Some(if *armor_mitigated {
+                            resolve_armored_damage(
+                                raw,
+                                damage_type,
+                                target_stats.armor_class.value,
+                                resistance,
+                            )
+                        } else {
+                            resolve_damage(DamagePacket::new(raw, damage_type), resistance)
+                        })
+                    }
+                    MeleeBlowEffectDefinition::Poison {
+                        damage_dice,
+                        damage_sides,
+                        ..
+                    } => {
+                        let raw = self.roll_damage(*damage_dice, *damage_sides);
+                        let duration = resolve_damage(
+                            DamagePacket::new(raw, DamageType::Poison),
+                            self.entities[target_index]
+                                .resistances
+                                .level(DamageType::Poison),
+                        )
+                        .applied
+                        .saturating_mul(7)
+                            / 4;
+                        self.apply_actor_melee_status(
+                            target_index,
+                            STATUS_POISON,
+                            duration,
+                            &source_kind_id,
+                        );
+                        None
+                    }
+                    MeleeBlowEffectDefinition::Disease {
+                        damage_dice,
+                        damage_sides,
+                        ..
+                    } => {
+                        let raw = self.roll_damage(*damage_dice, *damage_sides);
+                        let physical = resolve_armored_damage(
+                            raw,
+                            DamageType::Physical,
+                            target_stats.armor_class.value,
+                            self.entities[target_index]
+                                .resistances
+                                .level(DamageType::Physical),
+                        );
+                        Some(physical)
+                    }
+                    MeleeBlowEffectDefinition::DrainAttributes { .. } => None,
+                    MeleeBlowEffectDefinition::Bleeding {
+                        duration_dice,
+                        duration_sides,
+                        ..
+                    } => {
+                        let duration = self.roll_damage(*duration_dice, *duration_sides);
+                        self.apply_actor_melee_status(
+                            target_index,
+                            STATUS_BLEEDING,
+                            duration,
+                            &source_kind_id,
+                        );
+                        None
+                    }
+                };
+                let Some(damage) = damage else {
+                    continue;
+                };
+                let application = plan_damage_application(
+                    &self.entities[target_index],
+                    damage,
+                    FatalityPolicy::AtOrBelowZero,
+                );
+                commit_damage_application(&mut self.entities[target_index], &application);
+                self.wake_entity_after_damage(target_index, damage.applied, events);
+                if application.fatal {
+                    self.resolve_actor_death_without_rewards(
+                        target_index,
+                        Some(DomainEvent::MonsterMeleeEntitySlew {
+                            source_kind_id: source_kind_id.clone(),
+                            target_kind_id: target.kind_id().to_owned(),
+                            method_id: blow.method_id.clone(),
+                            damage,
+                        }),
+                        events,
+                        changed,
+                        removed_entities,
+                    )?;
+                    break;
+                }
+                if matches!(effect, MeleeBlowEffectDefinition::Disease { .. }) {
+                    let duration = resolve_damage(
+                        DamagePacket::new(damage.applied, DamageType::Poison),
+                        self.entities[target_index]
+                            .resistances
+                            .level(DamageType::Poison),
+                    )
+                    .applied;
+                    self.apply_actor_melee_status(
+                        target_index,
+                        STATUS_POISON,
+                        duration,
+                        &source_kind_id,
+                    );
+                }
+                events.push(DomainEvent::MonsterMeleeEntityHit {
+                    source_kind_id: source_kind_id.clone(),
+                    target_kind_id: target.kind_id().to_owned(),
+                    method_id: blow.method_id.clone(),
+                    damage,
+                });
+            }
         }
         Ok(())
     }
 
-    pub(super) fn resolve_monster_melee(&mut self, index: usize, events: &mut Vec<DomainEvent>) {
+    pub(super) fn resolve_monster_melee(
+        &mut self,
+        index: usize,
+        events: &mut Vec<DomainEvent>,
+    ) -> bool {
         let kind_id = self.entities[index].kind_id.clone();
         let definition = self
             .content
@@ -265,30 +478,161 @@ impl Game {
                 continue;
             }
 
-            let raw_damage = self.roll_damage(blow.damage_dice, blow.damage_sides);
-            let resistance = self.effective_player_resistances().level(blow.damage_type);
-            let damage = self.reduce_player_damage(resolve_armored_damage(
-                raw_damage,
-                blow.damage_type,
-                armor_class,
-                resistance,
-            ));
-            let application =
-                plan_damage_application(&self.player, damage, FatalityPolicy::BelowZero);
-            commit_damage_application(&mut self.player, &application);
-            events.push(DomainEvent::MonsterMeleeHit {
-                source_kind_id: kind_id.clone(),
-                method_id: blow.method_id.clone(),
-                damage,
-            });
-            if application.fatal {
-                events.push(DomainEvent::PlayerDied {
+            if blow.self_destructs {
+                return true;
+            }
+
+            for effect in &blow.effects {
+                if melee_effect_chance(effect)
+                    .is_some_and(|chance| self.rng.bounded(100) >= u64::from(chance))
+                {
+                    continue;
+                }
+                let damage = match effect {
+                    MeleeBlowEffectDefinition::Damage {
+                        damage_dice,
+                        damage_sides,
+                        damage_type,
+                        armor_mitigated,
+                        ..
+                    } => {
+                        let raw = self.roll_damage(*damage_dice, *damage_sides);
+                        let damage_type = DamageType::from(*damage_type);
+                        let resistance = self.effective_player_resistances().level(damage_type);
+                        Some(self.reduce_player_damage(if *armor_mitigated {
+                            resolve_armored_damage(raw, damage_type, armor_class, resistance)
+                        } else {
+                            resolve_damage(DamagePacket::new(raw, damage_type), resistance)
+                        }))
+                    }
+                    MeleeBlowEffectDefinition::Poison {
+                        damage_dice,
+                        damage_sides,
+                        ..
+                    } => {
+                        let raw = self.roll_damage(*damage_dice, *damage_sides);
+                        let duration = resolve_damage(
+                            DamagePacket::new(raw, DamageType::Poison),
+                            self.effective_player_resistances()
+                                .level(DamageType::Poison),
+                        )
+                        .applied
+                        .saturating_mul(7)
+                            / 4;
+                        if duration > 0 && !self.player_status_immunities().contains(STATUS_POISON)
+                        {
+                            apply_status(
+                                &mut self.player.statuses,
+                                melee_status(
+                                    STATUS_POISON,
+                                    u32::try_from(duration).unwrap_or(u32::MAX),
+                                    &kind_id,
+                                ),
+                            );
+                        }
+                        None
+                    }
+                    MeleeBlowEffectDefinition::Disease {
+                        damage_dice,
+                        damage_sides,
+                        ..
+                    } => {
+                        let raw = self.roll_damage(*damage_dice, *damage_sides);
+                        let physical = self.reduce_player_damage(resolve_armored_damage(
+                            raw,
+                            DamageType::Physical,
+                            armor_class,
+                            self.effective_player_resistances()
+                                .level(DamageType::Physical),
+                        ));
+                        Some(physical)
+                    }
+                    MeleeBlowEffectDefinition::DrainAttributes { attributes, .. } => {
+                        for attribute in attributes {
+                            self.resolve_monster_attribute_drain(Game::item_attribute_kind(
+                                attribute,
+                            ));
+                        }
+                        None
+                    }
+                    MeleeBlowEffectDefinition::Bleeding {
+                        duration_dice,
+                        duration_sides,
+                        ..
+                    } => {
+                        let duration = self.roll_damage(*duration_dice, *duration_sides);
+                        if duration > 0
+                            && !self.player_status_immunities().contains(STATUS_BLEEDING)
+                        {
+                            apply_status(
+                                &mut self.player.statuses,
+                                melee_status(
+                                    STATUS_BLEEDING,
+                                    u32::try_from(duration).unwrap_or(u32::MAX),
+                                    &kind_id,
+                                ),
+                            );
+                        }
+                        None
+                    }
+                };
+                let Some(damage) = damage else {
+                    continue;
+                };
+                let application =
+                    plan_damage_application(&self.player, damage, FatalityPolicy::BelowZero);
+                commit_damage_application(&mut self.player, &application);
+                events.push(DomainEvent::MonsterMeleeHit {
                     source_kind_id: kind_id.clone(),
-                    method_id: blow.method_id,
+                    method_id: blow.method_id.clone(),
                     damage,
                 });
-                break;
+                if application.fatal {
+                    events.push(DomainEvent::PlayerDied {
+                        source_kind_id: kind_id.clone(),
+                        method_id: blow.method_id.clone(),
+                        damage,
+                    });
+                    return false;
+                }
+                if matches!(effect, MeleeBlowEffectDefinition::Disease { .. }) {
+                    let duration = resolve_damage(
+                        DamagePacket::new(damage.applied, DamageType::Poison),
+                        self.effective_player_resistances()
+                            .level(DamageType::Poison),
+                    )
+                    .applied;
+                    if duration > 0 && !self.player_status_immunities().contains(STATUS_POISON) {
+                        apply_status(
+                            &mut self.player.statuses,
+                            melee_status(
+                                STATUS_POISON,
+                                u32::try_from(duration).unwrap_or(u32::MAX),
+                                &kind_id,
+                            ),
+                        );
+                    }
+                    if self.rng.bounded(100) < 10 {
+                        self.resolve_monster_attribute_drain(AttributeKind::Constitution);
+                    }
+                }
             }
+        }
+        false
+    }
+
+    fn resolve_monster_attribute_drain(&mut self, attribute: AttributeKind) {
+        if self
+            .player_equipment_passives()
+            .contains(&attribute_sustain_passive(attribute))
+        {
+            return;
+        }
+        let previous_max_hp = self.effective_player_max_hp();
+        let previous_resource_maxima = self.player_resource_maxima();
+        let outcome = apply_attribute_drain(&mut self.progress, attribute, &mut self.rng);
+        if outcome.changed {
+            self.refresh_after_attribute_change(previous_max_hp, &previous_resource_maxima);
         }
     }
 

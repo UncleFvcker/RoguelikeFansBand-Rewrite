@@ -304,6 +304,52 @@ impl Game {
         None
     }
 
+    pub(super) fn try_monster_destroy_terrain(
+        &mut self,
+        actor_index: usize,
+        position: Position,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) -> bool {
+        let Some(terrain_index) = self.index(position) else {
+            return false;
+        };
+        if position.x == 0
+            || position.y == 0
+            || position.x == i32::from(self.width) - 1
+            || position.y == i32::from(self.height) - 1
+            || self
+                .floor_connections
+                .iter()
+                .any(|connection| connection.position == position)
+        {
+            return false;
+        }
+        let Some(actor) = self.content.actor(&self.entities[actor_index].kind_id) else {
+            return false;
+        };
+        if !actor.terrain_interaction.destroys_walls {
+            return false;
+        }
+        let Some(terrain) = self.content.terrain(&self.terrain[terrain_index]) else {
+            return false;
+        };
+        let Some(target_id) = terrain.monster_destroy_to_terrain_id.clone() else {
+            return false;
+        };
+        let source_id = terrain.id.clone();
+        self.terrain[terrain_index] = target_id.clone();
+        self.revealed_terrain.remove(&position);
+        changed.insert(position);
+        events.push(DomainEvent::MonsterTerrainDestroyed {
+            source_kind_id: self.entities[actor_index].kind_id.clone(),
+            terrain_kind_id: source_id,
+            replacement_terrain_kind_id: target_id,
+            position,
+        });
+        true
+    }
+
     fn terrain_interaction_context(&self) -> TerrainInteractionContext<'_> {
         TerrainInteractionContext {
             content: &self.content,

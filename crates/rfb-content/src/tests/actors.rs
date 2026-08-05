@@ -95,12 +95,21 @@ fn melee_routines_require_monsters_and_valid_blow_profiles() {
         .iter_mut()
         .find(|actor| actor.id == "demo.actor.echo-hound")
         .expect("fixture should contain the echo hound");
-    hound
+    let blow = hound
         .melee_routine
         .as_mut()
         .expect("hound should have a melee routine")
-        .blows[0]
-        .damage_dice = 0;
+        .blows
+        .first_mut()
+        .expect("hound should have a melee blow");
+    let MeleeBlowEffectDefinition::Damage { damage_dice, .. } = blow
+        .effects
+        .first_mut()
+        .expect("hound should have a damage effect")
+    else {
+        panic!("hound's first melee effect should deal damage");
+    };
+    *damage_dice = 0;
     assert!(matches!(
         validate_and_normalize(&mut invalid),
         Err(ContentError::InvalidMeleeRoutine(_))

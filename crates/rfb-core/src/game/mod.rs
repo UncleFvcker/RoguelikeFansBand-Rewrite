@@ -55,13 +55,13 @@ use rfb_content::{
     DungeonInstanceLifecycle, EncounterEntryDefinition, EncounterTableDefinition, EquipmentBonuses,
     EquipmentPassive, FloorLifecycle, ItemAttributeDefinition, ItemCurseSeverityDefinition,
     ItemCurseTargetDefinition, ItemEnchantmentRollDefinition, ItemSummonLevelSourceDefinition,
-    ItemSummonSelectorDefinition, ItemUseEffectDefinition, MonsterPackBehavior,
-    PlayerAbilityDefinition, ProceduralLayoutMode, ProceduralMazeDefinition,
-    ProceduralPitDefinition, ProceduralRoomGeometryDefinition, ProceduralRoomPlacement,
-    ProceduralRoomShape, ProceduralStreamerCandidateDefinition, SkillKind, SlayLevel, SlayTarget,
-    StartingItemDefinition, StatModifiers, TaskObjectiveKind, TechniqueAttribute,
-    TechniqueProfileDefinition, TerrainFeatureEntryDefinition, ThemeVaultCandidateDefinition,
-    WeaponBrand,
+    ItemSummonSelectorDefinition, ItemUseEffectDefinition, MeleeBlowEffectDefinition,
+    MonsterDropKindDefinition, MonsterPackBehavior, PlayerAbilityDefinition, ProceduralLayoutMode,
+    ProceduralMazeDefinition, ProceduralPitDefinition, ProceduralRoomGeometryDefinition,
+    ProceduralRoomPlacement, ProceduralRoomShape, ProceduralStreamerCandidateDefinition, SkillKind,
+    SlayLevel, SlayTarget, StartingItemDefinition, StatModifiers, TaskObjectiveKind,
+    TechniqueAttribute, TechniqueProfileDefinition, TerrainFeatureEntryDefinition,
+    ThemeVaultCandidateDefinition, WeaponBrand,
 };
 #[cfg(test)]
 use rfb_content::{
@@ -211,7 +211,6 @@ const TERRAIN_INTERACTION_DIRECTIONS: [Direction; 8] = [
     Direction::West,
     Direction::NorthWest,
 ];
-const ACTOR_LIGHT_RADIUS: i32 = 5;
 const ITEM_LIGHT_RADIUS: i32 = 4;
 const PLAYER_LIGHT_COLOR: u32 = 0xffd7a3;
 const ACTOR_LIGHT_COLOR: u32 = 0xff8a4c;
@@ -3478,18 +3477,22 @@ impl Game {
             match self.try_monster_door_interaction(index, next_position, events, changed) {
                 Some(true) => {}
                 Some(false) => return Ok(ActorStepOutcome::Interacted),
-                None => return Ok(ActorStepOutcome::Blocked),
+                None => {
+                    if !self.try_monster_destroy_terrain(index, next_position, events, changed) {
+                        return Ok(ActorStepOutcome::Blocked);
+                    }
+                }
             }
         }
         let old_position = self.entities[index].position;
         self.entities[index].position = next_position;
         changed.insert(old_position);
         changed.insert(next_position);
-        if self.trigger_actor_trap(index, next_position, events, changed, removed_entities)? {
-            Ok(ActorStepOutcome::Moved)
-        } else {
-            Ok(ActorStepOutcome::Removed)
+        if !self.trigger_actor_trap(index, next_position, events, changed, removed_entities)? {
+            return Ok(ActorStepOutcome::Removed);
         }
+        self.destroy_items_under_monster(index, next_position, events, changed);
+        Ok(ActorStepOutcome::Moved)
     }
 
     fn roll_damage(&mut self, dice: u16, sides: u16) -> i32 {
@@ -3580,7 +3583,7 @@ impl Game {
     fn generate_death_loot(
         &mut self,
         actor: &Actor,
-    ) -> Result<(Vec<ItemInstance>, Option<GoldPile>), CoreError> {
+    ) -> Result<(Vec<ItemInstance>, Vec<GoldPile>), CoreError> {
         let actor_definition = self
             .content
             .actor(&actor.kind_id)
@@ -3602,8 +3605,77 @@ impl Game {
         let floor_id = self.current_floor_id.clone();
         let depth = self.floor_depth(&floor_id);
         let mut generated = Vec::new();
-        let mut gold = None;
-        if let Some(table_id) = table_id {
+        let mut gold = Vec::new();
+        if let Some(drop) = actor_definition.death_drop.clone() {
+            let unique = actor_definition.tags.iter().any(|tag| tag == "unique");
+            let mut count = u32::from(drop.base_rolls);
+            for roll in &drop.chance_rolls {
+                if (roll.guaranteed_for_unique && unique)
+                    || self.rng.bounded(100) < u64::from(roll.percent)
+                {
+                    count = count.saturating_add(1);
+                }
+            }
+            for dice in &drop.count_dice {
+                for _ in 0..dice.dice {
+                    count = count.saturating_add(
+                        u32::try_from(self.rng.bounded(u64::from(dice.sides)) + 1)
+                            .expect("validated monster drop die must fit u32"),
+                    );
+                }
+            }
+            if count > 2 && !unique && drop.minimum_quality != rfb_content::ItemQuality::Exceptional
+            {
+                count = 2 + (count - 2) / 2;
+            }
+            let object_level = {
+                let actor_level = actor_definition.level.min(u32::from(u16::MAX));
+                let floor_level = u32::from(depth);
+                if actor_level >= floor_level {
+                    actor_level
+                } else {
+                    (actor_level + floor_level) / 2
+                }
+            };
+            for _ in 0..count {
+                let drops_gold = match drop.kind {
+                    MonsterDropKindDefinition::Gold => true,
+                    MonsterDropKindDefinition::Items => false,
+                    MonsterDropKindDefinition::ItemsAndGold => self.rng.bounded(100) < 20,
+                };
+                if drops_gold {
+                    gold.push(self.generate_gold_pile(
+                        actor.position,
+                        u16::try_from(object_level).expect("bounded gold level must fit u16"),
+                        true,
+                    )?);
+                    continue;
+                }
+                let use_theme = drop.theme_table_id.is_some()
+                    && self.rng.bounded(100) < u64::from(drop.theme_chance_percent);
+                let table_id = if use_theme {
+                    drop.theme_table_id
+                        .as_ref()
+                        .expect("checked monster theme table must exist")
+                } else {
+                    drop.item_table_id
+                        .as_ref()
+                        .expect("validated item drop must define a table")
+                };
+                generated.extend(self.generate_one_loot_instance(
+                    &LootContext {
+                        table_id: table_id.clone(),
+                        floor_id: floor_id.clone(),
+                        depth,
+                        source: LootSource::MonsterDeath {
+                            actor_id: actor.id.clone(),
+                        },
+                    },
+                    ItemLocation::Ground(actor.position),
+                    drop.minimum_quality,
+                )?);
+            }
+        } else if let Some(table_id) = table_id {
             let context = LootContext {
                 table_id,
                 floor_id: floor_id.clone(),
@@ -3629,7 +3701,7 @@ impl Game {
                         } else {
                             (actor_level + floor_level) / 2
                         };
-                        gold = Some(self.generate_gold_pile(
+                        gold.push(self.generate_gold_pile(
                             actor.position,
                             u16::try_from(object_level).expect("bounded gold level must fit u16"),
                             true,
@@ -3668,7 +3740,13 @@ impl Game {
         context: &LootContext,
         location: ItemLocation,
     ) -> Result<Vec<ItemInstance>, CoreError> {
-        self.generate_loot_instances_internal(context, location, true)
+        self.generate_loot_instances_internal(
+            context,
+            location,
+            true,
+            None,
+            rfb_content::ItemQuality::Ordinary,
+        )
     }
 
     fn generate_loot_instances_after_roll_chance(
@@ -3676,7 +3754,22 @@ impl Game {
         context: &LootContext,
         location: ItemLocation,
     ) -> Result<Vec<ItemInstance>, CoreError> {
-        self.generate_loot_instances_internal(context, location, false)
+        self.generate_loot_instances_internal(
+            context,
+            location,
+            false,
+            None,
+            rfb_content::ItemQuality::Ordinary,
+        )
+    }
+
+    fn generate_one_loot_instance(
+        &mut self,
+        context: &LootContext,
+        location: ItemLocation,
+        minimum_quality: rfb_content::ItemQuality,
+    ) -> Result<Vec<ItemInstance>, CoreError> {
+        self.generate_loot_instances_internal(context, location, false, Some(1), minimum_quality)
     }
 
     fn generate_loot_instances_internal(
@@ -3684,6 +3777,8 @@ impl Game {
         context: &LootContext,
         location: ItemLocation,
         roll_table_chance: bool,
+        roll_count_override: Option<u16>,
+        minimum_quality: rfb_content::ItemQuality,
     ) -> Result<Vec<ItemInstance>, CoreError> {
         let context_is_valid = !context.floor_id.is_empty()
             && match &context.source {
@@ -3703,9 +3798,14 @@ impl Game {
             .loot_table(&context.table_id)
             .expect("validated actor loot table must remain available")
             .clone();
-        let maximum_rolls = table.roll_dice.map_or(u32::from(table.rolls), |dice| {
-            u32::from(table.rolls) + u32::from(dice.dice) * u32::from(dice.sides)
-        });
+        let maximum_rolls = roll_count_override.map_or_else(
+            || {
+                table.roll_dice.map_or(u32::from(table.rolls), |dice| {
+                    u32::from(table.rolls) + u32::from(dice.dice) * u32::from(dice.sides)
+                })
+            },
+            u32::from,
+        );
         self.next_item_instance_serial
             .checked_add(u64::from(maximum_rolls))
             .ok_or(CoreError::ItemIdExhausted)?;
@@ -3731,14 +3831,17 @@ impl Game {
             .iter()
             .map(|entry| entry.weight)
             .collect::<Vec<_>>();
-        let mut roll_count = table.rolls;
-        if roll_table_chance
+        let mut roll_count = roll_count_override.unwrap_or(table.rolls);
+        if roll_count_override.is_none()
+            && roll_table_chance
             && table
                 .roll_chance_percent
                 .is_some_and(|chance| self.rng.bounded(100) >= u64::from(chance))
         {
             roll_count = 0;
-        } else if let Some(dice) = table.roll_dice {
+        } else if roll_count_override.is_none()
+            && let Some(dice) = table.roll_dice
+        {
             for _ in 0..dice.dice {
                 roll_count = roll_count.saturating_add(
                     u16::try_from(self.rng.bounded(u64::from(dice.sides)) + 1)
@@ -3752,7 +3855,11 @@ impl Game {
             let quality_index = self.roll_weighted_index(&quality_weights);
             let affix_index = self.roll_weighted_index(&affix_weights);
             let entry = eligible_entries[entry_index];
-            let quality = item_quality_dto(table.quality_weights[quality_index].quality);
+            let quality = item_quality_dto(
+                table.quality_weights[quality_index]
+                    .quality
+                    .max(minimum_quality),
+            );
             let affix_ids = if quality == ItemQualityDto::Ordinary {
                 Vec::new()
             } else {
@@ -3944,12 +4051,20 @@ impl Game {
             let Some(definition) = self.content.actor(&entity.kind_id) else {
                 continue;
             };
-            if !definition.tags.iter().any(|tag| tag == "light-source") {
+            let Some(light) = definition.light else {
+                continue;
+            };
+            if !light.intrinsic
+                && entity
+                    .statuses
+                    .iter()
+                    .any(|status| status.kind_id == STATUS_SLEEP)
+            {
                 continue;
             }
             sources.push(LightSource {
                 position: entity.position,
-                radius: ACTOR_LIGHT_RADIUS,
+                radius: i32::from(light.radius),
                 maximum: 64,
                 color: ACTOR_LIGHT_COLOR,
             });

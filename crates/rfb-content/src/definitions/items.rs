@@ -140,6 +140,9 @@ pub struct AffixDefinition {
     /// Passive capabilities granted while the affixed item is equipped.
     #[serde(default)]
     pub passives: BTreeSet<EquipmentPassive>,
+    /// Protects instances from `KILL_ITEM`; used by Endurance ammunition.
+    #[serde(default)]
+    pub resists_monster_destruction: bool,
     /// Generation-time weighted rolls. Results are materialized into the
     /// item instance and never recomputed while loading a save.
     #[serde(default)]
@@ -623,5 +626,8 @@ pub struct ItemDefinition {
     /// Passive capabilities granted while this item is equipped.
     #[serde(default)]
     pub passives: BTreeSet<EquipmentPassive>,
+    /// Protects the base kind from `KILL_ITEM`; fixed artifacts use their artifact tag.
+    #[serde(default)]
+    pub resists_monster_destruction: bool,
     pub tags: Vec<String>,
 }

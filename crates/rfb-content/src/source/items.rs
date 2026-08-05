@@ -81,6 +81,8 @@ pub(crate) struct SourceItemDefinition {
     /// Passive capabilities granted while this item is equipped.
     #[serde(default)]
     passives: BTreeSet<EquipmentPassive>,
+    #[serde(default)]
+    resists_monster_destruction: bool,
     tags: Vec<String>,
 }
 
@@ -225,6 +227,7 @@ impl SourceItemDefinition {
             slays: self.slays,
             brands: self.brands,
             passives: self.passives,
+            resists_monster_destruction: self.resists_monster_destruction,
             tags: self.tags,
         })
     }

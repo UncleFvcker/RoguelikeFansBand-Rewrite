@@ -673,17 +673,18 @@ fn loot_tables_require_valid_weights_references_and_instance_shapes() {
 
     let mut invalid_dice = artifact.content.clone();
     invalid_dice
-        .loot_tables
+        .actors
         .iter_mut()
-        .find(|table| table.id == "demo.loot-table.warrens-keeper")
-        .expect("fixture should contain the diced loot table")
-        .roll_dice
+        .find(|actor| actor.id == "demo.actor.warrens-keeper")
+        .expect("fixture should contain the Warrens keeper")
+        .death_drop
         .as_mut()
-        .expect("Warrens keeper should use a drop-count die")
+        .expect("Warrens keeper should have a death drop")
+        .count_dice[0]
         .sides = 0;
     assert!(matches!(
         validate_and_normalize(&mut invalid_dice),
-        Err(ContentError::InvalidLootTable(_))
+        Err(ContentError::InvalidActorLootTable(_))
     ));
 
     let mut inverted_depth = artifact.content.clone();

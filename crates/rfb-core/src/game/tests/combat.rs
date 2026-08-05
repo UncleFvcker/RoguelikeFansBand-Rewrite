@@ -209,6 +209,177 @@ fn content_driven_monster_routine_resolves_blows_in_declared_order() {
 }
 
 #[test]
+fn self_destructing_blow_skips_single_target_effect_and_explodes_on_death() {
+    let base = game_with_actor_definition(0, "demo.actor.echo-hound", |actor| {
+        actor.attack = 1_000_000;
+        actor.melee_routine = Some(rfb_content::MeleeRoutineDefinition {
+            blows: vec![rfb_content::MeleeBlowDefinition {
+                method_id: "rfb.blow.explode".to_owned(),
+                to_hit: 0,
+                self_destructs: true,
+                effects: vec![rfb_content::MeleeBlowEffectDefinition::Damage {
+                    chance_percent: None,
+                    damage_dice: 1,
+                    damage_sides: 1,
+                    damage_type: rfb_content::ActorDamageType::Physical,
+                    armor_mitigated: false,
+                }],
+            }],
+        });
+    });
+    let (game, events, removed) = (0..100)
+        .find_map(|seed| {
+            let mut game = base.clone();
+            game.rng = RfbRng::seeded(seed);
+            game.entities[0].kind_id = "demo.actor.echo-hound".to_owned();
+            game.entities[0].position = Position {
+                x: game.player.position.x + 1,
+                y: game.player.position.y,
+            };
+            let target = MonsterHostileTarget::Player {
+                entity_id: game.player.id.clone(),
+                kind_id: "demo.actor.player".to_owned(),
+                position: game.player.position,
+            };
+            let mut events = Vec::new();
+            let mut removed = Vec::new();
+            game.resolve_monster_melee_target(
+                0,
+                &target,
+                &mut events,
+                &mut BTreeSet::new(),
+                &mut removed,
+            )
+            .expect("self-destructing melee should resolve");
+            (!removed.is_empty()).then_some((game, events, removed))
+        })
+        .expect("a deterministic seed should land the self-destructing blow");
+
+    assert_eq!(game.player.hp, 9);
+    assert_eq!(removed, ["demo.monster.ember-mote.1"]);
+    assert!(game.entities.iter().all(|actor| actor.id != removed[0]));
+    assert!(
+        !events
+            .iter()
+            .any(|event| matches!(event, DomainEvent::MonsterMeleeHit { .. }))
+    );
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::MonsterDeathExplosionHit { target_kind_id, damage, .. }
+            if target_kind_id == &game.player.kind_id && damage.applied == 1
+    )));
+}
+
+#[test]
+fn ordinary_death_uses_the_first_self_destructing_blow_as_a_radius_three_explosion() {
+    let mut game = game_with_actor_definition(0, "demo.actor.echo-hound", |actor| {
+        actor.melee_routine = Some(rfb_content::MeleeRoutineDefinition {
+            blows: vec![rfb_content::MeleeBlowDefinition {
+                method_id: "rfb.blow.explode".to_owned(),
+                to_hit: 0,
+                self_destructs: true,
+                effects: vec![rfb_content::MeleeBlowEffectDefinition::Damage {
+                    chance_percent: None,
+                    damage_dice: 1,
+                    damage_sides: 4,
+                    damage_type: rfb_content::ActorDamageType::Fire,
+                    armor_mitigated: false,
+                }],
+            }],
+        });
+    });
+    game.entities[0].kind_id = "demo.actor.echo-hound".to_owned();
+    game.entities[0].position = Position {
+        x: game.player.position.x + 3,
+        y: game.player.position.y,
+    };
+    game.rng = RfbRng::seeded(1);
+    let hp_before = game.player.hp;
+    let mut events = Vec::new();
+    let mut changed = BTreeSet::new();
+
+    game.resolve_actor_death(
+        0,
+        DomainEvent::Waited,
+        &mut events,
+        &mut changed,
+        &mut Vec::new(),
+    )
+    .expect("ordinary death explosion should resolve");
+
+    assert!(game.player.hp < hp_before);
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::MonsterDeathExplosionHit { target_kind_id, .. }
+            if target_kind_id == &game.player.kind_id
+    )));
+    assert!(
+        changed
+            .iter()
+            .any(|position| rfb_distance(game.player.position, *position) == 3)
+    );
+}
+
+#[test]
+fn death_explosion_removes_player_summons_without_death_drops() {
+    let mut game = game_with_actor_definition(0, "demo.actor.echo-hound", |actor| {
+        actor.melee_routine = Some(rfb_content::MeleeRoutineDefinition {
+            blows: vec![rfb_content::MeleeBlowDefinition {
+                method_id: "rfb.blow.explode".to_owned(),
+                to_hit: 0,
+                self_destructs: true,
+                effects: vec![rfb_content::MeleeBlowEffectDefinition::Damage {
+                    chance_percent: None,
+                    damage_dice: 1,
+                    damage_sides: 1,
+                    damage_type: rfb_content::ActorDamageType::Physical,
+                    armor_mitigated: false,
+                }],
+            }],
+        });
+    });
+    clear_monsters(&mut game);
+    let source_position = Position { x: 8, y: 4 };
+    let summon_position = Position { x: 9, y: 4 };
+    game.push_generated_actor(
+        "test.exploder".to_owned(),
+        "demo.actor.echo-hound",
+        source_position,
+    );
+    add_player_summon(&mut game, "test.summon", summon_position, 10);
+    game.entities[1].kind_id = "demo.actor.warrens-keeper".to_owned();
+    game.entities[1].hp = 1;
+    game.rng = RfbRng::seeded(1);
+    let mut events = Vec::new();
+    let mut removed = Vec::new();
+
+    game.resolve_actor_death(
+        0,
+        DomainEvent::Waited,
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut removed,
+    )
+    .expect("death explosion should remove its summoned target");
+
+    assert!(removed.iter().any(|entity_id| entity_id == "test.summon"));
+    assert!(game.entities.iter().all(|actor| actor.id != "test.summon"));
+    assert!(game.items.iter().all(|item| {
+        !matches!(item.location, ItemLocation::Ground(position) if position == summon_position)
+    }));
+    assert!(
+        game.gold_piles
+            .iter()
+            .all(|gold| gold.position != summon_position)
+    );
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::MonsterDeathExplosionSlew { target_kind_id, .. }
+            if target_kind_id == "demo.actor.warrens-keeper"
+    )));
+}
+
+#[test]
 fn lethal_monster_status_removes_the_entity_before_energy_actions() {
     let mut payload = Game::new(42).to_save();
     payload.entities[0].statuses = vec![StatusSaveDto {

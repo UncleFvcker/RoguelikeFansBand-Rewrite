@@ -1,12 +1,12 @@
 # 待实现内容清单
 
-状态：基于 contract-v1–v176、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
+状态：基于 contract-v1–v180、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
 
 本文件只记录已经在现有设计或原版对比中明确出现、但尚未实现的内容。长期设想仍保留在 [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)，这里用于跟踪可以实际排入后续 contract 的缺口。
 
 contract-v172 已把玩家施法策略从通用 Ability Program 中改为按需选配。当前由能力书或职业先天列表引用的能力必须拥有 `player` 策略；其他能力默认无绑定，但未来种族或怪物模式要授予玩家时可直接补充策略。存档与回放继续独立精确匹配内容，state hash 不再包含 `contentHash`，后续纯内容 hash 更新不需要全量刷新 fixture。
 
-contract-v173 已按固定原版来源完成 Warrens 的 W1-W6 与运行时自然补怪；contract-v174-v176 继续完成 W7 怪物门交互、W8 飞行/游泳移动域和 W9 个体 HP 骰。当前优先顺序改为 W10-W13 的公共怪物能力；W14 仍随 Outpost Pest Control 任务线实施，详见 [Warrens 怪物机制实现清单](warrens-monster-mechanism-backlog.md)。
+contract-v173 已按固定原版来源完成 Warrens 的 W1-W6 与运行时自然补怪；contract-v174-v176 完成 W7-W9，contract-v177-v180 继续完成 W10 特殊近战/死亡爆炸、W11 地形/物品破坏、W12 怪物光源和 W13 完整死亡掉落。W14 仍随 Outpost Pest Control 任务线实施，详见 [Warrens 怪物机制实现清单](warrens-monster-mechanism-backlog.md)。
 
 ## Warrens 当前优先级
 
@@ -14,7 +14,7 @@ contract-v173 已按固定原版来源完成 Warrens 的 W1-W6 与运行时自�
 | --- | --- | --- |
 | W1-W6 | 分配、越级、群体、Unique、escort、繁殖、随机移动与自然补怪 | 已由 contract-v173 完成 |
 | W7-W9 | 怪物门交互、飞行/游泳移动域、个体 HP 骰 | 已由 contract-v174-v176 完成 |
-| W10-W13 | 特殊近战、地图/物品破坏、怪物光源与完整掉落旗标 | 后续按原版依赖逐项推进 |
+| W10-W13 | 特殊近战、地图/物品破坏、怪物光源与完整掉落旗标 | 已由 contract-v177-v180 完成 |
 | W14 | Pest Control 专属 Warg 生态 | 随 Outpost 任务服务线推进 |
 
 ## 当前推进顺序

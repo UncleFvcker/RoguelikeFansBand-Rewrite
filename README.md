@@ -205,7 +205,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Rust 权威可见性与光照 v1](design/visibility-lighting-v1.md)
 - [静态地形 Chunk 渲染 v1](design/terrain-chunk-rendering-v1.md)
 
-当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v176`，共 462 条 exact fixtures、零 waiver，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
+当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v180`，共 462 条 exact fixtures、零 waiver，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
 
 fixture 使用受控的主分类。日常开发只验证或刷新受影响分类；普通 `cargo test -p rfb-contract` 只做快速的 schema、分类、ID 唯一性和契约单元测试，不回放全部场景：
 
@@ -465,6 +465,8 @@ contract-v171 按固定 RFB 原版来源扩充 Warrens 普通生态：接入 New
 contract-v172 将玩家施法参数改为 Ability Program 之外的可选 `player` 策略：能力默认不绑定，但不会被永久划分为怪物专属；能力书、职业先天技以及未来种族或怪物模式实际引用时才要求玩家策略。demo 保留当前玩家可获得能力的 48 个绑定，删除 21 个占位绑定；导入器同样从书本和职业先天列表派生绑定。存档与回放继续独立精确匹配 `contentId/contentHash`，历史 hash 兼容表已删除；`contentHash` 不再进入 state hash，Schema 升至 v62。协议保持 1.136，demo 升至 1.166.0，content hash 为 `eb6dded2ca73a46535357886d44561040ca571387353feaeefa6873b0afeb7c0`。详见 [Contract v172](design/contract-v172-optional-player-abilities-state-hash.md)。
 
 contract-v173 按固定 RFB 原版来源完成 Warrens W1-W6 与运行时自然补怪；contract-v174-v176 继续完成怪物开门/解锁/撞门、飞行与游泳移动域、显式陷阱规避，以及逐实例 HP 骰与 `FORCE_MAXHP`。路径、生成、群体、召唤、位移、陷阱和读档共享 movement profile；所有怪物出生入口共享 HP helper，保存后的实例 `maxHp` 不重掷。协议保持 1.137、demo 升至 1.170.0、state hash Schema 保持 v63，content hash 为 `b434df67e19e3f7986ee796870365c3e60deb792ff87478a48856194607b75b7`。详见 [Contract v174](design/contract-v174-monster-doors.md)、[v175](design/contract-v175-monster-movement-domains.md) 与 [v176](design/contract-v176-monster-hit-points.md)。
+
+contract-v177-v180 按固定原版来源完成 Warrens W10-W13：有序特殊近战与任意死亡触发的半径 3 `EXPLODE`、`KILL_WALL/KILL_ITEM` 事务及原版物品保护、区分睡眠语义的 `HAS_LITE/SELF_LITE` 权威光源，以及 `DROP_60/90/Xd2`、only kind、质量、20% 金币与 50% 职业主题组合。协议保持 1.137、demo 升至 1.174.0、state hash Schema 保持 v63；171 条相关分类 fixtures 原样通过，无 refresh，content hash 为 `fed9c01421e0ee68a6cde5d0b864aee32f4a218d58457cc0d0d06ab6b7d6334f`。详见 [Contract v177](design/contract-v177-monster-melee-effects.md)、[v178](design/contract-v178-monster-terrain-items.md)、[v179](design/contract-v179-monster-light.md) 与 [v180](design/contract-v180-monster-death-drops.md)。
 
 ### 本地验证
 

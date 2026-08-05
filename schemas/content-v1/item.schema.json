@@ -876,6 +876,10 @@
       },
       "type": "object"
     },
+    "resistsMonsterDestruction": {
+      "default": false,
+      "type": "boolean"
+    },
     "slays": {
       "additionalProperties": false,
       "default": {},

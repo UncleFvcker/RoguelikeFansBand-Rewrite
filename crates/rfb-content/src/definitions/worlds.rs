@@ -37,6 +37,9 @@ pub struct TerrainDefinition {
     pub dig_to_terrain_id: Option<String>,
     #[serde(default)]
     pub dig_check_difficulty: Option<i32>,
+    /// Result of the original `FF_HURT_DISI` terrain transition.
+    #[serde(default)]
+    pub monster_destroy_to_terrain_id: Option<String>,
     #[serde(default)]
     pub concealed_as_terrain_id: Option<String>,
     #[serde(default)]

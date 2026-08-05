@@ -7,6 +7,7 @@
   "glyph": "%",
   "walkable": false,
   "blocksSight": true,
+  "monsterDestroyToTerrainId": "demo.terrain.floor",
   "digToTerrainId": "demo.terrain.floor",
   "digCheckDifficulty": 10,
   "tags": ["interior", "stone", "vein", "diggable", "magma"]

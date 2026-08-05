@@ -116,6 +116,33 @@ fn direct_warrens_death_drops(
 }
 
 #[test]
+fn warrens_keeper_drop_count_is_one_d_two_and_items_only() {
+    let mut saw_one = false;
+    let mut saw_two = false;
+    for seed in 0..64 {
+        let (drops, gold) = direct_warrens_death_drops("demo.actor.warrens-keeper", seed);
+        let equipment = drops
+            .iter()
+            .filter(|item| {
+                !matches!(
+                    item.kind_id.as_str(),
+                    "demo.item.corpse-remains" | "demo.item.skeleton-remains"
+                )
+            })
+            .collect::<Vec<_>>();
+        assert!(gold.is_empty());
+        assert!(matches!(equipment.len(), 1 | 2));
+        assert!(equipment.iter().all(|item| matches!(
+            item.quality,
+            ItemQualityDto::Fine | ItemQualityDto::Exceptional
+        )));
+        saw_one |= equipment.len() == 1;
+        saw_two |= equipment.len() == 2;
+    }
+    assert!(saw_one && saw_two);
+}
+
+#[test]
 fn warrens_monster_drops_follow_original_probability_and_remains_profiles() {
     let is_remains = |item: &ItemInstance| {
         matches!(

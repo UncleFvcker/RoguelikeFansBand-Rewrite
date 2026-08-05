@@ -17,5 +17,6 @@
   "damageType": "fire",
   "carriedLootTableId": "demo.loot-table.ember-mote-carried",
   "lootTableId": "demo.loot-table.ember-mote",
-  "tags": ["elemental", "light-source"]
+  "light": { "radius": 5, "intrinsic": true },
+  "tags": ["elemental"]
 }

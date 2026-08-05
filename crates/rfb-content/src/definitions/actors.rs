@@ -6,6 +6,8 @@ use std::collections::BTreeMap;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
+use super::{ItemAttributeDefinition, ItemQuality};
+
 const fn default_actor_speed() -> u16 {
     110
 }
@@ -97,10 +99,53 @@ pub enum ActorResistanceLevel {
 pub struct MeleeBlowDefinition {
     pub method_id: String,
     pub to_hit: i32,
-    pub damage_dice: u16,
-    pub damage_sides: u16,
     #[serde(default)]
-    pub damage_type: ActorDamageType,
+    pub self_destructs: bool,
+    pub effects: Vec<MeleeBlowEffectDefinition>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(
+    tag = "type",
+    rename_all = "kebab-case",
+    rename_all_fields = "camelCase",
+    deny_unknown_fields
+)]
+pub enum MeleeBlowEffectDefinition {
+    Damage {
+        #[serde(default)]
+        chance_percent: Option<u8>,
+        damage_dice: u16,
+        damage_sides: u16,
+        #[serde(default)]
+        damage_type: ActorDamageType,
+        #[serde(default)]
+        armor_mitigated: bool,
+    },
+    Poison {
+        #[serde(default)]
+        chance_percent: Option<u8>,
+        damage_dice: u16,
+        damage_sides: u16,
+    },
+    Disease {
+        #[serde(default)]
+        chance_percent: Option<u8>,
+        damage_dice: u16,
+        damage_sides: u16,
+    },
+    DrainAttributes {
+        #[serde(default)]
+        chance_percent: Option<u8>,
+        attributes: Vec<ItemAttributeDefinition>,
+    },
+    Bleeding {
+        #[serde(default)]
+        chance_percent: Option<u8>,
+        duration_dice: u16,
+        duration_sides: u16,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -118,6 +163,73 @@ pub struct ActorHitPointDiceDefinition {
     pub sides: u16,
     #[serde(default)]
     pub force_maximum: bool,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ActorTerrainInteractionDefinition {
+    #[serde(default)]
+    pub destroys_walls: bool,
+    #[serde(default)]
+    pub destroys_items: bool,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ActorLightDefinition {
+    pub radius: u8,
+    /// Intrinsic light remains active while the actor sleeps. Carried light does not.
+    #[serde(default)]
+    pub intrinsic: bool,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum MonsterDropKindDefinition {
+    Items,
+    Gold,
+    ItemsAndGold,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct MonsterDropChanceDefinition {
+    pub percent: u8,
+    #[serde(default)]
+    pub guaranteed_for_unique: bool,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct MonsterDropDiceDefinition {
+    pub dice: u8,
+    pub sides: u8,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct MonsterDropDefinition {
+    pub kind: MonsterDropKindDefinition,
+    #[serde(default)]
+    pub item_table_id: Option<String>,
+    #[serde(default)]
+    pub theme_table_id: Option<String>,
+    #[serde(default)]
+    pub theme_chance_percent: u8,
+    #[serde(default)]
+    pub base_rolls: u8,
+    #[serde(default)]
+    pub chance_rolls: Vec<MonsterDropChanceDefinition>,
+    #[serde(default)]
+    pub count_dice: Vec<MonsterDropDiceDefinition>,
+    #[serde(default)]
+    pub minimum_quality: ItemQuality,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -165,6 +277,10 @@ pub struct ActorDefinition {
     #[serde(default)]
     pub melee_routine: Option<MeleeRoutineDefinition>,
     #[serde(default)]
+    pub terrain_interaction: ActorTerrainInteractionDefinition,
+    #[serde(default)]
+    pub light: Option<ActorLightDefinition>,
+    #[serde(default)]
     pub awareness: Option<ActorAwarenessDefinition>,
     #[serde(default)]
     pub monster_casting: Option<MonsterCastingDefinition>,
@@ -173,6 +289,8 @@ pub struct ActorDefinition {
     /// Chance that a successful death-loot roll becomes gold instead of an item.
     #[serde(default)]
     pub gold_drop_chance_percent: Option<u8>,
+    #[serde(default)]
+    pub death_drop: Option<MonsterDropDefinition>,
     #[serde(default)]
     pub carried_loot_table_id: Option<String>,
     #[serde(default)]

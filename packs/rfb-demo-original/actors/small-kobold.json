@@ -19,8 +19,13 @@
   "resistances": {
     "poison": "resistant"
   },
-  "lootTableId": "demo.loot-table.small-kobold",
-  "goldDropChancePercent": 20,
+  "deathDrop": {
+    "kind": "items-and-gold",
+    "itemTableId": "demo.loot-table.warrens",
+    "themeTableId": "demo.loot-table.small-kobold",
+    "themeChancePercent": 50,
+    "chanceRolls": [{ "percent": 60 }]
+  },
   "remains": {
     "chanceDenominator": 3,
     "corpseItemKindId": "demo.item.corpse-remains",

@@ -370,6 +370,32 @@ export function createPresentationFormatter(
         });
       case "combat-monster-hit":
         return formatMonsterDamageEvent(event);
+      case "combat-monster-self-destructed":
+        return localization.format("message-combat-monster-self-destructed", {
+          source: contentName(event.args.source),
+        });
+      case "combat-monster-death-explosion-hit":
+        return localization.format("message-combat-monster-death-explosion-hit", {
+          source: contentName(event.args.source),
+          target: contentName(event.args.target),
+          damage: damageResolution(event)?.finalDamage ?? "?",
+        });
+      case "combat-monster-death-explosion-slew":
+        return localization.format("message-combat-monster-death-explosion-slew", {
+          source: contentName(event.args.source),
+          target: contentName(event.args.target),
+        });
+      case "monster-terrain-destroyed":
+        return localization.format("message-monster-terrain-destroyed", {
+          source: contentName(event.args.source),
+          terrain: contentName(event.args.terrain),
+        });
+      case "monster-item-destroyed":
+        return localization.format("message-monster-item-destroyed", {
+          source: contentName(event.args.source),
+          target: contentName(event.args.target),
+          quantity: event.args.quantity ?? "?",
+        });
       case "combat-monster-entity-miss":
         return localization.format("message-combat-monster-entity-miss", {
           source: contentName(event.args.source),

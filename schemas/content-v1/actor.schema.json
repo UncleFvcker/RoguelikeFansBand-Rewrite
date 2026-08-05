@@ -192,6 +192,26 @@
       ],
       "type": "object"
     },
+    "ActorLightDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "intrinsic": {
+          "default": false,
+          "description": "Intrinsic light remains active while the actor sleeps. Carried light does not.",
+          "type": "boolean"
+        },
+        "radius": {
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "radius"
+      ],
+      "type": "object"
+    },
     "ActorMovementDefinition": {
       "additionalProperties": false,
       "properties": {
@@ -229,27 +249,54 @@
       ],
       "type": "string"
     },
+    "ActorTerrainInteractionDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "destroysItems": {
+          "default": false,
+          "type": "boolean"
+        },
+        "destroysWalls": {
+          "default": false,
+          "type": "boolean"
+        }
+      },
+      "type": "object"
+    },
+    "ItemAttributeDefinition": {
+      "enum": [
+        "strength",
+        "intelligence",
+        "wisdom",
+        "dexterity",
+        "constitution",
+        "charisma"
+      ],
+      "type": "string"
+    },
+    "ItemQuality": {
+      "enum": [
+        "ordinary",
+        "fine",
+        "exceptional"
+      ],
+      "type": "string"
+    },
     "MeleeBlowDefinition": {
       "additionalProperties": false,
       "properties": {
-        "damageDice": {
-          "format": "uint16",
-          "maximum": 65535,
-          "minimum": 0,
-          "type": "integer"
-        },
-        "damageSides": {
-          "format": "uint16",
-          "maximum": 65535,
-          "minimum": 0,
-          "type": "integer"
-        },
-        "damageType": {
-          "$ref": "#/$defs/ActorDamageType",
-          "default": "physical"
+        "effects": {
+          "items": {
+            "$ref": "#/$defs/MeleeBlowEffectDefinition"
+          },
+          "type": "array"
         },
         "methodId": {
           "type": "string"
+        },
+        "selfDestructs": {
+          "default": false,
+          "type": "boolean"
         },
         "toHit": {
           "format": "int32",
@@ -259,10 +306,199 @@
       "required": [
         "methodId",
         "toHit",
-        "damageDice",
-        "damageSides"
+        "effects"
       ],
       "type": "object"
+    },
+    "MeleeBlowEffectDefinition": {
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "armorMitigated": {
+              "default": false,
+              "type": "boolean"
+            },
+            "chancePercent": {
+              "default": null,
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "damageDice": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "damageSides": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "damageType": {
+              "$ref": "#/$defs/ActorDamageType",
+              "default": "physical"
+            },
+            "type": {
+              "const": "damage",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "damageDice",
+            "damageSides"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "chancePercent": {
+              "default": null,
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "damageDice": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "damageSides": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "poison",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "damageDice",
+            "damageSides"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "chancePercent": {
+              "default": null,
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "damageDice": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "damageSides": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "disease",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "damageDice",
+            "damageSides"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "attributes": {
+              "items": {
+                "$ref": "#/$defs/ItemAttributeDefinition"
+              },
+              "type": "array"
+            },
+            "chancePercent": {
+              "default": null,
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "type": {
+              "const": "drain-attributes",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "attributes"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "chancePercent": {
+              "default": null,
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "durationDice": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "durationSides": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "bleeding",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "durationDice",
+            "durationSides"
+          ],
+          "type": "object"
+        }
+      ]
     },
     "MeleeRoutineDefinition": {
       "additionalProperties": false,
@@ -338,6 +574,113 @@
         "abilities"
       ],
       "type": "object"
+    },
+    "MonsterDropChanceDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "guaranteedForUnique": {
+          "default": false,
+          "type": "boolean"
+        },
+        "percent": {
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "percent"
+      ],
+      "type": "object"
+    },
+    "MonsterDropDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "baseRolls": {
+          "default": 0,
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "chanceRolls": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/MonsterDropChanceDefinition"
+          },
+          "type": "array"
+        },
+        "countDice": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/MonsterDropDiceDefinition"
+          },
+          "type": "array"
+        },
+        "itemTableId": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "kind": {
+          "$ref": "#/$defs/MonsterDropKindDefinition"
+        },
+        "minimumQuality": {
+          "$ref": "#/$defs/ItemQuality",
+          "default": "ordinary"
+        },
+        "themeChancePercent": {
+          "default": 0,
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "themeTableId": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "type": "object"
+    },
+    "MonsterDropDiceDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "dice": {
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "sides": {
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "dice",
+        "sides"
+      ],
+      "type": "object"
+    },
+    "MonsterDropKindDefinition": {
+      "enum": [
+        "items",
+        "gold",
+        "items-and-gold"
+      ],
+      "type": "string"
     },
     "MonsterRemainsDefinition": {
       "additionalProperties": false,
@@ -451,6 +794,17 @@
       "$ref": "#/$defs/ActorDamageType",
       "default": "physical"
     },
+    "deathDrop": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/MonsterDropDefinition"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
     "defense": {
       "format": "int32",
       "type": "integer"
@@ -531,6 +885,17 @@
       "format": "uint32",
       "minimum": 0,
       "type": "integer"
+    },
+    "light": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ActorLightDefinition"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
     },
     "lootTableId": {
       "default": null,
@@ -704,6 +1069,13 @@
         "type": "string"
       },
       "type": "array"
+    },
+    "terrainInteraction": {
+      "$ref": "#/$defs/ActorTerrainInteractionDefinition",
+      "default": {
+        "destroysItems": false,
+        "destroysWalls": false
+      }
     }
   },
   "required": [

@@ -322,6 +322,40 @@ fn surface_is_ambient_lit_and_dungeon_visibility_follows_equipped_light_radius()
 }
 
 #[test]
+fn sleep_suppresses_carried_actor_light_but_not_intrinsic_light() {
+    let prepare = |intrinsic| {
+        let mut game = game_with_actor_definition(7, "demo.actor.ember-mote", |actor| {
+            actor.light = Some(rfb_content::ActorLightDefinition {
+                radius: 5,
+                intrinsic,
+            });
+        });
+        game.current_floor_id = "demo.floor.echo-depth-1".to_owned();
+        game.entities.truncate(1);
+        game.items.clear();
+        game.entities[0].position = Position { x: 5, y: 3 };
+        game.entities[0].statuses.push(StatusInstance {
+            kind_id: STATUS_SLEEP.to_owned(),
+            intensity: 1,
+            remaining_ticks: 10,
+            source_id: None,
+            granted_resistances: BTreeMap::new(),
+            granted_brands: BTreeSet::new(),
+            granted_modifiers: StatModifiersDto::default(),
+            granted_equipment_bonuses: EquipmentBonusesDto::default(),
+            granted_status_immunities: BTreeSet::new(),
+            granted_race_id: None,
+            grants_wall_passage: false,
+            incoming_damage_percent: 100,
+        });
+        game
+    };
+
+    assert!(!prepare(false).position_is_lit(Position { x: 4, y: 3 }));
+    assert!(prepare(true).position_is_lit(Position { x: 4, y: 3 }));
+}
+
+#[test]
 fn warrens_light_attempts_are_seeded_walkable_weighted_and_persistent() {
     let mut saw_miss = false;
     let mut saw_oil = false;

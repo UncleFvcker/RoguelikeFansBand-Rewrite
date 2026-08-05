@@ -6,7 +6,7 @@
 
 contract fixture 是规则兼容边界，不能把测试失败简单处理为“刷新预期结果”。政策用于保证每次规则变化只修改真正受影响的场景，同时保留可审查的失败原因。
 
-当前逻辑基线是 `contract-v172`，机器可读政策固定在：
+当前逻辑基线是 `contract-v180`，机器可读政策固定在：
 
 ```text
 tests/fixtures/active/baseline-policy.json

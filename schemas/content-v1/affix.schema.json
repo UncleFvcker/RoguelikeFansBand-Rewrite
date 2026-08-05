@@ -628,6 +628,11 @@
       },
       "type": "object"
     },
+    "resistsMonsterDestruction": {
+      "default": false,
+      "description": "Protects instances from `KILL_ITEM`; used by Endurance ammunition.",
+      "type": "boolean"
+    },
     "rollGroups": {
       "default": [],
       "description": "Generation-time weighted rolls. Results are materialized into the\nitem instance and never recomputed while loading a save.",

@@ -152,6 +152,14 @@
     "id": {
       "type": "string"
     },
+    "monsterDestroyToTerrainId": {
+      "default": null,
+      "description": "Result of the original `FF_HURT_DISI` terrain transition.",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
     "monsterDoorPower": {
       "default": null,
       "format": "uint16",

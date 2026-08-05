@@ -18,8 +18,8 @@
   "damageType": "physical",
   "meleeRoutine": {
     "blows": [
-      { "methodId": "rfb.blow.bite", "toHit": 20, "damageDice": 3, "damageSides": 3 },
-      { "methodId": "rfb.blow.bite", "toHit": 20, "damageDice": 3, "damageSides": 2 }
+      { "methodId": "rfb.blow.bite", "toHit": 20, "effects": [{ "type": "damage", "damageDice": 3, "damageSides": 3, "armorMitigated": true }] },
+      { "methodId": "rfb.blow.bite", "toHit": 20, "effects": [{ "type": "damage", "damageDice": 3, "damageSides": 2, "armorMitigated": true }] }
     ]
   },
   "monsterCasting": {

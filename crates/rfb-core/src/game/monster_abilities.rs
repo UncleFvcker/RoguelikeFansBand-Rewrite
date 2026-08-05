@@ -170,6 +170,7 @@ impl Game {
             targets
                 .iter()
                 .map(|target| target.target_entity_id.as_str()),
+            events,
             changed,
             removed_entities,
         );
@@ -248,6 +249,7 @@ impl Game {
             targets
                 .iter()
                 .map(|target| target.target_entity_id.as_str()),
+            events,
             changed,
             removed_entities,
         );
@@ -334,6 +336,7 @@ impl Game {
             targets
                 .iter()
                 .map(|target| target.target_entity_id.as_str()),
+            events,
             changed,
             removed_entities,
         );
@@ -487,6 +490,7 @@ impl Game {
                     targets
                         .iter()
                         .map(|target| target.target_entity_id.as_str()),
+                    events,
                     changed,
                     removed_entities,
                 );
@@ -821,6 +825,7 @@ impl Game {
     fn remove_defeated_player_summons<'a>(
         &mut self,
         target_entity_ids: impl Iterator<Item = &'a str>,
+        events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
     ) {
@@ -846,9 +851,14 @@ impl Game {
             else {
                 continue;
             };
-            let removed = self.entities.remove(index);
-            changed.insert(removed.position);
-            removed_entities.push(removed.id);
+            self.resolve_actor_death_without_rewards(
+                index,
+                None,
+                events,
+                changed,
+                removed_entities,
+            )
+            .expect("defeated player summon death must resolve");
         }
     }
 

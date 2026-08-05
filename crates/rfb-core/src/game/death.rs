@@ -2,15 +2,21 @@
 
 use std::collections::BTreeSet;
 
+use rfb_content::MeleeBlowEffectDefinition;
 use rfb_protocol::{ItemEnchantmentsDto, ItemQualityDto, MonsterPackRoleDto, Position};
 
 use crate::{
+    effect::{DamagePacket, resolve_damage},
     error::CoreError,
     event::DomainEvent,
+    resistance::DamageType,
     state::{Actor, GoldPile, ItemInstance, ItemLocation},
 };
 
-use super::{Game, initial_item_curse, initial_item_runtime_state};
+use super::{
+    FatalityPolicy, Game, commit_damage_application, initial_item_curse,
+    initial_item_runtime_state, plan_damage_application, rfb_area_damage,
+};
 use crate::save::initial_item_fuel;
 
 struct CarriedDrop {
@@ -23,19 +29,142 @@ struct ActorDeathPlan {
     actor: Actor,
     corpse: Option<ItemInstance>,
     generated_loot: Vec<ItemInstance>,
-    generated_gold: Option<GoldPile>,
+    generated_gold: Vec<GoldPile>,
     carried: Vec<CarriedDrop>,
     has_drops: bool,
     dissolved_pack_id: Option<String>,
-    death_event: DomainEvent,
 }
 
 impl Game {
-    fn plan_actor_death(
+    fn actor_death_explosion(
         &mut self,
-        index: usize,
-        death_event: DomainEvent,
-    ) -> Result<ActorDeathPlan, CoreError> {
+        actor: &Actor,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        let Some(blow) = self
+            .content
+            .actor(&actor.kind_id)
+            .and_then(|definition| definition.melee_routine.as_ref())
+            .and_then(|routine| routine.blows.iter().find(|blow| blow.self_destructs))
+            .cloned()
+        else {
+            return Ok(());
+        };
+        let source_is_player_aligned = self.actor_is_player_aligned(actor);
+
+        let cells = self.area_damage_cells(actor.position, 3);
+        changed.extend(cells.iter().map(|(_, position)| *position));
+        for effect in &blow.effects {
+            let (damage_dice, damage_sides, damage_type) = match effect {
+                MeleeBlowEffectDefinition::Damage {
+                    damage_dice,
+                    damage_sides,
+                    damage_type,
+                    ..
+                } => (*damage_dice, *damage_sides, DamageType::from(*damage_type)),
+                MeleeBlowEffectDefinition::Poison {
+                    damage_dice,
+                    damage_sides,
+                    ..
+                } => (*damage_dice, *damage_sides, DamageType::Poison),
+                MeleeBlowEffectDefinition::Disease { .. }
+                | MeleeBlowEffectDefinition::DrainAttributes { .. }
+                | MeleeBlowEffectDefinition::Bleeding { .. } => {
+                    unreachable!("validated death explosions only contain projected effects")
+                }
+            };
+            let raw_damage = self.roll_damage(damage_dice, damage_sides);
+            for (distance, position) in &cells {
+                let prepared_damage = rfb_area_damage(raw_damage, *distance);
+                if self.player.position == *position && !self.player_is_dead() {
+                    let damage = self.reduce_player_damage(resolve_damage(
+                        DamagePacket::new(prepared_damage, damage_type),
+                        self.effective_player_resistances().level(damage_type),
+                    ));
+                    let application =
+                        plan_damage_application(&self.player, damage, FatalityPolicy::BelowZero);
+                    commit_damage_application(&mut self.player, &application);
+                    events.push(DomainEvent::MonsterDeathExplosionHit {
+                        source_kind_id: actor.kind_id.clone(),
+                        target_kind_id: self.player.kind_id.clone(),
+                        damage,
+                    });
+                    if application.fatal {
+                        events.push(DomainEvent::PlayerDied {
+                            source_kind_id: actor.kind_id.clone(),
+                            method_id: Some(blow.method_id.clone()),
+                            damage,
+                        });
+                    }
+                }
+
+                let Some(target_id) = self
+                    .entities
+                    .iter()
+                    .find(|entity| {
+                        entity.id != actor.id && entity.hp > 0 && entity.position == *position
+                    })
+                    .map(|entity| entity.id.clone())
+                else {
+                    continue;
+                };
+                let target_index = self
+                    .entities
+                    .iter()
+                    .position(|entity| entity.id == target_id)
+                    .expect("death explosion target must remain available");
+                let target_is_player_aligned = self.entity_is_player_aligned(target_index);
+                let target_kind_id = self.entities[target_index].kind_id.clone();
+                let damage = resolve_damage(
+                    DamagePacket::new(prepared_damage, damage_type),
+                    self.entities[target_index].resistances.level(damage_type),
+                );
+                let application = plan_damage_application(
+                    &self.entities[target_index],
+                    damage,
+                    FatalityPolicy::AtOrBelowZero,
+                );
+                commit_damage_application(&mut self.entities[target_index], &application);
+                self.wake_entity_after_damage(target_index, damage.applied, events);
+                if application.fatal {
+                    let death_event = DomainEvent::MonsterDeathExplosionSlew {
+                        source_kind_id: actor.kind_id.clone(),
+                        target_kind_id,
+                        damage,
+                    };
+                    if target_is_player_aligned {
+                        self.resolve_actor_death_without_rewards(
+                            target_index,
+                            Some(death_event),
+                            events,
+                            changed,
+                            removed_entities,
+                        )?;
+                    } else {
+                        self.resolve_actor_death_with_credit(
+                            target_index,
+                            death_event,
+                            source_is_player_aligned,
+                            events,
+                            changed,
+                            removed_entities,
+                        )?;
+                    }
+                } else {
+                    events.push(DomainEvent::MonsterDeathExplosionHit {
+                        source_kind_id: actor.kind_id.clone(),
+                        target_kind_id,
+                        damage,
+                    });
+                }
+            }
+        }
+        Ok(())
+    }
+
+    fn plan_actor_death(&mut self, index: usize) -> Result<ActorDeathPlan, CoreError> {
         let actor = self.entities[index].clone();
         let actor_definition = self
             .content
@@ -104,7 +233,7 @@ impl Game {
         carried.sort_by(|left, right| left.item_id.cmp(&right.item_id));
         let has_drops = !carried.is_empty()
             || !generated_loot.is_empty()
-            || generated_gold.is_some()
+            || !generated_gold.is_empty()
             || corpse.is_some();
         let dissolved_pack_id = actor
             .pack
@@ -119,7 +248,6 @@ impl Game {
             carried,
             has_drops,
             dissolved_pack_id,
-            death_event,
         })
     }
 
@@ -131,7 +259,83 @@ impl Game {
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
     ) -> Result<(), CoreError> {
-        let plan = self.plan_actor_death(index, death_event)?;
+        self.resolve_actor_death_with_credit(
+            index,
+            death_event,
+            true,
+            events,
+            changed,
+            removed_entities,
+        )
+    }
+
+    pub(super) fn resolve_actor_death_without_rewards(
+        &mut self,
+        index: usize,
+        death_event: Option<DomainEvent>,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        let dying_actor = self.entities[index].clone();
+        let carried_item_ids = self
+            .items
+            .iter()
+            .filter_map(|item| match &item.location {
+                ItemLocation::CarriedBy { actor_id } if actor_id == &dying_actor.id => {
+                    Some(item.id.clone())
+                }
+                _ => None,
+            })
+            .collect::<BTreeSet<_>>();
+        self.entities[index].hp = self.entities[index].hp.min(0);
+        if let Some(death_event) = death_event {
+            events.push(death_event);
+        }
+        self.actor_death_explosion(&dying_actor, events, changed, removed_entities)?;
+        let index = self
+            .entities
+            .iter()
+            .position(|entity| entity.id == dying_actor.id)
+            .ok_or_else(|| {
+                CoreError::Invariant(format!(
+                    "dying actor {} disappeared during death explosion",
+                    dying_actor.id
+                ))
+            })?;
+        self.entities.remove(index);
+        removed_entities.push(dying_actor.id);
+        self.items
+            .retain(|item| !carried_item_ids.contains(item.id.as_str()));
+        changed.insert(dying_actor.position);
+        Ok(())
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn resolve_actor_death_with_credit(
+        &mut self,
+        index: usize,
+        death_event: DomainEvent,
+        credit_player: bool,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        let dying_actor = self.entities[index].clone();
+        self.entities[index].hp = self.entities[index].hp.min(0);
+        events.push(death_event.clone());
+        self.actor_death_explosion(&dying_actor, events, changed, removed_entities)?;
+        let index = self
+            .entities
+            .iter()
+            .position(|entity| entity.id == dying_actor.id)
+            .ok_or_else(|| {
+                CoreError::Invariant(format!(
+                    "dying actor {} disappeared during death explosion",
+                    dying_actor.id
+                ))
+            })?;
+        let plan = self.plan_actor_death(index)?;
         let ActorDeathPlan {
             actor,
             corpse,
@@ -140,7 +344,6 @@ impl Game {
             carried,
             has_drops,
             dissolved_pack_id,
-            death_event,
         } = plan;
 
         let removed = self.entities.remove(index);
@@ -153,7 +356,6 @@ impl Game {
             }
         }
         removed_entities.push(removed.id.clone());
-        events.push(death_event);
         let removed_definition = self
             .content
             .actor(&removed.kind_id)
@@ -165,7 +367,9 @@ impl Game {
                 .insert(removed.kind_id.clone());
         }
         let experience_value = removed_definition.experience_value;
-        self.apply_player_experience(experience_value, events);
+        if credit_player {
+            self.apply_player_experience(experience_value, events);
+        }
         let defeated_guardian = self
             .content
             .world(&self.world_id)
@@ -278,7 +482,7 @@ impl Game {
             });
             self.items.push(item);
         }
-        if let Some(gold) = generated_gold {
+        for gold in generated_gold {
             events.push(DomainEvent::GoldDropped {
                 source_kind_id: removed.kind_id.clone(),
                 amount: gold.amount,

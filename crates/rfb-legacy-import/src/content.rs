@@ -29,6 +29,8 @@ const A_INFO_SOURCE: &str = "lib/edit/a_info.txt";
 const B_INFO_SOURCE: &str = "lib/edit/b_info.txt";
 const M_INFO_SOURCE: &str = "lib/edit/m_info.txt";
 const S_INFO_SOURCE: &str = "lib/edit/s_info.txt";
+const LEGACY_DROP_TABLE_ID: &str = "rfb-legacy.loot-table.monster-drops";
+const LEGACY_WARRIOR_DROP_TABLE_ID: &str = "rfb-legacy.loot-table.monster-drops-warrior";
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -184,13 +186,20 @@ pub struct LegacyTerrainEntry {
     pub display_name: Option<String>,
     pub glyph: Option<char>,
     pub flags: Vec<String>,
+    pub destroyed_tag: Option<String>,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct LegacyBlowEffect {
+    pub token: String,
+    pub dice: Option<(u16, u16)>,
+    pub chance_percent: Option<u8>,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct LegacyBlow {
     pub method: String,
-    pub damage_dice: Option<(u16, u16)>,
-    pub effects: Vec<String>,
+    pub effects: Vec<LegacyBlowEffect>,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -207,6 +216,7 @@ pub struct LegacyMonsterEntry {
     pub blows: Vec<LegacyBlow>,
     pub flags: Vec<String>,
     pub spells: Vec<String>,
+    pub drop_theme: Option<String>,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -607,6 +617,10 @@ pub fn parse_f_info(text: &str) -> Result<Vec<LegacyTerrainEntry>, LegacyImportE
                     .next()
                     .expect("required glyph must contain a character"),
             );
+        } else if let Some(rest) = line.strip_prefix("K:DESTROYED:") {
+            entry.destroyed_tag = Some(
+                required_field(F_INFO_SOURCE, line_number, "K.destroyed", Some(rest))?.to_owned(),
+            );
         } else if let Some(rest) = line.strip_prefix("F:") {
             entry.flags.extend(
                 rest.split('|')
@@ -633,10 +647,8 @@ fn parse_blow(rest: &str, line_number: usize) -> Result<LegacyBlow, LegacyImport
         if part.is_empty() {
             continue;
         }
-        // Effects mostly carry their dice inline: HURT(2d6), POISON(1d4),
-        // DAM(3d8)... the first diced effect provides the melee damage.
-        if let Some((token, parameters)) = part.split_once('(') {
-            let dice = parameters.strip_suffix(')').ok_or_else(|| {
+        let (token, parameters) = if let Some((token, parameters)) = part.split_once('(') {
+            let parameters = parameters.strip_suffix(')').ok_or_else(|| {
                 content_parse_error(
                     R_INFO_SOURCE,
                     line_number,
@@ -645,23 +657,36 @@ fn parse_blow(rest: &str, line_number: usize) -> Result<LegacyBlow, LegacyImport
                     "effect parameters are missing a closing parenthesis",
                 )
             })?;
-            let token = required_field(R_INFO_SOURCE, line_number, "B.effect", Some(token))?;
-            if blow.damage_dice.is_none()
-                && let Some((dice_count, sides)) = dice.split_once('d')
-                && dice_count.bytes().all(|byte| byte.is_ascii_digit())
-                && sides.bytes().all(|byte| byte.is_ascii_digit())
-            {
-                let dice_count =
-                    parse_number(R_INFO_SOURCE, line_number, "B.damageDice", Some(dice_count))?;
-                let sides = parse_number(R_INFO_SOURCE, line_number, "B.damageSides", Some(sides))?;
-                blow.damage_dice = Some((dice_count, sides));
-                blow.effects.insert(0, token.to_owned());
-                continue;
-            }
-            blow.effects.push(token.to_owned());
+            (token, Some(parameters))
         } else {
-            blow.effects.push(part.to_owned());
+            (part, None)
+        };
+        let token = required_field(R_INFO_SOURCE, line_number, "B.effect", Some(token))?;
+        let mut effect = LegacyBlowEffect {
+            token: token.to_owned(),
+            ..LegacyBlowEffect::default()
+        };
+        if let Some(parameters) = parameters {
+            for parameter in parameters.split(',').map(str::trim) {
+                if let Some(percent) = parameter.strip_suffix('%') {
+                    let chance: u8 = parse_number(
+                        R_INFO_SOURCE,
+                        line_number,
+                        "B.effectChancePercent",
+                        Some(percent),
+                    )?;
+                    effect.chance_percent = Some(chance.min(100));
+                } else {
+                    effect.dice = Some(parse_dice(
+                        R_INFO_SOURCE,
+                        line_number,
+                        "B.effectDice",
+                        Some(parameter),
+                    )?);
+                }
+            }
         }
+        blow.effects.push(effect);
     }
     if blow.method.is_empty() {
         return Err(content_parse_error(
@@ -797,6 +822,10 @@ pub fn parse_r_info(text: &str) -> Result<Vec<LegacyMonsterEntry>, LegacyImportE
                     .filter(|spell| !spell.is_empty())
                     .map(str::to_owned),
             );
+        } else if let Some(rest) = line.strip_prefix("O:") {
+            entry.drop_theme = Some(
+                required_field(R_INFO_SOURCE, line_number, "O.dropTheme", Some(rest))?.to_owned(),
+            );
         }
     }
     if let Some(entry) = current.take() {
@@ -805,7 +834,7 @@ pub fn parse_r_info(text: &str) -> Result<Vec<LegacyMonsterEntry>, LegacyImportE
     Ok(entries)
 }
 
-const MAPPED_TERRAIN_FLAGS: [&str; 4] = ["MOVE", "LOS", "PROJECT", "PERMANENT"];
+const MAPPED_TERRAIN_FLAGS: [&str; 5] = ["MOVE", "LOS", "PROJECT", "PERMANENT", "HURT_DISI"];
 
 /// Parses k_info entries; `&` article and `~` plural markers strip out of
 /// names, and the `N:*:` auto-index form continues the running counter.
@@ -2602,6 +2631,9 @@ fn ego_json(
     apply_offensive_fold(&mut value, &offense);
     apply_equipment_fold(&mut value, &equipment);
     apply_ego_roll_recipe(&mut value, entry);
+    if entry.index == 184 && entry.name == "of Endurance" {
+        value["resistsMonsterDestruction"] = serde_json::json!(true);
+    }
     value
 }
 
@@ -5105,7 +5137,11 @@ fn legacy_skill_files() -> Vec<(String, serde_json::Value)> {
         .collect()
 }
 
-fn terrain_json(entry: &LegacyTerrainEntry, id: &str) -> serde_json::Value {
+fn terrain_json(
+    entry: &LegacyTerrainEntry,
+    id: &str,
+    monster_destroy_to_terrain_id: Option<&str>,
+) -> serde_json::Value {
     let walkable = entry.flags.iter().any(|flag| flag == "MOVE");
     let blocks_sight = !entry.flags.iter().any(|flag| flag == "LOS");
     let mut tags = vec!["legacy-import"];
@@ -5126,7 +5162,7 @@ fn terrain_json(entry: &LegacyTerrainEntry, id: &str) -> serde_json::Value {
         Some(glyph) => glyph,
         None => '?',
     };
-    serde_json::json!({
+    let mut value = serde_json::json!({
         "$schema": format!("{SCHEMA_BASE}/terrain.schema.json"),
         "formatVersion": 1,
         "id": format!("rfb-legacy.terrain.{id}"),
@@ -5136,31 +5172,142 @@ fn terrain_json(entry: &LegacyTerrainEntry, id: &str) -> serde_json::Value {
         "walkable": walkable,
         "blocksSight": blocks_sight,
         "tags": tags,
+    });
+    if let Some(target_id) = monster_destroy_to_terrain_id {
+        value["monsterDestroyToTerrainId"] = serde_json::json!(target_id);
+    }
+    value
+}
+
+fn melee_damage_type(token: &str) -> Option<&'static str> {
+    match token {
+        "HURT" | "DAM" => Some("physical"),
+        "FIRE" => Some("fire"),
+        "COLD" => Some("cold"),
+        "ACID" => Some("acid"),
+        "ELEC" => Some("electricity"),
+        "LITE" => Some("light"),
+        "DARK" => Some("dark"),
+        "CONFUSE" => Some("confusion"),
+        "NETHER" => Some("nether"),
+        "NEXUS" => Some("nexus"),
+        "SOUND" => Some("sound"),
+        "SHARDS" => Some("shards"),
+        "CHAOS" => Some("chaos"),
+        "DISENCHANT" => Some("disenchant"),
+        "TIME" => Some("time"),
+        "MANA" => Some("mana"),
+        "GRAVITY" => Some("gravity"),
+        "INERTIA" => Some("inertia"),
+        "PLASMA" => Some("plasma"),
+        "FORCE" => Some("force"),
+        "NUKE" => Some("nuke"),
+        "DISINTEGRATE" => Some("disintegrate"),
+        "STORM" => Some("storm"),
+        "HOLY_FIRE" => Some("holy-fire"),
+        "HELL_FIRE" => Some("hell-fire"),
+        "ICE" => Some("ice"),
+        "WATER" => Some("water"),
+        _ => None,
+    }
+}
+
+fn melee_effect_json(effect: &LegacyBlowEffect) -> Option<serde_json::Value> {
+    let mut value = match effect.token.as_str() {
+        "POISON" => {
+            let (damage_dice, damage_sides) = effect.dice?;
+            serde_json::json!({
+                "type": "poison",
+                "damageDice": damage_dice.clamp(1, 100),
+                "damageSides": damage_sides.clamp(1, 10_000),
+            })
+        }
+        "DISEASE" => {
+            let (damage_dice, damage_sides) = effect.dice.unwrap_or((0, 0));
+            serde_json::json!({
+                "type": "disease",
+                "damageDice": damage_dice.min(100),
+                "damageSides": damage_sides.min(10_000),
+            })
+        }
+        "CUT" => {
+            let (duration_dice, duration_sides) = effect.dice?;
+            serde_json::json!({
+                "type": "bleeding",
+                "durationDice": duration_dice.clamp(1, 100),
+                "durationSides": duration_sides.clamp(1, 10_000),
+            })
+        }
+        "LOSE_STR" | "LOSE_INT" | "LOSE_WIS" | "LOSE_DEX" | "LOSE_CON" | "LOSE_CHR"
+        | "LOSE_ALL" => {
+            let attributes: &[&str] = match effect.token.as_str() {
+                "LOSE_STR" => &["strength"],
+                "LOSE_INT" => &["intelligence"],
+                "LOSE_WIS" => &["wisdom"],
+                "LOSE_DEX" => &["dexterity"],
+                "LOSE_CON" => &["constitution"],
+                "LOSE_CHR" => &["charisma"],
+                "LOSE_ALL" => &[
+                    "strength",
+                    "dexterity",
+                    "constitution",
+                    "intelligence",
+                    "wisdom",
+                    "charisma",
+                ],
+                _ => unreachable!(),
+            };
+            serde_json::json!({
+                "type": "drain-attributes",
+                "attributes": attributes,
+            })
+        }
+        token => {
+            let damage_type = melee_damage_type(token)?;
+            let (damage_dice, damage_sides) = effect.dice?;
+            serde_json::json!({
+                "type": "damage",
+                "damageDice": damage_dice.clamp(1, 100),
+                "damageSides": damage_sides.clamp(1, 10_000),
+                "damageType": damage_type,
+                "armorMitigated": token == "HURT",
+            })
+        }
+    };
+    if let Some(chance_percent) = effect.chance_percent {
+        value["chancePercent"] = serde_json::json!(chance_percent);
+    }
+    Some(value)
+}
+
+fn blow_primary_dice(blow: &LegacyBlow) -> Option<(u16, u16)> {
+    blow.effects.iter().find_map(|effect| {
+        (effect.token == "POISON"
+            || effect.token == "DISEASE"
+            || melee_damage_type(&effect.token).is_some())
+        .then_some(effect.dice)
+        .flatten()
     })
 }
 
-/// Maps the dice-bearing effect token to our damage types; unknown tokens
-/// fall back to physical dice and are counted in the gap report.
+/// Maps the first damage-bearing effect to the actor's legacy fallback attack.
 fn damage_type_for(blow: &LegacyBlow) -> (&'static str, Option<&str>) {
-    match blow.effects.first().map(String::as_str) {
-        Some("POISON") => ("poison", None),
-        Some("FIRE") => ("fire", None),
-        Some("COLD") => ("cold", None),
-        Some("ACID") => ("acid", None),
-        Some("ELEC") => ("electricity", None),
-        Some("LITE") => ("light", None),
-        Some("NETHER") => ("nether", None),
-        Some("NEXUS") => ("nexus", None),
-        Some("SHARDS") => ("shards", None),
-        Some("DISENCHANT") => ("disenchant", None),
-        Some("TIME") => ("time", None),
-        Some("INERTIA") => ("inertia", None),
-        Some("PLASMA") => ("plasma", None),
-        Some("DISINTEGRATE") => ("disintegrate", None),
-        Some("HELL_FIRE") => ("hell-fire", None),
-        Some("HURT" | "DAM") | None => ("physical", None),
-        Some(other) => ("physical", Some(other)),
+    for effect in &blow.effects {
+        if effect.dice.is_none() {
+            continue;
+        }
+        if effect.token == "POISON" {
+            return ("poison", None);
+        }
+        if effect.token == "DISEASE" {
+            return ("physical", None);
+        }
+        if let Some(damage_type) = melee_damage_type(&effect.token) {
+            return (damage_type, None);
+        }
+        return ("physical", Some(&effect.token));
     }
+    ("physical", None)
 }
 
 /// Mental attacks package psi damage with status riders; the legacy saving
@@ -5481,7 +5628,28 @@ const RESISTANCE_ALL_TYPES: [&str; 27] = [
 ];
 
 fn monster_flag_is_mapped(flag: &str) -> bool {
-    if matches!(flag, "RES_ALL" | "RES_TELE" | "NO_CONF") {
+    if matches!(
+        flag,
+        "RES_ALL"
+            | "RES_TELE"
+            | "NO_CONF"
+            | "KILL_WALL"
+            | "KILL_ITEM"
+            | "HAS_LITE_1"
+            | "HAS_LITE_2"
+            | "SELF_LITE_1"
+            | "SELF_LITE_2"
+            | "ONLY_ITEM"
+            | "ONLY_GOLD"
+            | "DROP_60"
+            | "DROP_90"
+            | "DROP_1D2"
+            | "DROP_2D2"
+            | "DROP_3D2"
+            | "DROP_4D2"
+            | "DROP_GOOD"
+            | "DROP_GREAT"
+    ) {
         return true;
     }
     for (suffix, _) in RESISTANCE_FLAG_TYPES {
@@ -5493,6 +5661,63 @@ fn monster_flag_is_mapped(flag: &str) -> bool {
         }
     }
     false
+}
+
+fn monster_death_drop_json(entry: &LegacyMonsterEntry) -> Option<serde_json::Value> {
+    let mut chance_rolls = Vec::new();
+    if entry.flags.iter().any(|flag| flag == "DROP_60") {
+        chance_rolls.push(serde_json::json!({ "percent": 60 }));
+    }
+    if entry.flags.iter().any(|flag| flag == "DROP_90") {
+        chance_rolls.push(serde_json::json!({
+            "percent": 90,
+            "guaranteedForUnique": true,
+        }));
+    }
+    let count_dice = [
+        ("DROP_1D2", 1_u8),
+        ("DROP_2D2", 2),
+        ("DROP_3D2", 3),
+        ("DROP_4D2", 4),
+    ]
+    .into_iter()
+    .filter(|(flag, _)| entry.flags.iter().any(|candidate| candidate == flag))
+    .map(|(_, dice)| serde_json::json!({ "dice": dice, "sides": 2 }))
+    .collect::<Vec<_>>();
+    if chance_rolls.is_empty() && count_dice.is_empty() {
+        return None;
+    }
+    let only_items = entry.flags.iter().any(|flag| flag == "ONLY_ITEM");
+    let only_gold = entry.flags.iter().any(|flag| flag == "ONLY_GOLD");
+    let kind = if only_items {
+        "items"
+    } else if only_gold {
+        "gold"
+    } else {
+        "items-and-gold"
+    };
+    let allows_items = !only_gold;
+    let minimum_quality = if entry.flags.iter().any(|flag| flag == "DROP_GREAT") {
+        "exceptional"
+    } else if entry.flags.iter().any(|flag| flag == "DROP_GOOD") {
+        "fine"
+    } else {
+        "ordinary"
+    };
+    let mut value = serde_json::json!({
+        "kind": kind,
+        "chanceRolls": chance_rolls,
+        "countDice": count_dice,
+        "minimumQuality": minimum_quality,
+    });
+    if allows_items {
+        value["itemTableId"] = serde_json::json!(LEGACY_DROP_TABLE_ID);
+        if entry.drop_theme.as_deref() == Some("DROP_WARRIOR") {
+            value["themeTableId"] = serde_json::json!(LEGACY_WARRIOR_DROP_TABLE_ID);
+            value["themeChancePercent"] = serde_json::json!(50);
+        }
+    }
+    Some(value)
 }
 
 /// Folds RES_/IM_/HURT_ flags into a content resistance map; later tiers
@@ -5537,7 +5762,7 @@ fn monster_json(
         (hp_dice.saturating_mul(hp_sides.saturating_add(1)) / 2).max(1)
     };
     let level = entry.level.unwrap_or(1).max(1);
-    let (damage_dice, damage_sides) = blow.damage_dice.unwrap_or((1, 1));
+    let (damage_dice, damage_sides) = blow_primary_dice(blow).unwrap_or((1, 1));
     // Legacy type flags become category tags so summon filters can select
     // by monster class; the shared legacy-import tag doubles as "any".
     let mut tags = vec!["legacy-import".to_owned()];
@@ -5643,6 +5868,36 @@ fn monster_json(
             "bashes": bashes
         });
     }
+    let destroys_walls = entry.flags.iter().any(|flag| flag == "KILL_WALL");
+    let destroys_items = entry.flags.iter().any(|flag| flag == "KILL_ITEM");
+    if destroys_walls || destroys_items {
+        value["terrainInteraction"] = serde_json::json!({
+            "destroysWalls": destroys_walls,
+            "destroysItems": destroys_items,
+        });
+    }
+    let light_radius = u8::from(
+        entry
+            .flags
+            .iter()
+            .any(|flag| matches!(flag.as_str(), "HAS_LITE_1" | "SELF_LITE_1")),
+    ) + 2 * u8::from(
+        entry
+            .flags
+            .iter()
+            .any(|flag| matches!(flag.as_str(), "HAS_LITE_2" | "SELF_LITE_2")),
+    );
+    if light_radius > 0 {
+        value["light"] = serde_json::json!({
+            "radius": light_radius,
+            "intrinsic": entry.flags.iter().any(|flag| {
+                matches!(flag.as_str(), "SELF_LITE_1" | "SELF_LITE_2")
+            }),
+        });
+    }
+    if let Some(death_drop) = monster_death_drop_json(entry) {
+        value["deathDrop"] = death_drop;
+    }
     if let Some(routine) = melee_routine {
         value["meleeRoutine"] = routine;
     }
@@ -5705,6 +5960,7 @@ pub struct ContentImportOutcome {
     pub ability_book_files: Vec<(String, serde_json::Value)>,
     pub resource_files: Vec<(String, serde_json::Value)>,
     pub item_files: Vec<(String, serde_json::Value)>,
+    pub loot_table_files: Vec<(String, serde_json::Value)>,
     pub affix_files: Vec<(String, serde_json::Value)>,
     pub race_files: Vec<(String, serde_json::Value)>,
     pub class_files: Vec<(String, serde_json::Value)>,
@@ -6311,6 +6567,8 @@ pub fn convert_content(
     let mut terrain_files = Vec::new();
     let mut seen_ids = BTreeMap::new();
     let mut terrain_creation = TerrainCreationImportIds::default();
+    let mut planned_terrain = Vec::new();
+    let mut terrain_ids_by_tag = BTreeMap::new();
 
     report.terrain_total = terrain.len();
     for entry in terrain {
@@ -6341,12 +6599,29 @@ pub fn convert_content(
             terrain_creation.source_terrain_ids.push(terrain_id.clone());
         }
         match entry.tag.as_str() {
-            "TREE" => terrain_creation.tree_terrain_id = Some(terrain_id),
-            "GRANITE" => terrain_creation.wall_terrain_id = Some(terrain_id),
+            "TREE" => terrain_creation.tree_terrain_id = Some(terrain_id.clone()),
+            "GRANITE" => terrain_creation.wall_terrain_id = Some(terrain_id.clone()),
             _ => {}
         }
-        terrain_files.push((format!("{id}.json"), terrain_json(entry, &id)));
+        terrain_ids_by_tag
+            .entry(entry.tag.clone())
+            .or_insert(terrain_id);
+        planned_terrain.push((entry, id));
         report.terrain_imported += 1;
+    }
+    for (entry, id) in planned_terrain {
+        let destroyed_tag = entry
+            .destroyed_tag
+            .as_deref()
+            .map(|tag| if tag == "*FLOOR*" { "FLOOR" } else { tag });
+        let destroy_to = entry
+            .flags
+            .iter()
+            .any(|flag| flag == "HURT_DISI")
+            .then(|| destroyed_tag.and_then(|tag| terrain_ids_by_tag.get(tag)))
+            .flatten()
+            .map(String::as_str);
+        terrain_files.push((format!("{id}.json"), terrain_json(entry, &id, destroy_to)));
     }
     terrain_creation.source_terrain_ids.sort();
 
@@ -6366,7 +6641,11 @@ pub fn convert_content(
         let expressible: Vec<&LegacyBlow> = entry
             .blows
             .iter()
-            .filter(|blow| blow.damage_dice.is_some())
+            .filter(|blow| {
+                blow.effects
+                    .iter()
+                    .any(|effect| melee_effect_json(effect).is_some())
+            })
             .collect();
         let Some(blow) = expressible.first().copied() else {
             report.monsters_skipped += 1;
@@ -6385,7 +6664,11 @@ pub fn convert_content(
         if expressible.len() < entry.blows.len() {
             report.monsters_with_inexpressible_blows += 1;
             for blow in &entry.blows {
-                if blow.damage_dice.is_none() {
+                if !blow
+                    .effects
+                    .iter()
+                    .any(|effect| melee_effect_json(effect).is_some())
+                {
                     *report
                         .unmapped_blow_methods
                         .entry(blow.method.clone())
@@ -6395,31 +6678,39 @@ pub fn convert_content(
         }
         // Legacy routines cap at four blows; the schema allows eight, so no
         // real entry ever truncates.
-        let melee_routine = (expressible.len() > 1).then(|| {
+        let melee_routine = Some({
             report.monsters_with_melee_routine += 1;
             let blows: Vec<serde_json::Value> = expressible
                 .iter()
                 .take(8)
                 .map(|blow| {
-                    let (blow_type, unmapped) = damage_type_for(blow);
-                    if let Some(effect) = unmapped {
-                        *report
-                            .unmapped_blow_effects
-                            .entry(effect.to_owned())
-                            .or_default() += 1;
-                    }
-                    let (dice, sides) = blow.damage_dice.expect("expressible blow carries dice");
+                    let effects = blow
+                        .effects
+                        .iter()
+                        .filter_map(|effect| {
+                            let mapped = melee_effect_json(effect);
+                            if mapped.is_none() {
+                                *report
+                                    .unmapped_blow_effects
+                                    .entry(effect.token.clone())
+                                    .or_default() += 1;
+                            }
+                            mapped
+                        })
+                        .collect::<Vec<_>>();
                     let mut method = kebab(&blow.method);
                     if method.is_empty() {
                         method = "strike".to_owned();
                     }
-                    serde_json::json!({
+                    let mut value = serde_json::json!({
                         "methodId": format!("rfb-legacy.blow.{method}"),
                         "toHit": 20,
-                        "damageDice": dice.clamp(1, 100),
-                        "damageSides": sides.clamp(1, 10_000),
-                        "damageType": blow_type,
-                    })
+                        "effects": effects,
+                    });
+                    if blow.method == "EXPLODE" {
+                        value["selfDestructs"] = serde_json::json!(true);
+                    }
+                    value
                 })
                 .collect();
             serde_json::json!({ "blows": blows })
@@ -6540,6 +6831,7 @@ pub fn convert_content(
 
     let mut item_files = Vec::new();
     let mut seen_item_ids = BTreeMap::new();
+    let mut imported_item_ids = BTreeMap::new();
     report.items_total = items.len();
     // Prepass: the first shot/arrow/bolt entry becomes the canonical ammo
     // partner for its launcher class.
@@ -6576,6 +6868,7 @@ pub fn convert_content(
             id = format!("{id}-{}", entry.index);
         }
         *duplicates += 1;
+        imported_item_ids.insert(entry.index, format!("rfb-legacy.item.{id}"));
         item_files.push((
             format!("{id}.json"),
             item_json_with_terrain(
@@ -6604,6 +6897,61 @@ pub fn convert_content(
         }),
     ));
     report.items_imported += 1;
+
+    let loot_entries = items
+        .iter()
+        .filter(|entry| {
+            !entry.name.is_empty() && entry.name != "something" && entry.glyph.is_some()
+        })
+        .map(|entry| {
+            serde_json::json!({
+                "itemKindId": imported_item_ids[&entry.index],
+                "weight": 1,
+                "quantity": 1,
+                "minDepth": entry.level,
+            })
+        })
+        .collect::<Vec<_>>();
+    let warrior_loot_entries = items
+        .iter()
+        .filter(|entry| {
+            matches!(entry.tval, 17 | 18 | 30..=34 | 36..=38)
+                || (entry.tval == 23 && (11..32).contains(&entry.sval))
+                || (entry.tval == 75 && matches!(entry.sval, 32 | 33))
+        })
+        .filter(|entry| {
+            !entry.name.is_empty() && entry.name != "something" && entry.glyph.is_some()
+        })
+        .map(|entry| {
+            serde_json::json!({
+                "itemKindId": imported_item_ids[&entry.index],
+                "weight": 1,
+                "quantity": 1,
+                "minDepth": entry.level,
+            })
+        })
+        .collect::<Vec<_>>();
+    let loot_table = |id: &str, entries: Vec<serde_json::Value>| {
+        serde_json::json!({
+            "$schema": format!("{SCHEMA_BASE}/loot-table.schema.json"),
+            "formatVersion": 1,
+            "id": id,
+            "rolls": 1,
+            "entries": entries,
+            "qualityWeights": [{ "quality": "ordinary", "weight": 1 }],
+            "affixWeights": [{ "weight": 1 }],
+        })
+    };
+    let loot_table_files = vec![
+        (
+            "monster-drops.json".to_owned(),
+            loot_table(LEGACY_DROP_TABLE_ID, loot_entries),
+        ),
+        (
+            "monster-drops-warrior.json".to_owned(),
+            loot_table(LEGACY_WARRIOR_DROP_TABLE_ID, warrior_loot_entries),
+        ),
+    ];
 
     let mut affix_files = Vec::new();
     let mut seen_affix_ids = BTreeMap::new();
@@ -7136,6 +7484,7 @@ pub fn convert_content(
         ability_book_files,
         resource_files,
         item_files,
+        loot_table_files,
         affix_files,
         race_files,
         class_files,
@@ -7532,6 +7881,7 @@ pub fn import_content(source: &Path, output: &Path) -> Result<PathBuf, LegacyImp
         ("resources", &outcome.resource_files),
         ("effectPrograms", &effect_program_files),
         ("items", &outcome.item_files),
+        ("lootTables", &outcome.loot_table_files),
         ("affixes", &outcome.affix_files),
         ("races", &outcome.race_files),
         ("classes", &outcome.class_files),
@@ -7608,6 +7958,9 @@ pub fn import_content(source: &Path, output: &Path) -> Result<PathBuf, LegacyImp
     }
     if !outcome.item_files.is_empty() {
         content_roots.push("items");
+    }
+    if !outcome.loot_table_files.is_empty() {
+        content_roots.push("lootTables");
     }
     if !outcome.personality_files.is_empty() {
         content_roots.push("personalities");
@@ -7805,6 +8158,81 @@ mod tests {
         );
     }
 
+    #[test]
+    fn melee_effect_parser_preserves_order_dice_and_independent_chances() {
+        let blow = parse_blow("SLASH:HURT(10d1):POISON(4d4, 50%):CUT(2d3, 30%)", 1)
+            .expect("synthetic blow should parse");
+
+        assert_eq!(blow.method, "SLASH");
+        assert_eq!(blow.effects.len(), 3);
+        assert_eq!(blow.effects[0].token, "HURT");
+        assert_eq!(blow.effects[0].dice, Some((10, 1)));
+        assert_eq!(blow.effects[0].chance_percent, None);
+        assert_eq!(blow.effects[1].token, "POISON");
+        assert_eq!(blow.effects[1].dice, Some((4, 4)));
+        assert_eq!(blow.effects[1].chance_percent, Some(50));
+        assert_eq!(blow.effects[2].token, "CUT");
+        assert_eq!(blow.effects[2].dice, Some((2, 3)));
+        assert_eq!(blow.effects[2].chance_percent, Some(30));
+    }
+
+    #[test]
+    fn monster_import_maps_self_destruct_terrain_light_and_drop_flags() {
+        let monsters = parse_r_info(
+            "N:1:test breach mote\nG:*:y\nI:110:1d3:8:4:20:10\nW:3:1:10:3:0:0\nB:EXPLODE:FIRE(2d4)\nF:KILL_WALL | KILL_ITEM | HAS_LITE_1 | SELF_LITE_2\nF:ONLY_ITEM | DROP_90 | DROP_1D2 | DROP_GOOD | UNIQUE\nO:DROP_WARRIOR\n",
+        )
+        .expect("synthetic monster should parse");
+        let outcome = convert_content(
+            &[],
+            &monsters,
+            &[],
+            &[],
+            &[],
+            &LegacyCharacterSources::default(),
+        );
+        let actor = &outcome.actor_files[0].1;
+        let blow = &actor["meleeRoutine"]["blows"][0];
+
+        assert_eq!(blow["selfDestructs"], true);
+        assert_eq!(blow["effects"][0]["damageType"], "fire");
+        assert_eq!(actor["terrainInteraction"]["destroysWalls"], true);
+        assert_eq!(actor["terrainInteraction"]["destroysItems"], true);
+        assert_eq!(actor["light"]["radius"], 3);
+        assert_eq!(actor["light"]["intrinsic"], true);
+        assert_eq!(actor["deathDrop"]["kind"], "items");
+        assert_eq!(actor["deathDrop"]["chanceRolls"][0]["percent"], 90);
+        assert_eq!(actor["deathDrop"]["countDice"][0]["dice"], 1);
+        assert_eq!(actor["deathDrop"]["minimumQuality"], "fine");
+        assert_eq!(actor["deathDrop"]["themeChancePercent"], 50);
+    }
+
+    #[test]
+    fn terrain_import_uses_destroyed_target_for_disintegration() {
+        let terrain = parse_f_info(
+            "N:1:FLOOR\nG:.:w\nF:LOS | PROJECT | MOVE | FLOOR\nN:2:WALL\nG:#:w\nK:DESTROYED:*FLOOR*\nF:WALL | HURT_DISI\n",
+        )
+        .expect("synthetic terrain should parse");
+        let outcome = convert_content(
+            &terrain,
+            &[],
+            &[],
+            &[],
+            &[],
+            &LegacyCharacterSources::default(),
+        );
+        let wall = outcome
+            .terrain_files
+            .iter()
+            .find(|(name, _)| name == "wall.json")
+            .map(|(_, value)| value)
+            .expect("wall should import");
+
+        assert_eq!(
+            wall["monsterDestroyToTerrainId"],
+            "rfb-legacy.terrain.floor"
+        );
+    }
+
     // Synthetic samples in the legacy line format; no legacy content.
     const SYNTHETIC_F_INFO: &str = "\
 N:0:NONE\n\
@@ -7887,11 +8315,13 @@ B:GAZE:TERRIFY\n";
             .expect("routine should list blows");
         assert_eq!(blows.len(), 2);
         assert_eq!(blows[0]["methodId"], "rfb-legacy.blow.touch");
-        assert_eq!(blows[0]["damageType"], "fire");
+        assert_eq!(blows[0]["effects"][0]["type"], "damage");
+        assert_eq!(blows[0]["effects"][0]["damageType"], "fire");
         assert_eq!(blows[1]["methodId"], "rfb-legacy.blow.crush");
-        assert_eq!(blows[1]["damageType"], "physical");
-        assert_eq!(blows[1]["damageDice"], 1);
-        assert_eq!(blows[1]["damageSides"], 6);
+        assert_eq!(blows[1]["effects"][0]["damageType"], "physical");
+        assert_eq!(blows[1]["effects"][0]["damageDice"], 1);
+        assert_eq!(blows[1]["effects"][0]["damageSides"], 6);
+        assert_eq!(blows[1]["effects"].as_array().unwrap().len(), 1);
         // RES_FIRE folds into the content resistance map.
         assert_eq!(lantern["resistances"]["fire"], "resistant");
         assert_eq!(lantern["monsterCasting"]["frequencyPercent"], 20);
@@ -9589,6 +10019,7 @@ F:BRAND_VAMP | HOLD_LIFE
                 ..LegacyTerrainEntry::default()
             },
             "test-trap",
+            None,
         );
         assert!(
             trap["tags"]
@@ -9606,6 +10037,7 @@ F:BRAND_VAMP | HOLD_LIFE
                 ..LegacyTerrainEntry::default()
             },
             "test-store",
+            None,
         );
         assert_eq!(passage["glyph"], "+");
 
@@ -9615,6 +10047,7 @@ F:BRAND_VAMP | HOLD_LIFE
                 ..LegacyTerrainEntry::default()
             },
             "test-hidden",
+            None,
         );
         assert_eq!(blocked["glyph"], "#");
     }

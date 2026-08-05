@@ -20,16 +20,12 @@
       {
         "methodId": "rfb.blow.echo-bite",
         "toHit": 20,
-        "damageDice": 1,
-        "damageSides": 1,
-        "damageType": "physical"
+        "effects": [{ "type": "damage", "damageDice": 1, "damageSides": 1, "damageType": "physical", "armorMitigated": true }]
       },
       {
         "methodId": "rfb.blow.echo-rake",
         "toHit": 20,
-        "damageDice": 1,
-        "damageSides": 1,
-        "damageType": "cold"
+        "effects": [{ "type": "damage", "damageDice": 1, "damageSides": 1, "damageType": "cold" }]
       }
     ]
   },

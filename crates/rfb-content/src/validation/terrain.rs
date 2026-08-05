@@ -195,6 +195,21 @@ pub(super) fn validate_terrain(
                 return Err(ContentError::InvalidTerrainTransition(terrain.id.clone()));
             }
         }
+        if let Some(target_id) = &terrain.monster_destroy_to_terrain_id {
+            require_reference(&terrain_ids, target_id, &terrain.id)?;
+            let target = terrain_definitions
+                .iter()
+                .find(|candidate| candidate.id == *target_id)
+                .expect("validated monster destruction target must remain available");
+            if target_id == &terrain.id
+                || terrain.walkable
+                || !terrain.blocks_sight
+                || !target.walkable
+                || target.blocks_sight
+            {
+                return Err(ContentError::InvalidTerrainTransition(terrain.id.clone()));
+            }
+        }
         if let Some(target_id) = &terrain.concealed_as_terrain_id {
             require_reference(&terrain_ids, target_id, &terrain.id)?;
             let target = terrain_definitions

@@ -3,7 +3,6 @@
   "formatVersion": 1,
   "id": "demo.loot-table.large-kobold",
   "rolls": 1,
-  "rollChancePercent": 90,
   "entries": [
     { "itemKindId": "demo.item.appraisal-scroll", "weight": 1, "quantity": 1, "minDepth": 5, "maxDepth": 9 },
     { "itemKindId": "demo.item.light-healing-potion", "weight": 1, "quantity": 1, "minDepth": 5, "maxDepth": 9 },

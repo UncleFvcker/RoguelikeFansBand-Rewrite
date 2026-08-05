@@ -38,9 +38,8 @@ pub(in crate::game) struct ResolvedAttackProfile {
 pub(in crate::game) struct ResolvedMeleeBlow {
     pub(in crate::game) method_id: Option<String>,
     pub(in crate::game) to_hit: i32,
-    pub(in crate::game) damage_dice: u16,
-    pub(in crate::game) damage_sides: u16,
-    pub(in crate::game) damage_type: DamageType,
+    pub(in crate::game) self_destructs: bool,
+    pub(in crate::game) effects: Vec<MeleeBlowEffectDefinition>,
 }
 
 pub(in crate::game) struct ResolvedProjectileProfile {
@@ -91,9 +90,14 @@ pub(in crate::game) fn resolved_melee_blows(
             vec![ResolvedMeleeBlow {
                 method_id: None,
                 to_hit: 0,
-                damage_dice: definition.damage_dice,
-                damage_sides: definition.damage_sides,
-                damage_type: DamageType::from(definition.damage_type),
+                self_destructs: false,
+                effects: vec![MeleeBlowEffectDefinition::Damage {
+                    chance_percent: None,
+                    damage_dice: definition.damage_dice,
+                    damage_sides: definition.damage_sides,
+                    damage_type: definition.damage_type,
+                    armor_mitigated: true,
+                }],
             }]
         },
         |routine| {
@@ -103,9 +107,8 @@ pub(in crate::game) fn resolved_melee_blows(
                 .map(|blow| ResolvedMeleeBlow {
                     method_id: Some(blow.method_id.clone()),
                     to_hit: blow.to_hit,
-                    damage_dice: blow.damage_dice,
-                    damage_sides: blow.damage_sides,
-                    damage_type: DamageType::from(blow.damage_type),
+                    self_destructs: blow.self_destructs,
+                    effects: blow.effects.clone(),
                 })
                 .collect()
         },
@@ -123,13 +126,43 @@ pub(in crate::game) fn actor_melee_routine_dto(
                     .method_id
                     .unwrap_or_else(|| "rfb.blow.innate".to_owned()),
                 to_hit: blow.to_hit,
-                damage: DamageDiceDto {
-                    dice: blow.damage_dice,
-                    sides: blow.damage_sides,
-                    damage_type: blow.damage_type.into(),
-                },
+                damage: projected_blow_damage(&blow.effects),
             })
             .collect(),
+    }
+}
+
+fn projected_blow_damage(effects: &[MeleeBlowEffectDefinition]) -> DamageDiceDto {
+    let (dice, sides, damage_type) = effects
+        .iter()
+        .find_map(|effect| match effect {
+            MeleeBlowEffectDefinition::Damage {
+                damage_dice,
+                damage_sides,
+                damage_type,
+                ..
+            } => Some((*damage_dice, *damage_sides, DamageType::from(*damage_type))),
+            MeleeBlowEffectDefinition::Poison {
+                damage_dice,
+                damage_sides,
+                ..
+            } => Some((*damage_dice, *damage_sides, DamageType::Poison)),
+            MeleeBlowEffectDefinition::Disease {
+                damage_dice,
+                damage_sides,
+                ..
+            } if *damage_dice > 0 && *damage_sides > 0 => {
+                Some((*damage_dice, *damage_sides, DamageType::Physical))
+            }
+            MeleeBlowEffectDefinition::Disease { .. } => None,
+            MeleeBlowEffectDefinition::DrainAttributes { .. }
+            | MeleeBlowEffectDefinition::Bleeding { .. } => None,
+        })
+        .unwrap_or((1, 1, DamageType::Physical));
+    DamageDiceDto {
+        dice,
+        sides,
+        damage_type: damage_type.into(),
     }
 }
 

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
+use super::gold::gold_visual_id;
 use super::*;
 
 pub(super) fn actor_can_cross_terrain(
@@ -31,12 +32,128 @@ fn actor_can_interact_with_terrain(
     actor: &rfb_content::ActorDefinition,
     terrain: &rfb_content::TerrainDefinition,
 ) -> bool {
-    terrain.monster_door_power.is_some()
+    (terrain.monster_door_power.is_some()
         && ((actor.door_interaction.opens && terrain.open_to_terrain_id.is_some())
-            || (actor.door_interaction.bashes && terrain.bash_to_terrain_id.is_some()))
+            || (actor.door_interaction.bashes && terrain.bash_to_terrain_id.is_some())))
+        || (actor.terrain_interaction.destroys_walls
+            && terrain.monster_destroy_to_terrain_id.is_some())
 }
 
 impl Game {
+    fn item_resists_monster_destruction(
+        &self,
+        item: &ItemInstance,
+        actor: &Actor,
+        actor_definition: &rfb_content::ActorDefinition,
+    ) -> bool {
+        let Some(definition) = self.content.item(&item.kind_id) else {
+            return true;
+        };
+        if definition.resists_monster_destruction
+            || definition.tags.iter().any(|tag| tag == "artifact")
+        {
+            return true;
+        }
+        let mut resists = false;
+        let mut inspect_properties = |slays: &BTreeMap<SlayTarget, SlayLevel>,
+                                      brands: &BTreeSet<WeaponBrand>,
+                                      protected: bool| {
+            resists |= protected
+                || slays
+                    .keys()
+                    .any(|target| slay_target_matches(*target, actor_definition))
+                || brands.iter().any(|brand| {
+                    actor.resistances.level(brand_damage_type(*brand)) != ResistanceLevel::Immune
+                });
+        };
+        inspect_properties(&definition.slays, &definition.brands, false);
+        for affix_id in &item.affix_ids {
+            if let Some(affix) = self.content.affix(affix_id) {
+                inspect_properties(
+                    &affix.slays,
+                    &affix.brands,
+                    affix.resists_monster_destruction,
+                );
+            }
+        }
+        for rolled in &item.rolled_affixes {
+            inspect_properties(
+                &rolled.properties.slays,
+                &rolled.properties.brands,
+                self.content
+                    .affix(&rolled.affix_id)
+                    .is_some_and(|affix| affix.resists_monster_destruction),
+            );
+        }
+        resists
+    }
+
+    pub(super) fn destroy_items_under_monster(
+        &mut self,
+        actor_index: usize,
+        position: Position,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let actor = self.entities[actor_index].clone();
+        let Some(actor_definition) = self.content.actor(&actor.kind_id).cloned() else {
+            return;
+        };
+        if !actor_definition.terrain_interaction.destroys_items {
+            return;
+        }
+        let mut destroyed = self
+            .items
+            .iter()
+            .filter(|item| matches!(item.location, ItemLocation::Ground(item_position) if item_position == position))
+            .filter(|item| {
+                !self.item_resists_monster_destruction(item, &actor, &actor_definition)
+            })
+            .map(|item| (item.id.clone(), item.kind_id.clone(), item.quantity))
+            .collect::<Vec<_>>();
+        destroyed.sort_by(|left, right| left.0.cmp(&right.0));
+        let mut destroyed_gold = self
+            .gold_piles
+            .iter()
+            .filter(|pile| pile.position == position)
+            .map(|pile| {
+                (
+                    pile.id.clone(),
+                    gold_visual_id(pile.appearance).to_owned(),
+                    pile.amount,
+                )
+            })
+            .collect::<Vec<_>>();
+        destroyed_gold.sort_by(|left, right| left.0.cmp(&right.0));
+        if destroyed.is_empty() && destroyed_gold.is_empty() {
+            return;
+        }
+        let destroyed_ids = destroyed
+            .iter()
+            .map(|(item_id, _, _)| item_id.as_str())
+            .collect::<BTreeSet<_>>();
+        self.items
+            .retain(|item| !destroyed_ids.contains(item.id.as_str()));
+        self.gold_piles.retain(|pile| pile.position != position);
+        changed.insert(position);
+        for (_, target_kind_id, quantity) in destroyed {
+            events.push(DomainEvent::MonsterItemDestroyed {
+                source_kind_id: actor.kind_id.clone(),
+                target_kind_id,
+                quantity,
+                position,
+            });
+        }
+        for (_, target_kind_id, amount) in destroyed_gold {
+            events.push(DomainEvent::MonsterItemDestroyed {
+                source_kind_id: actor.kind_id.clone(),
+                target_kind_id,
+                quantity: amount,
+                position,
+            });
+        }
+    }
+
     pub(super) fn actor_kind_can_enter_position(&self, kind_id: &str, position: Position) -> bool {
         let Some(index) = self.index(position) else {
             return false;

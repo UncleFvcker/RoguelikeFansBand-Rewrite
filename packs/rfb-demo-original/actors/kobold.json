@@ -19,12 +19,17 @@
   "resistances": { "poison": "resistant" },
   "meleeRoutine": {
     "blows": [
-      { "methodId": "rfb.blow.hit", "toHit": 20, "damageDice": 1, "damageSides": 8 },
-      { "methodId": "rfb.blow.hit", "toHit": 20, "damageDice": 1, "damageSides": 8 }
+      { "methodId": "rfb.blow.hit", "toHit": 20, "effects": [{ "type": "damage", "damageDice": 1, "damageSides": 8, "armorMitigated": true }] },
+      { "methodId": "rfb.blow.hit", "toHit": 20, "effects": [{ "type": "damage", "damageDice": 1, "damageSides": 8, "armorMitigated": true }] }
     ]
   },
-  "lootTableId": "demo.loot-table.kobold",
-  "goldDropChancePercent": 20,
+  "deathDrop": {
+    "kind": "items-and-gold",
+    "itemTableId": "demo.loot-table.warrens",
+    "themeTableId": "demo.loot-table.kobold",
+    "themeChancePercent": 50,
+    "chanceRolls": [{ "percent": 60 }]
+  },
   "remains": {
     "chanceDenominator": 3,
     "corpseItemKindId": "demo.item.corpse-remains",

@@ -18,9 +18,9 @@
   "damageType": "physical",
   "meleeRoutine": {
     "blows": [
-      { "methodId": "rfb.blow.claw", "toHit": 20, "damageDice": 1, "damageSides": 3 },
-      { "methodId": "rfb.blow.claw", "toHit": 20, "damageDice": 1, "damageSides": 4 },
-      { "methodId": "rfb.blow.bite", "toHit": 20, "damageDice": 1, "damageSides": 5 }
+      { "methodId": "rfb.blow.claw", "toHit": 20, "effects": [{ "type": "damage", "damageDice": 1, "damageSides": 3, "armorMitigated": true }] },
+      { "methodId": "rfb.blow.claw", "toHit": 20, "effects": [{ "type": "damage", "damageDice": 1, "damageSides": 4, "armorMitigated": true }] },
+      { "methodId": "rfb.blow.bite", "toHit": 20, "effects": [{ "type": "damage", "damageDice": 1, "damageSides": 5, "armorMitigated": true }] }
     ]
   },
   "remains": {

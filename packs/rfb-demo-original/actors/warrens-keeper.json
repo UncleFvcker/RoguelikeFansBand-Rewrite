@@ -21,13 +21,20 @@
   },
   "meleeRoutine": {
     "blows": [
-      { "methodId": "rfb.blow.hit", "toHit": 20, "damageDice": 1, "damageSides": 10 },
-      { "methodId": "rfb.blow.hit", "toHit": 20, "damageDice": 1, "damageSides": 10 },
-      { "methodId": "rfb.blow.hit", "toHit": 20, "damageDice": 1, "damageSides": 10 },
-      { "methodId": "rfb.blow.hit", "toHit": 20, "damageDice": 1, "damageSides": 10 }
+      { "methodId": "rfb.blow.hit", "toHit": 20, "effects": [{ "type": "damage", "damageDice": 1, "damageSides": 10, "armorMitigated": true }] },
+      { "methodId": "rfb.blow.hit", "toHit": 20, "effects": [{ "type": "damage", "damageDice": 1, "damageSides": 10, "armorMitigated": true }] },
+      { "methodId": "rfb.blow.hit", "toHit": 20, "effects": [{ "type": "damage", "damageDice": 1, "damageSides": 10, "armorMitigated": true }] },
+      { "methodId": "rfb.blow.hit", "toHit": 20, "effects": [{ "type": "damage", "damageDice": 1, "damageSides": 10, "armorMitigated": true }] }
     ]
   },
-  "lootTableId": "demo.loot-table.warrens-keeper",
+  "deathDrop": {
+    "kind": "items",
+    "itemTableId": "demo.loot-table.warrens",
+    "themeTableId": "demo.loot-table.warrens-keeper",
+    "themeChancePercent": 50,
+    "countDice": [{ "dice": 1, "sides": 2 }],
+    "minimumQuality": "fine"
+  },
   "remains": {
     "chanceDenominator": 3,
     "corpseItemKindId": "demo.item.corpse-remains",

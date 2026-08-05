@@ -2,7 +2,10 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use crate::{ACTOR_SCHEMA, ActorDefinition, ActorRole, ContentError, MonsterCastingDefinition};
+use crate::{
+    ACTOR_SCHEMA, ActorDefinition, ActorRole, ContentError, MeleeBlowEffectDefinition,
+    MonsterCastingDefinition, MonsterDropKindDefinition,
+};
 
 use super::shared::{
     insert_definition_id, normalize_tags, require_format_version, require_schema,
@@ -122,17 +125,41 @@ pub(super) fn validate_actors(
             && (actor.role != ActorRole::Monster
                 || routine.blows.is_empty()
                 || routine.blows.len() > 8
+                || routine
+                    .blows
+                    .iter()
+                    .filter(|blow| blow.self_destructs)
+                    .count()
+                    > 1
                 || routine.blows.iter().any(|blow| {
                     validate_id(&blow.method_id).is_err()
                         || blow.to_hit < -1_000_000
                         || blow.to_hit > 1_000_000
-                        || blow.damage_dice == 0
-                        || blow.damage_dice > 100
-                        || blow.damage_sides == 0
-                        || blow.damage_sides > 10_000
+                        || blow.effects.is_empty()
+                        || blow.effects.len() > 8
+                        || (blow.self_destructs
+                            && blow.effects.iter().any(|effect| {
+                                !matches!(
+                                    effect,
+                                    MeleeBlowEffectDefinition::Damage { .. }
+                                        | MeleeBlowEffectDefinition::Poison { .. }
+                                )
+                            }))
+                        || blow
+                            .effects
+                            .iter()
+                            .any(|effect| !valid_melee_effect(effect))
                 }))
         {
             return Err(ContentError::InvalidMeleeRoutine(actor.id.clone()));
+        }
+        if actor.light.is_some_and(|light| {
+            actor.role != ActorRole::Monster || !(1..=8).contains(&light.radius)
+        }) || (actor.role != ActorRole::Monster
+            && (actor.terrain_interaction.destroys_walls
+                || actor.terrain_interaction.destroys_items))
+        {
+            return Err(ContentError::InvalidActorStats(actor.id.clone()));
         }
         if let Some(loot_table_id) = &actor.loot_table_id {
             if actor.role != ActorRole::Monster || validate_id(loot_table_id).is_err() {
@@ -146,6 +173,51 @@ pub(super) fn validate_actors(
                 || !(1..=100).contains(&chance)
         }) {
             return Err(ContentError::InvalidActorLootTable(actor.id.clone()));
+        }
+        if let Some(drop) = &actor.death_drop {
+            let allows_items = matches!(
+                drop.kind,
+                MonsterDropKindDefinition::Items | MonsterDropKindDefinition::ItemsAndGold
+            );
+            let maximum_rolls = u32::from(drop.base_rolls)
+                .saturating_add(u32::try_from(drop.chance_rolls.len()).unwrap_or(u32::MAX))
+                .saturating_add(drop.count_dice.iter().fold(0_u32, |total, dice| {
+                    total.saturating_add(u32::from(dice.dice) * u32::from(dice.sides))
+                }));
+            if actor.role != ActorRole::Monster
+                || actor.loot_table_id.is_some()
+                || actor.gold_drop_chance_percent.is_some()
+                || allows_items != drop.item_table_id.is_some()
+                || (!allows_items
+                    && (drop.theme_table_id.is_some() || drop.theme_chance_percent != 0))
+                || (drop.theme_table_id.is_some() != (drop.theme_chance_percent > 0))
+                || drop.theme_chance_percent > 100
+                || maximum_rolls == 0
+                || maximum_rolls > 32
+                || drop
+                    .chance_rolls
+                    .iter()
+                    .any(|roll| !(1..=100).contains(&roll.percent))
+                || drop.count_dice.iter().any(|dice| {
+                    dice.dice == 0
+                        || dice.sides == 0
+                        || u16::from(dice.dice) * u16::from(dice.sides) > 32
+                })
+            {
+                return Err(ContentError::InvalidActorLootTable(actor.id.clone()));
+            }
+            if let Some(table_id) = &drop.item_table_id {
+                if validate_id(table_id).is_err() {
+                    return Err(ContentError::InvalidActorLootTable(actor.id.clone()));
+                }
+                actor_loot_table_ids.push((format!("{}#drop", actor.id), table_id.clone()));
+            }
+            if let Some(table_id) = &drop.theme_table_id {
+                if validate_id(table_id).is_err() {
+                    return Err(ContentError::InvalidActorLootTable(actor.id.clone()));
+                }
+                actor_loot_table_ids.push((format!("{}#drop-theme", actor.id), table_id.clone()));
+            }
         }
         if let Some(loot_table_id) = &actor.carried_loot_table_id {
             if actor.role != ActorRole::Monster || validate_id(loot_table_id).is_err() {
@@ -225,4 +297,49 @@ pub(super) fn validate_actors(
         actor_monster_casting,
         actor_corpse_item_ids,
     })
+}
+
+fn valid_melee_effect(effect: &MeleeBlowEffectDefinition) -> bool {
+    let valid_chance = |chance: Option<u8>| chance.is_none_or(|chance| (1..=100).contains(&chance));
+    let valid_dice =
+        |dice: u16, sides: u16| (1..=100).contains(&dice) && (1..=10_000).contains(&sides);
+    match effect {
+        MeleeBlowEffectDefinition::Damage {
+            chance_percent,
+            damage_dice,
+            damage_sides,
+            ..
+        }
+        | MeleeBlowEffectDefinition::Poison {
+            chance_percent,
+            damage_dice,
+            damage_sides,
+        } => valid_chance(*chance_percent) && valid_dice(*damage_dice, *damage_sides),
+        MeleeBlowEffectDefinition::Disease {
+            chance_percent,
+            damage_dice,
+            damage_sides,
+        } => {
+            valid_chance(*chance_percent)
+                && ((*damage_dice == 0 && *damage_sides == 0)
+                    || valid_dice(*damage_dice, *damage_sides))
+        }
+        MeleeBlowEffectDefinition::DrainAttributes {
+            chance_percent,
+            attributes,
+        } => {
+            valid_chance(*chance_percent)
+                && !attributes.is_empty()
+                && attributes.len() <= 6
+                && !attributes
+                    .iter()
+                    .enumerate()
+                    .any(|(index, attribute)| attributes[..index].contains(attribute))
+        }
+        MeleeBlowEffectDefinition::Bleeding {
+            chance_percent,
+            duration_dice,
+            duration_sides,
+        } => valid_chance(*chance_percent) && valid_dice(*duration_dice, *duration_sides),
+    }
 }

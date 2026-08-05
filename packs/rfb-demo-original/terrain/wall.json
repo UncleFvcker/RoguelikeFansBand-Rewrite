@@ -7,5 +7,6 @@
   "glyph": "#",
   "walkable": false,
   "blocksSight": true,
+  "monsterDestroyToTerrainId": "demo.terrain.floor",
   "tags": ["interior", "stone"]
 }

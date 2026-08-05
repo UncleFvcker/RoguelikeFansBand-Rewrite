@@ -319,3 +319,29 @@ pub(super) fn clear_monsters(game: &mut Game) {
     game.items
         .retain(|item| !matches!(item.location, ItemLocation::CarriedBy { .. }));
 }
+
+pub(super) fn game_with_actor_definition(
+    seed: u64,
+    actor_kind_id: &str,
+    update: impl FnOnce(&mut rfb_content::ActorDefinition),
+) -> Game {
+    let pack_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(std::path::Path::parent)
+        .expect("core crate should be inside the workspace")
+        .join("packs/rfb-demo-original");
+    let mut artifact = rfb_content::compile_pack_dir(&pack_root).expect("demo pack should compile");
+    let actor = artifact
+        .content
+        .actors
+        .iter_mut()
+        .find(|actor| actor.id == actor_kind_id)
+        .unwrap_or_else(|| panic!("demo pack should contain {actor_kind_id}"));
+    update(actor);
+    let catalog = Arc::new(rfb_content::ContentCatalog::from_artifact(
+        rfb_content::encode_content(artifact.content)
+            .expect("custom actor definition should remain valid"),
+    ));
+    Game::from_content(seed, catalog, BUILT_IN_WORLD_ID)
+        .expect("custom actor definition should create a game")
+}

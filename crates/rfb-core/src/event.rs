@@ -865,6 +865,31 @@ pub(crate) enum DomainEvent {
         method_id: Option<String>,
         damage: DamageOutcome,
     },
+    MonsterSelfDestructed {
+        source_kind_id: String,
+    },
+    MonsterDeathExplosionHit {
+        source_kind_id: String,
+        target_kind_id: String,
+        damage: DamageOutcome,
+    },
+    MonsterDeathExplosionSlew {
+        source_kind_id: String,
+        target_kind_id: String,
+        damage: DamageOutcome,
+    },
+    MonsterTerrainDestroyed {
+        source_kind_id: String,
+        terrain_kind_id: String,
+        replacement_terrain_kind_id: String,
+        position: Position,
+    },
+    MonsterItemDestroyed {
+        source_kind_id: String,
+        target_kind_id: String,
+        quantity: u32,
+        position: Position,
+    },
     VengeanceHit {
         target_kind_id: String,
         damage: DamageOutcome,
@@ -3298,6 +3323,75 @@ impl DomainEvent {
                     },
                 ),
                 method_id,
+            ),
+            Self::MonsterSelfDestructed { source_kind_id } => dto(
+                "combat.monster-self-destructed",
+                "combat-monster-self-destructed",
+                [("source", source_kind_id)],
+            ),
+            Self::MonsterDeathExplosionHit {
+                source_kind_id,
+                target_kind_id,
+                damage,
+            } => dto_with_outcome(
+                "combat.monster-death-explosion-hit",
+                "combat-monster-death-explosion-hit",
+                [
+                    ("source", source_kind_id),
+                    ("target", target_kind_id),
+                    ("damage", damage.applied.to_string()),
+                ],
+                GameEventOutcomeDto::Damage {
+                    resolution: damage.into(),
+                },
+            ),
+            Self::MonsterDeathExplosionSlew {
+                source_kind_id,
+                target_kind_id,
+                damage,
+            } => dto_with_outcome(
+                "combat.monster-death-explosion-slew",
+                "combat-monster-death-explosion-slew",
+                [
+                    ("source", source_kind_id),
+                    ("target", target_kind_id),
+                    ("damage", damage.applied.to_string()),
+                ],
+                GameEventOutcomeDto::Death {
+                    resolution: damage.into(),
+                },
+            ),
+            Self::MonsterTerrainDestroyed {
+                source_kind_id,
+                terrain_kind_id,
+                replacement_terrain_kind_id,
+                position,
+            } => dto(
+                "monster.terrain-destroyed",
+                "monster-terrain-destroyed",
+                [
+                    ("source", source_kind_id),
+                    ("terrain", terrain_kind_id),
+                    ("replacement", replacement_terrain_kind_id),
+                    ("x", position.x.to_string()),
+                    ("y", position.y.to_string()),
+                ],
+            ),
+            Self::MonsterItemDestroyed {
+                source_kind_id,
+                target_kind_id,
+                quantity,
+                position,
+            } => dto(
+                "monster.item-destroyed",
+                "monster-item-destroyed",
+                [
+                    ("source", source_kind_id),
+                    ("target", target_kind_id),
+                    ("quantity", quantity.to_string()),
+                    ("x", position.x.to_string()),
+                    ("y", position.y.to_string()),
+                ],
             ),
             Self::VengeanceHit {
                 target_kind_id,
