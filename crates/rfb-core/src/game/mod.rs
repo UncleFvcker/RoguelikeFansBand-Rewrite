@@ -175,7 +175,7 @@ use world::generation::{
     GeneratedRoom, TerrainFeaturePlacementContext, set_generated_terrain,
     terrain_feature_placement_candidates,
 };
-use world::geometry::floor_position_is_walkable;
+use world::geometry::{floor_actor_position_is_enterable, floor_position_is_walkable};
 #[cfg(test)]
 use world::geometry::{
     generated_terrain_index, generated_terrain_is_connected, maze_floor_anchors,
@@ -273,6 +273,14 @@ struct MonsterAbilityPlanRejection {
 enum MonsterTacticalReason {
     Wounded,
     KeepDistance,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum ActorStepOutcome {
+    Moved,
+    Interacted,
+    Blocked,
+    Removed,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -2055,15 +2063,29 @@ impl Game {
         let mut entity_ids = Vec::with_capacity(count);
         let mut summoned_kind_ids = Vec::with_capacity(count);
         let mut used_positions = Vec::with_capacity(count);
-        for (ordinal, position) in positions.into_iter().take(count).enumerate() {
+        for position in positions {
+            if entity_ids.len() >= count {
+                break;
+            }
             if candidates.is_empty() {
                 break;
             }
-            let choice = usize::try_from(
-                self.rng
-                    .bounded(u64::try_from(candidates.len()).expect("candidate count fits")),
-            )
+            let eligible_choices = candidates
+                .iter()
+                .enumerate()
+                .filter_map(|(index, kind_id)| {
+                    self.actor_kind_can_enter_position(kind_id, position)
+                        .then_some(index)
+                })
+                .collect::<Vec<_>>();
+            if eligible_choices.is_empty() {
+                continue;
+            }
+            let eligible_choice = usize::try_from(self.rng.bounded(
+                u64::try_from(eligible_choices.len()).expect("eligible candidate count fits"),
+            ))
             .expect("bounded summon choice must fit usize");
+            let choice = eligible_choices[eligible_choice];
             let kind_id = candidates[choice].clone();
             let definition = self
                 .content
@@ -2073,7 +2095,7 @@ impl Game {
             if definition.tags.iter().any(|tag| tag == "unique") {
                 candidates.remove(choice);
             }
-            let id = self.summon_entity_id(spec.source_id, ordinal);
+            let id = self.summon_entity_id(spec.source_id, entity_ids.len());
             let mut entity = spawn_actor_from_definition(
                 &mut self.rng,
                 &definition,
@@ -2147,13 +2169,47 @@ impl Game {
         origin: Position,
         count: u8,
         radius: u8,
+        actor_kind_id: &str,
     ) -> Option<Vec<Position>> {
-        let candidates = self.open_positions_around(origin, radius);
+        let candidates = self.open_positions_around_for_actor_kind(origin, radius, actor_kind_id);
         let count = usize::from(count);
         (candidates.len() >= count).then(|| candidates.into_iter().take(count).collect())
     }
 
+    fn open_positions_around_for_actor_kind(
+        &self,
+        origin: Position,
+        radius: u8,
+        actor_kind_id: &str,
+    ) -> Vec<Position> {
+        self.open_positions_around_matching(origin, radius, |position| {
+            self.actor_kind_can_enter_position(actor_kind_id, position)
+        })
+    }
+
     fn open_positions_around(&self, origin: Position, radius: u8) -> Vec<Position> {
+        self.open_positions_around_matching(origin, radius, |position| self.is_walkable(position))
+    }
+
+    fn open_positions_around_for_actor_kinds(
+        &self,
+        origin: Position,
+        radius: u8,
+        actor_kind_ids: &[String],
+    ) -> Vec<Position> {
+        self.open_positions_around_matching(origin, radius, |position| {
+            actor_kind_ids
+                .iter()
+                .any(|kind_id| self.actor_kind_can_enter_position(kind_id, position))
+        })
+    }
+
+    fn open_positions_around_matching(
+        &self,
+        origin: Position,
+        radius: u8,
+        accepts: impl Fn(Position) -> bool,
+    ) -> Vec<Position> {
         let occupied = self
             .entities
             .iter()
@@ -2181,7 +2237,7 @@ impl Game {
                 if distance == 0
                     || distance > u32::from(radius)
                     || self.index(position).is_none()
-                    || !self.is_walkable(position)
+                    || !accepts(position)
                     || occupied.contains(&position)
                 {
                     continue;
@@ -3216,18 +3272,21 @@ impl Game {
         if let Some(reason) = tactical_reason
             && let Some(next_position) = self.next_monster_step_away(index)
         {
-            let old_position = self.entities[index].position;
-            self.entities[index].position = next_position;
-            changed.insert(old_position);
-            changed.insert(next_position);
+            let source_kind_id = self.entities[index].kind_id.clone();
+            let target_kind_id = primary_target.kind_id().to_owned();
+            if self.move_entity(index, next_position, events, changed, removed_entities)?
+                != ActorStepOutcome::Moved
+            {
+                return Ok(());
+            }
             events.push(match reason {
                 MonsterTacticalReason::Wounded => DomainEvent::MonsterFled {
-                    source_kind_id: self.entities[index].kind_id.clone(),
-                    target_kind_id: primary_target.kind_id().to_owned(),
+                    source_kind_id,
+                    target_kind_id,
                 },
                 MonsterTacticalReason::KeepDistance => DomainEvent::MonsterKeptDistance {
-                    source_kind_id: self.entities[index].kind_id.clone(),
-                    target_kind_id: primary_target.kind_id().to_owned(),
+                    source_kind_id,
+                    target_kind_id,
                 },
             });
             return Ok(());
@@ -3274,10 +3333,7 @@ impl Game {
         let Some(next_position) = next_position else {
             return Ok(());
         };
-        let old_position = self.entities[index].position;
-        self.entities[index].position = next_position;
-        changed.insert(old_position);
-        changed.insert(next_position);
+        self.move_entity(index, next_position, events, changed, removed_entities)?;
         Ok(())
     }
 
@@ -3342,7 +3398,7 @@ impl Game {
                     if let Some(next_position) =
                         self.next_monster_step_toward(index, owner_position, true)
                     {
-                        self.move_entity(index, next_position, changed);
+                        self.move_entity(index, next_position, events, changed, removed_entities)?;
                     }
                     return Ok(());
                 };
@@ -3405,7 +3461,7 @@ impl Game {
             }
         };
         if let Some(next_position) = next_position {
-            self.move_entity(index, next_position, changed);
+            self.move_entity(index, next_position, events, changed, removed_entities)?;
         }
         Ok(())
     }
@@ -3414,12 +3470,26 @@ impl Game {
         &mut self,
         index: usize,
         next_position: Position,
+        events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
-    ) {
+        removed_entities: &mut Vec<String>,
+    ) -> Result<ActorStepOutcome, CoreError> {
+        if !self.actor_can_enter_position(index, next_position) {
+            match self.try_monster_door_interaction(index, next_position, events, changed) {
+                Some(true) => {}
+                Some(false) => return Ok(ActorStepOutcome::Interacted),
+                None => return Ok(ActorStepOutcome::Blocked),
+            }
+        }
         let old_position = self.entities[index].position;
         self.entities[index].position = next_position;
         changed.insert(old_position);
         changed.insert(next_position);
+        if self.trigger_actor_trap(index, next_position, events, changed, removed_entities)? {
+            Ok(ActorStepOutcome::Moved)
+        } else {
+            Ok(ActorStepOutcome::Removed)
+        }
     }
 
     fn roll_damage(&mut self, dice: u16, sides: u16) -> i32 {

@@ -75,6 +75,8 @@ pub(super) fn validate_actors(
             || actor.damage_sides == 0
             || actor.damage_sides > 10_000
             || !hit_point_dice_are_valid
+            || (actor.role != ActorRole::Monster
+                && (actor.door_interaction.opens || actor.door_interaction.bashes))
             || (actor.role != ActorRole::Monster && !actor.movement.modes.is_empty())
             || (actor.role != ActorRole::Monster && !actor.status_immunities.is_empty())
         {

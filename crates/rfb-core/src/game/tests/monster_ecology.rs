@@ -111,11 +111,11 @@ fn giant_white_mouse_reproduction_adds_one_adjacent_mouse() {
         x: origin.x.saturating_sub(5),
         y: origin.y,
     };
-    game.entities.push(game.generated_actor(
+    game.push_generated_actor(
         "test.mouse".to_owned(),
         "demo.actor.giant-white-mouse",
         origin,
-    ));
+    );
     let seed = first_seed_for(|rng| {
         let _harmony = rng.bounded(375);
         rng.bounded(8) == 0
@@ -138,8 +138,7 @@ fn warg_random_movement_replaces_normal_tracking() {
         x: origin.x.saturating_sub(5),
         y: origin.y,
     };
-    game.entities
-        .push(game.generated_actor("test.warg".to_owned(), "demo.actor.warg", origin));
+    game.push_generated_actor("test.warg".to_owned(), "demo.actor.warg", origin);
     let seed = first_seed_for(|rng| rng.bounded(100) < 25);
     game.rng = RfbRng::seeded(seed);
 
@@ -180,11 +179,11 @@ fn ambient_allocation_adds_a_distant_warrens_monster() {
 fn defeated_unique_state_round_trips_after_normal_unique_death() {
     let mut game = enter_warrens(10);
     game.entities.clear();
-    game.entities.push(game.generated_actor(
+    game.push_generated_actor(
         "test.unique".to_owned(),
         "demo.actor.dread-vampire",
         game.player.position,
-    ));
+    );
     game.resolve_actor_death(
         0,
         DomainEvent::EntityDiedFromStatus {
@@ -245,11 +244,11 @@ fn fixed_unique_summon_plans_only_one_available_instance() {
     };
     assert_eq!(positions.len(), 1);
 
-    game.entities.push(game.generated_actor(
+    game.push_generated_actor(
         "test.unique".to_owned(),
         "demo.actor.dread-vampire",
         positions[0],
-    ));
+    );
     assert!(
         game.ability_target_plan(&ability, &TargetSelection::SelfTarget)
             .is_none()
@@ -265,16 +264,16 @@ fn save_rejects_duplicate_living_normal_unique_instances() {
         x: first.x.saturating_add(1),
         y: first.y,
     };
-    game.entities.push(game.generated_actor(
+    game.push_generated_actor(
         "test.unique.1".to_owned(),
         "demo.actor.dread-vampire",
         first,
-    ));
-    game.entities.push(game.generated_actor(
+    );
+    game.push_generated_actor(
         "test.unique.2".to_owned(),
         "demo.actor.dread-vampire",
         second,
-    ));
+    );
 
     let error = Game::from_save(game.to_save()).expect_err("duplicate Unique save must fail");
     assert!(matches!(

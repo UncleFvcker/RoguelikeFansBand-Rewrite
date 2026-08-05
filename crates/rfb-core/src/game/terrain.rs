@@ -11,7 +11,7 @@ use crate::{
     stats::{DerivedStat, DerivedStatsPipeline, StatBounds, StatKind, StatLayer},
 };
 
-use super::{Game, TERRAIN_INTERACTION_DIRECTIONS};
+use super::{DomainEvent, Game, TERRAIN_INTERACTION_DIRECTIONS};
 
 pub(super) enum TrapDisarmOutcome {
     Succeeded { position: Position },
@@ -244,6 +244,66 @@ fn action_difficulty(source_id: &str, difficulty: i32) -> DerivedStat {
 }
 
 impl Game {
+    pub(super) fn try_monster_door_interaction(
+        &mut self,
+        actor_index: usize,
+        position: Position,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) -> Option<bool> {
+        let terrain_index = self.index(position)?;
+        let terrain = self.content.terrain(&self.terrain[terrain_index])?.clone();
+        let power = terrain.monster_door_power?;
+        let interaction = self
+            .content
+            .actor(&self.entities[actor_index].kind_id)?
+            .door_interaction;
+        let roll_bound = u64::try_from(self.entities[actor_index].hp.max(0) / 10).unwrap_or(0);
+        let original_roll = |game: &mut Game| {
+            if roll_bound <= 1 {
+                0
+            } else {
+                game.rng.bounded(roll_bound)
+            }
+        };
+
+        if interaction.opens {
+            if power == 0 {
+                self.terrain[terrain_index] = terrain.open_to_terrain_id?;
+                changed.insert(position);
+                events.push(DomainEvent::DoorOpened { position });
+                return Some(false);
+            }
+            if original_roll(self) > u64::from(power) {
+                self.terrain[terrain_index] = terrain.monster_unlock_to_terrain_id?;
+                changed.insert(position);
+                events.push(DomainEvent::DoorUnlocked { position });
+                return Some(false);
+            }
+            if !interaction.bashes {
+                events.push(DomainEvent::DoorUnlockFailed { position });
+                return Some(false);
+            }
+        }
+
+        if interaction.bashes {
+            if original_roll(self) > u64::from(power) {
+                let broken = self.rng.bounded(100) < 50;
+                self.terrain[terrain_index] = if broken {
+                    terrain.bash_to_terrain_id?
+                } else {
+                    terrain.open_to_terrain_id?
+                };
+                changed.insert(position);
+                events.push(DomainEvent::DoorBashedOpen { position });
+                return Some(true);
+            }
+            events.push(DomainEvent::DoorBashFailed { position });
+            return Some(false);
+        }
+        None
+    }
+
     fn terrain_interaction_context(&self) -> TerrainInteractionContext<'_> {
         TerrainInteractionContext {
             content: &self.content,

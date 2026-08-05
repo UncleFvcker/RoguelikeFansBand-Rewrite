@@ -1,6 +1,6 @@
 # Warrens 怪物机制实现清单
 
-状态：由 contract-v171 的 Warrens 生态对照建立；contract-v173 已完成 W1-W6 与运行时自然补怪，W7-W14 继续作为后续怪物机制纵切队列。
+状态：由 contract-v171 的 Warrens 生态对照建立；contract-v173 已完成 W1-W6 与运行时自然补怪，contract-v174-v176 已完成 W7-W9，W10-W14 继续作为后续怪物机制纵切队列。
 
 固定原版来源为 commit `191f48c3fd1cdbc81a3d3395a88cd6758402b4d9`。Warrens 在 `d_info.txt` 中为深度 1–9，主字形集合为 `kKyYrRfFcCbB`，并带有 `MONSTER_DIV_16`。本清单只记录该来源明确要求、而当前重写版还不能完整表达的机制，不把标签或近似行为标成已完成规则。
 
@@ -12,7 +12,7 @@
 - Unique 具有跨当前层、离层仓库、普通分配、分类/固定召唤共享的权威可用性；普通非 guardian Unique 死亡进入存档和 state hash。Mughash 仍由 guardian 生命周期管理，避免重复登记。
 - Giant White Mouse 已进入全局分配并按 `MULTIPLY + RAND_50` 行动。繁殖受整层最多 100 个繁殖者约束；Warg 按 `RAND_25` 随机移动。随机移动发生在施法回退后、普通追踪前。
 - Warrens 已按原版基础 `1/160` 接入运行时自然补怪，并应用深度修正；生成位置必须距玩家超过 25 格，自然补怪同样可以展开群体。
-- 普通怪物 HP 仍暂取原版 HP 骰的确定性平均值；`FORCE_MAXHP` 的 Mughash 使用满值 150。多段普通伤害、毒抗和 Rat-thing 的 `1_IN_9 + SCARE` 已接入现有能力管线，随机个体 HP 留在 W9。
+- 普通怪物出生时已按原版 HP 骰逐骰生成实例生命；`FORCE_MAXHP` 的 Mughash 固定使用满值 150。多段普通伤害、毒抗和 Rat-thing 的 `1_IN_9 + SCARE` 已接入现有能力管线。
 
 ## 实现队列
 
@@ -24,9 +24,9 @@
 | W4 | 群体骰与上限 | `FRIENDS(XdY)` 使用骰值而非均匀 min/max；Warg 的 `3d3` 总群体为 3–9，通用展开最多 32 只 | **contract-v173 完成**：dice、总数包含 leader、32 只上限和稳定逐只落位已实现 |
 | W5 | Unique 与 Mughash escort | `UNIQUE` 在全局生命周期内只存活/生成一次；Mughash 的 `ESCORT` 从同字形、合格低等级怪物中选择 | **contract-v173 完成**：Unique 权威状态、跨层可用性、共享召唤过滤和原版 escort 候选均已实现 |
 | W6 | 繁殖与随机移动 | Giant White Mouse 具有 `MULTIPLY`、`RAND_50`；Warg 具有 `RAND_25` | **contract-v173 完成**：全层繁殖者上限 100，睡眠检查后尝试繁殖；RAND 移动在施法回退后、追踪前执行 |
-| W7 | 怪物门交互 | Kobold 系列与 Mughash 可 `OPEN_DOOR/BASH_DOOR`，Wild Cat/Warg 可破门 | AI 将开门/撞门作为真实行动，复用权威 terrain 事务和能量成本，不绕过锁、阻挡与事件 |
-| W8 | 移动域与地形关系 | Newt/蜥蜴可游泳，Fruit Bat/猎鹰可飞；飞行、游泳应影响可通行地形、危险地形和陷阱 | actor movement profile 统一用于路径、落位、追逐和陷阱触发；`flying`/`swimming` 标签不再只是分类信息 |
-| W9 | HP 骰与强制满 HP | 普通怪物从 HP 骰生成个体生命，`FORCE_MAXHP` 固定取骰面满值 | 出生时只掷一次并保存实例 HP 上限；召唤、群体、guardian 与读档共用；新存档无需兼容旧开发存档 |
+| W7 | 怪物门交互 | Kobold 系列与 Mughash 可 `OPEN_DOOR/BASH_DOOR`，Wild Cat/Warg 可破门 | **contract-v174 完成**：原版 HP/power 判定、开门/解锁分步行动、同回合撞门和 50% 破损已进入统一移动事务 |
+| W8 | 移动域与地形关系 | Newt/蜥蜴可游泳，Fruit Bat/猎鹰可飞；飞行、游泳应影响可通行地形、危险地形和陷阱 | **contract-v175 完成**：强类型 movement profile 已统一用于路径、落位、召唤、位移、读档和显式 trap avoidance |
+| W9 | HP 骰与强制满 HP | 普通怪物从 HP 骰生成个体生命，`FORCE_MAXHP` 固定取骰面满值 | **contract-v176 完成**：所有出生入口共用逐骰/强制满值 helper，实例上限保存后不重掷 |
 | W10 | 特殊近战效果 | 完整生态需要毒、疾病、属性损伤、流血等 blow effect，以及爆炸攻击和攻击者自毁 | `MeleeRoutine` blow 支持有序 effect 列表、抗性/豁免、致死中断和来源归属；爆炸不伪装成普通多段伤害 |
 | W11 | 怪物改变地图与物品 | `KILL_WALL/KILL_ITEM` 等旗标会改变追踪路径与地图/地面物品状态 | 怪物行动复用地形变换和物品销毁事务，保护边界、连接和任务物品，事件可观察 |
 | W12 | 怪物光源 | `HAS_LITE/SELF_LITE` 影响玩家可见区和怪物自身感知 | 动态 actor 光源进入权威光照/FOV 增量，不只用表现层发光 |
@@ -38,4 +38,4 @@
 - 每个 W 项单独做最小 fixture 或纯单元测试；非移动机制不通过移动命令搭建前置条件。
 - 通常不为一次生态扩充刷新全部 contract fixtures，只刷新实际受输出变化影响的 `dungeon`、`campaign` 或 `monsters` 分类。contract-v173 因 state-hash 输入新增 Unique 权威状态而按已批准规则一次性刷新全部分类。
 - 新 actor 可以先以已支持的攻击、抗性和施法进入内容包，但所有被省略的原版旗标必须留在本清单，不能靠标签假装规则已完成。
-- W1–W6 与自然补怪已经完成。当前优先路径是 W7–W13 的可复用怪物公共能力；W14 在 Outpost 任务服务线开始时实施。
+- W1–W9 与自然补怪已经完成。当前优先路径是 W10–W13 的可复用怪物公共能力；W14 在 Outpost 任务服务线开始时实施。

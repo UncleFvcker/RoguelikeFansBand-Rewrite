@@ -34,9 +34,23 @@
       ],
       "type": "string"
     },
+    "ActorMovementMode": {
+      "enum": [
+        "fly",
+        "swim"
+      ],
+      "type": "string"
+    },
     "TerrainTrapDefinition": {
       "additionalProperties": false,
       "properties": {
+        "avoidedByMovementModes": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/ActorMovementMode"
+          },
+          "type": "array"
+        },
         "damage": {
           "format": "int32",
           "type": "integer"
@@ -137,6 +151,30 @@
     },
     "id": {
       "type": "string"
+    },
+    "monsterDoorPower": {
+      "default": null,
+      "format": "uint16",
+      "maximum": 65535,
+      "minimum": 0,
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "monsterUnlockToTerrainId": {
+      "default": null,
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "movementModes": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/ActorMovementMode"
+      },
+      "type": "array"
     },
     "nameKey": {
       "type": "string"

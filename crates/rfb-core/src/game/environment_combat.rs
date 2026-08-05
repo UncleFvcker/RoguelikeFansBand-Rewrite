@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
+use super::movement::actor_avoids_terrain_trap;
 use super::*;
 
 pub(super) enum PlayerTrapOutcome {
@@ -11,6 +12,57 @@ pub(super) enum PlayerTrapOutcome {
 }
 
 impl Game {
+    pub(super) fn trigger_actor_trap(
+        &mut self,
+        index: usize,
+        position: Position,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<bool, CoreError> {
+        let Some(terrain_index) = self.index(position) else {
+            return Ok(true);
+        };
+        let Some(terrain) = self.content.terrain(&self.terrain[terrain_index]) else {
+            return Ok(true);
+        };
+        let Some(trap) = terrain.trap.clone() else {
+            return Ok(true);
+        };
+        let definition = self
+            .content
+            .actor(&self.entities[index].kind_id)
+            .expect("moving actor definition must remain available")
+            .clone();
+        if actor_avoids_terrain_trap(&definition, terrain) {
+            return Ok(true);
+        }
+        let target_kind_id = self.entities[index].kind_id.clone();
+        let resistance = self.entities[index]
+            .resistances
+            .level(trap.damage_type.into());
+        let damage = resolve_damage(
+            DamagePacket::new(trap.damage, trap.damage_type.into()),
+            resistance,
+        );
+        let application =
+            plan_damage_application(&self.entities[index], damage, FatalityPolicy::AtOrBelowZero);
+        commit_damage_application(&mut self.entities[index], &application);
+        let event = DomainEvent::ActorTrapTriggered {
+            position,
+            target_kind_id,
+            damage,
+        };
+        if application.fatal {
+            self.resolve_actor_death(index, event, events, changed, removed_entities)?;
+            Ok(false)
+        } else {
+            self.wake_entity_after_damage(index, damage.applied, events);
+            events.push(event);
+            Ok(true)
+        }
+    }
+
     pub(super) fn trigger_player_trap(
         &mut self,
         position: Position,

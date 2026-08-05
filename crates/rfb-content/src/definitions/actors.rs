@@ -34,6 +34,16 @@ pub struct ActorMovementDefinition {
     pub modes: Vec<ActorMovementMode>,
 }
 
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ActorDoorInteractionDefinition {
+    #[serde(default)]
+    pub opens: bool,
+    #[serde(default)]
+    pub bashes: bool,
+}
+
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
@@ -173,6 +183,8 @@ pub struct ActorDefinition {
     pub allocation: Option<ActorAllocationDefinition>,
     #[serde(default)]
     pub movement: ActorMovementDefinition,
+    #[serde(default)]
+    pub door_interaction: ActorDoorInteractionDefinition,
     pub tags: Vec<String>,
 }
 

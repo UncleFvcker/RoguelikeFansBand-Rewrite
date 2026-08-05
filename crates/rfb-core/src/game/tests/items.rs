@@ -1547,11 +1547,11 @@ fn stealth_skill_check_controls_alertness_and_alerted_save_compatibility() {
     let mut tinkerer = skill_check_game(5, "demo.build.tinkerer");
     let mut vanguard = skill_check_game(5, "demo.build.vanguard");
     for game in [&mut tinkerer, &mut vanguard] {
-        game.entities.push(game.generated_actor(
+        game.push_generated_actor(
             LISTENER_ID.to_owned(),
             "demo.actor.echo-listener",
             listener_position,
-        ));
+        );
     }
 
     let tinkerer_update = dispatch_next(&mut tinkerer, GameCommand::Wait);

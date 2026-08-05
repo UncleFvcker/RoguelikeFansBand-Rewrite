@@ -1801,16 +1801,6 @@ fn item_json_with_terrain(
         "baseValue": entry.base_value,
         "tags": tags,
     });
-    let movement_modes = [
-        ("CAN_FLY", "fly"),
-        ("CAN_SWIM", "swim"),
-    ]
-    .into_iter()
-    .filter_map(|(flag, mode)| entry.flags.iter().any(|value| value == flag).then_some(mode))
-    .collect::<Vec<_>>();
-    if !movement_modes.is_empty() {
-        value["movement"] = serde_json::json!({ "modes": movement_modes });
-    }
     if let Some(ability_book_id) = ability_book_id {
         value["maxStack"] = serde_json::json!(1);
         value["abilityBookId"] = serde_json::json!(ability_book_id);
@@ -5631,6 +5621,27 @@ fn monster_json(
     }
     if entry.flags.iter().any(|flag| flag == "NO_CONF") {
         value["statusImmunities"] = serde_json::json!(["rfb.status.confusion"]);
+    }
+    let movement_modes = [("CAN_FLY", "fly"), ("CAN_SWIM", "swim")]
+        .into_iter()
+        .filter_map(|(flag, mode)| {
+            entry
+                .flags
+                .iter()
+                .any(|value| value == flag)
+                .then_some(mode)
+        })
+        .collect::<Vec<_>>();
+    if !movement_modes.is_empty() {
+        value["movement"] = serde_json::json!({ "modes": movement_modes });
+    }
+    let opens = entry.flags.iter().any(|flag| flag == "OPEN_DOOR");
+    let bashes = entry.flags.iter().any(|flag| flag == "BASH_DOOR");
+    if opens || bashes {
+        value["doorInteraction"] = serde_json::json!({
+            "opens": opens,
+            "bashes": bashes
+        });
     }
     if let Some(routine) = melee_routine {
         value["meleeRoutine"] = routine;

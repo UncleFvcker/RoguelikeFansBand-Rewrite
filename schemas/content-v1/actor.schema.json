@@ -121,6 +121,20 @@
       ],
       "type": "string"
     },
+    "ActorDoorInteractionDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "bashes": {
+          "default": false,
+          "type": "boolean"
+        },
+        "opens": {
+          "default": false,
+          "type": "boolean"
+        }
+      },
+      "type": "object"
+    },
     "ActorFriendsDefinition": {
       "additionalProperties": false,
       "properties": {
@@ -151,6 +165,52 @@
         "sides"
       ],
       "type": "object"
+    },
+    "ActorHitPointDiceDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "dice": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "forceMaximum": {
+          "default": false,
+          "type": "boolean"
+        },
+        "sides": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "dice",
+        "sides"
+      ],
+      "type": "object"
+    },
+    "ActorMovementDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "modes": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/ActorMovementMode"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "ActorMovementMode": {
+      "enum": [
+        "fly",
+        "swim"
+      ],
+      "type": "string"
     },
     "ActorResistanceLevel": {
       "description": "Content-declared resistance tier; `normal` is expressed by omission.",
@@ -408,6 +468,13 @@
       "format": "int32",
       "type": "integer"
     },
+    "doorInteraction": {
+      "$ref": "#/$defs/ActorDoorInteractionDefinition",
+      "default": {
+        "bashes": false,
+        "opens": false
+      }
+    },
     "doorSkill": {
       "default": 0,
       "format": "int32",
@@ -438,6 +505,17 @@
         "integer",
         "null"
       ]
+    },
+    "hitPointDice": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ActorHitPointDiceDefinition"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
     },
     "id": {
       "type": "string"
@@ -486,6 +564,12 @@
         }
       ],
       "default": null
+    },
+    "movement": {
+      "$ref": "#/$defs/ActorMovementDefinition",
+      "default": {
+        "modes": []
+      }
     },
     "nameKey": {
       "type": "string"

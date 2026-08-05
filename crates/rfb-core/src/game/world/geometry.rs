@@ -4,6 +4,7 @@ use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use rfb_content::{ContentCatalog, ContentPosition, VaultDefinition, VaultTransform};
 use rfb_protocol::Position;
 
+use crate::game::movement::actor_can_cross_terrain;
 use crate::state::FloorState;
 
 pub(in crate::game) fn maze_floor_anchors(walkable: &BTreeSet<Position>) -> (Position, Position) {
@@ -309,4 +310,28 @@ pub(in crate::game) fn floor_position_is_walkable(
         .get(index)
         .and_then(|terrain_id| content.terrain(terrain_id))
         .is_some_and(|terrain| terrain.walkable)
+}
+
+pub(in crate::game) fn floor_actor_position_is_enterable(
+    floor: &FloorState,
+    actor_kind_id: &str,
+    position: Position,
+    content: &ContentCatalog,
+) -> bool {
+    if position.x < 0
+        || position.y < 0
+        || position.x >= i32::from(floor.width)
+        || position.y >= i32::from(floor.height)
+    {
+        return false;
+    }
+    let Some(actor) = content.actor(actor_kind_id) else {
+        return false;
+    };
+    let index = position.y as usize * usize::from(floor.width) + position.x as usize;
+    floor
+        .terrain
+        .get(index)
+        .and_then(|terrain_id| content.terrain(terrain_id))
+        .is_some_and(|terrain| actor_can_cross_terrain(actor, terrain))
 }

@@ -2,7 +2,7 @@
 
 状态：P0 规则、RNG、`rfb-replay` v1 和 Tauri 诊断导出已建立
 
-当前 state hash Schema 为 v63：哈希输入覆盖运行时内容包 ID（不含 `contentHash`）、world ID、当前 `FloorId`、当前 dungeon instance ID、当前与离层的连接 ID→位置→解析目标、离层 floor 实例身份、区域 ID/theme/局部表引用/格集合、actor 的 pack identity/behavior/alerted、summon identity/lifetime、怪物施法剩余冷却与已观察玩家抗性、战斗状态、物品实例、怪物携带物、已击败的非 guardian Unique actor kind、种类/实例知识、秘密 terrain 发现知识、含重接次数的完整任务状态机、持久地牢守护者、入口守卫与实例序号/retained 状态、campaign 胜利/退休/最终分数、玩家 Race/Class/Personality/build 身份、技能聚合与成长、角色成长 progress、资源池、已学能力、能力熟练度/统计/冷却（含先天技法）、全局召唤指令/Guard 锚点、RNG、世界脉冲和命令序号。contract-v172 从输入中移除 `contentHash` 并升级 Schema v62；contract-v173 新增 Unique 权威生命周期集合并升级 Schema v63。存档与回放在模拟前继续独立精确匹配 `contentId/contentHash`。下文旧 contract 对 Schema 和 content hash 的描述保留其历史语境。
+当前 state hash Schema 为 v63：哈希输入覆盖运行时内容包 ID（不含 `contentHash`）、world ID、当前 `FloorId`、当前 dungeon instance ID、当前与离层的连接 ID→位置→解析目标、离层 floor 实例身份、区域 ID/theme/局部表引用/格集合、actor 的 pack identity/behavior/alerted、summon identity/lifetime、怪物施法剩余冷却与已观察玩家抗性、战斗状态、物品实例、怪物携带物、已击败的非 guardian Unique actor kind、种类/实例知识、秘密 terrain 发现知识、含重接次数的完整任务状态机、持久地牢守护者、入口守卫与实例序号/retained 状态、campaign 胜利/退休/最终分数、玩家 Race/Class/Personality/build 身份、技能聚合与成长、角色成长 progress、资源池、已学能力、能力熟练度/统计/冷却（含先天技法）、全局召唤指令/Guard 锚点、RNG、世界脉冲和命令序号。contract-v172 从输入中移除 `contentHash` 并升级 Schema v62；contract-v173 新增 Unique 权威生命周期集合并升级 Schema v63；contract-v174-v176 不改变哈希结构，但 W9 怪物出生 HP 骰改变共同初始化 RNG，因此按规则一次性刷新全部分类。存档与回放在模拟前继续独立精确匹配 `contentId/contentHash`。下文旧 contract 对 Schema 和 content hash 的描述保留其历史语境。
 
 contract-v47 固定 vault 的生成顺序：先绘制规范化基础 terrain/覆盖，再按 group ID、成员位置逐个消费一次深度加权 actor 抽取，最后按 spawn ID 执行既有 loot table 三抽取事务。它没有新增权威状态字段；生成后的 terrain、actor、item、实例分配器、RNG 和 content hash 已进入 Schema v19，因此本切片不升级 state hash Schema。
 

@@ -35,6 +35,7 @@
     "corpseWeight": 4,
     "skeletonWeight": 1
   },
+  "doorInteraction": { "opens": true, "bashes": true },
   "allocation": { "legacyIndex": 135, "rarity": 3, "maxDepth": 999, "escort": true },
   "tags": ["evil", "guardian", "humanoid", "kobold", "unique", "warrens"]
 }

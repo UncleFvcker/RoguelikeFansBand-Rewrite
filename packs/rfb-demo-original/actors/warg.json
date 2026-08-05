@@ -23,6 +23,7 @@
     "corpseWeight": 4,
     "skeletonWeight": 1
   },
+  "doorInteraction": { "bashes": true },
   "allocation": {
     "legacyIndex": 257,
     "rarity": 2,

@@ -559,14 +559,29 @@ impl Game {
                 let mut summoned_kind_ids = Vec::with_capacity(count);
                 let mut used_positions = Vec::with_capacity(count);
                 let planned_positions = positions.iter().copied().take(count).collect::<Vec<_>>();
-                for (ordinal, position) in planned_positions.into_iter().enumerate() {
+                for position in planned_positions {
                     if candidate_kind_ids.is_empty() {
                         break;
                     }
-                    let choice = usize::try_from(self.rng.bounded(
-                        u64::try_from(candidate_kind_ids.len()).expect("candidate count fits"),
-                    ))
+                    let eligible_choices = candidate_kind_ids
+                        .iter()
+                        .enumerate()
+                        .filter_map(|(index, kind_id)| {
+                            self.actor_kind_can_enter_position(kind_id, position)
+                                .then_some(index)
+                        })
+                        .collect::<Vec<_>>();
+                    if eligible_choices.is_empty() {
+                        continue;
+                    }
+                    let eligible_choice = usize::try_from(
+                        self.rng.bounded(
+                            u64::try_from(eligible_choices.len())
+                                .expect("eligible candidate count fits"),
+                        ),
+                    )
                     .expect("bounded draw fits usize");
+                    let choice = eligible_choices[eligible_choice];
                     let kind_id = candidate_kind_ids[choice].clone();
                     let definition = self
                         .content
@@ -576,7 +591,7 @@ impl Game {
                     if definition.tags.iter().any(|tag| tag == "unique") {
                         candidate_kind_ids.remove(choice);
                     }
-                    let id = self.summon_entity_id(&plan.ability.id, ordinal);
+                    let id = self.summon_entity_id(&plan.ability.id, entity_ids.len());
                     let mut entity = spawn_actor_from_definition(
                         &mut self.rng,
                         &definition,
@@ -1334,7 +1349,12 @@ impl Game {
                     });
                 }
                 let positions = self
-                    .summon_positions_around(origin, if unique { 1 } else { *count }, *radius)
+                    .summon_positions_around(
+                        origin,
+                        if unique { 1 } else { *count },
+                        *radius,
+                        actor_kind_id,
+                    )
                     .ok_or(MonsterAbilityPlanRejection {
                         reason: MonsterAbilityRejectionReasonDto::NoSpace,
                         enemy_target_count: 0,
@@ -1377,7 +1397,7 @@ impl Game {
                 let maximum_count = usize::from(*count_dice) * usize::from(*count_sides)
                     + usize::from(*count_bonus);
                 let positions = self
-                    .open_positions_around(origin, *radius)
+                    .open_positions_around_for_actor_kinds(origin, *radius, &candidate_kind_ids)
                     .into_iter()
                     .take(maximum_count)
                     .collect::<Vec<_>>();
@@ -1612,7 +1632,8 @@ impl Game {
                                 y: i32::from(y),
                             };
                             if position == self.player.position
-                                || !self.is_walkable(position)
+                                || !self
+                                    .monster_hostile_target_can_enter_position(&target, position)
                                 || origin
                                     .x
                                     .abs_diff(position.x)
@@ -1674,7 +1695,7 @@ impl Game {
                     })
                     .find(|position| {
                         self.index(*position).is_some()
-                            && self.is_walkable(*position)
+                            && self.monster_hostile_target_can_enter_position(&target, *position)
                             && *position != self.player.position
                             && !self
                                 .entities

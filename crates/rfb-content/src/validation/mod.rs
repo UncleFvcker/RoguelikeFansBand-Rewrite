@@ -244,6 +244,7 @@ pub(crate) fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<
             world,
             &WorldValidationRefs {
                 terrain_ids: &terrain_ids,
+                terrain: &content.terrain,
                 terrain_walkability: &terrain_walkability,
                 terrain_tags: &terrain_tags,
                 terrain_open_targets: &terrain_open_targets,

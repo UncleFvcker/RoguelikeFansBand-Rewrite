@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
+use super::movement::actor_can_cross_terrain;
 use super::*;
 use rfb_content::{ActorDefinition, GlobalMonsterAllocationDefinition};
 
@@ -173,6 +174,7 @@ impl Game {
         floor_depth: u16,
         target_floor_kind_ids: &[String],
         escort_leader_kind_id: Option<&str>,
+        required_terrain: Option<&rfb_content::TerrainDefinition>,
     ) -> Option<String> {
         let unique_count = target_floor_kind_ids
             .iter()
@@ -207,6 +209,11 @@ impl Game {
                             || target_floor_kind_ids
                                 .iter()
                                 .any(|kind_id| kind_id == &definition.id)))
+                {
+                    return false;
+                }
+                if required_terrain
+                    .is_some_and(|terrain| !actor_can_cross_terrain(definition, terrain))
                 {
                     return false;
                 }
@@ -397,7 +404,7 @@ impl Game {
                             height,
                             position,
                         )
-                        .is_some_and(|tile| tile.walkable)
+                        .is_some_and(|tile| actor_can_cross_terrain(&leader, tile))
                     {
                         continue;
                     }
@@ -414,16 +421,16 @@ impl Game {
             for _ in 0..ORIGINAL_ESCORT_ATTEMPTS {
                 let position =
                     self.original_scatter_position(terrain, width, height, leader_position, 3);
-                if occupied.contains(&position)
-                    || !terrain_at_generated_position(
-                        &self.content,
-                        terrain,
-                        width,
-                        height,
-                        position,
-                    )
-                    .is_some_and(|tile| tile.walkable)
-                {
+                if occupied.contains(&position) {
+                    continue;
+                }
+                let required_terrain =
+                    terrain_at_generated_position(&self.content, terrain, width, height, position)
+                        .cloned();
+                let Some(required_terrain) = required_terrain else {
+                    continue;
+                };
+                if !required_terrain.walkable && required_terrain.movement_modes.is_empty() {
                     continue;
                 }
                 let target_floor_kind_ids = members
@@ -436,6 +443,7 @@ impl Game {
                     depth,
                     &target_floor_kind_ids,
                     Some(leader_kind_id),
+                    Some(&required_terrain),
                 ) else {
                     break;
                 };
@@ -515,7 +523,7 @@ impl Game {
                 let position = Position { x, y };
                 if position == origin
                     || position == self.player.position
-                    || !self.is_walkable(position)
+                    || !self.actor_can_enter_position(index, position)
                     || self
                         .entities
                         .iter()
@@ -602,14 +610,14 @@ impl Game {
                 return Ok(true);
             }
             if position == self.player.position
-                || !self.is_walkable(position)
+                || !self.actor_can_traverse_or_interact(index, position)
                 || self.entities.iter().enumerate().any(|(other, entity)| {
                     other != index && entity.hp > 0 && entity.position == position
                 })
             {
                 continue;
             }
-            self.move_entity(index, position, changed);
+            self.move_entity(index, position, events, changed, removed_entities)?;
             return Ok(true);
         }
         Ok(true)
@@ -655,8 +663,12 @@ impl Game {
                 y: i32::try_from(self.rng.bounded(u64::from(self.height))).unwrap_or(0),
                 x: i32::try_from(self.rng.bounded(u64::from(self.width))).unwrap_or(0),
             };
+            let supports_monster_movement = self
+                .index(position)
+                .and_then(|index| self.content.terrain(&self.terrain[index]))
+                .is_some_and(|terrain| terrain.walkable || !terrain.movement_modes.is_empty());
             if rfb_distance(position, self.player.position) <= ORIGINAL_MAX_SIGHT + 5
-                || !self.is_walkable(position)
+                || !supports_monster_movement
                 || self
                     .entities
                     .iter()
@@ -675,12 +687,20 @@ impl Game {
             .iter()
             .map(|entity| entity.kind_id.clone())
             .collect::<Vec<_>>();
+        let required_terrain = self
+            .index(leader_position)
+            .and_then(|index| self.content.terrain(&self.terrain[index]))
+            .cloned();
+        let Some(required_terrain) = required_terrain else {
+            return Ok(());
+        };
         let Some(kind_id) = self.select_original_allocated_monster(
             policy,
             depth,
             depth,
             &target_floor_kind_ids,
             None,
+            Some(&required_terrain),
         ) else {
             return Ok(());
         };

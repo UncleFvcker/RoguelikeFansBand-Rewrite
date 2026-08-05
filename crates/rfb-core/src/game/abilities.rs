@@ -2172,13 +2172,19 @@ impl Game {
             unreachable!("animate dead executor requires an animate dead effect");
         };
         let origin = self.player.position;
+        let definition = self
+            .content
+            .actor(actor_kind_id)
+            .expect("validated animated actor must remain available")
+            .clone();
         let mut corpses = self
             .items
             .iter()
             .filter_map(|item| match item.location {
                 ItemLocation::Ground(position)
                     if item.kind_id == corpse_item_kind_id.as_str()
-                        && chebyshev_distance(origin, position) <= u32::from(*radius) =>
+                        && chebyshev_distance(origin, position) <= u32::from(*radius)
+                        && self.actor_kind_can_enter_position(actor_kind_id, position) =>
                 {
                     Some((
                         chebyshev_distance(origin, position),
@@ -2202,11 +2208,6 @@ impl Game {
         for item_id in &consumed_corpse_item_ids {
             self.item_property_knowledge.remove(item_id);
         }
-        let definition = self
-            .content
-            .actor(actor_kind_id)
-            .expect("validated animated actor must remain available")
-            .clone();
         let mut entity_ids = Vec::with_capacity(corpses.len());
         let mut positions = Vec::with_capacity(corpses.len());
         for (ordinal, (_, _, _, _, position)) in corpses.into_iter().enumerate() {
@@ -2367,6 +2368,7 @@ impl Game {
                         self.player.position,
                         if unique { 1 } else { count },
                         radius,
+                        actor_kind_id,
                     )
                 })
                 .flatten()
@@ -2425,8 +2427,19 @@ impl Game {
                     usize::from(count_dice) * usize::from(count_sides) + usize::from(count_bonus);
                 let group_maximum = usize::from(group_count_dice) * usize::from(group_count_sides)
                     + usize::from(group_count_bonus);
+                let position_candidate_kind_ids = friendly_candidate_kind_ids
+                    .iter()
+                    .chain(&hostile_candidate_kind_ids)
+                    .cloned()
+                    .collect::<BTreeSet<_>>()
+                    .into_iter()
+                    .collect::<Vec<_>>();
                 let positions = self
-                    .open_positions_around(self.player.position, radius)
+                    .open_positions_around_for_actor_kinds(
+                        self.player.position,
+                        radius,
+                        &position_candidate_kind_ids,
+                    )
                     .into_iter()
                     .take(normal_maximum.max(group_maximum))
                     .collect::<Vec<_>>();

@@ -8,6 +8,7 @@ use rfb_content::{
 use rfb_protocol::Position;
 
 use super::super::monster_ecology::OriginalGroupRole;
+use super::super::movement::actor_can_cross_terrain;
 use super::super::*;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -489,6 +490,21 @@ fn generated_region_open_positions(
                 .is_some_and(|definition| definition.walkable)
         })
         .collect()
+}
+
+fn generated_actor_can_enter_position(
+    content: &ContentCatalog,
+    terrain: &[String],
+    width: u16,
+    actor_kind_id: &str,
+    position: Position,
+) -> bool {
+    let Some(actor) = content.actor(actor_kind_id) else {
+        return false;
+    };
+    content
+        .terrain(&terrain[generated_terrain_index(width, position)])
+        .is_some_and(|tile| actor_can_cross_terrain(actor, tile))
 }
 
 fn assign_generated_footprint_to_region(
@@ -1516,8 +1532,15 @@ impl Game {
                     .collect::<Vec<_>>();
                 for ordinal in 0..placements {
                     let entry = &eligible_entries[self.roll_weighted_index(&weights)];
-                    let position =
-                        self.choose_generated_region_position(region, &terrain, width, &occupied);
+                    let Some(position) = self.choose_generated_region_position_for_actor(
+                        region,
+                        &terrain,
+                        width,
+                        &occupied,
+                        &entry.actor_kind_id,
+                    ) else {
+                        continue;
+                    };
                     occupied.insert(position);
                     entities.push(self.generated_actor(
                         format!(
@@ -1573,12 +1596,18 @@ impl Game {
                             &occupied,
                         )
                     };
+                    let required_terrain = self
+                        .content
+                        .terrain(&terrain[generated_terrain_index(width, position)])
+                        .cloned()
+                        .expect("generated actor terrain must remain available");
                     let Some(kind_id) = self.select_original_allocated_monster(
                         policy,
                         definition.depth,
                         definition.depth,
                         &target_floor_kind_ids,
                         None,
+                        Some(&required_terrain),
                     ) else {
                         continue;
                     };
@@ -1669,13 +1698,23 @@ impl Game {
                             room_id
                         };
                         let position = if maze_only {
-                            choose_generated_maze_position(&maze_walkable, first_center, &occupied)
+                            Some(choose_generated_maze_position(
+                                &maze_walkable,
+                                first_center,
+                                &occupied,
+                            ))
                         } else {
-                            self.choose_generated_room_position(
+                            self.choose_generated_room_position_for_actor(
                                 content_rooms,
                                 placement_room_id,
+                                &terrain,
+                                width,
                                 &occupied,
+                                &entry.actor_kind_id,
                             )
+                        };
+                        let Some(position) = position else {
+                            continue;
                         };
                         occupied.insert(position);
                         entities.push(self.generated_actor(
@@ -1688,8 +1727,16 @@ impl Game {
                 if let Some(nest) = &definition.nest {
                     let entry = &eligible_entries[self.roll_weighted_index(&weights)];
                     for ordinal in 0..nest.spawn_count {
-                        let position =
-                            self.choose_generated_room_position(&rooms, &nest.room_id, &occupied);
+                        let Some(position) = self.choose_generated_room_position_for_actor(
+                            &rooms,
+                            &nest.room_id,
+                            &terrain,
+                            width,
+                            &occupied,
+                            &entry.actor_kind_id,
+                        ) else {
+                            break;
+                        };
                         occupied.insert(position);
                         let actor = self
                             .content
@@ -1727,8 +1774,16 @@ impl Game {
                 )
                 .expect("bounded actor candidate index must fit usize");
                 let kind_id = &eligible_kind_ids[kind_index];
-                let position =
-                    self.choose_generated_room_position(&rooms, &spawn.room_id, &occupied);
+                let Some(position) = self.choose_generated_room_position_for_actor(
+                    &rooms,
+                    &spawn.room_id,
+                    &terrain,
+                    width,
+                    &occupied,
+                    kind_id,
+                ) else {
+                    continue;
+                };
                 occupied.insert(position);
                 let actor = self
                     .content
@@ -3071,6 +3126,17 @@ impl Game {
         )
     }
 
+    #[cfg(test)]
+    pub(in crate::game) fn push_generated_actor(
+        &mut self,
+        id: String,
+        kind_id: &str,
+        position: Position,
+    ) {
+        let actor = self.generated_actor(id, kind_id, position);
+        self.entities.push(actor);
+    }
+
     fn generated_pack_actor(
         &mut self,
         id: String,
@@ -3670,6 +3736,43 @@ impl Game {
         candidates[index]
     }
 
+    fn choose_generated_room_position_for_actor(
+        &mut self,
+        rooms: &[GeneratedRoom],
+        room_id: &str,
+        terrain: &[String],
+        width: u16,
+        occupied: &BTreeSet<Position>,
+        actor_kind_id: &str,
+    ) -> Option<Position> {
+        let room = rooms
+            .iter()
+            .find(|room| room.id == room_id)
+            .expect("validated procedural room ID must remain available");
+        let candidates = (room.y..room.y + room.height)
+            .flat_map(|y| (room.x..room.x + room.width).map(move |x| Position { x, y }))
+            .filter(|position| {
+                room.contains(*position)
+                    && !occupied.contains(position)
+                    && generated_actor_can_enter_position(
+                        &self.content,
+                        terrain,
+                        width,
+                        actor_kind_id,
+                        *position,
+                    )
+            })
+            .collect::<Vec<_>>();
+        if candidates.is_empty() {
+            return None;
+        }
+        let index = usize::try_from(self.rng.bounded(
+            u64::try_from(candidates.len()).expect("generated actor candidate count must fit u64"),
+        ))
+        .expect("bounded generated actor candidate index must fit usize");
+        Some(candidates[index])
+    }
+
     fn choose_generated_rooms_position(
         &mut self,
         rooms: &[GeneratedRoom],
@@ -3763,6 +3866,40 @@ impl Game {
         ))
         .expect("regional candidate index must fit usize");
         candidates[index]
+    }
+
+    fn choose_generated_region_position_for_actor(
+        &mut self,
+        region: &GeneratedRegion,
+        terrain: &[String],
+        width: u16,
+        occupied: &BTreeSet<Position>,
+        actor_kind_id: &str,
+    ) -> Option<Position> {
+        let candidates = region
+            .state
+            .cells
+            .iter()
+            .copied()
+            .filter(|position| {
+                !occupied.contains(position)
+                    && generated_actor_can_enter_position(
+                        &self.content,
+                        terrain,
+                        width,
+                        actor_kind_id,
+                        *position,
+                    )
+            })
+            .collect::<Vec<_>>();
+        if candidates.is_empty() {
+            return None;
+        }
+        let index = usize::try_from(self.rng.bounded(
+            u64::try_from(candidates.len()).expect("regional actor candidate count must fit u64"),
+        ))
+        .expect("regional actor candidate index must fit usize");
+        Some(candidates[index])
     }
 }
 

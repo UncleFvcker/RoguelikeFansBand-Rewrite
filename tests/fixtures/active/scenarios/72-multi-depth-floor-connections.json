@@ -344,6 +344,26 @@
         }
       },
       {
+        "kind": "terrain.actor-trap-triggered",
+        "messageKey": "terrain-trap-triggered",
+        "args": {
+          "target": "demo.actor.echo-hound",
+          "x": "4",
+          "y": "4"
+        },
+        "outcome": {
+          "type": "damage",
+          "resolution": {
+            "rawDamage": 2,
+            "armorReduction": 0,
+            "resistanceAdjustment": 0,
+            "finalDamage": 2,
+            "damageType": "physical",
+            "resistance": "normal"
+          }
+        }
+      },
+      {
         "kind": "floor.transition",
         "messageKey": "floor-transition",
         "args": {

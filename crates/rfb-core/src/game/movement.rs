@@ -14,6 +14,28 @@ pub(super) fn actor_can_cross_terrain(
             .any(|mode| terrain.movement_modes.contains(mode))
 }
 
+pub(super) fn actor_avoids_terrain_trap(
+    actor: &rfb_content::ActorDefinition,
+    terrain: &rfb_content::TerrainDefinition,
+) -> bool {
+    terrain.trap.as_ref().is_some_and(|trap| {
+        actor
+            .movement
+            .modes
+            .iter()
+            .any(|mode| trap.avoided_by_movement_modes.contains(mode))
+    })
+}
+
+fn actor_can_interact_with_terrain(
+    actor: &rfb_content::ActorDefinition,
+    terrain: &rfb_content::TerrainDefinition,
+) -> bool {
+    terrain.monster_door_power.is_some()
+        && ((actor.door_interaction.opens && terrain.open_to_terrain_id.is_some())
+            || (actor.door_interaction.bashes && terrain.bash_to_terrain_id.is_some()))
+}
+
 impl Game {
     pub(super) fn actor_kind_can_enter_position(&self, kind_id: &str, position: Position) -> bool {
         let Some(index) = self.index(position) else {
@@ -29,6 +51,34 @@ impl Game {
 
     pub(super) fn actor_can_enter_position(&self, index: usize, position: Position) -> bool {
         self.actor_kind_can_enter_position(&self.entities[index].kind_id, position)
+    }
+
+    pub(super) fn actor_can_traverse_or_interact(&self, index: usize, position: Position) -> bool {
+        let Some(terrain_index) = self.index(position) else {
+            return false;
+        };
+        let Some(actor) = self.content.actor(&self.entities[index].kind_id) else {
+            return false;
+        };
+        self.content
+            .terrain(&self.terrain[terrain_index])
+            .is_some_and(|terrain| {
+                actor_can_cross_terrain(actor, terrain)
+                    || actor_can_interact_with_terrain(actor, terrain)
+            })
+    }
+
+    pub(super) fn monster_hostile_target_can_enter_position(
+        &self,
+        target: &MonsterHostileTarget,
+        position: Position,
+    ) -> bool {
+        match target {
+            MonsterHostileTarget::Player { .. } => self.is_walkable(position),
+            MonsterHostileTarget::Summon { kind_id, .. } => {
+                self.actor_kind_can_enter_position(kind_id, position)
+            }
+        }
     }
 
     pub(super) fn player_summon_hostile_targets(&self, index: usize) -> Vec<String> {
@@ -86,7 +136,7 @@ impl Game {
                 };
                 if position == self.player.position
                     || occupied.contains(&position)
-                    || !self.actor_can_enter_position(index, position)
+                    || !self.actor_can_traverse_or_interact(index, position)
                 {
                     return None;
                 }
@@ -243,7 +293,7 @@ impl Game {
                 };
                 if position == self.player.position
                     || occupied.contains(&position)
-                    || !self.actor_can_enter_position(index, position)
+                    || !self.actor_can_traverse_or_interact(index, position)
                     || movement_region.is_some_and(|region| !region.cells.contains(&position))
                 {
                     return None;
@@ -309,7 +359,7 @@ impl Game {
             if target == self.player.position
                 || occupied.contains(&target)
                 || reservations.contains(&target)
-                || !self.actor_can_enter_position(index, target)
+                || !self.actor_can_traverse_or_interact(index, target)
             {
                 continue;
             }
@@ -384,7 +434,7 @@ impl Game {
         for (_, _, position) in initial {
             if position == self.player.position
                 || occupied_now.contains(&position)
-                || !self.actor_can_enter_position(index, position)
+                || !self.actor_can_traverse_or_interact(index, position)
                 || movement_region.is_some_and(|region| !region.cells.contains(&position))
                 || !visited.insert(position)
             {
@@ -414,7 +464,7 @@ impl Game {
             for (_, _, next) in neighbors {
                 if next == self.player.position
                     || path_blockers.contains(&next)
-                    || !self.actor_can_enter_position(index, next)
+                    || !self.actor_can_traverse_or_interact(index, next)
                     || movement_region.is_some_and(|region| !region.cells.contains(&next))
                     || !visited.insert(next)
                 {

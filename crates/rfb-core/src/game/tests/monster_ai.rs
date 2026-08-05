@@ -10,11 +10,11 @@ fn monster_casting_uses_frequency_viability_and_weighted_selection() {
     for seed in 0..256_u64 {
         let mut game = Game::new(seed);
         clear_monsters(&mut game);
-        game.entities.push(game.generated_actor(
+        game.push_generated_actor(
             "test.monster.echo-cantor.1".to_owned(),
             "demo.actor.echo-cantor",
             Position { x: 8, y: 3 },
-        ));
+        );
         let draw_counter_before = game.rng.draw_counter;
         let mut events = Vec::new();
 
@@ -115,17 +115,17 @@ fn monster_casting_clean_shot_filter_blocks_allies_and_walls() {
     for blocked_by_actor in [true, false] {
         let mut game = Game::new(1);
         clear_monsters(&mut game);
-        game.entities.push(game.generated_actor(
+        game.push_generated_actor(
             "test.monster.echo-cantor.1".to_owned(),
             "demo.actor.echo-cantor",
             Position { x: 8, y: 3 },
-        ));
+        );
         if blocked_by_actor {
-            game.entities.push(game.generated_actor(
+            game.push_generated_actor(
                 "test.monster.blocker.1".to_owned(),
                 "demo.actor.ember-mote",
                 Position { x: 6, y: 3 },
-            ));
+            );
         } else {
             replace_terrain(&mut game, Position { x: 6, y: 3 }, "demo.terrain.wall");
         }
@@ -165,11 +165,11 @@ fn monster_casting_clean_shot_filter_blocks_allies_and_walls() {
 fn monster_casting_utility_uses_wounds_status_and_distance_without_rng() {
     let mut game = Game::new(1);
     clear_monsters(&mut game);
-    game.entities.push(game.generated_actor(
+    game.push_generated_actor(
         "test.monster.echo-cantor.1".to_owned(),
         "demo.actor.echo-cantor",
         Position { x: 8, y: 3 },
-    ));
+    );
     let draws_before = game.rng.draw_counter;
     let healing = game
         .content
@@ -254,11 +254,11 @@ fn monster_multi_target_plans_reject_secondary_entities() {
     ] {
         let mut game = Game::new(1);
         clear_monsters(&mut game);
-        game.entities.push(game.generated_actor(
+        game.push_generated_actor(
             "test.monster.echo-cantor.1".to_owned(),
             "demo.actor.echo-cantor",
             Position { x: 8, y: 3 },
-        ));
+        );
         let ability = game
             .content
             .ability(ability_id)
@@ -268,11 +268,11 @@ fn monster_multi_target_plans_reject_secondary_entities() {
             game.monster_ability_plan(0, ability.clone(), 2).is_ok(),
             "{ability_id} should be viable with only its primary target"
         );
-        game.entities.push(game.generated_actor(
+        game.push_generated_actor(
             "test.monster.secondary.1".to_owned(),
             "demo.actor.ember-mote",
             Position { x: 4, y: 3 },
-        ));
+        );
         assert_eq!(
             game.monster_ability_plan(0, ability, 2)
                 .expect_err("friendly footprint should be rejected")
@@ -287,11 +287,11 @@ fn monster_multi_target_plans_reject_secondary_entities() {
 fn monster_summons_are_hostile_owned_active_and_saveable() {
     let mut game = Game::new(1);
     clear_monsters(&mut game);
-    game.entities.push(game.generated_actor(
+    game.push_generated_actor(
         "test.monster.echo-cantor.1".to_owned(),
         "demo.actor.echo-cantor",
         Position { x: 5, y: 3 },
-    ));
+    );
     let ability = game
         .content
         .ability("demo.ability.call-discord")
@@ -368,11 +368,11 @@ fn unbound_monster_summon_round_trips_with_player_casting_profile() {
     let mut game =
         Game::new_with_build(1, "demo.build.scholar").expect("casting-profile build should create");
     clear_monsters(&mut game);
-    game.entities.push(game.generated_actor(
+    game.push_generated_actor(
         "test.monster.echo-cantor.1".to_owned(),
         "demo.actor.echo-cantor",
         Position { x: 5, y: 3 },
-    ));
+    );
     let ability = game
         .content
         .ability("demo.ability.call-discord")
@@ -400,11 +400,11 @@ fn unbound_monster_summon_round_trips_with_player_casting_profile() {
 fn monster_spells_target_nearby_player_summons_and_score_enemy_footprints() {
     let mut game = Game::new(1);
     clear_monsters(&mut game);
-    game.entities.push(game.generated_actor(
+    game.push_generated_actor(
         "test.monster.echo-cantor.1".to_owned(),
         "demo.actor.echo-cantor",
         Position { x: 8, y: 3 },
-    ));
+    );
     let mut companion = game.generated_actor(
         "test.summon.echo-companion.1".to_owned(),
         "demo.actor.echo-companion",
@@ -449,11 +449,11 @@ fn monster_spells_target_nearby_player_summons_and_score_enemy_footprints() {
 fn monster_area_damage_hits_every_player_aligned_target_and_removes_slain_summons() {
     let mut game = Game::new(2);
     clear_monsters(&mut game);
-    game.entities.push(game.generated_actor(
+    game.push_generated_actor(
         "test.monster.echo-cantor.1".to_owned(),
         "demo.actor.echo-cantor",
         Position { x: 8, y: 3 },
-    ));
+    );
     let mut companion = game.generated_actor(
         "test.summon.echo-companion.1".to_owned(),
         "demo.actor.echo-companion",
@@ -500,11 +500,11 @@ fn monster_area_damage_hits_every_player_aligned_target_and_removes_slain_summon
 fn smart_caster_learns_only_observed_player_resistance_and_round_trips() {
     let mut game = Game::new(3);
     clear_monsters(&mut game);
-    game.entities.push(game.generated_actor(
+    game.push_generated_actor(
         "test.monster.echo-cantor.1".to_owned(),
         "demo.actor.echo-cantor",
         Position { x: 8, y: 3 },
-    ));
+    );
     game.player
         .resistances
         .set(DamageType::Electricity, ResistanceLevel::Resistant);
@@ -550,11 +550,11 @@ fn smart_caster_learns_only_observed_player_resistance_and_round_trips() {
 fn caster_keeps_distance_and_flees_when_wounded_without_extra_rng() {
     let mut game = Game::new(4);
     clear_monsters(&mut game);
-    game.entities.push(game.generated_actor(
+    game.push_generated_actor(
         "test.monster.echo-cantor.1".to_owned(),
         "demo.actor.echo-cantor",
         Position { x: 5, y: 3 },
-    ));
+    );
     game.entities[0].casting_cooldown_remaining = 1;
     let draws_before = game.rng.draw_counter;
     let mut events = Vec::new();
@@ -603,21 +603,21 @@ fn monster_casting_cooldown_uses_inverse_frequency_without_rng() {
         .find(|seed| {
             let mut game = Game::new(*seed);
             clear_monsters(&mut game);
-            game.entities.push(game.generated_actor(
+            game.push_generated_actor(
                 "test.monster.echo-cantor.1".to_owned(),
                 "demo.actor.echo-cantor",
                 Position { x: 8, y: 3 },
-            ));
+            );
             game.resolve_monster_ability(0, &mut Vec::new())
         })
         .expect("a deterministic seed should pass the frequency check");
     let mut game = Game::new(seed);
     clear_monsters(&mut game);
-    game.entities.push(game.generated_actor(
+    game.push_generated_actor(
         "test.monster.echo-cantor.1".to_owned(),
         "demo.actor.echo-cantor",
         Position { x: 8, y: 3 },
-    ));
+    );
 
     assert!(game.resolve_monster_ability(0, &mut Vec::new()));
     assert_eq!(game.entities[0].casting_cooldown_remaining, 2);
@@ -650,11 +650,11 @@ fn lethal_monster_sequence_skips_later_status_without_extra_rng() {
         .find(|seed| {
             let mut game = Game::new(*seed);
             clear_monsters(&mut game);
-            game.entities.push(game.generated_actor(
+            game.push_generated_actor(
                 "test.monster.echo-cantor.1".to_owned(),
                 "demo.actor.echo-cantor",
                 Position { x: 8, y: 3 },
-            ));
+            );
             let mut events = Vec::new();
             game.resolve_monster_ability(0, &mut events);
             events.iter().any(|event| {
@@ -669,11 +669,11 @@ fn lethal_monster_sequence_skips_later_status_without_extra_rng() {
     let mut game = Game::new(seed);
     clear_monsters(&mut game);
     game.player.hp = 0;
-    game.entities.push(game.generated_actor(
+    game.push_generated_actor(
         "test.monster.echo-cantor.1".to_owned(),
         "demo.actor.echo-cantor",
         Position { x: 8, y: 3 },
-    ));
+    );
     let mut events = Vec::new();
 
     assert!(game.resolve_monster_ability(0, &mut events));

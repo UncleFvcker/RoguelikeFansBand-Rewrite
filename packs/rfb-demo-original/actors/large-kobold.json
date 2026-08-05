@@ -26,6 +26,7 @@
     "corpseWeight": 4,
     "skeletonWeight": 1
   },
+  "doorInteraction": { "opens": true, "bashes": true },
   "allocation": { "legacyIndex": 102, "rarity": 1, "maxDepth": 40 },
   "tags": ["evil", "humanoid", "kobold", "warrens"]
 }

@@ -438,7 +438,7 @@
             "x": 2,
             "y": 4
           },
-          "hp": 5,
+          "hp": 3,
           "speed": 110,
           "energyNeed": 100,
           "pack": {
@@ -526,7 +526,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "4e3baec93a8feba872fb88a0d542de61c9b550f7576c6a6ba8a8651d39f55d52"
+      "stateHash": "0332782077a508f4881b74e48b29892c8187be11cf4131a52cad081be2a646ff"
     },
     "events": [
       {
@@ -1001,6 +1001,26 @@
             "finalDamage": 0,
             "damageType": "physical",
             "resistance": "immune"
+          }
+        }
+      },
+      {
+        "kind": "terrain.actor-trap-triggered",
+        "messageKey": "terrain-trap-triggered",
+        "args": {
+          "target": "demo.actor.chorus-captain",
+          "x": "5",
+          "y": "4"
+        },
+        "outcome": {
+          "type": "damage",
+          "resolution": {
+            "rawDamage": 2,
+            "armorReduction": 0,
+            "resistanceAdjustment": 0,
+            "finalDamage": 2,
+            "damageType": "physical",
+            "resistance": "normal"
           }
         }
       },
@@ -14428,6 +14448,6 @@
         "y": 5
       }
     ],
-    "saveRoundTripStateHash": "4e3baec93a8feba872fb88a0d542de61c9b550f7576c6a6ba8a8651d39f55d52"
+    "saveRoundTripStateHash": "0332782077a508f4881b74e48b29892c8187be11cf4131a52cad081be2a646ff"
   }
 }

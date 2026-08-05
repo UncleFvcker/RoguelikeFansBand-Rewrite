@@ -32,13 +32,13 @@
       "turn": 1,
       "worldTick": 10,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 12,
+      "rngDrawCounter": 15,
       "floorId": "demo.floor.surface",
       "playerPosition": {
         "x": 3,
         "y": 3
       },
-      "playerHp": 9,
+      "playerHp": 8,
       "playerMaxHp": 10,
       "playerAttack": 2,
       "playerDefense": 1,
@@ -298,7 +298,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "d30d476139d743cc1ddf319d12625b1cc216b068a313efdcfa1f3df5d9762c7e"
+      "stateHash": "3a841cfeb0d68b151096b9e9efafe08cceb0e8664396c7f8cd8925736ee64598"
     },
     "events": [
       {
@@ -342,16 +342,16 @@
         "kind": "combat.monster-hit",
         "messageKey": "combat-monster-hit",
         "args": {
-          "damage": "1",
+          "damage": "0",
           "source": "demo.actor.fruit-bat"
         },
         "outcome": {
           "type": "damage",
           "resolution": {
-            "rawDamage": 2,
+            "rawDamage": 1,
             "armorReduction": 1,
             "resistanceAdjustment": 0,
-            "finalDamage": 1,
+            "finalDamage": 0,
             "damageType": "physical",
             "resistance": "normal"
           }
@@ -365,10 +365,22 @@
         }
       },
       {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
+        "kind": "combat.monster-hit",
+        "messageKey": "combat-monster-hit",
         "args": {
+          "damage": "2",
           "source": "demo.actor.acid-seep"
+        },
+        "outcome": {
+          "type": "damage",
+          "resolution": {
+            "rawDamage": 2,
+            "armorReduction": 0,
+            "resistanceAdjustment": 0,
+            "finalDamage": 2,
+            "damageType": "acid",
+            "resistance": "normal"
+          }
         }
       }
     ],

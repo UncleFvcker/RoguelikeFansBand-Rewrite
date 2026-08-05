@@ -203,7 +203,7 @@
       "turn": 31,
       "worldTick": 310,
       "lastCommandSeq": 31,
-      "rngDrawCounter": 495,
+      "rngDrawCounter": 505,
       "floorId": "demo.floor.warrens-depth-1",
       "dungeonInstanceId": "demo.dungeon.warrens.instance.1",
       "playerPosition": {
@@ -382,50 +382,50 @@
             "x": 49,
             "y": 15
           },
-          "hp": 7,
+          "hp": 10,
           "speed": 110,
           "energyNeed": 100
         },
         {
           "id": "demo.floor.warrens-depth-1.encounter.2",
           "position": {
-            "x": 34,
-            "y": 6
+            "x": 37,
+            "y": 3
           },
-          "hp": 3,
-          "speed": 120,
+          "hp": 6,
+          "speed": 110,
           "energyNeed": 100
         },
         {
           "id": "demo.floor.warrens-depth-1.encounter.3",
           "position": {
-            "x": 29,
+            "x": 24,
             "y": 12
           },
-          "hp": 7,
+          "hp": 9,
           "speed": 110,
           "energyNeed": 100
         },
         {
           "id": "demo.floor.warrens-depth-1.encounter.4",
           "position": {
-            "x": 52,
+            "x": 56,
             "y": 6
           },
-          "hp": 3,
-          "speed": 120,
+          "hp": 1,
+          "speed": 110,
           "energyNeed": 100
         }
       ],
-      "groundItemCount": 3,
+      "groundItemCount": 2,
       "goldPiles": [
         {
           "id": "generated.gold.1",
           "position": {
-            "x": 51,
-            "y": 8
+            "x": 46,
+            "y": 17
           },
-          "amount": 21,
+          "amount": 39,
           "appearance": "copper"
         }
       ],
@@ -805,7 +805,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 93,
+      "nextItemInstanceSerial": 92,
       "nextGoldPileSerial": 2,
       "campaign": {
         "status": "active",
@@ -813,7 +813,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "1801c08ae593df8098b62113c49f02541b22f635089849a48a9333ef69a1b0ca"
+      "stateHash": "dcd6c5904653a4ada2b404e6718c93adbd64165448ac0fdfc2f9c74be4874d43"
     },
     "events": [
       {
@@ -6875,6 +6875,6 @@
         "y": 21
       }
     ],
-    "saveRoundTripStateHash": "1801c08ae593df8098b62113c49f02541b22f635089849a48a9333ef69a1b0ca"
+    "saveRoundTripStateHash": "dcd6c5904653a4ada2b404e6718c93adbd64165448ac0fdfc2f9c74be4874d43"
   }
 }

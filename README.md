@@ -205,7 +205,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Rust 权威可见性与光照 v1](design/visibility-lighting-v1.md)
 - [静态地形 Chunk 渲染 v1](design/terrain-chunk-rendering-v1.md)
 
-当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v173`，共 462 条 exact fixtures、零 waiver，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
+当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v176`，共 462 条 exact fixtures、零 waiver，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
 
 fixture 使用受控的主分类。日常开发只验证或刷新受影响分类；普通 `cargo test -p rfb-contract` 只做快速的 schema、分类、ID 唯一性和契约单元测试，不回放全部场景：
 
@@ -464,7 +464,7 @@ contract-v171 按固定 RFB 原版来源扩充 Warrens 普通生态：接入 New
 
 contract-v172 将玩家施法参数改为 Ability Program 之外的可选 `player` 策略：能力默认不绑定，但不会被永久划分为怪物专属；能力书、职业先天技以及未来种族或怪物模式实际引用时才要求玩家策略。demo 保留当前玩家可获得能力的 48 个绑定，删除 21 个占位绑定；导入器同样从书本和职业先天列表派生绑定。存档与回放继续独立精确匹配 `contentId/contentHash`，历史 hash 兼容表已删除；`contentHash` 不再进入 state hash，Schema 升至 v62。协议保持 1.136，demo 升至 1.166.0，content hash 为 `eb6dded2ca73a46535357886d44561040ca571387353feaeefa6873b0afeb7c0`。详见 [Contract v172](design/contract-v172-optional-player-abilities-state-hash.md)。
 
-contract-v173 按固定 RFB 原版来源完成 Warrens W1-W6 与运行时自然补怪：怪物从全局分配池按 rarity、深度、地牢主字形和 `MONSTER_DIV_16` 选择；每次分配执行最多两次独立 `1/40` 越级判定；leader-first 展开 `FRIENDS(XdY)` 与 Mughash escort；Unique 具有跨当前层、离层仓库、召唤和死亡存档共享的权威生命周期；Giant White Mouse 与 Warg 分别执行 `MULTIPLY + RAND_50` 和 `RAND_25`；Warrens 按原版基础 `1/160` 运行时自然补怪。协议升至 1.137、demo 升至 1.167.0、state hash Schema 升至 v63，active baseline 保持 462 条 exact fixtures、零 waiver，content hash 为 `91743edbfd3459c7bf41216c78060baae59278e87c8977347983e3f3fc3cf48d`。详见 [Contract v173](design/contract-v173-warrens-allocation-ecology.md)。
+contract-v173 按固定 RFB 原版来源完成 Warrens W1-W6 与运行时自然补怪；contract-v174-v176 继续完成怪物开门/解锁/撞门、飞行与游泳移动域、显式陷阱规避，以及逐实例 HP 骰与 `FORCE_MAXHP`。路径、生成、群体、召唤、位移、陷阱和读档共享 movement profile；所有怪物出生入口共享 HP helper，保存后的实例 `maxHp` 不重掷。协议保持 1.137、demo 升至 1.170.0、state hash Schema 保持 v63，content hash 为 `b434df67e19e3f7986ee796870365c3e60deb792ff87478a48856194607b75b7`。详见 [Contract v174](design/contract-v174-monster-doors.md)、[v175](design/contract-v175-monster-movement-domains.md) 与 [v176](design/contract-v176-monster-hit-points.md)。
 
 ### 本地验证
 

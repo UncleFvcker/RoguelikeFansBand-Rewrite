@@ -238,7 +238,7 @@
             "x": 4,
             "y": 4
           },
-          "hp": 3,
+          "hp": 1,
           "speed": 110,
           "energyNeed": 100
         }
@@ -300,7 +300,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "8993d726ca48fbcebb5741f5148bcfb83847cd692dd3c8aa7f9283d72a804ec4"
+      "stateHash": "86b9bd0b47a57fe4c874c4b97fc9e56ce6f723472eb1ae092c6273d88ce5854d"
     },
     "events": [
       {
@@ -317,6 +317,26 @@
         "args": {
           "from": "demo.floor.echo-depth-1",
           "to": "demo.floor.echo-depth-2-mirror"
+        }
+      },
+      {
+        "kind": "terrain.actor-trap-triggered",
+        "messageKey": "terrain-trap-triggered",
+        "args": {
+          "target": "demo.actor.echo-hound",
+          "x": "4",
+          "y": "4"
+        },
+        "outcome": {
+          "type": "damage",
+          "resolution": {
+            "rawDamage": 2,
+            "armorReduction": 0,
+            "resistanceAdjustment": 0,
+            "finalDamage": 2,
+            "damageType": "physical",
+            "resistance": "normal"
+          }
         }
       }
     ],
@@ -3546,6 +3566,6 @@
         "y": 19
       }
     ],
-    "saveRoundTripStateHash": "8993d726ca48fbcebb5741f5148bcfb83847cd692dd3c8aa7f9283d72a804ec4"
+    "saveRoundTripStateHash": "86b9bd0b47a57fe4c874c4b97fc9e56ce6f723472eb1ae092c6273d88ce5854d"
   }
 }

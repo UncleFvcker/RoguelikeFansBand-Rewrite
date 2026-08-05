@@ -29,6 +29,7 @@
     "corpseWeight": 4,
     "skeletonWeight": 1
   },
+  "doorInteraction": { "bashes": true },
   "allocation": { "legacyIndex": 62, "rarity": 2, "maxDepth": 20 },
   "tags": ["animal", "warrens"]
 }

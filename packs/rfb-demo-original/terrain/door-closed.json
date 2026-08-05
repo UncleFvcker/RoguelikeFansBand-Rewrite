@@ -10,5 +10,6 @@
   "openToTerrainId": "demo.terrain.door-open",
   "bashToTerrainId": "demo.terrain.door-broken",
   "bashCheckDifficulty": 12,
+  "monsterDoorPower": 0,
   "tags": ["door", "door-closed"]
 }

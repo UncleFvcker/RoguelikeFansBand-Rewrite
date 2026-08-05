@@ -446,7 +446,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "669a0ab8b7e1193590765a8a5c0f606700dc5234810caf8bfc8196c41e894de1"
+      "stateHash": "8643563e2aa0d64ded541466b3d5662e1e5973241f829e37e4b2f55cbdafcf2e"
     },
     "events": [
       {
@@ -616,6 +616,26 @@
         "messageKey": "combat-monster-miss",
         "args": {
           "source": "demo.actor.frost-wisp"
+        }
+      },
+      {
+        "kind": "terrain.actor-trap-triggered",
+        "messageKey": "terrain-trap-triggered",
+        "args": {
+          "target": "demo.actor.chorus-captain",
+          "x": "6",
+          "y": "5"
+        },
+        "outcome": {
+          "type": "damage",
+          "resolution": {
+            "rawDamage": 2,
+            "armorReduction": 0,
+            "resistanceAdjustment": 0,
+            "finalDamage": 2,
+            "damageType": "physical",
+            "resistance": "normal"
+          }
         }
       },
       {
@@ -12017,14 +12037,14 @@
       {
         "step": 15,
         "kind": "player-dead",
-        "stateHash": "669a0ab8b7e1193590765a8a5c0f606700dc5234810caf8bfc8196c41e894de1"
+        "stateHash": "8643563e2aa0d64ded541466b3d5662e1e5973241f829e37e4b2f55cbdafcf2e"
       },
       {
         "step": 16,
         "kind": "player-dead",
-        "stateHash": "669a0ab8b7e1193590765a8a5c0f606700dc5234810caf8bfc8196c41e894de1"
+        "stateHash": "8643563e2aa0d64ded541466b3d5662e1e5973241f829e37e4b2f55cbdafcf2e"
       }
     ],
-    "saveRoundTripStateHash": "669a0ab8b7e1193590765a8a5c0f606700dc5234810caf8bfc8196c41e894de1"
+    "saveRoundTripStateHash": "8643563e2aa0d64ded541466b3d5662e1e5973241f829e37e4b2f55cbdafcf2e"
   }
 }

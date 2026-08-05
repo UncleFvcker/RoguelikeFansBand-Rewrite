@@ -1,6 +1,6 @@
 # RFB 全系统梳理与重构实现路线
 
-状态：长期规则实现路线；当前基线为协议 1.137 / contract-v173（P31–P98 进展见 8.3，玩家流程与 Outpost 进展见 Phase 17/18，物品接入见 Phase 19，Warrens 怪物机制见 W1–W14 清单）
+状态：长期规则实现路线；当前基线为协议 1.137 / contract-v176（P31–P98 进展见 8.3，玩家流程与 Outpost 进展见 Phase 17/18，物品接入见 Phase 19，Warrens 怪物机制见 W1–W14 清单）
 
 ## 1. 目的与边界
 
@@ -464,7 +464,7 @@ Warrens 的下一轮怪物工作按 [Warrens 怪物机制实现清单](warrens-m
 
 ### 8.1 基线与完成度判断
 
-当前权威基线为协议 1.137、内容包 1.167.0、contract-v173、save v1 和 state hash Schema v63；内容 hash 为 `91743edbfd3459c7bf41216c78060baae59278e87c8977347983e3f3fc3cf48d`。active baseline 包含 462 个 exact fixtures，零 waiver。v73–v149 建立的规则与内容边界保持；v150–v156 建立 Warrens 玩家流程、角色切片、结果恢复、地图密度和掉落；v157–v168 建立并扩展开放 Outpost、补给、九类设施与 Home；v169 接入 35 项固定原版物品、共享背包容量、容器/工具槽、装备近战修正与工具双槽语义；v170 按原版力量表动态计算负重容量，并以超重速度惩罚取代拾取和交易硬拒绝；v171 按固定原版来源把 Warrens 普通生态扩为十二种已支持怪物，并建立 W1–W14 怪物机制实施清单；v172 将玩家施法策略改为按实际玩家入口选配，并把内容匹配从 state hash 中分离；v173 完成 Warrens 的全局分配、越级、leader-first 群体、Unique/escort、繁殖、随机移动与自然补怪。Original Lab/Echo 与旧 demo builds 留作历史系统回归。Race/Class/Personality、技能成长、出生装备、自然属性、HP 序列、胜利后等级 100 / `18/820` 和装备派生边界保持一致。
+当前权威基线为协议 1.137、内容包 1.170.0、contract-v176、save v1 和 state hash Schema v63；内容 hash 为 `b434df67e19e3f7986ee796870365c3e60deb792ff87478a48856194607b75b7`。active baseline 包含 462 个 exact fixtures，零 waiver。v73–v149 建立的规则与内容边界保持；v150–v156 建立 Warrens 玩家流程、角色切片、结果恢复、地图密度和掉落；v157–v168 建立并扩展开放 Outpost、补给、九类设施与 Home；v169 接入 35 项固定原版物品、共享背包容量、容器/工具槽、装备近战修正与工具双槽语义；v170 按原版力量表动态计算负重容量，并以超重速度惩罚取代拾取和交易硬拒绝；v171 按固定原版来源把 Warrens 普通生态扩为十二种已支持怪物，并建立 W1–W14 怪物机制实施清单；v172 将玩家施法策略改为按实际玩家入口选配，并把内容匹配从 state hash 中分离；v173 完成 Warrens 的全局分配、越级、leader-first 群体、Unique/escort、繁殖、随机移动与自然补怪；v174-v176 完成怪物门交互、移动域与个体 HP 骰。Original Lab/Echo 与旧 demo builds 留作历史系统回归。Race/Class/Personality、技能成长、出生装备、自然属性、HP 序列、胜利后等级 100 / `18/820` 和装备派生边界保持一致。
 
 这一里程碑代表“规则架构、地牢纵切、角色构筑、玩家/怪物施法循环和首个兼容玩家流程已经成型”，不代表“旧 RFB 已重制完成”。当前 demo 内容包有 68 种 terrain、44 种 actor、140 种 item、3 种 resource、69 个 ability、6 本 ability book、10 个 skill、13 个 skill set、5 个 Race、6 个 Class、3 个 Personality、7 个 build、7 张 encounter table、14 张 loot table、3 张 theme table、1 张 region table、1 张 terrain feature table、6 个 Vault、1 个 town、1 个 town facility、8 个 shop 和 2 个 world。
 

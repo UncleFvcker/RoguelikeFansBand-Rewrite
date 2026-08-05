@@ -65,11 +65,11 @@ fn player_summons_follow_attack_keep_distance_and_guard_deterministically() {
             summon_position,
             5,
         );
-        game.entities.push(game.generated_actor(
+        game.push_generated_actor(
             "test.monster.ember-mote.1".to_owned(),
             "demo.actor.ember-mote",
             Position { x: 10, y: 3 },
-        ));
+        );
         game.summon_command = SummonCommandDto {
             mode,
             guard_position,

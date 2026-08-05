@@ -80,6 +80,13 @@ pub(super) fn validate_terrain(
         if terrain.bash_to_terrain_id.is_some() != terrain.bash_check_difficulty.is_some() {
             return Err(ContentError::InvalidTerrainTransition(terrain.id.clone()));
         }
+        if terrain.monster_door_power.is_some()
+            != (terrain.open_to_terrain_id.is_some() && terrain.bash_to_terrain_id.is_some())
+            || terrain.monster_unlock_to_terrain_id.is_some()
+                != terrain.monster_door_power.is_some_and(|power| power > 0)
+        {
+            return Err(ContentError::InvalidTerrainTransition(terrain.id.clone()));
+        }
         if terrain.dig_to_terrain_id.is_some() != terrain.dig_check_difficulty.is_some() {
             return Err(ContentError::InvalidTerrainTransition(terrain.id.clone()));
         }
@@ -153,6 +160,22 @@ pub(super) fn validate_terrain(
                 || !terrain.blocks_sight
                 || !target.walkable
                 || target.blocks_sight
+            {
+                return Err(ContentError::InvalidTerrainTransition(terrain.id.clone()));
+            }
+        }
+        if let Some(target_id) = &terrain.monster_unlock_to_terrain_id {
+            require_reference(&terrain_ids, target_id, &terrain.id)?;
+            let target = terrain_definitions
+                .iter()
+                .find(|candidate| candidate.id == *target_id)
+                .expect("validated monster unlock target must remain available");
+            if target_id == &terrain.id
+                || terrain.walkable
+                || !terrain.blocks_sight
+                || target.walkable
+                || !target.blocks_sight
+                || target.monster_door_power != Some(0)
             {
                 return Err(ContentError::InvalidTerrainTransition(terrain.id.clone()));
             }

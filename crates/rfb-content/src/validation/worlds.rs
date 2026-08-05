@@ -19,6 +19,7 @@ fn valid_procedural_count_range(range: ProceduralCountRangeDefinition) -> bool {
 
 pub(super) struct WorldValidationRefs<'a> {
     pub(super) terrain_ids: &'a BTreeSet<String>,
+    pub(super) terrain: &'a [TerrainDefinition],
     pub(super) terrain_walkability: &'a BTreeMap<String, bool>,
     pub(super) terrain_tags: &'a BTreeMap<String, BTreeSet<String>>,
     pub(super) terrain_open_targets: &'a BTreeMap<String, String>,
@@ -139,6 +140,7 @@ pub(super) fn validate_world(
 ) -> Result<(), ContentError> {
     let WorldValidationRefs {
         terrain_ids,
+        terrain,
         terrain_walkability,
         terrain_tags,
         terrain_open_targets,
@@ -2036,22 +2038,26 @@ pub(super) fn validate_world(
         terrain_walkability,
     )?;
     for actor in &world.actors {
-        require_walkable_spawn(
+        require_actor_enterable_spawn(
             world,
+            &actor.kind_id,
             actor.position,
             &override_terrain,
-            terrain_walkability,
+            actors,
+            terrain,
         )?;
     }
     for dungeon in &world.dungeons {
         let Some(guardian) = &dungeon.entrance_guardian else {
             continue;
         };
-        require_walkable_spawn(
+        require_actor_enterable_spawn(
             world,
+            &guardian.actor_kind_id,
             guardian.position,
             &override_terrain,
-            terrain_walkability,
+            actors,
+            terrain,
         )?;
         let terrain_id = override_terrain
             .get(&guardian.position)
@@ -2087,6 +2093,43 @@ fn require_walkable_spawn(
             .unwrap_or(&world.fill_terrain_id)
     };
     if terrain_walkability.get(terrain_id) != Some(&true) {
+        return Err(ContentError::SpawnOnBlockedTerrain(world.id.clone()));
+    }
+    Ok(())
+}
+
+fn require_actor_enterable_spawn(
+    world: &WorldDefinition,
+    actor_kind_id: &str,
+    position: ContentPosition,
+    override_terrain: &BTreeMap<ContentPosition, String>,
+    actors: &[ActorDefinition],
+    terrain: &[TerrainDefinition],
+) -> Result<(), ContentError> {
+    let terrain_id = if position.x == 0
+        || position.y == 0
+        || position.x == world.width - 1
+        || position.y == world.height - 1
+    {
+        &world.border_terrain_id
+    } else {
+        override_terrain
+            .get(&position)
+            .unwrap_or(&world.fill_terrain_id)
+    };
+    let can_enter = actors
+        .iter()
+        .find(|actor| actor.id == actor_kind_id)
+        .zip(terrain.iter().find(|tile| tile.id == *terrain_id))
+        .is_some_and(|(actor, tile)| {
+            tile.walkable
+                || actor
+                    .movement
+                    .modes
+                    .iter()
+                    .any(|mode| tile.movement_modes.contains(mode))
+        });
+    if !can_enter {
         return Err(ContentError::SpawnOnBlockedTerrain(world.id.clone()));
     }
     Ok(())

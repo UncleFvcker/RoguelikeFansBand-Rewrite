@@ -314,6 +314,11 @@ pub(crate) enum DomainEvent {
         position: Position,
         damage: DamageOutcome,
     },
+    ActorTrapTriggered {
+        position: Position,
+        target_kind_id: String,
+        damage: DamageOutcome,
+    },
     TrapDisarmed {
         position: Position,
     },
@@ -1598,6 +1603,22 @@ impl DomainEvent {
                 "terrain.trap-triggered",
                 "terrain-trap-triggered",
                 [("x", position.x.to_string()), ("y", position.y.to_string())],
+                GameEventOutcomeDto::Damage {
+                    resolution: damage.into(),
+                },
+            ),
+            Self::ActorTrapTriggered {
+                position,
+                target_kind_id,
+                damage,
+            } => dto_with_outcome(
+                "terrain.actor-trap-triggered",
+                "terrain-trap-triggered",
+                [
+                    ("target", target_kind_id.clone()),
+                    ("x", position.x.to_string()),
+                    ("y", position.y.to_string()),
+                ],
                 GameEventOutcomeDto::Damage {
                     resolution: damage.into(),
                 },

@@ -562,7 +562,7 @@ impl Game {
                 return Err(CoreError::InvalidSave("summon state is invalid"));
             }
             if !instance_ids.insert(entity.id.clone())
-                || !self.is_walkable(entity.position)
+                || !self.actor_kind_can_enter_position(&entity.kind_id, entity.position)
                 || !positions.insert(entity.position)
             {
                 return Err(CoreError::InvalidSave("entity position is invalid"));
@@ -780,7 +780,12 @@ impl Game {
             for entity in &floor.entities {
                 self.validate_actor(entity, ActorRole::Monster)?;
                 if !instance_ids.insert(entity.id.clone())
-                    || !floor_position_is_walkable(floor, entity.position, &self.content)
+                    || !floor_actor_position_is_enterable(
+                        floor,
+                        &entity.kind_id,
+                        entity.position,
+                        &self.content,
+                    )
                     || !floor_positions.insert(entity.position)
                 {
                     return Err(CoreError::InvalidSave(

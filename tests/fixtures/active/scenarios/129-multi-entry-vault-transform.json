@@ -408,7 +408,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "b42b38a53d01297ddda9e8a205ecccd208f0b7ecea6c91fcc3dd3567f2849c89"
+      "stateHash": "3bd13967f1c0e6257495058792899edc42d07dec2f8f145ed007cba3f8c1a21c"
     },
     "events": [
       {
@@ -530,6 +530,26 @@
             "armorReduction": 1,
             "resistanceAdjustment": 0,
             "finalDamage": 1,
+            "damageType": "physical",
+            "resistance": "normal"
+          }
+        }
+      },
+      {
+        "kind": "terrain.actor-trap-triggered",
+        "messageKey": "terrain-trap-triggered",
+        "args": {
+          "target": "demo.actor.storm-spark",
+          "x": "5",
+          "y": "5"
+        },
+        "outcome": {
+          "type": "damage",
+          "resolution": {
+            "rawDamage": 2,
+            "armorReduction": 0,
+            "resistanceAdjustment": 0,
+            "finalDamage": 2,
             "damageType": "physical",
             "resistance": "normal"
           }
@@ -11922,6 +11942,6 @@
         "y": 5
       }
     ],
-    "saveRoundTripStateHash": "b42b38a53d01297ddda9e8a205ecccd208f0b7ecea6c91fcc3dd3567f2849c89"
+    "saveRoundTripStateHash": "3bd13967f1c0e6257495058792899edc42d07dec2f8f145ed007cba3f8c1a21c"
   }
 }
