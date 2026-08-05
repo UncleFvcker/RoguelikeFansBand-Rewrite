@@ -13,8 +13,11 @@ use thiserror::Error;
 
 pub mod content;
 
+// Historical contract and save-fixture baseline. Content imports use the
+// independently selected authority below.
 pub const LEGACY_BASELINE_COMMIT: &str = "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9";
 pub const LEGACY_BASELINE_REFERENCE: &str = "v1.3.0.7";
+pub const LEGACY_CONTENT_REFERENCE: &str = "master";
 pub const LEGACY_RNG_DEGREE: usize = 63;
 pub const LEGACY_PREFIX_DECODED_LENGTH: usize = 409;
 pub const PARSED_SAMPLE_SCHEMA_VERSION: u16 = 1;

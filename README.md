@@ -227,7 +227,7 @@ cargo run -p rfb-contract -- refresh-category tests/fixtures/active/baseline-pol
 
 旧项目在重构期间只作为规则行为、平台表现和旧存档格式的本地参考实现。
 
-旧版内容不会复制进本仓库或新游戏发行包。开发工具通过本地环境变量 `RFB_LEGACY_SOURCE` 只读访问旧仓库，并固定读取 `v1.3.0.7`；默认开发路径见 [`.env.example`](.env.example)。新游戏内容、文本和素材均单独创作。
+旧版内容不会复制进本仓库或新游戏发行包。新规则与内容的权威原版是本地 `D:/codex/Frogcomposband/master` 仓库的 `master` Git 引用；工具通过 `RFB_LEGACY_SOURCE` 只读访问该仓库的 Git 对象，不读取当前检出分支或工作树文件。历史 contract 与旧存档 fixture 中明确记录的旧提交仍保持原有基准。默认开发路径见 [`.env.example`](.env.example)。
 
 ## 许可证
 
@@ -507,7 +507,7 @@ cargo run -p rfb-content --features schemas --bin generate-content-schemas
 
 内容编译器会严格解析 JSON、校验稳定 ID/引用/范围，规范化排序后输出带 SHA-256 校验的 MessagePack 容器。修改内容时可先运行 `rfb-contentc inspect-source packs/rfb-demo-original` 查看新 hash，再显式更新 lock；首个原创包的固定 content hash 记录在 `packs/rfb-demo-original/content.lock.json`。
 
-如需生成本地旧版参考 manifest：
+如需生成固定 1.3.0.7 旧存档基准所用的本地参考 manifest：
 
 ```powershell
 $env:RFB_LEGACY_SOURCE="D:/codex/Frogcomposband/master"
@@ -533,7 +533,7 @@ cargo run -p rfb-legacy-import -- verify-catalog .local/legacy-baseline/save-sam
 $env:RFB_LEGACY_SOURCE = "D:/codex/Frogcomposband/master"; cargo run -p rfb-legacy-import -- import-content .local/packs/rfb-legacy
 ```
 
-`rfb-legacy-import` 当前只读取不依赖旧 C 结构体内存布局的 409 字节稳定前缀，包括版本、保存元数据、63 项 RNG 状态和选项位。生成的 `parsed-save-samples.json` 仍位于 `.local/`，不会进入 Git；`record-catalog` 拒绝覆盖已有基线。
+`import-content` 和 `sync-demo-items` 始终读取该仓库 `master` 引用解析出的 Git 对象，并在导入报告中记录实际提交；它们不读取当前工作树。旧存档命令仍使用固定 1.3.0.7 基准，只解析不依赖旧 C 结构体内存布局的 409 字节稳定前缀，包括版本、保存元数据、63 项 RNG 状态和选项位。生成的 `parsed-save-samples.json` 仍位于 `.local/`，不会进入 Git；`record-catalog` 拒绝覆盖已有基线。
 
 快照规范化和 hash：
 

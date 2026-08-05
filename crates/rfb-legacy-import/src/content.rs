@@ -17,7 +17,7 @@ use std::{
 
 use serde::{Deserialize, Serialize};
 
-use crate::{LEGACY_BASELINE_COMMIT, LegacyImportError};
+use crate::{LEGACY_CONTENT_REFERENCE, LegacyImportError};
 
 pub const CONTENT_IMPORT_SCHEMA_VERSION: u16 = 2;
 const SCHEMA_BASE: &str = "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1";
@@ -503,14 +503,12 @@ fn kebab(raw: &str) -> String {
     id
 }
 
-/// Reads one path from the pinned legacy commit via git objects, never the
-/// working tree.
-pub fn read_legacy_object(source: &Path, path: &str) -> Result<String, LegacyImportError> {
+fn resolve_legacy_content_commit(source: &Path) -> Result<String, LegacyImportError> {
     let resolved = Command::new("git")
         .arg("-C")
         .arg(source)
         .arg("rev-parse")
-        .arg(format!("{LEGACY_BASELINE_COMMIT}^{{commit}}"))
+        .arg(format!("{LEGACY_CONTENT_REFERENCE}^{{commit}}"))
         .output()
         .map_err(|error| LegacyImportError::LegacyGit(error.to_string()))?;
     if !resolved.status.success() {
@@ -518,17 +516,26 @@ pub fn read_legacy_object(source: &Path, path: &str) -> Result<String, LegacyImp
             String::from_utf8_lossy(&resolved.stderr).trim().to_owned(),
         ));
     }
-    let commit = String::from_utf8_lossy(&resolved.stdout).trim().to_owned();
-    if commit != LEGACY_BASELINE_COMMIT {
-        return Err(LegacyImportError::LegacyGit(format!(
-            "resolved commit {commit} does not match the pinned baseline"
-        )));
-    }
+    Ok(String::from_utf8_lossy(&resolved.stdout).trim().to_owned())
+}
+
+/// Reads one path from the authoritative legacy master ref via Git objects,
+/// never the checked-out branch or working tree.
+pub fn read_legacy_object(source: &Path, path: &str) -> Result<String, LegacyImportError> {
+    let commit = resolve_legacy_content_commit(source)?;
+    read_legacy_object_at(source, &commit, path)
+}
+
+fn read_legacy_object_at(
+    source: &Path,
+    commit: &str,
+    path: &str,
+) -> Result<String, LegacyImportError> {
     let output = Command::new("git")
         .arg("-C")
         .arg(source)
         .arg("show")
-        .arg(format!("{LEGACY_BASELINE_COMMIT}:{path}"))
+        .arg(format!("{commit}:{path}"))
         .output()
         .map_err(|error| LegacyImportError::LegacyGit(error.to_string()))?;
     if !output.status.success() {
@@ -542,18 +549,11 @@ pub fn read_legacy_object(source: &Path, path: &str) -> Result<String, LegacyImp
     })
 }
 
-fn list_legacy_c_sources(source: &Path) -> Result<Vec<String>, LegacyImportError> {
+fn list_legacy_c_sources(source: &Path, commit: &str) -> Result<Vec<String>, LegacyImportError> {
     let output = Command::new("git")
         .arg("-C")
         .arg(source)
-        .args([
-            "ls-tree",
-            "-r",
-            "--name-only",
-            LEGACY_BASELINE_COMMIT,
-            "--",
-            "src",
-        ])
+        .args(["ls-tree", "-r", "--name-only", commit, "--", "src"])
         .output()
         .map_err(|error| LegacyImportError::LegacyGit(error.to_string()))?;
     if !output.status.success() {
@@ -4154,10 +4154,14 @@ fn legacy_class_uses_spell_scrolls(class_id: &str) -> bool {
     )
 }
 
-fn magic_profile_json(profile: &LegacyMagicProfile, class_id: &str) -> serde_json::Value {
+fn magic_profile_json(
+    profile: &LegacyMagicProfile,
+    class_id: &str,
+    source_commit: &str,
+) -> serde_json::Value {
     serde_json::json!({
         "schemaVersion": 1,
-        "sourceCommit": LEGACY_BASELINE_COMMIT,
+        "sourceCommit": source_commit,
         "classId": format!("rfb-legacy.class.{class_id}"),
         "legacyClassIndex": profile.class_index,
         "legacyNameHint": profile.name_hint,
@@ -4191,10 +4195,11 @@ fn magic_profile_json(profile: &LegacyMagicProfile, class_id: &str) -> serde_jso
 fn realm_readability_json(
     profiles: &[LegacyMagicProfile],
     class_ids: &BTreeMap<u16, String>,
+    source_commit: &str,
 ) -> serde_json::Value {
     serde_json::json!({
         "schemaVersion": 1,
-        "sourceCommit": LEGACY_BASELINE_COMMIT,
+        "sourceCommit": source_commit,
         "realms": LEGACY_REALM_IDS.iter().enumerate().map(|(index, realm_id)| {
             let readable_by_class_ids = profiles
                 .iter()
@@ -4218,6 +4223,7 @@ fn realm_readability_json(
 fn class_casting_shells_json(
     classes: &[LegacyClassEntry],
     profiles: &[LegacyMagicProfile],
+    source_commit: &str,
 ) -> serde_json::Value {
     let profiles = profiles
         .iter()
@@ -4225,7 +4231,7 @@ fn class_casting_shells_json(
         .collect::<BTreeMap<_, _>>();
     serde_json::json!({
         "schemaVersion": 1,
-        "sourceCommit": LEGACY_BASELINE_COMMIT,
+        "sourceCommit": source_commit,
         "classes": classes.iter().map(|entry| {
             let profile = profiles.get(&entry.registration.index).copied();
             let readable_realm_ids = profile
@@ -6559,9 +6565,29 @@ pub fn convert_content(
     artifacts: &[LegacyArtifactEntry],
     characters: &LegacyCharacterSources,
 ) -> ContentImportOutcome {
+    convert_content_from(
+        terrain,
+        monsters,
+        items,
+        egos,
+        artifacts,
+        characters,
+        LEGACY_CONTENT_REFERENCE,
+    )
+}
+
+fn convert_content_from(
+    terrain: &[LegacyTerrainEntry],
+    monsters: &[LegacyMonsterEntry],
+    items: &[LegacyItemEntry],
+    egos: &[LegacyEgoEntry],
+    artifacts: &[LegacyArtifactEntry],
+    characters: &LegacyCharacterSources,
+    source_commit: &str,
+) -> ContentImportOutcome {
     let mut report = ContentImportReport {
         schema_version: CONTENT_IMPORT_SCHEMA_VERSION,
-        source_commit: LEGACY_BASELINE_COMMIT.to_owned(),
+        source_commit: source_commit.to_owned(),
         ..ContentImportReport::default()
     };
     let mut terrain_files = Vec::new();
@@ -7400,7 +7426,7 @@ pub fn convert_content(
         }
         magic_profile_files.push((
             format!("{class_id}.json"),
-            magic_profile_json(profile, class_id),
+            magic_profile_json(profile, class_id, source_commit),
         ));
     }
     report.proficiency_profiles_total = characters.proficiency_profiles.len();
@@ -7422,9 +7448,14 @@ pub fn convert_content(
         }
     }
     let realm_readability = (!characters.magic_profiles.is_empty())
-        .then(|| realm_readability_json(&characters.magic_profiles, &class_ids));
-    let class_casting_shells = (!characters.classes.is_empty())
-        .then(|| class_casting_shells_json(&characters.classes, &characters.magic_profiles));
+        .then(|| realm_readability_json(&characters.magic_profiles, &class_ids, source_commit));
+    let class_casting_shells = (!characters.classes.is_empty()).then(|| {
+        class_casting_shells_json(
+            &characters.classes,
+            &characters.magic_profiles,
+            source_commit,
+        )
+    });
     let skill_files =
         if race_files.is_empty() && personality_files.is_empty() && class_files.is_empty() {
             Vec::new()
@@ -7749,16 +7780,17 @@ pub fn import_content(source: &Path, output: &Path) -> Result<PathBuf, LegacyImp
             "output directory must live outside the legacy source".to_owned(),
         ));
     }
-    let f_info = read_legacy_object(source, "lib/edit/f_info.txt")?;
-    let r_info = read_legacy_object(source, "lib/edit/r_info.txt")?;
-    let k_info = read_legacy_object(source, "lib/edit/k_info.txt")?;
-    let e_info = read_legacy_object(source, "lib/edit/e_info.txt")?;
-    let a_info = read_legacy_object(source, "lib/edit/a_info.txt")?;
-    let b_info = read_legacy_object(source, "lib/edit/b_info.txt")?;
-    let m_info = read_legacy_object(source, "lib/edit/m_info.txt")?;
-    let s_info = read_legacy_object(source, "lib/edit/s_info.txt")?;
-    let defines = read_legacy_object(source, "src/defines.h")?;
-    let classes_source = read_legacy_object(source, "src/classes.c")?;
+    let source_commit = resolve_legacy_content_commit(source)?;
+    let f_info = read_legacy_object_at(source, &source_commit, "lib/edit/f_info.txt")?;
+    let r_info = read_legacy_object_at(source, &source_commit, "lib/edit/r_info.txt")?;
+    let k_info = read_legacy_object_at(source, &source_commit, "lib/edit/k_info.txt")?;
+    let e_info = read_legacy_object_at(source, &source_commit, "lib/edit/e_info.txt")?;
+    let a_info = read_legacy_object_at(source, &source_commit, "lib/edit/a_info.txt")?;
+    let b_info = read_legacy_object_at(source, &source_commit, "lib/edit/b_info.txt")?;
+    let m_info = read_legacy_object_at(source, &source_commit, "lib/edit/m_info.txt")?;
+    let s_info = read_legacy_object_at(source, &source_commit, "lib/edit/s_info.txt")?;
+    let defines = read_legacy_object_at(source, &source_commit, "src/defines.h")?;
+    let classes_source = read_legacy_object_at(source, &source_commit, "src/classes.c")?;
     let terrain = parse_f_info(&f_info)?;
     let monsters = parse_r_info(&r_info)?;
     let items = parse_k_info(&k_info)?;
@@ -7790,10 +7822,10 @@ pub fn import_content(source: &Path, output: &Path) -> Result<PathBuf, LegacyImp
         proficiency_profiles,
         ..LegacyCharacterSources::default()
     };
-    let source_objects = list_legacy_c_sources(source)?
+    let source_objects = list_legacy_c_sources(source, &source_commit)?
         .into_iter()
         .map(|path| {
-            let text = read_legacy_object(source, &path)?;
+            let text = read_legacy_object_at(source, &source_commit, &path)?;
             Ok((path, text))
         })
         .collect::<Result<Vec<_>, LegacyImportError>>()?;
@@ -7857,7 +7889,15 @@ pub fn import_content(source: &Path, output: &Path) -> Result<PathBuf, LegacyImp
             }
         }));
     }
-    let mut outcome = convert_content(&terrain, &monsters, &items, &egos, &artifacts, &characters);
+    let mut outcome = convert_content_from(
+        &terrain,
+        &monsters,
+        &items,
+        &egos,
+        &artifacts,
+        &characters,
+        &source_commit,
+    );
     let effect_program_files = extract_item_effect_programs(&mut outcome.item_files)
         .map_err(|error| std::io::Error::new(std::io::ErrorKind::InvalidData, error))?;
     let player_ability_ids =
@@ -8022,7 +8062,12 @@ pub fn sync_demo_items(
             "selection must use schemaVersion 1 and contain at least one item".to_owned(),
         ));
     }
-    let entries = parse_k_info(&read_legacy_object(source, K_INFO_SOURCE)?)?;
+    let source_commit = resolve_legacy_content_commit(source)?;
+    let entries = parse_k_info(&read_legacy_object_at(
+        source,
+        &source_commit,
+        K_INFO_SOURCE,
+    )?)?;
     let by_index = entries
         .iter()
         .filter(|entry| {
