@@ -536,6 +536,7 @@ impl Game {
                 candidate_kind_ids,
                 positions,
             } => {
+                let mut candidate_kind_ids = candidate_kind_ids.clone();
                 let AbilityEffectDefinition::SummonCategory {
                     ref category,
                     count_dice,
@@ -561,6 +562,9 @@ impl Game {
                 let mut used_positions = Vec::with_capacity(count);
                 let planned_positions = positions.iter().copied().take(count).collect::<Vec<_>>();
                 for (ordinal, position) in planned_positions.into_iter().enumerate() {
+                    if candidate_kind_ids.is_empty() {
+                        break;
+                    }
                     let choice = usize::try_from(self.rng.bounded(
                         u64::try_from(candidate_kind_ids.len()).expect("candidate count fits"),
                     ))
@@ -571,6 +575,9 @@ impl Game {
                         .actor(&kind_id)
                         .expect("validated summon candidate must remain available")
                         .clone();
+                    if definition.tags.iter().any(|tag| tag == "unique") {
+                        candidate_kind_ids.remove(choice);
+                    }
                     let id = self.summon_entity_id(&plan.ability.id, ordinal);
                     let mut entity = actor_from_runtime_spawn(
                         &id,
@@ -1313,9 +1320,25 @@ impl Game {
         let origin = self.entities[index].position;
         let (target, enemy_target_count, friendly_risk_count) = match &ability.effect {
             AbilityEffectDefinition::Heal { .. } => (MonsterAbilityTargetPlan::SelfTarget, 0, 0),
-            AbilityEffectDefinition::Summon { count, radius, .. } => {
+            AbilityEffectDefinition::Summon {
+                actor_kind_id,
+                count,
+                radius,
+                ..
+            } => {
+                let unique = self
+                    .content
+                    .actor(actor_kind_id)
+                    .is_some_and(|definition| definition.tags.iter().any(|tag| tag == "unique"));
+                if unique && !self.unique_actor_kind_is_available(actor_kind_id) {
+                    return Err(MonsterAbilityPlanRejection {
+                        reason: MonsterAbilityRejectionReasonDto::NoCandidates,
+                        enemy_target_count: 0,
+                        friendly_risk_count: 0,
+                    });
+                }
                 let positions = self
-                    .summon_positions_around(origin, *count, *radius)
+                    .summon_positions_around(origin, if unique { 1 } else { *count }, *radius)
                     .ok_or(MonsterAbilityPlanRejection {
                         reason: MonsterAbilityRejectionReasonDto::NoSpace,
                         enemy_target_count: 0,
@@ -1339,9 +1362,12 @@ impl Game {
                     .content
                     .actor_definitions()
                     .filter(|definition| {
+                        let unique = definition.tags.iter().any(|tag| tag == "unique");
                         definition.role == ActorRole::Monster
                             && definition.level <= u32::from(*maximum_level)
                             && definition.tags.iter().any(|tag| tag == category)
+                            && !definition.tags.iter().any(|tag| tag == "guardian")
+                            && (!unique || self.unique_actor_kind_is_available(&definition.id))
                     })
                     .map(|definition| definition.id.clone())
                     .collect::<Vec<_>>();

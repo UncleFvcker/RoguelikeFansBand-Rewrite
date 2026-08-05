@@ -32,5 +32,6 @@
     "corpseItemKindId": "demo.item.corpse-remains",
     "corpseWeight": 1
   },
+  "allocation": { "legacyIndex": 115, "rarity": 1, "maxDepth": 40 },
   "tags": ["animal", "evil", "warrens"]
 }

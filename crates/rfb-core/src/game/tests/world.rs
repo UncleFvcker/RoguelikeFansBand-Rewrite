@@ -47,7 +47,7 @@ fn warrens_surface_reentry_starts_a_fresh_expedition_with_new_monsters() {
         .current_dungeon_instance_id
         .clone()
         .expect("Warrens entry should allocate an instance");
-    assert_eq!(game.entities.len(), 4);
+    assert_eq!(generated_encounter_leader_count(&game), 4);
 
     game.entities.clear();
     place_player_on_terrain(&mut game, "demo.terrain.stairs-up");
@@ -68,7 +68,7 @@ fn warrens_surface_reentry_starts_a_fresh_expedition_with_new_monsters() {
         Some(first_instance.as_str())
     );
     assert!(game.rng.draw_counter > draws_before_reentry);
-    assert_eq!(game.entities.len(), 4);
+    assert_eq!(generated_encounter_leader_count(&game), 4);
 }
 
 #[test]
@@ -105,7 +105,7 @@ fn warrens_maps_are_seeded_connected_varied_and_persistent() {
                     .count()
             )
         );
-        assert_eq!(game.entities.len(), 4);
+        assert_eq!(generated_encounter_leader_count(&game), 4);
         assert_eq!(
             game.terrain
                 .iter()
@@ -215,7 +215,14 @@ fn warrens_every_generated_floor_has_a_normal_descent_and_return_route() {
                 format!("demo.floor.warrens-depth-{depth}")
             );
             assert!(game.terrain.iter().any(|id| id == "demo.terrain.stairs-up"));
-            assert_eq!(game.entities.len(), if depth == 9 { 5 } else { 4 });
+            assert_eq!(generated_encounter_leader_count(&game), 4);
+            if depth == 9 {
+                assert!(
+                    game.entities
+                        .iter()
+                        .any(|actor| actor.id == "demo.guardian.warrens.1")
+                );
+            }
             let ground_items = game
                 .items
                 .iter()

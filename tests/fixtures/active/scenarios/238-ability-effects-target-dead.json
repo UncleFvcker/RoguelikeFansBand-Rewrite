@@ -3184,7 +3184,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "967999087b881e02da91cc1079d4387e1c30889a424814d8d8bb5ce4a6aa669c"
+      "stateHash": "dbbccc139f74883c4157a1e253e5255c4a840ea594c68de89683f183b5825281"
     },
     "events": [
       {
@@ -3441,6 +3441,6 @@
     "removedEntities": [
       "demo.monster.ember-mote.1"
     ],
-    "saveRoundTripStateHash": "967999087b881e02da91cc1079d4387e1c30889a424814d8d8bb5ce4a6aa669c"
+    "saveRoundTripStateHash": "dbbccc139f74883c4157a1e253e5255c4a840ea594c68de89683f183b5825281"
   }
 }

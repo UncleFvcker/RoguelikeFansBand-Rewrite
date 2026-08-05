@@ -250,6 +250,7 @@ pub(crate) fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<
                 terrain_traps: &terrain_traps,
                 actor_roles: &actor_roles,
                 actor_levels: &actor_levels,
+                actors: &content.actors,
                 item_limits: &item_limits,
                 items: &content.items,
                 affix_ids: &affix_ids,

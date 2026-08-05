@@ -28,5 +28,6 @@
     "corpseWeight": 4,
     "skeletonWeight": 1
   },
+  "allocation": { "legacyIndex": 62, "rarity": 2, "maxDepth": 20 },
   "tags": ["animal", "warrens"]
 }

@@ -154,11 +154,17 @@ impl Game {
         }
         removed_entities.push(removed.id.clone());
         events.push(death_event);
-        let experience_value = self
+        let removed_definition = self
             .content
             .actor(&removed.kind_id)
-            .expect("removed actor definition must remain available")
-            .experience_value;
+            .expect("removed actor definition must remain available");
+        if removed_definition.tags.iter().any(|tag| tag == "unique")
+            && !removed_definition.tags.iter().any(|tag| tag == "guardian")
+        {
+            self.defeated_unique_actor_kind_ids
+                .insert(removed.kind_id.clone());
+        }
+        let experience_value = removed_definition.experience_value;
         self.apply_player_experience(experience_value, events);
         let defeated_guardian = self
             .content

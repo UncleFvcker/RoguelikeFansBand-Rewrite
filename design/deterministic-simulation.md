@@ -2,7 +2,7 @@
 
 状态：P0 规则、RNG、`rfb-replay` v1 和 Tauri 诊断导出已建立
 
-当前 state hash Schema 为 v62：哈希输入覆盖运行时内容包 ID（不含 `contentHash`）、world ID、当前 `FloorId`、当前 dungeon instance ID、当前与离层的连接 ID→位置→解析目标、离层 floor 实例身份、区域 ID/theme/局部表引用/格集合、actor 的 pack identity/behavior/alerted、summon identity/lifetime、怪物施法剩余冷却与已观察玩家抗性、战斗状态、物品实例、怪物携带物、种类/实例知识、秘密 terrain 发现知识、含重接次数的完整任务状态机、持久地牢守护者、入口守卫与实例序号/retained 状态、campaign 胜利/退休/最终分数、玩家 Race/Class/Personality/build 身份、技能聚合与成长、角色成长 progress、资源池、已学能力、能力熟练度/统计/冷却（含先天技法）、全局召唤指令/Guard 锚点、RNG、世界脉冲和命令序号。contract-v172 从输入中移除 `contentHash` 并升级 Schema v62；存档与回放在模拟前继续独立精确匹配 `contentId/contentHash`。下文旧 contract 对 Schema 和 content hash 的描述保留其历史语境。
+当前 state hash Schema 为 v63：哈希输入覆盖运行时内容包 ID（不含 `contentHash`）、world ID、当前 `FloorId`、当前 dungeon instance ID、当前与离层的连接 ID→位置→解析目标、离层 floor 实例身份、区域 ID/theme/局部表引用/格集合、actor 的 pack identity/behavior/alerted、summon identity/lifetime、怪物施法剩余冷却与已观察玩家抗性、战斗状态、物品实例、怪物携带物、已击败的非 guardian Unique actor kind、种类/实例知识、秘密 terrain 发现知识、含重接次数的完整任务状态机、持久地牢守护者、入口守卫与实例序号/retained 状态、campaign 胜利/退休/最终分数、玩家 Race/Class/Personality/build 身份、技能聚合与成长、角色成长 progress、资源池、已学能力、能力熟练度/统计/冷却（含先天技法）、全局召唤指令/Guard 锚点、RNG、世界脉冲和命令序号。contract-v172 从输入中移除 `contentHash` 并升级 Schema v62；contract-v173 新增 Unique 权威生命周期集合并升级 Schema v63。存档与回放在模拟前继续独立精确匹配 `contentId/contentHash`。下文旧 contract 对 Schema 和 content hash 的描述保留其历史语境。
 
 contract-v47 固定 vault 的生成顺序：先绘制规范化基础 terrain/覆盖，再按 group ID、成员位置逐个消费一次深度加权 actor 抽取，最后按 spawn ID 执行既有 loot table 三抽取事务。它没有新增权威状态字段；生成后的 terrain、actor、item、实例分配器、RNG 和 content hash 已进入 Schema v19，因此本切片不升级 state hash Schema。
 
@@ -48,7 +48,7 @@ contract-v27 固定程序化楼层的布局、怪物种类/位置、携带物、
 
 contract-v28 的门开关直接替换权威 terrain ID；contract-v29 的锁定、开锁和破损结果继续使用同一数组。开锁/破门检定固定先抽 percentile，非自动结果再抽 ability contest。contract-v30 的相邻交互列表完全由 terrain、实体和地面物品派生，不消费 RNG。contract-v31 按固定八方向只对尚未发现的隐藏 terrain 执行搜索检定；发现位置作为权威知识进入 Schema v15，普通探索记忆仍不进入 hash。
 
-state hash 与正式存档 DTO 已解耦。Schema v62 使用显式、版本固定的兼容投影，正式 `.rfbsave` 则只保存权威字段；清理存档中的最终攻击、AC、伤害骰、装备派生 modifier、能力失败率、恢复速率和可用性标志不会静默改变 hash。探索记忆仍保存于每个楼层但不参与 hash，秘密 terrain 知识（包括持久侦测）、任务状态机、最终守护者与入口守卫击败状态、campaign 状态、dungeon instance 身份、连接/区域、pack/召唤身份、怪物施法剩余冷却和已观察抗性、角色构筑与成长、资源、能力进度、召唤指令和 actor statuses 属于权威规则状态并参与 hash。怪物的施法频率、基础权重和战术阈值由载入前已精确匹配的内容包固定；HP/状态/距离、敌我计数和已观察抗性只从当前权威状态纯计算。召唤目标/移动选择不抽 RNG，近战照常抽命中与伤害；指令切换不运行任何世界调度。未来规则状态边界变化时必须建立新的 state hash Schema，不得借修改存档序列化顺序隐式更新基准。
+state hash 与正式存档 DTO 已解耦。Schema v63 使用显式、版本固定的兼容投影，正式 `.rfbsave` 则只保存权威字段；清理存档中的最终攻击、AC、伤害骰、装备派生 modifier、能力失败率、恢复速率和可用性标志不会静默改变 hash。探索记忆仍保存于每个楼层但不参与 hash，秘密 terrain 知识（包括持久侦测）、任务状态机、最终守护者与入口守卫击败状态、已击败 Unique 集合、campaign 状态、dungeon instance 身份、连接/区域、pack/召唤身份、怪物施法剩余冷却和已观察抗性、角色构筑与成长、资源、能力进度、召唤指令和 actor statuses 属于权威规则状态并参与 hash。怪物的施法频率、基础权重和战术阈值由载入前已精确匹配的内容包固定；HP/状态/距离、敌我计数和已观察抗性只从当前权威状态纯计算。召唤目标/移动选择不抽 RNG，近战照常抽命中与伤害；指令切换不运行任何世界调度。未来规则状态边界变化时必须建立新的 state hash Schema，不得借修改存档序列化顺序隐式更新基准。
 
 ## 1. 原则
 

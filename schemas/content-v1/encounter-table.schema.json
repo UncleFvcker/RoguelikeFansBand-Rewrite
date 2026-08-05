@@ -195,6 +195,36 @@
       ],
       "type": "object"
     },
+    "GlobalMonsterAllocationDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "ambientChanceOneIn": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "preferredGlyphs": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "specialDiv": {
+          "description": "Weight numerator over the original fixed denominator of 64.",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "preferredGlyphs",
+        "specialDiv",
+        "ambientChanceOneIn"
+      ],
+      "type": "object"
+    },
     "MonsterPackBehavior": {
       "enum": [
         "seek",
@@ -213,6 +243,7 @@
       "type": "string"
     },
     "entries": {
+      "default": [],
       "items": {
         "$ref": "#/$defs/EncounterEntryDefinition"
       },
@@ -223,6 +254,17 @@
       "maximum": 65535,
       "minimum": 0,
       "type": "integer"
+    },
+    "globalAllocation": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/GlobalMonsterAllocationDefinition"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
     },
     "id": {
       "type": "string"
@@ -238,8 +280,7 @@
     "$schema",
     "formatVersion",
     "id",
-    "rolls",
-    "entries"
+    "rolls"
   ],
   "title": "EncounterTableDefinition",
   "type": "object"

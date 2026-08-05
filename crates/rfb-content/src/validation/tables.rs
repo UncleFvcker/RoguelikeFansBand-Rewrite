@@ -12,7 +12,7 @@ use crate::{
 
 use super::shared::{
     insert_definition_id, require_actor_role, require_format_version, require_reference,
-    require_schema, validate_definition_id, validate_id, validate_message_key,
+    require_schema, validate_definition_id, validate_glyph, validate_id, validate_message_key,
 };
 
 pub(super) struct TableDefinitions<'a> {
@@ -179,11 +179,25 @@ pub(super) fn validate_tables(
         require_schema(&table.schema, ENCOUNTER_TABLE_SCHEMA, &table.id)?;
         require_format_version(table.format_version, &table.id)?;
         validate_definition_id(&table.id, "encounter-table")?;
-        if table.rolls == 0
-            || table.rolls > 16
-            || table.entries.is_empty()
-            || table.entries.len() > 64
-        {
+        if table.rolls == 0 || table.rolls > 16 || table.entries.len() > 64 {
+            return Err(ContentError::InvalidEncounterTable(table.id.clone()));
+        }
+        if let Some(allocation) = &mut table.global_allocation {
+            allocation.preferred_glyphs.sort();
+            let mut glyphs = BTreeSet::new();
+            if !table.entries.is_empty()
+                || allocation.preferred_glyphs.is_empty()
+                || allocation.preferred_glyphs.len() > 64
+                || allocation.special_div > 64
+                || allocation.ambient_chance_one_in == 0
+                || allocation.ambient_chance_one_in > 10_000
+                || allocation.preferred_glyphs.iter().any(|glyph| {
+                    validate_glyph(&table.id, glyph).is_err() || !glyphs.insert(glyph.clone())
+                })
+            {
+                return Err(ContentError::InvalidEncounterTable(table.id.clone()));
+            }
+        } else if table.entries.is_empty() {
             return Err(ContentError::InvalidEncounterTable(table.id.clone()));
         }
         table.entries.sort_by(|left, right| {
@@ -285,7 +299,7 @@ pub(super) fn validate_tables(
                 .checked_add(u64::from(entry.weight))
                 .ok_or_else(|| ContentError::InvalidEncounterTable(table.id.clone()))?;
         }
-        if total_weight == 0 {
+        if table.global_allocation.is_none() && total_weight == 0 {
             return Err(ContentError::InvalidEncounterTable(table.id.clone()));
         }
         insert_definition_id(all_ids, &table.id)?;

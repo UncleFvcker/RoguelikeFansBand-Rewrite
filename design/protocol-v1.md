@@ -364,3 +364,5 @@ contract-v132 不增加运行时命令或快照 DTO，继续复用 `UseItem` 与
 协议 1.135 为 `Equip` 增加可选 `slotId`，用于在一个物品有多个合法装备目标时明确选择具体身体槽实例。未提供时继续按声明槽类型使用既有确定性自动选择；声明为 `tool` 的工具可以选择 `tool` 或 `weapon`，其他物品仍只能进入声明类型。该字段只属于瞬时命令，不进入存档；实际装备槽继续由既有 equipment save 保存，state hash Schema 保持 v61。
 
 协议 1.136 为 `PlayerDto` 增加 `encumbranceSpeedPenalty`。`carryCapacityTenthsPound` 改为从有效力量按原版 38 档表动态投影；超重不再拒绝拾取、购买或从 Home 取出，而是在达到容量 120% 后按每 20% 施加 1 点权威速度惩罚。存档与 state hash 输入结构不变，Schema 保持 v61。
+
+协议 1.137 为 save v1 增加必填 `defeatedUniqueActorKindIds`。该集合只记录已死亡的普通非 guardian Unique；当前层与离层仓库中的存活实例仍由 actor 状态直接证明占用，guardian 继续使用既有 dungeon 状态。读取时拒绝重复 ID、非 Unique、guardian 以及与存活实例冲突的集合。该权威状态进入 state hash Schema v63；旧开发存档不兼容。完整边界见 [Contract v173](contract-v173-warrens-allocation-ecology.md)。

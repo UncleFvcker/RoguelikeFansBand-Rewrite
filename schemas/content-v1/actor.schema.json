@@ -1,5 +1,68 @@
 {
   "$defs": {
+    "ActorAllocationDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "escort": {
+          "default": false,
+          "type": "boolean"
+        },
+        "forceDepth": {
+          "default": false,
+          "type": "boolean"
+        },
+        "friends": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ActorFriendsDefinition"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "legacyIndex": {
+          "description": "Stable order from the original global monster allocation table.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "maxDepth": {
+          "description": "Original maximum allocation depth; zero means unrestricted.",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "multiplies": {
+          "default": false,
+          "type": "boolean"
+        },
+        "randomMovementPercent": {
+          "default": 0,
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "rarity": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "wildOnly": {
+          "default": false,
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "legacyIndex",
+        "rarity",
+        "maxDepth"
+      ],
+      "type": "object"
+    },
     "ActorAwarenessDefinition": {
       "additionalProperties": false,
       "properties": {
@@ -57,6 +120,37 @@
         "psi"
       ],
       "type": "string"
+    },
+    "ActorFriendsDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "chancePercent": {
+          "default": 0,
+          "description": "Zero means unconditional, matching an original FRIENDS flag without a percentage.",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "dice": {
+          "description": "Zero dice and sides select the original depth-adjusted 1d10 rule.",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "sides": {
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "dice",
+        "sides"
+      ],
+      "type": "object"
     },
     "ActorResistanceLevel": {
       "description": "Content-declared resistance tier; `normal` is expressed by omission.",
@@ -235,6 +329,17 @@
   "properties": {
     "$schema": {
       "type": "string"
+    },
+    "allocation": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ActorAllocationDefinition"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
     },
     "attack": {
       "format": "int32",

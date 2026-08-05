@@ -29,6 +29,7 @@ pub(super) fn validate_actors(
     let mut actor_loot_table_ids = Vec::new();
     let mut actor_monster_casting = Vec::new();
     let mut actor_corpse_item_ids = Vec::new();
+    let mut allocation_indices = BTreeSet::new();
     for actor in actors {
         require_schema(&actor.schema, ACTOR_SCHEMA, &actor.id)?;
         require_format_version(actor.format_version, &actor.id)?;
@@ -164,6 +165,27 @@ pub(super) fn validate_actors(
                     return Err(ContentError::InvalidActorStats(actor.id.clone()));
                 }
                 actor_corpse_item_ids.push((actor.id.clone(), item_kind_id.clone()));
+            }
+        }
+        if let Some(allocation) = &actor.allocation {
+            let friends_are_valid = allocation.friends.is_none_or(|friends| {
+                let fixed_dice = friends.dice > 0
+                    && friends.sides > 0
+                    && u16::from(friends.dice) * u16::from(friends.sides) <= 32;
+                let depth_adjusted = friends.dice == 0 && friends.sides == 0;
+                (fixed_dice || depth_adjusted) && friends.chance_percent <= 100
+            });
+            if actor.role != ActorRole::Monster
+                || allocation.legacy_index == 0
+                || !allocation_indices.insert(allocation.legacy_index)
+                || allocation.rarity == 0
+                || allocation.rarity > 1_000_000
+                || allocation.max_depth > 10_000
+                || !matches!(allocation.random_movement_percent, 0 | 25 | 50 | 75)
+                || !friends_are_valid
+                || (allocation.friends.is_some() && allocation.escort)
+            {
+                return Err(ContentError::InvalidActorStats(actor.id.clone()));
             }
         }
         normalize_tags(&actor.id, &mut actor.tags)?;

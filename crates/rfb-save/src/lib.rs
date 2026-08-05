@@ -212,6 +212,7 @@ mod tests {
             task_progress: Vec::new(),
             task_states: Vec::new(),
             dungeon_states: Vec::new(),
+            defeated_unique_actor_kind_ids: Vec::new(),
             town_states: Vec::new(),
             shop_states: Vec::new(),
             home_states: Vec::new(),

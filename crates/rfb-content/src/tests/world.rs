@@ -12,38 +12,82 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         .find(|table| table.id == "demo.encounter-table.warrens")
         .expect("fixture should contain the Warrens encounter table");
 
+    assert!(table.entries.is_empty());
+    let policy = table
+        .global_allocation
+        .as_ref()
+        .expect("Warrens should use the original global allocator");
     assert_eq!(
-        table
-            .entries
+        policy
+            .preferred_glyphs
             .iter()
-            .map(|entry| (
-                entry.actor_kind_id.as_str(),
-                entry.weight,
-                entry.min_depth,
-                entry.max_depth,
-            ))
-            .collect::<Vec<_>>(),
+            .map(String::as_str)
+            .collect::<BTreeSet<_>>(),
+        ["k", "K", "y", "Y", "r", "R", "f", "F", "c", "C", "b", "B"]
+            .into_iter()
+            .collect::<BTreeSet<_>>()
+    );
+    assert_eq!(policy.special_div, 16);
+    assert_eq!(policy.ambient_chance_one_in, 160);
+
+    let mut allocation = artifact
+        .content
+        .actors
+        .iter()
+        .filter_map(|actor| {
+            actor.allocation.as_ref().map(|entry| {
+                (
+                    actor.id.as_str(),
+                    entry.legacy_index,
+                    entry.rarity,
+                    entry.max_depth,
+                )
+            })
+        })
+        .collect::<Vec<_>>();
+    allocation.sort_unstable();
+    assert_eq!(
+        allocation,
         vec![
-            ("demo.actor.cave-lizard", 100, 4, 9),
-            ("demo.actor.chiokovo", 33, 8, 9),
-            ("demo.actor.fruit-bat", 100, 1, 9),
-            ("demo.actor.hunting-hawk-of-julian", 50, 8, 9),
-            ("demo.actor.kobold", 100, 3, 9),
-            ("demo.actor.large-kobold", 100, 5, 9),
-            ("demo.actor.newt", 100, 1, 9),
-            ("demo.actor.night-lizard", 50, 7, 9),
-            ("demo.actor.rat-thing", 100, 6, 9),
-            ("demo.actor.rock-lizard", 100, 1, 9),
-            ("demo.actor.small-kobold", 100, 1, 9),
-            ("demo.actor.wild-cat", 50, 2, 9),
+            ("demo.actor.cave-lizard", 82, 1, 30),
+            ("demo.actor.chiokovo", 997, 3, 30),
+            ("demo.actor.fruit-bat", 37, 1, 10),
+            ("demo.actor.giant-white-mouse", 27, 1, 10),
+            ("demo.actor.hunting-hawk-of-julian", 151, 2, 40),
+            ("demo.actor.kobold", 30, 1, 30),
+            ("demo.actor.large-kobold", 102, 1, 40),
+            ("demo.actor.newt", 23, 1, 10),
+            ("demo.actor.night-lizard", 134, 2, 40),
+            ("demo.actor.rat-thing", 115, 1, 40),
+            ("demo.actor.rock-lizard", 33, 1, 10),
+            ("demo.actor.small-kobold", 29, 1, 30),
+            ("demo.actor.warg", 257, 2, 50),
+            ("demo.actor.warrens-keeper", 135, 3, 999),
+            ("demo.actor.wild-cat", 62, 2, 20),
         ]
     );
-    assert!(
-        table
-            .entries
-            .iter()
-            .all(|entry| entry.actor_kind_id != "demo.actor.warg")
+
+    let mouse = artifact
+        .content
+        .actors
+        .iter()
+        .find(|actor| actor.id == "demo.actor.giant-white-mouse")
+        .and_then(|actor| actor.allocation.as_ref())
+        .expect("White mouse allocation");
+    assert!(mouse.multiplies);
+    assert_eq!(mouse.random_movement_percent, 50);
+    let warg = artifact
+        .content
+        .actors
+        .iter()
+        .find(|actor| actor.id == "demo.actor.warg")
+        .and_then(|actor| actor.allocation.as_ref())
+        .expect("Warg allocation");
+    assert_eq!(
+        warg.friends.map(|friends| (friends.dice, friends.sides)),
+        Some((3, 3))
     );
+    assert_eq!(warg.random_movement_percent, 25);
 }
 
 #[test]

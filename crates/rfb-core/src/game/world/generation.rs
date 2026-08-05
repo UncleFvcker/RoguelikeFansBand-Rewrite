@@ -7,6 +7,7 @@ use rfb_content::{
 };
 use rfb_protocol::Position;
 
+use super::super::monster_ecology::OriginalGroupRole;
 use super::super::*;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -1536,55 +1537,26 @@ impl Game {
                 .encounter_table(table_id)
                 .expect("validated floor encounter table must remain available")
                 .clone();
-            let eligible_entries = table
-                .entries
-                .iter()
-                .filter(|entry| {
-                    entry.min_depth <= definition.depth
-                        && definition.depth <= entry.max_depth
-                        && self
-                            .content
-                            .actor(&entry.actor_kind_id)
-                            .is_some_and(|actor| actor.level <= u32::from(definition.depth))
-                })
-                .cloned()
-                .collect::<Vec<_>>();
-            let weights = eligible_entries
-                .iter()
-                .map(|entry| entry.weight)
-                .collect::<Vec<_>>();
+            let encounter_rolls =
+                definition
+                    .generation_budget
+                    .as_ref()
+                    .map_or(table.rolls, |budget| {
+                        table
+                            .rolls
+                            .min(budget.actor_slots.saturating_sub(reserved_actor_slots))
+                    });
             let room_id = if legacy_vault.is_some() {
                 "entry"
             } else {
                 "remote"
             };
-            if definition.generation_budget.as_ref().is_some_and(|budget| {
-                budget.group_placements.is_some() && budget.group_actor_slots.is_some()
-            }) {
-                entities.extend(self.generate_dynamic_encounter_groups(
-                    definition,
-                    &table,
-                    &eligible_entries,
-                    content_rooms,
-                    room_id,
-                    reserved_actor_slots,
-                    1,
-                    true,
-                    &definition.id,
-                    &mut occupied,
-                ));
-            } else {
-                let encounter_rolls =
-                    definition
-                        .generation_budget
-                        .as_ref()
-                        .map_or(table.rolls, |budget| {
-                            table
-                                .rolls
-                                .min(budget.actor_slots.saturating_sub(reserved_actor_slots))
-                        });
+            if let Some(policy) = table.global_allocation.as_ref() {
+                let mut target_floor_kind_ids = guardian
+                    .iter()
+                    .map(|guardian| guardian.actor_kind_id.clone())
+                    .collect::<Vec<_>>();
                 for ordinal in 0..encounter_rolls {
-                    let entry = &eligible_entries[self.roll_weighted_index(&weights)];
                     let placement_room_id = if maze_only {
                         "maze"
                     } else if definition.layout.is_some() {
@@ -1601,39 +1573,146 @@ impl Game {
                             &occupied,
                         )
                     };
+                    let Some(kind_id) = self.select_original_allocated_monster(
+                        policy,
+                        definition.depth,
+                        definition.depth,
+                        &target_floor_kind_ids,
+                        None,
+                    ) else {
+                        continue;
+                    };
                     occupied.insert(position);
-                    entities.push(self.generated_actor(
-                        format!("{}.encounter.{}", definition.id, ordinal + 1),
-                        &entry.actor_kind_id,
+                    let members = self.plan_original_group(
+                        policy,
+                        &kind_id,
                         position,
-                    ));
-                }
-            }
-            if let Some(nest) = &definition.nest {
-                let entry = &eligible_entries[self.roll_weighted_index(&weights)];
-                for ordinal in 0..nest.spawn_count {
-                    let position =
-                        self.choose_generated_room_position(&rooms, &nest.room_id, &occupied);
-                    occupied.insert(position);
-                    let actor = self
-                        .content
-                        .actor(&entry.actor_kind_id)
-                        .expect("validated nest actor must remain available");
-                    entities.push(stamped_spawn(
-                        actor_from_spawn(
-                            &format!("{}.nest.{}", definition.id, ordinal + 1),
-                            &entry.actor_kind_id,
-                            ContentPosition {
-                                x: u16::try_from(position.x).expect("nest actor x must fit u16"),
-                                y: u16::try_from(position.y).expect("nest actor y must fit u16"),
+                        definition.depth,
+                        &terrain,
+                        width,
+                        height,
+                        &mut occupied,
+                    );
+                    let leader_id = format!("{}.encounter.{}", definition.id, ordinal + 1);
+                    let pack_id = format!("{leader_id}.pack");
+                    let mut leader = self.generated_actor(leader_id.clone(), &kind_id, position);
+                    if !members.is_empty() {
+                        leader.pack = Some(MonsterPackIdentity {
+                            id: pack_id.clone(),
+                            leader_id: leader_id.clone(),
+                            role: MonsterPackRoleDto::Leader,
+                            behavior: MonsterPackBehaviorDto::Seek,
+                        });
+                    }
+                    target_floor_kind_ids.push(kind_id);
+                    entities.push(leader);
+                    for (member_ordinal, member) in members.into_iter().enumerate() {
+                        let mut actor = self.generated_actor(
+                            format!("{leader_id}.companion.{}", member_ordinal + 1),
+                            &member.kind_id,
+                            member.position,
+                        );
+                        actor.pack = Some(MonsterPackIdentity {
+                            id: pack_id.clone(),
+                            leader_id: leader_id.clone(),
+                            role: MonsterPackRoleDto::Member,
+                            behavior: match member.role {
+                                OriginalGroupRole::Friend => MonsterPackBehaviorDto::Surround,
+                                OriginalGroupRole::Escort => MonsterPackBehaviorDto::GuardLeader,
                             },
-                            actor.max_hp,
-                            actor.speed,
-                            INITIAL_MONSTER_ENERGY_NEED,
-                            actor_starts_alerted(actor),
-                        ),
-                        actor,
+                        });
+                        target_floor_kind_ids.push(member.kind_id);
+                        entities.push(actor);
+                    }
+                }
+            } else {
+                let eligible_entries = table
+                    .entries
+                    .iter()
+                    .filter(|entry| {
+                        entry.min_depth <= definition.depth
+                            && definition.depth <= entry.max_depth
+                            && self
+                                .content
+                                .actor(&entry.actor_kind_id)
+                                .is_some_and(|actor| actor.level <= u32::from(definition.depth))
+                    })
+                    .cloned()
+                    .collect::<Vec<_>>();
+                let weights = eligible_entries
+                    .iter()
+                    .map(|entry| entry.weight)
+                    .collect::<Vec<_>>();
+                if definition.generation_budget.as_ref().is_some_and(|budget| {
+                    budget.group_placements.is_some() && budget.group_actor_slots.is_some()
+                }) {
+                    entities.extend(self.generate_dynamic_encounter_groups(
+                        definition,
+                        &table,
+                        &eligible_entries,
+                        content_rooms,
+                        room_id,
+                        reserved_actor_slots,
+                        1,
+                        true,
+                        &definition.id,
+                        &mut occupied,
                     ));
+                } else {
+                    for ordinal in 0..encounter_rolls {
+                        let entry = &eligible_entries[self.roll_weighted_index(&weights)];
+                        let placement_room_id = if maze_only {
+                            "maze"
+                        } else if definition.layout.is_some() {
+                            generated_non_entry_room_id(content_rooms, ordinal)
+                        } else {
+                            room_id
+                        };
+                        let position = if maze_only {
+                            choose_generated_maze_position(&maze_walkable, first_center, &occupied)
+                        } else {
+                            self.choose_generated_room_position(
+                                content_rooms,
+                                placement_room_id,
+                                &occupied,
+                            )
+                        };
+                        occupied.insert(position);
+                        entities.push(self.generated_actor(
+                            format!("{}.encounter.{}", definition.id, ordinal + 1),
+                            &entry.actor_kind_id,
+                            position,
+                        ));
+                    }
+                }
+                if let Some(nest) = &definition.nest {
+                    let entry = &eligible_entries[self.roll_weighted_index(&weights)];
+                    for ordinal in 0..nest.spawn_count {
+                        let position =
+                            self.choose_generated_room_position(&rooms, &nest.room_id, &occupied);
+                        occupied.insert(position);
+                        let actor = self
+                            .content
+                            .actor(&entry.actor_kind_id)
+                            .expect("validated nest actor must remain available");
+                        entities.push(stamped_spawn(
+                            actor_from_spawn(
+                                &format!("{}.nest.{}", definition.id, ordinal + 1),
+                                &entry.actor_kind_id,
+                                ContentPosition {
+                                    x: u16::try_from(position.x)
+                                        .expect("nest actor x must fit u16"),
+                                    y: u16::try_from(position.y)
+                                        .expect("nest actor y must fit u16"),
+                                },
+                                actor.max_hp,
+                                actor.speed,
+                                INITIAL_MONSTER_ENERGY_NEED,
+                                actor_starts_alerted(actor),
+                            ),
+                            actor,
+                        ));
+                    }
                 }
             }
         } else {
@@ -1744,14 +1823,13 @@ impl Game {
             }
         }
         if let Some(guardian) = guardian {
-            let actor = self
+            let actor_definition = self
                 .content
                 .actor(&guardian.actor_kind_id)
-                .expect("validated dungeon guardian must remain available");
-            let max_hp = actor.max_hp;
-            let speed = actor.speed;
+                .expect("validated dungeon guardian must remain available")
+                .clone();
             let position = guardian_position.expect("present guardian must retain a position");
-            entities.push(stamped_spawn(
+            let mut actor = stamped_spawn(
                 actor_from_spawn(
                     &guardian.instance_id,
                     &guardian.actor_kind_id,
@@ -1759,13 +1837,57 @@ impl Game {
                         x: u16::try_from(position.x).expect("guardian x must fit u16"),
                         y: u16::try_from(position.y).expect("guardian y must fit u16"),
                     },
-                    max_hp,
-                    speed,
+                    actor_definition.max_hp,
+                    actor_definition.speed,
                     INITIAL_MONSTER_ENERGY_NEED,
-                    actor_starts_alerted(actor),
+                    actor_starts_alerted(&actor_definition),
                 ),
-                actor,
-            ));
+                &actor_definition,
+            );
+            let original_policy = definition
+                .encounter_table_id
+                .as_ref()
+                .and_then(|table_id| self.content.encounter_table(table_id))
+                .and_then(|table| table.global_allocation.clone());
+            if let Some(policy) = original_policy {
+                let members = self.plan_original_group(
+                    &policy,
+                    &guardian.actor_kind_id,
+                    position,
+                    definition.depth,
+                    &terrain,
+                    width,
+                    height,
+                    &mut occupied,
+                );
+                if !members.is_empty() {
+                    let pack_id = format!("{}.pack", guardian.instance_id);
+                    actor.pack = Some(MonsterPackIdentity {
+                        id: pack_id.clone(),
+                        leader_id: guardian.instance_id.clone(),
+                        role: MonsterPackRoleDto::Leader,
+                        behavior: MonsterPackBehaviorDto::Seek,
+                    });
+                    for (ordinal, member) in members.into_iter().enumerate() {
+                        let mut companion = self.generated_actor(
+                            format!("{}.companion.{}", guardian.instance_id, ordinal + 1),
+                            &member.kind_id,
+                            member.position,
+                        );
+                        companion.pack = Some(MonsterPackIdentity {
+                            id: pack_id.clone(),
+                            leader_id: guardian.instance_id.clone(),
+                            role: MonsterPackRoleDto::Member,
+                            behavior: match member.role {
+                                OriginalGroupRole::Friend => MonsterPackBehaviorDto::Surround,
+                                OriginalGroupRole::Escort => MonsterPackBehaviorDto::GuardLeader,
+                            },
+                        });
+                        entities.push(companion);
+                    }
+                }
+            }
+            entities.push(actor);
         }
         let mut items =
             self.generate_carried_loot_for_actors(&entities, &definition.id, definition.depth)?;

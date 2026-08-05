@@ -29,5 +29,6 @@
     "corpseWeight": 4,
     "skeletonWeight": 1
   },
+  "allocation": { "legacyIndex": 997, "rarity": 3, "maxDepth": 30 },
   "tags": ["animal", "bird", "warrens"]
 }

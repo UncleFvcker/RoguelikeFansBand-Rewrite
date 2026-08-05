@@ -2350,13 +2350,29 @@ impl Game {
                 self.teleport_destination(ability, *position)
                     .map(|destination| AbilityTargetPlan::Teleport { destination })
             }
-            AbilityEffectDefinition::Summon { count, radius, .. } => {
+            AbilityEffectDefinition::Summon {
+                ref actor_kind_id,
+                count,
+                radius,
+                ..
+            } => {
+                let unique = self
+                    .content
+                    .actor(actor_kind_id)
+                    .is_some_and(|definition| definition.tags.iter().any(|tag| tag == "unique"));
                 (matches!(target, TargetSelection::SelfTarget)
                     && ability
                         .target
                         .modes
-                        .contains(&AbilityTargetModeDefinition::SelfTarget))
-                .then(|| self.summon_positions_around(self.player.position, count, radius))
+                        .contains(&AbilityTargetModeDefinition::SelfTarget)
+                    && (!unique || self.unique_actor_kind_is_available(actor_kind_id)))
+                .then(|| {
+                    self.summon_positions_around(
+                        self.player.position,
+                        if unique { 1 } else { count },
+                        radius,
+                    )
+                })
                 .flatten()
                 .map(|positions| AbilityTargetPlan::Summon { positions })
             }

@@ -85,7 +85,20 @@ pub struct EncounterTableDefinition {
     pub format_version: u16,
     pub id: String,
     pub rolls: u16,
+    #[serde(default)]
+    pub global_allocation: Option<GlobalMonsterAllocationDefinition>,
+    #[serde(default)]
     pub entries: Vec<EncounterEntryDefinition>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct GlobalMonsterAllocationDefinition {
+    pub preferred_glyphs: Vec<String>,
+    /// Weight numerator over the original fixed denominator of 64.
+    pub special_div: u8,
+    pub ambient_chance_one_in: u16,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

@@ -26,5 +26,6 @@
     "corpseItemKindId": "demo.item.corpse-remains",
     "corpseWeight": 1
   },
+  "allocation": { "legacyIndex": 134, "rarity": 2, "maxDepth": 40 },
   "tags": ["animal", "reptile", "warrens"]
 }

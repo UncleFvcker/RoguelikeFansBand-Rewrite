@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.136";
+pub const PROTOCOL_VERSION: &str = "1.137";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -3342,6 +3342,7 @@ pub struct SavePayloadV1 {
     pub task_states: Vec<TaskStateSaveDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub dungeon_states: Vec<DungeonStateSaveDto>,
+    pub defeated_unique_actor_kind_ids: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub town_states: Vec<TownStateSaveDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -3432,6 +3433,7 @@ mod tests {
         player: PlayerDto,
         entities: Vec<EntityDto>,
         items: Vec<ItemDto>,
+        defeated_unique_actor_kind_ids: Vec<String>,
         inventory: Vec<InventoryItemDto>,
         equipment: Vec<EquipmentItemDto>,
         next_item_instance_serial: u64,
@@ -3740,6 +3742,7 @@ mod tests {
                 enchantments: ItemEnchantmentsDto::default(),
                 curse: None,
             }],
+            defeated_unique_actor_kind_ids: Vec::new(),
             inventory: vec![InventoryItemDto {
                 id: "demo.item.inventory.1".to_owned(),
                 kind_id: "demo.item.charm".to_owned(),

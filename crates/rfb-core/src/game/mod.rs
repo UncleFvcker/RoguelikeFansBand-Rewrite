@@ -109,6 +109,7 @@ mod lighting;
 mod monster_abilities;
 mod monster_ai;
 mod monster_combat;
+mod monster_ecology;
 mod movement;
 mod persistence;
 mod player_abilities;
@@ -185,7 +186,7 @@ pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 62;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 63;
 pub const WARRENS_JOURNEY_WORLD_ID: &str = "demo.world.warrens-journey";
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const VISIBILITY_RADIUS: i32 = 8;
@@ -724,6 +725,7 @@ pub struct Game {
     item_property_knowledge: BTreeMap<String, ItemPropertyKnowledgeState>,
     task_states: BTreeMap<String, TaskState>,
     dungeon_states: BTreeMap<String, DungeonState>,
+    defeated_unique_actor_kind_ids: BTreeSet<String>,
     town_states: BTreeMap<String, TownState>,
     shop_states: BTreeMap<String, ShopState>,
     home_states: BTreeMap<String, HomeState>,
@@ -1008,6 +1010,7 @@ impl Game {
             item_property_knowledge: BTreeMap::new(),
             task_states,
             dungeon_states,
+            defeated_unique_actor_kind_ids: BTreeSet::new(),
             town_states,
             shop_states,
             home_states,
@@ -2012,11 +2015,7 @@ impl Game {
                         .is_none_or(|category| !actor_matches_category(definition, category))
                     && !definition.tags.iter().any(|tag| tag == "guardian")
                     && (allow_unique || !unique)
-                    && (!unique
-                        || !self
-                            .entities
-                            .iter()
-                            .any(|entity| entity.kind_id == definition.id && entity.hp > 0))
+                    && (!unique || self.unique_actor_kind_is_available(&definition.id))
             })
             .map(|definition| definition.id.clone())
             .collect()
@@ -3176,6 +3175,9 @@ impl Game {
         surround_reservations: &mut BTreeSet<Position>,
     ) -> Result<(), CoreError> {
         if self.entity_is_player_aligned(index) {
+            if self.resolve_original_random_movement(index, events, changed, removed_entities)? {
+                return Ok(());
+            }
             self.resolve_player_summon_action(index, events, changed, removed_entities)?;
             return Ok(());
         }
@@ -3183,6 +3185,9 @@ impl Game {
             return Ok(());
         }
         if self.resolve_monster_ability_with_changes(index, events, changed, removed_entities)? {
+            return Ok(());
+        }
+        if self.resolve_original_random_movement(index, events, changed, removed_entities)? {
             return Ok(());
         }
         let Some(primary_target) = self.monster_hostile_targets(index).into_iter().next() else {

@@ -22,5 +22,12 @@
     "corpseWeight": 4,
     "skeletonWeight": 1
   },
+  "allocation": {
+    "legacyIndex": 257,
+    "rarity": 2,
+    "maxDepth": 50,
+    "friends": { "dice": 3, "sides": 3 },
+    "randomMovementPercent": 25
+  },
   "tags": ["animal", "beast", "evil", "pest-control", "warrens"]
 }

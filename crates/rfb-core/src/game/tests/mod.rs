@@ -22,6 +22,7 @@ mod inventory;
 mod items;
 mod lighting;
 mod monster_ai;
+mod monster_ecology;
 mod movement;
 mod persistence;
 mod progression;

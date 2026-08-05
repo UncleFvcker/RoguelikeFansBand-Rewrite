@@ -24,6 +24,7 @@ impl Game {
             self.process_equipped_light_fuel(events);
             self.process_equipment_regeneration(events);
             self.process_inventory_device_recovery(events);
+            self.process_ambient_monster_allocation(changed)?;
             self.process_monster_energy_pulse(events, changed, removed_entities)?;
             if self.player_is_dead() {
                 break;
@@ -327,6 +328,9 @@ impl Game {
                 events.push(DomainEvent::MonsterSlept {
                     target_kind_id: self.entities[index].kind_id.clone(),
                 });
+                continue;
+            }
+            if self.try_original_reproduction(index, changed) {
                 continue;
             }
             self.resolve_monster_action(

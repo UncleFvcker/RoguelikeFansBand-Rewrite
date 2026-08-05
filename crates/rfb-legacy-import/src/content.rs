@@ -203,6 +203,7 @@ pub struct LegacyMonsterEntry {
     pub armor_class: Option<i32>,
     pub level: Option<u16>,
     pub rarity: Option<u32>,
+    pub max_level: Option<u16>,
     pub blows: Vec<LegacyBlow>,
     pub flags: Vec<String>,
     pub spells: Vec<String>,
@@ -767,8 +768,13 @@ pub fn parse_r_info(text: &str) -> Result<Vec<LegacyMonsterEntry>, LegacyImportE
                 "W.rarity",
                 parts.get(1).copied(),
             )?);
+            entry.max_level = Some(parse_number(
+                R_INFO_SOURCE,
+                line_number,
+                "W.maxLevel",
+                parts.get(2).copied(),
+            )?);
             for (field, value) in [
-                ("W.extra", parts.get(2).copied()),
                 ("W.experience", parts.get(3).copied()),
                 ("W.evolution", parts.get(4).copied()),
                 ("W.nextEvolution", parts.get(5).copied()),
@@ -5614,6 +5620,48 @@ fn monster_json(
     }
     if living {
         value["corpseItemKindId"] = serde_json::json!(LEGACY_CORPSE_ITEM_ID);
+    }
+    if let Some(rarity) = entry.rarity.filter(|rarity| *rarity > 0) {
+        let friends = entry.flags.iter().find_map(|flag| {
+            if flag == "FRIENDS" {
+                return Some(serde_json::json!({
+                    "dice": 0,
+                    "sides": 0,
+                    "chancePercent": 0
+                }));
+            }
+            let body = flag.strip_prefix("FRIENDS(")?.strip_suffix(')')?;
+            let mut parts = body.split(',').map(str::trim);
+            let (dice, sides): (u8, u8) =
+                parse_dice(R_INFO_SOURCE, 0, "FRIENDS", parts.next()).ok()?;
+            let chance_percent = parts
+                .next()
+                .and_then(|chance| chance.strip_suffix('%'))
+                .and_then(|chance| chance.parse::<u8>().ok())
+                .unwrap_or(0);
+            Some(serde_json::json!({
+                "dice": dice,
+                "sides": sides,
+                "chancePercent": chance_percent
+            }))
+        });
+        let random_movement_percent = u8::from(entry.flags.iter().any(|flag| flag == "RAND_25"))
+            * 25
+            + u8::from(entry.flags.iter().any(|flag| flag == "RAND_50")) * 50;
+        let mut allocation = serde_json::json!({
+            "legacyIndex": entry.index,
+            "rarity": rarity,
+            "maxDepth": entry.max_level.unwrap_or(0),
+            "forceDepth": entry.flags.iter().any(|flag| flag == "FORCE_DEPTH"),
+            "wildOnly": entry.flags.iter().any(|flag| flag == "WILD_ONLY"),
+            "escort": entry.flags.iter().any(|flag| flag == "ESCORT"),
+            "multiplies": entry.flags.iter().any(|flag| flag == "MULTIPLY"),
+            "randomMovementPercent": random_movement_percent,
+        });
+        if let Some(friends) = friends {
+            allocation["friends"] = friends;
+        }
+        value["allocation"] = allocation;
     }
     value
 }

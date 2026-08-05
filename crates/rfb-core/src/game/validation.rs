@@ -310,6 +310,48 @@ impl Game {
         {
             return Err(CoreError::InvalidSave("floor identity is invalid"));
         }
+        if self.defeated_unique_actor_kind_ids.iter().any(|kind_id| {
+            !self.content.actor(kind_id).is_some_and(|definition| {
+                definition.tags.iter().any(|tag| tag == "unique")
+                    && !definition.tags.iter().any(|tag| tag == "guardian")
+            }) || self
+                .entities
+                .iter()
+                .chain(
+                    self.stored_floors
+                        .values()
+                        .flat_map(|floor| floor.entities.iter()),
+                )
+                .any(|actor| actor.hp > 0 && actor.kind_id == *kind_id)
+        }) {
+            return Err(CoreError::InvalidSave(
+                "defeated unique actor state is invalid",
+            ));
+        }
+        let mut living_unique_actor_kind_ids = BTreeSet::new();
+        if self
+            .entities
+            .iter()
+            .chain(
+                self.stored_floors
+                    .values()
+                    .flat_map(|floor| floor.entities.iter()),
+            )
+            .filter(|actor| actor.hp > 0)
+            .filter(|actor| {
+                self.content
+                    .actor(&actor.kind_id)
+                    .is_some_and(|definition| {
+                        definition.tags.iter().any(|tag| tag == "unique")
+                            && !definition.tags.iter().any(|tag| tag == "guardian")
+                    })
+            })
+            .any(|actor| !living_unique_actor_kind_ids.insert(actor.kind_id.as_str()))
+        {
+            return Err(CoreError::InvalidSave(
+                "living unique actor state is duplicated",
+            ));
+        }
         match world
             .town_id
             .as_deref()

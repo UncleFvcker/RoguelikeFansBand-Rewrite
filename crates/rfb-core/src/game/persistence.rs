@@ -480,7 +480,7 @@ fn item_property_knowledge_from_save(
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-struct StateHashPayloadV62<'a> {
+struct StateHashPayloadV63<'a> {
     schema_version: u16,
     revision: u32,
     turn: u32,
@@ -499,6 +499,7 @@ struct StateHashPayloadV62<'a> {
     item_property_knowledge: Vec<ItemPropertyKnowledgeSaveDto>,
     task_states: Vec<TaskStateSaveDto>,
     dungeon_states: Vec<DungeonStateSaveDto>,
+    defeated_unique_actor_kind_ids: Vec<&'a str>,
     town_states: Vec<TownStateSaveDto>,
     shop_states: Vec<ShopStateSaveDto>,
     home_states: Vec<HomeStateSaveDto>,
@@ -955,6 +956,23 @@ impl Game {
         }
         let campaign_state_missing = payload.campaign_state.is_none();
         let campaign_state = restore_campaign_state(payload.campaign_state.as_ref())?;
+        let defeated_unique_count = payload.defeated_unique_actor_kind_ids.len();
+        let defeated_unique_actor_kind_ids = payload
+            .defeated_unique_actor_kind_ids
+            .into_iter()
+            .collect::<BTreeSet<_>>();
+        if defeated_unique_actor_kind_ids.len() != defeated_unique_count
+            || defeated_unique_actor_kind_ids.iter().any(|kind_id| {
+                !content.actor(kind_id).is_some_and(|definition| {
+                    definition.tags.iter().any(|tag| tag == "unique")
+                        && !definition.tags.iter().any(|tag| tag == "guardian")
+                })
+            })
+        {
+            return Err(CoreError::InvalidSave(
+                "defeated unique actor state is invalid",
+            ));
+        }
         let mut game = Self {
             content,
             world_id: payload.world_id,
@@ -983,6 +1001,7 @@ impl Game {
             item_property_knowledge,
             task_states,
             dungeon_states,
+            defeated_unique_actor_kind_ids,
             town_states,
             shop_states,
             home_states,
@@ -1052,6 +1071,11 @@ impl Game {
             task_progress: Vec::new(),
             task_states: self.task_states_to_save(),
             dungeon_states: self.dungeon_states_to_save(),
+            defeated_unique_actor_kind_ids: self
+                .defeated_unique_actor_kind_ids
+                .iter()
+                .cloned()
+                .collect(),
             town_states: self
                 .town_states
                 .iter()
@@ -1089,7 +1113,7 @@ impl Game {
 
     #[must_use]
     pub fn state_hash(&self) -> String {
-        let payload = StateHashPayloadV62 {
+        let payload = StateHashPayloadV63 {
             schema_version: STATE_HASH_SCHEMA_VERSION,
             revision: self.revision,
             turn: self.turn,
@@ -1111,6 +1135,11 @@ impl Game {
             item_property_knowledge: self.item_property_knowledge_to_save(),
             task_states: self.task_states_to_save(),
             dungeon_states: self.dungeon_states_to_save(),
+            defeated_unique_actor_kind_ids: self
+                .defeated_unique_actor_kind_ids
+                .iter()
+                .map(String::as_str)
+                .collect(),
             town_states: self
                 .town_states
                 .iter()

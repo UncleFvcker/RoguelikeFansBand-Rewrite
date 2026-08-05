@@ -27,5 +27,6 @@
     "corpseItemKindId": "demo.item.corpse-remains",
     "corpseWeight": 1
   },
+  "allocation": { "legacyIndex": 151, "rarity": 2, "maxDepth": 40 },
   "tags": ["animal", "bird", "flying", "warrens"]
 }

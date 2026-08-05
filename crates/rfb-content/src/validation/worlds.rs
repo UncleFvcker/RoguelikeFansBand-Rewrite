@@ -25,6 +25,7 @@ pub(super) struct WorldValidationRefs<'a> {
     pub(super) terrain_traps: &'a BTreeSet<String>,
     pub(super) actor_roles: &'a BTreeMap<String, ActorRole>,
     pub(super) actor_levels: &'a BTreeMap<String, u32>,
+    pub(super) actors: &'a [ActorDefinition],
     pub(super) item_limits: &'a BTreeMap<String, (u32, bool)>,
     pub(super) items: &'a [ItemDefinition],
     pub(super) affix_ids: &'a BTreeSet<String>,
@@ -144,6 +145,7 @@ pub(super) fn validate_world(
         terrain_traps,
         actor_roles,
         actor_levels,
+        actors,
         item_limits,
         items,
         affix_ids,
@@ -372,21 +374,38 @@ pub(super) fn validate_world(
                     target: table_id.clone(),
                 });
             };
-            let entries = table
-                .entries
-                .iter()
-                .filter(|entry| {
-                    entry.min_depth <= procedural.depth
-                        && procedural.depth <= entry.max_depth
-                        && actor_levels
-                            .get(&entry.actor_kind_id)
-                            .is_some_and(|level| *level <= u32::from(procedural.depth))
-                })
-                .collect::<Vec<_>>();
-            if entries.is_empty() {
-                return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+            if table.global_allocation.is_some() {
+                let has_eligible_actor = actors.iter().any(|actor| {
+                    actor.role == ActorRole::Monster
+                        && actor.level <= u32::from(procedural.depth)
+                        && !actor.tags.iter().any(|tag| tag == "guardian")
+                        && actor.allocation.as_ref().is_some_and(|allocation| {
+                            !allocation.wild_only
+                                && (allocation.max_depth == 0
+                                    || allocation.max_depth >= procedural.depth)
+                        })
+                });
+                if !has_eligible_actor {
+                    return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+                }
+                Vec::new()
+            } else {
+                let entries = table
+                    .entries
+                    .iter()
+                    .filter(|entry| {
+                        entry.min_depth <= procedural.depth
+                            && procedural.depth <= entry.max_depth
+                            && actor_levels
+                                .get(&entry.actor_kind_id)
+                                .is_some_and(|level| *level <= u32::from(procedural.depth))
+                    })
+                    .collect::<Vec<_>>();
+                if entries.is_empty() {
+                    return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+                }
+                entries
             }
-            entries
         } else {
             Vec::new()
         };

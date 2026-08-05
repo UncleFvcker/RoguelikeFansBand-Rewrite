@@ -141,7 +141,44 @@ pub struct ActorDefinition {
     pub corpse_item_kind_id: Option<String>,
     #[serde(default)]
     pub remains: Option<MonsterRemainsDefinition>,
+    #[serde(default)]
+    pub allocation: Option<ActorAllocationDefinition>,
     pub tags: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ActorAllocationDefinition {
+    /// Stable order from the original global monster allocation table.
+    pub legacy_index: u32,
+    pub rarity: u32,
+    /// Original maximum allocation depth; zero means unrestricted.
+    pub max_depth: u16,
+    #[serde(default)]
+    pub force_depth: bool,
+    #[serde(default)]
+    pub wild_only: bool,
+    #[serde(default)]
+    pub friends: Option<ActorFriendsDefinition>,
+    #[serde(default)]
+    pub escort: bool,
+    #[serde(default)]
+    pub multiplies: bool,
+    #[serde(default)]
+    pub random_movement_percent: u8,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ActorFriendsDefinition {
+    /// Zero dice and sides select the original depth-adjusted 1d10 rule.
+    pub dice: u8,
+    pub sides: u8,
+    /// Zero means unconditional, matching an original FRIENDS flag without a percentage.
+    #[serde(default)]
+    pub chance_percent: u8,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

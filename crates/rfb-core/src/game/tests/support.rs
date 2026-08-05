@@ -70,6 +70,19 @@ pub(super) fn stored_floor<'a>(game: &'a Game, floor_id: &str) -> &'a FloorState
         .unwrap_or_else(|| panic!("stored floor {floor_id} should exist"))
 }
 
+pub(super) fn generated_encounter_leader_count(game: &Game) -> usize {
+    let prefix = format!("{}.encounter.", game.current_floor_id);
+    game.entities
+        .iter()
+        .filter(|actor| {
+            actor
+                .id
+                .strip_prefix(&prefix)
+                .is_some_and(|ordinal| ordinal.parse::<u16>().is_ok())
+        })
+        .count()
+}
+
 pub(super) fn region_at(game: &Game, position: Position) -> &FloorRegionState {
     game.floor_regions
         .iter()
