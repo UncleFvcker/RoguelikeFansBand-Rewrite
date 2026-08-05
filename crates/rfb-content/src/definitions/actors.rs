@@ -18,6 +18,22 @@ pub enum ActorRole {
     Monster,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum ActorMovementMode {
+    Fly,
+    Swim,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ActorMovementDefinition {
+    #[serde(default)]
+    pub modes: Vec<ActorMovementMode>,
+}
+
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
@@ -84,6 +100,16 @@ pub struct MeleeRoutineDefinition {
     pub blows: Vec<MeleeBlowDefinition>,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ActorHitPointDiceDefinition {
+    pub dice: u16,
+    pub sides: u16,
+    #[serde(default)]
+    pub force_maximum: bool,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -100,6 +126,8 @@ pub struct ActorDefinition {
     #[serde(default)]
     pub experience_value: u64,
     pub max_hp: i32,
+    #[serde(default)]
+    pub hit_point_dice: Option<ActorHitPointDiceDefinition>,
     #[serde(default = "default_actor_speed")]
     pub speed: u16,
     pub attack: i32,
@@ -143,6 +171,8 @@ pub struct ActorDefinition {
     pub remains: Option<MonsterRemainsDefinition>,
     #[serde(default)]
     pub allocation: Option<ActorAllocationDefinition>,
+    #[serde(default)]
+    pub movement: ActorMovementDefinition,
     pub tags: Vec<String>,
 }
 

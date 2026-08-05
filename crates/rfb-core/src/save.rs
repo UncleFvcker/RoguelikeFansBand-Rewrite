@@ -30,6 +30,21 @@ use rfb_protocol::{
 
 pub(crate) const GENERATED_ITEM_ID_PREFIX: &str = "generated.item.";
 
+pub(crate) fn actor_max_hp_is_valid(
+    definition: &rfb_content::ActorDefinition,
+    max_hp: i32,
+) -> bool {
+    let Some(hit_points) = definition.hit_point_dice else {
+        return max_hp == definition.max_hp;
+    };
+    let maximum = i32::from(hit_points.dice).saturating_mul(i32::from(hit_points.sides));
+    if hit_points.force_maximum {
+        max_hp == maximum
+    } else {
+        (i32::from(hit_points.dice)..=maximum).contains(&max_hp)
+    }
+}
+
 pub(crate) fn initial_item_fuel(content: &ContentCatalog, kind_id: &str) -> Option<ItemFuelDto> {
     content.item(kind_id).and_then(item_fuel_from_definition)
 }
@@ -169,7 +184,7 @@ pub(crate) fn actor_from_entity(
     let definition = content
         .actor(&entity.kind_id)
         .ok_or_else(|| CoreError::UnknownActor(entity.kind_id.clone()))?;
-    if entity.max_hp != 0 && entity.max_hp != definition.max_hp {
+    if !actor_max_hp_is_valid(definition, entity.max_hp) {
         return Err(CoreError::InvalidSave("entity base stats are invalid"));
     }
     if entity.base_speed != definition.speed {
@@ -184,7 +199,7 @@ pub(crate) fn actor_from_entity(
         kind_id: entity.kind_id,
         position: entity.position,
         hp: entity.hp,
-        max_hp: definition.max_hp,
+        max_hp: entity.max_hp,
         speed: entity.base_speed,
         energy_need: entity.energy_need,
         alerted: entity.alerted.unwrap_or_else(|| {

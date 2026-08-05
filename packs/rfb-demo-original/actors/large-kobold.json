@@ -9,6 +9,7 @@
   "level": 5,
   "experienceValue": 25,
   "maxHp": 65,
+  "hitPointDice": { "dice": 13, "sides": 9 },
   "speed": 110,
   "attack": 1,
   "defense": 3,

@@ -28,7 +28,8 @@ use crate::{
     rng::{RNG_ALGORITHM, RfbRng},
     save::{
         GENERATED_ITEM_ID_PREFIX, actor_from_runtime_spawn, actor_from_spawn,
-        derive_next_item_instance_serial, initial_item_fuel, position_from_content,
+        actor_max_hp_is_valid, derive_next_item_instance_serial, initial_item_fuel,
+        position_from_content,
     },
     scheduler::{
         INITIAL_MONSTER_ENERGY_NEED, INITIAL_PLAYER_ENERGY_NEED, STANDARD_ACTION_COST, energy_gain,
@@ -840,6 +841,10 @@ impl Game {
             INITIAL_PLAYER_ENERGY_NEED,
             true,
         );
+        let mut rng = RfbRng::seeded(seed);
+        let gold = gold::starting_gold(build.as_ref(), &mut rng);
+        let starting_ration_quantity = hunger::starting_ration_quantity(build.as_ref(), &mut rng);
+        let starting_torches = lighting::starting_torch_supply(build.as_ref(), &mut rng);
         let mut progress = CharacterProgress::new(seed, player_definition.max_hp);
         if let Some(identity) = build.as_ref() {
             let (definition, _, _, _) = build_definitions(&content, identity)?;
@@ -858,17 +863,13 @@ impl Game {
                 let definition = content
                     .actor(&spawn.kind_id)
                     .ok_or_else(|| CoreError::UnknownActor(spawn.kind_id.clone()))?;
-                Ok(stamped_spawn(
-                    actor_from_spawn(
-                        &spawn.instance_id,
-                        &spawn.kind_id,
-                        spawn.position,
-                        definition.max_hp,
-                        definition.speed,
-                        INITIAL_MONSTER_ENERGY_NEED,
-                        actor_starts_alerted(definition),
-                    ),
+                Ok(spawn_actor_from_definition(
+                    &mut rng,
                     definition,
+                    &spawn.instance_id,
+                    position_from_content(spawn.position),
+                    INITIAL_MONSTER_ENERGY_NEED,
+                    actor_starts_alerted(definition),
                 ))
             })
             .collect::<Result<Vec<_>, CoreError>>()?;
@@ -879,17 +880,13 @@ impl Game {
             let definition = content
                 .actor(&guardian.actor_kind_id)
                 .ok_or_else(|| CoreError::UnknownActor(guardian.actor_kind_id.clone()))?;
-            let mut actor = stamped_spawn(
-                actor_from_spawn(
-                    &guardian.instance_id,
-                    &guardian.actor_kind_id,
-                    guardian.position,
-                    definition.max_hp,
-                    definition.speed,
-                    INITIAL_MONSTER_ENERGY_NEED,
-                    actor_starts_alerted(definition),
-                ),
+            let mut actor = spawn_actor_from_definition(
+                &mut rng,
                 definition,
+                &guardian.instance_id,
+                position_from_content(guardian.position),
+                INITIAL_MONSTER_ENERGY_NEED,
+                actor_starts_alerted(definition),
             );
             actor.pack = Some(MonsterPackIdentity {
                 id: guardian.instance_id.clone(),
@@ -899,10 +896,6 @@ impl Game {
             });
             entities.push(actor);
         }
-        let mut rng = RfbRng::seeded(seed);
-        let gold = gold::starting_gold(build.as_ref(), &mut rng);
-        let starting_ration_quantity = hunger::starting_ration_quantity(build.as_ref(), &mut rng);
-        let starting_torches = lighting::starting_torch_supply(build.as_ref(), &mut rng);
         let mut items = world
             .items
             .iter()
@@ -2081,16 +2074,14 @@ impl Game {
                 candidates.remove(choice);
             }
             let id = self.summon_entity_id(spec.source_id, ordinal);
-            let mut entity = actor_from_runtime_spawn(
+            let mut entity = spawn_actor_from_definition(
+                &mut self.rng,
+                &definition,
                 &id,
-                &kind_id,
                 position,
-                definition.max_hp,
-                definition.speed,
                 INITIAL_MONSTER_ENERGY_NEED,
                 true,
             );
-            entity.resistances = definition_resistance_profile(&definition);
             if !spec.hostile {
                 if spec.duration_turns == 0 {
                     entity.controller_id = Some(spec.owner_id.to_owned());
@@ -5036,6 +5027,43 @@ const fn monster_pack_behavior_dto(behavior: MonsterPackBehavior) -> MonsterPack
 fn stamped_spawn(mut actor: Actor, definition: &rfb_content::ActorDefinition) -> Actor {
     actor.resistances = definition_resistance_profile(definition);
     actor
+}
+
+fn actor_spawn_max_hp(rng: &mut RfbRng, definition: &rfb_content::ActorDefinition) -> i32 {
+    let Some(hit_points) = definition.hit_point_dice else {
+        return definition.max_hp;
+    };
+    if hit_points.force_maximum {
+        return i32::from(hit_points.dice).saturating_mul(i32::from(hit_points.sides));
+    }
+    (0..hit_points.dice).fold(0_i32, |total, _| {
+        let roll = i32::try_from(rng.bounded(u64::from(hit_points.sides)))
+            .unwrap_or(i32::MAX)
+            .saturating_add(1);
+        total.saturating_add(roll)
+    })
+}
+
+fn spawn_actor_from_definition(
+    rng: &mut RfbRng,
+    definition: &rfb_content::ActorDefinition,
+    id: &str,
+    position: Position,
+    energy_need: i32,
+    alerted: bool,
+) -> Actor {
+    stamped_spawn(
+        actor_from_runtime_spawn(
+            id,
+            &definition.id,
+            position,
+            actor_spawn_max_hp(rng, definition),
+            definition.speed,
+            energy_need,
+            alerted,
+        ),
+        definition,
+    )
 }
 
 fn actor_starts_alerted(definition: &rfb_content::ActorDefinition) -> bool {

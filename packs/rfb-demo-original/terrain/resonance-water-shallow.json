@@ -7,5 +7,6 @@
   "glyph": "~",
   "walkable": true,
   "blocksSight": false,
+  "movementModes": ["fly", "swim"],
   "tags": ["interior", "water", "shallow", "resonance"]
 }

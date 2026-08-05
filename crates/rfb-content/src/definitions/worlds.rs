@@ -4,7 +4,7 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use super::{ActorDamageType, ItemQuality};
+use super::{ActorDamageType, ActorMovementMode, ItemQuality};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
@@ -41,6 +41,8 @@ pub struct TerrainDefinition {
     pub perception_check_difficulty: Option<i32>,
     #[serde(default)]
     pub trap: Option<TerrainTrapDefinition>,
+    #[serde(default)]
+    pub movement_modes: Vec<ActorMovementMode>,
     pub tags: Vec<String>,
 }
 
@@ -55,6 +57,8 @@ pub struct TerrainTrapDefinition {
     pub disarm_check_difficulty: i32,
     #[serde(default)]
     pub saving_throw_difficulty: Option<i32>,
+    #[serde(default)]
+    pub avoided_by_movement_modes: Vec<ActorMovementMode>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]

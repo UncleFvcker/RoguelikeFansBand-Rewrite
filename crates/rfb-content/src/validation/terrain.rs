@@ -34,6 +34,12 @@ pub(super) fn validate_terrain(
         validate_definition_id(&terrain.id, "terrain")?;
         validate_definition_text(&terrain.id, &terrain.name_key, &terrain.description_key)?;
         validate_glyph(&terrain.id, &terrain.glyph)?;
+        terrain.movement_modes.sort_unstable();
+        terrain.movement_modes.dedup();
+        if let Some(trap) = &mut terrain.trap {
+            trap.avoided_by_movement_modes.sort_unstable();
+            trap.avoided_by_movement_modes.dedup();
+        }
         if terrain
             .glyph
             .chars()

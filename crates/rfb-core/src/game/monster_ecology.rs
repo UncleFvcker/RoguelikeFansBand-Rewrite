@@ -541,17 +541,13 @@ impl Game {
             "{}.multiply.{}",
             self.entities[index].id, self.world_tick
         ));
-        let mut offspring = stamped_spawn(
-            actor_from_runtime_spawn(
-                &id,
-                &kind_id,
-                position,
-                definition.max_hp,
-                definition.speed,
-                INITIAL_MONSTER_ENERGY_NEED,
-                true,
-            ),
+        let mut offspring = spawn_actor_from_definition(
+            &mut self.rng,
             &definition,
+            &id,
+            position,
+            INITIAL_MONSTER_ENERGY_NEED,
+            true,
         );
         offspring.controller_id = self.entities[index].controller_id.clone();
         offspring.summon = self.entities[index].summon.clone();
@@ -716,17 +712,13 @@ impl Game {
             .actor(&kind_id)
             .expect("ambient actor definition must remain available")
             .clone();
-        let mut leader = stamped_spawn(
-            actor_from_runtime_spawn(
-                &leader_id,
-                &kind_id,
-                leader_position,
-                definition.max_hp,
-                definition.speed,
-                INITIAL_MONSTER_ENERGY_NEED,
-                actor_starts_alerted(&definition),
-            ),
+        let mut leader = spawn_actor_from_definition(
+            &mut self.rng,
             &definition,
+            &leader_id,
+            leader_position,
+            INITIAL_MONSTER_ENERGY_NEED,
+            actor_starts_alerted(&definition),
         );
         if !members.is_empty() {
             leader.pack = Some(MonsterPackIdentity {
@@ -744,17 +736,13 @@ impl Game {
                 .expect("ambient companion definition must remain available")
                 .clone();
             let id = format!("{leader_id}.companion.{}", ordinal + 1);
-            let mut actor = stamped_spawn(
-                actor_from_runtime_spawn(
-                    &id,
-                    &member.kind_id,
-                    member.position,
-                    member_definition.max_hp,
-                    member_definition.speed,
-                    INITIAL_MONSTER_ENERGY_NEED,
-                    actor_starts_alerted(&member_definition),
-                ),
+            let mut actor = spawn_actor_from_definition(
+                &mut self.rng,
                 &member_definition,
+                &id,
+                member.position,
+                INITIAL_MONSTER_ENERGY_NEED,
+                actor_starts_alerted(&member_definition),
             );
             actor.pack = Some(MonsterPackIdentity {
                 id: pack_id.clone(),

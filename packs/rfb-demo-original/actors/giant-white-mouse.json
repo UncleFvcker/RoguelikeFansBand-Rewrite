@@ -9,6 +9,7 @@
   "level": 1,
   "experienceValue": 3,
   "maxHp": 2,
+  "hitPointDice": { "dice": 1, "sides": 3 },
   "speed": 110,
   "attack": 1,
   "defense": 0,
@@ -27,5 +28,6 @@
     "multiplies": true,
     "randomMovementPercent": 50
   },
+  "movement": { "modes": ["swim"] },
   "tags": ["animal", "beast", "warrens"]
 }

@@ -1694,23 +1694,15 @@ impl Game {
                         let actor = self
                             .content
                             .actor(&entry.actor_kind_id)
-                            .expect("validated nest actor must remain available");
-                        entities.push(stamped_spawn(
-                            actor_from_spawn(
-                                &format!("{}.nest.{}", definition.id, ordinal + 1),
-                                &entry.actor_kind_id,
-                                ContentPosition {
-                                    x: u16::try_from(position.x)
-                                        .expect("nest actor x must fit u16"),
-                                    y: u16::try_from(position.y)
-                                        .expect("nest actor y must fit u16"),
-                                },
-                                actor.max_hp,
-                                actor.speed,
-                                INITIAL_MONSTER_ENERGY_NEED,
-                                actor_starts_alerted(actor),
-                            ),
-                            actor,
+                            .expect("validated nest actor must remain available")
+                            .clone();
+                        entities.push(spawn_actor_from_definition(
+                            &mut self.rng,
+                            &actor,
+                            &format!("{}.nest.{}", definition.id, ordinal + 1),
+                            position,
+                            INITIAL_MONSTER_ENERGY_NEED,
+                            actor_starts_alerted(&actor),
                         ));
                     }
                 }
@@ -1741,21 +1733,15 @@ impl Game {
                 let actor = self
                     .content
                     .actor(kind_id)
-                    .expect("validated procedural actor kind must remain available");
-                entities.push(stamped_spawn(
-                    actor_from_spawn(
-                        &spawn.instance_id,
-                        kind_id,
-                        ContentPosition {
-                            x: u16::try_from(position.x).expect("generated actor x must fit u16"),
-                            y: u16::try_from(position.y).expect("generated actor y must fit u16"),
-                        },
-                        actor.max_hp,
-                        actor.speed,
-                        INITIAL_MONSTER_ENERGY_NEED,
-                        actor_starts_alerted(actor),
-                    ),
-                    actor,
+                    .expect("validated procedural actor kind must remain available")
+                    .clone();
+                entities.push(spawn_actor_from_definition(
+                    &mut self.rng,
+                    &actor,
+                    &spawn.instance_id,
+                    position,
+                    INITIAL_MONSTER_ENERGY_NEED,
+                    actor_starts_alerted(&actor),
                 ));
             }
         }
@@ -1804,20 +1790,14 @@ impl Game {
                     } else {
                         format!("{}.{}.{}", definition.id, group.id, ordinal + 1)
                     };
-                    entities.push(stamped_spawn(
-                        actor_from_spawn(
-                            &instance_id,
-                            &entry.actor_kind_id,
-                            ContentPosition {
-                                x: u16::try_from(position.x).expect("vault actor x must fit u16"),
-                                y: u16::try_from(position.y).expect("vault actor y must fit u16"),
-                            },
-                            actor.max_hp,
-                            actor.speed,
-                            INITIAL_MONSTER_ENERGY_NEED,
-                            actor_starts_alerted(actor),
-                        ),
-                        actor,
+                    let actor = actor.clone();
+                    entities.push(spawn_actor_from_definition(
+                        &mut self.rng,
+                        &actor,
+                        &instance_id,
+                        position,
+                        INITIAL_MONSTER_ENERGY_NEED,
+                        actor_starts_alerted(&actor),
                     ));
                 }
             }
@@ -1829,20 +1809,13 @@ impl Game {
                 .expect("validated dungeon guardian must remain available")
                 .clone();
             let position = guardian_position.expect("present guardian must retain a position");
-            let mut actor = stamped_spawn(
-                actor_from_spawn(
-                    &guardian.instance_id,
-                    &guardian.actor_kind_id,
-                    ContentPosition {
-                        x: u16::try_from(position.x).expect("guardian x must fit u16"),
-                        y: u16::try_from(position.y).expect("guardian y must fit u16"),
-                    },
-                    actor_definition.max_hp,
-                    actor_definition.speed,
-                    INITIAL_MONSTER_ENERGY_NEED,
-                    actor_starts_alerted(&actor_definition),
-                ),
+            let mut actor = spawn_actor_from_definition(
+                &mut self.rng,
                 &actor_definition,
+                &guardian.instance_id,
+                position,
+                INITIAL_MONSTER_ENERGY_NEED,
+                actor_starts_alerted(&actor_definition),
             );
             let original_policy = definition
                 .encounter_table_id
@@ -2160,25 +2133,21 @@ impl Game {
                     let actor = self
                         .content
                         .actor(kind_id)
-                        .expect("validated objective actor must remain available");
-                    entities.push(stamped_spawn(
-                        actor_from_spawn(
-                            objective
-                                .actor_instance_id
-                                .as_ref()
-                                .expect("validated kill objective must have an instance ID"),
-                            kind_id,
-                            ContentPosition {
-                                x: u16::try_from(first_center.x + 1)
-                                    .expect("objective x must fit u16"),
-                                y: u16::try_from(first_center.y).expect("objective y must fit u16"),
-                            },
-                            actor.max_hp,
-                            actor.speed,
-                            INITIAL_MONSTER_ENERGY_NEED,
-                            actor_starts_alerted(actor),
-                        ),
-                        actor,
+                        .expect("validated objective actor must remain available")
+                        .clone();
+                    entities.push(spawn_actor_from_definition(
+                        &mut self.rng,
+                        &actor,
+                        objective
+                            .actor_instance_id
+                            .as_ref()
+                            .expect("validated kill objective must have an instance ID"),
+                        Position {
+                            x: first_center.x + 1,
+                            y: first_center.y,
+                        },
+                        INITIAL_MONSTER_ENERGY_NEED,
+                        actor_starts_alerted(&actor),
                     ));
                 }
                 TaskObjectiveKind::KillActorKind => {
@@ -2189,7 +2158,8 @@ impl Game {
                     let actor = self
                         .content
                         .actor(kind_id)
-                        .expect("validated objective actor must remain available");
+                        .expect("validated objective actor must remain available")
+                        .clone();
                     let remaining = self
                         .task_states
                         .get(floor_task_id(definition))
@@ -2201,26 +2171,16 @@ impl Game {
                         .unwrap_or(objective.required)
                         .min(remaining);
                     for ordinal in 0..spawn_count {
-                        entities.push(stamped_spawn(
-                            actor_from_spawn(
-                                &format!("{}.task-target.{}", definition.id, ordinal + 1),
-                                kind_id,
-                                ContentPosition {
-                                    x: u16::try_from(
-                                        first_center.x
-                                            + 1
-                                            + i32::try_from(ordinal).unwrap_or(i32::MAX),
-                                    )
-                                    .expect("objective x must fit u16"),
-                                    y: u16::try_from(first_center.y)
-                                        .expect("objective y must fit u16"),
-                                },
-                                actor.max_hp,
-                                actor.speed,
-                                INITIAL_MONSTER_ENERGY_NEED,
-                                actor_starts_alerted(actor),
-                            ),
-                            actor,
+                        entities.push(spawn_actor_from_definition(
+                            &mut self.rng,
+                            &actor,
+                            &format!("{}.task-target.{}", definition.id, ordinal + 1),
+                            Position {
+                                x: first_center.x + 1 + i32::try_from(ordinal).unwrap_or(i32::MAX),
+                                y: first_center.y,
+                            },
+                            INITIAL_MONSTER_ENERGY_NEED,
+                            actor_starts_alerted(&actor),
                         ));
                     }
                 }
@@ -3091,7 +3051,7 @@ impl Game {
     }
 
     pub(in crate::game) fn generated_actor(
-        &self,
+        &mut self,
         id: String,
         kind_id: &str,
         position: Position,
@@ -3099,23 +3059,20 @@ impl Game {
         let actor = self
             .content
             .actor(kind_id)
-            .expect("validated generated actor must remain available");
-        actor_from_spawn(
+            .expect("validated generated actor must remain available")
+            .clone();
+        spawn_actor_from_definition(
+            &mut self.rng,
+            &actor,
             &id,
-            kind_id,
-            ContentPosition {
-                x: u16::try_from(position.x).expect("generated actor x must fit u16"),
-                y: u16::try_from(position.y).expect("generated actor y must fit u16"),
-            },
-            actor.max_hp,
-            actor.speed,
+            position,
             INITIAL_MONSTER_ENERGY_NEED,
-            actor_starts_alerted(actor),
+            actor_starts_alerted(&actor),
         )
     }
 
     fn generated_pack_actor(
-        &self,
+        &mut self,
         id: String,
         kind_id: &str,
         position: Position,

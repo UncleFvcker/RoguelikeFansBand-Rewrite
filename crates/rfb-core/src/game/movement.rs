@@ -2,7 +2,35 @@
 
 use super::*;
 
+pub(super) fn actor_can_cross_terrain(
+    actor: &rfb_content::ActorDefinition,
+    terrain: &rfb_content::TerrainDefinition,
+) -> bool {
+    terrain.walkable
+        || actor
+            .movement
+            .modes
+            .iter()
+            .any(|mode| terrain.movement_modes.contains(mode))
+}
+
 impl Game {
+    pub(super) fn actor_kind_can_enter_position(&self, kind_id: &str, position: Position) -> bool {
+        let Some(index) = self.index(position) else {
+            return false;
+        };
+        let Some(actor) = self.content.actor(kind_id) else {
+            return false;
+        };
+        self.content
+            .terrain(&self.terrain[index])
+            .is_some_and(|terrain| actor_can_cross_terrain(actor, terrain))
+    }
+
+    pub(super) fn actor_can_enter_position(&self, index: usize, position: Position) -> bool {
+        self.actor_kind_can_enter_position(&self.entities[index].kind_id, position)
+    }
+
     pub(super) fn player_summon_hostile_targets(&self, index: usize) -> Vec<String> {
         let origin = self.entities[index].position;
         let mut targets = self
@@ -58,7 +86,7 @@ impl Game {
                 };
                 if position == self.player.position
                     || occupied.contains(&position)
-                    || !self.is_walkable(position)
+                    || !self.actor_can_enter_position(index, position)
                 {
                     return None;
                 }
@@ -92,7 +120,7 @@ impl Game {
                 };
                 if position == origin
                     || position == self.player.position
-                    || !self.is_walkable(position)
+                    || !self.actor_can_enter_position(source_index, position)
                     || !accepts(position)
                     || self
                         .entities
@@ -215,7 +243,7 @@ impl Game {
                 };
                 if position == self.player.position
                     || occupied.contains(&position)
-                    || !self.is_walkable(position)
+                    || !self.actor_can_enter_position(index, position)
                     || movement_region.is_some_and(|region| !region.cells.contains(&position))
                 {
                     return None;
@@ -281,7 +309,7 @@ impl Game {
             if target == self.player.position
                 || occupied.contains(&target)
                 || reservations.contains(&target)
-                || !self.is_walkable(target)
+                || !self.actor_can_enter_position(index, target)
             {
                 continue;
             }
@@ -356,7 +384,7 @@ impl Game {
         for (_, _, position) in initial {
             if position == self.player.position
                 || occupied_now.contains(&position)
-                || !self.is_walkable(position)
+                || !self.actor_can_enter_position(index, position)
                 || movement_region.is_some_and(|region| !region.cells.contains(&position))
                 || !visited.insert(position)
             {
@@ -386,7 +414,7 @@ impl Game {
             for (_, _, next) in neighbors {
                 if next == self.player.position
                     || path_blockers.contains(&next)
-                    || !self.is_walkable(next)
+                    || !self.actor_can_enter_position(index, next)
                     || movement_region.is_some_and(|region| !region.cells.contains(&next))
                     || !visited.insert(next)
                 {

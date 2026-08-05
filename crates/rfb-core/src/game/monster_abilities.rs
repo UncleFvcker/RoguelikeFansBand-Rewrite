@@ -29,16 +29,14 @@ impl Game {
         let mut entity_ids = Vec::with_capacity(positions.len());
         for (ordinal, position) in positions.iter().copied().enumerate() {
             let id = self.summon_entity_id(&plan.ability.id, ordinal);
-            let mut entity = actor_from_runtime_spawn(
+            let mut entity = spawn_actor_from_definition(
+                &mut self.rng,
+                &definition,
                 &id,
-                actor_kind_id,
                 position,
-                definition.max_hp,
-                definition.speed,
                 INITIAL_MONSTER_ENERGY_NEED,
                 true,
             );
-            entity.resistances = definition_resistance_profile(&definition);
             entity.summon = Some(SummonIdentity {
                 owner_id: owner_id.clone(),
                 source_ability_id: plan.ability.id.clone(),
@@ -579,16 +577,14 @@ impl Game {
                         candidate_kind_ids.remove(choice);
                     }
                     let id = self.summon_entity_id(&plan.ability.id, ordinal);
-                    let mut entity = actor_from_runtime_spawn(
+                    let mut entity = spawn_actor_from_definition(
+                        &mut self.rng,
+                        &definition,
                         &id,
-                        &kind_id,
                         position,
-                        definition.max_hp,
-                        definition.speed,
                         INITIAL_MONSTER_ENERGY_NEED,
                         true,
                     );
-                    entity.resistances = definition_resistance_profile(&definition);
                     entity.summon = Some(SummonIdentity {
                         owner_id: owner_id.clone(),
                         source_ability_id: plan.ability.id.clone(),

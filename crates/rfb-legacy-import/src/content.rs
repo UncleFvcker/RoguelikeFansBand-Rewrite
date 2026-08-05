@@ -1801,6 +1801,16 @@ fn item_json_with_terrain(
         "baseValue": entry.base_value,
         "tags": tags,
     });
+    let movement_modes = [
+        ("CAN_FLY", "fly"),
+        ("CAN_SWIM", "swim"),
+    ]
+    .into_iter()
+    .filter_map(|(flag, mode)| entry.flags.iter().any(|value| value == flag).then_some(mode))
+    .collect::<Vec<_>>();
+    if !movement_modes.is_empty() {
+        value["movement"] = serde_json::json!({ "modes": movement_modes });
+    }
     if let Some(ability_book_id) = ability_book_id {
         value["maxStack"] = serde_json::json!(1);
         value["abilityBookId"] = serde_json::json!(ability_book_id);
@@ -5530,7 +5540,12 @@ fn monster_json(
     monster_casting: Option<serde_json::Value>,
 ) -> serde_json::Value {
     let (hp_dice, hp_sides) = entry.hp_dice.unwrap_or((1, 1));
-    let max_hp = ((hp_dice * (hp_sides + 1)) / 2).max(1);
+    let force_maximum = entry.flags.iter().any(|flag| flag == "FORCE_MAXHP");
+    let max_hp = if force_maximum {
+        hp_dice.saturating_mul(hp_sides)
+    } else {
+        (hp_dice.saturating_mul(hp_sides.saturating_add(1)) / 2).max(1)
+    };
     let level = entry.level.unwrap_or(1).max(1);
     let (damage_dice, damage_sides) = blow.damage_dice.unwrap_or((1, 1));
     // Legacy type flags become category tags so summon filters can select
@@ -5597,6 +5612,11 @@ fn monster_json(
         "level": level,
         "experienceValue": u32::from(level) * 10,
         "maxHp": max_hp,
+        "hitPointDice": {
+            "dice": hp_dice,
+            "sides": hp_sides,
+            "forceMaximum": force_maximum
+        },
         "speed": entry.speed.unwrap_or(110),
         "attack": (i32::from(level) / 4).max(1),
         "defense": (entry.armor_class.unwrap_or(0) / 10).max(0),

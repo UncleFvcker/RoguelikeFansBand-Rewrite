@@ -9,6 +9,7 @@
   "level": 8,
   "experienceValue": 22,
   "maxHp": 36,
+  "hitPointDice": { "dice": 8, "sides": 8 },
   "speed": 120,
   "attack": 2,
   "defense": 2,
@@ -28,5 +29,6 @@
     "corpseWeight": 1
   },
   "allocation": { "legacyIndex": 151, "rarity": 2, "maxDepth": 40 },
-  "tags": ["animal", "bird", "flying", "warrens"]
+  "movement": { "modes": ["fly"] },
+  "tags": ["animal", "bird", "warrens"]
 }

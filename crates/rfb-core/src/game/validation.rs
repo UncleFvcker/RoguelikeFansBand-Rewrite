@@ -1230,7 +1230,9 @@ impl Game {
                 && !self.actor_is_player_aligned(actor)
         };
         if definition.role != expected_role
-            || actor.max_hp != definition.max_hp
+            || (expected_role == ActorRole::Player && actor.max_hp != definition.max_hp)
+            || (expected_role == ActorRole::Monster
+                && !actor_max_hp_is_valid(definition, actor.max_hp))
             || actor.speed != definition.speed
             || actor.speed > 199
             || !statuses_are_valid

@@ -9,6 +9,7 @@
   "level": 4,
   "experienceValue": 9,
   "maxHp": 10,
+  "hitPointDice": { "dice": 3, "sides": 6 },
   "speed": 110,
   "attack": 1,
   "defense": 1,
@@ -21,5 +22,6 @@
     "corpseWeight": 1
   },
   "allocation": { "legacyIndex": 82, "rarity": 1, "maxDepth": 30 },
+  "movement": { "modes": ["swim"] },
   "tags": ["animal", "reptile", "warrens"]
 }

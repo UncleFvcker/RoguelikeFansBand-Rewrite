@@ -37,6 +37,23 @@ pub(super) fn validate_actors(
         validate_definition_text(&actor.id, &actor.name_key, &actor.description_key)?;
         validate_glyph(&actor.id, &actor.glyph)?;
         validate_status_immunities(&actor.id, &mut actor.status_immunities)?;
+        actor.movement.modes.sort_unstable();
+        actor.movement.modes.dedup();
+        let hit_point_dice_are_valid = actor.hit_point_dice.is_none_or(|hit_points| {
+            let maximum = i32::from(hit_points.dice).saturating_mul(i32::from(hit_points.sides));
+            let expected_definition_hp = if hit_points.force_maximum {
+                maximum
+            } else {
+                i32::from(hit_points.dice)
+                    .saturating_mul(i32::from(hit_points.sides).saturating_add(1))
+                    / 2
+            };
+            actor.role == ActorRole::Monster
+                && (1..=100).contains(&hit_points.dice)
+                && (1..=10_000).contains(&hit_points.sides)
+                && maximum <= 1_000_000
+                && actor.max_hp == expected_definition_hp
+        });
         if actor.level > 10_000
             || actor.experience_value > 999_999_999
             || (actor.role == ActorRole::Player && actor.experience_value != 0)
@@ -57,6 +74,8 @@ pub(super) fn validate_actors(
             || actor.damage_dice > 100
             || actor.damage_sides == 0
             || actor.damage_sides > 10_000
+            || !hit_point_dice_are_valid
+            || (actor.role != ActorRole::Monster && !actor.movement.modes.is_empty())
             || (actor.role != ActorRole::Monster && !actor.status_immunities.is_empty())
         {
             return Err(ContentError::InvalidActorStats(actor.id.clone()));
