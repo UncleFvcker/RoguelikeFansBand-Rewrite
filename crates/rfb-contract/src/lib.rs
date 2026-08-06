@@ -12,7 +12,7 @@ use rfb_protocol::{
     ItemQualityDto, MonsterPackSaveDto, NaturalAttributeSetSaveDto, PROTOCOL_VERSION,
     PlayerBuildDto, Position, RecallStateDto, ResistanceDto, ResistanceSaveDto, ResourcePoolDto,
     ResourcePoolSaveDto, RolledAffixSaveDto, SAVE_HEADER_SCHEMA_VERSION, SaveHeaderV1, ShopDto,
-    StatusDto, StatusSaveDto, SummonCommandDto, SummonSaveDto, TaskStatusDto,
+    StatusDto, StatusSaveDto, SummonCommandDto, SummonSaveDto, TaskStateSaveDto, TaskStatusDto,
     TerrainInteractionDto, TownDto,
 };
 use serde::{Deserialize, Serialize};
@@ -22,7 +22,7 @@ pub mod policy;
 pub mod snapshot;
 
 pub const CONTRACT_SCHEMA_VERSION: u16 = 3;
-pub const ACTIVE_BASELINE: &str = "contract-v180";
+pub const ACTIVE_BASELINE: &str = "contract-v182";
 pub const ACTIVE_FIXTURE_DIRECTORY: &str = "active";
 pub const LEGACY_BASELINE_COMMIT: &str = "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9";
 pub const ORIGINAL_TEST_WORLD: &str = "demo.world.original-v1";
@@ -218,6 +218,14 @@ pub struct Preconditions {
     pub campaign_conquered_dungeons: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub campaign_state: Option<CampaignStateSaveDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub task_states: Vec<TaskStateSaveDto>,
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub enter_task_floor: bool,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub task_states_after_floor_entry: Vec<TaskStateSaveDto>,
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub debug_clear_entities_after_task_floor_entry: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -764,6 +772,12 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
         state.guardian_defeated = true;
     }
     payload.campaign_state = fixture.preconditions.campaign_state.clone();
+    for task_state in &fixture.preconditions.task_states {
+        payload
+            .task_states
+            .retain(|state| state.task_id != task_state.task_id);
+        payload.task_states.push(task_state.clone());
+    }
     for effects in &fixture.preconditions.entity_effects {
         let entity = payload
             .entities
@@ -815,6 +829,38 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
         }
     }
     let mut game = Game::from_save(payload)?;
+    if fixture.preconditions.enter_task_floor {
+        let envelope = GameCommandEnvelope {
+            command_seq: game.last_command_seq().saturating_add(1),
+            expected_revision: game.revision(),
+            command: GameCommand::TraverseStairs,
+        };
+        game.dispatch(envelope)
+            .map_err(|error| ContractError::UnexpectedCoreError(error.to_string()))?;
+        if !fixture
+            .preconditions
+            .task_states_after_floor_entry
+            .is_empty()
+        {
+            let mut payload = game.to_save();
+            for task_state in &fixture.preconditions.task_states_after_floor_entry {
+                payload
+                    .task_states
+                    .retain(|state| state.task_id != task_state.task_id);
+                payload.task_states.push(task_state.clone());
+            }
+            game = Game::from_save(payload)?;
+        }
+        if fixture
+            .preconditions
+            .debug_clear_entities_after_task_floor_entry
+        {
+            let mut payload = game.to_save();
+            payload.entities.clear();
+            payload.carried_items.clear();
+            game = Game::from_save(payload)?;
+        }
+    }
     for (item, depth) in fixture
         .preconditions
         .inventory_items
@@ -1057,6 +1103,21 @@ fn validate_fixture(fixture: &ContractFixture) -> Result<(), ContractError> {
     {
         return Err(ContractError::ConflictingItemCurseDebugPreconditions);
     }
+    if fixture
+        .preconditions
+        .debug_clear_entities_after_task_floor_entry
+        && !fixture.preconditions.enter_task_floor
+    {
+        return Err(ContractError::TaskFloorSetupRequiresEntry);
+    }
+    if !fixture
+        .preconditions
+        .task_states_after_floor_entry
+        .is_empty()
+        && !fixture.preconditions.enter_task_floor
+    {
+        return Err(ContractError::TaskFloorSetupRequiresEntry);
+    }
     Ok(())
 }
 
@@ -1175,6 +1236,8 @@ pub enum ContractError {
     InvalidGeneratedItemPrecondition(String),
     #[error("item curse debug preconditions cannot force both landing and resistance")]
     ConflictingItemCurseDebugPreconditions,
+    #[error("task-floor post-entry preconditions require enterTaskFloor")]
+    TaskFloorSetupRequiresEntry,
     #[error("fixture cannot select stock from unavailable shop {0}")]
     UnavailableShopSelection(String),
     #[error("fixture cannot select the first item from empty shop {0}")]

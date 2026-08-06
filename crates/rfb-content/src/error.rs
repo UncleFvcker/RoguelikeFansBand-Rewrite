@@ -151,6 +151,8 @@ pub enum ContentError {
     InvalidShop(String),
     #[error("town facility definition or entrance is invalid: {0}")]
     InvalidTownFacility(String),
+    #[error("task definition or ownership is invalid: {0}")]
+    InvalidTask(String),
     #[error("world dimensions are outside supported limits: {0}")]
     InvalidWorldDimensions(String),
     #[error("procedural floor definition is invalid: {0}")]

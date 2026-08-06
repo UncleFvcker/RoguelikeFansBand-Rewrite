@@ -427,6 +427,44 @@ impl Game {
         candidates.first().map(|(_, _, position)| *position)
     }
 
+    pub(super) fn next_monster_hiding_step(&self, index: usize) -> Option<Position> {
+        let origin = self.entities[index].position;
+        let occupied = self
+            .entities
+            .iter()
+            .enumerate()
+            .filter(|(other, entity)| *other != index && entity.hp > 0)
+            .map(|(_, entity)| entity.position)
+            .collect::<BTreeSet<_>>();
+        for radius in 1..10_u32 {
+            let radius = i32::try_from(radius).expect("small hiding radius must fit i32");
+            let mut candidates = (origin.y - radius..=origin.y + radius)
+                .flat_map(|y| {
+                    (origin.x - radius..=origin.x + radius).map(move |x| Position { x, y })
+                })
+                .filter(|position| {
+                    rfb_distance(origin, *position) == u32::try_from(radius).unwrap_or(u32::MAX)
+                        && rfb_distance(self.player.position, *position) >= 2
+                        && !occupied.contains(position)
+                        && self.actor_can_enter_position(index, *position)
+                        && !has_line_of_effect(self, self.player.position, *position)
+                        && has_line_of_effect(self, origin, *position)
+                })
+                .collect::<Vec<_>>();
+            candidates.sort_by_key(|position| {
+                (
+                    rfb_distance(self.player.position, *position),
+                    position.y,
+                    position.x,
+                )
+            });
+            if let Some(target) = candidates.first() {
+                return self.next_monster_step_toward(index, *target, false);
+            }
+        }
+        None
+    }
+
     pub(super) fn next_surround_step(
         &self,
         index: usize,

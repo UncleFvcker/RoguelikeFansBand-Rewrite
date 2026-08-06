@@ -1,0 +1,35 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "formatVersion": 1,
+  "id": "demo.actor.tax-collector",
+  "role": "monster",
+  "nameKey": "actor-demo-tax-collector-name",
+  "descriptionKey": "actor-demo-tax-collector-description",
+  "glyph": "p",
+  "level": 10,
+  "experienceValue": 35,
+  "maxHp": 40,
+  "hitPointDice": { "dice": 9, "sides": 8 },
+  "speed": 110,
+  "attack": 2,
+  "defense": 3,
+  "damageDice": 1,
+  "damageSides": 1,
+  "damageType": "physical",
+  "meleeRoutine": { "blows": [] },
+  "deathDrop": {
+    "kind": "items-and-gold",
+    "itemTableId": "demo.loot-table.warrens",
+    "countDice": [{ "dice": 1, "sides": 2 }]
+  },
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "skeletonItemKindId": "demo.item.skeleton-remains",
+    "corpseWeight": 4,
+    "skeletonWeight": 1
+  },
+  "doorInteraction": { "opens": true, "bashes": true },
+  "allocation": { "legacyIndex": 199, "rarity": 3, "maxDepth": 40 },
+  "tags": ["evil", "human", "humanoid", "thief"]
+}

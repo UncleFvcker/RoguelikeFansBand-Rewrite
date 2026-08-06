@@ -654,15 +654,12 @@ impl Game {
                         ..
                     } => {
                         let raw = self.roll_damage(*damage_dice, *damage_sides);
-                        let physical = resolve_armored_damage(
-                            raw,
-                            DamageType::Physical,
-                            target_stats.armor_class.value,
+                        Some(resolve_damage(
+                            DamagePacket::new(raw, DamageType::Poison),
                             self.entities[target_index]
                                 .resistances
-                                .level(DamageType::Physical),
-                        );
-                        Some(physical)
+                                .level(DamageType::Poison),
+                        ))
                     }
                     MeleeBlowEffectDefinition::DrainAttributes { .. } => None,
                     MeleeBlowEffectDefinition::Bleeding {

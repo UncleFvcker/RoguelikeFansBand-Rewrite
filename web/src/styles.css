@@ -2093,6 +2093,92 @@ kbd {
   font-size: 0.66rem;
 }
 
+.task-service-dialog {
+  width: min(48rem, calc(100vw - 2rem));
+}
+
+.task-service-workspace {
+  max-height: calc(100vh - 8rem);
+  overflow-y: auto;
+}
+
+.task-service-list {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.task-service-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1rem;
+  min-height: 7rem;
+  align-items: center;
+  border-bottom: 1px solid var(--ui-line-soft);
+  padding: 0.85rem 0.9rem;
+}
+
+.task-service-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.task-service-heading h3 {
+  margin: 0;
+  color: #eee6d7;
+  font-size: 0.88rem;
+}
+
+.task-service-status,
+.task-service-progress {
+  color: var(--ui-muted);
+  font-family: "Cascadia Mono", Consolas, monospace;
+  font-size: 0.67rem;
+}
+
+.task-service-status[data-status="available"],
+.task-service-status[data-status="reward-available"] {
+  color: var(--ui-accent);
+}
+
+.task-service-status[data-status="failed"],
+.task-service-status[data-status="abandoned"] {
+  color: #bd756c;
+}
+
+.task-service-copy > p {
+  max-width: 62ch;
+  margin: 0.4rem 0 0;
+  color: var(--ui-muted);
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+.task-service-progress {
+  color: var(--ui-faint) !important;
+}
+
+.task-service-action {
+  min-width: 6.5rem;
+  min-height: 2.4rem;
+}
+
+.task-service-feedback {
+  min-height: 2.8rem;
+  margin: 0;
+  padding: 0.75rem 0.9rem;
+}
+
+.task-service-empty {
+  padding: 2.5rem 1rem;
+  color: var(--ui-muted);
+  font-size: 0.78rem;
+  text-align: center;
+}
+
 .shop-workspace {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(18rem, 21rem);
@@ -2461,6 +2547,14 @@ kbd {
   .shop-dialog > header {
     align-items: flex-start;
     padding: 0.6rem;
+  }
+
+  .task-service-row {
+    grid-template-columns: 1fr;
+  }
+
+  .task-service-action {
+    width: 100%;
   }
 
   .shop-item-select {

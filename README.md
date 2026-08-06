@@ -205,7 +205,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Rust 权威可见性与光照 v1](design/visibility-lighting-v1.md)
 - [静态地形 Chunk 渲染 v1](design/terrain-chunk-rendering-v1.md)
 
-当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v180`，共 462 条 exact fixtures、零 waiver，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
+当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v182`，共 470 条 exact fixtures、零 waiver，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
 
 fixture 使用受控的主分类。日常开发只验证或刷新受影响分类；普通 `cargo test -p rfb-contract` 只做快速的 schema、分类、ID 唯一性和契约单元测试，不回放全部场景：
 
@@ -468,6 +468,10 @@ contract-v173 按固定 RFB 原版来源完成 Warrens W1-W6 与运行时自然�
 
 contract-v177-v180 按固定原版来源完成 Warrens W10-W13：有序特殊近战与任意死亡触发的半径 3 `EXPLODE`、`KILL_WALL/KILL_ITEM` 事务及原版物品保护、区分睡眠语义的 `HAS_LITE/SELF_LITE` 权威光源，以及 `DROP_60/90/Xd2`、only kind、质量、20% 金币与 50% 职业主题组合。协议保持 1.137、demo 升至 1.174.0、state hash Schema 保持 v63；171 条相关分类 fixtures 原样通过，无 refresh，content hash 为 `fed9c01421e0ee68a6cde5d0b864aee32f4a218d58457cc0d0d06ab6b7d6334f`。详见 [Contract v177](design/contract-v177-monster-melee-effects.md)、[v178](design/contract-v178-monster-terrain-items.md)、[v179](design/contract-v179-monster-light.md) 与 [v180](design/contract-v180-monster-death-drops.md)。
 
+contract-v181 建立通用 Outpost 任务设施并接入原版“盗贼藏身处”首流程：乌尔德里克二世伯爵、东北入口、任务专属 21x8 永久墙地图、八处独立 50% 陷阱候选、四处战利品、六怪阵型、失败/清层/回城领奖，以及可操作的 Web 任务面板。任务放置只绑定目标索引、既有楼层和数量，不携带怪物候选、距离或群体阵型策略；六条单命令 fixture 分别锁住接取、进入、清层、失败、回城和领奖。偷金、偷物、乞讨、地面拾取、完整随机陷阱/物品分配和非 Warrior 奖励矩阵仍显式暂缓。详见 [Contract v181](design/contract-v181-outpost-task-services.md)。
+
+contract-v182 在伯爵设施接入原版“害虫控制”任务：前置完成盗贼藏身处后可接取，目标严格为 Warrens 5 中的 8 只 Warg；`FRIENDS(3d3)` 只描述 Warg 普通生态群体，不改变任务数量。接取后楼层只补足剩余目标并隐藏普通下楼梯；最后一只 Warg 被击杀时生成一处魔法楼梯。未完成任务离层立即失败并丢弃本次阻塞楼层，不保留部分击杀进度；回到伯爵处原子领取原版毛皮披风。两条 `tasks` 分类单命令 fixture 覆盖接取和领奖，协议保持 1.138、demo 升至 1.177.0、state hash Schema 保持 v63，content hash 为 `b51f0b97ac90c025b9c35347b2b2c56c2c2d00d89f53c0534631a1e00d2270a5`，active baseline 共 470 条 exact fixtures、零 waiver。详见 [Contract v182](design/contract-v182-pest-control.md)。
+
 ### 本地验证
 
 ```powershell
@@ -545,7 +549,7 @@ cargo run -p rfb-contract -- verify-category tests/fixtures/active/baseline-poli
 cargo run -p rfb-contract -- refresh-category tests/fixtures/active/baseline-policy.json <category> [category ...]
 ```
 
-当前 462 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
+当前 470 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
 
 ```powershell
 cd web

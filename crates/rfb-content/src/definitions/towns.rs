@@ -34,6 +34,10 @@ pub struct TownFacilityDefinition {
     pub description_key: String,
     pub town_id: String,
     pub category: TownFacilityCategory,
+    #[serde(default)]
+    pub owner_name_key: Option<String>,
+    #[serde(default)]
+    pub task_ids: Vec<String>,
     pub entrance_position: ContentPosition,
     pub entrance_terrain_id: String,
 }
@@ -43,6 +47,7 @@ pub struct TownFacilityDefinition {
 #[serde(rename_all = "kebab-case")]
 pub enum TownFacilityCategory {
     Home,
+    QuestGiver,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

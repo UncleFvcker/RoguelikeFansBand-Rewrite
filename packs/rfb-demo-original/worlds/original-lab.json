@@ -165,6 +165,115 @@
     "turnPenaltyInterval": 100,
     "turnPenaltyPoints": 1
   },
+  "tasks": [{
+    "id": "demo.task.echo-rift",
+    "nameKey": "floor-demo-echo-task-rift-name",
+    "descriptionKey": "terrain-demo-task-rift-description",
+    "location": {
+      "kind": "dedicated-floors",
+      "floorIds": ["demo.floor.echo-task-rift"]
+    },
+    "objectives": [{
+      "kind": "collect-item",
+      "floorId": "demo.floor.echo-task-rift",
+      "itemInstanceId": "demo.task.echo-rift.objective.1",
+      "itemKindId": "demo.item.luminous-shard"
+    }],
+    "reward": {
+      "itemInstanceId": "demo.task.echo-rift.reward.1",
+      "itemKindId": "demo.item.echo-charm",
+      "quantity": 1
+    }
+  }, {
+    "id": "demo.task.echo-hunt",
+    "nameKey": "floor-demo-echo-hunt-rift-name",
+    "descriptionKey": "terrain-demo-hunt-rift-description",
+    "location": {
+      "kind": "dedicated-floors",
+      "floorIds": ["demo.floor.echo-hunt-rift"]
+    },
+    "objectives": [{
+      "kind": "kill-actor",
+      "floorId": "demo.floor.echo-hunt-rift",
+      "actorInstanceId": "demo.task.echo-hunt.target.1",
+      "actorKindId": "demo.actor.ember-mote"
+    }],
+    "targetPlacements": [{
+      "objectiveIndex": 0,
+      "floorId": "demo.floor.echo-hunt-rift",
+      "spawnCount": 1
+    }],
+    "reward": {
+      "itemInstanceId": "demo.task.echo-hunt.reward.1",
+      "itemKindId": "demo.item.luminous-shard",
+      "quantity": 2
+    }
+  }, {
+    "id": "demo.task.echo-bounty",
+    "nameKey": "floor-demo-echo-bounty-rift-name",
+    "descriptionKey": "terrain-demo-bounty-rift-description",
+    "location": {
+      "kind": "dedicated-floors",
+      "floorIds": [
+        "demo.floor.echo-bounty-rift",
+        "demo.floor.echo-bounty-annex-rift"
+      ]
+    },
+    "objectives": [{
+      "kind": "kill-actor-kind",
+      "actorKindId": "demo.actor.ember-mote",
+      "required": 2
+    }],
+    "targetPlacements": [{
+      "objectiveIndex": 0,
+      "floorId": "demo.floor.echo-bounty-rift",
+      "spawnCount": 2
+    }, {
+      "objectiveIndex": 0,
+      "floorId": "demo.floor.echo-bounty-annex-rift",
+      "spawnCount": 1
+    }],
+    "reward": {
+      "itemInstanceId": "demo.task.echo-bounty.reward.1",
+      "itemKindId": "demo.item.echo-charm",
+      "quantity": 1
+    }
+  }, {
+    "id": "demo.task.echo-chain",
+    "nameKey": "floor-demo-echo-chain-rift-name",
+    "descriptionKey": "terrain-demo-chain-rift-description",
+    "location": {
+      "kind": "dedicated-floors",
+      "floorIds": [
+        "demo.floor.echo-chain-rift",
+        "demo.floor.echo-chain-vault-rift"
+      ]
+    },
+    "objectives": [{
+      "kind": "collect-item",
+      "floorId": "demo.floor.echo-chain-rift",
+      "itemInstanceId": "demo.task.echo-chain.objective.1",
+      "itemKindId": "demo.item.luminous-shard"
+    }, {
+      "kind": "enter-floor",
+      "floorId": "demo.floor.echo-chain-vault-rift"
+    }, {
+      "kind": "kill-actor-kind",
+      "floorId": "demo.floor.echo-chain-vault-rift",
+      "actorKindId": "demo.actor.ember-mote",
+      "required": 2
+    }],
+    "targetPlacements": [{
+      "objectiveIndex": 2,
+      "floorId": "demo.floor.echo-chain-vault-rift",
+      "spawnCount": 2
+    }],
+    "reward": {
+      "itemInstanceId": "demo.task.echo-chain.reward.1",
+      "itemKindId": "demo.item.echo-charm",
+      "quantity": 1
+    }
+  }],
   "proceduralFloors": [{
     "id": "demo.floor.echo-depth-1",
     "nameKey": "floor-demo-echo-depth-1-name",
@@ -800,16 +909,7 @@
     "completedEntryTerrainId": "demo.terrain.task-rift-closed",
     "failedEntryTerrainId": "demo.terrain.task-rift-failed",
     "abandonedEntryTerrainId": "demo.terrain.task-rift-abandoned",
-    "taskObjective": {
-      "kind": "collect-item",
-      "itemInstanceId": "demo.task.echo-rift.objective.1",
-      "itemKindId": "demo.item.luminous-shard"
-    },
-    "taskReward": {
-      "itemInstanceId": "demo.task.echo-rift.reward.1",
-      "itemKindId": "demo.item.echo-charm",
-      "quantity": 1
-    },
+    "taskId": "demo.task.echo-rift",
     "depth": 1,
     "width": 20,
     "height": 20,
@@ -836,16 +936,7 @@
     "failedEntryTerrainId": "demo.terrain.hunt-rift-failed",
     "abandonedEntryTerrainId": "demo.terrain.hunt-rift-abandoned",
     "allowEarlyTaskExit": false,
-    "taskObjective": {
-      "kind": "kill-actor",
-      "actorInstanceId": "demo.task.echo-hunt.target.1",
-      "actorKindId": "demo.actor.ember-mote"
-    },
-    "taskReward": {
-      "itemInstanceId": "demo.task.echo-hunt.reward.1",
-      "itemKindId": "demo.item.luminous-shard",
-      "quantity": 2
-    },
+    "taskId": "demo.task.echo-hunt",
     "depth": 1,
     "width": 20,
     "height": 20,
@@ -869,16 +960,6 @@
     "maxRetakes": 1,
     "retakeFloorPolicy": "regenerate-floor",
     "taskId": "demo.task.echo-bounty",
-    "taskObjective": {
-      "kind": "kill-actor-kind",
-      "actorKindId": "demo.actor.ember-mote",
-      "required": 2
-    },
-    "taskReward": {
-      "itemInstanceId": "demo.task.echo-bounty.reward.1",
-      "itemKindId": "demo.item.echo-charm",
-      "quantity": 1
-    },
     "depth": 1,
     "width": 20,
     "height": 20,
@@ -902,12 +983,6 @@
     "maxRetakes": 1,
     "retakeFloorPolicy": "regenerate-floor",
     "taskId": "demo.task.echo-bounty",
-    "taskObjective": {
-      "kind": "kill-actor-kind",
-      "actorKindId": "demo.actor.ember-mote",
-      "required": 2,
-      "spawnCount": 1
-    },
     "depth": 1,
     "width": 20,
     "height": 20,
@@ -930,25 +1005,6 @@
     "retakeable": true,
     "maxRetakes": 2,
     "taskId": "demo.task.echo-chain",
-    "taskStages": [{
-      "kind": "collect-item",
-      "floorId": "demo.floor.echo-chain-rift",
-      "itemInstanceId": "demo.task.echo-chain.objective.1",
-      "itemKindId": "demo.item.luminous-shard"
-    }, {
-      "kind": "enter-floor",
-      "floorId": "demo.floor.echo-chain-vault-rift"
-    }, {
-      "kind": "kill-actor-kind",
-      "floorId": "demo.floor.echo-chain-vault-rift",
-      "actorKindId": "demo.actor.ember-mote",
-      "required": 2
-    }],
-    "taskReward": {
-      "itemInstanceId": "demo.task.echo-chain.reward.1",
-      "itemKindId": "demo.item.echo-charm",
-      "quantity": 1
-    },
     "depth": 1,
     "width": 20,
     "height": 20,

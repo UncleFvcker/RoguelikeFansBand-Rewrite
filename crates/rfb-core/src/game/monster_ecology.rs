@@ -24,6 +24,97 @@ pub(super) struct OriginalGroupMember {
     pub(super) role: OriginalGroupRole,
 }
 
+impl Game {
+    fn original_pack_spell_flags(&self, leader: &ActorDefinition) -> (bool, bool) {
+        fn classify(effect: &AbilityEffectDefinition) -> (bool, bool) {
+            match effect {
+                AbilityEffectDefinition::Damage { .. }
+                | AbilityEffectDefinition::AreaDamage { .. }
+                | AbilityEffectDefinition::BeamDamage { .. }
+                | AbilityEffectDefinition::BoltOrBeamDamage { .. }
+                | AbilityEffectDefinition::ConeDamage { .. }
+                | AbilityEffectDefinition::BreathDamage { .. }
+                | AbilityEffectDefinition::CurseDamage { .. }
+                | AbilityEffectDefinition::DeathRay { .. }
+                | AbilityEffectDefinition::DrainLife { .. } => (true, false),
+                AbilityEffectDefinition::Summon { .. }
+                | AbilityEffectDefinition::SummonCategory { .. } => (false, true),
+                AbilityEffectDefinition::Sequence { effects } => effects
+                    .iter()
+                    .map(classify)
+                    .fold((false, false), |left, right| {
+                        (left.0 || right.0, left.1 || right.1)
+                    }),
+                AbilityEffectDefinition::RandomChoice { branches, .. } => branches
+                    .iter()
+                    .map(|branch| classify(&branch.effect))
+                    .fold((false, false), |left, right| {
+                        (left.0 || right.0, left.1 || right.1)
+                    }),
+                _ => (false, false),
+            }
+        }
+
+        leader
+            .monster_casting
+            .iter()
+            .flat_map(|casting| &casting.abilities)
+            .filter_map(|candidate| self.content.ability(&candidate.ability_id))
+            .map(|ability| classify(&ability.effect))
+            .fold((false, false), |left, right| {
+                (left.0 || right.0, left.1 || right.1)
+            })
+    }
+
+    pub(super) fn original_pack_behavior(
+        &mut self,
+        leader: &ActorDefinition,
+        has_leader: bool,
+        count: usize,
+    ) -> MonsterPackBehaviorDto {
+        let (has_attack_spell, has_summon_spell) = self.original_pack_spell_flags(leader);
+        let roll = self.rng.bounded(if count == 1 {
+            if leader.damage_dice > 0 && leader.damage_sides > 0 {
+                100
+            } else {
+                25
+            }
+        } else {
+            10
+        });
+        if count == 1 {
+            return if roll < 5 && has_attack_spell {
+                MonsterPackBehaviorDto::Shoot
+            } else if roll < 15 && has_summon_spell {
+                MonsterPackBehaviorDto::Lure
+            } else if (roll < 25 && has_attack_spell)
+                || leader.damage_dice == 0
+                || leader.damage_sides == 0
+            {
+                MonsterPackBehaviorDto::MaintainDistance
+            } else {
+                MonsterPackBehaviorDto::Seek
+            };
+        }
+        if leader.tags.iter().any(|tag| tag == "animal") {
+            return match roll {
+                0..=2 => MonsterPackBehaviorDto::Seek,
+                3 if has_attack_spell => MonsterPackBehaviorDto::Shoot,
+                _ => MonsterPackBehaviorDto::Lure,
+            };
+        }
+        match roll {
+            0..=5 => MonsterPackBehaviorDto::Seek,
+            6 | 7 => MonsterPackBehaviorDto::Lure,
+            8 if has_leader => MonsterPackBehaviorDto::GuardLeader,
+            8 if has_attack_spell => MonsterPackBehaviorDto::GuardPosition,
+            8 => MonsterPackBehaviorDto::Lure,
+            9 if has_attack_spell => MonsterPackBehaviorDto::Shoot,
+            _ => MonsterPackBehaviorDto::Seek,
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 struct OriginalAllocationCandidate {
     kind_id: String,
@@ -161,7 +252,11 @@ impl Game {
         }
         let scaled = u64::from(base) * u64::from(policy.special_div);
         let mut weight = u32::try_from(scaled / 64).unwrap_or(u32::MAX);
-        if self.rng.bounded(64) < scaled % 64 {
+        let rounded = *self
+            .monster_division_remainders
+            .entry(definition.id.clone())
+            .or_insert_with(|| self.rng.bounded(64) < scaled % 64);
+        if rounded {
             weight = weight.saturating_add(1);
         }
         weight
@@ -437,6 +532,9 @@ impl Game {
                     .iter()
                     .map(|member| member.kind_id.clone())
                     .collect::<Vec<_>>();
+                // RFB prepares the terrain-filtered allocation table again for
+                // every escort position before drawing a candidate.
+                self.monster_division_remainders.clear();
                 let Some(kind_id) = self.select_original_allocated_monster(
                     policy,
                     u16::try_from(leader.level).unwrap_or(u16::MAX),
@@ -492,6 +590,12 @@ impl Game {
                         .and_then(|definition| definition.allocation.as_ref())
                         .is_some_and(|allocation| allocation.multiplies)
                 })
+                .count()
+                >= ORIGINAL_MAX_REPRODUCERS
+            || self
+                .entities
+                .iter()
+                .filter(|entity| entity.hp > 0 && entity.kind_id == kind_id)
                 .count()
                 >= ORIGINAL_MAX_REPRODUCERS
         {
@@ -627,6 +731,7 @@ impl Game {
         &mut self,
         changed: &mut BTreeSet<Position>,
     ) -> Result<(), CoreError> {
+        self.monster_division_remainders.clear();
         let Some((depth, table)) = self
             .content
             .world(&self.world_id)
@@ -722,16 +827,25 @@ impl Game {
             self.height,
             &mut occupied,
         );
-        let leader_id = self.ecology_entity_id(&format!(
-            "{}.ambient.{}",
-            self.current_floor_id, self.world_tick
-        ));
-        let pack_id = format!("{leader_id}.pack");
         let definition = self
             .content
             .actor(&kind_id)
             .expect("ambient actor definition must remain available")
             .clone();
+        let pack_behavior = (!members.is_empty()).then(|| {
+            self.original_pack_behavior(
+                &definition,
+                members
+                    .iter()
+                    .any(|member| member.role == OriginalGroupRole::Escort),
+                members.len() + 1,
+            )
+        });
+        let leader_id = self.ecology_entity_id(&format!(
+            "{}.ambient.{}",
+            self.current_floor_id, self.world_tick
+        ));
+        let pack_id = format!("{leader_id}.pack");
         let mut leader = spawn_actor_from_definition(
             &mut self.rng,
             &definition,
@@ -740,12 +854,12 @@ impl Game {
             INITIAL_MONSTER_ENERGY_NEED,
             actor_starts_alerted(&definition),
         );
-        if !members.is_empty() {
+        if let Some(behavior) = pack_behavior {
             leader.pack = Some(MonsterPackIdentity {
                 id: pack_id.clone(),
                 leader_id: leader_id.clone(),
                 role: MonsterPackRoleDto::Leader,
-                behavior: MonsterPackBehaviorDto::Seek,
+                behavior,
             });
         }
         let mut spawned = vec![leader];
@@ -768,10 +882,7 @@ impl Game {
                 id: pack_id.clone(),
                 leader_id: leader_id.clone(),
                 role: MonsterPackRoleDto::Member,
-                behavior: match member.role {
-                    OriginalGroupRole::Friend => MonsterPackBehaviorDto::Surround,
-                    OriginalGroupRole::Escort => MonsterPackBehaviorDto::GuardLeader,
-                },
+                behavior: pack_behavior.expect("non-empty pack must retain behavior"),
             });
             spawned.push(actor);
         }

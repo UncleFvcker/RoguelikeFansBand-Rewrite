@@ -6,7 +6,7 @@ fn compiled_catalog_exposes_stable_runtime_indexes() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.174.0");
+    assert_eq!(catalog.pack_version(), "1.177.0");
     assert!(
         catalog
             .ability("demo.ability.warrens-scare")
@@ -728,7 +728,7 @@ fn compiled_catalog_exposes_stable_runtime_indexes() {
         .world("demo.world.warrens-journey")
         .expect("Warrens world should remain available");
     assert_eq!((warrens.width, warrens.height), (96, 32));
-    assert_eq!(warrens.procedural_floors.len(), 9);
+    assert_eq!(warrens.procedural_floors.len(), 10);
     let warrens_first = &warrens.procedural_floors[0];
     assert_eq!((warrens_first.width, warrens_first.height), (66, 22));
     assert_eq!(
@@ -788,7 +788,10 @@ fn compiled_catalog_exposes_stable_runtime_indexes() {
             .as_ref()
             .and_then(|layout| layout.stairs)
             .and_then(|stairs| stairs.down),
-        None
+        Some(ProceduralCountRangeDefinition {
+            minimum: 4,
+            maximum: 5,
+        })
     );
     assert_eq!(
         catalog.visual_glyphs().get("demo.item.luminous-shard"),

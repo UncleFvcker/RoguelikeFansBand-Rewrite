@@ -50,6 +50,8 @@ fn non_preferred_glyph_uses_original_monster_div_sixteen_weight() {
 
     assert_eq!(game.original_dungeon_weight(&actor, &policy), 25);
     assert_eq!(game.rng.draw_counter, draws_before + 1);
+    assert_eq!(game.original_dungeon_weight(&actor, &policy), 25);
+    assert_eq!(game.rng.draw_counter, draws_before + 1);
 }
 
 #[test]
@@ -127,6 +129,99 @@ fn giant_white_mouse_reproduction_adds_one_adjacent_mouse() {
     assert_eq!(game.entities.len(), 2);
     assert_eq!(game.entities[1].kind_id, "demo.actor.giant-white-mouse");
     assert!(adjacent(origin, game.entities[1].position));
+}
+
+#[test]
+fn same_kind_reproduction_stops_at_one_hundred_living_monsters() {
+    let mut game = enter_warrens(70);
+    game.entities.clear();
+    let origin = game.player.position;
+    game.player.position = Position {
+        x: origin.x.saturating_sub(5),
+        y: origin.y,
+    };
+    for ordinal in 0..100 {
+        let mut actor = game.generated_actor(
+            format!("test.mouse.{ordinal}"),
+            "demo.actor.giant-white-mouse",
+            origin,
+        );
+        actor.position = Position {
+            x: origin.x + i32::try_from(ordinal % 10).expect("small x offset"),
+            y: origin.y + i32::try_from(ordinal / 10).expect("small y offset"),
+        };
+        game.entities.push(actor);
+    }
+
+    let draws_before = game.rng.draw_counter;
+    assert!(!game.try_original_reproduction(0, &mut BTreeSet::new()));
+    assert_eq!(game.entities.len(), 100);
+    assert_eq!(game.rng.draw_counter, draws_before);
+}
+
+#[test]
+fn original_pack_members_share_one_selected_behavior() {
+    let mut game = enter_warrens(71);
+    for _ in 2..=9 {
+        place_player_on_terrain(&mut game, "demo.terrain.stairs-down");
+        game.traverse_stairs(false)
+            .expect("Warrens descent should resolve")
+            .expect("Warrens descent should transition");
+    }
+    let guardian = game
+        .entities
+        .iter()
+        .find(|actor| actor.id == "demo.guardian.warrens.1")
+        .expect("Warrens guardian should be generated");
+    let pack_id = guardian
+        .pack
+        .as_ref()
+        .expect("Warrens guardian should lead an escort pack")
+        .id
+        .clone();
+    let pack = game
+        .entities
+        .iter()
+        .filter(|actor| actor.pack.as_ref().is_some_and(|pack| pack.id == pack_id))
+        .collect::<Vec<_>>();
+
+    assert!(pack.len() > 1);
+    assert!(pack.iter().all(|actor| {
+        actor.pack.as_ref().expect("pack member identity").behavior
+            == guardian
+                .pack
+                .as_ref()
+                .expect("guardian pack identity")
+                .behavior
+    }));
+}
+
+#[test]
+fn fixed_guardian_without_allocation_generates_on_global_allocation_floor() {
+    let mut game = enter_warrens(72);
+    let mut floor = game
+        .content
+        .world(WARRENS_JOURNEY_WORLD_ID)
+        .expect("Warrens world definition")
+        .procedural_floors
+        .iter()
+        .find(|floor| floor.id == "demo.floor.warrens-depth-9")
+        .expect("Warrens final floor definition")
+        .clone();
+    let guardian = floor
+        .guardian
+        .as_mut()
+        .expect("Warrens final floor guardian");
+    guardian.instance_id = "test.fixed-guardian".to_owned();
+    guardian.actor_kind_id = "demo.actor.serpent-of-chaos".to_owned();
+
+    let generated = game
+        .generate_procedural_floor(&floor, None)
+        .expect("fixed Guardian without allocation should generate safely");
+
+    assert!(generated.entities.iter().any(|actor| {
+        actor.id == "test.fixed-guardian" && actor.kind_id == "demo.actor.serpent-of-chaos"
+    }));
 }
 
 #[test]

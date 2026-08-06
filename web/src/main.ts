@@ -48,6 +48,7 @@ import { JourneyResult } from "./journey-result";
 import { PlayerUiLayout } from "./player-ui-layout";
 import { ShopPanel } from "./shop-panel";
 import { HomePanel } from "./home-panel";
+import { TaskServicePanel } from "./task-service-panel";
 
 const core = new TauriNativeTransport();
 const crashDiagnostics = new DesktopCrashDiagnostics();
@@ -148,6 +149,7 @@ const settingsPanel = new SettingsPanel({
     playerUiLayout.localize();
     shopPanel.localize();
     homePanel.localize();
+    taskServicePanel.localize();
     messagePanel.render();
   },
   refreshBusyControls: () => inventoryPanel.updateActions(),
@@ -165,6 +167,7 @@ const gameSession = new GameSession({
     inventoryPanel.render(update.inventory, update.equipment);
     shopPanel.render(update);
     homePanel.render(update);
+    taskServicePanel.render(update);
     for (const event of update.events) addGameEvent(event);
     journeyGuidance.observeCommand(command, previous, update);
     journeyResult.renderUpdate(update);
@@ -173,6 +176,7 @@ const gameSession = new GameSession({
     inventoryPanel.updateActions();
     shopPanel.updateActions();
     homePanel.updateActions();
+    taskServicePanel.updateActions();
     inputController.render();
   },
   showError,
@@ -249,6 +253,17 @@ const homePanel = new HomePanel({
   dispatch,
   formatEvent,
   visibleItemName,
+  beforeOpen: () => {
+    playerUiLayout.closePage();
+    inputController.cancelTargeting(false);
+  },
+});
+const taskServicePanel = new TaskServicePanel({
+  document,
+  state: appState,
+  localization,
+  dispatch,
+  formatEvent,
   beforeOpen: () => {
     playerUiLayout.closePage();
     inputController.cancelTargeting(false);
@@ -339,6 +354,7 @@ statusPanel.install();
 inventoryPanel.install();
 shopPanel.install();
 homePanel.install();
+taskServicePanel.install();
 journeyGuidance.install();
 journeyResult.install();
 playerUiLayout.install();
@@ -355,6 +371,7 @@ window.addEventListener("beforeunload", () => {
   statusPanel.dispose();
   shopPanel.dispose();
   homePanel.dispose();
+  taskServicePanel.dispose();
   settingsPanel.dispose();
   inputController.dispose();
   journeyGuidance.dispose();
@@ -466,6 +483,7 @@ function applyLoadedSnapshot(snapshot: GameSnapshot): void {
   inputController.cancelTargeting(false);
   shopPanel.reset();
   homePanel.reset();
+  taskServicePanel.reset();
   appState.mode = "playing";
   appState.setMapSize(snapshot.width, snapshot.height);
   appState.worldId = snapshot.worldId;
@@ -480,6 +498,7 @@ function applyLoadedSnapshot(snapshot: GameSnapshot): void {
   inventoryPanel.render(snapshot.inventory, snapshot.equipment);
   shopPanel.render(snapshot);
   homePanel.render(snapshot);
+  taskServicePanel.render(snapshot);
   journeyGuidance.render(snapshot);
   sessionShell.showGame(snapshot);
   journeyResult.renderSnapshot(snapshot);
@@ -505,6 +524,7 @@ async function initializeGameView(snapshot: GameSnapshot): Promise<void> {
   inputController.cancelTargeting(false);
   shopPanel.reset();
   homePanel.reset();
+  taskServicePanel.reset();
   appState.setMapSize(snapshot.width, snapshot.height);
   appState.worldId = snapshot.worldId;
   appState.replaceCells(snapshot.cells);
@@ -538,6 +558,7 @@ async function initializeGameView(snapshot: GameSnapshot): Promise<void> {
   inventoryPanel.render(snapshot.inventory, snapshot.equipment);
   shopPanel.render(snapshot);
   homePanel.render(snapshot);
+  taskServicePanel.render(snapshot);
   journeyGuidance.render(snapshot);
   journeyResult.renderSnapshot(snapshot);
   appState.connection = "ready";
@@ -561,6 +582,7 @@ function showSessionView(view: "title" | "new-game" | "load"): void {
   inputController.cancelTargeting(false);
   shopPanel.reset();
   homePanel.reset();
+  taskServicePanel.reset();
   appState.mode = "title";
   switch (view) {
     case "title":

@@ -133,6 +133,8 @@ pub struct WorldDefinition {
     pub dungeons: Vec<DungeonDefinition>,
     #[serde(default)]
     pub campaign: Option<CampaignDefinition>,
+    #[serde(default)]
+    pub tasks: Vec<TaskDefinition>,
     pub procedural_floors: Vec<ProceduralFloorDefinition>,
 }
 
@@ -258,11 +260,15 @@ pub struct ProceduralFloorDefinition {
     #[serde(default)]
     pub layout: Option<ProceduralLayoutDefinition>,
     #[serde(default)]
+    pub inline_map: Option<InlineFloorMapDefinition>,
+    #[serde(default)]
     pub generation_budget: Option<ProceduralGenerationBudgetDefinition>,
     #[serde(default)]
     pub nest: Option<ProceduralNestDefinition>,
     #[serde(default)]
     pub entry_terrain_id: Option<String>,
+    #[serde(default)]
+    pub available_entry_terrain_id: Option<String>,
     #[serde(default)]
     pub entry_connection_id: Option<String>,
     #[serde(default)]
@@ -283,12 +289,6 @@ pub struct ProceduralFloorDefinition {
     #[serde(default)]
     pub task_id: Option<String>,
     #[serde(default)]
-    pub task_objective: Option<TaskObjectiveDefinition>,
-    #[serde(default)]
-    pub task_stages: Vec<TaskObjectiveDefinition>,
-    #[serde(default)]
-    pub task_reward: Option<TaskRewardDefinition>,
-    #[serde(default)]
     pub next_floor_id: Option<String>,
     #[serde(default)]
     pub connections: Vec<ProceduralFloorConnectionDefinition>,
@@ -304,6 +304,55 @@ pub struct ProceduralFloorDefinition {
     pub trap_terrain_id: String,
     pub actor_spawns: Vec<ProceduralActorSpawnDefinition>,
     pub loot_spawns: Vec<ProceduralLootSpawnDefinition>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct InlineFloorMapDefinition {
+    pub player_position: ContentPosition,
+    pub terrain_overrides: Vec<InlineTerrainOverrideDefinition>,
+    #[serde(default)]
+    pub actor_spawns: Vec<ActorSpawn>,
+    #[serde(default)]
+    pub loot_spawns: Vec<InlineFloorLootSpawnDefinition>,
+    #[serde(default)]
+    pub monster_formation: Option<InlineMonsterFormationDefinition>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct InlineTerrainOverrideDefinition {
+    pub terrain_id: String,
+    pub positions: Vec<ContentPosition>,
+    #[serde(default = "default_terrain_override_chance_percent")]
+    pub chance_percent: u8,
+    #[serde(default)]
+    pub otherwise_terrain_id: Option<String>,
+}
+
+const fn default_terrain_override_chance_percent() -> u8 {
+    100
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct InlineFloorLootSpawnDefinition {
+    pub id: String,
+    pub position: ContentPosition,
+    pub loot_table_id: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct InlineMonsterFormationDefinition {
+    pub candidate_actor_kind_ids: Vec<String>,
+    pub draw_count: u16,
+    pub placement_indices: Vec<u16>,
+    pub positions: Vec<ContentPosition>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -413,8 +462,6 @@ pub struct TaskObjectiveDefinition {
     pub actor_instance_id: Option<String>,
     #[serde(default)]
     pub actor_kind_id: Option<String>,
-    #[serde(default)]
-    pub spawn_count: Option<u32>,
 }
 
 const fn default_task_objective_required() -> u32 {
@@ -425,10 +472,53 @@ const fn default_task_objective_required() -> u32 {
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
 pub enum TaskObjectiveKind {
+    ClearFloor,
     CollectItem,
     EnterFloor,
     KillActor,
     KillActorKind,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct TaskDefinition {
+    pub id: String,
+    pub name_key: String,
+    pub description_key: String,
+    #[serde(default)]
+    pub source_facility_id: Option<String>,
+    #[serde(default)]
+    pub prerequisite_task_id: Option<String>,
+    pub location: TaskLocationDefinition,
+    pub objectives: Vec<TaskObjectiveDefinition>,
+    #[serde(default)]
+    pub target_placements: Vec<TaskTargetPlacementDefinition>,
+    #[serde(default)]
+    pub completion_exit_terrain_id: Option<String>,
+    pub reward: TaskRewardDefinition,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(
+    tag = "kind",
+    rename_all = "kebab-case",
+    rename_all_fields = "camelCase",
+    deny_unknown_fields
+)]
+pub enum TaskLocationDefinition {
+    DedicatedFloors { floor_ids: Vec<String> },
+    DungeonDepth { dungeon_id: String, depth: u16 },
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct TaskTargetPlacementDefinition {
+    pub objective_index: u32,
+    pub floor_id: String,
+    pub spawn_count: u32,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

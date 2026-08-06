@@ -5,7 +5,10 @@
   "nameKey": "town-demo-outpost-name",
   "descriptionKey": "town-demo-outpost-description",
   "floorId": "demo.floor.surface",
-  "facilityIds": ["demo.town-facility.outpost-home"],
+  "facilityIds": [
+    "demo.town-facility.outpost-count",
+    "demo.town-facility.outpost-home"
+  ],
   "shopIds": [
     "demo.shop.outpost-armoury",
     "demo.shop.outpost-black-market",

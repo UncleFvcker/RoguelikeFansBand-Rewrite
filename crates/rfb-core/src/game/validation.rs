@@ -365,6 +365,17 @@ impl Game {
             }
             None => {}
             Some(town) => {
+                let home_facility_ids = town
+                    .facility_ids
+                    .iter()
+                    .filter(|facility_id| {
+                        self.content
+                            .town_facility(facility_id)
+                            .is_some_and(|facility| {
+                                facility.category == rfb_content::TownFacilityCategory::Home
+                            })
+                    })
+                    .collect::<BTreeSet<_>>();
                 if self.town_states.len() != 1
                     || !self
                         .town_states
@@ -375,11 +386,10 @@ impl Game {
                         .shop_ids
                         .iter()
                         .any(|shop_id| !self.shop_states.contains_key(shop_id))
-                    || self.home_states.len() != town.facility_ids.len()
-                    || town
-                        .facility_ids
+                    || self.home_states.len() != home_facility_ids.len()
+                    || home_facility_ids
                         .iter()
-                        .any(|facility_id| !self.home_states.contains_key(facility_id))
+                        .any(|facility_id| !self.home_states.contains_key(*facility_id))
                 {
                     return Err(CoreError::InvalidSave("town state is invalid"));
                 }
@@ -399,7 +409,7 @@ impl Game {
                     return Err(CoreError::InvalidSave("shop state is invalid"));
                 }
                 if self.current_floor_id == town.floor_id
-                    && town.facility_ids.iter().any(|facility_id| {
+                    && home_facility_ids.iter().any(|facility_id| {
                         let facility = self
                             .content
                             .town_facility(facility_id)
@@ -407,7 +417,7 @@ impl Game {
                         self.player.position == position_from_content(facility.entrance_position)
                             && !self
                                 .home_states
-                                .get(facility_id)
+                                .get(*facility_id)
                                 .is_some_and(|state| state.visited)
                     })
                 {
@@ -853,18 +863,25 @@ impl Game {
             .world(&self.world_id)
             .expect("active world must remain available");
         let expected_tasks = initial_task_states(world);
-        if self.task_states.len() != expected_tasks.len() {
+        if self
+            .task_states
+            .keys()
+            .any(|task_id| task_definition(world, task_id).is_none())
+            || expected_tasks
+                .keys()
+                .any(|task_id| !self.task_states.contains_key(task_id))
+        {
             return Err(CoreError::InvalidSave("task state set is invalid"));
         }
         for (task_id, state) in &self.task_states {
-            let Some(expected) = expected_tasks.get(task_id) else {
+            let Some(task) = task_definition(world, task_id) else {
                 return Err(CoreError::InvalidSave("task state ID is invalid"));
             };
-            let members = world
-                .procedural_floors
-                .iter()
-                .filter(|floor| floor_task_id(floor) == task_id)
-                .collect::<Vec<_>>();
+            let expected = expected_tasks
+                .get(task_id)
+                .cloned()
+                .unwrap_or_else(|| super::tasks::task_initial_state(task, &self.task_states));
+            let members = task_floors(world, task_id).collect::<Vec<_>>();
             let objectives = task_objectives(world, task_id);
             let Some(objective) = usize::try_from(state.stage_index)
                 .ok()
@@ -891,9 +908,34 @@ impl Game {
                             .is_some_and(|stage| stage + 1 == objectives.len())
                         && state.current == state.required
                 }
-                TaskStatusKindDto::Available
-                | TaskStatusKindDto::Failed
-                | TaskStatusKindDto::Abandoned => state.active_floor_id.is_none(),
+                TaskStatusKindDto::Available => {
+                    state.active_floor_id.is_none()
+                        && (task.source_facility_id.is_none()
+                            || expected.status == TaskStatusKindDto::Available)
+                }
+                TaskStatusKindDto::Failed | TaskStatusKindDto::Abandoned => {
+                    state.active_floor_id.is_none()
+                }
+                TaskStatusKindDto::Locked => {
+                    state.active_floor_id.is_none()
+                        && expected.status == TaskStatusKindDto::Locked
+                        && state.stage_index == 0
+                        && state.current == 0
+                }
+                TaskStatusKindDto::RewardAvailable => {
+                    state.active_floor_id.is_none()
+                        && task_definition(world, task_id)
+                            .is_some_and(|task| task.source_facility_id.is_some())
+                        && usize::try_from(state.stage_index)
+                            .ok()
+                            .is_some_and(|stage| stage + 1 == objectives.len())
+                        && state.current == state.required
+                }
+                TaskStatusKindDto::Taken => {
+                    state.active_floor_id.is_none()
+                        && task_definition(world, task_id)
+                            .is_some_and(|task| task.source_facility_id.is_some())
+                }
             };
             if (state.stage_index == 0 && expected.required != objective.required)
                 || state.required != objective.required

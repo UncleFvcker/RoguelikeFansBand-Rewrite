@@ -871,13 +871,28 @@
       ],
       "nextItemInstanceSerial": 90,
       "nextGoldPileSerial": 1,
+      "tasks": [
+        {
+          "taskId": "demo.task.thieves-hideout",
+          "floorId": "demo.floor.thieves-hideout",
+          "nameKey": "task-demo-thieves-hideout-name",
+          "descriptionKey": "task-demo-thieves-hideout-description",
+          "sourceFacilityId": "demo.town-facility.outpost-count",
+          "status": "available",
+          "current": 0,
+          "required": 1,
+          "stage": 1,
+          "stages": 1,
+          "retakesUsed": 0
+        }
+      ],
       "campaign": {
         "status": "active",
         "score": 0,
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "fc67e87302225259a63eb7e947d4b82d920d62d6f3f5919d561af5ce2652ab9f"
+      "stateHash": "5cc77044361fcb729d7f82f3d3e8357f254ecf2a3761e995e4b7aa746d01d2f0"
     },
     "changedCells": [
       {

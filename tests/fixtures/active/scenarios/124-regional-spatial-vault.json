@@ -394,31 +394,10 @@
       "nextGoldPileSerial": 1,
       "tasks": [
         {
-          "taskId": "demo.floor.echo-hunt-rift",
-          "floorId": "demo.floor.echo-hunt-rift",
-          "nameKey": "floor-demo-echo-hunt-rift-name",
-          "status": "available",
-          "current": 0,
-          "required": 1,
-          "stage": 1,
-          "stages": 1,
-          "retakesUsed": 0
-        },
-        {
-          "taskId": "demo.floor.echo-task-rift",
-          "floorId": "demo.floor.echo-task-rift",
-          "nameKey": "floor-demo-echo-task-rift-name",
-          "status": "available",
-          "current": 0,
-          "required": 1,
-          "stage": 1,
-          "stages": 1,
-          "retakesUsed": 0
-        },
-        {
           "taskId": "demo.task.echo-bounty",
           "floorId": "demo.floor.echo-bounty-rift",
           "nameKey": "floor-demo-echo-bounty-rift-name",
+          "descriptionKey": "terrain-demo-bounty-rift-description",
           "status": "available",
           "current": 0,
           "required": 2,
@@ -431,6 +410,7 @@
           "taskId": "demo.task.echo-chain",
           "floorId": "demo.floor.echo-chain-rift",
           "nameKey": "floor-demo-echo-chain-rift-name",
+          "descriptionKey": "terrain-demo-chain-rift-description",
           "status": "available",
           "current": 0,
           "required": 1,
@@ -438,6 +418,30 @@
           "stages": 3,
           "retakesUsed": 0,
           "maxRetakes": 2
+        },
+        {
+          "taskId": "demo.task.echo-hunt",
+          "floorId": "demo.floor.echo-hunt-rift",
+          "nameKey": "floor-demo-echo-hunt-rift-name",
+          "descriptionKey": "terrain-demo-hunt-rift-description",
+          "status": "available",
+          "current": 0,
+          "required": 1,
+          "stage": 1,
+          "stages": 1,
+          "retakesUsed": 0
+        },
+        {
+          "taskId": "demo.task.echo-rift",
+          "floorId": "demo.floor.echo-task-rift",
+          "nameKey": "floor-demo-echo-task-rift-name",
+          "descriptionKey": "terrain-demo-task-rift-description",
+          "status": "available",
+          "current": 0,
+          "required": 1,
+          "stage": 1,
+          "stages": 1,
+          "retakesUsed": 0
         }
       ],
       "campaign": {
@@ -446,7 +450,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "8643563e2aa0d64ded541466b3d5662e1e5973241f829e37e4b2f55cbdafcf2e"
+      "stateHash": "46ff52613bec612ad994195f21b31e7b4b0a3ce1bf35302b80be694360aee3dc"
     },
     "events": [
       {
@@ -12037,14 +12041,14 @@
       {
         "step": 15,
         "kind": "player-dead",
-        "stateHash": "8643563e2aa0d64ded541466b3d5662e1e5973241f829e37e4b2f55cbdafcf2e"
+        "stateHash": "46ff52613bec612ad994195f21b31e7b4b0a3ce1bf35302b80be694360aee3dc"
       },
       {
         "step": 16,
         "kind": "player-dead",
-        "stateHash": "8643563e2aa0d64ded541466b3d5662e1e5973241f829e37e4b2f55cbdafcf2e"
+        "stateHash": "46ff52613bec612ad994195f21b31e7b4b0a3ce1bf35302b80be694360aee3dc"
       }
     ],
-    "saveRoundTripStateHash": "8643563e2aa0d64ded541466b3d5662e1e5973241f829e37e4b2f55cbdafcf2e"
+    "saveRoundTripStateHash": "46ff52613bec612ad994195f21b31e7b4b0a3ce1bf35302b80be694360aee3dc"
   }
 }

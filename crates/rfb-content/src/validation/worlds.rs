@@ -56,14 +56,24 @@ fn validate_task_objective(
         .as_ref()
         .is_some_and(|floor_id| !floor_ids.contains(floor_id))
     {
-        return Err(ContentError::InvalidProceduralFloor(owner_id.to_owned()));
+        return Err(ContentError::InvalidTask(owner_id.to_owned()));
     }
     match objective.kind {
+        TaskObjectiveKind::ClearFloor => {
+            if objective.required != 1
+                || objective.item_instance_id.is_some()
+                || objective.item_kind_id.is_some()
+                || objective.actor_instance_id.is_some()
+                || objective.actor_kind_id.is_some()
+            {
+                return Err(ContentError::InvalidTask(owner_id.to_owned()));
+            }
+        }
         TaskObjectiveKind::CollectItem => {
             let (Some(instance_id), Some(kind_id)) =
                 (&objective.item_instance_id, &objective.item_kind_id)
             else {
-                return Err(ContentError::InvalidProceduralFloor(owner_id.to_owned()));
+                return Err(ContentError::InvalidTask(owner_id.to_owned()));
             };
             validate_id(instance_id)?;
             if !instance_ids.insert(instance_id.clone()) {
@@ -76,11 +86,10 @@ fn validate_task_objective(
                 });
             }
             if objective.required != 1
-                || objective.spawn_count.is_some()
                 || objective.actor_instance_id.is_some()
                 || objective.actor_kind_id.is_some()
             {
-                return Err(ContentError::InvalidProceduralFloor(owner_id.to_owned()));
+                return Err(ContentError::InvalidTask(owner_id.to_owned()));
             }
         }
         TaskObjectiveKind::EnterFloor => {
@@ -90,16 +99,15 @@ fn validate_task_objective(
                 || objective.item_kind_id.is_some()
                 || objective.actor_instance_id.is_some()
                 || objective.actor_kind_id.is_some()
-                || objective.spawn_count.is_some()
             {
-                return Err(ContentError::InvalidProceduralFloor(owner_id.to_owned()));
+                return Err(ContentError::InvalidTask(owner_id.to_owned()));
             }
         }
         TaskObjectiveKind::KillActor => {
             let (Some(instance_id), Some(kind_id)) =
                 (&objective.actor_instance_id, &objective.actor_kind_id)
             else {
-                return Err(ContentError::InvalidProceduralFloor(owner_id.to_owned()));
+                return Err(ContentError::InvalidTask(owner_id.to_owned()));
             };
             validate_id(instance_id)?;
             if !instance_ids.insert(instance_id.clone()) {
@@ -107,26 +115,22 @@ fn validate_task_objective(
             }
             require_actor_role(actor_roles, kind_id, ActorRole::Monster, owner_id)?;
             if objective.required != 1
-                || objective.spawn_count.is_some()
                 || objective.item_instance_id.is_some()
                 || objective.item_kind_id.is_some()
             {
-                return Err(ContentError::InvalidProceduralFloor(owner_id.to_owned()));
+                return Err(ContentError::InvalidTask(owner_id.to_owned()));
             }
         }
         TaskObjectiveKind::KillActorKind => {
             let Some(kind_id) = &objective.actor_kind_id else {
-                return Err(ContentError::InvalidProceduralFloor(owner_id.to_owned()));
+                return Err(ContentError::InvalidTask(owner_id.to_owned()));
             };
-            if objective.required < 2
+            if objective.required == 0
                 || objective.actor_instance_id.is_some()
                 || objective.item_instance_id.is_some()
                 || objective.item_kind_id.is_some()
-                || objective
-                    .spawn_count
-                    .is_some_and(|count| count == 0 || count > objective.required)
             {
-                return Err(ContentError::InvalidProceduralFloor(owner_id.to_owned()));
+                return Err(ContentError::InvalidTask(owner_id.to_owned()));
             }
             require_actor_role(actor_roles, kind_id, ActorRole::Monster, owner_id)?;
         }
@@ -320,6 +324,7 @@ pub(super) fn validate_world(
                     || procedural.next_floor_id.is_some()))
             || (procedural.lifecycle == FloorLifecycle::Dungeon
                 && (procedural.dungeon_id.is_none()
+                    || procedural.available_entry_terrain_id.is_some()
                     || procedural.completed_entry_terrain_id.is_some()
                     || procedural.failed_entry_terrain_id.is_some()
                     || procedural.abandoned_entry_terrain_id.is_some()
@@ -327,10 +332,7 @@ pub(super) fn validate_world(
                     || procedural.retakeable
                     || procedural.max_retakes.is_some()
                     || procedural.retake_floor_policy != RetakeFloorPolicy::PreserveFloor
-                    || procedural.task_id.is_some()
-                    || procedural.task_objective.is_some()
-                    || !procedural.task_stages.is_empty()
-                    || procedural.task_reward.is_some()))
+                    || procedural.task_id.is_some()))
         {
             return Err(ContentError::InvalidWorldDimensions(world.id.clone()));
         }
@@ -366,6 +368,26 @@ pub(super) fn validate_world(
                     || procedural.nest.is_some()
                     || maze_only
                     || procedural.generation_budget.is_none())
+            || procedural.inline_map.is_some()
+                && (procedural.lifecycle != FloorLifecycle::OneShot
+                    || procedural.task_id.is_none()
+                    || procedural.layout.is_some()
+                    || procedural.generation_budget.is_some()
+                    || procedural.encounter_table_id.is_some()
+                    || procedural.loot_table_id.is_some()
+                    || procedural.loot_allocation.is_some()
+                    || procedural.gold_allocation.is_some()
+                    || !procedural.guaranteed_items.is_empty()
+                    || procedural.theme_table_id.is_some()
+                    || procedural.region_table_id.is_some()
+                    || procedural.terrain_feature_table_id.is_some()
+                    || procedural.theme_id.is_some()
+                    || procedural.vault_id.is_some()
+                    || procedural.nest.is_some()
+                    || procedural.guardian.is_some()
+                    || !procedural.connections.is_empty()
+                    || !procedural.actor_spawns.is_empty()
+                    || !procedural.loot_spawns.is_empty())
         {
             return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
         }
@@ -1330,6 +1352,7 @@ pub(super) fn validate_world(
             Some(&procedural.trap_terrain_id),
             procedural.down_stair_terrain_id.as_ref(),
             procedural.entry_terrain_id.as_ref(),
+            procedural.available_entry_terrain_id.as_ref(),
             procedural.completed_entry_terrain_id.as_ref(),
             procedural.failed_entry_terrain_id.as_ref(),
             procedural.abandoned_entry_terrain_id.as_ref(),
@@ -1338,29 +1361,6 @@ pub(super) fn validate_world(
         .flatten()
         {
             require_reference(terrain_ids, terrain_id, &procedural.id)?;
-        }
-        if let Some(objective) = &procedural.task_objective {
-            if objective.floor_id.is_some() {
-                return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
-            }
-            validate_task_objective(
-                &procedural.id,
-                objective,
-                &floor_ids,
-                actor_roles,
-                item_limits,
-                &mut procedural_actor_ids,
-            )?;
-        }
-        for stage in &procedural.task_stages {
-            validate_task_objective(
-                &procedural.id,
-                stage,
-                &floor_ids,
-                actor_roles,
-                item_limits,
-                &mut procedural_actor_ids,
-            )?;
         }
         if let Some(guardian) = &procedural.guardian {
             validate_id(&guardian.instance_id)?;
@@ -1383,25 +1383,6 @@ pub(super) fn validate_world(
             }
             if let Some(table_id) = &guardian.reward_loot_table_id {
                 require_reference(loot_table_ids, table_id, &procedural.id)?;
-            }
-        }
-        if let Some(reward) = &procedural.task_reward {
-            validate_id(&reward.item_instance_id)?;
-            if !procedural_actor_ids.insert(reward.item_instance_id.clone()) {
-                return Err(ContentError::DuplicateInstanceId(
-                    reward.item_instance_id.clone(),
-                ));
-            }
-            let (max_stack, _) = item_limits.get(&reward.item_kind_id).ok_or_else(|| {
-                ContentError::DanglingReference {
-                    owner: procedural.id.clone(),
-                    target: reward.item_kind_id.clone(),
-                }
-            })?;
-            if reward.quantity == 0 || reward.quantity > *max_stack {
-                return Err(ContentError::InvalidItemQuantity(
-                    reward.item_instance_id.clone(),
-                ));
             }
         }
         if terrain_walkability
@@ -1430,6 +1411,180 @@ pub(super) fn validate_world(
             || procedural.depth > 1_000
         {
             return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+        }
+        if let Some(inline_map) = &mut procedural.inline_map {
+            validate_position(
+                inline_map.player_position,
+                procedural.width,
+                procedural.height,
+                &procedural.id,
+            )?;
+            inline_map.terrain_overrides.sort_by(|left, right| {
+                left.terrain_id
+                    .cmp(&right.terrain_id)
+                    .then_with(|| left.positions.first().cmp(&right.positions.first()))
+            });
+            let mut painted_positions = BTreeSet::new();
+            let mut painted_terrain = BTreeMap::new();
+            for terrain_override in &mut inline_map.terrain_overrides {
+                require_reference(terrain_ids, &terrain_override.terrain_id, &procedural.id)?;
+                if terrain_override.chance_percent == 0
+                    || terrain_override.chance_percent > 100
+                    || (terrain_override.chance_percent < 100)
+                        != terrain_override.otherwise_terrain_id.is_some()
+                {
+                    return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+                }
+                if let Some(otherwise_terrain_id) = &terrain_override.otherwise_terrain_id {
+                    require_reference(terrain_ids, otherwise_terrain_id, &procedural.id)?;
+                    if terrain_walkability.get(&terrain_override.terrain_id)
+                        != terrain_walkability.get(otherwise_terrain_id)
+                    {
+                        return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+                    }
+                }
+                terrain_override.positions.sort();
+                terrain_override.positions.dedup();
+                if terrain_override.positions.is_empty() {
+                    return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+                }
+                for position in &terrain_override.positions {
+                    validate_position(
+                        *position,
+                        procedural.width,
+                        procedural.height,
+                        &procedural.id,
+                    )?;
+                    if !painted_positions.insert(*position) {
+                        return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+                    }
+                    painted_terrain.insert(*position, terrain_override.terrain_id.as_str());
+                }
+            }
+            let terrain_at = |position: ContentPosition| {
+                painted_terrain
+                    .get(&position)
+                    .copied()
+                    .unwrap_or(procedural.wall_terrain_id.as_str())
+            };
+            if !terrain_walkability
+                .get(terrain_at(inline_map.player_position))
+                .copied()
+                .unwrap_or(false)
+            {
+                return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+            }
+
+            inline_map
+                .actor_spawns
+                .sort_by(|left, right| left.instance_id.cmp(&right.instance_id));
+            let mut occupied = BTreeSet::from([inline_map.player_position]);
+            for spawn in &inline_map.actor_spawns {
+                validate_id(&spawn.instance_id)?;
+                validate_position(
+                    spawn.position,
+                    procedural.width,
+                    procedural.height,
+                    &procedural.id,
+                )?;
+                if !procedural_actor_ids.insert(spawn.instance_id.clone())
+                    || !occupied.insert(spawn.position)
+                    || !terrain_walkability
+                        .get(terrain_at(spawn.position))
+                        .copied()
+                        .unwrap_or(false)
+                {
+                    return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+                }
+                require_actor_role(
+                    actor_roles,
+                    &spawn.kind_id,
+                    ActorRole::Monster,
+                    &procedural.id,
+                )?;
+            }
+
+            inline_map
+                .loot_spawns
+                .sort_by(|left, right| left.id.cmp(&right.id));
+            let mut inline_loot_ids = BTreeSet::new();
+            for spawn in &inline_map.loot_spawns {
+                validate_id(&spawn.id)?;
+                validate_position(
+                    spawn.position,
+                    procedural.width,
+                    procedural.height,
+                    &procedural.id,
+                )?;
+                if !inline_loot_ids.insert(spawn.id.clone())
+                    || !occupied.insert(spawn.position)
+                    || !terrain_walkability
+                        .get(terrain_at(spawn.position))
+                        .copied()
+                        .unwrap_or(false)
+                {
+                    return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+                }
+                require_reference(loot_table_ids, &spawn.loot_table_id, &procedural.id)?;
+            }
+
+            if let Some(formation) = &mut inline_map.monster_formation {
+                formation.candidate_actor_kind_ids.sort();
+                formation.candidate_actor_kind_ids.dedup();
+                if formation.candidate_actor_kind_ids.is_empty()
+                    || formation.candidate_actor_kind_ids.len() > 64
+                    || formation.draw_count == 0
+                    || formation.draw_count > 32
+                    || formation.placement_indices.len() != formation.positions.len()
+                    || formation.positions.is_empty()
+                    || formation.positions.len() > usize::from(formation.draw_count)
+                {
+                    return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+                }
+                for actor_kind_id in &formation.candidate_actor_kind_ids {
+                    require_actor_role(
+                        actor_roles,
+                        actor_kind_id,
+                        ActorRole::Monster,
+                        &procedural.id,
+                    )?;
+                    if actors
+                        .iter()
+                        .find(|actor| actor.id == *actor_kind_id)
+                        .is_none_or(|actor| {
+                            actor.allocation.is_none()
+                                || actor.level > u32::from(procedural.depth).saturating_add(5)
+                                || actor.tags.iter().any(|tag| tag == "unique")
+                        })
+                    {
+                        return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+                    }
+                }
+                let mut indices = BTreeSet::new();
+                for (index, position) in formation
+                    .placement_indices
+                    .iter()
+                    .copied()
+                    .zip(formation.positions.iter().copied())
+                {
+                    validate_position(
+                        position,
+                        procedural.width,
+                        procedural.height,
+                        &procedural.id,
+                    )?;
+                    if index >= formation.draw_count
+                        || !indices.insert(index)
+                        || !occupied.insert(position)
+                        || !terrain_walkability
+                            .get(terrain_at(position))
+                            .copied()
+                            .unwrap_or(false)
+                    {
+                        return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+                    }
+                }
+            }
         }
         procedural
             .actor_spawns
@@ -1598,81 +1753,294 @@ pub(super) fn validate_world(
             }
         }
     }
-    for procedural in world
+    world.tasks.sort_by(|left, right| left.id.cmp(&right.id));
+    let task_ids = world
+        .tasks
+        .iter()
+        .map(|task| task.id.clone())
+        .collect::<BTreeSet<_>>();
+    if task_ids.len() != world.tasks.len() {
+        return Err(ContentError::InvalidTask(world.id.clone()));
+    }
+    for task in &mut world.tasks {
+        validate_definition_id(&task.id, "task")?;
+        validate_message_key(&task.name_key)?;
+        validate_message_key(&task.description_key)?;
+        if task.objectives.is_empty() {
+            return Err(ContentError::InvalidTask(task.id.clone()));
+        }
+        if let Some(prerequisite_id) = &task.prerequisite_task_id {
+            validate_definition_id(prerequisite_id, "task")?;
+            if prerequisite_id == &task.id || !task_ids.contains(prerequisite_id) {
+                return Err(ContentError::InvalidTask(task.id.clone()));
+            }
+        }
+        if let Some(facility_id) = &task.source_facility_id {
+            validate_definition_id(facility_id, "town-facility")?;
+            let facility = town_facilities
+                .get(facility_id)
+                .ok_or_else(|| ContentError::InvalidTask(task.id.clone()))?;
+            if facility.category != TownFacilityCategory::QuestGiver
+                || Some(facility.town_id.as_str()) != world.town_id.as_deref()
+                || !facility.task_ids.contains(&task.id)
+            {
+                return Err(ContentError::InvalidTask(task.id.clone()));
+            }
+        }
+        let dungeon_depth_location =
+            matches!(&task.location, TaskLocationDefinition::DungeonDepth { .. });
+        let location_floor_ids = match &mut task.location {
+            TaskLocationDefinition::DedicatedFloors { floor_ids } => {
+                floor_ids.sort();
+                if floor_ids.is_empty() || floor_ids.windows(2).any(|pair| pair[0] == pair[1]) {
+                    return Err(ContentError::InvalidTask(task.id.clone()));
+                }
+                let mut retake_settings = None;
+                for floor_id in floor_ids.iter() {
+                    validate_definition_id(floor_id, "floor")?;
+                    let floor = world
+                        .procedural_floors
+                        .iter()
+                        .find(|floor| floor.id == *floor_id)
+                        .ok_or_else(|| ContentError::InvalidTask(task.id.clone()))?;
+                    if floor.lifecycle != FloorLifecycle::OneShot
+                        || floor.task_id.as_deref() != Some(task.id.as_str())
+                        || (task.source_facility_id.is_some()
+                            != floor.available_entry_terrain_id.is_some())
+                    {
+                        return Err(ContentError::InvalidTask(task.id.clone()));
+                    }
+                    let settings = (
+                        floor.retakeable,
+                        floor.max_retakes,
+                        floor.retake_floor_policy,
+                    );
+                    if retake_settings
+                        .replace(settings)
+                        .is_some_and(|value| value != settings)
+                    {
+                        return Err(ContentError::InvalidTask(task.id.clone()));
+                    }
+                }
+                floor_ids
+                    .iter()
+                    .map(String::as_str)
+                    .collect::<BTreeSet<_>>()
+            }
+            TaskLocationDefinition::DungeonDepth { dungeon_id, depth } => {
+                validate_definition_id(dungeon_id, "dungeon")?;
+                let members = world
+                    .procedural_floors
+                    .iter()
+                    .filter(|floor| {
+                        floor.lifecycle == FloorLifecycle::Dungeon
+                            && floor.dungeon_id.as_deref() == Some(dungeon_id.as_str())
+                            && floor.depth == *depth
+                    })
+                    .map(|floor| floor.id.as_str())
+                    .collect::<BTreeSet<_>>();
+                if *depth == 0 || members.is_empty() {
+                    return Err(ContentError::InvalidTask(task.id.clone()));
+                }
+                members
+            }
+        };
+
+        if let Some(terrain_id) = &task.completion_exit_terrain_id {
+            require_reference(terrain_ids, terrain_id, &task.id)?;
+            if task.source_facility_id.is_none()
+                || !dungeon_depth_location
+                || terrain_tags
+                    .get(terrain_id)
+                    .is_none_or(|tags| !tags.contains("stairs-down"))
+                || world
+                    .procedural_floors
+                    .iter()
+                    .filter(|floor| location_floor_ids.contains(floor.id.as_str()))
+                    .any(|floor| {
+                        !floor.connections.is_empty()
+                            || floor.down_stair_terrain_id.as_deref() != Some(terrain_id.as_str())
+                    })
+            {
+                return Err(ContentError::InvalidTask(task.id.clone()));
+            }
+        }
+
+        for objective in &task.objectives {
+            validate_task_objective(
+                &task.id,
+                objective,
+                &floor_ids,
+                actor_roles,
+                item_limits,
+                &mut procedural_actor_ids,
+            )?;
+            if objective
+                .floor_id
+                .as_deref()
+                .is_some_and(|floor_id| !location_floor_ids.contains(floor_id))
+            {
+                return Err(ContentError::InvalidTask(task.id.clone()));
+            }
+        }
+
+        task.target_placements.sort_by(|left, right| {
+            (left.objective_index, left.floor_id.as_str())
+                .cmp(&(right.objective_index, right.floor_id.as_str()))
+        });
+        if task.target_placements.windows(2).any(|pair| {
+            pair[0].objective_index == pair[1].objective_index
+                && pair[0].floor_id == pair[1].floor_id
+        }) {
+            return Err(ContentError::InvalidTask(task.id.clone()));
+        }
+        for placement in &task.target_placements {
+            let objective = usize::try_from(placement.objective_index)
+                .ok()
+                .and_then(|index| task.objectives.get(index))
+                .ok_or_else(|| ContentError::InvalidTask(task.id.clone()))?;
+            if !location_floor_ids.contains(placement.floor_id.as_str())
+                || objective
+                    .floor_id
+                    .as_deref()
+                    .is_some_and(|floor_id| floor_id != placement.floor_id)
+                || placement.spawn_count == 0
+                || !matches!(
+                    objective.kind,
+                    TaskObjectiveKind::KillActor | TaskObjectiveKind::KillActorKind
+                )
+                || objective.kind == TaskObjectiveKind::KillActor && placement.spawn_count != 1
+                || objective.kind == TaskObjectiveKind::KillActorKind
+                    && placement.spawn_count > objective.required
+            {
+                return Err(ContentError::InvalidTask(task.id.clone()));
+            }
+        }
+        for (index, objective) in task.objectives.iter().enumerate() {
+            let placements = task
+                .target_placements
+                .iter()
+                .filter(|placement| placement.objective_index as usize == index)
+                .count();
+            if (objective.kind == TaskObjectiveKind::KillActor && placements != 1)
+                || (placements > 0
+                    && !matches!(
+                        objective.kind,
+                        TaskObjectiveKind::KillActor | TaskObjectiveKind::KillActorKind
+                    ))
+                || (objective.floor_id.is_none() && location_floor_ids.len() > 1 && placements == 0)
+            {
+                return Err(ContentError::InvalidTask(task.id.clone()));
+            }
+        }
+
+        validate_id(&task.reward.item_instance_id)?;
+        if !procedural_actor_ids.insert(task.reward.item_instance_id.clone()) {
+            return Err(ContentError::DuplicateInstanceId(
+                task.reward.item_instance_id.clone(),
+            ));
+        }
+        let (max_stack, _) = item_limits.get(&task.reward.item_kind_id).ok_or_else(|| {
+            ContentError::DanglingReference {
+                owner: task.id.clone(),
+                target: task.reward.item_kind_id.clone(),
+            }
+        })?;
+        if task.reward.quantity == 0 || task.reward.quantity > *max_stack {
+            return Err(ContentError::InvalidItemQuantity(
+                task.reward.item_instance_id.clone(),
+            ));
+        }
+    }
+    let task_floor_ids = |task: &TaskDefinition| -> BTreeSet<String> {
+        match &task.location {
+            TaskLocationDefinition::DedicatedFloors { floor_ids } => {
+                floor_ids.iter().cloned().collect()
+            }
+            TaskLocationDefinition::DungeonDepth { dungeon_id, depth } => world
+                .procedural_floors
+                .iter()
+                .filter(|floor| {
+                    floor.dungeon_id.as_deref() == Some(dungeon_id.as_str())
+                        && floor.depth == *depth
+                })
+                .map(|floor| floor.id.clone())
+                .collect(),
+        }
+    };
+    let task_depends_on = |candidate: &TaskDefinition, ancestor_id: &str| {
+        let mut cursor = candidate.prerequisite_task_id.as_deref();
+        while let Some(task_id) = cursor {
+            if task_id == ancestor_id {
+                return true;
+            }
+            cursor = world
+                .tasks
+                .iter()
+                .find(|task| task.id == task_id)
+                .and_then(|task| task.prerequisite_task_id.as_deref());
+        }
+        false
+    };
+    for (left_index, left) in world.tasks.iter().enumerate() {
+        let left_floors = task_floor_ids(left);
+        for right in world.tasks.iter().skip(left_index + 1) {
+            if left_floors.is_disjoint(&task_floor_ids(right))
+                || task_depends_on(left, &right.id)
+                || task_depends_on(right, &left.id)
+            {
+                continue;
+            }
+            return Err(ContentError::InvalidTask(left.id.clone()));
+        }
+    }
+    for task in &world.tasks {
+        let mut seen = BTreeSet::new();
+        let mut cursor = Some(task.id.as_str());
+        while let Some(task_id) = cursor {
+            if !seen.insert(task_id) {
+                return Err(ContentError::InvalidTask(task.id.clone()));
+            }
+            cursor = world
+                .tasks
+                .iter()
+                .find(|candidate| candidate.id == task_id)
+                .and_then(|candidate| candidate.prerequisite_task_id.as_deref());
+        }
+    }
+    for floor in world
         .procedural_floors
         .iter()
         .filter(|floor| floor.lifecycle == FloorLifecycle::OneShot)
     {
-        let task_id = procedural.task_id.as_deref().unwrap_or(&procedural.id);
-        let members = world
-            .procedural_floors
-            .iter()
-            .filter(|floor| {
-                floor.lifecycle == FloorLifecycle::OneShot
-                    && floor.task_id.as_deref().unwrap_or(&floor.id) == task_id
-            })
-            .collect::<Vec<_>>();
-        if members
-            .iter()
-            .filter(|floor| floor.task_reward.is_some())
-            .count()
-            != 1
-            || members.iter().any(|floor| {
-                floor.retakeable != procedural.retakeable
-                    || floor.max_retakes != procedural.max_retakes
-                    || floor.retake_floor_policy != procedural.retake_floor_policy
-            })
-        {
-            return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+        let Some(task_id) = floor.task_id.as_deref() else {
+            return Err(ContentError::InvalidTask(floor.id.clone()));
+        };
+        if !world.tasks.iter().any(|task| {
+            task.id == task_id
+                && matches!(
+                    &task.location,
+                    TaskLocationDefinition::DedicatedFloors { floor_ids }
+                        if floor_ids.contains(&floor.id)
+                )
+        }) {
+            return Err(ContentError::InvalidTask(task_id.to_owned()));
         }
-        let staged_definitions = members
-            .iter()
-            .filter(|floor| !floor.task_stages.is_empty())
-            .collect::<Vec<_>>();
-        if staged_definitions.is_empty() {
-            let Some(objective) = procedural.task_objective.as_ref() else {
-                return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
-            };
-            if members.iter().any(|floor| {
-                let Some(other) = floor.task_objective.as_ref() else {
-                    return true;
-                };
-                other.kind != objective.kind
-                    || other.required != objective.required
-                    || other.item_kind_id != objective.item_kind_id
-                    || other.actor_kind_id != objective.actor_kind_id
+    }
+    if let Some(town_id) = &world.town_id {
+        for facility in town_facilities.values().filter(|facility| {
+            facility.town_id == *town_id && facility.category == TownFacilityCategory::QuestGiver
+        }) {
+            if facility.task_ids.iter().any(|task_id| {
+                world
+                    .tasks
+                    .iter()
+                    .find(|task| task.id == *task_id)
+                    .is_none_or(|task| {
+                        task.source_facility_id.as_deref() != Some(facility.id.as_str())
+                    })
             }) {
-                return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
-            }
-        } else {
-            if staged_definitions.len() != 1
-                || !procedural.retakeable
-                || members.iter().any(|floor| floor.task_objective.is_some())
-            {
-                return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
-            }
-            let stages = &staged_definitions[0].task_stages;
-            let member_ids = members
-                .iter()
-                .map(|floor| floor.id.as_str())
-                .collect::<BTreeSet<_>>();
-            let mut actionable_floor_ids = BTreeSet::new();
-            if stages.len() < 2
-                || stages.iter().any(|stage| {
-                    stage
-                        .floor_id
-                        .as_deref()
-                        .is_none_or(|floor_id| !member_ids.contains(floor_id))
-                        || (stage.kind != TaskObjectiveKind::EnterFloor
-                            && !actionable_floor_ids.insert(
-                                stage
-                                    .floor_id
-                                    .as_deref()
-                                    .expect("staged objective floor must be validated"),
-                            ))
-                })
-            {
-                return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+                return Err(ContentError::InvalidTownFacility(facility.id.clone()));
             }
         }
     }
@@ -1830,10 +2198,9 @@ pub(super) fn validate_world(
         }
     }
     let task_ids = world
-        .procedural_floors
+        .tasks
         .iter()
-        .filter(|floor| floor.lifecycle == FloorLifecycle::OneShot)
-        .map(|floor| floor.task_id.as_deref().unwrap_or(&floor.id))
+        .map(|task| task.id.as_str())
         .collect::<BTreeSet<_>>();
     for dungeon in &world.dungeons {
         for requirement in &dungeon.entry_requirements {

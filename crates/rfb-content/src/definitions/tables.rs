@@ -154,6 +154,9 @@ pub enum MonsterPackBehavior {
     Surround,
     GuardLeader,
     GuardPosition,
+    Lure,
+    Shoot,
+    MaintainDistance,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

@@ -230,7 +230,10 @@
         "seek",
         "surround",
         "guard-leader",
-        "guard-position"
+        "guard-position",
+        "lure",
+        "shoot",
+        "maintain-distance"
       ],
       "type": "string"
     }

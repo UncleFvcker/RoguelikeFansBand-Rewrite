@@ -273,7 +273,7 @@ export class StatusPanel {
       ...state.tasks.map((task) => {
         const row = document.createElement("li");
         row.textContent = this.#localization.format("task-log-entry", {
-          task: this.#contentName(task.floorId),
+          task: this.#localization.format(task.nameKey),
           status: this.#localization.format(`task-status-${task.status}` as MessageKey),
           stage: task.stage,
           stages: task.stages,

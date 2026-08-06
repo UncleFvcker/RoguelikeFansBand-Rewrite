@@ -1,0 +1,37 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "formatVersion": 1,
+  "id": "demo.actor.filthy-street-urchin",
+  "role": "monster",
+  "nameKey": "actor-demo-filthy-street-urchin-name",
+  "descriptionKey": "actor-demo-filthy-street-urchin-description",
+  "glyph": "t",
+  "level": 0,
+  "experienceValue": 0,
+  "maxHp": 2,
+  "hitPointDice": { "dice": 1, "sides": 4 },
+  "speed": 110,
+  "attack": 1,
+  "defense": 0,
+  "damageDice": 1,
+  "damageSides": 1,
+  "damageType": "physical",
+  "meleeRoutine": { "blows": [] },
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "skeletonItemKindId": "demo.item.skeleton-remains",
+    "corpseWeight": 4,
+    "skeletonWeight": 1
+  },
+  "doorInteraction": { "opens": true },
+  "allocation": {
+    "legacyIndex": 1,
+    "rarity": 2,
+    "maxDepth": 0,
+    "wildOnly": true,
+    "friends": { "dice": 0, "sides": 0 },
+    "randomMovementPercent": 25
+  },
+  "tags": ["evil", "human", "humanoid", "thief"]
+}

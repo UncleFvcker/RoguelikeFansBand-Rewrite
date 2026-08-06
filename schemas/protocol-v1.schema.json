@@ -3586,6 +3586,26 @@
         {
           "type": "object",
           "properties": {
+            "facilityId": {
+              "type": "string"
+            },
+            "taskId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "accept-task"
+            }
+          },
+          "required": [
+            "type",
+            "facilityId",
+            "taskId"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "type": {
               "type": "string",
               "const": "abandon-task"
@@ -3683,6 +3703,26 @@
             "shopId",
             "itemId",
             "quantity"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "facilityId": {
+              "type": "string"
+            },
+            "taskId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "claim-task-reward"
+            }
+          },
+          "required": [
+            "type",
+            "facilityId",
+            "taskId"
           ]
         },
         {
@@ -4833,6 +4873,13 @@
         "stateHash": {
           "type": "string"
         },
+        "taskServices": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/TaskServiceDto"
+          }
+        },
         "tasks": {
           "type": "array",
           "default": [],
@@ -5012,6 +5059,13 @@
         },
         "stateHash": {
           "type": "string"
+        },
+        "taskServices": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/TaskServiceDto"
+          }
         },
         "tasks": {
           "type": "array",
@@ -7474,6 +7528,48 @@
         "requiresLineOfEffect"
       ]
     },
+    "TaskServiceDto": {
+      "type": "object",
+      "properties": {
+        "descriptionKey": {
+          "type": "string"
+        },
+        "entrancePosition": {
+          "$ref": "#/$defs/Position"
+        },
+        "entranceTerrainId": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "nameKey": {
+          "type": "string"
+        },
+        "ownerNameKey": {
+          "type": "string"
+        },
+        "playerAtEntrance": {
+          "type": "boolean"
+        },
+        "tasks": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/TaskStatusDto"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "nameKey",
+        "descriptionKey",
+        "ownerNameKey",
+        "entrancePosition",
+        "entranceTerrainId",
+        "playerAtEntrance"
+      ]
+    },
     "TaskStatusDto": {
       "type": "object",
       "properties": {
@@ -7482,6 +7578,12 @@
           "format": "uint32",
           "default": 0,
           "minimum": 0
+        },
+        "descriptionKey": {
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "floorId": {
           "type": "string"
@@ -7510,6 +7612,12 @@
           "default": 0,
           "maximum": 65535,
           "minimum": 0
+        },
+        "sourceFacilityId": {
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "stage": {
           "type": "integer",
@@ -7545,7 +7653,10 @@
         "active",
         "completed",
         "failed",
-        "paused"
+        "locked",
+        "paused",
+        "reward-available",
+        "taken"
       ]
     },
     "TerrainInteractionDto": {

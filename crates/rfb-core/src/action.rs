@@ -9,6 +9,10 @@ use crate::{scheduler::STANDARD_ACTION_COST, stats::AttributeKind};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum GameAction {
+    AcceptTask {
+        facility_id: String,
+        task_id: String,
+    },
     AbandonTask,
     AbandonPausedTask {
         task_id: String,
@@ -26,6 +30,10 @@ pub(crate) enum GameAction {
         shop_id: String,
         item_id: String,
         quantity: u32,
+    },
+    ClaimTaskReward {
+        facility_id: String,
+        task_id: String,
     },
     DepositAtHome {
         facility_id: String,
@@ -130,6 +138,8 @@ impl GameAction {
     pub(crate) const fn energy_cost(&self) -> i32 {
         match self {
             Self::BuyFromShop { .. }
+            | Self::AcceptTask { .. }
+            | Self::ClaimTaskReward { .. }
             | Self::DepositAtHome { .. }
             | Self::IncreaseAttribute { .. }
             | Self::Retire
@@ -145,6 +155,13 @@ impl GameAction {
 impl From<GameCommand> for GameAction {
     fn from(command: GameCommand) -> Self {
         match command {
+            GameCommand::AcceptTask {
+                facility_id,
+                task_id,
+            } => Self::AcceptTask {
+                facility_id,
+                task_id,
+            },
             GameCommand::AbandonTask => Self::AbandonTask,
             GameCommand::AbandonPausedTask { task_id } => Self::AbandonPausedTask { task_id },
             GameCommand::IncreaseAttribute { attribute } => Self::IncreaseAttribute {
@@ -167,6 +184,13 @@ impl From<GameCommand> for GameAction {
                 shop_id,
                 item_id,
                 quantity,
+            },
+            GameCommand::ClaimTaskReward {
+                facility_id,
+                task_id,
+            } => Self::ClaimTaskReward {
+                facility_id,
+                task_id,
             },
             GameCommand::DepositAtHome {
                 facility_id,

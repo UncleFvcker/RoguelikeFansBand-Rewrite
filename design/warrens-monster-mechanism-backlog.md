@@ -1,6 +1,6 @@
 # Warrens 怪物机制实现清单
 
-状态：由 contract-v171 的 Warrens 生态对照建立；contract-v173 已完成 W1-W6 与运行时自然补怪，contract-v174-v176 已完成 W7-W9，contract-v177-v180 已完成 W10-W13；W14 随 Outpost Pest Control 推进。
+状态：由 contract-v171 的 Warrens 生态对照建立；contract-v173 已完成 W1-W6 与运行时自然补怪，contract-v174-v176 已完成 W7-W9，contract-v177-v180 已完成 W10-W13，contract-v182 已完成 W14 Pest Control 任务生态。
 
 固定原版来源为 commit `191f48c3fd1cdbc81a3d3395a88cd6758402b4d9`。Warrens 在 `d_info.txt` 中为深度 1–9，主字形集合为 `kKyYrRfFcCbB`，并带有 `MONSTER_DIV_16`。本清单只记录该来源明确要求、而当前重写版还不能完整表达的机制，不把标签或近似行为标成已完成规则。
 
@@ -31,11 +31,11 @@
 | W11 | 怪物改变地图与物品 | `KILL_WALL/KILL_ITEM` 等旗标会改变追踪路径与地图/地面物品状态 | **contract-v178 完成**：怪物专属破墙寻路/变换、地面物与金币销毁，以及 artifact、匹配 slay/brand、Endurance 弹药保护 |
 | W12 | 怪物光源 | `HAS_LITE/SELF_LITE` 影响玩家可见区和怪物自身感知 | **contract-v179 完成**：typed actor light 进入权威光照；睡眠抑制 `HAS_LITE`，不抑制 intrinsic `SELF_LITE` |
 | W13 | 完整掉落旗标与主题 | `DROP_60/90`、`DROP_1D2`、`ONLY_ITEM`、`DROP_GOOD`、职业主题和尸体/骨骸需要统一组合 | **contract-v180 完成**：次数概率/骰、压缩、20% 金币、50% 职业主题、only kind、质量下限与 remains 顺序可组合 |
-| W14 | Pest Control 专属 Warg 生态 | Warg 主要属于城镇 Pest Control 任务，而不是 Warrens 4–9 层常驻怪物 | 任务接受后创建专属目标种群，按 `FRIENDS(3d3)` 与 `RAND_25` 行动；完成、离场、重接和计数由任务状态机管理 |
+| W14 | Pest Control 专属 Warg 生态 | Warg 主要属于城镇 Pest Control 任务，而不是 Warrens 4–9 层常驻怪物 | **contract-v182 完成**：接取后在 Warrens 5 创建剩余目标 Warg；任务目标严格为 8 只，`FRIENDS(3d3)` 仅是 Warg 的普通生态群体规则，不是任务数量；Warg 沿用 `RAND_25`，完成后生成魔法楼梯，未完成离层失败并丢弃任务层，回城领取毛皮披风 |
 
 ## 推进原则
 
 - 每个 W 项单独做最小 fixture 或纯单元测试；非移动机制不通过移动命令搭建前置条件。
 - 通常不为一次生态扩充刷新全部 contract fixtures，只刷新实际受输出变化影响的 `dungeon`、`campaign` 或 `monsters` 分类。contract-v173 因 state-hash 输入新增 Unique 权威状态而按已批准规则一次性刷新全部分类。
 - 新 actor 可以先以已支持的攻击、抗性和施法进入内容包，但所有被省略的原版旗标必须留在本清单，不能靠标签假装规则已完成。
-- W1–W13 与自然补怪已经完成。W14 在 Outpost Pest Control 任务服务线开始时实施。
+- W1–W14 与自然补怪已经完成。W14 的内容和运行时边界见 [Contract v182](contract-v182-pest-control.md)。

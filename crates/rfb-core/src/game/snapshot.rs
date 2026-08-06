@@ -4,10 +4,11 @@ use std::collections::BTreeSet;
 
 use crate::{
     resistance::DamageType,
+    save::position_from_content,
     state::ItemLocation,
     stats::{AttributeKind, CharacterProgress, experience_required_for_level},
 };
-use rfb_content::{AbilityEffectDefinition, ItemUseEffectDefinition};
+use rfb_content::{AbilityEffectDefinition, ItemUseEffectDefinition, TownFacilityCategory};
 use rfb_protocol::{
     AbilityDetectSpecDto, AbilityDto, AbilityLearningDto, AbilitySummonSpecDto,
     AbilityTerrainTransformSpecDto, AttackProfileDto, AttributeSetDto, AttributeValueDto,
@@ -15,13 +16,16 @@ use rfb_protocol::{
     DeviceRechargeDto, EntityDto, EntityFactionDto, EquipmentItemDto, GameSnapshot,
     InventoryItemDto, ItemDto, ItemKnowledgeDto, PROTOCOL_VERSION, PlayerBuildDto, PlayerDto,
     PlayerProgressDto, Position, ResistanceDto, ResourcePoolDto, SkillProgressDto, SummonDto,
-    TaskStatusDto, TerrainInteractionDto, TerrainInteractionKindDto, VisibilityState,
+    TaskServiceDto, TaskStatusDto, TerrainInteractionDto, TerrainInteractionKindDto,
+    VisibilityState,
 };
 
+use super::tasks::projected_task_state;
 use super::{
     Game, LightSource, TERRAIN_INTERACTION_DIRECTIONS, ability_detect_subject_dto,
     ability_effect_spec_dto, ability_target_spec_dto, actor_melee_routine_dto, combine_percentages,
-    derived_speed, floor_task_id, item_target_spec, light_from_sources, task_objectives,
+    derived_speed, item_target_spec, light_from_sources, task_definition, task_floors,
+    task_objectives,
 };
 
 impl Game {
@@ -657,6 +661,7 @@ impl Game {
             town: self.current_town_dto(),
             shops: self.current_shop_dtos(),
             homes: self.current_home_dtos(),
+            task_services: self.current_task_service_dtos(),
             terrain_interactions: self.terrain_interactions(),
             tasks: self.task_statuses(),
             campaign: self.campaign_state_dto(),
@@ -844,20 +849,25 @@ impl Game {
             .content
             .world(&self.world_id)
             .expect("active world must remain available");
-        self.task_states
+        world
+            .tasks
             .iter()
-            .map(|(task_id, state)| {
-                let floor = world
-                    .procedural_floors
-                    .iter()
-                    .find(|floor| floor_task_id(floor) == task_id)
+            .filter_map(|task| {
+                let task_id = &task.id;
+                let state = projected_task_state(world, &self.task_states, task_id)?;
+                let task =
+                    task_definition(world, task_id).expect("task state must retain its definition");
+                let floor = task_floors(world, task_id)
+                    .next()
                     .expect("task state must have a representative floor");
                 let stages = u32::try_from(task_objectives(world, task_id).len())
                     .expect("validated task stage count must fit u32");
-                TaskStatusDto {
+                Some(TaskStatusDto {
                     task_id: task_id.clone(),
                     floor_id: floor.id.clone(),
-                    name_key: floor.name_key.clone(),
+                    name_key: task.name_key.clone(),
+                    description_key: Some(task.description_key.clone()),
+                    source_facility_id: task.source_facility_id.clone(),
                     status: state.status,
                     current: state.current,
                     required: state.required,
@@ -865,6 +875,71 @@ impl Game {
                     stages,
                     retakes_used: state.retakes_used,
                     max_retakes: floor.max_retakes,
+                })
+            })
+            .collect()
+    }
+
+    pub(super) fn current_task_service_dtos(&self) -> Vec<TaskServiceDto> {
+        let Some(world) = self.content.world(&self.world_id) else {
+            return Vec::new();
+        };
+        let Some(town) = world
+            .town_id
+            .as_deref()
+            .and_then(|town_id| self.content.town(town_id))
+            .filter(|town| self.current_floor_id == town.floor_id)
+        else {
+            return Vec::new();
+        };
+        town.facility_ids
+            .iter()
+            .filter_map(|facility_id| self.content.town_facility(facility_id))
+            .filter(|facility| facility.category == TownFacilityCategory::QuestGiver)
+            .map(|facility| {
+                let entrance_position = position_from_content(facility.entrance_position);
+                let player_at_entrance = self.player.position == entrance_position;
+                let mut tasks = if player_at_entrance {
+                    facility
+                        .task_ids
+                        .iter()
+                        .filter_map(|task_id| {
+                            let task = task_definition(world, task_id)?;
+                            let state = projected_task_state(world, &self.task_states, task_id)?;
+                            let floor = task_floors(world, task_id).next()?;
+                            let stages = u32::try_from(task.objectives.len()).ok()?;
+                            Some(TaskStatusDto {
+                                task_id: task.id.clone(),
+                                floor_id: floor.id.clone(),
+                                name_key: task.name_key.clone(),
+                                description_key: Some(task.description_key.clone()),
+                                source_facility_id: task.source_facility_id.clone(),
+                                status: state.status,
+                                current: state.current,
+                                required: state.required,
+                                stage: state.stage_index.saturating_add(1),
+                                stages,
+                                retakes_used: state.retakes_used,
+                                max_retakes: floor.max_retakes,
+                            })
+                        })
+                        .collect::<Vec<_>>()
+                } else {
+                    Vec::new()
+                };
+                tasks.sort_by(|left, right| left.task_id.cmp(&right.task_id));
+                TaskServiceDto {
+                    id: facility.id.clone(),
+                    name_key: facility.name_key.clone(),
+                    description_key: facility.description_key.clone(),
+                    owner_name_key: facility
+                        .owner_name_key
+                        .clone()
+                        .expect("validated quest giver must retain an owner name"),
+                    entrance_position,
+                    entrance_terrain_id: facility.entrance_terrain_id.clone(),
+                    player_at_entrance,
+                    tasks,
                 }
             })
             .collect()

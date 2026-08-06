@@ -342,12 +342,17 @@ message-player-attribute-increased = { $attribute } 提升至 { $natural }（有
 message-player-attribute-increase-unavailable = 当前无法提升{ $attribute }。
 message-floor-one-shot-closed = 一次性任务空间在你身后关闭了。
 message-task-completed = 你取回了任务目标。
+message-task-reward-available = 任务已完成。返回任务发布者处领取奖励。
+message-task-exit-revealed = 一道魔法楼梯出现了……
+message-task-accepted = 已接取任务：{ $task }。
+message-task-accept-unavailable = 当前无法在这里接取该任务。
 message-task-failed = 你没有取回任务目标就离开了。
 message-task-abandoned = 你主动放弃了当前任务。
 message-task-abandon-unavailable = 当前没有可从地表放弃的暂停任务。
 message-task-paused = 你暂时离开了任务，当前进度得以保留。
 message-task-resumed = 你重新进入了保留的任务。
 message-task-rewarded = 任务奖励：{ $target } × { $quantity }。
+message-task-reward-claim-unavailable = 当前无法在这里领取该任务奖励。
 
 panel-campaign-title = 战役
 campaign-status-label = 状态

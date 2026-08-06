@@ -105,15 +105,20 @@ fn committed_contract_fixture_metadata_is_valid() {
 
 #[test]
 fn legacy_attribute_projection_migration_is_schema_bounded() {
-    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../tests/fixtures/active/scenarios/450-potion-attribute-history.json");
-    let fixture: ContractFixture =
-        serde_json::from_slice(&fs::read(path).expect("attribute fixture should be readable"))
-            .expect("attribute fixture should parse");
+    let fixture = minimal_warrens_fixture(
+        json!({
+            "world": "demo.world.warrens-journey",
+            "playerBuildId": "demo.build.warrior",
+            "debugClearEntities": true
+        }),
+        json!([]),
+    );
+    let current_assertions = observe(&fixture).expect("minimal fixture should be observable");
 
     let legacy = |schema_version| {
         let mut fixture = fixture.clone();
         fixture.schema_version = schema_version;
+        fixture.assertions = Some(current_assertions.clone());
         let attributes = &mut fixture
             .assertions
             .as_mut()

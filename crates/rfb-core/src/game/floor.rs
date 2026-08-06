@@ -20,8 +20,9 @@ use crate::{
 };
 
 use super::tasks::{
-    TaskResolution, TaskState, activated_task_state, floor_task_id, initial_task_states,
-    task_objectives, task_resolution_for_departure, task_state_after_departure, task_succeeded,
+    TaskResolution, TaskState, activated_task_state, floor_task_id, task_definition,
+    task_initial_state, task_objectives, task_resolution_for_departure, task_state_after_departure,
+    task_succeeded,
 };
 use super::{
     DungeonState, Game, chebyshev_distance, initial_item_curse, initial_item_runtime_state,
@@ -682,9 +683,19 @@ impl Game {
             if !abandon_task && !source.retakeable && !source.allow_early_task_exit && !succeeded {
                 return Ok(None);
             }
-            let resolution =
-                task_resolution_for_departure(Some(source.retakeable), abandon_task, succeeded);
-            let initial_required = initial_task_states(world)[&task_id].required;
+            let reward_claim_required = task_definition(world, &task_id)
+                .is_some_and(|task| task.source_facility_id.is_some());
+            let resolution = task_resolution_for_departure(
+                Some(source.retakeable),
+                abandon_task,
+                succeeded,
+                reward_claim_required,
+            );
+            let initial_required = task_initial_state(
+                task_definition(world, &task_id).expect("paused task must retain its definition"),
+                &self.task_states,
+            )
+            .required;
             Some(OneShotDeparturePlan {
                 task_id,
                 members,
@@ -1005,7 +1016,7 @@ impl Game {
                 if let (Some(entry_id), Some(result_id)) = (
                     definition.entry_terrain_id.as_deref(),
                     match resolution {
-                        TaskResolution::Completed => {
+                        TaskResolution::Completed | TaskResolution::RewardAvailable => {
                             definition.completed_entry_terrain_id.as_deref()
                         }
                         TaskResolution::Failed => definition.failed_entry_terrain_id.as_deref(),
@@ -1022,10 +1033,11 @@ impl Game {
                 }
             }
             if resolution == TaskResolution::Completed
-                && let Some(reward) = departure
-                    .members
-                    .iter()
-                    .find_map(|definition| definition.task_reward.as_ref())
+                && let Some(reward) = self
+                    .content
+                    .world(&self.world_id)
+                    .and_then(|world| task_definition(world, &departure.task_id))
+                    .map(|task| &task.reward)
             {
                 let (activation, charges) = initial_item_runtime_state(
                     &self.content,
@@ -1139,6 +1151,9 @@ impl Game {
                 TaskResolution::Completed => DomainEvent::TaskCompleted {
                     floor_id: floor_id.clone(),
                 },
+                TaskResolution::RewardAvailable => DomainEvent::TaskRewardAvailable {
+                    floor_id: floor_id.clone(),
+                },
                 TaskResolution::Failed => DomainEvent::TaskFailed {
                     floor_id: floor_id.clone(),
                 },
@@ -1150,21 +1165,8 @@ impl Game {
                 && let Some(reward) = self
                     .content
                     .world(&self.world_id)
-                    .and_then(|world| {
-                        world
-                            .procedural_floors
-                            .iter()
-                            .find(|floor| floor_task_id(floor) == floor_id)
-                    })
-                    .and_then(|floor| {
-                        self.content.world(&self.world_id).and_then(|world| {
-                            world
-                                .procedural_floors
-                                .iter()
-                                .filter(|member| floor_task_id(member) == floor_task_id(floor))
-                                .find_map(|member| member.task_reward.as_ref())
-                        })
-                    })
+                    .and_then(|world| task_definition(world, &floor_id))
+                    .map(|task| &task.reward)
             {
                 events.push(DomainEvent::TaskRewarded {
                     item_kind_id: reward.item_kind_id.clone(),

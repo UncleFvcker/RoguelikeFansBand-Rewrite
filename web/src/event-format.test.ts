@@ -103,9 +103,28 @@ test("shop events report localized item names, totals, balances, and rejection r
         balance: "242",
       },
     }),
-    "出售了 1 件木制火把，获得 1 金币。余额：242。",
+    "出售了 1 件木火把，获得 1 金币。余额：242。",
   );
   localization.setLocale("en-US");
+});
+
+test("task service events use the current dotted event kinds", () => {
+  assert.equal(
+    formatter.formatEvent({
+      kind: "task.accepted",
+      messageKey: "task-accepted",
+      args: { task: "demo.task.thieves-hideout" },
+    }),
+    "Task accepted: The Thieves' Hideout (Outpost).",
+  );
+  assert.equal(
+    formatter.formatEvent({
+      kind: "task.reward-claim-unavailable",
+      messageKey: "task-reward-claim-unavailable",
+      args: {},
+    }),
+    "That reward cannot be claimed here right now.",
+  );
 });
 
 test("food events report eating hunger changes fainting and starvation", () => {

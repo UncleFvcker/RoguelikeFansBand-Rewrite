@@ -1,0 +1,13 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/town-facility.schema.json",
+  "formatVersion": 1,
+  "id": "demo.town-facility.outpost-count",
+  "nameKey": "town-facility-demo-outpost-count-name",
+  "descriptionKey": "town-facility-demo-outpost-count-description",
+  "townId": "demo.town.outpost",
+  "category": "quest-giver",
+  "ownerNameKey": "town-facility-demo-outpost-count-owner-name",
+  "taskIds": ["demo.task.thieves-hideout", "demo.task.pest-control"],
+  "entrancePosition": { "x": 26, "y": 13 },
+  "entranceTerrainId": "demo.terrain.count-entrance"
+}

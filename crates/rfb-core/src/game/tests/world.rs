@@ -37,6 +37,117 @@ fn warrens_journey_starts_on_an_outdoor_surface_with_a_working_entrance() {
 }
 
 #[test]
+fn thieves_hideout_inline_floor_preserves_the_fixed_map_and_six_member_formation() {
+    let mut game = Game::new_warrens_journey_with_build(42, "demo.build.warrior")
+        .expect("Warrens journey should create");
+    let definition = game
+        .content
+        .world(&game.world_id)
+        .expect("Warrens world should remain available")
+        .procedural_floors
+        .iter()
+        .find(|floor| floor.id == "demo.floor.thieves-hideout")
+        .expect("thieves' hideout should remain available")
+        .clone();
+    let floor = game
+        .generate_procedural_floor(&definition, None)
+        .expect("fixed thieves' hideout should generate");
+
+    let rows = floor
+        .terrain
+        .chunks(usize::from(floor.width))
+        .map(|row| {
+            row.iter()
+                .map(|terrain_id| match terrain_id.as_str() {
+                    "demo.terrain.permanent-wall" => '#',
+                    "demo.terrain.floor" => '.',
+                    "demo.terrain.door-closed" => '+',
+                    "demo.terrain.stairs-up" => '<',
+                    "demo.terrain.warren-snare" => '^',
+                    other => panic!("unexpected fixed-map terrain {other}"),
+                })
+                .collect::<String>()
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(
+        rows,
+        [
+            "#####################",
+            "#####...#...#...#...#",
+            "#####...#...#...#...#",
+            "#####.^.#...#...#.^.#",
+            "#<..##+###+###+###+##",
+            "#..^#....^...^..^...#",
+            "#.^.+...............#",
+            "#####################",
+        ]
+    );
+    assert_eq!(floor.player_position, Position { x: 1, y: 4 });
+    assert_eq!(floor.entities.len(), 6);
+    assert_eq!(floor.items.len(), 4);
+
+    let candidates = [
+        "demo.actor.agent-of-black-market",
+        "demo.actor.bandit",
+        "demo.actor.filthy-street-urchin",
+        "demo.actor.nibelung",
+        "demo.actor.novice-rogue",
+        "demo.actor.scruffy-looking-hobbit",
+        "demo.actor.tax-collector",
+    ]
+    .into_iter()
+    .collect::<BTreeSet<_>>();
+    let expected_positions = [
+        Position { x: 8, y: 6 },
+        Position { x: 6, y: 2 },
+        Position { x: 18, y: 2 },
+        Position { x: 10, y: 2 },
+        Position { x: 14, y: 2 },
+        Position { x: 15, y: 6 },
+    ]
+    .into_iter()
+    .collect::<BTreeSet<_>>();
+    assert_eq!(
+        floor
+            .entities
+            .iter()
+            .map(|entity| entity.position)
+            .collect::<BTreeSet<_>>(),
+        expected_positions
+    );
+    assert!(
+        floor
+            .entities
+            .iter()
+            .all(|entity| candidates.contains(entity.kind_id.as_str()))
+    );
+
+    let selected_order = floor
+        .entities
+        .iter()
+        .map(|entity| {
+            let actor = game
+                .content
+                .actor(&entity.kind_id)
+                .expect("formation actor should remain available");
+            (
+                actor.level,
+                actor
+                    .allocation
+                    .as_ref()
+                    .expect("formation actor should retain allocation")
+                    .legacy_index,
+            )
+        })
+        .collect::<Vec<_>>();
+    assert!(
+        selected_order.windows(2).all(|pair| {
+            pair[0].0 > pair[1].0 || pair[0].0 == pair[1].0 && pair[0].1 <= pair[1].1
+        })
+    );
+}
+
+#[test]
 fn warrens_surface_reentry_starts_a_fresh_expedition_with_new_monsters() {
     let mut game = Game::new_warrens_journey_with_build(42, "demo.build.warrior")
         .expect("Warrens journey should create");

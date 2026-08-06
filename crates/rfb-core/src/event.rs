@@ -272,6 +272,21 @@ pub(crate) enum DomainEvent {
     TaskCompleted {
         floor_id: String,
     },
+    TaskRewardAvailable {
+        floor_id: String,
+    },
+    TaskExitRevealed {
+        floor_id: String,
+        position: Position,
+    },
+    TaskAccepted {
+        task_id: String,
+    },
+    TaskAcceptUnavailable {
+        facility_id: String,
+        task_id: String,
+        reason: String,
+    },
     TaskFailed {
         floor_id: String,
     },
@@ -288,6 +303,11 @@ pub(crate) enum DomainEvent {
     TaskRewarded {
         item_kind_id: String,
         quantity: u32,
+    },
+    TaskRewardClaimUnavailable {
+        facility_id: String,
+        task_id: String,
+        reason: String,
     },
     DoorOpened {
         position: Position,
@@ -1562,6 +1582,36 @@ impl DomainEvent {
             Self::TaskCompleted { floor_id } => {
                 dto("task.completed", "task-completed", [("floor", floor_id)])
             }
+            Self::TaskRewardAvailable { floor_id } => dto(
+                "task.reward-available",
+                "task-reward-available",
+                [("floor", floor_id)],
+            ),
+            Self::TaskExitRevealed { floor_id, position } => dto(
+                "task.exit-revealed",
+                "task-exit-revealed",
+                [
+                    ("floor", floor_id),
+                    ("x", position.x.to_string()),
+                    ("y", position.y.to_string()),
+                ],
+            ),
+            Self::TaskAccepted { task_id } => {
+                dto("task.accepted", "task-accepted", [("task", task_id)])
+            }
+            Self::TaskAcceptUnavailable {
+                facility_id,
+                task_id,
+                reason,
+            } => dto(
+                "task.accept-unavailable",
+                "task-accept-unavailable",
+                [
+                    ("facility", facility_id),
+                    ("task", task_id),
+                    ("reason", reason),
+                ],
+            ),
             Self::TaskFailed { floor_id } => {
                 dto("task.failed", "task-failed", [("floor", floor_id)])
             }
@@ -1584,6 +1634,19 @@ impl DomainEvent {
                 "task.rewarded",
                 "task-rewarded",
                 [("target", item_kind_id), ("quantity", quantity.to_string())],
+            ),
+            Self::TaskRewardClaimUnavailable {
+                facility_id,
+                task_id,
+                reason,
+            } => dto(
+                "task.reward-claim-unavailable",
+                "task-reward-claim-unavailable",
+                [
+                    ("facility", facility_id),
+                    ("task", task_id),
+                    ("reason", reason),
+                ],
             ),
             Self::DoorOpened { position } => dto(
                 "terrain.door-opened",

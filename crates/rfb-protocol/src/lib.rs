@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.137";
+pub const PROTOCOL_VERSION: &str = "1.138";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -78,6 +78,10 @@ impl Direction {
     rename_all_fields = "camelCase"
 )]
 pub enum GameCommand {
+    AcceptTask {
+        facility_id: String,
+        task_id: String,
+    },
     AbandonTask,
     AbandonPausedTask {
         task_id: String,
@@ -95,6 +99,10 @@ pub enum GameCommand {
         shop_id: String,
         item_id: String,
         quantity: u32,
+    },
+    ClaimTaskReward {
+        facility_id: String,
+        task_id: String,
     },
     DepositAtHome {
         facility_id: String,
@@ -1036,7 +1044,10 @@ pub enum TaskStatusKindDto {
     Active,
     Completed,
     Failed,
+    Locked,
     Paused,
+    RewardAvailable,
+    Taken,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -1047,6 +1058,10 @@ pub struct TaskStatusDto {
     pub task_id: String,
     pub floor_id: String,
     pub name_key: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description_key: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source_facility_id: Option<String>,
     pub status: TaskStatusKindDto,
     #[serde(default)]
     pub current: u32,
@@ -2564,6 +2579,21 @@ pub struct HomeDto {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
+pub struct TaskServiceDto {
+    pub id: String,
+    pub name_key: String,
+    pub description_key: String,
+    pub owner_name_key: String,
+    pub entrance_position: Position,
+    pub entrance_terrain_id: String,
+    pub player_at_entrance: bool,
+    #[serde(default)]
+    pub tasks: Vec<TaskStatusDto>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
 pub struct GameSnapshot {
     pub protocol_version: String,
     pub revision: u32,
@@ -2600,6 +2630,8 @@ pub struct GameSnapshot {
     #[serde(default)]
     pub homes: Vec<HomeDto>,
     #[serde(default)]
+    pub task_services: Vec<TaskServiceDto>,
+    #[serde(default)]
     pub terrain_interactions: Vec<TerrainInteractionDto>,
     #[serde(default)]
     pub tasks: Vec<TaskStatusDto>,
@@ -2626,6 +2658,8 @@ pub struct GameUpdate {
     pub shops: Vec<ShopDto>,
     #[serde(default)]
     pub homes: Vec<HomeDto>,
+    #[serde(default)]
+    pub task_services: Vec<TaskServiceDto>,
     pub events: Vec<GameEventDto>,
     pub changed_cells: Vec<CellDto>,
     #[serde(default)]
@@ -2804,6 +2838,7 @@ pub fn generated_typescript() -> String {
     push_declaration!(ShopDto);
     push_declaration!(HomeItemDto);
     push_declaration!(HomeDto);
+    push_declaration!(TaskServiceDto);
     push_declaration!(GameSnapshot);
     push_declaration!(GameUpdate);
 
@@ -3016,6 +3051,9 @@ pub enum MonsterPackBehaviorDto {
     Surround,
     GuardLeader,
     GuardPosition,
+    Lure,
+    Shoot,
+    MaintainDistance,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

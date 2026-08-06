@@ -49,18 +49,25 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
     assert_eq!(
         allocation,
         vec![
+            ("demo.actor.agent-of-black-market", 14, 1, 0),
+            ("demo.actor.bandit", 150, 2, 40),
             ("demo.actor.cave-lizard", 82, 1, 30),
             ("demo.actor.chiokovo", 997, 3, 30),
+            ("demo.actor.filthy-street-urchin", 1, 2, 0),
             ("demo.actor.fruit-bat", 37, 1, 10),
             ("demo.actor.giant-white-mouse", 27, 1, 10),
             ("demo.actor.hunting-hawk-of-julian", 151, 2, 40),
             ("demo.actor.kobold", 30, 1, 30),
             ("demo.actor.large-kobold", 102, 1, 40),
             ("demo.actor.newt", 23, 1, 10),
+            ("demo.actor.nibelung", 111, 1, 40),
             ("demo.actor.night-lizard", 134, 2, 40),
+            ("demo.actor.novice-rogue", 44, 1, 30),
             ("demo.actor.rat-thing", 115, 1, 40),
             ("demo.actor.rock-lizard", 33, 1, 10),
+            ("demo.actor.scruffy-looking-hobbit", 74, 1, 30),
             ("demo.actor.small-kobold", 29, 1, 30),
+            ("demo.actor.tax-collector", 199, 3, 40),
             ("demo.actor.warg", 257, 2, 50),
             ("demo.actor.warrens-keeper", 135, 3, 999),
             ("demo.actor.wild-cat", 62, 2, 20),
@@ -150,6 +157,7 @@ fn outpost_has_walls_inner_shops_and_an_exterior_warrens_entrance() {
         world
             .procedural_floors
             .iter()
+            .filter(|floor| floor.lifecycle == FloorLifecycle::Dungeon)
             .all(|floor| (floor.width, floor.height) == (66, 22))
     );
     let expected_fortifications = (22..=66)
@@ -212,6 +220,78 @@ fn outpost_has_walls_inner_shops_and_an_exterior_warrens_entrance() {
         validate_and_normalize(&mut unowned_shop),
         Err(ContentError::InvalidShop(id)) if id == "demo.shop.outpost-general-store"
     ));
+}
+
+#[test]
+fn thieves_hideout_uses_the_original_fixed_map_and_formation_contract() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let world = artifact
+        .content
+        .worlds
+        .iter()
+        .find(|world| world.id == "demo.world.warrens-journey")
+        .expect("fixture should contain Warrens");
+    let task = world
+        .tasks
+        .iter()
+        .find(|task| task.id == "demo.task.thieves-hideout")
+        .expect("fixture should contain the thieves' hideout task");
+    assert_eq!(
+        task.source_facility_id.as_deref(),
+        Some("demo.town-facility.outpost-count")
+    );
+    assert_eq!(task.reward.item_kind_id, "demo.item.broad-sword");
+
+    let floor = world
+        .procedural_floors
+        .iter()
+        .find(|floor| floor.id == "demo.floor.thieves-hideout")
+        .expect("fixture should contain the thieves' hideout floor");
+    assert_eq!((floor.width, floor.height, floor.depth), (21, 8, 5));
+    assert_eq!(
+        floor.available_entry_terrain_id.as_deref(),
+        Some("demo.terrain.thieves-hideout-entry-available")
+    );
+    let inline_map = floor
+        .inline_map
+        .as_ref()
+        .expect("thieves' hideout should retain its inline map");
+    assert_eq!(inline_map.loot_spawns.len(), 4);
+    let formation = inline_map
+        .monster_formation
+        .as_ref()
+        .expect("thieves' hideout should retain its formation");
+    assert_eq!(formation.draw_count, 10);
+    assert_eq!(formation.placement_indices, [0, 2, 4, 5, 7, 8]);
+    assert_eq!(formation.positions.len(), 6);
+    assert_eq!(formation.candidate_actor_kind_ids.len(), 7);
+
+    let door_count = inline_map
+        .terrain_overrides
+        .iter()
+        .find(|override_| override_.terrain_id == "demo.terrain.door-closed")
+        .expect("fixed map should contain closed doors")
+        .positions
+        .len();
+    let trap_count = inline_map
+        .terrain_overrides
+        .iter()
+        .find(|override_| override_.terrain_id == "demo.terrain.warren-snare")
+        .expect("fixed map should contain traps")
+        .positions
+        .len();
+    assert_eq!((door_count, trap_count), (5, 8));
+    let trap_override = inline_map
+        .terrain_overrides
+        .iter()
+        .find(|override_| override_.terrain_id == "demo.terrain.warren-snare")
+        .expect("fixed map should contain trap candidates");
+    assert_eq!(trap_override.chance_percent, 50);
+    assert_eq!(
+        trap_override.otherwise_terrain_id.as_deref(),
+        Some("demo.terrain.floor")
+    );
+    assert_eq!(floor.wall_terrain_id, "demo.terrain.permanent-wall");
 }
 
 #[test]
@@ -534,33 +614,39 @@ fn guaranteed_floor_supplies_require_rfb_chance_and_supported_items() {
         .iter()
         .find(|world| world.id == "demo.world.warrens-journey")
         .expect("fixture should contain Warrens");
-    assert!(warrens.procedural_floors.iter().all(|floor| {
-        floor.guaranteed_items.as_slice()
-            == [
-                ProceduralGuaranteedItemDefinition {
-                    id: "demo.guaranteed.warrens-food".to_owned(),
-                    chance_one_in: 2,
-                    entries: vec![ProceduralGuaranteedItemEntryDefinition {
-                        item_kind_id: "demo.item.ration-of-food".to_owned(),
-                        weight: 1,
-                    }],
-                },
-                ProceduralGuaranteedItemDefinition {
-                    id: "demo.guaranteed.warrens-light".to_owned(),
-                    chance_one_in: 2,
-                    entries: vec![
-                        ProceduralGuaranteedItemEntryDefinition {
-                            item_kind_id: "demo.item.flask-of-oil".to_owned(),
-                            weight: 1,
+    assert!(
+        warrens
+            .procedural_floors
+            .iter()
+            .filter(|floor| floor.dungeon_id.as_deref() == Some("demo.dungeon.warrens"))
+            .all(|floor| {
+                floor.guaranteed_items.as_slice()
+                    == [
+                        ProceduralGuaranteedItemDefinition {
+                            id: "demo.guaranteed.warrens-food".to_owned(),
+                            chance_one_in: 2,
+                            entries: vec![ProceduralGuaranteedItemEntryDefinition {
+                                item_kind_id: "demo.item.ration-of-food".to_owned(),
+                                weight: 1,
+                            }],
                         },
-                        ProceduralGuaranteedItemEntryDefinition {
-                            item_kind_id: "demo.item.brass-lantern".to_owned(),
-                            weight: 2,
+                        ProceduralGuaranteedItemDefinition {
+                            id: "demo.guaranteed.warrens-light".to_owned(),
+                            chance_one_in: 2,
+                            entries: vec![
+                                ProceduralGuaranteedItemEntryDefinition {
+                                    item_kind_id: "demo.item.flask-of-oil".to_owned(),
+                                    weight: 1,
+                                },
+                                ProceduralGuaranteedItemEntryDefinition {
+                                    item_kind_id: "demo.item.brass-lantern".to_owned(),
+                                    weight: 2,
+                                },
+                            ],
                         },
-                    ],
-                },
-            ]
-    }));
+                    ]
+            })
+    );
 
     let mut invalid_chance = artifact.content.clone();
     invalid_chance
@@ -1420,46 +1506,45 @@ fn vaults_require_walkable_unique_positions_and_depth_eligible_encounters() {
 }
 
 #[test]
-fn staged_tasks_require_ordered_member_floor_objectives() {
+fn task_definitions_require_owned_locations_and_valid_target_placements() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
 
     let mut outside_member = artifact.content.clone();
     outside_member.worlds[0]
-        .procedural_floors
+        .tasks
         .iter_mut()
-        .find(|floor| floor.id == "demo.floor.echo-chain-rift")
+        .find(|task| task.id == "demo.task.echo-chain")
         .expect("fixture should contain the staged task")
-        .task_stages[1]
+        .objectives[1]
         .floor_id = Some("demo.floor.echo-bounty-rift".to_owned());
     assert!(matches!(
         validate_and_normalize(&mut outside_member),
-        Err(ContentError::InvalidProceduralFloor(_))
+        Err(ContentError::InvalidTask(_))
     ));
 
-    let mut duplicate_action_floor = artifact.content.clone();
-    duplicate_action_floor.worlds[0]
-        .procedural_floors
+    let mut non_kill_placement = artifact.content.clone();
+    non_kill_placement.worlds[0]
+        .tasks
         .iter_mut()
-        .find(|floor| floor.id == "demo.floor.echo-chain-rift")
+        .find(|task| task.id == "demo.task.echo-chain")
         .expect("fixture should contain the staged task")
-        .task_stages[2]
-        .floor_id = Some("demo.floor.echo-chain-rift".to_owned());
+        .target_placements[0]
+        .objective_index = 0;
     assert!(matches!(
-        validate_and_normalize(&mut duplicate_action_floor),
-        Err(ContentError::InvalidProceduralFloor(_))
+        validate_and_normalize(&mut non_kill_placement),
+        Err(ContentError::InvalidTask(_))
     ));
 
-    let mut non_retakeable = artifact.content.clone();
-    for floor in non_retakeable.worlds[0]
+    let mut wrong_owner = artifact.content.clone();
+    wrong_owner.worlds[0]
         .procedural_floors
         .iter_mut()
-        .filter(|floor| floor.task_id.as_deref() == Some("demo.task.echo-chain"))
-    {
-        floor.retakeable = false;
-    }
+        .find(|floor| floor.id == "demo.floor.echo-chain-vault-rift")
+        .expect("fixture should contain the staged task floor")
+        .task_id = Some("demo.task.echo-bounty".to_owned());
     assert!(matches!(
-        validate_and_normalize(&mut non_retakeable),
-        Err(ContentError::InvalidProceduralFloor(_))
+        validate_and_normalize(&mut wrong_owner),
+        Err(ContentError::InvalidTask(_))
     ));
 
     let mut zero_limit = artifact.content.clone();
@@ -1483,7 +1568,123 @@ fn staged_tasks_require_ordered_member_floor_objectives() {
         .retake_floor_policy = RetakeFloorPolicy::PreserveFloor;
     assert!(matches!(
         validate_and_normalize(&mut mismatched_policy),
-        Err(ContentError::InvalidProceduralFloor(_))
+        Err(ContentError::InvalidTask(_))
+    ));
+
+    let mut dedicated_completion_exit = artifact.content.clone();
+    dedicated_completion_exit
+        .worlds
+        .iter_mut()
+        .find(|world| world.id == "demo.world.warrens-journey")
+        .expect("fixture should contain the Warrens journey")
+        .tasks
+        .iter_mut()
+        .find(|task| task.id == "demo.task.thieves-hideout")
+        .expect("fixture should contain the thieves task")
+        .completion_exit_terrain_id = Some("demo.terrain.stairs-down".to_owned());
+    assert!(matches!(
+        validate_and_normalize(&mut dedicated_completion_exit),
+        Err(ContentError::InvalidTask(_))
+    ));
+}
+
+#[test]
+fn pest_control_matches_the_original_warrens_contract() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let world = artifact
+        .content
+        .worlds
+        .iter()
+        .find(|world| world.id == "demo.world.warrens-journey")
+        .expect("fixture should contain the Warrens journey");
+    let task = world
+        .tasks
+        .iter()
+        .find(|task| task.id == "demo.task.pest-control")
+        .expect("fixture should contain Pest Control");
+
+    assert_eq!(
+        task.prerequisite_task_id.as_deref(),
+        Some("demo.task.thieves-hideout")
+    );
+    assert!(matches!(
+        &task.location,
+        TaskLocationDefinition::DungeonDepth { dungeon_id, depth }
+            if dungeon_id == "demo.dungeon.warrens" && *depth == 5
+    ));
+    assert_eq!(task.objectives.len(), 1);
+    assert_eq!(task.objectives[0].kind, TaskObjectiveKind::KillActorKind);
+    assert_eq!(task.objectives[0].required, 8);
+    assert_eq!(
+        task.objectives[0].actor_kind_id.as_deref(),
+        Some("demo.actor.warg")
+    );
+    assert_eq!(task.target_placements.len(), 1);
+    assert_eq!(task.target_placements[0].spawn_count, 8);
+    assert_eq!(
+        task.completion_exit_terrain_id.as_deref(),
+        Some("demo.terrain.stairs-down")
+    );
+    assert_eq!(task.reward.item_kind_id, "demo.item.fur-cloak");
+
+    let reward = artifact
+        .content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.fur-cloak")
+        .expect("fixture should contain the Fur Cloak reward");
+    assert_eq!(reward.weight_tenths_pound, 30);
+    assert_eq!(reward.base_value, 200);
+    assert_eq!(reward.equipment_slot.as_deref(), Some("cloak"));
+    assert_eq!(reward.modifiers.defense, 3);
+}
+
+#[test]
+fn tasks_can_bind_an_existing_dungeon_depth_without_owning_the_floor() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let mut content = artifact.content.clone();
+    content.worlds[0].tasks.push(TaskDefinition {
+        id: "demo.task.depth-binding".to_owned(),
+        name_key: "floor-demo-echo-depth-1-name".to_owned(),
+        description_key: "terrain-demo-task-rift-description".to_owned(),
+        source_facility_id: None,
+        prerequisite_task_id: None,
+        location: TaskLocationDefinition::DungeonDepth {
+            dungeon_id: "demo.dungeon.echo-depths".to_owned(),
+            depth: 2,
+        },
+        objectives: vec![TaskObjectiveDefinition {
+            kind: TaskObjectiveKind::ClearFloor,
+            floor_id: Some("demo.floor.echo-depth-2".to_owned()),
+            required: 1,
+            item_instance_id: None,
+            item_kind_id: None,
+            actor_instance_id: None,
+            actor_kind_id: None,
+        }],
+        target_placements: Vec::new(),
+        completion_exit_terrain_id: None,
+        reward: TaskRewardDefinition {
+            item_instance_id: "demo.task.depth-binding.reward.1".to_owned(),
+            item_kind_id: "demo.item.luminous-shard".to_owned(),
+            quantity: 1,
+        },
+    });
+    validate_and_normalize(&mut content)
+        .expect("existing dungeon depth should be task-addressable");
+
+    let task = content.worlds[0]
+        .tasks
+        .iter_mut()
+        .find(|task| task.id == "demo.task.depth-binding")
+        .expect("test task should remain available");
+    task.location = TaskLocationDefinition::DungeonDepth {
+        dungeon_id: "demo.dungeon.echo-depths".to_owned(),
+        depth: 99,
+    };
+    assert!(matches!(
+        validate_and_normalize(&mut content),
+        Err(ContentError::InvalidTask(_))
     ));
 }
 

@@ -315,6 +315,14 @@ export function createPresentationFormatter(
         return localization.format("message-floor-one-shot-closed");
       case "task-completed":
         return localization.format("message-task-completed");
+      case "task-reward-available":
+        return localization.format("message-task-reward-available");
+      case "task-accepted":
+        return localization.format("message-task-accepted", {
+          task: contentName(event.args.task),
+        });
+      case "task-accept-unavailable":
+        return localization.format("message-task-accept-unavailable");
       case "task-failed":
         return localization.format("message-task-failed");
       case "task-abandoned":
@@ -330,6 +338,8 @@ export function createPresentationFormatter(
           target: visibleItemNameForKind(event.args.target),
           quantity: event.args.quantity ?? "?",
         });
+      case "task-reward-claim-unavailable":
+        return localization.format("message-task-reward-claim-unavailable");
       case "door-opened":
         return localization.format("message-door-opened");
       case "door-open-unavailable":

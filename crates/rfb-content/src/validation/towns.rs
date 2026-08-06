@@ -62,6 +62,22 @@ pub(super) fn validate_towns_and_shops(
         validate_definition_text(&facility.id, &facility.name_key, &facility.description_key)?;
         validate_definition_id(&facility.town_id, "town")?;
         validate_definition_id(&facility.entrance_terrain_id, "terrain")?;
+        if let Some(owner_name_key) = &facility.owner_name_key {
+            validate_message_key(owner_name_key)?;
+        }
+        let unique_task_ids = facility.task_ids.iter().collect::<BTreeSet<_>>();
+        if (facility.category == TownFacilityCategory::Home
+            && (facility.owner_name_key.is_some() || !facility.task_ids.is_empty()))
+            || (facility.category == TownFacilityCategory::QuestGiver
+                && (facility.owner_name_key.is_none() || facility.task_ids.is_empty()))
+            || unique_task_ids.len() != facility.task_ids.len()
+            || facility
+                .task_ids
+                .iter()
+                .any(|task_id| validate_definition_id(task_id, "task").is_err())
+        {
+            return Err(ContentError::InvalidTownFacility(facility.id.clone()));
+        }
         insert_definition_id(all_ids, &facility.id)?;
         facilities_by_id.insert(facility.id.clone(), facility.clone());
     }

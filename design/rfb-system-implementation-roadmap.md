@@ -1,6 +1,6 @@
 # RFB 全系统梳理与重构实现路线
 
-状态：长期规则实现路线；当前基线为协议 1.137 / contract-v180（P31–P98 进展见 8.3，玩家流程与 Outpost 进展见 Phase 17/18，物品接入见 Phase 19，Warrens 怪物机制见 W1–W14 清单）
+状态：长期规则实现路线；当前基线为协议 1.138 / contract-v182（P31–P98 进展见 8.3，玩家流程与 Outpost 进展见 Phase 17/18，物品接入见 Phase 19，Warrens 怪物机制见 W1–W14 清单）
 
 ## 1. 目的与边界
 
@@ -426,7 +426,7 @@ contract-v69 继续完成内容驱动的 dungeon 实例生命周期。`reset-on-
 6. 友好、宠物和命令。
 
 骑乘、捕获、进化、附身和玩家怪物种族延后到普通怪物系统稳定之后。
-Warrens 的下一轮怪物工作按 [Warrens 怪物机制实现清单](warrens-monster-mechanism-backlog.md) 的 W1–W14 推进；先补分配与群体真实性，再补门、移动域、HP、特殊攻击及掉落，避免一次纵切混合多个怪物行为。
+Warrens 的怪物机制按 [Warrens 怪物机制实现清单](warrens-monster-mechanism-backlog.md) 的 W1–W14 已完成。后续只在发现与固定 RFB 原版不一致的具体行为时，按单一机制补充；不把 `FRIENDS(3d3)` 误当作 Pest Control 目标数量。
 
 ### 阶段 I：城镇、商店、任务与经济
 
@@ -434,7 +434,7 @@ Warrens 的下一轮怪物工作按 [Warrens 怪物机制实现清单](warrens-m
 
 实现：城镇地图、商店刷新、交易、家中仓库、建筑服务、任务状态机、奖励、声望和第一条原创主线。任务目标只订阅击杀、拾取、进入楼层等领域事件。
 
-当前进度：contract-v36–v45 已建立一次性/可重接任务层、收集与击杀目标、奖励日志、主动放弃、计数进度、暂停恢复、共享任务 ID、权威 `TaskState`、集中领域事件订阅和跨成员楼层的有序多阶段目标；contract-v61 增加地表最终放弃、重接次数和保留进度的确定性重建。城镇、商店、接取来源、超时、脚本与声望仍未实现。
+当前进度：contract-v36–v45 已建立一次性/可重接任务层、收集与击杀目标、奖励日志、主动放弃、计数进度、暂停恢复、共享任务 ID、权威 `TaskState`、集中领域事件订阅和跨成员楼层的有序多阶段目标；contract-v61 增加地表最终放弃、重接次数和保留进度的确定性重建；contract-v181-v182 已接入 Outpost 伯爵任务来源、盗贼藏身处和害虫控制的接取、专属/既有楼层、失败、奖励与 UI。仍缺超时、脚本、重复任务、声望和完整任务日志 UI。
 
 ### 阶段 J：荒野、多地牢与战役
 
@@ -464,9 +464,9 @@ Warrens 的下一轮怪物工作按 [Warrens 怪物机制实现清单](warrens-m
 
 ### 8.1 基线与完成度判断
 
-当前权威基线为协议 1.137、内容包 1.174.0、contract-v180、save v1 和 state hash Schema v63；内容 hash 为 `fed9c01421e0ee68a6cde5d0b864aee32f4a218d58457cc0d0d06ab6b7d6334f`。active baseline 包含 462 个 exact fixtures，零 waiver。v73–v149 建立的规则与内容边界保持；v150–v156 建立 Warrens 玩家流程、角色切片、结果恢复、地图密度和掉落；v157–v168 建立并扩展开放 Outpost、补给、九类设施与 Home；v169 接入 35 项固定原版物品、共享背包容量、容器/工具槽、装备近战修正与工具双槽语义；v170 按原版力量表动态计算负重容量，并以超重速度惩罚取代拾取和交易硬拒绝；v171 按固定原版来源把 Warrens 普通生态扩为十二种已支持怪物，并建立 W1–W14 怪物机制实施清单；v172 将玩家施法策略改为按实际玩家入口选配，并把内容匹配从 state hash 中分离；v173 完成 Warrens 的全局分配、越级、leader-first 群体、Unique/escort、繁殖、随机移动与自然补怪；v174-v176 完成怪物门交互、移动域与个体 HP 骰；v177-v180 完成特殊近战/死亡爆炸、地形和物品破坏、怪物光源与完整死亡掉落旗标。Original Lab/Echo 与旧 demo builds 留作历史系统回归。Race/Class/Personality、技能成长、出生装备、自然属性、HP 序列、胜利后等级 100 / `18/820` 和装备派生边界保持一致。
+当前权威基线为协议 1.138、内容包 1.177.0、contract-v182、save v1 和 state hash Schema v63；内容 hash 为 `b51f0b97ac90c025b9c35347b2b2c56c2c2d00d89f53c0534631a1e00d2270a5`。active baseline 包含 470 个 exact fixtures，零 waiver。v73–v149 建立的规则与内容边界保持；v150–v156 建立 Warrens 玩家流程、角色切片、结果恢复、地图密度和掉落；v157–v168 建立并扩展开放 Outpost、补给、九类设施与 Home；v169 接入 35 项固定原版物品、共享背包容量、容器/工具槽、装备近战修正与工具双槽语义；v170 按原版力量表动态计算负重容量，并以超重速度惩罚取代拾取和交易硬拒绝；v171 按固定原版来源把 Warrens 普通生态扩为十二种已支持怪物，并建立 W1–W14 怪物机制实施清单；v172 将玩家施法策略按实际玩家入口选配，并把内容匹配从 state hash 中分离；v173 完成 Warrens 的全局分配、越级、leader-first 群体、Unique/escort、繁殖、随机移动与自然补怪；v174-v176 完成怪物门交互、移动域与个体 HP 骰；v177-v180 完成特殊近战/死亡爆炸、地形和物品破坏、怪物光源与完整死亡掉落旗标；v181 接通伯爵任务设施和盗贼藏身处；v182 接通原版害虫控制，严格使用 8 只 Warg 目标、Warrens 5 专属运行时补足、完成后魔法楼梯、失败离层和毛皮披风奖励，并以两条单命令 fixture 固定接取/领奖边界。Original Lab/Echo 与旧 demo builds 留作历史系统回归。Race/Class/Personality、技能成长、出生装备、自然属性、HP 序列、胜利后等级 100 / `18/820` 和装备派生边界保持一致。
 
-这一里程碑代表“规则架构、地牢纵切、角色构筑、玩家/怪物施法循环和首个兼容玩家流程已经成型”，不代表“旧 RFB 已重制完成”。当前 demo 内容包有 68 种 terrain、44 种 actor、140 种 item、3 种 resource、69 个 ability、6 本 ability book、10 个 skill、13 个 skill set、5 个 Race、6 个 Class、3 个 Personality、7 个 build、7 张 encounter table、14 张 loot table、3 张 theme table、1 张 region table、1 张 terrain feature table、6 个 Vault、1 个 town、1 个 town facility、8 个 shop 和 2 个 world。
+这一里程碑代表“规则架构、地牢纵切、角色构筑、玩家/怪物施法循环和首个兼容玩家流程已经成型”，不代表“旧 RFB 已重制完成”。当前 demo 内容包有 75 种 terrain、51 种 actor、141 种 item、3 种 resource、69 个 ability、6 本 ability book、10 个 skill、13 个 skill set、5 个 Race、6 个 Class、3 个 Personality、7 个 build、7 张 encounter table、14 张 loot table、3 张 theme table、1 张 region table、1 张 terrain feature table、6 个 Vault、1 个 town、2 个 town facility、8 个 shop 和 2 个 world。
 
 | 领域 | 阶段性状态 | 与旧 RFB 的当前差距 |
 | --- | --- | --- |
@@ -474,8 +474,8 @@ Warrens 的下一轮怪物工作按 [Warrens 怪物机制实现清单](warrens-m
 | 状态、抗性与基础战斗 | 基础纵切已建立 | 已覆盖近战、多 blow、射击、投掷、品牌、克制、吸血和代表性状态/元素；仍缺暴击、反击、姿态和骑乘等广度 |
 | 物品、装备与知识 | 基础闭环已建立 | 已覆盖背包、地面堆、装备、affix、质量、鉴别、携带物和掉落；仍缺完整神器、诅咒、激活、随机神器和锻造 |
 | 地图、地牢与探索 | 阶段 E 里程碑完成 | 已覆盖原版式房间外地貌、Vault、pit、maze-only、多区域、多楼梯、树状分支、共享守护者镜像、可配置实例生命周期，以及 Warrens 的 seeded 不规则洞室/随机环形通道；仍未复刻原版 fractal heightmap 与隧道启发式 |
-| 怪物与 AI | 部分建立 | 已有追踪、pack identity、formation、包围、守卫、施法效用、多格法术、敌对召唤、玩家召唤物目标/命令、保持距离/逃跑、有限智能学习，以及 Warrens W1-W13；仍缺 Pest Control Warg 任务生态、永久宠物和回忆 |
-| 任务与 campaign | 基础状态机已建立 | 已有多阶段目标、暂停/重接/放弃、奖励、胜利、退休和评分；仍缺任务来源、超时、脚本、重复任务与完整日志 UI |
+| 怪物与 AI | 部分建立 | 已有追踪、pack identity、formation、包围、守卫、施法效用、多格法术、敌对召唤、玩家召唤物目标/命令、保持距离/逃跑、有限智能学习，以及 Warrens W1-W14；盗贼藏身处候选仍缺 `BEG`、`EAT_GOLD/EAT_ITEM` 与 `TAKE_ITEM`，永久宠物和回忆仍未建立 |
+| 任务与 campaign | 基础状态机已建立 | 已有多阶段目标、暂停/重接/放弃、奖励、胜利、退休和评分，以及伯爵来源、盗贼藏身处和 Pest Control 的单目标任务；仍缺超时、脚本、重复任务与完整日志 UI |
 | 角色创建与成长 | 基础纵切已建立 | 已覆盖 Race/Class/Personality、五个代表性构筑、六维属性、经验/等级、HP 成长、十个技能的首轮规则消费和存档迁移；仍缺完整职业矩阵、技能练习、属性损伤/恢复和更多职业资源形态 |
 | 法术、能力与设备 | 玩家/怪物施法、动态设备与首批卷轴纵切已建立 | 已有 Mana、实体能力书、学习/熟练度/冷却、多类目标与伤害、位移/召唤/侦测/地形/状态、怪物效用选择、Death 四册、普通/完整物品鉴定、装备附魔、临时形态、生命恢复、动态设备 profile/容量、首批 wand/staff/rod 与主动充能；仍缺随机学习、首次奖励、受击/吟唱/姿态类资源、其他领域广度和完整卷轴/激活族 |
 | 荒野、城镇与经济 | Outpost 补给纵切已建立 | 已有首个围墙持久城镇、城外 Warrens、General Store/Temple/Alchemist/Magic Shop 店主、库存、定价、维护、交易与玩家商店 UI；多城镇旅行、家、建筑服务、声望和长期经济广度尚未形成 |

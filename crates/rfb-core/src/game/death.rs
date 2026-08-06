@@ -14,7 +14,7 @@ use crate::{
 };
 
 use super::{
-    FatalityPolicy, Game, commit_damage_application, initial_item_curse,
+    ActorDeathRecord, FatalityPolicy, Game, commit_damage_application, initial_item_curse,
     initial_item_runtime_state, plan_damage_application, rfb_area_damage,
 };
 use crate::save::initial_item_fuel;
@@ -370,6 +370,12 @@ impl Game {
         if credit_player {
             self.apply_player_experience(experience_value, events);
         }
+        self.command_actor_deaths.push(ActorDeathRecord {
+            actor_id: removed.id.clone(),
+            actor_kind_id: removed.kind_id.clone(),
+            position: removed.position,
+            credit_player,
+        });
         let defeated_guardian = self
             .content
             .world(&self.world_id)

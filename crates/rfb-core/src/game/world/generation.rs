@@ -2,8 +2,9 @@
 use std::collections::BTreeSet;
 
 use rfb_content::{
-    ContentCatalog, ContentPosition, EncounterFormation, ProceduralFloorDefinition,
-    ProceduralNormalAllocationDefinition, TerrainFeaturePlacement, VaultDefinition, VaultTransform,
+    ContentCatalog, ContentPosition, EncounterFormation, InlineFloorMapDefinition,
+    ProceduralFloorDefinition, ProceduralNormalAllocationDefinition, TaskLocationDefinition,
+    TerrainFeaturePlacement, VaultDefinition, VaultTransform,
 };
 use rfb_protocol::Position;
 
@@ -691,11 +692,173 @@ fn generated_wall_positions(
 }
 
 impl Game {
+    fn generate_inline_floor(
+        &mut self,
+        definition: &ProceduralFloorDefinition,
+        inline_map: &InlineFloorMapDefinition,
+        dungeon_instance_id: Option<String>,
+    ) -> Result<FloorState, CoreError> {
+        let width = definition.width;
+        let height = definition.height;
+        let mut terrain =
+            vec![definition.wall_terrain_id.clone(); usize::from(width) * usize::from(height)];
+        for terrain_override in &inline_map.terrain_overrides {
+            for position in &terrain_override.positions {
+                let terrain_id = if terrain_override.chance_percent == 100
+                    || self.rng.bounded(100) < u64::from(terrain_override.chance_percent)
+                {
+                    &terrain_override.terrain_id
+                } else {
+                    terrain_override
+                        .otherwise_terrain_id
+                        .as_ref()
+                        .expect("validated random inline terrain must have a fallback")
+                };
+                set_generated_terrain(
+                    &mut terrain,
+                    width,
+                    Position {
+                        x: i32::from(position.x),
+                        y: i32::from(position.y),
+                    },
+                    terrain_id,
+                );
+            }
+        }
+
+        let mut entities = Vec::new();
+        for spawn in &inline_map.actor_spawns {
+            let actor = self
+                .content
+                .actor(&spawn.kind_id)
+                .expect("validated inline actor must remain available")
+                .clone();
+            entities.push(spawn_actor_from_definition(
+                &mut self.rng,
+                &actor,
+                &spawn.instance_id,
+                Position {
+                    x: i32::from(spawn.position.x),
+                    y: i32::from(spawn.position.y),
+                },
+                INITIAL_MONSTER_ENERGY_NEED,
+                actor_starts_alerted(&actor),
+            ));
+        }
+        if let Some(formation) = &inline_map.monster_formation {
+            let mut candidates = formation
+                .candidate_actor_kind_ids
+                .iter()
+                .map(|actor_kind_id| {
+                    self.content
+                        .actor(actor_kind_id)
+                        .expect("validated formation actor must remain available")
+                        .clone()
+                })
+                .collect::<Vec<_>>();
+            candidates.sort_by_key(|actor| {
+                actor
+                    .allocation
+                    .as_ref()
+                    .expect("validated formation actor must retain allocation")
+                    .legacy_index
+            });
+            let weights = candidates
+                .iter()
+                .map(|actor| {
+                    100 / actor
+                        .allocation
+                        .as_ref()
+                        .expect("validated formation actor must retain allocation")
+                        .rarity
+                })
+                .collect::<Vec<_>>();
+            let mut drawn = (0..formation.draw_count)
+                .map(|_| candidates[self.roll_weighted_index(&weights)].clone())
+                .collect::<Vec<_>>();
+            drawn.sort_by(|left, right| {
+                right.level.cmp(&left.level).then_with(|| {
+                    left.allocation
+                        .as_ref()
+                        .expect("validated formation actor must retain allocation")
+                        .legacy_index
+                        .cmp(
+                            &right
+                                .allocation
+                                .as_ref()
+                                .expect("validated formation actor must retain allocation")
+                                .legacy_index,
+                        )
+                })
+            });
+            for ((draw_index, position), actor) in formation
+                .placement_indices
+                .iter()
+                .zip(&formation.positions)
+                .map(|(index, position)| ((*index, position), &drawn[usize::from(*index)]))
+            {
+                entities.push(spawn_actor_from_definition(
+                    &mut self.rng,
+                    actor,
+                    &format!("{}.formation.{}", definition.id, draw_index + 1),
+                    Position {
+                        x: i32::from(position.x),
+                        y: i32::from(position.y),
+                    },
+                    INITIAL_MONSTER_ENERGY_NEED,
+                    actor_starts_alerted(actor),
+                ));
+            }
+        }
+
+        let mut items = Vec::new();
+        for spawn in &inline_map.loot_spawns {
+            items.extend(self.generate_loot_instances(
+                &LootContext {
+                    table_id: spawn.loot_table_id.clone(),
+                    floor_id: definition.id.clone(),
+                    depth: definition.depth,
+                    source: LootSource::FloorRoom {
+                        room_id: "inline-map".to_owned(),
+                        spawn_id: spawn.id.clone(),
+                    },
+                },
+                ItemLocation::Ground(Position {
+                    x: i32::from(spawn.position.x),
+                    y: i32::from(spawn.position.y),
+                }),
+            )?);
+        }
+
+        Ok(FloorState {
+            id: definition.id.clone(),
+            dungeon_instance_id,
+            width,
+            height,
+            terrain,
+            player_position: Position {
+                x: i32::from(inline_map.player_position.x),
+                y: i32::from(inline_map.player_position.y),
+            },
+            entities,
+            items,
+            gold_piles: Vec::new(),
+            explored: vec![false; usize::from(width) * usize::from(height)],
+            revealed_terrain: BTreeSet::new(),
+            connections: Vec::new(),
+            regions: Vec::new(),
+        })
+    }
+
     pub(in crate::game) fn generate_procedural_floor(
         &mut self,
         definition: &ProceduralFloorDefinition,
         dungeon_instance_id: Option<String>,
     ) -> Result<FloorState, CoreError> {
+        self.monster_division_remainders.clear();
+        if let Some(inline_map) = &definition.inline_map {
+            return self.generate_inline_floor(definition, inline_map, dungeon_instance_id);
+        }
         let maze_only = definition
             .layout
             .as_ref()
@@ -817,29 +980,74 @@ impl Game {
                     .is_some_and(|state| !state.guardian_defeated)
             })
         });
-        let task_objectives = self
+        let task_definitions = self
             .content
             .world(&self.world_id)
-            .and_then(|world| {
-                world
-                    .procedural_floors
+            .map(|world| {
+                if let Some(task_id) = definition.task_id.as_deref() {
+                    task_definition(world, task_id)
+                        .cloned()
+                        .into_iter()
+                        .collect::<Vec<_>>()
+                } else {
+                    world
+                        .tasks
+                        .iter()
+                        .filter(|task| {
+                            task_applies_to_floor(task, definition)
+                                && self.task_states.get(&task.id).is_some_and(|state| {
+                                    matches!(
+                                        state.status,
+                                        TaskStatusKindDto::Active | TaskStatusKindDto::Taken
+                                    )
+                                })
+                        })
+                        .cloned()
+                        .collect::<Vec<_>>()
+                }
+            })
+            .unwrap_or_default();
+        let completion_exit_terrain_ids = task_definitions
+            .iter()
+            .filter_map(|task| task.completion_exit_terrain_id.clone())
+            .collect::<BTreeSet<_>>();
+        let task_objectives = task_definitions
+            .iter()
+            .flat_map(|task| {
+                task.objectives
                     .iter()
-                    .find(|floor| {
-                        floor_task_id(floor) == floor_task_id(definition)
-                            && !floor.task_stages.is_empty()
-                    })
-                    .map(|floor| {
-                        floor
-                            .task_stages
-                            .iter()
-                            .filter(|stage| {
-                                stage.floor_id.as_deref() == Some(definition.id.as_str())
-                            })
-                            .cloned()
-                            .collect::<Vec<_>>()
+                    .enumerate()
+                    .filter_map(|(index, objective)| {
+                        let placement = task.target_placements.iter().find(|placement| {
+                            placement.objective_index as usize == index
+                                && placement.floor_id == definition.id
+                        });
+                        let applies = objective.floor_id.as_deref() == Some(definition.id.as_str())
+                            || placement.is_some()
+                            || (objective.floor_id.is_none()
+                                && !task
+                                    .target_placements
+                                    .iter()
+                                    .any(|candidate| candidate.objective_index as usize == index));
+                        let requires_placement = matches!(
+                            objective.kind,
+                            TaskObjectiveKind::KillActor | TaskObjectiveKind::KillActorKind
+                        );
+                        (applies && (!requires_placement || placement.is_some())).then(|| {
+                            (
+                                task.id.clone(),
+                                index,
+                                objective.clone(),
+                                placement.cloned(),
+                                matches!(
+                                    &task.location,
+                                    TaskLocationDefinition::DungeonDepth { .. }
+                                ),
+                            )
+                        })
                     })
             })
-            .unwrap_or_else(|| definition.task_objective.iter().cloned().collect());
+            .collect::<Vec<_>>();
         let width = definition.width;
         let height = definition.height;
         let mut terrain =
@@ -1622,15 +1830,33 @@ impl Game {
                         height,
                         &mut occupied,
                     );
+                    let pack_behavior = if members.is_empty() {
+                        None
+                    } else {
+                        let leader_definition = self
+                            .content
+                            .actor(&kind_id)
+                            .expect("allocated leader definition must remain available")
+                            .clone();
+                        Some(
+                            self.original_pack_behavior(
+                                &leader_definition,
+                                members
+                                    .iter()
+                                    .any(|member| member.role == OriginalGroupRole::Escort),
+                                members.len() + 1,
+                            ),
+                        )
+                    };
                     let leader_id = format!("{}.encounter.{}", definition.id, ordinal + 1);
                     let pack_id = format!("{leader_id}.pack");
                     let mut leader = self.generated_actor(leader_id.clone(), &kind_id, position);
-                    if !members.is_empty() {
+                    if let Some(behavior) = pack_behavior {
                         leader.pack = Some(MonsterPackIdentity {
                             id: pack_id.clone(),
                             leader_id: leader_id.clone(),
                             role: MonsterPackRoleDto::Leader,
-                            behavior: MonsterPackBehaviorDto::Seek,
+                            behavior,
                         });
                     }
                     target_floor_kind_ids.push(kind_id);
@@ -1645,10 +1871,7 @@ impl Game {
                             id: pack_id.clone(),
                             leader_id: leader_id.clone(),
                             role: MonsterPackRoleDto::Member,
-                            behavior: match member.role {
-                                OriginalGroupRole::Friend => MonsterPackBehaviorDto::Surround,
-                                OriginalGroupRole::Escort => MonsterPackBehaviorDto::GuardLeader,
-                            },
+                            behavior: pack_behavior.expect("non-empty pack must retain behavior"),
                         });
                         target_floor_kind_ids.push(member.kind_id);
                         entities.push(actor);
@@ -1877,7 +2100,9 @@ impl Game {
                 .as_ref()
                 .and_then(|table_id| self.content.encounter_table(table_id))
                 .and_then(|table| table.global_allocation.clone());
-            if let Some(policy) = original_policy {
+            if let Some(policy) = original_policy
+                && actor_definition.allocation.is_some()
+            {
                 let members = self.plan_original_group(
                     &policy,
                     &guardian.actor_kind_id,
@@ -1888,13 +2113,22 @@ impl Game {
                     height,
                     &mut occupied,
                 );
-                if !members.is_empty() {
+                let pack_behavior = (!members.is_empty()).then(|| {
+                    self.original_pack_behavior(
+                        &actor_definition,
+                        members
+                            .iter()
+                            .any(|member| member.role == OriginalGroupRole::Escort),
+                        members.len() + 1,
+                    )
+                });
+                if let Some(behavior) = pack_behavior {
                     let pack_id = format!("{}.pack", guardian.instance_id);
                     actor.pack = Some(MonsterPackIdentity {
                         id: pack_id.clone(),
                         leader_id: guardian.instance_id.clone(),
                         role: MonsterPackRoleDto::Leader,
-                        behavior: MonsterPackBehaviorDto::Seek,
+                        behavior,
                     });
                     for (ordinal, member) in members.into_iter().enumerate() {
                         let mut companion = self.generated_actor(
@@ -1906,10 +2140,7 @@ impl Game {
                             id: pack_id.clone(),
                             leader_id: guardian.instance_id.clone(),
                             role: MonsterPackRoleDto::Member,
-                            behavior: match member.role {
-                                OriginalGroupRole::Friend => MonsterPackBehaviorDto::Surround,
-                                OriginalGroupRole::Escort => MonsterPackBehaviorDto::GuardLeader,
-                            },
+                            behavior: pack_behavior.expect("non-empty pack must retain behavior"),
                         });
                         entities.push(companion);
                     }
@@ -2147,7 +2378,9 @@ impl Game {
                 location: ItemLocation::Ground(position),
             });
         }
-        for objective in &task_objectives {
+        for (task_id, _objective_index, objective, target_placement, dungeon_depth_task) in
+            &task_objectives
+        {
             match objective.kind {
                 TaskObjectiveKind::CollectItem => {
                     let kind_id = objective
@@ -2190,6 +2423,11 @@ impl Game {
                         .actor(kind_id)
                         .expect("validated objective actor must remain available")
                         .clone();
+                    let target_position = Position {
+                        x: first_center.x + 1,
+                        y: first_center.y,
+                    };
+                    occupied.insert(target_position);
                     entities.push(spawn_actor_from_definition(
                         &mut self.rng,
                         &actor,
@@ -2197,10 +2435,7 @@ impl Game {
                             .actor_instance_id
                             .as_ref()
                             .expect("validated kill objective must have an instance ID"),
-                        Position {
-                            x: first_center.x + 1,
-                            y: first_center.y,
-                        },
+                        target_position,
                         INITIAL_MONSTER_ENERGY_NEED,
                         actor_starts_alerted(&actor),
                     ));
@@ -2217,29 +2452,54 @@ impl Game {
                         .clone();
                     let remaining = self
                         .task_states
-                        .get(floor_task_id(definition))
+                        .get(task_id)
                         .map_or(objective.required, |state| {
                             state.required.saturating_sub(state.current)
                         });
-                    let spawn_count = objective
-                        .spawn_count
-                        .unwrap_or(objective.required)
+                    let spawn_count = target_placement
+                        .as_ref()
+                        .map_or(objective.required, |placement| placement.spawn_count)
                         .min(remaining);
                     for ordinal in 0..spawn_count {
+                        let target_position = if *dungeon_depth_task {
+                            self.choose_generated_dungeon_task_target_position(
+                                definition,
+                                &terrain,
+                                &occupied,
+                                kind_id,
+                                first_center,
+                            )
+                            .ok_or_else(|| {
+                                CoreError::Invariant(format!(
+                                    "task {task_id} cannot place target {kind_id} on floor {}",
+                                    definition.id
+                                ))
+                            })?
+                        } else {
+                            Position {
+                                x: first_center.x + 1 + i32::try_from(ordinal).unwrap_or(i32::MAX),
+                                y: first_center.y,
+                            }
+                        };
+                        occupied.insert(target_position);
                         entities.push(spawn_actor_from_definition(
                             &mut self.rng,
                             &actor,
                             &format!("{}.task-target.{}", definition.id, ordinal + 1),
-                            Position {
-                                x: first_center.x + 1 + i32::try_from(ordinal).unwrap_or(i32::MAX),
-                                y: first_center.y,
-                            },
+                            target_position,
                             INITIAL_MONSTER_ENERGY_NEED,
                             actor_starts_alerted(&actor),
                         ));
                     }
                 }
-                TaskObjectiveKind::EnterFloor => {}
+                TaskObjectiveKind::ClearFloor | TaskObjectiveKind::EnterFloor => {}
+            }
+        }
+        if !completion_exit_terrain_ids.is_empty() {
+            for terrain_id in &mut terrain {
+                if completion_exit_terrain_ids.contains(terrain_id) {
+                    terrain_id.clone_from(&definition.floor_terrain_id);
+                }
             }
         }
         for region in &mut generated_regions {
@@ -3826,6 +4086,52 @@ impl Game {
         ))
         .expect("bounded generated floor candidate index must fit usize");
         candidates[index]
+    }
+
+    fn choose_generated_dungeon_task_target_position(
+        &mut self,
+        definition: &ProceduralFloorDefinition,
+        terrain: &[String],
+        occupied: &BTreeSet<Position>,
+        actor_kind_id: &str,
+        entry: Position,
+    ) -> Option<Position> {
+        const ORIGINAL_QUEST_TARGET_MINIMUM_DISTANCE: u32 = 10;
+
+        let candidates = terrain
+            .iter()
+            .enumerate()
+            .filter_map(|(index, _)| {
+                let position = Position {
+                    x: i32::try_from(index % usize::from(definition.width))
+                        .expect("generated task target x must fit i32"),
+                    y: i32::try_from(index / usize::from(definition.width))
+                        .expect("generated task target y must fit i32"),
+                };
+                (!occupied.contains(&position)
+                    && chebyshev_distance(entry, position)
+                        >= ORIGINAL_QUEST_TARGET_MINIMUM_DISTANCE
+                    && generated_actor_can_enter_position(
+                        &self.content,
+                        terrain,
+                        definition.width,
+                        actor_kind_id,
+                        position,
+                    ))
+                .then_some(position)
+            })
+            .collect::<Vec<_>>();
+        if candidates.is_empty() {
+            return None;
+        }
+        let index = usize::try_from(
+            self.rng.bounded(
+                u64::try_from(candidates.len())
+                    .expect("generated task target candidate count must fit u64"),
+            ),
+        )
+        .expect("bounded generated task target candidate index must fit usize");
+        Some(candidates[index])
     }
 
     fn scaled_normal_allocation(

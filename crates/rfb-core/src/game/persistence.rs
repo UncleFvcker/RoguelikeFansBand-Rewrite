@@ -38,9 +38,10 @@ use super::town::{
 use super::{
     BodySlot, CampaignState, DungeonState, Game, ItemKnowledgeState, ItemPropertyKnowledgeState,
     STATE_HASH_SCHEMA_VERSION, TaskState, character_skill_progress, dungeon_instance_id,
-    dungeon_instance_storage_key, floor_dungeon_id, floor_task_id, initial_dungeon_states,
-    initial_task_states, load_built_in_content, parse_dungeon_instance_ordinal, resolve_body_slots,
-    resolve_character_build, task_objectives,
+    dungeon_instance_storage_key, floor_dungeon_id, initial_dungeon_states, initial_task_states,
+    load_built_in_content, parse_dungeon_instance_ordinal, resolve_body_slots,
+    resolve_character_build, task_definition, task_floors, task_objectives,
+    tasks::task_initial_state,
 };
 
 struct TaskRestoreContext<'a> {
@@ -153,9 +154,13 @@ fn restore_task_states(
     if !context.saved_states.is_empty() {
         let mut restored = BTreeMap::new();
         for saved in context.saved_states {
-            let Some(expected) = states.get(&saved.task_id) else {
+            let Some(task) = task_definition(world, &saved.task_id) else {
                 return Err(CoreError::InvalidSave("task state ID is invalid"));
             };
+            let expected = states
+                .get(&saved.task_id)
+                .cloned()
+                .unwrap_or_else(|| task_initial_state(task, &states));
             let objectives = task_objectives(world, &saved.task_id);
             let Some(objective) = usize::try_from(saved.stage_index)
                 .ok()
@@ -163,11 +168,7 @@ fn restore_task_states(
             else {
                 return Err(CoreError::InvalidSave("task stage is invalid"));
             };
-            let members = world
-                .procedural_floors
-                .iter()
-                .filter(|floor| floor_task_id(floor) == saved.task_id)
-                .collect::<Vec<_>>();
+            let members = task_floors(world, &saved.task_id).collect::<Vec<_>>();
             let active_floor_is_valid = saved.active_floor_id.as_ref().is_some_and(|floor_id| {
                 floor_id == context.current_floor_id
                     && members.iter().any(|floor| floor.id == *floor_id)
@@ -189,9 +190,34 @@ fn restore_task_states(
                             .is_some_and(|stage| stage + 1 == objectives.len())
                         && saved.current == saved.required
                 }
-                TaskStatusKindDto::Available
-                | TaskStatusKindDto::Failed
-                | TaskStatusKindDto::Abandoned => saved.active_floor_id.is_none(),
+                TaskStatusKindDto::Available => {
+                    saved.active_floor_id.is_none()
+                        && (task.source_facility_id.is_none()
+                            || expected.status == TaskStatusKindDto::Available)
+                }
+                TaskStatusKindDto::Failed | TaskStatusKindDto::Abandoned => {
+                    saved.active_floor_id.is_none()
+                }
+                TaskStatusKindDto::Locked => {
+                    saved.active_floor_id.is_none()
+                        && expected.status == TaskStatusKindDto::Locked
+                        && saved.stage_index == 0
+                        && saved.current == 0
+                }
+                TaskStatusKindDto::RewardAvailable => {
+                    saved.active_floor_id.is_none()
+                        && task_definition(world, &saved.task_id)
+                            .is_some_and(|task| task.source_facility_id.is_some())
+                        && usize::try_from(saved.stage_index)
+                            .ok()
+                            .is_some_and(|stage| stage + 1 == objectives.len())
+                        && saved.current == saved.required
+                }
+                TaskStatusKindDto::Taken => {
+                    saved.active_floor_id.is_none()
+                        && task_definition(world, &saved.task_id)
+                            .is_some_and(|task| task.source_facility_id.is_some())
+                }
             };
             if (saved.stage_index == 0 && expected.required != objective.required)
                 || saved.required != objective.required
@@ -215,7 +241,7 @@ fn restore_task_states(
                 return Err(CoreError::InvalidSave("task state is invalid"));
             }
         }
-        if restored.len() != states.len() && !context.allow_missing_states {
+        if expected_task_states_missing(&states, &restored) && !context.allow_missing_states {
             return Err(CoreError::InvalidSave("task state set is incomplete"));
         }
         states.extend(restored);
@@ -231,11 +257,7 @@ fn restore_task_states(
             .map(|floor| floor.terrain.as_slice())
     };
     for (task_id, state) in &mut states {
-        let members = world
-            .procedural_floors
-            .iter()
-            .filter(|floor| floor_task_id(floor) == task_id)
-            .collect::<Vec<_>>();
+        let members = task_floors(world, task_id).collect::<Vec<_>>();
         let active = members
             .iter()
             .copied()
@@ -284,10 +306,9 @@ fn restore_task_states(
         state.current = context.legacy_progress.get(task_id).copied().unwrap_or(0);
         if state.status == TaskStatusKindDto::Completed {
             state.current = state.required;
-        } else if let Some(floor) = active {
-            let objective = floor
-                .task_objective
-                .as_ref()
+        } else if active.is_some() {
+            let objective = task_objectives(world, task_id)
+                .first()
                 .expect("validated task objective must remain available");
             match objective.kind {
                 TaskObjectiveKind::CollectItem => {
@@ -312,12 +333,23 @@ fn restore_task_states(
                         state.current = 1;
                     }
                 }
-                TaskObjectiveKind::EnterFloor | TaskObjectiveKind::KillActorKind => {}
+                TaskObjectiveKind::ClearFloor
+                | TaskObjectiveKind::EnterFloor
+                | TaskObjectiveKind::KillActorKind => {}
             }
         }
         state.current = state.current.min(state.required);
     }
     Ok(states)
+}
+
+fn expected_task_states_missing(
+    expected: &BTreeMap<String, TaskState>,
+    restored: &BTreeMap<String, TaskState>,
+) -> bool {
+    expected
+        .keys()
+        .any(|task_id| !restored.contains_key(task_id))
 }
 
 fn restore_character_progress(
@@ -602,27 +634,16 @@ impl Game {
             .ok_or_else(|| CoreError::UnknownWorld(payload.world_id.clone()))?;
         let mut legacy_task_progress = BTreeMap::new();
         for progress in &payload.task_progress {
-            let Some(floor) = world
-                .procedural_floors
-                .iter()
-                .find(|floor| floor_task_id(floor) == progress.task_id)
-                .or_else(|| {
-                    world
-                        .procedural_floors
-                        .iter()
-                        .find(|floor| floor.id == progress.task_id)
-                })
-            else {
+            let Some(task) = task_definition(world, &progress.task_id) else {
                 return Err(CoreError::InvalidSave("task progress floor ID is invalid"));
             };
-            let task_id = floor_task_id(floor).to_owned();
-            let required = floor
-                .task_objective
-                .as_ref()
+            let required = task
+                .objectives
+                .first()
                 .map_or(1, |objective| objective.required);
             if progress.current > required
                 || legacy_task_progress
-                    .insert(task_id, progress.current)
+                    .insert(task.id.clone(), progress.current)
                     .is_some()
             {
                 return Err(CoreError::InvalidSave("task progress is invalid"));
@@ -1000,6 +1021,7 @@ impl Game {
             item_knowledge,
             item_property_knowledge,
             task_states,
+            command_actor_deaths: Vec::new(),
             dungeon_states,
             defeated_unique_actor_kind_ids,
             town_states,
@@ -1027,6 +1049,7 @@ impl Game {
             debug_recall_delay_turns: None,
             debug_item_curses_land: false,
             debug_item_curses_resisted: false,
+            monster_division_remainders: BTreeMap::new(),
         };
         game.restore_player_ability_state(
             saved_resources,

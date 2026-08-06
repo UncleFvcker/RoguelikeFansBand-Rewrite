@@ -346,12 +346,17 @@ message-player-attribute-increased = { $attribute } rises to { $natural } (effec
 message-player-attribute-increase-unavailable = { $attribute } cannot be raised right now.
 message-floor-one-shot-closed = The one-use task space closes behind you.
 message-task-completed = You recovered the task objective.
+message-task-reward-available = The task is complete. Return to the quest giver for your reward.
+message-task-exit-revealed = A magical staircase appears...
+message-task-accepted = Task accepted: { $task }.
+message-task-accept-unavailable = That task cannot be accepted here right now.
 message-task-failed = You left without recovering the task objective.
 message-task-abandoned = You deliberately abandoned the active task.
 message-task-abandon-unavailable = There is no paused task that can be abandoned from here.
 message-task-paused = You leave the task for now; its progress is preserved.
 message-task-resumed = You resume the preserved task.
 message-task-rewarded = Task reward: { $quantity } × { $target }.
+message-task-reward-claim-unavailable = That reward cannot be claimed here right now.
 
 panel-campaign-title = Campaign
 campaign-status-label = Status

@@ -3,7 +3,8 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use rfb_content::{
-    ContentCatalog, ShopCategory, ShopDefinition, ShopStockDefinition, WorldDefinition,
+    ContentCatalog, ShopCategory, ShopDefinition, ShopStockDefinition, TownFacilityCategory,
+    WorldDefinition,
 };
 use rfb_protocol::{
     HomeDto, HomeItemDto, HomeStateSaveDto, ItemEnchantmentsDto, ItemQualityDto, Position,
@@ -44,15 +45,18 @@ pub(super) fn initial_home_states(
     town.facility_ids
         .iter()
         .filter_map(|id| {
-            content.town_facility(id).map(|facility| {
-                (
-                    facility.id.clone(),
-                    HomeState {
-                        visited: false,
-                        inventory: Vec::new(),
-                    },
-                )
-            })
+            content
+                .town_facility(id)
+                .filter(|facility| facility.category == TownFacilityCategory::Home)
+                .map(|facility| {
+                    (
+                        facility.id.clone(),
+                        HomeState {
+                            visited: false,
+                            inventory: Vec::new(),
+                        },
+                    )
+                })
         })
         .collect()
 }
@@ -82,7 +86,16 @@ pub(super) fn restore_home_states(
             .then(BTreeMap::new)
             .ok_or(CoreError::InvalidSave("home state is invalid"));
     };
-    let expected = town.facility_ids.iter().cloned().collect::<BTreeSet<_>>();
+    let expected = town
+        .facility_ids
+        .iter()
+        .filter(|id| {
+            content
+                .town_facility(id)
+                .is_some_and(|facility| facility.category == TownFacilityCategory::Home)
+        })
+        .cloned()
+        .collect::<BTreeSet<_>>();
     let mut states = BTreeMap::new();
     for saved in saved_homes {
         let Some(facility) = content.town_facility(&saved.facility_id) else {
@@ -1267,7 +1280,11 @@ impl Game {
                 state.visited = true;
             }
         }
-        for facility_id in &town.facility_ids {
+        for facility_id in town.facility_ids.iter().filter(|facility_id| {
+            self.content
+                .town_facility(facility_id)
+                .is_some_and(|facility| facility.category == TownFacilityCategory::Home)
+        }) {
             let facility = self
                 .content
                 .town_facility(facility_id)
@@ -1423,6 +1440,7 @@ impl Game {
         town.facility_ids
             .iter()
             .filter_map(|id| self.content.town_facility(id))
+            .filter(|facility| facility.category == TownFacilityCategory::Home)
             .map(|facility| {
                 let entrance_position = position_from_content(facility.entrance_position);
                 let player_at_entrance = self.player.position == entrance_position;

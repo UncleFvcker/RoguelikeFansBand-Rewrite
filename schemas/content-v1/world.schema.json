@@ -313,6 +313,142 @@
       ],
       "type": "string"
     },
+    "InlineFloorLootSpawnDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "lootTableId": {
+          "type": "string"
+        },
+        "position": {
+          "$ref": "#/$defs/ContentPosition"
+        }
+      },
+      "required": [
+        "id",
+        "position",
+        "lootTableId"
+      ],
+      "type": "object"
+    },
+    "InlineFloorMapDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "actorSpawns": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/ActorSpawn"
+          },
+          "type": "array"
+        },
+        "lootSpawns": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/InlineFloorLootSpawnDefinition"
+          },
+          "type": "array"
+        },
+        "monsterFormation": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/InlineMonsterFormationDefinition"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "playerPosition": {
+          "$ref": "#/$defs/ContentPosition"
+        },
+        "terrainOverrides": {
+          "items": {
+            "$ref": "#/$defs/InlineTerrainOverrideDefinition"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "playerPosition",
+        "terrainOverrides"
+      ],
+      "type": "object"
+    },
+    "InlineMonsterFormationDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "candidateActorKindIds": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "drawCount": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "placementIndices": {
+          "items": {
+            "format": "uint16",
+            "maximum": 65535,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "type": "array"
+        },
+        "positions": {
+          "items": {
+            "$ref": "#/$defs/ContentPosition"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "candidateActorKindIds",
+        "drawCount",
+        "placementIndices",
+        "positions"
+      ],
+      "type": "object"
+    },
+    "InlineTerrainOverrideDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "chancePercent": {
+          "default": 100,
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "otherwiseTerrainId": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "positions": {
+          "items": {
+            "$ref": "#/$defs/ContentPosition"
+          },
+          "type": "array"
+        },
+        "terrainId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "terrainId",
+        "positions"
+      ],
+      "type": "object"
+    },
     "ItemQuality": {
       "enum": [
         "ordinary",
@@ -508,6 +644,13 @@
           "default": true,
           "type": "boolean"
         },
+        "availableEntryTerrainId": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "closedDoorTerrainId": {
           "type": "string"
         },
@@ -629,6 +772,17 @@
         "id": {
           "type": "string"
         },
+        "inlineMap": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/InlineFloorMapDefinition"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
         "layout": {
           "anyOf": [
             {
@@ -723,35 +877,6 @@
             "string",
             "null"
           ]
-        },
-        "taskObjective": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/TaskObjectiveDefinition"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null
-        },
-        "taskReward": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/TaskRewardDefinition"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null
-        },
-        "taskStages": {
-          "default": [],
-          "items": {
-            "$ref": "#/$defs/TaskObjectiveDefinition"
-          },
-          "type": "array"
         },
         "terrainFeatureTableId": {
           "default": null,
@@ -1490,6 +1615,117 @@
       ],
       "type": "string"
     },
+    "TaskDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "completionExitTerrainId": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "descriptionKey": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "location": {
+          "$ref": "#/$defs/TaskLocationDefinition"
+        },
+        "nameKey": {
+          "type": "string"
+        },
+        "objectives": {
+          "items": {
+            "$ref": "#/$defs/TaskObjectiveDefinition"
+          },
+          "type": "array"
+        },
+        "prerequisiteTaskId": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "reward": {
+          "$ref": "#/$defs/TaskRewardDefinition"
+        },
+        "sourceFacilityId": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "targetPlacements": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/TaskTargetPlacementDefinition"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "nameKey",
+        "descriptionKey",
+        "location",
+        "objectives",
+        "reward"
+      ],
+      "type": "object"
+    },
+    "TaskLocationDefinition": {
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "floorIds": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "kind": {
+              "const": "dedicated-floors",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "floorIds"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "depth": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "dungeonId": {
+              "type": "string"
+            },
+            "kind": {
+              "const": "dungeon-depth",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "dungeonId",
+            "depth"
+          ],
+          "type": "object"
+        }
+      ]
+    },
     "TaskObjectiveDefinition": {
       "additionalProperties": false,
       "properties": {
@@ -1536,15 +1772,6 @@
           "format": "uint32",
           "minimum": 0,
           "type": "integer"
-        },
-        "spawnCount": {
-          "default": null,
-          "format": "uint32",
-          "minimum": 0,
-          "type": [
-            "integer",
-            "null"
-          ]
         }
       },
       "required": [
@@ -1554,6 +1781,7 @@
     },
     "TaskObjectiveKind": {
       "enum": [
+        "clear-floor",
         "collect-item",
         "enter-floor",
         "kill-actor",
@@ -1580,6 +1808,30 @@
         "itemInstanceId",
         "itemKindId",
         "quantity"
+      ],
+      "type": "object"
+    },
+    "TaskTargetPlacementDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "floorId": {
+          "type": "string"
+        },
+        "objectiveIndex": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "spawnCount": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "objectiveIndex",
+        "floorId",
+        "spawnCount"
       ],
       "type": "object"
     },
@@ -1680,6 +1932,13 @@
     "proceduralFloors": {
       "items": {
         "$ref": "#/$defs/ProceduralFloorDefinition"
+      },
+      "type": "array"
+    },
+    "tasks": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/TaskDefinition"
       },
       "type": "array"
     },

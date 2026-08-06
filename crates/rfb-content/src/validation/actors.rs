@@ -123,7 +123,6 @@ pub(super) fn validate_actors(
         }
         if let Some(routine) = &actor.melee_routine
             && (actor.role != ActorRole::Monster
-                || routine.blows.is_empty()
                 || routine.blows.len() > 8
                 || routine
                     .blows

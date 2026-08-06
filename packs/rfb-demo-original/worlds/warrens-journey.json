@@ -43,7 +43,11 @@
         { "x": 57, "y": 14 }, { "x": 57, "y": 15 },
         { "x": 30, "y": 17 }, { "x": 30, "y": 18 },
         { "x": 34, "y": 17 }, { "x": 34, "y": 18 },
-        { "x": 55, "y": 17 }, { "x": 55, "y": 18 }
+        { "x": 55, "y": 17 }, { "x": 55, "y": 18 },
+        { "x": 26, "y": 14 }, { "x": 27, "y": 14 }, { "x": 28, "y": 14 },
+        { "x": 29, "y": 14 }, { "x": 30, "y": 14 }, { "x": 31, "y": 14 },
+        { "x": 63, "y": 12 }, { "x": 63, "y": 13 }, { "x": 63, "y": 14 },
+        { "x": 63, "y": 15 }
       ]
     },
     {
@@ -132,7 +136,15 @@
         { "x": 36, "y": 22 }, { "x": 37, "y": 22 },
         { "x": 53, "y": 19 }, { "x": 54, "y": 19 }, { "x": 56, "y": 19 },
         { "x": 53, "y": 20 }, { "x": 54, "y": 20 }, { "x": 55, "y": 20 }, { "x": 56, "y": 20 },
-        { "x": 53, "y": 21 }, { "x": 54, "y": 21 }, { "x": 55, "y": 21 }, { "x": 56, "y": 21 }
+        { "x": 53, "y": 21 }, { "x": 54, "y": 21 }, { "x": 55, "y": 21 }, { "x": 56, "y": 21 },
+        { "x": 24, "y": 10 }, { "x": 25, "y": 10 }, { "x": 26, "y": 10 }, { "x": 27, "y": 10 }, { "x": 28, "y": 10 },
+        { "x": 24, "y": 11 }, { "x": 25, "y": 11 }, { "x": 26, "y": 11 }, { "x": 27, "y": 11 }, { "x": 28, "y": 11 },
+        { "x": 24, "y": 12 }, { "x": 25, "y": 12 }, { "x": 26, "y": 12 }, { "x": 27, "y": 12 }, { "x": 28, "y": 12 },
+        { "x": 24, "y": 13 }, { "x": 25, "y": 13 }, { "x": 27, "y": 13 }, { "x": 28, "y": 13 },
+        { "x": 62, "y": 8 }, { "x": 63, "y": 8 }, { "x": 64, "y": 8 }, { "x": 65, "y": 8 },
+        { "x": 62, "y": 9 }, { "x": 65, "y": 9 },
+        { "x": 62, "y": 10 }, { "x": 65, "y": 10 },
+        { "x": 62, "y": 11 }, { "x": 64, "y": 11 }, { "x": 65, "y": 11 }
       ]
     },
     {
@@ -153,6 +165,10 @@
     {
       "terrainId": "demo.terrain.general-store-entrance",
       "positions": [{ "x": 32, "y": 13 }]
+    },
+    {
+      "terrainId": "demo.terrain.count-entrance",
+      "positions": [{ "x": 26, "y": 13 }]
     },
     {
       "terrainId": "demo.terrain.home-entrance",
@@ -185,6 +201,10 @@
     {
       "terrainId": "demo.terrain.black-market-entrance",
       "positions": [{ "x": 55, "y": 19 }]
+    },
+    {
+      "terrainId": "demo.terrain.thieves-hideout-entry-available",
+      "positions": [{ "x": 63, "y": 11 }]
     },
     {
       "terrainId": "demo.terrain.surface-rock",
@@ -252,6 +272,62 @@
     "turnPenaltyInterval": 100,
     "turnPenaltyPoints": 1
   },
+  "tasks": [
+    {
+      "id": "demo.task.thieves-hideout",
+      "nameKey": "task-demo-thieves-hideout-name",
+      "descriptionKey": "task-demo-thieves-hideout-description",
+      "sourceFacilityId": "demo.town-facility.outpost-count",
+      "location": {
+        "kind": "dedicated-floors",
+        "floorIds": ["demo.floor.thieves-hideout"]
+      },
+      "objectives": [
+        {
+          "kind": "clear-floor",
+          "floorId": "demo.floor.thieves-hideout"
+        }
+      ],
+      "reward": {
+        "itemInstanceId": "demo.task.thieves-hideout.reward.1",
+        "itemKindId": "demo.item.broad-sword",
+        "quantity": 1
+      }
+    },
+    {
+      "id": "demo.task.pest-control",
+      "nameKey": "task-demo-pest-control-name",
+      "descriptionKey": "task-demo-pest-control-description",
+      "sourceFacilityId": "demo.town-facility.outpost-count",
+      "prerequisiteTaskId": "demo.task.thieves-hideout",
+      "location": {
+        "kind": "dungeon-depth",
+        "dungeonId": "demo.dungeon.warrens",
+        "depth": 5
+      },
+      "objectives": [
+        {
+          "kind": "kill-actor-kind",
+          "floorId": "demo.floor.warrens-depth-5",
+          "required": 8,
+          "actorKindId": "demo.actor.warg"
+        }
+      ],
+      "targetPlacements": [
+        {
+          "objectiveIndex": 0,
+          "floorId": "demo.floor.warrens-depth-5",
+          "spawnCount": 8
+        }
+      ],
+      "completionExitTerrainId": "demo.terrain.stairs-down",
+      "reward": {
+        "itemInstanceId": "demo.task.pest-control.reward.1",
+        "itemKindId": "demo.item.fur-cloak",
+        "quantity": 1
+      }
+    }
+  ],
   "proceduralFloors": [
     {
       "id": "demo.floor.warrens-depth-1",
@@ -685,6 +761,105 @@
       "upStairTerrainId": "demo.terrain.stairs-up",
       "closedDoorTerrainId": "demo.terrain.door-secret",
       "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.thieves-hideout",
+      "nameKey": "floor-demo-thieves-hideout-name",
+      "returnFloorId": "demo.floor.surface",
+      "lifecycle": "one-shot",
+      "entryTerrainId": "demo.terrain.thieves-hideout-entry",
+      "availableEntryTerrainId": "demo.terrain.thieves-hideout-entry-available",
+      "completedEntryTerrainId": "demo.terrain.thieves-hideout-entry-completed",
+      "failedEntryTerrainId": "demo.terrain.thieves-hideout-entry-failed",
+      "abandonedEntryTerrainId": "demo.terrain.thieves-hideout-entry-abandoned",
+      "taskId": "demo.task.thieves-hideout",
+      "depth": 5,
+      "width": 21,
+      "height": 8,
+      "wallTerrainId": "demo.terrain.permanent-wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "closedDoorTerrainId": "demo.terrain.door-closed",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "inlineMap": {
+        "playerPosition": { "x": 1, "y": 4 },
+        "terrainOverrides": [
+          {
+            "terrainId": "demo.terrain.floor",
+            "positions": [
+              { "x": 5, "y": 1 }, { "x": 6, "y": 1 }, { "x": 7, "y": 1 },
+              { "x": 9, "y": 1 }, { "x": 10, "y": 1 }, { "x": 11, "y": 1 },
+              { "x": 13, "y": 1 }, { "x": 14, "y": 1 }, { "x": 15, "y": 1 },
+              { "x": 17, "y": 1 }, { "x": 18, "y": 1 }, { "x": 19, "y": 1 },
+              { "x": 5, "y": 2 }, { "x": 6, "y": 2 }, { "x": 7, "y": 2 },
+              { "x": 9, "y": 2 }, { "x": 10, "y": 2 }, { "x": 11, "y": 2 },
+              { "x": 13, "y": 2 }, { "x": 14, "y": 2 }, { "x": 15, "y": 2 },
+              { "x": 17, "y": 2 }, { "x": 18, "y": 2 }, { "x": 19, "y": 2 },
+              { "x": 5, "y": 3 }, { "x": 7, "y": 3 },
+              { "x": 9, "y": 3 }, { "x": 10, "y": 3 }, { "x": 11, "y": 3 },
+              { "x": 13, "y": 3 }, { "x": 14, "y": 3 }, { "x": 15, "y": 3 },
+              { "x": 17, "y": 3 }, { "x": 19, "y": 3 },
+              { "x": 2, "y": 4 }, { "x": 3, "y": 4 },
+              { "x": 1, "y": 5 }, { "x": 5, "y": 5 }, { "x": 6, "y": 5 },
+              { "x": 7, "y": 5 }, { "x": 8, "y": 5 }, { "x": 10, "y": 5 },
+              { "x": 11, "y": 5 }, { "x": 12, "y": 5 }, { "x": 14, "y": 5 },
+              { "x": 15, "y": 5 }, { "x": 17, "y": 5 }, { "x": 18, "y": 5 }, { "x": 19, "y": 5 },
+              { "x": 1, "y": 6 }, { "x": 3, "y": 6 },
+              { "x": 5, "y": 6 }, { "x": 6, "y": 6 }, { "x": 7, "y": 6 },
+              { "x": 8, "y": 6 }, { "x": 9, "y": 6 }, { "x": 10, "y": 6 },
+              { "x": 11, "y": 6 }, { "x": 12, "y": 6 }, { "x": 13, "y": 6 },
+              { "x": 14, "y": 6 }, { "x": 15, "y": 6 }, { "x": 16, "y": 6 },
+              { "x": 17, "y": 6 }, { "x": 18, "y": 6 }, { "x": 19, "y": 6 }
+            ]
+          },
+          {
+            "terrainId": "demo.terrain.door-closed",
+            "positions": [
+              { "x": 6, "y": 4 }, { "x": 10, "y": 4 }, { "x": 14, "y": 4 },
+              { "x": 18, "y": 4 }, { "x": 4, "y": 6 }
+            ]
+          },
+          {
+            "terrainId": "demo.terrain.stairs-up",
+            "positions": [{ "x": 1, "y": 4 }]
+          },
+          {
+            "terrainId": "demo.terrain.warren-snare",
+            "chancePercent": 50,
+            "otherwiseTerrainId": "demo.terrain.floor",
+            "positions": [
+              { "x": 6, "y": 3 }, { "x": 18, "y": 3 },
+              { "x": 2, "y": 5 }, { "x": 3, "y": 5 }, { "x": 9, "y": 5 },
+              { "x": 13, "y": 5 }, { "x": 16, "y": 5 }, { "x": 2, "y": 6 }
+            ]
+          }
+        ],
+        "lootSpawns": [
+          { "id": "demo.loot.thieves-hideout.1", "position": { "x": 7, "y": 1 }, "lootTableId": "demo.loot-table.warrens" },
+          { "id": "demo.loot.thieves-hideout.2", "position": { "x": 11, "y": 1 }, "lootTableId": "demo.loot-table.warrens" },
+          { "id": "demo.loot.thieves-hideout.3", "position": { "x": 15, "y": 1 }, "lootTableId": "demo.loot-table.warrens" },
+          { "id": "demo.loot.thieves-hideout.4", "position": { "x": 19, "y": 1 }, "lootTableId": "demo.loot-table.warrens" }
+        ],
+        "monsterFormation": {
+          "candidateActorKindIds": [
+            "demo.actor.filthy-street-urchin",
+            "demo.actor.agent-of-black-market",
+            "demo.actor.novice-rogue",
+            "demo.actor.scruffy-looking-hobbit",
+            "demo.actor.nibelung",
+            "demo.actor.bandit",
+            "demo.actor.tax-collector"
+          ],
+          "drawCount": 10,
+          "placementIndices": [0, 2, 4, 5, 7, 8],
+          "positions": [
+            { "x": 8, "y": 6 }, { "x": 6, "y": 2 }, { "x": 18, "y": 2 },
+            { "x": 10, "y": 2 }, { "x": 14, "y": 2 }, { "x": 15, "y": 6 }
+          ]
+        }
+      },
       "actorSpawns": [],
       "lootSpawns": []
     }

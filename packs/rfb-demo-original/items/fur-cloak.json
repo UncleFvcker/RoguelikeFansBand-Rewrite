@@ -1,0 +1,16 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.fur-cloak",
+  "nameKey": "item-demo-fur-cloak-name",
+  "descriptionKey": "item-demo-fur-cloak-description",
+  "glyph": "(",
+  "weightTenthsPound": 30,
+  "maxStack": 1,
+  "baseValue": 200,
+  "equipmentSlot": "cloak",
+  "modifiers": {
+    "defense": 3
+  },
+  "tags": ["armor", "equipment", "rfb-compatibility", "quest-reward"]
+}

@@ -353,15 +353,12 @@ impl Game {
                         ..
                     } => {
                         let raw = self.roll_damage(*damage_dice, *damage_sides);
-                        let physical = resolve_armored_damage(
-                            raw,
-                            DamageType::Physical,
-                            target_stats.armor_class.value,
+                        Some(resolve_damage(
+                            DamagePacket::new(raw, DamageType::Poison),
                             self.entities[target_index]
                                 .resistances
-                                .level(DamageType::Physical),
-                        );
-                        Some(physical)
+                                .level(DamageType::Poison),
+                        ))
                     }
                     MeleeBlowEffectDefinition::DrainAttributes { .. } => None,
                     MeleeBlowEffectDefinition::Bleeding {
@@ -403,21 +400,6 @@ impl Game {
                         removed_entities,
                     )?;
                     break;
-                }
-                if matches!(effect, MeleeBlowEffectDefinition::Disease { .. }) {
-                    let duration = resolve_damage(
-                        DamagePacket::new(damage.applied, DamageType::Poison),
-                        self.entities[target_index]
-                            .resistances
-                            .level(DamageType::Poison),
-                    )
-                    .applied;
-                    self.apply_actor_melee_status(
-                        target_index,
-                        STATUS_POISON,
-                        duration,
-                        &source_kind_id,
-                    );
                 }
                 events.push(DomainEvent::MonsterMeleeEntityHit {
                     source_kind_id: source_kind_id.clone(),
@@ -538,14 +520,13 @@ impl Game {
                         ..
                     } => {
                         let raw = self.roll_damage(*damage_dice, *damage_sides);
-                        let physical = self.reduce_player_damage(resolve_armored_damage(
-                            raw,
-                            DamageType::Physical,
-                            armor_class,
-                            self.effective_player_resistances()
-                                .level(DamageType::Physical),
-                        ));
-                        Some(physical)
+                        Some(
+                            self.reduce_player_damage(resolve_damage(
+                                DamagePacket::new(raw, DamageType::Physical),
+                                self.effective_player_resistances()
+                                    .level(DamageType::Physical),
+                            )),
+                        )
                     }
                     MeleeBlowEffectDefinition::DrainAttributes { attributes, .. } => {
                         for attribute in attributes {

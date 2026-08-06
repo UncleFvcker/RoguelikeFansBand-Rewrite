@@ -166,8 +166,8 @@ use status_effects::{
     ability_status_stacking_dto, apply_ability_status_effect, remove_ability_status_effect,
 };
 use tasks::{
-    CampaignState, TaskState, abandoned_task_state, floor_task_id, initial_task_states,
-    task_objectives,
+    CampaignState, TaskState, abandoned_task_state, initial_task_states, task_applies_to_floor,
+    task_definition, task_floors, task_initial_state, task_objectives,
 };
 use terrain::{DoorBashOutcome, DoorOpenOutcome, TerrainDigOutcome, TrapDisarmOutcome};
 #[cfg(test)]
@@ -259,6 +259,14 @@ struct MonsterAbilityPlanResolution {
     effects: Vec<AbilityEffectResolutionDto>,
     targets: Vec<MonsterAbilityTargetResolutionDto>,
     trace: Option<ProjectileTrace>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct ActorDeathRecord {
+    actor_id: String,
+    actor_kind_id: String,
+    position: Position,
+    credit_player: bool,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -732,6 +740,7 @@ pub struct Game {
     item_knowledge: BTreeMap<String, ItemKnowledgeState>,
     item_property_knowledge: BTreeMap<String, ItemPropertyKnowledgeState>,
     task_states: BTreeMap<String, TaskState>,
+    command_actor_deaths: Vec<ActorDeathRecord>,
     dungeon_states: BTreeMap<String, DungeonState>,
     defeated_unique_actor_kind_ids: BTreeSet<String>,
     town_states: BTreeMap<String, TownState>,
@@ -759,6 +768,7 @@ pub struct Game {
     debug_recall_delay_turns: Option<u16>,
     debug_item_curses_land: bool,
     debug_item_curses_resisted: bool,
+    monster_division_remainders: BTreeMap<String, bool>,
 }
 
 impl Game {
@@ -1009,6 +1019,7 @@ impl Game {
             item_knowledge: BTreeMap::new(),
             item_property_knowledge: BTreeMap::new(),
             task_states,
+            command_actor_deaths: Vec::new(),
             dungeon_states,
             defeated_unique_actor_kind_ids: BTreeSet::new(),
             town_states,
@@ -1036,6 +1047,7 @@ impl Game {
             debug_recall_delay_turns: None,
             debug_item_curses_land: false,
             debug_item_curses_resisted: false,
+            monster_division_remainders: BTreeMap::new(),
         };
         game.initialize_player_ability_state();
         game.initialize_starting_item_knowledge();
@@ -1067,6 +1079,7 @@ impl Game {
         }
 
         let mut action = GameAction::from(envelope.command);
+        self.command_actor_deaths.clear();
         self.validate_runtime_invariants(&action)?;
         let base_revision = self.revision;
         // The world only mutates inside dispatch, so the visuals recorded at
@@ -1146,7 +1159,9 @@ impl Game {
             && !matches!(
                 &action,
                 GameAction::Retire
+                    | GameAction::AcceptTask { .. }
                     | GameAction::BuyFromShop { .. }
+                    | GameAction::ClaimTaskReward { .. }
                     | GameAction::DepositAtHome { .. }
                     | GameAction::IncreaseAttribute { .. }
                     | GameAction::Rest { .. }
@@ -1169,6 +1184,34 @@ impl Game {
         }
 
         match action {
+            GameAction::AcceptTask {
+                facility_id,
+                task_id,
+            } => match self.accept_task(&facility_id, &task_id) {
+                Ok(positions) => {
+                    changed.extend(positions);
+                    events.push(DomainEvent::TaskAccepted { task_id });
+                }
+                Err(reason) => events.push(DomainEvent::TaskAcceptUnavailable {
+                    facility_id,
+                    task_id,
+                    reason: reason.to_owned(),
+                }),
+            },
+            GameAction::ClaimTaskReward {
+                facility_id,
+                task_id,
+            } => match self.claim_task_reward(&facility_id, &task_id) {
+                Ok(outcome) => events.push(DomainEvent::TaskRewarded {
+                    item_kind_id: outcome.item_kind_id,
+                    quantity: outcome.quantity,
+                }),
+                Err(reason) => events.push(DomainEvent::TaskRewardClaimUnavailable {
+                    facility_id,
+                    task_id,
+                    reason: reason.to_owned(),
+                }),
+            },
             GameAction::AbandonPausedTask { task_id } => {
                 if let Some(positions) = self.abandon_paused_task(&task_id) {
                     changed.extend(positions);
@@ -1640,7 +1683,7 @@ impl Game {
                 self.decay_player_resources();
             }
         }
-        self.apply_task_events(&events)?;
+        self.apply_task_events(&mut events)?;
         self.apply_campaign_events(&mut events);
 
         self.last_command_seq = envelope.command_seq;
@@ -1663,6 +1706,7 @@ impl Game {
             town: self.current_town_dto(),
             shops: self.current_shop_dtos(),
             homes: self.current_home_dtos(),
+            task_services: self.current_task_service_dtos(),
             events,
             changed_cells: changed
                 .into_iter()
@@ -3315,19 +3359,45 @@ impl Game {
                 .next_surround_step(index, surround_reservations)
                 .or_else(|| self.next_monster_step(index)),
             MonsterPackBehaviorDto::GuardLeader => {
-                let leader_position = self.entities[index].pack.as_ref().and_then(|pack| {
+                let pack = self.entities[index].pack.as_ref();
+                let is_leader = pack.is_some_and(|pack| pack.leader_id == self.entities[index].id);
+                let leader_position = pack.and_then(|pack| {
                     self.entities
                         .iter()
                         .find(|entity| entity.id == pack.leader_id)
                         .map(|leader| leader.position)
                 });
                 match leader_position {
-                    Some(position) if adjacent(self.entities[index].position, position) => None,
-                    Some(position) => self.next_monster_step_toward(index, position, true),
+                    Some(_) if is_leader => self
+                        .next_surround_step(index, surround_reservations)
+                        .or_else(|| self.next_monster_step(index)),
+                    Some(position) if current_distance > 3 => {
+                        self.next_monster_step_toward(index, position, true)
+                    }
+                    Some(_) => self
+                        .next_surround_step(index, surround_reservations)
+                        .or_else(|| self.next_monster_step(index)),
                     None => self.next_monster_step(index),
                 }
             }
+            // Entrance guardians use the established fixed-post contract:
+            // they may attack an adjacent target above, but never leave the
+            // declared entrance position to pursue one.
             MonsterPackBehaviorDto::GuardPosition => None,
+            MonsterPackBehaviorDto::Lure => self
+                .next_monster_hiding_step(index)
+                .or_else(|| self.next_monster_step(index)),
+            MonsterPackBehaviorDto::Shoot => None,
+            MonsterPackBehaviorDto::MaintainDistance => {
+                if current_distance <= 5
+                    && self.player.hp.saturating_mul(5)
+                        >= self.effective_player_max_hp().saturating_mul(4)
+                {
+                    self.next_monster_step_away(index)
+                } else {
+                    self.next_monster_step(index)
+                }
+            }
         };
         let Some(next_position) = next_position else {
             return Ok(());
@@ -4100,17 +4170,12 @@ impl Game {
         {
             return None;
         }
-        let members = world
-            .procedural_floors
-            .iter()
-            .filter(|floor| {
-                floor.lifecycle == FloorLifecycle::OneShot
-                    && floor.retakeable
-                    && floor_task_id(floor) == task_id
-            })
+        let members = task_floors(world, task_id)
+            .filter(|floor| floor.lifecycle == FloorLifecycle::OneShot && floor.retakeable)
             .cloned()
             .collect::<Vec<_>>();
-        let initial_required = initial_task_states(world).get(task_id)?.required;
+        let initial_required =
+            task_initial_state(task_definition(world, task_id)?, &self.task_states).required;
         if members.is_empty() {
             return None;
         }
@@ -5204,6 +5269,9 @@ const fn monster_pack_behavior_dto(behavior: MonsterPackBehavior) -> MonsterPack
         MonsterPackBehavior::Surround => MonsterPackBehaviorDto::Surround,
         MonsterPackBehavior::GuardLeader => MonsterPackBehaviorDto::GuardLeader,
         MonsterPackBehavior::GuardPosition => MonsterPackBehaviorDto::GuardPosition,
+        MonsterPackBehavior::Lure => MonsterPackBehaviorDto::Lure,
+        MonsterPackBehavior::Shoot => MonsterPackBehaviorDto::Shoot,
+        MonsterPackBehavior::MaintainDistance => MonsterPackBehaviorDto::MaintainDistance,
     }
 }
 

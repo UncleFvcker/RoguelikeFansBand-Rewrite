@@ -1,12 +1,26 @@
 # 待实现内容清单
 
-状态：基于 contract-v1–v180、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
+状态：基于 contract-v1–v182、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
 
 本文件只记录已经在现有设计或原版对比中明确出现、但尚未实现的内容。长期设想仍保留在 [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)，这里用于跟踪可以实际排入后续 contract 的缺口。
 
 contract-v172 已把玩家施法策略从通用 Ability Program 中改为按需选配。当前由能力书或职业先天列表引用的能力必须拥有 `player` 策略；其他能力默认无绑定，但未来种族或怪物模式要授予玩家时可直接补充策略。存档与回放继续独立精确匹配内容，state hash 不再包含 `contentHash`，后续纯内容 hash 更新不需要全量刷新 fixture。
 
-contract-v173 已按固定原版来源完成 Warrens 的 W1-W6 与运行时自然补怪；contract-v174-v176 完成 W7-W9，contract-v177-v180 继续完成 W10 特殊近战/死亡爆炸、W11 地形/物品破坏、W12 怪物光源和 W13 完整死亡掉落。W14 仍随 Outpost Pest Control 任务线实施，详见 [Warrens 怪物机制实现清单](warrens-monster-mechanism-backlog.md)。
+contract-v173 已按固定原版来源完成 Warrens 的 W1-W6 与运行时自然补怪；contract-v174-v176 完成 W7-W9，contract-v177-v180 继续完成 W10 特殊近战/死亡爆炸、W11 地形/物品破坏、W12 怪物光源和 W13 完整死亡掉落；contract-v182 已完成 W14 Pest Control 任务生态，详见 [Warrens 怪物机制实现清单](warrens-monster-mechanism-backlog.md) 和 [Contract v182](contract-v182-pest-control.md)。
+
+contract-v181 已接通 Outpost 通用任务设施和首个可玩“盗贼藏身处”：伯爵处接取、东北入口、任务专属 21x8 地图、清层/失败、回城领奖及前端任务面板。contract-v182 在同一设施接入原版“害虫控制”：Warrens 5 的 8 只 Warg、完成后魔法楼梯、未完成离层失败、回城领取毛皮披风。地图的永久墙和八处独立 50% 陷阱候选已按原版定义；尚未支持的盗贼藏身处原版语义继续列在下表，不以近似攻击冒充完成。
+
+## 盗贼藏身处后续机制
+
+| 机制 | 原版来源 | 当前状态 |
+| --- | --- | --- |
+| `BEG` 乞讨攻击 | `r_info.txt` 的 Filthy street urchin | 未实现；该怪物保持空普通近战，不自创伤害 |
+| `EAT_GOLD` 近战偷金 | Filthy street urchin、Novice rogue、Scruffy looking hobbit、Nibelung、Bandit、Tax collector | 未实现；需要玩家金币损失、怪物逃跑和防偷判定的通用事务 |
+| `EAT_ITEM` 近战偷物 | Agent of black market、Tax collector | 未实现；需要合法背包候选、artifact/保护边界和怪物携带物状态 |
+| `TAKE_ITEM` 地面拾取 | 七种候选怪物 | 未实现；不同于 W11 `KILL_ITEM`，需要怪物持有并在死亡时归还物品 |
+| `TRAP(*)` 随机陷阱种类 | `q_thieves.txt` 的 `TRAP(*, 50)` | 50% 独立放置已完成；当前只使用已支持的兽穴陷阱，仍缺深度过滤的原版陷阱分配池 |
+| `$:OBJ(*)` 随机物品 | `q_thieves.txt` 的四个 `$` | 当前走已有兽穴战利品表；仍缺完整深度 5 原版物品分配器 |
+| 条件奖励矩阵 | `q_thieves.txt` 的默认及 Race/Class 条件 `R:` | 当前 Warrior 阶段锁定原版阔剑；其他种族/职业奖励未接入 |
 
 ## Warrens 当前优先级
 
@@ -15,7 +29,7 @@ contract-v173 已按固定原版来源完成 Warrens 的 W1-W6 与运行时自�
 | W1-W6 | 分配、越级、群体、Unique、escort、繁殖、随机移动与自然补怪 | 已由 contract-v173 完成 |
 | W7-W9 | 怪物门交互、飞行/游泳移动域、个体 HP 骰 | 已由 contract-v174-v176 完成 |
 | W10-W13 | 特殊近战、地图/物品破坏、怪物光源与完整掉落旗标 | 已由 contract-v177-v180 完成 |
-| W14 | Pest Control 专属 Warg 生态 | 随 Outpost 任务服务线推进 |
+| W14 | Pest Control 专属 Warg 生态 | 已由 contract-v182 完成；原版目标为 8 只 Warg，`FRIENDS(3d3)` 不改变任务目标数量 |
 
 ## 当前推进顺序
 

@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/terrain.schema.json",
+  "formatVersion": 1,
+  "id": "demo.terrain.thieves-hideout-entry-abandoned",
+  "nameKey": "terrain-demo-thieves-hideout-entry-abandoned-name",
+  "descriptionKey": "terrain-demo-thieves-hideout-entry-abandoned-description",
+  "glyph": "×",
+  "walkable": true,
+  "blocksSight": false,
+  "tags": ["outdoor", "surface", "task-entry-abandoned"]
+}

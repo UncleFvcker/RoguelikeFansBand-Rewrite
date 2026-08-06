@@ -24,7 +24,8 @@
     },
     "TownFacilityCategory": {
       "enum": [
-        "home"
+        "home",
+        "quest-giver"
       ],
       "type": "string"
     }
@@ -59,6 +60,20 @@
     },
     "nameKey": {
       "type": "string"
+    },
+    "ownerNameKey": {
+      "default": null,
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "taskIds": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
     },
     "townId": {
       "type": "string"

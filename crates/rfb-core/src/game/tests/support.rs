@@ -345,3 +345,90 @@ pub(super) fn game_with_actor_definition(
     Game::from_content(seed, catalog, BUILT_IN_WORLD_ID)
         .expect("custom actor definition should create a game")
 }
+
+pub(super) fn task_service_game(seed: u64) -> Game {
+    let pack_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(std::path::Path::parent)
+        .expect("core crate should be inside the workspace")
+        .join("packs/rfb-demo-original");
+    let mut artifact = rfb_content::compile_pack_dir(&pack_root).expect("demo pack should compile");
+    let task_id = "demo.task.test-warrens-depth";
+    let facility_id = "demo.town-facility.outpost-home";
+    let world = artifact
+        .content
+        .worlds
+        .iter_mut()
+        .find(|world| world.id == WARRENS_JOURNEY_WORLD_ID)
+        .expect("Warrens world should remain available");
+    world.tasks.push(rfb_content::TaskDefinition {
+        id: task_id.to_owned(),
+        name_key: "test-task-name".to_owned(),
+        description_key: "test-task-description".to_owned(),
+        source_facility_id: Some(facility_id.to_owned()),
+        prerequisite_task_id: None,
+        location: rfb_content::TaskLocationDefinition::DungeonDepth {
+            dungeon_id: "demo.dungeon.warrens".to_owned(),
+            depth: 1,
+        },
+        objectives: vec![rfb_content::TaskObjectiveDefinition {
+            kind: rfb_content::TaskObjectiveKind::ClearFloor,
+            floor_id: Some("demo.floor.warrens-depth-1".to_owned()),
+            required: 1,
+            item_instance_id: None,
+            item_kind_id: None,
+            actor_instance_id: None,
+            actor_kind_id: None,
+        }],
+        target_placements: Vec::new(),
+        completion_exit_terrain_id: None,
+        reward: rfb_content::TaskRewardDefinition {
+            item_instance_id: "demo.task.test-warrens-depth.reward.1".to_owned(),
+            item_kind_id: "demo.item.echo-charm".to_owned(),
+            quantity: 1,
+        },
+    });
+    let prerequisite_task_id = "demo.task.test-prerequisite";
+    world.tasks.push(rfb_content::TaskDefinition {
+        id: prerequisite_task_id.to_owned(),
+        name_key: "test-prerequisite-name".to_owned(),
+        description_key: "test-prerequisite-description".to_owned(),
+        source_facility_id: Some(facility_id.to_owned()),
+        prerequisite_task_id: Some(task_id.to_owned()),
+        location: rfb_content::TaskLocationDefinition::DungeonDepth {
+            dungeon_id: "demo.dungeon.warrens".to_owned(),
+            depth: 1,
+        },
+        objectives: vec![rfb_content::TaskObjectiveDefinition {
+            kind: rfb_content::TaskObjectiveKind::ClearFloor,
+            floor_id: Some("demo.floor.warrens-depth-1".to_owned()),
+            required: 1,
+            item_instance_id: None,
+            item_kind_id: None,
+            actor_instance_id: None,
+            actor_kind_id: None,
+        }],
+        target_placements: Vec::new(),
+        completion_exit_terrain_id: None,
+        reward: rfb_content::TaskRewardDefinition {
+            item_instance_id: "demo.task.test-prerequisite.reward.1".to_owned(),
+            item_kind_id: "demo.item.luminous-shard".to_owned(),
+            quantity: 1,
+        },
+    });
+    let facility = artifact
+        .content
+        .town_facilities
+        .iter_mut()
+        .find(|facility| facility.id == facility_id)
+        .expect("Outpost home should remain available");
+    facility.category = rfb_content::TownFacilityCategory::QuestGiver;
+    facility.owner_name_key = Some("test-quest-giver".to_owned());
+    facility.task_ids = vec![task_id.to_owned(), prerequisite_task_id.to_owned()];
+    let catalog = Arc::new(rfb_content::ContentCatalog::from_artifact(
+        rfb_content::encode_content(artifact.content)
+            .expect("custom task service definition should remain valid"),
+    ));
+    Game::from_content(seed, catalog, WARRENS_JOURNEY_WORLD_ID)
+        .expect("custom task service game should create")
+}
