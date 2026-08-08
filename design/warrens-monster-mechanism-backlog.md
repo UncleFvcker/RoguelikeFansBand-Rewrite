@@ -1,8 +1,8 @@
 # Warrens 怪物机制实现清单
 
-状态：由 contract-v171 的 Warrens 生态对照建立；contract-v173 已完成 W1-W6 与运行时自然补怪，contract-v174-v176 已完成 W7-W9，contract-v177-v180 已完成 W10-W13，contract-v182 已完成 W14 Pest Control 任务生态；contract-v183 开始分批接入正式浅层内容，contract-v184 完成 `NEVER_MOVE` 与怪物 `BLINK` 绑定，contract-v185 接入第二批 14 只 2–3 级怪物，contract-v186 接入第三批 13 只 4–5 级怪物，contract-v187 接入首批正式施法怪物与简单 Unique，contract-v188 接入 10 只机制完备的 6–7 级怪物，contract-v189 接入 12 只 8–9 级怪物并完成浅层普查收口，contract-v190 完成出生宽限与五类职业掉落并再接入 13 只怪物，contract-v191 完成六类非伤害近战并再接入 10 只怪物。
+状态：由 contract-v171 的 Warrens 生态对照建立；contract-v173 已完成 W1-W6 与运行时自然补怪，contract-v174-v176 已完成 W7-W9，contract-v177-v180 已完成 W10-W13，contract-v182 已完成 W14 Pest Control 任务生态；contract-v183 开始分批接入正式浅层内容，contract-v184 完成 `NEVER_MOVE` 与怪物 `BLINK` 绑定，contract-v185 接入第二批 14 只 2–3 级怪物，contract-v186 接入第三批 13 只 4–5 级怪物，contract-v187 接入首批正式施法怪物与简单 Unique，contract-v188 接入 10 只机制完备的 6–7 级怪物，contract-v189 接入 12 只 8–9 级怪物并完成浅层普查收口，contract-v190 完成出生宽限与五类职业掉落并再接入 13 只怪物，contract-v191 完成六类非伤害近战并再接入 10 只怪物，contract-v192 完成无近战怪物与 `SHRIEK`，contract-v193 完成地面拾物与四类近战偷窃/消耗事务。
 
-固定原版来源为 commit `191f48c3fd1cdbc81a3d3395a88cd6758402b4d9`。Warrens 在 `d_info.txt` 中为深度 1–9，主字形集合为 `kKyYrRfFcCbB`，并带有 `MONSTER_DIV_16`。本清单只记录该来源明确要求、而当前重写版还不能完整表达的机制，不把标签或近似行为标成已完成规则。
+当前权威原版来源为 `master` Git ref 的 commit `efd63661302866038f58d8cd2553b23e6af3bf9d`。Warrens 在 `d_info.txt` 中为深度 1–9，主字形集合为 `kKyYrRfFcCbB`，并带有 `MONSTER_DIV_16`。本清单只记录该来源明确要求、而当前重写版还不能完整表达的机制，不把标签或近似行为标成已完成规则。
 
 ## 当前可玩边界
 
@@ -123,3 +123,17 @@ contract-v191 将 `BLIND`、`CONFUSE`、`PARALYZE`、`SLOW`、`STUN`、
 118 条，严格同步增至 86 条，剩余 55 条继续等待各自真实机制。巨型蛞蝓、
 空间怪物、僧帽水母和骚灵仍分别被 `KILL_BODY`、穿墙、水生限定或地面拾物
 等独立能力阻塞，不以局部导入冒充完整接入。
+
+contract-v192 将原版 `NEVER_BLOW` 表达为显式空近战 routine，并把 `SHRIEK`
+映射到排除施法者的范围唤醒与视线内敌对怪物加速。尖叫蘑菇丛、白鹰身
+女妖和射石兽进入严格同步；`DARKNESS` 与 `TRAPS` 继续分别等待房间暗化和
+怪物陷阱生成基础设施。
+
+contract-v193 将 `TAKE_ITEM` 接入移动后地面拾物，并把 `EAT_GOLD`、
+`EAT_ITEM`、`EAT_FOOD`、`EAT_LITE` 接入有序近战。普通物品由怪物携带并在
+死亡时沿统一掉落事务返还；神器、尸骨、雕像和会以 slay/brand 伤害怪物的
+物品不会被拾取。偷金与偷物保留原版敏捷/等级保护、金币公式和偷窃后闪现，
+食物与非神器光源燃料按单次命中扣除。小香雪兰、斯密戈、哥布林、绿娜迦、
+粉红娜迦、小魔怪、吼牛者霍比特人和库塔熊进入严格同步，使正式浅层 actor
+增至 129 条、严格同步增至 97 条，剩余 44 条继续等待各自真实机制。巧言、
+罗宾汉和奈美仍被 `TRAPS` 阻塞，不能仅凭偷窃能力提前导入。

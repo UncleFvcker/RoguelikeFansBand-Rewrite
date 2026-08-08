@@ -40,6 +40,38 @@ fn actor_can_interact_with_terrain(
 }
 
 impl Game {
+    fn item_harms_monster(
+        &self,
+        item: &ItemInstance,
+        actor: &Actor,
+        actor_definition: &rfb_content::ActorDefinition,
+    ) -> bool {
+        let Some(definition) = self.content.item(&item.kind_id) else {
+            return true;
+        };
+        let mut harmful = false;
+        let mut inspect_properties =
+            |slays: &BTreeMap<SlayTarget, SlayLevel>, brands: &BTreeSet<WeaponBrand>| {
+                harmful |= slays
+                    .keys()
+                    .any(|target| slay_target_matches(*target, actor_definition))
+                    || brands.iter().any(|brand| {
+                        actor.resistances.level(brand_damage_type(*brand))
+                            != ResistanceLevel::Immune
+                    });
+            };
+        inspect_properties(&definition.slays, &definition.brands);
+        for affix_id in &item.affix_ids {
+            if let Some(affix) = self.content.affix(affix_id) {
+                inspect_properties(&affix.slays, &affix.brands);
+            }
+        }
+        for rolled in &item.rolled_affixes {
+            inspect_properties(&rolled.properties.slays, &rolled.properties.brands);
+        }
+        harmful
+    }
+
     fn item_resists_monster_destruction(
         &self,
         item: &ItemInstance,
@@ -54,38 +86,64 @@ impl Game {
         {
             return true;
         }
-        let mut resists = false;
-        let mut inspect_properties = |slays: &BTreeMap<SlayTarget, SlayLevel>,
-                                      brands: &BTreeSet<WeaponBrand>,
-                                      protected: bool| {
-            resists |= protected
-                || slays
-                    .keys()
-                    .any(|target| slay_target_matches(*target, actor_definition))
-                || brands.iter().any(|brand| {
-                    actor.resistances.level(brand_damage_type(*brand)) != ResistanceLevel::Immune
-                });
-        };
-        inspect_properties(&definition.slays, &definition.brands, false);
-        for affix_id in &item.affix_ids {
-            if let Some(affix) = self.content.affix(affix_id) {
-                inspect_properties(
-                    &affix.slays,
-                    &affix.brands,
-                    affix.resists_monster_destruction,
-                );
-            }
-        }
-        for rolled in &item.rolled_affixes {
-            inspect_properties(
-                &rolled.properties.slays,
-                &rolled.properties.brands,
+        definition.resists_monster_destruction
+            || item.affix_ids.iter().any(|affix_id| {
+                self.content
+                    .affix(affix_id)
+                    .is_some_and(|affix| affix.resists_monster_destruction)
+            })
+            || item.rolled_affixes.iter().any(|rolled| {
                 self.content
                     .affix(&rolled.affix_id)
-                    .is_some_and(|affix| affix.resists_monster_destruction),
-            );
+                    .is_some_and(|affix| affix.resists_monster_destruction)
+            })
+            || self.item_harms_monster(item, actor, actor_definition)
+    }
+
+    pub(super) fn pick_up_items_under_monster(
+        &mut self,
+        actor_index: usize,
+        position: Position,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let actor = self.entities[actor_index].clone();
+        let Some(actor_definition) = self.content.actor(&actor.kind_id).cloned() else {
+            return;
+        };
+        if !actor_definition.terrain_interaction.picks_up_items {
+            return;
         }
-        resists
+        let mut picked_up = self
+            .items
+            .iter()
+            .enumerate()
+            .filter(|(_, item)| matches!(item.location, ItemLocation::Ground(item_position) if item_position == position))
+            .filter(|(_, item)| {
+                self.content.item(&item.kind_id).is_some_and(|definition| {
+                    !definition.tags.iter().any(|tag| {
+                        matches!(tag.as_str(), "artifact" | "corpse" | "skeleton" | "statue")
+                    })
+                }) && !self.item_harms_monster(item, &actor, &actor_definition)
+            })
+            .map(|(index, item)| (index, item.id.clone(), item.kind_id.clone(), item.quantity))
+            .collect::<Vec<_>>();
+        picked_up.sort_by(|left, right| left.1.cmp(&right.1));
+        if picked_up.is_empty() {
+            return;
+        }
+        for (index, _, target_kind_id, quantity) in picked_up {
+            self.items[index].location = ItemLocation::CarriedBy {
+                actor_id: actor.id.clone(),
+            };
+            events.push(DomainEvent::MonsterItemPickedUp {
+                source_kind_id: actor.kind_id.clone(),
+                target_kind_id,
+                quantity,
+                position,
+            });
+        }
+        changed.insert(position);
     }
 
     pub(super) fn destroy_items_under_monster(
@@ -100,6 +158,9 @@ impl Game {
             return;
         };
         if !actor_definition.terrain_interaction.destroys_items {
+            return;
+        }
+        if actor_definition.terrain_interaction.picks_up_items {
             return;
         }
         let mut destroyed = self

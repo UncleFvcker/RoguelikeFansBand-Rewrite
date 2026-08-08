@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 use crate::game::movement::{actor_avoids_terrain_trap, actor_can_cross_terrain};
 
-use super::support::{game_with_actor_definition, replace_terrain};
+use super::support::{game_with_actor_definition, give_inventory_item, replace_terrain};
 use super::*;
 
 #[test]
@@ -174,6 +174,53 @@ fn item_destroyer_removes_a_ground_gold_pile() {
         events.as_slice(),
         [DomainEvent::MonsterItemDestroyed { target_kind_id, quantity: 17, .. }]
             if target_kind_id == "core.gold.silver"
+    ));
+}
+
+#[test]
+fn item_picker_carries_ordinary_ground_items_and_leaves_protected_kinds() {
+    let mut game = game_with_actor_definition(6, "demo.actor.echo-hound", |actor| {
+        actor.terrain_interaction.picks_up_items = true;
+    });
+    game.entities[0].kind_id = "demo.actor.echo-hound".to_owned();
+    let position = game.entities[0].position;
+    for (id, kind_id) in [
+        ("test.ordinary", "demo.item.echo-charm"),
+        ("test.corpse", "demo.item.corpse-remains"),
+        ("test.artifact", "demo.item.relic-blade"),
+    ] {
+        give_inventory_item(&mut game, id, kind_id);
+        game.items
+            .last_mut()
+            .expect("test item should exist")
+            .location = ItemLocation::Ground(position);
+    }
+    let mut events = Vec::new();
+
+    game.pick_up_items_under_monster(0, position, &mut events, &mut BTreeSet::new());
+
+    assert!(matches!(
+        &game.items
+            .iter()
+            .find(|item| item.id == "test.ordinary")
+            .expect("ordinary item should remain")
+            .location,
+        ItemLocation::CarriedBy { actor_id } if actor_id == &game.entities[0].id
+    ));
+    for item_id in ["test.corpse", "test.artifact"] {
+        assert!(matches!(
+            game.items
+                .iter()
+                .find(|item| item.id == item_id)
+                .expect("protected item should remain")
+                .location,
+            ItemLocation::Ground(item_position) if item_position == position
+        ));
+    }
+    assert!(matches!(
+        events.as_slice(),
+        [DomainEvent::MonsterItemPickedUp { target_kind_id, .. }]
+            if target_kind_id == "demo.item.echo-charm"
     ));
 }
 

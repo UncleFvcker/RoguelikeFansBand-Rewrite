@@ -1,0 +1,92 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 94,
+    "maxDepth": 40,
+    "randomMovementPercent": 25,
+    "rarity": 1
+  },
+  "attack": 1,
+  "damageDice": 2,
+  "damageSides": 6,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [
+      {
+        "percent": 60
+      }
+    ],
+    "itemTableId": "demo.loot-table.warrens",
+    "kind": "items-and-gold"
+  },
+  "defense": 4,
+  "descriptionKey": "actor-demo-green-naga-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 30,
+  "formatVersion": 1,
+  "glyph": "n",
+  "hitPointDice": {
+    "dice": 9,
+    "sides": 8
+  },
+  "id": "demo.actor.green-naga",
+  "level": 5,
+  "maxHp": 40,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 2,
+            "damageSides": 6,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.crush",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 2,
+            "damageSides": 8,
+            "damageType": "acid",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.spit",
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "modes": [
+      "swim"
+    ]
+  },
+  "nameKey": "actor-demo-green-naga-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "acid": "resistant"
+  },
+  "role": "monster",
+  "speed": 110,
+  "tags": [
+    "evil",
+    "naga",
+    "warrens"
+  ],
+  "terrainInteraction": {
+    "picksUpItems": true
+  }
+}

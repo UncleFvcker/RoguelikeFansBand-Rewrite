@@ -263,6 +263,10 @@
         "destroysWalls": {
           "default": false,
           "type": "boolean"
+        },
+        "picksUpItems": {
+          "default": false,
+          "type": "boolean"
         }
       },
       "type": "object"
@@ -660,6 +664,98 @@
             },
             "type": {
               "const": "terrify",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "chancePercent": {
+              "default": null,
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "type": {
+              "const": "eat-gold",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "chancePercent": {
+              "default": null,
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "type": {
+              "const": "eat-item",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "chancePercent": {
+              "default": null,
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "type": {
+              "const": "eat-food",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "chancePercent": {
+              "default": null,
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "type": {
+              "const": "eat-light",
               "type": "string"
             }
           },
@@ -1250,7 +1346,8 @@
       "$ref": "#/$defs/ActorTerrainInteractionDefinition",
       "default": {
         "destroysItems": false,
-        "destroysWalls": false
+        "destroysWalls": false,
+        "picksUpItems": false
       }
     }
   },

@@ -1,0 +1,101 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 153,
+    "maxDepth": 40,
+    "multiplies": true,
+    "rarity": 4
+  },
+  "attack": 2,
+  "damageDice": 1,
+  "damageSides": 2,
+  "damageType": "physical",
+  "defense": 3,
+  "descriptionKey": "actor-demo-gremlin-description",
+  "doorInteraction": {
+    "opens": true
+  },
+  "experienceValue": 6,
+  "formatVersion": 1,
+  "glyph": "u",
+  "hitPointDice": {
+    "dice": 5,
+    "sides": 5
+  },
+  "id": "demo.actor.gremlin",
+  "level": 8,
+  "maxHp": 15,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 2,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "type": "eat-food"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 2,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "type": "eat-food"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 4,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "type": "eat-food"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "modes": [
+      "swim"
+    ]
+  },
+  "nameKey": "actor-demo-gremlin-name",
+  "resistances": {
+    "dark": "resistant",
+    "light": "vulnerable",
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 110,
+  "tags": [
+    "demon",
+    "evil",
+    "warrens"
+  ],
+  "terrainInteraction": {
+    "picksUpItems": true
+  }
+}

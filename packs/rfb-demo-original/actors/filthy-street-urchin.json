@@ -16,7 +16,12 @@
   "damageDice": 1,
   "damageSides": 1,
   "damageType": "physical",
-  "meleeRoutine": { "blows": [] },
+  "meleeRoutine": {
+    "blows": [
+      { "methodId": "rfb.blow.touch", "toHit": 20, "effects": [{ "type": "eat-gold" }] }
+    ]
+  },
+  "terrainInteraction": { "picksUpItems": true },
   "remains": {
     "chanceDenominator": 3,
     "corpseItemKindId": "demo.item.corpse-remains",

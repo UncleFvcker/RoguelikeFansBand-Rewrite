@@ -910,6 +910,36 @@ pub(crate) enum DomainEvent {
         quantity: u32,
         position: Position,
     },
+    MonsterItemPickedUp {
+        source_kind_id: String,
+        target_kind_id: String,
+        quantity: u32,
+        position: Position,
+    },
+    MonsterGoldTheftPrevented {
+        source_kind_id: String,
+    },
+    MonsterItemTheftPrevented {
+        source_kind_id: String,
+    },
+    MonsterGoldStolen {
+        source_kind_id: String,
+        amount: u32,
+    },
+    MonsterItemStolen {
+        source_kind_id: String,
+        target_kind_id: String,
+        item_id: String,
+    },
+    MonsterFoodEaten {
+        source_kind_id: String,
+        target_kind_id: String,
+    },
+    MonsterLightEaten {
+        source_kind_id: String,
+        target_kind_id: String,
+        amount: u16,
+    },
     VengeanceHit {
         target_kind_id: String,
         damage: DamageOutcome,
@@ -3454,6 +3484,74 @@ impl DomainEvent {
                     ("quantity", quantity.to_string()),
                     ("x", position.x.to_string()),
                     ("y", position.y.to_string()),
+                ],
+            ),
+            Self::MonsterItemPickedUp {
+                source_kind_id,
+                target_kind_id,
+                quantity,
+                position,
+            } => dto(
+                "monster.item-picked-up",
+                "monster-item-picked-up",
+                [
+                    ("source", source_kind_id),
+                    ("target", target_kind_id),
+                    ("quantity", quantity.to_string()),
+                    ("x", position.x.to_string()),
+                    ("y", position.y.to_string()),
+                ],
+            ),
+            Self::MonsterGoldTheftPrevented { source_kind_id } => dto(
+                "monster.gold-theft-prevented",
+                "monster-gold-theft-prevented",
+                [("source", source_kind_id)],
+            ),
+            Self::MonsterItemTheftPrevented { source_kind_id } => dto(
+                "monster.item-theft-prevented",
+                "monster-item-theft-prevented",
+                [("source", source_kind_id)],
+            ),
+            Self::MonsterGoldStolen {
+                source_kind_id,
+                amount,
+            } => dto(
+                "monster.gold-stolen",
+                "monster-gold-stolen",
+                [("source", source_kind_id), ("amount", amount.to_string())],
+            ),
+            Self::MonsterItemStolen {
+                source_kind_id,
+                target_kind_id,
+                item_id,
+            } => dto(
+                "monster.item-stolen",
+                "monster-item-stolen",
+                [
+                    ("source", source_kind_id),
+                    ("target", target_kind_id),
+                    ("itemId", item_id),
+                ],
+            ),
+            Self::MonsterFoodEaten {
+                source_kind_id,
+                target_kind_id,
+            } => dto(
+                "monster.food-eaten",
+                "monster-food-eaten",
+                [("source", source_kind_id), ("target", target_kind_id)],
+            ),
+            Self::MonsterLightEaten {
+                source_kind_id,
+                target_kind_id,
+                amount,
+            } => dto(
+                "monster.light-eaten",
+                "monster-light-eaten",
+                [
+                    ("source", source_kind_id),
+                    ("target", target_kind_id),
+                    ("amount", amount.to_string()),
                 ],
             ),
             Self::VengeanceHit {

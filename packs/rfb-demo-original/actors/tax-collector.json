@@ -16,7 +16,13 @@
   "damageDice": 1,
   "damageSides": 1,
   "damageType": "physical",
-  "meleeRoutine": { "blows": [] },
+  "meleeRoutine": {
+    "blows": [
+      { "methodId": "rfb.blow.touch", "toHit": 20, "effects": [{ "type": "eat-gold" }] },
+      { "methodId": "rfb.blow.touch", "toHit": 20, "effects": [{ "type": "eat-item" }] }
+    ]
+  },
+  "terrainInteraction": { "picksUpItems": true },
   "deathDrop": {
     "kind": "items-and-gold",
     "itemTableId": "demo.loot-table.warrens",

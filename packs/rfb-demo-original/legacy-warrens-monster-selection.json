@@ -65,6 +65,12 @@
       "omittedFlags": ["CAN_SPEAK", "POS_GAIN_AC"]
     },
     {
+      "sourceIndex": 57,
+      "id": "freesia",
+      "tags": ["cat", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
       "sourceIndex": 58,
       "id": "slimy-worm-mass",
       "tags": ["warrens", "worm"],
@@ -81,6 +87,12 @@
       "id": "cave-spider",
       "tags": ["spider", "warrens"],
       "omittedFlags": ["POS_GAIN_AC", "WEIRD_MIND"]
+    },
+    {
+      "sourceIndex": 63,
+      "id": "smeagol",
+      "tags": ["hobbit", "thief", "warrens"],
+      "omittedFlags": ["CAN_SPEAK", "INVISIBLE", "MALE", "POS_SEE_INVIS", "SMART", "WILD_ALL"]
     },
     {
       "sourceIndex": 64,
@@ -167,6 +179,12 @@
       "omittedFlags": []
     },
     {
+      "sourceIndex": 87,
+      "id": "goblin",
+      "tags": ["goblin", "warrens"],
+      "omittedFlags": ["MALE", "WILD_GRASS"]
+    },
+    {
       "sourceIndex": 89,
       "id": "white-worm-mass",
       "tags": ["warrens", "worm"],
@@ -195,6 +213,12 @@
       "id": "novice-mage",
       "tags": ["humanoid", "warrens"],
       "omittedFlags": ["MALE", "WILD_ALL"]
+    },
+    {
+      "sourceIndex": 94,
+      "id": "green-naga",
+      "tags": ["naga", "warrens"],
+      "omittedFlags": ["FEMALE", "WILD_SHORE"]
     },
     {
       "sourceIndex": 99,
@@ -323,6 +347,12 @@
       "omittedFlags": ["POS_TELEPATHY"]
     },
     {
+      "sourceIndex": 130,
+      "id": "pink-naga",
+      "tags": ["naga", "warrens"],
+      "omittedFlags": ["FEMALE", "WILD_SHORE"]
+    },
+    {
       "sourceIndex": 131,
       "id": "pink-jelly",
       "tags": ["jelly", "warrens"],
@@ -399,6 +429,12 @@
       "id": "hill-orc",
       "tags": ["humanoid", "warrens"],
       "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 153,
+      "id": "gremlin",
+      "tags": ["demon", "warrens"],
+      "omittedFlags": []
     },
     {
       "sourceIndex": 155,
@@ -509,10 +545,22 @@
       "omittedFlags": ["POS_GAIN_AC", "WILD_WOOD"]
     },
     {
+      "sourceIndex": 914,
+      "id": "bullroarer-the-hobbit",
+      "tags": ["hobbit", "warrens"],
+      "omittedFlags": ["MALE"]
+    },
+    {
       "sourceIndex": 953,
       "id": "broken-death-sword",
       "tags": ["construct", "sword", "warrens"],
       "omittedFlags": ["COLD_BLOOD", "NASTY_GLYPH", "STUPID"]
+    },
+    {
+      "sourceIndex": 1020,
+      "id": "kutar",
+      "tags": ["bear", "warrens"],
+      "omittedFlags": ["WILD_WOOD"]
     },
     {
       "sourceIndex": 1054,

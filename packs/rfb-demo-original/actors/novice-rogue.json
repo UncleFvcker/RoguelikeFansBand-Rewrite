@@ -19,9 +19,11 @@
   "meleeRoutine": {
     "blows": [
       { "methodId": "rfb.blow.hit", "toHit": 20, "effects": [{ "type": "damage", "damageDice": 1, "damageSides": 5, "armorMitigated": true }] },
-      { "methodId": "rfb.blow.hit", "toHit": 20, "effects": [{ "type": "damage", "damageDice": 1, "damageSides": 5, "armorMitigated": true }] }
+      { "methodId": "rfb.blow.hit", "toHit": 20, "effects": [{ "type": "damage", "damageDice": 1, "damageSides": 5, "armorMitigated": true }] },
+      { "methodId": "rfb.blow.touch", "toHit": 20, "effects": [{ "type": "eat-gold" }] }
     ]
   },
+  "terrainInteraction": { "picksUpItems": true },
   "deathDrop": {
     "kind": "items-and-gold",
     "itemTableId": "demo.loot-table.warrens",

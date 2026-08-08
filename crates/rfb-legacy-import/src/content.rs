@@ -5316,6 +5316,10 @@ fn melee_effect_json(effect: &LegacyBlowEffect) -> Option<serde_json::Value> {
             })
         }
         "TERRIFY" => serde_json::json!({ "type": "terrify" }),
+        "EAT_GOLD" => serde_json::json!({ "type": "eat-gold" }),
+        "EAT_ITEM" => serde_json::json!({ "type": "eat-item" }),
+        "EAT_FOOD" => serde_json::json!({ "type": "eat-food" }),
+        "EAT_LITE" => serde_json::json!({ "type": "eat-light" }),
         "LOSE_STR" | "LOSE_INT" | "LOSE_WIS" | "LOSE_DEX" | "LOSE_CON" | "LOSE_CHR"
         | "LOSE_ALL" => {
             let attributes: &[&str] = match effect.token.as_str() {
@@ -5719,6 +5723,7 @@ fn monster_flag_is_mapped(flag: &str) -> bool {
             | "NEVER_BLOW"
             | "KILL_WALL"
             | "KILL_ITEM"
+            | "TAKE_ITEM"
             | "HAS_LITE_1"
             | "HAS_LITE_2"
             | "SELF_LITE_1"
@@ -5959,10 +5964,12 @@ fn monster_json(
     }
     let destroys_walls = entry.flags.iter().any(|flag| flag == "KILL_WALL");
     let destroys_items = entry.flags.iter().any(|flag| flag == "KILL_ITEM");
-    if destroys_walls || destroys_items {
+    let picks_up_items = entry.flags.iter().any(|flag| flag == "TAKE_ITEM");
+    if destroys_walls || destroys_items || picks_up_items {
         value["terrainInteraction"] = serde_json::json!({
             "destroysWalls": destroys_walls,
             "destroysItems": destroys_items,
+            "picksUpItems": picks_up_items,
         });
     }
     let light_radius = u8::from(
@@ -6061,6 +6068,7 @@ fn demo_monster_flag_is_handled(flag: &str) -> bool {
                 | "GIANT"
                 | "NONLIVING"
                 | "UNIQUE"
+                | "THIEF"
                 | "CAN_FLY"
                 | "CAN_SWIM"
                 | "OPEN_DOOR"
@@ -6252,6 +6260,7 @@ fn demo_monster_json(
         ("GIANT", "giant"),
         ("NONLIVING", "nonliving"),
         ("UNIQUE", "unique"),
+        ("THIEF", "thief"),
         ("RES_ALL", "resist-all"),
         ("RES_TELE", "resist-teleport"),
     ] {
@@ -6346,6 +6355,9 @@ fn demo_monster_json(
     for (object, key) in [
         ("doorInteraction", "opens"),
         ("doorInteraction", "bashes"),
+        ("terrainInteraction", "destroysWalls"),
+        ("terrainInteraction", "destroysItems"),
+        ("terrainInteraction", "picksUpItems"),
         ("allocation", "forceDepth"),
         ("allocation", "wildOnly"),
         ("allocation", "escort"),
@@ -8771,7 +8783,7 @@ mod tests {
     #[test]
     fn non_damage_melee_effects_map_without_inventing_damage() {
         let blow = parse_blow(
-            "GAZE:CONFUSE:BLIND:PARALYZE(50%):SLOW:STUN(1d4, 10%):TERRIFY",
+            "GAZE:CONFUSE:BLIND:PARALYZE(50%):SLOW:STUN(1d4, 10%):TERRIFY:EAT_GOLD:EAT_ITEM:EAT_FOOD:EAT_LITE",
             1,
         )
         .expect("synthetic status blow should parse");
@@ -8792,12 +8804,16 @@ mod tests {
         assert_eq!(effects[4]["durationSides"], 4);
         assert_eq!(effects[4]["chancePercent"], 10);
         assert_eq!(effects[5]["type"], "terrify");
+        assert_eq!(effects[6]["type"], "eat-gold");
+        assert_eq!(effects[7]["type"], "eat-item");
+        assert_eq!(effects[8]["type"], "eat-food");
+        assert_eq!(effects[9]["type"], "eat-light");
     }
 
     #[test]
     fn monster_import_maps_self_destruct_terrain_light_and_drop_flags() {
         let monsters = parse_r_info(
-            "N:1:test breach mote\nG:*:y\nI:110:1d3:8:4:20:10\nW:3:1:10:3:0:0\nB:EXPLODE:FIRE(2d4)\nF:KILL_WALL | KILL_ITEM | HAS_LITE_1 | SELF_LITE_2\nF:ONLY_ITEM | DROP_90 | DROP_1D2 | DROP_GOOD | UNIQUE\nO:DROP_WARRIOR\n",
+            "N:1:test breach mote\nG:*:y\nI:110:1d3:8:4:20:10\nW:3:1:10:3:0:0\nB:EXPLODE:FIRE(2d4)\nF:KILL_WALL | KILL_ITEM | TAKE_ITEM | HAS_LITE_1 | SELF_LITE_2\nF:ONLY_ITEM | DROP_90 | DROP_1D2 | DROP_GOOD | UNIQUE\nO:DROP_WARRIOR\n",
         )
         .expect("synthetic monster should parse");
         let outcome = convert_content(
@@ -8815,6 +8831,7 @@ mod tests {
         assert_eq!(blow["effects"][0]["damageType"], "fire");
         assert_eq!(actor["terrainInteraction"]["destroysWalls"], true);
         assert_eq!(actor["terrainInteraction"]["destroysItems"], true);
+        assert_eq!(actor["terrainInteraction"]["picksUpItems"], true);
         assert_eq!(actor["light"]["radius"], 3);
         assert_eq!(actor["light"]["intrinsic"], true);
         assert_eq!(actor["deathDrop"]["kind"], "items");

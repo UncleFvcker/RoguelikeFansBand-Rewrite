@@ -3627,6 +3627,7 @@ impl Game {
         if !self.trigger_actor_trap(index, next_position, events, changed, removed_entities)? {
             return Ok(ActorStepOutcome::Removed);
         }
+        self.pick_up_items_under_monster(index, next_position, events, changed);
         self.destroy_items_under_monster(index, next_position, events, changed);
         Ok(ActorStepOutcome::Moved)
     }

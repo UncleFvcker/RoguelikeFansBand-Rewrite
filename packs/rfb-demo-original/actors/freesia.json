@@ -1,0 +1,80 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 57,
+    "maxDepth": 999,
+    "rarity": 1
+  },
+  "attack": 1,
+  "damageDice": 2,
+  "damageSides": 2,
+  "damageType": "physical",
+  "defense": 3,
+  "descriptionKey": "actor-demo-freesia-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 45,
+  "formatVersion": 1,
+  "glyph": "f",
+  "hitPointDice": {
+    "dice": 5,
+    "forceMaximum": true,
+    "sides": 5
+  },
+  "id": "demo.actor.freesia",
+  "level": 2,
+  "maxHp": 25,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 2,
+            "damageSides": 2,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "type": "eat-food"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 2,
+            "damageSides": 3,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      }
+    ]
+  },
+  "nameKey": "actor-demo-freesia-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseWeight": 0,
+    "skeletonItemKindId": "demo.item.skeleton-remains",
+    "skeletonWeight": 1
+  },
+  "role": "monster",
+  "speed": 120,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "animal",
+    "cat",
+    "unique",
+    "warrens"
+  ]
+}

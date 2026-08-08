@@ -161,7 +161,11 @@ fn projected_blow_damage(effects: &[MeleeBlowEffectDefinition]) -> DamageDiceDto
             | MeleeBlowEffectDefinition::Paralysis { .. }
             | MeleeBlowEffectDefinition::Slow { .. }
             | MeleeBlowEffectDefinition::Stun { .. }
-            | MeleeBlowEffectDefinition::Terrify { .. } => None,
+            | MeleeBlowEffectDefinition::Terrify { .. }
+            | MeleeBlowEffectDefinition::EatGold { .. }
+            | MeleeBlowEffectDefinition::EatItem { .. }
+            | MeleeBlowEffectDefinition::EatFood { .. }
+            | MeleeBlowEffectDefinition::EatLight { .. } => None,
             MeleeBlowEffectDefinition::Confusion {
                 damage_dice,
                 damage_sides,

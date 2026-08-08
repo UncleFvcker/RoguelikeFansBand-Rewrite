@@ -157,7 +157,8 @@ pub(super) fn validate_actors(
             actor.role != ActorRole::Monster || !(1..=8).contains(&light.radius)
         }) || (actor.role != ActorRole::Monster
             && (actor.terrain_interaction.destroys_walls
-                || actor.terrain_interaction.destroys_items))
+                || actor.terrain_interaction.destroys_items
+                || actor.terrain_interaction.picks_up_items))
         {
             return Err(ContentError::InvalidActorStats(actor.id.clone()));
         }
@@ -359,6 +360,10 @@ fn valid_melee_effect(effect: &MeleeBlowEffectDefinition) -> bool {
         MeleeBlowEffectDefinition::Blind { chance_percent }
         | MeleeBlowEffectDefinition::Paralysis { chance_percent }
         | MeleeBlowEffectDefinition::Slow { chance_percent }
-        | MeleeBlowEffectDefinition::Terrify { chance_percent } => valid_chance(*chance_percent),
+        | MeleeBlowEffectDefinition::Terrify { chance_percent }
+        | MeleeBlowEffectDefinition::EatGold { chance_percent }
+        | MeleeBlowEffectDefinition::EatItem { chance_percent }
+        | MeleeBlowEffectDefinition::EatFood { chance_percent }
+        | MeleeBlowEffectDefinition::EatLight { chance_percent } => valid_chance(*chance_percent),
     }
 }

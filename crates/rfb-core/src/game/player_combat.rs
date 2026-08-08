@@ -755,6 +755,10 @@ impl Game {
                         );
                         None
                     }
+                    MeleeBlowEffectDefinition::EatGold { .. }
+                    | MeleeBlowEffectDefinition::EatItem { .. }
+                    | MeleeBlowEffectDefinition::EatFood { .. }
+                    | MeleeBlowEffectDefinition::EatLight { .. } => None,
                 };
                 let Some(damage) = damage else {
                     continue;

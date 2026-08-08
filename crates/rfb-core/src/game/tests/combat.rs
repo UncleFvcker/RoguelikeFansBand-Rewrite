@@ -2,6 +2,22 @@
 use super::support::*;
 use super::*;
 
+fn monster_effect_game(seed: u64, effect: MeleeBlowEffectDefinition) -> Game {
+    let mut game = game_with_actor_definition(seed, "demo.actor.echo-hound", |actor| {
+        actor.attack = 1_000_000;
+        actor.melee_routine = Some(rfb_content::MeleeRoutineDefinition {
+            blows: vec![rfb_content::MeleeBlowDefinition {
+                method_id: "rfb.blow.touch".to_owned(),
+                to_hit: 0,
+                self_destructs: false,
+                effects: vec![effect],
+            }],
+        });
+    });
+    game.entities[0].kind_id = "demo.actor.echo-hound".to_owned();
+    game
+}
+
 #[test]
 fn haste_and_slow_modify_scheduler_speed_without_changing_base_speed() {
     let mut haste_payload = Game::new(42).to_save();
@@ -159,7 +175,8 @@ fn content_driven_fire_melee_uses_the_player_resistance_profile() {
             let mut game = Game::new(42);
             game.rng = RfbRng::seeded(seed);
             let mut events = Vec::new();
-            game.resolve_monster_melee(0, &mut events);
+            game.resolve_monster_melee(0, &mut events, &mut BTreeSet::new())
+                .expect("monster melee should resolve");
             events.into_iter().find_map(|event| match event {
                 DomainEvent::MonsterMeleeHit { damage, .. } if damage.applied >= 2 => {
                     Some((seed, damage.applied))
@@ -176,7 +193,9 @@ fn content_driven_fire_melee_uses_the_player_resistance_profile() {
     );
     resistant.rng = RfbRng::seeded(seed);
     let mut events = Vec::new();
-    resistant.resolve_monster_melee(0, &mut events);
+    resistant
+        .resolve_monster_melee(0, &mut events, &mut BTreeSet::new())
+        .expect("monster melee should resolve");
     let resisted_damage = events
         .into_iter()
         .find_map(|event| match event {
@@ -200,7 +219,8 @@ fn content_driven_monster_routine_resolves_blows_in_declared_order() {
     assert_eq!(routine.blows[1].method_id, "rfb.blow.echo-rake");
 
     let mut events = Vec::new();
-    game.resolve_monster_melee(0, &mut events);
+    game.resolve_monster_melee(0, &mut events, &mut BTreeSet::new())
+        .expect("monster melee should resolve");
     let projected = project_events(events);
 
     assert_eq!(projected.len(), 2);
@@ -216,10 +236,151 @@ fn explicit_empty_melee_routine_performs_no_attack() {
     let draws_before = game.rng.draw_counter;
     let mut events = Vec::new();
 
-    assert!(!game.resolve_monster_melee(0, &mut events));
+    assert!(
+        !game
+            .resolve_monster_melee(0, &mut events, &mut BTreeSet::new())
+            .expect("empty monster melee should resolve")
+    );
     assert_eq!(game.player.hp, hp_before);
     assert_eq!(game.rng.draw_counter, draws_before);
     assert!(events.is_empty());
+}
+
+#[test]
+fn item_theft_splits_a_stack_into_monster_carried_loot_and_blinks() {
+    let mut game = monster_effect_game(
+        7,
+        MeleeBlowEffectDefinition::EatItem {
+            chance_percent: None,
+        },
+    );
+    game.items.clear();
+    give_inventory_item(&mut game, "test.rations", "demo.item.ration-of-food");
+    game.items[0].quantity = 2;
+    game.player
+        .statuses
+        .push(monster_combat::melee_status(STATUS_PARALYSIS, 10, "test.setup").status);
+    let origin = game.entities[0].position;
+    let mut events = Vec::new();
+
+    game.resolve_monster_melee(0, &mut events, &mut BTreeSet::new())
+        .expect("item theft should resolve");
+
+    assert_eq!(game.items[0].quantity, 1);
+    assert!(matches!(game.items[0].location, ItemLocation::Inventory));
+    let stolen = game
+        .items
+        .iter()
+        .find(|item| matches!(&item.location, ItemLocation::CarriedBy { actor_id } if actor_id == &game.entities[0].id))
+        .expect("the stolen item should be carried by the thief");
+    assert_eq!(stolen.kind_id, "demo.item.ration-of-food");
+    assert_eq!(stolen.quantity, 1);
+    assert_ne!(game.entities[0].position, origin);
+    assert!(
+        events
+            .iter()
+            .any(|event| matches!(event, DomainEvent::MonsterItemStolen { .. }))
+    );
+    assert!(
+        events
+            .iter()
+            .any(|event| matches!(event, DomainEvent::MonsterBlinked { .. }))
+    );
+}
+
+#[test]
+fn gold_theft_uses_the_original_amount_and_dexterity_protection() {
+    let effect = MeleeBlowEffectDefinition::EatGold {
+        chance_percent: None,
+    };
+    let mut stolen = monster_effect_game(11, effect.clone());
+    stolen.gold = 1_000;
+    stolen
+        .player
+        .statuses
+        .push(monster_combat::melee_status(STATUS_PARALYSIS, 10, "test.setup").status);
+    let mut events = Vec::new();
+    stolen
+        .resolve_monster_melee(0, &mut events, &mut BTreeSet::new())
+        .expect("gold theft should resolve");
+    assert!((875..=899).contains(&stolen.gold));
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::MonsterGoldStolen {
+            amount: 101..=125,
+            ..
+        }
+    )));
+
+    let mut protected = monster_effect_game(11, effect);
+    protected.gold = 1_000;
+    protected.progress.attributes.dexterity = 238;
+    protected.progress.maximum_attributes.dexterity = 238;
+    let mut events = Vec::new();
+    protected
+        .resolve_monster_melee(0, &mut events, &mut BTreeSet::new())
+        .expect("protected gold theft should resolve");
+    assert_eq!(protected.gold, 1_000);
+    assert!(
+        events
+            .iter()
+            .any(|event| matches!(event, DomainEvent::MonsterGoldTheftPrevented { .. }))
+    );
+}
+
+#[test]
+fn food_and_light_eating_consume_one_food_and_leave_one_light_fuel() {
+    let mut food = monster_effect_game(
+        13,
+        MeleeBlowEffectDefinition::EatFood {
+            chance_percent: None,
+        },
+    );
+    food.items.clear();
+    give_inventory_item(&mut food, "test.rations", "demo.item.ration-of-food");
+    food.items[0].quantity = 2;
+    let mut events = Vec::new();
+    food.resolve_monster_melee(0, &mut events, &mut BTreeSet::new())
+        .expect("food eating should resolve");
+    assert_eq!(food.items[0].quantity, 1);
+    assert!(
+        events
+            .iter()
+            .any(|event| matches!(event, DomainEvent::MonsterFoodEaten { .. }))
+    );
+
+    let mut light = monster_effect_game(
+        17,
+        MeleeBlowEffectDefinition::EatLight {
+            chance_percent: None,
+        },
+    );
+    light.items.clear();
+    give_inventory_item(&mut light, "test.torch", "demo.item.wooden-torch");
+    light.items[0].location = ItemLocation::Equipped {
+        slot_id: "light".to_owned(),
+    };
+    light.items[0]
+        .fuel
+        .as_mut()
+        .expect("torch should carry fuel")
+        .current = 300;
+    let mut events = Vec::new();
+    light
+        .resolve_monster_melee(0, &mut events, &mut BTreeSet::new())
+        .expect("light eating should resolve");
+    assert_eq!(
+        light.items[0]
+            .fuel
+            .expect("torch should retain fuel")
+            .current,
+        1
+    );
+    assert!(
+        events
+            .iter()
+            .any(|event| matches!(event, DomainEvent::MonsterLightEaten { amount: 299, .. }))
+    );
 }
 
 #[test]
@@ -264,7 +425,8 @@ fn non_damage_melee_riders_apply_the_existing_player_statuses() {
             game.rng = RfbRng::seeded(seed);
             game.entities[0].kind_id = "demo.actor.echo-hound".to_owned();
             game.player.hp = 100;
-            game.resolve_monster_melee(0, &mut Vec::new());
+            game.resolve_monster_melee(0, &mut Vec::new(), &mut BTreeSet::new())
+                .expect("monster melee should resolve");
             (game.player.statuses.len() == 6).then_some(game)
         })
         .expect("a deterministic seed should land the status blow");

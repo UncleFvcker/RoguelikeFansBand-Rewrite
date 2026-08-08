@@ -1,0 +1,83 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 1020,
+    "maxDepth": 30,
+    "rarity": 4
+  },
+  "attack": 1,
+  "damageDice": 3,
+  "damageSides": 4,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [
+      {
+        "percent": 60
+      }
+    ],
+    "itemTableId": "demo.loot-table.warrens",
+    "kind": "items-and-gold"
+  },
+  "defense": 1,
+  "descriptionKey": "actor-demo-kutar-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 20,
+  "formatVersion": 1,
+  "glyph": "h",
+  "hitPointDice": {
+    "dice": 3,
+    "sides": 5
+  },
+  "id": "demo.actor.kutar",
+  "level": 5,
+  "maxHp": 9,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 3,
+            "damageSides": 4,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 3,
+            "damageSides": 4,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "type": "eat-food"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "nameKey": "actor-demo-kutar-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "role": "monster",
+  "speed": 110,
+  "tags": [
+    "bear",
+    "warrens"
+  ]
+}

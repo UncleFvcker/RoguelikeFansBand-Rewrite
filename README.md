@@ -205,7 +205,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Rust 权威可见性与光照 v1](design/visibility-lighting-v1.md)
 - [静态地形 Chunk 渲染 v1](design/terrain-chunk-rendering-v1.md)
 
-当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v192`，共 470 条 exact fixtures、零 waiver，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
+当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v193`，共 470 条 exact fixtures、零 waiver，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
 
 fixture 使用受控的主分类。日常开发只验证或刷新受影响分类；普通 `cargo test -p rfb-contract` 只做快速的 schema、分类、ID 唯一性和契约单元测试，不回放全部场景：
 
@@ -491,6 +491,8 @@ contract-v190 推进正式内容 P6：按原版 `FORCE_SLEEP → MFLAG_NICE` 建
 contract-v191 推进正式内容 P7：`BLIND`、`CONFUSE`、`PARALYZE`、`SLOW`、`STUN` 与 `TERRIFY` 成为有序、可带独立概率的强类型近战 effect，并复用现有失明、混乱、麻痹、减速、眩晕、恐惧及免疫/抗性状态管线；闪烁的圆点同时从纯混乱伤害修正为“伤害 + 混乱”。由此接入漂浮眼、黄蘑菇丛、褐霉菌、充血的眼睛、史纳加队长拉格杜夫、绿霉菌、眼镜王蛇、破碎死亡之剑、冷酷的巴尔克梅格和巨蛾。协议保持 1.140、demo 升至 1.186.0、state hash Schema 保持 v64，正式包现有 151 种 actor、146 种 item、94 个 ability 和 19 张 loot table，content hash 为 `d1cfa9470d91e068baf2bb47ddc2c0c0ad8b1a6dfe8822b02d3127b4d03e4317`。详见 [Contract v191](design/contract-v191-warrens-content-p7-non-damage-melee.md)。
 
 contract-v192 推进正式内容 P8：显式空 `meleeRoutine` 现在表示原版 `NEVER_BLOW`，不再落入默认近战；新增强类型 `aggravate-monsters`，按原版 `SHRIEK` 排除施法者、唤醒两倍视距内怪物并使玩家视线内的敌对怪物加速 100 tick。由此接入尖叫蘑菇丛、白鹰身女妖和射石兽；后者保留每回合 `SHOOT(4d6)`。`DARKNESS` 与 `TRAPS` 继续等待房间暗化和怪物陷阱生成基础设施，不以失忆或空效果代替。协议升至 1.141、demo 升至 1.187.0、state hash Schema 保持 v64，正式包现有 154 种 actor、146 种 item、96 个 ability 和 19 张 loot table，content hash 为 `17ed668316b674de5baaa54d9b5a1fd817a7c5d2ea11b8d914dba462215b5359`。详见 [Contract v192](design/contract-v192-warrens-content-p8-no-melee-utility-spells.md)。
+
+contract-v193 推进正式内容 P9：怪物移动后的 `TAKE_ITEM` 会拾取普通地面物并由怪物携带，跳过金币、尸骨、雕像、神器及会伤害该怪物的 slay/brand 物品；`EAT_GOLD`、`EAT_ITEM`、`EAT_FOOD` 与 `EAT_LITE` 进入有序近战，覆盖敏捷/等级防偷、金币公式、背包单件拆分、食物扣除、非神器光源燃料消耗和偷窃后闪现。赃物沿用携带物死亡掉落事务，所有结果进入本地化事件投影。由此接入小香雪兰、斯密戈、哥布林、绿娜迦、粉红娜迦、小魔怪、吼牛者霍比特人和库塔熊；巧言、罗宾汉仍被未实现的 `TRAPS` 主动法术阻塞。协议保持 1.141、demo 升至 1.188.0、state hash Schema 保持 v64，正式包现有 162 种 actor、146 种 item、96 个 ability 和 19 张 loot table，content hash 为 `4b1c823041b0f60b452d1161546ad4b3eb338b8571b99a5ee9f80f8c3f44296d`。详见 [Contract v193](design/contract-v193-warrens-content-p9-pickup-theft.md)。
 
 ### 本地验证
 

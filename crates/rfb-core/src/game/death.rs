@@ -77,7 +77,11 @@ impl Game {
                 | MeleeBlowEffectDefinition::Paralysis { .. }
                 | MeleeBlowEffectDefinition::Slow { .. }
                 | MeleeBlowEffectDefinition::Stun { .. }
-                | MeleeBlowEffectDefinition::Terrify { .. } => {
+                | MeleeBlowEffectDefinition::Terrify { .. }
+                | MeleeBlowEffectDefinition::EatGold { .. }
+                | MeleeBlowEffectDefinition::EatItem { .. }
+                | MeleeBlowEffectDefinition::EatFood { .. }
+                | MeleeBlowEffectDefinition::EatLight { .. } => {
                     unreachable!("validated death explosions only contain projected effects")
                 }
             };

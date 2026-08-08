@@ -14,7 +14,11 @@ pub(super) fn melee_effect_chance(effect: &MeleeBlowEffectDefinition) -> Option<
         | MeleeBlowEffectDefinition::Paralysis { chance_percent }
         | MeleeBlowEffectDefinition::Slow { chance_percent }
         | MeleeBlowEffectDefinition::Stun { chance_percent, .. }
-        | MeleeBlowEffectDefinition::Terrify { chance_percent } => *chance_percent,
+        | MeleeBlowEffectDefinition::Terrify { chance_percent }
+        | MeleeBlowEffectDefinition::EatGold { chance_percent }
+        | MeleeBlowEffectDefinition::EatItem { chance_percent }
+        | MeleeBlowEffectDefinition::EatFood { chance_percent }
+        | MeleeBlowEffectDefinition::EatLight { chance_percent } => *chance_percent,
     }
 }
 
@@ -246,7 +250,7 @@ impl Game {
         if target.is_player() {
             let source_entity_id = self.entities[source_index].id.clone();
             let player_hp_before = self.player.hp;
-            let self_destructs = self.resolve_monster_melee(source_index, events);
+            let self_destructs = self.resolve_monster_melee(source_index, events, changed)?;
             if self_destructs {
                 if let Some(index) = self
                     .entities
@@ -282,6 +286,7 @@ impl Game {
             .expect("monster actor definition must remain available")
             .clone();
         let attacker = self.actor_derived_stats(&self.entities[source_index], &definition, false);
+        let mut blink_after_melee = false;
         for blow in resolved_melee_blows(&definition) {
             let Some(target_index) = self
                 .entities
@@ -506,6 +511,13 @@ impl Game {
                         );
                         None
                     }
+                    MeleeBlowEffectDefinition::EatGold { .. }
+                    | MeleeBlowEffectDefinition::EatItem { .. } => {
+                        blink_after_melee |= self.rng.bounded(2) == 0;
+                        None
+                    }
+                    MeleeBlowEffectDefinition::EatFood { .. }
+                    | MeleeBlowEffectDefinition::EatLight { .. } => None,
                 };
                 let Some(damage) = damage else {
                     continue;
@@ -540,14 +552,238 @@ impl Game {
                 });
             }
         }
+        if blink_after_melee
+            && let Some(source_index) = self
+                .entities
+                .iter()
+                .position(|entity| entity.id == source_entity_id)
+        {
+            self.blink_monster_after_theft(source_index, events, changed);
+        }
         Ok(())
+    }
+
+    fn player_prevents_monster_theft(&mut self) -> bool {
+        const DEXTERITY_SAFETY: [u8; 38] = [
+            0, 1, 2, 3, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 15, 15, 20, 25, 30, 35, 40, 45,
+            50, 60, 70, 80, 90, 100, 100, 100, 100, 100, 100, 100, 100,
+        ];
+        if self.player_has_status_kind(STATUS_PARALYSIS) {
+            return false;
+        }
+        let dexterity_index = usize::from(
+            self.effective_player_attributes()
+                .index(AttributeKind::Dexterity),
+        )
+        .min(DEXTERITY_SAFETY.len() - 1);
+        self.rng.bounded(100)
+            < u64::from(DEXTERITY_SAFETY[dexterity_index]) + u64::from(self.progress.level)
+    }
+
+    fn monster_is_confused(&self, index: usize) -> bool {
+        self.entities[index]
+            .statuses
+            .iter()
+            .any(|status| status.kind_id == STATUS_CONFUSION)
+    }
+
+    fn blink_monster_after_theft(
+        &mut self,
+        index: usize,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let actor_id = self.entities[index].id.clone();
+        let source_kind_id = self.entities[index].kind_id.clone();
+        let from = self.entities[index].position;
+        let destinations = self.open_positions_around_for_actor_kind(from, 45, &source_kind_id);
+        if destinations.is_empty() {
+            return;
+        }
+        let choice = usize::try_from(
+            self.rng
+                .bounded(u64::try_from(destinations.len()).expect("candidate count fits")),
+        )
+        .expect("bounded draw fits usize");
+        let to = destinations[choice];
+        self.entities[index].position = to;
+        changed.insert(from);
+        changed.insert(to);
+        events.push(DomainEvent::MonsterBlinked {
+            source_kind_id,
+            resolution: MonsterDisplacementResolutionDto { actor_id, from, to },
+        });
+    }
+
+    fn monster_steal_gold(&mut self, index: usize, events: &mut Vec<DomainEvent>) -> bool {
+        if self.monster_is_confused(index) {
+            return false;
+        }
+        let source_kind_id = self.entities[index].kind_id.clone();
+        if self.player_prevents_monster_theft() {
+            events.push(DomainEvent::MonsterGoldTheftPrevented { source_kind_id });
+            return self.rng.bounded(3) != 0;
+        }
+        let mut amount = self
+            .gold
+            .saturating_div(10)
+            .saturating_add(u32::try_from(self.rng.bounded(25) + 1).unwrap_or(25));
+        amount = amount.max(2);
+        if amount > 5_000 {
+            amount = self
+                .gold
+                .saturating_div(20)
+                .saturating_add(u32::try_from(self.rng.bounded(3_000) + 1).unwrap_or(3_000));
+        }
+        amount = amount.min(self.gold);
+        self.gold -= amount;
+        events.push(DomainEvent::MonsterGoldStolen {
+            source_kind_id,
+            amount,
+        });
+        true
+    }
+
+    fn monster_steal_item(
+        &mut self,
+        index: usize,
+        events: &mut Vec<DomainEvent>,
+    ) -> Result<bool, CoreError> {
+        if self.monster_is_confused(index) {
+            return Ok(false);
+        }
+        let actor_id = self.entities[index].id.clone();
+        let source_kind_id = self.entities[index].kind_id.clone();
+        if self.player_prevents_monster_theft() {
+            events.push(DomainEvent::MonsterItemTheftPrevented { source_kind_id });
+            return Ok(true);
+        }
+        let mut candidates = self
+            .items
+            .iter()
+            .enumerate()
+            .filter(|(_, item)| item.location == ItemLocation::Inventory)
+            .filter(|(_, item)| {
+                self.content
+                    .item(&item.kind_id)
+                    .is_some_and(|definition| !definition.tags.iter().any(|tag| tag == "artifact"))
+            })
+            .map(|(item_index, item)| (item.id.clone(), item_index))
+            .collect::<Vec<_>>();
+        candidates.sort_by(|left, right| left.0.cmp(&right.0));
+        if candidates.is_empty() {
+            return Ok(false);
+        }
+        let choice = usize::try_from(
+            self.rng
+                .bounded(u64::try_from(candidates.len()).expect("candidate count fits")),
+        )
+        .expect("bounded draw fits usize");
+        let item_index = candidates[choice].1;
+        let target_kind_id = self.items[item_index].kind_id.clone();
+        let item_id = if self.items[item_index].quantity == 1 {
+            self.items[item_index].location = ItemLocation::CarriedBy {
+                actor_id: actor_id.clone(),
+            };
+            self.items[item_index].id.clone()
+        } else {
+            let item_id = self.allocate_item_instance_id()?;
+            let mut stolen = self.items[item_index].clone();
+            self.items[item_index].quantity -= 1;
+            stolen.id.clone_from(&item_id);
+            stolen.quantity = 1;
+            stolen.location = ItemLocation::CarriedBy {
+                actor_id: actor_id.clone(),
+            };
+            if let Some(knowledge) = self
+                .item_property_knowledge
+                .get(&self.items[item_index].id)
+                .cloned()
+            {
+                self.item_property_knowledge
+                    .insert(item_id.clone(), knowledge);
+            }
+            self.items.push(stolen);
+            item_id
+        };
+        events.push(DomainEvent::MonsterItemStolen {
+            source_kind_id,
+            target_kind_id,
+            item_id,
+        });
+        Ok(true)
+    }
+
+    fn monster_eat_food(&mut self, index: usize, events: &mut Vec<DomainEvent>) {
+        let source_kind_id = self.entities[index].kind_id.clone();
+        let mut candidates = self
+            .items
+            .iter()
+            .enumerate()
+            .filter(|(_, item)| item.location == ItemLocation::Inventory)
+            .filter(|(_, item)| {
+                self.content.item(&item.kind_id).is_some_and(|definition| {
+                    definition.tags.iter().any(|tag| tag == "food")
+                        && !definition.tags.iter().any(|tag| tag == "artifact")
+                })
+            })
+            .map(|(item_index, item)| (item.id.clone(), item_index))
+            .collect::<Vec<_>>();
+        candidates.sort_by(|left, right| left.0.cmp(&right.0));
+        if candidates.is_empty() {
+            return;
+        }
+        let choice = usize::try_from(
+            self.rng
+                .bounded(u64::try_from(candidates.len()).expect("candidate count fits")),
+        )
+        .expect("bounded draw fits usize");
+        let item_index = candidates[choice].1;
+        let target_kind_id = self.items[item_index].kind_id.clone();
+        if self.items[item_index].quantity == 1 {
+            let removed = self.items.remove(item_index);
+            self.item_property_knowledge.remove(&removed.id);
+        } else {
+            self.items[item_index].quantity -= 1;
+        }
+        events.push(DomainEvent::MonsterFoodEaten {
+            source_kind_id,
+            target_kind_id,
+        });
+    }
+
+    fn monster_eat_light(&mut self, index: usize, events: &mut Vec<DomainEvent>) {
+        let Some(item_index) = self.items.iter().position(|item| {
+            matches!(&item.location, ItemLocation::Equipped { slot_id } if slot_id == "light")
+                && item.fuel.is_some_and(|fuel| fuel.current > 0)
+                && self
+                    .content
+                    .item(&item.kind_id)
+                    .is_some_and(|definition| !definition.tags.iter().any(|tag| tag == "artifact"))
+        }) else {
+            return;
+        };
+        let requested = u16::try_from(self.rng.bounded(250) + 251).unwrap_or(500);
+        let target_kind_id = self.items[item_index].kind_id.clone();
+        let fuel = self.items[item_index]
+            .fuel
+            .as_mut()
+            .expect("selected light must retain fuel");
+        let before = fuel.current;
+        fuel.current = fuel.current.saturating_sub(requested).max(1);
+        events.push(DomainEvent::MonsterLightEaten {
+            source_kind_id: self.entities[index].kind_id.clone(),
+            target_kind_id,
+            amount: before - fuel.current,
+        });
     }
 
     pub(super) fn resolve_monster_melee(
         &mut self,
         index: usize,
         events: &mut Vec<DomainEvent>,
-    ) -> bool {
+        changed: &mut BTreeSet<Position>,
+    ) -> Result<bool, CoreError> {
         let kind_id = self.entities[index].kind_id.clone();
         let nice = self.entities[index].nice;
         let definition = self
@@ -558,6 +794,7 @@ impl Game {
         let attacker = self.actor_derived_stats(&self.entities[index], &definition, false);
         let target = self.player_derived_stats();
         let armor_class = target.armor_class.value;
+        let mut blink_after_melee = false;
         for blow in resolved_melee_blows(&definition) {
             let ability = attacker.melee_skill.with_modifier(
                 StatLayer::Base,
@@ -593,7 +830,7 @@ impl Game {
             }
 
             if blow.self_destructs {
-                return true;
+                return Ok(true);
             }
 
             for effect in &blow.effects {
@@ -755,6 +992,22 @@ impl Game {
                         );
                         None
                     }
+                    MeleeBlowEffectDefinition::EatGold { .. } => {
+                        blink_after_melee |= self.monster_steal_gold(index, events);
+                        None
+                    }
+                    MeleeBlowEffectDefinition::EatItem { .. } => {
+                        blink_after_melee |= self.monster_steal_item(index, events)?;
+                        None
+                    }
+                    MeleeBlowEffectDefinition::EatFood { .. } => {
+                        self.monster_eat_food(index, events);
+                        None
+                    }
+                    MeleeBlowEffectDefinition::EatLight { .. } => {
+                        self.monster_eat_light(index, events);
+                        None
+                    }
                 };
                 let Some(damage) = damage else {
                     continue;
@@ -773,7 +1026,7 @@ impl Game {
                         method_id: blow.method_id.clone(),
                         damage,
                     });
-                    return false;
+                    return Ok(false);
                 }
                 if matches!(effect, MeleeBlowEffectDefinition::Disease { .. }) {
                     let duration = resolve_damage(
@@ -798,7 +1051,10 @@ impl Game {
                 }
             }
         }
-        false
+        if blink_after_melee && self.player.hp > 0 {
+            self.blink_monster_after_theft(index, events, changed);
+        }
+        Ok(false)
     }
 
     fn resolve_monster_attribute_drain(&mut self, attribute: AttributeKind) {

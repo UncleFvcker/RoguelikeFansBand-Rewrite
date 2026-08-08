@@ -68,6 +68,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.broken-death-sword", 953, 5, 40),
             ("demo.actor.brown-mold", 113, 1, 40),
             ("demo.actor.brown-yeek", 141, 1, 40),
+            ("demo.actor.bullroarer-the-hobbit", 914, 3, 999),
             ("demo.actor.carnivorous-flying-monkey", 145, 2, 40),
             ("demo.actor.caustic-icky-thing", 132, 2, 40),
             ("demo.actor.cave-lizard", 82, 1, 30),
@@ -89,6 +90,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.fang-farmer-maggots-dog", 55, 2, 999),
             ("demo.actor.filthy-street-urchin", 1, 2, 0),
             ("demo.actor.floating-eye", 32, 1, 10),
+            ("demo.actor.freesia", 57, 1, 999),
             ("demo.actor.frosty-jelly", 84, 1, 40),
             ("demo.actor.fruit-bat", 37, 1, 10),
             ("demo.actor.giant-black-ant", 49, 1, 20),
@@ -102,9 +104,12 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.giant-white-louse", 69, 1, 30),
             ("demo.actor.giant-white-mouse", 27, 1, 10),
             ("demo.actor.giant-white-rat", 86, 1, 40),
+            ("demo.actor.goblin", 87, 1, 40),
             ("demo.actor.green-jelly", 66, 1, 30),
             ("demo.actor.green-mold", 146, 2, 40),
+            ("demo.actor.green-naga", 94, 1, 40),
             ("demo.actor.green-worm-mass", 31, 1, 10),
+            ("demo.actor.gremlin", 153, 4, 40),
             ("demo.actor.grey-icky-thing", 103, 1, 40),
             ("demo.actor.grey-mold", 20, 1, 10),
             ("demo.actor.grid-bug", 34, 3, 20),
@@ -116,6 +121,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.killer-bee", 174, 2, 40),
             ("demo.actor.king-cobra", 171, 2, 40),
             ("demo.actor.kobold", 30, 1, 30),
+            ("demo.actor.kutar", 1020, 4, 30),
             ("demo.actor.lagduf-the-snaga", 140, 2, 999),
             ("demo.actor.large-brown-snake", 28, 1, 10),
             ("demo.actor.large-grey-snake", 90, 1, 40),
@@ -141,6 +147,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.nurgling", 139, 2, 40),
             ("demo.actor.orc-shaman", 162, 1, 40),
             ("demo.actor.pink-jelly", 131, 1, 40),
+            ("demo.actor.pink-naga", 130, 2, 40),
             ("demo.actor.purple-mushroom-patch", 108, 2, 40),
             ("demo.actor.radiation-eye", 80, 1, 30),
             ("demo.actor.rat-thing", 115, 1, 40),
@@ -161,6 +168,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.slimy-worm-mass", 58, 1, 20),
             ("demo.actor.slush-pile", 99, 1, 40),
             ("demo.actor.small-kobold", 29, 1, 30),
+            ("demo.actor.smeagol", 63, 2, 999),
             ("demo.actor.snaga", 118, 1, 40),
             ("demo.actor.soldier-ant", 36, 1, 10),
             ("demo.actor.spotted-mushroom-patch", 72, 1, 30),
@@ -258,6 +266,31 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
                 AbilityEffectDefinition::BlinkSelf { radius: 10 }
             )
     }));
+    assert!(
+        actor("demo.actor.smeagol")
+            .terrain_interaction
+            .picks_up_items
+    );
+    assert!(
+        actor("demo.actor.gremlin")
+            .melee_routine
+            .as_ref()
+            .is_some_and(|routine| routine.blows.iter().any(|blow| {
+                blow.effects
+                    .iter()
+                    .any(|effect| matches!(effect, MeleeBlowEffectDefinition::EatFood { .. }))
+            }))
+    );
+    assert!(
+        actor("demo.actor.bullroarer-the-hobbit")
+            .melee_routine
+            .as_ref()
+            .is_some_and(|routine| routine.blows.iter().any(|blow| {
+                blow.effects
+                    .iter()
+                    .any(|effect| matches!(effect, MeleeBlowEffectDefinition::EatItem { .. }))
+            }))
+    );
     for id in ["demo.actor.blue-yeek", "demo.actor.black-naga"] {
         let drop = actor(id)
             .death_drop

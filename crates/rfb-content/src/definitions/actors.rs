@@ -176,6 +176,22 @@ pub enum MeleeBlowEffectDefinition {
         #[serde(default)]
         chance_percent: Option<u8>,
     },
+    EatGold {
+        #[serde(default)]
+        chance_percent: Option<u8>,
+    },
+    EatItem {
+        #[serde(default)]
+        chance_percent: Option<u8>,
+    },
+    EatFood {
+        #[serde(default)]
+        chance_percent: Option<u8>,
+    },
+    EatLight {
+        #[serde(default)]
+        chance_percent: Option<u8>,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -203,6 +219,8 @@ pub struct ActorTerrainInteractionDefinition {
     pub destroys_walls: bool,
     #[serde(default)]
     pub destroys_items: bool,
+    #[serde(default)]
+    pub picks_up_items: bool,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]

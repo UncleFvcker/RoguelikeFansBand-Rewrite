@@ -406,6 +406,41 @@ export function createPresentationFormatter(
           target: contentName(event.args.target),
           quantity: event.args.quantity ?? "?",
         });
+      case "monster-item-picked-up":
+        return localization.format("message-monster-item-picked-up", {
+          source: contentName(event.args.source),
+          target: visibleItemNameForKind(event.args.target),
+          quantity: event.args.quantity ?? "?",
+        });
+      case "monster-gold-theft-prevented":
+        return localization.format("message-monster-gold-theft-prevented", {
+          source: contentName(event.args.source),
+        });
+      case "monster-item-theft-prevented":
+        return localization.format("message-monster-item-theft-prevented", {
+          source: contentName(event.args.source),
+        });
+      case "monster-gold-stolen":
+        return localization.format("message-monster-gold-stolen", {
+          source: contentName(event.args.source),
+          amount: event.args.amount ?? "?",
+        });
+      case "monster-item-stolen":
+        return localization.format("message-monster-item-stolen", {
+          source: contentName(event.args.source),
+          target: visibleItemNameForKind(event.args.target),
+        });
+      case "monster-food-eaten":
+        return localization.format("message-monster-food-eaten", {
+          source: contentName(event.args.source),
+          target: visibleItemNameForKind(event.args.target),
+        });
+      case "monster-light-eaten":
+        return localization.format("message-monster-light-eaten", {
+          source: contentName(event.args.source),
+          target: visibleItemNameForKind(event.args.target),
+          amount: event.args.amount ?? "?",
+        });
       case "combat-monster-entity-miss":
         return localization.format("message-combat-monster-entity-miss", {
           source: contentName(event.args.source),
