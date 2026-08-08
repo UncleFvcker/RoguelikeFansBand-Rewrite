@@ -156,7 +156,20 @@ fn projected_blow_damage(effects: &[MeleeBlowEffectDefinition]) -> DamageDiceDto
             }
             MeleeBlowEffectDefinition::Disease { .. } => None,
             MeleeBlowEffectDefinition::DrainAttributes { .. }
-            | MeleeBlowEffectDefinition::Bleeding { .. } => None,
+            | MeleeBlowEffectDefinition::Bleeding { .. }
+            | MeleeBlowEffectDefinition::Blind { .. }
+            | MeleeBlowEffectDefinition::Paralysis { .. }
+            | MeleeBlowEffectDefinition::Slow { .. }
+            | MeleeBlowEffectDefinition::Stun { .. }
+            | MeleeBlowEffectDefinition::Terrify { .. } => None,
+            MeleeBlowEffectDefinition::Confusion {
+                damage_dice,
+                damage_sides,
+                ..
+            } if *damage_dice > 0 && *damage_sides > 0 => {
+                Some((*damage_dice, *damage_sides, DamageType::Confusion))
+            }
+            MeleeBlowEffectDefinition::Confusion { .. } => None,
         })
         .unwrap_or((1, 1, DamageType::Physical));
     DamageDiceDto {

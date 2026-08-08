@@ -8,7 +8,13 @@ pub(super) fn melee_effect_chance(effect: &MeleeBlowEffectDefinition) -> Option<
         | MeleeBlowEffectDefinition::Poison { chance_percent, .. }
         | MeleeBlowEffectDefinition::Disease { chance_percent, .. }
         | MeleeBlowEffectDefinition::DrainAttributes { chance_percent, .. }
-        | MeleeBlowEffectDefinition::Bleeding { chance_percent, .. } => *chance_percent,
+        | MeleeBlowEffectDefinition::Bleeding { chance_percent, .. }
+        | MeleeBlowEffectDefinition::Blind { chance_percent }
+        | MeleeBlowEffectDefinition::Confusion { chance_percent, .. }
+        | MeleeBlowEffectDefinition::Paralysis { chance_percent }
+        | MeleeBlowEffectDefinition::Slow { chance_percent }
+        | MeleeBlowEffectDefinition::Stun { chance_percent, .. }
+        | MeleeBlowEffectDefinition::Terrify { chance_percent } => *chance_percent,
     }
 }
 
@@ -42,6 +48,12 @@ const fn nice_melee_roll(roll: i32, nice: bool) -> i32 {
     } else {
         roll
     }
+}
+
+pub(super) fn melee_terrify_duration(definition: &rfb_content::ActorDefinition) -> i32 {
+    i32::try_from(definition.level)
+        .unwrap_or(i32::MAX)
+        .saturating_add(i32::from(definition.tags.iter().any(|tag| tag == "unique")) * 3)
 }
 
 #[cfg(test)]
@@ -85,6 +97,25 @@ impl Game {
         }
         apply_status(
             &mut self.entities[index].statuses,
+            melee_status(
+                status_kind_id,
+                u32::try_from(duration).unwrap_or(u32::MAX),
+                source_kind_id,
+            ),
+        );
+    }
+
+    pub(super) fn apply_player_melee_status(
+        &mut self,
+        status_kind_id: &str,
+        duration: i32,
+        source_kind_id: &str,
+    ) {
+        if duration <= 0 || self.player_status_immunities().contains(status_kind_id) {
+            return;
+        }
+        apply_status(
+            &mut self.player.statuses,
             melee_status(
                 status_kind_id,
                 u32::try_from(duration).unwrap_or(u32::MAX),
@@ -396,6 +427,85 @@ impl Game {
                         );
                         None
                     }
+                    MeleeBlowEffectDefinition::Blind { .. } => {
+                        let duration = 12 + i32::try_from(self.rng.bounded(4)).unwrap_or(0);
+                        self.apply_actor_melee_status(
+                            target_index,
+                            STATUS_BLINDNESS,
+                            duration,
+                            &source_kind_id,
+                        );
+                        None
+                    }
+                    MeleeBlowEffectDefinition::Confusion {
+                        damage_dice,
+                        damage_sides,
+                        ..
+                    } => {
+                        let resistance = self.entities[target_index]
+                            .resistances
+                            .level(DamageType::Confusion);
+                        let raw = (*damage_dice > 0)
+                            .then(|| self.roll_damage(*damage_dice, *damage_sides));
+                        let duration = resisted_status_duration(
+                            u32::try_from(10 + self.roll_damage(1, 20)).unwrap_or(u32::MAX),
+                            resistance,
+                        );
+                        self.apply_actor_melee_status(
+                            target_index,
+                            STATUS_CONFUSION,
+                            i32::try_from(duration).unwrap_or(i32::MAX),
+                            &source_kind_id,
+                        );
+                        raw.map(|raw| {
+                            resolve_damage(
+                                DamagePacket::new(raw, DamageType::Confusion),
+                                resistance,
+                            )
+                        })
+                    }
+                    MeleeBlowEffectDefinition::Paralysis { .. } => {
+                        let duration = self.roll_damage(1, 3);
+                        self.apply_actor_melee_status(
+                            target_index,
+                            STATUS_PARALYSIS,
+                            duration,
+                            &source_kind_id,
+                        );
+                        None
+                    }
+                    MeleeBlowEffectDefinition::Slow { .. } => {
+                        self.apply_actor_melee_status(
+                            target_index,
+                            STATUS_SLOW,
+                            25,
+                            &source_kind_id,
+                        );
+                        None
+                    }
+                    MeleeBlowEffectDefinition::Stun {
+                        duration_dice,
+                        duration_sides,
+                        ..
+                    } => {
+                        let duration = self.roll_damage(*duration_dice, *duration_sides);
+                        self.apply_actor_melee_status(
+                            target_index,
+                            STATUS_STUN,
+                            duration,
+                            &source_kind_id,
+                        );
+                        None
+                    }
+                    MeleeBlowEffectDefinition::Terrify { .. } => {
+                        self.apply_actor_melee_status(
+                            target_index,
+                            STATUS_FEAR,
+                            melee_terrify_duration(&definition),
+                            &source_kind_id,
+                        );
+                        None
+                    }
                 };
                 let Some(damage) = damage else {
                     continue;
@@ -582,6 +692,67 @@ impl Game {
                                 ),
                             );
                         }
+                        None
+                    }
+                    MeleeBlowEffectDefinition::Blind { .. } => {
+                        let duration = 12 + i32::try_from(self.rng.bounded(4)).unwrap_or(0);
+                        self.apply_player_melee_status(STATUS_BLINDNESS, duration, &kind_id);
+                        None
+                    }
+                    MeleeBlowEffectDefinition::Confusion {
+                        damage_dice,
+                        damage_sides,
+                        ..
+                    } => {
+                        let resistance = self
+                            .effective_player_resistances()
+                            .level(DamageType::Confusion);
+                        let raw = (*damage_dice > 0).then(|| {
+                            nice_melee_roll(self.roll_damage(*damage_dice, *damage_sides), nice)
+                        });
+                        let duration = resisted_status_duration(
+                            u32::try_from(10 + self.roll_damage(1, 20)).unwrap_or(u32::MAX),
+                            resistance,
+                        );
+                        self.apply_player_melee_status(
+                            STATUS_CONFUSION,
+                            i32::try_from(duration).unwrap_or(i32::MAX),
+                            &kind_id,
+                        );
+                        raw.map(|raw| {
+                            self.reduce_player_damage(resolve_damage(
+                                DamagePacket::new(raw, DamageType::Confusion),
+                                resistance,
+                            ))
+                        })
+                    }
+                    MeleeBlowEffectDefinition::Paralysis { .. } => {
+                        let duration = self.roll_damage(1, 3);
+                        self.apply_player_melee_status(STATUS_PARALYSIS, duration, &kind_id);
+                        None
+                    }
+                    MeleeBlowEffectDefinition::Slow { .. } => {
+                        self.apply_player_melee_status(STATUS_SLOW, 25, &kind_id);
+                        None
+                    }
+                    MeleeBlowEffectDefinition::Stun {
+                        duration_dice,
+                        duration_sides,
+                        ..
+                    } => {
+                        let duration = nice_melee_roll(
+                            self.roll_damage(*duration_dice, *duration_sides),
+                            nice,
+                        );
+                        self.apply_player_melee_status(STATUS_STUN, duration, &kind_id);
+                        None
+                    }
+                    MeleeBlowEffectDefinition::Terrify { .. } => {
+                        self.apply_player_melee_status(
+                            STATUS_FEAR,
+                            melee_terrify_duration(&definition),
+                            &kind_id,
+                        );
                         None
                     }
                 };

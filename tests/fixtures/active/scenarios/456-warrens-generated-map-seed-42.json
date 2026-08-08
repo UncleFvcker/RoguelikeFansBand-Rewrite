@@ -203,7 +203,7 @@
       "turn": 31,
       "worldTick": 310,
       "lastCommandSeq": 31,
-      "rngDrawCounter": 532,
+      "rngDrawCounter": 548,
       "floorId": "demo.floor.warrens-depth-1",
       "dungeonInstanceId": "demo.dungeon.warrens.instance.1",
       "playerPosition": {
@@ -374,59 +374,112 @@
         "dungeonId": "demo.dungeon.warrens",
         "floorId": "demo.floor.warrens-depth-1"
       },
-      "entityCount": 4,
+      "entityCount": 7,
       "entities": [
         {
           "id": "demo.floor.warrens-depth-1.encounter.1",
           "position": {
-            "x": 49,
+            "x": 50,
             "y": 15
           },
-          "hp": 9,
+          "hp": 11,
           "speed": 110,
           "energyNeed": 100
         },
         {
           "id": "demo.floor.warrens-depth-1.encounter.2",
           "position": {
-            "x": 37,
+            "x": 38,
+            "y": 7
+          },
+          "hp": 1,
+          "speed": 110,
+          "energyNeed": 100,
+          "pack": {
+            "id": "demo.floor.warrens-depth-1.encounter.2.pack",
+            "leaderId": "demo.floor.warrens-depth-1.encounter.2",
+            "role": "leader",
+            "behavior": "lure"
+          }
+        },
+        {
+          "id": "demo.floor.warrens-depth-1.encounter.2.companion.1",
+          "position": {
+            "x": 38,
+            "y": 3
+          },
+          "hp": 3,
+          "speed": 110,
+          "energyNeed": 100,
+          "pack": {
+            "id": "demo.floor.warrens-depth-1.encounter.2.pack",
+            "leaderId": "demo.floor.warrens-depth-1.encounter.2",
+            "role": "member",
+            "behavior": "lure"
+          }
+        },
+        {
+          "id": "demo.floor.warrens-depth-1.encounter.2.companion.2",
+          "position": {
+            "x": 35,
             "y": 6
           },
-          "hp": 9,
+          "hp": 3,
           "speed": 110,
-          "energyNeed": 100
+          "energyNeed": 100,
+          "pack": {
+            "id": "demo.floor.warrens-depth-1.encounter.2.pack",
+            "leaderId": "demo.floor.warrens-depth-1.encounter.2",
+            "role": "member",
+            "behavior": "lure"
+          }
+        },
+        {
+          "id": "demo.floor.warrens-depth-1.encounter.2.companion.3",
+          "position": {
+            "x": 39,
+            "y": 5
+          },
+          "hp": 4,
+          "speed": 110,
+          "energyNeed": 100,
+          "pack": {
+            "id": "demo.floor.warrens-depth-1.encounter.2.pack",
+            "leaderId": "demo.floor.warrens-depth-1.encounter.2",
+            "role": "member",
+            "behavior": "lure"
+          }
         },
         {
           "id": "demo.floor.warrens-depth-1.encounter.3",
           "position": {
-            "x": 24,
-            "y": 12
+            "x": 28,
+            "y": 14
           },
-          "hp": 5,
+          "hp": 10,
           "speed": 110,
           "energyNeed": 100
         },
         {
           "id": "demo.floor.warrens-depth-1.encounter.4",
           "position": {
-            "x": 49,
-            "y": 7
+            "x": 55,
+            "y": 9
           },
-          "hp": 2,
+          "hp": 9,
           "speed": 110,
-          "energyNeed": 100,
-          "castingCooldownRemaining": 2
+          "energyNeed": 100
         }
       ],
-      "groundItemCount": 2,
+      "groundItemCount": 3,
       "goldPiles": [
         {
           "id": "generated.gold.1",
           "position": {
-            "x": 49,
-            "y": 10
+            "x": 30,
+            "y": 13
           },
-          "amount": 28,
+          "amount": 35,
           "appearance": "copper"
         }
       ],
@@ -806,7 +859,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 92,
+      "nextItemInstanceSerial": 93,
       "nextGoldPileSerial": 2,
       "tasks": [
         {
@@ -842,7 +895,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "3443f6d75fcb0b76832e16c70bcc52e04d381e52a8c0d6c6cd92308e5e4f4f42"
+      "stateHash": "32391af976c1d43404a97a217904760cbabf01c721e6df8fcdca4a7dd4fc8338"
     },
     "events": [
       {
@@ -851,97 +904,6 @@
         "args": {
           "from": "demo.floor.surface",
           "to": "demo.floor.warrens-depth-1"
-        }
-      },
-      {
-        "kind": "monster.ability-decision",
-        "messageKey": "monster-ability-decision",
-        "args": {
-          "frequency": "50",
-          "roll": "15",
-          "source": "demo.actor.blinking-dot",
-          "target": "demo.ability.blink"
-        },
-        "outcome": {
-          "type": "monster-ability-decision",
-          "resolution": {
-            "sourceEntityId": "demo.floor.warrens-depth-1.encounter.4",
-            "sourceKindId": "demo.actor.blinking-dot",
-            "frequencyPercent": 50,
-            "frequencyRoll": 15,
-            "candidates": [
-              {
-                "abilityId": "demo.ability.blink",
-                "baseWeight": 1,
-                "effectiveWeight": 1,
-                "targetEntityId": "demo.floor.warrens-depth-1.encounter.4",
-                "targetKindId": "demo.actor.blinking-dot",
-                "targetPosition": {
-                  "x": 57,
-                  "y": 8
-                },
-                "enemyTargetCount": 0,
-                "friendlyRiskCount": 0
-              }
-            ],
-            "viableAbilityIds": [
-              "demo.ability.blink"
-            ],
-            "totalWeight": 1,
-            "selectionRoll": 1,
-            "selectedAbilityId": "demo.ability.blink"
-          }
-        }
-      },
-      {
-        "kind": "monster.blinked",
-        "messageKey": "monster-blinked",
-        "args": {
-          "source": "demo.actor.blinking-dot"
-        },
-        "outcome": {
-          "type": "monster-displacement",
-          "resolution": {
-            "actorId": "demo.floor.warrens-depth-1.encounter.4",
-            "from": {
-              "x": 57,
-              "y": 8
-            },
-            "to": {
-              "x": 49,
-              "y": 7
-            }
-          }
-        }
-      },
-      {
-        "kind": "monster.ability-cast",
-        "messageKey": "monster-ability-cast",
-        "args": {
-          "count": "0",
-          "source": "demo.actor.blinking-dot",
-          "target": "demo.ability.blink"
-        },
-        "outcome": {
-          "type": "monster-ability-cast",
-          "resolution": {
-            "sourceEntityId": "demo.floor.warrens-depth-1.encounter.4",
-            "sourceKindId": "demo.actor.blinking-dot",
-            "abilityId": "demo.ability.blink",
-            "targetEntityId": "demo.floor.warrens-depth-1.encounter.4",
-            "targetKindId": "demo.actor.blinking-dot",
-            "affectedPositions": [
-              {
-                "x": 57,
-                "y": 8
-              },
-              {
-                "x": 49,
-                "y": 7
-              }
-            ],
-            "effects": []
-          }
         }
       }
     ],
@@ -6995,6 +6957,6 @@
         "y": 21
       }
     ],
-    "saveRoundTripStateHash": "3443f6d75fcb0b76832e16c70bcc52e04d381e52a8c0d6c6cd92308e5e4f4f42"
+    "saveRoundTripStateHash": "32391af976c1d43404a97a217904760cbabf01c721e6df8fcdca4a7dd4fc8338"
   }
 }

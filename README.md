@@ -205,7 +205,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Rust 权威可见性与光照 v1](design/visibility-lighting-v1.md)
 - [静态地形 Chunk 渲染 v1](design/terrain-chunk-rendering-v1.md)
 
-当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v190`，共 470 条 exact fixtures、零 waiver，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
+当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v191`，共 470 条 exact fixtures、零 waiver，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
 
 fixture 使用受控的主分类。日常开发只验证或刷新受影响分类；普通 `cargo test -p rfb-contract` 只做快速的 schema、分类、ID 唯一性和契约单元测试，不回放全部场景：
 
@@ -487,6 +487,8 @@ contract-v188 推进正式内容 P4：逐条核对原版全部 29 条 6–7 级�
 contract-v189 推进正式内容 P5 并完成当前浅层里程碑收口：核对原版全部 45 条 8–9 级记录后，新增骷髅兽人、纳垢灵、褐伊克、食肉飞猴、劣魔、山丘兽人、巨型灰鼠、斯卡文鼠人、岩石鼹鼠、巨型粉红蚁、战熊和杀人蜂。P1–P5 至此已枚举原版全部 173 条 1–9 级记录；正式包中 95 个 actor 带有对应浅层原版索引，其中 63 个由严格选择/同步路径维护，其余 78 条均已绑定明确的延期机制。协议保持 1.139、demo 升至 1.184.0、state hash Schema 保持 v63，正式包现有 128 种 actor、146 种 item、82 个 ability，content hash 为 `9d6be77bac135d2dad8f6c6067f34750c57f02121f905e8606197c2d043d606d`。详见 [Contract v189](design/contract-v189-warrens-content-p5-level-8-9-closure.md)。
 
 contract-v190 推进正式内容 P6：按原版 `FORCE_SLEEP → MFLAG_NICE` 建立一次玩家行动的出生宽限，宽限期怪物不施法且对玩家的高伤近战按 `25 + roll / 2` 限制，但仍可移动和近战；零时间命令不解除宽限，同一命令中新生怪物保留到下一次行动。同步路径新增 Mage、Archer、Priest、Evil Priest 与 Paladin 五类浅层职业掉落，并接入新手巫师、新手牧师、新手弓箭手、新手游侠、巨型火蜥蜴、新手圣武士、兽人萨满、五种幼龙和斯卡文萨满。协议升至 1.140、demo 升至 1.185.0、state hash Schema 升至 v64，正式包现有 141 种 actor、146 种 item、93 个 ability 和 19 张 loot table，content hash 为 `e7a7697de6aab4160c2398cba429559fa7fd62c46b65f3bb929490d859395f3e`。详见 [Contract v190](design/contract-v190-warrens-content-p6-spawn-grace-class-drops.md)。
+
+contract-v191 推进正式内容 P7：`BLIND`、`CONFUSE`、`PARALYZE`、`SLOW`、`STUN` 与 `TERRIFY` 成为有序、可带独立概率的强类型近战 effect，并复用现有失明、混乱、麻痹、减速、眩晕、恐惧及免疫/抗性状态管线；闪烁的圆点同时从纯混乱伤害修正为“伤害 + 混乱”。由此接入漂浮眼、黄蘑菇丛、褐霉菌、充血的眼睛、史纳加队长拉格杜夫、绿霉菌、眼镜王蛇、破碎死亡之剑、冷酷的巴尔克梅格和巨蛾。协议保持 1.140、demo 升至 1.186.0、state hash Schema 保持 v64，正式包现有 151 种 actor、146 种 item、94 个 ability 和 19 张 loot table，content hash 为 `d1cfa9470d91e068baf2bb47ddc2c0c0ad8b1a6dfe8822b02d3127b4d03e4317`。详见 [Contract v191](design/contract-v191-warrens-content-p7-non-damage-melee.md)。
 
 ### 本地验证
 

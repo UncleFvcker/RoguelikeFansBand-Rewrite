@@ -368,3 +368,5 @@ contract-v132 不增加运行时命令或快照 DTO，继续复用 `UseItem` 与
 协议 1.137 为 save v1 增加必填 `defeatedUniqueActorKindIds`。该集合只记录已死亡的普通非 guardian Unique；当前层与离层仓库中的存活实例仍由 actor 状态直接证明占用，guardian 继续使用既有 dungeon 状态。读取时拒绝重复 ID、非 Unique、guardian 以及与存活实例冲突的集合。该权威状态进入 state hash Schema v63；旧开发存档不兼容。完整边界见 [Contract v173](contract-v173-warrens-allocation-ecology.md)。
 
 协议 1.140 为 `ActorSaveDto` 增加必填 `nice`，保存原版 `FORCE_SLEEP → MFLAG_NICE` 的一次玩家行动出生宽限；当前层和离层仓库使用同一字段，旧开发存档不兼容。该字段进入 state hash Schema v64；它不属于普通 `StatusDto`，也不进入可见 `EntityDto`。完整边界见 [Contract v190](contract-v190-warrens-content-p6-spawn-grace-class-drops.md)。
+
+contract-v191 只增加内容层近战 effect 及对应运行时解释，不新增命令、事件、快照或存档 DTO。失明、混乱、麻痹、减速、眩晕和恐惧继续使用既有 `StatusDto` / `StatusSaveDto`；协议保持 1.140，save v1 与 state hash Schema v64 不变。完整边界见 [Contract v191](contract-v191-warrens-content-p7-non-damage-melee.md)。

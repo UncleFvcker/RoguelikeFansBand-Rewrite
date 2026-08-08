@@ -1,0 +1,56 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 1273,
+    "maxDepth": 12,
+    "randomMovementPercent": 25,
+    "rarity": 2
+  },
+  "attack": 1,
+  "damageDice": 1,
+  "damageSides": 1,
+  "damageType": "physical",
+  "defense": 1,
+  "descriptionKey": "actor-demo-giant-moth-description",
+  "experienceValue": 3,
+  "formatVersion": 1,
+  "glyph": "I",
+  "hitPointDice": {
+    "dice": 2,
+    "sides": 2
+  },
+  "id": "demo.actor.giant-moth",
+  "level": 2,
+  "maxHp": 3,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "type": "terrify"
+          },
+          {
+            "chancePercent": 25,
+            "type": "terrify"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "nameKey": "actor-demo-giant-moth-name",
+  "role": "monster",
+  "speed": 132,
+  "tags": [
+    "animal",
+    "insect",
+    "moth",
+    "warrens"
+  ]
+}

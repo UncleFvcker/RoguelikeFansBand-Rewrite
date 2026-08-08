@@ -33,7 +33,7 @@
       "turn": 1,
       "worldTick": 10,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 9,
+      "rngDrawCounter": 16,
       "floorId": "demo.floor.surface",
       "playerPosition": {
         "x": 3,
@@ -207,9 +207,9 @@
             "x": 2,
             "y": 2
           },
-          "hp": 1,
-          "speed": 110,
-          "energyNeed": 100,
+          "hp": 10,
+          "speed": 100,
+          "energyNeed": 50,
           "faction": "player",
           "controllerId": "demo.actor.player.1"
         },
@@ -220,7 +220,7 @@
             "y": 2
           },
           "hp": 3,
-          "speed": 110,
+          "speed": 120,
           "energyNeed": 100,
           "faction": "player",
           "controllerId": "demo.actor.player.1"
@@ -231,7 +231,7 @@
             "x": 4,
             "y": 2
           },
-          "hp": 3,
+          "hp": 1,
           "speed": 110,
           "energyNeed": 100,
           "faction": "player",
@@ -319,7 +319,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "1661679397c6f0eee5d74fd344159522f2013ff0b9fade6d699fe05da48401df"
+      "stateHash": "778e7624657cc55e93a9143be6188b4a10cf84434f286f9b4c96e4de9f9e9700"
     },
     "events": [
       {
@@ -358,9 +358,9 @@
             "hostile": false,
             "group": true,
             "summonedKindIds": [
-              "demo.actor.blinking-dot",
-              "demo.actor.echo-hound",
-              "demo.actor.storm-spark"
+              "demo.actor.large-white-snake",
+              "demo.actor.insect-swarm",
+              "demo.actor.blinking-dot"
             ]
           }
         }
@@ -380,6 +380,6 @@
         "y": 2
       }
     ],
-    "saveRoundTripStateHash": "1661679397c6f0eee5d74fd344159522f2013ff0b9fade6d699fe05da48401df"
+    "saveRoundTripStateHash": "778e7624657cc55e93a9143be6188b4a10cf84434f286f9b4c96e4de9f9e9700"
   }
 }

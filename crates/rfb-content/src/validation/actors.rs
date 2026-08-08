@@ -341,6 +341,24 @@ fn valid_melee_effect(effect: &MeleeBlowEffectDefinition) -> bool {
             chance_percent,
             duration_dice,
             duration_sides,
+        }
+        | MeleeBlowEffectDefinition::Stun {
+            chance_percent,
+            duration_dice,
+            duration_sides,
         } => valid_chance(*chance_percent) && valid_dice(*duration_dice, *duration_sides),
+        MeleeBlowEffectDefinition::Confusion {
+            chance_percent,
+            damage_dice,
+            damage_sides,
+        } => {
+            valid_chance(*chance_percent)
+                && ((*damage_dice == 0 && *damage_sides == 0)
+                    || valid_dice(*damage_dice, *damage_sides))
+        }
+        MeleeBlowEffectDefinition::Blind { chance_percent }
+        | MeleeBlowEffectDefinition::Paralysis { chance_percent }
+        | MeleeBlowEffectDefinition::Slow { chance_percent }
+        | MeleeBlowEffectDefinition::Terrify { chance_percent } => valid_chance(*chance_percent),
     }
 }

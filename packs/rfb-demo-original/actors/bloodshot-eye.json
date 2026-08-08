@@ -1,0 +1,78 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 129,
+    "maxDepth": 40,
+    "rarity": 3
+  },
+  "attack": 1,
+  "damageDice": 2,
+  "damageSides": 7,
+  "damageType": "physical",
+  "defense": 0,
+  "descriptionKey": "actor-demo-bloodshot-eye-description",
+  "experienceValue": 15,
+  "formatVersion": 1,
+  "glyph": "e",
+  "hitPointDice": {
+    "dice": 5,
+    "sides": 8
+  },
+  "id": "demo.actor.bloodshot-eye",
+  "level": 7,
+  "maxHp": 22,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 2,
+            "damageSides": 7,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "type": "blind"
+          }
+        ],
+        "methodId": "rfb.blow.gaze",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.drain-mana-4",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 14
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ],
+    "neverMoves": true
+  },
+  "nameKey": "actor-demo-bloodshot-eye-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "light": "vulnerable"
+  },
+  "role": "monster",
+  "speed": 110,
+  "statusImmunities": [
+    "rfb.status.fear"
+  ],
+  "tags": [
+    "eye",
+    "warrens"
+  ]
+}

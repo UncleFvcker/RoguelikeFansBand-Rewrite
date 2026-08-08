@@ -157,3 +157,13 @@ at Warrens depths; unsupported or deep items are not approximated.
 The formal selection remains 40 fixed-source items and the pack remains at 146
 items. The demo pack is version 1.185.0 with content hash
 `e7a7697de6aab4160c2398cba429559fa7fd62c46b65f3bb929490d859395f3e`.
+
+## Eleventh Batch Boundary
+
+P7 adds no item identity or new loot path. It adds six typed non-damage or
+status-rider melee effects and uses them to unlock ten shallow actors. Those
+actors continue to use only already-formal ordinary, good, and remains drops.
+
+The formal selection remains 40 fixed-source items and the pack remains at 146
+items. The demo pack is version 1.186.0 with content hash
+`d1cfa9470d91e068baf2bb47ddc2c0c0ad8b1a6dfe8822b02d3127b4d03e4317`.

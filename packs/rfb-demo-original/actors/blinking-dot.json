@@ -18,7 +18,7 @@
   "damageType": "confusion",
   "meleeRoutine": {
     "blows": [
-      { "methodId": "rfb.blow.spore", "toHit": 20, "effects": [{ "type": "damage", "damageDice": 1, "damageSides": 6, "damageType": "confusion", "armorMitigated": false }] }
+      { "methodId": "rfb.blow.spore", "toHit": 20, "effects": [{ "type": "confusion", "damageDice": 1, "damageSides": 6 }] }
     ]
   },
   "resistances": { "poison": "resistant" },

@@ -209,6 +209,76 @@ fn content_driven_monster_routine_resolves_blows_in_declared_order() {
 }
 
 #[test]
+fn non_damage_melee_riders_apply_the_existing_player_statuses() {
+    let base = game_with_actor_definition(0, "demo.actor.echo-hound", |actor| {
+        actor.attack = 1_000_000;
+        actor.melee_routine = Some(rfb_content::MeleeRoutineDefinition {
+            blows: vec![rfb_content::MeleeBlowDefinition {
+                method_id: "rfb.blow.status-check".to_owned(),
+                to_hit: 0,
+                self_destructs: false,
+                effects: vec![
+                    rfb_content::MeleeBlowEffectDefinition::Blind {
+                        chance_percent: None,
+                    },
+                    rfb_content::MeleeBlowEffectDefinition::Confusion {
+                        chance_percent: None,
+                        damage_dice: 1,
+                        damage_sides: 1,
+                    },
+                    rfb_content::MeleeBlowEffectDefinition::Paralysis {
+                        chance_percent: None,
+                    },
+                    rfb_content::MeleeBlowEffectDefinition::Slow {
+                        chance_percent: None,
+                    },
+                    rfb_content::MeleeBlowEffectDefinition::Stun {
+                        chance_percent: None,
+                        duration_dice: 1,
+                        duration_sides: 1,
+                    },
+                    rfb_content::MeleeBlowEffectDefinition::Terrify {
+                        chance_percent: None,
+                    },
+                ],
+            }],
+        });
+    });
+    let game = (0..100)
+        .find_map(|seed| {
+            let mut game = base.clone();
+            game.rng = RfbRng::seeded(seed);
+            game.entities[0].kind_id = "demo.actor.echo-hound".to_owned();
+            game.player.hp = 100;
+            game.resolve_monster_melee(0, &mut Vec::new());
+            (game.player.statuses.len() == 6).then_some(game)
+        })
+        .expect("a deterministic seed should land the status blow");
+
+    let duration = |kind_id| {
+        game.player
+            .statuses
+            .iter()
+            .find(|status| status.kind_id == kind_id)
+            .expect("melee rider should apply its status")
+            .remaining_ticks
+    };
+    assert!((12..=15).contains(&duration(STATUS_BLINDNESS)));
+    assert!((11..=30).contains(&duration(STATUS_CONFUSION)));
+    assert!((1..=3).contains(&duration(STATUS_PARALYSIS)));
+    assert_eq!(duration(STATUS_SLOW), 25);
+    assert_eq!(duration(STATUS_STUN), 1);
+    assert_eq!(
+        duration(STATUS_FEAR),
+        game.content
+            .actor("demo.actor.echo-hound")
+            .expect("test actor definition")
+            .level
+    );
+    assert_eq!(game.player.hp, 99);
+}
+
+#[test]
 fn self_destructing_blow_skips_single_target_effect_and_explodes_on_death() {
     let base = game_with_actor_definition(0, "demo.actor.echo-hound", |actor| {
         actor.attack = 1_000_000;

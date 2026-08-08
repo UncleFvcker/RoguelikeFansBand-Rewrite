@@ -32,13 +32,13 @@
       "turn": 1,
       "worldTick": 10,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 18,
+      "rngDrawCounter": 15,
       "floorId": "demo.floor.surface",
       "playerPosition": {
         "x": 3,
         "y": 3
       },
-      "playerHp": 7,
+      "playerHp": 5,
       "playerMaxHp": 10,
       "playerAttack": 2,
       "playerDefense": 1,
@@ -213,10 +213,10 @@
         {
           "id": "summon.demo.item.summoning-scroll.1.1",
           "position": {
-            "x": 2,
-            "y": 1
+            "x": 3,
+            "y": 2
           },
-          "hp": 6,
+          "hp": 3,
           "speed": 110,
           "energyNeed": 100
         }
@@ -302,7 +302,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "287b72f209daaa48f1d7c32b1014cdad12def3883e5619b28aa318f551d448ba"
+      "stateHash": "52466f8c5a28f24e93487d4444e2d170219c1fcfa07e480baca5bae7e509e3e7"
     },
     "events": [
       {
@@ -337,17 +337,9 @@
             "group": true,
             "summonedKindIds": [
               "demo.actor.newt",
-              "demo.actor.white-icky-thing"
+              "demo.actor.ember-mote"
             ]
           }
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.newt"
         }
       },
       {
@@ -369,13 +361,36 @@
             "resistance": "normal"
           }
         }
+      },
+      {
+        "kind": "combat.monster-miss",
+        "messageKey": "combat-monster-miss",
+        "args": {
+          "method": "rfb.blow.bite",
+          "source": "demo.actor.newt"
+        }
+      },
+      {
+        "kind": "combat.monster-hit",
+        "messageKey": "combat-monster-hit",
+        "args": {
+          "damage": "2",
+          "source": "demo.actor.ember-mote"
+        },
+        "outcome": {
+          "type": "damage",
+          "resolution": {
+            "rawDamage": 2,
+            "armorReduction": 0,
+            "resistanceAdjustment": 0,
+            "finalDamage": 2,
+            "damageType": "fire",
+            "resistance": "normal"
+          }
+        }
       }
     ],
     "changedCells": [
-      {
-        "x": 2,
-        "y": 1
-      },
       {
         "x": 2,
         "y": 2

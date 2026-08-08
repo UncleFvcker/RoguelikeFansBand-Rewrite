@@ -148,6 +148,34 @@ pub enum MeleeBlowEffectDefinition {
         duration_dice: u16,
         duration_sides: u16,
     },
+    Blind {
+        #[serde(default)]
+        chance_percent: Option<u8>,
+    },
+    Confusion {
+        #[serde(default)]
+        chance_percent: Option<u8>,
+        damage_dice: u16,
+        damage_sides: u16,
+    },
+    Paralysis {
+        #[serde(default)]
+        chance_percent: Option<u8>,
+    },
+    Slow {
+        #[serde(default)]
+        chance_percent: Option<u8>,
+    },
+    Stun {
+        #[serde(default)]
+        chance_percent: Option<u8>,
+        duration_dice: u16,
+        duration_sides: u16,
+    },
+    Terrify {
+        #[serde(default)]
+        chance_percent: Option<u8>,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

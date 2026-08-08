@@ -71,7 +71,13 @@ impl Game {
                 } => (*damage_dice, *damage_sides, DamageType::Poison),
                 MeleeBlowEffectDefinition::Disease { .. }
                 | MeleeBlowEffectDefinition::DrainAttributes { .. }
-                | MeleeBlowEffectDefinition::Bleeding { .. } => {
+                | MeleeBlowEffectDefinition::Bleeding { .. }
+                | MeleeBlowEffectDefinition::Blind { .. }
+                | MeleeBlowEffectDefinition::Confusion { .. }
+                | MeleeBlowEffectDefinition::Paralysis { .. }
+                | MeleeBlowEffectDefinition::Slow { .. }
+                | MeleeBlowEffectDefinition::Stun { .. }
+                | MeleeBlowEffectDefinition::Terrify { .. } => {
                     unreachable!("validated death explosions only contain projected effects")
                 }
             };

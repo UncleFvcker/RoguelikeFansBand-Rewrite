@@ -5247,7 +5247,6 @@ fn melee_damage_type(token: &str) -> Option<&'static str> {
         "ELEC" => Some("electricity"),
         "LITE" => Some("light"),
         "DARK" => Some("dark"),
-        "CONFUSE" => Some("confusion"),
         "NETHER" => Some("nether"),
         "NEXUS" => Some("nexus"),
         "SOUND" => Some("sound"),
@@ -5297,6 +5296,26 @@ fn melee_effect_json(effect: &LegacyBlowEffect) -> Option<serde_json::Value> {
                 "durationSides": duration_sides.clamp(1, 10_000),
             })
         }
+        "BLIND" => serde_json::json!({ "type": "blind" }),
+        "CONFUSE" => {
+            let (damage_dice, damage_sides) = effect.dice.unwrap_or((0, 0));
+            serde_json::json!({
+                "type": "confusion",
+                "damageDice": damage_dice.min(100),
+                "damageSides": damage_sides.min(10_000),
+            })
+        }
+        "PARALYZE" => serde_json::json!({ "type": "paralysis" }),
+        "SLOW" => serde_json::json!({ "type": "slow" }),
+        "STUN" => {
+            let (duration_dice, duration_sides) = effect.dice?;
+            serde_json::json!({
+                "type": "stun",
+                "durationDice": duration_dice.clamp(1, 100),
+                "durationSides": duration_sides.clamp(1, 10_000),
+            })
+        }
+        "TERRIFY" => serde_json::json!({ "type": "terrify" }),
         "LOSE_STR" | "LOSE_INT" | "LOSE_WIS" | "LOSE_DEX" | "LOSE_CON" | "LOSE_CHR"
         | "LOSE_ALL" => {
             let attributes: &[&str] = match effect.token.as_str() {
@@ -5343,6 +5362,7 @@ fn blow_primary_dice(blow: &LegacyBlow) -> Option<(u16, u16)> {
     blow.effects.iter().find_map(|effect| {
         (effect.token == "POISON"
             || effect.token == "DISEASE"
+            || effect.token == "CONFUSE"
             || melee_damage_type(&effect.token).is_some())
         .then_some(effect.dice)
         .flatten()
@@ -5360,6 +5380,9 @@ fn damage_type_for(blow: &LegacyBlow) -> (&'static str, Option<&str>) {
         }
         if effect.token == "DISEASE" {
             return ("physical", None);
+        }
+        if effect.token == "CONFUSE" {
+            return ("confusion", None);
         }
         if let Some(damage_type) = melee_damage_type(&effect.token) {
             return (damage_type, None);
@@ -8720,6 +8743,32 @@ mod tests {
     }
 
     #[test]
+    fn non_damage_melee_effects_map_without_inventing_damage() {
+        let blow = parse_blow(
+            "GAZE:CONFUSE:BLIND:PARALYZE(50%):SLOW:STUN(1d4, 10%):TERRIFY",
+            1,
+        )
+        .expect("synthetic status blow should parse");
+        let effects = blow
+            .effects
+            .iter()
+            .map(|effect| melee_effect_json(effect).expect("status effect should map"))
+            .collect::<Vec<_>>();
+
+        assert_eq!(effects[0]["type"], "confusion");
+        assert_eq!(effects[0]["damageDice"], 0);
+        assert_eq!(effects[1]["type"], "blind");
+        assert_eq!(effects[2]["type"], "paralysis");
+        assert_eq!(effects[2]["chancePercent"], 50);
+        assert_eq!(effects[3]["type"], "slow");
+        assert_eq!(effects[4]["type"], "stun");
+        assert_eq!(effects[4]["durationDice"], 1);
+        assert_eq!(effects[4]["durationSides"], 4);
+        assert_eq!(effects[4]["chancePercent"], 10);
+        assert_eq!(effects[5]["type"], "terrify");
+    }
+
+    #[test]
     fn monster_import_maps_self_destruct_terrain_light_and_drop_flags() {
         let monsters = parse_r_info(
             "N:1:test breach mote\nG:*:y\nI:110:1d3:8:4:20:10\nW:3:1:10:3:0:0\nB:EXPLODE:FIRE(2d4)\nF:KILL_WALL | KILL_ITEM | HAS_LITE_1 | SELF_LITE_2\nF:ONLY_ITEM | DROP_90 | DROP_1D2 | DROP_GOOD | UNIQUE\nO:DROP_WARRIOR\n",
@@ -8830,10 +8879,10 @@ B:GAZE:TERRIFY\n";
         );
         assert_eq!(outcome.report.terrain_imported, 2);
         assert_eq!(outcome.report.terrain_skipped, 1);
-        assert_eq!(outcome.report.monsters_imported, 1);
-        assert_eq!(outcome.report.monsters_skipped, 1);
+        assert_eq!(outcome.report.monsters_imported, 2);
+        assert_eq!(outcome.report.monsters_skipped, 0);
         assert_eq!(outcome.report.monsters_with_unmapped_spells, 0);
-        assert_eq!(outcome.report.monsters_with_melee_routine, 1);
+        assert_eq!(outcome.report.monsters_with_melee_routine, 2);
         assert_eq!(outcome.report.monsters_with_inexpressible_blows, 0);
         assert_eq!(outcome.report.unmapped_spells.len(), 0);
         assert_eq!(outcome.report.spells_mapped["SCARE"], 1);
@@ -8841,9 +8890,11 @@ B:GAZE:TERRIFY\n";
         assert_eq!(outcome.report.monsters_with_casting, 1);
         assert_eq!(outcome.ability_files.len(), 2);
         assert_eq!(outcome.resource_files.len(), 1);
-        assert_eq!(
-            outcome.report.skip_reasons["monster-without-expressible-melee"],
-            1
+        assert!(
+            !outcome
+                .report
+                .skip_reasons
+                .contains_key("monster-without-expressible-melee")
         );
 
         let (name, lantern) = &outcome.actor_files[0];
@@ -8864,7 +8915,8 @@ B:GAZE:TERRIFY\n";
         assert_eq!(blows[1]["effects"][0]["damageType"], "physical");
         assert_eq!(blows[1]["effects"][0]["damageDice"], 1);
         assert_eq!(blows[1]["effects"][0]["damageSides"], 6);
-        assert_eq!(blows[1]["effects"].as_array().unwrap().len(), 1);
+        assert_eq!(blows[1]["effects"].as_array().unwrap().len(), 2);
+        assert_eq!(blows[1]["effects"][1]["type"], "stun");
         // RES_FIRE folds into the content resistance map.
         assert_eq!(lantern["resistances"]["fire"], "resistant");
         assert_eq!(lantern["movement"]["neverMoves"], true);
