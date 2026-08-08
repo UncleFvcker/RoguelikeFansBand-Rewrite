@@ -5716,6 +5716,7 @@ fn monster_flag_is_mapped(flag: &str) -> bool {
             | "RES_TELE"
             | "NO_CONF"
             | "NEVER_MOVE"
+            | "NEVER_BLOW"
             | "KILL_WALL"
             | "KILL_ITEM"
             | "HAS_LITE_1"
@@ -5833,7 +5834,7 @@ fn resistances_from_flags(flags: &[String]) -> BTreeMap<&'static str, &'static s
 fn monster_json(
     entry: &LegacyMonsterEntry,
     id: &str,
-    blow: &LegacyBlow,
+    blow: Option<&LegacyBlow>,
     damage_type: &str,
     melee_routine: Option<serde_json::Value>,
     monster_casting: Option<serde_json::Value>,
@@ -5846,7 +5847,7 @@ fn monster_json(
         (hp_dice.saturating_mul(hp_sides.saturating_add(1)) / 2).max(1)
     };
     let level = entry.level.unwrap_or(1).max(1);
-    let (damage_dice, damage_sides) = blow_primary_dice(blow).unwrap_or((1, 1));
+    let (damage_dice, damage_sides) = blow.and_then(blow_primary_dice).unwrap_or((1, 1));
     // Legacy type flags become category tags so summon filters can select
     // by monster class; the shared legacy-import tag doubles as "any".
     let mut tags = vec!["legacy-import".to_owned()];
@@ -6177,12 +6178,13 @@ fn demo_monster_json(
             selection.id
         )));
     }
-    let primary_blow = entry.blows.first().ok_or_else(|| {
-        LegacyImportError::InvalidDemoMonsterSelection(format!(
-            "{} has no melee routine",
+    let primary_blow = entry.blows.first();
+    if primary_blow.is_none() && !entry.flags.iter().any(|flag| flag == "NEVER_BLOW") {
+        return Err(LegacyImportError::InvalidDemoMonsterSelection(format!(
+            "{} has no melee routine and is not marked NEVER_BLOW",
             selection.id
-        ))
-    })?;
+        )));
+    }
     let mut blows = Vec::with_capacity(entry.blows.len());
     for blow in &entry.blows {
         let effects = blow
@@ -6217,7 +6219,7 @@ fn demo_monster_json(
         }
         blows.push(value);
     }
-    let (damage_type, _) = damage_type_for(primary_blow);
+    let damage_type = primary_blow.map_or("physical", |blow| damage_type_for(blow).0);
     let routine = serde_json::json!({ "blows": blows });
     let mut value = monster_json(
         entry,
@@ -6595,6 +6597,26 @@ fn map_spell_token(
             abilities
                 .entry(id.clone())
                 .or_insert_with(|| heal_ability(amount));
+            Some(id)
+        }
+        "SHRIEK" => {
+            let id = "rfb-legacy.ability.shriek".to_owned();
+            abilities.entry(id.clone()).or_insert_with(|| {
+                serde_json::json!({
+                    "$schema": format!("{SCHEMA_BASE}/ability.schema.json"),
+                    "formatVersion": 1,
+                    "id": id,
+                    "nameKey": "ability-legacy-shriek-name",
+                    "descriptionKey": "ability-legacy-shriek-description",
+                    "target": {
+                        "modes": ["self"],
+                        "range": 0,
+                        "requiresLineOfEffect": false
+                    },
+                    "effect": { "type": "aggravate-monsters" },
+                    "tags": ["legacy-import", "innate", "utility"]
+                })
+            });
             Some(id)
         }
         other => map_damage_spell_token(other, level, breath_radius, abilities),
@@ -7080,7 +7102,11 @@ fn convert_content_from(
                     .any(|effect| melee_effect_json(effect).is_some())
             })
             .collect();
-        let Some(blow) = expressible.first().copied() else {
+        let intentional_no_melee = expressible.is_empty()
+            && entry.blows.is_empty()
+            && entry.flags.iter().any(|flag| flag == "NEVER_BLOW");
+        let blow = expressible.first().copied();
+        if blow.is_none() && !intentional_no_melee {
             report.monsters_skipped += 1;
             *report
                 .skip_reasons
@@ -7093,7 +7119,7 @@ fn convert_content_from(
                     .or_default() += 1;
             }
             continue;
-        };
+        }
         if expressible.len() < entry.blows.len() {
             report.monsters_with_inexpressible_blows += 1;
             for blow in &entry.blows {
@@ -7239,7 +7265,7 @@ fn convert_content_from(
                 .entry(flag.clone())
                 .or_default() += 1;
         }
-        let (damage_type, unmapped_effect) = damage_type_for(blow);
+        let (damage_type, unmapped_effect) = blow.map_or(("physical", None), damage_type_for);
         if melee_routine.is_none()
             && let Some(effect) = unmapped_effect
         {

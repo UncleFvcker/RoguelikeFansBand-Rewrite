@@ -145,6 +145,85 @@ fn monster_casting_uses_frequency_viability_and_weighted_selection() {
 }
 
 #[test]
+fn monster_shriek_excludes_the_caster_and_aggravates_other_monsters() {
+    let mut game = Game::new(1);
+    clear_monsters(&mut game);
+    game.push_generated_actor(
+        "test.monster.shrieker.1".to_owned(),
+        "demo.actor.shrieker-mushroom-patch",
+        Position { x: 5, y: 3 },
+    );
+    game.push_generated_actor(
+        "test.monster.green-mold.1".to_owned(),
+        "demo.actor.green-mold",
+        Position { x: 6, y: 3 },
+    );
+    for actor in &mut game.entities {
+        actor.statuses.push(StatusInstance {
+            kind_id: STATUS_SLEEP.to_owned(),
+            intensity: 1,
+            remaining_ticks: 25,
+            source_id: None,
+            granted_resistances: BTreeMap::new(),
+            granted_brands: BTreeSet::new(),
+            granted_modifiers: StatModifiersDto::default(),
+            granted_equipment_bonuses: EquipmentBonusesDto::default(),
+            granted_status_immunities: BTreeSet::new(),
+            granted_race_id: None,
+            grants_wall_passage: false,
+            incoming_damage_percent: 100,
+        });
+    }
+    let ability = game
+        .content
+        .ability("rfb-legacy.ability.shriek")
+        .expect("formal P8 content should contain Shriek")
+        .clone();
+    let plan = game
+        .monster_ability_plan(0, ability, 1)
+        .expect("Shriek should always be a viable utility action");
+    let mut changed = BTreeSet::new();
+    let resolution = game.resolve_monster_ability_plan(
+        0,
+        "demo.actor.shrieker-mushroom-patch",
+        &plan,
+        &mut Vec::new(),
+        &mut changed,
+        &mut Vec::new(),
+    );
+
+    assert!(
+        game.entities[0]
+            .statuses
+            .iter()
+            .any(|status| status.kind_id == STATUS_SLEEP)
+    );
+    assert!(
+        !game.entities[1]
+            .statuses
+            .iter()
+            .any(|status| status.kind_id == STATUS_SLEEP)
+    );
+    assert!(
+        game.entities[1]
+            .statuses
+            .iter()
+            .any(|status| status.kind_id == STATUS_HASTE && status.remaining_ticks == 100)
+    );
+    assert_eq!(
+        resolution.effects,
+        vec![AbilityEffectResolutionDto::AggravateMonsters {
+            effect_index: 0,
+            awakened: 1,
+            hastened: 1,
+        }]
+    );
+    assert_eq!(resolution.affected_positions, vec![Position { x: 6, y: 3 }]);
+    assert!(!changed.contains(&Position { x: 5, y: 3 }));
+    assert!(changed.contains(&Position { x: 6, y: 3 }));
+}
+
+#[test]
 fn monster_casting_clean_shot_filter_blocks_allies_and_walls() {
     for blocked_by_actor in [true, false] {
         let mut game = Game::new(1);

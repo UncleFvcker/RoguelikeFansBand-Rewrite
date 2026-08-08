@@ -314,6 +314,7 @@ impl Game {
                 }
                 AbilityEffectDefinition::BlinkSelf { .. }
                 | AbilityEffectDefinition::TeleportSelf { .. } => useful = true,
+                AbilityEffectDefinition::AggravateMonsters => useful = true,
                 AbilityEffectDefinition::TeleportTarget if hostile_target.is_some() => {
                     useful = true;
                 }

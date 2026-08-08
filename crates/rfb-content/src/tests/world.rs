@@ -78,6 +78,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.creeping-copper-coins", 85, 2, 40),
             ("demo.actor.crow-of-durthang", 1224, 2, 40),
             ("demo.actor.crypt-creep", 124, 2, 40),
+            ("demo.actor.culverin", 867, 2, 50),
             (
                 "demo.actor.disembodied-hand-that-strangled-people",
                 112,
@@ -150,6 +151,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.rotting-corpse", 125, 1, 40),
             ("demo.actor.salamander", 50, 1, 20),
             ("demo.actor.scruffy-looking-hobbit", 74, 1, 30),
+            ("demo.actor.shrieker-mushroom-patch", 40, 1, 50),
             ("demo.actor.skaven", 158, 1, 40),
             ("demo.actor.skaven-shaman", 217, 1, 50),
             ("demo.actor.skeleton-kobold", 91, 1, 40),
@@ -166,6 +168,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.war-bear", 173, 1, 40),
             ("demo.actor.warg", 257, 2, 50),
             ("demo.actor.warrens-keeper", 135, 3, 999),
+            ("demo.actor.white-harpy", 51, 1, 20),
             ("demo.actor.white-icky-thing", 25, 1, 10),
             ("demo.actor.white-worm-mass", 89, 1, 40),
             ("demo.actor.wild-cat", 62, 2, 20),

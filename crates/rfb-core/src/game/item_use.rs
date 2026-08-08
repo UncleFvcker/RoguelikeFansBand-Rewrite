@@ -443,17 +443,22 @@ impl Game {
         }
     }
 
-    pub(super) fn resolve_item_aggravation(
+    pub(super) fn aggravate_monsters(
         &mut self,
-        source_kind_id: &str,
-        events: &mut Vec<DomainEvent>,
+        source_entity_id: Option<&str>,
+        source_id: &str,
         changed: &mut BTreeSet<Position>,
-    ) {
+    ) -> (u32, u32, Vec<Position>) {
+        let mut awakened = 0_u32;
+        let mut hastened = 0_u32;
+        let mut affected_positions = Vec::new();
         let origin = self.player.position;
         let sight_radius =
             u32::try_from(VISIBILITY_RADIUS).expect("positive visibility radius must fit u32");
         for index in 0..self.entities.len() {
-            if self.entities[index].hp <= 0 {
+            if self.entities[index].hp <= 0
+                || source_entity_id.is_some_and(|source| self.entities[index].id == source)
+            {
                 continue;
             }
             let position = self.entities[index].position;
@@ -467,9 +472,13 @@ impl Game {
             }
             if nearby {
                 self.entities[index].alerted = true;
+                let status_count = self.entities[index].statuses.len();
                 self.entities[index]
                     .statuses
                     .retain(|status| status.kind_id != STATUS_SLEEP);
+                if self.entities[index].statuses.len() < status_count {
+                    awakened = awakened.saturating_add(1);
+                }
             }
             if hostile_in_los {
                 apply_status_application(
@@ -479,7 +488,7 @@ impl Game {
                             kind_id: STATUS_HASTE.to_owned(),
                             intensity: 1,
                             remaining_ticks: 100,
-                            source_id: Some(source_kind_id.to_owned()),
+                            source_id: Some(source_id.to_owned()),
                             granted_resistances: BTreeMap::new(),
                             granted_brands: BTreeSet::new(),
                             granted_modifiers: StatModifiersDto::default(),
@@ -492,9 +501,21 @@ impl Game {
                         stacking: StatusStacking::Extend,
                     },
                 );
+                hastened = hastened.saturating_add(1);
             }
             changed.insert(position);
+            affected_positions.push(position);
         }
+        (awakened, hastened, affected_positions)
+    }
+
+    pub(super) fn resolve_item_aggravation(
+        &mut self,
+        source_kind_id: &str,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        self.aggravate_monsters(None, source_kind_id, changed);
         self.mark_item_aware(source_kind_id);
         events.push(DomainEvent::ItemAggravated {
             source_kind_id: source_kind_id.to_owned(),

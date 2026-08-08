@@ -375,6 +375,19 @@
           "additionalProperties": false,
           "properties": {
             "type": {
+              "const": "aggravate-monsters",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
               "const": "teleport",
               "type": "string"
             }

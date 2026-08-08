@@ -2335,6 +2335,7 @@ impl Game {
             AbilityEffectDefinition::BlinkSelf { .. }
             | AbilityEffectDefinition::TeleportSelf { .. }
             | AbilityEffectDefinition::TeleportTarget
+            | AbilityEffectDefinition::AggravateMonsters
             | AbilityEffectDefinition::BreathDamage { .. }
             | AbilityEffectDefinition::CurseDamage { .. }
             | AbilityEffectDefinition::TeleportAway { .. }

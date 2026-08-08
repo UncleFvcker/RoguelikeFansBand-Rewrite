@@ -209,6 +209,20 @@ fn content_driven_monster_routine_resolves_blows_in_declared_order() {
 }
 
 #[test]
+fn explicit_empty_melee_routine_performs_no_attack() {
+    let mut game = Game::new(0);
+    game.entities[0].kind_id = "demo.actor.culverin".to_owned();
+    let hp_before = game.player.hp;
+    let draws_before = game.rng.draw_counter;
+    let mut events = Vec::new();
+
+    assert!(!game.resolve_monster_melee(0, &mut events));
+    assert_eq!(game.player.hp, hp_before);
+    assert_eq!(game.rng.draw_counter, draws_before);
+    assert!(events.is_empty());
+}
+
+#[test]
 fn non_damage_melee_riders_apply_the_existing_player_statuses() {
     let base = game_with_actor_definition(0, "demo.actor.echo-hound", |actor| {
         actor.attack = 1_000_000;

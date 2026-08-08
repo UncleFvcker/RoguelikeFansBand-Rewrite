@@ -5065,6 +5065,7 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             AbilityEffectSpecDto::DrainResource { amount: *amount }
         }
         AbilityEffectDefinition::Amnesia => AbilityEffectSpecDto::Amnesia,
+        AbilityEffectDefinition::AggravateMonsters => AbilityEffectSpecDto::AggravateMonsters,
         AbilityEffectDefinition::Teleport => AbilityEffectSpecDto::Teleport,
         AbilityEffectDefinition::Summon {
             actor_kind_id,

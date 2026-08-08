@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.140";
+pub const PROTOCOL_VERSION: &str = "1.141";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -671,6 +671,7 @@ pub enum AbilityEffectSpecDto {
         amount: u32,
     },
     Amnesia,
+    AggravateMonsters,
     Teleport,
     Summon {
         actor_kind_id: String,
@@ -1565,6 +1566,11 @@ pub enum AbilityEffectResolutionDto {
     Amnesia {
         effect_index: u8,
         cleared_cells: u32,
+    },
+    AggravateMonsters {
+        effect_index: u8,
+        awakened: u32,
+        hastened: u32,
     },
     Control {
         effect_index: u8,

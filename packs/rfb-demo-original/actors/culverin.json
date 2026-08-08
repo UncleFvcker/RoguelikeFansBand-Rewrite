@@ -1,0 +1,45 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 867,
+    "maxDepth": 50,
+    "randomMovementPercent": 25,
+    "rarity": 2
+  },
+  "attack": 2,
+  "damageDice": 1,
+  "damageSides": 1,
+  "damageType": "physical",
+  "defense": 1,
+  "descriptionKey": "actor-demo-culverin-description",
+  "experienceValue": 25,
+  "formatVersion": 1,
+  "glyph": "I",
+  "hitPointDice": {
+    "dice": 8,
+    "sides": 5
+  },
+  "id": "demo.actor.culverin",
+  "level": 8,
+  "maxHp": 24,
+  "meleeRoutine": {
+    "blows": []
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.bolt-physical-4d6",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 100
+  },
+  "nameKey": "actor-demo-culverin-name",
+  "role": "monster",
+  "speed": 110,
+  "tags": [
+    "animal",
+    "culverin",
+    "warrens"
+  ]
+}

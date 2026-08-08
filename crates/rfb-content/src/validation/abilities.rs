@@ -206,7 +206,9 @@ pub(super) fn validate_abilities(
                 AbilityEffectDefinition::DrainResource { amount } => {
                     (1..=1_000_000).contains(amount)
                 }
-                AbilityEffectDefinition::Amnesia => true,
+                AbilityEffectDefinition::Amnesia | AbilityEffectDefinition::AggravateMonsters => {
+                    true
+                }
                 AbilityEffectDefinition::Teleport => true,
                 AbilityEffectDefinition::BlinkSelf { radius } => (1..=10).contains(radius),
                 AbilityEffectDefinition::TeleportSelf { minimum_distance } => {
@@ -596,6 +598,7 @@ pub(super) fn validate_abilities(
                     && !ability.target.requires_line_of_effect
             }
             AbilityEffectDefinition::Heal { .. }
+            | AbilityEffectDefinition::AggravateMonsters
             | AbilityEffectDefinition::VisibleDamage { .. }
             | AbilityEffectDefinition::VisibleApplyStatus { .. }
             | AbilityEffectDefinition::EnchantEquippedWeapon { .. }
@@ -771,6 +774,7 @@ pub(super) fn validate_abilities(
                         && ability.target.requires_line_of_effect
                 }
                 AbilityEffectDefinition::Heal { .. }
+                | AbilityEffectDefinition::AggravateMonsters
                 | AbilityEffectDefinition::Summon { .. }
                 | AbilityEffectDefinition::SummonCategory { .. } => self_target,
                 AbilityEffectDefinition::ApplyStatus { .. }

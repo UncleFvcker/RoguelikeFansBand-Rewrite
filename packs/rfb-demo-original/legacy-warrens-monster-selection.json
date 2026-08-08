@@ -8,6 +8,12 @@
       "omittedFlags": ["POS_TELEPATHY"]
     },
     {
+      "sourceIndex": 40,
+      "id": "shrieker-mushroom-patch",
+      "tags": ["mushroom", "warrens"],
+      "omittedFlags": ["EMPTY_MIND", "POS_GAIN_AC", "STUPID", "WILD_SWAMP"]
+    },
+    {
       "sourceIndex": 42,
       "id": "metallic-green-centipede",
       "tags": ["centipede", "warrens"],
@@ -30,6 +36,12 @@
       "id": "salamander",
       "tags": ["reptile", "warrens"],
       "omittedFlags": ["WILD_VOLCANO"]
+    },
+    {
+      "sourceIndex": 51,
+      "id": "white-harpy",
+      "tags": ["harpy", "warrens"],
+      "omittedFlags": ["FEMALE", "POS_GAIN_AC", "WILD_MOUNTAIN"]
     },
     {
       "sourceIndex": 53,
@@ -489,6 +501,12 @@
       "id": "skaven-shaman",
       "tags": ["skaven", "warrens"],
       "omittedFlags": ["MALE", "POS_GAIN_AC", "WILD_SWAMP", "WILD_WASTE"]
+    },
+    {
+      "sourceIndex": 867,
+      "id": "culverin",
+      "tags": ["culverin", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC", "WILD_WOOD"]
     },
     {
       "sourceIndex": 953,

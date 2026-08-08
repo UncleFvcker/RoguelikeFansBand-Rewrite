@@ -355,9 +355,12 @@ impl Game {
         &mut self,
         source_index: usize,
         ability: &AbilityDefinition,
-    ) -> Vec<AbilityEffectResolutionDto> {
+        changed: &mut BTreeSet<Position>,
+    ) -> (Vec<AbilityEffectResolutionDto>, Vec<Position>) {
+        let source_entity_id = self.entities[source_index].id.clone();
         let effects = ability.effect.ordered_effects();
         let mut resolutions = Vec::with_capacity(effects.len());
+        let mut affected_positions = Vec::new();
         for (index, effect) in effects.iter().enumerate() {
             let effect_index =
                 u8::try_from(index).expect("validated monster ability effect index must fit u8");
@@ -431,11 +434,21 @@ impl Game {
                         status_kind_id,
                     )
                 }
+                AbilityEffectDefinition::AggravateMonsters => {
+                    let (awakened, hastened, positions) =
+                        self.aggravate_monsters(Some(&source_entity_id), &ability.id, changed);
+                    affected_positions.extend(positions);
+                    AbilityEffectResolutionDto::AggravateMonsters {
+                        effect_index,
+                        awakened,
+                        hastened,
+                    }
+                }
                 _ => unreachable!("validated monster self effects must remain actor effects"),
             };
             resolutions.push(resolution);
         }
-        resolutions
+        (resolutions, affected_positions)
     }
 
     pub(super) fn resolve_monster_ability_plan(
@@ -453,12 +466,18 @@ impl Game {
                 let target_entity_id = self.entities[source_index].id.clone();
                 let target_kind_id = self.entities[source_index].kind_id.clone();
                 let target_position = self.entities[source_index].position;
-                let effects = self.resolve_monster_self_effects(source_index, &plan.ability);
-                changed.insert(target_position);
+                let (effects, affected_positions) =
+                    self.resolve_monster_self_effects(source_index, &plan.ability, changed);
+                if !matches!(
+                    plan.ability.effect,
+                    AbilityEffectDefinition::AggravateMonsters
+                ) {
+                    changed.insert(target_position);
+                }
                 MonsterAbilityPlanResolution {
                     target_entity_id: target_entity_id.clone(),
                     target_kind_id: target_kind_id.clone(),
-                    affected_positions: Vec::new(),
+                    affected_positions,
                     summon: None,
                     effects: effects.clone(),
                     targets: vec![MonsterAbilityTargetResolutionDto {
@@ -1340,7 +1359,9 @@ impl Game {
     ) -> Result<MonsterAbilityPlan, MonsterAbilityPlanRejection> {
         let origin = self.entities[index].position;
         let (target, enemy_target_count, friendly_risk_count) = match &ability.effect {
-            AbilityEffectDefinition::Heal { .. } => (MonsterAbilityTargetPlan::SelfTarget, 0, 0),
+            AbilityEffectDefinition::Heal { .. } | AbilityEffectDefinition::AggravateMonsters => {
+                (MonsterAbilityTargetPlan::SelfTarget, 0, 0)
+            }
             AbilityEffectDefinition::Summon {
                 actor_kind_id,
                 count,
