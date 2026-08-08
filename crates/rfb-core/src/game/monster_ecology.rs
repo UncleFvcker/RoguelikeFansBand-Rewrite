@@ -12,6 +12,8 @@ const ORIGINAL_ESCORT_ATTEMPTS: u16 = 32;
 const ORIGINAL_MAX_REPRODUCERS: usize = 100;
 const ORIGINAL_MULTIPLY_ADJACENCY_FACTOR: u64 = 8;
 const ORIGINAL_MAX_SIGHT: u32 = 20;
+const SHADOWER_APPEARANCE_KIND_ID: &str = "demo.actor.shadower";
+const SHADOWER_ONE_IN: u64 = 333;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum OriginalGroupRole {
@@ -27,6 +29,29 @@ pub(super) struct OriginalGroupMember {
 }
 
 impl Game {
+    pub(super) fn maybe_apply_shadower_appearance(&mut self, actor: &mut Actor) {
+        let eligible = self
+            .content
+            .actor(&actor.kind_id)
+            .is_some_and(|definition| {
+                definition.level >= 10
+                    && !definition.tags.iter().any(|tag| tag == "unique")
+                    && definition.id != SHADOWER_APPEARANCE_KIND_ID
+            })
+            && self
+                .content
+                .actor(SHADOWER_APPEARANCE_KIND_ID)
+                .is_some_and(|definition| {
+                    definition
+                        .tags
+                        .iter()
+                        .any(|tag| tag == "shadower-appearance")
+                });
+        if eligible && self.rng.bounded(SHADOWER_ONE_IN) == 0 {
+            actor.appearance_kind_id = Some(SHADOWER_APPEARANCE_KIND_ID.to_owned());
+        }
+    }
+
     fn original_pack_spell_flags(&self, leader: &ActorDefinition) -> (bool, bool) {
         fn classify(effect: &AbilityEffectDefinition) -> (bool, bool) {
             match effect {
@@ -404,6 +429,7 @@ impl Game {
                 INITIAL_MONSTER_ENERGY_NEED,
                 actor_starts_alerted(&definition),
             );
+            self.maybe_apply_shadower_appearance(&mut leader);
             if let Some(behavior) = pack_behavior {
                 leader.pack = Some(MonsterPackIdentity {
                     id: pack_id.clone(),
@@ -428,6 +454,7 @@ impl Game {
                     INITIAL_MONSTER_ENERGY_NEED,
                     actor_starts_alerted(&member_definition),
                 );
+                self.maybe_apply_shadower_appearance(&mut actor);
                 actor.pack = Some(MonsterPackIdentity {
                     id: pack_id.clone(),
                     leader_id: leader_id.clone(),
@@ -1091,6 +1118,7 @@ impl Game {
             INITIAL_MONSTER_ENERGY_NEED,
             actor_starts_alerted(&definition),
         );
+        self.maybe_apply_shadower_appearance(&mut leader);
         if let Some(behavior) = pack_behavior {
             leader.pack = Some(MonsterPackIdentity {
                 id: pack_id.clone(),
@@ -1115,6 +1143,7 @@ impl Game {
                 INITIAL_MONSTER_ENERGY_NEED,
                 actor_starts_alerted(&member_definition),
             );
+            self.maybe_apply_shadower_appearance(&mut actor);
             actor.pack = Some(MonsterPackIdentity {
                 id: pack_id.clone(),
                 leader_id: leader_id.clone(),

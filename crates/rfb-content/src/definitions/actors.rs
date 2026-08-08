@@ -357,6 +357,9 @@ pub struct ActorDefinition {
     /// Whether the monster receives RFB's one-player-action spawn grace.
     #[serde(default)]
     pub force_sleep: bool,
+    /// Whether this monster starts on the player's side without being controlled.
+    #[serde(default)]
+    pub friendly: bool,
     #[serde(default)]
     pub monster_casting: Option<MonsterCastingDefinition>,
     #[serde(default)]

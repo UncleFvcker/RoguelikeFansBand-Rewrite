@@ -374,3 +374,5 @@ contract-v191 只增加内容层近战 effect 及对应运行时解释，不新�
 协议 1.142 为 `EquipmentPassiveDto` 恢复有权威消费者的 `see-invisible`，并为 `ActorSaveDto` 增加必填 `visibleInvisible`。该布尔值只保存当前已被看破的隐形 actor；实体与格子投影仍复用现有 `EntityDto` / `CellDto`，不可见目标不会泄露 ID。字段进入 state hash Schema v65，旧开发存档不兼容。完整边界见 [Contract v194](contract-v194-warrens-content-p10-movement-visibility-habitats.md)。
 
 协议 1.143 新增方向命令 `Ride`，并以 `PlayerDto.ridingActorId` 投影当前坐骑。`PlayerSaveDto.ridingActorId` 为必填可空字段，坐骑与玩家同格、随普通移动/传送/楼层切换流转且不独立行动；该字段进入 state hash Schema v66，旧开发存档不兼容。完整边界见 [Contract v195](contract-v195-warrens-content-p11-special-mechanics.md)。
+
+协议 1.144 为 `EntityFactionDto` 增加 `friendly`，并为 `ActorSaveDto` 增加省略式 `appearanceKindId`。友善 actor 仍自主行动，但不会被玩家侧 AI 视为敌人；外观种类只覆盖实体投影，真实 actor 种类继续承载属性、AI、掉落和死亡。外观字段进入 state hash Schema v67，旧开发存档不兼容。完整边界见 [Contract v196](contract-v196-warrens-content-p12-special-lifecycles.md)。

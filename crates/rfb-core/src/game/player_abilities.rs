@@ -687,7 +687,7 @@ impl Game {
     fn visible_hostile_exists(&self) -> bool {
         self.entities.iter().any(|entity| {
             entity.hp > 0
-                && !self.actor_is_player_aligned(entity)
+                && !self.actor_is_player_side(entity)
                 && self.entity_is_visible_to_player(entity)
         })
     }

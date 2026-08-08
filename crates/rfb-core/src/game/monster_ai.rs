@@ -279,6 +279,7 @@ impl Game {
             MonsterAbilityTargetPlan::Area { .. }
                 | MonsterAbilityTargetPlan::Beam { .. }
                 | MonsterAbilityTargetPlan::Cone { .. }
+                | MonsterAbilityTargetPlan::TerrainTransform { .. }
                 | MonsterAbilityTargetPlan::Summon { .. }
                 | MonsterAbilityTargetPlan::SummonCategory { .. }
         ) {
@@ -433,6 +434,14 @@ impl Game {
                     Some(target.kind_id().to_owned()),
                     Some(target.position()),
                     affected_positions.clone(),
+                ),
+                MonsterAbilityTargetPlan::TerrainTransform {
+                    target, positions, ..
+                } => (
+                    Some(target.entity_id().to_owned()),
+                    Some(target.kind_id().to_owned()),
+                    Some(target.position()),
+                    positions.clone(),
                 ),
                 MonsterAbilityTargetPlan::BlinkSelf { .. }
                 | MonsterAbilityTargetPlan::EscapeSelf { .. } => (

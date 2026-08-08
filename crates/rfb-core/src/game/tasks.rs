@@ -13,7 +13,7 @@ use crate::{
     error::CoreError,
     event::DomainEvent,
     save::{initial_item_fuel, position_from_content},
-    state::{Actor, ItemInstance, ItemLocation},
+    state::{ItemInstance, ItemLocation},
     stats::CharacterProgress,
 };
 
@@ -299,7 +299,7 @@ fn plan_task_event_reduction(
     task_states: &BTreeMap<String, TaskState>,
     current_floor_id: &str,
     items: &[ItemInstance],
-    entities: &[Actor],
+    clear_floor_completed: bool,
     actor_deaths: &[ActorDeathRecord],
     events: &[DomainEvent],
 ) -> Result<Option<TaskProgressPlan>, CoreError> {
@@ -309,11 +309,7 @@ fn plan_task_event_reduction(
         return Ok(None);
     };
     let increment = match objective.kind {
-        TaskObjectiveKind::ClearFloor => {
-            (entities
-                .iter()
-                .all(|entity| entity.hp <= 0 || entity.controller_id.is_some())) as u32
-        }
+        TaskObjectiveKind::ClearFloor => clear_floor_completed as u32,
         TaskObjectiveKind::CollectItem => events.iter().any(|event| {
             matches!(event, DomainEvent::ItemPickedUp { .. })
                 && objective.item_instance_id.as_ref().is_some_and(|id| {
@@ -876,6 +872,10 @@ impl Game {
         &mut self,
         events: &mut Vec<DomainEvent>,
     ) -> Result<(), CoreError> {
+        let clear_floor_completed = self
+            .entities
+            .iter()
+            .all(|entity| entity.hp <= 0 || self.actor_is_player_side(entity));
         let (plan, completion_exit) = {
             let world = self
                 .content
@@ -886,7 +886,7 @@ impl Game {
                 &self.task_states,
                 &self.current_floor_id,
                 &self.items,
-                &self.entities,
+                clear_floor_completed,
                 &self.command_actor_deaths,
                 events,
             )?;

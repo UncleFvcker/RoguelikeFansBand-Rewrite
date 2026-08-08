@@ -1,0 +1,29 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "attack": 1,
+  "damageDice": 1,
+  "damageSides": 1,
+  "damageType": "physical",
+  "defense": 0,
+  "descriptionKey": "actor-demo-shadower-description",
+  "experienceValue": 0,
+  "formatVersion": 1,
+  "glyph": "N",
+  "hitPointDice": {
+    "dice": 1,
+    "sides": 1
+  },
+  "id": "demo.actor.shadower",
+  "level": 1,
+  "maxHp": 1,
+  "meleeRoutine": {
+    "blows": []
+  },
+  "nameKey": "actor-demo-shadower-name",
+  "role": "monster",
+  "speed": 110,
+  "tags": [
+    "shadower-appearance",
+    "warrens"
+  ]
+}

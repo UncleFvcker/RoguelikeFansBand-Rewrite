@@ -759,6 +759,9 @@ pub(super) fn validate_abilities(
                     .modes
                     .contains(&AbilityTargetModeDefinition::SelfTarget)
                 && ability.target.requires_line_of_effect;
+            let position_target = ability.target.modes.as_slice()
+                == [AbilityTargetModeDefinition::Position]
+                && ability.target.requires_line_of_effect;
             let supported = match &ability.effect {
                 AbilityEffectDefinition::Damage { .. }
                 | AbilityEffectDefinition::AreaDamage { .. }
@@ -785,6 +788,7 @@ pub(super) fn validate_abilities(
                 AbilityEffectDefinition::DrainLife { .. }
                 | AbilityEffectDefinition::Genocide { .. } => projectile_target,
                 AbilityEffectDefinition::AnimateDead { .. } => self_target,
+                AbilityEffectDefinition::TransformTerrain { .. } => position_target,
                 AbilityEffectDefinition::Sequence { effects } => {
                     (self_target
                         && effects.iter().all(|effect| {

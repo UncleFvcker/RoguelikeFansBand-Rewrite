@@ -604,6 +604,8 @@ P30“首个非 Mana 职业资源”已由 contract-v90 完成：节奏资源按
 
 **浅层怪物 P11 进展（2026-08）**：contract-v195 以窄字段和既有战斗路径接入 `KILL_BODY`、`RANGED_MELEE`、`RIDING` 与 `SILVER`。强者可攻击挡路弱者，两格近战保留原版形状和干净线路；骑乘完成命令、移动域、速度、同格、楼层、死亡与存档闭环，绵羊保留三条拒绝彩蛋；银质只记录事实。新增 7 条严格同步记录，正式浅层 actor 达 155、严格同步达 123；协议 1.143，demo 1.190.0，state hash Schema v66，内置 hash 为 `72e709d0f66adba524769d31809d1747f73daea7d5aeff1ccaf5744531f73f1b`。完整边界见 [Contract v195](contract-v195-warrens-content-p11-special-mechanics.md)。
 
+**浅层怪物 P12 进展（2026-08）**：contract-v196 复用现有阵营、AI、地形转换和保存路径，接入 `FRIENDLY` 娜美与怪物 `TRAPS`；Shadower 只按 `1/333` 覆盖 10 级以上非 Unique 普通分配怪物的外观，真实种类和行为保持不变。板栗崽进入普通浅层分配，5 条 `DEPRECATED` 旧索引绑定到活跃同名替代。正式浅层 actor 达 158、严格同步达 126；协议 1.144，demo 1.191.0，state hash Schema v67，内置 hash 为 `c3440aa696805626dcde6222cc058bcb12b7b0f8a9213fd4f2ff8f7d5f28fdea`。完整边界见 [Contract v196](contract-v196-warrens-content-p12-special-lifecycles.md)。
+
 ## 9. 内容迁移策略
 
 ### 9.1 当前阶段

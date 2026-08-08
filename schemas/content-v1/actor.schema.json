@@ -1178,6 +1178,11 @@
       "minimum": 0,
       "type": "integer"
     },
+    "friendly": {
+      "default": false,
+      "description": "Whether this monster starts on the player's side without being controlled.",
+      "type": "boolean"
+    },
     "glyph": {
       "type": "string"
     },

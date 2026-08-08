@@ -33,7 +33,7 @@
       "turn": 1,
       "worldTick": 10,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 16,
+      "rngDrawCounter": 12,
       "floorId": "demo.floor.surface",
       "playerPosition": {
         "x": 3,
@@ -207,9 +207,9 @@
             "x": 2,
             "y": 2
           },
-          "hp": 10,
-          "speed": 100,
-          "energyNeed": 50,
+          "hp": 4,
+          "speed": 110,
+          "energyNeed": 100,
           "faction": "player",
           "controllerId": "demo.actor.player.1"
         },
@@ -220,7 +220,7 @@
             "y": 2
           },
           "hp": 3,
-          "speed": 120,
+          "speed": 110,
           "energyNeed": 100,
           "faction": "player",
           "controllerId": "demo.actor.player.1"
@@ -319,7 +319,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "632d1f88a301275e7cb9430ed24fb6853481a975c91d1085a03b7ea853ea9140"
+      "stateHash": "ae7d7afa882beee0322e7d2256bd5f8f36f4bd28d5f423e3a8bf3126fa5a5dfe"
     },
     "events": [
       {
@@ -358,9 +358,9 @@
             "hostile": false,
             "group": true,
             "summonedKindIds": [
-              "demo.actor.large-white-snake",
-              "demo.actor.insect-swarm",
-              "demo.actor.blinking-dot"
+              "demo.actor.grid-bug",
+              "demo.actor.frost-wisp",
+              "demo.actor.grey-mold"
             ]
           }
         }
@@ -380,6 +380,6 @@
         "y": 2
       }
     ],
-    "saveRoundTripStateHash": "632d1f88a301275e7cb9430ed24fb6853481a975c91d1085a03b7ea853ea9140"
+    "saveRoundTripStateHash": "ae7d7afa882beee0322e7d2256bd5f8f36f4bd28d5f423e3a8bf3126fa5a5dfe"
   }
 }

@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.143";
+pub const PROTOCOL_VERSION: &str = "1.144";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -2085,6 +2085,7 @@ pub enum EntityFactionDto {
     #[default]
     Hostile,
     Player,
+    Friendly,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -3010,6 +3011,8 @@ pub struct SkillProgressSaveDto {
 pub struct ActorSaveDto {
     pub id: String,
     pub kind_id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub appearance_kind_id: Option<String>,
     pub position: Position,
     pub hp: i32,
     #[serde(default)]

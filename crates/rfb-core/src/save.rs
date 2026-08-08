@@ -74,6 +74,7 @@ pub(crate) fn actor_from_spawn(
     Actor {
         id: id.to_owned(),
         kind_id: kind_id.to_owned(),
+        appearance_kind_id: None,
         position: position_from_content(position),
         hp: max_hp,
         max_hp,
@@ -104,6 +105,7 @@ pub(crate) fn actor_from_runtime_spawn(
     Actor {
         id: id.to_owned(),
         kind_id: kind_id.to_owned(),
+        appearance_kind_id: None,
         position,
         hp: max_hp,
         max_hp,
@@ -147,6 +149,7 @@ pub(crate) fn actor_from_player(
     Ok(Actor {
         id: player.id,
         kind_id: player.kind_id,
+        appearance_kind_id: None,
         position: player.position,
         hp: player.hp,
         max_hp: definition.max_hp,
@@ -190,6 +193,20 @@ pub(crate) fn actor_from_entity(
     let definition = content
         .actor(&entity.kind_id)
         .ok_or_else(|| CoreError::UnknownActor(entity.kind_id.clone()))?;
+    if let Some(appearance_kind_id) = entity.appearance_kind_id.as_deref() {
+        let appearance = content
+            .actor(appearance_kind_id)
+            .ok_or_else(|| CoreError::UnknownActor(appearance_kind_id.to_owned()))?;
+        if !appearance
+            .tags
+            .iter()
+            .any(|tag| tag == "shadower-appearance")
+            || definition.level < 10
+            || definition.tags.iter().any(|tag| tag == "unique")
+        {
+            return Err(CoreError::InvalidSave("entity appearance is invalid"));
+        }
+    }
     if !actor_max_hp_is_valid(definition, entity.max_hp) {
         return Err(CoreError::InvalidSave("entity base stats are invalid"));
     }
@@ -203,6 +220,7 @@ pub(crate) fn actor_from_entity(
     Ok(Actor {
         id: entity.id,
         kind_id: entity.kind_id,
+        appearance_kind_id: entity.appearance_kind_id,
         position: entity.position,
         hp: entity.hp,
         max_hp: entity.max_hp,
@@ -553,6 +571,7 @@ pub(crate) fn actors_to_save(entities: &[Actor]) -> Vec<ActorSaveDto> {
         .map(|entity| ActorSaveDto {
             id: entity.id.clone(),
             kind_id: entity.kind_id.clone(),
+            appearance_kind_id: entity.appearance_kind_id.clone(),
             position: entity.position,
             hp: entity.hp,
             max_hp: entity.max_hp,

@@ -3372,7 +3372,8 @@
       "type": "string",
       "enum": [
         "hostile",
-        "player"
+        "player",
+        "friendly"
       ]
     },
     "EquipmentBonusesDto": {

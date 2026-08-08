@@ -409,7 +409,10 @@ impl Game {
                 let stats = self.actor_derived_stats(entity, definition, false);
                 EntityDto {
                     id: entity.id.clone(),
-                    kind_id: entity.kind_id.clone(),
+                    kind_id: entity
+                        .appearance_kind_id
+                        .clone()
+                        .unwrap_or_else(|| entity.kind_id.clone()),
                     position: entity.position,
                     hp: entity.hp,
                     max_hp: entity.max_hp,
@@ -453,6 +456,8 @@ impl Game {
                         .collect(),
                     faction: if self.actor_is_player_aligned(entity) {
                         EntityFactionDto::Player
+                    } else if self.actor_is_friendly(entity) {
+                        EntityFactionDto::Friendly
                     } else {
                         EntityFactionDto::Hostile
                     },

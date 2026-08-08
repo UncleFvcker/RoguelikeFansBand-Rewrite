@@ -57,7 +57,16 @@ fn demo_drop_theme_table_id(theme: &str) -> Option<&'static str> {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct DemoMonsterSelection {
     schema_version: u16,
+    #[serde(default)]
+    deprecated_replacements: Vec<DemoDeprecatedMonsterReplacement>,
     monsters: Vec<DemoMonsterSelectionEntry>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct DemoDeprecatedMonsterReplacement {
+    deprecated_source_index: u32,
+    replacement_source_index: u32,
 }
 
 #[derive(Debug, Deserialize)]
@@ -6144,6 +6153,8 @@ fn demo_monster_flag_is_handled(flag: &str) -> bool {
                 | "RANGED_MELEE"
                 | "RIDING"
                 | "SILVER"
+                | "FRIENDLY"
+                | "KAGE"
                 | "OPEN_DOOR"
                 | "BASH_DOOR"
                 | "DROP_CORPSE"
@@ -6234,13 +6245,21 @@ fn demo_monster_json(
         if POSSESSOR_ONLY_SPELLS.contains(&base_token) {
             continue;
         }
-        let ability_id = map_spell_token(
-            spell,
-            level,
-            breath_radius,
-            &format!("demo.actor.{}", selection.id),
-            abilities,
-        )
+        let ability_id = if base_token == "TRAPS" {
+            let id = "rfb-legacy.ability.traps".to_owned();
+            abilities
+                .entry(id.clone())
+                .or_insert_with(demo_traps_ability);
+            Some(id)
+        } else {
+            map_spell_token(
+                spell,
+                level,
+                breath_radius,
+                &format!("demo.actor.{}", selection.id),
+                abilities,
+            )
+        }
         .ok_or_else(|| {
             LegacyImportError::InvalidDemoMonsterSelection(format!(
                 "{} has unsupported monster spell {spell}",
@@ -6271,7 +6290,12 @@ fn demo_monster_json(
         )));
     }
     let primary_blow = entry.blows.first();
-    if primary_blow.is_none() && !entry.flags.iter().any(|flag| flag == "NEVER_BLOW") {
+    if primary_blow.is_none()
+        && !entry
+            .flags
+            .iter()
+            .any(|flag| matches!(flag.as_str(), "NEVER_BLOW" | "KAGE"))
+    {
         return Err(LegacyImportError::InvalidDemoMonsterSelection(format!(
             "{} has no melee routine and is not marked NEVER_BLOW",
             selection.id
@@ -6328,8 +6352,21 @@ fn demo_monster_json(
         .as_object_mut()
         .expect("actor JSON must be an object")
         .remove("corpseItemKindId");
+    if entry.flags.iter().any(|flag| flag == "FRIENDLY") {
+        value["friendly"] = serde_json::json!(true);
+    }
+    if entry.flags.iter().any(|flag| flag == "KAGE") {
+        value
+            .as_object_mut()
+            .expect("actor JSON must be an object")
+            .remove("allocation");
+        value["meleeRoutine"] = serde_json::json!({ "blows": [] });
+    }
 
     let mut tags = selection.tags.iter().cloned().collect::<BTreeSet<_>>();
+    if entry.flags.iter().any(|flag| flag == "KAGE") {
+        tags.insert("shadower-appearance".to_owned());
+    }
     for (flag, tag) in [
         ("ANIMAL", "animal"),
         ("EVIL", "evil"),
@@ -6570,6 +6607,28 @@ fn heal_ability(amount: u32) -> serde_json::Value {
         "target": { "modes": ["self"], "range": 0, "requiresLineOfEffect": false },
         "effect": { "type": "heal", "amount": amount },
         "tags": ["legacy-import", "heal"],
+    })
+}
+
+fn demo_traps_ability() -> serde_json::Value {
+    serde_json::json!({
+        "$schema": format!("{SCHEMA_BASE}/ability.schema.json"),
+        "formatVersion": 1,
+        "id": "rfb-legacy.ability.traps",
+        "nameKey": "ability-legacy-traps-name",
+        "descriptionKey": "ability-legacy-traps-description",
+        "target": {
+            "modes": ["position"],
+            "range": 6,
+            "requiresLineOfEffect": true
+        },
+        "effect": {
+            "type": "transform-terrain",
+            "sourceTerrainIds": ["demo.terrain.floor"],
+            "targetTerrainId": "demo.terrain.warren-snare",
+            "radius": 1
+        },
+        "tags": ["legacy-import", "utility"]
     })
 }
 
@@ -8602,6 +8661,49 @@ pub fn sync_demo_monsters(
         .filter(|entry| !entry.name.is_empty() && entry.name != "player" && entry.glyph.is_some())
         .map(|entry| (entry.index, entry))
         .collect::<BTreeMap<_, _>>();
+    let selected_source_indexes = selection
+        .monsters
+        .iter()
+        .map(|monster| monster.source_index)
+        .collect::<BTreeSet<_>>();
+    let mut deprecated_indexes = BTreeSet::new();
+    let mut replacement_indexes = BTreeSet::new();
+    for replacement in &selection.deprecated_replacements {
+        if !deprecated_indexes.insert(replacement.deprecated_source_index)
+            || !replacement_indexes.insert(replacement.replacement_source_index)
+        {
+            return Err(LegacyImportError::InvalidDemoMonsterSelection(
+                "deprecated replacement indexes must be unique".to_owned(),
+            ));
+        }
+        let deprecated = by_index
+            .get(&replacement.deprecated_source_index)
+            .ok_or_else(|| {
+                LegacyImportError::InvalidDemoMonsterSelection(format!(
+                    "unknown deprecated source index {}",
+                    replacement.deprecated_source_index
+                ))
+            })?;
+        let active = by_index
+            .get(&replacement.replacement_source_index)
+            .ok_or_else(|| {
+                LegacyImportError::InvalidDemoMonsterSelection(format!(
+                    "unknown replacement source index {}",
+                    replacement.replacement_source_index
+                ))
+            })?;
+        if !deprecated.flags.iter().any(|flag| flag == "DEPRECATED")
+            || active.flags.iter().any(|flag| flag == "DEPRECATED")
+            || kebab(&deprecated.name) != kebab(&active.name)
+            || selected_source_indexes.contains(&replacement.deprecated_source_index)
+            || !selected_source_indexes.contains(&replacement.replacement_source_index)
+        {
+            return Err(LegacyImportError::InvalidDemoMonsterSelection(format!(
+                "invalid deprecated replacement {} -> {}",
+                replacement.deprecated_source_index, replacement.replacement_source_index
+            )));
+        }
+    }
     let mut selected_ids = BTreeSet::new();
     let mut selected_indexes = BTreeSet::new();
     let mut files = Vec::with_capacity(selection.monsters.len());
@@ -8625,6 +8727,12 @@ pub fn sync_demo_monsters(
                 selected.source_index
             ))
         })?;
+        if entry.flags.iter().any(|flag| flag == "DEPRECATED") {
+            return Err(LegacyImportError::InvalidDemoMonsterSelection(format!(
+                "selected source index {} is deprecated",
+                selected.source_index
+            )));
+        }
         let actual_id = kebab(&entry.name);
         let expected_source_id = selected.expected_source_id();
         if actual_id != expected_source_id {

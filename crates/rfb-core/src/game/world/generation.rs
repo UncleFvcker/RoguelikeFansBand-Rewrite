@@ -1851,6 +1851,7 @@ impl Game {
                     let leader_id = format!("{}.encounter.{}", definition.id, ordinal + 1);
                     let pack_id = format!("{leader_id}.pack");
                     let mut leader = self.generated_actor(leader_id.clone(), &kind_id, position);
+                    self.maybe_apply_shadower_appearance(&mut leader);
                     if let Some(behavior) = pack_behavior {
                         leader.pack = Some(MonsterPackIdentity {
                             id: pack_id.clone(),
@@ -1867,6 +1868,7 @@ impl Game {
                             &member.kind_id,
                             member.position,
                         );
+                        self.maybe_apply_shadower_appearance(&mut actor);
                         actor.pack = Some(MonsterPackIdentity {
                             id: pack_id.clone(),
                             leader_id: leader_id.clone(),

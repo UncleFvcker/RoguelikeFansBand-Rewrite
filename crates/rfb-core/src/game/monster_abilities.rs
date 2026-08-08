@@ -166,7 +166,7 @@ impl Game {
             .find(|resolution| resolution.target_entity_id == target.entity_id())
             .map(|resolution| resolution.effects.clone())
             .unwrap_or_default();
-        self.remove_defeated_player_summons(
+        self.remove_defeated_monster_targets(
             targets
                 .iter()
                 .map(|target| target.target_entity_id.as_str()),
@@ -245,7 +245,7 @@ impl Game {
             .find(|resolution| resolution.target_entity_id == target.entity_id())
             .map(|resolution| resolution.effects.clone())
             .unwrap_or_default();
-        self.remove_defeated_player_summons(
+        self.remove_defeated_monster_targets(
             targets
                 .iter()
                 .map(|target| target.target_entity_id.as_str()),
@@ -332,7 +332,7 @@ impl Game {
             .find(|resolution| resolution.target_entity_id == target.entity_id())
             .map(|resolution| resolution.effects.clone())
             .unwrap_or_default();
-        self.remove_defeated_player_summons(
+        self.remove_defeated_monster_targets(
             targets
                 .iter()
                 .map(|target| target.target_entity_id.as_str()),
@@ -505,7 +505,7 @@ impl Game {
                     target_position: target.position(),
                     effects: effects.clone(),
                 }];
-                self.remove_defeated_player_summons(
+                self.remove_defeated_monster_targets(
                     targets
                         .iter()
                         .map(|target| target.target_entity_id.as_str()),
@@ -550,6 +550,29 @@ impl Game {
                 changed,
                 removed_entities,
             ),
+            MonsterAbilityTargetPlan::TerrainTransform {
+                target,
+                trace,
+                center,
+                positions,
+            } => {
+                self.resolve_terrain_transform_effect(
+                    &plan.ability,
+                    *center,
+                    positions.clone(),
+                    events,
+                    changed,
+                );
+                MonsterAbilityPlanResolution {
+                    target_entity_id: target.entity_id().to_owned(),
+                    target_kind_id: target.kind_id().to_owned(),
+                    affected_positions: positions.clone(),
+                    summon: None,
+                    effects: Vec::new(),
+                    targets: Vec::new(),
+                    trace: Some(trace.clone()),
+                }
+            }
             MonsterAbilityTargetPlan::Summon { .. } => {
                 self.resolve_monster_fixed_summon_plan(source_index, plan, changed)
             }
@@ -841,7 +864,7 @@ impl Game {
         targets
     }
 
-    fn remove_defeated_player_summons<'a>(
+    fn remove_defeated_monster_targets<'a>(
         &mut self,
         target_entity_ids: impl Iterator<Item = &'a str>,
         events: &mut Vec<DomainEvent>,
@@ -852,11 +875,7 @@ impl Game {
             .filter_map(|entity_id| {
                 self.entities
                     .iter()
-                    .position(|entity| {
-                        entity.id == entity_id
-                            && entity.hp <= 0
-                            && self.actor_is_player_aligned(entity)
-                    })
+                    .position(|entity| entity.id == entity_id && entity.hp <= 0)
                     .map(|index| self.entities[index].id.clone())
             })
             .collect::<Vec<_>>();
@@ -877,7 +896,7 @@ impl Game {
                 changed,
                 removed_entities,
             )
-            .expect("defeated player summon death must resolve");
+            .expect("defeated monster target death must resolve");
         }
     }
 
@@ -1514,7 +1533,8 @@ impl Game {
             | AbilityEffectDefinition::ApplyStatus { .. }
             | AbilityEffectDefinition::RemoveStatus { .. }
             | AbilityEffectDefinition::Sequence { .. }
-            | AbilityEffectDefinition::TeleportTarget => {
+            | AbilityEffectDefinition::TeleportTarget
+            | AbilityEffectDefinition::TransformTerrain { .. } => {
                 let mut first_rejection = None;
                 let mut selected = None;
                 for hostile_target in self.monster_hostile_targets(index) {
@@ -1563,6 +1583,38 @@ impl Game {
         let origin = self.entities[source_index].position;
         let target_position = target.position();
         let (plan, affected_positions) = match &ability.effect {
+            AbilityEffectDefinition::TransformTerrain {
+                source_terrain_ids,
+                target_terrain_id,
+                radius,
+            } => {
+                let trace =
+                    self.monster_projectile_trace(source_index, ability, &target, false, false)?;
+                let positions = self
+                    .terrain_transform_positions_from(
+                        ability,
+                        Some(origin),
+                        target_position,
+                        source_terrain_ids,
+                        target_terrain_id,
+                        *radius,
+                    )
+                    .filter(|positions| !positions.is_empty())
+                    .ok_or(MonsterAbilityPlanRejection {
+                        reason: MonsterAbilityRejectionReasonDto::NoSpace,
+                        enemy_target_count: 0,
+                        friendly_risk_count: 0,
+                    })?;
+                (
+                    MonsterAbilityTargetPlan::TerrainTransform {
+                        target,
+                        trace,
+                        center: target_position,
+                        positions: positions.clone(),
+                    },
+                    positions,
+                )
+            }
             AbilityEffectDefinition::AreaDamage { radius, .. } => {
                 let trace =
                     self.monster_projectile_trace(source_index, ability, &target, false, false)?;
@@ -1772,9 +1824,11 @@ impl Game {
         source_index: usize,
         affected_positions: &[Position],
     ) -> (u16, u16) {
-        let mut enemies =
-            u16::from(affected_positions.contains(&self.player.position) && !self.player_is_dead());
-        let mut friendlies = 0_u16;
+        let source_is_player_side = self.entity_is_player_side(source_index);
+        let player_is_affected =
+            affected_positions.contains(&self.player.position) && !self.player_is_dead();
+        let mut enemies = u16::from(player_is_affected && !source_is_player_side);
+        let mut friendlies = u16::from(player_is_affected && source_is_player_side);
         for (index, entity) in self.entities.iter().enumerate() {
             if index == source_index
                 || entity.hp <= 0
@@ -1782,10 +1836,10 @@ impl Game {
             {
                 continue;
             }
-            if self.entity_is_player_aligned(index) {
-                enemies = enemies.saturating_add(1);
-            } else {
+            if self.entity_is_player_side(index) == source_is_player_side {
                 friendlies = friendlies.saturating_add(1);
+            } else {
+                enemies = enemies.saturating_add(1);
             }
         }
         (enemies, friendlies)
@@ -1846,7 +1900,8 @@ impl Game {
                                 && entity.position == *position
                         })
                 {
-                    let enemy = self.entity_is_player_aligned(candidate_index);
+                    let enemy = self.entity_is_player_side(candidate_index)
+                        != self.entity_is_player_side(index);
                     return Err(MonsterAbilityPlanRejection {
                         reason: if enemy {
                             MonsterAbilityRejectionReasonDto::Blocked

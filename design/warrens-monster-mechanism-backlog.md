@@ -1,6 +1,6 @@
 # Warrens 怪物机制实现清单
 
-状态：由 contract-v171 的 Warrens 生态对照建立；contract-v173 已完成 W1-W6 与运行时自然补怪，contract-v174-v176 已完成 W7-W9，contract-v177-v180 已完成 W10-W13，contract-v182 已完成 W14 Pest Control 任务生态；contract-v183 开始分批接入正式浅层内容，contract-v184 完成 `NEVER_MOVE` 与怪物 `BLINK` 绑定，contract-v185 接入第二批 14 只 2–3 级怪物，contract-v186 接入第三批 13 只 4–5 级怪物，contract-v187 接入首批正式施法怪物与简单 Unique，contract-v188 接入 10 只机制完备的 6–7 级怪物，contract-v189 接入 12 只 8–9 级怪物并完成浅层普查收口，contract-v190 完成出生宽限与五类职业掉落并再接入 13 只怪物，contract-v191 完成六类非伤害近战并再接入 10 只怪物，contract-v192 完成无近战怪物与 `SHRIEK`，contract-v193 完成地面拾物与四类近战偷窃/消耗事务，contract-v194 完成穿墙、水生、隐形与 Outpost 地表 habitat 分配，contract-v195 完成强者破体、两格近战、骑乘闭环与银质事实记录。
+状态：由 contract-v171 的 Warrens 生态对照建立；contract-v173 已完成 W1-W6 与运行时自然补怪，contract-v174-v176 已完成 W7-W9，contract-v177-v180 已完成 W10-W13，contract-v182 已完成 W14 Pest Control 任务生态；contract-v183 开始分批接入正式浅层内容，contract-v184 完成 `NEVER_MOVE` 与怪物 `BLINK` 绑定，contract-v185 接入第二批 14 只 2–3 级怪物，contract-v186 接入第三批 13 只 4–5 级怪物，contract-v187 接入首批正式施法怪物与简单 Unique，contract-v188 接入 10 只机制完备的 6–7 级怪物，contract-v189 接入 12 只 8–9 级怪物并完成浅层普查收口，contract-v190 完成出生宽限与五类职业掉落并再接入 13 只怪物，contract-v191 完成六类非伤害近战并再接入 10 只怪物，contract-v192 完成无近战怪物与 `SHRIEK`，contract-v193 完成地面拾物与四类近战偷窃/消耗事务，contract-v194 完成穿墙、水生、隐形与 Outpost 地表 habitat 分配，contract-v195 完成强者破体、两格近战、骑乘闭环与银质事实记录，contract-v196 完成友善娜美、怪物陷阱、Shadower 外观覆盖与废弃索引绑定。
 
 当前权威原版来源为 `master` Git ref 的 commit `efd63661302866038f58d8cd2553b23e6af3bf9d`。Warrens 在 `d_info.txt` 中为深度 1–9，主字形集合为 `kKyYrRfFcCbB`，并带有 `MONSTER_DIV_16`。本清单只记录该来源明确要求、而当前重写版还不能完整表达的机制，不把标签或近似行为标成已完成规则。
 
@@ -153,3 +153,10 @@ contract-v195 将 `KILL_BODY` 接入寻路与 actor 对 actor 近战，将
 考古学家、爬行银币、巨型鼻涕虫、马、难以驯服的马和绵羊进入严格同步，
 恰克波补上可骑乘事实。正式浅层 actor 增至 155 条、严格同步增至 123 条，
 剩余 18 条继续等待特殊召唤、主动陷阱/暗化和其他独立机制。
+
+contract-v196 将 `FRIENDLY` 接入现有阵营目标与清层判定，让航海士娜美
+自主攻击敌对怪物并复用既有治疗、偷窃和拾物；`TRAPS` 直接复用半径 1 的
+地形转换与兽穴陷阱。追踪者只作为 10 级以上非 Unique 普通分配怪物的
+`1/333` 外观覆盖，真实种类不变并随存档持久化；板栗崽进入普通浅层分配。
+正式浅层 actor 增至 158 条、严格同步增至 126 条。5 条 `DEPRECATED` 记录
+永久绑定到活跃同名替代索引，剩余 10 条活跃浅层记录不在本批扩张范围。

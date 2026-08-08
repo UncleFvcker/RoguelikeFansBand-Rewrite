@@ -465,7 +465,7 @@ impl Game {
             let distance = rfb_distance(origin, position);
             let nearby = distance < sight_radius.saturating_mul(2);
             let hostile_in_los = distance <= sight_radius
-                && !self.actor_is_player_aligned(&self.entities[index])
+                && !self.actor_is_player_side(&self.entities[index])
                 && has_line_of_sight(self, origin, position);
             if !nearby && !hostile_in_los {
                 continue;

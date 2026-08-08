@@ -187,7 +187,7 @@ pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 66;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 67;
 pub const WARRENS_JOURNEY_WORLD_ID: &str = "demo.world.warrens-journey";
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const VISIBILITY_RADIUS: i32 = 8;
@@ -350,6 +350,12 @@ enum MonsterAbilityTargetPlan {
         trace: ProjectileTrace,
         affected_positions: Vec<Position>,
     },
+    TerrainTransform {
+        target: MonsterHostileTarget,
+        trace: ProjectileTrace,
+        center: Position,
+        positions: Vec<Position>,
+    },
     Summon {
         positions: Vec<Position>,
     },
@@ -381,6 +387,7 @@ fn monster_plan_target(target: &MonsterAbilityTargetPlan) -> Option<&MonsterHost
         | MonsterAbilityTargetPlan::Area { target, .. }
         | MonsterAbilityTargetPlan::Beam { target, .. }
         | MonsterAbilityTargetPlan::Cone { target, .. }
+        | MonsterAbilityTargetPlan::TerrainTransform { target, .. }
         | MonsterAbilityTargetPlan::DragTarget { target, .. }
         | MonsterAbilityTargetPlan::BanishTarget { target, .. } => Some(target),
         MonsterAbilityTargetPlan::SelfTarget
@@ -1586,7 +1593,9 @@ impl Game {
                     .position(|entity| entity.position == target)
                 {
                     changed.insert(target);
-                    if self.player_fear_blocks_melee(index) {
+                    if self.actor_is_player_side(&self.entities[index]) {
+                        events.push(DomainEvent::MoveBlocked);
+                    } else if self.player_fear_blocks_melee(index) {
                         events.push(DomainEvent::PlayerFearBlocked {
                             status_kind_id: STATUS_FEAR.to_owned(),
                         });
@@ -2513,7 +2522,28 @@ impl Game {
         target_terrain_id: &str,
         radius: u8,
     ) -> Option<Vec<Position>> {
-        let origin = self.player.position;
+        self.terrain_transform_positions_from(
+            ability,
+            None,
+            center,
+            source_terrain_ids,
+            target_terrain_id,
+            radius,
+        )
+    }
+
+    fn terrain_transform_positions_from(
+        &self,
+        ability: &AbilityDefinition,
+        monster_origin: Option<Position>,
+        center: Position,
+        source_terrain_ids: &[String],
+        target_terrain_id: &str,
+        radius: u8,
+    ) -> Option<Vec<Position>> {
+        let (origin, require_visible) = monster_origin
+            .map(|origin| (origin, false))
+            .unwrap_or((self.player.position, true));
         if !ability
             .target
             .modes
@@ -2521,7 +2551,7 @@ impl Game {
             || self.index(center).is_none()
             || origin.x.abs_diff(center.x).max(origin.y.abs_diff(center.y))
                 > u32::from(ability.target.range)
-            || !self.is_visible(center)
+            || (require_visible && !self.is_visible(center))
             || (ability.target.requires_line_of_effect && !has_line_of_effect(self, origin, center))
         {
             return None;
@@ -2533,7 +2563,7 @@ impl Game {
             .iter()
             .filter(|entity| entity.hp > 0)
             .map(|entity| entity.position)
-            .chain(std::iter::once(origin))
+            .chain(std::iter::once(self.player.position))
             .chain(self.items.iter().filter_map(|item| match item.location {
                 ItemLocation::Ground(position) => Some(position),
                 ItemLocation::Inventory
@@ -2565,7 +2595,7 @@ impl Game {
                     || position.y >= max_y
                     || occupied.contains(&position)
                     || connections.contains(&position)
-                    || !self.is_visible(position)
+                    || (require_visible && !self.is_visible(position))
                     || !has_line_of_effect(self, center, position)
                 {
                     continue;

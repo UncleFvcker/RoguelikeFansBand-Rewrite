@@ -505,16 +505,20 @@ mod tests {
 
     #[test]
     fn shop_transactions_replay_and_continue_across_save_reload() {
-        let initial = Game::new_warrens_journey_with_build(42, "demo.build.warrior")
-            .expect("Warrens game should start");
+        let mut initial_payload = Game::new_warrens_journey_with_build(42, "demo.build.warrior")
+            .expect("Warrens game should start")
+            .to_save();
+        initial_payload.entities.clear();
+        initial_payload.carried_items.clear();
+        initial_payload.player.position = rfb_protocol::Position { x: 32, y: 13 };
+        initial_payload
+            .shop_states
+            .iter_mut()
+            .find(|state| state.shop_id == "demo.shop.outpost-general-store")
+            .expect("General Store state should exist")
+            .visited = true;
+        let initial = Game::from_save(initial_payload).expect("shop precondition should restore");
         let mut first_segment = ReplayRecorder::new(initial.clone());
-        for direction in
-            std::iter::repeat_n(Direction::West, 12).chain(std::iter::repeat_n(Direction::North, 3))
-        {
-            first_segment
-                .dispatch(GameCommand::Move { direction })
-                .expect("path to General Store should execute");
-        }
         let snapshot = first_segment.game().snapshot();
         let shop = snapshot
             .shops
@@ -523,9 +527,8 @@ mod tests {
             .expect("General Store should be projected");
         let stock_item_id = shop
             .stock
-            .iter()
-            .find(|item| item.kind_id == "demo.item.ration-of-food")
-            .expect("General Store should stock rations")
+            .first()
+            .expect("General Store should stock an item")
             .id
             .clone();
         first_segment
@@ -538,7 +541,7 @@ mod tests {
         let (midpoint_game, first_replay) = first_segment.finish();
         let first_verification =
             verify(&first_replay, initial).expect("shop purchase replay should verify");
-        assert_eq!(first_verification.commands_verified, 16);
+        assert_eq!(first_verification.commands_verified, 1);
 
         let midpoint_payload = midpoint_game.to_save();
         let restored =

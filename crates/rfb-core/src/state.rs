@@ -17,6 +17,7 @@ use crate::{effect::StatusInstance, resistance::ResistanceProfile};
 pub(crate) struct Actor {
     pub(crate) id: String,
     pub(crate) kind_id: String,
+    pub(crate) appearance_kind_id: Option<String>,
     pub(crate) position: Position,
     pub(crate) hp: i32,
     pub(crate) max_hp: i32,

@@ -301,7 +301,7 @@ impl Game {
             .filter(|entity| {
                 entity.hp > 0
                     && entity.id != self.entities[index].id
-                    && !self.actor_is_player_aligned(entity)
+                    && !self.actor_is_player_side(entity)
             })
             .map(|entity| {
                 (
@@ -409,10 +409,25 @@ impl Game {
                 .is_some_and(|summon| summon.owner_id == self.player.id)
     }
 
+    pub(super) fn actor_is_friendly(&self, actor: &Actor) -> bool {
+        self.content
+            .actor(&actor.kind_id)
+            .is_some_and(|definition| definition.friendly)
+    }
+
+    pub(super) fn actor_is_player_side(&self, actor: &Actor) -> bool {
+        self.actor_is_player_aligned(actor) || self.actor_is_friendly(actor)
+    }
+
+    pub(super) fn entity_is_player_side(&self, index: usize) -> bool {
+        self.actor_is_player_side(&self.entities[index])
+    }
+
     pub(super) fn monster_hostile_targets(&self, source_index: usize) -> Vec<MonsterHostileTarget> {
         let origin = self.entities[source_index].position;
+        let source_is_player_side = self.entity_is_player_side(source_index);
         let mut targets = Vec::new();
-        if !self.player_is_dead() {
+        if !source_is_player_side && !self.player_is_dead() {
             targets.push(MonsterHostileTarget::Player {
                 entity_id: self.player.id.clone(),
                 kind_id: self.player.kind_id.clone(),
@@ -424,7 +439,9 @@ impl Game {
                 .iter()
                 .enumerate()
                 .filter(|(index, entity)| {
-                    *index != source_index && entity.hp > 0 && self.entity_is_player_aligned(*index)
+                    *index != source_index
+                        && entity.hp > 0
+                        && self.entity_is_player_side(*index) != source_is_player_side
                 })
                 .map(|(_, entity)| MonsterHostileTarget::Summon {
                     entity_id: entity.id.clone(),

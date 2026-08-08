@@ -1,5 +1,12 @@
 {
   "schemaVersion": 1,
+  "deprecatedReplacements": [
+    { "deprecatedSourceIndex": 43, "replacementSourceIndex": 110 },
+    { "deprecatedSourceIndex": 46, "replacementSourceIndex": 93 },
+    { "deprecatedSourceIndex": 83, "replacementSourceIndex": 142 },
+    { "deprecatedSourceIndex": 97, "replacementSourceIndex": 147 },
+    { "deprecatedSourceIndex": 1053, "replacementSourceIndex": 1054 }
+  ],
   "monsters": [
     {
       "sourceIndex": 32,
@@ -742,6 +749,25 @@
       "id": "sheep",
       "tags": ["sheep", "warrens"],
       "omittedFlags": ["AUSSIE", "WEIRD_MIND"]
+    },
+    {
+      "sourceIndex": 924,
+      "id": "goomba",
+      "tags": ["mushroom", "warrens"],
+      "omittedFlags": ["NASTY_GLYPH", "WEIRD_MIND"]
+    },
+    {
+      "sourceIndex": 964,
+      "id": "shadower",
+      "tags": ["warrens"],
+      "omittedFlags": []
+    },
+    {
+      "sourceIndex": 1021,
+      "sourceId": "nami-the-mate",
+      "id": "nami-the-mate",
+      "tags": ["human", "warrens"],
+      "omittedFlags": ["CAN_SPEAK", "FEMALE"]
     }
   ]
 }

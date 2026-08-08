@@ -190,7 +190,7 @@ export type NutritionStateDto = "bloated" | "full" | "normal" | "hungry" | "weak
 
 export type PlayerDto = { id: string, kindId: string, position: Position, hp: number, maxHp: number, gold: number, nutrition: number, nutritionState: NutritionStateDto, speed: number, energyNeed: number, carriedWeightTenthsPound: number, carryCapacityTenthsPound: number, encumbranceSpeedPenalty: number, inventoryUsedSlots: number, inventorySlotCapacity: number, baseMaxHp: number, attack: number, baseAttack: number, defense: number, baseDefense: number, meleeSkill: number, armorClass: number, meleeDamage: DamageDiceDto, meleeProfile: AttackProfileDto, projectileProfile?: ProjectileProfileDto | null, isDead: boolean, equipmentModifiers: StatModifiersDto, statuses: Array<StatusDto>, confusingStrikeReady: boolean, resistances: Array<ResistanceDto>, progress?: PlayerProgressDto, build?: PlayerBuildDto | null, resources?: Array<ResourcePoolDto>, deviceRecharge?: DeviceRechargeDto | null, abilityLearning?: AbilityLearningDto | null, abilities?: Array<AbilityDto>, summonCommand?: SummonCommandDto, recall?: RecallStateDto | null, ridingActorId?: string | null, };
 
-export type EntityFactionDto = "hostile" | "player";
+export type EntityFactionDto = "hostile" | "player" | "friendly";
 
 export type SummonDto = { ownerId: string, sourceAbilityId: string, remainingTurns: number, };
 

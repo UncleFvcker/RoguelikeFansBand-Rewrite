@@ -311,9 +311,7 @@ impl Game {
                 AbilityEffectDefinition::TransformTerrain { .. },
                 AbilityTargetPlan::TerrainTransform { center, positions },
             ) => {
-                self.resolve_player_terrain_transform_effect(
-                    &ability, center, positions, events, changed,
-                );
+                self.resolve_terrain_transform_effect(&ability, center, positions, events, changed);
             }
             (
                 AbilityEffectDefinition::ApplyStatus { .. }
@@ -2285,7 +2283,7 @@ impl Game {
         });
     }
 
-    pub(super) fn resolve_player_terrain_transform_effect(
+    pub(super) fn resolve_terrain_transform_effect(
         &mut self,
         ability: &AbilityDefinition,
         center: Position,

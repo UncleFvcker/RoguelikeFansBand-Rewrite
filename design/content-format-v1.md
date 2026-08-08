@@ -270,6 +270,8 @@ contract-v81 以 1.73.0 增加 `teleport` 能力效果和 Echo Step，固定 pos
 
 contract-v82 以 1.74.0 增加 `summon` 能力效果、Echo Companion 与友方召唤 actor；空间验证、稳定实例 ID、所有者/阵营、玩家回合生命周期和到期移除由核心定义，召唤身份进入 `ActorSaveDto.summon`，state hash 升至 Schema v35。
 
+contract-v196 以 1.191.0 为 actor 增加默认 false 的 `friendly`，表示自主的玩家侧怪物而不是控制或召唤所有权；怪物 `TRAPS` 继续使用既有 `transform-terrain` 能力程序。追踪者以 `shadower-appearance` 标签成为非分配外观定义，外观概率与真实身份保存由核心负责。
+
 contract-v83 以 1.75.0 增加 `detect` 能力效果、Echo Pulse 与 Echo Sight；类别/半径、FOV 与隐藏投影筛选、稳定结果顺序、瞬时/持久知识边界由核心定义，持久结果复用 `revealedTerrain`，state hash 升至 Schema v36。
 
 contract-v84 以 1.76.0 增加 `transform-terrain` 能力效果、Echo Delving 与 Echo Rampart；来源/目标 terrain 集、范围、FOV/line of effect、占用格、连接/边界保护和原子写入由核心定义，地形继续复用既有 save/state hash 字段。
