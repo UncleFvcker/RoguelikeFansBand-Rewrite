@@ -403,8 +403,8 @@
         {
           "id": "demo.floor.resonance-depth-6.region.demo.region.resonance-grotto.encounter.1.escort.1",
           "position": {
-            "x": 4,
-            "y": 3
+            "x": 2,
+            "y": 2
           },
           "hp": 3,
           "speed": 110,
@@ -419,8 +419,8 @@
         {
           "id": "demo.floor.resonance-depth-6.region.demo.region.resonance-grotto.encounter.1.friend.1",
           "position": {
-            "x": 3,
-            "y": 4
+            "x": 4,
+            "y": 2
           },
           "hp": 5,
           "speed": 110,
@@ -451,8 +451,8 @@
         {
           "id": "demo.floor.resonance-depth-6.region.demo.region.resonance-grotto.encounter.plain.1",
           "position": {
-            "x": 2,
-            "y": 2
+            "x": 3,
+            "y": 4
           },
           "hp": 3,
           "speed": 110,
@@ -530,7 +530,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "b6de9b1916fcd19f0dbf0065cf64a1b5f5938c566ed354336a61fa25321eee30"
+      "stateHash": "0cc291922a886fcf444a42ce3230f4e885cdde3c0a80a24deffd1936ad915051"
     },
     "events": [
       {
@@ -860,14 +860,14 @@
         "messageKey": "combat-monster-hit",
         "args": {
           "damage": "0",
-          "source": "demo.actor.spore-shepherd"
+          "source": "demo.actor.venom-spore"
         },
         "outcome": {
           "type": "damage",
           "resolution": {
-            "rawDamage": 2,
+            "rawDamage": 3,
             "armorReduction": 0,
-            "resistanceAdjustment": 2,
+            "resistanceAdjustment": 3,
             "finalDamage": 0,
             "damageType": "poison",
             "resistance": "immune"
@@ -875,22 +875,17 @@
         }
       },
       {
-        "kind": "combat.monster-hit",
-        "messageKey": "combat-monster-hit",
+        "kind": "combat.monster-miss",
+        "messageKey": "combat-monster-miss",
         "args": {
-          "damage": "0",
+          "source": "demo.actor.spore-shepherd"
+        }
+      },
+      {
+        "kind": "combat.monster-miss",
+        "messageKey": "combat-monster-miss",
+        "args": {
           "source": "demo.actor.venom-spore"
-        },
-        "outcome": {
-          "type": "damage",
-          "resolution": {
-            "rawDamage": 2,
-            "armorReduction": 0,
-            "resistanceAdjustment": 2,
-            "finalDamage": 0,
-            "damageType": "poison",
-            "resistance": "immune"
-          }
         }
       },
       {
@@ -930,6 +925,25 @@
         "outcome": {
           "type": "damage",
           "resolution": {
+            "rawDamage": 2,
+            "armorReduction": 1,
+            "resistanceAdjustment": 1,
+            "finalDamage": 0,
+            "damageType": "physical",
+            "resistance": "immune"
+          }
+        }
+      },
+      {
+        "kind": "combat.monster-hit",
+        "messageKey": "combat-monster-hit",
+        "args": {
+          "damage": "0",
+          "source": "demo.actor.chorus-captain"
+        },
+        "outcome": {
+          "type": "damage",
+          "resolution": {
             "rawDamage": 1,
             "armorReduction": 1,
             "resistanceAdjustment": 0,
@@ -940,18 +954,11 @@
         }
       },
       {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "source": "demo.actor.chorus-captain"
-        }
-      },
-      {
         "kind": "combat.monster-hit",
         "messageKey": "combat-monster-hit",
         "args": {
           "damage": "0",
-          "source": "demo.actor.venom-spore"
+          "source": "demo.actor.storm-spark"
         },
         "outcome": {
           "type": "damage",
@@ -960,7 +967,7 @@
             "armorReduction": 0,
             "resistanceAdjustment": 3,
             "finalDamage": 0,
-            "damageType": "poison",
+            "damageType": "electricity",
             "resistance": "immune"
           }
         }
@@ -980,9 +987,9 @@
         "outcome": {
           "type": "damage",
           "resolution": {
-            "rawDamage": 1,
+            "rawDamage": 2,
             "armorReduction": 1,
-            "resistanceAdjustment": 0,
+            "resistanceAdjustment": 1,
             "finalDamage": 0,
             "damageType": "physical",
             "resistance": "immune"
@@ -994,16 +1001,16 @@
         "messageKey": "combat-monster-hit",
         "args": {
           "damage": "0",
-          "source": "demo.actor.chorus-captain"
+          "source": "demo.actor.storm-spark"
         },
         "outcome": {
           "type": "damage",
           "resolution": {
             "rawDamage": 1,
-            "armorReduction": 1,
-            "resistanceAdjustment": 0,
+            "armorReduction": 0,
+            "resistanceAdjustment": 1,
             "finalDamage": 0,
-            "damageType": "physical",
+            "damageType": "electricity",
             "resistance": "immune"
           }
         }
@@ -1038,137 +1045,6 @@
         "outcome": {
           "type": "damage",
           "resolution": {
-            "rawDamage": 1,
-            "armorReduction": 0,
-            "resistanceAdjustment": 1,
-            "finalDamage": 0,
-            "damageType": "poison",
-            "resistance": "immune"
-          }
-        }
-      },
-      {
-        "kind": "combat.monster-hit",
-        "messageKey": "combat-monster-hit",
-        "args": {
-          "damage": "0",
-          "source": "demo.actor.acid-seep"
-        },
-        "outcome": {
-          "type": "damage",
-          "resolution": {
-            "rawDamage": 1,
-            "armorReduction": 0,
-            "resistanceAdjustment": 1,
-            "finalDamage": 0,
-            "damageType": "acid",
-            "resistance": "immune"
-          }
-        }
-      },
-      {
-        "kind": "floor.transition-unavailable",
-        "messageKey": "floor-transition-unavailable",
-        "args": {}
-      },
-      {
-        "kind": "combat.monster-hit",
-        "messageKey": "combat-monster-hit",
-        "args": {
-          "damage": "0",
-          "source": "demo.actor.chorus-captain"
-        },
-        "outcome": {
-          "type": "damage",
-          "resolution": {
-            "rawDamage": 1,
-            "armorReduction": 1,
-            "resistanceAdjustment": 0,
-            "finalDamage": 0,
-            "damageType": "physical",
-            "resistance": "immune"
-          }
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "source": "demo.actor.chorus-captain"
-        }
-      },
-      {
-        "kind": "combat.monster-hit",
-        "messageKey": "combat-monster-hit",
-        "args": {
-          "damage": "0",
-          "source": "demo.actor.acid-seep"
-        },
-        "outcome": {
-          "type": "damage",
-          "resolution": {
-            "rawDamage": 1,
-            "armorReduction": 0,
-            "resistanceAdjustment": 1,
-            "finalDamage": 0,
-            "damageType": "acid",
-            "resistance": "immune"
-          }
-        }
-      },
-      {
-        "kind": "move.blocked",
-        "messageKey": "game-move-blocked",
-        "args": {}
-      },
-      {
-        "kind": "combat.monster-hit",
-        "messageKey": "combat-monster-hit",
-        "args": {
-          "damage": "0",
-          "source": "demo.actor.chorus-captain"
-        },
-        "outcome": {
-          "type": "damage",
-          "resolution": {
-            "rawDamage": 2,
-            "armorReduction": 1,
-            "resistanceAdjustment": 1,
-            "finalDamage": 0,
-            "damageType": "physical",
-            "resistance": "immune"
-          }
-        }
-      },
-      {
-        "kind": "combat.monster-hit",
-        "messageKey": "combat-monster-hit",
-        "args": {
-          "damage": "0",
-          "source": "demo.actor.chorus-captain"
-        },
-        "outcome": {
-          "type": "damage",
-          "resolution": {
-            "rawDamage": 1,
-            "armorReduction": 1,
-            "resistanceAdjustment": 0,
-            "finalDamage": 0,
-            "damageType": "physical",
-            "resistance": "immune"
-          }
-        }
-      },
-      {
-        "kind": "combat.monster-hit",
-        "messageKey": "combat-monster-hit",
-        "args": {
-          "damage": "0",
-          "source": "demo.actor.venom-spore"
-        },
-        "outcome": {
-          "type": "damage",
-          "resolution": {
             "rawDamage": 3,
             "armorReduction": 0,
             "resistanceAdjustment": 3,
@@ -1191,13 +1067,6 @@
         "args": {}
       },
       {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "source": "demo.actor.chorus-captain"
-        }
-      },
-      {
         "kind": "combat.monster-hit",
         "messageKey": "combat-monster-hit",
         "args": {
@@ -1212,6 +1081,132 @@
             "resistanceAdjustment": 0,
             "finalDamage": 0,
             "damageType": "physical",
+            "resistance": "immune"
+          }
+        }
+      },
+      {
+        "kind": "combat.monster-miss",
+        "messageKey": "combat-monster-miss",
+        "args": {
+          "source": "demo.actor.venom-spore"
+        }
+      },
+      {
+        "kind": "combat.monster-hit",
+        "messageKey": "combat-monster-hit",
+        "args": {
+          "damage": "0",
+          "source": "demo.actor.acid-seep"
+        },
+        "outcome": {
+          "type": "damage",
+          "resolution": {
+            "rawDamage": 1,
+            "armorReduction": 0,
+            "resistanceAdjustment": 1,
+            "finalDamage": 0,
+            "damageType": "acid",
+            "resistance": "immune"
+          }
+        }
+      },
+      {
+        "kind": "move.blocked",
+        "messageKey": "game-move-blocked",
+        "args": {}
+      },
+      {
+        "kind": "combat.monster-hit",
+        "messageKey": "combat-monster-hit",
+        "args": {
+          "damage": "0",
+          "source": "demo.actor.chorus-captain"
+        },
+        "outcome": {
+          "type": "damage",
+          "resolution": {
+            "rawDamage": 2,
+            "armorReduction": 1,
+            "resistanceAdjustment": 1,
+            "finalDamage": 0,
+            "damageType": "physical",
+            "resistance": "immune"
+          }
+        }
+      },
+      {
+        "kind": "combat.monster-miss",
+        "messageKey": "combat-monster-miss",
+        "args": {
+          "source": "demo.actor.storm-spark"
+        }
+      },
+      {
+        "kind": "combat.monster-hit",
+        "messageKey": "combat-monster-hit",
+        "args": {
+          "damage": "0",
+          "source": "demo.actor.venom-spore"
+        },
+        "outcome": {
+          "type": "damage",
+          "resolution": {
+            "rawDamage": 2,
+            "armorReduction": 0,
+            "resistanceAdjustment": 2,
+            "finalDamage": 0,
+            "damageType": "poison",
+            "resistance": "immune"
+          }
+        }
+      },
+      {
+        "kind": "combat.monster-hit",
+        "messageKey": "combat-monster-hit",
+        "args": {
+          "damage": "0",
+          "source": "demo.actor.acid-seep"
+        },
+        "outcome": {
+          "type": "damage",
+          "resolution": {
+            "rawDamage": 2,
+            "armorReduction": 0,
+            "resistanceAdjustment": 2,
+            "finalDamage": 0,
+            "damageType": "acid",
+            "resistance": "immune"
+          }
+        }
+      },
+      {
+        "kind": "floor.transition-unavailable",
+        "messageKey": "floor-transition-unavailable",
+        "args": {}
+      },
+      {
+        "kind": "combat.monster-miss",
+        "messageKey": "combat-monster-miss",
+        "args": {
+          "source": "demo.actor.chorus-captain"
+        }
+      },
+      {
+        "kind": "combat.monster-hit",
+        "messageKey": "combat-monster-hit",
+        "args": {
+          "damage": "0",
+          "source": "demo.actor.storm-spark"
+        },
+        "outcome": {
+          "type": "damage",
+          "resolution": {
+            "rawDamage": 1,
+            "armorReduction": 0,
+            "resistanceAdjustment": 1,
+            "finalDamage": 0,
+            "damageType": "electricity",
             "resistance": "immune"
           }
         }
@@ -1290,16 +1285,16 @@
         "messageKey": "combat-monster-hit",
         "args": {
           "damage": "0",
-          "source": "demo.actor.chorus-captain"
+          "source": "demo.actor.storm-spark"
         },
         "outcome": {
           "type": "damage",
           "resolution": {
-            "rawDamage": 1,
-            "armorReduction": 1,
-            "resistanceAdjustment": 0,
+            "rawDamage": 2,
+            "armorReduction": 0,
+            "resistanceAdjustment": 2,
             "finalDamage": 0,
-            "damageType": "physical",
+            "damageType": "electricity",
             "resistance": "immune"
           }
         }
@@ -1366,16 +1361,16 @@
         "messageKey": "combat-monster-hit",
         "args": {
           "damage": "0",
-          "source": "demo.actor.chorus-captain"
+          "source": "demo.actor.storm-spark"
         },
         "outcome": {
           "type": "damage",
           "resolution": {
-            "rawDamage": 2,
-            "armorReduction": 1,
-            "resistanceAdjustment": 1,
+            "rawDamage": 3,
+            "armorReduction": 0,
+            "resistanceAdjustment": 3,
             "finalDamage": 0,
-            "damageType": "physical",
+            "damageType": "electricity",
             "resistance": "immune"
           }
         }
@@ -11124,6 +11119,10 @@
         "y": 3
       },
       {
+        "x": 6,
+        "y": 4
+      },
+      {
         "x": 7,
         "y": 3
       },
@@ -12732,12 +12731,20 @@
         "y": 5
       },
       {
+        "x": 4,
+        "y": 3
+      },
+      {
         "x": 5,
         "y": 3
       },
       {
+        "x": 5,
+        "y": 6
+      },
+      {
         "x": 6,
-        "y": 3
+        "y": 5
       },
       {
         "x": 0,
@@ -14372,6 +14379,10 @@
         "y": 4
       },
       {
+        "x": 5,
+        "y": 5
+      },
+      {
         "x": 6,
         "y": 3
       },
@@ -14382,6 +14393,14 @@
       {
         "x": 4,
         "y": 1
+      },
+      {
+        "x": 5,
+        "y": 2
+      },
+      {
+        "x": 5,
+        "y": 3
       },
       {
         "x": 5,
@@ -14420,8 +14439,12 @@
         "y": 4
       },
       {
+        "x": 4,
+        "y": 5
+      },
+      {
         "x": 5,
-        "y": 3
+        "y": 2
       },
       {
         "x": 5,
@@ -14441,7 +14464,15 @@
       },
       {
         "x": 4,
+        "y": 3
+      },
+      {
+        "x": 4,
         "y": 4
+      },
+      {
+        "x": 4,
+        "y": 5
       },
       {
         "x": 2,
@@ -14450,8 +14481,40 @@
       {
         "x": 3,
         "y": 5
+      },
+      {
+        "x": 4,
+        "y": 3
+      },
+      {
+        "x": 4,
+        "y": 4
+      },
+      {
+        "x": 4,
+        "y": 2
+      },
+      {
+        "x": 4,
+        "y": 3
+      },
+      {
+        "x": 4,
+        "y": 2
+      },
+      {
+        "x": 4,
+        "y": 3
+      },
+      {
+        "x": 4,
+        "y": 2
+      },
+      {
+        "x": 4,
+        "y": 3
       }
     ],
-    "saveRoundTripStateHash": "b6de9b1916fcd19f0dbf0065cf64a1b5f5938c566ed354336a61fa25321eee30"
+    "saveRoundTripStateHash": "0cc291922a886fcf444a42ce3230f4e885cdde3c0a80a24deffd1936ad915051"
   }
 }

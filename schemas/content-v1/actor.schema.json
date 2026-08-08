@@ -221,6 +221,10 @@
             "$ref": "#/$defs/ActorMovementMode"
           },
           "type": "array"
+        },
+        "neverMoves": {
+          "default": false,
+          "type": "boolean"
         }
       },
       "type": "object"
@@ -840,6 +844,11 @@
       "minimum": 0,
       "type": "integer"
     },
+    "forceSleep": {
+      "default": false,
+      "description": "Whether the monster receives RFB's one-player-action spawn grace.",
+      "type": "boolean"
+    },
     "formatVersion": {
       "format": "uint16",
       "maximum": 65535,
@@ -933,7 +942,8 @@
     "movement": {
       "$ref": "#/$defs/ActorMovementDefinition",
       "default": {
-        "modes": []
+        "modes": [],
+        "neverMoves": false
       }
     },
     "nameKey": {

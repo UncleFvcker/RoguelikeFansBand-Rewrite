@@ -31,6 +31,53 @@ const M_INFO_SOURCE: &str = "lib/edit/m_info.txt";
 const S_INFO_SOURCE: &str = "lib/edit/s_info.txt";
 const LEGACY_DROP_TABLE_ID: &str = "rfb-legacy.loot-table.monster-drops";
 const LEGACY_WARRIOR_DROP_TABLE_ID: &str = "rfb-legacy.loot-table.monster-drops-warrior";
+const DEMO_DROP_TABLE_ID: &str = "demo.loot-table.warrens";
+const DEMO_WARRIOR_DROP_TABLE_ID: &str = "demo.loot-table.large-kobold";
+const DEMO_ARCHER_DROP_TABLE_ID: &str = "demo.loot-table.archer";
+const DEMO_MAGE_DROP_TABLE_ID: &str = "demo.loot-table.mage";
+const DEMO_PRIEST_DROP_TABLE_ID: &str = "demo.loot-table.priest";
+const DEMO_EVIL_PRIEST_DROP_TABLE_ID: &str = "demo.loot-table.evil-priest";
+const DEMO_PALADIN_DROP_TABLE_ID: &str = "demo.loot-table.paladin";
+const DEMO_CORPSE_ITEM_ID: &str = "demo.item.corpse-remains";
+const DEMO_SKELETON_ITEM_ID: &str = "demo.item.skeleton-remains";
+
+fn demo_drop_theme_table_id(theme: &str) -> Option<&'static str> {
+    match theme {
+        "DROP_WARRIOR" => Some(DEMO_WARRIOR_DROP_TABLE_ID),
+        "DROP_ARCHER" => Some(DEMO_ARCHER_DROP_TABLE_ID),
+        "DROP_MAGE" => Some(DEMO_MAGE_DROP_TABLE_ID),
+        "DROP_PRIEST" => Some(DEMO_PRIEST_DROP_TABLE_ID),
+        "DROP_PRIEST_EVIL" => Some(DEMO_EVIL_PRIEST_DROP_TABLE_ID),
+        "DROP_PALADIN" => Some(DEMO_PALADIN_DROP_TABLE_ID),
+        _ => None,
+    }
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct DemoMonsterSelection {
+    schema_version: u16,
+    monsters: Vec<DemoMonsterSelectionEntry>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct DemoMonsterSelectionEntry {
+    source_index: u32,
+    #[serde(default)]
+    source_id: Option<String>,
+    id: String,
+    #[serde(default)]
+    tags: Vec<String>,
+    #[serde(default)]
+    omitted_flags: Vec<String>,
+}
+
+impl DemoMonsterSelectionEntry {
+    fn expected_source_id(&self) -> &str {
+        self.source_id.as_deref().unwrap_or(&self.id)
+    }
+}
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -213,6 +260,7 @@ pub struct LegacyMonsterEntry {
     pub level: Option<u16>,
     pub rarity: Option<u32>,
     pub max_level: Option<u16>,
+    pub experience: Option<u64>,
     pub blows: Vec<LegacyBlow>,
     pub flags: Vec<String>,
     pub spells: Vec<String>,
@@ -799,8 +847,13 @@ pub fn parse_r_info(text: &str) -> Result<Vec<LegacyMonsterEntry>, LegacyImportE
                 "W.maxLevel",
                 parts.get(2).copied(),
             )?);
+            entry.experience = Some(parse_number(
+                R_INFO_SOURCE,
+                line_number,
+                "W.experience",
+                parts.get(3).copied(),
+            )?);
             for (field, value) in [
-                ("W.experience", parts.get(3).copied()),
                 ("W.evolution", parts.get(4).copied()),
                 ("W.nextEvolution", parts.get(5).copied()),
             ] {
@@ -5639,12 +5692,14 @@ fn monster_flag_is_mapped(flag: &str) -> bool {
         "RES_ALL"
             | "RES_TELE"
             | "NO_CONF"
+            | "NEVER_MOVE"
             | "KILL_WALL"
             | "KILL_ITEM"
             | "HAS_LITE_1"
             | "HAS_LITE_2"
             | "SELF_LITE_1"
             | "SELF_LITE_2"
+            | "FORCE_SLEEP"
             | "ONLY_ITEM"
             | "ONLY_GOLD"
             | "DROP_60"
@@ -5863,8 +5918,12 @@ fn monster_json(
                 .then_some(mode)
         })
         .collect::<Vec<_>>();
-    if !movement_modes.is_empty() {
+    let never_moves = entry.flags.iter().any(|flag| flag == "NEVER_MOVE");
+    if !movement_modes.is_empty() || never_moves {
         value["movement"] = serde_json::json!({ "modes": movement_modes });
+        if never_moves {
+            value["movement"]["neverMoves"] = serde_json::json!(true);
+        }
     }
     let opens = entry.flags.iter().any(|flag| flag == "OPEN_DOOR");
     let bashes = entry.flags.iter().any(|flag| flag == "BASH_DOOR");
@@ -5900,6 +5959,9 @@ fn monster_json(
                 matches!(flag.as_str(), "SELF_LITE_1" | "SELF_LITE_2")
             }),
         });
+    }
+    if entry.flags.iter().any(|flag| flag == "FORCE_SLEEP") {
+        value["forceSleep"] = serde_json::json!(true);
     }
     if let Some(death_drop) = monster_death_drop_json(entry) {
         value["deathDrop"] = death_drop;
@@ -5956,6 +6018,328 @@ fn monster_json(
         value["allocation"] = allocation;
     }
     value
+}
+
+fn demo_monster_flag_is_handled(flag: &str) -> bool {
+    monster_flag_is_mapped(flag)
+        || matches!(
+            flag,
+            "FORCE_MAXHP"
+                | "ANIMAL"
+                | "EVIL"
+                | "GOOD"
+                | "HUMAN"
+                | "DEMON"
+                | "DRAGON"
+                | "UNDEAD"
+                | "ORC"
+                | "TROLL"
+                | "GIANT"
+                | "NONLIVING"
+                | "UNIQUE"
+                | "CAN_FLY"
+                | "CAN_SWIM"
+                | "OPEN_DOOR"
+                | "BASH_DOOR"
+                | "DROP_CORPSE"
+                | "DROP_SKELETON"
+                | "NO_FEAR"
+                | "NO_SLEEP"
+                | "FORCE_DEPTH"
+                | "WILD_ONLY"
+                | "ESCORT"
+                | "MULTIPLY"
+                | "RAND_25"
+                | "RAND_50"
+                | "FRIENDS"
+        )
+        || flag.starts_with("FRIENDS(")
+}
+
+fn demo_monster_json(
+    entry: &LegacyMonsterEntry,
+    selection: &DemoMonsterSelectionEntry,
+    abilities: &mut BTreeMap<String, serde_json::Value>,
+) -> Result<serde_json::Value, LegacyImportError> {
+    let declared_omissions = selection
+        .omitted_flags
+        .iter()
+        .cloned()
+        .collect::<BTreeSet<_>>();
+    if declared_omissions.len() != selection.omitted_flags.len() {
+        return Err(LegacyImportError::InvalidDemoMonsterSelection(format!(
+            "{} contains duplicate omitted flags",
+            selection.id
+        )));
+    }
+    let actual_omissions = entry
+        .flags
+        .iter()
+        .filter(|flag| !demo_monster_flag_is_handled(flag))
+        .cloned()
+        .collect::<BTreeSet<_>>();
+    if declared_omissions != actual_omissions {
+        return Err(LegacyImportError::InvalidDemoMonsterSelection(format!(
+            "{} omitted flags differ: declared {declared_omissions:?}, source {actual_omissions:?}",
+            selection.id
+        )));
+    }
+
+    let mut frequency_percent = None;
+    let mut ability_ids = Vec::new();
+    let level = entry.level.unwrap_or(1).max(1);
+    let breath_radius = if level >= 50 || entry.glyph == Some('D') {
+        3
+    } else {
+        2
+    };
+    for spell in &entry.spells {
+        if let Some(divisor) = spell.strip_prefix("1_IN_") {
+            let divisor = divisor.parse::<u32>().map_err(|_| {
+                LegacyImportError::InvalidDemoMonsterSelection(format!(
+                    "{} has invalid casting frequency {spell}",
+                    selection.id
+                ))
+            })?;
+            frequency_percent = Some((100 / divisor.max(1)).clamp(1, 100));
+            continue;
+        }
+        if let Some(percent) = spell.strip_prefix("FREQ_") {
+            let percent = percent.parse::<u32>().map_err(|_| {
+                LegacyImportError::InvalidDemoMonsterSelection(format!(
+                    "{} has invalid casting frequency {spell}",
+                    selection.id
+                ))
+            })?;
+            frequency_percent = Some(percent.clamp(1, 100));
+            continue;
+        }
+        let base_token = spell.split('(').next().unwrap_or(spell);
+        if POSSESSOR_ONLY_SPELLS.contains(&base_token) {
+            continue;
+        }
+        let ability_id = map_spell_token(
+            spell,
+            level,
+            breath_radius,
+            &format!("demo.actor.{}", selection.id),
+            abilities,
+        )
+        .ok_or_else(|| {
+            LegacyImportError::InvalidDemoMonsterSelection(format!(
+                "{} has unsupported monster spell {spell}",
+                selection.id
+            ))
+        })?;
+        if !ability_ids.contains(&ability_id) {
+            ability_ids.push(ability_id);
+        }
+    }
+    let monster_casting = (!ability_ids.is_empty()).then(|| {
+        serde_json::json!({
+            "frequencyPercent": frequency_percent.unwrap_or(10),
+            "abilities": ability_ids
+                .iter()
+                .map(|ability_id| serde_json::json!({ "abilityId": ability_id, "weight": 1 }))
+                .collect::<Vec<_>>(),
+        })
+    });
+    if entry
+        .drop_theme
+        .as_deref()
+        .is_some_and(|theme| demo_drop_theme_table_id(theme).is_none())
+    {
+        return Err(LegacyImportError::InvalidDemoMonsterSelection(format!(
+            "{} requires a formal themed drop table",
+            selection.id
+        )));
+    }
+    let primary_blow = entry.blows.first().ok_or_else(|| {
+        LegacyImportError::InvalidDemoMonsterSelection(format!(
+            "{} has no melee routine",
+            selection.id
+        ))
+    })?;
+    let mut blows = Vec::with_capacity(entry.blows.len());
+    for blow in &entry.blows {
+        let effects = blow
+            .effects
+            .iter()
+            .map(|effect| {
+                melee_effect_json(effect).ok_or_else(|| {
+                    LegacyImportError::InvalidDemoMonsterSelection(format!(
+                        "{} has unsupported blow effect {}",
+                        selection.id, effect.token
+                    ))
+                })
+            })
+            .collect::<Result<Vec<_>, _>>()?;
+        if effects.is_empty() {
+            return Err(LegacyImportError::InvalidDemoMonsterSelection(format!(
+                "{} has an empty melee blow {}",
+                selection.id, blow.method
+            )));
+        }
+        let mut method = kebab(&blow.method);
+        if method.is_empty() {
+            method = "strike".to_owned();
+        }
+        let mut value = serde_json::json!({
+            "methodId": format!("rfb.blow.{method}"),
+            "toHit": 20,
+            "effects": effects,
+        });
+        if blow.method == "EXPLODE" {
+            value["selfDestructs"] = serde_json::json!(true);
+        }
+        blows.push(value);
+    }
+    let (damage_type, _) = damage_type_for(primary_blow);
+    let routine = serde_json::json!({ "blows": blows });
+    let mut value = monster_json(
+        entry,
+        &selection.id,
+        primary_blow,
+        damage_type,
+        Some(routine),
+        monster_casting,
+    );
+    value["id"] = serde_json::json!(format!("demo.actor.{}", selection.id));
+    value["nameKey"] = serde_json::json!(format!("actor-demo-{}-name", selection.id));
+    value["descriptionKey"] = serde_json::json!(format!("actor-demo-{}-description", selection.id));
+    value["experienceValue"] = serde_json::json!(entry.experience.unwrap_or(0));
+    value
+        .as_object_mut()
+        .expect("actor JSON must be an object")
+        .remove("corpseItemKindId");
+
+    let mut tags = selection.tags.iter().cloned().collect::<BTreeSet<_>>();
+    for (flag, tag) in [
+        ("ANIMAL", "animal"),
+        ("EVIL", "evil"),
+        ("GOOD", "good"),
+        ("HUMAN", "human"),
+        ("DEMON", "demon"),
+        ("DRAGON", "dragon"),
+        ("UNDEAD", "undead"),
+        ("ORC", "orc"),
+        ("TROLL", "troll"),
+        ("GIANT", "giant"),
+        ("NONLIVING", "nonliving"),
+        ("UNIQUE", "unique"),
+        ("RES_ALL", "resist-all"),
+        ("RES_TELE", "resist-teleport"),
+    ] {
+        if entry.flags.iter().any(|candidate| candidate == flag) {
+            tags.insert(tag.to_owned());
+        }
+    }
+    value["tags"] = serde_json::json!(tags);
+
+    let status_immunities = [
+        ("NO_CONF", "rfb.status.confusion"),
+        ("NO_FEAR", "rfb.status.fear"),
+        ("NO_SLEEP", "rfb.status.sleep"),
+    ]
+    .into_iter()
+    .filter_map(|(flag, status)| {
+        entry
+            .flags
+            .iter()
+            .any(|candidate| candidate == flag)
+            .then_some(status)
+    })
+    .collect::<Vec<_>>();
+    if status_immunities.is_empty() {
+        value
+            .as_object_mut()
+            .expect("actor JSON must be an object")
+            .remove("statusImmunities");
+    } else {
+        value["statusImmunities"] = serde_json::json!(status_immunities);
+    }
+
+    let has_corpse = entry.flags.iter().any(|flag| flag == "DROP_CORPSE");
+    let has_skeleton = entry.flags.iter().any(|flag| flag == "DROP_SKELETON");
+    if has_corpse || has_skeleton {
+        let mut remains = serde_json::json!({
+            "chanceDenominator": 3,
+            "corpseWeight": if has_corpse && has_skeleton { 4 } else if has_corpse { 1 } else { 0 },
+            "skeletonWeight": if has_skeleton { 1 } else { 0 },
+        });
+        if has_corpse {
+            remains["corpseItemKindId"] = serde_json::json!(DEMO_CORPSE_ITEM_ID);
+        }
+        if has_skeleton {
+            remains["skeletonItemKindId"] = serde_json::json!(DEMO_SKELETON_ITEM_ID);
+        }
+        value["remains"] = remains;
+    }
+    if let Some(death_drop) = value.get_mut("deathDrop") {
+        if death_drop.get("itemTableId").is_some() {
+            death_drop["itemTableId"] = serde_json::json!(DEMO_DROP_TABLE_ID);
+        }
+        if let Some(theme_table_id) = entry
+            .drop_theme
+            .as_deref()
+            .and_then(demo_drop_theme_table_id)
+        {
+            death_drop["themeTableId"] = serde_json::json!(theme_table_id);
+            death_drop["themeChancePercent"] = serde_json::json!(50);
+        }
+        if death_drop["countDice"]
+            .as_array()
+            .is_some_and(Vec::is_empty)
+        {
+            death_drop
+                .as_object_mut()
+                .expect("death drop JSON must be an object")
+                .remove("countDice");
+        }
+        if death_drop["minimumQuality"] == "ordinary" {
+            death_drop
+                .as_object_mut()
+                .expect("death drop JSON must be an object")
+                .remove("minimumQuality");
+        }
+    }
+    if value["hitPointDice"]["forceMaximum"] == false {
+        value["hitPointDice"]
+            .as_object_mut()
+            .expect("hit point dice JSON must be an object")
+            .remove("forceMaximum");
+    }
+    if value["movement"]["modes"]
+        .as_array()
+        .is_some_and(Vec::is_empty)
+    {
+        value["movement"]
+            .as_object_mut()
+            .expect("movement JSON must be an object")
+            .remove("modes");
+    }
+    for (object, key) in [
+        ("doorInteraction", "opens"),
+        ("doorInteraction", "bashes"),
+        ("allocation", "forceDepth"),
+        ("allocation", "wildOnly"),
+        ("allocation", "escort"),
+        ("allocation", "multiplies"),
+    ] {
+        if value[object][key] == false {
+            value[object]
+                .as_object_mut()
+                .expect("nested actor JSON must be an object")
+                .remove(key);
+        }
+    }
+    if value["allocation"]["randomMovementPercent"] == 0 {
+        value["allocation"]
+            .as_object_mut()
+            .expect("allocation JSON must be an object")
+            .remove("randomMovementPercent");
+    }
+    Ok(value)
 }
 
 pub struct ContentImportOutcome {
@@ -8043,6 +8427,120 @@ pub fn import_content(source: &Path, output: &Path) -> Result<PathBuf, LegacyImp
     Ok(report_path)
 }
 
+pub fn sync_demo_monsters(
+    source: &Path,
+    selection_path: &Path,
+    output: &Path,
+) -> Result<usize, LegacyImportError> {
+    let canonical_source = source
+        .canonicalize()
+        .map_err(|error| LegacyImportError::LegacyGit(error.to_string()))?;
+    if output.starts_with(&canonical_source) {
+        return Err(LegacyImportError::LegacyGit(
+            "output directory must live outside the legacy source".to_owned(),
+        ));
+    }
+    let selection: DemoMonsterSelection = serde_json::from_slice(&fs::read(selection_path)?)?;
+    if selection.schema_version != 1 || selection.monsters.is_empty() {
+        return Err(LegacyImportError::InvalidDemoMonsterSelection(
+            "selection must use schemaVersion 1 and contain at least one monster".to_owned(),
+        ));
+    }
+    let source_commit = resolve_legacy_content_commit(source)?;
+    let entries = parse_r_info(&read_legacy_object_at(
+        source,
+        &source_commit,
+        R_INFO_SOURCE,
+    )?)?;
+    let by_index = entries
+        .iter()
+        .filter(|entry| !entry.name.is_empty() && entry.name != "player" && entry.glyph.is_some())
+        .map(|entry| (entry.index, entry))
+        .collect::<BTreeMap<_, _>>();
+    let mut selected_ids = BTreeSet::new();
+    let mut selected_indexes = BTreeSet::new();
+    let mut files = Vec::with_capacity(selection.monsters.len());
+    let mut abilities = BTreeMap::new();
+    for selected in selection.monsters {
+        if !selected_ids.insert(selected.id.clone()) {
+            return Err(LegacyImportError::InvalidDemoMonsterSelection(format!(
+                "duplicate monster id {}",
+                selected.id
+            )));
+        }
+        if !selected_indexes.insert(selected.source_index) {
+            return Err(LegacyImportError::InvalidDemoMonsterSelection(format!(
+                "duplicate monster source index {}",
+                selected.source_index
+            )));
+        }
+        let entry = by_index.get(&selected.source_index).ok_or_else(|| {
+            LegacyImportError::InvalidDemoMonsterSelection(format!(
+                "unknown legacy source index {}",
+                selected.source_index
+            ))
+        })?;
+        let actual_id = kebab(&entry.name);
+        let expected_source_id = selected.expected_source_id();
+        if actual_id != expected_source_id {
+            return Err(LegacyImportError::InvalidDemoMonsterSelection(format!(
+                "source index {} is {actual_id}, expected {expected_source_id}",
+                selected.source_index
+            )));
+        }
+        files.push((
+            format!("{}.json", selected.id),
+            demo_monster_json(entry, &selected, &mut abilities)?,
+        ));
+    }
+    fs::create_dir_all(output)?;
+    for (name, value) in &files {
+        fs::write(
+            output.join(name),
+            serde_json::to_string_pretty(value)? + "\n",
+        )?;
+    }
+    let pack_root = output.parent().ok_or_else(|| {
+        LegacyImportError::InvalidDemoMonsterSelection(
+            "actors output must have a pack parent directory".to_owned(),
+        )
+    })?;
+    let mut ability_files = abilities
+        .into_iter()
+        .map(|(id, value)| {
+            let stem = id
+                .strip_prefix("rfb-legacy.ability.")
+                .expect("generated monster ability id must use the legacy prefix");
+            let mut name = format!("{stem}.json");
+            let existing = pack_root.join("abilities").join(&name);
+            if existing.is_file() {
+                let existing: serde_json::Value = serde_json::from_slice(&fs::read(existing)?)?;
+                if existing["id"].as_str() != Some(id.as_str()) {
+                    name = format!("legacy-{stem}.json");
+                }
+            }
+            Ok((name, value))
+        })
+        .collect::<Result<Vec<_>, LegacyImportError>>()?;
+    let extracted =
+        extract_ability_programs_and_player_bindings(&mut ability_files, &BTreeSet::new())
+            .map_err(LegacyImportError::InvalidDemoMonsterSelection)?;
+    for (directory, generated) in [
+        ("abilities", ability_files),
+        ("abilityPrograms", extracted.program_files),
+    ] {
+        let directory = pack_root.join(directory);
+        fs::create_dir_all(&directory)?;
+        for (name, value) in generated {
+            fs::write(
+                directory.join(name),
+                serde_json::to_string_pretty(&value)? + "\n",
+            )?;
+        }
+    }
+    Ok(files.len())
+}
+
 pub fn sync_demo_items(
     source: &Path,
     selection_path: &Path,
@@ -8369,6 +8867,13 @@ B:GAZE:TERRIFY\n";
         assert_eq!(blows[1]["effects"].as_array().unwrap().len(), 1);
         // RES_FIRE folds into the content resistance map.
         assert_eq!(lantern["resistances"]["fire"], "resistant");
+        assert_eq!(lantern["movement"]["neverMoves"], true);
+        assert!(
+            !outcome
+                .report
+                .unmapped_monster_flags
+                .contains_key("NEVER_MOVE")
+        );
         assert_eq!(lantern["monsterCasting"]["frequencyPercent"], 20);
         assert_eq!(
             lantern["monsterCasting"]["abilities"][0]["abilityId"],

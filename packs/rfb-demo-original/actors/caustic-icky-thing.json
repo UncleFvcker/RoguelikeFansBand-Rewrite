@@ -1,0 +1,67 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 132,
+    "maxDepth": 40,
+    "randomMovementPercent": 50,
+    "rarity": 2
+  },
+  "attack": 1,
+  "damageDice": 2,
+  "damageSides": 6,
+  "damageType": "acid",
+  "defense": 1,
+  "descriptionKey": "actor-demo-caustic-icky-thing-description",
+  "experienceValue": 18,
+  "formatVersion": 1,
+  "glyph": "i",
+  "hitPointDice": {
+    "dice": 5,
+    "sides": 8
+  },
+  "id": "demo.actor.caustic-icky-thing",
+  "level": 7,
+  "light": {
+    "intrinsic": true,
+    "radius": 2
+  },
+  "maxHp": 22,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 2,
+            "damageSides": 6,
+            "damageType": "acid",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "modes": [
+      "swim"
+    ]
+  },
+  "nameKey": "actor-demo-caustic-icky-thing-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "acid": "resistant"
+  },
+  "role": "monster",
+  "speed": 110,
+  "tags": [
+    "icky-thing",
+    "warrens"
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "formatVersion": 1,
+  "id": "demo.actor.bomb-mosquito",
+  "role": "monster",
+  "nameKey": "actor-demo-bomb-mosquito-name",
+  "descriptionKey": "actor-demo-bomb-mosquito-description",
+  "glyph": "I",
+  "level": 1,
+  "experienceValue": 3,
+  "maxHp": 1,
+  "hitPointDice": { "dice": 1, "sides": 1 },
+  "speed": 120,
+  "attack": 1,
+  "defense": 5,
+  "damageDice": 1,
+  "damageSides": 2,
+  "damageType": "physical",
+  "meleeRoutine": {
+    "blows": [
+      { "methodId": "rfb.blow.explode", "toHit": 20, "selfDestructs": true, "effects": [{ "type": "damage", "damageDice": 1, "damageSides": 2, "armorMitigated": false }] }
+    ]
+  },
+  "allocation": { "legacyIndex": 1017, "rarity": 3, "maxDepth": 20, "randomMovementPercent": 50 },
+  "movement": { "modes": ["fly"] },
+  "tags": ["animal", "insect", "warrens"]
+}

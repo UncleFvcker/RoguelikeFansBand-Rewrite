@@ -160,9 +160,15 @@ const gameSession = new GameSession({
   execute: (command) => core.dispatch(command),
   applyUpdate: (update, command) => {
     const previous = appState.status;
-    renderer.applyUpdate(update);
-    appState.updateCells(update.changedCells);
-    appState.updateVisualCells(update.changedVisualCells);
+    const mapResized = renderer.applyUpdate(update);
+    if (mapResized) {
+      appState.setMapSize(update.width, update.height);
+      appState.replaceCells(update.changedCells);
+      appState.replaceVisualCells(update.changedVisualCells);
+    } else {
+      appState.updateCells(update.changedCells);
+      appState.updateVisualCells(update.changedVisualCells);
+    }
     statusPanel.render(update);
     inventoryPanel.render(update.inventory, update.equipment);
     shopPanel.render(update);
@@ -192,6 +198,7 @@ const inputController = new InputController({
   dispatch,
   describeLook: describeLookPosition,
   onLookOrTargeting: (interaction) => journeyGuidance.recordInteraction(interaction),
+  onLookFocusChange: (position) => renderer.setCameraFocus(position),
   announce: addLocalizedMessage,
 });
 const inventoryPanel = new InventoryPanel({

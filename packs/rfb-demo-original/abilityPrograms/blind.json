@@ -1,0 +1,15 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability-program.blind",
+  "input": "cast-target",
+  "steps": [
+    {
+      "durationTicks": 25,
+      "intensity": 1,
+      "stacking": "extend",
+      "statusKindId": "rfb.status.blindness",
+      "type": "apply-status"
+    }
+  ]
+}

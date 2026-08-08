@@ -1,0 +1,65 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 53,
+    "maxDepth": 999,
+    "randomMovementPercent": 25,
+    "rarity": 2
+  },
+  "attack": 1,
+  "damageDice": 2,
+  "damageSides": 4,
+  "damageType": "physical",
+  "defense": 3,
+  "descriptionKey": "actor-demo-grip-farmer-maggots-dog-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 40,
+  "formatVersion": 1,
+  "glyph": "C",
+  "hitPointDice": {
+    "dice": 5,
+    "forceMaximum": true,
+    "sides": 5
+  },
+  "id": "demo.actor.grip-farmer-maggots-dog",
+  "level": 2,
+  "maxHp": 25,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 2,
+            "damageSides": 4,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      }
+    ]
+  },
+  "nameKey": "actor-demo-grip-farmer-maggots-dog-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "role": "monster",
+  "speed": 120,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "animal",
+    "dog",
+    "unique",
+    "warrens"
+  ]
+}

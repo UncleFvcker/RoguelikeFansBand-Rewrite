@@ -347,31 +347,10 @@
       ],
       "tasks": [
         {
-          "taskId": "demo.floor.echo-hunt-rift",
-          "floorId": "demo.floor.echo-hunt-rift",
-          "nameKey": "floor-demo-echo-hunt-rift-name",
-          "status": "available",
-          "current": 0,
-          "required": 1,
-          "stage": 1,
-          "stages": 1,
-          "retakesUsed": 0
-        },
-        {
-          "taskId": "demo.floor.echo-task-rift",
-          "floorId": "demo.floor.echo-task-rift",
-          "nameKey": "floor-demo-echo-task-rift-name",
-          "status": "available",
-          "current": 0,
-          "required": 1,
-          "stage": 1,
-          "stages": 1,
-          "retakesUsed": 0
-        },
-        {
           "taskId": "demo.task.echo-bounty",
           "floorId": "demo.floor.echo-bounty-rift",
           "nameKey": "floor-demo-echo-bounty-rift-name",
+          "descriptionKey": "terrain-demo-bounty-rift-description",
           "status": "available",
           "current": 0,
           "required": 2,
@@ -384,6 +363,7 @@
           "taskId": "demo.task.echo-chain",
           "floorId": "demo.floor.echo-chain-rift",
           "nameKey": "floor-demo-echo-chain-rift-name",
+          "descriptionKey": "terrain-demo-chain-rift-description",
           "status": "available",
           "current": 0,
           "required": 1,
@@ -391,6 +371,30 @@
           "stages": 3,
           "retakesUsed": 0,
           "maxRetakes": 2
+        },
+        {
+          "taskId": "demo.task.echo-hunt",
+          "floorId": "demo.floor.echo-hunt-rift",
+          "nameKey": "floor-demo-echo-hunt-rift-name",
+          "descriptionKey": "terrain-demo-hunt-rift-description",
+          "status": "available",
+          "current": 0,
+          "required": 1,
+          "stage": 1,
+          "stages": 1,
+          "retakesUsed": 0
+        },
+        {
+          "taskId": "demo.task.echo-rift",
+          "floorId": "demo.floor.echo-task-rift",
+          "nameKey": "floor-demo-echo-task-rift-name",
+          "descriptionKey": "terrain-demo-task-rift-description",
+          "status": "available",
+          "current": 0,
+          "required": 1,
+          "stage": 1,
+          "stages": 1,
+          "retakesUsed": 0
         }
       ],
       "campaign": {
@@ -399,8 +403,8 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "ee87e984e80443e7ee6340c8f54826f366c9714ef9e3337d720dcf882976f854"
+      "stateHash": "32a116b982d97e0cc3256fc62eb8a42bdb496ff827c54345deb3262b1101ec2e"
     },
-    "saveRoundTripStateHash": "ee87e984e80443e7ee6340c8f54826f366c9714ef9e3337d720dcf882976f854"
+    "saveRoundTripStateHash": "32a116b982d97e0cc3256fc62eb8a42bdb496ff827c54345deb3262b1101ec2e"
   }
 }

@@ -783,13 +783,41 @@
       ],
       "nextItemInstanceSerial": 90,
       "nextGoldPileSerial": 1,
+      "tasks": [
+        {
+          "taskId": "demo.task.pest-control",
+          "floorId": "demo.floor.warrens-depth-5",
+          "nameKey": "task-demo-pest-control-name",
+          "descriptionKey": "task-demo-pest-control-description",
+          "sourceFacilityId": "demo.town-facility.outpost-count",
+          "status": "locked",
+          "current": 0,
+          "required": 8,
+          "stage": 1,
+          "stages": 1,
+          "retakesUsed": 0
+        },
+        {
+          "taskId": "demo.task.thieves-hideout",
+          "floorId": "demo.floor.thieves-hideout",
+          "nameKey": "task-demo-thieves-hideout-name",
+          "descriptionKey": "task-demo-thieves-hideout-description",
+          "sourceFacilityId": "demo.town-facility.outpost-count",
+          "status": "available",
+          "current": 0,
+          "required": 1,
+          "stage": 1,
+          "stages": 1,
+          "retakesUsed": 0
+        }
+      ],
       "campaign": {
         "status": "active",
         "score": 0,
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "17c6bd5b3084cb8c2a417465358da38a4a189715a038c7445f5d31e9b21c5176"
+      "stateHash": "fa93e26be9800dab21bcd9919c97afb087cb58c3d2b073c465c6929ca1ab97bb"
     },
     "events": [
       {
@@ -812,6 +840,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "17c6bd5b3084cb8c2a417465358da38a4a189715a038c7445f5d31e9b21c5176"
+    "saveRoundTripStateHash": "fa93e26be9800dab21bcd9919c97afb087cb58c3d2b073c465c6929ca1ab97bb"
   }
 }

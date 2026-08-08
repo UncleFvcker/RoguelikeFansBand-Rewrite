@@ -3,6 +3,40 @@ use super::support::*;
 use super::*;
 
 #[test]
+fn nice_monster_skips_cast_rng_and_round_trips_until_world_advances() {
+    let mut game = Game::new(1);
+    clear_monsters(&mut game);
+    game.push_generated_actor(
+        "test.monster.echo-cantor.1".to_owned(),
+        "demo.actor.echo-cantor",
+        Position { x: 8, y: 3 },
+    );
+    game.entities[0].nice = true;
+    game.entities[0].casting_cooldown_remaining = 2;
+    let draws_before = game.rng.draw_counter;
+    let mut events = Vec::new();
+
+    assert!(!game.resolve_monster_ability(0, &mut events));
+    assert!(events.is_empty());
+    assert_eq!(game.rng.draw_counter, draws_before);
+    assert_eq!(game.entities[0].casting_cooldown_remaining, 2);
+
+    let restored = Game::from_save(game.to_save()).expect("nice state should round-trip");
+    assert!(restored.entities[0].nice);
+    assert_eq!(restored.state_hash(), game.state_hash());
+
+    dispatch_next(
+        &mut game,
+        GameCommand::SetSummonCommand {
+            mode: SummonCommandModeDto::Follow,
+        },
+    );
+    assert!(game.entities[0].nice);
+    dispatch_next(&mut game, GameCommand::Wait);
+    assert!(!game.entities[0].nice);
+}
+
+#[test]
 fn monster_casting_uses_frequency_viability_and_weighted_selection() {
     let mut selected = BTreeSet::new();
     let mut fallback_count = 0_u32;

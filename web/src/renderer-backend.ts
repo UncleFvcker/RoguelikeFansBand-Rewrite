@@ -53,6 +53,7 @@ export interface RendererBackend {
   readonly id: string;
   getDiagnostics(): RendererBackendDiagnostics;
   initialize(options: BackendInitialization): Promise<TilesetChangeResult>;
+  resize(width: number, height: number): void;
   applyCells(cells: readonly RenderCell[]): number;
   setCameraTransform(transform: CameraTransform): void;
   setTileset(tilesetManifestUrl: string): Promise<TilesetChangeResult>;

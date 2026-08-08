@@ -1,0 +1,66 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 105,
+    "maxDepth": 40,
+    "multiplies": true,
+    "randomMovementPercent": 75,
+    "rarity": 1
+  },
+  "attack": 1,
+  "damageDice": 1,
+  "damageSides": 9,
+  "damageType": "fire",
+  "defense": 1,
+  "descriptionKey": "actor-demo-red-worm-mass-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 6,
+  "formatVersion": 1,
+  "glyph": "w",
+  "hitPointDice": {
+    "dice": 5,
+    "sides": 8
+  },
+  "id": "demo.actor.red-worm-mass",
+  "level": 5,
+  "maxHp": 22,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 1,
+            "damageSides": 9,
+            "damageType": "fire",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.crawl",
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "modes": [
+      "swim"
+    ]
+  },
+  "nameKey": "actor-demo-red-worm-mass-name",
+  "resistances": {
+    "fire": "resistant",
+    "light": "vulnerable"
+  },
+  "role": "monster",
+  "speed": 100,
+  "statusImmunities": [
+    "rfb.status.fear"
+  ],
+  "tags": [
+    "animal",
+    "warrens",
+    "worm"
+  ]
+}

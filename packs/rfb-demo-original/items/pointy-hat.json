@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 20,
+  "descriptionKey": "item-demo-pointy-hat-description",
+  "equipmentSlot": "head",
+  "formatVersion": 1,
+  "glyph": "]",
+  "id": "demo.item.pointy-hat",
+  "maxStack": 1,
+  "modifiers": {
+    "defense": 1
+  },
+  "nameKey": "item-demo-pointy-hat-name",
+  "tags": [
+    "armor",
+    "equipment",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 20
+}

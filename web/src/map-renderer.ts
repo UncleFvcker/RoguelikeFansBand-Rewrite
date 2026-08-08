@@ -8,7 +8,7 @@ import {
   type ZoomLevel,
 } from "./camera";
 import { PixiRendererBackend } from "./pixi-renderer-backend";
-import type { GameSnapshot, GameUpdate } from "./protocol";
+import type { GameSnapshot, GameUpdate, Position } from "./protocol";
 import { RenderWorld } from "./render-world";
 import type {
   RendererBackend,
@@ -28,6 +28,7 @@ export class MapRenderer {
   #resizeObserver: ResizeObserver | undefined;
   #width = 0;
   #height = 0;
+  #cameraFocus: Position | undefined;
   #totalAppliedCells = 0;
 
   constructor(backend: RendererBackend = new PixiRendererBackend()) {
@@ -93,6 +94,11 @@ export class MapRenderer {
     this.#updateCamera();
   }
 
+  setCameraFocus(position: Position | undefined): void {
+    this.#cameraFocus = position ? { ...position } : undefined;
+    this.#updateCamera();
+  }
+
   async setTileset(tilesetManifestUrl: string): Promise<TilesetChangeResult> {
     const result = await this.#backend.setTileset(tilesetManifestUrl);
     const appliedCells = this.#backend.applyCells(this.#requireWorld().allCells());
@@ -102,6 +108,7 @@ export class MapRenderer {
   }
 
   applySnapshot(snapshot: GameSnapshot): void {
+    this.#resizeWorld(snapshot.width, snapshot.height);
     const cells = this.#requireWorld().applySnapshot(snapshot);
     const appliedCells = this.#backend.applyCells(cells);
     this.#recordRender("snapshot", appliedCells);
@@ -109,12 +116,14 @@ export class MapRenderer {
     this.#updateCamera();
   }
 
-  applyUpdate(update: GameUpdate): void {
+  applyUpdate(update: GameUpdate): boolean {
+    const resized = this.#resizeWorld(update.width, update.height);
     const cells = this.#requireWorld().applyUpdate(update);
     const appliedCells = this.#backend.applyCells(cells);
     this.#recordRender("update", appliedCells);
     this.#recordVisualState();
     this.#updateCamera();
+    return resized;
   }
 
   destroy(): void {
@@ -125,6 +134,7 @@ export class MapRenderer {
     this.#host = undefined;
     this.#width = 0;
     this.#height = 0;
+    this.#cameraFocus = undefined;
   }
 
   #configureViewport(): void {
@@ -137,15 +147,26 @@ export class MapRenderer {
     host.style.setProperty("--map-world-height", `${worldHeight}px`);
   }
 
+  #resizeWorld(width: number, height: number): boolean {
+    if (width === this.#width && height === this.#height) return false;
+    this.#width = width;
+    this.#height = height;
+    this.#world = new RenderWorld(width, height);
+    this.#backend.resize(width, height);
+    this.#configureViewport();
+    return true;
+  }
+
   #updateCamera(): void {
     const host = this.#host;
     const world = this.#world;
     if (!host || !world) return;
+    const focus = this.#cameraFocus ?? world.playerPosition;
     const viewportWidth = host.clientWidth || this.#width * MAP_CELL_SIZE;
     const viewportHeight = host.clientHeight || this.#height * MAP_CELL_SIZE;
     const offset = computeCameraOffset({
       mode: this.#cameraMode,
-      focus: world.playerPosition,
+      focus,
       worldWidth: this.#width * MAP_CELL_SIZE,
       worldHeight: this.#height * MAP_CELL_SIZE,
       viewportWidth,
@@ -167,7 +188,7 @@ export class MapRenderer {
     host.dataset.viewportHeight = String(viewportHeight);
     if (this.#cameraMode === "full-map") {
       const scroll = computeFullMapScroll({
-        focus: world.playerPosition,
+        focus,
         worldWidth: this.#width * MAP_CELL_SIZE,
         worldHeight: this.#height * MAP_CELL_SIZE,
         viewportWidth,

@@ -1,0 +1,60 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "friends": {
+      "chancePercent": 25,
+      "dice": 2,
+      "sides": 2
+    },
+    "legacyIndex": 139,
+    "maxDepth": 40,
+    "rarity": 2
+  },
+  "attack": 2,
+  "damageDice": 1,
+  "damageSides": 9,
+  "damageType": "physical",
+  "defense": 3,
+  "descriptionKey": "actor-demo-nurgling-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 19,
+  "formatVersion": 1,
+  "glyph": "u",
+  "hitPointDice": {
+    "dice": 9,
+    "sides": 9
+  },
+  "id": "demo.actor.nurgling",
+  "level": 8,
+  "maxHp": 45,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "damageDice": 1,
+            "damageSides": 9,
+            "type": "disease"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      }
+    ]
+  },
+  "nameKey": "actor-demo-nurgling-name",
+  "resistances": {
+    "fire": "resistant",
+    "poison": "immune"
+  },
+  "role": "monster",
+  "speed": 110,
+  "tags": [
+    "demon",
+    "evil",
+    "warrens"
+  ]
+}

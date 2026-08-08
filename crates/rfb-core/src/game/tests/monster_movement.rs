@@ -176,3 +176,89 @@ fn item_destroyer_removes_a_ground_gold_pile() {
             if target_kind_id == "core.gold.silver"
     ));
 }
+
+#[test]
+fn never_move_monster_waits_at_range_and_can_attack_adjacent() {
+    let mut game = game_with_actor_definition(7, "demo.actor.grey-mold", |actor| {
+        actor.attack = 1_000_000;
+    });
+    game.entities.clear();
+    let origin = Position { x: 5, y: 3 };
+    replace_terrain(&mut game, origin, "demo.terrain.floor");
+    let distant_player = Position { x: 8, y: 3 };
+    game.player.position = distant_player;
+    replace_terrain(&mut game, distant_player, "demo.terrain.floor");
+    game.push_generated_actor("test.grey-mold".to_owned(), "demo.actor.grey-mold", origin);
+    game.entities[0].alerted = true;
+
+    game.resolve_monster_action(
+        0,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+    )
+    .expect("stationary monster action should resolve");
+    assert_eq!(game.entities[0].position, origin);
+
+    let adjacent_player = Position { x: 6, y: 3 };
+    game.player.position = adjacent_player;
+    replace_terrain(&mut game, adjacent_player, "demo.terrain.floor");
+    let mut events = Vec::new();
+    game.resolve_monster_action(
+        0,
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+    )
+    .expect("adjacent stationary monster action should resolve");
+
+    assert_eq!(game.entities[0].position, origin);
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::MonsterMeleeHit { .. } | DomainEvent::MonsterMeleeMissed { .. }
+    )));
+}
+
+#[test]
+fn never_move_monster_can_still_blink() {
+    let mut game = game_with_actor_definition(8, "demo.actor.blinking-dot", |actor| {
+        actor
+            .monster_casting
+            .as_mut()
+            .expect("Blinking Dot casting profile")
+            .frequency_percent = 100;
+    });
+    game.entities.clear();
+    for y in 2..=6 {
+        for x in 2..=12 {
+            replace_terrain(&mut game, Position { x, y }, "demo.terrain.floor");
+        }
+    }
+    let origin = Position { x: 5, y: 3 };
+    game.player.position = Position { x: 12, y: 3 };
+    game.push_generated_actor(
+        "test.blinking-dot".to_owned(),
+        "demo.actor.blinking-dot",
+        origin,
+    );
+    game.entities[0].alerted = true;
+    let mut events = Vec::new();
+
+    game.resolve_monster_action(
+        0,
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+    )
+    .expect("stationary caster should blink");
+
+    assert_ne!(game.entities[0].position, origin);
+    assert!(
+        events
+            .iter()
+            .any(|event| matches!(event, DomainEvent::MonsterBlinked { .. }))
+    );
+}

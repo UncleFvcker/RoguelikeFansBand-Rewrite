@@ -1,6 +1,6 @@
 # 待实现内容清单
 
-状态：基于 contract-v1–v182、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
+状态：基于 contract-v1–v190、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
 
 本文件只记录已经在现有设计或原版对比中明确出现、但尚未实现的内容。长期设想仍保留在 [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)，这里用于跟踪可以实际排入后续 contract 的缺口。
 
@@ -9,6 +9,32 @@ contract-v172 已把玩家施法策略从通用 Ability Program 中改为按需�
 contract-v173 已按固定原版来源完成 Warrens 的 W1-W6 与运行时自然补怪；contract-v174-v176 完成 W7-W9，contract-v177-v180 继续完成 W10 特殊近战/死亡爆炸、W11 地形/物品破坏、W12 怪物光源和 W13 完整死亡掉落；contract-v182 已完成 W14 Pest Control 任务生态，详见 [Warrens 怪物机制实现清单](warrens-monster-mechanism-backlog.md) 和 [Contract v182](contract-v182-pest-control.md)。
 
 contract-v181 已接通 Outpost 通用任务设施和首个可玩“盗贼藏身处”：伯爵处接取、东北入口、任务专属 21x8 地图、清层/失败、回城领奖及前端任务面板。contract-v182 在同一设施接入原版“害虫控制”：Warrens 5 的 8 只 Warg、完成后魔法楼梯、未完成离层失败、回城领取毛皮披风。地图的永久墙和八处独立 50% 陷阱候选已按原版定义；尚未支持的盗贼藏身处原版语义继续列在下表，不以近似攻击冒充完成。
+
+contract-v183 已开始把 W1-W13 可承载的浅层怪物和物品加入正式包；
+contract-v184 进一步完成 `NEVER_MOVE` 与怪物 `BLINK` 绑定，并正式接入
+灰霉菌和闪烁的圆点。actor 的特殊心智、AI 学习提示和荒野 habitat 旗标
+仍按 [Warrens 怪物机制实现清单](warrens-monster-mechanism-backlog.md) 保留。
+contract-v185 增加固定索引的正式怪物选择/同步护栏，并接入 14 只 2–3 级
+机制完备怪物；四件已经固定源化的低层护具同时进入通用 Warrens 掉落。
+contract-v186 继续接入 13 只机制完备的 4–5 级怪物，并把正式
+`DROP_WARRIOR` 绑定复用于新手战士；需要主动施法、aquatic-only 分配、
+穿墙、拾物、偷窃、骑乘或特殊 Unique 行为的同级记录继续后置。
+contract-v187 让正式同步护栏复用现有怪物法术映射并拒绝任何未映射
+`S:` token，接入 10 只浅层施法怪物和紧咬、野狼、毒牙、东方人布罗达
+4 只简单 Unique。偷窃、荒野专属、特殊近战、专属物品和未支持召唤类型
+仍继续后置。
+contract-v188 接入 10 只机制完备的 6–7 级怪物；同级的睡眠 AI、特殊近战、
+银质交互、`KILL_BODY`、荒野专属、穿墙、拾物和职业主题掉落记录继续后置，
+不以 `omittedFlags` 删除主动行为。
+contract-v189 接入 12 只机制完备的 8–9 级怪物，并完成 1–9 级原版记录的
+浅层普查收口：173 条记录中 95 条已有正式 actor 和对应原版索引，63 条由
+严格选择/同步路径维护；其余 78 条均已归入明确机制缺口，不以近似内容
+冒充完成。
+contract-v190 按原版 `FORCE_SLEEP → MFLAG_NICE` 完成一次玩家行动的出生宽限，
+并建立 Mage、Archer、Priest、Evil Priest、Paladin 五类浅层职业掉落表；由此
+解锁 13 只此前因出生宽限或职业掉落后置的怪物。浅层正式 actor 增至 108 条，
+其中 76 条由严格同步维护；剩余 65 条继续绑定偷窃、特殊状态近战、穿墙、
+水生/骑乘、荒野限定、特殊召唤等真实能力缺口。
 
 ## 盗贼藏身处后续机制
 

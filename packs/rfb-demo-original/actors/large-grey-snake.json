@@ -1,0 +1,79 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 90,
+    "maxDepth": 40,
+    "randomMovementPercent": 25,
+    "rarity": 1
+  },
+  "attack": 1,
+  "damageDice": 1,
+  "damageSides": 8,
+  "damageType": "physical",
+  "defense": 4,
+  "descriptionKey": "actor-demo-large-grey-snake-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 14,
+  "formatVersion": 1,
+  "glyph": "J",
+  "hitPointDice": {
+    "dice": 6,
+    "sides": 8
+  },
+  "id": "demo.actor.large-grey-snake",
+  "level": 4,
+  "maxHp": 27,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 8,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 10,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.crush",
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "modes": [
+      "swim"
+    ]
+  },
+  "nameKey": "actor-demo-large-grey-snake-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 4,
+    "skeletonItemKindId": "demo.item.skeleton-remains",
+    "skeletonWeight": 1
+  },
+  "role": "monster",
+  "speed": 100,
+  "tags": [
+    "animal",
+    "reptile",
+    "snake",
+    "warrens"
+  ]
+}

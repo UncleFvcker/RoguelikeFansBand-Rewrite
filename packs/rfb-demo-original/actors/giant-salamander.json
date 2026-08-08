@@ -1,0 +1,78 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 143,
+    "maxDepth": 40,
+    "randomMovementPercent": 25,
+    "rarity": 1
+  },
+  "attack": 2,
+  "damageDice": 3,
+  "damageSides": 7,
+  "damageType": "fire",
+  "defense": 4,
+  "descriptionKey": "actor-demo-giant-salamander-description",
+  "experienceValue": 50,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "R",
+  "hitPointDice": {
+    "dice": 6,
+    "sides": 7
+  },
+  "id": "demo.actor.giant-salamander",
+  "level": 8,
+  "light": {
+    "intrinsic": true,
+    "radius": 1
+  },
+  "maxHp": 24,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 3,
+            "damageSides": 7,
+            "damageType": "fire",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.breath-fire-20-900-r2",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 11
+  },
+  "movement": {
+    "modes": [
+      "swim"
+    ]
+  },
+  "nameKey": "actor-demo-giant-salamander-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "fire": "resistant"
+  },
+  "role": "monster",
+  "speed": 110,
+  "tags": [
+    "animal",
+    "reptile",
+    "warrens"
+  ]
+}

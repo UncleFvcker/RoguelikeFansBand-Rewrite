@@ -785,6 +785,34 @@
       ],
       "nextItemInstanceSerial": 90,
       "nextGoldPileSerial": 1,
+      "tasks": [
+        {
+          "taskId": "demo.task.pest-control",
+          "floorId": "demo.floor.warrens-depth-5",
+          "nameKey": "task-demo-pest-control-name",
+          "descriptionKey": "task-demo-pest-control-description",
+          "sourceFacilityId": "demo.town-facility.outpost-count",
+          "status": "locked",
+          "current": 0,
+          "required": 8,
+          "stage": 1,
+          "stages": 1,
+          "retakesUsed": 0
+        },
+        {
+          "taskId": "demo.task.thieves-hideout",
+          "floorId": "demo.floor.thieves-hideout",
+          "nameKey": "task-demo-thieves-hideout-name",
+          "descriptionKey": "task-demo-thieves-hideout-description",
+          "sourceFacilityId": "demo.town-facility.outpost-count",
+          "status": "available",
+          "current": 0,
+          "required": 1,
+          "stage": 1,
+          "stages": 1,
+          "retakesUsed": 0
+        }
+      ],
       "campaign": {
         "status": "retired",
         "score": 60000,
@@ -793,7 +821,7 @@
         "victoryTurn": 0,
         "retiredTurn": 1
       },
-      "stateHash": "8191c6b785ef0999d237c596a12be4e7c9efe312c3bb6cbe5685e6044cd56f01"
+      "stateHash": "dbcf2a4153ab372a40b94959d9c1fdc7d8216fb04ff8762d5ab0039ec037b604"
     },
     "events": [
       {
@@ -808,9 +836,9 @@
       {
         "step": 2,
         "kind": "campaign-ended",
-        "stateHash": "8191c6b785ef0999d237c596a12be4e7c9efe312c3bb6cbe5685e6044cd56f01"
+        "stateHash": "dbcf2a4153ab372a40b94959d9c1fdc7d8216fb04ff8762d5ab0039ec037b604"
       }
     ],
-    "saveRoundTripStateHash": "8191c6b785ef0999d237c596a12be4e7c9efe312c3bb6cbe5685e6044cd56f01"
+    "saveRoundTripStateHash": "dbcf2a4153ab372a40b94959d9c1fdc7d8216fb04ff8762d5ab0039ec037b604"
   }
 }

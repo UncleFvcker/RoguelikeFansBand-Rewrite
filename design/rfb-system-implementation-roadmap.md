@@ -1,6 +1,6 @@
 # RFB 全系统梳理与重构实现路线
 
-状态：长期规则实现路线；当前基线为协议 1.138 / contract-v182（P31–P98 进展见 8.3，玩家流程与 Outpost 进展见 Phase 17/18，物品接入见 Phase 19，Warrens 怪物机制见 W1–W14 清单）
+状态：长期规则实现路线；当前基线为协议 1.140 / contract-v190（P31–P98 进展见 8.3，玩家流程与 Outpost 进展见 Phase 17/18，物品接入见 Phase 19，Warrens 怪物机制见 W1–W14 清单）
 
 ## 1. 目的与边界
 
@@ -460,13 +460,13 @@ Warrens 的怪物机制按 [Warrens 怪物机制实现清单](warrens-monster-me
 
 实现自动拾取规则 AST、自动铭文、宏/动作绑定、完整知识菜单、怪物回忆、统计、角色档案、高分、胜利记录和可选 spoiler 工具。最后进行大规模内容录入、性能分析、平衡差分和发行准备。
 
-## 8. contract-v75–v171 阶段性里程碑
+## 8. contract-v75–v190 阶段性里程碑
 
 ### 8.1 基线与完成度判断
 
-当前权威基线为协议 1.138、内容包 1.177.0、contract-v182、save v1 和 state hash Schema v63；内容 hash 为 `b51f0b97ac90c025b9c35347b2b2c56c2c2d00d89f53c0534631a1e00d2270a5`。active baseline 包含 470 个 exact fixtures，零 waiver。v73–v149 建立的规则与内容边界保持；v150–v156 建立 Warrens 玩家流程、角色切片、结果恢复、地图密度和掉落；v157–v168 建立并扩展开放 Outpost、补给、九类设施与 Home；v169 接入 35 项固定原版物品、共享背包容量、容器/工具槽、装备近战修正与工具双槽语义；v170 按原版力量表动态计算负重容量，并以超重速度惩罚取代拾取和交易硬拒绝；v171 按固定原版来源把 Warrens 普通生态扩为十二种已支持怪物，并建立 W1–W14 怪物机制实施清单；v172 将玩家施法策略按实际玩家入口选配，并把内容匹配从 state hash 中分离；v173 完成 Warrens 的全局分配、越级、leader-first 群体、Unique/escort、繁殖、随机移动与自然补怪；v174-v176 完成怪物门交互、移动域与个体 HP 骰；v177-v180 完成特殊近战/死亡爆炸、地形和物品破坏、怪物光源与完整死亡掉落旗标；v181 接通伯爵任务设施和盗贼藏身处；v182 接通原版害虫控制，严格使用 8 只 Warg 目标、Warrens 5 专属运行时补足、完成后魔法楼梯、失败离层和毛皮披风奖励，并以两条单命令 fixture 固定接取/领奖边界。Original Lab/Echo 与旧 demo builds 留作历史系统回归。Race/Class/Personality、技能成长、出生装备、自然属性、HP 序列、胜利后等级 100 / `18/820` 和装备派生边界保持一致。
+当前权威基线为协议 1.140、内容包 1.185.0、contract-v190、save v1 和 state hash Schema v64；内容 hash 为 `e7a7697de6aab4160c2398cba429559fa7fd62c46b65f3bb929490d859395f3e`。active baseline 包含 470 个 exact fixtures，零 waiver。v73–v149 建立的规则与内容边界保持；v150–v156 建立 Warrens 玩家流程、角色切片、结果恢复、地图密度和掉落；v157–v168 建立并扩展开放 Outpost、补给、九类设施与 Home；v169 接入 35 项固定原版物品、共享背包容量、容器/工具槽、装备近战修正与工具双槽语义；v170 按原版力量表动态计算负重容量，并以超重速度惩罚取代拾取和交易硬拒绝；v171 按固定原版来源把 Warrens 普通生态扩为十二种已支持怪物，并建立 W1–W14 怪物机制实施清单；v172 将玩家施法策略按实际玩家入口选配，并把内容匹配从 state hash 中分离；v173 完成 Warrens 的全局分配、越级、leader-first 群体、Unique/escort、繁殖、随机移动与自然补怪；v174-v176 完成怪物门交互、移动域与个体 HP 骰；v177-v180 完成特殊近战/死亡爆炸、地形和物品破坏、怪物光源与完整死亡掉落旗标；v181 接通伯爵任务设施和盗贼藏身处；v182 接通原版害虫控制；v183-v189 分五批完成 173 条 1–9 级原版记录普查并将 63 条纳入严格同步；v190 建立 `FORCE_SLEEP` 出生宽限及五类职业掉落，进一步正式接入 13 只怪物，使严格同步增至 76 条。Original Lab/Echo 与旧 demo builds 留作历史系统回归。Race/Class/Personality、技能成长、出生装备、自然属性、HP 序列、胜利后等级 100 / `18/820` 和装备派生边界保持一致。
 
-这一里程碑代表“规则架构、地牢纵切、角色构筑、玩家/怪物施法循环和首个兼容玩家流程已经成型”，不代表“旧 RFB 已重制完成”。当前 demo 内容包有 75 种 terrain、51 种 actor、141 种 item、3 种 resource、69 个 ability、6 本 ability book、10 个 skill、13 个 skill set、5 个 Race、6 个 Class、3 个 Personality、7 个 build、7 张 encounter table、14 张 loot table、3 张 theme table、1 张 region table、1 张 terrain feature table、6 个 Vault、1 个 town、2 个 town facility、8 个 shop 和 2 个 world。
+这一里程碑代表“规则架构、地牢纵切、角色构筑、玩家/怪物施法循环和首个兼容玩家流程已经成型”，不代表“旧 RFB 已重制完成”。当前 demo 内容包有 75 种 terrain、128 种 actor、146 种 item、3 种 resource、82 个 ability、6 本 ability book、10 个 skill、13 个 skill set、5 个 Race、6 个 Class、3 个 Personality、7 个 build、7 张 encounter table、14 张 loot table、3 张 theme table、1 张 region table、1 张 terrain feature table、6 个 Vault、1 个 town、2 个 town facility、8 个 shop 和 2 个 world。
 
 | 领域 | 阶段性状态 | 与旧 RFB 的当前差距 |
 | --- | --- | --- |

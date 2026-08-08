@@ -1,0 +1,56 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 69,
+    "maxDepth": 30,
+    "multiplies": true,
+    "randomMovementPercent": 75,
+    "rarity": 1
+  },
+  "attack": 1,
+  "damageDice": 1,
+  "damageSides": 3,
+  "damageType": "physical",
+  "defense": 0,
+  "descriptionKey": "actor-demo-giant-white-louse-description",
+  "experienceValue": 1,
+  "formatVersion": 1,
+  "glyph": "I",
+  "hitPointDice": {
+    "dice": 1,
+    "sides": 1
+  },
+  "id": "demo.actor.giant-white-louse",
+  "level": 3,
+  "maxHp": 1,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 3,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "nameKey": "actor-demo-giant-white-louse-name",
+  "role": "monster",
+  "speed": 120,
+  "tags": [
+    "animal",
+    "insect",
+    "warrens"
+  ]
+}

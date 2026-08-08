@@ -418,6 +418,8 @@ pub enum LegacyImportError {
     LegacyGit(String),
     #[error("invalid demo item selection: {0}")]
     InvalidDemoItemSelection(String),
+    #[error("invalid demo monster selection: {0}")]
+    InvalidDemoMonsterSelection(String),
     #[error(
         "legacy content parse error in {content_source}:{line} field {field}: {reason} (value {value:?})"
     )]

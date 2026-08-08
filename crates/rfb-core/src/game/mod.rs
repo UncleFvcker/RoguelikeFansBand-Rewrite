@@ -187,7 +187,7 @@ pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 63;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 64;
 pub const WARRENS_JOURNEY_WORLD_ID: &str = "demo.world.warrens-journey";
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const VISIBILITY_RADIUS: i32 = 8;
@@ -1079,9 +1079,17 @@ impl Game {
         }
 
         let mut action = GameAction::from(envelope.command);
+        let nice_entities_at_command_start = self
+            .entities
+            .iter()
+            .filter(|entity| entity.nice)
+            .map(|entity| entity.id.clone())
+            .collect::<BTreeSet<_>>();
         self.command_actor_deaths.clear();
         self.validate_runtime_invariants(&action)?;
         let base_revision = self.revision;
+        let world_tick_before_command = self.world_tick;
+        let previous_dimensions = (self.width, self.height);
         // The world only mutates inside dispatch, so the visuals recorded at
         // the end of the previous command are exactly this command's "before"
         // frame; recomputing them here would be a second full-map pass.
@@ -1686,12 +1694,27 @@ impl Game {
         self.apply_task_events(&mut events)?;
         self.apply_campaign_events(&mut events);
 
+        if self.world_tick != world_tick_before_command {
+            // Clear only the grace windows that existed before this command.
+            // Monsters generated while entering a floor keep their grace for
+            // the player's first action on that floor.
+            for entity in &mut self.entities {
+                if nice_entities_at_command_start.contains(&entity.id) {
+                    entity.nice = false;
+                }
+            }
+        }
+
         self.last_command_seq = envelope.command_seq;
         self.turn = self.turn.saturating_add(turn_advance);
         self.revision = self.revision.saturating_add(1);
         self.reveal_current_visibility();
         let current_visuals = self.visual_cells();
-        let changed_visual_cells = Self::changed_visual_cells(&current_visuals, &previous_visuals);
+        let changed_visual_cells = if (self.width, self.height) == previous_dimensions {
+            Self::changed_visual_cells(&current_visuals, &previous_visuals)
+        } else {
+            current_visuals.clone()
+        };
         self.last_visual_cells = Some(current_visuals);
         let events = project_events(events);
 
@@ -1701,6 +1724,8 @@ impl Game {
             turn: self.turn,
             world_tick: self.world_tick,
             command_seq: self.last_command_seq,
+            width: self.width,
+            height: self.height,
             floor_id: self.current_floor_id.clone(),
             dungeon_instance_id: self.current_dungeon_instance_id.clone(),
             town: self.current_town_dto(),
@@ -3264,8 +3289,19 @@ impl Game {
         removed_entities: &mut Vec<String>,
         surround_reservations: &mut BTreeSet<Position>,
     ) -> Result<(), CoreError> {
+        let never_moves = self
+            .content
+            .actor(&self.entities[index].kind_id)
+            .is_some_and(|definition| definition.movement.never_moves);
         if self.entity_is_player_aligned(index) {
-            if self.resolve_original_random_movement(index, events, changed, removed_entities)? {
+            if !never_moves
+                && self.resolve_original_random_movement(
+                    index,
+                    events,
+                    changed,
+                    removed_entities,
+                )?
+            {
                 return Ok(());
             }
             self.resolve_player_summon_action(index, events, changed, removed_entities)?;
@@ -3277,12 +3313,26 @@ impl Game {
         if self.resolve_monster_ability_with_changes(index, events, changed, removed_entities)? {
             return Ok(());
         }
-        if self.resolve_original_random_movement(index, events, changed, removed_entities)? {
+        if !never_moves
+            && self.resolve_original_random_movement(index, events, changed, removed_entities)?
+        {
             return Ok(());
         }
         let Some(primary_target) = self.monster_hostile_targets(index).into_iter().next() else {
             return Ok(());
         };
+        if never_moves {
+            if adjacent(self.entities[index].position, primary_target.position()) {
+                self.resolve_monster_melee_target(
+                    index,
+                    &primary_target,
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+            }
+            return Ok(());
+        }
         let casting = self
             .content
             .actor(&self.entities[index].kind_id)
@@ -3433,6 +3483,10 @@ impl Game {
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
     ) -> Result<(), CoreError> {
+        let never_moves = self
+            .content
+            .actor(&self.entities[index].kind_id)
+            .is_some_and(|definition| definition.movement.never_moves);
         let targets = self.player_summon_hostile_targets(index);
         let adjacent_target = targets.iter().find(|entity_id| {
             self.entities
@@ -3440,6 +3494,18 @@ impl Game {
                 .find(|entity| entity.id == **entity_id)
                 .is_some_and(|target| adjacent(self.entities[index].position, target.position))
         });
+        if never_moves {
+            if let Some(target_id) = adjacent_target {
+                self.resolve_player_summon_melee(
+                    index,
+                    target_id,
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+            }
+            return Ok(());
+        }
         let owner_position = self.player.position;
         let next_position = match self.summon_command.mode {
             SummonCommandModeDto::Follow => {
@@ -4100,7 +4166,9 @@ impl Game {
 
     fn position_is_lit(&self, position: Position) -> bool {
         self.collect_light_sources().iter().any(|source| {
-            squared_distance(source.position, position) <= source.radius * source.radius
+            rfb_distance(source.position, position)
+                <= u32::try_from(source.radius)
+                    .expect("validated light radius must be non-negative")
         })
     }
 
@@ -5279,6 +5347,7 @@ const fn monster_pack_behavior_dto(behavior: MonsterPackBehavior) -> MonsterPack
 /// its definition; loaded saves keep their stored profiles untouched.
 fn stamped_spawn(mut actor: Actor, definition: &rfb_content::ActorDefinition) -> Actor {
     actor.resistances = definition_resistance_profile(definition);
+    actor.nice = definition.force_sleep;
     actor
 }
 
@@ -5327,17 +5396,17 @@ fn actor_starts_alerted(definition: &rfb_content::ActorDefinition) -> bool {
 }
 
 fn source_intensity(source: Position, target: Position, radius: i32, maximum: u8) -> u8 {
-    let distance = squared_distance(source, target);
-    let radius_squared = radius * radius;
-    if distance > radius_squared {
+    let distance = rfb_distance(source, target);
+    let radius = u32::try_from(radius).expect("validated light radius must be non-negative");
+    if distance > radius {
         return 0;
     }
-    let remaining = radius_squared - distance;
-    u8::try_from(
-        (u32::from(maximum) * u32::try_from(remaining).unwrap_or(0))
-            / u32::try_from(radius_squared).unwrap_or(1),
-    )
-    .unwrap_or(maximum)
+
+    // RFB treats the source and all eight adjacent grids as the same inner
+    // light band. Every included outer band remains lit at reduced strength.
+    let remaining = radius.saturating_sub(distance.saturating_sub(1));
+    u8::try_from(u32::from(maximum).saturating_mul(remaining) / radius.max(1))
+        .expect("scaled light intensity must fit u8")
 }
 
 #[derive(Debug, Clone, Copy)]

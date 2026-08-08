@@ -23,6 +23,7 @@ pub(crate) struct Actor {
     pub(crate) speed: u16,
     pub(crate) energy_need: i32,
     pub(crate) alerted: bool,
+    pub(crate) nice: bool,
     pub(crate) casting_cooldown_remaining: u16,
     pub(crate) observed_player_resistances: BTreeMap<DamageType, ResistanceLevel>,
     pub(crate) statuses: Vec<StatusInstance>,

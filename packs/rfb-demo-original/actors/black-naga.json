@@ -1,0 +1,38 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "formatVersion": 1,
+  "id": "demo.actor.black-naga",
+  "role": "monster",
+  "nameKey": "actor-demo-black-naga-name",
+  "descriptionKey": "actor-demo-black-naga-description",
+  "glyph": "n",
+  "level": 3,
+  "experienceValue": 22,
+  "maxHp": 27,
+  "hitPointDice": { "dice": 6, "sides": 8 },
+  "speed": 110,
+  "attack": 1,
+  "defense": 4,
+  "damageDice": 2,
+  "damageSides": 6,
+  "damageType": "physical",
+  "meleeRoutine": {
+    "blows": [
+      { "methodId": "rfb.blow.crush", "toHit": 20, "effects": [{ "type": "damage", "damageDice": 2, "damageSides": 6, "armorMitigated": true }] }
+    ]
+  },
+  "deathDrop": {
+    "kind": "items-and-gold",
+    "itemTableId": "demo.loot-table.warrens",
+    "chanceRolls": [{ "percent": 60 }]
+  },
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1
+  },
+  "doorInteraction": { "bashes": true },
+  "allocation": { "legacyIndex": 71, "rarity": 1, "maxDepth": 30, "randomMovementPercent": 25 },
+  "movement": { "modes": ["swim"] },
+  "tags": ["evil", "naga", "warrens"]
+}

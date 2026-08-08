@@ -1,0 +1,71 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 99,
+    "maxDepth": 40,
+    "randomMovementPercent": 75,
+    "rarity": 1
+  },
+  "attack": 1,
+  "damageDice": 1,
+  "damageSides": 8,
+  "damageType": "cold",
+  "deathDrop": {
+    "chanceRolls": [
+      {
+        "percent": 60
+      }
+    ],
+    "itemTableId": "demo.loot-table.warrens",
+    "kind": "items-and-gold"
+  },
+  "defense": 1,
+  "descriptionKey": "actor-demo-slush-pile-description",
+  "experienceValue": 7,
+  "formatVersion": 1,
+  "glyph": "j",
+  "hitPointDice": {
+    "dice": 3,
+    "sides": 4
+  },
+  "id": "demo.actor.slush-pile",
+  "level": 5,
+  "maxHp": 7,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 1,
+            "damageSides": 8,
+            "damageType": "cold",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.crawl",
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "modes": [
+      "swim"
+    ]
+  },
+  "nameKey": "actor-demo-slush-pile-name",
+  "resistances": {
+    "cold": "resistant"
+  },
+  "role": "monster",
+  "speed": 110,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "jelly",
+    "warrens"
+  ]
+}

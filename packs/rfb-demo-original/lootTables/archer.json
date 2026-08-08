@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/loot-table.schema.json",
+  "formatVersion": 1,
+  "id": "demo.loot-table.archer",
+  "rolls": 1,
+  "entries": [
+    { "itemKindId": "demo.item.arrow", "weight": 1, "quantity": 1, "minDepth": 0, "maxDepth": 9 }
+  ],
+  "qualityWeights": [{ "quality": "ordinary", "weight": 1 }],
+  "affixWeights": [{ "weight": 1 }]
+}

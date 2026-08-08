@@ -285,8 +285,8 @@
         {
           "id": "demo.floor.resonance-depth-6.region.demo.region.resonance-grotto.encounter.1.escort.1",
           "position": {
-            "x": 4,
-            "y": 4
+            "x": 5,
+            "y": 3
           },
           "hp": 3,
           "speed": 110,
@@ -412,7 +412,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "17a576eae8071209f2a3666d4e7912126978c18b6b73bbd2c7947d7fb4aefada"
+      "stateHash": "2233fa51604ea17e35a024897cd1f5e3029e30dcbda43a2bdc55ab77a980648b"
     },
     "events": [
       {
@@ -10228,6 +10228,6 @@
         "y": 19
       }
     ],
-    "saveRoundTripStateHash": "17a576eae8071209f2a3666d4e7912126978c18b6b73bbd2c7947d7fb4aefada"
+    "saveRoundTripStateHash": "2233fa51604ea17e35a024897cd1f5e3029e30dcbda43a2bdc55ab77a980648b"
   }
 }

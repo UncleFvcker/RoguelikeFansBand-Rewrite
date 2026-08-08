@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 50,
+  "descriptionKey": "item-demo-paper-armour-description",
+  "equipmentSlot": "body",
+  "formatVersion": 1,
+  "glyph": "(",
+  "id": "demo.item.paper-armour",
+  "maxStack": 1,
+  "modifiers": {
+    "defense": 4
+  },
+  "nameKey": "item-demo-paper-armour-name",
+  "tags": [
+    "armor",
+    "equipment",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 30
+}

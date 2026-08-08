@@ -1,6 +1,6 @@
 # RFB CoreTransport 协议 v1
 
-状态：协议 1.136、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
+状态：协议 1.140、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
 
 ## 1. 适用边界
 
@@ -366,3 +366,5 @@ contract-v132 不增加运行时命令或快照 DTO，继续复用 `UseItem` 与
 协议 1.136 为 `PlayerDto` 增加 `encumbranceSpeedPenalty`。`carryCapacityTenthsPound` 改为从有效力量按原版 38 档表动态投影；超重不再拒绝拾取、购买或从 Home 取出，而是在达到容量 120% 后按每 20% 施加 1 点权威速度惩罚。存档与 state hash 输入结构不变，Schema 保持 v61。
 
 协议 1.137 为 save v1 增加必填 `defeatedUniqueActorKindIds`。该集合只记录已死亡的普通非 guardian Unique；当前层与离层仓库中的存活实例仍由 actor 状态直接证明占用，guardian 继续使用既有 dungeon 状态。读取时拒绝重复 ID、非 Unique、guardian 以及与存活实例冲突的集合。该权威状态进入 state hash Schema v63；旧开发存档不兼容。完整边界见 [Contract v173](contract-v173-warrens-allocation-ecology.md)。
+
+协议 1.140 为 `ActorSaveDto` 增加必填 `nice`，保存原版 `FORCE_SLEEP → MFLAG_NICE` 的一次玩家行动出生宽限；当前层和离层仓库使用同一字段，旧开发存档不兼容。该字段进入 state hash Schema v64；它不属于普通 `StatusDto`，也不进入可见 `EntityDto`。完整边界见 [Contract v190](contract-v190-warrens-content-p6-spawn-grace-class-drops.md)。

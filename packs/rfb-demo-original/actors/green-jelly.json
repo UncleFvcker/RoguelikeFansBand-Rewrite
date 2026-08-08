@@ -1,0 +1,70 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 66,
+    "maxDepth": 30,
+    "rarity": 1
+  },
+  "attack": 1,
+  "damageDice": 1,
+  "damageSides": 7,
+  "damageType": "poison",
+  "defense": 0,
+  "descriptionKey": "actor-demo-green-jelly-description",
+  "experienceValue": 13,
+  "formatVersion": 1,
+  "glyph": "j",
+  "hitPointDice": {
+    "dice": 10,
+    "sides": 8
+  },
+  "id": "demo.actor.green-jelly",
+  "level": 3,
+  "maxHp": 45,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "damageDice": 1,
+            "damageSides": 7,
+            "type": "poison"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.drain-mana-2",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 6
+  },
+  "movement": {
+    "modes": [
+      "swim"
+    ],
+    "neverMoves": true
+  },
+  "nameKey": "actor-demo-green-jelly-name",
+  "resistances": {
+    "light": "vulnerable",
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 120,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "jelly",
+    "warrens"
+  ]
+}

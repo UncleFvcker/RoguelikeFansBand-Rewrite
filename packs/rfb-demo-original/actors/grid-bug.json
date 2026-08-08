@@ -1,0 +1,35 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "formatVersion": 1,
+  "id": "demo.actor.grid-bug",
+  "role": "monster",
+  "nameKey": "actor-demo-grid-bug-name",
+  "descriptionKey": "actor-demo-grid-bug-description",
+  "glyph": "I",
+  "level": 1,
+  "experienceValue": 4,
+  "maxHp": 5,
+  "hitPointDice": { "dice": 2, "sides": 4 },
+  "speed": 110,
+  "attack": 1,
+  "defense": 0,
+  "damageDice": 1,
+  "damageSides": 7,
+  "damageType": "electricity",
+  "resistances": { "electricity": "resistant" },
+  "light": { "radius": 1, "intrinsic": true },
+  "meleeRoutine": {
+    "blows": [
+      { "methodId": "rfb.blow.bite", "toHit": 20, "effects": [{ "type": "damage", "damageDice": 1, "damageSides": 7, "damageType": "electricity", "armorMitigated": false }] }
+    ]
+  },
+  "allocation": {
+    "legacyIndex": 34,
+    "rarity": 3,
+    "maxDepth": 20,
+    "friends": { "dice": 0, "sides": 0 },
+    "randomMovementPercent": 25
+  },
+  "movement": { "modes": ["fly"] },
+  "tags": ["animal", "insect", "warrens"]
+}

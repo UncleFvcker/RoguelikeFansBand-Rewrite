@@ -1,0 +1,92 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "friends": {
+      "chancePercent": 50,
+      "dice": 2,
+      "sides": 3
+    },
+    "legacyIndex": 125,
+    "maxDepth": 40,
+    "rarity": 1
+  },
+  "attack": 1,
+  "damageDice": 1,
+  "damageSides": 3,
+  "damageType": "physical",
+  "defense": 2,
+  "descriptionKey": "actor-demo-rotting-corpse-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 15,
+  "formatVersion": 1,
+  "glyph": "z",
+  "hitPointDice": {
+    "dice": 8,
+    "sides": 8
+  },
+  "id": "demo.actor.rotting-corpse",
+  "level": 7,
+  "maxHp": 36,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 3,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "damageDice": 1,
+            "damageSides": 3,
+            "type": "poison"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 3,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "damageDice": 1,
+            "damageSides": 3,
+            "type": "poison"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      }
+    ]
+  },
+  "nameKey": "actor-demo-rotting-corpse-name",
+  "resistances": {
+    "cold": "resistant",
+    "nether": "resistant",
+    "poison": "immune"
+  },
+  "role": "monster",
+  "speed": 110,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "evil",
+    "undead",
+    "warrens",
+    "zombie"
+  ]
+}

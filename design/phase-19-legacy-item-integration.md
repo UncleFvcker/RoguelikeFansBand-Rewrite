@@ -97,3 +97,63 @@ the original utility-weapon choice.
 The formal demo selection now contains 35 fixed-source items. The demo pack is
 version 1.163.0 with 140 items and content hash
 `d9e227cc7757ff82a66c7afadf8da2846a1751920f53fa3f1f0a74c640b8a0ac`.
+
+## Sixth Batch
+
+The sixth batch adds Broken Dagger, Broken Sword, Filthy Rag, Pointy Hat, and
+Paper Armour from fixed-source indexes 45, 46, 246, 225, and 248. All five are
+passive equipment with no unresolved active behavior. They enter the Warrens
+loot table at their original object levels: the three damaged level-zero items
+at depth 0, Pointy Hat at depth 3, and Paper Armour at depth 5.
+
+This batch deliberately uses dungeon drops rather than expanding Outpost shop
+stock. The formal selection now contains 40 fixed-source items. The demo pack
+is version 1.179.0 with 146 items and content hash
+`066a3e92b8ec8698438876ef1f264e106151ad22e06c93a1bd435829f0ade8ff`.
+
+## Seventh Batch
+
+The seventh batch changes reachability rather than item identity. Leather
+Gloves enter the general Warrens table at original allocation depth 1; Soft
+Leather Boots, Hard Leather Cap, and Small Leather Shield enter at depth 3.
+All four were already fixed-source formal items and all have original
+allocation rarity 1. They remain in their existing shops and Warrior-theme
+drop table while becoming ordinary floor and general monster drops.
+
+The formal selection remains 40 items. The demo pack is version 1.180.0 with
+146 items and content hash
+`7051765d5f3e57bf1967c1e305d63eb6949ca90cbb87ceb24b2a384e6162de93`.
+
+## Eighth Batch Boundary
+
+The level-four and level-five monster batch adds no item identity. The formal
+selection already contains every passive fixed-source equipment kind eligible
+for ordinary Warrens allocation at depth five or shallower, and those kinds
+already appear in the general table at their source depth. Contract v186 adds
+only new consumers of those tables, including the existing Warrior-theme table.
+
+The formal selection remains 40 items. The demo pack is version 1.181.0 with
+146 items and content hash
+`da4f82376baca9fce9d3f8e4728bae42f5be60cdc69048f14e94b81458b68ab8`.
+
+## Ninth Batch Boundary
+
+The P3 caster and simple-Unique batch adds no item identity. Its four Unique
+actors use only already formal ordinary/good drops and remains; no source
+artifact is approximated or invented. The formal selection remains 40 items.
+The P4 level-six and level-seven and P5 level-eight and level-nine monster
+batches add no item identity. The formal selection remains 40 items. The demo
+pack is version 1.184.0 with 146 items and content hash
+`9d6be77bac135d2dad8f6c6067f34750c57f02121f905e8606197c2d043d606d`.
+
+## Tenth Batch Boundary
+
+P6 adds no item identity. It makes already-formal shallow items reachable from
+the original 50-percent Mage, Archer, Priest, Evil Priest, and Paladin monster
+drop branches through five explicit loot tables. Each table contains only the
+currently formal subset accepted by the corresponding RFB `master` predicate
+at Warrens depths; unsupported or deep items are not approximated.
+
+The formal selection remains 40 fixed-source items and the pack remains at 146
+items. The demo pack is version 1.185.0 with content hash
+`e7a7697de6aab4160c2398cba429559fa7fd62c46b65f3bb929490d859395f3e`.

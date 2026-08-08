@@ -1,0 +1,63 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 84,
+    "maxDepth": 40,
+    "rarity": 1
+  },
+  "attack": 1,
+  "damageDice": 2,
+  "damageSides": 5,
+  "damageType": "cold",
+  "defense": 0,
+  "descriptionKey": "actor-demo-frosty-jelly-description",
+  "experienceValue": 14,
+  "formatVersion": 1,
+  "glyph": "j",
+  "hitPointDice": {
+    "dice": 12,
+    "sides": 8
+  },
+  "id": "demo.actor.frosty-jelly",
+  "level": 4,
+  "maxHp": 54,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 2,
+            "damageSides": 5,
+            "damageType": "cold",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "modes": [
+      "swim"
+    ],
+    "neverMoves": true
+  },
+  "nameKey": "actor-demo-frosty-jelly-name",
+  "resistances": {
+    "cold": "resistant",
+    "light": "vulnerable"
+  },
+  "role": "monster",
+  "speed": 110,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "jelly",
+    "warrens"
+  ]
+}

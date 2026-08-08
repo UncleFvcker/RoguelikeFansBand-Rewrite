@@ -1,0 +1,17 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 1,
+  "descriptionKey": "item-demo-filthy-rag-description",
+  "equipmentSlot": "body",
+  "formatVersion": 1,
+  "glyph": "(",
+  "id": "demo.item.filthy-rag",
+  "maxStack": 1,
+  "nameKey": "item-demo-filthy-rag-name",
+  "tags": [
+    "armor",
+    "equipment",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 20
+}

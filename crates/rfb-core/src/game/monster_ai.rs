@@ -25,6 +25,12 @@ impl Game {
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
     ) -> Result<bool, CoreError> {
+        // RFB's FORCE_SLEEP flag creates a one-player-action "nice" window,
+        // not the ordinary sleep status. Nice monsters may still move and
+        // fight, but never enter the spell-frequency RNG path.
+        if self.entities[index].nice {
+            return Ok(false);
+        }
         let source_entity_id = self.entities[index].id.clone();
         let source_kind_id = self.entities[index].kind_id.clone();
         let Some(casting) = self

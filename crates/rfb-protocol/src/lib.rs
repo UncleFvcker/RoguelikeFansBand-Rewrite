@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.138";
+pub const PROTOCOL_VERSION: &str = "1.140";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -2649,6 +2649,8 @@ pub struct GameUpdate {
     #[serde(default)]
     pub world_tick: u32,
     pub command_seq: u32,
+    pub width: u16,
+    pub height: u16,
     pub floor_id: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub dungeon_instance_id: Option<String>,
@@ -3004,6 +3006,7 @@ pub struct ActorSaveDto {
     pub energy_need: i32,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub alerted: Option<bool>,
+    pub nice: bool,
     #[serde(default)]
     pub casting_cooldown_remaining: u16,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -3682,7 +3685,7 @@ mod tests {
     }
 
     #[test]
-    fn legacy_v1_save_payload_decodes_into_authoritative_save_dtos() {
+    fn v1_projection_migration_requires_current_actor_state() {
         let legacy = LegacySavePayloadV1 {
             schema_version: 1,
             revision: 2,
@@ -3862,8 +3865,15 @@ mod tests {
         };
 
         let encoded = to_msgpack(&legacy).expect("legacy payload should encode");
+        assert!(
+            from_msgpack::<SavePayloadV1>(&encoded).is_err(),
+            "pre-v190 actor saves without nice must be rejected"
+        );
+        let mut current = serde_json::to_value(&legacy).expect("fixture should serialize");
+        current["entities"][0]["nice"] = serde_json::json!(false);
+        let encoded = to_msgpack(&current).expect("current payload should encode");
         let decoded: SavePayloadV1 =
-            from_msgpack(&encoded).expect("legacy payload should migrate while decoding");
+            from_msgpack(&encoded).expect("current actor state should decode");
 
         assert_eq!(decoded.player.base_max_hp, 10);
         assert_eq!(decoded.entities[0].max_hp, 3);

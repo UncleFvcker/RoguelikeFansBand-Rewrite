@@ -34,6 +34,8 @@ pub enum ActorMovementMode {
 pub struct ActorMovementDefinition {
     #[serde(default)]
     pub modes: Vec<ActorMovementMode>,
+    #[serde(default)]
+    pub never_moves: bool,
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -282,6 +284,9 @@ pub struct ActorDefinition {
     pub light: Option<ActorLightDefinition>,
     #[serde(default)]
     pub awareness: Option<ActorAwarenessDefinition>,
+    /// Whether the monster receives RFB's one-player-action spawn grace.
+    #[serde(default)]
+    pub force_sleep: bool,
     #[serde(default)]
     pub monster_casting: Option<MonsterCastingDefinition>,
     #[serde(default)]

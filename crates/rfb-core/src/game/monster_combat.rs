@@ -36,6 +36,27 @@ pub(super) fn melee_status(
     }
 }
 
+const fn nice_melee_roll(roll: i32, nice: bool) -> i32 {
+    if nice && roll > 50 {
+        25 + roll / 2
+    } else {
+        roll
+    }
+}
+
+#[cfg(test)]
+mod nice_melee_tests {
+    use super::nice_melee_roll;
+
+    #[test]
+    fn spawn_grace_limits_only_rolls_above_fifty() {
+        assert_eq!(nice_melee_roll(50, true), 50);
+        assert_eq!(nice_melee_roll(51, true), 50);
+        assert_eq!(nice_melee_roll(100, true), 75);
+        assert_eq!(nice_melee_roll(100, false), 100);
+    }
+}
+
 impl Game {
     pub(super) fn actor_has_status_immunity(&self, index: usize, status_kind_id: &str) -> bool {
         self.content
@@ -418,6 +439,7 @@ impl Game {
         events: &mut Vec<DomainEvent>,
     ) -> bool {
         let kind_id = self.entities[index].kind_id.clone();
+        let nice = self.entities[index].nice;
         let definition = self
             .content
             .actor(&kind_id)
@@ -478,7 +500,8 @@ impl Game {
                         armor_mitigated,
                         ..
                     } => {
-                        let raw = self.roll_damage(*damage_dice, *damage_sides);
+                        let raw =
+                            nice_melee_roll(self.roll_damage(*damage_dice, *damage_sides), nice);
                         let damage_type = DamageType::from(*damage_type);
                         let resistance = self.effective_player_resistances().level(damage_type);
                         Some(self.reduce_player_damage(if *armor_mitigated {
@@ -492,7 +515,8 @@ impl Game {
                         damage_sides,
                         ..
                     } => {
-                        let raw = self.roll_damage(*damage_dice, *damage_sides);
+                        let raw =
+                            nice_melee_roll(self.roll_damage(*damage_dice, *damage_sides), nice);
                         let duration = resolve_damage(
                             DamagePacket::new(raw, DamageType::Poison),
                             self.effective_player_resistances()
@@ -519,7 +543,8 @@ impl Game {
                         damage_sides,
                         ..
                     } => {
-                        let raw = self.roll_damage(*damage_dice, *damage_sides);
+                        let raw =
+                            nice_melee_roll(self.roll_damage(*damage_dice, *damage_sides), nice);
                         Some(
                             self.reduce_player_damage(resolve_damage(
                                 DamagePacket::new(raw, DamageType::Physical),
@@ -541,7 +566,10 @@ impl Game {
                         duration_sides,
                         ..
                     } => {
-                        let duration = self.roll_damage(*duration_dice, *duration_sides);
+                        let duration = nice_melee_roll(
+                            self.roll_damage(*duration_dice, *duration_sides),
+                            nice,
+                        );
                         if duration > 0
                             && !self.player_status_immunities().contains(STATUS_BLEEDING)
                         {

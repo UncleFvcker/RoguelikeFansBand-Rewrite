@@ -1,0 +1,75 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 141,
+    "maxDepth": 40,
+    "rarity": 1
+  },
+  "attack": 2,
+  "damageDice": 1,
+  "damageSides": 7,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [
+      {
+        "percent": 60
+      }
+    ],
+    "itemTableId": "demo.loot-table.warrens",
+    "kind": "items-and-gold"
+  },
+  "defense": 1,
+  "descriptionKey": "actor-demo-brown-yeek-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 11,
+  "formatVersion": 1,
+  "glyph": "y",
+  "hitPointDice": {
+    "dice": 4,
+    "sides": 8
+  },
+  "id": "demo.actor.brown-yeek",
+  "level": 8,
+  "light": {
+    "intrinsic": false,
+    "radius": 1
+  },
+  "maxHp": 18,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 7,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "nameKey": "actor-demo-brown-yeek-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "acid": "resistant"
+  },
+  "role": "monster",
+  "speed": 110,
+  "tags": [
+    "animal",
+    "warrens",
+    "yeek"
+  ]
+}

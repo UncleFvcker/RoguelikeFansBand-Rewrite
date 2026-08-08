@@ -1,0 +1,59 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 77,
+    "maxDepth": 30,
+    "randomMovementPercent": 25,
+    "rarity": 1
+  },
+  "attack": 1,
+  "damageDice": 1,
+  "damageSides": 4,
+  "damageType": "physical",
+  "defense": 0,
+  "descriptionKey": "actor-demo-metallic-red-centipede-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 14,
+  "formatVersion": 1,
+  "glyph": "c",
+  "hitPointDice": {
+    "dice": 4,
+    "sides": 8
+  },
+  "id": "demo.actor.metallic-red-centipede",
+  "level": 3,
+  "maxHp": 18,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 4,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.crawl",
+        "toHit": 20
+      }
+    ]
+  },
+  "nameKey": "actor-demo-metallic-red-centipede-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseWeight": 0,
+    "skeletonItemKindId": "demo.item.skeleton-remains",
+    "skeletonWeight": 1
+  },
+  "role": "monster",
+  "speed": 120,
+  "tags": [
+    "animal",
+    "centipede",
+    "warrens"
+  ]
+}

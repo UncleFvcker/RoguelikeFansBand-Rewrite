@@ -10,6 +10,7 @@ import type {
   GameCommand,
   GameSnapshot,
   GameUpdate,
+  Position,
   TargetSpecDto,
 } from "./protocol";
 import {
@@ -49,6 +50,7 @@ export class InputController {
   readonly #dispatch: (command: GameCommand) => Promise<void>;
   readonly #describeLook: (position: { readonly x: number; readonly y: number }) => string;
   readonly #onLookOrTargeting: (interaction: "look" | "targeting") => void;
+  readonly #onLookFocusChange: (position: Position | undefined) => void;
   readonly #announce: (
     key: MessageKey,
     args: Record<string, string | number> | undefined,
@@ -66,6 +68,7 @@ export class InputController {
     dispatch: (command: GameCommand) => Promise<void>;
     describeLook: (position: { readonly x: number; readonly y: number }) => string;
     onLookOrTargeting: (interaction: "look" | "targeting") => void;
+    onLookFocusChange: (position: Position | undefined) => void;
     announce: (
       key: MessageKey,
       args: Record<string, string | number> | undefined,
@@ -81,6 +84,7 @@ export class InputController {
     this.#dispatch = options.dispatch;
     this.#describeLook = options.describeLook;
     this.#onLookOrTargeting = options.onLookOrTargeting;
+    this.#onLookFocusChange = options.onLookFocusChange;
     this.#announce = options.announce;
   }
 
@@ -125,6 +129,7 @@ export class InputController {
     this.#state.targetingIntent = { type: "look" };
     this.#announce("message-look-mode-started", undefined, "system");
     this.#onLookOrTargeting("look");
+    this.#onLookFocusChange(next.cursor);
     this.render();
   }
 
@@ -154,6 +159,9 @@ export class InputController {
       this.render();
       return;
     }
+    if (this.#state.targetingIntent?.type === "look") {
+      this.#onLookFocusChange(undefined);
+    }
     this.#state.targeting = next;
     this.#state.targetingIntent = intent;
     this.#announce("message-target-mode-started", undefined, "system");
@@ -163,8 +171,10 @@ export class InputController {
 
   cancelTargeting(announce = true): void {
     if (!this.#state.targeting) return;
+    const wasLooking = this.#state.targetingIntent?.type === "look";
     this.#state.targeting = undefined;
     this.#state.targetingIntent = undefined;
+    if (wasLooking) this.#onLookFocusChange(undefined);
     if (announce) {
       this.#announce("message-target-mode-cancelled", undefined, "system");
     }
@@ -355,7 +365,10 @@ export class InputController {
       this.#state.mapWidth,
       this.#state.mapHeight,
     );
-    if (this.#state.targetingIntent?.type === "look") this.#onLookOrTargeting("look");
+    if (this.#state.targetingIntent?.type === "look") {
+      this.#onLookOrTargeting("look");
+      this.#onLookFocusChange(this.#state.targeting.cursor);
+    }
     this.render();
   }
 

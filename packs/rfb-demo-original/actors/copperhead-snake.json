@@ -1,0 +1,74 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 106,
+    "maxDepth": 40,
+    "randomMovementPercent": 50,
+    "rarity": 1
+  },
+  "attack": 1,
+  "damageDice": 1,
+  "damageSides": 3,
+  "damageType": "physical",
+  "defense": 2,
+  "descriptionKey": "actor-demo-copperhead-snake-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 15,
+  "formatVersion": 1,
+  "glyph": "J",
+  "hitPointDice": {
+    "dice": 4,
+    "sides": 6
+  },
+  "id": "demo.actor.copperhead-snake",
+  "level": 5,
+  "maxHp": 14,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 3,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "damageDice": 2,
+            "damageSides": 6,
+            "type": "poison"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "modes": [
+      "swim"
+    ]
+  },
+  "nameKey": "actor-demo-copperhead-snake-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 4,
+    "skeletonItemKindId": "demo.item.skeleton-remains",
+    "skeletonWeight": 1
+  },
+  "resistances": {
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 110,
+  "tags": [
+    "animal",
+    "reptile",
+    "snake",
+    "warrens"
+  ]
+}

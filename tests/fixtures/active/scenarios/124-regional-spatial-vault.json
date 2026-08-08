@@ -297,7 +297,7 @@
         {
           "id": "demo.floor.resonance-depth-7.region.demo.region.resonance-gallery.encounter.1.escort.1",
           "position": {
-            "x": 5,
+            "x": 6,
             "y": 6
           },
           "hp": 3,
@@ -450,7 +450,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "46ff52613bec612ad994195f21b31e7b4b0a3ce1bf35302b80be694360aee3dc"
+      "stateHash": "16a0008582ae1aeab110b925d1bf7994d6ff107a5941e7eead14efe968a6318a"
     },
     "events": [
       {
@@ -10418,10 +10418,6 @@
       },
       {
         "x": 7,
-        "y": 2
-      },
-      {
-        "x": 7,
         "y": 3
       },
       {
@@ -10431,6 +10427,10 @@
       {
         "x": 7,
         "y": 5
+      },
+      {
+        "x": 8,
+        "y": 2
       },
       {
         "x": 8,
@@ -12041,14 +12041,14 @@
       {
         "step": 15,
         "kind": "player-dead",
-        "stateHash": "46ff52613bec612ad994195f21b31e7b4b0a3ce1bf35302b80be694360aee3dc"
+        "stateHash": "16a0008582ae1aeab110b925d1bf7994d6ff107a5941e7eead14efe968a6318a"
       },
       {
         "step": 16,
         "kind": "player-dead",
-        "stateHash": "46ff52613bec612ad994195f21b31e7b4b0a3ce1bf35302b80be694360aee3dc"
+        "stateHash": "16a0008582ae1aeab110b925d1bf7994d6ff107a5941e7eead14efe968a6318a"
       }
     ],
-    "saveRoundTripStateHash": "46ff52613bec612ad994195f21b31e7b4b0a3ce1bf35302b80be694360aee3dc"
+    "saveRoundTripStateHash": "16a0008582ae1aeab110b925d1bf7994d6ff107a5941e7eead14efe968a6318a"
   }
 }

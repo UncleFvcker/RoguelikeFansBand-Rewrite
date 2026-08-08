@@ -1,0 +1,61 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 114,
+    "maxDepth": 40,
+    "randomMovementPercent": 50,
+    "rarity": 1
+  },
+  "attack": 1,
+  "damageDice": 1,
+  "damageSides": 4,
+  "damageType": "physical",
+  "defense": 1,
+  "descriptionKey": "actor-demo-giant-brown-bat-description",
+  "experienceValue": 10,
+  "formatVersion": 1,
+  "glyph": "b",
+  "hitPointDice": {
+    "dice": 3,
+    "sides": 8
+  },
+  "id": "demo.actor.giant-brown-bat",
+  "level": 6,
+  "maxHp": 13,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 4,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "nameKey": "actor-demo-giant-brown-bat-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "role": "monster",
+  "speed": 130,
+  "tags": [
+    "animal",
+    "bat",
+    "warrens"
+  ]
+}

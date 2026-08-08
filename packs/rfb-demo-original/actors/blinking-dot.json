@@ -1,0 +1,40 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "formatVersion": 1,
+  "id": "demo.actor.blinking-dot",
+  "role": "monster",
+  "nameKey": "actor-demo-blinking-dot-name",
+  "descriptionKey": "actor-demo-blinking-dot-description",
+  "glyph": ",",
+  "level": 1,
+  "experienceValue": 3,
+  "maxHp": 1,
+  "hitPointDice": { "dice": 1, "sides": 2 },
+  "speed": 110,
+  "attack": 1,
+  "defense": 0,
+  "damageDice": 1,
+  "damageSides": 6,
+  "damageType": "confusion",
+  "meleeRoutine": {
+    "blows": [
+      { "methodId": "rfb.blow.spore", "toHit": 20, "effects": [{ "type": "damage", "damageDice": 1, "damageSides": 6, "damageType": "confusion", "armorMitigated": false }] }
+    ]
+  },
+  "resistances": { "poison": "resistant" },
+  "statusImmunities": ["rfb.status.confusion", "rfb.status.fear", "rfb.status.sleep"],
+  "monsterCasting": {
+    "frequencyPercent": 50,
+    "abilities": [
+      { "abilityId": "demo.ability.blink", "weight": 1 }
+    ]
+  },
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1
+  },
+  "allocation": { "legacyIndex": 22, "rarity": 1, "maxDepth": 10 },
+  "movement": { "neverMoves": true },
+  "tags": ["anomaly", "warrens"]
+}

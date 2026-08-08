@@ -1,6 +1,6 @@
 # Warrens 怪物机制实现清单
 
-状态：由 contract-v171 的 Warrens 生态对照建立；contract-v173 已完成 W1-W6 与运行时自然补怪，contract-v174-v176 已完成 W7-W9，contract-v177-v180 已完成 W10-W13，contract-v182 已完成 W14 Pest Control 任务生态。
+状态：由 contract-v171 的 Warrens 生态对照建立；contract-v173 已完成 W1-W6 与运行时自然补怪，contract-v174-v176 已完成 W7-W9，contract-v177-v180 已完成 W10-W13，contract-v182 已完成 W14 Pest Control 任务生态；contract-v183 开始分批接入正式浅层内容，contract-v184 完成 `NEVER_MOVE` 与怪物 `BLINK` 绑定，contract-v185 接入第二批 14 只 2–3 级怪物，contract-v186 接入第三批 13 只 4–5 级怪物，contract-v187 接入首批正式施法怪物与简单 Unique，contract-v188 接入 10 只机制完备的 6–7 级怪物，contract-v189 接入 12 只 8–9 级怪物并完成浅层普查收口，contract-v190 完成出生宽限与五类职业掉落并再接入 13 只怪物。
 
 固定原版来源为 commit `191f48c3fd1cdbc81a3d3395a88cd6758402b4d9`。Warrens 在 `d_info.txt` 中为深度 1–9，主字形集合为 `kKyYrRfFcCbB`，并带有 `MONSTER_DIV_16`。本清单只记录该来源明确要求、而当前重写版还不能完整表达的机制，不把标签或近似行为标成已完成规则。
 
@@ -39,3 +39,78 @@
 - 通常不为一次生态扩充刷新全部 contract fixtures，只刷新实际受输出变化影响的 `dungeon`、`campaign` 或 `monsters` 分类。contract-v173 因 state-hash 输入新增 Unique 权威状态而按已批准规则一次性刷新全部分类。
 - 新 actor 可以先以已支持的攻击、抗性和施法进入内容包，但所有被省略的原版旗标必须留在本清单，不能靠标签假装规则已完成。
 - W1–W14 与自然补怪已经完成。W14 的内容和运行时边界见 [Contract v182](contract-v182-pest-control.md)。
+
+## contract-v183 正式内容批次的保留旗标
+
+contract-v183 通过当前 `master` Git 对象接入 12 只浅层怪物。W1-W13 所
+覆盖的分配、群体、繁殖、随机移动、门、移动域、HP 骰、近战、爆炸、
+光照、掉落与尸骨均已正式表达。以下不属于 W1-W13 的原版旗标继续保留
+为后续缺口，不改变当前 Warrens 战斗和分配边界：
+
+- `WEIRD_MIND`：Giant White Centipede、Green Worm Mass、Grid Bug、Soldier
+  Ant、Insect Swarm、Bomb Mosquito；
+- `EMPTY_MIND`：White Icky Thing；
+- `STUPID`：Green Worm Mass、Grid Bug；
+- `POS_GAIN_AC`：Giant White Centipede、Green Worm Mass、Grid Bug、Insect
+  Swarm、Bomb Mosquito；
+- `WILD_*` habitat：等待正式荒野分配系统，不进入普通地牢资格判定。
+
+contract-v184 已将 Grey Mold 的 `NEVER_MOVE` 建模为禁止自主物理移动但保留
+相邻近战、施法和位移，并将 Blinking Dot 的 `BLINK` 绑定为半径 10 的正式
+怪物“闪现”能力；两只怪物均已进入全局分配。它们仍保留以下尚未实现的
+非行动旗标：Grey Mold 的 `STUPID`、`EMPTY_MIND`、`POS_GAIN_AC`，以及
+Blinking Dot 的 `STUPID`、`EMPTY_MIND`、`NASTY_GLYPH`、`POS_GAIN_AC`。
+
+contract-v185 通过严格选择清单继续接入 14 只 2–3 级怪物；所有 W1-W13
+行为已经正式表达，剩余非行动旗标按原版记录如下：
+
+- `WEIRD_MIND`：Metallic Green Centipede、Giant Black Ant、Slimy Worm Mass、
+  Cave Spider、Metallic Blue Centipede、Giant White Louse、Giant White Ant、
+  Metallic Red Centipede、Yellow Worm Mass；
+- `STUPID`：Slimy Worm Mass、Slimy Ooze、Spotted Mushroom Patch、Yellow Mold、
+  Yellow Worm Mass；
+- `EMPTY_MIND`：Slimy Ooze、Spotted Mushroom Patch、Yellow Mold；
+- `POS_GAIN_AC`：Metallic Green Centipede、Slimy Worm Mass、Cave Spider、Slimy
+  Ooze、Metallic Blue Centipede、Giant White Louse、Yellow Mold、Metallic Red
+  Centipede、Yellow Worm Mass；
+- `WILD_ALL/WILD_GRASS/WILD_WOOD/WILD_VOLCANO/WILD_SWAMP`：等待正式荒野
+  habitat 系统，不改变普通地牢分配资格。
+
+contract-v186 继续接入 13 只 4–5 级怪物。其分配、繁殖、随机移动、群体
+概率、门、移动域、光源、爆炸、近战、抗性、掉落与尸骨均已正式表达；
+保留项只包括 `MALE`、`COLD_BLOOD`、`STUPID`、`EMPTY_MIND`、`WEIRD_MIND`、
+`POS_GAIN_AC/POS_HOLD_LIFE` 与 `WILD_*` 元数据。需要主动行为的同级怪物
+继续后置，不用 omittedFlags 隐去 aquatic-only、穿墙、拾物、偷窃、骑乘、
+主动施法或 Unique 特例。
+
+contract-v187 允许正式怪物选择器复用已经实现的 `DRAIN_MANA`、`SHOOT`、
+`CAUSE_1`、`S_UNDEAD`、`BR_SOUND`、`BLIND/SLOW/CONFUSE/SCARE` 映射；频率、
+参数和声明顺序直接来自原版 `S:` 行，未映射 token 仍会使同步失败。首批
+简单 Unique 只使用现有一次性生成/击杀状态和完整可表达的近战、门、光照、
+掉落与尸骨行为。保留项为性别、可说话、特殊心智/附身提示和 `WILD_*`
+habitat 元数据；带偷窃、荒野专属、专属物品、未支持特殊近战或 `S_LOUSE`
+等未映射召唤的 Unique 不在本批选择中。
+
+contract-v188 覆盖原版全部 29 条 6–7 级记录并接入其中 10 条新增的机制完备
+记录；连同此前已有的 8 条，同级已有 18 条正式内容。紫蘑菇丛的三段孢子
+体质吸取、掐死人的断手、巨型褐蝠、响尾蛇、两类复生尸体、木蜘蛛、原魔、
+粉红果冻和腐蚀恶心物均保留完整近战、移动、群体、光源、抗性与分配规则。
+其余 11 条因睡眠 AI、骰值为空的状态近战、银质交互、`KILL_BODY`、
+`WILD_ONLY`、穿墙、拾物或职业掉落主题而继续后置。
+
+contract-v189 覆盖原版全部 45 条 8–9 级记录并接入其中 12 条新增的机制完备
+记录；连同此前已有的 7 条，同级已有 19 条正式内容。新增记录保留群体、
+繁殖、随机移动、门、飞行、破墙/毁物、光源、抗性、掉落、尸骨和有序近战。
+其余 26 条因偷窃/拾物、睡眠 AI、穿墙、骑乘/水生或荒野限定、骰值为空的
+状态近战、职业掉落、纯远程 `NEVER_BLOW` 或 `S_LOUSE` 而继续后置。
+
+P1–P5 至此已枚举原版全部 173 条 1–9 级记录。正式包中 95 个 actor 带有
+对应浅层原版索引，其中 63 个由严格选择/同步路径维护；其余 78 条保留在
+批次文档和本清单的明确机制边界中。浅层内容普查里程碑已经收口，机制缺口
+本身仍按共享运行时能力逐项推进。
+
+contract-v190 实现 `FORCE_SLEEP → MFLAG_NICE` 的一次玩家行动出生宽限，并
+建立 Mage、Archer、Priest、Evil Priest、Paladin 五张浅层职业掉落表。新手
+巫师、新手牧师、新手弓箭手、新手游侠、巨型火蜥蜴、新手圣武士、兽人萨满、
+五种幼龙和斯卡文萨满共 13 条进入严格同步。正式浅层 actor 增至 108 条，
+严格同步增至 76 条，剩余 65 条继续等待各自真实机制。

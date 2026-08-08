@@ -1,0 +1,59 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 76,
+    "maxDepth": 30,
+    "rarity": 1
+  },
+  "attack": 1,
+  "damageDice": 1,
+  "damageSides": 8,
+  "damageType": "physical",
+  "defense": 1,
+  "descriptionKey": "actor-demo-yellow-mold-description",
+  "experienceValue": 11,
+  "formatVersion": 1,
+  "glyph": "m",
+  "hitPointDice": {
+    "dice": 8,
+    "sides": 8
+  },
+  "id": "demo.actor.yellow-mold",
+  "level": 3,
+  "maxHp": 36,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 8,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "neverMoves": true
+  },
+  "nameKey": "actor-demo-yellow-mold-name",
+  "resistances": {
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 110,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "mold",
+    "warrens"
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 91,
+    "maxDepth": 40,
+    "rarity": 1
+  },
+  "attack": 1,
+  "damageDice": 1,
+  "damageSides": 10,
+  "damageType": "physical",
+  "defense": 2,
+  "descriptionKey": "actor-demo-skeleton-kobold-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 12,
+  "formatVersion": 1,
+  "glyph": "s",
+  "hitPointDice": {
+    "dice": 5,
+    "sides": 8
+  },
+  "id": "demo.actor.skeleton-kobold",
+  "level": 5,
+  "maxHp": 22,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 10,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "nameKey": "actor-demo-skeleton-kobold-name",
+  "resistances": {
+    "cold": "resistant",
+    "nether": "resistant",
+    "poison": "immune"
+  },
+  "role": "monster",
+  "speed": 110,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "evil",
+    "kobold",
+    "skeleton",
+    "undead",
+    "warrens"
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability-program.curse-3d8",
+  "input": "cast-target",
+  "steps": [
+    {
+      "damageDice": 3,
+      "damageSides": 8,
+      "type": "curse-damage"
+    }
+  ]
+}

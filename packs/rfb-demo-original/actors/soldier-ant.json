@@ -1,0 +1,32 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "formatVersion": 1,
+  "id": "demo.actor.soldier-ant",
+  "role": "monster",
+  "nameKey": "actor-demo-soldier-ant-name",
+  "descriptionKey": "actor-demo-soldier-ant-description",
+  "glyph": "a",
+  "level": 1,
+  "experienceValue": 6,
+  "maxHp": 6,
+  "hitPointDice": { "dice": 2, "sides": 5 },
+  "speed": 110,
+  "attack": 1,
+  "defense": 0,
+  "damageDice": 1,
+  "damageSides": 5,
+  "damageType": "physical",
+  "meleeRoutine": {
+    "blows": [
+      { "methodId": "rfb.blow.bite", "toHit": 20, "effects": [{ "type": "damage", "damageDice": 1, "damageSides": 5, "armorMitigated": true }] }
+    ]
+  },
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1
+  },
+  "doorInteraction": { "bashes": true },
+  "allocation": { "legacyIndex": 36, "rarity": 1, "maxDepth": 10 },
+  "tags": ["animal", "insect", "warrens"]
+}

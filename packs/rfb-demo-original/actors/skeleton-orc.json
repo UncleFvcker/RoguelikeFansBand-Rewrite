@@ -1,0 +1,66 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 136,
+    "maxDepth": 40,
+    "rarity": 1
+  },
+  "attack": 2,
+  "damageDice": 2,
+  "damageSides": 6,
+  "damageType": "physical",
+  "defense": 3,
+  "descriptionKey": "actor-demo-skeleton-orc-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 26,
+  "formatVersion": 1,
+  "glyph": "s",
+  "hitPointDice": {
+    "dice": 10,
+    "sides": 8
+  },
+  "id": "demo.actor.skeleton-orc",
+  "level": 8,
+  "maxHp": 45,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 2,
+            "damageSides": 6,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "nameKey": "actor-demo-skeleton-orc-name",
+  "resistances": {
+    "cold": "resistant",
+    "dark": "resistant",
+    "nether": "resistant",
+    "poison": "immune"
+  },
+  "role": "monster",
+  "speed": 110,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "evil",
+    "orc",
+    "skeleton",
+    "undead",
+    "warrens"
+  ]
+}

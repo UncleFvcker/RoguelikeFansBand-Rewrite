@@ -1,0 +1,61 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "friends": {
+      "chancePercent": 0,
+      "dice": 0,
+      "sides": 0
+    },
+    "legacyIndex": 148,
+    "maxDepth": 40,
+    "rarity": 3
+  },
+  "attack": 2,
+  "damageDice": 1,
+  "damageSides": 9,
+  "damageType": "physical",
+  "defense": 3,
+  "descriptionKey": "actor-demo-lemure-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 16,
+  "formatVersion": 1,
+  "glyph": "u",
+  "hitPointDice": {
+    "dice": 13,
+    "sides": 9
+  },
+  "id": "demo.actor.lemure",
+  "level": 8,
+  "maxHp": 65,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 9,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "nameKey": "actor-demo-lemure-name",
+  "resistances": {
+    "fire": "resistant"
+  },
+  "role": "monster",
+  "speed": 110,
+  "tags": [
+    "demon",
+    "evil",
+    "warrens"
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "formatVersion": 1,
+  "id": "demo.actor.grey-mold",
+  "role": "monster",
+  "nameKey": "actor-demo-grey-mold-name",
+  "descriptionKey": "actor-demo-grey-mold-description",
+  "glyph": "m",
+  "level": 1,
+  "experienceValue": 6,
+  "maxHp": 1,
+  "hitPointDice": { "dice": 1, "sides": 2 },
+  "speed": 110,
+  "attack": 1,
+  "defense": 0,
+  "damageDice": 1,
+  "damageSides": 6,
+  "damageType": "physical",
+  "meleeRoutine": {
+    "blows": [
+      { "methodId": "rfb.blow.hit", "toHit": 20, "effects": [{ "type": "damage", "damageDice": 1, "damageSides": 6, "armorMitigated": true }] },
+      { "methodId": "rfb.blow.hit", "toHit": 20, "effects": [{ "type": "damage", "damageDice": 1, "damageSides": 6, "armorMitigated": true }] }
+    ]
+  },
+  "resistances": { "poison": "resistant" },
+  "statusImmunities": ["rfb.status.confusion", "rfb.status.fear", "rfb.status.sleep"],
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1
+  },
+  "allocation": { "legacyIndex": 20, "rarity": 1, "maxDepth": 10 },
+  "movement": { "neverMoves": true },
+  "tags": ["mold", "warrens"]
+}

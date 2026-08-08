@@ -1,0 +1,85 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 155,
+    "maxDepth": 40,
+    "randomMovementPercent": 50,
+    "rarity": 3
+  },
+  "attack": 2,
+  "damageDice": 1,
+  "damageSides": 4,
+  "damageType": "physical",
+  "defense": 1,
+  "descriptionKey": "actor-demo-bloodshot-icky-thing-description",
+  "experienceValue": 24,
+  "formatVersion": 1,
+  "glyph": "i",
+  "hitPointDice": {
+    "dice": 7,
+    "sides": 8
+  },
+  "id": "demo.actor.bloodshot-icky-thing",
+  "level": 9,
+  "maxHp": 31,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 4,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 2,
+            "damageSides": 5,
+            "damageType": "acid",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.crawl",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.drain-mana-5",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 9
+  },
+  "movement": {
+    "modes": [
+      "swim"
+    ]
+  },
+  "nameKey": "actor-demo-bloodshot-icky-thing-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 110,
+  "tags": [
+    "icky-thing",
+    "warrens"
+  ]
+}

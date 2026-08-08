@@ -1,0 +1,78 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 168,
+    "maxDepth": 80,
+    "rarity": 2
+  },
+  "attack": 2,
+  "damageDice": 1,
+  "damageSides": 5,
+  "damageType": "physical",
+  "defense": 3,
+  "descriptionKey": "actor-demo-giant-pink-ant-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 22,
+  "formatVersion": 1,
+  "glyph": "a",
+  "hitPointDice": {
+    "dice": 4,
+    "sides": 8
+  },
+  "id": "demo.actor.giant-pink-ant",
+  "level": 9,
+  "maxHp": 18,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 5,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 4,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "attributes": [
+              "strength"
+            ],
+            "chancePercent": 50,
+            "type": "drain-attributes"
+          }
+        ],
+        "methodId": "rfb.blow.sting",
+        "toHit": 20
+      }
+    ]
+  },
+  "nameKey": "actor-demo-giant-pink-ant-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "role": "monster",
+  "speed": 110,
+  "tags": [
+    "animal",
+    "ant",
+    "warrens"
+  ]
+}

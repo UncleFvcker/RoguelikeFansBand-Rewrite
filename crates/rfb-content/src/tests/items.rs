@@ -556,6 +556,8 @@ fn fuel_items_require_original_capacity_slot_stack_and_radius_shapes() {
 fn selected_legacy_equipment_keeps_fixed_source_values_and_slots() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let expected = [
+        ("demo.item.broken-dagger", 1, 5, "weapon", 0, Some((1, 3))),
+        ("demo.item.broken-sword", 2, 30, "weapon", 0, Some((2, 3))),
         ("demo.item.club", 3, 100, "weapon", 0, Some((1, 5))),
         ("demo.item.dagger", 10, 12, "weapon", 0, Some((1, 5))),
         ("demo.item.main-gauche", 25, 30, "weapon", 0, Some((1, 6))),
@@ -572,6 +574,9 @@ fn selected_legacy_equipment_keeps_fixed_source_values_and_slots() {
         ("demo.item.robe", 4, 20, "body", 2, None),
         ("demo.item.padded-armour", 50, 60, "body", 5, None),
         ("demo.item.knit-cap", 10, 8, "head", 1, None),
+        ("demo.item.pointy-hat", 20, 20, "head", 1, None),
+        ("demo.item.filthy-rag", 1, 20, "body", 0, None),
+        ("demo.item.paper-armour", 50, 30, "body", 4, None),
         ("demo.item.soft-leather-armour", 18, 80, "body", 4, None),
         ("demo.item.soft-studded-leather", 35, 90, "body", 5, None),
         (

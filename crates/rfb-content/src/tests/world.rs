@@ -50,27 +50,122 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         allocation,
         vec![
             ("demo.actor.agent-of-black-market", 14, 1, 0),
+            ("demo.actor.baby-black-dragon", 166, 2, 40),
+            ("demo.actor.baby-blue-dragon", 163, 2, 40),
+            ("demo.actor.baby-green-dragon", 165, 2, 40),
+            ("demo.actor.baby-red-dragon", 167, 2, 40),
+            ("demo.actor.baby-white-dragon", 164, 2, 40),
             ("demo.actor.bandit", 150, 2, 40),
+            ("demo.actor.black-harpy", 157, 1, 60),
+            ("demo.actor.black-naga", 71, 1, 30),
+            ("demo.actor.blinking-dot", 22, 1, 10),
+            ("demo.actor.bloodshot-icky-thing", 155, 3, 40),
+            ("demo.actor.blue-yeek", 52, 1, 20),
+            ("demo.actor.bomb-mosquito", 1017, 3, 20),
+            ("demo.actor.brodda-the-easterling", 169, 2, 999),
+            ("demo.actor.brown-yeek", 141, 1, 40),
+            ("demo.actor.carnivorous-flying-monkey", 145, 2, 40),
+            ("demo.actor.caustic-icky-thing", 132, 2, 40),
             ("demo.actor.cave-lizard", 82, 1, 30),
+            ("demo.actor.cave-orc", 126, 1, 40),
+            ("demo.actor.cave-spider", 60, 1, 30),
             ("demo.actor.chiokovo", 997, 3, 30),
+            ("demo.actor.copperhead-snake", 106, 1, 40),
+            ("demo.actor.creeping-copper-coins", 85, 2, 40),
+            ("demo.actor.crow-of-durthang", 1224, 2, 40),
+            ("demo.actor.crypt-creep", 124, 2, 40),
+            (
+                "demo.actor.disembodied-hand-that-strangled-people",
+                112,
+                2,
+                40,
+            ),
+            ("demo.actor.ewok", 92, 2, 40),
+            ("demo.actor.fang-farmer-maggots-dog", 55, 2, 999),
             ("demo.actor.filthy-street-urchin", 1, 2, 0),
+            ("demo.actor.frosty-jelly", 84, 1, 40),
             ("demo.actor.fruit-bat", 37, 1, 10),
+            ("demo.actor.giant-black-ant", 49, 1, 20),
+            ("demo.actor.giant-brown-bat", 114, 1, 40),
+            ("demo.actor.giant-grey-rat", 156, 1, 40),
+            ("demo.actor.giant-pink-ant", 168, 2, 80),
+            ("demo.actor.giant-salamander", 143, 1, 40),
+            ("demo.actor.giant-white-ant", 75, 1, 30),
+            ("demo.actor.giant-white-centipede", 24, 1, 10),
+            ("demo.actor.giant-white-louse", 69, 1, 30),
             ("demo.actor.giant-white-mouse", 27, 1, 10),
+            ("demo.actor.giant-white-rat", 86, 1, 40),
+            ("demo.actor.green-jelly", 66, 1, 30),
+            ("demo.actor.green-worm-mass", 31, 1, 10),
+            ("demo.actor.grey-icky-thing", 103, 1, 40),
+            ("demo.actor.grey-mold", 20, 1, 10),
+            ("demo.actor.grid-bug", 34, 3, 20),
+            ("demo.actor.grip-farmer-maggots-dog", 53, 2, 999),
+            ("demo.actor.hill-orc", 149, 1, 40),
             ("demo.actor.hunting-hawk-of-julian", 151, 2, 40),
+            ("demo.actor.insect-swarm", 38, 1, 10),
+            ("demo.actor.jackal", 35, 1, 5),
+            ("demo.actor.killer-bee", 174, 2, 40),
             ("demo.actor.kobold", 30, 1, 30),
+            ("demo.actor.large-brown-snake", 28, 1, 10),
+            ("demo.actor.large-grey-snake", 90, 1, 40),
             ("demo.actor.large-kobold", 102, 1, 40),
+            ("demo.actor.large-white-snake", 21, 1, 10),
+            ("demo.actor.large-yellow-snake", 59, 1, 20),
+            ("demo.actor.lemure", 148, 3, 40),
+            ("demo.actor.manes", 128, 2, 40),
+            ("demo.actor.metallic-blue-centipede", 67, 1, 30),
+            ("demo.actor.metallic-green-centipede", 42, 1, 20),
+            ("demo.actor.metallic-red-centipede", 77, 1, 30),
             ("demo.actor.newt", 23, 1, 10),
             ("demo.actor.nibelung", 111, 1, 40),
             ("demo.actor.night-lizard", 134, 2, 40),
+            ("demo.actor.novice-archer", 116, 2, 40),
+            ("demo.actor.novice-mage", 93, 2, 40),
+            ("demo.actor.novice-mindcrafter", 1054, 1, 50),
+            ("demo.actor.novice-paladin", 147, 2, 40),
+            ("demo.actor.novice-priest", 109, 2, 40),
+            ("demo.actor.novice-ranger", 142, 1, 40),
             ("demo.actor.novice-rogue", 44, 1, 30),
+            ("demo.actor.novice-warrior", 110, 2, 40),
+            ("demo.actor.nurgling", 139, 2, 40),
+            ("demo.actor.orc-shaman", 162, 1, 40),
+            ("demo.actor.pink-jelly", 131, 1, 40),
+            ("demo.actor.purple-mushroom-patch", 108, 2, 40),
+            ("demo.actor.radiation-eye", 80, 1, 30),
             ("demo.actor.rat-thing", 115, 1, 40),
+            ("demo.actor.rattlesnake", 119, 1, 40),
+            ("demo.actor.red-worm-mass", 105, 1, 40),
             ("demo.actor.rock-lizard", 33, 1, 10),
+            ("demo.actor.rock-mole", 161, 2, 40),
+            ("demo.actor.rotting-corpse", 125, 1, 40),
+            ("demo.actor.salamander", 50, 1, 20),
             ("demo.actor.scruffy-looking-hobbit", 74, 1, 30),
+            ("demo.actor.skaven", 158, 1, 40),
+            ("demo.actor.skaven-shaman", 217, 1, 50),
+            ("demo.actor.skeleton-kobold", 91, 1, 40),
+            ("demo.actor.skeleton-orc", 136, 1, 40),
+            ("demo.actor.slimy-jelly", 101, 1, 40),
+            ("demo.actor.slimy-ooze", 64, 2, 30),
+            ("demo.actor.slimy-worm-mass", 58, 1, 20),
+            ("demo.actor.slush-pile", 99, 1, 40),
             ("demo.actor.small-kobold", 29, 1, 30),
+            ("demo.actor.snaga", 118, 1, 40),
+            ("demo.actor.soldier-ant", 36, 1, 10),
+            ("demo.actor.spotted-mushroom-patch", 72, 1, 30),
             ("demo.actor.tax-collector", 199, 3, 40),
+            ("demo.actor.war-bear", 173, 1, 40),
             ("demo.actor.warg", 257, 2, 50),
             ("demo.actor.warrens-keeper", 135, 3, 999),
+            ("demo.actor.white-icky-thing", 25, 1, 10),
+            ("demo.actor.white-worm-mass", 89, 1, 40),
             ("demo.actor.wild-cat", 62, 2, 20),
+            ("demo.actor.wolf-farmer-maggots-dog", 54, 2, 999),
+            ("demo.actor.wood-spider", 127, 3, 40),
+            ("demo.actor.yellow-light", 81, 1, 30),
+            ("demo.actor.yellow-mold", 76, 1, 30),
+            ("demo.actor.yellow-worm-mass", 78, 2, 30),
+            ("demo.actor.zombified-kobold", 123, 1, 40),
         ]
     );
 
@@ -95,6 +190,78 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         Some((3, 3))
     );
     assert_eq!(warg.random_movement_percent, 25);
+
+    let actor = |id: &str| {
+        artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == id)
+            .unwrap_or_else(|| panic!("{id} should be in the shallow Warrens batch"))
+    };
+    let worms = actor("demo.actor.green-worm-mass")
+        .allocation
+        .as_ref()
+        .expect("Green Worm Mass allocation");
+    assert!(worms.multiplies);
+    assert_eq!(worms.random_movement_percent, 75);
+    assert_eq!(
+        actor("demo.actor.jackal")
+            .allocation
+            .as_ref()
+            .and_then(|allocation| allocation.friends)
+            .map(|friends| (friends.dice, friends.sides)),
+        Some((3, 3))
+    );
+    let grid_light = actor("demo.actor.grid-bug")
+        .light
+        .as_ref()
+        .expect("Grid Bug intrinsic light");
+    assert_eq!((grid_light.radius, grid_light.intrinsic), (1, true));
+    assert!(
+        actor("demo.actor.bomb-mosquito")
+            .melee_routine
+            .as_ref()
+            .and_then(|routine| routine.blows.first())
+            .is_some_and(|blow| blow.self_destructs)
+    );
+    assert!(actor("demo.actor.grey-mold").movement.never_moves);
+    let blinking_dot = actor("demo.actor.blinking-dot");
+    assert!(blinking_dot.movement.never_moves);
+    assert!(
+        blinking_dot
+            .monster_casting
+            .as_ref()
+            .is_some_and(|casting| {
+                casting.frequency_percent == 50
+                    && casting.abilities.len() == 1
+                    && casting.abilities[0].ability_id == "demo.ability.blink"
+            })
+    );
+    assert!(artifact.content.abilities.iter().any(|ability| {
+        ability.id == "demo.ability.blink"
+            && matches!(
+                ability.effect,
+                AbilityEffectDefinition::BlinkSelf { radius: 10 }
+            )
+    }));
+    for id in ["demo.actor.blue-yeek", "demo.actor.black-naga"] {
+        let drop = actor(id)
+            .death_drop
+            .as_ref()
+            .unwrap_or_else(|| panic!("{id} should keep DROP_60"));
+        assert_eq!(
+            drop.item_table_id.as_deref(),
+            Some("demo.loot-table.warrens")
+        );
+        assert_eq!(
+            drop.chance_rolls
+                .iter()
+                .map(|roll| roll.percent)
+                .collect::<Vec<_>>(),
+            vec![60]
+        );
+    }
 }
 
 #[test]
@@ -515,13 +682,17 @@ fn selected_legacy_equipment_is_exposed_by_its_shop_and_warrens_depth() {
             .map(|entry| (entry.min_depth, entry.max_depth))
     };
     assert_eq!(depth("demo.item.club"), Some((0, 9)));
+    assert_eq!(depth("demo.item.broken-dagger"), Some((0, 9)));
+    assert_eq!(depth("demo.item.broken-sword"), Some((0, 9)));
     assert_eq!(depth("demo.item.dagger"), Some((0, 9)));
+    assert_eq!(depth("demo.item.filthy-rag"), Some((0, 9)));
     assert_eq!(depth("demo.item.cloak"), Some((1, 9)));
     assert_eq!(depth("demo.item.robe"), Some((1, 9)));
     assert_eq!(depth("demo.item.shovel"), Some((1, 9)));
     assert_eq!(depth("demo.item.padded-armour"), Some((2, 9)));
     assert_eq!(depth("demo.item.knit-cap"), Some((3, 9)));
     assert_eq!(depth("demo.item.main-gauche"), Some((3, 9)));
+    assert_eq!(depth("demo.item.pointy-hat"), Some((3, 9)));
     assert_eq!(depth("demo.item.soft-leather-armour"), Some((3, 9)));
     assert_eq!(depth("demo.item.soft-studded-leather"), Some((3, 9)));
     assert_eq!(depth("demo.item.tanto"), Some((3, 9)));
@@ -532,6 +703,7 @@ fn selected_legacy_equipment_is_exposed_by_its_shop_and_warrens_depth() {
     assert_eq!(depth("demo.item.rapier"), Some((5, 9)));
     assert_eq!(depth("demo.item.mace"), Some((5, 9)));
     assert_eq!(depth("demo.item.pair-of-hard-leather-boots"), Some((5, 9)));
+    assert_eq!(depth("demo.item.paper-armour"), Some((5, 9)));
     assert_eq!(depth("demo.item.pick"), Some((5, 9)));
     assert_eq!(depth("demo.item.small-sword"), Some((5, 9)));
     assert_eq!(

@@ -2737,13 +2737,27 @@ fn item_summon_candidates_follow_depth_player_level_kin_and_unique_rules() {
     }));
     assert_eq!(
         human.summon_category_candidate_kind_ids("undead", None, 8, true),
-        ["demo.actor.risen-thrall"]
+        [
+            "demo.actor.crypt-creep".to_owned(),
+            "demo.actor.disembodied-hand-that-strangled-people".to_owned(),
+            "demo.actor.risen-thrall".to_owned(),
+            "demo.actor.rotting-corpse".to_owned(),
+            "demo.actor.skeleton-kobold".to_owned(),
+            "demo.actor.skeleton-orc".to_owned(),
+            "demo.actor.zombified-kobold".to_owned(),
+        ]
     );
     assert_eq!(
         human.summon_category_candidate_kind_ids("undead", None, 32, true),
         [
+            "demo.actor.crypt-creep".to_owned(),
+            "demo.actor.disembodied-hand-that-strangled-people".to_owned(),
             "demo.actor.grave-wight".to_owned(),
             "demo.actor.risen-thrall".to_owned(),
+            "demo.actor.rotting-corpse".to_owned(),
+            "demo.actor.skeleton-kobold".to_owned(),
+            "demo.actor.skeleton-orc".to_owned(),
+            "demo.actor.zombified-kobold".to_owned(),
         ]
     );
 

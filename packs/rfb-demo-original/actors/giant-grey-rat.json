@@ -1,0 +1,59 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 156,
+    "maxDepth": 40,
+    "multiplies": true,
+    "randomMovementPercent": 25,
+    "rarity": 1
+  },
+  "attack": 2,
+  "damageDice": 1,
+  "damageSides": 2,
+  "damageType": "physical",
+  "defense": 1,
+  "descriptionKey": "actor-demo-giant-grey-rat-description",
+  "experienceValue": 2,
+  "formatVersion": 1,
+  "glyph": "r",
+  "hitPointDice": {
+    "dice": 2,
+    "sides": 3
+  },
+  "id": "demo.actor.giant-grey-rat",
+  "level": 9,
+  "maxHp": 4,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 2,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "damageDice": 1,
+            "damageSides": 5,
+            "type": "poison"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      }
+    ]
+  },
+  "nameKey": "actor-demo-giant-grey-rat-name",
+  "resistances": {
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 110,
+  "tags": [
+    "animal",
+    "rat",
+    "warrens"
+  ]
+}

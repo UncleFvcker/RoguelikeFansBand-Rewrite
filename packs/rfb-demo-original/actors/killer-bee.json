@@ -1,0 +1,78 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "friends": {
+      "chancePercent": 50,
+      "dice": 1,
+      "sides": 4
+    },
+    "legacyIndex": 174,
+    "maxDepth": 40,
+    "rarity": 2
+  },
+  "attack": 2,
+  "damageDice": 1,
+  "damageSides": 5,
+  "damageType": "poison",
+  "defense": 3,
+  "descriptionKey": "actor-demo-killer-bee-description",
+  "experienceValue": 22,
+  "formatVersion": 1,
+  "glyph": "I",
+  "hitPointDice": {
+    "dice": 2,
+    "sides": 4
+  },
+  "id": "demo.actor.killer-bee",
+  "level": 9,
+  "maxHp": 5,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "damageDice": 1,
+            "damageSides": 5,
+            "type": "poison"
+          }
+        ],
+        "methodId": "rfb.blow.sting",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 4,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "attributes": [
+              "strength"
+            ],
+            "chancePercent": 50,
+            "type": "drain-attributes"
+          }
+        ],
+        "methodId": "rfb.blow.sting",
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "nameKey": "actor-demo-killer-bee-name",
+  "role": "monster",
+  "speed": 120,
+  "tags": [
+    "animal",
+    "bee",
+    "insect",
+    "warrens"
+  ]
+}

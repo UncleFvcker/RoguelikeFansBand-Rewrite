@@ -205,7 +205,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Rust 权威可见性与光照 v1](design/visibility-lighting-v1.md)
 - [静态地形 Chunk 渲染 v1](design/terrain-chunk-rendering-v1.md)
 
-当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v182`，共 470 条 exact fixtures、零 waiver，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
+当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v190`，共 470 条 exact fixtures、零 waiver，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
 
 fixture 使用受控的主分类。日常开发只验证或刷新受影响分类；普通 `cargo test -p rfb-contract` 只做快速的 schema、分类、ID 唯一性和契约单元测试，不回放全部场景：
 
@@ -471,6 +471,22 @@ contract-v177-v180 按固定原版来源完成 Warrens W10-W13：有序特殊近
 contract-v181 建立通用 Outpost 任务设施并接入原版“盗贼藏身处”首流程：乌尔德里克二世伯爵、东北入口、任务专属 21x8 永久墙地图、八处独立 50% 陷阱候选、四处战利品、六怪阵型、失败/清层/回城领奖，以及可操作的 Web 任务面板。任务放置只绑定目标索引、既有楼层和数量，不携带怪物候选、距离或群体阵型策略；六条单命令 fixture 分别锁住接取、进入、清层、失败、回城和领奖。偷金、偷物、乞讨、地面拾取、完整随机陷阱/物品分配和非 Warrior 奖励矩阵仍显式暂缓。详见 [Contract v181](design/contract-v181-outpost-task-services.md)。
 
 contract-v182 在伯爵设施接入原版“害虫控制”任务：前置完成盗贼藏身处后可接取，目标严格为 Warrens 5 中的 8 只 Warg；`FRIENDS(3d3)` 只描述 Warg 普通生态群体，不改变任务数量。接取后楼层只补足剩余目标并隐藏普通下楼梯；最后一只 Warg 被击杀时生成一处魔法楼梯。未完成任务离层立即失败并丢弃本次阻塞楼层，不保留部分击杀进度；回到伯爵处原子领取原版毛皮披风。两条 `tasks` 分类单命令 fixture 覆盖接取和领奖，协议保持 1.138、demo 升至 1.177.0、state hash Schema 保持 v63，content hash 为 `b51f0b97ac90c025b9c35347b2b2c56c2c2d00d89f53c0534631a1e00d2270a5`，active baseline 共 470 条 exact fixtures、零 waiver。详见 [Contract v182](design/contract-v182-pest-control.md)。
+
+contract-v183 开始把 W1-W13 已能完整承载的原版浅层内容逐批接入正式包：首批增加大白蛇、巨型白蜈蚣、白色恶心物、大棕蛇、绿蠕虫团、电子虫、豺狼、兵蚁、昆虫群、炸弹蚊、蓝伊克与黑娜迦，并让后两者的原版 `DROP_60` 使用 Warrens 通用掉落表；固定源物品选择新增断折的匕首、断折的剑、尖帽子、肮脏的破布与纸装甲。灰霉菌和闪烁的圆点分别等待正式 `NEVER_MOVE` 与 `BLINK` 绑定，不以删减行为的方式接入。协议保持 1.139、demo 升至 1.178.0、state hash Schema 保持 v63，正式包现有 63 种 actor、146 种 item，content hash 为 `9dcd0be8ca01927b4b25cf466c654149e8a8de627360967cdf418ee601e687b6`。详见 [Contract v183](design/contract-v183-shallow-warrens-content-batch.md)。
+
+contract-v184 完成这两个暂缓项：actor movement 新增原版 `NEVER_MOVE` 语义，只禁止自主物理移动而保留相邻近战、施法和位移；正式怪物能力“闪现”复用 `blink-self` 并按原版使用半径 10。灰霉菌与闪烁的圆点现已按原版等级、HP、攻击、抗性、状态免疫、尸体、分配深度和索引加入全局分配，后者以 50% 频率施放闪现。协议保持 1.139、demo 升至 1.179.0、state hash Schema 保持 v63，正式包现有 65 种 actor、146 种 item、70 个 ability，content hash 为 `066a3e92b8ec8698438876ef1f264e106151ad22e06c93a1bd435829f0ade8ff`。详见 [Contract v184](design/contract-v184-stationary-monsters-blink.md)。
+
+contract-v185 建立按原版索引和规范 id 固定的正式怪物选择/同步护栏，未声明旗标、主动施法或不可表达近战会直接拒绝导入；第二批接入金属绿蜈蚣、巨型黑蚁、火蜥蜴、黏糊蠕虫团、大黄蛇、洞穴蜘蛛、黏糊软泥怪、金属蓝蜈蚣、巨型白虱、斑点蘑菇丛、巨型白蚁、黄霉菌、金属红蜈蚣和黄蠕虫团。皮手套在深度 1、软皮靴/硬皮帽/小皮盾在深度 3 加入通用 Warrens 掉落。协议保持 1.139、demo 升至 1.180.0、state hash Schema 保持 v63，正式包现有 79 种 actor、146 种 item、70 个 ability，content hash 为 `7051765d5f3e57bf1967c1e305d63eb6949ca90cbb87ceb24b2a384e6162de93`。详见 [Contract v185](design/contract-v185-warrens-content-batch-2.md)。
+
+contract-v186 接入第三批 13 只机制完备的 4–5 级怪物：黄色闪光、冰霜果冻、爬行铜币、巨型白鼠、白蠕虫团、大灰蛇、骷髅狗头人、泥泞土堆、黏糊果冻、灰色恶心物、红蠕虫团、铜头蛇和新手战士。黄色闪光保留半径 3 自体光源与光爆自毁；新手战士保留 `FRIENDS(2d3, 25%)`、三段近战、`DROP_60` 和 50% 战士主题掉落。深度 5 及以下的固定源被动物品已经全部在正式包和 Warrens 通用表中，本批不伪造新的物品身份。协议保持 1.139、demo 升至 1.181.0、state hash Schema 保持 v63，正式包现有 92 种 actor、146 种 item、70 个 ability，content hash 为 `da4f82376baca9fce9d3f8e4728bae42f5be60cdc69048f14e94b81458b68ab8`。详见 [Contract v186](design/contract-v186-warrens-content-batch-3.md)。
+
+contract-v187 推进正式内容 P3：同步护栏开始把原版主动 `S:` 行严格映射为现有 Ability Program，任何未支持法术仍拒绝导入。绿色果冻、辐射眼、伊渥克人、史纳加、地穴潜行者、洞穴兽人、充血的恶心物、黑鹰身女妖、学徒心灵塑师和都尔桑的乌鸦以原版频率使用吸取法力、射击、创伤诅咒、召唤死灵、声波吐息及致盲/减速/混乱/惊骇；紧咬、野狼、毒牙和东方人布罗达作为首批简单 Unique 接入现有一次性生态。协议保持 1.139、demo 升至 1.182.0、state hash Schema 保持 v63，正式包现有 106 种 actor、146 种 item、82 个 ability，content hash 为 `ed657aa4243293b0a15da53281ff553b18bdce9b4f4e2bbb736cd6beec2162ae`。详见 [Contract v187](design/contract-v187-warrens-content-p3-casters-uniques.md)。
+
+contract-v188 推进正式内容 P4：逐条核对原版全部 29 条 6–7 级记录后，新增紫蘑菇丛、掐死人的断手、巨型褐蝠、响尾蛇、僵尸狗头人、腐烂尸体、木蜘蛛、原魔、粉红果冻和腐蚀恶心物。三段体质吸取、飞行/游泳、随机移动、群体、门、内在光源、抗性、状态免疫和完整近战顺序均按原版正式表达；睡眠 AI、特殊状态近战、银质交互、`KILL_BODY`、荒野专属、穿墙、拾物和职业主题掉落记录继续后置。协议保持 1.139、demo 升至 1.183.0、state hash Schema 保持 v63，正式包现有 116 种 actor、146 种 item、82 个 ability，content hash 为 `8ebbd92c027da328b2c65f32d169a98942dc8310161c959719b0749670815a7c`。详见 [Contract v188](design/contract-v188-warrens-content-p4-level-6-7.md)。
+
+contract-v189 推进正式内容 P5 并完成当前浅层里程碑收口：核对原版全部 45 条 8–9 级记录后，新增骷髅兽人、纳垢灵、褐伊克、食肉飞猴、劣魔、山丘兽人、巨型灰鼠、斯卡文鼠人、岩石鼹鼠、巨型粉红蚁、战熊和杀人蜂。P1–P5 至此已枚举原版全部 173 条 1–9 级记录；正式包中 95 个 actor 带有对应浅层原版索引，其中 63 个由严格选择/同步路径维护，其余 78 条均已绑定明确的延期机制。协议保持 1.139、demo 升至 1.184.0、state hash Schema 保持 v63，正式包现有 128 种 actor、146 种 item、82 个 ability，content hash 为 `9d6be77bac135d2dad8f6c6067f34750c57f02121f905e8606197c2d043d606d`。详见 [Contract v189](design/contract-v189-warrens-content-p5-level-8-9-closure.md)。
+
+contract-v190 推进正式内容 P6：按原版 `FORCE_SLEEP → MFLAG_NICE` 建立一次玩家行动的出生宽限，宽限期怪物不施法且对玩家的高伤近战按 `25 + roll / 2` 限制，但仍可移动和近战；零时间命令不解除宽限，同一命令中新生怪物保留到下一次行动。同步路径新增 Mage、Archer、Priest、Evil Priest 与 Paladin 五类浅层职业掉落，并接入新手巫师、新手牧师、新手弓箭手、新手游侠、巨型火蜥蜴、新手圣武士、兽人萨满、五种幼龙和斯卡文萨满。协议升至 1.140、demo 升至 1.185.0、state hash Schema 升至 v64，正式包现有 141 种 actor、146 种 item、93 个 ability 和 19 张 loot table，content hash 为 `e7a7697de6aab4160c2398cba429559fa7fd62c46b65f3bb929490d859395f3e`。详见 [Contract v190](design/contract-v190-warrens-content-p6-spawn-grace-class-drops.md)。
 
 ### 本地验证
 

@@ -1,0 +1,108 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 162,
+    "maxDepth": 40,
+    "rarity": 1
+  },
+  "attack": 2,
+  "damageDice": 1,
+  "damageSides": 7,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [
+      {
+        "guaranteedForUnique": true,
+        "percent": 90
+      }
+    ],
+    "itemTableId": "demo.loot-table.warrens",
+    "kind": "items-and-gold",
+    "themeChancePercent": 50,
+    "themeTableId": "demo.loot-table.evil-priest"
+  },
+  "defense": 1,
+  "descriptionKey": "actor-demo-orc-shaman-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 30,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "o",
+  "hitPointDice": {
+    "dice": 9,
+    "sides": 8
+  },
+  "id": "demo.actor.orc-shaman",
+  "level": 9,
+  "maxHp": 40,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 7,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 7,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.blink",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.curse-3d8",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.bolt-physical-2d6-3",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 12
+  },
+  "nameKey": "actor-demo-orc-shaman-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 4,
+    "skeletonItemKindId": "demo.item.skeleton-remains",
+    "skeletonWeight": 1
+  },
+  "resistances": {
+    "dark": "resistant",
+    "light": "vulnerable"
+  },
+  "role": "monster",
+  "speed": 110,
+  "tags": [
+    "evil",
+    "humanoid",
+    "orc",
+    "warrens"
+  ]
+}

@@ -271,8 +271,10 @@ fn surface_is_ambient_lit_and_dungeon_visibility_follows_equipped_light_radius()
     descend_one_floor(&mut game);
     game.entities.clear();
     game.player.position = Position { x: 10, y: 10 };
-    for x in 10..=13 {
-        replace_terrain(&mut game, Position { x, y: 10 }, "demo.terrain.floor");
+    for y in 8..=13 {
+        for x in 8..=13 {
+            replace_terrain(&mut game, Position { x, y }, "demo.terrain.floor");
+        }
     }
     for item in &mut game.items {
         if matches!(item.location, ItemLocation::Equipped { .. }) {
@@ -280,7 +282,10 @@ fn surface_is_ambient_lit_and_dungeon_visibility_follows_equipped_light_radius()
         }
     }
     let adjacent = Position { x: 11, y: 10 };
+    let adjacent_diagonal = Position { x: 11, y: 11 };
     let distance_two = Position { x: 12, y: 10 };
+    let lantern_edge = Position { x: 12, y: 11 };
+    let lantern_corner = Position { x: 12, y: 12 };
     let distance_three = Position { x: 13, y: 10 };
     assert_eq!(
         visual_at(&game.snapshot(), adjacent).visibility,
@@ -299,6 +304,9 @@ fn surface_is_ambient_lit_and_dungeon_visibility_follows_equipped_light_radius()
         visual_at(&game.snapshot(), adjacent).visibility,
         VisibilityState::Visible
     );
+    let torch_diagonal = visual_at(&game.snapshot(), adjacent_diagonal);
+    assert_eq!(torch_diagonal.visibility, VisibilityState::Visible);
+    assert!(torch_diagonal.light.intensity > DUNGEON_AMBIENT_LIGHT);
     assert_eq!(
         visual_at(&game.snapshot(), distance_two).visibility,
         VisibilityState::Hidden
@@ -315,6 +323,13 @@ fn surface_is_ambient_lit_and_dungeon_visibility_follows_equipped_light_radius()
         visual_at(&game.snapshot(), distance_two).visibility,
         VisibilityState::Visible
     );
+    let lantern_outer_band = visual_at(&game.snapshot(), lantern_edge);
+    assert_eq!(lantern_outer_band.visibility, VisibilityState::Visible);
+    assert!(lantern_outer_band.light.intensity > DUNGEON_AMBIENT_LIGHT);
+    assert_eq!(
+        visual_at(&game.snapshot(), lantern_corner).visibility,
+        VisibilityState::Hidden
+    );
     assert_eq!(
         visual_at(&game.snapshot(), distance_three).visibility,
         VisibilityState::Hidden
@@ -326,7 +341,7 @@ fn sleep_suppresses_carried_actor_light_but_not_intrinsic_light() {
     let prepare = |intrinsic| {
         let mut game = game_with_actor_definition(7, "demo.actor.ember-mote", |actor| {
             actor.light = Some(rfb_content::ActorLightDefinition {
-                radius: 5,
+                radius: 1,
                 intrinsic,
             });
         });
@@ -351,8 +366,10 @@ fn sleep_suppresses_carried_actor_light_but_not_intrinsic_light() {
         game
     };
 
-    assert!(!prepare(false).position_is_lit(Position { x: 4, y: 3 }));
-    assert!(prepare(true).position_is_lit(Position { x: 4, y: 3 }));
+    let diagonal = Position { x: 4, y: 2 };
+    assert!(!prepare(false).position_is_lit(diagonal));
+    assert!(prepare(true).position_is_lit(diagonal));
+    assert!(!prepare(true).position_is_lit(Position { x: 3, y: 3 }));
 }
 
 #[test]

@@ -1,0 +1,63 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 58,
+    "maxDepth": 20,
+    "multiplies": true,
+    "randomMovementPercent": 75,
+    "rarity": 1
+  },
+  "attack": 1,
+  "damageDice": 1,
+  "damageSides": 6,
+  "damageType": "acid",
+  "defense": 0,
+  "descriptionKey": "actor-demo-slimy-worm-mass-description",
+  "experienceValue": 5,
+  "formatVersion": 1,
+  "glyph": "w",
+  "hitPointDice": {
+    "dice": 6,
+    "sides": 4
+  },
+  "id": "demo.actor.slimy-worm-mass",
+  "level": 2,
+  "maxHp": 15,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 1,
+            "damageSides": 6,
+            "damageType": "acid",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.crawl",
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "modes": [
+      "swim"
+    ]
+  },
+  "nameKey": "actor-demo-slimy-worm-mass-name",
+  "resistances": {
+    "acid": "resistant",
+    "light": "vulnerable"
+  },
+  "role": "monster",
+  "speed": 100,
+  "statusImmunities": [
+    "rfb.status.fear"
+  ],
+  "tags": [
+    "animal",
+    "warrens",
+    "worm"
+  ]
+}

@@ -105,14 +105,14 @@
       "turn": 16,
       "worldTick": 160,
       "lastCommandSeq": 16,
-      "rngDrawCounter": 170,
+      "rngDrawCounter": 173,
       "floorId": "demo.floor.resonance-depth-5",
       "dungeonInstanceId": "demo.dungeon.resonance-descent.instance.1",
       "playerPosition": {
         "x": 2,
         "y": 4
       },
-      "playerHp": 3,
+      "playerHp": 2,
       "playerMaxHp": 10,
       "playerAttack": 2,
       "playerDefense": 1,
@@ -400,7 +400,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "9b28dec955502752def96f75b736f072fa8cd7fa26f3c90cd8824d5dabced6ef"
+      "stateHash": "309ec2ee229b49cbf5c9fdec58d7e46c2632c1b7ef9d78d7843762cb31633190"
     },
     "events": [
       {
@@ -516,6 +516,26 @@
         }
       },
       {
+        "kind": "terrain.actor-trap-triggered",
+        "messageKey": "terrain-trap-triggered",
+        "args": {
+          "target": "demo.actor.storm-spark",
+          "x": "4",
+          "y": "6"
+        },
+        "outcome": {
+          "type": "damage",
+          "resolution": {
+            "rawDamage": 2,
+            "armorReduction": 0,
+            "resistanceAdjustment": 0,
+            "finalDamage": 2,
+            "damageType": "physical",
+            "resistance": "normal"
+          }
+        }
+      },
+      {
         "kind": "combat.hit",
         "messageKey": "combat-player-hit",
         "args": {
@@ -549,6 +569,25 @@
             "resistanceAdjustment": 0,
             "finalDamage": 1,
             "damageType": "physical",
+            "resistance": "normal"
+          }
+        }
+      },
+      {
+        "kind": "combat.monster-hit",
+        "messageKey": "combat-monster-hit",
+        "args": {
+          "damage": "1",
+          "source": "demo.actor.storm-spark"
+        },
+        "outcome": {
+          "type": "damage",
+          "resolution": {
+            "rawDamage": 1,
+            "armorReduction": 0,
+            "resistanceAdjustment": 0,
+            "finalDamage": 1,
+            "damageType": "electricity",
             "resistance": "normal"
           }
         }
@@ -10268,15 +10307,15 @@
       },
       {
         "x": 2,
-        "y": 6
+        "y": 4
       },
       {
-        "x": 3,
+        "x": 2,
         "y": 5
       },
       {
         "x": 3,
-        "y": 7
+        "y": 5
       },
       {
         "x": 0,
@@ -11887,6 +11926,6 @@
         "y": 4
       }
     ],
-    "saveRoundTripStateHash": "9b28dec955502752def96f75b736f072fa8cd7fa26f3c90cd8824d5dabced6ef"
+    "saveRoundTripStateHash": "309ec2ee229b49cbf5c9fdec58d7e46c2632c1b7ef9d78d7843762cb31633190"
   }
 }

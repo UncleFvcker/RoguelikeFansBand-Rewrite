@@ -80,7 +80,8 @@ pub(super) fn validate_actors(
             || !hit_point_dice_are_valid
             || (actor.role != ActorRole::Monster
                 && (actor.door_interaction.opens || actor.door_interaction.bashes))
-            || (actor.role != ActorRole::Monster && !actor.movement.modes.is_empty())
+            || (actor.role != ActorRole::Monster
+                && (!actor.movement.modes.is_empty() || actor.movement.never_moves))
             || (actor.role != ActorRole::Monster && !actor.status_immunities.is_empty())
         {
             return Err(ContentError::InvalidActorStats(actor.id.clone()));
@@ -274,6 +275,7 @@ pub(super) fn validate_actors(
                 || allocation.rarity > 1_000_000
                 || allocation.max_depth > 10_000
                 || !matches!(allocation.random_movement_percent, 0 | 25 | 50 | 75)
+                || (actor.movement.never_moves && allocation.random_movement_percent != 0)
                 || !friends_are_valid
                 || (allocation.friends.is_some() && allocation.escort)
             {

@@ -1,0 +1,15 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability-program.breath-fire-20-900-r2",
+  "input": "cast-target",
+  "steps": [
+    {
+      "damageType": "fire",
+      "hpPercent": 20,
+      "maxDamage": 900,
+      "radius": 2,
+      "type": "breath-damage"
+    }
+  ]
+}

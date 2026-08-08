@@ -33,7 +33,7 @@
       "turn": 1,
       "worldTick": 10,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 8,
+      "rngDrawCounter": 9,
       "floorId": "demo.floor.surface",
       "playerPosition": {
         "x": 3,
@@ -207,7 +207,7 @@
             "x": 2,
             "y": 2
           },
-          "hp": 3,
+          "hp": 1,
           "speed": 110,
           "energyNeed": 100,
           "faction": "player",
@@ -263,31 +263,10 @@
       ],
       "tasks": [
         {
-          "taskId": "demo.floor.echo-hunt-rift",
-          "floorId": "demo.floor.echo-hunt-rift",
-          "nameKey": "floor-demo-echo-hunt-rift-name",
-          "status": "available",
-          "current": 0,
-          "required": 1,
-          "stage": 1,
-          "stages": 1,
-          "retakesUsed": 0
-        },
-        {
-          "taskId": "demo.floor.echo-task-rift",
-          "floorId": "demo.floor.echo-task-rift",
-          "nameKey": "floor-demo-echo-task-rift-name",
-          "status": "available",
-          "current": 0,
-          "required": 1,
-          "stage": 1,
-          "stages": 1,
-          "retakesUsed": 0
-        },
-        {
           "taskId": "demo.task.echo-bounty",
           "floorId": "demo.floor.echo-bounty-rift",
           "nameKey": "floor-demo-echo-bounty-rift-name",
+          "descriptionKey": "terrain-demo-bounty-rift-description",
           "status": "available",
           "current": 0,
           "required": 2,
@@ -300,6 +279,7 @@
           "taskId": "demo.task.echo-chain",
           "floorId": "demo.floor.echo-chain-rift",
           "nameKey": "floor-demo-echo-chain-rift-name",
+          "descriptionKey": "terrain-demo-chain-rift-description",
           "status": "available",
           "current": 0,
           "required": 1,
@@ -307,6 +287,30 @@
           "stages": 3,
           "retakesUsed": 0,
           "maxRetakes": 2
+        },
+        {
+          "taskId": "demo.task.echo-hunt",
+          "floorId": "demo.floor.echo-hunt-rift",
+          "nameKey": "floor-demo-echo-hunt-rift-name",
+          "descriptionKey": "terrain-demo-hunt-rift-description",
+          "status": "available",
+          "current": 0,
+          "required": 1,
+          "stage": 1,
+          "stages": 1,
+          "retakesUsed": 0
+        },
+        {
+          "taskId": "demo.task.echo-rift",
+          "floorId": "demo.floor.echo-task-rift",
+          "nameKey": "floor-demo-echo-task-rift-name",
+          "descriptionKey": "terrain-demo-task-rift-description",
+          "status": "available",
+          "current": 0,
+          "required": 1,
+          "stage": 1,
+          "stages": 1,
+          "retakesUsed": 0
         }
       ],
       "campaign": {
@@ -315,7 +319,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "e3e3c4902eae96c1041b1a555d791349d803f0cccb160540bbce0072a44490c2"
+      "stateHash": "1661679397c6f0eee5d74fd344159522f2013ff0b9fade6d699fe05da48401df"
     },
     "events": [
       {
@@ -354,9 +358,9 @@
             "hostile": false,
             "group": true,
             "summonedKindIds": [
+              "demo.actor.blinking-dot",
               "demo.actor.echo-hound",
-              "demo.actor.acid-seep",
-              "demo.actor.frost-wisp"
+              "demo.actor.storm-spark"
             ]
           }
         }
@@ -376,6 +380,6 @@
         "y": 2
       }
     ],
-    "saveRoundTripStateHash": "e3e3c4902eae96c1041b1a555d791349d803f0cccb160540bbce0072a44490c2"
+    "saveRoundTripStateHash": "1661679397c6f0eee5d74fd344159522f2013ff0b9fade6d699fe05da48401df"
   }
 }

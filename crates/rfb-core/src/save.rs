@@ -80,6 +80,7 @@ pub(crate) fn actor_from_spawn(
         speed,
         energy_need,
         alerted,
+        nice: false,
         casting_cooldown_remaining: 0,
         observed_player_resistances: BTreeMap::new(),
         statuses: Vec::new(),
@@ -108,6 +109,7 @@ pub(crate) fn actor_from_runtime_spawn(
         speed,
         energy_need,
         alerted,
+        nice: false,
         casting_cooldown_remaining: 0,
         observed_player_resistances: BTreeMap::new(),
         statuses: Vec::new(),
@@ -149,6 +151,7 @@ pub(crate) fn actor_from_player(
         speed: player.base_speed,
         energy_need: player.energy_need,
         alerted: true,
+        nice: false,
         casting_cooldown_remaining: 0,
         observed_player_resistances: BTreeMap::new(),
         statuses,
@@ -208,6 +211,7 @@ pub(crate) fn actor_from_entity(
                 .as_ref()
                 .is_none_or(|awareness| awareness.starts_alerted)
         }),
+        nice: entity.nice,
         casting_cooldown_remaining: entity.casting_cooldown_remaining,
         observed_player_resistances,
         statuses,
@@ -550,6 +554,7 @@ pub(crate) fn actors_to_save(entities: &[Actor]) -> Vec<ActorSaveDto> {
             base_speed: entity.speed,
             energy_need: entity.energy_need,
             alerted: Some(entity.alerted),
+            nice: entity.nice,
             casting_cooldown_remaining: entity.casting_cooldown_remaining,
             observed_player_resistances: entity
                 .observed_player_resistances

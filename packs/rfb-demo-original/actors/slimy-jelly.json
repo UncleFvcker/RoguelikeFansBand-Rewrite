@@ -1,0 +1,63 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 101,
+    "maxDepth": 40,
+    "rarity": 1
+  },
+  "attack": 1,
+  "damageDice": 1,
+  "damageSides": 4,
+  "damageType": "acid",
+  "defense": 0,
+  "descriptionKey": "actor-demo-slimy-jelly-description",
+  "experienceValue": 18,
+  "formatVersion": 1,
+  "glyph": "j",
+  "hitPointDice": {
+    "dice": 22,
+    "sides": 8
+  },
+  "id": "demo.actor.slimy-jelly",
+  "level": 5,
+  "maxHp": 99,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 1,
+            "damageSides": 4,
+            "damageType": "acid",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "modes": [
+      "swim"
+    ],
+    "neverMoves": true
+  },
+  "nameKey": "actor-demo-slimy-jelly-name",
+  "resistances": {
+    "acid": "resistant",
+    "light": "vulnerable"
+  },
+  "role": "monster",
+  "speed": 120,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "jelly",
+    "warrens"
+  ]
+}

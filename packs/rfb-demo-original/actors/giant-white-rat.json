@@ -1,0 +1,49 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 86,
+    "maxDepth": 40,
+    "multiplies": true,
+    "randomMovementPercent": 25,
+    "rarity": 1
+  },
+  "attack": 1,
+  "damageDice": 1,
+  "damageSides": 6,
+  "damageType": "poison",
+  "defense": 0,
+  "descriptionKey": "actor-demo-giant-white-rat-description",
+  "experienceValue": 2,
+  "formatVersion": 1,
+  "glyph": "r",
+  "hitPointDice": {
+    "dice": 2,
+    "sides": 2
+  },
+  "id": "demo.actor.giant-white-rat",
+  "level": 4,
+  "maxHp": 3,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "damageDice": 1,
+            "damageSides": 6,
+            "type": "poison"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      }
+    ]
+  },
+  "nameKey": "actor-demo-giant-white-rat-name",
+  "role": "monster",
+  "speed": 110,
+  "tags": [
+    "animal",
+    "rat",
+    "warrens"
+  ]
+}

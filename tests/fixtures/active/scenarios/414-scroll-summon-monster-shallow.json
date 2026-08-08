@@ -32,13 +32,13 @@
       "turn": 1,
       "worldTick": 10,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 15,
+      "rngDrawCounter": 18,
       "floorId": "demo.floor.surface",
       "playerPosition": {
         "x": 3,
         "y": 3
       },
-      "playerHp": 8,
+      "playerHp": 7,
       "playerMaxHp": 10,
       "playerAttack": 2,
       "playerDefense": 1,
@@ -206,17 +206,17 @@
             "x": 2,
             "y": 2
           },
-          "hp": 3,
-          "speed": 120,
+          "hp": 4,
+          "speed": 110,
           "energyNeed": 100
         },
         {
           "id": "summon.demo.item.summoning-scroll.1.1",
           "position": {
-            "x": 3,
-            "y": 2
+            "x": 2,
+            "y": 1
           },
-          "hp": 3,
+          "hp": 6,
           "speed": 110,
           "energyNeed": 100
         }
@@ -246,31 +246,10 @@
       ],
       "tasks": [
         {
-          "taskId": "demo.floor.echo-hunt-rift",
-          "floorId": "demo.floor.echo-hunt-rift",
-          "nameKey": "floor-demo-echo-hunt-rift-name",
-          "status": "available",
-          "current": 0,
-          "required": 1,
-          "stage": 1,
-          "stages": 1,
-          "retakesUsed": 0
-        },
-        {
-          "taskId": "demo.floor.echo-task-rift",
-          "floorId": "demo.floor.echo-task-rift",
-          "nameKey": "floor-demo-echo-task-rift-name",
-          "status": "available",
-          "current": 0,
-          "required": 1,
-          "stage": 1,
-          "stages": 1,
-          "retakesUsed": 0
-        },
-        {
           "taskId": "demo.task.echo-bounty",
           "floorId": "demo.floor.echo-bounty-rift",
           "nameKey": "floor-demo-echo-bounty-rift-name",
+          "descriptionKey": "terrain-demo-bounty-rift-description",
           "status": "available",
           "current": 0,
           "required": 2,
@@ -283,6 +262,7 @@
           "taskId": "demo.task.echo-chain",
           "floorId": "demo.floor.echo-chain-rift",
           "nameKey": "floor-demo-echo-chain-rift-name",
+          "descriptionKey": "terrain-demo-chain-rift-description",
           "status": "available",
           "current": 0,
           "required": 1,
@@ -290,6 +270,30 @@
           "stages": 3,
           "retakesUsed": 0,
           "maxRetakes": 2
+        },
+        {
+          "taskId": "demo.task.echo-hunt",
+          "floorId": "demo.floor.echo-hunt-rift",
+          "nameKey": "floor-demo-echo-hunt-rift-name",
+          "descriptionKey": "terrain-demo-hunt-rift-description",
+          "status": "available",
+          "current": 0,
+          "required": 1,
+          "stage": 1,
+          "stages": 1,
+          "retakesUsed": 0
+        },
+        {
+          "taskId": "demo.task.echo-rift",
+          "floorId": "demo.floor.echo-task-rift",
+          "nameKey": "floor-demo-echo-task-rift-name",
+          "descriptionKey": "terrain-demo-task-rift-description",
+          "status": "available",
+          "current": 0,
+          "required": 1,
+          "stage": 1,
+          "stages": 1,
+          "retakesUsed": 0
         }
       ],
       "campaign": {
@@ -298,7 +302,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "3a841cfeb0d68b151096b9e9efafe08cceb0e8664396c7f8cd8925736ee64598"
+      "stateHash": "287b72f209daaa48f1d7c32b1014cdad12def3883e5619b28aa318f551d448ba"
     },
     "events": [
       {
@@ -332,28 +336,9 @@
             "hostile": true,
             "group": true,
             "summonedKindIds": [
-              "demo.actor.fruit-bat",
-              "demo.actor.acid-seep"
+              "demo.actor.newt",
+              "demo.actor.white-icky-thing"
             ]
-          }
-        }
-      },
-      {
-        "kind": "combat.monster-hit",
-        "messageKey": "combat-monster-hit",
-        "args": {
-          "damage": "0",
-          "source": "demo.actor.fruit-bat"
-        },
-        "outcome": {
-          "type": "damage",
-          "resolution": {
-            "rawDamage": 1,
-            "armorReduction": 1,
-            "resistanceAdjustment": 0,
-            "finalDamage": 0,
-            "damageType": "physical",
-            "resistance": "normal"
           }
         }
       },
@@ -361,30 +346,36 @@
         "kind": "combat.monster-miss",
         "messageKey": "combat-monster-miss",
         "args": {
-          "source": "demo.actor.fruit-bat"
+          "method": "rfb.blow.bite",
+          "source": "demo.actor.newt"
         }
       },
       {
         "kind": "combat.monster-hit",
         "messageKey": "combat-monster-hit",
         "args": {
-          "damage": "2",
-          "source": "demo.actor.acid-seep"
+          "damage": "3",
+          "method": "rfb.blow.bite",
+          "source": "demo.actor.newt"
         },
         "outcome": {
           "type": "damage",
           "resolution": {
-            "rawDamage": 2,
-            "armorReduction": 0,
+            "rawDamage": 4,
+            "armorReduction": 1,
             "resistanceAdjustment": 0,
-            "finalDamage": 2,
-            "damageType": "acid",
+            "finalDamage": 3,
+            "damageType": "physical",
             "resistance": "normal"
           }
         }
       }
     ],
     "changedCells": [
+      {
+        "x": 2,
+        "y": 1
+      },
       {
         "x": 2,
         "y": 2

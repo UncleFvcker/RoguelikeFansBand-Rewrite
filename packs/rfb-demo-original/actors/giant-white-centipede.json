@@ -1,0 +1,33 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "formatVersion": 1,
+  "id": "demo.actor.giant-white-centipede",
+  "role": "monster",
+  "nameKey": "actor-demo-giant-white-centipede-name",
+  "descriptionKey": "actor-demo-giant-white-centipede-description",
+  "glyph": "c",
+  "level": 1,
+  "experienceValue": 4,
+  "maxHp": 9,
+  "hitPointDice": { "dice": 3, "sides": 5 },
+  "speed": 110,
+  "attack": 1,
+  "defense": 1,
+  "damageDice": 1,
+  "damageSides": 5,
+  "damageType": "physical",
+  "meleeRoutine": {
+    "blows": [
+      { "methodId": "rfb.blow.bite", "toHit": 20, "effects": [{ "type": "damage", "damageDice": 1, "damageSides": 5, "armorMitigated": true }] },
+      { "methodId": "rfb.blow.sting", "toHit": 20, "effects": [{ "type": "damage", "damageDice": 1, "damageSides": 5, "armorMitigated": true }] }
+    ]
+  },
+  "remains": {
+    "chanceDenominator": 3,
+    "skeletonItemKindId": "demo.item.skeleton-remains",
+    "skeletonWeight": 1
+  },
+  "doorInteraction": { "bashes": true },
+  "allocation": { "legacyIndex": 24, "rarity": 1, "maxDepth": 10, "randomMovementPercent": 50 },
+  "tags": ["animal", "insect", "warrens"]
+}

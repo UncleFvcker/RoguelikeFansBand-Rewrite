@@ -155,6 +155,28 @@ export class PixiRendererBackend implements RendererBackend {
     };
   }
 
+  resize(width: number, height: number): void {
+    if (width === this.#width && height === this.#height) return;
+
+    for (const view of [...this.#allocatedDynamicViews]) this.#destroyDynamicView(view);
+    for (const chunk of this.#chunks) {
+      chunk.terrainTexture?.destroy(true);
+      chunk.terrainSprite.destroy();
+    }
+    this.#activeDynamicViews.clear();
+    this.#dynamicViewPools.clear();
+    this.#width = width;
+    this.#height = height;
+    this.#layout = createRenderChunkLayout(width, height, this.#terrainChunkSize);
+    this.#chunks = [];
+    this.#renderCells = [];
+    this.#terrainIds = [];
+    this.#forceTerrainRebuild = true;
+    this.#visibleChunkCount = 0;
+    this.#lastRebuiltTerrainChunks = 0;
+    this.#createTerrainChunks();
+  }
+
   setCameraTransform(transform: CameraTransform): void {
     this.#zoom = transform.zoom;
     const canvasWidth = transform.cullingEnabled

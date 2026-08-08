@@ -880,6 +880,19 @@
       "nextGoldPileSerial": 1,
       "tasks": [
         {
+          "taskId": "demo.task.pest-control",
+          "floorId": "demo.floor.warrens-depth-5",
+          "nameKey": "task-demo-pest-control-name",
+          "descriptionKey": "task-demo-pest-control-description",
+          "sourceFacilityId": "demo.town-facility.outpost-count",
+          "status": "locked",
+          "current": 0,
+          "required": 8,
+          "stage": 1,
+          "stages": 1,
+          "retakesUsed": 0
+        },
+        {
           "taskId": "demo.task.thieves-hideout",
           "floorId": "demo.floor.thieves-hideout",
           "nameKey": "task-demo-thieves-hideout-name",
@@ -899,7 +912,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "8574f8b9336364f08e37e213c05935879473206797c4bcc41d22b283ad1c9d3e"
+      "stateHash": "3f7e3c4512e46ea8e477c694812ed38e5008db12386d69bc3bc1716913caf00e"
     },
     "events": [
       {

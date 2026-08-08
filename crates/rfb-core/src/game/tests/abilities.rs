@@ -5107,7 +5107,16 @@ fn raise_dead_is_deterministic_and_enforces_faction_group_and_unique_rules() {
         shallow_resolution
             .summoned_kind_ids
             .iter()
-            .all(|kind_id| kind_id == "demo.actor.risen-thrall")
+            .all(|kind_id| matches!(
+                kind_id.as_str(),
+                "demo.actor.crypt-creep"
+                    | "demo.actor.disembodied-hand-that-strangled-people"
+                    | "demo.actor.risen-thrall"
+                    | "demo.actor.rotting-corpse"
+                    | "demo.actor.skeleton-kobold"
+                    | "demo.actor.skeleton-orc"
+                    | "demo.actor.zombified-kobold"
+            ))
     );
     assert_eq!(shallow.state_hash(), cast(0, 25).0.state_hash());
 

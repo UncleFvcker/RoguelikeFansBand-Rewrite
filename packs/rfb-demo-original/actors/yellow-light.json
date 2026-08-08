@@ -1,0 +1,62 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 81,
+    "maxDepth": 30,
+    "rarity": 1
+  },
+  "attack": 1,
+  "damageDice": 1,
+  "damageSides": 2,
+  "damageType": "light",
+  "defense": 1,
+  "descriptionKey": "actor-demo-yellow-light-description",
+  "experienceValue": 5,
+  "formatVersion": 1,
+  "glyph": "*",
+  "hitPointDice": {
+    "dice": 2,
+    "sides": 6
+  },
+  "id": "demo.actor.yellow-light",
+  "level": 4,
+  "light": {
+    "intrinsic": true,
+    "radius": 3
+  },
+  "maxHp": 7,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 1,
+            "damageSides": 2,
+            "damageType": "light",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.explode",
+        "selfDestructs": true,
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "nameKey": "actor-demo-yellow-light-name",
+  "resistances": {
+    "light": "resistant"
+  },
+  "role": "monster",
+  "speed": 120,
+  "tags": [
+    "light",
+    "nonliving",
+    "warrens"
+  ]
+}
