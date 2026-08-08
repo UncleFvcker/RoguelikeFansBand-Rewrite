@@ -194,19 +194,7 @@
         "lifePercent": 100,
         "experiencePercent": 100
       },
-      "entityCount": 1,
-      "entities": [
-        {
-          "id": "demo.monster.echo-task-rift.1",
-          "position": {
-            "x": 16,
-            "y": 14
-          },
-          "hp": 3,
-          "speed": 110,
-          "energyNeed": 100
-        }
-      ],
+      "entityCount": 0,
       "groundItemCount": 1,
       "nextItemInstanceSerial": 2,
       "nextGoldPileSerial": 1,
@@ -268,7 +256,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "8574378a6b0c4cc099ce8a6059af04afbe012fa413e7c6f4722be4c367f12a46"
+      "stateHash": "36b95efed4d85cc6e004ba313358fea4aa801a2d2ebe97509068efe453fd9ed9"
     },
     "events": [
       {
@@ -1898,6 +1886,6 @@
         "y": 19
       }
     ],
-    "saveRoundTripStateHash": "8574378a6b0c4cc099ce8a6059af04afbe012fa413e7c6f4722be4c367f12a46"
+    "saveRoundTripStateHash": "36b95efed4d85cc6e004ba313358fea4aa801a2d2ebe97509068efe453fd9ed9"
   }
 }

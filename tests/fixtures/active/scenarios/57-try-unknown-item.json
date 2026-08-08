@@ -248,55 +248,8 @@
         "lifePercent": 100,
         "experiencePercent": 100
       },
-      "entityCount": 2,
+      "entityCount": 1,
       "entities": [
-        {
-          "id": "demo.monster.ember-mote.1",
-          "position": {
-            "x": 18,
-            "y": 18
-          },
-          "hp": 3,
-          "speed": 10,
-          "energyNeed": 70,
-          "statuses": [
-            {
-              "kindId": "rfb.status.slow",
-              "intensity": 10,
-              "remainingTicks": 970,
-              "grantedModifiers": {
-                "attack": 0,
-                "defense": 0,
-                "maxHp": 0,
-                "strength": 0,
-                "intelligence": 0,
-                "wisdom": 0,
-                "dexterity": 0,
-                "constitution": 0,
-                "charisma": 0,
-                "speed": 0
-              },
-              "grantedEquipmentBonuses": {
-                "meleeAttacks": 0,
-                "meleeSkill": 0,
-                "meleeDamage": 0,
-                "rangedSkill": 0,
-                "throwingSkill": 0,
-                "deviceSkill": 0,
-                "savingThrowSkill": 0,
-                "stealthSkill": 0,
-                "searchSkill": 0,
-                "perceptionSkill": 0,
-                "disarmingSkill": 0,
-                "diggingSkill": 0,
-                "infravision": 0,
-                "lightRadius": 0
-              },
-              "grantsWallPassage": false,
-              "incomingDamagePercent": 100
-            }
-          ]
-        },
         {
           "id": "demo.z-entrance-guardian.resonance-descent.1",
           "position": {
@@ -410,7 +363,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "47e2e5a21b167e2177bc5bcdce90e1efbc80efbf7b8db89c157c94c5d9141a8d"
+      "stateHash": "60d4afb74cac06ec2706ab47dc8779fd667fcd405debd17d494b631c24130a2b"
     },
     "events": [
       {
@@ -471,6 +424,6 @@
         "y": 1
       }
     ],
-    "saveRoundTripStateHash": "47e2e5a21b167e2177bc5bcdce90e1efbc80efbf7b8db89c157c94c5d9141a8d"
+    "saveRoundTripStateHash": "60d4afb74cac06ec2706ab47dc8779fd667fcd405debd17d494b631c24130a2b"
   }
 }

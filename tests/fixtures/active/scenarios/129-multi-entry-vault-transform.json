@@ -288,69 +288,7 @@
         "dungeonId": "demo.dungeon.resonance-descent",
         "floorId": "demo.floor.resonance-depth-6"
       },
-      "entityCount": 6,
-      "entities": [
-        {
-          "id": "demo.floor.resonance-depth-5.encounter.1",
-          "position": {
-            "x": 18,
-            "y": 17
-          },
-          "hp": 3,
-          "speed": 110,
-          "energyNeed": 100
-        },
-        {
-          "id": "demo.floor.resonance-depth-5.encounter.2",
-          "position": {
-            "x": 16,
-            "y": 16
-          },
-          "hp": 3,
-          "speed": 110,
-          "energyNeed": 100
-        },
-        {
-          "id": "demo.floor.resonance-depth-5.encounter.3",
-          "position": {
-            "x": 16,
-            "y": 15
-          },
-          "hp": 3,
-          "speed": 110,
-          "energyNeed": 100
-        },
-        {
-          "id": "demo.floor.resonance-depth-5.encounter.4",
-          "position": {
-            "x": 15,
-            "y": 15
-          },
-          "hp": 3,
-          "speed": 110,
-          "energyNeed": 100
-        },
-        {
-          "id": "demo.floor.resonance-depth-5.encounter.5",
-          "position": {
-            "x": 14,
-            "y": 15
-          },
-          "hp": 3,
-          "speed": 110,
-          "energyNeed": 100
-        },
-        {
-          "id": "demo.floor.resonance-depth-5.encounter.6",
-          "position": {
-            "x": 14,
-            "y": 16
-          },
-          "hp": 3,
-          "speed": 110,
-          "energyNeed": 100
-        }
-      ],
+      "entityCount": 0,
       "groundItemCount": 2,
       "nextItemInstanceSerial": 11,
       "nextGoldPileSerial": 1,
@@ -412,7 +350,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "ab6c0b211890768abddde690c0f212813c53fea94652425ab9ea53584725da21"
+      "stateHash": "bbbcddcbb96b4e80f7155e5b2c654619cf10488a0c311db15c487fe009166226"
     },
     "events": [
       {
@@ -11954,6 +11892,6 @@
         "y": 5
       }
     ],
-    "saveRoundTripStateHash": "ab6c0b211890768abddde690c0f212813c53fea94652425ab9ea53584725da21"
+    "saveRoundTripStateHash": "bbbcddcbb96b4e80f7155e5b2c654619cf10488a0c311db15c487fe009166226"
   }
 }

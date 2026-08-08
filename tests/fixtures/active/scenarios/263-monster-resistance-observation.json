@@ -223,7 +223,7 @@
         "lifePercent": 100,
         "experiencePercent": 100
       },
-      "entityCount": 2,
+      "entityCount": 1,
       "entities": [
         {
           "id": "demo.monster.ember-mote.1",
@@ -241,22 +241,6 @@
               "level": "resistant"
             }
           ]
-        },
-        {
-          "id": "demo.z-entrance-guardian.resonance-descent.1",
-          "position": {
-            "x": 15,
-            "y": 15
-          },
-          "hp": 6,
-          "speed": 110,
-          "energyNeed": 100,
-          "pack": {
-            "id": "demo.z-entrance-guardian.resonance-descent.1",
-            "leaderId": "demo.z-entrance-guardian.resonance-descent.1",
-            "role": "leader",
-            "behavior": "guard-position"
-          }
         }
       ],
       "groundItemCount": 5,
@@ -333,7 +317,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "a95b2b75d38102c74639f3c3156e5d074fae7272eb69e219171ce5044e6020c6"
+      "stateHash": "8559bb0eb92105d937285a0a1d7f1fc5a418246591ea10aacf125e64506511a0"
     },
     "events": [
       {
@@ -851,6 +835,6 @@
         "y": 3
       }
     ],
-    "saveRoundTripStateHash": "a95b2b75d38102c74639f3c3156e5d074fae7272eb69e219171ce5044e6020c6"
+    "saveRoundTripStateHash": "8559bb0eb92105d937285a0a1d7f1fc5a418246591ea10aacf125e64506511a0"
   }
 }

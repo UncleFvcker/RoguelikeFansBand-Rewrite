@@ -22,6 +22,13 @@
           ],
           "default": null
         },
+        "habitats": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/ActorHabitat"
+          },
+          "type": "array"
+        },
         "legacyIndex": {
           "description": "Stable order from the original global monster allocation table.",
           "format": "uint32",
@@ -166,6 +173,21 @@
       ],
       "type": "object"
     },
+    "ActorHabitat": {
+      "enum": [
+        "all",
+        "grass",
+        "mountain",
+        "shore",
+        "snow",
+        "swamp",
+        "town",
+        "volcano",
+        "waste",
+        "wood"
+      ],
+      "type": "string"
+    },
     "ActorHitPointDiceDefinition": {
       "additionalProperties": false,
       "properties": {
@@ -231,7 +253,9 @@
     },
     "ActorMovementMode": {
       "enum": [
+        "aquatic",
         "fly",
+        "pass-wall",
         "swim"
       ],
       "type": "string"
@@ -466,6 +490,43 @@
           "required": [
             "type",
             "attributes"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "amountDice": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "amountSides": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "chancePercent": {
+              "default": null,
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "type": {
+              "const": "drain-resource",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "amountDice",
+            "amountSides"
           ],
           "type": "object"
         },
@@ -1152,6 +1213,11 @@
       "minimum": 0,
       "type": "integer"
     },
+    "killsWeakerBodies": {
+      "default": false,
+      "description": "Whether this actor attacks weaker actors that block its movement.",
+      "type": "boolean"
+    },
     "level": {
       "format": "uint32",
       "minimum": 0,
@@ -1174,6 +1240,11 @@
         "string",
         "null"
       ]
+    },
+    "madeOfSilver": {
+      "default": false,
+      "description": "Whether the original monster is materially silver.",
+      "type": "boolean"
     },
     "maxHp": {
       "format": "int32",
@@ -1210,6 +1281,11 @@
     },
     "nameKey": {
       "type": "string"
+    },
+    "rangedMelee": {
+      "default": false,
+      "description": "Whether this actor can use its melee routine at RFB's two-grid reach.",
+      "type": "boolean"
     },
     "remains": {
       "anyOf": [
@@ -1314,6 +1390,11 @@
         }
       },
       "type": "object"
+    },
+    "rideable": {
+      "default": false,
+      "description": "Whether the player can use this actor as a mount.",
+      "type": "boolean"
     },
     "role": {
       "$ref": "#/$defs/ActorRole"

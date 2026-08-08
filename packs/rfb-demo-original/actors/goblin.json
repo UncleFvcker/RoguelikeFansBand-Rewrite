@@ -6,6 +6,9 @@
       "dice": 3,
       "sides": 3
     },
+    "habitats": [
+      "grass"
+    ],
     "legacyIndex": 87,
     "maxDepth": 40,
     "rarity": 1

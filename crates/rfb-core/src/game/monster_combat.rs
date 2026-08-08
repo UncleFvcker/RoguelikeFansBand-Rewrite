@@ -8,6 +8,7 @@ pub(super) fn melee_effect_chance(effect: &MeleeBlowEffectDefinition) -> Option<
         | MeleeBlowEffectDefinition::Poison { chance_percent, .. }
         | MeleeBlowEffectDefinition::Disease { chance_percent, .. }
         | MeleeBlowEffectDefinition::DrainAttributes { chance_percent, .. }
+        | MeleeBlowEffectDefinition::DrainResource { chance_percent, .. }
         | MeleeBlowEffectDefinition::Bleeding { chance_percent, .. }
         | MeleeBlowEffectDefinition::Blind { chance_percent }
         | MeleeBlowEffectDefinition::Confusion { chance_percent, .. }
@@ -58,19 +59,6 @@ pub(super) fn melee_terrify_duration(definition: &rfb_content::ActorDefinition) 
     i32::try_from(definition.level)
         .unwrap_or(i32::MAX)
         .saturating_add(i32::from(definition.tags.iter().any(|tag| tag == "unique")) * 3)
-}
-
-#[cfg(test)]
-mod nice_melee_tests {
-    use super::nice_melee_roll;
-
-    #[test]
-    fn spawn_grace_limits_only_rolls_above_fifty() {
-        assert_eq!(nice_melee_roll(50, true), 50);
-        assert_eq!(nice_melee_roll(51, true), 50);
-        assert_eq!(nice_melee_roll(100, true), 75);
-        assert_eq!(nice_melee_roll(100, false), 100);
-    }
 }
 
 impl Game {
@@ -417,7 +405,8 @@ impl Game {
                                 .level(DamageType::Poison),
                         ))
                     }
-                    MeleeBlowEffectDefinition::DrainAttributes { .. } => None,
+                    MeleeBlowEffectDefinition::DrainAttributes { .. }
+                    | MeleeBlowEffectDefinition::DrainResource { .. } => None,
                     MeleeBlowEffectDefinition::Bleeding {
                         duration_dice,
                         duration_sides,
@@ -908,6 +897,44 @@ impl Game {
                         }
                         None
                     }
+                    MeleeBlowEffectDefinition::DrainResource {
+                        amount_dice,
+                        amount_sides,
+                        ..
+                    } => {
+                        let requested =
+                            u32::try_from(self.roll_damage(*amount_dice, *amount_sides).max(0))
+                                .unwrap_or(u32::MAX);
+                        let pool_id = self
+                            .casting_profile()
+                            .map(|profile| profile.resource_id.clone())
+                            .filter(|id| self.resources.contains_key(id))
+                            .or_else(|| {
+                                self.resources
+                                    .iter()
+                                    .find(|(_, pool)| pool.current > 0)
+                                    .map(|(id, _)| id.clone())
+                            });
+                        let drained = pool_id.map_or(0, |id| {
+                            let pool = self
+                                .resources
+                                .get_mut(&id)
+                                .expect("selected melee drain pool must remain available");
+                            let drained = pool.current.min(requested);
+                            pool.current -= drained;
+                            drained
+                        });
+                        if drained > 0 {
+                            let caster = &mut self.entities[index];
+                            let missing = caster.max_hp.saturating_sub(caster.hp).max(0);
+                            let healing = drained.saturating_mul(6);
+                            caster.hp = caster.hp.saturating_add(
+                                i32::try_from(healing).unwrap_or(i32::MAX).min(missing),
+                            );
+                            changed.insert(caster.position);
+                        }
+                        None
+                    }
                     MeleeBlowEffectDefinition::Bleeding {
                         duration_dice,
                         duration_sides,
@@ -1182,5 +1209,18 @@ impl Game {
             });
         }
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod nice_melee_tests {
+    use super::nice_melee_roll;
+
+    #[test]
+    fn spawn_grace_limits_only_rolls_above_fifty() {
+        assert_eq!(nice_melee_roll(50, true), 50);
+        assert_eq!(nice_melee_roll(51, true), 50);
+        assert_eq!(nice_melee_roll(100, true), 75);
+        assert_eq!(nice_melee_roll(100, false), 100);
     }
 }

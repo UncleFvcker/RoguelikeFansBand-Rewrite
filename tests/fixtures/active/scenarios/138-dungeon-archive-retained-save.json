@@ -236,18 +236,8 @@
         "dungeonId": "demo.dungeon.archive-depths",
         "floorId": "demo.floor.archive-depth-1"
       },
-      "entityCount": 2,
+      "entityCount": 1,
       "entities": [
-        {
-          "id": "demo.monster.ember-mote.1",
-          "position": {
-            "x": 12,
-            "y": 12
-          },
-          "hp": 3,
-          "speed": 110,
-          "energyNeed": 100
-        },
         {
           "id": "demo.z-entrance-guardian.resonance-descent.1",
           "position": {
@@ -326,7 +316,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "ebc58ac7c0efebe0b0baf7560e8661ecef8619b237886a33fbc8a854b5756af4"
+      "stateHash": "a82d7deb657d46c1a11db76014ec9b6260cbe4df3b891a194949e9569e24e333"
     },
     "events": [
       {
@@ -3649,6 +3639,6 @@
         "y": 19
       }
     ],
-    "saveRoundTripStateHash": "ebc58ac7c0efebe0b0baf7560e8661ecef8619b237886a33fbc8a854b5756af4"
+    "saveRoundTripStateHash": "a82d7deb657d46c1a11db76014ec9b6260cbe4df3b891a194949e9569e24e333"
   }
 }

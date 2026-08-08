@@ -2550,6 +2550,7 @@ fn equipment_fold(flags: &[String], pval: i32) -> EquipmentFold {
     }
     for (flag, passive) in [
         ("REGEN", "regeneration"),
+        ("SEE_INVIS", "see-invisible"),
         ("BRAND_VAMP", "vampiric"),
         ("SUST_STR", "sustain-strength"),
         ("SUST_INT", "sustain-intelligence"),
@@ -5207,6 +5208,9 @@ fn terrain_json(
     if entry.flags.iter().any(|flag| flag == "TRAP") {
         tags.push("trap");
     }
+    if entry.flags.iter().any(|flag| flag == "WATER") {
+        tags.push("water");
+    }
     if entry
         .flags
         .iter()
@@ -5234,6 +5238,22 @@ fn terrain_json(
     });
     if let Some(target_id) = monster_destroy_to_terrain_id {
         value["monsterDestroyToTerrainId"] = serde_json::json!(target_id);
+    }
+    if entry.flags.iter().any(|flag| flag == "CAN_PASS") {
+        value["allowsWallPassage"] = serde_json::json!(true);
+    }
+    let movement_modes = [("CAN_FLY", "fly"), ("CAN_SWIM", "swim")]
+        .into_iter()
+        .filter_map(|(flag, mode)| {
+            entry
+                .flags
+                .iter()
+                .any(|value| value == flag)
+                .then_some(mode)
+        })
+        .collect::<Vec<_>>();
+    if !movement_modes.is_empty() {
+        value["movementModes"] = serde_json::json!(movement_modes);
     }
     value
 }
@@ -5320,6 +5340,14 @@ fn melee_effect_json(effect: &LegacyBlowEffect) -> Option<serde_json::Value> {
         "EAT_ITEM" => serde_json::json!({ "type": "eat-item" }),
         "EAT_FOOD" => serde_json::json!({ "type": "eat-food" }),
         "EAT_LITE" => serde_json::json!({ "type": "eat-light" }),
+        "DRAIN_MANA" => {
+            let (amount_dice, amount_sides) = effect.dice?;
+            serde_json::json!({
+                "type": "drain-resource",
+                "amountDice": amount_dice.clamp(1, 100),
+                "amountSides": amount_sides.clamp(1, 10_000),
+            })
+        }
         "LOSE_STR" | "LOSE_INT" | "LOSE_WIS" | "LOSE_DEX" | "LOSE_CON" | "LOSE_CHR"
         | "LOSE_ALL" => {
             let attributes: &[&str] = match effect.token.as_str() {
@@ -5937,21 +5965,36 @@ fn monster_json(
     if entry.flags.iter().any(|flag| flag == "NO_CONF") {
         value["statusImmunities"] = serde_json::json!(["rfb.status.confusion"]);
     }
-    let movement_modes = [("CAN_FLY", "fly"), ("CAN_SWIM", "swim")]
-        .into_iter()
-        .filter_map(|(flag, mode)| {
-            entry
-                .flags
-                .iter()
-                .any(|value| value == flag)
-                .then_some(mode)
-        })
-        .collect::<Vec<_>>();
+    let movement_modes = [
+        ("AQUATIC", "aquatic"),
+        ("CAN_FLY", "fly"),
+        ("PASS_WALL", "pass-wall"),
+        ("CAN_SWIM", "swim"),
+    ]
+    .into_iter()
+    .filter_map(|(flag, mode)| {
+        entry
+            .flags
+            .iter()
+            .any(|value| value == flag)
+            .then_some(mode)
+    })
+    .collect::<Vec<_>>();
     let never_moves = entry.flags.iter().any(|flag| flag == "NEVER_MOVE");
     if !movement_modes.is_empty() || never_moves {
         value["movement"] = serde_json::json!({ "modes": movement_modes });
         if never_moves {
             value["movement"]["neverMoves"] = serde_json::json!(true);
+        }
+    }
+    for (flag, field) in [
+        ("KILL_BODY", "killsWeakerBodies"),
+        ("RANGED_MELEE", "rangedMelee"),
+        ("RIDING", "rideable"),
+        ("SILVER", "madeOfSilver"),
+    ] {
+        if entry.flags.iter().any(|value| value == flag) {
+            value[field] = serde_json::json!(true);
         }
     }
     let opens = entry.flags.iter().any(|flag| flag == "OPEN_DOOR");
@@ -6043,6 +6086,30 @@ fn monster_json(
             "multiplies": entry.flags.iter().any(|flag| flag == "MULTIPLY"),
             "randomMovementPercent": random_movement_percent,
         });
+        let habitats = [
+            ("WILD_ALL", "all"),
+            ("WILD_GRASS", "grass"),
+            ("WILD_MOUNTAIN", "mountain"),
+            ("WILD_SHORE", "shore"),
+            ("WILD_SNOW", "snow"),
+            ("WILD_SWAMP", "swamp"),
+            ("WILD_TOWN", "town"),
+            ("WILD_VOLCANO", "volcano"),
+            ("WILD_WASTE", "waste"),
+            ("WILD_WOOD", "wood"),
+        ]
+        .into_iter()
+        .filter_map(|(flag, habitat)| {
+            entry
+                .flags
+                .iter()
+                .any(|value| value == flag)
+                .then_some(habitat)
+        })
+        .collect::<Vec<_>>();
+        if !habitats.is_empty() {
+            allocation["habitats"] = serde_json::json!(habitats);
+        }
         if let Some(friends) = friends {
             allocation["friends"] = friends;
         }
@@ -6069,8 +6136,14 @@ fn demo_monster_flag_is_handled(flag: &str) -> bool {
                 | "NONLIVING"
                 | "UNIQUE"
                 | "THIEF"
+                | "AQUATIC"
                 | "CAN_FLY"
                 | "CAN_SWIM"
+                | "PASS_WALL"
+                | "KILL_BODY"
+                | "RANGED_MELEE"
+                | "RIDING"
+                | "SILVER"
                 | "OPEN_DOOR"
                 | "BASH_DOOR"
                 | "DROP_CORPSE"
@@ -6084,6 +6157,17 @@ fn demo_monster_flag_is_handled(flag: &str) -> bool {
                 | "RAND_25"
                 | "RAND_50"
                 | "FRIENDS"
+                | "INVISIBLE"
+                | "WILD_ALL"
+                | "WILD_GRASS"
+                | "WILD_MOUNTAIN"
+                | "WILD_SHORE"
+                | "WILD_SNOW"
+                | "WILD_SWAMP"
+                | "WILD_TOWN"
+                | "WILD_VOLCANO"
+                | "WILD_WASTE"
+                | "WILD_WOOD"
         )
         || flag.starts_with("FRIENDS(")
 }
@@ -6195,6 +6279,11 @@ fn demo_monster_json(
     }
     let mut blows = Vec::with_capacity(entry.blows.len());
     for blow in &entry.blows {
+        // RFB permits purely presentational methods such as DROOL with no
+        // effect payload. They do not create a gameplay blow in this model.
+        if blow.effects.is_empty() {
+            continue;
+        }
         let effects = blow
             .effects
             .iter()
@@ -6207,12 +6296,6 @@ fn demo_monster_json(
                 })
             })
             .collect::<Result<Vec<_>, _>>()?;
-        if effects.is_empty() {
-            return Err(LegacyImportError::InvalidDemoMonsterSelection(format!(
-                "{} has an empty melee blow {}",
-                selection.id, blow.method
-            )));
-        }
         let mut method = kebab(&blow.method);
         if method.is_empty() {
             method = "strike".to_owned();
@@ -6261,6 +6344,7 @@ fn demo_monster_json(
         ("NONLIVING", "nonliving"),
         ("UNIQUE", "unique"),
         ("THIEF", "thief"),
+        ("INVISIBLE", "invisible"),
         ("RES_ALL", "resist-all"),
         ("RES_TELE", "resist-teleport"),
     ] {

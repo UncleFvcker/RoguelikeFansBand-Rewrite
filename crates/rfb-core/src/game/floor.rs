@@ -902,9 +902,12 @@ impl Game {
             .cloned()
             .collect::<BTreeSet<_>>();
         let mut following_summons = Vec::with_capacity(following_summon_ids.len());
+        let mut riding_actor = None;
         let mut remaining_entities = Vec::with_capacity(self.entities.len());
         for entity in std::mem::take(&mut self.entities) {
-            if following_summon_ids.contains(&entity.id) {
+            if self.riding_actor_id.as_deref() == Some(entity.id.as_str()) {
+                riding_actor = Some(entity);
+            } else if following_summon_ids.contains(&entity.id) {
                 following_summons.push(entity);
             } else {
                 remaining_entities.push(entity);
@@ -1079,6 +1082,11 @@ impl Game {
         }
 
         self.activate_floor(destination, global_items);
+        if let Some(mut mount) = riding_actor {
+            mount.position = self.player.position;
+            self.entities.push(mount);
+            self.entities.sort_by(|left, right| left.id.cmp(&right.id));
+        }
         let (summons_followed, summons_could_not_follow) =
             self.place_following_summons(following_summons, &plan.from_storage_key);
         if self.summon_command.mode == SummonCommandModeDto::Guard {

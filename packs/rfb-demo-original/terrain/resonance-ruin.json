@@ -7,6 +7,7 @@
   "glyph": ";",
   "walkable": false,
   "blocksSight": true,
+  "allowsWallPassage": true,
   "digToTerrainId": "demo.terrain.floor",
   "digCheckDifficulty": 9,
   "tags": ["interior", "rubble", "destroyed", "diggable", "resonance"]

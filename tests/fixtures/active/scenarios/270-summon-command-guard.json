@@ -231,18 +231,8 @@
           "y": 3
         }
       },
-      "entityCount": 2,
+      "entityCount": 1,
       "entities": [
-        {
-          "id": "demo.monster.ember-mote.1",
-          "position": {
-            "x": 14,
-            "y": 14
-          },
-          "hp": 3,
-          "speed": 110,
-          "energyNeed": 100
-        },
         {
           "id": "demo.z-entrance-guardian.resonance-descent.1",
           "position": {
@@ -334,7 +324,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "203c9ebae75f2a39407149552c6471bcd3946b0aa647fc1fd1f7bdce9ffebe46"
+      "stateHash": "68b1acb7ae3d26ab4cef6e39b771826fece9c8d2bf290ea5179450ef18520acb"
     },
     "events": [
       {
@@ -382,6 +372,6 @@
         "y": 15
       }
     ],
-    "saveRoundTripStateHash": "203c9ebae75f2a39407149552c6471bcd3946b0aa647fc1fd1f7bdce9ffebe46"
+    "saveRoundTripStateHash": "68b1acb7ae3d26ab4cef6e39b771826fece9c8d2bf290ea5179450ef18520acb"
   }
 }

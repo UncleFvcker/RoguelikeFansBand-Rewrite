@@ -221,29 +221,7 @@
         "dungeonId": "demo.dungeon.resonance-descent",
         "floorId": "demo.floor.resonance-depth-2"
       },
-      "entityCount": 2,
-      "entities": [
-        {
-          "id": "demo.floor.resonance-depth-1.encounter.1",
-          "position": {
-            "x": 13,
-            "y": 15
-          },
-          "hp": 3,
-          "speed": 110,
-          "energyNeed": 100
-        },
-        {
-          "id": "demo.floor.resonance-depth-1.encounter.2",
-          "position": {
-            "x": 13,
-            "y": 17
-          },
-          "hp": 3,
-          "speed": 110,
-          "energyNeed": 100
-        }
-      ],
+      "entityCount": 0,
       "groundItemCount": 1,
       "nextItemInstanceSerial": 5,
       "nextGoldPileSerial": 1,
@@ -305,7 +283,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "bbb3f66cc133062fa052059d7a48281d29212eff625a02b9bf18c1693d0d8f52"
+      "stateHash": "e3433db82fef824e4ef7f1132b1ab71a4ba8d00f8b181fff1b95a0e1738ba3d6"
     },
     "events": [
       {
@@ -5228,6 +5206,6 @@
         "y": 19
       }
     ],
-    "saveRoundTripStateHash": "bbb3f66cc133062fa052059d7a48281d29212eff625a02b9bf18c1693d0d8f52"
+    "saveRoundTripStateHash": "e3433db82fef824e4ef7f1132b1ab71a4ba8d00f8b181fff1b95a0e1738ba3d6"
   }
 }

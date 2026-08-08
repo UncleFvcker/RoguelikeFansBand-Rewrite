@@ -337,6 +337,58 @@ fn surface_is_ambient_lit_and_dungeon_visibility_follows_equipped_light_radius()
 }
 
 #[test]
+fn invisible_actors_are_hidden_until_detected_and_detection_round_trips() {
+    let mut game = Game::new(12);
+    clear_monsters(&mut game);
+    let player_position = Position { x: 3, y: 3 };
+    game.player.position = player_position;
+    let target = Position { x: 4, y: 3 };
+    replace_terrain(&mut game, player_position, "demo.terrain.floor");
+    replace_terrain(&mut game, target, "demo.terrain.floor");
+    game.push_generated_actor(
+        "test.invisible".to_owned(),
+        "demo.actor.clear-icky-thing",
+        target,
+    );
+
+    let hidden = game.snapshot();
+    assert!(
+        hidden
+            .entities
+            .iter()
+            .all(|actor| actor.id != "test.invisible")
+    );
+    assert!(
+        hidden
+            .cells
+            .iter()
+            .any(|cell| { cell.position == target && cell.actor_id.is_none() })
+    );
+
+    game.entities[0].visible_invisible = true;
+    let detected = game.snapshot();
+    assert!(
+        detected
+            .entities
+            .iter()
+            .any(|actor| actor.id == "test.invisible")
+    );
+    assert!(detected.cells.iter().any(|cell| {
+        cell.position == target && cell.actor_id.as_deref() == Some("test.invisible")
+    }));
+
+    let restored = Game::from_save(game.to_save()).expect("invisible detection should reload");
+    assert!(restored.entities[0].visible_invisible);
+    assert!(
+        restored
+            .snapshot()
+            .entities
+            .iter()
+            .any(|actor| actor.id == "test.invisible")
+    );
+}
+
+#[test]
 fn sleep_suppresses_carried_actor_light_but_not_intrinsic_light() {
     let prepare = |intrinsic| {
         let mut game = game_with_actor_definition(7, "demo.actor.ember-mote", |actor| {

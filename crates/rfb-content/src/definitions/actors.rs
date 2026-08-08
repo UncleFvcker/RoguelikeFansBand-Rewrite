@@ -24,8 +24,26 @@ pub enum ActorRole {
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
 pub enum ActorMovementMode {
+    Aquatic,
     Fly,
+    PassWall,
     Swim,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum ActorHabitat {
+    All,
+    Grass,
+    Mountain,
+    Shore,
+    Snow,
+    Swamp,
+    Town,
+    Volcano,
+    Waste,
+    Wood,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -141,6 +159,12 @@ pub enum MeleeBlowEffectDefinition {
         #[serde(default)]
         chance_percent: Option<u8>,
         attributes: Vec<ItemAttributeDefinition>,
+    },
+    DrainResource {
+        #[serde(default)]
+        chance_percent: Option<u8>,
+        amount_dice: u16,
+        amount_sides: u16,
     },
     Bleeding {
         #[serde(default)]
@@ -352,6 +376,18 @@ pub struct ActorDefinition {
     pub allocation: Option<ActorAllocationDefinition>,
     #[serde(default)]
     pub movement: ActorMovementDefinition,
+    /// Whether this actor attacks weaker actors that block its movement.
+    #[serde(default)]
+    pub kills_weaker_bodies: bool,
+    /// Whether this actor can use its melee routine at RFB's two-grid reach.
+    #[serde(default)]
+    pub ranged_melee: bool,
+    /// Whether the player can use this actor as a mount.
+    #[serde(default)]
+    pub rideable: bool,
+    /// Whether the original monster is materially silver.
+    #[serde(default)]
+    pub made_of_silver: bool,
     #[serde(default)]
     pub door_interaction: ActorDoorInteractionDefinition,
     pub tags: Vec<String>,
@@ -370,6 +406,8 @@ pub struct ActorAllocationDefinition {
     pub force_depth: bool,
     #[serde(default)]
     pub wild_only: bool,
+    #[serde(default)]
+    pub habitats: Vec<ActorHabitat>,
     #[serde(default)]
     pub friends: Option<ActorFriendsDefinition>,
     #[serde(default)]

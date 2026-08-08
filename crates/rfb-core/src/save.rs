@@ -81,6 +81,7 @@ pub(crate) fn actor_from_spawn(
         energy_need,
         alerted,
         nice: false,
+        visible_invisible: false,
         casting_cooldown_remaining: 0,
         observed_player_resistances: BTreeMap::new(),
         statuses: Vec::new(),
@@ -110,6 +111,7 @@ pub(crate) fn actor_from_runtime_spawn(
         energy_need,
         alerted,
         nice: false,
+        visible_invisible: false,
         casting_cooldown_remaining: 0,
         observed_player_resistances: BTreeMap::new(),
         statuses: Vec::new(),
@@ -152,6 +154,7 @@ pub(crate) fn actor_from_player(
         energy_need: player.energy_need,
         alerted: true,
         nice: false,
+        visible_invisible: false,
         casting_cooldown_remaining: 0,
         observed_player_resistances: BTreeMap::new(),
         statuses,
@@ -212,6 +215,7 @@ pub(crate) fn actor_from_entity(
                 .is_none_or(|awareness| awareness.starts_alerted)
         }),
         nice: entity.nice,
+        visible_invisible: entity.visible_invisible,
         casting_cooldown_remaining: entity.casting_cooldown_remaining,
         observed_player_resistances,
         statuses,
@@ -537,6 +541,7 @@ pub(crate) fn player_to_save(
         ability_progress: Vec::new(),
         summon_command: Default::default(),
         recall: None,
+        riding_actor_id: None,
         // Filled by the game's save path, which owns the body template.
         body_slots: Vec::new(),
     }
@@ -555,6 +560,7 @@ pub(crate) fn actors_to_save(entities: &[Actor]) -> Vec<ActorSaveDto> {
             energy_need: entity.energy_need,
             alerted: Some(entity.alerted),
             nice: entity.nice,
+            visible_invisible: entity.visible_invisible,
             casting_cooldown_remaining: entity.casting_cooldown_remaining,
             observed_player_resistances: entity
                 .observed_player_resistances
@@ -1086,6 +1092,7 @@ const fn weapon_brand(value: WeaponBrandDto) -> WeaponBrand {
 const fn equipment_passive_dto(value: EquipmentPassive) -> EquipmentPassiveDto {
     match value {
         EquipmentPassive::Regeneration => EquipmentPassiveDto::Regeneration,
+        EquipmentPassive::SeeInvisible => EquipmentPassiveDto::SeeInvisible,
         EquipmentPassive::Vampiric => EquipmentPassiveDto::Vampiric,
         EquipmentPassive::SustainStrength => EquipmentPassiveDto::SustainStrength,
         EquipmentPassive::SustainIntelligence => EquipmentPassiveDto::SustainIntelligence,
@@ -1099,6 +1106,7 @@ const fn equipment_passive_dto(value: EquipmentPassive) -> EquipmentPassiveDto {
 const fn equipment_passive(value: EquipmentPassiveDto) -> EquipmentPassive {
     match value {
         EquipmentPassiveDto::Regeneration => EquipmentPassive::Regeneration,
+        EquipmentPassiveDto::SeeInvisible => EquipmentPassive::SeeInvisible,
         EquipmentPassiveDto::Vampiric => EquipmentPassive::Vampiric,
         EquipmentPassiveDto::SustainStrength => EquipmentPassive::SustainStrength,
         EquipmentPassiveDto::SustainIntelligence => EquipmentPassive::SustainIntelligence,

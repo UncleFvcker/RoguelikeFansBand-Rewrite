@@ -1,6 +1,10 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
   "allocation": {
+    "habitats": [
+      "swamp",
+      "wood"
+    ],
     "legacyIndex": 1273,
     "maxDepth": 12,
     "randomMovementPercent": 25,

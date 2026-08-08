@@ -45,7 +45,7 @@
       "turn": 1,
       "worldTick": 10,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 128,
+      "rngDrawCounter": 164,
       "floorId": "demo.floor.thieves-hideout",
       "playerPosition": {
         "x": 1,
@@ -211,69 +211,7 @@
         "lifePercent": 115,
         "experiencePercent": 100
       },
-      "entityCount": 6,
-      "entities": [
-        {
-          "id": "demo.floor.thieves-hideout.formation.1",
-          "position": {
-            "x": 7,
-            "y": 5
-          },
-          "hp": 16,
-          "speed": 110,
-          "energyNeed": 100
-        },
-        {
-          "id": "demo.floor.thieves-hideout.formation.3",
-          "position": {
-            "x": 5,
-            "y": 3
-          },
-          "hp": 9,
-          "speed": 110,
-          "energyNeed": 100
-        },
-        {
-          "id": "demo.floor.thieves-hideout.formation.5",
-          "position": {
-            "x": 17,
-            "y": 3
-          },
-          "hp": 8,
-          "speed": 110,
-          "energyNeed": 100
-        },
-        {
-          "id": "demo.floor.thieves-hideout.formation.6",
-          "position": {
-            "x": 9,
-            "y": 3
-          },
-          "hp": 20,
-          "speed": 110,
-          "energyNeed": 100
-        },
-        {
-          "id": "demo.floor.thieves-hideout.formation.8",
-          "position": {
-            "x": 13,
-            "y": 3
-          },
-          "hp": 3,
-          "speed": 110,
-          "energyNeed": 100
-        },
-        {
-          "id": "demo.floor.thieves-hideout.formation.9",
-          "position": {
-            "x": 14,
-            "y": 5
-          },
-          "hp": 4,
-          "speed": 110,
-          "energyNeed": 100
-        }
-      ],
+      "entityCount": 0,
       "groundItemCount": 4,
       "inventoryStackCount": 8,
       "equipmentCount": 3,
@@ -687,7 +625,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "4770eebf0dd48355231ad232298392c5780e0db9035d4150a1918fbcc1e7b89a"
+      "stateHash": "b2c61c95a90733de7ed33424f7f64fe90db054f157f9aa6b91d725bd016c655f"
     },
     "events": [
       {

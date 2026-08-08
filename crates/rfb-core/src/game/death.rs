@@ -71,6 +71,7 @@ impl Game {
                 } => (*damage_dice, *damage_sides, DamageType::Poison),
                 MeleeBlowEffectDefinition::Disease { .. }
                 | MeleeBlowEffectDefinition::DrainAttributes { .. }
+                | MeleeBlowEffectDefinition::DrainResource { .. }
                 | MeleeBlowEffectDefinition::Bleeding { .. }
                 | MeleeBlowEffectDefinition::Blind { .. }
                 | MeleeBlowEffectDefinition::Confusion { .. }
@@ -288,6 +289,9 @@ impl Game {
         removed_entities: &mut Vec<String>,
     ) -> Result<(), CoreError> {
         let dying_actor = self.entities[index].clone();
+        if self.riding_actor_id.as_deref() == Some(dying_actor.id.as_str()) {
+            self.riding_actor_id = None;
+        }
         let carried_item_ids = self
             .items
             .iter()
@@ -332,6 +336,9 @@ impl Game {
         removed_entities: &mut Vec<String>,
     ) -> Result<(), CoreError> {
         let dying_actor = self.entities[index].clone();
+        if self.riding_actor_id.as_deref() == Some(dying_actor.id.as_str()) {
+            self.riding_actor_id = None;
+        }
         self.entities[index].hp = self.entities[index].hp.min(0);
         events.push(death_event.clone());
         self.actor_death_explosion(&dying_actor, events, changed, removed_entities)?;

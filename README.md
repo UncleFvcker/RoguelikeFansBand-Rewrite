@@ -182,6 +182,8 @@ RoguelikeFansBand 的新一代重构工程。
 - [Contract v165：书店](design/contract-v165-outpost-bookstore.md)
 - [Contract v166：Outpost Home](design/contract-v166-outpost-home.md)
 - [Contract v167：Outpost Black Market](design/contract-v167-outpost-black-market.md)
+- [Contract v194：Warrens P10 移动域、隐形与地表分配](design/contract-v194-warrens-content-p10-movement-visibility-habitats.md)
+- [Contract v195：Warrens P11 低复用专用机制](design/contract-v195-warrens-content-p11-special-mechanics.md)
 - [旧版物品导入 v2（k_info / e_info / a_info）](design/legacy-item-import-v2.md)
 - [旧版内容导入优先级规划 v1](design/legacy-import-priority-v1.md)
 - [旧版角色内容导入 v1（b_info / 种族 / 性格）](design/legacy-character-import-v1.md)
@@ -205,7 +207,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Rust 权威可见性与光照 v1](design/visibility-lighting-v1.md)
 - [静态地形 Chunk 渲染 v1](design/terrain-chunk-rendering-v1.md)
 
-当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v193`，共 470 条 exact fixtures、零 waiver，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
+当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v195`，共 470 条 exact fixtures、零 waiver，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
 
 fixture 使用受控的主分类。日常开发只验证或刷新受影响分类；普通 `cargo test -p rfb-contract` 只做快速的 schema、分类、ID 唯一性和契约单元测试，不回放全部场景：
 
@@ -493,6 +495,10 @@ contract-v191 推进正式内容 P7：`BLIND`、`CONFUSE`、`PARALYZE`、`SLOW`�
 contract-v192 推进正式内容 P8：显式空 `meleeRoutine` 现在表示原版 `NEVER_BLOW`，不再落入默认近战；新增强类型 `aggravate-monsters`，按原版 `SHRIEK` 排除施法者、唤醒两倍视距内怪物并使玩家视线内的敌对怪物加速 100 tick。由此接入尖叫蘑菇丛、白鹰身女妖和射石兽；后者保留每回合 `SHOOT(4d6)`。`DARKNESS` 与 `TRAPS` 继续等待房间暗化和怪物陷阱生成基础设施，不以失忆或空效果代替。协议升至 1.141、demo 升至 1.187.0、state hash Schema 保持 v64，正式包现有 154 种 actor、146 种 item、96 个 ability 和 19 张 loot table，content hash 为 `17ed668316b674de5baaa54d9b5a1fd817a7c5d2ea11b8d914dba462215b5359`。详见 [Contract v192](design/contract-v192-warrens-content-p8-no-melee-utility-spells.md)。
 
 contract-v193 推进正式内容 P9：怪物移动后的 `TAKE_ITEM` 会拾取普通地面物并由怪物携带，跳过金币、尸骨、雕像、神器及会伤害该怪物的 slay/brand 物品；`EAT_GOLD`、`EAT_ITEM`、`EAT_FOOD` 与 `EAT_LITE` 进入有序近战，覆盖敏捷/等级防偷、金币公式、背包单件拆分、食物扣除、非神器光源燃料消耗和偷窃后闪现。赃物沿用携带物死亡掉落事务，所有结果进入本地化事件投影。由此接入小香雪兰、斯密戈、哥布林、绿娜迦、粉红娜迦、小魔怪、吼牛者霍比特人和库塔熊；巧言、罗宾汉仍被未实现的 `TRAPS` 主动法术阻塞。协议保持 1.141、demo 升至 1.188.0、state hash Schema 保持 v64，正式包现有 162 种 actor、146 种 item、96 个 ability 和 19 张 loot table，content hash 为 `4b1c823041b0f60b452d1161546ad4b3eb338b8571b99a5ee9f80f8c3f44296d`。详见 [Contract v193](design/contract-v193-warrens-content-p9-pickup-theft.md)。
+
+contract-v194 推进正式内容 P10：`PASS_WALL` 统一进入寻路、移动、召唤与落位，并仅穿越声明 `allowsWallPassage` 的非永久墙体；`AQUATIC` 只进入水域，飞行水生怪可越过适飞地形。`INVISIBLE` 从权威实体/格子投影隐藏，装备 `see-invisible` 时按原版搜索技能公式在进入视野或目标移动后判定，已看破状态随 actor 保存；隐藏占位仍可由位置移动触发近战。Outpost 新增疏林与深浅水面，按 `WILD_*` habitat、等级、rarity 与移动域分配地表怪物。由此新增透明恶心物、巨型绿蛙、乌鸦、吵闹鬼、渡鸦、食人鱼、透明蠕虫团、剑鱼、巨型水蛭、绿色贪吃鬼、巨型粉红蛙、迷失的灵魂、太空怪兽、幻影战士、受伤的熊、僧帽水母、血牙狼、老鹰和地缚灵；迷失的灵魂同时使用正式资源吸取近战。协议升至 1.142、demo 升至 1.189.0、state hash Schema 升至 v65，正式包现有 181 种 actor、146 种 item、97 个 ability、78 种 terrain 和 19 张 loot table，content hash 为 `91008be8add20b2a75cbdc7f73dbd5267e3beb9e9a31b9dc3fae31c2805dcc35`。详见 [Contract v194](design/contract-v194-warrens-content-p10-movement-visibility-habitats.md)。
+
+contract-v195 推进正式内容 P11：`KILL_BODY` 以原版强度积比较让强者在寻路中攻击挡路弱者，`RANGED_MELEE` 在两格直线/偏轴且线路干净时复用完整近战 routine；`RIDING` 建立 V+方向的骑乘/下马、坐骑移动域与速度、同格状态、楼层跟随、死亡清理及存档闭环，并保留绵羊的原版三条拒绝彩蛋。`SILVER` 只记录权威材质事实，当前没有银脆弱角色，因而不扩建无调用方的伤害系统。由此新增哭闹的恶心物、新手考古学家、爬行银币、巨型鼻涕虫、马、难以驯服的马和绵羊，恰克波补上可骑乘事实。协议升至 1.143、demo 升至 1.190.0、state hash Schema 升至 v66，正式包现有 188 种 actor、146 种 item、98 个 ability、78 种 terrain 和 19 张 loot table，content hash 为 `72e709d0f66adba524769d31809d1747f73daea7d5aeff1ccaf5744531f73f1b`。详见 [Contract v195](design/contract-v195-warrens-content-p11-special-mechanics.md)。
 
 ### 本地验证
 

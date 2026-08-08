@@ -214,49 +214,7 @@
         "floorId": "demo.floor.echo-depth-1",
         "remainingTurns": 3
       },
-      "entityCount": 4,
-      "entities": [
-        {
-          "id": "demo.floor.echo-depth-1.encounter.1",
-          "position": {
-            "x": 13,
-            "y": 14
-          },
-          "hp": 3,
-          "speed": 110,
-          "energyNeed": 100
-        },
-        {
-          "id": "demo.floor.echo-depth-1.nest.1",
-          "position": {
-            "x": 16,
-            "y": 13
-          },
-          "hp": 3,
-          "speed": 110,
-          "energyNeed": 100
-        },
-        {
-          "id": "demo.floor.echo-depth-1.nest.2",
-          "position": {
-            "x": 15,
-            "y": 13
-          },
-          "hp": 3,
-          "speed": 110,
-          "energyNeed": 100
-        },
-        {
-          "id": "demo.floor.echo-depth-1.nest.3",
-          "position": {
-            "x": 15,
-            "y": 14
-          },
-          "hp": 3,
-          "speed": 110,
-          "energyNeed": 100
-        }
-      ],
+      "entityCount": 0,
       "groundItemCount": 1,
       "itemKnowledge": [
         {
@@ -325,7 +283,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "6588a90b60060a6ccd94582dd60c4a9bcc4f024a5905f4630b1e3e2b78192042"
+      "stateHash": "4d60711ae23d46d2f38f76417ba96f0f29ce41f523bdf3c22f48a2756cfec1cf"
     },
     "events": [
       {
@@ -1957,6 +1915,6 @@
         "y": 19
       }
     ],
-    "saveRoundTripStateHash": "6588a90b60060a6ccd94582dd60c4a9bcc4f024a5905f4630b1e3e2b78192042"
+    "saveRoundTripStateHash": "4d60711ae23d46d2f38f76417ba96f0f29ce41f523bdf3c22f48a2756cfec1cf"
   }
 }

@@ -688,7 +688,7 @@ impl Game {
         self.entities.iter().any(|entity| {
             entity.hp > 0
                 && !self.actor_is_player_aligned(entity)
-                && self.is_visible(entity.position)
+                && self.entity_is_visible_to_player(entity)
         })
     }
 

@@ -156,6 +156,7 @@ fn projected_blow_damage(effects: &[MeleeBlowEffectDefinition]) -> DamageDiceDto
             }
             MeleeBlowEffectDefinition::Disease { .. } => None,
             MeleeBlowEffectDefinition::DrainAttributes { .. }
+            | MeleeBlowEffectDefinition::DrainResource { .. }
             | MeleeBlowEffectDefinition::Bleeding { .. }
             | MeleeBlowEffectDefinition::Blind { .. }
             | MeleeBlowEffectDefinition::Paralysis { .. }
@@ -458,6 +459,18 @@ impl Game {
             })
             .flat_map(|item| self.item_passives(item))
             .collect()
+    }
+
+    pub(super) fn player_see_invisible_sources(&self) -> usize {
+        self.items
+            .iter()
+            .filter(|item| {
+                matches!(&item.location, ItemLocation::Equipped { slot_id } if self.body_slot_type(slot_id) != Some("tool"))
+                    && self
+                        .item_passives(item)
+                        .contains(&EquipmentPassive::SeeInvisible)
+            })
+            .count()
     }
 
     pub(super) fn equipment_modifiers(&self) -> StatModifiersDto {
@@ -915,6 +928,17 @@ impl Game {
             base_source,
             i32::from(actor.speed),
         );
+        if include_equipment
+            && let Some(mount_id) = self.riding_actor_id.as_deref()
+            && let Some(mount) = self.entities.iter().find(|entity| entity.id == mount_id)
+        {
+            pipeline.add(
+                StatKind::Speed,
+                StatLayer::Environment,
+                &mount.id,
+                i32::from(mount.speed).saturating_sub(i32::from(actor.speed)),
+            );
+        }
         pipeline.add(
             StatKind::MeleeSkill,
             StatLayer::Base,

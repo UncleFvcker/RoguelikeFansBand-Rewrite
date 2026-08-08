@@ -824,7 +824,7 @@ impl Game {
             .iter()
             .filter(|entity| {
                 entity.hp > 0
-                    && self.is_visible(entity.position)
+                    && self.entity_is_visible_to_player(entity)
                     && target_category.as_ref().is_none_or(|category| {
                         self.content
                             .actor(&entity.kind_id)
@@ -1671,7 +1671,7 @@ impl Game {
             .iter()
             .filter(|entity| {
                 entity.hp > 0
-                    && self.is_visible(entity.position)
+                    && self.entity_is_visible_to_player(entity)
                     && target_category.as_ref().is_none_or(|category| {
                         self.content
                             .actor(&entity.kind_id)

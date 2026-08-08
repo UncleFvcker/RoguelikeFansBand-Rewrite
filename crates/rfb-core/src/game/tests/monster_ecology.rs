@@ -147,8 +147,8 @@ fn same_kind_reproduction_stops_at_one_hundred_living_monsters() {
             origin,
         );
         actor.position = Position {
-            x: origin.x + i32::try_from(ordinal % 10).expect("small x offset"),
-            y: origin.y + i32::try_from(ordinal / 10).expect("small y offset"),
+            x: origin.x + ordinal % 10,
+            y: origin.y + ordinal / 10,
         };
         game.entities.push(actor);
     }

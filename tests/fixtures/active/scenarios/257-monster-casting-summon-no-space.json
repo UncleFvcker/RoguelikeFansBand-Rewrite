@@ -262,73 +262,7 @@
         "lifePercent": 100,
         "experiencePercent": 100
       },
-      "entityCount": 2,
-      "entities": [
-        {
-          "id": "demo.monster.ember-mote.1",
-          "position": {
-            "x": 1,
-            "y": 1
-          },
-          "hp": 8,
-          "speed": 120,
-          "energyNeed": 100,
-          "castingCooldownRemaining": 2,
-          "statuses": [
-            {
-              "kindId": "rfb.status.haste",
-              "intensity": 1,
-              "remainingTicks": 30,
-              "grantedModifiers": {
-                "attack": 0,
-                "defense": 0,
-                "maxHp": 0,
-                "strength": 0,
-                "intelligence": 0,
-                "wisdom": 0,
-                "dexterity": 0,
-                "constitution": 0,
-                "charisma": 0,
-                "speed": 0
-              },
-              "grantedEquipmentBonuses": {
-                "meleeAttacks": 0,
-                "meleeSkill": 0,
-                "meleeDamage": 0,
-                "rangedSkill": 0,
-                "throwingSkill": 0,
-                "deviceSkill": 0,
-                "savingThrowSkill": 0,
-                "stealthSkill": 0,
-                "searchSkill": 0,
-                "perceptionSkill": 0,
-                "disarmingSkill": 0,
-                "diggingSkill": 0,
-                "infravision": 0,
-                "lightRadius": 0
-              },
-              "grantsWallPassage": false,
-              "incomingDamagePercent": 100
-            }
-          ]
-        },
-        {
-          "id": "demo.z-entrance-guardian.resonance-descent.1",
-          "position": {
-            "x": 15,
-            "y": 15
-          },
-          "hp": 6,
-          "speed": 110,
-          "energyNeed": 100,
-          "pack": {
-            "id": "demo.z-entrance-guardian.resonance-descent.1",
-            "leaderId": "demo.z-entrance-guardian.resonance-descent.1",
-            "role": "leader",
-            "behavior": "guard-position"
-          }
-        }
-      ],
+      "entityCount": 0,
       "groundItemCount": 5,
       "nextItemInstanceSerial": 2,
       "nextGoldPileSerial": 1,
@@ -403,7 +337,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "eddb0d6aca52568cb315c86790135d2abc9eb9eadb1badff84c3867c6408da40"
+      "stateHash": "a15abff6bc2add74a724ea229ed20af5eb5e16b18f3a178977154057186c5943"
     },
     "events": [
       {
@@ -583,6 +517,6 @@
         "y": 1
       }
     ],
-    "saveRoundTripStateHash": "eddb0d6aca52568cb315c86790135d2abc9eb9eadb1badff84c3867c6408da40"
+    "saveRoundTripStateHash": "a15abff6bc2add74a724ea229ed20af5eb5e16b18f3a178977154057186c5943"
   }
 }

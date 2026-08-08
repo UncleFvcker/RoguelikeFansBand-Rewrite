@@ -7,5 +7,6 @@
   "glyph": "♣",
   "walkable": false,
   "blocksSight": true,
+  "allowsWallPassage": true,
   "tags": ["living", "outdoor", "tree"]
 }

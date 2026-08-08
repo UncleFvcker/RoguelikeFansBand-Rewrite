@@ -170,6 +170,11 @@ pub(super) fn validate_world(
     if world.width < 3 || world.height < 3 || world.width > 512 || world.height > 512 {
         return Err(ContentError::InvalidWorldDimensions(world.id.clone()));
     }
+    if world.surface_actor_allocation.is_some_and(|allocation| {
+        !(1..=64).contains(&allocation.rolls) || !(1..=100).contains(&allocation.level)
+    }) {
+        return Err(ContentError::InvalidWorldDimensions(world.id.clone()));
+    }
     validate_definition_id(&world.initial_floor_id, "floor")?;
     let mut procedural_actor_ids = BTreeSet::new();
     let mut procedural_connection_ids = BTreeSet::new();

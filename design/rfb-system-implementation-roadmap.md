@@ -169,7 +169,7 @@ flowchart TD
 | 怪物物品与掉落 | 携带物、偷窃、掉落次数和主题 | 已建立基础版 | contract-v25 已建立真实携带实例、出生生成和统一死亡掉落事务；后续增加偷窃、缴械、怪物拾物、掉落次数和主题 |
 | 怪物回忆 | 观察攻击、抗性、掉落、击杀次数和死亡次数 | 未建立 | `MonsterKnowledge` 与怪物定义分开；观察事件逐项揭示 |
 | 宠物/友好 | 阵营、跟随、命令、维持费用、解散 | 未建立 | `FactionId` + `CompanionState` + 宠物命令；不使用多个 pet/friendly bool 组合 |
-| 骑乘与捕获 | 坐骑、骑术、落马、捕获球和宠物成长 | 未建立 | 等身体、移动、宠物和容器完成后实现；属于高级系统 |
+| 骑乘与捕获 | 坐骑、骑术、落马、捕获球和宠物成长 | 骑乘基础闭环已建立 | contract-v195 已建立邻格骑乘/下马、坐骑移动域与速度、楼层跟随和存档；骑术成长、受击落马、捕获球和宠物成长仍后置 |
 | 进化/变形/附身 | 怪物进化、玩家怪物种族、Possessor、Mimic | 未建立 | 使用 `FormDefinition` 和显式状态迁移；最后阶段实现 |
 
 ### 4.10 成长、经验与构筑
@@ -599,6 +599,10 @@ P30“首个非 Mana 职业资源”已由 contract-v90 完成：节奏资源按
 **P97 进展（2026-07）**：contract-v148 接入六种 `increase-attribute` 与固定六维顺序的 `augment-attributes`。每项先恢复当前属性，再按原版三段公式增长历史最大值，复用胜利前后属性上限；封顶属性零 RNG，Augmentation 仍继续处理后续属性。实际恢复或增长才 Aware，不消费 `pendingAttributeIncreases`，整瓶药水只刷新一次 HP 与职业资源。协议保持 1.123，demo 1.139.0，state hash Schema 保持 v55，fixture 452；内置 hash 为 `a8eb3c1a5b74f683bd5a71728da916f67972088769e3155cdc0b89c88b4e874c`。legacy importer 映射 tval 75/sval 48–53、55，`consumable-effect` 53→46，真实导入内容 hash 为 `2a5a78a6c8518385e45babebcc2670edd9ddb653a1eca8da2c78635c497e1138`。
 
 **P98 进展（2026-07）**：contract-v149 接入 Restoring Food、Restoring Potion、Ambrosia 与 Life Potion。四种窄效果按原版顺序组合六维属性恢复、历史最高经验/生命力恢复、减 Poison、`15d15`/5000 治疗和已建模状态清除；只复用两个共享 mutation helper，不建立通用成长事务或任意 sequence。Restoring 系列按实际变化决定 Aware，Ambrosia 与 Life 合法使用即 Aware。协议保持 1.123，demo 1.140.0，state hash Schema 保持 v55，fixtures 453–454；内置 hash 为 `cf977b882f1650f641035e1e12b22cca6430106a4992cceefd2e496060f51774`。legacy importer 使 `consumable-effect` 46→41、`food-nutrition` 保持 28，真实导入内容 hash 为 `54333ae2cda9df63ceaccc23794f54a66033897630afe44aa2f845fb217807ad`。
+
+**浅层怪物 P10 进展（2026-08）**：contract-v194 将 `PASS_WALL`、`AQUATIC`、`INVISIBLE` 与 `WILD_*` habitat 接入共享移动、可见性、存档和 Outpost 地表分配。普通可穿墙体与永久墙分离，水生与游泳分离；看破隐形按装备来源和搜索技能判定并随 actor 保存。新增 19 条严格同步记录，正式浅层 actor 达 148、严格同步达 116；协议 1.142，demo 1.189.0，state hash Schema v65，内置 hash 为 `91008be8add20b2a75cbdc7f73dbd5267e3beb9e9a31b9dc3fae31c2805dcc35`。完整边界见 [Contract v194](contract-v194-warrens-content-p10-movement-visibility-habitats.md)。
+
+**浅层怪物 P11 进展（2026-08）**：contract-v195 以窄字段和既有战斗路径接入 `KILL_BODY`、`RANGED_MELEE`、`RIDING` 与 `SILVER`。强者可攻击挡路弱者，两格近战保留原版形状和干净线路；骑乘完成命令、移动域、速度、同格、楼层、死亡与存档闭环，绵羊保留三条拒绝彩蛋；银质只记录事实。新增 7 条严格同步记录，正式浅层 actor 达 155、严格同步达 123；协议 1.143，demo 1.190.0，state hash Schema v66，内置 hash 为 `72e709d0f66adba524769d31809d1747f73daea7d5aeff1ccaf5744531f73f1b`。完整边界见 [Contract v195](contract-v195-warrens-content-p11-special-mechanics.md)。
 
 ## 9. 内容迁移策略
 

@@ -19,6 +19,33 @@ fn monster_effect_game(seed: u64, effect: MeleeBlowEffectDefinition) -> Game {
 }
 
 #[test]
+fn resource_drain_melee_heals_six_times_the_amount_actually_drained() {
+    let mut game = monster_effect_game(
+        0,
+        MeleeBlowEffectDefinition::DrainResource {
+            chance_percent: None,
+            amount_dice: 1,
+            amount_sides: 1,
+        },
+    );
+    game.resources.insert(
+        "test.resource.mana".to_owned(),
+        ResourcePool {
+            current: 1,
+            maximum: 1,
+        },
+    );
+    game.entities[0].hp = 1;
+    game.entities[0].max_hp = 20;
+
+    game.resolve_monster_melee(0, &mut Vec::new(), &mut BTreeSet::new())
+        .expect("resource-draining melee should resolve");
+
+    assert_eq!(game.resources["test.resource.mana"].current, 0);
+    assert_eq!(game.entities[0].hp, 7);
+}
+
+#[test]
 fn haste_and_slow_modify_scheduler_speed_without_changing_base_speed() {
     let mut haste_payload = Game::new(42).to_save();
     haste_payload.player.statuses = vec![StatusSaveDto {

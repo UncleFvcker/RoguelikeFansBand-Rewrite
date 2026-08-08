@@ -1,0 +1,93 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "habitats": [
+      "grass",
+      "mountain",
+      "wood"
+    ],
+    "legacyIndex": 159,
+    "maxDepth": 999,
+    "rarity": 1,
+    "wildOnly": true
+  },
+  "attack": 2,
+  "damageDice": 1,
+  "damageSides": 7,
+  "damageType": "physical",
+  "defense": 3,
+  "descriptionKey": "actor-demo-wounded-bear-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 25,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "q",
+  "hitPointDice": {
+    "dice": 10,
+    "forceMaximum": true,
+    "sides": 10
+  },
+  "id": "demo.actor.wounded-bear",
+  "level": 9,
+  "maxHp": 100,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 7,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 7,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 10,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      }
+    ]
+  },
+  "nameKey": "actor-demo-wounded-bear-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "role": "monster",
+  "speed": 110,
+  "tags": [
+    "animal",
+    "bear",
+    "unique",
+    "warrens"
+  ]
+}

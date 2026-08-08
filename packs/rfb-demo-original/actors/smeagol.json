@@ -1,6 +1,9 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
   "allocation": {
+    "habitats": [
+      "all"
+    ],
     "legacyIndex": 63,
     "maxDepth": 999,
     "randomMovementPercent": 75,
@@ -69,6 +72,7 @@
   "tags": [
     "evil",
     "hobbit",
+    "invisible",
     "thief",
     "unique",
     "warrens"

@@ -94,6 +94,7 @@ impl Game {
             abilities: self.player_ability_dtos(),
             summon_command: self.summon_command.clone(),
             recall: self.recall.clone(),
+            riding_actor_id: self.riding_actor_id.clone(),
         }
     }
 
@@ -399,6 +400,7 @@ impl Game {
         let mut entities = self
             .entities
             .iter()
+            .filter(|entity| self.entity_is_visible_to_player(entity))
             .map(|entity| {
                 let definition = self
                     .content
@@ -704,7 +706,9 @@ impl Game {
         } else {
             self.entities
                 .iter()
-                .find(|entity| entity.position == position)
+                .find(|entity| {
+                    entity.position == position && self.entity_is_visible_to_player(entity)
+                })
                 .map(|entity| entity.id.clone())
         };
         CellDto {

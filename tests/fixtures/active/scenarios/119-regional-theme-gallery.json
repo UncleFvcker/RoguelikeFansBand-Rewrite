@@ -210,28 +210,8 @@
         "dungeonId": "demo.dungeon.resonance-descent",
         "floorId": "demo.floor.resonance-depth-2"
       },
-      "entityCount": 4,
+      "entityCount": 2,
       "entities": [
-        {
-          "id": "demo.floor.resonance-depth-2.region.demo.region.resonance-gallery.encounter.plain.1",
-          "position": {
-            "x": 16,
-            "y": 14
-          },
-          "hp": 3,
-          "speed": 110,
-          "energyNeed": 100
-        },
-        {
-          "id": "demo.floor.resonance-depth-2.region.demo.region.resonance-gallery.encounter.plain.2",
-          "position": {
-            "x": 13,
-            "y": 16
-          },
-          "hp": 3,
-          "speed": 110,
-          "energyNeed": 100
-        },
         {
           "id": "demo.floor.resonance-depth-2.region.demo.region.resonance-grotto.encounter.plain.1",
           "position": {
@@ -314,7 +294,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "0eb50ff443aa1a09791383bd0e5990cd4dca0fff7282225144917265e919d0cc"
+      "stateHash": "0a5362f615e8d0db6468cc0620505169fc037e5da42859e584ea1ca74be2ee05"
     },
     "events": [
       {
@@ -3598,6 +3578,6 @@
         "y": 19
       }
     ],
-    "saveRoundTripStateHash": "0eb50ff443aa1a09791383bd0e5990cd4dca0fff7282225144917265e919d0cc"
+    "saveRoundTripStateHash": "0a5362f615e8d0db6468cc0620505169fc037e5da42859e584ea1ca74be2ee05"
   }
 }

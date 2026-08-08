@@ -6,6 +6,11 @@
       "dice": 0,
       "sides": 0
     },
+    "habitats": [
+      "mountain",
+      "waste",
+      "wood"
+    ],
     "legacyIndex": 1224,
     "maxDepth": 40,
     "rarity": 2

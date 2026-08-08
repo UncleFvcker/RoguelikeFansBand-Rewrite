@@ -52,6 +52,7 @@ pub enum WeaponBrand {
 #[serde(rename_all = "kebab-case")]
 pub enum EquipmentPassive {
     Regeneration,
+    SeeInvisible,
     Vampiric,
     SustainStrength,
     SustainIntelligence,

@@ -212,49 +212,7 @@
         "dungeonId": "demo.dungeon.echo-depths",
         "floorId": "demo.floor.echo-depth-1"
       },
-      "entityCount": 4,
-      "entities": [
-        {
-          "id": "demo.floor.echo-depth-1.encounter.1",
-          "position": {
-            "x": 13,
-            "y": 14
-          },
-          "hp": 3,
-          "speed": 110,
-          "energyNeed": 100
-        },
-        {
-          "id": "demo.floor.echo-depth-1.nest.1",
-          "position": {
-            "x": 16,
-            "y": 13
-          },
-          "hp": 3,
-          "speed": 110,
-          "energyNeed": 100
-        },
-        {
-          "id": "demo.floor.echo-depth-1.nest.2",
-          "position": {
-            "x": 15,
-            "y": 13
-          },
-          "hp": 3,
-          "speed": 110,
-          "energyNeed": 100
-        },
-        {
-          "id": "demo.floor.echo-depth-1.nest.3",
-          "position": {
-            "x": 15,
-            "y": 14
-          },
-          "hp": 3,
-          "speed": 110,
-          "energyNeed": 100
-        }
-      ],
+      "entityCount": 0,
       "groundItemCount": 1,
       "itemKnowledge": [
         {
@@ -323,7 +281,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "b60f6b29ade494c8d0b0a79d5ea0e445e110ad1c9093bdca9dbcda2599a50095"
+      "stateHash": "0478fe4d58b826c7ddbb45ee98defead2c9de3e66087ab48dd4bc51b051fdb94"
     },
     "events": [
       {
@@ -1954,6 +1912,6 @@
         "y": 19
       }
     ],
-    "saveRoundTripStateHash": "b60f6b29ade494c8d0b0a79d5ea0e445e110ad1c9093bdca9dbcda2599a50095"
+    "saveRoundTripStateHash": "0478fe4d58b826c7ddbb45ee98defead2c9de3e66087ab48dd4bc51b051fdb94"
   }
 }

@@ -240,65 +240,7 @@
         "dungeonId": "demo.dungeon.echo-depths",
         "floorId": "demo.floor.echo-depth-1"
       },
-      "entityCount": 5,
-      "entities": [
-        {
-          "id": "demo.floor.echo-depth-1.encounter.1",
-          "position": {
-            "x": 17,
-            "y": 13
-          },
-          "hp": 3,
-          "speed": 110,
-          "energyNeed": 100
-        },
-        {
-          "id": "demo.floor.echo-depth-1.nest.1",
-          "position": {
-            "x": 18,
-            "y": 16
-          },
-          "hp": 3,
-          "speed": 110,
-          "energyNeed": 100
-        },
-        {
-          "id": "demo.floor.echo-depth-1.nest.2",
-          "position": {
-            "x": 17,
-            "y": 16
-          },
-          "hp": 3,
-          "speed": 110,
-          "energyNeed": 100
-        },
-        {
-          "id": "demo.floor.echo-depth-1.nest.3",
-          "position": {
-            "x": 16,
-            "y": 13
-          },
-          "hp": 3,
-          "speed": 110,
-          "energyNeed": 100
-        },
-        {
-          "id": "demo.monster.ember-mote.1",
-          "position": {
-            "x": 5,
-            "y": 4
-          },
-          "hp": 4,
-          "speed": 100,
-          "energyNeed": 100,
-          "faction": "player",
-          "summon": {
-            "ownerId": "demo.actor.player.1",
-            "sourceAbilityId": "demo.ability.echo-companion",
-            "remainingTurns": 8
-          }
-        }
-      ],
+      "entityCount": 0,
       "groundItemCount": 1,
       "nextItemInstanceSerial": 3,
       "nextGoldPileSerial": 1,
@@ -360,7 +302,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "a08c31cf1daf9b5f046170dd1b9ab62c6305ea890bcf810cfae6ce0f372a7927"
+      "stateHash": "4e13db5e60b6d23a999b1001797a676e6028dddf6630d25c6a88427452713d31"
     },
     "events": [
       {
@@ -1990,6 +1932,6 @@
         "y": 19
       }
     ],
-    "saveRoundTripStateHash": "a08c31cf1daf9b5f046170dd1b9ab62c6305ea890bcf810cfae6ce0f372a7927"
+    "saveRoundTripStateHash": "4e13db5e60b6d23a999b1001797a676e6028dddf6630d25c6a88427452713d31"
   }
 }

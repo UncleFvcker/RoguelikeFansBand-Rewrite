@@ -28,7 +28,7 @@
       "turn": 1,
       "worldTick": 10,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 72,
+      "rngDrawCounter": 102,
       "floorId": "demo.floor.surface",
       "town": {
         "id": "demo.town.outpost",
@@ -817,7 +817,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "fa93e26be9800dab21bcd9919c97afb087cb58c3d2b073c465c6929ca1ab97bb"
+      "stateHash": "19d902a3a457079d0c57b740e3b2def32522b4dcb115f0ec12632f51bf9edd19"
     },
     "events": [
       {
@@ -840,6 +840,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "fa93e26be9800dab21bcd9919c97afb087cb58c3d2b073c465c6929ca1ab97bb"
+    "saveRoundTripStateHash": "19d902a3a457079d0c57b740e3b2def32522b4dcb115f0ec12632f51bf9edd19"
   }
 }

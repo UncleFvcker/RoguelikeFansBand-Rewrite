@@ -2930,18 +2930,8 @@
           "canCast": false
         }
       ],
-      "entityCount": 2,
+      "entityCount": 1,
       "entities": [
-        {
-          "id": "demo.z-entrance-guardian.resonance-descent.1",
-          "position": {
-            "x": 13,
-            "y": 13
-          },
-          "hp": 6,
-          "speed": 110,
-          "energyNeed": 100
-        },
         {
           "id": "summon.demo.ability.death-animate-dead.2.0",
           "position": {
@@ -3233,7 +3223,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "9a8e93ca19947167d543441ca6e93318f1b050bf33aa35942257ee8b65698f20"
+      "stateHash": "94752c5e8aafd0b346ab2effa231730ec604983c9c7e30b2cdceca60972aa897"
     },
     "events": [
       {
@@ -3780,6 +3770,6 @@
     "removedEntities": [
       "demo.monster.ember-mote.1"
     ],
-    "saveRoundTripStateHash": "9a8e93ca19947167d543441ca6e93318f1b050bf33aa35942257ee8b65698f20"
+    "saveRoundTripStateHash": "94752c5e8aafd0b346ab2effa231730ec604983c9c7e30b2cdceca60972aa897"
   }
 }

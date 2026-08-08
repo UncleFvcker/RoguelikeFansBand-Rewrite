@@ -30,6 +30,108 @@ fn movement_profile_controls_non_walkable_terrain_entry() {
 }
 
 #[test]
+fn aquatic_and_wall_passing_domains_remain_distinct() {
+    let game = Game::new(11);
+    let floor = game
+        .content
+        .terrain("demo.terrain.floor")
+        .expect("floor definition");
+    let wall = game
+        .content
+        .terrain("demo.terrain.wall")
+        .expect("ordinary wall definition");
+    let permanent_wall = game
+        .content
+        .terrain("demo.terrain.permanent-wall")
+        .expect("permanent wall definition");
+    let shallow_water = game
+        .content
+        .terrain("demo.terrain.surface-water-shallow")
+        .expect("surface water definition");
+    let aquatic = game
+        .content
+        .actor("demo.actor.piranha")
+        .expect("aquatic actor definition");
+    let wall_passer = game
+        .content
+        .actor("demo.actor.poltergeist")
+        .expect("wall-passing actor definition");
+
+    assert!(actor_can_cross_terrain(aquatic, shallow_water));
+    assert!(!actor_can_cross_terrain(aquatic, floor));
+    assert!(actor_can_cross_terrain(wall_passer, wall));
+    assert!(!actor_can_cross_terrain(wall_passer, permanent_wall));
+}
+
+#[test]
+fn kill_body_attacks_a_weaker_actor_blocking_the_next_step() {
+    let mut game = Game::new(42);
+    game.entities.clear();
+    let origin = Position { x: 4, y: 3 };
+    let blocker = Position { x: 5, y: 3 };
+    for position in [origin, blocker] {
+        replace_terrain(&mut game, position, "demo.terrain.floor");
+    }
+    game.push_generated_actor("test.slug".to_owned(), "demo.actor.giant-slug", origin);
+    game.push_generated_actor("test.blocker".to_owned(), "demo.actor.sheep", blocker);
+    let mut events = Vec::new();
+
+    let outcome = game
+        .move_entity(
+            0,
+            blocker,
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("KILL_BODY interaction should resolve");
+
+    assert_eq!(outcome, ActorStepOutcome::Interacted);
+    assert_eq!(game.entities[0].position, origin);
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::MonsterMeleeEntityMissed { .. }
+            | DomainEvent::MonsterMeleeEntityHit { .. }
+            | DomainEvent::MonsterMeleeEntitySlew { .. }
+    )));
+}
+
+#[test]
+fn ranged_melee_uses_the_melee_routine_at_rfb_two_grid_reach() {
+    let mut game = game_with_actor_definition(42, "demo.actor.small-kobold", |actor| {
+        actor.ranged_melee = true;
+    });
+    game.entities.clear();
+    let origin = Position { x: 4, y: 3 };
+    game.player.position = Position { x: 6, y: 4 };
+    for position in [origin, Position { x: 5, y: 4 }, game.player.position] {
+        replace_terrain(&mut game, position, "demo.terrain.floor");
+    }
+    game.push_generated_actor(
+        "test.ranged-melee".to_owned(),
+        "demo.actor.small-kobold",
+        origin,
+    );
+    game.entities[0].alerted = true;
+    let mut events = Vec::new();
+
+    game.resolve_monster_action(
+        0,
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+    )
+    .expect("ranged melee action should resolve");
+
+    assert_eq!(game.entities[0].position, origin);
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::MonsterMeleeHit { .. } | DomainEvent::MonsterMeleeMissed { .. }
+    )));
+}
+
+#[test]
 fn trap_avoidance_requires_an_explicit_matching_movement_mode() {
     let game = Game::new(2);
     let mut trap = game

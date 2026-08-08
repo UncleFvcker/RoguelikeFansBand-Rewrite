@@ -200,6 +200,7 @@ mod tests {
                 summon_command: Default::default(),
                 body_slots: Vec::new(),
                 recall: None,
+                riding_actor_id: None,
             },
             entities: Vec::<ActorSaveDto>::new(),
             items: Vec::<ItemSaveDto>::new(),

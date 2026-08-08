@@ -391,7 +391,7 @@
         "lifePercent": 100,
         "experiencePercent": 100
       },
-      "entityCount": 2,
+      "entityCount": 1,
       "entities": [
         {
           "id": "demo.monster.ember-mote.1",
@@ -439,16 +439,6 @@
               "incomingDamagePercent": 100
             }
           ]
-        },
-        {
-          "id": "demo.z-entrance-guardian.resonance-descent.1",
-          "position": {
-            "x": 9,
-            "y": 3
-          },
-          "hp": 6,
-          "speed": 110,
-          "energyNeed": 70
         }
       ],
       "groundItemCount": 5,
@@ -532,7 +522,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "739a0b25c01c53de1587438e1cfd0382eab632bc0fb47bc4787d50dc7e43531c"
+      "stateHash": "526380c44f4054c53326ca22e1b5207ec317058e9afd110d6bd67fc157eec46f"
     },
     "events": [
       {

@@ -1,6 +1,32 @@
 use super::*;
 
 #[test]
+fn p11_actor_facts_remain_explicit_and_narrow() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actor = |id: &str| {
+        artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == id)
+            .unwrap_or_else(|| panic!("fixture should contain {id}"))
+    };
+
+    assert!(actor("demo.actor.blubbering-icky-thing").kills_weaker_bodies);
+    assert!(actor("demo.actor.giant-slug").kills_weaker_bodies);
+    assert!(actor("demo.actor.novice-archaeologist").ranged_melee);
+    assert!(actor("demo.actor.creeping-silver-coins").made_of_silver);
+    for id in [
+        "demo.actor.horse",
+        "demo.actor.unruly-horse",
+        "demo.actor.sheep",
+        "demo.actor.chiokovo",
+    ] {
+        assert!(actor(id).rideable, "{id} should retain RIDING");
+    }
+}
+
+#[test]
 fn player_inventory_capacity_is_positive_and_monsters_cannot_declare_one() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let mut invalid = artifact.content.clone();

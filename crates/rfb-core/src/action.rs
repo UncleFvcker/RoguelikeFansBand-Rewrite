@@ -56,6 +56,9 @@ pub(crate) enum GameAction {
     Move {
         direction: Direction,
     },
+    Ride {
+        direction: Direction,
+    },
     OpenDoor {
         direction: Direction,
     },
@@ -208,6 +211,7 @@ impl From<GameCommand> for GameAction {
             GameCommand::DisarmTrap { direction } => Self::DisarmTrap { direction },
             GameCommand::DigTerrain { direction } => Self::DigTerrain { direction },
             GameCommand::Move { direction } => Self::Move { direction },
+            GameCommand::Ride { direction } => Self::Ride { direction },
             GameCommand::OpenDoor { direction } => Self::OpenDoor { direction },
             GameCommand::Wait => Self::Wait,
             GameCommand::PickUp => Self::PickUp,

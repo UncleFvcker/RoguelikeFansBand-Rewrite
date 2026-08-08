@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.141";
+pub const PROTOCOL_VERSION: &str = "1.143";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -141,6 +141,9 @@ pub enum GameCommand {
         target: TargetSelection,
     },
     Move {
+        direction: Direction,
+    },
+    Ride {
         direction: Direction,
     },
     OpenDoor {
@@ -313,6 +316,7 @@ impl EquipmentBonusesDto {
 #[serde(rename_all = "kebab-case")]
 pub enum EquipmentPassiveDto {
     Regeneration,
+    SeeInvisible,
     Vampiric,
     SustainStrength,
     SustainIntelligence,
@@ -330,6 +334,7 @@ where
         .into_iter()
         .filter_map(|passive| match passive.as_str() {
             "regeneration" => Some(Ok(EquipmentPassiveDto::Regeneration)),
+            "see-invisible" => Some(Ok(EquipmentPassiveDto::SeeInvisible)),
             "vampiric" => Some(Ok(EquipmentPassiveDto::Vampiric)),
             "sustain-strength" => Some(Ok(EquipmentPassiveDto::SustainStrength)),
             "sustain-intelligence" => Some(Ok(EquipmentPassiveDto::SustainIntelligence)),
@@ -337,8 +342,8 @@ where
             "sustain-dexterity" => Some(Ok(EquipmentPassiveDto::SustainDexterity)),
             "sustain-constitution" => Some(Ok(EquipmentPassiveDto::SustainConstitution)),
             "sustain-charisma" => Some(Ok(EquipmentPassiveDto::SustainCharisma)),
-            "see-invisible" | "telepathy" | "levitation" | "hold-life" | "blessed"
-            | "easy-spell" | "device-power" => None,
+            "telepathy" | "levitation" | "hold-life" | "blessed" | "easy-spell"
+            | "device-power" => None,
             _ => Some(Err(serde::de::Error::custom(format!(
                 "unknown rolled affix passive `{passive}`"
             )))),
@@ -1994,6 +1999,8 @@ pub struct PlayerDto {
     pub summon_command: SummonCommandDto,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub recall: Option<RecallStateDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub riding_actor_id: Option<String>,
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -2917,6 +2924,7 @@ pub struct PlayerSaveDto {
     pub body_slots: Vec<BodySlotSaveDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub recall: Option<RecallStateDto>,
+    pub riding_actor_id: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -3013,6 +3021,8 @@ pub struct ActorSaveDto {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub alerted: Option<bool>,
     pub nice: bool,
+    #[serde(default)]
+    pub visible_invisible: bool,
     #[serde(default)]
     pub casting_cooldown_remaining: u16,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -3750,6 +3760,7 @@ mod tests {
                 abilities: Vec::new(),
                 summon_command: SummonCommandDto::default(),
                 recall: None,
+                riding_actor_id: None,
             },
             entities: vec![EntityDto {
                 id: "demo.monster.1".to_owned(),
@@ -3931,6 +3942,7 @@ mod tests {
             summon_command: SummonCommandDto::default(),
             body_slots: Vec::new(),
             recall: None,
+            riding_actor_id: None,
         };
 
         let encoded = to_msgpack(&player).expect("player save should encode");

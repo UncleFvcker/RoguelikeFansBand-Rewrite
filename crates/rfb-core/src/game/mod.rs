@@ -187,7 +187,7 @@ pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 64;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 66;
 pub const WARRENS_JOURNEY_WORLD_ID: &str = "demo.world.warrens-journey";
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const VISIBILITY_RADIUS: i32 = 8;
@@ -723,6 +723,7 @@ pub struct Game {
     height: u16,
     terrain: Vec<String>,
     player: Actor,
+    riding_actor_id: Option<String>,
     build: Option<CharacterBuildIdentity>,
     body_slots: Vec<BodySlot>,
     progress: CharacterProgress,
@@ -1002,6 +1003,7 @@ impl Game {
             height,
             terrain,
             player,
+            riding_actor_id: None,
             build,
             body_slots,
             progress,
@@ -1052,7 +1054,9 @@ impl Game {
         game.initialize_player_ability_state();
         game.initialize_starting_item_knowledge();
         game.player.hp = game.effective_player_max_hp();
+        game.initialize_surface_monsters();
         game.initialize_carried_loot()?;
+        game.refresh_invisible_visibility(true, &BTreeMap::new());
         game.reveal_current_visibility();
         Ok(game)
     }
@@ -1089,6 +1093,15 @@ impl Game {
         self.validate_runtime_invariants(&action)?;
         let base_revision = self.revision;
         let world_tick_before_command = self.world_tick;
+        let player_position_before_command = self.player.position;
+        let floor_before_command = self.current_floor_id.clone();
+        let light_radius_before_command = self.equipped_light_radius();
+        let see_invisible_sources_before_command = self.player_see_invisible_sources();
+        let entity_positions_before_command = self
+            .entities
+            .iter()
+            .map(|entity| (entity.id.clone(), entity.position))
+            .collect::<BTreeMap<_, _>>();
         let previous_dimensions = (self.width, self.height);
         // The world only mutates inside dispatch, so the visuals recorded at
         // the end of the previous command are exactly this command's "before"
@@ -1554,9 +1567,18 @@ impl Game {
                     x: self.player.position.x + dx,
                     y: self.player.position.y + dy,
                 };
-                if self.index(target).is_none()
-                    || (!self.is_walkable(target) && !self.player_can_pass_walls())
-                {
+                let movement_blocked = if let Some(mount_id) = self.riding_actor_id.as_deref() {
+                    self.entities
+                        .iter()
+                        .position(|entity| entity.id == mount_id)
+                        .is_none_or(|mount_index| {
+                            !self.actor_can_enter_position(mount_index, target)
+                        })
+                } else {
+                    self.index(target).is_none()
+                        || (!self.is_walkable(target) && !self.player_can_pass_walls())
+                };
+                if movement_blocked {
                     events.push(DomainEvent::MoveBlocked);
                 } else if let Some(index) = self
                     .entities
@@ -1579,6 +1601,9 @@ impl Game {
                 } else {
                     events.extend(self.relocate_player(target, &mut changed));
                 }
+            }
+            GameAction::Ride { direction } => {
+                self.resolve_riding(direction, &mut events, &mut changed);
             }
             GameAction::OpenDoor { direction } => match self.open_door(direction) {
                 Some(DoorOpenOutcome::Opened { position }) => {
@@ -1693,6 +1718,15 @@ impl Game {
         }
         self.apply_task_events(&mut events)?;
         self.apply_campaign_events(&mut events);
+
+        let full_visibility_refresh = self.player.position != player_position_before_command
+            || self.current_floor_id != floor_before_command
+            || self.equipped_light_radius() != light_radius_before_command
+            || self.player_see_invisible_sources() != see_invisible_sources_before_command;
+        self.refresh_invisible_visibility(
+            full_visibility_refresh,
+            &entity_positions_before_command,
+        );
 
         if self.world_tick != world_tick_before_command {
             // Clear only the grace windows that existed before this command.
@@ -2021,6 +2055,9 @@ impl Game {
                 continue;
             };
             let removed = self.entities.remove(index);
+            if self.riding_actor_id.as_deref() == Some(removed.id.as_str()) {
+                self.riding_actor_id = None;
+            }
             if let Some(pack_id) = removed
                 .pack
                 .as_ref()
@@ -2621,7 +2658,9 @@ impl Game {
                 let position = self
                     .entities
                     .iter()
-                    .find(|entity| entity.id == *entity_id)
+                    .find(|entity| {
+                        entity.id == *entity_id && self.entity_is_visible_to_player(entity)
+                    })
                     .map(|entity| entity.position)?;
                 self.targeted_projectile_path_through_target(position, ability.target.range)
             }
@@ -2651,7 +2690,9 @@ impl Game {
                 let position = self
                     .entities
                     .iter()
-                    .find(|entity| entity.id == *entity_id)
+                    .find(|entity| {
+                        entity.id == *entity_id && self.entity_is_visible_to_player(entity)
+                    })
                     .map(|entity| entity.position)?;
                 self.targeted_projectile_path(position, range)
             }
@@ -3321,6 +3362,16 @@ impl Game {
         let Some(primary_target) = self.monster_hostile_targets(index).into_iter().next() else {
             return Ok(());
         };
+        if self.monster_can_use_ranged_melee(index, &primary_target) {
+            self.resolve_monster_melee_target(
+                index,
+                &primary_target,
+                events,
+                changed,
+                removed_entities,
+            )?;
+            return Ok(());
+        }
         if never_moves {
             if adjacent(self.entities[index].position, primary_target.position()) {
                 self.resolve_monster_melee_target(
@@ -3609,6 +3660,22 @@ impl Game {
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
     ) -> Result<ActorStepOutcome, CoreError> {
+        if let Some(target_index) = self
+            .entities
+            .iter()
+            .position(|entity| entity.hp > 0 && entity.position == next_position)
+        {
+            if !self.actor_can_kill_body_blocker(index, target_index) {
+                return Ok(ActorStepOutcome::Blocked);
+            }
+            let target = MonsterHostileTarget::Summon {
+                entity_id: self.entities[target_index].id.clone(),
+                kind_id: self.entities[target_index].kind_id.clone(),
+                position: next_position,
+            };
+            self.resolve_monster_melee_target(index, &target, events, changed, removed_entities)?;
+            return Ok(ActorStepOutcome::Interacted);
+        }
         if !self.actor_can_enter_position(index, next_position) {
             match self.try_monster_door_interaction(index, next_position, events, changed) {
                 Some(true) => {}
@@ -3630,6 +3697,132 @@ impl Game {
         self.pick_up_items_under_monster(index, next_position, events, changed);
         self.destroy_items_under_monster(index, next_position, events, changed);
         Ok(ActorStepOutcome::Moved)
+    }
+
+    fn monster_can_use_ranged_melee(&self, index: usize, target: &MonsterHostileTarget) -> bool {
+        let definition = self
+            .content
+            .actor(&self.entities[index].kind_id)
+            .expect("monster actor definition must remain available");
+        if !definition.ranged_melee
+            || self.entities[index]
+                .statuses
+                .iter()
+                .any(|status| matches!(status.kind_id.as_str(), STATUS_CONFUSION | STATUS_FEAR))
+        {
+            return false;
+        }
+        let origin = self.entities[index].position;
+        let destination = target.position();
+        let dx = origin.x.abs_diff(destination.x);
+        let dy = origin.y.abs_diff(destination.y);
+        if dx.max(dy) != 2 || dx.min(dy) >= 2 || !has_line_of_effect(self, origin, destination) {
+            return false;
+        }
+        projectile_path_between(origin, destination, 2).is_some_and(|path| {
+            path.into_iter()
+                .filter(|position| *position != destination)
+                .all(|position| {
+                    position != self.player.position
+                        && !self
+                            .entities
+                            .iter()
+                            .any(|entity| entity.hp > 0 && entity.position == position)
+                })
+        })
+    }
+
+    fn resolve_riding(
+        &mut self,
+        direction: Direction,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let (dx, dy) = direction.delta();
+        let target = Position {
+            x: self.player.position.x + dx,
+            y: self.player.position.y + dy,
+        };
+        if let Some(mount_id) = self.riding_actor_id.clone() {
+            let Some(mount_index) = self
+                .entities
+                .iter()
+                .position(|entity| entity.id == mount_id && entity.hp > 0)
+            else {
+                self.riding_actor_id = None;
+                events.push(DomainEvent::RidingUnavailable);
+                return;
+            };
+            if self.index(target).is_none()
+                || (!self.is_walkable(target) && !self.player_can_pass_walls())
+                || self
+                    .entities
+                    .iter()
+                    .any(|entity| entity.hp > 0 && entity.position == target)
+            {
+                events.push(DomainEvent::RidingUnavailable);
+                return;
+            }
+            let target_kind_id = self.entities[mount_index].kind_id.clone();
+            self.riding_actor_id = None;
+            events.extend(self.relocate_player(target, changed));
+            events.push(DomainEvent::RidingDismounted { target_kind_id });
+            return;
+        }
+
+        let Some(index) = self
+            .entities
+            .iter()
+            .position(|entity| entity.hp > 0 && entity.position == target)
+        else {
+            events.push(DomainEvent::RidingUnavailable);
+            return;
+        };
+        let definition = self
+            .content
+            .actor(&self.entities[index].kind_id)
+            .expect("mount actor definition must remain available");
+        if !definition.rideable {
+            events.push(DomainEvent::RidingUnavailable);
+            return;
+        }
+        if definition.id == "demo.actor.sheep" {
+            events.push(DomainEvent::SheepRidingRefused {
+                response: u8::try_from(self.rng.bounded(3))
+                    .expect("bounded sheep response must fit u8"),
+            });
+            return;
+        }
+        let range = self.progress.level / 2 + 20;
+        let roll =
+            u32::try_from(self.rng.bounded(u64::from(range)) + 1).expect("mount roll must fit u32");
+        if definition.level > roll {
+            events.push(DomainEvent::RidingFailed {
+                target_kind_id: definition.id.clone(),
+            });
+            return;
+        }
+        let target_entity_id = self.entities[index].id.clone();
+        if let Some(pack) = self.entities[index].pack.clone() {
+            if pack.role == MonsterPackRoleDto::Leader || pack.leader_id == target_entity_id {
+                for entity in &mut self.entities {
+                    if entity
+                        .pack
+                        .as_ref()
+                        .is_some_and(|identity| identity.id == pack.id)
+                    {
+                        entity.pack = None;
+                    }
+                }
+            } else {
+                self.entities[index].pack = None;
+            }
+        }
+        self.entities[index].controller_id = Some(self.player.id.clone());
+        self.riding_actor_id = Some(target_entity_id);
+        let target_kind_id = definition.id.clone();
+        events.extend(self.relocate_player(target, changed));
+        events.push(DomainEvent::RidingMounted { target_kind_id });
     }
 
     fn roll_damage(&mut self, dice: u16, sides: u16) -> i32 {
@@ -4151,6 +4344,61 @@ impl Game {
                 || self.position_is_lit(position))
     }
 
+    fn actor_is_invisible(&self, entity: &Actor) -> bool {
+        self.content
+            .actor(&entity.kind_id)
+            .is_some_and(|definition| definition.tags.iter().any(|tag| tag == "invisible"))
+    }
+
+    fn entity_is_visible_to_player(&self, entity: &Actor) -> bool {
+        self.is_visible(entity.position)
+            && (!self.actor_is_invisible(entity) || entity.visible_invisible)
+    }
+
+    fn refresh_invisible_visibility(
+        &mut self,
+        full: bool,
+        previous_positions: &BTreeMap<String, Position>,
+    ) {
+        let sources = self.player_see_invisible_sources();
+        let search_skill = self.player_derived_stats().search_skill.value.max(0) as u64;
+        let candidates = self
+            .entities
+            .iter()
+            .enumerate()
+            .filter_map(|(index, entity)| {
+                let definition = self.content.actor(&entity.kind_id)?;
+                definition
+                    .tags
+                    .iter()
+                    .any(|tag| tag == "invisible")
+                    .then_some((
+                        index,
+                        entity.id.clone(),
+                        entity.position,
+                        definition.level,
+                        entity.visible_invisible,
+                    ))
+            })
+            .collect::<Vec<_>>();
+        for (index, id, position, level, was_visible) in candidates {
+            if !self.is_visible(position) || sources == 0 {
+                self.entities[index].visible_invisible = false;
+                continue;
+            }
+            let moved = previous_positions
+                .get(&id)
+                .is_none_or(|before| *before != position);
+            if !full && !moved {
+                self.entities[index].visible_invisible = was_visible;
+                continue;
+            }
+            let difficulty = u64::from(50_u32.saturating_add(level / 2));
+            self.entities[index].visible_invisible =
+                (0..sources).any(|_| self.rng.bounded(difficulty) < search_skill);
+        }
+    }
+
     fn floor_has_environment_light(&self) -> bool {
         self.content
             .world(&self.world_id)
@@ -4302,6 +4550,14 @@ impl Game {
     ) -> Vec<DomainEvent> {
         let old_position = self.player.position;
         self.player.position = destination;
+        if let Some(mount_id) = self.riding_actor_id.as_deref()
+            && let Some(mount) = self
+                .entities
+                .iter_mut()
+                .find(|entity| entity.id == mount_id)
+        {
+            mount.position = destination;
+        }
         self.mark_shop_visited_at_player();
         self.maintain_shop_at_player()
             .expect("shop maintenance must preserve validated item allocation");
@@ -4477,6 +4733,7 @@ fn equipment_bonuses_dto(bonuses: &EquipmentBonuses) -> EquipmentBonusesDto {
 const fn equipment_passive_dto(passive: EquipmentPassive) -> EquipmentPassiveDto {
     match passive {
         EquipmentPassive::Regeneration => EquipmentPassiveDto::Regeneration,
+        EquipmentPassive::SeeInvisible => EquipmentPassiveDto::SeeInvisible,
         EquipmentPassive::Vampiric => EquipmentPassiveDto::Vampiric,
         EquipmentPassive::SustainStrength => EquipmentPassiveDto::SustainStrength,
         EquipmentPassive::SustainIntelligence => EquipmentPassiveDto::SustainIntelligence,

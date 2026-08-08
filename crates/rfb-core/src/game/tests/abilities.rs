@@ -5111,6 +5111,10 @@ fn raise_dead_is_deterministic_and_enforces_faction_group_and_unique_rules() {
                 kind_id.as_str(),
                 "demo.actor.crypt-creep"
                     | "demo.actor.disembodied-hand-that-strangled-people"
+                    | "demo.actor.green-glutton-ghost"
+                    | "demo.actor.jibaku-ghost"
+                    | "demo.actor.lost-soul"
+                    | "demo.actor.poltergeist"
                     | "demo.actor.risen-thrall"
                     | "demo.actor.rotting-corpse"
                     | "demo.actor.skeleton-kobold"

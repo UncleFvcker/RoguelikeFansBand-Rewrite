@@ -748,6 +748,7 @@ impl Game {
         let saved_ability_progress = payload.player.ability_progress.clone();
         let summon_command = payload.player.summon_command.clone();
         let recall = payload.player.recall.clone();
+        let riding_actor_id = payload.player.riding_actor_id.clone();
         let confusing_strike_ready = payload.player.confusing_strike_ready;
         // Body slots are save-authoritative once present; pre-template saves
         // derive them from the build's race (or the standard body) with no
@@ -1004,6 +1005,7 @@ impl Game {
             height: payload.terrain.height,
             terrain,
             player,
+            riding_actor_id,
             gold,
             nutrition,
             build,
@@ -1234,6 +1236,7 @@ impl Game {
             .collect();
         player.summon_command = self.summon_command.clone();
         player.recall = self.recall.clone();
+        player.riding_actor_id = self.riding_actor_id.clone();
         player.confusing_strike_ready = self.confusing_strike_ready;
         player.body_slots = self
             .body_slots

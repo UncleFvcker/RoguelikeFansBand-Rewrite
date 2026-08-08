@@ -36,7 +36,9 @@
     },
     "ActorMovementMode": {
       "enum": [
+        "aquatic",
         "fly",
+        "pass-wall",
         "swim"
       ],
       "type": "string"
@@ -89,6 +91,10 @@
   "properties": {
     "$schema": {
       "type": "string"
+    },
+    "allowsWallPassage": {
+      "default": false,
+      "type": "boolean"
     },
     "bashCheckDifficulty": {
       "default": null,

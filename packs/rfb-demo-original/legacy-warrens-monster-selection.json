@@ -11,37 +11,37 @@
       "sourceIndex": 40,
       "id": "shrieker-mushroom-patch",
       "tags": ["mushroom", "warrens"],
-      "omittedFlags": ["EMPTY_MIND", "POS_GAIN_AC", "STUPID", "WILD_SWAMP"]
+      "omittedFlags": ["EMPTY_MIND", "POS_GAIN_AC", "STUPID"]
     },
     {
       "sourceIndex": 42,
       "id": "metallic-green-centipede",
       "tags": ["centipede", "warrens"],
-      "omittedFlags": ["POS_GAIN_AC", "WEIRD_MIND", "WILD_ALL"]
+      "omittedFlags": ["POS_GAIN_AC", "WEIRD_MIND"]
     },
     {
       "sourceIndex": 47,
       "id": "yellow-mushroom-patch",
       "tags": ["mushroom", "warrens"],
-      "omittedFlags": ["EMPTY_MIND", "STUPID", "WILD_SWAMP"]
+      "omittedFlags": ["EMPTY_MIND", "STUPID"]
     },
     {
       "sourceIndex": 49,
       "id": "giant-black-ant",
       "tags": ["ant", "warrens"],
-      "omittedFlags": ["WEIRD_MIND", "WILD_GRASS", "WILD_WOOD"]
+      "omittedFlags": ["WEIRD_MIND"]
     },
     {
       "sourceIndex": 50,
       "id": "salamander",
       "tags": ["reptile", "warrens"],
-      "omittedFlags": ["WILD_VOLCANO"]
+      "omittedFlags": []
     },
     {
       "sourceIndex": 51,
       "id": "white-harpy",
       "tags": ["harpy", "warrens"],
-      "omittedFlags": ["FEMALE", "POS_GAIN_AC", "WILD_MOUNTAIN"]
+      "omittedFlags": ["FEMALE", "POS_GAIN_AC"]
     },
     {
       "sourceIndex": 53,
@@ -80,7 +80,7 @@
       "sourceIndex": 59,
       "id": "large-yellow-snake",
       "tags": ["reptile", "warrens"],
-      "omittedFlags": ["WILD_ALL"]
+      "omittedFlags": []
     },
     {
       "sourceIndex": 60,
@@ -92,7 +92,7 @@
       "sourceIndex": 63,
       "id": "smeagol",
       "tags": ["hobbit", "thief", "warrens"],
-      "omittedFlags": ["CAN_SPEAK", "INVISIBLE", "MALE", "POS_SEE_INVIS", "SMART", "WILD_ALL"]
+      "omittedFlags": ["CAN_SPEAK", "MALE", "POS_SEE_INVIS", "SMART"]
     },
     {
       "sourceIndex": 64,
@@ -110,7 +110,7 @@
       "sourceIndex": 67,
       "id": "metallic-blue-centipede",
       "tags": ["centipede", "warrens"],
-      "omittedFlags": ["POS_GAIN_AC", "WEIRD_MIND", "WILD_ALL"]
+      "omittedFlags": ["POS_GAIN_AC", "WEIRD_MIND"]
     },
     {
       "sourceIndex": 69,
@@ -122,13 +122,13 @@
       "sourceIndex": 72,
       "id": "spotted-mushroom-patch",
       "tags": ["mushroom", "warrens"],
-      "omittedFlags": ["EMPTY_MIND", "STUPID", "WILD_SWAMP"]
+      "omittedFlags": ["EMPTY_MIND", "STUPID"]
     },
     {
       "sourceIndex": 75,
       "id": "giant-white-ant",
       "tags": ["ant", "warrens"],
-      "omittedFlags": ["WEIRD_MIND", "WILD_GRASS"]
+      "omittedFlags": ["WEIRD_MIND"]
     },
     {
       "sourceIndex": 76,
@@ -140,7 +140,7 @@
       "sourceIndex": 77,
       "id": "metallic-red-centipede",
       "tags": ["centipede", "warrens"],
-      "omittedFlags": ["POS_GAIN_AC", "WEIRD_MIND", "WILD_ALL"]
+      "omittedFlags": ["POS_GAIN_AC", "WEIRD_MIND"]
     },
     {
       "sourceIndex": 78,
@@ -182,7 +182,7 @@
       "sourceIndex": 87,
       "id": "goblin",
       "tags": ["goblin", "warrens"],
-      "omittedFlags": ["MALE", "WILD_GRASS"]
+      "omittedFlags": ["MALE"]
     },
     {
       "sourceIndex": 89,
@@ -194,7 +194,7 @@
       "sourceIndex": 90,
       "id": "large-grey-snake",
       "tags": ["reptile", "snake", "warrens"],
-      "omittedFlags": ["WILD_ALL"]
+      "omittedFlags": []
     },
     {
       "sourceIndex": 91,
@@ -206,19 +206,19 @@
       "sourceIndex": 92,
       "id": "ewok",
       "tags": ["humanoid", "warrens"],
-      "omittedFlags": ["WILD_WOOD"]
+      "omittedFlags": []
     },
     {
       "sourceIndex": 93,
       "id": "novice-mage",
       "tags": ["humanoid", "warrens"],
-      "omittedFlags": ["MALE", "WILD_ALL"]
+      "omittedFlags": ["MALE"]
     },
     {
       "sourceIndex": 94,
       "id": "green-naga",
       "tags": ["naga", "warrens"],
-      "omittedFlags": ["FEMALE", "WILD_SHORE"]
+      "omittedFlags": ["FEMALE"]
     },
     {
       "sourceIndex": 99,
@@ -236,7 +236,7 @@
       "sourceIndex": 103,
       "id": "grey-icky-thing",
       "tags": ["icky-thing", "warrens"],
-      "omittedFlags": ["EMPTY_MIND", "WILD_SWAMP"]
+      "omittedFlags": ["EMPTY_MIND"]
     },
     {
       "sourceIndex": 105,
@@ -248,7 +248,7 @@
       "sourceIndex": 106,
       "id": "copperhead-snake",
       "tags": ["reptile", "snake", "warrens"],
-      "omittedFlags": ["WILD_ALL"]
+      "omittedFlags": []
     },
     {
       "sourceIndex": 108,
@@ -260,13 +260,13 @@
       "sourceIndex": 109,
       "id": "novice-priest",
       "tags": ["humanoid", "warrens"],
-      "omittedFlags": ["MALE", "WILD_ALL"]
+      "omittedFlags": ["MALE"]
     },
     {
       "sourceIndex": 110,
       "id": "novice-warrior",
       "tags": ["humanoid", "warrens"],
-      "omittedFlags": ["MALE", "WILD_ALL"]
+      "omittedFlags": ["MALE"]
     },
     {
       "sourceIndex": 112,
@@ -284,25 +284,25 @@
       "sourceIndex": 114,
       "id": "giant-brown-bat",
       "tags": ["bat", "warrens"],
-      "omittedFlags": ["POS_GAIN_AC", "WILD_MOUNTAIN", "WILD_WOOD"]
+      "omittedFlags": ["POS_GAIN_AC"]
     },
     {
       "sourceIndex": 116,
       "id": "novice-archer",
       "tags": ["humanoid", "warrens"],
-      "omittedFlags": ["MALE", "WILD_ALL"]
+      "omittedFlags": ["MALE"]
     },
     {
       "sourceIndex": 118,
       "id": "snaga",
       "tags": ["humanoid", "warrens"],
-      "omittedFlags": ["MALE", "WILD_ALL"]
+      "omittedFlags": ["MALE"]
     },
     {
       "sourceIndex": 119,
       "id": "rattlesnake",
       "tags": ["reptile", "snake", "warrens"],
-      "omittedFlags": ["WILD_ALL"]
+      "omittedFlags": []
     },
     {
       "sourceIndex": 123,
@@ -332,7 +332,7 @@
       "sourceIndex": 127,
       "id": "wood-spider",
       "tags": ["spider", "warrens"],
-      "omittedFlags": ["POS_GAIN_AC", "WEIRD_MIND", "WILD_WOOD"]
+      "omittedFlags": ["POS_GAIN_AC", "WEIRD_MIND"]
     },
     {
       "sourceIndex": 128,
@@ -350,7 +350,7 @@
       "sourceIndex": 130,
       "id": "pink-naga",
       "tags": ["naga", "warrens"],
-      "omittedFlags": ["FEMALE", "WILD_SHORE"]
+      "omittedFlags": ["FEMALE"]
     },
     {
       "sourceIndex": 131,
@@ -362,7 +362,7 @@
       "sourceIndex": 132,
       "id": "caustic-icky-thing",
       "tags": ["icky-thing", "warrens"],
-      "omittedFlags": ["EMPTY_MIND", "WILD_SWAMP"]
+      "omittedFlags": ["EMPTY_MIND"]
     },
     {
       "sourceIndex": 136,
@@ -404,7 +404,7 @@
       "sourceIndex": 145,
       "id": "carnivorous-flying-monkey",
       "tags": ["monkey", "warrens"],
-      "omittedFlags": ["AUSSIE", "POS_GAIN_AC", "WILD_MOUNTAIN", "WILD_WOOD"]
+      "omittedFlags": ["AUSSIE", "POS_GAIN_AC"]
     },
     {
       "sourceIndex": 146,
@@ -416,7 +416,7 @@
       "sourceIndex": 147,
       "id": "novice-paladin",
       "tags": ["humanoid", "warrens"],
-      "omittedFlags": ["KNIGHT", "MALE", "WILD_ALL"]
+      "omittedFlags": ["KNIGHT", "MALE"]
     },
     {
       "sourceIndex": 148,
@@ -440,7 +440,7 @@
       "sourceIndex": 155,
       "id": "bloodshot-icky-thing",
       "tags": ["icky-thing", "warrens"],
-      "omittedFlags": ["EMPTY_MIND", "WILD_SWAMP"]
+      "omittedFlags": ["EMPTY_MIND"]
     },
     {
       "sourceIndex": 156,
@@ -452,13 +452,13 @@
       "sourceIndex": 157,
       "id": "black-harpy",
       "tags": ["harpy", "warrens"],
-      "omittedFlags": ["FEMALE", "POS_GAIN_AC", "WILD_MOUNTAIN"]
+      "omittedFlags": ["FEMALE", "POS_GAIN_AC"]
     },
     {
       "sourceIndex": 158,
       "id": "skaven",
       "tags": ["skaven", "warrens"],
-      "omittedFlags": ["MALE", "POS_GAIN_AC", "WILD_SWAMP", "WILD_WASTE"]
+      "omittedFlags": ["MALE", "POS_GAIN_AC"]
     },
     {
       "sourceIndex": 161,
@@ -470,7 +470,7 @@
       "sourceIndex": 162,
       "id": "orc-shaman",
       "tags": ["humanoid", "warrens"],
-      "omittedFlags": ["MALE", "WILD_MOUNTAIN", "WILD_SWAMP", "WILD_WOOD"]
+      "omittedFlags": ["MALE"]
     },
     {
       "sourceIndex": 163,
@@ -482,7 +482,7 @@
       "sourceIndex": 164,
       "id": "baby-white-dragon",
       "tags": ["warrens"],
-      "omittedFlags": ["POS_GAIN_AC", "WILD_SNOW"]
+      "omittedFlags": ["POS_GAIN_AC"]
     },
     {
       "sourceIndex": 165,
@@ -506,19 +506,19 @@
       "sourceIndex": 168,
       "id": "giant-pink-ant",
       "tags": ["ant", "warrens"],
-      "omittedFlags": ["WEIRD_MIND", "WILD_ALL"]
+      "omittedFlags": ["WEIRD_MIND"]
     },
     {
       "sourceIndex": 169,
       "id": "brodda-the-easterling",
       "tags": ["humanoid", "warrens"],
-      "omittedFlags": ["CAN_SPEAK", "MALE", "WILD_ALL"]
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
     },
     {
       "sourceIndex": 171,
       "id": "king-cobra",
       "tags": ["reptile", "snake", "warrens"],
-      "omittedFlags": ["WILD_SWAMP", "WILD_WOOD"]
+      "omittedFlags": []
     },
     {
       "sourceIndex": 173,
@@ -530,19 +530,19 @@
       "sourceIndex": 174,
       "id": "killer-bee",
       "tags": ["bee", "insect", "warrens"],
-      "omittedFlags": ["POS_GAIN_AC", "WEIRD_MIND", "WILD_ALL"]
+      "omittedFlags": ["POS_GAIN_AC", "WEIRD_MIND"]
     },
     {
       "sourceIndex": 217,
       "id": "skaven-shaman",
       "tags": ["skaven", "warrens"],
-      "omittedFlags": ["MALE", "POS_GAIN_AC", "WILD_SWAMP", "WILD_WASTE"]
+      "omittedFlags": ["MALE", "POS_GAIN_AC"]
     },
     {
       "sourceIndex": 867,
       "id": "culverin",
       "tags": ["culverin", "warrens"],
-      "omittedFlags": ["POS_GAIN_AC", "WILD_WOOD"]
+      "omittedFlags": ["POS_GAIN_AC"]
     },
     {
       "sourceIndex": 914,
@@ -560,13 +560,13 @@
       "sourceIndex": 1020,
       "id": "kutar",
       "tags": ["bear", "warrens"],
-      "omittedFlags": ["WILD_WOOD"]
+      "omittedFlags": []
     },
     {
       "sourceIndex": 1054,
       "id": "novice-mindcrafter",
       "tags": ["humanoid", "warrens"],
-      "omittedFlags": ["MALE", "WILD_ALL"]
+      "omittedFlags": ["MALE"]
     },
     {
       "sourceIndex": 1182,
@@ -578,13 +578,170 @@
       "sourceIndex": 1224,
       "id": "crow-of-durthang",
       "tags": ["bird", "warrens"],
-      "omittedFlags": ["POS_GAIN_AC", "WILD_MOUNTAIN", "WILD_WASTE", "WILD_WOOD"]
+      "omittedFlags": ["POS_GAIN_AC"]
     },
     {
       "sourceIndex": 1273,
       "id": "giant-moth",
       "tags": ["insect", "moth", "warrens"],
-      "omittedFlags": ["POS_GAIN_AC", "WEIRD_MIND", "WILD_SWAMP", "WILD_WOOD"]
+      "omittedFlags": ["POS_GAIN_AC", "WEIRD_MIND"]
+    },
+    {
+      "sourceIndex": 26,
+      "id": "clear-icky-thing",
+      "tags": ["icky-thing", "warrens"],
+      "omittedFlags": ["ATTR_CLEAR", "EMPTY_MIND", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 56,
+      "id": "giant-green-frog",
+      "tags": ["frog", "warrens"],
+      "omittedFlags": []
+    },
+    {
+      "sourceIndex": 61,
+      "id": "crow",
+      "tags": ["bird", "warrens"],
+      "omittedFlags": []
+    },
+    {
+      "sourceIndex": 65,
+      "id": "poltergeist",
+      "tags": ["ghost", "warrens"],
+      "omittedFlags": ["COLD_BLOOD", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 68,
+      "id": "raven",
+      "tags": ["bird", "warrens"],
+      "omittedFlags": []
+    },
+    {
+      "sourceIndex": 70,
+      "id": "piranha",
+      "tags": ["fish", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 79,
+      "id": "clear-worm-mass",
+      "tags": ["warrens", "worm"],
+      "omittedFlags": ["ATTR_CLEAR", "POS_GAIN_AC", "STUPID", "WEIRD_MIND"]
+    },
+    {
+      "sourceIndex": 88,
+      "id": "swordfish",
+      "tags": ["fish", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 95,
+      "id": "giant-leech",
+      "tags": ["leech", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC", "WEIRD_MIND"]
+    },
+    {
+      "sourceIndex": 100,
+      "id": "green-glutton-ghost",
+      "tags": ["ghost", "warrens"],
+      "omittedFlags": ["COLD_BLOOD", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 121,
+      "id": "giant-pink-frog",
+      "tags": ["frog", "warrens"],
+      "omittedFlags": []
+    },
+    {
+      "sourceIndex": 133,
+      "id": "lost-soul",
+      "tags": ["ghost", "warrens"],
+      "omittedFlags": ["COLD_BLOOD", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 144,
+      "id": "space-monster",
+      "tags": ["warrens"],
+      "omittedFlags": ["NASTY_GLYPH"]
+    },
+    {
+      "sourceIndex": 152,
+      "id": "phantom-warrior",
+      "tags": ["construct", "warrens"],
+      "omittedFlags": ["COLD_BLOOD", "EMPTY_MIND", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 159,
+      "sourceId": "the-wounded-bear",
+      "id": "wounded-bear",
+      "tags": ["bear", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 160,
+      "id": "portuguese-man-o-war",
+      "tags": ["jellyfish", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 170,
+      "id": "bloodfang-the-wolf",
+      "tags": ["wolf", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 172,
+      "id": "eagle",
+      "tags": ["bird", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 1012,
+      "id": "jibaku-ghost",
+      "tags": ["ghost", "warrens"],
+      "omittedFlags": ["COLD_BLOOD", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 41,
+      "id": "blubbering-icky-thing",
+      "tags": ["icky-thing", "warrens"],
+      "omittedFlags": ["EMPTY_MIND"]
+    },
+    {
+      "sourceIndex": 45,
+      "id": "novice-archaeologist",
+      "tags": ["human", "warrens"],
+      "omittedFlags": []
+    },
+    {
+      "sourceIndex": 117,
+      "id": "creeping-silver-coins",
+      "tags": ["coin", "warrens"],
+      "omittedFlags": ["COLD_BLOOD"]
+    },
+    {
+      "sourceIndex": 120,
+      "id": "giant-slug",
+      "tags": ["slug", "warrens"],
+      "omittedFlags": ["EMPTY_MIND", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 956,
+      "id": "horse",
+      "tags": ["horse", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 957,
+      "id": "unruly-horse",
+      "tags": ["horse", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 1226,
+      "id": "sheep",
+      "tags": ["sheep", "warrens"],
+      "omittedFlags": ["AUSSIE", "WEIRD_MIND"]
     }
   ]
 }

@@ -227,18 +227,8 @@
       "playerSummonCommand": {
         "mode": "keep-distance"
       },
-      "entityCount": 2,
+      "entityCount": 1,
       "entities": [
-        {
-          "id": "demo.monster.ember-mote.1",
-          "position": {
-            "x": 14,
-            "y": 14
-          },
-          "hp": 3,
-          "speed": 110,
-          "energyNeed": 100
-        },
         {
           "id": "demo.z-entrance-guardian.resonance-descent.1",
           "position": {
@@ -330,7 +320,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "96aea241badf7454233fbcaf80cec15f0f6f4685ef4d84fe81456e007e6d4211"
+      "stateHash": "29e8fc9e84e3f713c1033c0f5b5ac5e7d1565879ad22ac89ec7e24bb29302fa1"
     },
     "events": [
       {
@@ -374,6 +364,6 @@
         "y": 15
       }
     ],
-    "saveRoundTripStateHash": "96aea241badf7454233fbcaf80cec15f0f6f4685ef4d84fe81456e007e6d4211"
+    "saveRoundTripStateHash": "29e8fc9e84e3f713c1033c0f5b5ac5e7d1565879ad22ac89ec7e24bb29302fa1"
   }
 }

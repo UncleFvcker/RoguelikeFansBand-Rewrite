@@ -6,6 +6,9 @@
       "dice": 1,
       "sides": 4
     },
+    "habitats": [
+      "all"
+    ],
     "legacyIndex": 1054,
     "maxDepth": 50,
     "rarity": 1

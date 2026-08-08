@@ -715,6 +715,7 @@ fn magic_shop_purchase_device_use_and_save_are_authoritative() {
     assert!(charges_before.current >= 4);
     let staff_id = bought.id.clone();
 
+    game.rng = RfbRng::seeded(32);
     let used = dispatch_next(
         &mut game,
         GameCommand::UseItem {

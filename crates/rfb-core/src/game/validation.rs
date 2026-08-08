@@ -564,7 +564,22 @@ impl Game {
         let mut monster_ids = BTreeSet::new();
         let mut positions = BTreeSet::new();
         positions.insert(self.player.position);
+        if let Some(mount_id) = self.riding_actor_id.as_deref() {
+            let valid_mount = self.entities.iter().find(|entity| entity.id == mount_id);
+            if !valid_mount.is_some_and(|mount| {
+                mount.hp > 0
+                    && mount.position == self.player.position
+                    && mount.controller_id.as_deref() == Some(self.player.id.as_str())
+                    && self
+                        .content
+                        .actor(&mount.kind_id)
+                        .is_some_and(|definition| definition.rideable)
+            }) {
+                return Err(CoreError::InvalidSave("riding state is invalid"));
+            }
+        }
         for entity in &self.entities {
+            let is_mount = self.riding_actor_id.as_deref() == Some(entity.id.as_str());
             self.validate_actor(entity, ActorRole::Monster)?;
             if let Some(summon) = &entity.summon
                 && !self.summon_identity_is_valid(entity, summon)
@@ -573,7 +588,7 @@ impl Game {
             }
             if !instance_ids.insert(entity.id.clone())
                 || !self.actor_kind_can_enter_position(&entity.kind_id, entity.position)
-                || !positions.insert(entity.position)
+                || (!positions.insert(entity.position) && !is_mount)
             {
                 return Err(CoreError::InvalidSave("entity position is invalid"));
             }

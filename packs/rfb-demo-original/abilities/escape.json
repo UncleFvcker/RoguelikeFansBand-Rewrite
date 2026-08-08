@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.escape",
+  "descriptionKey": "ability-legacy-escape-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.escape",
+  "nameKey": "ability-legacy-escape-name",
+  "tags": [
+    "legacy-import",
+    "mobility"
+  ],
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  }
+}

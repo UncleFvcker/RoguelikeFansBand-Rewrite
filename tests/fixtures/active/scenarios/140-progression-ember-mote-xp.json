@@ -230,25 +230,7 @@
         "lifePercent": 100,
         "experiencePercent": 100
       },
-      "entityCount": 1,
-      "entities": [
-        {
-          "id": "demo.z-entrance-guardian.resonance-descent.1",
-          "position": {
-            "x": 2,
-            "y": 1
-          },
-          "hp": 6,
-          "speed": 110,
-          "energyNeed": 100,
-          "pack": {
-            "id": "demo.z-entrance-guardian.resonance-descent.1",
-            "leaderId": "demo.z-entrance-guardian.resonance-descent.1",
-            "role": "leader",
-            "behavior": "guard-position"
-          }
-        }
-      ],
+      "entityCount": 0,
       "groundItemCount": 7,
       "nextItemInstanceSerial": 3,
       "nextGoldPileSerial": 1,
@@ -310,7 +292,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "5dfe7874fc61f14aacfc442022f1fa0d27c9e13bd336d1105c8783df8bb51a46"
+      "stateHash": "2fe07e5b85d61bd0e1ffceedd81ccda5e791e24ecd32e07ef676ea3a2048d99b"
     },
     "events": [
       {

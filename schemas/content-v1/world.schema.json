@@ -1615,6 +1615,28 @@
       ],
       "type": "string"
     },
+    "SurfaceActorAllocationDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "level": {
+          "format": "uint16",
+          "maximum": 100,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "rolls": {
+          "format": "uint16",
+          "maximum": 64,
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "rolls",
+        "level"
+      ],
+      "type": "object"
+    },
     "TaskDefinition": {
       "additionalProperties": false,
       "properties": {
@@ -1934,6 +1956,17 @@
         "$ref": "#/$defs/ProceduralFloorDefinition"
       },
       "type": "array"
+    },
+    "surfaceActorAllocation": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/SurfaceActorAllocationDefinition"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
     },
     "tasks": {
       "default": [],

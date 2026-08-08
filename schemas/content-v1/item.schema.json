@@ -202,6 +202,7 @@
     "EquipmentPassive": {
       "enum": [
         "regeneration",
+        "see-invisible",
         "vampiric",
         "sustain-strength",
         "sustain-intelligence",

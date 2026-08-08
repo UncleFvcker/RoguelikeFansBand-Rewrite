@@ -6,6 +6,10 @@
       "dice": 0,
       "sides": 0
     },
+    "habitats": [
+      "swamp",
+      "waste"
+    ],
     "legacyIndex": 158,
     "maxDepth": 40,
     "rarity": 1

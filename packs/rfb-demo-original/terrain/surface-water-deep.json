@@ -1,0 +1,12 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/terrain.schema.json",
+  "formatVersion": 1,
+  "id": "demo.terrain.surface-water-deep",
+  "nameKey": "terrain-demo-surface-water-deep-name",
+  "descriptionKey": "terrain-demo-surface-water-deep-description",
+  "glyph": "≈",
+  "walkable": false,
+  "blocksSight": false,
+  "movementModes": ["fly", "swim"],
+  "tags": ["outdoor", "surface", "water", "deep", "shore"]
+}

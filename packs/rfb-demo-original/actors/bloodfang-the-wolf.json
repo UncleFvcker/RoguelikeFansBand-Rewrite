@@ -1,0 +1,78 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "habitats": [
+      "grass",
+      "wood"
+    ],
+    "legacyIndex": 170,
+    "maxDepth": 999,
+    "rarity": 1,
+    "wildOnly": true
+  },
+  "attack": 2,
+  "damageDice": 1,
+  "damageSides": 11,
+  "damageType": "physical",
+  "defense": 3,
+  "descriptionKey": "actor-demo-bloodfang-the-wolf-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 30,
+  "formatVersion": 1,
+  "glyph": "C",
+  "hitPointDice": {
+    "dice": 6,
+    "forceMaximum": true,
+    "sides": 6
+  },
+  "id": "demo.actor.bloodfang-the-wolf",
+  "level": 9,
+  "maxHp": 36,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 11,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 11,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      }
+    ]
+  },
+  "nameKey": "actor-demo-bloodfang-the-wolf-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "role": "monster",
+  "speed": 120,
+  "tags": [
+    "animal",
+    "unique",
+    "warrens",
+    "wolf"
+  ]
+}

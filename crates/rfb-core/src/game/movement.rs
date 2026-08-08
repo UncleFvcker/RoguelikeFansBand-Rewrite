@@ -7,6 +7,17 @@ pub(super) fn actor_can_cross_terrain(
     actor: &rfb_content::ActorDefinition,
     terrain: &rfb_content::TerrainDefinition,
 ) -> bool {
+    use rfb_content::ActorMovementMode;
+
+    if actor.movement.modes.contains(&ActorMovementMode::PassWall) && terrain.allows_wall_passage {
+        return true;
+    }
+    let flies = actor.movement.modes.contains(&ActorMovementMode::Fly);
+    if actor.movement.modes.contains(&ActorMovementMode::Aquatic) {
+        return terrain.tags.iter().any(|tag| tag == "water")
+            || (flies
+                && (terrain.walkable || terrain.movement_modes.contains(&ActorMovementMode::Fly)));
+    }
     terrain.walkable
         || actor
             .movement
@@ -229,6 +240,29 @@ impl Game {
 
     pub(super) fn actor_can_enter_position(&self, index: usize, position: Position) -> bool {
         self.actor_kind_can_enter_position(&self.entities[index].kind_id, position)
+    }
+
+    pub(super) fn actor_can_kill_body_blocker(
+        &self,
+        source_index: usize,
+        target_index: usize,
+    ) -> bool {
+        let source = &self.entities[source_index];
+        let target = &self.entities[target_index];
+        let Some(source_definition) = self.content.actor(&source.kind_id) else {
+            return false;
+        };
+        let Some(target_definition) = self.content.actor(&target.kind_id) else {
+            return false;
+        };
+        source_definition.kills_weaker_bodies
+            && source_definition.melee_routine.is_some()
+            && target.hp > 0
+            && self.riding_actor_id.as_deref() != Some(target.id.as_str())
+            && self.actor_can_enter_position(source_index, target.position)
+            && u64::from(source_definition.level).saturating_mul(source_definition.experience_value)
+                > u64::from(target_definition.level)
+                    .saturating_mul(target_definition.experience_value)
     }
 
     pub(super) fn actor_can_traverse_or_interact(&self, index: usize, position: Position) -> bool {
@@ -613,7 +647,9 @@ impl Game {
             .entities
             .iter()
             .enumerate()
-            .filter(|(entity_index, _)| *entity_index != index)
+            .filter(|(entity_index, _)| {
+                *entity_index != index && !self.actor_can_kill_body_blocker(index, *entity_index)
+            })
             .map(|(_, entity)| entity.position)
             .collect::<BTreeSet<_>>();
         let moving_pack_id = self.entities[index]
@@ -626,6 +662,7 @@ impl Game {
                 .enumerate()
                 .filter(|(entity_index, entity)| {
                     *entity_index != index
+                        && !self.actor_can_kill_body_blocker(index, *entity_index)
                         && !entity.pack.as_ref().is_some_and(|pack| {
                             moving_pack_id.is_some_and(|moving| moving == pack.id)
                         })

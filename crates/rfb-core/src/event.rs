@@ -471,6 +471,19 @@ pub(crate) enum DomainEvent {
         severity: ItemCurseSeverityDto,
     },
     MoveBlocked,
+    RidingMounted {
+        target_kind_id: String,
+    },
+    RidingDismounted {
+        target_kind_id: String,
+    },
+    RidingFailed {
+        target_kind_id: String,
+    },
+    RidingUnavailable,
+    SheepRidingRefused {
+        response: u8,
+    },
     ProjectileUnavailable,
     ProjectileAmmoUnavailable {
         ammo_kind_id: String,
@@ -2100,6 +2113,30 @@ impl DomainEvent {
                 ],
             ),
             Self::MoveBlocked => dto_without_args("move.blocked", "game-move-blocked"),
+            Self::RidingMounted { target_kind_id } => dto(
+                "riding.mounted",
+                "riding-mounted",
+                [("target", target_kind_id)],
+            ),
+            Self::RidingDismounted { target_kind_id } => dto(
+                "riding.dismounted",
+                "riding-dismounted",
+                [("target", target_kind_id)],
+            ),
+            Self::RidingFailed { target_kind_id } => dto(
+                "riding.failed",
+                "riding-failed",
+                [("target", target_kind_id)],
+            ),
+            Self::RidingUnavailable => dto_without_args("riding.unavailable", "riding-unavailable"),
+            Self::SheepRidingRefused { response } => dto_without_args(
+                "riding.sheep-refused",
+                match response {
+                    0 => "riding-sheep-refused-0",
+                    1 => "riding-sheep-refused-1",
+                    _ => "riding-sheep-refused-2",
+                },
+            ),
             Self::ProjectileUnavailable => {
                 dto_without_args("combat.projectile-unavailable", "projectile-unavailable")
             }

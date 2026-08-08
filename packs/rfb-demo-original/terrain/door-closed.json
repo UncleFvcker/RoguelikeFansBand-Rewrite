@@ -7,6 +7,7 @@
   "glyph": "+",
   "walkable": false,
   "blocksSight": true,
+  "allowsWallPassage": true,
   "openToTerrainId": "demo.terrain.door-open",
   "bashToTerrainId": "demo.terrain.door-broken",
   "bashCheckDifficulty": 12,

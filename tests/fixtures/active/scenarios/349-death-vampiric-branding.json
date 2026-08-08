@@ -3064,19 +3064,7 @@
           "canCast": false
         }
       ],
-      "entityCount": 1,
-      "entities": [
-        {
-          "id": "demo.z-entrance-guardian.resonance-descent.1",
-          "position": {
-            "x": 12,
-            "y": 12
-          },
-          "hp": 6,
-          "speed": 110,
-          "energyNeed": 100
-        }
-      ],
+      "entityCount": 0,
       "groundItemCount": 7,
       "inventoryStackCount": 6,
       "equipmentCount": 2,
@@ -3421,7 +3409,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "9cedc3e554360ae437c3063182e2978d6d125be46abeb7aedb1cb2822ff4c220"
+      "stateHash": "3ec4b02b628f394cc8326674b68aa5bbf5c97794dbb52766b4dd47293c2c87df"
     },
     "events": [
       {
@@ -3766,6 +3754,6 @@
     "removedEntities": [
       "demo.monster.ember-mote.1"
     ],
-    "saveRoundTripStateHash": "9cedc3e554360ae437c3063182e2978d6d125be46abeb7aedb1cb2822ff4c220"
+    "saveRoundTripStateHash": "3ec4b02b628f394cc8326674b68aa5bbf5c97794dbb52766b4dd47293c2c87df"
   }
 }

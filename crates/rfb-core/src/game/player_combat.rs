@@ -661,7 +661,8 @@ impl Game {
                                 .level(DamageType::Poison),
                         ))
                     }
-                    MeleeBlowEffectDefinition::DrainAttributes { .. } => None,
+                    MeleeBlowEffectDefinition::DrainAttributes { .. }
+                    | MeleeBlowEffectDefinition::DrainResource { .. } => None,
                     MeleeBlowEffectDefinition::Bleeding {
                         duration_dice,
                         duration_sides,

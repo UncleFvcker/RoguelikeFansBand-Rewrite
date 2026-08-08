@@ -50,60 +50,23 @@
       "turn": 1,
       "worldTick": 10,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 64,
+      "rngDrawCounter": 38,
       "floorId": "demo.floor.surface",
       "playerPosition": {
         "x": 3,
         "y": 3
       },
-      "playerHp": -1,
+      "playerHp": 10,
       "playerMaxHp": 136,
       "playerAttack": 3,
       "playerDefense": 2,
       "playerSpeed": 110,
-      "playerEnergyNeed": 10,
+      "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 110,
       "playerCarryCapacityTenthsPound": 800,
       "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
-      "playerStatuses": [
-        {
-          "kindId": "rfb.status.poison",
-          "intensity": 1,
-          "remainingTicks": 8,
-          "grantedModifiers": {
-            "attack": 0,
-            "defense": 0,
-            "maxHp": 0,
-            "strength": 0,
-            "intelligence": 0,
-            "wisdom": 0,
-            "dexterity": 0,
-            "constitution": 0,
-            "charisma": 0,
-            "speed": 0
-          },
-          "grantedEquipmentBonuses": {
-            "meleeAttacks": 0,
-            "meleeSkill": 0,
-            "meleeDamage": 0,
-            "rangedSkill": 0,
-            "throwingSkill": 0,
-            "deviceSkill": 0,
-            "savingThrowSkill": 0,
-            "stealthSkill": 0,
-            "searchSkill": 0,
-            "perceptionSkill": 0,
-            "disarmingSkill": 0,
-            "diggingSkill": 0,
-            "infravision": 0,
-            "lightRadius": 0
-          },
-          "grantsWallPassage": false,
-          "incomingDamagePercent": 100
-        }
-      ],
       "playerLevel": 25,
       "playerExperience": 0,
       "playerMaxLevel": 25,
@@ -2930,7 +2893,7 @@
           "canCast": false
         }
       ],
-      "entityCount": 4,
+      "entityCount": 2,
       "entities": [
         {
           "id": "summon.demo.ability.death-raise-dead.1.0",
@@ -2938,9 +2901,9 @@
             "x": 2,
             "y": 2
           },
-          "hp": 51,
-          "speed": 110,
-          "energyNeed": 100
+          "hp": 12,
+          "speed": 100,
+          "energyNeed": 50
         },
         {
           "id": "summon.demo.ability.death-raise-dead.1.1",
@@ -2948,27 +2911,7 @@
             "x": 3,
             "y": 2
           },
-          "hp": 46,
-          "speed": 110,
-          "energyNeed": 100
-        },
-        {
-          "id": "summon.demo.ability.death-raise-dead.1.2",
-          "position": {
-            "x": 4,
-            "y": 2
-          },
-          "hp": 22,
-          "speed": 110,
-          "energyNeed": 100
-        },
-        {
-          "id": "summon.demo.ability.death-raise-dead.1.3",
-          "position": {
-            "x": 2,
-            "y": 3
-          },
-          "hp": 42,
+          "hp": 32,
           "speed": 110,
           "energyNeed": 100
         }
@@ -3251,7 +3194,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "c84a26ae8a24efac070ed1f477dc94edfa37722a0b2a363fc7055bef5cf5beb5"
+      "stateHash": "4b6c9f05c21ba942794f6aa1810e0f1b8363daf1ff1c0f1a327e05d939f5f26c"
     },
     "events": [
       {
@@ -3323,31 +3266,87 @@
             "hostile": true,
             "group": true,
             "summonedKindIds": [
-              "demo.actor.skeleton-orc",
-              "demo.actor.rotting-corpse",
+              "demo.actor.risen-thrall",
               "demo.actor.zombified-kobold",
-              "demo.actor.rotting-corpse"
+              "demo.actor.lost-soul",
+              "demo.actor.poltergeist"
             ]
           }
         }
       },
       {
-        "kind": "combat.monster-hit",
-        "messageKey": "combat-monster-hit",
+        "kind": "monster.ability-decision",
+        "messageKey": "monster-ability-decision",
         "args": {
-          "damage": "8",
-          "method": "rfb.blow.hit",
-          "source": "demo.actor.skeleton-orc"
+          "frequency": "6",
+          "roll": "89",
+          "source": "demo.actor.poltergeist",
+          "target": "none"
         },
         "outcome": {
-          "type": "damage",
+          "type": "monster-ability-decision",
           "resolution": {
-            "rawDamage": 9,
-            "armorReduction": 1,
-            "resistanceAdjustment": 0,
-            "finalDamage": 8,
-            "damageType": "physical",
-            "resistance": "normal"
+            "sourceEntityId": "summon.demo.ability.death-raise-dead.1.3",
+            "sourceKindId": "demo.actor.poltergeist",
+            "frequencyPercent": 6,
+            "frequencyRoll": 89,
+            "candidates": [
+              {
+                "abilityId": "rfb-legacy.ability.blink",
+                "baseWeight": 1,
+                "effectiveWeight": 1,
+                "targetEntityId": "summon.demo.ability.death-raise-dead.1.3",
+                "targetKindId": "demo.actor.poltergeist",
+                "targetPosition": {
+                  "x": 2,
+                  "y": 3
+                },
+                "enemyTargetCount": 0,
+                "friendlyRiskCount": 0
+              }
+            ],
+            "viableAbilityIds": [
+              "rfb-legacy.ability.blink"
+            ],
+            "totalWeight": 1
+          }
+        }
+      },
+      {
+        "kind": "monster.ability-decision",
+        "messageKey": "monster-ability-decision",
+        "args": {
+          "frequency": "6",
+          "roll": "19",
+          "source": "demo.actor.poltergeist",
+          "target": "none"
+        },
+        "outcome": {
+          "type": "monster-ability-decision",
+          "resolution": {
+            "sourceEntityId": "summon.demo.ability.death-raise-dead.1.3",
+            "sourceKindId": "demo.actor.poltergeist",
+            "frequencyPercent": 6,
+            "frequencyRoll": 19,
+            "candidates": [
+              {
+                "abilityId": "rfb-legacy.ability.blink",
+                "baseWeight": 1,
+                "effectiveWeight": 1,
+                "targetEntityId": "summon.demo.ability.death-raise-dead.1.3",
+                "targetKindId": "demo.actor.poltergeist",
+                "targetPosition": {
+                  "x": 2,
+                  "y": 4
+                },
+                "enemyTargetCount": 0,
+                "friendlyRiskCount": 0
+              }
+            ],
+            "viableAbilityIds": [
+              "rfb-legacy.ability.blink"
+            ],
+            "totalWeight": 1
           }
         }
       },
@@ -3356,8 +3355,8 @@
         "messageKey": "combat-monster-hit",
         "args": {
           "damage": "0",
-          "method": "rfb.blow.claw",
-          "source": "demo.actor.rotting-corpse"
+          "method": "rfb.blow.hit",
+          "source": "demo.actor.zombified-kobold"
         },
         "outcome": {
           "type": "damage",
@@ -3369,14 +3368,6 @@
             "damageType": "physical",
             "resistance": "normal"
           }
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.claw",
-          "source": "demo.actor.rotting-corpse"
         }
       },
       {
@@ -3400,86 +3391,111 @@
         }
       },
       {
-        "kind": "combat.monster-hit",
-        "messageKey": "combat-monster-hit",
+        "kind": "monster.ability-decision",
+        "messageKey": "monster-ability-decision",
         "args": {
-          "damage": "0",
-          "method": "rfb.blow.hit",
-          "source": "demo.actor.zombified-kobold"
+          "frequency": "6",
+          "roll": "30",
+          "source": "demo.actor.lost-soul",
+          "target": "none"
         },
         "outcome": {
-          "type": "damage",
+          "type": "monster-ability-decision",
           "resolution": {
-            "rawDamage": 1,
-            "armorReduction": 1,
-            "resistanceAdjustment": 0,
-            "finalDamage": 0,
-            "damageType": "physical",
-            "resistance": "normal"
+            "sourceEntityId": "summon.demo.ability.death-raise-dead.1.2",
+            "sourceKindId": "demo.actor.lost-soul",
+            "frequencyPercent": 6,
+            "frequencyRoll": 30,
+            "candidates": [
+              {
+                "abilityId": "rfb-legacy.ability.escape",
+                "baseWeight": 1,
+                "effectiveWeight": 1,
+                "targetEntityId": "summon.demo.ability.death-raise-dead.1.2",
+                "targetKindId": "demo.actor.lost-soul",
+                "targetPosition": {
+                  "x": 4,
+                  "y": 2
+                },
+                "enemyTargetCount": 0,
+                "friendlyRiskCount": 0
+              },
+              {
+                "abilityId": "rfb-legacy.ability.drain-mana-4",
+                "baseWeight": 1,
+                "effectiveWeight": 1,
+                "targetEntityId": "demo.actor.player.1",
+                "targetKindId": "demo.actor.explorer",
+                "targetPosition": {
+                  "x": 3,
+                  "y": 3
+                },
+                "affectedPositions": [
+                  {
+                    "x": 3,
+                    "y": 3
+                  }
+                ],
+                "enemyTargetCount": 1,
+                "friendlyRiskCount": 0
+              }
+            ],
+            "viableAbilityIds": [
+              "rfb-legacy.ability.escape",
+              "rfb-legacy.ability.drain-mana-4"
+            ],
+            "totalWeight": 2
           }
         }
       },
       {
-        "kind": "combat.monster-hit",
-        "messageKey": "combat-monster-hit",
+        "kind": "monster.ability-decision",
+        "messageKey": "monster-ability-decision",
         "args": {
-          "damage": "1",
-          "method": "rfb.blow.claw",
-          "source": "demo.actor.rotting-corpse"
+          "frequency": "6",
+          "roll": "80",
+          "source": "demo.actor.poltergeist",
+          "target": "none"
         },
         "outcome": {
-          "type": "damage",
+          "type": "monster-ability-decision",
           "resolution": {
-            "rawDamage": 2,
-            "armorReduction": 1,
-            "resistanceAdjustment": 0,
-            "finalDamage": 1,
-            "damageType": "physical",
-            "resistance": "normal"
-          }
-        }
-      },
-      {
-        "kind": "combat.monster-hit",
-        "messageKey": "combat-monster-hit",
-        "args": {
-          "damage": "2",
-          "method": "rfb.blow.claw",
-          "source": "demo.actor.rotting-corpse"
-        },
-        "outcome": {
-          "type": "damage",
-          "resolution": {
-            "rawDamage": 3,
-            "armorReduction": 1,
-            "resistanceAdjustment": 0,
-            "finalDamage": 2,
-            "damageType": "physical",
-            "resistance": "normal"
-          }
-        }
-      },
-      {
-        "kind": "combat.player-death",
-        "messageKey": "combat-player-death",
-        "args": {
-          "method": "rfb.blow.claw",
-          "source": "demo.actor.rotting-corpse"
-        },
-        "outcome": {
-          "type": "death",
-          "resolution": {
-            "rawDamage": 3,
-            "armorReduction": 1,
-            "resistanceAdjustment": 0,
-            "finalDamage": 2,
-            "damageType": "physical",
-            "resistance": "normal"
+            "sourceEntityId": "summon.demo.ability.death-raise-dead.1.3",
+            "sourceKindId": "demo.actor.poltergeist",
+            "frequencyPercent": 6,
+            "frequencyRoll": 80,
+            "candidates": [
+              {
+                "abilityId": "rfb-legacy.ability.blink",
+                "baseWeight": 1,
+                "effectiveWeight": 1,
+                "targetEntityId": "summon.demo.ability.death-raise-dead.1.3",
+                "targetKindId": "demo.actor.poltergeist",
+                "targetPosition": {
+                  "x": 1,
+                  "y": 3
+                },
+                "enemyTargetCount": 0,
+                "friendlyRiskCount": 0
+              }
+            ],
+            "viableAbilityIds": [
+              "rfb-legacy.ability.blink"
+            ],
+            "totalWeight": 1
           }
         }
       }
     ],
     "changedCells": [
+      {
+        "x": 1,
+        "y": 3
+      },
+      {
+        "x": 1,
+        "y": 4
+      },
       {
         "x": 2,
         "y": 2
@@ -3489,14 +3505,22 @@
         "y": 3
       },
       {
+        "x": 2,
+        "y": 4
+      },
+      {
         "x": 3,
         "y": 2
       },
       {
         "x": 4,
         "y": 2
+      },
+      {
+        "x": 5,
+        "y": 2
       }
     ],
-    "saveRoundTripStateHash": "c84a26ae8a24efac070ed1f477dc94edfa37722a0b2a363fc7055bef5cf5beb5"
+    "saveRoundTripStateHash": "4b6c9f05c21ba942794f6aa1810e0f1b8363daf1ff1c0f1a327e05d939f5f26c"
   }
 }

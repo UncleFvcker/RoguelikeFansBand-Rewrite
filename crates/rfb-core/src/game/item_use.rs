@@ -334,7 +334,7 @@ impl Game {
             .iter()
             .filter(|entity| {
                 entity.hp > 0
-                    && self.is_visible(entity.position)
+                    && self.entity_is_visible_to_player(entity)
                     && has_line_of_effect(self, self.player.position, entity.position)
             })
             .map(|entity| entity.id.clone())

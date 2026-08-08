@@ -29,6 +29,7 @@ mod monster_movement;
 mod movement;
 mod persistence;
 mod progression;
+mod riding;
 mod snapshots;
 mod summons;
 mod support;

@@ -338,6 +338,11 @@ fn valid_melee_effect(effect: &MeleeBlowEffectDefinition) -> bool {
                     .enumerate()
                     .any(|(index, attribute)| attributes[..index].contains(attribute))
         }
+        MeleeBlowEffectDefinition::DrainResource {
+            chance_percent,
+            amount_dice,
+            amount_sides,
+        } => valid_chance(*chance_percent) && valid_dice(*amount_dice, *amount_sides),
         MeleeBlowEffectDefinition::Bleeding {
             chance_percent,
             duration_dice,

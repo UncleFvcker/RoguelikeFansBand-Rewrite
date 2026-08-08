@@ -28,7 +28,7 @@
       "turn": 1,
       "worldTick": 10,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 72,
+      "rngDrawCounter": 102,
       "floorId": "demo.floor.surface",
       "town": {
         "id": "demo.town.outpost",
@@ -905,7 +905,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "58a850c942d3e068f3477fe6b049cd732c5230d3089ae018574c69913dabba7d"
+      "stateHash": "63b2cfb044c8d5201816fd3bfcfb89d7d417089e8121a538876eea7f8aa4f26a"
     },
     "changedCells": [
       {

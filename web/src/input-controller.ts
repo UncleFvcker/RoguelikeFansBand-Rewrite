@@ -57,6 +57,7 @@ export class InputController {
     kind: string,
   ) => void;
   #installed = false;
+  #ridingDirection = false;
 
   constructor(options: {
     state: AppState;
@@ -314,6 +315,10 @@ export class InputController {
       this.#handleTerrainDirection(event);
       return;
     }
+    if (this.#ridingDirection) {
+      this.#handleRidingDirection(event);
+      return;
+    }
 
     const nextTerrainInteractionMode = terrainInteractionModeForKey(event.key);
     if (nextTerrainInteractionMode) {
@@ -335,6 +340,12 @@ export class InputController {
     if (event.key.toLowerCase() === "x") {
       event.preventDefault();
       this.startLookMode();
+      return;
+    }
+    if (event.key.toLowerCase() === "v") {
+      event.preventDefault();
+      this.#ridingDirection = true;
+      this.#announce("message-riding-mode-started", undefined, "system");
       return;
     }
     const command = commandForKeyboardInput(event, this.#getInputPreset());
@@ -406,6 +417,20 @@ export class InputController {
       return;
     }
     void this.#dispatch(terrainInteractionCommand(mode, direction));
+  }
+
+  #handleRidingDirection(event: KeyboardEvent): void {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      this.#ridingDirection = false;
+      this.#announce("message-riding-mode-cancelled", undefined, "system");
+      return;
+    }
+    const direction = directionForKeyboardInput(event, this.#getInputPreset());
+    if (!direction) return;
+    event.preventDefault();
+    this.#ridingDirection = false;
+    void this.#dispatch({ type: "ride", direction });
   }
 
   #startTerrainInteraction(mode: TerrainInteractionMode): void {

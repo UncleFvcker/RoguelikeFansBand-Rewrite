@@ -2,7 +2,9 @@
 
 use super::movement::actor_can_cross_terrain;
 use super::*;
-use rfb_content::{ActorDefinition, GlobalMonsterAllocationDefinition};
+use rfb_content::{
+    ActorDefinition, ActorHabitat, ActorMovementMode, GlobalMonsterAllocationDefinition,
+};
 
 const ORIGINAL_NASTY_MON_ONE_IN: u64 = 40;
 const ORIGINAL_GROUP_MAX: u16 = 32;
@@ -131,6 +133,42 @@ fn actor_is_guardian(definition: &ActorDefinition) -> bool {
     definition.tags.iter().any(|tag| tag == "guardian")
 }
 
+fn habitat_tag(habitat: ActorHabitat) -> Option<&'static str> {
+    match habitat {
+        ActorHabitat::All => None,
+        ActorHabitat::Grass => Some("grass"),
+        ActorHabitat::Mountain => Some("mountain"),
+        ActorHabitat::Shore => Some("shore"),
+        ActorHabitat::Snow => Some("snow"),
+        ActorHabitat::Swamp => Some("swamp"),
+        ActorHabitat::Town => Some("town"),
+        ActorHabitat::Volcano => Some("volcano"),
+        ActorHabitat::Waste => Some("waste"),
+        ActorHabitat::Wood => Some("wood"),
+    }
+}
+
+fn actor_matches_surface_habitat(
+    definition: &ActorDefinition,
+    terrain: &rfb_content::TerrainDefinition,
+) -> bool {
+    let aquatic = definition
+        .movement
+        .modes
+        .contains(&ActorMovementMode::Aquatic);
+    if aquatic && terrain.tags.iter().any(|tag| tag == "water") {
+        return true;
+    }
+    let Some(allocation) = &definition.allocation else {
+        return false;
+    };
+    allocation.wild_only
+        && allocation.habitats.iter().any(|habitat| {
+            habitat_tag(*habitat)
+                .is_none_or(|required| terrain.tags.iter().any(|tag| tag == required))
+        })
+}
+
 fn escort_alignment_is_compatible(leader: &ActorDefinition, escort: &ActorDefinition) -> bool {
     let leader_good = leader.tags.iter().any(|tag| tag == "good");
     let leader_evil = leader.tags.iter().any(|tag| tag == "evil");
@@ -202,6 +240,205 @@ fn generated_line_of_effect(
 }
 
 impl Game {
+    fn select_surface_allocated_monster(
+        &mut self,
+        level: u16,
+        terrain: &rfb_content::TerrainDefinition,
+        target_floor_kind_ids: &[String],
+    ) -> Option<String> {
+        let mut candidates = self
+            .content
+            .actor_definitions()
+            .filter(|definition| {
+                let Some(allocation) = &definition.allocation else {
+                    return false;
+                };
+                definition.role == ActorRole::Monster
+                    && !actor_is_guardian(definition)
+                    && definition.level <= u32::from(level)
+                    && (allocation.max_depth == 0 || allocation.max_depth >= level)
+                    && (!actor_is_unique(definition)
+                        || (self.unique_actor_kind_is_available(&definition.id)
+                            && !target_floor_kind_ids
+                                .iter()
+                                .any(|kind_id| kind_id == &definition.id)))
+                    && actor_matches_surface_habitat(definition, terrain)
+                    && actor_can_cross_terrain(definition, terrain)
+            })
+            .map(|definition| {
+                let allocation = definition
+                    .allocation
+                    .as_ref()
+                    .expect("surface candidate must retain allocation metadata");
+                OriginalAllocationCandidate {
+                    kind_id: definition.id.clone(),
+                    level: definition.level,
+                    legacy_index: allocation.legacy_index,
+                    weight: 100 / allocation.rarity,
+                }
+            })
+            .filter(|candidate| candidate.weight > 0)
+            .collect::<Vec<_>>();
+        candidates.sort_by_key(|candidate| (candidate.level, candidate.legacy_index));
+        let total = candidates
+            .iter()
+            .map(|candidate| u64::from(candidate.weight))
+            .sum::<u64>();
+        if total == 0 {
+            return None;
+        }
+        let mut roll = self.rng.bounded(total);
+        for candidate in candidates {
+            if roll < u64::from(candidate.weight) {
+                return Some(candidate.kind_id);
+            }
+            roll -= u64::from(candidate.weight);
+        }
+        None
+    }
+
+    pub(super) fn initialize_surface_monsters(&mut self) {
+        let Some(allocation) = self
+            .content
+            .world(&self.world_id)
+            .and_then(|world| world.surface_actor_allocation)
+        else {
+            return;
+        };
+        let mut occupied = self
+            .entities
+            .iter()
+            .map(|entity| entity.position)
+            .chain(std::iter::once(self.player.position))
+            .collect::<BTreeSet<_>>();
+        let mut target_floor_kind_ids = self
+            .entities
+            .iter()
+            .map(|entity| entity.kind_id.clone())
+            .collect::<Vec<_>>();
+        let terrain = self.terrain.clone();
+        let group_policy = GlobalMonsterAllocationDefinition {
+            preferred_glyphs: Vec::new(),
+            special_div: 64,
+            ambient_chance_one_in: 1,
+        };
+        for ordinal in 0..allocation.rolls {
+            let mut positions = (1..self.height.saturating_sub(1))
+                .flat_map(|y| {
+                    (1..self.width.saturating_sub(1)).map(move |x| Position {
+                        x: i32::from(x),
+                        y: i32::from(y),
+                    })
+                })
+                .filter(|position| {
+                    !occupied.contains(position)
+                        && rfb_distance(*position, self.player.position) > 10
+                        && terrain_at_generated_position(
+                            &self.content,
+                            &terrain,
+                            self.width,
+                            self.height,
+                            *position,
+                        )
+                        .is_some_and(|tile| tile.tags.iter().any(|tag| tag == "surface"))
+                })
+                .collect::<Vec<_>>();
+            positions.sort_by_key(|position| (position.y, position.x));
+            if positions.is_empty() {
+                break;
+            }
+            let position = positions[usize::try_from(
+                self.rng
+                    .bounded(u64::try_from(positions.len()).unwrap_or(u64::MAX)),
+            )
+            .unwrap_or(0)];
+            let Some(required_terrain) = terrain_at_generated_position(
+                &self.content,
+                &terrain,
+                self.width,
+                self.height,
+                position,
+            )
+            .cloned() else {
+                continue;
+            };
+            let Some(kind_id) = self.select_surface_allocated_monster(
+                allocation.level,
+                &required_terrain,
+                &target_floor_kind_ids,
+            ) else {
+                continue;
+            };
+            occupied.insert(position);
+            let members = self.plan_original_group(
+                &group_policy,
+                &kind_id,
+                position,
+                allocation.level,
+                &terrain,
+                self.width,
+                self.height,
+                &mut occupied,
+            );
+            let definition = self
+                .content
+                .actor(&kind_id)
+                .expect("surface actor definition must remain available")
+                .clone();
+            let pack_behavior = (!members.is_empty()).then(|| {
+                self.original_pack_behavior(
+                    &definition,
+                    members
+                        .iter()
+                        .any(|member| member.role == OriginalGroupRole::Escort),
+                    members.len() + 1,
+                )
+            });
+            let leader_id = format!("{}.surface.{}", self.current_floor_id, ordinal + 1);
+            let pack_id = format!("{leader_id}.pack");
+            let mut leader = spawn_actor_from_definition(
+                &mut self.rng,
+                &definition,
+                &leader_id,
+                position,
+                INITIAL_MONSTER_ENERGY_NEED,
+                actor_starts_alerted(&definition),
+            );
+            if let Some(behavior) = pack_behavior {
+                leader.pack = Some(MonsterPackIdentity {
+                    id: pack_id.clone(),
+                    leader_id: leader_id.clone(),
+                    role: MonsterPackRoleDto::Leader,
+                    behavior,
+                });
+            }
+            target_floor_kind_ids.push(kind_id);
+            self.entities.push(leader);
+            for (member_ordinal, member) in members.into_iter().enumerate() {
+                let member_definition = self
+                    .content
+                    .actor(&member.kind_id)
+                    .expect("surface companion definition must remain available")
+                    .clone();
+                let mut actor = spawn_actor_from_definition(
+                    &mut self.rng,
+                    &member_definition,
+                    &format!("{leader_id}.companion.{}", member_ordinal + 1),
+                    member.position,
+                    INITIAL_MONSTER_ENERGY_NEED,
+                    actor_starts_alerted(&member_definition),
+                );
+                actor.pack = Some(MonsterPackIdentity {
+                    id: pack_id.clone(),
+                    leader_id: leader_id.clone(),
+                    role: MonsterPackRoleDto::Member,
+                    behavior: pack_behavior.expect("surface pack must retain behavior"),
+                });
+                self.entities.push(actor);
+            }
+        }
+    }
+
     pub(super) fn unique_actor_kind_is_available(&self, kind_id: &str) -> bool {
         if self.defeated_unique_actor_kind_ids.contains(kind_id)
             || self

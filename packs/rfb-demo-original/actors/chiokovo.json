@@ -11,6 +11,7 @@
   "maxHp": 36,
   "hitPointDice": { "dice": 8, "sides": 8 },
   "speed": 110,
+  "rideable": true,
   "attack": 2,
   "defense": 3,
   "damageDice": 1,

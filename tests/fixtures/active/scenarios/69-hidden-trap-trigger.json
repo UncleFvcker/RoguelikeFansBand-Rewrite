@@ -205,49 +205,7 @@
         "dungeonId": "demo.dungeon.echo-depths",
         "floorId": "demo.floor.echo-depth-1"
       },
-      "entityCount": 4,
-      "entities": [
-        {
-          "id": "demo.floor.echo-depth-1.encounter.1",
-          "position": {
-            "x": 15,
-            "y": 11
-          },
-          "hp": 3,
-          "speed": 110,
-          "energyNeed": 100
-        },
-        {
-          "id": "demo.floor.echo-depth-1.nest.1",
-          "position": {
-            "x": 14,
-            "y": 14
-          },
-          "hp": 3,
-          "speed": 110,
-          "energyNeed": 100
-        },
-        {
-          "id": "demo.floor.echo-depth-1.nest.2",
-          "position": {
-            "x": 16,
-            "y": 11
-          },
-          "hp": 3,
-          "speed": 110,
-          "energyNeed": 100
-        },
-        {
-          "id": "demo.floor.echo-depth-1.nest.3",
-          "position": {
-            "x": 18,
-            "y": 15
-          },
-          "hp": 3,
-          "speed": 110,
-          "energyNeed": 100
-        }
-      ],
+      "entityCount": 0,
       "groundItemCount": 1,
       "nextItemInstanceSerial": 3,
       "nextGoldPileSerial": 1,
@@ -315,7 +273,7 @@
           "y": 5
         }
       ],
-      "stateHash": "06f0fa3781e7e7f78ea3192739fc4f6a713660c1e3230f642f19b46577b7a1e6"
+      "stateHash": "95d204e86c9edae4c7e8e18bbbd0636402a62557e5979bcac795cd1592282d37"
     },
     "events": [
       {
@@ -1972,6 +1930,6 @@
         "y": 5
       }
     ],
-    "saveRoundTripStateHash": "06f0fa3781e7e7f78ea3192739fc4f6a713660c1e3230f642f19b46577b7a1e6"
+    "saveRoundTripStateHash": "95d204e86c9edae4c7e8e18bbbd0636402a62557e5979bcac795cd1592282d37"
   }
 }

@@ -3615,6 +3615,7 @@
       "type": "string",
       "enum": [
         "regeneration",
+        "see-invisible",
         "vampiric",
         "sustain-strength",
         "sustain-intelligence",
@@ -3966,6 +3967,22 @@
             "type": {
               "type": "string",
               "const": "move"
+            }
+          },
+          "required": [
+            "type",
+            "direction"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "direction": {
+              "$ref": "#/$defs/Direction"
+            },
+            "type": {
+              "type": "string",
+              "const": "ride"
             }
           },
           "required": [
@@ -6522,6 +6539,12 @@
           "items": {
             "$ref": "#/$defs/ResourcePoolDto"
           }
+        },
+        "ridingActorId": {
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "speed": {
           "type": "integer",

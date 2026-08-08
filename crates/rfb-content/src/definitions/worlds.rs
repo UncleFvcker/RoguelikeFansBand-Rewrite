@@ -20,6 +20,8 @@ pub struct TerrainDefinition {
     pub walkable: bool,
     pub blocks_sight: bool,
     #[serde(default)]
+    pub allows_wall_passage: bool,
+    #[serde(default)]
     pub open_to_terrain_id: Option<String>,
     #[serde(default)]
     pub open_check_difficulty: Option<i32>,
@@ -130,12 +132,24 @@ pub struct WorldDefinition {
     pub actors: Vec<ActorSpawn>,
     pub items: Vec<ItemSpawn>,
     #[serde(default)]
+    pub surface_actor_allocation: Option<SurfaceActorAllocationDefinition>,
+    #[serde(default)]
     pub dungeons: Vec<DungeonDefinition>,
     #[serde(default)]
     pub campaign: Option<CampaignDefinition>,
     #[serde(default)]
     pub tasks: Vec<TaskDefinition>,
     pub procedural_floors: Vec<ProceduralFloorDefinition>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct SurfaceActorAllocationDefinition {
+    #[cfg_attr(feature = "schemas", schemars(range(min = 1, max = 64)))]
+    pub rolls: u16,
+    #[cfg_attr(feature = "schemas", schemars(range(min = 1, max = 100)))]
+    pub level: u16,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

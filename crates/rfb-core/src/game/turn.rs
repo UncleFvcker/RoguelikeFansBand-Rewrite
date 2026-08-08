@@ -190,6 +190,9 @@ impl Game {
                 let target_kind_id = self.entities[index].kind_id.clone();
                 let removed_id = self.entities[index].id.clone();
                 self.entities.remove(index);
+                if self.riding_actor_id.as_deref() == Some(removed_id.as_str()) {
+                    self.riding_actor_id = None;
+                }
                 changed.insert(position);
                 removed_entities.push(removed_id.clone());
                 events.push(DomainEvent::SummonExpired {
@@ -308,6 +311,9 @@ impl Game {
             else {
                 continue;
             };
+            if self.riding_actor_id.as_deref() == Some(entity_id.as_str()) {
+                continue;
+            }
             let definition = self
                 .content
                 .actor(&self.entities[index].kind_id)
