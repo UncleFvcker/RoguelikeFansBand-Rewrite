@@ -375,6 +375,7 @@ fn valid_melee_effect(effect: &MeleeBlowEffectDefinition) -> bool {
         | MeleeBlowEffectDefinition::Paralysis { chance_percent }
         | MeleeBlowEffectDefinition::Slow { chance_percent }
         | MeleeBlowEffectDefinition::Terrify { chance_percent }
+        | MeleeBlowEffectDefinition::Disenchant { chance_percent }
         | MeleeBlowEffectDefinition::EatGold { chance_percent }
         | MeleeBlowEffectDefinition::EatItem { chance_percent }
         | MeleeBlowEffectDefinition::EatFood { chance_percent }

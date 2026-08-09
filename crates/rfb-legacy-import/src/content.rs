@@ -5781,6 +5781,9 @@ fn melee_effect_json(effect: &LegacyBlowEffect) -> Option<serde_json::Value> {
             })
         }
         "TERRIFY" => serde_json::json!({ "type": "terrify" }),
+        "DISENCHANT" if effect.dice.is_none() => {
+            serde_json::json!({ "type": "disenchant" })
+        }
         "EAT_GOLD" => serde_json::json!({ "type": "eat-gold" }),
         "EAT_ITEM" => serde_json::json!({ "type": "eat-item" }),
         "EAT_FOOD" => serde_json::json!({ "type": "eat-food" }),
@@ -9699,10 +9702,22 @@ mod tests {
         assert_eq!(effect["damageSides"], 0);
         assert_eq!(effect["damageType"], "physical");
         assert_eq!(effect["armorMitigated"], true);
+    }
 
-        let unsupported =
-            parse_blow("GAZE:DISENCHANT", 1).expect("dice-less DISENCHANT should parse");
-        assert!(melee_effect_json(&unsupported.effects[0]).is_none());
+    #[test]
+    fn dice_less_disenchant_maps_to_narrow_melee_effect() {
+        let blow = parse_blow("GAZE:DISENCHANT", 1).expect("dice-less DISENCHANT should parse");
+        let effect = melee_effect_json(&blow.effects[0]).expect("DISENCHANT should map");
+
+        assert_eq!(effect, serde_json::json!({ "type": "disenchant" }));
+
+        let damaging =
+            parse_blow("GAZE:DISENCHANT(1d4)", 1).expect("damaging DISENCHANT should parse");
+        let effect = melee_effect_json(&damaging.effects[0]).expect("damage should stay mapped");
+        assert_eq!(effect["type"], "damage");
+        assert_eq!(effect["damageDice"], 1);
+        assert_eq!(effect["damageSides"], 4);
+        assert_eq!(effect["damageType"], "disenchant");
     }
 
     #[test]

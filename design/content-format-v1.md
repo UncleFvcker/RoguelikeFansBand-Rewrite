@@ -276,6 +276,8 @@ contract-v196 以 1.191.0 为 actor 增加默认 false 的 `friendly`，表示�
 
 contract-v197 以 1.193.0 收紧既有怪物近战内容：只有 `armorMitigated: true` 的 physical `damage` effect 可以使用 `damageDice: 0, damageSides: 0`，用于权威无骰 `HURT`；其他 damage 和 poison 仍要求正骰。`S_LOUSE` 不增加内容类型，继续使用既有 `summon-category`，由 `louse` actor tag 与最大等级约束候选。
 
+contract-v198 以 1.194.0 增加窄怪物近战 `disenchant { chancePercent? }`。它不携带伤害骰，只复用玩家有效 Disenchant 抗性、已建模正面状态移除和已装备物品的 `enchantments`；带骰 `DISENCHANT` 仍是普通 damage effect。当前格式不为原版 pval、逐件 `OF_RES_DISEN` 或怪物装备另建影子字段。
+
 contract-v83 以 1.75.0 增加 `detect` 能力效果、Echo Pulse 与 Echo Sight；类别/半径、FOV 与隐藏投影筛选、稳定结果顺序、瞬时/持久知识边界由核心定义，持久结果复用 `revealedTerrain`，state hash 升至 Schema v36。
 
 contract-v84 以 1.76.0 增加 `transform-terrain` 能力效果、Echo Delving 与 Echo Rampart；来源/目标 terrain 集、范围、FOV/line of effect、占用格、连接/边界保护和原子写入由核心定义，地形继续复用既有 save/state hash 字段。

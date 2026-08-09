@@ -1,6 +1,6 @@
 # 待实现内容清单
 
-状态：基于 contract-v1–v197、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
+状态：基于 contract-v1–v198、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
 
 本文件只记录已经在现有设计或原版对比中明确出现、但尚未实现的内容。长期设想仍保留在 [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)，这里用于跟踪可以实际排入后续 contract 的缺口。
 
@@ -57,6 +57,9 @@ contract-v197 直接接入其中 7 条：高阶地狱兽、黄色果冻、佐格
 `S_LOUSE` 复用既有类别召唤，唯一候选为巨型白虱。浅层正式 actor 增至
 165 条、严格同步增至 133 条；只剩 Silver jelly、Disenchanter eye 和
 Dark elf 3 条。
+contract-v198 将无骰 `DISENCHANT` 收窄为已有抗性、正面状态移除和装备
+强化削减的近战 effect，接入解除附魔之眼及其 3 点吸取法力；浅层正式 actor
+增至 166 条、严格同步增至 134 条。只剩 Silver jelly 和 Dark elf 2 条。
 
 荒野 W0 已导入 `master:w_info.txt` 的 `99x66` normal 世界图、15 类地形、
 危险等级、道路和起点，并只把现有 Outpost/Warrens 绑定为正式地点。尚未实现

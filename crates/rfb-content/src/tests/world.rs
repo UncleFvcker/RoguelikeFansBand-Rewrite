@@ -92,6 +92,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
                 2,
                 40,
             ),
+            ("demo.actor.disenchanter-eye", 104, 2, 40),
             ("demo.actor.duck", 1241, 1, 25),
             ("demo.actor.eagle", 172, 2, 40),
             ("demo.actor.ewok", 92, 2, 40),

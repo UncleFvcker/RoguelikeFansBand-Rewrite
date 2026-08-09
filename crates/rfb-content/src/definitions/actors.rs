@@ -200,6 +200,10 @@ pub enum MeleeBlowEffectDefinition {
         #[serde(default)]
         chance_percent: Option<u8>,
     },
+    Disenchant {
+        #[serde(default)]
+        chance_percent: Option<u8>,
+    },
     EatGold {
         #[serde(default)]
         chance_percent: Option<u8>,

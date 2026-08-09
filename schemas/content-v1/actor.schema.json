@@ -747,6 +747,29 @@
               ]
             },
             "type": {
+              "const": "disenchant",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "chancePercent": {
+              "default": null,
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "type": {
               "const": "eat-gold",
               "type": "string"
             }

@@ -810,6 +810,12 @@
       "id": "duck",
       "tags": ["bird", "duck", "warrens"],
       "omittedFlags": []
+    },
+    {
+      "sourceIndex": 104,
+      "id": "disenchanter-eye",
+      "tags": ["eye", "warrens"],
+      "omittedFlags": ["ATTR_ANY", "ATTR_MULTI", "POS_TELEPATHY"]
     }
   ]
 }
