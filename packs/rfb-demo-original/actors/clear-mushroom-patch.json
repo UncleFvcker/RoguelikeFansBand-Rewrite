@@ -1,0 +1,62 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 184,
+    "maxDepth": 40,
+    "multiplies": true,
+    "rarity": 2
+  },
+  "attack": 2,
+  "damageDice": 1,
+  "damageSides": 1,
+  "damageType": "physical",
+  "defense": 0,
+  "descriptionKey": "actor-demo-clear-mushroom-patch-description",
+  "experienceValue": 3,
+  "formatVersion": 1,
+  "glyph": ",",
+  "hitPointDice": {
+    "dice": 1,
+    "sides": 1
+  },
+  "id": "demo.actor.clear-mushroom-patch",
+  "level": 10,
+  "maxHp": 1,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 1,
+            "damageSides": 1,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.spore",
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "modes": [
+      "swim"
+    ],
+    "neverMoves": true
+  },
+  "nameKey": "actor-demo-clear-mushroom-patch-name",
+  "role": "monster",
+  "speed": 115,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "invisible",
+    "legacy-import",
+    "mushroom",
+    "warrens"
+  ]
+}

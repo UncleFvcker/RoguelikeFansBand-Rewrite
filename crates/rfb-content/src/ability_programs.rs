@@ -219,6 +219,7 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::TeleportAway { .. }
                     | AbilityEffectDefinition::DrainResource { .. }
                     | AbilityEffectDefinition::Amnesia
+                    | AbilityEffectDefinition::DarkenRoom
                     | AbilityEffectDefinition::Teleport
                     | AbilityEffectDefinition::TransformTerrain { .. }
                     | AbilityEffectDefinition::ApplyStatus { .. }
@@ -284,6 +285,7 @@ fn resolve_source_ability_program(
 fn ability_program_input_matches_target(
     input: AbilityProgramInputDefinition,
     target: &AbilityTargetDefinition,
+    effect: &AbilityEffectDefinition,
 ) -> bool {
     match input {
         AbilityProgramInputDefinition::SelfTarget => {
@@ -298,7 +300,8 @@ fn ability_program_input_matches_target(
                     .contains(&AbilityTargetModeDefinition::SelfTarget)
                 && !target.modes.contains(&AbilityTargetModeDefinition::Item)
                 && (1..=64).contains(&target.range)
-                && target.requires_line_of_effect
+                && (target.requires_line_of_effect
+                    || matches!(effect, AbilityEffectDefinition::DarkenRoom))
         }
         AbilityProgramInputDefinition::Item => {
             target.modes.as_slice() == [AbilityTargetModeDefinition::Item]
@@ -316,7 +319,7 @@ impl SourceAbilityDefinition {
     ) -> Result<AbilityDefinition, ContentError> {
         let player = player_bindings.get(&self.id).cloned();
         let program = resolve_source_ability_program(&self.id, self.ability_program_id, programs)?;
-        if !ability_program_input_matches_target(program.input, &self.target) {
+        if !ability_program_input_matches_target(program.input, &self.target, &program.effect) {
             return Err(ContentError::InvalidAbility(self.id));
         }
         Ok(AbilityDefinition {

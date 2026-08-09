@@ -16,6 +16,7 @@ pub(super) fn melee_effect_chance(effect: &MeleeBlowEffectDefinition) -> Option<
         | MeleeBlowEffectDefinition::Slow { chance_percent }
         | MeleeBlowEffectDefinition::Stun { chance_percent, .. }
         | MeleeBlowEffectDefinition::Terrify { chance_percent }
+        | MeleeBlowEffectDefinition::Disenchant { chance_percent }
         | MeleeBlowEffectDefinition::EatGold { chance_percent }
         | MeleeBlowEffectDefinition::EatItem { chance_percent }
         | MeleeBlowEffectDefinition::EatFood { chance_percent }
@@ -59,6 +60,34 @@ pub(super) fn melee_terrify_duration(definition: &rfb_content::ActorDefinition) 
     i32::try_from(definition.level)
         .unwrap_or(i32::MAX)
         .saturating_add(i32::from(definition.tags.iter().any(|tag| tag == "unique")) * 3)
+}
+
+fn disenchantable_player_status(kind_id: &str) -> bool {
+    matches!(
+        kind_id,
+        STATUS_HASTE
+            | STATUS_VENGEANCE
+            | STATUS_PROTECTION_FROM_EVIL
+            | STATUS_THERMAL_RESISTANCE
+            | STATUS_BASIC_RESISTANCE
+            | "rfb.status.berserk"
+            | "rfb.status.blessed"
+            | "rfb.status.hero"
+            | "rfb.status.necromantic-resistance"
+            | "rfb.status.poetic-inspiration"
+            | "rfb.status.poison-branding"
+            | "rfb.status.stone-skin"
+            | "rfb.status.vampiric-transformation"
+            | "rfb.status.wraithform"
+    )
+}
+
+fn reduce_disenchanted_component(rng: &mut RfbRng, value: u16) -> u16 {
+    let mut value = value.saturating_sub(1);
+    if value > 5 && rng.bounded(100) < 20 {
+        value -= 1;
+    }
+    value
 }
 
 impl Game {
@@ -406,7 +435,8 @@ impl Game {
                         ))
                     }
                     MeleeBlowEffectDefinition::DrainAttributes { .. }
-                    | MeleeBlowEffectDefinition::DrainResource { .. } => None,
+                    | MeleeBlowEffectDefinition::DrainResource { .. }
+                    | MeleeBlowEffectDefinition::Disenchant { .. } => None,
                     MeleeBlowEffectDefinition::Bleeding {
                         duration_dice,
                         duration_sides,
@@ -767,6 +797,91 @@ impl Game {
         });
     }
 
+    fn resolve_player_disenchantment(&mut self) {
+        let remove_status = self.rng.bounded(5) != 0;
+        let resistance = self
+            .effective_player_resistances()
+            .level(DamageType::Disenchant)
+            .reduction_percent()
+            .clamp(0, 100);
+        if resistance == 100
+            || (resistance > 0
+                && self.rng.bounded(100)
+                    < u64::try_from(resistance).expect("clamped resistance fits"))
+        {
+            return;
+        }
+
+        if remove_status {
+            let mut candidates = self
+                .player
+                .statuses
+                .iter()
+                .map(|status| status.kind_id.clone())
+                .filter(|kind_id| disenchantable_player_status(kind_id))
+                .collect::<Vec<_>>();
+            candidates.sort();
+            candidates.dedup();
+            if candidates.is_empty() {
+                return;
+            }
+            let choice = usize::try_from(
+                self.rng
+                    .bounded(u64::try_from(candidates.len()).expect("candidate count fits")),
+            )
+            .expect("bounded draw fits usize");
+            apply_status_removal(
+                &mut self.player.statuses,
+                StatusRemovalRequest::new(&candidates[choice]),
+            );
+            return;
+        }
+
+        let mut candidates = self
+            .items
+            .iter()
+            .enumerate()
+            .filter_map(|(item_index, item)| {
+                let ItemLocation::Equipped { slot_id } = &item.location else {
+                    return None;
+                };
+                self.content.item(&item.kind_id).and_then(|definition| {
+                    definition
+                        .tags
+                        .iter()
+                        .any(|tag| matches!(tag.as_str(), "weapon" | "armor" | "ammunition"))
+                        .then(|| (slot_id.clone(), item.id.clone(), item_index))
+                })
+            })
+            .collect::<Vec<_>>();
+        candidates.sort();
+        if candidates.is_empty() {
+            return;
+        }
+        let choice = usize::try_from(
+            self.rng
+                .bounded(u64::try_from(candidates.len()).expect("candidate count fits")),
+        )
+        .expect("bounded draw fits usize");
+        let item_index = candidates[choice].2;
+        let enchantments = self.items[item_index].enchantments;
+        if enchantments.is_empty() {
+            return;
+        }
+        let is_artifact = self
+            .content
+            .item(&self.items[item_index].kind_id)
+            .is_some_and(|definition| definition.tags.iter().any(|tag| tag == "artifact"));
+        if is_artifact && self.rng.bounded(100) < 71 {
+            return;
+        }
+        self.items[item_index].enchantments = ItemEnchantmentsDto {
+            to_hit: reduce_disenchanted_component(&mut self.rng, enchantments.to_hit),
+            to_damage: reduce_disenchanted_component(&mut self.rng, enchantments.to_damage),
+            to_armor: reduce_disenchanted_component(&mut self.rng, enchantments.to_armor),
+        };
+    }
+
     pub(super) fn resolve_monster_melee(
         &mut self,
         index: usize,
@@ -1017,6 +1132,10 @@ impl Game {
                             melee_terrify_duration(&definition),
                             &kind_id,
                         );
+                        None
+                    }
+                    MeleeBlowEffectDefinition::Disenchant { .. } => {
+                        self.resolve_player_disenchantment();
                         None
                     }
                     MeleeBlowEffectDefinition::EatGold { .. } => {

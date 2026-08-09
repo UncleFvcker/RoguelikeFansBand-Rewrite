@@ -1,0 +1,87 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 195,
+    "maxDepth": 40,
+    "rarity": 3
+  },
+  "attack": 2,
+  "damageDice": 2,
+  "damageSides": 5,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [
+      {
+        "guaranteedForUnique": true,
+        "percent": 90
+      }
+    ],
+    "countDice": [
+      {
+        "dice": 1,
+        "sides": 2
+      }
+    ],
+    "kind": "gold"
+  },
+  "defense": 3,
+  "descriptionKey": "actor-demo-creeping-gold-coins-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 32,
+  "formatVersion": 1,
+  "glyph": "$",
+  "hitPointDice": {
+    "dice": 18,
+    "sides": 8
+  },
+  "id": "demo.actor.creeping-gold-coins",
+  "level": 10,
+  "maxHp": 81,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 2,
+            "damageSides": 5,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "damageDice": 3,
+            "damageSides": 5,
+            "type": "poison"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      }
+    ]
+  },
+  "nameKey": "actor-demo-creeping-gold-coins-name",
+  "resistances": {
+    "poison": "immune"
+  },
+  "role": "monster",
+  "speed": 100,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "animal",
+    "coin",
+    "legacy-import",
+    "mimic",
+    "warrens"
+  ]
+}

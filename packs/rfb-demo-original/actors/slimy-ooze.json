@@ -67,6 +67,7 @@
     "rfb.status.sleep"
   ],
   "tags": [
+    "legacy-import",
     "ooze",
     "warrens"
   ]

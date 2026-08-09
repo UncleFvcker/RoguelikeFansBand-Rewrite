@@ -75,6 +75,7 @@
   "speed": 100,
   "tags": [
     "animal",
+    "legacy-import",
     "reptile",
     "warrens"
   ]

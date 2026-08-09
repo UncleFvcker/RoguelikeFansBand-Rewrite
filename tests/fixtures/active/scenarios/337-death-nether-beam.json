@@ -3203,7 +3203,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "a8a56977c4283e0d50ed0f27d46c4ce5f5aa192f67f271eb6144501b63a4d897"
+      "stateHash": "86f057068bbadd21bdebdd5b99e9c95786effb2e4db49b1ea4cea14338cd9508"
     },
     "events": [
       {
@@ -3646,6 +3646,6 @@
       "demo.monster.ember-mote.1",
       "demo.z-entrance-guardian.resonance-descent.1"
     ],
-    "saveRoundTripStateHash": "a8a56977c4283e0d50ed0f27d46c4ce5f5aa192f67f271eb6144501b63a4d897"
+    "saveRoundTripStateHash": "86f057068bbadd21bdebdd5b99e9c95786effb2e4db49b1ea4cea14338cd9508"
   }
 }

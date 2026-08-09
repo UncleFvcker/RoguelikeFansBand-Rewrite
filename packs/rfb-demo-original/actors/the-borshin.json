@@ -1,0 +1,89 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 177,
+    "maxDepth": 999,
+    "rarity": 2
+  },
+  "attack": 2,
+  "damageDice": 2,
+  "damageSides": 13,
+  "damageType": "physical",
+  "defense": 3,
+  "descriptionKey": "actor-demo-the-borshin-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 45,
+  "formatVersion": 1,
+  "glyph": "g",
+  "hitPointDice": {
+    "dice": 10,
+    "forceMaximum": true,
+    "sides": 20
+  },
+  "id": "demo.actor.the-borshin",
+  "level": 10,
+  "maxHp": 200,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 2,
+            "damageSides": 13,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 2,
+            "damageSides": 15,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.crush",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "type": "terrify"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      }
+    ]
+  },
+  "nameKey": "actor-demo-the-borshin-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "cold": "resistant",
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 110,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "legacy-import",
+    "unique",
+    "warrens"
+  ]
+}

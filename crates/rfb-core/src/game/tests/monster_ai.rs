@@ -224,6 +224,54 @@ fn monster_shriek_excludes_the_caster_and_aggravates_other_monsters() {
 }
 
 #[test]
+fn monster_darkness_clears_the_players_connected_room_glow() {
+    let mut game = Game::new(1);
+    clear_monsters(&mut game);
+    game.current_floor_id = "demo.floor.echo-depth-1".to_owned();
+    game.glow.fill(false);
+    for y in 2..=4 {
+        for x in 2..=4 {
+            let position = Position { x, y };
+            replace_terrain(&mut game, position, "demo.terrain.floor");
+            let index = game.index(position).expect("room cell should be in bounds");
+            game.glow[index] = true;
+        }
+    }
+    game.push_generated_actor(
+        "test.monster.dark-elf.1".to_owned(),
+        "demo.actor.dark-elf",
+        Position { x: 8, y: 3 },
+    );
+    let ability = game
+        .content
+        .ability("rfb-legacy.ability.darkness")
+        .expect("formal P15 content should contain Darkness")
+        .clone();
+    let plan = game
+        .monster_ability_plan(0, ability, 1)
+        .expect("Darkness should target the player room without line of effect");
+    let mut changed = BTreeSet::new();
+    let resolution = game.resolve_monster_ability_plan(
+        0,
+        "demo.actor.dark-elf",
+        &plan,
+        &mut Vec::new(),
+        &mut changed,
+        &mut Vec::new(),
+    );
+
+    assert_eq!(
+        resolution.effects,
+        vec![AbilityEffectResolutionDto::DarkenRoom {
+            effect_index: 0,
+            cleared_cells: 9,
+        }]
+    );
+    assert_eq!(changed.len(), 9);
+    assert!(game.glow.iter().all(|glow| !*glow));
+}
+
+#[test]
 fn monster_casting_clean_shot_filter_blocks_allies_and_walls() {
     for blocked_by_actor in [true, false] {
         let mut game = Game::new(1);

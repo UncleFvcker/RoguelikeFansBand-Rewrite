@@ -1002,7 +1002,8 @@ impl Game {
                     )
                 }
                 AbilityEffectDefinition::DrainResource { .. }
-                | AbilityEffectDefinition::Amnesia => {
+                | AbilityEffectDefinition::Amnesia
+                | AbilityEffectDefinition::DarkenRoom => {
                     // Summons carry no resource pools or map knowledge; both
                     // effects fizzle against them (documented v99 boundary).
                     AbilityEffectResolutionDto::Skipped {
@@ -1308,6 +1309,14 @@ impl Game {
                         }
                     }
                 }
+                AbilityEffectDefinition::DarkenRoom => {
+                    let positions = self.darken_room(self.player.position);
+                    changed.extend(positions.iter().copied());
+                    AbilityEffectResolutionDto::DarkenRoom {
+                        effect_index,
+                        cleared_cells: u32::try_from(positions.len()).unwrap_or(u32::MAX),
+                    }
+                }
                 AbilityEffectDefinition::ApplyStatus {
                     status_kind_id,
                     intensity,
@@ -1530,6 +1539,7 @@ impl Game {
             | AbilityEffectDefinition::TeleportAway { .. }
             | AbilityEffectDefinition::DrainResource { .. }
             | AbilityEffectDefinition::Amnesia
+            | AbilityEffectDefinition::DarkenRoom
             | AbilityEffectDefinition::ApplyStatus { .. }
             | AbilityEffectDefinition::RemoveStatus { .. }
             | AbilityEffectDefinition::Sequence { .. }
@@ -1690,6 +1700,7 @@ impl Game {
             | AbilityEffectDefinition::CurseDamage { .. }
             | AbilityEffectDefinition::DrainResource { .. }
             | AbilityEffectDefinition::Amnesia
+            | AbilityEffectDefinition::DarkenRoom
             | AbilityEffectDefinition::ApplyStatus { .. }
             | AbilityEffectDefinition::RemoveStatus { .. }
             | AbilityEffectDefinition::Sequence { .. } => {

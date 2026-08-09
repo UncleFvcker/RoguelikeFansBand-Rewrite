@@ -276,7 +276,109 @@
         "dungeonId": "demo.dungeon.resonance-descent",
         "floorId": "demo.floor.resonance-depth-7"
       },
-      "entityCount": 0,
+      "entityCount": 7,
+      "entities": [
+        {
+          "id": "demo.floor.resonance-depth-7.region.demo.region.resonance-gallery.encounter.1",
+          "position": {
+            "x": 5,
+            "y": 5
+          },
+          "hp": 6,
+          "speed": 110,
+          "energyNeed": 100,
+          "pack": {
+            "id": "demo.floor.resonance-depth-7.region.demo.region.resonance-gallery.pack.1",
+            "leaderId": "demo.floor.resonance-depth-7.region.demo.region.resonance-gallery.encounter.1",
+            "role": "leader",
+            "behavior": "seek"
+          }
+        },
+        {
+          "id": "demo.floor.resonance-depth-7.region.demo.region.resonance-gallery.encounter.1.escort.1",
+          "position": {
+            "x": 6,
+            "y": 6
+          },
+          "hp": 3,
+          "speed": 110,
+          "energyNeed": 100,
+          "pack": {
+            "id": "demo.floor.resonance-depth-7.region.demo.region.resonance-gallery.pack.1",
+            "leaderId": "demo.floor.resonance-depth-7.region.demo.region.resonance-gallery.encounter.1",
+            "role": "member",
+            "behavior": "guard-leader"
+          }
+        },
+        {
+          "id": "demo.floor.resonance-depth-7.region.demo.region.resonance-gallery.encounter.1.escort.2",
+          "position": {
+            "x": 4,
+            "y": 5
+          },
+          "hp": 3,
+          "speed": 110,
+          "energyNeed": 100,
+          "pack": {
+            "id": "demo.floor.resonance-depth-7.region.demo.region.resonance-gallery.pack.1",
+            "leaderId": "demo.floor.resonance-depth-7.region.demo.region.resonance-gallery.encounter.1",
+            "role": "member",
+            "behavior": "guard-leader"
+          }
+        },
+        {
+          "id": "demo.floor.resonance-depth-7.region.demo.region.resonance-gallery.encounter.1.escort.3",
+          "position": {
+            "x": 5,
+            "y": 4
+          },
+          "hp": 3,
+          "speed": 110,
+          "energyNeed": 10,
+          "pack": {
+            "id": "demo.floor.resonance-depth-7.region.demo.region.resonance-gallery.pack.1",
+            "leaderId": "demo.floor.resonance-depth-7.region.demo.region.resonance-gallery.encounter.1",
+            "role": "member",
+            "behavior": "guard-leader"
+          }
+        },
+        {
+          "id": "demo.floor.resonance-depth-7.region.demo.region.resonance-gallery.encounter.1.friend.1",
+          "position": {
+            "x": 6,
+            "y": 5
+          },
+          "hp": 6,
+          "speed": 110,
+          "energyNeed": 10,
+          "pack": {
+            "id": "demo.floor.resonance-depth-7.region.demo.region.resonance-gallery.pack.1",
+            "leaderId": "demo.floor.resonance-depth-7.region.demo.region.resonance-gallery.encounter.1",
+            "role": "member",
+            "behavior": "surround"
+          }
+        },
+        {
+          "id": "demo.floor.resonance-depth-7.region.demo.region.resonance-gallery.encounter.plain.1",
+          "position": {
+            "x": 5,
+            "y": 2
+          },
+          "hp": 3,
+          "speed": 110,
+          "energyNeed": 10
+        },
+        {
+          "id": "demo.floor.resonance-depth-7.region.demo.region.resonance-gallery.encounter.plain.2",
+          "position": {
+            "x": 4,
+            "y": 3
+          },
+          "hp": 3,
+          "speed": 110,
+          "energyNeed": 10
+        }
+      ],
       "groundItemCount": 2,
       "nextItemInstanceSerial": 13,
       "nextGoldPileSerial": 1,
@@ -338,7 +440,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "6c41d10b48b18b353d8851da8b45489382f380969e37d83e89e07398ac04e9d7"
+      "stateHash": "25061074d235eecdc7c44c09a9a3de577c6873db537db735a308cd6fc08c03e2"
     },
     "events": [
       {
@@ -11929,14 +12031,14 @@
       {
         "step": 15,
         "kind": "player-dead",
-        "stateHash": "6c41d10b48b18b353d8851da8b45489382f380969e37d83e89e07398ac04e9d7"
+        "stateHash": "25061074d235eecdc7c44c09a9a3de577c6873db537db735a308cd6fc08c03e2"
       },
       {
         "step": 16,
         "kind": "player-dead",
-        "stateHash": "6c41d10b48b18b353d8851da8b45489382f380969e37d83e89e07398ac04e9d7"
+        "stateHash": "25061074d235eecdc7c44c09a9a3de577c6873db537db735a308cd6fc08c03e2"
       }
     ],
-    "saveRoundTripStateHash": "6c41d10b48b18b353d8851da8b45489382f380969e37d83e89e07398ac04e9d7"
+    "saveRoundTripStateHash": "25061074d235eecdc7c44c09a9a3de577c6873db537db735a308cd6fc08c03e2"
   }
 }

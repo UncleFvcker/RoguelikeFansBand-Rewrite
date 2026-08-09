@@ -19,6 +19,32 @@ fn monster_effect_game(seed: u64, effect: MeleeBlowEffectDefinition) -> Game {
 }
 
 #[test]
+fn zero_dice_hurt_hits_without_dealing_damage() {
+    let mut game = monster_effect_game(
+        0,
+        MeleeBlowEffectDefinition::Damage {
+            chance_percent: None,
+            damage_dice: 0,
+            damage_sides: 0,
+            damage_type: rfb_content::ActorDamageType::Physical,
+            armor_mitigated: true,
+        },
+    );
+    let hp_before = game.player.hp;
+    let mut events = Vec::new();
+
+    game.resolve_monster_melee(0, &mut events, &mut BTreeSet::new())
+        .expect("zero-damage HURT should resolve");
+
+    assert_eq!(game.player.hp, hp_before);
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::MonsterMeleeHit { damage, .. }
+            if damage.requested == 0 && damage.applied == 0
+    )));
+}
+
+#[test]
 fn resource_drain_melee_heals_six_times_the_amount_actually_drained() {
     let mut game = monster_effect_game(
         0,
@@ -43,6 +69,95 @@ fn resource_drain_melee_heals_six_times_the_amount_actually_drained() {
 
     assert_eq!(game.resources["test.resource.mana"].current, 0);
     assert_eq!(game.entities[0].hp, 7);
+}
+
+#[test]
+fn disenchant_melee_removes_positive_status_or_reduces_equipment_enchantments() {
+    let effect = MeleeBlowEffectDefinition::Disenchant {
+        chance_percent: None,
+    };
+    let mut status_base = monster_effect_game(0, effect.clone());
+    status_base
+        .player
+        .statuses
+        .push(monster_combat::melee_status(STATUS_HASTE, 20, "test.setup").status);
+    status_base
+        .player
+        .statuses
+        .push(monster_combat::melee_status(STATUS_POISON, 20, "test.setup").status);
+    let (status_seed, status_game) = (0..100)
+        .find_map(|seed| {
+            let mut game = status_base.clone();
+            game.rng = RfbRng::seeded(seed);
+            game.resolve_monster_melee(0, &mut Vec::new(), &mut BTreeSet::new())
+                .expect("disenchanting melee should resolve");
+            (!game
+                .player
+                .statuses
+                .iter()
+                .any(|status| status.kind_id == STATUS_HASTE))
+            .then_some((seed, game))
+        })
+        .expect("a deterministic seed should select the positive-status branch");
+    assert!(
+        status_game
+            .player
+            .statuses
+            .iter()
+            .any(|status| status.kind_id == STATUS_POISON)
+    );
+    assert_eq!(status_game.player.hp, status_base.player.hp);
+
+    let mut immune = status_base.clone();
+    immune.player.resistances.set(
+        DamageType::Disenchant,
+        crate::resistance::ResistanceLevel::Immune,
+    );
+    immune.rng = RfbRng::seeded(status_seed);
+    immune
+        .resolve_monster_melee(0, &mut Vec::new(), &mut BTreeSet::new())
+        .expect("resisted disenchanting melee should resolve");
+    assert!(
+        immune
+            .player
+            .statuses
+            .iter()
+            .any(|status| status.kind_id == STATUS_HASTE)
+    );
+
+    let mut equipment_base = monster_effect_game(0, effect);
+    equipment_base.items.clear();
+    give_inventory_item(
+        &mut equipment_base,
+        "test.enchanted-dagger",
+        "demo.item.dagger",
+    );
+    equipment_base.items[0].location = ItemLocation::Equipped {
+        slot_id: "weapon".to_owned(),
+    };
+    equipment_base.items[0].enchantments = ItemEnchantmentsDto {
+        to_hit: 2,
+        to_damage: 3,
+        to_armor: 0,
+    };
+    let equipment_game = (0..100)
+        .find_map(|seed| {
+            let mut game = equipment_base.clone();
+            game.rng = RfbRng::seeded(seed);
+            game.resolve_monster_melee(0, &mut Vec::new(), &mut BTreeSet::new())
+                .expect("disenchanting melee should resolve");
+            (game.items[0].enchantments != equipment_base.items[0].enchantments).then_some(game)
+        })
+        .expect("a deterministic seed should select the equipment branch");
+    assert_eq!(
+        equipment_game.items[0].enchantments,
+        ItemEnchantmentsDto {
+            to_hit: 1,
+            to_damage: 2,
+            to_armor: 0,
+        }
+    );
+    assert_eq!(equipment_game.player.hp, equipment_base.player.hp);
 }
 
 #[test]

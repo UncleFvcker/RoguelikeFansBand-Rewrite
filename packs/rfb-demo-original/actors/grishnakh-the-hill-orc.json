@@ -1,0 +1,131 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "escort": true,
+    "habitats": [
+      "all"
+    ],
+    "legacyIndex": 186,
+    "maxDepth": 999,
+    "rarity": 3
+  },
+  "attack": 2,
+  "damageDice": 1,
+  "damageSides": 12,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 1,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.warrens",
+    "kind": "items",
+    "minimumQuality": "fine",
+    "themeChancePercent": 50,
+    "themeTableId": "demo.loot-table.large-kobold"
+  },
+  "defense": 2,
+  "descriptionKey": "actor-demo-grishnakh-the-hill-orc-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 160,
+  "formatVersion": 1,
+  "glyph": "o",
+  "hitPointDice": {
+    "dice": 23,
+    "forceMaximum": true,
+    "sides": 10
+  },
+  "id": "demo.actor.grishnakh-the-hill-orc",
+  "level": 10,
+  "maxHp": 230,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 12,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "chancePercent": 10,
+            "durationDice": 1,
+            "durationSides": 4,
+            "type": "stun"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 10,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 12,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 10,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "nameKey": "actor-demo-grishnakh-the-hill-orc-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 4,
+    "skeletonItemKindId": "demo.item.skeleton-remains",
+    "skeletonWeight": 1
+  },
+  "resistances": {
+    "dark": "resistant",
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 110,
+  "tags": [
+    "evil",
+    "humanoid",
+    "legacy-import",
+    "orc",
+    "unique",
+    "warrens"
+  ]
+}

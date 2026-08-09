@@ -919,6 +919,31 @@
         {
           "type": "object",
           "properties": {
+            "clearedCells": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "darken-room"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex",
+            "clearedCells"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "awakened": {
               "type": "integer",
               "format": "uint32",
@@ -1652,6 +1677,18 @@
             "type": {
               "type": "string",
               "const": "amnesia"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "darken-room"
             }
           },
           "required": [

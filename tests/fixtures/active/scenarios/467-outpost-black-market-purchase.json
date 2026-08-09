@@ -29,7 +29,7 @@
       "revision": 1,
       "turn": 1,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 102,
+      "rngDrawCounter": 132,
       "floorId": "demo.floor.surface",
       "town": {
         "id": "demo.town.outpost",
@@ -107,13 +107,53 @@
           },
           "stock": [
             {
-              "id": "generated.item.47",
+              "id": "generated.item.62",
               "kindId": "demo.item.necronomicon",
               "displayNameKey": "item-demo-necronomicon-name",
               "quantity": 1,
               "maximumQuantity": 1,
               "unitPrice": 280000,
               "weightTenthsPound": 15,
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.63",
+              "kindId": "demo.item.unhealth-mushroom",
+              "displayNameKey": "item-demo-unhealth-mushroom-name",
+              "quantity": 1,
+              "maximumQuantity": 1,
+              "unitPrice": 140,
+              "weightTenthsPound": 1,
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.64",
+              "kindId": "demo.item.disease-mushroom",
+              "displayNameKey": "item-demo-disease-mushroom-name",
+              "quantity": 1,
+              "maximumQuantity": 1,
+              "unitPrice": 140,
+              "weightTenthsPound": 1,
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.65",
+              "kindId": "demo.item.restore-constitution-mushroom",
+              "displayNameKey": "item-demo-restore-constitution-mushroom-name",
+              "quantity": 1,
+              "maximumQuantity": 1,
+              "unitPrice": 980,
+              "weightTenthsPound": 1,
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.66",
+              "kindId": "demo.item.restore-strength-mushroom",
+              "displayNameKey": "item-demo-restore-strength-mushroom-name",
+              "quantity": 1,
+              "maximumQuantity": 1,
+              "unitPrice": 980,
+              "weightTenthsPound": 1,
               "quality": "ordinary"
             }
           ],
@@ -131,7 +171,7 @@
               "maximumQuantity": 6
             },
             {
-              "itemId": "generated.item.46",
+              "itemId": "generated.item.61",
               "kindId": "demo.item.black-channels",
               "unitPrice": 5357,
               "maximumQuantity": 1
@@ -564,32 +604,6 @@
           "identification": "unexamined"
         },
         {
-          "id": "generated.item.46",
-          "kindId": "demo.item.black-channels",
-          "displayNameKey": "item-demo-black-channels-name",
-          "knowledge": "aware",
-          "usable": false,
-          "canReceiveRecharge": false,
-          "canSupplyRecharge": false,
-          "quantity": 1,
-          "weightTenthsPound": 15,
-          "equipmentSlot": null,
-          "modifiers": {
-            "attack": 0,
-            "defense": 0,
-            "maxHp": 0,
-            "strength": 0,
-            "intelligence": 0,
-            "wisdom": 0,
-            "dexterity": 0,
-            "constitution": 0,
-            "charisma": 0,
-            "speed": 0
-          },
-          "identification": "identified",
-          "quality": "ordinary"
-        },
-        {
           "id": "generated.item.5",
           "kindId": "demo.item.wooden-torch",
           "displayNameKey": "item-demo-wooden-torch-name",
@@ -650,6 +664,32 @@
             "speed": 0
           },
           "identification": "unexamined"
+        },
+        {
+          "id": "generated.item.61",
+          "kindId": "demo.item.black-channels",
+          "displayNameKey": "item-demo-black-channels-name",
+          "knowledge": "aware",
+          "usable": false,
+          "canReceiveRecharge": false,
+          "canSupplyRecharge": false,
+          "quantity": 1,
+          "weightTenthsPound": 15,
+          "equipmentSlot": null,
+          "modifiers": {
+            "attack": 0,
+            "defense": 0,
+            "maxHp": 0,
+            "strength": 0,
+            "intelligence": 0,
+            "wisdom": 0,
+            "dexterity": 0,
+            "constitution": 0,
+            "charisma": 0,
+            "speed": 0
+          },
+          "identification": "identified",
+          "quality": "ordinary"
         },
         {
           "id": "generated.item.7",
@@ -839,7 +879,7 @@
           "identified": true
         },
         {
-          "itemId": "generated.item.46",
+          "itemId": "generated.item.61",
           "appraised": true,
           "identified": true
         },
@@ -849,7 +889,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 90,
+      "nextItemInstanceSerial": 130,
       "nextGoldPileSerial": 1,
       "tasks": [
         {
@@ -885,7 +925,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "f5eba1311499f53f6daff547867eca6ceb8b91dc7ae778ebf9d838b21e5fed9e"
+      "stateHash": "052e559005d8b0d170f7438cee7bbd6abdd4009928f901040bb614102beab27c"
     },
     "events": [
       {
@@ -893,7 +933,7 @@
         "messageKey": "shop-purchase-success",
         "args": {
           "balance": "958000",
-          "item": "generated.item.46",
+          "item": "generated.item.61",
           "quantity": "1",
           "shop": "demo.shop.outpost-black-market",
           "target": "demo.item.black-channels",

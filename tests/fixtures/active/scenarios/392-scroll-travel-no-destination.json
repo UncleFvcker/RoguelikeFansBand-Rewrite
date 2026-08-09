@@ -51,7 +51,7 @@
       "playerDefense": 1,
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
-      "playerCarriedWeightTenthsPound": 2,
+      "playerCarriedWeightTenthsPound": 10,
       "playerCarryCapacityTenthsPound": 1000,
       "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
@@ -212,13 +212,13 @@
         {
           "id": "test.item.depthshift-scroll.1",
           "kindId": "demo.item.depthshift-scroll",
-          "displayNameKey": "item-demo-unfamiliar-scroll-name",
+          "displayNameKey": "item-demo-depthshift-scroll-appearance",
           "knowledge": "unknown",
           "usable": true,
           "canReceiveRecharge": false,
           "canSupplyRecharge": false,
           "quantity": 1,
-          "weightTenthsPound": 1,
+          "weightTenthsPound": 5,
           "equipmentSlot": null,
           "modifiers": {
             "attack": 0,
@@ -237,13 +237,13 @@
         {
           "id": "test.item.homeward-scroll.1",
           "kindId": "demo.item.homeward-scroll",
-          "displayNameKey": "item-demo-unfamiliar-scroll-name",
+          "displayNameKey": "item-demo-homeward-scroll-appearance",
           "knowledge": "unknown",
           "usable": true,
           "canReceiveRecharge": false,
           "canSupplyRecharge": false,
           "quantity": 1,
-          "weightTenthsPound": 1,
+          "weightTenthsPound": 5,
           "equipmentSlot": null,
           "modifiers": {
             "attack": 0,
@@ -333,7 +333,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "788e683913f44adf5a1e8d11fc1dc6cbd9470f9b8df3486c8171dcdd71266afe"
+      "stateHash": "ba17d1bf71d38e91f665b49d4a71015049633c98b341e9aa83a2e759dc516608"
     },
     "events": [
       {
@@ -347,6 +347,6 @@
         "args": {}
       }
     ],
-    "saveRoundTripStateHash": "788e683913f44adf5a1e8d11fc1dc6cbd9470f9b8df3486c8171dcdd71266afe"
+    "saveRoundTripStateHash": "ba17d1bf71d38e91f665b49d4a71015049633c98b341e9aa83a2e759dc516608"
   }
 }

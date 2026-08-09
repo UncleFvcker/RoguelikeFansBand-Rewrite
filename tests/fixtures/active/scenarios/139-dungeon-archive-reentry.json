@@ -242,7 +242,19 @@
         "dungeonId": "demo.dungeon.archive-depths",
         "floorId": "demo.floor.archive-depth-1"
       },
-      "entityCount": 0,
+      "entityCount": 1,
+      "entities": [
+        {
+          "id": "demo.guardian.archive-depths.1",
+          "position": {
+            "x": 7,
+            "y": 3
+          },
+          "hp": 3,
+          "speed": 110,
+          "energyNeed": 100
+        }
+      ],
       "groundItemCount": 1,
       "nextItemInstanceSerial": 3,
       "nextGoldPileSerial": 1,
@@ -304,7 +316,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "7f2ef4a2272e5b1d1ef1b0d55b3bf16a842b50e915c770d2a783d89a6a602e92"
+      "stateHash": "d92153de510b822463c809d0eb2f423df0ff50971a6d5555d5f9e641e91a688a"
     },
     "events": [
       {
@@ -5275,6 +5287,6 @@
         "y": 19
       }
     ],
-    "saveRoundTripStateHash": "7f2ef4a2272e5b1d1ef1b0d55b3bf16a842b50e915c770d2a783d89a6a602e92"
+    "saveRoundTripStateHash": "d92153de510b822463c809d0eb2f423df0ff50971a6d5555d5f9e641e91a688a"
   }
 }

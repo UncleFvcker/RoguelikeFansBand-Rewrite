@@ -29,7 +29,7 @@
       "revision": 1,
       "turn": 1,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 102,
+      "rngDrawCounter": 132,
       "floorId": "demo.floor.surface",
       "town": {
         "id": "demo.town.outpost",
@@ -153,7 +153,7 @@
           },
           "stock": [
             {
-              "id": "generated.item.50",
+              "id": "generated.item.69",
               "kindId": "demo.item.ration-of-food",
               "displayNameKey": "item-demo-ration-of-food-name",
               "quantity": 1,
@@ -163,11 +163,11 @@
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.51",
+              "id": "generated.item.70",
               "kindId": "demo.item.wooden-torch",
               "displayNameKey": "item-demo-wooden-torch-name",
-              "quantity": 1,
-              "maximumQuantity": 1,
+              "quantity": 2,
+              "maximumQuantity": 2,
               "unitPrice": 1,
               "weightTenthsPound": 30,
               "fuel": {
@@ -179,7 +179,7 @@
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.52",
+              "id": "generated.item.72",
               "kindId": "demo.item.brass-lantern",
               "displayNameKey": "item-demo-brass-lantern-name",
               "quantity": 2,
@@ -195,11 +195,11 @@
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.54",
+              "id": "generated.item.74",
               "kindId": "demo.item.flask-of-oil",
               "displayNameKey": "item-demo-flask-of-oil-name",
-              "quantity": 5,
-              "maximumQuantity": 5,
+              "quantity": 1,
+              "maximumQuantity": 1,
               "unitPrice": 3,
               "weightTenthsPound": 10,
               "fuel": {
@@ -211,13 +211,73 @@
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.55",
+              "id": "generated.item.75",
               "kindId": "demo.item.fabric-bag",
               "displayNameKey": "item-demo-fabric-bag-name",
-              "quantity": 3,
-              "maximumQuantity": 3,
+              "quantity": 2,
+              "maximumQuantity": 2,
               "unitPrice": 30,
               "weightTenthsPound": 10,
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.77",
+              "kindId": "demo.item.hard-biscuit",
+              "displayNameKey": "item-demo-hard-biscuit-name",
+              "quantity": 4,
+              "maximumQuantity": 4,
+              "unitPrice": 1,
+              "weightTenthsPound": 2,
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.78",
+              "kindId": "demo.item.strip-of-venison",
+              "displayNameKey": "item-demo-strip-of-venison-name",
+              "quantity": 4,
+              "maximumQuantity": 4,
+              "unitPrice": 2,
+              "weightTenthsPound": 2,
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.79",
+              "kindId": "demo.item.cure-poison-mushroom",
+              "displayNameKey": "item-demo-cure-poison-mushroom-name",
+              "quantity": 1,
+              "maximumQuantity": 1,
+              "unitPrice": 120,
+              "weightTenthsPound": 1,
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.80",
+              "kindId": "demo.item.cure-blindness-mushroom",
+              "displayNameKey": "item-demo-cure-blindness-mushroom-name",
+              "quantity": 1,
+              "maximumQuantity": 1,
+              "unitPrice": 30,
+              "weightTenthsPound": 1,
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.81",
+              "kindId": "demo.item.cure-paranoia-mushroom",
+              "displayNameKey": "item-demo-cure-paranoia-mushroom-name",
+              "quantity": 3,
+              "maximumQuantity": 3,
+              "unitPrice": 25,
+              "weightTenthsPound": 1,
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.82",
+              "kindId": "demo.item.cure-confusion-mushroom",
+              "displayNameKey": "item-demo-cure-confusion-mushroom-name",
+              "quantity": 2,
+              "maximumQuantity": 2,
+              "unitPrice": 30,
+              "weightTenthsPound": 1,
               "quality": "ordinary"
             }
           ],
@@ -876,7 +936,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 91,
+      "nextItemInstanceSerial": 131,
       "nextGoldPileSerial": 1,
       "tasks": [
         {
@@ -912,7 +972,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "c6b5fa117046af2e72fdbc1f160c79686f2cbe03965ff82834bbfcf0dad3f2d3"
+      "stateHash": "79a7d88bf1475e8bc60e2eacb22b2ec51474b5d2d77e1e55c3b0e2d038868b0d"
     },
     "events": [
       {

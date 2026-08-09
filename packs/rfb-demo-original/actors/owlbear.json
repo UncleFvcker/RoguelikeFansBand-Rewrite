@@ -1,0 +1,87 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 188,
+    "maxDepth": 40,
+    "rarity": 1
+  },
+  "attack": 2,
+  "damageDice": 1,
+  "damageSides": 3,
+  "damageType": "physical",
+  "defense": 2,
+  "descriptionKey": "actor-demo-owlbear-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 35,
+  "formatVersion": 1,
+  "glyph": "H",
+  "hitPointDice": {
+    "dice": 15,
+    "sides": 8
+  },
+  "id": "demo.actor.owlbear",
+  "level": 10,
+  "maxHp": 67,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 3,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 3,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 10,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.crush",
+        "toHit": 20
+      }
+    ]
+  },
+  "nameKey": "actor-demo-owlbear-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "role": "monster",
+  "speed": 110,
+  "tags": [
+    "animal",
+    "evil",
+    "legacy-import",
+    "owlbear",
+    "warrens"
+  ]
+}

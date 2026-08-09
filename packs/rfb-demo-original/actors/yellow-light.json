@@ -55,6 +55,7 @@
   "role": "monster",
   "speed": 120,
   "tags": [
+    "legacy-import",
     "light",
     "nonliving",
     "warrens"

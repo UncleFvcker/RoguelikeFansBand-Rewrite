@@ -1,6 +1,6 @@
 # Warrens 怪物机制实现清单
 
-状态：由 contract-v171 的 Warrens 生态对照建立；contract-v173 已完成 W1-W6 与运行时自然补怪，contract-v174-v176 已完成 W7-W9，contract-v177-v180 已完成 W10-W13，contract-v182 已完成 W14 Pest Control 任务生态；contract-v183 开始分批接入正式浅层内容，contract-v184 完成 `NEVER_MOVE` 与怪物 `BLINK` 绑定，contract-v185 接入第二批 14 只 2–3 级怪物，contract-v186 接入第三批 13 只 4–5 级怪物，contract-v187 接入首批正式施法怪物与简单 Unique，contract-v188 接入 10 只机制完备的 6–7 级怪物，contract-v189 接入 12 只 8–9 级怪物并完成浅层普查收口，contract-v190 完成出生宽限与五类职业掉落并再接入 13 只怪物，contract-v191 完成六类非伤害近战并再接入 10 只怪物，contract-v192 完成无近战怪物与 `SHRIEK`，contract-v193 完成地面拾物与四类近战偷窃/消耗事务，contract-v194 完成穿墙、水生、隐形与 Outpost 地表 habitat 分配，contract-v195 完成强者破体、两格近战、骑乘闭环与银质事实记录，contract-v196 完成友善娜美、怪物陷阱、Shadower 外观覆盖与废弃索引绑定。
+状态：由 contract-v171 的 Warrens 生态对照建立；contract-v173 已完成 W1-W6 与运行时自然补怪，contract-v174-v176 已完成 W7-W9，contract-v177-v180 已完成 W10-W13，contract-v182 已完成 W14 Pest Control 任务生态；contract-v183 开始分批接入正式浅层内容，contract-v184 完成 `NEVER_MOVE` 与怪物 `BLINK` 绑定，contract-v185 接入第二批 14 只 2–3 级怪物，contract-v186 接入第三批 13 只 4–5 级怪物，contract-v187 接入首批正式施法怪物与简单 Unique，contract-v188 接入 10 只机制完备的 6–7 级怪物，contract-v189 接入 12 只 8–9 级怪物并完成浅层普查收口，contract-v190 完成出生宽限与五类职业掉落并再接入 13 只怪物，contract-v191 完成六类非伤害近战并再接入 10 只怪物，contract-v192 完成无近战怪物与 `SHRIEK`，contract-v193 完成地面拾物与四类近战偷窃/消耗事务，contract-v194 完成穿墙、水生、隐形与 Outpost 地表 habitat 分配，contract-v195 完成强者破体、两格近战、骑乘闭环与银质事实记录，contract-v196 完成友善娜美、怪物陷阱、Shadower 外观覆盖与废弃索引绑定，contract-v197 以零骰 `HURT` 和 `S_LOUSE` 收割 7 条浅层记录，contract-v198 以窄 `DISENCHANT` 接入解除附魔之眼，contract-v199 以持久房间 `glow`、黑暗源和 `darken-room` 接入银色果冻与黑暗精灵并完成浅层普查，contract-v200 复用现有机制直接接入 20 只十级非施法怪物，contract-v201 继续接入 7 只十级施法怪物并补齐通用召唤类别标签，contract-v202 以 `LIGHT → LITE` 源别名接入伪龙和明暗吐息资源，contract-v203 直接接入 6 只低风险十一级怪物。
 
 当前权威原版来源为 `master` Git ref 的 commit `efd63661302866038f58d8cd2553b23e6af3bf9d`。Warrens 在 `d_info.txt` 中为深度 1–9，主字形集合为 `kKyYrRfFcCbB`，并带有 `MONSTER_DIV_16`。本清单只记录该来源明确要求、而当前重写版还不能完整表达的机制，不把标签或近似行为标成已完成规则。
 
@@ -160,3 +160,43 @@ contract-v196 将 `FRIENDLY` 接入现有阵营目标与清层判定，让航海
 `1/333` 外观覆盖，真实种类不变并随存档持久化；板栗崽进入普通浅层分配。
 正式浅层 actor 增至 158 条、严格同步增至 126 条。5 条 `DEPRECATED` 记录
 永久绑定到活跃同名替代索引，剩余 10 条活跃浅层记录不在本批扩张范围。
+
+contract-v197 只补两个窄缺口：无骰 `HURT` 作为受护甲减免的精确 `0d0`
+进入既有 damage effect，`S_LOUSE` 作为既有 `summon-category` 的 `1d3+1`
+映射，并以巨型白虱的唯一 `louse` 标签锁定候选。高阶地狱兽、黄色果冻、
+佐格虫、巧言、罗宾汉、虱子王劳西和鸭子进入严格同步；正式浅层 actor
+增至 165 条、严格同步增至 133 条。剩余活跃浅层记录仅为 Silver jelly、
+Disenchanter eye 和 Dark elf，继续等待各自真实能力边界。
+
+contract-v198 将无骰 `DISENCHANT` 映射为独立近战 effect，按原版 4:1
+选择当前已建模正面时效或已装备武器/护甲/弹药，并复用 Disenchant 抗性、
+状态移除、物品强化和神器抵抗。解除附魔之眼进入严格同步；正式浅层 actor
+增至 166 条、严格同步增至 134 条。剩余活跃浅层记录仅为 Silver jelly 和
+Dark elf。
+
+contract-v199 为程序化房间逐格初始化持久 `glow`，并以目标格所在的八连通
+发光区域作为 `DARKNESS` 的清除边界。银色果冻的半径 1 黑暗源只压制永久
+房间光，玩家火把和怪物主动光继续照明；黑暗精灵复用既有施法选取与投射线
+结算，但该能力不要求 line of effect。两只怪物进入严格同步；正式浅层 actor
+增至 168 条、严格同步增至 136 条，剩余活跃浅层记录清零。
+
+contract-v200 开始十级段直接收割：20 只非施法记录全部复用既有水生/飞行、
+门、群体、繁殖、随机移动、Unique、爆炸、近战状态、掉落、尸骨、抗性和
+habitat 语义，严格同步增至 156 条。猞猁保留 `WILD_ONLY`，不进入普通地牢；
+其余 19 条进入现有全局分配池。特殊心智、附身提示和性别等非行动旗标继续
+由严格清单的 `omittedFlags` 明示，不扩建无消费者的通用系统。
+
+contract-v201 让 7 只十级施法怪物复用既有 bolt/ball、状态、治疗、位移、
+召唤和怪物施法选择。demo 严格 actor 保留 `legacy-import` 标签，使
+`S_MONSTER(1d1)` 可以从完整正式导入池选取，而不是生成无候选能力；该标签
+与完整导入器原有语义一致。严格同步增至 163 条，未增加 effect 或协议类型。
+
+contract-v202 仅在近战元素解析处接受原版使用的 `LIGHT` 拼写，并将其归一为
+现有 `LITE` 对应的 `light` 伤害。伪龙复用既有飞行、破门、抗性、施法和
+生命比例吐息 effect；明暗吐息各生成一个半径 2 的参数化资源。严格同步增至
+164 条，未增加运行时伤害类型、协议字段或兼容层。
+
+contract-v203 开始十一级内容：多彩龙幼龙、锋锐兔、马头鱼尾怪、僵尸兽人、
+浅水洼和怪诞者卢格全部由既有字段完整承载。多彩龙幼龙复用五种已有吐息，
+锋锐兔复用闪现，其余复用水生、骑乘、Unique、掉落、抗性和近战状态路径；
+严格同步增至 170 条，没有新增 ability、effect、协议字段或兼容层。

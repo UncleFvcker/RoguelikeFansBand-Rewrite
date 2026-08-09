@@ -3,8 +3,8 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::{
-    ACTOR_SCHEMA, ActorDefinition, ActorRole, ContentError, MeleeBlowEffectDefinition,
-    MonsterCastingDefinition, MonsterDropKindDefinition,
+    ACTOR_SCHEMA, ActorDamageType, ActorDefinition, ActorRole, ContentError,
+    MeleeBlowEffectDefinition, MonsterCastingDefinition, MonsterDropKindDefinition,
 };
 
 use super::shared::{
@@ -310,9 +310,18 @@ fn valid_melee_effect(effect: &MeleeBlowEffectDefinition) -> bool {
             chance_percent,
             damage_dice,
             damage_sides,
+            damage_type,
+            armor_mitigated,
             ..
+        } => {
+            valid_chance(*chance_percent)
+                && ((*armor_mitigated
+                    && *damage_type == ActorDamageType::Physical
+                    && *damage_dice == 0
+                    && *damage_sides == 0)
+                    || valid_dice(*damage_dice, *damage_sides))
         }
-        | MeleeBlowEffectDefinition::Poison {
+        MeleeBlowEffectDefinition::Poison {
             chance_percent,
             damage_dice,
             damage_sides,
@@ -366,6 +375,7 @@ fn valid_melee_effect(effect: &MeleeBlowEffectDefinition) -> bool {
         | MeleeBlowEffectDefinition::Paralysis { chance_percent }
         | MeleeBlowEffectDefinition::Slow { chance_percent }
         | MeleeBlowEffectDefinition::Terrify { chance_percent }
+        | MeleeBlowEffectDefinition::Disenchant { chance_percent }
         | MeleeBlowEffectDefinition::EatGold { chance_percent }
         | MeleeBlowEffectDefinition::EatItem { chance_percent }
         | MeleeBlowEffectDefinition::EatFood { chance_percent }

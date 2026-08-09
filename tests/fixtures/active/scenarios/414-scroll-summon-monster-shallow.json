@@ -32,7 +32,7 @@
       "turn": 1,
       "worldTick": 10,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 17,
+      "rngDrawCounter": 16,
       "floorId": "demo.floor.surface",
       "playerPosition": {
         "x": 3,
@@ -49,43 +49,6 @@
       "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
-      "playerStatuses": [
-        {
-          "kindId": "rfb.status.confusion",
-          "intensity": 1,
-          "remainingTicks": 27,
-          "grantedModifiers": {
-            "attack": 0,
-            "defense": 0,
-            "maxHp": 0,
-            "strength": 0,
-            "intelligence": 0,
-            "wisdom": 0,
-            "dexterity": 0,
-            "constitution": 0,
-            "charisma": 0,
-            "speed": 0
-          },
-          "grantedEquipmentBonuses": {
-            "meleeAttacks": 0,
-            "meleeSkill": 0,
-            "meleeDamage": 0,
-            "rangedSkill": 0,
-            "throwingSkill": 0,
-            "deviceSkill": 0,
-            "savingThrowSkill": 0,
-            "stealthSkill": 0,
-            "searchSkill": 0,
-            "perceptionSkill": 0,
-            "disarmingSkill": 0,
-            "diggingSkill": 0,
-            "infravision": 0,
-            "lightRadius": 0
-          },
-          "grantsWallPassage": false,
-          "incomingDamagePercent": 100
-        }
-      ],
       "playerLevel": 1,
       "playerExperience": 0,
       "playerMaxLevel": 1,
@@ -240,12 +203,13 @@
         {
           "id": "summon.demo.item.summoning-scroll.1.0",
           "position": {
-            "x": 2,
-            "y": 2
+            "x": 1,
+            "y": 3
           },
           "hp": 1,
           "speed": 110,
-          "energyNeed": 100
+          "energyNeed": 100,
+          "castingCooldownRemaining": 2
         },
         {
           "id": "summon.demo.item.summoning-scroll.1.1",
@@ -253,7 +217,7 @@
             "x": 3,
             "y": 2
           },
-          "hp": 3,
+          "hp": 6,
           "speed": 110,
           "energyNeed": 100
         }
@@ -339,7 +303,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "330f887a9ff6c3c4305da2a41a6da4db8729a73c3ef1644cf7b15f7de376640a"
+      "stateHash": "3487ae9d8938e258cd1cfcfbe74394fe726aab2aaa944e8f41f5e1f6d47d3202"
     },
     "events": [
       {
@@ -374,7 +338,7 @@
             "group": true,
             "summonedKindIds": [
               "demo.actor.blinking-dot",
-              "demo.actor.echo-hound"
+              "demo.actor.grid-bug"
             ]
           }
         }
@@ -384,9 +348,9 @@
         "messageKey": "monster-ability-decision",
         "args": {
           "frequency": "50",
-          "roll": "64",
+          "roll": "9",
           "source": "demo.actor.blinking-dot",
-          "target": "none"
+          "target": "demo.ability.blink"
         },
         "outcome": {
           "type": "monster-ability-decision",
@@ -394,7 +358,7 @@
             "sourceEntityId": "summon.demo.item.summoning-scroll.1.0",
             "sourceKindId": "demo.actor.blinking-dot",
             "frequencyPercent": 50,
-            "frequencyRoll": 64,
+            "frequencyRoll": 9,
             "candidates": [
               {
                 "abilityId": "demo.ability.blink",
@@ -413,27 +377,60 @@
             "viableAbilityIds": [
               "demo.ability.blink"
             ],
-            "totalWeight": 1
+            "totalWeight": 1,
+            "selectionRoll": 1,
+            "selectedAbilityId": "demo.ability.blink"
           }
         }
       },
       {
-        "kind": "combat.monster-hit",
-        "messageKey": "combat-monster-hit",
+        "kind": "monster.blinked",
+        "messageKey": "monster-blinked",
         "args": {
-          "damage": "1",
-          "method": "rfb.blow.spore",
           "source": "demo.actor.blinking-dot"
         },
         "outcome": {
-          "type": "damage",
+          "type": "monster-displacement",
           "resolution": {
-            "rawDamage": 1,
-            "armorReduction": 0,
-            "resistanceAdjustment": 0,
-            "finalDamage": 1,
-            "damageType": "confusion",
-            "resistance": "normal"
+            "actorId": "summon.demo.item.summoning-scroll.1.0",
+            "from": {
+              "x": 2,
+              "y": 2
+            },
+            "to": {
+              "x": 1,
+              "y": 3
+            }
+          }
+        }
+      },
+      {
+        "kind": "monster.ability-cast",
+        "messageKey": "monster-ability-cast",
+        "args": {
+          "count": "0",
+          "source": "demo.actor.blinking-dot",
+          "target": "demo.ability.blink"
+        },
+        "outcome": {
+          "type": "monster-ability-cast",
+          "resolution": {
+            "sourceEntityId": "summon.demo.item.summoning-scroll.1.0",
+            "sourceKindId": "demo.actor.blinking-dot",
+            "abilityId": "demo.ability.blink",
+            "targetEntityId": "summon.demo.item.summoning-scroll.1.0",
+            "targetKindId": "demo.actor.blinking-dot",
+            "affectedPositions": [
+              {
+                "x": 2,
+                "y": 2
+              },
+              {
+                "x": 1,
+                "y": 3
+              }
+            ],
+            "effects": []
           }
         }
       },
@@ -441,44 +438,28 @@
         "kind": "combat.monster-hit",
         "messageKey": "combat-monster-hit",
         "args": {
-          "damage": "0",
-          "method": "rfb.blow.echo-bite",
-          "source": "demo.actor.echo-hound"
+          "damage": "2",
+          "method": "rfb.blow.bite",
+          "source": "demo.actor.grid-bug"
         },
         "outcome": {
           "type": "damage",
           "resolution": {
-            "rawDamage": 1,
-            "armorReduction": 1,
-            "resistanceAdjustment": 0,
-            "finalDamage": 0,
-            "damageType": "physical",
-            "resistance": "normal"
-          }
-        }
-      },
-      {
-        "kind": "combat.monster-hit",
-        "messageKey": "combat-monster-hit",
-        "args": {
-          "damage": "1",
-          "method": "rfb.blow.echo-rake",
-          "source": "demo.actor.echo-hound"
-        },
-        "outcome": {
-          "type": "damage",
-          "resolution": {
-            "rawDamage": 1,
+            "rawDamage": 2,
             "armorReduction": 0,
             "resistanceAdjustment": 0,
-            "finalDamage": 1,
-            "damageType": "cold",
+            "finalDamage": 2,
+            "damageType": "electricity",
             "resistance": "normal"
           }
         }
       }
     ],
     "changedCells": [
+      {
+        "x": 1,
+        "y": 3
+      },
       {
         "x": 2,
         "y": 2

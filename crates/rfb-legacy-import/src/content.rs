@@ -6038,7 +6038,7 @@ fn melee_damage_type(token: &str) -> Option<&'static str> {
         "COLD" => Some("cold"),
         "ACID" => Some("acid"),
         "ELEC" => Some("electricity"),
-        "LITE" => Some("light"),
+        "LIGHT" | "LITE" => Some("light"),
         "DARK" => Some("dark"),
         "NETHER" => Some("nether"),
         "NEXUS" => Some("nexus"),
@@ -6109,6 +6109,9 @@ fn melee_effect_json(effect: &LegacyBlowEffect) -> Option<serde_json::Value> {
             })
         }
         "TERRIFY" => serde_json::json!({ "type": "terrify" }),
+        "DISENCHANT" if effect.dice.is_none() => {
+            serde_json::json!({ "type": "disenchant" })
+        }
         "EAT_GOLD" => serde_json::json!({ "type": "eat-gold" }),
         "EAT_ITEM" => serde_json::json!({ "type": "eat-item" }),
         "EAT_FOOD" => serde_json::json!({ "type": "eat-food" }),
@@ -6147,11 +6150,15 @@ fn melee_effect_json(effect: &LegacyBlowEffect) -> Option<serde_json::Value> {
         }
         token => {
             let damage_type = melee_damage_type(token)?;
-            let (damage_dice, damage_sides) = effect.dice?;
+            let (damage_dice, damage_sides) = match effect.dice {
+                Some((dice, sides)) => (dice.clamp(1, 100), sides.clamp(1, 10_000)),
+                None if token == "HURT" => (0, 0),
+                None => return None,
+            };
             serde_json::json!({
                 "type": "damage",
-                "damageDice": damage_dice.clamp(1, 100),
-                "damageSides": damage_sides.clamp(1, 10_000),
+                "damageDice": damage_dice,
+                "damageSides": damage_sides,
                 "damageType": damage_type,
                 "armorMitigated": token == "HURT",
             })
@@ -6315,6 +6322,16 @@ fn map_misc_spell_token(
             abilities
                 .entry(id.clone())
                 .or_insert_with(|| misc_ability("amnesia", serde_json::json!({"type": "amnesia"})));
+            Some(id)
+        }
+        "DARKNESS" => {
+            let id = "rfb-legacy.ability.darkness".to_owned();
+            abilities.entry(id.clone()).or_insert_with(|| {
+                let mut ability =
+                    misc_ability("darkness", serde_json::json!({"type": "darken-room"}));
+                ability["target"]["requiresLineOfEffect"] = serde_json::json!(false);
+                ability
+            });
             Some(id)
         }
         "DISPEL_MAGIC" => {
@@ -6529,6 +6546,10 @@ fn monster_flag_is_mapped(flag: &str) -> bool {
             | "HAS_LITE_2"
             | "SELF_LITE_1"
             | "SELF_LITE_2"
+            | "HAS_DARK_1"
+            | "HAS_DARK_2"
+            | "SELF_DARK_1"
+            | "SELF_DARK_2"
             | "FORCE_SLEEP"
             | "ONLY_ITEM"
             | "ONLY_GOLD"
@@ -6788,24 +6809,40 @@ fn monster_json(
             "picksUpItems": picks_up_items,
         });
     }
-    let light_radius = u8::from(
+    let light_radius = i8::from(
         entry
             .flags
             .iter()
             .any(|flag| matches!(flag.as_str(), "HAS_LITE_1" | "SELF_LITE_1")),
-    ) + 2 * u8::from(
+    ) + 2 * i8::from(
         entry
             .flags
             .iter()
             .any(|flag| matches!(flag.as_str(), "HAS_LITE_2" | "SELF_LITE_2")),
+    ) - i8::from(
+        entry
+            .flags
+            .iter()
+            .any(|flag| matches!(flag.as_str(), "HAS_DARK_1" | "SELF_DARK_1")),
+    ) - 2 * i8::from(
+        entry
+            .flags
+            .iter()
+            .any(|flag| matches!(flag.as_str(), "HAS_DARK_2" | "SELF_DARK_2")),
     );
-    if light_radius > 0 {
+    if light_radius != 0 {
+        let darkness = light_radius < 0;
         value["light"] = serde_json::json!({
-            "radius": light_radius,
-            "intrinsic": entry.flags.iter().any(|flag| {
+            "radius": light_radius.unsigned_abs(),
+            "intrinsic": entry.flags.iter().any(|flag| if darkness {
+                matches!(flag.as_str(), "SELF_DARK_1" | "SELF_DARK_2")
+            } else {
                 matches!(flag.as_str(), "SELF_LITE_1" | "SELF_LITE_2")
             }),
         });
+        if darkness {
+            value["light"]["darkness"] = serde_json::json!(true);
+        }
     }
     if entry.flags.iter().any(|flag| flag == "FORCE_SLEEP") {
         value["forceSleep"] = serde_json::json!(true);
@@ -7128,6 +7165,7 @@ fn demo_monster_json(
     }
 
     let mut tags = selection.tags.iter().cloned().collect::<BTreeSet<_>>();
+    tags.insert("legacy-import".to_owned());
     if entry.flags.iter().any(|flag| flag == "KAGE") {
         tags.insert("shadower-appearance".to_owned());
     }
@@ -7649,6 +7687,7 @@ fn summon_spell_defaults(base: &str) -> Option<(&'static str, (u32, u32, u32))> 
         "S_DRAGON" => ("dragon", (1, 3, 1)),
         "S_HI_DRAGON" => ("dragon", (1, 3, 0)),
         "S_ANIMAL" => ("animal", (1, 3, 1)),
+        "S_LOUSE" => ("louse", (1, 3, 1)),
         _ => return None,
     };
     Some(entry)
@@ -10601,6 +10640,49 @@ mod tests {
     }
 
     #[test]
+    fn dice_less_hurt_maps_to_exact_zero_damage_only() {
+        let hurt = parse_blow("GAZE:HURT", 1).expect("dice-less HURT should parse");
+        let effect = melee_effect_json(&hurt.effects[0]).expect("HURT should map");
+
+        assert_eq!(effect["type"], "damage");
+        assert_eq!(effect["damageDice"], 0);
+        assert_eq!(effect["damageSides"], 0);
+        assert_eq!(effect["damageType"], "physical");
+        assert_eq!(effect["armorMitigated"], true);
+    }
+
+    #[test]
+    fn light_melee_alias_matches_lite_damage() {
+        let light = parse_blow("BITE:LIGHT(1d3, 20%)", 1).expect("LIGHT melee damage should parse");
+        let lite = parse_blow("BITE:LITE(1d3, 20%)", 1).expect("LITE melee damage should parse");
+
+        assert_eq!(
+            melee_effect_json(&light.effects[0]),
+            melee_effect_json(&lite.effects[0])
+        );
+        assert_eq!(
+            melee_effect_json(&light.effects[0]).expect("LIGHT should map")["damageType"],
+            "light"
+        );
+    }
+
+    #[test]
+    fn dice_less_disenchant_maps_to_narrow_melee_effect() {
+        let blow = parse_blow("GAZE:DISENCHANT", 1).expect("dice-less DISENCHANT should parse");
+        let effect = melee_effect_json(&blow.effects[0]).expect("DISENCHANT should map");
+
+        assert_eq!(effect, serde_json::json!({ "type": "disenchant" }));
+
+        let damaging =
+            parse_blow("GAZE:DISENCHANT(1d4)", 1).expect("damaging DISENCHANT should parse");
+        let effect = melee_effect_json(&damaging.effects[0]).expect("damage should stay mapped");
+        assert_eq!(effect["type"], "damage");
+        assert_eq!(effect["damageDice"], 1);
+        assert_eq!(effect["damageSides"], 4);
+        assert_eq!(effect["damageType"], "disenchant");
+    }
+
+    #[test]
     fn monster_import_maps_self_destruct_terrain_light_and_drop_flags() {
         let monsters = parse_r_info(
             "N:1:test breach mote\nG:*:y\nI:110:1d3:8:4:20:10\nW:3:1:10:3:0:0\nB:EXPLODE:FIRE(2d4)\nF:KILL_WALL | KILL_ITEM | TAKE_ITEM | HAS_LITE_1 | SELF_LITE_2\nF:ONLY_ITEM | DROP_90 | DROP_1D2 | DROP_GOOD | UNIQUE\nO:DROP_WARRIOR\n",
@@ -10629,6 +10711,27 @@ mod tests {
         assert_eq!(actor["deathDrop"]["countDice"][0]["dice"], 1);
         assert_eq!(actor["deathDrop"]["minimumQuality"], "fine");
         assert_eq!(actor["deathDrop"]["themeChancePercent"], 50);
+    }
+
+    #[test]
+    fn monster_import_maps_carried_darkness_as_negative_light() {
+        let monsters = parse_r_info(
+            "N:1:test shadow jelly\nG:j:D\nI:110:1d3:8:4:20:10\nW:3:1:10:3:0:0\nB:TOUCH:DAM(1d2)\nF:HAS_DARK_1\n",
+        )
+        .expect("synthetic darkness monster should parse");
+        let outcome = convert_content(
+            &[],
+            &monsters,
+            &[],
+            &[],
+            &[],
+            &LegacyCharacterSources::default(),
+        );
+        let actor = &outcome.actor_files[0].1;
+
+        assert_eq!(actor["light"]["radius"], 1);
+        assert_eq!(actor["light"]["intrinsic"], false);
+        assert_eq!(actor["light"]["darkness"], true);
     }
 
     #[test]
@@ -11258,7 +11361,7 @@ I:110:8d8:20:20:10:10\n\
 W:20:2:20:9:10:40\n\
 B:HIT:HURT(1d6)\n\
 F:UNDEAD | DRAGON | RES_ALL | RES_TELE | NO_CONF\n\
-S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_CYBER\n";
+S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_LOUSE | S_CYBER\n";
         let monsters = parse_r_info(SUMMONER_R_INFO).expect("synthetic summoner should parse");
         assert_eq!(monsters.len(), 1);
 
@@ -11319,6 +11422,7 @@ S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_CYBER\n";
                 "rfb-legacy.ability.kin-test-bone-caller",
                 "rfb-legacy.ability.summon-undead-l20-1d3-1",
                 "rfb-legacy.ability.summon-legacy-import-l20-1d1",
+                "rfb-legacy.ability.summon-louse-l20-1d3-1",
             ]
         );
         // Uniques and cyber summons stay honest gaps.
@@ -11361,6 +11465,37 @@ S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_CYBER\n";
         assert_eq!(any["effect"]["countDice"], 1);
         assert_eq!(any["effect"]["countSides"], 1);
         assert!(any["effect"].get("countBonus").is_none());
+
+        let louse = outcome
+            .ability_files
+            .iter()
+            .find(|(name, _)| name == "summon-louse-l20-1d3-1.json")
+            .map(|(_, value)| value)
+            .expect("louse summon ability should be generated");
+        assert_eq!(louse["effect"]["category"], "louse");
+        assert_eq!(louse["effect"]["countDice"], 1);
+        assert_eq!(louse["effect"]["countSides"], 3);
+        assert_eq!(louse["effect"]["countBonus"], 1);
+
+        let mut demo_entry = monsters[0].clone();
+        demo_entry.spells.retain(|spell| spell != "S_CYBER");
+        let demo = demo_monster_json(
+            &demo_entry,
+            &DemoMonsterSelectionEntry {
+                source_index: 5,
+                source_id: None,
+                id: "test-bone-caller".to_owned(),
+                tags: vec!["warrens".to_owned()],
+                omitted_flags: Vec::new(),
+            },
+            &mut BTreeMap::new(),
+        )
+        .expect("demo monster should preserve the generic summon category");
+        assert!(
+            demo["tags"]
+                .as_array()
+                .is_some_and(|tags| { tags.iter().any(|tag| tag == "legacy-import") })
+        );
     }
 
     #[test]
@@ -13733,10 +13868,10 @@ S:1_IN_3 | TELE_OTHER | DRAIN_MANA | AMNESIA | DISPEL_MAGIC | DARKNESS
                 "rfb-legacy.ability.drain-mana-11",
                 "rfb-legacy.ability.amnesia",
                 "rfb-legacy.ability.dispel",
+                "rfb-legacy.ability.darkness",
             ]
         );
-        // Room unlighting has no neutral state yet.
-        assert_eq!(outcome.report.unmapped_spells["DARKNESS"], 1);
+        assert!(!outcome.report.unmapped_spells.contains_key("DARKNESS"));
         let drain = outcome
             .ability_files
             .iter()
@@ -13753,6 +13888,14 @@ S:1_IN_3 | TELE_OTHER | DRAIN_MANA | AMNESIA | DISPEL_MAGIC | DARKNESS
             .expect("banish ability should be generated");
         assert_eq!(banish["effect"]["type"], "teleport-away");
         assert_eq!(banish["effect"]["minimumDistance"], 10);
+        let darkness = outcome
+            .ability_files
+            .iter()
+            .find(|(name, _)| name == "darkness.json")
+            .map(|(_, value)| value)
+            .expect("darkness ability should be generated");
+        assert_eq!(darkness["effect"]["type"], "darken-room");
+        assert_eq!(darkness["target"]["requiresLineOfEffect"], false);
     }
 
     #[test]

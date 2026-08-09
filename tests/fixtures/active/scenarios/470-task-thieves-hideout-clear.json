@@ -48,7 +48,7 @@
       "turn": 2,
       "worldTick": 20,
       "lastCommandSeq": 2,
-      "rngDrawCounter": 175,
+      "rngDrawCounter": 192,
       "floorId": "demo.floor.thieves-hideout",
       "playerPosition": {
         "x": 1,
@@ -499,7 +499,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 95,
+      "nextItemInstanceSerial": 127,
       "nextGoldPileSerial": 1,
       "tasks": [
         {
@@ -535,7 +535,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "dd0c160a1848f30bf8e121b0f62dc12bbbf58bd501a4f42b669a8ead529ddaa5"
+      "stateHash": "c3d0ac0bd11824fc704777507a8ce06021da5382e83665ff4c71602a870ff211"
     },
     "events": [
       {

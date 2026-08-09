@@ -1,0 +1,86 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 190,
+    "maxDepth": 40,
+    "rarity": 2
+  },
+  "attack": 2,
+  "damageDice": 2,
+  "damageSides": 5,
+  "damageType": "physical",
+  "defense": 1,
+  "descriptionKey": "actor-demo-hairy-mold-description",
+  "experienceValue": 32,
+  "formatVersion": 1,
+  "glyph": "m",
+  "hitPointDice": {
+    "dice": 15,
+    "sides": 8
+  },
+  "id": "demo.actor.hairy-mold",
+  "level": 10,
+  "maxHp": 67,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 2,
+            "damageSides": 5,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "damageDice": 1,
+            "damageSides": 5,
+            "type": "poison"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 4,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "damageDice": 2,
+            "damageSides": 6,
+            "type": "poison"
+          }
+        ],
+        "methodId": "rfb.blow.spore",
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "modes": [
+      "swim"
+    ],
+    "neverMoves": true
+  },
+  "nameKey": "actor-demo-hairy-mold-name",
+  "resistances": {
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 110,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "legacy-import",
+    "mold",
+    "warrens"
+  ]
+}

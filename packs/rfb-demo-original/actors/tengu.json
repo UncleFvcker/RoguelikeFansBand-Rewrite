@@ -1,0 +1,84 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 194,
+    "maxDepth": 40,
+    "rarity": 1
+  },
+  "attack": 2,
+  "damageDice": 1,
+  "damageSides": 8,
+  "damageType": "physical",
+  "defense": 3,
+  "descriptionKey": "actor-demo-tengu-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 40,
+  "formatVersion": 1,
+  "glyph": "u",
+  "hitPointDice": {
+    "dice": 16,
+    "sides": 9
+  },
+  "id": "demo.actor.tengu",
+  "level": 10,
+  "maxHp": 80,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 8,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.blink",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.drag",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.banish",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.escape",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 33
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "nameKey": "actor-demo-tengu-name",
+  "resistances": {
+    "fire": "resistant"
+  },
+  "role": "monster",
+  "speed": 120,
+  "tags": [
+    "demon",
+    "evil",
+    "legacy-import",
+    "resist-teleport",
+    "warrens"
+  ]
+}

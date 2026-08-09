@@ -1,0 +1,85 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "habitats": [
+      "mountain",
+      "snow"
+    ],
+    "legacyIndex": 205,
+    "maxDepth": 40,
+    "rarity": 3
+  },
+  "attack": 2,
+  "damageDice": 6,
+  "damageSides": 1,
+  "damageType": "physical",
+  "defense": 4,
+  "descriptionKey": "actor-demo-vorpal-bunny-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 40,
+  "formatVersion": 1,
+  "glyph": "r",
+  "hitPointDice": {
+    "dice": 10,
+    "sides": 10
+  },
+  "id": "demo.actor.vorpal-bunny",
+  "level": 11,
+  "maxHp": 55,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 6,
+            "damageSides": 1,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 7,
+            "damageSides": 1,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.blink",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 12
+  },
+  "nameKey": "actor-demo-vorpal-bunny-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "role": "monster",
+  "speed": 120,
+  "tags": [
+    "animal",
+    "legacy-import",
+    "rabbit",
+    "warrens"
+  ]
+}

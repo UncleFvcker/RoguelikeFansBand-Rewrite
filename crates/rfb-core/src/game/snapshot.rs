@@ -983,7 +983,11 @@ impl Game {
             } else {
                 VisibilityState::Hidden
             },
-            light: light_from_sources(light_sources, position, self.ambient_light()),
+            light: light_from_sources(
+                light_sources,
+                position,
+                self.ambient_light(position, light_sources),
+            ),
         }
     }
 

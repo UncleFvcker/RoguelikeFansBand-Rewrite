@@ -358,6 +358,7 @@ fn roll_shop_stock(
             next_serial,
         )?;
     }
+    inventory.sort_by(|left, right| left.id.cmp(&right.id));
     Ok(inventory)
 }
 

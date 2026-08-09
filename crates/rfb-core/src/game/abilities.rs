@@ -2338,7 +2338,8 @@ impl Game {
             | AbilityEffectDefinition::CurseDamage { .. }
             | AbilityEffectDefinition::TeleportAway { .. }
             | AbilityEffectDefinition::DrainResource { .. }
-            | AbilityEffectDefinition::Amnesia => None,
+            | AbilityEffectDefinition::Amnesia
+            | AbilityEffectDefinition::DarkenRoom => None,
             AbilityEffectDefinition::Teleport => {
                 let TargetSelection::Position { position } = target else {
                     return None;

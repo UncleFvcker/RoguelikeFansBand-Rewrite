@@ -74,7 +74,7 @@
       "playerDefense": 1,
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
-      "playerCarriedWeightTenthsPound": 121,
+      "playerCarriedWeightTenthsPound": 125,
       "playerCarryCapacityTenthsPound": 1000,
       "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
@@ -235,7 +235,7 @@
         {
           "id": "test.item.accuracy-scroll.invalid",
           "kindId": "demo.item.accuracy-scroll",
-          "displayNameKey": "item-demo-unfamiliar-scroll-name",
+          "displayNameKey": "item-demo-accuracy-scroll-appearance",
           "knowledge": "unknown",
           "usable": true,
           "useTargetSpec": {
@@ -248,7 +248,7 @@
           "canReceiveRecharge": false,
           "canSupplyRecharge": false,
           "quantity": 1,
-          "weightTenthsPound": 1,
+          "weightTenthsPound": 5,
           "equipmentSlot": null,
           "modifiers": {
             "attack": 0,
@@ -363,7 +363,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "301f0af38df2f9e1faf61d280d812a2402c57f01b8e68fcaa8aa08fbf39de2a3"
+      "stateHash": "020531a7c74ed8e7b929bef5da846cf575213dff899675b4dc9259d88722b8c9"
     },
     "events": [
       {

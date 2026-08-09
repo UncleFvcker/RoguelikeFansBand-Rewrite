@@ -30,7 +30,7 @@
       "revision": 1,
       "turn": 1,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 102,
+      "rngDrawCounter": 132,
       "floorId": "demo.floor.surface",
       "town": {
         "id": "demo.town.outpost",
@@ -783,7 +783,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 90,
+      "nextItemInstanceSerial": 130,
       "nextGoldPileSerial": 1,
       "tasks": [
         {
@@ -821,7 +821,7 @@
         "victoryTurn": 0,
         "retiredTurn": 1
       },
-      "stateHash": "0bfbbf3b18f1e0c439e00f02108f99382687bcfd9cab06736c09092d783360bc"
+      "stateHash": "93cbf3dd49d28234f38158b6a324a870d2dca692e5986e4ae0e334a81affc5dd"
     },
     "events": [
       {
@@ -836,9 +836,9 @@
       {
         "step": 2,
         "kind": "campaign-ended",
-        "stateHash": "0bfbbf3b18f1e0c439e00f02108f99382687bcfd9cab06736c09092d783360bc"
+        "stateHash": "93cbf3dd49d28234f38158b6a324a870d2dca692e5986e4ae0e334a81affc5dd"
       }
     ],
-    "saveRoundTripStateHash": "0bfbbf3b18f1e0c439e00f02108f99382687bcfd9cab06736c09092d783360bc"
+    "saveRoundTripStateHash": "93cbf3dd49d28234f38158b6a324a870d2dca692e5986e4ae0e334a81affc5dd"
   }
 }

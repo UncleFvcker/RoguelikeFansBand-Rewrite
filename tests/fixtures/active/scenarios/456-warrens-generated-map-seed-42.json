@@ -203,7 +203,7 @@
       "turn": 31,
       "worldTick": 310,
       "lastCommandSeq": 31,
-      "rngDrawCounter": 633,
+      "rngDrawCounter": 233,
       "floorId": "demo.floor.surface",
       "town": {
         "id": "demo.town.outpost",
@@ -415,11 +415,11 @@
         }
       ],
       "playerPosition": {
-        "x": 64,
+        "x": 68,
         "y": 16
       },
-      "playerHp": 21,
-      "playerMaxHp": 46,
+      "playerHp": 40,
+      "playerMaxHp": 40,
       "playerAttack": 2,
       "playerDefense": 15,
       "playerSpeed": 110,
@@ -429,20 +429,20 @@
       "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 346,
       "playerNutrition": 9939,
-      "playerLevel": 3,
-      "playerExperience": 37,
-      "playerMaxLevel": 3,
+      "playerLevel": 2,
+      "playerExperience": 18,
+      "playerMaxLevel": 2,
       "playerPendingAttributeIncreases": 0,
       "playerAttributes": {
-        "level": 3,
-        "maxLevel": 3,
-        "experience": 37,
-        "maximumExperience": 37,
+        "level": 2,
+        "maxLevel": 2,
+        "experience": 18,
+        "maximumExperience": 18,
         "lifeForce": 1000,
         "levelCap": 50,
         "attributeCap": 238,
         "attributeIndexCap": 37,
-        "experienceForNextLevel": 45,
+        "experienceForNextLevel": 25,
         "pendingAttributeIncreases": 0,
         "victoryLevelCapUnlocked": false,
         "attributes": {
@@ -487,7 +487,7 @@
           {
             "id": "demo.skill.device",
             "nameKey": "skill-demo-device-name",
-            "current": 20,
+            "current": 19,
             "maximum": 1000,
             "base": 18,
             "growthPerTenLevels": 7
@@ -495,7 +495,7 @@
           {
             "id": "demo.skill.digging",
             "nameKey": "skill-demo-digging-name",
-            "current": 33,
+            "current": 32,
             "maximum": 1000,
             "base": 30,
             "growthPerTenLevels": 10
@@ -503,7 +503,7 @@
           {
             "id": "demo.skill.disarming",
             "nameKey": "skill-demo-disarming-name",
-            "current": 28,
+            "current": 27,
             "maximum": 1000,
             "base": 25,
             "growthPerTenLevels": 12
@@ -511,7 +511,7 @@
           {
             "id": "demo.skill.melee",
             "nameKey": "skill-demo-melee-name",
-            "current": 79,
+            "current": 76,
             "maximum": 1000,
             "base": 70,
             "growthPerTenLevels": 30
@@ -527,7 +527,7 @@
           {
             "id": "demo.skill.ranged",
             "nameKey": "skill-demo-ranged-name",
-            "current": 64,
+            "current": 61,
             "maximum": 1000,
             "base": 55,
             "growthPerTenLevels": 30
@@ -535,7 +535,7 @@
           {
             "id": "demo.skill.saving-throw",
             "nameKey": "skill-demo-saving-throw-name",
-            "current": 34,
+            "current": 33,
             "maximum": 1000,
             "base": 31,
             "growthPerTenLevels": 10
@@ -559,7 +559,7 @@
           {
             "id": "demo.skill.throwing",
             "nameKey": "skill-demo-throwing-name",
-            "current": 61,
+            "current": 59,
             "maximum": 1000,
             "base": 55,
             "growthPerTenLevels": 20
@@ -578,12 +578,12 @@
         "lifePercent": 115,
         "experiencePercent": 100
       },
-      "entityCount": 5,
+      "entityCount": 3,
       "entities": [
         {
-          "id": "demo.floor.surface.surface.1",
+          "id": "demo.floor.surface.surface.3",
           "position": {
-            "x": 63,
+            "x": 67,
             "y": 16
           },
           "hp": 36,
@@ -591,47 +591,27 @@
           "energyNeed": 100
         },
         {
-          "id": "demo.floor.surface.surface.12",
+          "id": "demo.floor.surface.surface.5",
           "position": {
-            "x": 63,
-            "y": 17
+            "x": 61,
+            "y": 16
           },
           "hp": 20,
           "speed": 120,
           "energyNeed": 100
         },
         {
-          "id": "demo.floor.surface.surface.2",
+          "id": "demo.floor.surface.surface.6",
           "position": {
-            "x": 63,
+            "x": 67,
             "y": 15
-          },
-          "hp": 100,
-          "speed": 110,
-          "energyNeed": 100
-        },
-        {
-          "id": "demo.floor.surface.surface.3",
-          "position": {
-            "x": 64,
-            "y": 15
-          },
-          "hp": 15,
-          "speed": 120,
-          "energyNeed": 100
-        },
-        {
-          "id": "demo.floor.surface.surface.7",
-          "position": {
-            "x": 64,
-            "y": 17
           },
           "hp": 20,
           "speed": 120,
           "energyNeed": 100
         }
       ],
-      "groundItemCount": 3,
+      "groundItemCount": 2,
       "inventoryStackCount": 8,
       "equipmentCount": 3,
       "inventory": [
@@ -1008,7 +988,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 91,
+      "nextItemInstanceSerial": 130,
       "nextGoldPileSerial": 1,
       "tasks": [
         {
@@ -1044,39 +1024,26 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "b576fb8942c34da6755a33c9f748b14d7db51888f1094d8b86d15cc0bd46070c"
+      "stateHash": "d25de501ae89dac836ddf0e5235c8fbf273457072ef2c2473845215c43cb589f"
     },
     "events": [
       {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
+        "kind": "combat.hit",
+        "messageKey": "combat-player-hit",
         "args": {
-          "method": "rfb.blow.claw",
-          "source": "demo.actor.wounded-bear"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.claw",
-          "source": "demo.actor.wounded-bear"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.wounded-bear"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.crow"
+          "damage": "8",
+          "target": "demo.actor.raven"
+        },
+        "outcome": {
+          "type": "damage",
+          "resolution": {
+            "rawDamage": 8,
+            "armorReduction": 0,
+            "resistanceAdjustment": 0,
+            "finalDamage": 8,
+            "damageType": "physical",
+            "resistance": "normal"
+          }
         }
       },
       {
@@ -1084,7 +1051,7 @@
         "messageKey": "combat-monster-miss",
         "args": {
           "method": "rfb.blow.bite",
-          "source": "demo.actor.crow"
+          "source": "demo.actor.raven"
         }
       },
       {
@@ -1092,7 +1059,7 @@
         "messageKey": "combat-monster-miss",
         "args": {
           "method": "rfb.blow.bite",
-          "source": "demo.actor.crow"
+          "source": "demo.actor.raven"
         }
       },
       {
@@ -1100,7 +1067,66 @@
         "messageKey": "combat-monster-miss",
         "args": {
           "method": "rfb.blow.bite",
-          "source": "demo.actor.crow"
+          "source": "demo.actor.raven"
+        }
+      },
+      {
+        "kind": "combat.monster-miss",
+        "messageKey": "combat-monster-miss",
+        "args": {
+          "method": "rfb.blow.bite",
+          "source": "demo.actor.raven"
+        }
+      },
+      {
+        "kind": "combat.hit",
+        "messageKey": "combat-player-hit",
+        "args": {
+          "damage": "8",
+          "target": "demo.actor.raven"
+        },
+        "outcome": {
+          "type": "damage",
+          "resolution": {
+            "rawDamage": 8,
+            "armorReduction": 0,
+            "resistanceAdjustment": 0,
+            "finalDamage": 8,
+            "damageType": "physical",
+            "resistance": "normal"
+          }
+        }
+      },
+      {
+        "kind": "combat.monster-miss",
+        "messageKey": "combat-monster-miss",
+        "args": {
+          "method": "rfb.blow.bite",
+          "source": "demo.actor.raven"
+        }
+      },
+      {
+        "kind": "combat.monster-miss",
+        "messageKey": "combat-monster-miss",
+        "args": {
+          "method": "rfb.blow.bite",
+          "source": "demo.actor.raven"
+        }
+      },
+      {
+        "kind": "combat.monster-miss",
+        "messageKey": "combat-monster-miss",
+        "args": {
+          "method": "rfb.blow.bite",
+          "source": "demo.actor.raven"
+        }
+      },
+      {
+        "kind": "combat.monster-miss",
+        "messageKey": "combat-monster-miss",
+        "args": {
+          "method": "rfb.blow.bite",
+          "source": "demo.actor.raven"
         }
       },
       {
@@ -1108,7 +1134,7 @@
         "messageKey": "combat-player-hit",
         "args": {
           "damage": "7",
-          "target": "demo.actor.crow"
+          "target": "demo.actor.raven"
         },
         "outcome": {
           "type": "damage",
@@ -1123,93 +1149,18 @@
         }
       },
       {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.crow"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.crow"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.claw",
-          "source": "demo.actor.wounded-bear"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.claw",
-          "source": "demo.actor.wounded-bear"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.wounded-bear"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.crow"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.crow"
-        }
-      },
-      {
-        "kind": "combat.hit",
-        "messageKey": "combat-player-hit",
-        "args": {
-          "damage": "11",
-          "target": "demo.actor.crow"
-        },
-        "outcome": {
-          "type": "damage",
-          "resolution": {
-            "rawDamage": 11,
-            "armorReduction": 0,
-            "resistanceAdjustment": 0,
-            "finalDamage": 11,
-            "damageType": "physical",
-            "resistance": "normal"
-          }
-        }
-      },
-      {
         "kind": "combat.slay",
         "messageKey": "combat-player-slay",
         "args": {
-          "target": "demo.actor.crow"
+          "target": "demo.actor.raven"
         },
         "outcome": {
           "type": "death",
           "resolution": {
-            "rawDamage": 11,
+            "rawDamage": 7,
             "armorReduction": 0,
             "resistanceAdjustment": 0,
-            "finalDamage": 11,
+            "finalDamage": 7,
             "damageType": "physical",
             "resistance": "normal"
           }
@@ -1219,33 +1170,28 @@
         "kind": "player.experience-gained",
         "messageKey": "player-experience-gained",
         "args": {
-          "amount": "10",
-          "total": "10"
+          "amount": "9",
+          "total": "9"
         }
       },
       {
-        "kind": "player.level-gained",
-        "messageKey": "player-level-gained",
+        "kind": "combat.monster-hit",
+        "messageKey": "combat-monster-hit",
         "args": {
-          "level": "2",
-          "maxHp": "40",
-          "pendingAttributeIncreases": "0"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.claw",
-          "source": "demo.actor.wounded-bear"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.claw",
-          "source": "demo.actor.wounded-bear"
+          "damage": "1",
+          "method": "rfb.blow.bite",
+          "source": "demo.actor.raven"
+        },
+        "outcome": {
+          "type": "damage",
+          "resolution": {
+            "rawDamage": 3,
+            "armorReduction": 2,
+            "resistanceAdjustment": 0,
+            "finalDamage": 1,
+            "damageType": "physical",
+            "resistance": "normal"
+          }
         }
       },
       {
@@ -1253,7 +1199,26 @@
         "messageKey": "combat-monster-miss",
         "args": {
           "method": "rfb.blow.bite",
-          "source": "demo.actor.wounded-bear"
+          "source": "demo.actor.raven"
+        }
+      },
+      {
+        "kind": "combat.hit",
+        "messageKey": "combat-player-hit",
+        "args": {
+          "damage": "5",
+          "target": "demo.actor.raven"
+        },
+        "outcome": {
+          "type": "damage",
+          "resolution": {
+            "rawDamage": 5,
+            "armorReduction": 0,
+            "resistanceAdjustment": 0,
+            "finalDamage": 5,
+            "damageType": "physical",
+            "resistance": "normal"
+          }
         }
       },
       {
@@ -1261,7 +1226,7 @@
         "messageKey": "combat-monster-miss",
         "args": {
           "method": "rfb.blow.bite",
-          "source": "demo.actor.crow"
+          "source": "demo.actor.raven"
         }
       },
       {
@@ -1269,7 +1234,23 @@
         "messageKey": "combat-monster-miss",
         "args": {
           "method": "rfb.blow.bite",
-          "source": "demo.actor.crow"
+          "source": "demo.actor.raven"
+        }
+      },
+      {
+        "kind": "combat.monster-miss",
+        "messageKey": "combat-monster-miss",
+        "args": {
+          "method": "rfb.blow.bite",
+          "source": "demo.actor.raven"
+        }
+      },
+      {
+        "kind": "combat.monster-miss",
+        "messageKey": "combat-monster-miss",
+        "args": {
+          "method": "rfb.blow.bite",
+          "source": "demo.actor.raven"
         }
       },
       {
@@ -1277,7 +1258,7 @@
         "messageKey": "combat-player-hit",
         "args": {
           "damage": "9",
-          "target": "demo.actor.crow"
+          "target": "demo.actor.raven"
         },
         "outcome": {
           "type": "damage",
@@ -1296,239 +1277,6 @@
         "messageKey": "combat-monster-miss",
         "args": {
           "method": "rfb.blow.bite",
-          "source": "demo.actor.crow"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.crow"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.raven"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.raven"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.claw",
-          "source": "demo.actor.wounded-bear"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.claw",
-          "source": "demo.actor.wounded-bear"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.wounded-bear"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.crow"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.crow"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.crow"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.crow"
-        }
-      },
-      {
-        "kind": "combat.hit",
-        "messageKey": "combat-player-hit",
-        "args": {
-          "damage": "6",
-          "target": "demo.actor.crow"
-        },
-        "outcome": {
-          "type": "damage",
-          "resolution": {
-            "rawDamage": 6,
-            "armorReduction": 0,
-            "resistanceAdjustment": 0,
-            "finalDamage": 6,
-            "damageType": "physical",
-            "resistance": "normal"
-          }
-        }
-      },
-      {
-        "kind": "combat.slay",
-        "messageKey": "combat-player-slay",
-        "args": {
-          "target": "demo.actor.crow"
-        },
-        "outcome": {
-          "type": "death",
-          "resolution": {
-            "rawDamage": 6,
-            "armorReduction": 0,
-            "resistanceAdjustment": 0,
-            "finalDamage": 6,
-            "damageType": "physical",
-            "resistance": "normal"
-          }
-        }
-      },
-      {
-        "kind": "player.experience-gained",
-        "messageKey": "player-experience-gained",
-        "args": {
-          "amount": "10",
-          "total": "20"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.raven"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.raven"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.crow"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.crow"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.raven"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.raven"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.claw",
-          "source": "demo.actor.wounded-bear"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.claw",
-          "source": "demo.actor.wounded-bear"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.wounded-bear"
-        }
-      },
-      {
-        "kind": "combat.monster-hit",
-        "messageKey": "combat-monster-hit",
-        "args": {
-          "damage": "0",
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.crow"
-        },
-        "outcome": {
-          "type": "damage",
-          "resolution": {
-            "rawDamage": 1,
-            "armorReduction": 1,
-            "resistanceAdjustment": 0,
-            "finalDamage": 0,
-            "damageType": "physical",
-            "resistance": "normal"
-          }
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.crow"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
           "source": "demo.actor.raven"
         }
       },
@@ -1554,495 +1302,6 @@
         "args": {
           "method": "rfb.blow.bite",
           "source": "demo.actor.raven"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.crow"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.crow"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.raven"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.raven"
-        }
-      },
-      {
-        "kind": "combat.miss",
-        "messageKey": "combat-player-miss",
-        "args": {
-          "target": "demo.actor.raven"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.raven"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.raven"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.crow"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.crow"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.raven"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.raven"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.raven"
-        }
-      },
-      {
-        "kind": "combat.monster-hit",
-        "messageKey": "combat-monster-hit",
-        "args": {
-          "damage": "3",
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.raven"
-        },
-        "outcome": {
-          "type": "damage",
-          "resolution": {
-            "rawDamage": 7,
-            "armorReduction": 4,
-            "resistanceAdjustment": 0,
-            "finalDamage": 3,
-            "damageType": "physical",
-            "resistance": "normal"
-          }
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.claw",
-          "source": "demo.actor.wounded-bear"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.claw",
-          "source": "demo.actor.wounded-bear"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.wounded-bear"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.crow"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.crow"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.raven"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.raven"
-        }
-      },
-      {
-        "kind": "combat.hit",
-        "messageKey": "combat-player-hit",
-        "args": {
-          "damage": "7",
-          "target": "demo.actor.raven"
-        },
-        "outcome": {
-          "type": "damage",
-          "resolution": {
-            "rawDamage": 7,
-            "armorReduction": 0,
-            "resistanceAdjustment": 0,
-            "finalDamage": 7,
-            "damageType": "physical",
-            "resistance": "normal"
-          }
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.raven"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.raven"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.crow"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.crow"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.raven"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.raven"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.raven"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.raven"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.claw",
-          "source": "demo.actor.wounded-bear"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.claw",
-          "source": "demo.actor.wounded-bear"
-        }
-      },
-      {
-        "kind": "combat.monster-hit",
-        "messageKey": "combat-monster-hit",
-        "args": {
-          "damage": "0",
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.wounded-bear"
-        },
-        "outcome": {
-          "type": "damage",
-          "resolution": {
-            "rawDamage": 1,
-            "armorReduction": 1,
-            "resistanceAdjustment": 0,
-            "finalDamage": 0,
-            "damageType": "physical",
-            "resistance": "normal"
-          }
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.crow"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.crow"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.raven"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.raven"
-        }
-      },
-      {
-        "kind": "combat.hit",
-        "messageKey": "combat-player-hit",
-        "args": {
-          "damage": "7",
-          "target": "demo.actor.raven"
-        },
-        "outcome": {
-          "type": "damage",
-          "resolution": {
-            "rawDamage": 7,
-            "armorReduction": 0,
-            "resistanceAdjustment": 0,
-            "finalDamage": 7,
-            "damageType": "physical",
-            "resistance": "normal"
-          }
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.raven"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.raven"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.crow"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.crow"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.raven"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.raven"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.bloodfang-the-wolf"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.bloodfang-the-wolf"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.raven"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.raven"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.claw",
-          "source": "demo.actor.wounded-bear"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.claw",
-          "source": "demo.actor.wounded-bear"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.wounded-bear"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.crow"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.crow"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.raven"
-        }
-      },
-      {
-        "kind": "combat.monster-hit",
-        "messageKey": "combat-monster-hit",
-        "args": {
-          "damage": "1",
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.raven"
-        },
-        "outcome": {
-          "type": "damage",
-          "resolution": {
-            "rawDamage": 2,
-            "armorReduction": 1,
-            "resistanceAdjustment": 0,
-            "finalDamage": 1,
-            "damageType": "physical",
-            "resistance": "normal"
-          }
         }
       },
       {
@@ -2087,272 +1346,16 @@
         "messageKey": "player-experience-gained",
         "args": {
           "amount": "9",
-          "total": "29"
+          "total": "18"
         }
       },
       {
         "kind": "player.level-gained",
         "messageKey": "player-level-gained",
         "args": {
-          "level": "3",
-          "maxHp": "46",
+          "level": "2",
+          "maxHp": "40",
           "pendingAttributeIncreases": "0"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.bloodfang-the-wolf"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.bloodfang-the-wolf"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.raven"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.raven"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.crow"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.crow"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.bloodfang-the-wolf"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.bloodfang-the-wolf"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.raven"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.raven"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.claw",
-          "source": "demo.actor.wounded-bear"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.claw",
-          "source": "demo.actor.wounded-bear"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.wounded-bear"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.crow"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.crow"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.raven"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.raven"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.bloodfang-the-wolf"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.bloodfang-the-wolf"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.raven"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.raven"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.crow"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.crow"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.bloodfang-the-wolf"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.bloodfang-the-wolf"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.raven"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.raven"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.crow"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.crow"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.bloodfang-the-wolf"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.bloodfang-the-wolf"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.raven"
         }
       },
       {
@@ -2369,7 +1372,7 @@
         "args": {
           "damage": "1",
           "method": "rfb.blow.bite",
-          "source": "demo.actor.crow"
+          "source": "demo.actor.raven"
         },
         "outcome": {
           "type": "damage",
@@ -2388,23 +1391,7 @@
         "messageKey": "combat-monster-miss",
         "args": {
           "method": "rfb.blow.bite",
-          "source": "demo.actor.crow"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.bloodfang-the-wolf"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.bloodfang-the-wolf"
+          "source": "demo.actor.raven"
         }
       },
       {
@@ -2413,70 +1400,6 @@
         "args": {
           "method": "rfb.blow.bite",
           "source": "demo.actor.raven"
-        }
-      },
-      {
-        "kind": "combat.monster-hit",
-        "messageKey": "combat-monster-hit",
-        "args": {
-          "damage": "2",
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.raven"
-        },
-        "outcome": {
-          "type": "damage",
-          "resolution": {
-            "rawDamage": 5,
-            "armorReduction": 3,
-            "resistanceAdjustment": 0,
-            "finalDamage": 2,
-            "damageType": "physical",
-            "resistance": "normal"
-          }
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.crow"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.crow"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.bloodfang-the-wolf"
-        }
-      },
-      {
-        "kind": "combat.monster-hit",
-        "messageKey": "combat-monster-hit",
-        "args": {
-          "damage": "5",
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.bloodfang-the-wolf"
-        },
-        "outcome": {
-          "type": "damage",
-          "resolution": {
-            "rawDamage": 11,
-            "armorReduction": 6,
-            "resistanceAdjustment": 0,
-            "finalDamage": 5,
-            "damageType": "physical",
-            "resistance": "normal"
-          }
         }
       },
       {
@@ -2500,77 +1423,6 @@
         "messageKey": "combat-monster-miss",
         "args": {
           "method": "rfb.blow.bite",
-          "source": "demo.actor.crow"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.crow"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.giant-green-frog"
-        }
-      },
-      {
-        "kind": "combat.hit",
-        "messageKey": "combat-player-hit",
-        "args": {
-          "damage": "7",
-          "target": "demo.actor.giant-green-frog"
-        },
-        "outcome": {
-          "type": "damage",
-          "resolution": {
-            "rawDamage": 7,
-            "armorReduction": 0,
-            "resistanceAdjustment": 0,
-            "finalDamage": 7,
-            "damageType": "physical",
-            "resistance": "normal"
-          }
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.bloodfang-the-wolf"
-        }
-      },
-      {
-        "kind": "combat.monster-hit",
-        "messageKey": "combat-monster-hit",
-        "args": {
-          "damage": "5",
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.bloodfang-the-wolf"
-        },
-        "outcome": {
-          "type": "damage",
-          "resolution": {
-            "rawDamage": 11,
-            "armorReduction": 6,
-            "resistanceAdjustment": 0,
-            "finalDamage": 5,
-            "damageType": "physical",
-            "resistance": "normal"
-          }
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
           "source": "demo.actor.raven"
         }
       },
@@ -2580,22 +1432,6 @@
         "args": {
           "method": "rfb.blow.bite",
           "source": "demo.actor.raven"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.crow"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.crow"
         }
       },
       {
@@ -2635,236 +1471,7 @@
         "messageKey": "combat-monster-miss",
         "args": {
           "method": "rfb.blow.bite",
-          "source": "demo.actor.crow"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.crow"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.giant-green-frog"
-        }
-      },
-      {
-        "kind": "combat.hit",
-        "messageKey": "combat-player-hit",
-        "args": {
-          "damage": "7",
-          "target": "demo.actor.giant-green-frog"
-        },
-        "outcome": {
-          "type": "damage",
-          "resolution": {
-            "rawDamage": 7,
-            "armorReduction": 0,
-            "resistanceAdjustment": 0,
-            "finalDamage": 7,
-            "damageType": "physical",
-            "resistance": "normal"
-          }
-        }
-      },
-      {
-        "kind": "combat.slay",
-        "messageKey": "combat-player-slay",
-        "args": {
-          "target": "demo.actor.giant-green-frog"
-        },
-        "outcome": {
-          "type": "death",
-          "resolution": {
-            "rawDamage": 7,
-            "armorReduction": 0,
-            "resistanceAdjustment": 0,
-            "finalDamage": 7,
-            "damageType": "physical",
-            "resistance": "normal"
-          }
-        }
-      },
-      {
-        "kind": "player.experience-gained",
-        "messageKey": "player-experience-gained",
-        "args": {
-          "amount": "8",
-          "total": "37"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
           "source": "demo.actor.bloodfang-the-wolf"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.bloodfang-the-wolf"
-        }
-      },
-      {
-        "kind": "combat.monster-hit",
-        "messageKey": "combat-monster-hit",
-        "args": {
-          "damage": "3",
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.raven"
-        },
-        "outcome": {
-          "type": "damage",
-          "resolution": {
-            "rawDamage": 7,
-            "armorReduction": 4,
-            "resistanceAdjustment": 0,
-            "finalDamage": 3,
-            "damageType": "physical",
-            "resistance": "normal"
-          }
-        }
-      },
-      {
-        "kind": "combat.monster-hit",
-        "messageKey": "combat-monster-hit",
-        "args": {
-          "damage": "2",
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.raven"
-        },
-        "outcome": {
-          "type": "damage",
-          "resolution": {
-            "rawDamage": 5,
-            "armorReduction": 3,
-            "resistanceAdjustment": 0,
-            "finalDamage": 2,
-            "damageType": "physical",
-            "resistance": "normal"
-          }
-        }
-      },
-      {
-        "kind": "combat.monster-hit",
-        "messageKey": "combat-monster-hit",
-        "args": {
-          "damage": "0",
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.crow"
-        },
-        "outcome": {
-          "type": "damage",
-          "resolution": {
-            "rawDamage": 1,
-            "armorReduction": 1,
-            "resistanceAdjustment": 0,
-            "finalDamage": 0,
-            "damageType": "physical",
-            "resistance": "normal"
-          }
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.crow"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.bloodfang-the-wolf"
-        }
-      },
-      {
-        "kind": "combat.monster-hit",
-        "messageKey": "combat-monster-hit",
-        "args": {
-          "damage": "3",
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.bloodfang-the-wolf"
-        },
-        "outcome": {
-          "type": "damage",
-          "resolution": {
-            "rawDamage": 7,
-            "armorReduction": 4,
-            "resistanceAdjustment": 0,
-            "finalDamage": 3,
-            "damageType": "physical",
-            "resistance": "normal"
-          }
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.raven"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.raven"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.claw",
-          "source": "demo.actor.wounded-bear"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.claw",
-          "source": "demo.actor.wounded-bear"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.wounded-bear"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.crow"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.crow"
         }
       },
       {
@@ -2888,39 +1495,7 @@
         "messageKey": "combat-monster-miss",
         "args": {
           "method": "rfb.blow.bite",
-          "source": "demo.actor.raven"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.raven"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.claw",
-          "source": "demo.actor.wounded-bear"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.claw",
-          "source": "demo.actor.wounded-bear"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.wounded-bear"
+          "source": "demo.actor.bloodfang-the-wolf"
         }
       },
       {
@@ -2949,38 +1524,6 @@
         "messageKey": "combat-monster-miss",
         "args": {
           "method": "rfb.blow.bite",
-          "source": "demo.actor.raven"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.raven"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.crow"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.crow"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
           "source": "demo.actor.bloodfang-the-wolf"
         }
       },
@@ -2990,117 +1533,89 @@
         "args": {
           "method": "rfb.blow.bite",
           "source": "demo.actor.bloodfang-the-wolf"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.raven"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.raven"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.claw",
-          "source": "demo.actor.wounded-bear"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.claw",
-          "source": "demo.actor.wounded-bear"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.wounded-bear"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.crow"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.crow"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.raven"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.raven"
         }
       }
     ],
     "changedCells": [
       {
         "x": 3,
-        "y": 17
+        "y": 13
       },
       {
         "x": 4,
-        "y": 16
+        "y": 14
       },
       {
         "x": 5,
+        "y": 15
+      },
+      {
+        "x": 10,
+        "y": 30
+      },
+      {
+        "x": 11,
+        "y": 29
+      },
+      {
+        "x": 12,
+        "y": 28
+      },
+      {
+        "x": 14,
+        "y": 15
+      },
+      {
+        "x": 15,
         "y": 16
       },
       {
-        "x": 21,
-        "y": 10
+        "x": 16,
+        "y": 16
+      },
+      {
+        "x": 20,
+        "y": 6
       },
       {
         "x": 21,
-        "y": 11
+        "y": 7
       },
       {
         "x": 21,
-        "y": 12
+        "y": 8
       },
       {
         "x": 26,
-        "y": 22
+        "y": 26
       },
       {
         "x": 27,
-        "y": 23
+        "y": 26
       },
       {
         "x": 28,
-        "y": 23
+        "y": 27
+      },
+      {
+        "x": 29,
+        "y": 4
+      },
+      {
+        "x": 30,
+        "y": 3
+      },
+      {
+        "x": 31,
+        "y": 2
+      },
+      {
+        "x": 35,
+        "y": 26
+      },
+      {
+        "x": 36,
+        "y": 26
       },
       {
         "x": 44,
@@ -3111,72 +1626,32 @@
         "y": 16
       },
       {
-        "x": 56,
-        "y": 22
+        "x": 58,
+        "y": 1
       },
       {
-        "x": 57,
-        "y": 21
-      },
-      {
-        "x": 80,
-        "y": 6
-      },
-      {
-        "x": 81,
-        "y": 5
-      },
-      {
-        "x": 82,
-        "y": 4
-      },
-      {
-        "x": 83,
-        "y": 18
-      },
-      {
-        "x": 84,
-        "y": 19
-      },
-      {
-        "x": 85,
-        "y": 23
-      },
-      {
-        "x": 86,
-        "y": 24
-      },
-      {
-        "x": 87,
-        "y": 4
-      },
-      {
-        "x": 87,
-        "y": 25
-      },
-      {
-        "x": 88,
-        "y": 3
-      },
-      {
-        "x": 89,
+        "x": 59,
         "y": 2
       },
       {
-        "x": 89,
-        "y": 7
+        "x": 60,
+        "y": 3
       },
       {
-        "x": 90,
-        "y": 6
+        "x": 66,
+        "y": 26
       },
       {
-        "x": 91,
-        "y": 5
+        "x": 67,
+        "y": 27
+      },
+      {
+        "x": 68,
+        "y": 28
       },
       {
         "x": 5,
-        "y": 16
+        "y": 15
       },
       {
         "x": 6,
@@ -3187,28 +1662,72 @@
         "y": 16
       },
       {
-        "x": 21,
-        "y": 12
+        "x": 12,
+        "y": 28
+      },
+      {
+        "x": 13,
+        "y": 27
+      },
+      {
+        "x": 14,
+        "y": 26
+      },
+      {
+        "x": 16,
+        "y": 16
+      },
+      {
+        "x": 17,
+        "y": 16
+      },
+      {
+        "x": 18,
+        "y": 16
       },
       {
         "x": 21,
-        "y": 13
+        "y": 8
       },
       {
         "x": 21,
-        "y": 14
+        "y": 9
+      },
+      {
+        "x": 21,
+        "y": 10
+      },
+      {
+        "x": 24,
+        "y": 26
+      },
+      {
+        "x": 25,
+        "y": 26
+      },
+      {
+        "x": 26,
+        "y": 26
+      },
+      {
+        "x": 27,
+        "y": 5
       },
       {
         "x": 28,
-        "y": 23
+        "y": 5
       },
       {
         "x": 29,
-        "y": 23
+        "y": 4
       },
       {
-        "x": 30,
-        "y": 23
+        "x": 34,
+        "y": 26
+      },
+      {
+        "x": 35,
+        "y": 26
       },
       {
         "x": 45,
@@ -3219,68 +1738,28 @@
         "y": 16
       },
       {
-        "x": 55,
-        "y": 22
+        "x": 60,
+        "y": 3
       },
       {
-        "x": 56,
-        "y": 22
-      },
-      {
-        "x": 78,
-        "y": 8
-      },
-      {
-        "x": 79,
-        "y": 7
-      },
-      {
-        "x": 80,
-        "y": 6
-      },
-      {
-        "x": 82,
-        "y": 17
-      },
-      {
-        "x": 83,
-        "y": 18
-      },
-      {
-        "x": 83,
-        "y": 21
-      },
-      {
-        "x": 84,
-        "y": 22
-      },
-      {
-        "x": 85,
-        "y": 6
-      },
-      {
-        "x": 85,
-        "y": 23
-      },
-      {
-        "x": 86,
-        "y": 5
-      },
-      {
-        "x": 87,
+        "x": 61,
         "y": 4
       },
       {
-        "x": 87,
-        "y": 9
+        "x": 62,
+        "y": 5
       },
       {
-        "x": 88,
-        "y": 8
+        "x": 66,
+        "y": 26
       },
       {
-        "x": 89,
-        "y": 7
+        "x": 67,
+        "y": 24
+      },
+      {
+        "x": 67,
+        "y": 25
       },
       {
         "x": 7,
@@ -3295,28 +1774,72 @@
         "y": 16
       },
       {
-        "x": 21,
-        "y": 14
+        "x": 14,
+        "y": 26
       },
       {
-        "x": 21,
-        "y": 15
+        "x": 15,
+        "y": 25
       },
       {
-        "x": 22,
+        "x": 16,
+        "y": 24
+      },
+      {
+        "x": 18,
         "y": 16
       },
       {
-        "x": 30,
-        "y": 23
+        "x": 19,
+        "y": 16
       },
       {
-        "x": 31,
-        "y": 23
+        "x": 20,
+        "y": 16
       },
       {
-        "x": 32,
-        "y": 23
+        "x": 21,
+        "y": 10
+      },
+      {
+        "x": 21,
+        "y": 11
+      },
+      {
+        "x": 21,
+        "y": 12
+      },
+      {
+        "x": 22,
+        "y": 26
+      },
+      {
+        "x": 23,
+        "y": 26
+      },
+      {
+        "x": 24,
+        "y": 26
+      },
+      {
+        "x": 25,
+        "y": 5
+      },
+      {
+        "x": 26,
+        "y": 5
+      },
+      {
+        "x": 27,
+        "y": 5
+      },
+      {
+        "x": 33,
+        "y": 26
+      },
+      {
+        "x": 34,
+        "y": 26
       },
       {
         "x": 46,
@@ -3327,68 +1850,28 @@
         "y": 16
       },
       {
-        "x": 54,
+        "x": 62,
+        "y": 5
+      },
+      {
+        "x": 63,
+        "y": 5
+      },
+      {
+        "x": 64,
+        "y": 5
+      },
+      {
+        "x": 67,
         "y": 22
       },
       {
-        "x": 55,
-        "y": 22
+        "x": 67,
+        "y": 23
       },
       {
-        "x": 76,
-        "y": 10
-      },
-      {
-        "x": 77,
-        "y": 9
-      },
-      {
-        "x": 78,
-        "y": 8
-      },
-      {
-        "x": 81,
-        "y": 16
-      },
-      {
-        "x": 81,
-        "y": 19
-      },
-      {
-        "x": 82,
-        "y": 17
-      },
-      {
-        "x": 82,
-        "y": 20
-      },
-      {
-        "x": 83,
-        "y": 8
-      },
-      {
-        "x": 83,
-        "y": 21
-      },
-      {
-        "x": 84,
-        "y": 7
-      },
-      {
-        "x": 85,
-        "y": 6
-      },
-      {
-        "x": 85,
-        "y": 11
-      },
-      {
-        "x": 86,
-        "y": 10
-      },
-      {
-        "x": 87,
-        "y": 9
+        "x": 67,
+        "y": 24
       },
       {
         "x": 9,
@@ -3403,28 +1886,64 @@
         "y": 16
       },
       {
+        "x": 16,
+        "y": 24
+      },
+      {
+        "x": 17,
+        "y": 23
+      },
+      {
+        "x": 18,
+        "y": 22
+      },
+      {
+        "x": 20,
+        "y": 16
+      },
+      {
+        "x": 21,
+        "y": 12
+      },
+      {
+        "x": 21,
+        "y": 13
+      },
+      {
+        "x": 21,
+        "y": 14
+      },
+      {
+        "x": 21,
+        "y": 16
+      },
+      {
+        "x": 21,
+        "y": 25
+      },
+      {
         "x": 22,
         "y": 16
       },
       {
-        "x": 23,
-        "y": 16
+        "x": 22,
+        "y": 26
       },
       {
         "x": 24,
-        "y": 16
+        "y": 5
+      },
+      {
+        "x": 25,
+        "y": 5
       },
       {
         "x": 32,
-        "y": 23
+        "y": 26
       },
       {
         "x": 33,
-        "y": 23
-      },
-      {
-        "x": 34,
-        "y": 23
+        "y": 26
       },
       {
         "x": 47,
@@ -3435,80 +1954,28 @@
         "y": 16
       },
       {
-        "x": 53,
+        "x": 64,
+        "y": 5
+      },
+      {
+        "x": 65,
+        "y": 5
+      },
+      {
+        "x": 66,
+        "y": 5
+      },
+      {
+        "x": 67,
+        "y": 20
+      },
+      {
+        "x": 67,
+        "y": 21
+      },
+      {
+        "x": 67,
         "y": 22
-      },
-      {
-        "x": 54,
-        "y": 22
-      },
-      {
-        "x": 74,
-        "y": 12
-      },
-      {
-        "x": 75,
-        "y": 11
-      },
-      {
-        "x": 76,
-        "y": 10
-      },
-      {
-        "x": 79,
-        "y": 18
-      },
-      {
-        "x": 80,
-        "y": 17
-      },
-      {
-        "x": 80,
-        "y": 18
-      },
-      {
-        "x": 81,
-        "y": 10
-      },
-      {
-        "x": 81,
-        "y": 16
-      },
-      {
-        "x": 81,
-        "y": 19
-      },
-      {
-        "x": 82,
-        "y": 9
-      },
-      {
-        "x": 83,
-        "y": 8
-      },
-      {
-        "x": 83,
-        "y": 13
-      },
-      {
-        "x": 84,
-        "y": 8
-      },
-      {
-        "x": 84,
-        "y": 12
-      },
-      {
-        "x": 85,
-        "y": 8
-      },
-      {
-        "x": 85,
-        "y": 11
-      },
-      {
-        "x": 86,
-        "y": 8
       },
       {
         "x": 11,
@@ -3516,11 +1983,59 @@
       },
       {
         "x": 12,
-        "y": 16
+        "y": 17
       },
       {
         "x": 13,
         "y": 16
+      },
+      {
+        "x": 18,
+        "y": 22
+      },
+      {
+        "x": 19,
+        "y": 23
+      },
+      {
+        "x": 20,
+        "y": 22
+      },
+      {
+        "x": 21,
+        "y": 13
+      },
+      {
+        "x": 21,
+        "y": 14
+      },
+      {
+        "x": 21,
+        "y": 24
+      },
+      {
+        "x": 21,
+        "y": 25
+      },
+      {
+        "x": 22,
+        "y": 16
+      },
+      {
+        "x": 22,
+        "y": 26
+      },
+      {
+        "x": 23,
+        "y": 5
+      },
+      {
+        "x": 23,
+        "y": 16
+      },
+      {
+        "x": 24,
+        "y": 5
       },
       {
         "x": 24,
@@ -3528,23 +2043,15 @@
       },
       {
         "x": 25,
-        "y": 16
+        "y": 5
       },
       {
-        "x": 26,
-        "y": 16
+        "x": 31,
+        "y": 26
       },
       {
-        "x": 34,
-        "y": 23
-      },
-      {
-        "x": 35,
-        "y": 23
-      },
-      {
-        "x": 36,
-        "y": 23
+        "x": 32,
+        "y": 26
       },
       {
         "x": 48,
@@ -3555,72 +2062,28 @@
         "y": 16
       },
       {
-        "x": 52,
-        "y": 21
+        "x": 66,
+        "y": 5
       },
       {
-        "x": 53,
-        "y": 22
+        "x": 67,
+        "y": 6
       },
       {
-        "x": 72,
-        "y": 12
+        "x": 67,
+        "y": 7
       },
       {
-        "x": 73,
-        "y": 12
-      },
-      {
-        "x": 74,
-        "y": 12
-      },
-      {
-        "x": 77,
-        "y": 20
-      },
-      {
-        "x": 78,
-        "y": 19
-      },
-      {
-        "x": 79,
-        "y": 12
-      },
-      {
-        "x": 79,
+        "x": 67,
         "y": 18
       },
       {
-        "x": 80,
-        "y": 11
+        "x": 67,
+        "y": 19
       },
       {
-        "x": 80,
-        "y": 17
-      },
-      {
-        "x": 81,
-        "y": 10
-      },
-      {
-        "x": 81,
-        "y": 15
-      },
-      {
-        "x": 82,
-        "y": 14
-      },
-      {
-        "x": 83,
-        "y": 13
-      },
-      {
-        "x": 85,
-        "y": 9
-      },
-      {
-        "x": 86,
-        "y": 8
+        "x": 67,
+        "y": 20
       },
       {
         "x": 13,
@@ -3635,6 +2098,146 @@
         "y": 16
       },
       {
+        "x": 20,
+        "y": 22
+      },
+      {
+        "x": 20,
+        "y": 23
+      },
+      {
+        "x": 21,
+        "y": 14
+      },
+      {
+        "x": 21,
+        "y": 15
+      },
+      {
+        "x": 21,
+        "y": 21
+      },
+      {
+        "x": 21,
+        "y": 24
+      },
+      {
+        "x": 22,
+        "y": 5
+      },
+      {
+        "x": 22,
+        "y": 16
+      },
+      {
+        "x": 23,
+        "y": 5
+      },
+      {
+        "x": 24,
+        "y": 16
+      },
+      {
+        "x": 25,
+        "y": 16
+      },
+      {
+        "x": 26,
+        "y": 16
+      },
+      {
+        "x": 30,
+        "y": 26
+      },
+      {
+        "x": 31,
+        "y": 26
+      },
+      {
+        "x": 49,
+        "y": 16
+      },
+      {
+        "x": 50,
+        "y": 16
+      },
+      {
+        "x": 66,
+        "y": 16
+      },
+      {
+        "x": 67,
+        "y": 7
+      },
+      {
+        "x": 67,
+        "y": 8
+      },
+      {
+        "x": 67,
+        "y": 17
+      },
+      {
+        "x": 67,
+        "y": 18
+      },
+      {
+        "x": 15,
+        "y": 16
+      },
+      {
+        "x": 16,
+        "y": 17
+      },
+      {
+        "x": 17,
+        "y": 16
+      },
+      {
+        "x": 20,
+        "y": 23
+      },
+      {
+        "x": 21,
+        "y": 6
+      },
+      {
+        "x": 21,
+        "y": 7
+      },
+      {
+        "x": 21,
+        "y": 19
+      },
+      {
+        "x": 21,
+        "y": 20
+      },
+      {
+        "x": 21,
+        "y": 21
+      },
+      {
+        "x": 21,
+        "y": 22
+      },
+      {
+        "x": 22,
+        "y": 5
+      },
+      {
+        "x": 22,
+        "y": 16
+      },
+      {
+        "x": 23,
+        "y": 16
+      },
+      {
+        "x": 24,
+        "y": 16
+      },
+      {
         "x": 26,
         "y": 16
       },
@@ -3647,124 +2250,12 @@
         "y": 16
       },
       {
-        "x": 36,
-        "y": 23
-      },
-      {
-        "x": 37,
-        "y": 23
-      },
-      {
-        "x": 38,
-        "y": 22
-      },
-      {
-        "x": 49,
-        "y": 16
-      },
-      {
-        "x": 50,
-        "y": 16
-      },
-      {
-        "x": 51,
-        "y": 20
-      },
-      {
-        "x": 52,
-        "y": 21
-      },
-      {
-        "x": 70,
-        "y": 13
-      },
-      {
-        "x": 71,
-        "y": 12
-      },
-      {
-        "x": 72,
-        "y": 12
-      },
-      {
-        "x": 75,
-        "y": 20
-      },
-      {
-        "x": 76,
-        "y": 20
-      },
-      {
-        "x": 77,
-        "y": 12
-      },
-      {
-        "x": 77,
-        "y": 20
-      },
-      {
-        "x": 78,
-        "y": 13
-      },
-      {
-        "x": 78,
-        "y": 19
-      },
-      {
-        "x": 79,
-        "y": 12
-      },
-      {
-        "x": 79,
-        "y": 13
-      },
-      {
-        "x": 79,
-        "y": 18
-      },
-      {
-        "x": 80,
-        "y": 14
-      },
-      {
-        "x": 81,
-        "y": 15
-      },
-      {
-        "x": 15,
-        "y": 16
-      },
-      {
-        "x": 16,
-        "y": 16
-      },
-      {
-        "x": 17,
-        "y": 16
-      },
-      {
-        "x": 28,
-        "y": 16
-      },
-      {
         "x": 29,
-        "y": 16
+        "y": 26
       },
       {
         "x": 30,
-        "y": 16
-      },
-      {
-        "x": 38,
-        "y": 21
-      },
-      {
-        "x": 38,
-        "y": 22
-      },
-      {
-        "x": 39,
-        "y": 20
+        "y": 26
       },
       {
         "x": 50,
@@ -3775,64 +2266,28 @@
         "y": 16
       },
       {
-        "x": 51,
-        "y": 19
+        "x": 64,
+        "y": 16
       },
       {
-        "x": 51,
-        "y": 20
+        "x": 65,
+        "y": 16
       },
       {
-        "x": 68,
-        "y": 15
+        "x": 66,
+        "y": 16
       },
       {
-        "x": 69,
-        "y": 14
+        "x": 67,
+        "y": 8
       },
       {
-        "x": 70,
-        "y": 13
+        "x": 67,
+        "y": 9
       },
       {
-        "x": 73,
-        "y": 20
-      },
-      {
-        "x": 74,
-        "y": 20
-      },
-      {
-        "x": 75,
-        "y": 12
-      },
-      {
-        "x": 75,
-        "y": 20
-      },
-      {
-        "x": 76,
-        "y": 12
-      },
-      {
-        "x": 77,
-        "y": 12
-      },
-      {
-        "x": 77,
-        "y": 20
-      },
-      {
-        "x": 78,
-        "y": 13
-      },
-      {
-        "x": 78,
-        "y": 19
-      },
-      {
-        "x": 79,
-        "y": 13
+        "x": 67,
+        "y": 10
       },
       {
         "x": 17,
@@ -3847,243 +2302,75 @@
         "y": 16
       },
       {
+        "x": 21,
+        "y": 7
+      },
+      {
+        "x": 21,
+        "y": 8
+      },
+      {
+        "x": 21,
+        "y": 9
+      },
+      {
+        "x": 21,
+        "y": 17
+      },
+      {
+        "x": 21,
+        "y": 18
+      },
+      {
+        "x": 21,
+        "y": 19
+      },
+      {
+        "x": 21,
+        "y": 20
+      },
+      {
+        "x": 21,
+        "y": 21
+      },
+      {
+        "x": 24,
+        "y": 16
+      },
+      {
+        "x": 25,
+        "y": 16
+      },
+      {
+        "x": 26,
+        "y": 16
+      },
+      {
+        "x": 28,
+        "y": 16
+      },
+      {
+        "x": 28,
+        "y": 26
+      },
+      {
+        "x": 29,
+        "y": 16
+      },
+      {
+        "x": 29,
+        "y": 26
+      },
+      {
         "x": 30,
         "y": 16
       },
       {
-        "x": 31,
-        "y": 16
-      },
-      {
-        "x": 32,
-        "y": 16
-      },
-      {
-        "x": 39,
-        "y": 20
-      },
-      {
-        "x": 40,
-        "y": 19
-      },
-      {
-        "x": 41,
-        "y": 18
-      },
-      {
         "x": 51,
         "y": 16
       },
       {
-        "x": 51,
-        "y": 19
-      },
-      {
         "x": 52,
-        "y": 16
-      },
-      {
-        "x": 52,
-        "y": 18
-      },
-      {
-        "x": 66,
-        "y": 16
-      },
-      {
-        "x": 67,
-        "y": 16
-      },
-      {
-        "x": 68,
-        "y": 15
-      },
-      {
-        "x": 71,
-        "y": 21
-      },
-      {
-        "x": 72,
-        "y": 20
-      },
-      {
-        "x": 73,
-        "y": 12
-      },
-      {
-        "x": 73,
-        "y": 20
-      },
-      {
-        "x": 74,
-        "y": 12
-      },
-      {
-        "x": 75,
-        "y": 12
-      },
-      {
-        "x": 76,
-        "y": 12
-      },
-      {
-        "x": 76,
-        "y": 20
-      },
-      {
-        "x": 77,
-        "y": 12
-      },
-      {
-        "x": 77,
-        "y": 20
-      },
-      {
-        "x": 19,
-        "y": 16
-      },
-      {
-        "x": 20,
-        "y": 16
-      },
-      {
-        "x": 21,
-        "y": 16
-      },
-      {
-        "x": 32,
-        "y": 16
-      },
-      {
-        "x": 33,
-        "y": 16
-      },
-      {
-        "x": 34,
-        "y": 16
-      },
-      {
-        "x": 41,
-        "y": 18
-      },
-      {
-        "x": 42,
-        "y": 17
-      },
-      {
-        "x": 43,
-        "y": 16
-      },
-      {
-        "x": 52,
-        "y": 16
-      },
-      {
-        "x": 52,
-        "y": 18
-      },
-      {
-        "x": 53,
-        "y": 16
-      },
-      {
-        "x": 53,
-        "y": 17
-      },
-      {
-        "x": 64,
-        "y": 16
-      },
-      {
-        "x": 65,
-        "y": 16
-      },
-      {
-        "x": 66,
-        "y": 16
-      },
-      {
-        "x": 69,
-        "y": 19
-      },
-      {
-        "x": 70,
-        "y": 20
-      },
-      {
-        "x": 71,
-        "y": 12
-      },
-      {
-        "x": 71,
-        "y": 21
-      },
-      {
-        "x": 72,
-        "y": 12
-      },
-      {
-        "x": 73,
-        "y": 12
-      },
-      {
-        "x": 74,
-        "y": 12
-      },
-      {
-        "x": 75,
-        "y": 12
-      },
-      {
-        "x": 75,
-        "y": 20
-      },
-      {
-        "x": 76,
-        "y": 20
-      },
-      {
-        "x": 21,
-        "y": 16
-      },
-      {
-        "x": 22,
-        "y": 16
-      },
-      {
-        "x": 23,
-        "y": 16
-      },
-      {
-        "x": 34,
-        "y": 16
-      },
-      {
-        "x": 35,
-        "y": 16
-      },
-      {
-        "x": 36,
-        "y": 16
-      },
-      {
-        "x": 43,
-        "y": 16
-      },
-      {
-        "x": 44,
-        "y": 16
-      },
-      {
-        "x": 45,
-        "y": 16
-      },
-      {
-        "x": 53,
-        "y": 16
-      },
-      {
-        "x": 54,
         "y": 16
       },
       {
@@ -4100,43 +2387,139 @@
       },
       {
         "x": 67,
+        "y": 10
+      },
+      {
+        "x": 67,
+        "y": 11
+      },
+      {
+        "x": 67,
+        "y": 12
+      },
+      {
+        "x": 19,
+        "y": 16
+      },
+      {
+        "x": 20,
+        "y": 16
+      },
+      {
+        "x": 21,
+        "y": 8
+      },
+      {
+        "x": 21,
+        "y": 9
+      },
+      {
+        "x": 21,
         "y": 17
       },
       {
-        "x": 68,
-        "y": 18
-      },
-      {
-        "x": 69,
-        "y": 14
-      },
-      {
-        "x": 69,
+        "x": 21,
         "y": 19
       },
       {
-        "x": 70,
+        "x": 21,
+        "y": 20
+      },
+      {
+        "x": 22,
+        "y": 16
+      },
+      {
+        "x": 23,
+        "y": 16
+      },
+      {
+        "x": 26,
+        "y": 16
+      },
+      {
+        "x": 27,
+        "y": 16
+      },
+      {
+        "x": 28,
+        "y": 16
+      },
+      {
+        "x": 28,
+        "y": 26
+      },
+      {
+        "x": 29,
+        "y": 26
+      },
+      {
+        "x": 30,
+        "y": 16
+      },
+      {
+        "x": 31,
+        "y": 16
+      },
+      {
+        "x": 32,
+        "y": 16
+      },
+      {
+        "x": 52,
+        "y": 16
+      },
+      {
+        "x": 53,
+        "y": 16
+      },
+      {
+        "x": 60,
+        "y": 16
+      },
+      {
+        "x": 61,
+        "y": 16
+      },
+      {
+        "x": 62,
+        "y": 16
+      },
+      {
+        "x": 67,
+        "y": 12
+      },
+      {
+        "x": 67,
         "y": 13
       },
       {
-        "x": 71,
-        "y": 12
+        "x": 67,
+        "y": 14
       },
       {
-        "x": 72,
-        "y": 12
+        "x": 21,
+        "y": 8
       },
       {
-        "x": 73,
-        "y": 12
+        "x": 21,
+        "y": 9
       },
       {
-        "x": 74,
+        "x": 21,
+        "y": 17
+      },
+      {
+        "x": 21,
+        "y": 19
+      },
+      {
+        "x": 21,
         "y": 20
       },
       {
-        "x": 75,
-        "y": 20
+        "x": 22,
+        "y": 16
       },
       {
         "x": 23,
@@ -4151,55 +2534,55 @@
         "y": 16
       },
       {
-        "x": 36,
+        "x": 28,
         "y": 16
       },
       {
-        "x": 37,
+        "x": 28,
+        "y": 26
+      },
+      {
+        "x": 29,
         "y": 16
       },
       {
-        "x": 38,
+        "x": 29,
+        "y": 26
+      },
+      {
+        "x": 30,
         "y": 16
       },
       {
-        "x": 45,
+        "x": 32,
         "y": 16
       },
       {
-        "x": 46,
+        "x": 33,
         "y": 16
       },
       {
-        "x": 47,
+        "x": 34,
         "y": 16
       },
       {
         "x": 53,
-        "y": 17
+        "y": 16
       },
       {
         "x": 54,
         "y": 16
       },
       {
-        "x": 55,
+        "x": 58,
+        "y": 16
+      },
+      {
+        "x": 59,
         "y": 16
       },
       {
         "x": 60,
-        "y": 16
-      },
-      {
-        "x": 61,
-        "y": 16
-      },
-      {
-        "x": 62,
-        "y": 16
-      },
-      {
-        "x": 65,
         "y": 16
       },
       {
@@ -4208,39 +2591,43 @@
       },
       {
         "x": 67,
-        "y": 16
-      },
-      {
-        "x": 67,
-        "y": 17
-      },
-      {
-        "x": 68,
-        "y": 15
-      },
-      {
-        "x": 69,
-        "y": 12
-      },
-      {
-        "x": 69,
         "y": 14
       },
       {
-        "x": 70,
+        "x": 67,
+        "y": 15
+      },
+      {
+        "x": 21,
+        "y": 9
+      },
+      {
+        "x": 21,
+        "y": 10
+      },
+      {
+        "x": 21,
         "y": 11
       },
       {
-        "x": 71,
-        "y": 12
+        "x": 21,
+        "y": 17
       },
       {
-        "x": 73,
-        "y": 20
+        "x": 21,
+        "y": 18
       },
       {
-        "x": 74,
-        "y": 20
+        "x": 21,
+        "y": 19
+      },
+      {
+        "x": 23,
+        "y": 16
+      },
+      {
+        "x": 24,
+        "y": 16
       },
       {
         "x": 25,
@@ -4255,27 +2642,35 @@
         "y": 16
       },
       {
-        "x": 38,
+        "x": 27,
+        "y": 26
+      },
+      {
+        "x": 28,
+        "y": 26
+      },
+      {
+        "x": 30,
         "y": 16
       },
       {
-        "x": 39,
+        "x": 31,
         "y": 16
       },
       {
-        "x": 40,
+        "x": 32,
         "y": 16
       },
       {
-        "x": 47,
+        "x": 34,
         "y": 16
       },
       {
-        "x": 48,
+        "x": 35,
         "y": 16
       },
       {
-        "x": 49,
+        "x": 36,
         "y": 16
       },
       {
@@ -4291,19 +2686,11 @@
         "y": 16
       },
       {
+        "x": 57,
+        "y": 16
+      },
+      {
         "x": 58,
-        "y": 16
-      },
-      {
-        "x": 59,
-        "y": 16
-      },
-      {
-        "x": 60,
-        "y": 16
-      },
-      {
-        "x": 63,
         "y": 16
       },
       {
@@ -4319,87 +2706,79 @@
         "y": 16
       },
       {
-        "x": 67,
-        "y": 12
+        "x": 21,
+        "y": 10
       },
       {
-        "x": 67,
-        "y": 16
-      },
-      {
-        "x": 68,
+        "x": 21,
         "y": 11
       },
       {
-        "x": 69,
-        "y": 12
+        "x": 21,
+        "y": 17
       },
       {
-        "x": 72,
-        "y": 20
+        "x": 22,
+        "y": 16
       },
       {
-        "x": 73,
-        "y": 20
+        "x": 23,
+        "y": 16
       },
       {
-        "x": 85,
-        "y": 9
+        "x": 25,
+        "y": 16
       },
       {
-        "x": 85,
-        "y": 10
+        "x": 26,
+        "y": 16
       },
       {
         "x": 27,
         "y": 16
       },
       {
+        "x": 27,
+        "y": 26
+      },
+      {
         "x": 28,
         "y": 16
+      },
+      {
+        "x": 28,
+        "y": 26
       },
       {
         "x": 29,
         "y": 16
       },
       {
-        "x": 40,
+        "x": 32,
         "y": 16
       },
       {
-        "x": 41,
+        "x": 33,
         "y": 16
       },
       {
-        "x": 42,
+        "x": 34,
         "y": 16
       },
       {
-        "x": 49,
+        "x": 36,
         "y": 16
       },
       {
-        "x": 50,
+        "x": 37,
         "y": 16
       },
       {
-        "x": 51,
-        "y": 16
-      },
-      {
-        "x": 55,
+        "x": 38,
         "y": 16
       },
       {
         "x": 56,
-        "y": 16
-      },
-      {
-        "x": 57,
-        "y": 16
-      },
-      {
-        "x": 61,
         "y": 16
       },
       {
@@ -4415,28 +2794,44 @@
         "y": 16
       },
       {
-        "x": 65,
-        "y": 16
+        "x": 21,
+        "y": 11
       },
       {
-        "x": 67,
+        "x": 21,
         "y": 12
       },
       {
-        "x": 67,
+        "x": 21,
         "y": 13
       },
       {
-        "x": 67,
-        "y": 14
+        "x": 23,
+        "y": 16
       },
       {
-        "x": 71,
-        "y": 20
+        "x": 24,
+        "y": 16
       },
       {
-        "x": 72,
-        "y": 20
+        "x": 25,
+        "y": 16
+      },
+      {
+        "x": 27,
+        "y": 16
+      },
+      {
+        "x": 27,
+        "y": 26
+      },
+      {
+        "x": 28,
+        "y": 16
+      },
+      {
+        "x": 28,
+        "y": 26
       },
       {
         "x": 29,
@@ -4451,35 +2846,31 @@
         "y": 16
       },
       {
-        "x": 42,
+        "x": 34,
         "y": 16
       },
       {
-        "x": 43,
+        "x": 35,
         "y": 16
       },
       {
-        "x": 44,
+        "x": 36,
         "y": 16
       },
       {
-        "x": 51,
+        "x": 38,
         "y": 16
       },
       {
-        "x": 52,
+        "x": 39,
         "y": 16
       },
       {
-        "x": 53,
+        "x": 40,
         "y": 16
       },
       {
-        "x": 58,
-        "y": 16
-      },
-      {
-        "x": 59,
+        "x": 56,
         "y": 16
       },
       {
@@ -4495,36 +2886,44 @@
         "y": 16
       },
       {
-        "x": 63,
-        "y": 16
+        "x": 21,
+        "y": 13
       },
       {
-        "x": 66,
-        "y": 16
-      },
-      {
-        "x": 67,
+        "x": 21,
         "y": 14
       },
       {
-        "x": 67,
+        "x": 21,
         "y": 15
       },
       {
-        "x": 71,
-        "y": 20
+        "x": 25,
+        "y": 16
       },
       {
-        "x": 72,
-        "y": 20
+        "x": 26,
+        "y": 16
       },
       {
-        "x": 84,
-        "y": 9
+        "x": 26,
+        "y": 26
       },
       {
-        "x": 85,
-        "y": 10
+        "x": 27,
+        "y": 16
+      },
+      {
+        "x": 27,
+        "y": 26
+      },
+      {
+        "x": 29,
+        "y": 16
+      },
+      {
+        "x": 30,
+        "y": 16
       },
       {
         "x": 31,
@@ -4539,27 +2938,31 @@
         "y": 16
       },
       {
-        "x": 44,
+        "x": 36,
         "y": 16
       },
       {
-        "x": 45,
+        "x": 37,
         "y": 16
       },
       {
-        "x": 46,
+        "x": 38,
         "y": 16
       },
       {
-        "x": 53,
+        "x": 40,
         "y": 16
       },
       {
-        "x": 54,
+        "x": 41,
         "y": 16
       },
       {
-        "x": 55,
+        "x": 42,
+        "y": 16
+      },
+      {
+        "x": 56,
         "y": 16
       },
       {
@@ -4575,28 +2978,44 @@
         "y": 16
       },
       {
-        "x": 61,
+        "x": 21,
+        "y": 15
+      },
+      {
+        "x": 22,
         "y": 16
       },
       {
-        "x": 64,
+        "x": 23,
         "y": 16
       },
       {
-        "x": 65,
+        "x": 26,
+        "y": 26
+      },
+      {
+        "x": 27,
         "y": 16
       },
       {
-        "x": 66,
+        "x": 27,
+        "y": 26
+      },
+      {
+        "x": 28,
         "y": 16
       },
       {
-        "x": 72,
-        "y": 20
+        "x": 29,
+        "y": 16
       },
       {
-        "x": 73,
-        "y": 21
+        "x": 31,
+        "y": 16
+      },
+      {
+        "x": 32,
+        "y": 16
       },
       {
         "x": 33,
@@ -4611,15 +3030,27 @@
         "y": 16
       },
       {
-        "x": 46,
+        "x": 38,
         "y": 16
       },
       {
-        "x": 47,
+        "x": 39,
         "y": 16
       },
       {
-        "x": 48,
+        "x": 40,
+        "y": 16
+      },
+      {
+        "x": 42,
+        "y": 16
+      },
+      {
+        "x": 43,
+        "y": 16
+      },
+      {
+        "x": 44,
         "y": 16
       },
       {
@@ -4628,39 +3059,55 @@
       },
       {
         "x": 56,
-        "y": 15
+        "y": 16
       },
       {
-        "x": 58,
+        "x": 57,
         "y": 16
       },
       {
         "x": 58,
-        "y": 17
-      },
-      {
-        "x": 59,
         "y": 16
       },
       {
-        "x": 62,
+        "x": 23,
         "y": 16
       },
       {
-        "x": 63,
+        "x": 24,
         "y": 16
       },
       {
-        "x": 64,
+        "x": 25,
         "y": 16
       },
       {
-        "x": 72,
-        "y": 20
+        "x": 26,
+        "y": 26
       },
       {
-        "x": 73,
-        "y": 21
+        "x": 27,
+        "y": 26
+      },
+      {
+        "x": 29,
+        "y": 16
+      },
+      {
+        "x": 30,
+        "y": 16
+      },
+      {
+        "x": 31,
+        "y": 16
+      },
+      {
+        "x": 33,
+        "y": 16
+      },
+      {
+        "x": 34,
+        "y": 16
       },
       {
         "x": 35,
@@ -4675,40 +3122,72 @@
         "y": 16
       },
       {
-        "x": 48,
+        "x": 40,
         "y": 16
       },
       {
-        "x": 49,
+        "x": 41,
         "y": 16
       },
       {
-        "x": 50,
+        "x": 42,
         "y": 16
       },
       {
-        "x": 58,
+        "x": 44,
         "y": 16
       },
       {
-        "x": 60,
+        "x": 45,
         "y": 16
       },
       {
-        "x": 61,
+        "x": 46,
         "y": 16
       },
       {
-        "x": 62,
+        "x": 57,
         "y": 16
       },
       {
-        "x": 71,
-        "y": 20
+        "x": 25,
+        "y": 16
       },
       {
-        "x": 72,
-        "y": 20
+        "x": 25,
+        "y": 26
+      },
+      {
+        "x": 26,
+        "y": 16
+      },
+      {
+        "x": 26,
+        "y": 26
+      },
+      {
+        "x": 27,
+        "y": 16
+      },
+      {
+        "x": 31,
+        "y": 16
+      },
+      {
+        "x": 32,
+        "y": 16
+      },
+      {
+        "x": 33,
+        "y": 16
+      },
+      {
+        "x": 35,
+        "y": 16
+      },
+      {
+        "x": 36,
+        "y": 16
       },
       {
         "x": 37,
@@ -4723,6 +3202,178 @@
         "y": 16
       },
       {
+        "x": 42,
+        "y": 16
+      },
+      {
+        "x": 43,
+        "y": 16
+      },
+      {
+        "x": 44,
+        "y": 16
+      },
+      {
+        "x": 46,
+        "y": 16
+      },
+      {
+        "x": 47,
+        "y": 16
+      },
+      {
+        "x": 48,
+        "y": 16
+      },
+      {
+        "x": 57,
+        "y": 16
+      },
+      {
+        "x": 24,
+        "y": 26
+      },
+      {
+        "x": 25,
+        "y": 26
+      },
+      {
+        "x": 27,
+        "y": 16
+      },
+      {
+        "x": 28,
+        "y": 16
+      },
+      {
+        "x": 29,
+        "y": 16
+      },
+      {
+        "x": 33,
+        "y": 16
+      },
+      {
+        "x": 34,
+        "y": 16
+      },
+      {
+        "x": 35,
+        "y": 16
+      },
+      {
+        "x": 37,
+        "y": 16
+      },
+      {
+        "x": 38,
+        "y": 16
+      },
+      {
+        "x": 39,
+        "y": 16
+      },
+      {
+        "x": 40,
+        "y": 16
+      },
+      {
+        "x": 41,
+        "y": 16
+      },
+      {
+        "x": 44,
+        "y": 16
+      },
+      {
+        "x": 45,
+        "y": 16
+      },
+      {
+        "x": 46,
+        "y": 16
+      },
+      {
+        "x": 48,
+        "y": 16
+      },
+      {
+        "x": 49,
+        "y": 16
+      },
+      {
+        "x": 50,
+        "y": 16
+      },
+      {
+        "x": 57,
+        "y": 16
+      },
+      {
+        "x": 23,
+        "y": 26
+      },
+      {
+        "x": 24,
+        "y": 26
+      },
+      {
+        "x": 29,
+        "y": 16
+      },
+      {
+        "x": 30,
+        "y": 16
+      },
+      {
+        "x": 31,
+        "y": 16
+      },
+      {
+        "x": 35,
+        "y": 16
+      },
+      {
+        "x": 36,
+        "y": 16
+      },
+      {
+        "x": 37,
+        "y": 16
+      },
+      {
+        "x": 39,
+        "y": 16
+      },
+      {
+        "x": 40,
+        "y": 16
+      },
+      {
+        "x": 41,
+        "y": 16
+      },
+      {
+        "x": 42,
+        "y": 16
+      },
+      {
+        "x": 43,
+        "y": 16
+      },
+      {
+        "x": 46,
+        "y": 16
+      },
+      {
+        "x": 47,
+        "y": 16
+      },
+      {
+        "x": 48,
+        "y": 16
+      },
+      {
         "x": 50,
         "y": 16
       },
@@ -4736,50 +3387,74 @@
       },
       {
         "x": 56,
-        "y": 15
-      },
-      {
-        "x": 56,
         "y": 16
       },
       {
         "x": 57,
-        "y": 15
-      },
-      {
-        "x": 57,
         "y": 16
       },
       {
-        "x": 58,
+        "x": 22,
+        "y": 26
+      },
+      {
+        "x": 23,
+        "y": 26
+      },
+      {
+        "x": 31,
         "y": 16
       },
       {
-        "x": 59,
+        "x": 32,
         "y": 16
       },
       {
-        "x": 60,
+        "x": 33,
         "y": 16
       },
       {
-        "x": 70,
-        "y": 19
+        "x": 37,
+        "y": 16
       },
       {
-        "x": 71,
-        "y": 20
+        "x": 38,
+        "y": 16
       },
       {
         "x": 39,
         "y": 16
       },
       {
-        "x": 40,
+        "x": 41,
         "y": 16
       },
       {
-        "x": 41,
+        "x": 42,
+        "y": 16
+      },
+      {
+        "x": 43,
+        "y": 16
+      },
+      {
+        "x": 44,
+        "y": 16
+      },
+      {
+        "x": 45,
+        "y": 16
+      },
+      {
+        "x": 48,
+        "y": 16
+      },
+      {
+        "x": 49,
+        "y": 16
+      },
+      {
+        "x": 50,
         "y": 16
       },
       {
@@ -4795,27 +3470,75 @@
         "y": 16
       },
       {
-        "x": 59,
+        "x": 57,
         "y": 16
       },
       {
-        "x": 69,
-        "y": 18
+        "x": 58,
+        "y": 16
       },
       {
-        "x": 70,
-        "y": 19
+        "x": 21,
+        "y": 25
+      },
+      {
+        "x": 22,
+        "y": 26
+      },
+      {
+        "x": 33,
+        "y": 16
+      },
+      {
+        "x": 34,
+        "y": 16
+      },
+      {
+        "x": 35,
+        "y": 16
+      },
+      {
+        "x": 39,
+        "y": 16
+      },
+      {
+        "x": 40,
+        "y": 16
       },
       {
         "x": 41,
         "y": 16
       },
       {
-        "x": 42,
+        "x": 43,
         "y": 16
       },
       {
-        "x": 43,
+        "x": 44,
+        "y": 16
+      },
+      {
+        "x": 45,
+        "y": 16
+      },
+      {
+        "x": 46,
+        "y": 16
+      },
+      {
+        "x": 47,
+        "y": 16
+      },
+      {
+        "x": 50,
+        "y": 16
+      },
+      {
+        "x": 51,
+        "y": 16
+      },
+      {
+        "x": 52,
         "y": 16
       },
       {
@@ -4831,56 +3554,44 @@
         "y": 16
       },
       {
+        "x": 58,
+        "y": 16
+      },
+      {
         "x": 59,
         "y": 16
       },
       {
-        "x": 68,
-        "y": 17
+        "x": 21,
+        "y": 24
       },
       {
-        "x": 69,
-        "y": 18
+        "x": 21,
+        "y": 25
       },
       {
-        "x": 83,
-        "y": 9
+        "x": 35,
+        "y": 16
       },
       {
-        "x": 84,
-        "y": 9
+        "x": 36,
+        "y": 16
+      },
+      {
+        "x": 37,
+        "y": 16
+      },
+      {
+        "x": 41,
+        "y": 16
+      },
+      {
+        "x": 42,
+        "y": 16
       },
       {
         "x": 43,
         "y": 16
-      },
-      {
-        "x": 44,
-        "y": 16
-      },
-      {
-        "x": 45,
-        "y": 16
-      },
-      {
-        "x": 56,
-        "y": 16
-      },
-      {
-        "x": 57,
-        "y": 17
-      },
-      {
-        "x": 59,
-        "y": 16
-      },
-      {
-        "x": 67,
-        "y": 16
-      },
-      {
-        "x": 68,
-        "y": 17
       },
       {
         "x": 45,
@@ -4888,22 +3599,6 @@
       },
       {
         "x": 46,
-        "y": 16
-      },
-      {
-        "x": 47,
-        "y": 16
-      },
-      {
-        "x": 59,
-        "y": 16
-      },
-      {
-        "x": 66,
-        "y": 16
-      },
-      {
-        "x": 67,
         "y": 16
       },
       {
@@ -4919,24 +3614,24 @@
         "y": 16
       },
       {
-        "x": 57,
-        "y": 15
+        "x": 52,
+        "y": 16
       },
       {
-        "x": 57,
+        "x": 53,
+        "y": 16
+      },
+      {
+        "x": 54,
+        "y": 16
+      },
+      {
+        "x": 56,
         "y": 16
       },
       {
         "x": 57,
-        "y": 17
-      },
-      {
-        "x": 58,
-        "y": 14
-      },
-      {
-        "x": 58,
-        "y": 15
+        "y": 16
       },
       {
         "x": 58,
@@ -4947,11 +3642,47 @@
         "y": 16
       },
       {
-        "x": 65,
-        "y": 15
+        "x": 60,
+        "y": 16
       },
       {
-        "x": 66,
+        "x": 20,
+        "y": 23
+      },
+      {
+        "x": 21,
+        "y": 24
+      },
+      {
+        "x": 37,
+        "y": 16
+      },
+      {
+        "x": 38,
+        "y": 16
+      },
+      {
+        "x": 39,
+        "y": 16
+      },
+      {
+        "x": 43,
+        "y": 16
+      },
+      {
+        "x": 44,
+        "y": 16
+      },
+      {
+        "x": 45,
+        "y": 16
+      },
+      {
+        "x": 47,
+        "y": 16
+      },
+      {
+        "x": 48,
         "y": 16
       },
       {
@@ -4967,48 +3698,72 @@
         "y": 16
       },
       {
-        "x": 58,
-        "y": 14
+        "x": 54,
+        "y": 16
       },
       {
-        "x": 58,
-        "y": 15
+        "x": 55,
+        "y": 16
+      },
+      {
+        "x": 56,
+        "y": 16
       },
       {
         "x": 58,
         "y": 16
       },
       {
-        "x": 58,
-        "y": 17
-      },
-      {
-        "x": 59,
-        "y": 14
-      },
-      {
-        "x": 59,
-        "y": 15
-      },
-      {
         "x": 59,
         "y": 16
-      },
-      {
-        "x": 59,
-        "y": 17
       },
       {
         "x": 60,
         "y": 16
       },
       {
-        "x": 64,
+        "x": 61,
         "y": 16
       },
       {
-        "x": 65,
-        "y": 15
+        "x": 20,
+        "y": 23
+      },
+      {
+        "x": 21,
+        "y": 22
+      },
+      {
+        "x": 39,
+        "y": 16
+      },
+      {
+        "x": 40,
+        "y": 16
+      },
+      {
+        "x": 41,
+        "y": 16
+      },
+      {
+        "x": 45,
+        "y": 16
+      },
+      {
+        "x": 46,
+        "y": 16
+      },
+      {
+        "x": 47,
+        "y": 16
+      },
+      {
+        "x": 49,
+        "y": 16
+      },
+      {
+        "x": 50,
+        "y": 16
       },
       {
         "x": 51,
@@ -5023,48 +3778,68 @@
         "y": 16
       },
       {
-        "x": 59,
-        "y": 14
-      },
-      {
-        "x": 59,
-        "y": 15
-      },
-      {
-        "x": 59,
+        "x": 56,
         "y": 16
       },
       {
-        "x": 59,
-        "y": 17
+        "x": 57,
+        "y": 16
       },
       {
-        "x": 60,
-        "y": 14
-      },
-      {
-        "x": 60,
-        "y": 15
-      },
-      {
-        "x": 60,
+        "x": 58,
         "y": 16
       },
       {
         "x": 60,
-        "y": 17
+        "y": 16
       },
       {
         "x": 61,
         "y": 16
       },
       {
-        "x": 64,
+        "x": 62,
         "y": 16
       },
       {
-        "x": 65,
-        "y": 15
+        "x": 21,
+        "y": 21
+      },
+      {
+        "x": 21,
+        "y": 22
+      },
+      {
+        "x": 41,
+        "y": 16
+      },
+      {
+        "x": 42,
+        "y": 16
+      },
+      {
+        "x": 43,
+        "y": 16
+      },
+      {
+        "x": 47,
+        "y": 16
+      },
+      {
+        "x": 48,
+        "y": 16
+      },
+      {
+        "x": 49,
+        "y": 16
+      },
+      {
+        "x": 51,
+        "y": 16
+      },
+      {
+        "x": 52,
+        "y": 16
       },
       {
         "x": 53,
@@ -5079,56 +3854,68 @@
         "y": 16
       },
       {
-        "x": 60,
-        "y": 14
+        "x": 58,
+        "y": 16
       },
       {
-        "x": 60,
-        "y": 15
+        "x": 59,
+        "y": 16
       },
       {
         "x": 60,
         "y": 16
       },
       {
-        "x": 60,
-        "y": 17
-      },
-      {
-        "x": 61,
-        "y": 14
-      },
-      {
-        "x": 61,
-        "y": 15
-      },
-      {
         "x": 61,
         "y": 16
-      },
-      {
-        "x": 61,
-        "y": 17
       },
       {
         "x": 62,
         "y": 16
       },
       {
-        "x": 64,
+        "x": 63,
         "y": 16
       },
       {
-        "x": 65,
-        "y": 15
+        "x": 21,
+        "y": 20
       },
       {
-        "x": 83,
-        "y": 8
+        "x": 21,
+        "y": 21
       },
       {
-        "x": 83,
-        "y": 9
+        "x": 43,
+        "y": 16
+      },
+      {
+        "x": 44,
+        "y": 16
+      },
+      {
+        "x": 45,
+        "y": 16
+      },
+      {
+        "x": 49,
+        "y": 16
+      },
+      {
+        "x": 50,
+        "y": 16
+      },
+      {
+        "x": 51,
+        "y": 16
+      },
+      {
+        "x": 53,
+        "y": 16
+      },
+      {
+        "x": 54,
+        "y": 16
       },
       {
         "x": 55,
@@ -5143,48 +3930,64 @@
         "y": 16
       },
       {
-        "x": 61,
-        "y": 14
-      },
-      {
-        "x": 61,
-        "y": 15
+        "x": 60,
+        "y": 16
       },
       {
         "x": 61,
         "y": 16
       },
       {
-        "x": 61,
-        "y": 17
-      },
-      {
-        "x": 62,
-        "y": 14
-      },
-      {
-        "x": 62,
-        "y": 15
-      },
-      {
         "x": 62,
         "y": 16
-      },
-      {
-        "x": 62,
-        "y": 17
       },
       {
         "x": 63,
         "y": 16
       },
       {
-        "x": 82,
-        "y": 8
+        "x": 64,
+        "y": 16
       },
       {
-        "x": 83,
-        "y": 8
+        "x": 21,
+        "y": 19
+      },
+      {
+        "x": 21,
+        "y": 20
+      },
+      {
+        "x": 45,
+        "y": 16
+      },
+      {
+        "x": 46,
+        "y": 16
+      },
+      {
+        "x": 47,
+        "y": 16
+      },
+      {
+        "x": 51,
+        "y": 16
+      },
+      {
+        "x": 52,
+        "y": 16
+      },
+      {
+        "x": 53,
+        "y": 16
+      },
+      {
+        "x": 55,
+        "y": 16
+      },
+      {
+        "x": 56,
+        "y": 16
       },
       {
         "x": 57,
@@ -5200,14 +4003,66 @@
       },
       {
         "x": 62,
-        "y": 14
+        "y": 16
       },
       {
         "x": 63,
         "y": 15
       },
       {
+        "x": 63,
+        "y": 16
+      },
+      {
         "x": 64,
+        "y": 15
+      },
+      {
+        "x": 64,
+        "y": 16
+      },
+      {
+        "x": 65,
+        "y": 16
+      },
+      {
+        "x": 21,
+        "y": 18
+      },
+      {
+        "x": 21,
+        "y": 19
+      },
+      {
+        "x": 47,
+        "y": 16
+      },
+      {
+        "x": 48,
+        "y": 16
+      },
+      {
+        "x": 49,
+        "y": 16
+      },
+      {
+        "x": 53,
+        "y": 16
+      },
+      {
+        "x": 54,
+        "y": 16
+      },
+      {
+        "x": 55,
+        "y": 16
+      },
+      {
+        "x": 57,
+        "y": 16
+      },
+      {
+        "x": 58,
         "y": 16
       },
       {
@@ -5220,83 +4075,237 @@
       },
       {
         "x": 61,
-        "y": 17
+        "y": 16
       },
       {
         "x": 64,
+        "y": 15
+      },
+      {
+        "x": 64,
+        "y": 16
+      },
+      {
+        "x": 65,
+        "y": 15
+      },
+      {
+        "x": 65,
+        "y": 16
+      },
+      {
+        "x": 66,
+        "y": 16
+      },
+      {
+        "x": 21,
+        "y": 18
+      },
+      {
+        "x": 21,
+        "y": 19
+      },
+      {
+        "x": 47,
+        "y": 16
+      },
+      {
+        "x": 48,
+        "y": 16
+      },
+      {
+        "x": 49,
+        "y": 16
+      },
+      {
+        "x": 53,
+        "y": 16
+      },
+      {
+        "x": 54,
+        "y": 16
+      },
+      {
+        "x": 55,
+        "y": 16
+      },
+      {
+        "x": 59,
+        "y": 16
+      },
+      {
+        "x": 59,
+        "y": 17
+      },
+      {
+        "x": 60,
+        "y": 16
+      },
+      {
+        "x": 60,
+        "y": 17
+      },
+      {
+        "x": 61,
+        "y": 16
+      },
+      {
+        "x": 63,
+        "y": 16
+      },
+      {
+        "x": 64,
+        "y": 16
+      },
+      {
+        "x": 65,
+        "y": 15
+      },
+      {
+        "x": 65,
+        "y": 16
+      },
+      {
+        "x": 66,
+        "y": 16
+      },
+      {
+        "x": 67,
+        "y": 16
+      },
+      {
+        "x": 21,
+        "y": 18
+      },
+      {
+        "x": 21,
+        "y": 19
+      },
+      {
+        "x": 47,
+        "y": 16
+      },
+      {
+        "x": 48,
+        "y": 16
+      },
+      {
+        "x": 49,
+        "y": 16
+      },
+      {
+        "x": 53,
+        "y": 16
+      },
+      {
+        "x": 54,
+        "y": 16
+      },
+      {
+        "x": 55,
+        "y": 16
+      },
+      {
+        "x": 58,
+        "y": 16
+      },
+      {
+        "x": 59,
+        "y": 16
+      },
+      {
+        "x": 59,
+        "y": 17
+      },
+      {
+        "x": 60,
         "y": 16
       },
       {
         "x": 61,
-        "y": 17
-      },
-      {
-        "x": 62,
-        "y": 15
-      },
-      {
-        "x": 62,
         "y": 16
-      },
-      {
-        "x": 62,
-        "y": 17
-      },
-      {
-        "x": 63,
-        "y": 14
       },
       {
         "x": 63,
         "y": 16
       },
       {
-        "x": 63,
-        "y": 17
+        "x": 64,
+        "y": 16
       },
       {
-        "x": 63,
+        "x": 65,
+        "y": 16
+      },
+      {
+        "x": 66,
+        "y": 16
+      },
+      {
+        "x": 67,
+        "y": 16
+      },
+      {
+        "x": 68,
+        "y": 16
+      },
+      {
+        "x": 21,
         "y": 18
       },
       {
-        "x": 64,
-        "y": 15
+        "x": 21,
+        "y": 19
       },
       {
-        "x": 64,
+        "x": 48,
         "y": 16
       },
       {
-        "x": 82,
-        "y": 8
+        "x": 49,
+        "y": 16
       },
       {
-        "x": 83,
-        "y": 9
+        "x": 54,
+        "y": 16
       },
       {
-        "x": 63,
-        "y": 18
+        "x": 55,
+        "y": 16
       },
       {
-        "x": 64,
-        "y": 17
+        "x": 59,
+        "y": 16
       },
       {
-        "x": 83,
-        "y": 9
+        "x": 60,
+        "y": 16
       },
       {
-        "x": 84,
-        "y": 8
+        "x": 61,
+        "y": 16
+      },
+      {
+        "x": 62,
+        "y": 16
+      },
+      {
+        "x": 65,
+        "y": 16
+      },
+      {
+        "x": 66,
+        "y": 16
+      },
+      {
+        "x": 67,
+        "y": 15
       }
     ],
     "removedEntities": [
-      "demo.floor.surface.surface.4",
-      "demo.floor.surface.surface.6",
-      "demo.floor.surface.surface.9",
-      "demo.floor.surface.surface.5"
+      "demo.floor.surface.surface.11",
+      "demo.floor.surface.surface.4"
     ],
-    "saveRoundTripStateHash": "b576fb8942c34da6755a33c9f748b14d7db51888f1094d8b86d15cc0bd46070c"
+    "saveRoundTripStateHash": "d25de501ae89dac836ddf0e5235c8fbf273457072ef2c2473845215c43cb589f"
   }
 }

@@ -501,7 +501,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "05cab84ffe2f486f9d4bad9e31b6bc2b73f830409374be850657575a3695108e"
+      "stateHash": "7f71effc9b8fb9a69c219fc1a928e3fc1c717d183e5bda1e8b759d0250e51b93"
     },
     "events": [
       {
@@ -513,7 +513,7 @@
           "before": "238",
           "change": "increased",
           "maximum": "238",
-          "nameKey": "item-demo-unfamiliar-potion-name",
+          "nameKey": "item-demo-might-tonic-appearance",
           "source": "demo.item.might-tonic"
         }
       },

@@ -117,9 +117,9 @@ fn thieves_hideout_inline_floor_preserves_the_fixed_map_and_six_member_formation
             "#####################",
             "#####...#...#...#...#",
             "#####...#...#...#...#",
-            "#####...#...#...#...#",
+            "#####...#...#...#.^.#",
             "#<..##+###+###+###+##",
-            "#.^^#........^......#",
+            "#..^#....^...^..^...#",
             "#...+...............#",
             "#####################",
         ]
@@ -304,6 +304,9 @@ fn warrens_maps_are_seeded_connected_varied_and_persistent() {
             )
         );
 
+        game.entities.clear();
+        game.items
+            .retain(|item| !matches!(item.location, ItemLocation::CarriedBy { .. }));
         let first_floor_terrain = game.terrain.clone();
         let first_floor_items = game.items.clone();
         let ground_item_count = first_floor_items
@@ -332,6 +335,10 @@ fn warrens_maps_are_seeded_connected_varied_and_persistent() {
             .expect("same-seed Warrens journey should create");
         place_player_on_terrain(&mut same_seed, "demo.terrain.stairs-down");
         dispatch_next(&mut same_seed, GameCommand::TraverseStairs);
+        same_seed.entities.clear();
+        same_seed
+            .items
+            .retain(|item| !matches!(item.location, ItemLocation::CarriedBy { .. }));
         assert_eq!(same_seed.terrain, first_floor_terrain);
         assert_eq!(same_seed.items, first_floor_items);
 
@@ -1699,13 +1706,17 @@ fn world_map_movement_uses_original_time_scale_without_advancing_hidden_monsters
 fn wilderness_daylight_drives_surface_ambient_light() {
     let mut game = Game::new_warrens_journey_with_build(42, "demo.build.warrior")
         .expect("Warrens journey should create");
+    let ambient_light = |game: &Game| {
+        let sources = game.collect_light_sources();
+        game.ambient_light(game.player.position, &sources)
+    };
 
     game.world_tick = 49_999;
-    assert_eq!(game.ambient_light(), SURFACE_AMBIENT_LIGHT);
+    assert_eq!(ambient_light(&game), SURFACE_AMBIENT_LIGHT);
     game.world_tick = 50_000;
-    assert_eq!(game.ambient_light(), DUNGEON_AMBIENT_LIGHT);
+    assert_eq!(ambient_light(&game), DUNGEON_AMBIENT_LIGHT);
     game.world_tick = 100_000;
-    assert_eq!(game.ambient_light(), SURFACE_AMBIENT_LIGHT);
+    assert_eq!(ambient_light(&game), SURFACE_AMBIENT_LIGHT);
 }
 
 #[test]

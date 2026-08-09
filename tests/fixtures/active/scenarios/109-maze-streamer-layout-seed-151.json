@@ -372,7 +372,7 @@
         "dungeonId": "demo.dungeon.resonance-descent",
         "floorId": "demo.floor.resonance-depth-7"
       },
-      "entityCount": 5,
+      "entityCount": 6,
       "entities": [
         {
           "id": "demo.floor.resonance-depth-6.region.demo.region.resonance-grotto.encounter.1",
@@ -388,6 +388,22 @@
             "leaderId": "demo.floor.resonance-depth-6.region.demo.region.resonance-grotto.encounter.1",
             "role": "leader",
             "behavior": "seek"
+          }
+        },
+        {
+          "id": "demo.floor.resonance-depth-6.region.demo.region.resonance-grotto.encounter.1.escort.1",
+          "position": {
+            "x": 2,
+            "y": 2
+          },
+          "hp": 3,
+          "speed": 110,
+          "energyNeed": 100,
+          "pack": {
+            "id": "demo.floor.resonance-depth-6.region.demo.region.resonance-grotto.pack.1",
+            "leaderId": "demo.floor.resonance-depth-6.region.demo.region.resonance-grotto.encounter.1",
+            "role": "member",
+            "behavior": "guard-leader"
           }
         },
         {
@@ -504,7 +520,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "4bef2360158469d7a30cf3cbadbf686f52a201d977cc48f71fe6a91d8f001f4f"
+      "stateHash": "096099b70e14fce505e28cb739f37e09170782b2e41e64586dce7058eeb52040"
     },
     "events": [
       {
@@ -14489,6 +14505,6 @@
         "y": 3
       }
     ],
-    "saveRoundTripStateHash": "4bef2360158469d7a30cf3cbadbf686f52a201d977cc48f71fe6a91d8f001f4f"
+    "saveRoundTripStateHash": "096099b70e14fce505e28cb739f37e09170782b2e41e64586dce7058eeb52040"
   }
 }

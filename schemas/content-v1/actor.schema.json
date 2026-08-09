@@ -217,6 +217,11 @@
     "ActorLightDefinition": {
       "additionalProperties": false,
       "properties": {
+        "darkness": {
+          "default": false,
+          "description": "Darkness suppresses permanent room glow, but not carried light sources.",
+          "type": "boolean"
+        },
         "intrinsic": {
           "default": false,
           "description": "Intrinsic light remains active while the actor sleeps. Carried light does not.",
@@ -725,6 +730,29 @@
             },
             "type": {
               "const": "terrify",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "chancePercent": {
+              "default": null,
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "type": {
+              "const": "disenchant",
               "type": "string"
             }
           },

@@ -1,0 +1,131 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 137,
+    "maxDepth": 999,
+    "rarity": 2
+  },
+  "attack": 2,
+  "damageDice": 1,
+  "damageSides": 6,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 1,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.warrens",
+    "kind": "items",
+    "minimumQuality": "exceptional"
+  },
+  "defense": 3,
+  "descriptionKey": "actor-demo-wormtongue-agent-of-saruman-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 150,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "p",
+  "hitPointDice": {
+    "dice": 25,
+    "forceMaximum": true,
+    "sides": 10
+  },
+  "id": "demo.actor.wormtongue-agent-of-saruman",
+  "level": 8,
+  "light": {
+    "intrinsic": false,
+    "radius": 2
+  },
+  "maxHp": 250,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 6,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 6,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "type": "eat-gold"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.heal-24",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.slow",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.traps",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.bolt-cold-6d8-2",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-poison-12d2",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 20
+  },
+  "nameKey": "actor-demo-wormtongue-agent-of-saruman-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "role": "monster",
+  "speed": 110,
+  "tags": [
+    "evil",
+    "human",
+    "legacy-import",
+    "resist-teleport",
+    "thief",
+    "unique",
+    "warrens"
+  ],
+  "terrainInteraction": {
+    "picksUpItems": true
+  }
+}

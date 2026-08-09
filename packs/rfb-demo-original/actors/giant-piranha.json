@@ -1,0 +1,82 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "friends": {
+      "chancePercent": 0,
+      "dice": 0,
+      "sides": 0
+    },
+    "habitats": [
+      "all"
+    ],
+    "legacyIndex": 187,
+    "maxDepth": 90,
+    "rarity": 2
+  },
+  "attack": 2,
+  "damageDice": 9,
+  "damageSides": 1,
+  "damageType": "physical",
+  "defense": 3,
+  "descriptionKey": "actor-demo-giant-piranha-description",
+  "experienceValue": 40,
+  "formatVersion": 1,
+  "glyph": "l",
+  "hitPointDice": {
+    "dice": 6,
+    "sides": 9
+  },
+  "id": "demo.actor.giant-piranha",
+  "level": 10,
+  "maxHp": 30,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 9,
+            "damageSides": 1,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 9,
+            "damageSides": 1,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "modes": [
+      "aquatic"
+    ]
+  },
+  "nameKey": "actor-demo-giant-piranha-name",
+  "resistances": {
+    "water": "resistant"
+  },
+  "role": "monster",
+  "speed": 120,
+  "statusImmunities": [
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "animal",
+    "fish",
+    "legacy-import",
+    "warrens"
+  ]
+}

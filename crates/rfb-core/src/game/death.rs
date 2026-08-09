@@ -79,6 +79,7 @@ impl Game {
                 | MeleeBlowEffectDefinition::Slow { .. }
                 | MeleeBlowEffectDefinition::Stun { .. }
                 | MeleeBlowEffectDefinition::Terrify { .. }
+                | MeleeBlowEffectDefinition::Disenchant { .. }
                 | MeleeBlowEffectDefinition::EatGold { .. }
                 | MeleeBlowEffectDefinition::EatItem { .. }
                 | MeleeBlowEffectDefinition::EatFood { .. }

@@ -185,6 +185,13 @@ RoguelikeFansBand 的新一代重构工程。
 - [Contract v194：Warrens P10 移动域、隐形与地表分配](design/contract-v194-warrens-content-p10-movement-visibility-habitats.md)
 - [Contract v195：Warrens P11 低复用专用机制](design/contract-v195-warrens-content-p11-special-mechanics.md)
 - [Contract v196：Warrens P12 特殊生命周期收口](design/contract-v196-warrens-content-p12-special-lifecycles.md)
+- [Contract v197：Warrens P13 浅层直接收割](design/contract-v197-warrens-content-p13-shallow-harvest.md)
+- [Contract v198：Warrens P14 解除附魔之眼](design/contract-v198-warrens-content-p14-disenchanter-eye.md)
+- [Contract v199：Warrens P15 黑暗机制收口](design/contract-v199-warrens-content-p15-darkness.md)
+- [Contract v200：Warrens P16 十级怪物直接收割](design/contract-v200-warrens-content-p16-level-10-harvest.md)
+- [Contract v201：Warrens P17 十级施法怪物](design/contract-v201-warrens-content-p17-level-10-casters.md)
+- [Contract v202：Warrens P18 伪龙](design/contract-v202-warrens-content-p18-pseudo-dragon.md)
+- [Contract v203：Warrens P19 十一级低风险怪物](design/contract-v203-warrens-content-p19-level-11-low-risk.md)
 - [荒野世界地图 W0：权威数据导入](design/wilderness-w0-authoritative-data.md)
 - [荒野世界地图 W1：权威状态与显示](design/wilderness-w1-map-state-display.md)
 - [荒野世界地图 W2：世界旅行与局部荒野](design/wilderness-w2-travel-local-generation.md)
@@ -214,7 +221,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Rust 权威可见性与光照 v1](design/visibility-lighting-v1.md)
 - [静态地形 Chunk 渲染 v1](design/terrain-chunk-rendering-v1.md)
 
-当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v199`，共 470 条 exact fixtures、零 waiver，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
+当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v204`，共 470 条 exact fixtures、零 waiver，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
 
 fixture 使用受控的主分类。日常开发只验证或刷新受影响分类；普通 `cargo test -p rfb-contract` 只做快速的 schema、分类、ID 唯一性和契约单元测试，不回放全部场景：
 
@@ -526,6 +533,22 @@ contract-v196 推进正式内容 P12：`FRIENDLY` 让航海士娜美作为自主
 物品 P2 将 45 个规则完整的原版卷轴身份和 44 个原版药水身份正式化：新增 5 个卷轴、22 个药水及对应 effect program，全部 89 个条目使用 RFB `master` 的权威名称、中文名、flavor、重量与价值；原版 `TOWN` 条目进入 Alchemist/Temple，等级 0–9 条目按源等级进入 Warrens。三个动态设备壳和四本死亡领域法书完成覆盖账本核对。Treasure Detection 经正式编译验证后确认仍缺金币堆探测，改列 `gold-detection` 阻塞，不以普通物品探测代替。demo 升至 1.194.0，正式包现有 191 种 actor、181 种 item、100 个 ability，content hash 为 `7b040392db6925522459b6b0fd6f484a615d67d16eaed95f2885d026d0618774`。详见 [Phase 19 物品集成](design/phase-19-legacy-item-integration.md)。
 
 物品 P3.1 完成食物与基础异常状态批次：18 种蘑菇、硬饼干、鹿肉干、史莱姆黏菌、满足饥饿卷轴和睡眠药水共 23 个来源身份全部由 blocked 转 active。食物按原版顺序先执行特殊效果再增加源 `pval` 营养；混乱、麻痹和幻觉进入通用持久状态，幻觉显示只按 cell index 与 `worldTick` 确定性扰动，不消耗核心 RNG。Fast Recovery、酒、葡萄酒和精灵面包继续保留双重 blocker。demo 升至 1.195.0，正式包现有 191 种 actor、204 种 item、100 个 ability；审计为 179 active、106 mechanics-ready、259 blocked，content hash 为 `56ed89d064461fa87225ef8e06f030b75c29648bdaa33a8236e3c2f116e0dcf7`。协议、存档和 State Hash Schema 不变；共享 replay baseline 留待集成工作树统一刷新。详见 [Phase 19 物品集成](design/phase-19-legacy-item-integration.md)。
+
+contract-v197 推进正式内容 P13：高阶地狱兽、黄色果冻、佐格虫、巧言、罗宾汉、虱子王劳西和鸭子共 7 只进入严格同步。无骰 `HURT` 只表达为受护甲减免的精确 `0d0`，`S_LOUSE` 复用既有类别召唤并由唯一 `louse` 标签候选锁定巨型白虱；巧言和罗宾汉同时生成寒冰箭、恶臭之云与射击能力。协议保持 1.144、state hash Schema 保持 v67，demo 升至 1.193.0；正式包现有 198 种 actor、104 个 ability，浅层正式 actor 165 条、严格同步 133 条，content hash 为 `de810d68f142e4f1574f5d17ed58323c0d10f877c29373dc752a7b0493394698`。详见 [Contract v197](design/contract-v197-warrens-content-p13-shallow-harvest.md)。
+
+contract-v198 推进正式内容 P14：无骰 `DISENCHANT` 成为窄近战 effect，按原版 4:1 分支清除当前已建模正面时效或削减随机已装备武器、护甲、弹药的正强化，并复用解除附魔抗性与神器 71% 抵抗；负面状态、HP、actor 对 actor 装备语义均不被近似改写。解除附魔之眼按索引 104 加入严格同步并生成 3 点吸取法力。协议保持 1.144、state hash Schema 保持 v67，demo 升至 1.194.0；正式包现有 199 种 actor、105 个 ability，浅层正式 actor 166 条、严格同步 134 条，content hash 为 `47efafab50f3e2787d0a713aa2726b226fbddb8c93bc958a662a08411c2c369b`。详见 [Contract v198](design/contract-v198-warrens-content-p14-disenchanter-eye.md)。
+
+contract-v199 推进正式内容 P15：程序化房间生成持久 `glow`，当前层、离层存储、save 与 state hash 使用同一逐格状态；`darken-room` 只清除施法落点所在的连通房间永久光，银色果冻的半径 1 黑暗源也只压制永久房间光，不压制玩家光源或怪物主动光。银色果冻与黑暗精灵进入严格同步，浅层普查至此收口。协议升至 1.145、state hash Schema 升至 v68，demo 升至 1.195.0；正式包现有 201 种 actor、106 个 ability，浅层正式 actor 168 条、严格同步 136 条，content hash 为 `b67309b1973ab483e71c90fce594d20af1d66bbb7b4ada6665fbcdbd4f513e18`。详见 [Contract v199](design/contract-v199-warrens-content-p15-darkness.md)。
+
+contract-v200 推进正式内容 P16：梭鱼、巨型蜘蛛、巨型白蜱、波尔申、神风特攻伊克、沙漠栖息者、透明蘑菇丛、山丘兽人葛力斯那克、巨型食人鱼、枭熊、蓝色惧妖、长毛霉菌、爬行金币、狼、巨型果蝇、黑豹、老虎霍布斯、菲奥娜的暗影生物、亡灵聚合体和猞猁共 20 只十级非施法怪物进入严格同步。全部复用现有近战、状态、移动、分配、群体、繁殖、Unique、掉落与外观路径；猞猁保留 `WILD_ONLY`，不进入普通 Warrens 分配。协议保持 1.145、state hash Schema 保持 v68，demo 升至 1.196.0；正式包现有 221 种 actor、106 个 ability，严格同步 156 条，content hash 为 `9c57c9fee1ffad6eebe37c8be662219f2723ced96554a3adea008e06a6d0f3a2`。详见 [Contract v200](design/contract-v200-warrens-content-p16-level-10-harvest.md)。
+
+contract-v201 推进正式内容 P17：黑暗精灵法师、博尔多之子欧法克斯、格拉基的仆从、黑暗精灵战士、箭袋插槽、解除附魔霉菌和天狗共 7 只十级施法怪物进入严格同步。全部复用现有伤害、状态、治疗、位移、召唤和怪物施法路径；严格 actor 同时保留既有 `legacy-import` 类别，使 `S_MONSTER` 拥有完整正式候选池。源数据最终生成寒冰箭 `6d8+3`、治疗 30、传送到身边、传送他人、吸取法力 6 和单只十级怪物召唤共 6 个 ability。协议保持 1.145、state hash Schema 保持 v68，demo 升至 1.197.0；正式包现有 228 种 actor、112 个 ability，严格同步 163 条，content hash 为 `d645415a7e27e519eb27d6e88b096e46c4ac7cdda01dd981a6468e92218142dc`。详见 [Contract v201](design/contract-v201-warrens-content-p17-level-10-casters.md)。
+
+contract-v202 推进正式内容 P18：导入器将原版近战元素名 `LIGHT` 严格归一为既有 `LITE`/`light` 语义，伪龙连同光明、黑暗吐息进入严格同步。两种吐息均复用现有生命比例锥形伤害，未新增 effect、协议字段或存档结构。协议保持 1.145、state hash Schema 保持 v68，demo 升至 1.198.0；正式包现有 229 种 actor、114 个 ability，严格同步 164 条，content hash 为 `6177272314068a98182321ef35baf1214c726a2230a156a57fb71f2bf72112e8`。详见 [Contract v202](design/contract-v202-warrens-content-p18-pseudo-dragon.md)。
+
+contract-v203 推进正式内容 P19：多彩龙幼龙、锋锐兔、马头鱼尾怪、僵尸兽人、浅水洼和怪诞者卢格共 6 只低风险十一级怪物进入严格同步。全部复用现有吐息、闪现、水生、骑乘、Unique、掉落、抗性与近战状态路径，没有新增 ability 或 effect 类型。协议保持 1.145、state hash Schema 保持 v68，demo 升至 1.199.0；正式包现有 235 种 actor、114 个 ability，严格同步 170 条，content hash 为 `f3a9f16c4d40fa7b6b4472f856fbf22af7e33727324afc5f2962ad84cf11912b`。详见 [Contract v203](design/contract-v203-warrens-content-p19-level-11-low-risk.md)。
+
+集成收口将荒野 W0–W5、物品 P1–P3.1 与怪物 P13–P19 合入同一主线：协议统一为 1.147、state hash Schema v70、基线 contract-v204，demo 统一为 1.200.0；正式包现有 86 种 terrain、235 种 actor、204 种 item 和 114 个 ability，content hash 为 `2273089117afc9e9f5ac4947407da9463d6eb8946fcbf7fb3a1a3f27cebd336b`。
 
 ### 本地验证
 

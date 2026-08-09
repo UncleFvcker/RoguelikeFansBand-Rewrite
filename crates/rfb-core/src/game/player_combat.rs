@@ -662,7 +662,8 @@ impl Game {
                         ))
                     }
                     MeleeBlowEffectDefinition::DrainAttributes { .. }
-                    | MeleeBlowEffectDefinition::DrainResource { .. } => None,
+                    | MeleeBlowEffectDefinition::DrainResource { .. }
+                    | MeleeBlowEffectDefinition::Disenchant { .. } => None,
                     MeleeBlowEffectDefinition::Bleeding {
                         duration_dice,
                         duration_sides,

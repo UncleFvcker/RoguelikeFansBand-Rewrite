@@ -1,0 +1,65 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 179,
+    "maxDepth": 40,
+    "rarity": 1
+  },
+  "attack": 2,
+  "damageDice": 10,
+  "damageSides": 2,
+  "damageType": "physical",
+  "defense": 1,
+  "descriptionKey": "actor-demo-kamikaze-yeek-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 10,
+  "formatVersion": 1,
+  "glyph": "y",
+  "hitPointDice": {
+    "dice": 4,
+    "sides": 8
+  },
+  "id": "demo.actor.kamikaze-yeek",
+  "level": 10,
+  "light": {
+    "intrinsic": false,
+    "radius": 1
+  },
+  "maxHp": 18,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 10,
+            "damageSides": 2,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.explode",
+        "selfDestructs": true,
+        "toHit": 20
+      }
+    ]
+  },
+  "nameKey": "actor-demo-kamikaze-yeek-name",
+  "resistances": {
+    "acid": "resistant"
+  },
+  "role": "monster",
+  "speed": 113,
+  "statusImmunities": [
+    "rfb.status.fear"
+  ],
+  "tags": [
+    "animal",
+    "legacy-import",
+    "warrens",
+    "yeek"
+  ]
+}

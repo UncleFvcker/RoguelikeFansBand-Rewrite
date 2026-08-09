@@ -1,6 +1,6 @@
 # RFB 全系统梳理与重构实现路线
 
-状态：长期规则实现路线；当前基线为协议 1.146 / contract-v199（P31–P98 进展见 8.3，玩家流程与 Outpost 进展见 Phase 17/18，物品接入见 Phase 19，Warrens 怪物机制见 W1–W14 清单，荒野世界图见 W0–W5）
+状态：长期规则实现路线；当前基线为协议 1.147 / contract-v204（P31–P98 进展见 8.3，玩家流程与 Outpost 进展见 Phase 17/18，物品接入见 Phase 19，Warrens 怪物机制见 W1–W14 清单，荒野世界图见 W0–W5）
 
 ## 1. 目的与边界
 
@@ -619,6 +619,22 @@ P30“首个非 Mana 职业资源”已由 contract-v90 完成：节奏资源按
 **荒野 W4 进展（2026-08）**：正式闭合现有 Outpost/Warrens 地点。世界尺度不接受楼梯命令；返回 Outpost 局部地图并站在既有入口后，还需由当前 `(28,52)` 的 `Dungeon` 地点 ID 匹配 Warrens 才能进入。离开地牢复用保存的地表楼层，恢复原世界坐标、入口格、任务和商店状态。协议 1.145、state hash Schema v68、demo 1.193.0/hash 与 contract-v198 不变；Orc Cave 和其他地点不激活。完整边界见 [Wilderness W4](wilderness-w4-location-loop.md)。
 
 **荒野 W5 进展（2026-08）**：按原版 `1/10` 低层荒野房间规则接入确定性的 `Ruined Home`，并增加八方向逐步自动旅行、权威目标恢复、深水/熔岩/雪地环境规则，以及宠物、坐骑和生效中召回的世界图确认闭环。协议 1.146、state hash Schema v69、contract-v199；demo 1.193.0/hash 不变。随机 20–50 级单层地下城和城镇传送严格等待对应内容消费者。完整边界见 [Wilderness W5](wilderness-w5-original-extensions.md)。
+
+**浅层怪物 P13 进展（2026-08）**：contract-v197 接入高阶地狱兽、黄色果冻、佐格虫、巧言、罗宾汉、虱子王劳西和鸭子。无骰 `HURT` 仅允许受护甲减免的精确 `0d0`；`S_LOUSE` 复用既有 `summon-category`，并以唯一 `louse` 标签候选还原巨型白虱。正式浅层 actor 达 165、严格同步达 133，只剩 3 条浅层活跃记录；协议 1.144、Schema v67 不变，demo 1.193.0，内置 hash 为 `de810d68f142e4f1574f5d17ed58323c0d10f877c29373dc752a7b0493394698`。完整边界见 [Contract v197](contract-v197-warrens-content-p13-shallow-harvest.md)。
+
+**浅层怪物 P14 进展（2026-08）**：contract-v198 以窄 `disenchant` 近战 effect 复用现有 Disenchant 抗性、正面状态移除与物品强化字段，按原版 4:1 处理时效/装备分支并保留神器抵抗；解除附魔之眼及 3 点吸取法力进入正式包。正式浅层 actor 达 166、严格同步达 134，只剩 Silver jelly 与 Dark elf；协议 1.144、Schema v67 不变，demo 1.194.0，内置 hash 为 `47efafab50f3e2787d0a713aa2726b226fbddb8c93bc958a662a08411c2c369b`。完整边界见 [Contract v198](contract-v198-warrens-content-p14-disenchanter-eye.md)。
+
+**浅层怪物 P15 进展（2026-08）**：contract-v199 为程序化房间增加持久 `glow`，当前层、离层存储、save 与 state hash 使用同一逐格状态；`darken-room` 清除施法落点所在的连通房间永久光，怪物黑暗源只压制永久房间光而不压制携带光源。银色果冻和黑暗精灵进入正式包，正式浅层 actor 达 168、严格同步达 136，浅层普查收口；协议 1.145、Schema v68，demo 1.195.0，内置 hash 为 `b67309b1973ab483e71c90fce594d20af1d66bbb7b4ada6665fbcdbd4f513e18`。完整边界见 [Contract v199](contract-v199-warrens-content-p15-darkness.md)。
+
+**十级怪物 P16 进展（2026-08）**：contract-v200 直接接入 20 只已经能由现有运行时完整承载的十级非施法怪物，复用既有近战、状态、移动、分配、群体、繁殖、Unique、掉落和 habitat 路径。猞猁保留 `WILD_ONLY`，其余 19 条进入现有全局地牢分配；严格同步达 156 条。协议 1.145、Schema v68 不变，demo 1.196.0，内置 hash 为 `9c57c9fee1ffad6eebe37c8be662219f2723ced96554a3adea008e06a6d0f3a2`。完整边界见 [Contract v200](contract-v200-warrens-content-p16-level-10-harvest.md)。
+
+**十级怪物 P17 进展（2026-08）**：contract-v201 接入黑暗精灵法师、欧法克斯、格拉基的仆从、黑暗精灵战士、箭袋插槽、解除附魔霉菌和天狗。现有 effect 承载全部法术，严格同步 actor 保留 `legacy-import` 通用召唤类别；源显式骰最终生成 6 个参数化 ability，使严格同步达 163 条。协议 1.145、Schema v68 不变，demo 1.197.0，内置 hash 为 `d645415a7e27e519eb27d6e88b096e46c4ac7cdda01dd981a6468e92218142dc`。完整边界见 [Contract v201](contract-v201-warrens-content-p17-level-10-casters.md)。
+
+**十级怪物 P18 进展（2026-08）**：contract-v202 以单点 `LIGHT → LITE` 近战源别名接入伪龙；光明与黑暗吐息复用已有生命比例锥形伤害，各生成一个参数化 ability。严格同步达 164 条，正式包为 229 actors / 114 abilities；协议 1.145、Schema v68 不变，demo 1.198.0，内置 hash 为 `6177272314068a98182321ef35baf1214c726a2230a156a57fb71f2bf72112e8`。完整边界见 [Contract v202](contract-v202-warrens-content-p18-pseudo-dragon.md)。
+
+**十一级怪物 P19 进展（2026-08）**：contract-v203 接入多彩龙幼龙、锋锐兔、马头鱼尾怪、僵尸兽人、浅水洼和怪诞者卢格。六只怪物只使用现有吐息、闪现、水生、骑乘、Unique、掉落、抗性和近战状态路径，没有新增 ability 或 effect。严格同步达 170 条，正式包为 235 actors / 114 abilities；协议 1.145、Schema v68 不变，demo 1.199.0，内置 hash 为 `f3a9f16c4d40fa7b6b4472f856fbf22af7e33727324afc5f2962ad84cf11912b`。完整边界见 [Contract v203](contract-v203-warrens-content-p19-level-11-low-risk.md)。
+
+**集成收口（2026-08）**：荒野 W0–W5、物品 P1–P3.1 与怪物 P13–P19 共存于同一主线；协议统一为 1.147，逐格永久光在既有荒野/自动旅行 hash 输入上使 Schema 升至 v70，470 条 exact fixtures 统一刷新为 contract-v204，内容包统一为 1.200.0。
 
 ## 9. 内容迁移策略
 

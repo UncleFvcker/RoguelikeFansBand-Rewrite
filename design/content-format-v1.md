@@ -280,6 +280,14 @@ contract-v196 以 1.191.0 为 actor 增加默认 false 的 `friendly`，表示�
 
 物品 P3.1 以 1.195.0 增加 `satisfy-hunger`、通用 `apply-status`、`self-damage` 与 `drain-resource-full`，并把这些窄 self 效果纳入 2–8 步非嵌套 `sequence`。食物严格按“特殊效果后增加源 `pval` 营养”执行；幻觉保存为普通状态，Web 仅用 cell index 与权威 `worldTick` 做确定性显示扰动，不触碰核心 RNG。23 个计划身份全部由 blocked 转 active；Fast Recovery、酒、葡萄酒和精灵面包继续保留完整 blocker。正式包现有 204 items，内容 hash 为 `56ed89d064461fa87225ef8e06f030b75c29648bdaa33a8236e3c2f116e0dcf7`，协议、存档和 state-hash Schema 不变。
 
+contract-v197 以 1.193.0 收紧既有怪物近战内容：只有 `armorMitigated: true` 的 physical `damage` effect 可以使用 `damageDice: 0, damageSides: 0`，用于权威无骰 `HURT`；其他 damage 和 poison 仍要求正骰。`S_LOUSE` 不增加内容类型，继续使用既有 `summon-category`，由 `louse` actor tag 与最大等级约束候选。
+
+contract-v198 以 1.194.0 增加窄怪物近战 `disenchant { chancePercent? }`。它不携带伤害骰，只复用玩家有效 Disenchant 抗性、已建模正面状态移除和已装备物品的 `enchantments`；带骰 `DISENCHANT` 仍是普通 damage effect。当前格式不为原版 pval、逐件 `OF_RES_DISEN` 或怪物装备另建影子字段。
+
+contract-v199 以 1.195.0 为既有 actor `light` 增加默认 false 的 `darkness`，并增加怪物施法 effect `darken-room`。负半径不另建第二套形状模型：同一个正整数 `radius` 描述作用域，`darkness` 只决定它压制永久房间光而不是产生主动光。`darken-room` 必须以非 self 的 position/entity 目标使用，当前不开放给玩家能力。
+
+集成包 1.200.0 同时包含荒野 W0–W5、物品 P1–P3.1 与怪物 P13–P19，共 86 terrain、235 actors、204 items、114 abilities，内容 hash 为 `2273089117afc9e9f5ac4947407da9463d6eb8946fcbf7fb3a1a3f27cebd336b`。
+
 contract-v83 以 1.75.0 增加 `detect` 能力效果、Echo Pulse 与 Echo Sight；类别/半径、FOV 与隐藏投影筛选、稳定结果顺序、瞬时/持久知识边界由核心定义，持久结果复用 `revealedTerrain`，state hash 升至 Schema v36。
 
 contract-v84 以 1.76.0 增加 `transform-terrain` 能力效果、Echo Delving 与 Echo Rampart；来源/目标 terrain 集、范围、FOV/line of effect、占用格、连接/边界保护和原子写入由核心定义，地形继续复用既有 save/state hash 字段。

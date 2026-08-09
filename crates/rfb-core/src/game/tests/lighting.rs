@@ -270,12 +270,14 @@ fn surface_is_ambient_lit_and_dungeon_visibility_follows_equipped_light_radius()
 
     descend_one_floor(&mut game);
     game.entities.clear();
+    game.glow.fill(false);
     game.player.position = Position { x: 10, y: 10 };
     for y in 8..=13 {
         for x in 8..=13 {
             replace_terrain(&mut game, Position { x, y }, "demo.terrain.floor");
         }
     }
+    game.explored.fill(false);
     for item in &mut game.items {
         if matches!(item.location, ItemLocation::Equipped { .. }) {
             item.location = ItemLocation::Inventory;
@@ -395,6 +397,7 @@ fn sleep_suppresses_carried_actor_light_but_not_intrinsic_light() {
             actor.light = Some(rfb_content::ActorLightDefinition {
                 radius: 1,
                 intrinsic,
+                darkness: false,
             });
         });
         game.current_floor_id = "demo.floor.echo-depth-1".to_owned();
@@ -422,6 +425,57 @@ fn sleep_suppresses_carried_actor_light_but_not_intrinsic_light() {
     assert!(!prepare(false).position_is_lit(diagonal));
     assert!(prepare(true).position_is_lit(diagonal));
     assert!(!prepare(true).position_is_lit(Position { x: 3, y: 3 }));
+}
+
+#[test]
+fn actor_darkness_suppresses_room_glow_but_not_carried_light() {
+    let mut game = Game::new(12);
+    clear_monsters(&mut game);
+    game.current_floor_id = "demo.floor.echo-depth-1".to_owned();
+    game.items.clear();
+    game.glow.fill(false);
+    let player_position = game.player.position;
+    let target = Position { x: 4, y: 3 };
+    replace_terrain(&mut game, player_position, "demo.terrain.floor");
+    replace_terrain(&mut game, target, "demo.terrain.floor");
+    let target_index = game.index(target).expect("target should be in bounds");
+    game.glow[target_index] = true;
+    assert!(game.position_is_lit(target));
+
+    game.push_generated_actor(
+        "test.silver-jelly".to_owned(),
+        "demo.actor.silver-jelly",
+        target,
+    );
+    assert!(!game.position_is_lit(target));
+
+    give_inventory_item(&mut game, "test.torch", TORCH_KIND_ID);
+    set_inventory_light_equipped(&mut game, "test.torch");
+    assert!(game.position_is_lit(target));
+}
+
+#[test]
+fn room_glow_darkening_persists_in_stored_floor_save_and_state_hash() {
+    let mut game = Game::new_warrens_journey_with_build(42, RFB_WARRIOR_BUILD_ID)
+        .expect("Warrens Warrior should create");
+    descend_one_floor(&mut game);
+    let floor_id = game.current_floor_id.clone();
+    assert!(game.glow.iter().any(|glow| *glow));
+    let hash_before = game.state_hash();
+    let darkened = game.darken_room(game.player.position);
+    assert!(!darkened.is_empty());
+    assert_ne!(game.state_hash(), hash_before);
+    let glow_after = game.glow.clone();
+
+    place_player_on_terrain(&mut game, "demo.terrain.stairs-down");
+    game.traverse_stairs(false)
+        .expect("deeper descent should resolve")
+        .expect("deeper descent should transition");
+    assert_eq!(stored_floor(&game, &floor_id).glow, glow_after);
+
+    let restored = Game::from_save(game.to_save()).expect("room glow should reload");
+    assert_eq!(stored_floor(&restored, &floor_id).glow, glow_after);
+    assert_eq!(restored.state_hash(), game.state_hash());
 }
 
 #[test]

@@ -280,7 +280,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "b679cf4e5547960561bc9a971836ac8685ac0102074f2750a9b57cf031124aa4"
+      "stateHash": "dc65385565fdd1e1af0f460c6bdf87868a8835c001b98c85d217e4015436a16b"
     },
     "events": [
       {
@@ -288,7 +288,7 @@
         "messageKey": "item-use-resource-no-effect",
         "args": {
           "amount": "0",
-          "nameKey": "item-demo-unfamiliar-potion-name",
+          "nameKey": "item-demo-perfect-focus-elixir-appearance",
           "resource": "demo.resource.mana",
           "target": "demo.item.perfect-focus-elixir"
         },
@@ -306,7 +306,7 @@
         "kind": "item.use-status-no-effect",
         "messageKey": "item-use-status-no-effect",
         "args": {
-          "nameKey": "item-demo-unfamiliar-potion-name",
+          "nameKey": "item-demo-perfect-focus-elixir-appearance",
           "status": "rfb.status.berserk",
           "target": "demo.item.perfect-focus-elixir"
         }

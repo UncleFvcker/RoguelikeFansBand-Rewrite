@@ -50,13 +50,13 @@
       "turn": 1,
       "worldTick": 10,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 38,
+      "rngDrawCounter": 77,
       "floorId": "demo.floor.surface",
       "playerPosition": {
         "x": 3,
         "y": 3
       },
-      "playerHp": 10,
+      "playerHp": 2,
       "playerMaxHp": 136,
       "playerAttack": 3,
       "playerDefense": 2,
@@ -97,10 +97,10 @@
             "index": 15
           },
           "wisdom": {
-            "natural": 13,
+            "natural": 12,
             "maximumNatural": 13,
-            "effective": 14,
-            "index": 11
+            "effective": 13,
+            "index": 10
           },
           "dexterity": {
             "natural": 13,
@@ -2901,17 +2901,17 @@
             "x": 2,
             "y": 2
           },
-          "hp": 12,
-          "speed": 100,
-          "energyNeed": 50
+          "hp": 32,
+          "speed": 110,
+          "energyNeed": 100
         },
         {
-          "id": "summon.demo.ability.death-raise-dead.1.1",
+          "id": "summon.demo.ability.death-raise-dead.1.2",
           "position": {
-            "x": 3,
+            "x": 4,
             "y": 2
           },
-          "hp": 32,
+          "hp": 61,
           "speed": 110,
           "energyNeed": 100
         }
@@ -3194,7 +3194,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "4757ede0236a690e32a6043e1c74960b2a83fb276af67af42cb1718fc3b5b3c4"
+      "stateHash": "848a3d016a80aa3be8d030acac2656c5b1bbb50d9e13b931585867ef05b3c902"
     },
     "events": [
       {
@@ -3266,87 +3266,51 @@
             "hostile": true,
             "group": true,
             "summonedKindIds": [
-              "demo.actor.risen-thrall",
               "demo.actor.zombified-kobold",
-              "demo.actor.lost-soul",
-              "demo.actor.poltergeist"
+              "demo.actor.jibaku-ghost",
+              "demo.actor.skeleton-orc",
+              "demo.actor.green-glutton-ghost"
             ]
           }
         }
       },
       {
-        "kind": "monster.ability-decision",
-        "messageKey": "monster-ability-decision",
+        "kind": "combat.monster-hit",
+        "messageKey": "combat-monster-hit",
         "args": {
-          "frequency": "6",
-          "roll": "89",
-          "source": "demo.actor.poltergeist",
-          "target": "none"
+          "damage": "1",
+          "method": "rfb.blow.touch",
+          "source": "demo.actor.green-glutton-ghost"
         },
         "outcome": {
-          "type": "monster-ability-decision",
+          "type": "damage",
           "resolution": {
-            "sourceEntityId": "summon.demo.ability.death-raise-dead.1.3",
-            "sourceKindId": "demo.actor.poltergeist",
-            "frequencyPercent": 6,
-            "frequencyRoll": 89,
-            "candidates": [
-              {
-                "abilityId": "rfb-legacy.ability.blink",
-                "baseWeight": 1,
-                "effectiveWeight": 1,
-                "targetEntityId": "summon.demo.ability.death-raise-dead.1.3",
-                "targetKindId": "demo.actor.poltergeist",
-                "targetPosition": {
-                  "x": 2,
-                  "y": 3
-                },
-                "enemyTargetCount": 0,
-                "friendlyRiskCount": 0
-              }
-            ],
-            "viableAbilityIds": [
-              "rfb-legacy.ability.blink"
-            ],
-            "totalWeight": 1
+            "rawDamage": 1,
+            "armorReduction": 0,
+            "resistanceAdjustment": 0,
+            "finalDamage": 1,
+            "damageType": "physical",
+            "resistance": "normal"
           }
         }
       },
       {
-        "kind": "monster.ability-decision",
-        "messageKey": "monster-ability-decision",
+        "kind": "combat.monster-hit",
+        "messageKey": "combat-monster-hit",
         "args": {
-          "frequency": "6",
-          "roll": "19",
-          "source": "demo.actor.poltergeist",
-          "target": "none"
+          "damage": "1",
+          "method": "rfb.blow.touch",
+          "source": "demo.actor.green-glutton-ghost"
         },
         "outcome": {
-          "type": "monster-ability-decision",
+          "type": "damage",
           "resolution": {
-            "sourceEntityId": "summon.demo.ability.death-raise-dead.1.3",
-            "sourceKindId": "demo.actor.poltergeist",
-            "frequencyPercent": 6,
-            "frequencyRoll": 19,
-            "candidates": [
-              {
-                "abilityId": "rfb-legacy.ability.blink",
-                "baseWeight": 1,
-                "effectiveWeight": 1,
-                "targetEntityId": "summon.demo.ability.death-raise-dead.1.3",
-                "targetKindId": "demo.actor.poltergeist",
-                "targetPosition": {
-                  "x": 2,
-                  "y": 4
-                },
-                "enemyTargetCount": 0,
-                "friendlyRiskCount": 0
-              }
-            ],
-            "viableAbilityIds": [
-              "rfb-legacy.ability.blink"
-            ],
-            "totalWeight": 1
+            "rawDamage": 1,
+            "armorReduction": 0,
+            "resistanceAdjustment": 0,
+            "finalDamage": 1,
+            "damageType": "physical",
+            "resistance": "normal"
           }
         }
       },
@@ -3391,111 +3355,43 @@
         }
       },
       {
-        "kind": "monster.ability-decision",
-        "messageKey": "monster-ability-decision",
+        "kind": "combat.monster-hit",
+        "messageKey": "combat-monster-hit",
         "args": {
-          "frequency": "6",
-          "roll": "30",
-          "source": "demo.actor.lost-soul",
-          "target": "none"
+          "damage": "6",
+          "method": "rfb.blow.hit",
+          "source": "demo.actor.jibaku-ghost"
         },
         "outcome": {
-          "type": "monster-ability-decision",
+          "type": "damage",
           "resolution": {
-            "sourceEntityId": "summon.demo.ability.death-raise-dead.1.2",
-            "sourceKindId": "demo.actor.lost-soul",
-            "frequencyPercent": 6,
-            "frequencyRoll": 30,
-            "candidates": [
-              {
-                "abilityId": "rfb-legacy.ability.escape",
-                "baseWeight": 1,
-                "effectiveWeight": 1,
-                "targetEntityId": "summon.demo.ability.death-raise-dead.1.2",
-                "targetKindId": "demo.actor.lost-soul",
-                "targetPosition": {
-                  "x": 4,
-                  "y": 2
-                },
-                "enemyTargetCount": 0,
-                "friendlyRiskCount": 0
-              },
-              {
-                "abilityId": "rfb-legacy.ability.drain-mana-4",
-                "baseWeight": 1,
-                "effectiveWeight": 1,
-                "targetEntityId": "demo.actor.player.1",
-                "targetKindId": "demo.actor.explorer",
-                "targetPosition": {
-                  "x": 3,
-                  "y": 3
-                },
-                "affectedPositions": [
-                  {
-                    "x": 3,
-                    "y": 3
-                  }
-                ],
-                "enemyTargetCount": 1,
-                "friendlyRiskCount": 0
-              }
-            ],
-            "viableAbilityIds": [
-              "rfb-legacy.ability.escape",
-              "rfb-legacy.ability.drain-mana-4"
-            ],
-            "totalWeight": 2
+            "rawDamage": 7,
+            "armorReduction": 1,
+            "resistanceAdjustment": 0,
+            "finalDamage": 6,
+            "damageType": "physical",
+            "resistance": "normal"
           }
         }
       },
       {
-        "kind": "monster.ability-decision",
-        "messageKey": "monster-ability-decision",
+        "kind": "combat.monster-miss",
+        "messageKey": "combat-monster-miss",
         "args": {
-          "frequency": "6",
-          "roll": "80",
-          "source": "demo.actor.poltergeist",
-          "target": "none"
-        },
-        "outcome": {
-          "type": "monster-ability-decision",
-          "resolution": {
-            "sourceEntityId": "summon.demo.ability.death-raise-dead.1.3",
-            "sourceKindId": "demo.actor.poltergeist",
-            "frequencyPercent": 6,
-            "frequencyRoll": 80,
-            "candidates": [
-              {
-                "abilityId": "rfb-legacy.ability.blink",
-                "baseWeight": 1,
-                "effectiveWeight": 1,
-                "targetEntityId": "summon.demo.ability.death-raise-dead.1.3",
-                "targetKindId": "demo.actor.poltergeist",
-                "targetPosition": {
-                  "x": 1,
-                  "y": 3
-                },
-                "enemyTargetCount": 0,
-                "friendlyRiskCount": 0
-              }
-            ],
-            "viableAbilityIds": [
-              "rfb-legacy.ability.blink"
-            ],
-            "totalWeight": 1
-          }
+          "method": "rfb.blow.hit",
+          "source": "demo.actor.skeleton-orc"
+        }
+      },
+      {
+        "kind": "combat.monster-miss",
+        "messageKey": "combat-monster-miss",
+        "args": {
+          "method": "rfb.blow.touch",
+          "source": "demo.actor.green-glutton-ghost"
         }
       }
     ],
     "changedCells": [
-      {
-        "x": 1,
-        "y": 3
-      },
-      {
-        "x": 1,
-        "y": 4
-      },
       {
         "x": 2,
         "y": 2
@@ -3503,10 +3399,6 @@
       {
         "x": 2,
         "y": 3
-      },
-      {
-        "x": 2,
-        "y": 4
       },
       {
         "x": 3,
@@ -3515,12 +3407,8 @@
       {
         "x": 4,
         "y": 2
-      },
-      {
-        "x": 5,
-        "y": 2
       }
     ],
-    "saveRoundTripStateHash": "4757ede0236a690e32a6043e1c74960b2a83fb276af67af42cb1718fc3b5b3c4"
+    "saveRoundTripStateHash": "848a3d016a80aa3be8d030acac2656c5b1bbb50d9e13b931585867ef05b3c902"
   }
 }

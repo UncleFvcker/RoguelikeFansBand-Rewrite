@@ -307,7 +307,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 1
       },
-      "stateHash": "b8edf0a4afe36fb9fbafaae5b9878ef722fd9bff2d0f66733e5a17793f4dca53"
+      "stateHash": "d6b373144e880adcdee1946d5ce3d42731a234d9063b9b5077358eb7f51550b6"
     },
     "events": [
       {
@@ -3754,6 +3754,6 @@
     "removedEntities": [
       "demo.task.echo-hunt.target.1"
     ],
-    "saveRoundTripStateHash": "b8edf0a4afe36fb9fbafaae5b9878ef722fd9bff2d0f66733e5a17793f4dca53"
+    "saveRoundTripStateHash": "d6b373144e880adcdee1946d5ce3d42731a234d9063b9b5077358eb7f51550b6"
   }
 }

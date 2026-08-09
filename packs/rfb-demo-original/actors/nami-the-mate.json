@@ -126,6 +126,7 @@
   "speed": 120,
   "tags": [
     "human",
+    "legacy-import",
     "unique",
     "warrens"
   ],

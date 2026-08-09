@@ -290,6 +290,7 @@ pub enum AbilityEffectDefinition {
         amount: u32,
     },
     Amnesia,
+    DarkenRoom,
     AggravateMonsters,
     Teleport,
     BlinkSelf {

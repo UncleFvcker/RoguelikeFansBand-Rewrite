@@ -1,6 +1,6 @@
 # 待实现内容清单
 
-状态：基于 contract-v1–v196、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
+状态：基于 contract-v1–v201、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
 
 本文件只记录已经在现有设计或原版对比中明确出现、但尚未实现的内容。长期设想仍保留在 [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)，这里用于跟踪可以实际排入后续 contract 的缺口。
 
@@ -52,6 +52,32 @@ contract-v196 完成 `FRIENDLY` 自主友方、怪物 `TRAPS` 与 Shadower 外�
 并接入航海士娜美、追踪者和板栗崽；浅层正式 actor 增至 158 条、严格同步
 增至 126 条。5 条 `DEPRECATED` 旧记录由严格清单绑定到活跃同名索引并永久
 排除；剩余 10 条活跃浅层记录继续按各自内容边界处理。
+contract-v197 直接接入其中 7 条：高阶地狱兽、黄色果冻、佐格虫、巧言、
+罗宾汉、虱子王劳西和鸭子。零骰 `HURT` 严格表达为受护甲减免的 `0d0`；
+`S_LOUSE` 复用既有类别召唤，唯一候选为巨型白虱。浅层正式 actor 增至
+165 条、严格同步增至 133 条；只剩 Silver jelly、Disenchanter eye 和
+Dark elf 3 条。
+contract-v198 将无骰 `DISENCHANT` 收窄为已有抗性、正面状态移除和装备
+强化削减的近战 effect，接入解除附魔之眼及其 3 点吸取法力；浅层正式 actor
+增至 166 条、严格同步增至 134 条。只剩 Silver jelly 和 Dark elf 2 条。
+contract-v199 为程序化房间增加持久 `glow`，以窄 `darken-room` 清除目标所在
+连通房间的永久光，并让怪物黑暗源只压制永久房间光；银色果冻和黑暗精灵
+进入严格同步。浅层正式 actor 增至 168 条、严格同步增至 136 条，浅层普查
+剩余活跃记录清零。
+contract-v200 开始推进下一段十级内容，直接接入 20 只不需要新增主动施法或
+运行时机制的怪物。正式包 actor 增至 221 条、严格同步增至 156 条；猞猁按
+原版保留 `WILD_ONLY`，其余 19 条可参与现有全局地牢分配。协议与 State Hash
+Schema 均不变。
+contract-v201 接入 7 只十级施法怪物，并让 demo 严格 actor 保留通用导入器
+已经使用的 `legacy-import` 类别，以承载欧法克斯的原作 `S_MONSTER(1d1)`。
+所有法术继续使用现有 effect；正式包 actor 增至 228、ability 增至 112、
+严格同步增至 163，协议与 State Hash Schema 均不变。
+contract-v202 将原版近战元素名 `LIGHT` 收窄为既有 `LITE`/`light` 语义，
+接入伪龙以及生命比例式光明、黑暗吐息。正式包 actor 增至 229、ability
+增至 114、严格同步增至 164；协议与 State Hash Schema 均不变。
+contract-v203 接入多彩龙幼龙、锋锐兔、马头鱼尾怪、僵尸兽人、浅水洼和
+怪诞者卢格 6 只十一级怪物，全部复用既有字段与 effect。正式包 actor 增至
+235、ability 保持 114、严格同步增至 170；协议与 State Hash Schema 均不变。
 
 荒野 W0 已导入 `master:w_info.txt` 的 `99x66` normal 世界图、15 类地形、
 危险等级、道路和起点，并只把现有 Outpost/Warrens 绑定为正式地点。W1 已完成

@@ -96,6 +96,7 @@
   "speed": 110,
   "tags": [
     "humanoid",
+    "legacy-import",
     "warrens"
   ]
 }

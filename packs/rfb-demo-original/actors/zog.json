@@ -1,0 +1,83 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 98,
+    "maxDepth": 40,
+    "rarity": 2
+  },
+  "attack": 1,
+  "damageDice": 2,
+  "damageSides": 5,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [
+      {
+        "guaranteedForUnique": true,
+        "percent": 90
+      }
+    ],
+    "itemTableId": "demo.loot-table.warrens",
+    "kind": "items-and-gold"
+  },
+  "defense": 2,
+  "descriptionKey": "actor-demo-zog-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 25,
+  "formatVersion": 1,
+  "glyph": "h",
+  "hitPointDice": {
+    "dice": 13,
+    "sides": 9
+  },
+  "id": "demo.actor.zog",
+  "level": 5,
+  "maxHp": 65,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 2,
+            "damageSides": 5,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 2,
+            "damageSides": 5,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "nameKey": "actor-demo-zog-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseWeight": 0,
+    "skeletonItemKindId": "demo.item.skeleton-remains",
+    "skeletonWeight": 1
+  },
+  "role": "monster",
+  "speed": 110,
+  "tags": [
+    "alien",
+    "evil",
+    "legacy-import",
+    "warrens"
+  ]
+}

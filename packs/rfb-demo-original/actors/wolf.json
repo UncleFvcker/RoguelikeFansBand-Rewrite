@@ -1,0 +1,70 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "friends": {
+      "chancePercent": 0,
+      "dice": 3,
+      "sides": 3
+    },
+    "habitats": [
+      "mountain",
+      "waste",
+      "wood"
+    ],
+    "legacyIndex": 196,
+    "maxDepth": 40,
+    "randomMovementPercent": 25,
+    "rarity": 1
+  },
+  "attack": 2,
+  "damageDice": 1,
+  "damageSides": 7,
+  "damageType": "physical",
+  "defense": 3,
+  "descriptionKey": "actor-demo-wolf-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 30,
+  "formatVersion": 1,
+  "glyph": "C",
+  "hitPointDice": {
+    "dice": 6,
+    "sides": 6
+  },
+  "id": "demo.actor.wolf",
+  "level": 10,
+  "maxHp": 21,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 7,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      }
+    ]
+  },
+  "nameKey": "actor-demo-wolf-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "role": "monster",
+  "speed": 120,
+  "tags": [
+    "animal",
+    "legacy-import",
+    "warrens",
+    "wolf"
+  ]
+}

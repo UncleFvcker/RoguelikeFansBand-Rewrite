@@ -459,14 +459,14 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "ca38af20289be781697d45bb5997618c46fbb2c993fb1baef0855a5b997bf512"
+      "stateHash": "d93bc3c5057cf6c63870b3ef5320d4e2f996df60e57ddc878b6dcd08b564fa37"
     },
     "events": [
       {
         "kind": "item.use-poison-resisted",
         "messageKey": "item-use-poison-resisted",
         "args": {
-          "nameKey": "item-demo-unfamiliar-potion-name",
+          "nameKey": "item-demo-venom-draught-appearance",
           "source": "demo.item.venom-draught"
         }
       }

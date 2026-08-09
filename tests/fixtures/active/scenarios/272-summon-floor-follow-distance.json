@@ -240,7 +240,25 @@
         "dungeonId": "demo.dungeon.echo-depths",
         "floorId": "demo.floor.echo-depth-1"
       },
-      "entityCount": 0,
+      "entityCount": 1,
+      "entities": [
+        {
+          "id": "demo.monster.ember-mote.1",
+          "position": {
+            "x": 5,
+            "y": 4
+          },
+          "hp": 4,
+          "speed": 100,
+          "energyNeed": 100,
+          "faction": "player",
+          "summon": {
+            "ownerId": "demo.actor.player.1",
+            "sourceAbilityId": "demo.ability.echo-companion",
+            "remainingTurns": 8
+          }
+        }
+      ],
       "groundItemCount": 1,
       "nextItemInstanceSerial": 3,
       "nextGoldPileSerial": 1,
@@ -302,7 +320,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "4524d7655f3e2722a6bec150d5b8ddb4dde62f96bfd8c26b97a6bd6779c05e79"
+      "stateHash": "ee6be6d45c96b1a6463424aa05dc1dabb86be285f8252fa5d39b11b8131be2ea"
     },
     "events": [
       {
@@ -1932,6 +1950,6 @@
         "y": 19
       }
     ],
-    "saveRoundTripStateHash": "4524d7655f3e2722a6bec150d5b8ddb4dde62f96bfd8c26b97a6bd6779c05e79"
+    "saveRoundTripStateHash": "ee6be6d45c96b1a6463424aa05dc1dabb86be285f8252fa5d39b11b8131be2ea"
   }
 }

@@ -188,7 +188,7 @@ pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 69;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 70;
 pub const WARRENS_JOURNEY_WORLD_ID: &str = "demo.world.warrens-journey";
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const VISIBILITY_RADIUS: i32 = 8;
@@ -202,6 +202,7 @@ const NATURAL_HP_REGENERATION_BASE: u64 = 1_442;
 const NATURAL_HP_REGENERATION_SCALE: u64 = 65_536;
 const SURFACE_AMBIENT_LIGHT: u8 = 48;
 const DUNGEON_AMBIENT_LIGHT: u8 = 0;
+const ROOM_GLOW_LIGHT: u8 = 48;
 const TERRAIN_INTERACTION_DIRECTIONS: [Direction; 8] = [
     Direction::North,
     Direction::NorthEast,
@@ -734,6 +735,7 @@ pub struct Game {
     width: u16,
     height: u16,
     terrain: Vec<String>,
+    glow: Vec<bool>,
     player: Actor,
     riding_actor_id: Option<String>,
     build: Option<CharacterBuildIdentity>,
@@ -1022,6 +1024,7 @@ impl Game {
             width,
             height,
             terrain,
+            glow: vec![false; usize::from(width) * usize::from(height)],
             player,
             riding_actor_id: None,
             build,
@@ -4319,7 +4322,16 @@ impl Game {
         let eligible_entries = table
             .entries
             .iter()
-            .filter(|entry| entry.min_depth <= context.depth && context.depth <= entry.max_depth)
+            .filter(|entry| {
+                entry.min_depth <= context.depth
+                    && context.depth <= entry.max_depth
+                    && (minimum_quality == rfb_content::ItemQuality::Ordinary
+                        || self.content.item(&entry.item_kind_id).is_some_and(|item| {
+                            item.max_stack == 1
+                                && item.equipment_slot.is_some()
+                                && entry.quantity == 1
+                        }))
+            })
             .collect::<Vec<_>>();
         if eligible_entries.is_empty() {
             return Ok(Vec::new());
@@ -4362,11 +4374,19 @@ impl Game {
             let quality_index = self.roll_weighted_index(&quality_weights);
             let affix_index = self.roll_weighted_index(&affix_weights);
             let entry = eligible_entries[entry_index];
-            let quality = item_quality_dto(
+            let rolled_quality = item_quality_dto(
                 table.quality_weights[quality_index]
                     .quality
                     .max(minimum_quality),
             );
+            let supports_quality = self.content.item(&entry.item_kind_id).is_some_and(|item| {
+                item.max_stack == 1 && item.equipment_slot.is_some() && entry.quantity == 1
+            });
+            let quality = if supports_quality {
+                rolled_quality
+            } else {
+                ItemQualityDto::Ordinary
+            };
             let affix_ids = if quality == ItemQualityDto::Ordinary {
                 Vec::new()
             } else {
@@ -4584,20 +4604,61 @@ impl Game {
                 .is_some_and(|world| self.current_floor_id == world.initial_floor_id)
     }
 
-    fn ambient_light(&self) -> u8 {
+    fn ambient_light(&self, position: Position, sources: &[LightSource]) -> u8 {
         if self.floor_has_environment_light() && self.wilderness_is_daytime() {
             SURFACE_AMBIENT_LIGHT
+        } else if self.index(position).is_some_and(|index| self.glow[index])
+            && !sources
+                .iter()
+                .any(|source| source.darkness && source.contains(position))
+        {
+            ROOM_GLOW_LIGHT
         } else {
             DUNGEON_AMBIENT_LIGHT
         }
     }
 
     fn position_is_lit(&self, position: Position) -> bool {
-        self.collect_light_sources().iter().any(|source| {
-            rfb_distance(source.position, position)
-                <= u32::try_from(source.radius)
-                    .expect("validated light radius must be non-negative")
-        })
+        let sources = self.collect_light_sources();
+        sources
+            .iter()
+            .any(|source| !source.darkness && source.contains(position))
+            || self.ambient_light(position, &sources) > 0
+    }
+
+    fn darken_room(&mut self, origin: Position) -> Vec<Position> {
+        let Some(origin_index) = self.index(origin) else {
+            return Vec::new();
+        };
+        if !self.glow[origin_index] {
+            return Vec::new();
+        }
+
+        self.glow[origin_index] = false;
+        let mut queue = VecDeque::from([origin]);
+        let mut darkened = Vec::new();
+        while let Some(position) = queue.pop_front() {
+            darkened.push(position);
+            for dy in -1..=1 {
+                for dx in -1..=1 {
+                    if dx == 0 && dy == 0 {
+                        continue;
+                    }
+                    let neighbor = Position {
+                        x: position.x + dx,
+                        y: position.y + dy,
+                    };
+                    let Some(index) = self.index(neighbor) else {
+                        continue;
+                    };
+                    if self.glow[index] {
+                        self.glow[index] = false;
+                        queue.push_back(neighbor);
+                    }
+                }
+            }
+        }
+        darkened
     }
 
     fn collect_light_sources(&self) -> Vec<LightSource> {
@@ -4611,6 +4672,7 @@ impl Game {
                 radius,
                 maximum: 72,
                 color: PLAYER_LIGHT_COLOR,
+                darkness: false,
             });
         }
         for entity in &self.entities {
@@ -4633,6 +4695,7 @@ impl Game {
                 radius: i32::from(light.radius),
                 maximum: 64,
                 color: ACTOR_LIGHT_COLOR,
+                darkness: light.darkness,
             });
         }
         for item in &self.items {
@@ -4651,6 +4714,7 @@ impl Game {
                 radius: ITEM_LIGHT_RADIUS,
                 maximum: 52,
                 color: ITEM_LIGHT_COLOR,
+                darkness: false,
             });
         }
         sources
@@ -5502,6 +5566,7 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             AbilityEffectSpecDto::DrainResource { amount: *amount }
         }
         AbilityEffectDefinition::Amnesia => AbilityEffectSpecDto::Amnesia,
+        AbilityEffectDefinition::DarkenRoom => AbilityEffectSpecDto::DarkenRoom,
         AbilityEffectDefinition::AggravateMonsters => AbilityEffectSpecDto::AggravateMonsters,
         AbilityEffectDefinition::Teleport => AbilityEffectSpecDto::Teleport,
         AbilityEffectDefinition::Summon {
@@ -5853,6 +5918,14 @@ struct LightSource {
     radius: i32,
     maximum: u8,
     color: u32,
+    darkness: bool,
+}
+
+impl LightSource {
+    fn contains(self, position: Position) -> bool {
+        rfb_distance(self.position, position)
+            <= u32::try_from(self.radius).expect("validated light radius must be non-negative")
+    }
 }
 
 fn light_from_sources(
@@ -5861,7 +5934,7 @@ fn light_from_sources(
     ambient_light: u8,
 ) -> CellLightDto {
     let mut strongest = (0_u8, PLAYER_LIGHT_COLOR);
-    for source in sources {
+    for source in sources.iter().filter(|source| !source.darkness) {
         let boost = source_intensity(source.position, position, source.radius, source.maximum);
         if boost > strongest.0 {
             strongest = (boost, source.color);

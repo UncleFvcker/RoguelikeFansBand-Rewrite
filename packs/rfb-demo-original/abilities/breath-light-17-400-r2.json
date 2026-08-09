@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.breath-light-17-400-r2",
+  "descriptionKey": "ability-legacy-breath-light-17-400-r2-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.breath-light-17-400-r2",
+  "nameKey": "ability-legacy-breath-light-17-400-r2-name",
+  "tags": [
+    "breath",
+    "damage",
+    "legacy-import"
+  ],
+  "target": {
+    "modes": [
+      "direction"
+    ],
+    "range": 8,
+    "requiresLineOfEffect": true
+  }
+}

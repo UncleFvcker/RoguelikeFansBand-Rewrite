@@ -97,6 +97,7 @@
     "rfb.status.sleep"
   ],
   "tags": [
+    "legacy-import",
     "mushroom",
     "warrens"
   ]
