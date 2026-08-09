@@ -9,18 +9,19 @@ use crate::{
     stats::{AttributeKind, CharacterProgress, experience_required_for_level},
 };
 use rfb_content::{
-    AbilityEffectDefinition, ItemUseEffectDefinition, TownFacilityCategory, WildernessDefinition,
-    WildernessLocationDefinition, WildernessTerrain,
+    AbilityEffectDefinition, ItemUseEffectDefinition, MutationRatingDefinition,
+    TownFacilityCategory, WildernessDefinition, WildernessLocationDefinition, WildernessTerrain,
 };
 use rfb_protocol::{
     AbilityDetectSpecDto, AbilityDto, AbilityLearningDto, AbilitySummonSpecDto,
     AbilityTerrainTransformSpecDto, AttackProfileDto, AttributeSetDto, AttributeValueDto,
     BodySlotDto, CampaignStateDto, CellDto, CellVisualDto, ContentVisualDto, DamageDiceDto,
     DeviceRechargeDto, EntityDto, EntityFactionDto, EquipmentItemDto, GameSnapshot,
-    InventoryItemDto, ItemDto, ItemKnowledgeDto, MapScaleDto, PROTOCOL_VERSION, PlayerBuildDto,
-    PlayerDto, PlayerProgressDto, Position, ResistanceDto, ResourcePoolDto, SkillProgressDto,
-    SummonDto, TaskServiceDto, TaskStatusDto, TerrainInteractionDto, TerrainInteractionKindDto,
-    VisibilityState, WildernessLocationDto, WildernessLocationKindDto,
+    InventoryItemDto, ItemDto, ItemKnowledgeDto, MapScaleDto, MutationRatingDto, PROTOCOL_VERSION,
+    PlayerBuildDto, PlayerDto, PlayerMutationDto, PlayerProgressDto, Position, ResistanceDto,
+    ResourcePoolDto, SkillProgressDto, SummonDto, TaskServiceDto, TaskStatusDto,
+    TerrainInteractionDto, TerrainInteractionKindDto, VisibilityState, WildernessLocationDto,
+    WildernessLocationKindDto,
 };
 
 use super::tasks::projected_task_state;
@@ -131,6 +132,7 @@ impl Game {
             progress: self.player_progress_dto(),
             build: self.player_build_dto(),
             resources: self.player_resource_dtos(),
+            mutations: self.player_mutation_dtos(),
             device_recharge: self
                 .device_recharge_profile()
                 .map(|profile| DeviceRechargeDto {
@@ -143,6 +145,33 @@ impl Game {
             recall: self.recall.clone(),
             riding_actor_id: self.riding_actor_id.clone(),
         }
+    }
+
+    fn player_mutation_dtos(&self) -> Vec<PlayerMutationDto> {
+        self.progress
+            .active_mutation_ids
+            .iter()
+            .map(|id| {
+                let definition = self
+                    .content
+                    .mutation(id)
+                    .expect("active mutation definition must remain available");
+                let rating = match definition.rating {
+                    MutationRatingDefinition::Awful => MutationRatingDto::Awful,
+                    MutationRatingDefinition::Bad => MutationRatingDto::Bad,
+                    MutationRatingDefinition::Average => MutationRatingDto::Average,
+                    MutationRatingDefinition::Good => MutationRatingDto::Good,
+                    MutationRatingDefinition::Great => MutationRatingDto::Great,
+                };
+                PlayerMutationDto {
+                    id: id.clone(),
+                    name: definition.name.clone(),
+                    description: definition.description.clone(),
+                    rating,
+                    locked: self.progress.locked_mutation_ids.contains(id),
+                }
+            })
+            .collect()
     }
 
     pub(super) fn projected_player_dto(&self) -> PlayerDto {

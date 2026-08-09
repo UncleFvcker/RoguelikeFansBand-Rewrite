@@ -1,0 +1,8 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/mutation.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.mutation.xtra-noise",
+  "name": "额外噪音",
+  "description": "你发出很多奇怪的噪音 (-3 潜行)。",
+  "rating": "bad"
+}

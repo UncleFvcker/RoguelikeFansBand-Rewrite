@@ -1,7 +1,65 @@
 // SPDX-License-Identifier: MPL-2.0
 use super::support::*;
 use super::*;
-use rfb_protocol::AttributeKindDto;
+use rfb_protocol::{AttributeKindDto, MutationRatingDto};
+
+#[test]
+fn mutation_state_projects_saves_hashes_and_rejects_invalid_references() {
+    let mut game = Game::new(42);
+    let initial_hash = game.state_hash();
+    game.progress
+        .active_mutation_ids
+        .insert("rfb.mutation.spit-acid".to_owned());
+    game.progress
+        .locked_mutation_ids
+        .insert("rfb.mutation.spit-acid".to_owned());
+
+    let mutation = game
+        .snapshot()
+        .player
+        .mutations
+        .into_iter()
+        .next()
+        .expect("active mutation should project");
+    assert_eq!(mutation.id, "rfb.mutation.spit-acid");
+    assert_eq!(mutation.name, "喷吐酸液");
+    assert_eq!(mutation.description, "你可以喷吐酸液（伤害为 等级*2）。");
+    assert_eq!(mutation.rating, MutationRatingDto::Good);
+    assert!(mutation.locked);
+    assert_ne!(game.state_hash(), initial_hash);
+
+    let saved = game.to_save();
+    assert_eq!(saved.player.active_mutation_ids, ["rfb.mutation.spit-acid"]);
+    assert_eq!(saved.player.locked_mutation_ids, ["rfb.mutation.spit-acid"]);
+    let restored = Game::from_save(saved.clone()).expect("mutation state should restore");
+    assert_eq!(restored.state_hash(), game.state_hash());
+    assert_eq!(restored.snapshot().player.mutations, [mutation]);
+
+    let mut duplicate = saved.clone();
+    duplicate
+        .player
+        .active_mutation_ids
+        .push("rfb.mutation.spit-acid".to_owned());
+    assert!(matches!(
+        Game::from_save(duplicate),
+        Err(CoreError::InvalidSave("player mutation state is invalid"))
+    ));
+
+    let mut unknown = saved.clone();
+    unknown.player.active_mutation_ids = vec!["rfb.mutation.unknown".to_owned()];
+    unknown.player.locked_mutation_ids.clear();
+    assert!(matches!(
+        Game::from_save(unknown),
+        Err(CoreError::InvalidSave("player mutation state is invalid"))
+    ));
+
+    let mut unlocked = saved;
+    unlocked.player.active_mutation_ids.clear();
+    assert!(matches!(
+        Game::from_save(unlocked),
+        Err(CoreError::InvalidSave("player mutation state is invalid"))
+    ));
+}
 
 #[test]
 fn default_character_build_preserves_the_v70_player_baseline() {

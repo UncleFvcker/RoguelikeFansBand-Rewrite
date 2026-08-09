@@ -547,6 +547,8 @@ pub(crate) fn player_to_save(
                 })
                 .collect(),
         }),
+        active_mutation_ids: progress.active_mutation_ids.iter().cloned().collect(),
+        locked_mutation_ids: progress.locked_mutation_ids.iter().cloned().collect(),
         build: build.map(|build| PlayerBuildSaveDto {
             build_id: build.build_id.clone(),
             race_id: build.race_id.clone(),

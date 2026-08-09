@@ -1,0 +1,8 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/mutation.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.mutation.human-int",
+  "name": "想象力过于丰富",
+  "description": "你的想象力过于丰富。",
+  "rating": "bad"
+}

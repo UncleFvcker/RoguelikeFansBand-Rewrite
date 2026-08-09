@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use crate::rng::RfbRng;
 
@@ -210,6 +210,8 @@ pub struct CharacterProgress {
     pub pending_attribute_increases: u16,
     pub hp_progression: Vec<i32>,
     pub skills: BTreeMap<String, SkillProgress>,
+    pub active_mutation_ids: BTreeSet<String>,
+    pub locked_mutation_ids: BTreeSet<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -267,6 +269,8 @@ impl CharacterProgress {
             pending_attribute_increases: 0,
             hp_progression,
             skills: BTreeMap::new(),
+            active_mutation_ids: BTreeSet::new(),
+            locked_mutation_ids: BTreeSet::new(),
         }
     }
 

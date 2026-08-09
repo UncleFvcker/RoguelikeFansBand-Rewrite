@@ -310,3 +310,5 @@ crates/rfb-legacy-import/
 协议 1.119 在 `PlayerSaveDto` 增加 `confusingStrikeReady`；旧存档缺字段迁移为 false，true 原样回读，不重抽 RNG。save 容器保持 v1，因该准备态进入权威 hash，state hash Schema 升到 v53。完整边界见 [Contract v128](contract-v128-scroll-monster-confusion.md)。
 
 协议 1.121 下的 contract-v132 为 `PlayerSaveDto` 增加默认 0、零值省略的 `bonusSpellLearningCapacity`。旧存档缺字段迁移为 0；非零值要求当前 Class 明确 `usesSpellScrolls`，否则载入时拒绝。bonus 与既有 Class 学习容量公式相加并进入 state hash Schema v54；save 容器保持 v1。完整边界见 [Contract v132](contract-v132-scroll-spell.md)。
+
+协议 1.152 为 `PlayerSaveDto` 增加必填 `activeMutationIds` 与 `lockedMutationIds`。两者按稳定 ID 排序保存；locked 必须是 active 的子集，且所有 ID 必须解析到当前内容包的 `MutationDefinition`。重复、未知或悬空锁定状态直接拒绝。两组集合进入 state hash Schema v73；save 容器仍为 v1，不为旧开发存档补默认值。完整边界见 [Contract v216](contract-v216-mutation-authoritative-state.md)。

@@ -1,0 +1,8 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/mutation.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.mutation.hyper-str",
+  "name": "肌肉猛男",
+  "description": "你拥有超人般的力量 (+4 力量)。",
+  "rating": "great"
+}

@@ -1,0 +1,8 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/mutation.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.mutation.human-dex",
+  "name": "敏捷超乎肉体",
+  "description": "你偶尔会在战斗中拉伤肌肉。",
+  "rating": "bad"
+}

@@ -1,0 +1,8 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/mutation.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.mutation.purple-gift",
+  "name": "紫神眷顾",
+  "description": "你是一位紫神的信徒。",
+  "rating": "good"
+}

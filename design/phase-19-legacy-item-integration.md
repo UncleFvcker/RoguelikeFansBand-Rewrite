@@ -545,3 +545,25 @@ mutation state or gameplay. The audit records 52 identities with eligibility
 conditions, 207 conditional-weight rules, and 33 ordered gain-time removal
 edges. `rfb.mutation.merchants-friend` is explicitly marked as the sole
 source-defined identity with no numeric effect.
+
+## P3.7-M1 Mutation Definitions and Authoritative State
+
+Content pack 1.212.0 adds one `MutationDefinition` for each of the 152 M0
+ledger identities. Definitions retain the stable `rfb.mutation.*` id, exact
+authoritative Chinese name and description, and source rating. The content
+compiler rejects malformed or duplicate mutation identities, while a catalog
+test checks every formal definition against the frozen ledger.
+
+`CharacterProgress` now owns ordered active and locked mutation ID sets.
+`PlayerSaveDto` persists both sets, and load rejects duplicates, unknown
+content references, or a locked ID absent from active. `PlayerDto` projects
+only active definitions with their identity text, rating, and lock flag. New
+characters start with both sets empty; M1 adds no acquisition, removal,
+activation, periodic effect, passive bonus, candidate weighting, or mutation
+UI behavior, so all 152 coverage-ledger rows remain `blocked` for their rule
+families.
+
+The save-backed sets enter State Hash Schema v73 and protocol 1.152. The save
+container remains v1, with no compatibility path for older development saves.
+The exact baseline advances to contract-v216. Full rules begin in later M
+batches rather than being represented by inert gameplay effects.

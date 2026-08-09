@@ -1,0 +1,8 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/mutation.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.mutation.scales",
+  "name": "鳞片",
+  "description": "你的皮肤变成了鳞片 (-1 魅力, +10 护甲)。",
+  "rating": "good"
+}

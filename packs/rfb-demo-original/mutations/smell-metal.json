@@ -1,0 +1,8 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/mutation.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.mutation.smell-metal",
+  "name": "嗅金属",
+  "description": "你可以闻出附近的贵重金属。",
+  "rating": "good"
+}

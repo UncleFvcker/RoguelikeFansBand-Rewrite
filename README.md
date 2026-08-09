@@ -7,9 +7,9 @@ RoguelikeFansBand 的下一代重写版：以确定性的 Rust 规则核心为�
 ## 当前状态
 
 - 已贯通荒野、城镇、地下城、物品与怪物的可玩垂直切片。
-- 协议版本 `1.151`，State Hash Schema `v72`。
-- 行为基线 `contract-v215`，共 470 个 exact fixture，零豁免。
-- 演示内容包 `1.211.0`：88 种地形、332 种角色、249 种物品、143 个能力。
+- 协议版本 `1.152`，State Hash Schema `v73`。
+- 行为基线 `contract-v216`，共 470 个 exact fixture，零豁免。
+- 演示内容包 `1.212.0`：88 种地形、332 种角色、249 种物品、143 个能力、152 项变异定义。
 
 内容包的精确版本与哈希以 [`pack.json`](packs/rfb-demo-original/pack.json) 和 [`content.lock.json`](packs/rfb-demo-original/content.lock.json) 为准。
 

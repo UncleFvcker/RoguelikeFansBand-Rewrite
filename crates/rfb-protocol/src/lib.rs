@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.151";
+pub const PROTOCOL_VERSION: &str = "1.152";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -1143,6 +1143,28 @@ pub struct PlayerProgressDto {
     pub skills: Vec<SkillProgressDto>,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum MutationRatingDto {
+    Awful,
+    Bad,
+    Average,
+    Good,
+    Great,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct PlayerMutationDto {
+    pub id: String,
+    pub name: String,
+    pub description: String,
+    pub rating: MutationRatingDto,
+    pub locked: bool,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
@@ -2149,6 +2171,8 @@ pub struct PlayerDto {
     pub build: Option<PlayerBuildDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub resources: Vec<ResourcePoolDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub mutations: Vec<PlayerMutationDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub device_recharge: Option<DeviceRechargeDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -2999,6 +3023,8 @@ pub fn generated_typescript() -> String {
     push_declaration!(DeviceRechargeDto);
     push_declaration!(RecallStateDto);
     push_declaration!(NutritionStateDto);
+    push_declaration!(MutationRatingDto);
+    push_declaration!(PlayerMutationDto);
     push_declaration!(PlayerDto);
     push_declaration!(EntityFactionDto);
     push_declaration!(SummonDto);
@@ -3091,6 +3117,8 @@ pub struct PlayerSaveDto {
     pub resistances: Vec<ResistanceSaveDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub progress: Option<PlayerProgressSaveDto>,
+    pub active_mutation_ids: Vec<String>,
+    pub locked_mutation_ids: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub build: Option<PlayerBuildSaveDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -3971,6 +3999,7 @@ mod tests {
                 progress: PlayerProgressDto::default(),
                 build: None,
                 resources: Vec::new(),
+                mutations: Vec::new(),
                 device_recharge: None,
                 ability_learning: None,
                 abilities: Vec::new(),
@@ -4104,6 +4133,8 @@ mod tests {
         );
         let mut current = serde_json::to_value(&legacy).expect("fixture should serialize");
         current["entities"][0]["nice"] = serde_json::json!(false);
+        current["player"]["activeMutationIds"] = serde_json::json!([]);
+        current["player"]["lockedMutationIds"] = serde_json::json!([]);
         let encoded = to_msgpack(&current).expect("current payload should encode");
         let decoded: SavePayloadV1 =
             from_msgpack(&encoded).expect("current actor state should decode");
@@ -4150,6 +4181,8 @@ mod tests {
             confusing_strike_ready: false,
             resistances: Vec::new(),
             progress: None,
+            active_mutation_ids: Vec::new(),
+            locked_mutation_ids: Vec::new(),
             build: None,
             resources: Vec::new(),
             bonus_spell_learning_capacity: 0,
@@ -4189,6 +4222,7 @@ mod tests {
         assert!(typescript.contains("alerted: boolean"));
         assert!(typescript.contains("equipment: Array<EquipmentItemDto>"));
         assert!(typescript.contains("deviceRecharge?: DeviceRechargeDto | null"));
+        assert!(typescript.contains("mutations?: Array<PlayerMutationDto>"));
         assert!(typescript.contains("canReceiveRecharge: boolean"));
         assert!(typescript.contains("requiresTargetGlyph?: boolean"));
         assert!(typescript.contains("requiresRechargeTargets?: boolean"));

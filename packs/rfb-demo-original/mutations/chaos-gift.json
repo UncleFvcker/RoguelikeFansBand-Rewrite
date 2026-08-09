@@ -1,0 +1,8 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/mutation.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.mutation.chaos-gift",
+  "name": "混沌神明",
+  "description": "混沌神明会给予你礼物。",
+  "rating": "great"
+}

@@ -1,0 +1,8 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/mutation.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.mutation.evasion",
+  "name": "闪避",
+  "description": "你能避免被地震压碎，并能躲避怪物的喷吐攻击。",
+  "rating": "great"
+}

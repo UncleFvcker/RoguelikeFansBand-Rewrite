@@ -3241,7 +3241,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "4f8049dcd0bc30a93d2e8142eccb48a70b3e24cd076075d649670860c91ec872"
+      "stateHash": "38faa5f2a10438b321b25ef7d72e857bc3c7b33cba26b66ea737dbbd4c61a25e"
     },
     "events": [
       {
@@ -3453,6 +3453,6 @@
         "y": 3
       }
     ],
-    "saveRoundTripStateHash": "4f8049dcd0bc30a93d2e8142eccb48a70b3e24cd076075d649670860c91ec872"
+    "saveRoundTripStateHash": "38faa5f2a10438b321b25ef7d72e857bc3c7b33cba26b66ea737dbbd4c61a25e"
   }
 }

@@ -7,11 +7,11 @@ use serde::{Deserialize, Serialize};
 use super::{
     AbilityBookDefinition, AbilityDefinition, ActorDefinition, AffixDefinition,
     CharacterBuildDefinition, ClassDefinition, CompiledArtifact, ContentError,
-    EncounterTableDefinition, ItemDefinition, LootTableDefinition, PackDependency,
-    PersonalityDefinition, RaceDefinition, RegionTableDefinition, ResourceDefinition,
-    ShopDefinition, SkillDefinition, SkillKind, SkillSetDefinition, TerrainDefinition,
-    TerrainFeatureTableDefinition, ThemeTableDefinition, TownDefinition, TownFacilityDefinition,
-    VaultDefinition, WorldDefinition, decode_content,
+    EncounterTableDefinition, ItemDefinition, LootTableDefinition, MutationDefinition,
+    PackDependency, PersonalityDefinition, RaceDefinition, RegionTableDefinition,
+    ResourceDefinition, ShopDefinition, SkillDefinition, SkillKind, SkillSetDefinition,
+    TerrainDefinition, TerrainFeatureTableDefinition, ThemeTableDefinition, TownDefinition,
+    TownFacilityDefinition, VaultDefinition, WorldDefinition, decode_content,
 };
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -45,6 +45,8 @@ pub struct CompiledContentV1 {
     pub personalities: Vec<PersonalityDefinition>,
     #[serde(default)]
     pub builds: Vec<CharacterBuildDefinition>,
+    #[serde(default)]
+    pub mutations: Vec<MutationDefinition>,
     #[serde(default)]
     pub encounter_tables: Vec<EncounterTableDefinition>,
     #[serde(default)]
@@ -84,6 +86,7 @@ pub struct ContentCatalog {
     classes: BTreeMap<String, ClassDefinition>,
     personalities: BTreeMap<String, PersonalityDefinition>,
     builds: BTreeMap<String, CharacterBuildDefinition>,
+    mutations: BTreeMap<String, MutationDefinition>,
     encounter_tables: BTreeMap<String, EncounterTableDefinition>,
     loot_tables: BTreeMap<String, LootTableDefinition>,
     theme_tables: BTreeMap<String, ThemeTableDefinition>,
@@ -115,6 +118,7 @@ pub struct ContentSummary {
     pub class_count: usize,
     pub personality_count: usize,
     pub build_count: usize,
+    pub mutation_count: usize,
     pub encounter_table_count: usize,
     pub loot_table_count: usize,
     pub theme_table_count: usize,
@@ -210,6 +214,11 @@ impl ContentCatalog {
                 .collect(),
             builds: content
                 .builds
+                .into_iter()
+                .map(|definition| (definition.id.clone(), definition))
+                .collect(),
+            mutations: content
+                .mutations
                 .into_iter()
                 .map(|definition| (definition.id.clone(), definition))
                 .collect(),
@@ -372,6 +381,15 @@ impl ContentCatalog {
 
     pub fn builds(&self) -> impl Iterator<Item = &CharacterBuildDefinition> {
         self.builds.values()
+    }
+
+    #[must_use]
+    pub fn mutation(&self, id: &str) -> Option<&MutationDefinition> {
+        self.mutations.get(id)
+    }
+
+    pub fn mutations(&self) -> impl Iterator<Item = &MutationDefinition> {
+        self.mutations.values()
     }
 
     #[must_use]

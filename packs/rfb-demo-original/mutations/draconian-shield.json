@@ -1,0 +1,8 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/mutation.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.mutation.draconian-shield",
+  "name": "龙皮",
+  "description": "龙皮：你获得 +15 AC 和火光环",
+  "rating": "good"
+}

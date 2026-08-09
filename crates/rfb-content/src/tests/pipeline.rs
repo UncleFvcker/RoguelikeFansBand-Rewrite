@@ -16,6 +16,7 @@ fn source_roots_and_validation_precedence_are_stable() {
             "encounterTables",
             "items",
             "lootTables",
+            "mutations",
             "personalities",
             "playerAbilityBindings",
             "races",

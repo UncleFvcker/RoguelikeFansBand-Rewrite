@@ -1,0 +1,8 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/mutation.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.mutation.weigh-magic",
+  "name": "衡量魔法",
+  "description": "你能感觉到影响你的魔法的强度。",
+  "rating": "average"
+}

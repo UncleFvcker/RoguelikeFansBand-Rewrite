@@ -1,0 +1,50 @@
+{
+  "$defs": {
+    "MutationRatingDefinition": {
+      "enum": [
+        "awful",
+        "bad",
+        "average",
+        "good",
+        "great"
+      ],
+      "type": "string"
+    }
+  },
+  "$id": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/mutation.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "formatVersion": {
+      "format": "uint16",
+      "maximum": 65535,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "id": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "rating": {
+      "$ref": "#/$defs/MutationRatingDefinition"
+    }
+  },
+  "required": [
+    "$schema",
+    "formatVersion",
+    "id",
+    "name",
+    "description",
+    "rating"
+  ],
+  "title": "MutationDefinition",
+  "type": "object"
+}

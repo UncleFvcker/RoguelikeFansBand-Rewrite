@@ -1,0 +1,8 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/mutation.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.mutation.random-telepathy",
+  "name": "随机心灵感应",
+  "description": "你的心智会随机地扩展和收缩。",
+  "rating": "average"
+}

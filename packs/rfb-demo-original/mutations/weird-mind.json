@@ -1,0 +1,8 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/mutation.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.mutation.weird-mind",
+  "name": "诡异心智",
+  "description": "你诡异的心智不受不可名状的恐怖和幻觉的影响。",
+  "rating": "good"
+}

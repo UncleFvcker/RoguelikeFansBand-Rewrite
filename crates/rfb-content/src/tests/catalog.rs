@@ -6,7 +6,20 @@ fn compiled_catalog_exposes_stable_runtime_indexes() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.211.0");
+    assert_eq!(catalog.pack_version(), "1.212.0");
+    assert_eq!(catalog.mutations().count(), 152);
+    assert_eq!(
+        catalog.mutation("rfb.mutation.spit-acid").map(|mutation| (
+            mutation.name.as_str(),
+            mutation.description.as_str(),
+            mutation.rating,
+        )),
+        Some((
+            "喷吐酸液",
+            "你可以喷吐酸液（伤害为 等级*2）。",
+            MutationRatingDefinition::Good,
+        ))
+    );
     assert!(
         catalog
             .ability("demo.ability.warrens-scare")
@@ -798,4 +811,33 @@ fn compiled_catalog_exposes_stable_runtime_indexes() {
         catalog.visual_glyphs().get("demo.item.luminous-shard"),
         Some(&"!".to_owned())
     );
+}
+
+#[test]
+fn mutation_definitions_match_the_frozen_legacy_ledger() {
+    let pack = original_pack_path();
+    let catalog = ContentCatalog::from_artifact(
+        compile_pack_dir(&pack).expect("original pack should compile"),
+    );
+    let ledger: serde_json::Value = serde_json::from_slice(
+        &std::fs::read(pack.join("legacy-mutation-plan.json")).expect("ledger should read"),
+    )
+    .expect("ledger should parse");
+    let mutations = ledger["mutations"]
+        .as_array()
+        .expect("ledger should contain mutations");
+    assert_eq!(mutations.len(), catalog.mutations().count());
+    for expected in mutations {
+        let id = expected["id"].as_str().expect("mutation id");
+        let actual = catalog.mutation(id).expect("mutation definition");
+        assert_eq!(actual.name, expected["nameZh"].as_str().unwrap());
+        assert_eq!(
+            actual.description,
+            expected["descriptionZh"].as_str().unwrap()
+        );
+        assert_eq!(
+            serde_json::to_value(actual.rating).unwrap(),
+            expected["rating"]
+        );
+    }
 }

@@ -74,6 +74,9 @@ pub(crate) fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<
         .sort_by(|left, right| left.id.cmp(&right.id));
     content.builds.sort_by(|left, right| left.id.cmp(&right.id));
     content
+        .mutations
+        .sort_by(|left, right| left.id.cmp(&right.id));
+    content
         .encounter_tables
         .sort_by(|left, right| left.id.cmp(&right.id));
     content
@@ -96,6 +99,15 @@ pub(crate) fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<
     content.shops.sort_by(|left, right| left.id.cmp(&right.id));
     content.worlds.sort_by(|left, right| left.id.cmp(&right.id));
     let mut all_ids = BTreeSet::new();
+    for mutation in &content.mutations {
+        require_schema(&mutation.schema, MUTATION_SCHEMA, &mutation.id)?;
+        require_format_version(mutation.format_version, &mutation.id)?;
+        validate_definition_id(&mutation.id, "mutation")?;
+        if mutation.name.trim().is_empty() || mutation.description.trim().is_empty() {
+            return Err(ContentError::InvalidDefinitionText(mutation.id.clone()));
+        }
+        insert_definition_id(&mut all_ids, &mutation.id)?;
+    }
     let TerrainValidationOutputs {
         terrain_ids,
         terrain_walkability,

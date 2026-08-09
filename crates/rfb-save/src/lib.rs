@@ -203,6 +203,8 @@ mod tests {
                 confusing_strike_ready: false,
                 resistances: Vec::new(),
                 progress: None,
+                active_mutation_ids: Vec::new(),
+                locked_mutation_ids: Vec::new(),
                 build: None,
                 resources: Vec::new(),
                 bonus_spell_learning_capacity: 0,
