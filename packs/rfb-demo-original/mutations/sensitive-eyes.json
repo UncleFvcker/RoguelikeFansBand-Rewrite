@@ -7,5 +7,7 @@
   "rating": "average",
   "sourceIndex": 132,
   "randomWeight": 4,
+  "infravision": 4,
+  "resistances": { "blindness": "vulnerable" },
   "removesOnGain": []
 }

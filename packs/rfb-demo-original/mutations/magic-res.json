@@ -7,5 +7,7 @@
   "rating": "good",
   "sourceIndex": 76,
   "randomWeight": 4,
+  "savingThrowSkill": 15,
+  "savingThrowSkillPerFiveLevels": 1,
   "removesOnGain": []
 }

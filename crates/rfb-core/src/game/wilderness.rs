@@ -360,14 +360,29 @@ impl Game {
             .expect("active player or mount definition must remain available")
     }
 
-    fn active_traveler_has_mode(&self, mode: ActorMovementMode) -> bool {
+    pub(super) fn active_traveler_has_mode(&self, mode: ActorMovementMode) -> bool {
+        if self.riding_actor_id.is_none()
+            && mode == ActorMovementMode::Fly
+            && self.player_levitates()
+        {
+            return true;
+        }
         self.active_traveler_definition()
             .movement
             .modes
             .contains(&mode)
     }
 
-    fn player_can_cross_surface_terrain(&self, terrain: &rfb_content::TerrainDefinition) -> bool {
+    pub(super) fn player_can_cross_surface_terrain(
+        &self,
+        terrain: &rfb_content::TerrainDefinition,
+    ) -> bool {
+        if self.riding_actor_id.is_none()
+            && self.player_levitates()
+            && terrain.movement_modes.contains(&ActorMovementMode::Fly)
+        {
+            return true;
+        }
         if self.riding_actor_id.is_none() && terrain.id == SURFACE_WATER_DEEP_ID {
             return true;
         }

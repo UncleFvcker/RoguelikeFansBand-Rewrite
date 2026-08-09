@@ -1329,6 +1329,8 @@ pub enum DamageTypeDto {
     Poison,
     Light,
     Dark,
+    Blindness,
+    Fear,
     Confusion,
     Nether,
     Nexus,

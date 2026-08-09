@@ -535,10 +535,16 @@ impl Game {
                         None
                     }
                     MeleeBlowEffectDefinition::Terrify { .. } => {
+                        let duration = resisted_status_duration(
+                            u32::try_from(melee_terrify_duration(&definition)).unwrap_or(u32::MAX),
+                            self.entities[target_index]
+                                .resistances
+                                .level(DamageType::Fear),
+                        );
                         self.apply_actor_melee_status(
                             target_index,
                             STATUS_FEAR,
-                            melee_terrify_duration(&definition),
+                            i32::try_from(duration).unwrap_or(i32::MAX),
                             &source_kind_id,
                         );
                         None
@@ -1154,9 +1160,13 @@ impl Game {
                         None
                     }
                     MeleeBlowEffectDefinition::Terrify { .. } => {
+                        let duration = resisted_status_duration(
+                            u32::try_from(melee_terrify_duration(&definition)).unwrap_or(u32::MAX),
+                            self.effective_player_resistances().level(DamageType::Fear),
+                        );
                         self.apply_player_melee_status(
                             STATUS_FEAR,
-                            melee_terrify_duration(&definition),
+                            i32::try_from(duration).unwrap_or(i32::MAX),
                             &kind_id,
                         );
                         None

@@ -7,6 +7,7 @@
   "rating": "average",
   "sourceIndex": 133,
   "randomWeight": 4,
+  "resistances": { "fear": "resistant" },
   "removesOnGain": [
     "rfb.mutation.cowardice",
     "rfb.mutation.fearless"

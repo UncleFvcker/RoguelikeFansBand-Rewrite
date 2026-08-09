@@ -119,7 +119,7 @@ export type CellVisualDto = { position: Position, visibility: VisibilityState, l
 
 export type ContentVisualDto = { id: string, glyph: string, };
 
-export type DamageTypeDto = "physical" | "acid" | "electricity" | "fire" | "cold" | "poison" | "light" | "dark" | "confusion" | "nether" | "nexus" | "sound" | "shards" | "chaos" | "disenchant" | "time" | "mana" | "gravity" | "inertia" | "plasma" | "force" | "nuke" | "disintegrate" | "storm" | "holy-fire" | "hell-fire" | "ice" | "water" | "psi" | "curse";
+export type DamageTypeDto = "physical" | "acid" | "electricity" | "fire" | "cold" | "poison" | "light" | "dark" | "blindness" | "fear" | "confusion" | "nether" | "nexus" | "sound" | "shards" | "chaos" | "disenchant" | "time" | "mana" | "gravity" | "inertia" | "plasma" | "force" | "nuke" | "disintegrate" | "storm" | "holy-fire" | "hell-fire" | "ice" | "water" | "psi" | "curse";
 
 export type ResistanceLevelDto = "vulnerable" | "normal" | "resistant" | "strong" | "immune";
 

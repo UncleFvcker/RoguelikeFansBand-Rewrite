@@ -1,5 +1,15 @@
 {
   "$defs": {
+    "ActorResistanceLevel": {
+      "description": "Content-declared resistance tier; `normal` is expressed by omission.",
+      "enum": [
+        "vulnerable",
+        "resistant",
+        "strong",
+        "immune"
+      ],
+      "type": "string"
+    },
     "MutationRatingDefinition": {
       "enum": [
         "awful",
@@ -92,6 +102,15 @@
     "id": {
       "type": "string"
     },
+    "infravision": {
+      "default": 0,
+      "format": "int32",
+      "type": "integer"
+    },
+    "levitation": {
+      "default": false,
+      "type": "boolean"
+    },
     "modifiers": {
       "$ref": "#/$defs/StatModifiers",
       "default": {
@@ -125,11 +144,130 @@
       },
       "type": "array"
     },
+    "resistances": {
+      "additionalProperties": false,
+      "properties": {
+        "acid": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "blindness": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "chaos": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "cold": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "confusion": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "dark": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "disenchant": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "disintegrate": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "electricity": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "fear": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "fire": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "force": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "gravity": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "hell-fire": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "holy-fire": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "ice": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "inertia": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "light": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "mana": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "nether": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "nexus": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "nuke": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "physical": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "plasma": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "poison": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "psi": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "shards": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "sound": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "storm": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "time": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "water": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        }
+      },
+      "type": "object"
+    },
+    "savingThrowSkill": {
+      "default": 0,
+      "format": "int32",
+      "type": "integer"
+    },
+    "savingThrowSkillPerFiveLevels": {
+      "default": 0,
+      "format": "int32",
+      "type": "integer"
+    },
     "sourceIndex": {
       "format": "uint16",
       "maximum": 65535,
       "minimum": 0,
       "type": "integer"
+    },
+    "statusImmunities": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "telepathy": {
+      "default": false,
+      "type": "boolean"
     }
   },
   "required": [

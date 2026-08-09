@@ -3917,7 +3917,12 @@ impl Game {
         duration_bonus: u32,
         events: &mut Vec<DomainEvent>,
     ) -> bool {
-        let resistance_threshold = if self.player_status_immunities().contains(STATUS_BLINDNESS) {
+        let resistance = self
+            .effective_player_resistances()
+            .level(DamageType::Blindness);
+        let resistance_threshold = if self.player_status_immunities().contains(STATUS_BLINDNESS)
+            || resistance == ResistanceLevel::Immune
+        {
             55
         } else {
             0
@@ -3928,9 +3933,12 @@ impl Game {
         } else {
             let duration_sides =
                 u16::try_from(duration_sides).expect("validated blindness die sides must fit u16");
-            let duration = u32::try_from(self.roll_damage(duration_dice, duration_sides))
-                .expect("validated blindness duration must fit u32")
-                .saturating_add(duration_bonus);
+            let duration = resisted_status_duration(
+                u32::try_from(self.roll_damage(duration_dice, duration_sides))
+                    .expect("validated blindness duration must fit u32")
+                    .saturating_add(duration_bonus),
+                resistance,
+            );
             let change = apply_status_application(
                 &mut self.player.statuses,
                 StatusApplication {

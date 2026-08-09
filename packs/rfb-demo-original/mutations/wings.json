@@ -7,5 +7,6 @@
   "rating": "good",
   "sourceIndex": 86,
   "randomWeight": 4,
+  "levitation": true,
   "removesOnGain": []
 }

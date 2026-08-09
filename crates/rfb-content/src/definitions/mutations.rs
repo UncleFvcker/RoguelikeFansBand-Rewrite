@@ -3,8 +3,9 @@
 #[cfg(feature = "schemas")]
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 
-use super::StatModifiers;
+use super::{ActorDamageType, ActorResistanceLevel, StatModifiers};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
@@ -35,6 +36,20 @@ pub struct MutationDefinition {
     /// Direct armor-class adjustment from the original mutation bonus.
     #[serde(default)]
     pub armor_class: i32,
+    #[serde(default)]
+    pub saving_throw_skill: i32,
+    #[serde(default)]
+    pub saving_throw_skill_per_five_levels: i32,
+    #[serde(default)]
+    pub infravision: i32,
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub resistances: BTreeMap<ActorDamageType, ActorResistanceLevel>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub status_immunities: Vec<String>,
+    #[serde(default)]
+    pub levitation: bool,
+    #[serde(default)]
+    pub telepathy: bool,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub removes_on_gain: Vec<String>,
 }

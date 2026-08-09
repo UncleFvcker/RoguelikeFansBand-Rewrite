@@ -22,7 +22,7 @@ use affixes::validate_affixes;
 use characters::{CharacterDefinitions, CharacterValidationRefs, validate_characters};
 pub(crate) use items::valid_item_effect;
 use items::{ItemValidationRefs, validate_items};
-use shared::{attribute_modifiers_out_of_range, insert_definition_id};
+use shared::{attribute_modifiers_out_of_range, insert_definition_id, validate_status_immunities};
 pub(crate) use shared::{
     require_format_version, require_schema, validate_definition_id, validate_id,
     validate_message_key, validate_pack_relations, validate_semver,
@@ -101,10 +101,11 @@ pub(crate) fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<
     let mut all_ids = BTreeSet::new();
     let mut mutation_ids = BTreeSet::new();
     let mut mutation_source_indices = BTreeSet::new();
-    for mutation in &content.mutations {
+    for mutation in &mut content.mutations {
         require_schema(&mutation.schema, MUTATION_SCHEMA, &mutation.id)?;
         require_format_version(mutation.format_version, &mutation.id)?;
         validate_definition_id(&mutation.id, "mutation")?;
+        validate_status_immunities(&mutation.id, &mut mutation.status_immunities)?;
         if mutation.name.trim().is_empty() || mutation.description.trim().is_empty() {
             return Err(ContentError::InvalidDefinitionText(mutation.id.clone()));
         }
@@ -114,6 +115,9 @@ pub(crate) fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<
             || !(-100..=100).contains(&mutation.modifiers.speed)
             || attribute_modifiers_out_of_range(&mutation.modifiers)
             || !(-1_000_000..=1_000_000).contains(&mutation.armor_class)
+            || !(-1_000_000..=1_000_000).contains(&mutation.saving_throw_skill)
+            || !(-1_000_000..=1_000_000).contains(&mutation.saving_throw_skill_per_five_levels)
+            || !(-64..=64).contains(&mutation.infravision)
         {
             return Err(ContentError::InvalidMutation(mutation.id.clone()));
         }

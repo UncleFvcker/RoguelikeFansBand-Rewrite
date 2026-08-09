@@ -648,3 +648,36 @@ has content hash
 Protocol 1.153, save v1, State Hash Schema v74, and contract-v217 are unchanged;
 no existing fixture begins with active mutations, so this content/behavior
 batch does not refresh unrelated exact fixtures.
+
+## P3.7-M4B Resistance, Senses, and Levitation
+
+The second bounded passive batch activates seven complete original mutations:
+Magic Resistance, Wings, Fearless, Weird Mind, Draconian Magic Resistance,
+Sensitive Eyes, and No Inhibitions. The two magic-resistance identities add the
+original `15 + level / 5` saving-throw skill through the existing derived-stat
+pipeline. Fearless and No Inhibitions grant one fear-resistance tier and retain
+their authoritative mutual exclusions. Sensitive Eyes grants four grids of
+infravision and one blindness-vulnerability tier. Weird Mind blocks the current
+hallucination status, and Wings supplies the existing Fly movement mode to
+surface traversal, terrain hazards, and fly-avoidable traps.
+
+`MutationDefinition` adds only the content fields consumed by those existing
+pipelines: saving-throw base/scaling, infravision, resistance tiers, status
+immunities, levitation, and telepathy. `fear` and `blindness` join the shared
+damage/resistance enum so status durations use the same resistant/normal/
+vulnerable scale as other effects. No parallel character state is persisted.
+
+ESP now has a tested telepathy consumer for normal and explicit `empty-mind`
+actor tags, but remains blocked until the selected legacy actors import exact
+`EMPTY_MIND`/`WEIRD_MIND` metadata and the UI has the original fuzzy identity
+projection. Draconian Resistance remains blocked on authoritative draconian
+subrace identity, and Strong Mind remains blocked because no mana-drain
+consumer exists. These are not represented by approximate effects.
+
+The mutation audit reports 21 active and 131 blocked identities. Pack 1.216.0
+has content hash
+`6bdadb2cacfcdb47ac61fb3692e056e787389abe8e5035dd2c216f90e94c46ff`.
+The shared protocol enum gains fear and blindness values; protocol-version and
+release-fixture consolidation remain owned by the integration worktree. Save
+v1 and State Hash Schema v74 are structurally unchanged, and existing fixtures
+still begin without active mutations.

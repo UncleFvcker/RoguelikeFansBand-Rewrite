@@ -1816,10 +1816,8 @@
         "lose:mutation-good-luck=>weight-1"
       ],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "mutation-passive-bonus-system"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -2043,10 +2041,8 @@
         "lose:mutation-good-luck=>weight-1"
       ],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "mutation-passive-bonus-system"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -2066,10 +2062,8 @@
         "rfb.mutation.cowardice",
         "rfb.mutation.no-inhibitions"
       ],
-      "status": "blocked",
-      "blockers": [
-        "mutation-passive-bonus-system"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -2116,7 +2110,7 @@
       "removesOnGain": [],
       "status": "blocked",
       "blockers": [
-        "mutation-passive-bonus-system"
+        "actor-telepathy-mind-flags-and-fuzzy-projection"
       ],
       "sourceNoNumericEffect": false
     },
@@ -2730,10 +2724,8 @@
         "lose:mutation-good-luck=>weight-1"
       ],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "mutation-passive-bonus-system"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -2886,10 +2878,8 @@
         "lose:mutation-good-luck=>weight-1"
       ],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "mutation-passive-bonus-system"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -3024,7 +3014,7 @@
       "removesOnGain": [],
       "status": "blocked",
       "blockers": [
-        "mutation-passive-bonus-system"
+        "draconian-subrace-identity"
       ],
       "sourceNoNumericEffect": false
     },
@@ -3089,10 +3079,8 @@
       ],
       "weightConditions": [],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "mutation-passive-bonus-system"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -3112,10 +3100,8 @@
         "rfb.mutation.cowardice",
         "rfb.mutation.fearless"
       ],
-      "status": "blocked",
-      "blockers": [
-        "mutation-passive-bonus-system"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -3280,7 +3266,7 @@
       "removesOnGain": [],
       "status": "blocked",
       "blockers": [
-        "mutation-cross-system-query"
+        "mana-drain-consumer"
       ],
       "sourceNoNumericEffect": false
     },

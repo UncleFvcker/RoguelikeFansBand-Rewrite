@@ -4666,8 +4666,24 @@ impl Game {
     }
 
     fn entity_is_visible_to_player(&self, entity: &Actor) -> bool {
-        (self.is_visible(entity.position) || self.entity_is_visible_by_infravision(entity))
-            && (!self.actor_is_invisible(entity) || entity.visible_invisible)
+        ((self.is_visible(entity.position) || self.entity_is_visible_by_infravision(entity))
+            && (!self.actor_is_invisible(entity) || entity.visible_invisible))
+            || self.entity_is_visible_by_telepathy(entity)
+    }
+
+    fn entity_is_visible_by_telepathy(&self, entity: &Actor) -> bool {
+        self.player_has_telepathy()
+            && squared_distance(self.player.position, entity.position)
+                <= VISIBILITY_RADIUS * VISIBILITY_RADIUS
+            && self
+                .content
+                .actor(&entity.kind_id)
+                .is_some_and(|definition| {
+                    !definition
+                        .tags
+                        .iter()
+                        .any(|tag| matches!(tag.as_str(), "empty-mind" | "weird-mind"))
+                })
     }
 
     fn entity_is_visible_by_infravision(&self, entity: &Actor) -> bool {

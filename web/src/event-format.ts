@@ -1338,6 +1338,8 @@ export function createPresentationFormatter(
       poison: "damage-type-poison-name",
       light: "damage-type-light-name",
       dark: "damage-type-dark-name",
+      blindness: "damage-type-blindness-name",
+      fear: "damage-type-fear-name",
       confusion: "damage-type-confusion-name",
       nether: "damage-type-nether-name",
       nexus: "damage-type-nexus-name",

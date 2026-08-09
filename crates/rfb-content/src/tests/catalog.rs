@@ -6,7 +6,7 @@ fn compiled_catalog_exposes_stable_runtime_indexes() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.215.0");
+    assert_eq!(catalog.pack_version(), "1.216.0");
     assert_eq!(catalog.mutations().count(), 152);
     assert_eq!(
         catalog.mutation("rfb.mutation.spit-acid").map(|mutation| (
@@ -1000,7 +1000,101 @@ fn first_passive_mutation_batch_keeps_original_attribute_speed_and_armor_bonuses
         .filter(|entry| entry["status"] == "active")
         .map(|entry| entry["id"].as_str().expect("mutation id"))
         .collect::<std::collections::BTreeSet<_>>();
-    assert_eq!(active, active_expected);
+    assert!(active.is_superset(&active_expected));
+}
+
+#[test]
+fn second_passive_mutation_batch_keeps_resistance_sense_and_levitation_semantics() {
+    let pack = original_pack_path();
+    let catalog = ContentCatalog::from_artifact(
+        compile_pack_dir(&pack).expect("original pack should compile"),
+    );
+    let expected_active = [
+        "rfb.mutation.magic-res",
+        "rfb.mutation.wings",
+        "rfb.mutation.fearless",
+        "rfb.mutation.weird-mind",
+        "rfb.mutation.draconian-magic-res",
+        "rfb.mutation.sensitive-eyes",
+        "rfb.mutation.no-inhibitions",
+    ];
+
+    for id in ["rfb.mutation.magic-res", "rfb.mutation.draconian-magic-res"] {
+        let mutation = catalog.mutation(id).unwrap_or_else(|| panic!("{id}"));
+        assert_eq!(mutation.saving_throw_skill, 15);
+        assert_eq!(mutation.saving_throw_skill_per_five_levels, 1);
+    }
+    assert!(catalog.mutation("rfb.mutation.wings").unwrap().levitation);
+    assert!(catalog.mutation("rfb.mutation.esp").unwrap().telepathy);
+    assert_eq!(
+        catalog
+            .mutation("rfb.mutation.fearless")
+            .unwrap()
+            .resistances
+            .get(&ActorDamageType::Fear),
+        Some(&ActorResistanceLevel::Resistant)
+    );
+    assert_eq!(
+        catalog
+            .mutation("rfb.mutation.sensitive-eyes")
+            .unwrap()
+            .resistances
+            .get(&ActorDamageType::Blindness),
+        Some(&ActorResistanceLevel::Vulnerable)
+    );
+    assert_eq!(
+        catalog
+            .mutation("rfb.mutation.sensitive-eyes")
+            .unwrap()
+            .infravision,
+        4
+    );
+    assert_eq!(
+        catalog
+            .mutation("rfb.mutation.weird-mind")
+            .unwrap()
+            .status_immunities,
+        ["rfb.status.hallucination"]
+    );
+
+    let ledger: serde_json::Value = serde_json::from_slice(
+        &std::fs::read(pack.join("legacy-mutation-plan.json")).expect("ledger should read"),
+    )
+    .expect("ledger should parse");
+    let entries = ledger["mutations"].as_array().expect("mutation entries");
+    assert_eq!(
+        entries
+            .iter()
+            .filter(|entry| entry["status"] == "active")
+            .count(),
+        21
+    );
+    for id in expected_active {
+        let entry = entries
+            .iter()
+            .find(|entry| entry["id"] == id)
+            .unwrap_or_else(|| panic!("{id}"));
+        assert_eq!(entry["status"], "active", "{id}");
+        assert_eq!(entry["blockers"], serde_json::json!([]), "{id}");
+    }
+    for (id, blocker) in [
+        (
+            "rfb.mutation.esp",
+            "actor-telepathy-mind-flags-and-fuzzy-projection",
+        ),
+        (
+            "rfb.mutation.draconian-resistance",
+            "draconian-subrace-identity",
+        ),
+        ("rfb.mutation.strong-mind", "mana-drain-consumer"),
+    ] {
+        let entry = entries
+            .iter()
+            .find(|entry| entry["id"] == id)
+            .unwrap_or_else(|| panic!("{id}"));
+        assert_eq!(entry["status"], "blocked", "{id}");
+        assert_eq!(entry["blockers"], serde_json::json!([blocker]), "{id}");
+    }
 }
 
 #[test]
@@ -1034,6 +1128,15 @@ fn mutation_transaction_metadata_rejects_duplicate_order_and_invalid_removals() 
     invalid_bonus.mutations[0].armor_class = 1_000_001;
     assert!(matches!(
         encode_content(invalid_bonus),
+        Err(ContentError::InvalidMutation(_))
+    ));
+
+    let mut invalid_sense = compile_pack_dir(&pack)
+        .expect("original pack should compile")
+        .content;
+    invalid_sense.mutations[0].infravision = 65;
+    assert!(matches!(
+        encode_content(invalid_sense),
         Err(ContentError::InvalidMutation(_))
     ));
 }

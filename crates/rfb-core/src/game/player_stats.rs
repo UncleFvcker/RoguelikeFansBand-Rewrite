@@ -284,6 +284,18 @@ impl Game {
                 );
             }
         }
+        for mutation in self
+            .content
+            .mutations()
+            .filter(|mutation| self.progress.active_mutation_ids.contains(&mutation.id))
+        {
+            for (damage_type, level) in &mutation.resistances {
+                record(
+                    DamageType::from(*damage_type),
+                    ResistanceLevel::from(*level),
+                );
+            }
+        }
         for item in &self.items {
             if !matches!(&item.location, ItemLocation::Equipped { slot_id } if self.body_slot_type(slot_id) != Some("tool"))
             {
@@ -367,6 +379,13 @@ impl Game {
         }
         if let Some((_, race, _, _)) = self.character_definitions() {
             immunities.extend(race.status_immunities.iter().cloned());
+        }
+        for mutation in self
+            .content
+            .mutations()
+            .filter(|mutation| self.progress.active_mutation_ids.contains(&mutation.id))
+        {
+            immunities.extend(mutation.status_immunities.iter().cloned());
         }
         for item in &self.items {
             if !matches!(&item.location, ItemLocation::Equipped { slot_id } if self.body_slot_type(slot_id) != Some("tool"))
@@ -496,13 +515,32 @@ impl Game {
             .fold(0_i32, |total, item| {
                 total.saturating_add(self.item_equipment_bonuses(item).infravision)
             });
+        let mutations = self
+            .content
+            .mutations()
+            .filter(|mutation| self.progress.active_mutation_ids.contains(&mutation.id))
+            .fold(0_i32, |total, mutation| {
+                total.saturating_add(mutation.infravision)
+            });
         self.player
             .statuses
             .iter()
-            .fold(equipment, |total, status| {
+            .fold(equipment.saturating_add(mutations), |total, status| {
                 total.saturating_add(status.granted_equipment_bonuses.infravision)
             })
             .max(0)
+    }
+
+    pub(super) fn player_levitates(&self) -> bool {
+        self.content.mutations().any(|mutation| {
+            mutation.levitation && self.progress.active_mutation_ids.contains(&mutation.id)
+        })
+    }
+
+    pub(super) fn player_has_telepathy(&self) -> bool {
+        self.content.mutations().any(|mutation| {
+            mutation.telepathy && self.progress.active_mutation_ids.contains(&mutation.id)
+        })
     }
 
     pub(super) fn equipment_modifiers(&self) -> StatModifiersDto {
@@ -1124,6 +1162,14 @@ impl Game {
                             .saturating_add(mutation.armor_class),
                     ),
                     (StatKind::Speed, modifiers.speed),
+                    (
+                        StatKind::SavingThrowSkill,
+                        mutation.saving_throw_skill.saturating_add(
+                            mutation
+                                .saving_throw_skill_per_five_levels
+                                .saturating_mul(i32::from(self.progress.level / 5)),
+                        ),
+                    ),
                 ] {
                     add_nonzero_stat(&mut pipeline, kind, StatLayer::Status, &mutation.id, value);
                 }

@@ -313,6 +313,114 @@ fn passive_mutations_feed_existing_attribute_speed_armor_and_hp_pipelines() {
 }
 
 #[test]
+fn m4b_passives_feed_resistance_sense_skill_and_flight_pipelines() {
+    let mut game = Game::new(0);
+    clear_monsters(&mut game);
+    game.apply_unscaled_player_experience(experience_required_for_level(25), &mut Vec::new());
+
+    let saving_throw = game.player_derived_stats().saving_throw_skill.value;
+    assert!(game.gain_mutation("rfb.mutation.magic-res", &mut Vec::new()));
+    assert_eq!(
+        game.player_derived_stats().saving_throw_skill.value,
+        saving_throw + 20
+    );
+    assert!(game.lose_mutation("rfb.mutation.magic-res", &mut Vec::new()));
+    assert_eq!(
+        game.player_derived_stats().saving_throw_skill.value,
+        saving_throw
+    );
+
+    assert!(game.gain_mutation("rfb.mutation.fearless", &mut Vec::new()));
+    assert_eq!(
+        game.effective_player_resistances().level(DamageType::Fear),
+        ResistanceLevel::Resistant
+    );
+    assert_eq!(
+        resisted_status_duration(
+            100,
+            game.effective_player_resistances().level(DamageType::Fear)
+        ),
+        50
+    );
+    assert!(game.gain_mutation("rfb.mutation.no-inhibitions", &mut Vec::new()));
+    assert!(
+        !game
+            .progress
+            .active_mutation_ids
+            .contains("rfb.mutation.fearless")
+    );
+    assert_eq!(
+        game.effective_player_resistances().level(DamageType::Fear),
+        ResistanceLevel::Resistant
+    );
+
+    assert!(game.gain_mutation("rfb.mutation.sensitive-eyes", &mut Vec::new()));
+    assert_eq!(game.player_infravision_range(), 4);
+    assert_eq!(
+        game.effective_player_resistances()
+            .level(DamageType::Blindness),
+        ResistanceLevel::Vulnerable
+    );
+    game.resolve_item_blindness("demo.item.veil-draught", 0, 1, 100, &mut Vec::new());
+    assert_eq!(
+        game.player
+            .statuses
+            .iter()
+            .find(|status| status.kind_id == STATUS_BLINDNESS)
+            .expect("blindness should be applied")
+            .remaining_ticks,
+        150
+    );
+
+    assert!(game.gain_mutation("rfb.mutation.weird-mind", &mut Vec::new()));
+    game.apply_player_melee_status(
+        crate::effect::STATUS_HALLUCINATION,
+        100,
+        "test.eldritch-source",
+    );
+    assert!(!game.player_has_status_kind(crate::effect::STATUS_HALLUCINATION));
+
+    let deep_lava = game
+        .content
+        .terrain("demo.terrain.surface-lava-deep")
+        .expect("deep lava terrain")
+        .clone();
+    assert!(!game.player_can_cross_surface_terrain(&deep_lava));
+    assert!(game.gain_mutation("rfb.mutation.wings", &mut Vec::new()));
+    assert!(game.active_traveler_has_mode(rfb_content::ActorMovementMode::Fly));
+    assert!(game.player_can_cross_surface_terrain(&deep_lava));
+}
+
+#[test]
+fn esp_core_detects_normal_minds_but_not_explicit_empty_minds() {
+    let position = Position { x: 5, y: 3 };
+    let mut normal = Game::new(0);
+    clear_monsters(&mut normal);
+    normal.player.position = Position { x: 3, y: 3 };
+    normal.push_generated_actor(
+        "test.normal-mind".to_owned(),
+        "demo.actor.small-kobold",
+        position,
+    );
+    assert!(!normal.entity_is_visible_by_telepathy(&normal.entities[0]));
+    assert!(normal.gain_mutation("rfb.mutation.esp", &mut Vec::new()));
+    assert!(normal.entity_is_visible_by_telepathy(&normal.entities[0]));
+
+    let mut empty = game_with_actor_definition(0, "demo.actor.small-kobold", |actor| {
+        actor.tags.push("empty-mind".to_owned());
+    });
+    clear_monsters(&mut empty);
+    empty.player.position = Position { x: 3, y: 3 };
+    empty.push_generated_actor(
+        "test.empty-mind".to_owned(),
+        "demo.actor.small-kobold",
+        position,
+    );
+    assert!(empty.gain_mutation("rfb.mutation.esp", &mut Vec::new()));
+    assert!(!empty.entity_is_visible_by_telepathy(&empty.entities[0]));
+}
+
+#[test]
 fn new_life_is_one_seeded_transaction_with_locked_mutation_protection() {
     const ITEM_ID: &str = "test.item.new-life.1";
     const KIND_ID: &str = "demo.item.new-life-potion";

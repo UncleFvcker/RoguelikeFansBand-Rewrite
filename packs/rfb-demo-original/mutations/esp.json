@@ -7,5 +7,6 @@
   "rating": "great",
   "sourceIndex": 89,
   "randomWeight": 4,
+  "telepathy": true,
   "removesOnGain": []
 }
