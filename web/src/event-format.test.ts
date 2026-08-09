@@ -216,6 +216,36 @@ test("food events report eating hunger changes fainting and starvation", () => {
   );
 });
 
+test("P3.2 potion events format experience loss and partial status curing", () => {
+  assert.equal(
+    formatter.formatEvent({
+      kind: "item.experience-lost",
+      messageKey: "item-experience-lost",
+      args: {
+        source: "demo.item.lose-memories-potion",
+        nameKey: "item-demo-lose-memories-potion-name",
+        amount: "250",
+        remaining: "750",
+      },
+    }),
+    "You use Potion of Lose Memories and lose 250 experience (750 remaining).",
+  );
+  assert.equal(
+    formatter.formatEvent({
+      kind: "item.use-status-reduced",
+      messageKey: "item-use-status-reduced",
+      args: {
+        target: "demo.item.antidote-potion",
+        nameKey: "item-demo-antidote-potion-name",
+        status: "rfb.status.poison",
+        before: "10000",
+        after: "5000",
+      },
+    }),
+    "You use Potion of Antidote, reducing poison from 10000 to 5000 ticks.",
+  );
+});
+
 test("damage event formatting preserves typed resistance outcomes", () => {
   const event = {
     kind: "combat.hit",

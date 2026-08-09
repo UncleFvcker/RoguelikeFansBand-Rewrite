@@ -32,7 +32,9 @@
     { "itemKindId": "demo.item.weakness-mushroom", "weight": 1, "quantity": 1, "minDepth": 8, "maxDepth": 9 },
     { "itemKindId": "demo.item.sickness-mushroom", "weight": 1, "quantity": 1, "minDepth": 8, "maxDepth": 9 },
     { "itemKindId": "demo.item.stupidity-mushroom", "weight": 1, "quantity": 1, "minDepth": 8, "maxDepth": 9 },
-    { "itemKindId": "demo.item.naivety-mushroom", "weight": 1, "quantity": 1, "minDepth": 8, "maxDepth": 9 }
+    { "itemKindId": "demo.item.naivety-mushroom", "weight": 1, "quantity": 1, "minDepth": 8, "maxDepth": 9 },
+    { "itemKindId": "demo.item.lose-memories-potion", "weight": 1, "quantity": 1, "minDepth": 9, "maxDepth": 9 },
+    { "itemKindId": "demo.item.ruination-potion", "weight": 1, "quantity": 1, "minDepth": 9, "maxDepth": 9 }
   ],
   "qualityWeights": [{ "quality": "ordinary", "weight": 1 }],
   "affixWeights": [{ "weight": 1 }]

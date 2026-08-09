@@ -1324,7 +1324,7 @@ impl Game {
                     .granted_resistances
                     .values()
                     .all(|level| *level != ResistanceLevel::Normal)
-                && (1..=100).contains(&status.incoming_damage_percent)
+                && status.incoming_damage_percent <= 100
                 && status
                     .granted_race_id
                     .as_deref()

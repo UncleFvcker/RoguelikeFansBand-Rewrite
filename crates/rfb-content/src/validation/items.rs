@@ -23,6 +23,7 @@ pub(crate) fn valid_item_effect(
     resource_ids: &BTreeSet<String>,
 ) -> bool {
     match effect {
+        ItemUseEffectDefinition::NoNumericEffect => true,
         ItemUseEffectDefinition::IncreaseNutrition { amount } => (1..=15_000).contains(amount),
         ItemUseEffectDefinition::SatisfyHunger => true,
         ItemUseEffectDefinition::Heal { amount }
@@ -138,10 +139,31 @@ pub(crate) fn valid_item_effect(
             duration_dice,
             duration_sides,
             duration_bonus,
+            granted_resistances,
+            granted_modifiers,
+            granted_equipment_bonuses,
+            incoming_damage_percent,
             ..
         } => {
             validate_id(status_kind_id).is_ok()
                 && (1..=100).contains(duration_dice)
+                && (1..=10_000).contains(duration_sides)
+                && *duration_bonus <= 1_000_000
+                && granted_resistances.len() <= 29
+                && granted_modifiers.max_hp.abs() <= 1_000_000
+                && granted_modifiers.attack.abs() <= 1_000_000
+                && granted_modifiers.defense.abs() <= 1_000_000
+                && (-100..=100).contains(&granted_modifiers.speed)
+                && !attribute_modifiers_out_of_range(granted_modifiers)
+                && !equipment_bonuses_out_of_range(granted_equipment_bonuses)
+                && *incoming_damage_percent <= 100
+        }
+        ItemUseEffectDefinition::ApplyGiantStrength {
+            duration_dice,
+            duration_sides,
+            duration_bonus,
+        } => {
+            (1..=100).contains(duration_dice)
                 && (1..=10_000).contains(duration_sides)
                 && *duration_bonus <= 1_000_000
         }
@@ -183,6 +205,16 @@ pub(crate) fn valid_item_effect(
         ItemUseEffectDefinition::RemoveStatus { status_kind_id } => {
             validate_id(status_kind_id).is_ok()
         }
+        ItemUseEffectDefinition::ReduceStatus {
+            status_kind_id,
+            minimum_reduction,
+            reduction_divisor,
+        } => {
+            validate_id(status_kind_id).is_ok()
+                && (1..=1_000_000).contains(minimum_reduction)
+                && (1..=100).contains(reduction_divisor)
+        }
+        ItemUseEffectDefinition::LoseExperienceFraction { divisor } => (2..=100).contains(divisor),
         ItemUseEffectDefinition::RestoreResource {
             resource_id,
             amount,
@@ -272,17 +304,21 @@ pub(crate) fn valid_item_effect(
                 && effects.iter().all(|effect| {
                     matches!(
                         effect,
-                        ItemUseEffectDefinition::IncreaseNutrition { .. }
+                        ItemUseEffectDefinition::NoNumericEffect
+                            | ItemUseEffectDefinition::IncreaseNutrition { .. }
                             | ItemUseEffectDefinition::SatisfyHunger
                             | ItemUseEffectDefinition::Heal { .. }
                             | ItemUseEffectDefinition::HealDice { .. }
                             | ItemUseEffectDefinition::ApplyPoison { .. }
                             | ItemUseEffectDefinition::ApplyBlindness { .. }
                             | ItemUseEffectDefinition::ApplyStatus { .. }
+                            | ItemUseEffectDefinition::ApplyGiantStrength { .. }
                             | ItemUseEffectDefinition::SelfDamage { .. }
+                            | ItemUseEffectDefinition::LoseExperienceFraction { .. }
                             | ItemUseEffectDefinition::DrainAttribute { .. }
                             | ItemUseEffectDefinition::RestoreAttribute { .. }
                             | ItemUseEffectDefinition::RemoveStatus { .. }
+                            | ItemUseEffectDefinition::ReduceStatus { .. }
                             | ItemUseEffectDefinition::RestoreResource { .. }
                             | ItemUseEffectDefinition::RestoreResourceDice { .. }
                             | ItemUseEffectDefinition::RestoreResourceFull { .. }
@@ -443,9 +479,11 @@ pub(super) fn validate_items(
                     | ItemUseEffectDefinition::ApplyPoison { .. }
                     | ItemUseEffectDefinition::ApplyBlindness { .. }
                     | ItemUseEffectDefinition::ApplyStatus { .. }
+                    | ItemUseEffectDefinition::ApplyGiantStrength { .. }
                     | ItemUseEffectDefinition::ApplyDetonation { .. }
                     | ItemUseEffectDefinition::SelfLifeLoss { .. }
                     | ItemUseEffectDefinition::SelfDamage { .. }
+                    | ItemUseEffectDefinition::LoseExperienceFraction { .. }
                     | ItemUseEffectDefinition::Vengeance { .. }
                     | ItemUseEffectDefinition::ProtectionFromEvil
                     | ItemUseEffectDefinition::PrepareConfusingStrike
@@ -457,11 +495,13 @@ pub(super) fn validate_items(
                     | ItemUseEffectDefinition::CreateAdjacentTerrain { .. }
                     | ItemUseEffectDefinition::DestroyAdjacentTrapsAndDoors
                     | ItemUseEffectDefinition::RemoveStatus { .. }
+                    | ItemUseEffectDefinition::ReduceStatus { .. }
                     | ItemUseEffectDefinition::RestoreResource { .. }
                     | ItemUseEffectDefinition::RestoreResourceDice { .. }
                     | ItemUseEffectDefinition::RestoreResourceFull { .. }
                     | ItemUseEffectDefinition::DrainResourceFull { .. }
                     | ItemUseEffectDefinition::Sequence { .. }
+                    | ItemUseEffectDefinition::NoNumericEffect
                     | ItemUseEffectDefinition::Detect { .. }
                     | ItemUseEffectDefinition::RandomTeleport { .. }
                     | ItemUseEffectDefinition::TeleportLevel

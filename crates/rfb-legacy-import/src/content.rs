@@ -137,6 +137,8 @@ struct DemoItemAdaptation {
     status: DemoItemCoverageStatus,
     #[serde(default)]
     blocker: Option<String>,
+    #[serde(default)]
+    adaptation: Option<String>,
     contract: String,
 }
 
@@ -2116,6 +2118,49 @@ fn fixed_consumable_use_action_with_terrain(
             "type": "banish-visible",
             "maximumDistance": 150
         }),
+        (75, 0..=2) => serde_json::json!({"type": "no-numeric-effect"}),
+        (75, 13) => serde_json::json!({
+            "type": "lose-experience-fraction",
+            "divisor": 4
+        }),
+        (75, 15) => sequence(vec![
+            serde_json::json!({"type": "self-damage", "damageDice": 10, "damageSides": 10}),
+            serde_json::json!({"type": "drain-attribute", "attribute": "strength"}),
+            serde_json::json!({"type": "drain-attribute", "attribute": "intelligence"}),
+            serde_json::json!({"type": "drain-attribute", "attribute": "wisdom"}),
+            serde_json::json!({"type": "drain-attribute", "attribute": "dexterity"}),
+            serde_json::json!({"type": "drain-attribute", "attribute": "constitution"}),
+            serde_json::json!({"type": "drain-attribute", "attribute": "charisma"}),
+        ]),
+        (75, 26) => sequence(vec![
+            serde_json::json!({
+                "type": "apply-status",
+                "statusKindId": "rfb.status.sight",
+                "durationDice": 1,
+                "durationSides": 100,
+                "durationBonus": 100,
+                "stacking": "extend",
+                "grantedEquipmentBonuses": {"infravision": 3}
+            }),
+            remove_status("rfb.status.blindness"),
+        ]),
+        (75, 27) => sequence(vec![
+            serde_json::json!({
+                "type": "reduce-status",
+                "statusKindId": "rfb.status.poison",
+                "minimumReduction": 4000,
+                "reductionDivisor": 2
+            }),
+            serde_json::json!({
+                "type": "apply-status",
+                "statusKindId": "rfb.status.poison-resistance",
+                "durationDice": 1,
+                "durationSides": 10,
+                "durationBonus": 10,
+                "stacking": "extend",
+                "grantedResistances": {"poison": "resistant"}
+            }),
+        ]),
         (75, 4) => serde_json::json!({
             "type": "apply-slowness",
             "durationDice": 1,
@@ -2271,6 +2316,35 @@ fn fixed_consumable_use_action_with_terrain(
             "durationSides": 20,
             "durationBonus": 20
         }),
+        (75, 61) => sequence(vec![
+            remove_status("rfb.status.blindness"),
+            serde_json::json!({
+                "type": "reduce-status",
+                "statusKindId": "rfb.status.poison",
+                "minimumReduction": 2000,
+                "reductionDivisor": 2
+            }),
+            remove_status("rfb.status.confusion"),
+            remove_status("rfb.status.stun"),
+            remove_status("rfb.status.bleeding"),
+            remove_status("rfb.status.hallucination"),
+            remove_status("rfb.status.berserk"),
+        ]),
+        (75, 62) => serde_json::json!({
+            "type": "apply-status",
+            "statusKindId": "rfb.status.invulnerability",
+            "durationDice": 1,
+            "durationSides": 4,
+            "durationBonus": 4,
+            "stacking": "extend",
+            "incomingDamagePercent": 0
+        }),
+        (75, 68) => serde_json::json!({
+            "type": "apply-giant-strength",
+            "durationDice": 1,
+            "durationSides": 20,
+            "durationBonus": 20
+        }),
         (75, 6) => serde_json::json!({
             "type": "apply-poison",
             "durationDice": 1,
@@ -2373,6 +2447,17 @@ fn fixed_consumable_use_action_with_terrain(
                 "bonus": 3
             }),
             remove_status("rfb.status.confusion"),
+        ]),
+        (75, 71) => sequence(vec![
+            serde_json::json!({
+                "type": "restore-resource-dice",
+                "resourceId": LEGACY_MANA_RESOURCE_ID,
+                "dice": 10,
+                "sides": 10,
+                "bonus": 15
+            }),
+            remove_status("rfb.status.confusion"),
+            remove_status("rfb.status.hallucination"),
         ]),
         _ => return None,
     };
@@ -10225,6 +10310,16 @@ fn build_demo_item_coverage_report(
                 adaptation.item_id
             )));
         }
+        if adaptation
+            .adaptation
+            .as_deref()
+            .is_some_and(|note| note.trim().is_empty())
+        {
+            return Err(LegacyImportError::InvalidDemoItemAudit(format!(
+                "adaptation {} has an empty adaptation note",
+                adaptation.item_id
+            )));
+        }
         if let Some(previous) =
             adaptation_statuses.insert(adaptation.source_index, adaptation.status)
             && previous != adaptation.status
@@ -11760,6 +11855,7 @@ W:5:0:0:150:80
                     item_id: format!("demo.item.{id}"),
                     status: DemoItemCoverageStatus::Active,
                     blocker: None,
+                    adaptation: None,
                     contract: "contract-test".to_owned(),
                 })
                 .collect(),
@@ -12644,6 +12740,46 @@ F:BRAND_VAMP | HOLD_LIFE
         assert_eq!(
             clarity["effect"]["effects"][1]["statusKindId"],
             "rfb.status.confusion"
+        );
+    }
+
+    #[test]
+    fn p3_2_low_coupling_potions_map_authoritative_effects() {
+        let effect = |sval| {
+            fixed_consumable_use_action(&LegacyItemEntry {
+                tval: 75,
+                sval,
+                ..LegacyItemEntry::default()
+            })
+            .expect("P3.2 potion should map")["effect"]
+                .clone()
+        };
+
+        for sval in 0..=2 {
+            assert_eq!(effect(sval)["type"], "no-numeric-effect");
+        }
+        assert_eq!(effect(13)["divisor"], 4);
+        assert_eq!(effect(15)["effects"].as_array().map(Vec::len), Some(7));
+        assert_eq!(effect(26)["effects"][0]["statusKindId"], "rfb.status.sight");
+        assert_eq!(effect(27)["effects"][0]["minimumReduction"], 4000);
+        assert_eq!(
+            effect(27)["effects"][1]["grantedResistances"]["poison"],
+            "resistant"
+        );
+        assert_eq!(effect(61)["effects"].as_array().map(Vec::len), Some(7));
+        assert_eq!(effect(62)["incomingDamagePercent"], 0);
+        assert_eq!(effect(68)["type"], "apply-giant-strength");
+        assert_eq!(effect(71)["effects"][0]["dice"], 10);
+        assert_eq!(effect(71)["effects"][0]["bonus"], 15);
+
+        assert!(
+            fixed_consumable_use_action(&LegacyItemEntry {
+                tval: 75,
+                sval: 3,
+                ..LegacyItemEntry::default()
+            })
+            .is_none(),
+            "salt water remains blocked"
         );
     }
 

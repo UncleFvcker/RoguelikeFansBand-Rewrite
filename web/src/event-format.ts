@@ -703,6 +703,12 @@ export function createPresentationFormatter(
           target: visibleItemName(event.args.nameKey, event.args.target),
           nutrition: event.args.nutrition ?? "?",
         });
+      case "item-experience-lost":
+        return localization.format("message-item-experience-lost", {
+          source: visibleItemName(event.args.nameKey, event.args.source),
+          amount: event.args.amount ?? "?",
+          remaining: event.args.remaining ?? "?",
+        });
       case "item-use-no-effect":
         return localization.format("message-item-use-no-effect", {
           target: visibleItemName(event.args.nameKey, event.args.target),
@@ -716,6 +722,13 @@ export function createPresentationFormatter(
         return localization.format("message-item-use-status-no-effect", {
           target: visibleItemName(event.args.nameKey, event.args.target),
           status: statusName(event.args.status),
+        });
+      case "item-use-status-reduced":
+        return localization.format("message-item-use-status-reduced", {
+          target: visibleItemName(event.args.nameKey, event.args.target),
+          status: statusName(event.args.status),
+          before: event.args.before ?? "?",
+          after: event.args.after ?? "?",
         });
       case "item-use-status-applied":
       case "item-use-status-resisted":
@@ -1518,6 +1531,18 @@ export function createPresentationFormatter(
     }
     if (statusId === "rfb.status.protection-from-evil") {
       return localization.format("status-protection-from-evil-name");
+    }
+    if (statusId === "rfb.status.sight") {
+      return localization.format("status-sight-name");
+    }
+    if (statusId === "rfb.status.poison-resistance") {
+      return localization.format("status-poison-resistance-name");
+    }
+    if (statusId === "rfb.status.invulnerability") {
+      return localization.format("status-invulnerability-name");
+    }
+    if (statusId === "rfb.status.giant-strength") {
+      return localization.format("status-giant-strength-name");
     }
     return localization.format("status-unknown-name");
   }

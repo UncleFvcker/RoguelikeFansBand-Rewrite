@@ -550,6 +550,8 @@ contract-v203 推进正式内容 P19：多彩龙幼龙、锋锐兔、马头鱼�
 
 集成收口将荒野 W0–W5、物品 P1–P3.1 与怪物 P13–P19 合入同一主线：协议统一为 1.147、state hash Schema v70、基线 contract-v204，demo 统一为 1.200.0；正式包现有 86 种 terrain、235 种 actor、204 种 item 和 114 个 ability，content hash 为 `2273089117afc9e9f5ac4947407da9463d6eb8946fcbf7fb3a1a3f27cebd336b`。
 
+物品 P3.2 在独立工作树完成 11 个低耦合药水来源身份：清水、苹果汁、史莱姆黏菌汁采用账本显式记录的“无口渴系统、无数值效果”适配；失去记忆、毁灭、视觉、解毒剂、净化、无敌、巨人之力和大澄明接入经验、属性、资源与临时状态规则。盐水仍因呕吐、饥饿、麻痹和种族条件的组合语义保持 blocked。demo 升至 1.201.0，正式包现有 215 种 item；审计为 190 active、106 mechanics-ready、248 blocked，content hash 为 `8918443abb7330bad113eaf395af65c283e96dfda1480fe34a4bd609a623f0b4`。协议、存档和 State Hash Schema 不变；商店与掉落变化造成的共享 replay baseline 更新留待集成工作树处理。
+
 ### 本地验证
 
 ```powershell

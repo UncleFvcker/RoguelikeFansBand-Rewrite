@@ -162,6 +162,27 @@
       "initialMaximum": 2,
       "maintenanceMinimum": 1,
       "maintenanceMaximum": 2
+    },
+    {
+      "itemKindId": "demo.item.sight-potion",
+      "initialMinimum": 1,
+      "initialMaximum": 3,
+      "maintenanceMinimum": 1,
+      "maintenanceMaximum": 3
+    },
+    {
+      "itemKindId": "demo.item.antidote-potion",
+      "initialMinimum": 1,
+      "initialMaximum": 3,
+      "maintenanceMinimum": 1,
+      "maintenanceMaximum": 3
+    },
+    {
+      "itemKindId": "demo.item.curing-potion",
+      "initialMinimum": 1,
+      "initialMaximum": 2,
+      "maintenanceMinimum": 1,
+      "maintenanceMaximum": 2
     }
   ],
   "maintenance": {

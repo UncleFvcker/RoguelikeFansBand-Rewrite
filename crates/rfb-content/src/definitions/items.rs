@@ -12,6 +12,10 @@ use super::{
     StatModifiers,
 };
 
+const fn default_incoming_damage_percent() -> u8 {
+    100
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
@@ -239,6 +243,7 @@ pub enum ItemSummonSelectorDefinition {
     deny_unknown_fields
 )]
 pub enum ItemUseEffectDefinition {
+    NoNumericEffect,
     IncreaseNutrition {
         amount: u16,
     },
@@ -338,6 +343,19 @@ pub enum ItemUseEffectDefinition {
         stacking: AbilityStatusStackingDefinition,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         resistance_type: Option<ActorDamageType>,
+        #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+        granted_resistances: BTreeMap<ActorDamageType, ActorResistanceLevel>,
+        #[serde(default)]
+        granted_modifiers: StatModifiers,
+        #[serde(default)]
+        granted_equipment_bonuses: EquipmentBonuses,
+        #[serde(default = "default_incoming_damage_percent")]
+        incoming_damage_percent: u8,
+    },
+    ApplyGiantStrength {
+        duration_dice: u16,
+        duration_sides: u32,
+        duration_bonus: u32,
     },
     ApplyDetonation {
         damage_dice: u16,
@@ -353,6 +371,9 @@ pub enum ItemUseEffectDefinition {
         damage_sides: u16,
         #[serde(default)]
         damage_bonus: u16,
+    },
+    LoseExperienceFraction {
+        divisor: u8,
     },
     Vengeance {
         duration_dice: u16,
@@ -389,6 +410,11 @@ pub enum ItemUseEffectDefinition {
     DestroyAdjacentTrapsAndDoors,
     RemoveStatus {
         status_kind_id: String,
+    },
+    ReduceStatus {
+        status_kind_id: String,
+        minimum_reduction: u32,
+        reduction_divisor: u8,
     },
     RestoreResource {
         resource_id: String,

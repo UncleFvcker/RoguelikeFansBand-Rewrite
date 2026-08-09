@@ -558,6 +558,12 @@ pub(crate) enum DomainEvent {
         nutrition: u16,
         noticed: bool,
     },
+    ItemExperienceLost {
+        source_kind_id: String,
+        display_name_key: String,
+        amount: u64,
+        remaining: u64,
+    },
     ItemStatusResolved {
         source_kind_id: String,
         display_name_key: String,
@@ -570,6 +576,13 @@ pub(crate) enum DomainEvent {
         display_name_key: String,
         status_kind_id: String,
         removed: bool,
+    },
+    ItemStatusReduced {
+        source_kind_id: String,
+        display_name_key: String,
+        status_kind_id: String,
+        before: u32,
+        after: u32,
     },
     ItemBlessed {
         source_kind_id: String,
@@ -2367,6 +2380,21 @@ impl DomainEvent {
                     ("nutrition", nutrition.to_string()),
                 ],
             ),
+            Self::ItemExperienceLost {
+                source_kind_id,
+                display_name_key,
+                amount,
+                remaining,
+            } => dto(
+                "item.experience-lost",
+                "item-experience-lost",
+                [
+                    ("source", source_kind_id),
+                    ("nameKey", display_name_key),
+                    ("amount", amount.to_string()),
+                    ("remaining", remaining.to_string()),
+                ],
+            ),
             Self::ItemStatusResolved {
                 source_kind_id,
                 display_name_key,
@@ -2415,6 +2443,31 @@ impl DomainEvent {
                     ("target", source_kind_id),
                     ("nameKey", display_name_key),
                     ("status", status_kind_id),
+                ],
+            ),
+            Self::ItemStatusReduced {
+                source_kind_id,
+                display_name_key,
+                status_kind_id,
+                before,
+                after,
+            } => dto(
+                if after < before {
+                    "item.use-status-reduced"
+                } else {
+                    "item.use-status-no-effect"
+                },
+                if after < before {
+                    "item-use-status-reduced"
+                } else {
+                    "item-use-status-no-effect"
+                },
+                [
+                    ("target", source_kind_id),
+                    ("nameKey", display_name_key),
+                    ("status", status_kind_id),
+                    ("before", before.to_string()),
+                    ("after", after.to_string()),
                 ],
             ),
             Self::ItemBlessed {

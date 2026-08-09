@@ -324,3 +324,48 @@ The demo pack is version 1.195.0 with content hash
 This batch changes no protocol, save format, or state-hash input schema.
 Shop/loot expansion changes common new-game RNG and remains an integration
 handoff; shared replay baselines are not refreshed in the item worktree.
+
+## P3.2 Low-Coupling Potions
+
+P3.2 moves 11 of its 12 planned source identities from `blocked` to `active`.
+Water, Apple Juice, and Slime Mold Juice use the explicit
+`no-numeric-effect` rule because the Rewrite has no thirst system. Their
+ledger rows carry the adaptation note
+`intentional-no-numeric-effect:no-thirst-system`; they are consumed, become
+known, and emit the ordinary no-effect event without inventing a thirst
+resource.
+
+Lose Memories removes one quarter of current experience while preserving
+historical maximum experience. Ruination applies 10d10 self damage followed
+by all six permanent attribute drains. Sight clears blindness, grants three
+tiles of operational living-creature infravision, and contributes one
+see-invisible source. Antidote and Curing use a general partial-status
+reduction rule for the original half-or-flat poison reductions. Great Clarity
+restores 10d10+15 mana and clears confusion and hallucination.
+
+Invulnerability reuses the existing incoming-damage percentage status with a
+zero-percent payload; the ledger records that the original one-in-thirteen
+damage penetration is intentionally not modeled in this low-coupling batch.
+Giant Strength grants the existing original-facing max-HP and melee-skill
+facets at player level; its ledger note records that weapon-weight and blow
+multiplier semantics remain outside the current combat model. These are
+bounded adaptations rather than new thirst, body-size, or per-hit exception
+systems.
+
+Water and Apple Juice are general-store stock, Slime Mold Juice is shallow
+Warrens loot, Sight/Antidote/Curing are alchemist stock, and the three priced
+late-game buffs are black-market stock. The two zero-value harmful potions use
+depth-9 kobold drops. Salt Water remains the sole P3.2 blocked identity because
+its vomiting, starvation, paralysis, poison clearing, and race-conditional
+semantics are still a composite rule gap.
+
+The authoritative `master` audit at
+`efd63661302866038f58d8cd2553b23e6af3bf9d` reports 190 active, 106
+mechanics-ready, and 248 blocked source items. The formal pack contains 191
+mapped RFB items plus 24 original items, for 215 total. P3.2 reports 11
+`blockedToActive`, one `stillBlocked` (Salt Water), and no unresolved secondary
+blocker. Pack version 1.201.0 has content hash
+`8918443abb7330bad113eaf395af65c283e96dfda1480fe34a4bd609a623f0b4`.
+Protocol, save structure, and state-hash input schema are unchanged. Shop/loot
+changes alter common new-game RNG, so replay baseline refresh remains an
+integration-worktree handoff.

@@ -777,6 +777,9 @@ fn temple_and_alchemist_stock_are_strictly_separated() {
                 "demo.item.restore-dexterity-potion",
                 "demo.item.restore-constitution-potion",
                 "demo.item.restore-charisma-potion",
+                "demo.item.sight-potion",
+                "demo.item.antidote-potion",
+                "demo.item.curing-potion",
             ]),
         ),
     ];
@@ -979,7 +982,7 @@ fn bookstore_stocks_original_town_books() {
 }
 
 #[test]
-fn black_market_stocks_original_non_town_books_and_priced_p3_foods() {
+fn black_market_stocks_original_non_town_books_and_priced_p3_consumables() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let shop_id = "demo.shop.outpost-black-market";
     let shop = artifact
@@ -1003,6 +1006,9 @@ fn black_market_stocks_original_non_town_books_and_priced_p3_foods() {
             "demo.item.restore-constitution-mushroom",
             "demo.item.restore-strength-mushroom",
             "demo.item.unhealth-mushroom",
+            "demo.item.invulnerability-potion",
+            "demo.item.giant-strength-potion",
+            "demo.item.great-clarity-potion",
         ])
     );
     let values = artifact
@@ -1018,6 +1024,9 @@ fn black_market_stocks_original_non_town_books_and_priced_p3_foods() {
     assert_eq!(values["demo.item.disease-mushroom"], 50);
     assert_eq!(values["demo.item.restore-constitution-mushroom"], 350);
     assert_eq!(values["demo.item.restore-strength-mushroom"], 350);
+    assert_eq!(values["demo.item.invulnerability-potion"], 100_000);
+    assert_eq!(values["demo.item.giant-strength-potion"], 10_000);
+    assert_eq!(values["demo.item.great-clarity-potion"], 1_000);
 }
 
 #[test]
@@ -1070,6 +1079,52 @@ fn p3_1_items_all_have_a_shop_or_warrens_acquisition_path() {
         "demo.item.slime-mold",
         "demo.item.satisfy-hunger-scroll",
         "demo.item.sleep-potion",
+    ] {
+        assert!(
+            available.contains(item_id),
+            "{item_id} should be obtainable"
+        );
+    }
+}
+
+#[test]
+fn p3_2_items_all_have_a_shop_or_warrens_acquisition_path() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let shop_items = artifact
+        .content
+        .shops
+        .iter()
+        .flat_map(|shop| shop.stock.iter().map(|stock| stock.item_kind_id.as_str()));
+    let loot_items = artifact
+        .content
+        .loot_tables
+        .iter()
+        .filter(|table| {
+            matches!(
+                table.id.as_str(),
+                "demo.loot-table.warrens" | "demo.loot-table.kobold"
+            )
+        })
+        .flat_map(|table| {
+            table
+                .entries
+                .iter()
+                .map(|entry| entry.item_kind_id.as_str())
+        });
+    let available = shop_items.chain(loot_items).collect::<BTreeSet<_>>();
+
+    for item_id in [
+        "demo.item.water-potion",
+        "demo.item.apple-juice",
+        "demo.item.slime-mold-juice",
+        "demo.item.lose-memories-potion",
+        "demo.item.ruination-potion",
+        "demo.item.sight-potion",
+        "demo.item.antidote-potion",
+        "demo.item.curing-potion",
+        "demo.item.invulnerability-potion",
+        "demo.item.giant-strength-potion",
+        "demo.item.great-clarity-potion",
     ] {
         assert!(
             available.contains(item_id),

@@ -19,9 +19,10 @@ use crate::{
     effect::{
         DamageOutcome, DamagePacket, EffectOutcome, EffectSpec, EffectTarget,
         STATUS_BASIC_RESISTANCE, STATUS_BLEEDING, STATUS_BLINDNESS, STATUS_CONFUSION, STATUS_FEAR,
-        STATUS_HASTE, STATUS_PARALYSIS, STATUS_POISON, STATUS_PROTECTION_FROM_EVIL, STATUS_SLEEP,
-        STATUS_SLOW, STATUS_STUN, STATUS_THERMAL_RESISTANCE, STATUS_VENGEANCE, StatusApplication,
-        StatusChange, StatusInstance, StatusStacking, apply_effect, apply_status, resolve_damage,
+        STATUS_GIANT_STRENGTH, STATUS_HASTE, STATUS_PARALYSIS, STATUS_POISON,
+        STATUS_PROTECTION_FROM_EVIL, STATUS_SIGHT, STATUS_SLEEP, STATUS_SLOW, STATUS_STUN,
+        STATUS_THERMAL_RESISTANCE, STATUS_VENGEANCE, StatusApplication, StatusChange,
+        StatusInstance, StatusStacking, apply_effect, apply_status, resolve_damage,
     },
     error::CoreError,
     event::{DomainEvent, ItemAttributeChange, ProjectileTrace, project_events},
@@ -4548,8 +4549,22 @@ impl Game {
     }
 
     fn entity_is_visible_to_player(&self, entity: &Actor) -> bool {
-        self.is_visible(entity.position)
+        (self.is_visible(entity.position) || self.entity_is_visible_by_infravision(entity))
             && (!self.actor_is_invisible(entity) || entity.visible_invisible)
+    }
+
+    fn entity_is_visible_by_infravision(&self, entity: &Actor) -> bool {
+        if self.player_has_status_kind(STATUS_BLINDNESS) {
+            return false;
+        }
+        let range = self.player_infravision_range();
+        range > 0
+            && squared_distance(self.player.position, entity.position) <= range * range
+            && has_line_of_sight(self, self.player.position, entity.position)
+            && self
+                .content
+                .actor(&entity.kind_id)
+                .is_some_and(|definition| actor_matches_category(definition, "living"))
     }
 
     fn refresh_invisible_visibility(

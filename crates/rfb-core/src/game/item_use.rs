@@ -1335,6 +1335,7 @@ impl Game {
         match (effect, plan) {
             (
                 effect @ (ItemUseEffectDefinition::Heal { .. }
+                | ItemUseEffectDefinition::NoNumericEffect
                 | ItemUseEffectDefinition::IncreaseNutrition { .. }
                 | ItemUseEffectDefinition::SatisfyHunger
                 | ItemUseEffectDefinition::HealDice { .. }
@@ -1355,7 +1356,9 @@ impl Game {
                 | ItemUseEffectDefinition::ApplyPoison { .. }
                 | ItemUseEffectDefinition::ApplyBlindness { .. }
                 | ItemUseEffectDefinition::ApplyStatus { .. }
+                | ItemUseEffectDefinition::ApplyGiantStrength { .. }
                 | ItemUseEffectDefinition::SelfDamage { .. }
+                | ItemUseEffectDefinition::LoseExperienceFraction { .. }
                 | ItemUseEffectDefinition::DrainAttribute { .. }
                 | ItemUseEffectDefinition::RestoreAttribute { .. }
                 | ItemUseEffectDefinition::IncreaseAttribute { .. }
@@ -1365,6 +1368,7 @@ impl Game {
                 | ItemUseEffectDefinition::PrepareConfusingStrike
                 | ItemUseEffectDefinition::IncreaseSpellLearningCapacity
                 | ItemUseEffectDefinition::RemoveStatus { .. }
+                | ItemUseEffectDefinition::ReduceStatus { .. }
                 | ItemUseEffectDefinition::RestoreResource { .. }
                 | ItemUseEffectDefinition::RestoreResourceDice { .. }
                 | ItemUseEffectDefinition::RestoreResourceFull { .. }
@@ -1578,7 +1582,8 @@ impl Game {
         }
         let self_target = target.is_none_or(|target| matches!(target, TargetSelection::SelfTarget));
         match effect {
-            ItemUseEffectDefinition::IncreaseNutrition { .. }
+            ItemUseEffectDefinition::NoNumericEffect
+            | ItemUseEffectDefinition::IncreaseNutrition { .. }
             | ItemUseEffectDefinition::SatisfyHunger
             | ItemUseEffectDefinition::Heal { .. }
             | ItemUseEffectDefinition::HealDice { .. }
@@ -1603,9 +1608,11 @@ impl Game {
             | ItemUseEffectDefinition::ApplyPoison { .. }
             | ItemUseEffectDefinition::ApplyBlindness { .. }
             | ItemUseEffectDefinition::ApplyStatus { .. }
+            | ItemUseEffectDefinition::ApplyGiantStrength { .. }
             | ItemUseEffectDefinition::ApplyDetonation { .. }
             | ItemUseEffectDefinition::SelfLifeLoss { .. }
             | ItemUseEffectDefinition::SelfDamage { .. }
+            | ItemUseEffectDefinition::LoseExperienceFraction { .. }
             | ItemUseEffectDefinition::Vengeance { .. }
             | ItemUseEffectDefinition::ProtectionFromEvil
             | ItemUseEffectDefinition::PrepareConfusingStrike
@@ -1614,6 +1621,7 @@ impl Game {
             | ItemUseEffectDefinition::AggravateMonsters
             | ItemUseEffectDefinition::MassGenocide { .. }
             | ItemUseEffectDefinition::RemoveStatus { .. }
+            | ItemUseEffectDefinition::ReduceStatus { .. }
             | ItemUseEffectDefinition::RestoreResource { .. }
             | ItemUseEffectDefinition::RestoreResourceDice { .. }
             | ItemUseEffectDefinition::RestoreResourceFull { .. }
@@ -2038,6 +2046,13 @@ impl Game {
         duration_bonus: u32,
         stacking: AbilityStatusStackingDefinition,
         resistance_type: Option<rfb_content::ActorDamageType>,
+        granted_resistances: &BTreeMap<
+            rfb_content::ActorDamageType,
+            rfb_content::ActorResistanceLevel,
+        >,
+        granted_modifiers: &StatModifiers,
+        granted_equipment_bonuses: &EquipmentBonuses,
+        incoming_damage_percent: u8,
         events: &mut Vec<DomainEvent>,
     ) -> bool {
         let immunity = self.player_status_immunities().contains(status_kind_id);
@@ -2077,14 +2092,17 @@ impl Game {
                         intensity: 1,
                         remaining_ticks: duration,
                         source_id: Some(source_kind_id.to_owned()),
-                        granted_resistances: BTreeMap::new(),
+                        granted_resistances: granted_resistances
+                            .iter()
+                            .map(|(damage_type, level)| ((*damage_type).into(), (*level).into()))
+                            .collect(),
                         granted_brands: BTreeSet::new(),
-                        granted_modifiers: StatModifiersDto::default(),
-                        granted_equipment_bonuses: EquipmentBonusesDto::default(),
+                        granted_modifiers: stat_modifiers_dto(granted_modifiers),
+                        granted_equipment_bonuses: equipment_bonuses_dto(granted_equipment_bonuses),
                         granted_status_immunities: BTreeSet::new(),
                         granted_race_id: None,
                         grants_wall_passage: false,
-                        incoming_damage_percent: 100,
+                        incoming_damage_percent,
                     },
                     stacking,
                 },
@@ -2103,6 +2121,122 @@ impl Game {
             noticed,
         });
         noticed
+    }
+
+    fn resolve_item_giant_strength(
+        &mut self,
+        source_kind_id: &str,
+        duration_dice: u16,
+        duration_sides: u32,
+        duration_bonus: u32,
+        events: &mut Vec<DomainEvent>,
+    ) -> bool {
+        let duration_sides =
+            u16::try_from(duration_sides).expect("validated status die sides must fit u16");
+        let source_turns = u32::try_from(self.roll_damage(duration_dice, duration_sides))
+            .expect("validated status duration must fit u32")
+            .saturating_add(duration_bonus);
+        let duration = source_turns.saturating_add(1).saturating_mul(10);
+        let level = i32::from(self.progress.level);
+        let change = apply_status_application(
+            &mut self.player.statuses,
+            StatusApplication {
+                status: StatusInstance {
+                    kind_id: STATUS_GIANT_STRENGTH.to_owned(),
+                    intensity: 1,
+                    remaining_ticks: duration,
+                    source_id: Some(source_kind_id.to_owned()),
+                    granted_resistances: BTreeMap::new(),
+                    granted_brands: BTreeSet::new(),
+                    granted_modifiers: StatModifiersDto {
+                        max_hp: 10 + level / 2,
+                        ..StatModifiersDto::default()
+                    },
+                    granted_equipment_bonuses: EquipmentBonusesDto {
+                        melee_skill: 60 * level / 50,
+                        ..EquipmentBonusesDto::default()
+                    },
+                    granted_status_immunities: BTreeSet::new(),
+                    granted_race_id: None,
+                    grants_wall_passage: false,
+                    incoming_damage_percent: 100,
+                },
+                stacking: StatusStacking::Extend,
+            },
+        )
+        .change;
+        let noticed = !matches!(change, StatusChange::Unchanged);
+        if noticed {
+            self.mark_item_aware(source_kind_id);
+        }
+        events.push(DomainEvent::ItemStatusResolved {
+            source_kind_id: source_kind_id.to_owned(),
+            display_name_key: self.item_display_name_key(source_kind_id),
+            status_kind_id: STATUS_GIANT_STRENGTH.to_owned(),
+            duration: Some(duration),
+            noticed,
+        });
+        noticed
+    }
+
+    fn resolve_item_experience_loss(
+        &mut self,
+        source_kind_id: &str,
+        divisor: u8,
+        events: &mut Vec<DomainEvent>,
+    ) -> bool {
+        let amount = self.progress.experience / u64::from(divisor);
+        self.progress.experience = self.progress.experience.saturating_sub(amount);
+        self.mark_item_aware(source_kind_id);
+        events.push(DomainEvent::ItemExperienceLost {
+            source_kind_id: source_kind_id.to_owned(),
+            display_name_key: self.item_display_name_key(source_kind_id),
+            amount,
+            remaining: self.progress.experience,
+        });
+        true
+    }
+
+    fn resolve_item_status_reduction(
+        &mut self,
+        source_kind_id: &str,
+        status_kind_id: &str,
+        minimum_reduction: u32,
+        reduction_divisor: u8,
+        events: &mut Vec<DomainEvent>,
+    ) -> bool {
+        let Some(index) = self
+            .player
+            .statuses
+            .iter()
+            .position(|status| status.kind_id == status_kind_id)
+        else {
+            events.push(DomainEvent::ItemStatusReduced {
+                source_kind_id: source_kind_id.to_owned(),
+                display_name_key: self.item_display_name_key(source_kind_id),
+                status_kind_id: status_kind_id.to_owned(),
+                before: 0,
+                after: 0,
+            });
+            return false;
+        };
+        let before = self.player.statuses[index].remaining_ticks;
+        let reduction = (before / u32::from(reduction_divisor)).max(minimum_reduction);
+        let after = before.saturating_sub(reduction);
+        if after == 0 {
+            self.player.statuses.remove(index);
+        } else {
+            self.player.statuses[index].remaining_ticks = after;
+        }
+        self.mark_item_aware(source_kind_id);
+        events.push(DomainEvent::ItemStatusReduced {
+            source_kind_id: source_kind_id.to_owned(),
+            display_name_key: self.item_display_name_key(source_kind_id),
+            status_kind_id: status_kind_id.to_owned(),
+            before,
+            after,
+        });
+        true
     }
 
     pub(super) fn resolve_item_resource_drain(
@@ -2887,6 +3021,16 @@ impl Game {
         events: &mut Vec<DomainEvent>,
     ) -> bool {
         match effect {
+            ItemUseEffectDefinition::NoNumericEffect => {
+                self.mark_item_aware(source_kind_id);
+                events.push(DomainEvent::ItemUsed {
+                    source_kind_id: source_kind_id.to_owned(),
+                    display_name_key: self.item_display_name_key(source_kind_id),
+                    requested: 0,
+                    applied: 0,
+                });
+                true
+            }
             ItemUseEffectDefinition::IncreaseNutrition { amount } => {
                 let before_state = self.nutrition_state();
                 let applied = self.increase_nutrition(*amount);
@@ -3107,6 +3251,10 @@ impl Game {
                 duration_bonus,
                 stacking,
                 resistance_type,
+                granted_resistances,
+                granted_modifiers,
+                granted_equipment_bonuses,
+                incoming_damage_percent,
             } => self.resolve_item_status(
                 source_kind_id,
                 status_kind_id,
@@ -3115,6 +3263,21 @@ impl Game {
                 *duration_bonus,
                 *stacking,
                 *resistance_type,
+                granted_resistances,
+                granted_modifiers,
+                granted_equipment_bonuses,
+                *incoming_damage_percent,
+                events,
+            ),
+            ItemUseEffectDefinition::ApplyGiantStrength {
+                duration_dice,
+                duration_sides,
+                duration_bonus,
+            } => self.resolve_item_giant_strength(
+                source_kind_id,
+                *duration_dice,
+                *duration_sides,
+                *duration_bonus,
                 events,
             ),
             ItemUseEffectDefinition::ApplyDetonation {
@@ -3148,6 +3311,9 @@ impl Game {
                 self.resolve_item_life_loss(source_kind_id, amount, events);
                 true
             }
+            ItemUseEffectDefinition::LoseExperienceFraction { divisor } => {
+                self.resolve_item_experience_loss(source_kind_id, *divisor, events)
+            }
             ItemUseEffectDefinition::Vengeance {
                 duration_dice,
                 duration_sides,
@@ -3175,6 +3341,17 @@ impl Game {
             ItemUseEffectDefinition::RemoveStatus { status_kind_id } => {
                 self.resolve_item_status_removal(source_kind_id, status_kind_id, events)
             }
+            ItemUseEffectDefinition::ReduceStatus {
+                status_kind_id,
+                minimum_reduction,
+                reduction_divisor,
+            } => self.resolve_item_status_reduction(
+                source_kind_id,
+                status_kind_id,
+                *minimum_reduction,
+                *reduction_divisor,
+                events,
+            ),
             ItemUseEffectDefinition::DrainResourceFull { resource_id } => {
                 self.resolve_item_resource_drain(source_kind_id, resource_id, events)
             }

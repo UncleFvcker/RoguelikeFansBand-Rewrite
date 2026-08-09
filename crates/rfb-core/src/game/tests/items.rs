@@ -4024,3 +4024,224 @@ fn recall_can_be_cancelled_and_reset_to_a_shallower_branch_floor() {
             .any(|event| event.kind == "item.recall-cancelled")
     );
 }
+
+#[test]
+fn p3_2_refreshments_are_deliberate_no_numeric_effects() {
+    let mut game = Game::new(201);
+    clear_monsters(&mut game);
+    give_inventory_item(&mut game, "test.item.water.1", "demo.item.water-potion");
+
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: "test.item.water.1".to_owned(),
+            target: None,
+        },
+    );
+
+    assert!(!game.items.iter().any(|item| item.id == "test.item.water.1"));
+    assert_eq!(
+        game.item_knowledge_dto("demo.item.water-potion"),
+        ItemKnowledgeDto::Aware
+    );
+    assert!(
+        update
+            .events
+            .iter()
+            .any(|event| event.kind == "item.use-no-effect")
+    );
+}
+
+#[test]
+fn p3_2_lose_memories_preserves_historical_experience() {
+    let mut game = Game::new(202);
+    clear_monsters(&mut game);
+    game.progress.gain_experience(1_000, false);
+    let maximum = game.progress.maximum_experience;
+    give_inventory_item(
+        &mut game,
+        "test.item.lose-memories.1",
+        "demo.item.lose-memories-potion",
+    );
+
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: "test.item.lose-memories.1".to_owned(),
+            target: None,
+        },
+    );
+
+    assert_eq!(game.progress.experience, 750);
+    assert_eq!(game.progress.maximum_experience, maximum);
+    let event = update
+        .events
+        .iter()
+        .find(|event| event.kind == "item.experience-lost")
+        .expect("experience loss should be projected");
+    assert_eq!(event.args["amount"], "250");
+    assert_eq!(event.args["remaining"], "750");
+}
+
+#[test]
+fn p3_2_sight_and_antidote_apply_timed_capabilities() {
+    let mut game = Game::new(203);
+    clear_monsters(&mut game);
+    game.player.statuses.push(StatusInstance {
+        kind_id: STATUS_BLINDNESS.to_owned(),
+        intensity: 1,
+        remaining_ticks: 500,
+        source_id: Some("test.blindness".to_owned()),
+        granted_resistances: BTreeMap::new(),
+        granted_brands: BTreeSet::new(),
+        granted_modifiers: StatModifiersDto::default(),
+        granted_equipment_bonuses: EquipmentBonusesDto::default(),
+        granted_status_immunities: BTreeSet::new(),
+        granted_race_id: None,
+        grants_wall_passage: false,
+        incoming_damage_percent: 100,
+    });
+    give_inventory_item(&mut game, "test.item.sight.1", "demo.item.sight-potion");
+    dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: "test.item.sight.1".to_owned(),
+            target: None,
+        },
+    );
+    assert!(
+        game.player
+            .statuses
+            .iter()
+            .all(|status| status.kind_id != STATUS_BLINDNESS)
+    );
+    assert_eq!(game.player_see_invisible_sources(), 1);
+    let sight = game
+        .player
+        .statuses
+        .iter()
+        .find(|status| status.kind_id == STATUS_SIGHT)
+        .expect("sight should remain active");
+    assert_eq!(sight.granted_equipment_bonuses.infravision, 3);
+    assert_eq!(game.player_infravision_range(), 3);
+    let target_position = Position {
+        x: game.player.position.x + 1,
+        y: game.player.position.y,
+    };
+    replace_terrain(&mut game, target_position, "demo.terrain.floor");
+    let living = game
+        .content
+        .actor("demo.actor.echo-hound")
+        .expect("living actor should exist");
+    let living = actor_from_runtime_spawn(
+        "test.actor.infravision-living",
+        &living.id,
+        target_position,
+        living.max_hp,
+        living.speed,
+        100,
+        true,
+    );
+    assert!(game.entity_is_visible_by_infravision(&living));
+    let nonliving = game
+        .content
+        .actor("demo.actor.resonant-warden")
+        .expect("nonliving actor should exist");
+    let nonliving = actor_from_runtime_spawn(
+        "test.actor.infravision-nonliving",
+        &nonliving.id,
+        target_position,
+        nonliving.max_hp,
+        nonliving.speed,
+        100,
+        true,
+    );
+    assert!(!game.entity_is_visible_by_infravision(&nonliving));
+
+    game.player.statuses.push(StatusInstance {
+        kind_id: STATUS_POISON.to_owned(),
+        intensity: 1,
+        remaining_ticks: 10_000,
+        source_id: Some("test.poison".to_owned()),
+        granted_resistances: BTreeMap::new(),
+        granted_brands: BTreeSet::new(),
+        granted_modifiers: StatModifiersDto::default(),
+        granted_equipment_bonuses: EquipmentBonusesDto::default(),
+        granted_status_immunities: BTreeSet::new(),
+        granted_race_id: None,
+        grants_wall_passage: false,
+        incoming_damage_percent: 100,
+    });
+    give_inventory_item(
+        &mut game,
+        "test.item.antidote.1",
+        "demo.item.antidote-potion",
+    );
+    dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: "test.item.antidote.1".to_owned(),
+            target: None,
+        },
+    );
+    let poison = game
+        .player
+        .statuses
+        .iter()
+        .find(|status| status.kind_id == STATUS_POISON)
+        .expect("half of the long poison duration should remain");
+    assert_eq!(poison.remaining_ticks, 4_990);
+    assert_eq!(
+        game.effective_player_resistances()
+            .level(DamageType::Poison),
+        ResistanceLevel::Resistant
+    );
+}
+
+#[test]
+fn p3_2_invulnerability_and_giant_strength_reuse_status_payloads() {
+    let mut game = Game::new(204);
+    clear_monsters(&mut game);
+    give_inventory_item(
+        &mut game,
+        "test.item.invulnerability.1",
+        "demo.item.invulnerability-potion",
+    );
+    dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: "test.item.invulnerability.1".to_owned(),
+            target: None,
+        },
+    );
+    assert_eq!(game.player_incoming_damage_percent(), 0);
+    assert_eq!(
+        game.reduce_player_damage(resolve_damage(
+            DamagePacket::new(100, DamageType::Physical),
+            ResistanceLevel::Normal,
+        ))
+        .applied,
+        0
+    );
+
+    give_inventory_item(
+        &mut game,
+        "test.item.giant-strength.1",
+        "demo.item.giant-strength-potion",
+    );
+    dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: "test.item.giant-strength.1".to_owned(),
+            target: None,
+        },
+    );
+    let giant = game
+        .player
+        .statuses
+        .iter()
+        .find(|status| status.kind_id == STATUS_GIANT_STRENGTH)
+        .expect("giant strength should remain active");
+    assert_eq!(giant.granted_modifiers.max_hp, 10);
+    assert_eq!(giant.granted_equipment_bonuses.melee_skill, 1);
+}

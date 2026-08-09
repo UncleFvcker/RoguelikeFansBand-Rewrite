@@ -723,7 +723,7 @@ fn supported_legacy_scrolls_and_potions_keep_source_identity_and_values() {
         .collect::<Vec<_>>();
 
     assert_eq!(scrolls.len(), 46);
-    assert_eq!(potions.len(), 45);
+    assert_eq!(potions.len(), 56);
     assert!(scrolls.iter().all(|item| item.weight_tenths_pound == 5));
     assert!(potions.iter().all(|item| item.weight_tenths_pound == 4));
 
@@ -736,7 +736,7 @@ fn supported_legacy_scrolls_and_potions_keep_source_identity_and_values() {
                 .expect("supported consumables should have source flavor")
         })
         .collect::<std::collections::BTreeSet<_>>();
-    assert_eq!(appearance_keys.len(), 91);
+    assert_eq!(appearance_keys.len(), 102);
 
     let added_values = [
         ("demo.item.door-stair-location-scroll", 10),
@@ -768,6 +768,17 @@ fn supported_legacy_scrolls_and_potions_keep_source_identity_and_values() {
         ("demo.item.constitution-potion", 25_000),
         ("demo.item.charisma-potion", 25_000),
         ("demo.item.blood-potion", 1_234),
+        ("demo.item.water-potion", 1),
+        ("demo.item.apple-juice", 1),
+        ("demo.item.slime-mold-juice", 2),
+        ("demo.item.lose-memories-potion", 0),
+        ("demo.item.ruination-potion", 0),
+        ("demo.item.sight-potion", 50),
+        ("demo.item.antidote-potion", 100),
+        ("demo.item.curing-potion", 80),
+        ("demo.item.invulnerability-potion", 100_000),
+        ("demo.item.giant-strength-potion", 10_000),
+        ("demo.item.great-clarity-potion", 1_000),
     ];
     for (id, base_value) in added_values {
         let item = artifact

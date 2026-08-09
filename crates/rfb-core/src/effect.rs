@@ -24,6 +24,10 @@ pub const STATUS_VENGEANCE: &str = "rfb.status.vengeance";
 pub const STATUS_PROTECTION_FROM_EVIL: &str = "rfb.status.protection-from-evil";
 pub const STATUS_THERMAL_RESISTANCE: &str = "rfb.status.thermal-resistance";
 pub const STATUS_BASIC_RESISTANCE: &str = "rfb.status.basic-resistance";
+pub const STATUS_SIGHT: &str = "rfb.status.sight";
+pub const STATUS_POISON_RESISTANCE: &str = "rfb.status.poison-resistance";
+pub const STATUS_INVULNERABILITY: &str = "rfb.status.invulnerability";
+pub const STATUS_GIANT_STRENGTH: &str = "rfb.status.giant-strength";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct DamagePacket {

@@ -70,9 +70,9 @@
           "id": "refreshments",
           "primaryBlockers": ["consumable-effect"],
           "items": [
-            { "sourceIndex": 400, "sourceName": "Water:Clear", "sourceId": "water-clear" },
-            { "sourceIndex": 401, "sourceName": "Apple Juice:Light Brown", "sourceId": "apple-juice-light-brown" },
-            { "sourceIndex": 402, "sourceName": "Slime Mold Juice:Icky Green", "sourceId": "slime-mold-juice-icky-green" }
+            { "sourceIndex": 400, "sourceName": "Water:Clear", "sourceId": "water-clear", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] },
+            { "sourceIndex": 401, "sourceName": "Apple Juice:Light Brown", "sourceId": "apple-juice-light-brown", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] },
+            { "sourceIndex": 402, "sourceName": "Slime Mold Juice:Icky Green", "sourceId": "slime-mold-juice-icky-green", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] }
           ]
         },
         {
@@ -86,20 +86,20 @@
           "id": "loss-and-ruination",
           "primaryBlockers": ["consumable-effect"],
           "items": [
-            { "sourceIndex": 409, "sourceName": "Lose Memories:Orange", "sourceId": "lose-memories-orange" },
-            { "sourceIndex": 410, "sourceName": "Ruination:Pungent", "sourceId": "ruination-pungent" }
+            { "sourceIndex": 409, "sourceName": "Lose Memories:Orange", "sourceId": "lose-memories-orange", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] },
+            { "sourceIndex": 410, "sourceName": "Ruination:Pungent", "sourceId": "ruination-pungent", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] }
           ]
         },
         {
           "id": "potion-status-and-buffs",
           "primaryBlockers": ["consumable-effect"],
           "items": [
-            { "sourceIndex": 419, "sourceName": "Sight:White", "sourceId": "sight-white" },
-            { "sourceIndex": 420, "sourceName": "Antidote:Violet", "sourceId": "antidote-violet" },
-            { "sourceIndex": 454, "sourceName": "Curing:Dark Blue", "sourceId": "curing-dark-blue" },
-            { "sourceIndex": 455, "sourceName": "Invulnerability:Dark Green", "sourceId": "invulnerability-dark-green" },
-            { "sourceIndex": 461, "sourceName": "Giant Strength:Noxious", "sourceId": "giant-strength-noxious" },
-            { "sourceIndex": 464, "sourceName": "Great Clarity:Acrid", "sourceId": "great-clarity-acrid" }
+            { "sourceIndex": 419, "sourceName": "Sight:White", "sourceId": "sight-white", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] },
+            { "sourceIndex": 420, "sourceName": "Antidote:Violet", "sourceId": "antidote-violet", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] },
+            { "sourceIndex": 454, "sourceName": "Curing:Dark Blue", "sourceId": "curing-dark-blue", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] },
+            { "sourceIndex": 455, "sourceName": "Invulnerability:Dark Green", "sourceId": "invulnerability-dark-green", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] },
+            { "sourceIndex": 461, "sourceName": "Giant Strength:Noxious", "sourceId": "giant-strength-noxious", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] },
+            { "sourceIndex": 464, "sourceName": "Great Clarity:Acrid", "sourceId": "great-clarity-acrid", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] }
           ]
         }
       ]

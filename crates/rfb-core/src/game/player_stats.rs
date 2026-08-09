@@ -463,7 +463,7 @@ impl Game {
     }
 
     pub(super) fn player_see_invisible_sources(&self) -> usize {
-        self.items
+        let equipment_sources = self.items
             .iter()
             .filter(|item| {
                 matches!(&item.location, ItemLocation::Equipped { slot_id } if self.body_slot_type(slot_id) != Some("tool"))
@@ -471,7 +471,33 @@ impl Game {
                         .item_passives(item)
                         .contains(&EquipmentPassive::SeeInvisible)
             })
-            .count()
+            .count();
+        equipment_sources
+            + usize::from(
+                self.player
+                    .statuses
+                    .iter()
+                    .any(|status| status.kind_id == STATUS_SIGHT),
+            )
+    }
+
+    pub(super) fn player_infravision_range(&self) -> i32 {
+        let equipment = self
+            .items
+            .iter()
+            .filter(|item| {
+                matches!(&item.location, ItemLocation::Equipped { slot_id } if self.body_slot_type(slot_id) != Some("tool"))
+            })
+            .fold(0_i32, |total, item| {
+                total.saturating_add(self.item_equipment_bonuses(item).infravision)
+            });
+        self.player
+            .statuses
+            .iter()
+            .fold(equipment, |total, status| {
+                total.saturating_add(status.granted_equipment_bonuses.infravision)
+            })
+            .max(0)
     }
 
     pub(super) fn equipment_modifiers(&self) -> StatModifiersDto {
