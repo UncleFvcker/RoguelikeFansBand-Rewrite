@@ -6891,6 +6891,12 @@ const RESISTANCE_ALL_TYPES: [&str; 27] = [
     "water",
 ];
 
+const MONSTER_CONTACT_AURA_FLAGS: [(&str, &str); 3] = [
+    ("AURA_FIRE", "fire"),
+    ("AURA_COLD", "cold"),
+    ("AURA_ELEC", "electricity"),
+];
+
 fn monster_flag_is_mapped(flag: &str) -> bool {
     if matches!(
         flag,
@@ -7251,6 +7257,21 @@ fn monster_json(
             contact_aura["chancePercent"] = serde_json::json!(chance_percent);
         }
         value["contactAura"] = contact_aura;
+    } else if MONSTER_CONTACT_AURA_FLAGS
+        .iter()
+        .filter(|(flag, _)| entry.flags.iter().any(|entry_flag| entry_flag == flag))
+        .count()
+        == 1
+        && let Some((_, damage_type)) = MONSTER_CONTACT_AURA_FLAGS
+            .iter()
+            .find(|(flag, _)| entry.flags.iter().any(|entry_flag| entry_flag == flag))
+    {
+        let level = entry.level.unwrap_or_default();
+        value["contactAura"] = serde_json::json!({
+            "damageType": damage_type,
+            "damageDice": 1 + level / 26,
+            "damageSides": 1 + level / 17,
+        });
     }
     if let Some(casting) = monster_casting {
         value["monsterCasting"] = casting;
@@ -7341,7 +7362,10 @@ fn monster_json(
 }
 
 fn demo_monster_flag_is_handled(flag: &str) -> bool {
-    monster_flag_is_mapped(flag)
+    MONSTER_CONTACT_AURA_FLAGS
+        .iter()
+        .any(|(aura_flag, _)| flag == *aura_flag)
+        || monster_flag_is_mapped(flag)
         || matches!(
             flag,
             "FORCE_MAXHP"
@@ -7512,7 +7536,11 @@ fn demo_monster_json(
             selection.id
         )));
     }
-    if entry.auras.len() > 1
+    let elemental_aura_count = MONSTER_CONTACT_AURA_FLAGS
+        .iter()
+        .filter(|(flag, _)| entry.flags.iter().any(|entry_flag| entry_flag == flag))
+        .count();
+    if entry.auras.len() + elemental_aura_count > 1
         || entry
             .auras
             .first()
@@ -8704,8 +8732,17 @@ fn convert_content_from(
                     .collect::<Vec<_>>(),
             })
         });
+        let elemental_aura_count = MONSTER_CONTACT_AURA_FLAGS
+            .iter()
+            .filter(|(flag, _)| entry.flags.iter().any(|entry_flag| entry_flag == flag))
+            .count();
         for flag in &entry.flags {
-            if monster_flag_is_mapped(flag) {
+            if monster_flag_is_mapped(flag)
+                || (elemental_aura_count == 1
+                    && MONSTER_CONTACT_AURA_FLAGS
+                        .iter()
+                        .any(|(aura_flag, _)| flag == *aura_flag))
+            {
                 continue;
             }
             *report
@@ -11391,6 +11428,52 @@ mod tests {
             demo_drop_theme_table_id("DROP_DWARF"),
             Some("demo.loot-table.dwarf")
         );
+    }
+
+    #[test]
+    fn demo_monster_import_maps_elemental_contact_aura_flags() {
+        let monsters = parse_r_info(
+            "N:1:test fire aura\nG:*:r\nI:120:6d6:100:30:0:25\nW:17:1:50:50:0:0\nB:EXPLODE:FIRE(8d8)\nF:AURA_FIRE | NEVER_MOVE\n\
+             N:2:test cold aura\nG:*:w\nI:120:6d6:100:30:0:25\nW:17:1:50:50:0:0\nB:EXPLODE:COLD(8d8)\nF:AURA_COLD | NEVER_MOVE\n\
+             N:3:test electricity aura\nG:*:B\nI:120:6d6:100:30:0:25\nW:17:1:50:50:0:0\nB:EXPLODE:ELEC(8d8)\nF:AURA_ELEC | NEVER_MOVE\n",
+        )
+        .expect("synthetic elemental aura monsters should parse");
+
+        for (entry, damage_type) in monsters.iter().zip(["fire", "cold", "electricity"]) {
+            let actor = demo_monster_json(
+                entry,
+                &DemoMonsterSelectionEntry {
+                    source_index: entry.index,
+                    source_id: None,
+                    id: kebab(&entry.name),
+                    tags: vec!["warrens".to_owned()],
+                    omitted_flags: Vec::new(),
+                },
+                &mut BTreeMap::new(),
+            )
+            .expect("elemental contact aura should import directly");
+            assert_eq!(actor["contactAura"]["damageType"], damage_type);
+            assert_eq!(actor["contactAura"]["damageDice"], 1);
+            assert_eq!(actor["contactAura"]["damageSides"], 2);
+        }
+
+        let mut multiple = monsters[0].clone();
+        multiple.flags.push("AURA_ELEC".to_owned());
+        assert!(matches!(
+            demo_monster_json(
+                &multiple,
+                &DemoMonsterSelectionEntry {
+                    source_index: multiple.index,
+                    source_id: None,
+                    id: kebab(&multiple.name),
+                    tags: vec!["warrens".to_owned()],
+                    omitted_flags: Vec::new(),
+                },
+                &mut BTreeMap::new(),
+            ),
+            Err(LegacyImportError::InvalidDemoMonsterSelection(message))
+                if message.contains("unsupported contact aura")
+        ));
     }
 
     #[test]

@@ -1794,6 +1794,24 @@
       "id": "nar-the-dwarf",
       "tags": ["dwarf", "humanoid", "warrens"],
       "omittedFlags": ["CAN_SPEAK", "MALE"]
+    },
+    {
+      "sourceIndex": 298,
+      "id": "freezing-sphere",
+      "tags": ["warrens"],
+      "omittedFlags": ["COLD_BLOOD", "EMPTY_MIND", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 299,
+      "id": "jumping-fireball",
+      "tags": ["warrens"],
+      "omittedFlags": ["EMPTY_MIND", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 300,
+      "id": "ball-lightning",
+      "tags": ["warrens"],
+      "omittedFlags": ["EMPTY_MIND", "POS_GAIN_AC"]
     }
   ]
 }

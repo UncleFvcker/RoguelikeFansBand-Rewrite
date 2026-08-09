@@ -290,8 +290,13 @@ pub(super) fn validate_actors(
             }
         }
         if actor.contact_aura.is_some_and(|aura| {
-            aura.damage_type != ActorDamageType::Poison
-                || !(1..=100).contains(&aura.damage_dice)
+            !matches!(
+                aura.damage_type,
+                ActorDamageType::Poison
+                    | ActorDamageType::Fire
+                    | ActorDamageType::Cold
+                    | ActorDamageType::Electricity
+            ) || !(1..=100).contains(&aura.damage_dice)
                 || !(1..=10_000).contains(&aura.damage_sides)
                 || aura
                     .chance_percent

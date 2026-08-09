@@ -60,6 +60,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.baby-red-dragon", 167, 2, 40),
             ("demo.actor.baby-white-dragon", 164, 2, 40),
             ("demo.actor.balcmeg-the-relentless", 1182, 2, 999),
+            ("demo.actor.ball-lightning", 300, 1, 60),
             ("demo.actor.bandit", 150, 2, 40),
             ("demo.actor.barracuda", 96, 2, 40),
             ("demo.actor.berserker", 293, 3, 80),
@@ -140,6 +141,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.flying-skull", 273, 3, 50),
             ("demo.actor.forest-troll", 297, 1, 80),
             ("demo.actor.freesia", 57, 1, 999),
+            ("demo.actor.freezing-sphere", 298, 1, 50),
             ("demo.actor.frosty-jelly", 84, 1, 40),
             ("demo.actor.fruit-bat", 37, 1, 10),
             ("demo.actor.frumious-bandersnatch", 232, 2, 50),
@@ -216,6 +218,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.ixitxachitl", 220, 1, 50),
             ("demo.actor.jackal", 35, 1, 5),
             ("demo.actor.jibaku-ghost", 1012, 2, 40),
+            ("demo.actor.jumping-fireball", 299, 1, 50),
             ("demo.actor.kamikaze-yeek", 179, 1, 40),
             ("demo.actor.killer-bee", 174, 2, 40),
             ("demo.actor.killer-brown-beetle", 236, 2, 50),
@@ -2001,6 +2004,52 @@ fn level_seventeen_p35_casters_reuse_parameterized_abilities_and_dwarf_drops() {
         .into_iter()
         .collect()
     );
+}
+
+#[test]
+fn level_seventeen_p36_spheres_keep_elemental_contact_and_death_damage() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+
+    for (id, damage_type) in [
+        ("demo.actor.freezing-sphere", ActorDamageType::Cold),
+        ("demo.actor.jumping-fireball", ActorDamageType::Fire),
+        ("demo.actor.ball-lightning", ActorDamageType::Electricity),
+    ] {
+        let actor = artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == id)
+            .unwrap_or_else(|| panic!("{id} should be imported"));
+        assert_eq!(actor.level, 17);
+        assert!(actor.contact_aura.is_some_and(|aura| {
+            aura.damage_type == damage_type
+                && aura.damage_dice == 1
+                && aura.damage_sides == 2
+                && aura.chance_percent.is_none()
+        }));
+        assert!(
+            actor
+                .melee_routine
+                .as_ref()
+                .and_then(|routine| routine.blows.first())
+                .is_some_and(|blow| {
+                    blow.self_destructs
+                        && blow.effects.iter().any(|effect| {
+                            matches!(
+                                effect,
+                                MeleeBlowEffectDefinition::Damage {
+                                    damage_dice: 8,
+                                    damage_sides: 8,
+                                    damage_type: effect_damage_type,
+                                    armor_mitigated: false,
+                                    ..
+                                } if *effect_damage_type == damage_type
+                            )
+                        })
+                })
+        );
+    }
 }
 
 #[test]
