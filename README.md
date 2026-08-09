@@ -1,646 +1,107 @@
 # RoguelikeFansBand Rewrite
 
-RoguelikeFansBand 的新一代重构工程。
+RoguelikeFansBand 的下一代重写版：以确定性的 Rust 规则核心为基础，通过 TypeScript、PixiJS 与 Tauri 2 提供桌面和 Android 客户端。
 
-本仓库不直接复制旧 C 工程，而是以稳定协议和行为测试为边界，逐步重新实现游戏核心与前端。
+项目不直接移植旧版 C 代码，而是先用协议、内容格式和精确行为契约固定规则，再逐步重建玩法。浏览器、PWA 与 WASM 不是目标运行环境。
 
-## 技术方向
+## 当前状态
 
-- Rust：游戏规则、数据模型、随机数、存档、AI 与原生核心
-- TypeScript + Vite：Tauri WebView 界面和开发工具
-- PixiJS：地图、tileset、光照与动画渲染
-- Tauri 2 IPC：TypeScript UI 与原生 Rust 核心通信
-- Tauri 2：Windows、Linux、macOS 和 Android 封装
-- Fluent：英文/简体中文本地化
+- 已贯通荒野、城镇、地下城、物品与怪物的可玩垂直切片。
+- 协议版本 `1.147`，State Hash Schema `v70`。
+- 行为基线 `contract-v204`，共 470 个 exact fixture，零豁免。
+- 演示内容包 `1.200.0`：86 种地形、235 种角色、204 种物品、114 个能力。
 
-当前不以浏览器/PWA 为发布目标，也不维护 WASM 核心。UI 通过 `CoreTransport` 连接 `TauriNativeTransport`；未来如确有网页需求，再单独增加 WASM 适配器。
+内容包的精确版本与哈希以 [`pack.json`](packs/rfb-demo-original/pack.json) 和 [`content.lock.json`](packs/rfb-demo-original/content.lock.json) 为准。
 
-## 设计文档
+## 快速开始
 
-- [Phase 18：Outpost 补给循环](design/phase-18-outpost-supply-loop.md)
-- [Phase 17：完整玩家旅程纵向切片](design/release-vertical-slice.md)
-- [Rust/Tauri 重构计划](design/html-rewrite-plan.md)
-- [旧版行为基准与差分测试](design/legacy-behavior-baseline.md)
-- [Contract 基准更新与差异豁免政策](design/baseline-update-policy.md)
-- [Contract v2 内容运行时迁移](design/contract-v2-content-migration.md)
-- [Contract v3 背包权威状态迁移](design/contract-v3-inventory-migration.md)
-- [Contract v4 装备与批量丢弃迁移](design/contract-v4-equipment-migration.md)
-- [Contract v5 装备属性与物品实例迁移](design/contract-v5-item-instance-migration.md)
-- [Contract v6 基础战斗属性迁移](design/contract-v6-combat-stats-migration.md)
-- [Contract v7：RFB 风格基础近战闭环](design/contract-v7-rfb-melee-migration.md)
-- [Contract v8：行动能量、速度与怪物追踪](design/contract-v8-action-energy-tracking.md)
-- [Contract v9：状态、抗性与效果管线](design/contract-v9-status-resistance-effects.md)
-- [Contract v10：流血与内容驱动元素近战](design/contract-v10-bleeding-elemental-melee.md)
-- [Contract v11：结构化伤害事件、派生属性与检定底座](design/contract-v11-structured-damage-events.md)
-- [Contract v12：武器 AttackProfile 与玩家多段近战](design/contract-v12-weapon-attack-profile.md)
-- [Contract v13：怪物 MeleeRoutine 与稳定 blow 顺序](design/contract-v13-monster-melee-routines.md)
-- [Contract v14：权威 projectile 与发射器基础](design/contract-v14-projectile-foundation.md)
-- [Contract v15：弹药事务与投掷落点](design/contract-v15-ammunition-throwing.md)
-- [Contract v16：核心目标选择与非八方向轨迹](design/contract-v16-target-selection.md)
-- [Contract v17：弹药破损与落地回收](design/contract-v17-ammunition-recovery.md)
-- [Contract v18：重量射程与投掷攻击](design/contract-v18-thrown-attacks.md)
-- [Contract v19：携带重量与拾取容量](design/contract-v19-inventory-capacity.md)
-- [Contract v20：物品知识与未知名称投影](design/contract-v20-item-knowledge.md)
-- [Contract v21：消耗品 UseAction 与可观察鉴定](design/contract-v21-consumable-use-action.md)
-- [Contract v22：实例词条与知识投影](design/contract-v22-instance-affix-knowledge.md)
-- [Contract v23：物品鉴别与完整识别](design/contract-v23-item-appraisal.md)
-- [Contract v24：确定性战利品生成](design/contract-v24-deterministic-loot-generation.md)
-- [Contract v25：怪物携带物与统一死亡掉落事务](design/contract-v25-monster-carried-items.md)
-- [Contract v26：楼层生命周期与确定性程序化楼层](design/contract-v26-floor-lifecycle.md)
-- [Contract v27：程序化房间怪物与地面掉落分配](design/contract-v27-procedural-room-content.md)
-- [Contract v28：门地形状态与方向性交互](design/contract-v28-door-terrain-state.md)
-- [Contract v29：锁门、开锁检定与破门](design/contract-v29-locked-door-checks.md)
-- [Contract v30：权威相邻地形交互查询](design/contract-v30-authoritative-terrain-interactions.md)
-- [Contract v31：秘密门、搜索与地形知识](design/contract-v31-secret-door-search.md)
-- [Contract v32：隐藏陷阱、触发与解除](design/contract-v32-hidden-traps-disarm.md)
-- [Contract v33：挖掘与可破坏地形](design/contract-v33-diggable-terrain.md)
-- [Contract v34：多深度楼层连接](design/contract-v34-multi-depth-floors.md)
-- [Contract v35：地牢探索实例生命周期](design/contract-v35-dungeon-expedition-lifecycle.md)
-- [Contract v36：一次性任务层](design/contract-v36-one-shot-task-floor.md)
-- [Contract v37：任务目标与完成/失败](design/contract-v37-task-objective-resolution.md)
-- [Contract v38：任务奖励与任务日志](design/contract-v38-task-reward-journal.md)
-- [Contract v39：击杀目标与任务进度](design/contract-v39-kill-objective-progress.md)
-- [Contract v40：任务放弃与退出限制](design/contract-v40-task-abandon-exit-policy.md)
-- [Contract v41：数量击杀与持久进度](design/contract-v41-counted-kill-progress.md)
-- [Contract v42：可重接任务](design/contract-v42-retakeable-task.md)
-- [Contract v43：独立任务 ID 与共享任务范围](design/contract-v43-shared-task-id.md)
-- [Contract v44：权威任务状态机与领域事件订阅](design/contract-v44-task-state-machine.md)
-- [Contract v45：有序多阶段任务目标](design/contract-v45-ordered-task-stages.md)
-- [Contract v46：多深度最终层与持久守护者](design/contract-v46-final-floor-guardian.md)
-- [Contract v47：深度主题 Vault 与群体遭遇](design/contract-v47-themed-vault.md)
-- [Contract v48：楼层生成表、加权 Vault 与巢穴](design/contract-v48-floor-generation-tables.md)
-- [Contract v49：预算化十层压力地牢](design/contract-v49-budgeted-pressure-dungeon.md)
-- [Contract v50：Vault 空间变换与确定性多模板落位](design/contract-v50-spatial-vault-placement.md)
-- [Contract v51：动态 friends/escort 群体与 formation](design/contract-v51-dynamic-encounter-groups.md)
-- [Contract v52：程序化特殊地形表与空间预算](design/contract-v52-terrain-feature-budgets.md)
-- [Contract v53：分阶段洞穴地貌与房间几何预算](design/contract-v53-staged-cavern-layout.md)
-- [Contract v54：湖泊与河流水文阶段](design/contract-v54-lake-river-hydrology.md)
-- [Contract v55：迷宫、毁坏区与岩脉阶段](design/contract-v55-maze-destroyed-streamers.md)
-- [Contract v56：原版式怪物 Pit 与等级阵列](design/contract-v56-classic-monster-pit.md)
-- [Contract v57：Maze-only 专用楼层模式](design/contract-v57-maze-only-floor.md)
-- [Contract v58：权威楼层连接与 shaft](design/contract-v58-floor-connections.md)
-- [Contract v59：持久 pack identity 与首版 pack AI](design/contract-v59-pack-ai.md)
-- [Contract v60：同层多区域主题](design/contract-v60-regional-themes.md)
-- [Contract v61：暂停任务管理与确定性重接](design/contract-v61-retake-management.md)
-- [Contract v62：区域组合生成](design/contract-v62-regional-composition.md)
-- [Contract v63：树状地牢与共享守护者镜像](design/contract-v63-dungeon-tree-guardian-mirrors.md)
-- [Contract v64：多入口 Vault 与连通拼接](design/contract-v64-multi-entry-vault-connectivity.md)
-- [Contract v65：地牢实例身份与生命周期](design/contract-v65-dungeon-instance-identity.md)
-- [Contract v66：动态楼梯目标与探索树](design/contract-v66-dynamic-exploration-tree.md)
-- [Contract v67：地牢入口守卫与可选进入条件](design/contract-v67-dungeon-entrance-guardians.md)
-- [Contract v68：胜利、退休与角色评分](design/contract-v68-victory-retirement-scoring.md)
-- [Contract v69：可配置地牢实例生命周期](design/contract-v69-configurable-instance-lifecycle.md)
-- [Contract v70：RFB 角色成长基础](design/contract-v70-rfb-character-progression.md)
-- [Contract v71：RFB 角色构筑、种族职业与技能集合](design/contract-v71-rfb-character-builds.md)
-- [Contract v72：可观察技能检定](design/contract-v72-observable-skill-checks.md)
-- [Contract v73：法术资源与能力书基础](design/contract-v73-ability-books.md)
-- [Contract v74：法术资源恢复与自身治疗](design/contract-v74-resource-recovery-and-healing.md)
-- [Contract v75：能力熟练度与冷却](design/contract-v75-ability-proficiency-and-cooldowns.md)
-- [Contract v76：学习容量与主动遗忘](design/contract-v76-learning-capacity-and-forgetting.md)
-- [Contract v77：RFB 式范围爆发伤害](design/contract-v77-area-damage.md)
-- [Contract v78：RFB 式方向射线伤害](design/contract-v78-beam-damage.md)
-- [Contract v79：RFB 式锥形能力伤害](design/contract-v79-cone-damage.md)
-- [Contract v80：RFB 式定点延长射线](design/contract-v80-targeted-beam-extension.md)
-- [Contract v81：首个短距位移能力](design/contract-v81-teleport-ability.md)
-- [Contract v82：首个召唤能力](design/contract-v82-summon-ability.md)
-- [Contract v83：首个侦测能力](design/contract-v83-detection-ability.md)
-- [Contract v84：首个地形改变能力](design/contract-v84-terrain-transform-ability.md)
-- [Contract v85：状态能力与有序多效果](design/contract-v85-ordered-status-effects.md)
-- [Contract v86：首个怪物施法与能力选择 AI](design/contract-v86-monster-casting-ai.md)
-- [Contract v87：怪物施法效用与目标扩展](design/contract-v87-monster-casting-utility.md)
-- [Contract v88：怪物目标、战术移动与施法记忆](design/contract-v88-monster-targets-tactics-memory.md)
-- [Contract v89：友方召唤物行动与首版命令](design/contract-v89-friendly-summon-commands.md)
-- [Contract v90：多职业资源底子与首个技法资源](design/contract-v90-technique-resources.md)
-- [Contract v91：怪物位移法术族](design/contract-v91-monster-displacement.md)
-- [Contract v92：新状态族（混乱/致盲/麻痹）](design/contract-v92-status-family.md)
-- [Contract v93：怪物直伤弹族（bolt/ball）与伤害平坦加值](design/contract-v93-monster-bolt-ball.md)
-- [Contract v94：怪物吐息族（breath）与 HP 比例伤害](design/contract-v94-breath-family.md)
-- [Contract v95：按类别召唤（summon-category）与召唤族导入](design/contract-v95-summon-category.md)
-- [伤害类型扩展 v1：RFB 原版元素表](design/damage-type-roster-v1.md)
-- [Contract v96：内容层抗性档与旧版抗性旗标导入](design/contract-v96-resistance-profiles.md)
-- [Contract v97：心灵族（psi 伤害 + 状态骑手组合）](design/contract-v97-psionic-family.md)
-- [Contract v98：诅咒族（curse-damage）与首个法术豁免门](design/contract-v98-curse-family.md)
-- [Contract v99：小型效果杂项包（推离/吸取资源/失忆/驱散）](design/contract-v99-misc-effects.md)
-- [Contract v100：身体/槽位模板（双戒指/光源槽/槽实例化）](design/contract-v100-body-slots.md)
-- [Contract v101：装备/内在旗标系统·防御面（抗性/免疫/速度）](design/contract-v101-defensive-flags.md)
-- [Contract v102：装备旗标系统·进攻面（斩杀/击杀/品牌）](design/contract-v102-offensive-flags.md)
-- [Contract v103：动态 affix 实例与装备被动属性](design/contract-v103-dynamic-affixes.md)
-- [Contract v104：玩家等级效果缩放与 Death 第一册](design/contract-v104-death-first-book.md)
-- [Contract v105：Death 第二册与尸体/灭绝系统](design/contract-v105-death-second-book.md)
-- [Contract v106：Death 第三册与随机效果/吸血武器](design/contract-v106-death-third-book.md)
-- [Contract v107：Death 第四册与生命/形态高级效果](design/contract-v107-death-fourth-book.md)
-- [Contract v108：充能物品实例与首批治疗消耗品](design/contract-v108-charged-items.md)
-- [Contract v109：动态设备身份与首批 staff/wand/rod 激活](design/contract-v109-dynamic-devices.md)
-- [Contract v110：设备自然恢复与主动充能](design/contract-v110-device-recharge.md)
-- [Contract v111：有序恢复型消耗品效果](design/contract-v111-restorative-items.md)
-- [Contract v112：卷轴效果重分类与首批鉴定事务](design/contract-v112-scroll-identification.md)
-- [Contract v113：地图与侦测卷轴](design/contract-v113-scroll-detection.md)
-- [Contract v114：卷轴传送、跨层与召回](design/contract-v114-scroll-travel-recall.md)
-- [Contract v115：装备附魔卷轴与实例强化](design/contract-v115-scroll-enchantment.md)
-- [Contract v116：装备诅咒与解除卷轴](design/contract-v116-scroll-curses.md)
-- [Contract v117：怪物、亡灵、宠物与同族召唤卷轴](design/contract-v117-scroll-summoning.md)
-- [Contract v118：收缩无消费者的装备 passive 表面](design/contract-v118-passive-surface-cleanup.md)
-- [Contract v119：可见目标驱散与放逐卷轴](design/contract-v119-scroll-visible-actor-effects.md)
-- [Contract v120：祝福卷轴族](design/contract-v120-scroll-blessing.md)
-- [Contract v121：相邻陷阱与门破坏卷轴](design/contract-v121-scroll-trap-door-destruction.md)
-- [Contract v122：火焰与寒冰卷轴](design/contract-v122-scroll-elemental-blasts.md)
-- [Contract v123：Mana 卷轴](design/contract-v123-scroll-mana.md)
-- [Contract v124：激怒怪物卷轴](design/contract-v124-scroll-aggravation.md)
-- [Contract v125：Mass Genocide 卷轴](design/contract-v125-scroll-mass-genocide.md)
-- [Contract v126：相邻树木与石墙创建卷轴](design/contract-v126-scroll-adjacent-terrain-creation.md)
-- [Contract v127：Vengeance 卷轴](design/contract-v127-scroll-vengeance.md)
-- [Contract v128：Monster Confusion 卷轴](design/contract-v128-scroll-monster-confusion.md)
-- [Contract v129：Protection from Evil 卷轴](design/contract-v129-scroll-protection-from-evil.md)
-- [Contract v130：Genocide 卷轴](design/contract-v130-scroll-genocide.md)
-- [Contract v131：Recharging 卷轴](design/contract-v131-scroll-recharging.md)
-- [Contract v132：Spell 卷轴](design/contract-v132-scroll-spell.md)
-- [Contract v133：Slowness 药水](design/contract-v133-potion-slowness.md)
-- [Contract v134：Death 药水](design/contract-v134-potion-death.md)
-- [Contract v135：Poison 药水](design/contract-v135-potion-poison.md)
-- [Contract v136：Thermal 药水](design/contract-v136-potion-thermal-resistance.md)
-- [Contract v137：Resistance 药水](design/contract-v137-potion-basic-resistance.md)
-- [Contract v138：Speed 药水](design/contract-v138-potion-speed.md)
-- [Contract v146：属性损伤与恢复](design/contract-v146-attribute-drain-restoration.md)
-- [Contract v147：P96 属性事务修正与 Sustain](design/contract-v147-p96-attribute-corrections.md)
-- [Contract v148：P97 属性永久增长药水](design/contract-v148-potion-attribute-increase.md)
-- [Contract v149：P98 组合恢复消耗品](design/contract-v149-restoration-combinations.md)
-- [Contract v150：Warrens 首个玩家流程](design/contract-v150-warrens-journey.md)
-- [Contract v151：RFB Warrior 与地牢状态面板](design/contract-v151-warrior-and-dungeon-status.md)
-- [Contract v152：玩家结果与恢复流程](design/contract-v152-player-results-and-recovery.md)
-- [Contract v153：Warrens 随机地图生成](design/contract-v153-warrens-map-generation.md)
-- [Contract v154：Warrens 地表与入口交互](design/contract-v154-warrens-surface-entry.md)
-- [Contract v155：Warrens 生成密度](design/contract-v155-warrens-generation-density.md)
-- [Contract v156：Warrens 楼层与怪物掉落](design/contract-v156-warrens-loot.md)
-- [Contract v157：金币来源与玩家钱包](design/contract-v157-gold-wallet.md)
-- [Contract v158：食物与饥饿](design/contract-v158-food-hunger.md)
-- [Contract v159：燃料与地牢光照](design/contract-v159-fuel-light.md)
-- [Contract v160：Outpost 内容模型](design/contract-v160-outpost-content.md)
-- [Contract v161：General Store 权威交易](design/contract-v161-general-store-transactions.md)
-- [Contract v162：Outpost 三入口补给院](design/contract-v162-outpost-supply-court.md)
-- [Contract v163：围墙 Outpost 与魔法店](design/contract-v163-walled-outpost-magic-shop.md)
-- [Contract v164：护甲店与武器店](design/contract-v164-outpost-armoury-weaponsmith.md)
-- [Contract v165：书店](design/contract-v165-outpost-bookstore.md)
-- [Contract v166：Outpost Home](design/contract-v166-outpost-home.md)
-- [Contract v167：Outpost Black Market](design/contract-v167-outpost-black-market.md)
-- [Contract v194：Warrens P10 移动域、隐形与地表分配](design/contract-v194-warrens-content-p10-movement-visibility-habitats.md)
-- [Contract v195：Warrens P11 低复用专用机制](design/contract-v195-warrens-content-p11-special-mechanics.md)
-- [Contract v196：Warrens P12 特殊生命周期收口](design/contract-v196-warrens-content-p12-special-lifecycles.md)
-- [Contract v197：Warrens P13 浅层直接收割](design/contract-v197-warrens-content-p13-shallow-harvest.md)
-- [Contract v198：Warrens P14 解除附魔之眼](design/contract-v198-warrens-content-p14-disenchanter-eye.md)
-- [Contract v199：Warrens P15 黑暗机制收口](design/contract-v199-warrens-content-p15-darkness.md)
-- [Contract v200：Warrens P16 十级怪物直接收割](design/contract-v200-warrens-content-p16-level-10-harvest.md)
-- [Contract v201：Warrens P17 十级施法怪物](design/contract-v201-warrens-content-p17-level-10-casters.md)
-- [Contract v202：Warrens P18 伪龙](design/contract-v202-warrens-content-p18-pseudo-dragon.md)
-- [Contract v203：Warrens P19 十一级低风险怪物](design/contract-v203-warrens-content-p19-level-11-low-risk.md)
-- [荒野世界地图 W0：权威数据导入](design/wilderness-w0-authoritative-data.md)
-- [荒野世界地图 W1：权威状态与显示](design/wilderness-w1-map-state-display.md)
-- [荒野世界地图 W2：世界旅行与局部荒野](design/wilderness-w2-travel-local-generation.md)
-- [荒野世界地图 W3：昼夜与伏击](design/wilderness-w3-day-night-ambush.md)
-- [荒野世界地图 W4：Outpost/Warrens 地点闭环](design/wilderness-w4-location-loop.md)
-- [荒野世界地图 W5：原版扩展机制](design/wilderness-w5-original-extensions.md)
-- [旧版物品导入 v2（k_info / e_info / a_info）](design/legacy-item-import-v2.md)
-- [旧版内容导入优先级规划 v1](design/legacy-import-priority-v1.md)
-- [旧版角色内容导入 v1（b_info / 种族 / 性格）](design/legacy-character-import-v1.md)
-- [旧版职业与施法档案导入 v1（class / m_info / s_info）](design/legacy-class-import-v1.md)
-- [旧版玩家领域法术导入 v1（Death 四册）](design/legacy-player-spell-import-v1.md)
-- [旧版内容导入管线 v1](design/legacy-content-import-v1.md)
-- [前端目标模式 v1](design/frontend-targeting-v1.md)
-- [RFB 全系统梳理与重构实现路线](design/rfb-system-implementation-roadmap.md)
-- [待实现内容清单](design/pending-implementation.md)
-- [核心协议 v1](design/protocol-v1.md)
-- [确定性模拟、随机数与回放](design/deterministic-simulation.md)
-- [内容数据格式 v1](design/content-format-v1.md)
-- [Tileset manifest 与资源回退 v1](design/tileset-format-v1.md)
-- [新存档格式 v1](design/save-format-v1.md)
-- [桌面原生存档与诊断 v1](design/desktop-native-storage-v1.md)
-- [桌面崩溃诊断闭环 v1](design/crash-diagnostics-v1.md)
-- [授权、版权与素材迁移审计](design/licensing-and-assets.md)
-- [本地化与中文文本重构计划](design/localization-rewrite-plan.md)
-- [Fluent 本地化运行时 v1](design/fluent-localization-v1.md)
-- [桌面分层 RendererBackend v1](design/renderer-backend-v1.md)
-- [Rust 权威可见性与光照 v1](design/visibility-lighting-v1.md)
-- [静态地形 Chunk 渲染 v1](design/terrain-chunk-rendering-v1.md)
-
-当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v204`，共 470 条 exact fixtures、零 waiver，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
-
-fixture 使用受控的主分类。日常开发只验证或刷新受影响分类；普通 `cargo test -p rfb-contract` 只做快速的 schema、分类、ID 唯一性和契约单元测试，不回放全部场景：
+需要 Rust 工具链、Node.js 与 npm，以及当前平台所需的 Tauri 依赖。
 
 ```powershell
-cargo run -p rfb-contract -- list-categories tests/fixtures/active/baseline-policy.json
-cargo run -p rfb-contract -- verify-category tests/fixtures/active/baseline-policy.json inventory equipment
-cargo run -p rfb-contract -- refresh-category tests/fixtures/active/baseline-policy.json inventory equipment
+cd web
+npm ci
+npm run dev
 ```
 
-协议投影、全局状态 hash 或共同内容生成发生变化时，才显式运行 `verify-all` / `refresh-all`。里程碑也可以运行 ignored 的完整回放测试：`cargo test -p rfb-contract --test contract_fixtures committed_contract_fixtures_pass -- --ignored`。
-
-确定性命令回放由 [`rfb-replay`](crates/rfb-replay) 提供：正式 `.rfbreplay` 使用带 SHA-256 校验的 MessagePack 容器，JSON 仅用于调试。
-
-## 原项目
-
-旧版 RFB 源码和当前可玩版本继续保留在：
-
-[UncleFvcker/RoguelikeFansBand-zh-CN](https://github.com/UncleFvcker/RoguelikeFansBand-zh-CN)
-
-旧项目在重构期间只作为规则行为、平台表现和旧存档格式的本地参考实现。
-
-旧版内容不会复制进本仓库或新游戏发行包。新规则与内容的权威原版是本地 `D:/codex/Frogcomposband/master` 仓库的 `master` Git 引用；工具通过 `RFB_LEGACY_SOURCE` 只读访问该仓库的 Git 对象，不读取当前检出分支或工作树文件。历史 contract 与旧存档 fixture 中明确记录的旧提交仍保持原有基准。默认开发路径见 [`.env.example`](.env.example)。
-
-## 许可证
-
-- 原创 Rust/TypeScript 代码、工具、测试和 Schema：`MPL-2.0`；
-- 原创文档、游戏数据和美术素材：`CC BY-SA 4.0`；
-- 第三方内容：保留各自许可证；
-- 旧 RFB/FrogComposband/Angband 内容不在本仓库中，也不由上述许可证重新授权。
-
-完整适用范围见 [LICENSES/README.md](LICENSES/README.md) 和 [NOTICE](NOTICE)。
-
-## 当前阶段
-
-协议 1.49 / contract-v49 已建立楼层级 `actorSlots/lootPlacements` 总预算，并新增独立十层共鸣压力地牢：actor 上限由 2 增长至 10，loot placement 由 1 增长至 3，深度 4 切换第二主题 terrain，深度 10 生成 9 个普通遭遇和 1 个持久守护者。active baseline 共 99 个 exact fixtures，内容包为 1.42.0、terrain 37、actor 8、encounter table 2、loot table 5、theme table 2、vault 2；save v1 / state-hash Schema v19 不变。完整边界见 [Contract v49 说明](design/contract-v49-budgeted-pressure-dungeon.md)。
-
-协议 1.50 / contract-v50 已建立 Vault 八向旋转/镜像、边界入口、自由 wall 区落位、同层多 Vault 数量/面积预算、重叠拒绝和确定性失败回退。共鸣压力地牢深度 8 会跳过无法落位的 12×12 高权重模板，并在 9 actor/3 loot 总预算内放置两个小型 Vault。active baseline 共 100 个 exact fixtures，内容包为 1.43.0、terrain 37、actor 8、encounter table 2、loot table 5、theme table 2、vault 5；save v1 / state-hash Schema v19 不变。完整边界见 [Contract v50 说明](design/contract-v50-spatial-vault-placement.md)。
-
-协议 1.51 / contract-v51 已建立 encounter 动态 friends/escort、`cluster/ring` formation、群体数量/随从 actor 预算、空间压力缩减和原子回退。共鸣压力地牢深度 6/7 分别生成 ring 与 cluster 群体，并在 7/8 actor 总预算内由普通遭遇填满剩余槽位。active baseline 共 102 个 exact fixtures，内容包为 1.44.0、terrain 37、actor 10、encounter table 3、loot table 5、theme table 2、vault 5；save v1 / state-hash Schema v19 不变。完整边界见 [Contract v51 说明](design/contract-v51-dynamic-encounter-groups.md)。
-
-协议 1.52 / contract-v52 已建立独立 terrain feature 表、room/corridor 放置语义、深度加权选择、额外特殊地形预算、占位排斥与空间失败回退。共鸣压力地牢深度 3–10 会在固定拓扑门/陷阱之外放置 2–4 个 trap、rubble、locked/secret door。active baseline 共 104 个 exact fixtures，内容包为 1.45.0、terrain 37、actor 10、encounter table 3、loot table 5、theme table 2、terrain feature table 1、vault 5；save v1 / state-hash Schema v19 不变。完整边界见 [Contract v52 说明](design/contract-v52-terrain-feature-budgets.md)。
-
-协议 1.55 / contract-v55 已沿原版 `build_maze_vault()`、`destroy_level()` 与 `build_streamer()` 增加内容驱动的完美迷宫、多震中毁坏区和加权岩脉阶段。深度 9 生成 15×15、127 通路格的 maze 与 24 格 streamer；深度 10 生成 48 格 destroyed 区与 24 格 streamer，房间/隧道仍保证主链连通。active baseline 共 110 个 exact fixtures，内容包为 1.48.0、terrain 42、actor 10、encounter table 3、loot table 5、theme table 2、terrain feature table 1、vault 5；save v1 / state-hash Schema v19 不变。完整边界见 [Contract v55 说明](design/contract-v55-maze-destroyed-streamers.md)。
-
-协议 1.56 / contract-v56 已参考原版 `Monster Pit I` 与 `_init_formation()` 增加独立复合 pit 房间、单入口内室、专属加权怪物池和中心强化的等级阵列。深度 9 生成 11×11 外墙/环廊/内墙结构并以 25 个 actor 填满 5×5 内室；普通 encounter、loot 和 terrain feature 排除整个 pit footprint。active baseline 共 112 个 exact fixtures，内容包为 1.49.0、terrain 42、actor 10、encounter table 4、loot table 5、theme table 2、terrain feature table 1、vault 5；save v1 / state-hash Schema v19 不变。完整边界见 [Contract v56 说明](design/contract-v56-classic-monster-pit.md)。
-
-协议 1.57 / contract-v57 已参考原版 `DF1_MAZE` 独立生成分支建立 `maze-only` 专用楼层模式。深度 9 现在跳过普通房间与走廊，只保留 127 格连通 maze、远距上下楼锚点、路径陷阱、streamer 和区域化 encounter/loot；v56 pit 移到深度 10 并继续与最终守护者和晚期地貌共存。active baseline 共 114 个 exact fixtures，内容包为 1.50.0、content hash 为 `d209d68a6a39af21eee8d1a951684be86e847ab570823c9c2604fa199e4571e1`；save v1 / state-hash Schema v19 不变。完整边界见 [Contract v57 说明](design/contract-v57-maze-only-floor.md)。
-
-协议 1.58 / contract-v58 已建立稳定连接 ID、同层多座普通楼梯、独立到达点和跨两层 shaft。主 up/down 保留旧锚点，附加连接在 Vault 之后使用种子 RNG 从合法格随机落位；当前层与离层存档保存连接 ID→位置，v57 无连接列表的旧楼层继续走 legacy 标签回退。active baseline 共 117 个 exact fixtures，内容包为 1.51.0、content hash 为 `ee07c276bbe568fafc1e1d6942e9d57d158bd250ed452b32c01c774d8521e96d`；save 容器仍为 v1，state-hash 升至 Schema v20。完整边界见 [Contract v58 说明](design/contract-v58-floor-connections.md)。
-
-协议 1.60 / contract-v60 已增加独立 `regionTables`、楼层 `regionTableId/regionPlacements`、权重无放回区域选择、按房间中心归属的局部 terrain，以及区域限定的 encounter/loot。区域 ID、主题、局部表引用和完整格集合随当前层与离层持久化；v59 旧存档缺失区域时不补生成、不推进 RNG。active baseline 共 119 个 exact fixtures，内容包为 1.53.0、content hash 为 `9789fcbbd8431ed745d8a0305cc81a54cc7e45ce79be86ed76e0227d66564a02`；save 容器仍为 v1，state-hash 升至 Schema v22。完整边界见 [Contract v60 说明](design/contract-v60-regional-themes.md)。
-
-协议 1.61 / contract-v61 已为可重接任务增加 `maxRetakes` 与 `preserve-floor/regenerate-floor` 策略，成功恢复次数进入权威任务状态；地表任务日志可按 `taskId` 永久放弃 paused 任务。重建会保留阶段与进度，只生成剩余计数目标；次数耗尽的入口拒绝不改变 RNG。active baseline 共 121 个 exact fixtures，内容包为 1.54.0、content hash 为 `56fc449617a4c05c12ff11716c14b4f5c680cada9ad86c6ece736b52fa904bc2`；save 容器仍为 v1，state-hash 升至 Schema v23。完整边界见 [Contract v61 说明](design/contract-v61-retake-management.md)。
-
-协议 1.62 / contract-v62 已解除区域楼层与全层 theme/Vault、dynamic formation、terrain feature、pit、guardian、显式连接和 cavern/lake/river/destroyed/streamer 的阶段隔离。特殊 footprint 归入单一宿主区域，普通 actor/loot 按实际可行走容量分配，区域怪物寻路保持在持久边界内；demo 在 echo depth 2 和 resonance depth 6/7/8/10 覆盖各组合。active baseline 共 125 个 exact fixtures，内容包为 1.55.0、content hash 为 `9d25687c1296bc6f9953024bd76bb9eefc4c1e3955280b96d34d565ff7ca289d`；save v1 / state-hash Schema v23 不变。完整边界见 [Contract v62 说明](design/contract-v62-regional-composition.md)。
-
-协议 1.63 / contract-v63 已增加独立 dungeon 定义、单根楼层树、唯一父边、多个程序化最终叶层和共享守护者镜像。回声地牢的普通楼梯与 shaft 现在进入不同子层；击败任一镜像只结算一次征服，并确定性移除其他已生成镜像。active baseline 共 127 个 exact fixtures，内容包为 1.56.0、content hash 为 `246f51864965fac494c7a39959f591caa0434d9fa4eac839501f9d09526eb617`；save v1 / state-hash Schema v23 不变。完整边界见 [Contract v63 说明](design/contract-v63-dungeon-tree-guardian-mirrors.md)。
-
-协议 1.64 / contract-v64 已把 Vault 入口升级为 1–8 个唯一边界位置，并在加载时证明模板内部可通行格连通；落位时每个入口使用固定方向、最多 12 格的 BFS connector 接入既有走廊，只有整层连通证明通过才原子提交。demo 新增 8×8 四入口 Crossroads，与不可落位 Monolith 一同覆盖加权选择和稳定回退。active baseline 共 129 个 exact fixtures，内容包为 1.57.0、content hash 为 `9f3e3d5dee1e8777179179259380990b9253aa7f195f08cd29cbbd58562793df`；save v1 / state-hash Schema v23 不变。完整边界见 [Contract v64 说明](design/contract-v64-multi-entry-vault-connectivity.md)。
-
-协议 1.65 / contract-v65 已增加显式 dungeon instance identity。每座地牢按稳定序号分配 <dungeonId>.instance.N，当前层、离层 floor 与存档都携带实例 ID；仓库键使用实例+floor，返回地表只清理当前实例，不再误删其他 dungeon 或任务楼层。v64 存档缺失字段时确定性迁移为首实例，不重建地图或推进 RNG。active baseline 共 131 个 exact fixtures，内容包仍为 1.57.0、content hash 为 9f3e3d5dee1e8777179179259380990b9253aa7f195f08cd29cbbd58562793df；save v1 / state-hash 升至 Schema v24。完整边界见 [Contract v65 说明](design/contract-v65-dungeon-instance-identity.md)。
-
-协议 1.66 / contract-v66 已增加动态楼梯目标与实例级探索树解析。连接可声明多个加权候选，同层按稳定连接 ID 无放回选择不同目标 floor；解析后的 target floor/connection 随楼层存档，目标 arrival connection 在首次到达时原子修正，v65 旧存档缺字段时固定目标回退且不推进 RNG。普通 dungeon 回到地表仍立即清空，下一次进入重新生成。active baseline 共 132 个 exact fixtures，内容包为 1.58.0、content hash 为 `834acbe3d025810eb1399db74689d35a4d3dae34862bcbf1271c8d20ad11d9fc`；save v1 / state-hash 升至 Schema v25。完整边界见 [Contract v66 说明](design/contract-v66-dynamic-exploration-tree.md)。
-
-协议 1.67 / contract-v67 已增加原版式 dungeon 入口守卫和原创内容可选硬进入条件。入口守卫使用 `GuardPosition` 固守入口附近、仍可相邻攻击，但不会阻止楼梯交互，玩家可以绕过直接进入；击败状态随 dungeon 持久化。任务状态、前置 dungeon 征服和携带物条件在实例序号与 RNG 消耗前原子检查，demo 原版 dungeon 默认不配置这些硬条件。普通 dungeon 回到地表仍立即清空，下一次进入重新生成。完整边界见 [Contract v67 说明](design/contract-v67-dungeon-entrance-guardians.md)。
-
-协议 1.68 / contract-v68 已建立 campaign 胜利、退休结算与内容驱动角色评分。Resonance 是 demo 唯一 campaign victory dungeon；Echo 守护者可被征服但不会提前结束战役。击败所有 victory dungeon 的最终守护者后发布 `CampaignVictorious`，玩家回到地表后可执行 `Retire`，结算后状态冻结且拒绝继续命令。评分为征服地牢、完成任务和胜利奖励之和，再扣除按回合间隔计算的惩罚，最低为 0。内容包升至 1.60.0，content hash 为 `1614fadbf4cd1d3ee03fc011eac069de3a1b8c23ec65b6f09e210f20008dbc4c`，active baseline 共 137 个 exact fixtures，save v1 / state-hash 升至 Schema v27。完整边界见 [Contract v68 说明](design/contract-v68-victory-retirement-scoring.md)。
-
-协议 1.69 / contract-v69 已建立内容驱动的 dungeon `instanceLifecycle`：默认 `reset-on-surface`、`persistent` 和带惰性淘汰的 `turn-ttl`。新增 Archive Depths 作为 3 回合 TTL 示例；返回地表可保存一个 retained instance，下次进入续接同一实例，过期后确定性分配下一个实例序号并清理已淘汰实例的物品属性知识。协议 DTO 增加可选 `retainedInstanceId`/`retainedAtTurn`，state hash 升至 Schema v28；v68 及更早存档缺失字段时按默认清理迁移。内容包升至 1.61.0，content hash 为 `06c054a8c083e05b9d0396aa1076fbe2133a6a1ce5f6c32f101e5d1dabd14b70`，active baseline 共 140 个 exact fixtures，零 waiver。普通 Echo/Resonance 仍返回地表即清空。完整边界见 [Contract v69 说明](design/contract-v69-configurable-instance-lifecycle.md)。
-
-协议 1.70 / contract-v70 已建立 RFB 角色成长基础：击杀经验沿用 1–50 级阈值，未征服最终地牢时等级封顶 50 且超过阈值的经验保留；胜利后自动释放封顶经验并解锁等级 100 与 `18/820` 属性桶。玩家保存独立的六维自然属性、出生时确定性生成的 100 级 HP 序列、待分配属性点和装备有效属性修正；新增 `IncreaseAttribute` 命令与自然/有效属性 DTO，旧存档缺少 progress 时按固定迁移规则恢复。state hash 升至 Schema v29；内容包为 1.62.0，content hash 为 `ad6b35c6e0ae8980a74fac51ea1e6597b09559541d4a85d598284dc2cb41d7e6`，active baseline 共 148 个 exact fixtures，零 waiver。普通 Echo/Resonance 仍返回地表即清空，Archive 继续覆盖 retained/TTL。完整边界见 [Contract v70 说明](design/contract-v70-rfb-character-progression.md)。
-
-协议 1.71 / contract-v71 在 v70 之上建立 RFB 角色构筑基础：内容包新增独立 `skills`、`skillSets`、`races`、`classes`、`personalities`、`builds` 根；`PlayerDto`/save 暴露构筑身份与技能聚合，Race/Class/Personality 的属性、生命/经验倍率和出生装备进入现有派生管线。demo 内容包升至 1.63.0，content hash 为 `1c94890a0f39d42a4b496a7222b8c9d191f24fe94b3c9d47d4a1eeea5364c5b4`；state hash 升至 Schema v30，active baseline 共 152 个 exact fixtures，零 waiver。v70 缺少构筑/技能字段的存档按默认 Explorer 迁移，不推进 RNG；四个代表性构筑 fixture 覆盖出生身份、技能、装备和 save round-trip。完整边界见 [Contract v71 说明](design/contract-v71-rfb-character-builds.md)。
-
-协议 1.72 / contract-v72 已把 `device`、`saving-throw`、`stealth` 和 `perception` 接入权威检定与结构化事件。装置失败不消费物品，陷阱豁免可抵消伤害，成功移动会被动发现邻近隐藏 terrain，未警戒怪物按范围与视线检定玩家潜行；actor 警戒状态进入快照、存档和 state hash Schema v31。内容包升至 1.64.0，新增 Resonance Stabilizer、Resonance Ward、隐藏 Echo Rune 和 Echo Listener，content hash 为 `3188f4cf0937f44292980e8ca8fffc1db9c310e961af4502bd9380124e53d54a`；active baseline 共 160 个 exact fixtures、零 waiver。八个新 fixture 以相同 seed 对照 Tinkerer/Vanguard 的成功失败，并覆盖 `alerted` round-trip。完整边界见 [Contract v72 说明](design/contract-v72-observable-skill-checks.md)。
-
-协议 1.73 / contract-v73 已建立首个能力书施法闭环：内容包新增独立 resource、ability 与 ability-book 根，Mage 以 Intelligence 计算 Mana 上限和失败率，Scholar 出生携带 Echo Primer，可学习并施放 Resonant Bolt。资源在失败检定前扣除，失败仍耗 Mana；资源不足、未学习或缺少书本会结构化拒绝且不推进施法 RNG。资源池、已学能力、施法 outcome、存档迁移和 Web 能力面板进入 state hash Schema v32。内容包升至 1.65.0，content hash 为 `fa88458239f225a5033e5910c64ba30f8e1e4095fc82b1ebce6a5c914e05ad2d`；该历史基准共 166 个 exact fixtures、零 waiver。完整边界见 [Contract v73 说明](design/contract-v73-ability-books.md)。
-
-协议 1.74 / contract-v74 已补齐首轮资源恢复与非伤害能力：Mana 在等待后恢复 1，`Rest { turns }` 每个实际休息回合恢复 3 并真实推进调度器；满资源、可见敌人、受伤与死亡都有结构化停止原因。协议新增稳定 `self` 目标、`heal` 能力效果、资源恢复与休息 outcome；Stillwater Notes 让 Scholar 学习 Mending Echo，以 4 Mana 治疗自身 6 点生命。Web 显示恢复速率、提供休息按钮，并直接提交自身目标。完整历史边界见 [Contract v74 说明](design/contract-v74-resource-recovery-and-healing.md)。
-
-协议 1.75 / contract-v75 在此基础上加入参考 RFB 原版的五档能力熟练度、Mana 成本曲线、Expert/Master 失败率修正、成功/失败统计、可选每能力/共享组冷却和存档迁移。能力进度进入 state hash Schema v34；普通能力默认无冷却，冷却拒绝不扣资源且不抽 RNG。内容包升至 1.67.0，content hash 为 `bcc23bf5834c37bf7fb0874bcb1dfc72c751efad36f76d94b07391100e976316`，active baseline 共 182 个 exact fixtures、零 waiver。完整边界见 [Contract v75 说明](design/contract-v75-ability-proficiency-and-cooldowns.md)。
-
-协议 1.76 / contract-v76 在 v75 之上加入独立学习容量、容量投影、主动 `ForgetAbility`、遗忘/重新学习事件和容量满零 RNG 拒绝。能力进度不因遗忘清除，重新学习恢复熟练度、统计与冷却；demo 内容包升至 1.68.0，新增 Harmonic Spark，content hash 为 `c16f6cf31b726461910fb09bc775b5b6d79af889fe0de046043f085e9593ad04`，active baseline 共 186 个 exact fixtures、零 waiver。state hash 仍为 Schema v34，save 容器仍为 v1。完整边界见 [Contract v76 说明](design/contract-v76-learning-capacity-and-forgetting.md)。
-
-协议 1.77 / contract-v77 在 v76 之上加入 RFB 式范围爆发伤害：定点目标穿过中途怪物、方向目标在首个怪物处停止，墙体阻断传播，爆发按原版整数距离由内向外稳定结算，并对每个 actor 复用既有抗性/击杀/掉落管线。无效目标在 Mana、施法 RNG 和熟练度前拒绝，空爆仍正常消耗资源并只投一次基础伤害骰；demo 内容包升至 1.69.0，新增 Echo Burst，content hash 为 `acecaf504ebc3affaf67fbd8400016d85a8f4fd6b70fb7de3f1626887e5c6d62`，active baseline 共 190 个 exact fixtures、零 waiver。state hash 仍为 Schema v34，save 容器仍为 v1。完整边界见 [Contract v77 说明](design/contract-v77-area-damage.md)。
-
-协议 1.78 / contract-v78 在 v77 之上加入 RFB `fire_beam()` 式方向射线：射线穿过 actor、被墙体/边界截断，按近到远稳定顺序复用既有抗性、击杀、经验、掉落和任务管线，并且每次射线只投一次基础伤害骰。方向以外的目标模式在资源/RNG 前拒绝，空射仍消耗资源并投一次伤害骰；demo 内容包升至 1.70.0，新增 Echo Lance，content hash 为 `6f5f545e3b2c9cab98b6cd33f328679228b643ae147f20739c982863eba47bea`，active baseline 共 194 个 exact fixtures、零 waiver。state hash 仍为 Schema v34，save 容器仍为 v1。完整边界见 [Contract v78 说明](design/contract-v78-beam-damage.md)。
-
-协议 1.79 / contract-v79 在 v78 之上加入 RFB 式固定八向锥形能力：中心线从相邻格开始逐层展开到配置半径，actor 不阻挡，墙体/边界截断，候选格按近到远、横向距离和坐标稳定排序，侧向目标复用既有整数衰减并共享一次基础伤害骰。无效目标模式在 Mana/RNG 前拒绝，空锥仍消耗资源并投一次伤害骰；demo 内容包升至 1.71.0，新增 Echo Fan，content hash 为 `817ccfc5924d6dd8d957fb1f2c97f191c08dd5c34aa1ff9dea265716d3236835`，active baseline 共 198 个 exact fixtures、零 waiver。state hash 仍为 Schema v34，save 容器仍为 v1。完整边界见 [Contract v79 说明](design/contract-v79-cone-damage.md)。
-
-协议 1.80 / contract-v80 在 v79 之上补齐 RFB `project_hook()` 的定点延长射线：Echo Lance 现在接受方向、格子和实体目标；定点/实体目标在可见且不超距时沿稳定整数斜率穿过目标继续推进到最大射程，actor 不阻挡，墙体/边界截断，所有命中共享一次基础伤害骰。自身、缺失、不可见和超距目标在 Mana/RNG 前拒绝，不新增存档字段；demo 内容包升至 1.72.0，content hash 为 `30c38e57bd9a9d22694e02da9c2b5f07b76af0a4009deb59bbbc605703f5a504`，active baseline 共 202 个 exact fixtures、零 waiver。state hash 仍为 Schema v34，save 容器仍为 v1。完整边界见 [Contract v80 说明](design/contract-v80-targeted-beam-extension.md)。
-
-协议 1.81 / contract-v81 在 v80 之上加入首个短距位移能力 Echo Step：teleport 效果只接受 position 目标，落点必须非当前格、在地图内、可见、满足 line of effect、可行走且无存活 actor 占据。所有落点拒绝在 Mana、施法 RNG 和熟练度前返回；成功后精确移动并复用普通移动的被动感知、陷阱触发和死亡处理，不增加误传送骰或存档字段；demo 内容包升至 1.73.0，content hash 为 `66e60826777d1bf79efb3eef6d718bcf3ed101e30c43d562fd122ff402eda95d`，active baseline 共 209 个 exact fixtures、零 waiver。state hash 仍为 Schema v34，save 容器仍为 v1。完整边界见 [Contract v81 说明](design/contract-v81-teleport-ability.md)。
-
-协议 1.82 / contract-v82 在 v81 之上加入首个内容驱动召唤能力 Echo Companion：`summon` 声明友方 actor、数量、半径和生命周期；核心按距离/坐标稳定选择空地，生成带所有者与源能力的稳定实例 ID。空间不足在 Mana、施法 RNG 和熟练度前原子拒绝，失败率失败仍消耗 Mana但不生成 actor；召唤物不进入敌对 AI 或可见敌人判断，并按玩家回合递减后发出到期移除事件。demo 内容包升至 1.74.0，content hash 为 `aab3548090030a1d2d46496581fb41a9f2892213186aeb2236a7a79065fc069f`，active baseline 共 213 个 exact fixtures、零 waiver。save 容器仍为 v1，state hash 升至 Schema v35。完整边界见 [Contract v82 说明](design/contract-v82-summon-ability.md)。
-
-协议 1.83 / contract-v83 在 v82 之上加入首个内容驱动侦测能力：Echo Pulse 返回 `perception-cue` 的瞬时位置，Echo Sight 把 `hidden` terrain 写入持久 `revealedTerrain`。侦测只扫描当前地图、半径和玩家 FOV 内尚未发现且具有隐藏投影的 terrain；结果按距离、`y`、`x` 稳定排序，墙后或视野外真值不会泄漏。空结果仍按正常施法支付 Mana、抽失败率并增加熟练度，非法目标和资源不足则在 RNG 前拒绝。demo 内容包升至 1.75.0，content hash 为 `8ac0aee6fe54abb2c97bbed3eedaaa510d32393126bd08f89d046d515a66213b`，active baseline 共 221 个 exact fixtures、零 waiver。save 容器仍为 v1，state hash 升至 Schema v36。完整边界见 [Contract v83 说明](design/contract-v83-detection-ability.md)。
-
-协议 1.84 / contract-v84 在 v83 之上加入内容驱动 `transform-terrain`：Echo Delving 参考原版 `GF_KILL_WALL` 把合法岩壁/瓦砾转为地面，Echo Rampart 参考 `GF_MAKE_WALL` 把未占用地面转为阻挡瓦砾。目标中心必须在射程、FOV 和 line of effect 内；候选按距离、`y`、`x` 稳定排序，并跳过玩家、存活 actor、地面物品、地图边界、floor connection 及楼梯/shaft/入口标签。候选在资源与失败率前完整收集，成功时一次提交；空结果仍正常施法，非法/超距目标和资源不足保持零 RNG，失败支付 Mana但不改地形。修改直接进入 `changedCells`、楼层存档和既有 terrain state hash，不做自动连通修复。demo 内容包升至 1.76.0，content hash 为 `6e3906fff5447c3b83630e85e6c789a0dc151d9e16e1faa484ed10dda41a3ee4`；该历史 baseline 共 231 个 exact fixtures、零 waiver，save v1 与 state hash Schema v36 保持不变。完整边界见 [Contract v84 说明](design/contract-v84-terrain-transform-ability.md)。
-
-协议 1.85 / contract-v85 在 v84 之上加入状态能力与有序多效果：旧单一 `effect` 内容保持兼容，新 `sequence` 允许 2–8 个同目标 actor 效果。Echo Quickening 依次添加 haste 并移除 slow；Echo Binding 先造成 cold damage，目标存活时再添加受 cold 抗性确定性缩时的 slow。效果按数组顺序结算，部分无效不回滚，免疫返回零持续时间；前序击杀后续效果标记 `target-dead`，空投影标记 `no-target`，二者都不抽取被跳过的伤害骰。协议通过 `AbilityDto.effects` 和 `ability.effects` 返回逐效果规格与结果。demo 内容包升至 1.77.0，content hash 为 `d056b65f8e2c61615e48badd8a6f02cd725007789535aa363448c8a0e8288bea`；该历史 baseline 共 242 个 exact fixtures、零 waiver，save v1 与 state hash Schema v36 保持不变。完整边界见 [Contract v85 说明](design/contract-v85-ordered-status-effects.md)。
-
-协议 1.86 / contract-v86 开始阶段 H 的怪物施法纵切。Monster actor 可声明百分比施法频率和有序加权能力集合；已警戒怪物先抽频率骰，再过滤射程、墙体和 clean-shot 友军阻挡，频率通过时才抽权重并复用既有伤害、状态、抗性、死亡与有序效果管线。频率失败或无可用法术时继续近战/移动。施法后按 `ceil(100 / frequencyPercent)` 增加自身行动冷却，因此 50% 为 2 行动、25% 为 4 行动；冷却行动不抽施法 RNG。demo 新增 Echo Cantor，内容包升至 1.78.0，content hash 为 `be6b9b098c495ee3f2af6075ea5790d16eae7e8487c1fa310575c0dad8cba5bd`；该历史 baseline 共 249 个 exact fixtures、零 waiver。怪物冷却进入 save/replay，state hash 升至 Schema v37。完整边界见 [Contract v86 说明](design/contract-v86-monster-casting-ai.md)。
-
-协议 1.87 / contract-v87 在同一选择层上加入纯效用调整和新目标执行器：健康或轻伤时剔除自疗，重伤按损失比例提高治疗权重，重复/免疫状态与无状态可移除以 `no-utility` 剔除，距离至少 3 格时提高对玩家施法权重。范围爆发、射线和锥形复用玩家侧几何并保守拒绝 footprint 内的次级实体；Call Discord 会生成由怪物施法者拥有、投影为 hostile、能够行动且可保存/回放的限时 Discordant Echo。协议返回每个候选的基础/有效权重、目标、footprint 与拒绝原因。内容包升至 1.79.0，content hash 为 `f9e9ccc93635da7f568a2cdd83f90024f86cd13d1d0ff43627f725dde4e3ecac`；active baseline 共 257 个 exact fixtures、零 waiver，save v1 / state hash Schema v37 不变。完整边界见 [Contract v87 说明](design/contract-v87-monster-casting-utility.md)。
-
-协议 1.88 / contract-v88 把玩家阵营召唤物纳入怪物法术、追踪和近战目标，并按距离、玩家优先级与稳定 ID 选择目标。多格法术显式返回敌我计数，无友军风险时按敌方命中数加权，并用一次基础伤害骰结算所有玩家阵营目标。Echo Cantor 在距离小于 3 时尝试拉开、25% 生命时撤退；聪明施法者只在效果实际作用于玩家后记录抗性，后续按已观察知识降权或剔除免疫候选。内容包升至 1.80.0，content hash 为 `29116f924e1ef4ddf6b0aa43f3b1b1bd0b4d28245ac086bce30d7a008e8e9e8e`；active baseline 共 265 个 exact fixtures、零 waiver，save v1 / state hash 升至 Schema v38。完整边界见 [Contract v88 说明](design/contract-v88-monster-targets-tactics-memory.md)。
-
-协议 1.89 / contract-v89 让玩家拥有的召唤物进入 actor 能量调度器，并提供 Follow、Attack、Keep Distance、Guard 四种零世界时间全局命令。召唤物复用自身近战和完整死亡事务，击杀经验、任务与掉落归属玩家；切层时仅 2 格内召唤物跟随并稳定落位，远处召唤物留在来源层。命令及 Guard 锚点进入 save/replay 和 state hash Schema v39；内容包保持 1.80.0 与同一 content hash。active baseline 共 272 个 exact fixtures、零 waiver。完整边界见 [Contract v89 说明](design/contract-v89-friendly-summon-commands.md)。
-
-协议 1.90 / contract-v90 建立多职业资源底子：资源定义新增初始填充、近战命中/击杀获得与闲置衰减字段，职业可声明多条 techniqueProfiles（独立上限公式、主宰属性、最低失败率与先天能力）。首个技法资源“节奏”由决斗家纵切承载：近战命中 +2、击杀 +3、闲置回合 -1，等待/休息不恢复；弦月斩与涌动节奏为先天技法，复用既有 cast/熟练度/冷却管线，资源不足拒绝不抽 RNG。旧存档资源池放宽为子集匹配，缺失的池按初始填充恢复且零 RNG。内容包升至 1.81.0，content hash 为 `43da90740e88ba63d9839c992a90b0fcc9c008a379919e2bc624a208978e6252`；active baseline 共 282 个 exact fixtures、零 waiver，save v1 / state hash 升至 Schema v40。完整边界见 [Contract v90 说明](design/contract-v90-technique-resources.md)。
-
-阶段 E 的楼层生命周期、房间内容分配、门、秘密地形、陷阱、挖掘、三层/十层地牢、动态树状分支、多个最终层、共享持久守护者、楼层生成表、actor/loot 总预算、深度与同层多区域主题、区域特殊阶段组合、Vault 多入口/空间落位/跨走廊拼接、巢穴、动态 friends/escort formation、持久 pack AI、程序化地貌、原版式 pit、maze-only、多楼梯、独立到达点、shaft、实例级探索生命周期、入口守卫/可选进入条件、campaign 胜利/退休评分和可配置实例生命周期已经建立。阶段 F 的角色成长、构筑与首轮技能消费已由 v72 固定；阶段 G 的玩家施法循环已由 v73–v85 固定；阶段 H 已由 v86–v89 建立怪物施法、效用权重、阵营目标、多格结算、敌对召唤、战术移动、有限抗性记忆和玩家召唤物命令/行动；v90 建立多职业资源底子与首个技法资源。普通 Echo/Resonance 仍返回地表即清空；原创 Archive 覆盖 retained/TTL。任务线也已补齐暂停任务的地表放弃、重接上限与确定性重建。运行时地形破坏直接写入权威地图，不触发自动连通修复；玩家可通过挖掘自行恢复通路。v92 建立混乱/致盲/麻痹新状态族与玩家侧效果。v93 为四种伤害效果补充平坦加值并映射旧版弹/球直伤两族（DETECT 系经源码核实为附身专用组、怪物不施放，已按不适用归档）。v94 建立吐息族：伤害 = 施法者当前 HP 百分比封顶上限、零伤害骰，锥形几何复用 v79 机制，导入器同轮补齐 FREQ_N 频率语法并把附身组 token 重分类为不适用。v95 建立按类别召唤：候选按 actor 标签 + 等级上限过滤、数量掷骰、逐只有界抽取 kind，落位/生命周期复用既有召唤机制；导入器把旧版类型旗标折算为标签并映射 S_ 族（S_KIN 用固定召唤映射为召唤同类）。伤害类型随后按 gf.h 原版元素表扩展到 28 类（协议 1.96，纯枚举扩展无契约迁移），导入器把近似映射转正并解锁全部异种元素弹/球/吐息。v96 建立内容层抗性档：actor 声明伤害类型→档位，生成路径盖章、存档保持权威，导入器把 RES_/IM_/HURT_ 旗标折算为抗性（1023 只导入怪物、3842 条条目）。v97 建立心灵族：新增原版 psi 伤害类型（协议 1.97），MIND_BLAST/BRAIN_SMASH 以既有 Sequence 组合 psi 伤害与状态骑手（psi 抗性同时减免伤害并缩短骑手时长），PSY_SPEAR 成为首个导入 beam。v98 建立诅咒族与首个法术豁免门：curse-damage 豁免成功全免（零后续 RNG）、失败全额（护甲抗性零参与），复用 v72 saving-throw 检定与事件。v99 打包四件小型效果：teleport-away 推离（复用位移机制与 relocate 管线）、drain-resource 吸取资源并滋养施法者、amnesia 豁免门失忆（清当前层地图记忆）、DISPEL 以既有 remove-status 驱散加速。法术导入线仅余特殊/字形召唤、房间光照、动尸与反魔法等结构性缺口。导入管线 v2 已吃下 k_info/e_info/a_info：544/545 条基础物品、88/160 条 ego 词条（affix 顶格修正；72 条力量全在不可表达旗标、按 ego-inexpressible 跳过入报告）与 392/392 件固定神器落地，普通戒指/护符修正为无属性通用壳——属性与 pval 只经词条或神器携带，与原版生成模型一致；未配对发射器（竖琴/枪械 12 件）按原版 fake bow 语义保 launcher 槽为可装备属性件、不带射击档。v100 建立身体/槽位模板：玩家装备槽从"物品自声明+同名一件"升级为显式身体模板（标准身体 13 槽含双戒指与光源槽，槽实例化 ring-1/ring-2），种族可用 bodySlots 声明自有身体（对齐旧版 b_info 按种族绑定），装备按类型找首个空实例、满则确定性顶替首实例（item.equip.swap 事件），存档权威、旧档零 RNG 派生；导入器同轮把光源（tval 39）接入 light 槽，光源神器（帕蓝提尔等 8 件）取回六维修正。协议 1.100、内容包 1.91.0（新增共鸣指环）、state hash Schema v41、320 个 exact fixtures。角色内容线（T1）已吃下 b_info/种族/性格：代码侧结构化提取 67/88 种族（21 个 rank 动态怪物种族入报告）、20/21 性格、113 身体模板缺口普查，玩家种族绑定原版 Standard 12 槽身体。v101 建立装备/内在旗标系统防御面：装备/词条/种族三处统一声明 resistances（复用 v96 档位词表）、statusImmunities（FREE_ACT→麻痹免疫）与 modifiers.speed；玩家有效抗性=基础∪种族∪装备∪词条的确定性合并（immune 任一即胜、正档遇 vulnerable 降档），派生值不入存档与 state hash；装备速度进派生速度管线；物品 DTO 按知识门控暴露防御表面（协议 1.101、内容包 1.92.0 新增御火指环/疾行靴/镇静吊坠，fixtures 321-323，共 323 个 exact）。导入器同轮回灌：ego 105/160、神器 392/392、33 种族内在旗标落地，RES_*/IM_*/SPEED/FREE_ACT 全部退出未映射清单。v102 完成进攻面：11 类 `SLAY_*`/`KILL_*` 与五元素 `BRAND_*` 进入装备/词条、按原版 tier 只放大武器骰且取最高倍率，元素免疫压制对应品牌；协议 1.102、内容包 1.93.0、Schema 保持 v41、326 个 exact fixtures。导入回灌为 ego 107/160、神器 392/392，12 词条/130 物品带 slay、5 词条/90 物品带基础 brand。下一候选：职业壳 + `m_info` 施法档案导入；设备/消耗品效果系统与法术清尾仍可插队。
-
-Tauri 2 Windows 原生垂直切片已经建立：`TauriNativeTransport` 直接调用 Rust 核心，移动、等待、怪物追踪、基础战斗、地面物品拾取、背包多选、鉴别、装备/卸下、整堆批量丢弃和部分数量丢弃均已接入；攻击、防御和最大生命由 Rust 权威派生，回声护符基础提供攻击 +1、防御 +1、最大生命 +4，完整识别后其谐振锋芒再提供攻击 +1。拆分物品使用持久化 `generated.item.N` 实例 ID。三套键位预设、Fluent 中英双语热切换、五层 PixiJS RendererBackend、Rust 权威 FOV/探索记忆/内容标签光源、桌面命名存档槽、`.rfbsave` 手动导入导出和 `.rfbreplay` 诊断回放均已接入。PixiJS 地形层根据 192×64 原创压力场景实测使用默认 16×16 RenderTexture chunk；`pixi-layered-chunks-v3` 后端保留整图语义数据，但玩家居中模式只为可见 chunk 挂载并复用 object/actor/visibility/lighting 动态视图。16 格 profile 的动态对象从整图理论值 86,016 降到 7,168，初始化约从 133 ms 降到 30 ms；整图滚动模式仍会按需挂载全部 chunk。动态规则 dirty cells、静态缓存和视图复用相互独立。原生存档使用应用私有目录、原子替换和三份备份，并提供结构化错误与本地日志。Rust panic、未正常退出和前端未处理异常已接入自动本地 `.rfbdiagnostic` 闭环，最多轮换保留 5 份且不自动上传。简体中文为默认语言；相机、缩放和本地化属于前端显示状态，不影响权威 state hash。旧 `rfb-wasm`、Web Worker、wasm-pack 和 wasm32 构建目标已经从 workspace、前端和 CI 删除。
-
-v103 在 v102 装备旗标之上完成动态 affix 实例：按深度过滤加权候选，生成结果完整写入物品实例、存档与 state hash，旧档缺失结果保持空且零 RNG，不按新内容表补抽。装备加值覆盖额外近战次数、十类技能、红外与光照；首版 passive 词表进入内容/DTO/Web，其中 regeneration 已每 10 world ticks 权威恢复 1 HP。demo Adaptive Echo 以两个 seed fixture 锁住两种浅层候选、真实死亡掉落、拾取、鉴定、装备、再生和回档。协议 1.103、内容包 1.94.0、Schema v42、active baseline 328 条 exact、零 waiver。真实 e_info 导入达到 128/160 ego；其余主要依赖反射、光环、诅咒、额外射击/威力和高级品牌系统。完整边界见 [Contract v103 说明](design/contract-v103-dynamic-affixes.md)。
-
-P52–P54 已把旧版职业施法数据接入首个完整玩家领域法书：54 个职业壳、53 份 `m_info` 与 `s_info` 差异先形成固定提交中间档案；`CastingProfileDefinition.abilityOverrides` 保留同一本物理法书在不同职业下的等级、耗魔与失败率差异。P54 新增七类玩家等级效果缩放、actor Detect、状态 power、sleep、状态授予临时抗性和带持久 controller identity 的 Control，Death 第一册 `[Stench of Death]` 八个槽位现已全部生成并可执行。真实包有 12 个静态职业、96 行参数覆盖和 8 个玩家 abilities；敏捷施法、生命施法和动态 Skillmaster 继续显式排除。协议 1.104、demo 1.95.0、state hash Schema v43、active baseline 334 条 exact、零 waiver；大型源包文件预算为 32,768，源包 16 MiB 与编译产物 32 MiB 字节预算继续生效。详见[职业施法档案](design/legacy-class-import-v1.md)、[玩家领域法术导入](design/legacy-player-spell-import-v1.md)与[Contract v104](design/contract-v104-death-first-book.md)。
-
-P55 / contract-v105 完成 Death 第二册 `[Sepulchral Ways]`：活体限定范围伤害、职业级 bolt/beam 几率、自身中心 Cloud Kill、单体/字形 Genocide、临时 poison 品牌、按实际伤害治疗的 Vampiric Drain、尸体生成和永久受控 Animate Dead 均进入内容协议、存档和回放。真实导入达到两本书、16 个 Death abilities、12 个静态职业和 192 行参数覆盖，Death 效果缺口 384→288。协议 1.105、demo 1.96.0、state hash Schema v44、active baseline 343 条 exact、零 waiver，内置 content hash 为 `26fdeb15063fa5ccc5a672cd8d2376f7ea66e7dc487fef6f1a4d5640a1050cf9`。详见[Contract v105](design/contract-v105-death-second-book.md)。
-
-P56 / contract-v106 完成 Death 第三册 `[Black Channels]`：随机状态时长及状态派生加值、23 分支 Invoke Spirits、敌对固定召唤、重复追踪 Drain Life、全可见目标共享伤害骰、永久武器 affix、Vampiric 近战吸血和 prorated 等级曲线均进入内容协议、存档和回放。真实导入达到三本书、24 个 Death abilities、12 个静态职业和 288 行参数覆盖，Death 效果缺口 288→192；Invoke Spirits 尚未具备的 actor polymorph、line light、earthquake、destroy area 明确保留为 `NoOp`。协议 1.106、demo 1.97.0、state hash Schema v45、active baseline 353 条 exact、零 waiver，内置 content hash 为 `5e6e5f4ee9b83eb8d80e05c8aa893bd8d19c1db1bdd18c97fe3e120fd823a88c`。详见[Contract v106](design/contract-v106-death-third-book.md)。
-
-P57 / contract-v107 完成 Death 第四册 `[Necronomicon]`：物品实例目标与鉴定、living-only Death Ray、分级类别召唤及敌友群体、临时 Race 投影、历史最高经验/生命力恢复、邻域灭绝、prorated Hellfire 和 Wraithform 穿墙/入伤减半均进入内容协议、存档和回放。真实导入达到四本书、32 个 Death abilities、12 个静态职业和 384 行参数覆盖，Death 效果缺口 192→96。协议 1.107、demo 1.98.0、state hash Schema v46、active baseline 365 条 exact、零 waiver，内置 content hash 为 `d8bdbdd4d4e85862a97229c279a874668b9b1d3ce9035aa6f17a11cff7b3af80`。详见[Contract v107](design/contract-v107-death-fourth-book.md)。
-
-P58 / contract-v108 按真实缺口转入物品主动效果线：`heal-dice` 与实例级 `initial/maximum/cost` 充能进入内容、存档、回放和背包投影；设备成功才扣充能且不消耗本体，失败不扣，耗尽时不抽 RNG、不推进世界时间，未鉴定种类不公开精确余量。demo 新增 3 充能的 Resonance Mender；legacy importer 按原版 sval 接入 Cure Light/Serious/Critical、Healing、*Healing*、Life 六种药水，使 `consumable-effect` 缺口 95→89。协议 1.108、demo 1.99.0、state hash Schema v47、active baseline 368 条 exact、零 waiver，内置 content hash 为 `4105aec18bdc40aced03bb503ec31e30385248545266d116b1d0088a374c04c8`。详见[Contract v108](design/contract-v108-charged-items.md)。
-
-P59 / contract-v109 把设备效果身份、power、检定难度、目标规格、成本和随机容量物化到物品实例。内容层 `deviceGeneration.activations` 按深度过滤并稳定加权选择；错误目标在设备检定前零 RNG 拒绝，成功才按实例成本扣费。demo 新增 Resonance Wand/Staff/Rod，分别覆盖浅深层 bolt 候选、自疗和持久陷阱侦测；未鉴定设备隐藏 profile/充能但保留目标规格供 UI 选目标。legacy importer 为原版三种通用壳生成首批动态候选，并把 `TRAP` 地形旗标映射为语义 tag，使 `device-effect` 64→61。协议 1.109、demo 1.100.0、state hash Schema v48、active baseline 373 条 exact、零 waiver，内置 content hash 为 `8432e5d6b0143608415de0f49969b6445cd902ef4db58c218c347b5da85cabab`。详见[Contract v109](design/contract-v109-dynamic-devices.md)。
-
-P60 / contract-v110 建立动态设备自然恢复与主动充能。rod 每个 world tick、wand/staff 每 10 tick 按最大能量的 1% 累积确定性余数，只恢复背包设备；余数进入四类物品存档并严格校验。Artificer 使用 Resonance 资源或另一件有能量的设备充能，资源失败清空目标，设备来源保留目标但承担 `1 in 3` 损毁率，artifact 来源免毁；非法事务保持零 world tick/零 RNG。Web、结构化事件和三项 contract 调试开关同步接入。协议 1.110、demo 1.101.0、state hash Schema v49、active baseline 379 条 exact、零 waiver，内置 content hash 为 `f2bf96ea4a980a6a9914ca80dff5527a5e04b2e36d25aa668b118e6562c9cad9`。详见[Contract v110](design/contract-v110-device-recharge.md)。
-
-P61 / contract-v111 建立有序恢复型消耗品效果。内容层新增状态清除、固定/骰值/回满资源及 2–8 步非嵌套恢复序列；运行时按声明顺序投影事件，骰值使用正式 RNG，回满零 RNG，缺少资源池时仍消费但不错误识别。demo 新增 Clarity Draught 与 Perfect Focus Elixir；legacy importer 接入四种恢复食物、Boldness、Vigor、Restore Mana、Clarity，并为六种既有治疗药水补齐可表达的异常清除，`consumable-effect` 89→81。协议 1.111、demo 1.102.0、state hash Schema v49、active baseline 383 条 exact、零 waiver，内置 content hash 为 `12c9160aec3bf8ebc6b7c92a785ad1ed8ad2dd23af674bd4bc6c445d2762d2e7`。详见[Contract v111](design/contract-v111-restorative-items.md)。
-
-P62 / contract-v112 完成卷轴效果重分类与首批鉴定事务。内容层新增物品效果 `identify-item { full }`，普通鉴定写入 appraised，完全鉴定写入 identified 与完整 affix 知识；固定物品与动态 activation 都校验 item-only 目标，缺失/错误/自身目标在消耗、RNG 与 world tick 前拒绝。Web 增加背包/装备通用物品目标对话框，Death 鉴定法术复用同一实例知识 helper。demo 新增 Appraisal Scroll 与 Revelation Scroll；legacy importer 把 tval 70/71 缺口统一改为 `scroll-effect` 并映射 sval 12/13，使缺口 61→59，报告不再出现 `device-effect`。协议 1.112、demo 1.103.0、state hash Schema v49、active baseline 386 条 exact、零 waiver，内置 content hash 为 `c02d577a3eaf36f61c636c1b8bbdfcfa30935aef08ec4d9c5b59e77ef21b4d25`。详见[Contract v112](design/contract-v112-scroll-identification.md)。
-
-P63 / contract-v113 完成地图与侦测卷轴族。内容层为 `detect` 增加 item 主体和显式 `throughWalls`：Mapping 持久写入 `explored`，陷阱与通道侦测持久写入 `revealedTerrain`，actor/item 侦测仅在结构化事件中返回稳定实例 ID 与位置；既有法术和设备仍保持 FOV 过滤。demo 新增 Cartography Scroll、Trapfinding Scroll 与 Seeking Scroll；legacy importer 映射 sval 25–30/57，并为 gold、门/楼梯和隐形怪物补充语义 tag，使 `scroll-effect` 缺口 59→52。协议 1.113、demo 1.104.0、state hash Schema v49、active baseline 389 条 exact、零 waiver，内置 content hash 为 `10d3813ec933dd881c23229b604c5f64e67716a56ebdb20b6a844c98593a7653`。详见[Contract v113](design/contract-v113-scroll-detection.md)。
-
-P64 / contract-v114 完成卷轴传送、跨层与召回族。内容层新增 `random-teleport`、`teleport-level`、`recall` 和 `reset-recall`；同层传送从最远半数合法格中稳定随机，跨层传送先作上下 50% 判定并在方向边界回退，楼梯/跨层/召回共用楼层转换管线。召回以稳定 dungeon/floor ID 保存目的地和可选倒计时，进入同地牢更深/同深分支自动更新，Reset Recall 可降到当前浅层，再次使用 Recall 可取消；普通地牢回地表仍清旧实例，地表召回创建新实例。demo 新增五种原创卷轴；legacy importer 映射 sval 8–11/53，使 `scroll-effect` 52→47。协议 1.114、demo 1.105.0、state hash Schema v50、active baseline 398 条 exact、零 waiver，内置 content hash 为 `36d07a047c3a9a331f051d4a0ebaa87070caef56408efb375e3b61e7e3fb1d86`。详见[Contract v114](design/contract-v114-scroll-travel-recall.md)。
-
-P65 / contract-v115 完成五种装备附魔卷轴与实例强化。内容层新增 `enchant-item` 的 to-hit/to-damage/to-AC 尝试骰；运行时按原版千分递减表、+15 上限、神器 50% 二次门和普通/弹药堆门结算，合法目标即使全失败也消费。强化值进入四类物品存档、拆分/堆叠、近战/发射器/弹药/投掷与护甲派生；旧档缺字段全零迁移，非法目标保持零 RNG/零 world tick。demo 新增五种卷轴与 Resonance Mail；legacy importer 映射 sval 16/17/18/20/21，使 `scroll-effect` 47→42。协议 1.115、demo 1.106.0、state hash Schema v51、active baseline 405 条 exact、零 waiver，内置 content hash 为 `9bfa2632f2be9129e39a59dad72f7bb9a64fd2f403d74c3feaee1302fb0fe459`。详见[Contract v115](design/contract-v115-scroll-enchantment.md)。
-
-P66 / contract-v116 完成装备诅咒与解除卷轴。内容层新增武器/护甲施咒、普通/强力解除和 normal/heavy/permanent 三档实例诅咒；神器拥有 50% 抵抗，永久诅咒不可由卷轴解除，任意诅咒装备都不能卸下或通过替换绕过。诅咒状态进入四类物品存档、拆分/堆叠与 Web 投影，旧档缺字段迁移为无诅咒；无目标施咒仍消费但只记 Tried。demo 新增四种卷轴和三件边界装备；legacy importer 映射 sval 2/3/14/15，使 `scroll-effect` 42→38。协议 1.116、demo 1.107.0、state hash Schema v52、active baseline 413 条 exact、零 waiver，内置 content hash 为 `9d1c6c1e01fb4533aa5a9868f0adfcbe876148d98585412783d0da93f4019dff`。详见[Contract v116](design/contract-v116-scroll-curses.md)。
-
-P67 / contract-v117 完成怪物、亡灵、宠物与同族四种召唤卷轴。内容层新增物品类别召唤的 selector、地牢深度/玩家等级来源和 Race `kinCategory`；运行时复用能力召唤的候选、unique、落位和群体管线，敌对结果允许可用 unique 但排除 guardian，Pet/Kin 只保存永久 `controllerId`。零候选或零空间仍消费并推进行动，只记 Tried 且不抽召唤 RNG；成功才 Aware。demo 新增四种卷轴并为 Race/actor 补 glyph 式 kin tag；legacy importer 映射 sval 4/5/6/54，使 `scroll-effect` 38→34。协议 1.117、demo 1.108.0、state hash Schema v52、active baseline 420 条 exact、零 waiver，内置 content hash 为 `0b9023398c8213f9e74d7f0d4d076b8ce70819dbb5cd8cc4eb3a2b84d4996210`。详见[Contract v117](design/contract-v117-scroll-summoning.md)。
-
-Contract v118 清理 contract-v103 遗留的无消费者装备 passive。内容、协议、导入和 Web 只保留已有权威规则的 `regeneration` 与 `vampiric`；13 类未实现原版旗标回到 import gap report。旧 rolled-affix 存档在单一 DTO 边界丢弃这些已知 no-op 值，未知值仍拒绝，不重掷或替换能力。协议 1.118、demo 1.109.0、state hash Schema v52、active baseline 420 条 exact、零 waiver，内置 content hash 为 `99398a53687b4cf106939ddebcb08865f4a24ee147795e9de2ae8e08036aaf00`。详见[Contract v118](design/contract-v118-passive-surface-cleanup.md)。
-
-P68 / contract-v119 接入 Dispel Undead 与 Banishment。两种卷轴共用可见且 line-of-effect 可达的 actor 快照；驱散对亡灵固定造成 80 点伤害并跳过 `resist-all`，放逐按 guardian、unique+`resist-teleport` 和普通等级抵抗逐目标结算，再逐目标抽取最远落点。无目标仍消费且零效果 RNG；放逐通过抵抗但无空间时仍可识别。legacy importer 映射 sval 42/62 并导入 `RES_ALL`/`RES_TELE` 标签，使 `scroll-effect` 34→32。协议保持 1.118、demo 1.110.0、state hash Schema v52、active baseline 422 条 exact、零 waiver，内置 content hash 为 `a9fa7d716f4f5e13ba8f97cb9c72f1dfbb4ed84c83a284b3cde2219549fcb1dd`。详见[Contract v119](design/contract-v119-scroll-visible-actor-effects.md)。
-
-P69 / contract-v120 接入 Blessing、Holy Chant 与 Holy Prayer。物品层新增窄 `bless` 效果，固定使用 `rfb.status.blessed`、Extend 堆叠、defense +5 和 melee/ranged skill +10；计划阶段零 RNG，消费后按 `6+1d12`、`12+1d24`、`24+1d48` 抽持续时间，成功后 Aware。legacy importer 映射 sval 33–35，使 `scroll-effect` 32→29。协议保持 1.118、demo 1.111.0、state hash Schema v52、active baseline 423 条 exact、零 waiver，内置 content hash 为 `b62824da6e34e2f72a367f94b2e46e50e279ba6ac4df88bece81021a156e90ab`。详见[Contract v120](design/contract-v120-scroll-blessing.md)。
-
-P70 / contract-v121 接入 Trap/Door Destruction。物品层新增窄 `destroy-adjacent-traps-and-doors` 效果，按固定八方向扫描权威地形：陷阱直达 `disarmToTerrainId`，带 `door` tag 的封闭门直达 `bashToTerrainId`；开启/破损门保持不变。空用仍消费、推进时间并变为 Aware，全程零 RNG；不受 FOV、revealed 状态、actor 或地面物品限制。legacy importer 映射 sval 39，使 `scroll-effect` 29→28。协议保持 1.118、demo 1.112.0、state hash Schema v52、active baseline 424 条 exact、零 waiver，内置 content hash 为 `3fd2b0a8b58531b89629aa2b50ef943a7a5687bdcb619991a26a3c81a7437bf7`。详见[Contract v121](design/contract-v121-scroll-trap-door-destruction.md)。
-
-P71 / contract-v122 接入 Fire 与 Ice。物品层新增窄 `self-centered-elemental-blast`，复用 self-target、既有范围格/墙阻挡/RFB 衰减、actor 抗性/死亡和玩家抗性/入伤管线；Fire 固定 666/r4/`25+1d25` fire 反噬，Ice 固定 800/r4/`30+1d30` cold 反噬。legacy importer 映射 sval 58/59，使 `scroll-effect` 28→26。协议保持 1.118、demo 1.113.0、state hash Schema v52、active baseline 425 条 exact、零 waiver，内置 content hash 为 `ab0bcb63b25c6729fd95d5fba97a4f618f7aca4589f3931a9ac149615d6062b5`。详见[Contract v122](design/contract-v122-scroll-elemental-blasts.md)。
-
-P72 / contract-v123 接入 Mana 卷轴。继续复用 `self-centered-elemental-blast`，只增加必填的 `backlashUsesResistance` 区分：actor 侧 1100/r4 mana 爆发照常经过目标 Mana 抗性，玩家侧 `50+1d50` mana 反噬明确忽略玩家 Mana 抗性，但保留既有 incoming-damage 百分比。legacy importer 映射 sval 61，使 `scroll-effect` 26→25。协议保持 1.118、demo 1.114.0、state hash Schema v52、active baseline 426 条 exact、零 waiver，内置 content hash 为 `db5233e09952166a195617182db8020cfacc457e2279d0ff403f16a941c49db2`。详见[Contract v123](design/contract-v123-scroll-mana.md)。
-
-P73 / contract-v124 接入 Aggravate Monster。窄 `aggravate-monsters` 效果以当前权威视距 8 为基准：距离小于 16 的存活 actor 清除 sleep 并警戒，距离不超过 8、具有几何 LOS 的敌对 actor 延长 100 ticks haste；玩家阵营只会被唤醒。合法使用无条件消费、Tried + Aware 且零效果 RNG，错误目标仍在消费和时间前拒绝。legacy importer 映射 sval 1，使 `scroll-effect` 25→24。协议保持 1.118、demo 1.115.0、state hash Schema v52、active baseline 427 条 exact、零 waiver，内置 content hash 为 `337e8599f02e53264b45ac1e899eb47b5ec6f4eeb6be0ae31b517c67ae6fb82b`。详见[Contract v124](design/contract-v124-scroll-aggravation.md)。
-
-P74 / contract-v125 接入 Mass Genocide。窄 `mass-genocide` 效果按半径 20 收集存活 actor 并以稳定实体 ID 顺序结算，不要求 LOS；power 300 的既有 Genocide 对抗直接移除普通目标，`unique`/`guardian` 必定抵抗，每个候选仍产生 `1d3` 疲劳。空候选仍消费并变为 Aware，但零效果 RNG；直接移除不触发 XP、掉落、尸体、任务或守护者胜利事务。legacy importer 映射 sval 45，使 `scroll-effect` 24→23。协议保持 1.118、demo 1.116.0、state hash Schema v52、active baseline 428 条 exact、零 waiver，内置 content hash 为 `39a7a79bdabafa301140266e7119735a0a0f16ef6a7071b8c5d06de6a53655a8`。详见[Contract v125](design/contract-v125-scroll-mass-genocide.md)。
-
-P75 / contract-v126 接入 Forest Creation 与 Wall Creation。窄 `create-adjacent-terrain` 固定扫描八邻格，只替换显式源地形，跳过玩家、存活 actor、地面物品和权威楼层连接；候选在消费前规划，提交时清除对应旧 reveal 状态，不作连通性证明或自动修复。成功才变为 Aware；空结果仍消费、推进时间、只记 Tried 且零效果 RNG。legacy importer 从解析后的 `FF_FLOOR` 派生源 ID，并解析本地 TREE/GRANITE 目标，使 `scroll-effect` 23→21。协议保持 1.118、demo 1.117.0、state hash Schema v52、active baseline 429 条 exact、零 waiver，内置 content hash 为 `7d344bf57cf11e303fbbd6b98f9792e572792e97a696e9a2c1987ba6f349a149`。详见[Contract v126](design/contract-v126-scroll-adjacent-terrain-creation.md)。
-
-P76 / contract-v127 接入 Vengeance。窄 `vengeance` 效果按 `25+1d25` 施加 KeepStrongest 反击状态；怪物完整 melee routine 或完整 spell cast 结束后，按本次实际玩家 HP 损失反击来源一次，零伤害与玩家死亡不触发，每次反击额外扣 5 ticks。反击零 RNG、跳过目标抗性，击杀复用统一 actor death 事务。legacy importer 映射 sval 50，使 `scroll-effect` 21→20。协议保持 1.118、demo 1.118.0、state hash Schema v52、active baseline 430 条 exact、零 waiver，内置 content hash 为 `c920d9f1b78d5f51a8ebb1097a54c1f74efe7b4a83eb469809b2c3e60d9717d3`。详见[Contract v127](design/contract-v127-scroll-vengeance.md)。
-
-P77 / contract-v128 接入 Monster Confusion。无参数 `prepare-confusing-strike` 写入玩家专属准备态；miss 与致死命中保留，首个非致死命中先清态，再按 `NO_CONF` 免疫、`bounded(100) < actor.level` 抵抗和 `10 + bounded(player.level) / 5` Extend confusion 顺序结算。legacy importer 映射 sval 36 与怪物 `NO_CONF`，使 `scroll-effect` 20→19。协议 1.119、demo 1.119.0、state hash Schema v53、active baseline 431 条 exact、零 waiver，内置 content hash 为 `757be0f1513b9cbfb2f77e08ceef8bff8ffcdb10fc7da17a0da05dbe32f908a0`。详见[Contract v128](design/contract-v128-scroll-monster-confusion.md)。
-
-P78 / contract-v129 接入 Protection from Evil。无参数 `protection-from-evil` 以 Extend 方式施加 `3 * player level + 1d25` ticks；只有带 `evil` tag 的怪物近战命中才进入 Wisdom/等级对抗，怪物失败后仍有 `one_in(3)` 绕过，其余结果在伤害骰前击退。非邪恶攻击零保护 RNG。legacy importer 映射 sval 37，使 `scroll-effect` 19→18。协议保持 1.119、demo 1.120.0、state hash Schema 保持 v53、active baseline 432 条 exact、零 waiver，内置 content hash 为 `27ad6b88a3e4bdeb4f1464d2081f6f59e62cbbfbab14ed09e9b5bdfaf43ead24`。详见[Contract v129](design/contract-v129-scroll-protection-from-evil.md)。
-
-P79 / contract-v130 接入 Genocide。窄 `genocide { power }` 以单字符 glyph 选择当前楼层的存活 actor，按稳定实体 ID 复用既有 Glyph Genocide 的 `1d4` 疲劳、unique/guardian 保护和 power 对抗；缺失/非法 glyph 零时间、零 RNG、不消费，合法空选择消费、Aware 且零效果 RNG。协议新增 `UseItemByGlyph` 与省略式 `requiresTargetGlyph`，不扩展通用目标模式；legacy importer 映射 sval 44，使 `scroll-effect` 18→17。协议 1.120、demo 1.121.0、state hash Schema 保持 v53、active baseline 433 条 exact、零 waiver，内置 content hash 为 `786aba7f693bac066d6caa0dbc848c97ac7bc01e4652bfeb2674cfa739130549`。详见[Contract v130](design/contract-v130-scroll-genocide.md)。
-
-P80 / contract-v131 接入 Recharging。窄 `recharge-from-device { power }` 只接受背包内互异的卷轴、来源设备和目标设备；非法组合在消费、时间和 RNG 前拒绝，合法事务先消费卷轴并支付来源的固定 `one_in(3)` 损毁或能量，再复用 P60 的目标失败公式，目标失败不回滚来源。协议新增 `UseItemForRecharge` 与省略式 `requiresRechargeTargets`，Web 复用既有物品目标对话框；legacy importer 映射 sval 22，使 `scroll-effect` 17→16。协议 1.121、demo 1.122.0、state hash Schema 保持 v53、active baseline 434 条 exact、零 waiver，内置 content hash 为 `d486f818e41cea542ac951f6a92abca69e298d29f5139e6219ddd0c34836ad52`。详见[Contract v131](design/contract-v131-scroll-recharging.md)。
-
-P81 / contract-v132 接入 Spell。Class 以默认 false 的 `usesSpellScrolls` 声明资格，无参数 `increase-spell-learning-capacity` 为合格职业永久增加 1 点学习容量；无资格职业仍消费、Aware、推进时间且零效果 RNG。bonus 以默认 0 的 `PlayerSaveDto.bonusSpellLearningCapacity` 保存，无资格职业的非零值显式拒绝；协议保持 1.121、demo 1.123.0、state hash Schema 升至 v54、active baseline 435 条 exact、零 waiver，内置 content hash 为 `25d972db57c825d4e23f5a61532c00579f9467acbe10edf97f2c0600b00514f5`。legacy importer 映射 sval 43，使 `scroll-effect` 16→15。详见[Contract v132](design/contract-v132-scroll-spell.md)。
-
-P82 / contract-v133 接入 Slowness Potion。窄 `apply-slowness` 静态消耗品效果固定 `15+1d25`，总是掷一次持续时间并以 KeepStrongest 合并 Slow；只有首次新增状态才 Aware，已有 Slow 即使延长也保持 Tried-only。协议保持 1.121、demo 1.124.0、state hash Schema 保持 v54、active baseline 436 条 exact、零 waiver，内置 content hash 为 `5ef19e0ecaf7328a7eb4ef3ff69ca066858ca0cc718c6b2db84b078e281f2404`。legacy importer 映射 tval 75/sval 4，使 `consumable-effect` 81→80。详见[Contract v133](design/contract-v133-potion-slowness.md)。
-
-P83 / contract-v134 接入 Death Potion。窄 `self-life-loss { amount: 5000 }` 静态消耗品效果直接扣除生命，绕过护甲、抗性与 `incomingDamagePercent`，零效果 RNG 并总是 Aware；demo 使用原创公开物品 Mortal Draught。协议保持 1.121、demo 1.125.0、state hash Schema 保持 v54、active baseline 437 条 exact、零 waiver，内置 content hash 为 `1c6e2bf891c76796cca6eb53ea014caa03fb8bb1fa3a95b8df8fd81f942e8562`。legacy importer 映射 tval 75/sval 23，使 `consumable-effect` 80→79。详见[Contract v134](design/contract-v134-potion-death.md)。
-
-P84 / contract-v135 接入 Poison Potion。窄 `apply-poison` 静态消耗品效果先固定抽取 `bounded(55)` 并与既有 Poison 抗性档阈值比较；抵抗成功保持 Tried-only 且不抽持续时间，失败后才抽 `10..24` ticks、Extend Poison 并 Aware。协议保持 1.121、demo 1.126.0、state hash Schema 保持 v54、active baseline 439 条 exact、零 waiver，内置 content hash 为 `497fbc6b137e9bc2d8162ad52b0253f4d655a37c58abe391be6bcdd94ef94d9e`。legacy importer 映射 tval 75/sval 6，使 `consumable-effect` 79→78。详见[Contract v135](design/contract-v135-potion-poison.md)。
-
-P85 / contract-v136 接入 Thermal Potion。窄 `apply-thermal-resistance` 静态消耗品效果只抽一次 `1d10+10`，以 Extend 应用单一 Thermal 状态并同时授予 Fire/Cold Resistant；只有首次新增状态才 Aware，已有状态的延长保持 Tried-only。协议保持 1.121、demo 1.127.0、state hash Schema 保持 v54、active baseline 440 条 exact、零 waiver，内置 content hash 为 `3098d9de2051029b4509acc3b8973cec0b76679dcacfa6ace1244864bc3f363d`。legacy importer 映射 tval 75/sval 30，使 `consumable-effect` 78→77。详见[Contract v136](design/contract-v136-potion-thermal-resistance.md)。
-
-P86 / contract-v137 接入 Resistance Potion。窄 `apply-basic-resistance` 静态消耗品效果每次只抽一次 `1d20+20`，以 KeepStrongest 应用单一 Basic Resistance 状态并同时授予 Acid/Electricity/Fire/Cold/Poison Resistant；合法使用无条件 Aware，即使第二次骰值不足以延长状态。协议保持 1.121、demo 1.128.0、state hash Schema 保持 v54、active baseline 441 条 exact、零 waiver，内置 content hash 为 `b33b104f3d7fd2153a66597b4f7685647020f3c9e3352366840dac326e650a57`。legacy importer 映射 tval 75/sval 60，使 `consumable-effect` 77→76。详见[Contract v137](design/contract-v137-potion-basic-resistance.md)。
-
-P87 / contract-v138 接入 Speed Potion。窄 `apply-speed` 在没有 Haste 时只抽一次 `1d25+15` 并变为 Aware；已有 Haste 时零 RNG、固定延长 5 ticks，保持既有知识边界。协议保持 1.121、demo 1.129.0、state hash Schema 保持 v54、active baseline 442 条 exact、零 waiver，内置 content hash 为 `1b3c059fedbc14ad79a9549a8b0bd4496f22785355e2bb4ef1ce3a0f763c7e35`。legacy importer 映射 tval 75/sval 29，使 `consumable-effect` 76→75。详见[Contract v138](design/contract-v138-potion-speed.md)。
-
-P88 / contract-v139 接入 Heroism Potion。窄 `apply-heroism` 每次抽取 `1d25+25`，以 Extend 应用授予 max HP +10、melee/ranged skill +12 与 Fear 免疫的 Hero 状态；只有首次新增状态才 Aware，已有 Hero 的延长保持 Tried-only。协议保持 1.121、demo 1.130.0、state hash Schema 保持 v54、active baseline 443 条 exact、零 waiver，内置 content hash 为 `99c41b9668586d97987cc18a459632c8f444d9c8dffbf1e6e024f2ce35a11091`。legacy importer 映射 tval 75/sval 32，使 `consumable-effect` 75→74。详见[Contract v139](design/contract-v139-potion-heroism.md)。
-
-P90 / contract-v140 接入 Berserk Strength Potion。窄 `apply-berserk-strength` 每次抽取 `1d25+25` 并 Extend Berserk，再固定治疗 30；Berserk 复用既有 max HP +30、defense -10、战斗/技能加值与 Fear 免疫，melee damage 为 `3 + level / 5`。首次新增 Berserk 或实际恢复 HP 任一成立即 Aware，单纯延长保持 Tried-only。协议保持 1.121、demo 1.131.0、state hash Schema 保持 v54、active baseline 444 条 exact、零 waiver，内置 content hash 为 `de5986a0133867854afb49f98e06a294528d9e4360bc88e7a0fa78d48fff8846`。legacy importer 映射 tval 75/sval 33，使 `consumable-effect` 73→72。详见[Contract v140](design/contract-v140-potion-berserk-strength.md)。
-
-P91 / contract-v141 接入 Poetic Inspiration Potion。窄 `apply-poetic-inspiration` 每次抽取 `1d100+100` 并 Extend 状态，通过既有状态修正授予 Wisdom/Charisma 各 +5；首次新增才 Aware，重复延长保持 Tried-only。协议保持 1.121、demo 1.132.0、state hash Schema 保持 v54、active baseline 445 条 exact、零 waiver，内置 content hash 为 `6ecb079e1a1dd1e653e7c4d201f264d72e7c1db9bfe466f8d1ffa410cfee36e0`。legacy importer 映射 tval 75/sval 14，使 `consumable-effect` 72→71。详见[Contract v141](design/contract-v141-potion-poetic-inspiration.md)。
-
-P92 / contract-v142 接入 Stone Skin Potion。窄 `apply-stone-skin` 每次抽取 `1d20+20` 并以 KeepStrongest 应用状态，按饮用时等级授予 `10 + 40 * level / 50` defense；只有首次新增才 Aware，更长刷新保持无新效果。协议保持 1.121、demo 1.133.0、state hash Schema 保持 v54、active baseline 446 条 exact、零 waiver，内置 content hash 为 `48611b108dafc4b06836073ca6b5c6881779c653cbab569a7fdeaec82c1c707a`。legacy importer 映射 tval 75/sval 69，使 `consumable-effect` 70→69。详见[Contract v142](design/contract-v142-potion-stone-skin.md)。
-
-P93 / contract-v143 接入 Restore Life Levels Potion。窄 `restore-life-levels { lifeForceAmount: 150 }` 先把当前经验恢复到历史最高值并复用既有等级重算，再增加生命力并封顶 1000；两项任一实际变化才 Aware，完全无变化保持 Tried-only，效果零 RNG。协议保持 1.121、demo 1.134.0、state hash Schema 保持 v54、active baseline 447 条 exact、零 waiver，内置 content hash 为 `8b3bdb097563d99b6433a5746c07d395b406d5c8d86616540e0126cd6af72404`。legacy importer 映射 tval 75/sval 41，使 `consumable-effect` 69→68。详见[Contract v143](design/contract-v143-potion-restore-life-levels.md)。
-
-P94 / contract-v144 接入 Blindness Potion 与 Blindness Food。窄 `apply-blindness` 固定先抽一次 `bounded(55)` 抗性 RNG，拥有 Blindness 免疫时短路持续时间；未抵抗时按来源抽取 `1d100+99` 或 `1d25+24` 并 Extend Blindness。只有首次新增状态才 Aware，已有状态延长保持 Tried-only。协议保持 1.121、demo 1.135.0、state hash Schema 保持 v54、active baseline 448 条 exact、零 waiver，内置 content hash 为 `9f28bf79c8fc72bbcf97beec23da1c1fa0a10045b5c363defcb59e9a29457ed5`。legacy importer 映射 tval 75/sval 7 与 tval 80/sval 1，使 `consumable-effect` 68→66，`food-nutrition` 保持 28。详见[Contract v144](design/contract-v144-potion-blindness.md)。
-
-P95 / contract-v145 接入 Detonations Potion。窄 `apply-detonation` 依原版顺序掷 `50d20`，绕过护甲与 Physical resistance、保留既有 `incomingDamagePercent`，存活时以 KeepStrongest 施加 75 ticks Stun、以 Extend 施加 5000 ticks Bleeding；直接伤害致死时不施加后续状态，合法使用无条件 Aware。协议保持 1.121、demo 1.136.0、state hash Schema 保持 v54、active baseline 449 条 exact、零 waiver，内置 content hash 为 `136cc9508d1d45997f193c39689f8604e6e06db258e4a2d22e65b7a24b72f717`。legacy importer 映射 tval 75/sval 22，使 `consumable-effect` 66→65。详见[Contract v145](design/contract-v145-potion-detonations.md)。
-
-P96 / contract-v146 接入属性损伤与恢复。玩家进度分别保存当前自然属性与历史最大自然属性；六种 `drain-attribute` 按原版 18/xx 公式降低当前值，六种 `restore-attribute` 无 RNG 恢复至历史最大值。当前值为 3 时不再降低，旧存档缺最大属性时迁移为当前值，损坏的 current > maximum 存档拒绝载入。实际变化才 Aware，无变化仍消费并保持 Tried-only；属性变化复用既有 HP、资源上限和派生刷新。协议 1.122、demo 1.137.0、state hash Schema v55、active baseline 450 条 exact、零 waiver，内置 content hash 为 `ffd8f8111a5b956a26a6af12bd242aad04a322bb996f587a08fae9db4488925b`。legacy importer 映射 tval 75/sval 16–21、42–47，使 `consumable-effect` 65→53；`food-nutrition` 保持 28，`scroll-effect` 保持 15。详见[Contract v146](design/contract-v146-attribute-drain-restoration.md)。
-
-P96 修正 / contract-v147 修复属性变化后资源池被先 clamp、再二次缩放的问题；装备 sustain 重新成为六维属性损伤的真实消费者，Warding Band 固定提供 Strength sustain。被维持的损伤不抽效果 RNG、不改变属性，但会识别来源药水并发出明确事件。fixture schema 升至 2：449 条历史 fixture 继续以 schema 1 显式迁移全缺失的历史最大属性投影，部分缺失拒绝验证；新 fixture 不再静默补值。Web 属性提升按钮改按 `maximumNatural` 判断上限。协议 1.123、demo 1.138.0、state hash Schema 保持 v55、active baseline 451 条 exact、零 waiver，内置 content hash 为 `2b1bf5beabe42513d3ad70e0d536274a773babf391c085f3af4ca7a720a2e003`。详见[Contract v147](design/contract-v147-p96-attribute-corrections.md)。
-
-P97 / contract-v148 接入六种单属性增长药水与 Augmentation。`increase-attribute` 先恢复当前属性，再按原版三段公式增长历史最大值；`augment-attributes` 固定按六维顺序处理，封顶属性跳过 RNG 但不阻断后续属性。实际恢复或增长才 Aware，完全无变化保持 Tried-only；不消费等级提升点，整瓶药水只刷新一次 HP 和职业资源。协议保持 1.123、demo 1.139.0、state hash Schema 保持 v55、active baseline 452 条 exact、零 waiver，内置 content hash 为 `a8eb3c1a5b74f683bd5a71728da916f67972088769e3155cdc0b89c88b4e874c`。legacy importer 映射 tval 75/sval 48–53、55，使 `consumable-effect` 53→46。详见[Contract v148](design/contract-v148-potion-attribute-increase.md)。
-
-P98 / contract-v149 接入 Restoring Food、Restoring Potion、Ambrosia 与 Life Potion 的组合恢复事务。四种窄效果复用六维属性恢复、历史最高经验/生命力恢复、既有状态清除和治疗路径；Restoring 系列按实际变化决定 Aware，Ambrosia 与 Life 合法使用即 Aware。协议保持 1.123、demo 1.140.0、state hash Schema 保持 v55、active baseline 454 条 exact、零 waiver，内置 content hash 为 `cf977b882f1650f641035e1e12b22cca6430106a4992cceefd2e496060f51774`。legacy importer 使 `consumable-effect` 46→41，`food-nutrition` 保持 28。详见[Contract v149](design/contract-v149-restoration-combinations.md)。
-
-Phase 17 Gate 3 / contract-v150 将生产首流程改为固定 RFB v1.3.0.7 行为参考下的 Warrens 兼容切片：独立世界包含九层正常上下行、早期鼠类/狗头人/座狼生态、狗头人领主、基础武器与治疗补给，以及胜利后逐层返程和地表退休。旧地图、文本、算法、精确数值表与素材未复制；Pest Control 因依赖城镇前置任务而暂缓。协议保持 1.123、demo 升至 1.141.0、state hash Schema 保持 v55、active baseline 455 条 exact、零 waiver，内置 content hash 为 `7231dd36f3ae6734f64290f7aba57f30648dfff1e3746de83acbb4148ec0347f`。详见[Contract v150](design/contract-v150-warrens-journey.md)。
-
-Phase 17 的 Gate 3 后产品修订 / contract-v151 取消准备、进入、深入、首领、返回、退休式阶段目标，改为只显示当前地牢、当前/最大深度，以及尚未击败的首领。新建角色只开放首个 RFB 职业切片 Warrior；六维、HP/生命/经验倍率、八项原版技能成长及阔剑/锁子甲/短弓/箭矢出生角色按固定源码核对，描述独立重写。Warrior 使用显式 RFB Standard 通用身体；高级职业能力和当前模型无法精确承载的弓倍率、护甲命中修正继续列为差异。协议保持 1.123、demo 升至 1.142.0、Schema 保持 v55、active baseline 455 条 exact、零 waiver，内置 content hash 为 `dd7a374770e13e923ac7c2be0648e3fea2793bcec5b78c81adf90f3d30783c36`。详见[Contract v151](design/contract-v151-warrior-and-dungeon-status.md)。
-
-Phase 17 Gate 4 / contract-v152 为死亡、击败兽穴首领后的返程状态和地表退休增加独立结果页。结果页显示职业、已知 seed、回合、分数、征服地牢和任务数，并提供按状态合法的继续返程、同配置重开、新配置、读取、主菜单和退出操作；旧存档无法提供原始 seed 时不会伪造，而是禁用同配置重开。标题页同时把可恢复备份的序号和恢复操作直接显示出来，并允许确认删除损坏存档。协议、save/replay、Schema、内容包与 455 条 exact fixture 均不漂移，active baseline 升至 contract-v152。详见[Contract v152](design/contract-v152-player-results-and-recovery.md)。
-
-Phase 17 Gate 5 前地图纠偏 / contract-v153 将 Warrens 的双矩形 fallback 替换为独立实现的 seeded 地图生成。固定 RFB v1.3.0.7 来源表明浅层 Warrens 实际是 66×22、约五个以不规则洞室为主的房间、随机中心/隧道，以及普通层 1–2 个上行和 4–5 个下行，而不是固定整层 cavern。新实现采用连通 frontier 洞室、打乱中心的环形随机通道和声明式楼梯范围；同 seed 可复现、不同 seed 有差异、楼层往返不重建。协议保持 1.123、demo 升至 1.143.0、Schema 保持 v55、active baseline 456 条 exact、零 waiver，内置 content hash 为 `4da783cfb282e4e2f2da517656ae5924e451083d0b67e6cf069887c840a2bfbe`。详见[Contract v153](design/contract-v153-warrens-map-generation.md)。
-
-Phase 17 Gate 5 前入口纠偏 / contract-v154 将 Warrens 开局层明确为独立地表：草地、土路、洞口岩壁和密林替换室内石地占位视觉，通用楼梯文案移除 Echo/Original Lab 残留，地牢信息在地表不再显示深度 0。地图工具栏新增状态感知的进入/上楼/下楼按钮，查看模式同时报告 terrain，入口指引明确起点南侧的 `>` 与 `Shift + .`。协议保持 1.123、demo 升至 1.144.0、Schema 保持 v55、active baseline 456 条 exact、零 waiver，内置 content hash 为 `25c0ed9c6afd24e3f74cdf3bae09f60044daec3b6ae9149f86a9e530c30087db`。详见[Contract v154](design/contract-v154-warrens-surface-entry.md)。
-
-Phase 17 Gate 5 前生成密度纠偏 / contract-v155 为 rooms layout 增加默认兼容的 `partitioned/free` 放置策略，Warrens 九层改用全图自由洞室布局并加入可挖的岩浆岩/石英矿脉；初始普通怪物从每层一次分配提高到 RFB 最小地图规则对应的四次分配，最终层另保留 Boss 槽。协议保持 1.123、demo 升至 1.145.0、Schema 保持 v55、active baseline 456 条 exact、零 waiver，内置 content hash 为 `6af0e0500187c01f10612428b47ddc255ab415f6068dcd87800a17078fb534c2`。详见[Contract v155](design/contract-v155-warrens-generation-density.md)。
-
-Phase 17 Gate 5 掉落纠偏 / contract-v156 按 RFB v1.3.0.7 的常规 Warrens 路径接入房间/全图独立物品分配、面积缩放和深度候选；Small kobold 使用 60% 普通/Warrior 主题掉落，mouse/Warg 无普通物品，四类怪物使用 `one_in_(3)` 遗骸，Mughash 掉落 `1d2` 件 Fine Warrior 装备并额外必掉 Speed 药水。金币、食物、光源、完整 `apply_magic` 与极稀有超深度提升在对应消费/对象系统建立前暂缓。协议保持 1.123、demo 升至 1.146.0、Schema 保持 v55、active baseline 456 条 exact、零 waiver，内置 content hash 为 `91ac518116420421305410a9435e002648c5538deba102780ce5e1359d7e33be`。详见[Contract v156](design/contract-v156-warrens-loot.md)。
-
-Phase 18 Gate 0 固定 Outpost 补给循环的实施边界：按 gold source -> hunger consumer -> fuel lighting -> Outpost content -> General Store transactions -> UI acceptance 的顺序推进，保留 `demo.floor.surface` 作为稳定返程层 ID，首批只开放杂货店和 Warrens 入口。Gate 0 仅更新规划，金币、饥饿、燃料、城镇与交易尚未进入运行时；协议 1.123、save v1、Schema v55、demo 1.146.0、contract-v156 和 456 条 exact fixtures 均不改变。详见[Phase 18 规划](design/phase-18-outpost-supply-loop.md)。
-
-Phase 18 Gate 1 / contract-v157 建立第一段经济来源：Warrior 出生金币 `2d300+200`、独立地面金币堆、Warrens 面积缩放金币分配、原版式金额/外观，以及 Small kobold 成功掉落后的 20% 金币替换分支。拾取先吸收同格全部金币且不占背包或负重；余额、当前层/离层金币和全局实例序号进入 save/replay/state hash，旧档迁移为 0 金币且不回填、不抽 RNG。Web 右栏、地图、附近面板与中英文事件同步显示金币。协议升至 1.124、demo 升至 1.147.0、Schema 升至 v56、active baseline 升至 contract-v157 和 457 条 exact fixtures、零 waiver，内置 content hash 为 `70f21e8d8f28a2102a8b28e5c6cabf83137afb4532e5c2868d10fb7c1e5e5012`。下一步是 Gate 2 的食物与饥饿。详见[Contract v157](design/contract-v157-gold-wallet.md)。
-
-Phase 18 Gate 2 / contract-v158 加入 Warrior 出生口粮、权威饱食度、速度相关消化、低饱食恢复、昏厥和挨饿伤害，并为 Warrens 每层增加原版式 50% 口粮保证尝试。协议升至 1.125、demo 升至 1.148.0、Schema 升至 v57，active baseline 增至 458 条 exact fixtures。详见[Contract v158](design/contract-v158-food-hunger.md)。
-
-Phase 18 Gate 3 / contract-v159 加入 Warrior 出生火把、火把/灯笼/油瓶实例燃料、补充燃料、周期消耗、Outpost 环境光和 Warrens 暗视野，并为 Warrens 每层增加原版式光源保证尝试。协议升至 1.126、demo 升至 1.149.0、Schema 升至 v58，active baseline 增至 459 条 exact fixtures。详见[Contract v159](design/contract-v159-fuel-light.md)。
-
-Phase 18 Gate 4 / contract-v160 增加严格的 town/shop 内容根、Outpost 与 General Store 稳定身份、独立地表布局、入口访问状态及确定性旧地表迁移。当前不含店主、库存、价格或交易；这些属于 Gate 5。协议升至 1.127、demo 升至 1.150.0、Schema 升至 v59，active baseline 增至 460 条 exact fixtures、零 waiver，内置 content hash 为 `a03b7c96e880a8c1d1e0c86a323e9e3333d84d2670eef9404d884cbad6d50779`。详见[Contract v160](design/contract-v160-outpost-content.md)。
-
-Phase 18 Gate 5–6 / contract-v161 建立完整 Outpost 补给闭环：General Store 具备稳定店主、四类 RFB 价值补给、种子库存、按 `worldTick` 维护、原版价格因子和原子批量买卖；相同种类且实例状态相容的库存与背包物品按原版 `pack_carry` 路径合并为一行，不同燃料或属性保持独立。Web 提供入口自动打开的购买/出售页、数量、价格、金币、负重、饱食和装备光源状态，桌面 E2E 覆盖购物、Warrens 消耗、拾取金币、回城补给及原生存档恢复。协议 1.128、demo 1.151.0、Schema v60、461 条 exact fixtures、零 waiver和 content hash 均保持不变。详见[Contract v161](design/contract-v161-general-store-transactions.md)与[Phase 18 规划](design/phase-18-outpost-supply-loop.md)。
-
-Phase 18 后续 / contract-v162 将 General Store、Temple 和 Alchemist 横向合并为一座三入口补给院，每店仍保留独立入口、稳定店主、持久库存、维护和访问状态。圣殿与炼金店首批只开放已有完整使用行为的 RFB 对应消耗品；三类普通商店共享正价值且非尸体/骨骸的收购边界。协议升至 1.129、demo 升至 1.152.0、Schema 保持 v60，active baseline 增至 462 条 exact fixtures、零 waiver，content hash 为 `8481a945e6d627244cf7ad1b8af4f77ef0ef2013baa2a1b360ef2821527f1433`。详见[Contract v162](design/contract-v162-outpost-supply-court.md)。
-
-Phase 18 后续 / contract-v163 将 Outpost 改为带东西城门和贯通主街的围墙城镇，Warrens 固定在东墙外。杂货店独立，圣殿使用南侧对称建筑，炼金店与魔法店共享一栋双入口建筑；墙体使用 `█/▓/▒` 色块，且所有 terrain 都禁止使用会与原版生物冲突的 ASCII 字母 glyph。Magic Shop 首批严格采用原版 Magic Missile Wand、Detect Objects Staff 和 Identify Staff。协议升至 1.130、demo 升至 1.153.0、Schema 保持 v60，active baseline 增至 463 条 exact fixtures、零 waiver，content hash 为 `cbcca1349df4d40a76a5de10759d3a2bffa17bfe4c71fc486389c5b21b4d525e`。详见[Contract v163](design/contract-v163-walled-outpost-magic-shop.md)。
-
-Phase 18 后续 / contract-v164 在 Outpost 西南侧加入共享工坊：护甲店与武器店使用原版数字 `2/3` 双入口，并只出售项目中已有完整装备、射击行为的 RFB 原版首批物品。两店采用固定原版 Human 店主参数；箭矢等兼容实例继续在商店 UI 聚合为一个条目。协议升至 1.131、demo 升至 1.154.0、Schema 保持 v60，active baseline 增至 464 条 exact fixtures、零 waiver，content hash 为 `dcf62b45fb72e47b8190bb98b8d59db534f5ad53cc9ec47ac918effb2e22d52c`。详见[Contract v164](design/contract-v164-outpost-armoury-weaponsmith.md)。
-
-Phase 18 后续 / contract-v165 将书店作为炼金店/魔法店共享建筑的第三入口，使用原版数字 `9`。库存严格限定为原版可进入城镇库存的《死亡的气息》和《冥府之路》，基础价值为 `100/1000`；前者新增为可购买并用于学习的完整能力书，后两册高阶死亡魔法书不提前出售。协议升至 1.132、demo 升至 1.155.0、Schema 保持 v60，active baseline 增至 465 条 exact fixtures、零 waiver，content hash 为 `3f12b3a62351b245edb8223b324c72a7bd01e3cc53f2ffb3fcd402dce5109435`。详见[Contract v165](design/contract-v165-outpost-bookstore.md)。
-
-Phase 18 后续 / contract-v166 在北侧独立建筑加入 Home，使用原版数字 `8`。Home 是无店主、钱包、价格和刷新的独立设施，支持免费持久存取、相容物品聚合、负重检查和原生存档恢复；操作不耗时间、不改变金币、不推进 RNG。协议升至 1.133、demo 升至 1.156.0、Schema 升至 v61，active baseline 增至 466 条 exact fixtures、零 waiver，content hash 为 `4b6e95cdd3c09be3f08c68a458d1c81965fb81d457fe6a0908ffcacb6a15b400`。原版基础数字入口现只剩 Black Market；连同新版 Jeweler、Shroomery、Dragon，共四类正式交易设施待实现。详见[Contract v166](design/contract-v166-outpost-home.md)。
-
-Phase 18 后续 / contract-v167 在东南侧加入原版数字 `7` Black Market。固定 Human 店主“公平的托皮(?)”使用 greed 150 与 30000 单件收购上限；Warrior 买价在普通报价后乘二、卖价减半。首批库存严格限定为原版不带 `TOWN` 的 Black Channels 与 Necronomicon。协议升至 1.134、demo 升至 1.157.0、Schema 保持 v61，active baseline 增至 467 条 exact fixtures、零 waiver，content hash 为 `796b48c16924b0d89a5c98443122b3802b920e9ef460aab447e0468a3f99d7ea`。重写版现已覆盖 Outpost 数字 1-9 的全部基础入口；原版地图仍缺 `0` Shroomery、Museum、两条轮换任务服务线和 Bounty Office，共五类。详见[Contract v167](design/contract-v167-outpost-black-market.md)。
-
-Phase 18 地图修订 / contract-v168 将 Outpost 地表扩为 `96×32`，城镇整体置于带四周荒野缓冲的地表中央，Warrens 入口继续位于东城门外；圣殿与相邻建筑之间保留左右通道和南侧绕行带。内容模型允许地表与程序楼层使用独立尺寸，因此九层 Warrens 继续保持原版依据的 `66×22`。协议和 Schema 不变，demo 升至 1.158.0；当前 active baseline 在去除四条重复的普通商店购买场景后为 463 条 exact fixtures，content hash 为 `6816ed2d04032ca79ad36aa2451ca8d2adac91633680d7541e4ab3084e231860`。详见[Contract v168](design/contract-v168-open-outpost-layout.md)。
-
-Phase 19 装备与背包扩展 / contract-v169 将正式原版物品选择扩至 35 项，并建立 26 格共享背包、`container/tool` 槽、装备容器增加 4/8/12 格、箭矢 99 堆叠、护甲/手套近战修正，以及工具双目标装备。工具装入 `tool` 时只贡献挖掘，装入 `weapon` 时完整武器与装备属性生效；`Equip.slotId` 明确选择具体槽实例。协议 1.135、demo 1.163.0、Schema 保持 v61、active baseline 保持 463 条 exact fixtures、零 waiver，content hash 为 `d9e227cc7757ff82a66c7afadf8da2846a1751920f53fa3f1f0a74c640b8a0ac`。详见[Contract v169](design/contract-v169-inventory-containers-tools.md)与[Phase 19](design/phase-19-legacy-item-integration.md)。
-
-contract-v170 将负重改为按有效力量使用 RFB 原版 38 档表动态计算，装备与背包物品共同计重。超重不再拒绝拾取、购买或从 Home 取出；达到容量 120% 后，每额外 20% 施加 1 点速度惩罚。协议 1.136、demo 1.164.0、Schema 保持 v61、active baseline 为 462 条 exact fixtures、零 waiver，content hash 为 `59d9801214e8f62544b9ffa96a0d56cdfd790d248ec04c90a94246a8089eaf8f`。详见 [Contract v170](design/contract-v170-strength-encumbrance.md)。
-
-contract-v171 按固定 RFB 原版来源扩充 Warrens 普通生态：接入 Newt、Rock Lizard、Fruit Bat、Wild Cat、Kobold、Cave Lizard、Large Kobold、Rat-thing、Night Lizard、Hunting Hawk of Julian 与 Chiokovo，并校正 Small Kobold、Mughash 和 Warg 的原版等级、HP、攻击与抗性边界。静态表按 `100 / rarity` 和怪物等级分层；Warg 不再常驻普通 Warrens，Giant White Mouse 等待繁殖/随机移动后再启用。协议与 Schema 不变，demo 升至 1.165.0，active baseline 保持 462 条 exact fixtures，content hash 为 `ab54279248422c2d39dc6e91b8827f6be1f15c4d9ab4c79ee60707e766abbb52`。全局分配、越级、群体、Unique、移动域与特殊怪物能力已拆入 [Warrens 怪物机制清单](design/warrens-monster-mechanism-backlog.md)。详见 [Contract v171](design/contract-v171-warrens-ecology.md)。
-
-contract-v172 将玩家施法参数改为 Ability Program 之外的可选 `player` 策略：能力默认不绑定，但不会被永久划分为怪物专属；能力书、职业先天技以及未来种族或怪物模式实际引用时才要求玩家策略。demo 保留当前玩家可获得能力的 48 个绑定，删除 21 个占位绑定；导入器同样从书本和职业先天列表派生绑定。存档与回放继续独立精确匹配 `contentId/contentHash`，历史 hash 兼容表已删除；`contentHash` 不再进入 state hash，Schema 升至 v62。协议保持 1.136，demo 升至 1.166.0，content hash 为 `eb6dded2ca73a46535357886d44561040ca571387353feaeefa6873b0afeb7c0`。详见 [Contract v172](design/contract-v172-optional-player-abilities-state-hash.md)。
-
-contract-v173 按固定 RFB 原版来源完成 Warrens W1-W6 与运行时自然补怪；contract-v174-v176 继续完成怪物开门/解锁/撞门、飞行与游泳移动域、显式陷阱规避，以及逐实例 HP 骰与 `FORCE_MAXHP`。路径、生成、群体、召唤、位移、陷阱和读档共享 movement profile；所有怪物出生入口共享 HP helper，保存后的实例 `maxHp` 不重掷。协议保持 1.137、demo 升至 1.170.0、state hash Schema 保持 v63，content hash 为 `b434df67e19e3f7986ee796870365c3e60deb792ff87478a48856194607b75b7`。详见 [Contract v174](design/contract-v174-monster-doors.md)、[v175](design/contract-v175-monster-movement-domains.md) 与 [v176](design/contract-v176-monster-hit-points.md)。
-
-contract-v177-v180 按固定原版来源完成 Warrens W10-W13：有序特殊近战与任意死亡触发的半径 3 `EXPLODE`、`KILL_WALL/KILL_ITEM` 事务及原版物品保护、区分睡眠语义的 `HAS_LITE/SELF_LITE` 权威光源，以及 `DROP_60/90/Xd2`、only kind、质量、20% 金币与 50% 职业主题组合。协议保持 1.137、demo 升至 1.174.0、state hash Schema 保持 v63；171 条相关分类 fixtures 原样通过，无 refresh，content hash 为 `fed9c01421e0ee68a6cde5d0b864aee32f4a218d58457cc0d0d06ab6b7d6334f`。详见 [Contract v177](design/contract-v177-monster-melee-effects.md)、[v178](design/contract-v178-monster-terrain-items.md)、[v179](design/contract-v179-monster-light.md) 与 [v180](design/contract-v180-monster-death-drops.md)。
-
-contract-v181 建立通用 Outpost 任务设施并接入原版“盗贼藏身处”首流程：乌尔德里克二世伯爵、东北入口、任务专属 21x8 永久墙地图、八处独立 50% 陷阱候选、四处战利品、六怪阵型、失败/清层/回城领奖，以及可操作的 Web 任务面板。任务放置只绑定目标索引、既有楼层和数量，不携带怪物候选、距离或群体阵型策略；六条单命令 fixture 分别锁住接取、进入、清层、失败、回城和领奖。偷金、偷物、乞讨、地面拾取、完整随机陷阱/物品分配和非 Warrior 奖励矩阵仍显式暂缓。详见 [Contract v181](design/contract-v181-outpost-task-services.md)。
-
-contract-v182 在伯爵设施接入原版“害虫控制”任务：前置完成盗贼藏身处后可接取，目标严格为 Warrens 5 中的 8 只 Warg；`FRIENDS(3d3)` 只描述 Warg 普通生态群体，不改变任务数量。接取后楼层只补足剩余目标并隐藏普通下楼梯；最后一只 Warg 被击杀时生成一处魔法楼梯。未完成任务离层立即失败并丢弃本次阻塞楼层，不保留部分击杀进度；回到伯爵处原子领取原版毛皮披风。两条 `tasks` 分类单命令 fixture 覆盖接取和领奖，协议保持 1.138、demo 升至 1.177.0、state hash Schema 保持 v63，content hash 为 `b51f0b97ac90c025b9c35347b2b2c56c2c2d00d89f53c0534631a1e00d2270a5`，active baseline 共 470 条 exact fixtures、零 waiver。详见 [Contract v182](design/contract-v182-pest-control.md)。
-
-contract-v183 开始把 W1-W13 已能完整承载的原版浅层内容逐批接入正式包：首批增加大白蛇、巨型白蜈蚣、白色恶心物、大棕蛇、绿蠕虫团、电子虫、豺狼、兵蚁、昆虫群、炸弹蚊、蓝伊克与黑娜迦，并让后两者的原版 `DROP_60` 使用 Warrens 通用掉落表；固定源物品选择新增断折的匕首、断折的剑、尖帽子、肮脏的破布与纸装甲。灰霉菌和闪烁的圆点分别等待正式 `NEVER_MOVE` 与 `BLINK` 绑定，不以删减行为的方式接入。协议保持 1.139、demo 升至 1.178.0、state hash Schema 保持 v63，正式包现有 63 种 actor、146 种 item，content hash 为 `9dcd0be8ca01927b4b25cf466c654149e8a8de627360967cdf418ee601e687b6`。详见 [Contract v183](design/contract-v183-shallow-warrens-content-batch.md)。
-
-contract-v184 完成这两个暂缓项：actor movement 新增原版 `NEVER_MOVE` 语义，只禁止自主物理移动而保留相邻近战、施法和位移；正式怪物能力“闪现”复用 `blink-self` 并按原版使用半径 10。灰霉菌与闪烁的圆点现已按原版等级、HP、攻击、抗性、状态免疫、尸体、分配深度和索引加入全局分配，后者以 50% 频率施放闪现。协议保持 1.139、demo 升至 1.179.0、state hash Schema 保持 v63，正式包现有 65 种 actor、146 种 item、70 个 ability，content hash 为 `066a3e92b8ec8698438876ef1f264e106151ad22e06c93a1bd435829f0ade8ff`。详见 [Contract v184](design/contract-v184-stationary-monsters-blink.md)。
-
-contract-v185 建立按原版索引和规范 id 固定的正式怪物选择/同步护栏，未声明旗标、主动施法或不可表达近战会直接拒绝导入；第二批接入金属绿蜈蚣、巨型黑蚁、火蜥蜴、黏糊蠕虫团、大黄蛇、洞穴蜘蛛、黏糊软泥怪、金属蓝蜈蚣、巨型白虱、斑点蘑菇丛、巨型白蚁、黄霉菌、金属红蜈蚣和黄蠕虫团。皮手套在深度 1、软皮靴/硬皮帽/小皮盾在深度 3 加入通用 Warrens 掉落。协议保持 1.139、demo 升至 1.180.0、state hash Schema 保持 v63，正式包现有 79 种 actor、146 种 item、70 个 ability，content hash 为 `7051765d5f3e57bf1967c1e305d63eb6949ca90cbb87ceb24b2a384e6162de93`。详见 [Contract v185](design/contract-v185-warrens-content-batch-2.md)。
-
-contract-v186 接入第三批 13 只机制完备的 4–5 级怪物：黄色闪光、冰霜果冻、爬行铜币、巨型白鼠、白蠕虫团、大灰蛇、骷髅狗头人、泥泞土堆、黏糊果冻、灰色恶心物、红蠕虫团、铜头蛇和新手战士。黄色闪光保留半径 3 自体光源与光爆自毁；新手战士保留 `FRIENDS(2d3, 25%)`、三段近战、`DROP_60` 和 50% 战士主题掉落。深度 5 及以下的固定源被动物品已经全部在正式包和 Warrens 通用表中，本批不伪造新的物品身份。协议保持 1.139、demo 升至 1.181.0、state hash Schema 保持 v63，正式包现有 92 种 actor、146 种 item、70 个 ability，content hash 为 `da4f82376baca9fce9d3f8e4728bae42f5be60cdc69048f14e94b81458b68ab8`。详见 [Contract v186](design/contract-v186-warrens-content-batch-3.md)。
-
-contract-v187 推进正式内容 P3：同步护栏开始把原版主动 `S:` 行严格映射为现有 Ability Program，任何未支持法术仍拒绝导入。绿色果冻、辐射眼、伊渥克人、史纳加、地穴潜行者、洞穴兽人、充血的恶心物、黑鹰身女妖、学徒心灵塑师和都尔桑的乌鸦以原版频率使用吸取法力、射击、创伤诅咒、召唤死灵、声波吐息及致盲/减速/混乱/惊骇；紧咬、野狼、毒牙和东方人布罗达作为首批简单 Unique 接入现有一次性生态。协议保持 1.139、demo 升至 1.182.0、state hash Schema 保持 v63，正式包现有 106 种 actor、146 种 item、82 个 ability，content hash 为 `ed657aa4243293b0a15da53281ff553b18bdce9b4f4e2bbb736cd6beec2162ae`。详见 [Contract v187](design/contract-v187-warrens-content-p3-casters-uniques.md)。
-
-contract-v188 推进正式内容 P4：逐条核对原版全部 29 条 6–7 级记录后，新增紫蘑菇丛、掐死人的断手、巨型褐蝠、响尾蛇、僵尸狗头人、腐烂尸体、木蜘蛛、原魔、粉红果冻和腐蚀恶心物。三段体质吸取、飞行/游泳、随机移动、群体、门、内在光源、抗性、状态免疫和完整近战顺序均按原版正式表达；睡眠 AI、特殊状态近战、银质交互、`KILL_BODY`、荒野专属、穿墙、拾物和职业主题掉落记录继续后置。协议保持 1.139、demo 升至 1.183.0、state hash Schema 保持 v63，正式包现有 116 种 actor、146 种 item、82 个 ability，content hash 为 `8ebbd92c027da328b2c65f32d169a98942dc8310161c959719b0749670815a7c`。详见 [Contract v188](design/contract-v188-warrens-content-p4-level-6-7.md)。
-
-contract-v189 推进正式内容 P5 并完成当前浅层里程碑收口：核对原版全部 45 条 8–9 级记录后，新增骷髅兽人、纳垢灵、褐伊克、食肉飞猴、劣魔、山丘兽人、巨型灰鼠、斯卡文鼠人、岩石鼹鼠、巨型粉红蚁、战熊和杀人蜂。P1–P5 至此已枚举原版全部 173 条 1–9 级记录；正式包中 95 个 actor 带有对应浅层原版索引，其中 63 个由严格选择/同步路径维护，其余 78 条均已绑定明确的延期机制。协议保持 1.139、demo 升至 1.184.0、state hash Schema 保持 v63，正式包现有 128 种 actor、146 种 item、82 个 ability，content hash 为 `9d6be77bac135d2dad8f6c6067f34750c57f02121f905e8606197c2d043d606d`。详见 [Contract v189](design/contract-v189-warrens-content-p5-level-8-9-closure.md)。
-
-contract-v190 推进正式内容 P6：按原版 `FORCE_SLEEP → MFLAG_NICE` 建立一次玩家行动的出生宽限，宽限期怪物不施法且对玩家的高伤近战按 `25 + roll / 2` 限制，但仍可移动和近战；零时间命令不解除宽限，同一命令中新生怪物保留到下一次行动。同步路径新增 Mage、Archer、Priest、Evil Priest 与 Paladin 五类浅层职业掉落，并接入新手巫师、新手牧师、新手弓箭手、新手游侠、巨型火蜥蜴、新手圣武士、兽人萨满、五种幼龙和斯卡文萨满。协议升至 1.140、demo 升至 1.185.0、state hash Schema 升至 v64，正式包现有 141 种 actor、146 种 item、93 个 ability 和 19 张 loot table，content hash 为 `e7a7697de6aab4160c2398cba429559fa7fd62c46b65f3bb929490d859395f3e`。详见 [Contract v190](design/contract-v190-warrens-content-p6-spawn-grace-class-drops.md)。
-
-contract-v191 推进正式内容 P7：`BLIND`、`CONFUSE`、`PARALYZE`、`SLOW`、`STUN` 与 `TERRIFY` 成为有序、可带独立概率的强类型近战 effect，并复用现有失明、混乱、麻痹、减速、眩晕、恐惧及免疫/抗性状态管线；闪烁的圆点同时从纯混乱伤害修正为“伤害 + 混乱”。由此接入漂浮眼、黄蘑菇丛、褐霉菌、充血的眼睛、史纳加队长拉格杜夫、绿霉菌、眼镜王蛇、破碎死亡之剑、冷酷的巴尔克梅格和巨蛾。协议保持 1.140、demo 升至 1.186.0、state hash Schema 保持 v64，正式包现有 151 种 actor、146 种 item、94 个 ability 和 19 张 loot table，content hash 为 `d1cfa9470d91e068baf2bb47ddc2c0c0ad8b1a6dfe8822b02d3127b4d03e4317`。详见 [Contract v191](design/contract-v191-warrens-content-p7-non-damage-melee.md)。
-
-contract-v192 推进正式内容 P8：显式空 `meleeRoutine` 现在表示原版 `NEVER_BLOW`，不再落入默认近战；新增强类型 `aggravate-monsters`，按原版 `SHRIEK` 排除施法者、唤醒两倍视距内怪物并使玩家视线内的敌对怪物加速 100 tick。由此接入尖叫蘑菇丛、白鹰身女妖和射石兽；后者保留每回合 `SHOOT(4d6)`。`DARKNESS` 与 `TRAPS` 继续等待房间暗化和怪物陷阱生成基础设施，不以失忆或空效果代替。协议升至 1.141、demo 升至 1.187.0、state hash Schema 保持 v64，正式包现有 154 种 actor、146 种 item、96 个 ability 和 19 张 loot table，content hash 为 `17ed668316b674de5baaa54d9b5a1fd817a7c5d2ea11b8d914dba462215b5359`。详见 [Contract v192](design/contract-v192-warrens-content-p8-no-melee-utility-spells.md)。
-
-contract-v193 推进正式内容 P9：怪物移动后的 `TAKE_ITEM` 会拾取普通地面物并由怪物携带，跳过金币、尸骨、雕像、神器及会伤害该怪物的 slay/brand 物品；`EAT_GOLD`、`EAT_ITEM`、`EAT_FOOD` 与 `EAT_LITE` 进入有序近战，覆盖敏捷/等级防偷、金币公式、背包单件拆分、食物扣除、非神器光源燃料消耗和偷窃后闪现。赃物沿用携带物死亡掉落事务，所有结果进入本地化事件投影。由此接入小香雪兰、斯密戈、哥布林、绿娜迦、粉红娜迦、小魔怪、吼牛者霍比特人和库塔熊；巧言、罗宾汉仍被未实现的 `TRAPS` 主动法术阻塞。协议保持 1.141、demo 升至 1.188.0、state hash Schema 保持 v64，正式包现有 162 种 actor、146 种 item、96 个 ability 和 19 张 loot table，content hash 为 `4b1c823041b0f60b452d1161546ad4b3eb338b8571b99a5ee9f80f8c3f44296d`。详见 [Contract v193](design/contract-v193-warrens-content-p9-pickup-theft.md)。
-
-contract-v194 推进正式内容 P10：`PASS_WALL` 统一进入寻路、移动、召唤与落位，并仅穿越声明 `allowsWallPassage` 的非永久墙体；`AQUATIC` 只进入水域，飞行水生怪可越过适飞地形。`INVISIBLE` 从权威实体/格子投影隐藏，装备 `see-invisible` 时按原版搜索技能公式在进入视野或目标移动后判定，已看破状态随 actor 保存；隐藏占位仍可由位置移动触发近战。Outpost 新增疏林与深浅水面，按 `WILD_*` habitat、等级、rarity 与移动域分配地表怪物。由此新增透明恶心物、巨型绿蛙、乌鸦、吵闹鬼、渡鸦、食人鱼、透明蠕虫团、剑鱼、巨型水蛭、绿色贪吃鬼、巨型粉红蛙、迷失的灵魂、太空怪兽、幻影战士、受伤的熊、僧帽水母、血牙狼、老鹰和地缚灵；迷失的灵魂同时使用正式资源吸取近战。协议升至 1.142、demo 升至 1.189.0、state hash Schema 升至 v65，正式包现有 181 种 actor、146 种 item、97 个 ability、78 种 terrain 和 19 张 loot table，content hash 为 `91008be8add20b2a75cbdc7f73dbd5267e3beb9e9a31b9dc3fae31c2805dcc35`。详见 [Contract v194](design/contract-v194-warrens-content-p10-movement-visibility-habitats.md)。
-
-contract-v195 推进正式内容 P11：`KILL_BODY` 以原版强度积比较让强者在寻路中攻击挡路弱者，`RANGED_MELEE` 在两格直线/偏轴且线路干净时复用完整近战 routine；`RIDING` 建立 V+方向的骑乘/下马、坐骑移动域与速度、同格状态、楼层跟随、死亡清理及存档闭环，并保留绵羊的原版三条拒绝彩蛋。`SILVER` 只记录权威材质事实，当前没有银脆弱角色，因而不扩建无调用方的伤害系统。由此新增哭闹的恶心物、新手考古学家、爬行银币、巨型鼻涕虫、马、难以驯服的马和绵羊，恰克波补上可骑乘事实。协议升至 1.143、demo 升至 1.190.0、state hash Schema 升至 v66，正式包现有 188 种 actor、146 种 item、98 个 ability、78 种 terrain 和 19 张 loot table，content hash 为 `72e709d0f66adba524769d31809d1747f73daea7d5aeff1ccaf5744531f73f1b`。详见 [Contract v195](design/contract-v195-warrens-content-p11-special-mechanics.md)。
-
-contract-v196 推进正式内容 P12：`FRIENDLY` 让航海士娜美作为自主友方参与既有怪物 AI，敌我目标、清层判定和快照阵营同步区分；`TRAPS` 复用地形转换，在目标周围把合格空地变为既有兽穴陷阱。追踪者按原版 `1/333` 仅覆盖 10 级以上非 Unique 的普通分配怪物外观，真实种类、属性、掉落与死亡不变，外观状态随存档持久化；板栗崽直接进入浅层分配。严格清单同时绑定并永久排除 5 条 `DEPRECATED` 旧索引。协议升至 1.144、demo 升至 1.191.0、state hash Schema 升至 v67，正式包现有 191 种 actor、146 种 item、100 个 ability、78 种 terrain 和 19 张 loot table，content hash 为 `c3440aa696805626dcde6222cc058bcb12b7b0f8a9213fd4f2ff8f7d5f28fdea`。详见 [Contract v196](design/contract-v196-warrens-content-p12-special-lifecycles.md)。
-
-荒野 W0 已把 RFB `master` 的 normal `w_info.txt` 世界图作为可选 `WorldDefinition.wilderness` 数据接入正式世界：`99x66` 定长地图、15 类地形、源危险等级、道路和起点 `(28,52)` 均由严格同步入口维护；只有已经存在的 Outpost 与 Warrens 被激活为地点，其余城镇/地牢不创建占位内容。当前不改变战术地表、旅行、协议或存档。demo 升至 1.192.0，content hash 为 `02577f7c9262ee49d7f73ec13e3271a674cedc4e1af297e9359032cfb5532962`。详见 [Wilderness W0](design/wilderness-w0-authoritative-data.md)。
-
-荒野 W1 在同一套地图管线上加入 `local | world` 权威尺度、荒野位置与种子存档/回放/哈希，以及 `<` 进入、`>` 返回的大地图命令。世界尺度继续使用现有 `cells`、Pixi renderer、镜头、缩放和 `x` 查看；每格只增加危险等级与地点元数据。世界图中 Core 只接受返回命令，前端同步屏蔽拾物、战斗、商店、物品变更和战术地形操作。协议升至 1.145、state hash Schema 升至 v68、contract 基线升至 v197；demo 仍为 1.192.0，内容 hash 不变。详见 [Wilderness W1](design/wilderness-w1-map-state-display.md)。
-
-荒野 W2 开放世界格移动，并按原版 `(MAX_HGT + MAX_WID) / 2 = 132` 倍移动耗时推进饥饿、光源、恢复与商店时钟；隐藏的本地怪物保持冻结。非城镇格使用 `wildernessSeed + 坐标` 确定性生成 `96x32` 局部荒野，混合四向邻格边界、按相邻道路连线，并复用 P10 habitat 和平滑危险等级分配怪物；越过局部边缘只重建相邻世界格，普通荒野不做全图缓存。协议仍为 1.145、state hash Schema 仍为 v68、contract-v197 基线不变；demo 升至 1.193.0，内容 hash 为 `5df3ee0a7bace5b35b805cd0ce22c0d373e3b9fbf38b379b8724d6bf64061b46`。详见 [Wilderness W2](design/wilderness-w2-travel-local-generation.md)。
-
-荒野 W3 从既有 `worldTick` 派生原版十万 tick 日周期与半日昼夜，统一驱动地表环境光、白昼惧光怪物过滤和状态栏时间。每次成功世界移动按原版危险等级、道路、昼夜、玩家等级与潜行公式掷伏击；触发时切回当前格局部荒野，以 20 次 habitat 分配生成伏击并让怪物取得先手。仍有敌对伏击者时禁止重返大地图，威胁状态直接从 actor 推导。协议 1.145、state hash Schema v68 与 demo 1.193.0 不变；公共地表初始化变化使基线升至 contract-v198。详见 [Wilderness W3](design/wilderness-w3-day-night-ambush.md)。
-
-荒野 W4 把现有 Outpost 地表与 Warrens 地牢正式绑定到同一 `(28,52)` 地点。世界尺度继续拒绝楼梯命令；玩家必须返回保存的 Outpost 局部地图并站在城东 Warrens 入口上，且当前世界坐标的 `Dungeon` 地点 ID 必须匹配，才能进入既有九层地牢。返回地表复用楼层缓存，精确恢复世界坐标、入口格、任务和商店状态。该纵切不增加协议、存档、哈希或内容数据，协议仍为 1.145、state hash Schema 仍为 v68、demo 仍为 1.193.0、contract-v198 基线不变。Orc Cave 及其他地点在对应 10–15 级内容完成前不激活。详见 [Wilderness W4](design/wilderness-w4-location-loop.md)。
-
-荒野 W5 接入原版扩展纵切：低层草地/荒地格以坐标种子按 `1/10` 生成 `Ruined Home` 特殊遭遇并显示原版发现消息；世界图 `x` 选点、回车自动旅行，大写 `J` 可在伏击、返回大图或读档后恢复目标，八方向寻路的每一步继续走 132 倍时间和伏击规则。深水超重溺水、浅/深熔岩、雪地伤害与雪地停止恢复进入统一环境结算；进入大图显式确认留下宠物和取消生效中的召回，当前坐骑随行。协议升至 1.146、state hash Schema 升至 v69、contract-v199；demo 内容版本与 hash 不变。随机单层地下城和城镇传送分别等待原版 20–50 级内容及第二座真实城镇，不建立占位消费者。详见 [Wilderness W5](design/wilderness-w5-original-extensions.md)。
-
-物品 P1 从 RFB `master` 的规则已可表达候选中加入 8 件等级 10、带 `TOWN` 标记的普通武器：克佩什弯剑、新月弯刀、短斧、镰刀、破甲锥、卢塞恩长戟、铁头木棍和晨星锤。固定源索引与 normalized id 进入严格选择清单，重量、价值、武器槽和伤害骰由同步器生成；八件物品进入 Outpost 武器店，不进入当前深度 1–9 的 Warrens 掉落。demo 升至 1.193.0，正式包现有 191 种 actor、154 种 item、100 个 ability，content hash 为 `b4c2ee223736f6c905f7c34dcd29069f15c2fd678f76259eca69ab2368fd8c31`。详见 [Phase 19 物品集成](design/phase-19-legacy-item-integration.md)。
-
-物品 P2 将 45 个规则完整的原版卷轴身份和 44 个原版药水身份正式化：新增 5 个卷轴、22 个药水及对应 effect program，全部 89 个条目使用 RFB `master` 的权威名称、中文名、flavor、重量与价值；原版 `TOWN` 条目进入 Alchemist/Temple，等级 0–9 条目按源等级进入 Warrens。三个动态设备壳和四本死亡领域法书完成覆盖账本核对。Treasure Detection 经正式编译验证后确认仍缺金币堆探测，改列 `gold-detection` 阻塞，不以普通物品探测代替。demo 升至 1.194.0，正式包现有 191 种 actor、181 种 item、100 个 ability，content hash 为 `7b040392db6925522459b6b0fd6f484a615d67d16eaed95f2885d026d0618774`。详见 [Phase 19 物品集成](design/phase-19-legacy-item-integration.md)。
-
-物品 P3.1 完成食物与基础异常状态批次：18 种蘑菇、硬饼干、鹿肉干、史莱姆黏菌、满足饥饿卷轴和睡眠药水共 23 个来源身份全部由 blocked 转 active。食物按原版顺序先执行特殊效果再增加源 `pval` 营养；混乱、麻痹和幻觉进入通用持久状态，幻觉显示只按 cell index 与 `worldTick` 确定性扰动，不消耗核心 RNG。Fast Recovery、酒、葡萄酒和精灵面包继续保留双重 blocker。demo 升至 1.195.0，正式包现有 191 种 actor、204 种 item、100 个 ability；审计为 179 active、106 mechanics-ready、259 blocked，content hash 为 `56ed89d064461fa87225ef8e06f030b75c29648bdaa33a8236e3c2f116e0dcf7`。协议、存档和 State Hash Schema 不变；共享 replay baseline 留待集成工作树统一刷新。详见 [Phase 19 物品集成](design/phase-19-legacy-item-integration.md)。
-
-contract-v197 推进正式内容 P13：高阶地狱兽、黄色果冻、佐格虫、巧言、罗宾汉、虱子王劳西和鸭子共 7 只进入严格同步。无骰 `HURT` 只表达为受护甲减免的精确 `0d0`，`S_LOUSE` 复用既有类别召唤并由唯一 `louse` 标签候选锁定巨型白虱；巧言和罗宾汉同时生成寒冰箭、恶臭之云与射击能力。协议保持 1.144、state hash Schema 保持 v67，demo 升至 1.193.0；正式包现有 198 种 actor、104 个 ability，浅层正式 actor 165 条、严格同步 133 条，content hash 为 `de810d68f142e4f1574f5d17ed58323c0d10f877c29373dc752a7b0493394698`。详见 [Contract v197](design/contract-v197-warrens-content-p13-shallow-harvest.md)。
-
-contract-v198 推进正式内容 P14：无骰 `DISENCHANT` 成为窄近战 effect，按原版 4:1 分支清除当前已建模正面时效或削减随机已装备武器、护甲、弹药的正强化，并复用解除附魔抗性与神器 71% 抵抗；负面状态、HP、actor 对 actor 装备语义均不被近似改写。解除附魔之眼按索引 104 加入严格同步并生成 3 点吸取法力。协议保持 1.144、state hash Schema 保持 v67，demo 升至 1.194.0；正式包现有 199 种 actor、105 个 ability，浅层正式 actor 166 条、严格同步 134 条，content hash 为 `47efafab50f3e2787d0a713aa2726b226fbddb8c93bc958a662a08411c2c369b`。详见 [Contract v198](design/contract-v198-warrens-content-p14-disenchanter-eye.md)。
-
-contract-v199 推进正式内容 P15：程序化房间生成持久 `glow`，当前层、离层存储、save 与 state hash 使用同一逐格状态；`darken-room` 只清除施法落点所在的连通房间永久光，银色果冻的半径 1 黑暗源也只压制永久房间光，不压制玩家光源或怪物主动光。银色果冻与黑暗精灵进入严格同步，浅层普查至此收口。协议升至 1.145、state hash Schema 升至 v68，demo 升至 1.195.0；正式包现有 201 种 actor、106 个 ability，浅层正式 actor 168 条、严格同步 136 条，content hash 为 `b67309b1973ab483e71c90fce594d20af1d66bbb7b4ada6665fbcdbd4f513e18`。详见 [Contract v199](design/contract-v199-warrens-content-p15-darkness.md)。
-
-contract-v200 推进正式内容 P16：梭鱼、巨型蜘蛛、巨型白蜱、波尔申、神风特攻伊克、沙漠栖息者、透明蘑菇丛、山丘兽人葛力斯那克、巨型食人鱼、枭熊、蓝色惧妖、长毛霉菌、爬行金币、狼、巨型果蝇、黑豹、老虎霍布斯、菲奥娜的暗影生物、亡灵聚合体和猞猁共 20 只十级非施法怪物进入严格同步。全部复用现有近战、状态、移动、分配、群体、繁殖、Unique、掉落与外观路径；猞猁保留 `WILD_ONLY`，不进入普通 Warrens 分配。协议保持 1.145、state hash Schema 保持 v68，demo 升至 1.196.0；正式包现有 221 种 actor、106 个 ability，严格同步 156 条，content hash 为 `9c57c9fee1ffad6eebe37c8be662219f2723ced96554a3adea008e06a6d0f3a2`。详见 [Contract v200](design/contract-v200-warrens-content-p16-level-10-harvest.md)。
-
-contract-v201 推进正式内容 P17：黑暗精灵法师、博尔多之子欧法克斯、格拉基的仆从、黑暗精灵战士、箭袋插槽、解除附魔霉菌和天狗共 7 只十级施法怪物进入严格同步。全部复用现有伤害、状态、治疗、位移、召唤和怪物施法路径；严格 actor 同时保留既有 `legacy-import` 类别，使 `S_MONSTER` 拥有完整正式候选池。源数据最终生成寒冰箭 `6d8+3`、治疗 30、传送到身边、传送他人、吸取法力 6 和单只十级怪物召唤共 6 个 ability。协议保持 1.145、state hash Schema 保持 v68，demo 升至 1.197.0；正式包现有 228 种 actor、112 个 ability，严格同步 163 条，content hash 为 `d645415a7e27e519eb27d6e88b096e46c4ac7cdda01dd981a6468e92218142dc`。详见 [Contract v201](design/contract-v201-warrens-content-p17-level-10-casters.md)。
-
-contract-v202 推进正式内容 P18：导入器将原版近战元素名 `LIGHT` 严格归一为既有 `LITE`/`light` 语义，伪龙连同光明、黑暗吐息进入严格同步。两种吐息均复用现有生命比例锥形伤害，未新增 effect、协议字段或存档结构。协议保持 1.145、state hash Schema 保持 v68，demo 升至 1.198.0；正式包现有 229 种 actor、114 个 ability，严格同步 164 条，content hash 为 `6177272314068a98182321ef35baf1214c726a2230a156a57fb71f2bf72112e8`。详见 [Contract v202](design/contract-v202-warrens-content-p18-pseudo-dragon.md)。
-
-contract-v203 推进正式内容 P19：多彩龙幼龙、锋锐兔、马头鱼尾怪、僵尸兽人、浅水洼和怪诞者卢格共 6 只低风险十一级怪物进入严格同步。全部复用现有吐息、闪现、水生、骑乘、Unique、掉落、抗性与近战状态路径，没有新增 ability 或 effect 类型。协议保持 1.145、state hash Schema 保持 v68，demo 升至 1.199.0；正式包现有 235 种 actor、114 个 ability，严格同步 170 条，content hash 为 `f3a9f16c4d40fa7b6b4472f856fbf22af7e33727324afc5f2962ad84cf11912b`。详见 [Contract v203](design/contract-v203-warrens-content-p19-level-11-low-risk.md)。
-
-集成收口将荒野 W0–W5、物品 P1–P3.1 与怪物 P13–P19 合入同一主线：协议统一为 1.147、state hash Schema v70、基线 contract-v204，demo 统一为 1.200.0；正式包现有 86 种 terrain、235 种 actor、204 种 item 和 114 个 ability，content hash 为 `2273089117afc9e9f5ac4947407da9463d6eb8946fcbf7fb3a1a3f27cebd336b`。
-
-### 本地验证
+构建无需 Vite 开发服务器的独立调试版：
+
+```powershell
+cd web
+npm run build:standalone:debug
+```
+
+生成的 Windows 可执行文件位于 `target/debug/rfb-tauri.exe`。普通 Cargo 构建仍可能依赖 Vite 开发服务器。
+
+## 技术与结构
+
+- Rust：确定性规则、内容编译、存档、回放和契约测试。
+- TypeScript + Vite：客户端状态、交互与构建。
+- PixiJS：地图和游戏画面渲染。
+- Tauri 2：原生应用外壳与 IPC。
+- Fluent：本地化。
+
+| 路径 | 职责 |
+| --- | --- |
+| `crates/rfb-core` | 游戏规则、运行时状态与确定性模拟 |
+| `crates/rfb-protocol` | IPC DTO、TypeScript 绑定与协议 Schema |
+| `crates/rfb-content` | 内容包加载、编译与验证 |
+| `crates/rfb-contract` | 精确行为 fixture 与回归基线 |
+| `crates/rfb-save`、`crates/rfb-replay` | 存档容器与回放 |
+| `crates/rfb-legacy-*` | 旧版数据探测与导入工具 |
+| `web` | TypeScript/PixiJS 前端 |
+| `web/src-tauri` | Tauri 原生后端 |
+| `packs/rfb-demo-original` | 当前演示内容包 |
+| `design`、`tests/fixtures/active` | 设计记录与有效契约样例 |
+
+## 关键文档
+
+- [系统实现路线图](design/rfb-system-implementation-roadmap.md)
+- [待实现清单](design/pending-implementation.md)
+- [发布垂直切片](design/release-vertical-slice.md)
+- [协议 v1](design/protocol-v1.md)
+- [内容格式 v1](design/content-format-v1.md)
+- [存档格式 v1](design/save-format-v1.md)
+- [确定性模拟](design/deterministic-simulation.md)
+- [基线更新策略](design/baseline-update-policy.md)
+- [物品集成现状](design/phase-19-legacy-item-integration.md)
+- [怪物机制待办](design/warrens-monster-mechanism-backlog.md)
+- [荒野 W5 扩展](design/wilderness-w5-original-extensions.md)
+
+历史契约与专题设计均保留在 [`design/`](design/) 中。
+
+## 验证
+
+日常开发按改动范围选择相关检查：
 
 ```powershell
 cargo fmt --all -- --check
-cargo test --workspace
-cargo clippy --workspace --exclude rfb-tauri --all-targets -- -D warnings
+cargo test -p rfb-core
+cargo test -p rfb-content
 cargo test -p rfb-contract
+cargo clippy --workspace --exclude rfb-tauri --all-targets -- -D warnings
+
 cargo run -p rfb-protocol --features bindings --bin generate-bindings -- --check
 cargo run -p rfb-content --features schemas --bin generate-content-schemas -- --check
 cargo run -p rfb-content --bin rfb-contentc -- verify-source packs/rfb-demo-original
 
 cd web
-npm ci
 npm test
-npm run build:standalone:debug
-npm run build -- --no-bundle
-# 启动可玩开发版：npm run dev
+npm run typecheck
+npm run build:ui
 ```
 
-`npm run build:standalone:debug` 生成可直接双击、无需 Vite 服务的 `target/debug/rfb-tauri.exe`。普通 `cargo build -p rfb-tauri` 只生成连接 `devUrl` 的开发程序，不能作为玩家测试封包。
+协议生成会同步 `web/src/protocol.ts` 与 `schemas/protocol-v1.schema.json`。完整 workspace、桌面 E2E 和 Android 构建仅在相关改动或里程碑验收时运行；细节见 [桌面 E2E](design/tauri-desktop-e2e.md) 与 [Android 目标](design/android-target.md)。
 
-Rust 是 CoreTransport DTO 的唯一权威来源。修改 `rfb-protocol` 后运行：
+## 旧版来源
 
-```powershell
-cargo run -p rfb-protocol --features bindings --bin generate-bindings
-```
+原项目：[UncleFvcker/RoguelikeFansBand-zh-CN](https://github.com/UncleFvcker/RoguelikeFansBand-zh-CN)。
 
-该命令更新 `web/src/protocol.ts` 和 `schemas/protocol-v1.schema.json`；CI 使用 `--check` 拒绝未同步的生成文件。
+新增规则与内容以本地 `D:/codex/Frogcomposband/master` 仓库的 `master` Git ref 为权威来源，并通过 Git 对象读取；不要依赖该仓库当前检出的分支或工作树。环境变量 `RFB_LEGACY_SOURCE` 可指定旧版仓库位置。历史契约和旧存档样例只有在明确固定提交时才沿用旧 ref。
 
-验证或编译原创内容包：
+## 许可证
 
-```powershell
-cargo run -p rfb-content --bin rfb-contentc -- verify-source packs/rfb-demo-original
-cargo run -p rfb-content --bin rfb-contentc -- compile packs/rfb-demo-original target/generated/rfb-demo-original.rfbcontent
-cargo run -p rfb-content --features schemas --bin generate-content-schemas
-```
+- 代码、测试和 Schema：MPL-2.0。
+- 项目自有文档、游戏数据和美术：CC BY-SA 4.0。
+- 第三方依赖和导入资产继续遵循各自许可证，旧版内容不会因导入而被重新授权。
 
-内容编译器会严格解析 JSON、校验稳定 ID/引用/范围，规范化排序后输出带 SHA-256 校验的 MessagePack 容器。修改内容时可先运行 `rfb-contentc inspect-source packs/rfb-demo-original` 查看新 hash，再显式更新 lock；首个原创包的固定 content hash 记录在 `packs/rfb-demo-original/content.lock.json`。
-
-如需生成固定 1.3.0.7 旧存档基准所用的本地参考 manifest：
-
-```powershell
-$env:RFB_LEGACY_SOURCE="D:/codex/Frogcomposband/master"
-$env:RFB_LEGACY_REF="v1.3.0.7"
-$env:RFB_LEGACY_COMMIT="191f48c3fd1cdbc81a3d3395a88cd6758402b4d9"
-cargo run -p rfb-legacy-probe
-```
-
-登记本地旧存档样本时显式传入至少 3 个旧仓库内的文件路径：
-
-```powershell
-cargo run -p rfb-legacy-probe -- catalog-saves <旧存档1> <旧存档2> <旧存档3>
-```
-
-工具只把中性命名副本、SHA-256、四字节版本头和本地清单写入被 Git 忽略的 `.local/legacy-baseline/`。当前机器已经准备两份 1.3.0.7 样本和一份 1.2.0.6 迁移样本。
-
-解析旧存档的稳定前缀并建立本地字段断言：
-
-```powershell
-cargo run -p rfb-legacy-import -- inspect-prefix .local/legacy-baseline/saves/legacy-save-01.bin
-cargo run -p rfb-legacy-import -- record-catalog .local/legacy-baseline/save-samples.json
-cargo run -p rfb-legacy-import -- verify-catalog .local/legacy-baseline/save-samples.json
-$env:RFB_LEGACY_SOURCE = "D:/codex/Frogcomposband/master"; cargo run -p rfb-legacy-import -- import-content .local/packs/rfb-legacy
-$env:RFB_LEGACY_SOURCE = "D:/codex/Frogcomposband/master"; cargo run -p rfb-legacy-import -- audit-demo-items packs/rfb-demo-original/legacy-item-selection.json packs/rfb-demo-original/legacy-item-adaptations.json packs/rfb-demo-original/legacy-item-p3-plan.json packs/rfb-demo-original/items
-```
-
-`import-content`、`audit-demo-items`、`sync-demo-items`、`sync-demo-monsters` 和 `sync-demo-wilderness` 始终读取该仓库 `master` 引用解析出的 Git 对象；它们不读取当前工作树。旧存档命令仍使用固定 1.3.0.7 基准，只解析不依赖旧 C 结构体内存布局的 409 字节稳定前缀，包括版本、保存元数据、63 项 RNG 状态和选项位。生成的 `parsed-save-samples.json` 仍位于 `.local/`，不会进入 Git；`record-catalog` 拒绝覆盖已有基线。
-
-快照规范化和 hash：
-
-```powershell
-cargo run -p rfb-contract -- normalize-snapshot <snapshot.json>
-cargo run -p rfb-contract -- hash-snapshot <snapshot.json>
-cargo run -p rfb-contract -- validate-policy tests/fixtures/active/baseline-policy.json
-cargo run -p rfb-contract -- verify-category tests/fixtures/active/baseline-policy.json <category> [category ...]
-cargo run -p rfb-contract -- refresh-category tests/fixtures/active/baseline-policy.json <category> [category ...]
-```
-
-当前 470 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
-
-```powershell
-cd web
-npm run e2e
-```
-
-测试覆盖 Rust 权威 FOV/光照增量、地图局部更新、terrain chunk 缓存/失效/视口剔除、Canvas/HTML 消息分层、镜头与缩放、地面物品拾取、背包多选、装备属性、卸下、部分/批量丢弃、原生存档槽的新建/载入/覆盖/删除、手动存档导出与恢复、回放导出、自动崩溃诊断和 tileset 热切换；失败时会在仓库根目录的 `test-results/` 生成截图和日志。
-
-Tauri Android ARM64 Debug APK 构建链也已经建立，Windows 本地可运行：
-
-```powershell
-.\scripts\build-android.ps1 -Proxy http://127.0.0.1:7897
-```
-
-Android 与 Windows 使用同一个 Rust 核心和 Tauri Commands。详细依赖、产物位置和当前尚未完成的真机验证见 [Tauri Android 原生目标](design/android-target.md)。
+详见 [`LICENSES/README.md`](LICENSES/README.md) 与 [`NOTICE`](NOTICE)。
