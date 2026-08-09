@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/mutation.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.mutation.poly-wound",
+  "name": "伤口变形",
+  "description": "你的生命值受混沌力量的影响。",
+  "rating": "average",
+  "sourceIndex": 52,
+  "randomWeight": 2,
+  "removesOnGain": []
+}

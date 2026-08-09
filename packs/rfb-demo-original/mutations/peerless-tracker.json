@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/mutation.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.mutation.peerless-tracker",
+  "name": "无双追踪者",
+  "description": "你是一名无双的追踪者。",
+  "rating": "great",
+  "sourceIndex": 108,
+  "randomWeight": 0,
+  "removesOnGain": []
+}

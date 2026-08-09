@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/mutation.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.mutation.draconian-lore",
+  "name": "远古知识",
+  "description": "物品在你捡起时会自动鉴定。",
+  "rating": "good",
+  "sourceIndex": 128,
+  "randomWeight": 0,
+  "removesOnGain": []
+}

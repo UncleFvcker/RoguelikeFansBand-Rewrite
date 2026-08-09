@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/mutation.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.mutation.normality",
+  "name": "正常化",
+  "description": "你也许变异了，但你正在恢复。",
+  "rating": "bad",
+  "sourceIndex": 50,
+  "randomWeight": 6,
+  "removesOnGain": []
+}

@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/mutation.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.mutation.vortex-control",
+  "name": "吐息控制",
+  "description": "你控制着你的吐息。",
+  "rating": "good",
+  "sourceIndex": 143,
+  "randomWeight": 0,
+  "removesOnGain": []
+}

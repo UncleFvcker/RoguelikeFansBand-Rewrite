@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/mutation.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.mutation.astral-guide",
+  "name": "星界向导",
+  "description": "你是一名星界向导（传送消耗更少的能量）。",
+  "rating": "good",
+  "sourceIndex": 114,
+  "randomWeight": 0,
+  "removesOnGain": []
+}

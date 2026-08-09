@@ -133,6 +133,8 @@ pub enum ContentError {
     InvalidStartingItems(String),
     #[error("character build definition is invalid: {0}")]
     InvalidCharacterBuild(String),
+    #[error("mutation definition is invalid: {0}")]
+    InvalidMutation(String),
     #[error("loot table weights, entries, or generated item constraints are invalid: {0}")]
     InvalidLootTable(String),
     #[error("encounter table weights, depth ranges, or actor entries are invalid: {0}")]

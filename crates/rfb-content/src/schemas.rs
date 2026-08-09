@@ -8,8 +8,8 @@ use super::{
     AbilityBookDefinition, AbilityProgramDefinition, ActorDefinition, AffixDefinition,
     BUILD_SCHEMA, CLASS_SCHEMA, CharacterBuildDefinition, ClassDefinition, EFFECT_PROGRAM_SCHEMA,
     ENCOUNTER_TABLE_SCHEMA, EffectProgramDefinition, EncounterTableDefinition, ITEM_SCHEMA,
-    LOOT_TABLE_SCHEMA, LootTableDefinition, PACK_SCHEMA, PERSONALITY_SCHEMA,
-    PLAYER_ABILITY_BINDING_SCHEMA, PackManifest, PersonalityDefinition,
+    LOOT_TABLE_SCHEMA, LootTableDefinition, MUTATION_SCHEMA, MutationDefinition, PACK_SCHEMA,
+    PERSONALITY_SCHEMA, PLAYER_ABILITY_BINDING_SCHEMA, PackManifest, PersonalityDefinition,
     PlayerAbilityBindingDefinition, RACE_SCHEMA, REGION_TABLE_SCHEMA, RESOURCE_SCHEMA,
     RaceDefinition, RegionTableDefinition, ResourceDefinition, SHOP_SCHEMA, SKILL_SCHEMA,
     SKILL_SET_SCHEMA, ShopDefinition, SkillDefinition, SkillSetDefinition, SourceAbilityDefinition,
@@ -92,6 +92,11 @@ pub fn generated_schema_documents() -> Result<Vec<(&'static str, String)>, serde
             "build.schema.json",
             BUILD_SCHEMA,
             schema_for!(CharacterBuildDefinition),
+        )?,
+        schema_document(
+            "mutation.schema.json",
+            MUTATION_SCHEMA,
+            schema_for!(MutationDefinition),
         )?,
         schema_document(
             "affix.schema.json",

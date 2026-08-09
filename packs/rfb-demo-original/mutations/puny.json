@@ -1,0 +1,16 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/mutation.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.mutation.puny",
+  "name": "孱弱",
+  "description": "你很孱弱 (-4 力量)。",
+  "rating": "awful",
+  "sourceIndex": 65,
+  "randomWeight": 6,
+  "modifiers": {
+    "strength": -4
+  },
+  "removesOnGain": [
+    "rfb.mutation.hyper-str"
+  ]
+}

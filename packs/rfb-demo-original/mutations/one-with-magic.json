@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/mutation.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.mutation.one-with-magic",
+  "name": "魔法亲和",
+  "description": "你有几率抵抗解除魔法和反魔法。",
+  "rating": "great",
+  "sourceIndex": 107,
+  "randomWeight": 0,
+  "removesOnGain": []
+}

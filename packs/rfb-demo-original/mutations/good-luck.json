@@ -1,0 +1,13 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/mutation.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.mutation.good-luck",
+  "name": "白色光环",
+  "description": "你的周围环绕着白色的光环。",
+  "rating": "great",
+  "sourceIndex": 95,
+  "randomWeight": 2,
+  "removesOnGain": [
+    "rfb.mutation.bad-luck"
+  ]
+}

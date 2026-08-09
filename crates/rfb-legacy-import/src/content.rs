@@ -6,6 +6,10 @@
 //! report so rule work can be prioritised from data. No legacy text enters
 //! the repository: unit tests use synthetic samples only.
 
+mod mutation_audit;
+
+pub use mutation_audit::{DemoMutationCoverageReport, audit_demo_mutations};
+
 use std::{
     collections::{BTreeMap, BTreeSet},
     fmt::Display,

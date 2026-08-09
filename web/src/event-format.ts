@@ -35,6 +35,14 @@ export function createPresentationFormatter(
 
   function formatEvent(event: GameEventDto): string {
     switch (event.messageKey) {
+      case "mutation-gained":
+        return localization.format("message-mutation-gained", {
+          mutation: event.args.name ?? event.args.target ?? "?",
+        });
+      case "mutation-lost":
+        return localization.format("message-mutation-lost", {
+          mutation: event.args.name ?? event.args.target ?? "?",
+        });
       case "ability-studied":
         return localization.format("message-ability-studied", {
           ability: contentName(event.args.target),
@@ -209,6 +217,23 @@ export function createPresentationFormatter(
           ability: contentName(event.args.source),
           target: contentName(event.args.target),
         });
+      case "mutation-aura-hit":
+      case "mutation-aura-slay": {
+        const resolution =
+          event.outcome?.type === "damage" || event.outcome?.type === "death"
+            ? event.outcome.resolution
+            : undefined;
+        return localization.format(
+          event.messageKey === "mutation-aura-slay"
+            ? "message-mutation-aura-slay"
+            : "message-mutation-aura-hit",
+          {
+            type: resolution ? damageTypeName(resolution.damageType) : "?",
+            target: contentName(event.args.target),
+            damage: event.args.damage ?? "?",
+          },
+        );
+      }
       case "combat-bolt-reflected":
         return localization.format("message-combat-bolt-reflected", {
           reflector: contentName(event.args.reflector),
@@ -1330,6 +1355,8 @@ export function createPresentationFormatter(
       poison: "damage-type-poison-name",
       light: "damage-type-light-name",
       dark: "damage-type-dark-name",
+      blindness: "damage-type-blindness-name",
+      fear: "damage-type-fear-name",
       confusion: "damage-type-confusion-name",
       nether: "damage-type-nether-name",
       nexus: "damage-type-nexus-name",

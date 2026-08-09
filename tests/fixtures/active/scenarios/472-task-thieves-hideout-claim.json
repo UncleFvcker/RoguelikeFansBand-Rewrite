@@ -46,7 +46,7 @@
       "revision": 1,
       "turn": 1,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 166,
+      "rngDrawCounter": 165,
       "floorId": "demo.floor.surface",
       "town": {
         "id": "demo.town.outpost",
@@ -292,36 +292,42 @@
           "strength": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 98,
             "effective": 17,
             "index": 14
           },
           "intelligence": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 108,
             "effective": 11,
             "index": 8
           },
           "wisdom": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 138,
             "effective": 11,
             "index": 8
           },
           "dexterity": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 138,
             "effective": 15,
             "index": 12
           },
           "constitution": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 108,
             "effective": 15,
             "index": 12
           },
           "charisma": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 118,
             "effective": 14,
             "index": 11
           }
@@ -847,7 +853,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 164,
+      "nextItemInstanceSerial": 165,
       "nextGoldPileSerial": 1,
       "tasks": [
         {
@@ -883,7 +889,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 1
       },
-      "stateHash": "3956c9293525a6e69f7381887ba945ea466bbfb7341e64a857728e417b0e3f56"
+      "stateHash": "01b00b06653ae60e984674634bfed88c6c5a2b3d33235a1940895042fef831e5"
     },
     "events": [
       {

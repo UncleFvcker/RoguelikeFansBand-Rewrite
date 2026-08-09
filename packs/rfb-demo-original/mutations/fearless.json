@@ -1,0 +1,15 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/mutation.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.mutation.fearless",
+  "name": "无所畏惧",
+  "description": "你无所畏惧。",
+  "rating": "average",
+  "sourceIndex": 87,
+  "randomWeight": 6,
+  "resistances": { "fear": "resistant" },
+  "removesOnGain": [
+    "rfb.mutation.cowardice",
+    "rfb.mutation.no-inhibitions"
+  ]
+}

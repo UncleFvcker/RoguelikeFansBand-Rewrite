@@ -1,0 +1,15 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/mutation.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.mutation.xtra-fat",
+  "name": "额外脂肪",
+  "description": "你极其肥胖 (+2 体质, -2 速度)。",
+  "rating": "average",
+  "sourceIndex": 69,
+  "randomWeight": 4,
+  "modifiers": {
+    "constitution": 2,
+    "speed": -2
+  },
+  "removesOnGain": []
+}

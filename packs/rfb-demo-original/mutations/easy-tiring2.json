@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/mutation.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.mutation.easy-tiring2",
+  "name": "极易疲劳",
+  "description": "使用魔法或远程武器会使你疲惫。",
+  "rating": "awful",
+  "sourceIndex": 144,
+  "randomWeight": 0,
+  "removesOnGain": []
+}

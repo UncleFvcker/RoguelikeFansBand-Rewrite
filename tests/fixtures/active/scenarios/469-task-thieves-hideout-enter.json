@@ -45,7 +45,7 @@
       "turn": 1,
       "worldTick": 10,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 238,
+      "rngDrawCounter": 234,
       "floorId": "demo.floor.thieves-hideout",
       "playerPosition": {
         "x": 1,
@@ -82,36 +82,42 @@
           "strength": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 108,
             "effective": 17,
             "index": 14
           },
           "intelligence": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 108,
             "effective": 11,
             "index": 8
           },
           "wisdom": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 118,
             "effective": 11,
             "index": 8
           },
           "dexterity": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 128,
             "effective": 15,
             "index": 12
           },
           "constitution": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 128,
             "effective": 15,
             "index": 12
           },
           "charisma": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 118,
             "effective": 14,
             "index": 11
           }
@@ -631,7 +637,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 168,
+      "nextItemInstanceSerial": 172,
       "nextGoldPileSerial": 1,
       "tasks": [
         {
@@ -667,7 +673,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "13bb3227209322b641dc11c2f2ae712ceb299d108a272244ff3fc40df06a1975"
+      "stateHash": "ca33c494b8def9b564046526b6d93f60fe3399183c3bf54160b59fcc4cc7be96"
     },
     "events": [
       {

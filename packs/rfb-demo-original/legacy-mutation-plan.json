@@ -1,0 +1,3507 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "efd63661302866038f58d8cd2553b23e6af3bf9d",
+  "globalRules": [
+    "gain:class-berserker+type-activation=>weight-0",
+    "gain:race-water-elemental+mutation-sp-to-hp-or-hp-to-sp=>weight-0",
+    "gain:object-monster-body+organic-mutation=>weight-0",
+    "gain:good-luck+bad-or-awful-rating=>weight-1",
+    "gain:bad-luck-or-fragile+good-or-great-rating=>weight-1",
+    "lose:good-luck+good-or-great-rating=>weight-1",
+    "lose:bad-luck+bad-or-awful-rating=>weight-1"
+  ],
+  "mutations": [
+    {
+      "sourceIndex": 0,
+      "sourceConstant": "MUT_SPIT_ACID",
+      "sourceHandler": "spit_acid_spell",
+      "id": "rfb.mutation.spit-acid",
+      "nameZh": "喷吐酸液",
+      "descriptionZh": "你可以喷吐酸液（伤害为 等级*2）。",
+      "rating": "good",
+      "randomWeight": 8,
+      "sourceType": "activation",
+      "mechanismFamily": "activation",
+      "eligibilityConditions": [
+        "exclude-class:berserker"
+      ],
+      "weightConditions": [
+        "gain:mutation-bad-luck-or-personality-fragile=>weight-1",
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-activation-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 1,
+      "sourceConstant": "MUT_BR_FIRE",
+      "sourceHandler": "breathe_fire_I_spell",
+      "id": "rfb.mutation.br-fire",
+      "nameZh": "喷吐火焰",
+      "descriptionZh": "你可以喷吐火焰（伤害为 等级 * 2）。",
+      "rating": "good",
+      "randomWeight": 6,
+      "sourceType": "activation",
+      "mechanismFamily": "activation",
+      "eligibilityConditions": [
+        "exclude-class:berserker"
+      ],
+      "weightConditions": [
+        "gain:mutation-bad-luck-or-personality-fragile=>weight-1",
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-activation-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 2,
+      "sourceConstant": "MUT_HYPN_GAZE",
+      "sourceHandler": "hypnotic_gaze_spell",
+      "id": "rfb.mutation.hypn-gaze",
+      "nameZh": "催眠凝视",
+      "descriptionZh": "你的凝视具有催眠作用。",
+      "rating": "average",
+      "randomWeight": 4,
+      "sourceType": "activation",
+      "mechanismFamily": "activation",
+      "eligibilityConditions": [
+        "exclude-class:berserker"
+      ],
+      "weightConditions": [
+        "gain:race-vampire=>weight-50"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-activation-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 3,
+      "sourceConstant": "MUT_TELEKINESIS",
+      "sourceHandler": "telekinesis_spell",
+      "id": "rfb.mutation.telekinesis",
+      "nameZh": "心灵遥控",
+      "descriptionZh": "你拥有了心灵遥控能力。",
+      "rating": "average",
+      "randomWeight": 4,
+      "sourceType": "activation",
+      "mechanismFamily": "activation",
+      "eligibilityConditions": [
+        "exclude-class:berserker"
+      ],
+      "weightConditions": [],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-activation-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 4,
+      "sourceConstant": "MUT_TELEPORT",
+      "sourceHandler": "teleport_spell",
+      "id": "rfb.mutation.teleport",
+      "nameZh": "传送术",
+      "descriptionZh": "你可以随心所欲地传送。",
+      "rating": "good",
+      "randomWeight": 6,
+      "sourceType": "activation",
+      "mechanismFamily": "activation",
+      "eligibilityConditions": [
+        "exclude-class:berserker"
+      ],
+      "weightConditions": [
+        "gain:mutation-bad-luck-or-personality-fragile=>weight-1",
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [
+        "rfb.mutation.teleport-rnd"
+      ],
+      "status": "blocked",
+      "blockers": [
+        "mutation-activation-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 5,
+      "sourceConstant": "MUT_MIND_BLAST",
+      "sourceHandler": "mind_blast_spell",
+      "id": "rfb.mutation.mind-blast",
+      "nameZh": "心灵震爆",
+      "descriptionZh": "你可以用心灵震爆攻击你的敌人。",
+      "rating": "good",
+      "randomWeight": 4,
+      "sourceType": "activation",
+      "mechanismFamily": "activation",
+      "eligibilityConditions": [
+        "exclude-class:berserker"
+      ],
+      "weightConditions": [
+        "gain:mutation-bad-luck-or-personality-fragile=>weight-1",
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-activation-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 6,
+      "sourceConstant": "MUT_RADIATION",
+      "sourceHandler": "radiation_spell",
+      "id": "rfb.mutation.radiation",
+      "nameZh": "散发辐射",
+      "descriptionZh": "你可以随心所欲地散发强辐射。",
+      "rating": "good",
+      "randomWeight": 4,
+      "sourceType": "activation",
+      "mechanismFamily": "activation",
+      "eligibilityConditions": [
+        "exclude-class:berserker"
+      ],
+      "weightConditions": [
+        "gain:mutation-bad-luck-or-personality-fragile=>weight-1",
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-activation-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 7,
+      "sourceConstant": "MUT_VAMPIRISM",
+      "sourceHandler": "vampirism_spell",
+      "id": "rfb.mutation.vampirism",
+      "nameZh": "吸血",
+      "descriptionZh": "你可以像吸血鬼一样从敌人身上吸取生命。",
+      "rating": "good",
+      "randomWeight": 4,
+      "sourceType": "activation",
+      "mechanismFamily": "activation",
+      "eligibilityConditions": [
+        "exclude-class:berserker"
+      ],
+      "weightConditions": [
+        "gain:mutation-bad-luck-or-personality-fragile=>weight-1",
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-activation-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 8,
+      "sourceConstant": "MUT_SMELL_METAL",
+      "sourceHandler": "smell_metal_spell",
+      "id": "rfb.mutation.smell-metal",
+      "nameZh": "嗅金属",
+      "descriptionZh": "你可以闻出附近的贵重金属。",
+      "rating": "good",
+      "randomWeight": 6,
+      "sourceType": "activation",
+      "mechanismFamily": "activation",
+      "eligibilityConditions": [
+        "exclude-class:berserker"
+      ],
+      "weightConditions": [
+        "gain:mutation-bad-luck-or-personality-fragile=>weight-1",
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-activation-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 9,
+      "sourceConstant": "MUT_SMELL_MONSTERS",
+      "sourceHandler": "smell_monsters_spell",
+      "id": "rfb.mutation.smell-monsters",
+      "nameZh": "嗅怪物",
+      "descriptionZh": "你可以闻出附近的怪物。",
+      "rating": "good",
+      "randomWeight": 8,
+      "sourceType": "activation",
+      "mechanismFamily": "activation",
+      "eligibilityConditions": [
+        "exclude-class:berserker"
+      ],
+      "weightConditions": [
+        "gain:mutation-bad-luck-or-personality-fragile=>weight-1",
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-activation-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 10,
+      "sourceConstant": "MUT_BLINK",
+      "sourceHandler": "phase_door_spell",
+      "id": "rfb.mutation.blink",
+      "nameZh": "相位之门",
+      "descriptionZh": "你可以进行短距离传送。",
+      "rating": "good",
+      "randomWeight": 6,
+      "sourceType": "activation",
+      "mechanismFamily": "activation",
+      "eligibilityConditions": [
+        "exclude-class:berserker",
+        "exclude-race:igor",
+        "exclude-race:gnome"
+      ],
+      "weightConditions": [
+        "gain:mutation-bad-luck-or-personality-fragile=>weight-1",
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-activation-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 11,
+      "sourceConstant": "MUT_EAT_ROCK",
+      "sourceHandler": "eat_rock_spell",
+      "id": "rfb.mutation.eat-rock",
+      "nameZh": "吞噬岩石",
+      "descriptionZh": "你可以吞噬坚固的岩石。",
+      "rating": "good",
+      "randomWeight": 4,
+      "sourceType": "activation",
+      "mechanismFamily": "activation",
+      "eligibilityConditions": [
+        "exclude-class:berserker"
+      ],
+      "weightConditions": [
+        "gain:mutation-bad-luck-or-personality-fragile=>weight-1",
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-activation-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 12,
+      "sourceConstant": "MUT_SWAP_POS",
+      "sourceHandler": "swap_pos_spell",
+      "id": "rfb.mutation.swap-pos",
+      "nameZh": "交换位置",
+      "descriptionZh": "你可以与另一个生物交换位置。",
+      "rating": "good",
+      "randomWeight": 4,
+      "sourceType": "activation",
+      "mechanismFamily": "activation",
+      "eligibilityConditions": [
+        "exclude-class:berserker"
+      ],
+      "weightConditions": [
+        "gain:mutation-bad-luck-or-personality-fragile=>weight-1",
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-activation-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 13,
+      "sourceConstant": "MUT_SHRIEK",
+      "sourceHandler": "shriek_spell",
+      "id": "rfb.mutation.shriek",
+      "nameZh": "尖啸",
+      "descriptionZh": "你可以发出一声可怕的尖啸。",
+      "rating": "good",
+      "randomWeight": 6,
+      "sourceType": "activation",
+      "mechanismFamily": "activation",
+      "eligibilityConditions": [
+        "exclude-class:berserker"
+      ],
+      "weightConditions": [
+        "gain:mutation-bad-luck-or-personality-fragile=>weight-1",
+        "lose:mutation-good-luck=>weight-1",
+        "gain:race-yeek=>weight-50"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-activation-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 14,
+      "sourceConstant": "MUT_ILLUMINE",
+      "sourceHandler": "light_area_spell",
+      "id": "rfb.mutation.illumine",
+      "nameZh": "照亮区域",
+      "descriptionZh": "你可以散发出明亮的光芒。",
+      "rating": "average",
+      "randomWeight": 6,
+      "sourceType": "activation",
+      "mechanismFamily": "activation",
+      "eligibilityConditions": [
+        "exclude-class:berserker"
+      ],
+      "weightConditions": [],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-activation-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 15,
+      "sourceConstant": "MUT_DET_CURSE",
+      "sourceHandler": "detect_curses_spell",
+      "id": "rfb.mutation.det-curse",
+      "nameZh": "侦测诅咒",
+      "descriptionZh": "你能感觉到邪恶魔法的危险。",
+      "rating": "average",
+      "randomWeight": 4,
+      "sourceType": "activation",
+      "mechanismFamily": "activation",
+      "eligibilityConditions": [
+        "exclude-class:berserker"
+      ],
+      "weightConditions": [],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-activation-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 16,
+      "sourceConstant": "MUT_BERSERK",
+      "sourceHandler": "berserk_spell",
+      "id": "rfb.mutation.berserk",
+      "nameZh": "狂暴",
+      "descriptionZh": "你可以使自己进入狂暴状态。",
+      "rating": "great",
+      "randomWeight": 6,
+      "sourceType": "activation",
+      "mechanismFamily": "activation",
+      "eligibilityConditions": [
+        "exclude-class:berserker"
+      ],
+      "weightConditions": [
+        "gain:mutation-bad-luck-or-personality-fragile=>weight-1",
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-activation-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 17,
+      "sourceConstant": "MUT_POLYMORPH",
+      "sourceHandler": "polymorph_self_spell",
+      "id": "rfb.mutation.polymorph",
+      "nameZh": "变形术",
+      "descriptionZh": "你可以随意变形自己。",
+      "rating": "average",
+      "randomWeight": 2,
+      "sourceType": "activation",
+      "mechanismFamily": "activation",
+      "eligibilityConditions": [
+        "exclude-class:berserker"
+      ],
+      "weightConditions": [
+        "gain:race-beastman=>weight-50"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-activation-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 18,
+      "sourceConstant": "MUT_MIDAS_TOUCH",
+      "sourceHandler": "alchemy_spell",
+      "id": "rfb.mutation.midas-touch",
+      "nameZh": "炼金术",
+      "descriptionZh": "你可以把普通物品变成金子。",
+      "rating": "good",
+      "randomWeight": 4,
+      "sourceType": "activation",
+      "mechanismFamily": "activation",
+      "eligibilityConditions": [
+        "exclude-class:berserker",
+        "exclude-class:alchemist"
+      ],
+      "weightConditions": [
+        "gain:mutation-bad-luck-or-personality-fragile=>weight-1",
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-activation-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 19,
+      "sourceConstant": "MUT_GROW_MOLD",
+      "sourceHandler": "grow_mold_spell",
+      "id": "rfb.mutation.grow-mold",
+      "nameZh": "培育霉菌",
+      "descriptionZh": "你可以使霉菌在你附近生长。",
+      "rating": "good",
+      "randomWeight": 2,
+      "sourceType": "activation",
+      "mechanismFamily": "activation",
+      "eligibilityConditions": [
+        "exclude-class:berserker"
+      ],
+      "weightConditions": [
+        "gain:mutation-bad-luck-or-personality-fragile=>weight-1",
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-activation-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 20,
+      "sourceConstant": "MUT_RESIST",
+      "sourceHandler": "resist_elements_spell",
+      "id": "rfb.mutation.resist",
+      "nameZh": "抵抗元素",
+      "descriptionZh": "你可以使自己强化，以抵御元素的摧残。",
+      "rating": "great",
+      "randomWeight": 6,
+      "sourceType": "activation",
+      "mechanismFamily": "activation",
+      "eligibilityConditions": [
+        "exclude-class:berserker"
+      ],
+      "weightConditions": [
+        "gain:mutation-bad-luck-or-personality-fragile=>weight-1",
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-activation-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 21,
+      "sourceConstant": "MUT_EARTHQUAKE",
+      "sourceHandler": "earthquake_spell",
+      "id": "rfb.mutation.earthquake",
+      "nameZh": "地震术",
+      "descriptionZh": "你可以让你周围的地下城坍塌。",
+      "rating": "average",
+      "randomWeight": 6,
+      "sourceType": "activation",
+      "mechanismFamily": "activation",
+      "eligibilityConditions": [
+        "exclude-class:berserker"
+      ],
+      "weightConditions": [],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-activation-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 22,
+      "sourceConstant": "MUT_EAT_MAGIC",
+      "sourceHandler": "eat_magic_spell",
+      "id": "rfb.mutation.eat-magic",
+      "nameZh": "吞噬魔法",
+      "descriptionZh": "你可以吞噬魔法能量供自己使用。",
+      "rating": "great",
+      "randomWeight": 2,
+      "sourceType": "activation",
+      "mechanismFamily": "activation",
+      "eligibilityConditions": [
+        "exclude-class:berserker"
+      ],
+      "weightConditions": [
+        "gain:mutation-bad-luck-or-personality-fragile=>weight-1",
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-activation-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 23,
+      "sourceConstant": "MUT_WEIGH_MAGIC",
+      "sourceHandler": "weigh_magic_spell",
+      "id": "rfb.mutation.weigh-magic",
+      "nameZh": "衡量魔法",
+      "descriptionZh": "你能感觉到影响你的魔法的强度。",
+      "rating": "average",
+      "randomWeight": 4,
+      "sourceType": "activation",
+      "mechanismFamily": "activation",
+      "eligibilityConditions": [
+        "exclude-class:berserker"
+      ],
+      "weightConditions": [],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-activation-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 24,
+      "sourceConstant": "MUT_STERILITY",
+      "sourceHandler": "sterility_spell",
+      "id": "rfb.mutation.sterility",
+      "nameZh": "绝育术",
+      "descriptionZh": "你可以导致大规模的阳痿。",
+      "rating": "great",
+      "randomWeight": 2,
+      "sourceType": "activation",
+      "mechanismFamily": "activation",
+      "eligibilityConditions": [
+        "exclude-class:berserker"
+      ],
+      "weightConditions": [
+        "gain:mutation-bad-luck-or-personality-fragile=>weight-1",
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-activation-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 25,
+      "sourceConstant": "MUT_PANIC_HIT",
+      "sourceHandler": "panic_hit_spell",
+      "id": "rfb.mutation.panic-hit",
+      "nameZh": "惊恐打击",
+      "descriptionZh": "你可以在打中目标后拼命逃跑。",
+      "rating": "good",
+      "randomWeight": 4,
+      "sourceType": "activation",
+      "mechanismFamily": "activation",
+      "eligibilityConditions": [
+        "exclude-class:berserker"
+      ],
+      "weightConditions": [
+        "gain:mutation-bad-luck-or-personality-fragile=>weight-1",
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-activation-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 26,
+      "sourceConstant": "MUT_DAZZLE",
+      "sourceHandler": "dazzle_spell",
+      "id": "rfb.mutation.dazzle",
+      "nameZh": "目眩术",
+      "descriptionZh": "你可以散发出令人混乱的致盲辐射。",
+      "rating": "good",
+      "randomWeight": 6,
+      "sourceType": "activation",
+      "mechanismFamily": "activation",
+      "eligibilityConditions": [
+        "exclude-class:berserker"
+      ],
+      "weightConditions": [
+        "gain:mutation-bad-luck-or-personality-fragile=>weight-1",
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-activation-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 27,
+      "sourceConstant": "MUT_LASER_EYE",
+      "sourceHandler": "laser_eye_spell",
+      "id": "rfb.mutation.laser-eye",
+      "nameZh": "激光眼",
+      "descriptionZh": "你的眼睛可以发射激光束。",
+      "rating": "good",
+      "randomWeight": 6,
+      "sourceType": "activation",
+      "mechanismFamily": "activation",
+      "eligibilityConditions": [
+        "exclude-class:berserker"
+      ],
+      "weightConditions": [
+        "gain:mutation-bad-luck-or-personality-fragile=>weight-1",
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-activation-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 28,
+      "sourceConstant": "MUT_RECALL",
+      "sourceHandler": "recall_spell",
+      "id": "rfb.mutation.recall",
+      "nameZh": "归还术",
+      "descriptionZh": "你可以往返于城镇和深渊之间。",
+      "rating": "good",
+      "randomWeight": 4,
+      "sourceType": "activation",
+      "mechanismFamily": "activation",
+      "eligibilityConditions": [
+        "exclude-class:berserker"
+      ],
+      "weightConditions": [
+        "gain:mutation-bad-luck-or-personality-fragile=>weight-1",
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-activation-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 29,
+      "sourceConstant": "MUT_BANISH",
+      "sourceHandler": "banish_evil_spell",
+      "id": "rfb.mutation.banish",
+      "nameZh": "放逐邪恶",
+      "descriptionZh": "你可以把邪恶生物直接送进地狱。",
+      "rating": "good",
+      "randomWeight": 2,
+      "sourceType": "activation",
+      "mechanismFamily": "activation",
+      "eligibilityConditions": [
+        "exclude-class:berserker"
+      ],
+      "weightConditions": [
+        "gain:mutation-bad-luck-or-personality-fragile=>weight-1",
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-activation-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 30,
+      "sourceConstant": "MUT_COLD_TOUCH",
+      "sourceHandler": "cold_touch_spell",
+      "id": "rfb.mutation.cold-touch",
+      "nameZh": "寒冷之触",
+      "descriptionZh": "你可以通过触碰来冻结事物。",
+      "rating": "average",
+      "randomWeight": 4,
+      "sourceType": "activation",
+      "mechanismFamily": "activation",
+      "eligibilityConditions": [
+        "exclude-class:berserker"
+      ],
+      "weightConditions": [],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-activation-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 31,
+      "sourceConstant": "MUT_LAUNCHER",
+      "sourceHandler": "power_throw_spell",
+      "id": "rfb.mutation.launcher",
+      "nameZh": "投掷物品",
+      "descriptionZh": "你可以用巨大的力量投掷物品。",
+      "rating": "average",
+      "randomWeight": 4,
+      "sourceType": "bonus",
+      "mechanismFamily": "passive-bonus",
+      "eligibilityConditions": [],
+      "weightConditions": [],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-passive-bonus-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 32,
+      "sourceConstant": "MUT_BERS_RAGE",
+      "sourceHandler": "berserk_rage_mut",
+      "id": "rfb.mutation.bers-rage",
+      "nameZh": "狂暴",
+      "descriptionZh": "你容易陷入狂暴状态。",
+      "rating": "bad",
+      "randomWeight": 2,
+      "sourceType": "effect",
+      "mechanismFamily": "periodic-effect",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "gain:mutation-good-luck=>weight-1",
+        "lose:mutation-bad-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-periodic-effect-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 33,
+      "sourceConstant": "MUT_COWARDICE",
+      "sourceHandler": "cowardice_mut",
+      "id": "rfb.mutation.cowardice",
+      "nameZh": "懦弱",
+      "descriptionZh": "你容易退缩。",
+      "rating": "bad",
+      "randomWeight": 2,
+      "sourceType": "effect",
+      "mechanismFamily": "periodic-effect",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "gain:mutation-good-luck=>weight-1",
+        "lose:mutation-bad-luck=>weight-1"
+      ],
+      "removesOnGain": [
+        "rfb.mutation.fearless",
+        "rfb.mutation.no-inhibitions"
+      ],
+      "status": "blocked",
+      "blockers": [
+        "mutation-periodic-effect-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 34,
+      "sourceConstant": "MUT_TELEPORT_RND",
+      "sourceHandler": "random_teleport_mut",
+      "id": "rfb.mutation.teleport-rnd",
+      "nameZh": "随机传送",
+      "descriptionZh": "你会随机传送。",
+      "rating": "bad",
+      "randomWeight": 2,
+      "sourceType": "effect",
+      "mechanismFamily": "periodic-effect",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "gain:mutation-good-luck=>weight-1",
+        "lose:mutation-bad-luck=>weight-1"
+      ],
+      "removesOnGain": [
+        "rfb.mutation.teleport"
+      ],
+      "status": "blocked",
+      "blockers": [
+        "mutation-periodic-effect-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 35,
+      "sourceConstant": "MUT_ALCOHOL",
+      "sourceHandler": "alcohol_mut",
+      "id": "rfb.mutation.alcohol",
+      "nameZh": "酒精",
+      "descriptionZh": "你的身体会分泌酒精。",
+      "rating": "bad",
+      "randomWeight": 2,
+      "sourceType": "effect",
+      "mechanismFamily": "periodic-effect",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "gain:mutation-good-luck=>weight-1",
+        "lose:mutation-bad-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-periodic-effect-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 36,
+      "sourceConstant": "MUT_HALLUCINATION",
+      "sourceHandler": "hallucination_mut",
+      "id": "rfb.mutation.hallucination",
+      "nameZh": "幻觉",
+      "descriptionZh": "你患有产生幻觉的疯狂。",
+      "rating": "bad",
+      "randomWeight": 2,
+      "sourceType": "effect",
+      "mechanismFamily": "periodic-effect",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "gain:mutation-good-luck=>weight-1",
+        "lose:mutation-bad-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-periodic-effect-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 37,
+      "sourceConstant": "MUT_FLATULENT",
+      "sourceHandler": "flatulence_mut",
+      "id": "rfb.mutation.flatulent",
+      "nameZh": "肠胃胀气",
+      "descriptionZh": "你会不受控制地肠胃胀气。",
+      "rating": "average",
+      "randomWeight": 2,
+      "sourceType": "effect",
+      "mechanismFamily": "periodic-effect",
+      "eligibilityConditions": [],
+      "weightConditions": [],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-periodic-effect-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 38,
+      "sourceConstant": "MUT_SCORPION_TAIL",
+      "sourceHandler": "scorpion_tail_mut",
+      "id": "rfb.mutation.scorpion-tail",
+      "nameZh": "蝎尾",
+      "descriptionZh": "你长着蝎尾。",
+      "rating": "good",
+      "randomWeight": 4,
+      "sourceType": "bonus",
+      "mechanismFamily": "passive-bonus",
+      "eligibilityConditions": [
+        "exclude-races:monster-ring,monster-sword,monster-armor"
+      ],
+      "weightConditions": [
+        "gain:mutation-bad-luck-or-personality-fragile=>weight-1",
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-passive-bonus-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 39,
+      "sourceConstant": "MUT_HORNS",
+      "sourceHandler": "horns_mut",
+      "id": "rfb.mutation.horns",
+      "nameZh": "长角",
+      "descriptionZh": "你长着角。",
+      "rating": "good",
+      "randomWeight": 4,
+      "sourceType": "bonus",
+      "mechanismFamily": "passive-bonus",
+      "eligibilityConditions": [
+        "exclude-races:monster-ring,monster-sword,monster-armor"
+      ],
+      "weightConditions": [
+        "gain:mutation-bad-luck-or-personality-fragile=>weight-1",
+        "lose:mutation-good-luck=>weight-1",
+        "gain:race-imp=>weight-50"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-passive-bonus-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 40,
+      "sourceConstant": "MUT_BEAK",
+      "sourceHandler": "beak_mut",
+      "id": "rfb.mutation.beak",
+      "nameZh": "鸟喙",
+      "descriptionZh": "你长着鸟喙。",
+      "rating": "good",
+      "randomWeight": 4,
+      "sourceType": "bonus",
+      "mechanismFamily": "passive-bonus",
+      "eligibilityConditions": [
+        "exclude-race:igor",
+        "exclude-races:monster-ring,monster-sword,monster-armor"
+      ],
+      "weightConditions": [
+        "gain:mutation-bad-luck-or-personality-fragile=>weight-1",
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [
+        "rfb.mutation.trunk"
+      ],
+      "status": "blocked",
+      "blockers": [
+        "mutation-passive-bonus-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 41,
+      "sourceConstant": "MUT_ATTRACT_DEMON",
+      "sourceHandler": "attract_demon_mut",
+      "id": "rfb.mutation.attract-demon",
+      "nameZh": "吸引恶魔",
+      "descriptionZh": "你会吸引恶魔。",
+      "rating": "bad",
+      "randomWeight": 4,
+      "sourceType": "effect",
+      "mechanismFamily": "periodic-effect",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "gain:mutation-good-luck=>weight-1",
+        "lose:mutation-bad-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-periodic-effect-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 42,
+      "sourceConstant": "MUT_PROD_MANA",
+      "sourceHandler": "produce_mana_mut",
+      "id": "rfb.mutation.prod-mana",
+      "nameZh": "生成法力",
+      "descriptionZh": "你不受控制地产生魔法能量。",
+      "rating": "average",
+      "randomWeight": 2,
+      "sourceType": "effect",
+      "mechanismFamily": "periodic-effect",
+      "eligibilityConditions": [],
+      "weightConditions": [],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-periodic-effect-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 43,
+      "sourceConstant": "MUT_SPEED_FLUX",
+      "sourceHandler": "speed_flux_mut",
+      "id": "rfb.mutation.speed-flux",
+      "nameZh": "速度波动",
+      "descriptionZh": "你的移动速度会随机变快或变慢。",
+      "rating": "bad",
+      "randomWeight": 4,
+      "sourceType": "effect",
+      "mechanismFamily": "periodic-effect",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "gain:mutation-good-luck=>weight-1",
+        "lose:mutation-bad-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-periodic-effect-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 44,
+      "sourceConstant": "MUT_BANISH_ALL_RND",
+      "sourceHandler": "random_banish_mut",
+      "id": "rfb.mutation.banish-all-rnd",
+      "nameZh": "随机放逐",
+      "descriptionZh": "你有时候会导致附近的生物消失。",
+      "rating": "average",
+      "randomWeight": 4,
+      "sourceType": "effect",
+      "mechanismFamily": "periodic-effect",
+      "eligibilityConditions": [],
+      "weightConditions": [],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-periodic-effect-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 45,
+      "sourceConstant": "MUT_EAT_LIGHT",
+      "sourceHandler": "eat_light_mut",
+      "id": "rfb.mutation.eat-light",
+      "nameZh": "吞噬光芒",
+      "descriptionZh": "你有时候会吸收周围的光线作为养分。",
+      "rating": "average",
+      "randomWeight": 2,
+      "sourceType": "effect",
+      "mechanismFamily": "periodic-effect",
+      "eligibilityConditions": [],
+      "weightConditions": [],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-periodic-effect-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 46,
+      "sourceConstant": "MUT_TRUNK",
+      "sourceHandler": "trunk_mut",
+      "id": "rfb.mutation.trunk",
+      "nameZh": "象鼻",
+      "descriptionZh": "你长着象鼻。",
+      "rating": "good",
+      "randomWeight": 4,
+      "sourceType": "bonus",
+      "mechanismFamily": "passive-bonus",
+      "eligibilityConditions": [
+        "exclude-race:igor",
+        "exclude-races:monster-ring,monster-sword,monster-armor"
+      ],
+      "weightConditions": [
+        "gain:mutation-bad-luck-or-personality-fragile=>weight-1",
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [
+        "rfb.mutation.beak"
+      ],
+      "status": "blocked",
+      "blockers": [
+        "mutation-passive-bonus-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 47,
+      "sourceConstant": "MUT_ATTRACT_ANIMAL",
+      "sourceHandler": "attract_animal_mut",
+      "id": "rfb.mutation.attract-animal",
+      "nameZh": "吸引动物",
+      "descriptionZh": "你会吸引动物。",
+      "rating": "bad",
+      "randomWeight": 2,
+      "sourceType": "effect",
+      "mechanismFamily": "periodic-effect",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "gain:mutation-good-luck=>weight-1",
+        "lose:mutation-bad-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-periodic-effect-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 48,
+      "sourceConstant": "MUT_TENTACLES",
+      "sourceHandler": "tentacles_mut",
+      "id": "rfb.mutation.tentacles",
+      "nameZh": "触手",
+      "descriptionZh": "你长着邪恶的触手。",
+      "rating": "good",
+      "randomWeight": 2,
+      "sourceType": "bonus",
+      "mechanismFamily": "passive-bonus",
+      "eligibilityConditions": [
+        "exclude-races:monster-ring,monster-sword,monster-armor"
+      ],
+      "weightConditions": [
+        "gain:mutation-bad-luck-or-personality-fragile=>weight-1",
+        "lose:mutation-good-luck=>weight-1",
+        "gain:race-mind-flayer=>weight-50"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-passive-bonus-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 49,
+      "sourceConstant": "MUT_RAW_CHAOS",
+      "sourceHandler": "raw_chaos_mut",
+      "id": "rfb.mutation.raw-chaos",
+      "nameZh": "原始混沌",
+      "descriptionZh": "你偶尔会被原始混沌所包围。",
+      "rating": "average",
+      "randomWeight": 2,
+      "sourceType": "effect",
+      "mechanismFamily": "periodic-effect",
+      "eligibilityConditions": [],
+      "weightConditions": [],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-periodic-effect-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 50,
+      "sourceConstant": "MUT_NORMALITY",
+      "sourceHandler": "normality_mut",
+      "id": "rfb.mutation.normality",
+      "nameZh": "正常化",
+      "descriptionZh": "你也许变异了，但你正在恢复。",
+      "rating": "bad",
+      "randomWeight": 6,
+      "sourceType": "effect",
+      "mechanismFamily": "periodic-effect",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "gain:mutation-good-luck=>weight-1",
+        "lose:mutation-bad-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-periodic-effect-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 51,
+      "sourceConstant": "MUT_WRAITH",
+      "sourceHandler": "wraith_mut",
+      "id": "rfb.mutation.wraith",
+      "nameZh": "怨灵形态",
+      "descriptionZh": "你在物质现实中忽隐忽现。",
+      "rating": "good",
+      "randomWeight": 2,
+      "sourceType": "effect",
+      "mechanismFamily": "periodic-effect",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "gain:mutation-bad-luck-or-personality-fragile=>weight-1",
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-periodic-effect-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 52,
+      "sourceConstant": "MUT_POLY_WOUND",
+      "sourceHandler": "polymorph_wounds_mut",
+      "id": "rfb.mutation.poly-wound",
+      "nameZh": "伤口变形",
+      "descriptionZh": "你的生命值受混沌力量的影响。",
+      "rating": "average",
+      "randomWeight": 2,
+      "sourceType": "effect",
+      "mechanismFamily": "periodic-effect",
+      "eligibilityConditions": [],
+      "weightConditions": [],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-periodic-effect-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 53,
+      "sourceConstant": "MUT_WASTING",
+      "sourceHandler": "wasting_mut",
+      "id": "rfb.mutation.wasting",
+      "nameZh": "恐怖枯萎",
+      "descriptionZh": "你患有可怕的枯萎病。",
+      "rating": "awful",
+      "randomWeight": 2,
+      "sourceType": "effect",
+      "mechanismFamily": "periodic-effect",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "gain:mutation-good-luck=>weight-1",
+        "lose:mutation-bad-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-periodic-effect-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 54,
+      "sourceConstant": "MUT_ATTRACT_DRAGON",
+      "sourceHandler": "attract_dragon_mut",
+      "id": "rfb.mutation.attract-dragon",
+      "nameZh": "吸引龙类",
+      "descriptionZh": "你会吸引龙类。",
+      "rating": "bad",
+      "randomWeight": 2,
+      "sourceType": "effect",
+      "mechanismFamily": "periodic-effect",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "gain:mutation-good-luck=>weight-1",
+        "lose:mutation-bad-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-periodic-effect-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 55,
+      "sourceConstant": "MUT_RANDOM_TELEPATHY",
+      "sourceHandler": "random_telepathy_mut",
+      "id": "rfb.mutation.random-telepathy",
+      "nameZh": "随机心灵感应",
+      "descriptionZh": "你的心智会随机地扩展和收缩。",
+      "rating": "average",
+      "randomWeight": 4,
+      "sourceType": "effect",
+      "mechanismFamily": "periodic-effect",
+      "eligibilityConditions": [],
+      "weightConditions": [],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-periodic-effect-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 56,
+      "sourceConstant": "MUT_NAUSEA",
+      "sourceHandler": "nausea_mut",
+      "id": "rfb.mutation.nausea",
+      "nameZh": "恶心",
+      "descriptionZh": "你的胃非常不舒服。",
+      "rating": "bad",
+      "randomWeight": 2,
+      "sourceType": "effect",
+      "mechanismFamily": "periodic-effect",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "gain:mutation-good-luck=>weight-1",
+        "lose:mutation-bad-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-periodic-effect-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 57,
+      "sourceConstant": "MUT_CHAOS_GIFT",
+      "sourceHandler": "chaos_deity_mut",
+      "id": "rfb.mutation.chaos-gift",
+      "nameZh": "混沌神明",
+      "descriptionZh": "混沌神明会给予你礼物。",
+      "rating": "great",
+      "randomWeight": 4,
+      "sourceType": "none",
+      "mechanismFamily": "cross-system-query",
+      "eligibilityConditions": [
+        "exclude-class:chaos-warrior",
+        "exclude-personality:chaotic",
+        "exclude-mutation:purple-gift"
+      ],
+      "weightConditions": [
+        "gain:mutation-bad-luck-or-personality-fragile=>weight-1",
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-cross-system-query"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 58,
+      "sourceConstant": "MUT_SHADOW_WALK",
+      "sourceHandler": "shadow_walk_mut",
+      "id": "rfb.mutation.shadow-walk",
+      "nameZh": "影中漫步",
+      "descriptionZh": "你偶尔会跌入其他阴影中。",
+      "rating": "bad",
+      "randomWeight": 2,
+      "sourceType": "effect",
+      "mechanismFamily": "periodic-effect",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "gain:mutation-good-luck=>weight-1",
+        "lose:mutation-bad-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-periodic-effect-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 59,
+      "sourceConstant": "MUT_WARNING",
+      "sourceHandler": "warning_mut",
+      "id": "rfb.mutation.warning",
+      "nameZh": "预警",
+      "descriptionZh": "你会收到关于敌人的预警。",
+      "rating": "average",
+      "randomWeight": 2,
+      "sourceType": "effect",
+      "mechanismFamily": "periodic-effect",
+      "eligibilityConditions": [],
+      "weightConditions": [],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-periodic-effect-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 60,
+      "sourceConstant": "MUT_INVULN",
+      "sourceHandler": "invulnerability_mut",
+      "id": "rfb.mutation.invuln",
+      "nameZh": "无敌",
+      "descriptionZh": "你偶尔感觉自己是无敌的。",
+      "rating": "good",
+      "randomWeight": 2,
+      "sourceType": "effect",
+      "mechanismFamily": "periodic-effect",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "gain:mutation-bad-luck-or-personality-fragile=>weight-1",
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-periodic-effect-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 61,
+      "sourceConstant": "MUT_SP_TO_HP",
+      "sourceHandler": "sp_to_hp_spell",
+      "id": "rfb.mutation.sp-to-hp",
+      "nameZh": "法力转生命",
+      "descriptionZh": "有时你的气血会涌入肌肉。",
+      "rating": "average",
+      "randomWeight": 4,
+      "sourceType": "effect",
+      "mechanismFamily": "periodic-effect",
+      "eligibilityConditions": [
+        "exclude-race:water-elemental"
+      ],
+      "weightConditions": [],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-periodic-effect-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 62,
+      "sourceConstant": "MUT_HP_TO_SP",
+      "sourceHandler": "hp_to_sp_spell",
+      "id": "rfb.mutation.hp-to-sp",
+      "nameZh": "生命转法力",
+      "descriptionZh": "有时你会气血上涌。",
+      "rating": "average",
+      "randomWeight": 2,
+      "sourceType": "effect",
+      "mechanismFamily": "periodic-effect",
+      "eligibilityConditions": [
+        "exclude-race:water-elemental"
+      ],
+      "weightConditions": [],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-periodic-effect-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 63,
+      "sourceConstant": "MUT_FUMBLING",
+      "sourceHandler": "fumbling_mut",
+      "id": "rfb.mutation.fumbling",
+      "nameZh": "笨手笨脚",
+      "descriptionZh": "你偶尔会绊倒并弄丢东西。",
+      "rating": "bad",
+      "randomWeight": 2,
+      "sourceType": "effect",
+      "mechanismFamily": "periodic-effect",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "gain:mutation-good-luck=>weight-1",
+        "lose:mutation-bad-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-periodic-effect-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 64,
+      "sourceConstant": "MUT_HYPER_STR",
+      "sourceHandler": "he_man_mut",
+      "id": "rfb.mutation.hyper-str",
+      "nameZh": "肌肉猛男",
+      "descriptionZh": "你拥有超人般的力量 (+4 力量)。",
+      "rating": "great",
+      "randomWeight": 6,
+      "sourceType": "bonus",
+      "mechanismFamily": "passive-bonus",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "gain:mutation-bad-luck-or-personality-fragile=>weight-1",
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [
+        "rfb.mutation.puny"
+      ],
+      "status": "active",
+      "blockers": [],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 65,
+      "sourceConstant": "MUT_PUNY",
+      "sourceHandler": "puny_mut",
+      "id": "rfb.mutation.puny",
+      "nameZh": "孱弱",
+      "descriptionZh": "你很孱弱 (-4 力量)。",
+      "rating": "awful",
+      "randomWeight": 6,
+      "sourceType": "bonus",
+      "mechanismFamily": "passive-bonus",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "gain:mutation-good-luck=>weight-1",
+        "lose:mutation-bad-luck=>weight-1"
+      ],
+      "removesOnGain": [
+        "rfb.mutation.hyper-str"
+      ],
+      "status": "active",
+      "blockers": [],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 66,
+      "sourceConstant": "MUT_HYPER_INT",
+      "sourceHandler": "einstein_mut",
+      "id": "rfb.mutation.hyper-int",
+      "nameZh": "活体计算机",
+      "descriptionZh": "你的大脑是一台活体计算机 (+4 智力/感知)。",
+      "rating": "great",
+      "randomWeight": 6,
+      "sourceType": "bonus",
+      "mechanismFamily": "passive-bonus",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "gain:mutation-bad-luck-or-personality-fragile=>weight-1",
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [
+        "rfb.mutation.moronic",
+        "rfb.mutation.pultitis"
+      ],
+      "status": "active",
+      "blockers": [],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 67,
+      "sourceConstant": "MUT_MORONIC",
+      "sourceHandler": "moron_mut",
+      "id": "rfb.mutation.moronic",
+      "nameZh": "白痴",
+      "descriptionZh": "你是个白痴 (-4 智力/感知)。",
+      "rating": "awful",
+      "randomWeight": 6,
+      "sourceType": "bonus",
+      "mechanismFamily": "passive-bonus",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "gain:mutation-good-luck=>weight-1",
+        "lose:mutation-bad-luck=>weight-1"
+      ],
+      "removesOnGain": [
+        "rfb.mutation.hyper-int",
+        "rfb.mutation.pultitis"
+      ],
+      "status": "active",
+      "blockers": [],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 68,
+      "sourceConstant": "MUT_RESILIENT",
+      "sourceHandler": "resilient_mut",
+      "id": "rfb.mutation.resilient",
+      "nameZh": "非凡韧性",
+      "descriptionZh": "你非常有韧性 (+4 体质)。",
+      "rating": "great",
+      "randomWeight": 4,
+      "sourceType": "bonus",
+      "mechanismFamily": "passive-bonus",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "gain:mutation-bad-luck-or-personality-fragile=>weight-1",
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [
+        "rfb.mutation.albino"
+      ],
+      "status": "active",
+      "blockers": [],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 69,
+      "sourceConstant": "MUT_XTRA_FAT",
+      "sourceHandler": "fat_mut",
+      "id": "rfb.mutation.xtra-fat",
+      "nameZh": "额外脂肪",
+      "descriptionZh": "你极其肥胖 (+2 体质, -2 速度)。",
+      "rating": "average",
+      "randomWeight": 4,
+      "sourceType": "bonus",
+      "mechanismFamily": "passive-bonus",
+      "eligibilityConditions": [],
+      "weightConditions": [],
+      "removesOnGain": [],
+      "status": "active",
+      "blockers": [],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 70,
+      "sourceConstant": "MUT_ALBINO",
+      "sourceHandler": "albino_mut",
+      "id": "rfb.mutation.albino",
+      "nameZh": "白化病",
+      "descriptionZh": "你患有白化病 (-4 体质)。",
+      "rating": "awful",
+      "randomWeight": 4,
+      "sourceType": "bonus",
+      "mechanismFamily": "passive-bonus",
+      "eligibilityConditions": [
+        "exclude-races:monster-ring,monster-sword,monster-armor"
+      ],
+      "weightConditions": [
+        "gain:mutation-good-luck=>weight-1",
+        "lose:mutation-bad-luck=>weight-1"
+      ],
+      "removesOnGain": [
+        "rfb.mutation.resilient"
+      ],
+      "status": "active",
+      "blockers": [],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 71,
+      "sourceConstant": "MUT_FLESH_ROT",
+      "sourceHandler": "rotting_flesh_mut",
+      "id": "rfb.mutation.flesh-rot",
+      "nameZh": "腐烂之躯",
+      "descriptionZh": "你的肉体正在腐烂 (-2 体质, -1 魅力, 缓慢再生)。",
+      "rating": "awful",
+      "randomWeight": 6,
+      "sourceType": "bonus",
+      "mechanismFamily": "passive-bonus",
+      "eligibilityConditions": [
+        "exclude-races:monster-ring,monster-sword,monster-armor"
+      ],
+      "weightConditions": [
+        "gain:mutation-good-luck=>weight-1",
+        "lose:mutation-bad-luck=>weight-1"
+      ],
+      "removesOnGain": [
+        "rfb.mutation.steel-skin",
+        "rfb.mutation.regen"
+      ],
+      "status": "active",
+      "blockers": [],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 72,
+      "sourceConstant": "MUT_SILLY_VOICE",
+      "sourceHandler": "silly_voice_mut",
+      "id": "rfb.mutation.silly-voice",
+      "nameZh": "滑稽嗓音",
+      "descriptionZh": "你的声音是滑稽的尖叫声 (-4 魅力)。",
+      "rating": "bad",
+      "randomWeight": 4,
+      "sourceType": "bonus",
+      "mechanismFamily": "passive-bonus",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "gain:mutation-good-luck=>weight-1",
+        "lose:mutation-bad-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "active",
+      "blockers": [],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 73,
+      "sourceConstant": "MUT_BLANK_FACE",
+      "sourceHandler": "blank_face_mut",
+      "id": "rfb.mutation.blank-face",
+      "nameZh": "面无表情",
+      "descriptionZh": "你没有五官 (-1 魅力)。",
+      "rating": "bad",
+      "randomWeight": 4,
+      "sourceType": "bonus",
+      "mechanismFamily": "passive-bonus",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "gain:mutation-good-luck=>weight-1",
+        "lose:mutation-bad-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "active",
+      "blockers": [],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 74,
+      "sourceConstant": "MUT_ILL_NORM",
+      "sourceHandler": "illusion_normal_mut",
+      "id": "rfb.mutation.ill-norm",
+      "nameZh": "安心幻象",
+      "descriptionZh": "你的外表被幻象所掩盖。",
+      "rating": "average",
+      "randomWeight": 2,
+      "sourceType": "none",
+      "mechanismFamily": "cross-system-query",
+      "eligibilityConditions": [],
+      "weightConditions": [],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-cross-system-query"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 75,
+      "sourceConstant": "MUT_XTRA_EYES",
+      "sourceHandler": "extra_eyes_mut",
+      "id": "rfb.mutation.xtra-eyes",
+      "nameZh": "额外的眼睛",
+      "descriptionZh": "你有一对额外的眼睛 (+15 搜索)。",
+      "rating": "average",
+      "randomWeight": 6,
+      "sourceType": "bonus",
+      "mechanismFamily": "passive-bonus",
+      "eligibilityConditions": [],
+      "weightConditions": [],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-passive-bonus-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 76,
+      "sourceConstant": "MUT_MAGIC_RES",
+      "sourceHandler": "magic_resistance_mut",
+      "id": "rfb.mutation.magic-res",
+      "nameZh": "魔法抗性",
+      "descriptionZh": "你对魔法具有抗性。",
+      "rating": "good",
+      "randomWeight": 4,
+      "sourceType": "bonus",
+      "mechanismFamily": "passive-bonus",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "gain:mutation-bad-luck-or-personality-fragile=>weight-1",
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "active",
+      "blockers": [],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 77,
+      "sourceConstant": "MUT_XTRA_NOISE",
+      "sourceHandler": "extra_noise_mut",
+      "id": "rfb.mutation.xtra-noise",
+      "nameZh": "额外噪音",
+      "descriptionZh": "你发出很多奇怪的噪音 (-3 潜行)。",
+      "rating": "bad",
+      "randomWeight": 6,
+      "sourceType": "bonus",
+      "mechanismFamily": "passive-bonus",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "gain:mutation-good-luck=>weight-1",
+        "lose:mutation-bad-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-passive-bonus-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 78,
+      "sourceConstant": "MUT_INFRAVISION",
+      "sourceHandler": "infravision_mut",
+      "id": "rfb.mutation.infravision",
+      "nameZh": "红外视力",
+      "descriptionZh": "你拥有非凡的红外视力 (+3)。",
+      "rating": "average",
+      "randomWeight": 6,
+      "sourceType": "bonus",
+      "mechanismFamily": "passive-bonus",
+      "eligibilityConditions": [],
+      "weightConditions": [],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-passive-bonus-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 79,
+      "sourceConstant": "MUT_XTRA_LEGS",
+      "sourceHandler": "extra_legs_mut",
+      "id": "rfb.mutation.xtra-legs",
+      "nameZh": "额外的腿",
+      "descriptionZh": "你有一对额外的腿 (+3 速度)。",
+      "rating": "great",
+      "randomWeight": 4,
+      "sourceType": "bonus",
+      "mechanismFamily": "passive-bonus",
+      "eligibilityConditions": [
+        "exclude-race:igor",
+        "exclude-races:monster-ring,monster-sword,monster-armor"
+      ],
+      "weightConditions": [
+        "gain:mutation-bad-luck-or-personality-fragile=>weight-1",
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "active",
+      "blockers": [],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 80,
+      "sourceConstant": "MUT_SHORT_LEG",
+      "sourceHandler": "short_legs_mut",
+      "id": "rfb.mutation.short-leg",
+      "nameZh": "短腿",
+      "descriptionZh": "你的腿是短粗的树桩 (-3 速度)。",
+      "rating": "awful",
+      "randomWeight": 4,
+      "sourceType": "bonus",
+      "mechanismFamily": "passive-bonus",
+      "eligibilityConditions": [
+        "exclude-races:monster-ring,monster-sword,monster-armor"
+      ],
+      "weightConditions": [
+        "gain:mutation-good-luck=>weight-1",
+        "lose:mutation-bad-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "active",
+      "blockers": [],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 81,
+      "sourceConstant": "MUT_ELEC_AURA",
+      "sourceHandler": "elec_aura_mut",
+      "id": "rfb.mutation.elec-aura",
+      "nameZh": "电击光环",
+      "descriptionZh": "电流在你的静脉中流淌。",
+      "rating": "good",
+      "randomWeight": 4,
+      "sourceType": "bonus",
+      "mechanismFamily": "passive-bonus",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "gain:mutation-bad-luck-or-personality-fragile=>weight-1",
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "active",
+      "blockers": [],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 82,
+      "sourceConstant": "MUT_FIRE_AURA",
+      "sourceHandler": "fire_aura_mut",
+      "id": "rfb.mutation.fire-aura",
+      "nameZh": "火焰光环",
+      "descriptionZh": "你的身体被火焰包围。",
+      "rating": "good",
+      "randomWeight": 4,
+      "sourceType": "bonus",
+      "mechanismFamily": "passive-bonus",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "gain:mutation-bad-luck-or-personality-fragile=>weight-1",
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "active",
+      "blockers": [],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 83,
+      "sourceConstant": "MUT_WARTS",
+      "sourceHandler": "warts_mut",
+      "id": "rfb.mutation.warts",
+      "nameZh": "长疣",
+      "descriptionZh": "你的皮肤上长满了疣 (-2 魅力, +5 护甲)。",
+      "rating": "average",
+      "randomWeight": 6,
+      "sourceType": "bonus",
+      "mechanismFamily": "passive-bonus",
+      "eligibilityConditions": [],
+      "weightConditions": [],
+      "removesOnGain": [
+        "rfb.mutation.steel-skin"
+      ],
+      "status": "active",
+      "blockers": [],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 84,
+      "sourceConstant": "MUT_SCALES",
+      "sourceHandler": "scales_mut",
+      "id": "rfb.mutation.scales",
+      "nameZh": "鳞片",
+      "descriptionZh": "你的皮肤变成了鳞片 (-1 魅力, +10 护甲)。",
+      "rating": "good",
+      "randomWeight": 6,
+      "sourceType": "bonus",
+      "mechanismFamily": "passive-bonus",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "gain:mutation-bad-luck-or-personality-fragile=>weight-1",
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [
+        "rfb.mutation.steel-skin"
+      ],
+      "status": "active",
+      "blockers": [],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 85,
+      "sourceConstant": "MUT_STEEL_SKIN",
+      "sourceHandler": "steel_skin_mut",
+      "id": "rfb.mutation.steel-skin",
+      "nameZh": "钢铁之肤",
+      "descriptionZh": "你的皮肤是钢铁构成的 (-1 敏捷, +25 护甲)。",
+      "rating": "great",
+      "randomWeight": 4,
+      "sourceType": "bonus",
+      "mechanismFamily": "passive-bonus",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "gain:mutation-bad-luck-or-personality-fragile=>weight-1",
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [
+        "rfb.mutation.scales",
+        "rfb.mutation.warts",
+        "rfb.mutation.flesh-rot"
+      ],
+      "status": "active",
+      "blockers": [],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 86,
+      "sourceConstant": "MUT_WINGS",
+      "sourceHandler": "wings_mut",
+      "id": "rfb.mutation.wings",
+      "nameZh": "翅膀",
+      "descriptionZh": "你长着翅膀。",
+      "rating": "good",
+      "randomWeight": 4,
+      "sourceType": "bonus",
+      "mechanismFamily": "passive-bonus",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "gain:mutation-bad-luck-or-personality-fragile=>weight-1",
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "active",
+      "blockers": [],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 87,
+      "sourceConstant": "MUT_FEARLESS",
+      "sourceHandler": "fearless_mut",
+      "id": "rfb.mutation.fearless",
+      "nameZh": "无所畏惧",
+      "descriptionZh": "你无所畏惧。",
+      "rating": "average",
+      "randomWeight": 6,
+      "sourceType": "bonus",
+      "mechanismFamily": "passive-bonus",
+      "eligibilityConditions": [],
+      "weightConditions": [],
+      "removesOnGain": [
+        "rfb.mutation.cowardice",
+        "rfb.mutation.no-inhibitions"
+      ],
+      "status": "active",
+      "blockers": [],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 88,
+      "sourceConstant": "MUT_REGEN",
+      "sourceHandler": "regeneration_mut",
+      "id": "rfb.mutation.regen",
+      "nameZh": "再生",
+      "descriptionZh": "你正在再生。",
+      "rating": "good",
+      "randomWeight": 4,
+      "sourceType": "bonus",
+      "mechanismFamily": "passive-bonus",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "gain:mutation-bad-luck-or-personality-fragile=>weight-1",
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [
+        "rfb.mutation.flesh-rot"
+      ],
+      "status": "active",
+      "blockers": [],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 89,
+      "sourceConstant": "MUT_ESP",
+      "sourceHandler": "telepathy_mut",
+      "id": "rfb.mutation.esp",
+      "nameZh": "心灵感应",
+      "descriptionZh": "你具有心灵感应。",
+      "rating": "great",
+      "randomWeight": 4,
+      "sourceType": "bonus",
+      "mechanismFamily": "passive-bonus",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "gain:mutation-bad-luck-or-personality-fragile=>weight-1",
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "actor-telepathy-mind-flags-and-fuzzy-projection"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 90,
+      "sourceConstant": "MUT_LIMBER",
+      "sourceHandler": "limber_mut",
+      "id": "rfb.mutation.limber",
+      "nameZh": "柔韧",
+      "descriptionZh": "你的身体非常柔韧 (+3 敏捷)。",
+      "rating": "good",
+      "randomWeight": 6,
+      "sourceType": "bonus",
+      "mechanismFamily": "passive-bonus",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "gain:mutation-bad-luck-or-personality-fragile=>weight-1",
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [
+        "rfb.mutation.arthritis"
+      ],
+      "status": "blocked",
+      "blockers": [
+        "mutation-passive-bonus-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 91,
+      "sourceConstant": "MUT_ARTHRITIS",
+      "sourceHandler": "arthritis_mut",
+      "id": "rfb.mutation.arthritis",
+      "nameZh": "关节炎",
+      "descriptionZh": "你的关节持续酸痛 (-3 敏捷)。",
+      "rating": "bad",
+      "randomWeight": 6,
+      "sourceType": "bonus",
+      "mechanismFamily": "passive-bonus",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "gain:mutation-good-luck=>weight-1",
+        "lose:mutation-bad-luck=>weight-1"
+      ],
+      "removesOnGain": [
+        "rfb.mutation.limber"
+      ],
+      "status": "blocked",
+      "blockers": [
+        "mutation-passive-bonus-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 92,
+      "sourceConstant": "MUT_BAD_LUCK",
+      "sourceHandler": "bad_luck_mut",
+      "id": "rfb.mutation.bad-luck",
+      "nameZh": "黑色光环",
+      "descriptionZh": "你的周围环绕着黑色的光环。",
+      "rating": "awful",
+      "randomWeight": 2,
+      "sourceType": "none",
+      "mechanismFamily": "cross-system-query",
+      "eligibilityConditions": [
+        "exclude-locked-mutation:good-luck"
+      ],
+      "weightConditions": [
+        "gain:mutation-good-luck=>weight-1",
+        "lose:mutation-bad-luck=>weight-1"
+      ],
+      "removesOnGain": [
+        "rfb.mutation.good-luck"
+      ],
+      "status": "blocked",
+      "blockers": [
+        "mutation-cross-system-query"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 93,
+      "sourceConstant": "MUT_VULN_ELEM",
+      "sourceHandler": "vulnerability_mut",
+      "id": "rfb.mutation.vuln-elem",
+      "nameZh": "脆弱",
+      "descriptionZh": "你很容易受到元素伤害。",
+      "rating": "awful",
+      "randomWeight": 2,
+      "sourceType": "none",
+      "mechanismFamily": "cross-system-query",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "gain:mutation-good-luck=>weight-1",
+        "lose:mutation-bad-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-cross-system-query"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 94,
+      "sourceConstant": "MUT_MOTION",
+      "sourceHandler": "motion_mut",
+      "id": "rfb.mutation.motion",
+      "nameZh": "行动自如",
+      "descriptionZh": "你的动作精准且有力 (行动自如; +1 潜行)。",
+      "rating": "good",
+      "randomWeight": 6,
+      "sourceType": "bonus",
+      "mechanismFamily": "passive-bonus",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "gain:mutation-bad-luck-or-personality-fragile=>weight-1",
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-passive-bonus-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 95,
+      "sourceConstant": "MUT_GOOD_LUCK",
+      "sourceHandler": "good_luck_mut",
+      "id": "rfb.mutation.good-luck",
+      "nameZh": "白色光环",
+      "descriptionZh": "你的周围环绕着白色的光环。",
+      "rating": "great",
+      "randomWeight": 2,
+      "sourceType": "none",
+      "mechanismFamily": "cross-system-query",
+      "eligibilityConditions": [
+        "exclude-locked-mutation:bad-luck"
+      ],
+      "weightConditions": [
+        "gain:mutation-bad-luck-or-personality-fragile=>weight-1",
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [
+        "rfb.mutation.bad-luck"
+      ],
+      "status": "blocked",
+      "blockers": [
+        "mutation-cross-system-query"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 96,
+      "sourceConstant": "MUT_FAST_LEARNER",
+      "sourceHandler": "fast_learner_mut",
+      "id": "rfb.mutation.fast-learner",
+      "nameZh": "快速学习者",
+      "descriptionZh": "你是个快速学习者。",
+      "rating": "great",
+      "randomWeight": 0,
+      "sourceType": "none",
+      "mechanismFamily": "cross-system-query",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-cross-system-query"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 97,
+      "sourceConstant": "MUT_WEAPON_SKILLS",
+      "sourceHandler": "weapon_skills_mut",
+      "id": "rfb.mutation.weapon-skills",
+      "nameZh": "武器多面手",
+      "descriptionZh": "你可以精通任何武器。",
+      "rating": "good",
+      "randomWeight": 0,
+      "sourceType": "none",
+      "mechanismFamily": "cross-system-query",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-cross-system-query"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 98,
+      "sourceConstant": "MUT_SUBTLE_CASTING",
+      "sourceHandler": "subtle_casting_mut",
+      "id": "rfb.mutation.subtle-casting",
+      "nameZh": "隐秘施法",
+      "descriptionZh": "你的远程攻击法术不再激怒怪物。",
+      "rating": "good",
+      "randomWeight": 0,
+      "sourceType": "none",
+      "mechanismFamily": "cross-system-query",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-cross-system-query"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 99,
+      "sourceConstant": "MUT_PEERLESS_SNIPER",
+      "sourceHandler": "peerless_sniper_mut",
+      "id": "rfb.mutation.peerless-sniper",
+      "nameZh": "无双狙击手",
+      "descriptionZh": "你的远程投射物不再激怒怪物。",
+      "rating": "good",
+      "randomWeight": 0,
+      "sourceType": "none",
+      "mechanismFamily": "cross-system-query",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-cross-system-query"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 100,
+      "sourceConstant": "MUT_UNYIELDING",
+      "sourceHandler": "unyielding_mut",
+      "id": "rfb.mutation.unyielding",
+      "nameZh": "不屈不挠",
+      "descriptionZh": "你不屈不挠并获得额外生命值。",
+      "rating": "good",
+      "randomWeight": 0,
+      "sourceType": "none",
+      "mechanismFamily": "cross-system-query",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-cross-system-query"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 101,
+      "sourceConstant": "MUT_AMBIDEXTROUS",
+      "sourceHandler": "ambidexterity_mut",
+      "id": "rfb.mutation.ambidextrous",
+      "nameZh": "左右开弓",
+      "descriptionZh": "你左右开弓。",
+      "rating": "great",
+      "randomWeight": 0,
+      "sourceType": "none",
+      "mechanismFamily": "cross-system-query",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-cross-system-query"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 102,
+      "sourceConstant": "MUT_UNTOUCHABLE",
+      "sourceHandler": "untouchable_mut",
+      "id": "rfb.mutation.untouchable",
+      "nameZh": "不可触碰",
+      "descriptionZh": "你不可触碰并获得护甲加成。",
+      "rating": "good",
+      "randomWeight": 0,
+      "sourceType": "bonus",
+      "mechanismFamily": "passive-bonus",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-passive-bonus-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 103,
+      "sourceConstant": "MUT_LOREMASTER",
+      "sourceHandler": "loremaster_mut",
+      "id": "rfb.mutation.loremaster",
+      "nameZh": "博学者",
+      "descriptionZh": "你是一名博学者。",
+      "rating": "good",
+      "randomWeight": 0,
+      "sourceType": "bonus",
+      "mechanismFamily": "passive-bonus",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-passive-bonus-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 104,
+      "sourceConstant": "MUT_ARCANE_MASTERY",
+      "sourceHandler": "arcane_mastery_mut",
+      "id": "rfb.mutation.arcane-mastery",
+      "nameZh": "奥术精通",
+      "descriptionZh": "你精通奥术。",
+      "rating": "great",
+      "randomWeight": 0,
+      "sourceType": "none",
+      "mechanismFamily": "cross-system-query",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-cross-system-query"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 105,
+      "sourceConstant": "MUT_EVASION",
+      "sourceHandler": "evasion_mut",
+      "id": "rfb.mutation.evasion",
+      "nameZh": "闪避",
+      "descriptionZh": "你能避免被地震压碎，并能躲避怪物的喷吐攻击。",
+      "rating": "great",
+      "randomWeight": 0,
+      "sourceType": "none",
+      "mechanismFamily": "cross-system-query",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-cross-system-query"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 106,
+      "sourceConstant": "MUT_POTION_CHUGGER",
+      "sourceHandler": "potion_chugger_mut",
+      "id": "rfb.mutation.potion-chugger",
+      "nameZh": "狂饮药水",
+      "descriptionZh": "你喝药水的速度比平常快得多。",
+      "rating": "good",
+      "randomWeight": 0,
+      "sourceType": "none",
+      "mechanismFamily": "cross-system-query",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-cross-system-query"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 107,
+      "sourceConstant": "MUT_ONE_WITH_MAGIC",
+      "sourceHandler": "one_with_magic_mut",
+      "id": "rfb.mutation.one-with-magic",
+      "nameZh": "魔法亲和",
+      "descriptionZh": "你有几率抵抗解除魔法和反魔法。",
+      "rating": "great",
+      "randomWeight": 0,
+      "sourceType": "none",
+      "mechanismFamily": "cross-system-query",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-cross-system-query"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 108,
+      "sourceConstant": "MUT_PEERLESS_TRACKER",
+      "sourceHandler": "peerless_tracker_mut",
+      "id": "rfb.mutation.peerless-tracker",
+      "nameZh": "无双追踪者",
+      "descriptionZh": "你是一名无双的追踪者。",
+      "rating": "great",
+      "randomWeight": 0,
+      "sourceType": "activation",
+      "mechanismFamily": "activation",
+      "eligibilityConditions": [
+        "exclude-class:berserker"
+      ],
+      "weightConditions": [
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-activation-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 109,
+      "sourceConstant": "MUT_INFERNAL_DEAL",
+      "sourceHandler": "infernal_deal_mut",
+      "id": "rfb.mutation.infernal-deal",
+      "nameZh": "恶魔契约",
+      "descriptionZh": "你已经签订了恶魔契约。",
+      "rating": "great",
+      "randomWeight": 0,
+      "sourceType": "none",
+      "mechanismFamily": "cross-system-query",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [
+        "rfb.mutation.arthritis"
+      ],
+      "status": "blocked",
+      "blockers": [
+        "mutation-cross-system-query"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 110,
+      "sourceConstant": "MUT_MERCHANTS_FRIEND",
+      "sourceHandler": "merchants_friend_mut",
+      "id": "rfb.mutation.merchants-friend",
+      "nameZh": "商人之友",
+      "descriptionZh": "你是商人之友。",
+      "rating": "good",
+      "randomWeight": 0,
+      "sourceType": "none",
+      "mechanismFamily": "cross-system-query",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-cross-system-query"
+      ],
+      "sourceNoNumericEffect": true
+    },
+    {
+      "sourceIndex": 111,
+      "sourceConstant": "MUT_SACRED_VITALITY",
+      "sourceHandler": "sacred_vitality_mut",
+      "id": "rfb.mutation.sacred-vitality",
+      "nameZh": "神圣活力",
+      "descriptionZh": "你获得所有治疗效果的加成。",
+      "rating": "good",
+      "randomWeight": 0,
+      "sourceType": "none",
+      "mechanismFamily": "cross-system-query",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-cross-system-query"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 112,
+      "sourceConstant": "MUT_CULT_OF_PERSONALITY",
+      "sourceHandler": "cult_of_personality_mut",
+      "id": "rfb.mutation.cult-of-personality",
+      "nameZh": "个人崇拜",
+      "descriptionZh": "被召唤出来的怪物有时是友好的。",
+      "rating": "good",
+      "randomWeight": 0,
+      "sourceType": "bonus",
+      "mechanismFamily": "passive-bonus",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-passive-bonus-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 113,
+      "sourceConstant": "MUT_FLEET_OF_FOOT",
+      "sourceHandler": "fleet_of_foot_mut",
+      "id": "rfb.mutation.fleet-of-foot",
+      "nameZh": "健步如飞",
+      "descriptionZh": "你健步如飞（移动消耗更少的能量）。",
+      "rating": "good",
+      "randomWeight": 0,
+      "sourceType": "none",
+      "mechanismFamily": "cross-system-query",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-cross-system-query"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 114,
+      "sourceConstant": "MUT_ASTRAL_GUIDE",
+      "sourceHandler": "astral_guide_mut",
+      "id": "rfb.mutation.astral-guide",
+      "nameZh": "星界向导",
+      "descriptionZh": "你是一名星界向导（传送消耗更少的能量）。",
+      "rating": "good",
+      "randomWeight": 0,
+      "sourceType": "none",
+      "mechanismFamily": "cross-system-query",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-cross-system-query"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 115,
+      "sourceConstant": "MUT_DEMONIC_GRASP",
+      "sourceHandler": "demonic_grasp_mut",
+      "id": "rfb.mutation.demonic-grasp",
+      "nameZh": "恶魔之握",
+      "descriptionZh": "你抵抗充能流失。",
+      "rating": "good",
+      "randomWeight": 0,
+      "sourceType": "none",
+      "mechanismFamily": "cross-system-query",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-cross-system-query"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 116,
+      "sourceConstant": "MUT_WEIRD_MIND",
+      "sourceHandler": "weird_mind_mut",
+      "id": "rfb.mutation.weird-mind",
+      "nameZh": "诡异心智",
+      "descriptionZh": "你诡异的心智不受不可名状的恐怖和幻觉的影响。",
+      "rating": "good",
+      "randomWeight": 0,
+      "sourceType": "bonus",
+      "mechanismFamily": "passive-bonus",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "active",
+      "blockers": [],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 117,
+      "sourceConstant": "MUT_FANTASTIC_FRENZY",
+      "sourceHandler": "fantastic_frenzy_mut",
+      "id": "rfb.mutation.fantastic-frenzy",
+      "nameZh": "奇妙狂乱",
+      "descriptionZh": "你拥有奇妙狂乱的力量。",
+      "rating": "great",
+      "randomWeight": 0,
+      "sourceType": "activation",
+      "mechanismFamily": "activation",
+      "eligibilityConditions": [
+        "exclude-class:berserker"
+      ],
+      "weightConditions": [
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-activation-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 118,
+      "sourceConstant": "MUT_BLACK_MARKETEER",
+      "sourceHandler": "black_marketeer_mut",
+      "id": "rfb.mutation.black-marketeer",
+      "nameZh": "黑市商人",
+      "descriptionZh": "你是黑市的代理人。",
+      "rating": "good",
+      "randomWeight": 0,
+      "sourceType": "none",
+      "mechanismFamily": "cross-system-query",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-cross-system-query"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 119,
+      "sourceConstant": "MUT_SPEED_READER",
+      "sourceHandler": "speed_reader_mut",
+      "id": "rfb.mutation.speed-reader",
+      "nameZh": "快速阅读",
+      "descriptionZh": "你阅读卷轴的速度比平常快。",
+      "rating": "good",
+      "randomWeight": 0,
+      "sourceType": "none",
+      "mechanismFamily": "cross-system-query",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-cross-system-query"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 120,
+      "sourceConstant": "MUT_FELL_SORCERY",
+      "sourceHandler": "fell_sorcery_mut",
+      "id": "rfb.mutation.fell-sorcery",
+      "nameZh": "恐怖巫术",
+      "descriptionZh": "你的法术变得更强大。",
+      "rating": "good",
+      "randomWeight": 0,
+      "sourceType": "bonus",
+      "mechanismFamily": "passive-bonus",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-passive-bonus-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 121,
+      "sourceConstant": "MUT_TREAD_SOFTLY",
+      "sourceHandler": "tread_softly_mut",
+      "id": "rfb.mutation.tread-softly",
+      "nameZh": "悄步前行",
+      "descriptionZh": "你的潜行能力提升了。",
+      "rating": "good",
+      "randomWeight": 0,
+      "sourceType": "bonus",
+      "mechanismFamily": "passive-bonus",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-passive-bonus-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 122,
+      "sourceConstant": "MUT_DRACONIAN_SHIELD",
+      "sourceHandler": "draconian_shield_mut",
+      "id": "rfb.mutation.draconian-shield",
+      "nameZh": "龙皮",
+      "descriptionZh": "龙皮：你获得 +15 AC 和火光环",
+      "rating": "good",
+      "randomWeight": 0,
+      "sourceType": "bonus",
+      "mechanismFamily": "passive-bonus",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "draconian-subrace-identity-and-aura-selection"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 123,
+      "sourceConstant": "MUT_DRACONIAN_MAGIC_RES",
+      "sourceHandler": "draconian_magic_resistance_mut",
+      "id": "rfb.mutation.draconian-magic-res",
+      "nameZh": "魔法抗性",
+      "descriptionZh": "你对魔法具有抗性。",
+      "rating": "good",
+      "randomWeight": 0,
+      "sourceType": "bonus",
+      "mechanismFamily": "passive-bonus",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "active",
+      "blockers": [],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 124,
+      "sourceConstant": "MUT_DRACONIAN_STRIKE",
+      "sourceHandler": "draconian_strike_mut",
+      "id": "rfb.mutation.draconian-strike",
+      "nameZh": "龙之打击",
+      "descriptionZh": "你拥有龙之打击的力量。",
+      "rating": "good",
+      "randomWeight": 0,
+      "sourceType": "activation",
+      "mechanismFamily": "activation",
+      "eligibilityConditions": [
+        "exclude-class:berserker"
+      ],
+      "weightConditions": [
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-activation-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 125,
+      "sourceConstant": "MUT_DRACONIAN_BREATH",
+      "sourceHandler": "draconian_breath_mut",
+      "id": "rfb.mutation.draconian-breath",
+      "nameZh": "致命吐息",
+      "descriptionZh": "你的吐息变得更加强劲。",
+      "rating": "good",
+      "randomWeight": 0,
+      "sourceType": "none",
+      "mechanismFamily": "cross-system-query",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-cross-system-query"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 126,
+      "sourceConstant": "MUT_DRACONIAN_REGEN",
+      "sourceHandler": "draconian_regen_mut",
+      "id": "rfb.mutation.draconian-regen",
+      "nameZh": "再生",
+      "descriptionZh": "你的再生速度极快。",
+      "rating": "good",
+      "randomWeight": 0,
+      "sourceType": "bonus",
+      "mechanismFamily": "passive-bonus",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "active",
+      "blockers": [],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 127,
+      "sourceConstant": "MUT_DRACONIAN_KIN",
+      "sourceHandler": "draconian_kin_mut",
+      "id": "rfb.mutation.draconian-kin",
+      "nameZh": "召唤同族",
+      "descriptionZh": "你能够召唤同类。",
+      "rating": "good",
+      "randomWeight": 0,
+      "sourceType": "activation",
+      "mechanismFamily": "activation",
+      "eligibilityConditions": [
+        "exclude-class:berserker"
+      ],
+      "weightConditions": [
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-activation-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 128,
+      "sourceConstant": "MUT_DRACONIAN_LORE",
+      "sourceHandler": "draconian_lore_mut",
+      "id": "rfb.mutation.draconian-lore",
+      "nameZh": "远古知识",
+      "descriptionZh": "物品在你捡起时会自动鉴定。",
+      "rating": "good",
+      "randomWeight": 0,
+      "sourceType": "bonus",
+      "mechanismFamily": "passive-bonus",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-passive-bonus-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 129,
+      "sourceConstant": "MUT_DRACONIAN_RESISTANCE",
+      "sourceHandler": "draconian_resistance_mut",
+      "id": "rfb.mutation.draconian-resistance",
+      "nameZh": "抗性增加",
+      "descriptionZh": "你获得额外的火抗性。",
+      "rating": "good",
+      "randomWeight": 0,
+      "sourceType": "bonus",
+      "mechanismFamily": "passive-bonus",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "draconian-subrace-identity"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 130,
+      "sourceConstant": "MUT_DRACONIAN_METAMORPHOSIS",
+      "sourceHandler": "draconian_metamorphosis_mut",
+      "id": "rfb.mutation.draconian-metamorphosis",
+      "nameZh": "变形",
+      "descriptionZh": "你变形成了一条龙！",
+      "rating": "good",
+      "randomWeight": 0,
+      "sourceType": "none",
+      "mechanismFamily": "cross-system-query",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-cross-system-query"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 131,
+      "sourceConstant": "MUT_EASY_TIRING",
+      "sourceHandler": "easy_tiring_mut",
+      "id": "rfb.mutation.easy-tiring",
+      "nameZh": "易疲劳",
+      "descriptionZh": "物理战斗会使你疲惫。",
+      "rating": "awful",
+      "randomWeight": 4,
+      "sourceType": "none",
+      "mechanismFamily": "cross-system-query",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "gain:mutation-good-luck=>weight-1",
+        "lose:mutation-bad-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-cross-system-query"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 132,
+      "sourceConstant": "MUT_SENSITIVE_EYES",
+      "sourceHandler": "sensitive_eyes_mut",
+      "id": "rfb.mutation.sensitive-eyes",
+      "nameZh": "敏感的双眼",
+      "descriptionZh": "你的眼睛非常敏感。",
+      "rating": "average",
+      "randomWeight": 4,
+      "sourceType": "bonus",
+      "mechanismFamily": "passive-bonus",
+      "eligibilityConditions": [
+        "exclude-races:monster-ring,monster-sword,monster-armor"
+      ],
+      "weightConditions": [],
+      "removesOnGain": [],
+      "status": "active",
+      "blockers": [],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 133,
+      "sourceConstant": "MUT_NO_INHIBITIONS",
+      "sourceHandler": "no_inhibitions_mut",
+      "id": "rfb.mutation.no-inhibitions",
+      "nameZh": "毫无顾忌",
+      "descriptionZh": "你毫无顾忌。",
+      "rating": "average",
+      "randomWeight": 4,
+      "sourceType": "bonus",
+      "mechanismFamily": "passive-bonus",
+      "eligibilityConditions": [],
+      "weightConditions": [],
+      "removesOnGain": [
+        "rfb.mutation.cowardice",
+        "rfb.mutation.fearless"
+      ],
+      "status": "active",
+      "blockers": [],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 134,
+      "sourceConstant": "MUT_WAYBREAD_INTO",
+      "sourceHandler": "waybread_into_mut",
+      "id": "rfb.mutation.waybread-into",
+      "nameZh": "兰巴斯不耐受",
+      "descriptionZh": "你有兰巴斯不耐受症。",
+      "rating": "bad",
+      "randomWeight": 4,
+      "sourceType": "none",
+      "mechanismFamily": "cross-system-query",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "gain:mutation-good-luck=>weight-1",
+        "lose:mutation-bad-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-cross-system-query"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 135,
+      "sourceConstant": "MUT_PULTITIS",
+      "sourceHandler": "cerebral_pultitis_mut",
+      "id": "rfb.mutation.pultitis",
+      "nameZh": "大脑化脓",
+      "descriptionZh": "你患有大脑化脓 (-3 智力)。",
+      "rating": "awful",
+      "randomWeight": 4,
+      "sourceType": "bonus",
+      "mechanismFamily": "passive-bonus",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "gain:mutation-good-luck=>weight-1",
+        "lose:mutation-bad-luck=>weight-1"
+      ],
+      "removesOnGain": [
+        "rfb.mutation.hyper-int",
+        "rfb.mutation.moronic"
+      ],
+      "status": "blocked",
+      "blockers": [
+        "mutation-passive-bonus-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 136,
+      "sourceConstant": "MUT_HYPOCHONDRIA",
+      "sourceHandler": "hypochondria_mut",
+      "id": "rfb.mutation.hypochondria",
+      "nameZh": "急性疑病症",
+      "descriptionZh": "你患有疑病症。",
+      "rating": "bad",
+      "randomWeight": 4,
+      "sourceType": "effect",
+      "mechanismFamily": "periodic-effect",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "gain:mutation-good-luck=>weight-1",
+        "lose:mutation-bad-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-periodic-effect-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 137,
+      "sourceConstant": "MUT_PURPLE_GIFT",
+      "sourceHandler": "purple_mut",
+      "id": "rfb.mutation.purple-gift",
+      "nameZh": "紫神眷顾",
+      "descriptionZh": "你是一位紫神的信徒。",
+      "rating": "good",
+      "randomWeight": 0,
+      "sourceType": "none",
+      "mechanismFamily": "cross-system-query",
+      "eligibilityConditions": [
+        "exclude-class:chaos-warrior",
+        "exclude-mutation:chaos-gift"
+      ],
+      "weightConditions": [
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-cross-system-query"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 138,
+      "sourceConstant": "MUT_INSPIRED_SMITHING",
+      "sourceHandler": "inspired_smithing_mut",
+      "id": "rfb.mutation.inspired-smithing",
+      "nameZh": "灵感锻造",
+      "descriptionZh": "你的存在能启发铁匠。",
+      "rating": "great",
+      "randomWeight": 0,
+      "sourceType": "none",
+      "mechanismFamily": "cross-system-query",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-cross-system-query"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 139,
+      "sourceConstant": "MUT_IMPOTENCE",
+      "sourceHandler": "impotence_mut",
+      "id": "rfb.mutation.impotence",
+      "nameZh": "魔法无能",
+      "descriptionZh": "你魔法无能。",
+      "rating": "bad",
+      "randomWeight": 4,
+      "sourceType": "none",
+      "mechanismFamily": "cross-system-query",
+      "eligibilityConditions": [
+        "exclude-sex:female"
+      ],
+      "weightConditions": [
+        "gain:mutation-good-luck=>weight-1",
+        "lose:mutation-bad-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-cross-system-query"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 140,
+      "sourceConstant": "MUT_STRONG_MIND",
+      "sourceHandler": "strong_mind_mut",
+      "id": "rfb.mutation.strong-mind",
+      "nameZh": "强韧心智",
+      "descriptionZh": "你免疫法力吸取。",
+      "rating": "great",
+      "randomWeight": 0,
+      "sourceType": "none",
+      "mechanismFamily": "cross-system-query",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mana-drain-consumer"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 141,
+      "sourceConstant": "MUT_VORTEX_MELEE",
+      "sourceHandler": "vortex_melee_mut",
+      "id": "rfb.mutation.vortex-melee",
+      "nameZh": "致命旋风",
+      "descriptionZh": "你带着致命的力量旋转。",
+      "rating": "good",
+      "randomWeight": 0,
+      "sourceType": "none",
+      "mechanismFamily": "cross-system-query",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-cross-system-query"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 142,
+      "sourceConstant": "MUT_VORTEX_SPEED",
+      "sourceHandler": "vortex_speed_mut",
+      "id": "rfb.mutation.vortex-speed",
+      "nameZh": "龙卷风速",
+      "descriptionZh": "你以龙卷风般的速度移动 (+8 速度)。",
+      "rating": "good",
+      "randomWeight": 0,
+      "sourceType": "bonus",
+      "mechanismFamily": "passive-bonus",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-passive-bonus-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 143,
+      "sourceConstant": "MUT_VORTEX_CONTROL",
+      "sourceHandler": "vortex_control_mut",
+      "id": "rfb.mutation.vortex-control",
+      "nameZh": "吐息控制",
+      "descriptionZh": "你控制着你的吐息。",
+      "rating": "good",
+      "randomWeight": 0,
+      "sourceType": "none",
+      "mechanismFamily": "cross-system-query",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "lose:mutation-good-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-cross-system-query"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 144,
+      "sourceConstant": "MUT_EASY_TIRING2",
+      "sourceHandler": "easy_tiring_II_mut",
+      "id": "rfb.mutation.easy-tiring2",
+      "nameZh": "极易疲劳",
+      "descriptionZh": "使用魔法或远程武器会使你疲惫。",
+      "rating": "awful",
+      "randomWeight": 0,
+      "sourceType": "none",
+      "mechanismFamily": "cross-system-query",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "lose:mutation-bad-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-cross-system-query"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 145,
+      "sourceConstant": "MUT_LIMP",
+      "sourceHandler": "limp_mut",
+      "id": "rfb.mutation.limp",
+      "nameZh": "跛行",
+      "descriptionZh": "你走路一瘸一拐的 (-10% 行走速度)。",
+      "rating": "bad",
+      "randomWeight": 4,
+      "sourceType": "none",
+      "mechanismFamily": "cross-system-query",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "gain:mutation-good-luck=>weight-1",
+        "lose:mutation-bad-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-cross-system-query"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 146,
+      "sourceConstant": "MUT_HUMAN_STR",
+      "sourceHandler": "human_str_mut",
+      "id": "rfb.mutation.human-str",
+      "nameZh": "失衡打击",
+      "descriptionZh": "你最强力攻击的威力会使你失去平衡。",
+      "rating": "bad",
+      "randomWeight": 0,
+      "sourceType": "none",
+      "mechanismFamily": "cross-system-query",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "lose:mutation-bad-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-cross-system-query"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 147,
+      "sourceConstant": "MUT_HUMAN_INT",
+      "sourceHandler": "human_int_mut",
+      "id": "rfb.mutation.human-int",
+      "nameZh": "想象力过于丰富",
+      "descriptionZh": "你的想象力过于丰富。",
+      "rating": "bad",
+      "randomWeight": 0,
+      "sourceType": "bonus",
+      "mechanismFamily": "passive-bonus",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "lose:mutation-bad-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-passive-bonus-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 148,
+      "sourceConstant": "MUT_HUMAN_WIS",
+      "sourceHandler": "human_wis_mut",
+      "id": "rfb.mutation.human-wis",
+      "nameZh": "与神同调",
+      "descriptionZh": "你感觉与邪恶生物没有任何联系。",
+      "rating": "bad",
+      "randomWeight": 0,
+      "sourceType": "none",
+      "mechanismFamily": "cross-system-query",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "lose:mutation-bad-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-cross-system-query"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 149,
+      "sourceConstant": "MUT_HUMAN_DEX",
+      "sourceHandler": "human_dex_mut",
+      "id": "rfb.mutation.human-dex",
+      "nameZh": "敏捷超乎肉体",
+      "descriptionZh": "你偶尔会在战斗中拉伤肌肉。",
+      "rating": "bad",
+      "randomWeight": 0,
+      "sourceType": "none",
+      "mechanismFamily": "cross-system-query",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "lose:mutation-bad-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-cross-system-query"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 150,
+      "sourceConstant": "MUT_HUMAN_CON",
+      "sourceHandler": "human_con_mut",
+      "id": "rfb.mutation.human-con",
+      "nameZh": "逼近极限",
+      "descriptionZh": "你会频繁地感到身体不适。",
+      "rating": "bad",
+      "randomWeight": 0,
+      "sourceType": "effect",
+      "mechanismFamily": "periodic-effect",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "lose:mutation-bad-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-periodic-effect-system"
+      ],
+      "sourceNoNumericEffect": false
+    },
+    {
+      "sourceIndex": 151,
+      "sourceConstant": "MUT_HUMAN_CHR",
+      "sourceHandler": "human_chr_mut",
+      "id": "rfb.mutation.human-chr",
+      "nameZh": "过度自信",
+      "descriptionZh": "过度自信使你变得马虎。",
+      "rating": "bad",
+      "randomWeight": 0,
+      "sourceType": "bonus",
+      "mechanismFamily": "passive-bonus",
+      "eligibilityConditions": [],
+      "weightConditions": [
+        "lose:mutation-bad-luck=>weight-1"
+      ],
+      "removesOnGain": [],
+      "status": "blocked",
+      "blockers": [
+        "mutation-passive-bonus-system"
+      ],
+      "sourceNoNumericEffect": false
+    }
+  ]
+}

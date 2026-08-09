@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/mutation.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.mutation.tread-softly",
+  "name": "悄步前行",
+  "description": "你的潜行能力提升了。",
+  "rating": "good",
+  "sourceIndex": 121,
+  "randomWeight": 0,
+  "removesOnGain": []
+}

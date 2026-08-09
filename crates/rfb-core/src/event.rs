@@ -75,6 +75,16 @@ pub(crate) enum BoltReflectionOutcome {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum DomainEvent {
+    #[allow(dead_code)]
+    MutationGained {
+        mutation_id: String,
+        name: String,
+    },
+    #[allow(dead_code)]
+    MutationLost {
+        mutation_id: String,
+        name: String,
+    },
     AbilityStudied {
         ability_id: String,
     },
@@ -1111,6 +1121,14 @@ pub(crate) enum DomainEvent {
         target_kind_id: String,
         amount: u16,
     },
+    MutationAuraHit {
+        target_kind_id: String,
+        damage: DamageOutcome,
+    },
+    MutationAuraSlew {
+        target_kind_id: String,
+        damage: DamageOutcome,
+    },
     VengeanceHit {
         target_kind_id: String,
         damage: DamageOutcome,
@@ -1193,6 +1211,16 @@ pub(crate) enum DomainEvent {
 impl DomainEvent {
     pub(crate) fn into_dto(self) -> GameEventDto {
         match self {
+            Self::MutationGained { mutation_id, name } => dto(
+                "mutation.gained",
+                "mutation-gained",
+                [("target", mutation_id), ("name", name)],
+            ),
+            Self::MutationLost { mutation_id, name } => dto(
+                "mutation.lost",
+                "mutation-lost",
+                [("target", mutation_id), ("name", name)],
+            ),
             Self::AbilityStudied { ability_id } => dto(
                 "ability.studied",
                 "ability-studied",
@@ -4171,6 +4199,31 @@ impl DomainEvent {
                     ("target", target_kind_id),
                     ("amount", amount.to_string()),
                 ],
+            ),
+            Self::MutationAuraHit {
+                target_kind_id,
+                damage,
+            } => dto_with_outcome(
+                "mutation.aura-hit",
+                "mutation-aura-hit",
+                [
+                    ("target", target_kind_id),
+                    ("damage", damage.applied.to_string()),
+                ],
+                GameEventOutcomeDto::Damage {
+                    resolution: damage.into(),
+                },
+            ),
+            Self::MutationAuraSlew {
+                target_kind_id,
+                damage,
+            } => dto_with_outcome(
+                "mutation.aura-slay",
+                "mutation-aura-slay",
+                [("target", target_kind_id)],
+                GameEventOutcomeDto::Death {
+                    resolution: damage.into(),
+                },
             ),
             Self::VengeanceHit {
                 target_kind_id,

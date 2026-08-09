@@ -32,7 +32,7 @@
         "y": 3
       },
       "playerHp": 12,
-      "playerMaxHp": 205,
+      "playerMaxHp": 195,
       "playerAttack": 3,
       "playerDefense": 2,
       "playerSpeed": 110,
@@ -62,36 +62,42 @@
           "strength": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 128,
             "effective": 9,
             "index": 6
           },
           "intelligence": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 118,
             "effective": 18,
             "index": 15
           },
           "wisdom": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 108,
             "effective": 14,
             "index": 11
           },
           "dexterity": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 88,
             "effective": 15,
             "index": 12
           },
           "constitution": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 148,
             "effective": 10,
             "index": 7
           },
           "charisma": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 118,
             "effective": 12,
             "index": 9
           }
@@ -3192,8 +3198,8 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "8935ce74989db3dad22244a86a28f4dfbea05927b9b919743246216c33965dcb"
+      "stateHash": "a4ff40a82d619c29842b6a33f9dfce3c579681a315a0afecf786dac29d9e31af"
     },
-    "saveRoundTripStateHash": "8935ce74989db3dad22244a86a28f4dfbea05927b9b919743246216c33965dcb"
+    "saveRoundTripStateHash": "a4ff40a82d619c29842b6a33f9dfce3c579681a315a0afecf786dac29d9e31af"
   }
 }

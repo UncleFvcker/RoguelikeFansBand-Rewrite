@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/mutation.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.mutation.hyper-int",
+  "name": "活体计算机",
+  "description": "你的大脑是一台活体计算机 (+4 智力/感知)。",
+  "rating": "great",
+  "sourceIndex": 66,
+  "randomWeight": 6,
+  "modifiers": {
+    "intelligence": 4,
+    "wisdom": 4
+  },
+  "removesOnGain": [
+    "rfb.mutation.moronic",
+    "rfb.mutation.pultitis"
+  ]
+}

@@ -606,6 +606,15 @@ impl Game {
                 let increase = window[1].saturating_sub(window[0]);
                 !(1..=10).contains(&increase)
             })
+            || !self
+                .progress
+                .locked_mutation_ids
+                .is_subset(&self.progress.active_mutation_ids)
+            || self
+                .progress
+                .active_mutation_ids
+                .iter()
+                .any(|id| self.content.mutation(id).is_none())
         {
             return Err(CoreError::InvalidSave("character progress is invalid"));
         }

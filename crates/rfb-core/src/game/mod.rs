@@ -118,6 +118,10 @@ mod monster_ai;
 mod monster_combat;
 mod monster_ecology;
 mod movement;
+// M2 deliberately establishes this core transaction boundary before any item
+// effect is allowed to call it; Polymorph remains blocked until its own batch.
+#[allow(dead_code)]
+mod mutations;
 mod persistence;
 mod player_abilities;
 mod player_combat;
@@ -196,7 +200,7 @@ pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 72;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 74;
 pub const WARRENS_JOURNEY_WORLD_ID: &str = "demo.world.warrens-journey";
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const VISIBILITY_RADIUS: i32 = 8;
@@ -1140,7 +1144,7 @@ impl Game {
         let player_position_before_command = self.player.position;
         let floor_before_command = self.current_floor_id.clone();
         let wilderness_position_before_command = self.wilderness_position;
-        let light_radius_before_command = self.equipped_light_radius();
+        let light_radius_before_command = self.player_light_radius();
         let see_invisible_sources_before_command = self.player_see_invisible_sources();
         let entity_positions_before_command = self
             .entities
@@ -1881,7 +1885,7 @@ impl Game {
 
         let full_visibility_refresh = self.player.position != player_position_before_command
             || self.current_floor_id != floor_before_command
-            || self.equipped_light_radius() != light_radius_before_command
+            || self.player_light_radius() != light_radius_before_command
             || self.player_see_invisible_sources() != see_invisible_sources_before_command;
         self.refresh_invisible_visibility(
             full_visibility_refresh,
@@ -4662,8 +4666,24 @@ impl Game {
     }
 
     fn entity_is_visible_to_player(&self, entity: &Actor) -> bool {
-        (self.is_visible(entity.position) || self.entity_is_visible_by_infravision(entity))
-            && (!self.actor_is_invisible(entity) || entity.visible_invisible)
+        ((self.is_visible(entity.position) || self.entity_is_visible_by_infravision(entity))
+            && (!self.actor_is_invisible(entity) || entity.visible_invisible))
+            || self.entity_is_visible_by_telepathy(entity)
+    }
+
+    fn entity_is_visible_by_telepathy(&self, entity: &Actor) -> bool {
+        self.player_has_telepathy()
+            && squared_distance(self.player.position, entity.position)
+                <= VISIBILITY_RADIUS * VISIBILITY_RADIUS
+            && self
+                .content
+                .actor(&entity.kind_id)
+                .is_some_and(|definition| {
+                    !definition
+                        .tags
+                        .iter()
+                        .any(|tag| matches!(tag.as_str(), "empty-mind" | "weird-mind"))
+                })
     }
 
     fn entity_is_visible_by_infravision(&self, entity: &Actor) -> bool {
@@ -4804,7 +4824,7 @@ impl Game {
         // entities, then ground items) so strict-greater comparisons keep
         // resolving ties identically.
         let mut sources = Vec::new();
-        if let Some(radius) = self.equipped_light_radius() {
+        if let Some(radius) = self.player_light_radius() {
             sources.push(LightSource {
                 position: self.player.position,
                 radius,

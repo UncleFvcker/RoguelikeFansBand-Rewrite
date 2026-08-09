@@ -10,6 +10,8 @@
         "poison",
         "light",
         "dark",
+        "blindness",
+        "fear",
         "confusion",
         "nether",
         "nexus",

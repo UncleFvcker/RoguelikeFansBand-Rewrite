@@ -1,0 +1,12 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/mutation.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.mutation.elec-aura",
+  "name": "电击光环",
+  "description": "电流在你的静脉中流淌。",
+  "rating": "good",
+  "sourceIndex": 81,
+  "randomWeight": 4,
+  "contactAura": "electricity",
+  "removesOnGain": []
+}

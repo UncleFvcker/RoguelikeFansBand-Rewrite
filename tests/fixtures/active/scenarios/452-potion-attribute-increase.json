@@ -11,12 +11,12 @@
     "debugClearCarriedItems": true,
     "playerBuildId": "demo.build.vanguard",
     "playerAttributes": {
-      "strength": 238,
-      "intelligence": 118,
+      "strength": 138,
+      "intelligence": 98,
       "wisdom": 118,
-      "dexterity": 118,
-      "constitution": 118,
-      "charisma": 118
+      "dexterity": 98,
+      "constitution": 98,
+      "charisma": 78
     },
     "inventoryItems": [
       {
@@ -84,14 +84,14 @@
         "x": 3,
         "y": 3
       },
-      "playerHp": 34,
-      "playerMaxHp": 44,
+      "playerHp": 33,
+      "playerMaxHp": 40,
       "playerAttack": 2,
       "playerDefense": 15,
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 444,
-      "playerCarryCapacityTenthsPound": 1950,
+      "playerCarryCapacityTenthsPound": 1800,
       "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
@@ -113,40 +113,46 @@
         "victoryLevelCapUnlocked": false,
         "attributes": {
           "strength": {
-            "natural": 238,
-            "maximumNatural": 238,
-            "effective": 238,
-            "index": 37
+            "natural": 138,
+            "maximumNatural": 138,
+            "potential": 138,
+            "effective": 188,
+            "index": 32
           },
           "intelligence": {
-            "natural": 146,
-            "maximumNatural": 146,
-            "effective": 116,
-            "index": 24
+            "natural": 100,
+            "maximumNatural": 100,
+            "potential": 108,
+            "effective": 70,
+            "index": 20
           },
           "wisdom": {
-            "natural": 148,
-            "maximumNatural": 148,
-            "effective": 118,
-            "index": 25
+            "natural": 125,
+            "maximumNatural": 125,
+            "potential": 148,
+            "effective": 95,
+            "index": 22
           },
           "dexterity": {
-            "natural": 145,
-            "maximumNatural": 145,
-            "effective": 175,
-            "index": 30
+            "natural": 103,
+            "maximumNatural": 103,
+            "potential": 118,
+            "effective": 133,
+            "index": 26
           },
           "constitution": {
-            "natural": 153,
-            "maximumNatural": 153,
-            "effective": 173,
-            "index": 30
+            "natural": 101,
+            "maximumNatural": 101,
+            "potential": 108,
+            "effective": 121,
+            "index": 25
           },
           "charisma": {
-            "natural": 156,
-            "maximumNatural": 156,
-            "effective": 166,
-            "index": 29
+            "natural": 81,
+            "maximumNatural": 81,
+            "potential": 88,
+            "effective": 91,
+            "index": 22
           }
         },
         "skills": [
@@ -528,18 +534,18 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "7da9f211c686cba29370b94ac18d23eef6fb090b720e9c6ab4589d7049e84988"
+      "stateHash": "0767b3033c621c270bee1d57922d144242c842a8c00fb88c48d5bab16f4f13f7"
     },
     "events": [
       {
         "kind": "item.use-attribute-increase-no-effect",
         "messageKey": "item-use-attribute-increase-no-effect",
         "args": {
-          "after": "238",
+          "after": "138",
           "attribute": "strength",
-          "before": "238",
+          "before": "138",
           "change": "increased",
-          "maximum": "238",
+          "maximum": "138",
           "nameKey": "item-demo-might-tonic-appearance",
           "source": "demo.item.might-tonic"
         }
@@ -548,11 +554,11 @@
         "kind": "item.use-attribute-drained",
         "messageKey": "item-use-attribute-drained",
         "args": {
-          "after": "230",
+          "after": "133",
           "attribute": "strength",
-          "before": "238",
+          "before": "138",
           "change": "drained",
-          "maximum": "238",
+          "maximum": "138",
           "nameKey": "item-demo-frailty-tonic-name",
           "source": "demo.item.frailty-tonic"
         }
@@ -561,11 +567,11 @@
         "kind": "item.use-attribute-restored",
         "messageKey": "item-use-attribute-restored",
         "args": {
-          "after": "238",
+          "after": "138",
           "attribute": "strength",
-          "before": "230",
+          "before": "133",
           "change": "restored",
-          "maximum": "238",
+          "maximum": "138",
           "nameKey": "item-demo-might-tonic-name",
           "source": "demo.item.might-tonic"
         }
@@ -574,11 +580,11 @@
         "kind": "item.use-attribute-increase-no-effect",
         "messageKey": "item-use-attribute-increase-no-effect",
         "args": {
-          "after": "238",
+          "after": "138",
           "attribute": "strength",
-          "before": "238",
+          "before": "138",
           "change": "increased",
-          "maximum": "238",
+          "maximum": "138",
           "nameKey": "item-demo-sixfold-tonic-name",
           "source": "demo.item.sixfold-tonic"
         }
@@ -587,11 +593,11 @@
         "kind": "item.use-attribute-increased",
         "messageKey": "item-use-attribute-increased",
         "args": {
-          "after": "146",
+          "after": "100",
           "attribute": "intelligence",
-          "before": "118",
+          "before": "98",
           "change": "increased",
-          "maximum": "146",
+          "maximum": "100",
           "nameKey": "item-demo-sixfold-tonic-name",
           "source": "demo.item.sixfold-tonic"
         }
@@ -600,11 +606,11 @@
         "kind": "item.use-attribute-increased",
         "messageKey": "item-use-attribute-increased",
         "args": {
-          "after": "148",
+          "after": "125",
           "attribute": "wisdom",
           "before": "118",
           "change": "increased",
-          "maximum": "148",
+          "maximum": "125",
           "nameKey": "item-demo-sixfold-tonic-name",
           "source": "demo.item.sixfold-tonic"
         }
@@ -613,11 +619,11 @@
         "kind": "item.use-attribute-increased",
         "messageKey": "item-use-attribute-increased",
         "args": {
-          "after": "145",
+          "after": "103",
           "attribute": "dexterity",
-          "before": "118",
+          "before": "98",
           "change": "increased",
-          "maximum": "145",
+          "maximum": "103",
           "nameKey": "item-demo-sixfold-tonic-name",
           "source": "demo.item.sixfold-tonic"
         }
@@ -626,11 +632,11 @@
         "kind": "item.use-attribute-increased",
         "messageKey": "item-use-attribute-increased",
         "args": {
-          "after": "153",
+          "after": "101",
           "attribute": "constitution",
-          "before": "118",
+          "before": "98",
           "change": "increased",
-          "maximum": "153",
+          "maximum": "101",
           "nameKey": "item-demo-sixfold-tonic-name",
           "source": "demo.item.sixfold-tonic"
         }
@@ -639,11 +645,11 @@
         "kind": "item.use-attribute-increased",
         "messageKey": "item-use-attribute-increased",
         "args": {
-          "after": "156",
+          "after": "81",
           "attribute": "charisma",
-          "before": "118",
+          "before": "78",
           "change": "increased",
-          "maximum": "156",
+          "maximum": "81",
           "nameKey": "item-demo-sixfold-tonic-name",
           "source": "demo.item.sixfold-tonic"
         }

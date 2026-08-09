@@ -1,0 +1,13 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/mutation.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.mutation.infernal-deal",
+  "name": "恶魔契约",
+  "description": "你已经签订了恶魔契约。",
+  "rating": "great",
+  "sourceIndex": 109,
+  "randomWeight": 0,
+  "removesOnGain": [
+    "rfb.mutation.arthritis"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/mutation.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.mutation.tentacles",
+  "name": "触手",
+  "description": "你长着邪恶的触手。",
+  "rating": "good",
+  "sourceIndex": 48,
+  "randomWeight": 2,
+  "removesOnGain": []
+}

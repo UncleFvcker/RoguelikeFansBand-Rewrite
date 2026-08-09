@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/mutation.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.mutation.grow-mold",
+  "name": "培育霉菌",
+  "description": "你可以使霉菌在你附近生长。",
+  "rating": "good",
+  "sourceIndex": 19,
+  "randomWeight": 2,
+  "removesOnGain": []
+}

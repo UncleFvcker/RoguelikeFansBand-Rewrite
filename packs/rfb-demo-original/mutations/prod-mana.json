@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/mutation.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.mutation.prod-mana",
+  "name": "生成法力",
+  "description": "你不受控制地产生魔法能量。",
+  "rating": "average",
+  "sourceIndex": 42,
+  "randomWeight": 2,
+  "removesOnGain": []
+}

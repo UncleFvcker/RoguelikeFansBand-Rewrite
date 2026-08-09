@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/mutation.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.mutation.demonic-grasp",
+  "name": "恶魔之握",
+  "description": "你抵抗充能流失。",
+  "rating": "good",
+  "sourceIndex": 115,
+  "randomWeight": 0,
+  "removesOnGain": []
+}

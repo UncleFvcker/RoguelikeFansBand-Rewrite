@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/mutation.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.mutation.flesh-rot",
+  "name": "腐烂之躯",
+  "description": "你的肉体正在腐烂 (-2 体质, -1 魅力, 缓慢再生)。",
+  "rating": "awful",
+  "sourceIndex": 71,
+  "randomWeight": 6,
+  "modifiers": {
+    "constitution": -2,
+    "charisma": -1
+  },
+  "regenerationRateModifierPercent": -80,
+  "removesOnGain": [
+    "rfb.mutation.steel-skin",
+    "rfb.mutation.regen"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/mutation.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.mutation.infravision",
+  "name": "红外视力",
+  "description": "你拥有非凡的红外视力 (+3)。",
+  "rating": "average",
+  "sourceIndex": 78,
+  "randomWeight": 6,
+  "removesOnGain": []
+}

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/mutation.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.mutation.steel-skin",
+  "name": "钢铁之肤",
+  "description": "你的皮肤是钢铁构成的 (-1 敏捷, +25 护甲)。",
+  "rating": "great",
+  "sourceIndex": 85,
+  "randomWeight": 4,
+  "modifiers": {
+    "dexterity": -1
+  },
+  "armorClass": 25,
+  "removesOnGain": [
+    "rfb.mutation.scales",
+    "rfb.mutation.warts",
+    "rfb.mutation.flesh-rot"
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/mutation.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.mutation.blank-face",
+  "name": "面无表情",
+  "description": "你没有五官 (-1 魅力)。",
+  "rating": "bad",
+  "sourceIndex": 73,
+  "randomWeight": 4,
+  "modifiers": {
+    "charisma": -1
+  },
+  "removesOnGain": []
+}

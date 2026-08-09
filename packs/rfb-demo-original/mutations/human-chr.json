@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/mutation.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.mutation.human-chr",
+  "name": "过度自信",
+  "description": "过度自信使你变得马虎。",
+  "rating": "bad",
+  "sourceIndex": 151,
+  "randomWeight": 0,
+  "removesOnGain": []
+}

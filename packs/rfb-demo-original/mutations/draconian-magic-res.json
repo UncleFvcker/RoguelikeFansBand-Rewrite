@@ -1,0 +1,13 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/mutation.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.mutation.draconian-magic-res",
+  "name": "魔法抗性",
+  "description": "你对魔法具有抗性。",
+  "rating": "good",
+  "sourceIndex": 123,
+  "randomWeight": 0,
+  "savingThrowSkill": 15,
+  "savingThrowSkillPerFiveLevels": 1,
+  "removesOnGain": []
+}

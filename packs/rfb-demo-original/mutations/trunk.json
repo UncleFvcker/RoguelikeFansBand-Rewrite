@@ -1,0 +1,13 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/mutation.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.mutation.trunk",
+  "name": "象鼻",
+  "description": "你长着象鼻。",
+  "rating": "good",
+  "sourceIndex": 46,
+  "randomWeight": 4,
+  "removesOnGain": [
+    "rfb.mutation.beak"
+  ]
+}

@@ -115,36 +115,42 @@
           "strength": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 118,
             "effective": 13,
             "index": 10
           },
           "intelligence": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 108,
             "effective": 13,
             "index": 10
           },
           "wisdom": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 128,
             "effective": 13,
             "index": 10
           },
           "dexterity": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 118,
             "effective": 13,
             "index": 10
           },
           "constitution": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 88,
             "effective": 13,
             "index": 10
           },
           "charisma": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 148,
             "effective": 13,
             "index": 10
           }
@@ -356,7 +362,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "fe7d860ab8515133b0d7e4d9104d073be87ae02e7ad2c7ce095f75e7f3299d8f"
+      "stateHash": "380218f629461717e83cbb30e6b816d5d822e259d6e62d7e6a8ac1518de0b257"
     },
     "events": [
       {
@@ -7080,6 +7086,6 @@
     "removedEntities": [
       "demo.floor.echo-bounty-rift.task-target.1"
     ],
-    "saveRoundTripStateHash": "fe7d860ab8515133b0d7e4d9104d073be87ae02e7ad2c7ce095f75e7f3299d8f"
+    "saveRoundTripStateHash": "380218f629461717e83cbb30e6b816d5d822e259d6e62d7e6a8ac1518de0b257"
   }
 }

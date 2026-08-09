@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/mutation.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.mutation.raw-chaos",
+  "name": "原始混沌",
+  "description": "你偶尔会被原始混沌所包围。",
+  "rating": "average",
+  "sourceIndex": 49,
+  "randomWeight": 2,
+  "removesOnGain": []
+}

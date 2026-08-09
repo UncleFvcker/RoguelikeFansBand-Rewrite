@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "id": "progression.post-victory-attribute-cap",
+  "id": "progression.post-victory-personal-attribute-cap",
   "category": "progression",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
@@ -12,7 +12,7 @@
     "playerMaxLevel": 51,
     "playerPendingAttributeIncreases": 1,
     "playerAttributes": {
-      "strength": 828,
+      "strength": 108,
       "intelligence": 13,
       "wisdom": 13,
       "dexterity": 13,
@@ -48,20 +48,20 @@
         "y": 3
       },
       "playerHp": 10,
-      "playerMaxHp": 254,
+      "playerMaxHp": 344,
       "playerAttack": 2,
       "playerDefense": 1,
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
-      "playerCarryCapacityTenthsPound": 1950,
+      "playerCarryCapacityTenthsPound": 1600,
       "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
       "playerLevel": 51,
       "playerExperience": 5000000,
       "playerMaxLevel": 51,
-      "playerPendingAttributeIncreases": 0,
+      "playerPendingAttributeIncreases": 1,
       "playerAttributes": {
         "level": 51,
         "maxLevel": 51,
@@ -72,42 +72,48 @@
         "attributeCap": 838,
         "attributeIndexCap": 97,
         "experienceForNextLevel": 5500000,
-        "pendingAttributeIncreases": 0,
+        "pendingAttributeIncreases": 1,
         "victoryLevelCapUnlocked": true,
         "attributes": {
           "strength": {
-            "natural": 838,
-            "maximumNatural": 838,
-            "effective": 838,
-            "index": 97
+            "natural": 108,
+            "maximumNatural": 108,
+            "potential": 108,
+            "effective": 108,
+            "index": 24
           },
           "intelligence": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 108,
             "effective": 13,
             "index": 10
           },
           "wisdom": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 118,
             "effective": 13,
             "index": 10
           },
           "dexterity": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 128,
             "effective": 13,
             "index": 10
           },
           "constitution": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 128,
             "effective": 13,
             "index": 10
           },
           "charisma": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 118,
             "effective": 13,
             "index": 10
           }
@@ -333,21 +339,17 @@
         "completedTasks": 0,
         "victoryTurn": 0
       },
-      "stateHash": "84df97228cd5a654d6370f337fbc895725e98bef010efc25c27ae9a81e2f9296"
+      "stateHash": "b77202201de57440ed436e7fecf7171aadc835470b960de68a59a2106e42f34b"
     },
     "events": [
       {
-        "kind": "player.attribute-increased",
-        "messageKey": "player-attribute-increased",
+        "kind": "player.attribute-increase-unavailable",
+        "messageKey": "player-attribute-increase-unavailable",
         "args": {
-          "attribute": "strength",
-          "effective": "838",
-          "index": "97",
-          "natural": "838",
-          "pendingAttributeIncreases": "0"
+          "attribute": "strength"
         }
       }
     ],
-    "saveRoundTripStateHash": "84df97228cd5a654d6370f337fbc895725e98bef010efc25c27ae9a81e2f9296"
+    "saveRoundTripStateHash": "b77202201de57440ed436e7fecf7171aadc835470b960de68a59a2106e42f34b"
   }
 }

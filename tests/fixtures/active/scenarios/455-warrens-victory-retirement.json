@@ -30,7 +30,7 @@
       "revision": 1,
       "turn": 1,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 164,
+      "rngDrawCounter": 173,
       "floorId": "demo.floor.surface",
       "town": {
         "id": "demo.town.outpost",
@@ -276,36 +276,42 @@
           "strength": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 108,
             "effective": 17,
             "index": 14
           },
           "intelligence": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 108,
             "effective": 11,
             "index": 8
           },
           "wisdom": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 118,
             "effective": 11,
             "index": 8
           },
           "dexterity": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 128,
             "effective": 15,
             "index": 12
           },
           "constitution": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 128,
             "effective": 15,
             "index": 12
           },
           "charisma": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 118,
             "effective": 14,
             "index": 11
           }
@@ -826,7 +832,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 164,
+      "nextItemInstanceSerial": 168,
       "nextGoldPileSerial": 1,
       "tasks": [
         {
@@ -864,7 +870,7 @@
         "victoryTurn": 0,
         "retiredTurn": 1
       },
-      "stateHash": "928c302934fc4b56ddabcf3fb195c8a5b594b4bba0d172c79bf9f3f358116bb1"
+      "stateHash": "ba297e273df201ac3516fc9e45de12dfb05a4f365a9a1e36c1db826909d145e2"
     },
     "events": [
       {
@@ -879,9 +885,9 @@
       {
         "step": 2,
         "kind": "campaign-ended",
-        "stateHash": "928c302934fc4b56ddabcf3fb195c8a5b594b4bba0d172c79bf9f3f358116bb1"
+        "stateHash": "ba297e273df201ac3516fc9e45de12dfb05a4f365a9a1e36c1db826909d145e2"
       }
     ],
-    "saveRoundTripStateHash": "928c302934fc4b56ddabcf3fb195c8a5b594b4bba0d172c79bf9f3f358116bb1"
+    "saveRoundTripStateHash": "ba297e273df201ac3516fc9e45de12dfb05a4f365a9a1e36c1db826909d145e2"
   }
 }

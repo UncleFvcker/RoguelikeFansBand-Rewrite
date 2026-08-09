@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/mutation.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.mutation.vortex-speed",
+  "name": "龙卷风速",
+  "description": "你以龙卷风般的速度移动 (+8 速度)。",
+  "rating": "good",
+  "sourceIndex": 142,
+  "randomWeight": 0,
+  "removesOnGain": []
+}

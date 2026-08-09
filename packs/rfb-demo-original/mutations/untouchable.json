@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/mutation.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.mutation.untouchable",
+  "name": "不可触碰",
+  "description": "你不可触碰并获得护甲加成。",
+  "rating": "good",
+  "sourceIndex": 102,
+  "randomWeight": 0,
+  "removesOnGain": []
+}

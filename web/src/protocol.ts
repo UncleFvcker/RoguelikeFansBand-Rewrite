@@ -33,7 +33,7 @@ export type EquipmentPassiveDto = "regeneration" | "see-invisible" | "vampiric" 
 
 export type AttributeKindDto = "strength" | "intelligence" | "wisdom" | "dexterity" | "constitution" | "charisma";
 
-export type AttributeValueDto = { natural: number, maximumNatural: number, effective: number, index: number, };
+export type AttributeValueDto = { natural: number, maximumNatural: number, potential: number, effective: number, index: number, };
 
 export type AttributeSetDto = { strength: AttributeValueDto, intelligence: AttributeValueDto, wisdom: AttributeValueDto, dexterity: AttributeValueDto, constitution: AttributeValueDto, charisma: AttributeValueDto, };
 
@@ -119,7 +119,7 @@ export type CellVisualDto = { position: Position, visibility: VisibilityState, l
 
 export type ContentVisualDto = { id: string, glyph: string, };
 
-export type DamageTypeDto = "physical" | "acid" | "electricity" | "fire" | "cold" | "poison" | "light" | "dark" | "confusion" | "nether" | "nexus" | "sound" | "shards" | "chaos" | "disenchant" | "time" | "mana" | "gravity" | "inertia" | "plasma" | "force" | "nuke" | "disintegrate" | "storm" | "holy-fire" | "hell-fire" | "ice" | "water" | "psi" | "curse";
+export type DamageTypeDto = "physical" | "acid" | "electricity" | "fire" | "cold" | "poison" | "light" | "dark" | "blindness" | "fear" | "confusion" | "nether" | "nexus" | "sound" | "shards" | "chaos" | "disenchant" | "time" | "mana" | "gravity" | "inertia" | "plasma" | "force" | "nuke" | "disintegrate" | "storm" | "holy-fire" | "hell-fire" | "ice" | "water" | "psi" | "curse";
 
 export type ResistanceLevelDto = "vulnerable" | "normal" | "resistant" | "strong" | "immune";
 
@@ -210,7 +210,11 @@ export type RecallStateDto = { dungeonId: string, floorId: string, remainingTurn
 
 export type NutritionStateDto = "bloated" | "full" | "normal" | "hungry" | "weak" | "faint" | "starving";
 
-export type PlayerDto = { id: string, kindId: string, position: Position, hp: number, maxHp: number, gold: number, nutrition: number, nutritionState: NutritionStateDto, speed: number, energyNeed: number, carriedWeightTenthsPound: number, carryCapacityTenthsPound: number, encumbranceSpeedPenalty: number, inventoryUsedSlots: number, inventorySlotCapacity: number, baseMaxHp: number, attack: number, baseAttack: number, defense: number, baseDefense: number, meleeSkill: number, armorClass: number, meleeDamage: DamageDiceDto, meleeProfile: AttackProfileDto, projectileProfile?: ProjectileProfileDto | null, isDead: boolean, equipmentModifiers: StatModifiersDto, statuses: Array<StatusDto>, confusingStrikeReady: boolean, resistances: Array<ResistanceDto>, progress?: PlayerProgressDto, build?: PlayerBuildDto | null, resources?: Array<ResourcePoolDto>, deviceRecharge?: DeviceRechargeDto | null, abilityLearning?: AbilityLearningDto | null, abilities?: Array<AbilityDto>, summonCommand?: SummonCommandDto, recall?: RecallStateDto | null, ridingActorId?: string | null, };
+export type MutationRatingDto = "awful" | "bad" | "average" | "good" | "great";
+
+export type PlayerMutationDto = { id: string, name: string, description: string, rating: MutationRatingDto, locked: boolean, };
+
+export type PlayerDto = { id: string, kindId: string, position: Position, hp: number, maxHp: number, gold: number, nutrition: number, nutritionState: NutritionStateDto, speed: number, energyNeed: number, carriedWeightTenthsPound: number, carryCapacityTenthsPound: number, encumbranceSpeedPenalty: number, inventoryUsedSlots: number, inventorySlotCapacity: number, baseMaxHp: number, attack: number, baseAttack: number, defense: number, baseDefense: number, meleeSkill: number, armorClass: number, meleeDamage: DamageDiceDto, meleeProfile: AttackProfileDto, projectileProfile?: ProjectileProfileDto | null, isDead: boolean, equipmentModifiers: StatModifiersDto, statuses: Array<StatusDto>, confusingStrikeReady: boolean, resistances: Array<ResistanceDto>, progress?: PlayerProgressDto, build?: PlayerBuildDto | null, resources?: Array<ResourcePoolDto>, mutations?: Array<PlayerMutationDto>, deviceRecharge?: DeviceRechargeDto | null, abilityLearning?: AbilityLearningDto | null, abilities?: Array<AbilityDto>, summonCommand?: SummonCommandDto, recall?: RecallStateDto | null, ridingActorId?: string | null, };
 
 export type EntityFactionDto = "hostile" | "player" | "friendly";
 

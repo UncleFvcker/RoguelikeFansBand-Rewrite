@@ -284,13 +284,18 @@ impl Game {
         self.resources.clear();
         self.learned_abilities.clear();
         self.ability_progress.clear();
-        let (pool_maxima, ability_ids) = self.player_ability_baseline();
-        for (resource_id, maximum) in pool_maxima {
-            let pool = initial_resource_pool(&self.content, &resource_id, maximum);
-            self.resources.insert(resource_id, pool);
-        }
+        self.refresh_player_ability_state();
+    }
+
+    pub(super) fn refresh_player_ability_state(&mut self) {
+        self.refresh_player_resource_maxima();
+        let (_, ability_ids) = self.player_ability_baseline();
+        self.ability_progress
+            .retain(|ability_id, _| ability_ids.contains(ability_id));
         for ability_id in ability_ids {
-            if let Some(ability) = self.content.ability(&ability_id) {
+            if !self.ability_progress.contains_key(&ability_id)
+                && let Some(ability) = self.content.ability(&ability_id)
+            {
                 let player = Self::player_ability_parameters(ability);
                 self.ability_progress.insert(
                     ability_id,

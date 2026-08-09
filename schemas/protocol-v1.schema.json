@@ -2924,6 +2924,13 @@
           "format": "uint16",
           "maximum": 65535,
           "minimum": 0
+        },
+        "potential": {
+          "type": "integer",
+          "format": "uint16",
+          "default": 0,
+          "maximum": 65535,
+          "minimum": 0
         }
       },
       "required": [
@@ -3221,6 +3228,8 @@
         "poison",
         "light",
         "dark",
+        "blindness",
+        "fear",
         "confusion",
         "nether",
         "nexus",
@@ -6653,6 +6662,16 @@
         "to"
       ]
     },
+    "MutationRatingDto": {
+      "type": "string",
+      "enum": [
+        "awful",
+        "bad",
+        "average",
+        "good",
+        "great"
+      ]
+    },
     "NutritionStateDto": {
       "type": "string",
       "enum": [
@@ -6894,6 +6913,12 @@
           "format": "int32",
           "default": 0
         },
+        "mutations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PlayerMutationDto"
+          }
+        },
         "nutrition": {
           "type": "integer",
           "format": "uint16",
@@ -6974,6 +6999,33 @@
         "position",
         "hp",
         "maxHp"
+      ]
+    },
+    "PlayerMutationDto": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "locked": {
+          "type": "boolean"
+        },
+        "name": {
+          "type": "string"
+        },
+        "rating": {
+          "$ref": "#/$defs/MutationRatingDto"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "description",
+        "rating",
+        "locked"
       ]
     },
     "PlayerProgressDto": {

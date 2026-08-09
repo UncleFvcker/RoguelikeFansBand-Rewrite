@@ -93,8 +93,8 @@
         "x": 3,
         "y": 3
       },
-      "playerHp": 30,
-      "playerMaxHp": 40,
+      "playerHp": 36,
+      "playerMaxHp": 46,
       "playerAttack": 2,
       "playerDefense": 15,
       "playerSpeed": 110,
@@ -161,36 +161,42 @@
           "strength": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 98,
             "effective": 18,
             "index": 15
           },
           "intelligence": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 118,
             "effective": 10,
             "index": 7
           },
           "wisdom": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 128,
             "effective": 10,
             "index": 7
           },
           "dexterity": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 128,
             "effective": 16,
             "index": 13
           },
           "constitution": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 128,
             "effective": 15,
             "index": 12
           },
           "charisma": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 108,
             "effective": 14,
             "index": 11
           }
@@ -569,7 +575,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "148b1d957a64a11a6b1d29543179c3b5bf7a97631bc24b9d4e1f9c129da174d0"
+      "stateHash": "388d0000a18d31f9ecbdaed33016111cd86baf21b84ee92cd89f83701dfa68d7"
     },
     "events": [
       {
@@ -780,7 +786,7 @@
         "messageKey": "player-level-gained",
         "args": {
           "level": "2",
-          "maxHp": "34",
+          "maxHp": "36",
           "pendingAttributeIncreases": "0"
         }
       },
@@ -789,7 +795,7 @@
         "messageKey": "player-level-gained",
         "args": {
           "level": "3",
-          "maxHp": "40",
+          "maxHp": "46",
           "pendingAttributeIncreases": "0"
         }
       },

@@ -3,11 +3,19 @@ use super::support::*;
 use super::*;
 
 fn monster_effect_game(seed: u64, effect: MeleeBlowEffectDefinition) -> Game {
+    monster_effect_game_with_method(seed, "rfb.blow.touch", effect)
+}
+
+fn monster_effect_game_with_method(
+    seed: u64,
+    method_id: &str,
+    effect: MeleeBlowEffectDefinition,
+) -> Game {
     let mut game = game_with_actor_definition(seed, "demo.actor.echo-hound", |actor| {
         actor.attack = 1_000_000;
         actor.melee_routine = Some(rfb_content::MeleeRoutineDefinition {
             blows: vec![rfb_content::MeleeBlowDefinition {
-                method_id: "rfb.blow.touch".to_owned(),
+                method_id: method_id.to_owned(),
                 to_hit: 0,
                 self_destructs: false,
                 effects: vec![effect],
@@ -16,6 +24,110 @@ fn monster_effect_game(seed: u64, effect: MeleeBlowEffectDefinition) -> Game {
     });
     game.entities[0].kind_id = "demo.actor.echo-hound".to_owned();
     game
+}
+
+#[test]
+fn mutation_contact_auras_retaliate_only_against_unresisted_contact_attacks() {
+    let harmless = MeleeBlowEffectDefinition::Damage {
+        chance_percent: None,
+        damage_dice: 0,
+        damage_sides: 0,
+        damage_type: rfb_content::ActorDamageType::Physical,
+        armor_mitigated: true,
+    };
+    let mut game = monster_effect_game(0, harmless.clone());
+    assert!(game.gain_mutation("rfb.mutation.fire-aura", &mut Vec::new()));
+    assert!(game.gain_mutation("rfb.mutation.elec-aura", &mut Vec::new()));
+    game.entities[0].hp = 100;
+    game.entities[0].max_hp = 100;
+    let hp_before = game.entities[0].hp;
+    let mut events = Vec::new();
+    game.resolve_monster_melee(0, &mut events, &mut BTreeSet::new(), &mut Vec::new())
+        .expect("contact attack should resolve mutation auras");
+    let aura_damage = events
+        .iter()
+        .filter_map(|event| match event {
+            DomainEvent::MutationAuraHit { damage, .. } => Some(damage.applied),
+            _ => None,
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(aura_damage.len(), 2);
+    assert!(aura_damage.iter().all(|damage| (3..=4).contains(damage)));
+    assert_eq!(
+        game.entities[0].hp,
+        hp_before - aura_damage.iter().sum::<i32>()
+    );
+
+    let mut resisted = monster_effect_game(0, harmless.clone());
+    assert!(resisted.gain_mutation("rfb.mutation.fire-aura", &mut Vec::new()));
+    resisted.entities[0]
+        .resistances
+        .set(DamageType::Fire, ResistanceLevel::Resistant);
+    let hp_before = resisted.entities[0].hp;
+    let mut events = Vec::new();
+    resisted
+        .resolve_monster_melee(0, &mut events, &mut BTreeSet::new(), &mut Vec::new())
+        .expect("fire-resistant contact attack should resolve");
+    assert_eq!(resisted.entities[0].hp, hp_before);
+    assert!(!events.iter().any(|event| matches!(
+        event,
+        DomainEvent::MutationAuraHit { .. } | DomainEvent::MutationAuraSlew { .. }
+    )));
+
+    let mut vulnerable = monster_effect_game(0, harmless.clone());
+    assert!(vulnerable.gain_mutation("rfb.mutation.fire-aura", &mut Vec::new()));
+    vulnerable.entities[0].hp = 100;
+    vulnerable.entities[0].max_hp = 100;
+    vulnerable.entities[0]
+        .resistances
+        .set(DamageType::Fire, ResistanceLevel::Vulnerable);
+    let mut events = Vec::new();
+    vulnerable
+        .resolve_monster_melee(0, &mut events, &mut BTreeSet::new(), &mut Vec::new())
+        .expect("fire-vulnerable contact attack should resolve");
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::MutationAuraHit { damage, .. }
+            if (3..=4).contains(&damage.applied)
+                && damage.resistance == ResistanceLevel::Normal
+    )));
+
+    let mut gaze = monster_effect_game_with_method(0, "rfb.blow.gaze", harmless);
+    assert!(gaze.gain_mutation("rfb.mutation.fire-aura", &mut Vec::new()));
+    let hp_before = gaze.entities[0].hp;
+    gaze.resolve_monster_melee(0, &mut Vec::new(), &mut BTreeSet::new(), &mut Vec::new())
+        .expect("non-contact gaze should resolve");
+    assert_eq!(gaze.entities[0].hp, hp_before);
+}
+
+#[test]
+fn fatal_mutation_aura_uses_the_shared_actor_death_transaction() {
+    let mut game = monster_effect_game(
+        0,
+        MeleeBlowEffectDefinition::Damage {
+            chance_percent: None,
+            damage_dice: 0,
+            damage_sides: 0,
+            damage_type: rfb_content::ActorDamageType::Physical,
+            armor_mitigated: true,
+        },
+    );
+    assert!(game.gain_mutation("rfb.mutation.fire-aura", &mut Vec::new()));
+    let removed_id = game.entities[0].id.clone();
+    game.entities[0].hp = 1;
+    game.entities[0].max_hp = 1;
+    let mut events = Vec::new();
+    let mut removed = Vec::new();
+
+    game.resolve_monster_melee(0, &mut events, &mut BTreeSet::new(), &mut removed)
+        .expect("fatal aura should resolve");
+
+    assert!(!game.entities.iter().any(|entity| entity.id == removed_id));
+    assert!(removed.contains(&removed_id));
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::MutationAuraSlew { damage, .. } if damage.applied >= 3
+    )));
 }
 
 #[test]
@@ -33,7 +145,7 @@ fn zero_dice_hurt_hits_without_dealing_damage() {
     let hp_before = game.player.hp;
     let mut events = Vec::new();
 
-    game.resolve_monster_melee(0, &mut events, &mut BTreeSet::new())
+    game.resolve_monster_melee(0, &mut events, &mut BTreeSet::new(), &mut Vec::new())
         .expect("zero-damage HURT should resolve");
 
     assert_eq!(game.player.hp, hp_before);
@@ -64,7 +176,7 @@ fn resource_drain_melee_heals_six_times_the_amount_actually_drained() {
     game.entities[0].hp = 1;
     game.entities[0].max_hp = 20;
 
-    game.resolve_monster_melee(0, &mut Vec::new(), &mut BTreeSet::new())
+    game.resolve_monster_melee(0, &mut Vec::new(), &mut BTreeSet::new(), &mut Vec::new())
         .expect("resource-draining melee should resolve");
 
     assert_eq!(game.resources["test.resource.mana"].current, 0);
@@ -86,7 +198,7 @@ fn experience_drain_lowers_current_level_but_preserves_character_history() {
     let max_level = game.progress.max_level;
     let mut events = Vec::new();
 
-    game.resolve_monster_melee(0, &mut events, &mut BTreeSet::new())
+    game.resolve_monster_melee(0, &mut events, &mut BTreeSet::new(), &mut Vec::new())
         .expect("experience-draining melee should resolve");
 
     assert_eq!(game.progress.experience, 0);
@@ -170,7 +282,7 @@ fn disenchant_melee_removes_positive_status_or_reduces_equipment_enchantments() 
         .find_map(|seed| {
             let mut game = status_base.clone();
             game.rng = RfbRng::seeded(seed);
-            game.resolve_monster_melee(0, &mut Vec::new(), &mut BTreeSet::new())
+            game.resolve_monster_melee(0, &mut Vec::new(), &mut BTreeSet::new(), &mut Vec::new())
                 .expect("disenchanting melee should resolve");
             (!game
                 .player
@@ -196,7 +308,7 @@ fn disenchant_melee_removes_positive_status_or_reduces_equipment_enchantments() 
     );
     immune.rng = RfbRng::seeded(status_seed);
     immune
-        .resolve_monster_melee(0, &mut Vec::new(), &mut BTreeSet::new())
+        .resolve_monster_melee(0, &mut Vec::new(), &mut BTreeSet::new(), &mut Vec::new())
         .expect("resisted disenchanting melee should resolve");
     assert!(
         immune
@@ -225,7 +337,7 @@ fn disenchant_melee_removes_positive_status_or_reduces_equipment_enchantments() 
         .find_map(|seed| {
             let mut game = equipment_base.clone();
             game.rng = RfbRng::seeded(seed);
-            game.resolve_monster_melee(0, &mut Vec::new(), &mut BTreeSet::new())
+            game.resolve_monster_melee(0, &mut Vec::new(), &mut BTreeSet::new(), &mut Vec::new())
                 .expect("disenchanting melee should resolve");
             (game.items[0].enchantments != equipment_base.items[0].enchantments).then_some(game)
         })
@@ -398,7 +510,7 @@ fn content_driven_fire_melee_uses_the_player_resistance_profile() {
             let mut game = Game::new(42);
             game.rng = RfbRng::seeded(seed);
             let mut events = Vec::new();
-            game.resolve_monster_melee(0, &mut events, &mut BTreeSet::new())
+            game.resolve_monster_melee(0, &mut events, &mut BTreeSet::new(), &mut Vec::new())
                 .expect("monster melee should resolve");
             events.into_iter().find_map(|event| match event {
                 DomainEvent::MonsterMeleeHit { damage, .. } if damage.applied >= 2 => {
@@ -417,7 +529,7 @@ fn content_driven_fire_melee_uses_the_player_resistance_profile() {
     resistant.rng = RfbRng::seeded(seed);
     let mut events = Vec::new();
     resistant
-        .resolve_monster_melee(0, &mut events, &mut BTreeSet::new())
+        .resolve_monster_melee(0, &mut events, &mut BTreeSet::new(), &mut Vec::new())
         .expect("monster melee should resolve");
     let resisted_damage = events
         .into_iter()
@@ -442,7 +554,7 @@ fn content_driven_monster_routine_resolves_blows_in_declared_order() {
     assert_eq!(routine.blows[1].method_id, "rfb.blow.echo-rake");
 
     let mut events = Vec::new();
-    game.resolve_monster_melee(0, &mut events, &mut BTreeSet::new())
+    game.resolve_monster_melee(0, &mut events, &mut BTreeSet::new(), &mut Vec::new())
         .expect("monster melee should resolve");
     let projected = project_events(events);
 
@@ -461,7 +573,7 @@ fn explicit_empty_melee_routine_performs_no_attack() {
 
     assert!(
         !game
-            .resolve_monster_melee(0, &mut events, &mut BTreeSet::new())
+            .resolve_monster_melee(0, &mut events, &mut BTreeSet::new(), &mut Vec::new())
             .expect("empty monster melee should resolve")
     );
     assert_eq!(game.player.hp, hp_before);
@@ -486,7 +598,7 @@ fn item_theft_splits_a_stack_into_monster_carried_loot_and_blinks() {
     let origin = game.entities[0].position;
     let mut events = Vec::new();
 
-    game.resolve_monster_melee(0, &mut events, &mut BTreeSet::new())
+    game.resolve_monster_melee(0, &mut events, &mut BTreeSet::new(), &mut Vec::new())
         .expect("item theft should resolve");
 
     assert_eq!(game.items[0].quantity, 1);
@@ -524,7 +636,7 @@ fn gold_theft_uses_the_original_amount_and_dexterity_protection() {
         .push(monster_combat::melee_status(STATUS_PARALYSIS, 10, "test.setup").status);
     let mut events = Vec::new();
     stolen
-        .resolve_monster_melee(0, &mut events, &mut BTreeSet::new())
+        .resolve_monster_melee(0, &mut events, &mut BTreeSet::new(), &mut Vec::new())
         .expect("gold theft should resolve");
     assert!((875..=899).contains(&stolen.gold));
     assert!(events.iter().any(|event| matches!(
@@ -541,7 +653,7 @@ fn gold_theft_uses_the_original_amount_and_dexterity_protection() {
     protected.progress.maximum_attributes.dexterity = 238;
     let mut events = Vec::new();
     protected
-        .resolve_monster_melee(0, &mut events, &mut BTreeSet::new())
+        .resolve_monster_melee(0, &mut events, &mut BTreeSet::new(), &mut Vec::new())
         .expect("protected gold theft should resolve");
     assert_eq!(protected.gold, 1_000);
     assert!(
@@ -563,7 +675,7 @@ fn food_and_light_eating_consume_one_food_and_leave_one_light_fuel() {
     give_inventory_item(&mut food, "test.rations", "demo.item.ration-of-food");
     food.items[0].quantity = 2;
     let mut events = Vec::new();
-    food.resolve_monster_melee(0, &mut events, &mut BTreeSet::new())
+    food.resolve_monster_melee(0, &mut events, &mut BTreeSet::new(), &mut Vec::new())
         .expect("food eating should resolve");
     assert_eq!(food.items[0].quantity, 1);
     assert!(
@@ -590,7 +702,7 @@ fn food_and_light_eating_consume_one_food_and_leave_one_light_fuel() {
         .current = 300;
     let mut events = Vec::new();
     light
-        .resolve_monster_melee(0, &mut events, &mut BTreeSet::new())
+        .resolve_monster_melee(0, &mut events, &mut BTreeSet::new(), &mut Vec::new())
         .expect("light eating should resolve");
     assert_eq!(
         light.items[0]
@@ -648,7 +760,7 @@ fn non_damage_melee_riders_apply_the_existing_player_statuses() {
             game.rng = RfbRng::seeded(seed);
             game.entities[0].kind_id = "demo.actor.echo-hound".to_owned();
             game.player.hp = 100;
-            game.resolve_monster_melee(0, &mut Vec::new(), &mut BTreeSet::new())
+            game.resolve_monster_melee(0, &mut Vec::new(), &mut BTreeSet::new(), &mut Vec::new())
                 .expect("monster melee should resolve");
             (game.player.statuses.len() == 6).then_some(game)
         })

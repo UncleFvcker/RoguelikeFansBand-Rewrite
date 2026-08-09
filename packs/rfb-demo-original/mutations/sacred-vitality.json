@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/mutation.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.mutation.sacred-vitality",
+  "name": "神圣活力",
+  "description": "你获得所有治疗效果的加成。",
+  "rating": "good",
+  "sourceIndex": 111,
+  "randomWeight": 0,
+  "removesOnGain": []
+}

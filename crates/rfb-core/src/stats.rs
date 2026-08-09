@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use crate::rng::RfbRng;
 
@@ -12,6 +12,12 @@ pub const PRE_VICTORY_ATTRIBUTE_INDEX_CAP: u8 = 37;
 pub const VICTORY_ATTRIBUTE_INDEX_CAP: u8 = 97;
 pub const MAX_EXPERIENCE: u64 = 999_999_999;
 const HP_SEQUENCE_SEED_SALT: u64 = 0x5246_425f_4850_7637;
+const ATTRIBUTE_POTENTIAL_SEED_SALT: u64 = 0x5246_425f_4150_7631;
+const ATTRIBUTE_POTENTIAL_DIE_BASE: u16 = 78;
+const ATTRIBUTE_POTENTIAL_DIE_SCALE: u16 = 10;
+const ATTRIBUTE_POTENTIAL_DIE_TOTAL: u16 = 24;
+const HP_RATING_MINIMUM_PERCENT: u16 = 87;
+const HP_RATING_MAXIMUM_PERCENT: u16 = 117;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum StatKind {
@@ -202,6 +208,7 @@ pub fn experience_required_for_level(level: u16) -> u64 {
 pub struct CharacterProgress {
     pub attributes: AttributeSet,
     pub maximum_attributes: AttributeSet,
+    pub attribute_potentials: AttributeSet,
     pub experience: u64,
     pub maximum_experience: u64,
     pub life_force: u16,
@@ -210,6 +217,8 @@ pub struct CharacterProgress {
     pub pending_attribute_increases: u16,
     pub hp_progression: Vec<i32>,
     pub skills: BTreeMap<String, SkillProgress>,
+    pub active_mutation_ids: BTreeSet<String>,
+    pub locked_mutation_ids: BTreeSet<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -247,18 +256,12 @@ impl CharacterProgress {
     #[must_use]
     pub fn new(seed: u64, base_max_hp: i32) -> Self {
         let mut hp_rng = RfbRng::seeded(seed ^ HP_SEQUENCE_SEED_SALT);
-        let mut hp_progression = Vec::with_capacity(usize::from(MAX_LEVEL));
-        let mut hp = base_max_hp.max(1);
-        hp_progression.push(hp);
-        for _ in 1..MAX_LEVEL {
-            hp = hp.saturating_add(
-                i32::try_from(hp_rng.bounded(10)).expect("HP roll must fit i32") + 1,
-            );
-            hp_progression.push(hp);
-        }
+        let hp_progression = Self::roll_hp_progression(base_max_hp, &mut hp_rng);
+        let mut potential_rng = RfbRng::seeded(seed ^ ATTRIBUTE_POTENTIAL_SEED_SALT);
         Self {
             attributes: AttributeSet::default(),
             maximum_attributes: AttributeSet::default(),
+            attribute_potentials: Self::roll_attribute_potentials(&mut potential_rng),
             experience: 0,
             maximum_experience: 0,
             life_force: 1_000,
@@ -267,6 +270,8 @@ impl CharacterProgress {
             pending_attribute_increases: 0,
             hp_progression,
             skills: BTreeMap::new(),
+            active_mutation_ids: BTreeSet::new(),
+            locked_mutation_ids: BTreeSet::new(),
         }
     }
 
@@ -308,6 +313,122 @@ impl CharacterProgress {
         } else {
             PRE_VICTORY_ATTRIBUTE_INDEX_CAP
         }
+    }
+
+    #[must_use]
+    pub fn personal_attribute_cap(&self, kind: AttributeKind, victorious: bool) -> u16 {
+        Self::attribute_cap(victorious).min(self.attribute_potentials.value(kind))
+    }
+
+    pub(crate) fn roll_attribute_potentials(rng: &mut RfbRng) -> AttributeSet {
+        loop {
+            let dice = std::array::from_fn::<_, 6, _>(|_| {
+                u16::try_from(rng.bounded(7)).expect("attribute potential roll must fit u16") + 1
+            });
+            if dice.into_iter().sum::<u16>() != ATTRIBUTE_POTENTIAL_DIE_TOTAL {
+                continue;
+            }
+            let potential = |die: u16| {
+                ATTRIBUTE_POTENTIAL_DIE_BASE
+                    .saturating_add(die.saturating_mul(ATTRIBUTE_POTENTIAL_DIE_SCALE))
+            };
+            return AttributeSet {
+                strength: potential(dice[0]),
+                intelligence: potential(dice[1]),
+                wisdom: potential(dice[2]),
+                dexterity: potential(dice[3]),
+                constitution: potential(dice[4]),
+                charisma: potential(dice[5]),
+            };
+        }
+    }
+
+    pub(crate) fn roll_hp_progression(base_max_hp: i32, rng: &mut RfbRng) -> Vec<i32> {
+        loop {
+            let mut progression = Vec::with_capacity(usize::from(MAX_LEVEL));
+            let mut hp = base_max_hp.max(1);
+            progression.push(hp);
+            for _ in 1..MAX_LEVEL {
+                hp = hp.saturating_add(
+                    i32::try_from(rng.bounded(10)).expect("HP roll must fit i32") + 1,
+                );
+                progression.push(hp);
+            }
+            if Self::hp_progression_rating_is_accepted(&progression) {
+                return progression;
+            }
+        }
+    }
+
+    #[must_use]
+    pub(crate) fn hp_progression_rating_is_accepted(progression: &[i32]) -> bool {
+        let rating = |level: u16| {
+            let first = progression.first().copied()?;
+            let current = progression
+                .get(usize::from(level.checked_sub(1)?))
+                .copied()?;
+            let gain = u64::try_from(current.checked_sub(first)?).ok()?;
+            let rolls = u64::from(level.checked_sub(1)?);
+            u16::try_from(
+                gain.saturating_mul(200)
+                    .saturating_div(rolls.saturating_mul(11)),
+            )
+            .ok()
+        };
+        [5, 10, 25]
+            .into_iter()
+            .all(|level| rating(level).is_some_and(|value| value >= HP_RATING_MINIMUM_PERCENT))
+            && rating(MAX_LEVEL).is_some_and(|value| {
+                (HP_RATING_MINIMUM_PERCENT..=HP_RATING_MAXIMUM_PERCENT).contains(&value)
+            })
+    }
+
+    pub(crate) fn clamp_attributes_to_potentials(&mut self) {
+        self.maximum_attributes.strength = self
+            .maximum_attributes
+            .strength
+            .min(self.attribute_potentials.strength);
+        self.attributes.strength = self
+            .attributes
+            .strength
+            .min(self.maximum_attributes.strength);
+        self.maximum_attributes.intelligence = self
+            .maximum_attributes
+            .intelligence
+            .min(self.attribute_potentials.intelligence);
+        self.attributes.intelligence = self
+            .attributes
+            .intelligence
+            .min(self.maximum_attributes.intelligence);
+        self.maximum_attributes.wisdom = self
+            .maximum_attributes
+            .wisdom
+            .min(self.attribute_potentials.wisdom);
+        self.attributes.wisdom = self.attributes.wisdom.min(self.maximum_attributes.wisdom);
+        self.maximum_attributes.dexterity = self
+            .maximum_attributes
+            .dexterity
+            .min(self.attribute_potentials.dexterity);
+        self.attributes.dexterity = self
+            .attributes
+            .dexterity
+            .min(self.maximum_attributes.dexterity);
+        self.maximum_attributes.constitution = self
+            .maximum_attributes
+            .constitution
+            .min(self.attribute_potentials.constitution);
+        self.attributes.constitution = self
+            .attributes
+            .constitution
+            .min(self.maximum_attributes.constitution);
+        self.maximum_attributes.charisma = self
+            .maximum_attributes
+            .charisma
+            .min(self.attribute_potentials.charisma);
+        self.attributes.charisma = self
+            .attributes
+            .charisma
+            .min(self.maximum_attributes.charisma);
     }
 
     #[must_use]
@@ -371,7 +492,7 @@ impl CharacterProgress {
         if self.pending_attribute_increases == 0 {
             return None;
         }
-        let cap = Self::attribute_cap(victorious);
+        let cap = self.personal_attribute_cap(kind, victorious);
         let value = self.maximum_attributes.value(kind);
         if value >= cap {
             return None;
@@ -472,7 +593,7 @@ impl CharacterProgress {
         rng: &mut RfbRng,
     ) -> bool {
         let restored = self.restore_attribute(kind);
-        let cap = Self::attribute_cap(victorious);
+        let cap = self.personal_attribute_cap(kind, victorious);
         let value = self.maximum_attributes.value(kind);
         if value >= cap {
             return restored;
@@ -550,6 +671,7 @@ impl CharacterProgress {
             && self.life_force <= 1_000
             && self.hp_progression.len() == usize::from(MAX_LEVEL)
             && self.hp_progression.iter().all(|hp| *hp > 0)
+            && Self::hp_progression_rating_is_accepted(&self.hp_progression)
             && [
                 self.attributes.strength,
                 self.attributes.intelligence,
@@ -567,11 +689,35 @@ impl CharacterProgress {
                 self.maximum_attributes.constitution,
                 self.maximum_attributes.charisma,
             ])
-            .all(|(value, maximum)| {
-                (3..=Self::attribute_cap(victorious)).contains(&value)
+            .zip([
+                self.attribute_potentials.strength,
+                self.attribute_potentials.intelligence,
+                self.attribute_potentials.wisdom,
+                self.attribute_potentials.dexterity,
+                self.attribute_potentials.constitution,
+                self.attribute_potentials.charisma,
+            ])
+            .all(|((value, maximum), potential)| {
+                (88..=148).contains(&potential)
+                    && (potential - ATTRIBUTE_POTENTIAL_DIE_BASE)
+                        .is_multiple_of(ATTRIBUTE_POTENTIAL_DIE_SCALE)
+                    && maximum <= potential
+                    && (3..=Self::attribute_cap(victorious)).contains(&value)
                     && (3..=Self::attribute_cap(victorious)).contains(&maximum)
                     && value <= maximum
             })
+            && [
+                self.attribute_potentials.strength,
+                self.attribute_potentials.intelligence,
+                self.attribute_potentials.wisdom,
+                self.attribute_potentials.dexterity,
+                self.attribute_potentials.constitution,
+                self.attribute_potentials.charisma,
+            ]
+            .into_iter()
+            .sum::<u16>()
+                == 6 * ATTRIBUTE_POTENTIAL_DIE_BASE
+                    + ATTRIBUTE_POTENTIAL_DIE_TOTAL * ATTRIBUTE_POTENTIAL_DIE_SCALE
             && self.pending_attribute_increases <= self.max_level / 5
             && self.skills.iter().all(|(id, skill)| {
                 !id.is_empty()
@@ -969,6 +1115,50 @@ mod tests {
                 .windows(2)
                 .all(|window| (1..=10).contains(&(window[1] - window[0])))
         );
+        assert!(CharacterProgress::hp_progression_rating_is_accepted(
+            &first.hp_progression
+        ));
+    }
+
+    #[test]
+    fn birth_attribute_potentials_are_seeded_balanced_and_source_encoded() {
+        let first = CharacterProgress::new(17, 10);
+        let repeated = CharacterProgress::new(17, 10);
+        let potentials = first.attribute_potentials;
+
+        assert_eq!(potentials, repeated.attribute_potentials);
+        let values = [
+            potentials.strength,
+            potentials.intelligence,
+            potentials.wisdom,
+            potentials.dexterity,
+            potentials.constitution,
+            potentials.charisma,
+        ];
+        assert_eq!(values.into_iter().sum::<u16>(), 708);
+        assert!(
+            values
+                .into_iter()
+                .all(|value| (88..=148).contains(&value) && (value - 78).is_multiple_of(10))
+        );
+    }
+
+    #[test]
+    fn hp_rating_filter_uses_early_lower_bounds_and_final_upper_bound() {
+        let progression = |gain: i32| {
+            (0..MAX_LEVEL)
+                .map(|level| 10 + i32::from(level) * gain)
+                .collect::<Vec<_>>()
+        };
+        assert!(!CharacterProgress::hp_progression_rating_is_accepted(
+            &progression(4)
+        ));
+        assert!(CharacterProgress::hp_progression_rating_is_accepted(
+            &progression(5)
+        ));
+        assert!(!CharacterProgress::hp_progression_rating_is_accepted(
+            &progression(7)
+        ));
     }
 
     #[test]
@@ -1031,32 +1221,12 @@ mod tests {
         for (current, maximum, seed, expected, changed, draws) in [
             (13, 13, 0, 14, true, 1),
             (17, 17, 2, 19, true, 1),
-            (
-                PRE_VICTORY_ATTRIBUTE_CAP - 2,
-                PRE_VICTORY_ATTRIBUTE_CAP - 2,
-                0,
-                PRE_VICTORY_ATTRIBUTE_CAP - 1,
-                true,
-                0,
-            ),
-            (
-                PRE_VICTORY_ATTRIBUTE_CAP - 1,
-                PRE_VICTORY_ATTRIBUTE_CAP,
-                0,
-                PRE_VICTORY_ATTRIBUTE_CAP,
-                true,
-                0,
-            ),
-            (
-                PRE_VICTORY_ATTRIBUTE_CAP,
-                PRE_VICTORY_ATTRIBUTE_CAP,
-                0,
-                PRE_VICTORY_ATTRIBUTE_CAP,
-                false,
-                0,
-            ),
+            (146, 146, 0, 147, true, 0),
+            (147, 148, 0, 148, true, 0),
+            (148, 148, 0, 148, false, 0),
         ] {
             let mut progress = CharacterProgress::new(1, 10);
+            progress.attribute_potentials.strength = 148;
             progress.attributes.strength = current;
             progress.maximum_attributes.strength = maximum;
             progress.pending_attribute_increases = 1;

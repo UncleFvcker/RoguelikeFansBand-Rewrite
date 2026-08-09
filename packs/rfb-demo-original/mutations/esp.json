@@ -1,0 +1,12 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/mutation.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.mutation.esp",
+  "name": "心灵感应",
+  "description": "你具有心灵感应。",
+  "rating": "great",
+  "sourceIndex": 89,
+  "randomWeight": 4,
+  "telepathy": true,
+  "removesOnGain": []
+}

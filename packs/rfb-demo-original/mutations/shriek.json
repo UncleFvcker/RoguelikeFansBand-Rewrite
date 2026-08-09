@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/mutation.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.mutation.shriek",
+  "name": "尖啸",
+  "description": "你可以发出一声可怕的尖啸。",
+  "rating": "good",
+  "sourceIndex": 13,
+  "randomWeight": 6,
+  "removesOnGain": []
+}

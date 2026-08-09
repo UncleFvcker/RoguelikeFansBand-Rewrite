@@ -306,8 +306,8 @@
         "x": 5,
         "y": 5
       },
-      "playerHp": 40,
-      "playerMaxHp": 40,
+      "playerHp": 67,
+      "playerMaxHp": 67,
       "playerAttack": 2,
       "playerDefense": 1,
       "playerSpeed": 110,
@@ -363,36 +363,42 @@
           "strength": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 108,
             "effective": 13,
             "index": 10
           },
           "intelligence": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 128,
             "effective": 13,
             "index": 10
           },
           "wisdom": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 98,
             "effective": 13,
             "index": 10
           },
           "dexterity": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 148,
             "effective": 13,
             "index": 10
           },
           "constitution": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 98,
             "effective": 13,
             "index": 10
           },
           "charisma": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 128,
             "effective": 13,
             "index": 10
           }
@@ -588,7 +594,7 @@
         "conqueredDungeons": 1,
         "completedTasks": 0
       },
-      "stateHash": "271ed231d05fefbd3a98c126cfb9eb43f207cc41a8b2f6c0fe9365c12acd3adf"
+      "stateHash": "a31d5b7f8b1535f3cb0bf89f52eabddc9d49bdcd9c5b27228b6d0267da3f9ca1"
     },
     "events": [
       {
@@ -1294,7 +1300,7 @@
         "messageKey": "player-level-gained",
         "args": {
           "level": "2",
-          "maxHp": "16",
+          "maxHp": "18",
           "pendingAttributeIncreases": "1"
         }
       },
@@ -1303,7 +1309,7 @@
         "messageKey": "player-level-gained",
         "args": {
           "level": "3",
-          "maxHp": "19",
+          "maxHp": "27",
           "pendingAttributeIncreases": "1"
         }
       },
@@ -1312,24 +1318,6 @@
         "messageKey": "player-level-gained",
         "args": {
           "level": "4",
-          "maxHp": "29",
-          "pendingAttributeIncreases": "1"
-        }
-      },
-      {
-        "kind": "player.level-gained",
-        "messageKey": "player-level-gained",
-        "args": {
-          "level": "5",
-          "maxHp": "36",
-          "pendingAttributeIncreases": "1"
-        }
-      },
-      {
-        "kind": "player.level-gained",
-        "messageKey": "player-level-gained",
-        "args": {
-          "level": "6",
           "maxHp": "37",
           "pendingAttributeIncreases": "1"
         }
@@ -1338,8 +1326,26 @@
         "kind": "player.level-gained",
         "messageKey": "player-level-gained",
         "args": {
+          "level": "5",
+          "maxHp": "42",
+          "pendingAttributeIncreases": "1"
+        }
+      },
+      {
+        "kind": "player.level-gained",
+        "messageKey": "player-level-gained",
+        "args": {
+          "level": "6",
+          "maxHp": "51",
+          "pendingAttributeIncreases": "1"
+        }
+      },
+      {
+        "kind": "player.level-gained",
+        "messageKey": "player-level-gained",
+        "args": {
           "level": "7",
-          "maxHp": "39",
+          "maxHp": "57",
           "pendingAttributeIncreases": "1"
         }
       },
@@ -1348,7 +1354,7 @@
         "messageKey": "player-level-gained",
         "args": {
           "level": "8",
-          "maxHp": "40",
+          "maxHp": "67",
           "pendingAttributeIncreases": "1"
         }
       },
@@ -6401,6 +6407,6 @@
       "demo.floor.echo-depth-2.region.demo.region.resonance-grotto.encounter.plain.1",
       "demo.guardian.echo-depths.1"
     ],
-    "saveRoundTripStateHash": "271ed231d05fefbd3a98c126cfb9eb43f207cc41a8b2f6c0fe9365c12acd3adf"
+    "saveRoundTripStateHash": "a31d5b7f8b1535f3cb0bf89f52eabddc9d49bdcd9c5b27228b6d0267da3f9ca1"
   }
 }

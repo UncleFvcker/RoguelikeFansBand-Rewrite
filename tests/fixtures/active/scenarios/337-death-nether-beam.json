@@ -89,7 +89,7 @@
         "y": 3
       },
       "playerHp": 12,
-      "playerMaxHp": 263,
+      "playerMaxHp": 244,
       "playerAttack": 3,
       "playerDefense": 2,
       "playerSpeed": 110,
@@ -118,36 +118,42 @@
           "strength": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 128,
             "effective": 9,
             "index": 6
           },
           "intelligence": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 118,
             "effective": 18,
             "index": 15
           },
           "wisdom": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 108,
             "effective": 14,
             "index": 11
           },
           "dexterity": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 88,
             "effective": 15,
             "index": 12
           },
           "constitution": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 148,
             "effective": 10,
             "index": 7
           },
           "charisma": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 118,
             "effective": 12,
             "index": 9
           }
@@ -3260,7 +3266,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "ba27e6c2e3f441862f8ea03bfdd679fc06abe9e4ad57e02a6b3079a6e1ada132"
+      "stateHash": "a1ab4be1f5c5b44a57719ee813bf7f1a68bd1a1c58bca022500c057f9b6beaca"
     },
     "events": [
       {
@@ -3703,6 +3709,6 @@
       "demo.monster.ember-mote.1",
       "demo.z-entrance-guardian.resonance-descent.1"
     ],
-    "saveRoundTripStateHash": "ba27e6c2e3f441862f8ea03bfdd679fc06abe9e4ad57e02a6b3079a6e1ada132"
+    "saveRoundTripStateHash": "a1ab4be1f5c5b44a57719ee813bf7f1a68bd1a1c58bca022500c057f9b6beaca"
   }
 }

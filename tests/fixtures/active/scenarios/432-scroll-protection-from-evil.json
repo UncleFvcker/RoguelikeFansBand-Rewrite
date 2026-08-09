@@ -12,7 +12,7 @@
     "playerAttributes": {
       "strength": 13,
       "intelligence": 13,
-      "wisdom": 238,
+      "wisdom": 108,
       "dexterity": 13,
       "constitution": 13,
       "charisma": 13
@@ -61,7 +61,7 @@
         "y": 3
       },
       "playerHp": 100,
-      "playerMaxHp": 288,
+      "playerMaxHp": 267,
       "playerAttack": 2,
       "playerDefense": 1,
       "playerSpeed": 110,
@@ -127,36 +127,42 @@
           "strength": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 128,
             "effective": 13,
             "index": 10
           },
           "intelligence": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 118,
             "effective": 13,
             "index": 10
           },
           "wisdom": {
-            "natural": 238,
-            "maximumNatural": 238,
-            "effective": 238,
-            "index": 37
+            "natural": 108,
+            "maximumNatural": 108,
+            "potential": 108,
+            "effective": 108,
+            "index": 24
           },
           "dexterity": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 88,
             "effective": 13,
             "index": 10
           },
           "constitution": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 148,
             "effective": 13,
             "index": 10
           },
           "charisma": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 118,
             "effective": 13,
             "index": 10
           }
@@ -388,7 +394,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "86f8e85e739a18e97ef964a3f300699f3c094b4c9e1e9d9562f5ef437252201d"
+      "stateHash": "8b868f03ca200733a062e16ec3ae8e7a6ab00e0d35fabcea606933f2d33f72c2"
     },
     "events": [
       {
@@ -427,6 +433,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "86f8e85e739a18e97ef964a3f300699f3c094b4c9e1e9d9562f5ef437252201d"
+    "saveRoundTripStateHash": "8b868f03ca200733a062e16ec3ae8e7a6ab00e0d35fabcea606933f2d33f72c2"
   }
 }

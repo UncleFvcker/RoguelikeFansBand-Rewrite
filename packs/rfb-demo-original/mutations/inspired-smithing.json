@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/mutation.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.mutation.inspired-smithing",
+  "name": "灵感锻造",
+  "description": "你的存在能启发铁匠。",
+  "rating": "great",
+  "sourceIndex": 138,
+  "randomWeight": 0,
+  "removesOnGain": []
+}

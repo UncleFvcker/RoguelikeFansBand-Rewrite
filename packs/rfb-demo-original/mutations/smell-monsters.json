@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/mutation.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.mutation.smell-monsters",
+  "name": "嗅怪物",
+  "description": "你可以闻出附近的怪物。",
+  "rating": "good",
+  "sourceIndex": 9,
+  "randomWeight": 8,
+  "removesOnGain": []
+}

@@ -79,6 +79,8 @@ pub enum ActorDamageType {
     Poison,
     Light,
     Dark,
+    Blindness,
+    Fear,
     Confusion,
     Nether,
     Nexus,

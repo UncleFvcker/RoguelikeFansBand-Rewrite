@@ -1,0 +1,12 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/mutation.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.mutation.wings",
+  "name": "翅膀",
+  "description": "你长着翅膀。",
+  "rating": "good",
+  "sourceIndex": 86,
+  "randomWeight": 4,
+  "levitation": true,
+  "removesOnGain": []
+}

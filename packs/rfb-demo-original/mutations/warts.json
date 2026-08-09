@@ -1,0 +1,17 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/mutation.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.mutation.warts",
+  "name": "长疣",
+  "description": "你的皮肤上长满了疣 (-2 魅力, +5 护甲)。",
+  "rating": "average",
+  "sourceIndex": 83,
+  "randomWeight": 6,
+  "modifiers": {
+    "charisma": -2
+  },
+  "armorClass": 5,
+  "removesOnGain": [
+    "rfb.mutation.steel-skin"
+  ]
+}

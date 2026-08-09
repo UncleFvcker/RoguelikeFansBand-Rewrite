@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/mutation.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.mutation.wraith",
+  "name": "怨灵形态",
+  "description": "你在物质现实中忽隐忽现。",
+  "rating": "good",
+  "sourceIndex": 51,
+  "randomWeight": 2,
+  "removesOnGain": []
+}

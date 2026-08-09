@@ -355,12 +355,34 @@ fn expected_task_states_missing(
 
 fn restore_character_progress(
     saved: Option<&PlayerProgressSaveDto>,
+    saved_active_mutation_ids: &[String],
+    saved_locked_mutation_ids: &[String],
     base_max_hp: i32,
     expected_skills: BTreeMap<String, SkillProgress>,
+    content: &ContentCatalog,
 ) -> Result<CharacterProgress, CoreError> {
+    let active_mutation_ids = saved_active_mutation_ids
+        .iter()
+        .cloned()
+        .collect::<BTreeSet<_>>();
+    let locked_mutation_ids = saved_locked_mutation_ids
+        .iter()
+        .cloned()
+        .collect::<BTreeSet<_>>();
+    if active_mutation_ids.len() != saved_active_mutation_ids.len()
+        || locked_mutation_ids.len() != saved_locked_mutation_ids.len()
+        || !locked_mutation_ids.is_subset(&active_mutation_ids)
+        || active_mutation_ids
+            .iter()
+            .any(|id| content.mutation(id).is_none())
+    {
+        return Err(CoreError::InvalidSave("player mutation state is invalid"));
+    }
     let Some(saved) = saved else {
         let mut progress = CharacterProgress::legacy(base_max_hp);
         progress.replace_skills(expected_skills);
+        progress.active_mutation_ids = active_mutation_ids;
+        progress.locked_mutation_ids = locked_mutation_ids;
         return Ok(progress);
     };
     let mut skills = BTreeMap::new();
@@ -405,6 +427,14 @@ fn restore_character_progress(
             charisma: maximum.charisma,
         })
         .unwrap_or(attributes);
+    let attribute_potentials = AttributeSet {
+        strength: saved.attribute_potentials.strength,
+        intelligence: saved.attribute_potentials.intelligence,
+        wisdom: saved.attribute_potentials.wisdom,
+        dexterity: saved.attribute_potentials.dexterity,
+        constitution: saved.attribute_potentials.constitution,
+        charisma: saved.attribute_potentials.charisma,
+    };
     if ![
         AttributeKind::Strength,
         AttributeKind::Intelligence,
@@ -424,6 +454,7 @@ fn restore_character_progress(
     Ok(CharacterProgress {
         attributes,
         maximum_attributes,
+        attribute_potentials,
         experience: saved.experience,
         maximum_experience: if saved.maximum_experience == 0 {
             saved.experience
@@ -436,6 +467,8 @@ fn restore_character_progress(
         pending_attribute_increases: saved.pending_attribute_increases,
         hp_progression: saved.hp_progression.clone(),
         skills,
+        active_mutation_ids,
+        locked_mutation_ids,
     })
 }
 
@@ -514,7 +547,7 @@ fn item_property_knowledge_from_save(
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-struct StateHashPayloadV72<'a> {
+struct StateHashPayloadV73<'a> {
     schema_version: u16,
     revision: u32,
     turn: u32,
@@ -813,8 +846,11 @@ impl Game {
         let expected_skills = character_skill_progress(&content, build.as_ref(), saved_level)?;
         let progress = restore_character_progress(
             payload.player.progress.as_ref(),
+            &payload.player.active_mutation_ids,
+            &payload.player.locked_mutation_ids,
             player_definition.max_hp,
             expected_skills,
+            &content,
         )?;
         let saved_resources = payload.player.resources.clone();
         let bonus_spell_learning_capacity = payload.player.bonus_spell_learning_capacity;
@@ -1235,7 +1271,7 @@ impl Game {
 
     #[must_use]
     pub fn state_hash(&self) -> String {
-        let payload = StateHashPayloadV72 {
+        let payload = StateHashPayloadV73 {
             schema_version: STATE_HASH_SCHEMA_VERSION,
             revision: self.revision,
             turn: self.turn,

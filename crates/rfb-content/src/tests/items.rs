@@ -733,7 +733,7 @@ fn supported_legacy_scrolls_and_potions_keep_source_identity_and_values() {
         .collect::<Vec<_>>();
 
     assert_eq!(scrolls.len(), 59);
-    assert_eq!(potions.len(), 62);
+    assert_eq!(potions.len(), 63);
     assert!(scrolls.iter().all(|item| item.weight_tenths_pound == 5));
     assert!(potions.iter().all(|item| item.weight_tenths_pound == 4));
 
@@ -746,7 +746,7 @@ fn supported_legacy_scrolls_and_potions_keep_source_identity_and_values() {
                 .expect("supported consumables should have source flavor")
         })
         .collect::<std::collections::BTreeSet<_>>();
-    assert_eq!(appearance_keys.len(), 121);
+    assert_eq!(appearance_keys.len(), 122);
 
     let added_values = [
         ("demo.item.door-stair-location-scroll", 10),
@@ -808,6 +808,7 @@ fn supported_legacy_scrolls_and_potions_keep_source_identity_and_values() {
         ("demo.item.experience-potion", 25_000),
         ("demo.item.neo-tsuyoshi-special", 2_000),
         ("demo.item.tsuyoshi-special", 0),
+        ("demo.item.new-life-potion", 25_000),
     ];
     for (id, base_value) in added_values {
         let item = artifact

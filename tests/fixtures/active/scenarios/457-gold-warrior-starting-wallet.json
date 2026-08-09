@@ -16,7 +16,7 @@
       "revision": 0,
       "turn": 0,
       "lastCommandSeq": 0,
-      "rngDrawCounter": 164,
+      "rngDrawCounter": 173,
       "floorId": "demo.floor.surface",
       "town": {
         "id": "demo.town.outpost",
@@ -262,36 +262,42 @@
           "strength": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 108,
             "effective": 17,
             "index": 14
           },
           "intelligence": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 108,
             "effective": 11,
             "index": 8
           },
           "wisdom": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 118,
             "effective": 11,
             "index": 8
           },
           "dexterity": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 128,
             "effective": 15,
             "index": 12
           },
           "constitution": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 128,
             "effective": 15,
             "index": 12
           },
           "charisma": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 118,
             "effective": 14,
             "index": 11
           }
@@ -812,7 +818,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 164,
+      "nextItemInstanceSerial": 168,
       "nextGoldPileSerial": 1,
       "tasks": [
         {
@@ -848,8 +854,8 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "694546e20f6252e9dbc2ad57ad47422dafc72ba83d86eb7d023b286a7802446b"
+      "stateHash": "45c336b574198827fdd87307ea51b2e38f908761f9e0f776ad2d30a86b73a1c2"
     },
-    "saveRoundTripStateHash": "694546e20f6252e9dbc2ad57ad47422dafc72ba83d86eb7d023b286a7802446b"
+    "saveRoundTripStateHash": "45c336b574198827fdd87307ea51b2e38f908761f9e0f776ad2d30a86b73a1c2"
   }
 }

@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/mutation.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.mutation.spit-acid",
+  "name": "喷吐酸液",
+  "description": "你可以喷吐酸液（伤害为 等级*2）。",
+  "rating": "good",
+  "sourceIndex": 0,
+  "randomWeight": 8,
+  "removesOnGain": []
+}

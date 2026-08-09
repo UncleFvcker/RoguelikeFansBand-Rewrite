@@ -154,7 +154,7 @@
         "y": 3
       },
       "playerHp": 6,
-      "playerMaxHp": 293,
+      "playerMaxHp": 274,
       "playerAttack": 3,
       "playerDefense": 0,
       "playerSpeed": 110,
@@ -258,36 +258,42 @@
           "strength": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 128,
             "effective": 9,
             "index": 6
           },
           "intelligence": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 118,
             "effective": 18,
             "index": 15
           },
           "wisdom": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 108,
             "effective": 14,
             "index": 11
           },
           "dexterity": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 88,
             "effective": 15,
             "index": 12
           },
           "constitution": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 148,
             "effective": 10,
             "index": 7
           },
           "charisma": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 118,
             "effective": 12,
             "index": 9
           }
@@ -3455,7 +3461,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "2db9c9ae5fd783824a7e15d6b1a24bd51d27293dc2689779d6ef2466c2a161c6"
+      "stateHash": "5748f56a2fd4619f61d3d87141bfe14c6cd1b48bdf1b6f7cbcbe7da8b92113a1"
     },
     "events": [
       {
@@ -3800,6 +3806,6 @@
     "removedEntities": [
       "demo.monster.ember-mote.1"
     ],
-    "saveRoundTripStateHash": "2db9c9ae5fd783824a7e15d6b1a24bd51d27293dc2689779d6ef2466c2a161c6"
+    "saveRoundTripStateHash": "5748f56a2fd4619f61d3d87141bfe14c6cd1b48bdf1b6f7cbcbe7da8b92113a1"
   }
 }

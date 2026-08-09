@@ -181,14 +181,17 @@ impl Game {
         }
     }
 
-    pub(super) fn equipped_light_radius(&self) -> Option<i32> {
-        self.items
+    pub(super) fn player_light_radius(&self) -> Option<i32> {
+        let equipment = self
+            .items
             .iter()
             .find(|item| {
                 matches!(&item.location, ItemLocation::Equipped { slot_id } if slot_id == "light")
             })
             .and_then(|item| item.fuel)
             .filter(|fuel| fuel.current > 0 && fuel.light_radius > 0)
-            .map(|fuel| i32::from(fuel.light_radius))
+            .map_or(0, |fuel| i32::from(fuel.light_radius));
+        let radius = equipment.max(self.player_mutation_light_radius());
+        (radius > 0).then_some(radius)
     }
 }

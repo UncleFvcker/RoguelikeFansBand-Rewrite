@@ -22,7 +22,7 @@ use affixes::validate_affixes;
 use characters::{CharacterDefinitions, CharacterValidationRefs, validate_characters};
 pub(crate) use items::valid_item_effect;
 use items::{ItemValidationRefs, validate_items};
-use shared::insert_definition_id;
+use shared::{attribute_modifiers_out_of_range, insert_definition_id, validate_status_immunities};
 pub(crate) use shared::{
     require_format_version, require_schema, validate_definition_id, validate_id,
     validate_message_key, validate_pack_relations, validate_semver,
@@ -74,6 +74,9 @@ pub(crate) fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<
         .sort_by(|left, right| left.id.cmp(&right.id));
     content.builds.sort_by(|left, right| left.id.cmp(&right.id));
     content
+        .mutations
+        .sort_by(|left, right| left.id.cmp(&right.id));
+    content
         .encounter_tables
         .sort_by(|left, right| left.id.cmp(&right.id));
     content
@@ -96,6 +99,44 @@ pub(crate) fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<
     content.shops.sort_by(|left, right| left.id.cmp(&right.id));
     content.worlds.sort_by(|left, right| left.id.cmp(&right.id));
     let mut all_ids = BTreeSet::new();
+    let mut mutation_ids = BTreeSet::new();
+    let mut mutation_source_indices = BTreeSet::new();
+    for mutation in &mut content.mutations {
+        require_schema(&mutation.schema, MUTATION_SCHEMA, &mutation.id)?;
+        require_format_version(mutation.format_version, &mutation.id)?;
+        validate_definition_id(&mutation.id, "mutation")?;
+        validate_status_immunities(&mutation.id, &mut mutation.status_immunities)?;
+        if mutation.name.trim().is_empty() || mutation.description.trim().is_empty() {
+            return Err(ContentError::InvalidDefinitionText(mutation.id.clone()));
+        }
+        if mutation.modifiers.max_hp.abs() > 1_000_000
+            || mutation.modifiers.attack.abs() > 1_000_000
+            || mutation.modifiers.defense.abs() > 1_000_000
+            || !(-100..=100).contains(&mutation.modifiers.speed)
+            || attribute_modifiers_out_of_range(&mutation.modifiers)
+            || !(-1_000_000..=1_000_000).contains(&mutation.armor_class)
+            || !(-1_000_000..=1_000_000).contains(&mutation.saving_throw_skill)
+            || !(-1_000_000..=1_000_000).contains(&mutation.saving_throw_skill_per_five_levels)
+            || !(-64..=64).contains(&mutation.infravision)
+            || !(-1_000..=1_000).contains(&mutation.regeneration_rate_modifier_percent)
+            || !(-8..=8).contains(&mutation.light_radius)
+        {
+            return Err(ContentError::InvalidMutation(mutation.id.clone()));
+        }
+        if !mutation_source_indices.insert(mutation.source_index) {
+            return Err(ContentError::InvalidMutation(mutation.id.clone()));
+        }
+        mutation_ids.insert(mutation.id.clone());
+        insert_definition_id(&mut all_ids, &mutation.id)?;
+    }
+    for mutation in &content.mutations {
+        let mut removed = BTreeSet::new();
+        if mutation.removes_on_gain.iter().any(|id| {
+            id == &mutation.id || !mutation_ids.contains(id) || !removed.insert(id.clone())
+        }) {
+            return Err(ContentError::InvalidMutation(mutation.id.clone()));
+        }
+    }
     let TerrainValidationOutputs {
         terrain_ids,
         terrain_walkability,

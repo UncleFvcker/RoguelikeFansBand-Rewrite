@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/mutation.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.mutation.limp",
+  "name": "跛行",
+  "description": "你走路一瘸一拐的 (-10% 行走速度)。",
+  "rating": "bad",
+  "sourceIndex": 145,
+  "randomWeight": 4,
+  "removesOnGain": []
+}

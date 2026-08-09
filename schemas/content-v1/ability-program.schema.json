@@ -786,6 +786,9 @@
                 "acid": {
                   "$ref": "#/$defs/ActorResistanceLevel"
                 },
+                "blindness": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
                 "chaos": {
                   "$ref": "#/$defs/ActorResistanceLevel"
                 },
@@ -805,6 +808,9 @@
                   "$ref": "#/$defs/ActorResistanceLevel"
                 },
                 "electricity": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
+                "fear": {
                   "$ref": "#/$defs/ActorResistanceLevel"
                 },
                 "fire": {
@@ -1400,6 +1406,8 @@
         "poison",
         "light",
         "dark",
+        "blindness",
+        "fear",
         "confusion",
         "nether",
         "nexus",

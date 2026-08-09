@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/mutation.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.mutation.resist",
+  "name": "抵抗元素",
+  "description": "你可以使自己强化，以抵御元素的摧残。",
+  "rating": "great",
+  "sourceIndex": 20,
+  "randomWeight": 6,
+  "removesOnGain": []
+}

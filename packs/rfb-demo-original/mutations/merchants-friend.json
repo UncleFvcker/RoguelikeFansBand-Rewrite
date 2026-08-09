@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/mutation.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.mutation.merchants-friend",
+  "name": "商人之友",
+  "description": "你是商人之友。",
+  "rating": "good",
+  "sourceIndex": 110,
+  "randomWeight": 0,
+  "removesOnGain": []
+}

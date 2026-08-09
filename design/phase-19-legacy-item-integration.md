@@ -519,3 +519,200 @@ active, 106 mechanics-ready, and 214 blocked source items. The formal pack has
 The protocol, save structure, and state-hash schema are unchanged. Shop and
 loot changes affect common new-game RNG, so shared replay refresh remains an
 integration-worktree handoff.
+
+## P3.7-M0 Mutation Coverage Baseline
+
+`legacy-mutation-plan.json` freezes all 152 mutation identities from the
+authoritative RFB `master` commit
+`efd63661302866038f58d8cd2553b23e6af3bf9d`. Each row pins its source index,
+constant and handler, stable id, exact Chinese name and description, rating,
+base random weight, source type, mechanism family, eligibility and weight
+conditions, gain-time removals, coverage state, blockers, and whether the
+original mutation intentionally has no numeric effect.
+
+Run the source-backed audit with:
+
+```powershell
+$env:RFB_LEGACY_SOURCE='D:/codex/Frogcomposband'
+cargo run -p rfb-legacy-import -- audit-demo-mutations packs/rfb-demo-original/legacy-mutation-plan.json
+```
+
+The M0 snapshot contains 104 base random candidates and 48 zero-weight
+identities. Its source types are 35 activations, 28 periodic effects, 51 passive
+bonuses, and 38 cross-system/query identities. All 152 remain `blocked`: M0
+establishes the coverage ledger and strict source-drift checks but does not add
+mutation state or gameplay. The audit records 52 identities with eligibility
+conditions, 207 conditional-weight rules, and 33 ordered gain-time removal
+edges. `rfb.mutation.merchants-friend` is explicitly marked as the sole
+source-defined identity with no numeric effect.
+
+## P3.7-M1 Mutation Definitions and Authoritative State
+
+Content pack 1.212.0 adds one `MutationDefinition` for each of the 152 M0
+ledger identities. Definitions retain the stable `rfb.mutation.*` id, exact
+authoritative Chinese name and description, and source rating. The content
+compiler rejects malformed or duplicate mutation identities, while a catalog
+test checks every formal definition against the frozen ledger.
+
+`CharacterProgress` now owns ordered active and locked mutation ID sets.
+`PlayerSaveDto` persists both sets, and load rejects duplicates, unknown
+content references, or a locked ID absent from active. `PlayerDto` projects
+only active definitions with their identity text, rating, and lock flag. New
+characters start with both sets empty; M1 adds no acquisition, removal,
+activation, periodic effect, passive bonus, candidate weighting, or mutation
+UI behavior, so all 152 coverage-ledger rows remain `blocked` for their rule
+families.
+
+The save-backed sets enter State Hash Schema v73 and protocol 1.152. The save
+container remains v1, with no compatibility path for older development saves.
+The exact baseline advances to contract-v216. Full rules begin in later M
+batches rather than being represented by inert gameplay effects.
+
+## P3.7-M2 Unified Mutation Transactions
+
+Content pack 1.213.0 promotes the M0 `sourceIndex`, `randomWeight`, and ordered
+`removesOnGain` metadata into the 152 formal mutation definitions. Validation
+rejects duplicate source indexes, self-removal, duplicate removals, and dangling
+mutation references. Runtime selection scans candidates in authoritative source
+order, applies the original Good Luck and Bad Luck rating-weight reductions, and
+does not draw RNG when the eligible total weight is zero.
+
+One core transaction path now owns direct and random gain/loss plus removal of
+all unlocked mutations. Locked mutations survive direct, random, bulk, and
+gain-time conflict removal. Conflict-loss events precede the gain event in the
+source handler's recorded order; bulk loss events use source-index order. Each
+transaction refreshes effective attributes, proportional HP, resource maxima,
+and the authoritative ability baseline once after committing mutation state.
+
+Natural and vampiric regeneration use the shared M2 unlocked-mutation penalty:
+ten percent per unlocked mutation, floored at ten percent. Locked mutations are
+free. M2 adds no mutation effect caller and does not connect Polymorph or New
+Life, so the coverage ledger remains blocked by the individual mechanism
+families and neither item enters the formal pack in this batch. Protocol, save,
+State Hash Schema v73, and contract-v216 are unchanged.
+
+## P3.7-M3 Attribute Potentials, HP Rerating, and New Life
+
+`CharacterProgress` now owns six independent personal attribute potentials.
+Birth rolls them from a dedicated deterministic seed stream using the original
+six `1d7` rolls whose total must equal 24, encoded as `78 + die * 10`.
+Permanent natural growth uses the smaller of this personal value and the
+campaign's global attribute cap. Save validation rejects malformed potential
+encodings, an incorrect total, or current/history values above their potential.
+
+The existing `hp_progression` remains the only HP-growth authority. Birth and
+New Life both reject candidate sequences below 87 percent at levels 5, 10, and
+25; the final level must be between 87 and 117 percent. Birth uses its existing
+dedicated HP seed stream, while New Life consumes the authoritative core RNG.
+No life-rating field or second HP representation is introduced.
+
+The `new-life` item effect plans both rerolls before mutation, then commits the
+new HP sequence, restores life force to 1000, replaces potentials, clamps both
+current and historical maximum attributes, and removes every unlocked mutation
+in source order. Locked mutations survive. Effective HP, resource maxima, and
+ability state refresh once after the complete transaction. The formal
+authoritative `新生药水` is Black Market stock and moves source index 456 from
+blocked to active; Polymorph remains blocked.
+
+The audit now reports 225 active, 106 mechanics-ready, and 213 blocked source
+items. The pack contains 226 mapped RFB items plus 24 original items, for 250
+total. Pack 1.214.0 has content hash
+`753bda0056119c1ebd6ba335e1e78bca4404bf8641097d7de5eec530951ebe8f`.
+Protocol 1.153, State Hash Schema v74, and contract-v217 carry the required
+potential save/projection and the 471-fixture refreshed baseline.
+
+## P3.7-M4A Passive Attributes, Speed, and Armor
+
+The first bounded passive batch activates 14 authoritative mutations: Hyper
+Strength, Puny, Hyper Intelligence, Moronic, Resilient, Extra Fat, Albino,
+Silly Voice, Blank Face, Extra Legs, Short Legs, Warts, Scales, and Steel
+Skin. Their exact Chinese identities remain sourced from RFB `master`.
+
+Mutation definitions reuse `StatModifiers` for the original attribute-bucket
+and speed adjustments. A single narrow `armorClass` field carries the direct
+`+5`, `+10`, and `+25` armor bonuses because the existing `defense` modifier
+uses rating units rather than original armor-class points. Active mutation
+modifiers feed the existing effective-attribute and derived-stat pipelines;
+constitution therefore changes the existing HP calculation, while M2 gain and
+loss transactions continue to own proportional HP/resource refresh and
+ordered conflict removal.
+
+Flesh Rot remains blocked because its original contract also slows
+regeneration. Resistance, immunity, ESP, flight, regeneration, aura, innate
+attack, luck, fatigue, movement, device, and item-knowledge consumers remain
+later 8--15 item batches rather than receiving partial effects here.
+
+The mutation audit reports 14 active and 138 blocked identities. Pack 1.215.0
+has content hash
+`5a3e77d707f1ea2aa9d9c02bf0e9494a9695decbc6140289f3e6f0cfa0db73c0`.
+Protocol 1.153, save v1, State Hash Schema v74, and contract-v217 are unchanged;
+no existing fixture begins with active mutations, so this content/behavior
+batch does not refresh unrelated exact fixtures.
+
+## P3.7-M4B Resistance, Senses, and Levitation
+
+The second bounded passive batch activates seven complete original mutations:
+Magic Resistance, Wings, Fearless, Weird Mind, Draconian Magic Resistance,
+Sensitive Eyes, and No Inhibitions. The two magic-resistance identities add the
+original `15 + level / 5` saving-throw skill through the existing derived-stat
+pipeline. Fearless and No Inhibitions grant one fear-resistance tier and retain
+their authoritative mutual exclusions. Sensitive Eyes grants four grids of
+infravision and one blindness-vulnerability tier. Weird Mind blocks the current
+hallucination status, and Wings supplies the existing Fly movement mode to
+surface traversal, terrain hazards, and fly-avoidable traps.
+
+`MutationDefinition` adds only the content fields consumed by those existing
+pipelines: saving-throw base/scaling, infravision, resistance tiers, status
+immunities, levitation, and telepathy. `fear` and `blindness` join the shared
+damage/resistance enum so status durations use the same resistant/normal/
+vulnerable scale as other effects. No parallel character state is persisted.
+
+ESP now has a tested telepathy consumer for normal and explicit `empty-mind`
+actor tags, but remains blocked until the selected legacy actors import exact
+`EMPTY_MIND`/`WEIRD_MIND` metadata and the UI has the original fuzzy identity
+projection. Draconian Resistance remains blocked on authoritative draconian
+subrace identity, and Strong Mind remains blocked because no mana-drain
+consumer exists. These are not represented by approximate effects.
+
+The mutation audit reports 21 active and 131 blocked identities. Pack 1.216.0
+has content hash
+`6bdadb2cacfcdb47ac61fb3692e056e787389abe8e5035dd2c216f90e94c46ff`.
+The shared protocol enum gains fear and blindness values; protocol-version and
+release-fixture consolidation remain owned by the integration worktree. Save
+v1 and State Hash Schema v74 are structurally unchanged, and existing fixtures
+still begin without active mutations.
+
+## P3.7-M4C Regeneration, Contact Auras, and Intrinsic Light
+
+The third bounded passive batch activates five complete original mutations:
+Flesh Rot, Electrical Aura, Fire Aura, Regeneration, and Draconian
+Regeneration. Their exact RFB regeneration adjustments feed the existing
+natural-HP recovery calculation as additive rate modifiers: Flesh Rot `-80%`,
+Regeneration `+100%`, and Draconian Regeneration `+150%`. The independent M2
+unlocked-mutation penalty is applied afterwards, matching the original order.
+Flesh Rot also carries its complete `-2` constitution and `-1` charisma
+penalties and retains the ordered conflict with Steel Skin and Regeneration.
+
+Fire and electrical mutation auras use the original player-aura roll
+`2 + (2 * aura level - 1 + player level / 10)d(2 + player level / 10)` after a
+successful contact-method monster blow. Fire resolves before electricity;
+resistant, strong, and immune monsters suppress that aura without consuming its
+damage RNG. Damage, wake, death credit, drops, changed cells, and removed actor
+IDs all pass through the shared actor damage/death transaction. Gaze, spit,
+spore, wail, and explosion methods do not trigger contact auras. Fire Aura also
+provides the original minimum one-grid intrinsic player light and combines with
+equipped light by taking the stronger radius rather than adding radii.
+
+`MutationDefinition` adds only three consumed fields: an additive regeneration
+rate modifier, an optional contact-aura damage type, and intrinsic light radius.
+No parallel HP, aura, lighting, or persistence state is introduced. Draconian
+Shield remains blocked on `draconian-subrace-identity-and-aura-selection`
+because its authoritative armor amount and fire/cold/electricity/shards aura
+depend on the missing draconian subrace identity.
+
+The mutation audit reports 26 active and 126 blocked identities. Pack 1.217.0
+has content hash
+`64d79464b93f82eb07b411f9508b0c64a0b90783623d92e49e0c699c52f15519`.
+Protocol 1.153, save v1, State Hash Schema v74, and contract-v217 are unchanged;
+the new aura events use the existing generic event projection, and existing
+fixtures still begin without active mutations.

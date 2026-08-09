@@ -72,6 +72,13 @@ impl Game {
         let terrain = self.content.terrain(&self.terrain[index])?;
         let source_kind_id = terrain.id.clone();
         let trap = terrain.trap.clone()?;
+        if self.active_traveler_has_mode(rfb_content::ActorMovementMode::Fly)
+            && trap
+                .avoided_by_movement_modes
+                .contains(&rfb_content::ActorMovementMode::Fly)
+        {
+            return None;
+        }
         self.revealed_terrain.insert(position);
         if let Some(difficulty) = trap.saving_throw_difficulty {
             let ability = self.player_derived_stats().saving_throw_skill;

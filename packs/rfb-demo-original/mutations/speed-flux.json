@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/mutation.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.mutation.speed-flux",
+  "name": "速度波动",
+  "description": "你的移动速度会随机变快或变慢。",
+  "rating": "bad",
+  "sourceIndex": 43,
+  "randomWeight": 4,
+  "removesOnGain": []
+}

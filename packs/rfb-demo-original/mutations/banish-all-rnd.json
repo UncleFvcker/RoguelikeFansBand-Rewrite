@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/mutation.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.mutation.banish-all-rnd",
+  "name": "随机放逐",
+  "description": "你有时候会导致附近的生物消失。",
+  "rating": "average",
+  "sourceIndex": 44,
+  "randomWeight": 4,
+  "removesOnGain": []
+}

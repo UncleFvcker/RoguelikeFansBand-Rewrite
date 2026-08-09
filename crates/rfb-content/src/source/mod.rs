@@ -32,7 +32,7 @@ pub(crate) use items::SourceItemUseActionDefinition;
 const MAX_SOURCE_FILE_LENGTH: usize = 1024 * 1024;
 const MAX_SOURCE_TOTAL_LENGTH: usize = 16 * 1024 * 1024;
 const MAX_SOURCE_FILES: usize = 32_768;
-pub(crate) const SUPPORTED_ROOTS: [&str; 26] = [
+pub(crate) const SUPPORTED_ROOTS: [&str; 27] = [
     "abilities",
     "abilityBooks",
     "abilityPrograms",
@@ -44,6 +44,7 @@ pub(crate) const SUPPORTED_ROOTS: [&str; 26] = [
     "encounterTables",
     "items",
     "lootTables",
+    "mutations",
     "personalities",
     "playerAbilityBindings",
     "races",
@@ -122,6 +123,7 @@ pub fn compile_pack_dir(root: &Path) -> Result<CompiledArtifact, ContentError> {
         classes: load_root(root, "classes", &roots, &mut budget)?,
         personalities: load_root(root, "personalities", &roots, &mut budget)?,
         builds: load_root(root, "builds", &roots, &mut budget)?,
+        mutations: load_root(root, "mutations", &roots, &mut budget)?,
         encounter_tables: load_root(root, "encounterTables", &roots, &mut budget)?,
         loot_tables: load_root(root, "lootTables", &roots, &mut budget)?,
         theme_tables: load_root(root, "themeTables", &roots, &mut budget)?,

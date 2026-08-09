@@ -23,6 +23,48 @@ const formatter = createPresentationFormatter(localization, () => state, {
   itemCurseSeverityName: () => "?",
 });
 
+test("mutation events use their authoritative projected names", () => {
+  const gained = {
+    kind: "mutation.gained",
+    messageKey: "mutation-gained",
+    args: { target: "rfb.mutation.spit-acid", name: "喷吐酸液" },
+  };
+  const lost = {
+    kind: "mutation.lost",
+    messageKey: "mutation-lost",
+    args: { target: "rfb.mutation.spit-acid", name: "喷吐酸液" },
+  };
+
+  assert.equal(formatter.formatEvent(gained), "You gain the 喷吐酸液 mutation.");
+  localization.setLocale("zh-CN");
+  assert.equal(formatter.formatEvent(lost), "你失去了变异“喷吐酸液”。");
+  localization.setLocale("en-US");
+});
+
+test("mutation aura events use the typed damage element", () => {
+  const event = {
+    kind: "mutation.aura-hit",
+    messageKey: "mutation-aura-hit",
+    args: { target: "demo.actor.echo-hound", damage: "4" },
+    outcome: {
+      type: "damage",
+      resolution: {
+        rawDamage: 4,
+        armorReduction: 0,
+        resistanceAdjustment: 0,
+        finalDamage: 4,
+        damageType: "fire",
+        resistance: "normal",
+      },
+    },
+  };
+
+  assert.equal(formatter.formatEvent(event), "Your fire aura hits echo hound for 4 damage.");
+  localization.setLocale("zh-CN");
+  assert.equal(formatter.formatEvent(event), "你的火焰光环击中了回声猎犬，造成 4 点伤害。");
+  localization.setLocale("en-US");
+});
+
 test("wilderness ambush events use the dedicated localized message", () => {
   assert.equal(
     formatter.formatEvent({

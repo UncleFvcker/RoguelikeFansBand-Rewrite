@@ -340,9 +340,10 @@ fn apply_attribute_dto_modifiers(
     }
 }
 
-fn effective_attributes(
+fn effective_attributes<'a>(
     mut attributes: AttributeSet,
     character_modifiers: Option<[&StatModifiers; 3]>,
+    mutation_modifiers: impl IntoIterator<Item = &'a StatModifiers>,
     equipment_modifiers: StatModifiersDto,
     status_modifiers: impl IntoIterator<Item = StatModifiersDto>,
     cap: u16,
@@ -351,6 +352,9 @@ fn effective_attributes(
         for modifiers in modifiers {
             attributes = apply_attribute_modifiers(attributes, modifiers, cap);
         }
+    }
+    for modifiers in mutation_modifiers {
+        attributes = apply_attribute_modifiers(attributes, modifiers, cap);
     }
     attributes = apply_attribute_dto_modifiers(attributes, equipment_modifiers, cap);
     for modifiers in status_modifiers {
@@ -530,6 +534,10 @@ impl Game {
         effective_attributes(
             self.progress.attributes,
             character_modifiers,
+            self.content
+                .mutations()
+                .filter(|mutation| self.progress.active_mutation_ids.contains(&mutation.id))
+                .map(|mutation| &mutation.modifiers),
             self.equipment_modifiers(),
             self.player
                 .statuses
@@ -566,6 +574,15 @@ impl Game {
         character_modifier_total(self.character_definitions(), value)
     }
 
+    fn mutation_modifier_total(&self, value: impl Fn(&StatModifiers) -> i32) -> i32 {
+        self.content
+            .mutations()
+            .filter(|mutation| self.progress.active_mutation_ids.contains(&mutation.id))
+            .fold(0, |total, mutation| {
+                total.saturating_add(value(&mutation.modifiers))
+            })
+    }
+
     pub(super) fn refresh_character_skills(&mut self) {
         let skills =
             character_skill_progress(&self.content, self.build.as_ref(), self.progress.level)
@@ -576,6 +593,7 @@ impl Game {
     pub(super) fn player_max_hp_at_level(&self, level: u16) -> i32 {
         self.character_base_max_hp_at_level(level)
             .saturating_add(self.character_modifier_total(|modifiers| modifiers.max_hp))
+            .saturating_add(self.mutation_modifier_total(|modifiers| modifiers.max_hp))
             .saturating_add(self.equipment_modifiers().max_hp)
             .max(1)
     }
@@ -696,7 +714,7 @@ impl Game {
         if previous_max_hp > 0 && next_max_hp != previous_max_hp {
             self.player.hp = rescale_i32(self.player.hp, previous_max_hp, next_max_hp);
         }
-        self.refresh_player_resource_maxima();
+        self.refresh_player_ability_state();
         for (resource_id, (previous_current, previous_maximum)) in previous_resource_maxima {
             let Some(pool) = self.resources.get_mut(resource_id) else {
                 continue;

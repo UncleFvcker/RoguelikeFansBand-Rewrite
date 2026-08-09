@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/mutation.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.mutation.weapon-skills",
+  "name": "武器多面手",
+  "description": "你可以精通任何武器。",
+  "rating": "good",
+  "sourceIndex": 97,
+  "randomWeight": 0,
+  "removesOnGain": []
+}

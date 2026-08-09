@@ -1,0 +1,14 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/mutation.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.mutation.cowardice",
+  "name": "懦弱",
+  "description": "你容易退缩。",
+  "rating": "bad",
+  "sourceIndex": 33,
+  "randomWeight": 2,
+  "removesOnGain": [
+    "rfb.mutation.fearless",
+    "rfb.mutation.no-inhibitions"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/mutation.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.mutation.draconian-kin",
+  "name": "召唤同族",
+  "description": "你能够召唤同类。",
+  "rating": "good",
+  "sourceIndex": 127,
+  "randomWeight": 0,
+  "removesOnGain": []
+}

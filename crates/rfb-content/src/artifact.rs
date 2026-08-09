@@ -39,6 +39,7 @@ impl CompiledArtifact {
             class_count: self.content.classes.len(),
             personality_count: self.content.personalities.len(),
             build_count: self.content.builds.len(),
+            mutation_count: self.content.mutations.len(),
             encounter_table_count: self.content.encounter_tables.len(),
             loot_table_count: self.content.loot_tables.len(),
             theme_table_count: self.content.theme_tables.len(),

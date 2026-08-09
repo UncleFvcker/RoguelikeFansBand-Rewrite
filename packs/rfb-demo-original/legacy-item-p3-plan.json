@@ -248,7 +248,7 @@
           "id": "life-and-mutation",
           "primaryBlockers": ["consumable-effect"],
           "items": [
-            { "sourceIndex": 456, "sourceName": "New Life:Bright Red", "sourceId": "new-life-bright-red", "secondaryBlockers": ["character-mutation-and-attribute-potential"] },
+            { "sourceIndex": 456, "sourceName": "New Life:Bright Red", "sourceId": "new-life-bright-red", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] },
             { "sourceIndex": 459, "sourceName": "Polymorph:Bronze", "sourceId": "polymorph-bronze", "secondaryBlockers": ["character-mutation-system"] }
           ]
         },
