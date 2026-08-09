@@ -34,6 +34,7 @@ use sha2::{Digest, Sha256};
 use super::gold::derive_next_gold_pile_serial;
 use super::town::{
     home_state_to_save, restore_home_states, restore_town_and_shop_states, shop_state_to_save,
+    world_town_for_floor,
 };
 use super::wilderness::WILDERNESS_FLOOR_ID;
 use super::{
@@ -770,8 +771,8 @@ impl Game {
         }
         if payload.map_scale == MapScaleDto::World
             && (world.wilderness.is_none()
-                || (current_floor_id != world.initial_floor_id
-                    && current_floor_id != WILDERNESS_FLOOR_ID))
+                || (current_floor_id != WILDERNESS_FLOOR_ID
+                    && world_town_for_floor(world, &content, &current_floor_id).is_none()))
         {
             return Err(CoreError::InvalidSave("world map state is invalid"));
         }
@@ -809,6 +810,7 @@ impl Game {
         let home_states = restore_home_states(
             world,
             &content,
+            &town_states,
             &current_floor_id,
             payload.player.position,
             &payload.home_states,
@@ -966,8 +968,11 @@ impl Game {
                 return Err(CoreError::InvalidSave("stored floor state is invalid"));
             }
         }
-        if current_floor_id == world.initial_floor_id {
+        if world_town_for_floor(world, &content, &current_floor_id).is_some() {
             stored_floors.retain(|_, stored| {
+                if world_town_for_floor(world, &content, &stored.id).is_some() {
+                    return true;
+                }
                 if world.procedural_floors.iter().any(|floor| {
                     floor.id == stored.id
                         && floor.lifecycle == FloorLifecycle::OneShot

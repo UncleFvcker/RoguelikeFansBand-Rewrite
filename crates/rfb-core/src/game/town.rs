@@ -3,8 +3,8 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use rfb_content::{
-    ContentCatalog, ShopCategory, ShopDefinition, ShopStockDefinition, TownFacilityCategory,
-    WorldDefinition,
+    ContentCatalog, ShopCategory, ShopDefinition, ShopStockDefinition, TownDefinition,
+    TownFacilityCategory, TownFacilityDefinition, WildernessLocationDefinition, WorldDefinition,
 };
 use rfb_protocol::{
     HomeDto, HomeItemDto, HomeStateSaveDto, ItemEnchantmentsDto, ItemQualityDto, Position,
@@ -35,6 +35,77 @@ const CHARISMA_PRICE_ADJUST_PERCENT: [u16; 38] = [
 
 pub(super) type TownAndShopStates = (BTreeMap<String, TownState>, BTreeMap<String, ShopState>);
 
+fn world_town_ids(world: &WorldDefinition) -> impl Iterator<Item = &str> {
+    world
+        .wilderness
+        .iter()
+        .flat_map(|wilderness| &wilderness.locations)
+        .filter_map(|location| match location {
+            WildernessLocationDefinition::Town { town_id, .. } => Some(town_id.as_str()),
+            WildernessLocationDefinition::Dungeon { .. } => None,
+        })
+}
+
+pub(super) fn world_town_for_floor<'a>(
+    world: &WorldDefinition,
+    content: &'a ContentCatalog,
+    floor_id: &str,
+) -> Option<&'a TownDefinition> {
+    world_town_ids(world)
+        .filter_map(|town_id| content.town(town_id))
+        .find(|town| town.floor_id == floor_id)
+}
+
+fn world_town_at_position<'a>(
+    world: &WorldDefinition,
+    content: &'a ContentCatalog,
+    position: Position,
+) -> Option<&'a TownDefinition> {
+    world
+        .wilderness
+        .as_ref()?
+        .locations
+        .iter()
+        .find_map(|location| match location {
+            WildernessLocationDefinition::Town {
+                position: candidate,
+                town_id,
+            } if position_from_content(*candidate) == position => content.town(town_id),
+            WildernessLocationDefinition::Town { .. }
+            | WildernessLocationDefinition::Dungeon { .. } => None,
+        })
+}
+
+fn home_facilities<'a>(
+    town: &'a TownDefinition,
+    content: &'a ContentCatalog,
+) -> impl Iterator<Item = &'a TownFacilityDefinition> {
+    town.facility_ids.iter().filter_map(|facility_id| {
+        content
+            .town_facility(facility_id)
+            .filter(|facility| facility.category == TownFacilityCategory::Home)
+    })
+}
+
+fn home_storage_id<'a>(content: &'a ContentCatalog, facility_id: &str) -> Option<&'a str> {
+    content
+        .town_facility(facility_id)
+        .filter(|facility| facility.category == TownFacilityCategory::Home)
+        .and_then(|facility| facility.storage_id.as_deref())
+}
+
+fn home_storage_ids<'a>(
+    town: &'a TownDefinition,
+    content: &'a ContentCatalog,
+) -> impl Iterator<Item = &'a str> {
+    home_facilities(town, content).map(|facility| {
+        facility
+            .storage_id
+            .as_deref()
+            .expect("validated Home must retain a storage id")
+    })
+}
+
 pub(super) fn initial_home_states(
     world: &WorldDefinition,
     content: &ContentCatalog,
@@ -42,21 +113,15 @@ pub(super) fn initial_home_states(
     let Some(town) = world.town_id.as_deref().and_then(|id| content.town(id)) else {
         return BTreeMap::new();
     };
-    town.facility_ids
-        .iter()
-        .filter_map(|id| {
-            content
-                .town_facility(id)
-                .filter(|facility| facility.category == TownFacilityCategory::Home)
-                .map(|facility| {
-                    (
-                        facility.id.clone(),
-                        HomeState {
-                            visited: false,
-                            inventory: Vec::new(),
-                        },
-                    )
-                })
+    home_storage_ids(town, content)
+        .map(|storage_id| {
+            (
+                storage_id.to_owned(),
+                HomeState {
+                    visited: false,
+                    inventory: Vec::new(),
+                },
+            )
         })
         .collect()
 }
@@ -76,29 +141,20 @@ pub(super) fn home_state_to_save(facility_id: &str, state: &HomeState) -> HomeSt
 pub(super) fn restore_home_states(
     world: &WorldDefinition,
     content: &ContentCatalog,
+    town_states: &BTreeMap<String, TownState>,
     current_floor_id: &str,
     player_position: Position,
     saved_homes: &[HomeStateSaveDto],
 ) -> Result<BTreeMap<String, HomeState>, CoreError> {
-    let Some(town) = world.town_id.as_deref().and_then(|id| content.town(id)) else {
-        return saved_homes
-            .is_empty()
-            .then(BTreeMap::new)
-            .ok_or(CoreError::InvalidSave("home state is invalid"));
-    };
-    let expected = town
-        .facility_ids
-        .iter()
-        .filter(|id| {
-            content
-                .town_facility(id)
-                .is_some_and(|facility| facility.category == TownFacilityCategory::Home)
-        })
-        .cloned()
+    let expected = world_town_ids(world)
+        .filter(|town_id| town_states.contains_key(*town_id))
+        .filter_map(|town_id| content.town(town_id))
+        .flat_map(|town| home_storage_ids(town, content))
+        .map(str::to_owned)
         .collect::<BTreeSet<_>>();
     let mut states = BTreeMap::new();
     for saved in saved_homes {
-        let Some(facility) = content.town_facility(&saved.facility_id) else {
+        let Some(storage) = content.town_facility(&saved.facility_id) else {
             return Err(CoreError::InvalidSave("home state is invalid"));
         };
         let mut inventory = saved
@@ -112,10 +168,17 @@ pub(super) fn restore_home_states(
                 facility_id: saved.facility_id.clone(),
             };
         }
+        let player_at_shared_home = world_town_for_floor(world, content, current_floor_id)
+            .into_iter()
+            .flat_map(|town| home_facilities(town, content))
+            .any(|facility| {
+                facility.storage_id.as_deref() == Some(saved.facility_id.as_str())
+                    && player_position == position_from_content(facility.entrance_position)
+            });
         if !expected.contains(&saved.facility_id)
-            || (current_floor_id == town.floor_id
-                && player_position == position_from_content(facility.entrance_position)
-                && !saved.visited)
+            || storage.category != TownFacilityCategory::Home
+            || storage.storage_id.as_deref() != Some(storage.id.as_str())
+            || (player_at_shared_home && !saved.visited)
             || states
                 .insert(
                     saved.facility_id.clone(),
@@ -189,34 +252,41 @@ pub(super) fn restore_town_and_shop_states(
     saved_towns: &[TownStateSaveDto],
     saved_shops: &[ShopStateSaveDto],
 ) -> Result<TownAndShopStates, CoreError> {
-    let Some(town_id) = &world.town_id else {
-        if saved_towns.is_empty() && saved_shops.is_empty() {
-            return Ok((BTreeMap::new(), BTreeMap::new()));
-        }
-        return Err(CoreError::InvalidSave("town state is invalid"));
-    };
-    let town = content
-        .town(town_id)
-        .expect("validated world town must remain available");
-
-    let town_states = if saved_towns.is_empty() {
-        BTreeMap::from([(town_id.clone(), TownState { visited: true })])
-    } else {
-        if saved_towns.len() != 1 || saved_towns[0].town_id != *town_id {
+    let formal_town_ids = world_town_ids(world).collect::<BTreeSet<_>>();
+    if formal_town_ids.is_empty() {
+        return (saved_towns.is_empty() && saved_shops.is_empty())
+            .then(|| (BTreeMap::new(), BTreeMap::new()))
+            .ok_or(CoreError::InvalidSave("town state is invalid"));
+    }
+    let mut town_states = BTreeMap::new();
+    for saved in saved_towns {
+        if !formal_town_ids.contains(saved.town_id.as_str())
+            || !saved.visited
+            || town_states
+                .insert(saved.town_id.clone(), TownState { visited: true })
+                .is_some()
+        {
             return Err(CoreError::InvalidSave("town state is invalid"));
         }
-        BTreeMap::from([(
-            town_id.clone(),
-            TownState {
-                visited: saved_towns[0].visited,
-            },
-        )])
-    };
+    }
+    let birth_town_id = world
+        .town_id
+        .as_deref()
+        .expect("validated town world must retain a birth town");
+    if !town_states.contains_key(birth_town_id)
+        || world_town_for_floor(world, content, current_floor_id)
+            .is_some_and(|town| !town_states.contains_key(&town.id))
+    {
+        return Err(CoreError::InvalidSave("town state is invalid"));
+    }
 
-    let expected_shop_ids = town.shop_ids.iter().cloned().collect::<BTreeSet<_>>();
     let mut shop_states = BTreeMap::new();
     for saved in saved_shops {
-        if !expected_shop_ids.contains(&saved.shop_id)
+        let Some(shop) = content.shop(&saved.shop_id) else {
+            return Err(CoreError::InvalidSave("shop state is invalid"));
+        };
+        if !formal_town_ids.contains(shop.town_id.as_str())
+            || !town_states.contains_key(&shop.town_id)
             || shop_states
                 .insert(saved.shop_id.clone(), restore_shop_state(saved, content)?)
                 .is_some()
@@ -224,13 +294,13 @@ pub(super) fn restore_town_and_shop_states(
             return Err(CoreError::InvalidSave("shop state is invalid"));
         }
     }
-    if saved_shops.is_empty() || shop_states.len() != expected_shop_ids.len() {
-        return Err(CoreError::InvalidSave("shop state is invalid"));
-    }
     for (shop_id, state) in &shop_states {
         let shop = content
             .shop(shop_id)
             .expect("validated town shop must remain available");
+        let town = content
+            .town(&shop.town_id)
+            .expect("validated shop town must remain available");
         if state.owner_id != shop.owner.id
             || (current_floor_id == town.floor_id
                 && player_position == position_from_content(shop.entrance_position)
@@ -238,6 +308,17 @@ pub(super) fn restore_town_and_shop_states(
         {
             return Err(CoreError::InvalidSave("shop state is invalid"));
         }
+    }
+    if let Some(town) = world_town_for_floor(world, content, current_floor_id)
+        && town.shop_ids.iter().any(|shop_id| {
+            let shop = content
+                .shop(shop_id)
+                .expect("validated town shop must remain available");
+            player_position == position_from_content(shop.entrance_position)
+                && !shop_states.get(shop_id).is_some_and(|state| state.visited)
+        })
+    {
+        return Err(CoreError::InvalidSave("shop state is invalid"));
     }
     Ok((town_states, shop_states))
 }
@@ -464,10 +545,15 @@ fn home_accessible(game: &Game, facility_id: &str) -> bool {
     let Some(facility) = game.content.town_facility(facility_id) else {
         return false;
     };
+    let Some(storage_id) = home_storage_id(&game.content, facility_id) else {
+        return false;
+    };
     let Some(town) = game.content.town(&facility.town_id) else {
         return false;
     };
-    game.current_floor_id == town.floor_id
+    game.current_town()
+        .is_some_and(|current| current.id == town.id)
+        && game.home_states.contains_key(storage_id)
         && game.player.position == position_from_content(facility.entrance_position)
 }
 
@@ -476,7 +562,8 @@ fn home_item_group(
     facility_id: &str,
     item_id: &str,
 ) -> Option<(ItemInstance, Vec<String>, u32)> {
-    let state = game.home_states.get(facility_id)?;
+    let storage_id = home_storage_id(&game.content, facility_id)?;
+    let state = game.home_states.get(storage_id)?;
     let anchor = state
         .inventory
         .iter()
@@ -552,7 +639,7 @@ fn grouped_inventory_for_home(game: &Game) -> Vec<(&ItemInstance, u32)> {
 
 fn transfer_inventory_group_to_home(
     game: &mut Game,
-    facility_id: &str,
+    storage_id: &str,
     item_ids: &[String],
     quantity: u32,
     mut split_id: Option<String>,
@@ -585,7 +672,7 @@ fn transfer_inventory_group_to_home(
             item
         };
         item.location = ItemLocation::Home {
-            facility_id: facility_id.to_owned(),
+            facility_id: storage_id.to_owned(),
         };
         transferred.push(item);
         remaining -= moved;
@@ -595,14 +682,14 @@ fn transfer_inventory_group_to_home(
 
 fn transfer_home_group_to_inventory(
     game: &mut Game,
-    facility_id: &str,
+    storage_id: &str,
     item_ids: &[String],
     quantity: u32,
     mut split_id: Option<String>,
 ) -> Vec<ItemInstance> {
     let state = game
         .home_states
-        .get_mut(facility_id)
+        .get_mut(storage_id)
         .expect("preflighted home must remain available");
     let mut remaining = quantity;
     let mut transferred = Vec::new();
@@ -689,7 +776,9 @@ fn shop_accessible(game: &Game, shop: &ShopDefinition) -> bool {
     let Some(town) = game.content.town(&shop.town_id) else {
         return false;
     };
-    game.current_floor_id == town.floor_id
+    game.current_town()
+        .is_some_and(|current| current.id == town.id)
+        && game.shop_states.contains_key(&shop.id)
         && game.player.position == position_from_content(shop.entrance_position)
 }
 
@@ -907,9 +996,10 @@ impl Game {
         item_id: &str,
         quantity: u32,
     ) -> Result<HomeTransferOutcome, &'static str> {
-        if self.content.town_facility(facility_id).is_none() {
+        let Some(storage_id) = home_storage_id(&self.content, facility_id).map(str::to_owned)
+        else {
             return Err("unknown-home");
-        }
+        };
         if !home_accessible(self, facility_id) {
             return Err("home-unreachable");
         }
@@ -929,14 +1019,14 @@ impl Game {
             .transpose()
             .map_err(|_| "item-id-exhausted")?;
         let deposited =
-            transfer_inventory_group_to_home(self, facility_id, &source_ids, quantity, split_id);
+            transfer_inventory_group_to_home(self, &storage_id, &source_ids, quantity, split_id);
         let destination_id = deposited
             .first()
             .expect("successful deposit must have a destination")
             .id
             .clone();
         self.home_states
-            .get_mut(facility_id)
+            .get_mut(&storage_id)
             .expect("preflighted home must remain available")
             .inventory
             .extend(deposited);
@@ -954,9 +1044,10 @@ impl Game {
         item_id: &str,
         quantity: u32,
     ) -> Result<HomeTransferOutcome, &'static str> {
-        if self.content.town_facility(facility_id).is_none() {
+        let Some(storage_id) = home_storage_id(&self.content, facility_id).map(str::to_owned)
+        else {
             return Err("unknown-home");
-        }
+        };
         if !home_accessible(self, facility_id) {
             return Err("home-unreachable");
         }
@@ -977,7 +1068,7 @@ impl Game {
         let split_required = group_requires_split(
             &self
                 .home_states
-                .get(facility_id)
+                .get(&storage_id)
                 .expect("preflighted home must remain available")
                 .inventory,
             &source_ids,
@@ -988,7 +1079,7 @@ impl Game {
             .transpose()
             .map_err(|_| "item-id-exhausted")?;
         let withdrawn =
-            transfer_home_group_to_inventory(self, facility_id, &source_ids, quantity, split_id);
+            transfer_home_group_to_inventory(self, &storage_id, &source_ids, quantity, split_id);
         let mut destination_ids = Vec::new();
         for item in withdrawn {
             destination_ids.extend(carry_home_withdrawal_item(self, item));
@@ -1182,14 +1273,7 @@ impl Game {
     }
 
     pub(super) fn maintain_shop_at_player(&mut self) -> Result<(), CoreError> {
-        let Some(world) = self.content.world(&self.world_id) else {
-            return Ok(());
-        };
-        let Some(town) = world
-            .town_id
-            .as_deref()
-            .and_then(|town_id| self.content.town(town_id))
-        else {
+        let Some(town) = self.current_town().cloned() else {
             return Ok(());
         };
         let Some(shop_id) = town
@@ -1257,66 +1341,93 @@ impl Game {
 }
 
 impl Game {
+    pub(super) fn town_at_wilderness_position(
+        &self,
+        position: Position,
+    ) -> Option<&TownDefinition> {
+        let world = self.content.world(&self.world_id)?;
+        world_town_at_position(world, &self.content, position)
+    }
+
+    pub(super) fn town_for_floor(&self, floor_id: &str) -> Option<&TownDefinition> {
+        let world = self.content.world(&self.world_id)?;
+        world_town_for_floor(world, &self.content, floor_id)
+    }
+
+    pub(super) fn current_town(&self) -> Option<&TownDefinition> {
+        self.town_for_floor(&self.current_floor_id)
+    }
+
     pub(super) fn mark_current_town_visited(&mut self) {
-        let world = self
-            .content
-            .world(&self.world_id)
-            .expect("active world must remain available");
-        if self.current_floor_id == world.initial_floor_id
-            && let Some(town_id) = &world.town_id
-            && let Some(state) = self.town_states.get_mut(town_id)
-        {
-            state.visited = true;
+        let Some(town) = self.current_town().cloned() else {
+            return;
+        };
+        self.town_states
+            .entry(town.id.clone())
+            .or_insert(TownState { visited: true })
+            .visited = true;
+        for storage_id in home_storage_ids(&town, &self.content) {
+            self.home_states
+                .entry(storage_id.to_owned())
+                .or_insert(HomeState {
+                    visited: false,
+                    inventory: Vec::new(),
+                });
         }
     }
 
-    pub(super) fn mark_shop_visited_at_player(&mut self) {
-        let world = self
-            .content
-            .world(&self.world_id)
-            .expect("active world must remain available");
-        let Some(town_id) = &world.town_id else {
-            return;
+    pub(super) fn mark_shop_visited_at_player(&mut self) -> Result<(), CoreError> {
+        let Some(town) = self.current_town().cloned() else {
+            return Ok(());
         };
-        let town = self
-            .content
-            .town(town_id)
-            .expect("validated world town must remain available");
-        if self.current_floor_id != town.floor_id {
-            return;
-        }
         for shop_id in &town.shop_ids {
             let shop = self
                 .content
                 .shop(shop_id)
-                .expect("validated town shop must remain available");
-            if self.player.position == position_from_content(shop.entrance_position)
-                && let Some(state) = self.shop_states.get_mut(shop_id)
-            {
+                .expect("validated town shop must remain available")
+                .clone();
+            if self.player.position != position_from_content(shop.entrance_position) {
+                continue;
+            }
+            if !self.shop_states.contains_key(shop_id) {
+                let inventory = roll_shop_stock(
+                    &shop,
+                    &self.content,
+                    &mut self.rng,
+                    &mut self.next_item_instance_serial,
+                    false,
+                )?;
+                self.shop_states.insert(
+                    shop_id.clone(),
+                    ShopState {
+                        visited: true,
+                        owner_id: shop.owner.id.clone(),
+                        inventory,
+                        last_maintenance_world_tick: self.world_tick,
+                    },
+                );
+            } else if let Some(state) = self.shop_states.get_mut(shop_id) {
                 state.visited = true;
             }
         }
-        for facility_id in town.facility_ids.iter().filter(|facility_id| {
-            self.content
-                .town_facility(facility_id)
-                .is_some_and(|facility| facility.category == TownFacilityCategory::Home)
-        }) {
-            let facility = self
-                .content
-                .town_facility(facility_id)
-                .expect("validated town facility must remain available");
+        for facility in home_facilities(&town, &self.content) {
             if self.player.position == position_from_content(facility.entrance_position)
-                && let Some(state) = self.home_states.get_mut(facility_id)
+                && let Some(state) = self.home_states.get_mut(
+                    facility
+                        .storage_id
+                        .as_deref()
+                        .expect("validated Home must retain a storage id"),
+                )
             {
                 state.visited = true;
             }
         }
+        Ok(())
     }
 
     pub(super) fn current_town_dto(&self) -> Option<TownDto> {
-        let world = self.content.world(&self.world_id)?;
-        let town = self.content.town(world.town_id.as_deref()?)?;
-        (self.current_floor_id == town.floor_id).then(|| TownDto {
+        let town = self.current_town()?;
+        Some(TownDto {
             id: town.id.clone(),
             name_key: town.name_key.clone(),
             description_key: town.description_key.clone(),
@@ -1329,15 +1440,7 @@ impl Game {
     }
 
     pub(super) fn current_shop_dtos(&self) -> Vec<ShopDto> {
-        let Some(world) = self.content.world(&self.world_id) else {
-            return Vec::new();
-        };
-        let Some(town) = world
-            .town_id
-            .as_deref()
-            .and_then(|town_id| self.content.town(town_id))
-            .filter(|town| self.current_floor_id == town.floor_id)
-        else {
+        let Some(town) = self.current_town() else {
             return Vec::new();
         };
         town.shop_ids
@@ -1347,12 +1450,11 @@ impl Game {
                 let entrance_position = position_from_content(shop.entrance_position);
                 let player_at_entrance = self.player.position == entrance_position;
                 let factor = shop_price_factor(self, shop);
-                let state = self
-                    .shop_states
-                    .get(&shop.id)
-                    .expect("validated shop state must remain available");
+                let state = self.shop_states.get(&shop.id);
                 let mut stock = if player_at_entrance {
-                    grouped_shop_items(&state.inventory)
+                    state
+                        .map(|state| grouped_shop_items(&state.inventory))
+                        .unwrap_or_default()
                         .into_iter()
                         .map(|(item, quantity)| {
                             let definition = self
@@ -1443,15 +1545,7 @@ impl Game {
     }
 
     pub(super) fn current_home_dtos(&self) -> Vec<HomeDto> {
-        let Some(world) = self.content.world(&self.world_id) else {
-            return Vec::new();
-        };
-        let Some(town) = world
-            .town_id
-            .as_deref()
-            .and_then(|town_id| self.content.town(town_id))
-            .filter(|town| self.current_floor_id == town.floor_id)
-        else {
+        let Some(town) = self.current_town() else {
             return Vec::new();
         };
         town.facility_ids
@@ -1461,12 +1555,14 @@ impl Game {
             .map(|facility| {
                 let entrance_position = position_from_content(facility.entrance_position);
                 let player_at_entrance = self.player.position == entrance_position;
-                let state = self
-                    .home_states
-                    .get(&facility.id)
-                    .expect("validated home state must remain available");
+                let state = facility
+                    .storage_id
+                    .as_deref()
+                    .and_then(|storage_id| self.home_states.get(storage_id));
                 let mut stored_items = if player_at_entrance {
-                    grouped_home_items(self, &state.inventory)
+                    state
+                        .map(|state| grouped_home_items(self, &state.inventory))
+                        .unwrap_or_default()
                         .into_iter()
                         .map(|(item, quantity)| {
                             let definition = self
@@ -1520,7 +1616,7 @@ impl Game {
                     description_key: facility.description_key.clone(),
                     entrance_position,
                     entrance_terrain_id: facility.entrance_terrain_id.clone(),
-                    visited: state.visited,
+                    visited: state.is_some_and(|state| state.visited),
                     player_at_entrance,
                     stored_items,
                     deposit_items,

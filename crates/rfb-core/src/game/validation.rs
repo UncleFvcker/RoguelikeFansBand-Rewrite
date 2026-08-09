@@ -34,13 +34,7 @@ impl Game {
             cancel_recall,
         } = action
             && (self.map_scale != rfb_protocol::MapScaleDto::Local
-                || (self.current_floor_id
-                    != self
-                        .content
-                        .world(&self.world_id)
-                        .expect("active world must remain available")
-                        .initial_floor_id
-                    && !self.is_wilderness_floor())
+                || (self.current_town().is_none() && !self.is_wilderness_floor())
                 || self
                     .content
                     .world(&self.world_id)
@@ -354,7 +348,10 @@ impl Game {
             return Err(CoreError::InvalidSave("floor identity is invalid"));
         }
         if self.is_wilderness_floor()
-            && (!self.stored_floors.contains_key(&world.initial_floor_id)
+            && (!self
+                .stored_floors
+                .values()
+                .any(|floor| self.town_for_floor(&floor.id).is_some())
                 || self.current_dungeon_instance_id.is_some()
                 || self.width != world.width
                 || self.height != world.height
@@ -407,91 +404,110 @@ impl Game {
                 "living unique actor state is duplicated",
             ));
         }
-        match world
-            .town_id
-            .as_deref()
-            .and_then(|town_id| self.content.town(town_id))
-        {
-            None if !self.town_states.is_empty()
+        let formal_town_ids = world
+            .wilderness
+            .iter()
+            .flat_map(|wilderness| &wilderness.locations)
+            .filter_map(|location| match location {
+                rfb_content::WildernessLocationDefinition::Town { town_id, .. } => {
+                    Some(town_id.as_str())
+                }
+                rfb_content::WildernessLocationDefinition::Dungeon { .. } => None,
+            })
+            .collect::<BTreeSet<_>>();
+        if formal_town_ids.is_empty() {
+            if !self.town_states.is_empty()
                 || !self.shop_states.is_empty()
-                || !self.home_states.is_empty() =>
+                || !self.home_states.is_empty()
             {
                 return Err(CoreError::InvalidSave("town state is invalid"));
             }
-            None => {}
-            Some(town) => {
-                let home_facility_ids = town
-                    .facility_ids
+        } else {
+            let birth_town_id = world
+                .town_id
+                .as_deref()
+                .expect("validated town world must retain a birth town");
+            if !self
+                .town_states
+                .get(birth_town_id)
+                .is_some_and(|state| state.visited)
+                || self.town_states.iter().any(|(town_id, state)| {
+                    !formal_town_ids.contains(town_id.as_str()) || !state.visited
+                })
+                || self
+                    .current_town()
+                    .is_some_and(|town| !self.town_states.contains_key(&town.id))
+            {
+                return Err(CoreError::InvalidSave("town state is invalid"));
+            }
+
+            let expected_home_storage_ids = self
+                .town_states
+                .keys()
+                .filter_map(|town_id| self.content.town(town_id))
+                .flat_map(|town| &town.facility_ids)
+                .filter_map(|facility_id| {
+                    self.content
+                        .town_facility(facility_id)
+                        .and_then(|facility| {
+                            (facility.category == rfb_content::TownFacilityCategory::Home)
+                                .then_some(facility.storage_id.as_deref())
+                                .flatten()
+                        })
+                })
+                .collect::<BTreeSet<_>>();
+            if self.home_states.len() != expected_home_storage_ids.len()
+                || expected_home_storage_ids
                     .iter()
-                    .filter(|facility_id| {
-                        self.content
-                            .town_facility(facility_id)
-                            .is_some_and(|facility| {
-                                facility.category == rfb_content::TownFacilityCategory::Home
-                            })
-                    })
-                    .collect::<BTreeSet<_>>();
-                if self.town_states.len() != 1
-                    || !self
-                        .town_states
-                        .get(&town.id)
-                        .is_some_and(|state| state.visited)
-                    || self.shop_states.len() != town.shop_ids.len()
-                    || town
-                        .shop_ids
-                        .iter()
-                        .any(|shop_id| !self.shop_states.contains_key(shop_id))
-                    || self.home_states.len() != home_facility_ids.len()
-                    || home_facility_ids
-                        .iter()
-                        .any(|facility_id| !self.home_states.contains_key(*facility_id))
-                {
-                    return Err(CoreError::InvalidSave("town state is invalid"));
-                }
-                if self.current_floor_id == town.floor_id
-                    && town.shop_ids.iter().any(|shop_id| {
-                        let shop = self
-                            .content
-                            .shop(shop_id)
-                            .expect("validated town shop must remain available");
-                        self.player.position == position_from_content(shop.entrance_position)
-                            && !self
-                                .shop_states
-                                .get(shop_id)
-                                .is_some_and(|state| state.visited)
-                    })
+                    .any(|storage_id| !self.home_states.contains_key(*storage_id))
+            {
+                return Err(CoreError::InvalidSave("home state is invalid"));
+            }
+
+            for (shop_id, state) in &self.shop_states {
+                let Some(shop) = self.content.shop(shop_id) else {
+                    return Err(CoreError::InvalidSave("shop state is invalid"));
+                };
+                if !formal_town_ids.contains(shop.town_id.as_str())
+                    || !self.town_states.contains_key(&shop.town_id)
+                    || state.owner_id != shop.owner.id
+                    || state.last_maintenance_world_tick > self.world_tick
                 {
                     return Err(CoreError::InvalidSave("shop state is invalid"));
                 }
-                if self.current_floor_id == town.floor_id
-                    && home_facility_ids.iter().any(|facility_id| {
-                        let facility = self
-                            .content
-                            .town_facility(facility_id)
-                            .expect("validated town facility must remain available");
-                        self.player.position == position_from_content(facility.entrance_position)
-                            && !self
-                                .home_states
-                                .get(*facility_id)
-                                .is_some_and(|state| state.visited)
-                    })
-                {
-                    return Err(CoreError::InvalidSave("home state is invalid"));
-                }
-                for shop_id in &town.shop_ids {
+            }
+            if let Some(town) = self.current_town() {
+                if town.shop_ids.iter().any(|shop_id| {
                     let shop = self
                         .content
                         .shop(shop_id)
                         .expect("validated town shop must remain available");
-                    let state = self
-                        .shop_states
-                        .get(shop_id)
-                        .expect("validated shop state must remain available");
-                    if state.owner_id != shop.owner.id
-                        || state.last_maintenance_world_tick > self.world_tick
-                    {
-                        return Err(CoreError::InvalidSave("shop state is invalid"));
-                    }
+                    self.player.position == position_from_content(shop.entrance_position)
+                        && !self
+                            .shop_states
+                            .get(shop_id)
+                            .is_some_and(|state| state.visited)
+                }) {
+                    return Err(CoreError::InvalidSave("shop state is invalid"));
+                }
+                if town.facility_ids.iter().any(|facility_id| {
+                    let facility = self
+                        .content
+                        .town_facility(facility_id)
+                        .expect("validated town facility must remain available");
+                    facility.category == rfb_content::TownFacilityCategory::Home
+                        && self.player.position == position_from_content(facility.entrance_position)
+                        && !self
+                            .home_states
+                            .get(
+                                facility
+                                    .storage_id
+                                    .as_deref()
+                                    .expect("validated Home must retain a storage id"),
+                            )
+                            .is_some_and(|state| state.visited)
+                }) {
+                    return Err(CoreError::InvalidSave("home state is invalid"));
                 }
             }
         }
@@ -517,6 +533,7 @@ impl Game {
                 .is_none_or(|turns| (1..=2_000).contains(&turns));
             let current_location_allows_pending = recall.remaining_turns.is_none()
                 || self.current_floor_id == world.initial_floor_id
+                || self.current_town().is_some()
                 || current_dungeon_id.is_some();
             if !destination_is_valid || !pending_is_valid || !current_location_allows_pending {
                 return Err(CoreError::InvalidSave("player recall state is invalid"));
@@ -789,7 +806,7 @@ impl Game {
                 }
             }
         }
-        for (facility_id, state) in &self.home_states {
+        for (storage_id, state) in &self.home_states {
             for item in &state.inventory {
                 let definition = self
                     .content
@@ -800,7 +817,7 @@ impl Game {
                 let location_is_valid = matches!(
                     &item.location,
                     ItemLocation::Home { facility_id: location_facility_id }
-                        if location_facility_id == facility_id
+                        if location_facility_id == storage_id
                 );
                 let affixes_are_valid = item.affix_ids.windows(2).all(|pair| pair[0] < pair[1])
                     && item
@@ -1168,7 +1185,8 @@ impl Game {
                             .is_some_and(|turn| score == self.campaign_score_at(turn))
                     });
                     if !campaign_victory_reached
-                        || self.current_floor_id != world.initial_floor_id
+                        || (self.current_floor_id != world.initial_floor_id
+                            && self.current_town().is_none())
                         || self.current_dungeon_instance_id.is_some()
                         || !valid_turns
                         || !valid_score

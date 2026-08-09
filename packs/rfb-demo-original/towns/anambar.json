@@ -1,0 +1,22 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/town.schema.json",
+  "formatVersion": 1,
+  "id": "demo.town.anambar",
+  "nameKey": "town-demo-anambar-name",
+  "descriptionKey": "town-demo-anambar-description",
+  "floorId": "demo.floor.anambar",
+  "facilityIds": [
+    "demo.town-facility.anambar-home"
+  ],
+  "shopIds": [
+    "demo.shop.anambar-alchemist",
+    "demo.shop.anambar-armoury",
+    "demo.shop.anambar-black-market",
+    "demo.shop.anambar-bookstore",
+    "demo.shop.anambar-general-store",
+    "demo.shop.anambar-inn",
+    "demo.shop.anambar-magic-shop",
+    "demo.shop.anambar-temple",
+    "demo.shop.anambar-weaponsmith"
+  ]
+}

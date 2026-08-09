@@ -1142,12 +1142,7 @@ impl Game {
         let Some(world) = self.content.world(&self.world_id) else {
             return Vec::new();
         };
-        let Some(town) = world
-            .town_id
-            .as_deref()
-            .and_then(|town_id| self.content.town(town_id))
-            .filter(|town| self.current_floor_id == town.floor_id)
-        else {
+        let Some(town) = self.current_town() else {
             return Vec::new();
         };
         town.facility_ids

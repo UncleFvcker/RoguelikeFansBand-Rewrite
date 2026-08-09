@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/shop.schema.json",
+  "formatVersion": 1,
+  "id": "demo.shop.anambar-bookstore",
+  "nameKey": "shop-demo-anambar-bookstore-name",
+  "descriptionKey": "shop-demo-anambar-bookstore-description",
+  "townId": "demo.town.anambar",
+  "category": "bookstore",
+  "entrancePosition": { "x": 14, "y": 9 },
+  "entranceTerrainId": "demo.terrain.bookstore-entrance",
+  "owner": {
+    "id": "demo.shop-owner.anambar-doraf",
+    "nameKey": "shop-owner-demo-outpost-doraf-name",
+    "raceId": "demo.race.rfb-human",
+    "greedPercent": 108,
+    "purchasePriceCap": 10000
+  },
+  "stock": [
+    { "itemKindId": "demo.item.stench-of-death", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1 },
+    { "itemKindId": "demo.item.sepulchral-ways", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1 }
+  ],
+  "maintenance": { "intervalWorldTicks": 10000 }
+}

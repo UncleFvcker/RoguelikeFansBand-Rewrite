@@ -12,6 +12,8 @@ const MAGIC_SHOP_ID: &str = "demo.shop.outpost-magic-shop";
 const BLACK_MARKET_ID: &str = "demo.shop.outpost-black-market";
 const BOOKSTORE_ID: &str = "demo.shop.outpost-bookstore";
 const HOME_ID: &str = "demo.town-facility.outpost-home";
+const ANAMBAR_HOME_ID: &str = "demo.town-facility.anambar-home";
+const ANAMBAR_INN_ID: &str = "demo.shop.anambar-inn";
 
 fn projected_shop<'a>(shops: &'a [ShopDto], shop_id: &str) -> &'a ShopDto {
     shops
@@ -24,7 +26,7 @@ fn store_game(seed: u64) -> Game {
     let mut game = Game::new_warrens_journey_with_build(seed, "demo.build.warrior")
         .expect("Warrens game should start");
     game.player.position = Position { x: 32, y: 13 };
-    game.mark_shop_visited_at_player();
+    game.mark_shop_visited_at_player().unwrap();
     game
 }
 
@@ -119,7 +121,7 @@ fn home_deposit_withdraw_grouping_and_save_are_authoritative() {
     let mut game = Game::new_warrens_journey_with_build(42, "demo.build.warrior")
         .expect("Warrens game should start");
     game.player.position = Position { x: 42, y: 13 };
-    game.mark_shop_visited_at_player();
+    game.mark_shop_visited_at_player().unwrap();
     let home = game.snapshot().homes[0].clone();
     assert!(home.visited);
     assert!(home.player_at_entrance);
@@ -201,11 +203,100 @@ fn home_deposit_withdraw_grouping_and_save_are_authoritative() {
 }
 
 #[test]
+fn anambar_home_uses_the_outpost_home_inventory() {
+    let mut game = Game::new_warrens_journey_with_build(42, "demo.build.warrior")
+        .expect("Warrens game should start");
+    game.player.position = Position { x: 42, y: 13 };
+    game.mark_shop_visited_at_player().unwrap();
+    let ration = game.snapshot().homes[0]
+        .deposit_items
+        .iter()
+        .find(|item| item.kind_id == "demo.item.ration-of-food")
+        .expect("Warrior should carry rations")
+        .clone();
+    dispatch_next(
+        &mut game,
+        GameCommand::DepositAtHome {
+            facility_id: HOME_ID.to_owned(),
+            item_id: ration.id,
+            quantity: 1,
+        },
+    );
+
+    dispatch_next(
+        &mut game,
+        GameCommand::EnterWorldMap {
+            leave_pets: false,
+            cancel_recall: false,
+        },
+    );
+    game.wilderness_position = Some(Position { x: 26, y: 39 });
+    dispatch_next(&mut game, GameCommand::LeaveWorldMap);
+    assert_eq!(game.current_floor_id, "demo.floor.anambar");
+    assert_eq!(game.home_states.len(), 1);
+    assert!(game.home_states.contains_key(HOME_ID));
+    let town_snapshot = game.snapshot();
+    assert_eq!(town_snapshot.shops.len(), 9);
+    assert!(
+        town_snapshot
+            .shops
+            .iter()
+            .all(|shop| !shop.visited && shop.stock.is_empty())
+    );
+    assert!(
+        !game
+            .shop_states
+            .keys()
+            .any(|shop_id| shop_id.starts_with("demo.shop.anambar-"))
+    );
+
+    game.player.position = Position { x: 18, y: 9 };
+    game.mark_shop_visited_at_player().unwrap();
+    let inn = projected_shop(&game.snapshot().shops, ANAMBAR_INN_ID).clone();
+    assert!(inn.visited && inn.player_at_entrance && !inn.stock.is_empty());
+    assert!(inn.stock.iter().all(|item| {
+        [
+            "demo.item.ration-of-food",
+            "demo.item.water-potion",
+            "demo.item.apple-juice",
+        ]
+        .contains(&item.kind_id.as_str())
+    }));
+
+    game.player.position = Position { x: 10, y: 9 };
+    game.mark_shop_visited_at_player().unwrap();
+    let home = game
+        .snapshot()
+        .homes
+        .into_iter()
+        .find(|home| home.id == ANAMBAR_HOME_ID)
+        .expect("Anambar Home should be projected");
+    let stored = home
+        .stored_items
+        .iter()
+        .find(|item| item.kind_id == "demo.item.ration-of-food")
+        .expect("Outpost deposit should be visible in Anambar");
+    dispatch_next(
+        &mut game,
+        GameCommand::WithdrawFromHome {
+            facility_id: ANAMBAR_HOME_ID.to_owned(),
+            item_id: stored.id.clone(),
+            quantity: 1,
+        },
+    );
+
+    assert!(game.home_states[HOME_ID].inventory.is_empty());
+    let restored = Game::from_save(game.to_save()).expect("shared Home should round-trip");
+    assert_eq!(restored.current_floor_id, "demo.floor.anambar");
+    assert_eq!(restored.home_states, game.home_states);
+}
+
+#[test]
 fn overburdened_player_can_withdraw_from_home() {
     let mut game = Game::new_warrens_journey_with_build(42, "demo.build.warrior")
         .expect("Warrens game should start");
     game.player.position = Position { x: 42, y: 13 };
-    game.mark_shop_visited_at_player();
+    game.mark_shop_visited_at_player().unwrap();
     support::give_inventory_item(&mut game, "test.heavy-stack", "demo.item.burdened-mail");
     game.items
         .iter_mut()
@@ -326,20 +417,28 @@ fn runtime_town_validation_requires_complete_home_state() {
     game.home_states.clear();
     assert!(matches!(
         game.validate_loaded_state(),
-        Err(CoreError::InvalidSave("town state is invalid"))
+        Err(CoreError::InvalidSave("home state is invalid"))
     ));
 }
 
 #[test]
-fn shop_state_is_required_for_development_saves() {
+fn missing_unentered_shop_state_is_created_on_first_entry() {
     let game = Game::new_warrens_journey_with_build(42, "demo.build.warrior")
         .expect("Warrens game should start");
     let mut payload = game.to_save();
     payload.shop_states.clear();
-    assert!(matches!(
-        Game::from_save(payload),
-        Err(CoreError::InvalidSave("shop state is invalid"))
-    ));
+    let mut restored = Game::from_save(payload).expect("unentered shop state may remain sparse");
+    assert!(restored.shop_states.is_empty());
+
+    restored.player.position = Position { x: 32, y: 14 };
+    let update = dispatch_next(
+        &mut restored,
+        GameCommand::Move {
+            direction: Direction::North,
+        },
+    );
+    assert!(restored.shop_states.contains_key(GENERAL_STORE_ID));
+    assert!(projected_shop(&update.shops, GENERAL_STORE_ID).visited);
 }
 
 #[test]
@@ -403,7 +502,7 @@ fn black_market_uses_original_warrior_markup_and_markdown() {
         .expect("Warrens game should start");
     game.gold = 1_000_000;
     game.player.position = Position { x: 55, y: 19 };
-    game.mark_shop_visited_at_player();
+    game.mark_shop_visited_at_player().unwrap();
     let snapshot = game.snapshot();
     let shop = projected_shop(&snapshot.shops, BLACK_MARKET_ID);
     assert!(shop.visited);
@@ -435,7 +534,7 @@ fn temple_purchase_and_alchemist_visit_use_independent_shop_state() {
         .expect("Warrens game should start");
     game.gold = 1_000;
     game.player.position = Position { x: 45, y: 19 };
-    game.mark_shop_visited_at_player();
+    game.mark_shop_visited_at_player().unwrap();
     let temple_snapshot = game.snapshot();
     let temple = projected_shop(&temple_snapshot.shops, TEMPLE_ID);
     assert!(temple.visited);
@@ -474,7 +573,7 @@ fn temple_purchase_and_alchemist_visit_use_independent_shop_state() {
     assert_eq!(game.shop_states[ALCHEMIST_ID], alchemist_before);
 
     game.player.position = Position { x: 53, y: 13 };
-    game.mark_shop_visited_at_player();
+    game.mark_shop_visited_at_player().unwrap();
     let snapshot = game.snapshot();
     let alchemist = projected_shop(&snapshot.shops, ALCHEMIST_ID);
     assert!(alchemist.visited);
@@ -501,7 +600,7 @@ fn bookstore_purchase_can_supply_an_original_spellbook_for_study() {
     game.items
         .retain(|item| item.location != ItemLocation::Inventory);
     game.player.position = Position { x: 55, y: 13 };
-    game.mark_shop_visited_at_player();
+    game.mark_shop_visited_at_player().unwrap();
 
     let shop = projected_shop(&game.snapshot().shops, BOOKSTORE_ID).clone();
     assert!(shop.visited);
@@ -581,7 +680,7 @@ fn shared_forge_shops_group_stock_and_sell_equipment_that_can_be_used() {
         .inventory
         .push(extra_arrows);
     game.player.position = Position { x: 34, y: 19 };
-    game.mark_shop_visited_at_player();
+    game.mark_shop_visited_at_player().unwrap();
 
     let weaponsmith = projected_shop(&game.snapshot().shops, WEAPONSMITH_ID).clone();
     assert!(weaponsmith.visited);
@@ -607,7 +706,7 @@ fn shared_forge_shops_group_stock_and_sell_equipment_that_can_be_used() {
     );
 
     game.player.position = Position { x: 30, y: 19 };
-    game.mark_shop_visited_at_player();
+    game.mark_shop_visited_at_player().unwrap();
     let armoury = projected_shop(&game.snapshot().shops, ARMOURY_ID).clone();
     assert!(armoury.visited);
     assert!(armoury.player_at_entrance);
@@ -660,7 +759,7 @@ fn magic_shop_purchase_device_use_and_save_are_authoritative() {
         .expect("Warrens game should start");
     game.gold = 10_000;
     game.player.position = Position { x: 57, y: 13 };
-    game.mark_shop_visited_at_player();
+    game.mark_shop_visited_at_player().unwrap();
 
     let shop = projected_shop(&game.snapshot().shops, MAGIC_SHOP_ID).clone();
     assert!(shop.visited);

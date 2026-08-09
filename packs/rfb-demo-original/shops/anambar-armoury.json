@@ -1,0 +1,41 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/shop.schema.json",
+  "formatVersion": 1,
+  "id": "demo.shop.anambar-armoury",
+  "nameKey": "shop-demo-anambar-armoury-name",
+  "descriptionKey": "shop-demo-anambar-armoury-description",
+  "townId": "demo.town.anambar",
+  "category": "armoury",
+  "entrancePosition": { "x": 6, "y": 1 },
+  "entranceTerrainId": "demo.terrain.armoury-entrance",
+  "owner": {
+    "id": "demo.shop-owner.anambar-dagro",
+    "nameKey": "shop-owner-demo-outpost-dagro-name",
+    "raceId": "demo.race.rfb-human",
+    "greedPercent": 111,
+    "purchasePriceCap": 20000
+  },
+  "stock": [
+    { "itemKindId": "demo.item.cloak", "initialMinimum": 1, "initialMaximum": 2, "maintenanceMinimum": 1, "maintenanceMaximum": 2 },
+    { "itemKindId": "demo.item.robe", "initialMinimum": 1, "initialMaximum": 2, "maintenanceMinimum": 1, "maintenanceMaximum": 2 },
+    { "itemKindId": "demo.item.padded-armour", "initialMinimum": 1, "initialMaximum": 2, "maintenanceMinimum": 1, "maintenanceMaximum": 2 },
+    { "itemKindId": "demo.item.knit-cap", "initialMinimum": 1, "initialMaximum": 2, "maintenanceMinimum": 1, "maintenanceMaximum": 2 },
+    { "itemKindId": "demo.item.soft-leather-armour", "initialMinimum": 1, "initialMaximum": 2, "maintenanceMinimum": 1, "maintenanceMaximum": 2 },
+    { "itemKindId": "demo.item.soft-studded-leather", "initialMinimum": 1, "initialMaximum": 2, "maintenanceMinimum": 1, "maintenanceMaximum": 2 },
+    { "itemKindId": "demo.item.hard-leather-armour", "initialMinimum": 1, "initialMaximum": 2, "maintenanceMinimum": 1, "maintenanceMaximum": 2 },
+    { "itemKindId": "demo.item.hard-studded-leather", "initialMinimum": 1, "initialMaximum": 2, "maintenanceMinimum": 1, "maintenanceMaximum": 2 },
+    { "itemKindId": "demo.item.pair-of-hard-leather-boots", "initialMinimum": 1, "initialMaximum": 2, "maintenanceMinimum": 1, "maintenanceMaximum": 2 },
+    { "itemKindId": "demo.item.cord-armour", "initialMinimum": 1, "initialMaximum": 2, "maintenanceMinimum": 1, "maintenanceMaximum": 2 },
+    { "itemKindId": "demo.item.metal-cap", "initialMinimum": 1, "initialMaximum": 2, "maintenanceMinimum": 1, "maintenanceMaximum": 2 },
+    { "itemKindId": "demo.item.small-metal-shield", "initialMinimum": 1, "initialMaximum": 2, "maintenanceMinimum": 1, "maintenanceMaximum": 2 },
+    { "itemKindId": "demo.item.large-leather-shield", "initialMinimum": 1, "initialMaximum": 2, "maintenanceMinimum": 1, "maintenanceMaximum": 2 },
+    { "itemKindId": "demo.item.leather-gloves", "initialMinimum": 1, "initialMaximum": 2, "maintenanceMinimum": 1, "maintenanceMaximum": 2 },
+    { "itemKindId": "demo.item.set-of-studded-leather-gloves", "initialMinimum": 1, "initialMaximum": 2, "maintenanceMinimum": 1, "maintenanceMaximum": 2 },
+    { "itemKindId": "demo.item.set-of-gauntlets", "initialMinimum": 1, "initialMaximum": 2, "maintenanceMinimum": 1, "maintenanceMaximum": 2 },
+    { "itemKindId": "demo.item.soft-leather-boots", "initialMinimum": 1, "initialMaximum": 2, "maintenanceMinimum": 1, "maintenanceMaximum": 2 },
+    { "itemKindId": "demo.item.hard-leather-cap", "initialMinimum": 1, "initialMaximum": 2, "maintenanceMinimum": 1, "maintenanceMaximum": 2 },
+    { "itemKindId": "demo.item.small-leather-shield", "initialMinimum": 1, "initialMaximum": 2, "maintenanceMinimum": 1, "maintenanceMaximum": 2 },
+    { "itemKindId": "demo.item.chain-mail", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1 }
+  ],
+  "maintenance": { "intervalWorldTicks": 10000 }
+}

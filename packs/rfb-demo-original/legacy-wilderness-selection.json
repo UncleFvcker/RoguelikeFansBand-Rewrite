@@ -1,11 +1,16 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "worldId": "demo.world.warrens-journey",
   "towns": [
     {
       "sourceIndex": 1,
       "sourceName": "前哨站",
       "id": "demo.town.outpost"
+    },
+    {
+      "sourceIndex": 5,
+      "sourceName": "阿南巴",
+      "id": "demo.town.anambar"
     }
   ],
   "dungeons": [
@@ -14,5 +19,86 @@
       "sourceName": "Warrens",
       "id": "demo.dungeon.warrens"
     }
-  ]
+  ],
+  "townPlans": [
+    {
+      "sourceIndex": 5,
+      "sourceName": "阿南巴",
+      "id": "demo.town.anambar",
+      "position": { "x": 26, "y": 39 },
+      "sourceFile": "lib/edit/t_ana.txt",
+      "standardFacilities": [
+        { "symbol": "1", "sourceTag": "GENERAL_STORE" },
+        { "symbol": "2", "sourceTag": "ARMOURY" },
+        { "symbol": "3", "sourceTag": "WEAPON_SMITHS" },
+        { "symbol": "4", "sourceTag": "TEMPLE" },
+        { "symbol": "5", "sourceTag": "ALCHEMY_SHOP" },
+        { "symbol": "6", "sourceTag": "MAGIC_SHOP" },
+        { "symbol": "7", "sourceTag": "BLACK_MARKET" },
+        { "symbol": "8", "sourceTag": "HOME" },
+        { "symbol": "9", "sourceTag": "BOOKSTORE" }
+      ],
+      "inn": {
+        "buildingIndex": 4,
+        "name": "旅店",
+        "ownerName": "奥托",
+        "ownerRace": "魔像",
+        "access": "Member",
+        "services": [
+          { "actionIndex": 0, "name": "住宿一晚", "minimumCost": 25, "maximumCost": 25, "command": "r", "actionId": 17, "restriction": 0 },
+          { "actionIndex": 1, "name": "购买食物和饮料", "minimumCost": 3, "maximumCost": 3, "command": "f", "actionId": 18, "restriction": 1 },
+          { "actionIndex": 2, "name": "打听传闻", "minimumCost": 10, "maximumCost": 10, "command": "u", "actionId": 19, "restriction": 0 },
+          { "actionIndex": 3, "name": "传送到其他城镇", "minimumCost": 500, "maximumCost": 500, "command": "m", "actionId": 42, "restriction": 0 },
+          { "actionIndex": 4, "name": "询问你的声望", "minimumCost": 1, "maximumCost": 1, "command": "a", "actionId": 55, "restriction": 0 }
+        ]
+      }
+    }
+  ],
+  "plannedDungeons": [
+    {
+      "sourceIndex": 3,
+      "sourceName": "Orc cave",
+      "id": "demo.dungeon.orc-cave",
+      "position": { "x": 30, "y": 45 },
+      "minimumDepth": 15,
+      "maximumDepth": 32,
+      "monsterDivisor": 16,
+      "generationFlags": [
+        "CAVE",
+        "WATER_RIVER",
+        "CAVERN",
+        "LAKE_TREE",
+        "DESTROY",
+        "BIG"
+      ],
+      "monsterPreferences": [
+        "ORC",
+        "R_CHAR_oOTC",
+        "ANIMAL",
+        "TROLL"
+      ],
+      "guardian": {
+        "sourceIndex": 1185,
+        "sourceName": "Othrod, Lord of the Orcs",
+        "chineseName": "半兽人之王奥斯罗德",
+        "level": 32
+      },
+      "finalObject": { "tval": 45, "sval": 0 },
+      "finalEgoSourceIndex": 206,
+      "substituteSourceIndex": 36
+    }
+  ],
+  "gaps": {
+    "orcCaveMonsters": {
+      "minimumLevel": 21,
+      "maximumLevel": 32,
+      "status": "deferred"
+    },
+    "orcCaveRewards": [
+      { "kind": "dungeon-loot", "status": "audit-required" },
+      { "kind": "guardian", "sourceIndex": 1185, "status": "deferred" },
+      { "kind": "final-object", "tval": 45, "sval": 0, "status": "deferred" },
+      { "kind": "final-ego", "sourceIndex": 206, "status": "deferred" }
+    ]
+  }
 }

@@ -68,6 +68,13 @@
         "null"
       ]
     },
+    "storageId": {
+      "default": null,
+      "type": [
+        "string",
+        "null"
+      ]
+    },
     "taskIds": {
       "default": [],
       "items": {

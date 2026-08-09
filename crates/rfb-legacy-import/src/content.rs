@@ -36,6 +36,9 @@ const M_INFO_SOURCE: &str = "lib/edit/m_info.txt";
 const S_INFO_SOURCE: &str = "lib/edit/s_info.txt";
 const W_INFO_SOURCE: &str = "lib/edit/w_info.txt";
 const D_INFO_SOURCE: &str = "lib/edit/d_info.txt";
+const T_INFO_SOURCE: &str = "lib/edit/t_info.txt";
+const T_PREF_SOURCE: &str = "lib/edit/t_pref.txt";
+const R_NAME_ZH_SOURCE: &str = "src/monster_name_zh.inc";
 const LEGACY_DROP_TABLE_ID: &str = "rfb-legacy.loot-table.monster-drops";
 const LEGACY_WARRIOR_DROP_TABLE_ID: &str = "rfb-legacy.loot-table.monster-drops-warrior";
 const DEMO_DROP_TABLE_ID: &str = "demo.loot-table.warrens";
@@ -205,6 +208,9 @@ struct DemoWildernessSelection {
     world_id: String,
     towns: Vec<DemoWildernessLocationSelection>,
     dungeons: Vec<DemoWildernessLocationSelection>,
+    town_plans: Vec<DemoWildernessTownPlan>,
+    planned_dungeons: Vec<DemoWildernessDungeonPlan>,
+    gaps: DemoWildernessGapPlan,
 }
 
 #[derive(Debug, Deserialize)]
@@ -213,6 +219,121 @@ struct DemoWildernessLocationSelection {
     source_index: u32,
     source_name: String,
     id: String,
+}
+
+#[derive(Debug, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct DemoWildernessPosition {
+    x: u16,
+    y: u16,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct DemoWildernessTownPlan {
+    source_index: u32,
+    source_name: String,
+    id: String,
+    position: DemoWildernessPosition,
+    source_file: String,
+    standard_facilities: Vec<DemoTownFacilityPlan>,
+    inn: DemoTownInnPlan,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct DemoTownFacilityPlan {
+    symbol: char,
+    source_tag: String,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct DemoTownInnPlan {
+    building_index: u16,
+    name: String,
+    owner_name: String,
+    owner_race: String,
+    access: String,
+    services: Vec<DemoTownInnServicePlan>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct DemoTownInnServicePlan {
+    action_index: u16,
+    name: String,
+    minimum_cost: u32,
+    maximum_cost: u32,
+    command: char,
+    action_id: u16,
+    restriction: u16,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct DemoWildernessDungeonPlan {
+    source_index: u32,
+    source_name: String,
+    id: String,
+    position: DemoWildernessPosition,
+    minimum_depth: u16,
+    maximum_depth: u16,
+    monster_divisor: u16,
+    generation_flags: Vec<String>,
+    monster_preferences: Vec<String>,
+    guardian: DemoDungeonGuardianPlan,
+    final_object: DemoDungeonObjectPlan,
+    final_ego_source_index: u32,
+    substitute_source_index: u32,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct DemoDungeonGuardianPlan {
+    source_index: u32,
+    source_name: String,
+    chinese_name: String,
+    level: u16,
+}
+
+#[derive(Debug, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct DemoDungeonObjectPlan {
+    tval: u16,
+    sval: u16,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct DemoWildernessGapPlan {
+    orc_cave_monsters: DemoDungeonMonsterGap,
+    orc_cave_rewards: Vec<DemoDungeonRewardGap>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct DemoDungeonMonsterGap {
+    minimum_level: u16,
+    maximum_level: u16,
+    status: DemoWildernessGapStatus,
+}
+
+#[derive(Debug, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+#[serde(rename_all = "kebab-case")]
+enum DemoWildernessGapStatus {
+    Deferred,
+    AuditRequired,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct DemoDungeonRewardGap {
+    kind: String,
+    source_index: Option<u32>,
+    tval: Option<u16>,
+    sval: Option<u16>,
+    status: DemoWildernessGapStatus,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -230,6 +351,16 @@ struct LegacyWildernessLocation {
     name: String,
     x: u16,
     y: u16,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+struct LegacyDungeonRecord {
+    name: String,
+    position: Option<(u16, u16)>,
+    minimum_depth: Option<u16>,
+    maximum_depth: Option<u16>,
+    flags: Vec<String>,
+    monster_preferences: Vec<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -1180,10 +1311,10 @@ fn parse_w_info(text: &str) -> Result<LegacyWilderness, LegacyImportError> {
     })
 }
 
-fn parse_dungeon_locations(
+fn parse_dungeon_records(
     text: &str,
-) -> Result<BTreeMap<u32, LegacyWildernessLocation>, LegacyImportError> {
-    let mut records = BTreeMap::<u32, (String, Option<(u16, u16)>)>::new();
+) -> Result<BTreeMap<u32, LegacyDungeonRecord>, LegacyImportError> {
+    let mut records = BTreeMap::<u32, LegacyDungeonRecord>::new();
     let mut current = None;
     for (line_index, raw_line) in text.lines().enumerate() {
         let line_number = line_index + 1;
@@ -1192,7 +1323,16 @@ fn parse_dungeon_locations(
             let mut fields = value.splitn(2, ':');
             let index = parse_number(D_INFO_SOURCE, line_number, "N.index", fields.next())?;
             let name = required_field(D_INFO_SOURCE, line_number, "N.name", fields.next())?;
-            if records.insert(index, (name.to_owned(), None)).is_some() {
+            if records
+                .insert(
+                    index,
+                    LegacyDungeonRecord {
+                        name: name.to_owned(),
+                        ..LegacyDungeonRecord::default()
+                    },
+                )
+                .is_some()
+            {
                 return Err(content_parse_error(
                     D_INFO_SOURCE,
                     line_number,
@@ -1218,7 +1358,7 @@ fn parse_dungeon_locations(
             let record = records
                 .get_mut(&index)
                 .expect("current dungeon record must exist");
-            if record.1.replace((x, y)).is_some() {
+            if record.position.replace((x, y)).is_some() {
                 return Err(content_parse_error(
                     D_INFO_SOURCE,
                     line_number,
@@ -1227,14 +1367,103 @@ fn parse_dungeon_locations(
                     "duplicate dungeon position",
                 ));
             }
+        } else if let Some(value) = line.strip_prefix("W:") {
+            let index = current.ok_or_else(|| {
+                content_parse_error(
+                    D_INFO_SOURCE,
+                    line_number,
+                    "W",
+                    value,
+                    "depth appears before a dungeon record",
+                )
+            })?;
+            let fields = value.split(':').collect::<Vec<_>>();
+            if fields.len() < 2 {
+                return Err(content_parse_error(
+                    D_INFO_SOURCE,
+                    line_number,
+                    "W",
+                    value,
+                    "expected at least minimum and maximum depth",
+                ));
+            }
+            let record = records
+                .get_mut(&index)
+                .expect("current dungeon record must exist");
+            if record.minimum_depth.is_some() || record.maximum_depth.is_some() {
+                return Err(content_parse_error(
+                    D_INFO_SOURCE,
+                    line_number,
+                    "W",
+                    value,
+                    "duplicate dungeon depth",
+                ));
+            }
+            record.minimum_depth = Some(parse_number(
+                D_INFO_SOURCE,
+                line_number,
+                "W.minimumDepth",
+                fields.first().copied(),
+            )?);
+            record.maximum_depth = Some(parse_number(
+                D_INFO_SOURCE,
+                line_number,
+                "W.maximumDepth",
+                fields.get(1).copied(),
+            )?);
+        } else if let Some(value) = line.strip_prefix("F:") {
+            let index = current.ok_or_else(|| {
+                content_parse_error(
+                    D_INFO_SOURCE,
+                    line_number,
+                    "F",
+                    value,
+                    "flag appears before a dungeon record",
+                )
+            })?;
+            records
+                .get_mut(&index)
+                .expect("current dungeon record must exist")
+                .flags
+                .extend(
+                    value
+                        .split('|')
+                        .map(str::trim)
+                        .filter(|flag| !flag.is_empty())
+                        .map(str::to_owned),
+                );
+        } else if let Some(value) = line.strip_prefix("M:") {
+            let index = current.ok_or_else(|| {
+                content_parse_error(
+                    D_INFO_SOURCE,
+                    line_number,
+                    "M",
+                    value,
+                    "monster preference appears before a dungeon record",
+                )
+            })?;
+            records
+                .get_mut(&index)
+                .expect("current dungeon record must exist")
+                .monster_preferences
+                .extend(
+                    value
+                        .split('|')
+                        .map(str::trim)
+                        .filter(|flag| !flag.is_empty())
+                        .map(str::to_owned),
+                );
         }
     }
-    Ok(records
-        .into_iter()
-        .filter_map(|(index, (name, position))| {
-            position.map(|(x, y)| (index, LegacyWildernessLocation { name, x, y }))
-        })
-        .collect())
+    Ok(records)
+}
+
+fn dungeon_location(record: &LegacyDungeonRecord) -> Option<LegacyWildernessLocation> {
+    record.position.map(|(x, y)| LegacyWildernessLocation {
+        name: record.name.clone(),
+        x,
+        y,
+    })
 }
 
 fn list_legacy_c_sources(source: &Path, commit: &str) -> Result<Vec<String>, LegacyImportError> {
@@ -10103,6 +10332,329 @@ fn replace_wilderness_property(
     Ok(output)
 }
 
+fn invalid_wilderness_selection(message: impl Into<String>) -> LegacyImportError {
+    LegacyImportError::InvalidDemoWildernessSelection(message.into())
+}
+
+fn selected_town_source_file(text: &str, source_index: u32) -> Option<&str> {
+    let selector = format!("?:[EQU $TOWN {source_index}]");
+    let mut selected = false;
+    for line in text.lines().map(str::trim) {
+        if line.starts_with("?:") {
+            selected = line == selector;
+        } else if selected && let Some(path) = line.strip_prefix("%:") {
+            return Some(path);
+        }
+    }
+    None
+}
+
+fn town_feature_tags(text: &str) -> BTreeMap<char, String> {
+    text.lines()
+        .filter_map(|line| {
+            let rest = line.trim().strip_prefix("L:")?;
+            let (symbol, tag) = rest.split_once(':')?;
+            let mut chars = symbol.chars();
+            let symbol = chars.next()?;
+            if chars.next().is_some() {
+                return None;
+            }
+            Some((symbol, tag.trim().to_owned()))
+        })
+        .collect()
+}
+
+fn source_has_town_symbol(text: &str, symbol: char) -> bool {
+    text.lines()
+        .filter_map(|line| line.trim_end().strip_prefix("M:"))
+        .any(|row| row.contains(symbol))
+}
+
+fn dungeon_flag_number(record: &LegacyDungeonRecord, prefix: &str) -> Option<u32> {
+    record
+        .flags
+        .iter()
+        .find_map(|flag| flag.strip_prefix(prefix)?.parse().ok())
+}
+
+fn dungeon_final_object(record: &LegacyDungeonRecord) -> Option<DemoDungeonObjectPlan> {
+    let value = record
+        .flags
+        .iter()
+        .find_map(|flag| flag.strip_prefix("FINAL_OBJECT_"))?;
+    let (tval, sval) = value.split_once('_')?;
+    Some(DemoDungeonObjectPlan {
+        tval: tval.parse().ok()?,
+        sval: sval.parse().ok()?,
+    })
+}
+
+fn validate_demo_wilderness_plans(
+    source: &Path,
+    source_commit: &str,
+    selection: &DemoWildernessSelection,
+    wilderness: &LegacyWilderness,
+    dungeons: &BTreeMap<u32, LegacyDungeonRecord>,
+) -> Result<(), LegacyImportError> {
+    let t_info = read_legacy_object_at(source, source_commit, T_INFO_SOURCE)?;
+    let t_pref = read_legacy_object_at(source, source_commit, T_PREF_SOURCE)?;
+    let feature_tags = town_feature_tags(&t_pref);
+
+    for town in &selection.town_plans {
+        if !selection
+            .towns
+            .iter()
+            .any(|selected| selected.source_index == town.source_index && selected.id == town.id)
+        {
+            return Err(invalid_wilderness_selection(format!(
+                "town plan {} is not active",
+                town.id
+            )));
+        }
+        let location = wilderness.towns.get(&town.source_index).ok_or_else(|| {
+            invalid_wilderness_selection(format!(
+                "unknown town-plan wilderness index {}",
+                town.source_index
+            ))
+        })?;
+        if location.name != town.source_name
+            || (location.x, location.y) != (town.position.x, town.position.y)
+        {
+            return Err(invalid_wilderness_selection(format!(
+                "town plan {} source name or position drifted",
+                town.id
+            )));
+        }
+        let source_include = town
+            .source_file
+            .strip_prefix("lib/edit/")
+            .unwrap_or(&town.source_file);
+        if selected_town_source_file(&t_info, town.source_index) != Some(source_include) {
+            return Err(invalid_wilderness_selection(format!(
+                "town plan {} is not mapped to {} by {T_INFO_SOURCE}",
+                town.id, town.source_file
+            )));
+        }
+        let town_source = read_legacy_object_at(source, source_commit, &town.source_file)?;
+        let mut symbols = BTreeSet::new();
+        for facility in &town.standard_facilities {
+            if !symbols.insert(facility.symbol)
+                || feature_tags.get(&facility.symbol) != Some(&facility.source_tag)
+                || !source_has_town_symbol(&town_source, facility.symbol)
+            {
+                return Err(invalid_wilderness_selection(format!(
+                    "town plan {} facility {}:{} is absent or duplicated",
+                    town.id, facility.symbol, facility.source_tag
+                )));
+            }
+        }
+
+        let inn = &town.inn;
+        let inn_name = format!(
+            "B:{}:N:{}:{}:{}",
+            inn.building_index, inn.name, inn.owner_name, inn.owner_race
+        );
+        if !town_source.lines().any(|line| line.trim() == inn_name) {
+            return Err(invalid_wilderness_selection(format!(
+                "town plan {} inn identity drifted",
+                town.id
+            )));
+        }
+        let mut action_indexes = BTreeSet::new();
+        for service in &inn.services {
+            let service_line = format!(
+                "B:{}:A:{}:{}:{}:{}:{}:{}:{}",
+                inn.building_index,
+                service.action_index,
+                service.name,
+                service.minimum_cost,
+                service.maximum_cost,
+                service.command,
+                service.action_id,
+                service.restriction
+            );
+            if !action_indexes.insert(service.action_index)
+                || !town_source.lines().any(|line| line.trim() == service_line)
+            {
+                return Err(invalid_wilderness_selection(format!(
+                    "town plan {} inn service {} is absent or duplicated",
+                    town.id, service.action_index
+                )));
+            }
+        }
+        let access_line = format!("B:{}:R:*:{}", inn.building_index, inn.access);
+        if !town_source.lines().any(|line| line.trim() == access_line) {
+            return Err(invalid_wilderness_selection(format!(
+                "town plan {} inn access drifted",
+                town.id
+            )));
+        }
+    }
+
+    let monsters = parse_r_info(&read_legacy_object_at(
+        source,
+        source_commit,
+        R_INFO_SOURCE,
+    )?)?;
+    let chinese_monster_names = parse_chinese_name_table(
+        &read_legacy_object_at(source, source_commit, R_NAME_ZH_SOURCE)?,
+        R_NAME_ZH_SOURCE,
+    )?;
+    for dungeon in &selection.planned_dungeons {
+        let record = dungeons.get(&dungeon.source_index).ok_or_else(|| {
+            invalid_wilderness_selection(format!(
+                "unknown planned dungeon index {}",
+                dungeon.source_index
+            ))
+        })?;
+        if record.name != dungeon.source_name
+            || record.position != Some((dungeon.position.x, dungeon.position.y))
+            || record.minimum_depth != Some(dungeon.minimum_depth)
+            || record.maximum_depth != Some(dungeon.maximum_depth)
+            || dungeon_flag_number(record, "MONSTER_DIV_")
+                != Some(u32::from(dungeon.monster_divisor))
+        {
+            return Err(invalid_wilderness_selection(format!(
+                "planned dungeon {} identity, position, depth, or divisor drifted",
+                dungeon.id
+            )));
+        }
+        let source_generation_flags = record
+            .flags
+            .iter()
+            .filter(|flag| {
+                !flag.starts_with("FINAL_")
+                    && !flag.starts_with("MONSTER_DIV_")
+                    && !flag.starts_with("SUBSTITUTE_")
+            })
+            .cloned()
+            .collect::<BTreeSet<_>>();
+        if dungeon
+            .generation_flags
+            .iter()
+            .cloned()
+            .collect::<BTreeSet<_>>()
+            != source_generation_flags
+            || dungeon
+                .monster_preferences
+                .iter()
+                .cloned()
+                .collect::<BTreeSet<_>>()
+                != record
+                    .monster_preferences
+                    .iter()
+                    .cloned()
+                    .collect::<BTreeSet<_>>()
+        {
+            return Err(invalid_wilderness_selection(format!(
+                "planned dungeon {} generation or monster preferences drifted",
+                dungeon.id
+            )));
+        }
+        if dungeon_flag_number(record, "FINAL_GUARDIAN_") != Some(dungeon.guardian.source_index)
+            || dungeon_final_object(record).as_ref() != Some(&dungeon.final_object)
+            || dungeon_flag_number(record, "FINAL_EGO_") != Some(dungeon.final_ego_source_index)
+            || dungeon_flag_number(record, "SUBSTITUTE_") != Some(dungeon.substitute_source_index)
+        {
+            return Err(invalid_wilderness_selection(format!(
+                "planned dungeon {} guardian or final reward drifted",
+                dungeon.id
+            )));
+        }
+        let guardian = monsters
+            .iter()
+            .find(|monster| monster.index == dungeon.guardian.source_index)
+            .ok_or_else(|| {
+                invalid_wilderness_selection(format!(
+                    "planned guardian index {} is absent",
+                    dungeon.guardian.source_index
+                ))
+            })?;
+        let guardian_chinese_name = chinese_monster_names
+            .get(dungeon.guardian.source_index as usize)
+            .and_then(Option::as_deref);
+        if guardian.name != dungeon.guardian.source_name
+            || guardian.level != Some(dungeon.guardian.level)
+            || guardian_chinese_name != Some(&dungeon.guardian.chinese_name)
+        {
+            return Err(invalid_wilderness_selection(format!(
+                "planned dungeon {} guardian identity drifted",
+                dungeon.id
+            )));
+        }
+    }
+
+    validate_demo_wilderness_gaps(selection)
+}
+
+fn validate_demo_wilderness_gaps(
+    selection: &DemoWildernessSelection,
+) -> Result<(), LegacyImportError> {
+    let orc_cave = selection
+        .planned_dungeons
+        .iter()
+        .find(|dungeon| dungeon.id == "demo.dungeon.orc-cave")
+        .ok_or_else(|| invalid_wilderness_selection("missing planned Orc Cave"))?;
+    let gaps = &selection.gaps;
+    if gaps.orc_cave_monsters.minimum_level != 21
+        || gaps.orc_cave_monsters.maximum_level != orc_cave.maximum_depth
+        || gaps.orc_cave_monsters.status != DemoWildernessGapStatus::Deferred
+    {
+        return Err(invalid_wilderness_selection(
+            "Orc Cave monster gap must defer source levels 21 through 32",
+        ));
+    }
+    let reward_gaps = gaps
+        .orc_cave_rewards
+        .iter()
+        .map(|gap| {
+            (
+                gap.kind.as_str(),
+                gap.source_index,
+                gap.tval,
+                gap.sval,
+                &gap.status,
+            )
+        })
+        .collect::<BTreeSet<_>>();
+    let expected_reward_gaps = BTreeSet::from([
+        (
+            "dungeon-loot",
+            None,
+            None,
+            None,
+            &DemoWildernessGapStatus::AuditRequired,
+        ),
+        (
+            "guardian",
+            Some(orc_cave.guardian.source_index),
+            None,
+            None,
+            &DemoWildernessGapStatus::Deferred,
+        ),
+        (
+            "final-object",
+            None,
+            Some(orc_cave.final_object.tval),
+            Some(orc_cave.final_object.sval),
+            &DemoWildernessGapStatus::Deferred,
+        ),
+        (
+            "final-ego",
+            Some(orc_cave.final_ego_source_index),
+            None,
+            None,
+            &DemoWildernessGapStatus::Deferred,
+        ),
+    ]);
+    if reward_gaps != expected_reward_gaps {
+        return Err(invalid_wilderness_selection(
+            "Orc Cave reward gaps must cover dungeon loot, its guardian, final object, and final ego",
+        ));
+    }
+    Ok(())
+}
+
 pub fn sync_demo_wilderness(
     source: &Path,
     selection_path: &Path,
@@ -10117,10 +10669,14 @@ pub fn sync_demo_wilderness(
         ));
     }
     let selection: DemoWildernessSelection = serde_json::from_slice(&fs::read(selection_path)?)?;
-    if selection.schema_version != 1 || selection.towns.is_empty() || selection.dungeons.is_empty()
+    if selection.schema_version != 3
+        || selection.towns.is_empty()
+        || selection.dungeons.is_empty()
+        || selection.town_plans.is_empty()
+        || selection.planned_dungeons.is_empty()
     {
         return Err(LegacyImportError::InvalidDemoWildernessSelection(
-            "selection must use schemaVersion 1 and contain at least one town and dungeon"
+            "selection must use schemaVersion 3 and contain active towns, town plans, and active and planned dungeons"
                 .to_owned(),
         ));
     }
@@ -10131,11 +10687,12 @@ pub fn sync_demo_wilderness(
         &source_commit,
         W_INFO_SOURCE,
     )?)?;
-    let dungeons = parse_dungeon_locations(&read_legacy_object_at(
+    let dungeons = parse_dungeon_records(&read_legacy_object_at(
         source,
         &source_commit,
         D_INFO_SOURCE,
     )?)?;
+    validate_demo_wilderness_plans(source, &source_commit, &selection, &wilderness, &dungeons)?;
     let world_source = fs::read_to_string(output)?;
     let world: serde_json::Value = serde_json::from_str(&world_source)?;
     if world.get("id").and_then(serde_json::Value::as_str) != Some(&selection.world_id) {
@@ -10145,6 +10702,11 @@ pub fn sync_demo_wilderness(
         )));
     }
     let known_town_id = world.get("townId").and_then(serde_json::Value::as_str);
+    let town_plan_ids = selection
+        .town_plans
+        .iter()
+        .map(|town| town.id.as_str())
+        .collect::<BTreeSet<_>>();
     let known_dungeon_ids = world
         .get("dungeons")
         .and_then(serde_json::Value::as_array)
@@ -10159,7 +10721,8 @@ pub fn sync_demo_wilderness(
     for selected in &selection.towns {
         if !selected_source_indexes.insert(("town", selected.source_index))
             || !selected_ids.insert(selected.id.as_str())
-            || known_town_id != Some(selected.id.as_str())
+            || (known_town_id != Some(selected.id.as_str())
+                && !town_plan_ids.contains(selected.id.as_str()))
         {
             return Err(LegacyImportError::InvalidDemoWildernessSelection(format!(
                 "duplicate or unsupported town selection {}",
@@ -10197,9 +10760,15 @@ pub fn sync_demo_wilderness(
                 selected.id
             )));
         }
-        let location = dungeons.get(&selected.source_index).ok_or_else(|| {
+        let record = dungeons.get(&selected.source_index).ok_or_else(|| {
             LegacyImportError::InvalidDemoWildernessSelection(format!(
                 "unknown positioned dungeon index {}",
+                selected.source_index
+            ))
+        })?;
+        let location = dungeon_location(record).ok_or_else(|| {
+            LegacyImportError::InvalidDemoWildernessSelection(format!(
+                "dungeon {} has no wilderness position",
                 selected.source_index
             ))
         })?;
@@ -10217,6 +10786,18 @@ pub fn sync_demo_wilderness(
             "position": { "x": location.x, "y": location.y },
             "dungeonId": selected.id,
         }));
+    }
+    for planned in &selection.planned_dungeons {
+        if !selected_source_indexes.insert(("dungeon", planned.source_index))
+            || !selected_ids.insert(planned.id.as_str())
+            || planned.position.x >= wilderness.width
+            || planned.position.y >= wilderness.height
+        {
+            return Err(invalid_wilderness_selection(format!(
+                "duplicate or out-of-bounds planned dungeon selection {}",
+                planned.id
+            )));
+        }
     }
 
     let legend = wilderness
@@ -11343,16 +11924,22 @@ mod tests {
             })
         );
 
-        let dungeons = parse_dungeon_locations("N:30:Warrens\nP:1:2\n")
-            .expect("synthetic dungeon position should parse");
+        let dungeons = parse_dungeon_records(
+            "N:30:Warrens\nP:1:2\nW:1:9:0\nF:CAVE | MONSTER_DIV_4\nM:ORC | TROLL\n",
+        )
+        .expect("synthetic dungeon record should parse");
         assert_eq!(
-            dungeons.get(&30),
+            dungeons.get(&30).and_then(dungeon_location).as_ref(),
             Some(&LegacyWildernessLocation {
                 name: "Warrens".to_owned(),
                 x: 2,
                 y: 1,
             })
         );
+        assert_eq!(dungeons[&30].minimum_depth, Some(1));
+        assert_eq!(dungeons[&30].maximum_depth, Some(9));
+        assert_eq!(dungeons[&30].flags, ["CAVE", "MONSTER_DIV_4"]);
+        assert_eq!(dungeons[&30].monster_preferences, ["ORC", "TROLL"]);
         assert_eq!(
             (0..=14)
                 .map(wilderness_terrain_id)
