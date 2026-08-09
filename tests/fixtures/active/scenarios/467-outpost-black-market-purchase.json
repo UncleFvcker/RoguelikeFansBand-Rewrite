@@ -869,22 +869,66 @@
       ],
       "itemPropertyKnowledge": [
         {
+          "itemId": "demo.item.warrens-light-healing-potion.1",
+          "discovered": true
+        },
+        {
+          "itemId": "demo.item.warrens-short-sword.1",
+          "discovered": true
+        },
+        {
+          "itemId": "generated.item.1",
+          "discovered": true
+        },
+        {
           "itemId": "generated.item.10",
+          "discovered": true,
           "appraised": true,
           "identified": true
         },
         {
           "itemId": "generated.item.11",
+          "discovered": true,
           "appraised": true,
           "identified": true
+        },
+        {
+          "itemId": "generated.item.2",
+          "discovered": true
+        },
+        {
+          "itemId": "generated.item.3",
+          "discovered": true
+        },
+        {
+          "itemId": "generated.item.4",
+          "discovered": true
+        },
+        {
+          "itemId": "generated.item.5",
+          "discovered": true
+        },
+        {
+          "itemId": "generated.item.6",
+          "discovered": true
         },
         {
           "itemId": "generated.item.61",
+          "discovered": true,
           "appraised": true,
           "identified": true
         },
         {
+          "itemId": "generated.item.7",
+          "discovered": true
+        },
+        {
+          "itemId": "generated.item.8",
+          "discovered": true
+        },
+        {
           "itemId": "generated.item.9",
+          "discovered": true,
           "appraised": true,
           "identified": true
         }
@@ -925,7 +969,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "052e559005d8b0d170f7438cee7bbd6abdd4009928f901040bb614102beab27c"
+      "stateHash": "deb6570caff930ae7e15f5b8ff1903636b5f76f053603eb84df84b9c7d15807b"
     },
     "events": [
       {

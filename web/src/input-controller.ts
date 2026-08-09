@@ -49,6 +49,7 @@ export class InputController {
   readonly #getZoom: () => number;
   readonly #dispatch: (command: GameCommand) => Promise<void>;
   readonly #describeLook: (position: { readonly x: number; readonly y: number }) => string;
+  readonly #openObjectList: () => void;
   readonly #onLookOrTargeting: (interaction: "look" | "targeting") => void;
   readonly #onLookFocusChange: (position: Position | undefined) => void;
   readonly #announce: (
@@ -58,7 +59,9 @@ export class InputController {
   ) => void;
   #installed = false;
   #ridingDirection = false;
-  #travelDestination: Position | undefined;
+  #worldTravelDestination: Position | undefined;
+  #localTravelDestination: Position | undefined;
+  #localTravelFloorId: string | undefined;
 
   constructor(options: {
     state: AppState;
@@ -69,6 +72,7 @@ export class InputController {
     getZoom: () => number;
     dispatch: (command: GameCommand) => Promise<void>;
     describeLook: (position: { readonly x: number; readonly y: number }) => string;
+    openObjectList: () => void;
     onLookOrTargeting: (interaction: "look" | "targeting") => void;
     onLookFocusChange: (position: Position | undefined) => void;
     announce: (
@@ -85,6 +89,7 @@ export class InputController {
     this.#getZoom = options.getZoom;
     this.#dispatch = options.dispatch;
     this.#describeLook = options.describeLook;
+    this.#openObjectList = options.openObjectList;
     this.#onLookOrTargeting = options.onLookOrTargeting;
     this.#onLookFocusChange = options.onLookFocusChange;
     this.#announce = options.announce;
@@ -135,6 +140,27 @@ export class InputController {
     this.render();
   }
 
+  startLocalTravelSelection(): void {
+    const status = this.#state.status;
+    if (this.#state.busy || this.#state.commandBlocked || !status || this.#state.worldMap) return;
+    const next = beginTargeting(status.player.position, {
+      modes: ["position"],
+      range: Math.max(this.#state.mapWidth, this.#state.mapHeight),
+      requiresLineOfEffect: false,
+    });
+    if (!next) return;
+    this.#state.targeting = next;
+    this.#state.targetingIntent = { type: "local-travel" };
+    this.#announce("message-local-travel-select", undefined, "system");
+    this.#onLookFocusChange(next.cursor);
+    this.render();
+  }
+
+  resetLocalTravel(): void {
+    this.#localTravelDestination = undefined;
+    this.#localTravelFloorId = undefined;
+  }
+
   startAbilityTargeting(ability: AbilityDto): void {
     if (
       this.#state.busy ||
@@ -161,7 +187,10 @@ export class InputController {
       this.render();
       return;
     }
-    if (this.#state.targetingIntent?.type === "look") {
+    if (
+      this.#state.targetingIntent?.type === "look" ||
+      this.#state.targetingIntent?.type === "local-travel"
+    ) {
       this.#onLookFocusChange(undefined);
     }
     this.#state.targeting = next;
@@ -173,10 +202,12 @@ export class InputController {
 
   cancelTargeting(announce = true): void {
     if (!this.#state.targeting) return;
-    const wasLooking = this.#state.targetingIntent?.type === "look";
+    const wasMapCursor =
+      this.#state.targetingIntent?.type === "look" ||
+      this.#state.targetingIntent?.type === "local-travel";
     this.#state.targeting = undefined;
     this.#state.targetingIntent = undefined;
-    if (wasLooking) this.#onLookFocusChange(undefined);
+    if (wasMapCursor) this.#onLookFocusChange(undefined);
     if (announce) {
       this.#announce("message-target-mode-cancelled", undefined, "system");
     }
@@ -184,13 +215,20 @@ export class InputController {
   }
 
   reconcileStatus(state: GameSnapshot | GameUpdate): void {
-    this.#travelDestination = state.worldTravelDestination ?? undefined;
+    this.#worldTravelDestination = state.worldTravelDestination ?? undefined;
+    if (
+      this.#localTravelFloorId &&
+      (this.#localTravelFloorId !== state.floorId || state.mapScale === "world")
+    ) {
+      this.resetLocalTravel();
+    }
     if (
       this.#state.targeting &&
       (this.#state.targeting.origin.x !== state.player.position.x ||
         this.#state.targeting.origin.y !== state.player.position.y ||
         !this.#state.targetingIntent ||
         (this.#state.targetingIntent.type !== "look" &&
+          this.#state.targetingIntent.type !== "local-travel" &&
           !targetSpecForIntent(state, this.#state.targetingIntent)))
     ) {
       this.cancelTargeting(false);
@@ -199,7 +237,8 @@ export class InputController {
 
   render(): void {
     const looking = this.#state.targetingIntent?.type === "look";
-    const targeting = Boolean(this.#state.targeting && !looking);
+    const localTravel = this.#state.targetingIntent?.type === "local-travel";
+    const targeting = Boolean(this.#state.targeting && !looking && !localTravel);
     const available = Boolean(
       !this.#state.worldMap &&
         this.#state.status &&
@@ -241,6 +280,7 @@ export class InputController {
       this.#state.busy ||
       this.#state.playerDead ||
       this.#state.worldMap ||
+      localTravel ||
       (!targeting && !available);
     this.#dom.lookModeToggle.textContent = this.#localization.format(
       looking ? "action-look-cancel" : "action-look-start",
@@ -269,17 +309,21 @@ export class InputController {
     this.#dom.targetCursor.style.height = `${renderedCellSize}px`;
     this.#dom.mapHost.dataset.targetX = String(cursor.x);
     this.#dom.mapHost.dataset.targetY = String(cursor.y);
-    this.#dom.targetModeStatus.textContent = looking
-      ? this.#localization.format("look-status-active", {
-          x: cursor.x,
-          y: cursor.y,
-          contents: this.#describeLook(cursor),
-        })
-      : this.#localization.format("target-status-active", {
-          x: cursor.x,
-          y: cursor.y,
-          range: spec.range,
-        });
+    this.#dom.targetModeStatus.textContent =
+      looking || localTravel
+        ? this.#localization.format(
+            localTravel ? "local-travel-status-active" : "look-status-active",
+            {
+              x: cursor.x,
+              y: cursor.y,
+              contents: this.#describeLook(cursor),
+            },
+          )
+        : this.#localization.format("target-status-active", {
+            x: cursor.x,
+            y: cursor.y,
+            range: spec.range,
+          });
   }
 
   readonly #handleTargetToggle = (): void => {
@@ -342,16 +386,31 @@ export class InputController {
     }
     if (this.#state.worldMap) {
       const travelDestination =
-        this.#travelDestination ?? this.#state.status?.worldTravelDestination;
+        this.#worldTravelDestination ?? this.#state.status?.worldTravelDestination;
       if (event.key === "J" && travelDestination) {
         event.preventDefault();
-        void this.#travelTo(travelDestination);
+        void this.#travelWorldTo(travelDestination);
         return;
       }
       const direction = directionForKeyboardInput(event, this.#getInputPreset());
       if (direction) void this.#dispatch({ type: "move", direction });
       else if (key === ">") void this.#dispatch({ type: "leave-world-map" });
       event.preventDefault();
+      return;
+    }
+    if (event.key === "`") {
+      event.preventDefault();
+      this.startLocalTravelSelection();
+      return;
+    }
+    if (event.key === "J" && this.#localTravelDestination) {
+      event.preventDefault();
+      void this.travelLocalTo(this.#localTravelDestination);
+      return;
+    }
+    if (isObjectListShortcut(event)) {
+      event.preventDefault();
+      this.#openObjectList();
       return;
     }
     if (key === "<" && connectionActionForState(this.#state) === "enter-world-map") {
@@ -396,13 +455,41 @@ export class InputController {
       this.cancelTargeting();
       return;
     }
-    if (event.key === "Enter") {
+    const localTravel = this.#state.targetingIntent?.type === "local-travel";
+    if (localTravel && (event.key === "<" || event.key === ">")) {
+      event.preventDefault();
+      const current = this.#state.targeting?.cursor;
+      const destination = current
+        ? nextTravelConnectionPosition(this.#state, event.key, current)
+        : undefined;
+      if (!destination || !this.#state.targeting) {
+        this.#announce("message-local-travel-stair-unavailable", undefined, "system");
+        return;
+      }
+      this.#state.targeting = { ...this.#state.targeting, cursor: destination };
+      this.#onLookFocusChange(destination);
+      this.render();
+      return;
+    }
+    if (
+      event.key === "Enter" ||
+      (localTravel && [" ", ".", "5", "0", "t"].includes(event.key))
+    ) {
       event.preventDefault();
       if (this.#state.targetingIntent?.type === "look") {
         const destination = this.#state.targeting?.cursor;
         const worldMap = this.#state.worldMap;
         this.cancelTargeting(false);
-        if (worldMap && destination) void this.#travelTo(destination);
+        if (worldMap && destination) void this.#travelWorldTo(destination);
+      } else if (localTravel) {
+        const destination = this.#state.targeting?.cursor;
+        const origin = this.#state.targeting?.origin;
+        if (!destination || !origin || samePosition(destination, origin)) {
+          this.#announce("message-target-selection-invalid", undefined, "system");
+          return;
+        }
+        this.cancelTargeting(false);
+        void this.travelLocalTo(destination);
       } else void this.#confirmTargeting();
       return;
     }
@@ -415,7 +502,10 @@ export class InputController {
       this.#state.mapWidth,
       this.#state.mapHeight,
     );
-    if (this.#state.targetingIntent?.type === "look") {
+    if (
+      this.#state.targetingIntent?.type === "look" ||
+      this.#state.targetingIntent?.type === "local-travel"
+    ) {
       this.#onLookOrTargeting("look");
       this.#onLookFocusChange(this.#state.targeting.cursor);
     }
@@ -493,6 +583,7 @@ export class InputController {
       !status ||
       !intent ||
       intent.type === "look" ||
+      intent.type === "local-travel" ||
       this.#state.busy ||
       this.#state.playerDead
     ) {
@@ -537,8 +628,32 @@ export class InputController {
     await this.#dispatch({ type: "enter-world-map", leavePets, cancelRecall });
   }
 
-  async #travelTo(destination: Position): Promise<void> {
-    this.#travelDestination = destination;
+  async travelLocalTo(destination: Position): Promise<void> {
+    const initial = this.#state.status;
+    if (!initial || initial.mapScale !== "local" || this.#state.commandBlocked) return;
+    this.#localTravelDestination = destination;
+    this.#localTravelFloorId = initial.floorId;
+    this.#announce("message-local-travel-started", undefined, "system");
+    for (;;) {
+      const before = this.#state.status;
+      if (
+        !before ||
+        before.mapScale !== "local" ||
+        before.floorId !== this.#localTravelFloorId ||
+        samePosition(before.player.position, destination)
+      ) {
+        return;
+      }
+      await this.#dispatch({ type: "travel-local", destination });
+      const current = this.#state.status;
+      if (localTravelStopsAfterStep(before, current, destination)) {
+        return;
+      }
+    }
+  }
+
+  async #travelWorldTo(destination: Position): Promise<void> {
+    this.#worldTravelDestination = destination;
     for (;;) {
       const status = this.#state.status;
       if (!status || status.mapScale !== "world") return;
@@ -546,7 +661,7 @@ export class InputController {
         status.player.position.x === destination.x &&
         status.player.position.y === destination.y
       ) {
-        this.#travelDestination = undefined;
+        this.#worldTravelDestination = undefined;
         return;
       }
       const previous = status.player.position;
@@ -561,6 +676,59 @@ export class InputController {
       }
     }
   }
+}
+
+export function isObjectListShortcut(
+  event: Pick<KeyboardEvent, "key" | "shiftKey" | "ctrlKey" | "altKey" | "metaKey">,
+): boolean {
+  if (event.ctrlKey || event.altKey || event.metaKey) return false;
+  return event.key === "]" || (event.shiftKey && event.key.toLowerCase() === "o");
+}
+
+export function nextTravelConnectionPosition(
+  state: AppState,
+  key: "<" | ">",
+  current: Position,
+): Position | undefined {
+  const positions = [...state.cells.values()]
+    .filter((cell) => {
+      const visibility = state.cellVisibility.get(
+        `${cell.position.x},${cell.position.y}`,
+      );
+      return (
+        (visibility === "visible" || visibility === "remembered") &&
+        state.contentGlyphs.get(cell.terrainId) === key
+      );
+    })
+    .map((cell) => cell.position)
+    .sort(
+      (left, right) =>
+        gridDistance(state.status?.player.position, left) -
+          gridDistance(state.status?.player.position, right) ||
+        left.y - right.y ||
+        left.x - right.x,
+    );
+  if (positions.length === 0) return undefined;
+  const currentIndex = positions.findIndex((position) => samePosition(position, current));
+  return positions[(currentIndex + 1) % positions.length];
+}
+
+export function localTravelStopsAfterStep(
+  before: GameSnapshot | GameUpdate,
+  current: GameSnapshot | GameUpdate | undefined,
+  destination: Position,
+): boolean {
+  return (
+    !current ||
+    current.mapScale !== "local" ||
+    current.floorId !== before.floorId ||
+    current.player.isDead ||
+    current.player.hp < before.player.hp ||
+    current.player.statuses.some((status) => status.kindId === "rfb.status.confusion") ||
+    current.entities.some((entity) => entity.faction === "hostile") ||
+    samePosition(current.player.position, before.player.position) ||
+    samePosition(current.player.position, destination)
+  );
 }
 
 export function commandForKeyboardInput(
@@ -632,7 +800,7 @@ function targetSpecForIntent(
   state: GameSnapshot | GameUpdate,
   intent: TargetingIntent,
 ): TargetSpecDto | null | undefined {
-  if (intent.type === "look") return undefined;
+  if (intent.type === "look" || intent.type === "local-travel") return undefined;
   if (intent.type === "projectile") return state.player.projectileProfile?.targetSpec;
   if (intent.type === "item") {
     return state.inventory.find(
@@ -642,6 +810,16 @@ function targetSpecForIntent(
   return (state.player.abilities ?? []).find(
     (ability) => ability.id === intent.abilityId && ability.canCast,
   )?.targetSpec;
+}
+
+function gridDistance(from: Position | undefined, to: Position): number {
+  return from
+    ? Math.max(Math.abs(to.x - from.x), Math.abs(to.y - from.y))
+    : 0;
+}
+
+function samePosition(left: Position, right: Position): boolean {
+  return left.x === right.x && left.y === right.y;
 }
 
 function terrainModeMessageKey(mode: TerrainInteractionMode): MessageKey {

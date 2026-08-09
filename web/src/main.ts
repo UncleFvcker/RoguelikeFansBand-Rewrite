@@ -49,6 +49,7 @@ import { PlayerUiLayout } from "./player-ui-layout";
 import { ShopPanel } from "./shop-panel";
 import { HomePanel } from "./home-panel";
 import { TaskServicePanel } from "./task-service-panel";
+import { ObjectListPanel } from "./object-list";
 
 const core = new TauriNativeTransport();
 const crashDiagnostics = new DesktopCrashDiagnostics();
@@ -124,6 +125,15 @@ const addLocalizedMessage = (
   kind: string,
 ) => messagePanel.addLocalized(key, args, kind);
 const addGameEvent = (event: GameEventDto) => messagePanel.addEvent(event);
+const objectListPanel = new ObjectListPanel({
+  document,
+  window,
+  state: appState,
+  localization,
+  contentName,
+  visibleItemName,
+  onTravel: (position) => void inputController.travelLocalTo(position),
+});
 const journeyGuidance = new JourneyGuidance({
   dom: appDom,
   localization,
@@ -150,6 +160,7 @@ const settingsPanel = new SettingsPanel({
     shopPanel.localize();
     homePanel.localize();
     taskServicePanel.localize();
+    objectListPanel.localize();
     messagePanel.render();
   },
   refreshBusyControls: () => inventoryPanel.updateActions(),
@@ -198,6 +209,7 @@ const inputController = new InputController({
   getZoom: () => settingsPanel.zoom,
   dispatch,
   describeLook: describeLookPosition,
+  openObjectList: () => objectListPanel.open(),
   onLookOrTargeting: (interaction) => journeyGuidance.recordInteraction(interaction),
   onLookFocusChange: (position) => renderer.setCameraFocus(position),
   announce: addLocalizedMessage,
@@ -363,6 +375,7 @@ inventoryPanel.install();
 shopPanel.install();
 homePanel.install();
 taskServicePanel.install();
+objectListPanel.install();
 journeyGuidance.install();
 journeyResult.install();
 playerUiLayout.install();
@@ -380,6 +393,7 @@ window.addEventListener("beforeunload", () => {
   shopPanel.dispose();
   homePanel.dispose();
   taskServicePanel.dispose();
+  objectListPanel.dispose();
   settingsPanel.dispose();
   inputController.dispose();
   journeyGuidance.dispose();
@@ -489,6 +503,8 @@ async function importSave(): Promise<void> {
 
 function applyLoadedSnapshot(snapshot: GameSnapshot): void {
   inputController.cancelTargeting(false);
+  inputController.resetLocalTravel();
+  objectListPanel.close();
   shopPanel.reset();
   homePanel.reset();
   taskServicePanel.reset();
@@ -530,6 +546,8 @@ async function startNewSession(request: NewSessionRequest): Promise<GameSnapshot
 
 async function initializeGameView(snapshot: GameSnapshot): Promise<void> {
   inputController.cancelTargeting(false);
+  inputController.resetLocalTravel();
+  objectListPanel.close();
   shopPanel.reset();
   homePanel.reset();
   taskServicePanel.reset();
@@ -588,6 +606,8 @@ async function restartSameSetup(): Promise<void> {
 
 function showSessionView(view: "title" | "new-game" | "load"): void {
   inputController.cancelTargeting(false);
+  inputController.resetLocalTravel();
+  objectListPanel.close();
   shopPanel.reset();
   homePanel.reset();
   taskServicePanel.reset();

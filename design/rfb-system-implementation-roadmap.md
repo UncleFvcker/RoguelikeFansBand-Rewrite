@@ -1,6 +1,6 @@
 # RFB 全系统梳理与重构实现路线
 
-状态：长期规则实现路线；当前基线为协议 1.147 / contract-v204（P31–P98 进展见 8.3，玩家流程与 Outpost 进展见 Phase 17/18，物品接入见 Phase 19，Warrens 怪物机制见 W1–W14 清单，荒野世界图见 W0–W5）
+状态：长期规则实现路线；当前基线为协议 1.149 / contract-v206（P31–P98 进展见 8.3，玩家流程与 Outpost 进展见 Phase 17/18，物品接入见 Phase 19，Warrens 怪物机制见 W1–W14 清单，荒野世界图见 W0–W5）
 
 ## 1. 目的与边界
 
@@ -619,6 +619,8 @@ P30“首个非 Mana 职业资源”已由 contract-v90 完成：节奏资源按
 **荒野 W4 进展（2026-08）**：正式闭合现有 Outpost/Warrens 地点。世界尺度不接受楼梯命令；返回 Outpost 局部地图并站在既有入口后，还需由当前 `(28,52)` 的 `Dungeon` 地点 ID 匹配 Warrens 才能进入。离开地牢复用保存的地表楼层，恢复原世界坐标、入口格、任务和商店状态。协议 1.145、state hash Schema v68、demo 1.193.0/hash 与 contract-v198 不变；Orc Cave 和其他地点不激活。完整边界见 [Wilderness W4](wilderness-w4-location-loop.md)。
 
 **荒野 W5 进展（2026-08）**：按原版 `1/10` 低层荒野房间规则接入确定性的 `Ruined Home`，并增加八方向逐步自动旅行、权威目标恢复、深水/熔岩/雪地环境规则，以及宠物、坐骑和生效中召回的世界图确认闭环。协议 1.146、state hash Schema v69、contract-v199；demo 1.193.0/hash 不变。随机 20–50 级单层地下城和城镇传送严格等待对应内容消费者。完整边界见 [Wilderness W5](wilderness-w5-original-extensions.md)。
+
+**物体列表 O1–O4 进展（2026-08）**：实例级 `discovered` 收紧地面物品投影并随视野、探测、楼层和存档保持；Shift+O / `]` 列出已知设施、入口、楼梯和物品，使用原版相对位置与稳定排序，且可直接启动普通地图旅行。反引号地图选点、`<` / `>` 楼梯定位和大写 `J` 恢复均复用单步 `TravelLocal` 与普通移动结算。协议 1.149、state hash Schema v71、contract-v206；save v1、demo 1.200.0 与内容 hash 不变。
 
 **浅层怪物 P13 进展（2026-08）**：contract-v197 接入高阶地狱兽、黄色果冻、佐格虫、巧言、罗宾汉、虱子王劳西和鸭子。无骰 `HURT` 仅允许受护甲减免的精确 `0d0`；`S_LOUSE` 复用既有 `summon-category`，并以唯一 `louse` 标签候选还原巨型白虱。正式浅层 actor 达 165、严格同步达 133，只剩 3 条浅层活跃记录；协议 1.144、Schema v67 不变，demo 1.193.0，内置 hash 为 `de810d68f142e4f1574f5d17ed58323c0d10f877c29373dc752a7b0493394698`。完整边界见 [Contract v197](contract-v197-warrens-content-p13-shallow-harvest.md)。
 

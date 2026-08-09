@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.147";
+pub const PROTOCOL_VERSION: &str = "1.149";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -148,6 +148,9 @@ pub enum GameCommand {
     },
     LeaveWorldMap,
     TravelWorld {
+        destination: Position,
+    },
+    TravelLocal {
         destination: Position,
     },
     Move {
@@ -3334,6 +3337,7 @@ pub struct ItemKnowledgeSaveDto {
 #[serde(rename_all = "camelCase")]
 pub struct ItemPropertyKnowledgeSaveDto {
     pub item_id: String,
+    pub discovered: bool,
     #[serde(default, skip_serializing_if = "is_false")]
     pub appraised: bool,
     #[serde(default, skip_serializing_if = "is_false")]
@@ -3636,6 +3640,9 @@ mod tests {
             GameCommand::LeaveWorldMap,
             GameCommand::TravelWorld {
                 destination: Position { x: 29, y: 52 },
+            },
+            GameCommand::TravelLocal {
+                destination: Position { x: 40, y: 12 },
             },
             GameCommand::Throw {
                 item_id: "demo.item.luminous-shard.1".to_owned(),

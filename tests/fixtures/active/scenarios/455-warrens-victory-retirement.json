@@ -768,17 +768,60 @@
       ],
       "itemPropertyKnowledge": [
         {
+          "itemId": "demo.item.warrens-light-healing-potion.1",
+          "discovered": true
+        },
+        {
+          "itemId": "demo.item.warrens-short-sword.1",
+          "discovered": true
+        },
+        {
+          "itemId": "generated.item.1",
+          "discovered": true
+        },
+        {
           "itemId": "generated.item.10",
+          "discovered": true,
           "appraised": true,
           "identified": true
         },
         {
           "itemId": "generated.item.11",
+          "discovered": true,
           "appraised": true,
           "identified": true
         },
         {
+          "itemId": "generated.item.2",
+          "discovered": true
+        },
+        {
+          "itemId": "generated.item.3",
+          "discovered": true
+        },
+        {
+          "itemId": "generated.item.4",
+          "discovered": true
+        },
+        {
+          "itemId": "generated.item.5",
+          "discovered": true
+        },
+        {
+          "itemId": "generated.item.6",
+          "discovered": true
+        },
+        {
+          "itemId": "generated.item.7",
+          "discovered": true
+        },
+        {
+          "itemId": "generated.item.8",
+          "discovered": true
+        },
+        {
           "itemId": "generated.item.9",
+          "discovered": true,
           "appraised": true,
           "identified": true
         }
@@ -821,7 +864,7 @@
         "victoryTurn": 0,
         "retiredTurn": 1
       },
-      "stateHash": "93cbf3dd49d28234f38158b6a324a870d2dca692e5986e4ae0e334a81affc5dd"
+      "stateHash": "d01140218a6a5d56bd605151c08ef14e8bc5b1e1aeaef5e4ce9fbdac1f16245f"
     },
     "events": [
       {
@@ -836,9 +879,9 @@
       {
         "step": 2,
         "kind": "campaign-ended",
-        "stateHash": "93cbf3dd49d28234f38158b6a324a870d2dca692e5986e4ae0e334a81affc5dd"
+        "stateHash": "d01140218a6a5d56bd605151c08ef14e8bc5b1e1aeaef5e4ce9fbdac1f16245f"
       }
     ],
-    "saveRoundTripStateHash": "93cbf3dd49d28234f38158b6a324a870d2dca692e5986e4ae0e334a81affc5dd"
+    "saveRoundTripStateHash": "d01140218a6a5d56bd605151c08ef14e8bc5b1e1aeaef5e4ce9fbdac1f16245f"
   }
 }

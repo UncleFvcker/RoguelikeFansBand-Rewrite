@@ -321,7 +321,12 @@ fn equipping_and_unequipping_moves_an_item_between_authoritative_lists() {
     assert_eq!(charm.identification, ItemIdentificationDto::Unexamined);
     assert_eq!(charm.quality, None);
     assert!(charm.known_properties.is_empty());
-    assert!(game.to_save().item_property_knowledge.is_empty());
+    assert!(
+        game.to_save()
+            .item_property_knowledge
+            .iter()
+            .all(|knowledge| knowledge.discovered && !knowledge.appraised)
+    );
     let equipped = game
         .dispatch(command(
             5,
@@ -362,11 +367,23 @@ fn equipping_and_unequipping_moves_an_item_between_authoritative_lists() {
         "demo.affix.harmonic-edge"
     );
     let saved = game.to_save();
-    assert_eq!(saved.item_property_knowledge.len(), 1);
+    let charm_knowledge = saved
+        .item_property_knowledge
+        .iter()
+        .find(|knowledge| knowledge.item_id == "demo.item.echo-charm.1")
+        .expect("equipped charm knowledge should be saved");
+    assert!(charm_knowledge.discovered);
+    assert!(charm_knowledge.appraised);
+    assert!(charm_knowledge.identified);
     let restored = Game::from_save(saved.clone()).expect("affix knowledge should round trip");
     assert_eq!(restored.state_hash(), game.state_hash());
     let mut invalid = saved;
-    invalid.item_property_knowledge[0].known_affix_ids = vec!["demo.affix.missing".to_owned()];
+    invalid
+        .item_property_knowledge
+        .iter_mut()
+        .find(|knowledge| knowledge.item_id == "demo.item.echo-charm.1")
+        .expect("equipped charm knowledge should be saved")
+        .known_affix_ids = vec!["demo.affix.missing".to_owned()];
     assert!(matches!(
         Game::from_save(invalid),
         Err(CoreError::InvalidSave(
@@ -434,9 +451,15 @@ fn appraising_reveals_quality_without_revealing_affixes() {
     assert_eq!(appraised.events[0].args["quality"], "fine");
 
     let saved = game.to_save();
-    assert!(saved.item_property_knowledge[0].appraised);
-    assert!(!saved.item_property_knowledge[0].identified);
-    assert!(saved.item_property_knowledge[0].known_affix_ids.is_empty());
+    let charm_knowledge = saved
+        .item_property_knowledge
+        .iter()
+        .find(|knowledge| knowledge.item_id == "demo.item.echo-charm.1")
+        .expect("appraised charm knowledge should be saved");
+    assert!(charm_knowledge.discovered);
+    assert!(charm_knowledge.appraised);
+    assert!(!charm_knowledge.identified);
+    assert!(charm_knowledge.known_affix_ids.is_empty());
     let restored = Game::from_save(saved).expect("appraisal knowledge should round trip");
     assert_eq!(restored.state_hash(), game.state_hash());
 }
@@ -1779,6 +1802,7 @@ fn offensive_flag_dto_hides_unknown_affix_contributions() {
     game.item_property_knowledge.insert(
         item_id.clone(),
         ItemPropertyKnowledgeState {
+            discovered: true,
             appraised: true,
             identified: true,
             known_affix_ids: BTreeSet::from(["demo.affix.frost-hunter".to_owned()]),
@@ -1917,6 +1941,7 @@ fn rolled_equipment_bonuses_and_regeneration_are_authoritative() {
     game.item_property_knowledge.insert(
         item_id.clone(),
         ItemPropertyKnowledgeState {
+            discovered: true,
             appraised: true,
             identified: true,
             known_affix_ids: BTreeSet::from(["demo.affix.adaptive-echo".to_owned()]),

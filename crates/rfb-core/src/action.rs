@@ -118,6 +118,9 @@ pub(crate) enum GameAction {
     TravelWorld {
         destination: rfb_protocol::Position,
     },
+    TravelLocal {
+        destination: rfb_protocol::Position,
+    },
     Throw {
         item_id: String,
         direction: Direction,
@@ -159,6 +162,7 @@ impl GameAction {
             | Self::SellToShop { .. }
             | Self::WithdrawFromHome { .. }
             | Self::SetSummonCommand { .. } => 0,
+            Self::TravelLocal { .. } => 0,
             Self::RefuelLight { .. } => STANDARD_ACTION_COST / 2,
             _ => STANDARD_ACTION_COST,
         }
@@ -229,6 +233,7 @@ impl From<GameCommand> for GameAction {
             },
             GameCommand::LeaveWorldMap => Self::LeaveWorldMap,
             GameCommand::TravelWorld { destination } => Self::TravelWorld { destination },
+            GameCommand::TravelLocal { destination } => Self::TravelLocal { destination },
             GameCommand::Move { direction } => Self::Move { direction },
             GameCommand::Ride { direction } => Self::Ride { direction },
             GameCommand::OpenDoor { direction } => Self::OpenDoor { direction },

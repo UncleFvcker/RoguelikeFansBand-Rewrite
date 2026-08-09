@@ -1236,9 +1236,6 @@ impl Game {
                     "item property knowledge state is invalid",
                 ));
             };
-            let empty_knowledge = !knowledge.appraised
-                && !knowledge.identified
-                && knowledge.known_affix_ids.is_empty();
             let identification_without_appraisal = knowledge.identified && !knowledge.appraised;
             let foreign_affix = knowledge
                 .known_affix_ids
@@ -1249,7 +1246,7 @@ impl Game {
                     .affix_ids
                     .iter()
                     .any(|affix_id| !knowledge.known_affix_ids.contains(affix_id));
-            if empty_knowledge
+            if !knowledge.discovered
                 || identification_without_appraisal
                 || foreign_affix
                 || incomplete_identification

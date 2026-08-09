@@ -823,6 +823,7 @@ fn enchantments_feed_combat_armor_and_legacy_save_projection() {
         game.item_property_knowledge.insert(
             id.to_owned(),
             ItemPropertyKnowledgeState {
+                discovered: true,
                 appraised: true,
                 identified: true,
                 known_affix_ids: BTreeSet::new(),

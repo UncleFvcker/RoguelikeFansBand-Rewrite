@@ -221,7 +221,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Rust 权威可见性与光照 v1](design/visibility-lighting-v1.md)
 - [静态地形 Chunk 渲染 v1](design/terrain-chunk-rendering-v1.md)
 
-当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v204`，共 470 条 exact fixtures、零 waiver，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
+当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v206`，共 470 条 exact fixtures、零 waiver，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
 
 fixture 使用受控的主分类。日常开发只验证或刷新受影响分类；普通 `cargo test -p rfb-contract` 只做快速的 schema、分类、ID 唯一性和契约单元测试，不回放全部场景：
 
@@ -549,6 +549,12 @@ contract-v202 推进正式内容 P18：导入器将原版近战元素名 `LIGHT`
 contract-v203 推进正式内容 P19：多彩龙幼龙、锋锐兔、马头鱼尾怪、僵尸兽人、浅水洼和怪诞者卢格共 6 只低风险十一级怪物进入严格同步。全部复用现有吐息、闪现、水生、骑乘、Unique、掉落、抗性与近战状态路径，没有新增 ability 或 effect 类型。协议保持 1.145、state hash Schema 保持 v68，demo 升至 1.199.0；正式包现有 235 种 actor、114 个 ability，严格同步 170 条，content hash 为 `f3a9f16c4d40fa7b6b4472f856fbf22af7e33727324afc5f2962ad84cf11912b`。详见 [Contract v203](design/contract-v203-warrens-content-p19-level-11-low-risk.md)。
 
 集成收口将荒野 W0–W5、物品 P1–P3.1 与怪物 P13–P19 合入同一主线：协议统一为 1.147、state hash Schema v70、基线 contract-v204，demo 统一为 1.200.0；正式包现有 86 种 terrain、235 种 actor、204 种 item 和 114 个 ability，content hash 为 `2273089117afc9e9f5ac4947407da9463d6eb8946fcbf7fb3a1a3f27cebd336b`。
+
+O1 为物品实例知识增加权威 `discovered` 状态：视野和物品探测会发现地面物品，未发现物品不再出现在 `items` 或 `CellDto.itemId` 投影中；拾取、丢弃、怪物携带、楼层存储和存档往返保持发现状态。协议升至 1.148、state hash Schema 升至 v71、基线升至 contract-v205；save 容器保持 v1，旧开发存档不兼容。详见 [O1 物品发现](design/object-list-o1-item-discovery.md)。
+
+O3 按 RFB 原版拆分普通地图旅行：反引号打开地图准星选点，选点时 `<` / `>` 循环定位已探索楼梯，物品列表中的 `J` / `(` / 反引号直接前往选中位置，大写 `J` 恢复本次运行中的上个目标。Core 的 `TravelLocal { destination }` 每次只走一步并复用普通移动结算；前端在遇敌、受伤、混乱、阻路、死亡或切层时停止。协议升至 1.149、基线升至 contract-v206；目标不写入存档或 state hash，Schema 保持 v71。
+
+O4 完成物体列表与本地旅行验收：列表使用相对南北/东西偏移并以距离、坐标、名称和实例 ID 稳定排序；聚焦测试覆盖隐藏物品投影、视野/探测发现、知识存档与 state hash、`O`/`o` 分流、楼梯切换、本地旅行绕墙和遇敌/受伤/阻塞中断，并回归世界地图旅行。最终版本保持协议 1.149、state hash Schema v71、save v1 与 contract-v206；内容包 1.200.0 和内容 hash 不变，旧开发存档不兼容。
 
 ### 本地验证
 

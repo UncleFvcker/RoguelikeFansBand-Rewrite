@@ -973,17 +973,60 @@
       ],
       "itemPropertyKnowledge": [
         {
+          "itemId": "demo.item.warrens-light-healing-potion.1",
+          "discovered": true
+        },
+        {
+          "itemId": "demo.item.warrens-short-sword.1",
+          "discovered": true
+        },
+        {
+          "itemId": "generated.item.1",
+          "discovered": true
+        },
+        {
           "itemId": "generated.item.10",
+          "discovered": true,
           "appraised": true,
           "identified": true
         },
         {
           "itemId": "generated.item.11",
+          "discovered": true,
           "appraised": true,
           "identified": true
         },
         {
+          "itemId": "generated.item.2",
+          "discovered": true
+        },
+        {
+          "itemId": "generated.item.3",
+          "discovered": true
+        },
+        {
+          "itemId": "generated.item.4",
+          "discovered": true
+        },
+        {
+          "itemId": "generated.item.5",
+          "discovered": true
+        },
+        {
+          "itemId": "generated.item.6",
+          "discovered": true
+        },
+        {
+          "itemId": "generated.item.7",
+          "discovered": true
+        },
+        {
+          "itemId": "generated.item.8",
+          "discovered": true
+        },
+        {
           "itemId": "generated.item.9",
+          "discovered": true,
           "appraised": true,
           "identified": true
         }
@@ -1024,7 +1067,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "d25de501ae89dac836ddf0e5235c8fbf273457072ef2c2473845215c43cb589f"
+      "stateHash": "5747603b4212230205c36691ad2ea9b7072b0a5c68a4c9ca5d3f853bd1a1ddc2"
     },
     "events": [
       {
@@ -4306,6 +4349,6 @@
       "demo.floor.surface.surface.11",
       "demo.floor.surface.surface.4"
     ],
-    "saveRoundTripStateHash": "d25de501ae89dac836ddf0e5235c8fbf273457072ef2c2473845215c43cb589f"
+    "saveRoundTripStateHash": "5747603b4212230205c36691ad2ea9b7072b0a5c68a4c9ca5d3f853bd1a1ddc2"
   }
 }

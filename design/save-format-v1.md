@@ -171,6 +171,8 @@ Rust 运行时内部只保留一个 `ItemInstance` 集合，`ItemLocation` 明�
 
 集成协议 1.147 同时保存荒野状态、自动旅行目标与逐格永久光；相对主线 1.146 新增的 `glow` 使 state hash 升至 Schema v70，save 容器仍为 v1。
 
+协议 1.148 在 `ItemPropertyKnowledgeSaveDto` 中增加必填 `discovered`，保存玩家已经看见或探测到的物品实例。发现状态随实例跨地面、背包、装备、怪物携带、Home 与楼层存储流转；已不存在实例的知识不会写入存档。该字段进入 state hash Schema v71，save 容器保持 v1，旧开发存档不兼容。完整边界见 [O1 物品发现](object-list-o1-item-discovery.md)。
+
 协议 1.89 为 `PlayerSaveDto` 增加默认的 `summonCommand`。旧存档缺失时恢复为 `follow` 且无锚点；`guard` 必须携带地图内可行走锚点，其他模式必须没有锚点，否则拒绝载入。当前层和离层召唤物仍使用既有 `SummonSaveDto`；跨层跟随只移动实体及其携带物，不改变 owner/source/lifetime。save 容器保持 v1，新增权威命令状态使 state hash 升至 Schema v39。完整边界见 [Contract v89](contract-v89-friendly-summon-commands.md)。
 
 协议 1.90 不新增存档字段：技法资源池写入既有 `PlayerSaveDto.resources`，先天能力熟练度写入 `abilityProgress`，`learnedAbilityIds` 仍只含研读所得。存档中的资源池放宽为子集匹配：缺失的池按内容 `initialFillPercent` 初始化且不抽 RNG；未知 ID、上限不符或超上限仍拒绝。无 `castingProfile` 的类不得携带 `learnedAbilityIds`。save 容器保持 v1，技法资源池与先天熟练度使 state hash 升至 Schema v40。完整边界见 [Contract v90](contract-v90-technique-resources.md)。

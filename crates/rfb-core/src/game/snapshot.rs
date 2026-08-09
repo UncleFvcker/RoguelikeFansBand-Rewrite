@@ -539,6 +539,9 @@ impl Game {
                 let ItemLocation::Ground(position) = &item.location else {
                     return None;
                 };
+                if !self.item_is_discovered(&item.id) {
+                    return None;
+                }
                 Some(ItemDto {
                     id: item.id.clone(),
                     kind_id: item.kind_id.clone(),
@@ -851,7 +854,10 @@ impl Game {
                 .or_else(|| {
                     self.items
                         .iter()
-                        .filter(|item| item.location == ItemLocation::Ground(position))
+                        .filter(|item| {
+                            item.location == ItemLocation::Ground(position)
+                                && self.item_is_discovered(&item.id)
+                        })
                         .min_by(|left, right| left.id.cmp(&right.id))
                         .map(|item| item.id.clone())
                 }),

@@ -122,6 +122,7 @@ mod status_effects;
 mod tasks;
 mod terrain;
 pub(crate) mod town;
+mod travel;
 mod turn;
 mod validation;
 mod wilderness;
@@ -188,7 +189,7 @@ pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 70;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 71;
 pub const WARRENS_JOURNEY_WORLD_ID: &str = "demo.world.warrens-journey";
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const VISIBILITY_RADIUS: i32 = 8;
@@ -1203,6 +1204,17 @@ impl Game {
         };
         let unavailable_world_travel =
             matches!(&action, GameAction::TravelWorld { .. }) && world_travel_direction.is_none();
+        let local_travel_direction = match &action {
+            GameAction::TravelLocal { destination } => {
+                self.next_local_travel_direction(*destination)
+            }
+            _ => None,
+        };
+        let unavailable_local_travel =
+            matches!(&action, GameAction::TravelLocal { .. }) && local_travel_direction.is_none();
+        if let Some(direction) = local_travel_direction {
+            action = GameAction::Move { direction };
+        }
         let advances_world = !depleted_device_use
             && !zero_time_unavailable_item_use
             && !cursed_unequip
@@ -1211,6 +1223,7 @@ impl Game {
             && !unavailable_light_refuel
             && !unavailable_recharging_item
             && !unavailable_world_travel
+            && !unavailable_local_travel
             && !matches!(
                 &action,
                 GameAction::Retire
@@ -1459,6 +1472,7 @@ impl Game {
                     events.push(DomainEvent::MoveBlocked);
                 }
             }
+            GameAction::TravelLocal { .. } => events.push(DomainEvent::MoveBlocked),
             GameAction::Throw { item_id, direction } => {
                 self.throw_inventory_item(
                     &item_id,
@@ -4038,6 +4052,7 @@ impl Game {
                 self.item_property_knowledge.insert(
                     item.id.clone(),
                     ItemPropertyKnowledgeState {
+                        discovered: true,
                         appraised: true,
                         identified: true,
                         known_affix_ids: item.affix_ids.iter().cloned().collect(),
@@ -4521,6 +4536,36 @@ impl Game {
                 }
             }
         }
+        let discovered_item_ids = self
+            .items
+            .iter()
+            .filter_map(|item| match item.location {
+                ItemLocation::Inventory | ItemLocation::Equipped { .. } => Some(item.id.clone()),
+                ItemLocation::Ground(position) if self.is_visible(position) => {
+                    Some(item.id.clone())
+                }
+                ItemLocation::Ground(_)
+                | ItemLocation::CarriedBy { .. }
+                | ItemLocation::Shop { .. }
+                | ItemLocation::Home { .. } => None,
+            })
+            .collect::<Vec<_>>();
+        self.mark_item_instances_discovered(&discovered_item_ids);
+    }
+
+    fn mark_item_instances_discovered(&mut self, item_ids: &[String]) {
+        for item_id in item_ids {
+            self.item_property_knowledge
+                .entry(item_id.clone())
+                .or_default()
+                .discovered = true;
+        }
+    }
+
+    fn item_is_discovered(&self, item_id: &str) -> bool {
+        self.item_property_knowledge
+            .get(item_id)
+            .is_some_and(|knowledge| knowledge.discovered)
     }
 
     fn is_visible(&self, position: Position) -> bool {

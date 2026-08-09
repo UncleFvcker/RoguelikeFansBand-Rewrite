@@ -214,6 +214,28 @@
           "aware": true
         }
       ],
+      "itemPropertyKnowledge": [
+        {
+          "itemId": "demo.item.echo-blade.1",
+          "discovered": true
+        },
+        {
+          "itemId": "demo.item.echo-charm.1",
+          "discovered": true
+        },
+        {
+          "itemId": "demo.item.luminous-shard.1",
+          "discovered": true
+        },
+        {
+          "itemId": "demo.item.resonance-pellet.1",
+          "discovered": true
+        },
+        {
+          "itemId": "demo.item.resonance-sling.1",
+          "discovered": true
+        }
+      ],
       "nextItemInstanceSerial": 2,
       "nextGoldPileSerial": 1,
       "terrainInteractions": [
@@ -293,7 +315,7 @@
           "y": 10
         }
       ],
-      "stateHash": "b768876203972c8496da1a38a811776f8540c5d79906cc9aca9aadc914f64570"
+      "stateHash": "c95246437ce9b81300ec0d4f84cbd3ed28457ab6639fb02baae46147ef4e0443"
     },
     "events": [
       {
@@ -326,6 +348,6 @@
         "y": 10
       }
     ],
-    "saveRoundTripStateHash": "b768876203972c8496da1a38a811776f8540c5d79906cc9aca9aadc914f64570"
+    "saveRoundTripStateHash": "c95246437ce9b81300ec0d4f84cbd3ed28457ab6639fb02baae46147ef4e0443"
   }
 }

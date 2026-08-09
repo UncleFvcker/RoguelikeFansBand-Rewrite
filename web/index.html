@@ -424,6 +424,21 @@
         <div id="player-page-host" class="player-page-host"></div>
       </dialog>
 
+      <dialog id="object-list-dialog" class="player-page-dialog object-list-dialog" aria-labelledby="object-list-title">
+        <header>
+          <div>
+            <p class="eyebrow" data-l10n-id="object-list-eyebrow"></p>
+            <h2 id="object-list-title" data-l10n-id="object-list-title"></h2>
+          </div>
+          <button id="object-list-close" class="quiet-button dialog-close" type="button" data-l10n-id="action-dialog-close"></button>
+        </header>
+        <div class="object-list-toolbar">
+          <p data-l10n-id="object-list-help"></p>
+          <button id="object-list-stairs-toggle" class="quiet-button" type="button" aria-pressed="false"></button>
+        </div>
+        <div id="object-list-host" class="object-list-host" aria-live="polite"></div>
+      </dialog>
+
       <dialog id="shop-dialog" class="shop-dialog" aria-labelledby="shop-title" aria-describedby="shop-description">
         <header class="shop-header">
           <div>

@@ -216,7 +216,28 @@
         "floorId": "demo.floor.echo-depth-1"
       },
       "entityCount": 0,
-      "groundItemCount": 1,
+      "itemPropertyKnowledge": [
+        {
+          "itemId": "demo.item.echo-blade.1",
+          "discovered": true
+        },
+        {
+          "itemId": "demo.item.echo-charm.1",
+          "discovered": true
+        },
+        {
+          "itemId": "demo.item.luminous-shard.1",
+          "discovered": true
+        },
+        {
+          "itemId": "demo.item.resonance-pellet.1",
+          "discovered": true
+        },
+        {
+          "itemId": "demo.item.resonance-sling.1",
+          "discovered": true
+        }
+      ],
       "nextItemInstanceSerial": 3,
       "nextGoldPileSerial": 1,
       "tasks": [
@@ -277,7 +298,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "8186dc05af22aaf524f6020d8f482c938818af2a66f16b1e1e4f0d3ce8942357"
+      "stateHash": "ff8afc62d1be4283afbd20bd06933ac097dcf423d5ba77308e015807f4dcd398"
     },
     "events": [
       {
@@ -1936,6 +1957,6 @@
         "y": 5
       }
     ],
-    "saveRoundTripStateHash": "8186dc05af22aaf524f6020d8f482c938818af2a66f16b1e1e4f0d3ce8942357"
+    "saveRoundTripStateHash": "ff8afc62d1be4283afbd20bd06933ac097dcf423d5ba77308e015807f4dcd398"
   }
 }

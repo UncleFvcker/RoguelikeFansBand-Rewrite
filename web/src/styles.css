@@ -1998,6 +1998,100 @@ kbd {
   max-height: none;
 }
 
+.object-list-dialog {
+  width: min(48rem, calc(100vw - 2rem));
+}
+
+.object-list-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid var(--ui-line-soft);
+  padding: 0.6rem 0.9rem;
+}
+
+.object-list-toolbar p {
+  margin: 0;
+  color: var(--ui-faint);
+  font-size: 0.68rem;
+  line-height: 1.45;
+}
+
+.object-list-host {
+  max-height: calc(100vh - 10rem);
+  overflow-y: auto;
+  padding: 0.75rem 0.9rem 0.9rem;
+}
+
+.object-list-section + .object-list-section {
+  margin-top: 1rem;
+}
+
+.object-list-section h3 {
+  margin: 0 0 0.35rem;
+  color: var(--ui-accent);
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.object-list-entries {
+  display: grid;
+  gap: 0.18rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.object-list-row {
+  display: grid;
+  width: 100%;
+  grid-template-columns: 2rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.55rem;
+  border: 1px solid transparent;
+  padding: 0.45rem 0.55rem;
+  color: var(--ui-text);
+  background: transparent;
+  text-align: left;
+}
+
+.object-list-row:hover,
+.object-list-row[data-selected="true"] {
+  border-color: #4d4738;
+  background: #191812;
+}
+
+.object-list-row:focus-visible {
+  outline: 1px solid var(--ui-accent);
+  outline-offset: -1px;
+}
+
+.object-list-glyph {
+  color: #d6c98f;
+  font-family: "Cascadia Mono", Consolas, monospace;
+  text-align: center;
+}
+
+.object-list-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.object-list-position,
+.object-list-empty {
+  color: var(--ui-faint);
+  font-family: "Cascadia Mono", Consolas, monospace;
+  font-size: 0.66rem;
+}
+
+.object-list-empty {
+  margin: 0;
+  padding: 0.45rem 0.55rem;
+}
+
 .player-ui-settings-dialog {
   width: min(46rem, calc(100vw - 2rem));
   overflow-y: auto;

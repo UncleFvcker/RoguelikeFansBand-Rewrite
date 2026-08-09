@@ -4062,6 +4062,22 @@
         {
           "type": "object",
           "properties": {
+            "destination": {
+              "$ref": "#/$defs/Position"
+            },
+            "type": {
+              "type": "string",
+              "const": "travel-local"
+            }
+          },
+          "required": [
+            "type",
+            "destination"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "direction": {
               "$ref": "#/$defs/Direction"
             },

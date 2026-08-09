@@ -1,6 +1,6 @@
 # RFB CoreTransport 协议 v1
 
-状态：协议 1.140、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
+状态：协议 1.149、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
 
 ## 1. 适用边界
 
@@ -381,3 +381,7 @@ contract-v191 只增加内容层近战 effect 及对应运行时解释，不新�
 协议 1.145 为 `TerrainSaveDto` 增加必填逐格 `glow`，并增加 `darken-room` ability spec 与带 `clearedCells` 的结算结果。当前层和离层存储使用同一 glow 数据；它进入 state hash Schema v68，旧开发存档不兼容。完整边界见 [Contract v199](contract-v199-warrens-content-p15-darkness.md)。
 
 集成协议 1.147 同时保留荒野 W1–W5 与房间永久光/黑暗字段；相对主线 1.146 新增的 `glow` 权威状态进入 state hash Schema v70，contract 基线统一刷新为 v204。
+
+协议 1.148 为 `ItemPropertyKnowledgeSaveDto` 增加必填 `discovered`。玩家视野和物品探测写入该实例级状态；`GameSnapshot.items` 与 `CellDto.itemId` 只投影已发现的非金币地面物品。该状态进入 state hash Schema v71，save 容器保持 v1，旧开发存档不兼容。完整边界见 [O1 物品发现](object-list-o1-item-discovery.md)。
+
+协议 1.149 增加单步 `TravelLocal { destination }`。Core 只根据当前已探索且可通行的地图知识选择下一步，避开已知陷阱，并复用普通 `Move` 的行动、怪物、时间、饥饿与光源结算；地图选点、循环定位楼梯、连续派发和中断由前端负责。普通地图目标遵循 RFB 原版生命周期，只在本次运行中供大写 `J` 恢复，不进入 save 或 state hash；Schema 保持 v71，基线升至 contract-v206。
