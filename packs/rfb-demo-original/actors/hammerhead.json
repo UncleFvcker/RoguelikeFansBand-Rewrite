@@ -1,0 +1,87 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "habitats": [
+      "all"
+    ],
+    "legacyIndex": 292,
+    "maxDepth": 50,
+    "rarity": 3
+  },
+  "attack": 4,
+  "damageDice": 4,
+  "damageSides": 4,
+  "damageType": "physical",
+  "defense": 5,
+  "descriptionKey": "actor-demo-hammerhead-description",
+  "experienceValue": 40,
+  "formatVersion": 1,
+  "glyph": "l",
+  "hitPointDice": {
+    "dice": 16,
+    "sides": 10
+  },
+  "id": "demo.actor.hammerhead",
+  "level": 16,
+  "maxHp": 88,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 4,
+            "damageSides": 4,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 4,
+            "damageSides": 4,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.butt",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 4,
+            "damageSides": 4,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "modes": [
+      "aquatic"
+    ]
+  },
+  "nameKey": "actor-demo-hammerhead-name",
+  "resistances": {
+    "water": "resistant"
+  },
+  "role": "monster",
+  "speed": 115,
+  "tags": [
+    "animal",
+    "fish",
+    "legacy-import",
+    "warrens"
+  ]
+}

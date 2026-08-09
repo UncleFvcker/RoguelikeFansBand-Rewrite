@@ -308,6 +308,8 @@ contract-v213 / 包 1.209.0 严格同步纳垢携疫者与侏儒法师，生成 
 
 contract-v214 / 包 1.210.0 为 actor 增加默认 false、仅怪物可用的 `reflectsBolts`，只控制单体 ability/device bolt 的 75% 反射入口；反射方向与命中继续由核心投射和伤害管线解释。铁甲虫进入严格同步。当前包共 86 terrain、332 actors、204 items、143 abilities，严格同步 267 条，内容 hash 为 `b6f4741928ed2c1ae56f65d5614b06a25a200cdcb2eb9abe44f96fe1da424e00`。协议 1.148 与 state hash Schema v70 不变。
 
+contract-v216 / 包 1.212.0 直接接入 12 只十六级怪物，全部复用既有 actor、近战、分配、掉落与怪物施法内容；`DETECT_OBJECTS`、`MULTIPLY` 和 `BERSERK` 的附身者提示不生成怪物能力。当前包共 88 terrain、344 actors、249 items、143 abilities，严格同步 279 条，内容 hash 为 `08dfc525ebb4f1f2af4e110dcc1490ffc37647f63feb088c0dfa4e8113e22f3f`。协议 1.151 与 state hash Schema v72 不变。
+
 contract-v83 以 1.75.0 增加 `detect` 能力效果、Echo Pulse 与 Echo Sight；类别/半径、FOV 与隐藏投影筛选、稳定结果顺序、瞬时/持久知识边界由核心定义，持久结果复用 `revealedTerrain`，state hash 升至 Schema v36。
 
 contract-v84 以 1.76.0 增加 `transform-terrain` 能力效果、Echo Delving 与 Echo Rampart；来源/目标 terrain 集、范围、FOV/line of effect、占用格、连接/边界保护和原子写入由核心定义，地形继续复用既有 save/state hash 字段。

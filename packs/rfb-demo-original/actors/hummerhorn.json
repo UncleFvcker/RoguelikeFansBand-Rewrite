@@ -1,0 +1,55 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 289,
+    "maxDepth": 50,
+    "multiplies": true,
+    "randomMovementPercent": 75,
+    "rarity": 5
+  },
+  "attack": 4,
+  "damageDice": 2,
+  "damageSides": 2,
+  "damageType": "confusion",
+  "defense": 1,
+  "descriptionKey": "actor-demo-hummerhorn-description",
+  "experienceValue": 4,
+  "formatVersion": 1,
+  "glyph": "I",
+  "hitPointDice": {
+    "dice": 2,
+    "sides": 2
+  },
+  "id": "demo.actor.hummerhorn",
+  "level": 16,
+  "maxHp": 3,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "damageDice": 2,
+            "damageSides": 2,
+            "type": "confusion"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "nameKey": "actor-demo-hummerhorn-name",
+  "role": "monster",
+  "speed": 120,
+  "tags": [
+    "animal",
+    "insect",
+    "legacy-import",
+    "warrens"
+  ]
+}

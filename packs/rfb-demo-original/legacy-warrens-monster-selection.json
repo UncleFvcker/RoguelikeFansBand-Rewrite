@@ -1614,6 +1614,78 @@
       "id": "buzzy-beetle",
       "tags": ["beetle", "warrens"],
       "omittedFlags": ["EMPTY_MIND", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 242,
+      "id": "pink-horror",
+      "tags": ["demon", "warrens"],
+      "omittedFlags": ["POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 284,
+      "id": "rust-monster",
+      "tags": ["rust-monster", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC", "STUPID", "WEIRD_MIND"]
+    },
+    {
+      "sourceIndex": 285,
+      "id": "orc-captain",
+      "tags": ["humanoid", "orc", "warrens"],
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
+    },
+    {
+      "sourceIndex": 286,
+      "id": "gelatinous-cube",
+      "tags": ["jelly", "warrens"],
+      "omittedFlags": ["COLD_BLOOD", "EMPTY_MIND", "POS_GAIN_AC", "STUPID"]
+    },
+    {
+      "sourceIndex": 287,
+      "id": "giant-green-dragon-fly",
+      "tags": ["insect", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC", "WEIRD_MIND"]
+    },
+    {
+      "sourceIndex": 289,
+      "id": "hummerhorn",
+      "tags": ["insect", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC", "WEIRD_MIND"]
+    },
+    {
+      "sourceIndex": 290,
+      "id": "lizardman",
+      "tags": ["humanoid", "reptile", "warrens"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 291,
+      "id": "ulfast-son-of-ulfang",
+      "tags": ["human", "humanoid", "warrens"],
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
+    },
+    {
+      "sourceIndex": 292,
+      "id": "hammerhead",
+      "tags": ["fish", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 293,
+      "id": "berserker",
+      "tags": ["human", "humanoid", "warrens"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 1057,
+      "id": "ogrillon",
+      "tags": ["giant", "humanoid", "orc", "warrens"],
+      "omittedFlags": []
+    },
+    {
+      "sourceIndex": 1188,
+      "id": "orc-berserker",
+      "tags": ["humanoid", "orc", "warrens"],
+      "omittedFlags": []
     }
   ]
 }
