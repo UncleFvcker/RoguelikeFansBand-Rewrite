@@ -83,6 +83,10 @@ contract-v205 以五个窄契约完成经验吸取、毒素接触光环、外观
 软体接触光环。正式包 actor 增至 241、ability 增至 116、严格同步增至 176；
 协议保持 1.147，State Hash Schema 保持 v70。瘟疫鼠的 `COMPOST` 仍等待真实
 下水道任务消费者，不作为掉落或通用区域规则近似实现。
+contract-v206 直接接入 20 只十二级非施法怪物，全部复用既有 actor 字段。
+正式包 actor 增至 261、ability 保持 116、严格同步增至 196；协议保持 1.147，
+State Hash Schema 保持 v70。`S:BERSERK` 和 `S:MULTIPLY` 仍按原版边界只作为
+附身者提示，不生成怪物主动能力。
 
 荒野 W0 已导入 `master:w_info.txt` 的 `99x66` normal 世界图、15 类地形、
 危险等级、道路和起点，并只把现有 Outpost/Warrens 绑定为正式地点。W1 已完成

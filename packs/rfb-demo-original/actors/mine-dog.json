@@ -1,0 +1,60 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "friends": {
+      "chancePercent": 0,
+      "dice": 3,
+      "sides": 3
+    },
+    "legacyIndex": 221,
+    "maxDepth": 50,
+    "randomMovementPercent": 50,
+    "rarity": 4
+  },
+  "attack": 3,
+  "damageDice": 5,
+  "damageSides": 5,
+  "damageType": "physical",
+  "defense": 3,
+  "descriptionKey": "actor-demo-mine-dog-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 40,
+  "formatVersion": 1,
+  "glyph": "C",
+  "hitPointDice": {
+    "dice": 6,
+    "sides": 6
+  },
+  "id": "demo.actor.mine-dog",
+  "level": 12,
+  "maxHp": 21,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 5,
+            "damageSides": 5,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.explode",
+        "selfDestructs": true,
+        "toHit": 20
+      }
+    ]
+  },
+  "nameKey": "actor-demo-mine-dog-name",
+  "role": "monster",
+  "speed": 120,
+  "tags": [
+    "animal",
+    "dog",
+    "legacy-import",
+    "warrens"
+  ]
+}

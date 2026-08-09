@@ -1068,6 +1068,126 @@
       "id": "wallaby",
       "tags": ["warrens"],
       "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 154,
+      "id": "yeti",
+      "tags": ["warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 191,
+      "id": "grizzly-bear",
+      "tags": ["bear", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 210,
+      "id": "black-mamba",
+      "tags": ["snake", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 211,
+      "id": "white-wolf",
+      "tags": ["warrens", "wolf"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 213,
+      "id": "nether-worm-mass",
+      "tags": ["warrens", "worm"],
+      "omittedFlags": ["POS_GAIN_AC", "STUPID", "WEIRD_MIND"]
+    },
+    {
+      "sourceIndex": 214,
+      "id": "abyss-worm-mass",
+      "tags": ["warrens", "worm"],
+      "omittedFlags": ["COLD_BLOOD", "POS_GAIN_AC", "STUPID", "WEIRD_MIND"]
+    },
+    {
+      "sourceIndex": 215,
+      "id": "golfimbul-the-hill-orc-chief",
+      "tags": ["humanoid", "warrens"],
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
+    },
+    {
+      "sourceIndex": 216,
+      "id": "swordsman",
+      "tags": ["humanoid", "warrens"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 220,
+      "id": "ixitxachitl",
+      "tags": ["fish", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 221,
+      "id": "mine-dog",
+      "tags": ["dog", "warrens"],
+      "omittedFlags": []
+    },
+    {
+      "sourceIndex": 222,
+      "id": "hellcat",
+      "tags": ["cat", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC", "WEIRD_MIND"]
+    },
+    {
+      "sourceIndex": 227,
+      "id": "air-spirit",
+      "tags": ["spirit", "warrens"],
+      "omittedFlags": ["COLD_BLOOD", "EMPTY_MIND", "POS_GAIN_AC", "POS_HOLD_LIFE"]
+    },
+    {
+      "sourceIndex": 228,
+      "id": "skeleton-human",
+      "tags": ["skeleton", "warrens"],
+      "omittedFlags": ["COLD_BLOOD", "EMPTY_MIND", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 229,
+      "id": "zombified-human",
+      "tags": ["warrens", "zombie"],
+      "omittedFlags": ["COLD_BLOOD", "EMPTY_MIND", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 230,
+      "id": "tiger",
+      "tags": ["tiger", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 232,
+      "id": "frumious-bandersnatch",
+      "tags": ["warrens"],
+      "omittedFlags": ["POS_GAIN_AC", "WEIRD_MIND"]
+    },
+    {
+      "sourceIndex": 233,
+      "id": "spotted-jelly",
+      "tags": ["jelly", "warrens"],
+      "omittedFlags": ["COLD_BLOOD", "EMPTY_MIND", "POS_GAIN_AC", "STUPID"]
+    },
+    {
+      "sourceIndex": 1072,
+      "id": "mauhur-the-orc-captain",
+      "tags": ["humanoid", "warrens"],
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
+    },
+    {
+      "sourceIndex": 1073,
+      "id": "meng-you-the-brother-of-meng-huo",
+      "tags": ["humanoid", "warrens"],
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
+    },
+    {
+      "sourceIndex": 1387,
+      "id": "swamp-rabbit",
+      "tags": ["rabbit", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
     }
   ]
 }

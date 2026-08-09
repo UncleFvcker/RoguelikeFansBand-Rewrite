@@ -1,0 +1,69 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 227,
+    "maxDepth": 50,
+    "randomMovementPercent": 75,
+    "rarity": 2
+  },
+  "attack": 3,
+  "damageDice": 1,
+  "damageSides": 3,
+  "damageType": "physical",
+  "defense": 4,
+  "descriptionKey": "actor-demo-air-spirit-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 40,
+  "formatVersion": 1,
+  "glyph": "E",
+  "hitPointDice": {
+    "dice": 8,
+    "sides": 8
+  },
+  "id": "demo.actor.air-spirit",
+  "level": 12,
+  "maxHp": 36,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 3,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "nameKey": "actor-demo-air-spirit-name",
+  "resistances": {
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 130,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "evil",
+    "invisible",
+    "legacy-import",
+    "nonliving",
+    "spirit",
+    "warrens"
+  ]
+}

@@ -1,0 +1,72 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "habitats": [
+      "all"
+    ],
+    "legacyIndex": 220,
+    "maxDepth": 50,
+    "rarity": 1
+  },
+  "attack": 3,
+  "damageDice": 2,
+  "damageSides": 6,
+  "damageType": "poison",
+  "defense": 3,
+  "descriptionKey": "actor-demo-ixitxachitl-description",
+  "experienceValue": 40,
+  "formatVersion": 1,
+  "glyph": "l",
+  "hitPointDice": {
+    "dice": 12,
+    "sides": 8
+  },
+  "id": "demo.actor.ixitxachitl",
+  "level": 12,
+  "maxHp": 54,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "damageDice": 2,
+            "damageSides": 6,
+            "type": "poison"
+          }
+        ],
+        "methodId": "rfb.blow.sting",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "damageDice": 2,
+            "damageSides": 6,
+            "type": "poison"
+          }
+        ],
+        "methodId": "rfb.blow.sting",
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "modes": [
+      "aquatic"
+    ]
+  },
+  "nameKey": "actor-demo-ixitxachitl-name",
+  "resistances": {
+    "poison": "resistant",
+    "water": "resistant"
+  },
+  "role": "monster",
+  "speed": 110,
+  "tags": [
+    "animal",
+    "evil",
+    "fish",
+    "legacy-import",
+    "warrens"
+  ]
+}

@@ -193,6 +193,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Contract v202：Warrens P18 伪龙](design/contract-v202-warrens-content-p18-pseudo-dragon.md)
 - [Contract v203：Warrens P19 十一级低风险怪物](design/contract-v203-warrens-content-p19-level-11-low-risk.md)
 - [Contract v205：Warrens P20 特殊机制](design/contract-v205-warrens-content-p20-special-mechanics.md)
+- [Contract v206：Warrens P21 十二级非施法怪物](design/contract-v206-warrens-content-p21-level-12-harvest.md)
 - [荒野世界地图 W0：权威数据导入](design/wilderness-w0-authoritative-data.md)
 - [荒野世界地图 W1：权威状态与显示](design/wilderness-w1-map-state-display.md)
 - [荒野世界地图 W2：世界旅行与局部荒野](design/wilderness-w2-travel-local-generation.md)
@@ -222,7 +223,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Rust 权威可见性与光照 v1](design/visibility-lighting-v1.md)
 - [静态地形 Chunk 渲染 v1](design/terrain-chunk-rendering-v1.md)
 
-当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v205`，共 470 条 exact fixtures、零 waiver，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
+当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v206`，共 470 条 exact fixtures、零 waiver，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
 
 fixture 使用受控的主分类。日常开发只验证或刷新受影响分类；普通 `cargo test -p rfb-contract` 只做快速的 schema、分类、ID 唯一性和契约单元测试，不回放全部场景：
 
@@ -552,6 +553,8 @@ contract-v203 推进正式内容 P19：多彩龙幼龙、锋锐兔、马头鱼�
 集成收口将荒野 W0–W5、物品 P1–P3.1 与怪物 P13–P19 合入同一主线：协议统一为 1.147、state hash Schema v70、基线 contract-v204，demo 统一为 1.200.0；正式包现有 86 种 terrain、235 种 actor、204 种 item 和 114 个 ability，content hash 为 `2273089117afc9e9f5ac4947407da9463d6eb8946fcbf7fb3a1a3f27cebd336b`。
 
 contract-v205 推进正式内容 P20：以五个窄契约分别接入经验吸取、毒素接触光环、外观变形、`DROP_WARRIOR_SHOOT` 弓手掉落别名和 `DUNGEON_31/35` 区域限定；混沌变形者、葡萄果冻、瘟疫鼠、骑士弓箭手、南蛮大王朵思大王和小袋鼠进入严格同步，既有黏糊糊的软体也恢复原作 `1d1` 毒素接触光环。协议保持 1.147、state hash Schema 保持 v70，demo 升至 1.201.0；正式包现有 86 种 terrain、241 种 actor、204 种 item 和 116 个 ability，严格同步 176 条，content hash 为 `e2fd133bcd3f2e3c2fd4d3ab8e25da6c437bfa18bede03d039d55a3db35406ae`。470 条 exact fixtures 无需刷新并全部通过。详见 [Contract v205](design/contract-v205-warrens-content-p20-special-mechanics.md)。
+
+contract-v206 推进正式内容 P21：雪人、灰熊、黑曼巴蛇、白狼、虚空蠕虫团、深渊蠕虫团、山丘兽人首领高尔芬博、剑客、异西鳐、地雷狗、地狱猫、气元素精灵、人类骷髅、僵尸人类、老虎、狂暴的班德斯纳奇、斑点果冻、半兽人队长毛胡尔、孟获之弟孟优和沼泽兔共 20 只十二级非施法怪物进入严格同步。全部复用现有生态、近战、移动、分配、掉落和区域限定字段；附身者专用的 `S:BERSERK` / `S:MULTIPLY` 不生成怪物施法。协议保持 1.147、state hash Schema 保持 v70，demo 升至 1.202.0；正式包现有 86 种 terrain、261 种 actor、204 种 item 和 116 个 ability，严格同步 196 条，content hash 为 `8f68bd58310207e0a9e7d1370d1a09731213fb1323753f6f28e2182b8ef2f8dc`。新增亡灵候选仅使 `death.raise-dead-basic-pool` 一条 fixture 按预期刷新，其余 469 条保持精确一致。详见 [Contract v206](design/contract-v206-warrens-content-p21-level-12-harvest.md)。
 
 ### 本地验证
 

@@ -1,0 +1,127 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "habitats": [
+      "shore"
+    ],
+    "legacyIndex": 1387,
+    "maxDepth": 42,
+    "rarity": 7,
+    "wildOnly": true
+  },
+  "attack": 3,
+  "damageDice": 4,
+  "damageSides": 1,
+  "damageType": "physical",
+  "defense": 5,
+  "descriptionKey": "actor-demo-swamp-rabbit-description",
+  "experienceValue": 50,
+  "formatVersion": 1,
+  "glyph": "r",
+  "hitPointDice": {
+    "dice": 12,
+    "sides": 10
+  },
+  "id": "demo.actor.swamp-rabbit",
+  "level": 12,
+  "maxHp": 66,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 4,
+            "damageSides": 1,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "durationDice": 2,
+            "durationSides": 1,
+            "type": "bleeding"
+          },
+          {
+            "attributes": [
+              "charisma"
+            ],
+            "type": "drain-attributes"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 4,
+            "damageSides": 1,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "durationDice": 2,
+            "durationSides": 1,
+            "type": "bleeding"
+          },
+          {
+            "attributes": [
+              "charisma"
+            ],
+            "type": "drain-attributes"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 4,
+            "damageSides": 1,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "durationDice": 2,
+            "durationSides": 1,
+            "type": "bleeding"
+          },
+          {
+            "attributes": [
+              "charisma"
+            ],
+            "type": "drain-attributes"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "modes": [
+      "swim"
+    ]
+  },
+  "nameKey": "actor-demo-swamp-rabbit-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "acid": "resistant",
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 120,
+  "tags": [
+    "legacy-import",
+    "rabbit",
+    "warrens"
+  ]
+}

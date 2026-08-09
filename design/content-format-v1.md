@@ -1,6 +1,6 @@
 # RFB 内容数据格式 v1
 
-状态：P0 源格式、JSON Schema、确定性编译器和首个原创内容包已实现；当前内容包已扩展至 1.201.0
+状态：P0 源格式、JSON Schema、确定性编译器和首个原创内容包已实现；当前内容包已扩展至 1.202.0
 
 ## 1. 目标
 
@@ -288,7 +288,9 @@ contract-v199 以 1.195.0 为既有 actor `light` 增加默认 false 的 `darkne
 
 集成包 1.200.0 同时包含荒野 W0–W5、物品 P1–P3.1 与怪物 P13–P19，共 86 terrain、235 actors、204 items、114 abilities，内容 hash 为 `2273089117afc9e9f5ac4947407da9463d6eb8946fcbf7fb3a1a3f27cebd336b`。
 
-contract-v205 / 包 1.201.0 为 actor 增加可选 `contactAura` 与分配字段 `legacyDungeonIndices`，为 dungeon 增加可选正整数 `legacyIndex`；经验吸取使用窄 `drain-experience` melee effect，变形继续复用既有 `appearanceKindId`。当前包共 86 terrain、241 actors、204 items、116 abilities，内容 hash 为 `e2fd133bcd3f2e3c2fd4d3ab8e25da6c437bfa18bede03d039d55a3db35406ae`。协议 1.147 与 state hash Schema v70 不变。
+contract-v205 / 包 1.201.0 为 actor 增加可选 `contactAura` 与分配字段 `legacyDungeonIndices`，为 dungeon 增加可选正整数 `legacyIndex`；经验吸取使用窄 `drain-experience` melee effect，变形继续复用既有 `appearanceKindId`。该版包共 86 terrain、241 actors、204 items、116 abilities，内容 hash 为 `e2fd133bcd3f2e3c2fd4d3ab8e25da6c437bfa18bede03d039d55a3db35406ae`。协议 1.147 与 state hash Schema v70 不变。
+
+contract-v206 / 包 1.202.0 只增加 20 条十二级非施法 actor 内容记录；既有 actor 字段完整承载经验吸取、毒素与属性损伤、眩晕、死亡爆炸、繁殖、群体、护卫、荒野/地牢限定、水生、骑乘、穿墙/毁墙、隐形、Unique、尸骨和 Warrior 掉落。当前包共 86 terrain、261 actors、204 items、116 abilities，严格同步 196 条，内容 hash 为 `8f68bd58310207e0a9e7d1370d1a09731213fb1323753f6f28e2182b8ef2f8dc`。协议 1.147 与 state hash Schema v70 不变。
 
 contract-v83 以 1.75.0 增加 `detect` 能力效果、Echo Pulse 与 Echo Sight；类别/半径、FOV 与隐藏投影筛选、稳定结果顺序、瞬时/持久知识边界由核心定义，持久结果复用 `revealedTerrain`，state hash 升至 Schema v36。
 

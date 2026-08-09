@@ -49,7 +49,9 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
     assert_eq!(
         allocation,
         vec![
+            ("demo.actor.abyss-worm-mass", 214, 4, 40),
             ("demo.actor.agent-of-black-market", 14, 1, 0),
+            ("demo.actor.air-spirit", 227, 2, 50),
             ("demo.actor.baby-black-dragon", 166, 2, 40),
             ("demo.actor.baby-blue-dragon", 163, 2, 40),
             ("demo.actor.baby-green-dragon", 165, 2, 40),
@@ -60,6 +62,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.bandit", 150, 2, 40),
             ("demo.actor.barracuda", 96, 2, 40),
             ("demo.actor.black-harpy", 157, 1, 60),
+            ("demo.actor.black-mamba", 210, 3, 40),
             ("demo.actor.black-naga", 71, 1, 30),
             ("demo.actor.blinking-dot", 22, 1, 10),
             ("demo.actor.bloodfang-the-wolf", 170, 1, 999),
@@ -112,6 +115,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.freesia", 57, 1, 999),
             ("demo.actor.frosty-jelly", 84, 1, 40),
             ("demo.actor.fruit-bat", 37, 1, 10),
+            ("demo.actor.frumious-bandersnatch", 232, 2, 50),
             ("demo.actor.giant-black-ant", 49, 1, 20),
             ("demo.actor.giant-brown-bat", 114, 1, 40),
             ("demo.actor.giant-fruit-fly", 197, 6, 40),
@@ -132,6 +136,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.giant-white-rat", 86, 1, 40),
             ("demo.actor.giant-white-tick", 176, 2, 40),
             ("demo.actor.goblin", 87, 1, 40),
+            ("demo.actor.golfimbul-the-hill-orc-chief", 215, 3, 999),
             ("demo.actor.goomba", 924, 1, 20),
             ("demo.actor.grape-jelly", 212, 3, 40),
             ("demo.actor.greater-hell-beast", 39, 6, 999),
@@ -146,13 +151,16 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.grid-bug", 34, 3, 20),
             ("demo.actor.grip-farmer-maggots-dog", 53, 2, 999),
             ("demo.actor.grishnakh-the-hill-orc", 186, 3, 999),
+            ("demo.actor.grizzly-bear", 191, 1, 45),
             ("demo.actor.hairy-mold", 190, 2, 40),
+            ("demo.actor.hellcat", 222, 1, 50),
             ("demo.actor.hill-orc", 149, 1, 40),
             ("demo.actor.hippocampus", 207, 1, 40),
             ("demo.actor.hobbes-the-tiger", 200, 2, 999),
             ("demo.actor.horse", 956, 1, 20),
             ("demo.actor.hunting-hawk-of-julian", 151, 2, 40),
             ("demo.actor.insect-swarm", 38, 1, 10),
+            ("demo.actor.ixitxachitl", 220, 1, 50),
             ("demo.actor.jackal", 35, 1, 5),
             ("demo.actor.jibaku-ghost", 1012, 2, 40),
             ("demo.actor.kamikaze-yeek", 179, 1, 40),
@@ -179,10 +187,14 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.lug-the-grotesque", 1183, 3, 999),
             ("demo.actor.lynx", 1347, 2, 40),
             ("demo.actor.manes", 128, 2, 40),
+            ("demo.actor.mauhur-the-orc-captain", 1072, 3, 999),
+            ("demo.actor.meng-you-the-brother-of-meng-huo", 1073, 2, 999),
             ("demo.actor.metallic-blue-centipede", 67, 1, 30),
             ("demo.actor.metallic-green-centipede", 42, 1, 20),
             ("demo.actor.metallic-red-centipede", 77, 1, 30),
+            ("demo.actor.mine-dog", 221, 4, 50),
             ("demo.actor.nami-the-mate", 1021, 4, 999),
+            ("demo.actor.nether-worm-mass", 213, 4, 40),
             ("demo.actor.newt", 23, 1, 10),
             ("demo.actor.nibelung", 111, 1, 40),
             ("demo.actor.night-lizard", 134, 2, 40),
@@ -230,6 +242,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.silver-jelly", 73, 2, 30),
             ("demo.actor.skaven", 158, 1, 40),
             ("demo.actor.skaven-shaman", 217, 1, 50),
+            ("demo.actor.skeleton-human", 228, 1, 50),
             ("demo.actor.skeleton-kobold", 91, 1, 40),
             ("demo.actor.skeleton-orc", 136, 1, 40),
             ("demo.actor.slimy-jelly", 101, 1, 40),
@@ -241,11 +254,15 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.snaga", 118, 1, 40),
             ("demo.actor.soldier-ant", 36, 1, 10),
             ("demo.actor.space-monster", 144, 2, 40),
+            ("demo.actor.spotted-jelly", 233, 3, 50),
             ("demo.actor.spotted-mushroom-patch", 72, 1, 30),
+            ("demo.actor.swamp-rabbit", 1387, 7, 42),
             ("demo.actor.swordfish", 88, 2, 40),
+            ("demo.actor.swordsman", 216, 1, 50),
             ("demo.actor.tax-collector", 199, 3, 40),
             ("demo.actor.tengu", 194, 1, 40),
             ("demo.actor.the-borshin", 177, 2, 999),
+            ("demo.actor.tiger", 230, 2, 50),
             ("demo.actor.undead-mass", 202, 2, 40),
             ("demo.actor.unruly-horse", 957, 2, 30),
             ("demo.actor.vorpal-bunny", 205, 3, 40),
@@ -255,6 +272,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.warrens-keeper", 135, 3, 999),
             ("demo.actor.white-harpy", 51, 1, 20),
             ("demo.actor.white-icky-thing", 25, 1, 10),
+            ("demo.actor.white-wolf", 211, 1, 40),
             ("demo.actor.white-worm-mass", 89, 1, 40),
             ("demo.actor.wild-cat", 62, 2, 20),
             ("demo.actor.wolf", 196, 1, 40),
@@ -267,7 +285,9 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.yellow-mold", 76, 1, 30),
             ("demo.actor.yellow-mushroom-patch", 47, 1, 20),
             ("demo.actor.yellow-worm-mass", 78, 2, 30),
+            ("demo.actor.yeti", 154, 3, 40),
             ("demo.actor.zog", 98, 2, 40),
+            ("demo.actor.zombified-human", 229, 1, 50),
             ("demo.actor.zombified-kobold", 123, 1, 40),
             ("demo.actor.zombified-orc", 208, 1, 40),
         ]
@@ -454,6 +474,70 @@ fn special_mechanics_batch_keeps_each_imported_contract_narrow() {
             .expect("Wallaby allocation")
             .legacy_dungeon_indices,
         [35]
+    );
+}
+
+#[test]
+fn level_twelve_noncasters_reuse_existing_actor_contracts() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actor = |id: &str| {
+        artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == id)
+            .unwrap_or_else(|| panic!("{id} should be imported"))
+    };
+    let ids = [
+        "demo.actor.yeti",
+        "demo.actor.grizzly-bear",
+        "demo.actor.black-mamba",
+        "demo.actor.white-wolf",
+        "demo.actor.nether-worm-mass",
+        "demo.actor.abyss-worm-mass",
+        "demo.actor.golfimbul-the-hill-orc-chief",
+        "demo.actor.swordsman",
+        "demo.actor.ixitxachitl",
+        "demo.actor.mine-dog",
+        "demo.actor.hellcat",
+        "demo.actor.air-spirit",
+        "demo.actor.skeleton-human",
+        "demo.actor.zombified-human",
+        "demo.actor.tiger",
+        "demo.actor.frumious-bandersnatch",
+        "demo.actor.spotted-jelly",
+        "demo.actor.mauhur-the-orc-captain",
+        "demo.actor.meng-you-the-brother-of-meng-huo",
+        "demo.actor.swamp-rabbit",
+    ];
+    for id in ids {
+        assert_eq!(actor(id).level, 12, "{id} should remain level 12");
+        assert!(
+            actor(id).monster_casting.is_none(),
+            "{id} must not import possessor-only S: hints as monster casting"
+        );
+    }
+
+    assert!(
+        actor("demo.actor.nether-worm-mass")
+            .allocation
+            .as_ref()
+            .is_some_and(|allocation| allocation.multiplies)
+    );
+    assert!(
+        actor("demo.actor.mine-dog")
+            .melee_routine
+            .as_ref()
+            .and_then(|routine| routine.blows.first())
+            .is_some_and(|blow| blow.self_destructs)
+    );
+    assert_eq!(
+        actor("demo.actor.meng-you-the-brother-of-meng-huo")
+            .allocation
+            .as_ref()
+            .expect("Meng You allocation")
+            .legacy_dungeon_indices,
+        [31]
     );
 }
 
