@@ -1,12 +1,12 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/town-facility.schema.json",
   "formatVersion": 1,
-  "id": "demo.town-facility.outpost-home",
+  "id": "demo.town-facility.anambar-home",
   "nameKey": "town-facility-demo-outpost-home-name",
   "descriptionKey": "town-facility-demo-outpost-home-description",
-  "townId": "demo.town.outpost",
+  "townId": "demo.town.anambar",
   "category": "home",
   "storageId": "demo.town-facility.outpost-home",
-  "entrancePosition": { "x": 42, "y": 13 },
+  "entrancePosition": { "x": 10, "y": 9 },
   "entranceTerrainId": "demo.terrain.home-entrance"
 }

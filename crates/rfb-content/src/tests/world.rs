@@ -2743,6 +2743,10 @@ fn outpost_has_walls_inner_shops_and_an_exterior_warrens_entrance() {
         wilderness.locations,
         [
             WildernessLocationDefinition::Town {
+                position: ContentPosition { x: 26, y: 39 },
+                town_id: "demo.town.anambar".to_owned(),
+            },
+            WildernessLocationDefinition::Town {
                 position: ContentPosition { x: 28, y: 52 },
                 town_id: "demo.town.outpost".to_owned(),
             },
@@ -2751,6 +2755,32 @@ fn outpost_has_walls_inner_shops_and_an_exterior_warrens_entrance() {
                 dungeon_id: "demo.dungeon.warrens".to_owned(),
             },
         ]
+    );
+    let anambar = artifact
+        .content
+        .towns
+        .iter()
+        .find(|town| town.id == "demo.town.anambar")
+        .expect("fixture should contain Anambar");
+    assert_eq!(anambar.floor_id, "demo.floor.anambar");
+    assert_eq!(anambar.shop_ids.len(), 9);
+    let anambar_floor = world
+        .procedural_floors
+        .iter()
+        .find(|floor| floor.id == anambar.floor_id)
+        .expect("Anambar should use a fixed town floor");
+    assert_eq!(anambar_floor.lifecycle, FloorLifecycle::Town);
+    assert_eq!((anambar_floor.width, anambar_floor.height), (23, 11));
+    assert!(anambar_floor.inline_map.is_some());
+    let anambar_home = artifact
+        .content
+        .town_facilities
+        .iter()
+        .find(|facility| facility.id == "demo.town-facility.anambar-home")
+        .expect("Anambar should contain Home");
+    assert_eq!(
+        anambar_home.storage_id.as_deref(),
+        Some("demo.town-facility.outpost-home")
     );
     let entrances = [
         (
@@ -2858,7 +2888,11 @@ fn outpost_has_walls_inner_shops_and_an_exterior_warrens_entrance() {
     ));
 
     let mut unowned_shop = artifact.content.clone();
-    unowned_shop.towns[0]
+    unowned_shop
+        .towns
+        .iter_mut()
+        .find(|town| town.id == "demo.town.outpost")
+        .expect("fixture should contain Outpost")
         .shop_ids
         .retain(|shop_id| shop_id != "demo.shop.outpost-general-store");
     assert!(matches!(
@@ -2987,7 +3021,7 @@ fn general_store_economy_content_enforces_generic_stock_rules() {
             shop.stock[0].initial_minimum = shop.stock[0].initial_maximum + 1;
         },
         |content: &mut CompiledContentV1| {
-            let kind_id = content
+            let mut item = content
                 .shops
                 .iter()
                 .find(|shop| shop.id == "demo.shop.outpost-general-store")
@@ -2995,12 +3029,23 @@ fn general_store_economy_content_enforces_generic_stock_rules() {
                 .stock[0]
                 .item_kind_id
                 .clone();
-            content
+            let mut definition = content
                 .items
-                .iter_mut()
-                .find(|item| item.id == kind_id)
+                .iter()
+                .find(|candidate| candidate.id == item)
                 .expect("stock kind should exist")
-                .base_value = 0;
+                .clone();
+            item = "demo.item.invalid-zero-value-stock".to_owned();
+            definition.id = item.clone();
+            definition.base_value = 0;
+            content.items.push(definition);
+            content
+                .shops
+                .iter_mut()
+                .find(|shop| shop.id == "demo.shop.outpost-general-store")
+                .unwrap()
+                .stock[0]
+                .item_kind_id = item;
         },
     ];
     for mutate in mutations {
@@ -3702,7 +3747,10 @@ fn guaranteed_floor_supplies_require_rfb_chance_and_supported_items() {
         .iter_mut()
         .find(|world| world.id == "demo.world.warrens-journey")
         .expect("fixture should contain Warrens")
-        .procedural_floors[0]
+        .procedural_floors
+        .iter_mut()
+        .find(|floor| floor.id == "demo.floor.warrens-depth-1")
+        .expect("Warrens first floor should remain available")
         .guaranteed_items[0]
         .chance_one_in = 1;
     assert!(matches!(
@@ -3716,7 +3764,10 @@ fn guaranteed_floor_supplies_require_rfb_chance_and_supported_items() {
         .iter_mut()
         .find(|world| world.id == "demo.world.warrens-journey")
         .expect("fixture should contain Warrens")
-        .procedural_floors[0]
+        .procedural_floors
+        .iter_mut()
+        .find(|floor| floor.id == "demo.floor.warrens-depth-1")
+        .expect("Warrens first floor should remain available")
         .guaranteed_items[0]
         .entries[0]
         .item_kind_id = "demo.item.broad-sword".to_owned();
@@ -4310,7 +4361,12 @@ fn warrens_stair_ranges_match_floor_topology_and_stay_bounded() {
         .worlds
         .iter_mut()
         .find(|world| world.id == "demo.world.warrens-journey")
-        .and_then(|world| world.procedural_floors.first_mut())
+        .and_then(|world| {
+            world
+                .procedural_floors
+                .iter_mut()
+                .find(|floor| floor.id == "demo.floor.warrens-depth-1")
+        })
         .and_then(|floor| floor.layout.as_mut())
         .and_then(|layout| layout.stairs.as_mut())
         .expect("Warrens first floor should retain stair ranges")
@@ -4326,7 +4382,12 @@ fn warrens_stair_ranges_match_floor_topology_and_stay_bounded() {
         .worlds
         .iter_mut()
         .find(|world| world.id == "demo.world.warrens-journey")
-        .and_then(|world| world.procedural_floors.first_mut())
+        .and_then(|world| {
+            world
+                .procedural_floors
+                .iter_mut()
+                .find(|floor| floor.id == "demo.floor.warrens-depth-1")
+        })
         .and_then(|floor| floor.layout.as_mut())
         .and_then(|layout| layout.stairs.as_mut())
         .expect("Warrens first floor should retain stair ranges")
@@ -5065,4 +5126,96 @@ fn terrain_glyphs_do_not_consume_letters_reserved_for_actors() {
         validate_and_normalize(&mut letter_terrain),
         Err(ContentError::InvalidTerrainGlyph(_))
     ));
+}
+
+#[test]
+fn wilderness_towns_accept_fixed_town_floors_and_derive_world_ownership() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let mut content = artifact.content;
+    let town_id = "demo.town.second";
+    let floor_id = "demo.floor.second-town";
+    let home_id = "demo.town-facility.second-home";
+
+    let mut town = content
+        .towns
+        .iter()
+        .find(|town| town.id == "demo.town.outpost")
+        .expect("Outpost should remain available")
+        .clone();
+    town.id = town_id.to_owned();
+    town.floor_id = floor_id.to_owned();
+    town.facility_ids = vec![home_id.to_owned()];
+    town.shop_ids.clear();
+    content.towns.push(town);
+
+    let mut home = content
+        .town_facilities
+        .iter()
+        .find(|facility| facility.id == "demo.town-facility.outpost-home")
+        .expect("Outpost Home should remain available")
+        .clone();
+    home.id = home_id.to_owned();
+    home.town_id = town_id.to_owned();
+    home.entrance_position = ContentPosition { x: 2, y: 1 };
+    content.town_facilities.push(home);
+
+    let world = content
+        .worlds
+        .iter_mut()
+        .find(|world| world.id == "demo.world.warrens-journey")
+        .expect("Warrens world should remain available");
+    let mut floor = world
+        .procedural_floors
+        .iter()
+        .find(|floor| floor.id == "demo.floor.thieves-hideout")
+        .expect("inline floor template should remain available")
+        .clone();
+    floor.id = floor_id.to_owned();
+    floor.name_key = "floor-demo-second-town-name".to_owned();
+    floor.lifecycle = FloorLifecycle::Town;
+    floor.depth = 0;
+    floor.width = 4;
+    floor.height = 3;
+    floor.entry_terrain_id = None;
+    floor.available_entry_terrain_id = None;
+    floor.completed_entry_terrain_id = None;
+    floor.failed_entry_terrain_id = None;
+    floor.abandoned_entry_terrain_id = None;
+    floor.task_id = None;
+    floor.inline_map = Some(InlineFloorMapDefinition {
+        player_position: ContentPosition { x: 1, y: 1 },
+        terrain_overrides: vec![
+            InlineTerrainOverrideDefinition {
+                terrain_id: "demo.terrain.floor".to_owned(),
+                positions: vec![ContentPosition { x: 1, y: 1 }],
+                chance_percent: 100,
+                otherwise_terrain_id: None,
+            },
+            InlineTerrainOverrideDefinition {
+                terrain_id: "demo.terrain.home-entrance".to_owned(),
+                positions: vec![ContentPosition { x: 2, y: 1 }],
+                chance_percent: 100,
+                otherwise_terrain_id: None,
+            },
+        ],
+        actor_spawns: Vec::new(),
+        loot_spawns: Vec::new(),
+        monster_formation: None,
+    });
+    world.procedural_floors.push(floor);
+    let wilderness = world
+        .wilderness
+        .as_mut()
+        .expect("Warrens world should retain wilderness");
+    wilderness
+        .locations
+        .push(WildernessLocationDefinition::Town {
+            position: ContentPosition {
+                x: wilderness.start_position.x + 1,
+                y: wilderness.start_position.y,
+            },
+            town_id: town_id.to_owned(),
+        });
+
+    validate_and_normalize(&mut content).expect("formal second town should validate");
 }

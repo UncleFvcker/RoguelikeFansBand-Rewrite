@@ -626,6 +626,7 @@ pub enum FloorLifecycle {
     #[default]
     Dungeon,
     OneShot,
+    Town,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

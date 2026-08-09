@@ -26,6 +26,9 @@ not create placeholder content.
 
 `legacy-wilderness-selection.json` binds source town 1 (`前哨站`) and source
 dungeon 30 (`Warrens`) to the two content definitions that already exist.
+Schema 3 also carries the active Anambar town plan and non-emitting Orc Cave plan documented in
+[`location-l0-anambar-orc-cave.md`](location-l0-anambar-orc-cave.md). Planned
+records are validated against `master` but never written to active locations.
 The focused synchronization command is:
 
 ```powershell

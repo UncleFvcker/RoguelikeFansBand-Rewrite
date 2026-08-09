@@ -499,14 +499,7 @@ fn plan_campaign_retirement(
 }
 
 fn task_service_accessible(game: &Game, facility_id: &str) -> bool {
-    let Some(world) = game.content.world(&game.world_id) else {
-        return false;
-    };
-    let Some(town) = world
-        .town_id
-        .as_deref()
-        .and_then(|town_id| game.content.town(town_id))
-    else {
+    let Some(town) = game.current_town() else {
         return false;
     };
     let Some(facility) = game.content.town_facility(facility_id) else {
@@ -997,10 +990,10 @@ impl Game {
     }
 
     pub(super) fn retire_campaign(&mut self) -> Option<u64> {
-        let on_surface = self.content.world(&self.world_id).is_some_and(|world| {
-            self.current_floor_id == world.initial_floor_id
-                && self.current_dungeon_instance_id.is_none()
-        });
+        let on_surface = self.current_dungeon_instance_id.is_none()
+            && self.content.world(&self.world_id).is_some_and(|world| {
+                self.current_floor_id == world.initial_floor_id || self.current_town().is_some()
+            });
         let retired_turn = self.turn.saturating_add(1);
         let plan = plan_campaign_retirement(
             self.campaign_definition(),

@@ -35,6 +35,8 @@ pub struct TownFacilityDefinition {
     pub town_id: String,
     pub category: TownFacilityCategory,
     #[serde(default)]
+    pub storage_id: Option<String>,
+    #[serde(default)]
     pub owner_name_key: Option<String>,
     #[serde(default)]
     pub task_ids: Vec<String>,

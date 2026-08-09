@@ -318,10 +318,19 @@ pub(crate) fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<
         for task in &world.tasks {
             insert_definition_id(&mut all_ids, &task.id)?;
         }
-        if let Some(town_id) = &world.town_id
-            && !referenced_towns.insert(town_id.clone())
-        {
-            return Err(ContentError::InvalidTown(town_id.clone()));
+        if let Some(wilderness) = &world.wilderness {
+            for town_id in wilderness
+                .locations
+                .iter()
+                .filter_map(|location| match location {
+                    WildernessLocationDefinition::Town { town_id, .. } => Some(town_id),
+                    WildernessLocationDefinition::Dungeon { .. } => None,
+                })
+            {
+                if !referenced_towns.insert(town_id.clone()) {
+                    return Err(ContentError::InvalidTown(town_id.clone()));
+                }
+            }
         }
     }
     if referenced_towns.len() != towns_by_id.len() {

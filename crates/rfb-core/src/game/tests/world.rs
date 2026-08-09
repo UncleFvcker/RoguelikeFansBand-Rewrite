@@ -18,6 +18,137 @@ fn confirmed_world_map_command(leave_pets: bool, cancel_recall: bool) -> GameCom
     }
 }
 
+fn game_with_second_town(seed: u64) -> (Game, Position) {
+    let pack_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(std::path::Path::parent)
+        .expect("core crate should be inside the workspace")
+        .join("packs/rfb-demo-original");
+    let mut artifact = rfb_content::compile_pack_dir(&pack_root).expect("demo pack should compile");
+
+    let town_id = "demo.town.second";
+    let floor_id = "demo.floor.second-town";
+    let shop_id = "demo.shop.second-general-store";
+    let home_id = "demo.town-facility.second-home";
+
+    let mut town = artifact
+        .content
+        .towns
+        .iter()
+        .find(|town| town.id == "demo.town.outpost")
+        .expect("Outpost should remain available")
+        .clone();
+    town.id = town_id.to_owned();
+    town.floor_id = floor_id.to_owned();
+    town.facility_ids = vec![home_id.to_owned()];
+    town.shop_ids = vec![shop_id.to_owned()];
+    artifact.content.towns.push(town);
+
+    let mut shop = artifact
+        .content
+        .shops
+        .iter()
+        .find(|shop| shop.id == "demo.shop.outpost-general-store")
+        .expect("Outpost general store should remain available")
+        .clone();
+    shop.id = shop_id.to_owned();
+    shop.town_id = town_id.to_owned();
+    shop.owner.id = "demo.shop-owner.second-general-store".to_owned();
+    shop.entrance_position = rfb_content::ContentPosition { x: 2, y: 1 };
+    artifact.content.shops.push(shop);
+
+    let mut home = artifact
+        .content
+        .town_facilities
+        .iter()
+        .find(|facility| facility.id == "demo.town-facility.outpost-home")
+        .expect("Outpost Home should remain available")
+        .clone();
+    home.id = home_id.to_owned();
+    home.town_id = town_id.to_owned();
+    home.entrance_position = rfb_content::ContentPosition { x: 3, y: 1 };
+    artifact.content.town_facilities.push(home);
+
+    let world = artifact
+        .content
+        .worlds
+        .iter_mut()
+        .find(|world| world.id == WARRENS_JOURNEY_WORLD_ID)
+        .expect("Warrens world should remain available");
+    let mut floor = world
+        .procedural_floors
+        .iter()
+        .find(|floor| floor.id == "demo.floor.thieves-hideout")
+        .expect("inline floor template should remain available")
+        .clone();
+    floor.id = floor_id.to_owned();
+    floor.name_key = "floor-demo-second-town-name".to_owned();
+    floor.lifecycle = rfb_content::FloorLifecycle::Town;
+    floor.depth = 0;
+    floor.width = 5;
+    floor.height = 4;
+    floor.entry_terrain_id = None;
+    floor.available_entry_terrain_id = None;
+    floor.completed_entry_terrain_id = None;
+    floor.failed_entry_terrain_id = None;
+    floor.abandoned_entry_terrain_id = None;
+    floor.task_id = None;
+    floor.inline_map = Some(rfb_content::InlineFloorMapDefinition {
+        player_position: rfb_content::ContentPosition { x: 1, y: 1 },
+        terrain_overrides: vec![
+            rfb_content::InlineTerrainOverrideDefinition {
+                terrain_id: "demo.terrain.floor".to_owned(),
+                positions: vec![rfb_content::ContentPosition { x: 1, y: 1 }],
+                chance_percent: 100,
+                otherwise_terrain_id: None,
+            },
+            rfb_content::InlineTerrainOverrideDefinition {
+                terrain_id: "demo.terrain.general-store-entrance".to_owned(),
+                positions: vec![rfb_content::ContentPosition { x: 2, y: 1 }],
+                chance_percent: 100,
+                otherwise_terrain_id: None,
+            },
+            rfb_content::InlineTerrainOverrideDefinition {
+                terrain_id: "demo.terrain.home-entrance".to_owned(),
+                positions: vec![rfb_content::ContentPosition { x: 3, y: 1 }],
+                chance_percent: 100,
+                otherwise_terrain_id: None,
+            },
+        ],
+        actor_spawns: Vec::new(),
+        loot_spawns: Vec::new(),
+        monster_formation: None,
+    });
+    world.procedural_floors.push(floor);
+    let wilderness = world
+        .wilderness
+        .as_mut()
+        .expect("Warrens world should retain wilderness");
+    let position = Position {
+        x: i32::from(wilderness.start_position.x) + 1,
+        y: i32::from(wilderness.start_position.y),
+    };
+    wilderness
+        .locations
+        .push(rfb_content::WildernessLocationDefinition::Town {
+            position: rfb_content::ContentPosition {
+                x: u16::try_from(position.x).unwrap(),
+                y: u16::try_from(position.y).unwrap(),
+            },
+            town_id: town_id.to_owned(),
+        });
+
+    let catalog = Arc::new(rfb_content::ContentCatalog::from_artifact(
+        rfb_content::encode_content(artifact.content)
+            .expect("second-town content should remain encodable"),
+    ));
+    (
+        Game::from_content(seed, catalog, WARRENS_JOURNEY_WORLD_ID)
+            .expect("second-town game should initialize"),
+        position,
+    )
+}
+
 #[test]
 fn entering_world_map_requires_explicit_pet_and_active_recall_confirmation() {
     let mut game = Game::new_warrens_journey_with_build(42, "demo.build.warrior")
@@ -1930,6 +2061,97 @@ fn returning_to_the_outpost_coordinate_restores_its_preserved_floor() {
     assert_eq!(game.entities, town_entities);
     assert_eq!(returned.changed_cells.len(), 96 * 32);
     assert!(game.stored_floors.is_empty());
+}
+
+#[test]
+fn formal_towns_switch_floors_initialize_shops_lazily_and_share_home_storage() {
+    const SECOND_TOWN_ID: &str = "demo.town.second";
+    const SECOND_FLOOR_ID: &str = "demo.floor.second-town";
+    const SECOND_SHOP_ID: &str = "demo.shop.second-general-store";
+    const SECOND_HOME_ID: &str = "demo.town-facility.second-home";
+    const SHARED_HOME_ID: &str = "demo.town-facility.outpost-home";
+
+    let baseline = Game::new_warrens_journey_with_build(42, "demo.build.warrior")
+        .expect("baseline Warrens game should create");
+    let (mut game, second_position) = game_with_second_town(42);
+    assert_eq!(game.shop_states, baseline.shop_states);
+    assert_eq!(game.rng.draw_counter, baseline.rng.draw_counter);
+    assert!(!game.town_states.contains_key(SECOND_TOWN_ID));
+    assert!(game.home_states.contains_key(SHARED_HOME_ID));
+    assert!(!game.home_states.contains_key(SECOND_HOME_ID));
+    assert!(!game.shop_states.contains_key(SECOND_SHOP_ID));
+
+    dispatch_next(&mut game, enter_world_map_command());
+    assert_eq!(game.wilderness_position, Some(Position { x: 28, y: 52 }));
+    dispatch_next(
+        &mut game,
+        GameCommand::Move {
+            direction: Direction::East,
+        },
+    );
+    assert_eq!(game.wilderness_position, Some(second_position));
+    let entered = dispatch_next(&mut game, GameCommand::LeaveWorldMap);
+
+    assert_eq!(game.current_floor_id, SECOND_FLOOR_ID);
+    assert_eq!(
+        entered.town.as_ref().map(|town| town.id.as_str()),
+        Some(SECOND_TOWN_ID)
+    );
+    assert!(game.town_states.contains_key(SECOND_TOWN_ID));
+    assert!(game.home_states.contains_key(SHARED_HOME_ID));
+    assert!(!game.home_states.contains_key(SECOND_HOME_ID));
+    assert!(!game.shop_states.contains_key(SECOND_SHOP_ID));
+    assert_eq!(game.shop_states, baseline.shop_states);
+    assert_eq!(game.rng.draw_counter, baseline.rng.draw_counter);
+    assert!(game.stored_floors.contains_key("demo.floor.surface"));
+
+    let shop_entry = dispatch_next(
+        &mut game,
+        GameCommand::Move {
+            direction: Direction::East,
+        },
+    );
+    assert!(game.shop_states.contains_key(SECOND_SHOP_ID));
+    assert!(
+        shop_entry
+            .shops
+            .iter()
+            .find(|shop| shop.id == SECOND_SHOP_ID)
+            .is_some_and(|shop| shop.visited && shop.player_at_entrance && !shop.stock.is_empty())
+    );
+    let stock = game.shop_states[SECOND_SHOP_ID].inventory.clone();
+
+    dispatch_next(&mut game, enter_world_map_command());
+    dispatch_next(
+        &mut game,
+        GameCommand::Move {
+            direction: Direction::West,
+        },
+    );
+    dispatch_next(&mut game, GameCommand::LeaveWorldMap);
+    assert_eq!(game.current_floor_id, "demo.floor.surface");
+    assert!(game.stored_floors.contains_key(SECOND_FLOOR_ID));
+
+    dispatch_next(&mut game, enter_world_map_command());
+    dispatch_next(
+        &mut game,
+        GameCommand::Move {
+            direction: Direction::East,
+        },
+    );
+    dispatch_next(&mut game, GameCommand::LeaveWorldMap);
+    assert_eq!(game.current_floor_id, SECOND_FLOOR_ID);
+    assert_eq!(game.shop_states[SECOND_SHOP_ID].inventory, stock);
+
+    let restored = Game::from_save_with_content(game.to_save(), game.content.clone())
+        .expect("second town should round-trip");
+    assert_eq!(restored.current_floor_id, SECOND_FLOOR_ID);
+    assert_eq!(
+        restored.current_town().map(|town| town.id.as_str()),
+        Some(SECOND_TOWN_ID)
+    );
+    assert_eq!(restored.shop_states[SECOND_SHOP_ID].inventory, stock);
+    assert!(restored.stored_floors.contains_key("demo.floor.surface"));
 }
 
 #[test]

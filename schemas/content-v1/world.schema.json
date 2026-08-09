@@ -319,7 +319,8 @@
     "FloorLifecycle": {
       "enum": [
         "dungeon",
-        "one-shot"
+        "one-shot",
+        "town"
       ],
       "type": "string"
     },

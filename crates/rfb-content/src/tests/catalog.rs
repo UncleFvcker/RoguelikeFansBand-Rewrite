@@ -6,7 +6,7 @@ fn compiled_catalog_exposes_stable_runtime_indexes() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.223.0");
+    assert_eq!(catalog.pack_version(), "1.224.0");
     assert_eq!(catalog.mutations().count(), 152);
     assert_eq!(
         catalog.mutation("rfb.mutation.spit-acid").map(|mutation| (
@@ -742,8 +742,12 @@ fn compiled_catalog_exposes_stable_runtime_indexes() {
         .world("demo.world.warrens-journey")
         .expect("Warrens world should remain available");
     assert_eq!((warrens.width, warrens.height), (96, 32));
-    assert_eq!(warrens.procedural_floors.len(), 10);
-    let warrens_first = &warrens.procedural_floors[0];
+    assert_eq!(warrens.procedural_floors.len(), 11);
+    let warrens_first = warrens
+        .procedural_floors
+        .iter()
+        .find(|floor| floor.id == "demo.floor.warrens-depth-1")
+        .expect("Warrens first floor should remain available");
     assert_eq!((warrens_first.width, warrens_first.height), (66, 22));
     assert_eq!(
         warrens_first.generation_budget.as_ref().map(|budget| (

@@ -272,10 +272,7 @@ impl Game {
     }
 
     pub(super) fn wilderness_position_is_town(&self, position: Position) -> bool {
-        self.content
-            .world(&self.world_id)
-            .and_then(|world| world.wilderness.as_ref())
-            .is_some_and(|wilderness| wilderness_has_town(wilderness, position))
+        self.town_at_wilderness_position(position).is_some()
     }
 
     pub(super) const fn wilderness_is_daytime(&self) -> bool {
@@ -546,40 +543,50 @@ impl Game {
         arrival: Option<Position>,
         ambush: bool,
     ) -> Result<(), CoreError> {
-        let world = self
-            .content
-            .world(&self.world_id)
-            .expect("active world must remain available");
-        let initial_floor_id = world.initial_floor_id.clone();
-        let wilderness = world
-            .wilderness
-            .as_ref()
-            .expect("wilderness position requires wilderness content");
         let position = self
             .wilderness_position
             .expect("wilderness position must remain available");
-        let destination_is_town = wilderness_has_town(wilderness, position);
+        let destination_town = self.town_at_wilderness_position(position).cloned();
 
-        if destination_is_town && self.current_floor_id == initial_floor_id {
+        if destination_town
+            .as_ref()
+            .is_some_and(|town| self.current_floor_id == town.floor_id)
+        {
             return Ok(());
         }
 
         let (active_floor, global_items, riding_actor) = self.take_active_wilderness_floor();
-        if active_floor.id == initial_floor_id
+        if self.town_for_floor(&active_floor.id).is_some()
             && self
                 .stored_floors
-                .insert(initial_floor_id.clone(), active_floor)
+                .insert(active_floor.id.clone(), active_floor)
                 .is_some()
         {
-            return Err(CoreError::InvalidSave("surface floor state is duplicated"));
+            return Err(CoreError::InvalidSave("town floor state is duplicated"));
         }
 
-        if destination_is_town {
-            let town = self
-                .stored_floors
-                .remove(&initial_floor_id)
-                .ok_or(CoreError::InvalidSave("surface floor state is missing"))?;
-            self.activate_floor(town, global_items);
+        if let Some(town) = destination_town {
+            let floor = if let Some(stored) = self.stored_floors.remove(&town.floor_id) {
+                stored
+            } else {
+                let world = self
+                    .content
+                    .world(&self.world_id)
+                    .expect("active world must remain available");
+                if town.floor_id == world.initial_floor_id {
+                    return Err(CoreError::InvalidSave("birth town floor state is missing"));
+                }
+                let definition = world
+                    .procedural_floors
+                    .iter()
+                    .find(|floor| {
+                        floor.id == town.floor_id && floor.lifecycle == FloorLifecycle::Town
+                    })
+                    .expect("validated town floor must remain available")
+                    .clone();
+                self.generate_procedural_floor(&definition, None)?
+            };
+            self.activate_floor(floor, global_items);
             self.restore_riding_actor(riding_actor);
             return Ok(());
         }

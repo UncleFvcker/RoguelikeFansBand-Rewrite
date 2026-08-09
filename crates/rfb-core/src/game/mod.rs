@@ -4892,6 +4892,7 @@ impl Game {
 
     fn floor_has_environment_light(&self) -> bool {
         self.is_wilderness_floor()
+            || self.current_town().is_some()
             || self
                 .content
                 .world(&self.world_id)
@@ -5026,7 +5027,7 @@ impl Game {
 
     fn abandon_paused_task(&mut self, task_id: &str) -> Option<Vec<Position>> {
         let world = self.content.world(&self.world_id)?;
-        if self.current_floor_id != world.initial_floor_id
+        if (self.current_floor_id != world.initial_floor_id && self.current_town().is_none())
             || self
                 .task_states
                 .get(task_id)
@@ -5105,7 +5106,8 @@ impl Game {
         {
             mount.position = destination;
         }
-        self.mark_shop_visited_at_player();
+        self.mark_shop_visited_at_player()
+            .expect("shop entry must preserve validated item allocation");
         self.maintain_shop_at_player()
             .expect("shop maintenance must preserve validated item allocation");
         changed.insert(old_position);

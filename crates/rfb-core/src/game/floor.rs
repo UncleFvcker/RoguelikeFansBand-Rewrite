@@ -1293,7 +1293,8 @@ impl Game {
         self.floor_connections = floor.connections;
         self.floor_regions = floor.regions;
         self.mark_current_town_visited();
-        self.mark_shop_visited_at_player();
+        self.mark_shop_visited_at_player()
+            .expect("town entry must preserve validated item allocation");
         self.update_recall_destination_for_current_floor();
         self.reveal_current_visibility();
     }
