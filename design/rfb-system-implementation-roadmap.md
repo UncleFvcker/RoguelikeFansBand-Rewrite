@@ -1,6 +1,6 @@
 # RFB 全系统梳理与重构实现路线
 
-状态：长期规则实现路线；当前基线为协议 1.157 / contract-v227 / state hash Schema v77（P31–P98 进展见 8.3，玩家流程与 Outpost 进展见 Phase 17/18，物品与变异接入见 Phase 19，Warrens 怪物机制见 W1–W14 清单，荒野世界图见 W0–W5）
+状态：长期规则实现路线；当前基线为协议 1.158 / contract-v229 / state hash Schema v78（P31–P98 进展见 8.3，玩家流程与 Outpost 进展见 Phase 17/18，物品与变异接入见 Phase 19，Warrens 怪物机制见 W1–W14 清单，荒野世界图见 W0–W5）
 
 ## 1. 目的与边界
 
@@ -693,6 +693,10 @@ P30“首个非 Mana 职业资源”已由 contract-v90 完成：节奏资源按
 **自动拾取 G4 收口（2026-08）**：最终版本为协议 1.156 / contract-v219 / state hash Schema v76。G0–G3 的模式、发现知识、权威目标、单步命令和 Ctrl+G 调度均通过 Core、协议、save、replay、Web 与 470 条 exact fixtures 验收。内容包和内容哈希未变；未执行独立桌面构建。
 
 **三线集成收口（2026-08）**：城镇自动拾取、物品与变异、Warrens 怪物 P31–P39 在协议 1.157 / contract-v227 / state hash Schema v77 汇合；共享协议投影、存档状态、内容哈希与 exact fixtures 由集成分支统一生成和验证。
+
+**怪物 P40 真实变色龙进展（2026-08）**：contract-v228 接入变色龙。现有 `appearanceKindId` 保存当前形态，`kindId` 保持真实身份；每次清醒行动以 `1/13` 判定换形，成功后按合法分配池选形并按新最大生命等比调整当前生命。形态驱动速度、抗性、派生属性、近战、移动和施法，存档与 State Hash 直接复用既有字段。正式包为 433 actors / 174 abilities，严格同步 368 条；协议 1.157、Schema v77 不变，demo 1.224.0，内容 hash 为 `f2f6891805e8b6b23673e2b6f48abcdf894cfc0578a39bc798f15eb66f7af267`。完整边界见 [Contract v228](contract-v228-warrens-content-p40-chameleon.md)。
+
+**怪物 P41 妖鬼进展（2026-08）**：contract-v229 接入妖鬼与真实 `ELDRITCH_HORROR`。敌对怪物从不可见转为可见时，按等级及 Unique/群体修正进行触发和玩家豁免；同一实例成功触发后仅以额外 `1/5` 门重触发。分层后果复用混乱、幻觉、麻痹、属性损伤、当前层地图失忆与既有精神变异，Weird Mind 直接免疫。正式包为 434 actors / 174 abilities，严格同步 369 条；协议 1.158、Schema v78，demo 1.225.0，内容 hash 为 `005d3db278c595029ef2a65e8f46dcd3748c303bc96681a1a513dfc24b54c43d`。完整边界见 [Contract v229](contract-v229-warrens-content-p41-eldritch-horror.md)。
 
 ## 9. 内容迁移策略
 

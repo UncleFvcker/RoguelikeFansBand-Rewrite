@@ -94,6 +94,27 @@ test("wilderness ambush events use the dedicated localized message", () => {
   );
 });
 
+test("eldritch horror events localize the monster and sanity outcome", () => {
+  const event = {
+    kind: "monster.eldritch-horror",
+    messageKey: "monster-eldritch-horror",
+    args: {
+      source: "demo.actor.ghast",
+      sourceEntity: "test.ghast",
+      power: "9",
+      outcome: "amnesia",
+    },
+  };
+
+  assert.equal(
+    formatter.formatEvent(event),
+    "The sight of Ghast tears away your memories of this place.",
+  );
+  localization.setLocale("zh-CN");
+  assert.equal(formatter.formatEvent(event), "妖鬼的面容抹去了你对这里的记忆。");
+  localization.setLocale("en-US");
+});
+
 test("item event formatting follows projected knowledge and locale changes", () => {
   const event = {
     kind: "item.pickup",

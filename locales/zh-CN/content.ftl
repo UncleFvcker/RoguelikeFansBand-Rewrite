@@ -2230,3 +2230,7 @@ ability-legacy-drain-mana-11-name = 吸取法力
 ability-legacy-drain-mana-11-description = 从目标身上吸取 11 点法力。
 ability-legacy-kin-the-icky-queen-name = 召唤同类
 ability-legacy-kin-the-icky-queen-description = 在附近召唤两个黏糊恶心女王的同类盟友。
+actor-demo-chameleon-name = 变色龙
+actor-demo-chameleon-description = 一只真正的变形者，会突然获得另一种怪物的身体与能力。
+actor-demo-ghast-name = 妖鬼
+actor-demo-ghast-description = 一个令人排斥的生物，它能像袋鼠一样用长长的后腿跳跃。尽管没有鼻子、额头以及“其它重要的特征”，它的脸却出奇地像人。

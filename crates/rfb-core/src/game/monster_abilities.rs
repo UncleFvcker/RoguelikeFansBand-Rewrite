@@ -37,6 +37,7 @@ impl Game {
                 INITIAL_MONSTER_ENERGY_NEED,
                 true,
             );
+            self.maybe_initialize_chameleon_form(&mut entity);
             entity.summon = Some(SummonIdentity {
                 owner_id: owner_id.clone(),
                 source_ability_id: plan.ability.id.clone(),
@@ -775,6 +776,7 @@ impl Game {
                         INITIAL_MONSTER_ENERGY_NEED,
                         true,
                     );
+                    self.maybe_initialize_chameleon_form(&mut entity);
                     entity.summon = Some(SummonIdentity {
                         owner_id: owner_id.clone(),
                         source_ability_id: plan.ability.id.clone(),
@@ -1465,22 +1467,7 @@ impl Game {
                         // Only the current floor map memory fades; item
                         // knowledge stays authoritative per the long-term
                         // design constraints.
-                        let width = usize::from(self.width);
-                        let mut cleared_cells = 0_u32;
-                        for (index, explored) in self.explored.iter_mut().enumerate() {
-                            if *explored {
-                                *explored = false;
-                                cleared_cells += 1;
-                                changed.insert(Position {
-                                    x: i32::try_from(index % width)
-                                        .expect("explored x must fit i32"),
-                                    y: i32::try_from(index / width)
-                                        .expect("explored y must fit i32"),
-                                });
-                            }
-                        }
-                        cleared_cells += u32::try_from(self.revealed_terrain.len()).unwrap_or(0);
-                        self.revealed_terrain.clear();
+                        let cleared_cells = self.clear_current_floor_memory(changed);
                         AbilityEffectResolutionDto::Amnesia {
                             effect_index,
                             cleared_cells,

@@ -1854,6 +1854,10 @@ impl Game {
                     let leader_id = format!("{}.encounter.{}", definition.id, ordinal + 1);
                     let pack_id = format!("{leader_id}.pack");
                     let mut leader = self.generated_actor(leader_id.clone(), &kind_id, position);
+                    self.maybe_initialize_chameleon_form_on_terrain(
+                        &mut leader,
+                        Some(&required_terrain.id),
+                    );
                     self.maybe_apply_shadower_appearance(&mut leader);
                     if let Some(behavior) = pack_behavior {
                         leader.pack = Some(MonsterPackIdentity {
@@ -1870,6 +1874,10 @@ impl Game {
                             format!("{leader_id}.companion.{}", member_ordinal + 1),
                             &member.kind_id,
                             member.position,
+                        );
+                        self.maybe_initialize_chameleon_form_on_terrain(
+                            &mut actor,
+                            Some(&terrain[generated_terrain_index(width, member.position)]),
                         );
                         self.maybe_apply_shadower_appearance(&mut actor);
                         actor.pack = Some(MonsterPackIdentity {

@@ -356,7 +356,7 @@ pub(super) fn task_service_game(seed: u64) -> Game {
         .join("packs/rfb-demo-original");
     let mut artifact = rfb_content::compile_pack_dir(&pack_root).expect("demo pack should compile");
     let task_id = "demo.task.test-warrens-depth";
-    let facility_id = "demo.town-facility.outpost-home";
+    let facility_id = "demo.town-facility.outpost-count";
     let world = artifact
         .content
         .worlds
@@ -424,9 +424,9 @@ pub(super) fn task_service_game(seed: u64) -> Game {
         .iter_mut()
         .find(|facility| facility.id == facility_id)
         .expect("Outpost home should remain available");
-    facility.category = rfb_content::TownFacilityCategory::QuestGiver;
-    facility.owner_name_key = Some("test-quest-giver".to_owned());
-    facility.task_ids = vec![task_id.to_owned(), prerequisite_task_id.to_owned()];
+    facility
+        .task_ids
+        .extend([task_id.to_owned(), prerequisite_task_id.to_owned()]);
     let catalog = Arc::new(rfb_content::ContentCatalog::from_artifact(
         rfb_content::encode_content(artifact.content)
             .expect("custom task service definition should remain valid"),

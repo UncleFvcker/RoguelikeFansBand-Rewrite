@@ -1347,6 +1347,7 @@ impl Game {
             .content
             .actor(&actor.kind_id)
             .ok_or_else(|| CoreError::UnknownActor(actor.kind_id.clone()))?;
+        let runtime_definition = self.actor_runtime_definition(actor).unwrap_or(definition);
         let effective_max_hp = if expected_role == ActorRole::Player {
             self.effective_player_max_hp()
         } else {
@@ -1376,17 +1377,20 @@ impl Game {
         } else {
             expected_role == ActorRole::Monster
                 && actor.observed_player_resistances.len() <= 6
-                && definition
+                && runtime_definition
                     .monster_casting
                     .as_ref()
                     .is_some_and(|casting| casting.smart)
                 && !self.actor_is_player_aligned(actor)
         };
         let appearance_is_valid = actor.appearance_kind_id.as_deref().is_none_or(|kind_id| {
-            let shapechanger = definition.tags.iter().any(|tag| tag == "shapechanger");
+            let changes_form = definition
+                .tags
+                .iter()
+                .any(|tag| matches!(tag.as_str(), "shapechanger" | "chameleon"));
             expected_role == ActorRole::Monster
                 && self.content.actor(kind_id).is_some_and(|appearance| {
-                    if shapechanger {
+                    if changes_form {
                         appearance.role == ActorRole::Monster
                             && appearance.id != definition.id
                             && !appearance
@@ -1406,8 +1410,8 @@ impl Game {
         if definition.role != expected_role
             || (expected_role == ActorRole::Player && actor.max_hp != definition.max_hp)
             || (expected_role == ActorRole::Monster
-                && !actor_max_hp_is_valid(definition, actor.max_hp))
-            || actor.speed != definition.speed
+                && !actor_max_hp_is_valid(runtime_definition, actor.max_hp))
+            || actor.speed != runtime_definition.speed
             || actor.speed > 199
             || !statuses_are_valid
             || !resistance_memory_is_valid
@@ -1427,7 +1431,7 @@ impl Game {
                 .is_some_and(|controller_id| controller_id != self.player.id)
             || (actor.controller_id.is_some() && actor.pack.is_some())
             || (actor.summon.is_some() && actor.pack.is_some())
-            || definition.monster_casting.as_ref().map_or(
+            || runtime_definition.monster_casting.as_ref().map_or(
                 actor.casting_cooldown_remaining != 0,
                 |casting| {
                     actor.casting_cooldown_remaining

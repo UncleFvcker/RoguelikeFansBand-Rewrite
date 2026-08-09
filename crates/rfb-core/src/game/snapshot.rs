@@ -490,8 +490,7 @@ impl Game {
             .filter(|entity| self.entity_is_visible_to_player(entity))
             .map(|entity| {
                 let definition = self
-                    .content
-                    .actor(&entity.kind_id)
+                    .actor_runtime_definition(entity)
                     .expect("entity actor definition must remain available");
                 let stats = self.actor_derived_stats(entity, definition, false);
                 EntityDto {

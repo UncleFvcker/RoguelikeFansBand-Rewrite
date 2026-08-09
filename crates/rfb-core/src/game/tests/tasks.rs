@@ -629,19 +629,19 @@ fn external_task_service_projects_sparse_available_state_and_accepts_at_entrance
         game.snapshot()
             .task_services
             .iter()
-            .find(|service| service.id == "demo.town-facility.outpost-home")
+            .find(|service| service.id == "demo.town-facility.outpost-count")
             .expect("test task service should be projected")
             .tasks
             .is_empty()
     );
 
-    game.player.position = Position { x: 42, y: 13 };
+    game.player.position = Position { x: 26, y: 13 };
     let before_draws = game.rng_draw_counter();
     let snapshot = game.snapshot();
     let service = snapshot
         .task_services
         .iter()
-        .find(|service| service.id == "demo.town-facility.outpost-home")
+        .find(|service| service.id == "demo.town-facility.outpost-count")
         .expect("test task service should be projected");
     assert!(service.player_at_entrance);
     assert_eq!(
@@ -656,7 +656,7 @@ fn external_task_service_projects_sparse_available_state_and_accepts_at_entrance
     let update = dispatch_next(
         &mut game,
         GameCommand::AcceptTask {
-            facility_id: "demo.town-facility.outpost-home".to_owned(),
+            facility_id: "demo.town-facility.outpost-count".to_owned(),
             task_id: task_id.to_owned(),
         },
     );
@@ -672,7 +672,7 @@ fn external_task_service_projects_sparse_available_state_and_accepts_at_entrance
         game.snapshot()
             .task_services
             .iter()
-            .find(|service| service.id == "demo.town-facility.outpost-home")
+            .find(|service| service.id == "demo.town-facility.outpost-count")
             .expect("test task service should be projected")
             .tasks
             .iter()
@@ -687,13 +687,13 @@ fn external_task_service_projects_sparse_available_state_and_accepts_at_entrance
 fn external_task_prerequisite_stays_locked_without_materializing_state() {
     let mut game = task_service_game(42);
     let task_id = "demo.task.test-prerequisite";
-    game.player.position = Position { x: 42, y: 13 };
+    game.player.position = Position { x: 26, y: 13 };
     let before_draws = game.rng_draw_counter();
     assert_eq!(
         game.snapshot()
             .task_services
             .iter()
-            .find(|service| service.id == "demo.town-facility.outpost-home")
+            .find(|service| service.id == "demo.town-facility.outpost-count")
             .expect("test task service should be projected")
             .tasks
             .iter()
@@ -706,7 +706,7 @@ fn external_task_prerequisite_stays_locked_without_materializing_state() {
     let update = dispatch_next(
         &mut game,
         GameCommand::AcceptTask {
-            facility_id: "demo.town-facility.outpost-home".to_owned(),
+            facility_id: "demo.town-facility.outpost-count".to_owned(),
             task_id: task_id.to_owned(),
         },
     );
@@ -724,11 +724,11 @@ fn external_task_prerequisite_stays_locked_without_materializing_state() {
 fn accepted_external_task_binds_while_inside_its_dungeon_depth() {
     let mut game = task_service_game(42);
     let task_id = "demo.task.test-warrens-depth";
-    game.player.position = Position { x: 42, y: 13 };
+    game.player.position = Position { x: 26, y: 13 };
     dispatch_next(
         &mut game,
         GameCommand::AcceptTask {
-            facility_id: "demo.town-facility.outpost-home".to_owned(),
+            facility_id: "demo.town-facility.outpost-count".to_owned(),
             task_id: task_id.to_owned(),
         },
     );
@@ -752,7 +752,7 @@ fn accepted_external_task_binds_while_inside_its_dungeon_depth() {
 fn external_task_reward_claim_is_atomic_and_persists_completion() {
     let mut game = task_service_game(42);
     let task_id = "demo.task.test-warrens-depth";
-    game.player.position = Position { x: 42, y: 13 };
+    game.player.position = Position { x: 26, y: 13 };
     game.task_states.insert(
         task_id.to_owned(),
         TaskState {
@@ -768,7 +768,7 @@ fn external_task_reward_claim_is_atomic_and_persists_completion() {
     let update = dispatch_next(
         &mut game,
         GameCommand::ClaimTaskReward {
-            facility_id: "demo.town-facility.outpost-home".to_owned(),
+            facility_id: "demo.town-facility.outpost-count".to_owned(),
             task_id: task_id.to_owned(),
         },
     );
@@ -806,7 +806,7 @@ fn external_task_service_rejects_unavailable_commands_without_rng_or_state_chang
     let accept = dispatch_next(
         &mut game,
         GameCommand::AcceptTask {
-            facility_id: "demo.town-facility.outpost-home".to_owned(),
+            facility_id: "demo.town-facility.outpost-count".to_owned(),
             task_id: task_id.to_owned(),
         },
     );
@@ -819,11 +819,11 @@ fn external_task_service_rejects_unavailable_commands_without_rng_or_state_chang
     assert!(!game.task_states.contains_key(task_id));
     assert_eq!(game.rng_draw_counter(), before_draws);
 
-    game.player.position = Position { x: 42, y: 13 };
+    game.player.position = Position { x: 26, y: 13 };
     let claim = dispatch_next(
         &mut game,
         GameCommand::ClaimTaskReward {
-            facility_id: "demo.town-facility.outpost-home".to_owned(),
+            facility_id: "demo.town-facility.outpost-count".to_owned(),
             task_id: task_id.to_owned(),
         },
     );

@@ -83,6 +83,7 @@ pub(crate) fn actor_from_spawn(
         alerted,
         nice: false,
         visible_invisible: false,
+        eldritch_horror_triggered: false,
         casting_cooldown_remaining: 0,
         observed_player_resistances: BTreeMap::new(),
         statuses: Vec::new(),
@@ -114,6 +115,7 @@ pub(crate) fn actor_from_runtime_spawn(
         alerted,
         nice: false,
         visible_invisible: false,
+        eldritch_horror_triggered: false,
         casting_cooldown_remaining: 0,
         observed_player_resistances: BTreeMap::new(),
         statuses: Vec::new(),
@@ -158,6 +160,7 @@ pub(crate) fn actor_from_player(
         alerted: true,
         nice: false,
         visible_invisible: false,
+        eldritch_horror_triggered: false,
         casting_cooldown_remaining: 0,
         observed_player_resistances: BTreeMap::new(),
         statuses,
@@ -193,24 +196,45 @@ pub(crate) fn actor_from_entity(
     let definition = content
         .actor(&entity.kind_id)
         .ok_or_else(|| CoreError::UnknownActor(entity.kind_id.clone()))?;
-    if let Some(appearance_kind_id) = entity.appearance_kind_id.as_deref() {
+    let appearance = if let Some(appearance_kind_id) = entity.appearance_kind_id.as_deref() {
         let appearance = content
             .actor(appearance_kind_id)
             .ok_or_else(|| CoreError::UnknownActor(appearance_kind_id.to_owned()))?;
-        if !appearance
+        let changes_form = definition
             .tags
             .iter()
-            .any(|tag| tag == "shadower-appearance")
-            || definition.level < 10
-            || definition.tags.iter().any(|tag| tag == "unique")
-        {
+            .any(|tag| matches!(tag.as_str(), "shapechanger" | "chameleon"));
+        let valid = if changes_form {
+            appearance.role == rfb_content::ActorRole::Monster
+                && appearance.id != definition.id
+                && !appearance
+                    .tags
+                    .iter()
+                    .any(|tag| tag == "shadower-appearance")
+        } else {
+            appearance
+                .tags
+                .iter()
+                .any(|tag| tag == "shadower-appearance")
+                && definition.level >= 10
+                && !definition.tags.iter().any(|tag| tag == "unique")
+        };
+        if !valid {
             return Err(CoreError::InvalidSave("entity appearance is invalid"));
         }
-    }
-    if !actor_max_hp_is_valid(definition, entity.max_hp) {
+        Some(appearance)
+    } else {
+        None
+    };
+    let runtime_definition = if definition.tags.iter().any(|tag| tag == "chameleon") {
+        appearance.unwrap_or(definition)
+    } else {
+        definition
+    };
+    if !actor_max_hp_is_valid(runtime_definition, entity.max_hp) {
         return Err(CoreError::InvalidSave("entity base stats are invalid"));
     }
-    if entity.base_speed != definition.speed {
+    if entity.base_speed != runtime_definition.speed {
         return Err(CoreError::InvalidSave("entity base speed is invalid"));
     }
     let statuses = statuses_from_save(entity.statuses)?;
@@ -227,13 +251,14 @@ pub(crate) fn actor_from_entity(
         speed: entity.base_speed,
         energy_need: entity.energy_need,
         alerted: entity.alerted.unwrap_or_else(|| {
-            definition
+            runtime_definition
                 .awareness
                 .as_ref()
                 .is_none_or(|awareness| awareness.starts_alerted)
         }),
         nice: entity.nice,
         visible_invisible: entity.visible_invisible,
+        eldritch_horror_triggered: entity.eldritch_horror_triggered,
         casting_cooldown_remaining: entity.casting_cooldown_remaining,
         observed_player_resistances,
         statuses,
@@ -598,6 +623,7 @@ pub(crate) fn actors_to_save(entities: &[Actor]) -> Vec<ActorSaveDto> {
             alerted: Some(entity.alerted),
             nice: entity.nice,
             visible_invisible: entity.visible_invisible,
+            eldritch_horror_triggered: entity.eldritch_horror_triggered,
             casting_cooldown_remaining: entity.casting_cooldown_remaining,
             observed_player_resistances: entity
                 .observed_player_resistances

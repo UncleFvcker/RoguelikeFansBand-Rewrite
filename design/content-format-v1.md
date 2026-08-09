@@ -445,3 +445,19 @@ contract-v226 / 包 1.222.0 接入闪烁的灯光与黏糊恶心女王。怪物�
 loot table；严格同步 367 条，内容 hash 为
 `604d16879ffd80f5e678cc6363a900f3a9491fd8768ffd84f8ee4c3f940630d2`。
 协议保持 1.152，State Hash Schema 保持 v72。
+
+contract-v228 / 包 1.224.0 接入变色龙。`chameleon` 标签把既有
+`appearanceKindId` 从纯显示投影收窄为该怪物的当前真实形态；本体 `kindId`
+保持不变。每次清醒行动先做 `1/13` 换形判定，成功后从合法非 Unique、非繁殖、
+非自爆且可通过当前位置地形的正式怪物中按分配稀有度选形；形态决定 HP、速度、
+抗性、派生属性、近战、移动和施法。当前包包含 88 种地形、433 种 actor、250
+种物品、174 个能力和 20 张 loot table；严格同步 368 条，内容 hash 为
+`f2f6891805e8b6b23673e2b6f48abcdf894cfc0578a39bc798f15eb66f7af267`。协议保持
+1.157，State Hash Schema 保持 v77。
+
+contract-v229 / 包 1.225.0 接入妖鬼。`eldritch-horror` 标签在怪物从不可见
+转为可见时触发原版分层理智检定，并复用既有混乱、幻觉、麻痹、属性损伤、
+地图失忆和变异消费者。当前包包含 88 种地形、434 种 actor、250 种物品、
+174 个能力和 20 张 loot table；严格同步 369 条，内容 hash 为
+`005d3db278c595029ef2a65e8f46dcd3748c303bc96681a1a513dfc24b54c43d`。实例级
+重复触发标记进入 save 与 State Hash，协议升至 1.158，State Hash Schema 升至 v78。

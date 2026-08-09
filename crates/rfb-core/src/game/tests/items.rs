@@ -2761,6 +2761,7 @@ fn item_summon_candidates_follow_depth_player_level_kin_and_unique_rules() {
             "demo.actor.crypt-creep".to_owned(),
             "demo.actor.disembodied-hand-that-strangled-people".to_owned(),
             "demo.actor.flying-skull".to_owned(),
+            "demo.actor.ghast".to_owned(),
             "demo.actor.grave-wight".to_owned(),
             "demo.actor.green-glutton-ghost".to_owned(),
             "demo.actor.jibaku-ghost".to_owned(),

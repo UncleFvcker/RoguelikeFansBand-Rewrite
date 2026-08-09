@@ -50,13 +50,13 @@
       "turn": 1,
       "worldTick": 10,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 75,
+      "rngDrawCounter": 96,
       "floorId": "demo.floor.surface",
       "playerPosition": {
         "x": 3,
         "y": 3
       },
-      "playerHp": 9,
+      "playerHp": 2,
       "playerMaxHp": 146,
       "playerAttack": 3,
       "playerDefense": 2,
@@ -67,6 +67,43 @@
       "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
+      "playerStatuses": [
+        {
+          "kindId": "rfb.status.poison",
+          "intensity": 1,
+          "remainingTicks": 6,
+          "grantedModifiers": {
+            "attack": 0,
+            "defense": 0,
+            "maxHp": 0,
+            "strength": 0,
+            "intelligence": 0,
+            "wisdom": 0,
+            "dexterity": 0,
+            "constitution": 0,
+            "charisma": 0,
+            "speed": 0
+          },
+          "grantedEquipmentBonuses": {
+            "meleeAttacks": 0,
+            "meleeSkill": 0,
+            "meleeDamage": 0,
+            "rangedSkill": 0,
+            "throwingSkill": 0,
+            "deviceSkill": 0,
+            "savingThrowSkill": 0,
+            "stealthSkill": 0,
+            "searchSkill": 0,
+            "perceptionSkill": 0,
+            "disarmingSkill": 0,
+            "diggingSkill": 0,
+            "infravision": 0,
+            "lightRadius": 0
+          },
+          "grantsWallPassage": false,
+          "incomingDamagePercent": 100
+        }
+      ],
       "playerLevel": 25,
       "playerExperience": 0,
       "playerMaxLevel": 25,
@@ -2902,22 +2939,22 @@
       "entityCount": 2,
       "entities": [
         {
-          "id": "summon.demo.ability.death-raise-dead.1.1",
-          "position": {
-            "x": 4,
-            "y": 3
-          },
-          "hp": 26,
-          "speed": 110,
-          "energyNeed": 100
-        },
-        {
           "id": "summon.demo.ability.death-raise-dead.1.2",
           "position": {
             "x": 4,
             "y": 2
           },
-          "hp": 71,
+          "hp": 35,
+          "speed": 110,
+          "energyNeed": 100
+        },
+        {
+          "id": "summon.demo.ability.death-raise-dead.1.3",
+          "position": {
+            "x": 2,
+            "y": 3
+          },
+          "hp": 67,
           "speed": 110,
           "energyNeed": 100
         }
@@ -3245,7 +3282,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "ad3e0cb65da95153b0c16ab8df2ff5ae13c15f5f9b4ab5918fe3d3245fcef724"
+      "stateHash": "e779bac763ecd28c7a203de9fa5094c97abb0bfbb71d1d85e6c4cafae6547620"
     },
     "events": [
       {
@@ -3318,9 +3355,9 @@
             "group": true,
             "summonedKindIds": [
               "demo.actor.jibaku-ghost",
-              "demo.actor.crypt-creep",
-              "demo.actor.flying-skull",
-              "demo.actor.the-ghost-q"
+              "demo.actor.the-ghost-q",
+              "demo.actor.rotting-corpse",
+              "demo.actor.zombified-human"
             ]
           }
         }
@@ -3366,11 +3403,23 @@
         }
       },
       {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
+        "kind": "combat.monster-hit",
+        "messageKey": "combat-monster-hit",
         "args": {
+          "damage": "1",
           "method": "rfb.blow.touch",
           "source": "demo.actor.the-ghost-q"
+        },
+        "outcome": {
+          "type": "damage",
+          "resolution": {
+            "rawDamage": 1,
+            "armorReduction": 0,
+            "resistanceAdjustment": 0,
+            "finalDamage": 1,
+            "damageType": "physical",
+            "resistance": "normal"
+          }
         }
       },
       {
@@ -3394,95 +3443,103 @@
         }
       },
       {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
+        "kind": "combat.monster-hit",
+        "messageKey": "combat-monster-hit",
         "args": {
-          "method": "rfb.blow.hit",
-          "source": "demo.actor.jibaku-ghost"
-        }
-      },
-      {
-        "kind": "monster.ability-decision",
-        "messageKey": "monster-ability-decision",
-        "args": {
-          "frequency": "10",
-          "roll": "54",
-          "source": "demo.actor.crypt-creep",
-          "target": "none"
+          "damage": "1",
+          "method": "rfb.blow.touch",
+          "source": "demo.actor.the-ghost-q"
         },
         "outcome": {
-          "type": "monster-ability-decision",
+          "type": "damage",
           "resolution": {
-            "sourceEntityId": "summon.demo.ability.death-raise-dead.1.1",
-            "sourceKindId": "demo.actor.crypt-creep",
-            "frequencyPercent": 10,
-            "frequencyRoll": 54,
-            "candidates": [
-              {
-                "abilityId": "rfb-legacy.ability.curse-3d8",
-                "baseWeight": 1,
-                "effectiveWeight": 1,
-                "targetEntityId": "demo.actor.player.1",
-                "targetKindId": "demo.actor.explorer",
-                "targetPosition": {
-                  "x": 3,
-                  "y": 3
-                },
-                "affectedPositions": [
-                  {
-                    "x": 3,
-                    "y": 3
-                  }
-                ],
-                "enemyTargetCount": 1,
-                "friendlyRiskCount": 0
-              },
-              {
-                "abilityId": "rfb-legacy.ability.summon-undead-l7-1d3-1",
-                "baseWeight": 1,
-                "effectiveWeight": 1,
-                "targetEntityId": "summon.demo.ability.death-raise-dead.1.1",
-                "targetKindId": "demo.actor.crypt-creep",
-                "targetPosition": {
-                  "x": 3,
-                  "y": 2
-                },
-                "affectedPositions": [
-                  {
-                    "x": 2,
-                    "y": 1
-                  },
-                  {
-                    "x": 3,
-                    "y": 1
-                  },
-                  {
-                    "x": 4,
-                    "y": 1
-                  },
-                  {
-                    "x": 2,
-                    "y": 3
-                  }
-                ],
-                "enemyTargetCount": 0,
-                "friendlyRiskCount": 0
-              }
-            ],
-            "viableAbilityIds": [
-              "rfb-legacy.ability.curse-3d8",
-              "rfb-legacy.ability.summon-undead-l7-1d3-1"
-            ],
-            "totalWeight": 2
+            "rawDamage": 1,
+            "armorReduction": 0,
+            "resistanceAdjustment": 0,
+            "finalDamage": 1,
+            "damageType": "physical",
+            "resistance": "normal"
           }
         }
       },
       {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
+        "kind": "combat.monster-hit",
+        "messageKey": "combat-monster-hit",
         "args": {
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.flying-skull"
+          "damage": "1",
+          "method": "rfb.blow.touch",
+          "source": "demo.actor.the-ghost-q"
+        },
+        "outcome": {
+          "type": "damage",
+          "resolution": {
+            "rawDamage": 1,
+            "armorReduction": 0,
+            "resistanceAdjustment": 0,
+            "finalDamage": 1,
+            "damageType": "physical",
+            "resistance": "normal"
+          }
+        }
+      },
+      {
+        "kind": "combat.monster-hit",
+        "messageKey": "combat-monster-hit",
+        "args": {
+          "damage": "1",
+          "method": "rfb.blow.touch",
+          "source": "demo.actor.the-ghost-q"
+        },
+        "outcome": {
+          "type": "damage",
+          "resolution": {
+            "rawDamage": 1,
+            "armorReduction": 0,
+            "resistanceAdjustment": 0,
+            "finalDamage": 1,
+            "damageType": "physical",
+            "resistance": "normal"
+          }
+        }
+      },
+      {
+        "kind": "combat.monster-hit",
+        "messageKey": "combat-monster-hit",
+        "args": {
+          "damage": "1",
+          "method": "rfb.blow.touch",
+          "source": "demo.actor.the-ghost-q"
+        },
+        "outcome": {
+          "type": "damage",
+          "resolution": {
+            "rawDamage": 1,
+            "armorReduction": 0,
+            "resistanceAdjustment": 0,
+            "finalDamage": 1,
+            "damageType": "physical",
+            "resistance": "normal"
+          }
+        }
+      },
+      {
+        "kind": "combat.monster-hit",
+        "messageKey": "combat-monster-hit",
+        "args": {
+          "damage": "2",
+          "method": "rfb.blow.hit",
+          "source": "demo.actor.jibaku-ghost"
+        },
+        "outcome": {
+          "type": "damage",
+          "resolution": {
+            "rawDamage": 3,
+            "armorReduction": 1,
+            "resistanceAdjustment": 0,
+            "finalDamage": 2,
+            "damageType": "physical",
+            "resistance": "normal"
+          }
         }
       },
       {
@@ -3490,8 +3547,8 @@
         "messageKey": "combat-monster-hit",
         "args": {
           "damage": "0",
-          "method": "rfb.blow.bite",
-          "source": "demo.actor.flying-skull"
+          "method": "rfb.blow.claw",
+          "source": "demo.actor.rotting-corpse"
         },
         "outcome": {
           "type": "damage",
@@ -3503,6 +3560,54 @@
             "damageType": "physical",
             "resistance": "normal"
           }
+        }
+      },
+      {
+        "kind": "combat.monster-hit",
+        "messageKey": "combat-monster-hit",
+        "args": {
+          "damage": "0",
+          "method": "rfb.blow.claw",
+          "source": "demo.actor.rotting-corpse"
+        },
+        "outcome": {
+          "type": "damage",
+          "resolution": {
+            "rawDamage": 1,
+            "armorReduction": 1,
+            "resistanceAdjustment": 0,
+            "finalDamage": 0,
+            "damageType": "physical",
+            "resistance": "normal"
+          }
+        }
+      },
+      {
+        "kind": "combat.monster-hit",
+        "messageKey": "combat-monster-hit",
+        "args": {
+          "damage": "0",
+          "method": "rfb.blow.hit",
+          "source": "demo.actor.zombified-human"
+        },
+        "outcome": {
+          "type": "damage",
+          "resolution": {
+            "rawDamage": 1,
+            "armorReduction": 1,
+            "resistanceAdjustment": 0,
+            "finalDamage": 0,
+            "damageType": "physical",
+            "resistance": "normal"
+          }
+        }
+      },
+      {
+        "kind": "combat.monster-miss",
+        "messageKey": "combat-monster-miss",
+        "args": {
+          "method": "rfb.blow.hit",
+          "source": "demo.actor.zombified-human"
         }
       }
     ],
@@ -3516,16 +3621,8 @@
         "y": 3
       },
       {
-        "x": 2,
-        "y": 4
-      },
-      {
         "x": 3,
         "y": 2
-      },
-      {
-        "x": 3,
-        "y": 5
       },
       {
         "x": 4,
@@ -3536,6 +3633,6 @@
         "y": 3
       }
     ],
-    "saveRoundTripStateHash": "ad3e0cb65da95153b0c16ab8df2ff5ae13c15f5f9b4ab5918fe3d3245fcef724"
+    "saveRoundTripStateHash": "e779bac763ecd28c7a203de9fa5094c97abb0bfbb71d1d85e6c4cafae6547620"
   }
 }

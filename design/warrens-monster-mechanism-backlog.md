@@ -1,6 +1,6 @@
 # Warrens 怪物机制实现清单
 
-状态：由 contract-v171 的 Warrens 生态对照建立；contract-v173 已完成 W1-W6 与运行时自然补怪，contract-v174-v176 已完成 W7-W9，contract-v177-v180 已完成 W10-W13，contract-v182 已完成 W14 Pest Control 任务生态；contract-v183 开始分批接入正式浅层内容，contract-v184 完成 `NEVER_MOVE` 与怪物 `BLINK` 绑定，contract-v185 接入第二批 14 只 2–3 级怪物，contract-v186 接入第三批 13 只 4–5 级怪物，contract-v187 接入首批正式施法怪物与简单 Unique，contract-v188 接入 10 只机制完备的 6–7 级怪物，contract-v189 接入 12 只 8–9 级怪物并完成浅层普查收口，contract-v190 完成出生宽限与五类职业掉落并再接入 13 只怪物，contract-v191 完成六类非伤害近战并再接入 10 只怪物，contract-v192 完成无近战怪物与 `SHRIEK`，contract-v193 完成地面拾物与四类近战偷窃/消耗事务，contract-v194 完成穿墙、水生、隐形与 Outpost 地表 habitat 分配，contract-v195 完成强者破体、两格近战、骑乘闭环与银质事实记录，contract-v196 完成友善娜美、怪物陷阱、Shadower 外观覆盖与废弃索引绑定，contract-v197 以零骰 `HURT` 和 `S_LOUSE` 收割 7 条浅层记录，contract-v198 以窄 `DISENCHANT` 接入解除附魔之眼，contract-v199 以持久房间 `glow`、黑暗源和 `darken-room` 接入银色果冻与黑暗精灵并完成浅层普查，contract-v200 复用现有机制直接接入 20 只十级非施法怪物，contract-v201 继续接入 7 只十级施法怪物并补齐通用召唤类别标签，contract-v202 以 `LIGHT → LITE` 源别名接入伪龙和明暗吐息资源，contract-v203 直接接入 6 只低风险十一级怪物，contract-v205 收口五类十一至十二级特殊机制，contract-v206 直接接入 20 只十二级非施法怪物，contract-v207 接入 7 只十二级施法怪物，contract-v208 接入全部 10 只十三级 P23 怪物，contract-v209 完成公共再生与 `MOVE_BODY`，contract-v210–v212 接入十四至十五级直接收割和参数化施法批次，contract-v213 以分类蚂蚁召唤和十格目标闪现接入 P28/P29，contract-v214 以窄单体 bolt 反射接入铁甲虫，contract-v216 直接接入 12 只十六级怪物，contract-v217 以蜘蛛分类召唤接入南蛮大王木鹿大王，contract-v218 完成剩余四只十六级阻塞怪物及其窄机制，contract-v219 直接接入 8 只十七级怪物，contract-v220 以参数化能力和 Dwarf 掉落表接入 5 只十七级怪物，contract-v221 以窄元素接触直伤接入剩余 3 只十七级怪物，contract-v222 按机制风险直接接入 33 只无怪物施法怪物，contract-v223 接入 15 只只使用现有怪物能力的 P37B 怪物，contract-v224 接入 11 只 P38A 参数化伤害怪物，contract-v225 接入 6 只 P38B 治疗与召唤参数怪物，contract-v226 接入 P39 跳跃光和有序复合接触光环。
+状态：由 contract-v171 的 Warrens 生态对照建立；contract-v173 已完成 W1-W6 与运行时自然补怪，contract-v174-v176 已完成 W7-W9，contract-v177-v180 已完成 W10-W13，contract-v182 已完成 W14 Pest Control 任务生态；contract-v183 开始分批接入正式浅层内容，contract-v184 完成 `NEVER_MOVE` 与怪物 `BLINK` 绑定，contract-v185 接入第二批 14 只 2–3 级怪物，contract-v186 接入第三批 13 只 4–5 级怪物，contract-v187 接入首批正式施法怪物与简单 Unique，contract-v188 接入 10 只机制完备的 6–7 级怪物，contract-v189 接入 12 只 8–9 级怪物并完成浅层普查收口，contract-v190 完成出生宽限与五类职业掉落并再接入 13 只怪物，contract-v191 完成六类非伤害近战并再接入 10 只怪物，contract-v192 完成无近战怪物与 `SHRIEK`，contract-v193 完成地面拾物与四类近战偷窃/消耗事务，contract-v194 完成穿墙、水生、隐形与 Outpost 地表 habitat 分配，contract-v195 完成强者破体、两格近战、骑乘闭环与银质事实记录，contract-v196 完成友善娜美、怪物陷阱、Shadower 外观覆盖与废弃索引绑定，contract-v197 以零骰 `HURT` 和 `S_LOUSE` 收割 7 条浅层记录，contract-v198 以窄 `DISENCHANT` 接入解除附魔之眼，contract-v199 以持久房间 `glow`、黑暗源和 `darken-room` 接入银色果冻与黑暗精灵并完成浅层普查，contract-v200 复用现有机制直接接入 20 只十级非施法怪物，contract-v201 继续接入 7 只十级施法怪物并补齐通用召唤类别标签，contract-v202 以 `LIGHT → LITE` 源别名接入伪龙和明暗吐息资源，contract-v203 直接接入 6 只低风险十一级怪物，contract-v205 收口五类十一至十二级特殊机制，contract-v206 直接接入 20 只十二级非施法怪物，contract-v207 接入 7 只十二级施法怪物，contract-v208 接入全部 10 只十三级 P23 怪物，contract-v209 完成公共再生与 `MOVE_BODY`，contract-v210–v212 接入十四至十五级直接收割和参数化施法批次，contract-v213 以分类蚂蚁召唤和十格目标闪现接入 P28/P29，contract-v214 以窄单体 bolt 反射接入铁甲虫，contract-v216 直接接入 12 只十六级怪物，contract-v217 以蜘蛛分类召唤接入南蛮大王木鹿大王，contract-v218 完成剩余四只十六级阻塞怪物及其窄机制，contract-v219 直接接入 8 只十七级怪物，contract-v220 以参数化能力和 Dwarf 掉落表接入 5 只十七级怪物，contract-v221 以窄元素接触直伤接入剩余 3 只十七级怪物，contract-v222 按机制风险直接接入 33 只无怪物施法怪物，contract-v223 接入 15 只只使用现有怪物能力的 P37B 怪物，contract-v224 接入 11 只 P38A 参数化伤害怪物，contract-v225 接入 6 只 P38B 治疗与召唤参数怪物，contract-v226 接入 P39 跳跃光和有序复合接触光环，contract-v228 接入 P40 真实变色龙形态，contract-v229 接入 P41 妖鬼与 `ELDRITCH_HORROR`。
 
 当前权威原版来源为 `master` Git ref 的 commit `efd63661302866038f58d8cd2553b23e6af3bf9d`。Warrens 在 `d_info.txt` 中为深度 1–9，主字形集合为 `kKyYrRfFcCbB`，并带有 `MONSTER_DIV_16`。本清单只记录该来源明确要求、而当前重写版还不能完整表达的机制，不把标签或近似行为标成已完成规则。
 
@@ -305,3 +305,14 @@ contract-v226 接入闪烁的灯光与黏糊恶心女王，严格同步增至 36
 增至 432，ability 增至 174。`JMP_LIGHT(5d5)` 使用窄 `jump-damage` 固定先范围
 光伤、后闪现；接触光环迁移为有序列表，女王的毒素、酸性 `2d3` 逐项复用现有
 结算和死亡中止，不建立通用 effect 序列框架。
+
+contract-v228 接入变色龙，严格同步增至 368 条，actor 增至 433，ability 保持
+174。新 `chameleon` 标签不复用 P20 的纯外观 `shapechanger` 近似：本体身份
+固定，当前形态以既有 `appearanceKindId` 保存，每次清醒行动以 `1/13` 换形；
+形态直接驱动生命、速度、抗性、属性、近战、移动和施法。没有新增通用状态、
+effect、协议字段或兼容层。
+
+contract-v229 接入妖鬼，严格同步增至 369 条，actor 增至 434，ability 保持
+174。`eldritch-horror` 只在敌对怪物新进入视野时运行；等级、Unique/群体修正、
+首次与低概率重触发、玩家豁免共同决定是否进入后果链。混乱、幻觉、麻痹、属性
+损伤、当前层地图失忆和既有精神变异均复用现有消费者，只新增实例触发标记。

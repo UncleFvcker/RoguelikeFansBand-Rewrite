@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.157";
+pub const PROTOCOL_VERSION: &str = "1.158";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -3328,6 +3328,8 @@ pub struct ActorSaveDto {
     pub nice: bool,
     #[serde(default)]
     pub visible_invisible: bool,
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub eldritch_horror_triggered: bool,
     #[serde(default)]
     pub casting_cooldown_remaining: u16,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]

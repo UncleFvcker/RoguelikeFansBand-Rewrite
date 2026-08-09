@@ -225,6 +225,12 @@ pub(crate) enum DomainEvent {
         source_kind_id: String,
         resolution: MonsterDisplacementResolutionDto,
     },
+    EldritchHorror {
+        source_entity_id: String,
+        source_kind_id: String,
+        power: u16,
+        outcome: &'static str,
+    },
     MonsterDraggedTarget {
         source_kind_id: String,
         target_kind_id: String,
@@ -1657,6 +1663,21 @@ impl DomainEvent {
                 "monster-teleported",
                 [("source", source_kind_id)],
                 GameEventOutcomeDto::MonsterDisplacement { resolution },
+            ),
+            Self::EldritchHorror {
+                source_entity_id,
+                source_kind_id,
+                power,
+                outcome,
+            } => dto(
+                "monster.eldritch-horror",
+                "monster-eldritch-horror",
+                [
+                    ("sourceEntity", source_entity_id),
+                    ("source", source_kind_id),
+                    ("power", power.to_string()),
+                    ("outcome", outcome.to_string()),
+                ],
             ),
             Self::MonsterDraggedTarget {
                 source_kind_id,

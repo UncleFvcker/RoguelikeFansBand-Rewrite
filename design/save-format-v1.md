@@ -326,3 +326,7 @@ contract-v216 不改变存档结构。每个角色继续在 `MogaminatorSaveDto`
 协议 1.155 为保存兼用的 `GoldPileDto` 增加必填 `discovered`。视野或金币探测发现后，该状态随当前层和离层楼层保存，并进入 state hash Schema v76；旧开发存档不兼容。`MogaminatorDto.autoGetTarget` 由当前地图、知识、规则和模式派生，不写入存档。
 
 集成协议 1.157 将上述角色变异、属性潜力、物品铭文、墨家名器配置与金币发现状态共同纳入 state hash Schema v77；save 容器仍为 v1，不提供旧开发存档兼容路径。
+
+协议 1.158 为每个 actor 保存可选的 `eldritchHorrorTriggered`。字段只区分首次
+理智冲击与同一怪物的低概率重触发，不保存派生可见性或新的理智数值。它进入
+state hash Schema v78；save 容器仍为 v1，不兼容旧开发存档。

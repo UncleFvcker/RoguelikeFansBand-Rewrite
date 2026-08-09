@@ -99,6 +99,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.cave-lizard", 82, 1, 30),
             ("demo.actor.cave-orc", 126, 1, 40),
             ("demo.actor.cave-spider", 60, 1, 30),
+            ("demo.actor.chameleon", 1040, 1, 999),
             ("demo.actor.chaos-beastman", 318, 2, 999),
             ("demo.actor.chaos-shapechanger", 203, 2, 40),
             ("demo.actor.cheerful-leprechaun", 258, 2, 50),
@@ -168,6 +169,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.frumious-bandersnatch", 232, 2, 50),
             ("demo.actor.gazer", 218, 1, 50),
             ("demo.actor.gelatinous-cube", 286, 4, 50),
+            ("demo.actor.ghast", 327, 1, 70),
             ("demo.actor.giant-black-ant", 49, 1, 20),
             ("demo.actor.giant-black-dragon-fly", 322, 2, 999),
             ("demo.actor.giant-bronze-dragon-fly", 320, 1, 999),
@@ -2714,6 +2716,72 @@ fn p39_monsters_bind_jump_damage_and_ordered_contact_auras() {
             ..
         } if actor_kind_id == "demo.actor.the-icky-queen"
     ));
+}
+
+#[test]
+fn p40_chameleon_retains_the_authoritative_form_change_marker() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let chameleon = artifact
+        .content
+        .actors
+        .iter()
+        .find(|actor| actor.id == "demo.actor.chameleon")
+        .expect("Chameleon should be imported");
+
+    assert_eq!(chameleon.level, 20);
+    assert_eq!(chameleon.hit_point_dice.unwrap().dice, 10);
+    assert_eq!(chameleon.hit_point_dice.unwrap().sides, 100);
+    assert!(chameleon.tags.iter().any(|tag| tag == "chameleon"));
+    assert!(chameleon.movement.modes.contains(&ActorMovementMode::Fly));
+    assert!(
+        chameleon
+            .melee_routine
+            .as_ref()
+            .is_some_and(|routine| routine.blows.is_empty())
+    );
+    for damage_type in [
+        ActorDamageType::Acid,
+        ActorDamageType::Cold,
+        ActorDamageType::Electricity,
+        ActorDamageType::Fire,
+        ActorDamageType::Poison,
+    ] {
+        assert_eq!(
+            chameleon.resistances.get(&damage_type),
+            Some(&ActorResistanceLevel::Resistant)
+        );
+    }
+}
+
+#[test]
+fn p41_ghast_retains_the_authoritative_eldritch_horror_marker() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let ghast = artifact
+        .content
+        .actors
+        .iter()
+        .find(|actor| actor.id == "demo.actor.ghast")
+        .expect("Ghast should be imported");
+
+    assert_eq!(ghast.level, 19);
+    assert_eq!(ghast.hit_point_dice.unwrap().dice, 12);
+    assert_eq!(ghast.hit_point_dice.unwrap().sides, 10);
+    assert!(ghast.tags.iter().any(|tag| tag == "eldritch-horror"));
+    assert!(ghast.tags.iter().any(|tag| tag == "undead"));
+    assert!(ghast.movement.modes.contains(&ActorMovementMode::Swim));
+    assert_eq!(
+        ghast.resistances.get(&ActorDamageType::Light),
+        Some(&ActorResistanceLevel::Vulnerable)
+    );
+    assert_eq!(
+        ghast
+            .melee_routine
+            .as_ref()
+            .expect("Ghast should retain its melee routine")
+            .blows
+            .len(),
+        3
+    );
 }
 
 #[test]

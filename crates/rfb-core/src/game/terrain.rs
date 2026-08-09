@@ -255,8 +255,7 @@ impl Game {
         let terrain = self.content.terrain(&self.terrain[terrain_index])?.clone();
         let power = terrain.monster_door_power?;
         let interaction = self
-            .content
-            .actor(&self.entities[actor_index].kind_id)?
+            .actor_runtime_definition(&self.entities[actor_index])?
             .door_interaction;
         let roll_bound = u64::try_from(self.entities[actor_index].hp.max(0) / 10).unwrap_or(0);
         let original_roll = |game: &mut Game| {
@@ -325,7 +324,7 @@ impl Game {
         {
             return false;
         }
-        let Some(actor) = self.content.actor(&self.entities[actor_index].kind_id) else {
+        let Some(actor) = self.actor_runtime_definition(&self.entities[actor_index]) else {
             return false;
         };
         if !actor.terrain_interaction.destroys_walls {

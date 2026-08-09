@@ -7248,6 +7248,8 @@ fn monster_flag_is_mapped(flag: &str) -> bool {
             | "DROP_4D2"
             | "DROP_GOOD"
             | "DROP_GREAT"
+            | "ELDRITCH_HORROR"
+            | "CHAMELEON"
             | "SHAPECHANGER"
             | "HURT_ROCK"
             | "CAN_CLIMB"
@@ -7419,6 +7421,12 @@ fn monster_json(
     }
     if entry.flags.iter().any(|flag| flag == "SHAPECHANGER") {
         tags.push("shapechanger".to_owned());
+    }
+    if entry.flags.iter().any(|flag| flag == "CHAMELEON") {
+        tags.push("chameleon".to_owned());
+    }
+    if entry.flags.iter().any(|flag| flag == "ELDRITCH_HORROR") {
+        tags.push("eldritch-horror".to_owned());
     }
     if entry.flags.iter().any(|flag| flag == "FIXED_UNIQUE") {
         tags.push("fixed-unique".to_owned());
@@ -7739,6 +7747,8 @@ fn demo_monster_flag_is_handled(flag: &str) -> bool {
                 | "FRIENDS"
                 | "INVISIBLE"
                 | "SMART"
+                | "ELDRITCH_HORROR"
+                | "CHAMELEON"
                 | "SHAPECHANGER"
                 | "WILD_ALL"
                 | "WILD_GRASS"
@@ -7886,7 +7896,7 @@ fn demo_monster_json(
         && !entry
             .flags
             .iter()
-            .any(|flag| matches!(flag.as_str(), "NEVER_BLOW" | "KAGE"))
+            .any(|flag| matches!(flag.as_str(), "NEVER_BLOW" | "KAGE" | "CHAMELEON"))
     {
         return Err(LegacyImportError::InvalidDemoMonsterSelection(format!(
             "{} has no melee routine and is not marked NEVER_BLOW",
@@ -7977,6 +7987,8 @@ fn demo_monster_json(
         ("INVISIBLE", "invisible"),
         ("RES_ALL", "resist-all"),
         ("RES_TELE", "resist-teleport"),
+        ("ELDRITCH_HORROR", "eldritch-horror"),
+        ("CHAMELEON", "chameleon"),
         ("SHAPECHANGER", "shapechanger"),
         ("FIXED_UNIQUE", "fixed-unique"),
         ("NO_QUEST", "no-quest"),
@@ -12876,6 +12888,64 @@ S:FREQ_50 | BR_FIRE(40%) | BR_POISON | DETECT_MONSTERS | MAPPING\n";
         assert_eq!(effect["damageType"], "light");
         assert_eq!(effect["radius"], 5);
         assert_eq!(effect["blinkRadius"], 10);
+    }
+
+    #[test]
+    fn chameleon_flag_marks_a_form_changer_without_requiring_a_base_blow() {
+        const CHAMELEON_R_INFO: &str = "\
+N:1040:Chameleon\n\
+G:R:v\n\
+I:110:10d100:20:0:0:150\n\
+W:20:1:999:0:0:0\n\
+F:CHAMELEON | ANIMAL | CAN_FLY | RES_FIRE\n";
+        let monsters = parse_r_info(CHAMELEON_R_INFO).expect("synthetic chameleon should parse");
+        let selection: DemoMonsterSelectionEntry = serde_json::from_value(serde_json::json!({
+            "sourceIndex": 1040,
+            "id": "chameleon",
+            "tags": ["animal", "warrens"],
+            "omittedFlags": []
+        }))
+        .expect("synthetic selection should parse");
+        let chameleon = demo_monster_json(&monsters[0], &selection, &mut BTreeMap::new())
+            .expect("chameleon should import without a base blow");
+
+        assert!(
+            chameleon["tags"]
+                .as_array()
+                .expect("tags should be an array")
+                .iter()
+                .any(|tag| tag == "chameleon")
+        );
+        assert_eq!(chameleon["meleeRoutine"]["blows"], serde_json::json!([]));
+    }
+
+    #[test]
+    fn eldritch_horror_flag_marks_the_runtime_sanity_trigger() {
+        const GHAST_R_INFO: &str = "\
+N:327:Ghast\n\
+G:z:U\n\
+I:110:12d10:40:40:20:90\n\
+W:19:1:70:75:0:0\n\
+B:KICK:HURT(3d3)\n\
+F:UNDEAD | ELDRITCH_HORROR\n";
+        let monsters = parse_r_info(GHAST_R_INFO).expect("synthetic ghast should parse");
+        let selection: DemoMonsterSelectionEntry = serde_json::from_value(serde_json::json!({
+            "sourceIndex": 327,
+            "id": "ghast",
+            "tags": ["undead", "warrens"],
+            "omittedFlags": []
+        }))
+        .expect("synthetic selection should parse");
+        let ghast = demo_monster_json(&monsters[0], &selection, &mut BTreeMap::new())
+            .expect("ghast should import with its sanity trigger");
+
+        assert!(
+            ghast["tags"]
+                .as_array()
+                .expect("tags should be an array")
+                .iter()
+                .any(|tag| tag == "eldritch-horror")
+        );
     }
 
     #[test]

@@ -1,6 +1,6 @@
 # RFB CoreTransport 协议 v1
 
-状态：协议 1.157、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
+状态：协议 1.158、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
 
 ## 1. 适用边界
 
@@ -415,3 +415,8 @@ G3 不改变协议：Web 将 Ctrl+G 与小写 `g` 分离，先执行零耗时普
 G4 以协议 1.156、state hash Schema v76 和 contract-v219 完成验收，不增加空协议版本。最初计划中的 1.154/v75 已分别由 G0 的模式状态采用；G1 的金币发现状态随后把最终 Schema 推进到 v76。验收记录见 [G4：协议与验收收口](autoget-g4-acceptance.md)。
 
 集成协议 1.157 同时保留城镇自动拾取、物品变异与怪物能力的协议投影和存档字段；组合后的 state-hash 输入提升为 Schema v77，save 容器仍为 v1，契约基线统一为 contract-v227。
+
+协议 1.158 为 `ActorSaveDto` 增加可选 `eldritchHorrorTriggered`，记录同一怪物已
+造成过一次真实理智冲击，供重新进入视野时的 `1/5` 门使用。理智后果通过既有
+状态、属性、地图知识和变异投影表达；没有新增通用事件 outcome DTO。该标记进入
+state-hash Schema v78，save 容器保持 v1，基线为 contract-v229。

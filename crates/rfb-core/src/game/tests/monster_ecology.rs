@@ -23,6 +23,31 @@ fn first_seed_for(mut predicate: impl FnMut(&mut RfbRng) -> bool) -> u64 {
         .expect("bounded deterministic seed search should find a match")
 }
 
+fn eldritch_seed(saving_throw_skill: i32, consequence_saves: &[bool]) -> u64 {
+    let threshold = u64::try_from(saving_throw_skill.saturating_sub(9).clamp(0, 100))
+        .expect("clamped saving throw must fit u64");
+    first_seed_for(|rng| {
+        if rng.bounded(100) >= 9 || rng.bounded(100) < threshold {
+            return false;
+        }
+        consequence_saves
+            .iter()
+            .all(|expected| (rng.bounded(100) < threshold) == *expected)
+    })
+}
+
+fn game_with_ghast() -> (Game, usize) {
+    let mut game = Game::new_warrens_journey_with_build(1, "demo.build.warrior")
+        .expect("Warrens journey should create");
+    let position = Position {
+        x: game.player.position.x + 1,
+        y: game.player.position.y,
+    };
+    game.push_generated_actor("test.ghast".to_owned(), "demo.actor.ghast", position);
+    let index = game.entities.len() - 1;
+    (game, index)
+}
+
 #[test]
 fn compost_monsters_allocate_only_in_the_sewer_task() {
     let game = Game::new(3);
@@ -75,6 +100,175 @@ fn shapechanger_projects_another_monster_and_rerolls_each_action() {
     game.reroll_shapechanger_appearance(index);
     assert_eq!(game.rng.draw_counter, draws_before + 1);
     assert!(game.entities[index].appearance_kind_id.is_some());
+}
+
+#[test]
+fn chameleon_keeps_its_identity_while_its_form_drives_runtime_behavior() {
+    let mut game = Game::new_warrens_journey_with_build(1, "demo.build.warrior")
+        .expect("Warrens journey should create");
+    game.push_generated_actor(
+        "test.chameleon".to_owned(),
+        "demo.actor.chameleon",
+        Position { x: 5, y: 3 },
+    );
+    let index = game.entities.len() - 1;
+    game.apply_chameleon_form(index, "demo.actor.illusionist");
+
+    let actor = &game.entities[index];
+    let form = game
+        .content
+        .actor("demo.actor.illusionist")
+        .expect("illusionist form should exist");
+    assert_eq!(actor.kind_id, "demo.actor.chameleon");
+    assert_eq!(
+        actor.appearance_kind_id.as_deref(),
+        Some("demo.actor.illusionist")
+    );
+    assert_eq!(actor.speed, form.speed);
+    assert!(actor_max_hp_is_valid(form, actor.max_hp));
+    assert_eq!(actor.resistances, definition_resistance_profile(form));
+    let runtime = game
+        .actor_runtime_definition(actor)
+        .expect("chameleon form should be its runtime definition");
+    assert_eq!(runtime.id, form.id);
+    assert!(!resolved_melee_blows(runtime).is_empty());
+    assert!(runtime.monster_casting.is_some());
+
+    game.entities[index].casting_cooldown_remaining = 3;
+    game.entities[index]
+        .observed_player_resistances
+        .insert(DamageType::Fire, ResistanceLevel::Resistant);
+    game.apply_chameleon_form(index, "demo.actor.earth-spirit");
+    assert_eq!(game.entities[index].casting_cooldown_remaining, 0);
+    assert!(game.entities[index].observed_player_resistances.is_empty());
+    let wall = Position { x: 6, y: 3 };
+    replace_terrain(&mut game, wall, "demo.terrain.wall");
+    assert!(game.actor_can_enter_position(index, wall));
+
+    let expected_hash = game.state_hash();
+    let save = game.to_save();
+    let saved = save
+        .entities
+        .iter()
+        .find(|entity| entity.id == "test.chameleon")
+        .expect("chameleon should be saved");
+    assert_eq!(saved.kind_id, "demo.actor.chameleon");
+    assert_eq!(
+        saved.appearance_kind_id.as_deref(),
+        Some("demo.actor.earth-spirit")
+    );
+    let restored = Game::from_save(save).expect("chameleon form should round-trip");
+    assert_eq!(restored.state_hash(), expected_hash);
+    let restored_actor = restored
+        .entities
+        .iter()
+        .find(|actor| actor.id == "test.chameleon")
+        .expect("restored chameleon should exist");
+    assert_eq!(
+        restored
+            .actor_runtime_definition(restored_actor)
+            .expect("restored form should remain active")
+            .id,
+        "demo.actor.earth-spirit"
+    );
+}
+
+#[test]
+fn chameleon_change_check_uses_one_in_thirteen_before_selecting_a_form() {
+    let mut game = Game::new_warrens_journey_with_build(1, "demo.build.warrior")
+        .expect("Warrens journey should create");
+    game.push_generated_actor(
+        "test.chameleon".to_owned(),
+        "demo.actor.chameleon",
+        Position { x: 5, y: 3 },
+    );
+    let index = game.entities.len() - 1;
+    game.apply_chameleon_form(index, "demo.actor.small-kobold");
+
+    let miss_seed = first_seed_for(|rng| rng.bounded(13) != 0);
+    game.rng = RfbRng::seeded(miss_seed);
+    let appearance = game.entities[index].appearance_kind_id.clone();
+    assert!(!game.maybe_change_chameleon_form(index));
+    assert_eq!(game.rng.draw_counter, 1);
+    assert_eq!(game.entities[index].appearance_kind_id, appearance);
+
+    let change_seed = first_seed_for(|rng| rng.bounded(13) == 0);
+    game.rng = RfbRng::seeded(change_seed);
+    assert!(game.maybe_change_chameleon_form(index));
+    assert!(game.rng.draw_counter >= 2);
+    assert_eq!(game.entities[index].kind_id, "demo.actor.chameleon");
+    assert!(game.entities[index].appearance_kind_id.is_some());
+}
+
+#[test]
+fn eldritch_horror_triggers_on_fresh_sight_and_persists_its_repeat_gate() {
+    let (mut game, index) = game_with_ghast();
+    let visible = game.visible_eldritch_horror_entity_ids();
+    let saving_throw = game.player_derived_stats().saving_throw_skill.value;
+    let seed = eldritch_seed(saving_throw, &[false]);
+    game.rng = RfbRng::seeded(seed);
+    let mut events = Vec::new();
+    let mut changed = BTreeSet::new();
+
+    game.resolve_newly_visible_eldritch_horrors(&visible, &mut events, &mut changed);
+    assert_eq!(game.rng.draw_counter, 0, "continuous sight must be safe");
+    game.resolve_newly_visible_eldritch_horrors(&BTreeSet::new(), &mut events, &mut changed);
+    assert!(game.entities[index].eldritch_horror_triggered);
+    assert!(game.player_has_status_kind(STATUS_CONFUSION));
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::EldritchHorror {
+            outcome: "mind-blast",
+            ..
+        }
+    )));
+
+    let expected_hash = game.state_hash();
+    let save = game.to_save();
+    assert!(
+        save.entities
+            .iter()
+            .find(|actor| actor.id == "test.ghast")
+            .expect("Ghast should be saved")
+            .eldritch_horror_triggered
+    );
+    let restored = Game::from_save(save).expect("Eldritch trigger state should round-trip");
+    assert_eq!(restored.state_hash(), expected_hash);
+
+    let repeat_miss_seed = first_seed_for(|rng| rng.bounded(100) < 9 && rng.bounded(5) != 0);
+    game.rng = RfbRng::seeded(repeat_miss_seed);
+    let event_count = events.len();
+    game.resolve_eldritch_horror(index, &mut events, &mut changed);
+    assert_eq!(game.rng.draw_counter, 2);
+    assert_eq!(events.len(), event_count);
+}
+
+#[test]
+fn eldritch_horror_reuses_attribute_amnesia_and_weird_mind_contracts() {
+    let (mut drained, drained_index) = game_with_ghast();
+    let saving_throw = drained.player_derived_stats().saving_throw_skill.value;
+    drained.rng = RfbRng::seeded(eldritch_seed(saving_throw, &[true, false]));
+    let attributes_before = drained.progress.attributes;
+    drained.resolve_eldritch_horror(drained_index, &mut Vec::new(), &mut BTreeSet::new());
+    assert!(
+        drained.progress.attributes.intelligence < attributes_before.intelligence
+            || drained.progress.attributes.wisdom < attributes_before.wisdom
+            || drained.progress.attributes.charisma < attributes_before.charisma
+    );
+
+    let (mut amnesia, amnesia_index) = game_with_ghast();
+    let saving_throw = amnesia.player_derived_stats().saving_throw_skill.value;
+    amnesia.explored.fill(true);
+    amnesia.rng = RfbRng::seeded(eldritch_seed(saving_throw, &[true, true, true, false]));
+    amnesia.resolve_eldritch_horror(amnesia_index, &mut Vec::new(), &mut BTreeSet::new());
+    assert!(amnesia.explored.iter().all(|explored| !explored));
+
+    let (mut immune, immune_index) = game_with_ghast();
+    assert!(immune.gain_mutation("rfb.mutation.weird-mind", &mut Vec::new()));
+    let draws_before = immune.rng.draw_counter;
+    immune.resolve_eldritch_horror(immune_index, &mut Vec::new(), &mut BTreeSet::new());
+    assert_eq!(immune.rng.draw_counter, draws_before);
+    assert!(!immune.entities[immune_index].eldritch_horror_triggered);
 }
 
 #[test]

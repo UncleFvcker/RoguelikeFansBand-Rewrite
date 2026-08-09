@@ -2214,6 +2214,18 @@
       "id": "the-icky-queen",
       "tags": ["icky", "warrens"],
       "omittedFlags": ["CAN_SPEAK", "FEMALE", "WEIRD_MIND"]
+    },
+    {
+      "sourceIndex": 1040,
+      "id": "chameleon",
+      "tags": ["animal", "warrens"],
+      "omittedFlags": []
+    },
+    {
+      "sourceIndex": 327,
+      "id": "ghast",
+      "tags": ["undead", "warrens"],
+      "omittedFlags": ["COLD_BLOOD", "POS_HOLD_LIFE"]
     }
   ]
 }

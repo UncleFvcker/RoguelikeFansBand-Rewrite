@@ -1058,7 +1058,7 @@ fn second_passive_mutation_batch_keeps_resistance_sense_and_levitation_semantics
             .mutation("rfb.mutation.weird-mind")
             .unwrap()
             .status_immunities,
-        ["rfb.status.hallucination"]
+        ["rfb.status.eldritch-horror", "rfb.status.hallucination"]
     );
 
     let ledger: serde_json::Value = serde_json::from_slice(

@@ -144,6 +144,18 @@ message-resource-gained = Your { $resource } rises by { $amount }.
 message-monster-blinked = { $source } blinks to a nearby spot.
 message-monster-blinked-target = { $source } blinks { $target } to a nearby spot!
 message-monster-teleported = { $source } tears open a rift and vanishes into the distance.
+message-monster-eldritch-horror =
+    { $outcome ->
+        [hallucinating] Through your hallucinations, { $source }'s face becomes even more absurd.
+        [unaffected] You behold { $source }'s sanity-blasting face, but remain unaffected.
+        [mind-blast] The sight of { $source } blasts your mind.
+        [attribute-drain] The sight of { $source } drains your intellect, wisdom, and presence.
+        [brain-smash] The sight of { $source } smashes through your mind.
+        [amnesia] The sight of { $source } tears away your memories of this place.
+        [permanent-insanity] The sight of { $source } leaves a permanent madness behind.
+        [fleeting-insanity] The sight of { $source } makes you feel briefly deranged.
+       *[resisted] You master the horror of { $source }.
+    }
 message-monster-banished-target = { $source } banishes { $target } far away!
 message-monster-dragged-target = { $source } drags { $target } to its side!
 message-rest-completed = You rest for { $turns } turns ({ $reason }).
