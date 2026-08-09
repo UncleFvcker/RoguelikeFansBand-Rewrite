@@ -1,6 +1,6 @@
 # RFB 全系统梳理与重构实现路线
 
-状态：长期规则实现路线；当前基线为协议 1.152 / contract-v219（P31–P98 进展见 8.3，玩家流程与 Outpost 进展见 Phase 17/18，物品接入见 Phase 19，Warrens 怪物机制见 W1–W14 清单，荒野世界图见 W0–W5）
+状态：长期规则实现路线；当前基线为协议 1.152 / contract-v220（P31–P98 进展见 8.3，玩家流程与 Outpost 进展见 Phase 17/18，物品接入见 Phase 19，Warrens 怪物机制见 W1–W14 清单，荒野世界图见 W0–W5）
 
 ## 1. 目的与边界
 
@@ -665,6 +665,8 @@ P30“首个非 Mana 职业资源”已由 contract-v90 完成：节奏资源按
 **十六级怪物 P33 进展（2026-08）**：contract-v218 接入恐爪怪、夸塞魔、老鼠王子尼祖基尔和布伦比野马。`HURT_ROCK` 复用解离易伤；`CAN_CLIMB` 只开放山地/冰川通行；`TELE_LEVEL` 复用楼层事务并保留 Nexus 抗性与豁免；`COMPOST` 只允许 `demo.task.the-sewer` 分配，不提前实现完整下水道任务。正式包为 349 actors / 147 abilities，严格同步 284 条；协议 1.152、Schema v72 不变，demo 1.214.0，内容 hash 为 `94b3ab337a895fc36e1240bd2107c4f39ba259b6c814080333ddaa441119b451`。完整边界见 [Contract v218](contract-v218-warrens-content-p33-level-16-blockers.md)。
 
 **十七级怪物 P34 进展（2026-08）**：contract-v219 直接接入斯芬克斯、森林巨魔、2头海德拉、沼泽怪物、水元素精灵、巨型粉红蝎、土元素精灵和南蛮大王兀突骨。全部复用现有状态施法、再生、`MOVE_BODY`、游泳/飞行、近战恐惧/属性损伤、`HURT_ROCK` 解离易伤、`DUNGEON_31` 与 Warrior 掉落，不新增 ability、effect 或运行时框架。正式包为 357 actors / 147 abilities，严格同步 292 条；协议 1.152、Schema v72 不变，demo 1.215.0，内容 hash 为 `795cf896433897af45dbf9b6d7f1519fbec70f8cf926843cefe4179a37f83f97`。完整边界见 [Contract v219](contract-v219-warrens-content-p34-level-17-direct-harvest.md)。
+
+**十七级怪物 P35 进展（2026-08）**：contract-v220 接入丘陵巨人、小恶魔、猫又、灰先知和矮人纳尔。`THROW`、火焰箭、十七级单体召唤、灰先知同族召唤与 51 点治疗只生成五条参数化 ability；`DROP_DWARF` 映射到引用现有镐、铲、小型金属盾和护身符的窄掉落表。正式包为 362 actors / 152 abilities，严格同步 297 条；协议 1.152、Schema v72 不变，demo 1.216.0，内容 hash 为 `1a3ff3f7f41da01cc0a0860393b4b6cab1d86d1861f8b32476d2841f095f13c8`。完整边界见 [Contract v220](contract-v220-warrens-content-p35-level-17-casters.md)。
 
 ## 9. 内容迁移策略
 

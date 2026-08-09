@@ -41,6 +41,7 @@ const DEMO_MAGE_DROP_TABLE_ID: &str = "demo.loot-table.mage";
 const DEMO_PRIEST_DROP_TABLE_ID: &str = "demo.loot-table.priest";
 const DEMO_EVIL_PRIEST_DROP_TABLE_ID: &str = "demo.loot-table.evil-priest";
 const DEMO_PALADIN_DROP_TABLE_ID: &str = "demo.loot-table.paladin";
+const DEMO_DWARF_DROP_TABLE_ID: &str = "demo.loot-table.dwarf";
 const DEMO_CORPSE_ITEM_ID: &str = "demo.item.corpse-remains";
 const DEMO_SKELETON_ITEM_ID: &str = "demo.item.skeleton-remains";
 
@@ -53,6 +54,7 @@ fn demo_drop_theme_table_id(theme: &str) -> Option<&'static str> {
         "DROP_PRIEST" => Some(DEMO_PRIEST_DROP_TABLE_ID),
         "DROP_PRIEST_EVIL" => Some(DEMO_EVIL_PRIEST_DROP_TABLE_ID),
         "DROP_PALADIN" => Some(DEMO_PALADIN_DROP_TABLE_ID),
+        "DROP_DWARF" => Some(DEMO_DWARF_DROP_TABLE_ID),
         _ => None,
     }
 }
@@ -11385,6 +11387,10 @@ mod tests {
             serde_json::json!([31])
         );
         assert_eq!(actor["deathDrop"]["themeTableId"], "demo.loot-table.archer");
+        assert_eq!(
+            demo_drop_theme_table_id("DROP_DWARF"),
+            Some("demo.loot-table.dwarf")
+        );
     }
 
     #[test]

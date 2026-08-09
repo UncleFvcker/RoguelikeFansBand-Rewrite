@@ -1764,6 +1764,36 @@
       "id": "wutugu-the-chief-of-southerings",
       "tags": ["human", "humanoid", "warrens"],
       "omittedFlags": ["CAN_SPEAK", "MALE"]
+    },
+    {
+      "sourceIndex": 255,
+      "id": "hill-giant",
+      "tags": ["giant", "warrens"],
+      "omittedFlags": ["MALE", "POS_SUST_STR"]
+    },
+    {
+      "sourceIndex": 296,
+      "id": "imp",
+      "tags": ["demon", "warrens"],
+      "omittedFlags": ["COLD_BLOOD", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 986,
+      "id": "nekomata",
+      "tags": ["cat", "warrens"],
+      "omittedFlags": ["MALE", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 1296,
+      "id": "grey-seer",
+      "tags": ["sewer", "skaven", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 996,
+      "id": "nar-the-dwarf",
+      "tags": ["dwarf", "humanoid", "warrens"],
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
     }
   ]
 }

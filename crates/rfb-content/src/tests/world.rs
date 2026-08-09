@@ -188,6 +188,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.gremlin", 153, 4, 40),
             ("demo.actor.grey-icky-thing", 103, 1, 40),
             ("demo.actor.grey-mold", 20, 1, 10),
+            ("demo.actor.grey-seer", 1296, 3, 50),
             ("demo.actor.grid-bug", 34, 3, 20),
             ("demo.actor.griffon", 279, 1, 50),
             ("demo.actor.grip-farmer-maggots-dog", 53, 2, 999),
@@ -199,6 +200,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.hammerhead", 292, 3, 50),
             ("demo.actor.hellcat", 222, 1, 50),
             ("demo.actor.hibagon", 983, 10, 30),
+            ("demo.actor.hill-giant", 255, 3, 60),
             ("demo.actor.hill-orc", 149, 1, 40),
             ("demo.actor.hippocampus", 207, 1, 40),
             ("demo.actor.hippogriff", 209, 1, 40),
@@ -208,6 +210,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.hummerhorn", 289, 5, 50),
             ("demo.actor.hunting-hawk-of-julian", 151, 2, 40),
             ("demo.actor.illusionist", 240, 2, 50),
+            ("demo.actor.imp", 296, 2, 80),
             ("demo.actor.insect-swarm", 38, 1, 10),
             ("demo.actor.irish-wolfhound-of-flora", 254, 2, 50),
             ("demo.actor.ixitxachitl", 220, 1, 50),
@@ -262,6 +265,8 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.mongbat", 235, 3, 50),
             ("demo.actor.moon-beast", 223, 1, 50),
             ("demo.actor.nami-the-mate", 1021, 4, 999),
+            ("demo.actor.nar-the-dwarf", 996, 2, 999),
+            ("demo.actor.nekomata", 986, 3, 40),
             ("demo.actor.nether-worm-mass", 213, 4, 40),
             ("demo.actor.newt", 23, 1, 10),
             ("demo.actor.nibelung", 111, 1, 40),
@@ -1797,6 +1802,204 @@ fn level_seventeen_p34_harvest_reuses_existing_mechanics_and_abilities() {
             .as_ref()
             .and_then(|drop| drop.theme_table_id.as_deref()),
         Some("demo.loot-table.large-kobold")
+    );
+}
+
+#[test]
+fn level_seventeen_p35_casters_reuse_parameterized_abilities_and_dwarf_drops() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actor = |id: &str| {
+        artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == id)
+            .unwrap_or_else(|| panic!("{id} should be imported"))
+    };
+    let ability = |id: &str| {
+        artifact
+            .content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == id)
+            .unwrap_or_else(|| panic!("{id} should be generated"))
+    };
+    let ability_ids = |id: &str| {
+        actor(id)
+            .monster_casting
+            .as_ref()
+            .unwrap_or_else(|| panic!("{id} should retain monster casting"))
+            .abilities
+            .iter()
+            .map(|candidate| candidate.ability_id.as_str())
+            .collect::<BTreeSet<_>>()
+    };
+
+    for id in [
+        "demo.actor.hill-giant",
+        "demo.actor.imp",
+        "demo.actor.nekomata",
+        "demo.actor.grey-seer",
+        "demo.actor.nar-the-dwarf",
+    ] {
+        assert_eq!(actor(id).level, 17, "{id} should remain level 17");
+    }
+
+    assert_eq!(
+        ability_ids("demo.actor.hill-giant"),
+        ["rfb-legacy.ability.bolt-physical-1d1-50"]
+            .into_iter()
+            .collect()
+    );
+    assert_eq!(
+        ability_ids("demo.actor.imp"),
+        [
+            "rfb-legacy.ability.blind",
+            "rfb-legacy.ability.blink",
+            "rfb-legacy.ability.bolt-fire-9d8-5",
+            "rfb-legacy.ability.confuse",
+            "rfb-legacy.ability.drag",
+            "rfb-legacy.ability.escape",
+            "rfb-legacy.ability.scare",
+            "rfb-legacy.ability.teleport-level",
+        ]
+        .into_iter()
+        .collect()
+    );
+    assert_eq!(
+        ability_ids("demo.actor.nekomata"),
+        [
+            "rfb-legacy.ability.curse-8d8",
+            "rfb-legacy.ability.scare",
+            "rfb-legacy.ability.summon-legacy-import-l17-1d1",
+        ]
+        .into_iter()
+        .collect()
+    );
+    assert_eq!(
+        ability_ids("demo.actor.grey-seer"),
+        [
+            "rfb-legacy.ability.ball-poison-12d2",
+            "rfb-legacy.ability.blind",
+            "rfb-legacy.ability.blink",
+            "rfb-legacy.ability.curse-8d8",
+            "rfb-legacy.ability.kin-grey-seer",
+            "rfb-legacy.ability.slow",
+        ]
+        .into_iter()
+        .collect()
+    );
+    assert_eq!(
+        ability_ids("demo.actor.nar-the-dwarf"),
+        [
+            "rfb-legacy.ability.blind",
+            "rfb-legacy.ability.confuse",
+            "rfb-legacy.ability.curse-8d8",
+            "rfb-legacy.ability.heal-51",
+            "rfb-legacy.ability.mind-blast-7d7",
+        ]
+        .into_iter()
+        .collect()
+    );
+
+    assert!(matches!(
+        ability("rfb-legacy.ability.bolt-physical-1d1-50").effect,
+        AbilityEffectDefinition::Damage {
+            damage_dice: 1,
+            damage_sides: 1,
+            damage_bonus: 50,
+            damage_type: ActorDamageType::Physical,
+        }
+    ));
+    assert!(matches!(
+        ability("rfb-legacy.ability.bolt-fire-9d8-5").effect,
+        AbilityEffectDefinition::Damage {
+            damage_dice: 9,
+            damage_sides: 8,
+            damage_bonus: 5,
+            damage_type: ActorDamageType::Fire,
+        }
+    ));
+    assert!(matches!(
+        ability("rfb-legacy.ability.summon-legacy-import-l17-1d1").effect,
+        AbilityEffectDefinition::SummonCategory {
+            ref category,
+            maximum_level: 17,
+            count_dice: 1,
+            count_sides: 1,
+            count_bonus: 0,
+            ..
+        } if category == "legacy-import"
+    ));
+    assert!(matches!(
+        ability("rfb-legacy.ability.kin-grey-seer").effect,
+        AbilityEffectDefinition::Summon {
+            ref actor_kind_id,
+            count: 2,
+            radius: 2,
+            ..
+        } if actor_kind_id == "demo.actor.grey-seer"
+    ));
+    assert!(matches!(
+        ability("rfb-legacy.ability.heal-51").effect,
+        AbilityEffectDefinition::Heal { amount: 51 }
+    ));
+
+    let hill_giant = actor("demo.actor.hill-giant");
+    assert!(
+        hill_giant
+            .movement
+            .modes
+            .contains(&ActorMovementMode::Climb)
+    );
+    assert_eq!(
+        hill_giant
+            .allocation
+            .as_ref()
+            .expect("Hill giant allocation")
+            .habitats,
+        [ActorHabitat::Mountain]
+    );
+
+    let grey_seer = actor("demo.actor.grey-seer");
+    assert_eq!(
+        grey_seer
+            .allocation
+            .as_ref()
+            .expect("Grey seer allocation")
+            .task_id
+            .as_deref(),
+        Some("demo.task.the-sewer")
+    );
+
+    let nar = actor("demo.actor.nar-the-dwarf");
+    assert!(nar.tags.iter().any(|tag| tag == "unique"));
+    assert!(nar.moves_weaker_bodies);
+    assert_eq!(
+        nar.death_drop
+            .as_ref()
+            .and_then(|drop| drop.theme_table_id.as_deref()),
+        Some("demo.loot-table.dwarf")
+    );
+    assert_eq!(
+        artifact
+            .content
+            .loot_tables
+            .iter()
+            .find(|table| table.id == "demo.loot-table.dwarf")
+            .expect("Dwarf drop table should compile")
+            .entries
+            .iter()
+            .map(|entry| entry.item_kind_id.as_str())
+            .collect::<BTreeSet<_>>(),
+        [
+            "demo.item.pick",
+            "demo.item.sealed-amulet",
+            "demo.item.shovel",
+            "demo.item.small-metal-shield",
+        ]
+        .into_iter()
+        .collect()
     );
 }
 
