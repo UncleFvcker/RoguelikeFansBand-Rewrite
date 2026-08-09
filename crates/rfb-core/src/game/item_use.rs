@@ -740,6 +740,9 @@ impl Game {
             AbilityDetectSubjectDefinition::Item => {
                 self.detect_item_positions(&category, radius, through_walls)
             }
+            AbilityDetectSubjectDefinition::Gold => {
+                self.detect_gold_positions(radius, through_walls)
+            }
         };
         if persistent {
             changed.extend(detected_positions.iter().copied());
@@ -1050,6 +1053,110 @@ impl Game {
                 changed: outcome.changed,
             },
         });
+    }
+
+    pub(super) fn resolve_item_inventory_identification(
+        &mut self,
+        source_kind_id: &str,
+        events: &mut Vec<DomainEvent>,
+    ) -> bool {
+        self.mark_item_aware(source_kind_id);
+        let count = self.identify_carried_items();
+        events.push(DomainEvent::ItemInventoryIdentified {
+            source_kind_id: source_kind_id.to_owned(),
+            display_name_key: self.item_display_name_key(source_kind_id),
+            count,
+        });
+        true
+    }
+
+    pub(super) fn resolve_item_self_knowledge(
+        &mut self,
+        source_kind_id: &str,
+        events: &mut Vec<DomainEvent>,
+    ) -> bool {
+        self.mark_item_aware(source_kind_id);
+        let player = self.player_dto();
+        let attribute = |value: rfb_protocol::AttributeValueDto| {
+            format!(
+                "{}/{}/{}",
+                value.natural, value.maximum_natural, value.effective
+            )
+        };
+        let mut statuses = player
+            .statuses
+            .iter()
+            .map(|status| {
+                format!(
+                    "{}:{}:{}",
+                    status.kind_id, status.intensity, status.remaining_ticks
+                )
+            })
+            .collect::<Vec<_>>();
+        statuses.sort();
+        let mut resistances = player
+            .resistances
+            .iter()
+            .map(|resistance| format!("{:?}:{:?}", resistance.damage_type, resistance.level))
+            .collect::<Vec<_>>();
+        resistances.sort();
+        let mut resources = player
+            .resources
+            .iter()
+            .map(|resource| format!("{}:{}/{}", resource.id, resource.current, resource.maximum))
+            .collect::<Vec<_>>();
+        resources.sort();
+        let attributes = player.progress.attributes;
+        events.push(DomainEvent::ItemSelfKnowledge {
+            source_kind_id: source_kind_id.to_owned(),
+            display_name_key: self.item_display_name_key(source_kind_id),
+            report: SelfKnowledgeReport {
+                level: player.progress.level,
+                hp: player.hp,
+                max_hp: player.max_hp,
+                gold: player.gold,
+                nutrition: player.nutrition,
+                attack: player.attack,
+                defense: player.defense,
+                melee_skill: player.melee_skill,
+                armor_class: player.armor_class,
+                speed: player.speed,
+                attributes: [
+                    attribute(attributes.strength),
+                    attribute(attributes.intelligence),
+                    attribute(attributes.wisdom),
+                    attribute(attributes.dexterity),
+                    attribute(attributes.constitution),
+                    attribute(attributes.charisma),
+                ],
+                statuses: statuses.join(","),
+                resistances: resistances.join(","),
+                resources: resources.join(","),
+            },
+        });
+        true
+    }
+
+    fn resolve_item_sequence(
+        &mut self,
+        source_kind_id: &str,
+        effects: Vec<ItemUseEffectDefinition>,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        for effect in effects {
+            if matches!(effect, ItemUseEffectDefinition::Detect { .. }) {
+                self.resolve_item_detection(
+                    source_kind_id.to_owned(),
+                    None,
+                    effect,
+                    events,
+                    changed,
+                );
+            } else {
+                self.resolve_item_self_effect(source_kind_id, &effect, events);
+            }
+        }
     }
 
     pub(super) fn item_attribute_kind(attribute: &ItemAttributeDefinition) -> AttributeKind {
@@ -1373,10 +1480,14 @@ impl Game {
                 | ItemUseEffectDefinition::RestoreResourceDice { .. }
                 | ItemUseEffectDefinition::RestoreResourceFull { .. }
                 | ItemUseEffectDefinition::DrainResourceFull { .. }
-                | ItemUseEffectDefinition::Sequence { .. }),
+                | ItemUseEffectDefinition::IdentifyInventory
+                | ItemUseEffectDefinition::SelfKnowledge),
                 ItemUsePlan::SelfTarget,
             ) => {
                 self.resolve_item_self_effect(&kind_id, &effect, events);
+            }
+            (ItemUseEffectDefinition::Sequence { effects }, ItemUsePlan::SelfTarget) => {
+                self.resolve_item_sequence(&kind_id, effects, events, changed)
             }
             (
                 ItemUseEffectDefinition::SelfCenteredElementalBlast {
@@ -1626,6 +1737,8 @@ impl Game {
             | ItemUseEffectDefinition::RestoreResourceDice { .. }
             | ItemUseEffectDefinition::RestoreResourceFull { .. }
             | ItemUseEffectDefinition::DrainResourceFull { .. }
+            | ItemUseEffectDefinition::IdentifyInventory
+            | ItemUseEffectDefinition::SelfKnowledge
             | ItemUseEffectDefinition::Sequence { .. }
             | ItemUseEffectDefinition::CurseEquippedItem { .. }
             | ItemUseEffectDefinition::RemoveEquippedCurses { .. } => {
@@ -3355,13 +3468,11 @@ impl Game {
             ItemUseEffectDefinition::DrainResourceFull { resource_id } => {
                 self.resolve_item_resource_drain(source_kind_id, resource_id, events)
             }
-            ItemUseEffectDefinition::Sequence { effects } => {
-                let mut noticed = false;
-                for effect in effects {
-                    noticed =
-                        self.resolve_item_self_effect(source_kind_id, effect, events) || noticed;
-                }
-                noticed
+            ItemUseEffectDefinition::IdentifyInventory => {
+                self.resolve_item_inventory_identification(source_kind_id, events)
+            }
+            ItemUseEffectDefinition::SelfKnowledge => {
+                self.resolve_item_self_knowledge(source_kind_id, events)
             }
             ItemUseEffectDefinition::Damage { .. }
             | ItemUseEffectDefinition::SelfCenteredElementalBlast { .. }
@@ -3384,6 +3495,9 @@ impl Game {
             | ItemUseEffectDefinition::Recall { .. }
             | ItemUseEffectDefinition::ResetRecall => {
                 unreachable!("projected item effects cannot resolve as self restoration")
+            }
+            ItemUseEffectDefinition::Sequence { .. } => {
+                unreachable!("item sequences resolve through the sequence executor")
             }
         }
     }

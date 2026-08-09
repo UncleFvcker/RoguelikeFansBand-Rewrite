@@ -417,5 +417,18 @@ status-sight-name = sight
 status-poison-resistance-name = poison resistance
 status-invulnerability-name = invulnerability
 status-giant-strength-name = giant strength
+status-understanding-name = understanding
+status-inventory-protection-name = inventory protection
+message-item-use-inventory-identified =
+    { $count ->
+        [one] You use { $source } and identify 1 carried item stack.
+       *[other] You use { $source } and identify { $count } carried item stacks.
+    }
+message-item-auto-identified =
+    { $count ->
+        [one] Your understanding identifies 1 newly carried item stack.
+       *[other] Your understanding identifies { $count } newly carried item stacks.
+    }
+message-item-use-self-knowledge = { $source } reveals: level { $level }; HP { $hp }/{ $maxHp }; gold { $gold }; food { $nutrition }; attack { $attack }; defense { $defense }; melee { $meleeSkill }; armour { $armorClass }; speed { $speed }; STR { $strength }, INT { $intelligence }, WIS { $wisdom }, DEX { $dexterity }, CON { $constitution }, CHR { $charisma }; statuses [{ $statuses }]; resistances [{ $resistances }]; resources [{ $resources }].
 message-item-use-resource-drained = { $source } drains { $amount } { $resource }.
 message-item-use-resource-drain-no-effect = { $source } finds no { $resource } to drain.

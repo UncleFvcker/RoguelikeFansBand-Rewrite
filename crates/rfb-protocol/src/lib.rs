@@ -603,6 +603,7 @@ pub enum AbilityDetectSubjectDto {
     Terrain,
     Actor,
     Item,
+    Gold,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]

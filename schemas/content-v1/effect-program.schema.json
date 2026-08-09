@@ -4,7 +4,8 @@
       "enum": [
         "terrain",
         "actor",
-        "item"
+        "item",
+        "gold"
       ],
       "type": "string"
     },
@@ -1580,6 +1581,32 @@
             },
             "type": {
               "const": "identify-item",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "identify-inventory",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "self-knowledge",
               "type": "string"
             }
           },

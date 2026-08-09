@@ -111,24 +111,24 @@
           "id": "inventory-knowledge",
           "primaryBlockers": ["scroll-effect"],
           "items": [
-            { "sourceIndex": 372, "sourceName": "Understanding:fentwon gerbil", "sourceId": "understanding-fentwon-gerbil" },
-            { "sourceIndex": 375, "sourceName": "Inventory Protection:arsemi zunag", "sourceId": "inventory-protection-arsemi-zunag" }
+            { "sourceIndex": 372, "sourceName": "Understanding:fentwon gerbil", "sourceId": "understanding-fentwon-gerbil", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] },
+            { "sourceIndex": 375, "sourceName": "Inventory Protection:arsemi zunag", "sourceId": "inventory-protection-arsemi-zunag", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] }
           ]
         },
         {
           "id": "gold-detection",
           "primaryBlockers": ["gold-detection"],
           "items": [
-            { "sourceIndex": 340, "sourceName": "Treasure Detection:ner fidtri", "sourceId": "treasure-detection-ner-fidtri" }
+            { "sourceIndex": 340, "sourceName": "Treasure Detection:ner fidtri", "sourceId": "treasure-detection-ner-fidtri", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] }
           ]
         },
         {
           "id": "enlightenment",
           "primaryBlockers": ["consumable-effect"],
           "items": [
-            { "sourceIndex": 449, "sourceName": "Enlightenment:Pink", "sourceId": "enlightenment-pink" },
-            { "sourceIndex": 450, "sourceName": "*Enlightenment*:Yellow Speckled", "sourceId": "enlightenment-yellow-speckled" },
-            { "sourceIndex": 451, "sourceName": "Self Knowledge:Shimmering", "sourceId": "self-knowledge-shimmering" }
+            { "sourceIndex": 449, "sourceName": "Enlightenment:Pink", "sourceId": "enlightenment-pink", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] },
+            { "sourceIndex": 450, "sourceName": "*Enlightenment*:Yellow Speckled", "sourceId": "enlightenment-yellow-speckled", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] },
+            { "sourceIndex": 451, "sourceName": "Self Knowledge:Shimmering", "sourceId": "self-knowledge-shimmering", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] }
           ]
         }
       ]

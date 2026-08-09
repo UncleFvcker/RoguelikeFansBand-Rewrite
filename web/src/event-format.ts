@@ -997,6 +997,20 @@ export function createPresentationFormatter(
           source: visibleItemName(event.args.nameKey, event.args.source),
           target: visibleItemNameForKind(event.args.target),
         });
+      case "item-use-inventory-identified":
+        return localization.format("message-item-use-inventory-identified", {
+          source: visibleItemName(event.args.nameKey, event.args.source),
+          count: Number(event.args.count ?? 0),
+        });
+      case "item-auto-identified":
+        return localization.format("message-item-auto-identified", {
+          count: Number(event.args.count ?? 0),
+        });
+      case "item-use-self-knowledge":
+        return localization.format("message-item-use-self-knowledge", {
+          ...event.args,
+          source: visibleItemName(event.args.nameKey, event.args.source),
+        });
       case "item-use-enchanted":
         return localization.format("message-item-use-enchanted", {
           source: visibleItemNameForKind(event.args.source),
@@ -1543,6 +1557,12 @@ export function createPresentationFormatter(
     }
     if (statusId === "rfb.status.giant-strength") {
       return localization.format("status-giant-strength-name");
+    }
+    if (statusId === "rfb.status.understanding") {
+      return localization.format("status-understanding-name");
+    }
+    if (statusId === "rfb.status.inventory-protection") {
+      return localization.format("status-inventory-protection-name");
     }
     return localization.format("status-unknown-name");
   }

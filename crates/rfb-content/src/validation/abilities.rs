@@ -313,6 +313,9 @@ pub(super) fn validate_abilities(
                                 !persistent
                                     && (category == "item" || item_tag_values.contains(category))
                             }
+                            AbilityDetectSubjectDefinition::Gold => {
+                                !persistent && category == "gold"
+                            }
                         }
                 }
                 AbilityEffectDefinition::TransformTerrain {

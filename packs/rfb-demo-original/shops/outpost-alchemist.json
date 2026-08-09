@@ -45,6 +45,13 @@
       "maintenanceMaximum": 4
     },
     {
+      "itemKindId": "demo.item.treasure-detection-scroll",
+      "initialMinimum": 1,
+      "initialMaximum": 4,
+      "maintenanceMinimum": 1,
+      "maintenanceMaximum": 4
+    },
+    {
       "itemKindId": "demo.item.temperate-tonic",
       "initialMinimum": 1,
       "initialMaximum": 2,

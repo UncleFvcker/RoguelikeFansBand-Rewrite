@@ -19,13 +19,16 @@ use crate::{
     effect::{
         DamageOutcome, DamagePacket, EffectOutcome, EffectSpec, EffectTarget,
         STATUS_BASIC_RESISTANCE, STATUS_BLEEDING, STATUS_BLINDNESS, STATUS_CONFUSION, STATUS_FEAR,
-        STATUS_GIANT_STRENGTH, STATUS_HASTE, STATUS_PARALYSIS, STATUS_POISON,
-        STATUS_PROTECTION_FROM_EVIL, STATUS_SIGHT, STATUS_SLEEP, STATUS_SLOW, STATUS_STUN,
-        STATUS_THERMAL_RESISTANCE, STATUS_VENGEANCE, StatusApplication, StatusChange,
-        StatusInstance, StatusStacking, apply_effect, apply_status, resolve_damage,
+        STATUS_GIANT_STRENGTH, STATUS_HASTE, STATUS_INVENTORY_PROTECTION, STATUS_PARALYSIS,
+        STATUS_POISON, STATUS_PROTECTION_FROM_EVIL, STATUS_SIGHT, STATUS_SLEEP, STATUS_SLOW,
+        STATUS_STUN, STATUS_THERMAL_RESISTANCE, STATUS_UNDERSTANDING, STATUS_VENGEANCE,
+        StatusApplication, StatusChange, StatusInstance, StatusStacking, apply_effect,
+        apply_status, resolve_damage,
     },
     error::CoreError,
-    event::{DomainEvent, ItemAttributeChange, ProjectileTrace, project_events},
+    event::{
+        DomainEvent, ItemAttributeChange, ProjectileTrace, SelfKnowledgeReport, project_events,
+    },
     rng::{RNG_ALGORITHM, RfbRng},
     save::{
         GENERATED_ITEM_ID_PREFIX, actor_from_runtime_spawn, actor_from_spawn,
@@ -1797,6 +1800,13 @@ impl Game {
             },
         }
 
+        if self.player_has_status_kind(STATUS_UNDERSTANDING) {
+            let count = self.identify_carried_items();
+            if count > 0 {
+                events.push(DomainEvent::ItemAutoIdentified { count });
+            }
+        }
+
         if advances_world && !self.player_is_dead() {
             events.extend(self.resolve_wilderness_terrain_hazard(self.player.position));
         }
@@ -2663,6 +2673,45 @@ impl Game {
             .map(|candidate| candidate.3)
             .collect();
         (positions, item_ids)
+    }
+
+    fn detect_gold_positions(
+        &self,
+        radius: u8,
+        through_walls: bool,
+    ) -> (Vec<Position>, Vec<String>) {
+        let origin = self.player.position;
+        let mut candidates = self
+            .gold_piles
+            .iter()
+            .filter_map(|pile| {
+                let distance = chebyshev_distance(origin, pile.position);
+                (distance <= u32::from(radius) && (through_walls || self.is_visible(pile.position)))
+                    .then(|| {
+                        (
+                            distance,
+                            pile.position.y,
+                            pile.position.x,
+                            pile.id.clone(),
+                            pile.position,
+                        )
+                    })
+            })
+            .collect::<Vec<_>>();
+        candidates.sort_by(|left, right| {
+            (left.0, left.1, left.2, left.3.as_str()).cmp(&(
+                right.0,
+                right.1,
+                right.2,
+                right.3.as_str(),
+            ))
+        });
+        let positions = candidates.iter().map(|candidate| candidate.4).collect();
+        let pile_ids = candidates
+            .into_iter()
+            .map(|candidate| candidate.3)
+            .collect();
+        (positions, pile_ids)
     }
 
     fn terrain_transform_positions(
@@ -5212,6 +5261,7 @@ const fn ability_detect_subject_dto(
         AbilityDetectSubjectDefinition::Terrain => AbilityDetectSubjectDto::Terrain,
         AbilityDetectSubjectDefinition::Actor => AbilityDetectSubjectDto::Actor,
         AbilityDetectSubjectDefinition::Item => AbilityDetectSubjectDto::Item,
+        AbilityDetectSubjectDefinition::Gold => AbilityDetectSubjectDto::Gold,
     }
 }
 

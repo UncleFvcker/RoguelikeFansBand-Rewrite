@@ -4245,3 +4245,243 @@ fn p3_2_invulnerability_and_giant_strength_reuse_status_payloads() {
     assert_eq!(giant.granted_modifiers.max_hp, 10);
     assert_eq!(giant.granted_equipment_bonuses.melee_skill, 1);
 }
+
+#[test]
+fn p3_3_treasure_detection_reports_stable_gold_pile_ids() {
+    let mut game = Game::new(205);
+    clear_monsters(&mut game);
+    let gold_position = Position {
+        x: game.player.position.x + 1,
+        y: game.player.position.y,
+    };
+    game.gold_piles = vec![
+        GoldPile {
+            id: "generated.gold.zeta".to_owned(),
+            position: gold_position,
+            amount: 20,
+            appearance: GoldAppearanceDto::Gold,
+        },
+        GoldPile {
+            id: "generated.gold.alpha".to_owned(),
+            position: gold_position,
+            amount: 10,
+            appearance: GoldAppearanceDto::Copper,
+        },
+    ];
+    give_inventory_item(
+        &mut game,
+        "test.item.treasure-detection.1",
+        "demo.item.treasure-detection-scroll",
+    );
+
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: "test.item.treasure-detection.1".to_owned(),
+            target: None,
+        },
+    );
+
+    let detection = update
+        .events
+        .iter()
+        .find_map(|event| match event.outcome.as_ref() {
+            Some(GameEventOutcomeDto::AbilityDetect { resolution }) => Some(resolution),
+            _ => None,
+        })
+        .expect("treasure detection should expose detected gold piles");
+    assert_eq!(detection.subject, AbilityDetectSubjectDto::Gold);
+    assert_eq!(detection.category, "gold");
+    assert_eq!(
+        detection.detected_positions,
+        vec![gold_position, gold_position]
+    );
+    assert_eq!(
+        detection.detected_entity_ids,
+        vec!["generated.gold.alpha", "generated.gold.zeta"]
+    );
+}
+
+#[test]
+fn p3_3_understanding_identifies_newly_carried_items_while_active() {
+    let mut game = Game::new(206);
+    clear_monsters(&mut game);
+    give_inventory_item(
+        &mut game,
+        "test.item.understanding.1",
+        "demo.item.understanding-scroll",
+    );
+
+    dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: "test.item.understanding.1".to_owned(),
+            target: None,
+        },
+    );
+    let understanding = game
+        .player
+        .statuses
+        .iter()
+        .find(|status| status.kind_id == STATUS_UNDERSTANDING)
+        .expect("understanding should remain active");
+    assert_eq!(understanding.remaining_ticks, 400);
+
+    give_inventory_item(
+        &mut game,
+        "test.item.understanding-target.1",
+        "demo.item.adaptive-glaive",
+    );
+    game.items
+        .iter_mut()
+        .find(|item| item.id == "test.item.understanding-target.1")
+        .expect("target item should exist")
+        .location = ItemLocation::Ground(game.player.position);
+    let update = dispatch_next(&mut game, GameCommand::PickUp);
+
+    let target = update
+        .inventory
+        .iter()
+        .find(|item| item.id == "test.item.understanding-target.1")
+        .expect("picked-up target should remain carried");
+    assert_eq!(target.knowledge, ItemKnowledgeDto::Aware);
+    assert_eq!(target.identification, ItemIdentificationDto::Appraised);
+    assert!(update.events.iter().any(|event| {
+        event.kind == "item.auto-identified" && event.args.get("count") == Some(&"1".to_owned())
+    }));
+}
+
+#[test]
+fn p3_3_inventory_protection_blocks_device_source_destruction() {
+    let mut game =
+        Game::new_with_build(207, "demo.build.tinkerer").expect("tinkerer build should create");
+    clear_monsters(&mut game);
+    game.debug_add_generated_inventory_item(
+        "test.item.protected-target",
+        "demo.item.resonance-staff",
+        1,
+    )
+    .expect("staff should generate");
+    game.debug_add_generated_inventory_item(
+        "test.item.protected-source",
+        "demo.item.resonance-wand",
+        1,
+    )
+    .expect("wand should generate");
+    game.items
+        .iter_mut()
+        .find(|item| item.id == "test.item.protected-target")
+        .expect("target")
+        .charges = Some(ItemChargesDto {
+        current: 0,
+        maximum: 24,
+    });
+    game.items
+        .iter_mut()
+        .find(|item| item.id == "test.item.protected-source")
+        .expect("source")
+        .charges = Some(ItemChargesDto {
+        current: 5,
+        maximum: 24,
+    });
+    give_inventory_item(
+        &mut game,
+        "test.item.inventory-protection.1",
+        "demo.item.inventory-protection-scroll",
+    );
+    dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: "test.item.inventory-protection.1".to_owned(),
+            target: None,
+        },
+    );
+    assert!(game.player_has_status_kind(STATUS_INVENTORY_PROTECTION));
+
+    let destruction_seed = (0..100)
+        .find(|seed| {
+            let mut rng = RfbRng::seeded(*seed);
+            rng.bounded(3) == 0
+        })
+        .expect("one seed should destroy an unprotected source");
+    game.debug_set_recharge_attempts_succeed(true);
+    game.rng = RfbRng::seeded(destruction_seed);
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::RechargeItem {
+            target_item_id: "test.item.protected-target".to_owned(),
+            source: DeviceRechargeSourceDto::Item {
+                item_id: "test.item.protected-source".to_owned(),
+            },
+        },
+    );
+
+    assert_eq!(
+        update.events[0]
+            .args
+            .get("sourceDestroyed")
+            .map(String::as_str),
+        Some("false")
+    );
+    assert!(
+        game.items
+            .iter()
+            .any(|item| item.id == "test.item.protected-source")
+    );
+}
+
+#[test]
+fn p3_3_star_enlightenment_composes_map_detection_identification_and_report() {
+    let mut game = Game::new(208);
+    clear_monsters(&mut game);
+    game.explored.fill(false);
+    let intelligence_before = game.progress.maximum_attributes.intelligence;
+    let wisdom_before = game.progress.maximum_attributes.wisdom;
+    give_inventory_item(
+        &mut game,
+        "test.item.star-enlightenment.1",
+        "demo.item.star-enlightenment-potion",
+    );
+    give_inventory_item(
+        &mut game,
+        "test.item.star-enlightenment-target.1",
+        "demo.item.adaptive-glaive",
+    );
+
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: "test.item.star-enlightenment.1".to_owned(),
+            target: None,
+        },
+    );
+
+    assert!(game.explored.iter().all(|explored| *explored));
+    assert!(game.progress.maximum_attributes.intelligence > intelligence_before);
+    assert!(game.progress.maximum_attributes.wisdom > wisdom_before);
+    let target = update
+        .inventory
+        .iter()
+        .find(|item| item.id == "test.item.star-enlightenment-target.1")
+        .expect("identified target should remain carried");
+    assert_eq!(target.identification, ItemIdentificationDto::Appraised);
+    assert!(update.events.iter().any(|event| {
+        matches!(
+            event.outcome.as_ref(),
+            Some(GameEventOutcomeDto::AbilityDetect { resolution })
+                if resolution.subject == AbilityDetectSubjectDto::Gold
+        )
+    }));
+    let report = update
+        .events
+        .iter()
+        .find(|event| event.kind == "item.use-self-knowledge")
+        .expect("star enlightenment should report current self knowledge");
+    assert_eq!(
+        report.args.get("level"),
+        Some(&game.progress.level.to_string())
+    );
+    assert_eq!(report.args.get("gold"), Some(&game.gold.to_string()));
+    assert!(report.args.contains_key("resistances"));
+    assert!(report.args.contains_key("resources"));
+}

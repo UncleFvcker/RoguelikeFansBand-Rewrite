@@ -1907,6 +1907,16 @@ fn fixed_consumable_use_action_with_terrain(
             "throughWalls": true
         })
     };
+    let detect_floor = |subject: &str, category: &str, persistent: bool| {
+        serde_json::json!({
+            "type": "detect",
+            "subject": subject,
+            "category": category,
+            "radius": 255,
+            "persistent": persistent,
+            "throughWalls": true
+        })
+    };
     let bless = |duration_sides: u32, duration_bonus: u32| {
         serde_json::json!({
             "type": "bless",
@@ -2022,7 +2032,7 @@ fn fixed_consumable_use_action_with_terrain(
             "type": "increase-spell-learning-capacity"
         }),
         (70, 25) => detect("terrain", "map", true),
-        (70, 26) => detect("item", "gold", false),
+        (70, 26) => detect("gold", "gold", false),
         (70, 27) => detect("item", "item", false),
         (70, 28) => detect("terrain", "trap", true),
         (70, 29) => detect("terrain", "passage", true),
@@ -2092,6 +2102,17 @@ fn fixed_consumable_use_action_with_terrain(
             "backlashDamageType": "cold",
             "backlashUsesResistance": true
         }),
+        (70, 60) => sequence(vec![
+            serde_json::json!({"type": "identify-inventory"}),
+            serde_json::json!({
+                "type": "apply-status",
+                "statusKindId": "rfb.status.understanding",
+                "durationDice": 1,
+                "durationSides": 1,
+                "durationBonus": 39,
+                "stacking": "extend"
+            }),
+        ]),
         (70, 61) => serde_json::json!({
             "type": "self-centered-elemental-blast",
             "baseDamage": 1100,
@@ -2117,6 +2138,14 @@ fn fixed_consumable_use_action_with_terrain(
         (70, 62) => serde_json::json!({
             "type": "banish-visible",
             "maximumDistance": 150
+        }),
+        (70, 63) => serde_json::json!({
+            "type": "apply-status",
+            "statusKindId": "rfb.status.inventory-protection",
+            "durationDice": 1,
+            "durationSides": 1,
+            "durationBonus": 24,
+            "stacking": "extend"
         }),
         (75, 0..=2) => serde_json::json!({"type": "no-numeric-effect"}),
         (75, 13) => serde_json::json!({
@@ -2304,6 +2333,23 @@ fn fixed_consumable_use_action_with_terrain(
         (75, 55) => serde_json::json!({
             "type": "augment-attributes"
         }),
+        (75, 56) => sequence(vec![
+            detect_floor("terrain", "map", true),
+            detect_floor("item", "item", false),
+            detect_floor("gold", "gold", false),
+        ]),
+        (75, 57) => sequence(vec![
+            detect_floor("terrain", "map", true),
+            detect_floor("item", "item", false),
+            detect_floor("gold", "gold", false),
+            serde_json::json!({"type": "increase-attribute", "attribute": "intelligence"}),
+            serde_json::json!({"type": "increase-attribute", "attribute": "wisdom"}),
+            detect_floor("terrain", "trap", true),
+            detect_floor("terrain", "passage", true),
+            serde_json::json!({"type": "identify-inventory"}),
+            serde_json::json!({"type": "self-knowledge"}),
+        ]),
+        (75, 58) => serde_json::json!({"type": "self-knowledge"}),
         (75, 30) => serde_json::json!({
             "type": "apply-thermal-resistance",
             "durationDice": 1,
@@ -12784,6 +12830,36 @@ F:BRAND_VAMP | HOLD_LIFE
     }
 
     #[test]
+    fn p3_3_knowledge_detection_and_protection_map_authoritative_effects() {
+        let effect = |tval, sval| {
+            fixed_consumable_use_action(&LegacyItemEntry {
+                tval,
+                sval,
+                ..LegacyItemEntry::default()
+            })
+            .expect("P3.3 consumable should map")["effect"]
+                .clone()
+        };
+
+        assert_eq!(effect(70, 26)["subject"], "gold");
+        assert_eq!(effect(70, 60)["effects"][0]["type"], "identify-inventory");
+        assert_eq!(
+            effect(70, 60)["effects"][1]["statusKindId"],
+            "rfb.status.understanding"
+        );
+        assert_eq!(
+            effect(70, 63)["statusKindId"],
+            "rfb.status.inventory-protection"
+        );
+        assert_eq!(effect(75, 56)["effects"][0]["radius"], 255);
+        assert_eq!(effect(75, 57)["effects"].as_array().map(Vec::len), Some(9));
+        assert_eq!(effect(75, 57)["effects"][5]["radius"], 255);
+        assert_eq!(effect(75, 57)["effects"][6]["radius"], 255);
+        assert_eq!(effect(75, 57)["effects"][8]["type"], "self-knowledge");
+        assert_eq!(effect(75, 58)["type"], "self-knowledge");
+    }
+
+    #[test]
     fn food_nutrition_gap_is_independent_from_active_effect_gap() {
         let cases = [
             (80, 99, Some(1), Some(1)),
@@ -13536,7 +13612,7 @@ F:BRAND_VAMP | HOLD_LIFE
         );
         for (sval, subject, category, persistent) in [
             (25, "terrain", "map", true),
-            (26, "item", "gold", false),
+            (26, "gold", "gold", false),
             (27, "item", "item", false),
             (28, "terrain", "trap", true),
             (29, "terrain", "passage", true),

@@ -56,27 +56,25 @@ work: five unpaired launchers, five instant-artifact rows, two charisma flags,
 and two no-enchant flags. Those rows must not become active merely because the
 launcher multiplier or ammunition dice blocker is removed.
 
-The current audited snapshot after the supported-consumable batch, against RFB `master` commit
+The current audited snapshot after P3.3, against RFB `master` commit
 `efd63661302866038f58d8cd2553b23e6af3bf9d`, is:
 
 | Measure | Count |
 | --- | ---: |
 | Authoritative source items | 544 |
-| Active source items | 156 |
+| Active source items | 196 |
 | Mechanics ready, not formalized | 106 |
-| Blocked source items | 282 |
-| Formal demo items | 181 |
-| Formal items mapped to RFB | 157 |
+| Blocked source items | 242 |
+| Formal demo items | 221 |
+| Formal items mapped to RFB | 197 |
 | Original formal items | 24 |
 
-The ledger has 110 formal adaptations for 109 unique source items; the generic
+The ledger has 149 formal adaptations for 148 unique source items; the generic
 Staff template intentionally maps to two formal devices. The largest current
-blocker groups are books (68), instant-artifact handling (42), consumable
-effects (40), food nutrition (25), the wallet/gold model (18), riding flags
-(17), and scroll effects (15). Treasure Detection has one explicit
-`gold-detection` blocker because gold piles are not item instances. Re-run the
-command after source, importer, or formal item changes instead of treating
-these snapshot counts as constants.
+blocker groups are books (68), instant-artifact handling (42), the wallet/gold
+model (18), riding flags (17), and the remaining consumable, scroll, and folded
+ammunition rule gaps (12 each). Re-run the command after source, importer, or
+formal item changes instead of treating these snapshot counts as constants.
 
 ## First Batch
 
@@ -369,3 +367,39 @@ blocker. Pack version 1.201.0 has content hash
 Protocol, save structure, and state-hash input schema are unchanged. Shop/loot
 changes alter common new-game RNG, so replay baseline refresh remains an
 integration-worktree handoff.
+
+## P3.3 Knowledge, Detection, and Inventory Protection
+
+P3.3 moves all six planned identities from `blocked` to `active`: Treasure
+Detection, Understanding, Inventory Protection, Enlightenment,
+*Enlightenment*, and Self Knowledge. Gold is now a first-class detection
+subject whose transient result carries the stable gold-pile ids. Understanding
+appraises the current carried inventory and grants 40 turns of automatic
+appraisal for items newly carried while the status remains active. Inventory
+Protection grants 25 turns of complete protection at the current inventory
+damage boundary; the existing device-recharge source-destruction path consults
+the same status before removing an item.
+
+Self Knowledge derives its report from the current player projection and emits
+it as an event; it adds no persistent character state. Enlightenment composes
+full-floor persistent map memory with transient item and gold detection.
+*Enlightenment* additionally increases Intelligence and Wisdom, reveals traps
+and passages across the full floor, appraises the carried inventory, and emits
+the same self-knowledge report. The ledger explicitly records persistent map
+memory as the bounded adaptation for the original permanent floor-lighting
+wording.
+
+Treasure Detection is regular Alchemist stock because its source row carries
+the original `TOWN` flag. The other five high-level, non-town items are exposed
+through the Black Market. The authoritative audit reports 196 active, 106
+mechanics-ready, and 242 blocked source items. The formal pack contains 197
+mapped RFB items plus 24 original items, for 221 total. P3.3 reports six
+`blockedToActive`, no remaining item, and no unresolved secondary blocker.
+Pack version 1.202.0 has content hash
+`8c3db682991effa151df14d798fee236db536bce730cbcce23145fbf1b150772`.
+
+Integration handoff: the item worktree adds `Gold` to the Rust protocol detect
+subject but deliberately does not bump protocol version, regenerate Web/Schema
+bindings, or refresh shared fixtures. The integration worktree must perform
+those generated-artifact and baseline updates once after merging all active
+directions. The save structure and state-hash input schema are unchanged.

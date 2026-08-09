@@ -34,6 +34,24 @@ pub(crate) struct ProjectileTrace {
     pub(crate) traversed: Vec<Position>,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct SelfKnowledgeReport {
+    pub(crate) level: u16,
+    pub(crate) hp: i32,
+    pub(crate) max_hp: i32,
+    pub(crate) gold: u32,
+    pub(crate) nutrition: u16,
+    pub(crate) attack: i32,
+    pub(crate) defense: i32,
+    pub(crate) melee_skill: i32,
+    pub(crate) armor_class: i32,
+    pub(crate) speed: u16,
+    pub(crate) attributes: [String; 6],
+    pub(crate) statuses: String,
+    pub(crate) resistances: String,
+    pub(crate) resources: String,
+}
+
 impl From<ProjectileTrace> for ProjectileTraceDto {
     fn from(trace: ProjectileTrace) -> Self {
         Self {
@@ -765,6 +783,19 @@ pub(crate) enum DomainEvent {
         source_kind_id: String,
         display_name_key: String,
         resolution: ItemIdentifyResolutionDto,
+    },
+    ItemInventoryIdentified {
+        source_kind_id: String,
+        display_name_key: String,
+        count: usize,
+    },
+    ItemAutoIdentified {
+        count: usize,
+    },
+    ItemSelfKnowledge {
+        source_kind_id: String,
+        display_name_key: String,
+        report: SelfKnowledgeReport,
     },
     ItemEnchanted {
         source_kind_id: String,
@@ -3126,6 +3157,55 @@ impl DomainEvent {
                     ("changed", resolution.changed.to_string()),
                 ],
                 GameEventOutcomeDto::ItemIdentify { resolution },
+            ),
+            Self::ItemInventoryIdentified {
+                source_kind_id,
+                display_name_key,
+                count,
+            } => dto(
+                "item.use-inventory-identified",
+                "item-use-inventory-identified",
+                [
+                    ("source", source_kind_id),
+                    ("nameKey", display_name_key),
+                    ("count", count.to_string()),
+                ],
+            ),
+            Self::ItemAutoIdentified { count } => dto(
+                "item.auto-identified",
+                "item-auto-identified",
+                [("count", count.to_string())],
+            ),
+            Self::ItemSelfKnowledge {
+                source_kind_id,
+                display_name_key,
+                report,
+            } => dto(
+                "item.use-self-knowledge",
+                "item-use-self-knowledge",
+                [
+                    ("source", source_kind_id),
+                    ("nameKey", display_name_key),
+                    ("level", report.level.to_string()),
+                    ("hp", report.hp.to_string()),
+                    ("maxHp", report.max_hp.to_string()),
+                    ("gold", report.gold.to_string()),
+                    ("nutrition", report.nutrition.to_string()),
+                    ("attack", report.attack.to_string()),
+                    ("defense", report.defense.to_string()),
+                    ("meleeSkill", report.melee_skill.to_string()),
+                    ("armorClass", report.armor_class.to_string()),
+                    ("speed", report.speed.to_string()),
+                    ("strength", report.attributes[0].clone()),
+                    ("intelligence", report.attributes[1].clone()),
+                    ("wisdom", report.attributes[2].clone()),
+                    ("dexterity", report.attributes[3].clone()),
+                    ("constitution", report.attributes[4].clone()),
+                    ("charisma", report.attributes[5].clone()),
+                    ("statuses", report.statuses),
+                    ("resistances", report.resistances),
+                    ("resources", report.resources),
+                ],
             ),
             Self::ItemEnchanted {
                 source_kind_id,

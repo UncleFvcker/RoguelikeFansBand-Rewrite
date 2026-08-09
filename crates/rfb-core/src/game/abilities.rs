@@ -2266,6 +2266,7 @@ impl Game {
             AbilityDetectSubjectDefinition::Item => {
                 self.detect_item_positions(category, *radius, false)
             }
+            AbilityDetectSubjectDefinition::Gold => self.detect_gold_positions(*radius, false),
         };
         if *persistent {
             changed.extend(detected_positions.iter().copied());

@@ -53,7 +53,7 @@ pub(super) fn compile_effect_program_catalog(
         require_schema(&definition.schema, EFFECT_PROGRAM_SCHEMA, &definition.id)?;
         require_format_version(definition.format_version, &definition.id)?;
         validate_definition_id(&definition.id, "effect")?;
-        if !(1..=8).contains(&definition.steps.len())
+        if !(1..=12).contains(&definition.steps.len())
             || definition
                 .steps
                 .iter()

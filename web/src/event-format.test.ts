@@ -246,6 +246,59 @@ test("P3.2 potion events format experience loss and partial status curing", () =
   );
 });
 
+test("P3.3 knowledge events localize inventory identification and current reports", () => {
+  assert.equal(
+    formatter.formatEvent({
+      kind: "item.use-inventory-identified",
+      messageKey: "item-use-inventory-identified",
+      args: {
+        source: "demo.item.understanding-scroll",
+        nameKey: "item-demo-understanding-scroll-name",
+        count: "3",
+      },
+    }),
+    "You use Scroll of Understanding and identify 3 carried item stacks.",
+  );
+  assert.equal(
+    formatter.formatEvent({
+      kind: "item.auto-identified",
+      messageKey: "item-auto-identified",
+      args: { count: "1" },
+    }),
+    "Your understanding identifies 1 newly carried item stack.",
+  );
+  assert.equal(
+    formatter.formatEvent({
+      kind: "item.use-self-knowledge",
+      messageKey: "item-use-self-knowledge",
+      args: {
+        source: "demo.item.self-knowledge-potion",
+        nameKey: "item-demo-self-knowledge-potion-name",
+        level: "7",
+        hp: "32",
+        maxHp: "40",
+        gold: "123",
+        nutrition: "9000",
+        attack: "11",
+        defense: "12",
+        meleeSkill: "13",
+        armorClass: "14",
+        speed: "110",
+        strength: "18/18/18",
+        intelligence: "17/17/17",
+        wisdom: "16/16/16",
+        dexterity: "15/15/15",
+        constitution: "14/14/14",
+        charisma: "13/13/13",
+        statuses: "rfb.status.understanding:1:400",
+        resistances: "Fire:Resistant",
+        resources: "demo.resource.mana:20/30",
+      },
+    }),
+    "Potion of Self Knowledge reveals: level 7; HP 32/40; gold 123; food 9000; attack 11; defense 12; melee 13; armour 14; speed 110; STR 18/18/18, INT 17/17/17, WIS 16/16/16, DEX 15/15/15, CON 14/14/14, CHR 13/13/13; statuses [rfb.status.understanding:1:400]; resistances [Fire:Resistant]; resources [demo.resource.mana:20/30].",
+  );
+});
+
 test("damage event formatting preserves typed resistance outcomes", () => {
   const event = {
     kind: "combat.hit",

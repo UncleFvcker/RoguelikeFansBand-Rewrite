@@ -437,6 +437,8 @@ pub enum ItemUseEffectDefinition {
         #[serde(default)]
         full: bool,
     },
+    IdentifyInventory,
+    SelfKnowledge,
     EnchantItem {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         to_hit: Option<ItemEnchantmentRollDefinition>,

@@ -760,6 +760,7 @@ fn temple_and_alchemist_stock_are_strictly_separated() {
                 "demo.item.farstep-scroll",
                 "demo.item.seeking-scroll",
                 "demo.item.trapfinding-scroll",
+                "demo.item.treasure-detection-scroll",
                 "demo.item.temperate-tonic",
                 "demo.item.appraisal-scroll",
                 "demo.item.revelation-scroll",
@@ -1009,6 +1010,11 @@ fn black_market_stocks_original_non_town_books_and_priced_p3_consumables() {
             "demo.item.invulnerability-potion",
             "demo.item.giant-strength-potion",
             "demo.item.great-clarity-potion",
+            "demo.item.understanding-scroll",
+            "demo.item.inventory-protection-scroll",
+            "demo.item.enlightenment-potion",
+            "demo.item.star-enlightenment-potion",
+            "demo.item.self-knowledge-potion",
         ])
     );
     let values = artifact
@@ -1027,6 +1033,11 @@ fn black_market_stocks_original_non_town_books_and_priced_p3_consumables() {
     assert_eq!(values["demo.item.invulnerability-potion"], 100_000);
     assert_eq!(values["demo.item.giant-strength-potion"], 10_000);
     assert_eq!(values["demo.item.great-clarity-potion"], 1_000);
+    assert_eq!(values["demo.item.understanding-scroll"], 2_500);
+    assert_eq!(values["demo.item.inventory-protection-scroll"], 2_500);
+    assert_eq!(values["demo.item.enlightenment-potion"], 800);
+    assert_eq!(values["demo.item.star-enlightenment-potion"], 120_000);
+    assert_eq!(values["demo.item.self-knowledge-potion"], 2_000);
 }
 
 #[test]
@@ -1125,6 +1136,31 @@ fn p3_2_items_all_have_a_shop_or_warrens_acquisition_path() {
         "demo.item.invulnerability-potion",
         "demo.item.giant-strength-potion",
         "demo.item.great-clarity-potion",
+    ] {
+        assert!(
+            available.contains(item_id),
+            "{item_id} should be obtainable"
+        );
+    }
+}
+
+#[test]
+fn p3_3_items_all_have_a_shop_acquisition_path() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let available = artifact
+        .content
+        .shops
+        .iter()
+        .flat_map(|shop| shop.stock.iter().map(|stock| stock.item_kind_id.as_str()))
+        .collect::<BTreeSet<_>>();
+
+    for item_id in [
+        "demo.item.treasure-detection-scroll",
+        "demo.item.understanding-scroll",
+        "demo.item.inventory-protection-scroll",
+        "demo.item.enlightenment-potion",
+        "demo.item.star-enlightenment-potion",
+        "demo.item.self-knowledge-potion",
     ] {
         assert!(
             available.contains(item_id),

@@ -66,7 +66,9 @@ pub(crate) fn valid_item_effect(
         | ItemUseEffectDefinition::DrainAttribute { .. }
         | ItemUseEffectDefinition::RestoreAttribute { .. }
         | ItemUseEffectDefinition::IncreaseAttribute { .. }
-        | ItemUseEffectDefinition::AugmentAttributes => true,
+        | ItemUseEffectDefinition::AugmentAttributes
+        | ItemUseEffectDefinition::IdentifyInventory
+        | ItemUseEffectDefinition::SelfKnowledge => true,
         ItemUseEffectDefinition::HealDice { dice, sides } => {
             (1..=100).contains(dice) && (1..=10_000).contains(sides)
         }
@@ -300,7 +302,7 @@ pub(crate) fn valid_item_effect(
                 && *duration_turns == 0
         }
         ItemUseEffectDefinition::Sequence { effects } => {
-            (2..=8).contains(&effects.len())
+            (2..=12).contains(&effects.len())
                 && effects.iter().all(|effect| {
                     matches!(
                         effect,
@@ -317,12 +319,16 @@ pub(crate) fn valid_item_effect(
                             | ItemUseEffectDefinition::LoseExperienceFraction { .. }
                             | ItemUseEffectDefinition::DrainAttribute { .. }
                             | ItemUseEffectDefinition::RestoreAttribute { .. }
+                            | ItemUseEffectDefinition::IncreaseAttribute { .. }
                             | ItemUseEffectDefinition::RemoveStatus { .. }
                             | ItemUseEffectDefinition::ReduceStatus { .. }
                             | ItemUseEffectDefinition::RestoreResource { .. }
                             | ItemUseEffectDefinition::RestoreResourceDice { .. }
                             | ItemUseEffectDefinition::RestoreResourceFull { .. }
                             | ItemUseEffectDefinition::DrainResourceFull { .. }
+                            | ItemUseEffectDefinition::IdentifyInventory
+                            | ItemUseEffectDefinition::SelfKnowledge
+                            | ItemUseEffectDefinition::Detect { .. }
                     ) && valid_item_effect(
                         effect,
                         terrain_tags,
@@ -362,7 +368,7 @@ pub(crate) fn valid_item_effect(
                         || byte.is_ascii_digit()
                         || matches!(byte, b'-' | b'_')
                 })
-                && (1..=8).contains(radius)
+                && (*radius > 0 && (*radius <= 8 || (*radius == u8::MAX && *through_walls)))
                 && match subject {
                     AbilityDetectSubjectDefinition::Terrain => {
                         if category == "map" {
@@ -377,6 +383,7 @@ pub(crate) fn valid_item_effect(
                     AbilityDetectSubjectDefinition::Item => {
                         !persistent && (category == "item" || item_tag_values.contains(category))
                     }
+                    AbilityDetectSubjectDefinition::Gold => !persistent && category == "gold",
                 }
         }
         ItemUseEffectDefinition::RandomTeleport { maximum_distance } => {
@@ -474,6 +481,8 @@ pub(super) fn validate_items(
                     | ItemUseEffectDefinition::RestoreAttribute { .. }
                     | ItemUseEffectDefinition::IncreaseAttribute { .. }
                     | ItemUseEffectDefinition::AugmentAttributes
+                    | ItemUseEffectDefinition::IdentifyInventory
+                    | ItemUseEffectDefinition::SelfKnowledge
                     | ItemUseEffectDefinition::ApplyThermalResistance { .. }
                     | ItemUseEffectDefinition::ApplyBasicResistance { .. }
                     | ItemUseEffectDefinition::ApplyPoison { .. }
@@ -706,6 +715,8 @@ pub(super) fn validate_items(
                         | ItemUseEffectDefinition::ApplyLifeRestoration { .. }
                         | ItemUseEffectDefinition::IncreaseAttribute { .. }
                         | ItemUseEffectDefinition::AugmentAttributes
+                        | ItemUseEffectDefinition::IdentifyInventory
+                        | ItemUseEffectDefinition::SelfKnowledge
                         | ItemUseEffectDefinition::ApplyThermalResistance { .. }
                         | ItemUseEffectDefinition::ApplyBasicResistance { .. }
                         | ItemUseEffectDefinition::ApplyPoison { .. }
