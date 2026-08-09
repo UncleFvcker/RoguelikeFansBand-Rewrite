@@ -4,5 +4,8 @@
   "id": "rfb.mutation.launcher",
   "name": "投掷物品",
   "description": "你可以用巨大的力量投掷物品。",
-  "rating": "average"
+  "rating": "average",
+  "sourceIndex": 31,
+  "randomWeight": 4,
+  "removesOnGain": []
 }

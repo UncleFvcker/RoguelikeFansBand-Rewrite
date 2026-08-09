@@ -4,5 +4,8 @@
   "id": "rfb.mutation.nausea",
   "name": "恶心",
   "description": "你的胃非常不舒服。",
-  "rating": "bad"
+  "rating": "bad",
+  "sourceIndex": 56,
+  "randomWeight": 2,
+  "removesOnGain": []
 }

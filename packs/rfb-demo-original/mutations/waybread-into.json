@@ -4,5 +4,8 @@
   "id": "rfb.mutation.waybread-into",
   "name": "兰巴斯不耐受",
   "description": "你有兰巴斯不耐受症。",
-  "rating": "bad"
+  "rating": "bad",
+  "sourceIndex": 134,
+  "randomWeight": 4,
+  "removesOnGain": []
 }

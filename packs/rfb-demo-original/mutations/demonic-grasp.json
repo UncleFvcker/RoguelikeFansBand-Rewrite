@@ -4,5 +4,8 @@
   "id": "rfb.mutation.demonic-grasp",
   "name": "恶魔之握",
   "description": "你抵抗充能流失。",
-  "rating": "good"
+  "rating": "good",
+  "sourceIndex": 115,
+  "randomWeight": 0,
+  "removesOnGain": []
 }

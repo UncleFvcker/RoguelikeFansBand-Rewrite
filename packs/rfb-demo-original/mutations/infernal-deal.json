@@ -4,5 +4,10 @@
   "id": "rfb.mutation.infernal-deal",
   "name": "恶魔契约",
   "description": "你已经签订了恶魔契约。",
-  "rating": "great"
+  "rating": "great",
+  "sourceIndex": 109,
+  "randomWeight": 0,
+  "removesOnGain": [
+    "rfb.mutation.arthritis"
+  ]
 }

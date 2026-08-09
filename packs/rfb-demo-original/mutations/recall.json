@@ -4,5 +4,8 @@
   "id": "rfb.mutation.recall",
   "name": "归还术",
   "description": "你可以往返于城镇和深渊之间。",
-  "rating": "good"
+  "rating": "good",
+  "sourceIndex": 28,
+  "randomWeight": 4,
+  "removesOnGain": []
 }

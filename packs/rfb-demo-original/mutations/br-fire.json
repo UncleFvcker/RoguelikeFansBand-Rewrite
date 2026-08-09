@@ -4,5 +4,8 @@
   "id": "rfb.mutation.br-fire",
   "name": "喷吐火焰",
   "description": "你可以喷吐火焰（伤害为 等级 * 2）。",
-  "rating": "good"
+  "rating": "good",
+  "sourceIndex": 1,
+  "randomWeight": 6,
+  "removesOnGain": []
 }

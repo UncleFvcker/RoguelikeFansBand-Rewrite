@@ -4,5 +4,8 @@
   "id": "rfb.mutation.draconian-lore",
   "name": "远古知识",
   "description": "物品在你捡起时会自动鉴定。",
-  "rating": "good"
+  "rating": "good",
+  "sourceIndex": 128,
+  "randomWeight": 0,
+  "removesOnGain": []
 }

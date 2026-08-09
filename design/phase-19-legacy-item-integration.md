@@ -567,3 +567,26 @@ The save-backed sets enter State Hash Schema v73 and protocol 1.152. The save
 container remains v1, with no compatibility path for older development saves.
 The exact baseline advances to contract-v216. Full rules begin in later M
 batches rather than being represented by inert gameplay effects.
+
+## P3.7-M2 Unified Mutation Transactions
+
+Content pack 1.213.0 promotes the M0 `sourceIndex`, `randomWeight`, and ordered
+`removesOnGain` metadata into the 152 formal mutation definitions. Validation
+rejects duplicate source indexes, self-removal, duplicate removals, and dangling
+mutation references. Runtime selection scans candidates in authoritative source
+order, applies the original Good Luck and Bad Luck rating-weight reductions, and
+does not draw RNG when the eligible total weight is zero.
+
+One core transaction path now owns direct and random gain/loss plus removal of
+all unlocked mutations. Locked mutations survive direct, random, bulk, and
+gain-time conflict removal. Conflict-loss events precede the gain event in the
+source handler's recorded order; bulk loss events use source-index order. Each
+transaction refreshes effective attributes, proportional HP, resource maxima,
+and the authoritative ability baseline once after committing mutation state.
+
+Natural and vampiric regeneration use the shared M2 unlocked-mutation penalty:
+ten percent per unlocked mutation, floored at ten percent. Locked mutations are
+free. M2 adds no mutation effect caller and does not connect Polymorph or New
+Life, so the coverage ledger remains blocked by the individual mechanism
+families and neither item enters the formal pack in this batch. Protocol, save,
+State Hash Schema v73, and contract-v216 are unchanged.

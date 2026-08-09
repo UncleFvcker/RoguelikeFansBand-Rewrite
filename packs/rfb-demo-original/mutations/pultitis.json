@@ -4,5 +4,11 @@
   "id": "rfb.mutation.pultitis",
   "name": "大脑化脓",
   "description": "你患有大脑化脓 (-3 智力)。",
-  "rating": "awful"
+  "rating": "awful",
+  "sourceIndex": 135,
+  "randomWeight": 4,
+  "removesOnGain": [
+    "rfb.mutation.hyper-int",
+    "rfb.mutation.moronic"
+  ]
 }

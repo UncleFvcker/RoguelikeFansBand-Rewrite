@@ -4,5 +4,10 @@
   "id": "rfb.mutation.teleport",
   "name": "传送术",
   "description": "你可以随心所欲地传送。",
-  "rating": "good"
+  "rating": "good",
+  "sourceIndex": 4,
+  "randomWeight": 6,
+  "removesOnGain": [
+    "rfb.mutation.teleport-rnd"
+  ]
 }

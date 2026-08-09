@@ -4,5 +4,8 @@
   "id": "rfb.mutation.radiation",
   "name": "散发辐射",
   "description": "你可以随心所欲地散发强辐射。",
-  "rating": "good"
+  "rating": "good",
+  "sourceIndex": 6,
+  "randomWeight": 4,
+  "removesOnGain": []
 }

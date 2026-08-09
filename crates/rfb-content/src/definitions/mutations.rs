@@ -26,4 +26,8 @@ pub struct MutationDefinition {
     pub name: String,
     pub description: String,
     pub rating: MutationRatingDefinition,
+    pub source_index: u16,
+    pub random_weight: u8,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub removes_on_gain: Vec<String>,
 }

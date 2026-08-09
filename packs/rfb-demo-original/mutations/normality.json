@@ -4,5 +4,8 @@
   "id": "rfb.mutation.normality",
   "name": "正常化",
   "description": "你也许变异了，但你正在恢复。",
-  "rating": "bad"
+  "rating": "bad",
+  "sourceIndex": 50,
+  "randomWeight": 6,
+  "removesOnGain": []
 }

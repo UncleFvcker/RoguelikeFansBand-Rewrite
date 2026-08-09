@@ -61,6 +61,195 @@ fn mutation_state_projects_saves_hashes_and_rejects_invalid_references() {
     ));
 }
 
+fn game_with_mutation_weights(weights: &[(&str, u8)]) -> Game {
+    let pack_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(std::path::Path::parent)
+        .expect("core crate should be inside the workspace")
+        .join("packs/rfb-demo-original");
+    let mut artifact = rfb_content::compile_pack_dir(&pack_root).expect("demo pack should compile");
+    for mutation in &mut artifact.content.mutations {
+        mutation.random_weight = weights
+            .iter()
+            .find_map(|(id, weight)| (mutation.id == *id).then_some(*weight))
+            .unwrap_or(0);
+    }
+    let catalog = Arc::new(rfb_content::ContentCatalog::from_artifact(
+        rfb_content::encode_content(artifact.content)
+            .expect("custom mutation weights should remain valid"),
+    ));
+    Game::from_content(0, catalog, BUILT_IN_WORLD_ID)
+        .expect("custom mutation content should create a game")
+}
+
+#[test]
+fn mutation_transactions_preserve_locks_remove_conflicts_and_emit_source_order() {
+    let mut game = Game::new(0);
+    let mut events = Vec::new();
+    assert!(game.gain_mutation("rfb.mutation.moronic", &mut events));
+    events.clear();
+    assert!(game.gain_mutation("rfb.mutation.pultitis", &mut events));
+    assert!(
+        !game
+            .progress
+            .active_mutation_ids
+            .contains("rfb.mutation.moronic")
+    );
+    assert!(
+        game.progress
+            .active_mutation_ids
+            .contains("rfb.mutation.pultitis")
+    );
+    let event_dtos = events
+        .drain(..)
+        .map(DomainEvent::into_dto)
+        .collect::<Vec<_>>();
+    assert_eq!(
+        event_dtos
+            .iter()
+            .map(|event| (event.kind.as_str(), event.args["target"].as_str()))
+            .collect::<Vec<_>>(),
+        [
+            ("mutation.lost", "rfb.mutation.moronic"),
+            ("mutation.gained", "rfb.mutation.pultitis"),
+        ]
+    );
+
+    assert!(game.gain_mutation("rfb.mutation.puny", &mut events));
+    game.progress
+        .locked_mutation_ids
+        .insert("rfb.mutation.puny".to_owned());
+    events.clear();
+    assert!(game.gain_mutation("rfb.mutation.hyper-str", &mut events));
+    assert!(
+        game.progress
+            .active_mutation_ids
+            .contains("rfb.mutation.puny")
+    );
+    assert!(!game.lose_mutation("rfb.mutation.puny", &mut events));
+
+    let mut all = Game::new(0);
+    for mutation_id in [
+        "rfb.mutation.hyper-str",
+        "rfb.mutation.br-fire",
+        "rfb.mutation.spit-acid",
+        "rfb.mutation.puny",
+    ] {
+        all.progress
+            .active_mutation_ids
+            .insert(mutation_id.to_owned());
+    }
+    all.progress
+        .locked_mutation_ids
+        .insert("rfb.mutation.puny".to_owned());
+    let mut events = Vec::new();
+    assert_eq!(all.lose_all_unlocked_mutations(&mut events), 3);
+    assert_eq!(
+        events
+            .into_iter()
+            .map(DomainEvent::into_dto)
+            .map(|event| event.args["target"].clone())
+            .collect::<Vec<_>>(),
+        [
+            "rfb.mutation.spit-acid",
+            "rfb.mutation.br-fire",
+            "rfb.mutation.hyper-str",
+        ]
+    );
+    assert_eq!(
+        all.progress.active_mutation_ids,
+        BTreeSet::from(["rfb.mutation.puny".to_owned()])
+    );
+    Game::from_save(all.to_save()).expect("transaction result should satisfy save invariants");
+}
+
+#[test]
+fn random_mutation_transactions_are_weighted_and_empty_candidates_use_no_rng() {
+    let mut weighted =
+        game_with_mutation_weights(&[("rfb.mutation.spit-acid", 1), ("rfb.mutation.br-fire", 3)]);
+    let mut expected_rng = RfbRng::seeded(19);
+    let expected = if expected_rng.bounded(4) == 0 {
+        "rfb.mutation.spit-acid"
+    } else {
+        "rfb.mutation.br-fire"
+    };
+    weighted.rng = RfbRng::seeded(19);
+    let gained = weighted
+        .gain_random_mutation(&mut Vec::new())
+        .expect("weighted candidates should select");
+    assert_eq!(gained, expected);
+    assert_eq!(weighted.rng.draw_counter, expected_rng.draw_counter);
+
+    let mut empty = game_with_mutation_weights(&[]);
+    empty.rng = RfbRng::seeded(23);
+    let draws = empty.rng.draw_counter;
+    assert_eq!(empty.gain_random_mutation(&mut Vec::new()), None);
+    empty
+        .progress
+        .active_mutation_ids
+        .insert("rfb.mutation.spit-acid".to_owned());
+    assert_eq!(empty.lose_random_mutation(&mut Vec::new()), None);
+    assert_eq!(empty.rng.draw_counter, draws);
+}
+
+#[test]
+fn locked_mutations_do_not_reduce_regeneration() {
+    let mut game = Game::new(0);
+    assert_eq!(game.mutation_regeneration_percent(), 100);
+    for mutation_id in [
+        "rfb.mutation.spit-acid",
+        "rfb.mutation.br-fire",
+        "rfb.mutation.hypn-gaze",
+    ] {
+        game.progress
+            .active_mutation_ids
+            .insert(mutation_id.to_owned());
+    }
+    game.progress
+        .locked_mutation_ids
+        .insert("rfb.mutation.spit-acid".to_owned());
+    assert_eq!(game.mutation_regeneration_percent(), 80);
+    game.progress.locked_mutation_ids = game.progress.active_mutation_ids.clone();
+    assert_eq!(game.mutation_regeneration_percent(), 100);
+    game.progress.locked_mutation_ids.clear();
+    game.progress.active_mutation_ids = game
+        .content
+        .mutations()
+        .take(20)
+        .map(|mutation| mutation.id.clone())
+        .collect();
+    assert_eq!(game.mutation_regeneration_percent(), 10);
+}
+
+#[test]
+fn unlocked_mutation_count_scales_natural_regeneration() {
+    let recovered = |active: usize, locked: usize| {
+        let mut game = Game::new(0);
+        let ids = game
+            .content
+            .mutations()
+            .take(active)
+            .map(|mutation| mutation.id.clone())
+            .collect::<Vec<_>>();
+        game.progress
+            .active_mutation_ids
+            .extend(ids.iter().cloned());
+        game.progress
+            .locked_mutation_ids
+            .extend(ids.into_iter().take(locked));
+        game.progress.hp_progression[0] = 10_000;
+        game.player.hp = 1;
+        game.world_tick = NATURAL_HP_REGENERATION_INTERVAL_TICKS;
+        game.process_natural_hp_regeneration(false);
+        game.player.hp - 1
+    };
+
+    let normal = recovered(0, 0);
+    assert!(normal > 0);
+    assert!(recovered(5, 0) < normal);
+    assert_eq!(recovered(5, 5), normal);
+}
+
 #[test]
 fn default_character_build_preserves_the_v70_player_baseline() {
     let game = Game::new(42);

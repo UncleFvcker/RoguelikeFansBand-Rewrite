@@ -4,5 +4,8 @@
   "id": "rfb.mutation.merchants-friend",
   "name": "商人之友",
   "description": "你是商人之友。",
-  "rating": "good"
+  "rating": "good",
+  "sourceIndex": 110,
+  "randomWeight": 0,
+  "removesOnGain": []
 }

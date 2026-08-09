@@ -4,5 +4,8 @@
   "id": "rfb.mutation.wings",
   "name": "翅膀",
   "description": "你长着翅膀。",
-  "rating": "good"
+  "rating": "good",
+  "sourceIndex": 86,
+  "randomWeight": 4,
+  "removesOnGain": []
 }

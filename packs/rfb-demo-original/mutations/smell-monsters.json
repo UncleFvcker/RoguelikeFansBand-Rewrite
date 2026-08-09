@@ -4,5 +4,8 @@
   "id": "rfb.mutation.smell-monsters",
   "name": "嗅怪物",
   "description": "你可以闻出附近的怪物。",
-  "rating": "good"
+  "rating": "good",
+  "sourceIndex": 9,
+  "randomWeight": 8,
+  "removesOnGain": []
 }

@@ -4,5 +4,8 @@
   "id": "rfb.mutation.raw-chaos",
   "name": "原始混沌",
   "description": "你偶尔会被原始混沌所包围。",
-  "rating": "average"
+  "rating": "average",
+  "sourceIndex": 49,
+  "randomWeight": 2,
+  "removesOnGain": []
 }

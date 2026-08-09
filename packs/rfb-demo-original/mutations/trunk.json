@@ -4,5 +4,10 @@
   "id": "rfb.mutation.trunk",
   "name": "象鼻",
   "description": "你长着象鼻。",
-  "rating": "good"
+  "rating": "good",
+  "sourceIndex": 46,
+  "randomWeight": 4,
+  "removesOnGain": [
+    "rfb.mutation.beak"
+  ]
 }

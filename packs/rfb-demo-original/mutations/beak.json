@@ -4,5 +4,10 @@
   "id": "rfb.mutation.beak",
   "name": "鸟喙",
   "description": "你长着鸟喙。",
-  "rating": "good"
+  "rating": "good",
+  "sourceIndex": 40,
+  "randomWeight": 4,
+  "removesOnGain": [
+    "rfb.mutation.trunk"
+  ]
 }

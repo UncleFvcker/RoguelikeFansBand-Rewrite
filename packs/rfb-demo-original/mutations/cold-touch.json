@@ -4,5 +4,8 @@
   "id": "rfb.mutation.cold-touch",
   "name": "寒冷之触",
   "description": "你可以通过触碰来冻结事物。",
-  "rating": "average"
+  "rating": "average",
+  "sourceIndex": 30,
+  "randomWeight": 4,
+  "removesOnGain": []
 }

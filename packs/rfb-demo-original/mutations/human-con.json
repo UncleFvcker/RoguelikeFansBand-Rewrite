@@ -4,5 +4,8 @@
   "id": "rfb.mutation.human-con",
   "name": "逼近极限",
   "description": "你会频繁地感到身体不适。",
-  "rating": "bad"
+  "rating": "bad",
+  "sourceIndex": 150,
+  "randomWeight": 0,
+  "removesOnGain": []
 }

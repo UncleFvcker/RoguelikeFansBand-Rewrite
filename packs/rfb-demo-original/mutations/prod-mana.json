@@ -4,5 +4,8 @@
   "id": "rfb.mutation.prod-mana",
   "name": "生成法力",
   "description": "你不受控制地产生魔法能量。",
-  "rating": "average"
+  "rating": "average",
+  "sourceIndex": 42,
+  "randomWeight": 2,
+  "removesOnGain": []
 }

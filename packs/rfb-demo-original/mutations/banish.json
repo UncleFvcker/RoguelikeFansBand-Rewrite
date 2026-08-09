@@ -4,5 +4,8 @@
   "id": "rfb.mutation.banish",
   "name": "放逐邪恶",
   "description": "你可以把邪恶生物直接送进地狱。",
-  "rating": "good"
+  "rating": "good",
+  "sourceIndex": 29,
+  "randomWeight": 2,
+  "removesOnGain": []
 }

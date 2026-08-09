@@ -4,5 +4,11 @@
   "id": "rfb.mutation.fearless",
   "name": "无所畏惧",
   "description": "你无所畏惧。",
-  "rating": "average"
+  "rating": "average",
+  "sourceIndex": 87,
+  "randomWeight": 6,
+  "removesOnGain": [
+    "rfb.mutation.cowardice",
+    "rfb.mutation.no-inhibitions"
+  ]
 }

@@ -4,5 +4,8 @@
   "id": "rfb.mutation.tentacles",
   "name": "触手",
   "description": "你长着邪恶的触手。",
-  "rating": "good"
+  "rating": "good",
+  "sourceIndex": 48,
+  "randomWeight": 2,
+  "removesOnGain": []
 }

@@ -4,5 +4,8 @@
   "id": "rfb.mutation.wasting",
   "name": "恐怖枯萎",
   "description": "你患有可怕的枯萎病。",
-  "rating": "awful"
+  "rating": "awful",
+  "sourceIndex": 53,
+  "randomWeight": 2,
+  "removesOnGain": []
 }

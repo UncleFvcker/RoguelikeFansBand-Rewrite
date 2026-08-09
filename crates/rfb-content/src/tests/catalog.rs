@@ -6,7 +6,7 @@ fn compiled_catalog_exposes_stable_runtime_indexes() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.212.0");
+    assert_eq!(catalog.pack_version(), "1.213.0");
     assert_eq!(catalog.mutations().count(), 152);
     assert_eq!(
         catalog.mutation("rfb.mutation.spit-acid").map(|mutation| (
@@ -839,5 +839,45 @@ fn mutation_definitions_match_the_frozen_legacy_ledger() {
             serde_json::to_value(actual.rating).unwrap(),
             expected["rating"]
         );
+        assert_eq!(
+            u64::from(actual.source_index),
+            expected["sourceIndex"].as_u64().unwrap()
+        );
+        assert_eq!(
+            u64::from(actual.random_weight),
+            expected["randomWeight"].as_u64().unwrap()
+        );
+        assert_eq!(
+            serde_json::to_value(&actual.removes_on_gain).unwrap(),
+            expected["removesOnGain"]
+        );
     }
+}
+
+#[test]
+fn mutation_transaction_metadata_rejects_duplicate_order_and_invalid_removals() {
+    let pack = original_pack_path();
+    let artifact = compile_pack_dir(&pack).expect("original pack should compile");
+    let first_id = artifact.content.mutations[0].id.clone();
+
+    let mut duplicate_order = artifact.content.clone();
+    duplicate_order.mutations[1].source_index = duplicate_order.mutations[0].source_index;
+    assert!(matches!(
+        encode_content(duplicate_order),
+        Err(ContentError::InvalidMutation(_))
+    ));
+
+    let mut self_removal = artifact.content.clone();
+    self_removal.mutations[0].removes_on_gain = vec![first_id];
+    assert!(matches!(
+        encode_content(self_removal),
+        Err(ContentError::InvalidMutation(_))
+    ));
+
+    let mut dangling = artifact.content;
+    dangling.mutations[0].removes_on_gain = vec!["rfb.mutation.unknown".to_owned()];
+    assert!(matches!(
+        encode_content(dangling),
+        Err(ContentError::InvalidMutation(_))
+    ));
 }

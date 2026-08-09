@@ -118,6 +118,10 @@ mod monster_ai;
 mod monster_combat;
 mod monster_ecology;
 mod movement;
+// M2 deliberately establishes this core transaction boundary before any item
+// effect is allowed to call it; Polymorph remains blocked until its own batch.
+#[allow(dead_code)]
+mod mutations;
 mod persistence;
 mod player_abilities;
 mod player_combat;

@@ -4,5 +4,10 @@
   "id": "rfb.mutation.albino",
   "name": "白化病",
   "description": "你患有白化病 (-4 体质)。",
-  "rating": "awful"
+  "rating": "awful",
+  "sourceIndex": 70,
+  "randomWeight": 4,
+  "removesOnGain": [
+    "rfb.mutation.resilient"
+  ]
 }

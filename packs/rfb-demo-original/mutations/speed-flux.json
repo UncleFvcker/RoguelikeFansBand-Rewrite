@@ -4,5 +4,8 @@
   "id": "rfb.mutation.speed-flux",
   "name": "速度波动",
   "description": "你的移动速度会随机变快或变慢。",
-  "rating": "bad"
+  "rating": "bad",
+  "sourceIndex": 43,
+  "randomWeight": 4,
+  "removesOnGain": []
 }

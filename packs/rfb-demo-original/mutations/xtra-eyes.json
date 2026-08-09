@@ -4,5 +4,8 @@
   "id": "rfb.mutation.xtra-eyes",
   "name": "额外的眼睛",
   "description": "你有一对额外的眼睛 (+15 搜索)。",
-  "rating": "average"
+  "rating": "average",
+  "sourceIndex": 75,
+  "randomWeight": 6,
+  "removesOnGain": []
 }

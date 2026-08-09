@@ -4,5 +4,8 @@
   "id": "rfb.mutation.unyielding",
   "name": "不屈不挠",
   "description": "你不屈不挠并获得额外生命值。",
-  "rating": "good"
+  "rating": "good",
+  "sourceIndex": 100,
+  "randomWeight": 0,
+  "removesOnGain": []
 }

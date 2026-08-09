@@ -4,5 +4,8 @@
   "id": "rfb.mutation.draconian-metamorphosis",
   "name": "变形",
   "description": "你变形成了一条龙！",
-  "rating": "good"
+  "rating": "good",
+  "sourceIndex": 130,
+  "randomWeight": 0,
+  "removesOnGain": []
 }

@@ -4,5 +4,8 @@
   "id": "rfb.mutation.swap-pos",
   "name": "交换位置",
   "description": "你可以与另一个生物交换位置。",
-  "rating": "good"
+  "rating": "good",
+  "sourceIndex": 12,
+  "randomWeight": 4,
+  "removesOnGain": []
 }

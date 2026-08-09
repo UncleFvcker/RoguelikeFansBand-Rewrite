@@ -4,5 +4,8 @@
   "id": "rfb.mutation.loremaster",
   "name": "博学者",
   "description": "你是一名博学者。",
-  "rating": "good"
+  "rating": "good",
+  "sourceIndex": 103,
+  "randomWeight": 0,
+  "removesOnGain": []
 }

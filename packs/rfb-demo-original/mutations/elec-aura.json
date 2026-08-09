@@ -4,5 +4,8 @@
   "id": "rfb.mutation.elec-aura",
   "name": "电击光环",
   "description": "电流在你的静脉中流淌。",
-  "rating": "good"
+  "rating": "good",
+  "sourceIndex": 81,
+  "randomWeight": 4,
+  "removesOnGain": []
 }

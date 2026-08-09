@@ -4,5 +4,8 @@
   "id": "rfb.mutation.chaos-gift",
   "name": "混沌神明",
   "description": "混沌神明会给予你礼物。",
-  "rating": "great"
+  "rating": "great",
+  "sourceIndex": 57,
+  "randomWeight": 4,
+  "removesOnGain": []
 }

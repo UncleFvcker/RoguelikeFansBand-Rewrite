@@ -23,6 +23,24 @@ const formatter = createPresentationFormatter(localization, () => state, {
   itemCurseSeverityName: () => "?",
 });
 
+test("mutation events use their authoritative projected names", () => {
+  const gained = {
+    kind: "mutation.gained",
+    messageKey: "mutation-gained",
+    args: { target: "rfb.mutation.spit-acid", name: "喷吐酸液" },
+  };
+  const lost = {
+    kind: "mutation.lost",
+    messageKey: "mutation-lost",
+    args: { target: "rfb.mutation.spit-acid", name: "喷吐酸液" },
+  };
+
+  assert.equal(formatter.formatEvent(gained), "You gain the 喷吐酸液 mutation.");
+  localization.setLocale("zh-CN");
+  assert.equal(formatter.formatEvent(lost), "你失去了变异“喷吐酸液”。");
+  localization.setLocale("en-US");
+});
+
 test("wilderness ambush events use the dedicated localized message", () => {
   assert.equal(
     formatter.formatEvent({

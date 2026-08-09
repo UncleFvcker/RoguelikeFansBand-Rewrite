@@ -4,5 +4,8 @@
   "id": "rfb.mutation.blink",
   "name": "相位之门",
   "description": "你可以进行短距离传送。",
-  "rating": "good"
+  "rating": "good",
+  "sourceIndex": 10,
+  "randomWeight": 6,
+  "removesOnGain": []
 }

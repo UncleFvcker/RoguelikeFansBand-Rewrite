@@ -4,5 +4,8 @@
   "id": "rfb.mutation.midas-touch",
   "name": "炼金术",
   "description": "你可以把普通物品变成金子。",
-  "rating": "good"
+  "rating": "good",
+  "sourceIndex": 18,
+  "randomWeight": 4,
+  "removesOnGain": []
 }

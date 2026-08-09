@@ -4,5 +4,8 @@
   "id": "rfb.mutation.grow-mold",
   "name": "培育霉菌",
   "description": "你可以使霉菌在你附近生长。",
-  "rating": "good"
+  "rating": "good",
+  "sourceIndex": 19,
+  "randomWeight": 2,
+  "removesOnGain": []
 }

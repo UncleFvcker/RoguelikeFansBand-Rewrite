@@ -4,5 +4,8 @@
   "id": "rfb.mutation.illumine",
   "name": "照亮区域",
   "description": "你可以散发出明亮的光芒。",
-  "rating": "average"
+  "rating": "average",
+  "sourceIndex": 14,
+  "randomWeight": 6,
+  "removesOnGain": []
 }

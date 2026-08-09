@@ -4,5 +4,8 @@
   "id": "rfb.mutation.easy-tiring",
   "name": "易疲劳",
   "description": "物理战斗会使你疲惫。",
-  "rating": "awful"
+  "rating": "awful",
+  "sourceIndex": 131,
+  "randomWeight": 4,
+  "removesOnGain": []
 }

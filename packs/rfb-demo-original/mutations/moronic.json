@@ -4,5 +4,11 @@
   "id": "rfb.mutation.moronic",
   "name": "白痴",
   "description": "你是个白痴 (-4 智力/感知)。",
-  "rating": "awful"
+  "rating": "awful",
+  "sourceIndex": 67,
+  "randomWeight": 6,
+  "removesOnGain": [
+    "rfb.mutation.hyper-int",
+    "rfb.mutation.pultitis"
+  ]
 }

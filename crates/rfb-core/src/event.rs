@@ -75,6 +75,16 @@ pub(crate) enum BoltReflectionOutcome {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum DomainEvent {
+    #[allow(dead_code)]
+    MutationGained {
+        mutation_id: String,
+        name: String,
+    },
+    #[allow(dead_code)]
+    MutationLost {
+        mutation_id: String,
+        name: String,
+    },
     AbilityStudied {
         ability_id: String,
     },
@@ -1193,6 +1203,16 @@ pub(crate) enum DomainEvent {
 impl DomainEvent {
     pub(crate) fn into_dto(self) -> GameEventDto {
         match self {
+            Self::MutationGained { mutation_id, name } => dto(
+                "mutation.gained",
+                "mutation-gained",
+                [("target", mutation_id), ("name", name)],
+            ),
+            Self::MutationLost { mutation_id, name } => dto(
+                "mutation.lost",
+                "mutation-lost",
+                [("target", mutation_id), ("name", name)],
+            ),
             Self::AbilityStudied { ability_id } => dto(
                 "ability.studied",
                 "ability-studied",

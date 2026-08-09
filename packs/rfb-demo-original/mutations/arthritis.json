@@ -4,5 +4,10 @@
   "id": "rfb.mutation.arthritis",
   "name": "关节炎",
   "description": "你的关节持续酸痛 (-3 敏捷)。",
-  "rating": "bad"
+  "rating": "bad",
+  "sourceIndex": 91,
+  "randomWeight": 6,
+  "removesOnGain": [
+    "rfb.mutation.limber"
+  ]
 }

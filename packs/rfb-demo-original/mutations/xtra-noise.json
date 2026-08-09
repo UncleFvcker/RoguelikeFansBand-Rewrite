@@ -4,5 +4,8 @@
   "id": "rfb.mutation.xtra-noise",
   "name": "额外噪音",
   "description": "你发出很多奇怪的噪音 (-3 潜行)。",
-  "rating": "bad"
+  "rating": "bad",
+  "sourceIndex": 77,
+  "randomWeight": 6,
+  "removesOnGain": []
 }

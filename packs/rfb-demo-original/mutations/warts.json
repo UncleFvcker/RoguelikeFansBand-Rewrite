@@ -4,5 +4,10 @@
   "id": "rfb.mutation.warts",
   "name": "长疣",
   "description": "你的皮肤上长满了疣 (-2 魅力, +5 护甲)。",
-  "rating": "average"
+  "rating": "average",
+  "sourceIndex": 83,
+  "randomWeight": 6,
+  "removesOnGain": [
+    "rfb.mutation.steel-skin"
+  ]
 }

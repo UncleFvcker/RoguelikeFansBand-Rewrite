@@ -4,5 +4,8 @@
   "id": "rfb.mutation.alcohol",
   "name": "酒精",
   "description": "你的身体会分泌酒精。",
-  "rating": "bad"
+  "rating": "bad",
+  "sourceIndex": 35,
+  "randomWeight": 2,
+  "removesOnGain": []
 }

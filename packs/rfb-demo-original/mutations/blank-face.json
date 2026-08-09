@@ -4,5 +4,8 @@
   "id": "rfb.mutation.blank-face",
   "name": "面无表情",
   "description": "你没有五官 (-1 魅力)。",
-  "rating": "bad"
+  "rating": "bad",
+  "sourceIndex": 73,
+  "randomWeight": 4,
+  "removesOnGain": []
 }

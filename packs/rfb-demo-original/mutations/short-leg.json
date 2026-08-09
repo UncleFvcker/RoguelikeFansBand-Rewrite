@@ -4,5 +4,8 @@
   "id": "rfb.mutation.short-leg",
   "name": "短腿",
   "description": "你的腿是短粗的树桩 (-3 速度)。",
-  "rating": "awful"
+  "rating": "awful",
+  "sourceIndex": 80,
+  "randomWeight": 4,
+  "removesOnGain": []
 }

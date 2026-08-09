@@ -52,7 +52,7 @@ impl Game {
         Ok(())
     }
 
-    fn process_natural_hp_regeneration(&mut self, resting: bool) {
+    pub(super) fn process_natural_hp_regeneration(&mut self, resting: bool) {
         if self.wilderness_blocks_regeneration()
             || !self
                 .world_tick
@@ -72,7 +72,9 @@ impl Game {
         let factor = self.nutrition_regeneration_factor() * if resting { 2 } else { 1 };
         let regeneration = maximum
             .saturating_mul(factor)
-            .saturating_add(NATURAL_HP_REGENERATION_BASE);
+            .saturating_add(NATURAL_HP_REGENERATION_BASE)
+            .saturating_mul(self.mutation_regeneration_percent())
+            .saturating_div(100);
         let recovered = period
             .saturating_mul(regeneration)
             .saturating_div(NATURAL_HP_REGENERATION_SCALE)

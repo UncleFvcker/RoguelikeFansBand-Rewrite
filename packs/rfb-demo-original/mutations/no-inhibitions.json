@@ -4,5 +4,11 @@
   "id": "rfb.mutation.no-inhibitions",
   "name": "毫无顾忌",
   "description": "你毫无顾忌。",
-  "rating": "average"
+  "rating": "average",
+  "sourceIndex": 133,
+  "randomWeight": 4,
+  "removesOnGain": [
+    "rfb.mutation.cowardice",
+    "rfb.mutation.fearless"
+  ]
 }

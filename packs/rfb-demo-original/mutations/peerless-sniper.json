@@ -4,5 +4,8 @@
   "id": "rfb.mutation.peerless-sniper",
   "name": "无双狙击手",
   "description": "你的远程投射物不再激怒怪物。",
-  "rating": "good"
+  "rating": "good",
+  "sourceIndex": 99,
+  "randomWeight": 0,
+  "removesOnGain": []
 }

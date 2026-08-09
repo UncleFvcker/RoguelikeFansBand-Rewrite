@@ -4,5 +4,8 @@
   "id": "rfb.mutation.attract-animal",
   "name": "吸引动物",
   "description": "你会吸引动物。",
-  "rating": "bad"
+  "rating": "bad",
+  "sourceIndex": 47,
+  "randomWeight": 2,
+  "removesOnGain": []
 }

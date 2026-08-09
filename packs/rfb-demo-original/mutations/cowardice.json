@@ -4,5 +4,11 @@
   "id": "rfb.mutation.cowardice",
   "name": "懦弱",
   "description": "你容易退缩。",
-  "rating": "bad"
+  "rating": "bad",
+  "sourceIndex": 33,
+  "randomWeight": 2,
+  "removesOnGain": [
+    "rfb.mutation.fearless",
+    "rfb.mutation.no-inhibitions"
+  ]
 }

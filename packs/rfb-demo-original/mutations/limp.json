@@ -4,5 +4,8 @@
   "id": "rfb.mutation.limp",
   "name": "跛行",
   "description": "你走路一瘸一拐的 (-10% 行走速度)。",
-  "rating": "bad"
+  "rating": "bad",
+  "sourceIndex": 145,
+  "randomWeight": 4,
+  "removesOnGain": []
 }

@@ -4,5 +4,8 @@
   "id": "rfb.mutation.astral-guide",
   "name": "星界向导",
   "description": "你是一名星界向导（传送消耗更少的能量）。",
-  "rating": "good"
+  "rating": "good",
+  "sourceIndex": 114,
+  "randomWeight": 0,
+  "removesOnGain": []
 }

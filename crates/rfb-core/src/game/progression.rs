@@ -696,7 +696,7 @@ impl Game {
         if previous_max_hp > 0 && next_max_hp != previous_max_hp {
             self.player.hp = rescale_i32(self.player.hp, previous_max_hp, next_max_hp);
         }
-        self.refresh_player_resource_maxima();
+        self.refresh_player_ability_state();
         for (resource_id, (previous_current, previous_maximum)) in previous_resource_maxima {
             let Some(pool) = self.resources.get_mut(resource_id) else {
                 continue;

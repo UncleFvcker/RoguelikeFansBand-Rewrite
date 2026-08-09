@@ -4,5 +4,8 @@
   "id": "rfb.mutation.motion",
   "name": "行动自如",
   "description": "你的动作精准且有力 (行动自如; +1 潜行)。",
-  "rating": "good"
+  "rating": "good",
+  "sourceIndex": 94,
+  "randomWeight": 6,
+  "removesOnGain": []
 }

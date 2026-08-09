@@ -4,5 +4,8 @@
   "id": "rfb.mutation.vortex-melee",
   "name": "致命旋风",
   "description": "你带着致命的力量旋转。",
-  "rating": "good"
+  "rating": "good",
+  "sourceIndex": 141,
+  "randomWeight": 0,
+  "removesOnGain": []
 }

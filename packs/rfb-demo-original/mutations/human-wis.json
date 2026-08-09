@@ -4,5 +4,8 @@
   "id": "rfb.mutation.human-wis",
   "name": "与神同调",
   "description": "你感觉与邪恶生物没有任何联系。",
-  "rating": "bad"
+  "rating": "bad",
+  "sourceIndex": 148,
+  "randomWeight": 0,
+  "removesOnGain": []
 }

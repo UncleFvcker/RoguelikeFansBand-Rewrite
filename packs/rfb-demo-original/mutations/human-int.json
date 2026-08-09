@@ -4,5 +4,8 @@
   "id": "rfb.mutation.human-int",
   "name": "想象力过于丰富",
   "description": "你的想象力过于丰富。",
-  "rating": "bad"
+  "rating": "bad",
+  "sourceIndex": 147,
+  "randomWeight": 0,
+  "removesOnGain": []
 }

@@ -4,5 +4,8 @@
   "id": "rfb.mutation.black-marketeer",
   "name": "黑市商人",
   "description": "你是黑市的代理人。",
-  "rating": "good"
+  "rating": "good",
+  "sourceIndex": 118,
+  "randomWeight": 0,
+  "removesOnGain": []
 }

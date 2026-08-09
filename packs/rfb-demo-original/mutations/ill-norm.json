@@ -4,5 +4,8 @@
   "id": "rfb.mutation.ill-norm",
   "name": "安心幻象",
   "description": "你的外表被幻象所掩盖。",
-  "rating": "average"
+  "rating": "average",
+  "sourceIndex": 74,
+  "randomWeight": 2,
+  "removesOnGain": []
 }

@@ -4,5 +4,10 @@
   "id": "rfb.mutation.bad-luck",
   "name": "黑色光环",
   "description": "你的周围环绕着黑色的光环。",
-  "rating": "awful"
+  "rating": "awful",
+  "sourceIndex": 92,
+  "randomWeight": 2,
+  "removesOnGain": [
+    "rfb.mutation.good-luck"
+  ]
 }

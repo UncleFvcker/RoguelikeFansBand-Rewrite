@@ -99,6 +99,8 @@ pub(crate) fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<
     content.shops.sort_by(|left, right| left.id.cmp(&right.id));
     content.worlds.sort_by(|left, right| left.id.cmp(&right.id));
     let mut all_ids = BTreeSet::new();
+    let mut mutation_ids = BTreeSet::new();
+    let mut mutation_source_indices = BTreeSet::new();
     for mutation in &content.mutations {
         require_schema(&mutation.schema, MUTATION_SCHEMA, &mutation.id)?;
         require_format_version(mutation.format_version, &mutation.id)?;
@@ -106,7 +108,19 @@ pub(crate) fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<
         if mutation.name.trim().is_empty() || mutation.description.trim().is_empty() {
             return Err(ContentError::InvalidDefinitionText(mutation.id.clone()));
         }
+        if !mutation_source_indices.insert(mutation.source_index) {
+            return Err(ContentError::InvalidMutation(mutation.id.clone()));
+        }
+        mutation_ids.insert(mutation.id.clone());
         insert_definition_id(&mut all_ids, &mutation.id)?;
+    }
+    for mutation in &content.mutations {
+        let mut removed = BTreeSet::new();
+        if mutation.removes_on_gain.iter().any(|id| {
+            id == &mutation.id || !mutation_ids.contains(id) || !removed.insert(id.clone())
+        }) {
+            return Err(ContentError::InvalidMutation(mutation.id.clone()));
+        }
     }
     let TerrainValidationOutputs {
         terrain_ids,

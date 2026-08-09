@@ -4,5 +4,8 @@
   "id": "rfb.mutation.attract-dragon",
   "name": "吸引龙类",
   "description": "你会吸引龙类。",
-  "rating": "bad"
+  "rating": "bad",
+  "sourceIndex": 54,
+  "randomWeight": 2,
+  "removesOnGain": []
 }

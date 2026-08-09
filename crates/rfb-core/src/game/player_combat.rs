@@ -437,14 +437,18 @@ impl Game {
                 && damage.applied > 5
                 && actor_matches_category(&definition, "living")
             {
-                let requested = self
+                let raw_requested = self
                     .roll_damage(
                         2,
                         u16::try_from(damage.applied / 6)
                             .expect("positive vampiric healing die must fit u16"),
                     )
                     .min(vampiric_drain_remaining);
-                vampiric_drain_remaining = vampiric_drain_remaining.saturating_sub(requested);
+                vampiric_drain_remaining = vampiric_drain_remaining.saturating_sub(raw_requested);
+                let requested = raw_requested.saturating_mul(
+                    i32::try_from(self.mutation_regeneration_percent())
+                        .expect("mutation regeneration percent must fit i32"),
+                ) / 100;
                 let max_hp = self.effective_player_max_hp();
                 let EffectOutcome::Healed { requested, applied } = apply_effect(
                     &mut EffectTarget {

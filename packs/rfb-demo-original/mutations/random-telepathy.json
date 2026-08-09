@@ -4,5 +4,8 @@
   "id": "rfb.mutation.random-telepathy",
   "name": "随机心灵感应",
   "description": "你的心智会随机地扩展和收缩。",
-  "rating": "average"
+  "rating": "average",
+  "sourceIndex": 55,
+  "randomWeight": 4,
+  "removesOnGain": []
 }

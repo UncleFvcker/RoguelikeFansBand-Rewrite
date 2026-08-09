@@ -4,5 +4,8 @@
   "id": "rfb.mutation.eat-light",
   "name": "吞噬光芒",
   "description": "你有时候会吸收周围的光线作为养分。",
-  "rating": "average"
+  "rating": "average",
+  "sourceIndex": 45,
+  "randomWeight": 2,
+  "removesOnGain": []
 }

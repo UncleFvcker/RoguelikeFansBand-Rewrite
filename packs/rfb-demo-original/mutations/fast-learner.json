@@ -4,5 +4,8 @@
   "id": "rfb.mutation.fast-learner",
   "name": "快速学习者",
   "description": "你是个快速学习者。",
-  "rating": "great"
+  "rating": "great",
+  "sourceIndex": 96,
+  "randomWeight": 0,
+  "removesOnGain": []
 }

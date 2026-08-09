@@ -4,5 +4,8 @@
   "id": "rfb.mutation.ambidextrous",
   "name": "左右开弓",
   "description": "你左右开弓。",
-  "rating": "great"
+  "rating": "great",
+  "sourceIndex": 101,
+  "randomWeight": 0,
+  "removesOnGain": []
 }

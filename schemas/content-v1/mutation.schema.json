@@ -33,8 +33,26 @@
     "name": {
       "type": "string"
     },
+    "randomWeight": {
+      "format": "uint8",
+      "maximum": 255,
+      "minimum": 0,
+      "type": "integer"
+    },
     "rating": {
       "$ref": "#/$defs/MutationRatingDefinition"
+    },
+    "removesOnGain": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "sourceIndex": {
+      "format": "uint16",
+      "maximum": 65535,
+      "minimum": 0,
+      "type": "integer"
     }
   },
   "required": [
@@ -43,7 +61,9 @@
     "id",
     "name",
     "description",
-    "rating"
+    "rating",
+    "sourceIndex",
+    "randomWeight"
   ],
   "title": "MutationDefinition",
   "type": "object"

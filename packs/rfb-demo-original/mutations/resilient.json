@@ -4,5 +4,10 @@
   "id": "rfb.mutation.resilient",
   "name": "非凡韧性",
   "description": "你非常有韧性 (+4 体质)。",
-  "rating": "great"
+  "rating": "great",
+  "sourceIndex": 68,
+  "randomWeight": 4,
+  "removesOnGain": [
+    "rfb.mutation.albino"
+  ]
 }

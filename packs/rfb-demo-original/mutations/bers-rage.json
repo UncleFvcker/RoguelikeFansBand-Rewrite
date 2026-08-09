@@ -4,5 +4,8 @@
   "id": "rfb.mutation.bers-rage",
   "name": "狂暴",
   "description": "你容易陷入狂暴状态。",
-  "rating": "bad"
+  "rating": "bad",
+  "sourceIndex": 32,
+  "randomWeight": 2,
+  "removesOnGain": []
 }

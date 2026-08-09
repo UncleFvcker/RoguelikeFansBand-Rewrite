@@ -4,5 +4,8 @@
   "id": "rfb.mutation.det-curse",
   "name": "侦测诅咒",
   "description": "你能感觉到邪恶魔法的危险。",
-  "rating": "average"
+  "rating": "average",
+  "sourceIndex": 15,
+  "randomWeight": 4,
+  "removesOnGain": []
 }

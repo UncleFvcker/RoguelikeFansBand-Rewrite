@@ -4,5 +4,8 @@
   "id": "rfb.mutation.human-str",
   "name": "失衡打击",
   "description": "你最强力攻击的威力会使你失去平衡。",
-  "rating": "bad"
+  "rating": "bad",
+  "sourceIndex": 146,
+  "randomWeight": 0,
+  "removesOnGain": []
 }

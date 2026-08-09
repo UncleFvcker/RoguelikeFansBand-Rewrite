@@ -4,5 +4,8 @@
   "id": "rfb.mutation.laser-eye",
   "name": "激光眼",
   "description": "你的眼睛可以发射激光束。",
-  "rating": "good"
+  "rating": "good",
+  "sourceIndex": 27,
+  "randomWeight": 6,
+  "removesOnGain": []
 }

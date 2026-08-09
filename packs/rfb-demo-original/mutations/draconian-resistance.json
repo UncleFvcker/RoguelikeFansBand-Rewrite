@@ -4,5 +4,8 @@
   "id": "rfb.mutation.draconian-resistance",
   "name": "抗性增加",
   "description": "你获得额外的火抗性。",
-  "rating": "good"
+  "rating": "good",
+  "sourceIndex": 129,
+  "randomWeight": 0,
+  "removesOnGain": []
 }

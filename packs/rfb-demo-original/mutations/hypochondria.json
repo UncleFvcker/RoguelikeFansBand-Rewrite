@@ -4,5 +4,8 @@
   "id": "rfb.mutation.hypochondria",
   "name": "急性疑病症",
   "description": "你患有疑病症。",
-  "rating": "bad"
+  "rating": "bad",
+  "sourceIndex": 136,
+  "randomWeight": 4,
+  "removesOnGain": []
 }

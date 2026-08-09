@@ -4,5 +4,8 @@
   "id": "rfb.mutation.hallucination",
   "name": "幻觉",
   "description": "你患有产生幻觉的疯狂。",
-  "rating": "bad"
+  "rating": "bad",
+  "sourceIndex": 36,
+  "randomWeight": 2,
+  "removesOnGain": []
 }

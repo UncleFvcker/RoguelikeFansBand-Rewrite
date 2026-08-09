@@ -4,5 +4,8 @@
   "id": "rfb.mutation.evasion",
   "name": "闪避",
   "description": "你能避免被地震压碎，并能躲避怪物的喷吐攻击。",
-  "rating": "great"
+  "rating": "great",
+  "sourceIndex": 105,
+  "randomWeight": 0,
+  "removesOnGain": []
 }

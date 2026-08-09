@@ -4,5 +4,10 @@
   "id": "rfb.mutation.limber",
   "name": "柔韧",
   "description": "你的身体非常柔韧 (+3 敏捷)。",
-  "rating": "good"
+  "rating": "good",
+  "sourceIndex": 90,
+  "randomWeight": 6,
+  "removesOnGain": [
+    "rfb.mutation.arthritis"
+  ]
 }

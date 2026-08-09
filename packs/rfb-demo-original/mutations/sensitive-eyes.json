@@ -4,5 +4,8 @@
   "id": "rfb.mutation.sensitive-eyes",
   "name": "敏感的双眼",
   "description": "你的眼睛非常敏感。",
-  "rating": "average"
+  "rating": "average",
+  "sourceIndex": 132,
+  "randomWeight": 4,
+  "removesOnGain": []
 }

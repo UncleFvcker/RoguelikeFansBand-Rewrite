@@ -4,5 +4,8 @@
   "id": "rfb.mutation.panic-hit",
   "name": "惊恐打击",
   "description": "你可以在打中目标后拼命逃跑。",
-  "rating": "good"
+  "rating": "good",
+  "sourceIndex": 25,
+  "randomWeight": 4,
+  "removesOnGain": []
 }

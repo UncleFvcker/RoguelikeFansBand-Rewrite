@@ -4,5 +4,8 @@
   "id": "rfb.mutation.subtle-casting",
   "name": "隐秘施法",
   "description": "你的远程攻击法术不再激怒怪物。",
-  "rating": "good"
+  "rating": "good",
+  "sourceIndex": 98,
+  "randomWeight": 0,
+  "removesOnGain": []
 }

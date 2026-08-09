@@ -4,5 +4,8 @@
   "id": "rfb.mutation.eat-magic",
   "name": "吞噬魔法",
   "description": "你可以吞噬魔法能量供自己使用。",
-  "rating": "great"
+  "rating": "great",
+  "sourceIndex": 22,
+  "randomWeight": 2,
+  "removesOnGain": []
 }

@@ -4,5 +4,10 @@
   "id": "rfb.mutation.scales",
   "name": "鳞片",
   "description": "你的皮肤变成了鳞片 (-1 魅力, +10 护甲)。",
-  "rating": "good"
+  "rating": "good",
+  "sourceIndex": 84,
+  "randomWeight": 6,
+  "removesOnGain": [
+    "rfb.mutation.steel-skin"
+  ]
 }

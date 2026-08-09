@@ -4,5 +4,8 @@
   "id": "rfb.mutation.cult-of-personality",
   "name": "个人崇拜",
   "description": "被召唤出来的怪物有时是友好的。",
-  "rating": "good"
+  "rating": "good",
+  "sourceIndex": 112,
+  "randomWeight": 0,
+  "removesOnGain": []
 }

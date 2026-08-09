@@ -4,5 +4,8 @@
   "id": "rfb.mutation.weigh-magic",
   "name": "衡量魔法",
   "description": "你能感觉到影响你的魔法的强度。",
-  "rating": "average"
+  "rating": "average",
+  "sourceIndex": 23,
+  "randomWeight": 4,
+  "removesOnGain": []
 }

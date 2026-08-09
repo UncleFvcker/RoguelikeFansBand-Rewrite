@@ -4,5 +4,8 @@
   "id": "rfb.mutation.magic-res",
   "name": "魔法抗性",
   "description": "你对魔法具有抗性。",
-  "rating": "good"
+  "rating": "good",
+  "sourceIndex": 76,
+  "randomWeight": 4,
+  "removesOnGain": []
 }

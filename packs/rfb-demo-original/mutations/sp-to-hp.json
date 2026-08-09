@@ -4,5 +4,8 @@
   "id": "rfb.mutation.sp-to-hp",
   "name": "法力转生命",
   "description": "有时你的气血会涌入肌肉。",
-  "rating": "average"
+  "rating": "average",
+  "sourceIndex": 61,
+  "randomWeight": 4,
+  "removesOnGain": []
 }

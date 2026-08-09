@@ -4,5 +4,8 @@
   "id": "rfb.mutation.draconian-breath",
   "name": "致命吐息",
   "description": "你的吐息变得更加强劲。",
-  "rating": "good"
+  "rating": "good",
+  "sourceIndex": 125,
+  "randomWeight": 0,
+  "removesOnGain": []
 }

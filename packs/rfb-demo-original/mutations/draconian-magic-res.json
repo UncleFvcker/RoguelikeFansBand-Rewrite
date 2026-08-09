@@ -4,5 +4,8 @@
   "id": "rfb.mutation.draconian-magic-res",
   "name": "魔法抗性",
   "description": "你对魔法具有抗性。",
-  "rating": "good"
+  "rating": "good",
+  "sourceIndex": 123,
+  "randomWeight": 0,
+  "removesOnGain": []
 }

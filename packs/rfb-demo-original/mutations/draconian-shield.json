@@ -4,5 +4,8 @@
   "id": "rfb.mutation.draconian-shield",
   "name": "龙皮",
   "description": "龙皮：你获得 +15 AC 和火光环",
-  "rating": "good"
+  "rating": "good",
+  "sourceIndex": 122,
+  "randomWeight": 0,
+  "removesOnGain": []
 }

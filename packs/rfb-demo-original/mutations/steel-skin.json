@@ -4,5 +4,12 @@
   "id": "rfb.mutation.steel-skin",
   "name": "钢铁之肤",
   "description": "你的皮肤是钢铁构成的 (-1 敏捷, +25 护甲)。",
-  "rating": "great"
+  "rating": "great",
+  "sourceIndex": 85,
+  "randomWeight": 4,
+  "removesOnGain": [
+    "rfb.mutation.scales",
+    "rfb.mutation.warts",
+    "rfb.mutation.flesh-rot"
+  ]
 }

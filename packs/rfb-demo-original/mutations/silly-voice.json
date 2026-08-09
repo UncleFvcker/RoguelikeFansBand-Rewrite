@@ -4,5 +4,8 @@
   "id": "rfb.mutation.silly-voice",
   "name": "滑稽嗓音",
   "description": "你的声音是滑稽的尖叫声 (-4 魅力)。",
-  "rating": "bad"
+  "rating": "bad",
+  "sourceIndex": 72,
+  "randomWeight": 4,
+  "removesOnGain": []
 }

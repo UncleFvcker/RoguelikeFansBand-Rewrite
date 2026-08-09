@@ -4,5 +4,8 @@
   "id": "rfb.mutation.infravision",
   "name": "红外视力",
   "description": "你拥有非凡的红外视力 (+3)。",
-  "rating": "average"
+  "rating": "average",
+  "sourceIndex": 78,
+  "randomWeight": 6,
+  "removesOnGain": []
 }

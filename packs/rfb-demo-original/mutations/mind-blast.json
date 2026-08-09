@@ -4,5 +4,8 @@
   "id": "rfb.mutation.mind-blast",
   "name": "心灵震爆",
   "description": "你可以用心灵震爆攻击你的敌人。",
-  "rating": "good"
+  "rating": "good",
+  "sourceIndex": 5,
+  "randomWeight": 4,
+  "removesOnGain": []
 }

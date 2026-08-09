@@ -4,5 +4,8 @@
   "id": "rfb.mutation.berserk",
   "name": "狂暴",
   "description": "你可以使自己进入狂暴状态。",
-  "rating": "great"
+  "rating": "great",
+  "sourceIndex": 16,
+  "randomWeight": 6,
+  "removesOnGain": []
 }

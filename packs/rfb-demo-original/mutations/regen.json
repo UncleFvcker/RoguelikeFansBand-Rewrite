@@ -4,5 +4,10 @@
   "id": "rfb.mutation.regen",
   "name": "再生",
   "description": "你正在再生。",
-  "rating": "good"
+  "rating": "good",
+  "sourceIndex": 88,
+  "randomWeight": 4,
+  "removesOnGain": [
+    "rfb.mutation.flesh-rot"
+  ]
 }

@@ -4,5 +4,8 @@
   "id": "rfb.mutation.potion-chugger",
   "name": "狂饮药水",
   "description": "你喝药水的速度比平常快得多。",
-  "rating": "good"
+  "rating": "good",
+  "sourceIndex": 106,
+  "randomWeight": 0,
+  "removesOnGain": []
 }

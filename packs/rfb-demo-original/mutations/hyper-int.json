@@ -4,5 +4,11 @@
   "id": "rfb.mutation.hyper-int",
   "name": "活体计算机",
   "description": "你的大脑是一台活体计算机 (+4 智力/感知)。",
-  "rating": "great"
+  "rating": "great",
+  "sourceIndex": 66,
+  "randomWeight": 6,
+  "removesOnGain": [
+    "rfb.mutation.moronic",
+    "rfb.mutation.pultitis"
+  ]
 }

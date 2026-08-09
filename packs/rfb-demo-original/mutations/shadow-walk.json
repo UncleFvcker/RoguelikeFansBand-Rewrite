@@ -4,5 +4,8 @@
   "id": "rfb.mutation.shadow-walk",
   "name": "影中漫步",
   "description": "你偶尔会跌入其他阴影中。",
-  "rating": "bad"
+  "rating": "bad",
+  "sourceIndex": 58,
+  "randomWeight": 2,
+  "removesOnGain": []
 }

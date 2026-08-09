@@ -4,5 +4,8 @@
   "id": "rfb.mutation.hp-to-sp",
   "name": "生命转法力",
   "description": "有时你会气血上涌。",
-  "rating": "average"
+  "rating": "average",
+  "sourceIndex": 62,
+  "randomWeight": 2,
+  "removesOnGain": []
 }

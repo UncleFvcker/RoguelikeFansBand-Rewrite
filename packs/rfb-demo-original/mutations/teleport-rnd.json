@@ -4,5 +4,10 @@
   "id": "rfb.mutation.teleport-rnd",
   "name": "随机传送",
   "description": "你会随机传送。",
-  "rating": "bad"
+  "rating": "bad",
+  "sourceIndex": 34,
+  "randomWeight": 2,
+  "removesOnGain": [
+    "rfb.mutation.teleport"
+  ]
 }

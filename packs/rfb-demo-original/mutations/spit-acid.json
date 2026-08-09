@@ -4,5 +4,8 @@
   "id": "rfb.mutation.spit-acid",
   "name": "喷吐酸液",
   "description": "你可以喷吐酸液（伤害为 等级*2）。",
-  "rating": "good"
+  "rating": "good",
+  "sourceIndex": 0,
+  "randomWeight": 8,
+  "removesOnGain": []
 }

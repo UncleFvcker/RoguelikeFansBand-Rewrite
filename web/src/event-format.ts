@@ -35,6 +35,14 @@ export function createPresentationFormatter(
 
   function formatEvent(event: GameEventDto): string {
     switch (event.messageKey) {
+      case "mutation-gained":
+        return localization.format("message-mutation-gained", {
+          mutation: event.args.name ?? event.args.target ?? "?",
+        });
+      case "mutation-lost":
+        return localization.format("message-mutation-lost", {
+          mutation: event.args.name ?? event.args.target ?? "?",
+        });
       case "ability-studied":
         return localization.format("message-ability-studied", {
           ability: contentName(event.args.target),

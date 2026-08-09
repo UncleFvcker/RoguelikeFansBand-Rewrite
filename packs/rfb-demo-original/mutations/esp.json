@@ -4,5 +4,8 @@
   "id": "rfb.mutation.esp",
   "name": "心灵感应",
   "description": "你具有心灵感应。",
-  "rating": "great"
+  "rating": "great",
+  "sourceIndex": 89,
+  "randomWeight": 4,
+  "removesOnGain": []
 }

@@ -4,5 +4,8 @@
   "id": "rfb.mutation.horns",
   "name": "长角",
   "description": "你长着角。",
-  "rating": "good"
+  "rating": "good",
+  "sourceIndex": 39,
+  "randomWeight": 4,
+  "removesOnGain": []
 }

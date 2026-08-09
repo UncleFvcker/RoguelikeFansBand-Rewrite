@@ -4,5 +4,8 @@
   "id": "rfb.mutation.weird-mind",
   "name": "诡异心智",
   "description": "你诡异的心智不受不可名状的恐怖和幻觉的影响。",
-  "rating": "good"
+  "rating": "good",
+  "sourceIndex": 116,
+  "randomWeight": 0,
+  "removesOnGain": []
 }

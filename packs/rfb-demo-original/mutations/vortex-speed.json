@@ -4,5 +4,8 @@
   "id": "rfb.mutation.vortex-speed",
   "name": "龙卷风速",
   "description": "你以龙卷风般的速度移动 (+8 速度)。",
-  "rating": "good"
+  "rating": "good",
+  "sourceIndex": 142,
+  "randomWeight": 0,
+  "removesOnGain": []
 }

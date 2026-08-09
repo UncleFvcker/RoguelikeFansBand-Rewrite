@@ -4,5 +4,8 @@
   "id": "rfb.mutation.impotence",
   "name": "魔法无能",
   "description": "你魔法无能。",
-  "rating": "bad"
+  "rating": "bad",
+  "sourceIndex": 139,
+  "randomWeight": 4,
+  "removesOnGain": []
 }

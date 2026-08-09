@@ -4,5 +4,10 @@
   "id": "rfb.mutation.puny",
   "name": "孱弱",
   "description": "你很孱弱 (-4 力量)。",
-  "rating": "awful"
+  "rating": "awful",
+  "sourceIndex": 65,
+  "randomWeight": 6,
+  "removesOnGain": [
+    "rfb.mutation.hyper-str"
+  ]
 }

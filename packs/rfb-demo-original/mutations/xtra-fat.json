@@ -4,5 +4,8 @@
   "id": "rfb.mutation.xtra-fat",
   "name": "额外脂肪",
   "description": "你极其肥胖 (+2 体质, -2 速度)。",
-  "rating": "average"
+  "rating": "average",
+  "sourceIndex": 69,
+  "randomWeight": 4,
+  "removesOnGain": []
 }

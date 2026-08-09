@@ -4,5 +4,8 @@
   "id": "rfb.mutation.earthquake",
   "name": "地震术",
   "description": "你可以让你周围的地下城坍塌。",
-  "rating": "average"
+  "rating": "average",
+  "sourceIndex": 21,
+  "randomWeight": 6,
+  "removesOnGain": []
 }

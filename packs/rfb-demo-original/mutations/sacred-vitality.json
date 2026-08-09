@@ -4,5 +4,8 @@
   "id": "rfb.mutation.sacred-vitality",
   "name": "神圣活力",
   "description": "你获得所有治疗效果的加成。",
-  "rating": "good"
+  "rating": "good",
+  "sourceIndex": 111,
+  "randomWeight": 0,
+  "removesOnGain": []
 }

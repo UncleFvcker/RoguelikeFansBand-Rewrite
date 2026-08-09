@@ -4,5 +4,8 @@
   "id": "rfb.mutation.dazzle",
   "name": "目眩术",
   "description": "你可以散发出令人混乱的致盲辐射。",
-  "rating": "good"
+  "rating": "good",
+  "sourceIndex": 26,
+  "randomWeight": 6,
+  "removesOnGain": []
 }

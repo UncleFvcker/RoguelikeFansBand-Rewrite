@@ -4,5 +4,8 @@
   "id": "rfb.mutation.strong-mind",
   "name": "强韧心智",
   "description": "你免疫法力吸取。",
-  "rating": "great"
+  "rating": "great",
+  "sourceIndex": 140,
+  "randomWeight": 0,
+  "removesOnGain": []
 }

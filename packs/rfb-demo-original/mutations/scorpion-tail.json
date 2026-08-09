@@ -4,5 +4,8 @@
   "id": "rfb.mutation.scorpion-tail",
   "name": "蝎尾",
   "description": "你长着蝎尾。",
-  "rating": "good"
+  "rating": "good",
+  "sourceIndex": 38,
+  "randomWeight": 4,
+  "removesOnGain": []
 }

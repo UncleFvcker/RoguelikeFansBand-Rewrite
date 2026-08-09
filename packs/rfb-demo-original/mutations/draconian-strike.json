@@ -4,5 +4,8 @@
   "id": "rfb.mutation.draconian-strike",
   "name": "龙之打击",
   "description": "你拥有龙之打击的力量。",
-  "rating": "good"
+  "rating": "good",
+  "sourceIndex": 124,
+  "randomWeight": 0,
+  "removesOnGain": []
 }

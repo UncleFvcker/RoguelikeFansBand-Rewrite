@@ -4,5 +4,8 @@
   "id": "rfb.mutation.vampirism",
   "name": "吸血",
   "description": "你可以像吸血鬼一样从敌人身上吸取生命。",
-  "rating": "good"
+  "rating": "good",
+  "sourceIndex": 7,
+  "randomWeight": 4,
+  "removesOnGain": []
 }

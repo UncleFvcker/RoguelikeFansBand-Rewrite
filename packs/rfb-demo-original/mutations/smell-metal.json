@@ -4,5 +4,8 @@
   "id": "rfb.mutation.smell-metal",
   "name": "嗅金属",
   "description": "你可以闻出附近的贵重金属。",
-  "rating": "good"
+  "rating": "good",
+  "sourceIndex": 8,
+  "randomWeight": 6,
+  "removesOnGain": []
 }

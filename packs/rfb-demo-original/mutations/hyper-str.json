@@ -4,5 +4,10 @@
   "id": "rfb.mutation.hyper-str",
   "name": "肌肉猛男",
   "description": "你拥有超人般的力量 (+4 力量)。",
-  "rating": "great"
+  "rating": "great",
+  "sourceIndex": 64,
+  "randomWeight": 6,
+  "removesOnGain": [
+    "rfb.mutation.puny"
+  ]
 }

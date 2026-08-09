@@ -4,5 +4,8 @@
   "id": "rfb.mutation.purple-gift",
   "name": "紫神眷顾",
   "description": "你是一位紫神的信徒。",
-  "rating": "good"
+  "rating": "good",
+  "sourceIndex": 137,
+  "randomWeight": 0,
+  "removesOnGain": []
 }

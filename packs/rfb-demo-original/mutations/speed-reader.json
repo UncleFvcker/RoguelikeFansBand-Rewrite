@@ -4,5 +4,8 @@
   "id": "rfb.mutation.speed-reader",
   "name": "快速阅读",
   "description": "你阅读卷轴的速度比平常快。",
-  "rating": "good"
+  "rating": "good",
+  "sourceIndex": 119,
+  "randomWeight": 0,
+  "removesOnGain": []
 }

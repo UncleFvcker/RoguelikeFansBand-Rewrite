@@ -4,5 +4,8 @@
   "id": "rfb.mutation.telekinesis",
   "name": "心灵遥控",
   "description": "你拥有了心灵遥控能力。",
-  "rating": "average"
+  "rating": "average",
+  "sourceIndex": 3,
+  "randomWeight": 4,
+  "removesOnGain": []
 }

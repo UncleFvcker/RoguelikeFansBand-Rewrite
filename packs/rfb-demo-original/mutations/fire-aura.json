@@ -4,5 +4,8 @@
   "id": "rfb.mutation.fire-aura",
   "name": "火焰光环",
   "description": "你的身体被火焰包围。",
-  "rating": "good"
+  "rating": "good",
+  "sourceIndex": 82,
+  "randomWeight": 4,
+  "removesOnGain": []
 }

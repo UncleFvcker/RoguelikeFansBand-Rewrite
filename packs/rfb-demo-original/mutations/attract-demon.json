@@ -4,5 +4,8 @@
   "id": "rfb.mutation.attract-demon",
   "name": "吸引恶魔",
   "description": "你会吸引恶魔。",
-  "rating": "bad"
+  "rating": "bad",
+  "sourceIndex": 41,
+  "randomWeight": 4,
+  "removesOnGain": []
 }
