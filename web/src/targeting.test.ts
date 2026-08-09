@@ -9,6 +9,7 @@ import {
   beginTargeting,
   moveTargetCursor,
   targetSelectionAtCursor,
+  translateTargetingState,
 } from "./targeting.ts";
 
 const SPEC: TargetSpecDto = {
@@ -39,6 +40,28 @@ test("target cursor stays inside both the map and Chebyshev range", () => {
   state = moveTargetCursor(state, "south-east", 4, 4);
   state = moveTargetCursor(state, "south-east", 4, 4);
   assert.deepEqual(state.cursor, { x: 3, y: 3 });
+});
+
+test("targeting coordinates follow wilderness map translations", () => {
+  const state = {
+    origin: { x: 64, y: 16 },
+    cursor: { x: 70, y: 20 },
+    spec: SPEC,
+  };
+  assert.deepEqual(translateTargetingState(state, { x: -32, y: 0 }, 96, 33), {
+    ...state,
+    origin: { x: 32, y: 16 },
+    cursor: { x: 38, y: 20 },
+  });
+  assert.equal(
+    translateTargetingState(
+      { ...state, origin: { x: 64, y: 22 }, cursor: { x: 70, y: 5 } },
+      { x: 0, y: -11 },
+      96,
+      33,
+    ),
+    undefined,
+  );
 });
 
 test("confirmation prefers a stable entity id then falls back to a position", () => {

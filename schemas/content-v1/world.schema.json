@@ -1970,6 +1970,9 @@
               "const": "town",
               "type": "string"
             },
+            "mapOrigin": {
+              "$ref": "#/$defs/ContentPosition"
+            },
             "position": {
               "$ref": "#/$defs/ContentPosition"
             },
@@ -1980,6 +1983,7 @@
           "required": [
             "kind",
             "position",
+            "mapOrigin",
             "townId"
           ],
           "type": "object"

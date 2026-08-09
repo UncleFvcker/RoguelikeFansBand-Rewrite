@@ -1,6 +1,6 @@
 # RFB 全系统梳理与重构实现路线
 
-状态：长期规则实现路线；当前基线为协议 1.158 / contract-v229 / state hash Schema v78（P31–P98 进展见 8.3，玩家流程与 Outpost 进展见 Phase 17/18，物品与变异接入见 Phase 19，Warrens 怪物机制见 W1–W14 清单，荒野世界图见 W0–W5）
+状态：长期规则实现路线；当前基线为协议 1.160 / contract-v237 / state hash Schema v79（P31–P98 进展见 8.3，玩家流程与 Outpost 进展见 Phase 17/18，物品与变异接入见 Phase 19，Warrens 怪物机制见 W1–W14 清单，荒野世界图见 W0–W5、区块卷动、条带怪物生成、客户端同步与连续城镇）
 
 ## 1. 目的与边界
 
@@ -187,7 +187,7 @@ flowchart TD
 | 子系统 | 旧 RFB 行为 | 当前状态 | 新实现方案 |
 | --- | --- | --- | --- |
 | 多地牢 | 深度范围、守护者、主题、进入条件和特殊规则 | 已建立基础版 | contract-v63 已建立 `DungeonDefinition`、根层和共享守护者身份；后续增加进入条件、并存探索实例、重置策略和地牢级特殊规则 |
-| 荒野 | 大地图、地形、生物群落、城镇入口和旅行 | W0–W5 已建立首个地点闭环与扩展旅行 | `WorldDefinition.wilderness` 保存 99x66 原版 normal 图例/行、危险、道路、起点与 Outpost/Warrens 地点；同一地图协议已支持 132 倍耗时的世界移动、可恢复自动寻路、坐标种子 96x32 局部荒野、道路/邻格边界、habitat 怪物、昼夜光照、原版伏击、低层特殊遭遇、完整现有地形危险，以及必须返回局部入口的 Outpost/Warrens 进入与返回 |
+| 荒野 | 大地图、地形、生物群落、城镇入口和旅行 | W0–W5 与 contract-v231–v237 已建立地点闭环、分代地形、区块卷动、客户端同步及连续城镇 | `WorldDefinition.wilderness` 保存 99x66 原版 normal 图例/行、危险、道路、起点与 Outpost/Warrens 地点；同一地图协议已支持 132 倍耗时的世界移动、可恢复自动寻路、96x33 动态荒野、3×3 个 32×11 绝对区块、持久视口偏移、5×5 派生缓存、进入世界图后演化的微地形、逐区块卷动、暴露条带怪物生成、客户端临时坐标同步，以及按 `mapOrigin` 嵌入可变尺寸城镇并从边缘连续步行进出；道路、生物群系、habitat 怪物、昼夜、世界图伏击、低层特殊遭遇与地点闭环保持既有实现 |
 | 城镇 | 多城镇、访问状态、地图、昼夜和服务 | Phase 18 Gate 4 已建立首个切片 | `TownDefinition` 复用普通 floor；稳定 `demo.floor.surface` 已扩展为独立设计的 Outpost，并保存/投影访问状态，首批只开放杂货店和 Warrens |
 | 商店与家 | 库存刷新、买卖、鉴定价格、黑市、家中仓库 | Phase 18 Gate 6 与 contract-v167 已建立八店及 Home 闭环 | 八店具备持久库存、店主、价格、钱包、原子买卖、维护与 UI；Home 具备独立持久存取、负重和聚合语义。固定 Outpost 地图还缺 Shroomery；全局 shop 系统另缺不在该地图上的 Jeweler、Dragon |
 | 建筑服务 | 治疗、鉴定、附魔、重铸、任务、公会等 | 未建立 | `ServiceDefinition` 引用 effect/transaction；UI 根据服务 schema 生成表单 |

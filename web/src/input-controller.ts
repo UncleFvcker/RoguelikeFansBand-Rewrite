@@ -18,6 +18,7 @@ import {
   beginTargeting,
   moveTargetCursor,
   targetSelectionAtCursor,
+  translateTargetingState,
 } from "./targeting.ts";
 import {
   terrainInteractionCommand,
@@ -240,11 +241,40 @@ export class InputController {
 
   reconcileStatus(state: GameSnapshot | GameUpdate): void {
     this.#worldTravelDestination = state.worldTravelDestination ?? undefined;
+    const mapTranslation = "mapTranslation" in state ? state.mapTranslation : undefined;
+    if (
+      this.#localTravelDestination &&
+      this.#localTravelFloorId === state.floorId &&
+      state.mapScale === "local" &&
+      mapTranslation
+    ) {
+      this.#localTravelDestination = translatedLocalPosition(
+        this.#localTravelDestination,
+        mapTranslation,
+      );
+    }
     if (
       this.#localTravelFloorId &&
       (this.#localTravelFloorId !== state.floorId || state.mapScale === "world")
     ) {
       this.resetLocalTravel();
+    }
+    if (this.#state.targeting && mapTranslation) {
+      const translated = translateTargetingState(
+        this.#state.targeting,
+        mapTranslation,
+        state.width,
+        state.height,
+      );
+      if (translated) {
+        this.#state.targeting = translated;
+        if (
+          this.#state.targetingIntent?.type === "look" ||
+          this.#state.targetingIntent?.type === "local-travel"
+        ) {
+          this.#onLookFocusChange(translated.cursor);
+        }
+      } else this.cancelTargeting(false);
     }
     if (
       this.#state.targeting &&
@@ -670,17 +700,23 @@ export class InputController {
     this.#announce("message-local-travel-started", undefined, "system");
     for (;;) {
       const before = this.#state.status;
+      const activeDestination = this.#localTravelDestination;
       if (
         !before ||
+        !activeDestination ||
         before.mapScale !== "local" ||
         before.floorId !== this.#localTravelFloorId ||
-        samePosition(before.player.position, destination)
+        samePosition(before.player.position, activeDestination)
       ) {
         return;
       }
-      await this.#dispatch({ type: "travel-local", destination });
+      await this.#dispatch({ type: "travel-local", destination: activeDestination });
       const current = this.#state.status;
-      if (localTravelStopsAfterStep(before, current, destination)) {
+      const translatedDestination = this.#localTravelDestination;
+      if (
+        !translatedDestination ||
+        localTravelStopsAfterStep(before, current, translatedDestination)
+      ) {
         return;
       }
     }
@@ -778,6 +814,13 @@ export function localTravelStopsAfterStep(
     samePosition(current.player.position, before.player.position) ||
     samePosition(current.player.position, destination)
   );
+}
+
+export function translatedLocalPosition(position: Position, translation: Position): Position {
+  return {
+    x: position.x + translation.x,
+    y: position.y + translation.y,
+  };
 }
 
 export function autoGetStopsAfterStep(

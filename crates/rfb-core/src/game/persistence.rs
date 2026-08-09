@@ -548,7 +548,7 @@ fn item_property_knowledge_from_save(
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-struct StateHashPayloadV77<'a> {
+struct StateHashPayloadV79<'a> {
     schema_version: u16,
     revision: u32,
     turn: u32,
@@ -556,6 +556,7 @@ struct StateHashPayloadV77<'a> {
     last_command_seq: u32,
     map_scale: MapScaleDto,
     wilderness_position: Option<Position>,
+    wilderness_view_offset: Position,
     wilderness_seed: u64,
     world_travel_destination: Option<Position>,
     interface_locale: rfb_protocol::LocaleDto,
@@ -1136,7 +1137,9 @@ impl Game {
             world_id: payload.world_id,
             map_scale: payload.map_scale,
             wilderness_position,
+            wilderness_view_offset: payload.wilderness_view_offset,
             wilderness_seed: payload.wilderness_seed,
+            wilderness_terrain_cache: BTreeMap::new(),
             world_travel_destination: payload.world_travel_destination,
             interface_locale: payload.interface_locale,
             mogaminator,
@@ -1225,6 +1228,7 @@ impl Game {
             last_command_seq: self.last_command_seq,
             map_scale: self.map_scale,
             wilderness_position: self.wilderness_position,
+            wilderness_view_offset: self.wilderness_view_offset,
             wilderness_seed: self.wilderness_seed,
             world_travel_destination: self.world_travel_destination,
             interface_locale: self.interface_locale,
@@ -1289,7 +1293,7 @@ impl Game {
 
     #[must_use]
     pub fn state_hash(&self) -> String {
-        let payload = StateHashPayloadV77 {
+        let payload = StateHashPayloadV79 {
             schema_version: STATE_HASH_SCHEMA_VERSION,
             revision: self.revision,
             turn: self.turn,
@@ -1297,6 +1301,7 @@ impl Game {
             last_command_seq: self.last_command_seq,
             map_scale: self.map_scale,
             wilderness_position: self.wilderness_position,
+            wilderness_view_offset: self.wilderness_view_offset,
             wilderness_seed: self.wilderness_seed,
             world_travel_destination: self.world_travel_destination,
             interface_locale: self.interface_locale,

@@ -2,6 +2,7 @@
 
 use std::{collections::BTreeSet, fmt, str::FromStr};
 
+use rfb_content::WildernessLocationDefinition;
 use rfb_core::{CoreError, Game, load_built_in_content};
 use rfb_protocol::{
     AbilityDto, AbilityLearningDto, AbilityProgressSaveDto, CampaignStateDto, CampaignStateSaveDto,
@@ -22,7 +23,7 @@ pub mod policy;
 pub mod snapshot;
 
 pub const CONTRACT_SCHEMA_VERSION: u16 = 3;
-pub const ACTIVE_BASELINE: &str = "contract-v229";
+pub const ACTIVE_BASELINE: &str = "contract-v237";
 pub const ACTIVE_FIXTURE_DIRECTORY: &str = "active";
 pub const LEGACY_BASELINE_COMMIT: &str = "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9";
 pub const ORIGINAL_TEST_WORLD: &str = "demo.world.original-v1";
@@ -727,12 +728,24 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
             return Err(ContractError::InvalidPlayerPositionPrecondition(position));
         }
         payload.player.position = position;
-        if let Some(town) = content
-            .world(&payload.world_id)
-            .and_then(|world| world.town_id.as_deref())
-            .and_then(|town_id| content.town(town_id))
-            .filter(|town| town.floor_id == payload.current_floor_id)
-        {
+        if let Some(town) = content.world(&payload.world_id).and_then(|world| {
+            world
+                .wilderness
+                .iter()
+                .flat_map(|wilderness| &wilderness.locations)
+                .find_map(|location| match location {
+                    WildernessLocationDefinition::Town {
+                        position, town_id, ..
+                    } => content.town(town_id).filter(|town| {
+                        town.floor_id == payload.current_floor_id
+                            || payload.wilderness_position.is_some_and(|current| {
+                                current.x == i32::from(position.x)
+                                    && current.y == i32::from(position.y)
+                            })
+                    }),
+                    WildernessLocationDefinition::Dungeon { .. } => None,
+                })
+        }) {
             for shop_id in &town.shop_ids {
                 let Some(shop) = content.shop(shop_id) else {
                     continue;

@@ -1,6 +1,6 @@
 # RFB CoreTransport 协议 v1
 
-状态：协议 1.158、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
+状态：协议 1.160、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
 
 ## 1. 适用边界
 
@@ -420,3 +420,42 @@ G4 以协议 1.156、state hash Schema v76 和 contract-v219 完成验收，不�
 造成过一次真实理智冲击，供重新进入视野时的 `1/5` 门使用。理智后果通过既有
 状态、属性、地图知识和变异投影表达；没有新增通用事件 outcome DTO。该标记进入
 state-hash Schema v78，save 容器保持 v1，基线为 contract-v229。
+
+contract-v230 纠正出生城镇与局部荒野的初始怪物分配：城镇出生层不再调用荒野
+分配，道路/非道路荒野分别采用原版 4/10 次初始分配。协议 `1.158`、State Hash
+Schema `v78` 和 save v1 均不变。
+
+协议 1.159 为 `SavePayloadV1` 增加必填 `wildernessViewOffset`，以 `(-1..=1,
+-1..=1)` 表示玩家所在世界格相对 3×3 荒野视口中心的区块偏移；字段进入
+state-hash Schema v79。动态荒野层固定为 96×33，即 3×3 个 32×11 区块；
+城镇与地下城尺寸不变。contract-v231 只建立持久坐标模型，实际逐区块卷动仍属
+后续实现；save 容器保持 v1，旧开发存档不兼容。
+
+contract-v232 不改变协议 DTO。动态荒野把世界格与视口偏移映射为绝对 32×11
+区块，最多缓存视口周围 5×5 个派生地形区块；缓存不保存、不投影，也不进入
+State Hash。成功进入世界地图时清空缓存并以固定奇数步长推进既有
+`wildernessSeed`，下一次局部荒野使用新一代微地形。协议保持 1.159，State
+Hash Schema 保持 v79，save 容器保持 v1。
+
+协议 1.160 为 `GameUpdate` 增加可选 `mapTranslation: Position`。动态荒野视口
+每平移一个区块便投影 `(-32, 0)`、`(32, 0)`、`(0, -11)`、`(0, 11)` 或对应
+对角组合，供客户端同步本地自动旅行目标；未发生视口平移时省略。地图格仍通过
+既有 `changedCells` 与 `changedVisualCells` 全量刷新。contract-v233 不增加存档
+字段，State Hash Schema 保持 v79。
+
+contract-v234 不改变协议 DTO。普通荒野卷动只在新暴露条带补充怪物，伏击判定
+与激活仅允许发生在世界地图；进入伏击后仍使用既有局部战斗地图。协议保持
+1.160，State Hash Schema 保持 v79。
+
+contract-v235 复用协议 1.160 已有的 `GameUpdate.mapTranslation`，让客户端同步
+查看、瞄准和本地旅行的临时坐标，并在打开对象列表时重建坐标、按稳定对象 ID
+保留选择。地图继续使用全量 changed 集合，不增加分块渲染或动画协议。
+
+contract-v236 不改变协议 DTO。普通荒野卷动在正规化后真正跨入城镇世界格时，
+直接投影既有独立城镇 FloorState；该次更新不发送 `mapTranslation`。协议保持
+1.160，State Hash Schema 保持 v79。
+
+contract-v237 不改变协议 DTO。可变尺寸城镇以 `mapOrigin` 嵌入同一 96×33 连续
+荒野视口；卷动继续使用既有 `mapTranslation`，Town、Shop、Home 与任务设施继续
+使用既有 DTO。城镇地表状态在活动视口与既有 `storedFloors` 之间裁剪同步，未新增
+存档字段；协议保持 1.160，State Hash Schema 保持 v79，save 容器保持 v1。

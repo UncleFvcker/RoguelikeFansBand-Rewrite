@@ -558,6 +558,7 @@ impl Game {
         &self,
         target: FloorTransitionTarget,
         abandon_task: bool,
+        source_floor_id: Option<&str>,
     ) -> Result<Option<FloorTransitionPlan>, CoreError> {
         let world = self
             .content
@@ -569,7 +570,8 @@ impl Game {
             .procedural_floors
             .iter()
             .find(|floor| floor.id == target.floor_id);
-        if self.current_floor_id == *initial_floor_id
+        let from_floor_id = source_floor_id.unwrap_or(&self.current_floor_id).to_owned();
+        if from_floor_id == *initial_floor_id
             && let Some(target_floor) =
                 target_definition.filter(|floor| floor.lifecycle == FloorLifecycle::Dungeon)
         {
@@ -606,7 +608,6 @@ impl Game {
             }
         }
 
-        let from_floor_id = self.current_floor_id.clone();
         let from_dungeon_instance_id = self.current_dungeon_instance_id.clone();
         let source_definition = world
             .procedural_floors
@@ -849,9 +850,16 @@ impl Game {
             .content
             .world(&self.world_id)
             .expect("active world must remain available");
+        let embedded_town_floor_id = self
+            .is_wilderness_floor()
+            .then(|| self.current_town().map(|town| town.floor_id.clone()))
+            .flatten();
+        let source_floor_id = embedded_town_floor_id
+            .as_deref()
+            .unwrap_or(&self.current_floor_id);
         let Some(target) = stair_transition_target(
             world,
-            &self.current_floor_id,
+            source_floor_id,
             &terrain_id,
             terrain,
             &self.floor_connections,
@@ -861,7 +869,7 @@ impl Game {
         else {
             return Ok(None);
         };
-        if self.current_floor_id == world.initial_floor_id
+        if source_floor_id == world.initial_floor_id
             && let Some(target_floor) = world.procedural_floors.iter().find(|floor| {
                 floor.id == target.floor_id && floor.lifecycle == FloorLifecycle::Dungeon
             })
@@ -887,12 +895,19 @@ impl Game {
                 return Ok(None);
             }
         }
-        self.transition_floor(
-            target.floor_id,
-            target.arrival_connection_id,
-            target.departure_connection_id,
-            abandon_task,
-        )
+        let Some(plan) =
+            self.plan_floor_transition(target, abandon_task, embedded_town_floor_id.as_deref())?
+        else {
+            return Ok(None);
+        };
+        if embedded_town_floor_id.is_some() {
+            self.activate_embedded_town_floor()?;
+        }
+        let outcome = self.commit_floor_transition(plan)?;
+        if self.current_town().is_some() {
+            self.initialize_continuous_wilderness_surface()?;
+        }
+        Ok(Some(outcome))
     }
 
     pub(super) fn transition_floor(
@@ -909,6 +924,7 @@ impl Game {
                 departure_connection_id,
             },
             abandon_task,
+            None,
         )?
         else {
             return Ok(None);
@@ -1416,6 +1432,7 @@ mod tests {
                     departure_connection_id: None,
                 },
                 false,
+                None,
             )
             .expect("valid dungeon entry should plan")
             .expect("valid dungeon entry should be available");
@@ -1463,6 +1480,7 @@ mod tests {
                     departure_connection_id: None,
                 },
                 false,
+                None,
             )
             .expect("retake limit should be normal unavailability");
 

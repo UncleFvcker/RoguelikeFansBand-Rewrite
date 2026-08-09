@@ -65,6 +65,11 @@ interface SavePayloadV1 {
   turn: number;
   worldTick: number;
   lastCommandSeq: number;
+  mapScale: "local" | "world";
+  wildernessPosition?: Position;
+  wildernessViewOffset: Position;
+  wildernessSeed: number;
+  worldTravelDestination?: Position;
   terrain: TerrainSaveDto;
   player: PlayerSaveDto;
   entities: ActorSaveDto[];
@@ -330,3 +335,36 @@ contract-v216 不改变存档结构。每个角色继续在 `MogaminatorSaveDto`
 协议 1.158 为每个 actor 保存可选的 `eldritchHorrorTriggered`。字段只区分首次
 理智冲击与同一怪物的低概率重触发，不保存派生可见性或新的理智数值。它进入
 state hash Schema v78；save 容器仍为 v1，不兼容旧开发存档。
+
+协议 1.159 增加必填 `wildernessViewOffset: Position`。两个分量都必须位于
+`-1..=1`；非零值只允许出现在 local 尺度的动态荒野层。该状态与既有
+`wildernessPosition`、`wildernessSeed` 一起保存并进入 state hash Schema v79。
+动态荒野层尺寸固定为 96×33，按 32×11 划分为 3×3 区块；save 容器仍为 v1，
+旧开发存档不兼容。
+
+contract-v232 将 `wildernessSeed` 解释为当前荒野代数种子。每次成功进入世界
+地图时以 `wrapping_add(0x9E3779B97F4A7C15)` 推进一次并照常保存；同一代的
+绝对区块可从 seed 与坐标重建。最多 5×5 个区块的运行时地形缓存不写入 payload，
+读档后为空且不改变重建结果；存档与 State Hash Schema 版本均不变化。
+
+contract-v233 使用既有 `wildernessPosition`、`wildernessViewOffset` 与
+`wildernessSeed` 保存卷动后的权威视口。重叠地形、探索状态和仍在视口内的动态
+对象继续落入既有活动层字段；派生缓存与单次更新的 `mapTranslation` 均不保存。
+save 容器保持 v1，State Hash Schema 保持 v79。
+
+contract-v234 的卷动怪物轮数由初始轮数、新暴露绝对区块集合和固定 salt 直接
+计算；不保存小数余数、条带生成状态或额外 RNG。伏击继续只使用既有世界地图
+状态。save 容器保持 v1，State Hash Schema 保持 v79。
+
+contract-v235 只同步客户端临时光标、旅行目标和对象列表选择；这些状态不写入
+存档，也不进入 State Hash。save 容器保持 v1，State Hash Schema 保持 v79。
+
+contract-v236 在卷动进入城镇时把 `wildernessViewOffset` 归零，继续保存正规化后
+的城镇世界坐标和既有独立城镇 FloorState。派生荒野缓存不保存，直接进入城镇也
+不推进 `wildernessSeed`；save 容器保持 v1，State Hash Schema 保持 v79。
+
+contract-v237 取消本地步行进入城镇时的独立层切换。活动地表继续保存为既有动态
+荒野层，城镇原尺寸地形、探索、实体、地面物品与金币仍复用 `storedFloors` 中的
+既有 `FloorState`，按可见矩形与活动视口双向同步。`wildernessPosition`、
+`wildernessViewOffset` 和 `wildernessSeed` 已足以恢复视口；未新增城镇缓存或
+`insideTown` 字段。save 容器保持 v1，State Hash Schema 保持 v79。

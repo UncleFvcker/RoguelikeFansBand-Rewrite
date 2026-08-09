@@ -5466,6 +5466,16 @@
           "$ref": "#/$defs/MapScaleDto",
           "default": "local"
         },
+        "mapTranslation": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "mogaminator": {
           "$ref": "#/$defs/MogaminatorDto"
         },

@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.158";
+pub const PROTOCOL_VERSION: &str = "1.160";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -2943,6 +2943,8 @@ pub struct GameUpdate {
     #[serde(default)]
     pub map_scale: MapScaleDto,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub map_translation: Option<Position>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub world_travel_destination: Option<Position>,
     pub width: u16,
     pub height: u16,
@@ -3704,6 +3706,7 @@ pub struct SavePayloadV1 {
     pub map_scale: MapScaleDto,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub wilderness_position: Option<Position>,
+    pub wilderness_view_offset: Position,
     #[serde(default)]
     pub wilderness_seed: u64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -3820,6 +3823,7 @@ mod tests {
         revision: u32,
         turn: u32,
         last_command_seq: u32,
+        wilderness_view_offset: Position,
         interface_locale: LocaleDto,
         mogaminator: MogaminatorSaveDto,
         terrain: TerrainSaveDto,
@@ -4057,6 +4061,7 @@ mod tests {
             revision: 2,
             turn: 2,
             last_command_seq: 2,
+            wilderness_view_offset: Position::default(),
             interface_locale: LocaleDto::ZhCn,
             mogaminator: MogaminatorSaveDto {
                 enabled: false,
@@ -4256,6 +4261,17 @@ mod tests {
         current["entities"][0]["nice"] = serde_json::json!(false);
         current["player"]["activeMutationIds"] = serde_json::json!([]);
         current["player"]["lockedMutationIds"] = serde_json::json!([]);
+        let mut missing_view_offset = current.clone();
+        missing_view_offset
+            .as_object_mut()
+            .expect("save fixture must be an object")
+            .remove("wildernessViewOffset");
+        let encoded =
+            to_msgpack(&missing_view_offset).expect("missing-field payload should encode");
+        assert!(
+            from_msgpack::<SavePayloadV1>(&encoded).is_err(),
+            "development saves without the authoritative view offset must be rejected"
+        );
         let encoded = to_msgpack(&current).expect("current payload should encode");
         let decoded: SavePayloadV1 =
             from_msgpack(&encoded).expect("current actor state should decode");

@@ -743,7 +743,7 @@ fn accepted_external_task_binds_while_inside_its_dungeon_depth() {
 
     place_player_on_terrain(&mut game, "demo.terrain.stairs-up");
     dispatch_next(&mut game, GameCommand::TraverseStairs);
-    assert_eq!(game.current_floor_id, "demo.floor.surface");
+    assert_eq!(game.current_floor_id, wilderness::WILDERNESS_FLOOR_ID);
     assert_eq!(game.task_states[task_id].status, TaskStatusKindDto::Failed);
     assert!(game.task_states[task_id].active_floor_id.is_none());
 }
@@ -889,7 +889,7 @@ fn clearing_thieves_hideout_closes_the_floor_without_granting_the_reward() {
     game.player.position = Position { x: 1, y: 4 };
     let returned = dispatch_next(&mut game, GameCommand::TraverseStairs);
 
-    assert_eq!(game.current_floor_id, "demo.floor.surface");
+    assert_eq!(game.current_floor_id, wilderness::WILDERNESS_FLOOR_ID);
     assert_eq!(
         game.task_states["demo.task.thieves-hideout"].status,
         TaskStatusKindDto::RewardAvailable
@@ -1198,7 +1198,13 @@ fn leaving_pest_control_incomplete_fails_and_discards_the_blocked_floor() {
         game.task_states["demo.task.pest-control"].status,
         TaskStatusKindDto::Failed
     );
-    assert!(game.stored_floors.is_empty());
+    assert_eq!(
+        game.stored_floors
+            .keys()
+            .map(String::as_str)
+            .collect::<Vec<_>>(),
+        ["demo.floor.surface"]
+    );
 }
 
 #[test]
@@ -1249,7 +1255,7 @@ fn warrens_journey_conquers_returns_retires_and_round_trips() {
         .set(DamageType::Physical, ResistanceLevel::Immune);
 
     assert_eq!(game.world_id, WARRENS_JOURNEY_WORLD_ID);
-    assert_eq!(game.current_floor_id, "demo.floor.surface");
+    assert_eq!(game.current_floor_id, wilderness::WILDERNESS_FLOOR_ID);
     assert_eq!(game.campaign_state.status, CampaignStatusDto::Active);
 
     for depth in 1..=9 {
@@ -1360,7 +1366,7 @@ fn warrens_journey_conquers_returns_retires_and_round_trips() {
     }
     place_player_on_terrain(&mut restored, "demo.terrain.stairs-up");
     let surface = dispatch_next(&mut restored, GameCommand::TraverseStairs);
-    assert_eq!(surface.floor_id, "demo.floor.surface");
+    assert_eq!(surface.floor_id, wilderness::WILDERNESS_FLOOR_ID);
     assert_eq!(surface.campaign.status, CampaignStatusDto::Victorious);
 
     let retirement = dispatch_next(&mut restored, GameCommand::Retire);

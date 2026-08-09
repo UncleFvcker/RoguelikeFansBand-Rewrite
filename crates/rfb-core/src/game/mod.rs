@@ -200,7 +200,7 @@ pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 78;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 79;
 pub const WARRENS_JOURNEY_WORLD_ID: &str = "demo.world.warrens-journey";
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const VISIBILITY_RADIUS: i32 = 8;
@@ -755,7 +755,9 @@ pub struct Game {
     world_id: String,
     map_scale: MapScaleDto,
     wilderness_position: Option<Position>,
+    wilderness_view_offset: Position,
     wilderness_seed: u64,
+    wilderness_terrain_cache: BTreeMap<Position, Vec<String>>,
     world_travel_destination: Option<Position>,
     interface_locale: LocaleDto,
     mogaminator: MogaminatorState,
@@ -1049,7 +1051,9 @@ impl Game {
             world_id: world_id.to_owned(),
             map_scale: MapScaleDto::Local,
             wilderness_position,
+            wilderness_view_offset: Position::default(),
             wilderness_seed: seed,
+            wilderness_terrain_cache: BTreeMap::new(),
             world_travel_destination: None,
             interface_locale: LocaleDto::ZhCn,
             mogaminator,
@@ -1117,8 +1121,8 @@ impl Game {
         }
         game.entities = initial_entities;
         game.player.hp = game.effective_player_max_hp();
-        game.initialize_surface_monsters();
         game.initialize_carried_loot()?;
+        game.initialize_continuous_wilderness_surface()?;
         game.refresh_invisible_visibility(true, &BTreeMap::new());
         game.reveal_current_visibility();
         Ok(game)
@@ -1173,6 +1177,7 @@ impl Game {
         let floor_before_command = self.current_floor_id.clone();
         let visible_eldritch_horrors_before_action = self.visible_eldritch_horror_entity_ids();
         let wilderness_position_before_command = self.wilderness_position;
+        let wilderness_view_offset_before_command = self.wilderness_view_offset;
         let light_radius_before_command = self.player_light_radius();
         let see_invisible_sources_before_command = self.player_see_invisible_sources();
         let entity_positions_before_command = self
@@ -1192,6 +1197,7 @@ impl Game {
         let mut changed = BTreeSet::new();
         let mut events = Vec::new();
         let mut removed_entities = Vec::new();
+        let mut map_translation = None;
         let mut mogaminator_diagnostics = Vec::new();
         self.resources_touched.clear();
         let depleted_device_use = matches!(
@@ -1566,6 +1572,8 @@ impl Game {
                 if cancel_recall && self.recall_is_active() {
                     self.cancel_recall();
                 }
+                self.store_visible_town_states();
+                self.advance_wilderness_generation();
                 self.map_scale = MapScaleDto::World;
             }
             GameAction::LeaveWorldMap => {
@@ -1808,38 +1816,52 @@ impl Game {
                             |can_enter| !can_enter,
                         )
                     };
-                    let crossed_wilderness_edge = movement_blocked
-                        && self.index(target).is_none()
-                        && self.move_across_wilderness_edge(direction)?;
-                    if crossed_wilderness_edge {
-                        if self.wilderness_is_daytime() && self.wilderness_has_interesting_site() {
-                            events.push(DomainEvent::WildernessInterestingDiscovery);
+                    if movement_blocked {
+                        events.push(DomainEvent::MoveBlocked);
+                    } else if let Some(index) = self
+                        .entities
+                        .iter()
+                        .position(|entity| entity.position == target)
+                    {
+                        changed.insert(target);
+                        if self.actor_is_player_side(&self.entities[index]) {
+                            events.push(DomainEvent::MoveBlocked);
+                        } else if self.player_fear_blocks_melee(index) {
+                            events.push(DomainEvent::PlayerFearBlocked {
+                                status_kind_id: STATUS_FEAR.to_owned(),
+                            });
+                        } else {
+                            self.resolve_player_melee(
+                                index,
+                                &mut events,
+                                &mut changed,
+                                &mut removed_entities,
+                            )?;
                         }
                     } else {
-                        if movement_blocked {
-                            events.push(DomainEvent::MoveBlocked);
-                        } else if let Some(index) = self
-                            .entities
-                            .iter()
-                            .position(|entity| entity.position == target)
+                        match self
+                            .scroll_wilderness_for_player_entry(target, &mut removed_entities)?
                         {
-                            changed.insert(target);
-                            if self.actor_is_player_side(&self.entities[index]) {
+                            wilderness::WildernessPlayerEntry::Blocked => {
                                 events.push(DomainEvent::MoveBlocked);
-                            } else if self.player_fear_blocks_melee(index) {
-                                events.push(DomainEvent::PlayerFearBlocked {
-                                    status_kind_id: STATUS_FEAR.to_owned(),
-                                });
-                            } else {
-                                self.resolve_player_melee(
-                                    index,
-                                    &mut events,
-                                    &mut changed,
-                                    &mut removed_entities,
-                                )?;
                             }
-                        } else {
-                            events.extend(self.relocate_player(target, &mut changed));
+                            wilderness::WildernessPlayerEntry::Local {
+                                target,
+                                crossed_world_cell,
+                                translation,
+                            } => {
+                                map_translation = translation;
+                                if crossed_world_cell
+                                    && self.wilderness_is_daytime()
+                                    && self.wilderness_has_interesting_site()
+                                {
+                                    events.push(DomainEvent::WildernessInterestingDiscovery);
+                                }
+                                events.extend(self.relocate_player(target, &mut changed));
+                                if let Some(translation) = translation {
+                                    self.populate_scrolled_wilderness(translation);
+                                }
+                            }
                         }
                     }
                 }
@@ -2066,7 +2088,8 @@ impl Game {
             && (self.is_wilderness_floor()
                 || floor_before_command == wilderness::WILDERNESS_FLOOR_ID)
             && (self.current_floor_id != floor_before_command
-                || self.wilderness_position != wilderness_position_before_command);
+                || self.wilderness_position != wilderness_position_before_command
+                || self.wilderness_view_offset != wilderness_view_offset_before_command);
         let map_projection_changed = map_scale_changed
             || wilderness_local_projection_changed
             || current_dimensions != previous_dimensions;
@@ -2100,6 +2123,7 @@ impl Game {
             world_tick: self.world_tick,
             command_seq: self.last_command_seq,
             map_scale: self.map_scale,
+            map_translation,
             world_travel_destination: self.world_travel_destination,
             width: current_dimensions.0,
             height: current_dimensions.1,
@@ -5140,6 +5164,7 @@ impl Game {
         {
             mount.position = destination;
         }
+        self.mark_current_town_visited();
         self.mark_shop_visited_at_player()
             .expect("shop entry must preserve validated item allocation");
         self.maintain_shop_at_player()

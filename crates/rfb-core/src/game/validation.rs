@@ -347,18 +347,21 @@ impl Game {
         {
             return Err(CoreError::InvalidSave("floor identity is invalid"));
         }
+        if !(-1..=1).contains(&self.wilderness_view_offset.x)
+            || !(-1..=1).contains(&self.wilderness_view_offset.y)
+            || (self.wilderness_view_offset != Position::default()
+                && (world.wilderness.is_none() || self.wilderness_position.is_none()))
+        {
+            return Err(CoreError::InvalidSave("wilderness view offset is invalid"));
+        }
         if self.is_wilderness_floor()
             && (!self
                 .stored_floors
                 .values()
                 .any(|floor| self.town_for_floor(&floor.id).is_some())
                 || self.current_dungeon_instance_id.is_some()
-                || self.width != world.width
-                || self.height != world.height
-                || (self.map_scale == rfb_protocol::MapScaleDto::Local
-                    && self
-                        .wilderness_position
-                        .is_some_and(|position| self.wilderness_position_is_town(position))))
+                || self.width != wilderness::WILDERNESS_VIEW_WIDTH
+                || self.height != wilderness::WILDERNESS_VIEW_HEIGHT)
         {
             return Err(CoreError::InvalidSave("local wilderness state is invalid"));
         }
@@ -482,7 +485,10 @@ impl Game {
                         .content
                         .shop(shop_id)
                         .expect("validated town shop must remain available");
-                    self.player.position == position_from_content(shop.entrance_position)
+                    self.town_local_to_active_position(
+                        &town.id,
+                        position_from_content(shop.entrance_position),
+                    ) == Some(self.player.position)
                         && !self
                             .shop_states
                             .get(shop_id)
@@ -496,7 +502,10 @@ impl Game {
                         .town_facility(facility_id)
                         .expect("validated town facility must remain available");
                     facility.category == rfb_content::TownFacilityCategory::Home
-                        && self.player.position == position_from_content(facility.entrance_position)
+                        && self.town_local_to_active_position(
+                            &town.id,
+                            position_from_content(facility.entrance_position),
+                        ) == Some(self.player.position)
                         && !self
                             .home_states
                             .get(

@@ -14,6 +14,7 @@ import {
   isObjectListShortcut,
   localTravelStopsAfterStep,
   nextTravelConnectionPosition,
+  translatedLocalPosition,
 } from "./input-controller.ts";
 import { AppState } from "./app-state.ts";
 
@@ -205,6 +206,60 @@ test("local travel stops after damage, a visible enemy, or blocked movement", ()
     true,
   );
   assert.equal(localTravelStopsAfterStep(before, before, destination), true);
+});
+
+test("local travel destinations follow wilderness map translations", () => {
+  assert.deepEqual(translatedLocalPosition({ x: 80, y: 25 }, { x: -32, y: -11 }), {
+    x: 48,
+    y: 14,
+  });
+});
+
+test("look and targeting cursors follow wilderness map translations", () => {
+  const state = new AppState();
+  const focused = [];
+  const controller = new InputController({
+    state,
+    dom: {},
+    localization: {},
+    window: {},
+    getInputPreset: () => "vi",
+    getZoom: () => 1,
+    dispatch: async () => {},
+    describeLook: () => "",
+    openObjectList: () => {},
+    openMogaminator: () => {},
+    onLookOrTargeting: () => {},
+    onLookFocusChange: (position) => focused.push(position),
+    announce: () => {},
+  });
+  const targetSpec = {
+    modes: ["position"],
+    range: 80,
+    requiresLineOfEffect: false,
+  };
+  const update = {
+    mapScale: "local",
+    mapTranslation: { x: -32, y: 0 },
+    width: 96,
+    height: 33,
+    floorId: "core.floor.wilderness",
+    worldTravelDestination: null,
+    player: { position: { x: 32, y: 16 }, projectileProfile: { targetSpec } },
+  };
+
+  for (const intent of [{ type: "look" }, { type: "projectile" }]) {
+    state.targeting = {
+      origin: { x: 64, y: 16 },
+      cursor: { x: 70, y: 20 },
+      spec: targetSpec,
+    };
+    state.targetingIntent = intent;
+    controller.reconcileStatus(update);
+    assert.deepEqual(state.targeting?.origin, { x: 32, y: 16 });
+    assert.deepEqual(state.targeting?.cursor, { x: 38, y: 20 });
+  }
+  assert.deepEqual(focused, [{ x: 38, y: 20 }]);
 });
 
 test("auto-get locks one target, then requests the next Core target", async () => {

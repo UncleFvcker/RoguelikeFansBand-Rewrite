@@ -2682,6 +2682,7 @@ dependencies = [
 name = "rfb-contract"
 version = "0.1.0"
 dependencies = [
+ "rfb-content",
  "rfb-core",
  "rfb-legacy-import",
  "rfb-protocol",

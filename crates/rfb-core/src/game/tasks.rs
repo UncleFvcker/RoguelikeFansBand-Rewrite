@@ -508,8 +508,10 @@ fn task_service_accessible(game: &Game, facility_id: &str) -> bool {
     facility.category == TownFacilityCategory::QuestGiver
         && facility.town_id == town.id
         && town.facility_ids.contains(&facility.id)
-        && game.current_floor_id == town.floor_id
-        && game.player.position == position_from_content(facility.entrance_position)
+        && game.town_local_to_active_position(
+            &town.id,
+            position_from_content(facility.entrance_position),
+        ) == Some(game.player.position)
 }
 
 fn reward_item(

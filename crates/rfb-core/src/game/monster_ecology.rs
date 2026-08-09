@@ -907,27 +907,23 @@ impl Game {
         None
     }
 
-    pub(super) fn initialize_surface_monsters(&mut self) {
-        let Some(allocation) = self
-            .content
-            .world(&self.world_id)
-            .and_then(|world| world.surface_actor_allocation)
-        else {
-            return;
-        };
-        self.initialize_surface_monsters_with(allocation.rolls, allocation.level, "surface");
-    }
-
-    pub(super) fn initialize_wilderness_monsters(
+    pub(super) fn initialize_wilderness_monsters_in_positions(
         &mut self,
         level: u16,
         rolls: u16,
         spawn_kind: &str,
+        allowed_positions: &BTreeSet<Position>,
     ) {
-        self.initialize_surface_monsters_with(rolls, level, spawn_kind);
+        self.initialize_surface_monsters_with(rolls, level, spawn_kind, Some(allowed_positions));
     }
 
-    fn initialize_surface_monsters_with(&mut self, rolls: u16, level: u16, spawn_kind: &str) {
+    fn initialize_surface_monsters_with(
+        &mut self,
+        rolls: u16,
+        level: u16,
+        spawn_kind: &str,
+        allowed_positions: Option<&BTreeSet<Position>>,
+    ) {
         let mut occupied = self
             .entities
             .iter()
@@ -954,7 +950,8 @@ impl Game {
                     })
                 })
                 .filter(|position| {
-                    !occupied.contains(position)
+                    allowed_positions.is_none_or(|allowed| allowed.contains(position))
+                        && !occupied.contains(position)
                         && rfb_distance(*position, self.player.position) > 10
                         && terrain_at_generated_position(
                             &self.content,
@@ -1006,12 +1003,14 @@ impl Game {
             );
             let daytime = self.wilderness_is_daytime();
             members.retain(|member| {
-                let eligible = self
-                    .content
-                    .actor(&member.kind_id)
-                    .is_some_and(|definition| {
-                        actor_matches_wilderness_daytime(definition, daytime)
-                    });
+                let eligible = allowed_positions
+                    .is_none_or(|allowed| allowed.contains(&member.position))
+                    && self
+                        .content
+                        .actor(&member.kind_id)
+                        .is_some_and(|definition| {
+                            actor_matches_wilderness_daytime(definition, daytime)
+                        });
                 if !eligible {
                     occupied.remove(&member.position);
                 }
@@ -1039,7 +1038,8 @@ impl Game {
             } else {
                 self.current_floor_id.clone()
             };
-            let leader_id = format!("{surface_id}.{spawn_kind}.{}", ordinal + 1);
+            let leader_id =
+                self.ecology_entity_id(&format!("{surface_id}.{spawn_kind}.{}", ordinal + 1));
             let pack_id = format!("{leader_id}.pack");
             let mut leader = spawn_actor_from_definition(
                 &mut self.rng,

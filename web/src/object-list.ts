@@ -122,6 +122,12 @@ export class ObjectListPanel {
     } else this.#renderStairsToggle();
   }
 
+  reconcileStatus(): void {
+    if (!this.#dom.dialog.open) return;
+    this.#render();
+    this.#focusSelected();
+  }
+
   readonly #close = (): void => this.close();
 
   readonly #toggleStairs = (): void => {

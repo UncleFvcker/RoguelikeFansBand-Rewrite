@@ -94,6 +94,14 @@ fn outpost_shops_are_projected_from_authoritative_content() {
 }
 
 #[test]
+fn birth_town_starts_without_surface_monsters() {
+    let game = Game::new_warrens_journey_with_build(0, "demo.build.warrior")
+        .expect("Warrens game should start");
+
+    assert!(game.entities.is_empty());
+}
+
+#[test]
 fn outpost_temple_has_walkable_space_on_both_sides_and_to_the_south() {
     let game = Game::new_warrens_journey_with_build(42, "demo.build.warrior")
         .expect("Warrens game should start");
@@ -232,7 +240,7 @@ fn anambar_home_uses_the_outpost_home_inventory() {
     );
     game.wilderness_position = Some(Position { x: 26, y: 39 });
     dispatch_next(&mut game, GameCommand::LeaveWorldMap);
-    assert_eq!(game.current_floor_id, "demo.floor.anambar");
+    assert_eq!(game.current_floor_id, wilderness::WILDERNESS_FLOOR_ID);
     assert_eq!(game.home_states.len(), 1);
     assert!(game.home_states.contains_key(HOME_ID));
     let town_snapshot = game.snapshot();
@@ -250,7 +258,7 @@ fn anambar_home_uses_the_outpost_home_inventory() {
             .any(|shop_id| shop_id.starts_with("demo.shop.anambar-"))
     );
 
-    game.player.position = Position { x: 18, y: 9 };
+    game.player.position = Position { x: 45, y: 15 };
     game.mark_shop_visited_at_player().unwrap();
     let inn = projected_shop(&game.snapshot().shops, ANAMBAR_INN_ID).clone();
     assert!(inn.visited && inn.player_at_entrance && !inn.stock.is_empty());
@@ -263,7 +271,7 @@ fn anambar_home_uses_the_outpost_home_inventory() {
         .contains(&item.kind_id.as_str())
     }));
 
-    game.player.position = Position { x: 10, y: 9 };
+    game.player.position = Position { x: 37, y: 15 };
     game.mark_shop_visited_at_player().unwrap();
     let home = game
         .snapshot()
@@ -287,7 +295,7 @@ fn anambar_home_uses_the_outpost_home_inventory() {
 
     assert!(game.home_states[HOME_ID].inventory.is_empty());
     let restored = Game::from_save(game.to_save()).expect("shared Home should round-trip");
-    assert_eq!(restored.current_floor_id, "demo.floor.anambar");
+    assert_eq!(restored.current_floor_id, wilderness::WILDERNESS_FLOOR_ID);
     assert_eq!(restored.home_states, game.home_states);
 }
 

@@ -923,6 +923,7 @@ impl Game {
                 WildernessLocationDefinition::Town {
                     position: candidate,
                     town_id,
+                    ..
                 } if position_from_content(*candidate) == position => Some(WildernessLocationDto {
                     kind: WildernessLocationKindDto::Town,
                     id: town_id.clone(),
@@ -1149,7 +1150,12 @@ impl Game {
             .filter_map(|facility_id| self.content.town_facility(facility_id))
             .filter(|facility| facility.category == TownFacilityCategory::QuestGiver)
             .map(|facility| {
-                let entrance_position = position_from_content(facility.entrance_position);
+                let entrance_position = self
+                    .town_local_to_active_position(
+                        &town.id,
+                        position_from_content(facility.entrance_position),
+                    )
+                    .expect("current town task service must retain an active position");
                 let player_at_entrance = self.player.position == entrance_position;
                 let mut tasks = if player_at_entrance {
                     facility

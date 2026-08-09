@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
 use crate::*;
 
@@ -123,7 +123,9 @@ fn validate_wilderness(
     let mut location_dungeon_ids = BTreeSet::new();
     for location in &wilderness.locations {
         match location {
-            WildernessLocationDefinition::Town { position, town_id } => {
+            WildernessLocationDefinition::Town {
+                position, town_id, ..
+            } => {
                 validate_definition_id(town_id, "town")?;
                 if !position_is_inside(*position)
                     || !towns.contains_key(town_id)
@@ -145,6 +147,184 @@ fn validate_wilderness(
                 }
             }
         }
+    }
+    Ok(())
+}
+
+fn wilderness_legend_at(
+    wilderness: &WildernessDefinition,
+    position: ContentPosition,
+) -> Option<&WildernessLegendEntry> {
+    let symbol = wilderness
+        .rows
+        .get(usize::from(position.y))?
+        .as_bytes()
+        .get(usize::from(position.x))?;
+    wilderness
+        .legend
+        .iter()
+        .find(|entry| entry.symbol.as_bytes() == [*symbol])
+}
+
+fn wilderness_neighbor_is_road(
+    wilderness: &WildernessDefinition,
+    position: ContentPosition,
+    dx: i32,
+    dy: i32,
+) -> bool {
+    let x = i32::from(position.x) + dx;
+    let y = i32::from(position.y) + dy;
+    let (Ok(x), Ok(y)) = (u16::try_from(x), u16::try_from(y)) else {
+        return false;
+    };
+    wilderness_legend_at(wilderness, ContentPosition { x, y }).is_some_and(|entry| entry.road)
+}
+
+fn town_surface_road_cell(
+    wilderness: &WildernessDefinition,
+    world_position: ContentPosition,
+    position: ContentPosition,
+) -> bool {
+    if !wilderness_legend_at(wilderness, world_position).is_some_and(|entry| entry.road) {
+        return false;
+    }
+    let center_x = WILDERNESS_WORLD_CELL_WIDTH / 2;
+    let center_y = WILDERNESS_WORLD_CELL_HEIGHT / 2;
+    let on_vertical = position.x.abs_diff(center_x) <= 1;
+    let on_horizontal = position.y.abs_diff(center_y) <= 1;
+    (on_vertical
+        && ((position.y <= center_y
+            && wilderness_neighbor_is_road(wilderness, world_position, 0, -1))
+            || (position.y >= center_y
+                && wilderness_neighbor_is_road(wilderness, world_position, 0, 1))))
+        || (on_horizontal
+            && ((position.x <= center_x
+                && wilderness_neighbor_is_road(wilderness, world_position, -1, 0))
+                || (position.x >= center_x
+                    && wilderness_neighbor_is_road(wilderness, world_position, 1, 0))))
+        || (on_vertical && on_horizontal)
+}
+
+#[allow(clippy::too_many_arguments)]
+fn validate_town_surface_placement(
+    wilderness: &WildernessDefinition,
+    world_position: ContentPosition,
+    map_origin: ContentPosition,
+    town_width: u16,
+    town_height: u16,
+    town_fill_terrain_id: &str,
+    town_border_terrain_id: &str,
+    town_terrain: &BTreeMap<ContentPosition, &str>,
+    terrain_walkability: &BTreeMap<String, bool>,
+    terrain_tags: &BTreeMap<String, BTreeSet<String>>,
+    town_id: &str,
+) -> Result<(), ContentError> {
+    if u32::from(map_origin.x) + u32::from(town_width) > u32::from(WILDERNESS_WORLD_CELL_WIDTH)
+        || u32::from(map_origin.y) + u32::from(town_height)
+            > u32::from(WILDERNESS_WORLD_CELL_HEIGHT)
+    {
+        return Err(ContentError::InvalidTown(town_id.to_owned()));
+    }
+
+    let surface_width = usize::from(WILDERNESS_WORLD_CELL_WIDTH);
+    let surface_height = usize::from(WILDERNESS_WORLD_CELL_HEIGHT);
+    let mut walkable = vec![false; surface_width * surface_height];
+    for y in 0..WILDERNESS_WORLD_CELL_HEIGHT {
+        for x in 0..WILDERNESS_WORLD_CELL_WIDTH {
+            let position = ContentPosition { x, y };
+            walkable[usize::from(y) * surface_width + usize::from(x)] =
+                town_surface_road_cell(wilderness, world_position, position);
+        }
+    }
+
+    let mut gates = Vec::new();
+    for y in 0..town_height {
+        for x in 0..town_width {
+            let local = ContentPosition { x, y };
+            let terrain_id = town_terrain.get(&local).copied().unwrap_or_else(|| {
+                if x == 0 || y == 0 || x + 1 == town_width || y + 1 == town_height {
+                    town_border_terrain_id
+                } else {
+                    town_fill_terrain_id
+                }
+            });
+            let position = ContentPosition {
+                x: map_origin.x + x,
+                y: map_origin.y + y,
+            };
+            let is_walkable = terrain_walkability.get(terrain_id) == Some(&true);
+            walkable[usize::from(position.y) * surface_width + usize::from(position.x)] =
+                is_walkable;
+            if is_walkable
+                && terrain_tags
+                    .get(terrain_id)
+                    .is_some_and(|tags| tags.contains("town-boundary"))
+            {
+                gates.push(position);
+            }
+        }
+    }
+    if gates.is_empty() {
+        return Err(ContentError::InvalidTown(town_id.to_owned()));
+    }
+
+    let mut reached = BTreeSet::new();
+    let mut pending = VecDeque::from(gates);
+    while let Some(position) = pending.pop_front() {
+        let index = usize::from(position.y) * surface_width + usize::from(position.x);
+        if !walkable[index] || !reached.insert(position) {
+            continue;
+        }
+        for (dx, dy) in [(0_i32, -1_i32), (1, 0), (0, 1), (-1, 0)] {
+            let x = i32::from(position.x) + dx;
+            let y = i32::from(position.y) + dy;
+            if x >= 0
+                && x < i32::from(WILDERNESS_WORLD_CELL_WIDTH)
+                && y >= 0
+                && y < i32::from(WILDERNESS_WORLD_CELL_HEIGHT)
+            {
+                pending.push_back(ContentPosition {
+                    x: u16::try_from(x).expect("bounded surface x must fit u16"),
+                    y: u16::try_from(y).expect("bounded surface y must fit u16"),
+                });
+            }
+        }
+    }
+
+    let center_x = WILDERNESS_WORLD_CELL_WIDTH / 2;
+    let center_y = WILDERNESS_WORLD_CELL_HEIGHT / 2;
+    let directions = [
+        (0, -1, (center_x, 0)),
+        (1, 0, (WILDERNESS_WORLD_CELL_WIDTH - 1, center_y)),
+        (0, 1, (center_x, WILDERNESS_WORLD_CELL_HEIGHT - 1)),
+        (-1, 0, (0, center_y)),
+    ];
+    let mut road_count = 0;
+    for (dx, dy, (edge_x, edge_y)) in directions {
+        if !wilderness_neighbor_is_road(wilderness, world_position, dx, dy) {
+            continue;
+        }
+        road_count += 1;
+        let connected = if dx == 0 {
+            center_x.saturating_sub(1)..=center_x.saturating_add(1)
+        } else {
+            edge_x..=edge_x
+        }
+        .any(|x| {
+            let ys = if dy == 0 {
+                center_y.saturating_sub(1)..=center_y.saturating_add(1)
+            } else {
+                edge_y..=edge_y
+            };
+            ys.into_iter()
+                .any(|y| reached.contains(&ContentPosition { x, y }))
+        });
+        if !connected {
+            return Err(ContentError::InvalidTown(town_id.to_owned()));
+        }
+    }
+    if road_count == 0 {
+        return Err(ContentError::InvalidTown(town_id.to_owned()));
     }
     Ok(())
 }
@@ -2505,10 +2685,19 @@ pub(super) fn validate_world(
         terrain_override.positions.sort();
         for position in &terrain_override.positions {
             validate_position(*position, world.width, world.height, &world.id)?;
-            if position.x == 0
+            let on_border = position.x == 0
                 || position.y == 0
                 || position.x == world.width - 1
-                || position.y == world.height - 1
+                || position.y == world.height - 1;
+            let valid_town_exit = world.town_id.is_some()
+                && terrain_tags
+                    .get(&terrain_override.terrain_id)
+                    .is_some_and(|tags| tags.contains("path"))
+                && ((position.x == 0 || position.x == world.width - 1)
+                    && position.y.abs_diff(WILDERNESS_WORLD_CELL_HEIGHT / 2) <= 1
+                    || (position.y == 0 || position.y == world.height - 1)
+                        && position.x.abs_diff(WILDERNESS_WORLD_CELL_WIDTH / 2) <= 1);
+            if (on_border && !valid_town_exit)
                 || override_terrain
                     .insert(*position, terrain_override.terrain_id.clone())
                     .is_some()
@@ -2525,7 +2714,7 @@ pub(super) fn validate_world(
                 owner: world.id.clone(),
                 target: (*town_id).to_owned(),
             })?;
-        let (town_width, town_height, town_fill_terrain_id, town_terrain) =
+        let (town_width, town_height, town_fill_terrain_id, town_border_terrain_id, town_terrain) =
             if world.town_id.as_deref() == Some(*town_id) {
                 if town.floor_id != world.initial_floor_id {
                     return Err(ContentError::InvalidTown(town.id.clone()));
@@ -2534,6 +2723,7 @@ pub(super) fn validate_world(
                     world.width,
                     world.height,
                     world.fill_terrain_id.as_str(),
+                    world.border_terrain_id.as_str(),
                     override_terrain
                         .iter()
                         .map(|(position, terrain_id)| (*position, terrain_id.as_str()))
@@ -2551,14 +2741,21 @@ pub(super) fn validate_world(
                     .inline_map
                     .as_ref()
                     .expect("validated town floor must retain its inline map");
+                if inline_map
+                    .terrain_overrides
+                    .iter()
+                    .any(|terrain| terrain.chance_percent != 100)
+                {
+                    return Err(ContentError::InvalidTown(town.id.clone()));
+                }
                 (
                     floor.width,
                     floor.height,
                     floor.wall_terrain_id.as_str(),
+                    floor.wall_terrain_id.as_str(),
                     inline_map
                         .terrain_overrides
                         .iter()
-                        .filter(|terrain| terrain.chance_percent == 100)
                         .flat_map(|terrain| {
                             terrain
                                 .positions
@@ -2568,6 +2765,40 @@ pub(super) fn validate_world(
                         .collect::<BTreeMap<_, _>>(),
                 )
             };
+        let (town_world_position, map_origin) = world
+            .wilderness
+            .as_ref()
+            .and_then(|wilderness| {
+                wilderness
+                    .locations
+                    .iter()
+                    .find_map(|location| match location {
+                        WildernessLocationDefinition::Town {
+                            position,
+                            map_origin,
+                            town_id: location_town_id,
+                        } if location_town_id == *town_id => Some((*position, *map_origin)),
+                        WildernessLocationDefinition::Town { .. }
+                        | WildernessLocationDefinition::Dungeon { .. } => None,
+                    })
+            })
+            .expect("validated wilderness town location must remain available");
+        validate_town_surface_placement(
+            world
+                .wilderness
+                .as_ref()
+                .expect("wilderness town must retain its wilderness"),
+            town_world_position,
+            map_origin,
+            town_width,
+            town_height,
+            town_fill_terrain_id,
+            town_border_terrain_id,
+            &town_terrain,
+            terrain_walkability,
+            terrain_tags,
+            &town.id,
+        )?;
         if world
             .procedural_floors
             .iter()

@@ -67,6 +67,35 @@ export function moveTargetCursor(
   return { ...state, cursor };
 }
 
+export function translateTargetingState(
+  state: TargetingState,
+  translation: Position,
+  width: number,
+  height: number,
+): TargetingState | undefined {
+  const origin = {
+    x: state.origin.x + translation.x,
+    y: state.origin.y + translation.y,
+  };
+  const cursor = {
+    x: state.cursor.x + translation.x,
+    y: state.cursor.y + translation.y,
+  };
+  if (
+    origin.x < 0 ||
+    origin.y < 0 ||
+    origin.x >= width ||
+    origin.y >= height ||
+    cursor.x < 0 ||
+    cursor.y < 0 ||
+    cursor.x >= width ||
+    cursor.y >= height
+  ) {
+    return undefined;
+  }
+  return { ...state, origin, cursor };
+}
+
 export function targetSelectionAtCursor(
   state: TargetingState,
   entities: readonly TargetableEntity[],

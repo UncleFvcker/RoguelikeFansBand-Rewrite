@@ -2812,10 +2812,12 @@ fn outpost_has_walls_inner_shops_and_an_exterior_warrens_entrance() {
         [
             WildernessLocationDefinition::Town {
                 position: ContentPosition { x: 26, y: 39 },
+                map_origin: ContentPosition { x: 27, y: 6 },
                 town_id: "demo.town.anambar".to_owned(),
             },
             WildernessLocationDefinition::Town {
                 position: ContentPosition { x: 28, y: 52 },
+                map_origin: ContentPosition { x: 0, y: 0 },
                 town_id: "demo.town.outpost".to_owned(),
             },
             WildernessLocationDefinition::Dungeon {
@@ -5255,13 +5257,22 @@ fn wilderness_towns_accept_fixed_town_floors_and_derive_world_ownership() {
         terrain_overrides: vec![
             InlineTerrainOverrideDefinition {
                 terrain_id: "demo.terrain.floor".to_owned(),
-                positions: vec![ContentPosition { x: 1, y: 1 }],
+                positions: vec![
+                    ContentPosition { x: 0, y: 1 },
+                    ContentPosition { x: 1, y: 1 },
+                ],
                 chance_percent: 100,
                 otherwise_terrain_id: None,
             },
             InlineTerrainOverrideDefinition {
                 terrain_id: "demo.terrain.home-entrance".to_owned(),
                 positions: vec![ContentPosition { x: 2, y: 1 }],
+                chance_percent: 100,
+                otherwise_terrain_id: None,
+            },
+            InlineTerrainOverrideDefinition {
+                terrain_id: "demo.terrain.outpost-gate".to_owned(),
+                positions: vec![ContentPosition { x: 3, y: 1 }],
                 chance_percent: 100,
                 otherwise_terrain_id: None,
             },
@@ -5282,8 +5293,73 @@ fn wilderness_towns_accept_fixed_town_floors_and_derive_world_ownership() {
                 x: wilderness.start_position.x + 1,
                 y: wilderness.start_position.y,
             },
+            map_origin: ContentPosition { x: 45, y: 15 },
             town_id: town_id.to_owned(),
         });
+
+    let set_second_town_origin = |content: &mut CompiledContentV1, origin: ContentPosition| {
+        let location = content
+            .worlds
+            .iter_mut()
+            .find(|world| world.id == "demo.world.warrens-journey")
+            .expect("Warrens world should remain available")
+            .wilderness
+            .as_mut()
+            .expect("Warrens world should retain wilderness")
+            .locations
+            .iter_mut()
+            .find(|location| {
+                matches!(
+                    location,
+                    WildernessLocationDefinition::Town {
+                        town_id: location_town_id,
+                        ..
+                    } if location_town_id == town_id
+                )
+            })
+            .expect("second town location should remain available");
+        let WildernessLocationDefinition::Town { map_origin, .. } = location else {
+            unreachable!("second town location must remain a town");
+        };
+        *map_origin = origin;
+    };
+
+    let mut invalid_origin = content.clone();
+    set_second_town_origin(&mut invalid_origin, ContentPosition { x: 93, y: 31 });
+    assert!(matches!(
+        validate_and_normalize(&mut invalid_origin),
+        Err(ContentError::InvalidTown(id)) if id == town_id
+    ));
+
+    let mut disconnected = content.clone();
+    set_second_town_origin(&mut disconnected, ContentPosition { x: 10, y: 10 });
+    assert!(matches!(
+        validate_and_normalize(&mut disconnected),
+        Err(ContentError::InvalidTown(id)) if id == town_id
+    ));
+
+    let mut random_terrain = content.clone();
+    let random_override = random_terrain
+        .worlds
+        .iter_mut()
+        .find(|world| world.id == "demo.world.warrens-journey")
+        .expect("Warrens world should remain available")
+        .procedural_floors
+        .iter_mut()
+        .find(|floor| floor.id == floor_id)
+        .expect("second town floor should remain available")
+        .inline_map
+        .as_mut()
+        .expect("second town floor should retain its inline map")
+        .terrain_overrides
+        .first_mut()
+        .expect("second town floor should retain terrain overrides");
+    random_override.chance_percent = 50;
+    random_override.otherwise_terrain_id = Some(random_override.terrain_id.clone());
+    assert!(matches!(
+        validate_and_normalize(&mut random_terrain),
+        Err(ContentError::InvalidTown(id)) if id == town_id
+    ));
 
     validate_and_normalize(&mut content).expect("formal second town should validate");
 }

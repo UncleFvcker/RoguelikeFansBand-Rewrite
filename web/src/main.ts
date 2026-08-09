@@ -188,6 +188,7 @@ const gameSession = new GameSession({
     }
     mapHost.dataset.mapScale = update.mapScale;
     statusPanel.render(update);
+    objectListPanel.reconcileStatus();
     inventoryPanel.render(update.inventory, update.equipment);
     shopPanel.render(update);
     homePanel.render(update);

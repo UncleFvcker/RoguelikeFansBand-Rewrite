@@ -7,9 +7,9 @@ use rfb_content::{
     TownFacilityCategory, TownFacilityDefinition, WildernessLocationDefinition, WorldDefinition,
 };
 use rfb_protocol::{
-    HomeDto, HomeItemDto, HomeStateSaveDto, ItemEnchantmentsDto, ItemQualityDto, Position,
-    ShopCategoryDto, ShopDto, ShopOwnerDto, ShopSellQuoteDto, ShopStateSaveDto, ShopStockItemDto,
-    TownDto, TownStateSaveDto,
+    HomeDto, HomeItemDto, HomeStateSaveDto, ItemEnchantmentsDto, ItemQualityDto, MapScaleDto,
+    Position, ShopCategoryDto, ShopDto, ShopOwnerDto, ShopSellQuoteDto, ShopStateSaveDto,
+    ShopStockItemDto, TownDto, TownStateSaveDto,
 };
 
 use crate::{
@@ -70,6 +70,7 @@ fn world_town_at_position<'a>(
             WildernessLocationDefinition::Town {
                 position: candidate,
                 town_id,
+                ..
             } if position_from_content(*candidate) == position => content.town(town_id),
             WildernessLocationDefinition::Town { .. }
             | WildernessLocationDefinition::Dungeon { .. } => None,
@@ -561,7 +562,10 @@ fn home_accessible(game: &Game, facility_id: &str) -> bool {
     game.current_town()
         .is_some_and(|current| current.id == town.id)
         && game.home_states.contains_key(storage_id)
-        && game.player.position == position_from_content(facility.entrance_position)
+        && game.town_local_to_active_position(
+            &town.id,
+            position_from_content(facility.entrance_position),
+        ) == Some(game.player.position)
 }
 
 fn home_item_group(
@@ -786,7 +790,9 @@ fn shop_accessible(game: &Game, shop: &ShopDefinition) -> bool {
     game.current_town()
         .is_some_and(|current| current.id == town.id)
         && game.shop_states.contains_key(&shop.id)
-        && game.player.position == position_from_content(shop.entrance_position)
+        && game
+            .town_local_to_active_position(&town.id, position_from_content(shop.entrance_position))
+            == Some(game.player.position)
 }
 
 fn shop_purchase_group(
@@ -1293,8 +1299,10 @@ impl Game {
             .iter()
             .find(|shop_id| {
                 self.content.shop(shop_id).is_some_and(|shop| {
-                    self.current_floor_id == town.floor_id
-                        && self.player.position == position_from_content(shop.entrance_position)
+                    self.town_local_to_active_position(
+                        &town.id,
+                        position_from_content(shop.entrance_position),
+                    ) == Some(self.player.position)
                 })
             })
             .cloned()
@@ -1366,7 +1374,30 @@ impl Game {
         world_town_for_floor(world, &self.content, floor_id)
     }
 
+    pub(super) fn town_local_to_active_position(
+        &self,
+        town_id: &str,
+        position: Position,
+    ) -> Option<Position> {
+        if self.map_scale != MapScaleDto::Local {
+            return None;
+        }
+        if self.is_wilderness_floor() {
+            return self.town_local_to_wilderness_view_position(town_id, position);
+        }
+        self.content
+            .town(town_id)
+            .is_some_and(|town| town.floor_id == self.current_floor_id)
+            .then_some(position)
+    }
+
     pub(super) fn current_town(&self) -> Option<&TownDefinition> {
+        if self.map_scale != MapScaleDto::Local {
+            return None;
+        }
+        if self.is_wilderness_floor() {
+            return self.town_at_wilderness_view_position(self.player.position);
+        }
         self.town_for_floor(&self.current_floor_id)
     }
 
@@ -1398,7 +1429,11 @@ impl Game {
                 .shop(shop_id)
                 .expect("validated town shop must remain available")
                 .clone();
-            if self.player.position != position_from_content(shop.entrance_position) {
+            if self.town_local_to_active_position(
+                &town.id,
+                position_from_content(shop.entrance_position),
+            ) != Some(self.player.position)
+            {
                 continue;
             }
             if !self.shop_states.contains_key(shop_id) {
@@ -1423,7 +1458,10 @@ impl Game {
             }
         }
         for facility in home_facilities(&town, &self.content) {
-            if self.player.position == position_from_content(facility.entrance_position)
+            if self.town_local_to_active_position(
+                &town.id,
+                position_from_content(facility.entrance_position),
+            ) == Some(self.player.position)
                 && let Some(state) = self.home_states.get_mut(
                     facility
                         .storage_id
@@ -1459,7 +1497,12 @@ impl Game {
             .iter()
             .filter_map(|shop_id| self.content.shop(shop_id))
             .map(|shop| {
-                let entrance_position = position_from_content(shop.entrance_position);
+                let entrance_position = self
+                    .town_local_to_active_position(
+                        &town.id,
+                        position_from_content(shop.entrance_position),
+                    )
+                    .expect("current town shop must retain an active position");
                 let player_at_entrance = self.player.position == entrance_position;
                 let factor = shop_price_factor(self, shop);
                 let state = self.shop_states.get(&shop.id);
@@ -1576,7 +1619,12 @@ impl Game {
             .filter_map(|id| self.content.town_facility(id))
             .filter(|facility| facility.category == TownFacilityCategory::Home)
             .map(|facility| {
-                let entrance_position = position_from_content(facility.entrance_position);
+                let entrance_position = self
+                    .town_local_to_active_position(
+                        &town.id,
+                        position_from_content(facility.entrance_position),
+                    )
+                    .expect("current town Home must retain an active position");
                 let player_at_entrance = self.player.position == entrance_position;
                 let state = facility
                     .storage_id

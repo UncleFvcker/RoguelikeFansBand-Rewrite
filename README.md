@@ -7,9 +7,9 @@ RoguelikeFansBand 的下一代重写版：以确定性的 Rust 规则核心为�
 ## 当前状态
 
 - 已贯通荒野、城镇、地下城、物品与怪物的可玩垂直切片。
-- 协议版本 `1.158`，State Hash Schema `v78`。
-- 行为基线 `contract-v229`，共 471 个 exact fixture，零豁免。
-- 演示内容包 `1.226.0`：89 种地形、434 种角色、250 种物品、174 个能力、152 项变异定义。
+- 协议版本 `1.160`，State Hash Schema `v79`。
+- 行为基线 `contract-v237`，共 471 个 exact fixture，零豁免。
+- 演示内容包 `1.227.0`：89 种地形、434 种角色、250 种物品、174 个能力、152 项变异定义。
 
 内容包的精确版本与哈希以 [`pack.json`](packs/rfb-demo-original/pack.json) 和 [`content.lock.json`](packs/rfb-demo-original/content.lock.json) 为准。
 
@@ -68,6 +68,13 @@ npm run build:standalone:debug
 - [怪物接入与对话交接手册](design/warrens-monster-integration-handoff.md)
 - [怪物机制待办](design/warrens-monster-mechanism-backlog.md)
 - [荒野 W5 扩展](design/wilderness-w5-original-extensions.md)
+- [荒野卷动坐标模型](design/contract-v231-wilderness-scroll-coordinate-model.md)
+- [荒野分代地形与缓存](design/contract-v232-wilderness-evolving-terrain-cache.md)
+- [荒野区块卷动与状态迁移](design/contract-v233-wilderness-chunk-scrolling.md)
+- [荒野暴露条带怪物生成](design/contract-v234-wilderness-strip-monster-population.md)
+- [荒野卷动客户端状态同步](design/contract-v235-wilderness-client-translation.md)
+- [荒野卷动城镇边界](design/contract-v236-wilderness-town-boundary.md)
+- [连续荒野中的可变尺寸城镇](design/contract-v237-wilderness-embedded-towns.md)
 
 历史契约与专题设计均保留在 [`design/`](design/) 中。
 
