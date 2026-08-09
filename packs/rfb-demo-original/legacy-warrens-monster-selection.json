@@ -2220,6 +2220,12 @@
       "id": "chameleon",
       "tags": ["animal", "warrens"],
       "omittedFlags": []
+    },
+    {
+      "sourceIndex": 327,
+      "id": "ghast",
+      "tags": ["undead", "warrens"],
+      "omittedFlags": ["COLD_BLOOD", "POS_HOLD_LIFE"]
     }
   ]
 }

@@ -141,6 +141,18 @@ message-resource-gained = 你的{ $resource }增长了 { $amount } 点。
 message-monster-blinked = { $source }闪到了近处的新位置。
 message-monster-blinked-target = { $source }把{ $target }闪现到了近处的新位置！
 message-monster-teleported = { $source }撕开裂隙消失在远处。
+message-monster-eldritch-horror =
+    { $outcome ->
+        [hallucinating] 在幻觉中，{ $source }的面容变得更加荒诞。
+        [unaffected] 你看到了{ $source }那摧毁理智的面容，但心智未受影响。
+        [mind-blast] { $source }的面容冲击了你的心智。
+        [attribute-drain] { $source }的面容削弱了你的智力、感知和魅力。
+        [brain-smash] { $source }的面容粉碎了你的思绪。
+        [amnesia] { $source }的面容抹去了你对这里的记忆。
+        [permanent-insanity] { $source }的面容在你心中留下了永久的疯狂。
+        [fleeting-insanity] { $source }的面容让你短暂地觉得自己疯了。
+       *[resisted] 你压制住了对{ $source }的恐惧。
+    }
 message-monster-dragged-target = { $source }把{ $target }拽到了自己身边！
 message-monster-banished-target = { $source }把{ $target }放逐到了远处！
 message-rest-completed = 你休息了 { $turns } 回合（{ $reason }）。

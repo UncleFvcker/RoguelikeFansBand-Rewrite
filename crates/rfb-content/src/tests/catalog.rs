@@ -6,7 +6,7 @@ fn compiled_catalog_exposes_stable_runtime_indexes() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.224.0");
+    assert_eq!(catalog.pack_version(), "1.225.0");
     assert_eq!(catalog.mutations().count(), 152);
     assert_eq!(
         catalog.mutation("rfb.mutation.spit-acid").map(|mutation| (
@@ -1054,7 +1054,7 @@ fn second_passive_mutation_batch_keeps_resistance_sense_and_levitation_semantics
             .mutation("rfb.mutation.weird-mind")
             .unwrap()
             .status_immunities,
-        ["rfb.status.hallucination"]
+        ["rfb.status.eldritch-horror", "rfb.status.hallucination"]
     );
 
     let ledger: serde_json::Value = serde_json::from_slice(

@@ -19,9 +19,9 @@ use crate::{
     effect::{
         DamageOutcome, DamagePacket, EffectOutcome, EffectSpec, EffectTarget,
         STATUS_BASIC_RESISTANCE, STATUS_BLEEDING, STATUS_BLINDNESS, STATUS_CONFUSION, STATUS_FEAR,
-        STATUS_GIANT_STRENGTH, STATUS_HASTE, STATUS_INVENTORY_PROTECTION, STATUS_PARALYSIS,
-        STATUS_POISON, STATUS_PROTECTION_FROM_EVIL, STATUS_SIGHT, STATUS_SLEEP, STATUS_SLOW,
-        STATUS_STUN, STATUS_THERMAL_RESISTANCE, STATUS_TSUYOSHI, STATUS_UNDERSTANDING,
+        STATUS_GIANT_STRENGTH, STATUS_HALLUCINATION, STATUS_HASTE, STATUS_INVENTORY_PROTECTION,
+        STATUS_PARALYSIS, STATUS_POISON, STATUS_PROTECTION_FROM_EVIL, STATUS_SIGHT, STATUS_SLEEP,
+        STATUS_SLOW, STATUS_STUN, STATUS_THERMAL_RESISTANCE, STATUS_TSUYOSHI, STATUS_UNDERSTANDING,
         STATUS_VENGEANCE, StatusApplication, StatusChange, StatusInstance, StatusStacking,
         apply_effect, apply_status, resolve_damage,
     },
@@ -200,7 +200,7 @@ pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 77;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 78;
 pub const WARRENS_JOURNEY_WORLD_ID: &str = "demo.world.warrens-journey";
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const VISIBILITY_RADIUS: i32 = 8;
@@ -1171,6 +1171,7 @@ impl Game {
         let world_tick_before_command = self.world_tick;
         let player_position_before_command = self.player.position;
         let floor_before_command = self.current_floor_id.clone();
+        let visible_eldritch_horrors_before_action = self.visible_eldritch_horror_entity_ids();
         let wilderness_position_before_command = self.wilderness_position;
         let light_radius_before_command = self.player_light_radius();
         let see_invisible_sources_before_command = self.player_see_invisible_sources();
@@ -1940,6 +1941,12 @@ impl Game {
             },
         }
 
+        self.resolve_newly_visible_eldritch_horrors(
+            &visible_eldritch_horrors_before_action,
+            &mut events,
+            &mut changed,
+        );
+
         if automatic_pickup_after_move
             && map_scale_before_command == MapScaleDto::Local
             && self.map_scale == MapScaleDto::Local
@@ -2015,9 +2022,16 @@ impl Game {
             || self.current_floor_id != floor_before_command
             || self.player_light_radius() != light_radius_before_command
             || self.player_see_invisible_sources() != see_invisible_sources_before_command;
+        let visible_eldritch_horrors_before_invisible_refresh =
+            self.visible_eldritch_horror_entity_ids();
         self.refresh_invisible_visibility(
             full_visibility_refresh,
             &entity_positions_before_command,
+        );
+        self.resolve_newly_visible_eldritch_horrors(
+            &visible_eldritch_horrors_before_invisible_refresh,
+            &mut events,
+            &mut changed,
         );
 
         if self.world_tick != world_tick_before_command && self.map_scale == MapScaleDto::Local {
@@ -4773,6 +4787,24 @@ impl Game {
             .map(|pile| pile.id.clone())
             .collect::<Vec<_>>();
         self.mark_gold_piles_discovered(&discovered_gold_ids);
+    }
+
+    pub(super) fn clear_current_floor_memory(&mut self, changed: &mut BTreeSet<Position>) -> u32 {
+        let width = usize::from(self.width);
+        let mut cleared_cells = 0_u32;
+        for (index, explored) in self.explored.iter_mut().enumerate() {
+            if *explored {
+                *explored = false;
+                cleared_cells += 1;
+                changed.insert(Position {
+                    x: i32::try_from(index % width).expect("explored x must fit i32"),
+                    y: i32::try_from(index / width).expect("explored y must fit i32"),
+                });
+            }
+        }
+        cleared_cells += u32::try_from(self.revealed_terrain.len()).unwrap_or(0);
+        self.revealed_terrain.clear();
+        cleared_cells
     }
 
     fn mark_item_instances_discovered(&mut self, item_ids: &[String]) {

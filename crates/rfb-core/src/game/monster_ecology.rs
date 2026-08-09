@@ -16,6 +16,13 @@ const ORIGINAL_MAX_SIGHT: u32 = 20;
 const SHADOWER_APPEARANCE_KIND_ID: &str = "demo.actor.shadower";
 const SHADOWER_ONE_IN: u64 = 333;
 const CHAMELEON_CHANGE_ONE_IN: u64 = 13;
+const ELDRITCH_HORROR_TAG: &str = "eldritch-horror";
+const ELDRITCH_HORROR_IMMUNITY: &str = "rfb.status.eldritch-horror";
+const ELDRITCH_HORROR_REPEAT_ONE_IN: u64 = 5;
+const ELDRITCH_HIGH_RESISTANCE_ROLL: u64 = 33;
+const MORONIC_MUTATION_ID: &str = "rfb.mutation.moronic";
+const COWARDICE_MUTATION_ID: &str = "rfb.mutation.cowardice";
+const HALLUCINATION_MUTATION_ID: &str = "rfb.mutation.hallucination";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum OriginalGroupRole {
@@ -63,6 +70,305 @@ impl Game {
             .as_deref()
             .and_then(|kind_id| self.content.actor(kind_id))
             .or(Some(definition))
+    }
+
+    pub(super) fn visible_eldritch_horror_entity_ids(&self) -> BTreeSet<String> {
+        if self.map_scale != MapScaleDto::Local {
+            return BTreeSet::new();
+        }
+        self.entities
+            .iter()
+            .filter(|actor| {
+                actor.hp > 0
+                    && !self.actor_is_player_aligned(actor)
+                    && self.entity_is_visible_to_player(actor)
+                    && self
+                        .actor_runtime_definition(actor)
+                        .is_some_and(|definition| {
+                            definition.tags.iter().any(|tag| tag == ELDRITCH_HORROR_TAG)
+                        })
+            })
+            .map(|actor| actor.id.clone())
+            .collect()
+    }
+
+    pub(super) fn resolve_newly_visible_eldritch_horrors(
+        &mut self,
+        previously_visible: &BTreeSet<String>,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let newly_visible = self
+            .visible_eldritch_horror_entity_ids()
+            .difference(previously_visible)
+            .cloned()
+            .collect::<Vec<_>>();
+        for entity_id in newly_visible {
+            let Some(index) = self.entities.iter().position(|actor| actor.id == entity_id) else {
+                continue;
+            };
+            self.resolve_eldritch_horror(index, events, changed);
+        }
+    }
+
+    fn eldritch_percent_save(&mut self, chance: i32) -> bool {
+        self.rng.bounded(100) < u64::try_from(chance.clamp(0, 100)).unwrap_or(0)
+    }
+
+    fn eldritch_saving_throw(&mut self, power: i32) -> bool {
+        let chance = self
+            .player_derived_stats()
+            .saving_throw_skill
+            .value
+            .saturating_sub(power);
+        self.eldritch_percent_save(chance)
+    }
+
+    fn eldritch_resistance_save(&mut self, damage_type: DamageType, status_kind_id: &str) -> bool {
+        if self.player_status_immunities().contains(status_kind_id) {
+            return true;
+        }
+        let percent = self
+            .effective_player_resistances()
+            .level(damage_type)
+            .reduction_percent()
+            .max(0);
+        self.rng.bounded(ELDRITCH_HIGH_RESISTANCE_ROLL) < u64::try_from(percent).unwrap_or(0)
+    }
+
+    fn apply_eldritch_status(&mut self, status_kind_id: &str, duration: u32, source_kind_id: &str) {
+        self.apply_player_melee_status(
+            status_kind_id,
+            i32::try_from(duration).unwrap_or(i32::MAX),
+            source_kind_id,
+        );
+    }
+
+    fn apply_eldritch_confusion(&mut self, source_kind_id: &str) {
+        if !self.eldritch_resistance_save(DamageType::Confusion, STATUS_CONFUSION) {
+            let duration = u32::try_from(self.rng.bounded(4) + 4).unwrap_or(u32::MAX);
+            self.apply_eldritch_status(STATUS_CONFUSION, duration, source_kind_id);
+        }
+    }
+
+    fn apply_eldritch_hallucination(&mut self, source_kind_id: &str, one_in_three: bool) {
+        if self.eldritch_resistance_save(DamageType::Chaos, STATUS_HALLUCINATION)
+            || (one_in_three && self.rng.bounded(3) != 0)
+        {
+            return;
+        }
+        let duration = u32::try_from(self.rng.bounded(25) + 15).unwrap_or(u32::MAX);
+        self.apply_eldritch_status(STATUS_HALLUCINATION, duration, source_kind_id);
+    }
+
+    fn drain_eldritch_attribute(&mut self, attribute: AttributeKind) -> bool {
+        if self
+            .player_equipment_passives()
+            .contains(&attribute_sustain_passive(attribute))
+        {
+            return false;
+        }
+        let previous_max_hp = self.effective_player_max_hp();
+        let previous_resource_maxima = self.player_resource_maxima();
+        let changed = apply_attribute_drain(&mut self.progress, attribute, &mut self.rng).changed;
+        if changed {
+            self.refresh_after_attribute_change(previous_max_hp, &previous_resource_maxima);
+        }
+        changed
+    }
+
+    fn apply_eldritch_brain_smash(&mut self, source_kind_id: &str) {
+        self.apply_eldritch_confusion(source_kind_id);
+        if !self.player_status_immunities().contains(STATUS_PARALYSIS) {
+            let duration = u32::try_from(self.rng.bounded(4) + 1).unwrap_or(u32::MAX);
+            self.apply_eldritch_status(STATUS_PARALYSIS, duration, source_kind_id);
+        }
+        for attribute in [AttributeKind::Intelligence, AttributeKind::Wisdom] {
+            while self.progress.attributes.value(attribute) > 3
+                && self.rng.bounded(100)
+                    > u64::try_from(
+                        self.player_derived_stats()
+                            .saving_throw_skill
+                            .value
+                            .clamp(0, 100),
+                    )
+                    .unwrap_or(0)
+            {
+                if !self.drain_eldritch_attribute(attribute) {
+                    break;
+                }
+            }
+        }
+        self.apply_eldritch_hallucination(source_kind_id, false);
+    }
+
+    fn resolve_eldritch_permanent_insanity(
+        &mut self,
+        events: &mut Vec<DomainEvent>,
+    ) -> &'static str {
+        let moronic = self
+            .progress
+            .active_mutation_ids
+            .contains(MORONIC_MUTATION_ID);
+        let cowardly = self
+            .progress
+            .active_mutation_ids
+            .contains(COWARDICE_MUTATION_ID);
+        let hallucinating = self
+            .progress
+            .active_mutation_ids
+            .contains(HALLUCINATION_MUTATION_ID);
+        if moronic
+            && (cowardly || self.eldritch_resistance_save(DamageType::Fear, STATUS_FEAR))
+            && (hallucinating
+                || self.eldritch_resistance_save(DamageType::Chaos, STATUS_HALLUCINATION))
+        {
+            return "unaffected";
+        }
+        loop {
+            match self.rng.bounded(21) + 1 {
+                1 if !self
+                    .progress
+                    .active_mutation_ids
+                    .contains(MORONIC_MUTATION_ID) =>
+                {
+                    if self.rng.bounded(5) == 0 {
+                        self.gain_mutation(MORONIC_MUTATION_ID, events);
+                        return "permanent-insanity";
+                    }
+                    return "fleeting-insanity";
+                }
+                2..=11
+                    if !self
+                        .progress
+                        .active_mutation_ids
+                        .contains(COWARDICE_MUTATION_ID)
+                        && !self.eldritch_resistance_save(DamageType::Fear, STATUS_FEAR) =>
+                {
+                    self.gain_mutation(COWARDICE_MUTATION_ID, events);
+                    return "permanent-insanity";
+                }
+                12..=21
+                    if !self
+                        .progress
+                        .active_mutation_ids
+                        .contains(HALLUCINATION_MUTATION_ID)
+                        && !self
+                            .eldritch_resistance_save(DamageType::Chaos, STATUS_HALLUCINATION) =>
+                {
+                    self.gain_mutation(HALLUCINATION_MUTATION_ID, events);
+                    return "permanent-insanity";
+                }
+                _ => {}
+            }
+        }
+    }
+
+    pub(super) fn resolve_eldritch_horror(
+        &mut self,
+        index: usize,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        if self
+            .player_status_immunities()
+            .contains(ELDRITCH_HORROR_IMMUNITY)
+            || self.entity_is_player_aligned(index)
+        {
+            return;
+        }
+        let definition = self
+            .actor_runtime_definition(&self.entities[index])
+            .expect("eldritch horror definition must remain available")
+            .clone();
+        if !definition.tags.iter().any(|tag| tag == ELDRITCH_HORROR_TAG) {
+            return;
+        }
+        let mut power = i32::try_from(definition.level / 2).unwrap_or(i32::MAX);
+        if definition.tags.iter().any(|tag| tag == "unique") {
+            power = power.saturating_mul(2);
+        } else if definition
+            .allocation
+            .as_ref()
+            .is_some_and(|allocation| allocation.friends.is_some())
+        {
+            power /= 2;
+        }
+        if !self.eldritch_percent_save(power)
+            || (self.entities[index].eldritch_horror_triggered
+                && self.rng.bounded(ELDRITCH_HORROR_REPEAT_ONE_IN) != 0)
+            || self.eldritch_saving_throw(power)
+        {
+            return;
+        }
+        let source_entity_id = self.entities[index].id.clone();
+        let source_kind_id = definition.id.clone();
+        if self.player_has_status_kind(STATUS_HALLUCINATION) {
+            if self.rng.bounded(3) == 0 {
+                let duration =
+                    u32::try_from(self.rng.bounded(u64::from(definition.level.max(1))) + 1)
+                        .unwrap_or(u32::MAX);
+                self.apply_eldritch_status(STATUS_HALLUCINATION, duration, &source_kind_id);
+            }
+            events.push(DomainEvent::EldritchHorror {
+                source_entity_id,
+                source_kind_id,
+                power: u16::try_from(power).unwrap_or(u16::MAX),
+                outcome: "hallucinating",
+            });
+            return;
+        }
+        let (is_demon, is_undead) = self
+            .character_definitions()
+            .map(|(_, race, _, _)| {
+                (
+                    race.tags.iter().any(|tag| tag == "demon"),
+                    race.tags.iter().any(|tag| tag == "undead"),
+                )
+            })
+            .unwrap_or_default();
+        if is_demon
+            || (is_undead && self.eldritch_percent_save(25 + i32::from(self.progress.level)))
+        {
+            events.push(DomainEvent::EldritchHorror {
+                source_entity_id,
+                source_kind_id,
+                power: u16::try_from(power).unwrap_or(u16::MAX),
+                outcome: "unaffected",
+            });
+            return;
+        }
+        self.entities[index].eldritch_horror_triggered = true;
+        let outcome = if !self.eldritch_saving_throw(power) {
+            self.apply_eldritch_confusion(&source_kind_id);
+            self.apply_eldritch_hallucination(&source_kind_id, true);
+            "mind-blast"
+        } else if !self.eldritch_saving_throw(power) {
+            for attribute in [
+                AttributeKind::Intelligence,
+                AttributeKind::Wisdom,
+                AttributeKind::Charisma,
+            ] {
+                self.drain_eldritch_attribute(attribute);
+            }
+            "attribute-drain"
+        } else if !self.eldritch_saving_throw(power) {
+            self.apply_eldritch_brain_smash(&source_kind_id);
+            "brain-smash"
+        } else if !self.eldritch_saving_throw(power) {
+            self.clear_current_floor_memory(changed);
+            "amnesia"
+        } else if self.eldritch_saving_throw(power) {
+            "resisted"
+        } else {
+            self.resolve_eldritch_permanent_insanity(events)
+        };
+        events.push(DomainEvent::EldritchHorror {
+            source_entity_id,
+            source_kind_id,
+            power: u16::try_from(power).unwrap_or(u16::MAX),
+            outcome,
+        });
     }
 
     fn roll_chameleon_form(&mut self, actor_kind_id: &str, position: Position) -> Option<String> {

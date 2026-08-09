@@ -7,6 +7,6 @@
   "rating": "good",
   "sourceIndex": 116,
   "randomWeight": 0,
-  "statusImmunities": ["rfb.status.hallucination"],
+  "statusImmunities": ["rfb.status.eldritch-horror", "rfb.status.hallucination"],
   "removesOnGain": []
 }

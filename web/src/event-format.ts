@@ -280,6 +280,11 @@ export function createPresentationFormatter(
         return localization.format("message-monster-teleported", {
           source: contentName(event.args.source),
         });
+      case "monster-eldritch-horror":
+        return localization.format("message-monster-eldritch-horror", {
+          source: contentName(event.args.source),
+          outcome: event.args.outcome ?? "unaffected",
+        });
       case "monster-dragged-target":
         return localization.format("message-monster-dragged-target", {
           source: contentName(event.args.source),

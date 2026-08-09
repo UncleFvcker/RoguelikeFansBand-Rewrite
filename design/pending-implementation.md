@@ -191,6 +191,11 @@ contract-v228 接入变色龙，正式包 actor 增至 433、严格同步增至 
 `appearanceKindId` 保存并进入 State Hash，驱动 HP、速度、抗性、属性、近战、
 移动和施法，本体 `kindId` 保持变色龙。协议 1.157、State Hash Schema v77 不变。
 
+contract-v229 接入妖鬼，正式包 actor 增至 434、严格同步增至 369 条，ability
+保持 174。`ELDRITCH_HORROR` 使用新进入视野的窄触发点和实例级重复触发标记，
+后果复用混乱、幻觉、麻痹、属性损伤、地图失忆与既有精神变异。协议 1.158、
+State Hash Schema v78；没有建立独立理智资源或通用精神状态框架。
+
 荒野 W0 已导入 `master:w_info.txt` 的 `99x66` normal 世界图、15 类地形、
 危险等级、道路和起点，并只把现有 Outpost/Warrens 绑定为正式地点。W1 已完成
 权威地图尺度、荒野位置/种子保存、协议投影、现有 Pixi 渲染与 `x` 查看。W2
