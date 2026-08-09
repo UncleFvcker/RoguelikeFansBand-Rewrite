@@ -1,0 +1,104 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "habitats": [
+      "mountain",
+      "waste",
+      "wood"
+    ],
+    "legacyDungeonIndices": [
+      35
+    ],
+    "legacyIndex": 1335,
+    "maxDepth": 50,
+    "rarity": 3
+  },
+  "attack": 5,
+  "damageDice": 1,
+  "damageSides": 9,
+  "damageType": "physical",
+  "defense": 4,
+  "descriptionKey": "actor-demo-yowie-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 150,
+  "formatVersion": 1,
+  "glyph": "Y",
+  "hitPointDice": {
+    "dice": 18,
+    "sides": 18
+  },
+  "id": "demo.actor.yowie",
+  "level": 20,
+  "maxHp": 171,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 9,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 9,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 2,
+            "damageSides": 6,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "modes": [
+      "climb"
+    ]
+  },
+  "nameKey": "actor-demo-yowie-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 4,
+    "skeletonItemKindId": "demo.item.skeleton-remains",
+    "skeletonWeight": 1
+  },
+  "resistances": {
+    "electricity": "resistant",
+    "sound": "resistant"
+  },
+  "role": "monster",
+  "speed": 120,
+  "tags": [
+    "animal",
+    "humanoid",
+    "legacy-import",
+    "warrens"
+  ]
+}

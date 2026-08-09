@@ -320,6 +320,8 @@ contract-v220 / 包 1.216.0 接入丘陵巨人、小恶魔、猫又、灰先知�
 
 contract-v221 / 包 1.217.0 接入冰冻球、跳跃火球和球状闪电。既有 `contactAura` 只窄扩展火焰、冰冷和闪电即时抗性伤害，按原版 17 级公式生成 `1d2`，毒素持续状态与 `8d8` 同元素死亡爆炸保持原路径。当前包共 88 terrain、365 actors、249 items、152 abilities、20 loot tables，严格同步 300 条，内容 hash 为 `d70909839615bb837a0b3ee4d348d29a887989f145d42c22aa90461dff67fcca`。协议 1.152，state hash Schema v72 不变。
 
+contract-v222 / 包 1.218.0 按机制风险直接接入 33 只无怪物施法怪物。现有 `contactAura`、繁殖、死亡爆炸、`HURT_ROCK`、毁墙/`MOVE_BODY`、骑乘、水生、群体、Unique 和掉落定义完整承载，不新增 ability、effect 或状态字段。当前包共 88 terrain、398 actors、249 items、152 abilities、20 loot tables，严格同步 333 条，内容 hash 为 `845f251ddaf432b3e870ae30a365a1777706051a1d9fcd37a6ae8d7f55d17de5`。协议 1.152，state hash Schema v72 不变。
+
 contract-v83 以 1.75.0 增加 `detect` 能力效果、Echo Pulse 与 Echo Sight；类别/半径、FOV 与隐藏投影筛选、稳定结果顺序、瞬时/持久知识边界由核心定义，持久结果复用 `revealedTerrain`，state hash 升至 Schema v36。
 
 contract-v84 以 1.76.0 增加 `transform-terrain` 能力效果、Echo Delving 与 Echo Rampart；来源/目标 terrain 集、范围、FOV/line of effect、占用格、连接/边界保护和原子写入由核心定义，地形继续复用既有 save/state hash 字段。

@@ -1,0 +1,73 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 910,
+    "maxDepth": 70,
+    "rarity": 1
+  },
+  "attack": 4,
+  "damageDice": 8,
+  "damageSides": 8,
+  "damageType": "physical",
+  "defense": 5,
+  "descriptionKey": "actor-demo-aquatic-golem-description",
+  "experienceValue": 100,
+  "formatVersion": 1,
+  "glyph": "g",
+  "hitPointDice": {
+    "dice": 25,
+    "sides": 10
+  },
+  "id": "demo.actor.aquatic-golem",
+  "level": 19,
+  "maxHp": 137,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 8,
+            "damageSides": 8,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "chancePercent": 25,
+            "durationDice": 1,
+            "durationSides": 6,
+            "type": "stun"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "modes": [
+      "aquatic"
+    ]
+  },
+  "nameKey": "actor-demo-aquatic-golem-name",
+  "resistances": {
+    "cold": "resistant",
+    "fire": "resistant",
+    "poison": "resistant",
+    "water": "resistant"
+  },
+  "role": "monster",
+  "speed": 110,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "aquatic",
+    "golem",
+    "legacy-import",
+    "nonliving",
+    "warrens"
+  ]
+}

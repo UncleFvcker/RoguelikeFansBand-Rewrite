@@ -1,0 +1,64 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 1016,
+    "maxDepth": 50,
+    "rarity": 4
+  },
+  "attack": 5,
+  "damageDice": 20,
+  "damageSides": 2,
+  "damageType": "physical",
+  "defense": 5,
+  "descriptionKey": "actor-demo-spider-bomb-description",
+  "experienceValue": 10,
+  "formatVersion": 1,
+  "glyph": "S",
+  "hitPointDice": {
+    "dice": 5,
+    "sides": 10
+  },
+  "id": "demo.actor.spider-bomb",
+  "level": 20,
+  "maxHp": 27,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 20,
+            "damageSides": 2,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.explode",
+        "selfDestructs": true,
+        "toHit": 20
+      }
+    ]
+  },
+  "nameKey": "actor-demo-spider-bomb-name",
+  "resistances": {
+    "cold": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 120,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "construct",
+    "legacy-import",
+    "nonliving",
+    "resist-teleport",
+    "spider",
+    "warrens"
+  ]
+}

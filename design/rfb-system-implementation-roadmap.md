@@ -1,6 +1,6 @@
 # RFB 全系统梳理与重构实现路线
 
-状态：长期规则实现路线；当前基线为协议 1.152 / contract-v221（P31–P98 进展见 8.3，玩家流程与 Outpost 进展见 Phase 17/18，物品接入见 Phase 19，Warrens 怪物机制见 W1–W14 清单，荒野世界图见 W0–W5）
+状态：长期规则实现路线；当前基线为协议 1.152 / contract-v222（P31–P98 进展见 8.3，玩家流程与 Outpost 进展见 Phase 17/18，物品接入见 Phase 19，Warrens 怪物机制见 W1–W14 清单，荒野世界图见 W0–W5）
 
 ## 1. 目的与边界
 
@@ -669,6 +669,8 @@ P30“首个非 Mana 职业资源”已由 contract-v90 完成：节奏资源按
 **十七级怪物 P35 进展（2026-08）**：contract-v220 接入丘陵巨人、小恶魔、猫又、灰先知和矮人纳尔。`THROW`、火焰箭、十七级单体召唤、灰先知同族召唤与 51 点治疗只生成五条参数化 ability；`DROP_DWARF` 映射到引用现有镐、铲、小型金属盾和护身符的窄掉落表。正式包为 362 actors / 152 abilities，严格同步 297 条；协议 1.152、Schema v72 不变，demo 1.216.0，内容 hash 为 `1a3ff3f7f41da01cc0a0860393b4b6cab1d86d1861f8b32476d2841f095f13c8`。完整边界见 [Contract v220](contract-v220-warrens-content-p35-level-17-casters.md)。
 
 **十七级怪物 P36 进展（2026-08）**：contract-v221 接入冰冻球、跳跃火球和球状闪电。`contactAura` 只窄扩展火焰、冰冷和闪电，按原版等级公式生成 `1d2` 接触直伤并复用既有抗性、伤害事务和事件；毒素状态行为与三只怪物的 `8d8` 同元素死亡爆炸保持原路径。正式包为 365 actors / 152 abilities，严格同步 300 条；协议 1.152、Schema v72 不变，demo 1.217.0，内容 hash 为 `d70909839615bb837a0b3ee4d348d29a887989f145d42c22aa90461dff67fcca`。完整边界见 [Contract v221](contract-v221-warrens-content-p36-elemental-contact-auras.md)。
+
+**怪物 P37A 直接复用进展（2026-08）**：contract-v222 不按等级拆批，直接接入 33 只无怪物施法怪物。全部复用现有接触光环、繁殖、死亡爆炸、`HURT_ROCK`、毁墙/`MOVE_BODY`、骑乘、水生、群体、Unique 与掉落结构，没有新增 ability、effect 或运行时状态。正式包为 398 actors / 152 abilities，严格同步 333 条；协议 1.152、Schema v72 不变，demo 1.218.0，内容 hash 为 `845f251ddaf432b3e870ae30a365a1777706051a1d9fcd37a6ae8d7f55d17de5`。完整边界见 [Contract v222](contract-v222-warrens-content-p37a-direct-harvest.md)。
 
 ## 9. 内容迁移策略
 

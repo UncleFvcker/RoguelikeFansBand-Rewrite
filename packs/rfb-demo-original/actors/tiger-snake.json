@@ -1,0 +1,82 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "habitats": [
+      "grass",
+      "waste",
+      "wood"
+    ],
+    "legacyDungeonIndices": [
+      35
+    ],
+    "legacyIndex": 1310,
+    "maxDepth": 50,
+    "rarity": 1
+  },
+  "attack": 4,
+  "damageDice": 2,
+  "damageSides": 2,
+  "damageType": "physical",
+  "defense": 4,
+  "descriptionKey": "actor-demo-tiger-snake-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 65,
+  "formatVersion": 1,
+  "glyph": "J",
+  "hitPointDice": {
+    "dice": 12,
+    "sides": 10
+  },
+  "id": "demo.actor.tiger-snake",
+  "level": 18,
+  "maxHp": 66,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 2,
+            "damageSides": 2,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "damageDice": 5,
+            "damageSides": 5,
+            "type": "poison"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "modes": [
+      "swim"
+    ]
+  },
+  "nameKey": "actor-demo-tiger-snake-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 4,
+    "skeletonItemKindId": "demo.item.skeleton-remains",
+    "skeletonWeight": 1
+  },
+  "resistances": {
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 120,
+  "tags": [
+    "animal",
+    "legacy-import",
+    "reptile",
+    "snake",
+    "warrens"
+  ]
+}

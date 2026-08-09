@@ -1,0 +1,75 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "habitats": [
+      "all"
+    ],
+    "legacyIndex": 317,
+    "maxDepth": 999,
+    "rarity": 1
+  },
+  "attack": 4,
+  "damageDice": 3,
+  "damageSides": 5,
+  "damageType": "physical",
+  "defense": 5,
+  "descriptionKey": "actor-demo-white-shark-description",
+  "experienceValue": 68,
+  "formatVersion": 1,
+  "glyph": "l",
+  "hitPointDice": {
+    "dice": 10,
+    "sides": 10
+  },
+  "id": "demo.actor.white-shark",
+  "level": 18,
+  "maxHp": 55,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 3,
+            "damageSides": 5,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 3,
+            "damageSides": 5,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "modes": [
+      "aquatic"
+    ]
+  },
+  "nameKey": "actor-demo-white-shark-name",
+  "resistances": {
+    "water": "resistant"
+  },
+  "role": "monster",
+  "speed": 120,
+  "tags": [
+    "animal",
+    "aquatic",
+    "legacy-import",
+    "shark",
+    "warrens"
+  ]
+}

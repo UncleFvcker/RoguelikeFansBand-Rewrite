@@ -1,0 +1,95 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "habitats": [
+      "volcano"
+    ],
+    "legacyIndex": 306,
+    "maxDepth": 80,
+    "randomMovementPercent": 25,
+    "rarity": 2
+  },
+  "attack": 4,
+  "contactAura": {
+    "damageDice": 1,
+    "damageSides": 2,
+    "damageType": "fire"
+  },
+  "damageDice": 2,
+  "damageSides": 6,
+  "damageType": "fire",
+  "defense": 3,
+  "descriptionKey": "actor-demo-fire-spirit-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 75,
+  "formatVersion": 1,
+  "glyph": "E",
+  "hitPointDice": {
+    "dice": 10,
+    "sides": 9
+  },
+  "id": "demo.actor.fire-spirit",
+  "level": 18,
+  "light": {
+    "intrinsic": true,
+    "radius": 1
+  },
+  "maxHp": 50,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 2,
+            "damageSides": 6,
+            "damageType": "fire",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 2,
+            "damageSides": 6,
+            "damageType": "fire",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "nameKey": "actor-demo-fire-spirit-name",
+  "resistances": {
+    "cold": "vulnerable",
+    "fire": "resistant",
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 120,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "evil",
+    "legacy-import",
+    "nonliving",
+    "spirit",
+    "warrens"
+  ]
+}

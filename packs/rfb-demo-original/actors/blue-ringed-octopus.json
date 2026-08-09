@@ -1,0 +1,78 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyDungeonIndices": [
+      35
+    ],
+    "legacyIndex": 1308,
+    "maxDepth": 50,
+    "randomMovementPercent": 25,
+    "rarity": 1
+  },
+  "attack": 5,
+  "damageDice": 2,
+  "damageSides": 15,
+  "damageType": "poison",
+  "defense": 3,
+  "descriptionKey": "actor-demo-blue-ringed-octopus-description",
+  "experienceValue": 60,
+  "formatVersion": 1,
+  "glyph": "l",
+  "hitPointDice": {
+    "dice": 10,
+    "sides": 8
+  },
+  "id": "demo.actor.blue-ringed-octopus",
+  "level": 20,
+  "maxHp": 45,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "type": "paralysis"
+          },
+          {
+            "damageDice": 2,
+            "damageSides": 15,
+            "type": "poison"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "type": "paralysis"
+          },
+          {
+            "damageDice": 2,
+            "damageSides": 15,
+            "type": "poison"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "modes": [
+      "aquatic"
+    ]
+  },
+  "nameKey": "actor-demo-blue-ringed-octopus-name",
+  "resistances": {
+    "poison": "resistant",
+    "water": "resistant"
+  },
+  "role": "monster",
+  "speed": 110,
+  "tags": [
+    "animal",
+    "aquatic",
+    "legacy-import",
+    "warrens"
+  ]
+}

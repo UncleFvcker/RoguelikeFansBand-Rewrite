@@ -1,0 +1,87 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "habitats": [
+      "mountain"
+    ],
+    "legacyIndex": 984,
+    "maxDepth": 60,
+    "rarity": 1
+  },
+  "attack": 5,
+  "damageDice": 1,
+  "damageSides": 10,
+  "damageType": "physical",
+  "defense": 3,
+  "descriptionKey": "actor-demo-nue-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 100,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "H",
+  "hitPointDice": {
+    "dice": 13,
+    "sides": 8
+  },
+  "id": "demo.actor.nue",
+  "level": 20,
+  "maxHp": 58,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 10,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 10,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 10,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "damageDice": 1,
+            "damageSides": 10,
+            "type": "poison"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      }
+    ]
+  },
+  "nameKey": "actor-demo-nue-name",
+  "role": "monster",
+  "speed": 110,
+  "tags": [
+    "animal",
+    "legacy-import",
+    "warrens"
+  ]
+}

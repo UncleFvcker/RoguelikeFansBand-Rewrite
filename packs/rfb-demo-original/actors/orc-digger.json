@@ -1,0 +1,94 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 1108,
+    "maxDepth": 50,
+    "rarity": 1
+  },
+  "attack": 4,
+  "damageDice": 1,
+  "damageSides": 11,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [
+      {
+        "percent": 60
+      }
+    ],
+    "itemTableId": "demo.loot-table.warrens",
+    "kind": "items-and-gold",
+    "themeChancePercent": 50,
+    "themeTableId": "demo.loot-table.large-kobold"
+  },
+  "defense": 3,
+  "descriptionKey": "actor-demo-orc-digger-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 50,
+  "formatVersion": 1,
+  "glyph": "o",
+  "hitPointDice": {
+    "dice": 20,
+    "sides": 9
+  },
+  "id": "demo.actor.orc-digger",
+  "level": 19,
+  "maxHp": 100,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 11,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 11,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "movesWeakerBodies": true,
+  "nameKey": "actor-demo-orc-digger-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 4,
+    "skeletonItemKindId": "demo.item.skeleton-remains",
+    "skeletonWeight": 1
+  },
+  "resistances": {
+    "dark": "resistant",
+    "light": "vulnerable"
+  },
+  "role": "monster",
+  "speed": 110,
+  "tags": [
+    "evil",
+    "humanoid",
+    "legacy-import",
+    "orc",
+    "warrens"
+  ],
+  "terrainInteraction": {
+    "destroysWalls": true
+  }
+}
