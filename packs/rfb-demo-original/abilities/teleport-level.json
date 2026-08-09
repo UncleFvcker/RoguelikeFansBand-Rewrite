@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.teleport-level",
+  "descriptionKey": "ability-legacy-teleport-level-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.teleport-level",
+  "nameKey": "ability-legacy-teleport-level-name",
+  "tags": [
+    "legacy-import",
+    "mobility"
+  ],
+  "target": {
+    "modes": [
+      "position",
+      "entity"
+    ],
+    "range": 8,
+    "requiresLineOfEffect": true
+  }
+}

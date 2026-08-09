@@ -487,6 +487,19 @@
         {
           "additionalProperties": false,
           "properties": {
+            "type": {
+              "const": "teleport-level",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
             "actorKindId": {
               "type": "string"
             },

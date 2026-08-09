@@ -389,3 +389,5 @@ contract-v191 只增加内容层近战 effect 及对应运行时解释，不新�
 协议 1.149 增加单步 `TravelLocal { destination }`。Core 只根据当前已探索且可通行的地图知识选择下一步，避开已知陷阱，并复用普通 `Move` 的行动、怪物、时间、饥饿与光源结算；地图选点、循环定位楼梯、连续派发和中断由前端负责。普通地图目标遵循 RFB 原版生命周期，只在本次运行中供大写 `J` 恢复，不进入 save 或 state hash；Schema 保持 v71，基线升至 contract-v206。
 
 集成协议 1.151 同时保留怪物目标闪现、物品发现、本地旅行和墨家名器双语配置；配置进入 save v1 与 state hash Schema v72，contract 基线统一刷新为 v215。
+
+协议 1.152 为 `AbilityEffectSpecDto` 与 `AbilityEffectResolutionDto` 增加怪物专用 `teleport-level`。它复用现有楼层切换事务，先判定 Nexus 抗性与玩家豁免；不增加命令、存档字段或 state-hash 输入，save v1 与 Schema v72 不变。完整边界见 [Contract v218](contract-v218-warrens-content-p33-level-16-blockers.md)。

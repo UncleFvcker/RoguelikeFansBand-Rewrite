@@ -62,7 +62,8 @@
         "weight": 1
       }
     ],
-    "frequencyPercent": 10
+    "frequencyPercent": 10,
+    "smart": true
   },
   "movement": {
     "modes": [

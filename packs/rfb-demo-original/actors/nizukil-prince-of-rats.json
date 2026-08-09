@@ -2,16 +2,20 @@
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
   "allocation": {
     "escort": true,
-    "legacyIndex": 237,
+    "legacyIndex": 1299,
     "maxDepth": 999,
-    "rarity": 3
+    "rarity": 255,
+    "taskId": "demo.task.the-sewer"
   },
-  "attack": 3,
+  "attack": 4,
   "damageDice": 1,
   "damageSides": 9,
   "damageType": "physical",
   "deathDrop": {
     "chanceRolls": [
+      {
+        "percent": 60
+      },
       {
         "guaranteedForUnique": true,
         "percent": 90
@@ -19,7 +23,7 @@
     ],
     "countDice": [
       {
-        "dice": 1,
+        "dice": 2,
         "sides": 2
       }
     ],
@@ -28,27 +32,23 @@
     "minimumQuality": "fine"
   },
   "defense": 2,
-  "descriptionKey": "actor-demo-boldor-king-of-the-yeeks-description",
+  "descriptionKey": "actor-demo-nizukil-prince-of-rats-description",
   "doorInteraction": {
     "bashes": true,
     "opens": true
   },
-  "experienceValue": 200,
+  "experienceValue": 240,
   "forceSleep": true,
   "formatVersion": 1,
-  "glyph": "y",
+  "glyph": "r",
   "hitPointDice": {
-    "dice": 18,
+    "dice": 20,
     "forceMaximum": true,
     "sides": 10
   },
-  "id": "demo.actor.boldor-king-of-the-yeeks",
-  "level": 13,
-  "light": {
-    "intrinsic": false,
-    "radius": 2
-  },
-  "maxHp": 180,
+  "id": "demo.actor.nizukil-prince-of-rats",
+  "level": 16,
+  "maxHp": 200,
   "meleeRoutine": {
     "blows": [
       {
@@ -61,7 +61,7 @@
             "type": "damage"
           }
         ],
-        "methodId": "rfb.blow.hit",
+        "methodId": "rfb.blow.claw",
         "toHit": 20
       },
       {
@@ -74,7 +74,7 @@
             "type": "damage"
           }
         ],
-        "methodId": "rfb.blow.hit",
+        "methodId": "rfb.blow.claw",
         "toHit": 20
       },
       {
@@ -87,7 +87,7 @@
             "type": "damage"
           }
         ],
-        "methodId": "rfb.blow.hit",
+        "methodId": "rfb.blow.bite",
         "toHit": 20
       }
     ]
@@ -95,7 +95,7 @@
   "monsterCasting": {
     "abilities": [
       {
-        "abilityId": "rfb-legacy.ability.heal-39",
+        "abilityId": "rfb-legacy.ability.heal-48",
         "weight": 1
       },
       {
@@ -103,26 +103,26 @@
         "weight": 1
       },
       {
-        "abilityId": "rfb-legacy.ability.escape",
+        "abilityId": "rfb-legacy.ability.shriek",
         "weight": 1
       },
       {
-        "abilityId": "rfb-legacy.ability.blind",
+        "abilityId": "rfb-legacy.ability.darkness",
         "weight": 1
       },
       {
-        "abilityId": "rfb-legacy.ability.slow",
+        "abilityId": "rfb-legacy.ability.bolt-physical-2d6-5",
         "weight": 1
       },
       {
-        "abilityId": "rfb-legacy.ability.kin-boldor-king-of-the-yeeks",
+        "abilityId": "rfb-legacy.ability.confuse",
         "weight": 1
       }
     ],
-    "frequencyPercent": 33,
+    "frequencyPercent": 20,
     "smart": true
   },
-  "nameKey": "actor-demo-boldor-king-of-the-yeeks-name",
+  "nameKey": "actor-demo-nizukil-prince-of-rats-name",
   "remains": {
     "chanceDenominator": 3,
     "corpseItemKindId": "demo.item.corpse-remains",
@@ -130,16 +130,19 @@
     "skeletonWeight": 0
   },
   "resistances": {
-    "acid": "immune"
+    "poison": "resistant"
   },
   "role": "monster",
-  "speed": 120,
+  "speed": 117,
   "tags": [
     "animal",
     "evil",
+    "fixed-unique",
     "legacy-import",
+    "no-quest",
+    "rat",
+    "sewer",
     "unique",
-    "warrens",
-    "yeek"
+    "warrens"
   ]
 }

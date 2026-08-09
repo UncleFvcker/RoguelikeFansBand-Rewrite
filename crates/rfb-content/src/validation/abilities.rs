@@ -215,7 +215,8 @@ pub(super) fn validate_abilities(
                 AbilityEffectDefinition::TeleportSelf { minimum_distance } => {
                     (1..=64).contains(minimum_distance)
                 }
-                AbilityEffectDefinition::TeleportTarget => true,
+                AbilityEffectDefinition::TeleportTarget
+                | AbilityEffectDefinition::TeleportLevel => true,
                 AbilityEffectDefinition::Summon {
                     actor_kind_id,
                     count,
@@ -580,6 +581,7 @@ pub(super) fn validate_abilities(
             | AbilityEffectDefinition::TeleportAway { .. }
             | AbilityEffectDefinition::DrainResource { .. }
             | AbilityEffectDefinition::Amnesia
+            | AbilityEffectDefinition::TeleportLevel
             | AbilityEffectDefinition::DrainLife { .. }
             | AbilityEffectDefinition::DeathRay { .. }
             | AbilityEffectDefinition::RandomChoice { .. } => projectile_target_rule,
@@ -792,7 +794,8 @@ pub(super) fn validate_abilities(
                 | AbilityEffectDefinition::CurseDamage { .. }
                 | AbilityEffectDefinition::TeleportAway { .. }
                 | AbilityEffectDefinition::DrainResource { .. }
-                | AbilityEffectDefinition::Amnesia => projectile_target,
+                | AbilityEffectDefinition::Amnesia
+                | AbilityEffectDefinition::TeleportLevel => projectile_target,
                 AbilityEffectDefinition::DarkenRoom => room_target,
                 AbilityEffectDefinition::ConeDamage { .. }
                 | AbilityEffectDefinition::BreathDamage { .. } => {

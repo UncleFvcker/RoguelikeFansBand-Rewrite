@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
-use crate::game::monster_ecology::{OriginalGroupRole, actor_allocation_matches_legacy_dungeon};
+use crate::game::monster_ecology::{
+    OriginalGroupRole, actor_allocation_matches_legacy_dungeon, actor_allocation_matches_task,
+};
 use crate::rng::RfbRng;
 
 use super::support::*;
@@ -19,6 +21,27 @@ fn first_seed_for(mut predicate: impl FnMut(&mut RfbRng) -> bool) -> u64 {
     (0..1_000_000)
         .find(|seed| predicate(&mut RfbRng::seeded(*seed)))
         .expect("bounded deterministic seed search should find a match")
+}
+
+#[test]
+fn compost_monsters_allocate_only_in_the_sewer_task() {
+    let game = Game::new(3);
+    for actor_id in ["demo.actor.plague-rat", "demo.actor.nizukil-prince-of-rats"] {
+        let allocation = game
+            .content
+            .actor(actor_id)
+            .and_then(|actor| actor.allocation.as_ref())
+            .expect("compost actor allocation");
+        assert!(!actor_allocation_matches_task(allocation, None));
+        assert!(!actor_allocation_matches_task(
+            allocation,
+            Some("demo.task.pest-control")
+        ));
+        assert!(actor_allocation_matches_task(
+            allocation,
+            Some("demo.task.the-sewer")
+        ));
+    }
 }
 
 #[test]
@@ -140,6 +163,7 @@ fn mughash_escort_uses_lower_level_kobolds() {
         "demo.actor.warrens-keeper",
         leader_position,
         9,
+        None,
         &terrain,
         game.width,
         game.height,

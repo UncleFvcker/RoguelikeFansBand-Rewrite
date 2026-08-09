@@ -81,6 +81,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.broken-death-sword", 953, 5, 40),
             ("demo.actor.brown-mold", 113, 1, 40),
             ("demo.actor.brown-yeek", 141, 1, 40),
+            ("demo.actor.brumby", 1334, 2, 35),
             ("demo.actor.bullroarer-the-hobbit", 914, 3, 999),
             ("demo.actor.buzzy-beetle", 951, 4, 60),
             ("demo.actor.carnivorous-flying-monkey", 145, 2, 40),
@@ -262,6 +263,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.nibelung", 111, 1, 40),
             ("demo.actor.night-lizard", 134, 2, 40),
             ("demo.actor.nixie", 248, 1, 50),
+            ("demo.actor.nizukil-prince-of-rats", 1299, 255, 999),
             ("demo.actor.novice-archaeologist", 45, 3, 30),
             ("demo.actor.novice-archer", 116, 2, 40),
             ("demo.actor.novice-mage", 93, 2, 40),
@@ -294,6 +296,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.priest", 225, 1, 50),
             ("demo.actor.pseudo-dragon", 193, 2, 50),
             ("demo.actor.purple-mushroom-patch", 108, 2, 40),
+            ("demo.actor.quasit", 294, 2, 50),
             ("demo.actor.quiver-slot", 185, 2, 40),
             ("demo.actor.radiant-kavu", 1071, 1, 50),
             ("demo.actor.radiation-eye", 80, 1, 30),
@@ -348,6 +351,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.trench-wurm", 1070, 1, 50),
             ("demo.actor.ufthak-of-cirith-ungol", 260, 3, 999),
             ("demo.actor.ulfast-son-of-ulfang", 291, 3, 999),
+            ("demo.actor.umber-hulk", 283, 1, 50),
             ("demo.actor.undead-devilfish", 913, 4, 50),
             ("demo.actor.undead-mass", 202, 2, 40),
             ("demo.actor.unruly-horse", 957, 2, 30),
@@ -1552,6 +1556,80 @@ fn level_sixteen_p32_king_mulu_reuses_category_summoning() {
             } if category == expected_category
         ));
     }
+}
+
+#[test]
+fn level_sixteen_p33_blockers_use_narrow_runtime_contracts() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actor = |id: &str| {
+        artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == id)
+            .unwrap_or_else(|| panic!("{id} should be imported"))
+    };
+    let ability = |id: &str| {
+        artifact
+            .content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == id)
+            .unwrap_or_else(|| panic!("{id} should be generated"))
+    };
+
+    let umber_hulk = actor("demo.actor.umber-hulk");
+    assert_eq!(umber_hulk.level, 16);
+    assert_eq!(
+        umber_hulk.resistances.get(&ActorDamageType::Disintegrate),
+        Some(&ActorResistanceLevel::Vulnerable)
+    );
+
+    let brumby = actor("demo.actor.brumby");
+    assert!(brumby.movement.modes.contains(&ActorMovementMode::Climb));
+    assert!(brumby.rideable);
+    assert_eq!(
+        brumby
+            .allocation
+            .as_ref()
+            .expect("Brumby allocation")
+            .legacy_dungeon_indices,
+        [35]
+    );
+
+    let quasit = actor("demo.actor.quasit");
+    let quasit_casting = quasit
+        .monster_casting
+        .as_ref()
+        .expect("Quasit should retain casting");
+    assert!(quasit_casting.smart);
+    assert!(
+        quasit_casting
+            .abilities
+            .iter()
+            .any(|candidate| { candidate.ability_id == "rfb-legacy.ability.teleport-level" })
+    );
+    assert!(matches!(
+        ability("rfb-legacy.ability.teleport-level").effect,
+        AbilityEffectDefinition::TeleportLevel
+    ));
+
+    let nizukil = actor("demo.actor.nizukil-prince-of-rats");
+    assert_eq!(
+        nizukil
+            .allocation
+            .as_ref()
+            .expect("Nizukil allocation")
+            .task_id
+            .as_deref(),
+        Some("demo.task.the-sewer")
+    );
+    assert!(nizukil.tags.iter().any(|tag| tag == "fixed-unique"));
+    assert!(nizukil.tags.iter().any(|tag| tag == "no-quest"));
+    assert!(matches!(
+        ability("rfb-legacy.ability.heal-48").effect,
+        AbilityEffectDefinition::Heal { amount: 48 }
+    ));
 }
 
 #[test]

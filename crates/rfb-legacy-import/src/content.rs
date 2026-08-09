@@ -6361,16 +6361,20 @@ fn terrain_json(
     if entry.flags.iter().any(|flag| flag == "CAN_PASS") {
         value["allowsWallPassage"] = serde_json::json!(true);
     }
-    let movement_modes = [("CAN_FLY", "fly"), ("CAN_SWIM", "swim")]
-        .into_iter()
-        .filter_map(|(flag, mode)| {
-            entry
-                .flags
-                .iter()
-                .any(|value| value == flag)
-                .then_some(mode)
-        })
-        .collect::<Vec<_>>();
+    let movement_modes = [
+        ("CAN_CLIMB", "climb"),
+        ("CAN_FLY", "fly"),
+        ("CAN_SWIM", "swim"),
+    ]
+    .into_iter()
+    .filter_map(|(flag, mode)| {
+        entry
+            .flags
+            .iter()
+            .any(|value| value == flag)
+            .then_some(mode)
+    })
+    .collect::<Vec<_>>();
     if !movement_modes.is_empty() {
         value["movementModes"] = serde_json::json!(movement_modes);
     }
@@ -6916,6 +6920,11 @@ fn monster_flag_is_mapped(flag: &str) -> bool {
             | "DROP_GOOD"
             | "DROP_GREAT"
             | "SHAPECHANGER"
+            | "HURT_ROCK"
+            | "CAN_CLIMB"
+            | "COMPOST"
+            | "FIXED_UNIQUE"
+            | "NO_QUEST"
     ) {
         return true;
     }
@@ -7013,6 +7022,9 @@ fn resistances_from_flags(flags: &[String]) -> BTreeMap<&'static str, &'static s
             }
         }
     }
+    if flags.iter().any(|flag| flag == "HURT_ROCK") {
+        resistances.insert("disintegrate", "vulnerable");
+    }
     resistances
 }
 
@@ -7079,6 +7091,12 @@ fn monster_json(
     if entry.flags.iter().any(|flag| flag == "SHAPECHANGER") {
         tags.push("shapechanger".to_owned());
     }
+    if entry.flags.iter().any(|flag| flag == "FIXED_UNIQUE") {
+        tags.push("fixed-unique".to_owned());
+    }
+    if entry.flags.iter().any(|flag| flag == "NO_QUEST") {
+        tags.push("no-quest".to_owned());
+    }
     if entry
         .glyph
         .is_some_and(|glyph| matches!(glyph, 'L' | 'V' | 'W'))
@@ -7122,6 +7140,7 @@ fn monster_json(
     }
     let movement_modes = [
         ("AQUATIC", "aquatic"),
+        ("CAN_CLIMB", "climb"),
         ("CAN_FLY", "fly"),
         ("PASS_WALL", "pass-wall"),
         ("CAN_SWIM", "swim"),
@@ -7274,6 +7293,9 @@ fn monster_json(
             "multiplies": entry.flags.iter().any(|flag| flag == "MULTIPLY"),
             "randomMovementPercent": random_movement_percent,
         });
+        if entry.flags.iter().any(|flag| flag == "COMPOST") {
+            allocation["taskId"] = serde_json::json!("demo.task.the-sewer");
+        }
         let habitats = [
             ("WILD_ALL", "all"),
             ("WILD_GRASS", "grass"),
@@ -7361,6 +7383,7 @@ fn demo_monster_flag_is_handled(flag: &str) -> bool {
                 | "RAND_50"
                 | "FRIENDS"
                 | "INVISIBLE"
+                | "SMART"
                 | "SHAPECHANGER"
                 | "WILD_ALL"
                 | "WILD_GRASS"
@@ -7465,13 +7488,17 @@ fn demo_monster_json(
         }
     }
     let monster_casting = (!ability_ids.is_empty()).then(|| {
-        serde_json::json!({
+        let mut casting = serde_json::json!({
             "frequencyPercent": frequency_percent.unwrap_or(10),
             "abilities": ability_ids
                 .iter()
                 .map(|ability_id| serde_json::json!({ "abilityId": ability_id, "weight": 1 }))
                 .collect::<Vec<_>>(),
-        })
+        });
+        if entry.flags.iter().any(|flag| flag == "SMART") {
+            casting["smart"] = serde_json::json!(true);
+        }
+        casting
     });
     if entry
         .drop_theme
@@ -7591,6 +7618,8 @@ fn demo_monster_json(
         ("RES_ALL", "resist-all"),
         ("RES_TELE", "resist-teleport"),
         ("SHAPECHANGER", "shapechanger"),
+        ("FIXED_UNIQUE", "fixed-unique"),
+        ("NO_QUEST", "no-quest"),
     ] {
         if entry.flags.iter().any(|candidate| candidate == flag) {
             tags.insert(tag.to_owned());
@@ -7959,6 +7988,17 @@ fn map_spell_token(
                 displacement_ability(
                     "drag",
                     serde_json::json!({"type": "teleport-target"}),
+                    false,
+                )
+            });
+            Some(id)
+        }
+        "TELE_LEVEL" => {
+            let id = "rfb-legacy.ability.teleport-level".to_owned();
+            abilities.entry(id.clone()).or_insert_with(|| {
+                displacement_ability(
+                    "teleport-level",
+                    serde_json::json!({"type": "teleport-level"}),
                     false,
                 )
             });
@@ -11345,6 +11385,58 @@ mod tests {
             serde_json::json!([31])
         );
         assert_eq!(actor["deathDrop"]["themeTableId"], "demo.loot-table.archer");
+    }
+
+    #[test]
+    fn demo_monster_import_maps_p33_blockers_without_fallbacks() {
+        let mut monsters = parse_r_info(
+            "N:1:test sewer climber\nG:u:w\nI:110:2d4:8:4:20:10\nW:16:2:50:40:0:0\nB:HIT:HURT(1d4)\nF:HURT_ROCK | CAN_CLIMB | COMPOST | FIXED_UNIQUE | NO_QUEST | SMART\nS:1_IN_10 | TELE_LEVEL\n",
+        )
+        .expect("synthetic P33 monster should parse");
+        let mut abilities = BTreeMap::new();
+        let actor = demo_monster_json(
+            &monsters.remove(0),
+            &DemoMonsterSelectionEntry {
+                source_index: 1,
+                source_id: None,
+                id: "test-sewer-climber".to_owned(),
+                tags: vec!["warrens".to_owned()],
+                omitted_flags: Vec::new(),
+            },
+            &mut abilities,
+        )
+        .expect("P33 mechanics should import directly");
+
+        assert_eq!(actor["resistances"]["disintegrate"], "vulnerable");
+        assert_eq!(actor["movement"]["modes"], serde_json::json!(["climb"]));
+        assert_eq!(actor["allocation"]["taskId"], "demo.task.the-sewer");
+        assert_eq!(actor["monsterCasting"]["smart"], true);
+        assert!(actor["tags"].as_array().is_some_and(|tags| {
+            tags.iter().any(|tag| tag == "fixed-unique") && tags.iter().any(|tag| tag == "no-quest")
+        }));
+        assert_eq!(
+            abilities["rfb-legacy.ability.teleport-level"]["effect"]["type"],
+            "teleport-level"
+        );
+    }
+
+    #[test]
+    fn terrain_import_maps_climbable_terrain_mode() {
+        let terrain = parse_f_info("N:1:STEEP\nG:#:w\nF:LOS | PROJECT | CAN_CLIMB | MOUNTAIN\n")
+            .expect("synthetic climb terrain should parse");
+        let outcome = convert_content(
+            &terrain,
+            &[],
+            &[],
+            &[],
+            &[],
+            &LegacyCharacterSources::default(),
+        );
+
+        assert_eq!(
+            outcome.terrain_files[0].1["movementModes"],
+            serde_json::json!(["climb"])
+        );
     }
 
     #[test]

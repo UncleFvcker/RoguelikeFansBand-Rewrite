@@ -8,7 +8,8 @@
     },
     "legacyIndex": 1298,
     "maxDepth": 40,
-    "rarity": 2
+    "rarity": 2,
+    "taskId": "demo.task.the-sewer"
   },
   "attack": 2,
   "contactAura": {

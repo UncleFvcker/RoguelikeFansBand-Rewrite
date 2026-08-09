@@ -304,6 +304,7 @@ pub enum AbilityEffectDefinition {
         minimum_distance: u8,
     },
     TeleportTarget,
+    TeleportLevel,
     Summon {
         actor_kind_id: String,
         count: u8,

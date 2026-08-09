@@ -1,22 +1,17 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
   "allocation": {
-    "escort": true,
-    "legacyIndex": 237,
-    "maxDepth": 999,
-    "rarity": 3
+    "legacyIndex": 294,
+    "maxDepth": 50,
+    "randomMovementPercent": 25,
+    "rarity": 2
   },
-  "attack": 3,
+  "attack": 4,
   "damageDice": 1,
-  "damageSides": 9,
+  "damageSides": 6,
   "damageType": "physical",
   "deathDrop": {
-    "chanceRolls": [
-      {
-        "guaranteedForUnique": true,
-        "percent": 90
-      }
-    ],
+    "chanceRolls": [],
     "countDice": [
       {
         "dice": 1,
@@ -24,31 +19,24 @@
       }
     ],
     "itemTableId": "demo.loot-table.warrens",
-    "kind": "items",
-    "minimumQuality": "fine"
+    "kind": "items"
   },
-  "defense": 2,
-  "descriptionKey": "actor-demo-boldor-king-of-the-yeeks-description",
+  "defense": 3,
+  "descriptionKey": "actor-demo-quasit-description",
   "doorInteraction": {
-    "bashes": true,
-    "opens": true
+    "bashes": true
   },
-  "experienceValue": 200,
+  "experienceValue": 50,
   "forceSleep": true,
   "formatVersion": 1,
-  "glyph": "y",
+  "glyph": "u",
   "hitPointDice": {
-    "dice": 18,
-    "forceMaximum": true,
-    "sides": 10
+    "dice": 6,
+    "sides": 8
   },
-  "id": "demo.actor.boldor-king-of-the-yeeks",
-  "level": 13,
-  "light": {
-    "intrinsic": false,
-    "radius": 2
-  },
-  "maxHp": 180,
+  "id": "demo.actor.quasit",
+  "level": 16,
+  "maxHp": 27,
   "meleeRoutine": {
     "blows": [
       {
@@ -56,12 +44,19 @@
           {
             "armorMitigated": true,
             "damageDice": 1,
-            "damageSides": 9,
+            "damageSides": 6,
             "damageType": "physical",
             "type": "damage"
+          },
+          {
+            "attributes": [
+              "dexterity"
+            ],
+            "chancePercent": 50,
+            "type": "drain-attributes"
           }
         ],
-        "methodId": "rfb.blow.hit",
+        "methodId": "rfb.blow.bite",
         "toHit": 20
       },
       {
@@ -69,12 +64,12 @@
           {
             "armorMitigated": true,
             "damageDice": 1,
-            "damageSides": 9,
+            "damageSides": 3,
             "damageType": "physical",
             "type": "damage"
           }
         ],
-        "methodId": "rfb.blow.hit",
+        "methodId": "rfb.blow.claw",
         "toHit": 20
       },
       {
@@ -82,22 +77,18 @@
           {
             "armorMitigated": true,
             "damageDice": 1,
-            "damageSides": 8,
+            "damageSides": 3,
             "damageType": "physical",
             "type": "damage"
           }
         ],
-        "methodId": "rfb.blow.hit",
+        "methodId": "rfb.blow.claw",
         "toHit": 20
       }
     ]
   },
   "monsterCasting": {
     "abilities": [
-      {
-        "abilityId": "rfb-legacy.ability.heal-39",
-        "weight": 1
-      },
       {
         "abilityId": "rfb-legacy.ability.blink",
         "weight": 1
@@ -107,39 +98,46 @@
         "weight": 1
       },
       {
+        "abilityId": "rfb-legacy.ability.drag",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.teleport-level",
+        "weight": 1
+      },
+      {
         "abilityId": "rfb-legacy.ability.blind",
         "weight": 1
       },
       {
-        "abilityId": "rfb-legacy.ability.slow",
+        "abilityId": "rfb-legacy.ability.confuse",
         "weight": 1
       },
       {
-        "abilityId": "rfb-legacy.ability.kin-boldor-king-of-the-yeeks",
+        "abilityId": "rfb-legacy.ability.scare",
         "weight": 1
       }
     ],
-    "frequencyPercent": 33,
+    "frequencyPercent": 10,
     "smart": true
   },
-  "nameKey": "actor-demo-boldor-king-of-the-yeeks-name",
-  "remains": {
-    "chanceDenominator": 3,
-    "corpseItemKindId": "demo.item.corpse-remains",
-    "corpseWeight": 1,
-    "skeletonWeight": 0
+  "movement": {
+    "modes": [
+      "fly"
+    ]
   },
+  "nameKey": "actor-demo-quasit-name",
   "resistances": {
-    "acid": "immune"
+    "fire": "resistant"
   },
   "role": "monster",
-  "speed": 120,
+  "speed": 110,
   "tags": [
-    "animal",
+    "demon",
     "evil",
+    "invisible",
     "legacy-import",
-    "unique",
-    "warrens",
-    "yeek"
+    "nonliving",
+    "warrens"
   ]
 }

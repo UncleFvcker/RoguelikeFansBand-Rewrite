@@ -134,8 +134,12 @@ contract-v216 直接接入粉红惧妖、铁锈怪、兽人队长、凝胶方块
 
 contract-v217 以现有 `summon-category` 接入南蛮大王木鹿大王，并给导入器增加
 `S_SPIDER → spider` 的单条窄映射；正式包 actor 增至 345、ability 增至 145、
-严格同步增至 280。十六级剩余阻塞收窄为恐爪怪的 `HURT_ROCK`、夸塞魔的
-`TELE_LEVEL`、老鼠王子尼祖基尔的真实下水道归属和布伦比野马的 `CAN_CLIMB`。
+严格同步增至 280。
+
+contract-v218 完成这四项十六级阻塞：恐爪怪以现有解离伤害记录 `HURT_ROCK`
+易伤，布伦比野马通过 `climb` 进入山地/冰川，夸塞魔以协议 1.152 的窄
+`teleport-level` effect 跨层，尼祖基尔和既有瘟疫鼠以 allocation `taskId`
+限定到 `demo.task.the-sewer`。完整下水道任务、地图和奖励仍是独立后续切片。
 
 荒野 W0 已导入 `master:w_info.txt` 的 `99x66` normal 世界图、15 类地形、
 危险等级、道路和起点，并只把现有 Outpost/Warrens 绑定为正式地点。W1 已完成

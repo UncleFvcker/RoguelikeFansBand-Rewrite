@@ -25,6 +25,7 @@ pub enum ActorRole {
 #[serde(rename_all = "kebab-case")]
 pub enum ActorMovementMode {
     Aquatic,
+    Climb,
     Fly,
     PassWall,
     Swim,
@@ -440,6 +441,9 @@ pub struct ActorAllocationDefinition {
     pub rarity: u32,
     /// Original maximum allocation depth; zero means unrestricted.
     pub max_depth: u16,
+    /// Optional task that exclusively owns this monster's allocation.
+    #[serde(default)]
+    pub task_id: Option<String>,
     #[serde(default)]
     pub force_depth: bool,
     #[serde(default)]

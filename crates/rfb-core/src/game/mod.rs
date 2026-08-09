@@ -2324,6 +2324,7 @@ impl Game {
         maximum_level: u16,
         allow_unique: bool,
     ) -> Vec<String> {
+        let current_task_id = self.current_floor_task_id();
         self.content
             .actor_definitions()
             .filter(|definition| {
@@ -2334,6 +2335,9 @@ impl Game {
                     && excluded_category
                         .is_none_or(|category| !actor_matches_category(definition, category))
                     && !definition.tags.iter().any(|tag| tag == "guardian")
+                    && definition.allocation.as_ref().is_none_or(|allocation| {
+                        monster_ecology::actor_allocation_matches_task(allocation, current_task_id)
+                    })
                     && (allow_unique || !unique)
                     && (!unique || self.unique_actor_kind_is_available(&definition.id))
             })
@@ -5613,6 +5617,7 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             }
         }
         AbilityEffectDefinition::TeleportTarget => AbilityEffectSpecDto::TeleportTarget,
+        AbilityEffectDefinition::TeleportLevel => AbilityEffectSpecDto::TeleportLevel,
         AbilityEffectDefinition::Damage {
             damage_dice,
             damage_sides,

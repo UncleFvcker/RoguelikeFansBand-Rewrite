@@ -228,6 +228,7 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::DrainLife { .. }
                     | AbilityEffectDefinition::BlinkTarget { .. }
                     | AbilityEffectDefinition::TeleportTarget
+                    | AbilityEffectDefinition::TeleportLevel
                     | AbilityEffectDefinition::NoOp { .. }
             ) || matches!(
                 effect,

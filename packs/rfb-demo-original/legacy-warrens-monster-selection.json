@@ -99,7 +99,7 @@
       "sourceIndex": 63,
       "id": "smeagol",
       "tags": ["hobbit", "thief", "warrens"],
-      "omittedFlags": ["CAN_SPEAK", "MALE", "POS_SEE_INVIS", "SMART"]
+      "omittedFlags": ["CAN_SPEAK", "MALE", "POS_SEE_INVIS"]
     },
     {
       "sourceIndex": 64,
@@ -797,7 +797,7 @@
       "sourceIndex": 138,
       "id": "robin-hood-the-outlaw",
       "tags": ["human", "warrens"],
-      "omittedFlags": ["CAN_SPEAK", "MALE", "NO_QUEST"]
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
     },
     {
       "sourceIndex": 1063,
@@ -959,7 +959,7 @@
       "sourceIndex": 180,
       "id": "orfax-son-of-boldor",
       "tags": ["warrens", "yeek"],
-      "omittedFlags": ["CAN_SPEAK", "MALE", "SMART"]
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
     },
     {
       "sourceIndex": 181,
@@ -1049,7 +1049,7 @@
       "sourceIndex": 1298,
       "id": "plague-rat",
       "tags": ["rat", "warrens"],
-      "omittedFlags": ["COMPOST", "POS_GAIN_AC"]
+      "omittedFlags": ["POS_GAIN_AC"]
     },
     {
       "sourceIndex": 219,
@@ -1211,13 +1211,13 @@
       "sourceIndex": 225,
       "id": "priest",
       "tags": ["humanoid", "warrens"],
-      "omittedFlags": ["MALE", "SMART"]
+      "omittedFlags": ["MALE"]
     },
     {
       "sourceIndex": 226,
       "id": "dark-elven-priest",
       "tags": ["dark-elf", "humanoid", "warrens"],
-      "omittedFlags": ["MALE", "POS_SEE_INVIS", "SMART"]
+      "omittedFlags": ["MALE", "POS_SEE_INVIS"]
     },
     {
       "sourceIndex": 231,
@@ -1253,7 +1253,7 @@
       "sourceIndex": 237,
       "id": "boldor-king-of-the-yeeks",
       "tags": ["warrens", "yeek"],
-      "omittedFlags": ["CAN_SPEAK", "MALE", "SMART"]
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
     },
     {
       "sourceIndex": 238,
@@ -1271,7 +1271,7 @@
       "sourceIndex": 241,
       "id": "druid",
       "tags": ["druid", "humanoid", "warrens"],
-      "omittedFlags": ["MALE", "SMART"]
+      "omittedFlags": ["MALE"]
     },
     {
       "sourceIndex": 243,
@@ -1295,7 +1295,7 @@
       "sourceIndex": 962,
       "id": "slime-mold",
       "tags": ["mold", "warrens"],
-      "omittedFlags": ["COLD_BLOOD", "NASTY_GLYPH", "SMART", "WEIRD_MIND"]
+      "omittedFlags": ["COLD_BLOOD", "NASTY_GLYPH", "WEIRD_MIND"]
     },
     {
       "sourceIndex": 107,
@@ -1385,7 +1385,7 @@
       "sourceIndex": 954,
       "id": "orcish-artillery",
       "tags": ["humanoid", "orc", "warrens"],
-      "omittedFlags": ["SMART"]
+      "omittedFlags": []
     },
     {
       "sourceIndex": 983,
@@ -1421,7 +1421,7 @@
       "sourceIndex": 240,
       "id": "illusionist",
       "tags": ["humanoid", "warrens"],
-      "omittedFlags": ["MALE", "SMART"]
+      "omittedFlags": ["MALE"]
     },
     {
       "sourceIndex": 262,
@@ -1511,7 +1511,7 @@
       "sourceIndex": 1003,
       "id": "the-ghost-q",
       "tags": ["ghost", "warrens"],
-      "omittedFlags": ["CAN_SPEAK", "COLD_BLOOD", "MALE", "NO_QUEST", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+      "omittedFlags": ["CAN_SPEAK", "COLD_BLOOD", "MALE", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
     },
     {
       "sourceIndex": 1028,
@@ -1692,6 +1692,30 @@
       "id": "king-mulu-the-chief-of-southerings",
       "tags": ["humanoid", "warrens"],
       "omittedFlags": ["CAN_SPEAK", "MALE"]
+    },
+    {
+      "sourceIndex": 283,
+      "id": "umber-hulk",
+      "tags": ["aberration", "warrens"],
+      "omittedFlags": ["COLD_BLOOD", "EMPTY_MIND", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 294,
+      "id": "quasit",
+      "tags": ["demon", "warrens"],
+      "omittedFlags": ["POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 1299,
+      "id": "nizukil-prince-of-rats",
+      "tags": ["rat", "sewer", "warrens"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 1334,
+      "id": "brumby",
+      "tags": ["mount", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
     }
   ]
 }

@@ -2526,6 +2526,7 @@ impl Game {
             | AbilityEffectDefinition::BlinkTarget { .. }
             | AbilityEffectDefinition::TeleportSelf { .. }
             | AbilityEffectDefinition::TeleportTarget
+            | AbilityEffectDefinition::TeleportLevel
             | AbilityEffectDefinition::AggravateMonsters
             | AbilityEffectDefinition::BreathDamage { .. }
             | AbilityEffectDefinition::CurseDamage { .. }

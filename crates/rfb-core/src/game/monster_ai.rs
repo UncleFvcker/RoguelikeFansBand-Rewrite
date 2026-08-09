@@ -249,6 +249,7 @@ impl Game {
                 AbilityEffectDefinition::ApplyStatus {
                     resistance_type, ..
                 } => resistance_type.map(DamageType::from),
+                AbilityEffectDefinition::TeleportLevel => Some(DamageType::Nexus),
                 _ => None,
             })
             .filter_map(|damage_type| {
@@ -314,6 +315,7 @@ impl Game {
                     useful = true;
                 }
                 AbilityEffectDefinition::DarkenRoom if player_target => useful = true,
+                AbilityEffectDefinition::TeleportLevel if player_target => useful = true,
                 AbilityEffectDefinition::BlinkSelf { .. }
                 | AbilityEffectDefinition::TeleportSelf { .. } => useful = true,
                 AbilityEffectDefinition::AggravateMonsters => useful = true,
