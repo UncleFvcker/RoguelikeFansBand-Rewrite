@@ -7,5 +7,9 @@
   "rating": "good",
   "sourceIndex": 94,
   "randomWeight": 6,
+  "stealthSkill": 1,
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
   "removesOnGain": []
 }

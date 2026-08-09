@@ -1329,6 +1329,65 @@ fn throwable_profile_uses_weight_range_and_resolves_damage() {
 }
 
 #[test]
+fn mighty_throw_increases_the_existing_throw_range_and_damage() {
+    let resolve = |mighty: bool| {
+        let mut game = Game::new(0);
+        if mighty {
+            assert!(game.gain_mutation("rfb.mutation.launcher", &mut Vec::new()));
+        }
+        game.rng = RfbRng::seeded(0);
+        game.item_knowledge.insert(
+            "demo.item.luminous-shard".to_owned(),
+            ItemKnowledgeState {
+                tried: true,
+                aware: true,
+            },
+        );
+        game.items
+            .iter_mut()
+            .find(|item| item.kind_id == "demo.item.luminous-shard")
+            .expect("demo throwable stack should exist")
+            .location = ItemLocation::Inventory;
+        game.entities[0].position = Position { x: 6, y: 3 };
+        game.entities[0].hp = 10;
+        let range = game
+            .snapshot()
+            .inventory
+            .iter()
+            .find(|item| item.kind_id == "demo.item.luminous-shard")
+            .and_then(|item| item.throw_profile.as_ref())
+            .expect("known shard should expose its throw profile")
+            .range;
+        let update = game
+            .dispatch(command(
+                1,
+                0,
+                GameCommand::Throw {
+                    item_id: "demo.item.luminous-shard.1".to_owned(),
+                    direction: Direction::East,
+                },
+            ))
+            .expect("throw attack should execute");
+        let hit = update
+            .events
+            .iter()
+            .find(|event| event.kind == "combat.throw-hit")
+            .expect("seeded throw should hit");
+        let damage = hit.args["damage"]
+            .parse::<i32>()
+            .expect("damage should be numeric");
+        let raw_damage = match hit.outcome.as_ref().expect("throw hit outcome") {
+            GameEventOutcomeDto::Damage { resolution } => resolution.raw_damage,
+            outcome => panic!("unexpected throw outcome: {outcome:?}"),
+        };
+        (range, raw_damage, damage)
+    };
+
+    assert_eq!(resolve(false), (5, 2, 1));
+    assert_eq!(resolve(true), (6, 4, 3));
+}
+
+#[test]
 fn throwing_an_unknown_item_marks_the_kind_tried_and_preserves_its_appearance() {
     let mut game = Game::new(42);
     clear_monsters(&mut game);

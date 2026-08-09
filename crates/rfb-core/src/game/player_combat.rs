@@ -250,7 +250,8 @@ impl Game {
             .content
             .item(&item.kind_id)
             .expect("throwable item definition must remain available");
-        let range = throw_range(definition.weight_tenths_pound);
+        let mighty_throw = self.player_has_mighty_throw();
+        let range = throw_range(definition.weight_tenths_pound, mighty_throw);
         let profile = definition
             .throw_profile
             .as_ref()
@@ -314,6 +315,7 @@ impl Game {
                 let raw_damage = self
                     .roll_damage(profile.damage_dice, profile.damage_sides)
                     .saturating_add(profile.to_damage)
+                    .saturating_mul(if mighty_throw { 2 } else { 1 })
                     .max(0);
                 let resistance = self.entities[index].resistances.level(profile.damage_type);
                 let damage = resolve_armored_damage(
@@ -378,126 +380,153 @@ impl Game {
         self.entities[index].alerted = true;
         let attacker = self.player_derived_stats();
         let target = self.actor_derived_stats(&self.entities[index], &definition, false);
-        let profile = self.player_melee_profile(&attacker);
-        let vampiric_weapon = profile.source_item_id.as_ref().is_some_and(|item_id| {
-            self.items
-                .iter()
-                .find(|item| &item.id == item_id)
-                .is_some_and(|item| {
-                    self.item_passives(item)
-                        .contains(&EquipmentPassive::Vampiric)
-                })
-        });
+        let weapon_profile = self.player_melee_profile(&attacker);
+        let equipped_weapon_id = weapon_profile.source_item_id.clone();
+        let mut profiles = vec![weapon_profile];
+        profiles.extend(
+            self.player_mutation_innate_attack_profiles(&attacker, equipped_weapon_id.as_deref()),
+        );
         let mut vampiric_drain_remaining = 50_i32;
-        let damage_multiplier =
-            self.player_melee_damage_multiplier(&profile, &self.entities[index], &definition);
-        for _ in 0..profile.attacks {
-            if attacker.melee_skill.value <= 0
-                || !resolve_check(
-                    &mut self.rng,
-                    CheckContext {
-                        kind: CheckKind::MeleeHit,
-                        actor_id: self.player.id.clone(),
-                        target_id: Some(self.entities[index].id.clone()),
-                        ability: attacker.melee_skill.clone(),
-                        difficulty: target.armor_class.clone(),
-                    },
-                )
-                .succeeded()
-            {
-                events.push(DomainEvent::PlayerMeleeMissed {
-                    target_kind_id: target_kind.clone(),
-                });
-                continue;
-            }
-
-            let weapon_damage = self.roll_damage(profile.damage_dice, profile.damage_sides);
-            let rolled_damage = weapon_damage
-                .saturating_mul(damage_multiplier)
-                .saturating_div(10)
-                .saturating_add(profile.to_damage)
-                .max(0);
-            let damage_type = profile.damage_type;
-            let resistance = self.entities[index].resistances.level(damage_type);
-            let damage = resolve_damage(DamagePacket::new(rolled_damage, damage_type), resistance);
-            let application = plan_damage_application(
-                &self.entities[index],
-                damage,
-                FatalityPolicy::AtOrBelowZero,
-            );
-            commit_damage_application(&mut self.entities[index], &application);
-            events.push(DomainEvent::PlayerMeleeHit {
-                target_kind_id: target_kind.clone(),
-                damage,
+        'profiles: for profile in profiles {
+            let vampiric_weapon = profile.source_item_id.as_ref().is_some_and(|item_id| {
+                self.items
+                    .iter()
+                    .find(|item| &item.id == item_id)
+                    .is_some_and(|item| {
+                        self.item_passives(item)
+                            .contains(&EquipmentPassive::Vampiric)
+                    })
             });
-            self.wake_entity_after_damage(index, damage.applied, events);
-            let contact_aura_fatal = self.resolve_monster_contact_auras(&definition, events);
-            if contact_aura_fatal {
+            let damage_multiplier =
+                self.player_melee_damage_multiplier(&profile, &self.entities[index], &definition);
+            for _ in 0..profile.attacks {
+                if profile.melee_skill.value <= 0
+                    || !resolve_check(
+                        &mut self.rng,
+                        CheckContext {
+                            kind: CheckKind::MeleeHit,
+                            actor_id: self.player.id.clone(),
+                            target_id: Some(self.entities[index].id.clone()),
+                            ability: profile.melee_skill.clone(),
+                            difficulty: target.armor_class.clone(),
+                        },
+                    )
+                    .succeeded()
+                {
+                    events.push(profile.miss_event(&target_kind));
+                    continue;
+                }
+
+                let weapon_damage = self.roll_damage(profile.damage_dice, profile.damage_sides);
+                let mut base_damage = weapon_damage
+                    .saturating_mul(damage_multiplier)
+                    .saturating_div(10);
+                if let Some(weight) = profile.critical_weight_tenths_pound {
+                    base_damage = base_damage
+                        .saturating_mul(
+                            self.roll_innate_critical_multiplier(weight, profile.to_hit),
+                        )
+                        .saturating_div(100);
+                }
+                let rolled_damage = base_damage.saturating_add(profile.to_damage).max(0);
+                let damage_type = profile.damage_type;
+                let resistance = self.entities[index].resistances.level(damage_type);
+                let damage =
+                    resolve_damage(DamagePacket::new(rolled_damage, damage_type), resistance);
+                let application = plan_damage_application(
+                    &self.entities[index],
+                    damage,
+                    FatalityPolicy::AtOrBelowZero,
+                );
+                commit_damage_application(&mut self.entities[index], &application);
+                events.push(profile.hit_event(&target_kind, damage));
+                self.wake_entity_after_damage(index, damage.applied, events);
+                let contact_aura_fatal = self.resolve_monster_contact_auras(&definition, events);
+                if contact_aura_fatal {
+                    if application.fatal {
+                        self.resolve_actor_death(
+                            index,
+                            profile.slew_event(&target_kind, damage),
+                            events,
+                            changed,
+                            removed_entities,
+                        )?;
+                    }
+                    break 'profiles;
+                }
+                if vampiric_weapon
+                    && vampiric_drain_remaining > 0
+                    && damage.applied > 5
+                    && actor_matches_category(&definition, "living")
+                {
+                    let raw_requested = self
+                        .roll_damage(
+                            2,
+                            u16::try_from(damage.applied / 6)
+                                .expect("positive vampiric healing die must fit u16"),
+                        )
+                        .min(vampiric_drain_remaining);
+                    vampiric_drain_remaining =
+                        vampiric_drain_remaining.saturating_sub(raw_requested);
+                    let requested = raw_requested.saturating_mul(
+                        i32::try_from(self.mutation_regeneration_percent())
+                            .expect("mutation regeneration percent must fit i32"),
+                    ) / 100;
+                    let max_hp = self.effective_player_max_hp();
+                    let EffectOutcome::Healed { requested, applied } = apply_effect(
+                        &mut EffectTarget {
+                            hp: &mut self.player.hp,
+                            max_hp,
+                            resistances: &self.player.resistances,
+                            statuses: &mut self.player.statuses,
+                        },
+                        EffectSpec::Heal { amount: requested },
+                    ) else {
+                        unreachable!("vampiric melee healing must produce a healing outcome");
+                    };
+                    events.push(DomainEvent::PlayerVampiricHealed {
+                        resolution: HealingResolutionDto { requested, applied },
+                    });
+                }
+                self.gain_player_melee_resources(ResourceGainSourceDto::MeleeHit, events);
                 if application.fatal {
                     self.resolve_actor_death(
                         index,
-                        DomainEvent::PlayerSlew {
-                            target_kind_id: target_kind.clone(),
-                            damage,
-                        },
+                        profile.slew_event(&target_kind, damage),
                         events,
                         changed,
                         removed_entities,
                     )?;
+                    self.gain_player_melee_resources(ResourceGainSourceDto::MeleeKill, events);
+                    break 'profiles;
                 }
-                break;
+                self.resolve_confusing_strike(index, &definition, events);
             }
-            if vampiric_weapon
-                && vampiric_drain_remaining > 0
-                && damage.applied > 5
-                && actor_matches_category(&definition, "living")
-            {
-                let raw_requested = self
-                    .roll_damage(
-                        2,
-                        u16::try_from(damage.applied / 6)
-                            .expect("positive vampiric healing die must fit u16"),
-                    )
-                    .min(vampiric_drain_remaining);
-                vampiric_drain_remaining = vampiric_drain_remaining.saturating_sub(raw_requested);
-                let requested = raw_requested.saturating_mul(
-                    i32::try_from(self.mutation_regeneration_percent())
-                        .expect("mutation regeneration percent must fit i32"),
-                ) / 100;
-                let max_hp = self.effective_player_max_hp();
-                let EffectOutcome::Healed { requested, applied } = apply_effect(
-                    &mut EffectTarget {
-                        hp: &mut self.player.hp,
-                        max_hp,
-                        resistances: &self.player.resistances,
-                        statuses: &mut self.player.statuses,
-                    },
-                    EffectSpec::Heal { amount: requested },
-                ) else {
-                    unreachable!("vampiric melee healing must produce a healing outcome");
-                };
-                events.push(DomainEvent::PlayerVampiricHealed {
-                    resolution: HealingResolutionDto { requested, applied },
-                });
-            }
-            self.gain_player_melee_resources(ResourceGainSourceDto::MeleeHit, events);
-            if application.fatal {
-                self.resolve_actor_death(
-                    index,
-                    DomainEvent::PlayerSlew {
-                        target_kind_id: target_kind.clone(),
-                        damage,
-                    },
-                    events,
-                    changed,
-                    removed_entities,
-                )?;
-                self.gain_player_melee_resources(ResourceGainSourceDto::MeleeKill, events);
-                break;
-            }
-            self.resolve_confusing_strike(index, &definition, events);
         }
         Ok(())
+    }
+
+    pub(super) fn roll_innate_critical_multiplier(
+        &mut self,
+        weight_tenths_pound: u16,
+        to_hit: i32,
+    ) -> i32 {
+        let chance = i64::from(weight_tenths_pound)
+            .saturating_add(i64::from(to_hit).saturating_mul(5))
+            .saturating_add(i64::from(self.progress.level).saturating_mul(3));
+        let roll =
+            i64::try_from(self.rng.bounded(5_000) + 1).expect("critical-hit roll must fit i64");
+        if roll > chance {
+            return 100;
+        }
+        let quality = u64::from(weight_tenths_pound) + self.rng.bounded(650) + 1;
+        match quality {
+            0..=399 => 200,
+            400..=699 => 250,
+            700..=899 => 300,
+            900..=1_299 => 350,
+            _ => 400,
+        }
     }
 
     pub(super) fn resolve_monster_contact_auras(

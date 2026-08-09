@@ -1009,6 +1009,11 @@ pub(crate) enum DomainEvent {
     PlayerMeleeMissed {
         target_kind_id: String,
     },
+    MutationMeleeMissed {
+        mutation_id: String,
+        attack_name: String,
+        target_kind_id: String,
+    },
     ConfusingStrikeImmune {
         target_kind_id: String,
     },
@@ -1039,12 +1044,24 @@ pub(crate) enum DomainEvent {
         target_kind_id: String,
         damage: DamageOutcome,
     },
+    MutationMeleeHit {
+        mutation_id: String,
+        attack_name: String,
+        target_kind_id: String,
+        damage: DamageOutcome,
+    },
     MonsterContactAuraApplied {
         source_kind_id: String,
         status_kind_id: String,
         duration: u32,
     },
     PlayerSlew {
+        target_kind_id: String,
+        damage: DamageOutcome,
+    },
+    MutationMeleeSlew {
+        mutation_id: String,
+        attack_name: String,
         target_kind_id: String,
         damage: DamageOutcome,
     },
@@ -3946,6 +3963,19 @@ impl DomainEvent {
                 "combat-player-miss",
                 [("target", target_kind_id)],
             ),
+            Self::MutationMeleeMissed {
+                mutation_id,
+                attack_name,
+                target_kind_id,
+            } => dto(
+                "mutation.melee-miss",
+                "mutation-melee-miss",
+                [
+                    ("source", mutation_id),
+                    ("attack", attack_name),
+                    ("target", target_kind_id),
+                ],
+            ),
             Self::ConfusingStrikeImmune { target_kind_id } => dto(
                 "combat.confusing-strike-immune",
                 "combat-confusing-strike-immune",
@@ -4009,6 +4039,24 @@ impl DomainEvent {
                     resolution: damage.into(),
                 },
             ),
+            Self::MutationMeleeHit {
+                mutation_id,
+                attack_name,
+                target_kind_id,
+                damage,
+            } => dto_with_outcome(
+                "mutation.melee-hit",
+                "mutation-melee-hit",
+                [
+                    ("source", mutation_id),
+                    ("attack", attack_name),
+                    ("target", target_kind_id),
+                    ("damage", damage.applied.to_string()),
+                ],
+                GameEventOutcomeDto::Damage {
+                    resolution: damage.into(),
+                },
+            ),
             Self::MonsterContactAuraApplied {
                 source_kind_id,
                 status_kind_id,
@@ -4029,6 +4077,23 @@ impl DomainEvent {
                 "combat.slay",
                 "combat-player-slay",
                 [("target", target_kind_id)],
+                GameEventOutcomeDto::Death {
+                    resolution: damage.into(),
+                },
+            ),
+            Self::MutationMeleeSlew {
+                mutation_id,
+                attack_name,
+                target_kind_id,
+                damage,
+            } => dto_with_outcome(
+                "mutation.melee-slay",
+                "mutation-melee-slay",
+                [
+                    ("source", mutation_id),
+                    ("attack", attack_name),
+                    ("target", target_kind_id),
+                ],
                 GameEventOutcomeDto::Death {
                     resolution: damage.into(),
                 },

@@ -21,6 +21,21 @@ pub enum MutationRatingDefinition {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct MutationInnateAttackDefinition {
+    pub name: String,
+    pub to_hit: i32,
+    pub to_damage: i32,
+    pub damage_dice: u16,
+    pub damage_sides: u16,
+    #[serde(default)]
+    pub damage_type: ActorDamageType,
+    /// Original RFB attack weight used by the innate critical-hit roll.
+    pub weight_tenths_pound: u16,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct MutationDefinition {
     #[serde(rename = "$schema")]
     pub schema: String,
@@ -41,6 +56,8 @@ pub struct MutationDefinition {
     #[serde(default)]
     pub saving_throw_skill_per_five_levels: i32,
     #[serde(default)]
+    pub stealth_skill: i32,
+    #[serde(default)]
     pub infravision: i32,
     /// Additive percentage adjustment to the natural HP regeneration rate.
     #[serde(default)]
@@ -57,6 +74,10 @@ pub struct MutationDefinition {
     pub contact_aura: Option<ActorDamageType>,
     #[serde(default)]
     pub light_radius: i32,
+    #[serde(default)]
+    pub mighty_throw: bool,
+    #[serde(default)]
+    pub innate_attack: Option<MutationInnateAttackDefinition>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub removes_on_gain: Vec<String>,
 }

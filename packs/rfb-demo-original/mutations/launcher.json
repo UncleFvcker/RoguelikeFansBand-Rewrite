@@ -7,5 +7,6 @@
   "rating": "average",
   "sourceIndex": 31,
   "randomWeight": 4,
+  "mightyThrow": true,
   "removesOnGain": []
 }

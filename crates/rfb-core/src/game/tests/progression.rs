@@ -476,6 +476,41 @@ fn m4c_regeneration_and_fire_light_feed_existing_player_pipelines() {
 }
 
 #[test]
+fn m4d_passive_combat_modifiers_feed_existing_attribute_and_skill_pipelines() {
+    let mut game = Game::new(0);
+    let base_dexterity = game.effective_player_attributes().dexterity;
+    let base_stats = game.player_derived_stats();
+
+    assert!(game.gain_mutation("rfb.mutation.limber", &mut Vec::new()));
+    assert_eq!(
+        game.effective_player_attributes().dexterity,
+        base_dexterity + 3
+    );
+    assert!(game.gain_mutation("rfb.mutation.arthritis", &mut Vec::new()));
+    assert!(
+        !game
+            .progress
+            .active_mutation_ids
+            .contains("rfb.mutation.limber")
+    );
+    assert_eq!(
+        game.effective_player_attributes().dexterity,
+        base_dexterity - 3
+    );
+
+    assert!(game.gain_mutation("rfb.mutation.motion", &mut Vec::new()));
+    assert!(game.gain_mutation("rfb.mutation.untouchable", &mut Vec::new()));
+    assert!(game.gain_mutation("rfb.mutation.tread-softly", &mut Vec::new()));
+    let stats = game.player_derived_stats();
+    assert_eq!(
+        stats.stealth_skill.value,
+        base_stats.stealth_skill.value + 4
+    );
+    assert_eq!(stats.armor_class.value, base_stats.armor_class.value + 20);
+    assert!(game.player_status_immunities().contains(STATUS_PARALYSIS));
+}
+
+#[test]
 fn new_life_is_one_seeded_transaction_with_locked_mutation_protection() {
     const ITEM_ID: &str = "test.item.new-life.1";
     const KIND_ID: &str = "demo.item.new-life-potion";

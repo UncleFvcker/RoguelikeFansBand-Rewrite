@@ -7,6 +7,9 @@
   "rating": "good",
   "sourceIndex": 90,
   "randomWeight": 6,
+  "modifiers": {
+    "dexterity": 3
+  },
   "removesOnGain": [
     "rfb.mutation.arthritis"
   ]

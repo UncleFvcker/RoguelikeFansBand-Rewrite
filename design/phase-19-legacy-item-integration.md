@@ -716,3 +716,40 @@ has content hash
 Protocol 1.153, save v1, State Hash Schema v74, and contract-v217 are unchanged;
 the new aura events use the existing generic event projection, and existing
 fixtures still begin without active mutations.
+
+## P3.7-M4D Innate Attacks and Combat Passives
+
+The fourth bounded passive batch activates eleven complete original mutations:
+Launcher, Scorpion Tail, Horns, Beak, Trunk, Tentacles, Limber, Arthritis,
+Motion, Untouchable, and Tread Softly. Their authoritative Chinese identities
+and ordered Beak/Trunk and Limber/Arthritis conflicts remain unchanged.
+
+The five mutation innate attacks run after the ordinary weapon routine in
+source-index order. They keep the original `3d7` poison tail, `2d6` horns,
+`2d4` beak, `1d4` trunk, and `2d5` tentacles, each at one blow. Weapon-specific
+hit and damage bonuses do not leak into these attacks. Successful innate blows
+reuse the existing hit contest, resistance, monster contact aura, resource,
+wake, and actor-death transactions. Their original attack weights drive the
+deterministic critical roll: `1d5000 <= weight + 5 * toHit + 3 * level`, followed
+by `weight + 1d650` selecting the `200%` through `400%` damage band.
+
+Launcher supplies the original Mighty Throw increment to the current throw
+model: the range budget rises from 50 to 60, its cap from 10 to 12 grids, and
+pre-resistance throw damage is doubled. Motion grants paralysis immunity and
+`+1` stealth; Tread Softly grants `+3` stealth; Untouchable grants `+20` armor;
+Limber and Arthritis grant `+3` and `-3` dexterity through the existing
+effective-attribute pipeline. `MutationDefinition` adds only an optional innate
+attack, a Mighty Throw flag, and a stealth-skill adjustment.
+
+Weapon Skills remains blocked on a weapon-proficiency system, Fell Sorcery on
+spell-power scaling, Vortex Melee on the vortex racial innate-attack identity,
+and the Human Strength, Dexterity, and Charisma traits on their critical
+balance, combat-strain, and complete accuracy/spell-failure consumers. None is
+represented by an approximate passive.
+
+The mutation audit reports 37 active and 115 blocked identities. Pack 1.224.0
+has content hash
+`d05c6da73374d1223c10cebdb88e3e7f0349d0ce3182cfc0e70aa96ac60b0bc6`.
+Protocol 1.157, save v1, State Hash Schema v77, and contract-v227 are unchanged;
+the innate-attack events use the existing generic event projection, and
+existing fixtures still begin without active mutations.

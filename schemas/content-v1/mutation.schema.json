@@ -46,6 +46,54 @@
       ],
       "type": "string"
     },
+    "MutationInnateAttackDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "damageDice": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "damageSides": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "damageType": {
+          "$ref": "#/$defs/ActorDamageType",
+          "default": "physical"
+        },
+        "name": {
+          "type": "string"
+        },
+        "toDamage": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "toHit": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "weightTenthsPound": {
+          "description": "Original RFB attack weight used by the innate critical-hit roll.",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "name",
+        "toHit",
+        "toDamage",
+        "damageDice",
+        "damageSides",
+        "weightTenthsPound"
+      ],
+      "type": "object"
+    },
     "MutationRatingDefinition": {
       "enum": [
         "awful",
@@ -154,6 +202,17 @@
       "format": "int32",
       "type": "integer"
     },
+    "innateAttack": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/MutationInnateAttackDefinition"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
     "levitation": {
       "default": false,
       "type": "boolean"
@@ -162,6 +221,10 @@
       "default": 0,
       "format": "int32",
       "type": "integer"
+    },
+    "mightyThrow": {
+      "default": false,
+      "type": "boolean"
     },
     "modifiers": {
       "$ref": "#/$defs/StatModifiers",
@@ -322,6 +385,11 @@
         "type": "string"
       },
       "type": "array"
+    },
+    "stealthSkill": {
+      "default": 0,
+      "format": "int32",
+      "type": "integer"
     },
     "telepathy": {
       "default": false,

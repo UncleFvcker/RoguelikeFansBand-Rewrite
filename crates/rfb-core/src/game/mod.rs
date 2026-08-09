@@ -5376,8 +5376,18 @@ const fn actor_resistance_rank(level: ActorResistanceLevel) -> u8 {
     }
 }
 
-fn throw_range(weight_tenths_pound: u16) -> u16 {
-    (BASE_THROW_RANGE_BUDGET / weight_tenths_pound.max(1)).clamp(MIN_THROW_RANGE, MAX_THROW_RANGE)
+fn throw_range(weight_tenths_pound: u16, mighty: bool) -> u16 {
+    let budget = if mighty {
+        BASE_THROW_RANGE_BUDGET.saturating_mul(6) / 5
+    } else {
+        BASE_THROW_RANGE_BUDGET
+    };
+    let maximum = if mighty {
+        MAX_THROW_RANGE.saturating_add(2)
+    } else {
+        MAX_THROW_RANGE
+    };
+    (budget / weight_tenths_pound.max(1)).clamp(MIN_THROW_RANGE, maximum)
 }
 
 fn item_target_spec() -> TargetSpecDto {

@@ -27,12 +27,16 @@ pub(in crate::game) struct ActorDerivedStats {
 #[derive(Clone)]
 pub(in crate::game) struct ResolvedAttackProfile {
     pub(in crate::game) attacks: u16,
+    pub(in crate::game) melee_skill: DerivedStat,
     pub(in crate::game) to_hit: i32,
     pub(in crate::game) to_damage: i32,
     pub(in crate::game) damage_dice: u16,
     pub(in crate::game) damage_sides: u16,
     pub(in crate::game) damage_type: DamageType,
     pub(in crate::game) source_item_id: Option<String>,
+    pub(in crate::game) source_mutation_id: Option<String>,
+    pub(in crate::game) attack_name: Option<String>,
+    pub(in crate::game) critical_weight_tenths_pound: Option<u16>,
 }
 
 pub(in crate::game) struct ResolvedMeleeBlow {
@@ -191,6 +195,66 @@ fn projected_blow_damage(effects: &[MeleeBlowEffectDefinition]) -> DamageDiceDto
 }
 
 impl ResolvedAttackProfile {
+    pub(in crate::game) fn miss_event(&self, target_kind_id: &str) -> DomainEvent {
+        self.source_mutation_id.as_ref().map_or_else(
+            || DomainEvent::PlayerMeleeMissed {
+                target_kind_id: target_kind_id.to_owned(),
+            },
+            |mutation_id| DomainEvent::MutationMeleeMissed {
+                mutation_id: mutation_id.clone(),
+                attack_name: self
+                    .attack_name
+                    .clone()
+                    .expect("mutation attack profile must retain its name"),
+                target_kind_id: target_kind_id.to_owned(),
+            },
+        )
+    }
+
+    pub(in crate::game) fn hit_event(
+        &self,
+        target_kind_id: &str,
+        damage: DamageOutcome,
+    ) -> DomainEvent {
+        self.source_mutation_id.as_ref().map_or_else(
+            || DomainEvent::PlayerMeleeHit {
+                target_kind_id: target_kind_id.to_owned(),
+                damage,
+            },
+            |mutation_id| DomainEvent::MutationMeleeHit {
+                mutation_id: mutation_id.clone(),
+                attack_name: self
+                    .attack_name
+                    .clone()
+                    .expect("mutation attack profile must retain its name"),
+                target_kind_id: target_kind_id.to_owned(),
+                damage,
+            },
+        )
+    }
+
+    pub(in crate::game) fn slew_event(
+        &self,
+        target_kind_id: &str,
+        damage: DamageOutcome,
+    ) -> DomainEvent {
+        self.source_mutation_id.as_ref().map_or_else(
+            || DomainEvent::PlayerSlew {
+                target_kind_id: target_kind_id.to_owned(),
+                damage,
+            },
+            |mutation_id| DomainEvent::MutationMeleeSlew {
+                mutation_id: mutation_id.clone(),
+                attack_name: self
+                    .attack_name
+                    .clone()
+                    .expect("mutation attack profile must retain its name"),
+                target_kind_id: target_kind_id.to_owned(),
+                damage,
+            },
+        )
+    }
+
     pub(in crate::game) fn to_dto(&self) -> AttackProfileDto {
         AttackProfileDto {
             attacks: self.attacks,
@@ -215,6 +279,27 @@ fn add_nonzero_stat(
 ) {
     if amount != 0 {
         pipeline.add(kind, layer, source_id, amount);
+    }
+}
+
+fn derived_stat_without_source(
+    stat: &DerivedStat,
+    source_id: &str,
+    non_negative: bool,
+) -> DerivedStat {
+    let contributions = stat
+        .contributions
+        .iter()
+        .filter(|contribution| contribution.source_id != source_id)
+        .cloned()
+        .collect::<Vec<_>>();
+    let value = contributions.iter().fold(0_i32, |total, contribution| {
+        total.saturating_add(contribution.amount)
+    });
+    DerivedStat {
+        kind: stat.kind,
+        value: if non_negative { value.max(0) } else { value },
+        contributions,
     }
 }
 
@@ -705,7 +790,10 @@ impl Game {
             .throw_profile
             .as_ref()
             .map(|profile| ThrowProfileDto {
-                range: throw_range(definition.weight_tenths_pound),
+                range: throw_range(
+                    definition.weight_tenths_pound,
+                    self.player_has_mighty_throw(),
+                ),
                 to_hit: profile
                     .to_hit
                     .saturating_add(i32::from(item.enchantments.to_hit)),
@@ -842,13 +930,93 @@ impl Game {
         ResolvedAttackProfile {
             attacks: u16::try_from(stats.melee_attacks.value)
                 .expect("derived melee attack count must fit u16"),
+            melee_skill: stats.melee_skill.clone(),
             to_hit,
             to_damage: stats.melee_damage_bonus.value,
             damage_dice: dice,
             damage_sides: sides,
             damage_type: DamageType::from(damage_type),
             source_item_id,
+            source_mutation_id: None,
+            attack_name: None,
+            critical_weight_tenths_pound: None,
         }
+    }
+
+    pub(super) fn player_mutation_innate_attack_profiles(
+        &self,
+        stats: &ActorDerivedStats,
+        equipped_weapon_id: Option<&str>,
+    ) -> Vec<ResolvedAttackProfile> {
+        let innate_skill = equipped_weapon_id.map_or_else(
+            || stats.melee_skill.clone(),
+            |item_id| derived_stat_without_source(&stats.melee_skill, item_id, true),
+        );
+        let innate_damage_bonus = equipped_weapon_id.map_or(stats.melee_damage_bonus.value, |id| {
+            derived_stat_without_source(&stats.melee_damage_bonus, id, false).value
+        });
+        let mut mutations = self
+            .content
+            .mutations()
+            .filter(|mutation| {
+                mutation.innate_attack.is_some()
+                    && self.progress.active_mutation_ids.contains(&mutation.id)
+            })
+            .collect::<Vec<_>>();
+        mutations.sort_by_key(|mutation| mutation.source_index);
+        mutations
+            .into_iter()
+            .map(|mutation| {
+                let attack = mutation
+                    .innate_attack
+                    .as_ref()
+                    .expect("filtered mutation must retain its innate attack");
+                let melee_skill = if attack.to_hit == 0 {
+                    innate_skill.clone()
+                } else {
+                    innate_skill.with_modifier(
+                        StatLayer::Status,
+                        &mutation.id,
+                        attack.to_hit,
+                        StatBounds::NON_NEGATIVE,
+                    )
+                };
+                let critical_to_hit = melee_skill
+                    .contributions
+                    .iter()
+                    .filter(|contribution| {
+                        matches!(
+                            contribution.layer,
+                            StatLayer::Equipment
+                                | StatLayer::Status
+                                | StatLayer::Stance
+                                | StatLayer::Environment
+                        )
+                    })
+                    .fold(0_i32, |total, contribution| {
+                        total.saturating_add(contribution.amount)
+                    });
+                ResolvedAttackProfile {
+                    attacks: 1,
+                    melee_skill,
+                    to_hit: critical_to_hit,
+                    to_damage: innate_damage_bonus.saturating_add(attack.to_damage),
+                    damage_dice: attack.damage_dice,
+                    damage_sides: attack.damage_sides,
+                    damage_type: DamageType::from(attack.damage_type),
+                    source_item_id: None,
+                    source_mutation_id: Some(mutation.id.clone()),
+                    attack_name: Some(attack.name.clone()),
+                    critical_weight_tenths_pound: Some(attack.weight_tenths_pound),
+                }
+            })
+            .collect()
+    }
+
+    pub(super) fn player_has_mighty_throw(&self) -> bool {
+        self.content.mutations().any(|mutation| {
+            mutation.mighty_throw && self.progress.active_mutation_ids.contains(&mutation.id)
+        })
     }
 
     pub(super) fn player_melee_damage_multiplier(
@@ -1192,6 +1360,7 @@ impl Game {
                                 .saturating_mul(i32::from(self.progress.level / 5)),
                         ),
                     ),
+                    (StatKind::StealthSkill, mutation.stealth_skill),
                 ] {
                     add_nonzero_stat(&mut pipeline, kind, StatLayer::Status, &mutation.id, value);
                 }

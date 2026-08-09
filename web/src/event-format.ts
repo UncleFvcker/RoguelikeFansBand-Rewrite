@@ -217,6 +217,14 @@ export function createPresentationFormatter(
           ability: contentName(event.args.source),
           target: contentName(event.args.target),
         });
+      case "mutation-melee-miss":
+      case "mutation-melee-hit":
+      case "mutation-melee-slay":
+        return localization.format(`message-${event.messageKey}`, {
+          attack: event.args.attack ?? "?",
+          target: contentName(event.args.target),
+          damage: event.args.damage ?? "?",
+        });
       case "mutation-aura-hit":
       case "mutation-aura-slay": {
         const resolution =

@@ -786,10 +786,8 @@
       "eligibilityConditions": [],
       "weightConditions": [],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "mutation-passive-bonus-system"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -951,10 +949,8 @@
         "lose:mutation-good-luck=>weight-1"
       ],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "mutation-passive-bonus-system"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -977,10 +973,8 @@
         "gain:race-imp=>weight-50"
       ],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "mutation-passive-bonus-system"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -1005,10 +999,8 @@
       "removesOnGain": [
         "rfb.mutation.trunk"
       ],
-      "status": "blocked",
-      "blockers": [
-        "mutation-passive-bonus-system"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -1139,10 +1131,8 @@
       "removesOnGain": [
         "rfb.mutation.beak"
       ],
-      "status": "blocked",
-      "blockers": [
-        "mutation-passive-bonus-system"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -1188,10 +1178,8 @@
         "gain:race-mind-flayer=>weight-50"
       ],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "mutation-passive-bonus-system"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -2125,10 +2113,8 @@
       "removesOnGain": [
         "rfb.mutation.arthritis"
       ],
-      "status": "blocked",
-      "blockers": [
-        "mutation-passive-bonus-system"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -2150,10 +2136,8 @@
       "removesOnGain": [
         "rfb.mutation.limber"
       ],
-      "status": "blocked",
-      "blockers": [
-        "mutation-passive-bonus-system"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -2223,10 +2207,8 @@
         "lose:mutation-good-luck=>weight-1"
       ],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "mutation-passive-bonus-system"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -2296,7 +2278,7 @@
       "removesOnGain": [],
       "status": "blocked",
       "blockers": [
-        "mutation-cross-system-query"
+        "weapon-proficiency-system"
       ],
       "sourceNoNumericEffect": false
     },
@@ -2404,10 +2386,8 @@
         "lose:mutation-good-luck=>weight-1"
       ],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "mutation-passive-bonus-system"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -2806,7 +2786,7 @@
       "removesOnGain": [],
       "status": "blocked",
       "blockers": [
-        "mutation-passive-bonus-system"
+        "spell-power-scaling"
       ],
       "sourceNoNumericEffect": false
     },
@@ -2826,10 +2806,8 @@
         "lose:mutation-good-luck=>weight-1"
       ],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "mutation-passive-bonus-system"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -3278,7 +3256,7 @@
       "removesOnGain": [],
       "status": "blocked",
       "blockers": [
-        "mutation-cross-system-query"
+        "vortex-race-innate-attack-identity"
       ],
       "sourceNoNumericEffect": false
     },
@@ -3389,7 +3367,7 @@
       "removesOnGain": [],
       "status": "blocked",
       "blockers": [
-        "mutation-cross-system-query"
+        "player-critical-hit-balance-penalty"
       ],
       "sourceNoNumericEffect": false
     },
@@ -3455,7 +3433,7 @@
       "removesOnGain": [],
       "status": "blocked",
       "blockers": [
-        "mutation-cross-system-query"
+        "combat-strain-and-temporary-dexterity-loss"
       ],
       "sourceNoNumericEffect": false
     },
@@ -3499,7 +3477,7 @@
       "removesOnGain": [],
       "status": "blocked",
       "blockers": [
-        "mutation-passive-bonus-system"
+        "spell-failure-and-ranged-device-accuracy-modifiers"
       ],
       "sourceNoNumericEffect": false
     }
