@@ -16,9 +16,9 @@ const TILESET_PRESET_STORAGE_KEY = "rfb.tileset-preset";
 const CAMERA_MODE_STORAGE_KEY = "rfb.camera-mode";
 const ZOOM_STORAGE_KEY = "rfb.zoom";
 const LOCALE_STORAGE_KEY = "rfb.locale";
-const TILESET_MANIFESTS: Record<TilesetPreset, string> = {
+export const TILESET_MANIFESTS: Readonly<Record<TilesetPreset, string>> = {
   ascii: "/tilesets/ascii-default/tileset.json",
-  image: "/tilesets/image-demo/tileset.json",
+  image: "/tilesets/rfb-pixel-28/tileset.json",
 };
 
 type SettingsDom = Pick<

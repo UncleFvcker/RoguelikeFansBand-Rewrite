@@ -10,6 +10,26 @@
       "licenseFile": "LICENSES/CC-BY-SA-4.0.txt",
       "modified": false,
       "notes": "Original three-cell demonstration atlas created for the rewrite project."
+    },
+    {
+      "id": "asset.tileset.rfb-pixel-28",
+      "path": "web/public/tilesets/rfb-pixel-28/atlas.png",
+      "source": "original-in-repository",
+      "authors": ["UncleFvcker and RoguelikeFansBand Rewrite contributors"],
+      "license": "CC-BY-SA-4.0",
+      "licenseFile": "LICENSES/CC-BY-SA-4.0.txt",
+      "modified": false,
+      "notes": "Original 28px pixel atlas created for the rewrite project; the checked-in Aseprite source is under assets/tilesets/rfb-pixel-28/."
+    },
+    {
+      "id": "asset.tileset.rfb-pixel-28.player-warrior",
+      "path": "web/public/tilesets/rfb-pixel-28/players/warrior.png",
+      "source": "original-in-repository",
+      "authors": ["UncleFvcker and RoguelikeFansBand Rewrite contributors"],
+      "license": "CC-BY-SA-4.0",
+      "licenseFile": "LICENSES/CC-BY-SA-4.0.txt",
+      "modified": false,
+      "notes": "Standalone 28px player appearance extracted losslessly from the original RFB Pixel 28 atlas artwork."
     }
   ]
 }

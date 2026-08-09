@@ -92,8 +92,10 @@
         "glyph": { "$ref": "#/$defs/glyph" },
         "foreground": { "$ref": "#/$defs/rgb" },
         "background": { "$ref": "#/$defs/rgb" },
-        "tile": { "$ref": "#/$defs/tile" }
-      }
+        "tile": { "$ref": "#/$defs/tile" },
+        "image": { "type": "string", "minLength": 1, "maxLength": 256 }
+      },
+      "not": { "required": ["tile", "image"] }
     },
     "fallback": {
       "type": "object",

@@ -15,6 +15,7 @@ export interface TilesetMapping {
   foreground: string;
   background?: string;
   tile?: TileCoordinate;
+  image?: string;
 }
 
 export interface TilesetAtlas {
@@ -50,6 +51,7 @@ export interface ResolvedTilesetVisual {
   foreground: number;
   background?: number;
   tile?: TileCoordinate;
+  image?: string;
   usedFallback: boolean;
 }
 
@@ -121,6 +123,7 @@ export function resolveTilesetVisual(
 ): ResolvedTilesetVisual {
   const mapping = manifest.mappings[semanticId];
   const tile = manifest.mode === "image" && imageAvailable ? mapping?.tile : undefined;
+  const image = manifest.mode === "image" && imageAvailable ? mapping?.image : undefined;
   const glyph = mapping?.glyph ?? contentGlyphs[semanticId] ?? manifest.fallback.glyph;
   const foreground = parseColor(mapping?.foreground ?? manifest.fallback.foreground);
   const background = mapping?.background
@@ -130,12 +133,13 @@ export function resolveTilesetVisual(
       : parseColor(manifest.fallback.background);
   return {
     semanticId,
-    source: tile ? "image" : "glyph",
+    source: tile || image ? "image" : "glyph",
     glyph,
     foreground,
     ...(background === undefined ? {} : { background }),
     ...(tile ? { tile } : {}),
-    usedFallback: !mapping || (manifest.mode === "image" && !tile),
+    ...(image ? { image } : {}),
+    usedFallback: !mapping || (manifest.mode === "image" && !tile && !image),
   };
 }
 
@@ -161,17 +165,23 @@ function parseMapping(
   atlas: TilesetAtlas | undefined,
 ): TilesetMapping {
   const mapping = objectValue(value, "tileset mapping");
-  assertKeys(mapping, ["glyph", "foreground", "background", "tile"], "tileset mapping");
+  assertKeys(mapping, ["glyph", "foreground", "background", "tile", "image"], "tileset mapping");
   if (mapping.glyph !== undefined) requireGlyph(mapping.glyph, "mapping glyph");
   requireColor(mapping.foreground, "mapping foreground");
   if (mapping.background !== undefined) requireColor(mapping.background, "mapping background");
   const tile = mapping.tile === undefined ? undefined : parseTile(mapping.tile, atlas);
-  if (mode === "ascii" && tile) fail("ascii mappings cannot contain tile coordinates");
+  const image = mapping.image === undefined ? undefined : mapping.image;
+  if (image !== undefined && (typeof image !== "string" || !isSafeRelativeAssetPath(image))) {
+    fail("mapping image must be a safe relative path");
+  }
+  if (tile && image) fail("image mappings cannot contain both tile and image");
+  if (mode === "ascii" && (tile || image)) fail("ascii mappings cannot contain image resources");
   return {
     ...(mapping.glyph === undefined ? {} : { glyph: mapping.glyph }),
     foreground: mapping.foreground,
     ...(mapping.background === undefined ? {} : { background: mapping.background }),
     ...(tile ? { tile } : {}),
+    ...(image ? { image } : {}),
   };
 }
 

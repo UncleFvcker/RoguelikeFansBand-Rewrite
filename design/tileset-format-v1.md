@@ -34,18 +34,18 @@ Schema 位于 `schemas/tileset-v1.schema.json`。manifest 至少包含：
 }
 ```
 
-图片模式额外声明安全相对路径 `atlas.source`、columns 和 rows。运行时拒绝远程 URL、绝对路径、路径穿越、未知字段、越界 tile 坐标和非法颜色。
+图片模式额外声明安全相对路径 `atlas.source`、columns 和 rows。mapping 通常以 `tile` 引用主 atlas；需要独立文件的单格素材也可以用安全相对路径 `image` 直接引用一张至少为 tile 尺寸的图片，但同一 mapping 不能同时声明 `tile` 和 `image`。运行时拒绝远程 URL、绝对路径、路径穿越、未知字段、越界 tile 坐标和非法颜色。
 
 ## 3. 回退顺序
 
 每个语义 ID 按以下顺序解析：
 
-1. 图片模式且图集成功载入、mapping 存在 tile：使用图片切片；
+1. 图片模式且对应资源成功载入、mapping 存在 tile 或 image：使用 atlas 切片或独立图片；
 2. mapping 提供 glyph：使用 glyph atlas；
 3. 原创内容定义提供 glyph：使用内容 fallback；
 4. ID 未知：使用 manifest 的醒目 `?` fallback。
 
-整个图片图集加载失败或尺寸不足时，所有映射自动进入同一 glyph 路径。单个 mapping 缺少 tile 时只回退该对象，不影响其他图片 tile。
+主 atlas 加载失败或尺寸不足时，所有 atlas 映射自动进入同一 glyph 路径；独立图片按文件分别加载和回退，失败不会影响其他图片资源。单个 mapping 未声明 tile/image 时也只回退该对象。
 
 ## 4. 当前资源
 

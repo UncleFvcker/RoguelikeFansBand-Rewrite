@@ -1,0 +1,699 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/tileset-v1.schema.json",
+  "format": "rfb-tileset",
+  "formatVersion": 1,
+  "id": "rfb.tileset.pixel-28",
+  "labelKey": "tileset-rfb-pixel-28",
+  "mode": "image",
+  "tileWidth": 28,
+  "tileHeight": 28,
+  "atlas": {
+    "source": "atlas.png",
+    "columns": 8,
+    "rows": 12
+  },
+  "mappings": {
+    "demo.terrain.floor": {
+      "foreground": "#5c6b53",
+      "background": "#3d253b",
+      "tile": { "x": 0, "y": 0 }
+    },
+    "demo.terrain.wall": {
+      "foreground": "#a7acba",
+      "background": "#25131a",
+      "tile": { "x": 1, "y": 0 }
+    },
+    "demo.terrain.permanent-wall": {
+      "foreground": "#91a0ad",
+      "background": "#171820",
+      "tile": { "x": 2, "y": 0 }
+    },
+    "demo.terrain.magma-vein": {
+      "foreground": "#ffd569",
+      "background": "#25131a",
+      "tile": { "x": 3, "y": 0 }
+    },
+    "demo.terrain.quartz-vein": {
+      "foreground": "#eaa5ff",
+      "background": "#242936",
+      "tile": { "x": 4, "y": 0 }
+    },
+    "demo.terrain.surface-grass": {
+      "foreground": "#80a53f",
+      "background": "#1f3736",
+      "tile": { "x": 5, "y": 0 }
+    },
+    "demo.terrain.surface-path": {
+      "foreground": "#e1a171",
+      "background": "#523b40",
+      "tile": { "x": 6, "y": 0 }
+    },
+    "demo.terrain.surface-rock": {
+      "foreground": "#969a8c",
+      "background": "#1b2d2e",
+      "tile": { "x": 7, "y": 0 }
+    },
+    "demo.terrain.outpost-wall": {
+      "foreground": "#e1a171",
+      "background": "#523b40",
+      "tile": { "x": 0, "y": 1 }
+    },
+    "demo.terrain.outpost-gate": {
+      "foreground": "#e1a171",
+      "background": "#9a8571",
+      "tile": { "x": 1, "y": 1 }
+    },
+    "demo.terrain.door-closed": {
+      "foreground": "#bf704d",
+      "background": "#1b2d2e",
+      "tile": { "x": 2, "y": 1 }
+    },
+    "demo.terrain.door-open": {
+      "foreground": "#895a45",
+      "background": "#171820",
+      "tile": { "x": 3, "y": 1 }
+    },
+    "demo.terrain.door-locked": {
+      "foreground": "#ffd569",
+      "background": "#1b2d2e",
+      "tile": { "x": 4, "y": 1 }
+    },
+    "demo.terrain.door-broken": {
+      "foreground": "#bf704d",
+      "background": "#171820",
+      "tile": { "x": 5, "y": 1 }
+    },
+    "demo.terrain.stairs-up": {
+      "foreground": "#b4b6a5",
+      "background": "#343b48",
+      "tile": { "x": 6, "y": 1 }
+    },
+    "demo.terrain.stairs-down": {
+      "foreground": "#787e73",
+      "background": "#1b2d2e",
+      "tile": { "x": 7, "y": 1 }
+    },
+    "demo.actor.warrior-player": {
+      "foreground": "#9bf0fd",
+      "image": "players/warrior.png"
+    },
+    "demo.actor.newt": {
+      "foreground": "#96c641",
+      "tile": { "x": 1, "y": 2 }
+    },
+    "demo.actor.giant-white-mouse": {
+      "foreground": "#ffffff",
+      "tile": { "x": 2, "y": 2 }
+    },
+    "demo.actor.small-kobold": {
+      "foreground": "#bf704d",
+      "tile": { "x": 3, "y": 2 }
+    },
+    "demo.actor.kobold": {
+      "foreground": "#9b4c51",
+      "tile": { "x": 4, "y": 2 }
+    },
+    "demo.actor.warg": {
+      "foreground": "#56587b",
+      "tile": { "x": 5, "y": 2 }
+    },
+    "demo.actor.warrens-keeper": {
+      "foreground": "#7144ff",
+      "tile": { "x": 6, "y": 2 }
+    },
+    "demo.actor.wild-cat": {
+      "foreground": "#e1a171",
+      "tile": { "x": 7, "y": 2 }
+    },
+    "demo.terrain.created-trap": {
+      "foreground": "#91a0ad",
+      "background": "#2c3938",
+      "tile": { "x": 0, "y": 3 }
+    },
+    "demo.terrain.trap-echo-snare": {
+      "foreground": "#91a0ad",
+      "background": "#2c3938",
+      "tile": { "x": 0, "y": 3 }
+    },
+    "demo.terrain.trap-resonance-ward": {
+      "foreground": "#91a0ad",
+      "background": "#2c3938",
+      "tile": { "x": 0, "y": 3 }
+    },
+    "core.gold.copper": {
+      "foreground": "#bf704d",
+      "tile": { "x": 1, "y": 3 }
+    },
+    "core.gold.silver": {
+      "foreground": "#a7acba",
+      "tile": { "x": 1, "y": 3 }
+    },
+    "core.gold.garnets": {
+      "foreground": "#d01946",
+      "tile": { "x": 1, "y": 3 }
+    },
+    "core.gold.gold": {
+      "foreground": "#ffd569",
+      "tile": { "x": 1, "y": 3 }
+    },
+    "core.gold.opals": {
+      "foreground": "#dfbbb3",
+      "tile": { "x": 1, "y": 3 }
+    },
+    "core.gold.sapphires": {
+      "foreground": "#5880cc",
+      "tile": { "x": 1, "y": 3 }
+    },
+    "core.gold.rubies": {
+      "foreground": "#e84444",
+      "tile": { "x": 1, "y": 3 }
+    },
+    "core.gold.diamonds": {
+      "foreground": "#ffffff",
+      "tile": { "x": 1, "y": 3 }
+    },
+    "core.gold.emeralds": {
+      "foreground": "#80a53f",
+      "tile": { "x": 1, "y": 3 }
+    },
+    "core.gold.mithril": {
+      "foreground": "#9bf0fd",
+      "tile": { "x": 1, "y": 3 }
+    },
+    "core.gold.adamantite": {
+      "foreground": "#af69bf",
+      "tile": { "x": 1, "y": 3 }
+    },
+    "demo.item.ration-of-food": {
+      "foreground": "#e1a171",
+      "tile": { "x": 2, "y": 3 }
+    },
+    "demo.item.wooden-torch": {
+      "foreground": "#ffd569",
+      "tile": { "x": 3, "y": 3 }
+    },
+    "demo.item.broad-sword": {
+      "foreground": "#ffffff",
+      "tile": { "x": 4, "y": 3 }
+    },
+    "demo.item.arrow": {
+      "foreground": "#e1a171",
+      "tile": { "x": 5, "y": 3 }
+    },
+    "demo.item.healing-potion": {
+      "foreground": "#e84444",
+      "tile": { "x": 6, "y": 3 }
+    },
+    "demo.item.fur-cloak": {
+      "foreground": "#dfbbb3",
+      "tile": { "x": 7, "y": 3 }
+    },
+    "demo.terrain.surface-tree": {
+      "foreground": "#96c641",
+      "background": "#1f3736",
+      "tile": { "x": 0, "y": 4 }
+    },
+    "demo.terrain.surface-water-shallow": {
+      "foreground": "#9bf0fd",
+      "background": "#2f7fb4",
+      "tile": { "x": 1, "y": 4 }
+    },
+    "demo.terrain.surface-water-deep": {
+      "foreground": "#45b7d1",
+      "background": "#24588a",
+      "tile": { "x": 2, "y": 4 }
+    },
+    "demo.terrain.surface-woodland": {
+      "foreground": "#80a53f",
+      "background": "#1f3736",
+      "tile": { "x": 3, "y": 4 }
+    },
+    "demo.terrain.temple-wall": {
+      "foreground": "#e6deca",
+      "background": "#343b48",
+      "tile": { "x": 4, "y": 4 }
+    },
+    "demo.terrain.door-secret": {
+      "foreground": "#5880cc",
+      "background": "#2c3938",
+      "tile": { "x": 5, "y": 4 }
+    },
+    "demo.terrain.warren-snare": {
+      "foreground": "#d49a6a",
+      "background": "#2c3938",
+      "tile": { "x": 6, "y": 4 }
+    },
+    "demo.terrain.thieves-hideout-entry": {
+      "foreground": "#ffd569",
+      "background": "#1f3736",
+      "tile": { "x": 7, "y": 4 }
+    },
+    "demo.terrain.thieves-hideout-entry-available": {
+      "foreground": "#ffd569",
+      "background": "#1f3736",
+      "tile": { "x": 7, "y": 4 }
+    },
+    "demo.terrain.thieves-hideout-entry-completed": {
+      "foreground": "#ffd569",
+      "background": "#1f3736",
+      "tile": { "x": 7, "y": 4 }
+    },
+    "demo.terrain.thieves-hideout-entry-failed": {
+      "foreground": "#e84444",
+      "background": "#1f3736",
+      "tile": { "x": 7, "y": 4 }
+    },
+    "demo.terrain.thieves-hideout-entry-abandoned": {
+      "foreground": "#9a8571",
+      "background": "#1f3736",
+      "tile": { "x": 7, "y": 4 }
+    },
+    "demo.terrain.general-store-entrance": {
+      "foreground": "#ffd569",
+      "background": "#523b40",
+      "tile": { "x": 0, "y": 5 }
+    },
+    "demo.terrain.armoury-entrance": {
+      "foreground": "#a7acba",
+      "background": "#343b48",
+      "tile": { "x": 1, "y": 5 }
+    },
+    "demo.terrain.weaponsmith-entrance": {
+      "foreground": "#e1a171",
+      "background": "#523b40",
+      "tile": { "x": 2, "y": 5 }
+    },
+    "demo.terrain.temple-entrance": {
+      "foreground": "#fff2b3",
+      "background": "#a7acba",
+      "tile": { "x": 3, "y": 5 }
+    },
+    "demo.terrain.alchemist-entrance": {
+      "foreground": "#af69bf",
+      "background": "#523b40",
+      "tile": { "x": 4, "y": 5 }
+    },
+    "demo.terrain.bookstore-entrance": {
+      "foreground": "#9bf0fd",
+      "background": "#343b48",
+      "tile": { "x": 5, "y": 5 }
+    },
+    "demo.terrain.magic-shop-entrance": {
+      "foreground": "#7144ff",
+      "background": "#343b48",
+      "tile": { "x": 5, "y": 5 }
+    },
+    "demo.terrain.black-market-entrance": {
+      "foreground": "#d01946",
+      "background": "#171820",
+      "tile": { "x": 6, "y": 5 }
+    },
+    "demo.terrain.home-entrance": {
+      "foreground": "#ffd569",
+      "background": "#895a45",
+      "tile": { "x": 7, "y": 5 }
+    },
+    "demo.actor.raven": {
+      "foreground": "#91a0ad",
+      "tile": { "x": 0, "y": 6 }
+    },
+    "demo.actor.duck": {
+      "foreground": "#ffd569",
+      "tile": { "x": 1, "y": 6 }
+    },
+    "demo.actor.fruit-bat": {
+      "foreground": "#9b4c51",
+      "tile": { "x": 2, "y": 6 }
+    },
+    "demo.actor.giant-white-centipede": {
+      "foreground": "#e6deca",
+      "tile": { "x": 3, "y": 6 }
+    },
+    "demo.actor.jackal": {
+      "foreground": "#d49a6a",
+      "tile": { "x": 4, "y": 6 }
+    },
+    "demo.actor.rock-lizard": {
+      "foreground": "#787e73",
+      "tile": { "x": 5, "y": 6 }
+    },
+    "demo.actor.blue-yeek": {
+      "foreground": "#5880cc",
+      "tile": { "x": 6, "y": 6 }
+    },
+    "demo.actor.giant-green-frog": {
+      "foreground": "#96c641",
+      "tile": { "x": 7, "y": 6 }
+    },
+    "demo.item.brass-lantern": {
+      "foreground": "#ffd569",
+      "tile": { "x": 0, "y": 7 }
+    },
+    "demo.item.flask-of-oil": {
+      "foreground": "#ffd569",
+      "tile": { "x": 1, "y": 7 }
+    },
+    "demo.item.broken-dagger": {
+      "foreground": "#a7acba",
+      "tile": { "x": 2, "y": 7 }
+    },
+    "demo.item.broken-sword": {
+      "foreground": "#a7acba",
+      "tile": { "x": 2, "y": 7 }
+    },
+    "demo.item.club": {
+      "foreground": "#d49a6a",
+      "tile": { "x": 3, "y": 7 }
+    },
+    "demo.item.dagger": {
+      "foreground": "#ffffff",
+      "tile": { "x": 4, "y": 7 }
+    },
+    "demo.item.seeking-scroll": {
+      "foreground": "#e6deca",
+      "tile": { "x": 5, "y": 7 }
+    },
+    "demo.item.appraisal-scroll": {
+      "foreground": "#e6deca",
+      "tile": { "x": 5, "y": 7 }
+    },
+    "demo.item.summoning-scroll": {
+      "foreground": "#e6deca",
+      "tile": { "x": 5, "y": 7 }
+    },
+    "demo.item.cartography-scroll": {
+      "foreground": "#e6deca",
+      "tile": { "x": 5, "y": 7 }
+    },
+    "demo.item.clamor-scroll": {
+      "foreground": "#e6deca",
+      "tile": { "x": 5, "y": 7 }
+    },
+    "demo.item.homeward-scroll": {
+      "foreground": "#e6deca",
+      "tile": { "x": 5, "y": 7 }
+    },
+    "demo.item.trapfinding-scroll": {
+      "foreground": "#e6deca",
+      "tile": { "x": 5, "y": 7 }
+    },
+    "demo.item.flicker-scroll": {
+      "foreground": "#e6deca",
+      "tile": { "x": 5, "y": 7 }
+    },
+    "demo.item.detect-invisible-scroll": {
+      "foreground": "#e6deca",
+      "tile": { "x": 5, "y": 7 }
+    },
+    "demo.item.benediction-scroll": {
+      "foreground": "#e6deca",
+      "tile": { "x": 5, "y": 7 }
+    },
+    "demo.item.door-stair-location-scroll": {
+      "foreground": "#e6deca",
+      "tile": { "x": 5, "y": 7 }
+    },
+    "demo.item.confusing-touch-scroll": {
+      "foreground": "#e6deca",
+      "tile": { "x": 5, "y": 7 }
+    },
+    "demo.item.satisfy-hunger-scroll": {
+      "foreground": "#e6deca",
+      "tile": { "x": 5, "y": 7 }
+    },
+    "demo.item.darkness-scroll": {
+      "foreground": "#e6deca",
+      "tile": { "x": 5, "y": 7 }
+    },
+    "demo.item.trap-creation-scroll": {
+      "foreground": "#e6deca",
+      "tile": { "x": 5, "y": 7 }
+    },
+    "demo.item.filthy-rag": {
+      "foreground": "#9a8571",
+      "tile": { "x": 6, "y": 7 }
+    },
+    "demo.item.cloak": {
+      "foreground": "#9a8571",
+      "tile": { "x": 6, "y": 7 }
+    },
+    "demo.item.robe": {
+      "foreground": "#9a8571",
+      "tile": { "x": 6, "y": 7 }
+    },
+    "demo.item.padded-armour": {
+      "foreground": "#9a8571",
+      "tile": { "x": 6, "y": 7 }
+    },
+    "demo.item.cord-armour": {
+      "foreground": "#9a8571",
+      "tile": { "x": 6, "y": 7 }
+    },
+    "demo.item.paper-armour": {
+      "foreground": "#9a8571",
+      "tile": { "x": 6, "y": 7 }
+    },
+    "demo.item.shovel": {
+      "foreground": "#a7acba",
+      "tile": { "x": 7, "y": 7 }
+    },
+    "demo.actor.freesia": {
+      "foreground": "#d49a6a",
+      "tile": { "x": 0, "y": 8 }
+    },
+    "demo.actor.metallic-green-centipede": {
+      "foreground": "#96c641",
+      "tile": { "x": 1, "y": 8 }
+    },
+    "demo.actor.salamander": {
+      "foreground": "#e84444",
+      "tile": { "x": 2, "y": 8 }
+    },
+    "demo.actor.metallic-blue-centipede": {
+      "foreground": "#62abd4",
+      "tile": { "x": 3, "y": 8 }
+    },
+    "demo.actor.metallic-red-centipede": {
+      "foreground": "#e84444",
+      "tile": { "x": 4, "y": 8 }
+    },
+    "demo.actor.cave-lizard": {
+      "foreground": "#787e73",
+      "tile": { "x": 5, "y": 8 }
+    },
+    "demo.actor.giant-white-rat": {
+      "foreground": "#ffffff",
+      "tile": { "x": 6, "y": 8 }
+    },
+    "demo.actor.large-kobold": {
+      "foreground": "#bf704d",
+      "tile": { "x": 7, "y": 8 }
+    },
+    "demo.actor.giant-brown-bat": {
+      "foreground": "#d49a6a",
+      "tile": { "x": 0, "y": 9 }
+    },
+    "demo.actor.rat-thing": {
+      "foreground": "#dfbbb3",
+      "tile": { "x": 1, "y": 9 }
+    },
+    "demo.actor.night-lizard": {
+      "foreground": "#56587b",
+      "tile": { "x": 2, "y": 9 }
+    },
+    "demo.actor.brown-yeek": {
+      "foreground": "#d49a6a",
+      "tile": { "x": 3, "y": 9 }
+    },
+    "demo.actor.giant-salamander": {
+      "foreground": "#ffd569",
+      "tile": { "x": 4, "y": 9 }
+    },
+    "demo.actor.giant-grey-rat": {
+      "foreground": "#a7acba",
+      "tile": { "x": 5, "y": 9 }
+    },
+    "demo.actor.skaven": {
+      "foreground": "#9a8571",
+      "tile": { "x": 6, "y": 9 }
+    },
+    "demo.actor.skaven-shaman": {
+      "foreground": "#af69bf",
+      "tile": { "x": 7, "y": 9 }
+    },
+    "demo.item.mace": {
+      "foreground": "#a7acba",
+      "tile": { "x": 0, "y": 10 }
+    },
+    "demo.item.cutlass": {
+      "foreground": "#ffffff",
+      "tile": { "x": 1, "y": 10 }
+    },
+    "demo.item.rapier": {
+      "foreground": "#ffffff",
+      "tile": { "x": 1, "y": 10 }
+    },
+    "demo.item.small-sword": {
+      "foreground": "#ffffff",
+      "tile": { "x": 1, "y": 10 }
+    },
+    "demo.item.short-sword": {
+      "foreground": "#ffffff",
+      "tile": { "x": 1, "y": 10 }
+    },
+    "demo.item.whip": {
+      "foreground": "#d49a6a",
+      "tile": { "x": 2, "y": 10 }
+    },
+    "demo.item.small-leather-shield": {
+      "foreground": "#d49a6a",
+      "tile": { "x": 3, "y": 10 }
+    },
+    "demo.item.hard-leather-cap": {
+      "foreground": "#d49a6a",
+      "tile": { "x": 4, "y": 10 }
+    },
+    "demo.item.knit-cap": {
+      "foreground": "#d49a6a",
+      "tile": { "x": 4, "y": 10 }
+    },
+    "demo.item.pointy-hat": {
+      "foreground": "#d49a6a",
+      "tile": { "x": 4, "y": 10 }
+    },
+    "demo.item.leather-gloves": {
+      "foreground": "#d49a6a",
+      "tile": { "x": 5, "y": 10 }
+    },
+    "demo.item.set-of-studded-leather-gloves": {
+      "foreground": "#d49a6a",
+      "tile": { "x": 5, "y": 10 }
+    },
+    "demo.item.soft-leather-boots": {
+      "foreground": "#d49a6a",
+      "tile": { "x": 6, "y": 10 }
+    },
+    "demo.item.pair-of-hard-leather-boots": {
+      "foreground": "#d49a6a",
+      "tile": { "x": 6, "y": 10 }
+    },
+    "demo.item.soft-leather-armour": {
+      "foreground": "#d49a6a",
+      "tile": { "x": 7, "y": 10 }
+    },
+    "demo.item.soft-studded-leather": {
+      "foreground": "#d49a6a",
+      "tile": { "x": 7, "y": 10 }
+    },
+    "demo.item.hard-leather-armour": {
+      "foreground": "#d49a6a",
+      "tile": { "x": 7, "y": 10 }
+    },
+    "demo.item.main-gauche": {
+      "foreground": "#ffffff",
+      "tile": { "x": 4, "y": 7 }
+    },
+    "demo.item.tanto": {
+      "foreground": "#ffffff",
+      "tile": { "x": 4, "y": 7 }
+    },
+    "demo.item.pick": {
+      "foreground": "#a7acba",
+      "tile": { "x": 7, "y": 7 }
+    },
+    "demo.item.boldness-potion": {
+      "foreground": "#af69bf",
+      "tile": { "x": 0, "y": 11 }
+    },
+    "demo.item.swiftstep-tonic": {
+      "foreground": "#eaa5ff",
+      "tile": { "x": 0, "y": 11 }
+    },
+    "demo.item.slowness-potion": {
+      "foreground": "#5880cc",
+      "tile": { "x": 1, "y": 11 }
+    },
+    "demo.item.frailty-tonic": {
+      "foreground": "#5880cc",
+      "tile": { "x": 1, "y": 11 }
+    },
+    "demo.item.veil-draught": {
+      "foreground": "#56587b",
+      "tile": { "x": 1, "y": 11 }
+    },
+    "demo.item.venom-draught": {
+      "foreground": "#96c641",
+      "tile": { "x": 2, "y": 11 }
+    },
+    "demo.item.slime-mold-juice": {
+      "foreground": "#80a53f",
+      "tile": { "x": 2, "y": 11 }
+    },
+    "demo.item.temperate-tonic": {
+      "foreground": "#e1a171",
+      "tile": { "x": 3, "y": 11 }
+    },
+    "demo.item.vigor-potion": {
+      "foreground": "#a7acba",
+      "tile": { "x": 3, "y": 11 }
+    },
+    "demo.item.valor-tonic": {
+      "foreground": "#dfbbb3",
+      "tile": { "x": 3, "y": 11 }
+    },
+    "demo.item.sleep-potion": {
+      "foreground": "#a7acba",
+      "tile": { "x": 4, "y": 11 }
+    },
+    "demo.item.clumsiness-potion": {
+      "foreground": "#91a0ad",
+      "tile": { "x": 4, "y": 11 }
+    },
+    "demo.item.tsuyoshi-special": {
+      "foreground": "#ffffff",
+      "tile": { "x": 4, "y": 11 }
+    },
+    "demo.item.slime-mold": {
+      "foreground": "#96c641",
+      "tile": { "x": 5, "y": 11 }
+    },
+    "demo.item.blindness-mushroom": {
+      "foreground": "#e84444",
+      "tile": { "x": 5, "y": 11 }
+    },
+    "demo.item.confusion-mushroom": {
+      "foreground": "#af69bf",
+      "tile": { "x": 5, "y": 11 }
+    },
+    "demo.item.paranoia-mushroom": {
+      "foreground": "#ffd569",
+      "tile": { "x": 5, "y": 11 }
+    },
+    "demo.item.poison-mushroom": {
+      "foreground": "#96c641",
+      "tile": { "x": 5, "y": 11 }
+    },
+    "demo.item.corpse-remains": {
+      "foreground": "#9b4c51",
+      "tile": { "x": 6, "y": 11 }
+    },
+    "demo.item.skeleton-remains": {
+      "foreground": "#e6deca",
+      "tile": { "x": 7, "y": 11 }
+    },
+    "demo.item.light-healing-potion": {
+      "foreground": "#ffd569",
+      "tile": { "x": 6, "y": 3 }
+    },
+    "demo.terrain.outpost-fortification": {
+      "foreground": "#e1a171",
+      "background": "#523b40",
+      "tile": { "x": 0, "y": 1 }
+    }
+  },
+  "fallback": {
+    "glyph": "?",
+    "foreground": "#e84444",
+    "background": "#25131a"
+  }
+}

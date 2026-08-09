@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  TILESET_MANIFESTS,
   inputPresetMessageKey,
   isInputPreset,
   readLocale,
@@ -22,4 +23,9 @@ test("settings locale persistence keeps supported values and defaults safely", (
   assert.equal(readLocale({ getItem: () => "en-US" }), "en-US");
   assert.equal(readLocale({ getItem: () => "invalid" }), "zh-CN");
   assert.equal(readLocale({ getItem: () => null }), "zh-CN");
+});
+
+test("image preset selects the RFB 28px manifest", () => {
+  assert.equal(TILESET_MANIFESTS.ascii, "/tilesets/ascii-default/tileset.json");
+  assert.equal(TILESET_MANIFESTS.image, "/tilesets/rfb-pixel-28/tileset.json");
 });

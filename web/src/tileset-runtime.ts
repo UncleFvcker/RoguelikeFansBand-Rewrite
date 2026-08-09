@@ -25,6 +25,7 @@ export class TilesetRuntime {
   readonly #contentGlyphs: Readonly<Record<string, string>>;
   readonly #glyphAtlas: GlyphAtlas;
   readonly #imageAtlas: Texture | undefined;
+  readonly #standaloneImages: Map<string, Texture>;
   readonly #imageFrames = new Map<string, Texture>();
   readonly #visualCache = new Map<string, RuntimeTileVisual>();
 
@@ -33,12 +34,14 @@ export class TilesetRuntime {
     contentGlyphs: Readonly<Record<string, string>>,
     glyphAtlas: GlyphAtlas,
     imageAtlas: Texture | undefined,
+    standaloneImages: Map<string, Texture>,
     warnings: TilesetWarning[],
   ) {
     this.manifest = manifest;
     this.#contentGlyphs = contentGlyphs;
     this.#glyphAtlas = glyphAtlas;
     this.#imageAtlas = imageAtlas;
+    this.#standaloneImages = standaloneImages;
     this.warnings = warnings;
   }
 
@@ -64,6 +67,10 @@ export class TilesetRuntime {
     );
     const warnings: TilesetWarning[] = [];
     let imageAtlas: Texture | undefined;
+    const standaloneImages = new Map<string, Texture>();
+    const warn = (warning: TilesetWarning): void => {
+      if (!warnings.includes(warning)) warnings.push(warning);
+    };
 
     if (manifest.mode === "image" && manifest.atlas) {
       const atlasUrl = new URL(
@@ -75,17 +82,47 @@ export class TilesetRuntime {
         const expectedWidth = manifest.atlas.columns * manifest.tileWidth;
         const expectedHeight = manifest.atlas.rows * manifest.tileHeight;
         if (loaded.source.width < expectedWidth || loaded.source.height < expectedHeight) {
-          warnings.push("image-too-small");
+          warn("image-too-small");
         } else {
           loaded.source.scaleMode = "nearest";
           imageAtlas = loaded;
         }
       } catch {
-        warnings.push("image-load-failed");
+        warn("image-load-failed");
       }
     }
 
-    return new TilesetRuntime(manifest, contentGlyphs, glyphAtlas, imageAtlas, warnings);
+    const imageSources = new Set(
+      Object.values(manifest.mappings).flatMap((mapping) =>
+        mapping.image === undefined ? [] : [mapping.image],
+      ),
+    );
+    for (const imageSource of imageSources) {
+      const imageUrl = new URL(imageSource, new URL(manifestUrl, window.location.href)).toString();
+      try {
+        const loaded = await Assets.load<Texture>(imageUrl);
+        if (
+          loaded.source.width < manifest.tileWidth ||
+          loaded.source.height < manifest.tileHeight
+        ) {
+          warn("image-too-small");
+        } else {
+          loaded.source.scaleMode = "nearest";
+          standaloneImages.set(imageSource, loaded);
+        }
+      } catch {
+        warn("image-load-failed");
+      }
+    }
+
+    return new TilesetRuntime(
+      manifest,
+      contentGlyphs,
+      glyphAtlas,
+      imageAtlas,
+      standaloneImages,
+      warnings,
+    );
   }
 
   resolve(semanticId: string): RuntimeTileVisual {
@@ -99,12 +136,25 @@ export class TilesetRuntime {
   }
 
   #resolveUncached(semanticId: string): RuntimeTileVisual {
+    const mapping = this.manifest.mappings[semanticId];
+    const standaloneImage = mapping?.image
+      ? this.#standaloneImages.get(mapping.image)
+      : undefined;
     const visual = resolveTilesetVisual(
       this.manifest,
       semanticId,
       this.#contentGlyphs,
-      this.#imageAtlas !== undefined,
+      mapping?.image ? standaloneImage !== undefined : this.#imageAtlas !== undefined,
     );
+    if (visual.source === "image" && visual.image && standaloneImage) {
+      return {
+        source: "image",
+        texture: standaloneImage,
+        tint: 0xffffff,
+        ...(visual.background === undefined ? {} : { background: visual.background }),
+        usedFallback: visual.usedFallback,
+      };
+    }
     if (visual.source === "image" && visual.tile && this.#imageAtlas) {
       const key = `${visual.tile.x},${visual.tile.y}`;
       let texture = this.#imageFrames.get(key);
@@ -140,6 +190,7 @@ export class TilesetRuntime {
   destroy(): void {
     for (const texture of this.#imageFrames.values()) texture.destroy(false);
     this.#imageFrames.clear();
+    this.#standaloneImages.clear();
     this.#glyphAtlas.destroy();
   }
 }
