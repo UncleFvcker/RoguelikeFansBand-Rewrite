@@ -65,6 +65,7 @@ npm run build:standalone:debug
 - [基线更新策略](design/baseline-update-policy.md)
 - [物体列表与本地旅行](design/object-list-o1-item-discovery.md)
 - [物品集成现状](design/phase-19-legacy-item-integration.md)
+- [怪物接入与对话交接手册](design/warrens-monster-integration-handoff.md)
 - [怪物机制待办](design/warrens-monster-mechanism-backlog.md)
 - [荒野 W5 扩展](design/wilderness-w5-original-extensions.md)
 
