@@ -155,6 +155,8 @@ pub enum ContentError {
     InvalidTask(String),
     #[error("world dimensions are outside supported limits: {0}")]
     InvalidWorldDimensions(String),
+    #[error("wilderness definition is invalid: {0}")]
+    InvalidWilderness(String),
     #[error("procedural floor definition is invalid: {0}")]
     InvalidProceduralFloor(String),
     #[error("content reference from {owner} to {target} is unresolved")]

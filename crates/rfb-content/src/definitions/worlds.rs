@@ -121,6 +121,8 @@ pub struct WorldDefinition {
     pub initial_floor_id: String,
     #[serde(default)]
     pub town_id: Option<String>,
+    #[serde(default)]
+    pub wilderness: Option<WildernessDefinition>,
     pub width: u16,
     pub height: u16,
     pub fill_terrain_id: String,
@@ -140,6 +142,68 @@ pub struct WorldDefinition {
     #[serde(default)]
     pub tasks: Vec<TaskDefinition>,
     pub procedural_floors: Vec<ProceduralFloorDefinition>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct WildernessDefinition {
+    pub width: u16,
+    pub height: u16,
+    pub start_position: ContentPosition,
+    pub legend: Vec<WildernessLegendEntry>,
+    pub rows: Vec<String>,
+    pub locations: Vec<WildernessLocationDefinition>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct WildernessLegendEntry {
+    pub symbol: String,
+    pub terrain: WildernessTerrain,
+    pub level: u16,
+    pub road: bool,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum WildernessTerrain {
+    Edge,
+    Town,
+    DeepWater,
+    ShallowWater,
+    Swamp,
+    Dirt,
+    Grass,
+    Trees,
+    Desert,
+    ShallowLava,
+    DeepLava,
+    Mountain,
+    Glacier,
+    Snow,
+    PackIce,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(
+    tag = "kind",
+    rename_all = "kebab-case",
+    rename_all_fields = "camelCase",
+    deny_unknown_fields
+)]
+pub enum WildernessLocationDefinition {
+    Town {
+        position: ContentPosition,
+        town_id: String,
+    },
+    Dungeon {
+        position: ContentPosition,
+        dungeon_id: String,
+    },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]

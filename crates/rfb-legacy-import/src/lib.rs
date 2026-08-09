@@ -420,6 +420,8 @@ pub enum LegacyImportError {
     InvalidDemoItemSelection(String),
     #[error("invalid demo monster selection: {0}")]
     InvalidDemoMonsterSelection(String),
+    #[error("invalid demo wilderness selection: {0}")]
+    InvalidDemoWildernessSelection(String),
     #[error(
         "legacy content parse error in {content_source}:{line} field {field}: {reason} (value {value:?})"
     )]

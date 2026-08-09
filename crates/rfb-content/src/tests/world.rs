@@ -348,6 +348,32 @@ fn outpost_has_walls_inner_shops_and_an_exterior_warrens_entrance() {
         .find(|world| world.id == "demo.world.warrens-journey")
         .expect("fixture should contain Warrens");
     assert_eq!(world.town_id.as_deref(), Some("demo.town.outpost"));
+    let wilderness = world
+        .wilderness
+        .as_ref()
+        .expect("Warrens journey should contain the authoritative wilderness map");
+    assert_eq!((wilderness.width, wilderness.height), (99, 66));
+    assert_eq!(wilderness.start_position, ContentPosition { x: 28, y: 52 });
+    assert_eq!(wilderness.rows.len(), 66);
+    assert!(wilderness.rows.iter().all(|row| row.len() == 99));
+    assert_eq!(wilderness.legend.len(), 30);
+    assert_eq!(
+        wilderness.legend.iter().filter(|entry| entry.road).count(),
+        10
+    );
+    assert_eq!(
+        wilderness.locations,
+        [
+            WildernessLocationDefinition::Town {
+                position: ContentPosition { x: 28, y: 52 },
+                town_id: "demo.town.outpost".to_owned(),
+            },
+            WildernessLocationDefinition::Dungeon {
+                position: ContentPosition { x: 28, y: 52 },
+                dungeon_id: "demo.dungeon.warrens".to_owned(),
+            },
+        ]
+    );
     let entrances = [
         (
             "demo.terrain.general-store-entrance",
@@ -460,6 +486,22 @@ fn outpost_has_walls_inner_shops_and_an_exterior_warrens_entrance() {
     assert!(matches!(
         validate_and_normalize(&mut unowned_shop),
         Err(ContentError::InvalidShop(id)) if id == "demo.shop.outpost-general-store"
+    ));
+
+    let mut malformed_wilderness = artifact.content.clone();
+    malformed_wilderness
+        .worlds
+        .iter_mut()
+        .find(|world| world.id == "demo.world.warrens-journey")
+        .expect("fixture should contain Warrens")
+        .wilderness
+        .as_mut()
+        .expect("fixture should contain wilderness")
+        .rows[0]
+        .pop();
+    assert!(matches!(
+        validate_and_normalize(&mut malformed_wilderness),
+        Err(ContentError::InvalidWilderness(_))
     ));
 }
 

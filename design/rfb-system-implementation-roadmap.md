@@ -1,6 +1,6 @@
 # RFB 全系统梳理与重构实现路线
 
-状态：长期规则实现路线；当前基线为协议 1.140 / contract-v191（P31–P98 进展见 8.3，玩家流程与 Outpost 进展见 Phase 17/18，物品接入见 Phase 19，Warrens 怪物机制见 W1–W14 清单）
+状态：长期规则实现路线；当前基线为协议 1.144 / contract-v196（P31–P98 进展见 8.3，玩家流程与 Outpost 进展见 Phase 17/18，物品接入见 Phase 19，Warrens 怪物机制见 W1–W14 清单，荒野世界图见 W0）
 
 ## 1. 目的与边界
 
@@ -187,7 +187,7 @@ flowchart TD
 | 子系统 | 旧 RFB 行为 | 当前状态 | 新实现方案 |
 | --- | --- | --- | --- |
 | 多地牢 | 深度范围、守护者、主题、进入条件和特殊规则 | 已建立基础版 | contract-v63 已建立 `DungeonDefinition`、根层和共享守护者身份；后续增加进入条件、并存探索实例、重置策略和地牢级特殊规则 |
-| 荒野 | 大地图、地形、生物群落、城镇入口和旅行 | 未建立 | 桌面版后期实现分区世界图；不与当前战术格地图共用同一尺寸假设 |
+| 荒野 | 大地图、地形、生物群落、城镇入口和旅行 | W0 权威数据已建立 | `WorldDefinition.wilderness` 已保存 99x66 原版 normal 图例/行、危险、道路、起点与 Outpost/Warrens 地点；协议、旅行、渲染和遭遇后续分批接入，不与当前战术地图共用尺寸假设 |
 | 城镇 | 多城镇、访问状态、地图、昼夜和服务 | Phase 18 Gate 4 已建立首个切片 | `TownDefinition` 复用普通 floor；稳定 `demo.floor.surface` 已扩展为独立设计的 Outpost，并保存/投影访问状态，首批只开放杂货店和 Warrens |
 | 商店与家 | 库存刷新、买卖、鉴定价格、黑市、家中仓库 | Phase 18 Gate 6 与 contract-v167 已建立八店及 Home 闭环 | 八店具备持久库存、店主、价格、钱包、原子买卖、维护与 UI；Home 具备独立持久存取、负重和聚合语义。固定 Outpost 地图还缺 Shroomery；全局 shop 系统另缺不在该地图上的 Jeweler、Dragon |
 | 建筑服务 | 治疗、鉴定、附魔、重铸、任务、公会等 | 未建立 | `ServiceDefinition` 引用 effect/transaction；UI 根据服务 schema 生成表单 |
@@ -442,6 +442,8 @@ Warrens 的怪物机制按 [Warrens 怪物机制实现清单](warrens-monster-me
 
 实现：世界分区、旅行、遭遇、多地牢进入条件、最终守护者、胜利状态和角色退休。竞技场和特殊场景使用同一 floor/scenario ruleset。
 
+当前进度：W0 已完成权威 `w_info.txt`/地牢位置导入、内容模型与严格校验，只激活已有 Outpost/Warrens；世界图投影、旅行、渲染、遭遇与地点进入从 W1 起实现。
+
 ### 阶段 K：高级职业、种族和特殊机制
 
 按底层机制而非旧源码文件推进：
@@ -478,7 +480,7 @@ Warrens 的怪物机制按 [Warrens 怪物机制实现清单](warrens-monster-me
 | 任务与 campaign | 基础状态机已建立 | 已有多阶段目标、暂停/重接/放弃、奖励、胜利、退休和评分，以及伯爵来源、盗贼藏身处和 Pest Control 的单目标任务；仍缺超时、脚本、重复任务与完整日志 UI |
 | 角色创建与成长 | 基础纵切已建立 | 已覆盖 Race/Class/Personality、五个代表性构筑、六维属性、经验/等级、HP 成长、十个技能的首轮规则消费和存档迁移；仍缺完整职业矩阵、技能练习、属性损伤/恢复和更多职业资源形态 |
 | 法术、能力与设备 | 玩家/怪物施法、动态设备与首批卷轴纵切已建立 | 已有 Mana、实体能力书、学习/熟练度/冷却、多类目标与伤害、位移/召唤/侦测/地形/状态、怪物效用选择、Death 四册、普通/完整物品鉴定、装备附魔、临时形态、生命恢复、动态设备 profile/容量、首批 wand/staff/rod 与主动充能；仍缺随机学习、首次奖励、受击/吟唱/姿态类资源、其他领域广度和完整卷轴/激活族 |
-| 荒野、城镇与经济 | Outpost 补给纵切已建立 | 已有首个围墙持久城镇、城外 Warrens、General Store/Temple/Alchemist/Magic Shop 店主、库存、定价、维护、交易与玩家商店 UI；多城镇旅行、家、建筑服务、声望和长期经济广度尚未形成 |
+| 荒野、城镇与经济 | Outpost 补给纵切 + W0 世界图数据已建立 | 已有首个围墙持久城镇、城外 Warrens、商店与 Home 闭环，以及 99x66 权威荒野静态数据；世界图投影、多城镇旅行、荒野遭遇、建筑服务、声望和长期经济广度尚未形成 |
 | 原生客户端与表现层 | Windows 纵切已建立 | Rust/Tauri/PixiJS、Fluent、FOV/记忆/光照、原生存档和诊断已接入；完整知识、统计和高分等菜单仍缺失 |
 
 ### 8.2 已达到或扩展旧版的边界
@@ -606,12 +608,14 @@ P30“首个非 Mana 职业资源”已由 contract-v90 完成：节奏资源按
 
 **浅层怪物 P12 进展（2026-08）**：contract-v196 复用现有阵营、AI、地形转换和保存路径，接入 `FRIENDLY` 娜美与怪物 `TRAPS`；Shadower 只按 `1/333` 覆盖 10 级以上非 Unique 普通分配怪物的外观，真实种类和行为保持不变。板栗崽进入普通浅层分配，5 条 `DEPRECATED` 旧索引绑定到活跃同名替代。正式浅层 actor 达 158、严格同步达 126；协议 1.144，demo 1.191.0，state hash Schema v67，内置 hash 为 `c3440aa696805626dcde6222cc058bcb12b7b0f8a9213fd4f2ff8f7d5f28fdea`。完整边界见 [Contract v196](contract-v196-warrens-content-p12-special-lifecycles.md)。
 
+**荒野 W0 进展（2026-08）**：从 RFB `master` Git 对象严格解析 `w_info.txt` 与 `d_info.txt` 位置字段，`WorldDefinition.wilderness` 保存 99x66 normal 世界图、15 类地形、源危险等级、道路和起点 `(28,52)`；仅现有 Outpost/Warrens 成为地点，其余来源地点不激活。协议 1.144、contract-v196、save v1 与 state hash Schema v67 不变；demo 升至 1.192.0，内置 hash 为 `02577f7c9262ee49d7f73ec13e3271a674cedc4e1af297e9359032cfb5532962`。完整边界见 [Wilderness W0](wilderness-w0-authoritative-data.md)。
+
 ## 9. 内容迁移策略
 
 ### 9.1 当前阶段
 
-- 新仓库只提交原创内容和中性机制 fixtures；
-- 旧 `lib/edit` 数据只能由本地工具读取并输出统计、字段映射和行为报告到 `.local/`；
+- 新仓库默认只提交原创内容和中性机制 fixtures；明确批准的兼容批次必须有固定来源、严格选择和范围文档；
+- 旧 `lib/edit` 数据默认由本地工具输出到 `.local/`；W0 世界图等明确批准的正式数据只能通过固定 `master` Git 对象和严格同步入口进入包；
 - 不把旧怪物名称、描述、任务地图或物品表作为测试 fixture 提交。
 
 ### 9.2 未来可能的内容包

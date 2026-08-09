@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "worldId": "demo.world.warrens-journey",
+  "towns": [
+    {
+      "sourceIndex": 1,
+      "sourceName": "前哨站",
+      "id": "demo.town.outpost"
+    }
+  ],
+  "dungeons": [
+    {
+      "sourceIndex": 30,
+      "sourceName": "Warrens",
+      "id": "demo.dungeon.warrens"
+    }
+  ]
+}

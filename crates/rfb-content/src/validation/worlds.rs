@@ -43,6 +43,112 @@ pub(super) struct WorldValidationRefs<'a> {
     pub(super) shops: &'a BTreeMap<String, ShopDefinition>,
 }
 
+fn validate_wilderness(
+    world_id: &str,
+    wilderness: &mut WildernessDefinition,
+    dungeon_ids: &BTreeSet<String>,
+    towns: &BTreeMap<String, TownDefinition>,
+) -> Result<(), ContentError> {
+    if wilderness.width < 3
+        || wilderness.height < 3
+        || wilderness.width > 512
+        || wilderness.height > 512
+        || wilderness.rows.len() != usize::from(wilderness.height)
+        || wilderness.legend.is_empty()
+    {
+        return Err(ContentError::InvalidWilderness(world_id.to_owned()));
+    }
+
+    wilderness
+        .legend
+        .sort_by(|left, right| left.symbol.cmp(&right.symbol));
+    let mut terrain_by_symbol = BTreeMap::new();
+    for entry in &wilderness.legend {
+        let mut symbols = entry.symbol.chars();
+        let Some(symbol) = symbols.next() else {
+            return Err(ContentError::InvalidWilderness(world_id.to_owned()));
+        };
+        if symbols.next().is_some()
+            || !symbol.is_ascii()
+            || symbol.is_ascii_control()
+            || terrain_by_symbol.insert(symbol, entry.terrain).is_some()
+        {
+            return Err(ContentError::InvalidWilderness(world_id.to_owned()));
+        }
+    }
+
+    let rows = wilderness
+        .rows
+        .iter()
+        .map(|row| row.chars().collect::<Vec<_>>())
+        .collect::<Vec<_>>();
+    for (y, row) in rows.iter().enumerate() {
+        if row.len() != usize::from(wilderness.width) {
+            return Err(ContentError::InvalidWilderness(world_id.to_owned()));
+        }
+        for (x, symbol) in row.iter().enumerate() {
+            let Some(terrain) = terrain_by_symbol.get(symbol) else {
+                return Err(ContentError::InvalidWilderness(world_id.to_owned()));
+            };
+            if (x == 0
+                || y == 0
+                || x + 1 == usize::from(wilderness.width)
+                || y + 1 == usize::from(wilderness.height))
+                && *terrain != WildernessTerrain::Edge
+            {
+                return Err(ContentError::InvalidWilderness(world_id.to_owned()));
+            }
+        }
+    }
+
+    let position_is_inside = |position: ContentPosition| {
+        position.x < wilderness.width
+            && position.y < wilderness.height
+            && terrain_by_symbol.get(&rows[usize::from(position.y)][usize::from(position.x)])
+                != Some(&WildernessTerrain::Edge)
+    };
+    if !position_is_inside(wilderness.start_position) {
+        return Err(ContentError::InvalidWilderness(world_id.to_owned()));
+    }
+
+    wilderness.locations.sort();
+    if wilderness
+        .locations
+        .windows(2)
+        .any(|locations| locations[0] == locations[1])
+    {
+        return Err(ContentError::InvalidWilderness(world_id.to_owned()));
+    }
+    let mut town_ids = BTreeSet::new();
+    let mut location_dungeon_ids = BTreeSet::new();
+    for location in &wilderness.locations {
+        match location {
+            WildernessLocationDefinition::Town { position, town_id } => {
+                validate_definition_id(town_id, "town")?;
+                if !position_is_inside(*position)
+                    || !towns.contains_key(town_id)
+                    || !town_ids.insert(town_id)
+                {
+                    return Err(ContentError::InvalidWilderness(world_id.to_owned()));
+                }
+            }
+            WildernessLocationDefinition::Dungeon {
+                position,
+                dungeon_id,
+            } => {
+                validate_definition_id(dungeon_id, "dungeon")?;
+                if !position_is_inside(*position)
+                    || !dungeon_ids.contains(dungeon_id)
+                    || !location_dungeon_ids.insert(dungeon_id)
+                {
+                    return Err(ContentError::InvalidWilderness(world_id.to_owned()));
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
 fn validate_task_objective(
     owner_id: &str,
     objective: &TaskObjectiveDefinition,
@@ -240,6 +346,9 @@ pub(super) fn validate_world(
                 ));
             }
         }
+    }
+    if let Some(wilderness) = &mut world.wilderness {
+        validate_wilderness(&world.id, wilderness, &dungeon_definition_ids, towns)?;
     }
     if let Some(campaign) = &mut world.campaign {
         campaign.victory_dungeon_ids.sort();

@@ -1875,6 +1875,146 @@
         "positions"
       ],
       "type": "object"
+    },
+    "WildernessDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "height": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "legend": {
+          "items": {
+            "$ref": "#/$defs/WildernessLegendEntry"
+          },
+          "type": "array"
+        },
+        "locations": {
+          "items": {
+            "$ref": "#/$defs/WildernessLocationDefinition"
+          },
+          "type": "array"
+        },
+        "rows": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "startPosition": {
+          "$ref": "#/$defs/ContentPosition"
+        },
+        "width": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "width",
+        "height",
+        "startPosition",
+        "legend",
+        "rows",
+        "locations"
+      ],
+      "type": "object"
+    },
+    "WildernessLegendEntry": {
+      "additionalProperties": false,
+      "properties": {
+        "level": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "road": {
+          "type": "boolean"
+        },
+        "symbol": {
+          "type": "string"
+        },
+        "terrain": {
+          "$ref": "#/$defs/WildernessTerrain"
+        }
+      },
+      "required": [
+        "symbol",
+        "terrain",
+        "level",
+        "road"
+      ],
+      "type": "object"
+    },
+    "WildernessLocationDefinition": {
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "town",
+              "type": "string"
+            },
+            "position": {
+              "$ref": "#/$defs/ContentPosition"
+            },
+            "townId": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "position",
+            "townId"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "dungeonId": {
+              "type": "string"
+            },
+            "kind": {
+              "const": "dungeon",
+              "type": "string"
+            },
+            "position": {
+              "$ref": "#/$defs/ContentPosition"
+            }
+          },
+          "required": [
+            "kind",
+            "position",
+            "dungeonId"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "WildernessTerrain": {
+      "enum": [
+        "edge",
+        "town",
+        "deep-water",
+        "shallow-water",
+        "swamp",
+        "dirt",
+        "grass",
+        "trees",
+        "desert",
+        "shallow-lava",
+        "deep-lava",
+        "mountain",
+        "glacier",
+        "snow",
+        "pack-ice"
+      ],
+      "type": "string"
     }
   },
   "$id": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/world.schema.json",
@@ -1993,6 +2133,17 @@
       "maximum": 65535,
       "minimum": 0,
       "type": "integer"
+    },
+    "wilderness": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/WildernessDefinition"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
     }
   },
   "required": [

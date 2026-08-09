@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
-//! Read-only import of legacy `f_info.txt`/`r_info.txt` content into local
+//! Read-only import of legacy content tables into local
 //! rfb-content JSON fragments. Everything expressible is written to a
 //! git-ignored output directory; everything else is aggregated into a gap
 //! report so rule work can be prioritised from data. No legacy text enters
@@ -29,6 +29,8 @@ const A_INFO_SOURCE: &str = "lib/edit/a_info.txt";
 const B_INFO_SOURCE: &str = "lib/edit/b_info.txt";
 const M_INFO_SOURCE: &str = "lib/edit/m_info.txt";
 const S_INFO_SOURCE: &str = "lib/edit/s_info.txt";
+const W_INFO_SOURCE: &str = "lib/edit/w_info.txt";
+const D_INFO_SOURCE: &str = "lib/edit/d_info.txt";
 const LEGACY_DROP_TABLE_ID: &str = "rfb-legacy.loot-table.monster-drops";
 const LEGACY_WARRIOR_DROP_TABLE_ID: &str = "rfb-legacy.loot-table.monster-drops-warrior";
 const DEMO_DROP_TABLE_ID: &str = "demo.loot-table.warrens";
@@ -108,6 +110,51 @@ impl DemoItemSelectionEntry {
     fn expected_source_id(&self) -> &str {
         self.source_id.as_deref().unwrap_or(&self.id)
     }
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct DemoWildernessSelection {
+    schema_version: u16,
+    world_id: String,
+    towns: Vec<DemoWildernessLocationSelection>,
+    dungeons: Vec<DemoWildernessLocationSelection>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct DemoWildernessLocationSelection {
+    source_index: u32,
+    source_name: String,
+    id: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct LegacyWildernessLegendEntry {
+    symbol: char,
+    terrain: u8,
+    level: u16,
+    town: u32,
+    road: bool,
+    name: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct LegacyWildernessLocation {
+    name: String,
+    x: u16,
+    y: u16,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct LegacyWilderness {
+    width: u16,
+    height: u16,
+    start_x: u16,
+    start_y: u16,
+    legend: Vec<LegacyWildernessLegendEntry>,
+    rows: Vec<String>,
+    towns: BTreeMap<u32, LegacyWildernessLocation>,
 }
 
 fn content_parse_error(
@@ -604,6 +651,395 @@ fn read_legacy_object_at(
         path: path.to_owned(),
         error: error.to_string(),
     })
+}
+
+fn parse_wilderness_legend(
+    line_number: usize,
+    record: &'static str,
+    value: &str,
+) -> Result<LegacyWildernessLegendEntry, LegacyImportError> {
+    let fields = value.split(':').map(str::trim).collect::<Vec<_>>();
+    let valid_length = if record == "W:E" {
+        fields.len() == 6
+    } else {
+        (2..=5).contains(&fields.len())
+    };
+    if !valid_length {
+        return Err(content_parse_error(
+            W_INFO_SOURCE,
+            line_number,
+            record,
+            value,
+            if record == "W:E" {
+                "expected 6 fields".to_owned()
+            } else {
+                format!("expected 2 to 5 fields, found {}", fields.len())
+            },
+        ));
+    }
+    let symbol = required_field(
+        W_INFO_SOURCE,
+        line_number,
+        "symbol",
+        fields.first().copied(),
+    )?;
+    let mut symbols = symbol.chars();
+    let Some(symbol) = symbols.next() else {
+        unreachable!("required field cannot be empty");
+    };
+    if symbols.next().is_some() || !symbol.is_ascii() || symbol.is_ascii_control() {
+        return Err(content_parse_error(
+            W_INFO_SOURCE,
+            line_number,
+            "symbol",
+            symbol.to_string(),
+            "expected one printable ASCII symbol",
+        ));
+    }
+    let terrain = parse_number::<u8>(
+        W_INFO_SOURCE,
+        line_number,
+        "terrain",
+        fields.get(1).copied(),
+    )?;
+    if terrain > 14 {
+        return Err(content_parse_error(
+            W_INFO_SOURCE,
+            line_number,
+            "terrain",
+            terrain.to_string(),
+            "expected an RFB wilderness terrain index from 0 through 14",
+        ));
+    }
+    let level = fields
+        .get(2)
+        .map(|value| parse_number(W_INFO_SOURCE, line_number, "level", Some(value)))
+        .transpose()?
+        .unwrap_or(0);
+    let town = fields
+        .get(3)
+        .map(|value| parse_number(W_INFO_SOURCE, line_number, "town", Some(value)))
+        .transpose()?
+        .unwrap_or(0);
+    let road = fields
+        .get(4)
+        .map(|value| parse_number::<u8>(W_INFO_SOURCE, line_number, "road", Some(value)))
+        .transpose()?
+        .unwrap_or(0);
+    if road > 1 {
+        return Err(content_parse_error(
+            W_INFO_SOURCE,
+            line_number,
+            "road",
+            road.to_string(),
+            "expected 0 or 1",
+        ));
+    }
+    let name = fields
+        .get(5)
+        .map(|value| required_field(W_INFO_SOURCE, line_number, "name", Some(value)))
+        .transpose()?
+        .map(str::to_owned);
+    if (record == "W:E") != (town != 0 && name.is_some()) {
+        return Err(content_parse_error(
+            W_INFO_SOURCE,
+            line_number,
+            record,
+            value,
+            "town entries require a non-zero town index and name; feature entries require neither",
+        ));
+    }
+    Ok(LegacyWildernessLegendEntry {
+        symbol,
+        terrain,
+        level,
+        town,
+        road: road == 1,
+        name,
+    })
+}
+
+fn parse_w_info(text: &str) -> Result<LegacyWilderness, LegacyImportError> {
+    let mut normal = false;
+    let mut found_normal = false;
+    let mut legend = Vec::new();
+    let mut symbols = BTreeSet::new();
+    let mut rows = Vec::new();
+    let mut start = None;
+    for (line_index, raw_line) in text.lines().enumerate() {
+        let line_number = line_index + 1;
+        let line = raw_line.trim_end();
+        if line == "?:[EQU $WILDERNESS NORMAL]" {
+            if found_normal {
+                return Err(content_parse_error(
+                    W_INFO_SOURCE,
+                    line_number,
+                    "section",
+                    line,
+                    "duplicate normal wilderness section",
+                ));
+            }
+            normal = true;
+            found_normal = true;
+            continue;
+        }
+        if normal && line == "?:[EQU $WILDERNESS NONE]" {
+            break;
+        }
+        if !normal || line.is_empty() || line.starts_with('#') {
+            continue;
+        }
+        if let Some(value) = line.strip_prefix("W:F:") {
+            let entry = parse_wilderness_legend(line_number, "W:F", value)?;
+            if !symbols.insert(entry.symbol) {
+                return Err(content_parse_error(
+                    W_INFO_SOURCE,
+                    line_number,
+                    "symbol",
+                    entry.symbol.to_string(),
+                    "duplicate wilderness symbol",
+                ));
+            }
+            legend.push(entry);
+        } else if let Some(value) = line.strip_prefix("W:E:") {
+            let entry = parse_wilderness_legend(line_number, "W:E", value)?;
+            if !symbols.insert(entry.symbol) {
+                return Err(content_parse_error(
+                    W_INFO_SOURCE,
+                    line_number,
+                    "symbol",
+                    entry.symbol.to_string(),
+                    "duplicate wilderness symbol",
+                ));
+            }
+            legend.push(entry);
+        } else if let Some(row) = line.strip_prefix("W:D:") {
+            rows.push(row.to_owned());
+        } else if let Some(value) = line.strip_prefix("W:P:") {
+            if start.is_some() {
+                return Err(content_parse_error(
+                    W_INFO_SOURCE,
+                    line_number,
+                    "W:P",
+                    value,
+                    "duplicate start position",
+                ));
+            }
+            let fields = parse_fields(W_INFO_SOURCE, line_number, "W:P", value, 2)?;
+            let y = parse_number(W_INFO_SOURCE, line_number, "W:P.y", fields.first().copied())?;
+            let x = parse_number(W_INFO_SOURCE, line_number, "W:P.x", fields.get(1).copied())?;
+            start = Some((x, y));
+        } else if line.starts_with("W:") {
+            return Err(content_parse_error(
+                W_INFO_SOURCE,
+                line_number,
+                "directive",
+                line,
+                "unsupported normal wilderness directive",
+            ));
+        }
+    }
+    if !found_normal || legend.is_empty() || rows.is_empty() {
+        return Err(content_parse_error(
+            W_INFO_SOURCE,
+            0,
+            "section",
+            "",
+            "normal wilderness section, legend, and rows are required",
+        ));
+    }
+    let height = u16::try_from(rows.len()).map_err(|_| {
+        content_parse_error(
+            W_INFO_SOURCE,
+            0,
+            "height",
+            rows.len().to_string(),
+            "height exceeds u16",
+        )
+    })?;
+    let width_count = rows[0].chars().count();
+    let width = u16::try_from(width_count).map_err(|_| {
+        content_parse_error(
+            W_INFO_SOURCE,
+            0,
+            "width",
+            width_count.to_string(),
+            "width exceeds u16",
+        )
+    })?;
+    if width < 3 || height < 3 || width > 512 || height > 512 {
+        return Err(content_parse_error(
+            W_INFO_SOURCE,
+            0,
+            "dimensions",
+            format!("{width}x{height}"),
+            "expected dimensions from 3 through 512",
+        ));
+    }
+    let legend_by_symbol = legend
+        .iter()
+        .map(|entry| (entry.symbol, entry))
+        .collect::<BTreeMap<_, _>>();
+    for (y, row) in rows.iter().enumerate() {
+        let cells = row.chars().collect::<Vec<_>>();
+        if cells.len() != usize::from(width) {
+            return Err(content_parse_error(
+                W_INFO_SOURCE,
+                y + 1,
+                "W:D",
+                row,
+                format!("expected row width {width}, found {}", cells.len()),
+            ));
+        }
+        for (x, symbol) in cells.iter().enumerate() {
+            let Some(entry) = legend_by_symbol.get(symbol) else {
+                return Err(content_parse_error(
+                    W_INFO_SOURCE,
+                    y + 1,
+                    "W:D",
+                    symbol.to_string(),
+                    "row uses a symbol absent from the legend",
+                ));
+            };
+            if (x == 0 || y == 0 || x + 1 == usize::from(width) || y + 1 == usize::from(height))
+                && entry.terrain != 0
+            {
+                return Err(content_parse_error(
+                    W_INFO_SOURCE,
+                    y + 1,
+                    "boundary",
+                    symbol.to_string(),
+                    "boundary cells must use edge terrain 0",
+                ));
+            }
+        }
+    }
+    let (start_x, start_y) = start.ok_or_else(|| {
+        content_parse_error(W_INFO_SOURCE, 0, "W:P", "", "start position is required")
+    })?;
+    if start_x >= width || start_y >= height {
+        return Err(content_parse_error(
+            W_INFO_SOURCE,
+            0,
+            "W:P",
+            format!("{start_y}:{start_x}"),
+            "start position is outside the wilderness",
+        ));
+    }
+    let start_symbol = rows[usize::from(start_y)]
+        .chars()
+        .nth(usize::from(start_x))
+        .expect("validated row width must contain the start cell");
+    if legend_by_symbol[&start_symbol].terrain == 0 {
+        return Err(content_parse_error(
+            W_INFO_SOURCE,
+            0,
+            "W:P",
+            format!("{start_y}:{start_x}"),
+            "start position cannot use edge terrain",
+        ));
+    }
+
+    let mut towns = BTreeMap::new();
+    for entry in legend.iter().filter(|entry| entry.town != 0) {
+        let positions = rows
+            .iter()
+            .enumerate()
+            .flat_map(|(y, row)| {
+                row.chars()
+                    .enumerate()
+                    .filter(move |(_, symbol)| *symbol == entry.symbol)
+                    .map(move |(x, _)| (x, y))
+            })
+            .collect::<Vec<_>>();
+        if positions.len() != 1 || towns.contains_key(&entry.town) {
+            return Err(content_parse_error(
+                W_INFO_SOURCE,
+                0,
+                "town",
+                entry.town.to_string(),
+                "town indexes must be unique and occur exactly once",
+            ));
+        }
+        let (x, y) = positions[0];
+        towns.insert(
+            entry.town,
+            LegacyWildernessLocation {
+                name: entry
+                    .name
+                    .clone()
+                    .expect("town legend entry must have a name"),
+                x: u16::try_from(x).expect("validated width fits u16"),
+                y: u16::try_from(y).expect("validated height fits u16"),
+            },
+        );
+    }
+    Ok(LegacyWilderness {
+        width,
+        height,
+        start_x,
+        start_y,
+        legend,
+        rows,
+        towns,
+    })
+}
+
+fn parse_dungeon_locations(
+    text: &str,
+) -> Result<BTreeMap<u32, LegacyWildernessLocation>, LegacyImportError> {
+    let mut records = BTreeMap::<u32, (String, Option<(u16, u16)>)>::new();
+    let mut current = None;
+    for (line_index, raw_line) in text.lines().enumerate() {
+        let line_number = line_index + 1;
+        let line = raw_line.trim_end();
+        if let Some(value) = line.strip_prefix("N:") {
+            let mut fields = value.splitn(2, ':');
+            let index = parse_number(D_INFO_SOURCE, line_number, "N.index", fields.next())?;
+            let name = required_field(D_INFO_SOURCE, line_number, "N.name", fields.next())?;
+            if records.insert(index, (name.to_owned(), None)).is_some() {
+                return Err(content_parse_error(
+                    D_INFO_SOURCE,
+                    line_number,
+                    "N.index",
+                    index.to_string(),
+                    "duplicate dungeon index",
+                ));
+            }
+            current = Some(index);
+        } else if let Some(value) = line.strip_prefix("P:") {
+            let index = current.ok_or_else(|| {
+                content_parse_error(
+                    D_INFO_SOURCE,
+                    line_number,
+                    "P",
+                    value,
+                    "position appears before a dungeon record",
+                )
+            })?;
+            let fields = parse_fields(D_INFO_SOURCE, line_number, "P", value, 2)?;
+            let y = parse_number(D_INFO_SOURCE, line_number, "P.y", fields.first().copied())?;
+            let x = parse_number(D_INFO_SOURCE, line_number, "P.x", fields.get(1).copied())?;
+            let record = records
+                .get_mut(&index)
+                .expect("current dungeon record must exist");
+            if record.1.replace((x, y)).is_some() {
+                return Err(content_parse_error(
+                    D_INFO_SOURCE,
+                    line_number,
+                    "P",
+                    value,
+                    "duplicate dungeon position",
+                ));
+            }
+        }
+    }
+    Ok(records
+        .into_iter()
+        .filter_map(|(index, (name, position))| {
+            position.map(|(x, y)| (index, LegacyWildernessLocation { name, x, y }))
+        })
+        .collect())
 }
 
 fn list_legacy_c_sources(source: &Path, commit: &str) -> Result<Vec<String>, LegacyImportError> {
@@ -8631,6 +9067,206 @@ pub fn import_content(source: &Path, output: &Path) -> Result<PathBuf, LegacyImp
     Ok(report_path)
 }
 
+fn wilderness_terrain_id(index: u8) -> &'static str {
+    match index {
+        0 => "edge",
+        1 => "town",
+        2 => "deep-water",
+        3 => "shallow-water",
+        4 => "swamp",
+        5 => "dirt",
+        6 => "grass",
+        7 => "trees",
+        8 => "desert",
+        9 => "shallow-lava",
+        10 => "deep-lava",
+        11 => "mountain",
+        12 => "glacier",
+        13 => "snow",
+        14 => "pack-ice",
+        _ => unreachable!("wilderness parser accepts exactly the 15 RFB terrain indexes"),
+    }
+}
+
+fn replace_wilderness_property(
+    source: &str,
+    wilderness: &serde_json::Value,
+) -> Result<String, LegacyImportError> {
+    let parsed: serde_json::Value = serde_json::from_str(source)?;
+    let newline = if source.contains("\r\n") {
+        "\r\n"
+    } else {
+        "\n"
+    };
+    let width_marker = format!("{newline}  \"width\":");
+    let width_start = source.find(&width_marker).ok_or_else(|| {
+        LegacyImportError::InvalidDemoWildernessSelection(
+            "world output must use the committed two-space JSON layout".to_owned(),
+        )
+    })?;
+    let property_marker = format!("{newline}  \"wilderness\":");
+    let property_start = source.find(&property_marker);
+    if parsed.get("wilderness").is_some() != property_start.is_some()
+        || property_start.is_some_and(|start| start > width_start)
+    {
+        return Err(LegacyImportError::InvalidDemoWildernessSelection(
+            "existing wilderness field is outside the expected world header".to_owned(),
+        ));
+    }
+    let encoded = serde_json::to_string_pretty(wilderness)?.replace('\n', &format!("{newline}  "));
+    let property = format!("{newline}  \"wilderness\": {encoded},");
+    let mut output = source.to_owned();
+    match property_start {
+        Some(start) => output.replace_range(start..width_start, &property),
+        None => output.insert_str(width_start, &property),
+    }
+    serde_json::from_str::<serde_json::Value>(&output)?;
+    Ok(output)
+}
+
+pub fn sync_demo_wilderness(
+    source: &Path,
+    selection_path: &Path,
+    output: &Path,
+) -> Result<usize, LegacyImportError> {
+    let canonical_source = source
+        .canonicalize()
+        .map_err(|error| LegacyImportError::LegacyGit(error.to_string()))?;
+    if output.starts_with(&canonical_source) {
+        return Err(LegacyImportError::LegacyGit(
+            "output file must live outside the legacy source".to_owned(),
+        ));
+    }
+    let selection: DemoWildernessSelection = serde_json::from_slice(&fs::read(selection_path)?)?;
+    if selection.schema_version != 1 || selection.towns.is_empty() || selection.dungeons.is_empty()
+    {
+        return Err(LegacyImportError::InvalidDemoWildernessSelection(
+            "selection must use schemaVersion 1 and contain at least one town and dungeon"
+                .to_owned(),
+        ));
+    }
+
+    let source_commit = resolve_legacy_content_commit(source)?;
+    let wilderness = parse_w_info(&read_legacy_object_at(
+        source,
+        &source_commit,
+        W_INFO_SOURCE,
+    )?)?;
+    let dungeons = parse_dungeon_locations(&read_legacy_object_at(
+        source,
+        &source_commit,
+        D_INFO_SOURCE,
+    )?)?;
+    let world_source = fs::read_to_string(output)?;
+    let world: serde_json::Value = serde_json::from_str(&world_source)?;
+    if world.get("id").and_then(serde_json::Value::as_str) != Some(&selection.world_id) {
+        return Err(LegacyImportError::InvalidDemoWildernessSelection(format!(
+            "world output does not define {}",
+            selection.world_id
+        )));
+    }
+    let known_town_id = world.get("townId").and_then(serde_json::Value::as_str);
+    let known_dungeon_ids = world
+        .get("dungeons")
+        .and_then(serde_json::Value::as_array)
+        .into_iter()
+        .flatten()
+        .filter_map(|dungeon| dungeon.get("id").and_then(serde_json::Value::as_str))
+        .collect::<BTreeSet<_>>();
+
+    let mut selected_source_indexes = BTreeSet::new();
+    let mut selected_ids = BTreeSet::new();
+    let mut locations = Vec::with_capacity(selection.towns.len() + selection.dungeons.len());
+    for selected in &selection.towns {
+        if !selected_source_indexes.insert(("town", selected.source_index))
+            || !selected_ids.insert(selected.id.as_str())
+            || known_town_id != Some(selected.id.as_str())
+        {
+            return Err(LegacyImportError::InvalidDemoWildernessSelection(format!(
+                "duplicate or unsupported town selection {}",
+                selected.id
+            )));
+        }
+        let location = wilderness
+            .towns
+            .get(&selected.source_index)
+            .ok_or_else(|| {
+                LegacyImportError::InvalidDemoWildernessSelection(format!(
+                    "unknown wilderness town index {}",
+                    selected.source_index
+                ))
+            })?;
+        if location.name != selected.source_name {
+            return Err(LegacyImportError::InvalidDemoWildernessSelection(format!(
+                "wilderness town {} is {}, expected {}",
+                selected.source_index, location.name, selected.source_name
+            )));
+        }
+        locations.push(serde_json::json!({
+            "kind": "town",
+            "position": { "x": location.x, "y": location.y },
+            "townId": selected.id,
+        }));
+    }
+    for selected in &selection.dungeons {
+        if !selected_source_indexes.insert(("dungeon", selected.source_index))
+            || !selected_ids.insert(selected.id.as_str())
+            || !known_dungeon_ids.contains(selected.id.as_str())
+        {
+            return Err(LegacyImportError::InvalidDemoWildernessSelection(format!(
+                "duplicate or unsupported dungeon selection {}",
+                selected.id
+            )));
+        }
+        let location = dungeons.get(&selected.source_index).ok_or_else(|| {
+            LegacyImportError::InvalidDemoWildernessSelection(format!(
+                "unknown positioned dungeon index {}",
+                selected.source_index
+            ))
+        })?;
+        if location.name != selected.source_name
+            || location.x >= wilderness.width
+            || location.y >= wilderness.height
+        {
+            return Err(LegacyImportError::InvalidDemoWildernessSelection(format!(
+                "dungeon {} source name or position does not match the wilderness",
+                selected.source_index
+            )));
+        }
+        locations.push(serde_json::json!({
+            "kind": "dungeon",
+            "position": { "x": location.x, "y": location.y },
+            "dungeonId": selected.id,
+        }));
+    }
+
+    let legend = wilderness
+        .legend
+        .iter()
+        .map(|entry| {
+            serde_json::json!({
+                "symbol": entry.symbol.to_string(),
+                "terrain": wilderness_terrain_id(entry.terrain),
+                "level": entry.level,
+                "road": entry.road,
+            })
+        })
+        .collect::<Vec<_>>();
+    let wilderness_json = serde_json::json!({
+        "width": wilderness.width,
+        "height": wilderness.height,
+        "startPosition": { "x": wilderness.start_x, "y": wilderness.start_y },
+        "legend": legend,
+        "rows": wilderness.rows,
+        "locations": locations,
+    });
+    fs::write(
+        output,
+        replace_wilderness_property(&world_source, &wilderness_json)?,
+    )?;
+    Ok(selection.towns.len() + selection.dungeons.len())
+}
+
 pub fn sync_demo_monsters(
     source: &Path,
     selection_path: &Path,
@@ -8951,6 +9587,52 @@ mod tests {
             S_INFO_SOURCE,
             2,
             "S.skillIndex",
+        );
+    }
+
+    #[test]
+    fn wilderness_parsers_keep_the_map_and_positioned_locations() {
+        let wilderness = parse_w_info(
+            "?:[EQU $WILDERNESS NORMAL]\n\
+             W:F:#:0\n\
+             W:F:.:6:10\n\
+             W:E:1:6:0:1:1:前哨站\n\
+             W:F:*:6:3:0:1\n\
+             W:D:#####\n\
+             W:D:#.1*#\n\
+             W:D:#####\n\
+             W:P:1:2\n\
+             ?:[EQU $WILDERNESS NONE]\n",
+        )
+        .expect("synthetic normal wilderness should parse");
+        assert_eq!((wilderness.width, wilderness.height), (5, 3));
+        assert_eq!((wilderness.start_x, wilderness.start_y), (2, 1));
+        assert_eq!(wilderness.legend.len(), 4);
+        assert_eq!(
+            wilderness.towns.get(&1),
+            Some(&LegacyWildernessLocation {
+                name: "前哨站".to_owned(),
+                x: 2,
+                y: 1,
+            })
+        );
+
+        let dungeons = parse_dungeon_locations("N:30:Warrens\nP:1:2\n")
+            .expect("synthetic dungeon position should parse");
+        assert_eq!(
+            dungeons.get(&30),
+            Some(&LegacyWildernessLocation {
+                name: "Warrens".to_owned(),
+                x: 2,
+                y: 1,
+            })
+        );
+        assert_eq!(
+            (0..=14)
+                .map(wilderness_terrain_id)
+                .collect::<BTreeSet<_>>()
+                .len(),
+            15
         );
     }
 

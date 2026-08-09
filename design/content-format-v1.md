@@ -272,6 +272,8 @@ contract-v82 以 1.74.0 增加 `summon` 能力效果、Echo Companion 与友方�
 
 contract-v196 以 1.191.0 为 actor 增加默认 false 的 `friendly`，表示自主的玩家侧怪物而不是控制或召唤所有权；怪物 `TRAPS` 继续使用既有 `transform-terrain` 能力程序。追踪者以 `shadower-appearance` 标签成为非分配外观定义，外观概率与真实身份保存由核心负责。
 
+荒野 W0 以 1.192.0 为 `WorldDefinition` 增加可选 `wilderness`：独立宽高、起点、单字符图例、定长字符串行和强类型 town/dungeon 地点。图例保留 15 类 RFB 荒野 terrain、原始危险等级和道路事实；编译器验证尺寸、行宽、符号、边界、起点、唯一地点和正式内容引用。该字段当前只进入内容 artifact，不进入协议、存档或战术 floor。
+
 contract-v83 以 1.75.0 增加 `detect` 能力效果、Echo Pulse 与 Echo Sight；类别/半径、FOV 与隐藏投影筛选、稳定结果顺序、瞬时/持久知识边界由核心定义，持久结果复用 `revealedTerrain`，state hash 升至 Schema v36。
 
 contract-v84 以 1.76.0 增加 `transform-terrain` 能力效果、Echo Delving 与 Echo Rampart；来源/目标 terrain 集、范围、FOV/line of effect、占用格、连接/边界保护和原子写入由核心定义，地形继续复用既有 save/state hash 字段。
