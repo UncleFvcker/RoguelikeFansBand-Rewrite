@@ -1,0 +1,58 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 342,
+    "maxDepth": 999,
+    "rarity": 2
+  },
+  "attack": 5,
+  "damageDice": 1,
+  "damageSides": 1,
+  "damageType": "physical",
+  "defense": 0,
+  "descriptionKey": "actor-demo-quylthulg-description",
+  "experienceValue": 250,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "Q",
+  "hitPointDice": {
+    "dice": 6,
+    "sides": 8
+  },
+  "id": "demo.actor.quylthulg",
+  "level": 20,
+  "maxHp": 27,
+  "meleeRoutine": {
+    "blows": []
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.blink",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-legacy-import-l20-1d1",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 25
+  },
+  "movement": {
+    "neverMoves": true
+  },
+  "nameKey": "actor-demo-quylthulg-name",
+  "role": "monster",
+  "speed": 110,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "invisible",
+    "legacy-import",
+    "quylthulg",
+    "warrens"
+  ]
+}

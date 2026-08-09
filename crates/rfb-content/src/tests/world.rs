@@ -118,6 +118,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.crow-of-durthang", 1224, 2, 40),
             ("demo.actor.crypt-creep", 124, 2, 40),
             ("demo.actor.culverin", 867, 2, 50),
+            ("demo.actor.daemonette-of-slaanesh", 319, 2, 999),
             ("demo.actor.dark-elf", 122, 2, 40),
             ("demo.actor.dark-elven-lord", 348, 2, 70),
             ("demo.actor.dark-elven-mage", 178, 1, 40),
@@ -242,6 +243,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.insect-swarm", 38, 1, 10),
             ("demo.actor.irish-wolfhound-of-flora", 254, 2, 50),
             ("demo.actor.ixitxachitl", 220, 1, 50),
+            ("demo.actor.ixitxachitl-priest", 328, 1, 80),
             ("demo.actor.jackal", 35, 1, 5),
             ("demo.actor.jibaku-ghost", 1012, 2, 40),
             ("demo.actor.jumping-fireball", 299, 1, 50),
@@ -286,6 +288,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.manes", 128, 2, 40),
             ("demo.actor.master-yeek", 224, 2, 40),
             ("demo.actor.mauhur-the-orc-captain", 1072, 3, 999),
+            ("demo.actor.meng-huo-the-king-of-southerings", 1030, 2, 999),
             ("demo.actor.meng-you-the-brother-of-meng-huo", 1073, 2, 999),
             ("demo.actor.metallic-blue-centipede", 67, 1, 30),
             ("demo.actor.metallic-green-centipede", 42, 1, 20),
@@ -329,6 +332,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.orfax-son-of-boldor", 180, 3, 999),
             ("demo.actor.owlbear", 188, 1, 40),
             ("demo.actor.ozmanian-devil", 1330, 2, 36),
+            ("demo.actor.paladin", 1038, 1, 80),
             ("demo.actor.panther", 198, 2, 40),
             ("demo.actor.phantom-warrior", 152, 1, 40),
             ("demo.actor.phase-spider", 331, 2, 999),
@@ -348,8 +352,10 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.quartz-vein", 911, 2, 60),
             ("demo.actor.quasit", 294, 2, 50),
             ("demo.actor.quiver-slot", 185, 2, 40),
+            ("demo.actor.quylthulg", 342, 2, 999),
             ("demo.actor.radiant-kavu", 1071, 1, 50),
             ("demo.actor.radiation-eye", 80, 1, 30),
+            ("demo.actor.ranger", 1039, 1, 80),
             ("demo.actor.rat-thing", 115, 1, 40),
             ("demo.actor.rattlesnake", 119, 1, 40),
             ("demo.actor.raven", 68, 2, 30),
@@ -2482,6 +2488,152 @@ fn p38a_monsters_bind_exact_parameterized_damage_abilities() {
                 && actual_type == damage_type
         ));
     }
+}
+
+#[test]
+fn p38b_monsters_bind_exact_healing_and_summoning_parameters() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actor = |id: &str| {
+        artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == format!("demo.actor.{id}"))
+            .unwrap_or_else(|| panic!("{id} should be imported"))
+    };
+    let ability = |id: &str| {
+        artifact
+            .content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == format!("rfb-legacy.ability.{id}"))
+            .unwrap_or_else(|| panic!("{id} should be imported"))
+    };
+    let assert_abilities = |actor_id: &str, expected: &[&str]| {
+        let actual = actor(actor_id)
+            .monster_casting
+            .as_ref()
+            .unwrap_or_else(|| panic!("{actor_id} should retain monster casting"))
+            .abilities
+            .iter()
+            .map(|candidate| candidate.ability_id.clone())
+            .collect::<BTreeSet<_>>();
+        let expected = expected
+            .iter()
+            .map(|id| format!("rfb-legacy.ability.{id}"))
+            .collect::<BTreeSet<_>>();
+        assert_eq!(actual, expected, "{actor_id} ability set");
+    };
+
+    assert_abilities(
+        "daemonette-of-slaanesh",
+        &[
+            "bolt-cold-6d8-6",
+            "bolt-fire-9d8-6",
+            "confuse",
+            "curse-8d8",
+            "scare",
+            "summon-demon-l18-1d3-1",
+        ],
+    );
+    assert_abilities(
+        "meng-huo-the-king-of-southerings",
+        &["kin-meng-huo-the-king-of-southerings"],
+    );
+    assert_abilities(
+        "ixitxachitl-priest",
+        &[
+            "blind",
+            "curse-8d8",
+            "drag",
+            "heal-57",
+            "scare",
+            "summon-legacy-import-l19-1d1",
+        ],
+    );
+    assert_abilities("quylthulg", &["blink", "summon-legacy-import-l20-1d1"]);
+    assert_abilities(
+        "paladin",
+        &[
+            "blind",
+            "curse-3d8",
+            "curse-8d8",
+            "heal-60",
+            "scare",
+            "slow",
+        ],
+    );
+    assert_abilities(
+        "ranger",
+        &[
+            "blink",
+            "bolt-electricity-4d8-6",
+            "bolt-physical-2d6-6",
+            "bolt-physical-5d6",
+            "summon-legacy-import-l20-1d1",
+        ],
+    );
+
+    assert!(matches!(
+        ability("summon-demon-l18-1d3-1").effect,
+        AbilityEffectDefinition::SummonCategory {
+            ref category,
+            maximum_level: 18,
+            count_dice: 1,
+            count_sides: 3,
+            count_bonus: 1,
+            ..
+        } if category == "demon"
+    ));
+    assert!(matches!(
+        ability("kin-meng-huo-the-king-of-southerings").effect,
+        AbilityEffectDefinition::Summon {
+            ref actor_kind_id,
+            count: 2,
+            radius: 2,
+            ..
+        } if actor_kind_id == "demo.actor.meng-huo-the-king-of-southerings"
+    ));
+    for (id, maximum_level) in [
+        ("summon-legacy-import-l19-1d1", 19),
+        ("summon-legacy-import-l20-1d1", 20),
+    ] {
+        assert!(matches!(
+            ability(id).effect,
+            AbilityEffectDefinition::SummonCategory {
+                ref category,
+                maximum_level: actual_level,
+                count_dice: 1,
+                count_sides: 1,
+                count_bonus: 0,
+                ..
+            } if category == "legacy-import" && actual_level == maximum_level
+        ));
+    }
+    for (id, amount) in [("heal-57", 57), ("heal-60", 60)] {
+        assert!(matches!(
+            ability(id).effect,
+            AbilityEffectDefinition::Heal { amount: actual } if actual == amount
+        ));
+    }
+    assert!(matches!(
+        ability("bolt-physical-5d6").effect,
+        AbilityEffectDefinition::Damage {
+            damage_dice: 5,
+            damage_sides: 6,
+            damage_bonus: 0,
+            damage_type: ActorDamageType::Physical,
+        }
+    ));
+    assert!(matches!(
+        ability("bolt-electricity-4d8-6").effect,
+        AbilityEffectDefinition::Damage {
+            damage_dice: 4,
+            damage_sides: 8,
+            damage_bonus: 6,
+            damage_type: ActorDamageType::Electricity,
+        }
+    ));
 }
 
 #[test]

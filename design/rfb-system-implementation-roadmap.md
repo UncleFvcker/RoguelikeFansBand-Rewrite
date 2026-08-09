@@ -1,6 +1,6 @@
 # RFB 全系统梳理与重构实现路线
 
-状态：长期规则实现路线；当前基线为协议 1.152 / contract-v224（P31–P98 进展见 8.3，玩家流程与 Outpost 进展见 Phase 17/18，物品接入见 Phase 19，Warrens 怪物机制见 W1–W14 清单，荒野世界图见 W0–W5）
+状态：长期规则实现路线；当前基线为协议 1.152 / contract-v225（P31–P98 进展见 8.3，玩家流程与 Outpost 进展见 Phase 17/18，物品接入见 Phase 19，Warrens 怪物机制见 W1–W14 清单，荒野世界图见 W0–W5）
 
 ## 1. 目的与边界
 
@@ -675,6 +675,8 @@ P30“首个非 Mana 职业资源”已由 contract-v90 完成：节奏资源按
 **怪物 P37B 现有能力进展（2026-08）**：contract-v223 接入 15 只只引用现有能力的怪物。火、冰、闪电、酸、毒素和声音吐息直接共享既有 ability；闪现犬、胡恩、跳蚁和相位蜘蛛复用 `blink` / `drag`；蔓生怪复用 `shriek`；南瓜人复用致盲、混乱、麻痹、恐惧、黑暗和 `curse-3d8`。`DETECT_MONSTERS` 仍按附身者专用令牌排除。正式包为 413 actors / 152 abilities，严格同步 348 条；协议 1.152、Schema v72 不变，demo 1.219.0，内容 hash 为 `c379c1b08743578fee07d0fb0678c3ce1a59ae080e62424ae01e84525ffd322a`。完整边界见 [Contract v223](contract-v223-warrens-content-p37b-existing-abilities.md)。
 
 **怪物 P38A 伤害参数进展（2026-08）**：contract-v224 接入药水拟似怪、门拟似怪、乌鲁克、混沌野兽人、巨型青铜蜻蜓、石巨人、雪魔像、丛林游侠、霜巨人、大地猎犬和黑暗精灵领主。11 条新增 ability 只保存既有 bolt、ball、breath effect 的权威骰值、伤害类型、半径或生命比例上限；多个怪物共享相同数值记录，附身者侦测令牌继续排除。正式包为 424 actors / 163 abilities，严格同步 359 条；协议 1.152、Schema v72 不变，demo 1.220.0，内容 hash 为 `60ccaee2d902a306b4e3615cfd22b61c98e41e5454af75af16c045566da8d82a`。完整边界见 [Contract v224](contract-v224-warrens-content-p38a-damage-parameters.md)。
+
+**怪物 P38B 治疗与召唤参数进展（2026-08）**：contract-v225 接入色孽欲魔、南蛮王孟获、异西鳐祭司、隐伏怪、圣武士和游侠。8 条新增 ability 只保存既有治疗、分类召唤、同族召唤和伤害 effect 的权威参数；20 级召唤由隐伏怪与游侠共享，色孽欲魔复用 P38A 的火/冰箭。附身者侦测、地图与祝福令牌继续排除。正式包为 430 actors / 171 abilities，严格同步 365 条；协议 1.152、Schema v72 不变，demo 1.221.0，内容 hash 为 `acc9186760331c90d5c3218755950ac186460f234760b8e9e995645ec41caba7`。完整边界见 [Contract v225](contract-v225-warrens-content-p38b-healing-summoning.md)。
 
 ## 9. 内容迁移策略
 

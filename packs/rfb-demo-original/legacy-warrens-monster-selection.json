@@ -2166,6 +2166,42 @@
       "id": "dark-elven-lord",
       "tags": ["dark-elf", "humanoid", "warrens"],
       "omittedFlags": ["MALE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 319,
+      "id": "daemonette-of-slaanesh",
+      "tags": ["demon", "warrens"],
+      "omittedFlags": ["FEMALE", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 1030,
+      "id": "meng-huo-the-king-of-southerings",
+      "tags": ["humanoid", "warrens"],
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
+    },
+    {
+      "sourceIndex": 328,
+      "id": "ixitxachitl-priest",
+      "tags": ["fish", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 342,
+      "id": "quylthulg",
+      "tags": ["quylthulg", "warrens"],
+      "omittedFlags": ["EMPTY_MIND", "POS_SEE_INVIS", "POS_TELEPATHY", "STUPID"]
+    },
+    {
+      "sourceIndex": 1038,
+      "id": "paladin",
+      "tags": ["humanoid", "warrens"],
+      "omittedFlags": ["KNIGHT", "MALE"]
+    },
+    {
+      "sourceIndex": 1039,
+      "id": "ranger",
+      "tags": ["humanoid", "warrens"],
+      "omittedFlags": ["MALE"]
     }
   ]
 }

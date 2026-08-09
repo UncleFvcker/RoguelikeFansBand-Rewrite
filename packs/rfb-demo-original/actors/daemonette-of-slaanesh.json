@@ -1,0 +1,127 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 319,
+    "maxDepth": 999,
+    "rarity": 2
+  },
+  "attack": 4,
+  "damageDice": 3,
+  "damageSides": 5,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [
+      {
+        "percent": 60
+      }
+    ],
+    "itemTableId": "demo.loot-table.warrens",
+    "kind": "items-and-gold"
+  },
+  "defense": 5,
+  "descriptionKey": "actor-demo-daemonette-of-slaanesh-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 75,
+  "formatVersion": 1,
+  "glyph": "u",
+  "hitPointDice": {
+    "dice": 12,
+    "forceMaximum": true,
+    "sides": 8
+  },
+  "id": "demo.actor.daemonette-of-slaanesh",
+  "level": 18,
+  "maxHp": 96,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 3,
+            "damageSides": 5,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "chancePercent": 50,
+            "damageDice": 0,
+            "damageSides": 0,
+            "type": "confusion"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 3,
+            "damageSides": 5,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "chancePercent": 50,
+            "damageDice": 0,
+            "damageSides": 0,
+            "type": "confusion"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.scare",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-demon-l18-1d3-1",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.curse-8d8",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.confuse",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.bolt-fire-9d8-6",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.bolt-cold-6d8-6",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 12
+  },
+  "nameKey": "actor-demo-daemonette-of-slaanesh-name",
+  "resistances": {
+    "cold": "resistant",
+    "fire": "resistant",
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 120,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "demon",
+    "evil",
+    "legacy-import",
+    "warrens"
+  ]
+}

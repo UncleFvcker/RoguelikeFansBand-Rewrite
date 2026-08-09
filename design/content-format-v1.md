@@ -430,3 +430,10 @@ ability 和 ability program 仅保存现有 bolt、ball、breath effect 的权�
 table；严格同步 359 条，内容 hash 为
 `60ccaee2d902a306b4e3615cfd22b61c98e41e5454af75af16c045566da8d82a`。
 协议保持 1.152，State Hash Schema 保持 v72。
+
+contract-v225 / 包 1.221.0 接入 6 只 P38B 治疗与召唤参数怪物。新增 8 条
+ability 和 ability program 仅保存现有治疗、分类召唤、同族召唤和伤害 effect
+的权威参数。当前包包含 88 种地形、430 种 actor、249 种物品、171 个能力和
+20 张 loot table；严格同步 365 条，内容 hash 为
+`acc9186760331c90d5c3218755950ac186460f234760b8e9e995645ec41caba7`。
+协议保持 1.152，State Hash Schema 保持 v72。
