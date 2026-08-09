@@ -1,6 +1,6 @@
 # RFB 全系统梳理与重构实现路线
 
-状态：长期规则实现路线；当前基线为协议 1.151 / contract-v216（P31–P98 进展见 8.3，玩家流程与 Outpost 进展见 Phase 17/18，物品接入见 Phase 19，Warrens 怪物机制见 W1–W14 清单，荒野世界图见 W0–W5）
+状态：长期规则实现路线；当前基线为协议 1.151 / contract-v217（P31–P98 进展见 8.3，玩家流程与 Outpost 进展见 Phase 17/18，物品接入见 Phase 19，Warrens 怪物机制见 W1–W14 清单，荒野世界图见 W0–W5）
 
 ## 1. 目的与边界
 
@@ -659,6 +659,8 @@ P30“首个非 Mana 职业资源”已由 contract-v90 完成：节奏资源按
 **十五级怪物 P30 进展（2026-08）**：contract-v214 接入铁甲虫及窄 `REFLECTING`。`reflectsBolts` 只让单体 ability/device bolt 按原版 75% 判定反射；方向重选、玩家/怪物命中和无奖励死亡复用现有投射与伤害路径，beam、ball、cone 和普通箭矢不受影响。正式包为 332 actors / 143 abilities，严格同步 267 条；协议 1.148、Schema v70 不变，demo 1.210.0，内容 hash 为 `b6f4741928ed2c1ae56f65d5614b06a25a200cdcb2eb9abe44f96fe1da424e00`。完整边界见 [Contract v214](contract-v214-warrens-content-p30-reflecting-buzzy-beetle.md)。
 
 **十六级怪物 P31 进展（2026-08）**：contract-v216 直接接入 12 只无需新机制的十六级怪物。粉红惧妖、兽人队长和巨型绿蜻蜓复用现有恐惧/混乱、`bolt-physical-3d6` 与毒素吐息；`DETECT_OBJECTS`、`MULTIPLY` 和 `BERSERK` 继续按附身者提示处理。正式包为 344 actors / 143 abilities，严格同步 279 条；协议 1.151、Schema v72 不变，demo 1.212.0，内容 hash 为 `08dfc525ebb4f1f2af4e110dcc1490ffc37647f63feb088c0dfa4e8113e22f3f`。完整边界见 [Contract v216](contract-v216-warrens-content-p31-level-16-direct-harvest.md)。
+
+**十六级怪物 P32 进展（2026-08）**：contract-v217 接入南蛮大王木鹿大王，并把 `S_SPIDER` 窄映射到现有蜘蛛分类召唤。`summon-ant-l16-1d3-1` 与 `summon-spider-l16-1d3-1` 只生成既有 `summon-category` 参数内容和配套 Ability Program。正式包为 345 actors / 145 abilities，严格同步 280 条；协议 1.151、Schema v72 不变，demo 1.213.0，内容 hash 为 `a5ff0d74568c28b7ac966b6a0f6dcbef64a6cb3cc9fc004b3ba6abbc8829d1eb`。完整边界见 [Contract v217](contract-v217-warrens-content-p32-king-mulu-spider-summon.md)。
 
 ## 9. 内容迁移策略
 

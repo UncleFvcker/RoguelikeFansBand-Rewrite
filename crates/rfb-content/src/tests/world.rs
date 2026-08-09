@@ -218,6 +218,12 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
                 2,
                 999,
             ),
+            (
+                "demo.actor.king-mulu-the-chief-of-southerings",
+                1077,
+                2,
+                999,
+            ),
             ("demo.actor.knight-archer", 219, 1, 50),
             ("demo.actor.kobold", 30, 1, 30),
             ("demo.actor.kutar", 1020, 4, 30),
@@ -1484,6 +1490,68 @@ fn level_sixteen_p31_harvest_reuses_existing_mechanics_and_abilities() {
             .iter()
             .any(|tag| tag == "unique")
     );
+}
+
+#[test]
+fn level_sixteen_p32_king_mulu_reuses_category_summoning() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actor = artifact
+        .content
+        .actors
+        .iter()
+        .find(|actor| actor.id == "demo.actor.king-mulu-the-chief-of-southerings")
+        .expect("King Mulu should be imported");
+    let ability = |id: &str| {
+        artifact
+            .content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == id)
+            .unwrap_or_else(|| panic!("{id} should be generated"))
+    };
+
+    assert_eq!(actor.level, 16);
+    assert!(actor.tags.iter().any(|tag| tag == "unique"));
+    assert_eq!(
+        actor
+            .allocation
+            .as_ref()
+            .expect("King Mulu allocation")
+            .legacy_dungeon_indices,
+        [31]
+    );
+    assert_eq!(
+        actor
+            .monster_casting
+            .as_ref()
+            .expect("King Mulu should retain summoning")
+            .abilities
+            .iter()
+            .map(|candidate| candidate.ability_id.as_str())
+            .collect::<BTreeSet<_>>(),
+        [
+            "rfb-legacy.ability.summon-ant-l16-1d3-1",
+            "rfb-legacy.ability.summon-spider-l16-1d3-1",
+        ]
+        .into_iter()
+        .collect()
+    );
+    for (id, expected_category) in [
+        ("rfb-legacy.ability.summon-ant-l16-1d3-1", "ant"),
+        ("rfb-legacy.ability.summon-spider-l16-1d3-1", "spider"),
+    ] {
+        assert!(matches!(
+            ability(id).effect,
+            AbilityEffectDefinition::SummonCategory {
+                ref category,
+                maximum_level: 16,
+                count_dice: 1,
+                count_sides: 3,
+                count_bonus: 1,
+                ..
+            } if category == expected_category
+        ));
+    }
 }
 
 #[test]

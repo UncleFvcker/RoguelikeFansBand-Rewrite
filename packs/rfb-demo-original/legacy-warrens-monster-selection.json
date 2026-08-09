@@ -1686,6 +1686,12 @@
       "id": "orc-berserker",
       "tags": ["humanoid", "orc", "warrens"],
       "omittedFlags": []
+    },
+    {
+      "sourceIndex": 1077,
+      "id": "king-mulu-the-chief-of-southerings",
+      "tags": ["humanoid", "warrens"],
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
     }
   ]
 }

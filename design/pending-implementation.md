@@ -1,6 +1,6 @@
 # 待实现内容清单
 
-状态：基于 contract-v1–v216、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
+状态：基于 contract-v1–v217、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
 
 本文件只记录已经在现有设计或原版对比中明确出现、但尚未实现的内容。长期设想仍保留在 [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)，这里用于跟踪可以实际排入后续 contract 的缺口。
 
@@ -131,6 +131,11 @@ contract-v216 直接接入粉红惧妖、铁锈怪、兽人队长、凝胶方块
 全部复用既有机制，协议 1.151 与 State Hash Schema v72 不变。十六级剩余的
 恐爪怪、夸塞魔、南蛮大王木鹿大王、老鼠王子尼祖基尔和布伦比野马继续按
 `HURT_ROCK`、`TELE_LEVEL`、`S_SPIDER`、下水道归属和 `CAN_CLIMB` 分批收口。
+
+contract-v217 以现有 `summon-category` 接入南蛮大王木鹿大王，并给导入器增加
+`S_SPIDER → spider` 的单条窄映射；正式包 actor 增至 345、ability 增至 145、
+严格同步增至 280。十六级剩余阻塞收窄为恐爪怪的 `HURT_ROCK`、夸塞魔的
+`TELE_LEVEL`、老鼠王子尼祖基尔的真实下水道归属和布伦比野马的 `CAN_CLIMB`。
 
 荒野 W0 已导入 `master:w_info.txt` 的 `99x66` normal 世界图、15 类地形、
 危险等级、道路和起点，并只把现有 Outpost/Warrens 绑定为正式地点。W1 已完成

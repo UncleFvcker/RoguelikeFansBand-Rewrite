@@ -310,6 +310,8 @@ contract-v214 / 包 1.210.0 为 actor 增加默认 false、仅怪物可用的 `r
 
 contract-v216 / 包 1.212.0 直接接入 12 只十六级怪物，全部复用既有 actor、近战、分配、掉落与怪物施法内容；`DETECT_OBJECTS`、`MULTIPLY` 和 `BERSERK` 的附身者提示不生成怪物能力。当前包共 88 terrain、344 actors、249 items、143 abilities，严格同步 279 条，内容 hash 为 `08dfc525ebb4f1f2af4e110dcc1490ffc37647f63feb088c0dfa4e8113e22f3f`。协议 1.151 与 state hash Schema v72 不变。
 
+contract-v217 / 包 1.213.0 给既有分类召唤白名单增加 `S_SPIDER → spider`，并接入南蛮大王木鹿大王。生成的 `summon-ant-l16-1d3-1` 与 `summon-spider-l16-1d3-1` ability 及其 Ability Program 只携带现有 `summon-category` 的权威参数。当前包共 88 terrain、345 actors、249 items、145 abilities，严格同步 280 条，内容 hash 为 `a5ff0d74568c28b7ac966b6a0f6dcbef64a6cb3cc9fc004b3ba6abbc8829d1eb`。协议 1.151 与 state hash Schema v72 不变。
+
 contract-v83 以 1.75.0 增加 `detect` 能力效果、Echo Pulse 与 Echo Sight；类别/半径、FOV 与隐藏投影筛选、稳定结果顺序、瞬时/持久知识边界由核心定义，持久结果复用 `revealedTerrain`，state hash 升至 Schema v36。
 
 contract-v84 以 1.76.0 增加 `transform-terrain` 能力效果、Echo Delving 与 Echo Rampart；来源/目标 terrain 集、范围、FOV/line of effect、占用格、连接/边界保护和原子写入由核心定义，地形继续复用既有 save/state hash 字段。
