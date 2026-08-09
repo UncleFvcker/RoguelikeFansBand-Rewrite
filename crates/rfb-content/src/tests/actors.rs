@@ -115,7 +115,7 @@ fn melee_routines_require_monsters_and_valid_blow_profiles() {
         Err(ContentError::InvalidMeleeRoutine(_))
     ));
 
-    let mut invalid = artifact.content;
+    let mut invalid = artifact.content.clone();
     let hound = invalid
         .actors
         .iter_mut()
@@ -138,6 +138,49 @@ fn melee_routines_require_monsters_and_valid_blow_profiles() {
     *damage_dice = 0;
     assert!(matches!(
         validate_and_normalize(&mut invalid),
+        Err(ContentError::InvalidMeleeRoutine(_))
+    ));
+
+    let mut zero_hurt = artifact.content;
+    let hound = zero_hurt
+        .actors
+        .iter_mut()
+        .find(|actor| actor.id == "demo.actor.echo-hound")
+        .expect("fixture should contain the echo hound");
+    let MeleeBlowEffectDefinition::Damage {
+        damage_dice,
+        damage_sides,
+        armor_mitigated,
+        ..
+    } = hound
+        .melee_routine
+        .as_mut()
+        .expect("hound should have a melee routine")
+        .blows[0]
+        .effects
+        .first_mut()
+        .expect("hound should have a damage effect")
+    else {
+        panic!("hound's first melee effect should deal damage");
+    };
+    *damage_dice = 0;
+    *damage_sides = 0;
+    assert!(*armor_mitigated);
+    validate_and_normalize(&mut zero_hurt).expect("armor-mitigated HURT may deal exact zero");
+
+    let MeleeBlowEffectDefinition::Damage { damage_type, .. } = zero_hurt
+        .actors
+        .iter_mut()
+        .find(|actor| actor.id == "demo.actor.echo-hound")
+        .and_then(|actor| actor.melee_routine.as_mut())
+        .and_then(|routine| routine.blows[0].effects.first_mut())
+        .expect("hound should still have a damage effect")
+    else {
+        panic!("hound's first melee effect should deal damage");
+    };
+    *damage_type = ActorDamageType::Cold;
+    assert!(matches!(
+        validate_and_normalize(&mut zero_hurt),
         Err(ContentError::InvalidMeleeRoutine(_))
     ));
 }

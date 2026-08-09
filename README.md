@@ -185,6 +185,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Contract v194：Warrens P10 移动域、隐形与地表分配](design/contract-v194-warrens-content-p10-movement-visibility-habitats.md)
 - [Contract v195：Warrens P11 低复用专用机制](design/contract-v195-warrens-content-p11-special-mechanics.md)
 - [Contract v196：Warrens P12 特殊生命周期收口](design/contract-v196-warrens-content-p12-special-lifecycles.md)
+- [Contract v197：Warrens P13 浅层直接收割](design/contract-v197-warrens-content-p13-shallow-harvest.md)
 - [荒野世界地图 W0：权威数据导入](design/wilderness-w0-authoritative-data.md)
 - [旧版物品导入 v2（k_info / e_info / a_info）](design/legacy-item-import-v2.md)
 - [旧版内容导入优先级规划 v1](design/legacy-import-priority-v1.md)
@@ -209,7 +210,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Rust 权威可见性与光照 v1](design/visibility-lighting-v1.md)
 - [静态地形 Chunk 渲染 v1](design/terrain-chunk-rendering-v1.md)
 
-当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v196`，共 470 条 exact fixtures、零 waiver，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
+当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v197`，共 470 条 exact fixtures、零 waiver，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
 
 fixture 使用受控的主分类。日常开发只验证或刷新受影响分类；普通 `cargo test -p rfb-contract` 只做快速的 schema、分类、ID 唯一性和契约单元测试，不回放全部场景：
 
@@ -505,6 +506,8 @@ contract-v195 推进正式内容 P11：`KILL_BODY` 以原版强度积比较让�
 contract-v196 推进正式内容 P12：`FRIENDLY` 让航海士娜美作为自主友方参与既有怪物 AI，敌我目标、清层判定和快照阵营同步区分；`TRAPS` 复用地形转换，在目标周围把合格空地变为既有兽穴陷阱。追踪者按原版 `1/333` 仅覆盖 10 级以上非 Unique 的普通分配怪物外观，真实种类、属性、掉落与死亡不变，外观状态随存档持久化；板栗崽直接进入浅层分配。严格清单同时绑定并永久排除 5 条 `DEPRECATED` 旧索引。协议升至 1.144、demo 升至 1.191.0、state hash Schema 升至 v67，正式包现有 191 种 actor、146 种 item、100 个 ability、78 种 terrain 和 19 张 loot table，content hash 为 `c3440aa696805626dcde6222cc058bcb12b7b0f8a9213fd4f2ff8f7d5f28fdea`。详见 [Contract v196](design/contract-v196-warrens-content-p12-special-lifecycles.md)。
 
 荒野 W0 已把 RFB `master` 的 normal `w_info.txt` 世界图作为可选 `WorldDefinition.wilderness` 数据接入正式世界：`99x66` 定长地图、15 类地形、源危险等级、道路和起点 `(28,52)` 均由严格同步入口维护；只有已经存在的 Outpost 与 Warrens 被激活为地点，其余城镇/地牢不创建占位内容。当前不改变战术地表、旅行、协议或存档。demo 升至 1.192.0，content hash 为 `02577f7c9262ee49d7f73ec13e3271a674cedc4e1af297e9359032cfb5532962`。详见 [Wilderness W0](design/wilderness-w0-authoritative-data.md)。
+
+contract-v197 推进正式内容 P13：高阶地狱兽、黄色果冻、佐格虫、巧言、罗宾汉、虱子王劳西和鸭子共 7 只进入严格同步。无骰 `HURT` 只表达为受护甲减免的精确 `0d0`，`S_LOUSE` 复用既有类别召唤并由唯一 `louse` 标签候选锁定巨型白虱；巧言和罗宾汉同时生成寒冰箭、恶臭之云与射击能力。协议保持 1.144、state hash Schema 保持 v67，demo 升至 1.193.0；正式包现有 198 种 actor、104 个 ability，浅层正式 actor 165 条、严格同步 133 条，content hash 为 `de810d68f142e4f1574f5d17ed58323c0d10f877c29373dc752a7b0493394698`。详见 [Contract v197](design/contract-v197-warrens-content-p13-shallow-harvest.md)。
 
 ### 本地验证
 

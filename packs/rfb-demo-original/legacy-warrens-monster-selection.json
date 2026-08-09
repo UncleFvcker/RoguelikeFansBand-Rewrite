@@ -122,7 +122,7 @@
     {
       "sourceIndex": 69,
       "id": "giant-white-louse",
-      "tags": ["insect", "warrens"],
+      "tags": ["insect", "louse", "warrens"],
       "omittedFlags": ["POS_GAIN_AC", "WEIRD_MIND"]
     },
     {
@@ -768,6 +768,48 @@
       "id": "nami-the-mate",
       "tags": ["human", "warrens"],
       "omittedFlags": ["CAN_SPEAK", "FEMALE"]
+    },
+    {
+      "sourceIndex": 39,
+      "id": "greater-hell-beast",
+      "tags": ["hell-beast", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC", "RES_WALL"]
+    },
+    {
+      "sourceIndex": 48,
+      "id": "yellow-jelly",
+      "tags": ["jelly", "warrens"],
+      "omittedFlags": ["EMPTY_MIND", "POS_GAIN_AC", "STUPID"]
+    },
+    {
+      "sourceIndex": 98,
+      "id": "zog",
+      "tags": ["alien", "warrens"],
+      "omittedFlags": []
+    },
+    {
+      "sourceIndex": 137,
+      "id": "wormtongue-agent-of-saruman",
+      "tags": ["human", "warrens"],
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
+    },
+    {
+      "sourceIndex": 138,
+      "id": "robin-hood-the-outlaw",
+      "tags": ["human", "warrens"],
+      "omittedFlags": ["CAN_SPEAK", "MALE", "NO_QUEST"]
+    },
+    {
+      "sourceIndex": 1063,
+      "id": "lousy-the-king-of-louses",
+      "tags": ["louse-king", "warrens"],
+      "omittedFlags": ["CAN_SPEAK", "MALE", "WEIRD_MIND"]
+    },
+    {
+      "sourceIndex": 1241,
+      "id": "duck",
+      "tags": ["bird", "duck", "warrens"],
+      "omittedFlags": []
     }
   ]
 }

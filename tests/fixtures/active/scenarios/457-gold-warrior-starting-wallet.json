@@ -16,7 +16,7 @@
       "revision": 0,
       "turn": 0,
       "lastCommandSeq": 0,
-      "rngDrawCounter": 102,
+      "rngDrawCounter": 141,
       "floorId": "demo.floor.surface",
       "town": {
         "id": "demo.town.outpost",
@@ -805,8 +805,8 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "7d28538d0c180fd678d9e87be266f1c90928685aadcdb6cc152fa3e3851d3c9c"
+      "stateHash": "62978102368540b806be5bea245721e6a1cc3459c9fd5a205a5dbe6bc68b8801"
     },
-    "saveRoundTripStateHash": "7d28538d0c180fd678d9e87be266f1c90928685aadcdb6cc152fa3e3851d3c9c"
+    "saveRoundTripStateHash": "62978102368540b806be5bea245721e6a1cc3459c9fd5a205a5dbe6bc68b8801"
   }
 }

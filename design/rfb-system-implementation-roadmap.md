@@ -1,6 +1,6 @@
 # RFB 全系统梳理与重构实现路线
 
-状态：长期规则实现路线；当前基线为协议 1.144 / contract-v196（P31–P98 进展见 8.3，玩家流程与 Outpost 进展见 Phase 17/18，物品接入见 Phase 19，Warrens 怪物机制见 W1–W14 清单，荒野世界图见 W0）
+状态：长期规则实现路线；当前基线为协议 1.144 / contract-v197（P31–P98 进展见 8.3，玩家流程与 Outpost 进展见 Phase 17/18，物品接入见 Phase 19，Warrens 怪物机制见 W1–W14 清单，荒野世界图见 W0）
 
 ## 1. 目的与边界
 
@@ -609,6 +609,8 @@ P30“首个非 Mana 职业资源”已由 contract-v90 完成：节奏资源按
 **浅层怪物 P12 进展（2026-08）**：contract-v196 复用现有阵营、AI、地形转换和保存路径，接入 `FRIENDLY` 娜美与怪物 `TRAPS`；Shadower 只按 `1/333` 覆盖 10 级以上非 Unique 普通分配怪物的外观，真实种类和行为保持不变。板栗崽进入普通浅层分配，5 条 `DEPRECATED` 旧索引绑定到活跃同名替代。正式浅层 actor 达 158、严格同步达 126；协议 1.144，demo 1.191.0，state hash Schema v67，内置 hash 为 `c3440aa696805626dcde6222cc058bcb12b7b0f8a9213fd4f2ff8f7d5f28fdea`。完整边界见 [Contract v196](contract-v196-warrens-content-p12-special-lifecycles.md)。
 
 **荒野 W0 进展（2026-08）**：从 RFB `master` Git 对象严格解析 `w_info.txt` 与 `d_info.txt` 位置字段，`WorldDefinition.wilderness` 保存 99x66 normal 世界图、15 类地形、源危险等级、道路和起点 `(28,52)`；仅现有 Outpost/Warrens 成为地点，其余来源地点不激活。协议 1.144、contract-v196、save v1 与 state hash Schema v67 不变；demo 升至 1.192.0，内置 hash 为 `02577f7c9262ee49d7f73ec13e3271a674cedc4e1af297e9359032cfb5532962`。完整边界见 [Wilderness W0](wilderness-w0-authoritative-data.md)。
+
+**浅层怪物 P13 进展（2026-08）**：contract-v197 接入高阶地狱兽、黄色果冻、佐格虫、巧言、罗宾汉、虱子王劳西和鸭子。无骰 `HURT` 仅允许受护甲减免的精确 `0d0`；`S_LOUSE` 复用既有 `summon-category`，并以唯一 `louse` 标签候选还原巨型白虱。正式浅层 actor 达 165、严格同步达 133，只剩 3 条浅层活跃记录；协议 1.144、Schema v67 不变，demo 1.193.0，内置 hash 为 `de810d68f142e4f1574f5d17ed58323c0d10f877c29373dc752a7b0493394698`。完整边界见 [Contract v197](contract-v197-warrens-content-p13-shallow-harvest.md)。
 
 ## 9. 内容迁移策略
 

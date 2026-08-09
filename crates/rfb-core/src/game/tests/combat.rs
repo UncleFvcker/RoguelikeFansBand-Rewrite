@@ -19,6 +19,32 @@ fn monster_effect_game(seed: u64, effect: MeleeBlowEffectDefinition) -> Game {
 }
 
 #[test]
+fn zero_dice_hurt_hits_without_dealing_damage() {
+    let mut game = monster_effect_game(
+        0,
+        MeleeBlowEffectDefinition::Damage {
+            chance_percent: None,
+            damage_dice: 0,
+            damage_sides: 0,
+            damage_type: rfb_content::ActorDamageType::Physical,
+            armor_mitigated: true,
+        },
+    );
+    let hp_before = game.player.hp;
+    let mut events = Vec::new();
+
+    game.resolve_monster_melee(0, &mut events, &mut BTreeSet::new())
+        .expect("zero-damage HURT should resolve");
+
+    assert_eq!(game.player.hp, hp_before);
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::MonsterMeleeHit { damage, .. }
+            if damage.requested == 0 && damage.applied == 0
+    )));
+}
+
+#[test]
 fn resource_drain_melee_heals_six_times_the_amount_actually_drained() {
     let mut game = monster_effect_game(
         0,

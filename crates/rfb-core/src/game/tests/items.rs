@@ -2768,6 +2768,10 @@ fn item_summon_candidates_follow_depth_player_level_kin_and_unique_rules() {
             "demo.actor.zombified-kobold".to_owned(),
         ]
     );
+    assert_eq!(
+        human.summon_category_candidate_kind_ids("louse", None, 9, true),
+        ["demo.actor.giant-white-louse".to_owned()]
+    );
 
     let kin_effect = human
         .content

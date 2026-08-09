@@ -5819,11 +5819,15 @@ fn melee_effect_json(effect: &LegacyBlowEffect) -> Option<serde_json::Value> {
         }
         token => {
             let damage_type = melee_damage_type(token)?;
-            let (damage_dice, damage_sides) = effect.dice?;
+            let (damage_dice, damage_sides) = match effect.dice {
+                Some((dice, sides)) => (dice.clamp(1, 100), sides.clamp(1, 10_000)),
+                None if token == "HURT" => (0, 0),
+                None => return None,
+            };
             serde_json::json!({
                 "type": "damage",
-                "damageDice": damage_dice.clamp(1, 100),
-                "damageSides": damage_sides.clamp(1, 10_000),
+                "damageDice": damage_dice,
+                "damageSides": damage_sides,
                 "damageType": damage_type,
                 "armorMitigated": token == "HURT",
             })
@@ -7321,6 +7325,7 @@ fn summon_spell_defaults(base: &str) -> Option<(&'static str, (u32, u32, u32))> 
         "S_DRAGON" => ("dragon", (1, 3, 1)),
         "S_HI_DRAGON" => ("dragon", (1, 3, 0)),
         "S_ANIMAL" => ("animal", (1, 3, 1)),
+        "S_LOUSE" => ("louse", (1, 3, 1)),
         _ => return None,
     };
     Some(entry)
@@ -9685,6 +9690,22 @@ mod tests {
     }
 
     #[test]
+    fn dice_less_hurt_maps_to_exact_zero_damage_only() {
+        let hurt = parse_blow("GAZE:HURT", 1).expect("dice-less HURT should parse");
+        let effect = melee_effect_json(&hurt.effects[0]).expect("HURT should map");
+
+        assert_eq!(effect["type"], "damage");
+        assert_eq!(effect["damageDice"], 0);
+        assert_eq!(effect["damageSides"], 0);
+        assert_eq!(effect["damageType"], "physical");
+        assert_eq!(effect["armorMitigated"], true);
+
+        let unsupported =
+            parse_blow("GAZE:DISENCHANT", 1).expect("dice-less DISENCHANT should parse");
+        assert!(melee_effect_json(&unsupported.effects[0]).is_none());
+    }
+
+    #[test]
     fn monster_import_maps_self_destruct_terrain_light_and_drop_flags() {
         let monsters = parse_r_info(
             "N:1:test breach mote\nG:*:y\nI:110:1d3:8:4:20:10\nW:3:1:10:3:0:0\nB:EXPLODE:FIRE(2d4)\nF:KILL_WALL | KILL_ITEM | TAKE_ITEM | HAS_LITE_1 | SELF_LITE_2\nF:ONLY_ITEM | DROP_90 | DROP_1D2 | DROP_GOOD | UNIQUE\nO:DROP_WARRIOR\n",
@@ -10342,7 +10363,7 @@ I:110:8d8:20:20:10:10\n\
 W:20:2:20:9:10:40\n\
 B:HIT:HURT(1d6)\n\
 F:UNDEAD | DRAGON | RES_ALL | RES_TELE | NO_CONF\n\
-S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_CYBER\n";
+S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_LOUSE | S_CYBER\n";
         let monsters = parse_r_info(SUMMONER_R_INFO).expect("synthetic summoner should parse");
         assert_eq!(monsters.len(), 1);
 
@@ -10403,6 +10424,7 @@ S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_CYBER\n";
                 "rfb-legacy.ability.kin-test-bone-caller",
                 "rfb-legacy.ability.summon-undead-l20-1d3-1",
                 "rfb-legacy.ability.summon-legacy-import-l20-1d1",
+                "rfb-legacy.ability.summon-louse-l20-1d3-1",
             ]
         );
         // Uniques and cyber summons stay honest gaps.
@@ -10445,6 +10467,17 @@ S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_CYBER\n";
         assert_eq!(any["effect"]["countDice"], 1);
         assert_eq!(any["effect"]["countSides"], 1);
         assert!(any["effect"].get("countBonus").is_none());
+
+        let louse = outcome
+            .ability_files
+            .iter()
+            .find(|(name, _)| name == "summon-louse-l20-1d3-1.json")
+            .map(|(_, value)| value)
+            .expect("louse summon ability should be generated");
+        assert_eq!(louse["effect"]["category"], "louse");
+        assert_eq!(louse["effect"]["countDice"], 1);
+        assert_eq!(louse["effect"]["countSides"], 3);
+        assert_eq!(louse["effect"]["countBonus"], 1);
     }
 
     #[test]
