@@ -97,7 +97,9 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.culverin", 867, 2, 50),
             ("demo.actor.dark-elf", 122, 2, 40),
             ("demo.actor.dark-elven-mage", 178, 1, 40),
+            ("demo.actor.dark-elven-priest", 226, 1, 50),
             ("demo.actor.dark-elven-warrior", 182, 1, 40),
+            ("demo.actor.devilfish", 918, 4, 50),
             (
                 "demo.actor.disembodied-hand-that-strangled-people",
                 112,
@@ -116,6 +118,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.frosty-jelly", 84, 1, 40),
             ("demo.actor.fruit-bat", 37, 1, 10),
             ("demo.actor.frumious-bandersnatch", 232, 2, 50),
+            ("demo.actor.gazer", 218, 1, 50),
             ("demo.actor.giant-black-ant", 49, 1, 20),
             ("demo.actor.giant-brown-bat", 114, 1, 40),
             ("demo.actor.giant-fruit-fly", 197, 6, 40),
@@ -187,12 +190,15 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.lug-the-grotesque", 1183, 3, 999),
             ("demo.actor.lynx", 1347, 2, 40),
             ("demo.actor.manes", 128, 2, 40),
+            ("demo.actor.master-yeek", 224, 2, 40),
             ("demo.actor.mauhur-the-orc-captain", 1072, 3, 999),
             ("demo.actor.meng-you-the-brother-of-meng-huo", 1073, 2, 999),
             ("demo.actor.metallic-blue-centipede", 67, 1, 30),
             ("demo.actor.metallic-green-centipede", 42, 1, 20),
             ("demo.actor.metallic-red-centipede", 77, 1, 30),
             ("demo.actor.mine-dog", 221, 4, 50),
+            ("demo.actor.moaning-spirit", 231, 2, 50),
+            ("demo.actor.moon-beast", 223, 1, 50),
             ("demo.actor.nami-the-mate", 1021, 4, 999),
             ("demo.actor.nether-worm-mass", 213, 4, 40),
             ("demo.actor.newt", 23, 1, 10),
@@ -219,6 +225,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.plague-rat", 1298, 2, 40),
             ("demo.actor.poltergeist", 65, 1, 30),
             ("demo.actor.portuguese-man-o-war", 160, 2, 40),
+            ("demo.actor.priest", 225, 1, 50),
             ("demo.actor.pseudo-dragon", 193, 2, 50),
             ("demo.actor.purple-mushroom-patch", 108, 2, 40),
             ("demo.actor.quiver-slot", 185, 2, 40),
@@ -538,6 +545,124 @@ fn level_twelve_noncasters_reuse_existing_actor_contracts() {
             .expect("Meng You allocation")
             .legacy_dungeon_indices,
         [31]
+    );
+}
+
+#[test]
+fn level_twelve_casters_share_parameterized_abilities() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actor = |id: &str| {
+        artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == id)
+            .unwrap_or_else(|| panic!("{id} should be imported"))
+    };
+    let ability_ids = |id: &str| {
+        actor(id)
+            .monster_casting
+            .as_ref()
+            .unwrap_or_else(|| panic!("{id} should retain monster casting"))
+            .abilities
+            .iter()
+            .map(|candidate| candidate.ability_id.as_str())
+            .collect::<BTreeSet<_>>()
+    };
+
+    assert_eq!(
+        ability_ids("demo.actor.gazer"),
+        ["rfb-legacy.ability.confuse", "rfb-legacy.ability.paralyze"]
+            .into_iter()
+            .collect()
+    );
+    assert_eq!(
+        ability_ids("demo.actor.moon-beast"),
+        [
+            "rfb-legacy.ability.blind",
+            "rfb-legacy.ability.confuse",
+            "rfb-legacy.ability.curse-8d8",
+            "rfb-legacy.ability.darkness",
+            "rfb-legacy.ability.heal-36",
+        ]
+        .into_iter()
+        .collect()
+    );
+    assert_eq!(
+        ability_ids("demo.actor.master-yeek"),
+        [
+            "rfb-legacy.ability.ball-poison-12d2",
+            "rfb-legacy.ability.blind",
+            "rfb-legacy.ability.blink",
+            "rfb-legacy.ability.escape",
+            "rfb-legacy.ability.slow",
+            "rfb-legacy.ability.summon-legacy-import-l12-1d1",
+        ]
+        .into_iter()
+        .collect()
+    );
+    assert_eq!(
+        ability_ids("demo.actor.priest"),
+        [
+            "rfb-legacy.ability.curse-8d8",
+            "rfb-legacy.ability.heal-36",
+            "rfb-legacy.ability.scare",
+            "rfb-legacy.ability.summon-legacy-import-l12-1d1",
+        ]
+        .into_iter()
+        .collect()
+    );
+    assert_eq!(
+        ability_ids("demo.actor.dark-elven-priest"),
+        [
+            "rfb-legacy.ability.blind",
+            "rfb-legacy.ability.bolt-physical-2d6-4",
+            "rfb-legacy.ability.confuse",
+            "rfb-legacy.ability.curse-8d8",
+            "rfb-legacy.ability.darkness",
+            "rfb-legacy.ability.heal-36",
+        ]
+        .into_iter()
+        .collect()
+    );
+    assert_eq!(
+        ability_ids("demo.actor.moaning-spirit"),
+        ["rfb-legacy.ability.escape", "rfb-legacy.ability.scare"]
+            .into_iter()
+            .collect()
+    );
+    assert_eq!(
+        ability_ids("demo.actor.devilfish"),
+        [
+            "rfb-legacy.ability.breath-chaos-17-600-r2",
+            "rfb-legacy.ability.breath-dark-17-400-r2",
+            "rfb-legacy.ability.breath-disenchant-17-500-r2",
+            "rfb-legacy.ability.breath-light-17-400-r2",
+            "rfb-legacy.ability.breath-sound-17-450-r2",
+            "rfb-legacy.ability.breath-time-33-150-r2",
+        ]
+        .into_iter()
+        .collect()
+    );
+    assert!(
+        actor("demo.actor.devilfish")
+            .melee_routine
+            .as_ref()
+            .is_none_or(|routine| routine.blows.is_empty())
+    );
+    assert_eq!(
+        actor("demo.actor.priest")
+            .death_drop
+            .as_ref()
+            .and_then(|drop| drop.theme_table_id.as_deref()),
+        Some("demo.loot-table.priest")
+    );
+    assert_eq!(
+        actor("demo.actor.dark-elven-priest")
+            .death_drop
+            .as_ref()
+            .and_then(|drop| drop.theme_table_id.as_deref()),
+        Some("demo.loot-table.evil-priest")
     );
 }
 

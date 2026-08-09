@@ -1,0 +1,86 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 918,
+    "maxDepth": 50,
+    "rarity": 4
+  },
+  "attack": 3,
+  "damageDice": 1,
+  "damageSides": 1,
+  "damageType": "physical",
+  "defense": 1,
+  "descriptionKey": "actor-demo-devilfish-description",
+  "experienceValue": 60,
+  "formatVersion": 1,
+  "glyph": "l",
+  "hitPointDice": {
+    "dice": 11,
+    "sides": 5
+  },
+  "id": "demo.actor.devilfish",
+  "level": 12,
+  "maxHp": 33,
+  "meleeRoutine": {
+    "blows": []
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.breath-chaos-17-600-r2",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-dark-17-400-r2",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-light-17-400-r2",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-sound-17-450-r2",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-disenchant-17-500-r2",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-time-33-150-r2",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 5
+  },
+  "movement": {
+    "modes": [
+      "aquatic"
+    ]
+  },
+  "nameKey": "actor-demo-devilfish-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "chaos": "resistant",
+    "dark": "resistant",
+    "light": "resistant",
+    "sound": "resistant",
+    "time": "resistant",
+    "water": "resistant"
+  },
+  "role": "monster",
+  "speed": 105,
+  "statusImmunities": [
+    "rfb.status.confusion"
+  ],
+  "tags": [
+    "fish",
+    "legacy-import",
+    "warrens"
+  ]
+}

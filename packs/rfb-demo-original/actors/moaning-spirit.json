@@ -1,0 +1,121 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 231,
+    "maxDepth": 50,
+    "randomMovementPercent": 25,
+    "rarity": 2
+  },
+  "attack": 3,
+  "damageDice": 1,
+  "damageSides": 1,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [
+      {
+        "percent": 60
+      },
+      {
+        "guaranteedForUnique": true,
+        "percent": 90
+      }
+    ],
+    "itemTableId": "demo.loot-table.warrens",
+    "kind": "items-and-gold"
+  },
+  "defense": 2,
+  "descriptionKey": "actor-demo-moaning-spirit-description",
+  "experienceValue": 44,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "G",
+  "hitPointDice": {
+    "dice": 5,
+    "sides": 8
+  },
+  "id": "demo.actor.moaning-spirit",
+  "level": 12,
+  "maxHp": 22,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "type": "terrify"
+          }
+        ],
+        "methodId": "rfb.blow.wail",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 8,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "attributes": [
+              "dexterity"
+            ],
+            "chancePercent": 25,
+            "type": "drain-attributes"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "amountDice": 1,
+            "amountSides": 8,
+            "type": "drain-resource"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.escape",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.scare",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 6
+  },
+  "movement": {
+    "modes": [
+      "fly",
+      "pass-wall"
+    ]
+  },
+  "nameKey": "actor-demo-moaning-spirit-name",
+  "resistances": {
+    "cold": "resistant",
+    "nether": "resistant"
+  },
+  "role": "monster",
+  "speed": 120,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "evil",
+    "invisible",
+    "legacy-import",
+    "spirit",
+    "undead",
+    "warrens"
+  ]
+}

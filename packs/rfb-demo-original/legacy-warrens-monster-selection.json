@@ -1188,6 +1188,48 @@
       "id": "swamp-rabbit",
       "tags": ["rabbit", "warrens"],
       "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 218,
+      "id": "gazer",
+      "tags": ["eye", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC", "POS_TELEPATHY"]
+    },
+    {
+      "sourceIndex": 223,
+      "id": "moon-beast",
+      "tags": ["warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 224,
+      "id": "master-yeek",
+      "tags": ["warrens", "yeek"],
+      "omittedFlags": []
+    },
+    {
+      "sourceIndex": 225,
+      "id": "priest",
+      "tags": ["humanoid", "warrens"],
+      "omittedFlags": ["MALE", "SMART"]
+    },
+    {
+      "sourceIndex": 226,
+      "id": "dark-elven-priest",
+      "tags": ["dark-elf", "humanoid", "warrens"],
+      "omittedFlags": ["MALE", "POS_SEE_INVIS", "SMART"]
+    },
+    {
+      "sourceIndex": 231,
+      "id": "moaning-spirit",
+      "tags": ["spirit", "warrens"],
+      "omittedFlags": ["COLD_BLOOD", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 918,
+      "id": "devilfish",
+      "tags": ["fish", "warrens"],
+      "omittedFlags": ["ATTR_MULTI", "POS_GAIN_AC"]
     }
   ]
 }

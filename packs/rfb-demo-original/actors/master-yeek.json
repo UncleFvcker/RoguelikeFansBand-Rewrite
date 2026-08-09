@@ -1,0 +1,107 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 224,
+    "maxDepth": 40,
+    "rarity": 2
+  },
+  "attack": 3,
+  "damageDice": 1,
+  "damageSides": 8,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [
+      {
+        "percent": 60
+      }
+    ],
+    "itemTableId": "demo.loot-table.warrens",
+    "kind": "items-and-gold"
+  },
+  "defense": 2,
+  "descriptionKey": "actor-demo-master-yeek-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 28,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "y",
+  "hitPointDice": {
+    "dice": 12,
+    "sides": 9
+  },
+  "id": "demo.actor.master-yeek",
+  "level": 12,
+  "light": {
+    "intrinsic": false,
+    "radius": 2
+  },
+  "maxHp": 60,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 8,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.blink",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.escape",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.blind",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.slow",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-poison-12d2",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-legacy-import-l12-1d1",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 25
+  },
+  "nameKey": "actor-demo-master-yeek-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "acid": "immune"
+  },
+  "role": "monster",
+  "speed": 110,
+  "tags": [
+    "animal",
+    "evil",
+    "legacy-import",
+    "warrens",
+    "yeek"
+  ]
+}

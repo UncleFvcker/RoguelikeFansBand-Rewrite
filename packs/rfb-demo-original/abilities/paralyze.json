@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.paralyze",
+  "descriptionKey": "ability-legacy-paralyze-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.paralyze",
+  "nameKey": "ability-legacy-paralyze-name",
+  "tags": [
+    "legacy-import",
+    "status"
+  ],
+  "target": {
+    "modes": [
+      "position",
+      "entity"
+    ],
+    "range": 6,
+    "requiresLineOfEffect": true
+  }
+}

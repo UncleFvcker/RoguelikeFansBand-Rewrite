@@ -50,60 +50,23 @@
       "turn": 1,
       "worldTick": 10,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 75,
+      "rngDrawCounter": 48,
       "floorId": "demo.floor.surface",
       "playerPosition": {
         "x": 3,
         "y": 3
       },
-      "playerHp": 4,
-      "playerMaxHp": 135,
+      "playerHp": -1,
+      "playerMaxHp": 136,
       "playerAttack": 3,
       "playerDefense": 2,
       "playerSpeed": 110,
-      "playerEnergyNeed": 0,
+      "playerEnergyNeed": 10,
       "playerCarriedWeightTenthsPound": 110,
       "playerCarryCapacityTenthsPound": 800,
       "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
-      "playerStatuses": [
-        {
-          "kindId": "rfb.status.poison",
-          "intensity": 1,
-          "remainingTicks": 3,
-          "grantedModifiers": {
-            "attack": 0,
-            "defense": 0,
-            "maxHp": 0,
-            "strength": 0,
-            "intelligence": 0,
-            "wisdom": 0,
-            "dexterity": 0,
-            "constitution": 0,
-            "charisma": 0,
-            "speed": 0
-          },
-          "grantedEquipmentBonuses": {
-            "meleeAttacks": 0,
-            "meleeSkill": 0,
-            "meleeDamage": 0,
-            "rangedSkill": 0,
-            "throwingSkill": 0,
-            "deviceSkill": 0,
-            "savingThrowSkill": 0,
-            "stealthSkill": 0,
-            "searchSkill": 0,
-            "perceptionSkill": 0,
-            "disarmingSkill": 0,
-            "diggingSkill": 0,
-            "infravision": 0,
-            "lightRadius": 0
-          },
-          "grantsWallPassage": false,
-          "incomingDamagePercent": 100
-        }
-      ],
       "playerLevel": 25,
       "playerExperience": 0,
       "playerMaxLevel": 25,
@@ -146,10 +109,10 @@
             "index": 12
           },
           "constitution": {
-            "natural": 12,
+            "natural": 13,
             "maximumNatural": 13,
-            "effective": 9,
-            "index": 6
+            "effective": 10,
+            "index": 7
           },
           "charisma": {
             "natural": 13,
@@ -2938,7 +2901,7 @@
             "x": 2,
             "y": 2
           },
-          "hp": 66,
+          "hp": 51,
           "speed": 110,
           "energyNeed": 100
         },
@@ -2948,7 +2911,7 @@
             "x": 3,
             "y": 2
           },
-          "hp": 39,
+          "hp": 31,
           "speed": 110,
           "energyNeed": 100
         },
@@ -2958,9 +2921,9 @@
             "x": 4,
             "y": 2
           },
-          "hp": 42,
-          "speed": 110,
-          "energyNeed": 100
+          "hp": 29,
+          "speed": 130,
+          "energyNeed": 30
         },
         {
           "id": "summon.demo.ability.death-raise-dead.1.3",
@@ -2968,9 +2931,9 @@
             "x": 2,
             "y": 3
           },
-          "hp": 49,
-          "speed": 110,
-          "energyNeed": 100
+          "hp": 12,
+          "speed": 100,
+          "energyNeed": 55
         }
       ],
       "groundItemCount": 5,
@@ -3251,7 +3214,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "b69ccafc6959c558d9955da493dd2f15b4bc30cbe5c761f2afb3977ac7cfba8f"
+      "stateHash": "9deb62ebc644de696ca078d8434e290fa675b8d9e1a600d12057a888f4944c46"
     },
     "events": [
       {
@@ -3323,137 +3286,49 @@
             "hostile": true,
             "group": true,
             "summonedKindIds": [
-              "demo.actor.servant-of-glaaki",
-              "demo.actor.undead-mass",
-              "demo.actor.zombified-orc",
-              "demo.actor.undead-mass"
+              "demo.actor.skeleton-human",
+              "demo.actor.zombified-kobold",
+              "demo.actor.disembodied-hand-that-strangled-people",
+              "demo.actor.risen-thrall"
             ]
           }
-        }
-      },
-      {
-        "kind": "monster.ability-decision",
-        "messageKey": "monster-ability-decision",
-        "args": {
-          "frequency": "8",
-          "roll": "31",
-          "source": "demo.actor.servant-of-glaaki",
-          "target": "none"
-        },
-        "outcome": {
-          "type": "monster-ability-decision",
-          "resolution": {
-            "sourceEntityId": "summon.demo.ability.death-raise-dead.1.0",
-            "sourceKindId": "demo.actor.servant-of-glaaki",
-            "frequencyPercent": 8,
-            "frequencyRoll": 31,
-            "candidates": [
-              {
-                "abilityId": "rfb-legacy.ability.curse-3d8",
-                "baseWeight": 1,
-                "effectiveWeight": 1,
-                "targetEntityId": "demo.actor.player.1",
-                "targetKindId": "demo.actor.explorer",
-                "targetPosition": {
-                  "x": 3,
-                  "y": 3
-                },
-                "affectedPositions": [
-                  {
-                    "x": 3,
-                    "y": 3
-                  }
-                ],
-                "enemyTargetCount": 1,
-                "friendlyRiskCount": 0
-              },
-              {
-                "abilityId": "rfb-legacy.ability.scare",
-                "baseWeight": 1,
-                "effectiveWeight": 1,
-                "targetEntityId": "demo.actor.player.1",
-                "targetKindId": "demo.actor.explorer",
-                "targetPosition": {
-                  "x": 3,
-                  "y": 3
-                },
-                "affectedPositions": [
-                  {
-                    "x": 3,
-                    "y": 3
-                  }
-                ],
-                "enemyTargetCount": 1,
-                "friendlyRiskCount": 0
-              }
-            ],
-            "viableAbilityIds": [
-              "rfb-legacy.ability.curse-3d8",
-              "rfb-legacy.ability.scare"
-            ],
-            "totalWeight": 2
-          }
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.crush",
-          "source": "demo.actor.servant-of-glaaki"
         }
       },
       {
         "kind": "combat.monster-hit",
         "messageKey": "combat-monster-hit",
         "args": {
-          "damage": "1",
-          "method": "rfb.blow.claw",
-          "source": "demo.actor.servant-of-glaaki"
+          "damage": "9",
+          "method": "rfb.blow.crush",
+          "source": "demo.actor.disembodied-hand-that-strangled-people"
         },
         "outcome": {
           "type": "damage",
           "resolution": {
-            "rawDamage": 1,
-            "armorReduction": 0,
+            "rawDamage": 10,
+            "armorReduction": 1,
             "resistanceAdjustment": 0,
-            "finalDamage": 1,
+            "finalDamage": 9,
             "damageType": "physical",
             "resistance": "normal"
           }
         }
       },
       {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.touch",
-          "source": "demo.actor.undead-mass"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.touch",
-          "source": "demo.actor.undead-mass"
-        }
-      },
-      {
         "kind": "combat.monster-hit",
         "messageKey": "combat-monster-hit",
         "args": {
-          "damage": "1",
-          "method": "rfb.blow.hit",
-          "source": "demo.actor.zombified-orc"
+          "damage": "0",
+          "method": "rfb.blow.crush",
+          "source": "demo.actor.disembodied-hand-that-strangled-people"
         },
         "outcome": {
           "type": "damage",
           "resolution": {
-            "rawDamage": 2,
+            "rawDamage": 1,
             "armorReduction": 1,
             "resistanceAdjustment": 0,
-            "finalDamage": 1,
+            "finalDamage": 0,
             "damageType": "physical",
             "resistance": "normal"
           }
@@ -3465,7 +3340,7 @@
         "args": {
           "damage": "3",
           "method": "rfb.blow.hit",
-          "source": "demo.actor.zombified-orc"
+          "source": "demo.actor.skeleton-human"
         },
         "outcome": {
           "type": "damage",
@@ -3480,28 +3355,20 @@
         }
       },
       {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.hit",
-          "source": "demo.actor.zombified-orc"
-        }
-      },
-      {
         "kind": "combat.monster-hit",
         "messageKey": "combat-monster-hit",
         "args": {
-          "damage": "2",
-          "method": "rfb.blow.touch",
-          "source": "demo.actor.undead-mass"
+          "damage": "0",
+          "method": "rfb.blow.hit",
+          "source": "demo.actor.zombified-kobold"
         },
         "outcome": {
           "type": "damage",
           "resolution": {
-            "rawDamage": 2,
-            "armorReduction": 0,
+            "rawDamage": 1,
+            "armorReduction": 1,
             "resistanceAdjustment": 0,
-            "finalDamage": 2,
+            "finalDamage": 0,
             "damageType": "physical",
             "resistance": "normal"
           }
@@ -3511,17 +3378,36 @@
         "kind": "combat.monster-hit",
         "messageKey": "combat-monster-hit",
         "args": {
-          "damage": "0",
-          "method": "rfb.blow.touch",
-          "source": "demo.actor.undead-mass"
+          "damage": "1",
+          "method": "rfb.blow.hit",
+          "source": "demo.actor.zombified-kobold"
         },
         "outcome": {
           "type": "damage",
           "resolution": {
-            "rawDamage": 1,
+            "rawDamage": 2,
             "armorReduction": 1,
             "resistanceAdjustment": 0,
-            "finalDamage": 0,
+            "finalDamage": 1,
+            "damageType": "physical",
+            "resistance": "normal"
+          }
+        }
+      },
+      {
+        "kind": "combat.player-death",
+        "messageKey": "combat-player-death",
+        "args": {
+          "method": "rfb.blow.hit",
+          "source": "demo.actor.zombified-kobold"
+        },
+        "outcome": {
+          "type": "death",
+          "resolution": {
+            "rawDamage": 2,
+            "armorReduction": 1,
+            "resistanceAdjustment": 0,
+            "finalDamage": 1,
             "damageType": "physical",
             "resistance": "normal"
           }
@@ -3546,6 +3432,6 @@
         "y": 2
       }
     ],
-    "saveRoundTripStateHash": "b69ccafc6959c558d9955da493dd2f15b4bc30cbe5c761f2afb3977ac7cfba8f"
+    "saveRoundTripStateHash": "9deb62ebc644de696ca078d8434e290fa675b8d9e1a600d12057a888f4944c46"
   }
 }
