@@ -417,3 +417,9 @@ v1 使用受限字段操作，不使用依赖数组下标的通用 JSON Patch：
 - 待完成：多包依赖图、patch、locale 回退和已安装内容集合迁移。
 
 首个包的真实编译 hash 与 contract-v1 使用的早期占位 content hash 不同。运行时激活通过 `contract-v2` 和 state hash Schema v2 完成；背包、装备、物品实例、战斗、行动调度与状态抗性依次迁移到 contract-v3–v9。contract-v12 至 v21 依次建立近战、怪物 routine、投射、重量、知识和消耗品；contract-v22–v25 建立 affix、质量、loot table 与怪物携带物；contract-v26–v45 建立程序化楼层、地形交互、多层探索和任务状态机；contract-v46–v69 建立生成表、分阶段地貌、树状地牢、实例身份、campaign 和生命周期；contract-v70–v90 建立成长、构筑、玩家/怪物施法、召唤物与职业资源；contract-v91–v103 建立导入所需的法术族、抗性、身体槽、装备旗标和动态 affix；contract-v104–v107 完成 Death 四册；contract-v108–v149 继续建立设备与窄物品效果；contract-v150–v172 建立 Warrens 玩家流程、Outpost、物品/背包/负重和可选玩家能力策略；contract-v173–v180 完成 Warrens W1–W13。v177–v180 为 actor 加入有序 melee effects、死亡爆炸、terrain interaction、typed light 与 death drop，为 terrain 加入 `monsterDestroyToTerrainId`，为 item/affix 加入 `resistsMonsterDestruction`。当前 state hash 为 Schema v63；内置内容 hash 为 `fed9c01421e0ee68a6cde5d0b864aee32f4a218d58457cc0d0d06ab6b7d6334f`。
+
+contract-v223 / 包 1.219.0 接入 15 只只使用现有怪物能力的 P37B 怪物。
+当前包包含 88 种地形、413 种 actor、249 种物品、152 个能力和 20 张
+loot table；严格同步 348 条，内容 hash 为
+`c379c1b08743578fee07d0fb0678c3ce1a59ae080e62424ae01e84525ffd322a`。
+协议保持 1.152，State Hash Schema 保持 v72。

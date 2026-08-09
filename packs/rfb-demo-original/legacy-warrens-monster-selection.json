@@ -2010,6 +2010,96 @@
       "id": "yowie",
       "tags": ["humanoid", "warrens"],
       "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 307,
+      "id": "fire-hound",
+      "tags": ["hound", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 308,
+      "id": "cold-hound",
+      "tags": ["hound", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 309,
+      "id": "energy-hound",
+      "tags": ["hound", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 312,
+      "id": "blink-dog",
+      "tags": ["dog", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 316,
+      "id": "shambling-mound",
+      "tags": ["warrens"],
+      "omittedFlags": ["EMPTY_MIND", "NASTY_GLYPH", "STUPID"]
+    },
+    {
+      "sourceIndex": 322,
+      "id": "giant-black-dragon-fly",
+      "tags": ["insect", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC", "WEIRD_MIND"]
+    },
+    {
+      "sourceIndex": 325,
+      "id": "giant-gold-dragon-fly",
+      "tags": ["insect", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC", "WEIRD_MIND"]
+    },
+    {
+      "sourceIndex": 1146,
+      "id": "pumpkin-man",
+      "tags": ["warrens"],
+      "omittedFlags": []
+    },
+    {
+      "sourceIndex": 329,
+      "id": "huorn",
+      "tags": ["tree", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC", "WEIRD_MIND"]
+    },
+    {
+      "sourceIndex": 1323,
+      "id": "hopper-ant",
+      "tags": ["ant", "insect", "warrens"],
+      "omittedFlags": ["WEIRD_MIND"]
+    },
+    {
+      "sourceIndex": 331,
+      "id": "phase-spider",
+      "tags": ["spider", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC", "WEIRD_MIND"]
+    },
+    {
+      "sourceIndex": 338,
+      "id": "air-hound",
+      "tags": ["hound", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 340,
+      "id": "water-hound",
+      "tags": ["hound", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 341,
+      "id": "chimera",
+      "tags": ["mount", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 1029,
+      "id": "demonite",
+      "tags": ["demon", "warrens"],
+      "omittedFlags": ["CAN_SPEAK", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
     }
   ]
 }

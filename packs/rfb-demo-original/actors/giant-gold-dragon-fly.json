@@ -1,0 +1,76 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "habitats": [
+      "mountain"
+    ],
+    "legacyIndex": 325,
+    "maxDepth": 999,
+    "randomMovementPercent": 75,
+    "rarity": 2
+  },
+  "attack": 4,
+  "damageDice": 1,
+  "damageSides": 3,
+  "damageType": "physical",
+  "defense": 2,
+  "descriptionKey": "actor-demo-giant-gold-dragon-fly-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 78,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "F",
+  "hitPointDice": {
+    "dice": 3,
+    "sides": 8
+  },
+  "id": "demo.actor.giant-gold-dragon-fly",
+  "level": 18,
+  "maxHp": 13,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 3,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.breath-sound-17-450-r2",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 11
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "nameKey": "actor-demo-giant-gold-dragon-fly-name",
+  "resistances": {
+    "fire": "resistant",
+    "sound": "resistant"
+  },
+  "role": "monster",
+  "speed": 120,
+  "tags": [
+    "animal",
+    "insect",
+    "legacy-import",
+    "warrens"
+  ]
+}

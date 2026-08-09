@@ -52,6 +52,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.2-headed-hydra", 301, 2, 70),
             ("demo.actor.abyss-worm-mass", 214, 4, 40),
             ("demo.actor.agent-of-black-market", 14, 1, 0),
+            ("demo.actor.air-hound", 338, 2, 90),
             ("demo.actor.air-spirit", 227, 2, 50),
             ("demo.actor.aquatic-golem", 910, 1, 70),
             ("demo.actor.baby-black-dragon", 166, 2, 40),
@@ -70,6 +71,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.black-naga", 71, 1, 30),
             ("demo.actor.black-ogre", 262, 2, 60),
             ("demo.actor.black-orc", 244, 2, 50),
+            ("demo.actor.blink-dog", 312, 2, 70),
             ("demo.actor.blinking-dot", 22, 1, 10),
             ("demo.actor.bloodfang-the-wolf", 170, 1, 999),
             ("demo.actor.bloodshot-eye", 129, 3, 40),
@@ -97,12 +99,14 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.cave-spider", 60, 1, 30),
             ("demo.actor.chaos-shapechanger", 203, 2, 40),
             ("demo.actor.cheerful-leprechaun", 258, 2, 50),
+            ("demo.actor.chimera", 341, 1, 70),
             ("demo.actor.chiokovo", 997, 3, 30),
             ("demo.actor.clear-hound", 282, 3, 50),
             ("demo.actor.clear-icky-thing", 26, 1, 10),
             ("demo.actor.clear-mushroom-patch", 184, 2, 40),
             ("demo.actor.clear-worm-mass", 79, 2, 30),
             ("demo.actor.cloaker", 243, 5, 50),
+            ("demo.actor.cold-hound", 308, 2, 70),
             ("demo.actor.copperhead-snake", 106, 1, 40),
             ("demo.actor.creeping-copper-coins", 85, 2, 40),
             ("demo.actor.creeping-gold-coins", 195, 3, 40),
@@ -118,6 +122,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.dark-elven-warrior", 182, 1, 40),
             ("demo.actor.dark-naga", 265, 2, 50),
             ("demo.actor.death-sword", 107, 5, 40),
+            ("demo.actor.demonite", 1029, 2, 50),
             ("demo.actor.devilfish", 918, 4, 50),
             ("demo.actor.dimetrodon", 1223, 3, 90),
             (
@@ -136,9 +141,11 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.eagle", 172, 2, 40),
             ("demo.actor.earth-spirit", 305, 2, 80),
             ("demo.actor.electric-eel", 346, 2, 70),
+            ("demo.actor.energy-hound", 309, 2, 70),
             ("demo.actor.ewok", 92, 2, 40),
             ("demo.actor.fang-farmer-maggots-dog", 55, 2, 999),
             ("demo.actor.filthy-street-urchin", 1, 2, 0),
+            ("demo.actor.fire-hound", 307, 2, 70),
             ("demo.actor.fire-spirit", 306, 2, 80),
             ("demo.actor.flesh-golem", 256, 1, 50),
             ("demo.actor.floating-eye", 32, 1, 10),
@@ -154,11 +161,13 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.gazer", 218, 1, 50),
             ("demo.actor.gelatinous-cube", 286, 4, 50),
             ("demo.actor.giant-black-ant", 49, 1, 20),
+            ("demo.actor.giant-black-dragon-fly", 322, 2, 999),
             ("demo.actor.giant-brown-bat", 114, 1, 40),
             ("demo.actor.giant-clear-centipede", 276, 2, 30),
             ("demo.actor.giant-cockroach", 1007, 2, 40),
             ("demo.actor.giant-flea", 259, 1, 50),
             ("demo.actor.giant-fruit-fly", 197, 6, 40),
+            ("demo.actor.giant-gold-dragon-fly", 325, 2, 999),
             ("demo.actor.giant-green-dragon-fly", 287, 2, 50),
             ("demo.actor.giant-green-frog", 56, 1, 20),
             ("demo.actor.giant-grey-rat", 156, 1, 40),
@@ -216,9 +225,11 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.hippogriff", 209, 1, 40),
             ("demo.actor.hobbes-the-tiger", 200, 2, 999),
             ("demo.actor.homonculus", 280, 3, 50),
+            ("demo.actor.hopper-ant", 1323, 3, 36),
             ("demo.actor.horse", 956, 1, 20),
             ("demo.actor.hummerhorn", 289, 5, 50),
             ("demo.actor.hunting-hawk-of-julian", 151, 2, 40),
+            ("demo.actor.huorn", 329, 1, 70),
             ("demo.actor.illusionist", 240, 2, 50),
             ("demo.actor.imp", 296, 2, 80),
             ("demo.actor.insect-swarm", 38, 1, 10),
@@ -313,6 +324,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.ozmanian-devil", 1330, 2, 36),
             ("demo.actor.panther", 198, 2, 40),
             ("demo.actor.phantom-warrior", 152, 1, 40),
+            ("demo.actor.phase-spider", 331, 2, 999),
             ("demo.actor.pink-horror", 242, 3, 50),
             ("demo.actor.pink-jelly", 131, 1, 40),
             ("demo.actor.pink-naga", 130, 2, 40),
@@ -323,6 +335,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.portuguese-man-o-war", 160, 2, 40),
             ("demo.actor.priest", 225, 1, 50),
             ("demo.actor.pseudo-dragon", 193, 2, 50),
+            ("demo.actor.pumpkin-man", 1146, 1, 999),
             ("demo.actor.purple-mushroom-patch", 108, 2, 40),
             ("demo.actor.quartz-vein", 911, 2, 60),
             ("demo.actor.quasit", 294, 2, 50),
@@ -349,6 +362,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.shadow-hound", 272, 2, 60),
             ("demo.actor.shagrat-the-orc-captain", 314, 2, 999),
             ("demo.actor.shallow-puddle", 885, 6, 30),
+            ("demo.actor.shambling-mound", 316, 2, 999),
             ("demo.actor.sheep", 1226, 4, 20),
             ("demo.actor.shrieker-mushroom-patch", 40, 1, 50),
             ("demo.actor.silver-jelly", 73, 2, 30),
@@ -403,6 +417,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.war-bear", 173, 1, 40),
             ("demo.actor.warg", 257, 2, 50),
             ("demo.actor.warrens-keeper", 135, 3, 999),
+            ("demo.actor.water-hound", 340, 3, 90),
             ("demo.actor.water-spirit", 303, 1, 70),
             ("demo.actor.weir", 344, 2, 70),
             ("demo.actor.wererat", 270, 2, 50),
@@ -2224,6 +2239,102 @@ fn p37a_direct_harvest_keeps_noncasting_monster_mechanics() {
                         .any(|effect| matches!(effect, MeleeBlowEffectDefinition::Poison { .. }))
             }))
     );
+}
+
+#[test]
+fn p37b_direct_harvest_reuses_existing_monster_abilities() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actor = |id: &str| {
+        artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == id)
+            .unwrap_or_else(|| panic!("{id} should be imported"))
+    };
+    let ability_ids = |id: &str| {
+        actor(id)
+            .monster_casting
+            .as_ref()
+            .unwrap_or_else(|| panic!("{id} should retain monster casting"))
+            .abilities
+            .iter()
+            .map(|candidate| candidate.ability_id.as_str())
+            .collect::<BTreeSet<_>>()
+    };
+
+    for (ids, ability_id) in [
+        (
+            &["fire-hound", "chimera"][..],
+            "rfb-legacy.ability.breath-fire-20-900-r2",
+        ),
+        (
+            &["cold-hound", "demonite"][..],
+            "rfb-legacy.ability.breath-cold-20-900-r2",
+        ),
+        (
+            &["energy-hound"][..],
+            "rfb-legacy.ability.breath-electricity-20-900-r2",
+        ),
+        (
+            &["giant-black-dragon-fly", "water-hound"][..],
+            "rfb-legacy.ability.breath-acid-20-900-r2",
+        ),
+        (
+            &["giant-gold-dragon-fly"][..],
+            "rfb-legacy.ability.breath-sound-17-450-r2",
+        ),
+        (
+            &["air-hound"][..],
+            "rfb-legacy.ability.breath-poison-17-600-r2",
+        ),
+    ] {
+        for id in ids {
+            assert_eq!(
+                ability_ids(&format!("demo.actor.{id}")),
+                [ability_id].into_iter().collect(),
+                "{id} should reuse its existing breath"
+            );
+        }
+    }
+
+    for id in ["blink-dog", "huorn", "hopper-ant", "phase-spider"] {
+        assert_eq!(
+            ability_ids(&format!("demo.actor.{id}")),
+            ["rfb-legacy.ability.blink", "rfb-legacy.ability.drag"]
+                .into_iter()
+                .collect(),
+            "{id} should only blink and pull its target"
+        );
+    }
+    assert_eq!(
+        ability_ids("demo.actor.shambling-mound"),
+        ["rfb-legacy.ability.shriek"].into_iter().collect()
+    );
+    assert_eq!(
+        ability_ids("demo.actor.pumpkin-man"),
+        [
+            "rfb-legacy.ability.blind",
+            "rfb-legacy.ability.confuse",
+            "rfb-legacy.ability.curse-3d8",
+            "rfb-legacy.ability.darkness",
+            "rfb-legacy.ability.paralyze",
+            "rfb-legacy.ability.scare",
+        ]
+        .into_iter()
+        .collect()
+    );
+
+    assert!(
+        actor("demo.actor.giant-black-dragon-fly")
+            .melee_routine
+            .as_ref()
+            .is_some_and(|routine| routine.blows.is_empty())
+    );
+    assert!(actor("demo.actor.huorn").movement.never_moves);
+    let chimera = actor("demo.actor.chimera");
+    assert!(chimera.rideable);
+    assert!(chimera.movement.modes.contains(&ActorMovementMode::Fly));
 }
 
 #[test]
