@@ -1,0 +1,75 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 212,
+    "maxDepth": 40,
+    "rarity": 3
+  },
+  "attack": 3,
+  "damageDice": 1,
+  "damageSides": 1,
+  "damageType": "physical",
+  "defense": 0,
+  "descriptionKey": "actor-demo-grape-jelly-description",
+  "experienceValue": 60,
+  "formatVersion": 1,
+  "glyph": "j",
+  "hitPointDice": {
+    "dice": 52,
+    "sides": 8
+  },
+  "id": "demo.actor.grape-jelly",
+  "level": 12,
+  "light": {
+    "intrinsic": true,
+    "radius": 1
+  },
+  "maxHp": 234,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "amountDice": 10,
+            "amountSides": 6,
+            "type": "drain-experience"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.drain-mana-7",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 9
+  },
+  "movement": {
+    "modes": [
+      "swim"
+    ],
+    "neverMoves": true
+  },
+  "nameKey": "actor-demo-grape-jelly-name",
+  "resistances": {
+    "light": "vulnerable",
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 110,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "jelly",
+    "legacy-import",
+    "warrens"
+  ]
+}

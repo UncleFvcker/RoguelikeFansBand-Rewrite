@@ -225,10 +225,19 @@ pub(crate) enum DomainEvent {
         amount: u64,
         total: u64,
     },
+    ExperienceDrained {
+        source_kind_id: String,
+        amount: u64,
+        total: u64,
+    },
     PlayerLevelGained {
         level: u16,
         max_hp: i32,
         pending_attribute_increases: u16,
+    },
+    PlayerLevelLost {
+        level: u16,
+        max_hp: i32,
     },
     PlayerLevelCapUnlocked {
         level_cap: u16,
@@ -889,6 +898,11 @@ pub(crate) enum DomainEvent {
         target_kind_id: String,
         damage: DamageOutcome,
     },
+    MonsterContactAuraApplied {
+        source_kind_id: String,
+        status_kind_id: String,
+        duration: u32,
+    },
     PlayerSlew {
         target_kind_id: String,
         damage: DamageOutcome,
@@ -1541,6 +1555,19 @@ impl DomainEvent {
                 "player-experience-gained",
                 [("amount", amount.to_string()), ("total", total.to_string())],
             ),
+            Self::ExperienceDrained {
+                source_kind_id,
+                amount,
+                total,
+            } => dto(
+                "player.experience-drained",
+                "player-experience-drained",
+                [
+                    ("source", source_kind_id),
+                    ("amount", amount.to_string()),
+                    ("total", total.to_string()),
+                ],
+            ),
             Self::PlayerLevelGained {
                 level,
                 max_hp,
@@ -1556,6 +1583,11 @@ impl DomainEvent {
                         pending_attribute_increases.to_string(),
                     ),
                 ],
+            ),
+            Self::PlayerLevelLost { level, max_hp } => dto(
+                "player.level-lost",
+                "player-level-lost",
+                [("level", level.to_string()), ("maxHp", max_hp.to_string())],
             ),
             Self::PlayerLevelCapUnlocked {
                 level_cap,
@@ -3467,6 +3499,19 @@ impl DomainEvent {
                 GameEventOutcomeDto::Damage {
                     resolution: damage.into(),
                 },
+            ),
+            Self::MonsterContactAuraApplied {
+                source_kind_id,
+                status_kind_id,
+                duration,
+            } => dto(
+                "combat.monster-contact-aura",
+                "combat-monster-contact-aura",
+                [
+                    ("source", source_kind_id),
+                    ("status", status_kind_id),
+                    ("duration", duration.to_string()),
+                ],
             ),
             Self::PlayerSlew {
                 target_kind_id,

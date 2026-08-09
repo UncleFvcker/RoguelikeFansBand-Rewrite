@@ -1,6 +1,6 @@
 # 待实现内容清单
 
-状态：基于 contract-v1–v201、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
+状态：基于 contract-v1–v205、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
 
 本文件只记录已经在现有设计或原版对比中明确出现、但尚未实现的内容。长期设想仍保留在 [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)，这里用于跟踪可以实际排入后续 contract 的缺口。
 
@@ -78,6 +78,11 @@ contract-v202 将原版近战元素名 `LIGHT` 收窄为既有 `LITE`/`light` �
 contract-v203 接入多彩龙幼龙、锋锐兔、马头鱼尾怪、僵尸兽人、浅水洼和
 怪诞者卢格 6 只十一级怪物，全部复用既有字段与 effect。正式包 actor 增至
 235、ability 保持 114、严格同步增至 170；协议与 State Hash Schema 均不变。
+contract-v205 以五个窄契约完成经验吸取、毒素接触光环、外观变形、弓手特殊
+掉落别名和地牢索引限定，接入 6 只十一至十二级怪物，并恢复既有黏糊糊的
+软体接触光环。正式包 actor 增至 241、ability 增至 116、严格同步增至 176；
+协议保持 1.147，State Hash Schema 保持 v70。瘟疫鼠的 `COMPOST` 仍等待真实
+下水道任务消费者，不作为掉落或通用区域规则近似实现。
 
 荒野 W0 已导入 `master:w_info.txt` 的 `99x66` normal 世界图、15 类地形、
 危险等级、道路和起点，并只把现有 Outpost/Warrens 绑定为正式地点。W1 已完成
@@ -252,7 +257,7 @@ contract-v141 后的 importer 维护复用 P84 已有 `apply-poison`，将 tval 
 - Berserk Strength Potion 只实现普通职业的 Berserk + 治疗事务；原版 `_potion_power`、Alchemist 等职业特例与全局 10000-tick 上限继续留在缺口，不提前建立职业覆盖表或通用时长上限层；
 - Poetic Inspiration Potion 只实现普通 `1d100+100` Extend 与 Wisdom/Charisma 各 +5；原版 `_potion_power`、Potion Devicemaster 特例和全局 10000-tick 上限继续留在缺口；
 - Stone Skin Potion 只实现普通 `1d20+20` KeepStrongest 与饮用时等级防御；原版 `_potion_power`、持续期间升级重算、Magic Defense、Kata Musou 和职业特例继续留在缺口；
-- Restore Life Levels Potion 只恢复既有 `maximumExperience` 并增加 150 生命力；不建立通用成长事务、经验吸取、生命力损伤、Possessor/Mimic 上限或 Android 特例，也不提前开放设备 activation；
+- Restore Life Levels Potion 只恢复既有 `maximumExperience` 并增加 150 生命力；经验吸取已由 contract-v205 作为怪物近战窄路径建立，生命力损伤、Possessor/Mimic 上限与 Android 特例仍等待各自纵切，也不提前开放设备 activation；
 - 属性增长药水只覆盖六种单属性增长和固定六维 Augmentation；不建立可配置属性列表、通用成长事务或与等级提升点合流，也不提前加入 `_potion_power` 和职业特例；
 - 剩余 `scroll-effect` 15 继续按世界/地形、状态和物品/成长事务分组；Understanding 和 Inventory Protection 不并入本轮。
 - `consumable-effect` 现为 46，只统计缺少主动使用效果的药水和食物；全部 28 种食物另以 `food-nutrition` 记录尚未实现的营养/饥饿事务。装备属性损伤、临时属性修改和更一般的成长事务继续按独立纵切，不扩展通用序列或属性 effect DSL。

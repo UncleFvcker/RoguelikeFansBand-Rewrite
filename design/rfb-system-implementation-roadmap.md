@@ -1,6 +1,6 @@
 # RFB 全系统梳理与重构实现路线
 
-状态：长期规则实现路线；当前基线为协议 1.147 / contract-v204（P31–P98 进展见 8.3，玩家流程与 Outpost 进展见 Phase 17/18，物品接入见 Phase 19，Warrens 怪物机制见 W1–W14 清单，荒野世界图见 W0–W5）
+状态：长期规则实现路线；当前基线为协议 1.147 / contract-v205（P31–P98 进展见 8.3，玩家流程与 Outpost 进展见 Phase 17/18，物品接入见 Phase 19，Warrens 怪物机制见 W1–W14 清单，荒野世界图见 W0–W5）
 
 ## 1. 目的与边界
 
@@ -635,6 +635,8 @@ P30“首个非 Mana 职业资源”已由 contract-v90 完成：节奏资源按
 **十一级怪物 P19 进展（2026-08）**：contract-v203 接入多彩龙幼龙、锋锐兔、马头鱼尾怪、僵尸兽人、浅水洼和怪诞者卢格。六只怪物只使用现有吐息、闪现、水生、骑乘、Unique、掉落、抗性和近战状态路径，没有新增 ability 或 effect。严格同步达 170 条，正式包为 235 actors / 114 abilities；协议 1.145、Schema v68 不变，demo 1.199.0，内置 hash 为 `f3a9f16c4d40fa7b6b4472f856fbf22af7e33727324afc5f2962ad84cf11912b`。完整边界见 [Contract v203](contract-v203-warrens-content-p19-level-11-low-risk.md)。
 
 **集成收口（2026-08）**：荒野 W0–W5、物品 P1–P3.1 与怪物 P13–P19 共存于同一主线；协议统一为 1.147，逐格永久光在既有荒野/自动旅行 hash 输入上使 Schema 升至 v70，470 条 exact fixtures 统一刷新为 contract-v204，内容包统一为 1.200.0。
+
+**十一至十二级怪物 P20 进展（2026-08）**：contract-v205 分别以窄 `drain-experience`、毒素 `contactAura`、既有 `appearanceKindId` 投影、`DROP_WARRIOR_SHOOT` 别名和 dungeon legacy index 过滤接入混沌变形者、葡萄果冻、瘟疫鼠、骑士弓箭手、南蛮大王朵思大王和小袋鼠。正式包为 241 actors / 116 abilities，严格同步 176 条；协议 1.147、Schema v70 不变，demo 1.201.0，内置 hash 为 `e2fd133bcd3f2e3c2fd4d3ab8e25da6c437bfa18bede03d039d55a3db35406ae`。完整边界见 [Contract v205](contract-v205-warrens-content-p20-special-mechanics.md)。
 
 ## 9. 内容迁移策略
 

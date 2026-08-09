@@ -3510,6 +3510,7 @@ impl Game {
         removed_entities: &mut Vec<String>,
         surround_reservations: &mut BTreeSet<Position>,
     ) -> Result<(), CoreError> {
+        self.reroll_shapechanger_appearance(index);
         let never_moves = self
             .content
             .actor(&self.entities[index].kind_id)

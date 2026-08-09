@@ -334,14 +334,25 @@ impl CharacterProgress {
             && self.experience >= experience_required_for_level(self.level.saturating_add(1))
         {
             self.level += 1;
+            let reached_new_maximum = self.level > self.max_level;
             self.max_level = self.max_level.max(self.level);
-            if self.level.is_multiple_of(5) {
+            if reached_new_maximum && self.level.is_multiple_of(5) {
                 self.pending_attribute_increases =
                     self.pending_attribute_increases.saturating_add(1);
             }
             gained.push(self.level);
         }
         gained
+    }
+
+    pub fn lose_experience(&mut self, amount: u64) -> Vec<u16> {
+        self.experience = self.experience.saturating_sub(amount);
+        let mut lost = Vec::new();
+        while self.level > 1 && self.experience < experience_required_for_level(self.level) {
+            self.level -= 1;
+            lost.push(self.level);
+        }
+        lost
     }
 
     pub fn replace_skills(&mut self, skills: BTreeMap<String, SkillProgress>) {
@@ -866,6 +877,25 @@ mod tests {
         assert_eq!(progress.level, 100);
         assert_eq!(progress.pending_attribute_increases, 20);
         assert!(progress.validate(true));
+    }
+
+    #[test]
+    fn regaining_drained_levels_does_not_repeat_attribute_rewards() {
+        let mut progress = CharacterProgress::new(7, 10);
+        progress.gain_experience(experience_required_for_level(5), false);
+        let pending = progress.pending_attribute_increases;
+
+        progress.lose_experience(progress.experience);
+        assert_eq!(progress.level, 1);
+        assert_eq!(progress.max_level, 5);
+        assert_eq!(
+            progress.maximum_experience,
+            experience_required_for_level(5)
+        );
+
+        progress.gain_experience(progress.maximum_experience, false);
+        assert_eq!(progress.level, 5);
+        assert_eq!(progress.pending_attribute_increases, pending);
     }
 
     #[test]

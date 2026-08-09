@@ -1,0 +1,96 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "friends": {
+      "chancePercent": 0,
+      "dice": 2,
+      "sides": 3
+    },
+    "legacyIndex": 1298,
+    "maxDepth": 40,
+    "rarity": 2
+  },
+  "attack": 2,
+  "contactAura": {
+    "damageDice": 1,
+    "damageSides": 2,
+    "damageType": "poison"
+  },
+  "damageDice": 2,
+  "damageSides": 3,
+  "damageType": "physical",
+  "defense": 2,
+  "descriptionKey": "actor-demo-plague-rat-description",
+  "experienceValue": 80,
+  "formatVersion": 1,
+  "glyph": "r",
+  "hitPointDice": {
+    "dice": 6,
+    "sides": 10
+  },
+  "id": "demo.actor.plague-rat",
+  "level": 11,
+  "maxHp": 33,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 2,
+            "damageSides": 3,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "chancePercent": 15,
+            "damageDice": 0,
+            "damageSides": 0,
+            "type": "disease"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 3,
+            "damageSides": 2,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "attributes": [
+              "constitution"
+            ],
+            "chancePercent": 15,
+            "type": "drain-attributes"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      }
+    ]
+  },
+  "nameKey": "actor-demo-plague-rat-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 116,
+  "tags": [
+    "animal",
+    "evil",
+    "legacy-import",
+    "rat",
+    "warrens"
+  ]
+}

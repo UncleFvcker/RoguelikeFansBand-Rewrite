@@ -79,6 +79,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.cave-lizard", 82, 1, 30),
             ("demo.actor.cave-orc", 126, 1, 40),
             ("demo.actor.cave-spider", 60, 1, 30),
+            ("demo.actor.chaos-shapechanger", 203, 2, 40),
             ("demo.actor.chiokovo", 997, 3, 30),
             ("demo.actor.clear-icky-thing", 26, 1, 10),
             ("demo.actor.clear-mushroom-patch", 184, 2, 40),
@@ -132,6 +133,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.giant-white-tick", 176, 2, 40),
             ("demo.actor.goblin", 87, 1, 40),
             ("demo.actor.goomba", 924, 1, 20),
+            ("demo.actor.grape-jelly", 212, 3, 40),
             ("demo.actor.greater-hell-beast", 39, 6, 999),
             ("demo.actor.green-glutton-ghost", 100, 1, 40),
             ("demo.actor.green-jelly", 66, 1, 30),
@@ -156,6 +158,13 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.kamikaze-yeek", 179, 1, 40),
             ("demo.actor.killer-bee", 174, 2, 40),
             ("demo.actor.king-cobra", 171, 2, 40),
+            (
+                "demo.actor.king-duosi-the-chief-of-southerings",
+                1076,
+                2,
+                999,
+            ),
+            ("demo.actor.knight-archer", 219, 1, 50),
             ("demo.actor.kobold", 30, 1, 30),
             ("demo.actor.kutar", 1020, 4, 30),
             ("demo.actor.lagduf-the-snaga", 140, 2, 999),
@@ -195,6 +204,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.pink-jelly", 131, 1, 40),
             ("demo.actor.pink-naga", 130, 2, 40),
             ("demo.actor.piranha", 70, 1, 60),
+            ("demo.actor.plague-rat", 1298, 2, 40),
             ("demo.actor.poltergeist", 65, 1, 30),
             ("demo.actor.portuguese-man-o-war", 160, 2, 40),
             ("demo.actor.pseudo-dragon", 193, 2, 50),
@@ -239,6 +249,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.undead-mass", 202, 2, 40),
             ("demo.actor.unruly-horse", 957, 2, 30),
             ("demo.actor.vorpal-bunny", 205, 3, 40),
+            ("demo.actor.wallaby", 1316, 2, 30),
             ("demo.actor.war-bear", 173, 1, 40),
             ("demo.actor.warg", 257, 2, 50),
             ("demo.actor.warrens-keeper", 135, 3, 999),
@@ -380,6 +391,70 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             vec![60]
         );
     }
+}
+
+#[test]
+fn special_mechanics_batch_keeps_each_imported_contract_narrow() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actor = |id: &str| {
+        artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == id)
+            .unwrap_or_else(|| panic!("{id} should be imported"))
+    };
+
+    assert!(
+        actor("demo.actor.grape-jelly")
+            .melee_routine
+            .as_ref()
+            .is_some_and(
+                |routine| routine.blows.iter().any(|blow| blow.effects.iter().any(
+                    |effect| matches!(effect, MeleeBlowEffectDefinition::DrainExperience { .. })
+                ))
+            )
+    );
+    assert_eq!(
+        actor("demo.actor.plague-rat").contact_aura,
+        Some(ActorContactAuraDefinition {
+            damage_type: ActorDamageType::Poison,
+            damage_dice: 1,
+            damage_sides: 2,
+            chance_percent: None,
+        })
+    );
+    assert!(
+        actor("demo.actor.chaos-shapechanger")
+            .tags
+            .iter()
+            .any(|tag| tag == "shapechanger")
+    );
+    let archer_drop = actor("demo.actor.knight-archer")
+        .death_drop
+        .as_ref()
+        .expect("Knight archer should retain its themed drop");
+    assert_eq!(
+        archer_drop.theme_table_id.as_deref(),
+        Some("demo.loot-table.archer")
+    );
+    assert_eq!(archer_drop.theme_chance_percent, 50);
+    assert_eq!(
+        actor("demo.actor.king-duosi-the-chief-of-southerings")
+            .allocation
+            .as_ref()
+            .expect("King Duosi allocation")
+            .legacy_dungeon_indices,
+        [31]
+    );
+    assert_eq!(
+        actor("demo.actor.wallaby")
+            .allocation
+            .as_ref()
+            .expect("Wallaby allocation")
+            .legacy_dungeon_indices,
+        [35]
+    );
 }
 
 #[test]
@@ -2277,6 +2352,30 @@ fn dungeon_entrance_guardians_and_entry_requirements_are_validated() {
         .instance_lifecycle = DungeonInstanceLifecycle::TurnTtl { ttl_turns: 0 };
     assert!(matches!(
         validate_and_normalize(&mut zero_ttl),
+        Err(ContentError::InvalidProceduralFloor(_))
+    ));
+
+    let mut zero_legacy_index = artifact.content.clone();
+    zero_legacy_index
+        .worlds
+        .iter_mut()
+        .find(|world| world.id == "demo.world.warrens-journey")
+        .expect("Warrens journey should remain available")
+        .dungeons
+        .iter_mut()
+        .find(|dungeon| dungeon.id == "demo.dungeon.warrens")
+        .expect("Warrens should remain available")
+        .legacy_index = Some(0);
+    assert!(matches!(
+        validate_and_normalize(&mut zero_legacy_index),
+        Err(ContentError::InvalidProceduralFloor(_))
+    ));
+
+    let mut duplicate_legacy_index = artifact.content.clone();
+    duplicate_legacy_index.worlds[0].dungeons[0].legacy_index = Some(30);
+    duplicate_legacy_index.worlds[0].dungeons[1].legacy_index = Some(30);
+    assert!(matches!(
+        validate_and_normalize(&mut duplicate_legacy_index),
         Err(ContentError::InvalidProceduralFloor(_))
     ));
 

@@ -3,8 +3,8 @@
 use super::movement::actor_can_cross_terrain;
 use super::*;
 use rfb_content::{
-    ActorDamageType, ActorDefinition, ActorHabitat, ActorMovementMode, ActorResistanceLevel,
-    GlobalMonsterAllocationDefinition,
+    ActorAllocationDefinition, ActorDamageType, ActorDefinition, ActorHabitat, ActorMovementMode,
+    ActorResistanceLevel, GlobalMonsterAllocationDefinition,
 };
 
 const ORIGINAL_NASTY_MON_ONE_IN: u64 = 40;
@@ -29,8 +29,25 @@ pub(super) struct OriginalGroupMember {
     pub(super) role: OriginalGroupRole,
 }
 
+pub(super) fn actor_allocation_matches_legacy_dungeon(
+    allocation: &ActorAllocationDefinition,
+    current_legacy_dungeon_index: Option<u16>,
+) -> bool {
+    allocation.legacy_dungeon_indices.is_empty()
+        || current_legacy_dungeon_index
+            .is_some_and(|index| allocation.legacy_dungeon_indices.contains(&index))
+}
+
 impl Game {
     pub(super) fn maybe_apply_shadower_appearance(&mut self, actor: &mut Actor) {
+        if self
+            .content
+            .actor(&actor.kind_id)
+            .is_some_and(|definition| definition.tags.iter().any(|tag| tag == "shapechanger"))
+        {
+            actor.appearance_kind_id = self.roll_shapechanger_appearance(&actor.kind_id);
+            return;
+        }
         let eligible = self
             .content
             .actor(&actor.kind_id)
@@ -51,6 +68,39 @@ impl Game {
         if eligible && self.rng.bounded(SHADOWER_ONE_IN) == 0 {
             actor.appearance_kind_id = Some(SHADOWER_APPEARANCE_KIND_ID.to_owned());
         }
+    }
+
+    fn roll_shapechanger_appearance(&mut self, actor_kind_id: &str) -> Option<String> {
+        let candidates = self
+            .content
+            .actor_definitions()
+            .filter(|definition| {
+                definition.role == ActorRole::Monster
+                    && definition.id != actor_kind_id
+                    && !definition
+                        .tags
+                        .iter()
+                        .any(|tag| tag == "shadower-appearance")
+            })
+            .map(|definition| definition.id.clone())
+            .collect::<Vec<_>>();
+        if candidates.is_empty() {
+            return None;
+        }
+        let index = usize::try_from(self.rng.bounded(candidates.len() as u64)).ok()?;
+        candidates.get(index).cloned()
+    }
+
+    pub(super) fn reroll_shapechanger_appearance(&mut self, index: usize) {
+        let kind_id = self.entities[index].kind_id.clone();
+        if !self
+            .content
+            .actor(&kind_id)
+            .is_some_and(|definition| definition.tags.iter().any(|tag| tag == "shapechanger"))
+        {
+            return;
+        }
+        self.entities[index].appearance_kind_id = self.roll_shapechanger_appearance(&kind_id);
     }
 
     fn original_pack_spell_flags(&self, leader: &ActorDefinition) -> (bool, bool) {
@@ -596,6 +646,19 @@ impl Game {
         escort_leader_kind_id: Option<&str>,
         required_terrain: Option<&rfb_content::TerrainDefinition>,
     ) -> Option<String> {
+        let current_legacy_dungeon_index = self.content.world(&self.world_id).and_then(|world| {
+            let dungeon_id = world
+                .procedural_floors
+                .iter()
+                .find(|floor| floor.id == self.current_floor_id)?
+                .dungeon_id
+                .as_deref()?;
+            world
+                .dungeons
+                .iter()
+                .find(|dungeon| dungeon.id == dungeon_id)?
+                .legacy_index
+        });
         let unique_count = target_floor_kind_ids
             .iter()
             .filter(|kind_id| self.content.actor(kind_id).is_some_and(actor_is_unique))
@@ -623,6 +686,10 @@ impl Game {
                     || definition.level > u32::from(selection_level)
                     || (allocation.max_depth != 0 && allocation.max_depth < selection_level)
                     || (allocation.force_depth && definition.level > u32::from(floor_depth))
+                    || !actor_allocation_matches_legacy_dungeon(
+                        allocation,
+                        current_legacy_dungeon_index,
+                    )
                     || (actor_is_unique(definition)
                         && (!allow_uniques
                             || !self.unique_actor_kind_is_available(&definition.id)

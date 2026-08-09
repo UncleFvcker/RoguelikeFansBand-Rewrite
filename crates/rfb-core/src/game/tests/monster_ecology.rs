@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
-use crate::game::monster_ecology::OriginalGroupRole;
+use crate::game::monster_ecology::{OriginalGroupRole, actor_allocation_matches_legacy_dungeon};
 use crate::rng::RfbRng;
 
 use super::support::*;
@@ -19,6 +19,58 @@ fn first_seed_for(mut predicate: impl FnMut(&mut RfbRng) -> bool) -> u64 {
     (0..1_000_000)
         .find(|seed| predicate(&mut RfbRng::seeded(*seed)))
         .expect("bounded deterministic seed search should find a match")
+}
+
+#[test]
+fn shapechanger_projects_another_monster_and_rerolls_each_action() {
+    let mut game = Game::new_warrens_journey_with_build(1, "demo.build.warrior")
+        .expect("Warrens journey should create");
+    game.push_generated_actor(
+        "test.shapechanger".to_owned(),
+        "demo.actor.chaos-shapechanger",
+        Position { x: 5, y: 3 },
+    );
+    let index = game.entities.len() - 1;
+    let mut actor = game.entities.pop().expect("shapechanger should exist");
+    game.maybe_apply_shadower_appearance(&mut actor);
+    game.entities.push(actor);
+
+    let appearance = game.entities[index]
+        .appearance_kind_id
+        .as_deref()
+        .expect("shapechanger should project another monster");
+    assert_ne!(appearance, "demo.actor.chaos-shapechanger");
+    assert!(game.content.actor(appearance).is_some_and(|definition| {
+        definition.role == ActorRole::Monster
+            && !definition
+                .tags
+                .iter()
+                .any(|tag| tag == "shadower-appearance")
+    }));
+
+    let draws_before = game.rng.draw_counter;
+    game.reroll_shapechanger_appearance(index);
+    assert_eq!(game.rng.draw_counter, draws_before + 1);
+    assert!(game.entities[index].appearance_kind_id.is_some());
+}
+
+#[test]
+fn legacy_dungeon_restrictions_match_only_the_declared_region() {
+    let game = Game::new_warrens_journey_with_build(1, "demo.build.warrior")
+        .expect("Warrens journey should create");
+    let allocation = |actor_id: &str| {
+        game.content
+            .actor(actor_id)
+            .and_then(|actor| actor.allocation.as_ref())
+            .unwrap_or_else(|| panic!("{actor_id} should retain allocation"))
+    };
+
+    let duosi = allocation("demo.actor.king-duosi-the-chief-of-southerings");
+    assert!(actor_allocation_matches_legacy_dungeon(duosi, Some(31)));
+    assert!(!actor_allocation_matches_legacy_dungeon(duosi, Some(30)));
+    let wallaby = allocation("demo.actor.wallaby");
+    assert!(actor_allocation_matches_legacy_dungeon(wallaby, Some(35)));
+    assert!(!actor_allocation_matches_legacy_dungeon(wallaby, None));
 }
 
 #[test]

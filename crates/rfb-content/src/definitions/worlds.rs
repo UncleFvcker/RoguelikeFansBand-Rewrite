@@ -233,6 +233,8 @@ pub struct CampaignDefinition {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct DungeonDefinition {
     pub id: String,
+    #[serde(default)]
+    pub legacy_index: Option<u16>,
     pub root_floor_id: String,
     pub guardian_actor_kind_id: String,
     #[serde(default)]

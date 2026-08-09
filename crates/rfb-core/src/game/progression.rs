@@ -611,6 +611,35 @@ impl Game {
         }
     }
 
+    pub(super) fn apply_player_experience_drain(
+        &mut self,
+        amount: u64,
+        source_kind_id: &str,
+        events: &mut Vec<DomainEvent>,
+    ) -> u64 {
+        let before = self.progress.experience;
+        let previous_max_hp = self.effective_player_max_hp();
+        let previous_resource_maxima = self.player_resource_maxima();
+        let lost_levels = self.progress.lose_experience(amount);
+        let drained = before.saturating_sub(self.progress.experience);
+        if !lost_levels.is_empty() {
+            self.refresh_character_skills();
+            self.refresh_after_attribute_change(previous_max_hp, &previous_resource_maxima);
+        }
+        events.push(DomainEvent::ExperienceDrained {
+            source_kind_id: source_kind_id.to_owned(),
+            amount: drained,
+            total: self.progress.experience,
+        });
+        for level in lost_levels {
+            events.push(DomainEvent::PlayerLevelLost {
+                level,
+                max_hp: self.player_max_hp_at_level(level),
+            });
+        }
+        drained
+    }
+
     pub(super) fn increase_player_attribute(
         &mut self,
         attribute: AttributeKind,

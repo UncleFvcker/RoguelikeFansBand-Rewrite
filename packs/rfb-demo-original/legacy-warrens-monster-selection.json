@@ -1032,6 +1032,42 @@
       "id": "lug-the-grotesque",
       "tags": ["humanoid", "warrens"],
       "omittedFlags": ["CAN_SPEAK", "MALE"]
+    },
+    {
+      "sourceIndex": 203,
+      "id": "chaos-shapechanger",
+      "tags": ["humanoid", "warrens"],
+      "omittedFlags": ["ATTR_ANY", "ATTR_MULTI", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 212,
+      "id": "grape-jelly",
+      "tags": ["jelly", "warrens"],
+      "omittedFlags": ["EMPTY_MIND", "POS_GAIN_AC", "POS_HOLD_LIFE", "STUPID"]
+    },
+    {
+      "sourceIndex": 1298,
+      "id": "plague-rat",
+      "tags": ["rat", "warrens"],
+      "omittedFlags": ["COMPOST", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 219,
+      "id": "knight-archer",
+      "tags": ["humanoid", "warrens"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 1076,
+      "id": "king-duosi-the-chief-of-southerings",
+      "tags": ["humanoid", "warrens"],
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
+    },
+    {
+      "sourceIndex": 1316,
+      "id": "wallaby",
+      "tags": ["warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
     }
   ]
 }

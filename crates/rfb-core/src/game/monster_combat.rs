@@ -9,6 +9,7 @@ pub(super) fn melee_effect_chance(effect: &MeleeBlowEffectDefinition) -> Option<
         | MeleeBlowEffectDefinition::Disease { chance_percent, .. }
         | MeleeBlowEffectDefinition::DrainAttributes { chance_percent, .. }
         | MeleeBlowEffectDefinition::DrainResource { chance_percent, .. }
+        | MeleeBlowEffectDefinition::DrainExperience { chance_percent, .. }
         | MeleeBlowEffectDefinition::Bleeding { chance_percent, .. }
         | MeleeBlowEffectDefinition::Blind { chance_percent }
         | MeleeBlowEffectDefinition::Confusion { chance_percent, .. }
@@ -436,6 +437,7 @@ impl Game {
                     }
                     MeleeBlowEffectDefinition::DrainAttributes { .. }
                     | MeleeBlowEffectDefinition::DrainResource { .. }
+                    | MeleeBlowEffectDefinition::DrainExperience { .. }
                     | MeleeBlowEffectDefinition::Disenchant { .. } => None,
                     MeleeBlowEffectDefinition::Bleeding {
                         duration_dice,
@@ -1048,6 +1050,20 @@ impl Game {
                             );
                             changed.insert(caster.position);
                         }
+                        None
+                    }
+                    MeleeBlowEffectDefinition::DrainExperience {
+                        amount_dice,
+                        amount_sides,
+                        ..
+                    } => {
+                        let rolled =
+                            nice_melee_roll(self.roll_damage(*amount_dice, *amount_sides), nice);
+                        let requested = u64::try_from(rolled.max(0))
+                            .unwrap_or(u64::MAX)
+                            .saturating_add(self.progress.experience.saturating_mul(2) / 100)
+                            .min(25_000);
+                        self.apply_player_experience_drain(requested, &kind_id, events);
                         None
                     }
                     MeleeBlowEffectDefinition::Bleeding {

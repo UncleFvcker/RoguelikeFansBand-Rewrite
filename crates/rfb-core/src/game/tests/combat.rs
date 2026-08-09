@@ -72,6 +72,87 @@ fn resource_drain_melee_heals_six_times_the_amount_actually_drained() {
 }
 
 #[test]
+fn experience_drain_lowers_current_level_but_preserves_character_history() {
+    let mut game = monster_effect_game(
+        0,
+        MeleeBlowEffectDefinition::DrainExperience {
+            chance_percent: None,
+            amount_dice: 100,
+            amount_sides: 1,
+        },
+    );
+    game.apply_player_experience(100, &mut Vec::new());
+    let maximum_experience = game.progress.maximum_experience;
+    let max_level = game.progress.max_level;
+    let mut events = Vec::new();
+
+    game.resolve_monster_melee(0, &mut events, &mut BTreeSet::new())
+        .expect("experience-draining melee should resolve");
+
+    assert_eq!(game.progress.experience, 0);
+    assert_eq!(game.progress.maximum_experience, maximum_experience);
+    assert_eq!(game.progress.level, 1);
+    assert_eq!(game.progress.max_level, max_level);
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::ExperienceDrained {
+            source_kind_id,
+            amount,
+            total: 0,
+        } if source_kind_id == "demo.actor.echo-hound" && *amount == maximum_experience
+    )));
+    assert!(
+        events
+            .iter()
+            .any(|event| matches!(event, DomainEvent::PlayerLevelLost { level: 1, .. }))
+    );
+}
+
+#[test]
+fn poison_contact_aura_triggers_after_a_fatal_player_hit() {
+    let base = game_with_actor_definition(0, "demo.actor.echo-hound", |actor| {
+        actor.defense = 0;
+        actor.contact_aura = Some(rfb_content::ActorContactAuraDefinition {
+            damage_type: rfb_content::ActorDamageType::Poison,
+            damage_dice: 1,
+            damage_sides: 1,
+            chance_percent: None,
+        });
+    });
+    let (game, events) = (0..128)
+        .find_map(|seed| {
+            let mut game = base.clone();
+            game.rng = RfbRng::seeded(seed);
+            game.entities[0].kind_id = "demo.actor.echo-hound".to_owned();
+            game.entities[0].hp = 1;
+            game.entities[0].max_hp = 1;
+            let mut events = Vec::new();
+            game.resolve_player_melee(0, &mut events, &mut BTreeSet::new(), &mut Vec::new())
+                .expect("contact aura melee should resolve");
+            events
+                .iter()
+                .any(|event| matches!(event, DomainEvent::PlayerSlew { .. }))
+                .then_some((game, events))
+        })
+        .expect("a deterministic seed should produce a fatal player hit");
+
+    assert!(
+        game.player
+            .statuses
+            .iter()
+            .any(|status| status.kind_id == STATUS_POISON && status.remaining_ticks == 1)
+    );
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::MonsterContactAuraApplied {
+            source_kind_id,
+            status_kind_id,
+            duration: 1,
+        } if source_kind_id == "demo.actor.echo-hound" && status_kind_id == STATUS_POISON
+    )));
+}
+
+#[test]
 fn disenchant_melee_removes_positive_status_or_reduces_equipment_enchantments() {
     let effect = MeleeBlowEffectDefinition::Disenchant {
         chance_percent: None,

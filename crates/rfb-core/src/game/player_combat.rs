@@ -409,6 +409,7 @@ impl Game {
                 damage,
             });
             self.wake_entity_after_damage(index, damage.applied, events);
+            self.resolve_monster_contact_aura(&definition, events);
             if vampiric_weapon
                 && vampiric_drain_remaining > 0
                 && damage.applied > 5
@@ -456,6 +457,44 @@ impl Game {
             self.resolve_confusing_strike(index, &definition, events);
         }
         Ok(())
+    }
+
+    fn resolve_monster_contact_aura(
+        &mut self,
+        definition: &rfb_content::ActorDefinition,
+        events: &mut Vec<DomainEvent>,
+    ) {
+        let Some(aura) = definition.contact_aura else {
+            return;
+        };
+        if aura
+            .chance_percent
+            .is_some_and(|chance| self.rng.bounded(100) >= u64::from(chance))
+        {
+            return;
+        }
+        let raw = self.roll_damage(aura.damage_dice, aura.damage_sides);
+        let duration = resolve_damage(
+            DamagePacket::new(raw, DamageType::from(aura.damage_type)),
+            self.effective_player_resistances()
+                .level(DamageType::from(aura.damage_type)),
+        )
+        .applied
+        .saturating_mul(7)
+            / 4;
+        if duration <= 0 || self.player_status_immunities().contains(STATUS_POISON) {
+            return;
+        }
+        let duration = u32::try_from(duration).unwrap_or(u32::MAX);
+        apply_status(
+            &mut self.player.statuses,
+            monster_combat::melee_status(STATUS_POISON, duration, &definition.id),
+        );
+        events.push(DomainEvent::MonsterContactAuraApplied {
+            source_kind_id: definition.id.clone(),
+            status_kind_id: STATUS_POISON.to_owned(),
+            duration,
+        });
     }
 
     pub(super) fn resolve_confusing_strike(
@@ -663,6 +702,7 @@ impl Game {
                     }
                     MeleeBlowEffectDefinition::DrainAttributes { .. }
                     | MeleeBlowEffectDefinition::DrainResource { .. }
+                    | MeleeBlowEffectDefinition::DrainExperience { .. }
                     | MeleeBlowEffectDefinition::Disenchant { .. } => None,
                     MeleeBlowEffectDefinition::Bleeding {
                         duration_dice,

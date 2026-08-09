@@ -1345,14 +1345,24 @@ impl Game {
                 && !self.actor_is_player_aligned(actor)
         };
         let appearance_is_valid = actor.appearance_kind_id.as_deref().is_none_or(|kind_id| {
+            let shapechanger = definition.tags.iter().any(|tag| tag == "shapechanger");
             expected_role == ActorRole::Monster
-                && definition.level >= 10
-                && !definition.tags.iter().any(|tag| tag == "unique")
                 && self.content.actor(kind_id).is_some_and(|appearance| {
-                    appearance
-                        .tags
-                        .iter()
-                        .any(|tag| tag == "shadower-appearance")
+                    if shapechanger {
+                        appearance.role == ActorRole::Monster
+                            && appearance.id != definition.id
+                            && !appearance
+                                .tags
+                                .iter()
+                                .any(|tag| tag == "shadower-appearance")
+                    } else {
+                        definition.level >= 10
+                            && !definition.tags.iter().any(|tag| tag == "unique")
+                            && appearance
+                                .tags
+                                .iter()
+                                .any(|tag| tag == "shadower-appearance")
+                    }
                 })
         });
         if definition.role != expected_role

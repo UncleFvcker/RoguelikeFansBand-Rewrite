@@ -1,6 +1,6 @@
 # RFB 内容数据格式 v1
 
-状态：P0 源格式、JSON Schema、确定性编译器和首个原创内容包已实现；当前内容包已扩展至 1.147.0
+状态：P0 源格式、JSON Schema、确定性编译器和首个原创内容包已实现；当前内容包已扩展至 1.201.0
 
 ## 1. 目标
 
@@ -287,6 +287,8 @@ contract-v198 以 1.194.0 增加窄怪物近战 `disenchant { chancePercent? }`�
 contract-v199 以 1.195.0 为既有 actor `light` 增加默认 false 的 `darkness`，并增加怪物施法 effect `darken-room`。负半径不另建第二套形状模型：同一个正整数 `radius` 描述作用域，`darkness` 只决定它压制永久房间光而不是产生主动光。`darken-room` 必须以非 self 的 position/entity 目标使用，当前不开放给玩家能力。
 
 集成包 1.200.0 同时包含荒野 W0–W5、物品 P1–P3.1 与怪物 P13–P19，共 86 terrain、235 actors、204 items、114 abilities，内容 hash 为 `2273089117afc9e9f5ac4947407da9463d6eb8946fcbf7fb3a1a3f27cebd336b`。
+
+contract-v205 / 包 1.201.0 为 actor 增加可选 `contactAura` 与分配字段 `legacyDungeonIndices`，为 dungeon 增加可选正整数 `legacyIndex`；经验吸取使用窄 `drain-experience` melee effect，变形继续复用既有 `appearanceKindId`。当前包共 86 terrain、241 actors、204 items、116 abilities，内容 hash 为 `e2fd133bcd3f2e3c2fd4d3ab8e25da6c437bfa18bede03d039d55a3db35406ae`。协议 1.147 与 state hash Schema v70 不变。
 
 contract-v83 以 1.75.0 增加 `detect` 能力效果、Echo Pulse 与 Echo Sight；类别/半径、FOV 与隐藏投影筛选、稳定结果顺序、瞬时/持久知识边界由核心定义，持久结果复用 `revealedTerrain`，state hash 升至 Schema v36。
 
