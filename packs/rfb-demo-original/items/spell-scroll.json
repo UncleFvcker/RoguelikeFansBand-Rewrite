@@ -3,11 +3,12 @@
   "formatVersion": 1,
   "id": "demo.item.spell-scroll",
   "nameKey": "item-demo-spell-scroll-name",
-  "appearanceNameKey": "item-demo-unfamiliar-scroll-name",
+  "appearanceNameKey": "item-demo-spell-scroll-appearance",
   "descriptionKey": "item-demo-spell-scroll-description",
   "glyph": "?",
-  "weightTenthsPound": 1,
+  "weightTenthsPound": 5,
   "maxStack": 20,
+  "baseValue": 1000,
   "useAction": {
     "effectProgramId": "demo.effect.increase-spell-learning-capacity"
   },

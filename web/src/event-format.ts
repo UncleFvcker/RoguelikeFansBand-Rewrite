@@ -697,6 +697,12 @@ export function createPresentationFormatter(
           amount: event.args.amount ?? "?",
           nutrition: event.args.nutrition ?? "?",
         });
+      case "item-use-hunger-satisfied":
+      case "item-use-hunger-no-effect":
+        return localization.format(`message-${event.messageKey}` as MessageKey, {
+          target: visibleItemName(event.args.nameKey, event.args.target),
+          nutrition: event.args.nutrition ?? "?",
+        });
       case "item-use-no-effect":
         return localization.format("message-item-use-no-effect", {
           target: visibleItemName(event.args.nameKey, event.args.target),
@@ -710,6 +716,14 @@ export function createPresentationFormatter(
         return localization.format("message-item-use-status-no-effect", {
           target: visibleItemName(event.args.nameKey, event.args.target),
           status: statusName(event.args.status),
+        });
+      case "item-use-status-applied":
+      case "item-use-status-resisted":
+      case "item-use-status-no-new-effect":
+        return localization.format(`message-${event.messageKey}` as MessageKey, {
+          source: visibleItemName(event.args.nameKey, event.args.source),
+          status: statusName(event.args.status),
+          duration: event.args.duration ?? "?",
         });
       case "item-use-blessed":
         return localization.format("message-item-use-blessed", {
@@ -952,6 +966,13 @@ export function createPresentationFormatter(
         return localization.format("message-item-use-resource-no-effect", {
           target: visibleItemName(event.args.nameKey, event.args.target),
           resource: contentName(event.args.resource),
+        });
+      case "item-use-resource-drained":
+      case "item-use-resource-drain-no-effect":
+        return localization.format(`message-${event.messageKey}` as MessageKey, {
+          source: visibleItemName(event.args.nameKey, event.args.source),
+          resource: contentName(event.args.resource),
+          amount: event.args.amount ?? "?",
         });
       case "item-use-identified":
         return localization.format("message-item-use-identified", {
@@ -1479,6 +1500,9 @@ export function createPresentationFormatter(
     }
     if (statusId === "rfb.status.confusion") {
       return localization.format("status-confusion-name");
+    }
+    if (statusId === "rfb.status.hallucination") {
+      return localization.format("status-hallucination-name");
     }
     if (statusId === "rfb.status.blindness") {
       return localization.format("status-blindness-name");

@@ -3,10 +3,10 @@
   "formatVersion": 1,
   "id": "demo.item.flicker-scroll",
   "nameKey": "item-demo-flicker-scroll-name",
-  "appearanceNameKey": "item-demo-unfamiliar-scroll-name",
+  "appearanceNameKey": "item-demo-flicker-scroll-appearance",
   "descriptionKey": "item-demo-flicker-scroll-description",
   "glyph": "?",
-  "weightTenthsPound": 1,
+  "weightTenthsPound": 5,
   "maxStack": 20,
   "baseValue": 15,
   "useAction": {

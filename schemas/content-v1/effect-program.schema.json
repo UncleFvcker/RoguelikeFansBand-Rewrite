@@ -8,6 +8,14 @@
       ],
       "type": "string"
     },
+    "AbilityStatusStackingDefinition": {
+      "enum": [
+        "replace",
+        "extend",
+        "keep-strongest"
+      ],
+      "type": "string"
+    },
     "ActorDamageType": {
       "enum": [
         "physical",
@@ -171,6 +179,19 @@
           "required": [
             "type",
             "amount"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "satisfy-hunger",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
           ],
           "type": "object"
         },
@@ -745,6 +766,56 @@
         {
           "additionalProperties": false,
           "properties": {
+            "durationBonus": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "durationDice": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "durationSides": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "resistanceType": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ActorDamageType"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "stacking": {
+              "$ref": "#/$defs/AbilityStatusStackingDefinition"
+            },
+            "statusKindId": {
+              "type": "string"
+            },
+            "type": {
+              "const": "apply-status",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "statusKindId",
+            "durationDice",
+            "durationSides",
+            "durationBonus",
+            "stacking"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
             "bleedingTicks": {
               "format": "uint32",
               "minimum": 0,
@@ -797,6 +868,40 @@
           "required": [
             "type",
             "amount"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "damageBonus": {
+              "default": 0,
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "damageDice": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "damageSides": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "self-damage",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "damageDice",
+            "damageSides"
           ],
           "type": "object"
         },
@@ -1125,6 +1230,23 @@
             },
             "type": {
               "const": "restore-resource-full",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "resourceId"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "resourceId": {
+              "type": "string"
+            },
+            "type": {
+              "const": "drain-resource-full",
               "type": "string"
             }
           },

@@ -14,5 +14,5 @@
   "bashCheckDifficulty": 18,
   "monsterDoorPower": 1,
   "monsterUnlockToTerrainId": "demo.terrain.door-closed",
-  "tags": ["door", "door-closed", "door-locked"]
+  "tags": ["door", "door-closed", "door-locked", "passage"]
 }

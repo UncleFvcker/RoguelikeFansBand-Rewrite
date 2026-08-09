@@ -114,6 +114,82 @@ impl DemoItemSelectionEntry {
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct DemoItemAdaptationLedger {
+    schema_version: u16,
+    items: Vec<DemoItemAdaptation>,
+}
+
+#[derive(Debug, Clone, Copy, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "kebab-case")]
+enum DemoItemCoverageStatus {
+    Active,
+    MechanicsReady,
+    Blocked,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct DemoItemAdaptation {
+    source_index: u32,
+    source_name: String,
+    source_id: String,
+    item_id: String,
+    status: DemoItemCoverageStatus,
+    #[serde(default)]
+    blocker: Option<String>,
+    contract: String,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct DemoItemPlan {
+    schema_version: u16,
+    baseline: DemoItemPlanBaseline,
+    batches: Vec<DemoItemPlanBatch>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct DemoItemPlanBaseline {
+    source_commit: String,
+    source_items_total: usize,
+    active_source_items: usize,
+    mechanics_ready_source_items: usize,
+    blocked_source_items: usize,
+    formal_items_total: usize,
+    mapped_formal_items: usize,
+    original_formal_items: usize,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct DemoItemPlanBatch {
+    id: String,
+    families: Vec<DemoItemPlanFamily>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct DemoItemPlanFamily {
+    id: String,
+    primary_blockers: Vec<String>,
+    items: Vec<DemoItemPlanEntry>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct DemoItemPlanEntry {
+    source_index: u32,
+    source_name: String,
+    source_id: String,
+    #[serde(default)]
+    secondary_blockers: Vec<String>,
+    #[serde(default)]
+    completed_requirements: Vec<String>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct DemoWildernessSelection {
     schema_version: u16,
     world_id: String,
@@ -578,6 +654,75 @@ pub struct ContentImportReport {
     pub body_slot_gaps: BTreeMap<String, usize>,
     pub item_behavior_gaps: BTreeMap<String, usize>,
     pub skip_reasons: BTreeMap<String, usize>,
+}
+
+#[derive(Debug, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct DemoItemCoverageReport {
+    pub schema_version: u16,
+    pub source_commit: String,
+    pub source_items_total: usize,
+    pub active_source_items: usize,
+    pub mechanics_ready_source_items: usize,
+    pub blocked_source_items: usize,
+    pub formal_items_total: usize,
+    pub mapped_formal_items: usize,
+    pub original_formal_items: usize,
+    pub blocker_counts: BTreeMap<String, usize>,
+    pub mechanics_ready: Vec<DemoItemCoverageEntry>,
+    pub blocked: Vec<DemoItemCoverageEntry>,
+    pub original_item_ids: Vec<String>,
+    pub p3_plan: DemoItemPlanProgress,
+}
+
+#[derive(Debug, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct DemoItemCoverageEntry {
+    pub source_index: u32,
+    pub source_name: String,
+    pub source_id: String,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub blockers: Vec<String>,
+}
+
+#[derive(Debug, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct DemoItemPlanProgress {
+    pub baseline_source_commit: String,
+    pub baseline_matches_current: bool,
+    pub formal_items_delta: i64,
+    pub mapped_rfb_formal_items_delta: i64,
+    pub original_formal_items_delta: i64,
+    pub active_requirements: Vec<String>,
+    pub planned_source_items: usize,
+    pub batches: Vec<DemoItemPlanBatchProgress>,
+}
+
+#[derive(Debug, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct DemoItemPlanBatchProgress {
+    pub id: String,
+    pub rule_families: Vec<String>,
+    pub planned_source_items: usize,
+    pub new_rfb_formal_items: usize,
+    pub new_rfb_formal_item_ids: Vec<String>,
+    pub blocked_to_active: Vec<DemoItemPlanProgressEntry>,
+    pub blocked_to_mechanics_ready: Vec<DemoItemPlanProgressEntry>,
+    pub still_blocked: Vec<DemoItemPlanProgressEntry>,
+    pub unresolved_secondary_blockers: BTreeMap<String, usize>,
+}
+
+#[derive(Debug, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct DemoItemPlanProgressEntry {
+    pub source_index: u32,
+    pub source_name: String,
+    pub source_id: String,
+    pub rule_family: String,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub blockers: Vec<String>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub unresolved_secondary_blockers: Vec<String>,
 }
 
 fn kebab(raw: &str) -> String {
@@ -1608,10 +1753,18 @@ fn item_shape(tval: u16) -> Option<ItemShape> {
             launcher: false,
             behavior_gap: None,
         },
-        75 | 80 => ItemShape {
+        75 => ItemShape {
             slot: None,
             max_stack: 20,
             tags: vec!["consumable", "legacy-import"],
+            melee: false,
+            launcher: false,
+            behavior_gap: Some("consumable-effect"),
+        },
+        80 => ItemShape {
+            slot: None,
+            max_stack: 100,
+            tags: vec!["consumable", "food", "legacy-import"],
             melee: false,
             launcher: false,
             behavior_gap: Some("consumable-effect"),
@@ -1661,6 +1814,25 @@ pub struct LauncherAmmoIndex {
     bolt: Option<String>,
 }
 
+fn launcher_ammo_index(items: &[LegacyItemEntry]) -> LauncherAmmoIndex {
+    let mut ammo = LauncherAmmoIndex::default();
+    for entry in items {
+        if entry.name.is_empty() || entry.name == "something" || entry.glyph.is_none() {
+            continue;
+        }
+        let slot = match entry.tval {
+            16 => &mut ammo.shot,
+            17 => &mut ammo.arrow,
+            18 => &mut ammo.bolt,
+            _ => continue,
+        };
+        if slot.is_none() {
+            *slot = Some(format!("rfb-legacy.item.{}", kebab(&entry.name)));
+        }
+    }
+    ammo
+}
+
 fn launcher_ammo_for(entry: &LegacyItemEntry, ammo: &LauncherAmmoIndex) -> Option<String> {
     match entry.sval {
         2 => ammo.shot.clone(),
@@ -1688,6 +1860,33 @@ struct TerrainCreationImportIds {
     source_terrain_ids: Vec<String>,
     tree_terrain_id: Option<String>,
     wall_terrain_id: Option<String>,
+}
+
+fn terrain_creation_import_ids(terrain: &[LegacyTerrainEntry]) -> TerrainCreationImportIds {
+    let mut ids = TerrainCreationImportIds::default();
+    let mut seen = BTreeMap::new();
+    for entry in terrain {
+        if entry.tag.is_empty() || entry.tag == "NONE" || entry.glyph.is_none() {
+            continue;
+        }
+        let mut id = kebab(&entry.tag);
+        let duplicates = seen.entry(id.clone()).or_insert(0_u32);
+        if *duplicates > 0 {
+            id = format!("{id}-{}", entry.index);
+        }
+        *duplicates += 1;
+        let id = format!("rfb-legacy.terrain.{id}");
+        if entry.flags.iter().any(|flag| flag == "FLOOR") {
+            ids.source_terrain_ids.push(id.clone());
+        }
+        match entry.tag.as_str() {
+            "TREE" => ids.tree_terrain_id = Some(id),
+            "GRANITE" => ids.wall_terrain_id = Some(id),
+            _ => {}
+        }
+    }
+    ids.source_terrain_ids.sort();
+    ids
 }
 
 fn fixed_consumable_use_action_with_terrain(
@@ -1738,6 +1937,9 @@ fn fixed_consumable_use_action_with_terrain(
             "durationTurns": 0
         })
     };
+    if let Some(effect) = p3_1_food_effect(entry) {
+        return Some(serde_json::json!({"effect": effect}));
+    }
     let effect = match (entry.tval, entry.sval) {
         (70, 1) => serde_json::json!({"type": "aggravate-monsters"}),
         (70, 2) => serde_json::json!({"type": "curse-equipped-item", "target": "armor"}),
@@ -1823,6 +2025,7 @@ fn fixed_consumable_use_action_with_terrain(
         (70, 28) => detect("terrain", "trap", true),
         (70, 29) => detect("terrain", "passage", true),
         (70, 30) => detect("actor", "invisible", false),
+        (70, 32) => serde_json::json!({"type": "satisfy-hunger"}),
         (70, 33) => bless(12, 6),
         (70, 34) => bless(24, 12),
         (70, 35) => bless(48, 24),
@@ -1918,6 +2121,14 @@ fn fixed_consumable_use_action_with_terrain(
             "durationDice": 1,
             "durationSides": 25,
             "durationBonus": 15
+        }),
+        (75, 11) => serde_json::json!({
+            "type": "apply-status",
+            "statusKindId": "rfb.status.paralysis",
+            "durationDice": 1,
+            "durationSides": 4,
+            "durationBonus": 0,
+            "stacking": "extend"
         }),
         (75, 29) => serde_json::json!({
             "type": "apply-speed",
@@ -2168,6 +2379,123 @@ fn fixed_consumable_use_action_with_terrain(
     Some(serde_json::json!({"effect": effect}))
 }
 
+fn p3_1_food_effect(entry: &LegacyItemEntry) -> Option<serde_json::Value> {
+    if entry.tval != 80 {
+        return None;
+    }
+    let effect = match entry.sval {
+        0 => Some(serde_json::json!({
+            "type": "apply-poison",
+            "durationDice": 1,
+            "durationSides": 10,
+            "durationBonus": 9
+        })),
+        1 => Some(serde_json::json!({
+            "type": "apply-blindness",
+            "durationDice": 1,
+            "durationSides": 25,
+            "durationBonus": 24
+        })),
+        2 => Some(serde_json::json!({
+            "type": "apply-status",
+            "statusKindId": "rfb.status.fear",
+            "durationDice": 1,
+            "durationSides": 10,
+            "durationBonus": 9,
+            "stacking": "extend"
+        })),
+        3 => Some(serde_json::json!({
+            "type": "apply-status",
+            "statusKindId": "rfb.status.confusion",
+            "durationDice": 1,
+            "durationSides": 10,
+            "durationBonus": 9,
+            "stacking": "extend",
+            "resistanceType": "confusion"
+        })),
+        4 => Some(serde_json::json!({
+            "type": "sequence",
+            "effects": [
+                {
+                    "type": "apply-status",
+                    "statusKindId": "rfb.status.hallucination",
+                    "durationDice": 1,
+                    "durationSides": 25,
+                    "durationBonus": 24,
+                    "stacking": "extend",
+                    "resistanceType": "chaos"
+                },
+                {"type": "drain-resource-full", "resourceId": LEGACY_MANA_RESOURCE_ID}
+            ]
+        })),
+        5 => Some(serde_json::json!({
+            "type": "apply-status",
+            "statusKindId": "rfb.status.paralysis",
+            "durationDice": 1,
+            "durationSides": 4,
+            "durationBonus": 0,
+            "stacking": "extend"
+        })),
+        6 => Some(food_damage_and_drain(6, 6, "strength")),
+        7 => Some(food_damage_and_drain(6, 6, "constitution")),
+        8 => Some(food_damage_and_drain(8, 8, "intelligence")),
+        9 => Some(food_damage_and_drain(8, 8, "wisdom")),
+        10 => Some(food_damage_and_drain(10, 10, "constitution")),
+        11 => Some(food_damage_and_drain(10, 10, "strength")),
+        12 => Some(serde_json::json!({
+            "type": "remove-status",
+            "statusKindId": "rfb.status.poison"
+        })),
+        13 => Some(serde_json::json!({
+            "type": "remove-status",
+            "statusKindId": "rfb.status.blindness"
+        })),
+        14 => Some(serde_json::json!({
+            "type": "remove-status",
+            "statusKindId": "rfb.status.fear"
+        })),
+        15 => Some(serde_json::json!({
+            "type": "remove-status",
+            "statusKindId": "rfb.status.confusion"
+        })),
+        17 => Some(serde_json::json!({
+            "type": "restore-attribute",
+            "attribute": "strength"
+        })),
+        18 => Some(serde_json::json!({
+            "type": "restore-attribute",
+            "attribute": "constitution"
+        })),
+        32 | 33 | 36 => None,
+        _ => return None,
+    };
+    let nutrition = u16::try_from(entry.pval)
+        .ok()
+        .filter(|amount| *amount > 0)?;
+    let nutrition = serde_json::json!({"type": "increase-nutrition", "amount": nutrition});
+    Some(match effect {
+        None => nutrition,
+        Some(mut effect) if effect["type"] == "sequence" => {
+            effect["effects"]
+                .as_array_mut()
+                .expect("food sequence must contain effects")
+                .push(nutrition);
+            effect
+        }
+        Some(effect) => serde_json::json!({"type": "sequence", "effects": [effect, nutrition]}),
+    })
+}
+
+fn food_damage_and_drain(dice: u16, sides: u16, attribute: &str) -> serde_json::Value {
+    serde_json::json!({
+        "type": "sequence",
+        "effects": [
+            {"type": "self-damage", "damageDice": dice, "damageSides": sides},
+            {"type": "drain-attribute", "attribute": attribute}
+        ]
+    })
+}
+
 #[cfg(test)]
 fn fixed_consumable_use_action(entry: &LegacyItemEntry) -> Option<serde_json::Value> {
     fixed_consumable_use_action_with_terrain(entry, None)
@@ -2310,7 +2638,7 @@ fn item_json_with_terrain(
     {
         *report.item_behavior_gaps.entry(gap.to_owned()).or_default() += 1;
     }
-    if entry.tval == 80 {
+    if entry.tval == 80 && p3_1_food_effect(entry).is_none() {
         *report
             .item_behavior_gaps
             .entry("food-nutrition".to_owned())
@@ -7885,21 +8213,7 @@ fn convert_content_from(
     report.items_total = items.len();
     // Prepass: the first shot/arrow/bolt entry becomes the canonical ammo
     // partner for its launcher class.
-    let mut ammo_index = LauncherAmmoIndex::default();
-    for entry in items {
-        if entry.name.is_empty() || entry.name == "something" || entry.glyph.is_none() {
-            continue;
-        }
-        let slot = match entry.tval {
-            16 => &mut ammo_index.shot,
-            17 => &mut ammo_index.arrow,
-            18 => &mut ammo_index.bolt,
-            _ => continue,
-        };
-        if slot.is_none() {
-            *slot = Some(format!("rfb-legacy.item.{}", kebab(&entry.name)));
-        }
-    }
+    let ammo_index = launcher_ammo_index(items);
     for entry in items {
         if entry.name.is_empty() || entry.name == "something" || entry.glyph.is_none() {
             report.items_skipped += 1;
@@ -9430,6 +9744,608 @@ pub fn sync_demo_monsters(
     Ok(files.len())
 }
 
+fn item_coverage_system_blocker(tval: u16) -> Option<&'static str> {
+    match tval {
+        1 => Some("remains-system"),
+        2 => Some("empty-container-system"),
+        3 => Some("misc-tool-system"),
+        4 => Some("instrument-system"),
+        5 => Some("spike-system"),
+        7 => Some("chest-system"),
+        8 => Some("figurine-system"),
+        9 => Some("statue-system"),
+        10 => Some("corpse-system"),
+        11 => Some("capture-ball-system"),
+        39 => Some("light-source-profile"),
+        50 => Some("card-system"),
+        68 => Some("device-book-system"),
+        77 => Some("fuel-refill"),
+        81 => Some("rune-system"),
+        127 => Some("gold-wallet-model"),
+        _ => None,
+    }
+}
+
+fn item_coverage_blockers(
+    entry: &LegacyItemEntry,
+    ammo: &LauncherAmmoIndex,
+    terrain_creation: &TerrainCreationImportIds,
+) -> Vec<String> {
+    let mut report = ContentImportReport::default();
+    item_json_with_terrain(
+        entry,
+        &kebab(&entry.name),
+        ammo,
+        player_ability_book_for_item(entry),
+        Some(terrain_creation),
+        &mut report,
+    );
+    let mut blockers = report.item_behavior_gaps.into_keys().collect::<Vec<_>>();
+    blockers.extend(
+        report
+            .unmapped_item_flags
+            .into_keys()
+            .filter(|flag| {
+                !matches!(
+                    flag.as_str(),
+                    "TOWN" | "NO_SHUFFLE" | "FIXED_FLAVOR" | "PLURAL"
+                )
+            })
+            .map(|flag| format!("item-flag:{flag}")),
+    );
+    if blockers.is_empty()
+        && let Some(blocker) = item_coverage_system_blocker(entry.tval)
+    {
+        blockers.push(blocker.to_owned());
+    }
+    blockers.sort();
+    blockers.dedup();
+    blockers
+}
+
+fn formal_item_ids(items_dir: &Path) -> Result<BTreeSet<String>, LegacyImportError> {
+    if !items_dir.is_dir() {
+        return Err(LegacyImportError::InvalidDemoItemAudit(format!(
+            "formal items directory does not exist: {}",
+            items_dir.display()
+        )));
+    }
+    let mut ids = BTreeSet::new();
+    for entry in fs::read_dir(items_dir)? {
+        let path = entry?.path();
+        if path.extension().and_then(|value| value.to_str()) != Some("json") {
+            continue;
+        }
+        let value: serde_json::Value = serde_json::from_slice(&fs::read(&path)?)?;
+        let id = value["id"].as_str().ok_or_else(|| {
+            LegacyImportError::InvalidDemoItemAudit(format!(
+                "formal item has no string id: {}",
+                path.display()
+            ))
+        })?;
+        if !ids.insert(id.to_owned()) {
+            return Err(LegacyImportError::InvalidDemoItemAudit(format!(
+                "duplicate formal item id {id}"
+            )));
+        }
+    }
+    Ok(ids)
+}
+
+const DEMO_ITEM_ACTIVE_REQUIREMENTS: [&str; 5] = [
+    "behavior",
+    "authoritative-zh-name",
+    "source-identity",
+    "flavor",
+    "acquisition",
+];
+
+fn count_delta(current: usize, baseline: usize) -> i64 {
+    current as i64 - baseline as i64
+}
+
+#[allow(clippy::too_many_arguments)]
+fn build_demo_item_plan_progress(
+    source_commit: &str,
+    plan: &DemoItemPlan,
+    by_index: &BTreeMap<u32, &LegacyItemEntry>,
+    active_sources: &BTreeSet<u32>,
+    mechanics_ready: &[DemoItemCoverageEntry],
+    blocked: &[DemoItemCoverageEntry],
+    formal_item_ids_by_source: &BTreeMap<u32, BTreeSet<String>>,
+    source_items_total: usize,
+    formal_items_total: usize,
+    mapped_formal_items: usize,
+    original_formal_items: usize,
+) -> Result<DemoItemPlanProgress, LegacyImportError> {
+    if plan.schema_version != 1 || plan.batches.is_empty() {
+        return Err(LegacyImportError::InvalidDemoItemAudit(
+            "P3 plan must use schemaVersion 1 and contain at least one batch".to_owned(),
+        ));
+    }
+    let baseline = &plan.baseline;
+    if baseline.source_commit.trim().is_empty()
+        || baseline.source_items_total
+            != baseline.active_source_items
+                + baseline.mechanics_ready_source_items
+                + baseline.blocked_source_items
+        || baseline.formal_items_total
+            != baseline.mapped_formal_items + baseline.original_formal_items
+    {
+        return Err(LegacyImportError::InvalidDemoItemAudit(
+            "P3 plan baseline totals are inconsistent".to_owned(),
+        ));
+    }
+
+    let mechanics_ready_by_index = mechanics_ready
+        .iter()
+        .map(|entry| (entry.source_index, entry))
+        .collect::<BTreeMap<_, _>>();
+    let blocked_by_index = blocked
+        .iter()
+        .map(|entry| (entry.source_index, entry))
+        .collect::<BTreeMap<_, _>>();
+    let required = DEMO_ITEM_ACTIVE_REQUIREMENTS
+        .into_iter()
+        .collect::<BTreeSet<_>>();
+    let mut baseline_matches_current = source_commit == baseline.source_commit
+        && source_items_total == baseline.source_items_total
+        && active_sources.len() == baseline.active_source_items
+        && mechanics_ready.len() == baseline.mechanics_ready_source_items
+        && blocked.len() == baseline.blocked_source_items
+        && formal_items_total == baseline.formal_items_total
+        && mapped_formal_items == baseline.mapped_formal_items
+        && original_formal_items == baseline.original_formal_items;
+    let mut batch_ids = BTreeSet::new();
+    let mut planned_sources = BTreeSet::new();
+    let mut batches = Vec::new();
+
+    for batch in &plan.batches {
+        if batch.id.trim().is_empty()
+            || !batch_ids.insert(batch.id.as_str())
+            || batch.families.is_empty()
+        {
+            return Err(LegacyImportError::InvalidDemoItemAudit(format!(
+                "P3 plan has an empty or duplicate batch {}",
+                batch.id
+            )));
+        }
+        let mut family_ids = BTreeSet::new();
+        let mut rule_families = Vec::new();
+        let mut new_rfb_formal_item_ids = BTreeSet::new();
+        let mut blocked_to_active = Vec::new();
+        let mut blocked_to_mechanics_ready = Vec::new();
+        let mut still_blocked = Vec::new();
+        let mut unresolved_secondary_blockers = BTreeMap::new();
+        let mut batch_item_count = 0;
+
+        for family in &batch.families {
+            if family.id.trim().is_empty()
+                || !family_ids.insert(family.id.as_str())
+                || family.primary_blockers.is_empty()
+                || family.items.is_empty()
+            {
+                return Err(LegacyImportError::InvalidDemoItemAudit(format!(
+                    "P3 batch {} has an empty or duplicate rule family {}",
+                    batch.id, family.id
+                )));
+            }
+            let primary_blockers = family
+                .primary_blockers
+                .iter()
+                .map(String::as_str)
+                .collect::<BTreeSet<_>>();
+            if primary_blockers.len() != family.primary_blockers.len()
+                || primary_blockers.iter().any(|blocker| blocker.is_empty())
+            {
+                return Err(LegacyImportError::InvalidDemoItemAudit(format!(
+                    "P3 rule family {} has empty or duplicate primary blockers",
+                    family.id
+                )));
+            }
+            rule_families.push(family.id.clone());
+
+            for item in &family.items {
+                batch_item_count += 1;
+                if !planned_sources.insert(item.source_index) {
+                    return Err(LegacyImportError::InvalidDemoItemAudit(format!(
+                        "P3 source index {} is planned more than once",
+                        item.source_index
+                    )));
+                }
+                let source = by_index.get(&item.source_index).ok_or_else(|| {
+                    LegacyImportError::InvalidDemoItemAudit(format!(
+                        "P3 plan names unknown source index {}",
+                        item.source_index
+                    ))
+                })?;
+                if source.name != item.source_name || kebab(&source.name) != item.source_id {
+                    return Err(LegacyImportError::InvalidDemoItemAudit(format!(
+                        "P3 source index {} does not match name/id {} / {}",
+                        item.source_index, item.source_name, item.source_id
+                    )));
+                }
+                let secondary_blockers = item
+                    .secondary_blockers
+                    .iter()
+                    .map(String::as_str)
+                    .collect::<BTreeSet<_>>();
+                if secondary_blockers.len() != item.secondary_blockers.len()
+                    || secondary_blockers.iter().any(|blocker| blocker.is_empty())
+                    || !primary_blockers.is_disjoint(&secondary_blockers)
+                {
+                    return Err(LegacyImportError::InvalidDemoItemAudit(format!(
+                        "P3 source index {} has invalid secondary blockers",
+                        item.source_index
+                    )));
+                }
+                let completed_requirements = item
+                    .completed_requirements
+                    .iter()
+                    .map(String::as_str)
+                    .collect::<BTreeSet<_>>();
+                if completed_requirements.len() != item.completed_requirements.len()
+                    || !completed_requirements.is_subset(&required)
+                {
+                    return Err(LegacyImportError::InvalidDemoItemAudit(format!(
+                        "P3 source index {} has unknown or duplicate completion requirements",
+                        item.source_index
+                    )));
+                }
+
+                let (blockers, progress_target) = if active_sources.contains(&item.source_index) {
+                    if completed_requirements != required {
+                        let missing = required
+                            .difference(&completed_requirements)
+                            .copied()
+                            .collect::<Vec<_>>()
+                            .join(", ");
+                        return Err(LegacyImportError::InvalidDemoItemAudit(format!(
+                            "active P3 source index {} is missing completion requirements: {missing}",
+                            item.source_index
+                        )));
+                    }
+                    let ids = formal_item_ids_by_source
+                        .get(&item.source_index)
+                        .ok_or_else(|| {
+                            LegacyImportError::InvalidDemoItemAudit(format!(
+                                "active P3 source index {} has no mapped formal item",
+                                item.source_index
+                            ))
+                        })?;
+                    new_rfb_formal_item_ids.extend(ids.iter().cloned());
+                    (Vec::new(), &mut blocked_to_active)
+                } else if mechanics_ready_by_index.contains_key(&item.source_index) {
+                    (Vec::new(), &mut blocked_to_mechanics_ready)
+                } else {
+                    let blockers = blocked_by_index
+                        .get(&item.source_index)
+                        .expect("coverage partitions every source")
+                        .blockers
+                        .clone();
+                    (blockers, &mut still_blocked)
+                };
+                let unresolved = blockers
+                    .iter()
+                    .filter(|blocker| !primary_blockers.contains(blocker.as_str()))
+                    .cloned()
+                    .collect::<Vec<_>>();
+                for blocker in &unresolved {
+                    *unresolved_secondary_blockers
+                        .entry(blocker.clone())
+                        .or_default() += 1;
+                }
+                let expected = primary_blockers
+                    .union(&secondary_blockers)
+                    .copied()
+                    .collect::<BTreeSet<_>>();
+                let actual = blockers.iter().map(String::as_str).collect::<BTreeSet<_>>();
+                if actual != expected {
+                    baseline_matches_current = false;
+                }
+                progress_target.push(DemoItemPlanProgressEntry {
+                    source_index: item.source_index,
+                    source_name: item.source_name.clone(),
+                    source_id: item.source_id.clone(),
+                    rule_family: family.id.clone(),
+                    blockers,
+                    unresolved_secondary_blockers: unresolved,
+                });
+            }
+        }
+        batches.push(DemoItemPlanBatchProgress {
+            id: batch.id.clone(),
+            rule_families,
+            planned_source_items: batch_item_count,
+            new_rfb_formal_items: new_rfb_formal_item_ids.len(),
+            new_rfb_formal_item_ids: new_rfb_formal_item_ids.into_iter().collect(),
+            blocked_to_active,
+            blocked_to_mechanics_ready,
+            still_blocked,
+            unresolved_secondary_blockers,
+        });
+    }
+
+    Ok(DemoItemPlanProgress {
+        baseline_source_commit: baseline.source_commit.clone(),
+        baseline_matches_current,
+        formal_items_delta: count_delta(formal_items_total, baseline.formal_items_total),
+        mapped_rfb_formal_items_delta: count_delta(
+            mapped_formal_items,
+            baseline.mapped_formal_items,
+        ),
+        original_formal_items_delta: count_delta(
+            original_formal_items,
+            baseline.original_formal_items,
+        ),
+        active_requirements: DEMO_ITEM_ACTIVE_REQUIREMENTS
+            .into_iter()
+            .map(str::to_owned)
+            .collect(),
+        planned_source_items: planned_sources.len(),
+        batches,
+    })
+}
+
+fn build_demo_item_coverage_report(
+    source_commit: &str,
+    entries: &[LegacyItemEntry],
+    selection: &DemoItemSelection,
+    adaptations: &DemoItemAdaptationLedger,
+    plan: &DemoItemPlan,
+    formal_ids: &BTreeSet<String>,
+    terrain_creation: &TerrainCreationImportIds,
+) -> Result<DemoItemCoverageReport, LegacyImportError> {
+    if selection.schema_version != 1 || selection.items.is_empty() {
+        return Err(LegacyImportError::InvalidDemoItemAudit(
+            "selection must use schemaVersion 1 and contain at least one item".to_owned(),
+        ));
+    }
+    if adaptations.schema_version != 1 {
+        return Err(LegacyImportError::InvalidDemoItemAudit(
+            "adaptation ledger must use schemaVersion 1".to_owned(),
+        ));
+    }
+    let by_index = entries
+        .iter()
+        .filter(|entry| {
+            !entry.name.is_empty() && entry.name != "something" && entry.glyph.is_some()
+        })
+        .map(|entry| (entry.index, entry))
+        .collect::<BTreeMap<_, _>>();
+    let mut active_sources = BTreeSet::new();
+    let mut mapped_formal_ids = BTreeSet::new();
+    let mut formal_item_ids_by_source = BTreeMap::<u32, BTreeSet<String>>::new();
+    let mut selected_ids = BTreeSet::new();
+    for selected in &selection.items {
+        if !active_sources.insert(selected.source_index) || !selected_ids.insert(&selected.id) {
+            return Err(LegacyImportError::InvalidDemoItemAudit(format!(
+                "duplicate selected item {} or source index {}",
+                selected.id, selected.source_index
+            )));
+        }
+        let source = by_index.get(&selected.source_index).ok_or_else(|| {
+            LegacyImportError::InvalidDemoItemAudit(format!(
+                "unknown selected source index {}",
+                selected.source_index
+            ))
+        })?;
+        let source_id = kebab(&source.name);
+        if source_id != selected.expected_source_id() {
+            return Err(LegacyImportError::InvalidDemoItemAudit(format!(
+                "selected source index {} is {source_id}, expected {}",
+                selected.source_index,
+                selected.expected_source_id()
+            )));
+        }
+        let item_id = format!("demo.item.{}", selected.id);
+        if !formal_ids.contains(&item_id) {
+            return Err(LegacyImportError::InvalidDemoItemAudit(format!(
+                "selected formal item {item_id} does not exist"
+            )));
+        }
+        formal_item_ids_by_source
+            .entry(selected.source_index)
+            .or_default()
+            .insert(item_id.clone());
+        mapped_formal_ids.insert(item_id);
+    }
+
+    let selected_sources = active_sources.clone();
+    let mut adaptation_item_ids = BTreeSet::new();
+    let mut adaptation_statuses = BTreeMap::new();
+    let mut explicit_blockers = BTreeMap::new();
+    for adaptation in &adaptations.items {
+        if selected_sources.contains(&adaptation.source_index) {
+            return Err(LegacyImportError::InvalidDemoItemAudit(format!(
+                "source index {} appears in both selection and adaptation ledger",
+                adaptation.source_index
+            )));
+        }
+        if !adaptation_item_ids.insert(&adaptation.item_id) {
+            return Err(LegacyImportError::InvalidDemoItemAudit(format!(
+                "duplicate adaptation item id {}",
+                adaptation.item_id
+            )));
+        }
+        let source = by_index.get(&adaptation.source_index).ok_or_else(|| {
+            LegacyImportError::InvalidDemoItemAudit(format!(
+                "unknown adaptation source index {}",
+                adaptation.source_index
+            ))
+        })?;
+        if source.name != adaptation.source_name || kebab(&source.name) != adaptation.source_id {
+            return Err(LegacyImportError::InvalidDemoItemAudit(format!(
+                "adaptation source index {} does not match name/id {} / {}",
+                adaptation.source_index, adaptation.source_name, adaptation.source_id
+            )));
+        }
+        if adaptation.contract.trim().is_empty() {
+            return Err(LegacyImportError::InvalidDemoItemAudit(format!(
+                "adaptation {} has no contract",
+                adaptation.item_id
+            )));
+        }
+        if let Some(previous) =
+            adaptation_statuses.insert(adaptation.source_index, adaptation.status)
+            && previous != adaptation.status
+        {
+            return Err(LegacyImportError::InvalidDemoItemAudit(format!(
+                "source index {} has conflicting adaptation statuses",
+                adaptation.source_index
+            )));
+        }
+        match adaptation.status {
+            DemoItemCoverageStatus::Active => {
+                if adaptation.blocker.is_some() || !formal_ids.contains(&adaptation.item_id) {
+                    return Err(LegacyImportError::InvalidDemoItemAudit(format!(
+                        "active adaptation {} must exist and have no blocker",
+                        adaptation.item_id
+                    )));
+                }
+                active_sources.insert(adaptation.source_index);
+                formal_item_ids_by_source
+                    .entry(adaptation.source_index)
+                    .or_default()
+                    .insert(adaptation.item_id.clone());
+                mapped_formal_ids.insert(adaptation.item_id.clone());
+            }
+            DemoItemCoverageStatus::MechanicsReady => {
+                if adaptation.blocker.is_some() || formal_ids.contains(&adaptation.item_id) {
+                    return Err(LegacyImportError::InvalidDemoItemAudit(format!(
+                        "mechanics-ready adaptation {} must be absent and have no blocker",
+                        adaptation.item_id
+                    )));
+                }
+            }
+            DemoItemCoverageStatus::Blocked => {
+                let blocker = adaptation
+                    .blocker
+                    .as_deref()
+                    .filter(|value| !value.is_empty())
+                    .ok_or_else(|| {
+                        LegacyImportError::InvalidDemoItemAudit(format!(
+                            "blocked adaptation {} must name a blocker",
+                            adaptation.item_id
+                        ))
+                    })?;
+                if formal_ids.contains(&adaptation.item_id) {
+                    return Err(LegacyImportError::InvalidDemoItemAudit(format!(
+                        "blocked adaptation {} must not exist in the formal pack",
+                        adaptation.item_id
+                    )));
+                }
+                explicit_blockers.insert(adaptation.source_index, blocker.to_owned());
+            }
+        }
+    }
+
+    let ammo = launcher_ammo_index(entries);
+    let mut mechanics_ready = Vec::new();
+    let mut blocked = Vec::new();
+    let mut blocker_counts = BTreeMap::new();
+    for entry in by_index.values() {
+        if active_sources.contains(&entry.index) {
+            continue;
+        }
+        let blockers = match adaptation_statuses.get(&entry.index) {
+            Some(DemoItemCoverageStatus::MechanicsReady) => Vec::new(),
+            Some(DemoItemCoverageStatus::Blocked) => vec![explicit_blockers[&entry.index].clone()],
+            Some(DemoItemCoverageStatus::Active) => unreachable!("active sources were skipped"),
+            None => item_coverage_blockers(entry, &ammo, terrain_creation),
+        };
+        let coverage = DemoItemCoverageEntry {
+            source_index: entry.index,
+            source_name: entry.name.clone(),
+            source_id: kebab(&entry.name),
+            blockers: blockers.clone(),
+        };
+        if blockers.is_empty() {
+            mechanics_ready.push(coverage);
+        } else {
+            for blocker in blockers {
+                *blocker_counts.entry(blocker).or_default() += 1;
+            }
+            blocked.push(coverage);
+        }
+    }
+    mechanics_ready.sort_by_key(|entry| entry.source_index);
+    blocked.sort_by_key(|entry| entry.source_index);
+    let original_item_ids = formal_ids
+        .difference(&mapped_formal_ids)
+        .cloned()
+        .collect::<Vec<_>>();
+    let p3_plan = build_demo_item_plan_progress(
+        source_commit,
+        plan,
+        &by_index,
+        &active_sources,
+        &mechanics_ready,
+        &blocked,
+        &formal_item_ids_by_source,
+        by_index.len(),
+        formal_ids.len(),
+        mapped_formal_ids.len(),
+        original_item_ids.len(),
+    )?;
+    let report = DemoItemCoverageReport {
+        schema_version: 1,
+        source_commit: source_commit.to_owned(),
+        source_items_total: by_index.len(),
+        active_source_items: active_sources.len(),
+        mechanics_ready_source_items: mechanics_ready.len(),
+        blocked_source_items: blocked.len(),
+        formal_items_total: formal_ids.len(),
+        mapped_formal_items: mapped_formal_ids.len(),
+        original_formal_items: original_item_ids.len(),
+        blocker_counts,
+        mechanics_ready,
+        blocked,
+        original_item_ids,
+        p3_plan,
+    };
+    debug_assert_eq!(
+        report.source_items_total,
+        report.active_source_items
+            + report.mechanics_ready_source_items
+            + report.blocked_source_items
+    );
+    Ok(report)
+}
+
+pub fn audit_demo_items(
+    source: &Path,
+    selection_path: &Path,
+    adaptations_path: &Path,
+    plan_path: &Path,
+    items_dir: &Path,
+) -> Result<DemoItemCoverageReport, LegacyImportError> {
+    let source_commit = resolve_legacy_content_commit(source)?;
+    let terrain = parse_f_info(&read_legacy_object_at(
+        source,
+        &source_commit,
+        F_INFO_SOURCE,
+    )?)?;
+    let entries = parse_k_info(&read_legacy_object_at(
+        source,
+        &source_commit,
+        K_INFO_SOURCE,
+    )?)?;
+    let selection: DemoItemSelection = serde_json::from_slice(&fs::read(selection_path)?)?;
+    let adaptations: DemoItemAdaptationLedger =
+        serde_json::from_slice(&fs::read(adaptations_path)?)?;
+    let plan: DemoItemPlan = serde_json::from_slice(&fs::read(plan_path)?)?;
+    build_demo_item_coverage_report(
+        &source_commit,
+        &entries,
+        &selection,
+        &adaptations,
+        &plan,
+        &formal_item_ids(items_dir)?,
+        &terrain_creation_import_ids(&terrain),
+    )
+}
+
 pub fn sync_demo_items(
     source: &Path,
     selection_path: &Path,
@@ -10658,6 +11574,145 @@ W:5:0:0:150:80
     }
 
     #[test]
+    fn demo_item_coverage_deduplicates_source_items_and_counts_originals() {
+        let entries = vec![
+            LegacyItemEntry {
+                index: 1,
+                name: "Dagger".to_owned(),
+                glyph: Some('|'),
+                tval: 23,
+                ..LegacyItemEntry::default()
+            },
+            LegacyItemEntry {
+                index: 2,
+                name: "Staff".to_owned(),
+                glyph: Some('_'),
+                tval: 55,
+                ..LegacyItemEntry::default()
+            },
+            LegacyItemEntry {
+                index: 3,
+                name: "Slowness".to_owned(),
+                glyph: Some('!'),
+                tval: 75,
+                sval: 4,
+                ..LegacyItemEntry::default()
+            },
+            LegacyItemEntry {
+                index: 4,
+                name: "Unmapped Book".to_owned(),
+                glyph: Some('?'),
+                tval: 90,
+                ..LegacyItemEntry::default()
+            },
+        ];
+        let selection = DemoItemSelection {
+            schema_version: 1,
+            items: vec![DemoItemSelectionEntry {
+                source_index: 1,
+                source_id: None,
+                id: "dagger".to_owned(),
+            }],
+        };
+        let adaptations = DemoItemAdaptationLedger {
+            schema_version: 1,
+            items: ["detect-staff", "identify-staff"]
+                .into_iter()
+                .map(|id| DemoItemAdaptation {
+                    source_index: 2,
+                    source_name: "Staff".to_owned(),
+                    source_id: "staff".to_owned(),
+                    item_id: format!("demo.item.{id}"),
+                    status: DemoItemCoverageStatus::Active,
+                    blocker: None,
+                    contract: "contract-test".to_owned(),
+                })
+                .collect(),
+        };
+        let formal_ids = [
+            "demo.item.dagger",
+            "demo.item.detect-staff",
+            "demo.item.identify-staff",
+            "demo.item.original",
+        ]
+        .into_iter()
+        .map(str::to_owned)
+        .collect();
+        let mut plan = DemoItemPlan {
+            schema_version: 1,
+            baseline: DemoItemPlanBaseline {
+                source_commit: "baseline-commit".to_owned(),
+                source_items_total: 4,
+                active_source_items: 1,
+                mechanics_ready_source_items: 1,
+                blocked_source_items: 2,
+                formal_items_total: 2,
+                mapped_formal_items: 1,
+                original_formal_items: 1,
+            },
+            batches: vec![DemoItemPlanBatch {
+                id: "p3.1".to_owned(),
+                families: vec![DemoItemPlanFamily {
+                    id: "devices".to_owned(),
+                    primary_blockers: vec!["device-system".to_owned()],
+                    items: vec![DemoItemPlanEntry {
+                        source_index: 2,
+                        source_name: "Staff".to_owned(),
+                        source_id: "staff".to_owned(),
+                        secondary_blockers: Vec::new(),
+                        completed_requirements: Vec::new(),
+                    }],
+                }],
+            }],
+        };
+
+        let error = build_demo_item_coverage_report(
+            "test-commit",
+            &entries,
+            &selection,
+            &adaptations,
+            &plan,
+            &formal_ids,
+            &TerrainCreationImportIds::default(),
+        )
+        .expect_err("active planned item should require completion evidence");
+        assert!(
+            error
+                .to_string()
+                .contains("missing completion requirements")
+        );
+        plan.batches[0].families[0].items[0].completed_requirements = DEMO_ITEM_ACTIVE_REQUIREMENTS
+            .into_iter()
+            .map(str::to_owned)
+            .collect();
+
+        let report = build_demo_item_coverage_report(
+            "test-commit",
+            &entries,
+            &selection,
+            &adaptations,
+            &plan,
+            &formal_ids,
+            &TerrainCreationImportIds::default(),
+        )
+        .expect("coverage should be valid");
+
+        assert_eq!(report.source_items_total, 4);
+        assert_eq!(report.active_source_items, 2);
+        assert_eq!(report.mechanics_ready_source_items, 1);
+        assert_eq!(report.blocked_source_items, 1);
+        assert_eq!(report.mapped_formal_items, 3);
+        assert_eq!(report.original_formal_items, 1);
+        assert_eq!(report.blocker_counts["book-system"], 1);
+        assert_eq!(report.original_item_ids, ["demo.item.original"]);
+        assert_eq!(report.p3_plan.formal_items_delta, 2);
+        assert_eq!(report.p3_plan.mapped_rfb_formal_items_delta, 2);
+        assert_eq!(report.p3_plan.original_formal_items_delta, 0);
+        assert_eq!(report.p3_plan.batches[0].new_rfb_formal_items, 2);
+        assert_eq!(report.p3_plan.batches[0].blocked_to_active.len(), 1);
+    }
+
+    #[test]
     fn item_effect_program_extraction_emits_flat_typed_references() {
         let mut items = vec![
             (
@@ -11486,6 +12541,48 @@ F:BRAND_VAMP | HOLD_LIFE
                 food_nutrition
             );
         }
+    }
+
+    #[test]
+    fn p3_1_foods_apply_special_effects_before_source_nutrition() {
+        let harmful = fixed_consumable_use_action(&LegacyItemEntry {
+            tval: 80,
+            sval: 6,
+            pval: 500,
+            ..LegacyItemEntry::default()
+        })
+        .expect("weakness food should map");
+        assert_eq!(
+            harmful["effect"]["effects"],
+            serde_json::json!([
+                {"type": "self-damage", "damageDice": 6, "damageSides": 6},
+                {"type": "drain-attribute", "attribute": "strength"},
+                {"type": "increase-nutrition", "amount": 500}
+            ])
+        );
+
+        let plain = fixed_consumable_use_action(&LegacyItemEntry {
+            tval: 80,
+            sval: 33,
+            pval: 1500,
+            ..LegacyItemEntry::default()
+        })
+        .expect("venison should map");
+        assert_eq!(
+            plain["effect"],
+            serde_json::json!({"type": "increase-nutrition", "amount": 1500})
+        );
+
+        assert!(
+            p3_1_food_effect(&LegacyItemEntry {
+                tval: 80,
+                sval: 40,
+                pval: 15_000,
+                ..LegacyItemEntry::default()
+            })
+            .is_none(),
+            "Elvish Waybread stays in P3.8 until its complete semantics exist"
+        );
     }
 
     #[test]

@@ -1,0 +1,16 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/effect-program.schema.json",
+  "formatVersion": 1,
+  "id": "demo.effect.door-stair-location-scroll",
+  "input": "self",
+  "steps": [
+    {
+      "category": "passage",
+      "persistent": true,
+      "radius": 8,
+      "subject": "terrain",
+      "throughWalls": true,
+      "type": "detect"
+    }
+  ]
+}

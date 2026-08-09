@@ -3,11 +3,12 @@
   "formatVersion": 1,
   "id": "demo.item.aether-rupture-scroll",
   "nameKey": "item-demo-aether-rupture-scroll-name",
-  "appearanceNameKey": "item-demo-unfamiliar-scroll-name",
+  "appearanceNameKey": "item-demo-aether-rupture-scroll-appearance",
   "descriptionKey": "item-demo-aether-rupture-scroll-description",
   "glyph": "?",
-  "weightTenthsPound": 1,
+  "weightTenthsPound": 5,
   "maxStack": 20,
+  "baseValue": 10000,
   "useAction": {
     "effectProgramId": "demo.effect.aether-rupture"
   },

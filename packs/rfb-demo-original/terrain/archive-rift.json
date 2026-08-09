@@ -7,5 +7,5 @@
   "glyph": ">",
   "walkable": true,
   "blocksSight": false,
-  "tags": ["stairs-down", "dungeon-entry"]
+  "tags": ["stairs-down", "dungeon-entry", "passage"]
 }

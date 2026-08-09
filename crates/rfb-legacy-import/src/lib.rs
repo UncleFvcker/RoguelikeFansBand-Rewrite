@@ -418,6 +418,8 @@ pub enum LegacyImportError {
     LegacyGit(String),
     #[error("invalid demo item selection: {0}")]
     InvalidDemoItemSelection(String),
+    #[error("invalid demo item coverage audit: {0}")]
+    InvalidDemoItemAudit(String),
     #[error("invalid demo monster selection: {0}")]
     InvalidDemoMonsterSelection(String),
     #[error("invalid demo wilderness selection: {0}")]

@@ -51,7 +51,22 @@
     { "itemKindId": "demo.item.clamor-scroll", "weight": 1, "quantity": 1, "minDepth": 5, "maxDepth": 9 },
     { "itemKindId": "demo.item.homeward-scroll", "weight": 1, "quantity": 1, "minDepth": 5, "maxDepth": 9 },
     { "itemKindId": "demo.item.short-sword", "weight": 1, "quantity": 1, "minDepth": 5, "maxDepth": 9 },
-    { "itemKindId": "demo.item.trapfinding-scroll", "weight": 1, "quantity": 1, "minDepth": 5, "maxDepth": 9 }
+    { "itemKindId": "demo.item.trapfinding-scroll", "weight": 1, "quantity": 1, "minDepth": 5, "maxDepth": 9 },
+    { "itemKindId": "demo.item.flicker-scroll", "weight": 1, "quantity": 1, "minDepth": 1, "maxDepth": 9 },
+    { "itemKindId": "demo.item.detect-invisible-scroll", "weight": 1, "quantity": 1, "minDepth": 1, "maxDepth": 9 },
+    { "itemKindId": "demo.item.benediction-scroll", "weight": 1, "quantity": 1, "minDepth": 1, "maxDepth": 9 },
+    { "itemKindId": "demo.item.boldness-potion", "weight": 1, "quantity": 1, "minDepth": 1, "maxDepth": 9 },
+    { "itemKindId": "demo.item.vigor-potion", "weight": 1, "quantity": 1, "minDepth": 1, "maxDepth": 9 },
+    { "itemKindId": "demo.item.door-stair-location-scroll", "weight": 1, "quantity": 1, "minDepth": 5, "maxDepth": 9 },
+    { "itemKindId": "demo.item.confusing-touch-scroll", "weight": 1, "quantity": 1, "minDepth": 5, "maxDepth": 9 },
+    { "itemKindId": "demo.item.clumsiness-potion", "weight": 1, "quantity": 1, "minDepth": 5, "maxDepth": 9 },
+    { "itemKindId": "demo.item.slime-mold", "weight": 1, "quantity": 1, "minDepth": 1, "maxDepth": 9 },
+    { "itemKindId": "demo.item.sleep-potion", "weight": 1, "quantity": 1, "minDepth": 0, "maxDepth": 9 },
+    { "itemKindId": "demo.item.poison-mushroom", "weight": 1, "quantity": 1, "minDepth": 5, "maxDepth": 9 },
+    { "itemKindId": "demo.item.blindness-mushroom", "weight": 1, "quantity": 1, "minDepth": 5, "maxDepth": 9 },
+    { "itemKindId": "demo.item.paranoia-mushroom", "weight": 1, "quantity": 1, "minDepth": 5, "maxDepth": 9 },
+    { "itemKindId": "demo.item.confusion-mushroom", "weight": 1, "quantity": 1, "minDepth": 5, "maxDepth": 9 },
+    { "itemKindId": "demo.item.satisfy-hunger-scroll", "weight": 1, "quantity": 1, "minDepth": 5, "maxDepth": 9 }
   ],
   "qualityWeights": [
     { "quality": "ordinary", "weight": 1 }

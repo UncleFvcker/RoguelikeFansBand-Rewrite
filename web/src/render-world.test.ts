@@ -103,11 +103,58 @@ test("remembered and hidden cells do not expose current occupants", () => {
   assert.equal(remembered.actorKindId, undefined);
 });
 
+test("hallucination scrambles occupants deterministically without randomness", () => {
+  const snapshot = snapshotFixture();
+  snapshot.worldTick = 10;
+  snapshot.width = 3;
+  snapshot.cells = [
+    cell(0, 0, "demo.actor.player.1", "demo.item.shard.1"),
+    cell(1, 0, "demo.actor.rat.1", "demo.item.ration.1"),
+    cell(2, 0, "demo.actor.orc.1"),
+  ];
+  snapshot.visualCells = [
+    visual(0, 0, "visible", 0xffffff, 100),
+    visual(1, 0, "visible", 0xffffff, 100),
+    visual(2, 0, "visible", 0xffffff, 100),
+  ];
+  snapshot.player.statuses = [{ kindId: "rfb.status.hallucination" }];
+  snapshot.entities = [
+    { id: "demo.actor.rat.1", kindId: "demo.actor.rat" },
+    { id: "demo.actor.orc.1", kindId: "demo.actor.orc" },
+  ];
+  snapshot.items = [
+    { id: "demo.item.shard.1", kindId: "demo.item.shard" },
+    { id: "demo.item.ration.1", kindId: "demo.item.ration" },
+  ];
+
+  const first = new RenderWorld(3, 1).applySnapshot(snapshot);
+  const repeated = new RenderWorld(3, 1).applySnapshot(snapshot);
+  assert.deepEqual(repeated, first);
+  assert.equal(first[0].actorKindId, "demo.actor.explorer");
+
+  const world = new RenderWorld(3, 1);
+  world.applySnapshot(snapshot);
+  const next = world.applyUpdate({
+    ...snapshot,
+    baseRevision: 0,
+    revision: 1,
+    commandSeq: 1,
+    worldTick: 11,
+    events: [],
+    changedCells: [],
+    changedVisualCells: [],
+    removedEntities: [],
+  });
+  assert.equal(next.length, 3);
+  assert.notEqual(next[1].itemKindId, first[1].itemKindId);
+});
+
 function snapshotFixture() {
   return {
     protocolVersion: "1.5",
     revision: 0,
     turn: 0,
+    worldTick: 0,
     lastCommandSeq: 0,
     width: 2,
     height: 1,
@@ -175,6 +222,7 @@ function player(x, y) {
     position: { x, y },
     hp: 10,
     maxHp: 10,
+    statuses: [],
   };
 }
 

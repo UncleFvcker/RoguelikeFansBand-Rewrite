@@ -7,8 +7,9 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use super::{
-    AbilityDetectSubjectDefinition, AbilityTargetDefinition, ActorDamageType, ActorResistanceLevel,
-    EquipmentBonuses, ItemAttributeDefinition, StatModifiers,
+    AbilityDetectSubjectDefinition, AbilityStatusStackingDefinition, AbilityTargetDefinition,
+    ActorDamageType, ActorResistanceLevel, EquipmentBonuses, ItemAttributeDefinition,
+    StatModifiers,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
@@ -241,6 +242,7 @@ pub enum ItemUseEffectDefinition {
     IncreaseNutrition {
         amount: u16,
     },
+    SatisfyHunger,
     Heal {
         amount: u32,
     },
@@ -328,6 +330,15 @@ pub enum ItemUseEffectDefinition {
         duration_sides: u32,
         duration_bonus: u32,
     },
+    ApplyStatus {
+        status_kind_id: String,
+        duration_dice: u16,
+        duration_sides: u32,
+        duration_bonus: u32,
+        stacking: AbilityStatusStackingDefinition,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        resistance_type: Option<ActorDamageType>,
+    },
     ApplyDetonation {
         damage_dice: u16,
         damage_sides: u16,
@@ -336,6 +347,12 @@ pub enum ItemUseEffectDefinition {
     },
     SelfLifeLoss {
         amount: u32,
+    },
+    SelfDamage {
+        damage_dice: u16,
+        damage_sides: u16,
+        #[serde(default)]
+        damage_bonus: u16,
     },
     Vengeance {
         duration_dice: u16,
@@ -385,6 +402,9 @@ pub enum ItemUseEffectDefinition {
         bonus: u32,
     },
     RestoreResourceFull {
+        resource_id: String,
+    },
+    DrainResourceFull {
         resource_id: String,
     },
     IdentifyItem {

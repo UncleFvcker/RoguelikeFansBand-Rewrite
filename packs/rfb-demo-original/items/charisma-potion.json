@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 25000,
+  "descriptionKey": "item-demo-charisma-potion-description",
+  "formatVersion": 1,
+  "glyph": "!",
+  "id": "demo.item.charisma-potion",
+  "maxStack": 20,
+  "nameKey": "item-demo-charisma-potion-name",
+  "tags": [
+    "consumable",
+    "rfb-compatibility",
+    "potion"
+  ],
+  "useAction": {
+    "effectProgramId": "demo.effect.charisma-potion"
+  },
+  "weightTenthsPound": 4,
+  "appearanceNameKey": "item-demo-charisma-potion-appearance"
+}

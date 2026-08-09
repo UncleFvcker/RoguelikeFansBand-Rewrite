@@ -1336,6 +1336,7 @@ impl Game {
             (
                 effect @ (ItemUseEffectDefinition::Heal { .. }
                 | ItemUseEffectDefinition::IncreaseNutrition { .. }
+                | ItemUseEffectDefinition::SatisfyHunger
                 | ItemUseEffectDefinition::HealDice { .. }
                 | ItemUseEffectDefinition::Bless { .. }
                 | ItemUseEffectDefinition::ApplySlowness { .. }
@@ -1353,6 +1354,8 @@ impl Game {
                 | ItemUseEffectDefinition::ApplyBasicResistance { .. }
                 | ItemUseEffectDefinition::ApplyPoison { .. }
                 | ItemUseEffectDefinition::ApplyBlindness { .. }
+                | ItemUseEffectDefinition::ApplyStatus { .. }
+                | ItemUseEffectDefinition::SelfDamage { .. }
                 | ItemUseEffectDefinition::DrainAttribute { .. }
                 | ItemUseEffectDefinition::RestoreAttribute { .. }
                 | ItemUseEffectDefinition::IncreaseAttribute { .. }
@@ -1365,6 +1368,7 @@ impl Game {
                 | ItemUseEffectDefinition::RestoreResource { .. }
                 | ItemUseEffectDefinition::RestoreResourceDice { .. }
                 | ItemUseEffectDefinition::RestoreResourceFull { .. }
+                | ItemUseEffectDefinition::DrainResourceFull { .. }
                 | ItemUseEffectDefinition::Sequence { .. }),
                 ItemUsePlan::SelfTarget,
             ) => {
@@ -1575,6 +1579,7 @@ impl Game {
         let self_target = target.is_none_or(|target| matches!(target, TargetSelection::SelfTarget));
         match effect {
             ItemUseEffectDefinition::IncreaseNutrition { .. }
+            | ItemUseEffectDefinition::SatisfyHunger
             | ItemUseEffectDefinition::Heal { .. }
             | ItemUseEffectDefinition::HealDice { .. }
             | ItemUseEffectDefinition::Bless { .. }
@@ -1597,8 +1602,10 @@ impl Game {
             | ItemUseEffectDefinition::ApplyBasicResistance { .. }
             | ItemUseEffectDefinition::ApplyPoison { .. }
             | ItemUseEffectDefinition::ApplyBlindness { .. }
+            | ItemUseEffectDefinition::ApplyStatus { .. }
             | ItemUseEffectDefinition::ApplyDetonation { .. }
             | ItemUseEffectDefinition::SelfLifeLoss { .. }
+            | ItemUseEffectDefinition::SelfDamage { .. }
             | ItemUseEffectDefinition::Vengeance { .. }
             | ItemUseEffectDefinition::ProtectionFromEvil
             | ItemUseEffectDefinition::PrepareConfusingStrike
@@ -1610,6 +1617,7 @@ impl Game {
             | ItemUseEffectDefinition::RestoreResource { .. }
             | ItemUseEffectDefinition::RestoreResourceDice { .. }
             | ItemUseEffectDefinition::RestoreResourceFull { .. }
+            | ItemUseEffectDefinition::DrainResourceFull { .. }
             | ItemUseEffectDefinition::Sequence { .. }
             | ItemUseEffectDefinition::CurseEquippedItem { .. }
             | ItemUseEffectDefinition::RemoveEquippedCurses { .. } => {
@@ -2018,6 +2026,107 @@ impl Game {
             removed,
         });
         removed
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    pub(super) fn resolve_item_status(
+        &mut self,
+        source_kind_id: &str,
+        status_kind_id: &str,
+        duration_dice: u16,
+        duration_sides: u32,
+        duration_bonus: u32,
+        stacking: AbilityStatusStackingDefinition,
+        resistance_type: Option<rfb_content::ActorDamageType>,
+        events: &mut Vec<DomainEvent>,
+    ) -> bool {
+        let immunity = self.player_status_immunities().contains(status_kind_id);
+        let resistance_threshold = resistance_type.map_or(0, |damage_type| {
+            u64::try_from(
+                self.effective_player_resistances()
+                    .level(damage_type.into())
+                    .reduction_percent()
+                    .max(0),
+            )
+            .expect("status resistance threshold must be non-negative")
+        });
+        let resisted =
+            immunity || (resistance_type.is_some() && self.rng.bounded(55) < resistance_threshold);
+        let (duration, noticed) = if resisted {
+            (None, false)
+        } else {
+            let duration_sides =
+                u16::try_from(duration_sides).expect("validated status die sides must fit u16");
+            let source_turns = u32::try_from(self.roll_damage(duration_dice, duration_sides))
+                .expect("validated status duration must fit u32")
+                .saturating_add(duration_bonus);
+            // RFB timed food and potion effects count standard player turns. The
+            // Rewrite scheduler advances ten world ticks per standard-speed action;
+            // one extra action window is consumed immediately after item resolution.
+            let duration = source_turns.saturating_add(1).saturating_mul(10);
+            let stacking = match stacking {
+                AbilityStatusStackingDefinition::Replace => StatusStacking::Replace,
+                AbilityStatusStackingDefinition::Extend => StatusStacking::Extend,
+                AbilityStatusStackingDefinition::KeepStrongest => StatusStacking::KeepStrongest,
+            };
+            let change = apply_status_application(
+                &mut self.player.statuses,
+                StatusApplication {
+                    status: StatusInstance {
+                        kind_id: status_kind_id.to_owned(),
+                        intensity: 1,
+                        remaining_ticks: duration,
+                        source_id: Some(source_kind_id.to_owned()),
+                        granted_resistances: BTreeMap::new(),
+                        granted_brands: BTreeSet::new(),
+                        granted_modifiers: StatModifiersDto::default(),
+                        granted_equipment_bonuses: EquipmentBonusesDto::default(),
+                        granted_status_immunities: BTreeSet::new(),
+                        granted_race_id: None,
+                        grants_wall_passage: false,
+                        incoming_damage_percent: 100,
+                    },
+                    stacking,
+                },
+            )
+            .change;
+            (Some(duration), !matches!(change, StatusChange::Unchanged))
+        };
+        if noticed {
+            self.mark_item_aware(source_kind_id);
+        }
+        events.push(DomainEvent::ItemStatusResolved {
+            source_kind_id: source_kind_id.to_owned(),
+            display_name_key: self.item_display_name_key(source_kind_id),
+            status_kind_id: status_kind_id.to_owned(),
+            duration,
+            noticed,
+        });
+        noticed
+    }
+
+    pub(super) fn resolve_item_resource_drain(
+        &mut self,
+        source_kind_id: &str,
+        resource_id: &str,
+        events: &mut Vec<DomainEvent>,
+    ) -> bool {
+        let drained = self.resources.get_mut(resource_id).map_or(0, |pool| {
+            let drained = pool.current;
+            pool.current = 0;
+            drained
+        });
+        if drained > 0 {
+            self.resources_touched.insert(resource_id.to_owned());
+            self.mark_item_aware(source_kind_id);
+        }
+        events.push(DomainEvent::ItemResourceDrained {
+            source_kind_id: source_kind_id.to_owned(),
+            display_name_key: self.item_display_name_key(source_kind_id),
+            resource_id: resource_id.to_owned(),
+            drained,
+        });
+        drained > 0
     }
 
     pub(super) fn resolve_item_protection_from_evil(
@@ -2798,6 +2907,28 @@ impl Game {
                 }
                 true
             }
+            ItemUseEffectDefinition::SatisfyHunger => {
+                let before_state = self.nutrition_state();
+                let target = rfb_protocol::PLAYER_NUTRITION_MAXIMUM - 1;
+                let noticed = self.nutrition != target;
+                self.nutrition = target;
+                self.mark_item_aware(source_kind_id);
+                events.push(DomainEvent::ItemNutritionSatisfied {
+                    source_kind_id: source_kind_id.to_owned(),
+                    display_name_key: self.item_display_name_key(source_kind_id),
+                    nutrition: self.nutrition,
+                    noticed,
+                });
+                let after_state = self.nutrition_state();
+                if after_state != before_state {
+                    events.push(DomainEvent::NutritionStateChanged {
+                        from: before_state,
+                        to: after_state,
+                        nutrition: self.nutrition,
+                    });
+                }
+                noticed
+            }
             effect @ (ItemUseEffectDefinition::Heal { .. }
             | ItemUseEffectDefinition::HealDice { .. }
             | ItemUseEffectDefinition::RestoreResource { .. }
@@ -2969,6 +3100,23 @@ impl Game {
                 *duration_bonus,
                 events,
             ),
+            ItemUseEffectDefinition::ApplyStatus {
+                status_kind_id,
+                duration_dice,
+                duration_sides,
+                duration_bonus,
+                stacking,
+                resistance_type,
+            } => self.resolve_item_status(
+                source_kind_id,
+                status_kind_id,
+                *duration_dice,
+                *duration_sides,
+                *duration_bonus,
+                *stacking,
+                *resistance_type,
+                events,
+            ),
             ItemUseEffectDefinition::ApplyDetonation {
                 damage_dice,
                 damage_sides,
@@ -2987,6 +3135,17 @@ impl Game {
             }
             ItemUseEffectDefinition::SelfLifeLoss { amount } => {
                 self.resolve_item_life_loss(source_kind_id, *amount, events);
+                true
+            }
+            ItemUseEffectDefinition::SelfDamage {
+                damage_dice,
+                damage_sides,
+                damage_bonus,
+            } => {
+                let amount = u32::try_from(self.roll_damage(*damage_dice, *damage_sides))
+                    .expect("validated self damage must fit u32")
+                    .saturating_add(u32::from(*damage_bonus));
+                self.resolve_item_life_loss(source_kind_id, amount, events);
                 true
             }
             ItemUseEffectDefinition::Vengeance {
@@ -3015,6 +3174,9 @@ impl Game {
             }
             ItemUseEffectDefinition::RemoveStatus { status_kind_id } => {
                 self.resolve_item_status_removal(source_kind_id, status_kind_id, events)
+            }
+            ItemUseEffectDefinition::DrainResourceFull { resource_id } => {
+                self.resolve_item_resource_drain(source_kind_id, resource_id, events)
             }
             ItemUseEffectDefinition::Sequence { effects } => {
                 let mut noticed = false;

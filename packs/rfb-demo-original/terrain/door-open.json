@@ -8,5 +8,5 @@
   "walkable": true,
   "blocksSight": false,
   "closeToTerrainId": "demo.terrain.door-closed",
-  "tags": ["door", "door-open"]
+  "tags": ["door", "door-open", "passage"]
 }

@@ -521,6 +521,12 @@ contract-v196 推进正式内容 P12：`FRIENDLY` 让航海士娜美作为自主
 
 荒野 W5 接入原版扩展纵切：低层草地/荒地格以坐标种子按 `1/10` 生成 `Ruined Home` 特殊遭遇并显示原版发现消息；世界图 `x` 选点、回车自动旅行，大写 `J` 可在伏击、返回大图或读档后恢复目标，八方向寻路的每一步继续走 132 倍时间和伏击规则。深水超重溺水、浅/深熔岩、雪地伤害与雪地停止恢复进入统一环境结算；进入大图显式确认留下宠物和取消生效中的召回，当前坐骑随行。协议升至 1.146、state hash Schema 升至 v69、contract-v199；demo 内容版本与 hash 不变。随机单层地下城和城镇传送分别等待原版 20–50 级内容及第二座真实城镇，不建立占位消费者。详见 [Wilderness W5](design/wilderness-w5-original-extensions.md)。
 
+物品 P1 从 RFB `master` 的规则已可表达候选中加入 8 件等级 10、带 `TOWN` 标记的普通武器：克佩什弯剑、新月弯刀、短斧、镰刀、破甲锥、卢塞恩长戟、铁头木棍和晨星锤。固定源索引与 normalized id 进入严格选择清单，重量、价值、武器槽和伤害骰由同步器生成；八件物品进入 Outpost 武器店，不进入当前深度 1–9 的 Warrens 掉落。demo 升至 1.193.0，正式包现有 191 种 actor、154 种 item、100 个 ability，content hash 为 `b4c2ee223736f6c905f7c34dcd29069f15c2fd678f76259eca69ab2368fd8c31`。详见 [Phase 19 物品集成](design/phase-19-legacy-item-integration.md)。
+
+物品 P2 将 45 个规则完整的原版卷轴身份和 44 个原版药水身份正式化：新增 5 个卷轴、22 个药水及对应 effect program，全部 89 个条目使用 RFB `master` 的权威名称、中文名、flavor、重量与价值；原版 `TOWN` 条目进入 Alchemist/Temple，等级 0–9 条目按源等级进入 Warrens。三个动态设备壳和四本死亡领域法书完成覆盖账本核对。Treasure Detection 经正式编译验证后确认仍缺金币堆探测，改列 `gold-detection` 阻塞，不以普通物品探测代替。demo 升至 1.194.0，正式包现有 191 种 actor、181 种 item、100 个 ability，content hash 为 `7b040392db6925522459b6b0fd6f484a615d67d16eaed95f2885d026d0618774`。详见 [Phase 19 物品集成](design/phase-19-legacy-item-integration.md)。
+
+物品 P3.1 完成食物与基础异常状态批次：18 种蘑菇、硬饼干、鹿肉干、史莱姆黏菌、满足饥饿卷轴和睡眠药水共 23 个来源身份全部由 blocked 转 active。食物按原版顺序先执行特殊效果再增加源 `pval` 营养；混乱、麻痹和幻觉进入通用持久状态，幻觉显示只按 cell index 与 `worldTick` 确定性扰动，不消耗核心 RNG。Fast Recovery、酒、葡萄酒和精灵面包继续保留双重 blocker。demo 升至 1.195.0，正式包现有 191 种 actor、204 种 item、100 个 ability；审计为 179 active、106 mechanics-ready、259 blocked，content hash 为 `56ed89d064461fa87225ef8e06f030b75c29648bdaa33a8236e3c2f116e0dcf7`。协议、存档和 State Hash Schema 不变；共享 replay baseline 留待集成工作树统一刷新。详见 [Phase 19 物品集成](design/phase-19-legacy-item-integration.md)。
+
 ### 本地验证
 
 ```powershell
@@ -584,9 +590,10 @@ cargo run -p rfb-legacy-import -- inspect-prefix .local/legacy-baseline/saves/le
 cargo run -p rfb-legacy-import -- record-catalog .local/legacy-baseline/save-samples.json
 cargo run -p rfb-legacy-import -- verify-catalog .local/legacy-baseline/save-samples.json
 $env:RFB_LEGACY_SOURCE = "D:/codex/Frogcomposband/master"; cargo run -p rfb-legacy-import -- import-content .local/packs/rfb-legacy
+$env:RFB_LEGACY_SOURCE = "D:/codex/Frogcomposband/master"; cargo run -p rfb-legacy-import -- audit-demo-items packs/rfb-demo-original/legacy-item-selection.json packs/rfb-demo-original/legacy-item-adaptations.json packs/rfb-demo-original/legacy-item-p3-plan.json packs/rfb-demo-original/items
 ```
 
-`import-content`、`sync-demo-items`、`sync-demo-monsters` 和 `sync-demo-wilderness` 始终读取该仓库 `master` 引用解析出的 Git 对象；它们不读取当前工作树。旧存档命令仍使用固定 1.3.0.7 基准，只解析不依赖旧 C 结构体内存布局的 409 字节稳定前缀，包括版本、保存元数据、63 项 RNG 状态和选项位。生成的 `parsed-save-samples.json` 仍位于 `.local/`，不会进入 Git；`record-catalog` 拒绝覆盖已有基线。
+`import-content`、`audit-demo-items`、`sync-demo-items`、`sync-demo-monsters` 和 `sync-demo-wilderness` 始终读取该仓库 `master` 引用解析出的 Git 对象；它们不读取当前工作树。旧存档命令仍使用固定 1.3.0.7 基准，只解析不依赖旧 C 结构体内存布局的 409 字节稳定前缀，包括版本、保存元数据、63 项 RNG 状态和选项位。生成的 `parsed-save-samples.json` 仍位于 `.local/`，不会进入 Git；`record-catalog` 拒绝覆盖已有基线。
 
 快照规范化和 hash：
 

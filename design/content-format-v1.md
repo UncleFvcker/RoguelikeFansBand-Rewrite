@@ -274,6 +274,12 @@ contract-v196 以 1.191.0 为 actor 增加默认 false 的 `friendly`，表示�
 
 荒野 W0 以 1.192.0 为 `WorldDefinition` 增加可选 `wilderness`：独立宽高、起点、单字符图例、定长字符串行和强类型 town/dungeon 地点。图例保留 15 类 RFB 荒野 terrain、原始危险等级和道路事实；编译器验证尺寸、行宽、符号、边界、起点、唯一地点和正式内容引用。该字段当前只进入内容 artifact，不进入协议、存档或战术 floor。
 
+物品 P1 以 1.193.0 从 RFB `master` 严格选择并同步 8 件等级 10、带 `TOWN` 标记的普通武器，保留权威重量、价值、槽位和伤害骰，并加入 Outpost 武器店；当前深度 1–9 的 Warrens 掉落表不变。
+
+物品 P2 以 1.194.0 正式化 45 个规则完整的原版卷轴身份和 44 个原版药水身份；新增 5 个卷轴、22 个药水及对应强类型 effect program，并为全部 89 个条目固定权威名称、中文名、flavor、重量和价值。原版 `TOWN` 条目进入 Alchemist/Temple，等级 0–9 条目按源等级进入 Warrens。三个动态设备壳与四本死亡领域法书完成覆盖账本核对。Treasure Detection 因 Rewrite 金币堆不是 item instance，明确记录为 `gold-detection` 阻塞，不以普通物品探测替代。内容 hash 为 `7b040392db6925522459b6b0fd6f484a615d67d16eaed95f2885d026d0618774`。
+
+物品 P3.1 以 1.195.0 增加 `satisfy-hunger`、通用 `apply-status`、`self-damage` 与 `drain-resource-full`，并把这些窄 self 效果纳入 2–8 步非嵌套 `sequence`。食物严格按“特殊效果后增加源 `pval` 营养”执行；幻觉保存为普通状态，Web 仅用 cell index 与权威 `worldTick` 做确定性显示扰动，不触碰核心 RNG。23 个计划身份全部由 blocked 转 active；Fast Recovery、酒、葡萄酒和精灵面包继续保留完整 blocker。正式包现有 204 items，内容 hash 为 `56ed89d064461fa87225ef8e06f030b75c29648bdaa33a8236e3c2f116e0dcf7`，协议、存档和 state-hash Schema 不变。
+
 contract-v83 以 1.75.0 增加 `detect` 能力效果、Echo Pulse 与 Echo Sight；类别/半径、FOV 与隐藏投影筛选、稳定结果顺序、瞬时/持久知识边界由核心定义，持久结果复用 `revealedTerrain`，state hash 升至 Schema v36。
 
 contract-v84 以 1.76.0 增加 `transform-terrain` 能力效果、Echo Delving 与 Echo Rampart；来源/目标 terrain 集、范围、FOV/line of effect、占用格、连接/边界保护和原子写入由核心定义，地形继续复用既有 save/state hash 字段。

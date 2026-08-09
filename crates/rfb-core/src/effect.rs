@@ -19,6 +19,7 @@ pub const STATUS_CONFUSION: &str = "rfb.status.confusion";
 pub const STATUS_BLINDNESS: &str = "rfb.status.blindness";
 pub const STATUS_PARALYSIS: &str = "rfb.status.paralysis";
 pub const STATUS_SLEEP: &str = "rfb.status.sleep";
+pub const STATUS_HALLUCINATION: &str = "rfb.status.hallucination";
 pub const STATUS_VENGEANCE: &str = "rfb.status.vengeance";
 pub const STATUS_PROTECTION_FROM_EVIL: &str = "rfb.status.protection-from-evil";
 pub const STATUS_THERMAL_RESISTANCE: &str = "rfb.status.thermal-resistance";
