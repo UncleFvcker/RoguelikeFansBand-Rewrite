@@ -79,6 +79,7 @@
   "speed": 110,
   "tags": [
     "icky-thing",
+    "legacy-import",
     "warrens"
   ],
   "terrainInteraction": {

@@ -101,6 +101,7 @@
     "dark-elf",
     "evil",
     "humanoid",
+    "legacy-import",
     "warrens"
   ]
 }

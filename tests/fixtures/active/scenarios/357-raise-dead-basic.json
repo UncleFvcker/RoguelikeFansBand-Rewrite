@@ -50,13 +50,13 @@
       "turn": 1,
       "worldTick": 10,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 45,
+      "rngDrawCounter": 75,
       "floorId": "demo.floor.surface",
       "playerPosition": {
         "x": 3,
         "y": 3
       },
-      "playerHp": 10,
+      "playerHp": 2,
       "playerMaxHp": 136,
       "playerAttack": 3,
       "playerDefense": 2,
@@ -67,6 +67,43 @@
       "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
       "playerNutrition": 9999,
+      "playerStatuses": [
+        {
+          "kindId": "rfb.status.poison",
+          "intensity": 1,
+          "remainingTicks": 5,
+          "grantedModifiers": {
+            "attack": 0,
+            "defense": 0,
+            "maxHp": 0,
+            "strength": 0,
+            "intelligence": 0,
+            "wisdom": 0,
+            "dexterity": 0,
+            "constitution": 0,
+            "charisma": 0,
+            "speed": 0
+          },
+          "grantedEquipmentBonuses": {
+            "meleeAttacks": 0,
+            "meleeSkill": 0,
+            "meleeDamage": 0,
+            "rangedSkill": 0,
+            "throwingSkill": 0,
+            "deviceSkill": 0,
+            "savingThrowSkill": 0,
+            "stealthSkill": 0,
+            "searchSkill": 0,
+            "perceptionSkill": 0,
+            "disarmingSkill": 0,
+            "diggingSkill": 0,
+            "infravision": 0,
+            "lightRadius": 0
+          },
+          "grantsWallPassage": false,
+          "incomingDamagePercent": 100
+        }
+      ],
       "playerLevel": 25,
       "playerExperience": 0,
       "playerMaxLevel": 25,
@@ -97,10 +134,10 @@
             "index": 15
           },
           "wisdom": {
-            "natural": 13,
+            "natural": 11,
             "maximumNatural": 13,
-            "effective": 14,
-            "index": 11
+            "effective": 12,
+            "index": 9
           },
           "dexterity": {
             "natural": 13,
@@ -220,7 +257,7 @@
         {
           "id": "demo.resource.mana",
           "nameKey": "resource-demo-mana-name",
-          "current": 4,
+          "current": 8,
           "maximum": 69,
           "waitRecoveryAmount": 1,
           "restRecoveryAmount": 3
@@ -2896,24 +2933,24 @@
       "entityCount": 2,
       "entities": [
         {
-          "id": "summon.demo.ability.death-raise-dead.1.0",
+          "id": "summon.demo.ability.death-raise-dead.1.1",
           "position": {
-            "x": 2,
+            "x": 3,
             "y": 2
           },
-          "hp": 27,
+          "hp": 37,
           "speed": 110,
           "energyNeed": 100
         },
         {
-          "id": "summon.demo.ability.death-raise-dead.1.3",
+          "id": "summon.demo.ability.death-raise-dead.1.2",
           "position": {
-            "x": 2,
-            "y": 3
+            "x": 4,
+            "y": 2
           },
-          "hp": 26,
-          "speed": 110,
-          "energyNeed": 100
+          "hp": 12,
+          "speed": 100,
+          "energyNeed": 50
         }
       ],
       "groundItemCount": 5,
@@ -3194,7 +3231,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "366685c10c8621401b1e8239c5f3c1c1d817d2bc0de9ed27847f60215ed189f2"
+      "stateHash": "440126772b229ce1b271c6a95b3704e9c51f3d3feab2bbbd432156a2938b0c62"
     },
     "events": [
       {
@@ -3266,151 +3303,11 @@
             "hostile": true,
             "group": true,
             "summonedKindIds": [
-              "demo.actor.skeleton-kobold",
-              "demo.actor.lost-soul",
-              "demo.actor.lost-soul",
-              "demo.actor.skeleton-kobold"
+              "demo.actor.jibaku-ghost",
+              "demo.actor.rotting-corpse",
+              "demo.actor.risen-thrall",
+              "demo.actor.jibaku-ghost"
             ]
-          }
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.hit",
-          "source": "demo.actor.skeleton-kobold"
-        }
-      },
-      {
-        "kind": "monster.ability-decision",
-        "messageKey": "monster-ability-decision",
-        "args": {
-          "frequency": "6",
-          "roll": "60",
-          "source": "demo.actor.lost-soul",
-          "target": "none"
-        },
-        "outcome": {
-          "type": "monster-ability-decision",
-          "resolution": {
-            "sourceEntityId": "summon.demo.ability.death-raise-dead.1.1",
-            "sourceKindId": "demo.actor.lost-soul",
-            "frequencyPercent": 6,
-            "frequencyRoll": 60,
-            "candidates": [
-              {
-                "abilityId": "rfb-legacy.ability.escape",
-                "baseWeight": 1,
-                "effectiveWeight": 1,
-                "targetEntityId": "summon.demo.ability.death-raise-dead.1.1",
-                "targetKindId": "demo.actor.lost-soul",
-                "targetPosition": {
-                  "x": 3,
-                  "y": 2
-                },
-                "enemyTargetCount": 0,
-                "friendlyRiskCount": 0
-              },
-              {
-                "abilityId": "rfb-legacy.ability.drain-mana-4",
-                "baseWeight": 1,
-                "effectiveWeight": 1,
-                "targetEntityId": "demo.actor.player.1",
-                "targetKindId": "demo.actor.explorer",
-                "targetPosition": {
-                  "x": 3,
-                  "y": 3
-                },
-                "affectedPositions": [
-                  {
-                    "x": 3,
-                    "y": 3
-                  }
-                ],
-                "enemyTargetCount": 1,
-                "friendlyRiskCount": 0
-              }
-            ],
-            "viableAbilityIds": [
-              "rfb-legacy.ability.escape",
-              "rfb-legacy.ability.drain-mana-4"
-            ],
-            "totalWeight": 2
-          }
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.hit",
-          "source": "demo.actor.lost-soul"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.touch",
-          "source": "demo.actor.lost-soul"
-        }
-      },
-      {
-        "kind": "monster.ability-decision",
-        "messageKey": "monster-ability-decision",
-        "args": {
-          "frequency": "6",
-          "roll": "63",
-          "source": "demo.actor.lost-soul",
-          "target": "none"
-        },
-        "outcome": {
-          "type": "monster-ability-decision",
-          "resolution": {
-            "sourceEntityId": "summon.demo.ability.death-raise-dead.1.2",
-            "sourceKindId": "demo.actor.lost-soul",
-            "frequencyPercent": 6,
-            "frequencyRoll": 63,
-            "candidates": [
-              {
-                "abilityId": "rfb-legacy.ability.escape",
-                "baseWeight": 1,
-                "effectiveWeight": 1,
-                "targetEntityId": "summon.demo.ability.death-raise-dead.1.2",
-                "targetKindId": "demo.actor.lost-soul",
-                "targetPosition": {
-                  "x": 4,
-                  "y": 2
-                },
-                "enemyTargetCount": 0,
-                "friendlyRiskCount": 0
-              },
-              {
-                "abilityId": "rfb-legacy.ability.drain-mana-4",
-                "baseWeight": 1,
-                "effectiveWeight": 1,
-                "targetEntityId": "demo.actor.player.1",
-                "targetKindId": "demo.actor.explorer",
-                "targetPosition": {
-                  "x": 3,
-                  "y": 3
-                },
-                "affectedPositions": [
-                  {
-                    "x": 3,
-                    "y": 3
-                  }
-                ],
-                "enemyTargetCount": 1,
-                "friendlyRiskCount": 0
-              }
-            ],
-            "viableAbilityIds": [
-              "rfb-legacy.ability.escape",
-              "rfb-legacy.ability.drain-mana-4"
-            ],
-            "totalWeight": 2
           }
         }
       },
@@ -3418,17 +3315,17 @@
         "kind": "combat.monster-hit",
         "messageKey": "combat-monster-hit",
         "args": {
-          "damage": "2",
+          "damage": "4",
           "method": "rfb.blow.hit",
-          "source": "demo.actor.lost-soul"
+          "source": "demo.actor.jibaku-ghost"
         },
         "outcome": {
           "type": "damage",
           "resolution": {
-            "rawDamage": 3,
+            "rawDamage": 5,
             "armorReduction": 1,
             "resistanceAdjustment": 0,
-            "finalDamage": 2,
+            "finalDamage": 4,
             "damageType": "physical",
             "resistance": "normal"
           }
@@ -3438,16 +3335,48 @@
         "kind": "combat.monster-miss",
         "messageKey": "combat-monster-miss",
         "args": {
-          "method": "rfb.blow.touch",
-          "source": "demo.actor.lost-soul"
+          "method": "rfb.blow.claw",
+          "source": "demo.actor.rotting-corpse"
         }
       },
       {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
+        "kind": "combat.monster-hit",
+        "messageKey": "combat-monster-hit",
         "args": {
+          "damage": "0",
+          "method": "rfb.blow.claw",
+          "source": "demo.actor.rotting-corpse"
+        },
+        "outcome": {
+          "type": "damage",
+          "resolution": {
+            "rawDamage": 1,
+            "armorReduction": 1,
+            "resistanceAdjustment": 0,
+            "finalDamage": 0,
+            "damageType": "physical",
+            "resistance": "normal"
+          }
+        }
+      },
+      {
+        "kind": "combat.monster-hit",
+        "messageKey": "combat-monster-hit",
+        "args": {
+          "damage": "6",
           "method": "rfb.blow.hit",
-          "source": "demo.actor.skeleton-kobold"
+          "source": "demo.actor.jibaku-ghost"
+        },
+        "outcome": {
+          "type": "damage",
+          "resolution": {
+            "rawDamage": 7,
+            "armorReduction": 1,
+            "resistanceAdjustment": 0,
+            "finalDamage": 6,
+            "damageType": "physical",
+            "resistance": "normal"
+          }
         }
       }
     ],
@@ -3469,6 +3398,6 @@
         "y": 2
       }
     ],
-    "saveRoundTripStateHash": "366685c10c8621401b1e8239c5f3c1c1d817d2bc0de9ed27847f60215ed189f2"
+    "saveRoundTripStateHash": "440126772b229ce1b271c6a95b3704e9c51f3d3feab2bbbd432156a2938b0c62"
   }
 }

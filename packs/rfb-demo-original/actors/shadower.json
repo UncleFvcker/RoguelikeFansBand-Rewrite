@@ -23,6 +23,7 @@
   "role": "monster",
   "speed": 110,
   "tags": [
+    "legacy-import",
     "shadower-appearance",
     "warrens"
   ]

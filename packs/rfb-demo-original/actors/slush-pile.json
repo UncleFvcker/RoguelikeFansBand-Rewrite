@@ -66,6 +66,7 @@
   ],
   "tags": [
     "jelly",
+    "legacy-import",
     "warrens"
   ]
 }

@@ -6837,6 +6837,7 @@ fn demo_monster_json(
     }
 
     let mut tags = selection.tags.iter().cloned().collect::<BTreeSet<_>>();
+    tags.insert("legacy-import".to_owned());
     if entry.flags.iter().any(|flag| flag == "KAGE") {
         tags.insert("shadower-appearance".to_owned());
     }
@@ -10544,6 +10545,26 @@ S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_LOUSE | S_CYBER\n";
         assert_eq!(louse["effect"]["countDice"], 1);
         assert_eq!(louse["effect"]["countSides"], 3);
         assert_eq!(louse["effect"]["countBonus"], 1);
+
+        let mut demo_entry = monsters[0].clone();
+        demo_entry.spells.retain(|spell| spell != "S_CYBER");
+        let demo = demo_monster_json(
+            &demo_entry,
+            &DemoMonsterSelectionEntry {
+                source_index: 5,
+                source_id: None,
+                id: "test-bone-caller".to_owned(),
+                tags: vec!["warrens".to_owned()],
+                omitted_flags: Vec::new(),
+            },
+            &mut BTreeMap::new(),
+        )
+        .expect("demo monster should preserve the generic summon category");
+        assert!(
+            demo["tags"]
+                .as_array()
+                .is_some_and(|tags| { tags.iter().any(|tag| tag == "legacy-import") })
+        );
     }
 
     #[test]

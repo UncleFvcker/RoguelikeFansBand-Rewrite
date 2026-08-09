@@ -79,6 +79,7 @@
     "rfb.status.sleep"
   ],
   "tags": [
+    "legacy-import",
     "mold",
     "warrens"
   ]

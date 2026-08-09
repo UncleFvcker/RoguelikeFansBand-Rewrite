@@ -1,6 +1,6 @@
 # 待实现内容清单
 
-状态：基于 contract-v1–v200、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
+状态：基于 contract-v1–v201、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
 
 本文件只记录已经在现有设计或原版对比中明确出现、但尚未实现的内容。长期设想仍保留在 [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)，这里用于跟踪可以实际排入后续 contract 的缺口。
 
@@ -68,6 +68,10 @@ contract-v200 开始推进下一段十级内容，直接接入 20 只不需要�
 运行时机制的怪物。正式包 actor 增至 221 条、严格同步增至 156 条；猞猁按
 原版保留 `WILD_ONLY`，其余 19 条可参与现有全局地牢分配。协议与 State Hash
 Schema 均不变。
+contract-v201 接入 7 只十级施法怪物，并让 demo 严格 actor 保留通用导入器
+已经使用的 `legacy-import` 类别，以承载欧法克斯的原作 `S_MONSTER(1d1)`。
+所有法术继续使用现有 effect；正式包 actor 增至 228、ability 增至 112、
+严格同步增至 163，协议与 State Hash Schema 均不变。
 
 荒野 W0 已导入 `master:w_info.txt` 的 `99x66` normal 世界图、15 类地形、
 危险等级、道路和起点，并只把现有 Outpost/Warrens 绑定为正式地点。尚未实现

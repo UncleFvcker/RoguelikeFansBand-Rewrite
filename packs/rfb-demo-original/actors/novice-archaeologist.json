@@ -95,6 +95,7 @@
   "speed": 110,
   "tags": [
     "human",
+    "legacy-import",
     "warrens"
   ],
   "terrainInteraction": {

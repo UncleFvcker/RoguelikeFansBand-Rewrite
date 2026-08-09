@@ -948,6 +948,48 @@
       "id": "lynx",
       "tags": ["cat", "warrens"],
       "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 178,
+      "id": "dark-elven-mage",
+      "tags": ["dark-elf", "humanoid", "warrens"],
+      "omittedFlags": ["MALE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 180,
+      "id": "orfax-son-of-boldor",
+      "tags": ["warrens", "yeek"],
+      "omittedFlags": ["CAN_SPEAK", "MALE", "SMART"]
+    },
+    {
+      "sourceIndex": 181,
+      "id": "servant-of-glaaki",
+      "tags": ["undead", "warrens"],
+      "omittedFlags": ["COLD_BLOOD", "POS_HOLD_LIFE"]
+    },
+    {
+      "sourceIndex": 182,
+      "id": "dark-elven-warrior",
+      "tags": ["dark-elf", "humanoid", "warrens"],
+      "omittedFlags": ["MALE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 185,
+      "id": "quiver-slot",
+      "tags": ["warrens"],
+      "omittedFlags": ["COLD_BLOOD", "EMPTY_MIND", "NASTY_GLYPH", "STUPID"]
+    },
+    {
+      "sourceIndex": 192,
+      "id": "disenchanter-mold",
+      "tags": ["mold", "warrens"],
+      "omittedFlags": ["ATTR_MULTI", "EMPTY_MIND", "POS_GAIN_AC", "STUPID"]
+    },
+    {
+      "sourceIndex": 194,
+      "id": "tengu",
+      "tags": ["demon", "warrens"],
+      "omittedFlags": ["POS_HOLD_LIFE"]
     }
   ]
 }

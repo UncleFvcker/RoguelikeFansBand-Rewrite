@@ -82,6 +82,7 @@
     "rfb.status.sleep"
   ],
   "tags": [
+    "legacy-import",
     "unique",
     "warrens"
   ]

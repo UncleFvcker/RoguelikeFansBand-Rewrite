@@ -81,6 +81,7 @@
   "speed": 110,
   "tags": [
     "bear",
+    "legacy-import",
     "warrens"
   ]
 }
