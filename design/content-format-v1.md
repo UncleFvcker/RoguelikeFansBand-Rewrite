@@ -296,6 +296,8 @@ contract-v207 / 包 1.203.0 增加 7 条十二级施法 actor 与 8 个按完整
 
 contract-v208 / 包 1.204.0 增加 10 条十三级 actor 与 5 个按完整参数签名生成的 ability 内容记录；自我加速只绑定既有 Haste 状态效果，没有增加数值覆盖层或 effect 类型。当前包共 86 terrain、278 actors、204 items、129 abilities，严格同步 213 条，内容 hash 为 `4b1c3378af39464ad9450bfc3148fc338b79f3ccd17bedf6fe2f776d226e23cb`。协议 1.147 与 state hash Schema v70 不变。
 
+contract-v209 / 包 1.205.0 为 actor 增加默认 false 的 `movesWeakerBodies` 与 `regenerates`。前者只控制符合经验值、阵营和双向地形条件的换位，后者只将公共怪物再生量翻倍；固定间隔、低 HP RNG 与 400 上限留在核心。黏菌及 `mind-blast-7d7` 进入正式包。当前包共 86 terrain、279 actors、204 items、130 abilities，严格同步 214 条，内容 hash 为 `3d94f3bff136355b23ad4a864f8308197606e79d2c92a3f36ad07f6b69a2c886`。协议 1.147 与 state hash Schema v70 不变。
+
 contract-v83 以 1.75.0 增加 `detect` 能力效果、Echo Pulse 与 Echo Sight；类别/半径、FOV 与隐藏投影筛选、稳定结果顺序、瞬时/持久知识边界由核心定义，持久结果复用 `revealedTerrain`，state hash 升至 Schema v36。
 
 contract-v84 以 1.76.0 增加 `transform-terrain` 能力效果、Echo Delving 与 Echo Rampart；来源/目标 terrain 集、范围、FOV/line of effect、占用格、连接/边界保护和原子写入由核心定义，地形继续复用既有 save/state hash 字段。

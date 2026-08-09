@@ -1680,3 +1680,7 @@ ability-legacy-bolt-fire-9d8-4-name = 火焰箭
 ability-legacy-bolt-fire-9d8-4-description = 向目标发射一发造成 9d8+4 点火焰伤害的火焰箭。
 ability-legacy-bolt-electricity-4d8-4-name = 闪电箭
 ability-legacy-bolt-electricity-4d8-4-description = 向目标发射一发造成 4d8+4 点电击伤害的闪电箭。
+actor-demo-slime-mold-name = 黏菌
+actor-demo-slime-mold-description = 这是一个史莱姆群落。如果你胆敢碰它一下的话。
+ability-legacy-mind-blast-7d7-name = 心灵爆破
+ability-legacy-mind-blast-7d7-description = 对目标造成 7d7 点精神伤害，并尝试施加 80 tick 的混乱。

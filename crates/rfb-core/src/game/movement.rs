@@ -265,6 +265,29 @@ impl Game {
                     .saturating_mul(target_definition.experience_value)
     }
 
+    pub(super) fn actor_can_move_body_blocker(
+        &self,
+        source_index: usize,
+        target_index: usize,
+    ) -> bool {
+        let source = &self.entities[source_index];
+        let target = &self.entities[target_index];
+        let Some(source_definition) = self.content.actor(&source.kind_id) else {
+            return false;
+        };
+        let Some(target_definition) = self.content.actor(&target.kind_id) else {
+            return false;
+        };
+        source_definition.moves_weaker_bodies
+            && !source_definition.movement.never_moves
+            && target.hp > 0
+            && self.entity_is_player_side(source_index) == self.entity_is_player_side(target_index)
+            && self.riding_actor_id.as_deref() != Some(target.id.as_str())
+            && self.actor_can_enter_position(source_index, target.position)
+            && self.actor_kind_can_enter_position(&target.kind_id, source.position)
+            && source_definition.experience_value > target_definition.experience_value
+    }
+
     pub(super) fn actor_can_traverse_or_interact(&self, index: usize, position: Position) -> bool {
         let Some(terrain_index) = self.index(position) else {
             return false;
@@ -665,7 +688,9 @@ impl Game {
             .iter()
             .enumerate()
             .filter(|(entity_index, _)| {
-                *entity_index != index && !self.actor_can_kill_body_blocker(index, *entity_index)
+                *entity_index != index
+                    && !self.actor_can_kill_body_blocker(index, *entity_index)
+                    && !self.actor_can_move_body_blocker(index, *entity_index)
             })
             .map(|(_, entity)| entity.position)
             .collect::<BTreeSet<_>>();
@@ -680,6 +705,7 @@ impl Game {
                 .filter(|(entity_index, entity)| {
                     *entity_index != index
                         && !self.actor_can_kill_body_blocker(index, *entity_index)
+                        && !self.actor_can_move_body_blocker(index, *entity_index)
                         && !entity.pack.as_ref().is_some_and(|pack| {
                             moving_pack_id.is_some_and(|moving| moving == pack.id)
                         })

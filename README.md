@@ -562,6 +562,8 @@ contract-v207 推进正式内容 P22：注视者、月兽、大师伊克、牧�
 
 contract-v208 推进正式内容 P23：蛛化精灵、猴蝠、杀手褐甲虫、伊克之王博尔多、食人魔、爬行秘银币、德鲁伊、暗幕魔兽、黑兽人和赭冻怪共 10 只十三级怪物进入严格同步。既有近战、状态、群体、护卫、掉落和施法路径全部复用；新增治疗 39、自我加速、博尔多召唤同类、`9d8+4` 火焰箭和 `4d8+4` 闪电箭共 5 条内容记录，没有新增 effect。协议保持 1.147、state hash Schema 保持 v70，demo 升至 1.204.0；正式包现有 86 种 terrain、278 种 actor、204 种 item 和 129 个 ability，严格同步 213 条，content hash 为 `4b1c3378af39464ad9450bfc3148fc338b79f3ccd17bedf6fe2f776d226e23cb`。470 条 exact fixtures 全部保持原结果。详见 [Contract v208](design/contract-v208-warrens-content-p23-level-13.md)。
 
+contract-v209 推进正式内容 P24：公共怪物再生每 100 个 world ticks 按 `maxHP/100` 恢复，低于 100 HP 时只抽一次二分 RNG，`REGENERATE` 翻倍且单次封顶 400；`MOVE_BODY` 仅让经验值更高、双方均可穿越交换前后地形的同阵营怪物换位，并唤醒被交换者。黏菌连同既有尖叫和 `7d7` 心灵爆破进入严格同步。协议保持 1.147、state hash Schema 保持 v70，demo 升至 1.205.0；正式包现有 86 种 terrain、279 种 actor、204 种 item 和 130 个 ability，严格同步 214 条，content hash 为 `3d94f3bff136355b23ad4a864f8308197606e79d2c92a3f36ad07f6b69a2c886`。公共低 HP 再生 RNG 使 2 条相关 fixture 定向刷新，其余 468 条保持精确一致。详见 [Contract v209](design/contract-v209-warrens-content-p24-slime-mold.md)。
+
 ### 本地验证
 
 ```powershell

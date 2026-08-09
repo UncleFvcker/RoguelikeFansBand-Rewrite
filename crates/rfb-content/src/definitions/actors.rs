@@ -408,6 +408,12 @@ pub struct ActorDefinition {
     /// Whether this actor attacks weaker actors that block its movement.
     #[serde(default)]
     pub kills_weaker_bodies: bool,
+    /// Whether this actor swaps places with weaker actors that block its movement.
+    #[serde(default)]
+    pub moves_weaker_bodies: bool,
+    /// Whether this actor receives twice the shared monster regeneration amount.
+    #[serde(default)]
+    pub regenerates: bool,
     /// Whether this actor can use its melee routine at RFB's two-grid reach.
     #[serde(default)]
     pub ranged_melee: bool,

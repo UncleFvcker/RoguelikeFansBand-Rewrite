@@ -1290,6 +1290,12 @@
       "id": "ochre-jelly",
       "tags": ["jelly", "warrens"],
       "omittedFlags": ["COLD_BLOOD", "EMPTY_MIND", "POS_GAIN_AC", "STUPID"]
+    },
+    {
+      "sourceIndex": 962,
+      "id": "slime-mold",
+      "tags": ["mold", "warrens"],
+      "omittedFlags": ["COLD_BLOOD", "NASTY_GLYPH", "SMART", "WEIRD_MIND"]
     }
   ]
 }

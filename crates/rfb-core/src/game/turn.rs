@@ -22,6 +22,9 @@ impl Game {
                 break;
             }
             self.process_natural_hp_regeneration(resting);
+            if local_floor_active {
+                self.process_monster_regeneration();
+            }
             self.process_equipped_light_fuel(events);
             self.process_equipment_regeneration(events);
             self.process_inventory_device_recovery(events);
@@ -88,6 +91,37 @@ impl Game {
             .hp
             .saturating_add(recovered)
             .min(self.effective_player_max_hp());
+    }
+
+    pub(super) fn process_monster_regeneration(&mut self) {
+        if !self
+            .world_tick
+            .is_multiple_of(MONSTER_REGENERATION_INTERVAL_TICKS)
+        {
+            return;
+        }
+        for index in 0..self.entities.len() {
+            let actor = &self.entities[index];
+            if actor.hp <= 0 || actor.hp >= actor.max_hp {
+                continue;
+            }
+            let mut recovered = actor.max_hp / 100;
+            if recovered == 0 && self.rng.bounded(2) == 0 {
+                recovered = 1;
+            }
+            if self
+                .content
+                .actor(&actor.kind_id)
+                .is_some_and(|definition| definition.regenerates)
+            {
+                recovered = recovered.saturating_mul(2);
+            }
+            recovered = recovered.min(MONSTER_REGENERATION_MAXIMUM);
+            self.entities[index].hp = self.entities[index]
+                .hp
+                .saturating_add(recovered)
+                .min(self.entities[index].max_hp);
+        }
     }
 
     fn process_equipment_regeneration(&mut self, events: &mut Vec<DomainEvent>) {

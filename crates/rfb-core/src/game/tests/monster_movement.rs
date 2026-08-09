@@ -97,6 +97,167 @@ fn kill_body_attacks_a_weaker_actor_blocking_the_next_step() {
 }
 
 #[test]
+fn move_body_swaps_with_a_weaker_actor_and_wakes_it() {
+    let mut game = game_with_actor_definition(42, "demo.actor.small-kobold", |actor| {
+        actor.moves_weaker_bodies = true;
+        actor.experience_value = 1_000;
+    });
+    game.entities.clear();
+    let origin = Position { x: 4, y: 3 };
+    let blocker = Position { x: 5, y: 3 };
+    for position in [origin, blocker] {
+        replace_terrain(&mut game, position, "demo.terrain.floor");
+    }
+    game.push_generated_actor("test.mover".to_owned(), "demo.actor.small-kobold", origin);
+    game.push_generated_actor("test.blocker".to_owned(), "demo.actor.sheep", blocker);
+    game.entities[1].statuses.push(StatusInstance {
+        kind_id: STATUS_SLEEP.to_owned(),
+        intensity: 1,
+        remaining_ticks: 25,
+        source_id: None,
+        granted_resistances: BTreeMap::new(),
+        granted_brands: BTreeSet::new(),
+        granted_modifiers: StatModifiersDto::default(),
+        granted_equipment_bonuses: EquipmentBonusesDto::default(),
+        granted_status_immunities: BTreeSet::new(),
+        granted_race_id: None,
+        grants_wall_passage: false,
+        incoming_damage_percent: 100,
+    });
+    let mut events = Vec::new();
+    let mut changed = BTreeSet::new();
+
+    let outcome = game
+        .move_entity(0, blocker, &mut events, &mut changed, &mut Vec::new())
+        .expect("MOVE_BODY swap should resolve");
+
+    assert_eq!(outcome, ActorStepOutcome::Moved);
+    assert_eq!(game.entities[0].position, blocker);
+    assert_eq!(game.entities[1].position, origin);
+    assert!(
+        game.entities[1]
+            .statuses
+            .iter()
+            .all(|status| status.kind_id != STATUS_SLEEP)
+    );
+    assert_eq!(changed, BTreeSet::from([origin, blocker]));
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::EntityAwakened { target_kind_id }
+            if target_kind_id == "demo.actor.sheep"
+    )));
+}
+
+#[test]
+fn move_body_requires_the_displaced_actor_to_cross_the_origin_terrain() {
+    let mut game = game_with_actor_definition(42, "demo.actor.small-kobold", |actor| {
+        actor.moves_weaker_bodies = true;
+        actor.experience_value = 1_000;
+        actor
+            .movement
+            .modes
+            .push(rfb_content::ActorMovementMode::Swim);
+    });
+    game.entities.clear();
+    let origin = Position { x: 4, y: 3 };
+    let blocker = Position { x: 5, y: 3 };
+    replace_terrain(&mut game, origin, "demo.terrain.floor");
+    replace_terrain(&mut game, blocker, "demo.terrain.surface-water-shallow");
+    game.push_generated_actor("test.mover".to_owned(), "demo.actor.small-kobold", origin);
+    game.push_generated_actor("test.blocker".to_owned(), "demo.actor.piranha", blocker);
+
+    assert!(game.actor_can_enter_position(0, blocker));
+    assert!(!game.actor_kind_can_enter_position("demo.actor.piranha", origin));
+    assert!(!game.actor_can_move_body_blocker(0, 1));
+}
+
+#[test]
+fn move_body_requires_strictly_greater_experience_value() {
+    let mut game = game_with_actor_definition(42, "demo.actor.small-kobold", |actor| {
+        actor.moves_weaker_bodies = true;
+        actor.experience_value = 0;
+    });
+    game.entities.clear();
+    let origin = Position { x: 4, y: 3 };
+    let blocker = Position { x: 5, y: 3 };
+    for position in [origin, blocker] {
+        replace_terrain(&mut game, position, "demo.terrain.floor");
+    }
+    game.push_generated_actor("test.mover".to_owned(), "demo.actor.small-kobold", origin);
+    game.push_generated_actor("test.blocker".to_owned(), "demo.actor.sheep", blocker);
+
+    assert!(!game.actor_can_move_body_blocker(0, 1));
+}
+
+#[test]
+fn monster_regeneration_is_shared_doubled_and_capped() {
+    let mut ordinary = game_with_actor_definition(42, "demo.actor.small-kobold", |actor| {
+        actor.regenerates = false;
+    });
+    ordinary.entities.clear();
+    ordinary.push_generated_actor(
+        "test.ordinary".to_owned(),
+        "demo.actor.small-kobold",
+        Position { x: 4, y: 3 },
+    );
+    ordinary.entities[0].hp = 1;
+    ordinary.entities[0].max_hp = 250;
+    ordinary.world_tick = MONSTER_REGENERATION_INTERVAL_TICKS - 1;
+    ordinary.process_monster_regeneration();
+    assert_eq!(ordinary.entities[0].hp, 1);
+    ordinary.world_tick = MONSTER_REGENERATION_INTERVAL_TICKS;
+    ordinary.process_monster_regeneration();
+    assert_eq!(ordinary.entities[0].hp, 3);
+
+    let mut fast = game_with_actor_definition(42, "demo.actor.small-kobold", |actor| {
+        actor.regenerates = true;
+    });
+    fast.entities.clear();
+    fast.push_generated_actor(
+        "test.fast".to_owned(),
+        "demo.actor.small-kobold",
+        Position { x: 4, y: 3 },
+    );
+    fast.push_generated_actor(
+        "test.capped".to_owned(),
+        "demo.actor.small-kobold",
+        Position { x: 5, y: 3 },
+    );
+    fast.entities[0].hp = 1;
+    fast.entities[0].max_hp = 250;
+    fast.entities[1].hp = 1;
+    fast.entities[1].max_hp = 50_000;
+    fast.world_tick = MONSTER_REGENERATION_INTERVAL_TICKS;
+    let draws = fast.rng.draw_counter;
+    fast.process_monster_regeneration();
+    assert_eq!(fast.entities[0].hp, 5);
+    assert_eq!(fast.entities[1].hp, 401);
+    assert_eq!(fast.rng.draw_counter, draws);
+}
+
+#[test]
+fn low_hp_monster_regeneration_uses_one_minimum_recovery_draw() {
+    let mut game = game_with_actor_definition(42, "demo.actor.small-kobold", |actor| {
+        actor.regenerates = false;
+    });
+    game.entities.clear();
+    game.push_generated_actor(
+        "test.low-hp".to_owned(),
+        "demo.actor.small-kobold",
+        Position { x: 4, y: 3 },
+    );
+    game.entities[0].hp = 1;
+    game.entities[0].max_hp = 50;
+    game.world_tick = MONSTER_REGENERATION_INTERVAL_TICKS;
+    let draws = game.rng.draw_counter;
+
+    game.process_monster_regeneration();
+
+    assert!(matches!(game.entities[0].hp, 1 | 2));
+    assert_eq!(game.rng.draw_counter, draws + 1);
+}
+
+#[test]
 fn ranged_melee_uses_the_melee_routine_at_rfb_two_grid_reach() {
     let mut game = game_with_actor_definition(42, "demo.actor.small-kobold", |actor| {
         actor.ranged_melee = true;

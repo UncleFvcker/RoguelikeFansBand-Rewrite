@@ -1680,3 +1680,7 @@ ability-legacy-bolt-fire-9d8-4-name = Fire bolt
 ability-legacy-bolt-fire-9d8-4-description = Fires a 9d8+4 bolt of fire at the target.
 ability-legacy-bolt-electricity-4d8-4-name = Lightning bolt
 ability-legacy-bolt-electricity-4d8-4-description = Fires a 4d8+4 bolt of electricity at the target.
+actor-demo-slime-mold-name = Slime Mold
+actor-demo-slime-mold-description = It's a slime colony. If you so much as dare to touch it.
+ability-legacy-mind-blast-7d7-name = Mind Blast
+ability-legacy-mind-blast-7d7-description = Deals 7d7 psi damage and attempts to confuse the target for 80 ticks.

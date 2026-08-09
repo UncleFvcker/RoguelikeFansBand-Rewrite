@@ -93,6 +93,10 @@ State Hash Schema 保持 v70。没有引入怪物数值覆盖、模板或第二�
 contract-v208 接入 10 只十三级怪物，复用现有运行时并生成 5 条 ability 内容记录。
 正式包 actor 增至 278、ability 增至 129、严格同步增至 213；协议保持 1.147，
 State Hash Schema 保持 v70。没有引入新 effect、数值覆盖或兼容路径。
+contract-v209 为所有当前层受伤怪物接入每 100 world ticks 一次的基础再生，
+`REGENERATE` 只将结果翻倍并共享 400 上限；`MOVE_BODY` 以经验值、阵营与
+双向地形通行为窄换位条件。黏菌进入严格同步，正式包 actor 增至 279、
+ability 增至 130、严格同步增至 214；协议 1.147 与 State Hash Schema v70 不变。
 
 荒野 W0 已导入 `master:w_info.txt` 的 `99x66` normal 世界图、15 类地形、
 危险等级、道路和起点，并只把现有 Outpost/Warrens 绑定为正式地点。W1 已完成

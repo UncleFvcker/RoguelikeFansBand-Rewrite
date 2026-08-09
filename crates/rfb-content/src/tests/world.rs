@@ -262,6 +262,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.skeleton-human", 228, 1, 50),
             ("demo.actor.skeleton-kobold", 91, 1, 40),
             ("demo.actor.skeleton-orc", 136, 1, 40),
+            ("demo.actor.slime-mold", 962, 4, 30),
             ("demo.actor.slimy-jelly", 101, 1, 40),
             ("demo.actor.slimy-ooze", 64, 2, 30),
             ("demo.actor.slimy-worm-mass", 58, 1, 20),

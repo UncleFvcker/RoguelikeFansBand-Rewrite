@@ -1,0 +1,22 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability-program.mind-blast-7d7",
+  "input": "cast-target",
+  "steps": [
+    {
+      "damageDice": 7,
+      "damageSides": 7,
+      "damageType": "psi",
+      "type": "damage"
+    },
+    {
+      "durationTicks": 80,
+      "intensity": 1,
+      "resistanceType": "psi",
+      "stacking": "extend",
+      "statusKindId": "rfb.status.confusion",
+      "type": "apply-status"
+    }
+  ]
+}

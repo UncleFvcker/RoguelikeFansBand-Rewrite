@@ -1406,12 +1406,22 @@
         "neverMoves": false
       }
     },
+    "movesWeakerBodies": {
+      "default": false,
+      "description": "Whether this actor swaps places with weaker actors that block its movement.",
+      "type": "boolean"
+    },
     "nameKey": {
       "type": "string"
     },
     "rangedMelee": {
       "default": false,
       "description": "Whether this actor can use its melee routine at RFB's two-grid reach.",
+      "type": "boolean"
+    },
+    "regenerates": {
+      "default": false,
+      "description": "Whether this actor receives twice the shared monster regeneration amount.",
       "type": "boolean"
     },
     "remains": {

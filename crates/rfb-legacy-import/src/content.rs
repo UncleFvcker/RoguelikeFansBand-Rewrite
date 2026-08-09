@@ -6804,6 +6804,8 @@ fn monster_json(
     }
     for (flag, field) in [
         ("KILL_BODY", "killsWeakerBodies"),
+        ("MOVE_BODY", "movesWeakerBodies"),
+        ("REGENERATE", "regenerates"),
         ("RANGED_MELEE", "rangedMelee"),
         ("RIDING", "rideable"),
         ("SILVER", "madeOfSilver"),
@@ -6996,6 +6998,8 @@ fn demo_monster_flag_is_handled(flag: &str) -> bool {
                 | "CAN_SWIM"
                 | "PASS_WALL"
                 | "KILL_BODY"
+                | "MOVE_BODY"
+                | "REGENERATE"
                 | "RANGED_MELEE"
                 | "RIDING"
                 | "SILVER"
@@ -10775,7 +10779,7 @@ mod tests {
     #[test]
     fn demo_monster_import_maps_special_mechanics_without_fallbacks() {
         let mut monsters = parse_r_info(
-            "N:1:test special monster\nG:j:v\nI:110:1d3:8:4:20:10\nW:12:1:50:40:0:0\nB:TOUCH:DRAIN_EXP(10d6)\nA:POISON(1d2)\nF:SHAPECHANGER | DUNGEON_31 | DROP_1D2\nO:DROP_WARRIOR_SHOOT\n",
+            "N:1:test special monster\nG:j:v\nI:110:1d3:8:4:20:10\nW:12:1:50:40:0:0\nB:TOUCH:DRAIN_EXP(10d6)\nA:POISON(1d2)\nF:SHAPECHANGER | MOVE_BODY | REGENERATE | DUNGEON_31 | DROP_1D2\nO:DROP_WARRIOR_SHOOT\n",
         )
         .expect("synthetic special monster should parse");
         let actor = demo_monster_json(
@@ -10798,6 +10802,8 @@ mod tests {
         assert_eq!(actor["contactAura"]["damageType"], "poison");
         assert_eq!(actor["contactAura"]["damageDice"], 1);
         assert_eq!(actor["contactAura"]["damageSides"], 2);
+        assert_eq!(actor["movesWeakerBodies"], true);
+        assert_eq!(actor["regenerates"], true);
         assert!(
             actor["tags"]
                 .as_array()

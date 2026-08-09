@@ -5114,11 +5114,14 @@ fn raise_dead_is_deterministic_and_enforces_faction_group_and_unique_rules() {
                     | "demo.actor.green-glutton-ghost"
                     | "demo.actor.jibaku-ghost"
                     | "demo.actor.lost-soul"
+                    | "demo.actor.moaning-spirit"
                     | "demo.actor.poltergeist"
                     | "demo.actor.risen-thrall"
                     | "demo.actor.rotting-corpse"
+                    | "demo.actor.skeleton-human"
                     | "demo.actor.skeleton-kobold"
                     | "demo.actor.skeleton-orc"
+                    | "demo.actor.zombified-human"
                     | "demo.actor.zombified-kobold"
             ))
     );

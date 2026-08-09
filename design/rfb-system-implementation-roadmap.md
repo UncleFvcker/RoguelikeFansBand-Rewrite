@@ -644,6 +644,8 @@ P30“首个非 Mana 职业资源”已由 contract-v90 完成：节奏资源按
 
 **十三级怪物 P23 进展（2026-08）**：contract-v208 接入蛛化精灵、猴蝠、杀手褐甲虫、伊克之王博尔多、食人魔、爬行秘银币、德鲁伊、暗幕魔兽、黑兽人和赭冻怪。新增治疗 39、自我加速、博尔多召唤同类、`9d8+4` 火焰箭和 `4d8+4` 闪电箭五条内容记录，其余施法、近战、群体、护卫与掉落全部复用。正式包为 278 actors / 129 abilities，严格同步 213 条；协议 1.147、Schema v70 不变，demo 1.204.0，内置 hash 为 `4b1c3378af39464ad9450bfc3148fc338b79f3ccd17bedf6fe2f776d226e23cb`。完整边界见 [Contract v208](contract-v208-warrens-content-p23-level-13.md)。
 
+**怪物公共行为 P24 进展（2026-08）**：contract-v209 接入原版公共怪物再生与 `MOVE_BODY`。当前层受伤怪物每 100 world ticks 恢复 `maxHP/100`，低 HP 只抽一次二分 RNG，`REGENERATE` 翻倍且单次封顶 400；换位严格要求更高经验值、同阵营和双方均可穿越交换前后的地形，并唤醒被交换者。黏菌复用尖叫并生成 `mind-blast-7d7` 内容记录。正式包为 279 actors / 130 abilities，严格同步 214 条；协议 1.147、Schema v70 不变，demo 1.205.0，内置 hash 为 `3d94f3bff136355b23ad4a864f8308197606e79d2c92a3f36ad07f6b69a2c886`。完整边界见 [Contract v209](contract-v209-warrens-content-p24-slime-mold.md)。
+
 ## 9. 内容迁移策略
 
 ### 9.1 当前阶段
