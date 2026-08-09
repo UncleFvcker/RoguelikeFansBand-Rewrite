@@ -78,6 +78,104 @@ fn shapechanger_projects_another_monster_and_rerolls_each_action() {
 }
 
 #[test]
+fn chameleon_keeps_its_identity_while_its_form_drives_runtime_behavior() {
+    let mut game = Game::new_warrens_journey_with_build(1, "demo.build.warrior")
+        .expect("Warrens journey should create");
+    game.push_generated_actor(
+        "test.chameleon".to_owned(),
+        "demo.actor.chameleon",
+        Position { x: 5, y: 3 },
+    );
+    let index = game.entities.len() - 1;
+    game.apply_chameleon_form(index, "demo.actor.illusionist");
+
+    let actor = &game.entities[index];
+    let form = game
+        .content
+        .actor("demo.actor.illusionist")
+        .expect("illusionist form should exist");
+    assert_eq!(actor.kind_id, "demo.actor.chameleon");
+    assert_eq!(
+        actor.appearance_kind_id.as_deref(),
+        Some("demo.actor.illusionist")
+    );
+    assert_eq!(actor.speed, form.speed);
+    assert!(actor_max_hp_is_valid(form, actor.max_hp));
+    assert_eq!(actor.resistances, definition_resistance_profile(form));
+    let runtime = game
+        .actor_runtime_definition(actor)
+        .expect("chameleon form should be its runtime definition");
+    assert_eq!(runtime.id, form.id);
+    assert!(!resolved_melee_blows(runtime).is_empty());
+    assert!(runtime.monster_casting.is_some());
+
+    game.entities[index].casting_cooldown_remaining = 3;
+    game.entities[index]
+        .observed_player_resistances
+        .insert(DamageType::Fire, ResistanceLevel::Resistant);
+    game.apply_chameleon_form(index, "demo.actor.earth-spirit");
+    assert_eq!(game.entities[index].casting_cooldown_remaining, 0);
+    assert!(game.entities[index].observed_player_resistances.is_empty());
+    let wall = Position { x: 6, y: 3 };
+    replace_terrain(&mut game, wall, "demo.terrain.wall");
+    assert!(game.actor_can_enter_position(index, wall));
+
+    let expected_hash = game.state_hash();
+    let save = game.to_save();
+    let saved = save
+        .entities
+        .iter()
+        .find(|entity| entity.id == "test.chameleon")
+        .expect("chameleon should be saved");
+    assert_eq!(saved.kind_id, "demo.actor.chameleon");
+    assert_eq!(
+        saved.appearance_kind_id.as_deref(),
+        Some("demo.actor.earth-spirit")
+    );
+    let restored = Game::from_save(save).expect("chameleon form should round-trip");
+    assert_eq!(restored.state_hash(), expected_hash);
+    let restored_actor = restored
+        .entities
+        .iter()
+        .find(|actor| actor.id == "test.chameleon")
+        .expect("restored chameleon should exist");
+    assert_eq!(
+        restored
+            .actor_runtime_definition(restored_actor)
+            .expect("restored form should remain active")
+            .id,
+        "demo.actor.earth-spirit"
+    );
+}
+
+#[test]
+fn chameleon_change_check_uses_one_in_thirteen_before_selecting_a_form() {
+    let mut game = Game::new_warrens_journey_with_build(1, "demo.build.warrior")
+        .expect("Warrens journey should create");
+    game.push_generated_actor(
+        "test.chameleon".to_owned(),
+        "demo.actor.chameleon",
+        Position { x: 5, y: 3 },
+    );
+    let index = game.entities.len() - 1;
+    game.apply_chameleon_form(index, "demo.actor.small-kobold");
+
+    let miss_seed = first_seed_for(|rng| rng.bounded(13) != 0);
+    game.rng = RfbRng::seeded(miss_seed);
+    let appearance = game.entities[index].appearance_kind_id.clone();
+    assert!(!game.maybe_change_chameleon_form(index));
+    assert_eq!(game.rng.draw_counter, 1);
+    assert_eq!(game.entities[index].appearance_kind_id, appearance);
+
+    let change_seed = first_seed_for(|rng| rng.bounded(13) == 0);
+    game.rng = RfbRng::seeded(change_seed);
+    assert!(game.maybe_change_chameleon_form(index));
+    assert!(game.rng.draw_counter >= 2);
+    assert_eq!(game.entities[index].kind_id, "demo.actor.chameleon");
+    assert!(game.entities[index].appearance_kind_id.is_some());
+}
+
+#[test]
 fn legacy_dungeon_restrictions_match_only_the_declared_region() {
     let game = Game::new_warrens_journey_with_build(1, "demo.build.warrior")
         .expect("Warrens journey should create");

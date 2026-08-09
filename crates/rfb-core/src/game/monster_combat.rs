@@ -93,8 +93,7 @@ fn reduce_disenchanted_component(rng: &mut RfbRng, value: u16) -> u16 {
 
 impl Game {
     pub(super) fn actor_has_status_immunity(&self, index: usize, status_kind_id: &str) -> bool {
-        self.content
-            .actor(&self.entities[index].kind_id)
+        self.actor_runtime_definition(&self.entities[index])
             .is_some_and(|definition| {
                 definition
                     .status_immunities
@@ -246,8 +245,7 @@ impl Game {
             return;
         };
         let smart = self
-            .content
-            .actor(&self.entities[source_index].kind_id)
+            .actor_runtime_definition(&self.entities[source_index])
             .and_then(|actor| actor.monster_casting.as_ref())
             .is_some_and(|casting| casting.smart);
         if smart {
@@ -315,8 +313,7 @@ impl Game {
         let source_entity_id = self.entities[source_index].id.clone();
         let source_kind_id = self.entities[source_index].kind_id.clone();
         let definition = self
-            .content
-            .actor(&source_kind_id)
+            .actor_runtime_definition(&self.entities[source_index])
             .expect("monster actor definition must remain available")
             .clone();
         let attacker = self.actor_derived_stats(&self.entities[source_index], &definition, false);
@@ -330,8 +327,7 @@ impl Game {
                 break;
             };
             let target_definition = self
-                .content
-                .actor(&self.entities[target_index].kind_id)
+                .actor_runtime_definition(&self.entities[target_index])
                 .expect("monster melee target definition must remain available");
             let target_stats =
                 self.actor_derived_stats(&self.entities[target_index], target_definition, false);
@@ -916,8 +912,7 @@ impl Game {
         let kind_id = self.entities[index].kind_id.clone();
         let nice = self.entities[index].nice;
         let definition = self
-            .content
-            .actor(&kind_id)
+            .actor_runtime_definition(&self.entities[index])
             .expect("monster actor definition must remain available")
             .clone();
         let attacker = self.actor_derived_stats(&self.entities[index], &definition, false);

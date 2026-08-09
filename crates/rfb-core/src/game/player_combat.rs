@@ -89,8 +89,7 @@ impl Game {
         let (trace, target_index) = self.trace_projectile_path(path);
         if let Some(index) = target_index {
             let definition = self
-                .content
-                .actor(&self.entities[index].kind_id)
+                .actor_runtime_definition(&self.entities[index])
                 .expect("projectile target definition must remain available")
                 .clone();
             let target_kind_id = definition.id.clone();
@@ -190,8 +189,7 @@ impl Game {
         removed_entities: &mut Vec<String>,
     ) -> Result<DamageOutcome, CoreError> {
         let definition = self
-            .content
-            .actor(&self.entities[index].kind_id)
+            .actor_runtime_definition(&self.entities[index])
             .expect("ability target definition must remain available")
             .clone();
         let target_kind_id = definition.id.clone();
@@ -278,8 +276,7 @@ impl Game {
         let landing = trace.landing;
         if let (Some(profile), Some(index)) = (profile, target_index) {
             let target_definition = self
-                .content
-                .actor(&self.entities[index].kind_id)
+                .actor_runtime_definition(&self.entities[index])
                 .expect("throw target definition must remain available")
                 .clone();
             let target_kind_id = target_definition.id.clone();
@@ -370,8 +367,7 @@ impl Game {
         removed_entities: &mut Vec<String>,
     ) -> Result<(), CoreError> {
         let definition = self
-            .content
-            .actor(&self.entities[index].kind_id)
+            .actor_runtime_definition(&self.entities[index])
             .expect("monster actor definition must remain available")
             .clone();
         let target_kind = self.entities[index].kind_id.clone();
@@ -623,8 +619,7 @@ impl Game {
         let source_entity_id = self.entities[source_index].id.clone();
         let source_kind_id = self.entities[source_index].kind_id.clone();
         let definition = self
-            .content
-            .actor(&source_kind_id)
+            .actor_runtime_definition(&self.entities[source_index])
             .expect("summon actor definition must remain available")
             .clone();
         let attacker = self.actor_derived_stats(&self.entities[source_index], &definition, false);
@@ -639,8 +634,7 @@ impl Game {
             let target_kind_id = self.entities[target_index].kind_id.clone();
             let target_position = self.entities[target_index].position;
             let target_definition = self
-                .content
-                .actor(&target_kind_id)
+                .actor_runtime_definition(&self.entities[target_index])
                 .expect("summon melee target definition must remain available");
             let target_stats =
                 self.actor_derived_stats(&self.entities[target_index], target_definition, false);

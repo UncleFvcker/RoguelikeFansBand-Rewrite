@@ -2206,3 +2206,5 @@ ability-legacy-drain-mana-11-name = Drain Mana
 ability-legacy-drain-mana-11-description = Drains 11 mana from the target.
 ability-legacy-kin-the-icky-queen-name = Summon kin
 ability-legacy-kin-the-icky-queen-description = Summons two allies of the Icky Queen's kind nearby.
+actor-demo-chameleon-name = Chameleon
+actor-demo-chameleon-description = A true shape-shifter that suddenly takes on another monster's body and abilities.

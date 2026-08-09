@@ -71,7 +71,9 @@ impl Game {
         let held = if self.actor_is_player_side(&self.entities[actor_index]) {
             true
         } else {
-            let level = self.content.actor(&source_kind_id)?.level;
+            let level = self
+                .actor_runtime_definition(&self.entities[actor_index])?
+                .level;
             let resistance = if position == self.player.position {
                 550_u64 * 2 / 3
             } else {
@@ -167,7 +169,7 @@ impl Game {
         changed: &mut BTreeSet<Position>,
     ) {
         let actor = self.entities[actor_index].clone();
-        let Some(actor_definition) = self.content.actor(&actor.kind_id).cloned() else {
+        let Some(actor_definition) = self.actor_runtime_definition(&actor).cloned() else {
             return;
         };
         if !actor_definition.terrain_interaction.picks_up_items {
@@ -213,7 +215,7 @@ impl Game {
         changed: &mut BTreeSet<Position>,
     ) {
         let actor = self.entities[actor_index].clone();
-        let Some(actor_definition) = self.content.actor(&actor.kind_id).cloned() else {
+        let Some(actor_definition) = self.actor_runtime_definition(&actor).cloned() else {
             return;
         };
         if !actor_definition.terrain_interaction.destroys_items {
@@ -287,7 +289,16 @@ impl Game {
     }
 
     pub(super) fn actor_can_enter_position(&self, index: usize, position: Position) -> bool {
-        self.actor_kind_can_enter_position(&self.entities[index].kind_id, position)
+        let Some(terrain_index) = self.index(position) else {
+            return false;
+        };
+        self.actor_runtime_definition(&self.entities[index])
+            .and_then(|actor| {
+                self.content
+                    .terrain(&self.terrain[terrain_index])
+                    .map(|terrain| actor_can_cross_terrain(actor, terrain))
+            })
+            .unwrap_or(false)
     }
 
     pub(super) fn actor_can_kill_body_blocker(
@@ -297,10 +308,10 @@ impl Game {
     ) -> bool {
         let source = &self.entities[source_index];
         let target = &self.entities[target_index];
-        let Some(source_definition) = self.content.actor(&source.kind_id) else {
+        let Some(source_definition) = self.actor_runtime_definition(source) else {
             return false;
         };
-        let Some(target_definition) = self.content.actor(&target.kind_id) else {
+        let Some(target_definition) = self.actor_runtime_definition(target) else {
             return false;
         };
         source_definition.kills_weaker_bodies
@@ -320,10 +331,10 @@ impl Game {
     ) -> bool {
         let source = &self.entities[source_index];
         let target = &self.entities[target_index];
-        let Some(source_definition) = self.content.actor(&source.kind_id) else {
+        let Some(source_definition) = self.actor_runtime_definition(source) else {
             return false;
         };
-        let Some(target_definition) = self.content.actor(&target.kind_id) else {
+        let Some(target_definition) = self.actor_runtime_definition(target) else {
             return false;
         };
         source_definition.moves_weaker_bodies
@@ -340,7 +351,7 @@ impl Game {
         let Some(terrain_index) = self.index(position) else {
             return false;
         };
-        let Some(actor) = self.content.actor(&self.entities[index].kind_id) else {
+        let Some(actor) = self.actor_runtime_definition(&self.entities[index]) else {
             return false;
         };
         self.content

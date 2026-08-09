@@ -34,8 +34,7 @@ impl Game {
         let source_entity_id = self.entities[index].id.clone();
         let source_kind_id = self.entities[index].kind_id.clone();
         let Some(casting) = self
-            .content
-            .actor(&source_kind_id)
+            .actor_runtime_definition(&self.entities[index])
             .and_then(|definition| definition.monster_casting.clone())
         else {
             return Ok(false);
@@ -229,8 +228,7 @@ impl Game {
         };
         if !hostile_target.is_player()
             || !self
-                .content
-                .actor(&self.entities[source_index].kind_id)
+                .actor_runtime_definition(&self.entities[source_index])
                 .and_then(|actor| actor.monster_casting.as_ref())
                 .is_some_and(|casting| casting.smart)
         {
@@ -506,8 +504,7 @@ impl Game {
     ) -> bool {
         let kind_id = self.entities[index].kind_id.clone();
         let Some(awareness) = self
-            .content
-            .actor(&kind_id)
+            .actor_runtime_definition(&self.entities[index])
             .and_then(|definition| definition.awareness.clone())
         else {
             self.entities[index].alerted = true;

@@ -694,6 +694,8 @@ P30“首个非 Mana 职业资源”已由 contract-v90 完成：节奏资源按
 
 **三线集成收口（2026-08）**：城镇自动拾取、物品与变异、Warrens 怪物 P31–P39 在协议 1.157 / contract-v227 / state hash Schema v77 汇合；共享协议投影、存档状态、内容哈希与 exact fixtures 由集成分支统一生成和验证。
 
+**怪物 P40 真实变色龙进展（2026-08）**：contract-v228 接入变色龙。现有 `appearanceKindId` 保存当前形态，`kindId` 保持真实身份；每次清醒行动以 `1/13` 判定换形，成功后按合法分配池选形并按新最大生命等比调整当前生命。形态驱动速度、抗性、派生属性、近战、移动和施法，存档与 State Hash 直接复用既有字段。正式包为 433 actors / 174 abilities，严格同步 368 条；协议 1.157、Schema v77 不变，demo 1.224.0，内容 hash 为 `f2f6891805e8b6b23673e2b6f48abcdf894cfc0578a39bc798f15eb66f7af267`。完整边界见 [Contract v228](contract-v228-warrens-content-p40-chameleon.md)。
+
 ## 9. 内容迁移策略
 
 ### 9.1 当前阶段

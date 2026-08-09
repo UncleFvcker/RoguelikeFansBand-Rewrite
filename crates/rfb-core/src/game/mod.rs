@@ -1111,6 +1111,11 @@ impl Game {
         };
         game.initialize_player_ability_state();
         game.initialize_starting_item_knowledge();
+        let mut initial_entities = std::mem::take(&mut game.entities);
+        for actor in &mut initial_entities {
+            game.maybe_initialize_chameleon_form(actor);
+        }
+        game.entities = initial_entities;
         game.player.hp = game.effective_player_max_hp();
         game.initialize_surface_monsters();
         game.initialize_carried_loot()?;
@@ -2564,6 +2569,7 @@ impl Game {
                 INITIAL_MONSTER_ENERGY_NEED,
                 true,
             );
+            self.maybe_initialize_chameleon_form(&mut entity);
             if !spec.hostile {
                 if spec.duration_turns == 0 {
                     entity.controller_id = Some(spec.owner_id.to_owned());
@@ -3710,10 +3716,10 @@ impl Game {
         removed_entities: &mut Vec<String>,
         surround_reservations: &mut BTreeSet<Position>,
     ) -> Result<(), CoreError> {
+        self.maybe_change_chameleon_form(index);
         self.reroll_shapechanger_appearance(index);
         let never_moves = self
-            .content
-            .actor(&self.entities[index].kind_id)
+            .actor_runtime_definition(&self.entities[index])
             .is_some_and(|definition| definition.movement.never_moves);
         if self.entity_is_player_aligned(index) {
             if !never_moves
@@ -3766,8 +3772,7 @@ impl Game {
             return Ok(());
         }
         let casting = self
-            .content
-            .actor(&self.entities[index].kind_id)
+            .actor_runtime_definition(&self.entities[index])
             .and_then(|definition| definition.monster_casting.clone());
         let current_distance = self.entities[index]
             .position
@@ -3920,8 +3925,7 @@ impl Game {
         removed_entities: &mut Vec<String>,
     ) -> Result<(), CoreError> {
         let never_moves = self
-            .content
-            .actor(&self.entities[index].kind_id)
+            .actor_runtime_definition(&self.entities[index])
             .is_some_and(|definition| definition.movement.never_moves);
         let targets = self.player_summon_hostile_targets(index);
         let adjacent_target = targets.iter().find(|entity_id| {
@@ -4104,8 +4108,7 @@ impl Game {
 
     fn monster_can_use_ranged_melee(&self, index: usize, target: &MonsterHostileTarget) -> bool {
         let definition = self
-            .content
-            .actor(&self.entities[index].kind_id)
+            .actor_runtime_definition(&self.entities[index])
             .expect("monster actor definition must remain available");
         if !definition.ranged_melee
             || self.entities[index]
@@ -4806,8 +4809,7 @@ impl Game {
     }
 
     fn actor_is_invisible(&self, entity: &Actor) -> bool {
-        self.content
-            .actor(&entity.kind_id)
+        self.actor_runtime_definition(entity)
             .is_some_and(|definition| definition.tags.iter().any(|tag| tag == "invisible"))
     }
 
@@ -4822,8 +4824,7 @@ impl Game {
             && squared_distance(self.player.position, entity.position)
                 <= VISIBILITY_RADIUS * VISIBILITY_RADIUS
             && self
-                .content
-                .actor(&entity.kind_id)
+                .actor_runtime_definition(entity)
                 .is_some_and(|definition| {
                     !definition
                         .tags
@@ -4841,8 +4842,7 @@ impl Game {
             && squared_distance(self.player.position, entity.position) <= range * range
             && has_line_of_sight(self, self.player.position, entity.position)
             && self
-                .content
-                .actor(&entity.kind_id)
+                .actor_runtime_definition(entity)
                 .is_some_and(|definition| actor_matches_category(definition, "living"))
     }
 
@@ -4858,7 +4858,7 @@ impl Game {
             .iter()
             .enumerate()
             .filter_map(|(index, entity)| {
-                let definition = self.content.actor(&entity.kind_id)?;
+                let definition = self.actor_runtime_definition(entity)?;
                 definition
                     .tags
                     .iter()
@@ -4980,7 +4980,7 @@ impl Game {
             });
         }
         for entity in &self.entities {
-            let Some(definition) = self.content.actor(&entity.kind_id) else {
+            let Some(definition) = self.actor_runtime_definition(entity) else {
                 continue;
             };
             let Some(light) = definition.light else {

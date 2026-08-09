@@ -445,3 +445,12 @@ contract-v226 / 包 1.222.0 接入闪烁的灯光与黏糊恶心女王。怪物�
 loot table；严格同步 367 条，内容 hash 为
 `604d16879ffd80f5e678cc6363a900f3a9491fd8768ffd84f8ee4c3f940630d2`。
 协议保持 1.152，State Hash Schema 保持 v72。
+
+contract-v228 / 包 1.224.0 接入变色龙。`chameleon` 标签把既有
+`appearanceKindId` 从纯显示投影收窄为该怪物的当前真实形态；本体 `kindId`
+保持不变。每次清醒行动先做 `1/13` 换形判定，成功后从合法非 Unique、非繁殖、
+非自爆且可通过当前位置地形的正式怪物中按分配稀有度选形；形态决定 HP、速度、
+抗性、派生属性、近战、移动和施法。当前包包含 88 种地形、433 种 actor、250
+种物品、174 个能力和 20 张 loot table；严格同步 368 条，内容 hash 为
+`f2f6891805e8b6b23673e2b6f48abcdf894cfc0578a39bc798f15eb66f7af267`。协议保持
+1.157，State Hash Schema 保持 v77。

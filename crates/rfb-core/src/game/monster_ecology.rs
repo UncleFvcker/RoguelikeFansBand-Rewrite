@@ -15,6 +15,7 @@ const ORIGINAL_MULTIPLY_ADJACENCY_FACTOR: u64 = 8;
 const ORIGINAL_MAX_SIGHT: u32 = 20;
 const SHADOWER_APPEARANCE_KIND_ID: &str = "demo.actor.shadower";
 const SHADOWER_ONE_IN: u64 = 333;
+const CHAMELEON_CHANGE_ONE_IN: u64 = 13;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum OriginalGroupRole {
@@ -49,6 +50,132 @@ pub(super) fn actor_allocation_matches_task(
 }
 
 impl Game {
+    pub(super) fn actor_runtime_definition<'a>(
+        &'a self,
+        actor: &Actor,
+    ) -> Option<&'a ActorDefinition> {
+        let definition = self.content.actor(&actor.kind_id)?;
+        if !definition.tags.iter().any(|tag| tag == "chameleon") {
+            return Some(definition);
+        }
+        actor
+            .appearance_kind_id
+            .as_deref()
+            .and_then(|kind_id| self.content.actor(kind_id))
+            .or(Some(definition))
+    }
+
+    fn roll_chameleon_form(&mut self, actor_kind_id: &str, position: Position) -> Option<String> {
+        let terrain_id = self
+            .index(position)
+            .map(|index| self.terrain[index].clone());
+        self.roll_chameleon_form_on_terrain(actor_kind_id, terrain_id.as_deref())
+    }
+
+    fn roll_chameleon_form_on_terrain(
+        &mut self,
+        actor_kind_id: &str,
+        terrain_id: Option<&str>,
+    ) -> Option<String> {
+        let level = self.content.actor(actor_kind_id)?.level;
+        let terrain = terrain_id.and_then(|terrain_id| self.content.terrain(terrain_id));
+        let mut candidates =
+            self.content
+                .actor_definitions()
+                .filter_map(|definition| {
+                    let allocation = definition.allocation.as_ref()?;
+                    let explodes = definition.melee_routine.as_ref().is_some_and(|routine| {
+                        routine.blows.iter().any(|blow| blow.self_destructs)
+                    });
+                    (definition.role == ActorRole::Monster
+                        && definition.id != actor_kind_id
+                        && definition.level <= level
+                        && (allocation.max_depth == 0
+                            || allocation.max_depth >= u16::try_from(level).unwrap_or(u16::MAX))
+                        && !definition.friendly
+                        && !actor_is_unique(definition)
+                        && !allocation.multiplies
+                        && !definition.tags.iter().any(|tag| tag == "chameleon")
+                        && !explodes
+                        && terrain
+                            .as_ref()
+                            .is_none_or(|terrain| actor_can_cross_terrain(definition, terrain)))
+                    .then(|| OriginalAllocationCandidate {
+                        kind_id: definition.id.clone(),
+                        level: definition.level,
+                        legacy_index: allocation.legacy_index,
+                        weight: 100 / allocation.rarity,
+                    })
+                })
+                .filter(|candidate| candidate.weight > 0)
+                .collect::<Vec<_>>();
+        candidates.sort_by_key(|candidate| (candidate.level, candidate.legacy_index));
+        let total = candidates
+            .iter()
+            .map(|candidate| u64::from(candidate.weight))
+            .sum::<u64>();
+        if total == 0 {
+            return None;
+        }
+        let mut roll = self.rng.bounded(total);
+        for candidate in candidates {
+            if roll < u64::from(candidate.weight) {
+                return Some(candidate.kind_id);
+            }
+            roll -= u64::from(candidate.weight);
+        }
+        None
+    }
+
+    pub(super) fn apply_chameleon_form(&mut self, index: usize, form_kind_id: &str) {
+        let definition = self
+            .content
+            .actor(form_kind_id)
+            .expect("selected chameleon form must remain available")
+            .clone();
+        let new_max_hp = actor_spawn_max_hp(&mut self.rng, &definition).max(1);
+        let actor = &mut self.entities[index];
+        let old_max_hp = actor.max_hp.max(1);
+        actor.hp = i32::try_from(
+            i64::from(actor.hp)
+                .saturating_mul(i64::from(new_max_hp))
+                .saturating_div(i64::from(old_max_hp)),
+        )
+        .unwrap_or(i32::MAX)
+        .max(1);
+        actor.max_hp = new_max_hp;
+        actor.speed = definition.speed;
+        actor.resistances = definition_resistance_profile(&definition);
+        actor.casting_cooldown_remaining = 0;
+        if !definition
+            .monster_casting
+            .as_ref()
+            .is_some_and(|casting| casting.smart)
+        {
+            actor.observed_player_resistances.clear();
+        }
+        actor.visible_invisible = false;
+        actor.appearance_kind_id = Some(definition.id);
+    }
+
+    pub(super) fn maybe_change_chameleon_form(&mut self, index: usize) -> bool {
+        let actor_kind_id = self.entities[index].kind_id.clone();
+        if !self
+            .content
+            .actor(&actor_kind_id)
+            .is_some_and(|definition| definition.tags.iter().any(|tag| tag == "chameleon"))
+            || self.rng.bounded(CHAMELEON_CHANGE_ONE_IN) != 0
+        {
+            return false;
+        }
+        let position = self.entities[index].position;
+        let Some(form_kind_id) = self.roll_chameleon_form(&actor_kind_id, position) else {
+            return false;
+        };
+        self.apply_chameleon_form(index, &form_kind_id);
+        true
+    }
+
     pub(super) fn current_floor_task_id(&self) -> Option<&str> {
         self.content.world(&self.world_id).and_then(|world| {
             world
@@ -60,7 +187,61 @@ impl Game {
         })
     }
 
+    pub(super) fn maybe_initialize_chameleon_form(&mut self, actor: &mut Actor) -> bool {
+        if !self
+            .content
+            .actor(&actor.kind_id)
+            .is_some_and(|definition| definition.tags.iter().any(|tag| tag == "chameleon"))
+        {
+            return false;
+        }
+        let terrain_id = self
+            .index(actor.position)
+            .and_then(|index| self.terrain.get(index).cloned());
+        self.maybe_initialize_chameleon_form_on_terrain(actor, terrain_id.as_deref())
+    }
+
+    pub(super) fn maybe_initialize_chameleon_form_on_terrain(
+        &mut self,
+        actor: &mut Actor,
+        terrain_id: Option<&str>,
+    ) -> bool {
+        if self
+            .content
+            .actor(&actor.kind_id)
+            .is_some_and(|definition| definition.tags.iter().any(|tag| tag == "chameleon"))
+        {
+            if actor.appearance_kind_id.is_some() {
+                return true;
+            }
+            let actor_kind_id = actor.kind_id.clone();
+            if let Some(form_kind_id) =
+                self.roll_chameleon_form_on_terrain(&actor_kind_id, terrain_id)
+            {
+                let definition = self
+                    .content
+                    .actor(&form_kind_id)
+                    .expect("selected chameleon form must remain available")
+                    .clone();
+                let new_max_hp = actor_spawn_max_hp(&mut self.rng, &definition).max(1);
+                actor.hp = new_max_hp;
+                actor.max_hp = new_max_hp;
+                actor.speed = definition.speed;
+                actor.resistances = definition_resistance_profile(&definition);
+                actor.casting_cooldown_remaining = 0;
+                actor.observed_player_resistances.clear();
+                actor.visible_invisible = false;
+                actor.appearance_kind_id = Some(form_kind_id);
+            }
+            return true;
+        }
+        false
+    }
+
     pub(super) fn maybe_apply_shadower_appearance(&mut self, actor: &mut Actor) {
+        if self.maybe_initialize_chameleon_form(actor) {
+            return;
+        }
         if self
             .content
             .actor(&actor.kind_id)
@@ -1105,8 +1286,7 @@ impl Game {
             (-1, -1),
         ];
         let chance = self
-            .content
-            .actor(&self.entities[index].kind_id)
+            .actor_runtime_definition(&self.entities[index])
             .and_then(|definition| definition.allocation.as_ref())
             .map_or(0, |allocation| allocation.random_movement_percent);
         if chance == 0 || self.rng.bounded(100) >= u64::from(chance) {

@@ -37,6 +37,7 @@ impl Game {
                 INITIAL_MONSTER_ENERGY_NEED,
                 true,
             );
+            self.maybe_initialize_chameleon_form(&mut entity);
             entity.summon = Some(SummonIdentity {
                 owner_id: owner_id.clone(),
                 source_ability_id: plan.ability.id.clone(),
@@ -775,6 +776,7 @@ impl Game {
                         INITIAL_MONSTER_ENERGY_NEED,
                         true,
                     );
+                    self.maybe_initialize_chameleon_form(&mut entity);
                     entity.summon = Some(SummonIdentity {
                         owner_id: owner_id.clone(),
                         source_ability_id: plan.ability.id.clone(),

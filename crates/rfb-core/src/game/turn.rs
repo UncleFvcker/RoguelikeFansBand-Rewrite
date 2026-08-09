@@ -114,8 +114,7 @@ impl Game {
                 recovered = 1;
             }
             if self
-                .content
-                .actor(&actor.kind_id)
+                .actor_runtime_definition(actor)
                 .is_some_and(|definition| definition.regenerates)
             {
                 recovered = recovered.saturating_mul(2);
@@ -393,8 +392,7 @@ impl Game {
                 continue;
             }
             let definition = self
-                .content
-                .actor(&self.entities[index].kind_id)
+                .actor_runtime_definition(&self.entities[index])
                 .expect("monster actor definition must remain available");
             let speed = derived_speed(
                 &self

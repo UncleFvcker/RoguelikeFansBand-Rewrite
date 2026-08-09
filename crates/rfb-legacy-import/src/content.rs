@@ -7019,6 +7019,7 @@ fn monster_flag_is_mapped(flag: &str) -> bool {
             | "DROP_4D2"
             | "DROP_GOOD"
             | "DROP_GREAT"
+            | "CHAMELEON"
             | "SHAPECHANGER"
             | "HURT_ROCK"
             | "CAN_CLIMB"
@@ -7190,6 +7191,9 @@ fn monster_json(
     }
     if entry.flags.iter().any(|flag| flag == "SHAPECHANGER") {
         tags.push("shapechanger".to_owned());
+    }
+    if entry.flags.iter().any(|flag| flag == "CHAMELEON") {
+        tags.push("chameleon".to_owned());
     }
     if entry.flags.iter().any(|flag| flag == "FIXED_UNIQUE") {
         tags.push("fixed-unique".to_owned());
@@ -7510,6 +7514,7 @@ fn demo_monster_flag_is_handled(flag: &str) -> bool {
                 | "FRIENDS"
                 | "INVISIBLE"
                 | "SMART"
+                | "CHAMELEON"
                 | "SHAPECHANGER"
                 | "WILD_ALL"
                 | "WILD_GRASS"
@@ -7657,7 +7662,7 @@ fn demo_monster_json(
         && !entry
             .flags
             .iter()
-            .any(|flag| matches!(flag.as_str(), "NEVER_BLOW" | "KAGE"))
+            .any(|flag| matches!(flag.as_str(), "NEVER_BLOW" | "KAGE" | "CHAMELEON"))
     {
         return Err(LegacyImportError::InvalidDemoMonsterSelection(format!(
             "{} has no melee routine and is not marked NEVER_BLOW",
@@ -7748,6 +7753,7 @@ fn demo_monster_json(
         ("INVISIBLE", "invisible"),
         ("RES_ALL", "resist-all"),
         ("RES_TELE", "resist-teleport"),
+        ("CHAMELEON", "chameleon"),
         ("SHAPECHANGER", "shapechanger"),
         ("FIXED_UNIQUE", "fixed-unique"),
         ("NO_QUEST", "no-quest"),
@@ -12289,6 +12295,35 @@ S:FREQ_50 | BR_FIRE(40%) | BR_POISON | DETECT_MONSTERS | MAPPING\n";
         assert_eq!(effect["damageType"], "light");
         assert_eq!(effect["radius"], 5);
         assert_eq!(effect["blinkRadius"], 10);
+    }
+
+    #[test]
+    fn chameleon_flag_marks_a_form_changer_without_requiring_a_base_blow() {
+        const CHAMELEON_R_INFO: &str = "\
+N:1040:Chameleon\n\
+G:R:v\n\
+I:110:10d100:20:0:0:150\n\
+W:20:1:999:0:0:0\n\
+F:CHAMELEON | ANIMAL | CAN_FLY | RES_FIRE\n";
+        let monsters = parse_r_info(CHAMELEON_R_INFO).expect("synthetic chameleon should parse");
+        let selection: DemoMonsterSelectionEntry = serde_json::from_value(serde_json::json!({
+            "sourceIndex": 1040,
+            "id": "chameleon",
+            "tags": ["animal", "warrens"],
+            "omittedFlags": []
+        }))
+        .expect("synthetic selection should parse");
+        let chameleon = demo_monster_json(&monsters[0], &selection, &mut BTreeMap::new())
+            .expect("chameleon should import without a base blow");
+
+        assert!(
+            chameleon["tags"]
+                .as_array()
+                .expect("tags should be an array")
+                .iter()
+                .any(|tag| tag == "chameleon")
+        );
+        assert_eq!(chameleon["meleeRoutine"]["blows"], serde_json::json!([]));
     }
 
     #[test]

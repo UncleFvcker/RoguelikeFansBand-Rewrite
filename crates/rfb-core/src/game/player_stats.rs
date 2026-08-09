@@ -1029,6 +1029,7 @@ impl Game {
         definition: &rfb_content::ActorDefinition,
         include_equipment: bool,
     ) -> ActorDerivedStats {
+        let definition = self.actor_runtime_definition(actor).unwrap_or(definition);
         let mut pipeline = DerivedStatsPipeline::new();
         let base_source = definition.id.as_str();
         pipeline.add(

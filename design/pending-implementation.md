@@ -186,6 +186,11 @@ contract-v226 接入闪烁的灯光与黏糊恶心女王，正式包 actor 增�
 酸性顺序复用现有抗性、状态、伤害和死亡中止。协议 1.152、State Hash Schema v72
 不变。
 
+contract-v228 接入变色龙，正式包 actor 增至 433、严格同步增至 368 条，ability
+保持 174。每次清醒行动以 `1/13` 判定真实换形；当前形态通过既有
+`appearanceKindId` 保存并进入 State Hash，驱动 HP、速度、抗性、属性、近战、
+移动和施法，本体 `kindId` 保持变色龙。协议 1.157、State Hash Schema v77 不变。
+
 荒野 W0 已导入 `master:w_info.txt` 的 `99x66` normal 世界图、15 类地形、
 危险等级、道路和起点，并只把现有 Outpost/Warrens 绑定为正式地点。W1 已完成
 权威地图尺度、荒野位置/种子保存、协议投影、现有 Pixi 渲染与 `x` 查看。W2

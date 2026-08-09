@@ -2206,3 +2206,5 @@ ability-legacy-drain-mana-11-name = 吸取法力
 ability-legacy-drain-mana-11-description = 从目标身上吸取 11 点法力。
 ability-legacy-kin-the-icky-queen-name = 召唤同类
 ability-legacy-kin-the-icky-queen-description = 在附近召唤两个黏糊恶心女王的同类盟友。
+actor-demo-chameleon-name = 变色龙
+actor-demo-chameleon-description = 一只真正的变形者，会突然获得另一种怪物的身体与能力。

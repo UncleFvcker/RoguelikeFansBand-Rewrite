@@ -766,8 +766,7 @@ impl Game {
     ) -> Result<bool, CoreError> {
         let reflector_kind_id = self.entities[reflector_index].kind_id.clone();
         if !self
-            .content
-            .actor(&reflector_kind_id)
+            .actor_runtime_definition(&self.entities[reflector_index])
             .is_some_and(|definition| definition.reflects_bolts)
             || self.rng.bounded(4) == 0
         {
@@ -2137,6 +2136,7 @@ impl Game {
                 INITIAL_MONSTER_ENERGY_NEED,
                 true,
             );
+            self.maybe_initialize_chameleon_form(&mut entity);
             if !hostile {
                 entity.summon = Some(SummonIdentity {
                     owner_id: self.player.id.clone(),

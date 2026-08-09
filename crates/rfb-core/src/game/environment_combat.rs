@@ -30,8 +30,7 @@ impl Game {
             return Ok(true);
         };
         let definition = self
-            .content
-            .actor(&self.entities[index].kind_id)
+            .actor_runtime_definition(&self.entities[index])
             .expect("moving actor definition must remain available")
             .clone();
         if actor_avoids_terrain_trap(&definition, terrain) {
