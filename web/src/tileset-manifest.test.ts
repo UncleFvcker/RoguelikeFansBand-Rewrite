@@ -40,7 +40,7 @@ test("RFB 28px manifest exposes the expanded atlas and standalone player art", (
   assert.equal(image.mode, "image");
   assert.equal(image.tileWidth, 28);
   assert.equal(image.tileHeight, 28);
-  assert.deepEqual(image.atlas, { source: "atlas.png", columns: 8, rows: 12 });
+  assert.deepEqual(image.atlas, { source: "atlas.png", columns: 8, rows: 16 });
   assert.deepEqual(image.mappings["demo.terrain.floor"]?.tile, { x: 0, y: 0 });
   assert.deepEqual(image.mappings["demo.terrain.wall"]?.tile, { x: 1, y: 0 });
   assert.deepEqual(image.mappings["demo.terrain.permanent-wall"]?.tile, { x: 2, y: 0 });
@@ -202,6 +202,65 @@ test("RFB 28px manifest exposes the expanded atlas and standalone player art", (
   assert.deepEqual(image.mappings["demo.item.skeleton-remains"]?.tile, { x: 7, y: 11 });
   assert.deepEqual(image.mappings["demo.item.light-healing-potion"]?.tile, { x: 6, y: 3 });
   assert.deepEqual(image.mappings["demo.terrain.outpost-fortification"]?.tile, { x: 0, y: 1 });
+  for (const [id, x] of [
+    ["demo.terrain.surface-waste", 0],
+    ["demo.terrain.surface-swamp", 1],
+    ["demo.terrain.surface-snow", 2],
+    ["demo.terrain.surface-pack-ice", 3],
+    ["demo.terrain.surface-mountain", 4],
+    ["demo.terrain.surface-glacier", 5],
+    ["demo.terrain.surface-lava-shallow", 6],
+    ["demo.terrain.surface-lava-deep", 7],
+  ]) {
+    assert.deepEqual(image.mappings[id]?.tile, { x, y: 12 });
+  }
+  for (const [id, x] of [
+    ["demo.actor.filthy-street-urchin", 0],
+    ["demo.actor.agent-of-black-market", 1],
+    ["demo.actor.novice-rogue", 2],
+    ["demo.actor.scruffy-looking-hobbit", 3],
+    ["demo.actor.nibelung", 4],
+    ["demo.actor.bandit", 5],
+    ["demo.actor.tax-collector", 6],
+    ["demo.terrain.count-entrance", 7],
+  ]) {
+    assert.deepEqual(image.mappings[id]?.tile, { x, y: 13 });
+  }
+  for (const [id, x] of [
+    ["demo.actor.floating-eye", 0],
+    ["demo.actor.grip-farmer-maggots-dog", 1],
+    ["demo.actor.wolf-farmer-maggots-dog", 2],
+    ["demo.actor.fang-farmer-maggots-dog", 3],
+    ["demo.actor.blubbering-icky-thing", 4],
+    ["demo.actor.cave-spider", 5],
+    ["demo.actor.clear-icky-thing", 6],
+    ["demo.actor.giant-black-ant", 7],
+  ]) {
+    assert.deepEqual(image.mappings[id]?.tile, { x, y: 14 });
+  }
+  for (const [id, x] of [
+    ["demo.actor.goomba", 0],
+    ["demo.actor.large-yellow-snake", 1],
+    ["demo.actor.shrieker-mushroom-patch", 2],
+    ["demo.actor.slimy-worm-mass", 3],
+    ["demo.actor.white-harpy", 4],
+    ["demo.actor.yellow-jelly", 5],
+    ["demo.actor.yellow-mushroom-patch", 6],
+    ["demo.actor.giant-white-ant", 7],
+  ]) {
+    assert.deepEqual(image.mappings[id]?.tile, { x, y: 15 });
+  }
+  for (const id of ["demo.actor.crow", "demo.actor.crow-of-durthang"]) {
+    assert.deepEqual(image.mappings[id]?.tile, { x: 0, y: 6 });
+  }
+  for (const id of [
+    "demo.actor.creeping-copper-coins",
+    "demo.actor.creeping-silver-coins",
+    "demo.actor.creeping-gold-coins",
+    "demo.actor.creeping-mithril-coins",
+  ]) {
+    assert.deepEqual(image.mappings[id]?.tile, { x: 1, y: 3 });
+  }
 });
 
 test("standalone mapping images resolve independently from the main atlas", () => {

@@ -10,7 +10,7 @@
   "atlas": {
     "source": "atlas.png",
     "columns": 8,
-    "rows": 12
+    "rows": 16
   },
   "mappings": {
     "demo.terrain.floor": {
@@ -689,6 +689,167 @@
       "foreground": "#e1a171",
       "background": "#523b40",
       "tile": { "x": 0, "y": 1 }
+    },
+    "demo.terrain.surface-waste": {
+      "foreground": "#b19470",
+      "background": "#4a3a32",
+      "tile": { "x": 0, "y": 12 }
+    },
+    "demo.terrain.surface-swamp": {
+      "foreground": "#6e7137",
+      "background": "#182622",
+      "tile": { "x": 1, "y": 12 }
+    },
+    "demo.terrain.surface-snow": {
+      "foreground": "#eef4f3",
+      "background": "#91aebc",
+      "tile": { "x": 2, "y": 12 }
+    },
+    "demo.terrain.surface-pack-ice": {
+      "foreground": "#d8f0f2",
+      "background": "#35677f",
+      "tile": { "x": 3, "y": 12 }
+    },
+    "demo.terrain.surface-mountain": {
+      "foreground": "#a0a19b",
+      "background": "#252a31",
+      "tile": { "x": 4, "y": 12 }
+    },
+    "demo.terrain.surface-glacier": {
+      "foreground": "#d1f2f2",
+      "background": "#235875",
+      "tile": { "x": 5, "y": 12 }
+    },
+    "demo.terrain.surface-lava-shallow": {
+      "foreground": "#ffb431",
+      "background": "#261b1b",
+      "tile": { "x": 6, "y": 12 }
+    },
+    "demo.terrain.surface-lava-deep": {
+      "foreground": "#ffe06a",
+      "background": "#8c3520",
+      "tile": { "x": 7, "y": 12 }
+    },
+    "demo.actor.filthy-street-urchin": {
+      "foreground": "#d49a6a",
+      "tile": { "x": 0, "y": 13 }
+    },
+    "demo.actor.agent-of-black-market": {
+      "foreground": "#d01946",
+      "tile": { "x": 1, "y": 13 }
+    },
+    "demo.actor.novice-rogue": {
+      "foreground": "#6e7137",
+      "tile": { "x": 2, "y": 13 }
+    },
+    "demo.actor.scruffy-looking-hobbit": {
+      "foreground": "#427f3b",
+      "tile": { "x": 3, "y": 13 }
+    },
+    "demo.actor.nibelung": {
+      "foreground": "#62abd4",
+      "tile": { "x": 4, "y": 13 }
+    },
+    "demo.actor.bandit": {
+      "foreground": "#e84444",
+      "tile": { "x": 5, "y": 13 }
+    },
+    "demo.actor.tax-collector": {
+      "foreground": "#f2b632",
+      "tile": { "x": 6, "y": 13 }
+    },
+    "demo.terrain.count-entrance": {
+      "foreground": "#f2b632",
+      "background": "#802954",
+      "tile": { "x": 7, "y": 13 }
+    },
+    "demo.actor.floating-eye": {
+      "foreground": "#62abd4",
+      "tile": { "x": 0, "y": 14 }
+    },
+    "demo.actor.grip-farmer-maggots-dog": {
+      "foreground": "#d49a6a",
+      "tile": { "x": 1, "y": 14 }
+    },
+    "demo.actor.wolf-farmer-maggots-dog": {
+      "foreground": "#91a0ad",
+      "tile": { "x": 2, "y": 14 }
+    },
+    "demo.actor.fang-farmer-maggots-dog": {
+      "foreground": "#9b4c51",
+      "tile": { "x": 3, "y": 14 }
+    },
+    "demo.actor.blubbering-icky-thing": {
+      "foreground": "#d49a6a",
+      "tile": { "x": 4, "y": 14 }
+    },
+    "demo.actor.cave-spider": {
+      "foreground": "#687789",
+      "tile": { "x": 5, "y": 14 }
+    },
+    "demo.actor.clear-icky-thing": {
+      "foreground": "#9bf0fd",
+      "tile": { "x": 6, "y": 14 }
+    },
+    "demo.actor.giant-black-ant": {
+      "foreground": "#343b48",
+      "tile": { "x": 7, "y": 14 }
+    },
+    "demo.actor.goomba": {
+      "foreground": "#d49a6a",
+      "tile": { "x": 0, "y": 15 }
+    },
+    "demo.actor.large-yellow-snake": {
+      "foreground": "#f2b632",
+      "tile": { "x": 1, "y": 15 }
+    },
+    "demo.actor.shrieker-mushroom-patch": {
+      "foreground": "#e84444",
+      "tile": { "x": 2, "y": 15 }
+    },
+    "demo.actor.slimy-worm-mass": {
+      "foreground": "#6e7137",
+      "tile": { "x": 3, "y": 15 }
+    },
+    "demo.actor.white-harpy": {
+      "foreground": "#cae6f5",
+      "tile": { "x": 4, "y": 15 }
+    },
+    "demo.actor.yellow-jelly": {
+      "foreground": "#ffe06a",
+      "tile": { "x": 5, "y": 15 }
+    },
+    "demo.actor.yellow-mushroom-patch": {
+      "foreground": "#f2b632",
+      "tile": { "x": 6, "y": 15 }
+    },
+    "demo.actor.giant-white-ant": {
+      "foreground": "#cae6f5",
+      "tile": { "x": 7, "y": 15 }
+    },
+    "demo.actor.crow": {
+      "foreground": "#91a0ad",
+      "tile": { "x": 0, "y": 6 }
+    },
+    "demo.actor.crow-of-durthang": {
+      "foreground": "#91a0ad",
+      "tile": { "x": 0, "y": 6 }
+    },
+    "demo.actor.creeping-copper-coins": {
+      "foreground": "#d49a6a",
+      "tile": { "x": 1, "y": 3 }
+    },
+    "demo.actor.creeping-silver-coins": {
+      "foreground": "#cae6f5",
+      "tile": { "x": 1, "y": 3 }
+    },
+    "demo.actor.creeping-gold-coins": {
+      "foreground": "#ffd569",
+      "tile": { "x": 1, "y": 3 }
+    },
+    "demo.actor.creeping-mithril-coins": {
+      "foreground": "#9bf0fd",
+      "tile": { "x": 1, "y": 3 }
     }
   },
   "fallback": {

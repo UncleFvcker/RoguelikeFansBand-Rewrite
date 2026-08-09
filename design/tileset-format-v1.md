@@ -2,6 +2,8 @@
 
 状态：ASCII glyph atlas、图片 atlas、manifest v1、回退链和五层 RendererBackend 已实现
 
+Tileset 的美术制作、扩展、导出和交接流程见 [`tileset-production-guide.md`](tileset-production-guide.md)。
+
 ## 1. 边界
 
 Rust 核心输出地形、角色和物品的语义 ID，并随初始快照提供内容包声明的 ASCII fallback glyph。实际 tileset、颜色和图片资源仍属于非权威前端资源，不能影响命令、RNG、存档或 state hash；前端也不得再直接读取内容包源 JSON。
