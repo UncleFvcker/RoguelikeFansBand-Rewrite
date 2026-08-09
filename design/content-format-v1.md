@@ -437,3 +437,11 @@ ability 和 ability program 仅保存现有治疗、分类召唤、同族召唤�
 20 张 loot table；严格同步 365 条，内容 hash 为
 `acc9186760331c90d5c3218755950ac186460f234760b8e9e995645ec41caba7`。
 协议保持 1.152，State Hash Schema 保持 v72。
+
+contract-v226 / 包 1.222.0 接入闪烁的灯光与黏糊恶心女王。怪物专用
+`jump-damage` 固定先结算施法者中心范围光伤、后闪现；actor `contactAuras`
+以声明有序列表替代单光环字段，毒素与酸性分别复用既有状态、抗性、伤害和死亡
+中止。当前包包含 88 种地形、432 种 actor、249 种物品、174 个能力和 20 张
+loot table；严格同步 367 条，内容 hash 为
+`604d16879ffd80f5e678cc6363a900f3a9491fd8768ffd84f8ee4c3f940630d2`。
+协议保持 1.152，State Hash Schema 保持 v72。

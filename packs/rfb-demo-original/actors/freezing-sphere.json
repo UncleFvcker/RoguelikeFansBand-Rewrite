@@ -6,11 +6,13 @@
     "rarity": 1
   },
   "attack": 4,
-  "contactAura": {
-    "damageDice": 1,
-    "damageSides": 2,
-    "damageType": "cold"
-  },
+  "contactAuras": [
+    {
+      "damageDice": 1,
+      "damageSides": 2,
+      "damageType": "cold"
+    }
+  ],
   "damageDice": 8,
   "damageSides": 8,
   "damageType": "cold",

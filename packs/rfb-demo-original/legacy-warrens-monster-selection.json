@@ -2202,6 +2202,18 @@
       "id": "ranger",
       "tags": ["humanoid", "warrens"],
       "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 1279,
+      "id": "blinking-light",
+      "tags": ["wisp", "warrens"],
+      "omittedFlags": ["ATTR_MULTI", "EMPTY_MIND", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 909,
+      "id": "the-icky-queen",
+      "tags": ["icky", "warrens"],
+      "omittedFlags": ["CAN_SPEAK", "FEMALE", "WEIRD_MIND"]
     }
   ]
 }

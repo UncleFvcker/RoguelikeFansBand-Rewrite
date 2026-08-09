@@ -184,7 +184,9 @@ impl Game {
         let target_position = monster_plan_target(&plan.target).map(MonsterHostileTarget::position);
         let distance_multiplier = if !matches!(
             &plan.target,
-            MonsterAbilityTargetPlan::SelfTarget | MonsterAbilityTargetPlan::Summon { .. }
+            MonsterAbilityTargetPlan::SelfTarget
+                | MonsterAbilityTargetPlan::JumpDamage { .. }
+                | MonsterAbilityTargetPlan::Summon { .. }
         ) && target_position.is_some_and(|position| {
             origin
                 .x
@@ -278,6 +280,7 @@ impl Game {
         if matches!(
             target,
             MonsterAbilityTargetPlan::Area { .. }
+                | MonsterAbilityTargetPlan::JumpDamage { .. }
                 | MonsterAbilityTargetPlan::Beam { .. }
                 | MonsterAbilityTargetPlan::Cone { .. }
                 | MonsterAbilityTargetPlan::TerrainTransform { .. }
@@ -407,6 +410,14 @@ impl Game {
                     Some(source.kind_id.clone()),
                     Some(source.position),
                     Vec::new(),
+                ),
+                MonsterAbilityTargetPlan::JumpDamage {
+                    affected_positions, ..
+                } => (
+                    Some(source.id.clone()),
+                    Some(source.kind_id.clone()),
+                    Some(source.position),
+                    affected_positions.clone(),
                 ),
                 MonsterAbilityTargetPlan::Summon { positions }
                 | MonsterAbilityTargetPlan::SummonCategory { positions, .. } => (

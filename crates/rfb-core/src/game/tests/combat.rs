@@ -112,12 +112,12 @@ fn experience_drain_lowers_current_level_but_preserves_character_history() {
 fn poison_contact_aura_triggers_after_a_fatal_player_hit() {
     let base = game_with_actor_definition(0, "demo.actor.echo-hound", |actor| {
         actor.defense = 0;
-        actor.contact_aura = Some(rfb_content::ActorContactAuraDefinition {
+        actor.contact_auras = vec![rfb_content::ActorContactAuraDefinition {
             damage_type: rfb_content::ActorDamageType::Poison,
             damage_dice: 1,
             damage_sides: 1,
             chance_percent: None,
-        });
+        }];
     });
     let (game, events) = (0..128)
         .find_map(|seed| {
@@ -155,6 +155,7 @@ fn poison_contact_aura_triggers_after_a_fatal_player_hit() {
 #[test]
 fn elemental_contact_auras_deal_immediate_resisted_damage() {
     for (actor_damage_type, damage_type) in [
+        (rfb_content::ActorDamageType::Acid, DamageType::Acid),
         (rfb_content::ActorDamageType::Fire, DamageType::Fire),
         (rfb_content::ActorDamageType::Cold, DamageType::Cold),
         (
@@ -163,12 +164,12 @@ fn elemental_contact_auras_deal_immediate_resisted_damage() {
         ),
     ] {
         let mut game = game_with_actor_definition(0, "demo.actor.echo-hound", |actor| {
-            actor.contact_aura = Some(rfb_content::ActorContactAuraDefinition {
+            actor.contact_auras = vec![rfb_content::ActorContactAuraDefinition {
                 damage_type: actor_damage_type,
                 damage_dice: 2,
                 damage_sides: 1,
                 chance_percent: None,
-            });
+            }];
         });
         game.player.hp = 10;
         game.player
@@ -181,7 +182,7 @@ fn elemental_contact_auras_deal_immediate_resisted_damage() {
             .clone();
         let mut events = Vec::new();
 
-        assert!(!game.resolve_monster_contact_aura(&definition, &mut events));
+        assert!(!game.resolve_monster_contact_auras(&definition, &mut events));
 
         assert_eq!(game.player.hp, 9);
         assert!(
@@ -206,15 +207,74 @@ fn elemental_contact_auras_deal_immediate_resisted_damage() {
 }
 
 #[test]
+fn multiple_contact_auras_resolve_in_declaration_order_with_resistance() {
+    let mut game = game_with_actor_definition(0, "demo.actor.echo-hound", |actor| {
+        actor.contact_auras = vec![
+            rfb_content::ActorContactAuraDefinition {
+                damage_type: rfb_content::ActorDamageType::Poison,
+                damage_dice: 2,
+                damage_sides: 1,
+                chance_percent: None,
+            },
+            rfb_content::ActorContactAuraDefinition {
+                damage_type: rfb_content::ActorDamageType::Acid,
+                damage_dice: 2,
+                damage_sides: 1,
+                chance_percent: None,
+            },
+        ];
+    });
+    game.player.hp = 10;
+    game.player.resistances.set(
+        DamageType::Acid,
+        crate::resistance::ResistanceLevel::Resistant,
+    );
+    let definition = game
+        .content
+        .actor("demo.actor.echo-hound")
+        .expect("contact aura actor definition")
+        .clone();
+    let mut events = Vec::new();
+
+    assert!(!game.resolve_monster_contact_auras(&definition, &mut events));
+
+    assert_eq!(game.player.hp, 9);
+    assert!(
+        game.player
+            .statuses
+            .iter()
+            .any(|status| { status.kind_id == STATUS_POISON && status.remaining_ticks == 3 })
+    );
+    assert!(matches!(
+        events.as_slice(),
+        [
+            DomainEvent::MonsterContactAuraApplied { status_kind_id, .. },
+            DomainEvent::MonsterMeleeHit { damage, .. }
+        ] if status_kind_id == STATUS_POISON
+            && damage.damage_type == DamageType::Acid
+            && damage.requested == 2
+            && damage.applied == 1
+    ));
+}
+
+#[test]
 fn fatal_elemental_contact_aura_stops_player_melee() {
     let mut base = game_with_actor_definition(0, "demo.actor.echo-hound", |actor| {
         actor.defense = 0;
-        actor.contact_aura = Some(rfb_content::ActorContactAuraDefinition {
-            damage_type: rfb_content::ActorDamageType::Fire,
-            damage_dice: 2,
-            damage_sides: 1,
-            chance_percent: None,
-        });
+        actor.contact_auras = vec![
+            rfb_content::ActorContactAuraDefinition {
+                damage_type: rfb_content::ActorDamageType::Fire,
+                damage_dice: 2,
+                damage_sides: 1,
+                chance_percent: None,
+            },
+            rfb_content::ActorContactAuraDefinition {
+                damage_type: rfb_content::ActorDamageType::Electricity,
+                damage_dice: 2,
+                damage_sides: 1,
+                chance_percent: None,
+            },
+        ];
     });
     let mut extra_attacks = monster_combat::melee_status(STATUS_HASTE, 20, "test.setup").status;
     extra_attacks.granted_equipment_bonuses.melee_attacks = 2;
@@ -238,6 +298,18 @@ fn fatal_elemental_contact_aura_stops_player_melee() {
         .expect("a deterministic seed should trigger the elemental contact aura");
 
     assert_eq!(game.player.hp, -1);
+    assert_eq!(
+        events
+            .iter()
+            .filter(|event| matches!(event, DomainEvent::MonsterMeleeHit { .. }))
+            .count(),
+        1
+    );
+    assert!(!events.iter().any(|event| matches!(
+        event,
+        DomainEvent::MonsterMeleeHit { damage, .. }
+            if damage.damage_type == DamageType::Electricity
+    )));
     assert_eq!(
         events
             .iter()

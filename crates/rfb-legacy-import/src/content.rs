@@ -6708,6 +6708,45 @@ fn map_misc_spell_token(
     }
 }
 
+fn map_jump_spell_token(
+    token: &str,
+    abilities: &mut BTreeMap<String, serde_json::Value>,
+) -> Option<String> {
+    let (base, explicit) = token.split_once('(')?;
+    let explicit = explicit.strip_suffix(')')?;
+    if !matches!(base, "JMP_LIGHT" | "JMP_LITE") {
+        return None;
+    }
+    let (damage_dice, damage_sides, damage_bonus) = parse_explicit_damage_dice(explicit)?;
+    if damage_bonus != 0 {
+        return None;
+    }
+    let suffix = format!("jump-light-{damage_dice}d{damage_sides}");
+    let id = format!("rfb-legacy.ability.{suffix}");
+    abilities.entry(id.clone()).or_insert_with(|| {
+        serde_json::json!({
+            "$schema": format!("{SCHEMA_BASE}/ability.schema.json"),
+            "formatVersion": 1,
+            "id": id,
+            "nameKey": format!("ability-legacy-{suffix}-name"),
+            "descriptionKey": format!("ability-legacy-{suffix}-description"),
+            "target": { "modes": ["self"], "range": 0, "requiresLineOfEffect": false },
+            "effect": {
+                "type": "jump-damage",
+                "damageDice": damage_dice,
+                "damageSides": damage_sides,
+                "damageMultiplierNumerator": 5,
+                "damageMultiplierDenominator": 4,
+                "damageType": "light",
+                "radius": 5,
+                "blinkRadius": 10
+            },
+            "tags": ["legacy-import", "innate", "offense"]
+        })
+    });
+    Some(id)
+}
+
 /// CAUSE curses gate on the player's saving throw instead of armour or
 /// resistances; HAND_DOOM (percent-of-current-HP) stays a gap.
 fn map_curse_spell_token(
@@ -7244,34 +7283,47 @@ fn monster_json(
     if let Some(routine) = melee_routine {
         value["meleeRoutine"] = routine;
     }
-    if let Some(aura) = entry.auras.first()
-        && aura.token == "POISON"
-        && let Some((damage_dice, damage_sides)) = aura.dice
-    {
-        let mut contact_aura = serde_json::json!({
-            "damageType": "poison",
-            "damageDice": damage_dice,
-            "damageSides": damage_sides,
-        });
-        if let Some(chance_percent) = aura.chance_percent {
-            contact_aura["chancePercent"] = serde_json::json!(chance_percent);
-        }
-        value["contactAura"] = contact_aura;
-    } else if MONSTER_CONTACT_AURA_FLAGS
+    let mut contact_auras = entry
+        .auras
         .iter()
-        .filter(|(flag, _)| entry.flags.iter().any(|entry_flag| entry_flag == flag))
-        .count()
-        == 1
-        && let Some((_, damage_type)) = MONSTER_CONTACT_AURA_FLAGS
+        .filter_map(|aura| {
+            let damage_type = match aura.token.as_str() {
+                "POISON" => "poison",
+                "ACID" => "acid",
+                _ => return None,
+            };
+            let (damage_dice, damage_sides) = aura.dice?;
+            let mut value = serde_json::json!({
+                "damageType": damage_type,
+                "damageDice": damage_dice,
+                "damageSides": damage_sides,
+            });
+            if let Some(chance_percent) = aura.chance_percent {
+                value["chancePercent"] = serde_json::json!(chance_percent);
+            }
+            Some(value)
+        })
+        .collect::<Vec<_>>();
+    let level = entry.level.unwrap_or_default();
+    contact_auras.extend(
+        MONSTER_CONTACT_AURA_FLAGS
             .iter()
-            .find(|(flag, _)| entry.flags.iter().any(|entry_flag| entry_flag == flag))
-    {
-        let level = entry.level.unwrap_or_default();
-        value["contactAura"] = serde_json::json!({
-            "damageType": damage_type,
-            "damageDice": 1 + level / 26,
-            "damageSides": 1 + level / 17,
-        });
+            .filter_map(|(flag, damage_type)| {
+                entry
+                    .flags
+                    .iter()
+                    .any(|entry_flag| entry_flag == flag)
+                    .then(|| {
+                        serde_json::json!({
+                            "damageType": damage_type,
+                            "damageDice": 1 + level / 26,
+                            "damageSides": 1 + level / 17,
+                        })
+                    })
+            }),
+    );
+    if !contact_auras.is_empty() {
+        value["contactAuras"] = serde_json::json!(contact_auras);
     }
     if let Some(casting) = monster_casting {
         value["monsterCasting"] = casting;
@@ -7536,15 +7588,16 @@ fn demo_monster_json(
             selection.id
         )));
     }
-    let elemental_aura_count = MONSTER_CONTACT_AURA_FLAGS
-        .iter()
-        .filter(|(flag, _)| entry.flags.iter().any(|entry_flag| entry_flag == flag))
-        .count();
-    if entry.auras.len() + elemental_aura_count > 1
+    if entry.auras.len()
+        + MONSTER_CONTACT_AURA_FLAGS
+            .iter()
+            .filter(|(flag, _)| entry.flags.iter().any(|entry_flag| entry_flag == flag))
+            .count()
+        > 8
         || entry
             .auras
-            .first()
-            .is_some_and(|aura| aura.token != "POISON" || aura.dice.is_none())
+            .iter()
+            .any(|aura| !matches!(aura.token.as_str(), "POISON" | "ACID") || aura.dice.is_none())
     {
         return Err(LegacyImportError::InvalidDemoMonsterSelection(format!(
             "{} has an unsupported contact aura",
@@ -7931,6 +7984,9 @@ fn map_spell_token(
         return Some(id);
     }
     if let Some(id) = map_curse_spell_token(token, abilities) {
+        return Some(id);
+    }
+    if let Some(id) = map_jump_spell_token(token, abilities) {
         return Some(id);
     }
     if let Some(id) = map_misc_spell_token(token, level, abilities) {
@@ -8732,16 +8788,11 @@ fn convert_content_from(
                     .collect::<Vec<_>>(),
             })
         });
-        let elemental_aura_count = MONSTER_CONTACT_AURA_FLAGS
-            .iter()
-            .filter(|(flag, _)| entry.flags.iter().any(|entry_flag| entry_flag == flag))
-            .count();
         for flag in &entry.flags {
             if monster_flag_is_mapped(flag)
-                || (elemental_aura_count == 1
-                    && MONSTER_CONTACT_AURA_FLAGS
-                        .iter()
-                        .any(|(aura_flag, _)| flag == *aura_flag))
+                || MONSTER_CONTACT_AURA_FLAGS
+                    .iter()
+                    .any(|(aura_flag, _)| flag == *aura_flag)
             {
                 continue;
             }
@@ -11388,7 +11439,7 @@ mod tests {
     #[test]
     fn demo_monster_import_maps_special_mechanics_without_fallbacks() {
         let mut monsters = parse_r_info(
-            "N:1:test special monster\nG:j:v\nI:110:1d3:8:4:20:10\nW:12:1:50:40:0:0\nB:TOUCH:DRAIN_EXP(10d6)\nA:POISON(1d2)\nF:SHAPECHANGER | MOVE_BODY | REGENERATE | REFLECTING | DUNGEON_31 | DROP_1D2\nO:DROP_WARRIOR_SHOOT\n",
+            "N:1:test special monster\nG:j:v\nI:110:1d3:8:4:20:10\nW:12:1:50:40:0:0\nB:TOUCH:DRAIN_EXP(10d6)\nA:POISON(1d2):ACID(2d3)\nF:SHAPECHANGER | MOVE_BODY | REGENERATE | REFLECTING | DUNGEON_31 | DROP_1D2\nO:DROP_WARRIOR_SHOOT\n",
         )
         .expect("synthetic special monster should parse");
         let actor = demo_monster_json(
@@ -11408,9 +11459,12 @@ mod tests {
             actor["meleeRoutine"]["blows"][0]["effects"][0]["type"],
             "drain-experience"
         );
-        assert_eq!(actor["contactAura"]["damageType"], "poison");
-        assert_eq!(actor["contactAura"]["damageDice"], 1);
-        assert_eq!(actor["contactAura"]["damageSides"], 2);
+        assert_eq!(actor["contactAuras"][0]["damageType"], "poison");
+        assert_eq!(actor["contactAuras"][0]["damageDice"], 1);
+        assert_eq!(actor["contactAuras"][0]["damageSides"], 2);
+        assert_eq!(actor["contactAuras"][1]["damageType"], "acid");
+        assert_eq!(actor["contactAuras"][1]["damageDice"], 2);
+        assert_eq!(actor["contactAuras"][1]["damageSides"], 3);
         assert_eq!(actor["movesWeakerBodies"], true);
         assert_eq!(actor["regenerates"], true);
         assert_eq!(actor["reflectsBolts"], true);
@@ -11452,28 +11506,27 @@ mod tests {
                 &mut BTreeMap::new(),
             )
             .expect("elemental contact aura should import directly");
-            assert_eq!(actor["contactAura"]["damageType"], damage_type);
-            assert_eq!(actor["contactAura"]["damageDice"], 1);
-            assert_eq!(actor["contactAura"]["damageSides"], 2);
+            assert_eq!(actor["contactAuras"][0]["damageType"], damage_type);
+            assert_eq!(actor["contactAuras"][0]["damageDice"], 1);
+            assert_eq!(actor["contactAuras"][0]["damageSides"], 2);
         }
 
         let mut multiple = monsters[0].clone();
         multiple.flags.push("AURA_ELEC".to_owned());
-        assert!(matches!(
-            demo_monster_json(
-                &multiple,
-                &DemoMonsterSelectionEntry {
-                    source_index: multiple.index,
-                    source_id: None,
-                    id: kebab(&multiple.name),
-                    tags: vec!["warrens".to_owned()],
-                    omitted_flags: Vec::new(),
-                },
-                &mut BTreeMap::new(),
-            ),
-            Err(LegacyImportError::InvalidDemoMonsterSelection(message))
-                if message.contains("unsupported contact aura")
-        ));
+        let actor = demo_monster_json(
+            &multiple,
+            &DemoMonsterSelectionEntry {
+                source_index: multiple.index,
+                source_id: None,
+                id: kebab(&multiple.name),
+                tags: vec!["warrens".to_owned()],
+                omitted_flags: Vec::new(),
+            },
+            &mut BTreeMap::new(),
+        )
+        .expect("multiple elemental contact auras should import directly");
+        assert_eq!(actor["contactAuras"][0]["damageType"], "fire");
+        assert_eq!(actor["contactAuras"][1]["damageType"], "electricity");
     }
 
     #[test]
@@ -12165,6 +12218,29 @@ S:FREQ_50 | BR_FIRE(40%) | BR_POISON | DETECT_MONSTERS | MAPPING\n";
         assert_eq!(outcome.report.not_applicable_spells["MAPPING"], 1);
         assert_eq!(outcome.report.unmapped_spells.len(), 0);
         assert_eq!(outcome.report.monsters_with_unmapped_spells, 0);
+    }
+
+    #[test]
+    fn jump_light_maps_exact_damage_multiplier_radius_and_blink() {
+        let mut abilities = BTreeMap::new();
+        let id = map_spell_token(
+            "JMP_LIGHT(5d5)",
+            19,
+            2,
+            "demo.actor.blinking-light",
+            &mut abilities,
+        )
+        .expect("JMP_LIGHT should map");
+        assert_eq!(id, "rfb-legacy.ability.jump-light-5d5");
+        let effect = &abilities[&id]["effect"];
+        assert_eq!(effect["type"], "jump-damage");
+        assert_eq!(effect["damageDice"], 5);
+        assert_eq!(effect["damageSides"], 5);
+        assert_eq!(effect["damageMultiplierNumerator"], 5);
+        assert_eq!(effect["damageMultiplierDenominator"], 4);
+        assert_eq!(effect["damageType"], "light");
+        assert_eq!(effect["radius"], 5);
+        assert_eq!(effect["blinkRadius"], 10);
     }
 
     #[test]

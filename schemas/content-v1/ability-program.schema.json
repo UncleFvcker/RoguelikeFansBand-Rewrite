@@ -104,6 +104,65 @@
         {
           "additionalProperties": false,
           "properties": {
+            "blinkRadius": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "damageDice": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "damageMultiplierDenominator": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "damageMultiplierNumerator": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "damageSides": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "damageType": {
+              "$ref": "#/$defs/ActorDamageType",
+              "default": "physical"
+            },
+            "radius": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "jump-damage",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "damageDice",
+            "damageSides",
+            "damageMultiplierNumerator",
+            "damageMultiplierDenominator",
+            "radius",
+            "blinkRadius"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
             "damageBonus": {
               "default": 0,
               "format": "uint16",

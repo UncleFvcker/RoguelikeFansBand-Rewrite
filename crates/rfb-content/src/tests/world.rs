@@ -73,6 +73,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.black-orc", 244, 2, 50),
             ("demo.actor.blink-dog", 312, 2, 70),
             ("demo.actor.blinking-dot", 22, 1, 10),
+            ("demo.actor.blinking-light", 1279, 3, 44),
             ("demo.actor.bloodfang-the-wolf", 170, 1, 999),
             ("demo.actor.bloodshot-eye", 129, 3, 40),
             ("demo.actor.bloodshot-icky-thing", 155, 3, 40),
@@ -414,6 +415,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.tengu", 194, 1, 40),
             ("demo.actor.the-borshin", 177, 2, 999),
             ("demo.actor.the-ghost-q", 1003, 3, 999),
+            ("demo.actor.the-icky-queen", 909, 5, 999),
             ("demo.actor.tiger", 230, 2, 50),
             ("demo.actor.tiger-snake", 1310, 1, 50),
             ("demo.actor.time-initiate", 1091, 3, 40),
@@ -610,13 +612,13 @@ fn special_mechanics_batch_keeps_each_imported_contract_narrow() {
             )
     );
     assert_eq!(
-        actor("demo.actor.plague-rat").contact_aura,
-        Some(ActorContactAuraDefinition {
+        actor("demo.actor.plague-rat").contact_auras,
+        vec![ActorContactAuraDefinition {
             damage_type: ActorDamageType::Poison,
             damage_dice: 1,
             damage_sides: 2,
             chance_percent: None,
-        })
+        }]
     );
     assert!(
         actor("demo.actor.chaos-shapechanger")
@@ -2087,7 +2089,7 @@ fn level_seventeen_p36_spheres_keep_elemental_contact_and_death_damage() {
             .find(|actor| actor.id == id)
             .unwrap_or_else(|| panic!("{id} should be imported"));
         assert_eq!(actor.level, 17);
-        assert!(actor.contact_aura.is_some_and(|aura| {
+        assert!(actor.contact_auras.first().is_some_and(|aura| {
             aura.damage_type == damage_type
                 && aura.damage_dice == 1
                 && aura.damage_sides == 2
@@ -2196,7 +2198,8 @@ fn p37a_direct_harvest_keeps_noncasting_monster_mechanics() {
     ] {
         assert!(
             actor(&format!("demo.actor.{id}"))
-                .contact_aura
+                .contact_auras
+                .first()
                 .is_some_and(|aura| {
                     aura.damage_type == damage_type
                         && aura.damage_dice == dice
@@ -2633,6 +2636,83 @@ fn p38b_monsters_bind_exact_healing_and_summoning_parameters() {
             damage_bonus: 6,
             damage_type: ActorDamageType::Electricity,
         }
+    ));
+}
+
+#[test]
+fn p39_monsters_bind_jump_damage_and_ordered_contact_auras() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actor = |id: &str| {
+        artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == format!("demo.actor.{id}"))
+            .unwrap_or_else(|| panic!("{id} should be imported"))
+    };
+    let ability = |id: &str| {
+        artifact
+            .content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == format!("rfb-legacy.ability.{id}"))
+            .unwrap_or_else(|| panic!("{id} should be imported"))
+    };
+
+    let blinking = actor("blinking-light");
+    assert_eq!(blinking.level, 19);
+    assert_eq!(
+        blinking.monster_casting.as_ref().unwrap().abilities[0].ability_id,
+        "rfb-legacy.ability.jump-light-5d5"
+    );
+    assert!(matches!(
+        ability("jump-light-5d5").effect,
+        AbilityEffectDefinition::JumpDamage {
+            damage_dice: 5,
+            damage_sides: 5,
+            damage_multiplier_numerator: 5,
+            damage_multiplier_denominator: 4,
+            damage_type: ActorDamageType::Light,
+            radius: 5,
+            blink_radius: 10,
+        }
+    ));
+
+    let queen = actor("the-icky-queen");
+    assert_eq!(queen.level, 20);
+    assert_eq!(
+        queen
+            .contact_auras
+            .iter()
+            .map(|aura| (aura.damage_type, aura.damage_dice, aura.damage_sides))
+            .collect::<Vec<_>>(),
+        vec![
+            (ActorDamageType::Poison, 2, 3),
+            (ActorDamageType::Acid, 2, 3),
+        ]
+    );
+    let queen_abilities = queen
+        .monster_casting
+        .as_ref()
+        .unwrap()
+        .abilities
+        .iter()
+        .map(|candidate| candidate.ability_id.as_str())
+        .collect::<BTreeSet<_>>();
+    assert!(queen_abilities.contains("rfb-legacy.ability.drain-mana-11"));
+    assert!(queen_abilities.contains("rfb-legacy.ability.kin-the-icky-queen"));
+    assert!(matches!(
+        ability("drain-mana-11").effect,
+        AbilityEffectDefinition::DrainResource { amount: 11 }
+    ));
+    assert!(matches!(
+        ability("kin-the-icky-queen").effect,
+        AbilityEffectDefinition::Summon {
+            ref actor_kind_id,
+            count: 2,
+            radius: 2,
+            ..
+        } if actor_kind_id == "demo.actor.the-icky-queen"
     ));
 }
 

@@ -242,6 +242,16 @@ pub enum AbilityEffectDefinition {
         #[serde(default)]
         target_category: Option<String>,
     },
+    JumpDamage {
+        damage_dice: u16,
+        damage_sides: u16,
+        damage_multiplier_numerator: u8,
+        damage_multiplier_denominator: u8,
+        #[serde(default)]
+        damage_type: ActorDamageType,
+        radius: u8,
+        blink_radius: u8,
+    },
     BeamDamage {
         damage_dice: u16,
         damage_sides: u16,
@@ -481,6 +491,7 @@ fn ability_level_scaling_base_and_limit(
         (
             AbilityEffectDefinition::Damage { damage_dice, .. }
             | AbilityEffectDefinition::AreaDamage { damage_dice, .. }
+            | AbilityEffectDefinition::JumpDamage { damage_dice, .. }
             | AbilityEffectDefinition::BeamDamage { damage_dice, .. }
             | AbilityEffectDefinition::BoltOrBeamDamage { damage_dice, .. }
             | AbilityEffectDefinition::ConeDamage { damage_dice, .. }
@@ -492,6 +503,7 @@ fn ability_level_scaling_base_and_limit(
         (
             AbilityEffectDefinition::Damage { damage_sides, .. }
             | AbilityEffectDefinition::AreaDamage { damage_sides, .. }
+            | AbilityEffectDefinition::JumpDamage { damage_sides, .. }
             | AbilityEffectDefinition::BeamDamage { damage_sides, .. }
             | AbilityEffectDefinition::BoltOrBeamDamage { damage_sides, .. }
             | AbilityEffectDefinition::ConeDamage { damage_sides, .. }
@@ -523,6 +535,7 @@ fn ability_level_scaling_base_and_limit(
         ) => Some((u64::from(*full_identify_power), 1_000)),
         (
             AbilityEffectDefinition::AreaDamage { radius, .. }
+            | AbilityEffectDefinition::JumpDamage { radius, .. }
             | AbilityEffectDefinition::ConeDamage { radius, .. }
             | AbilityEffectDefinition::BreathDamage { radius, .. },
             AbilityLevelScalingField::Radius,

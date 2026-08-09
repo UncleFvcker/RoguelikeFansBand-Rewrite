@@ -1,6 +1,6 @@
 # 待实现内容清单
 
-状态：基于 contract-v1–v225、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
+状态：基于 contract-v1–v226、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
 
 本文件只记录已经在现有设计或原版对比中明确出现、但尚未实现的内容。长期设想仍保留在 [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)，这里用于跟踪可以实际排入后续 contract 的缺口。
 
@@ -179,6 +179,12 @@ contract-v225 接入 6 只 P38B 治疗与召唤参数怪物，正式包 actor �
 严格同步增至 365 条，ability 增至 171。新增内容只承载既有治疗、分类召唤、
 同族召唤和伤害 effect 的权威参数；附身者侦测、地图和祝福令牌不进入 casting
 profile。协议 1.152、State Hash Schema v72 不变。
+
+contract-v226 接入闪烁的灯光与黏糊恶心女王，正式包 actor 增至 432、严格同步
+增至 367 条，ability 增至 174。`jump-damage` 只承载原版“施法者中心范围光伤后
+闪现”的固定顺序；`contactAuras` 只把单光环字段迁移为声明有序列表，并按毒素、
+酸性顺序复用现有抗性、状态、伤害和死亡中止。协议 1.152、State Hash Schema v72
+不变。
 
 荒野 W0 已导入 `master:w_info.txt` 的 `99x66` normal 世界图、15 类地形、
 危险等级、道路和起点，并只把现有 Outpost/Warrens 绑定为正式地点。W1 已完成

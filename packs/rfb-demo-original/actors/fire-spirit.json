@@ -10,11 +10,13 @@
     "rarity": 2
   },
   "attack": 4,
-  "contactAura": {
-    "damageDice": 1,
-    "damageSides": 2,
-    "damageType": "fire"
-  },
+  "contactAuras": [
+    {
+      "damageDice": 1,
+      "damageSides": 2,
+      "damageType": "fire"
+    }
+  ],
   "damageDice": 2,
   "damageSides": 6,
   "damageType": "fire",

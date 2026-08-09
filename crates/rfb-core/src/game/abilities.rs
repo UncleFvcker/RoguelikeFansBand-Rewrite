@@ -2533,7 +2533,8 @@ impl Game {
             | AbilityEffectDefinition::TeleportAway { .. }
             | AbilityEffectDefinition::DrainResource { .. }
             | AbilityEffectDefinition::Amnesia
-            | AbilityEffectDefinition::DarkenRoom => None,
+            | AbilityEffectDefinition::DarkenRoom
+            | AbilityEffectDefinition::JumpDamage { .. } => None,
             AbilityEffectDefinition::Teleport => {
                 let TargetSelection::Position { position } = target else {
                     return None;

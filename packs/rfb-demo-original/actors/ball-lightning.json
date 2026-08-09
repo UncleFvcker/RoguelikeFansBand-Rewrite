@@ -6,11 +6,13 @@
     "rarity": 1
   },
   "attack": 4,
-  "contactAura": {
-    "damageDice": 1,
-    "damageSides": 2,
-    "damageType": "electricity"
-  },
+  "contactAuras": [
+    {
+      "damageDice": 1,
+      "damageSides": 2,
+      "damageType": "electricity"
+    }
+  ],
   "damageDice": 8,
   "damageSides": 8,
   "damageType": "electricity",

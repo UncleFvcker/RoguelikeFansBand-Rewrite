@@ -289,19 +289,22 @@ pub(super) fn validate_actors(
                 return Err(ContentError::InvalidActorStats(actor.id.clone()));
             }
         }
-        if actor.contact_aura.is_some_and(|aura| {
-            !matches!(
-                aura.damage_type,
-                ActorDamageType::Poison
-                    | ActorDamageType::Fire
-                    | ActorDamageType::Cold
-                    | ActorDamageType::Electricity
-            ) || !(1..=100).contains(&aura.damage_dice)
-                || !(1..=10_000).contains(&aura.damage_sides)
-                || aura
-                    .chance_percent
-                    .is_some_and(|chance| !(1..=100).contains(&chance))
-        }) {
+        if actor.contact_auras.len() > 8
+            || actor.contact_auras.iter().any(|aura| {
+                !matches!(
+                    aura.damage_type,
+                    ActorDamageType::Poison
+                        | ActorDamageType::Acid
+                        | ActorDamageType::Fire
+                        | ActorDamageType::Cold
+                        | ActorDamageType::Electricity
+                ) || !(1..=100).contains(&aura.damage_dice)
+                    || !(1..=10_000).contains(&aura.damage_sides)
+                    || aura
+                        .chance_percent
+                        .is_some_and(|chance| !(1..=100).contains(&chance))
+            })
+        {
             return Err(ContentError::InvalidActorStats(actor.id.clone()));
         }
         normalize_tags(&actor.id, &mut actor.tags)?;

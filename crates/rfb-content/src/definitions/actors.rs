@@ -373,8 +373,8 @@ pub struct ActorDefinition {
     pub status_immunities: Vec<String>,
     #[serde(default)]
     pub melee_routine: Option<MeleeRoutineDefinition>,
-    #[serde(default)]
-    pub contact_aura: Option<ActorContactAuraDefinition>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub contact_auras: Vec<ActorContactAuraDefinition>,
     #[serde(default)]
     pub terrain_interaction: ActorTerrainInteractionDefinition,
     #[serde(default)]

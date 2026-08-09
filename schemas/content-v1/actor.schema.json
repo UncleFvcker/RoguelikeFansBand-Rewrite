@@ -1218,16 +1218,11 @@
         "null"
       ]
     },
-    "contactAura": {
-      "anyOf": [
-        {
-          "$ref": "#/$defs/ActorContactAuraDefinition"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null
+    "contactAuras": {
+      "items": {
+        "$ref": "#/$defs/ActorContactAuraDefinition"
+      },
+      "type": "array"
     },
     "corpseItemKindId": {
       "default": null,

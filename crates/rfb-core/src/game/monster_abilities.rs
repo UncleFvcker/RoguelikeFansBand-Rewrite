@@ -351,6 +351,116 @@ impl Game {
         }
     }
 
+    #[allow(clippy::too_many_arguments)]
+    pub(super) fn resolve_monster_jump_damage_plan(
+        &mut self,
+        source_index: usize,
+        source_entity_id: &str,
+        source_kind_id: &str,
+        plan: &MonsterAbilityPlan,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> MonsterAbilityPlanResolution {
+        let MonsterAbilityTargetPlan::JumpDamage {
+            affected_positions,
+            destinations,
+        } = &plan.target
+        else {
+            unreachable!("monster jump damage executor requires a jump target plan")
+        };
+        let AbilityEffectDefinition::JumpDamage {
+            damage_dice,
+            damage_sides,
+            damage_multiplier_numerator,
+            damage_multiplier_denominator,
+            damage_type,
+            ..
+        } = &plan.ability.effect
+        else {
+            unreachable!("monster jump damage plan must retain a jump damage effect")
+        };
+        let origin = self.entities[source_index].position;
+        let raw_damage = self
+            .roll_damage(*damage_dice, *damage_sides)
+            .saturating_mul(i32::from(*damage_multiplier_numerator))
+            .saturating_div(i32::from(*damage_multiplier_denominator))
+            .max(0);
+        let target_actors = self
+            .monster_hostile_targets(source_index)
+            .into_iter()
+            .filter(|target| affected_positions.contains(&target.position()))
+            .collect::<Vec<_>>();
+        let mut targets = Vec::with_capacity(target_actors.len());
+        for target in target_actors {
+            let position = target.position();
+            let distance = origin
+                .x
+                .abs_diff(position.x)
+                .max(origin.y.abs_diff(position.y));
+            let prepared = rfb_area_damage(raw_damage, distance);
+            let effect = self.resolve_monster_damage_to_hostile(
+                source_entity_id,
+                source_kind_id,
+                &plan.ability.id,
+                0,
+                raw_damage,
+                prepared,
+                DamageType::from(*damage_type),
+                &target,
+                events,
+            );
+            changed.insert(position);
+            targets.push(MonsterAbilityTargetResolutionDto {
+                target_entity_id: target.entity_id().to_owned(),
+                target_kind_id: target.kind_id().to_owned(),
+                target_position: position,
+                effects: vec![effect],
+            });
+        }
+        self.remove_defeated_monster_targets(
+            targets
+                .iter()
+                .map(|target| target.target_entity_id.as_str()),
+            events,
+            changed,
+            removed_entities,
+        );
+
+        let choice = usize::try_from(
+            self.rng
+                .bounded(u64::try_from(destinations.len()).expect("candidate count fits")),
+        )
+        .expect("bounded draw fits usize");
+        let destination = destinations[choice];
+        let source_index = self
+            .entities
+            .iter()
+            .position(|entity| entity.id == source_entity_id)
+            .expect("jumping monster must remain on the floor");
+        self.entities[source_index].position = destination;
+        changed.insert(origin);
+        changed.insert(destination);
+        events.push(DomainEvent::MonsterBlinked {
+            source_kind_id: source_kind_id.to_owned(),
+            resolution: MonsterDisplacementResolutionDto {
+                actor_id: source_entity_id.to_owned(),
+                from: origin,
+                to: destination,
+            },
+        });
+
+        MonsterAbilityPlanResolution {
+            target_entity_id: source_entity_id.to_owned(),
+            target_kind_id: source_kind_id.to_owned(),
+            affected_positions: affected_positions.clone(),
+            summon: None,
+            effects: Vec::new(),
+            targets,
+            trace: None,
+        }
+    }
+
     pub(super) fn resolve_monster_self_effects(
         &mut self,
         source_index: usize,
@@ -534,6 +644,15 @@ impl Game {
                 }
             }
             MonsterAbilityTargetPlan::Area { .. } => self.resolve_monster_area_damage_plan(
+                source_index,
+                &source_entity_id,
+                source_kind_id,
+                plan,
+                events,
+                changed,
+                removed_entities,
+            ),
+            MonsterAbilityTargetPlan::JumpDamage { .. } => self.resolve_monster_jump_damage_plan(
                 source_index,
                 &source_entity_id,
                 source_kind_id,
@@ -1567,6 +1686,54 @@ impl Game {
                     });
                 }
                 (MonsterAbilityTargetPlan::BlinkSelf { destinations }, 0, 0)
+            }
+            AbilityEffectDefinition::JumpDamage {
+                radius,
+                blink_radius,
+                ..
+            } => {
+                let affected_positions = self
+                    .area_damage_cells(origin, *radius)
+                    .into_iter()
+                    .map(|(_, position)| position)
+                    .collect::<Vec<_>>();
+                let enemy_target_count = u16::try_from(
+                    self.monster_hostile_targets(index)
+                        .into_iter()
+                        .filter(|target| affected_positions.contains(&target.position()))
+                        .count(),
+                )
+                .unwrap_or(u16::MAX);
+                if enemy_target_count == 0 {
+                    return Err(MonsterAbilityPlanRejection {
+                        reason: MonsterAbilityRejectionReasonDto::InvalidTarget,
+                        enemy_target_count: 0,
+                        friendly_risk_count: 0,
+                    });
+                }
+                let blink_radius = u32::from(*blink_radius);
+                let destinations = self.displacement_destinations(index, |position| {
+                    origin
+                        .x
+                        .abs_diff(position.x)
+                        .max(origin.y.abs_diff(position.y))
+                        <= blink_radius
+                });
+                if destinations.is_empty() {
+                    return Err(MonsterAbilityPlanRejection {
+                        reason: MonsterAbilityRejectionReasonDto::NoSpace,
+                        enemy_target_count,
+                        friendly_risk_count: 0,
+                    });
+                }
+                (
+                    MonsterAbilityTargetPlan::JumpDamage {
+                        affected_positions,
+                        destinations,
+                    },
+                    enemy_target_count,
+                    0,
+                )
             }
             AbilityEffectDefinition::TeleportSelf { minimum_distance } => {
                 let player = self.player.position;

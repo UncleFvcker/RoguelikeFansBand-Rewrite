@@ -1,0 +1,61 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 1279,
+    "maxDepth": 44,
+    "randomMovementPercent": 50,
+    "rarity": 3
+  },
+  "attack": 4,
+  "damageDice": 1,
+  "damageSides": 1,
+  "damageType": "physical",
+  "defense": 2,
+  "descriptionKey": "actor-demo-blinking-light-description",
+  "experienceValue": 64,
+  "formatVersion": 1,
+  "glyph": "*",
+  "hitPointDice": {
+    "dice": 7,
+    "sides": 8
+  },
+  "id": "demo.actor.blinking-light",
+  "level": 19,
+  "light": {
+    "intrinsic": true,
+    "radius": 1
+  },
+  "maxHp": 31,
+  "meleeRoutine": {
+    "blows": []
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.jump-light-5d5",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 75
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "nameKey": "actor-demo-blinking-light-name",
+  "resistances": {
+    "light": "resistant"
+  },
+  "role": "monster",
+  "speed": 115,
+  "statusImmunities": [
+    "rfb.status.confusion"
+  ],
+  "tags": [
+    "legacy-import",
+    "nonliving",
+    "warrens",
+    "wisp"
+  ]
+}

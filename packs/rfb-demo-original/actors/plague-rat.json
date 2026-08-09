@@ -12,11 +12,13 @@
     "taskId": "demo.task.the-sewer"
   },
   "attack": 2,
-  "contactAura": {
-    "damageDice": 1,
-    "damageSides": 2,
-    "damageType": "poison"
-  },
+  "contactAuras": [
+    {
+      "damageDice": 1,
+      "damageSides": 2,
+      "damageType": "poison"
+    }
+  ],
   "damageDice": 2,
   "damageSides": 3,
   "damageType": "physical",

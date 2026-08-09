@@ -352,6 +352,10 @@ enum MonsterAbilityTargetPlan {
         trace: ProjectileTrace,
         affected_positions: Vec<Position>,
     },
+    JumpDamage {
+        affected_positions: Vec<Position>,
+        destinations: Vec<Position>,
+    },
     Beam {
         target: MonsterHostileTarget,
         trace: ProjectileTrace,
@@ -409,6 +413,7 @@ fn monster_plan_target(target: &MonsterAbilityTargetPlan) -> Option<&MonsterHost
         | MonsterAbilityTargetPlan::BlinkTarget { target, .. }
         | MonsterAbilityTargetPlan::BanishTarget { target, .. } => Some(target),
         MonsterAbilityTargetPlan::SelfTarget
+        | MonsterAbilityTargetPlan::JumpDamage { .. }
         | MonsterAbilityTargetPlan::Summon { .. }
         | MonsterAbilityTargetPlan::SummonCategory { .. }
         | MonsterAbilityTargetPlan::BlinkSelf { .. }
@@ -5605,6 +5610,9 @@ fn apply_ability_level_scaling(
 
 fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpecDto {
     match effect {
+        AbilityEffectDefinition::JumpDamage { .. } => {
+            unreachable!("monster-only jump damage is never projected as a player ability")
+        }
         AbilityEffectDefinition::BlinkSelf { radius } => {
             AbilityEffectSpecDto::BlinkSelf { radius: *radius }
         }
