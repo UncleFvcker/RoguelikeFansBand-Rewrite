@@ -11,7 +11,10 @@ use crate::{
     state::{EquipOutcome, ItemInstance, ItemLocation},
 };
 
-use super::{BodySlot, Game, body_slot_instance_for_type, item_can_occupy_slot_type};
+use super::{
+    BodySlot, Game, STATUS_INVENTORY_PROTECTION, body_slot_instance_for_type,
+    item_can_occupy_slot_type,
+};
 
 #[derive(Debug, Clone, Default)]
 pub(super) struct ItemKnowledgeState {
@@ -661,6 +664,29 @@ impl Game {
         }
     }
 
+    pub(super) fn identify_carried_items(&mut self) -> usize {
+        let mut item_ids = self
+            .items
+            .iter()
+            .filter(|item| {
+                item.quantity > 0
+                    && matches!(
+                        item.location,
+                        ItemLocation::Inventory | ItemLocation::Equipped { .. }
+                    )
+            })
+            .map(|item| item.id.clone())
+            .collect::<Vec<_>>();
+        item_ids.sort();
+        item_ids
+            .into_iter()
+            .filter(|item_id| {
+                self.identify_item_instance(item_id, ItemIdentificationRequest::new(false))
+                    .changed
+            })
+            .count()
+    }
+
     pub(super) fn enchant_item_instance(
         &mut self,
         item_id: &str,
@@ -931,7 +957,8 @@ impl Game {
             .content
             .item(&source_kind_id)
             .is_some_and(|definition| definition.tags.iter().any(|tag| tag == "artifact"));
-        let source_destroyed = destroy && !artifact;
+        let source_destroyed =
+            destroy && !artifact && !self.player_has_status_kind(STATUS_INVENTORY_PROTECTION);
         if source_destroyed {
             let removed = self.items.remove(source_index);
             self.item_property_knowledge.remove(&removed.id);

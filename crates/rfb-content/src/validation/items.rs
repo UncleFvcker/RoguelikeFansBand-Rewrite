@@ -21,8 +21,11 @@ pub(crate) fn valid_item_effect(
     actor_tag_values: &BTreeSet<String>,
     item_tag_values: &BTreeSet<String>,
     resource_ids: &BTreeSet<String>,
+    affix_ids: &BTreeSet<String>,
+    loot_table_ids: &BTreeSet<String>,
 ) -> bool {
     match effect {
+        ItemUseEffectDefinition::NoNumericEffect => true,
         ItemUseEffectDefinition::IncreaseNutrition { amount } => (1..=15_000).contains(amount),
         ItemUseEffectDefinition::SatisfyHunger => true,
         ItemUseEffectDefinition::Heal { amount }
@@ -65,7 +68,11 @@ pub(crate) fn valid_item_effect(
         | ItemUseEffectDefinition::DrainAttribute { .. }
         | ItemUseEffectDefinition::RestoreAttribute { .. }
         | ItemUseEffectDefinition::IncreaseAttribute { .. }
-        | ItemUseEffectDefinition::AugmentAttributes => true,
+        | ItemUseEffectDefinition::AugmentAttributes
+        | ItemUseEffectDefinition::IdentifyInventory
+        | ItemUseEffectDefinition::SelfKnowledge
+        | ItemUseEffectDefinition::TriggerTsuyoshiCrash
+        | ItemUseEffectDefinition::MundanifyItem => true,
         ItemUseEffectDefinition::HealDice { dice, sides } => {
             (1..=100).contains(dice) && (1..=10_000).contains(sides)
         }
@@ -124,6 +131,11 @@ pub(crate) fn valid_item_effect(
             duration_sides,
             duration_bonus,
         }
+        | ItemUseEffectDefinition::ApplyTsuyoshi {
+            duration_dice,
+            duration_sides,
+            duration_bonus,
+        }
         | ItemUseEffectDefinition::Vengeance {
             duration_dice,
             duration_sides,
@@ -138,10 +150,31 @@ pub(crate) fn valid_item_effect(
             duration_dice,
             duration_sides,
             duration_bonus,
+            granted_resistances,
+            granted_modifiers,
+            granted_equipment_bonuses,
+            incoming_damage_percent,
             ..
         } => {
             validate_id(status_kind_id).is_ok()
                 && (1..=100).contains(duration_dice)
+                && (1..=10_000).contains(duration_sides)
+                && *duration_bonus <= 1_000_000
+                && granted_resistances.len() <= 29
+                && granted_modifiers.max_hp.abs() <= 1_000_000
+                && granted_modifiers.attack.abs() <= 1_000_000
+                && granted_modifiers.defense.abs() <= 1_000_000
+                && (-100..=100).contains(&granted_modifiers.speed)
+                && !attribute_modifiers_out_of_range(granted_modifiers)
+                && !equipment_bonuses_out_of_range(granted_equipment_bonuses)
+                && *incoming_damage_percent <= 100
+        }
+        ItemUseEffectDefinition::ApplyGiantStrength {
+            duration_dice,
+            duration_sides,
+            duration_bonus,
+        } => {
+            (1..=100).contains(duration_dice)
                 && (1..=10_000).contains(duration_sides)
                 && *duration_bonus <= 1_000_000
         }
@@ -168,6 +201,10 @@ pub(crate) fn valid_item_effect(
         ItemUseEffectDefinition::CreateAdjacentTerrain {
             source_terrain_ids,
             target_terrain_id,
+        }
+        | ItemUseEffectDefinition::CreateCurrentTerrain {
+            source_terrain_ids,
+            target_terrain_id,
         } => {
             !source_terrain_ids.is_empty()
                 && source_terrain_ids.len() <= 32
@@ -180,8 +217,49 @@ pub(crate) fn valid_item_effect(
                     .iter()
                     .all(|source_id| source_id != target_terrain_id)
         }
+        ItemUseEffectDefinition::SetFloorGlow { radius, .. } => (1..=32).contains(radius),
+        ItemUseEffectDefinition::AreaDestruction {
+            minimum_radius,
+            maximum_radius,
+            floor_terrain_id,
+            wall_terrain_id,
+            quartz_terrain_id,
+            magma_terrain_id,
+        } => {
+            (1..=32).contains(minimum_radius)
+                && minimum_radius <= maximum_radius
+                && maximum_radius <= &32
+                && [
+                    floor_terrain_id,
+                    wall_terrain_id,
+                    quartz_terrain_id,
+                    magma_terrain_id,
+                ]
+                .into_iter()
+                .all(|terrain_id| terrain_tags.contains_key(terrain_id))
+        }
         ItemUseEffectDefinition::RemoveStatus { status_kind_id } => {
             validate_id(status_kind_id).is_ok()
+        }
+        ItemUseEffectDefinition::ReduceStatus {
+            status_kind_id,
+            minimum_reduction,
+            reduction_divisor,
+        } => {
+            validate_id(status_kind_id).is_ok()
+                && (1..=1_000_000).contains(minimum_reduction)
+                && (1..=100).contains(reduction_divisor)
+        }
+        ItemUseEffectDefinition::LoseExperienceFraction { divisor } => (2..=100).contains(divisor),
+        ItemUseEffectDefinition::GainRelativeExperience {
+            divisor,
+            bonus,
+            maximum_gain,
+        } => {
+            (2..=100).contains(divisor)
+                && (1..=1_000_000).contains(bonus)
+                && bonus <= maximum_gain
+                && maximum_gain <= &1_000_000
         }
         ItemUseEffectDefinition::RestoreResource {
             resource_id,
@@ -205,6 +283,31 @@ pub(crate) fn valid_item_effect(
             resource_ids.contains(resource_id)
         }
         ItemUseEffectDefinition::IdentifyItem { .. } => true,
+        ItemUseEffectDefinition::Acquirement {
+            loot_table_id,
+            minimum_count,
+            maximum_count,
+        } => {
+            loot_table_ids.contains(loot_table_id)
+                && (1..=8).contains(minimum_count)
+                && minimum_count <= maximum_count
+                && maximum_count <= &8
+        }
+        ItemUseEffectDefinition::CraftItem {
+            weapon_affix_ids,
+            armor_affix_ids,
+        } => {
+            let valid_candidates = |candidates: &[String]| {
+                !candidates.is_empty()
+                    && candidates.len() <= 32
+                    && candidates.windows(2).all(|pair| pair[0] < pair[1])
+                    && candidates.iter().all(|id| affix_ids.contains(id))
+            };
+            valid_candidates(weapon_affix_ids) && valid_candidates(armor_affix_ids)
+        }
+        ItemUseEffectDefinition::ShowRumour { message_key } => {
+            validate_message_key(message_key).is_ok()
+        }
         ItemUseEffectDefinition::EnchantItem {
             to_hit,
             to_damage,
@@ -268,31 +371,45 @@ pub(crate) fn valid_item_effect(
                 && *duration_turns == 0
         }
         ItemUseEffectDefinition::Sequence { effects } => {
-            (2..=8).contains(&effects.len())
+            (2..=12).contains(&effects.len())
                 && effects.iter().all(|effect| {
                     matches!(
                         effect,
-                        ItemUseEffectDefinition::IncreaseNutrition { .. }
+                        ItemUseEffectDefinition::NoNumericEffect
+                            | ItemUseEffectDefinition::IncreaseNutrition { .. }
                             | ItemUseEffectDefinition::SatisfyHunger
                             | ItemUseEffectDefinition::Heal { .. }
                             | ItemUseEffectDefinition::HealDice { .. }
                             | ItemUseEffectDefinition::ApplyPoison { .. }
                             | ItemUseEffectDefinition::ApplyBlindness { .. }
                             | ItemUseEffectDefinition::ApplyStatus { .. }
+                            | ItemUseEffectDefinition::ApplyGiantStrength { .. }
                             | ItemUseEffectDefinition::SelfDamage { .. }
+                            | ItemUseEffectDefinition::LoseExperienceFraction { .. }
+                            | ItemUseEffectDefinition::GainRelativeExperience { .. }
+                            | ItemUseEffectDefinition::ApplyTsuyoshi { .. }
+                            | ItemUseEffectDefinition::TriggerTsuyoshiCrash
                             | ItemUseEffectDefinition::DrainAttribute { .. }
                             | ItemUseEffectDefinition::RestoreAttribute { .. }
+                            | ItemUseEffectDefinition::IncreaseAttribute { .. }
                             | ItemUseEffectDefinition::RemoveStatus { .. }
+                            | ItemUseEffectDefinition::ReduceStatus { .. }
                             | ItemUseEffectDefinition::RestoreResource { .. }
                             | ItemUseEffectDefinition::RestoreResourceDice { .. }
                             | ItemUseEffectDefinition::RestoreResourceFull { .. }
                             | ItemUseEffectDefinition::DrainResourceFull { .. }
+                            | ItemUseEffectDefinition::IdentifyInventory
+                            | ItemUseEffectDefinition::SelfKnowledge
+                            | ItemUseEffectDefinition::Detect { .. }
+                            | ItemUseEffectDefinition::SetFloorGlow { .. }
                     ) && valid_item_effect(
                         effect,
                         terrain_tags,
                         actor_tag_values,
                         item_tag_values,
                         resource_ids,
+                        affix_ids,
+                        loot_table_ids,
                     )
                 })
         }
@@ -326,7 +443,7 @@ pub(crate) fn valid_item_effect(
                         || byte.is_ascii_digit()
                         || matches!(byte, b'-' | b'_')
                 })
-                && (1..=8).contains(radius)
+                && (*radius > 0 && (*radius <= 8 || (*radius == u8::MAX && *through_walls)))
                 && match subject {
                     AbilityDetectSubjectDefinition::Terrain => {
                         if category == "map" {
@@ -341,6 +458,7 @@ pub(crate) fn valid_item_effect(
                     AbilityDetectSubjectDefinition::Item => {
                         !persistent && (category == "item" || item_tag_values.contains(category))
                     }
+                    AbilityDetectSubjectDefinition::Gold => !persistent && category == "gold",
                 }
         }
         ItemUseEffectDefinition::RandomTeleport { maximum_distance } => {
@@ -363,7 +481,9 @@ fn item_effect_is_self_targeted(effect: &ItemUseEffectDefinition) -> bool {
     match effect {
         ItemUseEffectDefinition::Damage { .. }
         | ItemUseEffectDefinition::IdentifyItem { .. }
-        | ItemUseEffectDefinition::EnchantItem { .. } => false,
+        | ItemUseEffectDefinition::EnchantItem { .. }
+        | ItemUseEffectDefinition::MundanifyItem
+        | ItemUseEffectDefinition::CraftItem { .. } => false,
         ItemUseEffectDefinition::Sequence { effects } => {
             effects.iter().all(item_effect_is_self_targeted)
         }
@@ -376,6 +496,8 @@ pub(super) struct ItemValidationRefs<'a> {
     pub(super) actor_tag_values: &'a BTreeSet<String>,
     pub(super) item_tag_values: &'a BTreeSet<String>,
     pub(super) resource_ids: &'a BTreeSet<String>,
+    pub(super) affix_ids: &'a BTreeSet<String>,
+    pub(super) loot_table_ids: &'a BTreeSet<String>,
     pub(super) ability_book_ids: &'a BTreeSet<String>,
     pub(super) actor_corpse_item_ids: Vec<(String, String)>,
     pub(super) ability_corpse_item_ids: Vec<(String, String)>,
@@ -391,6 +513,8 @@ pub(super) fn validate_items(
         actor_tag_values,
         item_tag_values,
         resource_ids,
+        affix_ids,
+        loot_table_ids,
         ability_book_ids,
         actor_corpse_item_ids,
         ability_corpse_item_ids,
@@ -438,14 +562,23 @@ pub(super) fn validate_items(
                     | ItemUseEffectDefinition::RestoreAttribute { .. }
                     | ItemUseEffectDefinition::IncreaseAttribute { .. }
                     | ItemUseEffectDefinition::AugmentAttributes
+                    | ItemUseEffectDefinition::IdentifyInventory
+                    | ItemUseEffectDefinition::SelfKnowledge
+                    | ItemUseEffectDefinition::Acquirement { .. }
+                    | ItemUseEffectDefinition::ShowRumour { .. }
                     | ItemUseEffectDefinition::ApplyThermalResistance { .. }
                     | ItemUseEffectDefinition::ApplyBasicResistance { .. }
                     | ItemUseEffectDefinition::ApplyPoison { .. }
                     | ItemUseEffectDefinition::ApplyBlindness { .. }
                     | ItemUseEffectDefinition::ApplyStatus { .. }
+                    | ItemUseEffectDefinition::ApplyGiantStrength { .. }
                     | ItemUseEffectDefinition::ApplyDetonation { .. }
                     | ItemUseEffectDefinition::SelfLifeLoss { .. }
                     | ItemUseEffectDefinition::SelfDamage { .. }
+                    | ItemUseEffectDefinition::LoseExperienceFraction { .. }
+                    | ItemUseEffectDefinition::GainRelativeExperience { .. }
+                    | ItemUseEffectDefinition::ApplyTsuyoshi { .. }
+                    | ItemUseEffectDefinition::TriggerTsuyoshiCrash
                     | ItemUseEffectDefinition::Vengeance { .. }
                     | ItemUseEffectDefinition::ProtectionFromEvil
                     | ItemUseEffectDefinition::PrepareConfusingStrike
@@ -455,13 +588,18 @@ pub(super) fn validate_items(
                     | ItemUseEffectDefinition::Genocide { .. }
                     | ItemUseEffectDefinition::IncreaseSpellLearningCapacity
                     | ItemUseEffectDefinition::CreateAdjacentTerrain { .. }
+                    | ItemUseEffectDefinition::CreateCurrentTerrain { .. }
+                    | ItemUseEffectDefinition::SetFloorGlow { .. }
+                    | ItemUseEffectDefinition::AreaDestruction { .. }
                     | ItemUseEffectDefinition::DestroyAdjacentTrapsAndDoors
                     | ItemUseEffectDefinition::RemoveStatus { .. }
+                    | ItemUseEffectDefinition::ReduceStatus { .. }
                     | ItemUseEffectDefinition::RestoreResource { .. }
                     | ItemUseEffectDefinition::RestoreResourceDice { .. }
                     | ItemUseEffectDefinition::RestoreResourceFull { .. }
                     | ItemUseEffectDefinition::DrainResourceFull { .. }
                     | ItemUseEffectDefinition::Sequence { .. }
+                    | ItemUseEffectDefinition::NoNumericEffect
                     | ItemUseEffectDefinition::Detect { .. }
                     | ItemUseEffectDefinition::RandomTeleport { .. }
                     | ItemUseEffectDefinition::TeleportLevel
@@ -475,7 +613,9 @@ pub(super) fn validate_items(
                     ItemUseEffectDefinition::RechargeFromDevice { .. } => false,
                     ItemUseEffectDefinition::Damage { .. } => projectile_target,
                     ItemUseEffectDefinition::IdentifyItem { .. }
-                    | ItemUseEffectDefinition::EnchantItem { .. } => {
+                    | ItemUseEffectDefinition::EnchantItem { .. }
+                    | ItemUseEffectDefinition::MundanifyItem
+                    | ItemUseEffectDefinition::CraftItem { .. } => {
                         target.modes.as_slice() == [AbilityTargetModeDefinition::Item]
                             && target.range == 0
                             && !target.requires_line_of_effect
@@ -590,14 +730,29 @@ pub(super) fn validate_items(
                 || item.equipment_slot.as_deref() != Some("launcher")
                 || profile.range == 0
                 || profile.range > 32
+                || profile.damage_multiplier_percent < 100
+                || profile.damage_multiplier_percent > 1_000
                 || profile.to_hit < -1_000_000
                 || profile.to_hit > 1_000_000
                 || profile.to_damage < -1_000_000
-                || profile.to_damage > 1_000_000
-                || profile.damage_dice == 0
-                || profile.damage_dice > 100
-                || profile.damage_sides == 0
-                || profile.damage_sides > 10_000)
+                || profile.to_damage > 1_000_000)
+        {
+            return Err(ContentError::InvalidProjectileProfile(item.id.clone()));
+        }
+        let is_ammunition = item.tags.iter().any(|tag| tag == "ammunition");
+        if is_ammunition != item.ammunition_profile.is_some()
+            || item.ammunition_profile.as_ref().is_some_and(|profile| {
+                item.equipment_slot.is_some()
+                    || item.max_stack <= 1
+                    || profile.to_hit < -1_000_000
+                    || profile.to_hit > 1_000_000
+                    || profile.to_damage < -1_000_000
+                    || profile.to_damage > 1_000_000
+                    || profile.damage_dice == 0
+                    || profile.damage_dice > 100
+                    || profile.damage_sides == 0
+                    || profile.damage_sides > 10_000
+            })
         {
             return Err(ContentError::InvalidProjectileProfile(item.id.clone()));
         }
@@ -613,12 +768,16 @@ pub(super) fn validate_items(
         {
             return Err(ContentError::InvalidThrowProfile(item.id.clone()));
         }
-        if let Some(action) = &mut item.use_action
-            && let ItemUseEffectDefinition::CreateAdjacentTerrain {
-                source_terrain_ids, ..
-            } = &mut action.effect
-        {
-            source_terrain_ids.sort();
+        if let Some(action) = &mut item.use_action {
+            match &mut action.effect {
+                ItemUseEffectDefinition::CreateAdjacentTerrain {
+                    source_terrain_ids, ..
+                }
+                | ItemUseEffectDefinition::CreateCurrentTerrain {
+                    source_terrain_ids, ..
+                } => source_terrain_ids.sort(),
+                _ => {}
+            }
         }
         if let Some(action) = &item.use_action {
             let valid_effect = valid_item_effect(
@@ -627,11 +786,15 @@ pub(super) fn validate_items(
                 actor_tag_values,
                 item_tag_values,
                 resource_ids,
+                affix_ids,
+                loot_table_ids,
             ) && (item_effect_is_self_targeted(&action.effect)
                 || matches!(
                     action.effect,
                     ItemUseEffectDefinition::IdentifyItem { .. }
                         | ItemUseEffectDefinition::EnchantItem { .. }
+                        | ItemUseEffectDefinition::MundanifyItem
+                        | ItemUseEffectDefinition::CraftItem { .. }
                 ));
             let valid_charges = action.charges.is_none_or(|charges| {
                 charges.maximum > 0
@@ -666,6 +829,8 @@ pub(super) fn validate_items(
                         | ItemUseEffectDefinition::ApplyLifeRestoration { .. }
                         | ItemUseEffectDefinition::IncreaseAttribute { .. }
                         | ItemUseEffectDefinition::AugmentAttributes
+                        | ItemUseEffectDefinition::IdentifyInventory
+                        | ItemUseEffectDefinition::SelfKnowledge
                         | ItemUseEffectDefinition::ApplyThermalResistance { .. }
                         | ItemUseEffectDefinition::ApplyBasicResistance { .. }
                         | ItemUseEffectDefinition::ApplyPoison { .. }
@@ -688,11 +853,14 @@ pub(super) fn validate_items(
                 .activations
                 .sort_by(|left, right| left.id.cmp(&right.id));
             for activation in &mut generation.activations {
-                if let ItemUseEffectDefinition::CreateAdjacentTerrain {
-                    source_terrain_ids, ..
-                } = &mut activation.effect
-                {
-                    source_terrain_ids.sort();
+                match &mut activation.effect {
+                    ItemUseEffectDefinition::CreateAdjacentTerrain {
+                        source_terrain_ids, ..
+                    }
+                    | ItemUseEffectDefinition::CreateCurrentTerrain {
+                        source_terrain_ids, ..
+                    } => source_terrain_ids.sort(),
+                    _ => {}
                 }
             }
             let mut activation_ids = BTreeSet::new();
@@ -716,6 +884,8 @@ pub(super) fn validate_items(
                             actor_tag_values,
                             item_tag_values,
                             resource_ids,
+                            affix_ids,
+                            loot_table_ids,
                         )
                         && !matches!(
                             activation.effect,
@@ -804,16 +974,12 @@ pub(super) fn validate_items(
         let Some(profile) = &item.projectile_profile else {
             continue;
         };
-        let Some(ammo) = items
-            .iter()
-            .find(|candidate| candidate.id == profile.ammo_kind_id)
-        else {
-            return Err(ContentError::DanglingReference {
-                owner: item.id.clone(),
-                target: profile.ammo_kind_id.clone(),
-            });
-        };
-        if ammo.max_stack <= 1 || !ammo.tags.iter().any(|tag| tag == "ammunition") {
+        if !items.iter().any(|candidate| {
+            candidate
+                .ammunition_profile
+                .as_ref()
+                .is_some_and(|ammo| ammo.ammunition_type == profile.ammunition_type)
+        }) {
             return Err(ContentError::InvalidProjectileProfile(item.id.clone()));
         }
     }

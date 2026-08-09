@@ -5,11 +5,22 @@ use super::*;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) enum ItemUsePlan {
     SelfTarget,
+    Acquirement {
+        source_item_id: String,
+        depth: u16,
+    },
     GlyphGenocide {
         glyph: String,
     },
     CreateAdjacentTerrain {
         replacements: Vec<(Position, String)>,
+    },
+    CreateCurrentTerrain {
+        replacement: Option<(Position, String)>,
+    },
+    SetFloorGlow,
+    AreaDestruction {
+        allowed: bool,
     },
     DestroyAdjacentTrapsAndDoors {
         replacements: Vec<(Position, String)>,
@@ -38,6 +49,13 @@ pub(super) enum ItemUsePlan {
     },
     Recall(RecallUseAction),
     ResetRecall(floor::RecallDestination),
+}
+
+struct AreaDestructionPlan {
+    terrain_replacements: Vec<(Position, String)>,
+    entity_ids: BTreeSet<String>,
+    item_ids: BTreeSet<String>,
+    gold_pile_ids: BTreeSet<String>,
 }
 
 pub(super) struct SettledItemUse {
@@ -618,6 +636,7 @@ impl Game {
                 | ItemLocation::Shop { .. }
                 | ItemLocation::Home { .. } => None,
             }))
+            .chain(self.gold_piles.iter().map(|pile| pile.position))
             .collect::<BTreeSet<_>>();
         let connections = self
             .floor_connections
@@ -635,6 +654,29 @@ impl Game {
                 .then(|| (position, target_terrain_id.to_owned()))
             })
             .collect()
+    }
+
+    fn current_terrain_creation_replacement(
+        &self,
+        source_terrain_ids: &[String],
+        target_terrain_id: &str,
+    ) -> Option<(Position, String)> {
+        let position = self.player.position;
+        let index = self.index(position)?;
+        (source_terrain_ids.contains(&self.terrain[index])
+            && !self
+                .entities
+                .iter()
+                .any(|entity| entity.hp > 0 && entity.position == position)
+            && !self.items.iter().any(
+                |item| matches!(item.location, ItemLocation::Ground(ground) if ground == position),
+            )
+            && !self.gold_piles.iter().any(|pile| pile.position == position)
+            && !self
+                .floor_connections
+                .iter()
+                .any(|connection| connection.position == position))
+        .then(|| (position, target_terrain_id.to_owned()))
     }
 
     fn adjacent_trap_door_replacements(&self) -> Vec<(Position, String)> {
@@ -683,6 +725,321 @@ impl Game {
             source_kind_id: source_kind_id.to_owned(),
             display_name_key: self.item_display_name_key(source_kind_id),
             affected_positions,
+        });
+    }
+
+    fn resolve_item_current_terrain_creation(
+        &mut self,
+        source_kind_id: &str,
+        replacement: Option<(Position, String)>,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let affected_position = replacement.map(|(position, target_terrain_id)| {
+            let index = self
+                .index(position)
+                .expect("planned current terrain creation must remain in bounds");
+            self.terrain[index] = target_terrain_id;
+            self.revealed_terrain.remove(&position);
+            changed.insert(position);
+            position
+        });
+        if affected_position.is_some() {
+            self.mark_item_aware(source_kind_id);
+        }
+        events.push(DomainEvent::ItemCreatedCurrentTerrain {
+            source_kind_id: source_kind_id.to_owned(),
+            display_name_key: self.item_display_name_key(source_kind_id),
+            affected_position,
+        });
+    }
+
+    fn resolve_item_floor_glow(
+        &mut self,
+        source_kind_id: &str,
+        glow: bool,
+        radius: u8,
+        connected_glow: bool,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let mut positions = self
+            .area_damage_cells(self.player.position, radius)
+            .into_iter()
+            .map(|(_, position)| position)
+            .collect::<BTreeSet<_>>();
+        if connected_glow {
+            positions.extend(self.connected_glow_positions(self.player.position));
+        }
+        let affected_positions = positions
+            .into_iter()
+            .filter(|position| {
+                self.index(*position)
+                    .is_some_and(|index| self.glow[index] != glow)
+            })
+            .collect::<Vec<_>>();
+        for position in &affected_positions {
+            let index = self
+                .index(*position)
+                .expect("planned floor lighting position must remain in bounds");
+            self.glow[index] = glow;
+            changed.insert(*position);
+        }
+        if !affected_positions.is_empty() {
+            self.mark_item_aware(source_kind_id);
+        }
+        events.push(DomainEvent::ItemFloorGlowChanged {
+            source_kind_id: source_kind_id.to_owned(),
+            display_name_key: self.item_display_name_key(source_kind_id),
+            glow,
+            affected_positions,
+        });
+    }
+
+    fn area_destruction_allowed(&self) -> bool {
+        let Some(world) = self.content.world(&self.world_id) else {
+            return false;
+        };
+        let Some(floor) = world
+            .procedural_floors
+            .iter()
+            .find(|floor| floor.id == self.current_floor_id)
+        else {
+            return false;
+        };
+        floor.dungeon_id.is_some()
+            && !world.tasks.iter().any(|task| {
+                task_floors(world, &task.id).any(|floor| floor.id == self.current_floor_id)
+            })
+    }
+
+    fn terrain_is_area_destruction_protected(&self, position: Position) -> bool {
+        if position == self.player.position
+            || self
+                .floor_connections
+                .iter()
+                .any(|connection| connection.position == position)
+        {
+            return true;
+        }
+        if self.entities.iter().any(|entity| {
+            entity.hp > 0
+                && entity.position == position
+                && self.content.actor(&entity.kind_id).is_some_and(|actor| {
+                    actor
+                        .tags
+                        .iter()
+                        .any(|tag| matches!(tag.as_str(), "unique" | "guardian"))
+                })
+        }) {
+            return true;
+        }
+        self.index(position)
+            .and_then(|index| self.content.terrain(&self.terrain[index]))
+            .is_none_or(|terrain| {
+                terrain.tags.iter().any(|tag| {
+                    matches!(
+                        tag.as_str(),
+                        "permanent"
+                            | "passage"
+                            | "stairs-up"
+                            | "stairs-down"
+                            | "shaft"
+                            | "dungeon-entry"
+                            | "task-entry"
+                            | "shop-entrance"
+                    )
+                })
+            })
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn plan_area_destruction(
+        &mut self,
+        minimum_radius: u8,
+        maximum_radius: u8,
+        floor_terrain_id: &str,
+        wall_terrain_id: &str,
+        quartz_terrain_id: &str,
+        magma_terrain_id: &str,
+    ) -> AreaDestructionPlan {
+        let radius_span = u64::from(maximum_radius - minimum_radius) + 1;
+        let radius = minimum_radius
+            + u8::try_from(self.rng.bounded(radius_span))
+                .expect("validated destruction radius span must fit u8");
+        let center = self.player.position;
+        let radius_limit = u32::from(radius);
+        let radius_offset = i32::from(radius);
+        let mut positions = Vec::new();
+        for y in center.y.saturating_sub(radius_offset)..=center.y.saturating_add(radius_offset) {
+            for x in center.x.saturating_sub(radius_offset)..=center.x.saturating_add(radius_offset)
+            {
+                let position = Position { x, y };
+                if self.index(position).is_some()
+                    && rfb_distance(center, position) <= radius_limit
+                    && !self.terrain_is_area_destruction_protected(position)
+                {
+                    positions.push(position);
+                }
+            }
+        }
+        positions.sort_by_key(|position| (rfb_distance(center, *position), position.y, position.x));
+
+        let affected = positions.iter().copied().collect::<BTreeSet<_>>();
+        let entity_ids = self
+            .entities
+            .iter()
+            .filter(|entity| {
+                entity.hp > 0
+                    && affected.contains(&entity.position)
+                    && self
+                        .content
+                        .actor(&entity.kind_id)
+                        .is_some_and(|definition| {
+                            !definition
+                                .tags
+                                .iter()
+                                .any(|tag| matches!(tag.as_str(), "unique" | "guardian"))
+                        })
+            })
+            .map(|entity| entity.id.clone())
+            .collect::<BTreeSet<_>>();
+        let item_ids = self
+            .items
+            .iter()
+            .filter(|item| match &item.location {
+                ItemLocation::Ground(position) => affected.contains(position),
+                ItemLocation::CarriedBy { actor_id } => entity_ids.contains(actor_id),
+                ItemLocation::Inventory
+                | ItemLocation::Equipped { .. }
+                | ItemLocation::Shop { .. }
+                | ItemLocation::Home { .. } => false,
+            })
+            .map(|item| item.id.clone())
+            .collect::<BTreeSet<_>>();
+        let gold_pile_ids = self
+            .gold_piles
+            .iter()
+            .filter(|pile| affected.contains(&pile.position))
+            .map(|pile| pile.id.clone())
+            .collect::<BTreeSet<_>>();
+        let terrain_replacements = positions
+            .into_iter()
+            .map(|position| {
+                let roll = self.rng.bounded(200);
+                let terrain_id = if roll < 20 {
+                    wall_terrain_id
+                } else if roll < 70 {
+                    quartz_terrain_id
+                } else if roll < 100 {
+                    magma_terrain_id
+                } else {
+                    floor_terrain_id
+                };
+                (position, terrain_id.to_owned())
+            })
+            .collect();
+        AreaDestructionPlan {
+            terrain_replacements,
+            entity_ids,
+            item_ids,
+            gold_pile_ids,
+        }
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn resolve_item_area_destruction(
+        &mut self,
+        source_kind_id: &str,
+        allowed: bool,
+        minimum_radius: u8,
+        maximum_radius: u8,
+        floor_terrain_id: &str,
+        wall_terrain_id: &str,
+        quartz_terrain_id: &str,
+        magma_terrain_id: &str,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) {
+        if !allowed {
+            self.mark_item_aware(source_kind_id);
+            events.push(DomainEvent::ItemAreaDestruction {
+                source_kind_id: source_kind_id.to_owned(),
+                display_name_key: self.item_display_name_key(source_kind_id),
+                protected_floor: true,
+                affected_positions: Vec::new(),
+                removed_entities: 0,
+                removed_items: 0,
+                removed_gold_piles: 0,
+            });
+            return;
+        }
+        let plan = self.plan_area_destruction(
+            minimum_radius,
+            maximum_radius,
+            floor_terrain_id,
+            wall_terrain_id,
+            quartz_terrain_id,
+            magma_terrain_id,
+        );
+        let affected_positions = plan
+            .terrain_replacements
+            .iter()
+            .map(|(position, _)| *position)
+            .collect::<Vec<_>>();
+        for (position, terrain_id) in plan.terrain_replacements {
+            let index = self
+                .index(position)
+                .expect("planned destruction position must remain in bounds");
+            self.terrain[index] = terrain_id;
+            self.glow[index] = false;
+            self.explored[index] = false;
+            self.revealed_terrain.remove(&position);
+            changed.insert(position);
+        }
+        for entity_id in &plan.entity_ids {
+            let Some(index) = self
+                .entities
+                .iter()
+                .position(|entity| entity.id == *entity_id)
+            else {
+                continue;
+            };
+            let removed = self.entities.remove(index);
+            if self.riding_actor_id.as_deref() == Some(removed.id.as_str()) {
+                self.riding_actor_id = None;
+            }
+            if let Some(pack_id) = removed
+                .pack
+                .as_ref()
+                .and_then(|pack| (pack.role == MonsterPackRoleDto::Leader).then(|| pack.id.clone()))
+            {
+                for entity in &mut self.entities {
+                    if entity.pack.as_ref().is_some_and(|pack| pack.id == pack_id) {
+                        entity.pack = None;
+                    }
+                }
+            }
+            changed.insert(removed.position);
+            removed_entities.push(removed.id);
+        }
+        self.items
+            .retain(|item| !plan.item_ids.contains(item.id.as_str()));
+        for item_id in &plan.item_ids {
+            self.item_property_knowledge.remove(item_id);
+        }
+        self.gold_piles
+            .retain(|pile| !plan.gold_pile_ids.contains(pile.id.as_str()));
+        self.mark_item_aware(source_kind_id);
+        events.push(DomainEvent::ItemAreaDestruction {
+            source_kind_id: source_kind_id.to_owned(),
+            display_name_key: self.item_display_name_key(source_kind_id),
+            protected_floor: false,
+            affected_positions,
+            removed_entities: plan.entity_ids.len(),
+            removed_items: plan.item_ids.len(),
+            removed_gold_piles: plan.gold_pile_ids.len(),
         });
     }
 
@@ -739,6 +1096,9 @@ impl Game {
             AbilityDetectSubjectDefinition::Actor => self.detect_actor_positions(&category, radius),
             AbilityDetectSubjectDefinition::Item => {
                 self.detect_item_positions(&category, radius, through_walls)
+            }
+            AbilityDetectSubjectDefinition::Gold => {
+                self.detect_gold_positions(radius, through_walls)
             }
         };
         if persistent {
@@ -955,6 +1315,218 @@ impl Game {
         })
     }
 
+    fn item_mutation_target(
+        &self,
+        source_item_id: &str,
+        target_item_id: &str,
+    ) -> Option<&ItemInstance> {
+        if source_item_id == target_item_id {
+            return None;
+        }
+        let item = self.items.iter().find(|item| {
+            item.id == target_item_id
+                && item.quantity > 0
+                && (matches!(item.location, ItemLocation::Inventory | ItemLocation::Equipped { .. })
+                    || matches!(item.location, ItemLocation::Ground(position) if position == self.player.position))
+        })?;
+        let split_fits = item.quantity == 1
+            || !matches!(item.location, ItemLocation::Inventory)
+            || self.inventory_used_slots() + 1
+                - u16::from(self.items.iter().any(|source| {
+                    source.id == source_item_id
+                        && source.quantity == 1
+                        && source.location == ItemLocation::Inventory
+                }))
+                <= self.inventory_slot_capacity();
+        split_fits.then_some(item).filter(|_| {
+            self.next_item_instance_serial.checked_add(1).is_some() || item.quantity == 1
+        })
+    }
+
+    fn item_is_valid_mundanity_target(&self, source_item_id: &str, target_item_id: &str) -> bool {
+        let Some(item) = self.item_mutation_target(source_item_id, target_item_id) else {
+            return false;
+        };
+        self.content.item(&item.kind_id).is_some_and(|definition| {
+            !definition.tags.iter().any(|tag| tag == "artifact")
+                && (item.quality != ItemQualityDto::Ordinary
+                    || !item.affix_ids.is_empty()
+                    || !item.enchantments.is_empty()
+                    || item.curse.is_some())
+        })
+    }
+
+    fn item_is_valid_crafting_target(&self, source_item_id: &str, target_item_id: &str) -> bool {
+        let Some(item) = self.item_mutation_target(source_item_id, target_item_id) else {
+            return false;
+        };
+        self.content.item(&item.kind_id).is_some_and(|definition| {
+            item.quality == ItemQualityDto::Ordinary
+                && item.affix_ids.is_empty()
+                && definition.tags.iter().any(|tag| {
+                    matches!(tag.as_str(), "weapon" | "launcher" | "ammunition" | "armor")
+                })
+                && !definition
+                    .tags
+                    .iter()
+                    .any(|tag| matches!(tag.as_str(), "artifact" | "no-enchant"))
+        })
+    }
+
+    fn split_item_for_mutation(
+        &mut self,
+        target_item_id: &str,
+    ) -> Result<(usize, bool), CoreError> {
+        let index = self
+            .items
+            .iter()
+            .position(|item| item.id == target_item_id)
+            .expect("preflighted mutation target must remain available");
+        if self.items[index].quantity == 1 {
+            return Ok((index, false));
+        }
+        let mut split = self.items[index].clone();
+        self.items[index].quantity -= 1;
+        split.id = self.allocate_item_instance_id()?;
+        split.quantity = 1;
+        self.items.push(split);
+        Ok((self.items.len() - 1, true))
+    }
+
+    fn resolve_item_acquirement(
+        &mut self,
+        source_kind_id: &str,
+        source_item_id: String,
+        parameters: (String, u8, u8),
+        depth: u16,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) -> Result<(), CoreError> {
+        let (loot_table_id, minimum_count, maximum_count) = parameters;
+        let count = if minimum_count == maximum_count {
+            minimum_count
+        } else {
+            minimum_count
+                + u8::try_from(
+                    self.rng
+                        .bounded(u64::from(maximum_count - minimum_count + 1)),
+                )
+                .expect("validated acquirement count must fit u8")
+        };
+        let generated = self.generate_loot_instances_internal(
+            &LootContext {
+                table_id: loot_table_id,
+                floor_id: self.current_floor_id.clone(),
+                depth,
+                source: LootSource::ItemUse {
+                    item_id: source_item_id,
+                },
+            },
+            ItemLocation::Ground(self.player.position),
+            false,
+            Some(u16::from(count)),
+            rfb_content::ItemQuality::Exceptional,
+        )?;
+        let generated_item_ids = generated.iter().map(|item| item.id.clone()).collect();
+        let generated_kind_ids = generated.iter().map(|item| item.kind_id.clone()).collect();
+        self.items.extend(generated);
+        self.mark_item_aware(source_kind_id);
+        changed.insert(self.player.position);
+        events.push(DomainEvent::ItemAcquirement {
+            source_kind_id: source_kind_id.to_owned(),
+            display_name_key: self.item_display_name_key(source_kind_id),
+            generated_item_ids,
+            generated_kind_ids,
+            position: self.player.position,
+        });
+        Ok(())
+    }
+
+    fn resolve_item_mundanity(
+        &mut self,
+        source_kind_id: &str,
+        target_item_id: &str,
+        events: &mut Vec<DomainEvent>,
+    ) -> Result<(), CoreError> {
+        let (index, split) = self.split_item_for_mutation(target_item_id)?;
+        let target_item_id = self.items[index].id.clone();
+        let target_kind_id = self.items[index].kind_id.clone();
+        self.items[index].quality = ItemQualityDto::Ordinary;
+        self.items[index].affix_ids.clear();
+        self.items[index].rolled_affixes.clear();
+        self.items[index].enchantments = ItemEnchantmentsDto::default();
+        self.items[index].curse = None;
+        self.item_property_knowledge.insert(
+            target_item_id.clone(),
+            ItemPropertyKnowledgeState {
+                appraised: true,
+                identified: true,
+                known_affix_ids: BTreeSet::new(),
+            },
+        );
+        self.mark_item_aware(source_kind_id);
+        events.push(DomainEvent::ItemMundanified {
+            source_kind_id: source_kind_id.to_owned(),
+            display_name_key: self.item_display_name_key(source_kind_id),
+            target_item_id,
+            target_kind_id,
+            split,
+        });
+        Ok(())
+    }
+
+    fn resolve_item_crafting(
+        &mut self,
+        source_kind_id: &str,
+        target_item_id: &str,
+        weapon_affix_ids: Vec<String>,
+        armor_affix_ids: Vec<String>,
+        events: &mut Vec<DomainEvent>,
+    ) -> Result<(), CoreError> {
+        let definition = self
+            .items
+            .iter()
+            .find(|item| item.id == target_item_id)
+            .and_then(|item| self.content.item(&item.kind_id))
+            .expect("preflighted crafting target must retain its definition");
+        let candidates = if definition.tags.iter().any(|tag| tag == "armor") {
+            armor_affix_ids
+        } else {
+            weapon_affix_ids
+        };
+        let selected = usize::try_from(self.rng.bounded(candidates.len() as u64))
+            .expect("validated crafting candidate count must fit usize");
+        let affix_id = candidates[selected].clone();
+        let rolled_affixes = self.roll_affix_properties(
+            std::slice::from_ref(&affix_id),
+            self.floor_depth(&self.current_floor_id),
+        );
+        let (index, split) = self.split_item_for_mutation(target_item_id)?;
+        let target_item_id = self.items[index].id.clone();
+        let target_kind_id = self.items[index].kind_id.clone();
+        self.items[index].quality = ItemQualityDto::Exceptional;
+        self.items[index].affix_ids = vec![affix_id.clone()];
+        self.items[index].rolled_affixes = rolled_affixes;
+        self.item_property_knowledge.insert(
+            target_item_id.clone(),
+            ItemPropertyKnowledgeState {
+                appraised: true,
+                identified: true,
+                known_affix_ids: BTreeSet::from([affix_id.clone()]),
+            },
+        );
+        self.mark_item_aware(source_kind_id);
+        events.push(DomainEvent::ItemCrafted {
+            source_kind_id: source_kind_id.to_owned(),
+            display_name_key: self.item_display_name_key(source_kind_id),
+            target_item_id,
+            target_kind_id,
+            affix_id,
+            split,
+        });
+        Ok(())
+    }
+
     pub(super) fn resolve_item_enchantment(
         &mut self,
         source_kind_id: &str,
@@ -1050,6 +1622,125 @@ impl Game {
                 changed: outcome.changed,
             },
         });
+    }
+
+    pub(super) fn resolve_item_inventory_identification(
+        &mut self,
+        source_kind_id: &str,
+        events: &mut Vec<DomainEvent>,
+    ) -> bool {
+        self.mark_item_aware(source_kind_id);
+        let count = self.identify_carried_items();
+        events.push(DomainEvent::ItemInventoryIdentified {
+            source_kind_id: source_kind_id.to_owned(),
+            display_name_key: self.item_display_name_key(source_kind_id),
+            count,
+        });
+        true
+    }
+
+    pub(super) fn resolve_item_self_knowledge(
+        &mut self,
+        source_kind_id: &str,
+        events: &mut Vec<DomainEvent>,
+    ) -> bool {
+        self.mark_item_aware(source_kind_id);
+        let player = self.player_dto();
+        let attribute = |value: rfb_protocol::AttributeValueDto| {
+            format!(
+                "{}/{}/{}",
+                value.natural, value.maximum_natural, value.effective
+            )
+        };
+        let mut statuses = player
+            .statuses
+            .iter()
+            .map(|status| {
+                format!(
+                    "{}:{}:{}",
+                    status.kind_id, status.intensity, status.remaining_ticks
+                )
+            })
+            .collect::<Vec<_>>();
+        statuses.sort();
+        let mut resistances = player
+            .resistances
+            .iter()
+            .map(|resistance| format!("{:?}:{:?}", resistance.damage_type, resistance.level))
+            .collect::<Vec<_>>();
+        resistances.sort();
+        let mut resources = player
+            .resources
+            .iter()
+            .map(|resource| format!("{}:{}/{}", resource.id, resource.current, resource.maximum))
+            .collect::<Vec<_>>();
+        resources.sort();
+        let attributes = player.progress.attributes;
+        events.push(DomainEvent::ItemSelfKnowledge {
+            source_kind_id: source_kind_id.to_owned(),
+            display_name_key: self.item_display_name_key(source_kind_id),
+            report: SelfKnowledgeReport {
+                level: player.progress.level,
+                hp: player.hp,
+                max_hp: player.max_hp,
+                gold: player.gold,
+                nutrition: player.nutrition,
+                attack: player.attack,
+                defense: player.defense,
+                melee_skill: player.melee_skill,
+                armor_class: player.armor_class,
+                speed: player.speed,
+                attributes: [
+                    attribute(attributes.strength),
+                    attribute(attributes.intelligence),
+                    attribute(attributes.wisdom),
+                    attribute(attributes.dexterity),
+                    attribute(attributes.constitution),
+                    attribute(attributes.charisma),
+                ],
+                statuses: statuses.join(","),
+                resistances: resistances.join(","),
+                resources: resources.join(","),
+            },
+        });
+        true
+    }
+
+    fn resolve_item_sequence(
+        &mut self,
+        source_kind_id: &str,
+        effects: Vec<ItemUseEffectDefinition>,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        for effect in effects {
+            match effect {
+                effect @ ItemUseEffectDefinition::Detect { .. } => {
+                    self.resolve_item_detection(
+                        source_kind_id.to_owned(),
+                        None,
+                        effect,
+                        events,
+                        changed,
+                    );
+                }
+                ItemUseEffectDefinition::SetFloorGlow {
+                    glow,
+                    radius,
+                    connected_glow,
+                } => self.resolve_item_floor_glow(
+                    source_kind_id,
+                    glow,
+                    radius,
+                    connected_glow,
+                    events,
+                    changed,
+                ),
+                effect => {
+                    self.resolve_item_self_effect(source_kind_id, &effect, events);
+                }
+            }
+        }
     }
 
     pub(super) fn item_attribute_kind(attribute: &ItemAttributeDefinition) -> AttributeKind {
@@ -1335,6 +2026,7 @@ impl Game {
         match (effect, plan) {
             (
                 effect @ (ItemUseEffectDefinition::Heal { .. }
+                | ItemUseEffectDefinition::NoNumericEffect
                 | ItemUseEffectDefinition::IncreaseNutrition { .. }
                 | ItemUseEffectDefinition::SatisfyHunger
                 | ItemUseEffectDefinition::HealDice { .. }
@@ -1355,7 +2047,12 @@ impl Game {
                 | ItemUseEffectDefinition::ApplyPoison { .. }
                 | ItemUseEffectDefinition::ApplyBlindness { .. }
                 | ItemUseEffectDefinition::ApplyStatus { .. }
+                | ItemUseEffectDefinition::ApplyGiantStrength { .. }
                 | ItemUseEffectDefinition::SelfDamage { .. }
+                | ItemUseEffectDefinition::LoseExperienceFraction { .. }
+                | ItemUseEffectDefinition::GainRelativeExperience { .. }
+                | ItemUseEffectDefinition::ApplyTsuyoshi { .. }
+                | ItemUseEffectDefinition::TriggerTsuyoshiCrash
                 | ItemUseEffectDefinition::DrainAttribute { .. }
                 | ItemUseEffectDefinition::RestoreAttribute { .. }
                 | ItemUseEffectDefinition::IncreaseAttribute { .. }
@@ -1365,14 +2062,61 @@ impl Game {
                 | ItemUseEffectDefinition::PrepareConfusingStrike
                 | ItemUseEffectDefinition::IncreaseSpellLearningCapacity
                 | ItemUseEffectDefinition::RemoveStatus { .. }
+                | ItemUseEffectDefinition::ReduceStatus { .. }
                 | ItemUseEffectDefinition::RestoreResource { .. }
                 | ItemUseEffectDefinition::RestoreResourceDice { .. }
                 | ItemUseEffectDefinition::RestoreResourceFull { .. }
                 | ItemUseEffectDefinition::DrainResourceFull { .. }
-                | ItemUseEffectDefinition::Sequence { .. }),
+                | ItemUseEffectDefinition::IdentifyInventory
+                | ItemUseEffectDefinition::SelfKnowledge),
                 ItemUsePlan::SelfTarget,
             ) => {
                 self.resolve_item_self_effect(&kind_id, &effect, events);
+            }
+            (ItemUseEffectDefinition::Sequence { effects }, ItemUsePlan::SelfTarget) => {
+                self.resolve_item_sequence(&kind_id, effects, events, changed)
+            }
+            (
+                ItemUseEffectDefinition::Acquirement {
+                    loot_table_id,
+                    minimum_count,
+                    maximum_count,
+                },
+                ItemUsePlan::Acquirement {
+                    source_item_id,
+                    depth,
+                },
+            ) => self.resolve_item_acquirement(
+                &kind_id,
+                source_item_id,
+                (loot_table_id, minimum_count, maximum_count),
+                depth,
+                events,
+                changed,
+            )?,
+            (ItemUseEffectDefinition::MundanifyItem, ItemUsePlan::Item { item_id }) => {
+                self.resolve_item_mundanity(&kind_id, &item_id, events)?;
+            }
+            (
+                ItemUseEffectDefinition::CraftItem {
+                    weapon_affix_ids,
+                    armor_affix_ids,
+                },
+                ItemUsePlan::Item { item_id },
+            ) => self.resolve_item_crafting(
+                &kind_id,
+                &item_id,
+                weapon_affix_ids,
+                armor_affix_ids,
+                events,
+            )?,
+            (ItemUseEffectDefinition::ShowRumour { message_key }, ItemUsePlan::SelfTarget) => {
+                self.mark_item_aware(&kind_id);
+                events.push(DomainEvent::ItemRumour {
+                    source_kind_id: kind_id.clone(),
+                    display_name_key: self.item_display_name_key(&kind_id),
+                    message_key,
+                });
             }
             (
                 ItemUseEffectDefinition::SelfCenteredElementalBlast {
@@ -1453,6 +2197,48 @@ impl Game {
                     changed,
                 );
             }
+            (
+                ItemUseEffectDefinition::CreateCurrentTerrain { .. },
+                ItemUsePlan::CreateCurrentTerrain { replacement },
+            ) => self.resolve_item_current_terrain_creation(&kind_id, replacement, events, changed),
+            (
+                ItemUseEffectDefinition::SetFloorGlow {
+                    glow,
+                    radius,
+                    connected_glow,
+                },
+                ItemUsePlan::SetFloorGlow,
+            ) => self.resolve_item_floor_glow(
+                &kind_id,
+                glow,
+                radius,
+                connected_glow,
+                events,
+                changed,
+            ),
+            (
+                ItemUseEffectDefinition::AreaDestruction {
+                    minimum_radius,
+                    maximum_radius,
+                    floor_terrain_id,
+                    wall_terrain_id,
+                    quartz_terrain_id,
+                    magma_terrain_id,
+                },
+                ItemUsePlan::AreaDestruction { allowed },
+            ) => self.resolve_item_area_destruction(
+                &kind_id,
+                allowed,
+                minimum_radius,
+                maximum_radius,
+                &floor_terrain_id,
+                &wall_terrain_id,
+                &quartz_terrain_id,
+                &magma_terrain_id,
+                events,
+                changed,
+                removed_entities,
+            ),
             (
                 ItemUseEffectDefinition::DestroyAdjacentTrapsAndDoors,
                 ItemUsePlan::DestroyAdjacentTrapsAndDoors { replacements },
@@ -1578,7 +2364,8 @@ impl Game {
         }
         let self_target = target.is_none_or(|target| matches!(target, TargetSelection::SelfTarget));
         match effect {
-            ItemUseEffectDefinition::IncreaseNutrition { .. }
+            ItemUseEffectDefinition::NoNumericEffect
+            | ItemUseEffectDefinition::IncreaseNutrition { .. }
             | ItemUseEffectDefinition::SatisfyHunger
             | ItemUseEffectDefinition::Heal { .. }
             | ItemUseEffectDefinition::HealDice { .. }
@@ -1603,9 +2390,14 @@ impl Game {
             | ItemUseEffectDefinition::ApplyPoison { .. }
             | ItemUseEffectDefinition::ApplyBlindness { .. }
             | ItemUseEffectDefinition::ApplyStatus { .. }
+            | ItemUseEffectDefinition::ApplyGiantStrength { .. }
             | ItemUseEffectDefinition::ApplyDetonation { .. }
             | ItemUseEffectDefinition::SelfLifeLoss { .. }
             | ItemUseEffectDefinition::SelfDamage { .. }
+            | ItemUseEffectDefinition::LoseExperienceFraction { .. }
+            | ItemUseEffectDefinition::GainRelativeExperience { .. }
+            | ItemUseEffectDefinition::ApplyTsuyoshi { .. }
+            | ItemUseEffectDefinition::TriggerTsuyoshiCrash
             | ItemUseEffectDefinition::Vengeance { .. }
             | ItemUseEffectDefinition::ProtectionFromEvil
             | ItemUseEffectDefinition::PrepareConfusingStrike
@@ -1614,14 +2406,49 @@ impl Game {
             | ItemUseEffectDefinition::AggravateMonsters
             | ItemUseEffectDefinition::MassGenocide { .. }
             | ItemUseEffectDefinition::RemoveStatus { .. }
+            | ItemUseEffectDefinition::ReduceStatus { .. }
             | ItemUseEffectDefinition::RestoreResource { .. }
             | ItemUseEffectDefinition::RestoreResourceDice { .. }
             | ItemUseEffectDefinition::RestoreResourceFull { .. }
             | ItemUseEffectDefinition::DrainResourceFull { .. }
+            | ItemUseEffectDefinition::IdentifyInventory
+            | ItemUseEffectDefinition::SelfKnowledge
+            | ItemUseEffectDefinition::ShowRumour { .. }
             | ItemUseEffectDefinition::Sequence { .. }
             | ItemUseEffectDefinition::CurseEquippedItem { .. }
             | ItemUseEffectDefinition::RemoveEquippedCurses { .. } => {
                 self_target.then_some(ItemUsePlan::SelfTarget)
+            }
+            ItemUseEffectDefinition::Acquirement {
+                loot_table_id,
+                maximum_count,
+                ..
+            } => {
+                if !self_target
+                    || self
+                        .next_item_instance_serial
+                        .checked_add(u64::from(*maximum_count))
+                        .is_none()
+                {
+                    return None;
+                }
+                let depth = self.floor_depth(&self.current_floor_id);
+                let table = self.content.loot_table(loot_table_id)?;
+                table
+                    .entries
+                    .iter()
+                    .any(|entry| {
+                        entry.min_depth <= depth
+                            && depth <= entry.max_depth
+                            && entry.quantity == 1
+                            && self.content.item(&entry.item_kind_id).is_some_and(|item| {
+                                item.max_stack == 1 && item.equipment_slot.is_some()
+                            })
+                    })
+                    .then(|| ItemUsePlan::Acquirement {
+                        source_item_id: source_item_id.to_owned(),
+                        depth,
+                    })
             }
             ItemUseEffectDefinition::Genocide { .. } => {
                 if target.is_some() {
@@ -1644,6 +2471,21 @@ impl Game {
                 replacements: self
                     .adjacent_terrain_creation_replacements(source_terrain_ids, target_terrain_id),
             }),
+            ItemUseEffectDefinition::CreateCurrentTerrain {
+                source_terrain_ids,
+                target_terrain_id,
+            } => self_target.then(|| ItemUsePlan::CreateCurrentTerrain {
+                replacement: self
+                    .current_terrain_creation_replacement(source_terrain_ids, target_terrain_id),
+            }),
+            ItemUseEffectDefinition::SetFloorGlow { .. } => {
+                self_target.then_some(ItemUsePlan::SetFloorGlow)
+            }
+            ItemUseEffectDefinition::AreaDestruction { .. } => {
+                self_target.then(|| ItemUsePlan::AreaDestruction {
+                    allowed: self.area_destruction_allowed(),
+                })
+            }
             ItemUseEffectDefinition::DestroyAdjacentTrapsAndDoors => {
                 self_target.then(|| ItemUsePlan::DestroyAdjacentTrapsAndDoors {
                     replacements: self.adjacent_trap_door_replacements(),
@@ -1673,6 +2515,30 @@ impl Game {
                     return None;
                 };
                 self.item_is_valid_identify_target(source_item_id, target_item_id)
+                    .then(|| ItemUsePlan::Item {
+                        item_id: target_item_id.clone(),
+                    })
+            }
+            ItemUseEffectDefinition::MundanifyItem => {
+                let TargetSelection::Item {
+                    item_id: target_item_id,
+                } = target?
+                else {
+                    return None;
+                };
+                self.item_is_valid_mundanity_target(source_item_id, target_item_id)
+                    .then(|| ItemUsePlan::Item {
+                        item_id: target_item_id.clone(),
+                    })
+            }
+            ItemUseEffectDefinition::CraftItem { .. } => {
+                let TargetSelection::Item {
+                    item_id: target_item_id,
+                } = target?
+                else {
+                    return None;
+                };
+                self.item_is_valid_crafting_target(source_item_id, target_item_id)
                     .then(|| ItemUsePlan::Item {
                         item_id: target_item_id.clone(),
                     })
@@ -2038,6 +2904,13 @@ impl Game {
         duration_bonus: u32,
         stacking: AbilityStatusStackingDefinition,
         resistance_type: Option<rfb_content::ActorDamageType>,
+        granted_resistances: &BTreeMap<
+            rfb_content::ActorDamageType,
+            rfb_content::ActorResistanceLevel,
+        >,
+        granted_modifiers: &StatModifiers,
+        granted_equipment_bonuses: &EquipmentBonuses,
+        incoming_damage_percent: u8,
         events: &mut Vec<DomainEvent>,
     ) -> bool {
         let immunity = self.player_status_immunities().contains(status_kind_id);
@@ -2077,14 +2950,17 @@ impl Game {
                         intensity: 1,
                         remaining_ticks: duration,
                         source_id: Some(source_kind_id.to_owned()),
-                        granted_resistances: BTreeMap::new(),
+                        granted_resistances: granted_resistances
+                            .iter()
+                            .map(|(damage_type, level)| ((*damage_type).into(), (*level).into()))
+                            .collect(),
                         granted_brands: BTreeSet::new(),
-                        granted_modifiers: StatModifiersDto::default(),
-                        granted_equipment_bonuses: EquipmentBonusesDto::default(),
+                        granted_modifiers: stat_modifiers_dto(granted_modifiers),
+                        granted_equipment_bonuses: equipment_bonuses_dto(granted_equipment_bonuses),
                         granted_status_immunities: BTreeSet::new(),
                         granted_race_id: None,
                         grants_wall_passage: false,
-                        incoming_damage_percent: 100,
+                        incoming_damage_percent,
                     },
                     stacking,
                 },
@@ -2103,6 +2979,252 @@ impl Game {
             noticed,
         });
         noticed
+    }
+
+    fn resolve_item_giant_strength(
+        &mut self,
+        source_kind_id: &str,
+        duration_dice: u16,
+        duration_sides: u32,
+        duration_bonus: u32,
+        events: &mut Vec<DomainEvent>,
+    ) -> bool {
+        let duration_sides =
+            u16::try_from(duration_sides).expect("validated status die sides must fit u16");
+        let source_turns = u32::try_from(self.roll_damage(duration_dice, duration_sides))
+            .expect("validated status duration must fit u32")
+            .saturating_add(duration_bonus);
+        let duration = source_turns.saturating_add(1).saturating_mul(10);
+        let level = i32::from(self.progress.level);
+        let change = apply_status_application(
+            &mut self.player.statuses,
+            StatusApplication {
+                status: StatusInstance {
+                    kind_id: STATUS_GIANT_STRENGTH.to_owned(),
+                    intensity: 1,
+                    remaining_ticks: duration,
+                    source_id: Some(source_kind_id.to_owned()),
+                    granted_resistances: BTreeMap::new(),
+                    granted_brands: BTreeSet::new(),
+                    granted_modifiers: StatModifiersDto {
+                        max_hp: 10 + level / 2,
+                        ..StatModifiersDto::default()
+                    },
+                    granted_equipment_bonuses: EquipmentBonusesDto {
+                        melee_skill: 60 * level / 50,
+                        ..EquipmentBonusesDto::default()
+                    },
+                    granted_status_immunities: BTreeSet::new(),
+                    granted_race_id: None,
+                    grants_wall_passage: false,
+                    incoming_damage_percent: 100,
+                },
+                stacking: StatusStacking::Extend,
+            },
+        )
+        .change;
+        let noticed = !matches!(change, StatusChange::Unchanged);
+        if noticed {
+            self.mark_item_aware(source_kind_id);
+        }
+        events.push(DomainEvent::ItemStatusResolved {
+            source_kind_id: source_kind_id.to_owned(),
+            display_name_key: self.item_display_name_key(source_kind_id),
+            status_kind_id: STATUS_GIANT_STRENGTH.to_owned(),
+            duration: Some(duration),
+            noticed,
+        });
+        noticed
+    }
+
+    fn resolve_item_experience_loss(
+        &mut self,
+        source_kind_id: &str,
+        divisor: u8,
+        events: &mut Vec<DomainEvent>,
+    ) -> bool {
+        let amount = self.progress.experience / u64::from(divisor);
+        self.progress.experience = self.progress.experience.saturating_sub(amount);
+        self.mark_item_aware(source_kind_id);
+        events.push(DomainEvent::ItemExperienceLost {
+            source_kind_id: source_kind_id.to_owned(),
+            display_name_key: self.item_display_name_key(source_kind_id),
+            amount,
+            remaining: self.progress.experience,
+        });
+        true
+    }
+
+    fn resolve_item_relative_experience_gain(
+        &mut self,
+        source_kind_id: &str,
+        divisor: u8,
+        bonus: u64,
+        maximum_gain: u64,
+        events: &mut Vec<DomainEvent>,
+    ) -> bool {
+        let amount = (self.progress.experience / u64::from(divisor))
+            .saturating_add(bonus)
+            .min(maximum_gain);
+        let before = self.progress.experience;
+        self.apply_unscaled_player_experience(amount, events);
+        let noticed = self.progress.experience != before;
+        if noticed {
+            self.mark_item_aware(source_kind_id);
+        }
+        noticed
+    }
+
+    fn resolve_item_tsuyoshi(
+        &mut self,
+        source_kind_id: &str,
+        duration_dice: u16,
+        duration_sides: u32,
+        duration_bonus: u32,
+        events: &mut Vec<DomainEvent>,
+    ) -> bool {
+        let resolution = apply_ability_status_effect(
+            &mut self.player,
+            source_kind_id,
+            0,
+            STATUS_TSUYOSHI,
+            1,
+            duration_bonus,
+            duration_dice,
+            duration_sides,
+            AbilityStatusStackingDefinition::Extend,
+            None,
+            None,
+            &BTreeMap::new(),
+            &BTreeSet::new(),
+            &StatModifiers {
+                max_hp: 50,
+                strength: 4,
+                constitution: 4,
+                ..StatModifiers::default()
+            },
+            &EquipmentBonuses::default(),
+            &BTreeSet::new(),
+            None,
+            false,
+            100,
+            None,
+            None,
+            &mut self.rng,
+        );
+        let (duration, noticed) = match resolution {
+            AbilityEffectResolutionDto::ApplyStatus {
+                applied_duration_ticks,
+                change,
+                ..
+            } => (
+                applied_duration_ticks,
+                !matches!(change, AbilityStatusChangeDto::Unchanged),
+            ),
+            _ => unreachable!("Tsuyoshi must produce a status application resolution"),
+        };
+        if noticed {
+            self.mark_item_aware(source_kind_id);
+        }
+        events.push(DomainEvent::ItemStatusResolved {
+            source_kind_id: source_kind_id.to_owned(),
+            display_name_key: self.item_display_name_key(source_kind_id),
+            status_kind_id: STATUS_TSUYOSHI.to_owned(),
+            duration: Some(duration),
+            noticed,
+        });
+        noticed
+    }
+
+    pub(super) fn apply_tsuyoshi_crash(
+        &mut self,
+        source_kind_id: &str,
+        previous_max_hp: i32,
+        previous_resource_maxima: &BTreeMap<String, (u32, u32)>,
+        events: &mut Vec<DomainEvent>,
+    ) -> bool {
+        let mut noticed = false;
+        for attribute in [AttributeKind::Constitution, AttributeKind::Strength] {
+            let outcome =
+                apply_permanent_attribute_drain(&mut self.progress, attribute, 20, &mut self.rng);
+            noticed = noticed || outcome.changed;
+            events.push(DomainEvent::ItemAttributeChanged {
+                source_kind_id: source_kind_id.to_owned(),
+                display_name_key: self.item_display_name_key(source_kind_id),
+                attribute: outcome.attribute,
+                change: ItemAttributeChange::Drained,
+                before: outcome.before,
+                after: outcome.after,
+                maximum: outcome.maximum_after,
+                noticed: outcome.changed,
+            });
+        }
+        if noticed {
+            self.refresh_after_attribute_change(previous_max_hp, previous_resource_maxima);
+        }
+        noticed
+    }
+
+    fn resolve_item_tsuyoshi_crash(
+        &mut self,
+        source_kind_id: &str,
+        events: &mut Vec<DomainEvent>,
+    ) -> bool {
+        let previous_max_hp = self.effective_player_max_hp();
+        let previous_resource_maxima = self.player_resource_maxima();
+        self.player
+            .statuses
+            .retain(|status| status.kind_id != STATUS_TSUYOSHI);
+        let noticed = self.apply_tsuyoshi_crash(
+            source_kind_id,
+            previous_max_hp,
+            &previous_resource_maxima,
+            events,
+        );
+        self.mark_item_aware(source_kind_id);
+        noticed
+    }
+
+    fn resolve_item_status_reduction(
+        &mut self,
+        source_kind_id: &str,
+        status_kind_id: &str,
+        minimum_reduction: u32,
+        reduction_divisor: u8,
+        events: &mut Vec<DomainEvent>,
+    ) -> bool {
+        let Some(index) = self
+            .player
+            .statuses
+            .iter()
+            .position(|status| status.kind_id == status_kind_id)
+        else {
+            events.push(DomainEvent::ItemStatusReduced {
+                source_kind_id: source_kind_id.to_owned(),
+                display_name_key: self.item_display_name_key(source_kind_id),
+                status_kind_id: status_kind_id.to_owned(),
+                before: 0,
+                after: 0,
+            });
+            return false;
+        };
+        let before = self.player.statuses[index].remaining_ticks;
+        let reduction = (before / u32::from(reduction_divisor)).max(minimum_reduction);
+        let after = before.saturating_sub(reduction);
+        if after == 0 {
+            self.player.statuses.remove(index);
+        } else {
+            self.player.statuses[index].remaining_ticks = after;
+        }
+        self.mark_item_aware(source_kind_id);
+        events.push(DomainEvent::ItemStatusReduced {
+            source_kind_id: source_kind_id.to_owned(),
+            display_name_key: self.item_display_name_key(source_kind_id),
+            status_kind_id: status_kind_id.to_owned(),
+            before,
+            after,
+        });
+        true
     }
 
     pub(super) fn resolve_item_resource_drain(
@@ -2887,6 +4009,16 @@ impl Game {
         events: &mut Vec<DomainEvent>,
     ) -> bool {
         match effect {
+            ItemUseEffectDefinition::NoNumericEffect => {
+                self.mark_item_aware(source_kind_id);
+                events.push(DomainEvent::ItemUsed {
+                    source_kind_id: source_kind_id.to_owned(),
+                    display_name_key: self.item_display_name_key(source_kind_id),
+                    requested: 0,
+                    applied: 0,
+                });
+                true
+            }
             ItemUseEffectDefinition::IncreaseNutrition { amount } => {
                 let before_state = self.nutrition_state();
                 let applied = self.increase_nutrition(*amount);
@@ -3107,6 +4239,10 @@ impl Game {
                 duration_bonus,
                 stacking,
                 resistance_type,
+                granted_resistances,
+                granted_modifiers,
+                granted_equipment_bonuses,
+                incoming_damage_percent,
             } => self.resolve_item_status(
                 source_kind_id,
                 status_kind_id,
@@ -3115,6 +4251,21 @@ impl Game {
                 *duration_bonus,
                 *stacking,
                 *resistance_type,
+                granted_resistances,
+                granted_modifiers,
+                granted_equipment_bonuses,
+                *incoming_damage_percent,
+                events,
+            ),
+            ItemUseEffectDefinition::ApplyGiantStrength {
+                duration_dice,
+                duration_sides,
+                duration_bonus,
+            } => self.resolve_item_giant_strength(
+                source_kind_id,
+                *duration_dice,
+                *duration_sides,
+                *duration_bonus,
                 events,
             ),
             ItemUseEffectDefinition::ApplyDetonation {
@@ -3148,6 +4299,34 @@ impl Game {
                 self.resolve_item_life_loss(source_kind_id, amount, events);
                 true
             }
+            ItemUseEffectDefinition::LoseExperienceFraction { divisor } => {
+                self.resolve_item_experience_loss(source_kind_id, *divisor, events)
+            }
+            ItemUseEffectDefinition::GainRelativeExperience {
+                divisor,
+                bonus,
+                maximum_gain,
+            } => self.resolve_item_relative_experience_gain(
+                source_kind_id,
+                *divisor,
+                *bonus,
+                *maximum_gain,
+                events,
+            ),
+            ItemUseEffectDefinition::ApplyTsuyoshi {
+                duration_dice,
+                duration_sides,
+                duration_bonus,
+            } => self.resolve_item_tsuyoshi(
+                source_kind_id,
+                *duration_dice,
+                *duration_sides,
+                *duration_bonus,
+                events,
+            ),
+            ItemUseEffectDefinition::TriggerTsuyoshiCrash => {
+                self.resolve_item_tsuyoshi_crash(source_kind_id, events)
+            }
             ItemUseEffectDefinition::Vengeance {
                 duration_dice,
                 duration_sides,
@@ -3175,16 +4354,25 @@ impl Game {
             ItemUseEffectDefinition::RemoveStatus { status_kind_id } => {
                 self.resolve_item_status_removal(source_kind_id, status_kind_id, events)
             }
+            ItemUseEffectDefinition::ReduceStatus {
+                status_kind_id,
+                minimum_reduction,
+                reduction_divisor,
+            } => self.resolve_item_status_reduction(
+                source_kind_id,
+                status_kind_id,
+                *minimum_reduction,
+                *reduction_divisor,
+                events,
+            ),
             ItemUseEffectDefinition::DrainResourceFull { resource_id } => {
                 self.resolve_item_resource_drain(source_kind_id, resource_id, events)
             }
-            ItemUseEffectDefinition::Sequence { effects } => {
-                let mut noticed = false;
-                for effect in effects {
-                    noticed =
-                        self.resolve_item_self_effect(source_kind_id, effect, events) || noticed;
-                }
-                noticed
+            ItemUseEffectDefinition::IdentifyInventory => {
+                self.resolve_item_inventory_identification(source_kind_id, events)
+            }
+            ItemUseEffectDefinition::SelfKnowledge => {
+                self.resolve_item_self_knowledge(source_kind_id, events)
             }
             ItemUseEffectDefinition::Damage { .. }
             | ItemUseEffectDefinition::SelfCenteredElementalBlast { .. }
@@ -3193,11 +4381,18 @@ impl Game {
             | ItemUseEffectDefinition::Genocide { .. }
             | ItemUseEffectDefinition::RechargeFromDevice { .. }
             | ItemUseEffectDefinition::CreateAdjacentTerrain { .. }
+            | ItemUseEffectDefinition::CreateCurrentTerrain { .. }
+            | ItemUseEffectDefinition::SetFloorGlow { .. }
+            | ItemUseEffectDefinition::AreaDestruction { .. }
             | ItemUseEffectDefinition::DestroyAdjacentTrapsAndDoors
             | ItemUseEffectDefinition::DispelCategory { .. }
             | ItemUseEffectDefinition::BanishVisible { .. }
             | ItemUseEffectDefinition::Detect { .. }
             | ItemUseEffectDefinition::IdentifyItem { .. }
+            | ItemUseEffectDefinition::Acquirement { .. }
+            | ItemUseEffectDefinition::MundanifyItem
+            | ItemUseEffectDefinition::CraftItem { .. }
+            | ItemUseEffectDefinition::ShowRumour { .. }
             | ItemUseEffectDefinition::EnchantItem { .. }
             | ItemUseEffectDefinition::CurseEquippedItem { .. }
             | ItemUseEffectDefinition::RemoveEquippedCurses { .. }
@@ -3207,6 +4402,9 @@ impl Game {
             | ItemUseEffectDefinition::Recall { .. }
             | ItemUseEffectDefinition::ResetRecall => {
                 unreachable!("projected item effects cannot resolve as self restoration")
+            }
+            ItemUseEffectDefinition::Sequence { .. } => {
+                unreachable!("item sequences resolve through the sequence executor")
             }
         }
     }

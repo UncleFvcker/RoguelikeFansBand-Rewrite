@@ -627,7 +627,7 @@ fn statuses_from_save(mut statuses: Vec<StatusSaveDto>) -> Result<Vec<StatusInst
                     .source_id
                     .as_deref()
                     .is_some_and(|source| source.is_empty() || source.len() > 128)
-                || !(1..=100).contains(&status.incoming_damage_percent)
+                || status.incoming_damage_percent > 100
             {
                 return Err(CoreError::InvalidSave("actor status state is invalid"));
             }

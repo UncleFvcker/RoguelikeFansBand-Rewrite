@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "ammunitionProfile": {
+    "ammunitionType": "shot",
+    "damageDice": 5,
+    "damageSides": 3,
+    "toDamage": 0,
+    "toHit": 0
+  },
+  "baseValue": 15,
+  "breakChancePercent": 10,
+  "descriptionKey": "item-demo-mithril-shot-description",
+  "formatVersion": 1,
+  "glyph": "{",
+  "id": "demo.item.mithril-shot",
+  "maxStack": 99,
+  "nameKey": "item-demo-mithril-shot-name",
+  "tags": [
+    "ammunition",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 5
+}

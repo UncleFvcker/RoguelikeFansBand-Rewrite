@@ -4,7 +4,8 @@
       "enum": [
         "terrain",
         "actor",
-        "item"
+        "item",
+        "gold"
       ],
       "type": "string"
     },
@@ -50,6 +51,16 @@
       ],
       "type": "string"
     },
+    "ActorResistanceLevel": {
+      "description": "Content-declared resistance tier; `normal` is expressed by omission.",
+      "enum": [
+        "vulnerable",
+        "resistant",
+        "strong",
+        "immune"
+      ],
+      "type": "string"
+    },
     "EffectProgramInputDefinition": {
       "enum": [
         "self",
@@ -58,6 +69,82 @@
         "glyph"
       ],
       "type": "string"
+    },
+    "EquipmentBonuses": {
+      "additionalProperties": false,
+      "properties": {
+        "deviceSkill": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "diggingSkill": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "disarmingSkill": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "infravision": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "lightRadius": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "meleeAttacks": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "meleeDamage": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "meleeSkill": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "perceptionSkill": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "rangedSkill": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "savingThrowSkill": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "searchSkill": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "stealthSkill": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "throwingSkill": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        }
+      },
+      "type": "object"
     },
     "ItemAttributeDefinition": {
       "enum": [
@@ -162,6 +249,19 @@
     },
     "ItemUseEffectDefinition": {
       "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "no-numeric-effect",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
         {
           "additionalProperties": false,
           "properties": {
@@ -782,6 +882,140 @@
               "minimum": 0,
               "type": "integer"
             },
+            "grantedEquipmentBonuses": {
+              "$ref": "#/$defs/EquipmentBonuses",
+              "default": {
+                "deviceSkill": 0,
+                "diggingSkill": 0,
+                "disarmingSkill": 0,
+                "infravision": 0,
+                "lightRadius": 0,
+                "meleeAttacks": 0,
+                "meleeDamage": 0,
+                "meleeSkill": 0,
+                "perceptionSkill": 0,
+                "rangedSkill": 0,
+                "savingThrowSkill": 0,
+                "searchSkill": 0,
+                "stealthSkill": 0,
+                "throwingSkill": 0
+              }
+            },
+            "grantedModifiers": {
+              "$ref": "#/$defs/StatModifiers",
+              "default": {
+                "attack": 0,
+                "charisma": 0,
+                "constitution": 0,
+                "defense": 0,
+                "dexterity": 0,
+                "intelligence": 0,
+                "maxHp": 0,
+                "speed": 0,
+                "strength": 0,
+                "wisdom": 0
+              }
+            },
+            "grantedResistances": {
+              "additionalProperties": false,
+              "properties": {
+                "acid": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
+                "chaos": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
+                "cold": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
+                "confusion": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
+                "dark": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
+                "disenchant": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
+                "disintegrate": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
+                "electricity": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
+                "fire": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
+                "force": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
+                "gravity": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
+                "hell-fire": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
+                "holy-fire": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
+                "ice": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
+                "inertia": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
+                "light": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
+                "mana": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
+                "nether": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
+                "nexus": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
+                "nuke": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
+                "physical": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
+                "plasma": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
+                "poison": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
+                "psi": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
+                "shards": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
+                "sound": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
+                "storm": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
+                "time": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
+                "water": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                }
+              },
+              "type": "object"
+            },
+            "incomingDamagePercent": {
+              "default": 100,
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
             "resistanceType": {
               "anyOf": [
                 {
@@ -810,6 +1044,38 @@
             "durationSides",
             "durationBonus",
             "stacking"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "durationBonus": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "durationDice": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "durationSides": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "apply-giant-strength",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "durationDice",
+            "durationSides",
+            "durationBonus"
           ],
           "type": "object"
         },
@@ -902,6 +1168,103 @@
             "type",
             "damageDice",
             "damageSides"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "divisor": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "lose-experience-fraction",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "divisor"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "bonus": {
+              "format": "uint64",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "divisor": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "maximumGain": {
+              "format": "uint64",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "gain-relative-experience",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "divisor",
+            "bonus",
+            "maximumGain"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "durationBonus": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "durationDice": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "durationSides": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "apply-tsuyoshi",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "durationDice",
+            "durationSides",
+            "durationBonus"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "trigger-tsuyoshi-crash",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
           ],
           "type": "object"
         },
@@ -1135,6 +1498,101 @@
         {
           "additionalProperties": false,
           "properties": {
+            "sourceTerrainIds": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "targetTerrainId": {
+              "type": "string"
+            },
+            "type": {
+              "const": "create-current-terrain",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "sourceTerrainIds",
+            "targetTerrainId"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "connectedGlow": {
+              "default": false,
+              "type": "boolean"
+            },
+            "glow": {
+              "type": "boolean"
+            },
+            "radius": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "set-floor-glow",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "glow",
+            "radius"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "floorTerrainId": {
+              "type": "string"
+            },
+            "magmaTerrainId": {
+              "type": "string"
+            },
+            "maximumRadius": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "minimumRadius": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "quartzTerrainId": {
+              "type": "string"
+            },
+            "type": {
+              "const": "area-destruction",
+              "type": "string"
+            },
+            "wallTerrainId": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "minimumRadius",
+            "maximumRadius",
+            "floorTerrainId",
+            "wallTerrainId",
+            "quartzTerrainId",
+            "magmaTerrainId"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
             "type": {
               "const": "destroy-adjacent-traps-and-doors",
               "type": "string"
@@ -1159,6 +1617,36 @@
           "required": [
             "type",
             "statusKindId"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "minimumReduction": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "reductionDivisor": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "statusKindId": {
+              "type": "string"
+            },
+            "type": {
+              "const": "reduce-status",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "statusKindId",
+            "minimumReduction",
+            "reductionDivisor"
           ],
           "type": "object"
         },
@@ -1270,6 +1758,120 @@
           },
           "required": [
             "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "identify-inventory",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "self-knowledge",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "lootTableId": {
+              "type": "string"
+            },
+            "maximumCount": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "minimumCount": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "acquirement",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "lootTableId",
+            "minimumCount",
+            "maximumCount"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "mundanify-item",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "armorAffixIds": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "type": {
+              "const": "craft-item",
+              "type": "string"
+            },
+            "weaponAffixIds": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "type",
+            "weaponAffixIds",
+            "armorAffixIds"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "messageKey": {
+              "type": "string"
+            },
+            "type": {
+              "const": "show-rumour",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "messageKey"
           ],
           "type": "object"
         },
@@ -1661,6 +2263,62 @@
           "type": "object"
         }
       ]
+    },
+    "StatModifiers": {
+      "additionalProperties": false,
+      "properties": {
+        "attack": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "charisma": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "constitution": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "defense": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "dexterity": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "intelligence": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "maxHp": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "speed": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "strength": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "wisdom": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        }
+      },
+      "type": "object"
     }
   },
   "$id": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/effect-program.schema.json",

@@ -70,9 +70,9 @@
           "id": "refreshments",
           "primaryBlockers": ["consumable-effect"],
           "items": [
-            { "sourceIndex": 400, "sourceName": "Water:Clear", "sourceId": "water-clear" },
-            { "sourceIndex": 401, "sourceName": "Apple Juice:Light Brown", "sourceId": "apple-juice-light-brown" },
-            { "sourceIndex": 402, "sourceName": "Slime Mold Juice:Icky Green", "sourceId": "slime-mold-juice-icky-green" }
+            { "sourceIndex": 400, "sourceName": "Water:Clear", "sourceId": "water-clear", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] },
+            { "sourceIndex": 401, "sourceName": "Apple Juice:Light Brown", "sourceId": "apple-juice-light-brown", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] },
+            { "sourceIndex": 402, "sourceName": "Slime Mold Juice:Icky Green", "sourceId": "slime-mold-juice-icky-green", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] }
           ]
         },
         {
@@ -86,20 +86,20 @@
           "id": "loss-and-ruination",
           "primaryBlockers": ["consumable-effect"],
           "items": [
-            { "sourceIndex": 409, "sourceName": "Lose Memories:Orange", "sourceId": "lose-memories-orange" },
-            { "sourceIndex": 410, "sourceName": "Ruination:Pungent", "sourceId": "ruination-pungent" }
+            { "sourceIndex": 409, "sourceName": "Lose Memories:Orange", "sourceId": "lose-memories-orange", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] },
+            { "sourceIndex": 410, "sourceName": "Ruination:Pungent", "sourceId": "ruination-pungent", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] }
           ]
         },
         {
           "id": "potion-status-and-buffs",
           "primaryBlockers": ["consumable-effect"],
           "items": [
-            { "sourceIndex": 419, "sourceName": "Sight:White", "sourceId": "sight-white" },
-            { "sourceIndex": 420, "sourceName": "Antidote:Violet", "sourceId": "antidote-violet" },
-            { "sourceIndex": 454, "sourceName": "Curing:Dark Blue", "sourceId": "curing-dark-blue" },
-            { "sourceIndex": 455, "sourceName": "Invulnerability:Dark Green", "sourceId": "invulnerability-dark-green" },
-            { "sourceIndex": 461, "sourceName": "Giant Strength:Noxious", "sourceId": "giant-strength-noxious" },
-            { "sourceIndex": 464, "sourceName": "Great Clarity:Acrid", "sourceId": "great-clarity-acrid" }
+            { "sourceIndex": 419, "sourceName": "Sight:White", "sourceId": "sight-white", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] },
+            { "sourceIndex": 420, "sourceName": "Antidote:Violet", "sourceId": "antidote-violet", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] },
+            { "sourceIndex": 454, "sourceName": "Curing:Dark Blue", "sourceId": "curing-dark-blue", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] },
+            { "sourceIndex": 455, "sourceName": "Invulnerability:Dark Green", "sourceId": "invulnerability-dark-green", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] },
+            { "sourceIndex": 461, "sourceName": "Giant Strength:Noxious", "sourceId": "giant-strength-noxious", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] },
+            { "sourceIndex": 464, "sourceName": "Great Clarity:Acrid", "sourceId": "great-clarity-acrid", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] }
           ]
         }
       ]
@@ -111,24 +111,24 @@
           "id": "inventory-knowledge",
           "primaryBlockers": ["scroll-effect"],
           "items": [
-            { "sourceIndex": 372, "sourceName": "Understanding:fentwon gerbil", "sourceId": "understanding-fentwon-gerbil" },
-            { "sourceIndex": 375, "sourceName": "Inventory Protection:arsemi zunag", "sourceId": "inventory-protection-arsemi-zunag" }
+            { "sourceIndex": 372, "sourceName": "Understanding:fentwon gerbil", "sourceId": "understanding-fentwon-gerbil", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] },
+            { "sourceIndex": 375, "sourceName": "Inventory Protection:arsemi zunag", "sourceId": "inventory-protection-arsemi-zunag", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] }
           ]
         },
         {
           "id": "gold-detection",
           "primaryBlockers": ["gold-detection"],
           "items": [
-            { "sourceIndex": 340, "sourceName": "Treasure Detection:ner fidtri", "sourceId": "treasure-detection-ner-fidtri" }
+            { "sourceIndex": 340, "sourceName": "Treasure Detection:ner fidtri", "sourceId": "treasure-detection-ner-fidtri", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] }
           ]
         },
         {
           "id": "enlightenment",
           "primaryBlockers": ["consumable-effect"],
           "items": [
-            { "sourceIndex": 449, "sourceName": "Enlightenment:Pink", "sourceId": "enlightenment-pink" },
-            { "sourceIndex": 450, "sourceName": "*Enlightenment*:Yellow Speckled", "sourceId": "enlightenment-yellow-speckled" },
-            { "sourceIndex": 451, "sourceName": "Self Knowledge:Shimmering", "sourceId": "self-knowledge-shimmering" }
+            { "sourceIndex": 449, "sourceName": "Enlightenment:Pink", "sourceId": "enlightenment-pink", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] },
+            { "sourceIndex": 450, "sourceName": "*Enlightenment*:Yellow Speckled", "sourceId": "enlightenment-yellow-speckled", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] },
+            { "sourceIndex": 451, "sourceName": "Self Knowledge:Shimmering", "sourceId": "self-knowledge-shimmering", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] }
           ]
         }
       ]
@@ -140,23 +140,23 @@
           "id": "tile-mutations",
           "primaryBlockers": ["scroll-effect"],
           "items": [
-            { "sourceIndex": 322, "sourceName": "Trap Creation:wahx our gre", "sourceId": "trap-creation-wahx-our-gre" },
-            { "sourceIndex": 351, "sourceName": "Rune of Protection:sef unag famur", "sourceId": "rune-of-protection-sef-unag-famur" }
+            { "sourceIndex": 322, "sourceName": "Trap Creation:wahx our gre", "sourceId": "trap-creation-wahx-our-gre", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] },
+            { "sourceIndex": 351, "sourceName": "Rune of Protection:sef unag famur", "sourceId": "rune-of-protection-sef-unag-famur", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] }
           ]
         },
         {
           "id": "floor-lighting",
           "primaryBlockers": ["scroll-effect"],
           "items": [
-            { "sourceIndex": 315, "sourceName": "Darkness:fapay doea", "sourceId": "darkness-fapay-doea" },
-            { "sourceIndex": 338, "sourceName": "Light:misat dernin", "sourceId": "light-misat-dernin" }
+            { "sourceIndex": 315, "sourceName": "Darkness:fapay doea", "sourceId": "darkness-fapay-doea", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] },
+            { "sourceIndex": 338, "sourceName": "Light:misat dernin", "sourceId": "light-misat-dernin", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] }
           ]
         },
         {
           "id": "area-destruction",
           "primaryBlockers": ["scroll-effect"],
           "items": [
-            { "sourceIndex": 353, "sourceName": "Destruction:denmung ishbul", "sourceId": "destruction-denmung-ishbul" }
+            { "sourceIndex": 353, "sourceName": "Destruction:denmung ishbul", "sourceId": "destruction-denmung-ishbul", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] }
           ]
         }
       ]
@@ -168,24 +168,30 @@
           "id": "item-generation",
           "primaryBlockers": ["scroll-effect"],
           "items": [
-            { "sourceIndex": 358, "sourceName": "Acquirement:klinej ere", "sourceId": "acquirement-klinej-ere" },
-            { "sourceIndex": 359, "sourceName": "*Acquirement*:snetrol uni", "sourceId": "acquirement-snetrol-uni" }
+            { "sourceIndex": 358, "sourceName": "Acquirement:klinej ere", "sourceId": "acquirement-klinej-ere", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] },
+            { "sourceIndex": 359, "sourceName": "*Acquirement*:snetrol uni", "sourceId": "acquirement-snetrol-uni", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] }
           ]
         },
         {
           "id": "item-mutation",
           "primaryBlockers": ["scroll-effect"],
           "items": [
-            { "sourceIndex": 337, "sourceName": "Mundanity:danseh nejood", "sourceId": "mundanity-danseh-nejood" },
-            { "sourceIndex": 364, "sourceName": "Artifact Creation:engsno argsan", "sourceId": "artifact-creation-engsno-argsan" },
-            { "sourceIndex": 367, "sourceName": "Crafting:enchantus maximus", "sourceId": "crafting-enchantus-maximus" }
+            { "sourceIndex": 337, "sourceName": "Mundanity:danseh nejood", "sourceId": "mundanity-danseh-nejood", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] },
+            { "sourceIndex": 367, "sourceName": "Crafting:enchantus maximus", "sourceId": "crafting-enchantus-maximus", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] }
+          ]
+        },
+        {
+          "id": "artifact-creation",
+          "primaryBlockers": ["random-artifact-identity"],
+          "items": [
+            { "sourceIndex": 364, "sourceName": "Artifact Creation:engsno argsan", "sourceId": "artifact-creation-engsno-argsan" }
           ]
         },
         {
           "id": "rumour",
           "primaryBlockers": ["scroll-effect"],
           "items": [
-            { "sourceIndex": 363, "sourceName": "Rumour:an gan nagblaa", "sourceId": "rumour-an-gan-nagblaa" }
+            { "sourceIndex": 363, "sourceName": "Rumour:an gan nagblaa", "sourceId": "rumour-an-gan-nagblaa", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] }
           ]
         }
       ]
@@ -197,10 +203,10 @@
           "id": "launcher-multiplier",
           "primaryBlockers": ["launcher-multiplier"],
           "items": [
-            { "sourceIndex": 160, "sourceName": "Sling", "sourceId": "sling" },
-            { "sourceIndex": 162, "sourceName": "Long Bow", "sourceId": "long-bow" },
-            { "sourceIndex": 163, "sourceName": "Light Crossbow", "sourceId": "light-crossbow" },
-            { "sourceIndex": 164, "sourceName": "Heavy Crossbow", "sourceId": "heavy-crossbow" },
+            { "sourceIndex": 160, "sourceName": "Sling", "sourceId": "sling", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] },
+            { "sourceIndex": 162, "sourceName": "Long Bow", "sourceId": "long-bow", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] },
+            { "sourceIndex": 163, "sourceName": "Light Crossbow", "sourceId": "light-crossbow", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] },
+            { "sourceIndex": 164, "sourceName": "Heavy Crossbow", "sourceId": "heavy-crossbow", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] },
             { "sourceIndex": 165, "sourceName": "Gun", "sourceId": "gun", "secondaryBlockers": ["item-flag:INSTA_ART", "launcher-unpaired"] },
             { "sourceIndex": 166, "sourceName": "Gun", "sourceId": "gun", "secondaryBlockers": ["item-flag:INSTA_ART", "launcher-unpaired"] },
             { "sourceIndex": 167, "sourceName": "Yumi", "sourceId": "yumi", "secondaryBlockers": ["item-flag:INSTA_ART", "launcher-unpaired"] },
@@ -212,18 +218,18 @@
           "id": "ammunition-damage",
           "primaryBlockers": ["ammo-dice-folded"],
           "items": [
-            { "sourceIndex": 176, "sourceName": "Sheaf Arrow", "sourceId": "sheaf-arrow" },
-            { "sourceIndex": 177, "sourceName": "Mithril Arrow", "sourceId": "mithril-arrow" },
-            { "sourceIndex": 178, "sourceName": "Seeker Arrow", "sourceId": "seeker-arrow" },
+            { "sourceIndex": 176, "sourceName": "Sheaf Arrow", "sourceId": "sheaf-arrow", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] },
+            { "sourceIndex": 177, "sourceName": "Mithril Arrow", "sourceId": "mithril-arrow", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] },
+            { "sourceIndex": 178, "sourceName": "Seeker Arrow", "sourceId": "seeker-arrow", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] },
             { "sourceIndex": 179, "sourceName": "Black Arrow", "sourceId": "black-arrow", "secondaryBlockers": ["item-flag:INSTA_ART"] },
-            { "sourceIndex": 185, "sourceName": "Bolt", "sourceId": "bolt" },
-            { "sourceIndex": 186, "sourceName": "Steel Bolt", "sourceId": "steel-bolt" },
-            { "sourceIndex": 187, "sourceName": "Mithril Bolt", "sourceId": "mithril-bolt" },
-            { "sourceIndex": 188, "sourceName": "Seeker Bolt", "sourceId": "seeker-bolt" },
-            { "sourceIndex": 189, "sourceName": "Adamantine Bolt", "sourceId": "adamantine-bolt" },
-            { "sourceIndex": 190, "sourceName": "Rounded Pebble", "sourceId": "rounded-pebble" },
-            { "sourceIndex": 191, "sourceName": "Iron Shot", "sourceId": "iron-shot" },
-            { "sourceIndex": 192, "sourceName": "Mithril Shot", "sourceId": "mithril-shot" }
+            { "sourceIndex": 185, "sourceName": "Bolt", "sourceId": "bolt", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] },
+            { "sourceIndex": 186, "sourceName": "Steel Bolt", "sourceId": "steel-bolt", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] },
+            { "sourceIndex": 187, "sourceName": "Mithril Bolt", "sourceId": "mithril-bolt", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] },
+            { "sourceIndex": 188, "sourceName": "Seeker Bolt", "sourceId": "seeker-bolt", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] },
+            { "sourceIndex": 189, "sourceName": "Adamantine Bolt", "sourceId": "adamantine-bolt", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] },
+            { "sourceIndex": 190, "sourceName": "Rounded Pebble", "sourceId": "rounded-pebble", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] },
+            { "sourceIndex": 191, "sourceName": "Iron Shot", "sourceId": "iron-shot", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] },
+            { "sourceIndex": 192, "sourceName": "Mithril Shot", "sourceId": "mithril-shot", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] }
           ]
         }
       ]
@@ -235,23 +241,23 @@
           "id": "experience-growth",
           "primaryBlockers": ["consumable-effect"],
           "items": [
-            { "sourceIndex": 452, "sourceName": "Experience:Green Speckled", "sourceId": "experience-green-speckled" }
+            { "sourceIndex": 452, "sourceName": "Experience:Green Speckled", "sourceId": "experience-green-speckled", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] }
           ]
         },
         {
           "id": "life-and-mutation",
           "primaryBlockers": ["consumable-effect"],
           "items": [
-            { "sourceIndex": 456, "sourceName": "New Life:Bright Red", "sourceId": "new-life-bright-red" },
-            { "sourceIndex": 459, "sourceName": "Polymorph:Bronze", "sourceId": "polymorph-bronze" }
+            { "sourceIndex": 456, "sourceName": "New Life:Bright Red", "sourceId": "new-life-bright-red", "secondaryBlockers": ["character-mutation-and-attribute-potential"] },
+            { "sourceIndex": 459, "sourceName": "Polymorph:Bronze", "sourceId": "polymorph-bronze", "secondaryBlockers": ["character-mutation-system"] }
           ]
         },
         {
           "id": "timed-stat-side-effects",
           "primaryBlockers": ["consumable-effect"],
           "items": [
-            { "sourceIndex": 457, "sourceName": "Neo-Tsuyoshi Special:Sky Blue", "sourceId": "neo-tsuyoshi-special-sky-blue" },
-            { "sourceIndex": 458, "sourceName": "Tsuyoshi Special:Silver", "sourceId": "tsuyoshi-special-silver" }
+            { "sourceIndex": 457, "sourceName": "Neo-Tsuyoshi Special:Sky Blue", "sourceId": "neo-tsuyoshi-special-sky-blue", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] },
+            { "sourceIndex": 458, "sourceName": "Tsuyoshi Special:Silver", "sourceId": "tsuyoshi-special-silver", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] }
           ]
         }
       ]

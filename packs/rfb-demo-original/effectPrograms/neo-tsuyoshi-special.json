@@ -1,0 +1,1 @@
+{"$schema":"https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/effect-program.schema.json","formatVersion":1,"id":"demo.effect.neo-tsuyoshi-special","input":"self","steps":[{"type":"remove-status","statusKindId":"rfb.status.hallucination"},{"type":"apply-tsuyoshi","durationDice":1,"durationSides":100,"durationBonus":100}]}

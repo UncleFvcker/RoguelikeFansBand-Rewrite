@@ -4,7 +4,15 @@
   "id": "demo.loot-table.archer",
   "rolls": 1,
   "entries": [
-    { "itemKindId": "demo.item.arrow", "weight": 1, "quantity": 1, "minDepth": 0, "maxDepth": 9 }
+    { "itemKindId": "demo.item.arrow", "weight": 1, "quantity": 5, "minDepth": 0, "maxDepth": 9 },
+    { "itemKindId": "demo.item.sheaf-arrow", "weight": 1, "quantity": 5, "minDepth": 5, "maxDepth": 9 },
+    { "itemKindId": "demo.item.mithril-arrow", "weight": 1, "quantity": 5, "minDepth": 7, "maxDepth": 9 },
+    { "itemKindId": "demo.item.seeker-arrow", "weight": 1, "quantity": 5, "minDepth": 9, "maxDepth": 9 },
+    { "itemKindId": "demo.item.steel-bolt", "weight": 1, "quantity": 5, "minDepth": 5, "maxDepth": 9 },
+    { "itemKindId": "demo.item.mithril-bolt", "weight": 1, "quantity": 5, "minDepth": 7, "maxDepth": 9 },
+    { "itemKindId": "demo.item.seeker-bolt", "weight": 1, "quantity": 5, "minDepth": 9, "maxDepth": 9 },
+    { "itemKindId": "demo.item.adamantine-bolt", "weight": 1, "quantity": 5, "minDepth": 9, "maxDepth": 9 },
+    { "itemKindId": "demo.item.mithril-shot", "weight": 1, "quantity": 5, "minDepth": 7, "maxDepth": 9 }
   ],
   "qualityWeights": [{ "quality": "ordinary", "weight": 1 }],
   "affixWeights": [{ "weight": 1 }]

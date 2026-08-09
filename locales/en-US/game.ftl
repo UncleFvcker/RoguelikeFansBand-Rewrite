@@ -411,5 +411,40 @@ message-item-use-hunger-no-effect = You use { $target }, but your food is alread
 message-item-use-status-applied = You use { $source } and gain { $status } for { $duration } ticks.
 message-item-use-status-resisted = You resist the { $status } from { $source }.
 message-item-use-status-no-new-effect = You use { $source }, but its { $status } has no new effect.
+message-item-experience-lost = You use { $source } and lose { $amount } experience ({ $remaining } remaining).
+message-item-use-status-reduced = You use { $target }, reducing { $status } from { $before } to { $after } ticks.
+status-sight-name = sight
+status-poison-resistance-name = poison resistance
+status-invulnerability-name = invulnerability
+status-giant-strength-name = giant strength
+status-understanding-name = understanding
+status-inventory-protection-name = inventory protection
+message-item-use-inventory-identified =
+    { $count ->
+        [one] You use { $source } and identify 1 carried item stack.
+       *[other] You use { $source } and identify { $count } carried item stacks.
+    }
+message-item-auto-identified =
+    { $count ->
+        [one] Your understanding identifies 1 newly carried item stack.
+       *[other] Your understanding identifies { $count } newly carried item stacks.
+    }
+message-item-use-self-knowledge = { $source } reveals: level { $level }; HP { $hp }/{ $maxHp }; gold { $gold }; food { $nutrition }; attack { $attack }; defense { $defense }; melee { $meleeSkill }; armour { $armorClass }; speed { $speed }; STR { $strength }, INT { $intelligence }, WIS { $wisdom }, DEX { $dexterity }, CON { $constitution }, CHR { $charisma }; statuses [{ $statuses }]; resistances [{ $resistances }]; resources [{ $resources }].
 message-item-use-resource-drained = { $source } drains { $amount } { $resource }.
 message-item-use-resource-drain-no-effect = { $source } finds no { $resource } to drain.
+message-item-use-create-current-terrain = { $source } creates a glyph beneath you.
+message-item-use-create-current-terrain-no-effect = { $source } finds no legal ground beneath you.
+message-item-use-floor-light = { $source } permanently lights { $count } spaces.
+message-item-use-floor-darkness = { $source } darkens { $count } spaces.
+message-item-use-floor-glow-no-effect = { $source } produces no further change in the surrounding light.
+message-item-use-area-destruction = { $source } remakes { $count } spaces, removing { $entities } creatures, { $items } items, and { $gold } treasure piles.
+message-item-use-area-destruction-protected = { $source } cannot destroy this protected region.
+message-item-use-acquirement = { $source } creates { $count } excellent { $count ->
+    [one] item
+   *[other] items
+} at your feet.
+message-item-use-mundanity = { $source } strips { $target } back to the mundane.
+message-item-use-crafting = { $source } crafts { $target } with { $affix }.
+message-item-use-rumour = { $source } reads: “{ $rumour }”
+message-monster-warding-glyph-held = The glyph of warding repels { $source }.
+message-monster-warding-glyph-broken = { $source } breaks the glyph of warding.

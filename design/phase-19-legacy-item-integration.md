@@ -56,27 +56,27 @@ work: five unpaired launchers, five instant-artifact rows, two charisma flags,
 and two no-enchant flags. Those rows must not become active merely because the
 launcher multiplier or ammunition dice blocker is removed.
 
-The current audited snapshot after the supported-consumable batch, against RFB `master` commit
+The current audited snapshot after P3.5, against RFB `master` commit
 `efd63661302866038f58d8cd2553b23e6af3bf9d`, is:
 
 | Measure | Count |
 | --- | ---: |
 | Authoritative source items | 544 |
-| Active source items | 156 |
+| Active source items | 206 |
 | Mechanics ready, not formalized | 106 |
-| Blocked source items | 282 |
-| Formal demo items | 181 |
-| Formal items mapped to RFB | 157 |
+| Blocked source items | 232 |
+| Formal demo items | 231 |
+| Formal items mapped to RFB | 207 |
 | Original formal items | 24 |
 
-The ledger has 110 formal adaptations for 109 unique source items; the generic
+The ledger has 159 formal adaptations for 158 unique source items; the generic
 Staff template intentionally maps to two formal devices. The largest current
-blocker groups are books (68), instant-artifact handling (42), consumable
-effects (40), food nutrition (25), the wallet/gold model (18), riding flags
-(17), and scroll effects (15). Treasure Detection has one explicit
-`gold-detection` blocker because gold piles are not item instances. Re-run the
-command after source, importer, or formal item changes instead of treating
-these snapshot counts as constants.
+blocker groups are books (68), instant-artifact handling (42), the wallet/gold
+model (18), riding flags (17), and the remaining consumable and folded
+ammunition rule gaps (12 each). Madness is the sole remaining generic scroll
+effect gap; Artifact Creation is separately blocked by the missing random
+artifact identity model. Re-run the command after source, importer, or
+formal item changes instead of treating these snapshot counts as constants.
 
 ## First Batch
 
@@ -324,3 +324,198 @@ The demo pack is version 1.195.0 with content hash
 This batch changes no protocol, save format, or state-hash input schema.
 Shop/loot expansion changes common new-game RNG and remains an integration
 handoff; shared replay baselines are not refreshed in the item worktree.
+
+## P3.2 Low-Coupling Potions
+
+P3.2 moves 11 of its 12 planned source identities from `blocked` to `active`.
+Water, Apple Juice, and Slime Mold Juice use the explicit
+`no-numeric-effect` rule because the Rewrite has no thirst system. Their
+ledger rows carry the adaptation note
+`intentional-no-numeric-effect:no-thirst-system`; they are consumed, become
+known, and emit the ordinary no-effect event without inventing a thirst
+resource.
+
+Lose Memories removes one quarter of current experience while preserving
+historical maximum experience. Ruination applies 10d10 self damage followed
+by all six permanent attribute drains. Sight clears blindness, grants three
+tiles of operational living-creature infravision, and contributes one
+see-invisible source. Antidote and Curing use a general partial-status
+reduction rule for the original half-or-flat poison reductions. Great Clarity
+restores 10d10+15 mana and clears confusion and hallucination.
+
+Invulnerability reuses the existing incoming-damage percentage status with a
+zero-percent payload; the ledger records that the original one-in-thirteen
+damage penetration is intentionally not modeled in this low-coupling batch.
+Giant Strength grants the existing original-facing max-HP and melee-skill
+facets at player level; its ledger note records that weapon-weight and blow
+multiplier semantics remain outside the current combat model. These are
+bounded adaptations rather than new thirst, body-size, or per-hit exception
+systems.
+
+Water and Apple Juice are general-store stock, Slime Mold Juice is shallow
+Warrens loot, Sight/Antidote/Curing are alchemist stock, and the three priced
+late-game buffs are black-market stock. The two zero-value harmful potions use
+depth-9 kobold drops. Salt Water remains the sole P3.2 blocked identity because
+its vomiting, starvation, paralysis, poison clearing, and race-conditional
+semantics are still a composite rule gap.
+
+The authoritative `master` audit at
+`efd63661302866038f58d8cd2553b23e6af3bf9d` reports 190 active, 106
+mechanics-ready, and 248 blocked source items. The formal pack contains 191
+mapped RFB items plus 24 original items, for 215 total. P3.2 reports 11
+`blockedToActive`, one `stillBlocked` (Salt Water), and no unresolved secondary
+blocker. Pack version 1.201.0 has content hash
+`8918443abb7330bad113eaf395af65c283e96dfda1480fe34a4bd609a623f0b4`.
+Protocol, save structure, and state-hash input schema are unchanged. Shop/loot
+changes alter common new-game RNG, so replay baseline refresh remains an
+integration-worktree handoff.
+
+## P3.3 Knowledge, Detection, and Inventory Protection
+
+P3.3 moves all six planned identities from `blocked` to `active`: Treasure
+Detection, Understanding, Inventory Protection, Enlightenment,
+*Enlightenment*, and Self Knowledge. Gold is now a first-class detection
+subject whose transient result carries the stable gold-pile ids. Understanding
+appraises the current carried inventory and grants 40 turns of automatic
+appraisal for items newly carried while the status remains active. Inventory
+Protection grants 25 turns of complete protection at the current inventory
+damage boundary; the existing device-recharge source-destruction path consults
+the same status before removing an item.
+
+Self Knowledge derives its report from the current player projection and emits
+it as an event; it adds no persistent character state. Enlightenment composes
+full-floor persistent map memory with transient item and gold detection.
+*Enlightenment* additionally increases Intelligence and Wisdom, reveals traps
+and passages across the full floor, appraises the carried inventory, and emits
+the same self-knowledge report. The ledger explicitly records persistent map
+memory as the bounded adaptation for the original permanent floor-lighting
+wording.
+
+Treasure Detection is regular Alchemist stock because its source row carries
+the original `TOWN` flag. The other five high-level, non-town items are exposed
+through the Black Market. The authoritative audit reports 196 active, 106
+mechanics-ready, and 242 blocked source items. The formal pack contains 197
+mapped RFB items plus 24 original items, for 221 total. P3.3 reports six
+`blockedToActive`, no remaining item, and no unresolved secondary blocker.
+Pack version 1.202.0 has content hash
+`8c3db682991effa151df14d798fee236db536bce730cbcce23145fbf1b150772`.
+
+Integration handoff: the item worktree adds `Gold` to the Rust protocol detect
+subject but deliberately does not bump protocol version, regenerate Web/Schema
+bindings, or refresh shared fixtures. The integration worktree must perform
+those generated-artifact and baseline updates once after merging all active
+directions. The save structure and state-hash input schema are unchanged.
+
+## P3.4 Map and Region Rules
+
+P3.4 moves all five planned identities from `blocked` to `active`: Darkness,
+Trap Creation, Light, Rune of Protection, and Destruction. Trap Creation reuses
+the existing fixed eight-neighbor terrain transaction and now treats creatures,
+ground items, gold, and floor connections as occupied. Rune of Protection only
+replaces a clean current floor cell. Its warding glyph rejects monster movement
+and summon placement; hostile monsters use the original resistance 550 break
+check, reduced to two thirds while the player is standing on the glyph, while
+player-side actors never break it.
+
+Light and Darkness use the already persisted and projected per-cell `glow`
+vector. Light changes the radius-two line-of-effect area; Darkness also clears
+the connected glowing room component and applies the original `1d5+3`
+blindness. The ledger records the deliberate omission of the original weak
+light/dark actor damage. Because `glow` already participates in current-floor
+storage, save/load, protocol terrain projection, and state hash, P3.4 adds no
+second lighting structure and does not bump the protocol or state-hash schema.
+
+Destruction is allowed only on non-task dungeon floors. It rolls the original
+13-17 radius and 10% granite / 25% quartz / 15% magma / 50% floor distribution,
+builds all terrain/entity/item/gold mutations before committing them, clears
+light, exploration, and revealed-terrain memory in affected cells, and deletes
+ordinary actors without rewards. The player cell, permanent terrain, every
+floor connection and passage/shop/task entrance, town floors, task floors, and
+unique or guardian actors are protected. The ledger records the deliberate
+omission of the original player flash damage.
+
+Light is regular Alchemist stock. Darkness is shallow Warrens loot, Trap
+Creation appears at depth 9, and Rune of Protection plus Destruction are Black
+Market stock. The authoritative audit reports 201 active, 106 mechanics-ready,
+and 237 blocked source items. The formal pack contains 202 mapped RFB items plus
+24 original items, for 226 total. P3.4 reports five `blockedToActive`, no
+remaining item, and no unresolved secondary blocker. Pack version 1.203.0 has
+content hash
+`7e31d738ec40807ac2ba1dd29727f68d3390aa03a6954b3fb4f44c097d90b04d`.
+The loot/shop change alters common new-game RNG, so shared replay refresh stays
+with the integration worktree.
+
+## P3.5 Item Generation and Mutation
+
+P3.5 moves five of its six planned identities from `blocked` to `active`:
+Mundanity, Acquirement, *Acquirement*, Rumour, and Crafting. Acquirement reuses
+the current floor's validated loot table, forces exceptional quality, and
+creates one item at the player's position; the starred scroll uses the same
+path for two or three items. Generated instances use the existing monotonic
+item serial allocator. The count roll and the existing entry, quality, and
+affix rolls are the only core RNG draws.
+
+Mundanity and Crafting use the existing item target selection. Invalid targets
+are rejected before the source scroll is consumed or RNG advances. When a
+stack is selected, one unit receives a new stable instance id and the remainder
+keeps the selected id. Mundanity clears quality, affixes, rolled affix state,
+enchantments, and curses. Fixed artifact kinds remain ineligible because their
+artifact identity is part of the content kind rather than an instance field.
+Crafting accepts ordinary weapons, armour, launchers, and ammunition, chooses
+from explicit validated affix candidates, and fully identifies the resulting
+ego item.
+
+Rumour emits a content-owned localization key and deliberately consumes no
+core RNG. The ledger records this fixed-rumour adaptation. Artifact Creation
+remains blocked under `random-artifact-identity`; a high-quality ego is not
+treated as a random artifact substitute.
+
+The authoritative audit reports 206 active, 106 mechanics-ready, and 232
+blocked source items. The formal pack contains 207 mapped RFB items plus 24
+original items, for 231 total. P3.5 reports five `blockedToActive` and one
+`stillBlocked` item. Pack version 1.204.0 has content hash
+`d06159983bfc5c8b1cbffaca1db8ff87d443d4f2b351c091bc503156a2bee135`.
+The save and state-hash schemas are unchanged. Black Market and Alchemist stock
+changes affect common new-game RNG, so shared fixture refresh remains an
+integration-worktree handoff.
+
+## P3.7 Character Growth Potions
+
+P3.7 moves three of its five planned identities from `blocked` to `active`:
+Experience, Neo-Tsuyoshi Special, and Tsuyoshi Special. Experience grants the
+smaller of 100,000 or half the current experience plus 10. It bypasses the
+ordinary monster-reward multiplier, then uses the existing progression path so
+level gains, attribute points, skills, resources, and the campaign's level-50
+or level-100 cap remain authoritative. The current supported race set contains
+neither Android nor a Fast Learner mutation, so no dormant race exception or
+item-owned substitute state is added.
+
+Neo-Tsuyoshi clears hallucination and extends a normal persisted status. The
+status grants four Strength and Constitution buckets plus 50 maximum HP. When
+the shared status clock expires it, the core applies the original 20-percent
+permanent Constitution and Strength drains to both current and maximum natural
+attributes. Tsuyoshi Special invokes that same crash immediately, removes any
+active Tsuyoshi status so the penalty cannot fire twice, and then applies
+hallucination through the existing chaos-resistance rule. High-stat crashes
+preserve the original four deterministic RNG draws: current and maximum values
+for Constitution, then Strength.
+
+New Life and Polymorph remain blocked. `hp_progression` already persists the
+authoritative life-growth sequence and can support a future rerate without a
+new life-rating field, but New Life also requires personal maximum-attribute
+potential and removal of all unlocked mutations. The project has neither that
+potential model nor character mutation identities, acquisition/removal rules,
+or a candidate pool. The ledger therefore records
+`character-mutation-and-attribute-potential` for New Life and
+`character-mutation-system` for Polymorph instead of emitting reduced effects.
+
+Experience and Neo-Tsuyoshi are Black Market stock. The zero-value harmful
+Tsuyoshi Special uses a depth-9 Warrens drop, matching the existing policy for
+zero-value harmful consumables. The authoritative `master` audit reports 224
+active, 106 mechanics-ready, and 214 blocked source items. The formal pack has
+225 mapped RFB items plus 24 original items, for 249 total. Pack version
+1.206.0 has content hash
+`e32733e922438bb34b2bf67886001de280d69be532061e485f20b9fd0fb0d33f`.
+The protocol, save structure, and state-hash schema are unchanged. Shop and
+loot changes affect common new-game RNG, so shared replay refresh remains an
+integration-worktree handoff.

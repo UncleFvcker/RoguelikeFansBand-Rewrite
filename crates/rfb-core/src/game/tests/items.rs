@@ -3349,6 +3349,422 @@ fn adjacent_terrain_creation_consumes_empty_result_as_tried_without_rng() {
 }
 
 #[test]
+fn p3_4_trap_creation_only_replaces_clean_adjacent_floor() {
+    let mut game = skill_check_game(205, "demo.build.scholar");
+    game.items.clear();
+    game.gold_piles.clear();
+    game.terrain.fill("demo.terrain.wall".to_owned());
+    let center = game.player.position;
+    replace_terrain(&mut game, center, "demo.terrain.floor");
+    let clean = Position {
+        x: center.x,
+        y: center.y - 1,
+    };
+    let gold = Position {
+        x: center.x + 1,
+        y: center.y - 1,
+    };
+    let connection = Position {
+        x: center.x + 1,
+        y: center.y,
+    };
+    let actor = Position {
+        x: center.x + 1,
+        y: center.y + 1,
+    };
+    let item = Position {
+        x: center.x,
+        y: center.y + 1,
+    };
+    for position in [clean, gold, connection, actor, item] {
+        replace_terrain(&mut game, position, "demo.terrain.floor");
+    }
+    game.gold_piles.push(GoldPile {
+        id: "test.gold.trap-blocker".to_owned(),
+        position: gold,
+        amount: 1,
+        appearance: GoldAppearanceDto::Copper,
+    });
+    game.floor_connections.push(FloorConnectionState {
+        id: "test.connection.trap-blocker".to_owned(),
+        position: connection,
+        target_floor_id: None,
+        target_connection_id: None,
+    });
+    game.push_generated_actor(
+        "test.actor.trap-blocker".to_owned(),
+        "demo.actor.ember-mote",
+        actor,
+    );
+    give_inventory_item(
+        &mut game,
+        "test.item.trap-blocker",
+        "demo.item.ration-of-food",
+    );
+    game.items
+        .iter_mut()
+        .find(|candidate| candidate.id == "test.item.trap-blocker")
+        .expect("ground blocker should exist")
+        .location = ItemLocation::Ground(item);
+    give_inventory_item(
+        &mut game,
+        "test.item.trap-creation.1",
+        "demo.item.trap-creation-scroll",
+    );
+    let mut events = Vec::new();
+    game.use_inventory_item(
+        "test.item.trap-creation.1",
+        None,
+        None,
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("trap creation should resolve");
+    assert_eq!(game.terrain_at(clean), "demo.terrain.created-trap");
+    for position in [gold, connection, actor, item] {
+        assert_eq!(game.terrain_at(position), "demo.terrain.floor");
+    }
+    assert!(matches!(
+        events.as_slice(),
+        [DomainEvent::ItemCreatedAdjacentTerrain {
+            affected_positions,
+            ..
+        }] if affected_positions == &[clean]
+    ));
+}
+
+#[test]
+fn p3_4_light_and_darkness_reuse_persisted_floor_glow() {
+    let mut game = skill_check_game(206, "demo.build.scholar");
+    game.glow.fill(false);
+    give_inventory_item(&mut game, "test.item.light.1", "demo.item.light-scroll");
+    let hash_before = game.state_hash();
+    let mut events = Vec::new();
+    game.use_inventory_item(
+        "test.item.light.1",
+        None,
+        None,
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("light scroll should resolve");
+    assert!(game.glow.iter().any(|glow| *glow));
+    assert_ne!(game.state_hash(), hash_before);
+    assert!(matches!(
+        events.as_slice(),
+        [DomainEvent::ItemFloorGlowChanged {
+            glow: true,
+            affected_positions,
+            ..
+        }] if !affected_positions.is_empty()
+    ));
+
+    let restored = Game::from_save(game.to_save()).expect("lit floor should reload");
+    assert_eq!(restored.glow, game.glow);
+    assert_eq!(restored.state_hash(), game.state_hash());
+
+    give_inventory_item(
+        &mut game,
+        "test.item.darkness.1",
+        "demo.item.darkness-scroll",
+    );
+    let mut darkness_events = Vec::new();
+    game.use_inventory_item(
+        "test.item.darkness.1",
+        None,
+        None,
+        &mut darkness_events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("darkness scroll should resolve");
+    assert!(game.glow.iter().all(|glow| !*glow));
+    assert!(darkness_events.iter().any(|event| matches!(
+        event,
+        DomainEvent::ItemFloorGlowChanged {
+            glow: false,
+            affected_positions,
+            ..
+        } if !affected_positions.is_empty()
+    )));
+}
+
+#[test]
+fn p3_4_rune_requires_clean_floor_and_uses_original_break_threshold() {
+    let mut blocked = skill_check_game(207, "demo.build.scholar");
+    let blocked_position = blocked.player.position;
+    replace_terrain(&mut blocked, blocked_position, "demo.terrain.floor");
+    blocked.gold_piles.push(GoldPile {
+        id: "test.gold.rune-blocker".to_owned(),
+        position: blocked.player.position,
+        amount: 1,
+        appearance: GoldAppearanceDto::Copper,
+    });
+    give_inventory_item(
+        &mut blocked,
+        "test.item.rune.blocked",
+        "demo.item.rune-of-protection-scroll",
+    );
+    let mut blocked_events = Vec::new();
+    blocked
+        .use_inventory_item(
+            "test.item.rune.blocked",
+            None,
+            None,
+            &mut blocked_events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("blocked rune should still consume the scroll");
+    assert_eq!(
+        blocked.terrain_at(blocked.player.position),
+        "demo.terrain.floor"
+    );
+    assert!(matches!(
+        blocked_events.as_slice(),
+        [DomainEvent::ItemCreatedCurrentTerrain {
+            affected_position: None,
+            ..
+        }]
+    ));
+
+    let mut game = game_with_actor_definition(208, "demo.actor.dread-vampire", |actor| {
+        actor.level = 400;
+    });
+    clear_monsters(&mut game);
+    let player_position = game.player.position;
+    replace_terrain(&mut game, player_position, "demo.terrain.floor");
+    give_inventory_item(
+        &mut game,
+        "test.item.rune.legal",
+        "demo.item.rune-of-protection-scroll",
+    );
+    game.use_inventory_item(
+        "test.item.rune.legal",
+        None,
+        None,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("legal rune should resolve");
+    assert_eq!(
+        game.terrain_at(game.player.position),
+        "demo.terrain.warding-glyph"
+    );
+    let monster_position = Position {
+        x: game.player.position.x + 1,
+        y: game.player.position.y,
+    };
+    replace_terrain(&mut game, monster_position, "demo.terrain.floor");
+    game.push_generated_actor(
+        "test.actor.rune-breaker".to_owned(),
+        "demo.actor.dread-vampire",
+        monster_position,
+    );
+    let mut events = Vec::new();
+    assert_eq!(
+        game.try_monster_break_warding_glyph(
+            0,
+            game.player.position,
+            &mut events,
+            &mut BTreeSet::new(),
+        ),
+        Some(true)
+    );
+    assert_eq!(game.terrain_at(game.player.position), "demo.terrain.floor");
+    assert!(matches!(
+        events.as_slice(),
+        [DomainEvent::WardingGlyphBroken { .. }]
+    ));
+}
+
+#[test]
+fn p3_4_destruction_commits_atomically_and_refuses_protected_floors() {
+    let mut protected = skill_check_game(209, "demo.build.scholar");
+    give_inventory_item(
+        &mut protected,
+        "test.item.destruction.protected",
+        "demo.item.destruction-scroll",
+    );
+    let terrain_before = protected.terrain.clone();
+    let draws_before = protected.rng_draw_counter();
+    let mut protected_events = Vec::new();
+    protected
+        .use_inventory_item(
+            "test.item.destruction.protected",
+            None,
+            None,
+            &mut protected_events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("town destruction should resolve as protected");
+    assert_eq!(protected.terrain, terrain_before);
+    assert_eq!(protected.rng_draw_counter(), draws_before);
+    assert!(matches!(
+        protected_events.as_slice(),
+        [DomainEvent::ItemAreaDestruction {
+            protected_floor: true,
+            ..
+        }]
+    ));
+    protected.current_floor_id = "demo.floor.echo-task-rift".to_owned();
+    give_inventory_item(
+        &mut protected,
+        "test.item.destruction.task",
+        "demo.item.destruction-scroll",
+    );
+    let task_draws_before = protected.rng_draw_counter();
+    let mut task_events = Vec::new();
+    protected
+        .use_inventory_item(
+            "test.item.destruction.task",
+            None,
+            None,
+            &mut task_events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("task destruction should resolve as protected");
+    assert_eq!(protected.rng_draw_counter(), task_draws_before);
+    assert!(matches!(
+        task_events.as_slice(),
+        [DomainEvent::ItemAreaDestruction {
+            protected_floor: true,
+            ..
+        }]
+    ));
+
+    let mut game = skill_check_game(210, "demo.build.scholar");
+    game.items.clear();
+    game.gold_piles.clear();
+    game.current_floor_id = "demo.floor.echo-depth-1".to_owned();
+    game.terrain.fill("demo.terrain.floor".to_owned());
+    game.glow.fill(true);
+    game.explored.fill(true);
+    let center = game.player.position;
+    let permanent = Position {
+        x: center.x + 1,
+        y: center.y,
+    };
+    let passage = Position {
+        x: center.x + 2,
+        y: center.y,
+    };
+    let connection = Position {
+        x: center.x - 1,
+        y: center.y,
+    };
+    let unique = Position {
+        x: center.x,
+        y: center.y - 1,
+    };
+    let destroyed = Position {
+        x: center.x,
+        y: center.y + 1,
+    };
+    replace_terrain(&mut game, permanent, "demo.terrain.permanent-wall");
+    replace_terrain(&mut game, passage, "demo.terrain.stairs-down");
+    game.floor_connections.push(FloorConnectionState {
+        id: "test.connection.destruction".to_owned(),
+        position: connection,
+        target_floor_id: None,
+        target_connection_id: None,
+    });
+    game.push_generated_actor(
+        "test.actor.destruction-target".to_owned(),
+        "demo.actor.ember-mote",
+        destroyed,
+    );
+    game.push_generated_actor(
+        "test.actor.destruction-unique".to_owned(),
+        "demo.actor.bloodfang-the-wolf",
+        unique,
+    );
+    give_inventory_item(
+        &mut game,
+        "test.item.destruction-ground",
+        "demo.item.ration-of-food",
+    );
+    game.items
+        .iter_mut()
+        .find(|item| item.id == "test.item.destruction-ground")
+        .expect("ground target should exist")
+        .location = ItemLocation::Ground(destroyed);
+    game.gold_piles.push(GoldPile {
+        id: "test.gold.destruction".to_owned(),
+        position: destroyed,
+        amount: 12,
+        appearance: GoldAppearanceDto::Silver,
+    });
+    give_inventory_item(
+        &mut game,
+        "test.item.destruction.legal",
+        "demo.item.destruction-scroll",
+    );
+    let mut events = Vec::new();
+    let mut changed = BTreeSet::new();
+    let mut removed = Vec::new();
+    game.use_inventory_item(
+        "test.item.destruction.legal",
+        None,
+        None,
+        &mut events,
+        &mut changed,
+        &mut removed,
+    )
+    .expect("dungeon destruction should resolve");
+
+    assert_eq!(game.terrain_at(center), "demo.terrain.floor");
+    assert_eq!(game.terrain_at(permanent), "demo.terrain.permanent-wall");
+    assert_eq!(game.terrain_at(passage), "demo.terrain.stairs-down");
+    assert_eq!(game.terrain_at(connection), "demo.terrain.floor");
+    assert_eq!(game.terrain_at(unique), "demo.terrain.floor");
+    for position in [center, permanent, passage, connection, unique] {
+        let index = game
+            .index(position)
+            .expect("protected cell must be in bounds");
+        assert!(game.glow[index]);
+        assert!(game.explored[index]);
+    }
+    assert!(
+        game.entities
+            .iter()
+            .any(|entity| entity.id == "test.actor.destruction-unique")
+    );
+    let destroyed_index = game.index(destroyed).expect("target must be in bounds");
+    assert!(!game.glow[destroyed_index]);
+    assert!(!game.explored[destroyed_index]);
+    assert!(changed.contains(&destroyed));
+    assert_eq!(removed, ["test.actor.destruction-target"]);
+    assert!(
+        !game
+            .items
+            .iter()
+            .any(|item| item.id == "test.item.destruction-ground")
+    );
+    assert!(
+        !game
+            .gold_piles
+            .iter()
+            .any(|pile| pile.id == "test.gold.destruction")
+    );
+    assert!(matches!(
+        events.as_slice(),
+        [DomainEvent::ItemAreaDestruction {
+            protected_floor: false,
+            removed_entities: 1,
+            removed_items: 1,
+            removed_gold_piles: 1,
+            ..
+        }]
+    ));
+}
+
+#[test]
 fn vengeance_retaliates_against_monster_spells_but_not_after_player_death() {
     fn vengeance_status() -> StatusInstance {
         StatusInstance {
@@ -4022,5 +4438,873 @@ fn recall_can_be_cancelled_and_reset_to_a_shallower_branch_floor() {
             .events
             .iter()
             .any(|event| event.kind == "item.recall-cancelled")
+    );
+}
+
+#[test]
+fn p3_2_refreshments_are_deliberate_no_numeric_effects() {
+    let mut game = Game::new(201);
+    clear_monsters(&mut game);
+    give_inventory_item(&mut game, "test.item.water.1", "demo.item.water-potion");
+
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: "test.item.water.1".to_owned(),
+            target: None,
+        },
+    );
+
+    assert!(!game.items.iter().any(|item| item.id == "test.item.water.1"));
+    assert_eq!(
+        game.item_knowledge_dto("demo.item.water-potion"),
+        ItemKnowledgeDto::Aware
+    );
+    assert!(
+        update
+            .events
+            .iter()
+            .any(|event| event.kind == "item.use-no-effect")
+    );
+}
+
+#[test]
+fn p3_2_lose_memories_preserves_historical_experience() {
+    let mut game = Game::new(202);
+    clear_monsters(&mut game);
+    game.progress.gain_experience(1_000, false);
+    let maximum = game.progress.maximum_experience;
+    give_inventory_item(
+        &mut game,
+        "test.item.lose-memories.1",
+        "demo.item.lose-memories-potion",
+    );
+
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: "test.item.lose-memories.1".to_owned(),
+            target: None,
+        },
+    );
+
+    assert_eq!(game.progress.experience, 750);
+    assert_eq!(game.progress.maximum_experience, maximum);
+    let event = update
+        .events
+        .iter()
+        .find(|event| event.kind == "item.experience-lost")
+        .expect("experience loss should be projected");
+    assert_eq!(event.args["amount"], "250");
+    assert_eq!(event.args["remaining"], "750");
+}
+
+#[test]
+fn p3_2_sight_and_antidote_apply_timed_capabilities() {
+    let mut game = Game::new(203);
+    clear_monsters(&mut game);
+    game.player.statuses.push(StatusInstance {
+        kind_id: STATUS_BLINDNESS.to_owned(),
+        intensity: 1,
+        remaining_ticks: 500,
+        source_id: Some("test.blindness".to_owned()),
+        granted_resistances: BTreeMap::new(),
+        granted_brands: BTreeSet::new(),
+        granted_modifiers: StatModifiersDto::default(),
+        granted_equipment_bonuses: EquipmentBonusesDto::default(),
+        granted_status_immunities: BTreeSet::new(),
+        granted_race_id: None,
+        grants_wall_passage: false,
+        incoming_damage_percent: 100,
+    });
+    give_inventory_item(&mut game, "test.item.sight.1", "demo.item.sight-potion");
+    dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: "test.item.sight.1".to_owned(),
+            target: None,
+        },
+    );
+    assert!(
+        game.player
+            .statuses
+            .iter()
+            .all(|status| status.kind_id != STATUS_BLINDNESS)
+    );
+    assert_eq!(game.player_see_invisible_sources(), 1);
+    let sight = game
+        .player
+        .statuses
+        .iter()
+        .find(|status| status.kind_id == STATUS_SIGHT)
+        .expect("sight should remain active");
+    assert_eq!(sight.granted_equipment_bonuses.infravision, 3);
+    assert_eq!(game.player_infravision_range(), 3);
+    let target_position = Position {
+        x: game.player.position.x + 1,
+        y: game.player.position.y,
+    };
+    replace_terrain(&mut game, target_position, "demo.terrain.floor");
+    let living = game
+        .content
+        .actor("demo.actor.echo-hound")
+        .expect("living actor should exist");
+    let living = actor_from_runtime_spawn(
+        "test.actor.infravision-living",
+        &living.id,
+        target_position,
+        living.max_hp,
+        living.speed,
+        100,
+        true,
+    );
+    assert!(game.entity_is_visible_by_infravision(&living));
+    let nonliving = game
+        .content
+        .actor("demo.actor.resonant-warden")
+        .expect("nonliving actor should exist");
+    let nonliving = actor_from_runtime_spawn(
+        "test.actor.infravision-nonliving",
+        &nonliving.id,
+        target_position,
+        nonliving.max_hp,
+        nonliving.speed,
+        100,
+        true,
+    );
+    assert!(!game.entity_is_visible_by_infravision(&nonliving));
+
+    game.player.statuses.push(StatusInstance {
+        kind_id: STATUS_POISON.to_owned(),
+        intensity: 1,
+        remaining_ticks: 10_000,
+        source_id: Some("test.poison".to_owned()),
+        granted_resistances: BTreeMap::new(),
+        granted_brands: BTreeSet::new(),
+        granted_modifiers: StatModifiersDto::default(),
+        granted_equipment_bonuses: EquipmentBonusesDto::default(),
+        granted_status_immunities: BTreeSet::new(),
+        granted_race_id: None,
+        grants_wall_passage: false,
+        incoming_damage_percent: 100,
+    });
+    give_inventory_item(
+        &mut game,
+        "test.item.antidote.1",
+        "demo.item.antidote-potion",
+    );
+    dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: "test.item.antidote.1".to_owned(),
+            target: None,
+        },
+    );
+    let poison = game
+        .player
+        .statuses
+        .iter()
+        .find(|status| status.kind_id == STATUS_POISON)
+        .expect("half of the long poison duration should remain");
+    assert_eq!(poison.remaining_ticks, 4_990);
+    assert_eq!(
+        game.effective_player_resistances()
+            .level(DamageType::Poison),
+        ResistanceLevel::Resistant
+    );
+}
+
+#[test]
+fn p3_2_invulnerability_and_giant_strength_reuse_status_payloads() {
+    let mut game = Game::new(204);
+    clear_monsters(&mut game);
+    give_inventory_item(
+        &mut game,
+        "test.item.invulnerability.1",
+        "demo.item.invulnerability-potion",
+    );
+    dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: "test.item.invulnerability.1".to_owned(),
+            target: None,
+        },
+    );
+    assert_eq!(game.player_incoming_damage_percent(), 0);
+    assert_eq!(
+        game.reduce_player_damage(resolve_damage(
+            DamagePacket::new(100, DamageType::Physical),
+            ResistanceLevel::Normal,
+        ))
+        .applied,
+        0
+    );
+
+    give_inventory_item(
+        &mut game,
+        "test.item.giant-strength.1",
+        "demo.item.giant-strength-potion",
+    );
+    dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: "test.item.giant-strength.1".to_owned(),
+            target: None,
+        },
+    );
+    let giant = game
+        .player
+        .statuses
+        .iter()
+        .find(|status| status.kind_id == STATUS_GIANT_STRENGTH)
+        .expect("giant strength should remain active");
+    assert_eq!(giant.granted_modifiers.max_hp, 10);
+    assert_eq!(giant.granted_equipment_bonuses.melee_skill, 1);
+}
+
+#[test]
+fn p3_7_experience_potion_uses_unscaled_relative_gain_and_level_cap() {
+    let mut game =
+        Game::new_with_build(701, "demo.build.scholar").expect("scholar build should create");
+    clear_monsters(&mut game);
+    game.apply_unscaled_player_experience(100, &mut Vec::new());
+    assert_eq!(game.progress.experience, 100);
+    give_inventory_item(
+        &mut game,
+        "test.item.experience.1",
+        "demo.item.experience-potion",
+    );
+
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: "test.item.experience.1".to_owned(),
+            target: None,
+        },
+    );
+
+    assert_eq!(game.progress.experience, 160);
+    assert!(update.events.iter().any(|event| {
+        event.kind == "player.experience-gained"
+            && event.args.get("amount").map(String::as_str) == Some("60")
+    }));
+
+    let mut capped = Game::new(704);
+    clear_monsters(&mut capped);
+    capped.apply_unscaled_player_experience(4_500_000, &mut Vec::new());
+    assert_eq!(capped.progress.level, 50);
+    give_inventory_item(
+        &mut capped,
+        "test.item.experience.2",
+        "demo.item.experience-potion",
+    );
+    dispatch_next(
+        &mut capped,
+        GameCommand::UseItem {
+            item_id: "test.item.experience.2".to_owned(),
+            target: None,
+        },
+    );
+    assert_eq!(capped.progress.experience, 4_600_000);
+    assert_eq!(capped.progress.level, 50);
+}
+
+#[test]
+fn p3_7_neo_tsuyoshi_round_trips_and_crashes_on_expiry() {
+    let mut game = Game::new(702);
+    clear_monsters(&mut game);
+    game.player.statuses.push(StatusInstance {
+        kind_id: crate::effect::STATUS_HALLUCINATION.to_owned(),
+        intensity: 1,
+        remaining_ticks: 50,
+        source_id: Some("test.hallucination".to_owned()),
+        granted_resistances: BTreeMap::new(),
+        granted_brands: BTreeSet::new(),
+        granted_modifiers: StatModifiersDto::default(),
+        granted_equipment_bonuses: EquipmentBonusesDto::default(),
+        granted_status_immunities: BTreeSet::new(),
+        granted_race_id: None,
+        grants_wall_passage: false,
+        incoming_damage_percent: 100,
+    });
+    give_inventory_item(
+        &mut game,
+        "test.item.neo-tsuyoshi.1",
+        "demo.item.neo-tsuyoshi-special",
+    );
+
+    dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: "test.item.neo-tsuyoshi.1".to_owned(),
+            target: None,
+        },
+    );
+
+    assert!(!game.player_has_status_kind(crate::effect::STATUS_HALLUCINATION));
+    let tsuyoshi = game
+        .player
+        .statuses
+        .iter()
+        .find(|status| status.kind_id == STATUS_TSUYOSHI)
+        .expect("Neo-Tsuyoshi should remain active");
+    assert_eq!(tsuyoshi.granted_modifiers.strength, 4);
+    assert_eq!(tsuyoshi.granted_modifiers.constitution, 4);
+    assert_eq!(tsuyoshi.granted_modifiers.max_hp, 50);
+    assert!((91..=190).contains(&tsuyoshi.remaining_ticks));
+    let restored = Game::from_save(game.to_save()).expect("Tsuyoshi status should round trip");
+    assert_eq!(restored.snapshot(), game.snapshot());
+
+    game.progress.attributes.strength = 118;
+    game.progress.maximum_attributes.strength = 118;
+    game.progress.attributes.constitution = 118;
+    game.progress.maximum_attributes.constitution = 118;
+    game.player
+        .statuses
+        .iter_mut()
+        .find(|status| status.kind_id == STATUS_TSUYOSHI)
+        .expect("Tsuyoshi should remain active")
+        .remaining_ticks = 1;
+    let draws_before = game.rng_draw_counter();
+    let mut events = Vec::new();
+    game.process_status_tick(&mut events, &mut BTreeSet::new(), &mut Vec::new(), true)
+        .expect("Tsuyoshi expiry should resolve");
+
+    assert!(!game.player_has_status_kind(STATUS_TSUYOSHI));
+    assert!(game.progress.maximum_attributes.strength < 118);
+    assert!(game.progress.maximum_attributes.constitution < 118);
+    assert_eq!(
+        game.progress.attributes.strength,
+        game.progress.maximum_attributes.strength
+    );
+    assert_eq!(
+        game.progress.attributes.constitution,
+        game.progress.maximum_attributes.constitution
+    );
+    assert_eq!(game.rng_draw_counter(), draws_before + 4);
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::PlayerStatusExpired { status_kind_id }
+            if status_kind_id == STATUS_TSUYOSHI
+    )));
+}
+
+#[test]
+fn p3_7_tsuyoshi_special_triggers_the_same_permanent_crash_immediately() {
+    let mut game = Game::new(703);
+    clear_monsters(&mut game);
+    game.progress.attributes.strength = 18;
+    game.progress.maximum_attributes.strength = 18;
+    game.progress.attributes.constitution = 18;
+    game.progress.maximum_attributes.constitution = 18;
+    give_inventory_item(
+        &mut game,
+        "test.item.tsuyoshi.1",
+        "demo.item.tsuyoshi-special",
+    );
+
+    dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: "test.item.tsuyoshi.1".to_owned(),
+            target: None,
+        },
+    );
+
+    assert_eq!(game.progress.attributes.strength, 17);
+    assert_eq!(game.progress.maximum_attributes.strength, 17);
+    assert_eq!(game.progress.attributes.constitution, 17);
+    assert_eq!(game.progress.maximum_attributes.constitution, 17);
+    assert!(!game.player_has_status_kind(STATUS_TSUYOSHI));
+    assert!(game.player_has_status_kind(crate::effect::STATUS_HALLUCINATION));
+}
+
+#[test]
+fn p3_3_treasure_detection_reports_stable_gold_pile_ids() {
+    let mut game = Game::new(205);
+    clear_monsters(&mut game);
+    let gold_position = Position {
+        x: game.player.position.x + 1,
+        y: game.player.position.y,
+    };
+    game.gold_piles = vec![
+        GoldPile {
+            id: "generated.gold.zeta".to_owned(),
+            position: gold_position,
+            amount: 20,
+            appearance: GoldAppearanceDto::Gold,
+        },
+        GoldPile {
+            id: "generated.gold.alpha".to_owned(),
+            position: gold_position,
+            amount: 10,
+            appearance: GoldAppearanceDto::Copper,
+        },
+    ];
+    give_inventory_item(
+        &mut game,
+        "test.item.treasure-detection.1",
+        "demo.item.treasure-detection-scroll",
+    );
+
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: "test.item.treasure-detection.1".to_owned(),
+            target: None,
+        },
+    );
+
+    let detection = update
+        .events
+        .iter()
+        .find_map(|event| match event.outcome.as_ref() {
+            Some(GameEventOutcomeDto::AbilityDetect { resolution }) => Some(resolution),
+            _ => None,
+        })
+        .expect("treasure detection should expose detected gold piles");
+    assert_eq!(detection.subject, AbilityDetectSubjectDto::Gold);
+    assert_eq!(detection.category, "gold");
+    assert_eq!(
+        detection.detected_positions,
+        vec![gold_position, gold_position]
+    );
+    assert_eq!(
+        detection.detected_entity_ids,
+        vec!["generated.gold.alpha", "generated.gold.zeta"]
+    );
+}
+
+#[test]
+fn p3_3_understanding_identifies_newly_carried_items_while_active() {
+    let mut game = Game::new(206);
+    clear_monsters(&mut game);
+    give_inventory_item(
+        &mut game,
+        "test.item.understanding.1",
+        "demo.item.understanding-scroll",
+    );
+
+    dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: "test.item.understanding.1".to_owned(),
+            target: None,
+        },
+    );
+    let understanding = game
+        .player
+        .statuses
+        .iter()
+        .find(|status| status.kind_id == STATUS_UNDERSTANDING)
+        .expect("understanding should remain active");
+    assert_eq!(understanding.remaining_ticks, 400);
+
+    give_inventory_item(
+        &mut game,
+        "test.item.understanding-target.1",
+        "demo.item.adaptive-glaive",
+    );
+    game.items
+        .iter_mut()
+        .find(|item| item.id == "test.item.understanding-target.1")
+        .expect("target item should exist")
+        .location = ItemLocation::Ground(game.player.position);
+    let update = dispatch_next(&mut game, GameCommand::PickUp);
+
+    let target = update
+        .inventory
+        .iter()
+        .find(|item| item.id == "test.item.understanding-target.1")
+        .expect("picked-up target should remain carried");
+    assert_eq!(target.knowledge, ItemKnowledgeDto::Aware);
+    assert_eq!(target.identification, ItemIdentificationDto::Appraised);
+    assert!(update.events.iter().any(|event| {
+        event.kind == "item.auto-identified" && event.args.get("count") == Some(&"1".to_owned())
+    }));
+}
+
+#[test]
+fn p3_3_inventory_protection_blocks_device_source_destruction() {
+    let mut game =
+        Game::new_with_build(207, "demo.build.tinkerer").expect("tinkerer build should create");
+    clear_monsters(&mut game);
+    game.debug_add_generated_inventory_item(
+        "test.item.protected-target",
+        "demo.item.resonance-staff",
+        1,
+    )
+    .expect("staff should generate");
+    game.debug_add_generated_inventory_item(
+        "test.item.protected-source",
+        "demo.item.resonance-wand",
+        1,
+    )
+    .expect("wand should generate");
+    game.items
+        .iter_mut()
+        .find(|item| item.id == "test.item.protected-target")
+        .expect("target")
+        .charges = Some(ItemChargesDto {
+        current: 0,
+        maximum: 24,
+    });
+    game.items
+        .iter_mut()
+        .find(|item| item.id == "test.item.protected-source")
+        .expect("source")
+        .charges = Some(ItemChargesDto {
+        current: 5,
+        maximum: 24,
+    });
+    give_inventory_item(
+        &mut game,
+        "test.item.inventory-protection.1",
+        "demo.item.inventory-protection-scroll",
+    );
+    dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: "test.item.inventory-protection.1".to_owned(),
+            target: None,
+        },
+    );
+    assert!(game.player_has_status_kind(STATUS_INVENTORY_PROTECTION));
+
+    let destruction_seed = (0..100)
+        .find(|seed| {
+            let mut rng = RfbRng::seeded(*seed);
+            rng.bounded(3) == 0
+        })
+        .expect("one seed should destroy an unprotected source");
+    game.debug_set_recharge_attempts_succeed(true);
+    game.rng = RfbRng::seeded(destruction_seed);
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::RechargeItem {
+            target_item_id: "test.item.protected-target".to_owned(),
+            source: DeviceRechargeSourceDto::Item {
+                item_id: "test.item.protected-source".to_owned(),
+            },
+        },
+    );
+
+    assert_eq!(
+        update.events[0]
+            .args
+            .get("sourceDestroyed")
+            .map(String::as_str),
+        Some("false")
+    );
+    assert!(
+        game.items
+            .iter()
+            .any(|item| item.id == "test.item.protected-source")
+    );
+}
+
+#[test]
+fn p3_3_star_enlightenment_composes_map_detection_identification_and_report() {
+    let mut game = Game::new(208);
+    clear_monsters(&mut game);
+    game.explored.fill(false);
+    let intelligence_before = game.progress.maximum_attributes.intelligence;
+    let wisdom_before = game.progress.maximum_attributes.wisdom;
+    give_inventory_item(
+        &mut game,
+        "test.item.star-enlightenment.1",
+        "demo.item.star-enlightenment-potion",
+    );
+    give_inventory_item(
+        &mut game,
+        "test.item.star-enlightenment-target.1",
+        "demo.item.adaptive-glaive",
+    );
+
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: "test.item.star-enlightenment.1".to_owned(),
+            target: None,
+        },
+    );
+
+    assert!(game.explored.iter().all(|explored| *explored));
+    assert!(game.progress.maximum_attributes.intelligence > intelligence_before);
+    assert!(game.progress.maximum_attributes.wisdom > wisdom_before);
+    let target = update
+        .inventory
+        .iter()
+        .find(|item| item.id == "test.item.star-enlightenment-target.1")
+        .expect("identified target should remain carried");
+    assert_eq!(target.identification, ItemIdentificationDto::Appraised);
+    assert!(update.events.iter().any(|event| {
+        matches!(
+            event.outcome.as_ref(),
+            Some(GameEventOutcomeDto::AbilityDetect { resolution })
+                if resolution.subject == AbilityDetectSubjectDto::Gold
+        )
+    }));
+    let report = update
+        .events
+        .iter()
+        .find(|event| event.kind == "item.use-self-knowledge")
+        .expect("star enlightenment should report current self knowledge");
+    assert_eq!(
+        report.args.get("level"),
+        Some(&game.progress.level.to_string())
+    );
+    assert_eq!(report.args.get("gold"), Some(&game.gold.to_string()));
+    assert!(report.args.contains_key("resistances"));
+    assert!(report.args.contains_key("resources"));
+}
+
+#[test]
+fn p3_5_acquirement_uses_stable_ids_current_position_and_exact_rng_draws() {
+    let mut single = Game::new(503);
+    clear_monsters(&mut single);
+    give_inventory_item(
+        &mut single,
+        "test.item.acquirement.1",
+        "demo.item.acquirement-scroll",
+    );
+    let position = single.player.position;
+    let ids_before = single
+        .items
+        .iter()
+        .map(|item| item.id.clone())
+        .collect::<BTreeSet<_>>();
+    let draws_before = single.rng_draw_counter();
+    let update = dispatch_next(
+        &mut single,
+        GameCommand::UseItem {
+            item_id: "test.item.acquirement.1".to_owned(),
+            target: None,
+        },
+    );
+    let generated = single
+        .items
+        .iter()
+        .filter(|item| !ids_before.contains(&item.id))
+        .collect::<Vec<_>>();
+    assert_eq!(generated.len(), 1);
+    assert_eq!(generated[0].location, ItemLocation::Ground(position));
+    assert_eq!(generated[0].quality, ItemQualityDto::Exceptional);
+    assert!(generated[0].id.starts_with("generated.item."));
+    assert_eq!(single.rng_draw_counter(), draws_before + 3);
+    assert!(update.events.iter().any(|event| {
+        event.kind == "item.use-acquirement"
+            && event.args.get("count").map(String::as_str) == Some("1")
+    }));
+
+    let mut multiple = Game::new(509);
+    clear_monsters(&mut multiple);
+    give_inventory_item(
+        &mut multiple,
+        "test.item.star-acquirement.1",
+        "demo.item.star-acquirement-scroll",
+    );
+    let before_count = multiple.items.len();
+    let draws_before = multiple.rng_draw_counter();
+    dispatch_next(
+        &mut multiple,
+        GameCommand::UseItem {
+            item_id: "test.item.star-acquirement.1".to_owned(),
+            target: None,
+        },
+    );
+    let generated_count = multiple.items.len() - (before_count - 1);
+    assert!((2..=3).contains(&generated_count));
+    assert_eq!(
+        multiple.rng_draw_counter(),
+        draws_before + 1 + 3 * generated_count as u64
+    );
+}
+
+#[test]
+fn p3_5_mundanity_splits_one_unit_and_rejects_fixed_artifacts_atomically() {
+    let mut game = Game::new(521);
+    clear_monsters(&mut game);
+    give_inventory_item(
+        &mut game,
+        "test.item.mundanity.1",
+        "demo.item.mundanity-scroll",
+    );
+    give_inventory_item(&mut game, "test.item.mundane-target.1", "demo.item.arrow");
+    let target = game
+        .items
+        .iter_mut()
+        .find(|item| item.id == "test.item.mundane-target.1")
+        .expect("target stack should exist");
+    target.quantity = 3;
+    target.quality = ItemQualityDto::Exceptional;
+    target.affix_ids = vec!["demo.affix.frost-hunter".to_owned()];
+    target.enchantments.to_hit = 2;
+    let draws_before = game.rng_draw_counter();
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: "test.item.mundanity.1".to_owned(),
+            target: Some(TargetSelection::Item {
+                item_id: "test.item.mundane-target.1".to_owned(),
+            }),
+        },
+    );
+    let remainder = game
+        .items
+        .iter()
+        .find(|item| item.id == "test.item.mundane-target.1")
+        .expect("remainder should keep the selected stack id");
+    assert_eq!(remainder.quantity, 2);
+    assert_eq!(remainder.quality, ItemQualityDto::Exceptional);
+    let mundane = game
+        .items
+        .iter()
+        .find(|item| item.kind_id == "demo.item.arrow" && item.id != "test.item.mundane-target.1")
+        .expect("one separated unit should become mundane");
+    assert_eq!(mundane.quantity, 1);
+    assert_eq!(mundane.quality, ItemQualityDto::Ordinary);
+    assert!(mundane.affix_ids.is_empty());
+    assert!(mundane.enchantments.is_empty());
+    assert_eq!(game.rng_draw_counter(), draws_before);
+    assert!(update.events.iter().any(|event| {
+        event.kind == "item.use-mundanity"
+            && event.args.get("split").map(String::as_str) == Some("true")
+            && event.args.get("targetId") == Some(&mundane.id)
+    }));
+    Game::from_save(game.to_save()).expect("split mundane ammunition should round-trip");
+
+    give_inventory_item(
+        &mut game,
+        "test.item.mundanity.2",
+        "demo.item.mundanity-scroll",
+    );
+    give_inventory_item(
+        &mut game,
+        "test.item.fixed-artifact.1",
+        "demo.item.relic-blade",
+    );
+    let draws_before = game.rng_draw_counter();
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: "test.item.mundanity.2".to_owned(),
+            target: Some(TargetSelection::Item {
+                item_id: "test.item.fixed-artifact.1".to_owned(),
+            }),
+        },
+    );
+    assert_eq!(game.rng_draw_counter(), draws_before);
+    assert!(
+        game.items
+            .iter()
+            .any(|item| item.id == "test.item.mundanity.2")
+    );
+    assert_eq!(update.events[0].kind, "item.use-unavailable");
+}
+
+#[test]
+fn p3_5_crafting_splits_ammunition_identifies_ego_and_cancels_invalid_targets() {
+    let mut game = Game::new(523);
+    clear_monsters(&mut game);
+    give_inventory_item(
+        &mut game,
+        "test.item.crafting.1",
+        "demo.item.crafting-scroll",
+    );
+    give_inventory_item(&mut game, "test.item.crafting-target.1", "demo.item.arrow");
+    game.items
+        .iter_mut()
+        .find(|item| item.id == "test.item.crafting-target.1")
+        .expect("ammunition should exist")
+        .quantity = 3;
+    let draws_before = game.rng_draw_counter();
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: "test.item.crafting.1".to_owned(),
+            target: Some(TargetSelection::Item {
+                item_id: "test.item.crafting-target.1".to_owned(),
+            }),
+        },
+    );
+    assert_eq!(game.rng_draw_counter(), draws_before + 1);
+    assert_eq!(
+        game.items
+            .iter()
+            .find(|item| item.id == "test.item.crafting-target.1")
+            .expect("remainder should exist")
+            .quantity,
+        2
+    );
+    let crafted = game
+        .items
+        .iter()
+        .find(|item| item.kind_id == "demo.item.arrow" && item.id != "test.item.crafting-target.1")
+        .expect("one crafted unit should be split from the stack");
+    assert_eq!(crafted.quantity, 1);
+    assert_eq!(crafted.quality, ItemQualityDto::Exceptional);
+    assert_eq!(crafted.affix_ids.len(), 1);
+    let knowledge = &game.item_property_knowledge[&crafted.id];
+    assert!(knowledge.appraised && knowledge.identified);
+    assert!(knowledge.known_affix_ids.contains(&crafted.affix_ids[0]));
+    assert!(update.events.iter().any(|event| {
+        event.kind == "item.use-crafting"
+            && event.args.get("targetId") == Some(&crafted.id)
+            && event.args.get("split").map(String::as_str) == Some("true")
+    }));
+    Game::from_save(game.to_save()).expect("crafted ammunition should round-trip");
+
+    give_inventory_item(
+        &mut game,
+        "test.item.crafting.2",
+        "demo.item.crafting-scroll",
+    );
+    give_inventory_item(
+        &mut game,
+        "test.item.invalid-crafting-target.1",
+        "demo.item.ration-of-food",
+    );
+    let draws_before = game.rng_draw_counter();
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: "test.item.crafting.2".to_owned(),
+            target: Some(TargetSelection::Item {
+                item_id: "test.item.invalid-crafting-target.1".to_owned(),
+            }),
+        },
+    );
+    assert_eq!(game.rng_draw_counter(), draws_before);
+    assert!(
+        game.items
+            .iter()
+            .any(|item| item.id == "test.item.crafting.2")
+    );
+    assert_eq!(update.events[0].kind, "item.use-unavailable");
+}
+
+#[test]
+fn p3_5_rumour_is_localized_without_core_rng() {
+    let mut game = Game::new(541);
+    clear_monsters(&mut game);
+    give_inventory_item(&mut game, "test.item.rumour.1", "demo.item.rumour-scroll");
+    let draws_before = game.rng_draw_counter();
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: "test.item.rumour.1".to_owned(),
+            target: None,
+        },
+    );
+    assert_eq!(game.rng_draw_counter(), draws_before);
+    let event = update
+        .events
+        .iter()
+        .find(|event| event.kind == "item.use-rumour")
+        .expect("rumour should emit a localized message reference");
+    assert_eq!(
+        event.args.get("rumourKey").map(String::as_str),
+        Some("rumour-demo-warrens-depths")
     );
 }

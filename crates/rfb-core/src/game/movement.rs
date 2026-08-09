@@ -9,6 +9,9 @@ pub(super) fn actor_can_cross_terrain(
 ) -> bool {
     use rfb_content::ActorMovementMode;
 
+    if terrain.tags.iter().any(|tag| tag == "warding-glyph") {
+        return false;
+    }
     if actor.movement.modes.contains(&ActorMovementMode::PassWall) && terrain.allows_wall_passage {
         return true;
     }
@@ -43,11 +46,56 @@ fn actor_can_interact_with_terrain(
     actor: &rfb_content::ActorDefinition,
     terrain: &rfb_content::TerrainDefinition,
 ) -> bool {
-    (terrain.monster_door_power.is_some()
-        && ((actor.door_interaction.opens && terrain.open_to_terrain_id.is_some())
-            || (actor.door_interaction.bashes && terrain.bash_to_terrain_id.is_some())))
+    terrain.tags.iter().any(|tag| tag == "warding-glyph")
+        || (terrain.monster_door_power.is_some()
+            && ((actor.door_interaction.opens && terrain.open_to_terrain_id.is_some())
+                || (actor.door_interaction.bashes && terrain.bash_to_terrain_id.is_some())))
         || (actor.terrain_interaction.destroys_walls
             && terrain.monster_destroy_to_terrain_id.is_some())
+}
+
+impl Game {
+    pub(super) fn try_monster_break_warding_glyph(
+        &mut self,
+        actor_index: usize,
+        position: Position,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) -> Option<bool> {
+        let terrain_index = self.index(position)?;
+        let terrain = self.content.terrain(&self.terrain[terrain_index])?;
+        if !terrain.tags.iter().any(|tag| tag == "warding-glyph") {
+            return None;
+        }
+        let source_kind_id = self.entities[actor_index].kind_id.clone();
+        let held = if self.actor_is_player_side(&self.entities[actor_index]) {
+            true
+        } else {
+            let level = self.content.actor(&source_kind_id)?.level;
+            let resistance = if position == self.player.position {
+                550_u64 * 2 / 3
+            } else {
+                550
+            };
+            self.rng.bounded(resistance) + 1 >= u64::from(level)
+        };
+        if held {
+            events.push(DomainEvent::WardingGlyphHeld { source_kind_id });
+            return Some(false);
+        }
+        let replacement = terrain
+            .monster_destroy_to_terrain_id
+            .clone()
+            .expect("validated warding glyph must define a destruction target");
+        self.terrain[terrain_index] = replacement;
+        self.revealed_terrain.remove(&position);
+        changed.insert(position);
+        events.push(DomainEvent::WardingGlyphBroken {
+            source_kind_id,
+            position,
+        });
+        Some(true)
+    }
 }
 
 impl Game {

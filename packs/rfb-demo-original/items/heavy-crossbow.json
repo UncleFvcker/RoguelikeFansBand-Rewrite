@@ -1,0 +1,24 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 500,
+  "descriptionKey": "item-demo-heavy-crossbow-description",
+  "equipmentSlot": "launcher",
+  "formatVersion": 1,
+  "glyph": "}",
+  "id": "demo.item.heavy-crossbow",
+  "maxStack": 1,
+  "nameKey": "item-demo-heavy-crossbow-name",
+  "projectileProfile": {
+    "ammunitionType": "bolt",
+    "damageMultiplierPercent": 400,
+    "range": 18,
+    "toDamage": 0,
+    "toHit": 0
+  },
+  "tags": [
+    "equipment",
+    "launcher",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 200
+}

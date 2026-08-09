@@ -219,9 +219,28 @@ impl Game {
         removed_entities: &mut Vec<String>,
         process_entities: bool,
     ) -> Result<(), CoreError> {
+        let tsuyoshi_expiration = self
+            .player
+            .statuses
+            .iter()
+            .find(|status| status.kind_id == STATUS_TSUYOSHI && status.remaining_ticks <= 1)
+            .map(|status| {
+                (
+                    status
+                        .source_id
+                        .clone()
+                        .unwrap_or_else(|| STATUS_TSUYOSHI.to_owned()),
+                    self.effective_player_max_hp(),
+                    self.player_resource_maxima(),
+                )
+            });
         let player_damage_percent = self.player_incoming_damage_percent();
         let player_tick = process_actor_status_tick(&mut self.player, false, player_damage_percent);
         let player_status_expired = !player_tick.expired.is_empty();
+        let tsuyoshi_expired = player_tick
+            .expired
+            .iter()
+            .any(|status_kind_id| status_kind_id == STATUS_TSUYOSHI);
         for damage in player_tick.damage {
             events.push(DomainEvent::PlayerStatusDamaged {
                 status_kind_id: damage.status_kind_id,
@@ -230,6 +249,16 @@ impl Game {
         }
         for status_kind_id in player_tick.expired {
             events.push(DomainEvent::PlayerStatusExpired { status_kind_id });
+        }
+        if let Some((source_kind_id, previous_max_hp, previous_resource_maxima)) =
+            tsuyoshi_expiration.filter(|_| tsuyoshi_expired)
+        {
+            self.apply_tsuyoshi_crash(
+                &source_kind_id,
+                previous_max_hp,
+                &previous_resource_maxima,
+                events,
+            );
         }
         if player_status_expired {
             self.refresh_player_resource_maxima();

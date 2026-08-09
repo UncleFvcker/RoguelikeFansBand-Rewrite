@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "ammunitionProfile": {
+    "ammunitionType": "bolt",
+    "damageDice": 7,
+    "damageSides": 5,
+    "toDamage": 0,
+    "toHit": 0
+  },
+  "baseValue": 35,
+  "breakChancePercent": 10,
+  "descriptionKey": "item-demo-adamantine-bolt-description",
+  "formatVersion": 1,
+  "glyph": "{",
+  "id": "demo.item.adamantine-bolt",
+  "maxStack": 99,
+  "nameKey": "item-demo-adamantine-bolt-name",
+  "tags": [
+    "ammunition",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 5
+}

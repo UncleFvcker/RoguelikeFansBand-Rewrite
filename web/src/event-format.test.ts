@@ -216,6 +216,179 @@ test("food events report eating hunger changes fainting and starvation", () => {
   );
 });
 
+test("P3.2 potion events format experience loss and partial status curing", () => {
+  assert.equal(
+    formatter.formatEvent({
+      kind: "item.experience-lost",
+      messageKey: "item-experience-lost",
+      args: {
+        source: "demo.item.lose-memories-potion",
+        nameKey: "item-demo-lose-memories-potion-name",
+        amount: "250",
+        remaining: "750",
+      },
+    }),
+    "You use Potion of Lose Memories and lose 250 experience (750 remaining).",
+  );
+  assert.equal(
+    formatter.formatEvent({
+      kind: "item.use-status-reduced",
+      messageKey: "item-use-status-reduced",
+      args: {
+        target: "demo.item.antidote-potion",
+        nameKey: "item-demo-antidote-potion-name",
+        status: "rfb.status.poison",
+        before: "10000",
+        after: "5000",
+      },
+    }),
+    "You use Potion of Antidote, reducing poison from 10000 to 5000 ticks.",
+  );
+});
+
+test("P3.3 knowledge events localize inventory identification and current reports", () => {
+  assert.equal(
+    formatter.formatEvent({
+      kind: "item.use-inventory-identified",
+      messageKey: "item-use-inventory-identified",
+      args: {
+        source: "demo.item.understanding-scroll",
+        nameKey: "item-demo-understanding-scroll-name",
+        count: "3",
+      },
+    }),
+    "You use Scroll of Understanding and identify 3 carried item stacks.",
+  );
+  assert.equal(
+    formatter.formatEvent({
+      kind: "item.auto-identified",
+      messageKey: "item-auto-identified",
+      args: { count: "1" },
+    }),
+    "Your understanding identifies 1 newly carried item stack.",
+  );
+  assert.equal(
+    formatter.formatEvent({
+      kind: "item.use-self-knowledge",
+      messageKey: "item-use-self-knowledge",
+      args: {
+        source: "demo.item.self-knowledge-potion",
+        nameKey: "item-demo-self-knowledge-potion-name",
+        level: "7",
+        hp: "32",
+        maxHp: "40",
+        gold: "123",
+        nutrition: "9000",
+        attack: "11",
+        defense: "12",
+        meleeSkill: "13",
+        armorClass: "14",
+        speed: "110",
+        strength: "18/18/18",
+        intelligence: "17/17/17",
+        wisdom: "16/16/16",
+        dexterity: "15/15/15",
+        constitution: "14/14/14",
+        charisma: "13/13/13",
+        statuses: "rfb.status.understanding:1:400",
+        resistances: "Fire:Resistant",
+        resources: "demo.resource.mana:20/30",
+      },
+    }),
+    "Potion of Self Knowledge reveals: level 7; HP 32/40; gold 123; food 9000; attack 11; defense 12; melee 13; armour 14; speed 110; STR 18/18/18, INT 17/17/17, WIS 16/16/16, DEX 15/15/15, CON 14/14/14, CHR 13/13/13; statuses [rfb.status.understanding:1:400]; resistances [Fire:Resistant]; resources [demo.resource.mana:20/30].",
+  );
+});
+
+test("P3.4 terrain events localize lighting destruction and warding glyphs", () => {
+  assert.equal(
+    formatter.formatEvent({
+      kind: "item.use-floor-light",
+      messageKey: "item-use-floor-light",
+      args: {
+        source: "demo.item.light-scroll",
+        nameKey: "item-demo-light-scroll-name",
+        count: "12",
+      },
+    }),
+    "Scroll of Light permanently lights 12 spaces.",
+  );
+  assert.equal(
+    formatter.formatEvent({
+      kind: "item.use-area-destruction",
+      messageKey: "item-use-area-destruction",
+      args: {
+        source: "demo.item.destruction-scroll",
+        nameKey: "item-demo-destruction-scroll-name",
+        count: "41",
+        entities: "2",
+        items: "3",
+        gold: "4",
+      },
+    }),
+    "Scroll of Destruction remakes 41 spaces, removing 2 creatures, 3 items, and 4 treasure piles.",
+  );
+  assert.equal(
+    formatter.formatEvent({
+      kind: "monster.warding-glyph-held",
+      messageKey: "monster-warding-glyph-held",
+      args: { source: "demo.actor.bloodfang-the-wolf" },
+    }),
+    "The glyph of warding repels Bloodfang the Wolf.",
+  );
+});
+
+test("P3.5 item generation mutation and rumour events localize", () => {
+  assert.equal(
+    formatter.formatEvent({
+      kind: "item.use-acquirement",
+      messageKey: "item-use-acquirement",
+      args: {
+        source: "demo.item.acquirement-scroll",
+        nameKey: "item-demo-acquirement-scroll-name",
+        count: "1",
+      },
+    }),
+    "Scroll of Acquirement creates 1 excellent item at your feet.",
+  );
+  assert.equal(
+    formatter.formatEvent({
+      kind: "item.use-mundanity",
+      messageKey: "item-use-mundanity",
+      args: {
+        source: "demo.item.mundanity-scroll",
+        nameKey: "item-demo-mundanity-scroll-name",
+        target: "demo.item.arrow",
+      },
+    }),
+    "Scroll of Mundanity strips Arrow back to the mundane.",
+  );
+  assert.equal(
+    formatter.formatEvent({
+      kind: "item.use-crafting",
+      messageKey: "item-use-crafting",
+      args: {
+        source: "demo.item.crafting-scroll",
+        nameKey: "item-demo-crafting-scroll-name",
+        target: "demo.item.arrow",
+        affix: "demo.affix.frost-hunter",
+      },
+    }),
+    "Scroll of Crafting crafts Arrow with frost hunter.",
+  );
+  assert.equal(
+    formatter.formatEvent({
+      kind: "item.use-rumour",
+      messageKey: "item-use-rumour",
+      args: {
+        source: "demo.item.rumour-scroll",
+        nameKey: "item-demo-rumour-scroll-name",
+        rumourKey: "rumour-demo-warrens-depths",
+      },
+    }),
+    "Scroll of Rumour reads: “The oldest warrens hide their best steel below the roots.”",
+  );
+});
+
 test("damage event formatting preserves typed resistance outcomes", () => {
   const event = {
     kind: "combat.hit",

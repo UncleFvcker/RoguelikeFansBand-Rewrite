@@ -409,6 +409,11 @@ export function createPresentationFormatter(
           source: contentName(event.args.source),
           terrain: contentName(event.args.terrain),
         });
+      case "monster-warding-glyph-held":
+      case "monster-warding-glyph-broken":
+        return localization.format(`message-${event.messageKey}`, {
+          source: contentName(event.args.source),
+        });
       case "monster-item-destroyed":
         return localization.format("message-monster-item-destroyed", {
           source: contentName(event.args.source),
@@ -703,6 +708,12 @@ export function createPresentationFormatter(
           target: visibleItemName(event.args.nameKey, event.args.target),
           nutrition: event.args.nutrition ?? "?",
         });
+      case "item-experience-lost":
+        return localization.format("message-item-experience-lost", {
+          source: visibleItemName(event.args.nameKey, event.args.source),
+          amount: event.args.amount ?? "?",
+          remaining: event.args.remaining ?? "?",
+        });
       case "item-use-no-effect":
         return localization.format("message-item-use-no-effect", {
           target: visibleItemName(event.args.nameKey, event.args.target),
@@ -716,6 +727,13 @@ export function createPresentationFormatter(
         return localization.format("message-item-use-status-no-effect", {
           target: visibleItemName(event.args.nameKey, event.args.target),
           status: statusName(event.args.status),
+        });
+      case "item-use-status-reduced":
+        return localization.format("message-item-use-status-reduced", {
+          target: visibleItemName(event.args.nameKey, event.args.target),
+          status: statusName(event.args.status),
+          before: event.args.before ?? "?",
+          after: event.args.after ?? "?",
         });
       case "item-use-status-applied":
       case "item-use-status-resisted":
@@ -925,6 +943,27 @@ export function createPresentationFormatter(
           source: visibleItemName(event.args.nameKey, event.args.source),
           count: event.args.count ?? "0",
         });
+      case "item-use-create-current-terrain":
+      case "item-use-create-current-terrain-no-effect":
+        return localization.format(`message-${event.messageKey}`, {
+          source: visibleItemName(event.args.nameKey, event.args.source),
+        });
+      case "item-use-floor-light":
+      case "item-use-floor-darkness":
+      case "item-use-floor-glow-no-effect":
+        return localization.format(`message-${event.messageKey}`, {
+          source: visibleItemName(event.args.nameKey, event.args.source),
+          count: event.args.count ?? "0",
+        });
+      case "item-use-area-destruction":
+      case "item-use-area-destruction-protected":
+        return localization.format(`message-${event.messageKey}`, {
+          source: visibleItemName(event.args.nameKey, event.args.source),
+          count: event.args.count ?? "0",
+          entities: event.args.entities ?? "0",
+          items: event.args.items ?? "0",
+          gold: event.args.gold ?? "0",
+        });
       case "item-use-elemental-blast":
         return localization.format("message-item-use-elemental-blast", {
           source: visibleItemName(event.args.nameKey, event.args.source),
@@ -983,6 +1022,41 @@ export function createPresentationFormatter(
         return localization.format("message-item-use-fully-identified", {
           source: visibleItemName(event.args.nameKey, event.args.source),
           target: visibleItemNameForKind(event.args.target),
+        });
+      case "item-use-inventory-identified":
+        return localization.format("message-item-use-inventory-identified", {
+          source: visibleItemName(event.args.nameKey, event.args.source),
+          count: Number(event.args.count ?? 0),
+        });
+      case "item-auto-identified":
+        return localization.format("message-item-auto-identified", {
+          count: Number(event.args.count ?? 0),
+        });
+      case "item-use-self-knowledge":
+        return localization.format("message-item-use-self-knowledge", {
+          ...event.args,
+          source: visibleItemName(event.args.nameKey, event.args.source),
+        });
+      case "item-use-acquirement":
+        return localization.format("message-item-use-acquirement", {
+          source: visibleItemName(event.args.nameKey, event.args.source),
+          count: Number(event.args.count ?? 0),
+        });
+      case "item-use-mundanity":
+        return localization.format("message-item-use-mundanity", {
+          source: visibleItemName(event.args.nameKey, event.args.source),
+          target: visibleItemNameForKind(event.args.target),
+        });
+      case "item-use-crafting":
+        return localization.format("message-item-use-crafting", {
+          source: visibleItemName(event.args.nameKey, event.args.source),
+          target: visibleItemNameForKind(event.args.target),
+          affix: contentName(event.args.affix),
+        });
+      case "item-use-rumour":
+        return localization.format("message-item-use-rumour", {
+          source: visibleItemName(event.args.nameKey, event.args.source),
+          rumour: localization.format(event.args.rumourKey ?? ""),
         });
       case "item-use-enchanted":
         return localization.format("message-item-use-enchanted", {
@@ -1518,6 +1592,24 @@ export function createPresentationFormatter(
     }
     if (statusId === "rfb.status.protection-from-evil") {
       return localization.format("status-protection-from-evil-name");
+    }
+    if (statusId === "rfb.status.sight") {
+      return localization.format("status-sight-name");
+    }
+    if (statusId === "rfb.status.poison-resistance") {
+      return localization.format("status-poison-resistance-name");
+    }
+    if (statusId === "rfb.status.invulnerability") {
+      return localization.format("status-invulnerability-name");
+    }
+    if (statusId === "rfb.status.giant-strength") {
+      return localization.format("status-giant-strength-name");
+    }
+    if (statusId === "rfb.status.understanding") {
+      return localization.format("status-understanding-name");
+    }
+    if (statusId === "rfb.status.inventory-protection") {
+      return localization.format("status-inventory-protection-name");
     }
     return localization.format("status-unknown-name");
   }

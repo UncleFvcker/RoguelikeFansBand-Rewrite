@@ -760,6 +760,7 @@ fn temple_and_alchemist_stock_are_strictly_separated() {
                 "demo.item.farstep-scroll",
                 "demo.item.seeking-scroll",
                 "demo.item.trapfinding-scroll",
+                "demo.item.treasure-detection-scroll",
                 "demo.item.temperate-tonic",
                 "demo.item.appraisal-scroll",
                 "demo.item.revelation-scroll",
@@ -777,6 +778,11 @@ fn temple_and_alchemist_stock_are_strictly_separated() {
                 "demo.item.restore-dexterity-potion",
                 "demo.item.restore-constitution-potion",
                 "demo.item.restore-charisma-potion",
+                "demo.item.sight-potion",
+                "demo.item.antidote-potion",
+                "demo.item.curing-potion",
+                "demo.item.light-scroll",
+                "demo.item.rumour-scroll",
             ]),
         ),
     ];
@@ -979,7 +985,7 @@ fn bookstore_stocks_original_town_books() {
 }
 
 #[test]
-fn black_market_stocks_original_non_town_books_and_priced_p3_foods() {
+fn black_market_stocks_original_non_town_books_and_priced_p3_consumables() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let shop_id = "demo.shop.outpost-black-market";
     let shop = artifact
@@ -1003,6 +1009,22 @@ fn black_market_stocks_original_non_town_books_and_priced_p3_foods() {
             "demo.item.restore-constitution-mushroom",
             "demo.item.restore-strength-mushroom",
             "demo.item.unhealth-mushroom",
+            "demo.item.invulnerability-potion",
+            "demo.item.giant-strength-potion",
+            "demo.item.great-clarity-potion",
+            "demo.item.understanding-scroll",
+            "demo.item.inventory-protection-scroll",
+            "demo.item.enlightenment-potion",
+            "demo.item.star-enlightenment-potion",
+            "demo.item.self-knowledge-potion",
+            "demo.item.experience-potion",
+            "demo.item.neo-tsuyoshi-special",
+            "demo.item.rune-of-protection-scroll",
+            "demo.item.destruction-scroll",
+            "demo.item.mundanity-scroll",
+            "demo.item.acquirement-scroll",
+            "demo.item.star-acquirement-scroll",
+            "demo.item.crafting-scroll",
         ])
     );
     let values = artifact
@@ -1018,6 +1040,16 @@ fn black_market_stocks_original_non_town_books_and_priced_p3_foods() {
     assert_eq!(values["demo.item.disease-mushroom"], 50);
     assert_eq!(values["demo.item.restore-constitution-mushroom"], 350);
     assert_eq!(values["demo.item.restore-strength-mushroom"], 350);
+    assert_eq!(values["demo.item.invulnerability-potion"], 100_000);
+    assert_eq!(values["demo.item.giant-strength-potion"], 10_000);
+    assert_eq!(values["demo.item.great-clarity-potion"], 1_000);
+    assert_eq!(values["demo.item.understanding-scroll"], 2_500);
+    assert_eq!(values["demo.item.inventory-protection-scroll"], 2_500);
+    assert_eq!(values["demo.item.enlightenment-potion"], 800);
+    assert_eq!(values["demo.item.star-enlightenment-potion"], 120_000);
+    assert_eq!(values["demo.item.self-knowledge-potion"], 2_000);
+    assert_eq!(values["demo.item.rune-of-protection-scroll"], 500);
+    assert_eq!(values["demo.item.destruction-scroll"], 250);
 }
 
 #[test]
@@ -1070,6 +1102,214 @@ fn p3_1_items_all_have_a_shop_or_warrens_acquisition_path() {
         "demo.item.slime-mold",
         "demo.item.satisfy-hunger-scroll",
         "demo.item.sleep-potion",
+    ] {
+        assert!(
+            available.contains(item_id),
+            "{item_id} should be obtainable"
+        );
+    }
+}
+
+#[test]
+fn p3_2_items_all_have_a_shop_or_warrens_acquisition_path() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let shop_items = artifact
+        .content
+        .shops
+        .iter()
+        .flat_map(|shop| shop.stock.iter().map(|stock| stock.item_kind_id.as_str()));
+    let loot_items = artifact
+        .content
+        .loot_tables
+        .iter()
+        .filter(|table| {
+            matches!(
+                table.id.as_str(),
+                "demo.loot-table.warrens" | "demo.loot-table.kobold"
+            )
+        })
+        .flat_map(|table| {
+            table
+                .entries
+                .iter()
+                .map(|entry| entry.item_kind_id.as_str())
+        });
+    let available = shop_items.chain(loot_items).collect::<BTreeSet<_>>();
+
+    for item_id in [
+        "demo.item.water-potion",
+        "demo.item.apple-juice",
+        "demo.item.slime-mold-juice",
+        "demo.item.lose-memories-potion",
+        "demo.item.ruination-potion",
+        "demo.item.sight-potion",
+        "demo.item.antidote-potion",
+        "demo.item.curing-potion",
+        "demo.item.invulnerability-potion",
+        "demo.item.giant-strength-potion",
+        "demo.item.great-clarity-potion",
+    ] {
+        assert!(
+            available.contains(item_id),
+            "{item_id} should be obtainable"
+        );
+    }
+}
+
+#[test]
+fn p3_3_items_all_have_a_shop_acquisition_path() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let available = artifact
+        .content
+        .shops
+        .iter()
+        .flat_map(|shop| shop.stock.iter().map(|stock| stock.item_kind_id.as_str()))
+        .collect::<BTreeSet<_>>();
+
+    for item_id in [
+        "demo.item.treasure-detection-scroll",
+        "demo.item.understanding-scroll",
+        "demo.item.inventory-protection-scroll",
+        "demo.item.enlightenment-potion",
+        "demo.item.star-enlightenment-potion",
+        "demo.item.self-knowledge-potion",
+    ] {
+        assert!(
+            available.contains(item_id),
+            "{item_id} should be obtainable"
+        );
+    }
+}
+
+#[test]
+fn p3_4_items_all_have_a_shop_or_warrens_acquisition_path() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let shop_items = artifact
+        .content
+        .shops
+        .iter()
+        .flat_map(|shop| shop.stock.iter().map(|stock| stock.item_kind_id.as_str()));
+    let loot_items = artifact
+        .content
+        .loot_tables
+        .iter()
+        .filter(|table| table.id == "demo.loot-table.warrens")
+        .flat_map(|table| {
+            table
+                .entries
+                .iter()
+                .map(|entry| entry.item_kind_id.as_str())
+        });
+    let available = shop_items.chain(loot_items).collect::<BTreeSet<_>>();
+
+    for item_id in [
+        "demo.item.darkness-scroll",
+        "demo.item.trap-creation-scroll",
+        "demo.item.light-scroll",
+        "demo.item.rune-of-protection-scroll",
+        "demo.item.destruction-scroll",
+    ] {
+        assert!(
+            available.contains(item_id),
+            "{item_id} should be obtainable"
+        );
+    }
+}
+
+#[test]
+fn p3_5_items_all_have_a_shop_acquisition_path() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let available = artifact
+        .content
+        .shops
+        .iter()
+        .flat_map(|shop| shop.stock.iter().map(|stock| stock.item_kind_id.as_str()))
+        .collect::<BTreeSet<_>>();
+
+    for item_id in [
+        "demo.item.mundanity-scroll",
+        "demo.item.acquirement-scroll",
+        "demo.item.star-acquirement-scroll",
+        "demo.item.rumour-scroll",
+        "demo.item.crafting-scroll",
+    ] {
+        assert!(
+            available.contains(item_id),
+            "{item_id} should be obtainable"
+        );
+    }
+}
+
+#[test]
+fn p3_6_launchers_and_ammunition_all_have_an_acquisition_path() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let shop_items = artifact
+        .content
+        .shops
+        .iter()
+        .flat_map(|shop| shop.stock.iter().map(|stock| stock.item_kind_id.as_str()));
+    let archer_ammunition = artifact
+        .content
+        .loot_tables
+        .iter()
+        .filter(|table| table.id == "demo.loot-table.archer")
+        .flat_map(|table| {
+            table
+                .entries
+                .iter()
+                .map(|entry| entry.item_kind_id.as_str())
+        });
+    let available = shop_items.chain(archer_ammunition).collect::<BTreeSet<_>>();
+
+    for item_id in [
+        "demo.item.sling",
+        "demo.item.long-bow",
+        "demo.item.light-crossbow",
+        "demo.item.heavy-crossbow",
+        "demo.item.sheaf-arrow",
+        "demo.item.mithril-arrow",
+        "demo.item.seeker-arrow",
+        "demo.item.bolt",
+        "demo.item.steel-bolt",
+        "demo.item.mithril-bolt",
+        "demo.item.seeker-bolt",
+        "demo.item.adamantine-bolt",
+        "demo.item.rounded-pebble",
+        "demo.item.iron-shot",
+        "demo.item.mithril-shot",
+    ] {
+        assert!(
+            available.contains(item_id),
+            "{item_id} should be obtainable"
+        );
+    }
+}
+
+#[test]
+fn p3_7_active_potions_all_have_an_acquisition_path() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let shop_items = artifact
+        .content
+        .shops
+        .iter()
+        .flat_map(|shop| shop.stock.iter().map(|stock| stock.item_kind_id.as_str()));
+    let warrens_items = artifact
+        .content
+        .loot_tables
+        .iter()
+        .filter(|table| table.id == "demo.loot-table.warrens")
+        .flat_map(|table| {
+            table
+                .entries
+                .iter()
+                .map(|entry| entry.item_kind_id.as_str())
+        });
+    let available = shop_items.chain(warrens_items).collect::<BTreeSet<_>>();
+
+    for item_id in [
+        "demo.item.experience-potion",
+        "demo.item.neo-tsuyoshi-special",
+        "demo.item.tsuyoshi-special",
     ] {
         assert!(
             available.contains(item_id),

@@ -265,6 +265,17 @@ impl Game {
         removed_entities: &mut Vec<String>,
     ) -> Result<(), CoreError> {
         if target.is_player() {
+            if adjacent(self.entities[source_index].position, target.position())
+                && let Some(broken) = self.try_monster_break_warding_glyph(
+                    source_index,
+                    target.position(),
+                    events,
+                    changed,
+                )
+                && !broken
+            {
+                return Ok(());
+            }
             let source_entity_id = self.entities[source_index].id.clone();
             let player_hp_before = self.player.hp;
             let self_destructs = self.resolve_monster_melee(source_index, events, changed)?;

@@ -80,7 +80,7 @@ pub(super) fn validate_tables(
                 .roll_dice
                 .is_some_and(|dice| dice.dice == 0 || dice.sides == 0)
             || table.entries.is_empty()
-            || table.entries.len() > 64
+            || table.entries.len() > 128
             || table.quality_weights.is_empty()
             || table.quality_weights.len() > 3
             || table.affix_weights.is_empty()

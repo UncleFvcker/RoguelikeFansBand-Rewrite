@@ -1,0 +1,24 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 500,
+  "descriptionKey": "item-demo-light-crossbow-description",
+  "equipmentSlot": "launcher",
+  "formatVersion": 1,
+  "glyph": "}",
+  "id": "demo.item.light-crossbow",
+  "maxStack": 1,
+  "nameKey": "item-demo-light-crossbow-name",
+  "projectileProfile": {
+    "ammunitionType": "bolt",
+    "damageMultiplierPercent": 350,
+    "range": 17,
+    "toDamage": 0,
+    "toHit": 0
+  },
+  "tags": [
+    "equipment",
+    "launcher",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 110
+}

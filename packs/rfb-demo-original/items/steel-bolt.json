@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "ammunitionProfile": {
+    "ammunitionType": "bolt",
+    "damageDice": 4,
+    "damageSides": 5,
+    "toDamage": 0,
+    "toHit": 0
+  },
+  "baseValue": 10,
+  "breakChancePercent": 10,
+  "descriptionKey": "item-demo-steel-bolt-description",
+  "formatVersion": 1,
+  "glyph": "{",
+  "id": "demo.item.steel-bolt",
+  "maxStack": 99,
+  "nameKey": "item-demo-steel-bolt-name",
+  "tags": [
+    "ammunition",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 4
+}

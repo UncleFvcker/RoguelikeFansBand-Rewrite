@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "ammunitionProfile": {
+    "ammunitionType": "bolt",
+    "damageDice": 6,
+    "damageSides": 5,
+    "toDamage": 0,
+    "toHit": 0
+  },
+  "baseValue": 25,
+  "breakChancePercent": 10,
+  "descriptionKey": "item-demo-seeker-bolt-description",
+  "formatVersion": 1,
+  "glyph": "{",
+  "id": "demo.item.seeker-bolt",
+  "maxStack": 99,
+  "nameKey": "item-demo-seeker-bolt-name",
+  "tags": [
+    "ammunition",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 3
+}

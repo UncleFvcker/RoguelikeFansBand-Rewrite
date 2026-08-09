@@ -78,6 +78,18 @@ pub(super) fn apply_attribute_drain(
     attribute_mutation_outcome(progress, attribute, before, maximum_before, changed)
 }
 
+pub(super) fn apply_permanent_attribute_drain(
+    progress: &mut CharacterProgress,
+    attribute: AttributeKind,
+    amount: u8,
+    rng: &mut RfbRng,
+) -> AttributeMutationOutcome {
+    let before = progress.attributes.value(attribute);
+    let maximum_before = progress.maximum_attributes.value(attribute);
+    let changed = progress.permanently_drain_attribute(attribute, amount, rng);
+    attribute_mutation_outcome(progress, attribute, before, maximum_before, changed)
+}
+
 pub(super) fn apply_attribute_restoration(
     progress: &mut CharacterProgress,
     attribute: AttributeKind,
@@ -579,6 +591,14 @@ impl Game {
 
     pub(super) fn apply_player_experience(&mut self, amount: u64, events: &mut Vec<DomainEvent>) {
         let amount = scale_experience_reward(amount, self.character_experience_percent());
+        self.apply_unscaled_player_experience(amount, events);
+    }
+
+    pub(super) fn apply_unscaled_player_experience(
+        &mut self,
+        amount: u64,
+        events: &mut Vec<DomainEvent>,
+    ) {
         let previous_level = self.progress.level;
         let mut previous_max_hp = self.player_max_hp_at_level(previous_level);
         let ExperienceGainPlan {

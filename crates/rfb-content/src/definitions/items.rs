@@ -12,6 +12,10 @@ use super::{
     StatModifiers,
 };
 
+const fn default_incoming_damage_percent() -> u8 {
+    100
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
@@ -170,13 +174,33 @@ pub struct AttackProfileDefinition {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ProjectileProfileDefinition {
     pub range: u16,
+    /// Original launcher multiplier scaled by 100 (x2.50 = 250).
+    pub damage_multiplier_percent: u16,
+    pub to_hit: i32,
+    pub to_damage: i32,
+    pub ammunition_type: AmmunitionTypeDefinition,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum AmmunitionTypeDefinition {
+    Shot,
+    Arrow,
+    Bolt,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct AmmunitionProfileDefinition {
+    pub ammunition_type: AmmunitionTypeDefinition,
     pub to_hit: i32,
     pub to_damage: i32,
     pub damage_dice: u16,
     pub damage_sides: u16,
     #[serde(default)]
     pub damage_type: ActorDamageType,
-    pub ammo_kind_id: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -239,6 +263,7 @@ pub enum ItemSummonSelectorDefinition {
     deny_unknown_fields
 )]
 pub enum ItemUseEffectDefinition {
+    NoNumericEffect,
     IncreaseNutrition {
         amount: u16,
     },
@@ -338,6 +363,19 @@ pub enum ItemUseEffectDefinition {
         stacking: AbilityStatusStackingDefinition,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         resistance_type: Option<ActorDamageType>,
+        #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+        granted_resistances: BTreeMap<ActorDamageType, ActorResistanceLevel>,
+        #[serde(default)]
+        granted_modifiers: StatModifiers,
+        #[serde(default)]
+        granted_equipment_bonuses: EquipmentBonuses,
+        #[serde(default = "default_incoming_damage_percent")]
+        incoming_damage_percent: u8,
+    },
+    ApplyGiantStrength {
+        duration_dice: u16,
+        duration_sides: u32,
+        duration_bonus: u32,
     },
     ApplyDetonation {
         damage_dice: u16,
@@ -354,6 +392,20 @@ pub enum ItemUseEffectDefinition {
         #[serde(default)]
         damage_bonus: u16,
     },
+    LoseExperienceFraction {
+        divisor: u8,
+    },
+    GainRelativeExperience {
+        divisor: u8,
+        bonus: u64,
+        maximum_gain: u64,
+    },
+    ApplyTsuyoshi {
+        duration_dice: u16,
+        duration_sides: u32,
+        duration_bonus: u32,
+    },
+    TriggerTsuyoshiCrash,
     Vengeance {
         duration_dice: u16,
         duration_sides: u32,
@@ -386,9 +438,32 @@ pub enum ItemUseEffectDefinition {
         source_terrain_ids: Vec<String>,
         target_terrain_id: String,
     },
+    CreateCurrentTerrain {
+        source_terrain_ids: Vec<String>,
+        target_terrain_id: String,
+    },
+    SetFloorGlow {
+        glow: bool,
+        radius: u8,
+        #[serde(default)]
+        connected_glow: bool,
+    },
+    AreaDestruction {
+        minimum_radius: u8,
+        maximum_radius: u8,
+        floor_terrain_id: String,
+        wall_terrain_id: String,
+        quartz_terrain_id: String,
+        magma_terrain_id: String,
+    },
     DestroyAdjacentTrapsAndDoors,
     RemoveStatus {
         status_kind_id: String,
+    },
+    ReduceStatus {
+        status_kind_id: String,
+        minimum_reduction: u32,
+        reduction_divisor: u8,
     },
     RestoreResource {
         resource_id: String,
@@ -410,6 +485,21 @@ pub enum ItemUseEffectDefinition {
     IdentifyItem {
         #[serde(default)]
         full: bool,
+    },
+    IdentifyInventory,
+    SelfKnowledge,
+    Acquirement {
+        loot_table_id: String,
+        minimum_count: u8,
+        maximum_count: u8,
+    },
+    MundanifyItem,
+    CraftItem {
+        weapon_affix_ids: Vec<String>,
+        armor_affix_ids: Vec<String>,
+    },
+    ShowRumour {
+        message_key: String,
     },
     EnchantItem {
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -618,6 +708,8 @@ pub struct ItemDefinition {
     pub melee_profile: Option<AttackProfileDefinition>,
     #[serde(default)]
     pub projectile_profile: Option<ProjectileProfileDefinition>,
+    #[serde(default)]
+    pub ammunition_profile: Option<AmmunitionProfileDefinition>,
     #[serde(default)]
     pub throw_profile: Option<ThrowProfileDefinition>,
     #[serde(default)]

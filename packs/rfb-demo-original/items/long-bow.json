@@ -1,0 +1,24 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 400,
+  "descriptionKey": "item-demo-long-bow-description",
+  "equipmentSlot": "launcher",
+  "formatVersion": 1,
+  "glyph": "}",
+  "id": "demo.item.long-bow",
+  "maxStack": 1,
+  "nameKey": "item-demo-long-bow-name",
+  "projectileProfile": {
+    "ammunitionType": "arrow",
+    "damageMultiplierPercent": 300,
+    "range": 16,
+    "toDamage": 0,
+    "toHit": 0
+  },
+  "tags": [
+    "equipment",
+    "launcher",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 40
+}

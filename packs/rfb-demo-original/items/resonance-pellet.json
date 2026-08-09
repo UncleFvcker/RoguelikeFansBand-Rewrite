@@ -8,5 +8,12 @@
   "weightTenthsPound": 2,
   "maxStack": 20,
   "breakChancePercent": 10,
+  "ammunitionProfile": {
+    "ammunitionType": "shot",
+    "toHit": 0,
+    "toDamage": 0,
+    "damageDice": 1,
+    "damageSides": 2
+  },
   "tags": ["ammunition"]
 }

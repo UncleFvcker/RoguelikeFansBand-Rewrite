@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "ammunitionProfile": {
+    "ammunitionType": "bolt",
+    "damageDice": 5,
+    "damageSides": 5,
+    "toDamage": 0,
+    "toHit": 0
+  },
+  "baseValue": 20,
+  "breakChancePercent": 10,
+  "descriptionKey": "item-demo-mithril-bolt-description",
+  "formatVersion": 1,
+  "glyph": "{",
+  "id": "demo.item.mithril-bolt",
+  "maxStack": 99,
+  "nameKey": "item-demo-mithril-bolt-name",
+  "tags": [
+    "ammunition",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 4
+}

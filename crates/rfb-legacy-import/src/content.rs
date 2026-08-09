@@ -137,6 +137,8 @@ struct DemoItemAdaptation {
     status: DemoItemCoverageStatus,
     #[serde(default)]
     blocker: Option<String>,
+    #[serde(default)]
+    adaptation: Option<String>,
     contract: String,
 }
 
@@ -358,6 +360,43 @@ where
     Ok(Some(parse_dice(source, line, field, Some(value))?))
 }
 
+fn parse_launcher_multiplier(
+    source: &'static str,
+    line: usize,
+    field: &'static str,
+    value: Option<&str>,
+) -> Result<Option<u16>, LegacyImportError> {
+    let value = required_field(source, line, field, value)?;
+    let Some(multiplier) = value.strip_prefix('x') else {
+        return Ok(None);
+    };
+    let (whole, fraction) = multiplier.split_once('.').ok_or_else(|| {
+        content_parse_error(
+            source,
+            line,
+            field,
+            value,
+            "expected multiplier in x<whole>.<fraction> form",
+        )
+    })?;
+    if fraction.len() != 2 {
+        return Err(content_parse_error(
+            source,
+            line,
+            field,
+            value,
+            "expected multiplier with two decimal places",
+        ));
+    }
+    let whole = parse_number::<u16>(source, line, field, Some(whole))?;
+    let fraction = parse_number::<u16>(source, line, field, Some(fraction))?;
+    whole
+        .checked_mul(100)
+        .and_then(|value| value.checked_add(fraction))
+        .map(Some)
+        .ok_or_else(|| content_parse_error(source, line, field, value, "multiplier is too large"))
+}
+
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct LegacyTerrainEntry {
     pub index: u32,
@@ -412,6 +451,7 @@ pub struct LegacyItemEntry {
     pub base_value: u32,
     pub armor_class: i32,
     pub damage_dice: Option<(u16, u16)>,
+    pub launcher_multiplier_percent: Option<u16>,
     pub to_hit: i32,
     pub to_damage: i32,
     pub to_armor: i32,
@@ -444,6 +484,7 @@ pub struct LegacyArtifactEntry {
     pub base_value: u32,
     pub armor_class: i32,
     pub damage_dice: Option<(u16, u16)>,
+    pub launcher_multiplier_percent: Option<u16>,
     pub to_hit: i32,
     pub to_damage: i32,
     pub to_armor: i32,
@@ -1477,7 +1518,8 @@ pub fn parse_r_info(text: &str) -> Result<Vec<LegacyMonsterEntry>, LegacyImportE
     Ok(entries)
 }
 
-const MAPPED_TERRAIN_FLAGS: [&str; 5] = ["MOVE", "LOS", "PROJECT", "PERMANENT", "HURT_DISI"];
+const MAPPED_TERRAIN_FLAGS: [&str; 6] =
+    ["MOVE", "LOS", "PROJECT", "PERMANENT", "HURT_DISI", "GLYPH"];
 
 /// Parses k_info entries; `&` article and `~` plural markers strip out of
 /// names, and the `N:*:` auto-index form continues the running counter.
@@ -1588,6 +1630,12 @@ pub fn parse_k_info(text: &str) -> Result<Vec<LegacyItemEntry>, LegacyImportErro
                 "P.damage",
                 parts.get(1).copied(),
             )?;
+            entry.launcher_multiplier_percent = parse_launcher_multiplier(
+                K_INFO_SOURCE,
+                line_number,
+                "P.damage",
+                parts.get(1).copied(),
+            )?;
             entry.to_hit =
                 parse_number(K_INFO_SOURCE, line_number, "P.toHit", parts.get(2).copied())?;
             entry.to_damage = parse_number(
@@ -1669,7 +1717,7 @@ fn item_shape(tval: u16) -> Option<ItemShape> {
             tags: vec!["equipment", "launcher", "legacy-import"],
             melee: false,
             launcher: true,
-            behavior_gap: Some("launcher-multiplier"),
+            behavior_gap: None,
         },
         16..=18 => ItemShape {
             slot: None,
@@ -1677,7 +1725,7 @@ fn item_shape(tval: u16) -> Option<ItemShape> {
             tags: vec!["ammunition", "legacy-import"],
             melee: false,
             launcher: false,
-            behavior_gap: Some("ammo-dice-folded"),
+            behavior_gap: None,
         },
         36..=38 => ItemShape {
             slot: Some("body"),
@@ -1833,13 +1881,29 @@ fn launcher_ammo_index(items: &[LegacyItemEntry]) -> LauncherAmmoIndex {
     ammo
 }
 
-fn launcher_ammo_for(entry: &LegacyItemEntry, ammo: &LauncherAmmoIndex) -> Option<String> {
+fn launcher_ammunition_type(
+    entry: &LegacyItemEntry,
+    ammo: &LauncherAmmoIndex,
+) -> Option<&'static str> {
     match entry.sval {
-        2 => ammo.shot.clone(),
-        12 | 13 => ammo.arrow.clone(),
-        23 | 24 => ammo.bolt.clone(),
+        2 if ammo.shot.is_some() => Some("shot"),
+        12 | 13 if ammo.arrow.is_some() => Some("arrow"),
+        23 | 24 if ammo.bolt.is_some() => Some("bolt"),
         _ => None,
     }
+}
+
+fn ammunition_type(tval: u16) -> Option<&'static str> {
+    match tval {
+        16 => Some("shot"),
+        17 => Some("arrow"),
+        18 => Some("bolt"),
+        _ => None,
+    }
+}
+
+fn launcher_range(multiplier_percent: u16) -> u16 {
+    13_u16.saturating_add(multiplier_percent / 80).min(32)
 }
 
 fn player_ability_book_for_item(entry: &LegacyItemEntry) -> Option<&'static str> {
@@ -1858,8 +1922,13 @@ fn player_ability_book_for_item(entry: &LegacyItemEntry) -> Option<&'static str>
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 struct TerrainCreationImportIds {
     source_terrain_ids: Vec<String>,
+    floor_terrain_id: Option<String>,
+    created_trap_terrain_id: Option<String>,
+    glyph_terrain_id: Option<String>,
     tree_terrain_id: Option<String>,
     wall_terrain_id: Option<String>,
+    quartz_terrain_id: Option<String>,
+    magma_terrain_id: Option<String>,
 }
 
 fn terrain_creation_import_ids(terrain: &[LegacyTerrainEntry]) -> TerrainCreationImportIds {
@@ -1880,12 +1949,19 @@ fn terrain_creation_import_ids(terrain: &[LegacyTerrainEntry]) -> TerrainCreatio
             ids.source_terrain_ids.push(id.clone());
         }
         match entry.tag.as_str() {
+            "FLOOR" => ids.floor_terrain_id = Some(id.clone()),
+            "GLYPH" => ids.glyph_terrain_id = Some(id.clone()),
             "TREE" => ids.tree_terrain_id = Some(id),
-            "GRANITE" => ids.wall_terrain_id = Some(id),
+            "GRANITE" => ids.wall_terrain_id = Some(id.clone()),
+            "QUARTZ" => ids.quartz_terrain_id = Some(id.clone()),
+            "MAGMA" => ids.magma_terrain_id = Some(id),
             _ => {}
         }
     }
     ids.source_terrain_ids.sort();
+    if ids.floor_terrain_id.is_some() {
+        ids.created_trap_terrain_id = Some("rfb-legacy.terrain.created-trap".to_owned());
+    }
     ids
 }
 
@@ -1901,6 +1977,16 @@ fn fixed_consumable_use_action_with_terrain(
             "subject": subject,
             "category": category,
             "radius": 8,
+            "persistent": persistent,
+            "throughWalls": true
+        })
+    };
+    let detect_floor = |subject: &str, category: &str, persistent: bool| {
+        serde_json::json!({
+            "type": "detect",
+            "subject": subject,
+            "category": category,
+            "radius": 255,
             "persistent": persistent,
             "throughWalls": true
         })
@@ -1941,6 +2027,20 @@ fn fixed_consumable_use_action_with_terrain(
         return Some(serde_json::json!({"effect": effect}));
     }
     let effect = match (entry.tval, entry.sval) {
+        (70, 0) => sequence(vec![
+            serde_json::json!({
+                "type": "apply-blindness",
+                "durationDice": 1,
+                "durationSides": 5,
+                "durationBonus": 3
+            }),
+            serde_json::json!({
+                "type": "set-floor-glow",
+                "glow": false,
+                "radius": 3,
+                "connectedGlow": true
+            }),
+        ]),
         (70, 1) => serde_json::json!({"type": "aggravate-monsters"}),
         (70, 2) => serde_json::json!({"type": "curse-equipped-item", "target": "armor"}),
         (70, 3) => serde_json::json!({"type": "curse-equipped-item", "target": "weapon"}),
@@ -1974,6 +2074,14 @@ fn fixed_consumable_use_action_with_terrain(
             1,
             false,
         ),
+        (70, 7) => {
+            let terrain_creation = terrain_creation?;
+            serde_json::json!({
+                "type": "create-adjacent-terrain",
+                "sourceTerrainIds": terrain_creation.source_terrain_ids,
+                "targetTerrainId": terrain_creation.created_trap_terrain_id.as_ref()?
+            })
+        }
         (70, 8) => serde_json::json!({"type": "random-teleport", "maximumDistance": 10}),
         (70, 9) => serde_json::json!({"type": "random-teleport", "maximumDistance": 100}),
         (70, 10) => serde_json::json!({"type": "teleport-level"}),
@@ -2016,11 +2124,17 @@ fn fixed_consumable_use_action_with_terrain(
             "type": "recharge-from-device",
             "power": 100
         }),
+        (70, 23) => serde_json::json!({"type": "mundanify-item"}),
+        (70, 24) => serde_json::json!({
+            "type": "set-floor-glow",
+            "glow": true,
+            "radius": 2
+        }),
         (70, 43) => serde_json::json!({
             "type": "increase-spell-learning-capacity"
         }),
         (70, 25) => detect("terrain", "map", true),
-        (70, 26) => detect("item", "gold", false),
+        (70, 26) => detect("gold", "gold", false),
         (70, 27) => detect("item", "item", false),
         (70, 28) => detect("terrain", "trap", true),
         (70, 29) => detect("terrain", "passage", true),
@@ -2031,9 +2145,29 @@ fn fixed_consumable_use_action_with_terrain(
         (70, 35) => bless(48, 24),
         (70, 36) => serde_json::json!({"type": "prepare-confusing-strike"}),
         (70, 37) => serde_json::json!({"type": "protection-from-evil"}),
+        (70, 38) => {
+            let terrain_creation = terrain_creation?;
+            serde_json::json!({
+                "type": "create-current-terrain",
+                "sourceTerrainIds": terrain_creation.source_terrain_ids,
+                "targetTerrainId": terrain_creation.glyph_terrain_id.as_ref()?
+            })
+        }
         (70, 39) => serde_json::json!({
             "type": "destroy-adjacent-traps-and-doors"
         }),
+        (70, 41) => {
+            let terrain_creation = terrain_creation?;
+            serde_json::json!({
+                "type": "area-destruction",
+                "minimumRadius": 13,
+                "maximumRadius": 17,
+                "floorTerrainId": terrain_creation.floor_terrain_id.as_ref()?,
+                "wallTerrainId": terrain_creation.wall_terrain_id.as_ref()?,
+                "quartzTerrainId": terrain_creation.quartz_terrain_id.as_ref()?,
+                "magmaTerrainId": terrain_creation.magma_terrain_id.as_ref()?
+            })
+        }
         (70, 42) => serde_json::json!({
             "type": "dispel-category",
             "category": "undead",
@@ -2047,6 +2181,18 @@ fn fixed_consumable_use_action_with_terrain(
             "type": "mass-genocide",
             "power": 300,
             "radius": 20
+        }),
+        (70, 46) => serde_json::json!({
+            "type": "acquirement",
+            "lootTableId": LEGACY_DROP_TABLE_ID,
+            "minimumCount": 1,
+            "maximumCount": 1
+        }),
+        (70, 47) => serde_json::json!({
+            "type": "acquirement",
+            "lootTableId": LEGACY_DROP_TABLE_ID,
+            "minimumCount": 2,
+            "maximumCount": 3
         }),
         (70, 48) => {
             let terrain_creation = terrain_creation?;
@@ -2070,6 +2216,10 @@ fn fixed_consumable_use_action_with_terrain(
             "durationSides": 25,
             "durationBonus": 25
         }),
+        (70, 51) => serde_json::json!({
+            "type": "show-rumour",
+            "messageKey": "rumour-legacy-wilderness"
+        }),
         (70, 58) => serde_json::json!({
             "type": "self-centered-elemental-blast",
             "baseDamage": 666,
@@ -2090,6 +2240,17 @@ fn fixed_consumable_use_action_with_terrain(
             "backlashDamageType": "cold",
             "backlashUsesResistance": true
         }),
+        (70, 60) => sequence(vec![
+            serde_json::json!({"type": "identify-inventory"}),
+            serde_json::json!({
+                "type": "apply-status",
+                "statusKindId": "rfb.status.understanding",
+                "durationDice": 1,
+                "durationSides": 1,
+                "durationBonus": 39,
+                "stacking": "extend"
+            }),
+        ]),
         (70, 61) => serde_json::json!({
             "type": "self-centered-elemental-blast",
             "baseDamage": 1100,
@@ -2112,10 +2273,69 @@ fn fixed_consumable_use_action_with_terrain(
             1,
             false,
         ),
+        (70, 55) => serde_json::json!({
+            "type": "craft-item",
+            "weaponAffixIds": [
+                "rfb-legacy.affix.of-sharpness",
+                "rfb-legacy.affix.of-slaying"
+            ],
+            "armorAffixIds": ["rfb-legacy.affix.of-protection"]
+        }),
         (70, 62) => serde_json::json!({
             "type": "banish-visible",
             "maximumDistance": 150
         }),
+        (70, 63) => serde_json::json!({
+            "type": "apply-status",
+            "statusKindId": "rfb.status.inventory-protection",
+            "durationDice": 1,
+            "durationSides": 1,
+            "durationBonus": 24,
+            "stacking": "extend"
+        }),
+        (75, 0..=2) => serde_json::json!({"type": "no-numeric-effect"}),
+        (75, 13) => serde_json::json!({
+            "type": "lose-experience-fraction",
+            "divisor": 4
+        }),
+        (75, 15) => sequence(vec![
+            serde_json::json!({"type": "self-damage", "damageDice": 10, "damageSides": 10}),
+            serde_json::json!({"type": "drain-attribute", "attribute": "strength"}),
+            serde_json::json!({"type": "drain-attribute", "attribute": "intelligence"}),
+            serde_json::json!({"type": "drain-attribute", "attribute": "wisdom"}),
+            serde_json::json!({"type": "drain-attribute", "attribute": "dexterity"}),
+            serde_json::json!({"type": "drain-attribute", "attribute": "constitution"}),
+            serde_json::json!({"type": "drain-attribute", "attribute": "charisma"}),
+        ]),
+        (75, 26) => sequence(vec![
+            serde_json::json!({
+                "type": "apply-status",
+                "statusKindId": "rfb.status.sight",
+                "durationDice": 1,
+                "durationSides": 100,
+                "durationBonus": 100,
+                "stacking": "extend",
+                "grantedEquipmentBonuses": {"infravision": 3}
+            }),
+            remove_status("rfb.status.blindness"),
+        ]),
+        (75, 27) => sequence(vec![
+            serde_json::json!({
+                "type": "reduce-status",
+                "statusKindId": "rfb.status.poison",
+                "minimumReduction": 4000,
+                "reductionDivisor": 2
+            }),
+            serde_json::json!({
+                "type": "apply-status",
+                "statusKindId": "rfb.status.poison-resistance",
+                "durationDice": 1,
+                "durationSides": 10,
+                "durationBonus": 10,
+                "stacking": "extend",
+                "grantedResistances": {"poison": "resistant"}
+            }),
+        ]),
         (75, 4) => serde_json::json!({
             "type": "apply-slowness",
             "durationDice": 1,
@@ -2259,6 +2479,29 @@ fn fixed_consumable_use_action_with_terrain(
         (75, 55) => serde_json::json!({
             "type": "augment-attributes"
         }),
+        (75, 56) => sequence(vec![
+            detect_floor("terrain", "map", true),
+            detect_floor("item", "item", false),
+            detect_floor("gold", "gold", false),
+        ]),
+        (75, 57) => sequence(vec![
+            detect_floor("terrain", "map", true),
+            detect_floor("item", "item", false),
+            detect_floor("gold", "gold", false),
+            serde_json::json!({"type": "increase-attribute", "attribute": "intelligence"}),
+            serde_json::json!({"type": "increase-attribute", "attribute": "wisdom"}),
+            detect_floor("terrain", "trap", true),
+            detect_floor("terrain", "passage", true),
+            serde_json::json!({"type": "identify-inventory"}),
+            serde_json::json!({"type": "self-knowledge"}),
+        ]),
+        (75, 58) => serde_json::json!({"type": "self-knowledge"}),
+        (75, 59) => serde_json::json!({
+            "type": "gain-relative-experience",
+            "divisor": 2,
+            "bonus": 10,
+            "maximumGain": 100000
+        }),
         (75, 30) => serde_json::json!({
             "type": "apply-thermal-resistance",
             "durationDice": 1,
@@ -2267,6 +2510,56 @@ fn fixed_consumable_use_action_with_terrain(
         }),
         (75, 60) => serde_json::json!({
             "type": "apply-basic-resistance",
+            "durationDice": 1,
+            "durationSides": 20,
+            "durationBonus": 20
+        }),
+        (75, 61) => sequence(vec![
+            remove_status("rfb.status.blindness"),
+            serde_json::json!({
+                "type": "reduce-status",
+                "statusKindId": "rfb.status.poison",
+                "minimumReduction": 2000,
+                "reductionDivisor": 2
+            }),
+            remove_status("rfb.status.confusion"),
+            remove_status("rfb.status.stun"),
+            remove_status("rfb.status.bleeding"),
+            remove_status("rfb.status.hallucination"),
+            remove_status("rfb.status.berserk"),
+        ]),
+        (75, 62) => serde_json::json!({
+            "type": "apply-status",
+            "statusKindId": "rfb.status.invulnerability",
+            "durationDice": 1,
+            "durationSides": 4,
+            "durationBonus": 4,
+            "stacking": "extend",
+            "incomingDamagePercent": 0
+        }),
+        (75, 64) => sequence(vec![
+            remove_status("rfb.status.hallucination"),
+            serde_json::json!({
+                "type": "apply-tsuyoshi",
+                "durationDice": 1,
+                "durationSides": 100,
+                "durationBonus": 100
+            }),
+        ]),
+        (75, 65) => sequence(vec![
+            serde_json::json!({"type": "trigger-tsuyoshi-crash"}),
+            serde_json::json!({
+                "type": "apply-status",
+                "statusKindId": "rfb.status.hallucination",
+                "durationDice": 1,
+                "durationSides": 50,
+                "durationBonus": 50,
+                "stacking": "keep-strongest",
+                "resistanceType": "chaos"
+            }),
+        ]),
+        (75, 68) => serde_json::json!({
+            "type": "apply-giant-strength",
             "durationDice": 1,
             "durationSides": 20,
             "durationBonus": 20
@@ -2373,6 +2666,17 @@ fn fixed_consumable_use_action_with_terrain(
                 "bonus": 3
             }),
             remove_status("rfb.status.confusion"),
+        ]),
+        (75, 71) => sequence(vec![
+            serde_json::json!({
+                "type": "restore-resource-dice",
+                "resourceId": LEGACY_MANA_RESOURCE_ID,
+                "dice": 10,
+                "sides": 10,
+                "bonus": 15
+            }),
+            remove_status("rfb.status.confusion"),
+            remove_status("rfb.status.hallucination"),
         ]),
         _ => return None,
     };
@@ -2631,7 +2935,12 @@ fn item_json_with_terrain(
     }
     let use_action = fixed_consumable_use_action_with_terrain(entry, terrain_creation);
     let device_generation = legacy_device_generation(entry);
-    if let Some(gap) = shape.behavior_gap
+    let behavior_gap = if entry.tval == 70 && entry.sval == 52 {
+        Some("random-artifact-identity")
+    } else {
+        shape.behavior_gap
+    };
+    if let Some(gap) = behavior_gap
         && ability_book_id.is_none()
         && use_action.is_none()
         && device_generation.is_none()
@@ -2670,8 +2979,22 @@ fn item_json_with_terrain(
     if let Some(slot) = shape.slot {
         value["equipmentSlot"] = serde_json::json!(slot);
     }
-    if shape.max_stack > 1 && shape.tags_contain("ammunition") {
-        value["breakChancePercent"] = serde_json::json!(25);
+    if let Some(ammunition_type) = ammunition_type(entry.tval) {
+        value["breakChancePercent"] = serde_json::json!(if entry.tval == 17 { 20 } else { 10 });
+        if let Some((dice, sides)) = entry.damage_dice {
+            value["ammunitionProfile"] = serde_json::json!({
+                "ammunitionType": ammunition_type,
+                "toHit": entry.to_hit.clamp(-1_000_000, 1_000_000),
+                "toDamage": entry.to_damage.clamp(-1_000_000, 1_000_000),
+                "damageDice": dice.clamp(1, 100),
+                "damageSides": sides.clamp(1, 10_000),
+            });
+        } else {
+            *report
+                .item_behavior_gaps
+                .entry("ammo-dice-folded".to_owned())
+                .or_default() += 1;
+        }
     }
     if shape.melee {
         let (dice, sides) = entry.damage_dice.unwrap_or((1, 1));
@@ -2688,15 +3011,21 @@ fn item_json_with_terrain(
         // only launchers with a canonical ammo partner keep the profile.
         // The rest stay equippable fake bows (legacy obj_is_fake_bow):
         // they occupy the launcher slot but cannot fire.
-        if let Some(ammo_kind_id) = launcher_ammo_for(entry, ammo) {
-            value["projectileProfile"] = serde_json::json!({
-                "range": 12,
-                "toHit": entry.to_hit.clamp(-1_000_000, 1_000_000),
-                "toDamage": entry.to_damage.clamp(-1_000_000, 1_000_000),
-                "damageDice": 2,
-                "damageSides": 5,
-                "ammoKindId": ammo_kind_id,
-            });
+        if let Some(ammunition_type) = launcher_ammunition_type(entry, ammo) {
+            if let Some(multiplier_percent) = entry.launcher_multiplier_percent {
+                value["projectileProfile"] = serde_json::json!({
+                    "range": launcher_range(multiplier_percent),
+                    "damageMultiplierPercent": multiplier_percent,
+                    "toHit": entry.to_hit.clamp(-1_000_000, 1_000_000),
+                    "toDamage": entry.to_damage.clamp(-1_000_000, 1_000_000),
+                    "ammunitionType": ammunition_type,
+                });
+            } else {
+                *report
+                    .item_behavior_gaps
+                    .entry("launcher-multiplier".to_owned())
+                    .or_default() += 1;
+            }
         } else {
             *report
                 .item_behavior_gaps
@@ -2780,9 +3109,10 @@ fn item_json(
 fn demo_item_json(
     entry: &LegacyItemEntry,
     id: &str,
+    ammo: &LauncherAmmoIndex,
 ) -> Result<serde_json::Value, LegacyImportError> {
     let shape = item_shape(entry.tval).expect("every tval resolves a shape");
-    if !matches!(
+    let ordinary_equipment = matches!(
         shape.slot,
         Some(
             "weapon"
@@ -2794,8 +3124,11 @@ fn demo_item_json(
                 | "boots"
                 | "tool"
                 | "container"
+                | "launcher"
         )
-    ) || shape.behavior_gap.is_some()
+    );
+    if (!ordinary_equipment && !shape.tags_contain("ammunition"))
+        || shape.behavior_gap.is_some()
         || fixed_consumable_use_action_with_terrain(entry, None).is_some()
         || legacy_device_generation(entry).is_some()
         || player_ability_book_for_item(entry).is_some()
@@ -2806,14 +3139,7 @@ fn demo_item_json(
     }
 
     let mut report = ContentImportReport::default();
-    let mut value = item_json_with_terrain(
-        entry,
-        id,
-        &LauncherAmmoIndex::default(),
-        None,
-        None,
-        &mut report,
-    );
+    let mut value = item_json_with_terrain(entry, id, ammo, None, None, &mut report);
     report.unmapped_item_flags.remove("TOWN");
     if !report.item_behavior_gaps.is_empty() || !report.unmapped_item_flags.is_empty() {
         return Err(LegacyImportError::InvalidDemoItemSelection(format!(
@@ -3043,6 +3369,12 @@ pub fn parse_a_info(text: &str) -> Result<Vec<LegacyArtifactEntry>, LegacyImport
                 parts.first().copied(),
             )?;
             entry.damage_dice = parse_damage_or_multiplier(
+                A_INFO_SOURCE,
+                line_number,
+                "P.damage",
+                parts.get(1).copied(),
+            )?;
+            entry.launcher_multiplier_percent = parse_launcher_multiplier(
                 A_INFO_SOURCE,
                 line_number,
                 "P.damage",
@@ -3602,21 +3934,22 @@ fn artifact_json(
         });
     }
     if shape.launcher {
-        let paired = launcher_ammo_for(
+        let paired = launcher_ammunition_type(
             &LegacyItemEntry {
                 sval: entry.sval,
                 ..LegacyItemEntry::default()
             },
             ammo,
         );
-        if let Some(ammo_kind_id) = paired {
+        if let Some(ammunition_type) = paired
+            && let Some(multiplier_percent) = entry.launcher_multiplier_percent
+        {
             value["projectileProfile"] = serde_json::json!({
-                "range": 12,
+                "range": launcher_range(multiplier_percent),
+                "damageMultiplierPercent": multiplier_percent,
                 "toHit": entry.to_hit.clamp(-1_000_000, 1_000_000),
                 "toDamage": entry.to_damage.clamp(-1_000_000, 1_000_000),
-                "damageDice": 2,
-                "damageSides": 5,
-                "ammoKindId": ammo_kind_id,
+                "ammunitionType": ammunition_type,
             });
         } else {
             // Fake bows (guns, harps): the slot and fixed bonuses stay, only
@@ -5981,6 +6314,12 @@ fn terrain_json(
     if entry.flags.iter().any(|flag| flag == "TRAP") {
         tags.push("trap");
     }
+    if entry.flags.iter().any(|flag| flag == "PERMANENT") {
+        tags.push("permanent");
+    }
+    if entry.flags.iter().any(|flag| flag == "GLYPH") {
+        tags.push("warding-glyph");
+    }
     if entry.flags.iter().any(|flag| flag == "WATER") {
         tags.push("water");
     }
@@ -8012,8 +8351,12 @@ fn convert_content_from(
             terrain_creation.source_terrain_ids.push(terrain_id.clone());
         }
         match entry.tag.as_str() {
+            "FLOOR" => terrain_creation.floor_terrain_id = Some(terrain_id.clone()),
+            "GLYPH" => terrain_creation.glyph_terrain_id = Some(terrain_id.clone()),
             "TREE" => terrain_creation.tree_terrain_id = Some(terrain_id.clone()),
             "GRANITE" => terrain_creation.wall_terrain_id = Some(terrain_id.clone()),
+            "QUARTZ" => terrain_creation.quartz_terrain_id = Some(terrain_id.clone()),
+            "MAGMA" => terrain_creation.magma_terrain_id = Some(terrain_id.clone()),
             _ => {}
         }
         terrain_ids_by_tag
@@ -8037,6 +8380,32 @@ fn convert_content_from(
         terrain_files.push((format!("{id}.json"), terrain_json(entry, &id, destroy_to)));
     }
     terrain_creation.source_terrain_ids.sort();
+    if let Some(floor_terrain_id) = &terrain_creation.floor_terrain_id {
+        terrain_creation.created_trap_terrain_id =
+            Some("rfb-legacy.terrain.created-trap".to_owned());
+        terrain_files.push((
+            "created-trap.json".to_owned(),
+            serde_json::json!({
+                "$schema": format!("{SCHEMA_BASE}/terrain.schema.json"),
+                "formatVersion": 1,
+                "id": "rfb-legacy.terrain.created-trap",
+                "nameKey": "terrain-legacy-created-trap-name",
+                "descriptionKey": "terrain-legacy-created-trap-description",
+                "glyph": "^",
+                "walkable": true,
+                "blocksSight": false,
+                "concealedAsTerrainId": floor_terrain_id,
+                "searchCheckDifficulty": 10,
+                "trap": {
+                    "damage": 4,
+                    "damageType": "physical",
+                    "disarmToTerrainId": floor_terrain_id,
+                    "disarmCheckDifficulty": 10
+                },
+                "tags": ["legacy-import", "trap"]
+            }),
+        ));
+    }
 
     let mut actor_files = Vec::new();
     let mut seen_actor_ids = BTreeMap::new();
@@ -10225,6 +10594,16 @@ fn build_demo_item_coverage_report(
                 adaptation.item_id
             )));
         }
+        if adaptation
+            .adaptation
+            .as_deref()
+            .is_some_and(|note| note.trim().is_empty())
+        {
+            return Err(LegacyImportError::InvalidDemoItemAudit(format!(
+                "adaptation {} has an empty adaptation note",
+                adaptation.item_id
+            )));
+        }
         if let Some(previous) =
             adaptation_statuses.insert(adaptation.source_index, adaptation.status)
             && previous != adaptation.status
@@ -10410,6 +10789,7 @@ pub fn sync_demo_items(
         &source_commit,
         K_INFO_SOURCE,
     )?)?;
+    let ammo = launcher_ammo_index(&entries);
     let by_index = entries
         .iter()
         .filter(|entry| {
@@ -10442,7 +10822,7 @@ pub fn sync_demo_items(
         }
         files.push((
             format!("{}.json", selected_entry.id),
-            demo_item_json(entry, &selected_entry.id)?,
+            demo_item_json(entry, &selected_entry.id, &ammo)?,
         ));
     }
     fs::create_dir_all(output)?;
@@ -11579,12 +11959,17 @@ W:5:0:0:150:80
 
         let bow = get("test-short-bow.json");
         assert_eq!(bow["equipmentSlot"], "launcher");
-        assert!(bow.get("projectileProfile").is_some());
+        assert_eq!(bow["projectileProfile"]["damageMultiplierPercent"], 200);
+        assert_eq!(bow["projectileProfile"]["range"], 15);
+        assert_eq!(bow["projectileProfile"]["ammunitionType"], "arrow");
 
         let arrow = get("test-arrow.json");
         assert!(arrow.get("equipmentSlot").is_none());
         assert_eq!(arrow["maxStack"], 99);
-        assert_eq!(arrow["breakChancePercent"], 25);
+        assert_eq!(arrow["breakChancePercent"], 20);
+        assert_eq!(arrow["ammunitionProfile"]["damageDice"], 1);
+        assert_eq!(arrow["ammunitionProfile"]["damageSides"], 4);
+        assert_eq!(arrow["ammunitionProfile"]["ammunitionType"], "arrow");
 
         // Inherent defensive flags fold onto the base item (dragon scale
         // style); durability flags are not applicable to RFB items.
@@ -11678,14 +12063,18 @@ W:5:0:0:150:80
             ..LegacyItemEntry::default()
         };
 
-        let armor = demo_item_json(&armor, "hard-leather-armour")
+        let armor = demo_item_json(&armor, "hard-leather-armour", &LauncherAmmoIndex::default())
             .expect("armor hit modifier should be behavior-complete");
         assert_eq!(armor["equipmentBonuses"]["meleeSkill"], -1);
         assert!(armor["equipmentBonuses"].get("meleeDamage").is_none());
         assert!(armor.get("meleeProfile").is_none());
 
-        let gloves = demo_item_json(&gloves, "studded-leather-gloves")
-            .expect("glove damage modifier should be behavior-complete");
+        let gloves = demo_item_json(
+            &gloves,
+            "studded-leather-gloves",
+            &LauncherAmmoIndex::default(),
+        )
+        .expect("glove damage modifier should be behavior-complete");
         assert_eq!(gloves["equipmentBonuses"]["meleeDamage"], 1);
         assert!(gloves["equipmentBonuses"].get("meleeSkill").is_none());
         assert!(gloves.get("meleeProfile").is_none());
@@ -11760,6 +12149,7 @@ W:5:0:0:150:80
                     item_id: format!("demo.item.{id}"),
                     status: DemoItemCoverageStatus::Active,
                     blocker: None,
+                    adaptation: None,
                     contract: "contract-test".to_owned(),
                 })
                 .collect(),
@@ -12648,6 +13038,189 @@ F:BRAND_VAMP | HOLD_LIFE
     }
 
     #[test]
+    fn p3_2_low_coupling_potions_map_authoritative_effects() {
+        let effect = |sval| {
+            fixed_consumable_use_action(&LegacyItemEntry {
+                tval: 75,
+                sval,
+                ..LegacyItemEntry::default()
+            })
+            .expect("P3.2 potion should map")["effect"]
+                .clone()
+        };
+
+        for sval in 0..=2 {
+            assert_eq!(effect(sval)["type"], "no-numeric-effect");
+        }
+        assert_eq!(effect(13)["divisor"], 4);
+        assert_eq!(effect(15)["effects"].as_array().map(Vec::len), Some(7));
+        assert_eq!(effect(26)["effects"][0]["statusKindId"], "rfb.status.sight");
+        assert_eq!(effect(27)["effects"][0]["minimumReduction"], 4000);
+        assert_eq!(
+            effect(27)["effects"][1]["grantedResistances"]["poison"],
+            "resistant"
+        );
+        assert_eq!(effect(61)["effects"].as_array().map(Vec::len), Some(7));
+        assert_eq!(effect(62)["incomingDamagePercent"], 0);
+        assert_eq!(effect(68)["type"], "apply-giant-strength");
+        assert_eq!(effect(71)["effects"][0]["dice"], 10);
+        assert_eq!(effect(71)["effects"][0]["bonus"], 15);
+
+        assert!(
+            fixed_consumable_use_action(&LegacyItemEntry {
+                tval: 75,
+                sval: 3,
+                ..LegacyItemEntry::default()
+            })
+            .is_none(),
+            "salt water remains blocked"
+        );
+    }
+
+    #[test]
+    fn p3_3_knowledge_detection_and_protection_map_authoritative_effects() {
+        let effect = |tval, sval| {
+            fixed_consumable_use_action(&LegacyItemEntry {
+                tval,
+                sval,
+                ..LegacyItemEntry::default()
+            })
+            .expect("P3.3 consumable should map")["effect"]
+                .clone()
+        };
+
+        assert_eq!(effect(70, 26)["subject"], "gold");
+        assert_eq!(effect(70, 60)["effects"][0]["type"], "identify-inventory");
+        assert_eq!(
+            effect(70, 60)["effects"][1]["statusKindId"],
+            "rfb.status.understanding"
+        );
+        assert_eq!(
+            effect(70, 63)["statusKindId"],
+            "rfb.status.inventory-protection"
+        );
+        assert_eq!(effect(75, 56)["effects"][0]["radius"], 255);
+        assert_eq!(effect(75, 57)["effects"].as_array().map(Vec::len), Some(9));
+        assert_eq!(effect(75, 57)["effects"][5]["radius"], 255);
+        assert_eq!(effect(75, 57)["effects"][6]["radius"], 255);
+        assert_eq!(effect(75, 57)["effects"][8]["type"], "self-knowledge");
+        assert_eq!(effect(75, 58)["type"], "self-knowledge");
+    }
+
+    #[test]
+    fn p3_4_floor_and_area_scrolls_map_authoritative_effects() {
+        let terrain = TerrainCreationImportIds {
+            source_terrain_ids: vec!["rfb-legacy.terrain.floor".to_owned()],
+            floor_terrain_id: Some("rfb-legacy.terrain.floor".to_owned()),
+            created_trap_terrain_id: Some("rfb-legacy.terrain.created-trap".to_owned()),
+            glyph_terrain_id: Some("rfb-legacy.terrain.glyph".to_owned()),
+            wall_terrain_id: Some("rfb-legacy.terrain.granite".to_owned()),
+            quartz_terrain_id: Some("rfb-legacy.terrain.quartz".to_owned()),
+            magma_terrain_id: Some("rfb-legacy.terrain.magma".to_owned()),
+            ..TerrainCreationImportIds::default()
+        };
+        let effect = |sval| {
+            fixed_consumable_use_action_with_terrain(
+                &LegacyItemEntry {
+                    tval: 70,
+                    sval,
+                    ..LegacyItemEntry::default()
+                },
+                Some(&terrain),
+            )
+            .expect("P3.4 scroll should map")["effect"]
+                .clone()
+        };
+
+        assert_eq!(effect(0)["effects"][0]["type"], "apply-blindness");
+        assert_eq!(effect(0)["effects"][1]["connectedGlow"], true);
+        assert_eq!(
+            effect(7)["targetTerrainId"],
+            "rfb-legacy.terrain.created-trap"
+        );
+        assert_eq!(effect(24)["type"], "set-floor-glow");
+        assert_eq!(effect(38)["targetTerrainId"], "rfb-legacy.terrain.glyph");
+        assert_eq!(effect(41)["minimumRadius"], 13);
+        assert_eq!(effect(41)["maximumRadius"], 17);
+        assert_eq!(effect(41)["quartzTerrainId"], "rfb-legacy.terrain.quartz");
+    }
+
+    #[test]
+    fn p3_5_generation_and_mutation_scrolls_map_authoritative_effects() {
+        let effect = |sval| {
+            fixed_consumable_use_action(&LegacyItemEntry {
+                tval: 70,
+                sval,
+                ..LegacyItemEntry::default()
+            })
+            .expect("P3.5 scroll should map")["effect"]
+                .clone()
+        };
+
+        assert_eq!(effect(23)["type"], "mundanify-item");
+        assert_eq!(effect(46)["minimumCount"], 1);
+        assert_eq!(effect(46)["maximumCount"], 1);
+        assert_eq!(effect(47)["minimumCount"], 2);
+        assert_eq!(effect(47)["maximumCount"], 3);
+        assert_eq!(effect(51)["type"], "show-rumour");
+        assert_eq!(effect(55)["type"], "craft-item");
+
+        let mut report = ContentImportReport::default();
+        let _ = item_json(
+            &LegacyItemEntry {
+                tval: 70,
+                sval: 52,
+                ..LegacyItemEntry::default()
+            },
+            "artifact-creation-scroll",
+            &LauncherAmmoIndex::default(),
+            None,
+            &mut report,
+        );
+        assert_eq!(report.item_behavior_gaps["random-artifact-identity"], 1);
+        assert!(!report.item_behavior_gaps.contains_key("scroll-effect"));
+    }
+
+    #[test]
+    fn p3_7_growth_and_tsuyoshi_potions_map_without_fake_mutations() {
+        let effect = |sval| {
+            fixed_consumable_use_action(&LegacyItemEntry {
+                tval: 75,
+                sval,
+                ..LegacyItemEntry::default()
+            })
+            .expect("supported P3.7 potion should map")["effect"]
+                .clone()
+        };
+
+        assert_eq!(effect(59)["type"], "gain-relative-experience");
+        assert_eq!(effect(59)["maximumGain"], 100_000);
+        assert_eq!(effect(64)["effects"][0]["type"], "remove-status");
+        assert_eq!(effect(64)["effects"][1]["type"], "apply-tsuyoshi");
+        assert_eq!(effect(65)["effects"][0]["type"], "trigger-tsuyoshi-crash");
+        assert_eq!(
+            effect(65)["effects"][1]["statusKindId"],
+            "rfb.status.hallucination"
+        );
+
+        for sval in [63, 66] {
+            let mut report = ContentImportReport::default();
+            let _ = item_json(
+                &LegacyItemEntry {
+                    tval: 75,
+                    sval,
+                    ..LegacyItemEntry::default()
+                },
+                &format!("blocked-p3-7-{sval}"),
+                &LauncherAmmoIndex::default(),
+                None,
+                &mut report,
+            );
+            assert_eq!(report.item_behavior_gaps["consumable-effect"], 1);
+        }
+    }
+
+    #[test]
     fn food_nutrition_gap_is_independent_from_active_effect_gap() {
         let cases = [
             (80, 99, Some(1), Some(1)),
@@ -12755,6 +13328,7 @@ F:BRAND_VAMP | HOLD_LIFE
         let _ = item_json(
             &LegacyItemEntry {
                 tval: 70,
+                sval: 19,
                 ..LegacyItemEntry::default()
             },
             "scroll-shell",
@@ -13400,7 +13974,7 @@ F:BRAND_VAMP | HOLD_LIFE
         );
         for (sval, subject, category, persistent) in [
             (25, "terrain", "map", true),
-            (26, "item", "gold", false),
+            (26, "gold", "gold", false),
             (27, "item", "item", false),
             (28, "terrain", "trap", true),
             (29, "terrain", "passage", true),
@@ -13579,6 +14153,7 @@ F:BRAND_VAMP | HOLD_LIFE
             ],
             tree_terrain_id: Some("rfb-legacy.terrain.tree".to_owned()),
             wall_terrain_id: Some("rfb-legacy.terrain.granite".to_owned()),
+            ..TerrainCreationImportIds::default()
         };
         for (sval, target_terrain_id) in [
             (48, "rfb-legacy.terrain.tree"),
@@ -13669,7 +14244,7 @@ F:BRAND_VAMP | HOLD_LIFE
         let _ = item_json(
             &LegacyItemEntry {
                 tval: 70,
-                sval: 0,
+                sval: 19,
                 ..LegacyItemEntry::default()
             },
             "unsupported-scroll",

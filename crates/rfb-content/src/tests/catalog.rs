@@ -6,7 +6,7 @@ fn compiled_catalog_exposes_stable_runtime_indexes() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.200.0");
+    assert_eq!(catalog.pack_version(), "1.206.0");
     assert!(
         catalog
             .ability("demo.ability.warrens-scare")
@@ -592,11 +592,12 @@ fn compiled_catalog_exposes_stable_runtime_indexes() {
             .and_then(|item| item.projectile_profile.as_ref())
             .map(|profile| (
                 profile.range,
+                profile.damage_multiplier_percent,
                 profile.to_hit,
                 profile.to_damage,
-                profile.ammo_kind_id.as_str(),
+                profile.ammunition_type,
             )),
-        Some((6, 30, 1, "demo.item.resonance-pellet"))
+        Some((6, 100, 30, 1, AmmunitionTypeDefinition::Shot))
     );
     assert_eq!(catalog.content_hash(), artifact.content_hash);
     assert_eq!(

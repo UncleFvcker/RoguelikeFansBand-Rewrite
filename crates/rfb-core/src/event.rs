@@ -34,6 +34,24 @@ pub(crate) struct ProjectileTrace {
     pub(crate) traversed: Vec<Position>,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct SelfKnowledgeReport {
+    pub(crate) level: u16,
+    pub(crate) hp: i32,
+    pub(crate) max_hp: i32,
+    pub(crate) gold: u32,
+    pub(crate) nutrition: u16,
+    pub(crate) attack: i32,
+    pub(crate) defense: i32,
+    pub(crate) melee_skill: i32,
+    pub(crate) armor_class: i32,
+    pub(crate) speed: u16,
+    pub(crate) attributes: [String; 6],
+    pub(crate) statuses: String,
+    pub(crate) resistances: String,
+    pub(crate) resources: String,
+}
+
 impl From<ProjectileTrace> for ProjectileTraceDto {
     fn from(trace: ProjectileTrace) -> Self {
         Self {
@@ -558,6 +576,12 @@ pub(crate) enum DomainEvent {
         nutrition: u16,
         noticed: bool,
     },
+    ItemExperienceLost {
+        source_kind_id: String,
+        display_name_key: String,
+        amount: u64,
+        remaining: u64,
+    },
     ItemStatusResolved {
         source_kind_id: String,
         display_name_key: String,
@@ -570,6 +594,13 @@ pub(crate) enum DomainEvent {
         display_name_key: String,
         status_kind_id: String,
         removed: bool,
+    },
+    ItemStatusReduced {
+        source_kind_id: String,
+        display_name_key: String,
+        status_kind_id: String,
+        before: u32,
+        after: u32,
     },
     ItemBlessed {
         source_kind_id: String,
@@ -738,6 +769,26 @@ pub(crate) enum DomainEvent {
         display_name_key: String,
         affected_positions: Vec<Position>,
     },
+    ItemCreatedCurrentTerrain {
+        source_kind_id: String,
+        display_name_key: String,
+        affected_position: Option<Position>,
+    },
+    ItemFloorGlowChanged {
+        source_kind_id: String,
+        display_name_key: String,
+        glow: bool,
+        affected_positions: Vec<Position>,
+    },
+    ItemAreaDestruction {
+        source_kind_id: String,
+        display_name_key: String,
+        protected_floor: bool,
+        affected_positions: Vec<Position>,
+        removed_entities: usize,
+        removed_items: usize,
+        removed_gold_piles: usize,
+    },
     ItemDestroyedAdjacentTrapsAndDoors {
         source_kind_id: String,
         display_name_key: String,
@@ -752,6 +803,46 @@ pub(crate) enum DomainEvent {
         source_kind_id: String,
         display_name_key: String,
         resolution: ItemIdentifyResolutionDto,
+    },
+    ItemInventoryIdentified {
+        source_kind_id: String,
+        display_name_key: String,
+        count: usize,
+    },
+    ItemAutoIdentified {
+        count: usize,
+    },
+    ItemSelfKnowledge {
+        source_kind_id: String,
+        display_name_key: String,
+        report: SelfKnowledgeReport,
+    },
+    ItemAcquirement {
+        source_kind_id: String,
+        display_name_key: String,
+        generated_item_ids: Vec<String>,
+        generated_kind_ids: Vec<String>,
+        position: Position,
+    },
+    ItemMundanified {
+        source_kind_id: String,
+        display_name_key: String,
+        target_item_id: String,
+        target_kind_id: String,
+        split: bool,
+    },
+    ItemCrafted {
+        source_kind_id: String,
+        display_name_key: String,
+        target_item_id: String,
+        target_kind_id: String,
+        affix_id: String,
+        split: bool,
+    },
+    ItemRumour {
+        source_kind_id: String,
+        display_name_key: String,
+        message_key: String,
     },
     ItemEnchanted {
         source_kind_id: String,
@@ -940,6 +1031,13 @@ pub(crate) enum DomainEvent {
         source_kind_id: String,
         terrain_kind_id: String,
         replacement_terrain_kind_id: String,
+        position: Position,
+    },
+    WardingGlyphHeld {
+        source_kind_id: String,
+    },
+    WardingGlyphBroken {
+        source_kind_id: String,
         position: Position,
     },
     MonsterItemDestroyed {
@@ -2367,6 +2465,21 @@ impl DomainEvent {
                     ("nutrition", nutrition.to_string()),
                 ],
             ),
+            Self::ItemExperienceLost {
+                source_kind_id,
+                display_name_key,
+                amount,
+                remaining,
+            } => dto(
+                "item.experience-lost",
+                "item-experience-lost",
+                [
+                    ("source", source_kind_id),
+                    ("nameKey", display_name_key),
+                    ("amount", amount.to_string()),
+                    ("remaining", remaining.to_string()),
+                ],
+            ),
             Self::ItemStatusResolved {
                 source_kind_id,
                 display_name_key,
@@ -2415,6 +2528,31 @@ impl DomainEvent {
                     ("target", source_kind_id),
                     ("nameKey", display_name_key),
                     ("status", status_kind_id),
+                ],
+            ),
+            Self::ItemStatusReduced {
+                source_kind_id,
+                display_name_key,
+                status_kind_id,
+                before,
+                after,
+            } => dto(
+                if after < before {
+                    "item.use-status-reduced"
+                } else {
+                    "item.use-status-no-effect"
+                },
+                if after < before {
+                    "item-use-status-reduced"
+                } else {
+                    "item-use-status-no-effect"
+                },
+                [
+                    ("target", source_kind_id),
+                    ("nameKey", display_name_key),
+                    ("status", status_kind_id),
+                    ("before", before.to_string()),
+                    ("after", after.to_string()),
                 ],
             ),
             Self::ItemBlessed {
@@ -3007,6 +3145,77 @@ impl DomainEvent {
                     ("count", affected_positions.len().to_string()),
                 ],
             ),
+            Self::ItemCreatedCurrentTerrain {
+                source_kind_id,
+                display_name_key,
+                affected_position,
+            } => dto(
+                if affected_position.is_some() {
+                    "item.use-create-current-terrain"
+                } else {
+                    "item.use-create-current-terrain-no-effect"
+                },
+                if affected_position.is_some() {
+                    "item-use-create-current-terrain"
+                } else {
+                    "item-use-create-current-terrain-no-effect"
+                },
+                [("source", source_kind_id), ("nameKey", display_name_key)],
+            ),
+            Self::ItemFloorGlowChanged {
+                source_kind_id,
+                display_name_key,
+                glow,
+                affected_positions,
+            } => dto(
+                if affected_positions.is_empty() {
+                    "item.use-floor-glow-no-effect"
+                } else if glow {
+                    "item.use-floor-light"
+                } else {
+                    "item.use-floor-darkness"
+                },
+                if affected_positions.is_empty() {
+                    "item-use-floor-glow-no-effect"
+                } else if glow {
+                    "item-use-floor-light"
+                } else {
+                    "item-use-floor-darkness"
+                },
+                [
+                    ("source", source_kind_id),
+                    ("nameKey", display_name_key),
+                    ("count", affected_positions.len().to_string()),
+                ],
+            ),
+            Self::ItemAreaDestruction {
+                source_kind_id,
+                display_name_key,
+                protected_floor,
+                affected_positions,
+                removed_entities,
+                removed_items,
+                removed_gold_piles,
+            } => dto(
+                if protected_floor {
+                    "item.use-area-destruction-protected"
+                } else {
+                    "item.use-area-destruction"
+                },
+                if protected_floor {
+                    "item-use-area-destruction-protected"
+                } else {
+                    "item-use-area-destruction"
+                },
+                [
+                    ("source", source_kind_id),
+                    ("nameKey", display_name_key),
+                    ("count", affected_positions.len().to_string()),
+                    ("entities", removed_entities.to_string()),
+                    ("items", removed_items.to_string()),
+                    ("gold", removed_gold_piles.to_string()),
+                ],
+            ),
             Self::ItemDestroyedAdjacentTrapsAndDoors {
                 source_kind_id,
                 display_name_key,
@@ -3073,6 +3282,123 @@ impl DomainEvent {
                     ("changed", resolution.changed.to_string()),
                 ],
                 GameEventOutcomeDto::ItemIdentify { resolution },
+            ),
+            Self::ItemInventoryIdentified {
+                source_kind_id,
+                display_name_key,
+                count,
+            } => dto(
+                "item.use-inventory-identified",
+                "item-use-inventory-identified",
+                [
+                    ("source", source_kind_id),
+                    ("nameKey", display_name_key),
+                    ("count", count.to_string()),
+                ],
+            ),
+            Self::ItemAutoIdentified { count } => dto(
+                "item.auto-identified",
+                "item-auto-identified",
+                [("count", count.to_string())],
+            ),
+            Self::ItemSelfKnowledge {
+                source_kind_id,
+                display_name_key,
+                report,
+            } => dto(
+                "item.use-self-knowledge",
+                "item-use-self-knowledge",
+                [
+                    ("source", source_kind_id),
+                    ("nameKey", display_name_key),
+                    ("level", report.level.to_string()),
+                    ("hp", report.hp.to_string()),
+                    ("maxHp", report.max_hp.to_string()),
+                    ("gold", report.gold.to_string()),
+                    ("nutrition", report.nutrition.to_string()),
+                    ("attack", report.attack.to_string()),
+                    ("defense", report.defense.to_string()),
+                    ("meleeSkill", report.melee_skill.to_string()),
+                    ("armorClass", report.armor_class.to_string()),
+                    ("speed", report.speed.to_string()),
+                    ("strength", report.attributes[0].clone()),
+                    ("intelligence", report.attributes[1].clone()),
+                    ("wisdom", report.attributes[2].clone()),
+                    ("dexterity", report.attributes[3].clone()),
+                    ("constitution", report.attributes[4].clone()),
+                    ("charisma", report.attributes[5].clone()),
+                    ("statuses", report.statuses),
+                    ("resistances", report.resistances),
+                    ("resources", report.resources),
+                ],
+            ),
+            Self::ItemAcquirement {
+                source_kind_id,
+                display_name_key,
+                generated_item_ids,
+                generated_kind_ids,
+                position,
+            } => dto(
+                "item.use-acquirement",
+                "item-use-acquirement",
+                [
+                    ("source", source_kind_id),
+                    ("nameKey", display_name_key),
+                    ("count", generated_item_ids.len().to_string()),
+                    ("itemIds", generated_item_ids.join(",")),
+                    ("items", generated_kind_ids.join(",")),
+                    ("x", position.x.to_string()),
+                    ("y", position.y.to_string()),
+                ],
+            ),
+            Self::ItemMundanified {
+                source_kind_id,
+                display_name_key,
+                target_item_id,
+                target_kind_id,
+                split,
+            } => dto(
+                "item.use-mundanity",
+                "item-use-mundanity",
+                [
+                    ("source", source_kind_id),
+                    ("nameKey", display_name_key),
+                    ("targetId", target_item_id),
+                    ("target", target_kind_id),
+                    ("split", split.to_string()),
+                ],
+            ),
+            Self::ItemCrafted {
+                source_kind_id,
+                display_name_key,
+                target_item_id,
+                target_kind_id,
+                affix_id,
+                split,
+            } => dto(
+                "item.use-crafting",
+                "item-use-crafting",
+                [
+                    ("source", source_kind_id),
+                    ("nameKey", display_name_key),
+                    ("targetId", target_item_id),
+                    ("target", target_kind_id),
+                    ("affix", affix_id),
+                    ("split", split.to_string()),
+                ],
+            ),
+            Self::ItemRumour {
+                source_kind_id,
+                display_name_key,
+                message_key,
+            } => dto(
+                "item.use-rumour",
+                "item-use-rumour",
+                [
+                    ("source", source_kind_id),
+                    ("nameKey", display_name_key),
+                    ("rumourKey", message_key),
+                ],
             ),
             Self::ItemEnchanted {
                 source_kind_id,
@@ -3616,6 +3942,23 @@ impl DomainEvent {
                     ("source", source_kind_id),
                     ("terrain", terrain_kind_id),
                     ("replacement", replacement_terrain_kind_id),
+                    ("x", position.x.to_string()),
+                    ("y", position.y.to_string()),
+                ],
+            ),
+            Self::WardingGlyphHeld { source_kind_id } => dto(
+                "monster.warding-glyph-held",
+                "monster-warding-glyph-held",
+                [("source", source_kind_id)],
+            ),
+            Self::WardingGlyphBroken {
+                source_kind_id,
+                position,
+            } => dto(
+                "monster.warding-glyph-broken",
+                "monster-warding-glyph-broken",
+                [
+                    ("source", source_kind_id),
                     ("x", position.x.to_string()),
                     ("y", position.y.to_string()),
                 ],

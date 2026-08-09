@@ -2,6 +2,19 @@
 
 use super::*;
 
+fn projectile_raw_damage(
+    rolled_ammunition_damage: i32,
+    ammunition_to_damage: i32,
+    damage_multiplier_percent: u16,
+    launcher_to_damage: i32,
+) -> i32 {
+    rolled_ammunition_damage
+        .saturating_add(ammunition_to_damage)
+        .saturating_mul(i32::from(damage_multiplier_percent))
+        / 100
+        + launcher_to_damage
+}
+
 impl Game {
     pub(super) fn gain_player_melee_resources(
         &mut self,
@@ -61,7 +74,13 @@ impl Game {
             events.push(DomainEvent::ProjectileTargetUnavailable);
             return Ok(());
         };
-        let Some(ammunition) = self.take_inventory_item_kind(&profile.ammo_kind_id)? else {
+        let Some(ammo_item_id) = &profile.ammo_item_id else {
+            events.push(DomainEvent::ProjectileAmmoUnavailable {
+                ammo_kind_id: profile.ammo_kind_id,
+            });
+            return Ok(());
+        };
+        let Some(ammunition) = self.take_inventory_item(ammo_item_id)? else {
             events.push(DomainEvent::ProjectileAmmoUnavailable {
                 ammo_kind_id: profile.ammo_kind_id,
             });
@@ -80,7 +99,7 @@ impl Game {
             let ranged_skill = attacker.ranged_skill.with_modifier(
                 StatLayer::Equipment,
                 profile.ammo_kind_id.clone(),
-                i32::from(profile.ammunition_to_hit),
+                profile.ammunition_to_hit,
                 StatBounds::NON_NEGATIVE,
             );
             let target = self.actor_derived_stats(&self.entities[index], &definition, false);
@@ -102,10 +121,13 @@ impl Game {
                     trace: trace.clone(),
                 });
             } else {
-                let raw_damage = self
-                    .roll_damage(profile.damage_dice, profile.damage_sides)
-                    .saturating_add(profile.to_damage)
-                    .max(0);
+                let raw_damage = projectile_raw_damage(
+                    self.roll_damage(profile.damage_dice, profile.damage_sides),
+                    profile.ammunition_to_damage,
+                    profile.damage_multiplier_percent,
+                    profile.launcher_to_damage,
+                )
+                .max(0);
                 let resistance = self.entities[index].resistances.level(profile.damage_type);
                 let damage = resolve_armored_damage(
                     raw_damage,
@@ -812,5 +834,16 @@ impl Game {
             }
         }
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::projectile_raw_damage;
+
+    #[test]
+    fn ammunition_damage_and_bonus_are_scaled_before_launcher_bonus() {
+        assert_eq!(projectile_raw_damage(7, 2, 250, 3), 25);
+        assert_eq!(projectile_raw_damage(7, 2, 350, 3), 34);
     }
 }

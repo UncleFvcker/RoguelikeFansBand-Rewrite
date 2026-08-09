@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "ammunitionProfile": {
+    "ammunitionType": "arrow",
+    "damageDice": 6,
+    "damageSides": 4,
+    "toDamage": 0,
+    "toHit": 0
+  },
+  "baseValue": 20,
+  "breakChancePercent": 20,
+  "descriptionKey": "item-demo-seeker-arrow-description",
+  "formatVersion": 1,
+  "glyph": "{",
+  "id": "demo.item.seeker-arrow",
+  "maxStack": 99,
+  "nameKey": "item-demo-seeker-arrow-name",
+  "tags": [
+    "ammunition",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 2
+}

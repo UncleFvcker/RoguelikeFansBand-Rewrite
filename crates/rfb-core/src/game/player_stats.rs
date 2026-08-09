@@ -46,10 +46,14 @@ pub(in crate::game) struct ResolvedProjectileProfile {
     pub(in crate::game) range: u16,
     pub(in crate::game) to_hit: i32,
     pub(in crate::game) to_damage: i32,
-    pub(in crate::game) ammunition_to_hit: u16,
+    pub(in crate::game) ammunition_to_hit: i32,
+    pub(in crate::game) ammunition_to_damage: i32,
+    pub(in crate::game) launcher_to_damage: i32,
+    pub(in crate::game) damage_multiplier_percent: u16,
     pub(in crate::game) damage_dice: u16,
     pub(in crate::game) damage_sides: u16,
     pub(in crate::game) damage_type: DamageType,
+    pub(in crate::game) ammo_item_id: Option<String>,
     pub(in crate::game) ammo_kind_id: String,
     pub(in crate::game) ammo_break_chance_percent: u8,
     pub(in crate::game) source_item_id: String,
@@ -463,7 +467,7 @@ impl Game {
     }
 
     pub(super) fn player_see_invisible_sources(&self) -> usize {
-        self.items
+        let equipment_sources = self.items
             .iter()
             .filter(|item| {
                 matches!(&item.location, ItemLocation::Equipped { slot_id } if self.body_slot_type(slot_id) != Some("tool"))
@@ -471,7 +475,33 @@ impl Game {
                         .item_passives(item)
                         .contains(&EquipmentPassive::SeeInvisible)
             })
-            .count()
+            .count();
+        equipment_sources
+            + usize::from(
+                self.player
+                    .statuses
+                    .iter()
+                    .any(|status| status.kind_id == STATUS_SIGHT),
+            )
+    }
+
+    pub(super) fn player_infravision_range(&self) -> i32 {
+        let equipment = self
+            .items
+            .iter()
+            .filter(|item| {
+                matches!(&item.location, ItemLocation::Equipped { slot_id } if self.body_slot_type(slot_id) != Some("tool"))
+            })
+            .fold(0_i32, |total, item| {
+                total.saturating_add(self.item_equipment_bonuses(item).infravision)
+            });
+        self.player
+            .statuses
+            .iter()
+            .fold(equipment, |total, status| {
+                total.saturating_add(status.granted_equipment_bonuses.infravision)
+            })
+            .max(0)
     }
 
     pub(super) fn equipment_modifiers(&self) -> StatModifiersDto {
@@ -538,26 +568,40 @@ impl Game {
         &self,
         item: &ItemInstance,
     ) -> Option<ProjectileProfileDto> {
-        self.content
-            .item(&item.kind_id)
-            .and_then(|definition| definition.projectile_profile.as_ref())
-            .map(|profile| ProjectileProfileDto {
-                range: profile.range,
-                to_hit: profile
-                    .to_hit
-                    .saturating_add(i32::from(item.enchantments.to_hit)),
-                to_damage: profile
+        let profile = self
+            .content
+            .item(&item.kind_id)?
+            .projectile_profile
+            .as_ref()?;
+        let ammunition = self.content.item_definitions().find(|definition| {
+            definition
+                .ammunition_profile
+                .as_ref()
+                .is_some_and(|ammo| ammo.ammunition_type == profile.ammunition_type)
+        })?;
+        let ammo = ammunition.ammunition_profile.as_ref()?;
+        Some(ProjectileProfileDto {
+            range: profile.range,
+            to_hit: profile
+                .to_hit
+                .saturating_add(i32::from(item.enchantments.to_hit))
+                .saturating_add(ammo.to_hit),
+            to_damage: ammo
+                .to_damage
+                .saturating_mul(i32::from(profile.damage_multiplier_percent))
+                / 100
+                + profile
                     .to_damage
                     .saturating_add(i32::from(item.enchantments.to_damage)),
-                damage: DamageDiceDto {
-                    dice: profile.damage_dice,
-                    sides: profile.damage_sides,
-                    damage_type: DamageType::from(profile.damage_type).into(),
-                },
-                ammo_kind_id: profile.ammo_kind_id.clone(),
-                target_spec: projectile_target_spec(profile.range),
-                source_item_id: item.id.clone(),
-            })
+            damage: DamageDiceDto {
+                dice: ammo.damage_dice,
+                sides: ammo.damage_sides,
+                damage_type: DamageType::from(ammo.damage_type).into(),
+            },
+            ammo_kind_id: ammunition.id.clone(),
+            target_spec: projectile_target_spec(profile.range),
+            source_item_id: item.id.clone(),
+        })
     }
 
     pub(super) fn item_weight_tenths_pound(&self, kind_id: &str) -> u16 {
@@ -636,35 +680,60 @@ impl Game {
                 .projectile_profile
                 .as_ref()
                 .and_then(|profile| {
-                    let ammo_definition = self.content.item(&profile.ammo_kind_id)?;
-                    let ammo_break_chance_percent = ammo_definition.break_chance_percent;
-                    let ammunition_enchantments = self
+                    let ammunition = self
                         .items
                         .iter()
                         .filter(|ammunition| {
-                            ammunition.kind_id == profile.ammo_kind_id
-                                && ammunition.location == ItemLocation::Inventory
+                            ammunition.location == ItemLocation::Inventory
                                 && ammunition.quantity > 0
+                                && self
+                                    .content
+                                    .item(&ammunition.kind_id)
+                                    .and_then(|definition| definition.ammunition_profile.as_ref())
+                                    .is_some_and(|ammo| {
+                                        ammo.ammunition_type == profile.ammunition_type
+                                    })
                         })
-                        .min_by(|left, right| left.id.cmp(&right.id))
-                        .map_or_else(ItemEnchantmentsDto::default, |ammunition| {
-                            ammunition.enchantments
-                        });
+                        .min_by(|left, right| left.id.cmp(&right.id));
+                    let ammo_definition = ammunition
+                        .and_then(|item| self.content.item(&item.kind_id))
+                        .or_else(|| {
+                            self.content.item_definitions().find(|definition| {
+                                definition.ammunition_profile.as_ref().is_some_and(|ammo| {
+                                    ammo.ammunition_type == profile.ammunition_type
+                                })
+                            })
+                        })?;
+                    let ammo_profile = ammo_definition.ammunition_profile.as_ref()?;
+                    let ammo_break_chance_percent = ammo_definition.break_chance_percent;
+                    let ammunition_to_hit = ammo_profile.to_hit.saturating_add(i32::from(
+                        ammunition.map_or(0, |item| item.enchantments.to_hit),
+                    ));
+                    let ammunition_to_damage = ammo_profile.to_damage.saturating_add(i32::from(
+                        ammunition.map_or(0, |item| item.enchantments.to_damage),
+                    ));
+                    let launcher_to_damage = profile
+                        .to_damage
+                        .saturating_add(i32::from(item.enchantments.to_damage));
                     Some(ResolvedProjectileProfile {
                         range: profile.range,
                         to_hit: profile
                             .to_hit
                             .saturating_add(i32::from(item.enchantments.to_hit))
-                            .saturating_add(i32::from(ammunition_enchantments.to_hit)),
-                        to_damage: profile
-                            .to_damage
-                            .saturating_add(i32::from(item.enchantments.to_damage))
-                            .saturating_add(i32::from(ammunition_enchantments.to_damage)),
-                        ammunition_to_hit: ammunition_enchantments.to_hit,
-                        damage_dice: profile.damage_dice,
-                        damage_sides: profile.damage_sides,
-                        damage_type: DamageType::from(profile.damage_type),
-                        ammo_kind_id: profile.ammo_kind_id.clone(),
+                            .saturating_add(ammunition_to_hit),
+                        to_damage: ammunition_to_damage
+                            .saturating_mul(i32::from(profile.damage_multiplier_percent))
+                            / 100
+                            + launcher_to_damage,
+                        ammunition_to_hit,
+                        ammunition_to_damage,
+                        launcher_to_damage,
+                        damage_multiplier_percent: profile.damage_multiplier_percent,
+                        damage_dice: ammo_profile.damage_dice,
+                        damage_sides: ammo_profile.damage_sides,
+                        damage_type: DamageType::from(ammo_profile.damage_type),
+                        ammo_item_id: ammunition.map(|item| item.id.clone()),
+                        ammo_kind_id: ammo_definition.id.clone(),
                         ammo_break_chance_percent,
                         source_item_id: item.id.clone(),
                     })

@@ -655,6 +655,10 @@ impl Game {
                 .content
                 .item(&item.kind_id)
                 .ok_or_else(|| CoreError::UnknownItem(item.kind_id.clone()))?;
+            let supports_quality = (definition.max_stack == 1
+                && definition.equipment_slot.is_some()
+                && item.quantity == 1)
+                || definition.tags.iter().any(|tag| tag == "ammunition");
             let affixes_are_valid = item.affix_ids.windows(2).all(|pair| pair[0] < pair[1])
                 && item
                     .affix_ids
@@ -662,12 +666,8 @@ impl Game {
                     .all(|affix_id| self.content.affix(affix_id).is_some())
                 && rolled_affixes_are_valid(item)
                 && (item.affix_ids.is_empty()
-                    || (definition.max_stack == 1
-                        && definition.equipment_slot.is_some()
-                        && item.quantity == 1
-                        && item.quality != ItemQualityDto::Ordinary))
-                && (item.quality == ItemQualityDto::Ordinary
-                    || (definition.max_stack == 1 && item.quantity == 1));
+                    || (supports_quality && item.quality != ItemQualityDto::Ordinary))
+                && (item.quality == ItemQualityDto::Ordinary || supports_quality);
             let common_valid = instance_ids.insert(item.id.clone()) && item.quantity != 0;
             if !affixes_are_valid {
                 return Err(CoreError::InvalidSave(
@@ -744,6 +744,8 @@ impl Game {
                     .content
                     .item(&item.kind_id)
                     .ok_or_else(|| CoreError::UnknownItem(item.kind_id.clone()))?;
+                let supports_quality = (definition.max_stack == 1 && item.quantity == 1)
+                    || definition.tags.iter().any(|tag| tag == "ammunition");
                 let location_is_valid = matches!(
                     &item.location,
                     ItemLocation::Shop { shop_id: location_shop_id }
@@ -755,8 +757,7 @@ impl Game {
                         .iter()
                         .all(|affix_id| self.content.affix(affix_id).is_some())
                     && rolled_affixes_are_valid(item)
-                    && (item.quality == ItemQualityDto::Ordinary
-                        || (definition.max_stack == 1 && item.quantity == 1));
+                    && (item.quality == ItemQualityDto::Ordinary || supports_quality);
                 if !instance_ids.insert(item.id.clone())
                     || item.quantity == 0
                     || item.quantity > definition.max_stack
@@ -773,6 +774,8 @@ impl Game {
                     .content
                     .item(&item.kind_id)
                     .ok_or_else(|| CoreError::UnknownItem(item.kind_id.clone()))?;
+                let supports_quality = (definition.max_stack == 1 && item.quantity == 1)
+                    || definition.tags.iter().any(|tag| tag == "ammunition");
                 let location_is_valid = matches!(
                     &item.location,
                     ItemLocation::Home { facility_id: location_facility_id }
@@ -784,8 +787,7 @@ impl Game {
                         .iter()
                         .all(|affix_id| self.content.affix(affix_id).is_some())
                     && rolled_affixes_are_valid(item)
-                    && (item.quality == ItemQualityDto::Ordinary
-                        || (definition.max_stack == 1 && item.quantity == 1));
+                    && (item.quality == ItemQualityDto::Ordinary || supports_quality);
                 if !instance_ids.insert(item.id.clone())
                     || item.quantity == 0
                     || item.quantity > definition.max_stack
@@ -882,6 +884,10 @@ impl Game {
                     .content
                     .item(&item.kind_id)
                     .ok_or_else(|| CoreError::UnknownItem(item.kind_id.clone()))?;
+                let supports_quality = (definition.max_stack == 1
+                    && definition.equipment_slot.is_some()
+                    && item.quantity == 1)
+                    || definition.tags.iter().any(|tag| tag == "ammunition");
                 let affixes_are_valid = item.affix_ids.windows(2).all(|pair| pair[0] < pair[1])
                     && item
                         .affix_ids
@@ -889,12 +895,8 @@ impl Game {
                         .all(|affix_id| self.content.affix(affix_id).is_some())
                     && rolled_affixes_are_valid(item)
                     && (item.affix_ids.is_empty()
-                        || (definition.max_stack == 1
-                            && definition.equipment_slot.is_some()
-                            && item.quantity == 1
-                            && item.quality != ItemQualityDto::Ordinary))
-                    && (item.quality == ItemQualityDto::Ordinary
-                        || (definition.max_stack == 1 && item.quantity == 1));
+                        || (supports_quality && item.quality != ItemQualityDto::Ordinary))
+                    && (item.quality == ItemQualityDto::Ordinary || supports_quality);
                 let location_is_valid = match &item.location {
                     ItemLocation::Ground(position) => {
                         floor_position_is_walkable(floor, *position, &self.content)
@@ -1324,7 +1326,7 @@ impl Game {
                     .granted_resistances
                     .values()
                     .all(|level| *level != ResistanceLevel::Normal)
-                && (1..=100).contains(&status.incoming_damage_percent)
+                && status.incoming_damage_percent <= 100
                 && status
                     .granted_race_id
                     .as_deref()

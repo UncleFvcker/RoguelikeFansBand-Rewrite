@@ -401,19 +401,53 @@ impl CharacterProgress {
 
     pub fn drain_attribute(&mut self, kind: AttributeKind, rng: &mut RfbRng) -> bool {
         let current = self.attributes.value(kind);
-        if current <= 3 {
+        let next = drain_attribute_value(current, 10, rng);
+        self.set_current_attribute(kind, next)
+    }
+
+    pub fn permanently_drain_attribute(
+        &mut self,
+        kind: AttributeKind,
+        amount: u8,
+        rng: &mut RfbRng,
+    ) -> bool {
+        let current = self.attributes.value(kind);
+        let maximum = self.maximum_attributes.value(kind);
+        let next_current = drain_attribute_value(current, amount, rng);
+        let mut next_maximum = drain_attribute_value(maximum, amount, rng);
+        if current == maximum || next_maximum < next_current {
+            next_maximum = next_current;
+        }
+        if next_current == current && next_maximum == maximum {
             return false;
         }
-        let next = if current <= 18 {
-            current.saturating_sub(1)
-        } else {
-            let loss_base = (((current - 18) / 2).div_ceil(2) + 1).max(1);
-            let roll = rng.bounded(u64::from(loss_base)) + 1;
-            let loss = ((roll + u64::from(loss_base)) * 10 / 100).max(5);
-            let reduced = u16::try_from(u64::from(current).saturating_sub(loss)).unwrap_or(3);
-            if reduced < 18 { 18 } else { reduced }
-        };
-        self.set_current_attribute(kind, next)
+        match kind {
+            AttributeKind::Strength => {
+                self.attributes.strength = next_current;
+                self.maximum_attributes.strength = next_maximum;
+            }
+            AttributeKind::Intelligence => {
+                self.attributes.intelligence = next_current;
+                self.maximum_attributes.intelligence = next_maximum;
+            }
+            AttributeKind::Wisdom => {
+                self.attributes.wisdom = next_current;
+                self.maximum_attributes.wisdom = next_maximum;
+            }
+            AttributeKind::Dexterity => {
+                self.attributes.dexterity = next_current;
+                self.maximum_attributes.dexterity = next_maximum;
+            }
+            AttributeKind::Constitution => {
+                self.attributes.constitution = next_current;
+                self.maximum_attributes.constitution = next_maximum;
+            }
+            AttributeKind::Charisma => {
+                self.attributes.charisma = next_current;
+                self.maximum_attributes.charisma = next_maximum;
+            }
+        }
+        true
     }
 
     pub fn restore_attribute(&mut self, kind: AttributeKind) -> bool {
@@ -538,6 +572,28 @@ impl CharacterProgress {
             })
             && (self.level == Self::level_cap(victorious)
                 || self.experience < experience_required_for_level(self.level + 1))
+    }
+}
+
+fn drain_attribute_value(value: u16, amount: u8, rng: &mut RfbRng) -> u16 {
+    if value <= 3 {
+        return value;
+    }
+    if value <= 18 {
+        return value
+            .saturating_sub(
+                1 + u16::from(amount > 20) + u16::from(amount > 50) + u16::from(amount > 90),
+            )
+            .max(3);
+    }
+    let loss_base = (((value - 18) / 2).div_ceil(2) + 1).max(1);
+    let roll = rng.bounded(u64::from(loss_base)) + 1;
+    let loss = ((roll + u64::from(loss_base)) * u64::from(amount) / 100).max(u64::from(amount / 2));
+    let reduced = u16::try_from(u64::from(value).saturating_sub(loss)).unwrap_or(3);
+    if reduced < 18 {
+        if amount <= 20 { 18 } else { 17 }
+    } else {
+        reduced
     }
 }
 

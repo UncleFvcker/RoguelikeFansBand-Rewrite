@@ -19,12 +19,16 @@ use crate::{
     effect::{
         DamageOutcome, DamagePacket, EffectOutcome, EffectSpec, EffectTarget,
         STATUS_BASIC_RESISTANCE, STATUS_BLEEDING, STATUS_BLINDNESS, STATUS_CONFUSION, STATUS_FEAR,
-        STATUS_HASTE, STATUS_PARALYSIS, STATUS_POISON, STATUS_PROTECTION_FROM_EVIL, STATUS_SLEEP,
-        STATUS_SLOW, STATUS_STUN, STATUS_THERMAL_RESISTANCE, STATUS_VENGEANCE, StatusApplication,
-        StatusChange, StatusInstance, StatusStacking, apply_effect, apply_status, resolve_damage,
+        STATUS_GIANT_STRENGTH, STATUS_HASTE, STATUS_INVENTORY_PROTECTION, STATUS_PARALYSIS,
+        STATUS_POISON, STATUS_PROTECTION_FROM_EVIL, STATUS_SIGHT, STATUS_SLEEP, STATUS_SLOW,
+        STATUS_STUN, STATUS_THERMAL_RESISTANCE, STATUS_TSUYOSHI, STATUS_UNDERSTANDING,
+        STATUS_VENGEANCE, StatusApplication, StatusChange, StatusInstance, StatusStacking,
+        apply_effect, apply_status, resolve_damage,
     },
     error::CoreError,
-    event::{DomainEvent, ItemAttributeChange, ProjectileTrace, project_events},
+    event::{
+        DomainEvent, ItemAttributeChange, ProjectileTrace, SelfKnowledgeReport, project_events,
+    },
     rng::{RNG_ALGORITHM, RfbRng},
     save::{
         GENERATED_ITEM_ID_PREFIX, actor_from_runtime_spawn, actor_from_spawn,
@@ -159,9 +163,9 @@ use player_stats::{
 use progression::{
     LifeForceRestorationRequest, apply_attribute_drain, apply_attribute_restoration,
     apply_experience_restoration, apply_learning_capacity_increase, apply_life_force_restoration,
-    apply_permanent_attribute_increase, build_definitions, character_skill_progress,
-    combine_percentages, initial_character_attributes, initial_resource_pool,
-    profile_resource_maximum, resolve_character_build,
+    apply_permanent_attribute_drain, apply_permanent_attribute_increase, build_definitions,
+    character_skill_progress, combine_percentages, initial_character_attributes,
+    initial_resource_pool, profile_resource_maximum, resolve_character_build,
 };
 use status_effects::{
     ability_status_stacking_dto, apply_ability_status_effect, remove_ability_status_effect,
@@ -414,6 +418,7 @@ enum LootSource {
     MonsterDeath { actor_id: String },
     FloorRoom { room_id: String, spawn_id: String },
     Vault { vault_id: String, spawn_id: String },
+    ItemUse { item_id: String },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -1796,6 +1801,13 @@ impl Game {
             },
         }
 
+        if self.player_has_status_kind(STATUS_UNDERSTANDING) {
+            let count = self.identify_carried_items();
+            if count > 0 {
+                events.push(DomainEvent::ItemAutoIdentified { count });
+            }
+        }
+
         if advances_world && !self.player_is_dead() {
             events.extend(self.resolve_wilderness_terrain_hazard(self.player.position));
         }
@@ -2664,6 +2676,45 @@ impl Game {
         (positions, item_ids)
     }
 
+    fn detect_gold_positions(
+        &self,
+        radius: u8,
+        through_walls: bool,
+    ) -> (Vec<Position>, Vec<String>) {
+        let origin = self.player.position;
+        let mut candidates = self
+            .gold_piles
+            .iter()
+            .filter_map(|pile| {
+                let distance = chebyshev_distance(origin, pile.position);
+                (distance <= u32::from(radius) && (through_walls || self.is_visible(pile.position)))
+                    .then(|| {
+                        (
+                            distance,
+                            pile.position.y,
+                            pile.position.x,
+                            pile.id.clone(),
+                            pile.position,
+                        )
+                    })
+            })
+            .collect::<Vec<_>>();
+        candidates.sort_by(|left, right| {
+            (left.0, left.1, left.2, left.3.as_str()).cmp(&(
+                right.0,
+                right.1,
+                right.2,
+                right.3.as_str(),
+            ))
+        });
+        let positions = candidates.iter().map(|candidate| candidate.4).collect();
+        let pile_ids = candidates
+            .into_iter()
+            .map(|candidate| candidate.3)
+            .collect();
+        (positions, pile_ids)
+    }
+
     fn terrain_transform_positions(
         &self,
         ability: &AbilityDefinition,
@@ -3126,41 +3177,6 @@ impl Game {
             (*layer, *lateral_distance, position.y, position.x)
         });
         cells
-    }
-
-    fn take_inventory_item_kind(
-        &mut self,
-        kind_id: &str,
-    ) -> Result<Option<ItemInstance>, CoreError> {
-        let Some(index) = self
-            .items
-            .iter()
-            .enumerate()
-            .filter(|(_, item)| {
-                item.kind_id == kind_id
-                    && item.location == ItemLocation::Inventory
-                    && item.quantity > 0
-            })
-            .min_by(|(_, left), (_, right)| left.id.cmp(&right.id))
-            .map(|(index, _)| index)
-        else {
-            return Ok(None);
-        };
-        if self.items[index].quantity == 1 {
-            Ok(Some(self.items.remove(index)))
-        } else {
-            let id = self.allocate_item_instance_id()?;
-            let mut split = self.items[index].clone();
-            let knowledge = self.item_property_knowledge.get(&split.id).cloned();
-            self.items[index].quantity -= 1;
-            split.id = id.clone();
-            split.quantity = 1;
-            split.location = ItemLocation::Inventory;
-            if let Some(knowledge) = knowledge {
-                self.item_property_knowledge.insert(id, knowledge);
-            }
-            Ok(Some(split))
-        }
     }
 
     fn settle_projectile_ammunition(
@@ -3856,6 +3872,12 @@ impl Game {
             self.resolve_monster_melee_target(index, &target, events, changed, removed_entities)?;
             return Ok(ActorStepOutcome::Interacted);
         }
+        if let Some(broken) =
+            self.try_monster_break_warding_glyph(index, next_position, events, changed)
+            && !broken
+        {
+            return Ok(ActorStepOutcome::Interacted);
+        }
         if !self.actor_can_enter_position(index, next_position) {
             match self.try_monster_door_interaction(index, next_position, events, changed) {
                 Some(true) => {}
@@ -4301,6 +4323,7 @@ impl Game {
                 LootSource::Vault { vault_id, spawn_id } => {
                     context.depth > 0 && !vault_id.is_empty() && !spawn_id.is_empty()
                 }
+                LootSource::ItemUse { item_id } => !item_id.is_empty(),
             };
         debug_assert!(context_is_valid, "validated loot context must remain valid");
         let table = self
@@ -4548,8 +4571,22 @@ impl Game {
     }
 
     fn entity_is_visible_to_player(&self, entity: &Actor) -> bool {
-        self.is_visible(entity.position)
+        (self.is_visible(entity.position) || self.entity_is_visible_by_infravision(entity))
             && (!self.actor_is_invisible(entity) || entity.visible_invisible)
+    }
+
+    fn entity_is_visible_by_infravision(&self, entity: &Actor) -> bool {
+        if self.player_has_status_kind(STATUS_BLINDNESS) {
+            return false;
+        }
+        let range = self.player_infravision_range();
+        range > 0
+            && squared_distance(self.player.position, entity.position) <= range * range
+            && has_line_of_sight(self, self.player.position, entity.position)
+            && self
+                .content
+                .actor(&entity.kind_id)
+                .is_some_and(|definition| actor_matches_category(definition, "living"))
     }
 
     fn refresh_invisible_visibility(
@@ -4626,7 +4663,7 @@ impl Game {
             || self.ambient_light(position, &sources) > 0
     }
 
-    fn darken_room(&mut self, origin: Position) -> Vec<Position> {
+    fn connected_glow_positions(&self, origin: Position) -> Vec<Position> {
         let Some(origin_index) = self.index(origin) else {
             return Vec::new();
         };
@@ -4634,11 +4671,11 @@ impl Game {
             return Vec::new();
         }
 
-        self.glow[origin_index] = false;
+        let mut visited = BTreeSet::from([origin]);
         let mut queue = VecDeque::from([origin]);
-        let mut darkened = Vec::new();
+        let mut positions = Vec::new();
         while let Some(position) = queue.pop_front() {
-            darkened.push(position);
+            positions.push(position);
             for dy in -1..=1 {
                 for dx in -1..=1 {
                     if dx == 0 && dy == 0 {
@@ -4651,12 +4688,22 @@ impl Game {
                     let Some(index) = self.index(neighbor) else {
                         continue;
                     };
-                    if self.glow[index] {
-                        self.glow[index] = false;
+                    if self.glow[index] && visited.insert(neighbor) {
                         queue.push_back(neighbor);
                     }
                 }
             }
+        }
+        positions
+    }
+
+    fn darken_room(&mut self, origin: Position) -> Vec<Position> {
+        let darkened = self.connected_glow_positions(origin);
+        for position in &darkened {
+            let index = self
+                .index(*position)
+                .expect("connected glow position must remain in bounds");
+            self.glow[index] = false;
         }
         darkened
     }
@@ -5197,6 +5244,7 @@ const fn ability_detect_subject_dto(
         AbilityDetectSubjectDefinition::Terrain => AbilityDetectSubjectDto::Terrain,
         AbilityDetectSubjectDefinition::Actor => AbilityDetectSubjectDto::Actor,
         AbilityDetectSubjectDefinition::Item => AbilityDetectSubjectDto::Item,
+        AbilityDetectSubjectDefinition::Gold => AbilityDetectSubjectDto::Gold,
     }
 }
 

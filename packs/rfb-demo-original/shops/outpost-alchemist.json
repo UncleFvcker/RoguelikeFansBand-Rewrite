@@ -45,6 +45,20 @@
       "maintenanceMaximum": 4
     },
     {
+      "itemKindId": "demo.item.treasure-detection-scroll",
+      "initialMinimum": 1,
+      "initialMaximum": 4,
+      "maintenanceMinimum": 1,
+      "maintenanceMaximum": 4
+    },
+    {
+      "itemKindId": "demo.item.light-scroll",
+      "initialMinimum": 1,
+      "initialMaximum": 4,
+      "maintenanceMinimum": 1,
+      "maintenanceMaximum": 4
+    },
+    {
       "itemKindId": "demo.item.temperate-tonic",
       "initialMinimum": 1,
       "initialMaximum": 2,
@@ -162,6 +176,34 @@
       "initialMaximum": 2,
       "maintenanceMinimum": 1,
       "maintenanceMaximum": 2
+    },
+    {
+      "itemKindId": "demo.item.sight-potion",
+      "initialMinimum": 1,
+      "initialMaximum": 3,
+      "maintenanceMinimum": 1,
+      "maintenanceMaximum": 3
+    },
+    {
+      "itemKindId": "demo.item.antidote-potion",
+      "initialMinimum": 1,
+      "initialMaximum": 3,
+      "maintenanceMinimum": 1,
+      "maintenanceMaximum": 3
+    },
+    {
+      "itemKindId": "demo.item.curing-potion",
+      "initialMinimum": 1,
+      "initialMaximum": 2,
+      "maintenanceMinimum": 1,
+      "maintenanceMaximum": 2
+    },
+    {
+      "itemKindId": "demo.item.rumour-scroll",
+      "initialMinimum": 1,
+      "initialMaximum": 4,
+      "maintenanceMinimum": 1,
+      "maintenanceMaximum": 4
     }
   ],
   "maintenance": {

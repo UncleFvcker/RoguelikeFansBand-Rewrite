@@ -7,12 +7,13 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    AbilityTargetDefinition, ActorDamageType, ActorResistanceLevel, AttackProfileDefinition,
-    ContentError, EquipmentBonuses, EquipmentPassive, ItemChargeDefinition,
-    ItemCurseSeverityDefinition, ItemDefinition, ItemDeviceActivationDefinition,
-    ItemDeviceChargeRangeDefinition, ItemDeviceGenerationDefinition, ItemDeviceRecoveryDefinition,
-    ItemFuelDefinition, ItemUseActionDefinition, ProjectileProfileDefinition, SlayLevel,
-    SlayTarget, StatModifiers, ThrowProfileDefinition, WeaponBrand,
+    AbilityTargetDefinition, ActorDamageType, ActorResistanceLevel, AmmunitionProfileDefinition,
+    AttackProfileDefinition, ContentError, EquipmentBonuses, EquipmentPassive,
+    ItemChargeDefinition, ItemCurseSeverityDefinition, ItemDefinition,
+    ItemDeviceActivationDefinition, ItemDeviceChargeRangeDefinition,
+    ItemDeviceGenerationDefinition, ItemDeviceRecoveryDefinition, ItemFuelDefinition,
+    ItemUseActionDefinition, ProjectileProfileDefinition, SlayLevel, SlayTarget, StatModifiers,
+    ThrowProfileDefinition, WeaponBrand,
     effect_programs::{
         ResolvedEffectProgram, effect_program_input_matches_device_target,
         resolve_source_item_effect,
@@ -52,6 +53,8 @@ pub(crate) struct SourceItemDefinition {
     melee_profile: Option<AttackProfileDefinition>,
     #[serde(default)]
     projectile_profile: Option<ProjectileProfileDefinition>,
+    #[serde(default)]
+    ammunition_profile: Option<AmmunitionProfileDefinition>,
     #[serde(default)]
     throw_profile: Option<ThrowProfileDefinition>,
     #[serde(default)]
@@ -216,6 +219,7 @@ impl SourceItemDefinition {
             equipment_bonuses: self.equipment_bonuses,
             melee_profile: self.melee_profile,
             projectile_profile: self.projectile_profile,
+            ammunition_profile: self.ammunition_profile,
             throw_profile: self.throw_profile,
             use_action,
             device_generation,
