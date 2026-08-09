@@ -414,6 +414,9 @@ pub struct ActorDefinition {
     /// Whether this actor receives twice the shared monster regeneration amount.
     #[serde(default)]
     pub regenerates: bool,
+    /// Whether this actor reflects single-target bolts.
+    #[serde(default)]
+    pub reflects_bolts: bool,
     /// Whether this actor can use its melee routine at RFB's two-grid reach.
     #[serde(default)]
     pub ranged_melee: bool,

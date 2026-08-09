@@ -572,6 +572,8 @@ contract-v212 推进正式内容 P27：门槛潜伏者、黑暗娜迦、兽化�
 
 contract-v213 推进正式内容 P28/P29：纳垢携疫者把原版 `S_ANT` 严格映射为既有分类召唤参数 `summon-ant-l15-1d3-1`；侏儒法师使用新增的窄 `blink-target { radius: 10 }`，把目标随机闪现到其当前位置十格内，而不复用远距放逐。协议升至 1.148、state hash Schema 保持 v70，demo 升至 1.209.0；正式包现有 86 种 terrain、331 种 actor、204 种 item 和 143 个 ability，严格同步 266 条，content hash 为 `b0f60081b2b1971d643f93c619df721c43997661a496a8f4549b6bac8ce16cde`。新增亡灵候选只刷新复活亡灵池对应的 1 条 fixture，其余 469 条保持精确一致。详见 [Contract v213](design/contract-v213-warrens-content-p28-p29-ant-summon-target-blink.md)。
 
+contract-v214 推进正式内容 P30：铁甲虫以 actor 事实 `reflectsBolts` 接入原版 `REFLECTING`。玩家单体 ability bolt 与设备 bolt 命中时有 75% 概率反射，最多十次在施法者周围重选方向并沿既有投射线路结算；beam、ball、cone 与普通箭矢不进入反射分支。协议保持 1.148、state hash Schema 保持 v70，demo 升至 1.210.0；正式包现有 86 种 terrain、332 种 actor、204 种 item 和 143 个 ability，严格同步 267 条，content hash 为 `b6f4741928ed2c1ae56f65d5614b06a25a200cdcb2eb9abe44f96fe1da424e00`。470 条 exact fixtures 全部保持原结果。详见 [Contract v214](design/contract-v214-warrens-content-p30-reflecting-buzzy-beetle.md)。
+
 ### 本地验证
 
 ```powershell

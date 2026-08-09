@@ -1,6 +1,6 @@
 # 待实现内容清单
 
-状态：基于 contract-v1–v213、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
+状态：基于 contract-v1–v214、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
 
 本文件只记录已经在现有设计或原版对比中明确出现、但尚未实现的内容。长期设想仍保留在 [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)，这里用于跟踪可以实际排入后续 contract 的缺口。
 
@@ -118,6 +118,12 @@ contract-v213 接入纳垢携疫者和侏儒法师，正式包 actor 增至 331�
 增至 143、严格同步增至 266。`S_ANT` 复用分类召唤；`BLINK_OTHER` 使用新增的
 怪物专用十格目标闪现，不以远距放逐近似。协议升至 1.148，State Hash Schema
 保持 v70。
+
+contract-v214 接入铁甲虫，正式包 actor 增至 332、ability 保持 143、严格同步
+增至 267。`REFLECTING` 使用 actor 事实和既有投射/伤害路径，只反射单体
+ability/device bolt；协议 1.148 与 State Hash Schema v70 不变。黏土魔像仍等待
+玩家侧碎岩攻击，魔法蘑菇丛仍等待 `ANTI_MAGIC`/`POLYMORPH`，鼠巨魔仍等待
+真实下水道任务的 `COMPOST` 分配。
 
 荒野 W0 已导入 `master:w_info.txt` 的 `99x66` normal 世界图、15 类地形、
 危险等级、道路和起点，并只把现有 Outpost/Warrens 绑定为正式地点。W1 已完成

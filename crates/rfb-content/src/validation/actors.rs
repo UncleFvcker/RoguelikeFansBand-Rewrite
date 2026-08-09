@@ -83,6 +83,7 @@ pub(super) fn validate_actors(
             || (actor.role != ActorRole::Monster
                 && (!actor.movement.modes.is_empty() || actor.movement.never_moves))
             || (actor.role != ActorRole::Monster && !actor.status_immunities.is_empty())
+            || (actor.role != ActorRole::Monster && actor.reflects_bolts)
         {
             return Err(ContentError::InvalidActorStats(actor.id.clone()));
         }

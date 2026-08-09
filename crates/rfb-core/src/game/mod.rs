@@ -24,7 +24,9 @@ use crate::{
         StatusChange, StatusInstance, StatusStacking, apply_effect, apply_status, resolve_damage,
     },
     error::CoreError,
-    event::{DomainEvent, ItemAttributeChange, ProjectileTrace, project_events},
+    event::{
+        BoltReflectionOutcome, DomainEvent, ItemAttributeChange, ProjectileTrace, project_events,
+    },
     rng::{RNG_ALGORITHM, RfbRng},
     save::{
         GENERATED_ITEM_ID_PREFIX, actor_from_runtime_spawn, actor_from_spawn,

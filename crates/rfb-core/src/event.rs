@@ -46,6 +46,16 @@ impl From<ProjectileTrace> for ProjectileTraceDto {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) enum BoltReflectionOutcome {
+    Landed,
+    Hit {
+        target_kind_id: String,
+        damage: DamageOutcome,
+        fatal: bool,
+    },
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum DomainEvent {
     AbilityStudied {
         ability_id: String,
@@ -150,6 +160,12 @@ pub(crate) enum DomainEvent {
         ability_id: String,
         target_kind_id: String,
         damage: DamageOutcome,
+        trace: ProjectileTrace,
+    },
+    BoltReflected {
+        reflector_kind_id: String,
+        source_kind_id: String,
+        outcome: BoltReflectionOutcome,
         trace: ProjectileTrace,
     },
     AbilityHealed {
@@ -1367,6 +1383,55 @@ impl DomainEvent {
                 ),
                 trace,
             ),
+            Self::BoltReflected {
+                reflector_kind_id,
+                source_kind_id,
+                outcome,
+                trace,
+            } => match outcome {
+                BoltReflectionOutcome::Landed => with_trace(
+                    dto(
+                        "combat.bolt-reflected",
+                        "combat-bolt-reflected",
+                        [("reflector", reflector_kind_id), ("source", source_kind_id)],
+                    ),
+                    trace,
+                ),
+                BoltReflectionOutcome::Hit {
+                    target_kind_id,
+                    damage,
+                    fatal,
+                } => with_trace(
+                    dto_with_outcome(
+                        if fatal {
+                            "combat.bolt-reflected-slay"
+                        } else {
+                            "combat.bolt-reflected-hit"
+                        },
+                        if fatal {
+                            "combat-bolt-reflected-slay"
+                        } else {
+                            "combat-bolt-reflected-hit"
+                        },
+                        [
+                            ("reflector", reflector_kind_id),
+                            ("source", source_kind_id),
+                            ("target", target_kind_id),
+                            ("damage", damage.applied.to_string()),
+                        ],
+                        if fatal {
+                            GameEventOutcomeDto::Death {
+                                resolution: damage.into(),
+                            }
+                        } else {
+                            GameEventOutcomeDto::Damage {
+                                resolution: damage.into(),
+                            }
+                        },
+                    ),
+                    trace,
+                ),
+            },
             Self::AbilityHealed {
                 ability_id,
                 resolution,

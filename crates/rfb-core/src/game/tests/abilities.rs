@@ -3323,6 +3323,132 @@ fn bolt_or_beam_damage_uses_one_roll_and_changes_only_penetration() {
 }
 
 #[test]
+fn reflecting_monsters_redirect_only_single_target_bolts() {
+    let make_game = |seed| {
+        let mut game = Game::new(seed);
+        clear_monsters(&mut game);
+        game.player.position = Position { x: 3, y: 3 };
+        game.player.hp = 100;
+        let definition = game
+            .content
+            .actor("demo.actor.buzzy-beetle")
+            .expect("P30 reflector should exist")
+            .clone();
+        game.entities.push(actor_from_runtime_spawn(
+            "test.actor.reflector",
+            &definition.id,
+            Position { x: 5, y: 3 },
+            definition.max_hp,
+            definition.speed,
+            100,
+            true,
+        ));
+        game
+    };
+    let make_bolt = |game: &Game| {
+        let mut ability = game
+            .content
+            .ability("rfb-legacy.ability.bolt-physical-1d4")
+            .expect("physical bolt should exist")
+            .clone();
+        let AbilityEffectDefinition::Damage { damage_type, .. } = ability.effect else {
+            unreachable!("physical bolt must remain direct damage");
+        };
+        ability.effect = AbilityEffectDefinition::Damage {
+            damage_dice: 1,
+            damage_sides: 1,
+            damage_bonus: 19,
+            damage_type,
+        };
+        ability
+    };
+    let path = vec![Position { x: 4, y: 3 }, Position { x: 5, y: 3 }];
+    let mut saw_normal_hit = false;
+    let mut saw_reflected_landing = false;
+    let mut saw_reflected_player_hit = false;
+
+    for seed in 0..512 {
+        let mut game = make_game(seed);
+        let ability = make_bolt(&game);
+        let reflector_hp = game.entities[0].hp;
+        let mut events = Vec::new();
+        game.resolve_player_projectile_damage_effect(
+            &ability,
+            path.clone(),
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("bolt should resolve");
+        match events.iter().find_map(|event| match event {
+            DomainEvent::BoltReflected { outcome, trace, .. } => Some((outcome, trace)),
+            _ => None,
+        }) {
+            None => {
+                saw_normal_hit = true;
+                assert!(game.entities[0].hp < reflector_hp);
+            }
+            Some((BoltReflectionOutcome::Landed, trace)) => {
+                saw_reflected_landing = true;
+                assert_eq!(game.entities[0].hp, reflector_hp);
+                assert_eq!(trace.origin, Position { x: 5, y: 3 });
+            }
+            Some((BoltReflectionOutcome::Hit { target_kind_id, .. }, trace)) => {
+                saw_reflected_player_hit = true;
+                assert_eq!(target_kind_id, &game.player.kind_id);
+                assert!(game.player.hp < 100);
+                assert_eq!(game.entities[0].hp, reflector_hp);
+                assert_eq!(trace.origin, Position { x: 5, y: 3 });
+            }
+        }
+        if saw_normal_hit && saw_reflected_landing && saw_reflected_player_hit {
+            break;
+        }
+    }
+    assert!(saw_normal_hit && saw_reflected_landing && saw_reflected_player_hit);
+
+    let mut beam = make_game(0);
+    let mut ability = beam
+        .content
+        .ability("demo.ability.death-dark-bolt")
+        .expect("dark bolt should provide bolt-or-beam damage")
+        .clone();
+    let AbilityEffectDefinition::BoltOrBeamDamage {
+        damage_type,
+        damage_dice,
+        damage_sides,
+        damage_bonus,
+        ..
+    } = ability.effect
+    else {
+        unreachable!("dark bolt must remain bolt-or-beam damage");
+    };
+    ability.effect = AbilityEffectDefinition::BoltOrBeamDamage {
+        damage_dice,
+        damage_sides,
+        damage_bonus,
+        damage_type,
+        beam_chance_percent: 100,
+    };
+    let reflector_hp = beam.entities[0].hp;
+    let mut events = Vec::new();
+    beam.resolve_player_bolt_or_beam_damage_effect(
+        &ability,
+        path,
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("beam should resolve");
+    assert!(beam.entities[0].hp < reflector_hp);
+    assert!(
+        !events
+            .iter()
+            .any(|event| matches!(event, DomainEvent::BoltReflected { .. }))
+    );
+}
+
+#[test]
 fn cloud_kill_centers_on_the_caster_and_entropy_filters_nonliving_targets() {
     let game = Game::new_with_build(0, "demo.build.scholar").expect("scholar build should create");
     let cloud_kill = game

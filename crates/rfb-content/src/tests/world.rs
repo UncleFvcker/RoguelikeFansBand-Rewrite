@@ -81,6 +81,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.brown-mold", 113, 1, 40),
             ("demo.actor.brown-yeek", 141, 1, 40),
             ("demo.actor.bullroarer-the-hobbit", 914, 3, 999),
+            ("demo.actor.buzzy-beetle", 951, 4, 60),
             ("demo.actor.carnivorous-flying-monkey", 145, 2, 40),
             ("demo.actor.carrion", 361, 1, 70),
             ("demo.actor.caustic-icky-thing", 132, 2, 40),
@@ -1341,6 +1342,29 @@ fn level_fifteen_p28_p29_bind_narrow_summon_and_target_blink() {
             .as_ref()
             .map(|light| (light.radius, light.intrinsic)),
         Some((1, false))
+    );
+}
+
+#[test]
+fn level_fifteen_p30_buzzy_beetle_reflects_bolts() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actor = artifact
+        .content
+        .actors
+        .iter()
+        .find(|actor| actor.id == "demo.actor.buzzy-beetle")
+        .expect("Buzzy beetle should be imported");
+
+    assert_eq!(actor.level, 15);
+    assert!(actor.reflects_bolts);
+    assert!(actor.monster_casting.is_none());
+    assert!(actor.tags.iter().any(|tag| tag == "nonliving"));
+    assert_eq!(
+        actor
+            .melee_routine
+            .as_ref()
+            .map(|routine| routine.blows.len()),
+        Some(4)
     );
 }
 

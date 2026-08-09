@@ -516,6 +516,17 @@ impl Game {
             .roll_damage(*damage_dice, *damage_sides)
             .saturating_add(i32::from(*damage_bonus))
             .max(0);
+        if self.try_reflect_player_bolt(
+            index,
+            &ability.id,
+            raw_damage,
+            DamageType::from(*damage_type),
+            events,
+            changed,
+            removed_entities,
+        )? {
+            return Ok(());
+        }
         self.resolve_ability_damage_to_entity(
             index,
             &ability.id,
@@ -717,6 +728,17 @@ impl Game {
                 });
                 return Ok(());
             };
+            if self.try_reflect_player_bolt(
+                index,
+                &ability.id,
+                base_raw_damage,
+                damage_type,
+                events,
+                changed,
+                removed_entities,
+            )? {
+                return Ok(());
+            }
             self.resolve_ability_damage_to_entity(
                 index,
                 &ability.id,
@@ -729,6 +751,172 @@ impl Game {
             )?;
         }
         Ok(())
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    pub(super) fn try_reflect_player_bolt(
+        &mut self,
+        reflector_index: usize,
+        source_kind_id: &str,
+        raw_damage: i32,
+        damage_type: DamageType,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<bool, CoreError> {
+        let reflector_kind_id = self.entities[reflector_index].kind_id.clone();
+        if !self
+            .content
+            .actor(&reflector_kind_id)
+            .is_some_and(|definition| definition.reflects_bolts)
+            || self.rng.bounded(4) == 0
+        {
+            return Ok(false);
+        }
+
+        let origin = self.entities[reflector_index].position;
+        let range = self.width.max(self.height);
+        let mut reflected_path = None;
+        for _ in 0..10 {
+            let y = self.player.position.y
+                + i32::try_from(self.rng.bounded(5)).expect("bounded draw fits i32")
+                - 2;
+            let x = self.player.position.x
+                + i32::try_from(self.rng.bounded(5)).expect("bounded draw fits i32")
+                - 2;
+            let destination = Position { x, y };
+            let Some(path) = projectile_path_between(origin, destination, range) else {
+                continue;
+            };
+            if path
+                .iter()
+                .all(|position| self.index(*position).is_some() && self.is_walkable(*position))
+            {
+                reflected_path = Some(path);
+                break;
+            }
+        }
+        let path = reflected_path
+            .or_else(|| projectile_path_between(origin, self.player.position, range))
+            .expect("an incoming bolt must retain a reverse reflection path");
+        let can_hit_player = self.rng.bounded(2) != 0;
+        let mut impact = origin;
+        let mut landing = origin;
+        let mut traversed = Vec::new();
+        let mut hit_player = false;
+        let mut hit_actor_index = None;
+        for position in path {
+            impact = position;
+            if self.index(position).is_none() || !self.is_walkable(position) {
+                break;
+            }
+            landing = position;
+            traversed.push(position);
+            if can_hit_player && position == self.player.position {
+                hit_player = true;
+                break;
+            }
+            if let Some(index) = self
+                .entities
+                .iter()
+                .position(|entity| entity.hp > 0 && entity.position == position)
+            {
+                hit_actor_index = Some(index);
+                break;
+            }
+        }
+        let trace = ProjectileTrace {
+            origin,
+            impact,
+            landing,
+            traversed,
+        };
+
+        if hit_player {
+            let target = self.player_derived_stats();
+            let resistance = self.effective_player_resistances().level(damage_type);
+            let damage = self.reduce_player_damage(resolve_armored_damage(
+                raw_damage,
+                damage_type,
+                target.armor_class.value,
+                resistance,
+            ));
+            let application =
+                plan_damage_application(&self.player, damage, FatalityPolicy::BelowZero);
+            commit_damage_application(&mut self.player, &application);
+            events.push(DomainEvent::BoltReflected {
+                reflector_kind_id: reflector_kind_id.clone(),
+                source_kind_id: source_kind_id.to_owned(),
+                outcome: BoltReflectionOutcome::Hit {
+                    target_kind_id: self.player.kind_id.clone(),
+                    damage,
+                    fatal: application.fatal,
+                },
+                trace,
+            });
+            if application.fatal {
+                events.push(DomainEvent::PlayerDied {
+                    source_kind_id: reflector_kind_id,
+                    method_id: Some(source_kind_id.to_owned()),
+                    damage,
+                });
+            }
+            return Ok(true);
+        }
+
+        if let Some(index) = hit_actor_index {
+            let definition = self
+                .content
+                .actor(&self.entities[index].kind_id)
+                .expect("reflected bolt target definition must remain available")
+                .clone();
+            let target_kind_id = definition.id.clone();
+            let target = self.actor_derived_stats(&self.entities[index], &definition, false);
+            let resistance = self.entities[index].resistances.level(damage_type);
+            let damage = resolve_armored_damage(
+                raw_damage,
+                damage_type,
+                target.armor_class.value,
+                resistance,
+            );
+            let application = plan_damage_application(
+                &self.entities[index],
+                damage,
+                FatalityPolicy::AtOrBelowZero,
+            );
+            commit_damage_application(&mut self.entities[index], &application);
+            self.entities[index].alerted = true;
+            changed.insert(self.entities[index].position);
+            self.wake_entity_after_damage(index, damage.applied, events);
+            events.push(DomainEvent::BoltReflected {
+                reflector_kind_id,
+                source_kind_id: source_kind_id.to_owned(),
+                outcome: BoltReflectionOutcome::Hit {
+                    target_kind_id,
+                    damage,
+                    fatal: application.fatal,
+                },
+                trace,
+            });
+            if application.fatal {
+                self.resolve_actor_death_without_rewards(
+                    index,
+                    None,
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+            }
+            return Ok(true);
+        }
+
+        events.push(DomainEvent::BoltReflected {
+            reflector_kind_id,
+            source_kind_id: source_kind_id.to_owned(),
+            outcome: BoltReflectionOutcome::Landed,
+            trace,
+        });
+        Ok(true)
     }
 
     pub(super) fn resolve_player_cone_damage_effect(

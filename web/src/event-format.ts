@@ -209,6 +209,24 @@ export function createPresentationFormatter(
           ability: contentName(event.args.source),
           target: contentName(event.args.target),
         });
+      case "combat-bolt-reflected":
+        return localization.format("message-combat-bolt-reflected", {
+          reflector: contentName(event.args.reflector),
+          source: contentName(event.args.source),
+        });
+      case "combat-bolt-reflected-hit":
+      case "combat-bolt-reflected-slay":
+        return localization.format(
+          event.messageKey === "combat-bolt-reflected-slay"
+            ? "message-combat-bolt-reflected-slay"
+            : "message-combat-bolt-reflected-hit",
+          {
+            reflector: contentName(event.args.reflector),
+            source: contentName(event.args.source),
+            target: contentName(event.args.target),
+            damage: event.args.damage ?? "?",
+          },
+        );
       case "ability-healed":
         return localization.format("message-ability-healed", {
           ability: contentName(event.args.source),

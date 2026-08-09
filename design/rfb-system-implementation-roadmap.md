@@ -1,6 +1,6 @@
 # RFB 全系统梳理与重构实现路线
 
-状态：长期规则实现路线；当前基线为协议 1.148 / contract-v213（P31–P98 进展见 8.3，玩家流程与 Outpost 进展见 Phase 17/18，物品接入见 Phase 19，Warrens 怪物机制见 W1–W14 清单，荒野世界图见 W0–W5）
+状态：长期规则实现路线；当前基线为协议 1.148 / contract-v214（P31–P98 进展见 8.3，玩家流程与 Outpost 进展见 Phase 17/18，物品接入见 Phase 19，Warrens 怪物机制见 W1–W14 清单，荒野世界图见 W0–W5）
 
 ## 1. 目的与边界
 
@@ -653,6 +653,8 @@ P30“首个非 Mana 职业资源”已由 contract-v90 完成：节奏资源按
 **十五级参数化施法怪物 P27 进展（2026-08）**：contract-v212 接入门槛潜伏者、黑暗娜迦、兽化鼠人、米-戈、狮鹫、悬浮法球、不死魔鬼鱼和光耀卡甫。新增 11 条参数化 ability 与对应 Ability Program 记录，全部复用现有伤害、治疗、吸法、召唤和吐息 effect，没有新增 effect、协议或兼容层。正式包为 329 actors / 141 abilities，严格同步 264 条；协议 1.147、Schema v70 不变，demo 1.208.0，内容 hash 为 `068d5296c10176d40507e531b3a9cb3605e5c5d1288304ad36ed534527dd1bcd`。完整边界见 [Contract v212](contract-v212-warrens-content-p27-level-15-parameterized-casters.md)。
 
 **十五级怪物 P28/P29 进展（2026-08）**：contract-v213 接入纳垢携疫者和侏儒法师。`S_ANT` 直接映射为既有分类召唤参数 `summon-ant-l15-1d3-1`；`BLINK_OTHER` 增加怪物专用 `blink-target { radius: 10 }`，只在目标当前位置十格内选择可通行空格，不复用远距放逐。正式包为 331 actors / 143 abilities，严格同步 266 条；协议升至 1.148、Schema v70 不变，demo 1.209.0，内容 hash 为 `b0f60081b2b1971d643f93c619df721c43997661a496a8f4549b6bac8ce16cde`。完整边界见 [Contract v213](contract-v213-warrens-content-p28-p29-ant-summon-target-blink.md)。
+
+**十五级怪物 P30 进展（2026-08）**：contract-v214 接入铁甲虫及窄 `REFLECTING`。`reflectsBolts` 只让单体 ability/device bolt 按原版 75% 判定反射；方向重选、玩家/怪物命中和无奖励死亡复用现有投射与伤害路径，beam、ball、cone 和普通箭矢不受影响。正式包为 332 actors / 143 abilities，严格同步 267 条；协议 1.148、Schema v70 不变，demo 1.210.0，内容 hash 为 `b6f4741928ed2c1ae56f65d5614b06a25a200cdcb2eb9abe44f96fe1da424e00`。完整边界见 [Contract v214](contract-v214-warrens-content-p30-reflecting-buzzy-beetle.md)。
 
 ## 9. 内容迁移策略
 

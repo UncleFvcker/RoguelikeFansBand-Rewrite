@@ -1608,6 +1608,12 @@
       "id": "gnome-mage",
       "tags": ["gnome", "humanoid", "warrens"],
       "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 951,
+      "id": "buzzy-beetle",
+      "tags": ["beetle", "warrens"],
+      "omittedFlags": ["EMPTY_MIND", "POS_GAIN_AC"]
     }
   ]
 }

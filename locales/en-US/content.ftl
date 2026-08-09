@@ -1814,3 +1814,5 @@ ability-legacy-summon-ant-l15-1d3-1-name = Summon ants
 ability-legacy-summon-ant-l15-1d3-1-description = Summons 1d3+1 ants of level 15 or lower.
 ability-legacy-blink-other-name = Blink target
 ability-legacy-blink-other-description = Blinks the target to a random open position within ten tiles.
+actor-demo-buzzy-beetle-name = Buzzy beetle
+actor-demo-buzzy-beetle-description = A heavily armored beetle whose shell turns incoming bolts aside.

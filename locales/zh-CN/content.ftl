@@ -1814,3 +1814,5 @@ ability-legacy-summon-ant-l15-1d3-1-name = 召唤蚂蚁
 ability-legacy-summon-ant-l15-1d3-1-description = 召唤 1d3+1 只等级不高于 15 的蚂蚁。
 ability-legacy-blink-other-name = 闪现目标
 ability-legacy-blink-other-description = 将目标随机闪现至其当前位置十格内的一处空地。
+actor-demo-buzzy-beetle-name = 铁甲虫
+actor-demo-buzzy-beetle-description = 一只甲壳坚硬、能够反射来袭飞弹的甲虫。
