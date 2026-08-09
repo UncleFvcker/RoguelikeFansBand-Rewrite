@@ -155,6 +155,12 @@ pub(crate) fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<
             actor_tag_values: &actor_tag_values,
             item_tag_values: &item_tag_values,
             resource_ids: &resource_ids,
+            affix_ids: &affix_ids,
+            loot_table_ids: &content
+                .loot_tables
+                .iter()
+                .map(|table| table.id.clone())
+                .collect(),
             ability_book_ids: &ability_book_ids,
             actor_corpse_item_ids,
             ability_corpse_item_ids,

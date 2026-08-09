@@ -782,6 +782,7 @@ fn temple_and_alchemist_stock_are_strictly_separated() {
                 "demo.item.antidote-potion",
                 "demo.item.curing-potion",
                 "demo.item.light-scroll",
+                "demo.item.rumour-scroll",
             ]),
         ),
     ];
@@ -1018,6 +1019,10 @@ fn black_market_stocks_original_non_town_books_and_priced_p3_consumables() {
             "demo.item.self-knowledge-potion",
             "demo.item.rune-of-protection-scroll",
             "demo.item.destruction-scroll",
+            "demo.item.mundanity-scroll",
+            "demo.item.acquirement-scroll",
+            "demo.item.star-acquirement-scroll",
+            "demo.item.crafting-scroll",
         ])
     );
     let values = artifact
@@ -1201,6 +1206,30 @@ fn p3_4_items_all_have_a_shop_or_warrens_acquisition_path() {
         "demo.item.light-scroll",
         "demo.item.rune-of-protection-scroll",
         "demo.item.destruction-scroll",
+    ] {
+        assert!(
+            available.contains(item_id),
+            "{item_id} should be obtainable"
+        );
+    }
+}
+
+#[test]
+fn p3_5_items_all_have_a_shop_acquisition_path() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let available = artifact
+        .content
+        .shops
+        .iter()
+        .flat_map(|shop| shop.stock.iter().map(|stock| stock.item_kind_id.as_str()))
+        .collect::<BTreeSet<_>>();
+
+    for item_id in [
+        "demo.item.mundanity-scroll",
+        "demo.item.acquirement-scroll",
+        "demo.item.star-acquirement-scroll",
+        "demo.item.rumour-scroll",
+        "demo.item.crafting-scroll",
     ] {
         assert!(
             available.contains(item_id),

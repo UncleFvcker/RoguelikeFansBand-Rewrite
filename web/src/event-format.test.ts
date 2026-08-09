@@ -337,6 +337,58 @@ test("P3.4 terrain events localize lighting destruction and warding glyphs", () 
   );
 });
 
+test("P3.5 item generation mutation and rumour events localize", () => {
+  assert.equal(
+    formatter.formatEvent({
+      kind: "item.use-acquirement",
+      messageKey: "item-use-acquirement",
+      args: {
+        source: "demo.item.acquirement-scroll",
+        nameKey: "item-demo-acquirement-scroll-name",
+        count: "1",
+      },
+    }),
+    "Scroll of Acquirement creates 1 excellent item at your feet.",
+  );
+  assert.equal(
+    formatter.formatEvent({
+      kind: "item.use-mundanity",
+      messageKey: "item-use-mundanity",
+      args: {
+        source: "demo.item.mundanity-scroll",
+        nameKey: "item-demo-mundanity-scroll-name",
+        target: "demo.item.arrow",
+      },
+    }),
+    "Scroll of Mundanity strips Arrow back to the mundane.",
+  );
+  assert.equal(
+    formatter.formatEvent({
+      kind: "item.use-crafting",
+      messageKey: "item-use-crafting",
+      args: {
+        source: "demo.item.crafting-scroll",
+        nameKey: "item-demo-crafting-scroll-name",
+        target: "demo.item.arrow",
+        affix: "demo.affix.frost-hunter",
+      },
+    }),
+    "Scroll of Crafting crafts Arrow with frost hunter.",
+  );
+  assert.equal(
+    formatter.formatEvent({
+      kind: "item.use-rumour",
+      messageKey: "item-use-rumour",
+      args: {
+        source: "demo.item.rumour-scroll",
+        nameKey: "item-demo-rumour-scroll-name",
+        rumourKey: "rumour-demo-warrens-depths",
+      },
+    }),
+    "Scroll of Rumour reads: “The oldest warrens hide their best steel below the roots.”",
+  );
+});
+
 test("damage event formatting preserves typed resistance outcomes", () => {
   const event = {
     kind: "combat.hit",

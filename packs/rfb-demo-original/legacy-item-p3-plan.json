@@ -168,24 +168,30 @@
           "id": "item-generation",
           "primaryBlockers": ["scroll-effect"],
           "items": [
-            { "sourceIndex": 358, "sourceName": "Acquirement:klinej ere", "sourceId": "acquirement-klinej-ere" },
-            { "sourceIndex": 359, "sourceName": "*Acquirement*:snetrol uni", "sourceId": "acquirement-snetrol-uni" }
+            { "sourceIndex": 358, "sourceName": "Acquirement:klinej ere", "sourceId": "acquirement-klinej-ere", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] },
+            { "sourceIndex": 359, "sourceName": "*Acquirement*:snetrol uni", "sourceId": "acquirement-snetrol-uni", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] }
           ]
         },
         {
           "id": "item-mutation",
           "primaryBlockers": ["scroll-effect"],
           "items": [
-            { "sourceIndex": 337, "sourceName": "Mundanity:danseh nejood", "sourceId": "mundanity-danseh-nejood" },
-            { "sourceIndex": 364, "sourceName": "Artifact Creation:engsno argsan", "sourceId": "artifact-creation-engsno-argsan" },
-            { "sourceIndex": 367, "sourceName": "Crafting:enchantus maximus", "sourceId": "crafting-enchantus-maximus" }
+            { "sourceIndex": 337, "sourceName": "Mundanity:danseh nejood", "sourceId": "mundanity-danseh-nejood", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] },
+            { "sourceIndex": 367, "sourceName": "Crafting:enchantus maximus", "sourceId": "crafting-enchantus-maximus", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] }
+          ]
+        },
+        {
+          "id": "artifact-creation",
+          "primaryBlockers": ["random-artifact-identity"],
+          "items": [
+            { "sourceIndex": 364, "sourceName": "Artifact Creation:engsno argsan", "sourceId": "artifact-creation-engsno-argsan" }
           ]
         },
         {
           "id": "rumour",
           "primaryBlockers": ["scroll-effect"],
           "items": [
-            { "sourceIndex": 363, "sourceName": "Rumour:an gan nagblaa", "sourceId": "rumour-an-gan-nagblaa" }
+            { "sourceIndex": 363, "sourceName": "Rumour:an gan nagblaa", "sourceId": "rumour-an-gan-nagblaa", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] }
           ]
         }
       ]

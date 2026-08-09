@@ -21,6 +21,8 @@ pub(crate) fn valid_item_effect(
     actor_tag_values: &BTreeSet<String>,
     item_tag_values: &BTreeSet<String>,
     resource_ids: &BTreeSet<String>,
+    affix_ids: &BTreeSet<String>,
+    loot_table_ids: &BTreeSet<String>,
 ) -> bool {
     match effect {
         ItemUseEffectDefinition::NoNumericEffect => true,
@@ -68,7 +70,8 @@ pub(crate) fn valid_item_effect(
         | ItemUseEffectDefinition::IncreaseAttribute { .. }
         | ItemUseEffectDefinition::AugmentAttributes
         | ItemUseEffectDefinition::IdentifyInventory
-        | ItemUseEffectDefinition::SelfKnowledge => true,
+        | ItemUseEffectDefinition::SelfKnowledge
+        | ItemUseEffectDefinition::MundanifyItem => true,
         ItemUseEffectDefinition::HealDice { dice, sides } => {
             (1..=100).contains(dice) && (1..=10_000).contains(sides)
         }
@@ -264,6 +267,31 @@ pub(crate) fn valid_item_effect(
             resource_ids.contains(resource_id)
         }
         ItemUseEffectDefinition::IdentifyItem { .. } => true,
+        ItemUseEffectDefinition::Acquirement {
+            loot_table_id,
+            minimum_count,
+            maximum_count,
+        } => {
+            loot_table_ids.contains(loot_table_id)
+                && (1..=8).contains(minimum_count)
+                && minimum_count <= maximum_count
+                && maximum_count <= &8
+        }
+        ItemUseEffectDefinition::CraftItem {
+            weapon_affix_ids,
+            armor_affix_ids,
+        } => {
+            let valid_candidates = |candidates: &[String]| {
+                !candidates.is_empty()
+                    && candidates.len() <= 32
+                    && candidates.windows(2).all(|pair| pair[0] < pair[1])
+                    && candidates.iter().all(|id| affix_ids.contains(id))
+            };
+            valid_candidates(weapon_affix_ids) && valid_candidates(armor_affix_ids)
+        }
+        ItemUseEffectDefinition::ShowRumour { message_key } => {
+            validate_message_key(message_key).is_ok()
+        }
         ItemUseEffectDefinition::EnchantItem {
             to_hit,
             to_damage,
@@ -361,6 +389,8 @@ pub(crate) fn valid_item_effect(
                         actor_tag_values,
                         item_tag_values,
                         resource_ids,
+                        affix_ids,
+                        loot_table_ids,
                     )
                 })
         }
@@ -432,7 +462,9 @@ fn item_effect_is_self_targeted(effect: &ItemUseEffectDefinition) -> bool {
     match effect {
         ItemUseEffectDefinition::Damage { .. }
         | ItemUseEffectDefinition::IdentifyItem { .. }
-        | ItemUseEffectDefinition::EnchantItem { .. } => false,
+        | ItemUseEffectDefinition::EnchantItem { .. }
+        | ItemUseEffectDefinition::MundanifyItem
+        | ItemUseEffectDefinition::CraftItem { .. } => false,
         ItemUseEffectDefinition::Sequence { effects } => {
             effects.iter().all(item_effect_is_self_targeted)
         }
@@ -445,6 +477,8 @@ pub(super) struct ItemValidationRefs<'a> {
     pub(super) actor_tag_values: &'a BTreeSet<String>,
     pub(super) item_tag_values: &'a BTreeSet<String>,
     pub(super) resource_ids: &'a BTreeSet<String>,
+    pub(super) affix_ids: &'a BTreeSet<String>,
+    pub(super) loot_table_ids: &'a BTreeSet<String>,
     pub(super) ability_book_ids: &'a BTreeSet<String>,
     pub(super) actor_corpse_item_ids: Vec<(String, String)>,
     pub(super) ability_corpse_item_ids: Vec<(String, String)>,
@@ -460,6 +494,8 @@ pub(super) fn validate_items(
         actor_tag_values,
         item_tag_values,
         resource_ids,
+        affix_ids,
+        loot_table_ids,
         ability_book_ids,
         actor_corpse_item_ids,
         ability_corpse_item_ids,
@@ -509,6 +545,8 @@ pub(super) fn validate_items(
                     | ItemUseEffectDefinition::AugmentAttributes
                     | ItemUseEffectDefinition::IdentifyInventory
                     | ItemUseEffectDefinition::SelfKnowledge
+                    | ItemUseEffectDefinition::Acquirement { .. }
+                    | ItemUseEffectDefinition::ShowRumour { .. }
                     | ItemUseEffectDefinition::ApplyThermalResistance { .. }
                     | ItemUseEffectDefinition::ApplyBasicResistance { .. }
                     | ItemUseEffectDefinition::ApplyPoison { .. }
@@ -553,7 +591,9 @@ pub(super) fn validate_items(
                     ItemUseEffectDefinition::RechargeFromDevice { .. } => false,
                     ItemUseEffectDefinition::Damage { .. } => projectile_target,
                     ItemUseEffectDefinition::IdentifyItem { .. }
-                    | ItemUseEffectDefinition::EnchantItem { .. } => {
+                    | ItemUseEffectDefinition::EnchantItem { .. }
+                    | ItemUseEffectDefinition::MundanifyItem
+                    | ItemUseEffectDefinition::CraftItem { .. } => {
                         target.modes.as_slice() == [AbilityTargetModeDefinition::Item]
                             && target.range == 0
                             && !target.requires_line_of_effect
@@ -709,11 +749,15 @@ pub(super) fn validate_items(
                 actor_tag_values,
                 item_tag_values,
                 resource_ids,
+                affix_ids,
+                loot_table_ids,
             ) && (item_effect_is_self_targeted(&action.effect)
                 || matches!(
                     action.effect,
                     ItemUseEffectDefinition::IdentifyItem { .. }
                         | ItemUseEffectDefinition::EnchantItem { .. }
+                        | ItemUseEffectDefinition::MundanifyItem
+                        | ItemUseEffectDefinition::CraftItem { .. }
                 ));
             let valid_charges = action.charges.is_none_or(|charges| {
                 charges.maximum > 0
@@ -803,6 +847,8 @@ pub(super) fn validate_items(
                             actor_tag_values,
                             item_tag_values,
                             resource_ids,
+                            affix_ids,
+                            loot_table_ids,
                         )
                         && !matches!(
                             activation.effect,

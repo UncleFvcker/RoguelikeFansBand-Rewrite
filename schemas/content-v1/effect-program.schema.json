@@ -1713,6 +1713,94 @@
         {
           "additionalProperties": false,
           "properties": {
+            "lootTableId": {
+              "type": "string"
+            },
+            "maximumCount": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "minimumCount": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "acquirement",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "lootTableId",
+            "minimumCount",
+            "maximumCount"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "mundanify-item",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "armorAffixIds": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "type": {
+              "const": "craft-item",
+              "type": "string"
+            },
+            "weaponAffixIds": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "type",
+            "weaponAffixIds",
+            "armorAffixIds"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "messageKey": {
+              "type": "string"
+            },
+            "type": {
+              "const": "show-rumour",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "messageKey"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
             "toArmor": {
               "anyOf": [
                 {

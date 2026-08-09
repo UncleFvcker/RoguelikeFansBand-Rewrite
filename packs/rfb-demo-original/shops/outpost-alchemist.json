@@ -197,6 +197,13 @@
       "initialMaximum": 2,
       "maintenanceMinimum": 1,
       "maintenanceMaximum": 2
+    },
+    {
+      "itemKindId": "demo.item.rumour-scroll",
+      "initialMinimum": 1,
+      "initialMaximum": 4,
+      "maintenanceMinimum": 1,
+      "maintenanceMaximum": 4
     }
   ],
   "maintenance": {

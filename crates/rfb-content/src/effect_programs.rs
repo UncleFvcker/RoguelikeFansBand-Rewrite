@@ -98,6 +98,8 @@ fn effect_program_input_for_step(
         ItemUseEffectDefinition::Damage { .. } => Some(EffectProgramInputDefinition::Actor),
         ItemUseEffectDefinition::IdentifyItem { .. }
         | ItemUseEffectDefinition::EnchantItem { .. }
+        | ItemUseEffectDefinition::MundanifyItem
+        | ItemUseEffectDefinition::CraftItem { .. }
         | ItemUseEffectDefinition::RechargeFromDevice { .. } => {
             Some(EffectProgramInputDefinition::Item)
         }
@@ -185,6 +187,16 @@ pub(super) fn validate_effect_program_catalog(
         .iter()
         .map(|resource| resource.id.clone())
         .collect::<BTreeSet<_>>();
+    let affix_ids = content
+        .affixes
+        .iter()
+        .map(|affix| affix.id.clone())
+        .collect::<BTreeSet<_>>();
+    let loot_table_ids = content
+        .loot_tables
+        .iter()
+        .map(|table| table.id.clone())
+        .collect::<BTreeSet<_>>();
 
     for (id, program) in programs {
         if !valid_item_effect(
@@ -193,6 +205,8 @@ pub(super) fn validate_effect_program_catalog(
             &actor_tag_values,
             &item_tag_values,
             &resource_ids,
+            &affix_ids,
+            &loot_table_ids,
         ) {
             return Err(ContentError::InvalidEffectProgram(id.clone()));
         }

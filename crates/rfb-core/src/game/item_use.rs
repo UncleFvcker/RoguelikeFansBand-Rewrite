@@ -5,6 +5,10 @@ use super::*;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) enum ItemUsePlan {
     SelfTarget,
+    Acquirement {
+        source_item_id: String,
+        depth: u16,
+    },
     GlyphGenocide {
         glyph: String,
     },
@@ -1311,6 +1315,218 @@ impl Game {
         })
     }
 
+    fn item_mutation_target(
+        &self,
+        source_item_id: &str,
+        target_item_id: &str,
+    ) -> Option<&ItemInstance> {
+        if source_item_id == target_item_id {
+            return None;
+        }
+        let item = self.items.iter().find(|item| {
+            item.id == target_item_id
+                && item.quantity > 0
+                && (matches!(item.location, ItemLocation::Inventory | ItemLocation::Equipped { .. })
+                    || matches!(item.location, ItemLocation::Ground(position) if position == self.player.position))
+        })?;
+        let split_fits = item.quantity == 1
+            || !matches!(item.location, ItemLocation::Inventory)
+            || self.inventory_used_slots() + 1
+                - u16::from(self.items.iter().any(|source| {
+                    source.id == source_item_id
+                        && source.quantity == 1
+                        && source.location == ItemLocation::Inventory
+                }))
+                <= self.inventory_slot_capacity();
+        split_fits.then_some(item).filter(|_| {
+            self.next_item_instance_serial.checked_add(1).is_some() || item.quantity == 1
+        })
+    }
+
+    fn item_is_valid_mundanity_target(&self, source_item_id: &str, target_item_id: &str) -> bool {
+        let Some(item) = self.item_mutation_target(source_item_id, target_item_id) else {
+            return false;
+        };
+        self.content.item(&item.kind_id).is_some_and(|definition| {
+            !definition.tags.iter().any(|tag| tag == "artifact")
+                && (item.quality != ItemQualityDto::Ordinary
+                    || !item.affix_ids.is_empty()
+                    || !item.enchantments.is_empty()
+                    || item.curse.is_some())
+        })
+    }
+
+    fn item_is_valid_crafting_target(&self, source_item_id: &str, target_item_id: &str) -> bool {
+        let Some(item) = self.item_mutation_target(source_item_id, target_item_id) else {
+            return false;
+        };
+        self.content.item(&item.kind_id).is_some_and(|definition| {
+            item.quality == ItemQualityDto::Ordinary
+                && item.affix_ids.is_empty()
+                && definition.tags.iter().any(|tag| {
+                    matches!(tag.as_str(), "weapon" | "launcher" | "ammunition" | "armor")
+                })
+                && !definition
+                    .tags
+                    .iter()
+                    .any(|tag| matches!(tag.as_str(), "artifact" | "no-enchant"))
+        })
+    }
+
+    fn split_item_for_mutation(
+        &mut self,
+        target_item_id: &str,
+    ) -> Result<(usize, bool), CoreError> {
+        let index = self
+            .items
+            .iter()
+            .position(|item| item.id == target_item_id)
+            .expect("preflighted mutation target must remain available");
+        if self.items[index].quantity == 1 {
+            return Ok((index, false));
+        }
+        let mut split = self.items[index].clone();
+        self.items[index].quantity -= 1;
+        split.id = self.allocate_item_instance_id()?;
+        split.quantity = 1;
+        self.items.push(split);
+        Ok((self.items.len() - 1, true))
+    }
+
+    fn resolve_item_acquirement(
+        &mut self,
+        source_kind_id: &str,
+        source_item_id: String,
+        parameters: (String, u8, u8),
+        depth: u16,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) -> Result<(), CoreError> {
+        let (loot_table_id, minimum_count, maximum_count) = parameters;
+        let count = if minimum_count == maximum_count {
+            minimum_count
+        } else {
+            minimum_count
+                + u8::try_from(
+                    self.rng
+                        .bounded(u64::from(maximum_count - minimum_count + 1)),
+                )
+                .expect("validated acquirement count must fit u8")
+        };
+        let generated = self.generate_loot_instances_internal(
+            &LootContext {
+                table_id: loot_table_id,
+                floor_id: self.current_floor_id.clone(),
+                depth,
+                source: LootSource::ItemUse {
+                    item_id: source_item_id,
+                },
+            },
+            ItemLocation::Ground(self.player.position),
+            false,
+            Some(u16::from(count)),
+            rfb_content::ItemQuality::Exceptional,
+        )?;
+        let generated_item_ids = generated.iter().map(|item| item.id.clone()).collect();
+        let generated_kind_ids = generated.iter().map(|item| item.kind_id.clone()).collect();
+        self.items.extend(generated);
+        self.mark_item_aware(source_kind_id);
+        changed.insert(self.player.position);
+        events.push(DomainEvent::ItemAcquirement {
+            source_kind_id: source_kind_id.to_owned(),
+            display_name_key: self.item_display_name_key(source_kind_id),
+            generated_item_ids,
+            generated_kind_ids,
+            position: self.player.position,
+        });
+        Ok(())
+    }
+
+    fn resolve_item_mundanity(
+        &mut self,
+        source_kind_id: &str,
+        target_item_id: &str,
+        events: &mut Vec<DomainEvent>,
+    ) -> Result<(), CoreError> {
+        let (index, split) = self.split_item_for_mutation(target_item_id)?;
+        let target_item_id = self.items[index].id.clone();
+        let target_kind_id = self.items[index].kind_id.clone();
+        self.items[index].quality = ItemQualityDto::Ordinary;
+        self.items[index].affix_ids.clear();
+        self.items[index].rolled_affixes.clear();
+        self.items[index].enchantments = ItemEnchantmentsDto::default();
+        self.items[index].curse = None;
+        self.item_property_knowledge.insert(
+            target_item_id.clone(),
+            ItemPropertyKnowledgeState {
+                appraised: true,
+                identified: true,
+                known_affix_ids: BTreeSet::new(),
+            },
+        );
+        self.mark_item_aware(source_kind_id);
+        events.push(DomainEvent::ItemMundanified {
+            source_kind_id: source_kind_id.to_owned(),
+            display_name_key: self.item_display_name_key(source_kind_id),
+            target_item_id,
+            target_kind_id,
+            split,
+        });
+        Ok(())
+    }
+
+    fn resolve_item_crafting(
+        &mut self,
+        source_kind_id: &str,
+        target_item_id: &str,
+        weapon_affix_ids: Vec<String>,
+        armor_affix_ids: Vec<String>,
+        events: &mut Vec<DomainEvent>,
+    ) -> Result<(), CoreError> {
+        let definition = self
+            .items
+            .iter()
+            .find(|item| item.id == target_item_id)
+            .and_then(|item| self.content.item(&item.kind_id))
+            .expect("preflighted crafting target must retain its definition");
+        let candidates = if definition.tags.iter().any(|tag| tag == "armor") {
+            armor_affix_ids
+        } else {
+            weapon_affix_ids
+        };
+        let selected = usize::try_from(self.rng.bounded(candidates.len() as u64))
+            .expect("validated crafting candidate count must fit usize");
+        let affix_id = candidates[selected].clone();
+        let rolled_affixes = self.roll_affix_properties(
+            std::slice::from_ref(&affix_id),
+            self.floor_depth(&self.current_floor_id),
+        );
+        let (index, split) = self.split_item_for_mutation(target_item_id)?;
+        let target_item_id = self.items[index].id.clone();
+        let target_kind_id = self.items[index].kind_id.clone();
+        self.items[index].quality = ItemQualityDto::Exceptional;
+        self.items[index].affix_ids = vec![affix_id.clone()];
+        self.items[index].rolled_affixes = rolled_affixes;
+        self.item_property_knowledge.insert(
+            target_item_id.clone(),
+            ItemPropertyKnowledgeState {
+                appraised: true,
+                identified: true,
+                known_affix_ids: BTreeSet::from([affix_id.clone()]),
+            },
+        );
+        self.mark_item_aware(source_kind_id);
+        events.push(DomainEvent::ItemCrafted {
+            source_kind_id: source_kind_id.to_owned(),
+            display_name_key: self.item_display_name_key(source_kind_id),
+            target_item_id,
+            target_kind_id,
+            affix_id,
+            split,
+        });
+        Ok(())
+    }
+
     pub(super) fn resolve_item_enchantment(
         &mut self,
         source_kind_id: &str,
@@ -1858,6 +2074,48 @@ impl Game {
                 self.resolve_item_sequence(&kind_id, effects, events, changed)
             }
             (
+                ItemUseEffectDefinition::Acquirement {
+                    loot_table_id,
+                    minimum_count,
+                    maximum_count,
+                },
+                ItemUsePlan::Acquirement {
+                    source_item_id,
+                    depth,
+                },
+            ) => self.resolve_item_acquirement(
+                &kind_id,
+                source_item_id,
+                (loot_table_id, minimum_count, maximum_count),
+                depth,
+                events,
+                changed,
+            )?,
+            (ItemUseEffectDefinition::MundanifyItem, ItemUsePlan::Item { item_id }) => {
+                self.resolve_item_mundanity(&kind_id, &item_id, events)?;
+            }
+            (
+                ItemUseEffectDefinition::CraftItem {
+                    weapon_affix_ids,
+                    armor_affix_ids,
+                },
+                ItemUsePlan::Item { item_id },
+            ) => self.resolve_item_crafting(
+                &kind_id,
+                &item_id,
+                weapon_affix_ids,
+                armor_affix_ids,
+                events,
+            )?,
+            (ItemUseEffectDefinition::ShowRumour { message_key }, ItemUsePlan::SelfTarget) => {
+                self.mark_item_aware(&kind_id);
+                events.push(DomainEvent::ItemRumour {
+                    source_kind_id: kind_id.clone(),
+                    display_name_key: self.item_display_name_key(&kind_id),
+                    message_key,
+                });
+            }
+            (
                 ItemUseEffectDefinition::SelfCenteredElementalBlast {
                     base_damage,
                     damage_type,
@@ -2149,10 +2407,42 @@ impl Game {
             | ItemUseEffectDefinition::DrainResourceFull { .. }
             | ItemUseEffectDefinition::IdentifyInventory
             | ItemUseEffectDefinition::SelfKnowledge
+            | ItemUseEffectDefinition::ShowRumour { .. }
             | ItemUseEffectDefinition::Sequence { .. }
             | ItemUseEffectDefinition::CurseEquippedItem { .. }
             | ItemUseEffectDefinition::RemoveEquippedCurses { .. } => {
                 self_target.then_some(ItemUsePlan::SelfTarget)
+            }
+            ItemUseEffectDefinition::Acquirement {
+                loot_table_id,
+                maximum_count,
+                ..
+            } => {
+                if !self_target
+                    || self
+                        .next_item_instance_serial
+                        .checked_add(u64::from(*maximum_count))
+                        .is_none()
+                {
+                    return None;
+                }
+                let depth = self.floor_depth(&self.current_floor_id);
+                let table = self.content.loot_table(loot_table_id)?;
+                table
+                    .entries
+                    .iter()
+                    .any(|entry| {
+                        entry.min_depth <= depth
+                            && depth <= entry.max_depth
+                            && entry.quantity == 1
+                            && self.content.item(&entry.item_kind_id).is_some_and(|item| {
+                                item.max_stack == 1 && item.equipment_slot.is_some()
+                            })
+                    })
+                    .then(|| ItemUsePlan::Acquirement {
+                        source_item_id: source_item_id.to_owned(),
+                        depth,
+                    })
             }
             ItemUseEffectDefinition::Genocide { .. } => {
                 if target.is_some() {
@@ -2219,6 +2509,30 @@ impl Game {
                     return None;
                 };
                 self.item_is_valid_identify_target(source_item_id, target_item_id)
+                    .then(|| ItemUsePlan::Item {
+                        item_id: target_item_id.clone(),
+                    })
+            }
+            ItemUseEffectDefinition::MundanifyItem => {
+                let TargetSelection::Item {
+                    item_id: target_item_id,
+                } = target?
+                else {
+                    return None;
+                };
+                self.item_is_valid_mundanity_target(source_item_id, target_item_id)
+                    .then(|| ItemUsePlan::Item {
+                        item_id: target_item_id.clone(),
+                    })
+            }
+            ItemUseEffectDefinition::CraftItem { .. } => {
+                let TargetSelection::Item {
+                    item_id: target_item_id,
+                } = target?
+                else {
+                    return None;
+                };
+                self.item_is_valid_crafting_target(source_item_id, target_item_id)
                     .then(|| ItemUsePlan::Item {
                         item_id: target_item_id.clone(),
                     })
@@ -3914,6 +4228,10 @@ impl Game {
             | ItemUseEffectDefinition::BanishVisible { .. }
             | ItemUseEffectDefinition::Detect { .. }
             | ItemUseEffectDefinition::IdentifyItem { .. }
+            | ItemUseEffectDefinition::Acquirement { .. }
+            | ItemUseEffectDefinition::MundanifyItem
+            | ItemUseEffectDefinition::CraftItem { .. }
+            | ItemUseEffectDefinition::ShowRumour { .. }
             | ItemUseEffectDefinition::EnchantItem { .. }
             | ItemUseEffectDefinition::CurseEquippedItem { .. }
             | ItemUseEffectDefinition::RemoveEquippedCurses { .. }

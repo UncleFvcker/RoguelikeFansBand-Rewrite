@@ -56,24 +56,26 @@ work: five unpaired launchers, five instant-artifact rows, two charisma flags,
 and two no-enchant flags. Those rows must not become active merely because the
 launcher multiplier or ammunition dice blocker is removed.
 
-The current audited snapshot after P3.4, against RFB `master` commit
+The current audited snapshot after P3.5, against RFB `master` commit
 `efd63661302866038f58d8cd2553b23e6af3bf9d`, is:
 
 | Measure | Count |
 | --- | ---: |
 | Authoritative source items | 544 |
-| Active source items | 201 |
+| Active source items | 206 |
 | Mechanics ready, not formalized | 106 |
-| Blocked source items | 237 |
-| Formal demo items | 226 |
-| Formal items mapped to RFB | 202 |
+| Blocked source items | 232 |
+| Formal demo items | 231 |
+| Formal items mapped to RFB | 207 |
 | Original formal items | 24 |
 
-The ledger has 154 formal adaptations for 153 unique source items; the generic
+The ledger has 159 formal adaptations for 158 unique source items; the generic
 Staff template intentionally maps to two formal devices. The largest current
 blocker groups are books (68), instant-artifact handling (42), the wallet/gold
 model (18), riding flags (17), and the remaining consumable and folded
-ammunition rule gaps (12 each); seven scroll effects remain blocked. Re-run the command after source, importer, or
+ammunition rule gaps (12 each). Madness is the sole remaining generic scroll
+effect gap; Artifact Creation is separately blocked by the missing random
+artifact identity model. Re-run the command after source, importer, or
 formal item changes instead of treating these snapshot counts as constants.
 
 ## First Batch
@@ -442,3 +444,37 @@ content hash
 `7e31d738ec40807ac2ba1dd29727f68d3390aa03a6954b3fb4f44c097d90b04d`.
 The loot/shop change alters common new-game RNG, so shared replay refresh stays
 with the integration worktree.
+
+## P3.5 Item Generation and Mutation
+
+P3.5 moves five of its six planned identities from `blocked` to `active`:
+Mundanity, Acquirement, *Acquirement*, Rumour, and Crafting. Acquirement reuses
+the current floor's validated loot table, forces exceptional quality, and
+creates one item at the player's position; the starred scroll uses the same
+path for two or three items. Generated instances use the existing monotonic
+item serial allocator. The count roll and the existing entry, quality, and
+affix rolls are the only core RNG draws.
+
+Mundanity and Crafting use the existing item target selection. Invalid targets
+are rejected before the source scroll is consumed or RNG advances. When a
+stack is selected, one unit receives a new stable instance id and the remainder
+keeps the selected id. Mundanity clears quality, affixes, rolled affix state,
+enchantments, and curses. Fixed artifact kinds remain ineligible because their
+artifact identity is part of the content kind rather than an instance field.
+Crafting accepts ordinary weapons, armour, launchers, and ammunition, chooses
+from explicit validated affix candidates, and fully identifies the resulting
+ego item.
+
+Rumour emits a content-owned localization key and deliberately consumes no
+core RNG. The ledger records this fixed-rumour adaptation. Artifact Creation
+remains blocked under `random-artifact-identity`; a high-quality ego is not
+treated as a random artifact substitute.
+
+The authoritative audit reports 206 active, 106 mechanics-ready, and 232
+blocked source items. The formal pack contains 207 mapped RFB items plus 24
+original items, for 231 total. P3.5 reports five `blockedToActive` and one
+`stillBlocked` item. Pack version 1.204.0 has content hash
+`d06159983bfc5c8b1cbffaca1db8ff87d443d4f2b351c091bc503156a2bee135`.
+The save and state-hash schemas are unchanged. Black Market and Alchemist stock
+changes affect common new-game RNG, so shared fixture refresh remains an
+integration-worktree handoff.

@@ -1037,6 +1037,27 @@ export function createPresentationFormatter(
           ...event.args,
           source: visibleItemName(event.args.nameKey, event.args.source),
         });
+      case "item-use-acquirement":
+        return localization.format("message-item-use-acquirement", {
+          source: visibleItemName(event.args.nameKey, event.args.source),
+          count: Number(event.args.count ?? 0),
+        });
+      case "item-use-mundanity":
+        return localization.format("message-item-use-mundanity", {
+          source: visibleItemName(event.args.nameKey, event.args.source),
+          target: visibleItemNameForKind(event.args.target),
+        });
+      case "item-use-crafting":
+        return localization.format("message-item-use-crafting", {
+          source: visibleItemName(event.args.nameKey, event.args.source),
+          target: visibleItemNameForKind(event.args.target),
+          affix: contentName(event.args.affix),
+        });
+      case "item-use-rumour":
+        return localization.format("message-item-use-rumour", {
+          source: visibleItemName(event.args.nameKey, event.args.source),
+          rumour: localization.format(event.args.rumourKey ?? ""),
+        });
       case "item-use-enchanted":
         return localization.format("message-item-use-enchanted", {
           source: visibleItemNameForKind(event.args.source),

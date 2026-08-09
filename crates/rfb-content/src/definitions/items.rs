@@ -457,6 +457,19 @@ pub enum ItemUseEffectDefinition {
     },
     IdentifyInventory,
     SelfKnowledge,
+    Acquirement {
+        loot_table_id: String,
+        minimum_count: u8,
+        maximum_count: u8,
+    },
+    MundanifyItem,
+    CraftItem {
+        weapon_affix_ids: Vec<String>,
+        armor_affix_ids: Vec<String>,
+    },
+    ShowRumour {
+        message_key: String,
+    },
     EnchantItem {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         to_hit: Option<ItemEnchantmentRollDefinition>,

@@ -2063,6 +2063,7 @@ fn fixed_consumable_use_action_with_terrain(
             "type": "recharge-from-device",
             "power": 100
         }),
+        (70, 23) => serde_json::json!({"type": "mundanify-item"}),
         (70, 24) => serde_json::json!({
             "type": "set-floor-glow",
             "glow": true,
@@ -2120,6 +2121,18 @@ fn fixed_consumable_use_action_with_terrain(
             "power": 300,
             "radius": 20
         }),
+        (70, 46) => serde_json::json!({
+            "type": "acquirement",
+            "lootTableId": LEGACY_DROP_TABLE_ID,
+            "minimumCount": 1,
+            "maximumCount": 1
+        }),
+        (70, 47) => serde_json::json!({
+            "type": "acquirement",
+            "lootTableId": LEGACY_DROP_TABLE_ID,
+            "minimumCount": 2,
+            "maximumCount": 3
+        }),
         (70, 48) => {
             let terrain_creation = terrain_creation?;
             serde_json::json!({
@@ -2141,6 +2154,10 @@ fn fixed_consumable_use_action_with_terrain(
             "durationDice": 1,
             "durationSides": 25,
             "durationBonus": 25
+        }),
+        (70, 51) => serde_json::json!({
+            "type": "show-rumour",
+            "messageKey": "rumour-legacy-wilderness"
         }),
         (70, 58) => serde_json::json!({
             "type": "self-centered-elemental-blast",
@@ -2195,6 +2212,14 @@ fn fixed_consumable_use_action_with_terrain(
             1,
             false,
         ),
+        (70, 55) => serde_json::json!({
+            "type": "craft-item",
+            "weaponAffixIds": [
+                "rfb-legacy.affix.of-sharpness",
+                "rfb-legacy.affix.of-slaying"
+            ],
+            "armorAffixIds": ["rfb-legacy.affix.of-protection"]
+        }),
         (70, 62) => serde_json::json!({
             "type": "banish-visible",
             "maximumDistance": 150
@@ -2822,7 +2847,12 @@ fn item_json_with_terrain(
     }
     let use_action = fixed_consumable_use_action_with_terrain(entry, terrain_creation);
     let device_generation = legacy_device_generation(entry);
-    if let Some(gap) = shape.behavior_gap
+    let behavior_gap = if entry.tval == 70 && entry.sval == 52 {
+        Some("random-artifact-identity")
+    } else {
+        shape.behavior_gap
+    };
+    if let Some(gap) = behavior_gap
         && ability_book_id.is_none()
         && use_action.is_none()
         && device_generation.is_none()
@@ -12991,6 +13021,42 @@ F:BRAND_VAMP | HOLD_LIFE
         assert_eq!(effect(41)["minimumRadius"], 13);
         assert_eq!(effect(41)["maximumRadius"], 17);
         assert_eq!(effect(41)["quartzTerrainId"], "rfb-legacy.terrain.quartz");
+    }
+
+    #[test]
+    fn p3_5_generation_and_mutation_scrolls_map_authoritative_effects() {
+        let effect = |sval| {
+            fixed_consumable_use_action(&LegacyItemEntry {
+                tval: 70,
+                sval,
+                ..LegacyItemEntry::default()
+            })
+            .expect("P3.5 scroll should map")["effect"]
+                .clone()
+        };
+
+        assert_eq!(effect(23)["type"], "mundanify-item");
+        assert_eq!(effect(46)["minimumCount"], 1);
+        assert_eq!(effect(46)["maximumCount"], 1);
+        assert_eq!(effect(47)["minimumCount"], 2);
+        assert_eq!(effect(47)["maximumCount"], 3);
+        assert_eq!(effect(51)["type"], "show-rumour");
+        assert_eq!(effect(55)["type"], "craft-item");
+
+        let mut report = ContentImportReport::default();
+        let _ = item_json(
+            &LegacyItemEntry {
+                tval: 70,
+                sval: 52,
+                ..LegacyItemEntry::default()
+            },
+            "artifact-creation-scroll",
+            &LauncherAmmoIndex::default(),
+            None,
+            &mut report,
+        );
+        assert_eq!(report.item_behavior_gaps["random-artifact-identity"], 1);
+        assert!(!report.item_behavior_gaps.contains_key("scroll-effect"));
     }
 
     #[test]

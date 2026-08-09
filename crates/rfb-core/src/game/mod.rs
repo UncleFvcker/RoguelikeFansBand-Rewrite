@@ -418,6 +418,7 @@ enum LootSource {
     MonsterDeath { actor_id: String },
     FloorRoom { room_id: String, spawn_id: String },
     Vault { vault_id: String, spawn_id: String },
+    ItemUse { item_id: String },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -4357,6 +4358,7 @@ impl Game {
                 LootSource::Vault { vault_id, spawn_id } => {
                     context.depth > 0 && !vault_id.is_empty() && !spawn_id.is_empty()
                 }
+                LootSource::ItemUse { item_id } => !item_id.is_empty(),
             };
         debug_assert!(context_is_valid, "validated loot context must remain valid");
         let table = self

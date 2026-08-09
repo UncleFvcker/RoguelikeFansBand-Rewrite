@@ -4901,3 +4901,253 @@ fn p3_3_star_enlightenment_composes_map_detection_identification_and_report() {
     assert!(report.args.contains_key("resistances"));
     assert!(report.args.contains_key("resources"));
 }
+
+#[test]
+fn p3_5_acquirement_uses_stable_ids_current_position_and_exact_rng_draws() {
+    let mut single = Game::new(503);
+    clear_monsters(&mut single);
+    give_inventory_item(
+        &mut single,
+        "test.item.acquirement.1",
+        "demo.item.acquirement-scroll",
+    );
+    let position = single.player.position;
+    let ids_before = single
+        .items
+        .iter()
+        .map(|item| item.id.clone())
+        .collect::<BTreeSet<_>>();
+    let draws_before = single.rng_draw_counter();
+    let update = dispatch_next(
+        &mut single,
+        GameCommand::UseItem {
+            item_id: "test.item.acquirement.1".to_owned(),
+            target: None,
+        },
+    );
+    let generated = single
+        .items
+        .iter()
+        .filter(|item| !ids_before.contains(&item.id))
+        .collect::<Vec<_>>();
+    assert_eq!(generated.len(), 1);
+    assert_eq!(generated[0].location, ItemLocation::Ground(position));
+    assert_eq!(generated[0].quality, ItemQualityDto::Exceptional);
+    assert!(generated[0].id.starts_with("generated.item."));
+    assert_eq!(single.rng_draw_counter(), draws_before + 3);
+    assert!(update.events.iter().any(|event| {
+        event.kind == "item.use-acquirement"
+            && event.args.get("count").map(String::as_str) == Some("1")
+    }));
+
+    let mut multiple = Game::new(509);
+    clear_monsters(&mut multiple);
+    give_inventory_item(
+        &mut multiple,
+        "test.item.star-acquirement.1",
+        "demo.item.star-acquirement-scroll",
+    );
+    let before_count = multiple.items.len();
+    let draws_before = multiple.rng_draw_counter();
+    dispatch_next(
+        &mut multiple,
+        GameCommand::UseItem {
+            item_id: "test.item.star-acquirement.1".to_owned(),
+            target: None,
+        },
+    );
+    let generated_count = multiple.items.len() - (before_count - 1);
+    assert!((2..=3).contains(&generated_count));
+    assert_eq!(
+        multiple.rng_draw_counter(),
+        draws_before + 1 + 3 * generated_count as u64
+    );
+}
+
+#[test]
+fn p3_5_mundanity_splits_one_unit_and_rejects_fixed_artifacts_atomically() {
+    let mut game = Game::new(521);
+    clear_monsters(&mut game);
+    give_inventory_item(
+        &mut game,
+        "test.item.mundanity.1",
+        "demo.item.mundanity-scroll",
+    );
+    give_inventory_item(&mut game, "test.item.mundane-target.1", "demo.item.arrow");
+    let target = game
+        .items
+        .iter_mut()
+        .find(|item| item.id == "test.item.mundane-target.1")
+        .expect("target stack should exist");
+    target.quantity = 3;
+    target.quality = ItemQualityDto::Exceptional;
+    target.affix_ids = vec!["demo.affix.frost-hunter".to_owned()];
+    target.enchantments.to_hit = 2;
+    let draws_before = game.rng_draw_counter();
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: "test.item.mundanity.1".to_owned(),
+            target: Some(TargetSelection::Item {
+                item_id: "test.item.mundane-target.1".to_owned(),
+            }),
+        },
+    );
+    let remainder = game
+        .items
+        .iter()
+        .find(|item| item.id == "test.item.mundane-target.1")
+        .expect("remainder should keep the selected stack id");
+    assert_eq!(remainder.quantity, 2);
+    assert_eq!(remainder.quality, ItemQualityDto::Exceptional);
+    let mundane = game
+        .items
+        .iter()
+        .find(|item| item.kind_id == "demo.item.arrow" && item.id != "test.item.mundane-target.1")
+        .expect("one separated unit should become mundane");
+    assert_eq!(mundane.quantity, 1);
+    assert_eq!(mundane.quality, ItemQualityDto::Ordinary);
+    assert!(mundane.affix_ids.is_empty());
+    assert!(mundane.enchantments.is_empty());
+    assert_eq!(game.rng_draw_counter(), draws_before);
+    assert!(update.events.iter().any(|event| {
+        event.kind == "item.use-mundanity"
+            && event.args.get("split").map(String::as_str) == Some("true")
+            && event.args.get("targetId") == Some(&mundane.id)
+    }));
+    Game::from_save(game.to_save()).expect("split mundane ammunition should round-trip");
+
+    give_inventory_item(
+        &mut game,
+        "test.item.mundanity.2",
+        "demo.item.mundanity-scroll",
+    );
+    give_inventory_item(
+        &mut game,
+        "test.item.fixed-artifact.1",
+        "demo.item.relic-blade",
+    );
+    let draws_before = game.rng_draw_counter();
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: "test.item.mundanity.2".to_owned(),
+            target: Some(TargetSelection::Item {
+                item_id: "test.item.fixed-artifact.1".to_owned(),
+            }),
+        },
+    );
+    assert_eq!(game.rng_draw_counter(), draws_before);
+    assert!(
+        game.items
+            .iter()
+            .any(|item| item.id == "test.item.mundanity.2")
+    );
+    assert_eq!(update.events[0].kind, "item.use-unavailable");
+}
+
+#[test]
+fn p3_5_crafting_splits_ammunition_identifies_ego_and_cancels_invalid_targets() {
+    let mut game = Game::new(523);
+    clear_monsters(&mut game);
+    give_inventory_item(
+        &mut game,
+        "test.item.crafting.1",
+        "demo.item.crafting-scroll",
+    );
+    give_inventory_item(&mut game, "test.item.crafting-target.1", "demo.item.arrow");
+    game.items
+        .iter_mut()
+        .find(|item| item.id == "test.item.crafting-target.1")
+        .expect("ammunition should exist")
+        .quantity = 3;
+    let draws_before = game.rng_draw_counter();
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: "test.item.crafting.1".to_owned(),
+            target: Some(TargetSelection::Item {
+                item_id: "test.item.crafting-target.1".to_owned(),
+            }),
+        },
+    );
+    assert_eq!(game.rng_draw_counter(), draws_before + 1);
+    assert_eq!(
+        game.items
+            .iter()
+            .find(|item| item.id == "test.item.crafting-target.1")
+            .expect("remainder should exist")
+            .quantity,
+        2
+    );
+    let crafted = game
+        .items
+        .iter()
+        .find(|item| item.kind_id == "demo.item.arrow" && item.id != "test.item.crafting-target.1")
+        .expect("one crafted unit should be split from the stack");
+    assert_eq!(crafted.quantity, 1);
+    assert_eq!(crafted.quality, ItemQualityDto::Exceptional);
+    assert_eq!(crafted.affix_ids.len(), 1);
+    let knowledge = &game.item_property_knowledge[&crafted.id];
+    assert!(knowledge.appraised && knowledge.identified);
+    assert!(knowledge.known_affix_ids.contains(&crafted.affix_ids[0]));
+    assert!(update.events.iter().any(|event| {
+        event.kind == "item.use-crafting"
+            && event.args.get("targetId") == Some(&crafted.id)
+            && event.args.get("split").map(String::as_str) == Some("true")
+    }));
+    Game::from_save(game.to_save()).expect("crafted ammunition should round-trip");
+
+    give_inventory_item(
+        &mut game,
+        "test.item.crafting.2",
+        "demo.item.crafting-scroll",
+    );
+    give_inventory_item(
+        &mut game,
+        "test.item.invalid-crafting-target.1",
+        "demo.item.ration-of-food",
+    );
+    let draws_before = game.rng_draw_counter();
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: "test.item.crafting.2".to_owned(),
+            target: Some(TargetSelection::Item {
+                item_id: "test.item.invalid-crafting-target.1".to_owned(),
+            }),
+        },
+    );
+    assert_eq!(game.rng_draw_counter(), draws_before);
+    assert!(
+        game.items
+            .iter()
+            .any(|item| item.id == "test.item.crafting.2")
+    );
+    assert_eq!(update.events[0].kind, "item.use-unavailable");
+}
+
+#[test]
+fn p3_5_rumour_is_localized_without_core_rng() {
+    let mut game = Game::new(541);
+    clear_monsters(&mut game);
+    give_inventory_item(&mut game, "test.item.rumour.1", "demo.item.rumour-scroll");
+    let draws_before = game.rng_draw_counter();
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: "test.item.rumour.1".to_owned(),
+            target: None,
+        },
+    );
+    assert_eq!(game.rng_draw_counter(), draws_before);
+    let event = update
+        .events
+        .iter()
+        .find(|event| event.kind == "item.use-rumour")
+        .expect("rumour should emit a localized message reference");
+    assert_eq!(
+        event.args.get("rumourKey").map(String::as_str),
+        Some("rumour-demo-warrens-depths")
+    );
+}

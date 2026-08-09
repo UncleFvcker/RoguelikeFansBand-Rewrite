@@ -439,5 +439,12 @@ message-item-use-floor-darkness = { $source } darkens { $count } spaces.
 message-item-use-floor-glow-no-effect = { $source } produces no further change in the surrounding light.
 message-item-use-area-destruction = { $source } remakes { $count } spaces, removing { $entities } creatures, { $items } items, and { $gold } treasure piles.
 message-item-use-area-destruction-protected = { $source } cannot destroy this protected region.
+message-item-use-acquirement = { $source } creates { $count } excellent { $count ->
+    [one] item
+   *[other] items
+} at your feet.
+message-item-use-mundanity = { $source } strips { $target } back to the mundane.
+message-item-use-crafting = { $source } crafts { $target } with { $affix }.
+message-item-use-rumour = { $source } reads: “{ $rumour }”
 message-monster-warding-glyph-held = The glyph of warding repels { $source }.
 message-monster-warding-glyph-broken = { $source } breaks the glyph of warding.
