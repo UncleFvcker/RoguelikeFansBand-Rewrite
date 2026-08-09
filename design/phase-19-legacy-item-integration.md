@@ -792,3 +792,7 @@ has content hash
 Protocol 1.157, save v1, State Hash Schema v77, and contract-v227 are unchanged;
 all new state remains derived from the existing active-mutation set, so existing
 fixtures still begin without active mutations.
+
+The current M0--M4E status, the missing random-candidate closure gate, and the
+M5--M8 continuation plan are consolidated in
+[`handoff-p3-7-mutation-system.md`](handoff-p3-7-mutation-system.md).
