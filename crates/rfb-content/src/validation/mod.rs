@@ -117,10 +117,41 @@ pub(crate) fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<
             || !(-1_000_000..=1_000_000).contains(&mutation.armor_class)
             || !(-1_000_000..=1_000_000).contains(&mutation.saving_throw_skill)
             || !(-1_000_000..=1_000_000).contains(&mutation.saving_throw_skill_per_five_levels)
+            || !(-64..=64).contains(&mutation.stealth_skill)
+            || !(-64..=64).contains(&mutation.search_skill)
+            || !(-64..=64).contains(&mutation.perception_skill)
             || !(-64..=64).contains(&mutation.infravision)
             || !(-1_000..=1_000).contains(&mutation.regeneration_rate_modifier_percent)
             || !(-8..=8).contains(&mutation.light_radius)
+            || !(-100..=100).contains(&mutation.spell_failure_modifier_percent)
+            || mutation.kill_experience_bonus_percent > 1_000
+            || mutation.dispel_resistance_percent > 100
         {
+            return Err(ContentError::InvalidMutation(mutation.id.clone()));
+        }
+        if [
+            mutation.relative_experience_multiplier,
+            mutation.movement_energy_multiplier,
+            mutation.scroll_energy_multiplier,
+        ]
+        .into_iter()
+        .flatten()
+        .any(|ratio| {
+            ratio.numerator == 0
+                || ratio.denominator == 0
+                || ratio.numerator > 1_000
+                || ratio.denominator > 1_000
+        }) {
+            return Err(ContentError::InvalidMutation(mutation.id.clone()));
+        }
+        if mutation.innate_attack.as_ref().is_some_and(|attack| {
+            attack.name.trim().is_empty()
+                || attack.damage_dice == 0
+                || attack.damage_sides == 0
+                || attack.weight_tenths_pound == 0
+                || !(-1_000_000..=1_000_000).contains(&attack.to_hit)
+                || !(-1_000_000..=1_000_000).contains(&attack.to_damage)
+        }) {
             return Err(ContentError::InvalidMutation(mutation.id.clone()));
         }
         if !mutation_source_indices.insert(mutation.source_index) {

@@ -7,5 +7,14 @@
   "rating": "good",
   "sourceIndex": 38,
   "randomWeight": 4,
+  "innateAttack": {
+    "name": "尾巴",
+    "toHit": 0,
+    "toDamage": 0,
+    "damageDice": 3,
+    "damageSides": 7,
+    "damageType": "poison",
+    "weightTenthsPound": 50
+  },
   "removesOnGain": []
 }

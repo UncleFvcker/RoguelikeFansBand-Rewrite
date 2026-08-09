@@ -716,3 +716,83 @@ has content hash
 Protocol 1.153, save v1, State Hash Schema v74, and contract-v217 are unchanged;
 the new aura events use the existing generic event projection, and existing
 fixtures still begin without active mutations.
+
+## P3.7-M4D Innate Attacks and Combat Passives
+
+The fourth bounded passive batch activates eleven complete original mutations:
+Launcher, Scorpion Tail, Horns, Beak, Trunk, Tentacles, Limber, Arthritis,
+Motion, Untouchable, and Tread Softly. Their authoritative Chinese identities
+and ordered Beak/Trunk and Limber/Arthritis conflicts remain unchanged.
+
+The five mutation innate attacks run after the ordinary weapon routine in
+source-index order. They keep the original `3d7` poison tail, `2d6` horns,
+`2d4` beak, `1d4` trunk, and `2d5` tentacles, each at one blow. Weapon-specific
+hit and damage bonuses do not leak into these attacks. Successful innate blows
+reuse the existing hit contest, resistance, monster contact aura, resource,
+wake, and actor-death transactions. Their original attack weights drive the
+deterministic critical roll: `1d5000 <= weight + 5 * toHit + 3 * level`, followed
+by `weight + 1d650` selecting the `200%` through `400%` damage band.
+
+Launcher supplies the original Mighty Throw increment to the current throw
+model: the range budget rises from 50 to 60, its cap from 10 to 12 grids, and
+pre-resistance throw damage is doubled. Motion grants paralysis immunity and
+`+1` stealth; Tread Softly grants `+3` stealth; Untouchable grants `+20` armor;
+Limber and Arthritis grant `+3` and `-3` dexterity through the existing
+effective-attribute pipeline. `MutationDefinition` adds only an optional innate
+attack, a Mighty Throw flag, and a stealth-skill adjustment.
+
+Weapon Skills remains blocked on a weapon-proficiency system, Fell Sorcery on
+spell-power scaling, Vortex Melee on the vortex racial innate-attack identity,
+and the Human Strength, Dexterity, and Charisma traits on their critical
+balance, combat-strain, and complete accuracy/spell-failure consumers. None is
+represented by an approximate passive.
+
+The mutation audit reports 37 active and 115 blocked identities. Pack 1.224.0
+has content hash
+`d05c6da73374d1223c10cebdb88e3e7f0349d0ce3182cfc0e70aa96ac60b0bc6`.
+Protocol 1.157, save v1, State Hash Schema v77, and contract-v227 are unchanged;
+the innate-attack events use the existing generic event projection, and
+existing fixtures still begin without active mutations.
+
+## P3.7-M4E Cross-System Passives
+
+The fifth bounded passive batch activates thirteen complete identities: Extra
+Eyes, Extra Noise, Fast Learner, Loremaster, Arcane Mastery, One with Magic,
+Merchant's Friend, Fleet of Foot, Black Marketeer, Speed Reader, Draconian
+Lore, Strong Mind, and Limp. Merchant's Friend remains the authoritative
+source no-numeric-effect identity rather than inventing a local shop bonus.
+
+Extra Eyes contributes the original `+15` search and perception values, while
+Extra Noise contributes `-3` stealth through the existing derived-stat
+pipeline. Fast Learner applies `120%` monster-kill experience and the original
+`5/3` multiplier to relative experience effects. Loremaster and Draconian Lore
+reuse standard item identification on gain and after carried-item changes.
+Arcane Mastery subtracts three percentage points before the casting profile's
+minimum failure clamp.
+
+Fleet of Foot scales local and world-map walking energy by `3/5`; Limp first
+scales it by `10/9`, preserving the original integer-rounding order when both
+are active. Speed Reader halves scroll energy. Black Marketeer removes the Black Market's
+two-times purchase markup and one-half sale markdown. One with Magic uses one
+deterministic `77%` roll against hostile dispelling, and Strong Mind makes the
+existing monster resource-drain effect resolve with zero drain and zero caster
+healing.
+
+Good Luck and Bad Luck remain blocked until item generation, random device
+outcomes, curses, and sensing all consume the same luck rule. Easy Tiring and
+Easy Tiring II remain blocked on the original `minislow`/recovery state and all
+physical, ranged, and magic action consumers. Astral Guide remains blocked
+until every player-triggered teleport entry point can report and scale its
+energy cost. Device-charge drain and category-specific device failure modifiers
+also retain explicit blockers.
+
+The mutation audit reports 50 active and 102 blocked identities. Pack 1.225.0
+has content hash
+`40248e0e709f3f10e3549e61fb792b09700cc69d1ad4bd923c3691564733bcde`.
+Protocol 1.157, save v1, State Hash Schema v77, and contract-v227 are unchanged;
+all new state remains derived from the existing active-mutation set, so existing
+fixtures still begin without active mutations.
+
+The current M0--M4E status, the missing random-candidate closure gate, and the
+M5--M8 continuation plan are consolidated in
+[`handoff-p3-7-mutation-system.md`](handoff-p3-7-mutation-system.md).

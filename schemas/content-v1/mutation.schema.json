@@ -46,6 +46,54 @@
       ],
       "type": "string"
     },
+    "MutationInnateAttackDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "damageDice": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "damageSides": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "damageType": {
+          "$ref": "#/$defs/ActorDamageType",
+          "default": "physical"
+        },
+        "name": {
+          "type": "string"
+        },
+        "toDamage": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "toHit": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "weightTenthsPound": {
+          "description": "Original RFB attack weight used by the innate critical-hit roll.",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "name",
+        "toHit",
+        "toDamage",
+        "damageDice",
+        "damageSides",
+        "weightTenthsPound"
+      ],
+      "type": "object"
+    },
     "MutationRatingDefinition": {
       "enum": [
         "awful",
@@ -55,6 +103,28 @@
         "great"
       ],
       "type": "string"
+    },
+    "MutationRatioDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "denominator": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "numerator": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "numerator",
+        "denominator"
+      ],
+      "type": "object"
     },
     "StatModifiers": {
       "additionalProperties": false,
@@ -126,6 +196,14 @@
       "format": "int32",
       "type": "integer"
     },
+    "autoIdentifyItems": {
+      "default": false,
+      "type": "boolean"
+    },
+    "blackMarketStandardPrices": {
+      "default": false,
+      "type": "boolean"
+    },
     "contactAura": {
       "anyOf": [
         {
@@ -139,6 +217,13 @@
     },
     "description": {
       "type": "string"
+    },
+    "dispelResistancePercent": {
+      "default": 0,
+      "format": "uint8",
+      "maximum": 255,
+      "minimum": 0,
+      "type": "integer"
     },
     "formatVersion": {
       "format": "uint16",
@@ -154,6 +239,24 @@
       "format": "int32",
       "type": "integer"
     },
+    "innateAttack": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/MutationInnateAttackDefinition"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "killExperienceBonusPercent": {
+      "default": 0,
+      "format": "uint16",
+      "maximum": 65535,
+      "minimum": 0,
+      "type": "integer"
+    },
     "levitation": {
       "default": false,
       "type": "boolean"
@@ -162,6 +265,10 @@
       "default": 0,
       "format": "int32",
       "type": "integer"
+    },
+    "mightyThrow": {
+      "default": false,
+      "type": "boolean"
     },
     "modifiers": {
       "$ref": "#/$defs/StatModifiers",
@@ -178,8 +285,24 @@
         "wisdom": 0
       }
     },
+    "movementEnergyMultiplier": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/MutationRatioDefinition"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
     "name": {
       "type": "string"
+    },
+    "perceptionSkill": {
+      "default": 0,
+      "format": "int32",
+      "type": "integer"
     },
     "randomWeight": {
       "format": "uint8",
@@ -195,6 +318,17 @@
       "description": "Additive percentage adjustment to the natural HP regeneration rate.",
       "format": "int32",
       "type": "integer"
+    },
+    "relativeExperienceMultiplier": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/MutationRatioDefinition"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
     },
     "removesOnGain": {
       "items": {
@@ -301,6 +435,10 @@
       },
       "type": "object"
     },
+    "resourceDrainImmunity": {
+      "default": false,
+      "type": "boolean"
+    },
     "savingThrowSkill": {
       "default": 0,
       "format": "int32",
@@ -311,10 +449,31 @@
       "format": "int32",
       "type": "integer"
     },
+    "scrollEnergyMultiplier": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/MutationRatioDefinition"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "searchSkill": {
+      "default": 0,
+      "format": "int32",
+      "type": "integer"
+    },
     "sourceIndex": {
       "format": "uint16",
       "maximum": 65535,
       "minimum": 0,
+      "type": "integer"
+    },
+    "spellFailureModifierPercent": {
+      "default": 0,
+      "format": "int32",
       "type": "integer"
     },
     "statusImmunities": {
@@ -322,6 +481,11 @@
         "type": "string"
       },
       "type": "array"
+    },
+    "stealthSkill": {
+      "default": 0,
+      "format": "int32",
+      "type": "integer"
     },
     "telepathy": {
       "default": false,

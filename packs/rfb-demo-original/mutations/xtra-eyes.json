@@ -7,5 +7,7 @@
   "rating": "average",
   "sourceIndex": 75,
   "randomWeight": 6,
+  "searchSkill": 15,
+  "perceptionSkill": 15,
   "removesOnGain": []
 }

@@ -7,5 +7,6 @@
   "rating": "bad",
   "sourceIndex": 77,
   "randomWeight": 6,
+  "stealthSkill": -3,
   "removesOnGain": []
 }

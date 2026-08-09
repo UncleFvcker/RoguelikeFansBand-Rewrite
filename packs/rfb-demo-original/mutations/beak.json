@@ -7,6 +7,14 @@
   "rating": "good",
   "sourceIndex": 40,
   "randomWeight": 4,
+  "innateAttack": {
+    "name": "鸟喙",
+    "toHit": 0,
+    "toDamage": 0,
+    "damageDice": 2,
+    "damageSides": 4,
+    "weightTenthsPound": 30
+  },
   "removesOnGain": [
     "rfb.mutation.trunk"
   ]

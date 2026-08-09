@@ -476,6 +476,125 @@ fn m4c_regeneration_and_fire_light_feed_existing_player_pipelines() {
 }
 
 #[test]
+fn m4d_passive_combat_modifiers_feed_existing_attribute_and_skill_pipelines() {
+    let mut game = Game::new(0);
+    let base_dexterity = game.effective_player_attributes().dexterity;
+    let base_stats = game.player_derived_stats();
+
+    assert!(game.gain_mutation("rfb.mutation.limber", &mut Vec::new()));
+    assert_eq!(
+        game.effective_player_attributes().dexterity,
+        base_dexterity + 3
+    );
+    assert!(game.gain_mutation("rfb.mutation.arthritis", &mut Vec::new()));
+    assert!(
+        !game
+            .progress
+            .active_mutation_ids
+            .contains("rfb.mutation.limber")
+    );
+    assert_eq!(
+        game.effective_player_attributes().dexterity,
+        base_dexterity - 3
+    );
+
+    assert!(game.gain_mutation("rfb.mutation.motion", &mut Vec::new()));
+    assert!(game.gain_mutation("rfb.mutation.untouchable", &mut Vec::new()));
+    assert!(game.gain_mutation("rfb.mutation.tread-softly", &mut Vec::new()));
+    let stats = game.player_derived_stats();
+    assert_eq!(
+        stats.stealth_skill.value,
+        base_stats.stealth_skill.value + 4
+    );
+    assert_eq!(stats.armor_class.value, base_stats.armor_class.value + 20);
+    assert!(game.player_status_immunities().contains(STATUS_PARALYSIS));
+}
+
+#[test]
+fn m4e_cross_system_mutations_reuse_stats_energy_experience_and_item_knowledge() {
+    const ITEM_ID: &str = "test.item.m4e-water.1";
+    const SCROLL_ID: &str = "test.item.m4e-scroll.1";
+
+    let mut game = Game::new(0);
+    let base = game.player_derived_stats();
+    assert!(game.gain_mutation("rfb.mutation.xtra-eyes", &mut Vec::new()));
+    assert!(game.gain_mutation("rfb.mutation.xtra-noise", &mut Vec::new()));
+    let stats = game.player_derived_stats();
+    assert_eq!(stats.search_skill.value, base.search_skill.value + 15);
+    assert_eq!(
+        stats.perception_skill.value,
+        base.perception_skill.value + 15
+    );
+    assert_eq!(
+        stats.stealth_skill.value,
+        base.stealth_skill.value.saturating_sub(3).max(0)
+    );
+    assert!(
+        stats
+            .stealth_skill
+            .contributions
+            .iter()
+            .any(|contribution| {
+                contribution.source_id == "rfb.mutation.xtra-noise" && contribution.amount == -3
+            })
+    );
+
+    give_inventory_item(&mut game, ITEM_ID, "demo.item.water-potion");
+    let mut events = Vec::new();
+    assert!(game.gain_mutation("rfb.mutation.loremaster", &mut events));
+    assert_eq!(
+        game.item_knowledge_dto("demo.item.water-potion"),
+        rfb_protocol::ItemKnowledgeDto::Aware
+    );
+    assert!(game.item_property_knowledge[ITEM_ID].appraised);
+    assert!(!game.item_property_knowledge[ITEM_ID].identified);
+    assert!(matches!(
+        events.last(),
+        Some(DomainEvent::ItemAutoIdentified { count: 1 })
+    ));
+
+    assert!(game.gain_mutation("rfb.mutation.fast-learner", &mut Vec::new()));
+    assert_eq!(game.player_kill_experience_reward(100), 120);
+    assert_eq!(game.player_relative_experience_reward(100), 166);
+
+    assert!(game.gain_mutation("rfb.mutation.fleet-of-foot", &mut Vec::new()));
+    assert!(game.gain_mutation("rfb.mutation.limp", &mut Vec::new()));
+    assert_eq!(
+        game.player_mutation_action_energy_cost(
+            &GameAction::Move {
+                direction: Direction::North,
+            },
+            STANDARD_ACTION_COST,
+        ),
+        66
+    );
+    let world_walking_cost = STANDARD_ACTION_COST * wilderness::WORLD_MAP_ACTION_MULTIPLIER;
+    assert_eq!(
+        game.player_mutation_action_energy_cost(
+            &GameAction::TravelWorld {
+                destination: Position { x: 1, y: 1 },
+            },
+            world_walking_cost,
+        ),
+        (world_walking_cost * 10 / 9) * 3 / 5
+    );
+
+    give_inventory_item(&mut game, SCROLL_ID, "demo.item.appraisal-scroll");
+    assert!(game.gain_mutation("rfb.mutation.speed-reader", &mut Vec::new()));
+    assert_eq!(
+        game.player_mutation_action_energy_cost(
+            &GameAction::UseItem {
+                item_id: SCROLL_ID.to_owned(),
+                target: None,
+                target_glyph: None,
+            },
+            STANDARD_ACTION_COST,
+        ),
+        STANDARD_ACTION_COST / 2
+    );
+}
+
+#[test]
 fn new_life_is_one_seeded_transaction_with_locked_mutation_protection() {
     const ITEM_ID: &str = "test.item.new-life.1";
     const KIND_ID: &str = "demo.item.new-life-potion";

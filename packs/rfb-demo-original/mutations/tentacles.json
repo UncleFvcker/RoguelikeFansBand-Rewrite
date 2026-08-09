@@ -7,5 +7,13 @@
   "rating": "good",
   "sourceIndex": 48,
   "randomWeight": 2,
+  "innateAttack": {
+    "name": "触手",
+    "toHit": 0,
+    "toDamage": 0,
+    "damageDice": 2,
+    "damageSides": 5,
+    "weightTenthsPound": 50
+  },
   "removesOnGain": []
 }

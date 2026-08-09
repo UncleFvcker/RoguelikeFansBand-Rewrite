@@ -123,6 +123,7 @@ impl Game {
         attribute: AttributeKind,
         minimum_failure_percent: u8,
         ability: &AbilityDefinition,
+        modifier_percent: i32,
     ) -> u8 {
         let player = Self::player_ability_parameters(ability);
         let attribute_index = i32::from(self.effective_player_attributes().index(attribute));
@@ -135,6 +136,7 @@ impl Game {
             .saturating_sub(level_adjustment)
             .saturating_sub(attribute_index)
             .saturating_sub(proficiency_adjustment)
+            .saturating_add(modifier_percent)
             .clamp(i32::from(minimum_failure_percent), 95);
         u8::try_from(chance).expect("validated ability failure chance must fit u8")
     }
@@ -226,6 +228,7 @@ impl Game {
             Self::technique_attribute_kind(profile.governing_attribute),
             profile.minimum_failure_percent,
             ability,
+            0,
         )
     }
 
@@ -605,6 +608,7 @@ impl Game {
             Self::casting_attribute_kind(profile.casting_attribute),
             profile.minimum_failure_percent,
             ability,
+            self.player_spell_failure_modifier_percent(),
         )
     }
 

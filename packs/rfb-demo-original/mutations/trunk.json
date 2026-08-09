@@ -7,6 +7,14 @@
   "rating": "good",
   "sourceIndex": 46,
   "randomWeight": 4,
+  "innateAttack": {
+    "name": "象鼻",
+    "toHit": 0,
+    "toDamage": 0,
+    "damageDice": 1,
+    "damageSides": 4,
+    "weightTenthsPound": 200
+  },
   "removesOnGain": [
     "rfb.mutation.beak"
   ]

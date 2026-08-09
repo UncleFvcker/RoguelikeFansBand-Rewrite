@@ -4329,6 +4329,102 @@ fn spell_proficiency_uses_rfb_ranks_mana_costs_and_failure_adjustments() {
 }
 
 #[test]
+fn arcane_mastery_reduces_spell_failure_without_bypassing_the_profile_minimum() {
+    let mut game =
+        Game::new_with_build(0, "demo.build.scholar").expect("scholar build should create");
+    let ability = game
+        .content
+        .ability("demo.ability.resonant-bolt")
+        .expect("resonant bolt should exist")
+        .clone();
+    let profile = game
+        .casting_profile()
+        .expect("scholar should have a casting profile")
+        .clone();
+    assert_eq!(game.ability_failure_percent(&profile, &ability), 20);
+    assert!(game.gain_mutation("rfb.mutation.arcane-mastery", &mut Vec::new()));
+    assert_eq!(game.ability_failure_percent(&profile, &ability), 17);
+
+    game.progress.level = 50;
+    assert_eq!(
+        game.ability_failure_percent(&profile, &ability),
+        profile.minimum_failure_percent
+    );
+}
+
+#[test]
+fn magic_affinity_and_strong_mind_gate_existing_dispel_and_resource_drain_effects() {
+    let seed = (0..100)
+        .find(|seed| {
+            let game = Game::new_with_build(*seed, "demo.build.scholar")
+                .expect("scholar build should create");
+            let mut rng = game.rng.clone();
+            rng.bounded(100) < 77
+        })
+        .expect("a deterministic affinity resistance seed should exist");
+    let mut game =
+        Game::new_with_build(seed, "demo.build.scholar").expect("scholar build should create");
+    clear_monsters(&mut game);
+    game.resolve_item_speed("demo.item.swiftstep-tonic", 0, 1, 10, &mut Vec::new());
+    assert!(game.player_has_status_kind(STATUS_HASTE));
+    assert!(game.gain_mutation("rfb.mutation.one-with-magic", &mut Vec::new()));
+    assert!(game.gain_mutation("rfb.mutation.strong-mind", &mut Vec::new()));
+
+    let dispel = game
+        .content
+        .ability("demo.ability.veil-dispel")
+        .expect("veil dispel should exist")
+        .clone();
+    let draws_before = game.rng_draw_counter();
+    let resolutions = game.resolve_monster_player_effects(
+        "test.monster.caster",
+        "demo.actor.veil-warden",
+        &dispel,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+    );
+    assert_eq!(game.rng_draw_counter(), draws_before + 1);
+    assert!(matches!(
+        resolutions.as_slice(),
+        [AbilityEffectResolutionDto::Skipped {
+            reason: AbilityEffectSkipReasonDto::Saved,
+            ..
+        }]
+    ));
+    assert!(game.player_has_status_kind(STATUS_HASTE));
+
+    let drain = game
+        .content
+        .ability("rfb-legacy.ability.drain-mana-2")
+        .expect("drain mana should exist")
+        .clone();
+    let resource_id = game
+        .casting_profile()
+        .expect("scholar should have mana")
+        .resource_id
+        .clone();
+    let resource_before = game.resources[&resource_id].current;
+    let resolutions = game.resolve_monster_player_effects(
+        "test.monster.caster",
+        "demo.actor.gazer",
+        &drain,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+    );
+    assert!(matches!(
+        resolutions.as_slice(),
+        [AbilityEffectResolutionDto::DrainResource {
+            resource_id: drained_id,
+            requested: 2,
+            drained: 0,
+            caster_healed: 0,
+            ..
+        }] if drained_id == &resource_id
+    ));
+    assert_eq!(game.resources[&resource_id].current, resource_before);
+}
+
+#[test]
 fn failed_cast_costs_mana_but_insufficient_mana_does_not_draw_rng() {
     let mut failure =
         Game::new_with_build(2, "demo.build.scholar").expect("scholar build should create");

@@ -7,6 +7,9 @@
   "rating": "bad",
   "sourceIndex": 91,
   "randomWeight": 6,
+  "modifiers": {
+    "dexterity": -3
+  },
   "removesOnGain": [
     "rfb.mutation.limber"
   ]

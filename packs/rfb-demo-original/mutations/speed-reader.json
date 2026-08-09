@@ -7,5 +7,9 @@
   "rating": "good",
   "sourceIndex": 119,
   "randomWeight": 0,
+  "scrollEnergyMultiplier": {
+    "numerator": 1,
+    "denominator": 2
+  },
   "removesOnGain": []
 }

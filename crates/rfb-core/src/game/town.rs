@@ -474,17 +474,24 @@ pub(super) fn sell_unit_price(base_value: u32, factor: u16, cap: u32) -> u32 {
         .min(cap)
 }
 
-fn player_purchase_unit_price(shop: &ShopDefinition, base_value: u32, factor: u16) -> u32 {
+fn player_purchase_unit_price(
+    game: &Game,
+    shop: &ShopDefinition,
+    base_value: u32,
+    factor: u16,
+) -> u32 {
     let price = buy_unit_price(base_value, factor);
-    if shop.category == ShopCategory::BlackMarket {
+    if shop.category == ShopCategory::BlackMarket && !game.player_has_black_market_standard_prices()
+    {
         price.saturating_mul(2)
     } else {
         price
     }
 }
 
-fn player_sale_unit_price(shop: &ShopDefinition, base_value: u32, factor: u16) -> u32 {
-    if shop.category == ShopCategory::BlackMarket {
+fn player_sale_unit_price(game: &Game, shop: &ShopDefinition, base_value: u32, factor: u16) -> u32 {
+    if shop.category == ShopCategory::BlackMarket && !game.player_has_black_market_standard_prices()
+    {
         ((u64::from(base_value) * 100) / u64::from(factor.max(105)) / 2)
             .try_into()
             .unwrap_or(u32::MAX)
@@ -1125,6 +1132,7 @@ impl Game {
             .item(&item_kind_id)
             .expect("shop item kind must remain available");
         let unit_price = player_purchase_unit_price(
+            self,
             &shop,
             definition.base_value,
             shop_price_factor(self, &shop),
@@ -1232,8 +1240,12 @@ impl Game {
             .content
             .item(&item_kind_id)
             .expect("inventory item kind must remain available");
-        let unit_price =
-            player_sale_unit_price(&shop, definition.base_value, shop_price_factor(self, &shop));
+        let unit_price = player_sale_unit_price(
+            self,
+            &shop,
+            definition.base_value,
+            shop_price_factor(self, &shop),
+        );
         let Some(total_price) = unit_price.checked_mul(quantity) else {
             return Err("price-overflow");
         };
@@ -1461,8 +1473,12 @@ impl Game {
                                 .content
                                 .item(&item.kind_id)
                                 .expect("shop item kind must remain available");
-                            let unit_price =
-                                player_purchase_unit_price(shop, definition.base_value, factor);
+                            let unit_price = player_purchase_unit_price(
+                                self,
+                                shop,
+                                definition.base_value,
+                                factor,
+                            );
                             let affordable = self.gold / unit_price.max(1);
                             let slot_carryable = self.inventory_quantity_capacity_for(item, false);
                             ShopStockItemDto {
@@ -1501,7 +1517,14 @@ impl Game {
                                 item_id: item.id.clone(),
                                 kind_id: item.kind_id.clone(),
                                 unit_price: unavailable_reason.as_ref().map_or_else(
-                                    || player_sale_unit_price(shop, definition.base_value, factor),
+                                    || {
+                                        player_sale_unit_price(
+                                            self,
+                                            shop,
+                                            definition.base_value,
+                                            factor,
+                                        )
+                                    },
                                     |_| 0,
                                 ),
                                 maximum_quantity: if unavailable_reason.is_some() {

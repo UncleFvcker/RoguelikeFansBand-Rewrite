@@ -65,6 +65,24 @@ test("mutation aura events use the typed damage element", () => {
   localization.setLocale("en-US");
 });
 
+test("mutation melee events retain the authoritative innate attack name", () => {
+  const event = {
+    kind: "mutation.melee-hit",
+    messageKey: "mutation-melee-hit",
+    args: {
+      source: "rfb.mutation.scorpion-tail",
+      attack: "尾巴",
+      target: "demo.actor.echo-hound",
+      damage: "7",
+    },
+  };
+
+  assert.equal(formatter.formatEvent(event), "Your 尾巴 hits echo hound for 7 damage.");
+  localization.setLocale("zh-CN");
+  assert.equal(formatter.formatEvent(event), "你的尾巴击中了回声猎犬，造成 7 点伤害。");
+  localization.setLocale("en-US");
+});
+
 test("wilderness ambush events use the dedicated localized message", () => {
   assert.equal(
     formatter.formatEvent({

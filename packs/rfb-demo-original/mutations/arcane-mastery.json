@@ -7,5 +7,6 @@
   "rating": "great",
   "sourceIndex": 104,
   "randomWeight": 0,
+  "spellFailureModifierPercent": -3,
   "removesOnGain": []
 }

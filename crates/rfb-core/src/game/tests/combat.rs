@@ -131,6 +131,144 @@ fn fatal_mutation_aura_uses_the_shared_actor_death_transaction() {
 }
 
 #[test]
+fn mutation_innate_attacks_follow_source_order_and_use_their_damage_types() {
+    let mut base = game_with_actor_definition(0, "demo.actor.echo-hound", |actor| {
+        actor.defense = 0;
+    });
+    base.entities[0].kind_id = "demo.actor.echo-hound".to_owned();
+    base.entities[0].hp = 10_000;
+    base.entities[0].max_hp = 10_000;
+    for id in [
+        "rfb.mutation.scorpion-tail",
+        "rfb.mutation.horns",
+        "rfb.mutation.beak",
+        "rfb.mutation.trunk",
+        "rfb.mutation.tentacles",
+    ] {
+        base.progress.active_mutation_ids.insert(id.to_owned());
+    }
+    let attacker = base.player_derived_stats();
+    let profiles = base.player_mutation_innate_attack_profiles(&attacker, None);
+    assert_eq!(
+        profiles
+            .iter()
+            .map(|profile| profile.source_mutation_id.as_deref().unwrap())
+            .collect::<Vec<_>>(),
+        [
+            "rfb.mutation.scorpion-tail",
+            "rfb.mutation.horns",
+            "rfb.mutation.beak",
+            "rfb.mutation.trunk",
+            "rfb.mutation.tentacles",
+        ]
+    );
+
+    let events = (0..128)
+        .find_map(|seed| {
+            let mut game = base.clone();
+            game.rng = RfbRng::seeded(seed);
+            let mut events = Vec::new();
+            game.resolve_player_melee(0, &mut events, &mut BTreeSet::new(), &mut Vec::new())
+                .expect("mutation melee should resolve");
+            (events
+                .iter()
+                .filter(|event| matches!(event, DomainEvent::MutationMeleeHit { .. }))
+                .count()
+                == 5)
+                .then_some(events)
+        })
+        .expect("a deterministic seed should land all five innate attacks");
+    let mutation_hits = events
+        .iter()
+        .filter_map(|event| match event {
+            DomainEvent::MutationMeleeHit {
+                mutation_id,
+                attack_name,
+                damage,
+                ..
+            } => Some((
+                mutation_id.as_str(),
+                attack_name.as_str(),
+                damage.damage_type,
+            )),
+            _ => None,
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(
+        mutation_hits,
+        [
+            ("rfb.mutation.scorpion-tail", "尾巴", DamageType::Poison),
+            ("rfb.mutation.horns", "长角", DamageType::Physical),
+            ("rfb.mutation.beak", "鸟喙", DamageType::Physical),
+            ("rfb.mutation.trunk", "象鼻", DamageType::Physical),
+            ("rfb.mutation.tentacles", "触手", DamageType::Physical),
+        ]
+    );
+}
+
+#[test]
+fn fatal_mutation_innate_attack_uses_the_shared_actor_death_transaction() {
+    let mut base = game_with_actor_definition(0, "demo.actor.echo-hound", |actor| {
+        actor.defense = 0;
+    });
+    base.entities[0].kind_id = "demo.actor.echo-hound".to_owned();
+    base.entities[0].hp = 1;
+    base.entities[0].max_hp = 1;
+    base.entities[0]
+        .resistances
+        .set(DamageType::Physical, ResistanceLevel::Immune);
+    assert!(base.gain_mutation("rfb.mutation.scorpion-tail", &mut Vec::new()));
+    let removed_id = base.entities[0].id.clone();
+
+    let (game, events, removed) = (0..128)
+        .find_map(|seed| {
+            let mut game = base.clone();
+            game.rng = RfbRng::seeded(seed);
+            let mut events = Vec::new();
+            let mut removed = Vec::new();
+            game.resolve_player_melee(0, &mut events, &mut BTreeSet::new(), &mut removed)
+                .expect("fatal mutation melee should resolve");
+            events
+                .iter()
+                .any(|event| matches!(event, DomainEvent::MutationMeleeSlew { .. }))
+                .then_some((game, events, removed))
+        })
+        .expect("a deterministic seed should land the poisonous tail");
+
+    assert!(!game.entities.iter().any(|entity| entity.id == removed_id));
+    assert!(removed.contains(&removed_id));
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::MutationMeleeSlew {
+            mutation_id,
+            attack_name,
+            damage,
+            ..
+        } if mutation_id == "rfb.mutation.scorpion-tail"
+            && attack_name == "尾巴"
+            && damage.damage_type == DamageType::Poison
+            && damage.applied >= 3
+    )));
+}
+
+#[test]
+fn innate_critical_roll_uses_original_weight_level_and_quality_bands() {
+    let (seed, multiplier) = (0..10_000)
+        .find_map(|seed| {
+            let mut game = Game::new(seed);
+            let multiplier = game.roll_innate_critical_multiplier(200, 50);
+            (multiplier > 100).then_some((seed, multiplier))
+        })
+        .expect("a deterministic seed should produce an innate critical");
+    let mut repeated = Game::new(seed);
+    assert_eq!(
+        repeated.roll_innate_critical_multiplier(200, 50),
+        multiplier
+    );
+    assert!([200, 250, 300, 350, 400].contains(&multiplier));
+}
+
+#[test]
 fn zero_dice_hurt_hits_without_dealing_damage() {
     let mut game = monster_effect_game(
         0,

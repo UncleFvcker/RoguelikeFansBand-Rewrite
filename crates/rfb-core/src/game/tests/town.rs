@@ -523,6 +523,26 @@ fn black_market_uses_original_warrior_markup_and_markdown() {
         .expect("Black Market should buy ordinary legal inventory");
     assert_eq!(ration.unit_price, 1);
 
+    assert!(game.gain_mutation("rfb.mutation.black-marketeer", &mut Vec::new()));
+    let discounted = game.snapshot();
+    let shop = projected_shop(&discounted.shops, BLACK_MARKET_ID);
+    assert_eq!(
+        shop.stock
+            .iter()
+            .find(|item| item.kind_id == "demo.item.black-channels")
+            .expect("Black Market should retain Black Channels")
+            .unit_price,
+        21_000
+    );
+    assert_eq!(
+        shop.sell_quotes
+            .iter()
+            .find(|item| item.kind_id == "demo.item.ration-of-food")
+            .expect("Black Market should retain the ration quote")
+            .unit_price,
+        2
+    );
+
     let restored = Game::from_save(game.to_save()).expect("Black Market should round-trip");
     assert_eq!(restored.shop_states, game.shop_states);
     assert_eq!(restored.state_hash(), game.state_hash());
