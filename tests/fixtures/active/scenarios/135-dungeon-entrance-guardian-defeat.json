@@ -70,8 +70,8 @@
         "x": 3,
         "y": 3
       },
-      "playerHp": 42,
-      "playerMaxHp": 42,
+      "playerHp": 58,
+      "playerMaxHp": 58,
       "playerAttack": 2,
       "playerDefense": 1,
       "playerSpeed": 110,
@@ -101,36 +101,42 @@
           "strength": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 108,
             "effective": 13,
             "index": 10
           },
           "intelligence": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 108,
             "effective": 13,
             "index": 10
           },
           "wisdom": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 118,
             "effective": 13,
             "index": 10
           },
           "dexterity": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 128,
             "effective": 13,
             "index": 10
           },
           "constitution": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 128,
             "effective": 13,
             "index": 10
           },
           "charisma": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 118,
             "effective": 13,
             "index": 10
           }
@@ -343,7 +349,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "62bc2a34130688a25bbd9c69e59bee4000774c28b42a017d6ea4ca32997030cd"
+      "stateHash": "a96f148fac597af1ed995c26b83e6b4c88862b244cc3e3a4364e44b3b32370dc"
     },
     "events": [
       {
@@ -411,7 +417,7 @@
         "messageKey": "player-level-gained",
         "args": {
           "level": "2",
-          "maxHp": "16",
+          "maxHp": "18",
           "pendingAttributeIncreases": "1"
         }
       },
@@ -420,15 +426,6 @@
         "messageKey": "player-level-gained",
         "args": {
           "level": "3",
-          "maxHp": "21",
-          "pendingAttributeIncreases": "1"
-        }
-      },
-      {
-        "kind": "player.level-gained",
-        "messageKey": "player-level-gained",
-        "args": {
-          "level": "4",
           "maxHp": "25",
           "pendingAttributeIncreases": "1"
         }
@@ -437,8 +434,17 @@
         "kind": "player.level-gained",
         "messageKey": "player-level-gained",
         "args": {
+          "level": "4",
+          "maxHp": "32",
+          "pendingAttributeIncreases": "1"
+        }
+      },
+      {
+        "kind": "player.level-gained",
+        "messageKey": "player-level-gained",
+        "args": {
           "level": "5",
-          "maxHp": "30",
+          "maxHp": "33",
           "pendingAttributeIncreases": "1"
         }
       },
@@ -447,7 +453,7 @@
         "messageKey": "player-level-gained",
         "args": {
           "level": "6",
-          "maxHp": "36",
+          "maxHp": "43",
           "pendingAttributeIncreases": "1"
         }
       },
@@ -456,7 +462,7 @@
         "messageKey": "player-level-gained",
         "args": {
           "level": "7",
-          "maxHp": "41",
+          "maxHp": "49",
           "pendingAttributeIncreases": "1"
         }
       },
@@ -465,7 +471,7 @@
         "messageKey": "player-level-gained",
         "args": {
           "level": "8",
-          "maxHp": "42",
+          "maxHp": "58",
           "pendingAttributeIncreases": "1"
         }
       },
@@ -504,6 +510,6 @@
     "removedEntities": [
       "demo.z-entrance-guardian.resonance-descent.1"
     ],
-    "saveRoundTripStateHash": "62bc2a34130688a25bbd9c69e59bee4000774c28b42a017d6ea4ca32997030cd"
+    "saveRoundTripStateHash": "a96f148fac597af1ed995c26b83e6b4c88862b244cc3e3a4364e44b3b32370dc"
   }
 }

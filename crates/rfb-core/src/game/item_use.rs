@@ -2061,6 +2061,7 @@ impl Game {
                 | ItemUseEffectDefinition::RestoreAttribute { .. }
                 | ItemUseEffectDefinition::IncreaseAttribute { .. }
                 | ItemUseEffectDefinition::AugmentAttributes
+                | ItemUseEffectDefinition::NewLife
                 | ItemUseEffectDefinition::Vengeance { .. }
                 | ItemUseEffectDefinition::ProtectionFromEvil
                 | ItemUseEffectDefinition::PrepareConfusingStrike
@@ -2389,6 +2390,7 @@ impl Game {
             | ItemUseEffectDefinition::RestoreAttribute { .. }
             | ItemUseEffectDefinition::IncreaseAttribute { .. }
             | ItemUseEffectDefinition::AugmentAttributes
+            | ItemUseEffectDefinition::NewLife
             | ItemUseEffectDefinition::ApplyThermalResistance { .. }
             | ItemUseEffectDefinition::ApplyBasicResistance { .. }
             | ItemUseEffectDefinition::ApplyPoison { .. }
@@ -2760,6 +2762,43 @@ impl Game {
             }
             _ => unreachable!("vitality restoration executor requires a restoration effect"),
         }
+    }
+
+    fn resolve_item_new_life(
+        &mut self,
+        source_kind_id: &str,
+        events: &mut Vec<DomainEvent>,
+    ) -> bool {
+        let base_max_hp = self
+            .progress
+            .hp_progression
+            .first()
+            .copied()
+            .unwrap_or(self.player.max_hp);
+        let mut planned_rng = self.rng.clone();
+        let hp_progression = CharacterProgress::roll_hp_progression(base_max_hp, &mut planned_rng);
+        let attribute_potentials = CharacterProgress::roll_attribute_potentials(&mut planned_rng);
+
+        let previous_max_hp = self.effective_player_max_hp();
+        let previous_resource_maxima = self.player_resource_maxima();
+        self.rng = planned_rng;
+        self.progress.hp_progression = hp_progression;
+        self.progress.life_force = 1_000;
+        self.progress.attribute_potentials = attribute_potentials;
+        self.progress.clamp_attributes_to_potentials();
+        let removed_mutations = self.remove_all_unlocked_mutations_without_refresh();
+        self.refresh_after_attribute_change(previous_max_hp, &previous_resource_maxima);
+
+        for (mutation_id, name) in removed_mutations {
+            events.push(DomainEvent::MutationLost { mutation_id, name });
+        }
+        self.mark_item_aware(source_kind_id);
+        events.push(DomainEvent::ItemRestorationResolved {
+            source_kind_id: source_kind_id.to_owned(),
+            display_name_key: self.item_display_name_key(source_kind_id),
+            noticed: true,
+        });
+        true
     }
 
     fn resolve_item_restore_life_levels(
@@ -4189,6 +4228,7 @@ impl Game {
                 ],
                 events,
             ),
+            ItemUseEffectDefinition::NewLife => self.resolve_item_new_life(source_kind_id, events),
             ItemUseEffectDefinition::ApplyThermalResistance {
                 duration_dice,
                 duration_sides,

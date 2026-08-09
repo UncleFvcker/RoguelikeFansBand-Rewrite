@@ -415,6 +415,7 @@ export class StatusPanel {
         values.textContent = this.#localization.format("attribute-value", {
           natural: formatAttributeValue(value.natural),
           maximumNatural: formatAttributeValue(value.maximumNatural),
+          potential: formatAttributeValue(value.potential),
           effective: formatAttributeValue(value.effective),
           index: value.index,
         });
@@ -427,7 +428,7 @@ export class StatusPanel {
           this.#state.playerDead ||
           this.#state.worldMap ||
           progress.pendingAttributeIncreases === 0 ||
-          value.maximumNatural >= progress.attributeCap;
+          value.maximumNatural >= Math.min(progress.attributeCap, value.potential);
         increase.addEventListener("click", () =>
           void this.#dispatch({ type: "increase-attribute", attribute }),
         );

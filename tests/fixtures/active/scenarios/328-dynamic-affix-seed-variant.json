@@ -155,36 +155,42 @@
           "strength": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 138,
             "effective": 13,
             "index": 10
           },
           "intelligence": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 98,
             "effective": 13,
             "index": 10
           },
           "wisdom": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 98,
             "effective": 13,
             "index": 10
           },
           "dexterity": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 108,
             "effective": 13,
             "index": 10
           },
           "constitution": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 118,
             "effective": 13,
             "index": 10
           },
           "charisma": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 148,
             "effective": 13,
             "index": 10
           }
@@ -488,7 +494,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "e1b27b27eda6c80671e1eb50b2522ffb9fe077dc702bd3262e228ee3276b0ff3"
+      "stateHash": "7db919c8b5b4292479a9d83de847c786dc859ff7a7a0db78a476a8aa734ac420"
     },
     "events": [
       {
@@ -652,6 +658,6 @@
     "removedEntities": [
       "demo.monster.ember-mote.1"
     ],
-    "saveRoundTripStateHash": "e1b27b27eda6c80671e1eb50b2522ffb9fe077dc702bd3262e228ee3276b0ff3"
+    "saveRoundTripStateHash": "7db919c8b5b4292479a9d83de847c786dc859ff7a7a0db78a476a8aa734ac420"
   }
 }

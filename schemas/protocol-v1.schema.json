@@ -2924,6 +2924,13 @@
           "format": "uint16",
           "maximum": 65535,
           "minimum": 0
+        },
+        "potential": {
+          "type": "integer",
+          "format": "uint16",
+          "default": 0,
+          "maximum": 65535,
+          "minimum": 0
         }
       },
       "required": [

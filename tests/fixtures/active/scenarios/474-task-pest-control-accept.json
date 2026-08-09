@@ -46,7 +46,7 @@
       "revision": 1,
       "turn": 1,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 164,
+      "rngDrawCounter": 173,
       "floorId": "demo.floor.surface",
       "town": {
         "id": "demo.town.outpost",
@@ -292,36 +292,42 @@
           "strength": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 108,
             "effective": 17,
             "index": 14
           },
           "intelligence": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 108,
             "effective": 11,
             "index": 8
           },
           "wisdom": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 118,
             "effective": 11,
             "index": 8
           },
           "dexterity": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 128,
             "effective": 15,
             "index": 12
           },
           "constitution": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 128,
             "effective": 15,
             "index": 12
           },
           "charisma": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 118,
             "effective": 14,
             "index": 11
           }
@@ -421,19 +427,7 @@
         "lifePercent": 115,
         "experiencePercent": 100
       },
-      "entityCount": 1,
-      "entities": [
-        {
-          "id": "demo.floor.surface.surface.11",
-          "position": {
-            "x": 24,
-            "y": 19
-          },
-          "hp": 20,
-          "speed": 120,
-          "energyNeed": 100
-        }
-      ],
+      "entityCount": 0,
       "groundItemCount": 2,
       "inventoryStackCount": 8,
       "equipmentCount": 3,
@@ -854,7 +848,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 164,
+      "nextItemInstanceSerial": 168,
       "nextGoldPileSerial": 1,
       "tasks": [
         {
@@ -890,7 +884,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 1
       },
-      "stateHash": "d9ec40a18fbde0f9e269454f381e117ab9115cf620ec53fc7a0fcaa1b0ad48b4"
+      "stateHash": "178e8b9853a98ed1e5223ef3c67874679954c9360cc47973a1a3022e4a35c226"
     },
     "events": [
       {

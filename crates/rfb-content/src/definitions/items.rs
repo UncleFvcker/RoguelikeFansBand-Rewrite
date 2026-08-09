@@ -335,6 +335,7 @@ pub enum ItemUseEffectDefinition {
         attribute: ItemAttributeDefinition,
     },
     AugmentAttributes,
+    NewLife,
     ApplyThermalResistance {
         duration_dice: u16,
         duration_sides: u32,

@@ -224,8 +224,8 @@
         "x": 5,
         "y": 3
       },
-      "playerHp": 11,
-      "playerMaxHp": 41,
+      "playerHp": 7,
+      "playerMaxHp": 37,
       "playerAttack": 2,
       "playerDefense": 15,
       "playerSpeed": 110,
@@ -265,36 +265,42 @@
           "strength": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 108,
             "effective": 18,
             "index": 15
           },
           "intelligence": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 108,
             "effective": 10,
             "index": 7
           },
           "wisdom": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 148,
             "effective": 10,
             "index": 7
           },
           "dexterity": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 88,
             "effective": 16,
             "index": 13
           },
           "constitution": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 128,
             "effective": 15,
             "index": 12
           },
           "charisma": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 128,
             "effective": 14,
             "index": 11
           }
@@ -709,7 +715,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "2e12e87f44ce510ae13f0970ade944499bd38a5b9e330c520797645c8f214e33"
+      "stateHash": "a031005583a610b2c8f8f4442357a39ae1eaebca89c244a5791f82a296862c4e"
     },
     "events": [
       {
@@ -815,7 +821,7 @@
         "messageKey": "player-level-gained",
         "args": {
           "level": "2",
-          "maxHp": "41",
+          "maxHp": "37",
           "pendingAttributeIncreases": "0"
         }
       },

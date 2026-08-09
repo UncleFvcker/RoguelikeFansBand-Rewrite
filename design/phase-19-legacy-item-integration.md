@@ -590,3 +590,33 @@ free. M2 adds no mutation effect caller and does not connect Polymorph or New
 Life, so the coverage ledger remains blocked by the individual mechanism
 families and neither item enters the formal pack in this batch. Protocol, save,
 State Hash Schema v73, and contract-v216 are unchanged.
+
+## P3.7-M3 Attribute Potentials, HP Rerating, and New Life
+
+`CharacterProgress` now owns six independent personal attribute potentials.
+Birth rolls them from a dedicated deterministic seed stream using the original
+six `1d7` rolls whose total must equal 24, encoded as `78 + die * 10`.
+Permanent natural growth uses the smaller of this personal value and the
+campaign's global attribute cap. Save validation rejects malformed potential
+encodings, an incorrect total, or current/history values above their potential.
+
+The existing `hp_progression` remains the only HP-growth authority. Birth and
+New Life both reject candidate sequences below 87 percent at levels 5, 10, and
+25; the final level must be between 87 and 117 percent. Birth uses its existing
+dedicated HP seed stream, while New Life consumes the authoritative core RNG.
+No life-rating field or second HP representation is introduced.
+
+The `new-life` item effect plans both rerolls before mutation, then commits the
+new HP sequence, restores life force to 1000, replaces potentials, clamps both
+current and historical maximum attributes, and removes every unlocked mutation
+in source order. Locked mutations survive. Effective HP, resource maxima, and
+ability state refresh once after the complete transaction. The formal
+authoritative `新生药水` is Black Market stock and moves source index 456 from
+blocked to active; Polymorph remains blocked.
+
+The audit now reports 225 active, 106 mechanics-ready, and 213 blocked source
+items. The pack contains 226 mapped RFB items plus 24 original items, for 250
+total. Pack 1.214.0 has content hash
+`753bda0056119c1ebd6ba335e1e78bca4404bf8641097d7de5eec530951ebe8f`.
+Protocol 1.153, State Hash Schema v74, and contract-v217 carry the required
+potential save/projection and the 471-fixture refreshed baseline.

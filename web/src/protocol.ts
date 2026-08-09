@@ -33,7 +33,7 @@ export type EquipmentPassiveDto = "regeneration" | "see-invisible" | "vampiric" 
 
 export type AttributeKindDto = "strength" | "intelligence" | "wisdom" | "dexterity" | "constitution" | "charisma";
 
-export type AttributeValueDto = { natural: number, maximumNatural: number, effective: number, index: number, };
+export type AttributeValueDto = { natural: number, maximumNatural: number, potential: number, effective: number, index: number, };
 
 export type AttributeSetDto = { strength: AttributeValueDto, intelligence: AttributeValueDto, wisdom: AttributeValueDto, dexterity: AttributeValueDto, constitution: AttributeValueDto, charisma: AttributeValueDto, };
 

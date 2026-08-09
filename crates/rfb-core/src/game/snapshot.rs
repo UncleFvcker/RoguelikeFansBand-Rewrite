@@ -400,6 +400,7 @@ impl Game {
         let value = |kind| AttributeValueDto {
             natural: natural.value(kind),
             maximum_natural: self.progress.maximum_attributes.value(kind),
+            potential: self.progress.attribute_potentials.value(kind),
             effective: effective.value(kind),
             index: effective.index(kind),
         };

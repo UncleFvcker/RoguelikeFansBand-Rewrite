@@ -69,6 +69,7 @@ pub(crate) fn valid_item_effect(
         | ItemUseEffectDefinition::RestoreAttribute { .. }
         | ItemUseEffectDefinition::IncreaseAttribute { .. }
         | ItemUseEffectDefinition::AugmentAttributes
+        | ItemUseEffectDefinition::NewLife
         | ItemUseEffectDefinition::IdentifyInventory
         | ItemUseEffectDefinition::SelfKnowledge
         | ItemUseEffectDefinition::TriggerTsuyoshiCrash
@@ -562,6 +563,7 @@ pub(super) fn validate_items(
                     | ItemUseEffectDefinition::RestoreAttribute { .. }
                     | ItemUseEffectDefinition::IncreaseAttribute { .. }
                     | ItemUseEffectDefinition::AugmentAttributes
+                    | ItemUseEffectDefinition::NewLife
                     | ItemUseEffectDefinition::IdentifyInventory
                     | ItemUseEffectDefinition::SelfKnowledge
                     | ItemUseEffectDefinition::Acquirement { .. }

@@ -427,6 +427,14 @@ fn restore_character_progress(
             charisma: maximum.charisma,
         })
         .unwrap_or(attributes);
+    let attribute_potentials = AttributeSet {
+        strength: saved.attribute_potentials.strength,
+        intelligence: saved.attribute_potentials.intelligence,
+        wisdom: saved.attribute_potentials.wisdom,
+        dexterity: saved.attribute_potentials.dexterity,
+        constitution: saved.attribute_potentials.constitution,
+        charisma: saved.attribute_potentials.charisma,
+    };
     if ![
         AttributeKind::Strength,
         AttributeKind::Intelligence,
@@ -446,6 +454,7 @@ fn restore_character_progress(
     Ok(CharacterProgress {
         attributes,
         maximum_attributes,
+        attribute_potentials,
         experience: saved.experience,
         maximum_experience: if saved.maximum_experience == 0 {
             saved.experience

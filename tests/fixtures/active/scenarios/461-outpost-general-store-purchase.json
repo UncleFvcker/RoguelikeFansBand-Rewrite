@@ -29,7 +29,7 @@
       "revision": 1,
       "turn": 1,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 164,
+      "rngDrawCounter": 173,
       "floorId": "demo.floor.surface",
       "town": {
         "id": "demo.town.outpost",
@@ -154,112 +154,6 @@
           "stock": [
             {
               "id": "generated.item.101",
-              "kindId": "demo.item.hard-biscuit",
-              "displayNameKey": "item-demo-hard-biscuit-name",
-              "quantity": 5,
-              "maximumQuantity": 5,
-              "unitPrice": 1,
-              "weightTenthsPound": 2,
-              "quality": "ordinary"
-            },
-            {
-              "id": "generated.item.102",
-              "kindId": "demo.item.strip-of-venison",
-              "displayNameKey": "item-demo-strip-of-venison-name",
-              "quantity": 2,
-              "maximumQuantity": 2,
-              "unitPrice": 2,
-              "weightTenthsPound": 2,
-              "quality": "ordinary"
-            },
-            {
-              "id": "generated.item.103",
-              "kindId": "demo.item.water-potion",
-              "displayNameKey": "item-demo-water-potion-name",
-              "quantity": 4,
-              "maximumQuantity": 4,
-              "unitPrice": 1,
-              "weightTenthsPound": 4,
-              "quality": "ordinary"
-            },
-            {
-              "id": "generated.item.104",
-              "kindId": "demo.item.apple-juice",
-              "displayNameKey": "item-demo-apple-juice-name",
-              "quantity": 5,
-              "maximumQuantity": 5,
-              "unitPrice": 1,
-              "weightTenthsPound": 4,
-              "quality": "ordinary"
-            },
-            {
-              "id": "generated.item.105",
-              "kindId": "demo.item.cure-poison-mushroom",
-              "displayNameKey": "item-demo-cure-poison-mushroom-name",
-              "quantity": 1,
-              "maximumQuantity": 1,
-              "unitPrice": 120,
-              "weightTenthsPound": 1,
-              "quality": "ordinary"
-            },
-            {
-              "id": "generated.item.106",
-              "kindId": "demo.item.cure-blindness-mushroom",
-              "displayNameKey": "item-demo-cure-blindness-mushroom-name",
-              "quantity": 3,
-              "maximumQuantity": 3,
-              "unitPrice": 30,
-              "weightTenthsPound": 1,
-              "quality": "ordinary"
-            },
-            {
-              "id": "generated.item.107",
-              "kindId": "demo.item.cure-paranoia-mushroom",
-              "displayNameKey": "item-demo-cure-paranoia-mushroom-name",
-              "quantity": 3,
-              "maximumQuantity": 3,
-              "unitPrice": 25,
-              "weightTenthsPound": 1,
-              "quality": "ordinary"
-            },
-            {
-              "id": "generated.item.108",
-              "kindId": "demo.item.cure-confusion-mushroom",
-              "displayNameKey": "item-demo-cure-confusion-mushroom-name",
-              "quantity": 3,
-              "maximumQuantity": 3,
-              "unitPrice": 30,
-              "weightTenthsPound": 1,
-              "quality": "ordinary"
-            },
-            {
-              "id": "generated.item.95",
-              "kindId": "demo.item.ration-of-food",
-              "displayNameKey": "item-demo-ration-of-food-name",
-              "quantity": 3,
-              "maximumQuantity": 3,
-              "unitPrice": 3,
-              "weightTenthsPound": 10,
-              "quality": "ordinary"
-            },
-            {
-              "id": "generated.item.96",
-              "kindId": "demo.item.wooden-torch",
-              "displayNameKey": "item-demo-wooden-torch-name",
-              "quantity": 2,
-              "maximumQuantity": 2,
-              "unitPrice": 1,
-              "weightTenthsPound": 30,
-              "fuel": {
-                "kind": "torch",
-                "current": 4000,
-                "maximum": 5000,
-                "lightRadius": 1
-              },
-              "quality": "ordinary"
-            },
-            {
-              "id": "generated.item.98",
               "kindId": "demo.item.brass-lantern",
               "displayNameKey": "item-demo-brass-lantern-name",
               "quantity": 1,
@@ -275,7 +169,7 @@
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.99",
+              "id": "generated.item.102",
               "kindId": "demo.item.flask-of-oil",
               "displayNameKey": "item-demo-flask-of-oil-name",
               "quantity": 1,
@@ -289,6 +183,122 @@
                 "lightRadius": 0
               },
               "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.103",
+              "kindId": "demo.item.fabric-bag",
+              "displayNameKey": "item-demo-fabric-bag-name",
+              "quantity": 3,
+              "maximumQuantity": 3,
+              "unitPrice": 30,
+              "weightTenthsPound": 10,
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.106",
+              "kindId": "demo.item.hard-biscuit",
+              "displayNameKey": "item-demo-hard-biscuit-name",
+              "quantity": 2,
+              "maximumQuantity": 2,
+              "unitPrice": 1,
+              "weightTenthsPound": 2,
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.107",
+              "kindId": "demo.item.strip-of-venison",
+              "displayNameKey": "item-demo-strip-of-venison-name",
+              "quantity": 4,
+              "maximumQuantity": 4,
+              "unitPrice": 2,
+              "weightTenthsPound": 2,
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.108",
+              "kindId": "demo.item.water-potion",
+              "displayNameKey": "item-demo-water-potion-name",
+              "quantity": 5,
+              "maximumQuantity": 5,
+              "unitPrice": 1,
+              "weightTenthsPound": 4,
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.109",
+              "kindId": "demo.item.apple-juice",
+              "displayNameKey": "item-demo-apple-juice-name",
+              "quantity": 5,
+              "maximumQuantity": 5,
+              "unitPrice": 1,
+              "weightTenthsPound": 4,
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.110",
+              "kindId": "demo.item.cure-poison-mushroom",
+              "displayNameKey": "item-demo-cure-poison-mushroom-name",
+              "quantity": 3,
+              "maximumQuantity": 3,
+              "unitPrice": 120,
+              "weightTenthsPound": 1,
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.111",
+              "kindId": "demo.item.cure-blindness-mushroom",
+              "displayNameKey": "item-demo-cure-blindness-mushroom-name",
+              "quantity": 3,
+              "maximumQuantity": 3,
+              "unitPrice": 30,
+              "weightTenthsPound": 1,
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.112",
+              "kindId": "demo.item.cure-paranoia-mushroom",
+              "displayNameKey": "item-demo-cure-paranoia-mushroom-name",
+              "quantity": 3,
+              "maximumQuantity": 3,
+              "unitPrice": 25,
+              "weightTenthsPound": 1,
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.113",
+              "kindId": "demo.item.cure-confusion-mushroom",
+              "displayNameKey": "item-demo-cure-confusion-mushroom-name",
+              "quantity": 3,
+              "maximumQuantity": 3,
+              "unitPrice": 30,
+              "weightTenthsPound": 1,
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.96",
+              "kindId": "demo.item.ration-of-food",
+              "displayNameKey": "item-demo-ration-of-food-name",
+              "quantity": 2,
+              "maximumQuantity": 2,
+              "unitPrice": 3,
+              "weightTenthsPound": 10,
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.97",
+              "kindId": "demo.item.wooden-torch",
+              "displayNameKey": "item-demo-wooden-torch-name",
+              "quantity": 3,
+              "maximumQuantity": 3,
+              "unitPrice": 1,
+              "weightTenthsPound": 30,
+              "fuel": {
+                "kind": "torch",
+                "current": 4000,
+                "maximum": 5000,
+                "lightRadius": 1
+              },
+              "quality": "ordinary"
             }
           ],
           "sellQuotes": [
@@ -300,8 +310,8 @@
             },
             {
               "itemId": "generated.item.100",
-              "kindId": "demo.item.fabric-bag",
-              "unitPrice": 28,
+              "kindId": "demo.item.wooden-torch",
+              "unitPrice": 1,
               "maximumQuantity": 1
             },
             {
@@ -414,10 +424,10 @@
       "playerDefense": 15,
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
-      "playerCarriedWeightTenthsPound": 724,
+      "playerCarriedWeightTenthsPound": 744,
       "playerCarryCapacityTenthsPound": 1200,
       "playerEncumbranceSpeedPenalty": 0,
-      "playerGold": 999970,
+      "playerGold": 999999,
       "playerNutrition": 9999,
       "playerLevel": 1,
       "playerExperience": 0,
@@ -439,36 +449,42 @@
           "strength": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 108,
             "effective": 17,
             "index": 14
           },
           "intelligence": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 108,
             "effective": 11,
             "index": 8
           },
           "wisdom": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 118,
             "effective": 11,
             "index": 8
           },
           "dexterity": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 128,
             "effective": 15,
             "index": 12
           },
           "constitution": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 128,
             "effective": 15,
             "index": 12
           },
           "charisma": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 118,
             "effective": 14,
             "index": 11
           }
@@ -600,15 +616,21 @@
         },
         {
           "id": "generated.item.100",
-          "kindId": "demo.item.fabric-bag",
-          "displayNameKey": "item-demo-fabric-bag-name",
+          "kindId": "demo.item.wooden-torch",
+          "displayNameKey": "item-demo-wooden-torch-name",
           "knowledge": "aware",
           "usable": false,
+          "fuel": {
+            "kind": "torch",
+            "current": 4000,
+            "maximum": 5000,
+            "lightRadius": 1
+          },
           "canReceiveRecharge": false,
           "canSupplyRecharge": false,
           "quantity": 1,
-          "weightTenthsPound": 10,
-          "equipmentSlot": "container",
+          "weightTenthsPound": 30,
+          "equipmentSlot": "light",
           "modifiers": {
             "attack": 0,
             "defense": 0,
@@ -1021,7 +1043,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 164,
+      "nextItemInstanceSerial": 168,
       "nextGoldPileSerial": 1,
       "tasks": [
         {
@@ -1057,20 +1079,20 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "4ab57e5f4e369b40cab614cf777517bdce41866008a3c29dc9590276a30685c7"
+      "stateHash": "5e3789d9306ddd5d5b577be873b67547086ca16346905853aa831bf1f6b3b39b"
     },
     "events": [
       {
         "kind": "shop.purchase",
         "messageKey": "shop-purchase-success",
         "args": {
-          "balance": "999970",
+          "balance": "999999",
           "item": "generated.item.100",
           "quantity": "1",
           "shop": "demo.shop.outpost-general-store",
-          "target": "demo.item.fabric-bag",
-          "totalPrice": "30",
-          "unitPrice": "30"
+          "target": "demo.item.wooden-torch",
+          "totalPrice": "1",
+          "unitPrice": "1"
         }
       }
     ]

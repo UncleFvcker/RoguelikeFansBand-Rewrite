@@ -80,6 +80,26 @@ impl Game {
     }
 
     pub(super) fn lose_all_unlocked_mutations(&mut self, events: &mut Vec<DomainEvent>) -> usize {
+        let previous_max_hp = self.effective_player_max_hp();
+        let previous_resource_maxima = self.player_resource_maxima();
+        let removed = self.remove_all_unlocked_mutations_without_refresh();
+        if removed.is_empty() {
+            return 0;
+        }
+
+        self.refresh_after_attribute_change(previous_max_hp, &previous_resource_maxima);
+        for (mutation_id, name) in &removed {
+            events.push(DomainEvent::MutationLost {
+                mutation_id: mutation_id.clone(),
+                name: name.clone(),
+            });
+        }
+        removed.len()
+    }
+
+    pub(super) fn remove_all_unlocked_mutations_without_refresh(
+        &mut self,
+    ) -> Vec<(String, String)> {
         let mut removed = self
             .content
             .mutations()
@@ -96,23 +116,13 @@ impl Game {
             })
             .collect::<Vec<_>>();
         removed.sort_by_key(|(source_index, _, _)| *source_index);
-        if removed.is_empty() {
-            return 0;
-        }
-
-        let previous_max_hp = self.effective_player_max_hp();
-        let previous_resource_maxima = self.player_resource_maxima();
         for (_, mutation_id, _) in &removed {
             self.progress.active_mutation_ids.remove(mutation_id);
         }
-        self.refresh_after_attribute_change(previous_max_hp, &previous_resource_maxima);
-        for (_, mutation_id, name) in &removed {
-            events.push(DomainEvent::MutationLost {
-                mutation_id: mutation_id.clone(),
-                name: name.clone(),
-            });
-        }
-        removed.len()
+        removed
+            .into_iter()
+            .map(|(_, mutation_id, name)| (mutation_id, name))
+            .collect()
     }
 
     pub(super) fn gain_random_mutation(&mut self, events: &mut Vec<DomainEvent>) -> Option<String> {

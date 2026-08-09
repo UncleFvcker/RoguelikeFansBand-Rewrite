@@ -29,7 +29,7 @@
       "revision": 1,
       "turn": 1,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 164,
+      "rngDrawCounter": 173,
       "floorId": "demo.floor.surface",
       "town": {
         "id": "demo.town.outpost",
@@ -238,7 +238,7 @@
           "playerAtEntrance": true,
           "storedItems": [
             {
-              "id": "generated.item.164",
+              "id": "generated.item.168",
               "kindId": "demo.item.ration-of-food",
               "displayNameKey": "item-demo-ration-of-food-name",
               "quantity": 1,
@@ -315,36 +315,42 @@
           "strength": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 108,
             "effective": 17,
             "index": 14
           },
           "intelligence": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 108,
             "effective": 11,
             "index": 8
           },
           "wisdom": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 118,
             "effective": 11,
             "index": 8
           },
           "dexterity": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 128,
             "effective": 15,
             "index": 12
           },
           "constitution": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 128,
             "effective": 15,
             "index": 12
           },
           "charisma": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 118,
             "effective": 14,
             "index": 11
           }
@@ -831,7 +837,7 @@
           "identified": true
         },
         {
-          "itemId": "generated.item.164",
+          "itemId": "generated.item.168",
           "discovered": true
         },
         {
@@ -869,7 +875,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 165,
+      "nextItemInstanceSerial": 169,
       "nextGoldPileSerial": 1,
       "tasks": [
         {
@@ -905,7 +911,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "04198362a26a61b256e1eb481e4918059dbc2ce7a1d0931f40e55ec8ca5e2a87"
+      "stateHash": "2acd9858b6193994ed9bb532101c3488e4852a3f321397227da7660d5d4510c6"
     },
     "events": [
       {
@@ -913,7 +919,7 @@
         "messageKey": "home-deposit-success",
         "args": {
           "facility": "demo.town-facility.outpost-home",
-          "item": "generated.item.164",
+          "item": "generated.item.168",
           "quantity": "1",
           "target": "demo.item.ration-of-food"
         }

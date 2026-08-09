@@ -65,8 +65,8 @@
         "x": 3,
         "y": 3
       },
-      "playerHp": 14,
-      "playerMaxHp": 14,
+      "playerHp": 13,
+      "playerMaxHp": 13,
       "playerAttack": 2,
       "playerDefense": 1,
       "playerSpeed": 110,
@@ -96,36 +96,42 @@
           "strength": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 118,
             "effective": 13,
             "index": 10
           },
           "intelligence": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 138,
             "effective": 13,
             "index": 10
           },
           "wisdom": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 98,
             "effective": 13,
             "index": 10
           },
           "dexterity": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 118,
             "effective": 13,
             "index": 10
           },
           "constitution": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 128,
             "effective": 13,
             "index": 10
           },
           "charisma": {
             "natural": 13,
             "maximumNatural": 13,
+            "potential": 108,
             "effective": 13,
             "index": 10
           }
@@ -351,7 +357,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "42ae684867ec1a75493bc910cd74103c48dfee738d64cb0b1ec92581fd477296"
+      "stateHash": "8ee1d53940f1cc699b3be3c28463e8af5bf32310e1cbdacaba3e709f77742c45"
     },
     "events": [
       {
@@ -408,7 +414,7 @@
         "messageKey": "player-level-gained",
         "args": {
           "level": "2",
-          "maxHp": "14",
+          "maxHp": "13",
           "pendingAttributeIncreases": "0"
         }
       },
@@ -440,6 +446,6 @@
     "removedEntities": [
       "demo.monster.ember-mote.1"
     ],
-    "saveRoundTripStateHash": "42ae684867ec1a75493bc910cd74103c48dfee738d64cb0b1ec92581fd477296"
+    "saveRoundTripStateHash": "8ee1d53940f1cc699b3be3c28463e8af5bf32310e1cbdacaba3e709f77742c45"
   }
 }

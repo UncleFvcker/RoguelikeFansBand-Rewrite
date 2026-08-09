@@ -1,6 +1,6 @@
 # RFB CoreTransport 协议 v1
 
-状态：协议 1.152、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
+状态：协议 1.153、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
 
 ## 1. 适用边界
 
@@ -391,3 +391,5 @@ contract-v191 只增加内容层近战 effect 及对应运行时解释，不新�
 集成协议 1.151 同时保留怪物目标闪现、物品发现、本地旅行和墨家名器双语配置；配置进入 save v1 与 state hash Schema v72，contract 基线统一刷新为 v215。
 
 协议 1.152 新增 `MutationRatingDto`、`PlayerMutationDto` 与 `PlayerDto.mutations`，只投影角色当前 active 变异的稳定 ID、权威中文名称和描述、评级及锁定状态。`PlayerSaveDto` 必填保存排序后的 `activeMutationIds` 与 `lockedMutationIds`；未知 ID、重复 ID 及 locked 非 active 子集均拒绝载入。变异集合进入 state hash Schema v73，save 容器仍为 v1，旧开发存档不兼容。完整边界见 [Contract v216](contract-v216-mutation-authoritative-state.md)。
+
+协议 1.153 为每个 `AttributeValueDto` 增加个人 `potential` 投影，并在 `PlayerProgressSaveDto` 中必填保存六维 `attributePotentials`。自然属性的永久成长上限是个人潜力与当前全局阶段上限的较小值；新生药水重掷 HP 成长与潜力、恢复生命力并移除全部未锁定变异。新增状态进入 State Hash Schema v74，save 容器仍为 v1，旧开发存档不兼容。完整边界见 [Contract v217](contract-v217-new-life-and-attribute-potentials.md)。

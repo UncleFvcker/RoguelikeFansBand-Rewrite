@@ -2011,6 +2011,7 @@ fn black_market_stocks_original_non_town_books_and_priced_p3_consumables() {
             "demo.item.acquirement-scroll",
             "demo.item.star-acquirement-scroll",
             "demo.item.crafting-scroll",
+            "demo.item.new-life-potion",
         ])
     );
     let values = artifact

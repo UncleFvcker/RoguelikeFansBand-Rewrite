@@ -312,3 +312,5 @@ crates/rfb-legacy-import/
 协议 1.121 下的 contract-v132 为 `PlayerSaveDto` 增加默认 0、零值省略的 `bonusSpellLearningCapacity`。旧存档缺字段迁移为 0；非零值要求当前 Class 明确 `usesSpellScrolls`，否则载入时拒绝。bonus 与既有 Class 学习容量公式相加并进入 state hash Schema v54；save 容器保持 v1。完整边界见 [Contract v132](contract-v132-scroll-spell.md)。
 
 协议 1.152 为 `PlayerSaveDto` 增加必填 `activeMutationIds` 与 `lockedMutationIds`。两者按稳定 ID 排序保存；locked 必须是 active 的子集，且所有 ID 必须解析到当前内容包的 `MutationDefinition`。重复、未知或悬空锁定状态直接拒绝。两组集合进入 state hash Schema v73；save 容器仍为 v1，不为旧开发存档补默认值。完整边界见 [Contract v216](contract-v216-mutation-authoritative-state.md)。
+
+协议 1.153 为 `PlayerProgressSaveDto` 增加必填 `attributePotentials`，保存六个原版编码的个人属性潜力。每项必须来自 `78 + 10 × 1d7`，六次骰点总和必须为 24；当前与历史最大自然属性都不得超过个人潜力和全局阶段上限。`hpProgression` 继续是唯一 HP 成长权威状态，不增加生命评级旁路字段。潜力与重掷后的 HP 序列进入 State Hash Schema v74；save 容器仍为 v1，不为旧开发存档补默认值。完整边界见 [Contract v217](contract-v217-new-life-and-attribute-potentials.md)。

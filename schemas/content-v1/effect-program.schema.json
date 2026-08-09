@@ -738,6 +738,19 @@
         {
           "additionalProperties": false,
           "properties": {
+            "type": {
+              "const": "new-life",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
             "durationBonus": {
               "format": "uint32",
               "minimum": 0,
