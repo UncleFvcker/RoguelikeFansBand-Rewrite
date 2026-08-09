@@ -7,5 +7,8 @@
   "rating": "awful",
   "sourceIndex": 80,
   "randomWeight": 4,
+  "modifiers": {
+    "speed": -3
+  },
   "removesOnGain": []
 }

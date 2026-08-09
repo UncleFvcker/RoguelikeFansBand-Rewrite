@@ -6,7 +6,7 @@ fn compiled_catalog_exposes_stable_runtime_indexes() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.214.0");
+    assert_eq!(catalog.pack_version(), "1.215.0");
     assert_eq!(catalog.mutations().count(), 152);
     assert_eq!(
         catalog.mutation("rfb.mutation.spit-acid").map(|mutation| (
@@ -855,6 +855,155 @@ fn mutation_definitions_match_the_frozen_legacy_ledger() {
 }
 
 #[test]
+fn first_passive_mutation_batch_keeps_original_attribute_speed_and_armor_bonuses() {
+    let pack = original_pack_path();
+    let catalog = ContentCatalog::from_artifact(
+        compile_pack_dir(&pack).expect("original pack should compile"),
+    );
+    let expected = [
+        (
+            "rfb.mutation.hyper-str",
+            StatModifiers {
+                strength: 4,
+                ..StatModifiers::default()
+            },
+            0,
+        ),
+        (
+            "rfb.mutation.puny",
+            StatModifiers {
+                strength: -4,
+                ..StatModifiers::default()
+            },
+            0,
+        ),
+        (
+            "rfb.mutation.hyper-int",
+            StatModifiers {
+                intelligence: 4,
+                wisdom: 4,
+                ..StatModifiers::default()
+            },
+            0,
+        ),
+        (
+            "rfb.mutation.moronic",
+            StatModifiers {
+                intelligence: -4,
+                wisdom: -4,
+                ..StatModifiers::default()
+            },
+            0,
+        ),
+        (
+            "rfb.mutation.resilient",
+            StatModifiers {
+                constitution: 4,
+                ..StatModifiers::default()
+            },
+            0,
+        ),
+        (
+            "rfb.mutation.xtra-fat",
+            StatModifiers {
+                constitution: 2,
+                speed: -2,
+                ..StatModifiers::default()
+            },
+            0,
+        ),
+        (
+            "rfb.mutation.albino",
+            StatModifiers {
+                constitution: -4,
+                ..StatModifiers::default()
+            },
+            0,
+        ),
+        (
+            "rfb.mutation.silly-voice",
+            StatModifiers {
+                charisma: -4,
+                ..StatModifiers::default()
+            },
+            0,
+        ),
+        (
+            "rfb.mutation.blank-face",
+            StatModifiers {
+                charisma: -1,
+                ..StatModifiers::default()
+            },
+            0,
+        ),
+        (
+            "rfb.mutation.xtra-legs",
+            StatModifiers {
+                speed: 3,
+                ..StatModifiers::default()
+            },
+            0,
+        ),
+        (
+            "rfb.mutation.short-leg",
+            StatModifiers {
+                speed: -3,
+                ..StatModifiers::default()
+            },
+            0,
+        ),
+        (
+            "rfb.mutation.warts",
+            StatModifiers {
+                charisma: -2,
+                ..StatModifiers::default()
+            },
+            5,
+        ),
+        (
+            "rfb.mutation.scales",
+            StatModifiers {
+                charisma: -1,
+                ..StatModifiers::default()
+            },
+            10,
+        ),
+        (
+            "rfb.mutation.steel-skin",
+            StatModifiers {
+                dexterity: -1,
+                ..StatModifiers::default()
+            },
+            25,
+        ),
+    ];
+    let active_expected = expected
+        .iter()
+        .map(|(id, _, _)| *id)
+        .collect::<std::collections::BTreeSet<_>>();
+    for (id, modifiers, armor_class) in expected {
+        let mutation = catalog
+            .mutation(id)
+            .unwrap_or_else(|| panic!("{id} should exist"));
+        assert_eq!(mutation.modifiers, modifiers, "{id} modifiers");
+        assert_eq!(mutation.armor_class, armor_class, "{id} armor class");
+    }
+
+    let ledger: serde_json::Value = serde_json::from_slice(
+        &std::fs::read(pack.join("legacy-mutation-plan.json")).expect("ledger should read"),
+    )
+    .expect("ledger should parse");
+    let active = ledger["mutations"]
+        .as_array()
+        .expect("ledger should contain mutations")
+        .iter()
+        .filter(|entry| entry["status"] == "active")
+        .map(|entry| entry["id"].as_str().expect("mutation id"))
+        .collect::<std::collections::BTreeSet<_>>();
+    assert_eq!(active, active_expected);
+}
+
+#[test]
 fn mutation_transaction_metadata_rejects_duplicate_order_and_invalid_removals() {
     let pack = original_pack_path();
     let artifact = compile_pack_dir(&pack).expect("original pack should compile");
@@ -874,10 +1023,17 @@ fn mutation_transaction_metadata_rejects_duplicate_order_and_invalid_removals() 
         Err(ContentError::InvalidMutation(_))
     ));
 
-    let mut dangling = artifact.content;
+    let mut dangling = artifact.content.clone();
     dangling.mutations[0].removes_on_gain = vec!["rfb.mutation.unknown".to_owned()];
     assert!(matches!(
         encode_content(dangling),
+        Err(ContentError::InvalidMutation(_))
+    ));
+
+    let mut invalid_bonus = artifact.content;
+    invalid_bonus.mutations[0].armor_class = 1_000_001;
+    assert!(matches!(
+        encode_content(invalid_bonus),
         Err(ContentError::InvalidMutation(_))
     ));
 }

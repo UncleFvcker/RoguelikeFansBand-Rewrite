@@ -7,6 +7,10 @@
   "rating": "great",
   "sourceIndex": 85,
   "randomWeight": 4,
+  "modifiers": {
+    "dexterity": -1
+  },
+  "armorClass": 25,
   "removesOnGain": [
     "rfb.mutation.scales",
     "rfb.mutation.warts",

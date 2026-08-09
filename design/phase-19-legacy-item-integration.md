@@ -620,3 +620,31 @@ total. Pack 1.214.0 has content hash
 `753bda0056119c1ebd6ba335e1e78bca4404bf8641097d7de5eec530951ebe8f`.
 Protocol 1.153, State Hash Schema v74, and contract-v217 carry the required
 potential save/projection and the 471-fixture refreshed baseline.
+
+## P3.7-M4A Passive Attributes, Speed, and Armor
+
+The first bounded passive batch activates 14 authoritative mutations: Hyper
+Strength, Puny, Hyper Intelligence, Moronic, Resilient, Extra Fat, Albino,
+Silly Voice, Blank Face, Extra Legs, Short Legs, Warts, Scales, and Steel
+Skin. Their exact Chinese identities remain sourced from RFB `master`.
+
+Mutation definitions reuse `StatModifiers` for the original attribute-bucket
+and speed adjustments. A single narrow `armorClass` field carries the direct
+`+5`, `+10`, and `+25` armor bonuses because the existing `defense` modifier
+uses rating units rather than original armor-class points. Active mutation
+modifiers feed the existing effective-attribute and derived-stat pipelines;
+constitution therefore changes the existing HP calculation, while M2 gain and
+loss transactions continue to own proportional HP/resource refresh and
+ordered conflict removal.
+
+Flesh Rot remains blocked because its original contract also slows
+regeneration. Resistance, immunity, ESP, flight, regeneration, aura, innate
+attack, luck, fatigue, movement, device, and item-knowledge consumers remain
+later 8--15 item batches rather than receiving partial effects here.
+
+The mutation audit reports 14 active and 138 blocked identities. Pack 1.215.0
+has content hash
+`5a3e77d707f1ea2aa9d9c02bf0e9494a9695decbc6140289f3e6f0cfa0db73c0`.
+Protocol 1.153, save v1, State Hash Schema v74, and contract-v217 are unchanged;
+no existing fixture begins with active mutations, so this content/behavior
+batch does not refresh unrelated exact fixtures.

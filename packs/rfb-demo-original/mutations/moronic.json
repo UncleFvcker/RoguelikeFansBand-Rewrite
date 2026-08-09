@@ -7,6 +7,10 @@
   "rating": "awful",
   "sourceIndex": 67,
   "randomWeight": 6,
+  "modifiers": {
+    "intelligence": -4,
+    "wisdom": -4
+  },
   "removesOnGain": [
     "rfb.mutation.hyper-int",
     "rfb.mutation.pultitis"

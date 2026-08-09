@@ -7,6 +7,10 @@
   "rating": "average",
   "sourceIndex": 83,
   "randomWeight": 6,
+  "modifiers": {
+    "charisma": -2
+  },
+  "armorClass": 5,
   "removesOnGain": [
     "rfb.mutation.steel-skin"
   ]

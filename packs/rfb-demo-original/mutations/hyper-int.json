@@ -7,6 +7,10 @@
   "rating": "great",
   "sourceIndex": 66,
   "randomWeight": 6,
+  "modifiers": {
+    "intelligence": 4,
+    "wisdom": 4
+  },
   "removesOnGain": [
     "rfb.mutation.moronic",
     "rfb.mutation.pultitis"

@@ -7,6 +7,9 @@
   "rating": "awful",
   "sourceIndex": 70,
   "randomWeight": 4,
+  "modifiers": {
+    "constitution": -4
+  },
   "removesOnGain": [
     "rfb.mutation.resilient"
   ]

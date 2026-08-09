@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 use super::support::*;
 use super::*;
-use crate::stats::experience_required_for_level;
+use crate::stats::{AttributeSet, experience_required_for_level, modify_attribute_value};
 use rfb_protocol::{AttributeKindDto, MutationRatingDto};
 
 #[test]
@@ -204,6 +204,115 @@ fn mutation_transactions_preserve_locks_remove_conflicts_and_emit_source_order()
 }
 
 #[test]
+fn passive_mutations_feed_existing_attribute_speed_armor_and_hp_pipelines() {
+    let mutation_ids = [
+        "rfb.mutation.hyper-str",
+        "rfb.mutation.puny",
+        "rfb.mutation.hyper-int",
+        "rfb.mutation.moronic",
+        "rfb.mutation.resilient",
+        "rfb.mutation.xtra-fat",
+        "rfb.mutation.albino",
+        "rfb.mutation.silly-voice",
+        "rfb.mutation.blank-face",
+        "rfb.mutation.xtra-legs",
+        "rfb.mutation.short-leg",
+        "rfb.mutation.warts",
+        "rfb.mutation.scales",
+        "rfb.mutation.steel-skin",
+    ];
+
+    for mutation_id in mutation_ids {
+        let mut game = Game::new(0);
+        clear_monsters(&mut game);
+        game.apply_unscaled_player_experience(experience_required_for_level(25), &mut Vec::new());
+        let baseline_attributes = game.effective_player_attributes();
+        let baseline_stats = game.player_derived_stats();
+        let baseline_max_hp = baseline_stats.max_hp.value;
+        game.player.hp = baseline_max_hp;
+        let definition = game
+            .content
+            .mutation(mutation_id)
+            .unwrap_or_else(|| panic!("{mutation_id} should exist"))
+            .clone();
+
+        assert!(game.gain_mutation(mutation_id, &mut Vec::new()));
+        let cap = CharacterProgress::attribute_cap(game.victory_level_cap_unlocked());
+        let expected_attributes = AttributeSet {
+            strength: modify_attribute_value(
+                baseline_attributes.strength,
+                definition.modifiers.strength,
+                cap,
+            ),
+            intelligence: modify_attribute_value(
+                baseline_attributes.intelligence,
+                definition.modifiers.intelligence,
+                cap,
+            ),
+            wisdom: modify_attribute_value(
+                baseline_attributes.wisdom,
+                definition.modifiers.wisdom,
+                cap,
+            ),
+            dexterity: modify_attribute_value(
+                baseline_attributes.dexterity,
+                definition.modifiers.dexterity,
+                cap,
+            ),
+            constitution: modify_attribute_value(
+                baseline_attributes.constitution,
+                definition.modifiers.constitution,
+                cap,
+            ),
+            charisma: modify_attribute_value(
+                baseline_attributes.charisma,
+                definition.modifiers.charisma,
+                cap,
+            ),
+        };
+        let stats = game.player_derived_stats();
+        assert_eq!(game.effective_player_attributes(), expected_attributes);
+        assert_eq!(
+            stats.speed.value,
+            baseline_stats.speed.value + definition.modifiers.speed
+        );
+        assert_eq!(
+            stats.armor_class.value,
+            baseline_stats.armor_class.value + definition.armor_class
+        );
+        assert_eq!(game.player.hp, stats.max_hp.value);
+        if definition.modifiers.constitution > 0 {
+            assert!(stats.max_hp.value > baseline_max_hp);
+        } else if definition.modifiers.constitution < 0 {
+            assert!(stats.max_hp.value < baseline_max_hp);
+        }
+
+        assert!(game.lose_mutation(mutation_id, &mut Vec::new()));
+        let restored = game.player_derived_stats();
+        assert_eq!(game.effective_player_attributes(), baseline_attributes);
+        assert_eq!(restored.speed.value, baseline_stats.speed.value);
+        assert_eq!(restored.armor_class.value, baseline_stats.armor_class.value);
+        assert_eq!(restored.max_hp.value, baseline_max_hp);
+        assert_eq!(game.player.hp, baseline_max_hp);
+    }
+
+    let mut skin = Game::new(0);
+    let baseline_armor = skin.player_derived_stats().armor_class.value;
+    assert!(skin.gain_mutation("rfb.mutation.warts", &mut Vec::new()));
+    assert!(skin.gain_mutation("rfb.mutation.steel-skin", &mut Vec::new()));
+    assert!(
+        !skin
+            .progress
+            .active_mutation_ids
+            .contains("rfb.mutation.warts")
+    );
+    assert_eq!(
+        skin.player_derived_stats().armor_class.value,
+        baseline_armor + 25
+    );
+}
+
+#[test]
 fn new_life_is_one_seeded_transaction_with_locked_mutation_protection() {
     const ITEM_ID: &str = "test.item.new-life.1";
     const KIND_ID: &str = "demo.item.new-life-potion";
@@ -388,6 +497,9 @@ fn unlocked_mutation_count_scales_natural_regeneration() {
         let ids = game
             .content
             .mutations()
+            .filter(|mutation| {
+                mutation.modifiers.constitution == 0 && mutation.modifiers.max_hp == 0
+            })
             .take(active)
             .map(|mutation| mutation.id.clone())
             .collect::<Vec<_>>();

@@ -1104,6 +1104,30 @@ impl Game {
         if include_equipment {
             self.add_character_stat_contributions(&mut pipeline);
             self.add_character_skill_contributions(&mut pipeline);
+            for mutation in self
+                .content
+                .mutations()
+                .filter(|mutation| self.progress.active_mutation_ids.contains(&mutation.id))
+            {
+                let modifiers = &mutation.modifiers;
+                for (kind, value) in [
+                    (StatKind::MaxHp, modifiers.max_hp),
+                    (StatKind::Attack, modifiers.attack),
+                    (StatKind::Defense, modifiers.defense),
+                    (
+                        StatKind::MeleeSkill,
+                        rating_to_combat_value(modifiers.attack),
+                    ),
+                    (
+                        StatKind::ArmorClass,
+                        rating_to_armor_class(modifiers.defense)
+                            .saturating_add(mutation.armor_class),
+                    ),
+                    (StatKind::Speed, modifiers.speed),
+                ] {
+                    add_nonzero_stat(&mut pipeline, kind, StatLayer::Status, &mutation.id, value);
+                }
+            }
             for item in self
                 .items
                 .iter()

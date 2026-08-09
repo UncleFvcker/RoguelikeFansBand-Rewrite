@@ -22,7 +22,7 @@ use affixes::validate_affixes;
 use characters::{CharacterDefinitions, CharacterValidationRefs, validate_characters};
 pub(crate) use items::valid_item_effect;
 use items::{ItemValidationRefs, validate_items};
-use shared::insert_definition_id;
+use shared::{attribute_modifiers_out_of_range, insert_definition_id};
 pub(crate) use shared::{
     require_format_version, require_schema, validate_definition_id, validate_id,
     validate_message_key, validate_pack_relations, validate_semver,
@@ -107,6 +107,15 @@ pub(crate) fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<
         validate_definition_id(&mutation.id, "mutation")?;
         if mutation.name.trim().is_empty() || mutation.description.trim().is_empty() {
             return Err(ContentError::InvalidDefinitionText(mutation.id.clone()));
+        }
+        if mutation.modifiers.max_hp.abs() > 1_000_000
+            || mutation.modifiers.attack.abs() > 1_000_000
+            || mutation.modifiers.defense.abs() > 1_000_000
+            || !(-100..=100).contains(&mutation.modifiers.speed)
+            || attribute_modifiers_out_of_range(&mutation.modifiers)
+            || !(-1_000_000..=1_000_000).contains(&mutation.armor_class)
+        {
+            return Err(ContentError::InvalidMutation(mutation.id.clone()));
         }
         if !mutation_source_indices.insert(mutation.source_index) {
             return Err(ContentError::InvalidMutation(mutation.id.clone()));

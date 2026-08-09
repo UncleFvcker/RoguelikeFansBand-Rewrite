@@ -7,6 +7,9 @@
   "rating": "awful",
   "sourceIndex": 65,
   "randomWeight": 6,
+  "modifiers": {
+    "strength": -4
+  },
   "removesOnGain": [
     "rfb.mutation.hyper-str"
   ]
