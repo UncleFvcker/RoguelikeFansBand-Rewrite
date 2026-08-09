@@ -1,6 +1,6 @@
 # RFB CoreTransport 协议 v1
 
-状态：协议 1.140、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
+状态：协议 1.151、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
 
 ## 1. 适用边界
 
@@ -383,3 +383,9 @@ contract-v191 只增加内容层近战 effect 及对应运行时解释，不新�
 集成协议 1.147 同时保留荒野 W1–W5 与房间永久光/黑暗字段；相对主线 1.146 新增的 `glow` 权威状态进入 state hash Schema v70，contract 基线统一刷新为 v204。
 
 协议 1.148 为 `AbilityEffectSpecDto` 增加怪物专用 `blink-target { radius }`。它使用既有投射目标与怪物位移结算，只在目标当前位置给定半径内选择可通行空格；P29 的半径固定为 10。该效果不增加命令、存档或 state-hash 输入，save v1 与 Schema v70 保持不变。完整边界见 [Contract v213](contract-v213-warrens-content-p28-p29-ant-summon-target-blink.md)。
+
+协议 1.148 为 `ItemPropertyKnowledgeSaveDto` 增加必填 `discovered`。玩家视野和物品探测写入该实例级状态；`GameSnapshot.items` 与 `CellDto.itemId` 只投影已发现的非金币地面物品。该状态进入 state hash Schema v71，save 容器保持 v1，旧开发存档不兼容。完整边界见 [O1 物品发现](object-list-o1-item-discovery.md)。
+
+协议 1.149 增加单步 `TravelLocal { destination }`。Core 只根据当前已探索且可通行的地图知识选择下一步，避开已知陷阱，并复用普通 `Move` 的行动、怪物、时间、饥饿与光源结算；地图选点、循环定位楼梯、连续派发和中断由前端负责。普通地图目标遵循 RFB 原版生命周期，只在本次运行中供大写 `J` 恢复，不进入 save 或 state hash；Schema 保持 v71，基线升至 contract-v206。
+
+集成协议 1.151 同时保留怪物目标闪现、物品发现、本地旅行和墨家名器双语配置；配置进入 save v1 与 state hash Schema v72，contract 基线统一刷新为 v215。

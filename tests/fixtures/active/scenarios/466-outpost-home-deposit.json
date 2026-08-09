@@ -29,7 +29,7 @@
       "revision": 1,
       "turn": 1,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 132,
+      "rngDrawCounter": 164,
       "floorId": "demo.floor.surface",
       "town": {
         "id": "demo.town.outpost",
@@ -238,7 +238,7 @@
           "playerAtEntrance": true,
           "storedItems": [
             {
-              "id": "generated.item.130",
+              "id": "generated.item.164",
               "kindId": "demo.item.ration-of-food",
               "displayNameKey": "item-demo-ration-of-food-name",
               "quantity": 1,
@@ -783,7 +783,7 @@
           "identification": "identified",
           "quality": "ordinary",
           "projectileProfile": {
-            "range": 8,
+            "range": 16,
             "toHit": 0,
             "toDamage": 0,
             "damage": {
@@ -798,7 +798,7 @@
                 "position",
                 "entity"
               ],
-              "range": 8,
+              "range": 16,
               "requiresLineOfEffect": true
             },
             "sourceItemId": "generated.item.11"
@@ -807,22 +807,69 @@
       ],
       "itemPropertyKnowledge": [
         {
+          "itemId": "demo.item.warrens-light-healing-potion.1",
+          "discovered": true
+        },
+        {
+          "itemId": "demo.item.warrens-short-sword.1",
+          "discovered": true
+        },
+        {
+          "itemId": "generated.item.1",
+          "discovered": true
+        },
+        {
           "itemId": "generated.item.10",
+          "discovered": true,
           "appraised": true,
           "identified": true
         },
         {
           "itemId": "generated.item.11",
+          "discovered": true,
           "appraised": true,
           "identified": true
         },
         {
+          "itemId": "generated.item.164",
+          "discovered": true
+        },
+        {
+          "itemId": "generated.item.2",
+          "discovered": true
+        },
+        {
+          "itemId": "generated.item.3",
+          "discovered": true
+        },
+        {
+          "itemId": "generated.item.4",
+          "discovered": true
+        },
+        {
+          "itemId": "generated.item.5",
+          "discovered": true
+        },
+        {
+          "itemId": "generated.item.6",
+          "discovered": true
+        },
+        {
+          "itemId": "generated.item.7",
+          "discovered": true
+        },
+        {
+          "itemId": "generated.item.8",
+          "discovered": true
+        },
+        {
           "itemId": "generated.item.9",
+          "discovered": true,
           "appraised": true,
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 131,
+      "nextItemInstanceSerial": 165,
       "nextGoldPileSerial": 1,
       "tasks": [
         {
@@ -858,7 +905,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "50f345f79e85c342c42b107bb57dccb92e0cf1dfcb1eba899a531ed3ab99d8a0"
+      "stateHash": "e7ce1862223e74200d0553121b3cd775927873a7c3a8ff90f59efcf8fabab0d3"
     },
     "events": [
       {
@@ -866,7 +913,7 @@
         "messageKey": "home-deposit-success",
         "args": {
           "facility": "demo.town-facility.outpost-home",
-          "item": "generated.item.130",
+          "item": "generated.item.164",
           "quantity": "1",
           "target": "demo.item.ration-of-food"
         }

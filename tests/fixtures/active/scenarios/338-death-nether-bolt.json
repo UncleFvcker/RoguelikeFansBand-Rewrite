@@ -3137,9 +3137,62 @@
       ],
       "itemPropertyKnowledge": [
         {
+          "itemId": "demo.item.echo-blade.1",
+          "discovered": true
+        },
+        {
+          "itemId": "demo.item.echo-charm.1",
+          "discovered": true
+        },
+        {
+          "itemId": "demo.item.luminous-shard.1",
+          "discovered": true
+        },
+        {
+          "itemId": "demo.item.resonance-pellet.1",
+          "discovered": true
+        },
+        {
+          "itemId": "demo.item.resonance-sling.1",
+          "discovered": true
+        },
+        {
+          "itemId": "generated.item.1",
+          "discovered": true
+        },
+        {
           "itemId": "generated.item.2",
+          "discovered": true,
           "appraised": true,
           "identified": true
+        },
+        {
+          "itemId": "generated.item.3",
+          "discovered": true
+        },
+        {
+          "itemId": "generated.item.4",
+          "discovered": true
+        },
+        {
+          "itemId": "generated.item.5",
+          "discovered": true
+        },
+        {
+          "itemId": "generated.item.6",
+          "discovered": true
+        },
+        {
+          "itemId": "generated.item.7",
+          "discovered": true
+        },
+        {
+          "itemId": "generated.item.8",
+          "discovered": true
+        },
+        {
+          "itemId": "generated.item.9",
+          "discovered": true
         }
       ],
       "nextItemInstanceSerial": 10,
@@ -3215,7 +3268,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "3f21660be08ccfa2c3c28bb97908e7de3ad9d6a3dd41e995aa9198d2bd5f13c1"
+      "stateHash": "04d491d502897f2bcb9be2736a5a745eee6d5ac3c9560aba551fba3972eff55c"
     },
     "events": [
       {
@@ -3352,6 +3405,6 @@
     "removedEntities": [
       "demo.monster.ember-mote.1"
     ],
-    "saveRoundTripStateHash": "3f21660be08ccfa2c3c28bb97908e7de3ad9d6a3dd41e995aa9198d2bd5f13c1"
+    "saveRoundTripStateHash": "04d491d502897f2bcb9be2736a5a745eee6d5ac3c9560aba551fba3972eff55c"
   }
 }

@@ -365,12 +365,29 @@
       ],
       "itemPropertyKnowledge": [
         {
+          "itemId": "demo.item.echo-blade.1",
+          "discovered": true
+        },
+        {
           "itemId": "demo.item.echo-charm.1",
+          "discovered": true,
           "appraised": true,
           "identified": true,
           "knownAffixIds": [
             "demo.affix.harmonic-edge"
           ]
+        },
+        {
+          "itemId": "demo.item.luminous-shard.1",
+          "discovered": true
+        },
+        {
+          "itemId": "demo.item.resonance-pellet.1",
+          "discovered": true
+        },
+        {
+          "itemId": "demo.item.resonance-sling.1",
+          "discovered": true
         }
       ],
       "nextItemInstanceSerial": 2,
@@ -433,7 +450,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "ea16fde6e0603230127669fb0cae79158a19c7c7de4d4e71da5436b529449c52"
+      "stateHash": "8ef0c67b0f8f63edcee0688b4431cd32a0db38e241f500511a2d0c025743ae94"
     },
     "events": [
       {

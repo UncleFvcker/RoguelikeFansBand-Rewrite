@@ -49,6 +49,8 @@ import { PlayerUiLayout } from "./player-ui-layout";
 import { ShopPanel } from "./shop-panel";
 import { HomePanel } from "./home-panel";
 import { TaskServicePanel } from "./task-service-panel";
+import { ObjectListPanel } from "./object-list";
+import { MogaminatorEditor } from "./mogaminator-editor";
 
 const core = new TauriNativeTransport();
 const crashDiagnostics = new DesktopCrashDiagnostics();
@@ -124,6 +126,17 @@ const addLocalizedMessage = (
   kind: string,
 ) => messagePanel.addLocalized(key, args, kind);
 const addGameEvent = (event: GameEventDto) => messagePanel.addEvent(event);
+let dispatch: (command: GameCommand) => Promise<void> = async () => {};
+let mogaminatorEditor: MogaminatorEditor | undefined;
+const objectListPanel = new ObjectListPanel({
+  document,
+  window,
+  state: appState,
+  localization,
+  contentName,
+  visibleItemName,
+  onTravel: (position) => void inputController.travelLocalTo(position),
+});
 const journeyGuidance = new JourneyGuidance({
   dom: appDom,
   localization,
@@ -150,8 +163,11 @@ const settingsPanel = new SettingsPanel({
     shopPanel.localize();
     homePanel.localize();
     taskServicePanel.localize();
+    objectListPanel.localize();
+    mogaminatorEditor?.localize();
     messagePanel.render();
   },
+  onLocaleChange: (locale) => dispatch({ type: "set-interface-locale", locale }),
   refreshBusyControls: () => inventoryPanel.updateActions(),
   announce: addLocalizedMessage,
 });
@@ -175,6 +191,7 @@ const gameSession = new GameSession({
     shopPanel.render(update);
     homePanel.render(update);
     taskServicePanel.render(update);
+    mogaminatorEditor?.render(update.mogaminator);
     for (const event of update.events) addGameEvent(event);
     journeyGuidance.observeCommand(command, previous, update);
     journeyResult.renderUpdate(update);
@@ -188,7 +205,14 @@ const gameSession = new GameSession({
   },
   showError,
 });
-const dispatch = (command: GameCommand) => gameSession.dispatch(command);
+dispatch = (command: GameCommand) => gameSession.dispatch(command);
+mogaminatorEditor = new MogaminatorEditor({
+  document,
+  window,
+  state: appState,
+  localization,
+  dispatch,
+});
 const inputController = new InputController({
   state: appState,
   dom: appDom,
@@ -198,6 +222,8 @@ const inputController = new InputController({
   getZoom: () => settingsPanel.zoom,
   dispatch,
   describeLook: describeLookPosition,
+  openObjectList: () => objectListPanel.open(),
+  openMogaminator: () => mogaminatorEditor?.open(),
   onLookOrTargeting: (interaction) => journeyGuidance.recordInteraction(interaction),
   onLookFocusChange: (position) => renderer.setCameraFocus(position),
   announce: addLocalizedMessage,
@@ -363,6 +389,8 @@ inventoryPanel.install();
 shopPanel.install();
 homePanel.install();
 taskServicePanel.install();
+objectListPanel.install();
+mogaminatorEditor.install();
 journeyGuidance.install();
 journeyResult.install();
 playerUiLayout.install();
@@ -380,6 +408,8 @@ window.addEventListener("beforeunload", () => {
   shopPanel.dispose();
   homePanel.dispose();
   taskServicePanel.dispose();
+  objectListPanel.dispose();
+  mogaminatorEditor?.dispose();
   settingsPanel.dispose();
   inputController.dispose();
   journeyGuidance.dispose();
@@ -489,6 +519,9 @@ async function importSave(): Promise<void> {
 
 function applyLoadedSnapshot(snapshot: GameSnapshot): void {
   inputController.cancelTargeting(false);
+  inputController.resetLocalTravel();
+  objectListPanel.close();
+  mogaminatorEditor?.close();
   shopPanel.reset();
   homePanel.reset();
   taskServicePanel.reset();
@@ -510,6 +543,9 @@ function applyLoadedSnapshot(snapshot: GameSnapshot): void {
   journeyGuidance.render(snapshot);
   sessionShell.showGame(snapshot);
   journeyResult.renderSnapshot(snapshot);
+  if (snapshot.mogaminator.locale !== localization.locale) {
+    void dispatch({ type: "set-interface-locale", locale: localization.locale });
+  }
 }
 
 async function startNewSession(request: NewSessionRequest): Promise<GameSnapshot> {
@@ -530,6 +566,9 @@ async function startNewSession(request: NewSessionRequest): Promise<GameSnapshot
 
 async function initializeGameView(snapshot: GameSnapshot): Promise<void> {
   inputController.cancelTargeting(false);
+  inputController.resetLocalTravel();
+  objectListPanel.close();
+  mogaminatorEditor?.close();
   shopPanel.reset();
   homePanel.reset();
   taskServicePanel.reset();
@@ -562,6 +601,7 @@ async function initializeGameView(snapshot: GameSnapshot): Promise<void> {
   await synchronizeCrashDiagnosticContext(snapshot);
   appState.mode = "playing";
   statusPanel.render(snapshot);
+  mogaminatorEditor?.render(snapshot.mogaminator);
   appState.bodySlots = snapshot.bodySlots ?? [];
   inventoryPanel.render(snapshot.inventory, snapshot.equipment);
   shopPanel.render(snapshot);
@@ -571,6 +611,9 @@ async function initializeGameView(snapshot: GameSnapshot): Promise<void> {
   journeyResult.renderSnapshot(snapshot);
   appState.connection = "ready";
   renderConnectionStatus();
+  if (snapshot.mogaminator.locale !== localization.locale) {
+    await dispatch({ type: "set-interface-locale", locale: localization.locale });
+  }
   await nativeSavePanel.refresh();
 }
 
@@ -588,6 +631,9 @@ async function restartSameSetup(): Promise<void> {
 
 function showSessionView(view: "title" | "new-game" | "load"): void {
   inputController.cancelTargeting(false);
+  inputController.resetLocalTravel();
+  objectListPanel.close();
+  mogaminatorEditor?.close();
   shopPanel.reset();
   homePanel.reset();
   taskServicePanel.reset();

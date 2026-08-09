@@ -47,7 +47,7 @@
       "turn": 2,
       "worldTick": 20,
       "lastCommandSeq": 2,
-      "rngDrawCounter": 274,
+      "rngDrawCounter": 248,
       "floorId": "demo.floor.surface",
       "town": {
         "id": "demo.town.outpost",
@@ -668,7 +668,7 @@
           "identification": "identified",
           "quality": "ordinary",
           "projectileProfile": {
-            "range": 8,
+            "range": 16,
             "toHit": 0,
             "toDamage": 0,
             "damage": {
@@ -683,7 +683,7 @@
                 "position",
                 "entity"
               ],
-              "range": 8,
+              "range": 16,
               "requiresLineOfEffect": true
             },
             "sourceItemId": "generated.item.8"
@@ -692,22 +692,53 @@
       ],
       "itemPropertyKnowledge": [
         {
+          "itemId": "demo.item.warrens-light-healing-potion.1",
+          "discovered": true
+        },
+        {
+          "itemId": "demo.item.warrens-short-sword.1",
+          "discovered": true
+        },
+        {
+          "itemId": "generated.item.1",
+          "discovered": true
+        },
+        {
+          "itemId": "generated.item.2",
+          "discovered": true
+        },
+        {
+          "itemId": "generated.item.3",
+          "discovered": true
+        },
+        {
+          "itemId": "generated.item.4",
+          "discovered": true
+        },
+        {
+          "itemId": "generated.item.5",
+          "discovered": true
+        },
+        {
           "itemId": "generated.item.6",
+          "discovered": true,
           "appraised": true,
           "identified": true
         },
         {
           "itemId": "generated.item.7",
+          "discovered": true,
           "appraised": true,
           "identified": true
         },
         {
           "itemId": "generated.item.8",
+          "discovered": true,
           "appraised": true,
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 137,
+      "nextItemInstanceSerial": 170,
       "nextGoldPileSerial": 1,
       "tasks": [
         {
@@ -743,7 +774,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "b287a0b3b45c5e2dd8715a4c8c596475cb73c33c0490c49dc31078c92a4ff100"
+      "stateHash": "bc3d1af02137cdef771d39ee66d231adc09d3d539f9e05fc5afe8b0aeaa02855"
     },
     "events": [
       {

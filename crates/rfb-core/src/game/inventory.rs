@@ -24,9 +24,22 @@ pub(super) struct ItemKnowledgeState {
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub(super) struct ItemPropertyKnowledgeState {
+    pub(super) discovered: bool,
     pub(super) appraised: bool,
     pub(super) identified: bool,
     pub(super) known_affix_ids: BTreeSet<String>,
+}
+
+pub(super) fn item_properties_match(
+    left: Option<&ItemPropertyKnowledgeState>,
+    right: Option<&ItemPropertyKnowledgeState>,
+) -> bool {
+    let empty = ItemPropertyKnowledgeState::default();
+    let left = left.unwrap_or(&empty);
+    let right = right.unwrap_or(&empty);
+    left.appraised == right.appraised
+        && left.identified == right.identified
+        && left.known_affix_ids == right.known_affix_ids
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -262,7 +275,10 @@ fn compatible_inventory_space(
                 && carried.quantity < definition.max_stack
                 && item_instances_stack_compatible(carried, incoming)
                 && (!match_knowledge
-                    || item_property_knowledge.get(&carried.id) == incoming_knowledge)
+                    || item_properties_match(
+                        item_property_knowledge.get(&carried.id),
+                        incoming_knowledge,
+                    ))
         })
         .fold(0_u32, |space, carried| {
             space.saturating_add(definition.max_stack - carried.quantity)
@@ -474,7 +490,7 @@ fn plan_pick_up(
                 && carried.kind_id == kind_id
                 && carried.quantity < definition.max_stack
                 && item_instances_stack_compatible(carried, pickup_item)
-                && item_property_knowledge.get(&carried.id) == pickup_knowledge
+                && item_properties_match(item_property_knowledge.get(&carried.id), pickup_knowledge)
         })
         .map(|(index, _)| index)
         .collect::<Vec<_>>();
@@ -614,10 +630,12 @@ impl Game {
         if knowledge.is_some_and(|knowledge| knowledge.appraised || knowledge.identified) {
             return None;
         }
-        self.item_property_knowledge
+        let knowledge = self
+            .item_property_knowledge
             .entry(item_instance_id)
-            .or_default()
-            .appraised = true;
+            .or_default();
+        knowledge.discovered = true;
+        knowledge.appraised = true;
         Some((kind_id, quality))
     }
 
@@ -649,6 +667,7 @@ impl Game {
             .item_property_knowledge
             .entry(item_id.to_owned())
             .or_default();
+        knowledge.discovered = true;
         knowledge.appraised = true;
         if request.full {
             knowledge.identified = true;
@@ -1137,6 +1156,7 @@ impl Game {
             .item_property_knowledge
             .entry(item_instance_id)
             .or_default();
+        knowledge.discovered = true;
         knowledge.appraised = true;
         knowledge.identified = true;
         let discovered_affix_ids = affix_ids

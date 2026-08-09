@@ -1009,6 +1009,7 @@ mod tests {
         payload.entities.clear();
         payload.items.clear();
         payload.carried_items.clear();
+        payload.item_property_knowledge.clear();
         payload
             .dungeon_states
             .iter_mut()
@@ -1071,6 +1072,7 @@ mod tests {
         payload.entities.clear();
         payload.items.clear();
         payload.carried_items.clear();
+        payload.item_property_knowledge.clear();
         payload
             .dungeon_states
             .iter_mut()

@@ -134,6 +134,7 @@ fn home_deposit_withdraw_grouping_and_save_are_authoritative() {
     game.item_property_knowledge.insert(
         ration.id.clone(),
         ItemPropertyKnowledgeState {
+            discovered: true,
             appraised: true,
             identified: true,
             known_affix_ids: BTreeSet::new(),

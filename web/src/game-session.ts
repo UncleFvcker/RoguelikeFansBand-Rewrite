@@ -30,7 +30,9 @@ export class GameSession {
       (this.#state.worldMap &&
         command.type !== "move" &&
         command.type !== "travel-world" &&
-        command.type !== "leave-world-map")
+        command.type !== "leave-world-map" &&
+        command.type !== "configure-mogaminator" &&
+        command.type !== "set-interface-locale")
     ) return;
     this.#state.busy = true;
     this.#refreshBusyControls();

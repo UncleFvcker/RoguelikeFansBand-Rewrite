@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: MPL-2.0
 
+use std::collections::BTreeSet;
+
 use fluent_bundle::{FluentArgs, FluentBundle, FluentResource};
+use rfb_content::ContentCatalog;
 use thiserror::Error;
 use unic_langid::LanguageIdentifier;
 
@@ -76,12 +79,96 @@ impl Localizer {
         Err(LocalizationError::MissingMessage(key.to_owned()))
     }
 
+    /// Formats one locale without falling back to English.
+    ///
+    /// Logic driven by localized text, such as Mogaminator rules,
+    /// must fail on a missing translation instead of silently changing the
+    /// language being matched.
+    pub fn format_exact(
+        &self,
+        locale: Locale,
+        key: &str,
+        args: Option<&FluentArgs<'_>>,
+    ) -> Result<String, LocalizationError> {
+        format_from(self.bundle(locale), key, args)?
+            .ok_or_else(|| LocalizationError::MissingMessage(key.to_owned()))
+    }
+
     fn bundle(&self, locale: Locale) -> &FluentBundle<FluentResource> {
         match locale {
             Locale::EnUs => &self.english,
             Locale::ZhCn => &self.chinese,
         }
     }
+}
+
+/// Resolves the authoritative item matching name used by Mogaminator.
+///
+/// English and Chinese names remain in their existing Fluent resources. This
+/// type stores no second display or matching-name field, and callers decide
+/// independently whether the resolved true name may be projected to the UI.
+pub struct MogaminatorNames {
+    localizer: Localizer,
+}
+
+impl MogaminatorNames {
+    pub fn new(locale: Locale) -> Result<Self, LocalizationError> {
+        Ok(Self {
+            localizer: Localizer::new(locale)?,
+        })
+    }
+
+    pub fn item_name(
+        &self,
+        content: &ContentCatalog,
+        kind_id: &str,
+        affix_ids: &[String],
+    ) -> Result<String, MogaminatorNameError> {
+        let item = content
+            .item(kind_id)
+            .ok_or_else(|| MogaminatorNameError::UnknownItem(kind_id.to_owned()))?;
+        let base_name =
+            self.localizer
+                .format_exact(self.localizer.locale(), &item.name_key, None)?;
+        let mut prefixes = String::new();
+        let mut suffixes = String::new();
+        for affix_id in affix_ids.iter().collect::<BTreeSet<_>>() {
+            let affix = content
+                .affix(affix_id)
+                .ok_or_else(|| MogaminatorNameError::UnknownAffix(affix_id.clone()))?;
+            let affix_name =
+                self.localizer
+                    .format_exact(self.localizer.locale(), &affix.name_key, None)?;
+            if self.localizer.locale() == Locale::ZhCn
+                && let Some(prefix) = chinese_prefix(&affix_name)
+            {
+                prefixes.push_str(prefix);
+            } else {
+                suffixes.push(' ');
+                suffixes.push_str(affix_name.trim());
+            }
+        }
+        Ok(format!("{prefixes}{}{suffixes}", base_name.trim()))
+    }
+}
+
+fn chinese_prefix(name: &str) -> Option<&str> {
+    let name = name.trim();
+    let unwrapped = name
+        .strip_prefix('(')
+        .and_then(|name| name.strip_suffix(')'))
+        .unwrap_or(name);
+    (unwrapped.ends_with('之') || unwrapped.ends_with('的')).then_some(unwrapped)
+}
+
+#[derive(Debug, Error)]
+pub enum MogaminatorNameError {
+    #[error("unknown item definition {0}")]
+    UnknownItem(String),
+    #[error("unknown affix definition {0}")]
+    UnknownAffix(String),
+    #[error(transparent)]
+    Localization(#[from] LocalizationError),
 }
 
 fn create_bundle(
@@ -159,7 +246,10 @@ pub enum LocalizationError {
 
 #[cfg(test)]
 mod tests {
+    use std::path::Path;
+
     use fluent_bundle::FluentArgs;
+    use rfb_content::{ContentCatalog, compile_pack_dir};
 
     use super::*;
 
@@ -199,5 +289,102 @@ mod tests {
                 assert!(localizer.has_message(locale, key), "{locale:?}/{key}");
             }
         }
+    }
+
+    #[test]
+    fn all_item_affix_and_artifact_names_have_exact_matching_messages() {
+        let pack = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .and_then(Path::parent)
+            .expect("crate should be inside the workspace")
+            .join("packs/rfb-demo-original");
+        let artifact = compile_pack_dir(&pack).expect("original pack should compile");
+        let localizer = Localizer::new(Locale::ZhCn).expect("resources should load");
+        for locale in [Locale::EnUs, Locale::ZhCn] {
+            for item in &artifact.content.items {
+                localizer
+                    .format_exact(locale, &item.name_key, None)
+                    .unwrap_or_else(|error| {
+                        panic!("{locale:?}/{}/{}: {error}", item.id, item.name_key)
+                    });
+            }
+            for affix in &artifact.content.affixes {
+                localizer
+                    .format_exact(locale, &affix.name_key, None)
+                    .unwrap_or_else(|error| {
+                        panic!("{locale:?}/{}/{}: {error}", affix.id, affix.name_key)
+                    });
+            }
+        }
+    }
+
+    #[test]
+    fn mogaminator_name_uses_true_chinese_name_and_stable_affixes() {
+        let pack = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .and_then(Path::parent)
+            .expect("crate should be inside the workspace")
+            .join("packs/rfb-demo-original");
+        let content = ContentCatalog::from_artifact(
+            compile_pack_dir(&pack).expect("original pack should compile"),
+        );
+        let names = MogaminatorNames::new(Locale::ZhCn).expect("resources should load");
+
+        assert_eq!(
+            names
+                .item_name(
+                    &content,
+                    "demo.item.echo-blade",
+                    &[
+                        "demo.affix.vampiric".to_owned(),
+                        "demo.affix.vampiric".to_owned(),
+                    ],
+                )
+                .expect("name should resolve"),
+            "回声刃 吸血"
+        );
+        assert_eq!(
+            names
+                .item_name(&content, "demo.item.relic-blade", &[])
+                .expect("artifact name should resolve"),
+            "遗珍之刃"
+        );
+    }
+
+    #[test]
+    fn mogaminator_name_uses_english_when_selected() {
+        let pack = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .and_then(Path::parent)
+            .expect("crate should be inside the workspace")
+            .join("packs/rfb-demo-original");
+        let content = ContentCatalog::from_artifact(
+            compile_pack_dir(&pack).expect("original pack should compile"),
+        );
+        let names = MogaminatorNames::new(Locale::EnUs).expect("resources should load");
+
+        assert_eq!(
+            names
+                .item_name(
+                    &content,
+                    "demo.item.echo-blade",
+                    &["demo.affix.vampiric".to_owned()],
+                )
+                .expect("name should resolve"),
+            "echo blade vampiric"
+        );
+        assert_eq!(
+            names
+                .item_name(&content, "demo.item.relic-blade", &[])
+                .expect("artifact name should resolve"),
+            "Relic Blade"
+        );
+    }
+
+    #[test]
+    fn chinese_ego_prefixes_follow_original_composition() {
+        assert_eq!(chinese_prefix("杀戮之"), Some("杀戮之"));
+        assert_eq!(chinese_prefix("(受祝福的)"), Some("受祝福的"));
+        assert_eq!(chinese_prefix("吸血"), None);
     }
 }

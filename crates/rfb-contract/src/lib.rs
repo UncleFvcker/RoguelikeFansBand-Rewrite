@@ -22,7 +22,7 @@ pub mod policy;
 pub mod snapshot;
 
 pub const CONTRACT_SCHEMA_VERSION: u16 = 3;
-pub const ACTIVE_BASELINE: &str = "contract-v214";
+pub const ACTIVE_BASELINE: &str = "contract-v215";
 pub const ACTIVE_FIXTURE_DIRECTORY: &str = "active";
 pub const LEGACY_BASELINE_COMMIT: &str = "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9";
 pub const ORIGINAL_TEST_WORLD: &str = "demo.world.original-v1";
@@ -688,6 +688,7 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
             .item_property_knowledge
             .push(ItemPropertyKnowledgeSaveDto {
                 item_id: item.id.clone(),
+                discovered: true,
                 appraised: true,
                 identified: true,
                 known_affix_ids: item.affix_ids.clone(),

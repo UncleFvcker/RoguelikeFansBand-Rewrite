@@ -117,10 +117,10 @@ fn thieves_hideout_inline_floor_preserves_the_fixed_map_and_six_member_formation
             "#####################",
             "#####...#...#...#...#",
             "#####...#...#...#...#",
-            "#####...#...#...#.^.#",
+            "#####.^.#...#...#...#",
             "#<..##+###+###+###+##",
-            "#..^#....^...^..^...#",
-            "#...+...............#",
+            "#.^.#....^..........#",
+            "#.^.+...............#",
             "#####################",
         ]
     );
@@ -627,6 +627,7 @@ fn configurable_dungeon_lifecycle_retains_then_expires_instances() {
     game.item_property_knowledge.insert(
         archive_item_id.clone(),
         ItemPropertyKnowledgeState {
+            discovered: true,
             appraised: true,
             identified: false,
             known_affix_ids: BTreeSet::new(),

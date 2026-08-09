@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use rfb_protocol::{
-    AttributeKindDto, DeviceRechargeSourceDto, Direction, GameCommand, SummonCommandModeDto,
-    TargetSelection,
+    AttributeKindDto, DeviceRechargeSourceDto, Direction, GameCommand, LocaleDto,
+    SummonCommandModeDto, TargetSelection,
 };
 
 use crate::{scheduler::STANDARD_ACTION_COST, stats::AttributeKind};
@@ -46,6 +46,11 @@ pub(crate) enum GameAction {
     },
     CloseDoor {
         direction: Direction,
+    },
+    ConfigureMogaminator {
+        enabled: bool,
+        locale: LocaleDto,
+        source: String,
     },
     DisarmTrap {
         direction: Direction,
@@ -93,6 +98,9 @@ pub(crate) enum GameAction {
     SetSummonCommand {
         mode: SummonCommandModeDto,
     },
+    SetInterfaceLocale {
+        locale: LocaleDto,
+    },
     ForgetAbility {
         ability_id: String,
     },
@@ -116,6 +124,9 @@ pub(crate) enum GameAction {
     },
     LeaveWorldMap,
     TravelWorld {
+        destination: rfb_protocol::Position,
+    },
+    TravelLocal {
         destination: rfb_protocol::Position,
     },
     Throw {
@@ -158,7 +169,10 @@ impl GameAction {
             | Self::Retire
             | Self::SellToShop { .. }
             | Self::WithdrawFromHome { .. }
-            | Self::SetSummonCommand { .. } => 0,
+            | Self::SetSummonCommand { .. }
+            | Self::ConfigureMogaminator { .. }
+            | Self::SetInterfaceLocale { .. } => 0,
+            Self::TravelLocal { .. } => 0,
             Self::RefuelLight { .. } => STANDARD_ACTION_COST / 2,
             _ => STANDARD_ACTION_COST,
         }
@@ -218,6 +232,15 @@ impl From<GameCommand> for GameAction {
                 Self::CastAbility { ability_id, target }
             }
             GameCommand::CloseDoor { direction } => Self::CloseDoor { direction },
+            GameCommand::ConfigureMogaminator {
+                enabled,
+                locale,
+                source,
+            } => Self::ConfigureMogaminator {
+                enabled,
+                locale,
+                source,
+            },
             GameCommand::DisarmTrap { direction } => Self::DisarmTrap { direction },
             GameCommand::DigTerrain { direction } => Self::DigTerrain { direction },
             GameCommand::EnterWorldMap {
@@ -229,6 +252,7 @@ impl From<GameCommand> for GameAction {
             },
             GameCommand::LeaveWorldMap => Self::LeaveWorldMap,
             GameCommand::TravelWorld { destination } => Self::TravelWorld { destination },
+            GameCommand::TravelLocal { destination } => Self::TravelLocal { destination },
             GameCommand::Move { direction } => Self::Move { direction },
             GameCommand::Ride { direction } => Self::Ride { direction },
             GameCommand::OpenDoor { direction } => Self::OpenDoor { direction },
@@ -270,6 +294,7 @@ impl From<GameCommand> for GameAction {
                 quantity,
             },
             GameCommand::SetSummonCommand { mode } => Self::SetSummonCommand { mode },
+            GameCommand::SetInterfaceLocale { locale } => Self::SetInterfaceLocale { locale },
             GameCommand::ForgetAbility { ability_id } => Self::ForgetAbility { ability_id },
             GameCommand::StudyAbility {
                 book_item_id,

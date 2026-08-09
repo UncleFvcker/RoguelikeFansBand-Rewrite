@@ -326,9 +326,38 @@
       ],
       "itemPropertyKnowledge": [
         {
+          "itemId": "demo.item.echo-blade.1",
+          "discovered": true
+        },
+        {
+          "itemId": "demo.item.echo-charm.1",
+          "discovered": true
+        },
+        {
+          "itemId": "demo.item.luminous-shard.1",
+          "discovered": true
+        },
+        {
+          "itemId": "demo.item.resonance-pellet.1",
+          "discovered": true
+        },
+        {
+          "itemId": "demo.item.resonance-sling.1",
+          "discovered": true
+        },
+        {
           "itemId": "generated.item.1",
+          "discovered": true,
           "appraised": true,
           "identified": true
+        },
+        {
+          "itemId": "generated.item.2",
+          "discovered": true
+        },
+        {
+          "itemId": "generated.item.3",
+          "discovered": true
         }
       ],
       "nextItemInstanceSerial": 5,
@@ -404,8 +433,8 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "104806613987028618251986a16a443783a1183fa34c31452a4b2620f555ec18"
+      "stateHash": "0ef115cddd1bbf5cd8660115d8e8b9696c28fa3a1b06b59160c2b2bdc74fd5a0"
     },
-    "saveRoundTripStateHash": "104806613987028618251986a16a443783a1183fa34c31452a4b2620f555ec18"
+    "saveRoundTripStateHash": "0ef115cddd1bbf5cd8660115d8e8b9696c28fa3a1b06b59160c2b2bdc74fd5a0"
   }
 }

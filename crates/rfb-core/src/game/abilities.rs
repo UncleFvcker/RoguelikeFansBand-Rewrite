@@ -2004,6 +2004,7 @@ impl Game {
                     .item_property_knowledge
                     .entry(item_id.clone())
                     .or_default();
+                knowledge.discovered = true;
                 knowledge.appraised = true;
                 knowledge.identified = true;
                 knowledge.known_affix_ids.insert(affix_id.clone());
@@ -2452,11 +2453,13 @@ impl Game {
             ),
             AbilityDetectSubjectDefinition::Actor => self.detect_actor_positions(category, *radius),
             AbilityDetectSubjectDefinition::Item => {
-                self.detect_item_positions(category, *radius, false)
+                let detected = self.detect_item_positions(category, *radius, false);
+                self.mark_item_instances_discovered(&detected.1);
+                detected
             }
             AbilityDetectSubjectDefinition::Gold => self.detect_gold_positions(*radius, false),
         };
-        if *persistent {
+        if *persistent || *subject == AbilityDetectSubjectDefinition::Item {
             changed.extend(detected_positions.iter().copied());
         }
         events.push(DomainEvent::AbilityDetected {

@@ -252,7 +252,13 @@ fn equipment_precondition_relocates_and_identifies_an_existing_item() {
         "demo.item.echo-charm.1"
     );
     assert_eq!(
-        observed.final_state.item_property_knowledge[0].known_affix_ids,
+        observed
+            .final_state
+            .item_property_knowledge
+            .iter()
+            .find(|knowledge| knowledge.item_id == "demo.item.echo-charm.1")
+            .expect("equipped charm knowledge should be projected")
+            .known_affix_ids,
         ["demo.affix.harmonic-edge"]
     );
 }

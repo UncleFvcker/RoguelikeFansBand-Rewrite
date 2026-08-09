@@ -333,7 +333,7 @@
           "identification": "identified",
           "quality": "ordinary",
           "projectileProfile": {
-            "range": 8,
+            "range": 16,
             "toHit": 0,
             "toDamage": 0,
             "damage": {
@@ -348,7 +348,7 @@
                 "position",
                 "entity"
               ],
-              "range": 8,
+              "range": 16,
               "requiresLineOfEffect": true
             },
             "sourceItemId": "generated.item.4"
@@ -398,22 +398,50 @@
       ],
       "itemPropertyKnowledge": [
         {
+          "itemId": "demo.item.echo-blade.1",
+          "discovered": true
+        },
+        {
+          "itemId": "demo.item.echo-charm.1",
+          "discovered": true
+        },
+        {
+          "itemId": "demo.item.luminous-shard.1",
+          "discovered": true
+        },
+        {
+          "itemId": "demo.item.resonance-pellet.1",
+          "discovered": true
+        },
+        {
+          "itemId": "demo.item.resonance-sling.1",
+          "discovered": true
+        },
+        {
+          "itemId": "generated.item.1",
+          "discovered": true
+        },
+        {
           "itemId": "generated.item.2",
+          "discovered": true,
           "appraised": true,
           "identified": true
         },
         {
           "itemId": "generated.item.3",
+          "discovered": true,
           "appraised": true,
           "identified": true
         },
         {
           "itemId": "generated.item.4",
+          "discovered": true,
           "appraised": true,
           "identified": true
         },
         {
           "itemId": "test.item.resonance-mail.1",
+          "discovered": true,
           "appraised": true,
           "identified": true
         }
@@ -491,7 +519,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "73ab75c7d23bc90172f0802a9005b5f67349ce4f0f5d52844d848bec3a14363f"
+      "stateHash": "05428cc032e0a46e4a33809e570e5257617a615498a710d3f3c076af77c12d62"
     },
     "events": [
       {
@@ -521,6 +549,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "73ab75c7d23bc90172f0802a9005b5f67349ce4f0f5d52844d848bec3a14363f"
+    "saveRoundTripStateHash": "05428cc032e0a46e4a33809e570e5257617a615498a710d3f3c076af77c12d62"
   }
 }

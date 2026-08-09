@@ -18,6 +18,7 @@ export type ApplicationMode = "title" | "starting-session" | "playing";
 
 export type TargetingIntent =
   | { type: "look" }
+  | { type: "local-travel" }
   | { type: "projectile" }
   | { type: "ability"; abilityId: string }
   | { type: "item"; itemId: string };

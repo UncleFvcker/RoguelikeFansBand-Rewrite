@@ -177,6 +177,12 @@ mod tests {
             wilderness_position: None,
             wilderness_seed: 0,
             world_travel_destination: None,
+            interface_locale: rfb_protocol::LocaleDto::ZhCn,
+            mogaminator: rfb_protocol::MogaminatorSaveDto {
+                enabled: false,
+                zh_cn_source: "# 墨家名器规则\n".to_owned(),
+                en_us_source: "# Mogaminator rules\n".to_owned(),
+            },
             terrain: TerrainSaveDto {
                 width: 1,
                 height: 1,

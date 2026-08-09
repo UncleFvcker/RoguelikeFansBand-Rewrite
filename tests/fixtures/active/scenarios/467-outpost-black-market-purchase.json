@@ -29,7 +29,7 @@
       "revision": 1,
       "turn": 1,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 132,
+      "rngDrawCounter": 164,
       "floorId": "demo.floor.surface",
       "town": {
         "id": "demo.town.outpost",
@@ -107,7 +107,7 @@
           },
           "stock": [
             {
-              "id": "generated.item.62",
+              "id": "generated.item.72",
               "kindId": "demo.item.necronomicon",
               "displayNameKey": "item-demo-necronomicon-name",
               "quantity": 1,
@@ -117,7 +117,7 @@
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.63",
+              "id": "generated.item.73",
               "kindId": "demo.item.unhealth-mushroom",
               "displayNameKey": "item-demo-unhealth-mushroom-name",
               "quantity": 1,
@@ -127,7 +127,7 @@
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.64",
+              "id": "generated.item.74",
               "kindId": "demo.item.disease-mushroom",
               "displayNameKey": "item-demo-disease-mushroom-name",
               "quantity": 1,
@@ -137,7 +137,7 @@
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.65",
+              "id": "generated.item.75",
               "kindId": "demo.item.restore-constitution-mushroom",
               "displayNameKey": "item-demo-restore-constitution-mushroom-name",
               "quantity": 1,
@@ -147,13 +147,173 @@
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.66",
+              "id": "generated.item.76",
               "kindId": "demo.item.restore-strength-mushroom",
               "displayNameKey": "item-demo-restore-strength-mushroom-name",
               "quantity": 1,
               "maximumQuantity": 1,
               "unitPrice": 980,
               "weightTenthsPound": 1,
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.77",
+              "kindId": "demo.item.invulnerability-potion",
+              "displayNameKey": "item-demo-invulnerability-potion-name",
+              "quantity": 1,
+              "maximumQuantity": 1,
+              "unitPrice": 280000,
+              "weightTenthsPound": 4,
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.78",
+              "kindId": "demo.item.giant-strength-potion",
+              "displayNameKey": "item-demo-giant-strength-potion-name",
+              "quantity": 1,
+              "maximumQuantity": 1,
+              "unitPrice": 28000,
+              "weightTenthsPound": 4,
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.79",
+              "kindId": "demo.item.great-clarity-potion",
+              "displayNameKey": "item-demo-great-clarity-potion-name",
+              "quantity": 1,
+              "maximumQuantity": 1,
+              "unitPrice": 2800,
+              "weightTenthsPound": 4,
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.80",
+              "kindId": "demo.item.understanding-scroll",
+              "displayNameKey": "item-demo-understanding-scroll-name",
+              "quantity": 1,
+              "maximumQuantity": 1,
+              "unitPrice": 7000,
+              "weightTenthsPound": 5,
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.81",
+              "kindId": "demo.item.inventory-protection-scroll",
+              "displayNameKey": "item-demo-inventory-protection-scroll-name",
+              "quantity": 1,
+              "maximumQuantity": 1,
+              "unitPrice": 7000,
+              "weightTenthsPound": 5,
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.82",
+              "kindId": "demo.item.enlightenment-potion",
+              "displayNameKey": "item-demo-enlightenment-potion-name",
+              "quantity": 1,
+              "maximumQuantity": 1,
+              "unitPrice": 2240,
+              "weightTenthsPound": 4,
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.83",
+              "kindId": "demo.item.star-enlightenment-potion",
+              "displayNameKey": "item-demo-star-enlightenment-potion-name",
+              "quantity": 1,
+              "maximumQuantity": 1,
+              "unitPrice": 336000,
+              "weightTenthsPound": 4,
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.84",
+              "kindId": "demo.item.self-knowledge-potion",
+              "displayNameKey": "item-demo-self-knowledge-potion-name",
+              "quantity": 1,
+              "maximumQuantity": 1,
+              "unitPrice": 5600,
+              "weightTenthsPound": 4,
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.85",
+              "kindId": "demo.item.experience-potion",
+              "displayNameKey": "item-demo-experience-potion-name",
+              "quantity": 1,
+              "maximumQuantity": 1,
+              "unitPrice": 70000,
+              "weightTenthsPound": 4,
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.86",
+              "kindId": "demo.item.neo-tsuyoshi-special",
+              "displayNameKey": "item-demo-neo-tsuyoshi-special-name",
+              "quantity": 1,
+              "maximumQuantity": 1,
+              "unitPrice": 5600,
+              "weightTenthsPound": 4,
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.87",
+              "kindId": "demo.item.rune-of-protection-scroll",
+              "displayNameKey": "item-demo-rune-of-protection-scroll-name",
+              "quantity": 1,
+              "maximumQuantity": 1,
+              "unitPrice": 1400,
+              "weightTenthsPound": 5,
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.88",
+              "kindId": "demo.item.destruction-scroll",
+              "displayNameKey": "item-demo-destruction-scroll-name",
+              "quantity": 1,
+              "maximumQuantity": 1,
+              "unitPrice": 700,
+              "weightTenthsPound": 5,
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.89",
+              "kindId": "demo.item.mundanity-scroll",
+              "displayNameKey": "item-demo-mundanity-scroll-name",
+              "quantity": 1,
+              "maximumQuantity": 1,
+              "unitPrice": 8400,
+              "weightTenthsPound": 5,
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.90",
+              "kindId": "demo.item.acquirement-scroll",
+              "displayNameKey": "item-demo-acquirement-scroll-name",
+              "quantity": 1,
+              "maximumQuantity": 1,
+              "unitPrice": 280000,
+              "weightTenthsPound": 5,
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.91",
+              "kindId": "demo.item.star-acquirement-scroll",
+              "displayNameKey": "item-demo-star-acquirement-scroll-name",
+              "quantity": 1,
+              "maximumQuantity": 1,
+              "unitPrice": 560000,
+              "weightTenthsPound": 5,
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.92",
+              "kindId": "demo.item.crafting-scroll",
+              "displayNameKey": "item-demo-crafting-scroll-name",
+              "quantity": 1,
+              "maximumQuantity": 1,
+              "unitPrice": 280000,
+              "weightTenthsPound": 5,
               "quality": "ordinary"
             }
           ],
@@ -171,7 +331,7 @@
               "maximumQuantity": 6
             },
             {
-              "itemId": "generated.item.61",
+              "itemId": "generated.item.71",
               "kindId": "demo.item.black-channels",
               "unitPrice": 5357,
               "maximumQuantity": 1
@@ -666,32 +826,6 @@
           "identification": "unexamined"
         },
         {
-          "id": "generated.item.61",
-          "kindId": "demo.item.black-channels",
-          "displayNameKey": "item-demo-black-channels-name",
-          "knowledge": "aware",
-          "usable": false,
-          "canReceiveRecharge": false,
-          "canSupplyRecharge": false,
-          "quantity": 1,
-          "weightTenthsPound": 15,
-          "equipmentSlot": null,
-          "modifiers": {
-            "attack": 0,
-            "defense": 0,
-            "maxHp": 0,
-            "strength": 0,
-            "intelligence": 0,
-            "wisdom": 0,
-            "dexterity": 0,
-            "constitution": 0,
-            "charisma": 0,
-            "speed": 0
-          },
-          "identification": "identified",
-          "quality": "ordinary"
-        },
-        {
           "id": "generated.item.7",
           "kindId": "demo.item.wooden-torch",
           "displayNameKey": "item-demo-wooden-torch-name",
@@ -721,6 +855,32 @@
             "speed": 0
           },
           "identification": "unexamined"
+        },
+        {
+          "id": "generated.item.71",
+          "kindId": "demo.item.black-channels",
+          "displayNameKey": "item-demo-black-channels-name",
+          "knowledge": "aware",
+          "usable": false,
+          "canReceiveRecharge": false,
+          "canSupplyRecharge": false,
+          "quantity": 1,
+          "weightTenthsPound": 15,
+          "equipmentSlot": null,
+          "modifiers": {
+            "attack": 0,
+            "defense": 0,
+            "maxHp": 0,
+            "strength": 0,
+            "intelligence": 0,
+            "wisdom": 0,
+            "dexterity": 0,
+            "constitution": 0,
+            "charisma": 0,
+            "speed": 0
+          },
+          "identification": "identified",
+          "quality": "ordinary"
         },
         {
           "id": "generated.item.8",
@@ -845,7 +1005,7 @@
           "identification": "identified",
           "quality": "ordinary",
           "projectileProfile": {
-            "range": 8,
+            "range": 16,
             "toHit": 0,
             "toDamage": 0,
             "damage": {
@@ -860,7 +1020,7 @@
                 "position",
                 "entity"
               ],
-              "range": 8,
+              "range": 16,
               "requiresLineOfEffect": true
             },
             "sourceItemId": "generated.item.11"
@@ -869,27 +1029,71 @@
       ],
       "itemPropertyKnowledge": [
         {
+          "itemId": "demo.item.warrens-light-healing-potion.1",
+          "discovered": true
+        },
+        {
+          "itemId": "demo.item.warrens-short-sword.1",
+          "discovered": true
+        },
+        {
+          "itemId": "generated.item.1",
+          "discovered": true
+        },
+        {
           "itemId": "generated.item.10",
+          "discovered": true,
           "appraised": true,
           "identified": true
         },
         {
           "itemId": "generated.item.11",
+          "discovered": true,
           "appraised": true,
           "identified": true
         },
         {
-          "itemId": "generated.item.61",
+          "itemId": "generated.item.2",
+          "discovered": true
+        },
+        {
+          "itemId": "generated.item.3",
+          "discovered": true
+        },
+        {
+          "itemId": "generated.item.4",
+          "discovered": true
+        },
+        {
+          "itemId": "generated.item.5",
+          "discovered": true
+        },
+        {
+          "itemId": "generated.item.6",
+          "discovered": true
+        },
+        {
+          "itemId": "generated.item.7",
+          "discovered": true
+        },
+        {
+          "itemId": "generated.item.71",
+          "discovered": true,
           "appraised": true,
           "identified": true
+        },
+        {
+          "itemId": "generated.item.8",
+          "discovered": true
         },
         {
           "itemId": "generated.item.9",
+          "discovered": true,
           "appraised": true,
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 130,
+      "nextItemInstanceSerial": 164,
       "nextGoldPileSerial": 1,
       "tasks": [
         {
@@ -925,7 +1129,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "052e559005d8b0d170f7438cee7bbd6abdd4009928f901040bb614102beab27c"
+      "stateHash": "903094a33340ded69464af96e210deac48d4051638b042de39c2107ebcc9ba96"
     },
     "events": [
       {
@@ -933,7 +1137,7 @@
         "messageKey": "shop-purchase-success",
         "args": {
           "balance": "958000",
-          "item": "generated.item.61",
+          "item": "generated.item.71",
           "quantity": "1",
           "shop": "demo.shop.outpost-black-market",
           "target": "demo.item.black-channels",

@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.148";
+pub const PROTOCOL_VERSION: &str = "1.151";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -116,6 +116,11 @@ pub enum GameCommand {
     CloseDoor {
         direction: Direction,
     },
+    ConfigureMogaminator {
+        enabled: bool,
+        locale: LocaleDto,
+        source: String,
+    },
     DisarmTrap {
         direction: Direction,
     },
@@ -148,6 +153,9 @@ pub enum GameCommand {
     },
     LeaveWorldMap,
     TravelWorld {
+        destination: Position,
+    },
+    TravelLocal {
         destination: Position,
     },
     Move {
@@ -184,6 +192,9 @@ pub enum GameCommand {
         target_item_id: String,
         source_item_id: String,
     },
+    SetInterfaceLocale {
+        locale: LocaleDto,
+    },
     SetSummonCommand {
         mode: SummonCommandModeDto,
     },
@@ -217,6 +228,107 @@ pub enum GameCommand {
         slot_id: String,
     },
     Wait,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+pub enum LocaleDto {
+    #[serde(rename = "en-US")]
+    #[cfg_attr(feature = "bindings", ts(rename = "en-US"))]
+    EnUs,
+    #[default]
+    #[serde(rename = "zh-CN")]
+    #[cfg_attr(feature = "bindings", ts(rename = "zh-CN"))]
+    ZhCn,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum MogaminatorDispositionDto {
+    PickUp,
+    Destroy,
+    Leave,
+    Query,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct MogaminatorActionDto {
+    pub disposition: MogaminatorDispositionDto,
+    pub display: bool,
+    pub auto_identify: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub inscription: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct MogaminatorDiagnosticDto {
+    pub line: u32,
+    pub column: u32,
+    pub code: String,
+    #[serde(default)]
+    pub arguments: Vec<String>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum MogaminatorLineKindDto {
+    Blank,
+    Comment,
+    Condition,
+    Rule,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct MogaminatorLineDto {
+    pub line_number: u32,
+    pub kind: MogaminatorLineKindDto,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub action: Option<MogaminatorActionDto>,
+    #[serde(default)]
+    pub predicate_count: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub search: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct MogaminatorItemMatchDto {
+    pub item_id: String,
+    pub line_number: u32,
+    pub action: MogaminatorActionDto,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct MogaminatorDto {
+    pub enabled: bool,
+    pub locale: LocaleDto,
+    pub source: String,
+    pub default_source: String,
+    #[serde(default)]
+    pub diagnostics: Vec<MogaminatorDiagnosticDto>,
+    #[serde(default)]
+    pub lines: Vec<MogaminatorLineDto>,
+    #[serde(default)]
+    pub matches: Vec<MogaminatorItemMatchDto>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MogaminatorSaveDto {
+    pub enabled: bool,
+    pub zh_cn_source: String,
+    pub en_us_source: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -2682,6 +2794,7 @@ pub struct GameSnapshot {
     pub equipment: Vec<EquipmentItemDto>,
     #[serde(default)]
     pub body_slots: Vec<BodySlotDto>,
+    pub mogaminator: MogaminatorDto,
     pub content_id: String,
     pub content_hash: String,
     pub content_visuals: Vec<ContentVisualDto>,
@@ -2744,6 +2857,7 @@ pub struct GameUpdate {
     pub inventory: Vec<InventoryItemDto>,
     #[serde(default)]
     pub equipment: Vec<EquipmentItemDto>,
+    pub mogaminator: MogaminatorDto,
     pub removed_entities: Vec<String>,
     #[serde(default)]
     pub terrain_interactions: Vec<TerrainInteractionDto>,
@@ -2785,6 +2899,14 @@ pub fn generated_typescript() -> String {
 
     push_declaration!(Direction);
     push_declaration!(DeviceRechargeSourceDto);
+    push_declaration!(LocaleDto);
+    push_declaration!(MogaminatorDispositionDto);
+    push_declaration!(MogaminatorActionDto);
+    push_declaration!(MogaminatorDiagnosticDto);
+    push_declaration!(MogaminatorLineKindDto);
+    push_declaration!(MogaminatorLineDto);
+    push_declaration!(MogaminatorItemMatchDto);
+    push_declaration!(MogaminatorDto);
     push_declaration!(GameCommand);
     push_declaration!(GameCommandEnvelope);
     push_declaration!(StatModifiersDto);
@@ -3338,6 +3460,7 @@ pub struct ItemKnowledgeSaveDto {
 #[serde(rename_all = "camelCase")]
 pub struct ItemPropertyKnowledgeSaveDto {
     pub item_id: String,
+    pub discovered: bool,
     #[serde(default, skip_serializing_if = "is_false")]
     pub appraised: bool,
     #[serde(default, skip_serializing_if = "is_false")]
@@ -3447,6 +3570,8 @@ pub struct SavePayloadV1 {
     pub wilderness_seed: u64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub world_travel_destination: Option<Position>,
+    pub interface_locale: LocaleDto,
+    pub mogaminator: MogaminatorSaveDto,
     pub terrain: TerrainSaveDto,
     pub player: PlayerSaveDto,
     pub entities: Vec<ActorSaveDto>,
@@ -3557,6 +3682,8 @@ mod tests {
         revision: u32,
         turn: u32,
         last_command_seq: u32,
+        interface_locale: LocaleDto,
+        mogaminator: MogaminatorSaveDto,
         terrain: TerrainSaveDto,
         player: PlayerDto,
         entities: Vec<EntityDto>,
@@ -3640,6 +3767,9 @@ mod tests {
             GameCommand::LeaveWorldMap,
             GameCommand::TravelWorld {
                 destination: Position { x: 29, y: 52 },
+            },
+            GameCommand::TravelLocal {
+                destination: Position { x: 40, y: 12 },
             },
             GameCommand::Throw {
                 item_id: "demo.item.luminous-shard.1".to_owned(),
@@ -3786,6 +3916,12 @@ mod tests {
             revision: 2,
             turn: 2,
             last_command_seq: 2,
+            interface_locale: LocaleDto::ZhCn,
+            mogaminator: MogaminatorSaveDto {
+                enabled: false,
+                zh_cn_source: "# 墨家名器规则\n".to_owned(),
+                en_us_source: "# Mogaminator rules\n".to_owned(),
+            },
             terrain: TerrainSaveDto {
                 width: 1,
                 height: 1,

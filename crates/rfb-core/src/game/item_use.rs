@@ -1095,13 +1095,15 @@ impl Game {
             ),
             AbilityDetectSubjectDefinition::Actor => self.detect_actor_positions(&category, radius),
             AbilityDetectSubjectDefinition::Item => {
-                self.detect_item_positions(&category, radius, through_walls)
+                let detected = self.detect_item_positions(&category, radius, through_walls);
+                self.mark_item_instances_discovered(&detected.1);
+                detected
             }
             AbilityDetectSubjectDefinition::Gold => {
                 self.detect_gold_positions(radius, through_walls)
             }
         };
-        if persistent {
+        if persistent || subject == AbilityDetectSubjectDefinition::Item {
             changed.extend(detected_positions.iter().copied());
         }
         self.mark_item_aware(&source_kind_id);
@@ -1459,6 +1461,7 @@ impl Game {
         self.item_property_knowledge.insert(
             target_item_id.clone(),
             ItemPropertyKnowledgeState {
+                discovered: true,
                 appraised: true,
                 identified: true,
                 known_affix_ids: BTreeSet::new(),
@@ -1510,6 +1513,7 @@ impl Game {
         self.item_property_knowledge.insert(
             target_item_id.clone(),
             ItemPropertyKnowledgeState {
+                discovered: true,
                 appraised: true,
                 identified: true,
                 known_affix_ids: BTreeSet::from([affix_id.clone()]),

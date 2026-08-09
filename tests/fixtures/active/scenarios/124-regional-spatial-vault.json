@@ -379,7 +379,41 @@
           "energyNeed": 10
         }
       ],
-      "groundItemCount": 2,
+      "groundItemCount": 1,
+      "itemPropertyKnowledge": [
+        {
+          "itemId": "demo.item.echo-blade.1",
+          "discovered": true
+        },
+        {
+          "itemId": "demo.item.echo-charm.1",
+          "discovered": true
+        },
+        {
+          "itemId": "demo.item.luminous-shard.1",
+          "discovered": true
+        },
+        {
+          "itemId": "demo.item.resonance-pellet.1",
+          "discovered": true
+        },
+        {
+          "itemId": "demo.item.resonance-sling.1",
+          "discovered": true
+        },
+        {
+          "itemId": "generated.item.11",
+          "discovered": true
+        },
+        {
+          "itemId": "generated.item.3",
+          "discovered": true
+        },
+        {
+          "itemId": "generated.item.9",
+          "discovered": true
+        }
+      ],
       "nextItemInstanceSerial": 13,
       "nextGoldPileSerial": 1,
       "tasks": [
@@ -440,7 +474,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "25061074d235eecdc7c44c09a9a3de577c6873db537db735a308cd6fc08c03e2"
+      "stateHash": "a4cb6aa9321e349d967049733bd0c5f03feded93eebf0233d252ab688abeb9a0"
     },
     "events": [
       {
@@ -12031,14 +12065,14 @@
       {
         "step": 15,
         "kind": "player-dead",
-        "stateHash": "25061074d235eecdc7c44c09a9a3de577c6873db537db735a308cd6fc08c03e2"
+        "stateHash": "a4cb6aa9321e349d967049733bd0c5f03feded93eebf0233d252ab688abeb9a0"
       },
       {
         "step": 16,
         "kind": "player-dead",
-        "stateHash": "25061074d235eecdc7c44c09a9a3de577c6873db537db735a308cd6fc08c03e2"
+        "stateHash": "a4cb6aa9321e349d967049733bd0c5f03feded93eebf0233d252ab688abeb9a0"
       }
     ],
-    "saveRoundTripStateHash": "25061074d235eecdc7c44c09a9a3de577c6873db537db735a308cd6fc08c03e2"
+    "saveRoundTripStateHash": "a4cb6aa9321e349d967049733bd0c5f03feded93eebf0233d252ab688abeb9a0"
   }
 }

@@ -8,5 +8,6 @@ rust-version.workspace = true
 
 [dependencies]
 fluent-bundle.workspace = true
+rfb-content = { path = "../rfb-content" }
 thiserror.workspace = true
 unic-langid.workspace = true

@@ -486,7 +486,7 @@ fn item_property_knowledge_from_save(
             .all(|affix_id| known_affix_ids.contains(affix_id));
         let identified = entry.identified || (!known_affix_ids.is_empty() && all_affixes_known);
         let appraised = entry.appraised || identified;
-        if (!appraised && !identified && known_affix_ids.is_empty())
+        if !entry.discovered
             || known_affix_ids.len() != known_affix_count
             || known_affix_ids.iter().any(|affix_id| {
                 !item.affix_ids.contains(affix_id) || content.affix(affix_id).is_none()
@@ -496,6 +496,7 @@ fn item_property_knowledge_from_save(
                 .insert(
                     entry.item_id,
                     ItemPropertyKnowledgeState {
+                        discovered: entry.discovered,
                         appraised,
                         identified,
                         known_affix_ids,
@@ -513,7 +514,7 @@ fn item_property_knowledge_from_save(
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-struct StateHashPayloadV69<'a> {
+struct StateHashPayloadV72<'a> {
     schema_version: u16,
     revision: u32,
     turn: u32,
@@ -523,6 +524,8 @@ struct StateHashPayloadV69<'a> {
     wilderness_position: Option<Position>,
     wilderness_seed: u64,
     world_travel_destination: Option<Position>,
+    interface_locale: rfb_protocol::LocaleDto,
+    mogaminator: rfb_protocol::MogaminatorSaveDto,
     terrain: TerrainSaveRef<'a>,
     player: PlayerSaveDto,
     entities: Vec<ActorSaveDto>,
@@ -636,6 +639,9 @@ impl Game {
         {
             return Err(CoreError::ContentMismatch);
         }
+        let mogaminator =
+            super::mogaminator::MogaminatorState::from_save(payload.mogaminator.clone())
+                .map_err(|_| CoreError::InvalidSave("Mogaminator source is invalid"))?;
         let world = content
             .world(&payload.world_id)
             .ok_or_else(|| CoreError::UnknownWorld(payload.world_id.clone()))?;
@@ -1006,8 +1012,17 @@ impl Game {
             &content,
         )?;
         for item in &items {
-            if matches!(item.location, ItemLocation::Equipped { .. }) {
+            if matches!(
+                item.location,
+                ItemLocation::Inventory | ItemLocation::Equipped { .. }
+            ) {
                 let knowledge = item_property_knowledge.entry(item.id.clone()).or_default();
+                knowledge.discovered = true;
+            }
+            if matches!(item.location, ItemLocation::Equipped { .. }) {
+                let knowledge = item_property_knowledge
+                    .get_mut(&item.id)
+                    .expect("equipped item knowledge was initialized");
                 knowledge.appraised = true;
                 knowledge.identified = true;
                 knowledge
@@ -1070,6 +1085,8 @@ impl Game {
             wilderness_position,
             wilderness_seed: payload.wilderness_seed,
             world_travel_destination: payload.world_travel_destination,
+            interface_locale: payload.interface_locale,
+            mogaminator,
             current_floor_id,
             current_dungeon_instance_id,
             stored_floors,
@@ -1156,6 +1173,8 @@ impl Game {
             wilderness_position: self.wilderness_position,
             wilderness_seed: self.wilderness_seed,
             world_travel_destination: self.world_travel_destination,
+            interface_locale: self.interface_locale,
+            mogaminator: self.mogaminator.to_save(),
             terrain: TerrainSaveDto {
                 width: self.width,
                 height: self.height,
@@ -1216,7 +1235,7 @@ impl Game {
 
     #[must_use]
     pub fn state_hash(&self) -> String {
-        let payload = StateHashPayloadV69 {
+        let payload = StateHashPayloadV72 {
             schema_version: STATE_HASH_SCHEMA_VERSION,
             revision: self.revision,
             turn: self.turn,
@@ -1226,6 +1245,8 @@ impl Game {
             wilderness_position: self.wilderness_position,
             wilderness_seed: self.wilderness_seed,
             world_travel_destination: self.world_travel_destination,
+            interface_locale: self.interface_locale,
+            mogaminator: self.mogaminator.to_save(),
             terrain: TerrainSaveRef {
                 width: self.width,
                 height: self.height,
@@ -1344,16 +1365,62 @@ impl Game {
     }
 
     fn item_property_knowledge_to_save(&self) -> Vec<ItemPropertyKnowledgeSaveDto> {
-        self.item_property_knowledge
+        let all_items = self
+            .items
             .iter()
-            .filter(|(_, knowledge)| {
-                knowledge.appraised || knowledge.identified || !knowledge.known_affix_ids.is_empty()
-            })
-            .map(|(item_id, knowledge)| ItemPropertyKnowledgeSaveDto {
-                item_id: item_id.clone(),
-                appraised: knowledge.appraised,
-                identified: knowledge.identified,
-                known_affix_ids: knowledge.known_affix_ids.iter().cloned().collect(),
+            .chain(
+                self.stored_floors
+                    .values()
+                    .flat_map(|floor| floor.items.iter()),
+            )
+            .chain(
+                self.shop_states
+                    .values()
+                    .flat_map(|state| state.inventory.iter()),
+            )
+            .chain(
+                self.home_states
+                    .values()
+                    .flat_map(|state| state.inventory.iter()),
+            )
+            .collect::<Vec<_>>();
+        let mut item_ids = self
+            .item_property_knowledge
+            .keys()
+            .filter(|item_id| all_items.iter().any(|item| item.id == item_id.as_str()))
+            .cloned()
+            .collect::<BTreeSet<_>>();
+        item_ids.extend(
+            self.items
+                .iter()
+                .filter(|item| {
+                    matches!(
+                        item.location,
+                        ItemLocation::Inventory | ItemLocation::Equipped { .. }
+                    )
+                })
+                .map(|item| item.id.clone()),
+        );
+        item_ids
+            .into_iter()
+            .map(|item_id| {
+                let knowledge = self.item_property_knowledge.get(&item_id);
+                let held = self.items.iter().any(|item| {
+                    item.id == item_id
+                        && matches!(
+                            item.location,
+                            ItemLocation::Inventory | ItemLocation::Equipped { .. }
+                        )
+                });
+                ItemPropertyKnowledgeSaveDto {
+                    item_id,
+                    discovered: held || knowledge.is_some_and(|knowledge| knowledge.discovered),
+                    appraised: knowledge.is_some_and(|knowledge| knowledge.appraised),
+                    identified: knowledge.is_some_and(|knowledge| knowledge.identified),
+                    known_affix_ids: knowledge
+                        .map(|knowledge| knowledge.known_affix_ids.iter().cloned().collect())
+                        .unwrap_or_default(),
+                }
             })
             .collect()
     }

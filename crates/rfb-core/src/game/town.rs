@@ -22,7 +22,7 @@ use crate::{
 
 use super::{
     Game, initial_item_curse, initial_item_runtime_state,
-    inventory::item_instances_stack_compatible,
+    inventory::{item_instances_stack_compatible, item_properties_match},
 };
 use crate::save::{
     GENERATED_ITEM_ID_PREFIX, initial_item_fuel, inventory_item_from_dto, inventory_to_save,
@@ -486,7 +486,10 @@ fn home_item_group(
         .iter()
         .filter(|item| {
             item_instances_stack_compatible(item, &anchor)
-                && game.item_property_knowledge.get(&item.id) == anchor_knowledge
+                && item_properties_match(
+                    game.item_property_knowledge.get(&item.id),
+                    anchor_knowledge,
+                )
         })
         .collect::<Vec<_>>();
     items.sort_by(|left, right| left.id.cmp(&right.id));
@@ -513,7 +516,7 @@ fn grouped_home_items<'a>(
         let knowledge = game.item_property_knowledge.get(&item.id);
         if let Some((_, quantity)) = groups.iter_mut().find(|(anchor, _)| {
             item_instances_stack_compatible(anchor, item)
-                && game.item_property_knowledge.get(&anchor.id) == knowledge
+                && item_properties_match(game.item_property_knowledge.get(&anchor.id), knowledge)
         }) {
             *quantity = quantity.saturating_add(item.quantity);
         } else {
@@ -535,7 +538,7 @@ fn grouped_inventory_for_home(game: &Game) -> Vec<(&ItemInstance, u32)> {
         let knowledge = game.item_property_knowledge.get(&item.id);
         if let Some((_, quantity)) = groups.iter_mut().find(|(anchor, _)| {
             item_instances_stack_compatible(anchor, item)
-                && game.item_property_knowledge.get(&anchor.id) == knowledge
+                && item_properties_match(game.item_property_knowledge.get(&anchor.id), knowledge)
         }) {
             *quantity = quantity.saturating_add(item.quantity);
         } else {
@@ -647,7 +650,10 @@ fn carry_home_withdrawal_item(game: &mut Game, mut item: ItemInstance) -> Vec<St
             carried.location == ItemLocation::Inventory
                 && carried.quantity < definition.max_stack
                 && item_instances_stack_compatible(carried, &item)
-                && game.item_property_knowledge.get(&carried.id) == source_knowledge.as_ref()
+                && item_properties_match(
+                    game.item_property_knowledge.get(&carried.id),
+                    source_knowledge.as_ref(),
+                )
         })
         .map(|(index, _)| index)
         .collect::<Vec<_>>();
@@ -725,7 +731,10 @@ fn inventory_sale_group(game: &Game, item_id: &str) -> Option<(ItemInstance, Vec
         .filter(|item| {
             item.location == ItemLocation::Inventory
                 && item_instances_stack_compatible(item, &anchor)
-                && game.item_property_knowledge.get(&item.id) == anchor_knowledge
+                && item_properties_match(
+                    game.item_property_knowledge.get(&item.id),
+                    anchor_knowledge,
+                )
         })
         .collect::<Vec<_>>();
     items.sort_by(|left, right| left.id.cmp(&right.id));
@@ -789,7 +798,10 @@ fn grouped_inventory_items(game: &Game) -> Vec<(&ItemInstance, u32)> {
             if let Some((_, quantity)) = groups.iter_mut().find(|(anchor, _)| {
                 item_is_legal_for_shop(game, anchor)
                     && item_instances_stack_compatible(anchor, item)
-                    && game.item_property_knowledge.get(&anchor.id) == knowledge
+                    && item_properties_match(
+                        game.item_property_knowledge.get(&anchor.id),
+                        knowledge,
+                    )
             }) {
                 *quantity = quantity.saturating_add(item.quantity);
                 continue;
@@ -1081,6 +1093,7 @@ impl Game {
                 .item_property_knowledge
                 .entry(destination_id)
                 .or_default();
+            knowledge.discovered = true;
             knowledge.appraised = true;
             knowledge.identified = true;
             knowledge.known_affix_ids.extend(known_affix_ids);

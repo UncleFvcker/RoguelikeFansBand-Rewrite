@@ -332,7 +332,7 @@
           "identification": "identified",
           "quality": "ordinary",
           "projectileProfile": {
-            "range": 8,
+            "range": 16,
             "toHit": 0,
             "toDamage": 0,
             "damage": {
@@ -347,7 +347,7 @@
                 "position",
                 "entity"
               ],
-              "range": 8,
+              "range": 16,
               "requiresLineOfEffect": true
             },
             "sourceItemId": "generated.item.4"
@@ -397,17 +397,44 @@
       ],
       "itemPropertyKnowledge": [
         {
+          "itemId": "demo.item.echo-blade.1",
+          "discovered": true
+        },
+        {
+          "itemId": "demo.item.echo-charm.1",
+          "discovered": true
+        },
+        {
+          "itemId": "demo.item.luminous-shard.1",
+          "discovered": true
+        },
+        {
+          "itemId": "demo.item.resonance-pellet.1",
+          "discovered": true
+        },
+        {
+          "itemId": "demo.item.resonance-sling.1",
+          "discovered": true
+        },
+        {
+          "itemId": "generated.item.1",
+          "discovered": true
+        },
+        {
           "itemId": "generated.item.2",
+          "discovered": true,
           "appraised": true,
           "identified": true
         },
         {
           "itemId": "generated.item.3",
+          "discovered": true,
           "appraised": true,
           "identified": true
         },
         {
           "itemId": "generated.item.4",
+          "discovered": true,
           "appraised": true,
           "identified": true
         }
@@ -485,7 +512,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "cf183d140e6364873768b9ad09e5cadac02413c222eaa6403806b56e3c60e3d1"
+      "stateHash": "0ce9f527c145f336affed2c0d5a1790063028956f4a3776b55f3b69c733f85da"
     },
     "events": [
       {
@@ -498,6 +525,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "cf183d140e6364873768b9ad09e5cadac02413c222eaa6403806b56e3c60e3d1"
+    "saveRoundTripStateHash": "0ce9f527c145f336affed2c0d5a1790063028956f4a3776b55f3b69c733f85da"
   }
 }

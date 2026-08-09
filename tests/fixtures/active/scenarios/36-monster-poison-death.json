@@ -251,6 +251,36 @@
         }
       ],
       "groundItemCount": 7,
+      "itemPropertyKnowledge": [
+        {
+          "itemId": "demo.item.echo-blade.1",
+          "discovered": true
+        },
+        {
+          "itemId": "demo.item.echo-charm.1",
+          "discovered": true
+        },
+        {
+          "itemId": "demo.item.luminous-shard.1",
+          "discovered": true
+        },
+        {
+          "itemId": "demo.item.resonance-pellet.1",
+          "discovered": true
+        },
+        {
+          "itemId": "demo.item.resonance-sling.1",
+          "discovered": true
+        },
+        {
+          "itemId": "generated.item.1",
+          "discovered": true
+        },
+        {
+          "itemId": "generated.item.2",
+          "discovered": true
+        }
+      ],
       "nextItemInstanceSerial": 3,
       "nextGoldPileSerial": 1,
       "terrainInteractions": [
@@ -324,7 +354,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "6347bad2ef9cd382f425291ebd4bdcc93a2d0b490655e71674195cec911ffef7"
+      "stateHash": "0da2d1a7cb59d80fde97678c78942fd05ff4c53bbd0beba0810db2f3a3a4402b"
     },
     "events": [
       {
@@ -424,6 +454,6 @@
     "removedEntities": [
       "demo.monster.ember-mote.1"
     ],
-    "saveRoundTripStateHash": "6347bad2ef9cd382f425291ebd4bdcc93a2d0b490655e71674195cec911ffef7"
+    "saveRoundTripStateHash": "0da2d1a7cb59d80fde97678c78942fd05ff4c53bbd0beba0810db2f3a3a4402b"
   }
 }

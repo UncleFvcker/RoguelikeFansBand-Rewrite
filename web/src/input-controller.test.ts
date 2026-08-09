@@ -8,6 +8,9 @@ import {
   commandForKeyboardInput,
   connectionActionForState,
   directionForKeyboardInput,
+  isObjectListShortcut,
+  localTravelStopsAfterStep,
+  nextTravelConnectionPosition,
 } from "./input-controller.ts";
 import { AppState } from "./app-state.ts";
 
@@ -42,6 +45,18 @@ test("shared commands and diagonal directions remain preset-aware", () => {
   });
   assert.equal(directionForKeyboardInput({ key: "e", code: "KeyE" }, "wasd"), "north-east");
   assert.equal(directionForKeyboardInput({ key: "x", code: "KeyX" }, "vi"), undefined);
+});
+
+test("the object list keeps Shift+O distinct from lowercase open-door input", () => {
+  const modifiers = { ctrlKey: false, altKey: false, metaKey: false };
+  assert.equal(isObjectListShortcut({ key: "O", shiftKey: true, ...modifiers }), true);
+  assert.equal(isObjectListShortcut({ key: "]", shiftKey: false, ...modifiers }), true);
+  assert.equal(isObjectListShortcut({ key: "o", shiftKey: false, ...modifiers }), false);
+  assert.equal(isObjectListShortcut({ key: "O", shiftKey: false, ...modifiers }), false);
+  assert.equal(
+    isObjectListShortcut({ key: "O", shiftKey: true, ...modifiers, ctrlKey: true }),
+    false,
+  );
 });
 
 test("connection actions distinguish the Warrens entrance and generated stairs", () => {
@@ -107,4 +122,71 @@ test("connection actions distinguish the Warrens entrance and generated stairs",
     entities: [],
   };
   assert.equal(connectionActionForState(state), "leave-world-map");
+});
+
+test("local travel selection cycles only remembered stairs of the requested direction", () => {
+  const state = new AppState();
+  state.status = {
+    mapScale: "local",
+    floorId: "demo.floor.warrens-depth-1",
+    player: { position: { x: 5, y: 5 } },
+  };
+  state.contentGlyphs.set("demo.terrain.stairs-up", "<");
+  state.contentGlyphs.set("demo.terrain.stairs-down", ">");
+  state.replaceCells([
+    { position: { x: 3, y: 3 }, terrainId: "demo.terrain.stairs-up" },
+    { position: { x: 7, y: 7 }, terrainId: "demo.terrain.stairs-up" },
+    { position: { x: 6, y: 5 }, terrainId: "demo.terrain.stairs-down" },
+  ]);
+  state.cellVisibility.set("3,3", "remembered");
+  state.cellVisibility.set("7,7", "visible");
+  state.cellVisibility.set("6,5", "hidden");
+
+  assert.deepEqual(nextTravelConnectionPosition(state, "<", { x: 5, y: 5 }), {
+    x: 3,
+    y: 3,
+  });
+  assert.deepEqual(nextTravelConnectionPosition(state, "<", { x: 3, y: 3 }), {
+    x: 7,
+    y: 7,
+  });
+  assert.equal(nextTravelConnectionPosition(state, ">", { x: 5, y: 5 }), undefined);
+});
+
+test("local travel stops after damage, a visible enemy, or blocked movement", () => {
+  const before = {
+    mapScale: "local",
+    floorId: "floor.1",
+    player: {
+      position: { x: 1, y: 1 },
+      hp: 10,
+      isDead: false,
+      statuses: [],
+    },
+    entities: [],
+  };
+  const after = {
+    ...before,
+    player: { ...before.player, position: { x: 2, y: 1 } },
+  };
+  const destination = { x: 4, y: 1 };
+
+  assert.equal(localTravelStopsAfterStep(before, after, destination), false);
+  assert.equal(
+    localTravelStopsAfterStep(
+      before,
+      { ...after, player: { ...after.player, hp: 9 } },
+      destination,
+    ),
+    true,
+  );
+  assert.equal(
+    localTravelStopsAfterStep(
+      before,
+      { ...after, entities: [{ faction: "hostile" }] },
+      destination,
+    ),
+    true,
+  );
+  assert.equal(localTravelStopsAfterStep(before, before, destination), true);
 });

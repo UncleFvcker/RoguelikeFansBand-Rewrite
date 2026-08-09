@@ -46,7 +46,7 @@
       "revision": 1,
       "turn": 1,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 132,
+      "rngDrawCounter": 164,
       "floorId": "demo.floor.surface",
       "town": {
         "id": "demo.town.outpost",
@@ -421,7 +421,19 @@
         "lifePercent": 115,
         "experiencePercent": 100
       },
-      "entityCount": 0,
+      "entityCount": 1,
+      "entities": [
+        {
+          "id": "demo.floor.surface.surface.11",
+          "position": {
+            "x": 24,
+            "y": 19
+          },
+          "hp": 20,
+          "speed": 120,
+          "energyNeed": 100
+        }
+      ],
       "groundItemCount": 2,
       "inventoryStackCount": 8,
       "equipmentCount": 3,
@@ -760,7 +772,7 @@
           "identification": "identified",
           "quality": "ordinary",
           "projectileProfile": {
-            "range": 8,
+            "range": 16,
             "toHit": 0,
             "toDamage": 0,
             "damage": {
@@ -775,7 +787,7 @@
                 "position",
                 "entity"
               ],
-              "range": 8,
+              "range": 16,
               "requiresLineOfEffect": true
             },
             "sourceItemId": "generated.item.11"
@@ -784,22 +796,65 @@
       ],
       "itemPropertyKnowledge": [
         {
+          "itemId": "demo.item.warrens-light-healing-potion.1",
+          "discovered": true
+        },
+        {
+          "itemId": "demo.item.warrens-short-sword.1",
+          "discovered": true
+        },
+        {
+          "itemId": "generated.item.1",
+          "discovered": true
+        },
+        {
           "itemId": "generated.item.10",
+          "discovered": true,
           "appraised": true,
           "identified": true
         },
         {
           "itemId": "generated.item.11",
+          "discovered": true,
           "appraised": true,
           "identified": true
         },
         {
+          "itemId": "generated.item.2",
+          "discovered": true
+        },
+        {
+          "itemId": "generated.item.3",
+          "discovered": true
+        },
+        {
+          "itemId": "generated.item.4",
+          "discovered": true
+        },
+        {
+          "itemId": "generated.item.5",
+          "discovered": true
+        },
+        {
+          "itemId": "generated.item.6",
+          "discovered": true
+        },
+        {
+          "itemId": "generated.item.7",
+          "discovered": true
+        },
+        {
+          "itemId": "generated.item.8",
+          "discovered": true
+        },
+        {
           "itemId": "generated.item.9",
+          "discovered": true,
           "appraised": true,
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 130,
+      "nextItemInstanceSerial": 164,
       "nextGoldPileSerial": 1,
       "tasks": [
         {
@@ -835,7 +890,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 1
       },
-      "stateHash": "22ce4852f9e6b6b01c4ab15c37083f704623a9ea4f055ab3ef85028353e76ef3"
+      "stateHash": "a9743e11fb4d0794f64bb4bd0005e633b4ec529b295651ab82596596190fdcc2"
     },
     "events": [
       {

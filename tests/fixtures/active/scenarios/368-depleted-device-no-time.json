@@ -321,7 +321,7 @@
           "identification": "identified",
           "quality": "ordinary",
           "projectileProfile": {
-            "range": 8,
+            "range": 16,
             "toHit": 0,
             "toDamage": 0,
             "damage": {
@@ -336,7 +336,7 @@
                 "position",
                 "entity"
               ],
-              "range": 8,
+              "range": 16,
               "requiresLineOfEffect": true
             },
             "sourceItemId": "generated.item.4"
@@ -379,19 +379,50 @@
       ],
       "itemPropertyKnowledge": [
         {
+          "itemId": "demo.item.echo-blade.1",
+          "discovered": true
+        },
+        {
+          "itemId": "demo.item.echo-charm.1",
+          "discovered": true
+        },
+        {
+          "itemId": "demo.item.luminous-shard.1",
+          "discovered": true
+        },
+        {
+          "itemId": "demo.item.resonance-pellet.1",
+          "discovered": true
+        },
+        {
+          "itemId": "demo.item.resonance-sling.1",
+          "discovered": true
+        },
+        {
+          "itemId": "generated.item.1",
+          "discovered": true
+        },
+        {
           "itemId": "generated.item.2",
+          "discovered": true,
           "appraised": true,
           "identified": true
         },
         {
           "itemId": "generated.item.3",
+          "discovered": true,
           "appraised": true,
           "identified": true
         },
         {
           "itemId": "generated.item.4",
+          "discovered": true,
           "appraised": true,
           "identified": true
+        },
+        {
+          "itemId": "test.item.resonance-mender.1",
+          "discovered": true
         }
       ],
       "nextItemInstanceSerial": 6,
@@ -467,7 +498,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "1ab25a843a4d07e4ddc4badafddbabaea09b49492c1de7b4f56acb9e17368416"
+      "stateHash": "6b582dea0db6352c4d4786be9a22f59b0712d198ad5ddbcada87049e60c05139"
     },
     "events": [
       {
@@ -476,6 +507,6 @@
         "args": {}
       }
     ],
-    "saveRoundTripStateHash": "1ab25a843a4d07e4ddc4badafddbabaea09b49492c1de7b4f56acb9e17368416"
+    "saveRoundTripStateHash": "6b582dea0db6352c4d4786be9a22f59b0712d198ad5ddbcada87049e60c05139"
   }
 }

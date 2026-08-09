@@ -255,6 +255,28 @@
         }
       ],
       "groundItemCount": 5,
+      "itemPropertyKnowledge": [
+        {
+          "itemId": "demo.item.echo-blade.1",
+          "discovered": true
+        },
+        {
+          "itemId": "demo.item.echo-charm.1",
+          "discovered": true
+        },
+        {
+          "itemId": "demo.item.luminous-shard.1",
+          "discovered": true
+        },
+        {
+          "itemId": "demo.item.resonance-pellet.1",
+          "discovered": true
+        },
+        {
+          "itemId": "demo.item.resonance-sling.1",
+          "discovered": true
+        }
+      ],
       "nextItemInstanceSerial": 4,
       "nextGoldPileSerial": 1,
       "terrainInteractions": [
@@ -328,7 +350,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "9bf7bdb614d3b90461b3af7479a291a77d3ac627b5e14af62a14092e7208cd37"
+      "stateHash": "135a897b7ebe54824ce34b239d83d9114a2aad33fc25c2e85ec4e1dfd79e336c"
     },
     "events": [
       {
@@ -6803,6 +6825,6 @@
         "y": 19
       }
     ],
-    "saveRoundTripStateHash": "9bf7bdb614d3b90461b3af7479a291a77d3ac627b5e14af62a14092e7208cd37"
+    "saveRoundTripStateHash": "135a897b7ebe54824ce34b239d83d9114a2aad33fc25c2e85ec4e1dfd79e336c"
   }
 }

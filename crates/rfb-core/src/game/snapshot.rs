@@ -539,6 +539,9 @@ impl Game {
                 let ItemLocation::Ground(position) = &item.location else {
                     return None;
                 };
+                if !self.item_is_discovered(&item.id) {
+                    return None;
+                }
                 Some(ItemDto {
                     id: item.id.clone(),
                     kind_id: item.kind_id.clone(),
@@ -724,6 +727,7 @@ impl Game {
                     slot_type: slot.slot_type.clone(),
                 })
                 .collect(),
+            mogaminator: self.mogaminator_dto(Vec::new()),
             content_id: self.content.pack_id().to_owned(),
             content_hash: self.content.content_hash().to_owned(),
             content_visuals: self.content_visuals(),
@@ -851,7 +855,10 @@ impl Game {
                 .or_else(|| {
                     self.items
                         .iter()
-                        .filter(|item| item.location == ItemLocation::Ground(position))
+                        .filter(|item| {
+                            item.location == ItemLocation::Ground(position)
+                                && self.item_is_discovered(&item.id)
+                        })
                         .min_by(|left, right| left.id.cmp(&right.id))
                         .map(|item| item.id.clone())
                 }),

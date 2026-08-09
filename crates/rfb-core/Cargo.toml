@@ -12,6 +12,7 @@ rfb-content = { path = "../rfb-content" }
 
 [dependencies]
 rfb-content = { path = "../rfb-content" }
+rfb-localization = { path = "../rfb-localization" }
 rfb-protocol = { path = "../rfb-protocol" }
 rmp-serde.workspace = true
 serde.workspace = true
