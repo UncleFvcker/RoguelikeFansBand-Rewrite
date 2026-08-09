@@ -72,6 +72,9 @@ contract-v201 接入 7 只十级施法怪物，并让 demo 严格 actor 保留�
 已经使用的 `legacy-import` 类别，以承载欧法克斯的原作 `S_MONSTER(1d1)`。
 所有法术继续使用现有 effect；正式包 actor 增至 228、ability 增至 112、
 严格同步增至 163，协议与 State Hash Schema 均不变。
+contract-v202 将原版近战元素名 `LIGHT` 收窄为既有 `LITE`/`light` 语义，
+接入伪龙以及生命比例式光明、黑暗吐息。正式包 actor 增至 229、ability
+增至 114、严格同步增至 164；协议与 State Hash Schema 均不变。
 
 荒野 W0 已导入 `master:w_info.txt` 的 `99x66` normal 世界图、15 类地形、
 危险等级、道路和起点，并只把现有 Outpost/Warrens 绑定为正式地点。尚未实现

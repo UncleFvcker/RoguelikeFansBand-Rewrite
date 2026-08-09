@@ -5710,7 +5710,7 @@ fn melee_damage_type(token: &str) -> Option<&'static str> {
         "COLD" => Some("cold"),
         "ACID" => Some("acid"),
         "ELEC" => Some("electricity"),
-        "LITE" => Some("light"),
+        "LIGHT" | "LITE" => Some("light"),
         "DARK" => Some("dark"),
         "NETHER" => Some("nether"),
         "NEXUS" => Some("nexus"),
@@ -9733,6 +9733,21 @@ mod tests {
         assert_eq!(effect["damageSides"], 0);
         assert_eq!(effect["damageType"], "physical");
         assert_eq!(effect["armorMitigated"], true);
+    }
+
+    #[test]
+    fn light_melee_alias_matches_lite_damage() {
+        let light = parse_blow("BITE:LIGHT(1d3, 20%)", 1).expect("LIGHT melee damage should parse");
+        let lite = parse_blow("BITE:LITE(1d3, 20%)", 1).expect("LITE melee damage should parse");
+
+        assert_eq!(
+            melee_effect_json(&light.effects[0]),
+            melee_effect_json(&lite.effects[0])
+        );
+        assert_eq!(
+            melee_effect_json(&light.effects[0]).expect("LIGHT should map")["damageType"],
+            "light"
+        );
     }
 
     #[test]

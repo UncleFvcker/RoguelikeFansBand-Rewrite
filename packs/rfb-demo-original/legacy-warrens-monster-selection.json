@@ -990,6 +990,12 @@
       "id": "tengu",
       "tags": ["demon", "warrens"],
       "omittedFlags": ["POS_HOLD_LIFE"]
+    },
+    {
+      "sourceIndex": 193,
+      "id": "pseudo-dragon",
+      "tags": ["warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
     }
   ]
 }

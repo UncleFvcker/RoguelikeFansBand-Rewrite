@@ -194,6 +194,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.piranha", 70, 1, 60),
             ("demo.actor.poltergeist", 65, 1, 30),
             ("demo.actor.portuguese-man-o-war", 160, 2, 40),
+            ("demo.actor.pseudo-dragon", 193, 2, 50),
             ("demo.actor.purple-mushroom-patch", 108, 2, 40),
             ("demo.actor.quiver-slot", 185, 2, 40),
             ("demo.actor.radiation-eye", 80, 1, 30),

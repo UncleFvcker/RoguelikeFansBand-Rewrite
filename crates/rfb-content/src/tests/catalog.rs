@@ -6,7 +6,7 @@ fn compiled_catalog_exposes_stable_runtime_indexes() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.197.0");
+    assert_eq!(catalog.pack_version(), "1.198.0");
     assert!(
         catalog
             .ability("demo.ability.warrens-scare")
