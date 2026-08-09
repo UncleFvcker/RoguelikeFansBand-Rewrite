@@ -519,3 +519,29 @@ active, 106 mechanics-ready, and 214 blocked source items. The formal pack has
 The protocol, save structure, and state-hash schema are unchanged. Shop and
 loot changes affect common new-game RNG, so shared replay refresh remains an
 integration-worktree handoff.
+
+## P3.7-M0 Mutation Coverage Baseline
+
+`legacy-mutation-plan.json` freezes all 152 mutation identities from the
+authoritative RFB `master` commit
+`efd63661302866038f58d8cd2553b23e6af3bf9d`. Each row pins its source index,
+constant and handler, stable id, exact Chinese name and description, rating,
+base random weight, source type, mechanism family, eligibility and weight
+conditions, gain-time removals, coverage state, blockers, and whether the
+original mutation intentionally has no numeric effect.
+
+Run the source-backed audit with:
+
+```powershell
+$env:RFB_LEGACY_SOURCE='D:/codex/Frogcomposband'
+cargo run -p rfb-legacy-import -- audit-demo-mutations packs/rfb-demo-original/legacy-mutation-plan.json
+```
+
+The M0 snapshot contains 104 base random candidates and 48 zero-weight
+identities. Its source types are 35 activations, 28 periodic effects, 51 passive
+bonuses, and 38 cross-system/query identities. All 152 remain `blocked`: M0
+establishes the coverage ledger and strict source-drift checks but does not add
+mutation state or gameplay. The audit records 52 identities with eligibility
+conditions, 207 conditional-weight rules, and 33 ordered gain-time removal
+edges. `rfb.mutation.merchants-friend` is explicitly marked as the sole
+source-defined identity with no numeric effect.
