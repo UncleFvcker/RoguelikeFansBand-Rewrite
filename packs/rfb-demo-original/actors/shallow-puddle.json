@@ -1,0 +1,79 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 885,
+    "maxDepth": 30,
+    "rarity": 6
+  },
+  "attack": 2,
+  "damageDice": 2,
+  "damageSides": 3,
+  "damageType": "acid",
+  "defense": 1,
+  "descriptionKey": "actor-demo-shallow-puddle-description",
+  "experienceValue": 70,
+  "formatVersion": 1,
+  "glyph": "~",
+  "hitPointDice": {
+    "dice": 9,
+    "sides": 6
+  },
+  "id": "demo.actor.shallow-puddle",
+  "level": 11,
+  "maxHp": 31,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 2,
+            "damageSides": 3,
+            "damageType": "acid",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 2,
+            "damageSides": 3,
+            "damageType": "acid",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "modes": [
+      "swim"
+    ],
+    "neverMoves": true
+  },
+  "nameKey": "actor-demo-shallow-puddle-name",
+  "resistances": {
+    "acid": "resistant",
+    "electricity": "resistant",
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 115,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "legacy-import",
+    "nonliving",
+    "puddle",
+    "warrens"
+  ]
+}

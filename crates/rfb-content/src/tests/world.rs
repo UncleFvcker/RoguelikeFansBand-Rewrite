@@ -53,6 +53,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.baby-black-dragon", 166, 2, 40),
             ("demo.actor.baby-blue-dragon", 163, 2, 40),
             ("demo.actor.baby-green-dragon", 165, 2, 40),
+            ("demo.actor.baby-multi-hued-dragon", 204, 2, 40),
             ("demo.actor.baby-red-dragon", 167, 2, 40),
             ("demo.actor.baby-white-dragon", 164, 2, 40),
             ("demo.actor.balcmeg-the-relentless", 1182, 2, 999),
@@ -145,6 +146,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.grishnakh-the-hill-orc", 186, 3, 999),
             ("demo.actor.hairy-mold", 190, 2, 40),
             ("demo.actor.hill-orc", 149, 1, 40),
+            ("demo.actor.hippocampus", 207, 1, 40),
             ("demo.actor.hobbes-the-tiger", 200, 2, 999),
             ("demo.actor.horse", 956, 1, 20),
             ("demo.actor.hunting-hawk-of-julian", 151, 2, 40),
@@ -165,6 +167,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.lemure", 148, 3, 40),
             ("demo.actor.lost-soul", 133, 2, 40),
             ("demo.actor.lousy-the-king-of-louses", 1063, 3, 999),
+            ("demo.actor.lug-the-grotesque", 1183, 3, 999),
             ("demo.actor.lynx", 1347, 2, 40),
             ("demo.actor.manes", 128, 2, 40),
             ("demo.actor.metallic-blue-centipede", 67, 1, 30),
@@ -211,6 +214,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.scruffy-looking-hobbit", 74, 1, 30),
             ("demo.actor.servant-of-glaaki", 181, 1, 40),
             ("demo.actor.shadow-creature-of-fiona", 201, 2, 40),
+            ("demo.actor.shallow-puddle", 885, 6, 30),
             ("demo.actor.sheep", 1226, 4, 20),
             ("demo.actor.shrieker-mushroom-patch", 40, 1, 50),
             ("demo.actor.silver-jelly", 73, 2, 30),
@@ -234,6 +238,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.the-borshin", 177, 2, 999),
             ("demo.actor.undead-mass", 202, 2, 40),
             ("demo.actor.unruly-horse", 957, 2, 30),
+            ("demo.actor.vorpal-bunny", 205, 3, 40),
             ("demo.actor.war-bear", 173, 1, 40),
             ("demo.actor.warg", 257, 2, 50),
             ("demo.actor.warrens-keeper", 135, 3, 999),
@@ -253,6 +258,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.yellow-worm-mass", 78, 2, 30),
             ("demo.actor.zog", 98, 2, 40),
             ("demo.actor.zombified-kobold", 123, 1, 40),
+            ("demo.actor.zombified-orc", 208, 1, 40),
         ]
     );
 

@@ -1,6 +1,6 @@
 # RFB 全系统梳理与重构实现路线
 
-状态：长期规则实现路线；当前基线为协议 1.145 / contract-v202（P31–P98 进展见 8.3，玩家流程与 Outpost 进展见 Phase 17/18，物品接入见 Phase 19，Warrens 怪物机制见 W1–W14 清单，荒野世界图见 W0）
+状态：长期规则实现路线；当前基线为协议 1.145 / contract-v203（P31–P98 进展见 8.3，玩家流程与 Outpost 进展见 Phase 17/18，物品接入见 Phase 19，Warrens 怪物机制见 W1–W14 清单，荒野世界图见 W0）
 
 ## 1. 目的与边界
 
@@ -621,6 +621,8 @@ P30“首个非 Mana 职业资源”已由 contract-v90 完成：节奏资源按
 **十级怪物 P17 进展（2026-08）**：contract-v201 接入黑暗精灵法师、欧法克斯、格拉基的仆从、黑暗精灵战士、箭袋插槽、解除附魔霉菌和天狗。现有 effect 承载全部法术，严格同步 actor 保留 `legacy-import` 通用召唤类别；源显式骰最终生成 6 个参数化 ability，使严格同步达 163 条。协议 1.145、Schema v68 不变，demo 1.197.0，内置 hash 为 `d645415a7e27e519eb27d6e88b096e46c4ac7cdda01dd981a6468e92218142dc`。完整边界见 [Contract v201](contract-v201-warrens-content-p17-level-10-casters.md)。
 
 **十级怪物 P18 进展（2026-08）**：contract-v202 以单点 `LIGHT → LITE` 近战源别名接入伪龙；光明与黑暗吐息复用已有生命比例锥形伤害，各生成一个参数化 ability。严格同步达 164 条，正式包为 229 actors / 114 abilities；协议 1.145、Schema v68 不变，demo 1.198.0，内置 hash 为 `6177272314068a98182321ef35baf1214c726a2230a156a57fb71f2bf72112e8`。完整边界见 [Contract v202](contract-v202-warrens-content-p18-pseudo-dragon.md)。
+
+**十一级怪物 P19 进展（2026-08）**：contract-v203 接入多彩龙幼龙、锋锐兔、马头鱼尾怪、僵尸兽人、浅水洼和怪诞者卢格。六只怪物只使用现有吐息、闪现、水生、骑乘、Unique、掉落、抗性和近战状态路径，没有新增 ability 或 effect。严格同步达 170 条，正式包为 235 actors / 114 abilities；协议 1.145、Schema v68 不变，demo 1.199.0，内置 hash 为 `f3a9f16c4d40fa7b6b4472f856fbf22af7e33727324afc5f2962ad84cf11912b`。完整边界见 [Contract v203](contract-v203-warrens-content-p19-level-11-low-risk.md)。
 
 ## 9. 内容迁移策略
 

@@ -996,6 +996,42 @@
       "id": "pseudo-dragon",
       "tags": ["warrens"],
       "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 204,
+      "id": "baby-multi-hued-dragon",
+      "tags": ["warrens"],
+      "omittedFlags": ["ATTR_MULTI", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 205,
+      "id": "vorpal-bunny",
+      "tags": ["rabbit", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 207,
+      "id": "hippocampus",
+      "tags": ["horse", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 208,
+      "id": "zombified-orc",
+      "tags": ["warrens", "zombie"],
+      "omittedFlags": ["COLD_BLOOD", "EMPTY_MIND", "POS_HOLD_LIFE"]
+    },
+    {
+      "sourceIndex": 885,
+      "id": "shallow-puddle",
+      "tags": ["puddle", "warrens"],
+      "omittedFlags": ["COLD_BLOOD", "EMPTY_MIND", "NASTY_GLYPH"]
+    },
+    {
+      "sourceIndex": 1183,
+      "id": "lug-the-grotesque",
+      "tags": ["humanoid", "warrens"],
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
     }
   ]
 }

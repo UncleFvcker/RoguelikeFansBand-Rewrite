@@ -191,6 +191,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Contract v200：Warrens P16 十级怪物直接收割](design/contract-v200-warrens-content-p16-level-10-harvest.md)
 - [Contract v201：Warrens P17 十级施法怪物](design/contract-v201-warrens-content-p17-level-10-casters.md)
 - [Contract v202：Warrens P18 伪龙](design/contract-v202-warrens-content-p18-pseudo-dragon.md)
+- [Contract v203：Warrens P19 十一级低风险怪物](design/contract-v203-warrens-content-p19-level-11-low-risk.md)
 - [荒野世界地图 W0：权威数据导入](design/wilderness-w0-authoritative-data.md)
 - [旧版物品导入 v2（k_info / e_info / a_info）](design/legacy-item-import-v2.md)
 - [旧版内容导入优先级规划 v1](design/legacy-import-priority-v1.md)
@@ -215,7 +216,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Rust 权威可见性与光照 v1](design/visibility-lighting-v1.md)
 - [静态地形 Chunk 渲染 v1](design/terrain-chunk-rendering-v1.md)
 
-当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v202`，共 470 条 exact fixtures、零 waiver，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
+当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v203`，共 470 条 exact fixtures、零 waiver，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
 
 fixture 使用受控的主分类。日常开发只验证或刷新受影响分类；普通 `cargo test -p rfb-contract` 只做快速的 schema、分类、ID 唯一性和契约单元测试，不回放全部场景：
 
@@ -523,6 +524,8 @@ contract-v200 推进正式内容 P16：梭鱼、巨型蜘蛛、巨型白蜱、�
 contract-v201 推进正式内容 P17：黑暗精灵法师、博尔多之子欧法克斯、格拉基的仆从、黑暗精灵战士、箭袋插槽、解除附魔霉菌和天狗共 7 只十级施法怪物进入严格同步。全部复用现有伤害、状态、治疗、位移、召唤和怪物施法路径；严格 actor 同时保留既有 `legacy-import` 类别，使 `S_MONSTER` 拥有完整正式候选池。源数据最终生成寒冰箭 `6d8+3`、治疗 30、传送到身边、传送他人、吸取法力 6 和单只十级怪物召唤共 6 个 ability。协议保持 1.145、state hash Schema 保持 v68，demo 升至 1.197.0；正式包现有 228 种 actor、112 个 ability，严格同步 163 条，content hash 为 `d645415a7e27e519eb27d6e88b096e46c4ac7cdda01dd981a6468e92218142dc`。详见 [Contract v201](design/contract-v201-warrens-content-p17-level-10-casters.md)。
 
 contract-v202 推进正式内容 P18：导入器将原版近战元素名 `LIGHT` 严格归一为既有 `LITE`/`light` 语义，伪龙连同光明、黑暗吐息进入严格同步。两种吐息均复用现有生命比例锥形伤害，未新增 effect、协议字段或存档结构。协议保持 1.145、state hash Schema 保持 v68，demo 升至 1.198.0；正式包现有 229 种 actor、114 个 ability，严格同步 164 条，content hash 为 `6177272314068a98182321ef35baf1214c726a2230a156a57fb71f2bf72112e8`。详见 [Contract v202](design/contract-v202-warrens-content-p18-pseudo-dragon.md)。
+
+contract-v203 推进正式内容 P19：多彩龙幼龙、锋锐兔、马头鱼尾怪、僵尸兽人、浅水洼和怪诞者卢格共 6 只低风险十一级怪物进入严格同步。全部复用现有吐息、闪现、水生、骑乘、Unique、掉落、抗性与近战状态路径，没有新增 ability 或 effect 类型。协议保持 1.145、state hash Schema 保持 v68，demo 升至 1.199.0；正式包现有 235 种 actor、114 个 ability，严格同步 170 条，content hash 为 `f3a9f16c4d40fa7b6b4472f856fbf22af7e33727324afc5f2962ad84cf11912b`。详见 [Contract v203](design/contract-v203-warrens-content-p19-level-11-low-risk.md)。
 
 ### 本地验证
 
