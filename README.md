@@ -188,6 +188,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Contract v197：Warrens P13 浅层直接收割](design/contract-v197-warrens-content-p13-shallow-harvest.md)
 - [Contract v198：Warrens P14 解除附魔之眼](design/contract-v198-warrens-content-p14-disenchanter-eye.md)
 - [Contract v199：Warrens P15 黑暗机制收口](design/contract-v199-warrens-content-p15-darkness.md)
+- [Contract v200：Warrens P16 十级怪物直接收割](design/contract-v200-warrens-content-p16-level-10-harvest.md)
 - [荒野世界地图 W0：权威数据导入](design/wilderness-w0-authoritative-data.md)
 - [旧版物品导入 v2（k_info / e_info / a_info）](design/legacy-item-import-v2.md)
 - [旧版内容导入优先级规划 v1](design/legacy-import-priority-v1.md)
@@ -212,7 +213,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Rust 权威可见性与光照 v1](design/visibility-lighting-v1.md)
 - [静态地形 Chunk 渲染 v1](design/terrain-chunk-rendering-v1.md)
 
-当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v199`，共 470 条 exact fixtures、零 waiver，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
+当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v200`，共 470 条 exact fixtures、零 waiver，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
 
 fixture 使用受控的主分类。日常开发只验证或刷新受影响分类；普通 `cargo test -p rfb-contract` 只做快速的 schema、分类、ID 唯一性和契约单元测试，不回放全部场景：
 
@@ -514,6 +515,8 @@ contract-v197 推进正式内容 P13：高阶地狱兽、黄色果冻、佐格�
 contract-v198 推进正式内容 P14：无骰 `DISENCHANT` 成为窄近战 effect，按原版 4:1 分支清除当前已建模正面时效或削减随机已装备武器、护甲、弹药的正强化，并复用解除附魔抗性与神器 71% 抵抗；负面状态、HP、actor 对 actor 装备语义均不被近似改写。解除附魔之眼按索引 104 加入严格同步并生成 3 点吸取法力。协议保持 1.144、state hash Schema 保持 v67，demo 升至 1.194.0；正式包现有 199 种 actor、105 个 ability，浅层正式 actor 166 条、严格同步 134 条，content hash 为 `47efafab50f3e2787d0a713aa2726b226fbddb8c93bc958a662a08411c2c369b`。详见 [Contract v198](design/contract-v198-warrens-content-p14-disenchanter-eye.md)。
 
 contract-v199 推进正式内容 P15：程序化房间生成持久 `glow`，当前层、离层存储、save 与 state hash 使用同一逐格状态；`darken-room` 只清除施法落点所在的连通房间永久光，银色果冻的半径 1 黑暗源也只压制永久房间光，不压制玩家光源或怪物主动光。银色果冻与黑暗精灵进入严格同步，浅层普查至此收口。协议升至 1.145、state hash Schema 升至 v68，demo 升至 1.195.0；正式包现有 201 种 actor、106 个 ability，浅层正式 actor 168 条、严格同步 136 条，content hash 为 `b67309b1973ab483e71c90fce594d20af1d66bbb7b4ada6665fbcdbd4f513e18`。详见 [Contract v199](design/contract-v199-warrens-content-p15-darkness.md)。
+
+contract-v200 推进正式内容 P16：梭鱼、巨型蜘蛛、巨型白蜱、波尔申、神风特攻伊克、沙漠栖息者、透明蘑菇丛、山丘兽人葛力斯那克、巨型食人鱼、枭熊、蓝色惧妖、长毛霉菌、爬行金币、狼、巨型果蝇、黑豹、老虎霍布斯、菲奥娜的暗影生物、亡灵聚合体和猞猁共 20 只十级非施法怪物进入严格同步。全部复用现有近战、状态、移动、分配、群体、繁殖、Unique、掉落与外观路径；猞猁保留 `WILD_ONLY`，不进入普通 Warrens 分配。协议保持 1.145、state hash Schema 保持 v68，demo 升至 1.196.0；正式包现有 221 种 actor、106 个 ability，严格同步 156 条，content hash 为 `9c57c9fee1ffad6eebe37c8be662219f2723ced96554a3adea008e06a6d0f3a2`。详见 [Contract v200](design/contract-v200-warrens-content-p16-level-10-harvest.md)。
 
 ### 本地验证
 

@@ -1,6 +1,6 @@
 # RFB 全系统梳理与重构实现路线
 
-状态：长期规则实现路线；当前基线为协议 1.145 / contract-v199（P31–P98 进展见 8.3，玩家流程与 Outpost 进展见 Phase 17/18，物品接入见 Phase 19，Warrens 怪物机制见 W1–W14 清单，荒野世界图见 W0）
+状态：长期规则实现路线；当前基线为协议 1.145 / contract-v200（P31–P98 进展见 8.3，玩家流程与 Outpost 进展见 Phase 17/18，物品接入见 Phase 19，Warrens 怪物机制见 W1–W14 清单，荒野世界图见 W0）
 
 ## 1. 目的与边界
 
@@ -615,6 +615,8 @@ P30“首个非 Mana 职业资源”已由 contract-v90 完成：节奏资源按
 **浅层怪物 P14 进展（2026-08）**：contract-v198 以窄 `disenchant` 近战 effect 复用现有 Disenchant 抗性、正面状态移除与物品强化字段，按原版 4:1 处理时效/装备分支并保留神器抵抗；解除附魔之眼及 3 点吸取法力进入正式包。正式浅层 actor 达 166、严格同步达 134，只剩 Silver jelly 与 Dark elf；协议 1.144、Schema v67 不变，demo 1.194.0，内置 hash 为 `47efafab50f3e2787d0a713aa2726b226fbddb8c93bc958a662a08411c2c369b`。完整边界见 [Contract v198](contract-v198-warrens-content-p14-disenchanter-eye.md)。
 
 **浅层怪物 P15 进展（2026-08）**：contract-v199 为程序化房间增加持久 `glow`，当前层、离层存储、save 与 state hash 使用同一逐格状态；`darken-room` 清除施法落点所在的连通房间永久光，怪物黑暗源只压制永久房间光而不压制携带光源。银色果冻和黑暗精灵进入正式包，正式浅层 actor 达 168、严格同步达 136，浅层普查收口；协议 1.145、Schema v68，demo 1.195.0，内置 hash 为 `b67309b1973ab483e71c90fce594d20af1d66bbb7b4ada6665fbcdbd4f513e18`。完整边界见 [Contract v199](contract-v199-warrens-content-p15-darkness.md)。
+
+**十级怪物 P16 进展（2026-08）**：contract-v200 直接接入 20 只已经能由现有运行时完整承载的十级非施法怪物，复用既有近战、状态、移动、分配、群体、繁殖、Unique、掉落和 habitat 路径。猞猁保留 `WILD_ONLY`，其余 19 条进入现有全局地牢分配；严格同步达 156 条。协议 1.145、Schema v68 不变，demo 1.196.0，内置 hash 为 `9c57c9fee1ffad6eebe37c8be662219f2723ced96554a3adea008e06a6d0f3a2`。完整边界见 [Contract v200](contract-v200-warrens-content-p16-level-10-harvest.md)。
 
 ## 9. 内容迁移策略
 

@@ -1,0 +1,57 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 197,
+    "maxDepth": 40,
+    "multiplies": true,
+    "randomMovementPercent": 75,
+    "rarity": 6
+  },
+  "attack": 2,
+  "damageDice": 1,
+  "damageSides": 2,
+  "damageType": "physical",
+  "defense": 1,
+  "descriptionKey": "actor-demo-giant-fruit-fly-description",
+  "experienceValue": 4,
+  "formatVersion": 1,
+  "glyph": "I",
+  "hitPointDice": {
+    "dice": 2,
+    "sides": 2
+  },
+  "id": "demo.actor.giant-fruit-fly",
+  "level": 10,
+  "maxHp": 3,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 2,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "nameKey": "actor-demo-giant-fruit-fly-name",
+  "role": "monster",
+  "speed": 120,
+  "tags": [
+    "animal",
+    "fly",
+    "insect",
+    "warrens"
+  ]
+}

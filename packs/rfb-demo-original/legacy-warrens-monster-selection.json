@@ -828,6 +828,126 @@
       "id": "dark-elf",
       "tags": ["dark-elf", "humanoid", "warrens"],
       "omittedFlags": ["MALE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 96,
+      "id": "barracuda",
+      "tags": ["fish", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 175,
+      "id": "giant-spider",
+      "tags": ["spider", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC", "WEIRD_MIND"]
+    },
+    {
+      "sourceIndex": 176,
+      "id": "giant-white-tick",
+      "tags": ["insect", "tick", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC", "WEIRD_MIND"]
+    },
+    {
+      "sourceIndex": 177,
+      "id": "the-borshin",
+      "tags": ["warrens"],
+      "omittedFlags": []
+    },
+    {
+      "sourceIndex": 179,
+      "id": "kamikaze-yeek",
+      "tags": ["warrens", "yeek"],
+      "omittedFlags": []
+    },
+    {
+      "sourceIndex": 183,
+      "id": "sand-dweller",
+      "tags": ["humanoid", "warrens"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 184,
+      "id": "clear-mushroom-patch",
+      "tags": ["mushroom", "warrens"],
+      "omittedFlags": ["ATTR_CLEAR", "COLD_BLOOD", "EMPTY_MIND", "STUPID"]
+    },
+    {
+      "sourceIndex": 186,
+      "id": "grishnakh-the-hill-orc",
+      "tags": ["humanoid", "orc", "warrens"],
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
+    },
+    {
+      "sourceIndex": 187,
+      "id": "giant-piranha",
+      "tags": ["fish", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 188,
+      "id": "owlbear",
+      "tags": ["owlbear", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 189,
+      "id": "blue-horror",
+      "tags": ["demon", "warrens"],
+      "omittedFlags": ["POS_HOLD_LIFE"]
+    },
+    {
+      "sourceIndex": 190,
+      "id": "hairy-mold",
+      "tags": ["mold", "warrens"],
+      "omittedFlags": ["EMPTY_MIND", "POS_GAIN_AC", "STUPID"]
+    },
+    {
+      "sourceIndex": 195,
+      "id": "creeping-gold-coins",
+      "tags": ["coin", "mimic", "warrens"],
+      "omittedFlags": ["COLD_BLOOD"]
+    },
+    {
+      "sourceIndex": 196,
+      "id": "wolf",
+      "tags": ["warrens", "wolf"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 197,
+      "id": "giant-fruit-fly",
+      "tags": ["fly", "insect", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC", "WEIRD_MIND"]
+    },
+    {
+      "sourceIndex": 198,
+      "id": "panther",
+      "tags": ["cat", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 200,
+      "id": "hobbes-the-tiger",
+      "tags": ["cat", "tiger", "warrens"],
+      "omittedFlags": ["CAN_SPEAK", "MALE", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 201,
+      "id": "shadow-creature-of-fiona",
+      "tags": ["humanoid", "warrens"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 202,
+      "id": "undead-mass",
+      "tags": ["undead", "warrens"],
+      "omittedFlags": ["COLD_BLOOD", "EMPTY_MIND", "POS_GAIN_AC", "POS_SEE_INVIS", "POS_SUST_CON"]
+    },
+    {
+      "sourceIndex": 1347,
+      "id": "lynx",
+      "tags": ["cat", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
     }
   ]
 }
