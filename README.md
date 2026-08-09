@@ -568,6 +568,8 @@ contract-v210 推进正式内容 P25：死亡之剑、软件漏洞、地底潜�
 
 contract-v211 推进正式内容 P26：鹰马、幻术师、黑食人魔、半兽人、巨型章鱼、守卫娜迦、光明猎犬、暗影猎犬、飞行头骨、巨型狼蛛、巨型透明蜈蚣、幽暗密林蜘蛛、炼金人造人、透明猎犬、腐尸鸟、不稳定蠕虫团、小鬼Q太郎、狂熊、深渊亚龙、时间学徒、异齿龙、鸭鸣鸭嘴兽和巨型黄蟾蜍共 23 只十五级怪物进入严格同步。全部复用既有施法、吐息、尖叫、繁殖、随机移动、穿墙、毁墙、骑乘、Unique 和限定分配路径，没有新增 ability 或 effect。协议保持 1.147、state hash Schema 保持 v70，demo 升至 1.207.0；正式包现有 86 种 terrain、321 种 actor、204 种 item 和 130 个 ability，严格同步 256 条，content hash 为 `068d58f2b165c78eb608f589322dcfd65d8ba4652c8645b8ebb3d80ed82bc043`。新增亡灵“腐尸鸟”改变既有复活亡灵候选池，只刷新对应 1 条 fixture，其余 469 条结果保持不变。详见 [Contract v211](design/contract-v211-warrens-content-p26-level-15-direct-harvest.md)。
 
+contract-v212 推进正式内容 P27：门槛潜伏者、黑暗娜迦、兽化鼠人、米-戈、狮鹫、悬浮法球、不死魔鬼鱼和光耀卡甫共 8 只十五级施法怪物进入严格同步。新增 11 条参数化 ability 与对应 Ability Program 内容记录，寒冰箭、十五级单体召唤和 `heal-45` 在怪物间共享；全部复用现有伤害、治疗、法力吸取、召唤和吐息 effect。`BLESS` 与 `HEROISM` 仍作为附身者提示跳过。协议保持 1.147、state hash Schema 保持 v70，demo 升至 1.208.0；正式包现有 86 种 terrain、329 种 actor、204 种 item 和 141 个 ability，严格同步 264 条，content hash 为 `068d5296c10176d40507e531b3a9cb3605e5c5d1288304ad36ed534527dd1bcd`。470 条 exact fixtures 全量验证无需刷新。详见 [Contract v212](design/contract-v212-warrens-content-p27-level-15-parameterized-casters.md)。
+
 ### 本地验证
 
 ```powershell

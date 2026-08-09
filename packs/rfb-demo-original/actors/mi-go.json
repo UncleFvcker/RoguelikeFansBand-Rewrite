@@ -1,0 +1,105 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 274,
+    "maxDepth": 50,
+    "rarity": 2
+  },
+  "attack": 3,
+  "damageDice": 1,
+  "damageSides": 4,
+  "damageType": "poison",
+  "defense": 3,
+  "descriptionKey": "actor-demo-mi-go-description",
+  "experienceValue": 80,
+  "formatVersion": 1,
+  "glyph": "I",
+  "hitPointDice": {
+    "dice": 13,
+    "sides": 8
+  },
+  "id": "demo.actor.mi-go",
+  "level": 15,
+  "maxHp": 58,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "damageDice": 1,
+            "damageSides": 4,
+            "type": "poison"
+          }
+        ],
+        "methodId": "rfb.blow.sting",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 2,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "attributes": [
+              "strength"
+            ],
+            "chancePercent": 50,
+            "type": "drain-attributes"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.confuse",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-legacy-import-l15-1d1",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-demon-l15-1d3-1",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 16
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "nameKey": "actor-demo-mi-go-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseWeight": 0,
+    "skeletonItemKindId": "demo.item.skeleton-remains",
+    "skeletonWeight": 1
+  },
+  "resistances": {
+    "cold": "resistant",
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 120,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "animal",
+    "evil",
+    "legacy-import",
+    "mi-go",
+    "warrens"
+  ]
+}

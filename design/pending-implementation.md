@@ -109,6 +109,11 @@ contract-v211 直接接入 23 只十五级怪物，正式包 actor 增至 321、
 光明/暗影猎犬、时间学徒和鸭鸣鸭嘴兽只引用已有能力内容；附身者专用的
 `DETECT_MONSTERS`、`BERSERK` 与 `MULTIPLY` 提示仍不生成怪物能力。
 
+contract-v212 接入 8 只十五级参数化施法怪物，正式包 actor 增至 329、ability
+增至 141、严格同步增至 264；协议 1.147 与 State Hash Schema v70 不变。
+11 条新 ability 只携带权威数值并复用现有 effect；`BLESS` 与 `HEROISM` 仍按
+附身者提示处理，不生成怪物能力。
+
 荒野 W0 已导入 `master:w_info.txt` 的 `99x66` normal 世界图、15 类地形、
 危险等级、道路和起点，并只把现有 Outpost/Warrens 绑定为正式地点。W1 已完成
 权威地图尺度、荒野位置/种子保存、协议投影、现有 Pixi 渲染与 `x` 查看。W2

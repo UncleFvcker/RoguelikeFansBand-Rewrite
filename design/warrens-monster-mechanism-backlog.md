@@ -239,3 +239,8 @@ contract-v211 直接收割 23 只无需新机制的十五级怪物，严格同�
 actor 增至 321，ability 保持 130。幻术师、光明/暗影猎犬、时间学徒和
 鸭鸣鸭嘴兽复用已有能力；`DETECT_MONSTERS`、`BERSERK` 与 `MULTIPLY` 仍按
 附身者提示处理，不生成怪物施法能力。
+
+contract-v212 接入 8 只十五级参数化施法怪物，严格同步增至 264 条，actor
+增至 329，ability 增至 141。11 条新 ability 只为既有 effect 固定权威参数，
+寒冰箭、十五级单体召唤和 `heal-45` 由多个怪物共享；`BLESS` 与 `HEROISM`
+仍按附身者提示处理。

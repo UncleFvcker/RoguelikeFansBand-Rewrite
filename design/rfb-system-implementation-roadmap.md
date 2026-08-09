@@ -650,6 +650,8 @@ P30“首个非 Mana 职业资源”已由 contract-v90 完成：节奏资源按
 
 **十五级怪物 P26 进展（2026-08）**：contract-v211 接入 23 只由既有内容契约完整承载的十五级怪物。施法、明暗吐息、尖叫、繁殖、随机移动、穿墙、毁墙、骑乘、Unique 与限定分配均复用既有路径，没有新增 ability、effect 或兼容层。正式包为 321 actors / 130 abilities，严格同步 256 条；协议 1.147、Schema v70 不变，demo 1.207.0，内容 hash 为 `068d58f2b165c78eb608f589322dcfd65d8ba4652c8645b8ebb3d80ed82bc043`。完整边界见 [Contract v211](contract-v211-warrens-content-p26-level-15-direct-harvest.md)。
 
+**十五级参数化施法怪物 P27 进展（2026-08）**：contract-v212 接入门槛潜伏者、黑暗娜迦、兽化鼠人、米-戈、狮鹫、悬浮法球、不死魔鬼鱼和光耀卡甫。新增 11 条参数化 ability 与对应 Ability Program 记录，全部复用现有伤害、治疗、吸法、召唤和吐息 effect，没有新增 effect、协议或兼容层。正式包为 329 actors / 141 abilities，严格同步 264 条；协议 1.147、Schema v70 不变，demo 1.208.0，内容 hash 为 `068d5296c10176d40507e531b3a9cb3605e5c5d1288304ad36ed534527dd1bcd`。完整边界见 [Contract v212](contract-v212-warrens-content-p27-level-15-parameterized-casters.md)。
+
 ## 9. 内容迁移策略
 
 ### 9.1 当前阶段

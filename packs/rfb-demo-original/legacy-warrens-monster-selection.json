@@ -1548,6 +1548,54 @@
       "id": "giant-yellow-toad",
       "tags": ["toad", "warrens"],
       "omittedFlags": []
+    },
+    {
+      "sourceIndex": 263,
+      "id": "dweller-on-the-threshold",
+      "tags": ["dweller", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 265,
+      "id": "dark-naga",
+      "tags": ["naga", "warrens"],
+      "omittedFlags": ["EMPTY_MIND", "FEMALE"]
+    },
+    {
+      "sourceIndex": 270,
+      "id": "wererat",
+      "tags": ["rat", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 274,
+      "id": "mi-go",
+      "tags": ["mi-go", "warrens"],
+      "omittedFlags": ["COLD_BLOOD", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 279,
+      "id": "griffon",
+      "tags": ["griffon", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 912,
+      "id": "floating-orb",
+      "tags": ["orb", "warrens"],
+      "omittedFlags": ["NASTY_GLYPH", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 913,
+      "id": "undead-devilfish",
+      "tags": ["fish", "warrens"],
+      "omittedFlags": ["ATTR_MULTI", "POS_GAIN_AC", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 1071,
+      "id": "radiant-kavu",
+      "tags": ["kavu", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
     }
   ]
 }

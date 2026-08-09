@@ -302,6 +302,8 @@ contract-v210 / 包 1.206.0 严格同步 19 只十四级怪物，只复用既有
 
 contract-v211 / 包 1.207.0 严格同步 23 只十五级怪物，只复用既有 actor 字段与 ability 内容，不增加 schema、ability 或 effect。当前包共 86 terrain、321 actors、204 items、130 abilities，严格同步 256 条，内容 hash 为 `068d58f2b165c78eb608f589322dcfd65d8ba4652c8645b8ebb3d80ed82bc043`。协议 1.147 与 state hash Schema v70 不变。
 
+contract-v212 / 包 1.208.0 严格同步 8 只十五级参数化施法怪物，生成 11 条 ability 与对应 Ability Program 内容记录，只复用既有 effect，不增加 schema。当前包共 86 terrain、329 actors、204 items、141 abilities，严格同步 264 条，内容 hash 为 `068d5296c10176d40507e531b3a9cb3605e5c5d1288304ad36ed534527dd1bcd`。协议 1.147 与 state hash Schema v70 不变。
+
 contract-v83 以 1.75.0 增加 `detect` 能力效果、Echo Pulse 与 Echo Sight；类别/半径、FOV 与隐藏投影筛选、稳定结果顺序、瞬时/持久知识边界由核心定义，持久结果复用 `revealedTerrain`，state hash 升至 Schema v36。
 
 contract-v84 以 1.76.0 增加 `transform-terrain` 能力效果、Echo Delving 与 Echo Rampart；来源/目标 terrain 集、范围、FOV/line of effect、占用格、连接/边界保护和原子写入由核心定义，地形继续复用既有 save/state hash 字段。

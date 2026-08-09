@@ -108,6 +108,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.dark-elven-mage", 178, 1, 40),
             ("demo.actor.dark-elven-priest", 226, 1, 50),
             ("demo.actor.dark-elven-warrior", 182, 1, 40),
+            ("demo.actor.dark-naga", 265, 2, 50),
             ("demo.actor.death-sword", 107, 5, 40),
             ("demo.actor.devilfish", 918, 4, 50),
             ("demo.actor.dimetrodon", 1223, 3, 90),
@@ -123,12 +124,14 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.druid", 241, 2, 50),
             ("demo.actor.duck", 1241, 1, 25),
             ("demo.actor.duck-quacked-platypus", 1325, 1, 36),
+            ("demo.actor.dweller-on-the-threshold", 263, 5, 50),
             ("demo.actor.eagle", 172, 2, 40),
             ("demo.actor.ewok", 92, 2, 40),
             ("demo.actor.fang-farmer-maggots-dog", 55, 2, 999),
             ("demo.actor.filthy-street-urchin", 1, 2, 0),
             ("demo.actor.flesh-golem", 256, 1, 50),
             ("demo.actor.floating-eye", 32, 1, 10),
+            ("demo.actor.floating-orb", 912, 2, 50),
             ("demo.actor.flying-skull", 273, 3, 50),
             ("demo.actor.freesia", 57, 1, 999),
             ("demo.actor.frosty-jelly", 84, 1, 40),
@@ -176,6 +179,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.grey-icky-thing", 103, 1, 40),
             ("demo.actor.grey-mold", 20, 1, 10),
             ("demo.actor.grid-bug", 34, 3, 20),
+            ("demo.actor.griffon", 279, 1, 50),
             ("demo.actor.grip-farmer-maggots-dog", 53, 2, 999),
             ("demo.actor.grishnakh-the-hill-orc", 186, 3, 999),
             ("demo.actor.grizzly-bear", 191, 1, 45),
@@ -232,6 +236,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.metallic-blue-centipede", 67, 1, 30),
             ("demo.actor.metallic-green-centipede", 42, 1, 20),
             ("demo.actor.metallic-red-centipede", 77, 1, 30),
+            ("demo.actor.mi-go", 274, 2, 50),
             ("demo.actor.mine-dog", 221, 4, 50),
             ("demo.actor.mirkwood-spider", 277, 2, 50),
             ("demo.actor.moaning-spirit", 231, 2, 50),
@@ -271,6 +276,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.pseudo-dragon", 193, 2, 50),
             ("demo.actor.purple-mushroom-patch", 108, 2, 40),
             ("demo.actor.quiver-slot", 185, 2, 40),
+            ("demo.actor.radiant-kavu", 1071, 1, 50),
             ("demo.actor.radiation-eye", 80, 1, 30),
             ("demo.actor.rat-thing", 115, 1, 40),
             ("demo.actor.rattlesnake", 119, 1, 40),
@@ -321,6 +327,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.time-initiate", 1091, 3, 40),
             ("demo.actor.trench-wurm", 1070, 1, 50),
             ("demo.actor.ufthak-of-cirith-ungol", 260, 3, 999),
+            ("demo.actor.undead-devilfish", 913, 4, 50),
             ("demo.actor.undead-mass", 202, 2, 40),
             ("demo.actor.unruly-horse", 957, 2, 30),
             ("demo.actor.unstable-worm-mass", 876, 4, 50),
@@ -330,6 +337,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.war-bear", 173, 1, 40),
             ("demo.actor.warg", 257, 2, 50),
             ("demo.actor.warrens-keeper", 135, 3, 999),
+            ("demo.actor.wererat", 270, 2, 50),
             ("demo.actor.white-harpy", 51, 1, 20),
             ("demo.actor.white-icky-thing", 25, 1, 10),
             ("demo.actor.white-wolf", 211, 1, 40),
@@ -1115,6 +1123,138 @@ fn level_fifteen_direct_harvest_reuses_existing_mechanics_and_abilities() {
             [35]
         );
     }
+}
+
+#[test]
+fn level_fifteen_parameterized_casters_share_existing_effect_families() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actor = |id: &str| {
+        artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == id)
+            .unwrap_or_else(|| panic!("{id} should be imported"))
+    };
+    let ability_ids = |id: &str| {
+        actor(id)
+            .monster_casting
+            .as_ref()
+            .unwrap_or_else(|| panic!("{id} should retain monster casting"))
+            .abilities
+            .iter()
+            .map(|candidate| candidate.ability_id.as_str())
+            .collect::<BTreeSet<_>>()
+    };
+
+    for id in [
+        "demo.actor.dweller-on-the-threshold",
+        "demo.actor.dark-naga",
+        "demo.actor.wererat",
+        "demo.actor.mi-go",
+        "demo.actor.griffon",
+        "demo.actor.floating-orb",
+        "demo.actor.undead-devilfish",
+        "demo.actor.radiant-kavu",
+    ] {
+        assert_eq!(actor(id).level, 15, "{id} should remain level 15");
+    }
+
+    assert_eq!(
+        ability_ids("demo.actor.dweller-on-the-threshold"),
+        [
+            "rfb-legacy.ability.bolt-acid-7d8-5",
+            "rfb-legacy.ability.drain-mana-8",
+            "rfb-legacy.ability.scare",
+            "rfb-legacy.ability.summon-legacy-import-l15-1d1",
+        ]
+        .into_iter()
+        .collect()
+    );
+    assert_eq!(
+        ability_ids("demo.actor.dark-naga"),
+        [
+            "rfb-legacy.ability.bolt-cold-6d8-5",
+            "rfb-legacy.ability.confuse",
+            "rfb-legacy.ability.darkness",
+            "rfb-legacy.ability.heal-45",
+            "rfb-legacy.ability.paralyze",
+        ]
+        .into_iter()
+        .collect()
+    );
+    assert_eq!(
+        ability_ids("demo.actor.wererat"),
+        [
+            "rfb-legacy.ability.ball-poison-12d2",
+            "rfb-legacy.ability.blink",
+            "rfb-legacy.ability.bolt-cold-6d8-5",
+            "rfb-legacy.ability.curse-8d8",
+            "rfb-legacy.ability.kin-wererat",
+        ]
+        .into_iter()
+        .collect()
+    );
+    assert_eq!(
+        ability_ids("demo.actor.mi-go"),
+        [
+            "rfb-legacy.ability.confuse",
+            "rfb-legacy.ability.summon-demon-l15-1d3-1",
+            "rfb-legacy.ability.summon-legacy-import-l15-1d1",
+        ]
+        .into_iter()
+        .collect()
+    );
+    assert_eq!(
+        ability_ids("demo.actor.griffon"),
+        ["rfb-legacy.ability.bolt-physical-4d5"]
+            .into_iter()
+            .collect()
+    );
+    assert_eq!(
+        ability_ids("demo.actor.floating-orb"),
+        ["rfb-legacy.ability.bolt-physical-2d6-5"]
+            .into_iter()
+            .collect()
+    );
+    assert_eq!(
+        ability_ids("demo.actor.undead-devilfish"),
+        [
+            "rfb-legacy.ability.breath-disenchant-17-500-r2",
+            "rfb-legacy.ability.breath-nether-14-550-r2",
+            "rfb-legacy.ability.breath-nexus-33-250-r2",
+            "rfb-legacy.ability.breath-poison-17-600-r2",
+            "rfb-legacy.ability.breath-time-33-150-r2",
+        ]
+        .into_iter()
+        .collect()
+    );
+    assert_eq!(
+        ability_ids("demo.actor.radiant-kavu"),
+        ["rfb-legacy.ability.heal-45"].into_iter().collect()
+    );
+
+    assert!(
+        actor("demo.actor.dweller-on-the-threshold")
+            .movement
+            .never_moves
+    );
+    assert!(actor("demo.actor.floating-orb").movement.never_moves);
+    assert!(actor("demo.actor.griffon").rideable);
+    assert!(actor("demo.actor.radiant-kavu").rideable);
+    assert!(
+        actor("demo.actor.undead-devilfish")
+            .movement
+            .modes
+            .contains(&ActorMovementMode::Aquatic)
+    );
+    assert_eq!(
+        actor("demo.actor.radiant-kavu")
+            .light
+            .as_ref()
+            .map(|light| (light.radius, light.intrinsic)),
+        Some((1, true))
+    );
 }
 
 #[test]

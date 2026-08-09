@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.kin-wererat",
+  "descriptionKey": "ability-legacy-kin-wererat-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.kin-wererat",
+  "nameKey": "ability-legacy-kin-wererat-name",
+  "tags": [
+    "legacy-import",
+    "summon"
+  ],
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  }
+}

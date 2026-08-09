@@ -1,0 +1,82 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 913,
+    "maxDepth": 50,
+    "rarity": 4
+  },
+  "attack": 3,
+  "damageDice": 1,
+  "damageSides": 1,
+  "damageType": "physical",
+  "defense": 2,
+  "descriptionKey": "actor-demo-undead-devilfish-description",
+  "experienceValue": 75,
+  "formatVersion": 1,
+  "glyph": "l",
+  "hitPointDice": {
+    "dice": 15,
+    "sides": 5
+  },
+  "id": "demo.actor.undead-devilfish",
+  "level": 15,
+  "maxHp": 45,
+  "meleeRoutine": {
+    "blows": []
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.breath-nether-14-550-r2",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-disenchant-17-500-r2",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-time-33-150-r2",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-nexus-33-250-r2",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-poison-17-600-r2",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 10
+  },
+  "movement": {
+    "modes": [
+      "aquatic"
+    ]
+  },
+  "nameKey": "actor-demo-undead-devilfish-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "nether": "resistant",
+    "time": "resistant",
+    "water": "resistant"
+  },
+  "role": "monster",
+  "speed": 105,
+  "statusImmunities": [
+    "rfb.status.confusion"
+  ],
+  "tags": [
+    "evil",
+    "fish",
+    "invisible",
+    "legacy-import",
+    "undead",
+    "warrens"
+  ]
+}

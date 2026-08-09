@@ -1,0 +1,129 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "habitats": [
+      "shore"
+    ],
+    "legacyIndex": 265,
+    "maxDepth": 50,
+    "randomMovementPercent": 25,
+    "rarity": 2
+  },
+  "attack": 3,
+  "damageDice": 1,
+  "damageSides": 10,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [
+      {
+        "percent": 60
+      }
+    ],
+    "countDice": [
+      {
+        "dice": 1,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.warrens",
+    "kind": "items-and-gold",
+    "themeChancePercent": 50,
+    "themeTableId": "demo.loot-table.mage"
+  },
+  "defense": 6,
+  "descriptionKey": "actor-demo-dark-naga-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 90,
+  "formatVersion": 1,
+  "glyph": "n",
+  "hitPointDice": {
+    "dice": 22,
+    "sides": 11
+  },
+  "id": "demo.actor.dark-naga",
+  "level": 15,
+  "maxHp": 132,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 10,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.sting",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 10,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.paralyze",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.confuse",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.bolt-cold-6d8-5",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.heal-45",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.darkness",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 25
+  },
+  "movement": {
+    "modes": [
+      "swim"
+    ]
+  },
+  "nameKey": "actor-demo-dark-naga-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "cold": "resistant",
+    "poison": "resistant",
+    "water": "resistant"
+  },
+  "role": "monster",
+  "speed": 110,
+  "tags": [
+    "evil",
+    "legacy-import",
+    "naga",
+    "warrens"
+  ]
+}

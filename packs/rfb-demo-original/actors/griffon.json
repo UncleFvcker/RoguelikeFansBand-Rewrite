@@ -1,0 +1,106 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 279,
+    "maxDepth": 50,
+    "rarity": 1
+  },
+  "attack": 3,
+  "damageDice": 2,
+  "damageSides": 3,
+  "damageType": "physical",
+  "defense": 5,
+  "descriptionKey": "actor-demo-griffon-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 150,
+  "formatVersion": 1,
+  "glyph": "H",
+  "hitPointDice": {
+    "dice": 30,
+    "forceMaximum": true,
+    "sides": 10
+  },
+  "id": "demo.actor.griffon",
+  "level": 15,
+  "maxHp": 300,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 2,
+            "damageSides": 3,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 2,
+            "damageSides": 3,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 2,
+            "damageSides": 3,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.bolt-physical-4d5",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 10
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "nameKey": "actor-demo-griffon-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "acid": "resistant",
+    "cold": "resistant",
+    "electricity": "resistant"
+  },
+  "rideable": true,
+  "role": "monster",
+  "speed": 115,
+  "tags": [
+    "animal",
+    "griffon",
+    "legacy-import",
+    "warrens"
+  ]
+}
