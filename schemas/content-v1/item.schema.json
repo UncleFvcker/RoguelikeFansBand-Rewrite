@@ -80,6 +80,54 @@
       ],
       "type": "string"
     },
+    "AmmunitionProfileDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "ammunitionType": {
+          "$ref": "#/$defs/AmmunitionTypeDefinition"
+        },
+        "damageDice": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "damageSides": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "damageType": {
+          "$ref": "#/$defs/ActorDamageType",
+          "default": "physical"
+        },
+        "toDamage": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "toHit": {
+          "format": "int32",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "ammunitionType",
+        "toHit",
+        "toDamage",
+        "damageDice",
+        "damageSides"
+      ],
+      "type": "object"
+    },
+    "AmmunitionTypeDefinition": {
+      "enum": [
+        "shot",
+        "arrow",
+        "bolt"
+      ],
+      "type": "string"
+    },
     "AttackProfileDefinition": {
       "additionalProperties": false,
       "properties": {
@@ -449,24 +497,15 @@
     "ProjectileProfileDefinition": {
       "additionalProperties": false,
       "properties": {
-        "ammoKindId": {
-          "type": "string"
+        "ammunitionType": {
+          "$ref": "#/$defs/AmmunitionTypeDefinition"
         },
-        "damageDice": {
+        "damageMultiplierPercent": {
+          "description": "Original launcher multiplier scaled by 100 (x2.50 = 250).",
           "format": "uint16",
           "maximum": 65535,
           "minimum": 0,
           "type": "integer"
-        },
-        "damageSides": {
-          "format": "uint16",
-          "maximum": 65535,
-          "minimum": 0,
-          "type": "integer"
-        },
-        "damageType": {
-          "$ref": "#/$defs/ActorDamageType",
-          "default": "physical"
         },
         "range": {
           "format": "uint16",
@@ -485,11 +524,10 @@
       },
       "required": [
         "range",
+        "damageMultiplierPercent",
         "toHit",
         "toDamage",
-        "damageDice",
-        "damageSides",
-        "ammoKindId"
+        "ammunitionType"
       ],
       "type": "object"
     },
@@ -616,6 +654,17 @@
         "string",
         "null"
       ]
+    },
+    "ammunitionProfile": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/AmmunitionProfileDefinition"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
     },
     "appearanceNameKey": {
       "default": null,

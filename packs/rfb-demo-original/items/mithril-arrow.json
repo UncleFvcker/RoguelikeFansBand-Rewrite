@@ -2,22 +2,22 @@
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
   "ammunitionProfile": {
     "ammunitionType": "arrow",
-    "damageDice": 3,
+    "damageDice": 5,
     "damageSides": 4,
     "toDamage": 0,
     "toHit": 0
   },
-  "baseValue": 1,
+  "baseValue": 20,
   "breakChancePercent": 20,
-  "descriptionKey": "item-demo-arrow-description",
+  "descriptionKey": "item-demo-mithril-arrow-description",
   "formatVersion": 1,
   "glyph": "{",
-  "id": "demo.item.arrow",
+  "id": "demo.item.mithril-arrow",
   "maxStack": 99,
-  "nameKey": "item-demo-arrow-name",
+  "nameKey": "item-demo-mithril-arrow-name",
   "tags": [
     "ammunition",
     "rfb-compatibility"
   ],
-  "weightTenthsPound": 2
+  "weightTenthsPound": 4
 }

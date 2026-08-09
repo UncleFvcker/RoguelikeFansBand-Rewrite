@@ -174,13 +174,33 @@ pub struct AttackProfileDefinition {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ProjectileProfileDefinition {
     pub range: u16,
+    /// Original launcher multiplier scaled by 100 (x2.50 = 250).
+    pub damage_multiplier_percent: u16,
+    pub to_hit: i32,
+    pub to_damage: i32,
+    pub ammunition_type: AmmunitionTypeDefinition,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum AmmunitionTypeDefinition {
+    Shot,
+    Arrow,
+    Bolt,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct AmmunitionProfileDefinition {
+    pub ammunition_type: AmmunitionTypeDefinition,
     pub to_hit: i32,
     pub to_damage: i32,
     pub damage_dice: u16,
     pub damage_sides: u16,
     #[serde(default)]
     pub damage_type: ActorDamageType,
-    pub ammo_kind_id: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -677,6 +697,8 @@ pub struct ItemDefinition {
     pub melee_profile: Option<AttackProfileDefinition>,
     #[serde(default)]
     pub projectile_profile: Option<ProjectileProfileDefinition>,
+    #[serde(default)]
+    pub ammunition_profile: Option<AmmunitionProfileDefinition>,
     #[serde(default)]
     pub throw_profile: Option<ThrowProfileDefinition>,
     #[serde(default)]

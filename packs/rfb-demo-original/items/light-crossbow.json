@@ -1,17 +1,17 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "baseValue": 400,
-  "descriptionKey": "item-demo-short-bow-description",
+  "baseValue": 500,
+  "descriptionKey": "item-demo-light-crossbow-description",
   "equipmentSlot": "launcher",
   "formatVersion": 1,
   "glyph": "}",
-  "id": "demo.item.short-bow",
+  "id": "demo.item.light-crossbow",
   "maxStack": 1,
-  "nameKey": "item-demo-short-bow-name",
+  "nameKey": "item-demo-light-crossbow-name",
   "projectileProfile": {
-    "ammunitionType": "arrow",
-    "damageMultiplierPercent": 250,
-    "range": 16,
+    "ammunitionType": "bolt",
+    "damageMultiplierPercent": 350,
+    "range": 17,
     "toDamage": 0,
     "toHit": 0
   },
@@ -20,5 +20,5 @@
     "launcher",
     "rfb-compatibility"
   ],
-  "weightTenthsPound": 30
+  "weightTenthsPound": 110
 }

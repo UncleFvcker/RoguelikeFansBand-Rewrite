@@ -708,14 +708,29 @@ pub(super) fn validate_items(
                 || item.equipment_slot.as_deref() != Some("launcher")
                 || profile.range == 0
                 || profile.range > 32
+                || profile.damage_multiplier_percent < 100
+                || profile.damage_multiplier_percent > 1_000
                 || profile.to_hit < -1_000_000
                 || profile.to_hit > 1_000_000
                 || profile.to_damage < -1_000_000
-                || profile.to_damage > 1_000_000
-                || profile.damage_dice == 0
-                || profile.damage_dice > 100
-                || profile.damage_sides == 0
-                || profile.damage_sides > 10_000)
+                || profile.to_damage > 1_000_000)
+        {
+            return Err(ContentError::InvalidProjectileProfile(item.id.clone()));
+        }
+        let is_ammunition = item.tags.iter().any(|tag| tag == "ammunition");
+        if is_ammunition != item.ammunition_profile.is_some()
+            || item.ammunition_profile.as_ref().is_some_and(|profile| {
+                item.equipment_slot.is_some()
+                    || item.max_stack <= 1
+                    || profile.to_hit < -1_000_000
+                    || profile.to_hit > 1_000_000
+                    || profile.to_damage < -1_000_000
+                    || profile.to_damage > 1_000_000
+                    || profile.damage_dice == 0
+                    || profile.damage_dice > 100
+                    || profile.damage_sides == 0
+                    || profile.damage_sides > 10_000
+            })
         {
             return Err(ContentError::InvalidProjectileProfile(item.id.clone()));
         }
@@ -937,16 +952,12 @@ pub(super) fn validate_items(
         let Some(profile) = &item.projectile_profile else {
             continue;
         };
-        let Some(ammo) = items
-            .iter()
-            .find(|candidate| candidate.id == profile.ammo_kind_id)
-        else {
-            return Err(ContentError::DanglingReference {
-                owner: item.id.clone(),
-                target: profile.ammo_kind_id.clone(),
-            });
-        };
-        if ammo.max_stack <= 1 || !ammo.tags.iter().any(|tag| tag == "ammunition") {
+        if !items.iter().any(|candidate| {
+            candidate
+                .ammunition_profile
+                .as_ref()
+                .is_some_and(|ammo| ammo.ammunition_type == profile.ammunition_type)
+        }) {
             return Err(ContentError::InvalidProjectileProfile(item.id.clone()));
         }
     }

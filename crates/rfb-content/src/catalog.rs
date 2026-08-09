@@ -306,6 +306,11 @@ impl ContentCatalog {
         self.items.get(id)
     }
 
+    /// All item definitions in stable id order.
+    pub fn item_definitions(&self) -> impl Iterator<Item = &ItemDefinition> {
+        self.items.values()
+    }
+
     #[must_use]
     pub fn affix(&self, id: &str) -> Option<&AffixDefinition> {
         self.affixes.get(id)

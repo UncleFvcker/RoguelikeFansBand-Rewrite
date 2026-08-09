@@ -30,6 +30,56 @@ fn fixed_seed_and_commands_are_deterministic() {
 }
 
 #[test]
+fn ranged_multiplier_breakage_and_recovery_replay_deterministically() {
+    let mut left = Game::new(73);
+    for item in &mut left.items {
+        if matches!(item.location, ItemLocation::Equipped { ref slot_id } if slot_id == "launcher")
+        {
+            item.location = ItemLocation::Inventory;
+        }
+    }
+    give_inventory_item(
+        &mut left,
+        "test.item.heavy-crossbow",
+        "demo.item.heavy-crossbow",
+    );
+    give_inventory_item(
+        &mut left,
+        "test.item.adamantine-bolt",
+        "demo.item.adamantine-bolt",
+    );
+    left.items
+        .iter_mut()
+        .find(|item| item.id == "test.item.heavy-crossbow")
+        .expect("test crossbow should exist")
+        .location = ItemLocation::Equipped {
+        slot_id: "launcher".to_owned(),
+    };
+    left.entities[0].position = Position { x: 7, y: 3 };
+    left.entities[0].hp = 100;
+    let mut right = left.clone();
+
+    let fire = GameCommand::Fire {
+        direction: Direction::East,
+    };
+    let left_update = left
+        .dispatch(command(1, 0, fire.clone()))
+        .expect("left projectile should resolve");
+    let right_update = right
+        .dispatch(command(1, 0, fire))
+        .expect("right projectile should resolve");
+
+    assert_eq!(left_update, right_update);
+    assert_eq!(left.state_hash(), right.state_hash());
+    assert!(left_update.events.iter().any(|event| {
+        matches!(
+            event.kind.as_str(),
+            "combat.projectile-ammo-broken" | "combat.projectile-ammo-recovered"
+        )
+    }));
+}
+
+#[test]
 fn normal_speed_monster_tracks_once_per_player_action() {
     let mut game = Game::new(42);
     let update = game

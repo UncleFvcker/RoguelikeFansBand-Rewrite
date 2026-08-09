@@ -913,6 +913,67 @@ fn equipped_launcher_traces_to_first_target_and_resolves_damage() {
 }
 
 #[test]
+fn sling_bow_and_crossbow_resolve_their_compatible_ammunition_profiles() {
+    let cases = [
+        (
+            "demo.item.sling",
+            "demo.item.mithril-shot",
+            15,
+            200,
+            5,
+            3,
+            10,
+        ),
+        (
+            "demo.item.long-bow",
+            "demo.item.sheaf-arrow",
+            16,
+            300,
+            4,
+            4,
+            20,
+        ),
+        (
+            "demo.item.heavy-crossbow",
+            "demo.item.adamantine-bolt",
+            18,
+            400,
+            7,
+            5,
+            10,
+        ),
+    ];
+
+    for (launcher_kind, ammo_kind, range, multiplier, dice, sides, break_chance) in cases {
+        let mut game = Game::new(0);
+        for item in &mut game.items {
+            if matches!(item.location, ItemLocation::Equipped { ref slot_id } if slot_id == "launcher")
+            {
+                item.location = ItemLocation::Inventory;
+            }
+        }
+        give_inventory_item(&mut game, "test.item.launcher", launcher_kind);
+        give_inventory_item(&mut game, "test.item.ammunition", ammo_kind);
+        game.items
+            .iter_mut()
+            .find(|item| item.id == "test.item.launcher")
+            .expect("test launcher should exist")
+            .location = ItemLocation::Equipped {
+            slot_id: "launcher".to_owned(),
+        };
+
+        let profile = game
+            .player_projectile_profile()
+            .expect("compatible ammunition should resolve a projectile profile");
+        assert_eq!(profile.range, range);
+        assert_eq!(profile.damage_multiplier_percent, multiplier);
+        assert_eq!((profile.damage_dice, profile.damage_sides), (dice, sides));
+        assert_eq!(profile.ammo_kind_id, ammo_kind);
+        assert_eq!(profile.ammo_break_chance_percent, break_chance);
+    }
+}
+
+#[test]
 fn ammunition_breakage_is_checked_after_hitting_a_body() {
     let mut game = Game::new(16);
     game.rng = RfbRng::seeded(16);

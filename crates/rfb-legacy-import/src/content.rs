@@ -360,6 +360,43 @@ where
     Ok(Some(parse_dice(source, line, field, Some(value))?))
 }
 
+fn parse_launcher_multiplier(
+    source: &'static str,
+    line: usize,
+    field: &'static str,
+    value: Option<&str>,
+) -> Result<Option<u16>, LegacyImportError> {
+    let value = required_field(source, line, field, value)?;
+    let Some(multiplier) = value.strip_prefix('x') else {
+        return Ok(None);
+    };
+    let (whole, fraction) = multiplier.split_once('.').ok_or_else(|| {
+        content_parse_error(
+            source,
+            line,
+            field,
+            value,
+            "expected multiplier in x<whole>.<fraction> form",
+        )
+    })?;
+    if fraction.len() != 2 {
+        return Err(content_parse_error(
+            source,
+            line,
+            field,
+            value,
+            "expected multiplier with two decimal places",
+        ));
+    }
+    let whole = parse_number::<u16>(source, line, field, Some(whole))?;
+    let fraction = parse_number::<u16>(source, line, field, Some(fraction))?;
+    whole
+        .checked_mul(100)
+        .and_then(|value| value.checked_add(fraction))
+        .map(Some)
+        .ok_or_else(|| content_parse_error(source, line, field, value, "multiplier is too large"))
+}
+
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct LegacyTerrainEntry {
     pub index: u32,
@@ -414,6 +451,7 @@ pub struct LegacyItemEntry {
     pub base_value: u32,
     pub armor_class: i32,
     pub damage_dice: Option<(u16, u16)>,
+    pub launcher_multiplier_percent: Option<u16>,
     pub to_hit: i32,
     pub to_damage: i32,
     pub to_armor: i32,
@@ -446,6 +484,7 @@ pub struct LegacyArtifactEntry {
     pub base_value: u32,
     pub armor_class: i32,
     pub damage_dice: Option<(u16, u16)>,
+    pub launcher_multiplier_percent: Option<u16>,
     pub to_hit: i32,
     pub to_damage: i32,
     pub to_armor: i32,
@@ -1591,6 +1630,12 @@ pub fn parse_k_info(text: &str) -> Result<Vec<LegacyItemEntry>, LegacyImportErro
                 "P.damage",
                 parts.get(1).copied(),
             )?;
+            entry.launcher_multiplier_percent = parse_launcher_multiplier(
+                K_INFO_SOURCE,
+                line_number,
+                "P.damage",
+                parts.get(1).copied(),
+            )?;
             entry.to_hit =
                 parse_number(K_INFO_SOURCE, line_number, "P.toHit", parts.get(2).copied())?;
             entry.to_damage = parse_number(
@@ -1672,7 +1717,7 @@ fn item_shape(tval: u16) -> Option<ItemShape> {
             tags: vec!["equipment", "launcher", "legacy-import"],
             melee: false,
             launcher: true,
-            behavior_gap: Some("launcher-multiplier"),
+            behavior_gap: None,
         },
         16..=18 => ItemShape {
             slot: None,
@@ -1680,7 +1725,7 @@ fn item_shape(tval: u16) -> Option<ItemShape> {
             tags: vec!["ammunition", "legacy-import"],
             melee: false,
             launcher: false,
-            behavior_gap: Some("ammo-dice-folded"),
+            behavior_gap: None,
         },
         36..=38 => ItemShape {
             slot: Some("body"),
@@ -1836,13 +1881,29 @@ fn launcher_ammo_index(items: &[LegacyItemEntry]) -> LauncherAmmoIndex {
     ammo
 }
 
-fn launcher_ammo_for(entry: &LegacyItemEntry, ammo: &LauncherAmmoIndex) -> Option<String> {
+fn launcher_ammunition_type(
+    entry: &LegacyItemEntry,
+    ammo: &LauncherAmmoIndex,
+) -> Option<&'static str> {
     match entry.sval {
-        2 => ammo.shot.clone(),
-        12 | 13 => ammo.arrow.clone(),
-        23 | 24 => ammo.bolt.clone(),
+        2 if ammo.shot.is_some() => Some("shot"),
+        12 | 13 if ammo.arrow.is_some() => Some("arrow"),
+        23 | 24 if ammo.bolt.is_some() => Some("bolt"),
         _ => None,
     }
+}
+
+fn ammunition_type(tval: u16) -> Option<&'static str> {
+    match tval {
+        16 => Some("shot"),
+        17 => Some("arrow"),
+        18 => Some("bolt"),
+        _ => None,
+    }
+}
+
+fn launcher_range(multiplier_percent: u16) -> u16 {
+    13_u16.saturating_add(multiplier_percent / 80).min(32)
 }
 
 fn player_ability_book_for_item(entry: &LegacyItemEntry) -> Option<&'static str> {
@@ -2891,8 +2952,22 @@ fn item_json_with_terrain(
     if let Some(slot) = shape.slot {
         value["equipmentSlot"] = serde_json::json!(slot);
     }
-    if shape.max_stack > 1 && shape.tags_contain("ammunition") {
-        value["breakChancePercent"] = serde_json::json!(25);
+    if let Some(ammunition_type) = ammunition_type(entry.tval) {
+        value["breakChancePercent"] = serde_json::json!(if entry.tval == 17 { 20 } else { 10 });
+        if let Some((dice, sides)) = entry.damage_dice {
+            value["ammunitionProfile"] = serde_json::json!({
+                "ammunitionType": ammunition_type,
+                "toHit": entry.to_hit.clamp(-1_000_000, 1_000_000),
+                "toDamage": entry.to_damage.clamp(-1_000_000, 1_000_000),
+                "damageDice": dice.clamp(1, 100),
+                "damageSides": sides.clamp(1, 10_000),
+            });
+        } else {
+            *report
+                .item_behavior_gaps
+                .entry("ammo-dice-folded".to_owned())
+                .or_default() += 1;
+        }
     }
     if shape.melee {
         let (dice, sides) = entry.damage_dice.unwrap_or((1, 1));
@@ -2909,15 +2984,21 @@ fn item_json_with_terrain(
         // only launchers with a canonical ammo partner keep the profile.
         // The rest stay equippable fake bows (legacy obj_is_fake_bow):
         // they occupy the launcher slot but cannot fire.
-        if let Some(ammo_kind_id) = launcher_ammo_for(entry, ammo) {
-            value["projectileProfile"] = serde_json::json!({
-                "range": 12,
-                "toHit": entry.to_hit.clamp(-1_000_000, 1_000_000),
-                "toDamage": entry.to_damage.clamp(-1_000_000, 1_000_000),
-                "damageDice": 2,
-                "damageSides": 5,
-                "ammoKindId": ammo_kind_id,
-            });
+        if let Some(ammunition_type) = launcher_ammunition_type(entry, ammo) {
+            if let Some(multiplier_percent) = entry.launcher_multiplier_percent {
+                value["projectileProfile"] = serde_json::json!({
+                    "range": launcher_range(multiplier_percent),
+                    "damageMultiplierPercent": multiplier_percent,
+                    "toHit": entry.to_hit.clamp(-1_000_000, 1_000_000),
+                    "toDamage": entry.to_damage.clamp(-1_000_000, 1_000_000),
+                    "ammunitionType": ammunition_type,
+                });
+            } else {
+                *report
+                    .item_behavior_gaps
+                    .entry("launcher-multiplier".to_owned())
+                    .or_default() += 1;
+            }
         } else {
             *report
                 .item_behavior_gaps
@@ -3001,9 +3082,10 @@ fn item_json(
 fn demo_item_json(
     entry: &LegacyItemEntry,
     id: &str,
+    ammo: &LauncherAmmoIndex,
 ) -> Result<serde_json::Value, LegacyImportError> {
     let shape = item_shape(entry.tval).expect("every tval resolves a shape");
-    if !matches!(
+    let ordinary_equipment = matches!(
         shape.slot,
         Some(
             "weapon"
@@ -3015,8 +3097,11 @@ fn demo_item_json(
                 | "boots"
                 | "tool"
                 | "container"
+                | "launcher"
         )
-    ) || shape.behavior_gap.is_some()
+    );
+    if (!ordinary_equipment && !shape.tags_contain("ammunition"))
+        || shape.behavior_gap.is_some()
         || fixed_consumable_use_action_with_terrain(entry, None).is_some()
         || legacy_device_generation(entry).is_some()
         || player_ability_book_for_item(entry).is_some()
@@ -3027,14 +3112,7 @@ fn demo_item_json(
     }
 
     let mut report = ContentImportReport::default();
-    let mut value = item_json_with_terrain(
-        entry,
-        id,
-        &LauncherAmmoIndex::default(),
-        None,
-        None,
-        &mut report,
-    );
+    let mut value = item_json_with_terrain(entry, id, ammo, None, None, &mut report);
     report.unmapped_item_flags.remove("TOWN");
     if !report.item_behavior_gaps.is_empty() || !report.unmapped_item_flags.is_empty() {
         return Err(LegacyImportError::InvalidDemoItemSelection(format!(
@@ -3264,6 +3342,12 @@ pub fn parse_a_info(text: &str) -> Result<Vec<LegacyArtifactEntry>, LegacyImport
                 parts.first().copied(),
             )?;
             entry.damage_dice = parse_damage_or_multiplier(
+                A_INFO_SOURCE,
+                line_number,
+                "P.damage",
+                parts.get(1).copied(),
+            )?;
+            entry.launcher_multiplier_percent = parse_launcher_multiplier(
                 A_INFO_SOURCE,
                 line_number,
                 "P.damage",
@@ -3823,21 +3907,22 @@ fn artifact_json(
         });
     }
     if shape.launcher {
-        let paired = launcher_ammo_for(
+        let paired = launcher_ammunition_type(
             &LegacyItemEntry {
                 sval: entry.sval,
                 ..LegacyItemEntry::default()
             },
             ammo,
         );
-        if let Some(ammo_kind_id) = paired {
+        if let Some(ammunition_type) = paired
+            && let Some(multiplier_percent) = entry.launcher_multiplier_percent
+        {
             value["projectileProfile"] = serde_json::json!({
-                "range": 12,
+                "range": launcher_range(multiplier_percent),
+                "damageMultiplierPercent": multiplier_percent,
                 "toHit": entry.to_hit.clamp(-1_000_000, 1_000_000),
                 "toDamage": entry.to_damage.clamp(-1_000_000, 1_000_000),
-                "damageDice": 2,
-                "damageSides": 5,
-                "ammoKindId": ammo_kind_id,
+                "ammunitionType": ammunition_type,
             });
         } else {
             // Fake bows (guns, harps): the slot and fixed bonuses stay, only
@@ -10677,6 +10762,7 @@ pub fn sync_demo_items(
         &source_commit,
         K_INFO_SOURCE,
     )?)?;
+    let ammo = launcher_ammo_index(&entries);
     let by_index = entries
         .iter()
         .filter(|entry| {
@@ -10709,7 +10795,7 @@ pub fn sync_demo_items(
         }
         files.push((
             format!("{}.json", selected_entry.id),
-            demo_item_json(entry, &selected_entry.id)?,
+            demo_item_json(entry, &selected_entry.id, &ammo)?,
         ));
     }
     fs::create_dir_all(output)?;
@@ -11846,12 +11932,17 @@ W:5:0:0:150:80
 
         let bow = get("test-short-bow.json");
         assert_eq!(bow["equipmentSlot"], "launcher");
-        assert!(bow.get("projectileProfile").is_some());
+        assert_eq!(bow["projectileProfile"]["damageMultiplierPercent"], 200);
+        assert_eq!(bow["projectileProfile"]["range"], 15);
+        assert_eq!(bow["projectileProfile"]["ammunitionType"], "arrow");
 
         let arrow = get("test-arrow.json");
         assert!(arrow.get("equipmentSlot").is_none());
         assert_eq!(arrow["maxStack"], 99);
-        assert_eq!(arrow["breakChancePercent"], 25);
+        assert_eq!(arrow["breakChancePercent"], 20);
+        assert_eq!(arrow["ammunitionProfile"]["damageDice"], 1);
+        assert_eq!(arrow["ammunitionProfile"]["damageSides"], 4);
+        assert_eq!(arrow["ammunitionProfile"]["ammunitionType"], "arrow");
 
         // Inherent defensive flags fold onto the base item (dragon scale
         // style); durability flags are not applicable to RFB items.
@@ -11945,14 +12036,18 @@ W:5:0:0:150:80
             ..LegacyItemEntry::default()
         };
 
-        let armor = demo_item_json(&armor, "hard-leather-armour")
+        let armor = demo_item_json(&armor, "hard-leather-armour", &LauncherAmmoIndex::default())
             .expect("armor hit modifier should be behavior-complete");
         assert_eq!(armor["equipmentBonuses"]["meleeSkill"], -1);
         assert!(armor["equipmentBonuses"].get("meleeDamage").is_none());
         assert!(armor.get("meleeProfile").is_none());
 
-        let gloves = demo_item_json(&gloves, "studded-leather-gloves")
-            .expect("glove damage modifier should be behavior-complete");
+        let gloves = demo_item_json(
+            &gloves,
+            "studded-leather-gloves",
+            &LauncherAmmoIndex::default(),
+        )
+        .expect("glove damage modifier should be behavior-complete");
         assert_eq!(gloves["equipmentBonuses"]["meleeDamage"], 1);
         assert!(gloves["equipmentBonuses"].get("meleeSkill").is_none());
         assert!(gloves.get("meleeProfile").is_none());

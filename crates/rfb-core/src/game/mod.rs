@@ -3179,41 +3179,6 @@ impl Game {
         cells
     }
 
-    fn take_inventory_item_kind(
-        &mut self,
-        kind_id: &str,
-    ) -> Result<Option<ItemInstance>, CoreError> {
-        let Some(index) = self
-            .items
-            .iter()
-            .enumerate()
-            .filter(|(_, item)| {
-                item.kind_id == kind_id
-                    && item.location == ItemLocation::Inventory
-                    && item.quantity > 0
-            })
-            .min_by(|(_, left), (_, right)| left.id.cmp(&right.id))
-            .map(|(index, _)| index)
-        else {
-            return Ok(None);
-        };
-        if self.items[index].quantity == 1 {
-            Ok(Some(self.items.remove(index)))
-        } else {
-            let id = self.allocate_item_instance_id()?;
-            let mut split = self.items[index].clone();
-            let knowledge = self.item_property_knowledge.get(&split.id).cloned();
-            self.items[index].quantity -= 1;
-            split.id = id.clone();
-            split.quantity = 1;
-            split.location = ItemLocation::Inventory;
-            if let Some(knowledge) = knowledge {
-                self.item_property_knowledge.insert(id, knowledge);
-            }
-            Ok(Some(split))
-        }
-    }
-
     fn settle_projectile_ammunition(
         &mut self,
         mut ammunition: ItemInstance,

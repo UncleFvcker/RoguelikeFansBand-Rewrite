@@ -1239,6 +1239,51 @@ fn p3_5_items_all_have_a_shop_acquisition_path() {
 }
 
 #[test]
+fn p3_6_launchers_and_ammunition_all_have_an_acquisition_path() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let shop_items = artifact
+        .content
+        .shops
+        .iter()
+        .flat_map(|shop| shop.stock.iter().map(|stock| stock.item_kind_id.as_str()));
+    let archer_ammunition = artifact
+        .content
+        .loot_tables
+        .iter()
+        .filter(|table| table.id == "demo.loot-table.archer")
+        .flat_map(|table| {
+            table
+                .entries
+                .iter()
+                .map(|entry| entry.item_kind_id.as_str())
+        });
+    let available = shop_items.chain(archer_ammunition).collect::<BTreeSet<_>>();
+
+    for item_id in [
+        "demo.item.sling",
+        "demo.item.long-bow",
+        "demo.item.light-crossbow",
+        "demo.item.heavy-crossbow",
+        "demo.item.sheaf-arrow",
+        "demo.item.mithril-arrow",
+        "demo.item.seeker-arrow",
+        "demo.item.bolt",
+        "demo.item.steel-bolt",
+        "demo.item.mithril-bolt",
+        "demo.item.seeker-bolt",
+        "demo.item.adamantine-bolt",
+        "demo.item.rounded-pebble",
+        "demo.item.iron-shot",
+        "demo.item.mithril-shot",
+    ] {
+        assert!(
+            available.contains(item_id),
+            "{item_id} should be obtainable"
+        );
+    }
+}
+
+#[test]
 fn guaranteed_floor_supplies_require_rfb_chance_and_supported_items() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let warrens = artifact

@@ -203,10 +203,10 @@
           "id": "launcher-multiplier",
           "primaryBlockers": ["launcher-multiplier"],
           "items": [
-            { "sourceIndex": 160, "sourceName": "Sling", "sourceId": "sling" },
-            { "sourceIndex": 162, "sourceName": "Long Bow", "sourceId": "long-bow" },
-            { "sourceIndex": 163, "sourceName": "Light Crossbow", "sourceId": "light-crossbow" },
-            { "sourceIndex": 164, "sourceName": "Heavy Crossbow", "sourceId": "heavy-crossbow" },
+            { "sourceIndex": 160, "sourceName": "Sling", "sourceId": "sling", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] },
+            { "sourceIndex": 162, "sourceName": "Long Bow", "sourceId": "long-bow", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] },
+            { "sourceIndex": 163, "sourceName": "Light Crossbow", "sourceId": "light-crossbow", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] },
+            { "sourceIndex": 164, "sourceName": "Heavy Crossbow", "sourceId": "heavy-crossbow", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] },
             { "sourceIndex": 165, "sourceName": "Gun", "sourceId": "gun", "secondaryBlockers": ["item-flag:INSTA_ART", "launcher-unpaired"] },
             { "sourceIndex": 166, "sourceName": "Gun", "sourceId": "gun", "secondaryBlockers": ["item-flag:INSTA_ART", "launcher-unpaired"] },
             { "sourceIndex": 167, "sourceName": "Yumi", "sourceId": "yumi", "secondaryBlockers": ["item-flag:INSTA_ART", "launcher-unpaired"] },
@@ -218,18 +218,18 @@
           "id": "ammunition-damage",
           "primaryBlockers": ["ammo-dice-folded"],
           "items": [
-            { "sourceIndex": 176, "sourceName": "Sheaf Arrow", "sourceId": "sheaf-arrow" },
-            { "sourceIndex": 177, "sourceName": "Mithril Arrow", "sourceId": "mithril-arrow" },
-            { "sourceIndex": 178, "sourceName": "Seeker Arrow", "sourceId": "seeker-arrow" },
+            { "sourceIndex": 176, "sourceName": "Sheaf Arrow", "sourceId": "sheaf-arrow", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] },
+            { "sourceIndex": 177, "sourceName": "Mithril Arrow", "sourceId": "mithril-arrow", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] },
+            { "sourceIndex": 178, "sourceName": "Seeker Arrow", "sourceId": "seeker-arrow", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] },
             { "sourceIndex": 179, "sourceName": "Black Arrow", "sourceId": "black-arrow", "secondaryBlockers": ["item-flag:INSTA_ART"] },
-            { "sourceIndex": 185, "sourceName": "Bolt", "sourceId": "bolt" },
-            { "sourceIndex": 186, "sourceName": "Steel Bolt", "sourceId": "steel-bolt" },
-            { "sourceIndex": 187, "sourceName": "Mithril Bolt", "sourceId": "mithril-bolt" },
-            { "sourceIndex": 188, "sourceName": "Seeker Bolt", "sourceId": "seeker-bolt" },
-            { "sourceIndex": 189, "sourceName": "Adamantine Bolt", "sourceId": "adamantine-bolt" },
-            { "sourceIndex": 190, "sourceName": "Rounded Pebble", "sourceId": "rounded-pebble" },
-            { "sourceIndex": 191, "sourceName": "Iron Shot", "sourceId": "iron-shot" },
-            { "sourceIndex": 192, "sourceName": "Mithril Shot", "sourceId": "mithril-shot" }
+            { "sourceIndex": 185, "sourceName": "Bolt", "sourceId": "bolt", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] },
+            { "sourceIndex": 186, "sourceName": "Steel Bolt", "sourceId": "steel-bolt", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] },
+            { "sourceIndex": 187, "sourceName": "Mithril Bolt", "sourceId": "mithril-bolt", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] },
+            { "sourceIndex": 188, "sourceName": "Seeker Bolt", "sourceId": "seeker-bolt", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] },
+            { "sourceIndex": 189, "sourceName": "Adamantine Bolt", "sourceId": "adamantine-bolt", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] },
+            { "sourceIndex": 190, "sourceName": "Rounded Pebble", "sourceId": "rounded-pebble", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] },
+            { "sourceIndex": 191, "sourceName": "Iron Shot", "sourceId": "iron-shot", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] },
+            { "sourceIndex": 192, "sourceName": "Mithril Shot", "sourceId": "mithril-shot", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] }
           ]
         }
       ]

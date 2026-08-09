@@ -28,8 +28,6 @@
     { "sourceIndex": 54, "sourceName": "Sabre", "sourceId": "sabre", "itemId": "demo.item.sabre", "status": "active", "contract": "contract-v164-outpost-armoury-weaponsmith" },
     { "sourceIndex": 59, "sourceName": "Broad Sword", "sourceId": "broad-sword", "itemId": "demo.item.broad-sword", "status": "active", "contract": "contract-v164-outpost-armoury-weaponsmith" },
     { "sourceIndex": 86, "sourceName": "Spear", "sourceId": "spear", "itemId": "demo.item.spear", "status": "active", "contract": "contract-v164-outpost-armoury-weaponsmith" },
-    { "sourceIndex": 161, "sourceName": "Short Bow", "sourceId": "short-bow", "itemId": "demo.item.short-bow", "status": "active", "contract": "contract-v164-outpost-armoury-weaponsmith" },
-    { "sourceIndex": 175, "sourceName": "Arrow", "sourceId": "arrow", "itemId": "demo.item.arrow", "status": "active", "contract": "contract-v164-outpost-armoury-weaponsmith" },
     { "sourceIndex": 197, "sourceName": "Fur Cloak", "sourceId": "fur-cloak", "itemId": "demo.item.fur-cloak", "status": "active", "contract": "contract-v182-pest-control" },
     { "sourceIndex": 312, "sourceName": "Wand", "sourceId": "wand", "itemId": "demo.item.magic-missile-wand", "status": "active", "contract": "contract-v163-walled-outpost-magic-shop" },
     { "sourceIndex": 313, "sourceName": "Staff", "sourceId": "staff", "itemId": "demo.item.detect-objects-staff", "status": "active", "contract": "contract-v163-walled-outpost-magic-shop" },

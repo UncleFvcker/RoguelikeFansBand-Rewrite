@@ -1,17 +1,17 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "baseValue": 400,
-  "descriptionKey": "item-demo-short-bow-description",
+  "baseValue": 5,
+  "descriptionKey": "item-demo-sling-description",
   "equipmentSlot": "launcher",
   "formatVersion": 1,
   "glyph": "}",
-  "id": "demo.item.short-bow",
+  "id": "demo.item.sling",
   "maxStack": 1,
-  "nameKey": "item-demo-short-bow-name",
+  "nameKey": "item-demo-sling-name",
   "projectileProfile": {
-    "ammunitionType": "arrow",
-    "damageMultiplierPercent": 250,
-    "range": 16,
+    "ammunitionType": "shot",
+    "damageMultiplierPercent": 200,
+    "range": 15,
     "toDamage": 0,
     "toHit": 0
   },
@@ -20,5 +20,5 @@
     "launcher",
     "rfb-compatibility"
   ],
-  "weightTenthsPound": 30
+  "weightTenthsPound": 5
 }

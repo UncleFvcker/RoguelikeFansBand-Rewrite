@@ -41,6 +41,18 @@ fn equippable_items_require_a_valid_slot_and_single_item_stack() {
     ));
 
     let mut invalid = artifact.content.clone();
+    invalid
+        .items
+        .iter_mut()
+        .find(|item| item.id == "demo.item.resonance-pellet")
+        .expect("fixture should contain the ammunition")
+        .ammunition_profile = None;
+    assert!(matches!(
+        validate_and_normalize(&mut invalid),
+        Err(ContentError::InvalidProjectileProfile(_))
+    ));
+
+    let mut invalid = artifact.content.clone();
     let shard = invalid
         .items
         .iter_mut()
@@ -159,18 +171,16 @@ fn equippable_items_require_a_valid_slot_and_single_item_stack() {
     ));
 
     let mut invalid = artifact.content.clone();
-    invalid
-        .items
-        .iter_mut()
-        .find(|item| item.id == "demo.item.resonance-sling")
-        .expect("fixture should contain the sling")
-        .projectile_profile
-        .as_mut()
-        .expect("sling should have a projectile profile")
-        .ammo_kind_id = "demo.item.missing-ammunition".to_owned();
+    for item in &mut invalid.items {
+        if let Some(ammo) = &mut item.ammunition_profile
+            && ammo.ammunition_type == AmmunitionTypeDefinition::Shot
+        {
+            ammo.ammunition_type = AmmunitionTypeDefinition::Arrow;
+        }
+    }
     assert!(matches!(
         validate_and_normalize(&mut invalid),
-        Err(ContentError::DanglingReference { .. })
+        Err(ContentError::InvalidProjectileProfile(_))
     ));
 }
 

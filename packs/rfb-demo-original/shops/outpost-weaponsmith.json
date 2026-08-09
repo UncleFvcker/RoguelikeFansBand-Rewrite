@@ -40,7 +40,14 @@
     { "itemKindId": "demo.item.short-sword", "initialMinimum": 1, "initialMaximum": 2, "maintenanceMinimum": 1, "maintenanceMaximum": 2 },
     { "itemKindId": "demo.item.broad-sword", "initialMinimum": 1, "initialMaximum": 2, "maintenanceMinimum": 1, "maintenanceMaximum": 2 },
     { "itemKindId": "demo.item.short-bow", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1 },
-    { "itemKindId": "demo.item.arrow", "initialMinimum": 20, "initialMaximum": 60, "maintenanceMinimum": 20, "maintenanceMaximum": 60 }
+    { "itemKindId": "demo.item.arrow", "initialMinimum": 20, "initialMaximum": 60, "maintenanceMinimum": 20, "maintenanceMaximum": 60 },
+    { "itemKindId": "demo.item.sling", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1 },
+    { "itemKindId": "demo.item.long-bow", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1 },
+    { "itemKindId": "demo.item.light-crossbow", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1 },
+    { "itemKindId": "demo.item.heavy-crossbow", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1 },
+    { "itemKindId": "demo.item.bolt", "initialMinimum": 20, "initialMaximum": 60, "maintenanceMinimum": 20, "maintenanceMaximum": 60 },
+    { "itemKindId": "demo.item.rounded-pebble", "initialMinimum": 20, "initialMaximum": 60, "maintenanceMinimum": 20, "maintenanceMaximum": 60 },
+    { "itemKindId": "demo.item.iron-shot", "initialMinimum": 20, "initialMaximum": 60, "maintenanceMinimum": 20, "maintenanceMaximum": 60 }
   ],
   "maintenance": { "intervalWorldTicks": 10000 }
 }
