@@ -1596,15 +1596,17 @@ fn dropping_multiple_selected_stacks_is_atomic_and_deterministic() {
 }
 
 #[test]
-fn pickup_on_empty_ground_is_a_deterministic_turn() {
+fn pickup_on_empty_ground_is_zero_time() {
     let mut game = Game::new(42);
     clear_monsters(&mut game);
     let before = game.state_hash();
+    let world_tick = game.world_tick;
     let update = game
         .dispatch(command(1, 0, GameCommand::PickUp))
         .expect("empty pickup should still execute");
 
     assert_eq!(update.turn, 1);
+    assert_eq!(update.world_tick, world_tick);
     assert!(update.changed_cells.is_empty());
     assert!(update.inventory.is_empty());
     assert_eq!(update.events[0].message_key, "item-pickup-none");

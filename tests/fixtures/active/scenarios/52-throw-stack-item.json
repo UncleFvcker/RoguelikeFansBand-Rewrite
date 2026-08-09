@@ -33,9 +33,9 @@
     "finalState": {
       "revision": 3,
       "turn": 3,
-      "worldTick": 30,
+      "worldTick": 20,
       "lastCommandSeq": 3,
-      "rngDrawCounter": 6,
+      "rngDrawCounter": 3,
       "floorId": "demo.floor.surface",
       "playerPosition": {
         "x": 4,
@@ -206,7 +206,7 @@
         {
           "id": "demo.monster.ember-mote.1",
           "position": {
-            "x": 5,
+            "x": 6,
             "y": 3
           },
           "hp": 3,
@@ -352,7 +352,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "63c745049d126e27ae2220f5ece1f89413115e43329c7ead4baef328b4bdcbb4"
+      "stateHash": "5a399a363e440a0927f9b2c04242c0eef80db0231879371096d183c806e67f29"
     },
     "events": [
       {
@@ -364,23 +364,10 @@
         }
       },
       {
-        "kind": "combat.throw-hit",
-        "messageKey": "throw-hit",
+        "kind": "item.thrown",
+        "messageKey": "item-thrown",
         "args": {
-          "damage": "0",
-          "source": "demo.item.luminous-shard",
-          "target": "demo.actor.ember-mote"
-        },
-        "outcome": {
-          "type": "damage",
-          "resolution": {
-            "rawDamage": 1,
-            "armorReduction": 1,
-            "resistanceAdjustment": 0,
-            "finalDamage": 0,
-            "damageType": "physical",
-            "resistance": "normal"
-          }
+          "target": "demo.item.luminous-shard"
         },
         "trace": {
           "origin": {
@@ -388,11 +375,11 @@
             "y": 3
           },
           "impact": {
-            "x": 6,
+            "x": 9,
             "y": 3
           },
           "landing": {
-            "x": 6,
+            "x": 9,
             "y": 3
           },
           "traversed": [
@@ -402,6 +389,18 @@
             },
             {
               "x": 6,
+              "y": 3
+            },
+            {
+              "x": 7,
+              "y": 3
+            },
+            {
+              "x": 8,
+              "y": 3
+            },
+            {
+              "x": 9,
               "y": 3
             }
           ]
@@ -438,14 +437,10 @@
         "y": 4
       },
       {
-        "x": 5,
-        "y": 3
-      },
-      {
-        "x": 6,
+        "x": 9,
         "y": 3
       }
     ],
-    "saveRoundTripStateHash": "63c745049d126e27ae2220f5ece1f89413115e43329c7ead4baef328b4bdcbb4"
+    "saveRoundTripStateHash": "5a399a363e440a0927f9b2c04242c0eef80db0231879371096d183c806e67f29"
   }
 }

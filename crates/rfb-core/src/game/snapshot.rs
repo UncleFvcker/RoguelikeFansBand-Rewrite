@@ -852,7 +852,7 @@ impl Game {
             item_id: self
                 .gold_piles
                 .iter()
-                .filter(|pile| pile.position == position)
+                .filter(|pile| pile.discovered && pile.position == position)
                 .min_by(|left, right| left.id.cmp(&right.id))
                 .map(|pile| pile.id.clone())
                 .or_else(|| {

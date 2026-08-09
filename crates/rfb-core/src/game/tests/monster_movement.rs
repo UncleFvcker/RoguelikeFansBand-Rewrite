@@ -429,6 +429,7 @@ fn item_destroyer_removes_a_ground_gold_pile() {
         position,
         amount: 17,
         appearance: GoldAppearanceDto::Silver,
+        discovered: true,
     });
     let mut events = Vec::new();
 

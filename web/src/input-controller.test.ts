@@ -5,9 +5,12 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  InputController,
+  autoGetStopsAfterStep,
   commandForKeyboardInput,
   connectionActionForState,
   directionForKeyboardInput,
+  isAutoGetShortcut,
   isObjectListShortcut,
   localTravelStopsAfterStep,
   nextTravelConnectionPosition,
@@ -45,6 +48,19 @@ test("shared commands and diagonal directions remain preset-aware", () => {
   });
   assert.equal(directionForKeyboardInput({ key: "e", code: "KeyE" }, "wasd"), "north-east");
   assert.equal(directionForKeyboardInput({ key: "x", code: "KeyX" }, "vi"), undefined);
+});
+
+test("Ctrl+G is distinct from lowercase pickup", () => {
+  const modifiers = { shiftKey: false, altKey: false, metaKey: false };
+  assert.equal(isAutoGetShortcut({ key: "g", ctrlKey: true, ...modifiers }), true);
+  assert.equal(isAutoGetShortcut({ key: "g", ctrlKey: false, ...modifiers }), false);
+  assert.equal(
+    isAutoGetShortcut({ key: "G", ctrlKey: true, ...modifiers, shiftKey: true }),
+    false,
+  );
+  assert.deepEqual(commandForKeyboardInput({ key: "g", code: "KeyG" }, "vi"), {
+    type: "pick-up",
+  });
 });
 
 test("the object list keeps Shift+O distinct from lowercase open-door input", () => {
@@ -189,4 +205,174 @@ test("local travel stops after damage, a visible enemy, or blocked movement", ()
     true,
   );
   assert.equal(localTravelStopsAfterStep(before, before, destination), true);
+});
+
+test("auto-get locks one target, then requests the next Core target", async () => {
+  const state = new AppState();
+  state.mode = "playing";
+  const item = (id, x) => ({ id, position: { x, y: 1 } });
+  const status = (x, target, items) => ({
+    mapScale: "local",
+    floorId: "floor.1",
+    player: {
+      position: { x, y: 1 },
+      hp: 10,
+      isDead: false,
+      statuses: [],
+      inventoryUsedSlots: 0,
+      inventorySlotCapacity: 10,
+    },
+    entities: [],
+    items,
+    goldPiles: [],
+    mogaminator: { autoGetTarget: target },
+  });
+  const alpha = { objectId: "alpha", position: { x: 3, y: 1 } };
+  const beta = { objectId: "beta", position: { x: 3, y: 1 } };
+  state.status = status(1, alpha, [item("alpha", 3), item("beta", 3)]);
+  const updates = [
+    status(1, alpha, [item("alpha", 3), item("beta", 3)]),
+    status(2, beta, [item("alpha", 3), item("beta", 3)]),
+    status(3, beta, [item("beta", 3)]),
+    status(3, undefined, []),
+  ];
+  const commands = [];
+  const controller = new InputController({
+    state,
+    dom: {},
+    localization: {},
+    window: {},
+    getInputPreset: () => "vi",
+    getZoom: () => 1,
+    dispatch: async (command) => {
+      commands.push(command);
+      state.status = updates.shift();
+    },
+    describeLook: () => "",
+    openObjectList: () => {},
+    openMogaminator: () => {},
+    onLookOrTargeting: () => {},
+    onLookFocusChange: () => {},
+    announce: () => {},
+  });
+
+  await controller.autoGet();
+
+  assert.deepEqual(commands, [
+    { type: "pick-up" },
+    { type: "auto-get", objectId: "alpha" },
+    { type: "auto-get", objectId: "alpha" },
+    { type: "auto-get", objectId: "beta" },
+  ]);
+
+  state.status = { ...status(1, alpha, [item("alpha", 3)]), mapScale: "world" };
+  await controller.autoGet();
+  assert.equal(commands.length, 4);
+});
+
+test("auto-get stops on every authoritative interruption", () => {
+  const target = { objectId: "alpha", position: { x: 3, y: 1 } };
+  const before = {
+    mapScale: "local",
+    floorId: "floor.1",
+    player: {
+      position: { x: 1, y: 1 },
+      hp: 10,
+      isDead: false,
+      statuses: [],
+      inventoryUsedSlots: 0,
+      inventorySlotCapacity: 10,
+    },
+    entities: [],
+    items: [{ id: "alpha" }],
+    goldPiles: [],
+    mogaminator: {},
+  };
+  const moved = {
+    ...before,
+    player: { ...before.player, position: { x: 2, y: 1 } },
+  };
+
+  assert.equal(autoGetStopsAfterStep(before, moved, target), false);
+  assert.equal(
+    autoGetStopsAfterStep(
+      before,
+      { ...moved, player: { ...moved.player, hp: 9 } },
+      target,
+    ),
+    true,
+  );
+  assert.equal(
+    autoGetStopsAfterStep(
+      before,
+      {
+        ...moved,
+        player: {
+          ...moved.player,
+          statuses: [{ kindId: "rfb.status.confusion" }],
+        },
+      },
+      target,
+    ),
+    true,
+  );
+  assert.equal(
+    autoGetStopsAfterStep(
+      before,
+      { ...moved, player: { ...moved.player, isDead: true } },
+      target,
+    ),
+    true,
+  );
+  assert.equal(
+    autoGetStopsAfterStep(before, { ...moved, entities: [{ faction: "hostile" }] }, target),
+    true,
+  );
+  assert.equal(
+    autoGetStopsAfterStep(
+      before,
+      {
+        ...moved,
+        player: {
+          ...moved.player,
+          statuses: [{ kindId: "rfb.status.blindness" }],
+        },
+      },
+      target,
+    ),
+    true,
+  );
+  assert.equal(
+    autoGetStopsAfterStep(
+      before,
+      {
+        ...moved,
+        player: { ...moved.player, inventoryUsedSlots: 10 },
+      },
+      target,
+    ),
+    true,
+  );
+  assert.equal(
+    autoGetStopsAfterStep(
+      before,
+      { ...moved, mogaminator: { pendingQuery: { itemId: "alpha" } } },
+      target,
+    ),
+    true,
+  );
+  assert.equal(autoGetStopsAfterStep(before, before, target), true);
+  assert.equal(
+    autoGetStopsAfterStep(before, { ...moved, floorId: "floor.2" }, target),
+    true,
+  );
+  assert.equal(
+    autoGetStopsAfterStep(before, { ...moved, mapScale: "world" }, target),
+    true,
+  );
+  assert.equal(autoGetStopsAfterStep(before, undefined, target), true);
+  assert.equal(
+    autoGetStopsAfterStep(before, { ...before, items: [] }, target),
+    false,
+  );
 });

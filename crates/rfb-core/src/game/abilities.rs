@@ -2457,9 +2457,18 @@ impl Game {
                 self.mark_item_instances_discovered(&detected.1);
                 detected
             }
-            AbilityDetectSubjectDefinition::Gold => self.detect_gold_positions(*radius, false),
+            AbilityDetectSubjectDefinition::Gold => {
+                let detected = self.detect_gold_positions(*radius, false);
+                self.mark_gold_piles_discovered(&detected.1);
+                detected
+            }
         };
-        if *persistent || *subject == AbilityDetectSubjectDefinition::Item {
+        if *persistent
+            || matches!(
+                subject,
+                AbilityDetectSubjectDefinition::Item | AbilityDetectSubjectDefinition::Gold
+            )
+        {
             changed.extend(detected_positions.iter().copied());
         }
         events.push(DomainEvent::AbilityDetected {

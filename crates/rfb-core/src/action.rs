@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use rfb_protocol::{
-    AttributeKindDto, DeviceRechargeSourceDto, Direction, GameCommand, LocaleDto,
+    AttributeKindDto, AutoGetModeDto, DeviceRechargeSourceDto, Direction, GameCommand, LocaleDto,
     SummonCommandModeDto, TargetSelection,
 };
 
@@ -50,8 +50,12 @@ pub(crate) enum GameAction {
     ConfigureMogaminator {
         enabled: bool,
         leave_destroyed_items: bool,
+        auto_get_mode: AutoGetModeDto,
         locale: LocaleDto,
         source: String,
+    },
+    AutoGet {
+        object_id: String,
     },
     ResolveMogaminatorQuery {
         item_id: String,
@@ -184,6 +188,8 @@ impl GameAction {
             | Self::WithdrawFromHome { .. }
             | Self::SetSummonCommand { .. }
             | Self::ConfigureMogaminator { .. }
+            | Self::AutoGet { .. }
+            | Self::PickUp
             | Self::ResolveMogaminatorQuery { .. }
             | Self::InscribeItem { .. }
             | Self::SetInterfaceLocale { .. } => 0,
@@ -250,14 +256,17 @@ impl From<GameCommand> for GameAction {
             GameCommand::ConfigureMogaminator {
                 enabled,
                 leave_destroyed_items,
+                auto_get_mode,
                 locale,
                 source,
             } => Self::ConfigureMogaminator {
                 enabled,
                 leave_destroyed_items,
+                auto_get_mode,
                 locale,
                 source,
             },
+            GameCommand::AutoGet { object_id } => Self::AutoGet { object_id },
             GameCommand::ResolveMogaminatorQuery { item_id, pick_up } => {
                 Self::ResolveMogaminatorQuery { item_id, pick_up }
             }

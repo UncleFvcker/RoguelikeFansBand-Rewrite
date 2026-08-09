@@ -49,7 +49,7 @@
     "finalState": {
       "revision": 5,
       "turn": 5,
-      "worldTick": 50,
+      "worldTick": 40,
       "lastCommandSeq": 5,
       "rngDrawCounter": 10,
       "floorId": "demo.floor.echo-chain-rift",
@@ -67,7 +67,7 @@
       "playerCarryCapacityTenthsPound": 1000,
       "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
-      "playerNutrition": 9989,
+      "playerNutrition": 9999,
       "playerResistances": [
         {
           "damageType": "fire",
@@ -338,7 +338,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "200a7db856bafc5dfef0d3fc58be0c19647fc63cf2909ff9ea34782d48e09b3e"
+      "stateHash": "110ba6ffad4412e6e73cee2afcfc537bd5feb5743a29716232b8e625011308db"
     },
     "events": [
       {
@@ -2023,6 +2023,6 @@
         "y": 6
       }
     ],
-    "saveRoundTripStateHash": "200a7db856bafc5dfef0d3fc58be0c19647fc63cf2909ff9ea34782d48e09b3e"
+    "saveRoundTripStateHash": "110ba6ffad4412e6e73cee2afcfc537bd5feb5743a29716232b8e625011308db"
   }
 }

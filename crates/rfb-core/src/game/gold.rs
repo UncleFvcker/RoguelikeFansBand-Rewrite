@@ -56,15 +56,22 @@ impl Game {
             position,
             amount,
             appearance: gold_appearance(variety_index),
+            discovered: false,
         })
     }
 
-    pub(super) fn pick_up_gold_at_player(&mut self) -> Option<GoldPickupOutcome> {
+    pub(super) fn pick_up_gold_at_player(
+        &mut self,
+        target_id: Option<&str>,
+    ) -> Option<GoldPickupOutcome> {
         let mut indices = self
             .gold_piles
             .iter()
             .enumerate()
-            .filter(|(_, pile)| pile.position == self.player.position)
+            .filter(|(_, pile)| {
+                pile.position == self.player.position
+                    && target_id.is_none_or(|target_id| pile.id == target_id)
+            })
             .map(|(index, pile)| (index, pile.id.clone(), pile.amount))
             .collect::<Vec<_>>();
         if indices.is_empty() {
@@ -94,15 +101,25 @@ impl Game {
         let mut piles = self
             .gold_piles
             .iter()
+            .filter(|pile| pile.discovered)
             .map(|pile| GoldPileDto {
                 id: pile.id.clone(),
                 position: pile.position,
                 amount: pile.amount,
                 appearance: pile.appearance,
+                discovered: pile.discovered,
             })
             .collect::<Vec<_>>();
         piles.sort_by(|left, right| left.id.cmp(&right.id));
         piles
+    }
+
+    pub(super) fn mark_gold_piles_discovered(&mut self, pile_ids: &[String]) {
+        for pile in &mut self.gold_piles {
+            if pile_ids.contains(&pile.id) {
+                pile.discovered = true;
+            }
+        }
     }
 
     pub(super) fn allocate_gold_pile_id(&mut self) -> Result<String, CoreError> {

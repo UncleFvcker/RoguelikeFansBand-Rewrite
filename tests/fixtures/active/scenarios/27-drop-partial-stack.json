@@ -40,9 +40,9 @@
     "finalState": {
       "revision": 4,
       "turn": 4,
-      "worldTick": 40,
+      "worldTick": 30,
       "lastCommandSeq": 4,
-      "rngDrawCounter": 5,
+      "rngDrawCounter": 3,
       "floorId": "demo.floor.surface",
       "playerPosition": {
         "x": 4,
@@ -356,7 +356,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "c2bf661d98ea53c0cf065f944709d0d9a29996c89f655c18ca67af230409d804"
+      "stateHash": "3f351d47517458286acda0f6db997de81e932012a3a87cf1b970787480692466"
     },
     "events": [
       {
@@ -382,13 +382,6 @@
           "quantity": "1",
           "stacks": "1"
         }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "source": "demo.actor.ember-mote"
-        }
       }
     ],
     "changedCells": [
@@ -413,6 +406,10 @@
         "y": 3
       },
       {
+        "x": 4,
+        "y": 3
+      },
+      {
         "x": 6,
         "y": 3
       },
@@ -431,12 +428,8 @@
       {
         "x": 6,
         "y": 3
-      },
-      {
-        "x": 4,
-        "y": 3
       }
     ],
-    "saveRoundTripStateHash": "c2bf661d98ea53c0cf065f944709d0d9a29996c89f655c18ca67af230409d804"
+    "saveRoundTripStateHash": "3f351d47517458286acda0f6db997de81e932012a3a87cf1b970787480692466"
   }
 }

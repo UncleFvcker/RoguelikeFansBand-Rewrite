@@ -514,7 +514,7 @@ fn item_property_knowledge_from_save(
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-struct StateHashPayloadV74<'a> {
+struct StateHashPayloadV76<'a> {
     schema_version: u16,
     revision: u32,
     turn: u32,
@@ -1248,7 +1248,7 @@ impl Game {
 
     #[must_use]
     pub fn state_hash(&self) -> String {
-        let payload = StateHashPayloadV74 {
+        let payload = StateHashPayloadV76 {
             schema_version: STATE_HASH_SCHEMA_VERSION,
             revision: self.revision,
             turn: self.turn,

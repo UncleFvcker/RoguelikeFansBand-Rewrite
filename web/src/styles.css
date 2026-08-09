@@ -2022,6 +2022,10 @@ kbd {
   padding: 0.75rem 1.1rem;
 }
 
+.mogaminator-toolbar {
+  flex-wrap: wrap;
+}
+
 .mogaminator-toolbar p,
 .mogaminator-feedback p {
   margin: 0;

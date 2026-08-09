@@ -574,11 +574,6 @@ pub(super) fn item_instances_stack_compatible(left: &ItemInstance, right: &ItemI
 
 impl Game {
     pub(super) fn can_destroy_item(&self, item: &ItemInstance) -> Result<(), DestroyItemFailure> {
-        if !matches!(item.location, ItemLocation::Inventory)
-            && item.location != ItemLocation::Ground(self.player.position)
-        {
-            return Err(DestroyItemFailure::NotOwned);
-        }
         let definition = self
             .content
             .item(&item.kind_id)
@@ -625,6 +620,11 @@ impl Game {
             .iter()
             .position(|item| item.id == item_id)
             .ok_or(DestroyItemFailure::NotFound)?;
+        if !matches!(self.items[index].location, ItemLocation::Inventory)
+            && self.items[index].location != ItemLocation::Ground(self.player.position)
+        {
+            return Err(DestroyItemFailure::NotOwned);
+        }
         self.can_destroy_item(&self.items[index])?;
         if quantity == 0 || quantity > self.items[index].quantity {
             return Err(DestroyItemFailure::InvalidQuantity);

@@ -46,15 +46,15 @@
     "finalState": {
       "revision": 5,
       "turn": 5,
-      "worldTick": 50,
+      "worldTick": 30,
       "lastCommandSeq": 5,
-      "rngDrawCounter": 11,
+      "rngDrawCounter": 5,
       "floorId": "demo.floor.surface",
       "playerPosition": {
         "x": 5,
         "y": 3
       },
-      "playerHp": 7,
+      "playerHp": 10,
       "playerMaxHp": 10,
       "playerAttack": 2,
       "playerDefense": 1,
@@ -64,7 +64,7 @@
       "playerCarryCapacityTenthsPound": 1000,
       "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
-      "playerNutrition": 9989,
+      "playerNutrition": 9999,
       "playerLevel": 1,
       "playerExperience": 0,
       "playerMaxLevel": 1,
@@ -326,7 +326,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "ab3965836a12788415883703527639d965dfe25c7cdc3f1da43e105575f9ce65"
+      "stateHash": "db4866129beaa17d8a55cf93e2ad25bf1446b67337112263623fb526eed958eb"
     },
     "events": [
       {
@@ -338,37 +338,11 @@
         }
       },
       {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "source": "demo.actor.ember-mote"
-        }
-      },
-      {
         "kind": "item.pickup",
         "messageKey": "item-pickup-success",
         "args": {
           "quantity": "1",
           "target": "demo.item.echo-charm"
-        }
-      },
-      {
-        "kind": "combat.monster-hit",
-        "messageKey": "combat-monster-hit",
-        "args": {
-          "damage": "1",
-          "source": "demo.actor.ember-mote"
-        },
-        "outcome": {
-          "type": "damage",
-          "resolution": {
-            "rawDamage": 1,
-            "armorReduction": 0,
-            "resistanceAdjustment": 0,
-            "finalDamage": 1,
-            "damageType": "fire",
-            "resistance": "normal"
-          }
         }
       },
       {
@@ -380,22 +354,10 @@
         }
       },
       {
-        "kind": "combat.monster-hit",
-        "messageKey": "combat-monster-hit",
+        "kind": "combat.monster-miss",
+        "messageKey": "combat-monster-miss",
         "args": {
-          "damage": "2",
           "source": "demo.actor.ember-mote"
-        },
-        "outcome": {
-          "type": "damage",
-          "resolution": {
-            "rawDamage": 2,
-            "armorReduction": 0,
-            "resistanceAdjustment": 0,
-            "finalDamage": 2,
-            "damageType": "fire",
-            "resistance": "normal"
-          }
         }
       }
     ],
@@ -421,20 +383,20 @@
         "y": 3
       },
       {
-        "x": 6,
-        "y": 3
-      },
-      {
-        "x": 7,
-        "y": 4
-      },
-      {
         "x": 4,
         "y": 3
       },
       {
         "x": 5,
         "y": 3
+      },
+      {
+        "x": 6,
+        "y": 3
+      },
+      {
+        "x": 7,
+        "y": 4
       },
       {
         "x": 5,
@@ -445,6 +407,6 @@
         "y": 3
       }
     ],
-    "saveRoundTripStateHash": "ab3965836a12788415883703527639d965dfe25c7cdc3f1da43e105575f9ce65"
+    "saveRoundTripStateHash": "db4866129beaa17d8a55cf93e2ad25bf1446b67337112263623fb526eed958eb"
   }
 }

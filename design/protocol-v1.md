@@ -1,6 +1,6 @@
 # RFB CoreTransport 协议 v1
 
-状态：协议 1.153、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
+状态：协议 1.156、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
 
 ## 1. 适用边界
 
@@ -395,3 +395,13 @@ contract-v191 只增加内容层近战 effect 及对应运行时解释，不新�
 协议 1.153 增加 `ResolveMogaminatorQuery` 和 `pendingQuery` 投影：`;` 规则按物品实例建立一次权威确认，拒绝结果随角色保存；物品离开脚下后待确认自动失效。`?` 规则在 Core 内按稳定实例 ID 优先消耗鉴定装置充能、其次消耗鉴定卷轴，成功后仅重新匹配一次。尸体来源、悬赏目标、延期谓词所需角色/物品/法术书数据进入 save v1 与 state hash Schema v74；内容包升级为 1.212.0。
 
 contract-v216 完成墨家名器双语默认模板：英文模板严格采用 RFB `master:lib/pref/pickpref.prf`，中文模板保持同序同动作并使用权威中文匹配名。当前界面语言选择对应的每角色规则源；导入只替换当前语言的文本，不猜测语言，导出亦只导出当前文本。以上行为复用既有 `ConfigureMogaminator`、`defaultSource` 和双语 source 投影，没有新增 DTO；协议保持 1.153，Schema 保持 v74。
+
+协议 1.154 为每角色墨家名器配置增加 `AutoGetModeDto` 三态：`off`、`ammo`、`wanted`。`ConfigureMogaminator` 原子更新该模式，`MogaminatorDto` 投影给编辑器，`MogaminatorSaveDto` 负责保存；默认 `off`。该权威配置进入 state hash Schema v75，save 容器仍为 v1，旧开发存档不兼容。G0 只建立配置闭环，不增加 Ctrl+G 命令、目标搜索或拾取执行。完整边界见 [G0：每角色自动拾取模式](autoget-g0-character-mode.md)。
+
+协议 1.155 为 `MogaminatorDto` 增加派生的 `autoGetTarget` 坐标，并为 `GoldPileDto` 增加必填 `discovered`。Core 按原版距离、投射规则、已探索可达性及稳定实例 ID 选择目标；`wanted` 复用墨家名器首条命中和统一销毁保护，`ammo` 只认 `=g` 铭文。未发现金币不进入快照、格子占用投影或自动拾取目标；视野与金币探测均可登记发现。金币发现状态进入 save v1 与 state hash Schema v76，旧开发存档不兼容；目标本身只派生、不保存。完整边界见 [G1：权威自动拾取目标](autoget-g1-authoritative-target.md)。
+
+协议 1.156 将 `autoGetTarget` 收紧为权威对象 ID 与坐标，并增加单步 `AutoGet { objectId }`。Core 只接受当前权威候选集中的对象：远端目标复用 O3 寻路转成一次普通移动，脚下按 ID 收取一堆金币、执行墨家名器动作或拾取 `=g` 物品；脚下、失效目标和普通 `PickUp` 均不推进世界时间。完整边界见 [G2：单步自动拾取命令](autoget-g2-single-step-command.md)。
+
+G3 不改变协议：Web 将 Ctrl+G 与小写 `g` 分离，先执行零耗时普通拾取，再锁定 Core 投影的对象 ID 连续派发 `AutoGet`；对象消失后才请求下一个目标。中断只读取权威更新，完整边界见 [G3：Ctrl+G 连续调度](autoget-g3-continuous-dispatch.md)。
+
+G4 以协议 1.156、state hash Schema v76 和 contract-v219 完成验收，不增加空协议版本。最初计划中的 1.154/v75 已分别由 G0 的模式状态采用；G1 的金币发现状态随后把最终 Schema 推进到 v76。验收记录见 [G4：协议与验收收口](autoget-g4-acceptance.md)。

@@ -97,6 +97,7 @@ pub(crate) struct GoldPile {
     pub(crate) position: Position,
     pub(crate) amount: u32,
     pub(crate) appearance: GoldAppearanceDto,
+    pub(crate) discovered: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

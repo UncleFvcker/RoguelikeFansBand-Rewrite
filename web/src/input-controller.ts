@@ -6,6 +6,7 @@ import type { AppState, TargetingIntent } from "./app-state";
 import type { Localization, MessageKey } from "./localization";
 import type {
   AbilityDto,
+  AutoGetTargetDto,
   Direction,
   GameCommand,
   GameSnapshot,
@@ -162,6 +163,26 @@ export class InputController {
   resetLocalTravel(): void {
     this.#localTravelDestination = undefined;
     this.#localTravelFloorId = undefined;
+  }
+
+  async autoGet(): Promise<void> {
+    const initial = this.#state.status;
+    if (!initial || initial.mapScale !== "local" || this.#state.commandBlocked) return;
+    await this.#dispatch({ type: "pick-up" });
+    let current = this.#state.status;
+    if (autoGetInterrupted(initial, current)) return;
+
+    for (;;) {
+      const target = current?.mogaminator.autoGetTarget;
+      if (!current || !target) return;
+      for (;;) {
+        const before = current;
+        await this.#dispatch({ type: "auto-get", objectId: target.objectId });
+        current = this.#state.status;
+        if (autoGetStopsAfterStep(before, current, target)) return;
+        if (!current || !autoGetObjectExists(current, target.objectId)) break;
+      }
+    }
   }
 
   startAbilityTargeting(ability: AbilityDto): void {
@@ -390,6 +411,11 @@ export class InputController {
     if (event.key === "_") {
       event.preventDefault();
       this.#openMogaminator();
+      return;
+    }
+    if (isAutoGetShortcut(event)) {
+      event.preventDefault();
+      if (!this.#state.worldMap) void this.autoGet();
       return;
     }
     if (this.#state.worldMap) {
@@ -693,6 +719,21 @@ export function isObjectListShortcut(
   return event.key === "]" || (event.shiftKey && event.key.toLowerCase() === "o");
 }
 
+export function isAutoGetShortcut(
+  event: Pick<
+    KeyboardEvent,
+    "key" | "shiftKey" | "ctrlKey" | "altKey" | "metaKey"
+  >,
+): boolean {
+  return (
+    event.ctrlKey &&
+    !event.shiftKey &&
+    !event.altKey &&
+    !event.metaKey &&
+    event.key.toLowerCase() === "g"
+  );
+}
+
 export function nextTravelConnectionPosition(
   state: AppState,
   key: "<" | ">",
@@ -736,6 +777,52 @@ export function localTravelStopsAfterStep(
     current.entities.some((entity) => entity.faction === "hostile") ||
     samePosition(current.player.position, before.player.position) ||
     samePosition(current.player.position, destination)
+  );
+}
+
+export function autoGetStopsAfterStep(
+  before: GameSnapshot | GameUpdate,
+  current: GameSnapshot | GameUpdate | undefined,
+  target: AutoGetTargetDto,
+): boolean {
+  return (
+    autoGetInterrupted(before, current) ||
+    Boolean(
+      current &&
+        samePosition(current.player.position, before.player.position) &&
+        autoGetObjectExists(current, target.objectId),
+    )
+  );
+}
+
+function autoGetInterrupted(
+  before: GameSnapshot | GameUpdate,
+  current: GameSnapshot | GameUpdate | undefined,
+): boolean {
+  return (
+    !current ||
+    current.mapScale !== "local" ||
+    current.floorId !== before.floorId ||
+    current.player.isDead ||
+    current.player.hp < before.player.hp ||
+    current.player.inventoryUsedSlots >= current.player.inventorySlotCapacity ||
+    current.player.statuses.some(
+      (status) =>
+        status.kindId === "rfb.status.confusion" ||
+        status.kindId === "rfb.status.blindness",
+    ) ||
+    current.entities.some((entity) => entity.faction === "hostile") ||
+    Boolean(current.mogaminator.pendingQuery)
+  );
+}
+
+function autoGetObjectExists(
+  state: GameSnapshot | GameUpdate,
+  objectId: string,
+): boolean {
+  return (
+    state.items.some((item) => item.id === objectId) ||
+    state.goldPiles.some((pile) => pile.id === objectId)
   );
 }
 

@@ -9,9 +9,10 @@ use crate::mogaminator::{
 use rfb_content::AmmunitionTypeDefinition;
 use rfb_localization::{Locale, Localizer, MogaminatorNames};
 use rfb_protocol::{
-    LocaleDto, MogaminatorActionDto, MogaminatorDiagnosticDto, MogaminatorDispositionDto,
-    MogaminatorDto, MogaminatorItemMatchDto, MogaminatorLineDto, MogaminatorLineKindDto,
-    MogaminatorPendingQueryDto, MogaminatorPendingQuerySaveDto, MogaminatorSaveDto,
+    AutoGetModeDto, AutoGetTargetDto, LocaleDto, MogaminatorActionDto, MogaminatorDiagnosticDto,
+    MogaminatorDispositionDto, MogaminatorDto, MogaminatorItemMatchDto, MogaminatorLineDto,
+    MogaminatorLineKindDto, MogaminatorPendingQueryDto, MogaminatorPendingQuerySaveDto,
+    MogaminatorSaveDto,
 };
 
 const DEFAULT_ZH_CN_SOURCE: &str = include_str!("mogaminator-default-zh-CN.prf");
@@ -56,6 +57,7 @@ pub(super) struct MogaminatorPendingQuery {
 pub(super) struct MogaminatorState {
     pub(super) enabled: bool,
     pub(super) leave_destroyed_items: bool,
+    pub(super) auto_get_mode: AutoGetModeDto,
     pub(super) zh_cn_source: String,
     pub(super) en_us_source: String,
     pub(super) pending_query: Option<MogaminatorPendingQuery>,
@@ -68,6 +70,7 @@ impl Default for MogaminatorState {
         Self {
             enabled: false,
             leave_destroyed_items: false,
+            auto_get_mode: AutoGetModeDto::Off,
             zh_cn_source: DEFAULT_ZH_CN_SOURCE.to_owned(),
             en_us_source: DEFAULT_EN_US_SOURCE.to_owned(),
             pending_query: None,
@@ -84,6 +87,7 @@ impl MogaminatorState {
         Ok(Self {
             enabled: saved.enabled,
             leave_destroyed_items: saved.leave_destroyed_items,
+            auto_get_mode: saved.auto_get_mode,
             zh_cn_source: saved.zh_cn_source,
             en_us_source: saved.en_us_source,
             pending_query: saved.pending_query.map(|pending| MogaminatorPendingQuery {
@@ -99,6 +103,7 @@ impl MogaminatorState {
         MogaminatorSaveDto {
             enabled: self.enabled,
             leave_destroyed_items: self.leave_destroyed_items,
+            auto_get_mode: self.auto_get_mode,
             zh_cn_source: self.zh_cn_source.clone(),
             en_us_source: self.en_us_source.clone(),
             pending_query: self.pending_query.as_ref().map(|pending| {
@@ -155,6 +160,7 @@ impl Game {
         &mut self,
         enabled: bool,
         leave_destroyed_items: bool,
+        auto_get_mode: AutoGetModeDto,
         locale: LocaleDto,
         source: String,
     ) -> Vec<MogaminatorDiagnostic> {
@@ -163,6 +169,7 @@ impl Game {
                 self.mogaminator.set_source(locale, source);
                 self.mogaminator.enabled = enabled;
                 self.mogaminator.leave_destroyed_items = leave_destroyed_items;
+                self.mogaminator.auto_get_mode = auto_get_mode;
                 self.mogaminator.pending_query = None;
                 self.mogaminator.dismissed_query_item_ids.clear();
                 Vec::new()
@@ -214,6 +221,8 @@ impl Game {
         MogaminatorDto {
             enabled: self.mogaminator.enabled,
             leave_destroyed_items: self.mogaminator.leave_destroyed_items,
+            auto_get_mode: self.mogaminator.auto_get_mode,
+            auto_get_target: self.mogaminator_auto_get_target(),
             locale: self.interface_locale,
             source: source.to_owned(),
             default_source: default_source(self.interface_locale).to_owned(),
@@ -256,6 +265,98 @@ impl Game {
         matches
     }
 
+    pub(super) fn mogaminator_auto_get_target(&self) -> Option<AutoGetTargetDto> {
+        self.mogaminator_auto_get_candidates()
+            .into_iter()
+            .min_by(|left, right| (left.0, left.1.as_str()).cmp(&(right.0, right.1.as_str())))
+            .map(|candidate| AutoGetTargetDto {
+                object_id: candidate.1,
+                position: candidate.2,
+            })
+    }
+
+    pub(super) fn mogaminator_auto_get_position(&self, object_id: &str) -> Option<Position> {
+        self.mogaminator_auto_get_candidates()
+            .into_iter()
+            .find(|candidate| candidate.1 == object_id)
+            .map(|candidate| candidate.2)
+    }
+
+    fn mogaminator_auto_get_candidates(&self) -> Vec<(u32, String, Position)> {
+        let mode = self.mogaminator.auto_get_mode;
+        if mode == AutoGetModeDto::Off {
+            return Vec::new();
+        }
+
+        let origin = self.player.position;
+        let mut candidates = Vec::new();
+        let mut add_candidate = |id: &str, position: Position| {
+            let distance = rfb_distance(origin, position);
+            let projectable = has_line_of_effect(self, origin, position);
+            if (mode == AutoGetModeDto::Wanted && !projectable)
+                || (mode == AutoGetModeDto::Ammo && !projectable && distance > 18)
+                || (position != origin && self.next_local_travel_direction(position).is_none())
+            {
+                return;
+            }
+            candidates.push((distance, id.to_owned(), position));
+        };
+
+        match mode {
+            AutoGetModeDto::Off => {}
+            AutoGetModeDto::Ammo => {
+                for item in &self.items {
+                    let ItemLocation::Ground(position) = &item.location else {
+                        continue;
+                    };
+                    if self.item_is_discovered(&item.id)
+                        && item
+                            .inscription
+                            .as_deref()
+                            .is_some_and(|inscription| inscription.contains("=g"))
+                    {
+                        add_candidate(&item.id, *position);
+                    }
+                }
+            }
+            AutoGetModeDto::Wanted => {
+                for pile in &self.gold_piles {
+                    if pile.discovered {
+                        add_candidate(&pile.id, pile.position);
+                    }
+                }
+                let locale = localization_locale(self.interface_locale);
+                let names = MogaminatorNames::new(locale)
+                    .expect("bundled Mogaminator matching names must remain available");
+                let compiled = compile_mogaminator(self.mogaminator.source(self.interface_locale))
+                    .expect("authoritative Mogaminator sources are validated before use");
+                for item in &self.items {
+                    let ItemLocation::Ground(position) = &item.location else {
+                        continue;
+                    };
+                    if !self.item_is_discovered(&item.id) {
+                        continue;
+                    }
+                    let wanted = self
+                        .mogaminator_match_for_item(&compiled, &names, locale, item)
+                        .is_some_and(|(_, (action, _))| match action.disposition {
+                            MogaminatorDisposition::PickUp => true,
+                            MogaminatorDisposition::Destroy => {
+                                !self.mogaminator.leave_destroyed_items
+                                    && self.can_destroy_item(item).is_ok()
+                            }
+                            MogaminatorDisposition::Leave | MogaminatorDisposition::Query => false,
+                        });
+                    if wanted {
+                        add_candidate(&item.id, *position);
+                    }
+                }
+            }
+        }
+
+        candidates
+    }
+
     pub(super) fn apply_mogaminator_at_player(
         &mut self,
     ) -> Result<Vec<MogaminatorItemResolution>, CoreError> {
@@ -280,7 +381,7 @@ impl Game {
         self.apply_mogaminator_to_items(item_ids, false)
     }
 
-    fn apply_mogaminator_to_items(
+    pub(super) fn apply_mogaminator_to_items(
         &mut self,
         item_ids: Vec<String>,
         allow_pickup: bool,
@@ -1058,17 +1159,96 @@ mod tests {
     use super::*;
     use rfb_protocol::GameCommand;
 
+    fn auto_get_test_game(mode: AutoGetModeDto, source: &str) -> Game {
+        let mut game = Game::new(41);
+        game.entities.clear();
+        game.items.clear();
+        game.gold_piles.clear();
+        game.terrain.fill("demo.terrain.surface-path".to_owned());
+        game.explored.fill(true);
+        game.interface_locale = LocaleDto::EnUs;
+        assert!(
+            game.configure_mogaminator(true, false, mode, LocaleDto::EnUs, source.to_owned(),)
+                .is_empty()
+        );
+        game
+    }
+
+    fn add_auto_get_item(
+        game: &mut Game,
+        id: &str,
+        kind_id: &str,
+        position: Position,
+        inscription: Option<&str>,
+        discovered: bool,
+    ) {
+        game.items.push(ItemInstance {
+            id: id.to_owned(),
+            kind_id: kind_id.to_owned(),
+            quantity: 1,
+            inscription: inscription.map(str::to_owned),
+            origin_actor_kind_id: None,
+            quality: ItemQualityDto::Ordinary,
+            affix_ids: Vec::new(),
+            rolled_affixes: Vec::new(),
+            enchantments: ItemEnchantmentsDto::default(),
+            curse: None,
+            activation: None,
+            charges: None,
+            fuel: None,
+            device_recovery_progress: 0,
+            location: ItemLocation::Ground(position),
+        });
+        game.item_property_knowledge.insert(
+            id.to_owned(),
+            inventory::ItemPropertyKnowledgeState {
+                discovered,
+                ..Default::default()
+            },
+        );
+    }
+
+    fn auto_get_target(game: &Game) -> Option<(String, Position)> {
+        game.mogaminator_dto(Vec::new())
+            .auto_get_target
+            .map(|target| (target.object_id, target.position))
+    }
+
+    fn dispatch_auto_get(game: &mut Game, object_id: &str) -> GameUpdate {
+        game.dispatch(GameCommandEnvelope {
+            command_seq: game.last_command_seq + 1,
+            expected_revision: game.revision,
+            command: GameCommand::AutoGet {
+                object_id: object_id.to_owned(),
+            },
+        })
+        .expect("auto-get command should execute")
+    }
+
     #[test]
     fn character_keeps_independent_bilingual_sources_and_applies_atomically() {
         let mut game = Game::new(7);
+        assert_eq!(game.mogaminator.auto_get_mode, AutoGetModeDto::Off);
         let initial_hash = game.state_hash();
         assert!(
-            game.configure_mogaminator(true, false, LocaleDto::ZhCn, "物品".to_owned())
-                .is_empty()
+            game.configure_mogaminator(
+                true,
+                false,
+                AutoGetModeDto::Ammo,
+                LocaleDto::ZhCn,
+                "物品".to_owned(),
+            )
+            .is_empty()
         );
         assert!(
-            game.configure_mogaminator(true, false, LocaleDto::EnUs, "weapons".to_owned())
-                .is_empty()
+            game.configure_mogaminator(
+                true,
+                false,
+                AutoGetModeDto::Ammo,
+                LocaleDto::EnUs,
+                "weapons".to_owned(),
+            )
+            .is_empty()
         );
 
         game.interface_locale = LocaleDto::ZhCn;
@@ -1079,12 +1259,14 @@ mod tests {
         let diagnostics = game.configure_mogaminator(
             false,
             false,
+            AutoGetModeDto::Wanted,
             LocaleDto::EnUs,
             "?:[EQU $SYS windows]\nweapons".to_owned(),
         );
         assert_eq!(diagnostics.len(), 1);
         let dto = game.mogaminator_dto(Vec::new());
         assert!(dto.enabled);
+        assert_eq!(dto.auto_get_mode, AutoGetModeDto::Ammo);
         assert_eq!(dto.source, "weapons");
         assert_ne!(game.state_hash(), initial_hash);
 
@@ -1092,6 +1274,233 @@ mod tests {
             Game::from_save(game.to_save()).expect("Mogaminator state should round-trip");
         assert_eq!(restored.interface_locale, LocaleDto::EnUs);
         assert_eq!(restored.mogaminator, game.mogaminator);
+    }
+
+    #[test]
+    fn wanted_auto_get_excludes_leave_query_and_protected_destruction() {
+        let mut game = auto_get_test_game(AutoGetModeDto::Wanted, "~potions\n;weapons\n!items");
+        let start = game.player.position;
+        add_auto_get_item(
+            &mut game,
+            "g1.leave",
+            "demo.item.healing-potion",
+            Position {
+                x: start.x + 1,
+                y: start.y,
+            },
+            None,
+            true,
+        );
+        add_auto_get_item(
+            &mut game,
+            "g1.query",
+            "demo.item.broad-sword",
+            Position {
+                x: start.x - 1,
+                y: start.y,
+            },
+            None,
+            true,
+        );
+        add_auto_get_item(
+            &mut game,
+            "g1.destroy.protected",
+            "demo.item.echo-charm",
+            Position {
+                x: start.x,
+                y: start.y + 1,
+            },
+            Some("!k"),
+            true,
+        );
+        let eligible = Position {
+            x: start.x,
+            y: start.y + 2,
+        };
+        add_auto_get_item(
+            &mut game,
+            "g1.destroy.eligible",
+            "demo.item.ration-of-food",
+            eligible,
+            None,
+            true,
+        );
+
+        assert_eq!(
+            auto_get_target(&game),
+            Some(("g1.destroy.eligible".to_owned(), eligible))
+        );
+        game.mogaminator.leave_destroyed_items = true;
+        assert_eq!(auto_get_target(&game), None);
+    }
+
+    #[test]
+    fn auto_get_uses_original_projectability_distance_and_stable_id_order() {
+        let mut game = auto_get_test_game(AutoGetModeDto::Ammo, "items");
+        let start = game.player.position;
+        let alpha = Position {
+            x: start.x,
+            y: start.y + 2,
+        };
+        let zeta = Position {
+            x: start.x + 2,
+            y: start.y,
+        };
+        add_auto_get_item(
+            &mut game,
+            "g1.ammo.zeta",
+            "demo.item.arrow",
+            zeta,
+            Some("=g"),
+            true,
+        );
+        add_auto_get_item(
+            &mut game,
+            "g1.ammo.alpha",
+            "demo.item.arrow",
+            alpha,
+            Some("=g"),
+            true,
+        );
+        add_auto_get_item(
+            &mut game,
+            "g1.ammo.hidden",
+            "demo.item.arrow",
+            Position {
+                x: start.x + 1,
+                y: start.y,
+            },
+            Some("=g"),
+            false,
+        );
+        assert_eq!(
+            auto_get_target(&game),
+            Some(("g1.ammo.alpha".to_owned(), alpha))
+        );
+
+        let wall = Position {
+            x: start.x + 1,
+            y: start.y,
+        };
+        let wall_index = game.index(wall).expect("wall position should be valid");
+        game.terrain[wall_index] = "demo.terrain.wall".to_owned();
+        game.items.retain(|item| item.id != "g1.ammo.alpha");
+        game.item_property_knowledge.remove("g1.ammo.alpha");
+        assert_eq!(
+            auto_get_target(&game),
+            Some(("g1.ammo.zeta".to_owned(), zeta)),
+            "ammo mode keeps the original within-18 non-projectable exception"
+        );
+
+        game.mogaminator.auto_get_mode = AutoGetModeDto::Wanted;
+        assert_eq!(auto_get_target(&game), None);
+    }
+
+    #[test]
+    fn wanted_auto_get_does_not_reveal_hidden_gold() {
+        let mut game = auto_get_test_game(AutoGetModeDto::Wanted, "~items");
+        let position = Position {
+            x: game.player.position.x + 2,
+            y: game.player.position.y,
+        };
+        game.gold_piles.push(GoldPile {
+            id: "g1.gold".to_owned(),
+            position,
+            amount: 17,
+            appearance: GoldAppearanceDto::Silver,
+            discovered: false,
+        });
+
+        assert_eq!(auto_get_target(&game), None);
+        assert!(game.gold_pile_dtos().is_empty());
+        assert_eq!(game.cell_dto(position).item_id, None);
+
+        game.gold_piles[0].discovered = true;
+        assert_eq!(
+            auto_get_target(&game),
+            Some(("g1.gold".to_owned(), position))
+        );
+        assert_eq!(game.gold_pile_dtos().len(), 1);
+        assert_eq!(game.cell_dto(position).item_id.as_deref(), Some("g1.gold"));
+    }
+
+    #[test]
+    fn auto_get_moves_one_step_then_picks_up_ammo_without_time() {
+        let mut game = auto_get_test_game(AutoGetModeDto::Ammo, "~items");
+        let start = game.player.position;
+        let target = Position {
+            x: start.x + 2,
+            y: start.y,
+        };
+        add_auto_get_item(
+            &mut game,
+            "g2.ammo",
+            "demo.item.arrow",
+            target,
+            Some("=g"),
+            true,
+        );
+
+        let initial_tick = game.world_tick;
+        dispatch_auto_get(&mut game, "g2.ammo");
+        assert_eq!(
+            game.player.position,
+            Position {
+                x: start.x + 1,
+                y: start.y,
+            }
+        );
+        assert!(game.world_tick > initial_tick);
+
+        dispatch_auto_get(&mut game, "g2.ammo");
+        assert_eq!(game.player.position, target);
+        let arrival_tick = game.world_tick;
+        dispatch_auto_get(&mut game, "g2.ammo");
+        assert_eq!(game.world_tick, arrival_tick);
+        assert!(
+            game.items
+                .iter()
+                .any(|item| { item.id == "g2.ammo" && item.location == ItemLocation::Inventory })
+        );
+    }
+
+    #[test]
+    fn auto_get_rejects_stale_id_and_collects_only_the_locked_gold() {
+        let mut game = auto_get_test_game(AutoGetModeDto::Wanted, "~items");
+        let position = game.player.position;
+        game.gold_piles.extend([
+            GoldPile {
+                id: "g2.gold.alpha".to_owned(),
+                position,
+                amount: 11,
+                appearance: GoldAppearanceDto::Gold,
+                discovered: true,
+            },
+            GoldPile {
+                id: "g2.gold.zeta".to_owned(),
+                position,
+                amount: 29,
+                appearance: GoldAppearanceDto::Silver,
+                discovered: true,
+            },
+        ]);
+        assert_eq!(
+            auto_get_target(&game),
+            Some(("g2.gold.alpha".to_owned(), position))
+        );
+
+        let initial_gold = game.gold;
+        let initial_tick = game.world_tick;
+        dispatch_auto_get(&mut game, "g2.gold.missing");
+        assert_eq!(game.gold, initial_gold);
+        assert_eq!(game.gold_piles.len(), 2);
+        assert_eq!(game.world_tick, initial_tick);
+
+        dispatch_auto_get(&mut game, "g2.gold.zeta");
+        assert_eq!(game.gold, initial_gold + 29);
+        assert_eq!(game.gold_piles.len(), 1);
+        assert_eq!(game.gold_piles[0].id, "g2.gold.alpha");
+        assert_eq!(game.world_tick, initial_tick);
     }
 
     #[test]
@@ -1236,8 +1645,14 @@ mod tests {
         let mut game = Game::new(11);
         game.interface_locale = LocaleDto::ZhCn;
         assert!(
-            game.configure_mogaminator(true, false, LocaleDto::ZhCn, "~物品\n!物品".to_owned())
-                .is_empty()
+            game.configure_mogaminator(
+                true,
+                false,
+                AutoGetModeDto::Off,
+                LocaleDto::ZhCn,
+                "~物品\n!物品".to_owned(),
+            )
+            .is_empty()
         );
 
         let locations_before = game
@@ -1274,8 +1689,14 @@ mod tests {
         first_item.location = ItemLocation::Ground(Position { x: 4, y: 3 });
         game.items.push(first_item);
         assert!(
-            game.configure_mogaminator(true, false, LocaleDto::ZhCn, "(物品".to_owned())
-                .is_empty()
+            game.configure_mogaminator(
+                true,
+                false,
+                AutoGetModeDto::Off,
+                LocaleDto::ZhCn,
+                "(物品".to_owned(),
+            )
+            .is_empty()
         );
 
         let tick_before = game.world_tick;
@@ -1318,7 +1739,13 @@ mod tests {
         leave.interface_locale = LocaleDto::ZhCn;
         assert!(
             leave
-                .configure_mogaminator(true, false, LocaleDto::ZhCn, "~物品".to_owned())
+                .configure_mogaminator(
+                    true,
+                    false,
+                    AutoGetModeDto::Off,
+                    LocaleDto::ZhCn,
+                    "~物品".to_owned(),
+                )
                 .is_empty()
         );
         leave
@@ -1355,8 +1782,14 @@ mod tests {
         game.interface_locale = LocaleDto::ZhCn;
         game.player.position = Position { x: 4, y: 3 };
         assert!(
-            game.configure_mogaminator(true, false, LocaleDto::ZhCn, "!物品#!k".to_owned())
-                .is_empty()
+            game.configure_mogaminator(
+                true,
+                false,
+                AutoGetModeDto::Off,
+                LocaleDto::ZhCn,
+                "!物品#!k".to_owned(),
+            )
+            .is_empty()
         );
 
         let outcomes = game
@@ -1388,7 +1821,13 @@ mod tests {
             .expect("test item should remain accessible");
         assert!(
             restored
-                .configure_mogaminator(true, true, LocaleDto::ZhCn, "!物品".to_owned())
+                .configure_mogaminator(
+                    true,
+                    true,
+                    AutoGetModeDto::Off,
+                    LocaleDto::ZhCn,
+                    "!物品".to_owned(),
+                )
                 .is_empty()
         );
         assert!(
@@ -1406,7 +1845,13 @@ mod tests {
 
         assert!(
             restored
-                .configure_mogaminator(true, false, LocaleDto::ZhCn, "!物品".to_owned())
+                .configure_mogaminator(
+                    true,
+                    false,
+                    AutoGetModeDto::Off,
+                    LocaleDto::ZhCn,
+                    "!物品".to_owned(),
+                )
                 .is_empty()
         );
         let outcomes = restored
@@ -1430,8 +1875,14 @@ mod tests {
         game.interface_locale = LocaleDto::ZhCn;
         game.player.position = Position { x: 4, y: 3 };
         assert!(
-            game.configure_mogaminator(true, false, LocaleDto::ZhCn, ";物品".to_owned())
-                .is_empty()
+            game.configure_mogaminator(
+                true,
+                false,
+                AutoGetModeDto::Off,
+                LocaleDto::ZhCn,
+                ";物品".to_owned(),
+            )
+            .is_empty()
         );
 
         game.apply_mogaminator_at_player()
@@ -1499,8 +1950,14 @@ mod tests {
             .and_then(|item| item.charges)
             .expect("identify staff should have charges");
         assert!(
-            game.configure_mogaminator(true, false, LocaleDto::ZhCn, "?物品".to_owned())
-                .is_empty()
+            game.configure_mogaminator(
+                true,
+                false,
+                AutoGetModeDto::Off,
+                LocaleDto::ZhCn,
+                "?物品".to_owned(),
+            )
+            .is_empty()
         );
 
         let outcomes = game

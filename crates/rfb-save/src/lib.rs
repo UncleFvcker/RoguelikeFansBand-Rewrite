@@ -180,8 +180,13 @@ mod tests {
             interface_locale: rfb_protocol::LocaleDto::ZhCn,
             mogaminator: rfb_protocol::MogaminatorSaveDto {
                 enabled: false,
+                leave_destroyed_items: false,
+                auto_get_mode: rfb_protocol::AutoGetModeDto::Off,
                 zh_cn_source: "# 墨家名器规则\n".to_owned(),
                 en_us_source: "# Mogaminator rules\n".to_owned(),
+                pending_query: None,
+                dismissed_query_item_ids: Vec::new(),
+                wanted_actor_kind_ids: Vec::new(),
             },
             terrain: TerrainSaveDto {
                 width: 1,

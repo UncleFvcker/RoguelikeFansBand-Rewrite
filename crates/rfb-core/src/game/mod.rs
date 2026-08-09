@@ -81,22 +81,22 @@ use rfb_protocol::{
     AbilityProficiencyRankDto, AbilityProgressSaveDto, AbilityRandomBranchSpecDto,
     AbilityRandomTargetDto, AbilityStatusChangeDto, AbilityStatusStackingDto,
     AbilitySummonResolutionDto, AbilityTeleportResolutionDto, AbilityTerrainTransformResolutionDto,
-    AbilityVisibleDamageResolutionDto, AttackProfileDto, CampaignStatusDto, CellLightDto,
-    CellVisualDto, DamageDiceDto, DeviceRechargeSourceDto, Direction, EquipmentBonusesDto,
-    EquipmentPassiveDto, GameCommandEnvelope, GameUpdate, GoldAppearanceDto, HealingResolutionDto,
-    ItemActivationDto, ItemChargesDto, ItemCurseRemovalResolutionDto, ItemCurseResolutionDto,
-    ItemCurseSeverityDto, ItemEnchantmentComponentResolutionDto, ItemEnchantmentResolutionDto,
-    ItemEnchantmentsDto, ItemIdentificationDto, ItemIdentifyResolutionDto, ItemKnowledgeDto,
-    ItemPropertyDto, ItemQualityDto, LocaleDto, MapScaleDto, MeleeBlowDto, MeleeRoutineDto,
-    MonsterAbilityCandidateResolutionDto, MonsterAbilityCastResolutionDto,
-    MonsterAbilityDecisionResolutionDto, MonsterAbilityRejectionReasonDto,
-    MonsterAbilityTargetResolutionDto, MonsterDisplacementResolutionDto, MonsterPackBehaviorDto,
-    MonsterPackRoleDto, Position, ProjectileProfileDto, RecallStateDto, ResistanceDto,
-    ResourceGainResolutionDto, ResourceGainSourceDto, ResourcePoolSaveDto,
-    ResourceRecoveryResolutionDto, RestResolutionDto, RestStopReasonDto, SlayDto, SlayLevelDto,
-    SlayTargetDto, StatModifiersDto, SummonCommandDto, SummonCommandModeDto,
-    SummonCommandResolutionDto, TargetModeDto, TargetSelection, TargetSpecDto, TaskStatusKindDto,
-    ThrowProfileDto, WeaponBrandDto,
+    AbilityVisibleDamageResolutionDto, AttackProfileDto, AutoGetModeDto, CampaignStatusDto,
+    CellLightDto, CellVisualDto, DamageDiceDto, DeviceRechargeSourceDto, Direction,
+    EquipmentBonusesDto, EquipmentPassiveDto, GameCommandEnvelope, GameUpdate, GoldAppearanceDto,
+    HealingResolutionDto, ItemActivationDto, ItemChargesDto, ItemCurseRemovalResolutionDto,
+    ItemCurseResolutionDto, ItemCurseSeverityDto, ItemEnchantmentComponentResolutionDto,
+    ItemEnchantmentResolutionDto, ItemEnchantmentsDto, ItemIdentificationDto,
+    ItemIdentifyResolutionDto, ItemKnowledgeDto, ItemPropertyDto, ItemQualityDto, LocaleDto,
+    MapScaleDto, MeleeBlowDto, MeleeRoutineDto, MonsterAbilityCandidateResolutionDto,
+    MonsterAbilityCastResolutionDto, MonsterAbilityDecisionResolutionDto,
+    MonsterAbilityRejectionReasonDto, MonsterAbilityTargetResolutionDto,
+    MonsterDisplacementResolutionDto, MonsterPackBehaviorDto, MonsterPackRoleDto, Position,
+    ProjectileProfileDto, RecallStateDto, ResistanceDto, ResourceGainResolutionDto,
+    ResourceGainSourceDto, ResourcePoolSaveDto, ResourceRecoveryResolutionDto, RestResolutionDto,
+    RestStopReasonDto, SlayDto, SlayLevelDto, SlayTargetDto, StatModifiersDto, SummonCommandDto,
+    SummonCommandModeDto, SummonCommandResolutionDto, TargetModeDto, TargetSelection,
+    TargetSpecDto, TaskStatusKindDto, ThrowProfileDto, WeaponBrandDto,
 };
 
 mod abilities;
@@ -196,7 +196,7 @@ pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 74;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 76;
 pub const WARRENS_JOURNEY_WORLD_ID: &str = "demo.world.warrens-journey";
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const VISIBILITY_RADIUS: i32 = 8;
@@ -1254,6 +1254,17 @@ impl Game {
         if let Some(direction) = local_travel_direction {
             action = GameAction::Move { direction };
         }
+        let auto_get_target = match &action {
+            GameAction::AutoGet { object_id } => self.mogaminator_auto_get_position(object_id),
+            _ => None,
+        };
+        if let Some(direction) = auto_get_target.and_then(|target| {
+            (target != self.player.position)
+                .then(|| self.next_local_travel_direction(target))
+                .flatten()
+        }) {
+            action = GameAction::Move { direction };
+        }
         let advances_world = !depleted_device_use
             && !zero_time_unavailable_item_use
             && !cursed_unequip
@@ -1278,6 +1289,8 @@ impl Game {
                     | GameAction::WithdrawFromHome { .. }
                     | GameAction::SetSummonCommand { .. }
                     | GameAction::ConfigureMogaminator { .. }
+                    | GameAction::AutoGet { .. }
+                    | GameAction::PickUp
                     | GameAction::ResolveMogaminatorQuery { .. }
                     | GameAction::InscribeItem { .. }
                     | GameAction::SetInterfaceLocale { .. }
@@ -1410,11 +1423,17 @@ impl Game {
             GameAction::ConfigureMogaminator {
                 enabled,
                 leave_destroyed_items,
+                auto_get_mode,
                 locale,
                 source,
             } => {
-                mogaminator_diagnostics =
-                    self.configure_mogaminator(enabled, leave_destroyed_items, locale, source);
+                mogaminator_diagnostics = self.configure_mogaminator(
+                    enabled,
+                    leave_destroyed_items,
+                    auto_get_mode,
+                    locale,
+                    source,
+                );
             }
             GameAction::ResolveMogaminatorQuery { item_id, pick_up } => {
                 if let Some(outcome) = self.resolve_mogaminator_query(&item_id, pick_up)? {
@@ -1673,8 +1692,27 @@ impl Game {
                 }
             }
             GameAction::Wait => events.push(DomainEvent::Waited),
+            GameAction::AutoGet { object_id } => {
+                let valid_target =
+                    auto_get_target.is_some_and(|target| target == self.player.position);
+                if !valid_target {
+                    events.push(DomainEvent::NothingToPickUp);
+                } else if let Some(gold) = self.pick_up_gold_at_player(Some(&object_id)) {
+                    changed.insert(self.player.position);
+                    events.push(DomainEvent::GoldPickedUp {
+                        amount: gold.gained,
+                        balance: gold.balance,
+                    });
+                } else if self.mogaminator.auto_get_mode == AutoGetModeDto::Ammo {
+                    let outcome = self.pick_up_item_at_player(Some(&object_id))?;
+                    self.record_pick_up_outcome(outcome, &mut events, &mut changed);
+                } else {
+                    let resolutions = self.apply_mogaminator_to_items(vec![object_id], true)?;
+                    self.record_mogaminator_resolutions(resolutions, &mut events, &mut changed);
+                }
+            }
             GameAction::PickUp => {
-                let gold_pickup = self.pick_up_gold_at_player();
+                let gold_pickup = self.pick_up_gold_at_player(None);
                 if let Some(gold) = gold_pickup {
                     changed.insert(self.player.position);
                     events.push(DomainEvent::GoldPickedUp {
@@ -1982,7 +2020,14 @@ impl Game {
         self.last_command_seq = envelope.command_seq;
         self.turn = self.turn.saturating_add(turn_advance);
         self.revision = self.revision.saturating_add(1);
+        let newly_discovered_gold_positions = self
+            .gold_piles
+            .iter()
+            .filter(|pile| !pile.discovered && self.is_visible(pile.position))
+            .map(|pile| pile.position)
+            .collect::<Vec<_>>();
         self.reveal_current_visibility();
+        changed.extend(newly_discovered_gold_positions);
         let current_dimensions = self.projected_dimensions();
         let current_visuals = self.visual_cells();
         let map_scale_changed = self.map_scale != map_scale_before_command;
@@ -2187,6 +2232,7 @@ impl Game {
             position: self.player.position,
             amount,
             appearance: GoldAppearanceDto::Gold,
+            discovered: true,
         });
         Ok(())
     }
@@ -4704,6 +4750,13 @@ impl Game {
             })
             .collect::<Vec<_>>();
         self.mark_item_instances_discovered(&discovered_item_ids);
+        let discovered_gold_ids = self
+            .gold_piles
+            .iter()
+            .filter(|pile| self.is_visible(pile.position))
+            .map(|pile| pile.id.clone())
+            .collect::<Vec<_>>();
+        self.mark_gold_piles_discovered(&discovered_gold_ids);
     }
 
     fn mark_item_instances_discovered(&mut self, item_ids: &[String]) {

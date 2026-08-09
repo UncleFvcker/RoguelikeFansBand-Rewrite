@@ -3,6 +3,7 @@
 import type { AppState } from "./app-state";
 import type { Localization } from "./localization";
 import type {
+  AutoGetModeDto,
   GameCommand,
   MogaminatorDiagnosticDto,
   MogaminatorDto,
@@ -14,6 +15,7 @@ interface MogaminatorEditorDom {
   readonly close: HTMLButtonElement;
   readonly enabled: HTMLInputElement;
   readonly leaveDestroyed: HTMLInputElement;
+  readonly autoGetMode: HTMLSelectElement;
   readonly locale: HTMLElement;
   readonly source: HTMLTextAreaElement;
   readonly explanation: HTMLElement;
@@ -159,6 +161,7 @@ export class MogaminatorEditor {
       type: "configure-mogaminator",
       enabled: this.#dom.enabled.checked,
       leaveDestroyedItems: this.#dom.leaveDestroyed.checked,
+      autoGetMode: this.#dom.autoGetMode.value as AutoGetModeDto,
       locale: this.#localization.locale,
       source: this.#dom.source.value,
     });
@@ -189,6 +192,7 @@ export class MogaminatorEditor {
     if (!this.#status) return;
     this.#dom.enabled.checked = this.#status.enabled;
     this.#dom.leaveDestroyed.checked = this.#status.leaveDestroyedItems;
+    this.#dom.autoGetMode.value = this.#status.autoGetMode;
     this.#dom.source.value = this.#status.source;
     this.#dirty = false;
     this.#renderMetadata();
@@ -255,6 +259,7 @@ function createDom(document: Document): MogaminatorEditorDom {
     close: element(document, "mogaminator-close"),
     enabled: element(document, "mogaminator-enabled"),
     leaveDestroyed: element(document, "mogaminator-leave-destroyed"),
+    autoGetMode: element(document, "mogaminator-auto-get-mode"),
     locale: element(document, "mogaminator-locale"),
     source: element(document, "mogaminator-source"),
     explanation: element(document, "mogaminator-line-explanation"),

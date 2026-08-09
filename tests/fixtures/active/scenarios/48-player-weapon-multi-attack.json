@@ -108,7 +108,7 @@
     "finalState": {
       "revision": 8,
       "turn": 8,
-      "worldTick": 80,
+      "worldTick": 50,
       "lastCommandSeq": 8,
       "rngDrawCounter": 8,
       "floorId": "demo.floor.surface",
@@ -286,12 +286,12 @@
           },
           "hp": 1,
           "speed": 10,
-          "energyNeed": 20,
+          "energyNeed": 50,
           "statuses": [
             {
               "kindId": "rfb.status.slow",
               "intensity": 10,
-              "remainingTicks": 20,
+              "remainingTicks": 50,
               "grantedModifiers": {
                 "attack": 0,
                 "defense": 0,
@@ -517,7 +517,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "d4b529900172e2586e8e55f33a9a5d583587f9bd08edc26ffb0acc1da0c53777"
+      "stateHash": "b55a350914b09e5630afee570fb4545f055384d38d66250817765285d78b3fcd"
     },
     "events": [
       {
@@ -621,6 +621,6 @@
         "y": 3
       }
     ],
-    "saveRoundTripStateHash": "d4b529900172e2586e8e55f33a9a5d583587f9bd08edc26ffb0acc1da0c53777"
+    "saveRoundTripStateHash": "b55a350914b09e5630afee570fb4545f055384d38d66250817765285d78b3fcd"
   }
 }

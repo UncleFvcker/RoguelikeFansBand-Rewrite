@@ -316,3 +316,7 @@ crates/rfb-legacy-import/
 协议 1.153 为 `MogaminatorSaveDto` 增加待确认物品、已拒绝实例和每角色悬赏唯一怪物集合；所有物品位置的 save DTO 增加可选 `originActorKindId`。尸体来源参与堆叠兼容性，防止不同怪物的尸体合并后丢失 `wanted` / `unique` / `human` 判定。以上字段进入 state hash Schema v74；save 容器仍为 v1，旧开发存档不兼容。
 
 contract-v216 不改变存档结构。每个角色继续在 `MogaminatorSaveDto` 中独立保存中文与英文规则源，界面语言只决定当前使用和编辑哪一份；恢复默认显式用对应内置模板覆盖该语言的角色副本。文本导入经既有配置命令校验成功后才成为权威状态，导出不修改存档。save 容器仍为 v1，state hash Schema 保持 v74。
+
+协议 1.154 为每角色 `MogaminatorSaveDto` 增加必填 `autoGetMode`，合法值为 `off`、`ammo`、`wanted`，新角色默认 `off`。模式与中英文规则文本共同保存，并进入 state hash Schema v75；save 容器仍为 v1，旧开发存档不兼容。G0 尚不保存自动拾取目标或行走状态。
+
+协议 1.155 为保存兼用的 `GoldPileDto` 增加必填 `discovered`。视野或金币探测发现后，该状态随当前层和离层楼层保存，并进入 state hash Schema v76；旧开发存档不兼容。`MogaminatorDto.autoGetTarget` 由当前地图、知识、规则和模式派生，不写入存档。

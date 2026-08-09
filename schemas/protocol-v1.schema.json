@@ -2932,6 +2932,29 @@
         "index"
       ]
     },
+    "AutoGetModeDto": {
+      "type": "string",
+      "enum": [
+        "off",
+        "ammo",
+        "wanted"
+      ]
+    },
+    "AutoGetTargetDto": {
+      "type": "object",
+      "properties": {
+        "objectId": {
+          "type": "string"
+        },
+        "position": {
+          "$ref": "#/$defs/Position"
+        }
+      },
+      "required": [
+        "objectId",
+        "position"
+      ]
+    },
     "BodySlotDto": {
       "description": "One equipment slot instance on the player's body: `slot_type` matches\nitem `equipmentSlot` declarations, `id` names the concrete instance so\nseveral slots of one type (two rings) stay addressable.",
       "type": "object",
@@ -3913,6 +3936,9 @@
         {
           "type": "object",
           "properties": {
+            "autoGetMode": {
+              "$ref": "#/$defs/AutoGetModeDto"
+            },
             "enabled": {
               "type": "boolean"
             },
@@ -3934,8 +3960,25 @@
             "type",
             "enabled",
             "leaveDestroyedItems",
+            "autoGetMode",
             "locale",
             "source"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "objectId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "auto-get"
+            }
+          },
+          "required": [
+            "type",
+            "objectId"
           ]
         },
         {
@@ -5508,6 +5551,9 @@
         "appearance": {
           "$ref": "#/$defs/GoldAppearanceDto"
         },
+        "discovered": {
+          "type": "boolean"
+        },
         "id": {
           "type": "string"
         },
@@ -5519,7 +5565,8 @@
         "id",
         "position",
         "amount",
-        "appearance"
+        "appearance",
+        "discovered"
       ]
     },
     "HealingResolutionDto": {
@@ -6385,6 +6432,19 @@
     "MogaminatorDto": {
       "type": "object",
       "properties": {
+        "autoGetMode": {
+          "$ref": "#/$defs/AutoGetModeDto"
+        },
+        "autoGetTarget": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AutoGetTargetDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "defaultSource": {
           "type": "string"
         },
@@ -6435,6 +6495,7 @@
       "required": [
         "enabled",
         "leaveDestroyedItems",
+        "autoGetMode",
         "locale",
         "source",
         "defaultSource"

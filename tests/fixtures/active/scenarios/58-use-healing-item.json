@@ -80,7 +80,7 @@
     "finalState": {
       "revision": 3,
       "turn": 3,
-      "worldTick": 30,
+      "worldTick": 20,
       "lastCommandSeq": 3,
       "rngDrawCounter": 3,
       "floorId": "demo.floor.surface",
@@ -396,7 +396,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "a4cc72a7840cd875fd35cada6052cb58fad78d76a040594e906f98af0c9f9515"
+      "stateHash": "890087e2bad57d4bec90b32e2f34d35b685899f248478075221b0900cb363735"
     },
     "events": [
       {
@@ -438,6 +438,6 @@
         "y": 3
       }
     ],
-    "saveRoundTripStateHash": "a4cc72a7840cd875fd35cada6052cb58fad78d76a040594e906f98af0c9f9515"
+    "saveRoundTripStateHash": "890087e2bad57d4bec90b32e2f34d35b685899f248478075221b0900cb363735"
   }
 }

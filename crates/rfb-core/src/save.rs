@@ -1362,6 +1362,7 @@ pub(crate) fn gold_piles_to_save(piles: &[GoldPile]) -> Vec<GoldPileDto> {
             position: pile.position,
             amount: pile.amount,
             appearance: pile.appearance,
+            discovered: pile.discovered,
         })
         .collect::<Vec<_>>();
     piles.sort_by(|left, right| left.id.cmp(&right.id));
@@ -1376,6 +1377,7 @@ pub(crate) fn gold_piles_from_save(piles: Vec<GoldPileDto>) -> Vec<GoldPile> {
             position: pile.position,
             amount: pile.amount,
             appearance: pile.appearance,
+            discovered: pile.discovered,
         })
         .collect()
 }
