@@ -1,0 +1,58 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 259,
+    "maxDepth": 50,
+    "multiplies": true,
+    "randomMovementPercent": 50,
+    "rarity": 1
+  },
+  "attack": 3,
+  "damageDice": 1,
+  "damageSides": 2,
+  "damageType": "physical",
+  "defense": 0,
+  "descriptionKey": "actor-demo-giant-flea-description",
+  "experienceValue": 3,
+  "formatVersion": 1,
+  "glyph": "I",
+  "hitPointDice": {
+    "dice": 1,
+    "sides": 2
+  },
+  "id": "demo.actor.giant-flea",
+  "level": 14,
+  "maxHp": 1,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 2,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "nameKey": "actor-demo-giant-flea-name",
+  "role": "monster",
+  "speed": 120,
+  "tags": [
+    "animal",
+    "flea",
+    "insect",
+    "legacy-import",
+    "warrens"
+  ]
+}

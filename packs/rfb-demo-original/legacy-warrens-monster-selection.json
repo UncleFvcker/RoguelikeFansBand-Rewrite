@@ -1296,6 +1296,120 @@
       "id": "slime-mold",
       "tags": ["mold", "warrens"],
       "omittedFlags": ["COLD_BLOOD", "NASTY_GLYPH", "SMART", "WEIRD_MIND"]
+    },
+    {
+      "sourceIndex": 107,
+      "id": "death-sword",
+      "tags": ["sword", "warrens"],
+      "omittedFlags": ["CHAR_MULTI", "COLD_BLOOD", "NASTY_GLYPH", "STUPID"]
+    },
+    {
+      "sourceIndex": 246,
+      "id": "software-bug",
+      "tags": ["bug", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC", "WEIRD_MIND"]
+    },
+    {
+      "sourceIndex": 247,
+      "id": "lurker",
+      "tags": ["lurker", "warrens"],
+      "omittedFlags": ["ATTR_CLEAR", "CHAR_CLEAR", "COLD_BLOOD", "EMPTY_MIND", "NASTY_GLYPH"]
+    },
+    {
+      "sourceIndex": 248,
+      "id": "nixie",
+      "tags": ["nixie", "warrens"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 249,
+      "id": "vlasta",
+      "tags": ["vlasta", "warrens"],
+      "omittedFlags": []
+    },
+    {
+      "sourceIndex": 250,
+      "id": "giant-white-dragon-fly",
+      "tags": ["insect", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC", "WEIRD_MIND"]
+    },
+    {
+      "sourceIndex": 251,
+      "id": "snaga-sapper",
+      "tags": ["humanoid", "orc", "warrens"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 252,
+      "id": "blue-icky-thing",
+      "tags": ["icky-thing", "warrens"],
+      "omittedFlags": []
+    },
+    {
+      "sourceIndex": 253,
+      "id": "gibbering-mouther",
+      "tags": ["mouther", "warrens"],
+      "omittedFlags": ["EMPTY_MIND", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 254,
+      "id": "irish-wolfhound-of-flora",
+      "tags": ["hound", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 256,
+      "id": "flesh-golem",
+      "tags": ["golem", "warrens"],
+      "omittedFlags": ["EMPTY_MIND", "POS_GAIN_AC", "POS_HOLD_LIFE"]
+    },
+    {
+      "sourceIndex": 258,
+      "id": "cheerful-leprechaun",
+      "tags": ["humanoid", "leprechaun", "warrens"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 259,
+      "id": "giant-flea",
+      "tags": ["flea", "insect", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC", "WEIRD_MIND"]
+    },
+    {
+      "sourceIndex": 260,
+      "id": "ufthak-of-cirith-ungol",
+      "tags": ["humanoid", "orc", "warrens"],
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
+    },
+    {
+      "sourceIndex": 954,
+      "id": "orcish-artillery",
+      "tags": ["humanoid", "orc", "warrens"],
+      "omittedFlags": ["SMART"]
+    },
+    {
+      "sourceIndex": 983,
+      "id": "hibagon",
+      "tags": ["animal", "warrens"],
+      "omittedFlags": []
+    },
+    {
+      "sourceIndex": 1007,
+      "id": "giant-cockroach",
+      "tags": ["cockroach", "insect", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC", "WEIRD_MIND"]
+    },
+    {
+      "sourceIndex": 1321,
+      "id": "lion",
+      "tags": ["cat", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 1338,
+      "id": "snow-leopard",
+      "tags": ["cat", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
     }
   ]
 }

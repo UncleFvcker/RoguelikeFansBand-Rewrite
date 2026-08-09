@@ -564,6 +564,8 @@ contract-v208 推进正式内容 P23：蛛化精灵、猴蝠、杀手褐甲虫�
 
 contract-v209 推进正式内容 P24：公共怪物再生每 100 个 world ticks 按 `maxHP/100` 恢复，低于 100 HP 时只抽一次二分 RNG，`REGENERATE` 翻倍且单次封顶 400；`MOVE_BODY` 仅让经验值更高、双方均可穿越交换前后地形的同阵营怪物换位，并唤醒被交换者。黏菌连同既有尖叫和 `7d7` 心灵爆破进入严格同步。协议保持 1.147、state hash Schema 保持 v70，demo 升至 1.205.0；正式包现有 86 种 terrain、279 种 actor、204 种 item 和 130 个 ability，严格同步 214 条，content hash 为 `3d94f3bff136355b23ad4a864f8308197606e79d2c92a3f36ad07f6b69a2c886`。公共低 HP 再生 RNG 使 2 条相关 fixture 定向刷新，其余 468 条保持精确一致。详见 [Contract v209](design/contract-v209-warrens-content-p24-slime-mold.md)。
 
+contract-v210 推进正式内容 P25：死亡之剑、软件漏洞、地底潜伏者、水妖精、弗拉斯塔、巨型白蜻蜓、史纳加爆破兵、蓝色恶心物、惧噬体、弗洛拉的爱尔兰猎狼犬、肉身魔像、快乐的矮妖、巨型跳蚤、西力斯昂哥的乌夫萨克、半兽人火炮、比婆怪兽、巨型蟑螂、狮子和雪豹共 19 只十四级怪物进入严格同步。全部复用既有吐息、状态、闪现、繁殖、群体、Unique、骑乘、限定分配、爆炸和掉落路径，没有新增 ability 或 effect。协议保持 1.147、state hash Schema 保持 v70，demo 升至 1.206.0；正式包现有 86 种 terrain、298 种 actor、204 种 item 和 130 个 ability，严格同步 233 条，content hash 为 `e4d423b5dc4cb246897e44a006f1b7cf3d638d30a5c88ab604140bbcafbba7bf`。470 条 exact fixtures 全量验证无需刷新。详见 [Contract v210](design/contract-v210-warrens-content-p25-level-14-harvest.md)。
+
 ### 本地验证
 
 ```powershell

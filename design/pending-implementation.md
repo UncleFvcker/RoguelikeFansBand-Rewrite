@@ -98,6 +98,12 @@ contract-v209 为所有当前层受伤怪物接入每 100 world ticks 一次的�
 双向地形通行为窄换位条件。黏菌进入严格同步，正式包 actor 增至 279、
 ability 增至 130、严格同步增至 214；协议 1.147 与 State Hash Schema v70 不变。
 
+contract-v210 直接接入 19 只十四级怪物，正式包 actor 增至 298、ability 保持
+130、严格同步增至 233；协议 1.147 与 State Hash Schema v70 不变。座狼继续
+复用 Pest Control 的手写身份，瘟疫武僧与斯卡文刺客等待真实 `COMPOST` 任务
+消费者，祝融夫人与火焰乌鸦等待火焰接触光环，维护者等待 `POLYMORPH` 与
+软件漏洞定点召唤，均不以重复 actor 或近似规则提前接入。
+
 荒野 W0 已导入 `master:w_info.txt` 的 `99x66` normal 世界图、15 类地形、
 危险等级、道路和起点，并只把现有 Outpost/Warrens 绑定为正式地点。W1 已完成
 权威地图尺度、荒野位置/种子保存、协议投影、现有 Pixi 渲染与 `x` 查看。W2

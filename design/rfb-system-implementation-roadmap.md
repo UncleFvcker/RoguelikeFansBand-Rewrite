@@ -646,6 +646,8 @@ P30“首个非 Mana 职业资源”已由 contract-v90 完成：节奏资源按
 
 **怪物公共行为 P24 进展（2026-08）**：contract-v209 接入原版公共怪物再生与 `MOVE_BODY`。当前层受伤怪物每 100 world ticks 恢复 `maxHP/100`，低 HP 只抽一次二分 RNG，`REGENERATE` 翻倍且单次封顶 400；换位严格要求更高经验值、同阵营和双方均可穿越交换前后的地形，并唤醒被交换者。黏菌复用尖叫并生成 `mind-blast-7d7` 内容记录。正式包为 279 actors / 130 abilities，严格同步 214 条；协议 1.147、Schema v70 不变，demo 1.205.0，内置 hash 为 `3d94f3bff136355b23ad4a864f8308197606e79d2c92a3f36ad07f6b69a2c886`。完整边界见 [Contract v209](contract-v209-warrens-content-p24-slime-mold.md)。
 
+**十四级怪物 P25 进展（2026-08）**：contract-v210 接入 19 只由既有内容契约完整承载的十四级怪物。冷气/光明吐息、致盲/混乱/恐惧、闪现、物理射击、繁殖、群体、Unique、骑乘、限定分配、爆炸和掉落均复用既有路径，没有新增 ability、effect 或兼容层。正式包为 298 actors / 130 abilities，严格同步 233 条；协议 1.147、Schema v70 不变，demo 1.206.0，内容 hash 为 `e4d423b5dc4cb246897e44a006f1b7cf3d638d30a5c88ab604140bbcafbba7bf`。完整边界见 [Contract v210](contract-v210-warrens-content-p25-level-14-harvest.md)。
+
 ## 9. 内容迁移策略
 
 ### 9.1 当前阶段

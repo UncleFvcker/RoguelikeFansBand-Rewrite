@@ -1,0 +1,88 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 258,
+    "maxDepth": 50,
+    "multiplies": true,
+    "randomMovementPercent": 50,
+    "rarity": 2
+  },
+  "attack": 3,
+  "damageDice": 1,
+  "damageSides": 1,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [
+      {
+        "percent": 60
+      }
+    ],
+    "kind": "gold"
+  },
+  "defense": 0,
+  "descriptionKey": "actor-demo-cheerful-leprechaun-description",
+  "doorInteraction": {
+    "opens": true
+  },
+  "experienceValue": 23,
+  "formatVersion": 1,
+  "glyph": "h",
+  "hitPointDice": {
+    "dice": 2,
+    "sides": 5
+  },
+  "id": "demo.actor.cheerful-leprechaun",
+  "level": 14,
+  "light": {
+    "intrinsic": false,
+    "radius": 1
+  },
+  "maxHp": 6,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "type": "eat-gold"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "type": "eat-food"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.blink",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 16
+  },
+  "nameKey": "actor-demo-cheerful-leprechaun-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "role": "monster",
+  "speed": 120,
+  "tags": [
+    "good",
+    "humanoid",
+    "legacy-import",
+    "leprechaun",
+    "warrens"
+  ]
+}

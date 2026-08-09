@@ -1,0 +1,79 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 253,
+    "maxDepth": 50,
+    "multiplies": true,
+    "rarity": 4
+  },
+  "attack": 3,
+  "damageDice": 1,
+  "damageSides": 4,
+  "damageType": "poison",
+  "defense": 2,
+  "descriptionKey": "actor-demo-gibbering-mouther-description",
+  "experienceValue": 20,
+  "formatVersion": 1,
+  "glyph": "j",
+  "hitPointDice": {
+    "dice": 8,
+    "sides": 6
+  },
+  "id": "demo.actor.gibbering-mouther",
+  "level": 14,
+  "maxHp": 28,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "damageDice": 1,
+            "damageSides": 4,
+            "type": "poison"
+          }
+        ],
+        "methodId": "rfb.blow.crawl",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.scare",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.confuse",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-light-17-400-r2",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 14
+  },
+  "movement": {
+    "modes": [
+      "swim"
+    ],
+    "neverMoves": true
+  },
+  "nameKey": "actor-demo-gibbering-mouther-name",
+  "resistances": {
+    "light": "resistant",
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 110,
+  "statusImmunities": [
+    "rfb.status.fear"
+  ],
+  "tags": [
+    "evil",
+    "legacy-import",
+    "mouther",
+    "warrens"
+  ]
+}

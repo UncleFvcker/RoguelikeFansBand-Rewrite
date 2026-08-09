@@ -1,0 +1,73 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 256,
+    "maxDepth": 50,
+    "rarity": 1
+  },
+  "attack": 3,
+  "damageDice": 3,
+  "damageSides": 3,
+  "damageType": "physical",
+  "defense": 3,
+  "descriptionKey": "actor-demo-flesh-golem-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 50,
+  "formatVersion": 1,
+  "glyph": "g",
+  "hitPointDice": {
+    "dice": 12,
+    "sides": 8
+  },
+  "id": "demo.actor.flesh-golem",
+  "level": 14,
+  "maxHp": 54,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 3,
+            "damageSides": 3,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "chancePercent": 20,
+            "durationDice": 1,
+            "durationSides": 3,
+            "type": "stun"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "modes": [
+      "swim"
+    ]
+  },
+  "nameKey": "actor-demo-flesh-golem-name",
+  "resistances": {
+    "cold": "resistant",
+    "electricity": "resistant"
+  },
+  "role": "monster",
+  "speed": 110,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "golem",
+    "legacy-import",
+    "nonliving",
+    "warrens"
+  ]
+}

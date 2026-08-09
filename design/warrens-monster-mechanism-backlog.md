@@ -227,3 +227,10 @@ contract-v209 单独收口黏菌阻塞的两个真实机制。`MOVE_BODY` 只在
 每 100 world ticks 执行一次，低 HP 保留单次二分 RNG，`REGENERATE` 翻倍并在
 翻倍后封顶 400。黏菌进入严格同步，ability 增至 130；协议、存档与 state hash
 结构不变。
+
+contract-v210 直接收割 19 只无需新机制的十四级怪物，严格同步增至 233 条，
+actor 增至 298，ability 保持 130。十四级剩余阻塞保持拆分：座狼需把 Pest
+Control 手写 actor 与权威身份合并；瘟疫武僧、斯卡文刺客等待 `COMPOST` 的
+真实下水道任务消费者；祝融夫人、火焰乌鸦等待火焰接触光环；维护者等待
+`POLYMORPH` 与软件漏洞定点召唤。以上均不以重复 actor、通用触发框架或局部
+近似规则代替。
