@@ -471,11 +471,27 @@
       "minimum": 0,
       "type": "integer"
     },
+    "favoriteWeaponTags": {
+      "default": [],
+      "description": "Item tags accepted by Mogaminator's favorite-weapon predicate.",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
     "formatVersion": {
       "format": "uint16",
       "maximum": 65535,
       "minimum": 0,
       "type": "integer"
+    },
+    "ickyEquipmentSlots": {
+      "default": [],
+      "description": "Equipment slot types known to be uncomfortable for this class.",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
     },
     "id": {
       "type": "string"
@@ -507,6 +523,14 @@
     },
     "skillSetId": {
       "type": "string"
+    },
+    "specialItemTags": {
+      "default": [],
+      "description": "Item tags with class-specific utility that ordinary rules must retain.",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
     },
     "startingItems": {
       "default": [],

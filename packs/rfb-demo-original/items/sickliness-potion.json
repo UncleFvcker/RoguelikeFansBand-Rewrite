@@ -15,6 +15,8 @@
   "useAction": {
     "effectProgramId": "demo.effect.sickliness-potion"
   },
+  "generationLevel": 10,
+  "mogaminatorRare": false,
   "weightTenthsPound": 4,
   "appearanceNameKey": "item-demo-sickliness-potion-appearance"
 }

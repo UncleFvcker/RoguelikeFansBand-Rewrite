@@ -15,6 +15,8 @@
   "useAction": {
     "effectProgramId": "demo.effect.detect-monsters-scroll"
   },
+  "generationLevel": 10,
+  "mogaminatorRare": false,
   "weightTenthsPound": 5,
   "appearanceNameKey": "item-demo-detect-monsters-scroll-appearance"
 }

@@ -214,6 +214,13 @@ export class HomePanel {
       return;
     }
     for (const item of items) {
+      const name = this.#visibleItemName(item.displayNameKey, item.kindId);
+      const displayName = item.inscription
+        ? this.#localization.format("inventory-inscribed-name", {
+            name,
+            inscription: item.inscription,
+          })
+        : name;
       const row = this.#dom.list.ownerDocument.createElement("li");
       row.className = "shop-item-row";
       const button = this.#dom.list.ownerDocument.createElement("button");
@@ -223,7 +230,7 @@ export class HomePanel {
       button.disabled = item.maximumQuantity === 0;
       button.setAttribute("aria-pressed", String(item.id === this.#selectedItemId));
       button.append(
-        span(this.#dom.list, "shop-item-name", this.#visibleItemName(item.displayNameKey, item.kindId)),
+        span(this.#dom.list, "shop-item-name", displayName),
         span(this.#dom.list, "shop-item-details", this.#localization.format("shop-item-weight", { weight: formatTenths(item.weightTenthsPound) })),
         span(this.#dom.list, "shop-item-stock", this.#localization.format(this.#mode === "withdraw" ? "home-stored-count" : "shop-owned-count", { quantity: item.quantity })),
       );

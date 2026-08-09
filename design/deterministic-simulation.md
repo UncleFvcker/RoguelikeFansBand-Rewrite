@@ -2,7 +2,7 @@
 
 状态：P0 规则、RNG、`rfb-replay` v1 和 Tauri 诊断导出已建立
 
-当前 state hash Schema 为 v63：哈希输入覆盖运行时内容包 ID（不含 `contentHash`）、world ID、当前 `FloorId`、当前 dungeon instance ID、当前与离层的连接 ID→位置→解析目标、离层 floor 实例身份、区域 ID/theme/局部表引用/格集合、actor 的 pack identity/behavior/alerted、summon identity/lifetime、怪物施法剩余冷却与已观察玩家抗性、战斗状态、物品实例、怪物携带物、已击败的非 guardian Unique actor kind、种类/实例知识、秘密 terrain 发现知识、含重接次数的完整任务状态机、持久地牢守护者、入口守卫与实例序号/retained 状态、campaign 胜利/退休/最终分数、玩家 Race/Class/Personality/build 身份、技能聚合与成长、角色成长 progress、资源池、已学能力、能力熟练度/统计/冷却（含先天技法）、全局召唤指令/Guard 锚点、RNG、世界脉冲和命令序号。contract-v172 从输入中移除 `contentHash` 并升级 Schema v62；contract-v173 新增 Unique 权威生命周期集合并升级 Schema v63；contract-v174-v176 不改变哈希结构，但 W9 怪物出生 HP 骰改变共同初始化 RNG，因此按规则一次性刷新全部分类。存档与回放在模拟前继续独立精确匹配 `contentId/contentHash`。下文旧 contract 对 Schema 和 content hash 的描述保留其历史语境。
+当前 state hash Schema 为 v74：哈希输入覆盖运行时内容包 ID（不含 `contentHash`）、world ID、当前 `FloorId`、当前 dungeon instance ID、当前与离层的连接 ID→位置→解析目标、离层 floor 实例身份、区域 ID/theme/局部表引用/格集合、actor 的 pack identity/behavior/alerted、summon identity/lifetime、怪物施法剩余冷却与已观察玩家抗性、战斗状态、物品实例、怪物携带物、已击败的非 guardian Unique actor kind、种类/实例知识、秘密 terrain 发现知识、含重接次数的完整任务状态机、持久地牢守护者、入口守卫与实例序号/retained 状态、campaign 胜利/退休/最终分数、玩家 Race/Class/Personality/build 身份、技能聚合与成长、资源池、已学能力、全局召唤指令、RNG、世界脉冲、命令序号，以及后续 contract 明确增加的权威字段。contract-v172 从输入中移除 `contentHash` 并升级 Schema v62；下文按 contract 继续记录直至 v74 的结构变化，历史 contract 对 Schema 和 content hash 的描述保留其历史语境。存档与回放在模拟前仍独立精确匹配 `contentId/contentHash`。
 
 contract-v47 固定 vault 的生成顺序：先绘制规范化基础 terrain/覆盖，再按 group ID、成员位置逐个消费一次深度加权 actor 抽取，最后按 spawn ID 执行既有 loot table 三抽取事务。它没有新增权威状态字段；生成后的 terrain、actor、item、实例分配器、RNG 和 content hash 已进入 Schema v19，因此本切片不升级 state hash Schema。
 
@@ -207,3 +207,9 @@ v92 的新状态族只在状态存在时消费 RNG：混乱移动先抽一次 `b
 v90 的资源获得、衰减与上限计算不抽 RNG：近战命中/击杀按内容数值即时增加对应池并发出 `resource.gained`；推进世界时间的行动内未被获得、消费或恢复触碰的池在结算后静默衰减，被拒绝的施法回合同样衰减；技法失败率按 profile 主宰属性确定性计算，只有失败率百分比掷骰照常消耗 RNG。
 
 v89 的全局召唤指令切换不推进 `turn/worldTick`、能量、生命周期、冷却或 RNG。召唤物在自身能量行动中按稳定距离/ID 选敌，按固定八方向移动；只有近战命中和伤害复用现有 RNG。楼层切换按实体 ID 提取玩家 2 格内召唤物，在目标点半径 5 内按距离/坐标稳定落位；Guard 锚点重置为到达点。指令和锚点进入 save/replay 与 state hash Schema v39，旧存档默认 Follow。
+
+M4 的铭文、人工销毁和墨家名器 `!` 不抽 RNG。地面物品按稳定实例 ID 处理；规则先写入缺失铭文，再经人工销毁共用的保护判定决定是否删除。部分堆叠只减少数量，整堆删除同步移除实例知识；规则行号只进入事件，不进入权威状态。铭文和 `leaveDestroyedItems` 进入 state hash Schema v73。
+
+M5 的 `;` 确认与 `?` 自动鉴定均为零耗时配置闭环；鉴定来源按“装置优先、实例 ID 升序”确定，实际扣除充能或卷轴后只重匹配一次。每角色悬赏集合使用独立的派生 RNG 初始化，不推进战斗/生成 RNG；待确认、拒绝集合、悬赏集合和尸体来源进入 state hash Schema v74。
+
+M6 的默认模板载入、规则解析、名称匹配、编辑器导入导出均不消费 RNG。条件函数按 RFB 原版的可变参数语义求值；中英文模板必须在同一角色、物品和知识状态下得到相同的首条命中与动作。规则源仍是既有权威哈希输入，匹配名和编译结果由内容、语言与源文本派生，不重复入 hash；结构不变，Schema 保持 v74。由于新角色的默认规则文本改变，共同初始化基线统一刷新至 contract-v216。

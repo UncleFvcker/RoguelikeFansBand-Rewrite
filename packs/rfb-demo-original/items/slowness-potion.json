@@ -6,6 +6,8 @@
   "appearanceNameKey": "item-demo-slowness-potion-appearance",
   "descriptionKey": "item-demo-slowness-potion-description",
   "glyph": "!",
+  "generationLevel": 1,
+  "mogaminatorRare": false,
   "weightTenthsPound": 4,
   "maxStack": 20,
   "baseValue": 1,

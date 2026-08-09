@@ -4,6 +4,8 @@
   "id": "demo.ability-book.echo-primer",
   "nameKey": "ability-book-demo-echo-primer-name",
   "descriptionKey": "ability-book-demo-echo-primer-description",
+  "realmId": "echo",
+  "rank": 1,
   "abilityIds": [
     "demo.ability.death-black-sleep",
     "demo.ability.death-detect-evil",

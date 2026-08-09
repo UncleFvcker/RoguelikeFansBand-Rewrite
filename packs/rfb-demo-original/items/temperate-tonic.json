@@ -6,6 +6,8 @@
   "appearanceNameKey": "item-demo-temperate-tonic-appearance",
   "descriptionKey": "item-demo-temperate-tonic-description",
   "glyph": "!",
+  "generationLevel": 1,
+  "mogaminatorRare": false,
   "weightTenthsPound": 4,
   "maxStack": 20,
   "baseValue": 120,

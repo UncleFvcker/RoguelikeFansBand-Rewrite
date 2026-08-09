@@ -4,6 +4,8 @@
   "id": "demo.ability-book.necronomicon",
   "nameKey": "ability-book-demo-necronomicon-name",
   "descriptionKey": "ability-book-demo-necronomicon-description",
+  "realmId": "death",
+  "rank": 4,
   "abilityIds": [
     "demo.ability.death-death-ray",
     "demo.ability.death-raise-dead",

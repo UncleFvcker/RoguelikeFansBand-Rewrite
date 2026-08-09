@@ -4,6 +4,8 @@
   "id": "demo.ability-book.stillwater-notes",
   "nameKey": "ability-book-demo-stillwater-notes-name",
   "descriptionKey": "ability-book-demo-stillwater-notes-description",
+  "realmId": "healing",
+  "rank": 1,
   "abilityIds": ["demo.ability.mending-echo"],
   "tags": ["healing", "spellbook"]
 }

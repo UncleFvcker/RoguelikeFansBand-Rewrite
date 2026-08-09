@@ -220,6 +220,8 @@ impl Game {
                 curse: initial_item_curse(&self.content, &kind_id),
                 kind_id,
                 quantity: 1,
+                inscription: None,
+                origin_actor_kind_id: Some(actor.kind_id.clone()),
                 quality: ItemQualityDto::Ordinary,
                 affix_ids: Vec::new(),
                 rolled_affixes: Vec::new(),

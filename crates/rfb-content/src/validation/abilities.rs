@@ -848,6 +848,18 @@ pub(super) fn validate_abilities(
         require_format_version(book.format_version, &book.id)?;
         validate_definition_id(&book.id, "ability-book")?;
         validate_definition_text(&book.id, &book.name_key, &book.description_key)?;
+        if book.realm_id.is_some() != book.rank.is_some()
+            || book.rank.is_some_and(|rank| !(1..=4).contains(&rank))
+            || book.realm_id.as_deref().is_some_and(|realm_id| {
+                realm_id.is_empty()
+                    || realm_id.len() > 64
+                    || !realm_id.bytes().all(|byte| {
+                        byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'-'
+                    })
+            })
+        {
+            return Err(ContentError::InvalidAbilityBook(book.id.clone()));
+        }
         book.ability_ids.sort();
         let mut members = BTreeSet::new();
         if book.ability_ids.is_empty()

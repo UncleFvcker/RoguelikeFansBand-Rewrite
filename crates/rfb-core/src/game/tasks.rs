@@ -530,6 +530,8 @@ fn reward_item(
         id: reward.item_instance_id.clone(),
         kind_id: reward.item_kind_id.clone(),
         quantity: reward.quantity,
+        inscription: None,
+        origin_actor_kind_id: None,
         quality: ItemQualityDto::Ordinary,
         affix_ids: Vec::new(),
         rolled_affixes: Vec::new(),

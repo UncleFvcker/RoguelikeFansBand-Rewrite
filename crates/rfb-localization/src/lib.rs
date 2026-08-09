@@ -7,6 +7,8 @@ use rfb_content::ContentCatalog;
 use thiserror::Error;
 use unic_langid::LanguageIdentifier;
 
+mod rfb_matching_names;
+
 const EN_US: [&str; 3] = [
     include_str!("../../../locales/en-US/ui.ftl"),
     include_str!("../../../locales/en-US/game.ftl"),
@@ -104,9 +106,9 @@ impl Localizer {
 
 /// Resolves the authoritative item matching name used by Mogaminator.
 ///
-/// English and Chinese names remain in their existing Fluent resources. This
-/// type stores no second display or matching-name field, and callers decide
-/// independently whether the resolved true name may be projected to the UI.
+/// Display names remain in Fluent. RFB-derived English matching names and the
+/// few rewrite-only aliases that need different search nouns stay private to
+/// this resolver; callers decide whether the resolved true name may be shown.
 pub struct MogaminatorNames {
     localizer: Localizer,
 }
@@ -123,13 +125,47 @@ impl MogaminatorNames {
         content: &ContentCatalog,
         kind_id: &str,
         affix_ids: &[String],
+        activation_profile_id: Option<&str>,
     ) -> Result<String, MogaminatorNameError> {
         let item = content
             .item(kind_id)
             .ok_or_else(|| MogaminatorNameError::UnknownItem(kind_id.to_owned()))?;
-        let base_name =
-            self.localizer
-                .format_exact(self.localizer.locale(), &item.name_key, None)?;
+        let base_name = match self.localizer.locale() {
+            Locale::EnUs => {
+                if let Some(name) = rfb_matching_names::english_item_name(kind_id) {
+                    name.to_owned()
+                } else {
+                    self.localizer
+                        .format_exact(self.localizer.locale(), &item.name_key, None)?
+                }
+            }
+            Locale::ZhCn if kind_id == "demo.item.resonance-rod" => "魔棒".to_owned(),
+            Locale::ZhCn => {
+                self.localizer
+                    .format_exact(self.localizer.locale(), &item.name_key, None)?
+            }
+        };
+        let base_name = if let Some(profile_id) = activation_profile_id {
+            let profile = item
+                .device_generation
+                .as_ref()
+                .and_then(|generation| {
+                    generation
+                        .activations
+                        .iter()
+                        .find(|profile| profile.id == profile_id)
+                })
+                .ok_or_else(|| MogaminatorNameError::UnknownActivation(profile_id.to_owned()))?;
+            let activation_name =
+                self.localizer
+                    .format_exact(self.localizer.locale(), &profile.name_key, None)?;
+            match self.localizer.locale() {
+                Locale::EnUs => format!("{base_name} of {activation_name}"),
+                Locale::ZhCn => format!("{activation_name}{base_name}"),
+            }
+        } else {
+            base_name
+        };
         let mut prefixes = String::new();
         let mut suffixes = String::new();
         for affix_id in affix_ids.iter().collect::<BTreeSet<_>>() {
@@ -167,6 +203,8 @@ pub enum MogaminatorNameError {
     UnknownItem(String),
     #[error("unknown affix definition {0}")]
     UnknownAffix(String),
+    #[error("unknown device activation {0}")]
+    UnknownActivation(String),
     #[error(transparent)]
     Localization(#[from] LocalizationError),
 }
@@ -339,15 +377,27 @@ mod tests {
                         "demo.affix.vampiric".to_owned(),
                         "demo.affix.vampiric".to_owned(),
                     ],
+                    None,
                 )
                 .expect("name should resolve"),
             "回声刃 吸血"
         );
         assert_eq!(
             names
-                .item_name(&content, "demo.item.relic-blade", &[])
+                .item_name(&content, "demo.item.relic-blade", &[], None)
                 .expect("artifact name should resolve"),
             "遗珍之刃"
+        );
+        assert_eq!(
+            names
+                .item_name(
+                    &content,
+                    "demo.item.resonance-rod",
+                    &[],
+                    Some("demo.device-activation.trap-sense"),
+                )
+                .expect("device activation should resolve"),
+            "陷阱感知魔棒"
         );
     }
 
@@ -369,15 +419,39 @@ mod tests {
                     &content,
                     "demo.item.echo-blade",
                     &["demo.affix.vampiric".to_owned()],
+                    None,
                 )
                 .expect("name should resolve"),
             "echo blade vampiric"
         );
         assert_eq!(
             names
-                .item_name(&content, "demo.item.relic-blade", &[])
+                .item_name(&content, "demo.item.relic-blade", &[], None)
                 .expect("artifact name should resolve"),
             "Relic Blade"
+        );
+        assert_eq!(
+            names
+                .item_name(&content, "demo.item.sixfold-provision", &[], None)
+                .expect("RFB matching name should resolve"),
+            "Mushroom of Restoring"
+        );
+        assert_eq!(
+            names
+                .item_name(&content, "demo.item.resonance-pellet", &[], None)
+                .expect("rewrite matching alias should resolve"),
+            "Resonance Shot"
+        );
+        assert_eq!(
+            names
+                .item_name(
+                    &content,
+                    "demo.item.resonance-rod",
+                    &[],
+                    Some("demo.device-activation.trap-sense"),
+                )
+                .expect("device activation should resolve"),
+            "Rod of trap sense"
         );
     }
 

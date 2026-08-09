@@ -33,6 +33,10 @@ pub(crate) struct SourceItemDefinition {
     appearance_name_key: Option<String>,
     description_key: String,
     glyph: String,
+    #[serde(default)]
+    generation_level: u16,
+    #[serde(default)]
+    mogaminator_rare: bool,
     weight_tenths_pound: u16,
     max_stack: u32,
     #[serde(default)]
@@ -209,6 +213,8 @@ impl SourceItemDefinition {
             appearance_name_key: self.appearance_name_key,
             description_key: self.description_key,
             glyph: self.glyph,
+            generation_level: self.generation_level,
+            mogaminator_rare: self.mogaminator_rare,
             weight_tenths_pound: self.weight_tenths_pound,
             max_stack: self.max_stack,
             base_value: self.base_value,

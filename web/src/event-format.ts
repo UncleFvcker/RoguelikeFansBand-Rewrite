@@ -678,6 +678,32 @@ export function createPresentationFormatter(
         });
       case "item-appraise-unavailable":
         return localization.format("message-item-appraise-unavailable");
+      case "item-destroy-success":
+        return localization.format("message-item-destroy-success", {
+          target: visibleItemNameForKind(event.args.target),
+          quantity: event.args.quantity ?? "?",
+          ruleLine: Number(event.args.ruleLine ?? 0),
+        });
+      case "item-destroy-unavailable":
+        return localization.format("message-item-destroy-unavailable", {
+          reason: itemDestroyReason(event.args.reason),
+          ruleLine: Number(event.args.ruleLine ?? 0),
+        });
+      case "item-inscribe-success":
+        return localization.format("message-item-inscribe-success", {
+          target: visibleItemNameForKind(event.args.target),
+          inscription: event.args.inscription ?? "",
+          ruleLine: Number(event.args.ruleLine ?? 0),
+        });
+      case "item-inscribe-cleared":
+        return localization.format("message-item-inscribe-cleared", {
+          target: visibleItemNameForKind(event.args.target),
+          ruleLine: Number(event.args.ruleLine ?? 0),
+        });
+      case "item-inscribe-unavailable":
+        return localization.format("message-item-inscribe-unavailable", {
+          reason: itemDestroyReason(event.args.reason),
+        });
       case "item-property-discovered":
         return localization.format("message-item-property-discovered", {
           target: visibleItemNameForKind(event.args.target),
@@ -1507,6 +1533,13 @@ export function createPresentationFormatter(
     return localization.hasMessage(localization.locale, key) || localization.hasMessage("en-US", key)
       ? localization.format(key)
       : localization.format("shop-transaction-reason-unknown");
+  }
+
+  function itemDestroyReason(reason: string | undefined): string {
+    const key = `item-destroy-reason-${reason ?? "unknown"}`;
+    return localization.hasMessage(localization.locale, key) || localization.hasMessage("en-US", key)
+      ? localization.format(key)
+      : localization.format("item-destroy-reason-unknown");
   }
 
   function visibleItemName(

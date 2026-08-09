@@ -4,6 +4,8 @@
   "id": "demo.ability-book.black-channels",
   "nameKey": "ability-book-demo-black-channels-name",
   "descriptionKey": "ability-book-demo-black-channels-description",
+  "realmId": "death",
+  "rank": 3,
   "abilityIds": [
     "demo.ability.death-berserk",
     "demo.ability.death-invoke-spirits",

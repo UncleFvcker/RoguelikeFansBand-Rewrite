@@ -122,6 +122,9 @@ pub struct AffixDefinition {
     pub id: String,
     pub name_key: String,
     pub description_key: String,
+    /// Original generation level used by Mogaminator's level predicate.
+    #[serde(default)]
+    pub generation_level: u16,
     #[serde(default)]
     pub modifiers: StatModifiers,
     /// Equipment-only combat, skill, and sensory bonuses.
@@ -685,6 +688,13 @@ pub struct ItemDefinition {
     pub appearance_name_key: Option<String>,
     pub description_key: String,
     pub glyph: String,
+    /// Original base-kind generation level used by authoritative item rules.
+    #[serde(default)]
+    pub generation_level: u16,
+    /// RFB's explicit `object_is_rare` kind classification. This is not an
+    /// allocation rarity or a generated quality.
+    #[serde(default)]
+    pub mogaminator_rare: bool,
     pub weight_tenths_pound: u16,
     pub max_stack: u32,
     /// Fully-known, plain-instance value used by authoritative shop pricing.

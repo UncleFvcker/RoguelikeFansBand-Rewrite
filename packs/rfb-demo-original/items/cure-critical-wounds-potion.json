@@ -15,6 +15,8 @@
   "useAction": {
     "effectProgramId": "demo.effect.cure-critical-wounds-potion"
   },
+  "generationLevel": 20,
+  "mogaminatorRare": false,
   "weightTenthsPound": 4,
   "appearanceNameKey": "item-demo-cure-critical-wounds-potion-appearance"
 }

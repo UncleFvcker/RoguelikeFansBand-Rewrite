@@ -6,6 +6,8 @@
   "appearanceNameKey": "item-demo-muse-tonic-appearance",
   "descriptionKey": "item-demo-muse-tonic-description",
   "glyph": "!",
+  "generationLevel": 80,
+  "mogaminatorRare": false,
   "weightTenthsPound": 4,
   "maxStack": 20,
   "baseValue": 10000,

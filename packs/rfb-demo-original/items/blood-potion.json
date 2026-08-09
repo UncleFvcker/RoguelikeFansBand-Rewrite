@@ -15,6 +15,8 @@
   "useAction": {
     "effectProgramId": "demo.effect.blood-potion"
   },
+  "generationLevel": 75,
+  "mogaminatorRare": false,
   "weightTenthsPound": 4,
   "appearanceNameKey": "item-demo-blood-potion-appearance"
 }

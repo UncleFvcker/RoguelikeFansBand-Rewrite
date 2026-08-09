@@ -310,3 +310,9 @@ crates/rfb-legacy-import/
 协议 1.119 在 `PlayerSaveDto` 增加 `confusingStrikeReady`；旧存档缺字段迁移为 false，true 原样回读，不重抽 RNG。save 容器保持 v1，因该准备态进入权威 hash，state hash Schema 升到 v53。完整边界见 [Contract v128](contract-v128-scroll-monster-confusion.md)。
 
 协议 1.121 下的 contract-v132 为 `PlayerSaveDto` 增加默认 0、零值省略的 `bonusSpellLearningCapacity`。旧存档缺字段迁移为 0；非零值要求当前 Class 明确 `usesSpellScrolls`，否则载入时拒绝。bonus 与既有 Class 学习容量公式相加并进入 state hash Schema v54；save 容器保持 v1。完整边界见 [Contract v132](contract-v132-scroll-spell.md)。
+
+协议 1.152 为全部物品位置的 save DTO 增加可选 `inscription`，并为每角色 `MogaminatorSaveDto` 增加必填 `leaveDestroyedItems`。铭文随拾取、丢弃、装备、Home、商店、怪物携带和楼层归档保持，且参与堆叠兼容性。两个字段进入 state hash Schema v73；save 容器仍为 v1，旧开发存档不兼容。
+
+协议 1.153 为 `MogaminatorSaveDto` 增加待确认物品、已拒绝实例和每角色悬赏唯一怪物集合；所有物品位置的 save DTO 增加可选 `originActorKindId`。尸体来源参与堆叠兼容性，防止不同怪物的尸体合并后丢失 `wanted` / `unique` / `human` 判定。以上字段进入 state hash Schema v74；save 容器仍为 v1，旧开发存档不兼容。
+
+contract-v216 不改变存档结构。每个角色继续在 `MogaminatorSaveDto` 中独立保存中文与英文规则源，界面语言只决定当前使用和编辑哪一份；恢复默认显式用对应内置模板覆盖该语言的角色副本。文本导入经既有配置命令校验成功后才成为权威状态，导出不修改存档。save 容器仍为 v1，state hash Schema 保持 v74。

@@ -6,6 +6,8 @@
   "appearanceNameKey": "item-demo-mortal-draught-appearance",
   "descriptionKey": "item-demo-mortal-draught-description",
   "glyph": "!",
+  "generationLevel": 55,
+  "mogaminatorRare": false,
   "weightTenthsPound": 4,
   "maxStack": 20,
   "baseValue": 0,

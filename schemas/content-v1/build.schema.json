@@ -89,6 +89,13 @@
     "descriptionKey": {
       "type": "string"
     },
+    "firstRealmId": {
+      "default": null,
+      "type": [
+        "string",
+        "null"
+      ]
+    },
     "formatVersion": {
       "format": "uint16",
       "maximum": 65535,
@@ -107,12 +114,33 @@
     "raceId": {
       "type": "string"
     },
+    "secondRealmId": {
+      "default": null,
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "specialityNameKey": {
+      "default": null,
+      "type": [
+        "string",
+        "null"
+      ]
+    },
     "startingItems": {
       "default": [],
       "items": {
         "$ref": "#/$defs/StartingItemDefinition"
       },
       "type": "array"
+    },
+    "subclassNameKey": {
+      "default": null,
+      "type": [
+        "string",
+        "null"
+      ]
     },
     "tags": {
       "items": {

@@ -6,6 +6,8 @@
   "appearanceNameKey": "item-demo-spell-scroll-appearance",
   "descriptionKey": "item-demo-spell-scroll-description",
   "glyph": "?",
+  "generationLevel": 10,
+  "mogaminatorRare": false,
   "weightTenthsPound": 5,
   "maxStack": 20,
   "baseValue": 1000,

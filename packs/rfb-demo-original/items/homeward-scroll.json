@@ -6,6 +6,8 @@
   "appearanceNameKey": "item-demo-homeward-scroll-appearance",
   "descriptionKey": "item-demo-homeward-scroll-description",
   "glyph": "?",
+  "generationLevel": 5,
+  "mogaminatorRare": false,
   "weightTenthsPound": 5,
   "maxStack": 20,
   "baseValue": 150,

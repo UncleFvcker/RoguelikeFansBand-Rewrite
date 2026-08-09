@@ -6,6 +6,8 @@
   "appearanceNameKey": "item-demo-might-tonic-appearance",
   "descriptionKey": "item-demo-might-tonic-description",
   "glyph": "!",
+  "generationLevel": 30,
+  "mogaminatorRare": false,
   "weightTenthsPound": 4,
   "maxStack": 20,
   "baseValue": 25000,

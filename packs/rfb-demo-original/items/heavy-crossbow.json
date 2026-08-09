@@ -20,5 +20,7 @@
     "launcher",
     "rfb-compatibility"
   ],
+  "generationLevel": 30,
+  "mogaminatorRare": false,
   "weightTenthsPound": 200
 }

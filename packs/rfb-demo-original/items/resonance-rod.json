@@ -6,6 +6,8 @@
   "appearanceNameKey": "item-demo-unfamiliar-rod-name",
   "descriptionKey": "item-demo-resonance-rod-description",
   "glyph": "-",
+  "generationLevel": 10,
+  "mogaminatorRare": false,
   "weightTenthsPound": 14,
   "maxStack": 1,
   "deviceGeneration": {

@@ -1,6 +1,6 @@
 # RFB CoreTransport 协议 v1
 
-状态：协议 1.151、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
+状态：协议 1.153、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
 
 ## 1. 适用边界
 
@@ -389,3 +389,9 @@ contract-v191 只增加内容层近战 effect 及对应运行时解释，不新�
 协议 1.149 增加单步 `TravelLocal { destination }`。Core 只根据当前已探索且可通行的地图知识选择下一步，避开已知陷阱，并复用普通 `Move` 的行动、怪物、时间、饥饿与光源结算；地图选点、循环定位楼梯、连续派发和中断由前端负责。普通地图目标遵循 RFB 原版生命周期，只在本次运行中供大写 `J` 恢复，不进入 save 或 state hash；Schema 保持 v71，基线升至 contract-v206。
 
 集成协议 1.151 同时保留怪物目标闪现、物品发现、本地旅行和墨家名器双语配置；配置进入 save v1 与 state hash Schema v72，contract 基线统一刷新为 v215。
+
+协议 1.152 增加 `DestroyItem` / `InscribeItem`，为地面、背包、装备、商店与 Home 物品投影增加可选 `inscription`，并为墨家名器配置增加 `leaveDestroyedItems`。人工销毁与 `!` 规则共用 Core 的唯一保护判定；神器、任务物品、`indestructible` 内容标签及 `!k` / `!*` 铭文均拒绝销毁。规则铭文和销毁事件携带原始规则行号。铭文及保留选项进入 save v1 与 state hash Schema v73；旧开发存档不兼容。
+
+协议 1.153 增加 `ResolveMogaminatorQuery` 和 `pendingQuery` 投影：`;` 规则按物品实例建立一次权威确认，拒绝结果随角色保存；物品离开脚下后待确认自动失效。`?` 规则在 Core 内按稳定实例 ID 优先消耗鉴定装置充能、其次消耗鉴定卷轴，成功后仅重新匹配一次。尸体来源、悬赏目标、延期谓词所需角色/物品/法术书数据进入 save v1 与 state hash Schema v74；内容包升级为 1.212.0。
+
+contract-v216 完成墨家名器双语默认模板：英文模板严格采用 RFB `master:lib/pref/pickpref.prf`，中文模板保持同序同动作并使用权威中文匹配名。当前界面语言选择对应的每角色规则源；导入只替换当前语言的文本，不猜测语言，导出亦只导出当前文本。以上行为复用既有 `ConfigureMogaminator`、`defaultSource` 和双语 source 投影，没有新增 DTO；协议保持 1.153，Schema 保持 v74。

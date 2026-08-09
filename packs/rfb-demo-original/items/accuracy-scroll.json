@@ -6,6 +6,8 @@
   "appearanceNameKey": "item-demo-accuracy-scroll-appearance",
   "descriptionKey": "item-demo-accuracy-scroll-description",
   "glyph": "?",
+  "generationLevel": 15,
+  "mogaminatorRare": false,
   "weightTenthsPound": 5,
   "maxStack": 20,
   "baseValue": 250,

@@ -24,5 +24,7 @@
     "tool",
     "weapon"
   ],
+  "generationLevel": 5,
+  "mogaminatorRare": false,
   "weightTenthsPound": 150
 }

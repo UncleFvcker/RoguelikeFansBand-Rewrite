@@ -5,6 +5,8 @@
   "nameKey": "item-demo-wooden-torch-name",
   "descriptionKey": "item-demo-wooden-torch-description",
   "glyph": "~",
+  "generationLevel": 1,
+  "mogaminatorRare": false,
   "weightTenthsPound": 30,
   "maxStack": 1,
   "baseValue": 1,

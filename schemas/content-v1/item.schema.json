@@ -752,6 +752,13 @@
       ],
       "default": null
     },
+    "generationLevel": {
+      "default": 0,
+      "format": "uint16",
+      "maximum": 65535,
+      "minimum": 0,
+      "type": "integer"
+    },
     "glyph": {
       "type": "string"
     },
@@ -807,6 +814,10 @@
         "strength": 0,
         "wisdom": 0
       }
+    },
+    "mogaminatorRare": {
+      "default": false,
+      "type": "boolean"
     },
     "nameKey": {
       "type": "string"

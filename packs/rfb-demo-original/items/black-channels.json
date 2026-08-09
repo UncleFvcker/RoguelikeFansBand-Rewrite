@@ -5,6 +5,8 @@
   "nameKey": "item-demo-black-channels-name",
   "descriptionKey": "item-demo-black-channels-description",
   "glyph": "?",
+  "generationLevel": 45,
+  "mogaminatorRare": false,
   "weightTenthsPound": 15,
   "maxStack": 1,
   "baseValue": 15000,

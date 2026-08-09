@@ -39,7 +39,7 @@ import {
   createItemCurseSeverityName,
   formatTenthsPoundArgument,
 } from "./inventory-panel";
-import type { GameCommand, GameEventDto, GameSnapshot } from "./protocol";
+import type { GameCommand, GameEventDto, GameSnapshot, MogaminatorDto } from "./protocol";
 import { TauriNativeTransport } from "./tauri-native-transport";
 import { installRendererProfileHook } from "./render-profile";
 import { createSessionShellDom, SessionShell } from "./session-shell";
@@ -128,6 +128,7 @@ const addLocalizedMessage = (
 const addGameEvent = (event: GameEventDto) => messagePanel.addEvent(event);
 let dispatch: (command: GameCommand) => Promise<void> = async () => {};
 let mogaminatorEditor: MogaminatorEditor | undefined;
+let promptedMogaminatorItemId: string | undefined;
 const objectListPanel = new ObjectListPanel({
   document,
   window,
@@ -192,6 +193,7 @@ const gameSession = new GameSession({
     homePanel.render(update);
     taskServicePanel.render(update);
     mogaminatorEditor?.render(update.mogaminator);
+    promptMogaminatorQuery(update.mogaminator);
     for (const event of update.events) addGameEvent(event);
     journeyGuidance.observeCommand(command, previous, update);
     journeyResult.renderUpdate(update);
@@ -206,6 +208,29 @@ const gameSession = new GameSession({
   showError,
 });
 dispatch = (command: GameCommand) => gameSession.dispatch(command);
+
+function promptMogaminatorQuery(mogaminator: MogaminatorDto): void {
+  const pending = mogaminator.pendingQuery;
+  if (!pending) {
+    promptedMogaminatorItemId = undefined;
+    return;
+  }
+  if (promptedMogaminatorItemId === pending.itemId) return;
+  promptedMogaminatorItemId = pending.itemId;
+  const pickUp = window.confirm(
+    localization.format("mogaminator-query-pick-up", {
+      item: contentName(pending.itemKindId),
+    }),
+  );
+  queueMicrotask(() => {
+    void dispatch({
+      type: "resolve-mogaminator-query",
+      itemId: pending.itemId,
+      pickUp,
+    });
+  });
+}
+
 mogaminatorEditor = new MogaminatorEditor({
   document,
   window,
@@ -540,6 +565,8 @@ function applyLoadedSnapshot(snapshot: GameSnapshot): void {
   shopPanel.render(snapshot);
   homePanel.render(snapshot);
   taskServicePanel.render(snapshot);
+  mogaminatorEditor?.render(snapshot.mogaminator);
+  promptMogaminatorQuery(snapshot.mogaminator);
   journeyGuidance.render(snapshot);
   sessionShell.showGame(snapshot);
   journeyResult.renderSnapshot(snapshot);
@@ -602,6 +629,7 @@ async function initializeGameView(snapshot: GameSnapshot): Promise<void> {
   appState.mode = "playing";
   statusPanel.render(snapshot);
   mogaminatorEditor?.render(snapshot.mogaminator);
+  promptMogaminatorQuery(snapshot.mogaminator);
   appState.bodySlots = snapshot.bodySlots ?? [];
   inventoryPanel.render(snapshot.inventory, snapshot.equipment);
   shopPanel.render(snapshot);

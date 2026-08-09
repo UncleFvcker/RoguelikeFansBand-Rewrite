@@ -5,6 +5,8 @@
   "nameKey": "item-demo-stench-of-death-name",
   "descriptionKey": "item-demo-stench-of-death-description",
   "glyph": "?",
+  "generationLevel": 10,
+  "mogaminatorRare": false,
   "weightTenthsPound": 30,
   "maxStack": 1,
   "baseValue": 100,

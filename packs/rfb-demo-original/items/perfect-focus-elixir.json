@@ -6,6 +6,8 @@
   "appearanceNameKey": "item-demo-perfect-focus-elixir-appearance",
   "descriptionKey": "item-demo-perfect-focus-elixir-description",
   "glyph": "!",
+  "generationLevel": 25,
+  "mogaminatorRare": false,
   "weightTenthsPound": 4,
   "maxStack": 20,
   "baseValue": 1000,

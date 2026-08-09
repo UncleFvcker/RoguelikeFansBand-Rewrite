@@ -13,11 +13,15 @@ interface MogaminatorEditorDom {
   readonly dialog: HTMLDialogElement;
   readonly close: HTMLButtonElement;
   readonly enabled: HTMLInputElement;
+  readonly leaveDestroyed: HTMLInputElement;
   readonly locale: HTMLElement;
   readonly source: HTMLTextAreaElement;
   readonly explanation: HTMLElement;
   readonly diagnostics: HTMLOListElement;
   readonly matches: HTMLElement;
+  readonly importFile: HTMLInputElement;
+  readonly import: HTMLButtonElement;
+  readonly export: HTMLButtonElement;
   readonly reset: HTMLButtonElement;
   readonly apply: HTMLButtonElement;
 }
@@ -51,6 +55,9 @@ export class MogaminatorEditor {
     if (this.#installed) return;
     this.#installed = true;
     this.#dom.close.addEventListener("click", this.#close);
+    this.#dom.import.addEventListener("click", this.#openImport);
+    this.#dom.importFile.addEventListener("change", this.#import);
+    this.#dom.export.addEventListener("click", this.#export);
     this.#dom.reset.addEventListener("click", this.#reset);
     this.#dom.apply.addEventListener("click", this.#apply);
     this.#dom.source.addEventListener("input", this.#sourceChanged);
@@ -62,6 +69,9 @@ export class MogaminatorEditor {
     if (!this.#installed) return;
     this.#installed = false;
     this.#dom.close.removeEventListener("click", this.#close);
+    this.#dom.import.removeEventListener("click", this.#openImport);
+    this.#dom.importFile.removeEventListener("change", this.#import);
+    this.#dom.export.removeEventListener("click", this.#export);
     this.#dom.reset.removeEventListener("click", this.#reset);
     this.#dom.apply.removeEventListener("click", this.#apply);
     this.#dom.source.removeEventListener("input", this.#sourceChanged);
@@ -105,6 +115,35 @@ export class MogaminatorEditor {
 
   readonly #close = (): void => this.close();
 
+  readonly #openImport = (): void => this.#dom.importFile.click();
+
+  readonly #import = (): void => {
+    const file = this.#dom.importFile.files?.[0];
+    if (!file) return;
+    void file
+      .text()
+      .then((source) => {
+        this.#dom.source.value = source;
+        this.#sourceChanged();
+        this.#dom.source.focus();
+      })
+      .catch(() => this.#window.alert(this.#localization.format("mogaminator-import-error")))
+      .finally(() => {
+        this.#dom.importFile.value = "";
+      });
+  };
+
+  readonly #export = (): void => {
+    const url = URL.createObjectURL(
+      new Blob([this.#dom.source.value], { type: "text/plain;charset=utf-8" }),
+    );
+    const link = this.#dom.source.ownerDocument.createElement("a");
+    link.href = url;
+    link.download = `mogaminator-${this.#localization.locale}.prf`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   readonly #reset = (): void => {
     if (!this.#status) return;
     this.#dom.source.value = this.#status.defaultSource;
@@ -119,6 +158,7 @@ export class MogaminatorEditor {
     void this.#dispatch({
       type: "configure-mogaminator",
       enabled: this.#dom.enabled.checked,
+      leaveDestroyedItems: this.#dom.leaveDestroyed.checked,
       locale: this.#localization.locale,
       source: this.#dom.source.value,
     });
@@ -148,6 +188,7 @@ export class MogaminatorEditor {
   #loadAuthoritativeSource(): void {
     if (!this.#status) return;
     this.#dom.enabled.checked = this.#status.enabled;
+    this.#dom.leaveDestroyed.checked = this.#status.leaveDestroyedItems;
     this.#dom.source.value = this.#status.source;
     this.#dirty = false;
     this.#renderMetadata();
@@ -213,11 +254,15 @@ function createDom(document: Document): MogaminatorEditorDom {
     dialog: element(document, "mogaminator-dialog"),
     close: element(document, "mogaminator-close"),
     enabled: element(document, "mogaminator-enabled"),
+    leaveDestroyed: element(document, "mogaminator-leave-destroyed"),
     locale: element(document, "mogaminator-locale"),
     source: element(document, "mogaminator-source"),
     explanation: element(document, "mogaminator-line-explanation"),
     diagnostics: element(document, "mogaminator-diagnostics"),
     matches: element(document, "mogaminator-match-summary"),
+    importFile: element(document, "mogaminator-import-file"),
+    import: element(document, "mogaminator-import"),
+    export: element(document, "mogaminator-export"),
     reset: element(document, "mogaminator-reset"),
     apply: element(document, "mogaminator-apply"),
   };

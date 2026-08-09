@@ -30,5 +30,6 @@
   "startingItems": [
     { "itemKindId": "demo.item.echo-blade", "quantity": 1, "equipped": true }
   ],
+  "favoriteWeaponTags": ["weapon"],
   "tags": ["martial", "prototype", "technique"]
 }

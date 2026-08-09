@@ -6,6 +6,8 @@
   "appearanceNameKey": "item-demo-prismatic-elixir-appearance",
   "descriptionKey": "item-demo-prismatic-elixir-description",
   "glyph": "!",
+  "generationLevel": 20,
+  "mogaminatorRare": false,
   "weightTenthsPound": 4,
   "maxStack": 20,
   "baseValue": 250,

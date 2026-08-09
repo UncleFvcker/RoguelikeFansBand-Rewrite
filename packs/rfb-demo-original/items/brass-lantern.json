@@ -5,6 +5,8 @@
   "nameKey": "item-demo-brass-lantern-name",
   "descriptionKey": "item-demo-brass-lantern-description",
   "glyph": "~",
+  "generationLevel": 3,
+  "mogaminatorRare": false,
   "weightTenthsPound": 50,
   "maxStack": 1,
   "baseValue": 30,

@@ -373,10 +373,16 @@
                   <span data-l10n-id="inventory-drop-quantity-label"></span>
                   <input id="inventory-drop-quantity" type="number" min="1" step="1" inputmode="numeric" />
                 </label>
+                <label class="inventory-inscription-control" for="inventory-inscription">
+                  <span data-l10n-id="inventory-inscription-label"></span>
+                  <input id="inventory-inscription" type="text" maxlength="120" />
+                </label>
                 <button id="inventory-use" type="button" data-l10n-id="action-inventory-use"></button>
                 <button id="inventory-appraise" type="button" data-l10n-id="action-inventory-appraise"></button>
                 <button id="inventory-equip" type="button" data-l10n-id="action-inventory-equip"></button>
                 <button id="inventory-drop" type="button" data-l10n-id="action-inventory-drop"></button>
+                <button id="inventory-inscribe" type="button" data-l10n-id="action-inventory-inscribe"></button>
+                <button id="inventory-destroy" type="button" data-l10n-id="action-inventory-destroy"></button>
               </div>
             </div>
             <ul id="inventory-list" class="inventory-list" aria-live="polite"></ul>
@@ -449,8 +455,15 @@
         </header>
         <div class="mogaminator-toolbar">
           <label><input id="mogaminator-enabled" type="checkbox" /> <span data-l10n-id="mogaminator-enabled"></span></label>
+          <label><input id="mogaminator-leave-destroyed" type="checkbox" /> <span data-l10n-id="mogaminator-leave-destroyed"></span></label>
           <p id="mogaminator-locale"></p>
         </div>
+        <details class="mogaminator-help">
+          <summary data-l10n-id="mogaminator-help-title"></summary>
+          <p data-l10n-id="mogaminator-help-order"></p>
+          <p data-l10n-id="mogaminator-help-actions"></p>
+          <p data-l10n-id="mogaminator-help-language"></p>
+        </details>
         <label class="mogaminator-source-label" for="mogaminator-source" data-l10n-id="mogaminator-source-label"></label>
         <textarea id="mogaminator-source" class="mogaminator-source" spellcheck="false" wrap="off"></textarea>
         <section class="mogaminator-feedback" aria-live="polite">
@@ -459,6 +472,9 @@
           <p id="mogaminator-match-summary"></p>
         </section>
         <footer class="mogaminator-actions">
+          <input id="mogaminator-import-file" type="file" accept=".prf,.txt,text/plain" hidden />
+          <button id="mogaminator-import" class="quiet-button" type="button" data-l10n-id="mogaminator-import"></button>
+          <button id="mogaminator-export" class="quiet-button" type="button" data-l10n-id="mogaminator-export"></button>
           <button id="mogaminator-reset" class="quiet-button" type="button" data-l10n-id="mogaminator-reset"></button>
           <button id="mogaminator-apply" class="primary-button" type="button" data-l10n-id="mogaminator-apply"></button>
         </footer>

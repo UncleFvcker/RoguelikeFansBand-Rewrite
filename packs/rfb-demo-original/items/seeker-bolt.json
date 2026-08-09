@@ -19,5 +19,7 @@
     "ammunition",
     "rfb-compatibility"
   ],
+  "generationLevel": 80,
+  "mogaminatorRare": true,
   "weightTenthsPound": 3
 }

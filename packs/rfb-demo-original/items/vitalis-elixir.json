@@ -6,6 +6,8 @@
   "appearanceNameKey": "item-demo-vitalis-elixir-appearance",
   "descriptionKey": "item-demo-vitalis-elixir-description",
   "glyph": "!",
+  "generationLevel": 100,
+  "mogaminatorRare": false,
   "weightTenthsPound": 4,
   "maxStack": 20,
   "baseValue": 5000,

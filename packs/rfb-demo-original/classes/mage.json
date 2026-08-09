@@ -47,5 +47,7 @@
     { "itemKindId": "demo.item.necronomicon", "quantity": 1 },
     { "itemKindId": "demo.item.stillwater-notes", "quantity": 1 }
   ],
+  "favoriteWeaponTags": ["weapon", "shooter"],
+  "ickyEquipmentSlots": ["gloves"],
   "tags": ["book-caster", "prototype"]
 }

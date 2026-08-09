@@ -27,6 +27,23 @@
     "nameKey": {
       "type": "string"
     },
+    "rank": {
+      "description": "One-based RFB book rank within its realm.",
+      "format": "uint8",
+      "maximum": 255,
+      "minimum": 0,
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "realmId": {
+      "description": "Stable spell realm identity used by character rules and book filters.",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
     "tags": {
       "items": {
         "type": "string"

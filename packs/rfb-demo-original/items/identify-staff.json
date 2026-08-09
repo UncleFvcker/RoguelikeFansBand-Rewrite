@@ -6,6 +6,8 @@
   "appearanceNameKey": "item-demo-unfamiliar-staff-name",
   "descriptionKey": "item-demo-identify-staff-description",
   "glyph": "_",
+  "generationLevel": 5,
+  "mogaminatorRare": false,
   "weightTenthsPound": 50,
   "maxStack": 1,
   "baseValue": 1500,

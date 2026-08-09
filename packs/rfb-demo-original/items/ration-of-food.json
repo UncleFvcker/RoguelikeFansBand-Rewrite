@@ -5,6 +5,8 @@
   "nameKey": "item-demo-ration-of-food-name",
   "descriptionKey": "item-demo-ration-of-food-description",
   "glyph": ",",
+  "generationLevel": 0,
+  "mogaminatorRare": false,
   "weightTenthsPound": 10,
   "maxStack": 100,
   "baseValue": 3,

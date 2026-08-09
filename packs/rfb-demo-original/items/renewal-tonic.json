@@ -6,6 +6,8 @@
   "appearanceNameKey": "item-demo-renewal-tonic-appearance",
   "descriptionKey": "item-demo-renewal-tonic-description",
   "glyph": "!",
+  "generationLevel": 20,
+  "mogaminatorRare": false,
   "weightTenthsPound": 4,
   "maxStack": 20,
   "baseValue": 400,

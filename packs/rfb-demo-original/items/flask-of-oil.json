@@ -5,6 +5,8 @@
   "nameKey": "item-demo-flask-of-oil-name",
   "descriptionKey": "item-demo-flask-of-oil-description",
   "glyph": "!",
+  "generationLevel": 1,
+  "mogaminatorRare": false,
   "weightTenthsPound": 10,
   "maxStack": 100,
   "baseValue": 3,

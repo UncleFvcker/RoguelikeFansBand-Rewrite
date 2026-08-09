@@ -6,6 +6,8 @@
   "appearanceNameKey": "item-demo-verdant-ring-scroll-appearance",
   "descriptionKey": "item-demo-verdant-ring-scroll-description",
   "glyph": "?",
+  "generationLevel": 50,
+  "mogaminatorRare": false,
   "weightTenthsPound": 5,
   "maxStack": 20,
   "baseValue": 1000,

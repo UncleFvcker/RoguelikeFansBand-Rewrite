@@ -5,6 +5,8 @@
   "nameKey": "item-demo-spear-name",
   "descriptionKey": "item-demo-spear-description",
   "glyph": "/",
+  "generationLevel": 5,
+  "mogaminatorRare": false,
   "weightTenthsPound": 50,
   "maxStack": 1,
   "baseValue": 36,

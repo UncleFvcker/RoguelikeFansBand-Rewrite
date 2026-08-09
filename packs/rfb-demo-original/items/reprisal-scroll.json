@@ -6,6 +6,8 @@
   "appearanceNameKey": "item-demo-reprisal-scroll-appearance",
   "descriptionKey": "item-demo-reprisal-scroll-description",
   "glyph": "?",
+  "generationLevel": 80,
+  "mogaminatorRare": false,
   "weightTenthsPound": 5,
   "maxStack": 20,
   "baseValue": 10000,

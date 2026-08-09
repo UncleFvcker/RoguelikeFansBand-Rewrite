@@ -6,6 +6,8 @@
   "appearanceNameKey": "item-demo-severance-scroll-appearance",
   "descriptionKey": "item-demo-severance-scroll-description",
   "glyph": "?",
+  "generationLevel": 50,
+  "mogaminatorRare": false,
   "weightTenthsPound": 5,
   "maxStack": 20,
   "baseValue": 1000,

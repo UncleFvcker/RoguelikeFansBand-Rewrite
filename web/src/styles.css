@@ -845,14 +845,16 @@ h1 {
   gap: 0.45rem;
 }
 
-.inventory-drop-quantity {
+.inventory-drop-quantity,
+.inventory-inscription-control {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
   white-space: nowrap;
 }
 
-.inventory-drop-quantity input {
+.inventory-drop-quantity input,
+.inventory-inscription-control input {
   width: 3.7rem;
   padding: 0.3rem 0.4rem;
   border: 1px solid rgb(103 137 168 / 28%);
@@ -862,7 +864,12 @@ h1 {
   font: inherit;
 }
 
-.inventory-drop-quantity input:disabled {
+.inventory-inscription-control input {
+  width: 8rem;
+}
+
+.inventory-drop-quantity input:disabled,
+.inventory-inscription-control input:disabled {
   opacity: 0.45;
 }
 
@@ -2026,6 +2033,15 @@ kbd {
   padding: 0 1.1rem 0.5rem;
 }
 
+.mogaminator-help {
+  margin: 0 1.1rem 0.75rem;
+  color: var(--ui-muted);
+}
+
+.mogaminator-help p {
+  margin: 0.35rem 0 0;
+}
+
 .mogaminator-source {
   display: block;
   width: calc(100% - 2.2rem);
@@ -2054,6 +2070,7 @@ kbd {
 
 .mogaminator-actions {
   justify-content: flex-end;
+  flex-wrap: wrap;
 }
 
 .object-list-toolbar {

@@ -55,6 +55,8 @@ fn pickup_collects_all_gold_before_item_and_gold_has_no_weight() {
         id: "test.gold-pickup.item".to_owned(),
         kind_id: "demo.item.echo-charm".to_owned(),
         quantity: 1,
+        inscription: None,
+        origin_actor_kind_id: None,
         quality: ItemQualityDto::Ordinary,
         affix_ids: Vec::new(),
         rolled_affixes: Vec::new(),

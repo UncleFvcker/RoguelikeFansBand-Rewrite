@@ -673,6 +673,12 @@ pub struct AbilityBookDefinition {
     pub id: String,
     pub name_key: String,
     pub description_key: String,
+    /// Stable spell realm identity used by character rules and book filters.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub realm_id: Option<String>,
+    /// One-based RFB book rank within its realm.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rank: Option<u8>,
     pub ability_ids: Vec<String>,
     pub tags: Vec<String>,
 }

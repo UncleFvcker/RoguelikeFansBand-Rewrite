@@ -669,6 +669,8 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
             id: item.id.clone(),
             kind_id: item.kind_id.clone(),
             quantity: item.quantity,
+            inscription: None,
+            origin_actor_kind_id: None,
             quality: item.quality,
             affix_ids: item.affix_ids.clone(),
             rolled_affixes: item.rolled_affixes.clone(),

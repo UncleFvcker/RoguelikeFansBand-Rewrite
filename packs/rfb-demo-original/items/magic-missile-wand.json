@@ -6,6 +6,8 @@
   "appearanceNameKey": "item-demo-unfamiliar-wand-name",
   "descriptionKey": "item-demo-magic-missile-wand-description",
   "glyph": "-",
+  "generationLevel": 1,
+  "mogaminatorRare": false,
   "weightTenthsPound": 2,
   "maxStack": 1,
   "baseValue": 850,

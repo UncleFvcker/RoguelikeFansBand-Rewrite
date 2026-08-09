@@ -22,5 +22,6 @@
     { "itemKindId": "demo.item.short-bow", "quantity": 1, "equipped": true },
     { "itemKindId": "demo.item.arrow", "quantity": 22 }
   ],
+  "favoriteWeaponTags": ["weapon", "shooter"],
   "tags": ["martial", "rfb-compatibility"]
 }

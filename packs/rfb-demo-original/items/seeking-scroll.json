@@ -6,6 +6,8 @@
   "appearanceNameKey": "item-demo-seeking-scroll-appearance",
   "descriptionKey": "item-demo-seeking-scroll-description",
   "glyph": "?",
+  "generationLevel": 0,
+  "mogaminatorRare": false,
   "weightTenthsPound": 5,
   "maxStack": 20,
   "baseValue": 8,

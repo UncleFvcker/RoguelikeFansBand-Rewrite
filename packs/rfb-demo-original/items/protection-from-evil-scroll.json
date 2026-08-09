@@ -6,6 +6,8 @@
   "appearanceNameKey": "item-demo-protection-from-evil-scroll-appearance",
   "descriptionKey": "item-demo-protection-from-evil-scroll-description",
   "glyph": "?",
+  "generationLevel": 30,
+  "mogaminatorRare": false,
   "weightTenthsPound": 5,
   "maxStack": 20,
   "baseValue": 250,
