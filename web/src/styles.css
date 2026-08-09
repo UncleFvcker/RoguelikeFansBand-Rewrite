@@ -2002,6 +2002,60 @@ kbd {
   width: min(48rem, calc(100vw - 2rem));
 }
 
+.mogaminator-dialog {
+  width: min(55rem, calc(100vw - 2rem));
+}
+
+.mogaminator-toolbar,
+.mogaminator-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 1.1rem;
+}
+
+.mogaminator-toolbar p,
+.mogaminator-feedback p {
+  margin: 0;
+  color: var(--ui-muted);
+}
+
+.mogaminator-source-label {
+  display: block;
+  padding: 0 1.1rem 0.5rem;
+}
+
+.mogaminator-source {
+  display: block;
+  width: calc(100% - 2.2rem);
+  min-height: min(46vh, 26rem);
+  margin: 0 1.1rem;
+  border: 1px solid var(--ui-line);
+  border-radius: 0.35rem;
+  padding: 0.75rem;
+  resize: vertical;
+  color: var(--ui-text);
+  background: var(--ui-bg);
+  font: 0.875rem/1.55 "Cascadia Mono", Consolas, monospace;
+  tab-size: 2;
+}
+
+.mogaminator-feedback {
+  min-height: 4.5rem;
+  padding: 0.65rem 1.1rem 0;
+}
+
+.mogaminator-feedback ol {
+  margin: 0.5rem 0 0;
+  padding-left: 1.4rem;
+  color: #d98073;
+}
+
+.mogaminator-actions {
+  justify-content: flex-end;
+}
+
 .object-list-toolbar {
   display: flex;
   align-items: center;

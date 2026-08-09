@@ -46,6 +46,7 @@ export class SettingsPanel {
   readonly #storage: Storage;
   readonly #renderTargeting: () => void;
   readonly #renderLocaleDependentUi: () => void;
+  readonly #onLocaleChange: (locale: SupportedLocale) => void | Promise<void>;
   readonly #refreshBusyControls: () => void;
   readonly #announce: (
     key: MessageKey,
@@ -67,6 +68,7 @@ export class SettingsPanel {
     storage: Storage;
     renderTargeting: () => void;
     renderLocaleDependentUi: () => void;
+    onLocaleChange: (locale: SupportedLocale) => void | Promise<void>;
     refreshBusyControls: () => void;
     announce: (
       key: MessageKey,
@@ -82,6 +84,7 @@ export class SettingsPanel {
     this.#storage = options.storage;
     this.#renderTargeting = options.renderTargeting;
     this.#renderLocaleDependentUi = options.renderLocaleDependentUi;
+    this.#onLocaleChange = options.onLocaleChange;
     this.#refreshBusyControls = options.refreshBusyControls;
     this.#announce = options.announce;
     this.#logError = options.logError ?? console.error;
@@ -189,6 +192,7 @@ export class SettingsPanel {
     this.#renderer.setCanvasLabel(this.#localization.format("map-aria-label"));
     this.#renderInputHelp();
     this.#renderLocaleDependentUi();
+    void this.#onLocaleChange(locale);
   };
 
   async #changeTileset(): Promise<void> {

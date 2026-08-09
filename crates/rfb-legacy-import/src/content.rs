@@ -26,6 +26,7 @@ const R_INFO_SOURCE: &str = "lib/edit/r_info.txt";
 const K_INFO_SOURCE: &str = "lib/edit/k_info.txt";
 const E_INFO_SOURCE: &str = "lib/edit/e_info.txt";
 const A_INFO_SOURCE: &str = "lib/edit/a_info.txt";
+const K_NAME_ZH_SOURCE: &str = "src/kind_name_zh.inc";
 const B_INFO_SOURCE: &str = "lib/edit/b_info.txt";
 const M_INFO_SOURCE: &str = "lib/edit/m_info.txt";
 const S_INFO_SOURCE: &str = "lib/edit/s_info.txt";
@@ -10385,6 +10386,172 @@ pub fn audit_demo_items(
     )
 }
 
+fn selected_demo_items<'a>(
+    selection: &'a DemoItemSelection,
+    entries: &'a [LegacyItemEntry],
+) -> Result<Vec<(&'a DemoItemSelectionEntry, &'a LegacyItemEntry)>, LegacyImportError> {
+    if selection.schema_version != 1 || selection.items.is_empty() {
+        return Err(LegacyImportError::InvalidDemoItemSelection(
+            "selection must use schemaVersion 1 and contain at least one item".to_owned(),
+        ));
+    }
+    let by_index = entries
+        .iter()
+        .filter(|entry| {
+            !entry.name.is_empty() && entry.name != "something" && entry.glyph.is_some()
+        })
+        .map(|entry| (entry.index, entry))
+        .collect::<BTreeMap<_, _>>();
+    let mut selected = BTreeSet::new();
+    selection
+        .items
+        .iter()
+        .map(|selected_entry| {
+            if !selected.insert(selected_entry.id.clone()) {
+                return Err(LegacyImportError::InvalidDemoItemSelection(format!(
+                    "duplicate item {}",
+                    selected_entry.id
+                )));
+            }
+            let entry = by_index.get(&selected_entry.source_index).ok_or_else(|| {
+                LegacyImportError::InvalidDemoItemSelection(format!(
+                    "unknown legacy source index {}",
+                    selected_entry.source_index
+                ))
+            })?;
+            let actual_id = kebab(&entry.name);
+            let expected_source_id = selected_entry.expected_source_id();
+            if actual_id != expected_source_id {
+                return Err(LegacyImportError::InvalidDemoItemSelection(format!(
+                    "source index {} is {actual_id}, expected {expected_source_id}",
+                    selected_entry.source_index
+                )));
+            }
+            Ok((selected_entry, *entry))
+        })
+        .collect()
+}
+
+fn parse_chinese_name_table(
+    text: &str,
+    source: &'static str,
+) -> Result<Vec<Option<String>>, LegacyImportError> {
+    let mut names = Vec::new();
+    let mut in_array = false;
+    let mut closed = false;
+    for (offset, line) in text.lines().enumerate() {
+        let line_number = offset + 1;
+        let line = line.trim();
+        if !in_array {
+            in_array = line == "{";
+            continue;
+        }
+        if line == "};" {
+            closed = true;
+            break;
+        }
+        let value = line.strip_suffix(',').unwrap_or(line);
+        if value == "NULL" {
+            names.push(None);
+        } else if value.starts_with('"') {
+            names.push(Some(serde_json::from_str(value).map_err(|error| {
+                content_parse_error(source, line_number, "name", value, error.to_string())
+            })?));
+        }
+    }
+    if !closed || names.is_empty() {
+        return Err(LegacyImportError::InvalidDemoItemAudit(format!(
+            "{source} does not contain a complete Chinese name array"
+        )));
+    }
+    Ok(names)
+}
+
+fn singular_chinese_kind_name(template: &str) -> String {
+    let template = template.trim();
+    let name = template
+        .strip_prefix("& ")
+        .and_then(|name| name.split_once('~').map(|(_, name)| name))
+        .unwrap_or(template);
+    name.replace('~', "").trim().to_owned()
+}
+
+fn singular_english_kind_name(template: &str) -> String {
+    template
+        .trim()
+        .strip_prefix("& ")
+        .unwrap_or(template.trim())
+        .replace('~', "")
+}
+
+fn ftl_message_value<'a>(text: &'a str, key: &str) -> Result<&'a str, LegacyImportError> {
+    let prefix = format!("{key} =");
+    let mut matches = text
+        .lines()
+        .filter_map(|line| line.strip_prefix(&prefix).map(str::trim));
+    let value = matches.next().ok_or_else(|| {
+        LegacyImportError::InvalidDemoItemAudit(format!("missing Chinese message {key}"))
+    })?;
+    if matches.next().is_some() {
+        return Err(LegacyImportError::InvalidDemoItemAudit(format!(
+            "duplicate Chinese message {key}"
+        )));
+    }
+    Ok(value)
+}
+
+/// Verifies that formal demo items reuse the authoritative RFB master English
+/// and Chinese names as their locale-specific Mogaminator matching sources.
+pub fn audit_demo_item_names(
+    source: &Path,
+    selection_path: &Path,
+    en_content_path: &Path,
+    zh_content_path: &Path,
+) -> Result<usize, LegacyImportError> {
+    let source_commit = resolve_legacy_content_commit(source)?;
+    let entries = parse_k_info(&read_legacy_object_at(
+        source,
+        &source_commit,
+        K_INFO_SOURCE,
+    )?)?;
+    let chinese_names = parse_chinese_name_table(
+        &read_legacy_object_at(source, &source_commit, K_NAME_ZH_SOURCE)?,
+        K_NAME_ZH_SOURCE,
+    )?;
+    let selection: DemoItemSelection = serde_json::from_slice(&fs::read(selection_path)?)?;
+    let selected = selected_demo_items(&selection, &entries)?;
+    let en_content = fs::read_to_string(en_content_path)?;
+    let zh_content = fs::read_to_string(zh_content_path)?;
+    for (selected_entry, item) in &selected {
+        let expected_en = singular_english_kind_name(&item.name);
+        let expected_zh = chinese_names
+            .get(selected_entry.source_index as usize)
+            .and_then(Option::as_deref)
+            .map(singular_chinese_kind_name)
+            .filter(|name| !name.is_empty())
+            .ok_or_else(|| {
+                LegacyImportError::InvalidDemoItemAudit(format!(
+                    "source index {} ({}) has no authoritative Chinese name",
+                    selected_entry.source_index, selected_entry.id
+                ))
+            })?;
+        let key = format!("item-demo-{}-name", selected_entry.id);
+        let actual_en = ftl_message_value(&en_content, &key)?;
+        if actual_en != expected_en {
+            return Err(LegacyImportError::InvalidDemoItemAudit(format!(
+                "en-US/{key} is {actual_en:?}, expected {expected_en:?} from {K_INFO_SOURCE}"
+            )));
+        }
+        let actual_zh = ftl_message_value(&zh_content, &key)?;
+        if actual_zh != expected_zh {
+            return Err(LegacyImportError::InvalidDemoItemAudit(format!(
+                "zh-CN/{key} is {actual_zh:?}, expected {expected_zh:?} from {K_NAME_ZH_SOURCE}"
+            )));
+        }
+    }
+    Ok(selected.len())
+}
+
 pub fn sync_demo_items(
     source: &Path,
     selection_path: &Path,
@@ -10399,47 +10566,15 @@ pub fn sync_demo_items(
         ));
     }
     let selection: DemoItemSelection = serde_json::from_slice(&fs::read(selection_path)?)?;
-    if selection.schema_version != 1 || selection.items.is_empty() {
-        return Err(LegacyImportError::InvalidDemoItemSelection(
-            "selection must use schemaVersion 1 and contain at least one item".to_owned(),
-        ));
-    }
     let source_commit = resolve_legacy_content_commit(source)?;
     let entries = parse_k_info(&read_legacy_object_at(
         source,
         &source_commit,
         K_INFO_SOURCE,
     )?)?;
-    let by_index = entries
-        .iter()
-        .filter(|entry| {
-            !entry.name.is_empty() && entry.name != "something" && entry.glyph.is_some()
-        })
-        .map(|entry| (entry.index, entry))
-        .collect::<BTreeMap<_, _>>();
-    let mut selected = BTreeSet::new();
+    let selected = selected_demo_items(&selection, &entries)?;
     let mut files = Vec::with_capacity(selection.items.len());
-    for selected_entry in selection.items {
-        if !selected.insert(selected_entry.id.clone()) {
-            return Err(LegacyImportError::InvalidDemoItemSelection(format!(
-                "duplicate item {}",
-                selected_entry.id
-            )));
-        }
-        let entry = by_index.get(&selected_entry.source_index).ok_or_else(|| {
-            LegacyImportError::InvalidDemoItemSelection(format!(
-                "unknown legacy source index {}",
-                selected_entry.source_index
-            ))
-        })?;
-        let actual_id = kebab(&entry.name);
-        let expected_source_id = selected_entry.expected_source_id();
-        if actual_id != expected_source_id {
-            return Err(LegacyImportError::InvalidDemoItemSelection(format!(
-                "source index {} is {actual_id}, expected {expected_source_id}",
-                selected_entry.source_index
-            )));
-        }
+    for (selected_entry, entry) in selected {
         files.push((
             format!("{}.json", selected_entry.id),
             demo_item_json(entry, &selected_entry.id)?,

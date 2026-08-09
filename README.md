@@ -221,7 +221,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Rust 权威可见性与光照 v1](design/visibility-lighting-v1.md)
 - [静态地形 Chunk 渲染 v1](design/terrain-chunk-rendering-v1.md)
 
-当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v206`，共 470 条 exact fixtures、零 waiver，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
+当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v207`，共 470 条 exact fixtures、零 waiver，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
 
 fixture 使用受控的主分类。日常开发只验证或刷新受影响分类；普通 `cargo test -p rfb-contract` 只做快速的 schema、分类、ID 唯一性和契约单元测试，不回放全部场景：
 
@@ -556,6 +556,8 @@ O3 按 RFB 原版拆分普通地图旅行：反引号打开地图准星选点，
 
 O4 完成物体列表与本地旅行验收：列表使用相对南北/东西偏移并以距离、坐标、名称和实例 ID 稳定排序；聚焦测试覆盖隐藏物品投影、视野/探测发现、知识存档与 state hash、`O`/`o` 分流、楼梯切换、本地旅行绕墙和遇敌/受伤/阻塞中断，并回归世界地图旅行。最终版本保持协议 1.149、state hash Schema v71、save v1 与 contract-v206；内容包 1.200.0 和内容 hash 不变，旧开发存档不兼容。
 
+墨家名器 M0–M2 建立中英文权威匹配名、双语规则解析和首个只判定不执行动作的角色配置纵切。每个角色分别保存中文与英文规则；界面语言变化会切换对应副本，不翻译或覆盖另一语言。Core 原子校验整份文本，支持当前物品知识、类别、质量、堆叠、重量、充能、附魔与 `$RACE` / `$CLASS` / `$LEVEL` / `$MONEY`，并返回自上而下的首条命中。`_` 打开编辑器，提供启用、应用、恢复默认、行号诊断和当前行解释。协议升至 1.150、state hash Schema 升至 v72、基线升至 contract-v207；配置进入 save v1、回放和 state hash，旧开发存档不兼容。
+
 ### 本地验证
 
 ```powershell
@@ -598,7 +600,7 @@ cargo run -p rfb-content --features schemas --bin generate-content-schemas
 如需生成固定 1.3.0.7 旧存档基准所用的本地参考 manifest：
 
 ```powershell
-$env:RFB_LEGACY_SOURCE="D:/codex/Frogcomposband/master"
+$env:RFB_LEGACY_SOURCE="D:/codex/Frogcomposband"
 $env:RFB_LEGACY_REF="v1.3.0.7"
 $env:RFB_LEGACY_COMMIT="191f48c3fd1cdbc81a3d3395a88cd6758402b4d9"
 cargo run -p rfb-legacy-probe
@@ -618,11 +620,12 @@ cargo run -p rfb-legacy-probe -- catalog-saves <旧存档1> <旧存档2> <旧存
 cargo run -p rfb-legacy-import -- inspect-prefix .local/legacy-baseline/saves/legacy-save-01.bin
 cargo run -p rfb-legacy-import -- record-catalog .local/legacy-baseline/save-samples.json
 cargo run -p rfb-legacy-import -- verify-catalog .local/legacy-baseline/save-samples.json
-$env:RFB_LEGACY_SOURCE = "D:/codex/Frogcomposband/master"; cargo run -p rfb-legacy-import -- import-content .local/packs/rfb-legacy
-$env:RFB_LEGACY_SOURCE = "D:/codex/Frogcomposband/master"; cargo run -p rfb-legacy-import -- audit-demo-items packs/rfb-demo-original/legacy-item-selection.json packs/rfb-demo-original/legacy-item-adaptations.json packs/rfb-demo-original/legacy-item-p3-plan.json packs/rfb-demo-original/items
+$env:RFB_LEGACY_SOURCE = "D:/codex/Frogcomposband"; cargo run -p rfb-legacy-import -- import-content .local/packs/rfb-legacy
+$env:RFB_LEGACY_SOURCE = "D:/codex/Frogcomposband"; cargo run -p rfb-legacy-import -- audit-demo-item-names packs/rfb-demo-original/legacy-item-selection.json locales/en-US/content.ftl locales/zh-CN/content.ftl
+$env:RFB_LEGACY_SOURCE = "D:/codex/Frogcomposband"; cargo run -p rfb-legacy-import -- audit-demo-items packs/rfb-demo-original/legacy-item-selection.json packs/rfb-demo-original/legacy-item-adaptations.json packs/rfb-demo-original/legacy-item-p3-plan.json packs/rfb-demo-original/items
 ```
 
-`import-content`、`audit-demo-items`、`sync-demo-items`、`sync-demo-monsters` 和 `sync-demo-wilderness` 始终读取该仓库 `master` 引用解析出的 Git 对象；它们不读取当前工作树。旧存档命令仍使用固定 1.3.0.7 基准，只解析不依赖旧 C 结构体内存布局的 409 字节稳定前缀，包括版本、保存元数据、63 项 RNG 状态和选项位。生成的 `parsed-save-samples.json` 仍位于 `.local/`，不会进入 Git；`record-catalog` 拒绝覆盖已有基线。
+`import-content`、`audit-demo-item-names`、`audit-demo-items`、`sync-demo-items`、`sync-demo-monsters` 和 `sync-demo-wilderness` 始终读取该仓库 `master` 引用解析出的 Git 对象；它们不读取当前工作树。`audit-demo-item-names` 会分别核对正式物品清单与原版 `k_info.txt`、`kind_name_zh.inc`，并拒绝缺失、自译或不一致的英文、中文匹配名。旧存档命令仍使用固定 1.3.0.7 基准，只解析不依赖旧 C 结构体内存布局的 409 字节稳定前缀，包括版本、保存元数据、63 项 RNG 状态和选项位。生成的 `parsed-save-samples.json` 仍位于 `.local/`，不会进入 Git；`record-catalog` 拒绝覆盖已有基线。
 
 快照规范化和 hash：
 

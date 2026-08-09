@@ -439,6 +439,31 @@
         <div id="object-list-host" class="object-list-host" aria-live="polite"></div>
       </dialog>
 
+      <dialog id="mogaminator-dialog" class="player-page-dialog mogaminator-dialog" aria-labelledby="mogaminator-title">
+        <header>
+          <div>
+            <p class="eyebrow" data-l10n-id="mogaminator-eyebrow"></p>
+            <h2 id="mogaminator-title" data-l10n-id="mogaminator-title"></h2>
+          </div>
+          <button id="mogaminator-close" class="quiet-button dialog-close" type="button" data-l10n-id="action-dialog-close"></button>
+        </header>
+        <div class="mogaminator-toolbar">
+          <label><input id="mogaminator-enabled" type="checkbox" /> <span data-l10n-id="mogaminator-enabled"></span></label>
+          <p id="mogaminator-locale"></p>
+        </div>
+        <label class="mogaminator-source-label" for="mogaminator-source" data-l10n-id="mogaminator-source-label"></label>
+        <textarea id="mogaminator-source" class="mogaminator-source" spellcheck="false" wrap="off"></textarea>
+        <section class="mogaminator-feedback" aria-live="polite">
+          <p id="mogaminator-line-explanation"></p>
+          <ol id="mogaminator-diagnostics"></ol>
+          <p id="mogaminator-match-summary"></p>
+        </section>
+        <footer class="mogaminator-actions">
+          <button id="mogaminator-reset" class="quiet-button" type="button" data-l10n-id="mogaminator-reset"></button>
+          <button id="mogaminator-apply" class="primary-button" type="button" data-l10n-id="mogaminator-apply"></button>
+        </footer>
+      </dialog>
+
       <dialog id="shop-dialog" class="shop-dialog" aria-labelledby="shop-title" aria-describedby="shop-description">
         <header class="shop-header">
           <div>

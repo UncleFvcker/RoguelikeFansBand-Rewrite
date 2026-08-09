@@ -43,7 +43,7 @@ test("game session applies successful updates only after clearing busy", async (
   ]);
 });
 
-test("world map accepts movement, travel, and the explicit return command", async () => {
+test("world map accepts travel and zero-time character configuration", async () => {
   const state = sessionState();
   state.worldMap = true;
   const calls = [];
@@ -62,9 +62,22 @@ test("world map accepts movement, travel, and the explicit return command", asyn
   await session.dispatch({ type: "fire", direction: "east" });
   await session.dispatch({ type: "move", direction: "east" });
   await session.dispatch({ type: "travel-world", destination: { x: 30, y: 52 } });
+  await session.dispatch({ type: "set-interface-locale", locale: "zh-CN" });
+  await session.dispatch({
+    type: "configure-mogaminator",
+    enabled: true,
+    locale: "zh-CN",
+    source: "物品",
+  });
   await session.dispatch({ type: "leave-world-map" });
 
-  assert.deepEqual(calls, ["move", "travel-world", "leave-world-map"]);
+  assert.deepEqual(calls, [
+    "move",
+    "travel-world",
+    "set-interface-locale",
+    "configure-mogaminator",
+    "leave-world-map",
+  ]);
 });
 
 test("game session restores controls after failure and blocks terminal commands", async () => {

@@ -2697,6 +2697,7 @@ name = "rfb-core"
 version = "0.1.0"
 dependencies = [
  "rfb-content",
+ "rfb-localization",
  "rfb-protocol",
  "rmp-serde",
  "serde",
@@ -2730,6 +2731,7 @@ name = "rfb-localization"
 version = "0.1.0"
 dependencies = [
  "fluent-bundle",
+ "rfb-content",
  "thiserror 2.0.18",
  "unic-langid",
 ]

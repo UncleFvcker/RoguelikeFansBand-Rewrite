@@ -727,6 +727,7 @@ impl Game {
                     slot_type: slot.slot_type.clone(),
                 })
                 .collect(),
+            mogaminator: self.mogaminator_dto(Vec::new()),
             content_id: self.content.pack_id().to_owned(),
             content_hash: self.content.content_hash().to_owned(),
             content_visuals: self.content_visuals(),

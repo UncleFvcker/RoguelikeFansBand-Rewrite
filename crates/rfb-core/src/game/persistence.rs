@@ -514,7 +514,7 @@ fn item_property_knowledge_from_save(
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-struct StateHashPayloadV71<'a> {
+struct StateHashPayloadV72<'a> {
     schema_version: u16,
     revision: u32,
     turn: u32,
@@ -524,6 +524,8 @@ struct StateHashPayloadV71<'a> {
     wilderness_position: Option<Position>,
     wilderness_seed: u64,
     world_travel_destination: Option<Position>,
+    interface_locale: rfb_protocol::LocaleDto,
+    mogaminator: rfb_protocol::MogaminatorSaveDto,
     terrain: TerrainSaveRef<'a>,
     player: PlayerSaveDto,
     entities: Vec<ActorSaveDto>,
@@ -637,6 +639,9 @@ impl Game {
         {
             return Err(CoreError::ContentMismatch);
         }
+        let mogaminator =
+            super::mogaminator::MogaminatorState::from_save(payload.mogaminator.clone())
+                .map_err(|_| CoreError::InvalidSave("Mogaminator source is invalid"))?;
         let world = content
             .world(&payload.world_id)
             .ok_or_else(|| CoreError::UnknownWorld(payload.world_id.clone()))?;
@@ -1080,6 +1085,8 @@ impl Game {
             wilderness_position,
             wilderness_seed: payload.wilderness_seed,
             world_travel_destination: payload.world_travel_destination,
+            interface_locale: payload.interface_locale,
+            mogaminator,
             current_floor_id,
             current_dungeon_instance_id,
             stored_floors,
@@ -1166,6 +1173,8 @@ impl Game {
             wilderness_position: self.wilderness_position,
             wilderness_seed: self.wilderness_seed,
             world_travel_destination: self.world_travel_destination,
+            interface_locale: self.interface_locale,
+            mogaminator: self.mogaminator.to_save(),
             terrain: TerrainSaveDto {
                 width: self.width,
                 height: self.height,
@@ -1226,7 +1235,7 @@ impl Game {
 
     #[must_use]
     pub fn state_hash(&self) -> String {
-        let payload = StateHashPayloadV71 {
+        let payload = StateHashPayloadV72 {
             schema_version: STATE_HASH_SCHEMA_VERSION,
             revision: self.revision,
             turn: self.turn,
@@ -1236,6 +1245,8 @@ impl Game {
             wilderness_position: self.wilderness_position,
             wilderness_seed: self.wilderness_seed,
             world_travel_destination: self.world_travel_destination,
+            interface_locale: self.interface_locale,
+            mogaminator: self.mogaminator.to_save(),
             terrain: TerrainSaveRef {
                 width: self.width,
                 height: self.height,

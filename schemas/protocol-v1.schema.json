@@ -3887,6 +3887,30 @@
         {
           "type": "object",
           "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "locale": {
+              "$ref": "#/$defs/LocaleDto"
+            },
+            "source": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "configure-mogaminator"
+            }
+          },
+          "required": [
+            "type",
+            "enabled",
+            "locale",
+            "source"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "direction": {
               "$ref": "#/$defs/Direction"
             },
@@ -4268,6 +4292,22 @@
             "type",
             "targetItemId",
             "sourceItemId"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "locale": {
+              "$ref": "#/$defs/LocaleDto"
+            },
+            "type": {
+              "type": "string",
+              "const": "set-interface-locale"
+            }
+          },
+          "required": [
+            "type",
+            "locale"
           ]
         },
         {
@@ -5033,6 +5073,9 @@
           "$ref": "#/$defs/MapScaleDto",
           "default": "local"
         },
+        "mogaminator": {
+          "$ref": "#/$defs/MogaminatorDto"
+        },
         "player": {
           "$ref": "#/$defs/PlayerDto"
         },
@@ -5135,6 +5178,7 @@
         "entities",
         "items",
         "inventory",
+        "mogaminator",
         "contentId",
         "contentHash",
         "contentVisuals",
@@ -5237,6 +5281,9 @@
           "$ref": "#/$defs/MapScaleDto",
           "default": "local"
         },
+        "mogaminator": {
+          "$ref": "#/$defs/MogaminatorDto"
+        },
         "player": {
           "$ref": "#/$defs/PlayerDto"
         },
@@ -5334,6 +5381,7 @@
         "entities",
         "items",
         "inventory",
+        "mogaminator",
         "removedEntities",
         "campaign",
         "stateHash"
@@ -6110,6 +6158,13 @@
         "exceptional"
       ]
     },
+    "LocaleDto": {
+      "type": "string",
+      "enum": [
+        "en-US",
+        "zh-CN"
+      ]
+    },
     "MapScaleDto": {
       "type": "string",
       "enum": [
@@ -6149,6 +6204,183 @@
       },
       "required": [
         "blows"
+      ]
+    },
+    "MogaminatorActionDto": {
+      "type": "object",
+      "properties": {
+        "autoIdentify": {
+          "type": "boolean"
+        },
+        "display": {
+          "type": "boolean"
+        },
+        "disposition": {
+          "$ref": "#/$defs/MogaminatorDispositionDto"
+        },
+        "inscription": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "disposition",
+        "display",
+        "autoIdentify"
+      ]
+    },
+    "MogaminatorDiagnosticDto": {
+      "type": "object",
+      "properties": {
+        "arguments": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "string"
+          }
+        },
+        "code": {
+          "type": "string"
+        },
+        "column": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "line": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "line",
+        "column",
+        "code"
+      ]
+    },
+    "MogaminatorDispositionDto": {
+      "type": "string",
+      "enum": [
+        "pick-up",
+        "destroy",
+        "leave",
+        "query"
+      ]
+    },
+    "MogaminatorDto": {
+      "type": "object",
+      "properties": {
+        "defaultSource": {
+          "type": "string"
+        },
+        "diagnostics": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/MogaminatorDiagnosticDto"
+          }
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "lines": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/MogaminatorLineDto"
+          }
+        },
+        "locale": {
+          "$ref": "#/$defs/LocaleDto"
+        },
+        "matches": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/MogaminatorItemMatchDto"
+          }
+        },
+        "source": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "enabled",
+        "locale",
+        "source",
+        "defaultSource"
+      ]
+    },
+    "MogaminatorItemMatchDto": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "$ref": "#/$defs/MogaminatorActionDto"
+        },
+        "itemId": {
+          "type": "string"
+        },
+        "lineNumber": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "itemId",
+        "lineNumber",
+        "action"
+      ]
+    },
+    "MogaminatorLineDto": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MogaminatorActionDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "kind": {
+          "$ref": "#/$defs/MogaminatorLineKindDto"
+        },
+        "lineNumber": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "predicateCount": {
+          "type": "integer",
+          "format": "uint32",
+          "default": 0,
+          "minimum": 0
+        },
+        "search": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "lineNumber",
+        "kind"
+      ]
+    },
+    "MogaminatorLineKindDto": {
+      "type": "string",
+      "enum": [
+        "blank",
+        "comment",
+        "condition",
+        "rule"
       ]
     },
     "MonsterAbilityCandidateResolutionDto": {

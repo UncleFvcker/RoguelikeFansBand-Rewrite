@@ -7,6 +7,7 @@ pub mod effect;
 mod error;
 mod event;
 mod game;
+pub mod mogaminator;
 pub mod resistance;
 mod rng;
 mod save;

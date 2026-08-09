@@ -22,6 +22,8 @@ impl Game {
                 GameAction::Move { .. }
                     | GameAction::LeaveWorldMap
                     | GameAction::TravelWorld { .. }
+                    | GameAction::ConfigureMogaminator { .. }
+                    | GameAction::SetInterfaceLocale { .. }
             )
         {
             return Err(CoreError::WorldMapActionUnavailable);

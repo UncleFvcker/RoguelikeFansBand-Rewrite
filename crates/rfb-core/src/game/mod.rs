@@ -82,7 +82,7 @@ use rfb_protocol::{
     ItemActivationDto, ItemChargesDto, ItemCurseRemovalResolutionDto, ItemCurseResolutionDto,
     ItemCurseSeverityDto, ItemEnchantmentComponentResolutionDto, ItemEnchantmentResolutionDto,
     ItemEnchantmentsDto, ItemIdentificationDto, ItemIdentifyResolutionDto, ItemKnowledgeDto,
-    ItemPropertyDto, ItemQualityDto, MapScaleDto, MeleeBlowDto, MeleeRoutineDto,
+    ItemPropertyDto, ItemQualityDto, LocaleDto, MapScaleDto, MeleeBlowDto, MeleeRoutineDto,
     MonsterAbilityCandidateResolutionDto, MonsterAbilityCastResolutionDto,
     MonsterAbilityDecisionResolutionDto, MonsterAbilityRejectionReasonDto,
     MonsterAbilityTargetResolutionDto, MonsterDisplacementResolutionDto, MonsterPackBehaviorDto,
@@ -107,6 +107,7 @@ mod item_combat;
 mod item_knowledge;
 mod item_use;
 mod lighting;
+mod mogaminator;
 mod monster_abilities;
 mod monster_ai;
 mod monster_combat;
@@ -151,6 +152,7 @@ use inventory::{
 };
 #[cfg(test)]
 use item_use::ItemUsePlan;
+use mogaminator::MogaminatorState;
 use player_abilities::AbilityProgress;
 #[cfg(test)]
 use player_abilities::{SPELL_EXP_EXPERT, SPELL_EXP_MASTER};
@@ -189,7 +191,7 @@ pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 71;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 72;
 pub const WARRENS_JOURNEY_WORLD_ID: &str = "demo.world.warrens-journey";
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const VISIBILITY_RADIUS: i32 = 8;
@@ -730,6 +732,8 @@ pub struct Game {
     wilderness_position: Option<Position>,
     wilderness_seed: u64,
     world_travel_destination: Option<Position>,
+    interface_locale: LocaleDto,
+    mogaminator: MogaminatorState,
     current_floor_id: String,
     current_dungeon_instance_id: Option<String>,
     stored_floors: BTreeMap<String, FloorState>,
@@ -1019,6 +1023,8 @@ impl Game {
             wilderness_position,
             wilderness_seed: seed,
             world_travel_destination: None,
+            interface_locale: LocaleDto::ZhCn,
+            mogaminator: MogaminatorState::default(),
             current_floor_id: initial_floor_id,
             current_dungeon_instance_id: None,
             stored_floors: BTreeMap::new(),
@@ -1139,6 +1145,7 @@ impl Game {
         let mut changed = BTreeSet::new();
         let mut events = Vec::new();
         let mut removed_entities = Vec::new();
+        let mut mogaminator_diagnostics = Vec::new();
         self.resources_touched.clear();
         let depleted_device_use = matches!(
             &action,
@@ -1238,6 +1245,8 @@ impl Game {
                     | GameAction::SellToShop { .. }
                     | GameAction::WithdrawFromHome { .. }
                     | GameAction::SetSummonCommand { .. }
+                    | GameAction::ConfigureMogaminator { .. }
+                    | GameAction::SetInterfaceLocale { .. }
             );
         // Paralysis wastes any world-advancing action: the substituted idle
         // still spends the turn (energy, monster actions, status ticks) but
@@ -1362,6 +1371,13 @@ impl Game {
                 } else {
                     events.push(DomainEvent::DoorCloseUnavailable);
                 }
+            }
+            GameAction::ConfigureMogaminator {
+                enabled,
+                locale,
+                source,
+            } => {
+                mogaminator_diagnostics = self.configure_mogaminator(enabled, locale, source);
             }
             GameAction::Drop { item_ids } => {
                 if let Some((stacks, quantity)) = self.drop_inventory_items(&item_ids) {
@@ -1788,6 +1804,9 @@ impl Game {
                     },
                 });
             }
+            GameAction::SetInterfaceLocale { locale } => {
+                self.interface_locale = locale;
+            }
             GameAction::DisarmTrap { direction } => match self.disarm_trap(direction) {
                 Some(TrapDisarmOutcome::Succeeded { position }) => {
                     changed.insert(position);
@@ -1947,6 +1966,7 @@ impl Game {
             },
             inventory: self.inventory_dto(),
             equipment: self.equipment_dto(),
+            mogaminator: self.mogaminator_dto(mogaminator_diagnostics),
             removed_entities,
             terrain_interactions: if world_map {
                 Vec::new()

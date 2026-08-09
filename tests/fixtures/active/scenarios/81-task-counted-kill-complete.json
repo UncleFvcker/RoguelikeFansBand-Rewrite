@@ -329,7 +329,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "7a20fb5ee414444de5ddb87a7f720be02d0075a1fd387059c480d653a64a72e2"
+      "stateHash": "4b4b7713787b7765f399dd35cc92ff360e0f51aaf664703602d55a2e6f6bebb7"
     },
     "events": [
       {
@@ -2241,9 +2241,9 @@
       {
         "step": 8,
         "kind": "player-dead",
-        "stateHash": "7a20fb5ee414444de5ddb87a7f720be02d0075a1fd387059c480d653a64a72e2"
+        "stateHash": "4b4b7713787b7765f399dd35cc92ff360e0f51aaf664703602d55a2e6f6bebb7"
       }
     ],
-    "saveRoundTripStateHash": "7a20fb5ee414444de5ddb87a7f720be02d0075a1fd387059c480d653a64a72e2"
+    "saveRoundTripStateHash": "4b4b7713787b7765f399dd35cc92ff360e0f51aaf664703602d55a2e6f6bebb7"
   }
 }

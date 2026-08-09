@@ -50,6 +50,7 @@ export class InputController {
   readonly #dispatch: (command: GameCommand) => Promise<void>;
   readonly #describeLook: (position: { readonly x: number; readonly y: number }) => string;
   readonly #openObjectList: () => void;
+  readonly #openMogaminator: () => void;
   readonly #onLookOrTargeting: (interaction: "look" | "targeting") => void;
   readonly #onLookFocusChange: (position: Position | undefined) => void;
   readonly #announce: (
@@ -73,6 +74,7 @@ export class InputController {
     dispatch: (command: GameCommand) => Promise<void>;
     describeLook: (position: { readonly x: number; readonly y: number }) => string;
     openObjectList: () => void;
+    openMogaminator: () => void;
     onLookOrTargeting: (interaction: "look" | "targeting") => void;
     onLookFocusChange: (position: Position | undefined) => void;
     announce: (
@@ -90,6 +92,7 @@ export class InputController {
     this.#dispatch = options.dispatch;
     this.#describeLook = options.describeLook;
     this.#openObjectList = options.openObjectList;
+    this.#openMogaminator = options.openMogaminator;
     this.#onLookOrTargeting = options.onLookOrTargeting;
     this.#onLookFocusChange = options.onLookFocusChange;
     this.#announce = options.announce;
@@ -382,6 +385,11 @@ export class InputController {
     if (key === "x") {
       event.preventDefault();
       this.startLookMode();
+      return;
+    }
+    if (event.key === "_") {
+      event.preventDefault();
+      this.#openMogaminator();
       return;
     }
     if (this.#state.worldMap) {
