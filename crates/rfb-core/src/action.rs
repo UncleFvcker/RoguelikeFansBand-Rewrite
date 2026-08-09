@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use rfb_protocol::{
-    AttributeKindDto, DeviceRechargeSourceDto, Direction, GameCommand, LocaleDto,
+    AttributeKindDto, AutoGetModeDto, DeviceRechargeSourceDto, Direction, GameCommand, LocaleDto,
     SummonCommandModeDto, TargetSelection,
 };
 
@@ -49,8 +49,21 @@ pub(crate) enum GameAction {
     },
     ConfigureMogaminator {
         enabled: bool,
+        leave_destroyed_items: bool,
+        auto_get_mode: AutoGetModeDto,
         locale: LocaleDto,
         source: String,
+    },
+    AutoGet {
+        object_id: String,
+    },
+    ResolveMogaminatorQuery {
+        item_id: String,
+        pick_up: bool,
+    },
+    DestroyItem {
+        item_id: String,
+        quantity: u32,
     },
     DisarmTrap {
         direction: Direction,
@@ -66,6 +79,10 @@ pub(crate) enum GameAction {
     },
     OpenDoor {
         direction: Direction,
+    },
+    InscribeItem {
+        item_id: String,
+        inscription: Option<String>,
     },
     /// Internal action substituted when paralysis wastes the player's turn.
     /// No command maps to it; it advances world time at standard cost.
@@ -171,6 +188,10 @@ impl GameAction {
             | Self::WithdrawFromHome { .. }
             | Self::SetSummonCommand { .. }
             | Self::ConfigureMogaminator { .. }
+            | Self::AutoGet { .. }
+            | Self::PickUp
+            | Self::ResolveMogaminatorQuery { .. }
+            | Self::InscribeItem { .. }
             | Self::SetInterfaceLocale { .. } => 0,
             Self::TravelLocal { .. } => 0,
             Self::RefuelLight { .. } => STANDARD_ACTION_COST / 2,
@@ -234,13 +255,24 @@ impl From<GameCommand> for GameAction {
             GameCommand::CloseDoor { direction } => Self::CloseDoor { direction },
             GameCommand::ConfigureMogaminator {
                 enabled,
+                leave_destroyed_items,
+                auto_get_mode,
                 locale,
                 source,
             } => Self::ConfigureMogaminator {
                 enabled,
+                leave_destroyed_items,
+                auto_get_mode,
                 locale,
                 source,
             },
+            GameCommand::AutoGet { object_id } => Self::AutoGet { object_id },
+            GameCommand::ResolveMogaminatorQuery { item_id, pick_up } => {
+                Self::ResolveMogaminatorQuery { item_id, pick_up }
+            }
+            GameCommand::DestroyItem { item_id, quantity } => {
+                Self::DestroyItem { item_id, quantity }
+            }
             GameCommand::DisarmTrap { direction } => Self::DisarmTrap { direction },
             GameCommand::DigTerrain { direction } => Self::DigTerrain { direction },
             GameCommand::EnterWorldMap {
@@ -256,6 +288,13 @@ impl From<GameCommand> for GameAction {
             GameCommand::Move { direction } => Self::Move { direction },
             GameCommand::Ride { direction } => Self::Ride { direction },
             GameCommand::OpenDoor { direction } => Self::OpenDoor { direction },
+            GameCommand::InscribeItem {
+                item_id,
+                inscription,
+            } => Self::InscribeItem {
+                item_id,
+                inscription,
+            },
             GameCommand::Wait => Self::Wait,
             GameCommand::PickUp => Self::PickUp,
             GameCommand::Retire => Self::Retire,

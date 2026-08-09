@@ -1932,6 +1932,26 @@ fn player_ability_book_for_item(entry: &LegacyItemEntry) -> Option<&'static str>
     }
 }
 
+fn mogaminator_kind_is_rare(entry: &LegacyItemEntry) -> bool {
+    match entry.tval {
+        19 => entry.sval == 70,
+        21 => matches!(entry.sval, 20 | 21),
+        22 => matches!(entry.sval, 30 | 50),
+        23 => matches!(entry.sval, 30 | 31 | 32 | 33 | 35),
+        34 => matches!(entry.sval, 6 | 10),
+        32 => entry.sval == 8,
+        30 => entry.sval == 4,
+        35 => matches!(entry.sval, 2 | 5 | 6 | 7),
+        31 => entry.sval == 6,
+        36 => matches!(entry.sval, 13 | 50),
+        38 => true,
+        17 => matches!(entry.sval, 3 | 4),
+        18 => matches!(entry.sval, 3..=5),
+        16 => entry.sval == 3,
+        _ => false,
+    }
+}
+
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 struct TerrainCreationImportIds {
     source_terrain_ids: Vec<String>,
@@ -2973,6 +2993,8 @@ fn item_json_with_terrain(
         "nameKey": format!("item-legacy-{id}-name"),
         "descriptionKey": format!("item-legacy-{id}-description"),
         "glyph": entry.glyph.map_or_else(|| "?".to_owned(), |glyph| glyph.to_string()),
+        "generationLevel": entry.level,
+        "mogaminatorRare": mogaminator_kind_is_rare(entry),
         "weightTenthsPound": entry.weight_tenths_pound.max(1),
         "maxStack": shape.max_stack,
         "baseValue": entry.base_value,
@@ -3794,6 +3816,7 @@ fn ego_json(
         "id": format!("rfb-legacy.affix.{id}"),
         "nameKey": format!("affix-legacy-{id}-name"),
         "descriptionKey": format!("affix-legacy-{id}-description"),
+        "generationLevel": entry.level,
         "tags": tags,
     });
     if !modifiers.is_empty() {
@@ -5287,6 +5310,24 @@ fn class_json(
     if legacy_class_uses_spell_scrolls(&entry.registration.id) {
         value["usesSpellScrolls"] = serde_json::Value::Bool(true);
     }
+    value["favoriteWeaponTags"] = serde_json::json!(match entry.registration.id.as_str() {
+        "ranger" | "archer" => vec!["shooter"],
+        "mystic" => Vec::new(),
+        _ => vec!["weapon", "shooter"],
+    });
+    if entry.caster_profile.as_ref().is_some_and(|caster| {
+        caster
+            .options
+            .iter()
+            .any(|option| option == "glove-encumbrance")
+    }) {
+        value["ickyEquipmentSlots"] = serde_json::json!(["gloves"]);
+    }
+    value["specialItemTags"] = serde_json::json!(match entry.registration.id.as_str() {
+        "alchemist" => vec!["potion"],
+        "archer" => vec!["skeleton"],
+        _ => Vec::new(),
+    });
     class_gap_accounting(entry, report);
     value
 }
@@ -6204,6 +6245,8 @@ fn death_first_book_json(ability_ids: &[String]) -> serde_json::Value {
         "id": DEATH_FIRST_BOOK_ID,
         "nameKey": "ability-book-legacy-death-stench-of-death-name",
         "descriptionKey": "ability-book-legacy-death-stench-of-death-description",
+        "realmId": "death",
+        "rank": 1,
         "abilityIds": ability_ids,
         "tags": ["death", "legacy-import", "spellbook"],
     })
@@ -6216,6 +6259,8 @@ fn death_second_book_json(ability_ids: &[String]) -> serde_json::Value {
         "id": DEATH_SECOND_BOOK_ID,
         "nameKey": "ability-book-legacy-death-sepulchral-ways-name",
         "descriptionKey": "ability-book-legacy-death-sepulchral-ways-description",
+        "realmId": "death",
+        "rank": 2,
         "abilityIds": ability_ids,
         "tags": ["death", "legacy-import", "spellbook"],
     })
@@ -6228,6 +6273,8 @@ fn death_third_book_json(ability_ids: &[String]) -> serde_json::Value {
         "id": DEATH_THIRD_BOOK_ID,
         "nameKey": "ability-book-legacy-death-black-channels-name",
         "descriptionKey": "ability-book-legacy-death-black-channels-description",
+        "realmId": "death",
+        "rank": 3,
         "abilityIds": ability_ids,
         "tags": ["death", "legacy-import", "spellbook"],
     })
@@ -6240,6 +6287,8 @@ fn death_fourth_book_json(ability_ids: &[String]) -> serde_json::Value {
         "id": DEATH_FOURTH_BOOK_ID,
         "nameKey": "ability-book-legacy-death-necronomicon-name",
         "descriptionKey": "ability-book-legacy-death-necronomicon-description",
+        "realmId": "death",
+        "rank": 4,
         "abilityIds": ability_ids,
         "tags": ["death", "legacy-import", "spellbook"],
     })
@@ -7312,18 +7361,13 @@ fn monster_json(
     contact_auras.extend(
         MONSTER_CONTACT_AURA_FLAGS
             .iter()
-            .filter_map(|(flag, damage_type)| {
-                entry
-                    .flags
-                    .iter()
-                    .any(|entry_flag| entry_flag == flag)
-                    .then(|| {
-                        serde_json::json!({
-                            "damageType": damage_type,
-                            "damageDice": 1 + level / 26,
-                            "damageSides": 1 + level / 17,
-                        })
-                    })
+            .filter(|(flag, _)| entry.flags.iter().any(|entry_flag| entry_flag == flag))
+            .map(|(_, damage_type)| {
+                serde_json::json!({
+                    "damageType": damage_type,
+                    "damageDice": 1 + level / 26,
+                    "damageSides": 1 + level / 17,
+                })
             }),
     );
     if !contact_auras.is_empty() {

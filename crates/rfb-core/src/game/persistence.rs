@@ -547,7 +547,7 @@ fn item_property_knowledge_from_save(
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-struct StateHashPayloadV73<'a> {
+struct StateHashPayloadV77<'a> {
     schema_version: u16,
     revision: u32,
     turn: u32,
@@ -675,6 +675,18 @@ impl Game {
         let mogaminator =
             super::mogaminator::MogaminatorState::from_save(payload.mogaminator.clone())
                 .map_err(|_| CoreError::InvalidSave("Mogaminator source is invalid"))?;
+        if mogaminator.wanted_actor_kind_ids.len() > 20
+            || mogaminator.wanted_actor_kind_ids.iter().any(|actor_id| {
+                content.actor(actor_id).is_none_or(|actor| {
+                    !actor.tags.iter().any(|tag| tag == "unique")
+                        || (actor.corpse_item_kind_id.is_none() && actor.remains.is_none())
+                })
+            })
+        {
+            return Err(CoreError::InvalidSave(
+                "Mogaminator wanted target state is invalid",
+            ));
+        }
         let world = content
             .world(&payload.world_id)
             .ok_or_else(|| CoreError::UnknownWorld(payload.world_id.clone()))?;
@@ -1193,6 +1205,7 @@ impl Game {
         // the authoritative level and HP are not dependent on a later input.
         game.apply_player_experience(0, &mut Vec::new());
         game.reveal_current_visibility();
+        game.clear_stale_mogaminator_query();
         game.validate_loaded_state()?;
         Ok(game)
     }
@@ -1271,7 +1284,7 @@ impl Game {
 
     #[must_use]
     pub fn state_hash(&self) -> String {
-        let payload = StateHashPayloadV73 {
+        let payload = StateHashPayloadV77 {
             schema_version: STATE_HASH_SCHEMA_VERSION,
             revision: self.revision,
             turn: self.turn,

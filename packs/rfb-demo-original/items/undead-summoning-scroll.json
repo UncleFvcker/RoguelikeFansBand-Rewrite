@@ -6,6 +6,8 @@
   "appearanceNameKey": "item-demo-undead-summoning-scroll-appearance",
   "descriptionKey": "item-demo-undead-summoning-scroll-description",
   "glyph": "?",
+  "generationLevel": 15,
+  "mogaminatorRare": false,
   "weightTenthsPound": 5,
   "maxStack": 20,
   "baseValue": 0,

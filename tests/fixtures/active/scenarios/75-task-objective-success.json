@@ -41,7 +41,7 @@
     "finalState": {
       "revision": 5,
       "turn": 5,
-      "worldTick": 50,
+      "worldTick": 40,
       "lastCommandSeq": 5,
       "rngDrawCounter": 9,
       "floorId": "demo.floor.surface",
@@ -59,7 +59,7 @@
       "playerCarryCapacityTenthsPound": 1000,
       "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
-      "playerNutrition": 9989,
+      "playerNutrition": 9999,
       "playerLevel": 1,
       "playerExperience": 0,
       "playerMaxLevel": 1,
@@ -363,7 +363,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 1
       },
-      "stateHash": "5ed94b6f954a48e146e639a50c714fe45c1b3a7a4f6fd8f9195d2ab1d0328c47"
+      "stateHash": "4f7d25185c4d87c6337a5c6048db97d82a3f0ed89f1d4ff13a0f22b4f44970ac"
     },
     "events": [
       {
@@ -3648,6 +3648,6 @@
         "y": 3
       }
     ],
-    "saveRoundTripStateHash": "5ed94b6f954a48e146e639a50c714fe45c1b3a7a4f6fd8f9195d2ab1d0328c47"
+    "saveRoundTripStateHash": "4f7d25185c4d87c6337a5c6048db97d82a3f0ed89f1d4ff13a0f22b4f44970ac"
   }
 }

@@ -42,12 +42,14 @@ fn pickup_collects_all_gold_before_item_and_gold_has_no_weight() {
             position: game.player.position,
             amount: 10,
             appearance: GoldAppearanceDto::Silver,
+            discovered: true,
         },
         GoldPile {
             id: "generated.gold.1".to_owned(),
             position: game.player.position,
             amount: 4,
             appearance: GoldAppearanceDto::Copper,
+            discovered: true,
         },
     ];
     game.next_gold_pile_serial = 3;
@@ -55,6 +57,8 @@ fn pickup_collects_all_gold_before_item_and_gold_has_no_weight() {
         id: "test.gold-pickup.item".to_owned(),
         kind_id: "demo.item.echo-charm".to_owned(),
         quantity: 1,
+        inscription: None,
+        origin_actor_kind_id: None,
         quality: ItemQualityDto::Ordinary,
         affix_ids: Vec::new(),
         rolled_affixes: Vec::new(),
@@ -99,6 +103,38 @@ fn pickup_collects_all_gold_before_item_and_gold_has_no_weight() {
 }
 
 #[test]
+fn seeing_gold_discovers_and_refreshes_its_cell() {
+    let mut game = Game::new(42);
+    game.entities.clear();
+    game.items.clear();
+    let position = Position {
+        x: game.player.position.x + 1,
+        y: game.player.position.y,
+    };
+    replace_terrain(&mut game, position, "demo.terrain.floor");
+    game.gold_piles = vec![GoldPile {
+        id: "generated.gold.1".to_owned(),
+        position,
+        amount: 10,
+        appearance: GoldAppearanceDto::Gold,
+        discovered: false,
+    }];
+
+    let update = dispatch_next(&mut game, GameCommand::Wait);
+
+    assert!(game.gold_piles[0].discovered);
+    assert_eq!(update.gold_piles[0].id, "generated.gold.1");
+    assert_eq!(
+        update
+            .changed_cells
+            .iter()
+            .find(|cell| cell.position == position)
+            .and_then(|cell| cell.item_id.as_deref()),
+        Some("generated.gold.1")
+    );
+}
+
+#[test]
 fn invalid_gold_state_and_allocator_are_rejected() {
     let game = Game::new(42);
     let position = game.player.position;
@@ -116,6 +152,7 @@ fn invalid_gold_state_and_allocator_are_rejected() {
         position,
         amount: 0,
         appearance: GoldAppearanceDto::Copper,
+        discovered: true,
     });
     zero_pile.next_gold_pile_serial = 2;
     assert!(matches!(
@@ -129,6 +166,7 @@ fn invalid_gold_state_and_allocator_are_rejected() {
         position,
         amount: 10,
         appearance: GoldAppearanceDto::Gold,
+        discovered: true,
     });
     stale_allocator.next_gold_pile_serial = 4;
     assert!(matches!(

@@ -6,6 +6,8 @@
   "appearanceNameKey": "item-demo-benediction-scroll-appearance",
   "descriptionKey": "item-demo-benediction-scroll-description",
   "glyph": "?",
+  "generationLevel": 1,
+  "mogaminatorRare": false,
   "weightTenthsPound": 5,
   "maxStack": 20,
   "baseValue": 15,

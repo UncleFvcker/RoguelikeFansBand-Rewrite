@@ -6,6 +6,8 @@
   "appearanceNameKey": "item-demo-cartography-scroll-appearance",
   "descriptionKey": "item-demo-cartography-scroll-description",
   "glyph": "?",
+  "generationLevel": 5,
+  "mogaminatorRare": false,
   "weightTenthsPound": 5,
   "maxStack": 20,
   "baseValue": 30,

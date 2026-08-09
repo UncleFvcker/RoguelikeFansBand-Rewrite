@@ -5,6 +5,8 @@
   "nameKey": "item-demo-necronomicon-name",
   "descriptionKey": "item-demo-necronomicon-description",
   "glyph": "?",
+  "generationLevel": 80,
+  "mogaminatorRare": false,
   "weightTenthsPound": 15,
   "maxStack": 1,
   "baseValue": 100000,

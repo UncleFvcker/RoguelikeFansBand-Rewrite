@@ -31,7 +31,7 @@
     "finalState": {
       "revision": 3,
       "turn": 3,
-      "worldTick": 30,
+      "worldTick": 20,
       "lastCommandSeq": 3,
       "rngDrawCounter": 9,
       "floorId": "demo.floor.echo-task-rift",
@@ -320,7 +320,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "c16c255adc70c225639dd5e457a95a8e4da7075fc066e3bceb3146093b53d7aa"
+      "stateHash": "98f6fc22b76caca55aaa921c8f116ebc924ec49436b3cbe5ec3cd948048b37e0"
     },
     "events": [
       {
@@ -1962,6 +1962,6 @@
         "y": 4
       }
     ],
-    "saveRoundTripStateHash": "c16c255adc70c225639dd5e457a95a8e4da7075fc066e3bceb3146093b53d7aa"
+    "saveRoundTripStateHash": "98f6fc22b76caca55aaa921c8f116ebc924ec49436b3cbe5ec3cd948048b37e0"
   }
 }

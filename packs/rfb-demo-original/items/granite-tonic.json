@@ -6,6 +6,8 @@
   "appearanceNameKey": "item-demo-granite-tonic-appearance",
   "descriptionKey": "item-demo-granite-tonic-description",
   "glyph": "!",
+  "generationLevel": 50,
+  "mogaminatorRare": false,
   "weightTenthsPound": 4,
   "maxStack": 20,
   "baseValue": 10000,

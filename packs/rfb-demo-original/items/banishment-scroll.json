@@ -6,6 +6,8 @@
   "appearanceNameKey": "item-demo-banishment-scroll-appearance",
   "descriptionKey": "item-demo-banishment-scroll-description",
   "glyph": "?",
+  "generationLevel": 50,
+  "mogaminatorRare": false,
   "weightTenthsPound": 5,
   "maxStack": 20,
   "baseValue": 5000,

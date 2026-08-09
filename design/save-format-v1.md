@@ -314,3 +314,15 @@ crates/rfb-legacy-import/
 协议 1.152 为 `PlayerSaveDto` 增加必填 `activeMutationIds` 与 `lockedMutationIds`。两者按稳定 ID 排序保存；locked 必须是 active 的子集，且所有 ID 必须解析到当前内容包的 `MutationDefinition`。重复、未知或悬空锁定状态直接拒绝。两组集合进入 state hash Schema v73；save 容器仍为 v1，不为旧开发存档补默认值。完整边界见 [Contract v216](contract-v216-mutation-authoritative-state.md)。
 
 协议 1.153 为 `PlayerProgressSaveDto` 增加必填 `attributePotentials`，保存六个原版编码的个人属性潜力。每项必须来自 `78 + 10 × 1d7`，六次骰点总和必须为 24；当前与历史最大自然属性都不得超过个人潜力和全局阶段上限。`hpProgression` 继续是唯一 HP 成长权威状态，不增加生命评级旁路字段。潜力与重掷后的 HP 序列进入 State Hash Schema v74；save 容器仍为 v1，不为旧开发存档补默认值。完整边界见 [Contract v217](contract-v217-new-life-and-attribute-potentials.md)。
+
+协议 1.152 为全部物品位置的 save DTO 增加可选 `inscription`，并为每角色 `MogaminatorSaveDto` 增加必填 `leaveDestroyedItems`。铭文随拾取、丢弃、装备、Home、商店、怪物携带和楼层归档保持，且参与堆叠兼容性。两个字段进入 state hash Schema v73；save 容器仍为 v1，旧开发存档不兼容。
+
+协议 1.153 为 `MogaminatorSaveDto` 增加待确认物品、已拒绝实例和每角色悬赏唯一怪物集合；所有物品位置的 save DTO 增加可选 `originActorKindId`。尸体来源参与堆叠兼容性，防止不同怪物的尸体合并后丢失 `wanted` / `unique` / `human` 判定。以上字段进入 state hash Schema v74；save 容器仍为 v1，旧开发存档不兼容。
+
+contract-v216 不改变存档结构。每个角色继续在 `MogaminatorSaveDto` 中独立保存中文与英文规则源，界面语言只决定当前使用和编辑哪一份；恢复默认显式用对应内置模板覆盖该语言的角色副本。文本导入经既有配置命令校验成功后才成为权威状态，导出不修改存档。save 容器仍为 v1，state hash Schema 保持 v74。
+
+协议 1.154 为每角色 `MogaminatorSaveDto` 增加必填 `autoGetMode`，合法值为 `off`、`ammo`、`wanted`，新角色默认 `off`。模式与中英文规则文本共同保存，并进入 state hash Schema v75；save 容器仍为 v1，旧开发存档不兼容。G0 尚不保存自动拾取目标或行走状态。
+
+协议 1.155 为保存兼用的 `GoldPileDto` 增加必填 `discovered`。视野或金币探测发现后，该状态随当前层和离层楼层保存，并进入 state hash Schema v76；旧开发存档不兼容。`MogaminatorDto.autoGetTarget` 由当前地图、知识、规则和模式派生，不写入存档。
+
+集成协议 1.157 将上述角色变异、属性潜力、物品铭文、墨家名器配置与金币发现状态共同纳入 state hash Schema v77；save 容器仍为 v1，不提供旧开发存档兼容路径。

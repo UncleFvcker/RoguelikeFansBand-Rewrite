@@ -20,5 +20,7 @@
     "rfb-compatibility",
     "weapon"
   ],
+  "generationLevel": 5,
+  "mogaminatorRare": false,
   "weightTenthsPound": 75
 }

@@ -6,6 +6,8 @@
   "appearanceNameKey": "item-demo-strength-renewal-tonic-appearance",
   "descriptionKey": "item-demo-strength-renewal-tonic-description",
   "glyph": "!",
+  "generationLevel": 25,
+  "mogaminatorRare": false,
   "weightTenthsPound": 4,
   "maxStack": 20,
   "baseValue": 220,

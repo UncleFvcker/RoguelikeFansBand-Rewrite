@@ -1100,10 +1100,17 @@ impl Game {
                 detected
             }
             AbilityDetectSubjectDefinition::Gold => {
-                self.detect_gold_positions(radius, through_walls)
+                let detected = self.detect_gold_positions(radius, through_walls);
+                self.mark_gold_piles_discovered(&detected.1);
+                detected
             }
         };
-        if persistent || subject == AbilityDetectSubjectDefinition::Item {
+        if persistent
+            || matches!(
+                subject,
+                AbilityDetectSubjectDefinition::Item | AbilityDetectSubjectDefinition::Gold
+            )
+        {
             changed.extend(detected_positions.iter().copied());
         }
         self.mark_item_aware(&source_kind_id);

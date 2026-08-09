@@ -120,6 +120,7 @@ pub enum MogaminatorPredicate {
     Diggers,
     Shooters,
     Ammo,
+    Arrows,
     Armors,
     Shields,
     Suits,
@@ -284,6 +285,7 @@ const ADJECTIVES: &[(&str, MogaminatorPredicate)] = &[
     ("icky", MogaminatorPredicate::Icky),
     ("被排斥", MogaminatorPredicate::Icky),
     ("ego", MogaminatorPredicate::Ego),
+    ("词缀", MogaminatorPredicate::Ego),
     ("all", MogaminatorPredicate::All),
     ("全部", MogaminatorPredicate::All),
 ];
@@ -333,6 +335,8 @@ const NOUNS: &[(&str, MogaminatorPredicate)] = &[
     ("物品", MogaminatorPredicate::Items),
     ("ammo", MogaminatorPredicate::Ammo),
     ("弹药", MogaminatorPredicate::Ammo),
+    ("arrows", MogaminatorPredicate::Arrows),
+    ("箭类", MogaminatorPredicate::Arrows),
     ("wands", MogaminatorPredicate::Wands),
     ("魔杖", MogaminatorPredicate::Wands),
     ("staves", MogaminatorPredicate::Staves),
@@ -451,14 +455,38 @@ fn predicate_is_supported(predicate: MogaminatorPredicate) -> bool {
             | MogaminatorPredicate::Ego
             | MogaminatorPredicate::Artifact
             | MogaminatorPredicate::Nameless
+            | MogaminatorPredicate::Rare
+            | MogaminatorPredicate::Common
+            | MogaminatorPredicate::Worthless
+            | MogaminatorPredicate::DiceBoosted
+            | MogaminatorPredicate::Icky
+            | MogaminatorPredicate::Unreadable
+            | MogaminatorPredicate::FirstRealm
+            | MogaminatorPredicate::SecondRealm
+            | MogaminatorPredicate::FirstBook
+            | MogaminatorPredicate::SecondBook
+            | MogaminatorPredicate::ThirdBook
+            | MogaminatorPredicate::FourthBook
             | MogaminatorPredicate::Collecting
+            | MogaminatorPredicate::Special
+            | MogaminatorPredicate::Unusable
+            | MogaminatorPredicate::Wanted
+            | MogaminatorPredicate::Unique
+            | MogaminatorPredicate::Human
+            | MogaminatorPredicate::MoreDiceThan(_)
             | MogaminatorPredicate::MoreBonusThan(_)
+            | MogaminatorPredicate::MoreLevelThan(_)
             | MogaminatorPredicate::MoreWeightThan(_)
             | MogaminatorPredicate::MoreChargesThan(_)
+            | MogaminatorPredicate::MoreValueThan(_)
             | MogaminatorPredicate::Items
             | MogaminatorPredicate::Weapons
+            | MogaminatorPredicate::FavoriteWeapons
+            | MogaminatorPredicate::HaftedWeapons
+            | MogaminatorPredicate::Diggers
             | MogaminatorPredicate::Shooters
             | MogaminatorPredicate::Ammo
+            | MogaminatorPredicate::Arrows
             | MogaminatorPredicate::Armors
             | MogaminatorPredicate::Shields
             | MogaminatorPredicate::Suits
@@ -493,10 +521,10 @@ fn validate_expression(
         } => {
             let valid_arity = match function {
                 MogaminatorFunction::Or | MogaminatorFunction::And => !arguments.is_empty(),
-                MogaminatorFunction::Not => arguments.len() == 1,
+                MogaminatorFunction::Not => !arguments.is_empty(),
                 MogaminatorFunction::Equal
                 | MogaminatorFunction::LessOrEqual
-                | MogaminatorFunction::GreaterOrEqual => arguments.len() == 2,
+                | MogaminatorFunction::GreaterOrEqual => arguments.len() >= 2,
             };
             if !valid_arity {
                 diagnostics.push(MogaminatorDiagnostic {
@@ -515,8 +543,13 @@ fn validate_expression(
                 variable,
                 MogaminatorVariable::Race
                     | MogaminatorVariable::Class
+                    | MogaminatorVariable::Subclass
+                    | MogaminatorVariable::Speciality
+                    | MogaminatorVariable::FirstRealm
+                    | MogaminatorVariable::SecondRealm
                     | MogaminatorVariable::Level
                     | MogaminatorVariable::Money
+                    | MogaminatorVariable::Selling
             ) {
                 diagnostics.push(MogaminatorDiagnostic {
                     line,
@@ -1075,18 +1108,15 @@ mod tests {
     }
 
     #[test]
-    fn compiler_rejects_unsupported_semantics_even_below_false_condition() {
-        let diagnostics = compile_mogaminator("?:[EQU 0 1]\n稀有 武器\n?:[EQU $子职业 无]\n物品")
+    fn compiler_rejects_unsupported_variables_even_below_false_condition() {
+        let diagnostics = compile_mogaminator("?:[EQU 0 1]\n稀有 武器\n?:[EQU $SYS windows]\n物品")
             .expect_err("all active and inactive lines must compile atomically");
         assert_eq!(
             diagnostics
                 .iter()
                 .map(|diagnostic| diagnostic.code.as_str())
                 .collect::<Vec<_>>(),
-            [
-                "mogaminator.unsupported-predicate",
-                "mogaminator.unsupported-variable",
-            ]
+            ["mogaminator.unsupported-variable"]
         );
 
         compile_mogaminator("?:[与 [等于 $职业 战士] [大于等于 $等级 1]]\n良好的 武器")

@@ -6,6 +6,8 @@
   "appearanceNameKey": "item-demo-trapfinding-scroll-appearance",
   "descriptionKey": "item-demo-trapfinding-scroll-description",
   "glyph": "?",
+  "generationLevel": 5,
+  "mogaminatorRare": false,
   "weightTenthsPound": 5,
   "maxStack": 20,
   "baseValue": 8,

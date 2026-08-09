@@ -19,5 +19,6 @@
     { "itemKindId": "demo.item.resonance-pellet", "quantity": 16 },
     { "itemKindId": "demo.item.resonance-sling", "quantity": 1, "equipped": true }
   ],
+  "favoriteWeaponTags": ["shooter"],
   "tags": ["hybrid-ranged", "prototype"]
 }

@@ -6,6 +6,8 @@
   "appearanceNameKey": "item-demo-clarity-draught-appearance",
   "descriptionKey": "item-demo-clarity-draught-description",
   "glyph": "!",
+  "generationLevel": 20,
+  "mogaminatorRare": false,
   "weightTenthsPound": 4,
   "maxStack": 20,
   "baseValue": 180,

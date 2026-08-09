@@ -6,13 +6,14 @@ import type {
   CellDto,
   HomeDto,
   ItemDto,
+  MogaminatorItemMatchDto,
   Position,
   ShopDto,
   TaskServiceDto,
   VisibilityState,
 } from "./protocol";
 
-export type ObjectListCategory = "interesting" | "items";
+export type ObjectListCategory = "interesting" | "needed" | "items";
 
 export interface ObjectListEntry {
   readonly id: string;
@@ -34,6 +35,7 @@ export interface ObjectListProjection {
   readonly homes: readonly HomeDto[];
   readonly taskServices: readonly TaskServiceDto[];
   readonly items: readonly ItemDto[];
+  readonly mogaminatorMatches: readonly MogaminatorItemMatchDto[];
   readonly includeStairs: boolean;
   readonly visibilityAt: (position: Position) => VisibilityState | undefined;
   readonly glyphFor: (contentId: string) => string | undefined;
@@ -195,6 +197,7 @@ export class ObjectListPanel {
       homes: status.homes,
       taskServices: status.taskServices,
       items: status.items,
+      mogaminatorMatches: status.mogaminator.matches,
       includeStairs: this.#includeStairs,
       visibilityAt: (position) => this.#state.cellVisibility.get(positionKey(position)),
       glyphFor: (contentId) => this.#state.contentGlyphs.get(contentId),
@@ -211,6 +214,7 @@ export class ObjectListPanel {
     this.#renderStairsToggle();
     this.#dom.host.replaceChildren(
       this.#renderCategory("interesting", "object-list-category-interesting"),
+      this.#renderCategory("needed", "object-list-category-needed"),
       this.#renderCategory("items", "object-list-category-items"),
     );
   }
@@ -355,17 +359,26 @@ export function buildObjectListEntries(options: ObjectListProjection): ObjectLis
     });
   }
 
-  const items = options.items.map<ObjectListEntry>((item) => ({
-    id: `item:${item.id}`,
-    category: "items",
-    position: item.position,
-    name: options.visibleItemName(item.displayNameKey, item.kindId),
-    glyph: options.glyphFor(item.kindId) ?? "?",
-    distance: gridDistance(options.playerPosition, item.position),
-    offsetX: item.position.x - options.playerPosition.x,
-    offsetY: item.position.y - options.playerPosition.y,
-    quantity: item.quantity,
-  }));
+  const mogaminatorMatches = new Map(
+    options.mogaminatorMatches.map((match) => [match.itemId, match.action]),
+  );
+  const items = options.items.flatMap<ObjectListEntry>((item) => {
+    const action = mogaminatorMatches.get(item.id);
+    if (action && !action.display) return [];
+    return [{
+      id: `item:${item.id}`,
+      category: action?.disposition === "pick-up" ? "needed" : "items",
+      position: item.position,
+      name: item.inscription
+        ? `${options.visibleItemName(item.displayNameKey, item.kindId)} {${item.inscription}}`
+        : options.visibleItemName(item.displayNameKey, item.kindId),
+      glyph: options.glyphFor(item.kindId) ?? "?",
+      distance: gridDistance(options.playerPosition, item.position),
+      offsetX: item.position.x - options.playerPosition.x,
+      offsetY: item.position.y - options.playerPosition.y,
+      quantity: item.quantity,
+    }];
+  });
   const compare = (left: ObjectListEntry, right: ObjectListEntry): number =>
     left.distance - right.distance ||
     left.position.y - right.position.y ||

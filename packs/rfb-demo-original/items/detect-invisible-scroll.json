@@ -15,6 +15,8 @@
   "useAction": {
     "effectProgramId": "demo.effect.detect-invisible-scroll"
   },
+  "generationLevel": 1,
+  "mogaminatorRare": false,
   "weightTenthsPound": 5,
   "appearanceNameKey": "item-demo-detect-invisible-scroll-appearance"
 }

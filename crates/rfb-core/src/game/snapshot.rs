@@ -579,6 +579,7 @@ impl Game {
                     knowledge: self.item_knowledge_dto(&item.kind_id),
                     position: *position,
                     quantity: item.quantity,
+                    inscription: item.inscription.clone(),
                     fuel: item.fuel,
                     enchantments: item.enchantments,
                     curse: self.visible_item_curse(item),
@@ -647,6 +648,7 @@ impl Game {
                     can_receive_recharge: self.item_can_receive_recharge(item),
                     can_supply_recharge: self.item_can_supply_recharge(item),
                     quantity: item.quantity,
+                    inscription: item.inscription.clone(),
                     enchantments: item.enchantments,
                     curse: self.visible_item_curse(item),
                     weight_tenths_pound: self.item_weight_tenths_pound(&item.kind_id),
@@ -688,6 +690,7 @@ impl Game {
                     display_name_key: self.item_display_name_key(&item.kind_id),
                     knowledge: self.item_knowledge_dto(&item.kind_id),
                     quantity: item.quantity,
+                    inscription: item.inscription.clone(),
                     fuel: item.fuel,
                     enchantments: item.enchantments,
                     curse: self.visible_item_curse(item),
@@ -879,7 +882,7 @@ impl Game {
             item_id: self
                 .gold_piles
                 .iter()
-                .filter(|pile| pile.position == position)
+                .filter(|pile| pile.discovered && pile.position == position)
                 .min_by(|left, right| left.id.cmp(&right.id))
                 .map(|pile| pile.id.clone())
                 .or_else(|| {

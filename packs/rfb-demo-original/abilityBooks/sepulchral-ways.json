@@ -4,6 +4,8 @@
   "id": "demo.ability-book.sepulchral-ways",
   "nameKey": "ability-book-demo-sepulchral-ways-name",
   "descriptionKey": "ability-book-demo-sepulchral-ways-description",
+  "realmId": "death",
+  "rank": 2,
   "abilityIds": [
     "demo.ability.death-entropy-orb",
     "demo.ability.death-nether-bolt",

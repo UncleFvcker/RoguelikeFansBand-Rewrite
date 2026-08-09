@@ -73,15 +73,15 @@
     "finalState": {
       "revision": 10,
       "turn": 10,
-      "worldTick": 100,
+      "worldTick": 80,
       "lastCommandSeq": 10,
-      "rngDrawCounter": 20,
+      "rngDrawCounter": 14,
       "floorId": "demo.floor.surface",
       "playerPosition": {
         "x": 9,
         "y": 5
       },
-      "playerHp": 2,
+      "playerHp": 5,
       "playerMaxHp": 10,
       "playerAttack": 2,
       "playerDefense": 1,
@@ -91,7 +91,7 @@
       "playerCarryCapacityTenthsPound": 1000,
       "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
-      "playerNutrition": 9979,
+      "playerNutrition": 9989,
       "playerLevel": 1,
       "playerExperience": 0,
       "playerMaxLevel": 1,
@@ -420,7 +420,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "a0604c01e252dae27b90843df38ee25aa97c5570826eca4e0e01b10baa62a268"
+      "stateHash": "a8bce40497feaef9bc16e00038f63f319ba1e9610a594b29cfd9a0f15c427445"
     },
     "events": [
       {
@@ -432,37 +432,11 @@
         }
       },
       {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "source": "demo.actor.ember-mote"
-        }
-      },
-      {
         "kind": "item.pickup",
         "messageKey": "item-pickup-success",
         "args": {
           "quantity": "1",
           "target": "demo.item.echo-charm"
-        }
-      },
-      {
-        "kind": "combat.monster-hit",
-        "messageKey": "combat-monster-hit",
-        "args": {
-          "damage": "1",
-          "source": "demo.actor.ember-mote"
-        },
-        "outcome": {
-          "type": "damage",
-          "resolution": {
-            "rawDamage": 1,
-            "armorReduction": 0,
-            "resistanceAdjustment": 0,
-            "finalDamage": 1,
-            "damageType": "fire",
-            "resistance": "normal"
-          }
         }
       },
       {
@@ -482,41 +456,10 @@
         }
       },
       {
-        "kind": "combat.monster-hit",
-        "messageKey": "combat-monster-hit",
+        "kind": "combat.monster-miss",
+        "messageKey": "combat-monster-miss",
         "args": {
-          "damage": "2",
           "source": "demo.actor.ember-mote"
-        },
-        "outcome": {
-          "type": "damage",
-          "resolution": {
-            "rawDamage": 2,
-            "armorReduction": 0,
-            "resistanceAdjustment": 0,
-            "finalDamage": 2,
-            "damageType": "fire",
-            "resistance": "normal"
-          }
-        }
-      },
-      {
-        "kind": "combat.monster-hit",
-        "messageKey": "combat-monster-hit",
-        "args": {
-          "damage": "2",
-          "source": "demo.actor.ember-mote"
-        },
-        "outcome": {
-          "type": "damage",
-          "resolution": {
-            "rawDamage": 2,
-            "armorReduction": 0,
-            "resistanceAdjustment": 0,
-            "finalDamage": 2,
-            "damageType": "fire",
-            "resistance": "normal"
-          }
         }
       },
       {
@@ -533,6 +476,25 @@
             "armorReduction": 0,
             "resistanceAdjustment": 0,
             "finalDamage": 1,
+            "damageType": "fire",
+            "resistance": "normal"
+          }
+        }
+      },
+      {
+        "kind": "combat.monster-hit",
+        "messageKey": "combat-monster-hit",
+        "args": {
+          "damage": "2",
+          "source": "demo.actor.ember-mote"
+        },
+        "outcome": {
+          "type": "damage",
+          "resolution": {
+            "rawDamage": 2,
+            "armorReduction": 0,
+            "resistanceAdjustment": 0,
+            "finalDamage": 2,
             "damageType": "fire",
             "resistance": "normal"
           }
@@ -588,20 +550,20 @@
         "y": 3
       },
       {
-        "x": 6,
-        "y": 3
-      },
-      {
-        "x": 7,
-        "y": 4
-      },
-      {
         "x": 4,
         "y": 3
       },
       {
         "x": 5,
         "y": 3
+      },
+      {
+        "x": 6,
+        "y": 3
+      },
+      {
+        "x": 7,
+        "y": 4
       },
       {
         "x": 5,
@@ -652,6 +614,6 @@
         "y": 5
       }
     ],
-    "saveRoundTripStateHash": "a0604c01e252dae27b90843df38ee25aa97c5570826eca4e0e01b10baa62a268"
+    "saveRoundTripStateHash": "a8bce40497feaef9bc16e00038f63f319ba1e9610a594b29cfd9a0f15c427445"
   }
 }

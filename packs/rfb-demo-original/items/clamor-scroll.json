@@ -6,6 +6,8 @@
   "appearanceNameKey": "item-demo-clamor-scroll-appearance",
   "descriptionKey": "item-demo-clamor-scroll-description",
   "glyph": "?",
+  "generationLevel": 5,
+  "mogaminatorRare": false,
   "weightTenthsPound": 5,
   "maxStack": 20,
   "baseValue": 0,

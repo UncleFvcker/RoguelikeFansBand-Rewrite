@@ -81,22 +81,22 @@ use rfb_protocol::{
     AbilityProficiencyRankDto, AbilityProgressSaveDto, AbilityRandomBranchSpecDto,
     AbilityRandomTargetDto, AbilityStatusChangeDto, AbilityStatusStackingDto,
     AbilitySummonResolutionDto, AbilityTeleportResolutionDto, AbilityTerrainTransformResolutionDto,
-    AbilityVisibleDamageResolutionDto, AttackProfileDto, CampaignStatusDto, CellLightDto,
-    CellVisualDto, DamageDiceDto, DeviceRechargeSourceDto, Direction, EquipmentBonusesDto,
-    EquipmentPassiveDto, GameCommandEnvelope, GameUpdate, GoldAppearanceDto, HealingResolutionDto,
-    ItemActivationDto, ItemChargesDto, ItemCurseRemovalResolutionDto, ItemCurseResolutionDto,
-    ItemCurseSeverityDto, ItemEnchantmentComponentResolutionDto, ItemEnchantmentResolutionDto,
-    ItemEnchantmentsDto, ItemIdentificationDto, ItemIdentifyResolutionDto, ItemKnowledgeDto,
-    ItemPropertyDto, ItemQualityDto, LocaleDto, MapScaleDto, MeleeBlowDto, MeleeRoutineDto,
-    MonsterAbilityCandidateResolutionDto, MonsterAbilityCastResolutionDto,
-    MonsterAbilityDecisionResolutionDto, MonsterAbilityRejectionReasonDto,
-    MonsterAbilityTargetResolutionDto, MonsterDisplacementResolutionDto, MonsterPackBehaviorDto,
-    MonsterPackRoleDto, Position, ProjectileProfileDto, RecallStateDto, ResistanceDto,
-    ResourceGainResolutionDto, ResourceGainSourceDto, ResourcePoolSaveDto,
-    ResourceRecoveryResolutionDto, RestResolutionDto, RestStopReasonDto, SlayDto, SlayLevelDto,
-    SlayTargetDto, StatModifiersDto, SummonCommandDto, SummonCommandModeDto,
-    SummonCommandResolutionDto, TargetModeDto, TargetSelection, TargetSpecDto, TaskStatusKindDto,
-    ThrowProfileDto, WeaponBrandDto,
+    AbilityVisibleDamageResolutionDto, AttackProfileDto, AutoGetModeDto, CampaignStatusDto,
+    CellLightDto, CellVisualDto, DamageDiceDto, DeviceRechargeSourceDto, Direction,
+    EquipmentBonusesDto, EquipmentPassiveDto, GameCommandEnvelope, GameUpdate, GoldAppearanceDto,
+    HealingResolutionDto, ItemActivationDto, ItemChargesDto, ItemCurseRemovalResolutionDto,
+    ItemCurseResolutionDto, ItemCurseSeverityDto, ItemEnchantmentComponentResolutionDto,
+    ItemEnchantmentResolutionDto, ItemEnchantmentsDto, ItemIdentificationDto,
+    ItemIdentifyResolutionDto, ItemKnowledgeDto, ItemPropertyDto, ItemQualityDto, LocaleDto,
+    MapScaleDto, MeleeBlowDto, MeleeRoutineDto, MonsterAbilityCandidateResolutionDto,
+    MonsterAbilityCastResolutionDto, MonsterAbilityDecisionResolutionDto,
+    MonsterAbilityRejectionReasonDto, MonsterAbilityTargetResolutionDto,
+    MonsterDisplacementResolutionDto, MonsterPackBehaviorDto, MonsterPackRoleDto, Position,
+    ProjectileProfileDto, RecallStateDto, ResistanceDto, ResourceGainResolutionDto,
+    ResourceGainSourceDto, ResourcePoolSaveDto, ResourceRecoveryResolutionDto, RestResolutionDto,
+    RestStopReasonDto, SlayDto, SlayLevelDto, SlayTargetDto, StatModifiersDto, SummonCommandDto,
+    SummonCommandModeDto, SummonCommandResolutionDto, TargetModeDto, TargetSelection,
+    TargetSpecDto, TaskStatusKindDto, ThrowProfileDto, WeaponBrandDto,
 };
 
 mod abilities;
@@ -200,7 +200,7 @@ pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 74;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 77;
 pub const WARRENS_JOURNEY_WORLD_ID: &str = "demo.world.warrens-journey";
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const VISIBILITY_RADIUS: i32 = 8;
@@ -622,6 +622,8 @@ fn append_starting_item(
         id,
         kind_id: starting_item.item_kind_id.clone(),
         quantity: starting_item.quantity,
+        inscription: None,
+        origin_actor_kind_id: None,
         quality: ItemQualityDto::Ordinary,
         affix_ids: Vec::new(),
         rolled_affixes: Vec::new(),
@@ -966,6 +968,8 @@ impl Game {
                     id: spawn.instance_id.clone(),
                     kind_id: spawn.kind_id.clone(),
                     quantity: spawn.quantity,
+                    inscription: None,
+                    origin_actor_kind_id: None,
                     quality: item_quality_dto(spawn.quality),
                     affix_ids: spawn.affix_ids.clone(),
                     rolled_affixes: Vec::new(),
@@ -1039,6 +1043,7 @@ impl Game {
             &mut next_item_instance_serial,
         )?;
         let home_states = town::initial_home_states(world, &content);
+        let mogaminator = MogaminatorState::for_character(&content, seed);
         let mut game = Self {
             content,
             world_id: world_id.to_owned(),
@@ -1047,7 +1052,7 @@ impl Game {
             wilderness_seed: seed,
             world_travel_destination: None,
             interface_locale: LocaleDto::ZhCn,
-            mogaminator: MogaminatorState::default(),
+            mogaminator,
             current_floor_id: initial_floor_id,
             current_dungeon_instance_id: None,
             stored_floors: BTreeMap::new(),
@@ -1136,6 +1141,19 @@ impl Game {
         }
 
         let mut action = GameAction::from(envelope.command);
+        let reevaluate_all_mogaminator_items = matches!(
+            &action,
+            GameAction::ConfigureMogaminator { .. } | GameAction::SetInterfaceLocale { .. }
+        );
+        let configuring_mogaminator = matches!(&action, GameAction::ConfigureMogaminator { .. });
+        let item_property_knowledge_before = self
+            .mogaminator
+            .enabled
+            .then(|| self.item_property_knowledge.clone());
+        let item_knowledge_before = self
+            .mogaminator
+            .enabled
+            .then(|| self.item_knowledge.clone());
         let nice_entities_at_command_start = self
             .entities
             .iter()
@@ -1245,6 +1263,17 @@ impl Game {
         if let Some(direction) = local_travel_direction {
             action = GameAction::Move { direction };
         }
+        let auto_get_target = match &action {
+            GameAction::AutoGet { object_id } => self.mogaminator_auto_get_position(object_id),
+            _ => None,
+        };
+        if let Some(direction) = auto_get_target.and_then(|target| {
+            (target != self.player.position)
+                .then(|| self.next_local_travel_direction(target))
+                .flatten()
+        }) {
+            action = GameAction::Move { direction };
+        }
         let advances_world = !depleted_device_use
             && !zero_time_unavailable_item_use
             && !cursed_unequip
@@ -1269,6 +1298,10 @@ impl Game {
                     | GameAction::WithdrawFromHome { .. }
                     | GameAction::SetSummonCommand { .. }
                     | GameAction::ConfigureMogaminator { .. }
+                    | GameAction::AutoGet { .. }
+                    | GameAction::PickUp
+                    | GameAction::ResolveMogaminatorQuery { .. }
+                    | GameAction::InscribeItem { .. }
                     | GameAction::SetInterfaceLocale { .. }
             );
         // Paralysis wastes any world-advancing action: the substituted idle
@@ -1283,6 +1316,7 @@ impl Game {
         } else {
             action.energy_cost()
         };
+        let automatic_pickup_after_move = matches!(&action, GameAction::Move { .. });
         let recover_after_wait = matches!(&action, GameAction::Wait);
         let mut turn_advance = 1_u32;
         if advances_world {
@@ -1397,11 +1431,52 @@ impl Game {
             }
             GameAction::ConfigureMogaminator {
                 enabled,
+                leave_destroyed_items,
+                auto_get_mode,
                 locale,
                 source,
             } => {
-                mogaminator_diagnostics = self.configure_mogaminator(enabled, locale, source);
+                mogaminator_diagnostics = self.configure_mogaminator(
+                    enabled,
+                    leave_destroyed_items,
+                    auto_get_mode,
+                    locale,
+                    source,
+                );
             }
+            GameAction::ResolveMogaminatorQuery { item_id, pick_up } => {
+                if let Some(outcome) = self.resolve_mogaminator_query(&item_id, pick_up)? {
+                    self.record_pick_up_outcome(outcome, &mut events, &mut changed);
+                }
+            }
+            GameAction::DestroyItem { item_id, quantity } => {
+                match self.destroy_item(&item_id, quantity) {
+                    Ok(outcome) => events.push(DomainEvent::ItemDestroyed {
+                        target_kind_id: outcome.kind_id,
+                        quantity: outcome.quantity,
+                        rule_line: None,
+                    }),
+                    Err(reason) => events.push(DomainEvent::ItemDestroyUnavailable {
+                        item_id,
+                        reason: reason.reason().to_owned(),
+                        rule_line: None,
+                    }),
+                }
+            }
+            GameAction::InscribeItem {
+                item_id,
+                inscription,
+            } => match self.inscribe_item(&item_id, inscription) {
+                Ok(outcome) => events.push(DomainEvent::ItemInscribed {
+                    target_kind_id: outcome.kind_id,
+                    inscription: outcome.inscription,
+                    rule_line: None,
+                }),
+                Err(reason) => events.push(DomainEvent::ItemInscribeUnavailable {
+                    item_id,
+                    reason: reason.to_owned(),
+                }),
+            },
             GameAction::Drop { item_ids } => {
                 if let Some((stacks, quantity)) = self.drop_inventory_items(&item_ids) {
                     changed.insert(self.player.position);
@@ -1626,8 +1701,27 @@ impl Game {
                 }
             }
             GameAction::Wait => events.push(DomainEvent::Waited),
+            GameAction::AutoGet { object_id } => {
+                let valid_target =
+                    auto_get_target.is_some_and(|target| target == self.player.position);
+                if !valid_target {
+                    events.push(DomainEvent::NothingToPickUp);
+                } else if let Some(gold) = self.pick_up_gold_at_player(Some(&object_id)) {
+                    changed.insert(self.player.position);
+                    events.push(DomainEvent::GoldPickedUp {
+                        amount: gold.gained,
+                        balance: gold.balance,
+                    });
+                } else if self.mogaminator.auto_get_mode == AutoGetModeDto::Ammo {
+                    let outcome = self.pick_up_item_at_player(Some(&object_id))?;
+                    self.record_pick_up_outcome(outcome, &mut events, &mut changed);
+                } else {
+                    let resolutions = self.apply_mogaminator_to_items(vec![object_id], true)?;
+                    self.record_mogaminator_resolutions(resolutions, &mut events, &mut changed);
+                }
+            }
             GameAction::PickUp => {
-                let gold_pickup = self.pick_up_gold_at_player();
+                let gold_pickup = self.pick_up_gold_at_player(None);
                 if let Some(gold) = gold_pickup {
                     changed.insert(self.player.position);
                     events.push(DomainEvent::GoldPickedUp {
@@ -1635,31 +1729,20 @@ impl Game {
                         balance: gold.balance,
                     });
                 }
-                match self.pick_up_at_player()? {
-                    PickUpOutcome::Picked { kind_id, quantity } => {
-                        changed.insert(self.player.position);
-                        events.push(DomainEvent::ItemPickedUp {
-                            target_kind_id: kind_id,
-                            quantity,
-                        });
-                    }
-                    PickUpOutcome::InventoryFull {
-                        kind_id,
-                        quantity,
-                        used_slots,
-                        required_slots,
-                        capacity,
-                    } => events.push(DomainEvent::ItemPickupInventoryFull {
-                        target_kind_id: kind_id,
-                        quantity,
-                        used_slots,
-                        required_slots,
-                        capacity,
-                    }),
-                    PickUpOutcome::Nothing if gold_pickup.is_none() => {
-                        events.push(DomainEvent::NothingToPickUp);
-                    }
-                    PickUpOutcome::Nothing => {}
+                let mut picked_item = false;
+                let resolutions = self.apply_mogaminator_at_player()?;
+                picked_item |=
+                    self.record_mogaminator_resolutions(resolutions, &mut events, &mut changed);
+                let nothing_to_pick_up = if self.mogaminator.pending_query.is_none() {
+                    let outcome = self.pick_up_at_player()?;
+                    let nothing = matches!(&outcome, PickUpOutcome::Nothing);
+                    picked_item |= self.record_pick_up_outcome(outcome, &mut events, &mut changed);
+                    nothing
+                } else {
+                    false
+                };
+                if nothing_to_pick_up && gold_pickup.is_none() && !picked_item {
+                    events.push(DomainEvent::NothingToPickUp);
                 }
             }
             GameAction::Unequip { slot_id } => {
@@ -1852,11 +1935,45 @@ impl Game {
             },
         }
 
+        if automatic_pickup_after_move
+            && map_scale_before_command == MapScaleDto::Local
+            && self.map_scale == MapScaleDto::Local
+            && self.player.position != player_position_before_command
+            && !self.player_is_dead()
+        {
+            let resolutions = self.apply_mogaminator_at_player()?;
+            self.record_mogaminator_resolutions(resolutions, &mut events, &mut changed);
+        }
+
         if self.player_has_status_kind(STATUS_UNDERSTANDING) {
             let count = self.identify_carried_items();
             if count > 0 {
                 events.push(DomainEvent::ItemAutoIdentified { count });
             }
+        }
+
+        if self.mogaminator.enabled {
+            let reevaluate_all = reevaluate_all_mogaminator_items
+                && (!configuring_mogaminator || mogaminator_diagnostics.is_empty());
+            let item_ids = self
+                .items
+                .iter()
+                .filter(|item| item.location == ItemLocation::Inventory)
+                .filter(|item| {
+                    reevaluate_all
+                        || item_property_knowledge_before
+                            .as_ref()
+                            .is_some_and(|before| {
+                                before.get(&item.id) != self.item_property_knowledge.get(&item.id)
+                            })
+                        || item_knowledge_before.as_ref().is_some_and(|before| {
+                            before.get(&item.kind_id) != self.item_knowledge.get(&item.kind_id)
+                        })
+                })
+                .map(|item| item.id.clone())
+                .collect::<Vec<_>>();
+            let resolutions = self.apply_mogaminator_to_carried_items(item_ids)?;
+            self.record_mogaminator_resolutions(resolutions, &mut events, &mut changed);
         }
 
         if advances_world && !self.player_is_dead() {
@@ -1887,6 +2004,7 @@ impl Game {
         }
         self.apply_task_events(&mut events)?;
         self.apply_campaign_events(&mut events);
+        self.clear_stale_mogaminator_query();
 
         let full_visibility_refresh = self.player.position != player_position_before_command
             || self.current_floor_id != floor_before_command
@@ -1911,7 +2029,14 @@ impl Game {
         self.last_command_seq = envelope.command_seq;
         self.turn = self.turn.saturating_add(turn_advance);
         self.revision = self.revision.saturating_add(1);
+        let newly_discovered_gold_positions = self
+            .gold_piles
+            .iter()
+            .filter(|pile| !pile.discovered && self.is_visible(pile.position))
+            .map(|pile| pile.position)
+            .collect::<Vec<_>>();
         self.reveal_current_visibility();
+        changed.extend(newly_discovered_gold_positions);
         let current_dimensions = self.projected_dimensions();
         let current_visuals = self.visual_cells();
         let map_scale_changed = self.map_scale != map_scale_before_command;
@@ -2088,6 +2213,8 @@ impl Game {
             id: id.to_owned(),
             kind_id: kind_id.to_owned(),
             quantity: 1,
+            inscription: None,
+            origin_actor_kind_id: None,
             quality: ItemQualityDto::Ordinary,
             affix_ids: Vec::new(),
             rolled_affixes: Vec::new(),
@@ -2114,6 +2241,7 @@ impl Game {
             position: self.player.position,
             amount,
             appearance: GoldAppearanceDto::Gold,
+            discovered: true,
         });
         Ok(())
     }
@@ -4504,6 +4632,8 @@ impl Game {
                 id: self.allocate_item_instance_id()?,
                 kind_id: entry.item_kind_id.clone(),
                 quantity: entry.quantity,
+                inscription: None,
+                origin_actor_kind_id: None,
                 quality,
                 affix_ids,
                 rolled_affixes,
@@ -4633,6 +4763,13 @@ impl Game {
             })
             .collect::<Vec<_>>();
         self.mark_item_instances_discovered(&discovered_item_ids);
+        let discovered_gold_ids = self
+            .gold_piles
+            .iter()
+            .filter(|pile| self.is_visible(pile.position))
+            .map(|pile| pile.id.clone())
+            .collect::<Vec<_>>();
+        self.mark_gold_piles_discovered(&discovered_gold_ids);
     }
 
     fn mark_item_instances_discovered(&mut self, item_ids: &[String]) {

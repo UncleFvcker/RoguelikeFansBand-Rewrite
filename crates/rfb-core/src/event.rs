@@ -246,6 +246,25 @@ pub(crate) enum DomainEvent {
         quality: ItemQualityDto,
     },
     ItemAppraiseUnavailable,
+    ItemDestroyed {
+        target_kind_id: String,
+        quantity: u32,
+        rule_line: Option<u32>,
+    },
+    ItemDestroyUnavailable {
+        item_id: String,
+        reason: String,
+        rule_line: Option<u32>,
+    },
+    ItemInscribed {
+        target_kind_id: String,
+        inscription: Option<String>,
+        rule_line: Option<u32>,
+    },
+    ItemInscribeUnavailable {
+        item_id: String,
+        reason: String,
+    },
     ItemsDropped {
         stacks: usize,
         quantity: u64,
@@ -1690,6 +1709,62 @@ impl DomainEvent {
             Self::ItemAppraiseUnavailable => {
                 dto_without_args("item.appraise.none", "item-appraise-unavailable")
             }
+            Self::ItemDestroyed {
+                target_kind_id,
+                quantity,
+                rule_line,
+            } => dto(
+                "item.destroy",
+                "item-destroy-success",
+                [
+                    ("target", target_kind_id),
+                    ("quantity", quantity.to_string()),
+                    ("ruleLine", rule_line.unwrap_or(0).to_string()),
+                ],
+            ),
+            Self::ItemDestroyUnavailable {
+                item_id,
+                reason,
+                rule_line,
+            } => dto(
+                "item.destroy.unavailable",
+                "item-destroy-unavailable",
+                [
+                    ("item", item_id),
+                    ("reason", reason),
+                    ("ruleLine", rule_line.unwrap_or(0).to_string()),
+                ],
+            ),
+            Self::ItemInscribed {
+                target_kind_id,
+                inscription: Some(inscription),
+                rule_line,
+            } => dto(
+                "item.inscribe",
+                "item-inscribe-success",
+                [
+                    ("target", target_kind_id),
+                    ("inscription", inscription),
+                    ("ruleLine", rule_line.unwrap_or(0).to_string()),
+                ],
+            ),
+            Self::ItemInscribed {
+                target_kind_id,
+                inscription: None,
+                rule_line,
+            } => dto(
+                "item.inscribe.cleared",
+                "item-inscribe-cleared",
+                [
+                    ("target", target_kind_id),
+                    ("ruleLine", rule_line.unwrap_or(0).to_string()),
+                ],
+            ),
+            Self::ItemInscribeUnavailable { item_id, reason } => dto(
+                "item.inscribe.unavailable",
+                "item-inscribe-unavailable",
+                [("item", item_id), ("reason", reason)],
+            ),
             Self::ItemsDropped { stacks, quantity } => dto(
                 "item.drop",
                 "item-drop-success",

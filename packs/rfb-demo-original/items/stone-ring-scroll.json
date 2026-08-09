@@ -6,6 +6,8 @@
   "appearanceNameKey": "item-demo-stone-ring-scroll-appearance",
   "descriptionKey": "item-demo-stone-ring-scroll-description",
   "glyph": "?",
+  "generationLevel": 75,
+  "mogaminatorRare": false,
   "weightTenthsPound": 5,
   "maxStack": 20,
   "baseValue": 5000,

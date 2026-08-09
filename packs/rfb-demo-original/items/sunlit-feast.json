@@ -6,6 +6,8 @@
   "appearanceNameKey": "item-demo-unfamiliar-food-name",
   "descriptionKey": "item-demo-sunlit-feast-description",
   "glyph": ",",
+  "generationLevel": 90,
+  "mogaminatorRare": false,
   "weightTenthsPound": 2,
   "maxStack": 20,
   "useAction": {

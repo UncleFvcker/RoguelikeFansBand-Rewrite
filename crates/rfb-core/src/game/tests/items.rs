@@ -449,6 +449,8 @@ fn revelation_scroll_fully_identifies_affixes_and_round_trips() {
         id: TARGET_ID.to_owned(),
         kind_id: "demo.item.adaptive-glaive".to_owned(),
         quantity: 1,
+        inscription: None,
+        origin_actor_kind_id: None,
         quality: ItemQualityDto::Exceptional,
         affix_ids: vec!["demo.affix.adaptive-echo".to_owned()],
         rolled_affixes: Vec::new(),
@@ -2970,6 +2972,8 @@ fn item_summon_zero_candidate_and_zero_space_consume_without_awareness_or_rng() 
             id: format!("test.item.summon-blocker.{ordinal}"),
             kind_id: "demo.item.luminous-shard".to_owned(),
             quantity: 1,
+            inscription: None,
+            origin_actor_kind_id: None,
             quality: ItemQualityDto::Ordinary,
             affix_ids: Vec::new(),
             rolled_affixes: Vec::new(),
@@ -3393,6 +3397,7 @@ fn p3_4_trap_creation_only_replaces_clean_adjacent_floor() {
         position: gold,
         amount: 1,
         appearance: GoldAppearanceDto::Copper,
+        discovered: true,
     });
     game.floor_connections.push(FloorConnectionState {
         id: "test.connection.trap-blocker".to_owned(),
@@ -3510,6 +3515,7 @@ fn p3_4_rune_requires_clean_floor_and_uses_original_break_threshold() {
         position: blocked.player.position,
         amount: 1,
         appearance: GoldAppearanceDto::Copper,
+        discovered: true,
     });
     give_inventory_item(
         &mut blocked,
@@ -3708,6 +3714,7 @@ fn p3_4_destruction_commits_atomically_and_refuses_protected_floors() {
         position: destroyed,
         amount: 12,
         appearance: GoldAppearanceDto::Silver,
+        discovered: true,
     });
     give_inventory_item(
         &mut game,
@@ -4842,12 +4849,14 @@ fn p3_3_treasure_detection_reports_stable_gold_pile_ids() {
             position: gold_position,
             amount: 20,
             appearance: GoldAppearanceDto::Gold,
+            discovered: false,
         },
         GoldPile {
             id: "generated.gold.alpha".to_owned(),
             position: gold_position,
             amount: 10,
             appearance: GoldAppearanceDto::Copper,
+            discovered: false,
         },
     ];
     give_inventory_item(
@@ -4882,6 +4891,11 @@ fn p3_3_treasure_detection_reports_stable_gold_pile_ids() {
         detection.detected_entity_ids,
         vec!["generated.gold.alpha", "generated.gold.zeta"]
     );
+    assert!(game.gold_piles.iter().all(|pile| pile.discovered));
+    assert_eq!(update.gold_piles.len(), 2);
+    assert!(update.changed_cells.iter().any(|cell| {
+        cell.position == gold_position && cell.item_id.as_deref() == Some("generated.gold.alpha")
+    }));
 }
 
 #[test]

@@ -6,6 +6,8 @@
   "appearanceNameKey": "item-demo-shatterburst-draught-appearance",
   "descriptionKey": "item-demo-shatterburst-draught-description",
   "glyph": "!",
+  "generationLevel": 60,
+  "mogaminatorRare": false,
   "weightTenthsPound": 4,
   "maxStack": 20,
   "baseValue": 10000,

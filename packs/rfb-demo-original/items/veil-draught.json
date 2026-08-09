@@ -6,6 +6,8 @@
   "appearanceNameKey": "item-demo-veil-draught-appearance",
   "descriptionKey": "item-demo-veil-draught-description",
   "glyph": "!",
+  "generationLevel": 0,
+  "mogaminatorRare": false,
   "weightTenthsPound": 4,
   "maxStack": 20,
   "baseValue": 0,

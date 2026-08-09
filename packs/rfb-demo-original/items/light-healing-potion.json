@@ -6,6 +6,8 @@
   "appearanceNameKey": "item-demo-light-healing-potion-appearance",
   "descriptionKey": "item-demo-light-healing-potion-description",
   "glyph": "!",
+  "generationLevel": 0,
+  "mogaminatorRare": false,
   "weightTenthsPound": 4,
   "maxStack": 20,
   "baseValue": 20,

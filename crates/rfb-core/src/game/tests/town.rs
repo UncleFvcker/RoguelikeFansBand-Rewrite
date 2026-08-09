@@ -948,6 +948,7 @@ fn sold_item_can_be_bought_back_with_full_instance_state() {
                 .as_mut()
                 .expect("starting torch must have fuel")
                 .current = 1_234;
+            item.inscription = Some("@m1".to_owned());
             item.clone()
         })
         .expect("warrior should start with torches")
@@ -961,6 +962,14 @@ fn sold_item_can_be_bought_back_with_full_instance_state() {
         },
     );
     assert!(sale.events.iter().any(|event| event.kind == "shop.sale"));
+    assert_eq!(
+        sale.shops
+            .iter()
+            .find(|shop| shop.id == GENERAL_STORE_ID)
+            .and_then(|shop| shop.stock.iter().find(|item| item.id == original.id))
+            .and_then(|item| item.inscription.as_deref()),
+        Some("@m1")
+    );
     let sold = game.shop_states[GENERAL_STORE_ID]
         .inventory
         .iter()
@@ -989,6 +998,7 @@ fn sold_item_can_be_bought_back_with_full_instance_state() {
     assert_eq!(repurchased.kind_id, original.kind_id);
     assert_eq!(repurchased.fuel, original.fuel);
     assert_eq!(repurchased.charges, original.charges);
+    assert_eq!(repurchased.inscription, original.inscription);
     assert!(game.item_property_knowledge[&repurchased.id].identified);
 }
 

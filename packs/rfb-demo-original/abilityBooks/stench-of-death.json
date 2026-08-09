@@ -4,6 +4,8 @@
   "id": "demo.ability-book.stench-of-death",
   "nameKey": "ability-book-demo-stench-of-death-name",
   "descriptionKey": "ability-book-demo-stench-of-death-description",
+  "realmId": "death",
+  "rank": 1,
   "abilityIds": [
     "demo.ability.death-black-sleep",
     "demo.ability.death-detect-evil",

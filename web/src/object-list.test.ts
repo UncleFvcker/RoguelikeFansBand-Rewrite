@@ -60,6 +60,7 @@ function projection(includeStairs = false, floorId = "demo.floor.warrens-depth-1
         quantity: 2,
       },
     ],
+    mogaminatorMatches: [],
     includeStairs,
     visibilityAt: (position) => visibility.get(`${position.x},${position.y}`),
     glyphFor: (id) => glyphs.get(id),
@@ -99,6 +100,33 @@ test("equal-position object sorting uses stable instance ids", () => {
       .filter((entry) => entry.category === "items")
       .map((entry) => entry.id),
     ["item:ration.0", "item:ration.1"],
+  );
+});
+
+test("Mogaminator groups needed items and hides display-disabled matches", () => {
+  const options = projection();
+  options.items = [
+    options.items[0],
+    { ...options.items[0], id: "ration.hidden" },
+  ];
+  options.mogaminatorMatches = [
+    {
+      itemId: "ration.1",
+      lineNumber: 1,
+      action: { disposition: "pick-up", display: true, autoIdentify: false },
+    },
+    {
+      itemId: "ration.hidden",
+      lineNumber: 2,
+      action: { disposition: "pick-up", display: false, autoIdentify: false },
+    },
+  ];
+
+  assert.deepEqual(
+    buildObjectListEntries(options)
+      .filter((entry) => entry.category !== "interesting")
+      .map(({ id, category }) => [id, category]),
+    [["item:ration.1", "needed"]],
   );
 });
 

@@ -15,6 +15,8 @@
   "useAction": {
     "effectProgramId": "demo.effect.intelligence-potion"
   },
+  "generationLevel": 30,
+  "mogaminatorRare": false,
   "weightTenthsPound": 4,
   "appearanceNameKey": "item-demo-intelligence-potion-appearance"
 }

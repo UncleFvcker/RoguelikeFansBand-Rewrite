@@ -149,6 +149,8 @@ pub(super) fn give_inventory_item(game: &mut Game, id: &str, kind_id: &str) {
         id: id.to_owned(),
         kind_id: kind_id.to_owned(),
         quantity: 1,
+        inscription: None,
+        origin_actor_kind_id: None,
         quality: ItemQualityDto::Ordinary,
         affix_ids: Vec::new(),
         rolled_affixes: Vec::new(),

@@ -5,6 +5,8 @@
   "nameKey": "item-demo-sepulchral-ways-name",
   "descriptionKey": "item-demo-sepulchral-ways-description",
   "glyph": "?",
+  "generationLevel": 20,
+  "mogaminatorRare": false,
   "weightTenthsPound": 30,
   "maxStack": 1,
   "baseValue": 1000,

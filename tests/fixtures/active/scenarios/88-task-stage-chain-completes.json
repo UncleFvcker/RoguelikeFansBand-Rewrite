@@ -124,7 +124,7 @@
     "finalState": {
       "revision": 18,
       "turn": 18,
-      "worldTick": 180,
+      "worldTick": 170,
       "lastCommandSeq": 18,
       "rngDrawCounter": 29,
       "floorId": "demo.floor.surface",
@@ -428,7 +428,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "8f70c49b1882c23f1c40ced5da2445b50c163bc9ef37a68d9958d5abb4bef976"
+      "stateHash": "18eb5d4632c079cd6ab1270967af30679c11d6ea3173bcb4318e2cc07f6077ca"
     },
     "events": [
       {
@@ -3958,6 +3958,6 @@
     "removedEntities": [
       "demo.monster.ember-mote.1"
     ],
-    "saveRoundTripStateHash": "8f70c49b1882c23f1c40ced5da2445b50c163bc9ef37a68d9958d5abb4bef976"
+    "saveRoundTripStateHash": "18eb5d4632c079cd6ab1270967af30679c11d6ea3173bcb4318e2cc07f6077ca"
   }
 }

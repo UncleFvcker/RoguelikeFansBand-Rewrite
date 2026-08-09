@@ -6,6 +6,8 @@
   "appearanceNameKey": "item-demo-rime-surge-scroll-appearance",
   "descriptionKey": "item-demo-rime-surge-scroll-description",
   "glyph": "?",
+  "generationLevel": 70,
+  "mogaminatorRare": false,
   "weightTenthsPound": 5,
   "maxStack": 20,
   "baseValue": 1000,

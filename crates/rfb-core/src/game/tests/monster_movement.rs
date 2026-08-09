@@ -410,6 +410,8 @@ fn item_destroyer_removes_an_ordinary_ground_item() {
         id: "test.destroyed-item".to_owned(),
         kind_id: "demo.item.echo-charm".to_owned(),
         quantity: 2,
+        inscription: None,
+        origin_actor_kind_id: None,
         quality: ItemQualityDto::Ordinary,
         affix_ids: Vec::new(),
         rolled_affixes: Vec::new(),
@@ -449,6 +451,7 @@ fn item_destroyer_removes_a_ground_gold_pile() {
         position,
         amount: 17,
         appearance: GoldAppearanceDto::Silver,
+        discovered: true,
     });
     let mut events = Vec::new();
 

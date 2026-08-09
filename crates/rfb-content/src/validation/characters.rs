@@ -353,6 +353,20 @@ pub(super) fn validate_characters(
             }
             require_reference(resource_ids, &profile.resource_id, &class.id)?;
         }
+        normalize_tags(&class.id, &mut class.favorite_weapon_tags)?;
+        normalize_tags(&class.id, &mut class.special_item_tags)?;
+        class.icky_equipment_slots.sort();
+        if class
+            .icky_equipment_slots
+            .iter()
+            .any(|slot| validate_equipment_slot(slot).is_err())
+            || class
+                .icky_equipment_slots
+                .windows(2)
+                .any(|pair| pair[0] == pair[1])
+        {
+            return Err(ContentError::InvalidCharacterSource(class.id.clone()));
+        }
         normalize_tags(&class.id, &mut class.tags)?;
         insert_definition_id(all_ids, &class.id)?;
         class_ids.insert(class.id.clone());
@@ -435,6 +449,12 @@ pub(super) fn validate_characters(
         ]
         .into_iter()
         .any(|value| !(3..=18).contains(&value))
+        {
+            return Err(ContentError::InvalidCharacterBuild(build.id.clone()));
+        }
+        if build.first_realm_id.as_deref().is_some_and(str::is_empty)
+            || build.second_realm_id.as_deref().is_some_and(str::is_empty)
+            || build.first_realm_id.is_some() && build.first_realm_id == build.second_realm_id
         {
             return Err(ContentError::InvalidCharacterBuild(build.id.clone()));
         }

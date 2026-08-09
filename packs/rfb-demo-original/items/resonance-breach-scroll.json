@@ -6,6 +6,8 @@
   "appearanceNameKey": "item-demo-resonance-breach-scroll-appearance",
   "descriptionKey": "item-demo-resonance-breach-scroll-description",
   "glyph": "?",
+  "generationLevel": 10,
+  "mogaminatorRare": false,
   "weightTenthsPound": 5,
   "maxStack": 20,
   "baseValue": 50,

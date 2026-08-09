@@ -1,6 +1,6 @@
 # RFB 全系统梳理与重构实现路线
 
-状态：长期规则实现路线；当前基线为协议 1.154 / contract-v226（P31–P98 进展见 8.3，玩家流程与 Outpost 进展见 Phase 17/18，物品与变异接入见 Phase 19，Warrens 怪物机制见 W1–W14 清单，荒野世界图见 W0–W5）
+状态：长期规则实现路线；当前基线为协议 1.157 / contract-v227 / state hash Schema v77（P31–P98 进展见 8.3，玩家流程与 Outpost 进展见 Phase 17/18，物品与变异接入见 Phase 19，Warrens 怪物机制见 W1–W14 清单，荒野世界图见 W0–W5）
 
 ## 1. 目的与边界
 
@@ -679,6 +679,20 @@ P30“首个非 Mana 职业资源”已由 contract-v90 完成：节奏资源按
 **怪物 P38B 治疗与召唤参数进展（2026-08）**：contract-v225 接入色孽欲魔、南蛮王孟获、异西鳐祭司、隐伏怪、圣武士和游侠。8 条新增 ability 只保存既有治疗、分类召唤、同族召唤和伤害 effect 的权威参数；20 级召唤由隐伏怪与游侠共享，色孽欲魔复用 P38A 的火/冰箭。附身者侦测、地图与祝福令牌继续排除。正式包为 430 actors / 171 abilities，严格同步 365 条；协议 1.152、Schema v72 不变，demo 1.221.0，内容 hash 为 `acc9186760331c90d5c3218755950ac186460f234760b8e9e995645ec41caba7`。完整边界见 [Contract v225](contract-v225-warrens-content-p38b-healing-summoning.md)。
 
 **怪物 P39 窄机制进展（2026-08）**：contract-v226 接入闪烁的灯光与黏糊恶心女王。`JMP_LIGHT(5d5)` 由怪物专用 `jump-damage` 严格按施法者中心范围光伤、死亡处理、半径十闪现的顺序执行；actor `contactAuras` 改为声明有序列表，女王的毒素与酸性 `2d3` 分别复用状态、抗性、即时伤害和致死中止。新增 `drain-mana-11` 与女王同族召唤参数记录。正式包为 432 actors / 174 abilities，严格同步 367 条；协议 1.152、Schema v72 不变，demo 1.222.0，内容 hash 为 `604d16879ffd80f5e678cc6363a900f3a9491fd8768ffd84f8ee4c3f940630d2`。完整边界见 [Contract v226](contract-v226-warrens-content-p39-jump-light-multiple-auras.md)。
+
+**墨家名器 M6 进展（2026-08）**：contract-v216 以 RFB `master:lib/pref/pickpref.prf` 为英文默认模板，中文模板保持相同行序、条件和动作，并以权威中文名及类型化中文谓词表达同一语义。中英文匹配名按界面语言选择，每个角色仍分别保存两套规则文本；新角色、恢复默认及界面语言切换使用对应模板。编辑器增加原生文本导入、导出和内联帮助。M6 不增加 DTO 或权威状态字段，协议保持 1.153、save v1 与 state hash Schema v74 不变；共同初始化默认文本改变，470 个 exact fixture 统一刷新至 contract-v216。
+
+**自动拾取 G0 进展（2026-08）**：contract-v217 增加每角色 `off / ammo / wanted` 三态配置，默认关闭，并在墨家名器编辑器中使用原生下拉选择。模式随存档、回放和 state hash 保存；无效规则应用不会部分改写模式。协议升至 1.154，state hash Schema 升至 v75。G0 不实现 Ctrl+G 目标搜索、路径或拾取动作。
+
+**自动拾取 G1 进展（2026-08）**：contract-v218 在 Core 内派生单个权威目标坐标。`wanted` 复用墨家名器与统一销毁保护，`ammo` 识别 `=g`；两者复用 O3 可达性，并按原版投射例外、距离和稳定实例 ID 选择。金币补齐发现状态并收紧快照投影。协议升至 1.155，state hash Schema 升至 v76。G1 不派发 Ctrl+G、不移动或拾取。
+
+**自动拾取 G2 进展（2026-08）**：contract-v219 增加 `AutoGet { objectId }`。Core 核对当前权威候选；远端目标只执行一次普通移动，脚下按实例 ID 处理金币、墨家名器动作或 `=g` 物品，普通 `PickUp` 同步改为零耗时。协议升至 1.156，state hash Schema 保持 v76。G2 尚未绑定 Ctrl+G 连续派发。
+
+**自动拾取 G3 进展（2026-08）**：Web 明确区分 Ctrl+G 与小写 `g`。Ctrl+G 先处理脚下物品，再锁定 Core 目标连续派发单步 `AutoGet`，目标消失后选取下一个；敌人、伤害、死亡、失明/混乱、路线阻断、楼层切换、满包和墨家名器询问都会停止。世界地图禁用。协议、contract-v219 与 state hash Schema v76 不变。
+
+**自动拾取 G4 收口（2026-08）**：最终版本为协议 1.156 / contract-v219 / state hash Schema v76。G0–G3 的模式、发现知识、权威目标、单步命令和 Ctrl+G 调度均通过 Core、协议、save、replay、Web 与 470 条 exact fixtures 验收。内容包和内容哈希未变；未执行独立桌面构建。
+
+**三线集成收口（2026-08）**：城镇自动拾取、物品与变异、Warrens 怪物 P31–P39 在协议 1.157 / contract-v227 / state hash Schema v77 汇合；共享协议投影、存档状态、内容哈希与 exact fixtures 由集成分支统一生成和验证。
 
 ## 9. 内容迁移策略
 

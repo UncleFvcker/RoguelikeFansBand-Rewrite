@@ -6,6 +6,8 @@
   "appearanceNameKey": "item-demo-kin-summoning-scroll-appearance",
   "descriptionKey": "item-demo-kin-summoning-scroll-description",
   "glyph": "?",
+  "generationLevel": 30,
+  "mogaminatorRare": false,
   "weightTenthsPound": 5,
   "maxStack": 20,
   "baseValue": 1000,

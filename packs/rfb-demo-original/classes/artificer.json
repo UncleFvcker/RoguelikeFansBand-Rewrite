@@ -29,5 +29,6 @@
     { "itemKindId": "demo.item.luminous-shard", "quantity": 3 },
     { "itemKindId": "demo.item.resonance-stabilizer", "quantity": 1 }
   ],
+  "favoriteWeaponTags": ["weapon", "shooter"],
   "tags": ["device-user", "prototype"]
 }

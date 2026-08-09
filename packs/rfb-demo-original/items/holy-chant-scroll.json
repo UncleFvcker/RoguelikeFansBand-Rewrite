@@ -15,6 +15,8 @@
   "useAction": {
     "effectProgramId": "demo.effect.holy-chant-scroll"
   },
+  "generationLevel": 10,
+  "mogaminatorRare": false,
   "weightTenthsPound": 5,
   "appearanceNameKey": "item-demo-holy-chant-scroll-appearance"
 }

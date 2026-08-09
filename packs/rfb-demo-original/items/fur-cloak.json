@@ -5,6 +5,8 @@
   "nameKey": "item-demo-fur-cloak-name",
   "descriptionKey": "item-demo-fur-cloak-description",
   "glyph": "(",
+  "generationLevel": 20,
+  "mogaminatorRare": false,
   "weightTenthsPound": 30,
   "maxStack": 1,
   "baseValue": 200,

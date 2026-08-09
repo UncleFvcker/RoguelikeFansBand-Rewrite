@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: MPL-2.0
 use std::collections::{BTreeMap, BTreeSet};
 
-use rfb_content::ContentCatalog;
+use rfb_content::{ContentCatalog, TaskObjectiveKind};
 use rfb_protocol::{
     ItemCurseSeverityDto, ItemEnchantmentsDto, ItemKnowledgeDto, ItemQualityDto, Position,
 };
 
 use crate::{
     error::CoreError,
+    event::DomainEvent,
     state::{EquipOutcome, ItemInstance, ItemLocation},
 };
 
@@ -16,7 +17,7 @@ use super::{
     item_can_occupy_slot_type,
 };
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub(super) struct ItemKnowledgeState {
     pub(super) tried: bool,
     pub(super) aware: bool,
@@ -202,6 +203,43 @@ pub(super) enum PickUpOutcome {
         capacity: u16,
     },
     Nothing,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(super) struct DestroyItemOutcome {
+    pub(super) kind_id: String,
+    pub(super) quantity: u32,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) enum DestroyItemFailure {
+    Artifact,
+    Indestructible,
+    InvalidQuantity,
+    NotFound,
+    NotOwned,
+    ProtectedInscription,
+    TaskItem,
+}
+
+impl DestroyItemFailure {
+    pub(super) const fn reason(self) -> &'static str {
+        match self {
+            Self::Artifact => "artifact",
+            Self::Indestructible => "indestructible",
+            Self::InvalidQuantity => "invalid-quantity",
+            Self::NotFound => "not-found",
+            Self::NotOwned => "not-owned",
+            Self::ProtectedInscription => "protected-inscription",
+            Self::TaskItem => "task-item",
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(super) struct InscribeItemOutcome {
+    pub(super) kind_id: String,
+    pub(super) inscription: Option<String>,
 }
 
 struct BatchDropPlan {
@@ -444,11 +482,15 @@ fn plan_pick_up(
     item_property_knowledge: &BTreeMap<String, ItemPropertyKnowledgeState>,
     player_position: Position,
     inventory_slot_capacity: u16,
+    item_id: Option<&str>,
 ) -> Result<PickUpPlan, CoreError> {
     let Some(ground_index) = items
         .iter()
         .enumerate()
-        .filter(|(_, item)| item.location == ItemLocation::Ground(player_position))
+        .filter(|(_, item)| {
+            item.location == ItemLocation::Ground(player_position)
+                && item_id.is_none_or(|item_id| item.id == item_id)
+        })
         .min_by(|(_, left), (_, right)| left.id.cmp(&right.id))
         .map(|(index, _)| index)
     else {
@@ -517,6 +559,8 @@ fn plan_pick_up(
 
 pub(super) fn item_instances_stack_compatible(left: &ItemInstance, right: &ItemInstance) -> bool {
     left.kind_id == right.kind_id
+        && left.inscription == right.inscription
+        && left.origin_actor_kind_id == right.origin_actor_kind_id
         && left.quality == right.quality
         && left.affix_ids == right.affix_ids
         && left.rolled_affixes == right.rolled_affixes
@@ -529,6 +573,96 @@ pub(super) fn item_instances_stack_compatible(left: &ItemInstance, right: &ItemI
 }
 
 impl Game {
+    pub(super) fn can_destroy_item(&self, item: &ItemInstance) -> Result<(), DestroyItemFailure> {
+        let definition = self
+            .content
+            .item(&item.kind_id)
+            .ok_or(DestroyItemFailure::Indestructible)?;
+        if definition.tags.iter().any(|tag| tag == "artifact") {
+            return Err(DestroyItemFailure::Artifact);
+        }
+        if definition.tags.iter().any(|tag| tag == "indestructible") {
+            return Err(DestroyItemFailure::Indestructible);
+        }
+        if item
+            .inscription
+            .as_deref()
+            .is_some_and(inscription_protects_from_destruction)
+        {
+            return Err(DestroyItemFailure::ProtectedInscription);
+        }
+        let task_item = self.content.world(&self.world_id).is_some_and(|world| {
+            world
+                .tasks
+                .iter()
+                .flat_map(|task| &task.objectives)
+                .any(|objective| {
+                    objective.kind == TaskObjectiveKind::CollectItem
+                        && objective.item_instance_id.as_deref().map_or_else(
+                            || objective.item_kind_id.as_deref() == Some(item.kind_id.as_str()),
+                            |instance_id| instance_id == item.id,
+                        )
+                })
+        });
+        if task_item {
+            return Err(DestroyItemFailure::TaskItem);
+        }
+        Ok(())
+    }
+
+    pub(super) fn destroy_item(
+        &mut self,
+        item_id: &str,
+        quantity: u32,
+    ) -> Result<DestroyItemOutcome, DestroyItemFailure> {
+        let index = self
+            .items
+            .iter()
+            .position(|item| item.id == item_id)
+            .ok_or(DestroyItemFailure::NotFound)?;
+        if !matches!(self.items[index].location, ItemLocation::Inventory)
+            && self.items[index].location != ItemLocation::Ground(self.player.position)
+        {
+            return Err(DestroyItemFailure::NotOwned);
+        }
+        self.can_destroy_item(&self.items[index])?;
+        if quantity == 0 || quantity > self.items[index].quantity {
+            return Err(DestroyItemFailure::InvalidQuantity);
+        }
+        let kind_id = self.items[index].kind_id.clone();
+        if quantity == self.items[index].quantity {
+            let removed = self.items.remove(index);
+            self.item_property_knowledge.remove(&removed.id);
+        } else {
+            self.items[index].quantity -= quantity;
+        }
+        Ok(DestroyItemOutcome { kind_id, quantity })
+    }
+
+    pub(super) fn inscribe_item(
+        &mut self,
+        item_id: &str,
+        inscription: Option<String>,
+    ) -> Result<InscribeItemOutcome, &'static str> {
+        let item = self
+            .items
+            .iter_mut()
+            .find(|item| item.id == item_id)
+            .ok_or("not-found")?;
+        if !matches!(
+            item.location,
+            ItemLocation::Inventory | ItemLocation::Equipped { .. }
+        ) && item.location != ItemLocation::Ground(self.player.position)
+        {
+            return Err("not-owned");
+        }
+        item.inscription = inscription.filter(|value| !value.is_empty());
+        Ok(InscribeItemOutcome {
+            kind_id: item.kind_id.clone(),
+            inscription: item.inscription.clone(),
+        })
+    }
+
     pub(super) fn inventory_used_slots(&self) -> u16 {
         inventory_used_slots(&self.items)
     }
@@ -1211,12 +1345,20 @@ impl Game {
     }
 
     pub(super) fn pick_up_at_player(&mut self) -> Result<PickUpOutcome, CoreError> {
+        self.pick_up_item_at_player(None)
+    }
+
+    pub(super) fn pick_up_item_at_player(
+        &mut self,
+        item_id: Option<&str>,
+    ) -> Result<PickUpOutcome, CoreError> {
         let plan = plan_pick_up(
             &self.content,
             &self.items,
             &self.item_property_knowledge,
             self.player.position,
             self.inventory_slot_capacity(),
+            item_id,
         )?;
         match plan {
             PickUpPlan::Nothing => Ok(PickUpOutcome::Nothing),
@@ -1249,6 +1391,41 @@ impl Game {
                     quantity: plan.original_quantity,
                 })
             }
+        }
+    }
+
+    pub(super) fn record_pick_up_outcome(
+        &self,
+        outcome: PickUpOutcome,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) -> bool {
+        match outcome {
+            PickUpOutcome::Picked { kind_id, quantity } => {
+                changed.insert(self.player.position);
+                events.push(DomainEvent::ItemPickedUp {
+                    target_kind_id: kind_id,
+                    quantity,
+                });
+                true
+            }
+            PickUpOutcome::InventoryFull {
+                kind_id,
+                quantity,
+                used_slots,
+                required_slots,
+                capacity,
+            } => {
+                events.push(DomainEvent::ItemPickupInventoryFull {
+                    target_kind_id: kind_id,
+                    quantity,
+                    used_slots,
+                    required_slots,
+                    capacity,
+                });
+                false
+            }
+            PickUpOutcome::Nothing => false,
         }
     }
 
@@ -1310,4 +1487,13 @@ impl Game {
             knowledge.aware = true;
         }
     }
+}
+
+fn inscription_protects_from_destruction(inscription: &str) -> bool {
+    inscription.split('!').skip(1).any(|commands| {
+        commands
+            .chars()
+            .take_while(|command| command.is_ascii_alphabetic() || *command == '*')
+            .any(|command| command == 'k' || command == '*')
+    })
 }

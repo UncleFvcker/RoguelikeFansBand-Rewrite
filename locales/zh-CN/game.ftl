@@ -230,6 +230,20 @@ message-item-equip-swap = 你卸下了{ $replaced }，并将{ $target }装备在
 message-item-equip-unavailable = 所选物品现在无法装备。请选择一件具有装备槽的物品，并确认“装备”按钮可用。
 message-item-appraise-success = 你鉴别出{ $target }的品质为{ $quality }。
 message-item-appraise-unavailable = 所选物品现在无法鉴别。
+message-item-destroy-success = 你销毁了 { $quantity } 个{ $target }。{ $ruleLine ->
+    [0] { "" }
+   *[other] （墨家名器第 { $ruleLine } 行）
+}
+message-item-destroy-unavailable = 无法销毁该物品：{ $reason }。{ $ruleLine ->
+    [0] { "" }
+   *[other] （墨家名器第 { $ruleLine } 行）
+}
+message-item-inscribe-success = { $target }的铭文已设为“{ $inscription }”。{ $ruleLine ->
+    [0] { "" }
+   *[other] （墨家名器第 { $ruleLine } 行）
+}
+message-item-inscribe-cleared = 已清除{ $target }的铭文。
+message-item-inscribe-unavailable = 无法设置铭文：{ $reason }。
 message-item-property-discovered = 装备{ $target }时，你发现了它的“{ $property }”词条。
 message-loot-drop = { $source }掉落了 { $quantity } 个{ $target }。
 message-gold-drop = { $source }掉落了 { $amount } 金币。

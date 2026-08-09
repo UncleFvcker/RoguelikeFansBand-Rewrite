@@ -6,6 +6,8 @@
   "appearanceNameKey": "item-demo-masterwork-armor-scroll-appearance",
   "descriptionKey": "item-demo-masterwork-armor-scroll-description",
   "glyph": "?",
+  "generationLevel": 50,
+  "mogaminatorRare": false,
   "weightTenthsPound": 5,
   "maxStack": 20,
   "baseValue": 1000,

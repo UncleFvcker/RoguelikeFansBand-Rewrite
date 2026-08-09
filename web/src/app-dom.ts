@@ -84,6 +84,9 @@ export interface AppDom {
   readonly inventoryEquip: HTMLButtonElement;
   readonly inventoryDrop: HTMLButtonElement;
   readonly inventoryDropQuantity: HTMLInputElement;
+  readonly inventoryInscription: HTMLInputElement;
+  readonly inventoryInscribe: HTMLButtonElement;
+  readonly inventoryDestroy: HTMLButtonElement;
   readonly inventoryList: HTMLUListElement;
   readonly equipmentList: HTMLUListElement;
   readonly nativeSaveName: HTMLInputElement;
@@ -194,6 +197,9 @@ export function createAppDom(document: DocumentLookup): Readonly<AppDom> {
     inventoryEquip: element<HTMLButtonElement>(document, "inventory-equip"),
     inventoryDrop: element<HTMLButtonElement>(document, "inventory-drop"),
     inventoryDropQuantity: element<HTMLInputElement>(document, "inventory-drop-quantity"),
+    inventoryInscription: element<HTMLInputElement>(document, "inventory-inscription"),
+    inventoryInscribe: element<HTMLButtonElement>(document, "inventory-inscribe"),
+    inventoryDestroy: element<HTMLButtonElement>(document, "inventory-destroy"),
     inventoryList: element<HTMLUListElement>(document, "inventory-list"),
     equipmentList: element<HTMLUListElement>(document, "equipment-list"),
     nativeSaveName: element<HTMLInputElement>(document, "native-save-name"),

@@ -159,6 +159,15 @@ pub struct ClassDefinition {
     pub device_recharge_profile: Option<DeviceRechargeProfileDefinition>,
     #[serde(default)]
     pub starting_items: Vec<StartingItemDefinition>,
+    /// Item tags accepted by Mogaminator's favorite-weapon predicate.
+    #[serde(default)]
+    pub favorite_weapon_tags: Vec<String>,
+    /// Equipment slot types known to be uncomfortable for this class.
+    #[serde(default)]
+    pub icky_equipment_slots: Vec<String>,
+    /// Item tags with class-specific utility that ordinary rules must retain.
+    #[serde(default)]
+    pub special_item_tags: Vec<String>,
     pub tags: Vec<String>,
 }
 
@@ -299,6 +308,14 @@ pub struct CharacterBuildDefinition {
     pub race_id: String,
     pub class_id: String,
     pub personality_id: String,
+    #[serde(default)]
+    pub subclass_name_key: Option<String>,
+    #[serde(default)]
+    pub speciality_name_key: Option<String>,
+    #[serde(default)]
+    pub first_realm_id: Option<String>,
+    #[serde(default)]
+    pub second_realm_id: Option<String>,
     pub attributes: InitialAttributeSetDefinition,
     #[serde(default)]
     pub starting_items: Vec<StartingItemDefinition>,

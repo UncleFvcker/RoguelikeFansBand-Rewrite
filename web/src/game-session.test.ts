@@ -66,6 +66,8 @@ test("world map accepts travel and zero-time character configuration", async () 
   await session.dispatch({
     type: "configure-mogaminator",
     enabled: true,
+    leaveDestroyedItems: false,
+    autoGetMode: "off",
     locale: "zh-CN",
     source: "物品",
   });

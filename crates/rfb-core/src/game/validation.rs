@@ -23,6 +23,7 @@ impl Game {
                     | GameAction::LeaveWorldMap
                     | GameAction::TravelWorld { .. }
                     | GameAction::ConfigureMogaminator { .. }
+                    | GameAction::InscribeItem { .. }
                     | GameAction::SetInterfaceLocale { .. }
             )
         {
@@ -666,6 +667,15 @@ impl Game {
                 .content
                 .item(&item.kind_id)
                 .ok_or_else(|| CoreError::UnknownItem(item.kind_id.clone()))?;
+            if item.origin_actor_kind_id.as_ref().is_some_and(|actor_id| {
+                self.content.actor(actor_id).is_none()
+                    || !definition
+                        .tags
+                        .iter()
+                        .any(|tag| tag == "corpse" || tag == "skeleton")
+            }) {
+                return Err(CoreError::InvalidSave("item origin actor state is invalid"));
+            }
             let supports_quality = (definition.max_stack == 1
                 && definition.equipment_slot.is_some()
                 && item.quantity == 1)

@@ -32,6 +32,9 @@ type InventoryDom = Pick<
   | "inventoryEquip"
   | "inventoryDrop"
   | "inventoryDropQuantity"
+  | "inventoryInscription"
+  | "inventoryInscribe"
+  | "inventoryDestroy"
   | "inventoryList"
   | "equipmentList"
 >;
@@ -107,6 +110,8 @@ export class InventoryPanel {
     this.#dom.inventoryAppraise.addEventListener("click", this.#handleAppraise);
     this.#dom.inventoryEquip.addEventListener("click", this.#handleEquip);
     this.#dom.inventoryDrop.addEventListener("click", this.#handleDrop);
+    this.#dom.inventoryInscribe.addEventListener("click", this.#handleInscribe);
+    this.#dom.inventoryDestroy.addEventListener("click", this.#handleDestroy);
     this.#dom.inventoryDropQuantity.addEventListener("input", this.#handleQuantityInput);
   }
 
@@ -117,6 +122,8 @@ export class InventoryPanel {
     this.#dom.inventoryAppraise.removeEventListener("click", this.#handleAppraise);
     this.#dom.inventoryEquip.removeEventListener("click", this.#handleEquip);
     this.#dom.inventoryDrop.removeEventListener("click", this.#handleDrop);
+    this.#dom.inventoryInscribe.removeEventListener("click", this.#handleInscribe);
+    this.#dom.inventoryDestroy.removeEventListener("click", this.#handleDestroy);
     this.#dom.inventoryDropQuantity.removeEventListener("input", this.#handleQuantityInput);
   }
 
@@ -197,6 +204,12 @@ export class InventoryPanel {
         this.#state.dropQuantityItemId = item.id;
         this.#dom.inventoryDropQuantity.value = String(item.quantity);
       }
+      if (
+        this.#dom.inventoryInscription.ownerDocument.activeElement !==
+        this.#dom.inventoryInscription
+      ) {
+        this.#dom.inventoryInscription.value = item.inscription ?? "";
+      }
       this.#dom.inventoryDropQuantity.min = "1";
       this.#dom.inventoryDropQuantity.max = String(item.quantity);
       this.#dom.inventoryDropQuantity.disabled =
@@ -206,12 +219,21 @@ export class InventoryPanel {
         this.#state.playerDead ||
         worldMap ||
         parseDropQuantity(this.#dom.inventoryDropQuantity.value, item.quantity) === undefined;
+      this.#dom.inventoryInscription.disabled =
+        this.#state.busy || this.#state.playerDead || worldMap;
+      this.#dom.inventoryInscribe.disabled =
+        this.#state.busy || this.#state.playerDead || worldMap;
+      this.#dom.inventoryDestroy.disabled = this.#dom.inventoryDrop.disabled;
     } else {
       this.#state.dropQuantityItemId = undefined;
       this.#dom.inventoryDropQuantity.value = "";
       this.#dom.inventoryDropQuantity.disabled = true;
       this.#dom.inventoryDrop.disabled =
         this.#state.busy || this.#state.playerDead || worldMap || selected.length === 0;
+      this.#dom.inventoryInscription.value = "";
+      this.#dom.inventoryInscription.disabled = true;
+      this.#dom.inventoryInscribe.disabled = true;
+      this.#dom.inventoryDestroy.disabled = true;
     }
     for (const checkbox of this.#dom.inventoryList.querySelectorAll<HTMLInputElement>(
       'input[type="checkbox"]',
@@ -272,6 +294,14 @@ export class InventoryPanel {
 
   readonly #handleDrop = (): void => {
     void this.#dropSelectedItems();
+  };
+
+  readonly #handleInscribe = (): void => {
+    void this.#inscribeSelectedItem();
+  };
+
+  readonly #handleDestroy = (): void => {
+    void this.#destroySelectedItem();
   };
 
   readonly #handleQuantityInput = (): void => {
@@ -373,6 +403,7 @@ export class InventoryPanel {
         const name = document.createElement("span");
         name.textContent = this.#formatter.visibleItemName(item.displayNameKey, item.kindId);
         details.append(name, slotTag);
+        this.#appendInscription(details, item.inscription);
         this.#appendItemFuel(details, item);
         this.#appendKnownDetails(details, item);
         if (item.fuel && item.fuel.kind !== "oil" && item.fuel.current < item.fuel.maximum) {
@@ -417,6 +448,7 @@ export class InventoryPanel {
     name.className = "inventory-item-name";
     name.textContent = this.#formatter.visibleItemName(item.displayNameKey, item.kindId);
     container.append(name);
+    this.#appendInscription(container, item.inscription);
     if (item.equipmentSlot) {
       const equippable = document.createElement("span");
       equippable.className = "inventory-equippable";
@@ -460,6 +492,14 @@ export class InventoryPanel {
       maximum: item.fuel.maximum,
     });
     container.append(fuel);
+  }
+
+  #appendInscription(container: HTMLElement, inscription: string | null | undefined): void {
+    if (!inscription) return;
+    const value = container.ownerDocument.createElement("span");
+    value.className = "inventory-inscription";
+    value.textContent = this.#localization.format("inventory-inscription", { inscription });
+    container.append(value);
   }
 
   #refuelSourceForTarget(targetItemId: string): InventoryItemDto | undefined {
@@ -595,6 +635,30 @@ export class InventoryPanel {
     }
     const itemIds = selected.map((item) => item.id).sort();
     await this.#dispatch({ type: "drop", itemIds });
+  }
+
+  async #inscribeSelectedItem(): Promise<void> {
+    const selected = this.#selectedItems();
+    if (this.#state.busy || selected.length !== 1 || !selected[0]) return;
+    await this.#dispatch({
+      type: "inscribe-item",
+      itemId: selected[0].id,
+      inscription: this.#dom.inventoryInscription.value || null,
+    });
+  }
+
+  async #destroySelectedItem(): Promise<void> {
+    const selected = this.#selectedItems();
+    if (this.#state.busy || selected.length !== 1 || !selected[0]) return;
+    const item = selected[0];
+    const quantity = parseDropQuantity(this.#dom.inventoryDropQuantity.value, item.quantity);
+    if (quantity === undefined) return;
+    const name = this.#formatter.visibleItemName(item.displayNameKey, item.kindId);
+    const confirmed = this.#dom.inventoryList.ownerDocument.defaultView?.confirm(
+      this.#localization.format("inventory-destroy-confirm", { name, quantity }),
+    );
+    if (!confirmed) return;
+    await this.#dispatch({ type: "destroy-item", itemId: item.id, quantity });
   }
 
   async #unequipItem(slotId: string): Promise<void> {

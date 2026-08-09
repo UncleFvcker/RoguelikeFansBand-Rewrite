@@ -6,6 +6,8 @@
   "appearanceNameKey": "item-demo-aether-rupture-scroll-appearance",
   "descriptionKey": "item-demo-aether-rupture-scroll-description",
   "glyph": "?",
+  "generationLevel": 90,
+  "mogaminatorRare": false,
   "weightTenthsPound": 5,
   "maxStack": 20,
   "baseValue": 10000,

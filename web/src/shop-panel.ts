@@ -56,6 +56,7 @@ interface ShopSelection {
   readonly kindId: string;
   readonly displayNameKey: string;
   readonly quantity: number;
+  readonly inscription?: string;
   readonly maximumQuantity: number;
   readonly unitPrice: number;
   readonly weightTenthsPound: number;
@@ -349,7 +350,16 @@ export class ShopPanel {
       button.disabled = selection.maximumQuantity === 0;
       button.setAttribute("aria-pressed", String(selection.id === this.#selectedItemId));
 
-      const name = this.#span("shop-item-name", this.#visibleItemName(selection.displayNameKey, selection.kindId));
+      const plainName = this.#visibleItemName(selection.displayNameKey, selection.kindId);
+      const name = this.#span(
+        "shop-item-name",
+        selection.inscription
+          ? this.#localization.format("inventory-inscribed-name", {
+              name: plainName,
+              inscription: selection.inscription,
+            })
+          : plainName,
+      );
       const details = this.#span(
         "shop-item-details",
         this.#itemDetails(selection),
@@ -456,6 +466,7 @@ export class ShopPanel {
         kindId: item.kindId,
         displayNameKey: item.displayNameKey,
         quantity: item.quantity,
+        inscription: item.inscription ?? undefined,
         maximumQuantity: item.maximumQuantity,
         unitPrice: item.unitPrice,
         weightTenthsPound: item.weightTenthsPound,
@@ -561,6 +572,7 @@ function sellSelection(item: InventoryItemDto, quote: ShopSellQuoteDto): ShopSel
     kindId: item.kindId,
     displayNameKey: item.displayNameKey,
     quantity: quote.unavailableReason ? item.quantity : quote.maximumQuantity,
+    inscription: item.inscription ?? undefined,
     maximumQuantity: quote.maximumQuantity,
     unitPrice: quote.unitPrice,
     weightTenthsPound: item.weightTenthsPound,

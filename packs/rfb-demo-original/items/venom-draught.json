@@ -6,6 +6,8 @@
   "appearanceNameKey": "item-demo-venom-draught-appearance",
   "descriptionKey": "item-demo-venom-draught-description",
   "glyph": "!",
+  "generationLevel": 3,
+  "mogaminatorRare": false,
   "weightTenthsPound": 4,
   "maxStack": 20,
   "baseValue": 0,

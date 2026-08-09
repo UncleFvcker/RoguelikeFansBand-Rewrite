@@ -6,6 +6,8 @@
   "appearanceNameKey": "item-demo-frailty-tonic-appearance",
   "descriptionKey": "item-demo-frailty-tonic-description",
   "glyph": "!",
+  "generationLevel": 3,
+  "mogaminatorRare": false,
   "weightTenthsPound": 4,
   "maxStack": 20,
   "baseValue": 0,

@@ -71,6 +71,8 @@ pub(crate) struct ItemInstance {
     pub(crate) id: String,
     pub(crate) kind_id: String,
     pub(crate) quantity: u32,
+    pub(crate) inscription: Option<String>,
+    pub(crate) origin_actor_kind_id: Option<String>,
     pub(crate) quality: ItemQualityDto,
     pub(crate) affix_ids: Vec<String>,
     pub(crate) rolled_affixes: Vec<RolledAffixState>,
@@ -95,6 +97,7 @@ pub(crate) struct GoldPile {
     pub(crate) position: Position,
     pub(crate) amount: u32,
     pub(crate) appearance: GoldAppearanceDto,
+    pub(crate) discovered: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

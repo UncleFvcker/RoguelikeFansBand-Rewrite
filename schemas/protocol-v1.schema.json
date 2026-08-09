@@ -2978,6 +2978,29 @@
         "index"
       ]
     },
+    "AutoGetModeDto": {
+      "type": "string",
+      "enum": [
+        "off",
+        "ammo",
+        "wanted"
+      ]
+    },
+    "AutoGetTargetDto": {
+      "type": "object",
+      "properties": {
+        "objectId": {
+          "type": "string"
+        },
+        "position": {
+          "$ref": "#/$defs/Position"
+        }
+      },
+      "required": [
+        "objectId",
+        "position"
+      ]
+    },
     "BodySlotDto": {
       "description": "One equipment slot instance on the player's body: `slot_type` matches\nitem `equipmentSlot` declarations, `id` names the concrete instance so\nseveral slots of one type (two rings) stay addressable.",
       "type": "object",
@@ -3617,6 +3640,12 @@
           "$ref": "#/$defs/ItemIdentificationDto",
           "default": "unexamined"
         },
+        "inscription": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "kindId": {
           "type": "string"
         },
@@ -3955,7 +3984,13 @@
         {
           "type": "object",
           "properties": {
+            "autoGetMode": {
+              "$ref": "#/$defs/AutoGetModeDto"
+            },
             "enabled": {
+              "type": "boolean"
+            },
+            "leaveDestroyedItems": {
               "type": "boolean"
             },
             "locale": {
@@ -3972,8 +4007,68 @@
           "required": [
             "type",
             "enabled",
+            "leaveDestroyedItems",
+            "autoGetMode",
             "locale",
             "source"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "objectId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "auto-get"
+            }
+          },
+          "required": [
+            "type",
+            "objectId"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "itemId": {
+              "type": "string"
+            },
+            "pickUp": {
+              "type": "boolean"
+            },
+            "type": {
+              "type": "string",
+              "const": "resolve-mogaminator-query"
+            }
+          },
+          "required": [
+            "type",
+            "itemId",
+            "pickUp"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "itemId": {
+              "type": "string"
+            },
+            "quantity": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "destroy-item"
+            }
+          },
+          "required": [
+            "type",
+            "itemId",
+            "quantity"
           ]
         },
         {
@@ -4064,6 +4159,28 @@
             "type": {
               "type": "string",
               "const": "equip"
+            }
+          },
+          "required": [
+            "type",
+            "itemId"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "inscription": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "itemId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "inscribe-item"
             }
           },
           "required": [
@@ -5482,6 +5599,9 @@
         "appearance": {
           "$ref": "#/$defs/GoldAppearanceDto"
         },
+        "discovered": {
+          "type": "boolean"
+        },
         "id": {
           "type": "string"
         },
@@ -5493,7 +5613,8 @@
         "id",
         "position",
         "amount",
-        "appearance"
+        "appearance",
+        "discovered"
       ]
     },
     "HealingResolutionDto": {
@@ -5580,6 +5701,12 @@
         },
         "id": {
           "type": "string"
+        },
+        "inscription": {
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "kindId": {
           "type": "string"
@@ -5690,6 +5817,12 @@
         "identification": {
           "$ref": "#/$defs/ItemIdentificationDto",
           "default": "unexamined"
+        },
+        "inscription": {
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "kindId": {
           "type": "string"
@@ -5986,6 +6119,12 @@
         },
         "id": {
           "type": "string"
+        },
+        "inscription": {
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "kindId": {
           "type": "string"
@@ -6341,6 +6480,19 @@
     "MogaminatorDto": {
       "type": "object",
       "properties": {
+        "autoGetMode": {
+          "$ref": "#/$defs/AutoGetModeDto"
+        },
+        "autoGetTarget": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AutoGetTargetDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "defaultSource": {
           "type": "string"
         },
@@ -6352,6 +6504,9 @@
           }
         },
         "enabled": {
+          "type": "boolean"
+        },
+        "leaveDestroyedItems": {
           "type": "boolean"
         },
         "lines": {
@@ -6371,12 +6526,24 @@
             "$ref": "#/$defs/MogaminatorItemMatchDto"
           }
         },
+        "pendingQuery": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MogaminatorPendingQueryDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "source": {
           "type": "string"
         }
       },
       "required": [
         "enabled",
+        "leaveDestroyedItems",
+        "autoGetMode",
         "locale",
         "source",
         "defaultSource"
@@ -6449,6 +6616,33 @@
         "comment",
         "condition",
         "rule"
+      ]
+    },
+    "MogaminatorPendingQueryDto": {
+      "type": "object",
+      "properties": {
+        "itemId": {
+          "type": "string"
+        },
+        "itemKindId": {
+          "type": "string"
+        },
+        "quantity": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "ruleLine": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "itemId",
+        "itemKindId",
+        "quantity",
+        "ruleLine"
       ]
     },
     "MonsterAbilityCandidateResolutionDto": {
@@ -7657,6 +7851,12 @@
         },
         "id": {
           "type": "string"
+        },
+        "inscription": {
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "kindId": {
           "type": "string"

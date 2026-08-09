@@ -230,6 +230,20 @@ message-item-equip-swap = You unequip { $replaced } and equip { $target } in the
 message-item-equip-unavailable = The selected item cannot be equipped right now. Select one item with an equipment slot and check that its Equip action is enabled.
 message-item-appraise-success = You appraise { $target } as { $quality } quality.
 message-item-appraise-unavailable = The selected item cannot be appraised right now.
+message-item-destroy-success = You destroy { $target } ×{ $quantity }.{ $ruleLine ->
+    [0] { "" }
+   *[other]  (Mogaminator line { $ruleLine })
+}
+message-item-destroy-unavailable = You cannot destroy that item: { $reason }.{ $ruleLine ->
+    [0] { "" }
+   *[other]  (Mogaminator line { $ruleLine })
+}
+message-item-inscribe-success = { $target } is inscribed “{ $inscription }”.{ $ruleLine ->
+    [0] { "" }
+   *[other]  (Mogaminator line { $ruleLine })
+}
+message-item-inscribe-cleared = The inscription on { $target } is cleared.
+message-item-inscribe-unavailable = You cannot inscribe that item: { $reason }.
 message-item-property-discovered = Equipping { $target } reveals its { $property } property.
 message-loot-drop = { $source } drops { $target } ×{ $quantity }.
 message-gold-drop = { $source } drops { $amount } gold.

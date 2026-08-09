@@ -6,6 +6,8 @@
   "appearanceNameKey": "item-demo-pet-summoning-scroll-appearance",
   "descriptionKey": "item-demo-pet-summoning-scroll-description",
   "glyph": "?",
+  "generationLevel": 30,
+  "mogaminatorRare": false,
   "weightTenthsPound": 5,
   "maxStack": 20,
   "baseValue": 1000,

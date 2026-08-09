@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.154";
+pub const PROTOCOL_VERSION: &str = "1.157";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -118,8 +118,21 @@ pub enum GameCommand {
     },
     ConfigureMogaminator {
         enabled: bool,
+        leave_destroyed_items: bool,
+        auto_get_mode: AutoGetModeDto,
         locale: LocaleDto,
         source: String,
+    },
+    AutoGet {
+        object_id: String,
+    },
+    ResolveMogaminatorQuery {
+        item_id: String,
+        pick_up: bool,
+    },
+    DestroyItem {
+        item_id: String,
+        quantity: u32,
     },
     DisarmTrap {
         direction: Direction,
@@ -138,6 +151,11 @@ pub enum GameCommand {
         item_id: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         slot_id: Option<String>,
+    },
+    InscribeItem {
+        item_id: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        inscription: Option<String>,
     },
     Fire {
         direction: Direction,
@@ -242,6 +260,16 @@ pub enum LocaleDto {
     ZhCn,
 }
 
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum AutoGetModeDto {
+    #[default]
+    Off,
+    Ammo,
+    Wanted,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "kebab-case")]
@@ -310,8 +338,30 @@ pub struct MogaminatorItemMatchDto {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
+pub struct MogaminatorPendingQueryDto {
+    pub item_id: String,
+    pub item_kind_id: String,
+    pub quantity: u32,
+    pub rule_line: u32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct AutoGetTargetDto {
+    pub object_id: String,
+    pub position: Position,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
 pub struct MogaminatorDto {
     pub enabled: bool,
+    pub leave_destroyed_items: bool,
+    pub auto_get_mode: AutoGetModeDto,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub auto_get_target: Option<AutoGetTargetDto>,
     pub locale: LocaleDto,
     pub source: String,
     pub default_source: String,
@@ -321,14 +371,31 @@ pub struct MogaminatorDto {
     pub lines: Vec<MogaminatorLineDto>,
     #[serde(default)]
     pub matches: Vec<MogaminatorItemMatchDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pending_query: Option<MogaminatorPendingQueryDto>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MogaminatorPendingQuerySaveDto {
+    pub item_id: String,
+    pub rule_line: u32,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MogaminatorSaveDto {
     pub enabled: bool,
+    pub leave_destroyed_items: bool,
+    pub auto_get_mode: AutoGetModeDto,
     pub zh_cn_source: String,
     pub en_us_source: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pending_query: Option<MogaminatorPendingQuerySaveDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub dismissed_query_item_ids: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub wanted_actor_kind_ids: Vec<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -2304,6 +2371,8 @@ pub struct ItemDto {
     pub position: Position,
     pub quantity: u32,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub inscription: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub fuel: Option<ItemFuelDto>,
     #[serde(default, skip_serializing_if = "ItemEnchantmentsDto::is_empty")]
     pub enchantments: ItemEnchantmentsDto,
@@ -2336,6 +2405,7 @@ pub struct GoldPileDto {
     pub position: Position,
     pub amount: u32,
     pub appearance: GoldAppearanceDto,
+    pub discovered: bool,
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -2530,6 +2600,8 @@ pub struct InventoryItemDto {
     #[serde(default)]
     pub can_supply_recharge: bool,
     pub quantity: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub inscription: Option<String>,
     #[serde(default, skip_serializing_if = "ItemEnchantmentsDto::is_empty")]
     pub enchantments: ItemEnchantmentsDto,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -2588,6 +2660,8 @@ pub struct EquipmentItemDto {
     #[serde(default)]
     pub knowledge: ItemKnowledgeDto,
     pub quantity: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub inscription: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub fuel: Option<ItemFuelDto>,
     #[serde(default, skip_serializing_if = "ItemEnchantmentsDto::is_empty")]
@@ -2706,6 +2780,8 @@ pub struct ShopStockItemDto {
     pub kind_id: String,
     pub display_name_key: String,
     pub quantity: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub inscription: Option<String>,
     pub maximum_quantity: u32,
     pub unit_price: u32,
     pub weight_tenths_pound: u16,
@@ -2761,6 +2837,8 @@ pub struct HomeItemDto {
     pub kind_id: String,
     pub display_name_key: String,
     pub quantity: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub inscription: Option<String>,
     pub maximum_quantity: u32,
     pub weight_tenths_pound: u16,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -2934,12 +3012,15 @@ pub fn generated_typescript() -> String {
     push_declaration!(Direction);
     push_declaration!(DeviceRechargeSourceDto);
     push_declaration!(LocaleDto);
+    push_declaration!(AutoGetModeDto);
     push_declaration!(MogaminatorDispositionDto);
     push_declaration!(MogaminatorActionDto);
     push_declaration!(MogaminatorDiagnosticDto);
     push_declaration!(MogaminatorLineKindDto);
     push_declaration!(MogaminatorLineDto);
     push_declaration!(MogaminatorItemMatchDto);
+    push_declaration!(MogaminatorPendingQueryDto);
+    push_declaration!(AutoGetTargetDto);
     push_declaration!(MogaminatorDto);
     push_declaration!(GameCommand);
     push_declaration!(GameCommandEnvelope);
@@ -3339,6 +3420,10 @@ pub struct ItemSaveDto {
     pub kind_id: String,
     pub position: Position,
     pub quantity: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub inscription: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub origin_actor_kind_id: Option<String>,
     #[serde(default)]
     pub quality: ItemQualityDto,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -3365,6 +3450,10 @@ pub struct InventoryItemSaveDto {
     pub id: String,
     pub kind_id: String,
     pub quantity: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub inscription: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub origin_actor_kind_id: Option<String>,
     #[serde(default)]
     pub quality: ItemQualityDto,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -3391,6 +3480,10 @@ pub struct EquipmentItemSaveDto {
     pub id: String,
     pub kind_id: String,
     pub quantity: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub inscription: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub origin_actor_kind_id: Option<String>,
     pub slot_id: String,
     #[serde(default)]
     pub quality: ItemQualityDto,
@@ -3418,6 +3511,10 @@ pub struct CarriedItemSaveDto {
     pub id: String,
     pub kind_id: String,
     pub quantity: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub inscription: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub origin_actor_kind_id: Option<String>,
     pub actor_id: String,
     #[serde(default)]
     pub quality: ItemQualityDto,
@@ -3777,6 +3874,9 @@ mod tests {
                 direction: Direction::SouthEast,
             },
             GameCommand::PickUp,
+            GameCommand::AutoGet {
+                object_id: "generated.gold.1".to_owned(),
+            },
             GameCommand::Equip {
                 item_id: "demo.item.shovel.1".to_owned(),
                 slot_id: Some("weapon".to_owned()),
@@ -3958,8 +4058,13 @@ mod tests {
             interface_locale: LocaleDto::ZhCn,
             mogaminator: MogaminatorSaveDto {
                 enabled: false,
+                leave_destroyed_items: false,
+                auto_get_mode: AutoGetModeDto::Off,
                 zh_cn_source: "# 墨家名器规则\n".to_owned(),
                 en_us_source: "# Mogaminator rules\n".to_owned(),
+                pending_query: None,
+                dismissed_query_item_ids: Vec::new(),
+                wanted_actor_kind_ids: Vec::new(),
             },
             terrain: TerrainSaveDto {
                 width: 1,
@@ -4052,6 +4157,7 @@ mod tests {
                 knowledge: ItemKnowledgeDto::Aware,
                 position: Position { x: 0, y: 0 },
                 quantity: 2,
+                inscription: None,
                 fuel: None,
                 enchantments: ItemEnchantmentsDto::default(),
                 curse: None,
@@ -4072,6 +4178,7 @@ mod tests {
                 can_receive_recharge: false,
                 can_supply_recharge: false,
                 quantity: 1,
+                inscription: None,
                 enchantments: ItemEnchantmentsDto::default(),
                 curse: None,
                 weight_tenths_pound: 5,
@@ -4101,6 +4208,7 @@ mod tests {
                 display_name_key: "item-demo-charm-name".to_owned(),
                 knowledge: ItemKnowledgeDto::Aware,
                 quantity: 1,
+                inscription: None,
                 fuel: None,
                 enchantments: ItemEnchantmentsDto::default(),
                 curse: None,

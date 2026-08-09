@@ -6,6 +6,8 @@
   "appearanceNameKey": "item-demo-sixfold-tonic-appearance",
   "descriptionKey": "item-demo-sixfold-tonic-description",
   "glyph": "!",
+  "generationLevel": 60,
+  "mogaminatorRare": false,
   "weightTenthsPound": 4,
   "maxStack": 20,
   "baseValue": 150000,

@@ -510,6 +510,14 @@
       "minimum": 0,
       "type": "integer"
     },
+    "generationLevel": {
+      "default": 0,
+      "description": "Original generation level used by Mogaminator's level predicate.",
+      "format": "uint16",
+      "maximum": 65535,
+      "minimum": 0,
+      "type": "integer"
+    },
     "id": {
       "type": "string"
     },

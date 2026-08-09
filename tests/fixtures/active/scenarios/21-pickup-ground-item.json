@@ -26,7 +26,7 @@
     "finalState": {
       "revision": 2,
       "turn": 2,
-      "worldTick": 20,
+      "worldTick": 10,
       "lastCommandSeq": 2,
       "rngDrawCounter": 3,
       "floorId": "demo.floor.surface",
@@ -205,8 +205,8 @@
         {
           "id": "demo.monster.ember-mote.1",
           "position": {
-            "x": 6,
-            "y": 3
+            "x": 7,
+            "y": 4
           },
           "hp": 3,
           "speed": 110,
@@ -340,7 +340,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "45d4e27419ea4099b0af95002aac50312546940666ebf8d9c6d0ffb82610b582"
+      "stateHash": "fc179f7339bd4db3a1f05c632727f92f325688f5e04c9decaca5091d95cf71b1"
     },
     "events": [
       {
@@ -372,16 +372,8 @@
       {
         "x": 4,
         "y": 3
-      },
-      {
-        "x": 6,
-        "y": 3
-      },
-      {
-        "x": 7,
-        "y": 4
       }
     ],
-    "saveRoundTripStateHash": "45d4e27419ea4099b0af95002aac50312546940666ebf8d9c6d0ffb82610b582"
+    "saveRoundTripStateHash": "fc179f7339bd4db3a1f05c632727f92f325688f5e04c9decaca5091d95cf71b1"
   }
 }

@@ -10,6 +10,8 @@ fn ring_slots_fill_in_body_order_and_replace_deterministically() {
             id: format!("test.item.band.{ordinal}"),
             kind_id: "demo.item.resonant-band".to_owned(),
             quantity: 1,
+            inscription: None,
+            origin_actor_kind_id: None,
             quality: ItemQualityDto::Ordinary,
             affix_ids: Vec::new(),
             rolled_affixes: Vec::new(),
@@ -157,6 +159,8 @@ fn twenty_seventh_inventory_stack_is_rejected() {
         id: "test.ground.band".to_owned(),
         kind_id: "demo.item.resonant-band".to_owned(),
         quantity: 1,
+        inscription: None,
+        origin_actor_kind_id: None,
         quality: ItemQualityDto::Ordinary,
         affix_ids: Vec::new(),
         rolled_affixes: Vec::new(),
@@ -201,6 +205,8 @@ fn full_inventory_can_merge_into_an_existing_stack() {
         id: "test.ground.arrow".to_owned(),
         kind_id: "demo.item.arrow".to_owned(),
         quantity: 1,
+        inscription: None,
+        origin_actor_kind_id: None,
         quality: ItemQualityDto::Ordinary,
         affix_ids: Vec::new(),
         rolled_affixes: Vec::new(),
@@ -543,6 +549,8 @@ fn armor_hit_modifier_only_changes_melee_skill() {
         id: "test.item.hard-leather-armour".to_owned(),
         kind_id: "demo.item.hard-leather-armour".to_owned(),
         quantity: 1,
+        inscription: None,
+        origin_actor_kind_id: None,
         quality: ItemQualityDto::Ordinary,
         affix_ids: Vec::new(),
         rolled_affixes: Vec::new(),
@@ -575,6 +583,8 @@ fn gauntlets_add_their_hit_and_damage_modifiers_to_melee() {
         id: "test.item.set-of-gauntlets".to_owned(),
         kind_id: "demo.item.set-of-gauntlets".to_owned(),
         quantity: 1,
+        inscription: None,
+        origin_actor_kind_id: None,
         quality: ItemQualityDto::Ordinary,
         affix_ids: Vec::new(),
         rolled_affixes: Vec::new(),
@@ -1586,15 +1596,17 @@ fn dropping_multiple_selected_stacks_is_atomic_and_deterministic() {
 }
 
 #[test]
-fn pickup_on_empty_ground_is_a_deterministic_turn() {
+fn pickup_on_empty_ground_is_zero_time() {
     let mut game = Game::new(42);
     clear_monsters(&mut game);
     let before = game.state_hash();
+    let world_tick = game.world_tick;
     let update = game
         .dispatch(command(1, 0, GameCommand::PickUp))
         .expect("empty pickup should still execute");
 
     assert_eq!(update.turn, 1);
+    assert_eq!(update.world_tick, world_tick);
     assert!(update.changed_cells.is_empty());
     assert!(update.inventory.is_empty());
     assert_eq!(update.events[0].message_key, "item-pickup-none");
@@ -1609,6 +1621,8 @@ fn pickup_merges_into_the_lowest_id_compatible_stack() {
         id: "demo.inventory.resonance-pellet.1".to_owned(),
         kind_id: "demo.item.resonance-pellet".to_owned(),
         quantity: 19,
+        inscription: None,
+        origin_actor_kind_id: None,
         quality: ItemQualityDto::Ordinary,
         affix_ids: Vec::new(),
         rolled_affixes: Vec::new(),
@@ -1787,6 +1801,8 @@ fn elemental_brand_is_suppressed_only_by_matching_immunity() {
         id: "test.item.ember-edge".to_owned(),
         kind_id: "demo.item.ember-edge".to_owned(),
         quantity: 1,
+        inscription: None,
+        origin_actor_kind_id: None,
         quality: ItemQualityDto::Ordinary,
         affix_ids: Vec::new(),
         rolled_affixes: Vec::new(),
@@ -1840,6 +1856,8 @@ fn offensive_flag_dto_hides_unknown_affix_contributions() {
         id: item_id.clone(),
         kind_id: "demo.item.ember-edge".to_owned(),
         quantity: 1,
+        inscription: None,
+        origin_actor_kind_id: None,
         quality: ItemQualityDto::Fine,
         affix_ids: vec!["demo.affix.frost-hunter".to_owned()],
         rolled_affixes: Vec::new(),
@@ -1922,6 +1940,8 @@ fn rolled_affix_save_round_trip_does_not_redraw_rng() {
         id: "test.item.dynamic-save".to_owned(),
         kind_id: "demo.item.adaptive-glaive".to_owned(),
         quantity: 1,
+        inscription: None,
+        origin_actor_kind_id: None,
         quality: ItemQualityDto::Fine,
         affix_ids: vec!["demo.affix.adaptive-echo".to_owned()],
         rolled_affixes: rolled.clone(),
@@ -1982,6 +2002,8 @@ fn rolled_equipment_bonuses_and_regeneration_are_authoritative() {
         id: "test.item.dynamic-equipped".to_owned(),
         kind_id: "demo.item.adaptive-glaive".to_owned(),
         quantity: 1,
+        inscription: None,
+        origin_actor_kind_id: None,
         quality: ItemQualityDto::Fine,
         affix_ids: vec!["demo.affix.adaptive-echo".to_owned()],
         rolled_affixes: vec![RolledAffixState {

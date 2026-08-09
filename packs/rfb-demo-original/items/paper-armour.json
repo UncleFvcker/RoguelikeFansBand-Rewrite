@@ -16,5 +16,7 @@
     "equipment",
     "rfb-compatibility"
   ],
+  "generationLevel": 5,
+  "mogaminatorRare": false,
   "weightTenthsPound": 30
 }

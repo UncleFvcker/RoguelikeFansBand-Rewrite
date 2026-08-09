@@ -19,7 +19,6 @@
     "finalState": {
       "revision": 1,
       "turn": 1,
-      "worldTick": 10,
       "lastCommandSeq": 1,
       "rngDrawCounter": 3,
       "floorId": "demo.floor.surface",
@@ -198,8 +197,8 @@
         {
           "id": "demo.monster.ember-mote.1",
           "position": {
-            "x": 7,
-            "y": 4
+            "x": 8,
+            "y": 5
           },
           "hp": 3,
           "speed": 110,
@@ -318,23 +317,13 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "792d1f3eb38270c8679d18cb0c1598cfe91828e33473ebb345a42200ca52ca2e"
+      "stateHash": "3d4364777d3275c0a2ed6a0f71cc40f260fe81b609fba1b1f607ee43b0097602"
     },
     "events": [
       {
         "kind": "item.pickup.none",
         "messageKey": "item-pickup-none",
         "args": {}
-      }
-    ],
-    "changedCells": [
-      {
-        "x": 7,
-        "y": 4
-      },
-      {
-        "x": 8,
-        "y": 5
       }
     ]
   }
