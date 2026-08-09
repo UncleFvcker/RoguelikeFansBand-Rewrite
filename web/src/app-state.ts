@@ -48,6 +48,10 @@ export class AppState {
     return this.mode !== "playing" || this.playerDead || this.campaignEnded;
   }
 
+  get worldMap(): boolean {
+    return this.status?.mapScale === "world";
+  }
+
   setMapSize(width: number, height: number): void {
     this.mapWidth = width;
     this.mapHeight = height;

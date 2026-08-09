@@ -47,6 +47,10 @@ protocol, create travel state, replace the existing Outpost tactical floor,
 render a world map, allocate wilderness encounters, or enter a location.
 Those behaviors begin with W1 and later vertical slices.
 
+W1 now implements the authoritative scale state and display described in
+[`wilderness-w1-map-state-display.md`](wilderness-w1-map-state-display.md);
+travel, encounters, and location entry remain deferred.
+
 The demo pack advances to `1.192.0`, with content hash
 `02577f7c9262ee49d7f73ec13e3271a674cedc4e1af297e9359032cfb5532962`.
 Protocol `1.144`, save v1, state-hash Schema v67, and the contract-v196

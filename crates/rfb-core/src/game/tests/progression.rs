@@ -532,7 +532,7 @@ fn wraithform_passes_walls_halves_spell_damage_and_expires_in_place() {
         .expect("Wraithform should remain active")
         .remaining_ticks = 1;
     restored
-        .process_status_tick(&mut Vec::new(), &mut BTreeSet::new(), &mut Vec::new())
+        .process_status_tick(&mut Vec::new(), &mut BTreeSet::new(), &mut Vec::new(), true)
         .expect("Wraithform expiry should resolve");
     assert!(!restored.player_can_pass_walls());
     assert_eq!(restored.player.position, wall);

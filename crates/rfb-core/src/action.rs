@@ -110,6 +110,14 @@ pub(crate) enum GameAction {
     FireTarget {
         target: TargetSelection,
     },
+    EnterWorldMap {
+        leave_pets: bool,
+        cancel_recall: bool,
+    },
+    LeaveWorldMap,
+    TravelWorld {
+        destination: rfb_protocol::Position,
+    },
     Throw {
         item_id: String,
         direction: Direction,
@@ -145,6 +153,8 @@ impl GameAction {
             | Self::ClaimTaskReward { .. }
             | Self::DepositAtHome { .. }
             | Self::IncreaseAttribute { .. }
+            | Self::EnterWorldMap { .. }
+            | Self::LeaveWorldMap
             | Self::Retire
             | Self::SellToShop { .. }
             | Self::WithdrawFromHome { .. }
@@ -210,6 +220,15 @@ impl From<GameCommand> for GameAction {
             GameCommand::CloseDoor { direction } => Self::CloseDoor { direction },
             GameCommand::DisarmTrap { direction } => Self::DisarmTrap { direction },
             GameCommand::DigTerrain { direction } => Self::DigTerrain { direction },
+            GameCommand::EnterWorldMap {
+                leave_pets,
+                cancel_recall,
+            } => Self::EnterWorldMap {
+                leave_pets,
+                cancel_recall,
+            },
+            GameCommand::LeaveWorldMap => Self::LeaveWorldMap,
+            GameCommand::TravelWorld { destination } => Self::TravelWorld { destination },
             GameCommand::Move { direction } => Self::Move { direction },
             GameCommand::Ride { direction } => Self::Ride { direction },
             GameCommand::OpenDoor { direction } => Self::OpenDoor { direction },

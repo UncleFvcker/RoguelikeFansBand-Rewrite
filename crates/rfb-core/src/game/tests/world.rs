@@ -4,6 +4,48 @@ use rfb_protocol::TerrainInteractionUnavailableReasonDto;
 use super::support::*;
 use super::*;
 
+fn enter_world_map_command() -> GameCommand {
+    GameCommand::EnterWorldMap {
+        leave_pets: false,
+        cancel_recall: false,
+    }
+}
+
+fn confirmed_world_map_command(leave_pets: bool, cancel_recall: bool) -> GameCommand {
+    GameCommand::EnterWorldMap {
+        leave_pets,
+        cancel_recall,
+    }
+}
+
+#[test]
+fn entering_world_map_requires_explicit_pet_and_active_recall_confirmation() {
+    let mut game = Game::new_warrens_journey_with_build(42, "demo.build.warrior")
+        .expect("Warrens journey should create");
+    let pet = game
+        .entities
+        .first_mut()
+        .expect("Outpost surface should retain at least one actor");
+    pet.controller_id = Some(game.player.id.clone());
+    game.recall = Some(RecallStateDto {
+        dungeon_id: "demo.dungeon.warrens".to_owned(),
+        floor_id: "demo.floor.warrens-depth-1".to_owned(),
+        remaining_turns: Some(10),
+    });
+
+    let rejected = game.dispatch(command(1, 0, confirmed_world_map_command(false, false)));
+    assert!(matches!(
+        rejected,
+        Err(CoreError::WorldMapTransitionUnavailable)
+    ));
+
+    let entered = game
+        .dispatch(command(1, 0, confirmed_world_map_command(true, true)))
+        .expect("explicit confirmations should enter the world map");
+    assert_eq!(entered.map_scale, MapScaleDto::World);
+    assert_eq!(entered.player.recall.unwrap().remaining_turns, None);
+}
+
 #[test]
 fn warrens_journey_starts_on_an_outdoor_surface_with_a_working_entrance() {
     let mut game = Game::new_warrens_journey_with_build(42, "demo.build.warrior")
@@ -1498,4 +1540,406 @@ fn stairs_command_off_stairs_keeps_the_current_floor() {
             .any(|event| event.kind == "floor.transition-unavailable")
     );
     assert!(game.stored_floors.is_empty());
+}
+
+#[test]
+fn warrens_location_requires_its_local_entrance_and_restores_the_outpost() {
+    let mut game = Game::new_warrens_journey_with_build(42, "demo.build.warrior")
+        .expect("Warrens journey should create");
+    let outpost_position = game.player.position;
+    let task_states = game.task_states.clone();
+    let shop_states = game.shop_states.clone();
+
+    dispatch_next(&mut game, enter_world_map_command());
+    let direct_entry = game.dispatch(command(
+        game.last_command_seq + 1,
+        game.revision,
+        GameCommand::TraverseStairs,
+    ));
+    assert!(matches!(
+        direct_entry,
+        Err(CoreError::WorldMapActionUnavailable)
+    ));
+
+    dispatch_next(&mut game, GameCommand::LeaveWorldMap);
+    assert_eq!(game.player.position, outpost_position);
+    place_player_on_terrain(&mut game, "demo.terrain.stairs-down");
+    let entrance_position = game.player.position;
+
+    game.wilderness_position = Some(Position { x: 29, y: 52 });
+    assert!(
+        game.traverse_stairs(false)
+            .expect("unbound entrance check should resolve")
+            .is_none()
+    );
+
+    game.wilderness_position = Some(Position { x: 28, y: 52 });
+    game.traverse_stairs(false)
+        .expect("Warrens entry should resolve")
+        .expect("the bound local entrance should open Warrens");
+    assert_eq!(game.current_floor_id, "demo.floor.warrens-depth-1");
+
+    game.entities.clear();
+    place_player_on_terrain(&mut game, "demo.terrain.stairs-up");
+    game.traverse_stairs(false)
+        .expect("Warrens exit should resolve")
+        .expect("the dungeon exit should restore the surface");
+
+    assert_eq!(game.current_floor_id, "demo.floor.surface");
+    assert_eq!(game.wilderness_position, Some(Position { x: 28, y: 52 }));
+    assert_eq!(game.player.position, entrance_position);
+    assert_eq!(game.task_states, task_states);
+    assert_eq!(game.shop_states, shop_states);
+}
+
+#[test]
+fn world_map_projects_authoritative_wilderness_cells_and_restores_the_local_map() {
+    let mut game = Game::new_warrens_journey_with_build(42, "demo.build.warrior")
+        .expect("Warrens journey should create");
+    let local_position = game.player.position;
+    let world_tick = game.world_tick;
+    assert!(
+        game.snapshot()
+            .content_visuals
+            .iter()
+            .any(|visual| visual.id == "core.wilderness.road" && visual.glyph == ".")
+    );
+
+    let entered = dispatch_next(&mut game, enter_world_map_command());
+    assert_eq!(entered.map_scale, MapScaleDto::World);
+    assert_eq!((entered.width, entered.height), (99, 66));
+    assert_eq!(entered.player.position, Position { x: 28, y: 52 });
+    assert_eq!(entered.changed_cells.len(), 99 * 66);
+    assert_eq!(entered.changed_visual_cells.len(), 99 * 66);
+    assert!(entered.entities.is_empty());
+    assert!(entered.items.is_empty());
+    assert!(entered.shops.is_empty());
+    assert!(entered.terrain_interactions.is_empty());
+    assert_eq!(game.world_tick, world_tick);
+
+    let current = entered
+        .changed_cells
+        .iter()
+        .find(|cell| cell.position == Position { x: 28, y: 52 })
+        .expect("world position should be projected");
+    assert_eq!(current.terrain_id, "core.wilderness.town");
+    assert_eq!(current.danger_level, Some(0));
+    assert_eq!(current.locations.len(), 2);
+    assert!(
+        current
+            .locations
+            .iter()
+            .any(|location| location.id == "demo.town.outpost")
+    );
+    assert!(
+        current
+            .locations
+            .iter()
+            .any(|location| location.id == "demo.dungeon.warrens")
+    );
+
+    let save = game.to_save();
+    assert_eq!(save.map_scale, MapScaleDto::World);
+    assert_eq!(save.wilderness_position, Some(Position { x: 28, y: 52 }));
+    assert_eq!(save.wilderness_seed, 42);
+    let mut restored = Game::from_save(save).expect("world map state should reload");
+    assert_eq!(restored.state_hash(), game.state_hash());
+    assert_eq!(restored.snapshot().map_scale, MapScaleDto::World);
+
+    let blocked = restored.dispatch(command(
+        restored.last_command_seq + 1,
+        restored.revision,
+        GameCommand::Wait,
+    ));
+    assert!(matches!(blocked, Err(CoreError::WorldMapActionUnavailable)));
+
+    let left = dispatch_next(&mut restored, GameCommand::LeaveWorldMap);
+    assert_eq!(left.map_scale, MapScaleDto::Local);
+    assert_eq!((left.width, left.height), (96, 32));
+    assert_eq!(left.player.position, local_position);
+    assert_eq!(left.changed_cells.len(), 96 * 32);
+    assert_eq!(restored.world_tick, world_tick);
+}
+
+#[test]
+fn world_map_movement_uses_original_time_scale_without_advancing_hidden_monsters() {
+    let mut game = Game::new_warrens_journey_with_build(42, "demo.build.warrior")
+        .expect("Warrens journey should create");
+    let hidden_entities = game.entities.clone();
+    let mut expected_rng = game.rng.clone();
+    expected_rng.bounded(1);
+    let nutrition = game.nutrition;
+    dispatch_next(&mut game, enter_world_map_command());
+    let world_tick = game.world_tick;
+
+    let moved = dispatch_next(
+        &mut game,
+        GameCommand::Move {
+            direction: Direction::East,
+        },
+    );
+
+    assert_eq!(game.wilderness_position, Some(Position { x: 29, y: 52 }));
+    assert_eq!(moved.player.position, Position { x: 29, y: 52 });
+    assert_eq!(moved.changed_cells.len(), 2);
+    assert_eq!(
+        game.world_tick - world_tick,
+        u32::try_from(
+            STANDARD_ACTION_COST * wilderness::WORLD_MAP_ACTION_MULTIPLIER
+                / energy_gain(derived_speed(&game.player_derived_stats().speed)),
+        )
+        .expect("world-map travel ticks must fit u32")
+    );
+    assert!(game.nutrition < nutrition);
+    assert_eq!(game.entities, hidden_entities);
+    assert_eq!(game.rng, expected_rng);
+}
+
+#[test]
+fn wilderness_daylight_drives_surface_ambient_light() {
+    let mut game = Game::new_warrens_journey_with_build(42, "demo.build.warrior")
+        .expect("Warrens journey should create");
+
+    game.world_tick = 49_999;
+    assert_eq!(game.ambient_light(), SURFACE_AMBIENT_LIGHT);
+    game.world_tick = 50_000;
+    assert_eq!(game.ambient_light(), DUNGEON_AMBIENT_LIGHT);
+    game.world_tick = 100_000;
+    assert_eq!(game.ambient_light(), SURFACE_AMBIENT_LIGHT);
+}
+
+#[test]
+fn wilderness_ambush_enters_local_combat_and_locks_world_map_until_cleared() {
+    let mut game = Game::new_warrens_journey_with_build(42, "demo.build.warrior")
+        .expect("Warrens journey should create");
+    dispatch_next(&mut game, enter_world_map_command());
+    let start = game
+        .wilderness_position
+        .expect("world map should retain the current position");
+    let ambush_position = Position {
+        x: start.x + 1,
+        y: start.y,
+    };
+    let travel_destination = Position {
+        x: start.x + 2,
+        y: start.y,
+    };
+    game.wilderness_position = Some(ambush_position);
+    let ambush_seed = (0..10_000)
+        .find(|seed| {
+            game.rng = RfbRng::seeded(*seed);
+            game.roll_wilderness_ambush()
+        })
+        .expect("a deterministic ambush seed should be found");
+    game.wilderness_position = Some(start);
+    game.rng = RfbRng::seeded(ambush_seed);
+    let world_tick = game.world_tick;
+
+    let ambushed = dispatch_next(
+        &mut game,
+        GameCommand::TravelWorld {
+            destination: travel_destination,
+        },
+    );
+
+    assert_eq!(ambushed.map_scale, MapScaleDto::Local);
+    assert_eq!(game.current_floor_id, wilderness::WILDERNESS_FLOOR_ID);
+    assert_eq!(game.wilderness_position, Some(ambush_position));
+    assert_eq!(ambushed.world_travel_destination, Some(travel_destination));
+    assert!(
+        ambushed
+            .events
+            .iter()
+            .any(|event| event.kind == "wilderness.ambushed")
+    );
+    assert!(
+        game.entities
+            .iter()
+            .any(|entity| entity.id.contains(".ambush."))
+    );
+    let player_gain = energy_gain(derived_speed(&game.player_derived_stats().speed));
+    assert_eq!(
+        game.world_tick - world_tick,
+        u32::try_from((STANDARD_ACTION_COST + player_gain - 1) / player_gain)
+            .expect("ambush initiative ticks must fit u32")
+    );
+
+    let mut restored = Game::from_save(game.to_save()).expect("ambush should round-trip");
+    assert_eq!(restored.state_hash(), game.state_hash());
+    assert_eq!(restored.world_travel_destination, Some(travel_destination));
+    let blocked = restored.dispatch(command(
+        restored.last_command_seq + 1,
+        restored.revision,
+        enter_world_map_command(),
+    ));
+    assert!(matches!(
+        blocked,
+        Err(CoreError::WorldMapTransitionUnavailable)
+    ));
+
+    let owner_id = restored
+        .entities
+        .iter()
+        .find(|entity| entity.id.contains(".ambush.") && !restored.actor_is_player_side(entity))
+        .expect("ambush owner should remain available")
+        .id
+        .clone();
+    let mut summoned = restored
+        .entities
+        .iter()
+        .find(|entity| entity.id == owner_id)
+        .expect("ambush owner should remain available")
+        .clone();
+    summoned.id = "summon.test.ambush-threat".to_owned();
+    summoned.summon = Some(SummonIdentity {
+        owner_id,
+        source_ability_id: "test.ability.summon".to_owned(),
+        remaining_turns: 10,
+    });
+    restored
+        .entities
+        .retain(|entity| !entity.id.contains(".ambush."));
+    restored.entities.push(summoned);
+    let summoned_threat = restored.dispatch(command(
+        restored.last_command_seq + 1,
+        restored.revision,
+        enter_world_map_command(),
+    ));
+    assert!(matches!(
+        summoned_threat,
+        Err(CoreError::WorldMapTransitionUnavailable)
+    ));
+
+    restored.entities.clear();
+    let entered = dispatch_next(&mut restored, enter_world_map_command());
+    assert_eq!(entered.map_scale, MapScaleDto::World);
+    assert_eq!(entered.world_travel_destination, Some(travel_destination));
+}
+
+#[test]
+fn local_wilderness_is_coordinate_seeded_and_restores_from_save() {
+    fn enter_eastern_wilderness(seed: u64) -> Game {
+        let mut game = Game::new_warrens_journey_with_build(seed, "demo.build.warrior")
+            .expect("Warrens journey should create");
+        dispatch_next(&mut game, enter_world_map_command());
+        dispatch_next(
+            &mut game,
+            GameCommand::Move {
+                direction: Direction::East,
+            },
+        );
+        let simulation_rng = game.rng.clone();
+        dispatch_next(&mut game, GameCommand::LeaveWorldMap);
+        assert_eq!(game.rng, simulation_rng);
+        game
+    }
+
+    let game = enter_eastern_wilderness(42);
+    let duplicate = enter_eastern_wilderness(42);
+    assert_eq!(game.current_floor_id, wilderness::WILDERNESS_FLOOR_ID);
+    assert_eq!((game.width, game.height), (96, 32));
+    assert_eq!(game.player.position, Position { x: 48, y: 16 });
+    assert_eq!(game.terrain, duplicate.terrain);
+    assert_eq!(game.entities, duplicate.entities);
+    assert_eq!(
+        game.terrain_at(Position { x: 0, y: 16 }),
+        "demo.terrain.surface-path"
+    );
+    assert_eq!(
+        game.terrain_at(Position { x: 95, y: 16 }),
+        "demo.terrain.surface-path"
+    );
+    assert!(game.stored_floors.contains_key("demo.floor.surface"));
+
+    let restored = Game::from_save(game.to_save()).expect("local wilderness should reload");
+    assert_eq!(restored.state_hash(), game.state_hash());
+    assert_eq!(restored.terrain, game.terrain);
+    assert_eq!(restored.entities, game.entities);
+}
+
+#[test]
+fn walking_across_a_local_wilderness_edge_regenerates_the_neighbor_coordinate() {
+    let mut game = Game::new_warrens_journey_with_build(42, "demo.build.warrior")
+        .expect("Warrens journey should create");
+    dispatch_next(&mut game, enter_world_map_command());
+    dispatch_next(
+        &mut game,
+        GameCommand::Move {
+            direction: Direction::East,
+        },
+    );
+    dispatch_next(&mut game, GameCommand::LeaveWorldMap);
+    let previous_terrain = game.terrain.clone();
+    game.player.position = Position { x: 95, y: 16 };
+
+    let crossed = dispatch_next(
+        &mut game,
+        GameCommand::Move {
+            direction: Direction::East,
+        },
+    );
+
+    assert_eq!(game.wilderness_position, Some(Position { x: 30, y: 52 }));
+    assert_eq!(game.current_floor_id, wilderness::WILDERNESS_FLOOR_ID);
+    assert_eq!(game.player.position, Position { x: 1, y: 16 });
+    assert_eq!(crossed.changed_cells.len(), 96 * 32);
+    assert_ne!(game.terrain, previous_terrain);
+    assert_eq!(game.stored_floors.len(), 1);
+}
+
+#[test]
+fn returning_to_the_outpost_coordinate_restores_its_preserved_floor() {
+    let mut game = Game::new_warrens_journey_with_build(42, "demo.build.warrior")
+        .expect("Warrens journey should create");
+    let town_position = game.player.position;
+    let town_terrain = game.terrain.clone();
+    let town_entities = game.entities.clone();
+    dispatch_next(&mut game, enter_world_map_command());
+    dispatch_next(
+        &mut game,
+        GameCommand::Move {
+            direction: Direction::East,
+        },
+    );
+    dispatch_next(&mut game, GameCommand::LeaveWorldMap);
+    dispatch_next(&mut game, enter_world_map_command());
+    dispatch_next(
+        &mut game,
+        GameCommand::Move {
+            direction: Direction::West,
+        },
+    );
+
+    let returned = dispatch_next(&mut game, GameCommand::LeaveWorldMap);
+
+    assert_eq!(game.current_floor_id, "demo.floor.surface");
+    assert_eq!(game.player.position, town_position);
+    assert_eq!(game.terrain, town_terrain);
+    assert_eq!(game.entities, town_entities);
+    assert_eq!(returned.changed_cells.len(), 96 * 32);
+    assert!(game.stored_floors.is_empty());
+}
+
+#[test]
+fn world_map_can_only_be_entered_from_a_surface_that_defines_wilderness() {
+    let mut no_wilderness = Game::new(42);
+    let result = no_wilderness.dispatch(command(1, 0, enter_world_map_command()));
+    assert!(matches!(
+        result,
+        Err(CoreError::WorldMapTransitionUnavailable)
+    ));
+
+    let mut dungeon = Game::new_warrens_journey_with_build(42, "demo.build.warrior")
+        .expect("Warrens journey should create");
+    dungeon.player.position = Position { x: 74, y: 16 };
+    dispatch_next(&mut dungeon, GameCommand::TraverseStairs);
+    let result = dungeon.dispatch(command(
+        dungeon.last_command_seq + 1,
+        dungeon.revision,
+        enter_world_map_command(),
+    ));
+    assert!(matches!(
+        result,
+        Err(CoreError::WorldMapTransitionUnavailable)
+    ));
 }

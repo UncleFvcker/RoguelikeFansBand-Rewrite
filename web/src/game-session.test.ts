@@ -11,6 +11,7 @@ function sessionState() {
     busy: false,
     playerDead: false,
     campaignEnded: false,
+    worldMap: false,
     get commandBlocked() {
       return this.playerDead || this.campaignEnded;
     },
@@ -40,6 +41,30 @@ test("game session applies successful updates only after clearing busy", async (
     ["execute", "wait", true],
     ["apply", 1, "wait", false],
   ]);
+});
+
+test("world map accepts movement, travel, and the explicit return command", async () => {
+  const state = sessionState();
+  state.worldMap = true;
+  const calls = [];
+  const session = new GameSession({
+    state,
+    execute: async (command) => {
+      calls.push(command.type);
+      return { turn: 1 };
+    },
+    applyUpdate: () => {},
+    refreshBusyControls: () => {},
+    showError: () => {},
+  });
+
+  await session.dispatch({ type: "pick-up" });
+  await session.dispatch({ type: "fire", direction: "east" });
+  await session.dispatch({ type: "move", direction: "east" });
+  await session.dispatch({ type: "travel-world", destination: { x: 30, y: 52 } });
+  await session.dispatch({ type: "leave-world-map" });
+
+  assert.deepEqual(calls, ["move", "travel-world", "leave-world-map"]);
 });
 
 test("game session restores controls after failure and blocks terminal commands", async () => {

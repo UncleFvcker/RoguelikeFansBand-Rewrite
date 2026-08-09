@@ -1,6 +1,6 @@
 # RFB 全系统梳理与重构实现路线
 
-状态：长期规则实现路线；当前基线为协议 1.144 / contract-v196（P31–P98 进展见 8.3，玩家流程与 Outpost 进展见 Phase 17/18，物品接入见 Phase 19，Warrens 怪物机制见 W1–W14 清单，荒野世界图见 W0）
+状态：长期规则实现路线；当前基线为协议 1.146 / contract-v199（P31–P98 进展见 8.3，玩家流程与 Outpost 进展见 Phase 17/18，物品接入见 Phase 19，Warrens 怪物机制见 W1–W14 清单，荒野世界图见 W0–W5）
 
 ## 1. 目的与边界
 
@@ -187,7 +187,7 @@ flowchart TD
 | 子系统 | 旧 RFB 行为 | 当前状态 | 新实现方案 |
 | --- | --- | --- | --- |
 | 多地牢 | 深度范围、守护者、主题、进入条件和特殊规则 | 已建立基础版 | contract-v63 已建立 `DungeonDefinition`、根层和共享守护者身份；后续增加进入条件、并存探索实例、重置策略和地牢级特殊规则 |
-| 荒野 | 大地图、地形、生物群落、城镇入口和旅行 | W0 权威数据已建立 | `WorldDefinition.wilderness` 已保存 99x66 原版 normal 图例/行、危险、道路、起点与 Outpost/Warrens 地点；协议、旅行、渲染和遭遇后续分批接入，不与当前战术地图共用尺寸假设 |
+| 荒野 | 大地图、地形、生物群落、城镇入口和旅行 | W0–W5 已建立首个地点闭环与扩展旅行 | `WorldDefinition.wilderness` 保存 99x66 原版 normal 图例/行、危险、道路、起点与 Outpost/Warrens 地点；同一地图协议已支持 132 倍耗时的世界移动、可恢复自动寻路、坐标种子 96x32 局部荒野、道路/邻格边界、habitat 怪物、昼夜光照、原版伏击、低层特殊遭遇、完整现有地形危险，以及必须返回局部入口的 Outpost/Warrens 进入与返回 |
 | 城镇 | 多城镇、访问状态、地图、昼夜和服务 | Phase 18 Gate 4 已建立首个切片 | `TownDefinition` 复用普通 floor；稳定 `demo.floor.surface` 已扩展为独立设计的 Outpost，并保存/投影访问状态，首批只开放杂货店和 Warrens |
 | 商店与家 | 库存刷新、买卖、鉴定价格、黑市、家中仓库 | Phase 18 Gate 6 与 contract-v167 已建立八店及 Home 闭环 | 八店具备持久库存、店主、价格、钱包、原子买卖、维护与 UI；Home 具备独立持久存取、负重和聚合语义。固定 Outpost 地图还缺 Shroomery；全局 shop 系统另缺不在该地图上的 Jeweler、Dragon |
 | 建筑服务 | 治疗、鉴定、附魔、重铸、任务、公会等 | 未建立 | `ServiceDefinition` 引用 effect/transaction；UI 根据服务 schema 生成表单 |
@@ -442,7 +442,7 @@ Warrens 的怪物机制按 [Warrens 怪物机制实现清单](warrens-monster-me
 
 实现：世界分区、旅行、遭遇、多地牢进入条件、最终守护者、胜利状态和角色退休。竞技场和特殊场景使用同一 floor/scenario ruleset。
 
-当前进度：W0 已完成权威 `w_info.txt`/地牢位置导入、内容模型与严格校验，只激活已有 Outpost/Warrens；世界图投影、旅行、渲染、遭遇与地点进入从 W1 起实现。
+当前进度：W0–W5 已完成权威 `w_info.txt`/地牢位置导入、世界图投影、旅行、局部荒野、昼夜、伏击、可恢复自动寻路、低层特殊遭遇、地形危险，以及现有 Outpost/Warrens 的地点进入和原位返回。Orc Cave、随机高层单层地下城与城镇传送继续等待对应真实内容，不创建占位入口或目标。
 
 ### 阶段 K：高级职业、种族和特殊机制
 
@@ -480,7 +480,7 @@ Warrens 的怪物机制按 [Warrens 怪物机制实现清单](warrens-monster-me
 | 任务与 campaign | 基础状态机已建立 | 已有多阶段目标、暂停/重接/放弃、奖励、胜利、退休和评分，以及伯爵来源、盗贼藏身处和 Pest Control 的单目标任务；仍缺超时、脚本、重复任务与完整日志 UI |
 | 角色创建与成长 | 基础纵切已建立 | 已覆盖 Race/Class/Personality、五个代表性构筑、六维属性、经验/等级、HP 成长、十个技能的首轮规则消费和存档迁移；仍缺完整职业矩阵、技能练习、属性损伤/恢复和更多职业资源形态 |
 | 法术、能力与设备 | 玩家/怪物施法、动态设备与首批卷轴纵切已建立 | 已有 Mana、实体能力书、学习/熟练度/冷却、多类目标与伤害、位移/召唤/侦测/地形/状态、怪物效用选择、Death 四册、普通/完整物品鉴定、装备附魔、临时形态、生命恢复、动态设备 profile/容量、首批 wand/staff/rod 与主动充能；仍缺随机学习、首次奖励、受击/吟唱/姿态类资源、其他领域广度和完整卷轴/激活族 |
-| 荒野、城镇与经济 | Outpost 补给纵切 + W0 世界图数据已建立 | 已有首个围墙持久城镇、城外 Warrens、商店与 Home 闭环，以及 99x66 权威荒野静态数据；世界图投影、多城镇旅行、荒野遭遇、建筑服务、声望和长期经济广度尚未形成 |
+| 荒野、城镇与经济 | Outpost 补给纵切 + W0–W5 首个地点与扩展旅行闭环已建立 | 已有首个围墙持久城镇、城外 Warrens、商店与 Home 闭环，以及 99x66 权威世界图、可恢复自动旅行、确定性局部荒野、昼夜、伏击、低层特殊遭遇、地形危险和 Outpost/Warrens 进入返回；多城镇内容、更多正式地点、建筑服务、声望和长期经济广度尚未形成 |
 | 原生客户端与表现层 | Windows 纵切已建立 | Rust/Tauri/PixiJS、Fluent、FOV/记忆/光照、原生存档和诊断已接入；完整知识、统计和高分等菜单仍缺失 |
 
 ### 8.2 已达到或扩展旧版的边界
@@ -609,6 +609,16 @@ P30“首个非 Mana 职业资源”已由 contract-v90 完成：节奏资源按
 **浅层怪物 P12 进展（2026-08）**：contract-v196 复用现有阵营、AI、地形转换和保存路径，接入 `FRIENDLY` 娜美与怪物 `TRAPS`；Shadower 只按 `1/333` 覆盖 10 级以上非 Unique 普通分配怪物的外观，真实种类和行为保持不变。板栗崽进入普通浅层分配，5 条 `DEPRECATED` 旧索引绑定到活跃同名替代。正式浅层 actor 达 158、严格同步达 126；协议 1.144，demo 1.191.0，state hash Schema v67，内置 hash 为 `c3440aa696805626dcde6222cc058bcb12b7b0f8a9213fd4f2ff8f7d5f28fdea`。完整边界见 [Contract v196](contract-v196-warrens-content-p12-special-lifecycles.md)。
 
 **荒野 W0 进展（2026-08）**：从 RFB `master` Git 对象严格解析 `w_info.txt` 与 `d_info.txt` 位置字段，`WorldDefinition.wilderness` 保存 99x66 normal 世界图、15 类地形、源危险等级、道路和起点 `(28,52)`；仅现有 Outpost/Warrens 成为地点，其余来源地点不激活。协议 1.144、contract-v196、save v1 与 state hash Schema v67 不变；demo 升至 1.192.0，内置 hash 为 `02577f7c9262ee49d7f73ec13e3271a674cedc4e1af297e9359032cfb5532962`。完整边界见 [Wilderness W0](wilderness-w0-authoritative-data.md)。
+
+**荒野 W1 进展（2026-08）**：增加 `local | world` 权威地图尺度、荒野位置与种子，并同步进入 save v1、回放和 state hash；协议以显式进入/离开命令和既有 `CellDto` 的危险等级/地点元数据投影 99x66 世界图。前端复用 Pixi renderer、镜头、缩放和 `x` 查看；世界尺度只允许返回，本地战术状态不变。协议 1.145、contract-v197、state hash Schema v68；demo 1.192.0 与内置内容 hash 不变。完整边界见 [Wilderness W1](wilderness-w1-map-state-display.md)。
+
+**荒野 W2 进展（2026-08）**：世界格 `Move` 按原版 132 倍耗时推进玩家时间系统，同时冻结未投影的本地怪物；普通荒野以单一 seed 和坐标重建 96x32 本地地形，四向混合邻格边界、只连接真实相邻道路，并按平滑危险等级复用 P10 habitat 分配怪物。越过本地边缘只生成邻格，离开的普通格不缓存，Outpost 地表单独保存并恢复。协议 1.145、contract-v197、state hash Schema v68 不变；demo 1.193.0，内置 hash 为 `5df3ee0a7bace5b35b805cd0ce22c0d373e3b9fbf38b379b8724d6bf64061b46`。完整边界见 [Wilderness W2](wilderness-w2-travel-local-generation.md)。
+
+**荒野 W3 进展（2026-08）**：从 `worldTick` 派生原版十万 tick 日周期，统一驱动地表环境光、白昼惧光怪物过滤和状态栏时间；世界移动按道路、夜间、潜行、玩家等级和区域危险的原版公式掷伏击。伏击复用当前格局部荒野与 habitat、执行 20 次分配、给怪物先手，并在敌对伏击者清除前锁定大地图入口。协议 1.145、state hash Schema v68 与 demo 1.193.0/hash 不变；公共地表初始化变化使基线升至 contract-v198。完整边界见 [Wilderness W3](wilderness-w3-day-night-ambush.md)。
+
+**荒野 W4 进展（2026-08）**：正式闭合现有 Outpost/Warrens 地点。世界尺度不接受楼梯命令；返回 Outpost 局部地图并站在既有入口后，还需由当前 `(28,52)` 的 `Dungeon` 地点 ID 匹配 Warrens 才能进入。离开地牢复用保存的地表楼层，恢复原世界坐标、入口格、任务和商店状态。协议 1.145、state hash Schema v68、demo 1.193.0/hash 与 contract-v198 不变；Orc Cave 和其他地点不激活。完整边界见 [Wilderness W4](wilderness-w4-location-loop.md)。
+
+**荒野 W5 进展（2026-08）**：按原版 `1/10` 低层荒野房间规则接入确定性的 `Ruined Home`，并增加八方向逐步自动旅行、权威目标恢复、深水/熔岩/雪地环境规则，以及宠物、坐骑和生效中召回的世界图确认闭环。协议 1.146、state hash Schema v69、contract-v199；demo 1.193.0/hash 不变。随机 20–50 级单层地下城和城镇传送严格等待对应内容消费者。完整边界见 [Wilderness W5](wilderness-w5-original-extensions.md)。
 
 ## 9. 内容迁移策略
 

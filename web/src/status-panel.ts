@@ -70,6 +70,27 @@ const ATTRIBUTE_KINDS: AttributeKindDto[] = [
   "charisma",
 ];
 
+const WILDERNESS_DAY_TICKS = 100_000;
+
+export type WildernessClock = {
+  day: number;
+  hour: number;
+  minute: number;
+  daytime: boolean;
+};
+
+export function wildernessClock(worldTick: number): WildernessClock {
+  const withinDay = worldTick % WILDERNESS_DAY_TICKS;
+  const clockTick = (withinDay + WILDERNESS_DAY_TICKS / 4) % WILDERNESS_DAY_TICKS;
+  const minuteOfDay = Math.floor((clockTick * 24 * 60) / WILDERNESS_DAY_TICKS);
+  return {
+    day: Math.floor((worldTick + WILDERNESS_DAY_TICKS / 4) / WILDERNESS_DAY_TICKS) + 1,
+    hour: Math.floor(minuteOfDay / 60),
+    minute: minuteOfDay % 60,
+    daytime: withinDay < WILDERNESS_DAY_TICKS / 2,
+  };
+}
+
 export class StatusPanel {
   readonly #dom: StatusDom;
   readonly #state: AppState;
@@ -150,7 +171,16 @@ export class StatusPanel {
     this.#dom.mapHost.ownerDocument.documentElement.dataset.playerState = this.#state.playerDead
       ? "dead"
       : "alive";
-    this.#dom.turnValue.textContent = String(state.turn);
+    const clock = wildernessClock(state.worldTick);
+    this.#dom.turnValue.textContent = this.#localization.format("status-turn-time", {
+      turn: state.turn,
+      day: clock.day,
+      hour: String(clock.hour).padStart(2, "0"),
+      minute: String(clock.minute).padStart(2, "0"),
+      phase: this.#localization.format(
+        clock.daytime ? "wilderness-daytime" : "wilderness-nighttime",
+      ),
+    });
     this.#dom.hpValue.textContent = this.#localization.format(
       state.player.equipmentModifiers.maxHp > 0
         ? "status-health-value-bonus"
@@ -245,6 +275,7 @@ export class StatusPanel {
     this.#dom.campaignRetire.disabled =
       this.#state.busy ||
       this.#state.playerDead ||
+      this.#state.worldMap ||
       !state ||
       state.campaign.status !== "victorious" ||
       state.floorId !== "demo.floor.surface" ||
@@ -294,7 +325,7 @@ export class StatusPanel {
           const abandon = document.createElement("button");
           abandon.type = "button";
           abandon.textContent = this.#localization.format("action-task-abandon");
-          abandon.disabled = this.#state.busy;
+          abandon.disabled = this.#state.busy || this.#state.worldMap;
           abandon.addEventListener("click", () =>
             void this.#dispatch(
               task.status === "active"
@@ -394,6 +425,7 @@ export class StatusPanel {
         increase.disabled =
           this.#state.busy ||
           this.#state.playerDead ||
+          this.#state.worldMap ||
           progress.pendingAttributeIncreases === 0 ||
           value.maximumNatural >= progress.attributeCap;
         increase.addEventListener("click", () =>
@@ -443,7 +475,8 @@ export class StatusPanel {
       HTMLButtonElement,
     ][]) {
       const selected = buttonMode === mode;
-      button.disabled = this.#state.busy || this.#state.commandBlocked || selected;
+      button.disabled =
+        this.#state.busy || this.#state.commandBlocked || this.#state.worldMap || selected;
       button.setAttribute("aria-pressed", String(selected));
     }
   }
@@ -459,6 +492,7 @@ export class StatusPanel {
     this.#dom.resourceRest.disabled =
       this.#state.busy ||
       this.#state.playerDead ||
+      this.#state.worldMap ||
       !this.#state.status ||
       (this.#state.status.player.hp >= this.#state.status.player.maxHp &&
         !resources.some(
@@ -699,15 +733,18 @@ export class StatusPanel {
     study.disabled =
       this.#state.busy ||
       this.#state.playerDead ||
+      this.#state.worldMap ||
       !ability.canStudy ||
       !ability.bookItemId;
     const forget = this.#abilityAction("action-ability-forget", () =>
       void this.#dispatch({ type: "forget-ability", abilityId: ability.id }),
     );
-    forget.disabled = this.#state.busy || this.#state.playerDead || !ability.canForget;
+    forget.disabled =
+      this.#state.busy || this.#state.playerDead || this.#state.worldMap || !ability.canForget;
     const cast = this.#abilityAction("action-ability-cast", () => this.#castAbility(ability));
     cast.classList.add("ability-cast-action");
-    cast.disabled = this.#state.busy || this.#state.playerDead || !ability.canCast;
+    cast.disabled =
+      this.#state.busy || this.#state.playerDead || this.#state.worldMap || !ability.canCast;
     actions.append(study, forget, cast);
     row.append(details, actions);
     return row;

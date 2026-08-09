@@ -186,6 +186,11 @@ RoguelikeFansBand 的新一代重构工程。
 - [Contract v195：Warrens P11 低复用专用机制](design/contract-v195-warrens-content-p11-special-mechanics.md)
 - [Contract v196：Warrens P12 特殊生命周期收口](design/contract-v196-warrens-content-p12-special-lifecycles.md)
 - [荒野世界地图 W0：权威数据导入](design/wilderness-w0-authoritative-data.md)
+- [荒野世界地图 W1：权威状态与显示](design/wilderness-w1-map-state-display.md)
+- [荒野世界地图 W2：世界旅行与局部荒野](design/wilderness-w2-travel-local-generation.md)
+- [荒野世界地图 W3：昼夜与伏击](design/wilderness-w3-day-night-ambush.md)
+- [荒野世界地图 W4：Outpost/Warrens 地点闭环](design/wilderness-w4-location-loop.md)
+- [荒野世界地图 W5：原版扩展机制](design/wilderness-w5-original-extensions.md)
 - [旧版物品导入 v2（k_info / e_info / a_info）](design/legacy-item-import-v2.md)
 - [旧版内容导入优先级规划 v1](design/legacy-import-priority-v1.md)
 - [旧版角色内容导入 v1（b_info / 种族 / 性格）](design/legacy-character-import-v1.md)
@@ -209,7 +214,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Rust 权威可见性与光照 v1](design/visibility-lighting-v1.md)
 - [静态地形 Chunk 渲染 v1](design/terrain-chunk-rendering-v1.md)
 
-当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v196`，共 470 条 exact fixtures、零 waiver，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
+当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v199`，共 470 条 exact fixtures、零 waiver，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
 
 fixture 使用受控的主分类。日常开发只验证或刷新受影响分类；普通 `cargo test -p rfb-contract` 只做快速的 schema、分类、ID 唯一性和契约单元测试，不回放全部场景：
 
@@ -505,6 +510,16 @@ contract-v195 推进正式内容 P11：`KILL_BODY` 以原版强度积比较让�
 contract-v196 推进正式内容 P12：`FRIENDLY` 让航海士娜美作为自主友方参与既有怪物 AI，敌我目标、清层判定和快照阵营同步区分；`TRAPS` 复用地形转换，在目标周围把合格空地变为既有兽穴陷阱。追踪者按原版 `1/333` 仅覆盖 10 级以上非 Unique 的普通分配怪物外观，真实种类、属性、掉落与死亡不变，外观状态随存档持久化；板栗崽直接进入浅层分配。严格清单同时绑定并永久排除 5 条 `DEPRECATED` 旧索引。协议升至 1.144、demo 升至 1.191.0、state hash Schema 升至 v67，正式包现有 191 种 actor、146 种 item、100 个 ability、78 种 terrain 和 19 张 loot table，content hash 为 `c3440aa696805626dcde6222cc058bcb12b7b0f8a9213fd4f2ff8f7d5f28fdea`。详见 [Contract v196](design/contract-v196-warrens-content-p12-special-lifecycles.md)。
 
 荒野 W0 已把 RFB `master` 的 normal `w_info.txt` 世界图作为可选 `WorldDefinition.wilderness` 数据接入正式世界：`99x66` 定长地图、15 类地形、源危险等级、道路和起点 `(28,52)` 均由严格同步入口维护；只有已经存在的 Outpost 与 Warrens 被激活为地点，其余城镇/地牢不创建占位内容。当前不改变战术地表、旅行、协议或存档。demo 升至 1.192.0，content hash 为 `02577f7c9262ee49d7f73ec13e3271a674cedc4e1af297e9359032cfb5532962`。详见 [Wilderness W0](design/wilderness-w0-authoritative-data.md)。
+
+荒野 W1 在同一套地图管线上加入 `local | world` 权威尺度、荒野位置与种子存档/回放/哈希，以及 `<` 进入、`>` 返回的大地图命令。世界尺度继续使用现有 `cells`、Pixi renderer、镜头、缩放和 `x` 查看；每格只增加危险等级与地点元数据。世界图中 Core 只接受返回命令，前端同步屏蔽拾物、战斗、商店、物品变更和战术地形操作。协议升至 1.145、state hash Schema 升至 v68、contract 基线升至 v197；demo 仍为 1.192.0，内容 hash 不变。详见 [Wilderness W1](design/wilderness-w1-map-state-display.md)。
+
+荒野 W2 开放世界格移动，并按原版 `(MAX_HGT + MAX_WID) / 2 = 132` 倍移动耗时推进饥饿、光源、恢复与商店时钟；隐藏的本地怪物保持冻结。非城镇格使用 `wildernessSeed + 坐标` 确定性生成 `96x32` 局部荒野，混合四向邻格边界、按相邻道路连线，并复用 P10 habitat 和平滑危险等级分配怪物；越过局部边缘只重建相邻世界格，普通荒野不做全图缓存。协议仍为 1.145、state hash Schema 仍为 v68、contract-v197 基线不变；demo 升至 1.193.0，内容 hash 为 `5df3ee0a7bace5b35b805cd0ce22c0d373e3b9fbf38b379b8724d6bf64061b46`。详见 [Wilderness W2](design/wilderness-w2-travel-local-generation.md)。
+
+荒野 W3 从既有 `worldTick` 派生原版十万 tick 日周期与半日昼夜，统一驱动地表环境光、白昼惧光怪物过滤和状态栏时间。每次成功世界移动按原版危险等级、道路、昼夜、玩家等级与潜行公式掷伏击；触发时切回当前格局部荒野，以 20 次 habitat 分配生成伏击并让怪物取得先手。仍有敌对伏击者时禁止重返大地图，威胁状态直接从 actor 推导。协议 1.145、state hash Schema v68 与 demo 1.193.0 不变；公共地表初始化变化使基线升至 contract-v198。详见 [Wilderness W3](design/wilderness-w3-day-night-ambush.md)。
+
+荒野 W4 把现有 Outpost 地表与 Warrens 地牢正式绑定到同一 `(28,52)` 地点。世界尺度继续拒绝楼梯命令；玩家必须返回保存的 Outpost 局部地图并站在城东 Warrens 入口上，且当前世界坐标的 `Dungeon` 地点 ID 必须匹配，才能进入既有九层地牢。返回地表复用楼层缓存，精确恢复世界坐标、入口格、任务和商店状态。该纵切不增加协议、存档、哈希或内容数据，协议仍为 1.145、state hash Schema 仍为 v68、demo 仍为 1.193.0、contract-v198 基线不变。Orc Cave 及其他地点在对应 10–15 级内容完成前不激活。详见 [Wilderness W4](design/wilderness-w4-location-loop.md)。
+
+荒野 W5 接入原版扩展纵切：低层草地/荒地格以坐标种子按 `1/10` 生成 `Ruined Home` 特殊遭遇并显示原版发现消息；世界图 `x` 选点、回车自动旅行，大写 `J` 可在伏击、返回大图或读档后恢复目标，八方向寻路的每一步继续走 132 倍时间和伏击规则。深水超重溺水、浅/深熔岩、雪地伤害与雪地停止恢复进入统一环境结算；进入大图显式确认留下宠物和取消生效中的召回，当前坐骑随行。协议升至 1.146、state hash Schema 升至 v69、contract-v199；demo 内容版本与 hash 不变。随机单层地下城和城镇传送分别等待原版 20–50 级内容及第二座真实城镇，不建立占位消费者。详见 [Wilderness W5](design/wilderness-w5-original-extensions.md)。
 
 ### 本地验证
 

@@ -5,7 +5,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use rfb_content::{
     DungeonDefinition, DungeonEntryRequirementDefinition, DungeonEntryTaskStatus,
     DungeonInstanceLifecycle, FloorLifecycle, ProceduralFloorDefinition, RetakeFloorPolicy,
-    TerrainDefinition, WorldDefinition,
+    TerrainDefinition, WildernessLocationDefinition, WorldDefinition,
 };
 use rfb_protocol::{
     ItemEnchantmentsDto, ItemQualityDto, Position, RecallStateDto, SummonCommandModeDto,
@@ -15,7 +15,7 @@ use rfb_protocol::{
 use crate::{
     error::CoreError,
     event::DomainEvent,
-    save::initial_item_fuel,
+    save::{initial_item_fuel, position_from_content},
     state::{Actor, FloorConnectionState, FloorState, ItemInstance, ItemLocation},
 };
 
@@ -861,6 +861,32 @@ impl Game {
         else {
             return Ok(None);
         };
+        if self.current_floor_id == world.initial_floor_id
+            && let Some(target_floor) = world.procedural_floors.iter().find(|floor| {
+                floor.id == target.floor_id && floor.lifecycle == FloorLifecycle::Dungeon
+            })
+            && let Some(wilderness) = &world.wilderness
+        {
+            let position = self.wilderness_position.ok_or(CoreError::InvalidSave(
+                "wilderness surface is missing its world position",
+            ))?;
+            let dungeon_id = target_floor
+                .dungeon_id
+                .as_deref()
+                .expect("dungeon floor must retain a dungeon ID");
+            if !wilderness.locations.iter().any(|location| {
+                matches!(
+                    location,
+                    WildernessLocationDefinition::Dungeon {
+                        position: location_position,
+                        dungeon_id: location_dungeon_id,
+                    } if position_from_content(*location_position) == position
+                        && location_dungeon_id == dungeon_id
+                )
+            }) {
+                return Ok(None);
+            }
+        }
         self.transition_floor(
             target.floor_id,
             target.arrival_connection_id,
@@ -1243,7 +1269,11 @@ impl Game {
         (followed, Vec::new())
     }
 
-    fn activate_floor(&mut self, floor: FloorState, mut global_items: Vec<ItemInstance>) {
+    pub(super) fn activate_floor(
+        &mut self,
+        floor: FloorState,
+        mut global_items: Vec<ItemInstance>,
+    ) {
         self.current_floor_id = floor.id;
         self.current_dungeon_instance_id = floor.dungeon_instance_id;
         self.width = floor.width;

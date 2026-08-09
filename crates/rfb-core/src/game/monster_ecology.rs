@@ -3,7 +3,8 @@
 use super::movement::actor_can_cross_terrain;
 use super::*;
 use rfb_content::{
-    ActorDefinition, ActorHabitat, ActorMovementMode, GlobalMonsterAllocationDefinition,
+    ActorDamageType, ActorDefinition, ActorHabitat, ActorMovementMode, ActorResistanceLevel,
+    GlobalMonsterAllocationDefinition,
 };
 
 const ORIGINAL_NASTY_MON_ONE_IN: u64 = 40;
@@ -142,6 +143,24 @@ impl Game {
     }
 }
 
+#[cfg(test)]
+mod w3_tests {
+    use super::*;
+
+    #[test]
+    fn daylight_excludes_light_vulnerable_wilderness_monsters() {
+        let game = Game::new_warrens_journey_with_build(42, "demo.build.warrior")
+            .expect("Warrens journey should create");
+        let cave_spider = game
+            .content
+            .actor("demo.actor.cave-spider")
+            .expect("light-vulnerable actor should remain available");
+
+        assert!(!actor_matches_wilderness_daytime(cave_spider, true));
+        assert!(actor_matches_wilderness_daytime(cave_spider, false));
+    }
+}
+
 #[derive(Debug, Clone)]
 struct OriginalAllocationCandidate {
     kind_id: String,
@@ -192,6 +211,12 @@ fn actor_matches_surface_habitat(
             habitat_tag(*habitat)
                 .is_none_or(|required| terrain.tags.iter().any(|tag| tag == required))
         })
+}
+
+fn actor_matches_wilderness_daytime(definition: &ActorDefinition, daytime: bool) -> bool {
+    !daytime
+        || definition.resistances.get(&ActorDamageType::Light)
+            != Some(&ActorResistanceLevel::Vulnerable)
 }
 
 fn escort_alignment_is_compatible(leader: &ActorDefinition, escort: &ActorDefinition) -> bool {
@@ -271,6 +296,7 @@ impl Game {
         terrain: &rfb_content::TerrainDefinition,
         target_floor_kind_ids: &[String],
     ) -> Option<String> {
+        let daytime = self.wilderness_is_daytime();
         let mut candidates = self
             .content
             .actor_definitions()
@@ -288,6 +314,7 @@ impl Game {
                                 .iter()
                                 .any(|kind_id| kind_id == &definition.id)))
                     && actor_matches_surface_habitat(definition, terrain)
+                    && actor_matches_wilderness_daytime(definition, daytime)
                     && actor_can_cross_terrain(definition, terrain)
             })
             .map(|definition| {
@@ -330,6 +357,19 @@ impl Game {
         else {
             return;
         };
+        self.initialize_surface_monsters_with(allocation.rolls, allocation.level, "surface");
+    }
+
+    pub(super) fn initialize_wilderness_monsters(
+        &mut self,
+        level: u16,
+        rolls: u16,
+        spawn_kind: &str,
+    ) {
+        self.initialize_surface_monsters_with(rolls, level, spawn_kind);
+    }
+
+    fn initialize_surface_monsters_with(&mut self, rolls: u16, level: u16, spawn_kind: &str) {
         let mut occupied = self
             .entities
             .iter()
@@ -347,7 +387,7 @@ impl Game {
             special_div: 64,
             ambient_chance_one_in: 1,
         };
-        for ordinal in 0..allocation.rolls {
+        for ordinal in 0..rolls {
             let mut positions = (1..self.height.saturating_sub(1))
                 .flat_map(|y| {
                     (1..self.width.saturating_sub(1)).map(move |x| Position {
@@ -388,23 +428,36 @@ impl Game {
                 continue;
             };
             let Some(kind_id) = self.select_surface_allocated_monster(
-                allocation.level,
+                level,
                 &required_terrain,
                 &target_floor_kind_ids,
             ) else {
                 continue;
             };
             occupied.insert(position);
-            let members = self.plan_original_group(
+            let mut members = self.plan_original_group(
                 &group_policy,
                 &kind_id,
                 position,
-                allocation.level,
+                level,
                 &terrain,
                 self.width,
                 self.height,
                 &mut occupied,
             );
+            let daytime = self.wilderness_is_daytime();
+            members.retain(|member| {
+                let eligible = self
+                    .content
+                    .actor(&member.kind_id)
+                    .is_some_and(|definition| {
+                        actor_matches_wilderness_daytime(definition, daytime)
+                    });
+                if !eligible {
+                    occupied.remove(&member.position);
+                }
+                eligible
+            });
             let definition = self
                 .content
                 .actor(&kind_id)
@@ -419,7 +472,15 @@ impl Game {
                     members.len() + 1,
                 )
             });
-            let leader_id = format!("{}.surface.{}", self.current_floor_id, ordinal + 1);
+            let surface_id = if self.is_wilderness_floor() {
+                let position = self
+                    .wilderness_position
+                    .expect("local wilderness must retain its world position");
+                format!("{}.{}.{}", self.current_floor_id, position.x, position.y)
+            } else {
+                self.current_floor_id.clone()
+            };
+            let leader_id = format!("{surface_id}.{spawn_kind}.{}", ordinal + 1);
             let pack_id = format!("{leader_id}.pack");
             let mut leader = spawn_actor_from_definition(
                 &mut self.rng,

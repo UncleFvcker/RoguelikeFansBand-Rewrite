@@ -25,7 +25,13 @@ export class GameSession {
   }
 
   async dispatch(command: GameCommand): Promise<void> {
-    if (this.#state.commandBlocked) return;
+    if (
+      this.#state.commandBlocked ||
+      (this.#state.worldMap &&
+        command.type !== "move" &&
+        command.type !== "travel-world" &&
+        command.type !== "leave-world-map")
+    ) return;
     this.#state.busy = true;
     this.#refreshBusyControls();
     try {

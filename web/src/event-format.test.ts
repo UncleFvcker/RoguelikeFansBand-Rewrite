@@ -23,6 +23,17 @@ const formatter = createPresentationFormatter(localization, () => state, {
   itemCurseSeverityName: () => "?",
 });
 
+test("wilderness ambush events use the dedicated localized message", () => {
+  assert.equal(
+    formatter.formatEvent({
+      kind: "wilderness.ambushed",
+      messageKey: "wilderness-ambushed",
+      args: {},
+    }),
+    "You are ambushed in the wilderness!",
+  );
+});
+
 test("item event formatting follows projected knowledge and locale changes", () => {
   const event = {
     kind: "item.pickup",

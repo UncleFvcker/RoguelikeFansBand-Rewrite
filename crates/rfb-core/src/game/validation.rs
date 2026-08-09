@@ -16,6 +16,44 @@ use super::*;
 
 impl Game {
     pub(super) fn validate_runtime_invariants(&self, action: &GameAction) -> Result<(), CoreError> {
+        if self.map_scale == rfb_protocol::MapScaleDto::World
+            && !matches!(
+                action,
+                GameAction::Move { .. }
+                    | GameAction::LeaveWorldMap
+                    | GameAction::TravelWorld { .. }
+            )
+        {
+            return Err(CoreError::WorldMapActionUnavailable);
+        }
+        if let GameAction::EnterWorldMap {
+            leave_pets,
+            cancel_recall,
+        } = action
+            && (self.map_scale != rfb_protocol::MapScaleDto::Local
+                || (self.current_floor_id
+                    != self
+                        .content
+                        .world(&self.world_id)
+                        .expect("active world must remain available")
+                        .initial_floor_id
+                    && !self.is_wilderness_floor())
+                || self
+                    .content
+                    .world(&self.world_id)
+                    .and_then(|world| world.wilderness.as_ref())
+                    .is_none()
+                || self.wilderness_ambush_threat_remains()
+                || (self.player_has_following_pet() && !leave_pets)
+                || (self.recall_is_active() && !cancel_recall))
+        {
+            return Err(CoreError::WorldMapTransitionUnavailable);
+        }
+        if matches!(action, GameAction::LeaveWorldMap)
+            && self.map_scale != rfb_protocol::MapScaleDto::World
+        {
+            return Err(CoreError::WorldMapTransitionUnavailable);
+        }
         self.active_task_objective()?;
         match action {
             GameAction::UseItem { item_id, .. }
@@ -302,13 +340,27 @@ impl Game {
                     .iter()
                     .any(|floor| floor.id == floor_id)
         };
-        if !valid_floor(&self.current_floor_id)
+        if !(valid_floor(&self.current_floor_id)
+            || (self.current_floor_id == wilderness::WILDERNESS_FLOOR_ID
+                && world.wilderness.is_some()))
             || self
                 .stored_floors
                 .values()
                 .any(|floor| !valid_floor(&floor.id))
         {
             return Err(CoreError::InvalidSave("floor identity is invalid"));
+        }
+        if self.is_wilderness_floor()
+            && (!self.stored_floors.contains_key(&world.initial_floor_id)
+                || self.current_dungeon_instance_id.is_some()
+                || self.width != world.width
+                || self.height != world.height
+                || (self.map_scale == rfb_protocol::MapScaleDto::Local
+                    && self
+                        .wilderness_position
+                        .is_some_and(|position| self.wilderness_position_is_town(position))))
+        {
+            return Err(CoreError::InvalidSave("local wilderness state is invalid"));
         }
         if self.defeated_unique_actor_kind_ids.iter().any(|kind_id| {
             !self.content.actor(kind_id).is_some_and(|definition| {

@@ -141,7 +141,7 @@ fn original_pack_compiles_deterministically_and_round_trips() {
     assert_eq!(first.bytes, second.bytes);
     assert_eq!(decoded, first);
     assert_eq!(first.content.pack_id, "rfb.demo.original-v1");
-    assert_eq!(first.content.terrain.len(), 78);
+    assert_eq!(first.content.terrain.len(), 86);
     assert_eq!(first.content.actors.len(), 191);
     assert_eq!(first.content.affixes.len(), 4);
     assert_eq!(first.content.items.len(), 146);

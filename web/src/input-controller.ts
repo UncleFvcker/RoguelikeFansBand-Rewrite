@@ -58,6 +58,7 @@ export class InputController {
   ) => void;
   #installed = false;
   #ridingDirection = false;
+  #travelDestination: Position | undefined;
 
   constructor(options: {
     state: AppState;
@@ -183,6 +184,7 @@ export class InputController {
   }
 
   reconcileStatus(state: GameSnapshot | GameUpdate): void {
+    this.#travelDestination = state.worldTravelDestination ?? undefined;
     if (
       this.#state.targeting &&
       (this.#state.targeting.origin.x !== state.player.position.x ||
@@ -199,7 +201,8 @@ export class InputController {
     const looking = this.#state.targetingIntent?.type === "look";
     const targeting = Boolean(this.#state.targeting && !looking);
     const available = Boolean(
-      this.#state.status &&
+      !this.#state.worldMap &&
+        this.#state.status &&
         beginTargeting(
           this.#state.status.player.position,
           this.#state.status.player.projectileProfile?.targetSpec,
@@ -210,7 +213,11 @@ export class InputController {
       this.#state.worldId === "demo.world.warrens-journey" &&
       this.#state.status?.floorId === "demo.floor.surface";
     this.#dom.traverseStairs.textContent = this.#localization.format(
-      connectionAction === "enter-warrens"
+      connectionAction === "enter-world-map"
+        ? "action-enter-world-map"
+        : connectionAction === "leave-world-map"
+          ? "action-leave-world-map"
+      : connectionAction === "enter-warrens"
         ? "action-enter-warrens"
         : connectionAction === "ascend"
           ? "action-stairs-ascend"
@@ -233,6 +240,7 @@ export class InputController {
     this.#dom.targetModeToggle.disabled =
       this.#state.busy ||
       this.#state.playerDead ||
+      this.#state.worldMap ||
       (!targeting && !available);
     this.#dom.lookModeToggle.textContent = this.#localization.format(
       looking ? "action-look-cancel" : "action-look-start",
@@ -293,7 +301,13 @@ export class InputController {
 
   readonly #handleTraverseStairs = (): void => {
     if (this.#dom.traverseStairs.disabled) return;
-    void this.#dispatch({ type: "traverse-stairs" });
+    const action = connectionActionForState(this.#state);
+    if (action === "enter-world-map") void this.#enterWorldMap();
+    else void this.#dispatch(
+      action === "leave-world-map"
+        ? { type: "leave-world-map" }
+        : { type: "traverse-stairs" },
+    );
   };
 
   readonly #handleResize = (): void => {
@@ -320,6 +334,32 @@ export class InputController {
       return;
     }
 
+    const key = event.key.toLowerCase();
+    if (key === "x") {
+      event.preventDefault();
+      this.startLookMode();
+      return;
+    }
+    if (this.#state.worldMap) {
+      const travelDestination =
+        this.#travelDestination ?? this.#state.status?.worldTravelDestination;
+      if (event.key === "J" && travelDestination) {
+        event.preventDefault();
+        void this.#travelTo(travelDestination);
+        return;
+      }
+      const direction = directionForKeyboardInput(event, this.#getInputPreset());
+      if (direction) void this.#dispatch({ type: "move", direction });
+      else if (key === ">") void this.#dispatch({ type: "leave-world-map" });
+      event.preventDefault();
+      return;
+    }
+    if (key === "<" && connectionActionForState(this.#state) === "enter-world-map") {
+      event.preventDefault();
+      void this.#enterWorldMap();
+      return;
+    }
+
     const nextTerrainInteractionMode = terrainInteractionModeForKey(event.key);
     if (nextTerrainInteractionMode) {
       event.preventDefault();
@@ -335,11 +375,6 @@ export class InputController {
     if (event.key.toLowerCase() === "f") {
       event.preventDefault();
       this.startProjectileTargeting();
-      return;
-    }
-    if (event.key.toLowerCase() === "x") {
-      event.preventDefault();
-      this.startLookMode();
       return;
     }
     if (event.key.toLowerCase() === "v") {
@@ -363,8 +398,12 @@ export class InputController {
     }
     if (event.key === "Enter") {
       event.preventDefault();
-      if (this.#state.targetingIntent?.type === "look") this.cancelTargeting(false);
-      else void this.#confirmTargeting();
+      if (this.#state.targetingIntent?.type === "look") {
+        const destination = this.#state.targeting?.cursor;
+        const worldMap = this.#state.worldMap;
+        this.cancelTargeting(false);
+        if (worldMap && destination) void this.#travelTo(destination);
+      } else void this.#confirmTargeting();
       return;
     }
     const direction = directionForKeyboardInput(event, this.#getInputPreset());
@@ -473,6 +512,55 @@ export class InputController {
           : { type: "fire-target", target },
     );
   }
+
+  async #enterWorldMap(): Promise<void> {
+    const status = this.#state.status;
+    if (!status) return;
+    const leavePets = status.entities.some(
+      (entity) =>
+        entity.id !== status.player.ridingActorId &&
+        (entity.controllerId === status.player.id || entity.summon?.ownerId === status.player.id),
+    );
+    if (
+      leavePets &&
+      !this.#window.confirm(this.#localization.format("confirm-world-map-leave-pets"))
+    ) {
+      return;
+    }
+    const cancelRecall = status.player.recall?.remainingTurns != null;
+    if (
+      cancelRecall &&
+      !this.#window.confirm(this.#localization.format("confirm-world-map-cancel-recall"))
+    ) {
+      return;
+    }
+    await this.#dispatch({ type: "enter-world-map", leavePets, cancelRecall });
+  }
+
+  async #travelTo(destination: Position): Promise<void> {
+    this.#travelDestination = destination;
+    for (;;) {
+      const status = this.#state.status;
+      if (!status || status.mapScale !== "world") return;
+      if (
+        status.player.position.x === destination.x &&
+        status.player.position.y === destination.y
+      ) {
+        this.#travelDestination = undefined;
+        return;
+      }
+      const previous = status.player.position;
+      await this.#dispatch({ type: "travel-world", destination });
+      const current = this.#state.status;
+      if (
+        !current ||
+        current.mapScale !== "world" ||
+        (current.player.position.x === previous.x && current.player.position.y === previous.y)
+      ) {
+        return;
+      }
+    }
+  }
 }
 
 export function commandForKeyboardInput(
@@ -496,19 +584,39 @@ export function commandForKeyboardInput(
   return direction ? { type: "move", direction } : undefined;
 }
 
-export type ConnectionAction = "enter-warrens" | "ascend" | "descend";
+export type ConnectionAction =
+  | "enter-world-map"
+  | "leave-world-map"
+  | "enter-warrens"
+  | "ascend"
+  | "descend";
 
 export function connectionActionForState(state: AppState): ConnectionAction | undefined {
   const status = state.status;
   if (!status) return undefined;
+  if (status.mapScale === "world") return "leave-world-map";
   const terrainId = state.cellAt(status.player.position)?.terrainId;
   const glyph = terrainId ? state.contentGlyphs.get(terrainId) : undefined;
   if (glyph === "<") return "ascend";
-  if (glyph !== ">") return undefined;
+  if (glyph === ">") {
+    return state.worldId === "demo.world.warrens-journey" &&
+      status.floorId === "demo.floor.surface"
+      ? "enter-warrens"
+      : "descend";
+  }
+  const ambushThreatRemains =
+    status.floorId === "core.floor.wilderness" &&
+    status.entities.some(
+      (entity) =>
+        entity.faction === "hostile" &&
+        (entity.id.includes(".ambush.") || entity.summon?.ownerId.includes(".ambush.")),
+    );
   return state.worldId === "demo.world.warrens-journey" &&
-    status.floorId === "demo.floor.surface"
-    ? "enter-warrens"
-    : "descend";
+    !ambushThreatRemains &&
+    (status.floorId === "demo.floor.surface" ||
+      status.floorId === "core.floor.wilderness")
+    ? "enter-world-map"
+    : undefined;
 }
 
 export function directionForKeyboardInput(

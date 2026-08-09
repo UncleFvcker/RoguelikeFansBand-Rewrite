@@ -6,13 +6,14 @@ impl Game {
     pub(super) fn advance_until_player_ready(
         &mut self,
         resting: bool,
+        local_floor_active: bool,
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
     ) -> Result<(), CoreError> {
         loop {
             self.world_tick = self.world_tick.saturating_add(1);
-            self.process_status_tick(events, changed, removed_entities)?;
+            self.process_status_tick(events, changed, removed_entities, local_floor_active)?;
             if self.player_is_dead() {
                 break;
             }
@@ -24,10 +25,12 @@ impl Game {
             self.process_equipped_light_fuel(events);
             self.process_equipment_regeneration(events);
             self.process_inventory_device_recovery(events);
-            if !self.current_floor_has_active_task() {
-                self.process_ambient_monster_allocation(changed)?;
+            if local_floor_active {
+                if !self.current_floor_has_active_task() {
+                    self.process_ambient_monster_allocation(changed)?;
+                }
+                self.process_monster_energy_pulse(events, changed, removed_entities)?;
             }
-            self.process_monster_energy_pulse(events, changed, removed_entities)?;
             if self.player_is_dead() {
                 break;
             }
@@ -37,17 +40,20 @@ impl Game {
                 break;
             }
         }
-        self.advance_summon_lifetimes(events, changed, removed_entities);
-        if !self.player_is_dead() {
+        if local_floor_active {
+            self.advance_summon_lifetimes(events, changed, removed_entities);
+        }
+        if local_floor_active && !self.player_is_dead() {
             self.advance_recall(events, changed)?;
         }
         Ok(())
     }
 
     fn process_natural_hp_regeneration(&mut self, resting: bool) {
-        if !self
-            .world_tick
-            .is_multiple_of(NATURAL_HP_REGENERATION_INTERVAL_TICKS)
+        if self.wilderness_blocks_regeneration()
+            || !self
+                .world_tick
+                .is_multiple_of(NATURAL_HP_REGENERATION_INTERVAL_TICKS)
             || self.player.hp >= self.effective_player_max_hp()
             || self
                 .player
@@ -85,9 +91,10 @@ impl Game {
     }
 
     fn process_equipment_regeneration(&mut self, events: &mut Vec<DomainEvent>) {
-        if !self
-            .world_tick
-            .is_multiple_of(EQUIPMENT_REGENERATION_INTERVAL_TICKS)
+        if self.wilderness_blocks_regeneration()
+            || !self
+                .world_tick
+                .is_multiple_of(EQUIPMENT_REGENERATION_INTERVAL_TICKS)
             || !self
                 .player_equipment_passives()
                 .contains(&EquipmentPassive::Regeneration)
@@ -210,6 +217,7 @@ impl Game {
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
+        process_entities: bool,
     ) -> Result<(), CoreError> {
         let player_damage_percent = self.player_incoming_damage_percent();
         let player_tick = process_actor_status_tick(&mut self.player, false, player_damage_percent);
@@ -232,6 +240,9 @@ impl Game {
                 status_kind_id: damage.status_kind_id,
                 damage: damage.outcome,
             });
+            return Ok(());
+        }
+        if !process_entities {
             return Ok(());
         }
 

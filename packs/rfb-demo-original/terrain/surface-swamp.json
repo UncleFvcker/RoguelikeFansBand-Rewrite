@@ -1,0 +1,12 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/terrain.schema.json",
+  "formatVersion": 1,
+  "id": "demo.terrain.surface-swamp",
+  "nameKey": "terrain-demo-surface-swamp-name",
+  "descriptionKey": "terrain-demo-surface-swamp-description",
+  "glyph": ".",
+  "walkable": true,
+  "blocksSight": false,
+  "movementModes": ["fly", "swim"],
+  "tags": ["outdoor", "surface", "water", "shallow", "shore", "swamp"]
+}

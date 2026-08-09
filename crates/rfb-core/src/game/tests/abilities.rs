@@ -3579,9 +3579,9 @@ fn poison_branding_is_temporary_affects_melee_and_round_trips() {
         serde_json::from_value(legacy_value).expect("old status save should deserialize");
     Game::from_save(legacy_payload).expect("old status save should remain loadable");
 
-    game.process_status_tick(&mut Vec::new(), &mut BTreeSet::new(), &mut Vec::new())
+    game.process_status_tick(&mut Vec::new(), &mut BTreeSet::new(), &mut Vec::new(), true)
         .expect("first brand tick should resolve");
-    game.process_status_tick(&mut Vec::new(), &mut BTreeSet::new(), &mut Vec::new())
+    game.process_status_tick(&mut Vec::new(), &mut BTreeSet::new(), &mut Vec::new(), true)
         .expect("second brand tick should expire");
     assert_eq!(
         game.player_melee_damage_multiplier(&profile, &target, &definition),
@@ -4015,13 +4015,13 @@ fn temporary_status_resistances_apply_expire_and_round_trip() {
     let restored = Game::from_save(game.to_save()).expect("temporary resistance should reload");
     assert_eq!(restored.snapshot(), snapshot);
 
-    game.process_status_tick(&mut Vec::new(), &mut BTreeSet::new(), &mut Vec::new())
+    game.process_status_tick(&mut Vec::new(), &mut BTreeSet::new(), &mut Vec::new(), true)
         .expect("first status tick should resolve");
     assert_eq!(
         game.effective_player_resistances().level(DamageType::Cold),
         ResistanceLevel::Resistant
     );
-    game.process_status_tick(&mut Vec::new(), &mut BTreeSet::new(), &mut Vec::new())
+    game.process_status_tick(&mut Vec::new(), &mut BTreeSet::new(), &mut Vec::new(), true)
         .expect("second status tick should expire");
     assert_eq!(
         game.effective_player_resistances().level(DamageType::Cold),

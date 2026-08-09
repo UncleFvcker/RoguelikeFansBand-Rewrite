@@ -13,6 +13,10 @@ pub enum CoreError {
     PlayerDead,
     #[error("the campaign has ended and cannot accept more commands")]
     CampaignEnded,
+    #[error("world map transition is unavailable from the current state")]
+    WorldMapTransitionUnavailable,
+    #[error("the command is unavailable while viewing the world map")]
+    WorldMapActionUnavailable,
     #[error("unsupported save schema version {0}")]
     UnsupportedSaveVersion(u16),
     #[error("save uses unsupported RNG algorithm {0}")]

@@ -415,7 +415,7 @@ pub enum ReplayError {
 
 #[cfg(test)]
 mod tests {
-    use rfb_protocol::{DeviceRechargeSourceDto, Direction, SummonCommandModeDto};
+    use rfb_protocol::{DeviceRechargeSourceDto, Direction, MapScaleDto, SummonCommandModeDto};
 
     use super::*;
 
@@ -596,6 +596,26 @@ mod tests {
             final_game.rng_draw_counter()
         );
         verify(&replay, initial).expect("combat replay should verify");
+    }
+
+    #[test]
+    fn world_map_state_round_trips_through_replay() {
+        let initial = Game::new_warrens_journey_with_build(42, "demo.build.warrior")
+            .expect("Warrens journey should create");
+        let mut recorder = ReplayRecorder::new(initial.clone());
+        let update = recorder
+            .dispatch(GameCommand::EnterWorldMap {
+                leave_pets: false,
+                cancel_recall: false,
+            })
+            .expect("world map should open");
+        assert_eq!(update.map_scale, MapScaleDto::World);
+        let (final_game, replay) = recorder.finish();
+
+        let verification = verify(&replay, initial).expect("world map replay should verify");
+        assert_eq!(verification.commands_verified, 1);
+        assert_eq!(verification.final_state_hash, final_game.state_hash());
+        assert_eq!(final_game.snapshot().map_scale, MapScaleDto::World);
     }
 
     #[test]

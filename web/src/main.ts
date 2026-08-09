@@ -169,6 +169,7 @@ const gameSession = new GameSession({
       appState.updateCells(update.changedCells);
       appState.updateVisualCells(update.changedVisualCells);
     }
+    mapHost.dataset.mapScale = update.mapScale;
     statusPanel.render(update);
     inventoryPanel.render(update.inventory, update.equipment);
     shopPanel.render(update);
@@ -608,13 +609,24 @@ function describeLookPosition(position: { readonly x: number; readonly y: number
   const status = appState.status;
   if (!status) return localization.format("look-contents-empty");
   const cell = appState.cellAt(position);
-  const withTerrain = (contents: string): string =>
-    cell
-      ? localization.format("look-contents-with-terrain", {
+  const withTerrain = (contents: string): string => {
+    if (!cell) return contents;
+    const terrain = localization.format("look-contents-with-terrain", {
           contents,
           terrain: contentName(cell.terrainId),
-        })
-      : contents;
+        });
+    const danger = cell.dangerLevel;
+    if (danger == null) return terrain;
+    const locations = (cell.locations ?? []).map((location) => contentName(location.id));
+    return localization.format(
+      locations.length > 0 ? "look-contents-world-locations" : "look-contents-world",
+      {
+        contents: terrain,
+        danger,
+        locations: locations.join(localization.locale === "zh-CN" ? "、" : ", "),
+      },
+    );
+  };
   if (
     status.player.position.x === position.x &&
     status.player.position.y === position.y
@@ -653,6 +665,7 @@ function renderContentMetadata(snapshot: GameSnapshot): void {
   mapHost.dataset.contentId = snapshot.contentId;
   mapHost.dataset.contentHash = snapshot.contentHash;
   mapHost.dataset.worldId = snapshot.worldId;
+  mapHost.dataset.mapScale = snapshot.mapScale;
   mapHost.dataset.visualCellCount = String(snapshot.visualCells.length);
 }
 

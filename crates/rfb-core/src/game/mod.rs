@@ -82,7 +82,7 @@ use rfb_protocol::{
     ItemActivationDto, ItemChargesDto, ItemCurseRemovalResolutionDto, ItemCurseResolutionDto,
     ItemCurseSeverityDto, ItemEnchantmentComponentResolutionDto, ItemEnchantmentResolutionDto,
     ItemEnchantmentsDto, ItemIdentificationDto, ItemIdentifyResolutionDto, ItemKnowledgeDto,
-    ItemPropertyDto, ItemQualityDto, MeleeBlowDto, MeleeRoutineDto,
+    ItemPropertyDto, ItemQualityDto, MapScaleDto, MeleeBlowDto, MeleeRoutineDto,
     MonsterAbilityCandidateResolutionDto, MonsterAbilityCastResolutionDto,
     MonsterAbilityDecisionResolutionDto, MonsterAbilityRejectionReasonDto,
     MonsterAbilityTargetResolutionDto, MonsterDisplacementResolutionDto, MonsterPackBehaviorDto,
@@ -124,6 +124,7 @@ mod terrain;
 pub(crate) mod town;
 mod turn;
 mod validation;
+mod wilderness;
 mod world;
 
 #[cfg(test)]
@@ -187,7 +188,7 @@ pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 67;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 69;
 pub const WARRENS_JOURNEY_WORLD_ID: &str = "demo.world.warrens-journey";
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const VISIBILITY_RADIUS: i32 = 8;
@@ -723,6 +724,10 @@ fn initial_item_runtime_state(
 pub struct Game {
     content: Arc<ContentCatalog>,
     world_id: String,
+    map_scale: MapScaleDto,
+    wilderness_position: Option<Position>,
+    wilderness_seed: u64,
+    world_travel_destination: Option<Position>,
     current_floor_id: String,
     current_dungeon_instance_id: Option<String>,
     stored_floors: BTreeMap<String, FloorState>,
@@ -991,6 +996,10 @@ impl Game {
             &mut rng,
         )?;
         let initial_floor_id = world.initial_floor_id.clone();
+        let wilderness_position = world
+            .wilderness
+            .as_ref()
+            .map(|wilderness| position_from_content(wilderness.start_position));
         let task_states = initial_task_states(world);
         let dungeon_states = initial_dungeon_states(world);
         let (town_states, shop_states) = town::initial_town_and_shop_states(
@@ -1003,6 +1012,10 @@ impl Game {
         let mut game = Self {
             content,
             world_id: world_id.to_owned(),
+            map_scale: MapScaleDto::Local,
+            wilderness_position,
+            wilderness_seed: seed,
+            world_travel_destination: None,
             current_floor_id: initial_floor_id,
             current_dungeon_instance_id: None,
             stored_floors: BTreeMap::new(),
@@ -1102,6 +1115,7 @@ impl Game {
         let world_tick_before_command = self.world_tick;
         let player_position_before_command = self.player.position;
         let floor_before_command = self.current_floor_id.clone();
+        let wilderness_position_before_command = self.wilderness_position;
         let light_radius_before_command = self.equipped_light_radius();
         let see_invisible_sources_before_command = self.player_see_invisible_sources();
         let entity_positions_before_command = self
@@ -1109,7 +1123,8 @@ impl Game {
             .iter()
             .map(|entity| (entity.id.clone(), entity.position))
             .collect::<BTreeMap<_, _>>();
-        let previous_dimensions = (self.width, self.height);
+        let map_scale_before_command = self.map_scale;
+        let previous_dimensions = self.projected_dimensions();
         // The world only mutates inside dispatch, so the visuals recorded at
         // the end of the previous command are exactly this command's "before"
         // frame; recomputing them here would be a second full-map pass.
@@ -1177,6 +1192,14 @@ impl Game {
                 .recharging_item_unavailable_reason(item_id, source_item_id, target_item_id)
                 .is_some()
         );
+        let world_travel_direction = match &action {
+            GameAction::TravelWorld { destination } => {
+                self.next_world_travel_direction(*destination)
+            }
+            _ => None,
+        };
+        let unavailable_world_travel =
+            matches!(&action, GameAction::TravelWorld { .. }) && world_travel_direction.is_none();
         let advances_world = !depleted_device_use
             && !zero_time_unavailable_item_use
             && !cursed_unequip
@@ -1184,6 +1207,7 @@ impl Game {
             && !unavailable_recharge
             && !unavailable_light_refuel
             && !unavailable_recharging_item
+            && !unavailable_world_travel
             && !matches!(
                 &action,
                 GameAction::Retire
@@ -1191,7 +1215,9 @@ impl Game {
                     | GameAction::BuyFromShop { .. }
                     | GameAction::ClaimTaskReward { .. }
                     | GameAction::DepositAtHome { .. }
+                    | GameAction::EnterWorldMap { .. }
                     | GameAction::IncreaseAttribute { .. }
+                    | GameAction::LeaveWorldMap
                     | GameAction::Rest { .. }
                     | GameAction::SellToShop { .. }
                     | GameAction::WithdrawFromHome { .. }
@@ -1204,7 +1230,11 @@ impl Game {
         if advances_world && self.player_has_status_kind(STATUS_PARALYSIS) {
             action = GameAction::ParalyzedIdle;
         }
-        let action_cost = action.energy_cost();
+        let mut action_cost = if map_scale_before_command == MapScaleDto::World && advances_world {
+            STANDARD_ACTION_COST.saturating_mul(wilderness::WORLD_MAP_ACTION_MULTIPLIER)
+        } else {
+            action.energy_cost()
+        };
         let recover_after_wait = matches!(&action, GameAction::Wait);
         let mut turn_advance = 1_u32;
         if advances_world {
@@ -1395,6 +1425,37 @@ impl Game {
                 &mut changed,
                 &mut removed_entities,
             )?,
+            GameAction::EnterWorldMap { cancel_recall, .. } => {
+                if cancel_recall && self.recall_is_active() {
+                    self.cancel_recall();
+                }
+                self.map_scale = MapScaleDto::World;
+            }
+            GameAction::LeaveWorldMap => {
+                if self.leave_world_map()? && self.wilderness_is_daytime() {
+                    events.push(DomainEvent::WildernessInterestingDiscovery);
+                }
+            }
+            GameAction::TravelWorld { destination } => {
+                if let Some(direction) = world_travel_direction {
+                    self.world_travel_destination = Some(destination);
+                    if !self.move_on_world_map(direction, &mut changed) {
+                        events.push(DomainEvent::MoveBlocked);
+                    } else {
+                        if self.wilderness_position == Some(destination) {
+                            self.world_travel_destination = None;
+                        }
+                        if !self.player_is_dead() && self.roll_wilderness_ambush() {
+                            self.activate_wilderness_ambush()?;
+                            action_cost = STANDARD_ACTION_COST;
+                            events.push(DomainEvent::WildernessAmbushed);
+                        }
+                    }
+                } else {
+                    self.world_travel_destination = None;
+                    events.push(DomainEvent::MoveBlocked);
+                }
+            }
             GameAction::Throw { item_id, direction } => {
                 self.throw_inventory_item(
                     &item_id,
@@ -1568,47 +1629,73 @@ impl Game {
                 });
             }
             GameAction::Move { direction } => {
-                let direction = self.confused_direction(direction, &mut events);
-                let (dx, dy) = direction.delta();
-                let target = Position {
-                    x: self.player.position.x + dx,
-                    y: self.player.position.y + dy,
-                };
-                let movement_blocked = if let Some(mount_id) = self.riding_actor_id.as_deref() {
-                    self.entities
-                        .iter()
-                        .position(|entity| entity.id == mount_id)
-                        .is_none_or(|mount_index| {
-                            !self.actor_can_enter_position(mount_index, target)
-                        })
-                } else {
-                    self.index(target).is_none()
-                        || (!self.is_walkable(target) && !self.player_can_pass_walls())
-                };
-                if movement_blocked {
-                    events.push(DomainEvent::MoveBlocked);
-                } else if let Some(index) = self
-                    .entities
-                    .iter()
-                    .position(|entity| entity.position == target)
-                {
-                    changed.insert(target);
-                    if self.actor_is_player_side(&self.entities[index]) {
+                if self.map_scale == MapScaleDto::World {
+                    if !self.move_on_world_map(direction, &mut changed) {
                         events.push(DomainEvent::MoveBlocked);
-                    } else if self.player_fear_blocks_melee(index) {
-                        events.push(DomainEvent::PlayerFearBlocked {
-                            status_kind_id: STATUS_FEAR.to_owned(),
-                        });
                     } else {
-                        self.resolve_player_melee(
-                            index,
-                            &mut events,
-                            &mut changed,
-                            &mut removed_entities,
-                        )?;
+                        if !self.player_is_dead() && self.roll_wilderness_ambush() {
+                            self.activate_wilderness_ambush()?;
+                            action_cost = STANDARD_ACTION_COST;
+                            events.push(DomainEvent::WildernessAmbushed);
+                        }
                     }
                 } else {
-                    events.extend(self.relocate_player(target, &mut changed));
+                    let direction = self.confused_direction(direction, &mut events);
+                    let (dx, dy) = direction.delta();
+                    let target = Position {
+                        x: self.player.position.x + dx,
+                        y: self.player.position.y + dy,
+                    };
+                    let movement_blocked = if let Some(mount_id) = self.riding_actor_id.as_deref() {
+                        self.entities
+                            .iter()
+                            .position(|entity| entity.id == mount_id)
+                            .is_none_or(|mount_index| {
+                                !self.actor_can_enter_position(mount_index, target)
+                            })
+                    } else {
+                        self.player_can_enter_local_wilderness(target).map_or_else(
+                            || {
+                                self.index(target).is_none()
+                                    || (!self.is_walkable(target) && !self.player_can_pass_walls())
+                            },
+                            |can_enter| !can_enter,
+                        )
+                    };
+                    let crossed_wilderness_edge = movement_blocked
+                        && self.index(target).is_none()
+                        && self.move_across_wilderness_edge(direction)?;
+                    if crossed_wilderness_edge {
+                        if self.wilderness_is_daytime() && self.wilderness_has_interesting_site() {
+                            events.push(DomainEvent::WildernessInterestingDiscovery);
+                        }
+                    } else {
+                        if movement_blocked {
+                            events.push(DomainEvent::MoveBlocked);
+                        } else if let Some(index) = self
+                            .entities
+                            .iter()
+                            .position(|entity| entity.position == target)
+                        {
+                            changed.insert(target);
+                            if self.actor_is_player_side(&self.entities[index]) {
+                                events.push(DomainEvent::MoveBlocked);
+                            } else if self.player_fear_blocks_melee(index) {
+                                events.push(DomainEvent::PlayerFearBlocked {
+                                    status_kind_id: STATUS_FEAR.to_owned(),
+                                });
+                            } else {
+                                self.resolve_player_melee(
+                                    index,
+                                    &mut events,
+                                    &mut changed,
+                                    &mut removed_entities,
+                                )?;
+                            }
+                        } else {
+                            events.extend(self.relocate_player(target, &mut changed));
+                        }
+                    }
                 }
             }
             GameAction::Ride { direction } => {
@@ -1706,15 +1793,22 @@ impl Game {
             },
         }
 
+        if advances_world && !self.player_is_dead() {
+            events.extend(self.resolve_wilderness_terrain_hazard(self.player.position));
+        }
         if advances_world {
             spend_energy(&mut self.player.energy_need, action_cost);
             self.advance_until_player_ready(
                 false,
+                self.map_scale != MapScaleDto::World,
                 &mut events,
                 &mut changed,
                 &mut removed_entities,
             )?;
-            if recover_after_wait && !self.player_is_dead() {
+            if recover_after_wait
+                && !self.player_is_dead()
+                && !self.wilderness_blocks_regeneration()
+            {
                 events.extend(
                     self.recover_player_resources(false)
                         .into_iter()
@@ -1737,7 +1831,7 @@ impl Game {
             &entity_positions_before_command,
         );
 
-        if self.world_tick != world_tick_before_command {
+        if self.world_tick != world_tick_before_command && self.map_scale == MapScaleDto::Local {
             // Clear only the grace windows that existed before this command.
             // Monsters generated while entering a floor keep their grace for
             // the player's first action on that floor.
@@ -1752,14 +1846,40 @@ impl Game {
         self.turn = self.turn.saturating_add(turn_advance);
         self.revision = self.revision.saturating_add(1);
         self.reveal_current_visibility();
+        let current_dimensions = self.projected_dimensions();
         let current_visuals = self.visual_cells();
-        let changed_visual_cells = if (self.width, self.height) == previous_dimensions {
+        let map_scale_changed = self.map_scale != map_scale_before_command;
+        let wilderness_local_projection_changed = self.map_scale == MapScaleDto::Local
+            && map_scale_before_command == MapScaleDto::Local
+            && (self.is_wilderness_floor()
+                || floor_before_command == wilderness::WILDERNESS_FLOOR_ID)
+            && (self.current_floor_id != floor_before_command
+                || self.wilderness_position != wilderness_position_before_command);
+        let map_projection_changed = map_scale_changed
+            || wilderness_local_projection_changed
+            || current_dimensions != previous_dimensions;
+        let changed_visual_cells = if !map_projection_changed {
             Self::changed_visual_cells(&current_visuals, &previous_visuals)
         } else {
             current_visuals.clone()
         };
         self.last_visual_cells = Some(current_visuals);
         let events = project_events(events);
+        let changed_cells = if map_scale_changed || wilderness_local_projection_changed {
+            self.projected_cells()
+        } else {
+            changed
+                .into_iter()
+                .map(|position| {
+                    if self.map_scale == MapScaleDto::World {
+                        self.wilderness_cell_dto(position)
+                    } else {
+                        self.cell_dto(position)
+                    }
+                })
+                .collect()
+        };
+        let world_map = self.map_scale == MapScaleDto::World;
 
         Ok(GameUpdate {
             base_revision,
@@ -1767,28 +1887,55 @@ impl Game {
             turn: self.turn,
             world_tick: self.world_tick,
             command_seq: self.last_command_seq,
-            width: self.width,
-            height: self.height,
+            map_scale: self.map_scale,
+            world_travel_destination: self.world_travel_destination,
+            width: current_dimensions.0,
+            height: current_dimensions.1,
             floor_id: self.current_floor_id.clone(),
             dungeon_instance_id: self.current_dungeon_instance_id.clone(),
-            town: self.current_town_dto(),
-            shops: self.current_shop_dtos(),
-            homes: self.current_home_dtos(),
-            task_services: self.current_task_service_dtos(),
+            town: (!world_map).then(|| self.current_town_dto()).flatten(),
+            shops: if world_map {
+                Vec::new()
+            } else {
+                self.current_shop_dtos()
+            },
+            homes: if world_map {
+                Vec::new()
+            } else {
+                self.current_home_dtos()
+            },
+            task_services: if world_map {
+                Vec::new()
+            } else {
+                self.current_task_service_dtos()
+            },
             events,
-            changed_cells: changed
-                .into_iter()
-                .map(|position| self.cell_dto(position))
-                .collect(),
+            changed_cells,
             changed_visual_cells,
-            player: self.player_dto(),
-            entities: self.entities_dto(),
-            items: self.items_dto(),
-            gold_piles: self.gold_pile_dtos(),
+            player: self.projected_player_dto(),
+            entities: if world_map {
+                Vec::new()
+            } else {
+                self.entities_dto()
+            },
+            items: if world_map {
+                Vec::new()
+            } else {
+                self.items_dto()
+            },
+            gold_piles: if world_map {
+                Vec::new()
+            } else {
+                self.gold_pile_dtos()
+            },
             inventory: self.inventory_dto(),
             equipment: self.equipment_dto(),
             removed_entities,
-            terrain_interactions: self.terrain_interactions(),
+            terrain_interactions: if world_map {
+                Vec::new()
+            } else {
+                self.terrain_interactions()
+            },
             tasks: self.task_statuses(),
             campaign: self.campaign_state_dto(),
             state_hash: self.state_hash(),
@@ -4430,13 +4577,15 @@ impl Game {
     }
 
     fn floor_has_environment_light(&self) -> bool {
-        self.content
-            .world(&self.world_id)
-            .is_some_and(|world| self.current_floor_id == world.initial_floor_id)
+        self.is_wilderness_floor()
+            || self
+                .content
+                .world(&self.world_id)
+                .is_some_and(|world| self.current_floor_id == world.initial_floor_id)
     }
 
     fn ambient_light(&self) -> u8 {
-        if self.floor_has_environment_light() {
+        if self.floor_has_environment_light() && self.wilderness_is_daytime() {
             SURFACE_AMBIENT_LIGHT
         } else {
             DUNGEON_AMBIENT_LIGHT

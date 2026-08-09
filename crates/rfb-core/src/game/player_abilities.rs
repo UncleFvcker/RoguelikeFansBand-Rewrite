@@ -715,7 +715,7 @@ impl Game {
             loop {
                 let hp_before = self.player.hp;
                 spend_energy(&mut self.player.energy_need, STANDARD_ACTION_COST);
-                self.advance_until_player_ready(true, events, changed, removed_entities)?;
+                self.advance_until_player_ready(true, true, events, changed, removed_entities)?;
                 completed_turns = completed_turns.saturating_add(1);
                 if self.player_is_dead() {
                     break RestStopReasonDto::PlayerDied;

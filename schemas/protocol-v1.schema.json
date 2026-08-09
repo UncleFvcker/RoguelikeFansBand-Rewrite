@@ -2953,11 +2953,26 @@
             "null"
           ]
         },
+        "dangerLevel": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
         "itemId": {
           "type": [
             "string",
             "null"
           ]
+        },
+        "locations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/WildernessLocationDto"
+          }
         },
         "position": {
           "$ref": "#/$defs/Position"
@@ -3962,6 +3977,54 @@
         {
           "type": "object",
           "properties": {
+            "cancelRecall": {
+              "type": "boolean",
+              "default": false
+            },
+            "leavePets": {
+              "type": "boolean",
+              "default": false
+            },
+            "type": {
+              "type": "string",
+              "const": "enter-world-map"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "leave-world-map"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "destination": {
+              "$ref": "#/$defs/Position"
+            },
+            "type": {
+              "type": "string",
+              "const": "travel-world"
+            }
+          },
+          "required": [
+            "type",
+            "destination"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "direction": {
               "$ref": "#/$defs/Direction"
             },
@@ -4913,6 +4976,10 @@
           "format": "uint32",
           "minimum": 0
         },
+        "mapScale": {
+          "$ref": "#/$defs/MapScaleDto",
+          "default": "local"
+        },
         "player": {
           "$ref": "#/$defs/PlayerDto"
         },
@@ -4991,6 +5058,16 @@
           "format": "uint32",
           "default": 0,
           "minimum": 0
+        },
+        "worldTravelDestination": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "required": [
@@ -5103,6 +5180,10 @@
             "$ref": "#/$defs/ItemDto"
           }
         },
+        "mapScale": {
+          "$ref": "#/$defs/MapScaleDto",
+          "default": "local"
+        },
         "player": {
           "$ref": "#/$defs/PlayerDto"
         },
@@ -5174,6 +5255,16 @@
           "format": "uint32",
           "default": 0,
           "minimum": 0
+        },
+        "worldTravelDestination": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "required": [
@@ -5964,6 +6055,13 @@
         "ordinary",
         "fine",
         "exceptional"
+      ]
+    },
+    "MapScaleDto": {
+      "type": "string",
+      "enum": [
+        "local",
+        "world"
       ]
     },
     "MeleeBlowDto": {
@@ -7873,6 +7971,28 @@
         "fire",
         "cold",
         "poison"
+      ]
+    },
+    "WildernessLocationDto": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/WildernessLocationKindDto"
+        }
+      },
+      "required": [
+        "kind",
+        "id"
+      ]
+    },
+    "WildernessLocationKindDto": {
+      "type": "string",
+      "enum": [
+        "town",
+        "dungeon"
       ]
     }
   }

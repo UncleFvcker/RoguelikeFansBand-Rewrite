@@ -19,14 +19,14 @@ use crate::{
     state::{Actor, FloorState, ItemInstance, ItemLocation},
     stats::{AttributeKind, AttributeSet, CharacterProgress, SkillProgress},
 };
-use rfb_content::{ContentCatalog, FloorLifecycle, TaskObjectiveKind};
+use rfb_content::{ContentCatalog, FloorLifecycle, TaskObjectiveKind, WildernessTerrain};
 use rfb_protocol::{
     AbilityProgressSaveDto, ActorSaveDto, BodySlotSaveDto, CampaignStateSaveDto, CampaignStatusDto,
     CarriedItemSaveDto, DungeonStateSaveDto, EquipmentItemSaveDto, FloorConnectionSaveDto,
     FloorRegionSaveDto, HomeStateSaveDto, InventoryItemSaveDto, ItemKnowledgeSaveDto,
-    ItemPropertyKnowledgeSaveDto, ItemSaveDto, PlayerProgressSaveDto, PlayerSaveDto, Position,
-    ResourcePoolSaveDto, RngSaveDto, SAVE_PAYLOAD_SCHEMA_VERSION, SavePayloadV1, ShopStateSaveDto,
-    TaskStateSaveDto, TaskStatusKindDto, TerrainSaveDto, TownStateSaveDto,
+    ItemPropertyKnowledgeSaveDto, ItemSaveDto, MapScaleDto, PlayerProgressSaveDto, PlayerSaveDto,
+    Position, ResourcePoolSaveDto, RngSaveDto, SAVE_PAYLOAD_SCHEMA_VERSION, SavePayloadV1,
+    ShopStateSaveDto, TaskStateSaveDto, TaskStatusKindDto, TerrainSaveDto, TownStateSaveDto,
 };
 use serde::Serialize;
 use sha2::{Digest, Sha256};
@@ -35,6 +35,7 @@ use super::gold::derive_next_gold_pile_serial;
 use super::town::{
     home_state_to_save, restore_home_states, restore_town_and_shop_states, shop_state_to_save,
 };
+use super::wilderness::WILDERNESS_FLOOR_ID;
 use super::{
     BodySlot, CampaignState, DungeonState, Game, ItemKnowledgeState, ItemPropertyKnowledgeState,
     STATE_HASH_SCHEMA_VERSION, TaskState, character_skill_progress, dungeon_instance_id,
@@ -512,12 +513,16 @@ fn item_property_knowledge_from_save(
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-struct StateHashPayloadV64<'a> {
+struct StateHashPayloadV69<'a> {
     schema_version: u16,
     revision: u32,
     turn: u32,
     world_tick: u32,
     last_command_seq: u32,
+    map_scale: MapScaleDto,
+    wilderness_position: Option<Position>,
+    wilderness_seed: u64,
+    world_travel_destination: Option<Position>,
     terrain: TerrainSaveRef<'a>,
     player: PlayerSaveDto,
     entities: Vec<ActorSaveDto>,
@@ -632,6 +637,53 @@ impl Game {
         let world = content
             .world(&payload.world_id)
             .ok_or_else(|| CoreError::UnknownWorld(payload.world_id.clone()))?;
+        let wilderness_position = match (&world.wilderness, payload.wilderness_position) {
+            (Some(wilderness), Some(position)) => {
+                let symbol = usize::try_from(position.y)
+                    .ok()
+                    .and_then(|y| wilderness.rows.get(y))
+                    .and_then(|row| {
+                        usize::try_from(position.x)
+                            .ok()
+                            .and_then(|x| row.as_bytes().get(x))
+                    });
+                let valid = symbol.is_some_and(|symbol| {
+                    wilderness.legend.iter().any(|entry| {
+                        entry.symbol.as_bytes() == [*symbol]
+                            && entry.terrain != WildernessTerrain::Edge
+                    })
+                });
+                if !valid {
+                    return Err(CoreError::InvalidSave("wilderness position is invalid"));
+                }
+                Some(position)
+            }
+            (None, None) => None,
+            _ => return Err(CoreError::InvalidSave("wilderness position is invalid")),
+        };
+        if let Some(destination) = payload.world_travel_destination {
+            let valid = world.wilderness.as_ref().is_some_and(|wilderness| {
+                usize::try_from(destination.y)
+                    .ok()
+                    .and_then(|y| wilderness.rows.get(y))
+                    .and_then(|row| {
+                        usize::try_from(destination.x)
+                            .ok()
+                            .and_then(|x| row.as_bytes().get(x))
+                    })
+                    .is_some_and(|symbol| {
+                        wilderness.legend.iter().any(|entry| {
+                            entry.symbol.as_bytes() == [*symbol]
+                                && entry.terrain != WildernessTerrain::Edge
+                        })
+                    })
+            });
+            if !valid {
+                return Err(CoreError::InvalidSave(
+                    "world travel destination is invalid",
+                ));
+            }
+        }
         let mut legacy_task_progress = BTreeMap::new();
         for progress in &payload.task_progress {
             let Some(task) = task_definition(world, &progress.task_id) else {
@@ -655,12 +707,23 @@ impl Game {
             payload.current_floor_id.clone()
         };
         if current_floor_id != world.initial_floor_id
+            && current_floor_id != WILDERNESS_FLOOR_ID
             && !world
                 .procedural_floors
                 .iter()
                 .any(|floor| floor.id == current_floor_id)
         {
             return Err(CoreError::InvalidSave("current floor ID is invalid"));
+        }
+        if payload.map_scale == MapScaleDto::World
+            && (world.wilderness.is_none()
+                || (current_floor_id != world.initial_floor_id
+                    && current_floor_id != WILDERNESS_FLOOR_ID))
+        {
+            return Err(CoreError::InvalidSave("world map state is invalid"));
+        }
+        if current_floor_id == WILDERNESS_FLOOR_ID && world.wilderness.is_none() {
+            return Err(CoreError::InvalidSave("local wilderness state is invalid"));
         }
         let mut current_dungeon_instance_id = payload.current_dungeon_instance_id.clone();
         if let Some(dungeon_id) = floor_dungeon_id(world, &current_floor_id) {
@@ -998,6 +1061,10 @@ impl Game {
         let mut game = Self {
             content,
             world_id: payload.world_id,
+            map_scale: payload.map_scale,
+            wilderness_position,
+            wilderness_seed: payload.wilderness_seed,
+            world_travel_destination: payload.world_travel_destination,
             current_floor_id,
             current_dungeon_instance_id,
             stored_floors,
@@ -1079,6 +1146,10 @@ impl Game {
             turn: self.turn,
             world_tick: self.world_tick,
             last_command_seq: self.last_command_seq,
+            map_scale: self.map_scale,
+            wilderness_position: self.wilderness_position,
+            wilderness_seed: self.wilderness_seed,
+            world_travel_destination: self.world_travel_destination,
             terrain: TerrainSaveDto {
                 width: self.width,
                 height: self.height,
@@ -1138,12 +1209,16 @@ impl Game {
 
     #[must_use]
     pub fn state_hash(&self) -> String {
-        let payload = StateHashPayloadV64 {
+        let payload = StateHashPayloadV69 {
             schema_version: STATE_HASH_SCHEMA_VERSION,
             revision: self.revision,
             turn: self.turn,
             world_tick: self.world_tick,
             last_command_seq: self.last_command_seq,
+            map_scale: self.map_scale,
+            wilderness_position: self.wilderness_position,
+            wilderness_seed: self.wilderness_seed,
+            world_travel_destination: self.world_travel_destination,
             terrain: TerrainSaveRef {
                 width: self.width,
                 height: self.height,

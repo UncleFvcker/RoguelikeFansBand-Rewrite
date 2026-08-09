@@ -471,6 +471,12 @@ pub(crate) enum DomainEvent {
         severity: ItemCurseSeverityDto,
     },
     MoveBlocked,
+    WildernessAmbushed,
+    WildernessInterestingDiscovery,
+    WildernessTerrainDamaged {
+        terrain_id: String,
+        damage: DamageOutcome,
+    },
     RidingMounted {
         target_kind_id: String,
     },
@@ -2113,6 +2119,21 @@ impl DomainEvent {
                 ],
             ),
             Self::MoveBlocked => dto_without_args("move.blocked", "game-move-blocked"),
+            Self::WildernessAmbushed => {
+                dto_without_args("wilderness.ambushed", "wilderness-ambushed")
+            }
+            Self::WildernessInterestingDiscovery => dto_without_args(
+                "wilderness.interesting-discovery",
+                "wilderness-interesting-discovery",
+            ),
+            Self::WildernessTerrainDamaged { terrain_id, damage } => dto_with_outcome(
+                "wilderness.terrain-damaged",
+                "wilderness-terrain-damaged",
+                [("terrain", terrain_id)],
+                GameEventOutcomeDto::Damage {
+                    resolution: damage.into(),
+                },
+            ),
             Self::RidingMounted { target_kind_id } => dto(
                 "riding.mounted",
                 "riding-mounted",

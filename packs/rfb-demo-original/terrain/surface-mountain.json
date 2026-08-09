@@ -1,0 +1,12 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/terrain.schema.json",
+  "formatVersion": 1,
+  "id": "demo.terrain.surface-mountain",
+  "nameKey": "terrain-demo-surface-mountain-name",
+  "descriptionKey": "terrain-demo-surface-mountain-description",
+  "glyph": "#",
+  "walkable": false,
+  "blocksSight": true,
+  "movementModes": ["fly"],
+  "tags": ["mountain", "outdoor", "surface"]
+}

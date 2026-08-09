@@ -163,6 +163,7 @@ export class InventoryPanel {
 
   updateActions(): void {
     this.#updateCampaignAction();
+    const worldMap = this.#state.worldMap;
     const selected = this.#selectedItems();
     this.#dom.inventorySelectionCount.textContent = this.#localization.format(
       "inventory-selected-count",
@@ -171,11 +172,13 @@ export class InventoryPanel {
     this.#dom.inventoryEquip.disabled =
       this.#state.busy ||
       this.#state.playerDead ||
+      worldMap ||
       selected.length !== 1 ||
       !selected[0]?.equipmentSlot;
     this.#dom.inventoryUse.disabled =
       this.#state.busy ||
       this.#state.playerDead ||
+      worldMap ||
       !(
         (selected.length === 1 &&
           selected[0]?.usable &&
@@ -185,6 +188,7 @@ export class InventoryPanel {
     this.#dom.inventoryAppraise.disabled =
       this.#state.busy ||
       this.#state.playerDead ||
+      worldMap ||
       selected.length !== 1 ||
       selected[0]?.identification !== "unexamined";
     const [item] = selected;
@@ -195,22 +199,24 @@ export class InventoryPanel {
       }
       this.#dom.inventoryDropQuantity.min = "1";
       this.#dom.inventoryDropQuantity.max = String(item.quantity);
-      this.#dom.inventoryDropQuantity.disabled = this.#state.busy || this.#state.playerDead;
+      this.#dom.inventoryDropQuantity.disabled =
+        this.#state.busy || this.#state.playerDead || worldMap;
       this.#dom.inventoryDrop.disabled =
         this.#state.busy ||
         this.#state.playerDead ||
+        worldMap ||
         parseDropQuantity(this.#dom.inventoryDropQuantity.value, item.quantity) === undefined;
     } else {
       this.#state.dropQuantityItemId = undefined;
       this.#dom.inventoryDropQuantity.value = "";
       this.#dom.inventoryDropQuantity.disabled = true;
       this.#dom.inventoryDrop.disabled =
-        this.#state.busy || this.#state.playerDead || selected.length === 0;
+        this.#state.busy || this.#state.playerDead || worldMap || selected.length === 0;
     }
     for (const checkbox of this.#dom.inventoryList.querySelectorAll<HTMLInputElement>(
       'input[type="checkbox"]',
     )) {
-      checkbox.disabled = this.#state.busy || this.#state.playerDead;
+      checkbox.disabled = this.#state.busy || this.#state.playerDead || worldMap;
     }
     for (const button of this.#dom.inventoryList.querySelectorAll<HTMLButtonElement>(
       "button[data-recharge-target-id]",
@@ -219,6 +225,7 @@ export class InventoryPanel {
       button.disabled =
         this.#state.busy ||
         this.#state.playerDead ||
+        worldMap ||
         targetItemId === undefined ||
         this.#rechargeSourceForTarget(targetItemId) === undefined;
     }
@@ -227,6 +234,7 @@ export class InventoryPanel {
       button.disabled =
         this.#state.busy ||
         this.#state.playerDead ||
+        worldMap ||
         (refuelTargetId !== undefined && this.#refuelSourceForTarget(refuelTargetId) === undefined);
     }
   }

@@ -8,16 +8,19 @@ use crate::{
     state::ItemLocation,
     stats::{AttributeKind, CharacterProgress, experience_required_for_level},
 };
-use rfb_content::{AbilityEffectDefinition, ItemUseEffectDefinition, TownFacilityCategory};
+use rfb_content::{
+    AbilityEffectDefinition, ItemUseEffectDefinition, TownFacilityCategory, WildernessDefinition,
+    WildernessLocationDefinition, WildernessTerrain,
+};
 use rfb_protocol::{
     AbilityDetectSpecDto, AbilityDto, AbilityLearningDto, AbilitySummonSpecDto,
     AbilityTerrainTransformSpecDto, AttackProfileDto, AttributeSetDto, AttributeValueDto,
     BodySlotDto, CampaignStateDto, CellDto, CellVisualDto, ContentVisualDto, DamageDiceDto,
     DeviceRechargeDto, EntityDto, EntityFactionDto, EquipmentItemDto, GameSnapshot,
-    InventoryItemDto, ItemDto, ItemKnowledgeDto, PROTOCOL_VERSION, PlayerBuildDto, PlayerDto,
-    PlayerProgressDto, Position, ResistanceDto, ResourcePoolDto, SkillProgressDto, SummonDto,
-    TaskServiceDto, TaskStatusDto, TerrainInteractionDto, TerrainInteractionKindDto,
-    VisibilityState,
+    InventoryItemDto, ItemDto, ItemKnowledgeDto, MapScaleDto, PROTOCOL_VERSION, PlayerBuildDto,
+    PlayerDto, PlayerProgressDto, Position, ResistanceDto, ResourcePoolDto, SkillProgressDto,
+    SummonDto, TaskServiceDto, TaskStatusDto, TerrainInteractionDto, TerrainInteractionKindDto,
+    VisibilityState, WildernessLocationDto, WildernessLocationKindDto,
 };
 
 use super::tasks::projected_task_state;
@@ -27,6 +30,50 @@ use super::{
     derived_speed, item_target_spec, light_from_sources, task_definition, task_floors,
     task_objectives,
 };
+
+const WILDERNESS_TOWN_ID: &str = "core.wilderness.town";
+const WILDERNESS_ROAD_ID: &str = "core.wilderness.road";
+const WILDERNESS_DUNGEON_ID: &str = "core.wilderness.dungeon";
+const WILDERNESS_VISUALS: [(&str, &str); 18] = [
+    ("core.wilderness.edge", "#"),
+    (WILDERNESS_TOWN_ID, "#"),
+    (WILDERNESS_ROAD_ID, "."),
+    (WILDERNESS_DUNGEON_ID, ">"),
+    ("core.wilderness.deep-water", "~"),
+    ("core.wilderness.shallow-water", "~"),
+    ("core.wilderness.swamp", "~"),
+    ("core.wilderness.dirt", "."),
+    ("core.wilderness.grass", "."),
+    ("core.wilderness.trees", "T"),
+    ("core.wilderness.desert", "."),
+    ("core.wilderness.shallow-lava", "~"),
+    ("core.wilderness.deep-lava", "~"),
+    ("core.wilderness.mountain", "^"),
+    ("core.wilderness.glacier", "."),
+    ("core.wilderness.snow", "."),
+    ("core.wilderness.pack-ice", "."),
+    ("core.wilderness.terrain-town", "#"),
+];
+
+const fn wilderness_terrain_id(terrain: WildernessTerrain) -> &'static str {
+    match terrain {
+        WildernessTerrain::Edge => "core.wilderness.edge",
+        WildernessTerrain::Town => "core.wilderness.terrain-town",
+        WildernessTerrain::DeepWater => "core.wilderness.deep-water",
+        WildernessTerrain::ShallowWater => "core.wilderness.shallow-water",
+        WildernessTerrain::Swamp => "core.wilderness.swamp",
+        WildernessTerrain::Dirt => "core.wilderness.dirt",
+        WildernessTerrain::Grass => "core.wilderness.grass",
+        WildernessTerrain::Trees => "core.wilderness.trees",
+        WildernessTerrain::Desert => "core.wilderness.desert",
+        WildernessTerrain::ShallowLava => "core.wilderness.shallow-lava",
+        WildernessTerrain::DeepLava => "core.wilderness.deep-lava",
+        WildernessTerrain::Mountain => "core.wilderness.mountain",
+        WildernessTerrain::Glacier => "core.wilderness.glacier",
+        WildernessTerrain::Snow => "core.wilderness.snow",
+        WildernessTerrain::PackIce => "core.wilderness.pack-ice",
+    }
+}
 
 impl Game {
     pub(super) fn player_dto(&self) -> PlayerDto {
@@ -96,6 +143,16 @@ impl Game {
             recall: self.recall.clone(),
             riding_actor_id: self.riding_actor_id.clone(),
         }
+    }
+
+    pub(super) fn projected_player_dto(&self) -> PlayerDto {
+        let mut player = self.player_dto();
+        if self.map_scale == MapScaleDto::World {
+            player.position = self
+                .wilderness_position
+                .expect("world map requires a wilderness position");
+        }
+        player
     }
 
     pub(super) fn player_ability_learning_dto(&self) -> Option<AbilityLearningDto> {
@@ -625,30 +682,38 @@ impl Game {
 
     #[must_use]
     pub fn snapshot(&self) -> GameSnapshot {
-        let mut cells = Vec::with_capacity(self.terrain.len());
-        for y in 0..self.height {
-            for x in 0..self.width {
-                cells.push(self.cell_dto(Position {
-                    x: i32::from(x),
-                    y: i32::from(y),
-                }));
-            }
-        }
+        let (width, height) = self.projected_dimensions();
+        let cells = self.projected_cells();
         let visual_cells = self.visual_cells();
+        let world_map = self.map_scale == MapScaleDto::World;
         GameSnapshot {
             protocol_version: PROTOCOL_VERSION.to_owned(),
             revision: self.revision,
             turn: self.turn,
             world_tick: self.world_tick,
             last_command_seq: self.last_command_seq,
-            width: self.width,
-            height: self.height,
+            map_scale: self.map_scale,
+            world_travel_destination: self.world_travel_destination,
+            width,
+            height,
             cells,
             visual_cells,
-            player: self.player_dto(),
-            entities: self.entities_dto(),
-            items: self.items_dto(),
-            gold_piles: self.gold_pile_dtos(),
+            player: self.projected_player_dto(),
+            entities: if world_map {
+                Vec::new()
+            } else {
+                self.entities_dto()
+            },
+            items: if world_map {
+                Vec::new()
+            } else {
+                self.items_dto()
+            },
+            gold_piles: if world_map {
+                Vec::new()
+            } else {
+                self.gold_pile_dtos()
+            },
             inventory: self.inventory_dto(),
             equipment: self.equipment_dto(),
             body_slots: self
@@ -665,11 +730,27 @@ impl Game {
             world_id: self.world_id.clone(),
             floor_id: self.current_floor_id.clone(),
             dungeon_instance_id: self.current_dungeon_instance_id.clone(),
-            town: self.current_town_dto(),
-            shops: self.current_shop_dtos(),
-            homes: self.current_home_dtos(),
-            task_services: self.current_task_service_dtos(),
-            terrain_interactions: self.terrain_interactions(),
+            town: (!world_map).then(|| self.current_town_dto()).flatten(),
+            shops: if world_map {
+                Vec::new()
+            } else {
+                self.current_shop_dtos()
+            },
+            homes: if world_map {
+                Vec::new()
+            } else {
+                self.current_home_dtos()
+            },
+            task_services: if world_map {
+                Vec::new()
+            } else {
+                self.current_task_service_dtos()
+            },
+            terrain_interactions: if world_map {
+                Vec::new()
+            } else {
+                self.terrain_interactions()
+            },
             tasks: self.task_statuses(),
             campaign: self.campaign_state_dto(),
             state_hash: self.state_hash(),
@@ -701,8 +782,50 @@ impl Game {
                 glyph: "$".to_owned(),
             });
         }
+        if self
+            .content
+            .world(&self.world_id)
+            .is_some_and(|world| world.wilderness.is_some())
+        {
+            visuals.extend(
+                WILDERNESS_VISUALS
+                    .into_iter()
+                    .map(|(id, glyph)| ContentVisualDto {
+                        id: id.to_owned(),
+                        glyph: glyph.to_owned(),
+                    }),
+            );
+        }
         visuals.sort_by(|left, right| left.id.cmp(&right.id));
         visuals
+    }
+
+    pub(super) fn projected_dimensions(&self) -> (u16, u16) {
+        if self.map_scale == MapScaleDto::World {
+            let wilderness = self.wilderness();
+            (wilderness.width, wilderness.height)
+        } else {
+            (self.width, self.height)
+        }
+    }
+
+    pub(super) fn projected_cells(&self) -> Vec<CellDto> {
+        let (width, height) = self.projected_dimensions();
+        let mut cells = Vec::with_capacity(usize::from(width) * usize::from(height));
+        for y in 0..height {
+            for x in 0..width {
+                let position = Position {
+                    x: i32::from(x),
+                    y: i32::from(y),
+                };
+                cells.push(if self.map_scale == MapScaleDto::World {
+                    self.wilderness_cell_dto(position)
+                } else {
+                    self.cell_dto(position)
+                });
+            }
+        }
+        cells
     }
 
     pub(super) fn cell_dto(&self, position: Position) -> CellDto {
@@ -733,10 +856,92 @@ impl Game {
                         .map(|item| item.id.clone())
                 }),
             actor_id,
+            danger_level: None,
+            locations: Vec::new(),
+        }
+    }
+
+    pub(super) fn wilderness(&self) -> &WildernessDefinition {
+        self.content
+            .world(&self.world_id)
+            .and_then(|world| world.wilderness.as_ref())
+            .expect("world map state requires wilderness content")
+    }
+
+    pub(super) fn wilderness_cell_dto(&self, position: Position) -> CellDto {
+        let wilderness = self.wilderness();
+        let symbol = wilderness.rows[usize::try_from(position.y).expect("validated wilderness y")]
+            .as_bytes()[usize::try_from(position.x).expect("validated wilderness x")];
+        let legend = wilderness
+            .legend
+            .iter()
+            .find(|entry| entry.symbol.as_bytes() == [symbol])
+            .expect("validated wilderness symbol must remain defined");
+        let locations = wilderness
+            .locations
+            .iter()
+            .filter_map(|location| match location {
+                WildernessLocationDefinition::Town {
+                    position: candidate,
+                    town_id,
+                } if position_from_content(*candidate) == position => Some(WildernessLocationDto {
+                    kind: WildernessLocationKindDto::Town,
+                    id: town_id.clone(),
+                }),
+                WildernessLocationDefinition::Dungeon {
+                    position: candidate,
+                    dungeon_id,
+                } if position_from_content(*candidate) == position => Some(WildernessLocationDto {
+                    kind: WildernessLocationKindDto::Dungeon,
+                    id: dungeon_id.clone(),
+                }),
+                _ => None,
+            })
+            .collect::<Vec<_>>();
+        let terrain_id = if locations
+            .iter()
+            .any(|location| location.kind == WildernessLocationKindDto::Town)
+        {
+            WILDERNESS_TOWN_ID
+        } else if legend.road {
+            WILDERNESS_ROAD_ID
+        } else if locations
+            .iter()
+            .any(|location| location.kind == WildernessLocationKindDto::Dungeon)
+        {
+            WILDERNESS_DUNGEON_ID
+        } else {
+            wilderness_terrain_id(legend.terrain)
+        };
+        CellDto {
+            position,
+            terrain_id: terrain_id.to_owned(),
+            item_id: None,
+            actor_id: (self.wilderness_position == Some(position)).then(|| self.player.id.clone()),
+            danger_level: Some(legend.level),
+            locations,
         }
     }
 
     pub(super) fn visual_cells(&self) -> Vec<CellVisualDto> {
+        if self.map_scale == MapScaleDto::World {
+            let (width, height) = self.projected_dimensions();
+            return (0..height)
+                .flat_map(|y| {
+                    (0..width).map(move |x| CellVisualDto {
+                        position: Position {
+                            x: i32::from(x),
+                            y: i32::from(y),
+                        },
+                        visibility: VisibilityState::Visible,
+                        light: rfb_protocol::CellLightDto {
+                            color: 0xffffff,
+                            intensity: 100,
+                        },
+                    })
+                })
+                .collect();
+        }
         // Light sources are collected once per pass; scanning every entity
         // and ground item again for each of the W*H cells is the dominant
         // fixed cost of a visual rebuild on larger maps.

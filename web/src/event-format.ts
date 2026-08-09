@@ -257,6 +257,8 @@ export function createPresentationFormatter(
         return localization.format("message-game-wait");
       case "game-move-blocked":
         return localization.format("message-move-blocked");
+      case "wilderness-ambushed":
+        return localization.format("message-wilderness-ambushed");
       case "floor-transition":
         return localization.format("message-floor-transition", {
           from: floorName(event.args.from),
@@ -350,6 +352,13 @@ export function createPresentationFormatter(
         return localization.format("message-door-close-unavailable");
       case "terrain-trap-triggered":
         return localization.format("message-terrain-trap-triggered", {
+          damage: damageResolution(event)?.finalDamage ?? "?",
+        });
+      case "wilderness-interesting-discovery":
+        return localization.format("message-wilderness-interesting-discovery");
+      case "wilderness-terrain-damaged":
+        return localization.format("message-wilderness-terrain-damaged", {
+          terrain: contentName(event.args.terrain),
           damage: damageResolution(event)?.finalDamage ?? "?",
         });
       case "terrain-trap-disarmed":

@@ -1,0 +1,12 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/terrain.schema.json",
+  "formatVersion": 1,
+  "id": "demo.terrain.surface-lava-shallow",
+  "nameKey": "terrain-demo-surface-lava-shallow-name",
+  "descriptionKey": "terrain-demo-surface-lava-shallow-description",
+  "glyph": "~",
+  "walkable": true,
+  "blocksSight": false,
+  "movementModes": ["fly"],
+  "tags": ["outdoor", "surface", "lava", "shallow", "volcano"]
+}

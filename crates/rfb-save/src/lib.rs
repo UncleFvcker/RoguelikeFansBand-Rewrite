@@ -142,8 +142,8 @@ pub enum SaveError {
 #[cfg(test)]
 mod tests {
     use rfb_protocol::{
-        ActorSaveDto, CharacterSummary, InventoryItemSaveDto, ItemSaveDto, PROTOCOL_VERSION,
-        PlayerSaveDto, Position, RngSaveDto, TerrainSaveDto,
+        ActorSaveDto, CharacterSummary, InventoryItemSaveDto, ItemSaveDto, MapScaleDto,
+        PROTOCOL_VERSION, PlayerSaveDto, Position, RngSaveDto, TerrainSaveDto,
     };
 
     use super::*;
@@ -173,6 +173,10 @@ mod tests {
             turn: 0,
             world_tick: 0,
             last_command_seq: 0,
+            map_scale: MapScaleDto::Local,
+            wilderness_position: None,
+            wilderness_seed: 0,
+            world_travel_destination: None,
             terrain: TerrainSaveDto {
                 width: 1,
                 height: 1,

@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.144";
+pub const PROTOCOL_VERSION: &str = "1.146";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -139,6 +139,16 @@ pub enum GameCommand {
     },
     FireTarget {
         target: TargetSelection,
+    },
+    EnterWorldMap {
+        #[serde(default)]
+        leave_pets: bool,
+        #[serde(default)]
+        cancel_recall: bool,
+    },
+    LeaveWorldMap,
+    TravelWorld {
+        destination: Position,
     },
     Move {
         direction: Direction,
@@ -497,6 +507,31 @@ pub struct GameCommandEnvelope {
 pub struct Position {
     pub x: i32,
     pub y: i32,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum MapScaleDto {
+    #[default]
+    Local,
+    World,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum WildernessLocationKindDto {
+    Town,
+    Dungeon,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct WildernessLocationDto {
+    pub kind: WildernessLocationKindDto,
+    pub id: String,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -1100,6 +1135,10 @@ pub struct CellDto {
     pub terrain_id: String,
     pub item_id: Option<String>,
     pub actor_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub danger_level: Option<u16>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub locations: Vec<WildernessLocationDto>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -2615,6 +2654,10 @@ pub struct GameSnapshot {
     #[serde(default)]
     pub world_tick: u32,
     pub last_command_seq: u32,
+    #[serde(default)]
+    pub map_scale: MapScaleDto,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub world_travel_destination: Option<Position>,
     pub width: u16,
     pub height: u16,
     pub cells: Vec<CellDto>,
@@ -2663,6 +2706,10 @@ pub struct GameUpdate {
     #[serde(default)]
     pub world_tick: u32,
     pub command_seq: u32,
+    #[serde(default)]
+    pub map_scale: MapScaleDto,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub world_travel_destination: Option<Position>,
     pub width: u16,
     pub height: u16,
     pub floor_id: String,
@@ -2765,6 +2812,9 @@ pub fn generated_typescript() -> String {
     push_declaration!(ThrowProfileDto);
     push_declaration!(ProjectileTraceDto);
     push_declaration!(Position);
+    push_declaration!(MapScaleDto);
+    push_declaration!(WildernessLocationKindDto);
+    push_declaration!(WildernessLocationDto);
     push_declaration!(TerrainInteractionKindDto);
     push_declaration!(TerrainInteractionUnavailableReasonDto);
     push_declaration!(TerrainInteractionDto);
@@ -3379,6 +3429,14 @@ pub struct SavePayloadV1 {
     #[serde(default)]
     pub world_tick: u32,
     pub last_command_seq: u32,
+    #[serde(default)]
+    pub map_scale: MapScaleDto,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub wilderness_position: Option<Position>,
+    #[serde(default)]
+    pub wilderness_seed: u64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub world_travel_destination: Option<Position>,
     pub terrain: TerrainSaveDto,
     pub player: PlayerSaveDto,
     pub entities: Vec<ActorSaveDto>,
@@ -3564,6 +3622,14 @@ mod tests {
                 target: TargetSelection::Entity {
                     entity_id: "demo.monster.ember-mote.1".to_owned(),
                 },
+            },
+            GameCommand::EnterWorldMap {
+                leave_pets: false,
+                cancel_recall: false,
+            },
+            GameCommand::LeaveWorldMap,
+            GameCommand::TravelWorld {
+                destination: Position { x: 29, y: 52 },
             },
             GameCommand::Throw {
                 item_id: "demo.item.luminous-shard.1".to_owned(),
