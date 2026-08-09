@@ -1,0 +1,87 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "habitats": [
+      "shore",
+      "swamp"
+    ],
+    "legacyDungeonIndices": [
+      35
+    ],
+    "legacyIndex": 1329,
+    "maxDepth": 40,
+    "multiplies": true,
+    "randomMovementPercent": 50,
+    "rarity": 6
+  },
+  "attack": 3,
+  "damageDice": 1,
+  "damageSides": 5,
+  "damageType": "physical",
+  "defense": 1,
+  "descriptionKey": "actor-demo-giant-yellow-toad-description",
+  "experienceValue": 7,
+  "formatVersion": 1,
+  "glyph": "R",
+  "hitPointDice": {
+    "dice": 3,
+    "sides": 8
+  },
+  "id": "demo.actor.giant-yellow-toad",
+  "level": 15,
+  "maxHp": 13,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 5,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "attributes": [
+              "constitution"
+            ],
+            "chancePercent": 20,
+            "type": "drain-attributes"
+          },
+          {
+            "chancePercent": 20,
+            "damageDice": 1,
+            "damageSides": 4,
+            "type": "poison"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      }
+    ]
+  },
+  "nameKey": "actor-demo-giant-yellow-toad-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 108,
+  "tags": [
+    "animal",
+    "legacy-import",
+    "toad",
+    "warrens"
+  ]
+}

@@ -301,6 +301,7 @@ pub(super) fn validate_world(
         return Err(ContentError::InvalidWorldDimensions(world.id.clone()));
     }
     let mut dungeon_definition_ids = BTreeSet::new();
+    let mut legacy_dungeon_indices = BTreeSet::new();
     for dungeon in &mut world.dungeons {
         validate_definition_id(&dungeon.id, "dungeon")?;
         validate_definition_id(&dungeon.root_floor_id, "floor")?;
@@ -312,7 +313,10 @@ pub(super) fn validate_world(
         {
             return Err(ContentError::InvalidProceduralFloor(dungeon.id.clone()));
         }
-        if !dungeon_definition_ids.insert(dungeon.id.clone())
+        if dungeon
+            .legacy_index
+            .is_some_and(|index| index == 0 || !legacy_dungeon_indices.insert(index))
+            || !dungeon_definition_ids.insert(dungeon.id.clone())
             || !floor_ids.contains(&dungeon.root_floor_id)
         {
             return Err(ContentError::InvalidProceduralFloor(

@@ -52,6 +52,17 @@ impl Game {
             .saturating_add(i32::from(damage_bonus))
             .max(0);
         let damage_type = DamageType::from(damage_type);
+        if self.try_reflect_player_bolt(
+            target_index,
+            &source_kind_id,
+            raw_damage,
+            damage_type,
+            events,
+            changed,
+            removed_entities,
+        )? {
+            return Ok(());
+        }
         let resistance = self.entities[target_index].resistances.level(damage_type);
         let damage = resolve_armored_damage(
             raw_damage,

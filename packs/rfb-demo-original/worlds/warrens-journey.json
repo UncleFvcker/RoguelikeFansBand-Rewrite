@@ -615,6 +615,7 @@
   "dungeons": [
     {
       "id": "demo.dungeon.warrens",
+      "legacyIndex": 30,
       "rootFloorId": "demo.floor.warrens-depth-1",
       "guardianActorKindId": "demo.actor.warrens-keeper"
     }

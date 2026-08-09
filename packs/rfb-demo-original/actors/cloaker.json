@@ -1,0 +1,85 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 243,
+    "maxDepth": 50,
+    "rarity": 5
+  },
+  "attack": 3,
+  "damageDice": 4,
+  "damageSides": 5,
+  "damageType": "physical",
+  "defense": 4,
+  "descriptionKey": "actor-demo-cloaker-description",
+  "experienceValue": 30,
+  "formatVersion": 1,
+  "glyph": "(",
+  "hitPointDice": {
+    "dice": 7,
+    "forceMaximum": true,
+    "sides": 7
+  },
+  "id": "demo.actor.cloaker",
+  "level": 13,
+  "maxHp": 49,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 4,
+            "damageSides": 5,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "chancePercent": 75,
+            "type": "paralysis"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 4,
+            "damageSides": 5,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "type": "terrify"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "neverMoves": true
+  },
+  "nameKey": "actor-demo-cloaker-name",
+  "resistances": {
+    "cold": "resistant",
+    "electricity": "resistant",
+    "poison": "immune"
+  },
+  "role": "monster",
+  "speed": 115,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "cloaker",
+    "evil",
+    "legacy-import",
+    "nonliving",
+    "warrens"
+  ]
+}

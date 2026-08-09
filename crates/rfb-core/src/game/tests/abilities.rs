@@ -3323,6 +3323,132 @@ fn bolt_or_beam_damage_uses_one_roll_and_changes_only_penetration() {
 }
 
 #[test]
+fn reflecting_monsters_redirect_only_single_target_bolts() {
+    let make_game = |seed| {
+        let mut game = Game::new(seed);
+        clear_monsters(&mut game);
+        game.player.position = Position { x: 3, y: 3 };
+        game.player.hp = 100;
+        let definition = game
+            .content
+            .actor("demo.actor.buzzy-beetle")
+            .expect("P30 reflector should exist")
+            .clone();
+        game.entities.push(actor_from_runtime_spawn(
+            "test.actor.reflector",
+            &definition.id,
+            Position { x: 5, y: 3 },
+            definition.max_hp,
+            definition.speed,
+            100,
+            true,
+        ));
+        game
+    };
+    let make_bolt = |game: &Game| {
+        let mut ability = game
+            .content
+            .ability("rfb-legacy.ability.bolt-physical-1d4")
+            .expect("physical bolt should exist")
+            .clone();
+        let AbilityEffectDefinition::Damage { damage_type, .. } = ability.effect else {
+            unreachable!("physical bolt must remain direct damage");
+        };
+        ability.effect = AbilityEffectDefinition::Damage {
+            damage_dice: 1,
+            damage_sides: 1,
+            damage_bonus: 19,
+            damage_type,
+        };
+        ability
+    };
+    let path = vec![Position { x: 4, y: 3 }, Position { x: 5, y: 3 }];
+    let mut saw_normal_hit = false;
+    let mut saw_reflected_landing = false;
+    let mut saw_reflected_player_hit = false;
+
+    for seed in 0..512 {
+        let mut game = make_game(seed);
+        let ability = make_bolt(&game);
+        let reflector_hp = game.entities[0].hp;
+        let mut events = Vec::new();
+        game.resolve_player_projectile_damage_effect(
+            &ability,
+            path.clone(),
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("bolt should resolve");
+        match events.iter().find_map(|event| match event {
+            DomainEvent::BoltReflected { outcome, trace, .. } => Some((outcome, trace)),
+            _ => None,
+        }) {
+            None => {
+                saw_normal_hit = true;
+                assert!(game.entities[0].hp < reflector_hp);
+            }
+            Some((BoltReflectionOutcome::Landed, trace)) => {
+                saw_reflected_landing = true;
+                assert_eq!(game.entities[0].hp, reflector_hp);
+                assert_eq!(trace.origin, Position { x: 5, y: 3 });
+            }
+            Some((BoltReflectionOutcome::Hit { target_kind_id, .. }, trace)) => {
+                saw_reflected_player_hit = true;
+                assert_eq!(target_kind_id, &game.player.kind_id);
+                assert!(game.player.hp < 100);
+                assert_eq!(game.entities[0].hp, reflector_hp);
+                assert_eq!(trace.origin, Position { x: 5, y: 3 });
+            }
+        }
+        if saw_normal_hit && saw_reflected_landing && saw_reflected_player_hit {
+            break;
+        }
+    }
+    assert!(saw_normal_hit && saw_reflected_landing && saw_reflected_player_hit);
+
+    let mut beam = make_game(0);
+    let mut ability = beam
+        .content
+        .ability("demo.ability.death-dark-bolt")
+        .expect("dark bolt should provide bolt-or-beam damage")
+        .clone();
+    let AbilityEffectDefinition::BoltOrBeamDamage {
+        damage_type,
+        damage_dice,
+        damage_sides,
+        damage_bonus,
+        ..
+    } = ability.effect
+    else {
+        unreachable!("dark bolt must remain bolt-or-beam damage");
+    };
+    ability.effect = AbilityEffectDefinition::BoltOrBeamDamage {
+        damage_dice,
+        damage_sides,
+        damage_bonus,
+        damage_type,
+        beam_chance_percent: 100,
+    };
+    let reflector_hp = beam.entities[0].hp;
+    let mut events = Vec::new();
+    beam.resolve_player_bolt_or_beam_damage_effect(
+        &ability,
+        path,
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("beam should resolve");
+    assert!(beam.entities[0].hp < reflector_hp);
+    assert!(
+        !events
+            .iter()
+            .any(|event| matches!(event, DomainEvent::BoltReflected { .. }))
+    );
+}
+
+#[test]
 fn cloud_kill_centers_on_the_caster_and_entropy_filters_nonliving_targets() {
     let game = Game::new_with_build(0, "demo.build.scholar").expect("scholar build should create");
     let cloud_kill = game
@@ -4879,6 +5005,81 @@ fn escape_teleport_falls_back_to_half_distance_and_blink_rejects_without_space()
 }
 
 #[test]
+fn blink_other_moves_the_target_within_ten_tiles_using_one_destination_draw() {
+    let mut game = Game::new(0);
+    clear_monsters(&mut game);
+    for cell in game.terrain.iter_mut() {
+        *cell = "demo.terrain.wall".to_owned();
+    }
+    let player = game.player.position;
+    let caster = Position {
+        x: player.x + 1,
+        y: player.y,
+    };
+    let landing = Position {
+        x: player.x + 5,
+        y: player.y,
+    };
+    for position in [player, caster, landing] {
+        let index = game.index(position).expect("test cell should exist");
+        game.terrain[index] = "demo.terrain.floor".to_owned();
+    }
+    game.entities.push(actor_from_runtime_spawn(
+        "generated.actor.gnome-mage",
+        "demo.actor.gnome-mage",
+        caster,
+        31,
+        110,
+        100,
+        true,
+    ));
+
+    let ability = game
+        .content
+        .ability("rfb-legacy.ability.blink-other")
+        .expect("P29 ability should compile")
+        .clone();
+    assert!(matches!(
+        ability.effect,
+        AbilityEffectDefinition::BlinkTarget { radius: 10 }
+    ));
+    let plan = game
+        .monster_ability_target_plan(0, ability, 1)
+        .expect("adjacent player should be a valid blink target");
+    let MonsterAbilityTargetPlan::BlinkTarget { destinations, .. } = &plan.target else {
+        panic!("BLINK_OTHER should plan a target blink");
+    };
+    assert_eq!(destinations, &[landing]);
+    assert!(destinations.iter().all(|position| {
+        player
+            .x
+            .abs_diff(position.x)
+            .max(player.y.abs_diff(position.y))
+            <= 10
+    }));
+
+    let draws = game.rng_draw_counter();
+    let mut events = Vec::new();
+    let mut changed = BTreeSet::new();
+    let mut removed_entities = Vec::new();
+    game.resolve_monster_ability_plan(
+        0,
+        "demo.actor.gnome-mage",
+        &plan,
+        &mut events,
+        &mut changed,
+        &mut removed_entities,
+    );
+    assert_eq!(game.rng_draw_counter(), draws + 1);
+    assert_eq!(game.player.position, landing);
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::MonsterBlinkedTarget { resolution, .. }
+            if resolution.from == player && resolution.to == landing
+    )));
+}
+
+#[test]
 fn death_fourth_book_materializes_original_level_curves() {
     let projected = |level| {
         let mut game =
@@ -5109,17 +5310,28 @@ fn raise_dead_is_deterministic_and_enforces_faction_group_and_unique_rules() {
             .iter()
             .all(|kind_id| matches!(
                 kind_id.as_str(),
-                "demo.actor.crypt-creep"
+                "demo.actor.carrion"
+                    | "demo.actor.crypt-creep"
                     | "demo.actor.disembodied-hand-that-strangled-people"
+                    | "demo.actor.flying-skull"
                     | "demo.actor.green-glutton-ghost"
                     | "demo.actor.jibaku-ghost"
                     | "demo.actor.lost-soul"
+                    | "demo.actor.moaning-spirit"
+                    | "demo.actor.plaguebearer-of-nurgle"
                     | "demo.actor.poltergeist"
                     | "demo.actor.risen-thrall"
                     | "demo.actor.rotting-corpse"
+                    | "demo.actor.servant-of-glaaki"
+                    | "demo.actor.skeleton-human"
                     | "demo.actor.skeleton-kobold"
                     | "demo.actor.skeleton-orc"
+                    | "demo.actor.the-ghost-q"
+                    | "demo.actor.undead-devilfish"
+                    | "demo.actor.undead-mass"
+                    | "demo.actor.zombified-human"
                     | "demo.actor.zombified-kobold"
+                    | "demo.actor.zombified-orc"
             ))
     );
     assert_eq!(shallow.state_hash(), cast(0, 25).0.state_hash());

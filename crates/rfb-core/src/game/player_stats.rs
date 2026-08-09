@@ -161,6 +161,7 @@ fn projected_blow_damage(effects: &[MeleeBlowEffectDefinition]) -> DamageDiceDto
             MeleeBlowEffectDefinition::Disease { .. } => None,
             MeleeBlowEffectDefinition::DrainAttributes { .. }
             | MeleeBlowEffectDefinition::DrainResource { .. }
+            | MeleeBlowEffectDefinition::DrainExperience { .. }
             | MeleeBlowEffectDefinition::Bleeding { .. }
             | MeleeBlowEffectDefinition::Blind { .. }
             | MeleeBlowEffectDefinition::Paralysis { .. }

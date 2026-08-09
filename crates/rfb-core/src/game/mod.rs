@@ -27,7 +27,8 @@ use crate::{
     },
     error::CoreError,
     event::{
-        DomainEvent, ItemAttributeChange, ProjectileTrace, SelfKnowledgeReport, project_events,
+        BoltReflectionOutcome, DomainEvent, ItemAttributeChange, ProjectileTrace,
+        SelfKnowledgeReport, project_events,
     },
     rng::{RNG_ALGORITHM, RfbRng},
     save::{
@@ -204,6 +205,8 @@ const NATURAL_HP_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const NATURAL_HP_REGENERATION_FACTOR: u64 = 197;
 const NATURAL_HP_REGENERATION_BASE: u64 = 1_442;
 const NATURAL_HP_REGENERATION_SCALE: u64 = 65_536;
+const MONSTER_REGENERATION_INTERVAL_TICKS: u32 = 100;
+const MONSTER_REGENERATION_MAXIMUM: i32 = 400;
 const SURFACE_AMBIENT_LIGHT: u8 = 48;
 const DUNGEON_AMBIENT_LIGHT: u8 = 0;
 const ROOM_GLOW_LIGHT: u8 = 48;
@@ -372,6 +375,11 @@ enum MonsterAbilityTargetPlan {
     BlinkSelf {
         destinations: Vec<Position>,
     },
+    BlinkTarget {
+        target: MonsterHostileTarget,
+        trace: ProjectileTrace,
+        destinations: Vec<Position>,
+    },
     EscapeSelf {
         destinations: Vec<Position>,
     },
@@ -395,6 +403,7 @@ fn monster_plan_target(target: &MonsterAbilityTargetPlan) -> Option<&MonsterHost
         | MonsterAbilityTargetPlan::Cone { target, .. }
         | MonsterAbilityTargetPlan::TerrainTransform { target, .. }
         | MonsterAbilityTargetPlan::DragTarget { target, .. }
+        | MonsterAbilityTargetPlan::BlinkTarget { target, .. }
         | MonsterAbilityTargetPlan::BanishTarget { target, .. } => Some(target),
         MonsterAbilityTargetPlan::SelfTarget
         | MonsterAbilityTargetPlan::Summon { .. }
@@ -3526,6 +3535,7 @@ impl Game {
         removed_entities: &mut Vec<String>,
         surround_reservations: &mut BTreeSet<Position>,
     ) -> Result<(), CoreError> {
+        self.reroll_shapechanger_appearance(index);
         let never_moves = self
             .content
             .actor(&self.entities[index].kind_id)
@@ -3712,6 +3722,10 @@ impl Game {
         if applied_damage <= 0 || self.entities[index].hp <= 0 {
             return;
         }
+        self.wake_entity(index, events);
+    }
+
+    fn wake_entity(&mut self, index: usize, events: &mut Vec<DomainEvent>) {
         let before = self.entities[index].statuses.len();
         self.entities[index]
             .statuses
@@ -3856,40 +3870,52 @@ impl Game {
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
     ) -> Result<ActorStepOutcome, CoreError> {
+        let old_position = self.entities[index].position;
         if let Some(target_index) = self
             .entities
             .iter()
             .position(|entity| entity.hp > 0 && entity.position == next_position)
         {
-            if !self.actor_can_kill_body_blocker(index, target_index) {
+            if self.actor_can_kill_body_blocker(index, target_index) {
+                let target = MonsterHostileTarget::Summon {
+                    entity_id: self.entities[target_index].id.clone(),
+                    kind_id: self.entities[target_index].kind_id.clone(),
+                    position: next_position,
+                };
+                self.resolve_monster_melee_target(
+                    index,
+                    &target,
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+                return Ok(ActorStepOutcome::Interacted);
+            }
+            if !self.actor_can_move_body_blocker(index, target_index) {
                 return Ok(ActorStepOutcome::Blocked);
             }
-            let target = MonsterHostileTarget::Summon {
-                entity_id: self.entities[target_index].id.clone(),
-                kind_id: self.entities[target_index].kind_id.clone(),
-                position: next_position,
-            };
-            self.resolve_monster_melee_target(index, &target, events, changed, removed_entities)?;
-            return Ok(ActorStepOutcome::Interacted);
-        }
-        if let Some(broken) =
-            self.try_monster_break_warding_glyph(index, next_position, events, changed)
-            && !broken
-        {
-            return Ok(ActorStepOutcome::Interacted);
-        }
-        if !self.actor_can_enter_position(index, next_position) {
-            match self.try_monster_door_interaction(index, next_position, events, changed) {
-                Some(true) => {}
-                Some(false) => return Ok(ActorStepOutcome::Interacted),
-                None => {
-                    if !self.try_monster_destroy_terrain(index, next_position, events, changed) {
-                        return Ok(ActorStepOutcome::Blocked);
+            self.entities[target_index].position = old_position;
+            self.wake_entity(target_index, events);
+        } else {
+            if let Some(broken) =
+                self.try_monster_break_warding_glyph(index, next_position, events, changed)
+                && !broken
+            {
+                return Ok(ActorStepOutcome::Interacted);
+            }
+            if !self.actor_can_enter_position(index, next_position) {
+                match self.try_monster_door_interaction(index, next_position, events, changed) {
+                    Some(true) => {}
+                    Some(false) => return Ok(ActorStepOutcome::Interacted),
+                    None => {
+                        if !self.try_monster_destroy_terrain(index, next_position, events, changed)
+                        {
+                            return Ok(ActorStepOutcome::Blocked);
+                        }
                     }
                 }
             }
         }
-        let old_position = self.entities[index].position;
         self.entities[index].position = next_position;
         changed.insert(old_position);
         changed.insert(next_position);
@@ -5512,6 +5538,9 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
     match effect {
         AbilityEffectDefinition::BlinkSelf { radius } => {
             AbilityEffectSpecDto::BlinkSelf { radius: *radius }
+        }
+        AbilityEffectDefinition::BlinkTarget { radius } => {
+            AbilityEffectSpecDto::BlinkTarget { radius: *radius }
         }
         AbilityEffectDefinition::TeleportSelf { minimum_distance } => {
             AbilityEffectSpecDto::TeleportSelf {

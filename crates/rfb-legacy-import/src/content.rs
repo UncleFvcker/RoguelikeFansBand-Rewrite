@@ -46,6 +46,7 @@ const DEMO_SKELETON_ITEM_ID: &str = "demo.item.skeleton-remains";
 fn demo_drop_theme_table_id(theme: &str) -> Option<&'static str> {
     match theme {
         "DROP_WARRIOR" => Some(DEMO_WARRIOR_DROP_TABLE_ID),
+        "DROP_WARRIOR_SHOOT" => Some(DEMO_ARCHER_DROP_TABLE_ID),
         "DROP_ARCHER" => Some(DEMO_ARCHER_DROP_TABLE_ID),
         "DROP_MAGE" => Some(DEMO_MAGE_DROP_TABLE_ID),
         "DROP_PRIEST" => Some(DEMO_PRIEST_DROP_TABLE_ID),
@@ -433,6 +434,7 @@ pub struct LegacyMonsterEntry {
     pub max_level: Option<u16>,
     pub experience: Option<u64>,
     pub blows: Vec<LegacyBlow>,
+    pub auras: Vec<LegacyBlowEffect>,
     pub flags: Vec<String>,
     pub spells: Vec<String>,
     pub drop_theme: Option<String>,
@@ -1400,7 +1402,7 @@ pub fn parse_r_info(text: &str) -> Result<Vec<LegacyMonsterEntry>, LegacyImportE
             });
             continue;
         }
-        let recognized = ["G:", "I:", "W:", "B:", "F:", "S:"]
+        let recognized = ["G:", "I:", "W:", "B:", "A:", "F:", "S:", "O:"]
             .iter()
             .any(|prefix| line.starts_with(prefix));
         let entry = match current.as_mut() {
@@ -1492,6 +1494,10 @@ pub fn parse_r_info(text: &str) -> Result<Vec<LegacyMonsterEntry>, LegacyImportE
             }
         } else if let Some(rest) = line.strip_prefix("B:") {
             entry.blows.push(parse_blow(rest, line_number)?);
+        } else if let Some(rest) = line.strip_prefix("A:") {
+            entry
+                .auras
+                .extend(parse_blow(&format!("AURA:{rest}"), line_number)?.effects);
         } else if let Some(rest) = line.strip_prefix("F:") {
             entry.flags.extend(
                 rest.split('|')
@@ -6463,6 +6469,14 @@ fn melee_effect_json(effect: &LegacyBlowEffect) -> Option<serde_json::Value> {
                 "amountSides": amount_sides.clamp(1, 10_000),
             })
         }
+        "DRAIN_EXP" => {
+            let (amount_dice, amount_sides) = effect.dice?;
+            serde_json::json!({
+                "type": "drain-experience",
+                "amountDice": amount_dice.clamp(1, 100),
+                "amountSides": amount_sides.clamp(1, 10_000),
+            })
+        }
         "LOSE_STR" | "LOSE_INT" | "LOSE_WIS" | "LOSE_DEX" | "LOSE_CON" | "LOSE_CHR"
         | "LOSE_ALL" => {
             let attributes: &[&str] = match effect.token.as_str() {
@@ -6900,7 +6914,11 @@ fn monster_flag_is_mapped(flag: &str) -> bool {
             | "DROP_4D2"
             | "DROP_GOOD"
             | "DROP_GREAT"
+            | "SHAPECHANGER"
     ) {
+        return true;
+    }
+    if flag.starts_with("DUNGEON_") {
         return true;
     }
     for (suffix, _) in RESISTANCE_FLAG_TYPES {
@@ -7057,6 +7075,9 @@ fn monster_json(
     if entry.flags.iter().any(|flag| flag == "INVISIBLE") {
         tags.push("invisible".to_owned());
     }
+    if entry.flags.iter().any(|flag| flag == "SHAPECHANGER") {
+        tags.push("shapechanger".to_owned());
+    }
     if entry
         .glyph
         .is_some_and(|glyph| matches!(glyph, 'L' | 'V' | 'W'))
@@ -7122,6 +7143,9 @@ fn monster_json(
     }
     for (flag, field) in [
         ("KILL_BODY", "killsWeakerBodies"),
+        ("MOVE_BODY", "movesWeakerBodies"),
+        ("REGENERATE", "regenerates"),
+        ("REFLECTING", "reflectsBolts"),
         ("RANGED_MELEE", "rangedMelee"),
         ("RIDING", "rideable"),
         ("SILVER", "madeOfSilver"),
@@ -7192,6 +7216,20 @@ fn monster_json(
     if let Some(routine) = melee_routine {
         value["meleeRoutine"] = routine;
     }
+    if let Some(aura) = entry.auras.first()
+        && aura.token == "POISON"
+        && let Some((damage_dice, damage_sides)) = aura.dice
+    {
+        let mut contact_aura = serde_json::json!({
+            "damageType": "poison",
+            "damageDice": damage_dice,
+            "damageSides": damage_sides,
+        });
+        if let Some(chance_percent) = aura.chance_percent {
+            contact_aura["chancePercent"] = serde_json::json!(chance_percent);
+        }
+        value["contactAura"] = contact_aura;
+    }
     if let Some(casting) = monster_casting {
         value["monsterCasting"] = casting;
     }
@@ -7259,6 +7297,16 @@ fn monster_json(
         if !habitats.is_empty() {
             allocation["habitats"] = serde_json::json!(habitats);
         }
+        let mut legacy_dungeon_indices = entry
+            .flags
+            .iter()
+            .filter_map(|flag| flag.strip_prefix("DUNGEON_")?.parse::<u16>().ok())
+            .collect::<Vec<_>>();
+        legacy_dungeon_indices.sort_unstable();
+        legacy_dungeon_indices.dedup();
+        if !legacy_dungeon_indices.is_empty() {
+            allocation["legacyDungeonIndices"] = serde_json::json!(legacy_dungeon_indices);
+        }
         if let Some(friends) = friends {
             allocation["friends"] = friends;
         }
@@ -7290,6 +7338,9 @@ fn demo_monster_flag_is_handled(flag: &str) -> bool {
                 | "CAN_SWIM"
                 | "PASS_WALL"
                 | "KILL_BODY"
+                | "MOVE_BODY"
+                | "REGENERATE"
+                | "REFLECTING"
                 | "RANGED_MELEE"
                 | "RIDING"
                 | "SILVER"
@@ -7309,6 +7360,7 @@ fn demo_monster_flag_is_handled(flag: &str) -> bool {
                 | "RAND_50"
                 | "FRIENDS"
                 | "INVISIBLE"
+                | "SHAPECHANGER"
                 | "WILD_ALL"
                 | "WILD_GRASS"
                 | "WILD_MOUNTAIN"
@@ -7321,6 +7373,7 @@ fn demo_monster_flag_is_handled(flag: &str) -> bool {
                 | "WILD_WOOD"
         )
         || flag.starts_with("FRIENDS(")
+        || flag.starts_with("DUNGEON_")
 }
 
 fn demo_monster_json(
@@ -7429,6 +7482,17 @@ fn demo_monster_json(
             selection.id
         )));
     }
+    if entry.auras.len() > 1
+        || entry
+            .auras
+            .first()
+            .is_some_and(|aura| aura.token != "POISON" || aura.dice.is_none())
+    {
+        return Err(LegacyImportError::InvalidDemoMonsterSelection(format!(
+            "{} has an unsupported contact aura",
+            selection.id
+        )));
+    }
     let primary_blow = entry.blows.first();
     if primary_blow.is_none()
         && !entry
@@ -7525,6 +7589,7 @@ fn demo_monster_json(
         ("INVISIBLE", "invisible"),
         ("RES_ALL", "resist-all"),
         ("RES_TELE", "resist-teleport"),
+        ("SHAPECHANGER", "shapechanger"),
     ] {
         if entry.flags.iter().any(|candidate| candidate == flag) {
             tags.insert(tag.to_owned());
@@ -7865,6 +7930,17 @@ fn map_spell_token(
             });
             Some(id)
         }
+        "BLINK_OTHER" => {
+            let id = "rfb-legacy.ability.blink-other".to_owned();
+            abilities.entry(id.clone()).or_insert_with(|| {
+                displacement_ability(
+                    "blink-other",
+                    serde_json::json!({"type": "blink-target", "radius": 10}),
+                    false,
+                )
+            });
+            Some(id)
+        }
         "TELE_SELF" | "TELEPORT" => {
             let id = "rfb-legacy.ability.escape".to_owned();
             abilities.entry(id.clone()).or_insert_with(|| {
@@ -8026,6 +8102,7 @@ fn summon_spell_defaults(base: &str) -> Option<(&'static str, (u32, u32, u32))> 
         "S_DRAGON" => ("dragon", (1, 3, 1)),
         "S_HI_DRAGON" => ("dragon", (1, 3, 0)),
         "S_ANIMAL" => ("animal", (1, 3, 1)),
+        "S_ANT" => ("ant", (1, 3, 1)),
         "S_LOUSE" => ("louse", (1, 3, 1)),
         _ => return None,
     };
@@ -11094,6 +11171,47 @@ mod tests {
     }
 
     #[test]
+    fn demo_monster_import_maps_special_mechanics_without_fallbacks() {
+        let mut monsters = parse_r_info(
+            "N:1:test special monster\nG:j:v\nI:110:1d3:8:4:20:10\nW:12:1:50:40:0:0\nB:TOUCH:DRAIN_EXP(10d6)\nA:POISON(1d2)\nF:SHAPECHANGER | MOVE_BODY | REGENERATE | REFLECTING | DUNGEON_31 | DROP_1D2\nO:DROP_WARRIOR_SHOOT\n",
+        )
+        .expect("synthetic special monster should parse");
+        let actor = demo_monster_json(
+            &monsters.remove(0),
+            &DemoMonsterSelectionEntry {
+                source_index: 1,
+                source_id: None,
+                id: "test-special-monster".to_owned(),
+                tags: vec!["warrens".to_owned()],
+                omitted_flags: Vec::new(),
+            },
+            &mut BTreeMap::new(),
+        )
+        .expect("supported special mechanics should import directly");
+
+        assert_eq!(
+            actor["meleeRoutine"]["blows"][0]["effects"][0]["type"],
+            "drain-experience"
+        );
+        assert_eq!(actor["contactAura"]["damageType"], "poison");
+        assert_eq!(actor["contactAura"]["damageDice"], 1);
+        assert_eq!(actor["contactAura"]["damageSides"], 2);
+        assert_eq!(actor["movesWeakerBodies"], true);
+        assert_eq!(actor["regenerates"], true);
+        assert_eq!(actor["reflectsBolts"], true);
+        assert!(
+            actor["tags"]
+                .as_array()
+                .is_some_and(|tags| tags.iter().any(|tag| tag == "shapechanger"))
+        );
+        assert_eq!(
+            actor["allocation"]["legacyDungeonIndices"],
+            serde_json::json!([31])
+        );
+        assert_eq!(actor["deathDrop"]["themeTableId"], "demo.loot-table.archer");
+    }
+
+    #[test]
     fn monster_import_maps_carried_darkness_as_negative_light() {
         let monsters = parse_r_info(
             "N:1:test shadow jelly\nG:j:D\nI:110:1d3:8:4:20:10\nW:3:1:10:3:0:0\nB:TOUCH:DAM(1d2)\nF:HAS_DARK_1\n",
@@ -11741,7 +11859,7 @@ I:110:8d8:20:20:10:10\n\
 W:20:2:20:9:10:40\n\
 B:HIT:HURT(1d6)\n\
 F:UNDEAD | DRAGON | RES_ALL | RES_TELE | NO_CONF\n\
-S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_LOUSE | S_CYBER\n";
+S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_ANT | S_LOUSE | S_CYBER\n";
         let monsters = parse_r_info(SUMMONER_R_INFO).expect("synthetic summoner should parse");
         assert_eq!(monsters.len(), 1);
 
@@ -11802,6 +11920,7 @@ S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_LOUSE | S_CYBER\n";
                 "rfb-legacy.ability.kin-test-bone-caller",
                 "rfb-legacy.ability.summon-undead-l20-1d3-1",
                 "rfb-legacy.ability.summon-legacy-import-l20-1d1",
+                "rfb-legacy.ability.summon-ant-l20-1d3-1",
                 "rfb-legacy.ability.summon-louse-l20-1d3-1",
             ]
         );
@@ -11845,6 +11964,17 @@ S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_LOUSE | S_CYBER\n";
         assert_eq!(any["effect"]["countDice"], 1);
         assert_eq!(any["effect"]["countSides"], 1);
         assert!(any["effect"].get("countBonus").is_none());
+
+        let ant = outcome
+            .ability_files
+            .iter()
+            .find(|(name, _)| name == "summon-ant-l20-1d3-1.json")
+            .map(|(_, value)| value)
+            .expect("ant summon ability should be generated");
+        assert_eq!(ant["effect"]["category"], "ant");
+        assert_eq!(ant["effect"]["countDice"], 1);
+        assert_eq!(ant["effect"]["countSides"], 3);
+        assert_eq!(ant["effect"]["countBonus"], 1);
 
         let louse = outcome
             .ability_files

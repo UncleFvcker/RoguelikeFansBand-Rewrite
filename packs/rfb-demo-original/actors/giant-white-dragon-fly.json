@@ -1,0 +1,76 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "habitats": [
+      "snow",
+      "waste"
+    ],
+    "legacyIndex": 250,
+    "maxDepth": 50,
+    "randomMovementPercent": 50,
+    "rarity": 3
+  },
+  "attack": 3,
+  "damageDice": 1,
+  "damageSides": 6,
+  "damageType": "cold",
+  "defense": 2,
+  "descriptionKey": "actor-demo-giant-white-dragon-fly-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 60,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "F",
+  "hitPointDice": {
+    "dice": 5,
+    "sides": 8
+  },
+  "id": "demo.actor.giant-white-dragon-fly",
+  "level": 14,
+  "maxHp": 22,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 1,
+            "damageSides": 6,
+            "damageType": "cold",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.breath-cold-20-900-r2",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 10
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "nameKey": "actor-demo-giant-white-dragon-fly-name",
+  "resistances": {
+    "cold": "resistant"
+  },
+  "role": "monster",
+  "speed": 110,
+  "tags": [
+    "animal",
+    "insect",
+    "legacy-import",
+    "warrens"
+  ]
+}

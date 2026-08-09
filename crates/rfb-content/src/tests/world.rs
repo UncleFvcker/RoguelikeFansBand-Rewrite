@@ -49,7 +49,9 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
     assert_eq!(
         allocation,
         vec![
+            ("demo.actor.abyss-worm-mass", 214, 4, 40),
             ("demo.actor.agent-of-black-market", 14, 1, 0),
+            ("demo.actor.air-spirit", 227, 2, 50),
             ("demo.actor.baby-black-dragon", 166, 2, 40),
             ("demo.actor.baby-blue-dragon", 163, 2, 40),
             ("demo.actor.baby-green-dragon", 165, 2, 40),
@@ -60,32 +62,44 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.bandit", 150, 2, 40),
             ("demo.actor.barracuda", 96, 2, 40),
             ("demo.actor.black-harpy", 157, 1, 60),
+            ("demo.actor.black-mamba", 210, 3, 40),
             ("demo.actor.black-naga", 71, 1, 30),
+            ("demo.actor.black-ogre", 262, 2, 60),
+            ("demo.actor.black-orc", 244, 2, 50),
             ("demo.actor.blinking-dot", 22, 1, 10),
             ("demo.actor.bloodfang-the-wolf", 170, 1, 999),
             ("demo.actor.bloodshot-eye", 129, 3, 40),
             ("demo.actor.bloodshot-icky-thing", 155, 3, 40),
             ("demo.actor.blubbering-icky-thing", 41, 1, 20),
             ("demo.actor.blue-horror", 189, 3, 40),
+            ("demo.actor.blue-icky-thing", 252, 4, 50),
             ("demo.actor.blue-yeek", 52, 1, 20),
+            ("demo.actor.boldor-king-of-the-yeeks", 237, 3, 999),
             ("demo.actor.bomb-mosquito", 1017, 3, 20),
             ("demo.actor.brodda-the-easterling", 169, 2, 999),
             ("demo.actor.broken-death-sword", 953, 5, 40),
             ("demo.actor.brown-mold", 113, 1, 40),
             ("demo.actor.brown-yeek", 141, 1, 40),
             ("demo.actor.bullroarer-the-hobbit", 914, 3, 999),
+            ("demo.actor.buzzy-beetle", 951, 4, 60),
             ("demo.actor.carnivorous-flying-monkey", 145, 2, 40),
+            ("demo.actor.carrion", 361, 1, 70),
             ("demo.actor.caustic-icky-thing", 132, 2, 40),
             ("demo.actor.cave-lizard", 82, 1, 30),
             ("demo.actor.cave-orc", 126, 1, 40),
             ("demo.actor.cave-spider", 60, 1, 30),
+            ("demo.actor.chaos-shapechanger", 203, 2, 40),
+            ("demo.actor.cheerful-leprechaun", 258, 2, 50),
             ("demo.actor.chiokovo", 997, 3, 30),
+            ("demo.actor.clear-hound", 282, 3, 50),
             ("demo.actor.clear-icky-thing", 26, 1, 10),
             ("demo.actor.clear-mushroom-patch", 184, 2, 40),
             ("demo.actor.clear-worm-mass", 79, 2, 30),
+            ("demo.actor.cloaker", 243, 5, 50),
             ("demo.actor.copperhead-snake", 106, 1, 40),
             ("demo.actor.creeping-copper-coins", 85, 2, 40),
             ("demo.actor.creeping-gold-coins", 195, 3, 40),
+            ("demo.actor.creeping-mithril-coins", 239, 4, 50),
             ("demo.actor.creeping-silver-coins", 117, 2, 40),
             ("demo.actor.crow", 61, 2, 20),
             ("demo.actor.crow-of-durthang", 1224, 2, 40),
@@ -93,7 +107,12 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.culverin", 867, 2, 50),
             ("demo.actor.dark-elf", 122, 2, 40),
             ("demo.actor.dark-elven-mage", 178, 1, 40),
+            ("demo.actor.dark-elven-priest", 226, 1, 50),
             ("demo.actor.dark-elven-warrior", 182, 1, 40),
+            ("demo.actor.dark-naga", 265, 2, 50),
+            ("demo.actor.death-sword", 107, 5, 40),
+            ("demo.actor.devilfish", 918, 4, 50),
+            ("demo.actor.dimetrodon", 1223, 3, 90),
             (
                 "demo.actor.disembodied-hand-that-strangled-people",
                 112,
@@ -102,36 +121,56 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ),
             ("demo.actor.disenchanter-eye", 104, 2, 40),
             ("demo.actor.disenchanter-mold", 192, 2, 40),
+            ("demo.actor.drider", 234, 2, 50),
+            ("demo.actor.druid", 241, 2, 50),
             ("demo.actor.duck", 1241, 1, 25),
+            ("demo.actor.duck-quacked-platypus", 1325, 1, 36),
+            ("demo.actor.dweller-on-the-threshold", 263, 5, 50),
             ("demo.actor.eagle", 172, 2, 40),
             ("demo.actor.ewok", 92, 2, 40),
             ("demo.actor.fang-farmer-maggots-dog", 55, 2, 999),
             ("demo.actor.filthy-street-urchin", 1, 2, 0),
+            ("demo.actor.flesh-golem", 256, 1, 50),
             ("demo.actor.floating-eye", 32, 1, 10),
+            ("demo.actor.floating-orb", 912, 2, 50),
+            ("demo.actor.flying-skull", 273, 3, 50),
             ("demo.actor.freesia", 57, 1, 999),
             ("demo.actor.frosty-jelly", 84, 1, 40),
             ("demo.actor.fruit-bat", 37, 1, 10),
+            ("demo.actor.frumious-bandersnatch", 232, 2, 50),
+            ("demo.actor.gazer", 218, 1, 50),
             ("demo.actor.giant-black-ant", 49, 1, 20),
             ("demo.actor.giant-brown-bat", 114, 1, 40),
+            ("demo.actor.giant-clear-centipede", 276, 2, 30),
+            ("demo.actor.giant-cockroach", 1007, 2, 40),
+            ("demo.actor.giant-flea", 259, 1, 50),
             ("demo.actor.giant-fruit-fly", 197, 6, 40),
             ("demo.actor.giant-green-frog", 56, 1, 20),
             ("demo.actor.giant-grey-rat", 156, 1, 40),
             ("demo.actor.giant-leech", 95, 1, 40),
             ("demo.actor.giant-moth", 1273, 2, 12),
+            ("demo.actor.giant-octopus", 266, 2, 50),
             ("demo.actor.giant-pink-ant", 168, 2, 80),
             ("demo.actor.giant-pink-frog", 121, 1, 40),
             ("demo.actor.giant-piranha", 187, 2, 90),
             ("demo.actor.giant-salamander", 143, 1, 40),
             ("demo.actor.giant-slug", 120, 1, 40),
             ("demo.actor.giant-spider", 175, 2, 40),
+            ("demo.actor.giant-tarantula", 275, 3, 60),
             ("demo.actor.giant-white-ant", 75, 1, 30),
             ("demo.actor.giant-white-centipede", 24, 1, 10),
+            ("demo.actor.giant-white-dragon-fly", 250, 3, 50),
             ("demo.actor.giant-white-louse", 69, 1, 30),
             ("demo.actor.giant-white-mouse", 27, 1, 10),
             ("demo.actor.giant-white-rat", 86, 1, 40),
             ("demo.actor.giant-white-tick", 176, 2, 40),
+            ("demo.actor.giant-yellow-toad", 1329, 6, 40),
+            ("demo.actor.gibbering-mouther", 253, 4, 50),
+            ("demo.actor.gnome-mage", 281, 2, 60),
             ("demo.actor.goblin", 87, 1, 40),
+            ("demo.actor.golfimbul-the-hill-orc-chief", 215, 3, 999),
             ("demo.actor.goomba", 924, 1, 20),
+            ("demo.actor.grape-jelly", 212, 3, 40),
             ("demo.actor.greater-hell-beast", 39, 6, 999),
             ("demo.actor.green-glutton-ghost", 100, 1, 40),
             ("demo.actor.green-jelly", 66, 1, 30),
@@ -142,20 +181,39 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.grey-icky-thing", 103, 1, 40),
             ("demo.actor.grey-mold", 20, 1, 10),
             ("demo.actor.grid-bug", 34, 3, 20),
+            ("demo.actor.griffon", 279, 1, 50),
             ("demo.actor.grip-farmer-maggots-dog", 53, 2, 999),
             ("demo.actor.grishnakh-the-hill-orc", 186, 3, 999),
+            ("demo.actor.grizzly-bear", 191, 1, 45),
+            ("demo.actor.guardian-naga", 269, 2, 50),
             ("demo.actor.hairy-mold", 190, 2, 40),
+            ("demo.actor.half-orc", 264, 3, 50),
+            ("demo.actor.hellcat", 222, 1, 50),
+            ("demo.actor.hibagon", 983, 10, 30),
             ("demo.actor.hill-orc", 149, 1, 40),
             ("demo.actor.hippocampus", 207, 1, 40),
+            ("demo.actor.hippogriff", 209, 1, 40),
             ("demo.actor.hobbes-the-tiger", 200, 2, 999),
+            ("demo.actor.homonculus", 280, 3, 50),
             ("demo.actor.horse", 956, 1, 20),
             ("demo.actor.hunting-hawk-of-julian", 151, 2, 40),
+            ("demo.actor.illusionist", 240, 2, 50),
             ("demo.actor.insect-swarm", 38, 1, 10),
+            ("demo.actor.irish-wolfhound-of-flora", 254, 2, 50),
+            ("demo.actor.ixitxachitl", 220, 1, 50),
             ("demo.actor.jackal", 35, 1, 5),
             ("demo.actor.jibaku-ghost", 1012, 2, 40),
             ("demo.actor.kamikaze-yeek", 179, 1, 40),
             ("demo.actor.killer-bee", 174, 2, 40),
+            ("demo.actor.killer-brown-beetle", 236, 2, 50),
             ("demo.actor.king-cobra", 171, 2, 40),
+            (
+                "demo.actor.king-duosi-the-chief-of-southerings",
+                1076,
+                2,
+                999,
+            ),
+            ("demo.actor.knight-archer", 219, 1, 50),
             ("demo.actor.kobold", 30, 1, 30),
             ("demo.actor.kutar", 1020, 4, 30),
             ("demo.actor.lagduf-the-snaga", 140, 2, 999),
@@ -165,18 +223,33 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.large-white-snake", 21, 1, 10),
             ("demo.actor.large-yellow-snake", 59, 1, 20),
             ("demo.actor.lemure", 148, 3, 40),
+            ("demo.actor.light-hound", 271, 2, 60),
+            ("demo.actor.lion", 1321, 2, 50),
             ("demo.actor.lost-soul", 133, 2, 40),
             ("demo.actor.lousy-the-king-of-louses", 1063, 3, 999),
             ("demo.actor.lug-the-grotesque", 1183, 3, 999),
+            ("demo.actor.lurker", 247, 3, 50),
             ("demo.actor.lynx", 1347, 2, 40),
+            ("demo.actor.mad-bear", 1028, 1, 40),
             ("demo.actor.manes", 128, 2, 40),
+            ("demo.actor.master-yeek", 224, 2, 40),
+            ("demo.actor.mauhur-the-orc-captain", 1072, 3, 999),
+            ("demo.actor.meng-you-the-brother-of-meng-huo", 1073, 2, 999),
             ("demo.actor.metallic-blue-centipede", 67, 1, 30),
             ("demo.actor.metallic-green-centipede", 42, 1, 20),
             ("demo.actor.metallic-red-centipede", 77, 1, 30),
+            ("demo.actor.mi-go", 274, 2, 50),
+            ("demo.actor.mine-dog", 221, 4, 50),
+            ("demo.actor.mirkwood-spider", 277, 2, 50),
+            ("demo.actor.moaning-spirit", 231, 2, 50),
+            ("demo.actor.mongbat", 235, 3, 50),
+            ("demo.actor.moon-beast", 223, 1, 50),
             ("demo.actor.nami-the-mate", 1021, 4, 999),
+            ("demo.actor.nether-worm-mass", 213, 4, 40),
             ("demo.actor.newt", 23, 1, 10),
             ("demo.actor.nibelung", 111, 1, 40),
             ("demo.actor.night-lizard", 134, 2, 40),
+            ("demo.actor.nixie", 248, 1, 50),
             ("demo.actor.novice-archaeologist", 45, 3, 30),
             ("demo.actor.novice-archer", 116, 2, 40),
             ("demo.actor.novice-mage", 93, 2, 40),
@@ -187,7 +260,10 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.novice-rogue", 44, 1, 30),
             ("demo.actor.novice-warrior", 110, 2, 40),
             ("demo.actor.nurgling", 139, 2, 40),
+            ("demo.actor.ochre-jelly", 245, 3, 50),
+            ("demo.actor.ogre", 238, 2, 50),
             ("demo.actor.orc-shaman", 162, 1, 40),
+            ("demo.actor.orcish-artillery", 954, 3, 40),
             ("demo.actor.orfax-son-of-boldor", 180, 3, 999),
             ("demo.actor.owlbear", 188, 1, 40),
             ("demo.actor.panther", 198, 2, 40),
@@ -195,11 +271,15 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.pink-jelly", 131, 1, 40),
             ("demo.actor.pink-naga", 130, 2, 40),
             ("demo.actor.piranha", 70, 1, 60),
+            ("demo.actor.plague-rat", 1298, 2, 40),
+            ("demo.actor.plaguebearer-of-nurgle", 268, 2, 50),
             ("demo.actor.poltergeist", 65, 1, 30),
             ("demo.actor.portuguese-man-o-war", 160, 2, 40),
+            ("demo.actor.priest", 225, 1, 50),
             ("demo.actor.pseudo-dragon", 193, 2, 50),
             ("demo.actor.purple-mushroom-patch", 108, 2, 40),
             ("demo.actor.quiver-slot", 185, 2, 40),
+            ("demo.actor.radiant-kavu", 1071, 1, 50),
             ("demo.actor.radiation-eye", 80, 1, 30),
             ("demo.actor.rat-thing", 115, 1, 40),
             ("demo.actor.rattlesnake", 119, 1, 40),
@@ -214,14 +294,17 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.scruffy-looking-hobbit", 74, 1, 30),
             ("demo.actor.servant-of-glaaki", 181, 1, 40),
             ("demo.actor.shadow-creature-of-fiona", 201, 2, 40),
+            ("demo.actor.shadow-hound", 272, 2, 60),
             ("demo.actor.shallow-puddle", 885, 6, 30),
             ("demo.actor.sheep", 1226, 4, 20),
             ("demo.actor.shrieker-mushroom-patch", 40, 1, 50),
             ("demo.actor.silver-jelly", 73, 2, 30),
             ("demo.actor.skaven", 158, 1, 40),
             ("demo.actor.skaven-shaman", 217, 1, 50),
+            ("demo.actor.skeleton-human", 228, 1, 50),
             ("demo.actor.skeleton-kobold", 91, 1, 40),
             ("demo.actor.skeleton-orc", 136, 1, 40),
+            ("demo.actor.slime-mold", 962, 4, 30),
             ("demo.actor.slimy-jelly", 101, 1, 40),
             ("demo.actor.slimy-ooze", 64, 2, 30),
             ("demo.actor.slimy-worm-mass", 58, 1, 20),
@@ -229,21 +312,38 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.small-kobold", 29, 1, 30),
             ("demo.actor.smeagol", 63, 2, 999),
             ("demo.actor.snaga", 118, 1, 40),
+            ("demo.actor.snaga-sapper", 251, 2, 50),
+            ("demo.actor.snow-leopard", 1338, 2, 50),
+            ("demo.actor.software-bug", 246, 2, 90),
             ("demo.actor.soldier-ant", 36, 1, 10),
             ("demo.actor.space-monster", 144, 2, 40),
+            ("demo.actor.spotted-jelly", 233, 3, 50),
             ("demo.actor.spotted-mushroom-patch", 72, 1, 30),
+            ("demo.actor.swamp-rabbit", 1387, 7, 42),
             ("demo.actor.swordfish", 88, 2, 40),
+            ("demo.actor.swordsman", 216, 1, 50),
             ("demo.actor.tax-collector", 199, 3, 40),
             ("demo.actor.tengu", 194, 1, 40),
             ("demo.actor.the-borshin", 177, 2, 999),
+            ("demo.actor.the-ghost-q", 1003, 3, 999),
+            ("demo.actor.tiger", 230, 2, 50),
+            ("demo.actor.time-initiate", 1091, 3, 40),
+            ("demo.actor.trench-wurm", 1070, 1, 50),
+            ("demo.actor.ufthak-of-cirith-ungol", 260, 3, 999),
+            ("demo.actor.undead-devilfish", 913, 4, 50),
             ("demo.actor.undead-mass", 202, 2, 40),
             ("demo.actor.unruly-horse", 957, 2, 30),
+            ("demo.actor.unstable-worm-mass", 876, 4, 50),
+            ("demo.actor.vlasta", 249, 3, 50),
             ("demo.actor.vorpal-bunny", 205, 3, 40),
+            ("demo.actor.wallaby", 1316, 2, 30),
             ("demo.actor.war-bear", 173, 1, 40),
             ("demo.actor.warg", 257, 2, 50),
             ("demo.actor.warrens-keeper", 135, 3, 999),
+            ("demo.actor.wererat", 270, 2, 50),
             ("demo.actor.white-harpy", 51, 1, 20),
             ("demo.actor.white-icky-thing", 25, 1, 10),
+            ("demo.actor.white-wolf", 211, 1, 40),
             ("demo.actor.white-worm-mass", 89, 1, 40),
             ("demo.actor.wild-cat", 62, 2, 20),
             ("demo.actor.wolf", 196, 1, 40),
@@ -256,7 +356,9 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.yellow-mold", 76, 1, 30),
             ("demo.actor.yellow-mushroom-patch", 47, 1, 20),
             ("demo.actor.yellow-worm-mass", 78, 2, 30),
+            ("demo.actor.yeti", 154, 3, 40),
             ("demo.actor.zog", 98, 2, 40),
+            ("demo.actor.zombified-human", 229, 1, 50),
             ("demo.actor.zombified-kobold", 123, 1, 40),
             ("demo.actor.zombified-orc", 208, 1, 40),
         ]
@@ -380,6 +482,890 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             vec![60]
         );
     }
+}
+
+#[test]
+fn special_mechanics_batch_keeps_each_imported_contract_narrow() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actor = |id: &str| {
+        artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == id)
+            .unwrap_or_else(|| panic!("{id} should be imported"))
+    };
+
+    assert!(
+        actor("demo.actor.grape-jelly")
+            .melee_routine
+            .as_ref()
+            .is_some_and(
+                |routine| routine.blows.iter().any(|blow| blow.effects.iter().any(
+                    |effect| matches!(effect, MeleeBlowEffectDefinition::DrainExperience { .. })
+                ))
+            )
+    );
+    assert_eq!(
+        actor("demo.actor.plague-rat").contact_aura,
+        Some(ActorContactAuraDefinition {
+            damage_type: ActorDamageType::Poison,
+            damage_dice: 1,
+            damage_sides: 2,
+            chance_percent: None,
+        })
+    );
+    assert!(
+        actor("demo.actor.chaos-shapechanger")
+            .tags
+            .iter()
+            .any(|tag| tag == "shapechanger")
+    );
+    let archer_drop = actor("demo.actor.knight-archer")
+        .death_drop
+        .as_ref()
+        .expect("Knight archer should retain its themed drop");
+    assert_eq!(
+        archer_drop.theme_table_id.as_deref(),
+        Some("demo.loot-table.archer")
+    );
+    assert_eq!(archer_drop.theme_chance_percent, 50);
+    assert_eq!(
+        actor("demo.actor.king-duosi-the-chief-of-southerings")
+            .allocation
+            .as_ref()
+            .expect("King Duosi allocation")
+            .legacy_dungeon_indices,
+        [31]
+    );
+    assert_eq!(
+        actor("demo.actor.wallaby")
+            .allocation
+            .as_ref()
+            .expect("Wallaby allocation")
+            .legacy_dungeon_indices,
+        [35]
+    );
+}
+
+#[test]
+fn level_twelve_noncasters_reuse_existing_actor_contracts() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actor = |id: &str| {
+        artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == id)
+            .unwrap_or_else(|| panic!("{id} should be imported"))
+    };
+    let ids = [
+        "demo.actor.yeti",
+        "demo.actor.grizzly-bear",
+        "demo.actor.black-mamba",
+        "demo.actor.white-wolf",
+        "demo.actor.nether-worm-mass",
+        "demo.actor.abyss-worm-mass",
+        "demo.actor.golfimbul-the-hill-orc-chief",
+        "demo.actor.swordsman",
+        "demo.actor.ixitxachitl",
+        "demo.actor.mine-dog",
+        "demo.actor.hellcat",
+        "demo.actor.air-spirit",
+        "demo.actor.skeleton-human",
+        "demo.actor.zombified-human",
+        "demo.actor.tiger",
+        "demo.actor.frumious-bandersnatch",
+        "demo.actor.spotted-jelly",
+        "demo.actor.mauhur-the-orc-captain",
+        "demo.actor.meng-you-the-brother-of-meng-huo",
+        "demo.actor.swamp-rabbit",
+    ];
+    for id in ids {
+        assert_eq!(actor(id).level, 12, "{id} should remain level 12");
+        assert!(
+            actor(id).monster_casting.is_none(),
+            "{id} must not import possessor-only S: hints as monster casting"
+        );
+    }
+
+    assert!(
+        actor("demo.actor.nether-worm-mass")
+            .allocation
+            .as_ref()
+            .is_some_and(|allocation| allocation.multiplies)
+    );
+    assert!(
+        actor("demo.actor.mine-dog")
+            .melee_routine
+            .as_ref()
+            .and_then(|routine| routine.blows.first())
+            .is_some_and(|blow| blow.self_destructs)
+    );
+    assert_eq!(
+        actor("demo.actor.meng-you-the-brother-of-meng-huo")
+            .allocation
+            .as_ref()
+            .expect("Meng You allocation")
+            .legacy_dungeon_indices,
+        [31]
+    );
+}
+
+#[test]
+fn level_twelve_casters_share_parameterized_abilities() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actor = |id: &str| {
+        artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == id)
+            .unwrap_or_else(|| panic!("{id} should be imported"))
+    };
+    let ability_ids = |id: &str| {
+        actor(id)
+            .monster_casting
+            .as_ref()
+            .unwrap_or_else(|| panic!("{id} should retain monster casting"))
+            .abilities
+            .iter()
+            .map(|candidate| candidate.ability_id.as_str())
+            .collect::<BTreeSet<_>>()
+    };
+
+    assert_eq!(
+        ability_ids("demo.actor.gazer"),
+        ["rfb-legacy.ability.confuse", "rfb-legacy.ability.paralyze"]
+            .into_iter()
+            .collect()
+    );
+    assert_eq!(
+        ability_ids("demo.actor.moon-beast"),
+        [
+            "rfb-legacy.ability.blind",
+            "rfb-legacy.ability.confuse",
+            "rfb-legacy.ability.curse-8d8",
+            "rfb-legacy.ability.darkness",
+            "rfb-legacy.ability.heal-36",
+        ]
+        .into_iter()
+        .collect()
+    );
+    assert_eq!(
+        ability_ids("demo.actor.master-yeek"),
+        [
+            "rfb-legacy.ability.ball-poison-12d2",
+            "rfb-legacy.ability.blind",
+            "rfb-legacy.ability.blink",
+            "rfb-legacy.ability.escape",
+            "rfb-legacy.ability.slow",
+            "rfb-legacy.ability.summon-legacy-import-l12-1d1",
+        ]
+        .into_iter()
+        .collect()
+    );
+    assert_eq!(
+        ability_ids("demo.actor.priest"),
+        [
+            "rfb-legacy.ability.curse-8d8",
+            "rfb-legacy.ability.heal-36",
+            "rfb-legacy.ability.scare",
+            "rfb-legacy.ability.summon-legacy-import-l12-1d1",
+        ]
+        .into_iter()
+        .collect()
+    );
+    assert_eq!(
+        ability_ids("demo.actor.dark-elven-priest"),
+        [
+            "rfb-legacy.ability.blind",
+            "rfb-legacy.ability.bolt-physical-2d6-4",
+            "rfb-legacy.ability.confuse",
+            "rfb-legacy.ability.curse-8d8",
+            "rfb-legacy.ability.darkness",
+            "rfb-legacy.ability.heal-36",
+        ]
+        .into_iter()
+        .collect()
+    );
+    assert_eq!(
+        ability_ids("demo.actor.moaning-spirit"),
+        ["rfb-legacy.ability.escape", "rfb-legacy.ability.scare"]
+            .into_iter()
+            .collect()
+    );
+    assert_eq!(
+        ability_ids("demo.actor.devilfish"),
+        [
+            "rfb-legacy.ability.breath-chaos-17-600-r2",
+            "rfb-legacy.ability.breath-dark-17-400-r2",
+            "rfb-legacy.ability.breath-disenchant-17-500-r2",
+            "rfb-legacy.ability.breath-light-17-400-r2",
+            "rfb-legacy.ability.breath-sound-17-450-r2",
+            "rfb-legacy.ability.breath-time-33-150-r2",
+        ]
+        .into_iter()
+        .collect()
+    );
+    assert!(
+        actor("demo.actor.devilfish")
+            .melee_routine
+            .as_ref()
+            .is_none_or(|routine| routine.blows.is_empty())
+    );
+    assert_eq!(
+        actor("demo.actor.priest")
+            .death_drop
+            .as_ref()
+            .and_then(|drop| drop.theme_table_id.as_deref()),
+        Some("demo.loot-table.priest")
+    );
+    assert_eq!(
+        actor("demo.actor.dark-elven-priest")
+            .death_drop
+            .as_ref()
+            .and_then(|drop| drop.theme_table_id.as_deref()),
+        Some("demo.loot-table.evil-priest")
+    );
+}
+
+#[test]
+fn level_thirteen_monsters_reuse_existing_mechanics_and_parameterized_abilities() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actor = |id: &str| {
+        artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == id)
+            .unwrap_or_else(|| panic!("{id} should be imported"))
+    };
+    let ability_ids = |id: &str| {
+        actor(id)
+            .monster_casting
+            .as_ref()
+            .unwrap_or_else(|| panic!("{id} should retain monster casting"))
+            .abilities
+            .iter()
+            .map(|candidate| candidate.ability_id.as_str())
+            .collect::<BTreeSet<_>>()
+    };
+
+    for id in [
+        "demo.actor.drider",
+        "demo.actor.mongbat",
+        "demo.actor.killer-brown-beetle",
+        "demo.actor.boldor-king-of-the-yeeks",
+        "demo.actor.ogre",
+        "demo.actor.creeping-mithril-coins",
+        "demo.actor.druid",
+        "demo.actor.cloaker",
+        "demo.actor.black-orc",
+        "demo.actor.ochre-jelly",
+    ] {
+        assert_eq!(actor(id).level, 13, "{id} should remain level 13");
+    }
+    for id in [
+        "demo.actor.mongbat",
+        "demo.actor.killer-brown-beetle",
+        "demo.actor.ogre",
+        "demo.actor.creeping-mithril-coins",
+        "demo.actor.cloaker",
+        "demo.actor.ochre-jelly",
+    ] {
+        assert!(actor(id).monster_casting.is_none(), "{id} should not cast");
+    }
+
+    assert_eq!(
+        ability_ids("demo.actor.drider"),
+        [
+            "rfb-legacy.ability.bolt-physical-2d6-4",
+            "rfb-legacy.ability.bolt-physical-3d6",
+            "rfb-legacy.ability.confuse",
+            "rfb-legacy.ability.curse-3d8",
+            "rfb-legacy.ability.darkness",
+        ]
+        .into_iter()
+        .collect()
+    );
+    assert_eq!(
+        ability_ids("demo.actor.boldor-king-of-the-yeeks"),
+        [
+            "rfb-legacy.ability.blind",
+            "rfb-legacy.ability.blink",
+            "rfb-legacy.ability.escape",
+            "rfb-legacy.ability.heal-39",
+            "rfb-legacy.ability.kin-boldor-king-of-the-yeeks",
+            "rfb-legacy.ability.slow",
+        ]
+        .into_iter()
+        .collect()
+    );
+    assert_eq!(
+        ability_ids("demo.actor.druid"),
+        [
+            "rfb-legacy.ability.blind",
+            "rfb-legacy.ability.blink",
+            "rfb-legacy.ability.bolt-electricity-4d8-4",
+            "rfb-legacy.ability.bolt-fire-9d8-4",
+            "rfb-legacy.ability.haste-self",
+            "rfb-legacy.ability.paralyze",
+            "rfb-legacy.ability.slow",
+        ]
+        .into_iter()
+        .collect()
+    );
+    assert_eq!(
+        ability_ids("demo.actor.black-orc"),
+        ["rfb-legacy.ability.bolt-physical-2d7"]
+            .into_iter()
+            .collect()
+    );
+    assert!(actor("demo.actor.cloaker").movement.never_moves);
+    assert_eq!(
+        actor("demo.actor.black-orc")
+            .death_drop
+            .as_ref()
+            .and_then(|drop| drop.theme_table_id.as_deref()),
+        Some("demo.loot-table.archer")
+    );
+    assert_eq!(
+        actor("demo.actor.ogre")
+            .death_drop
+            .as_ref()
+            .and_then(|drop| drop.theme_table_id.as_deref()),
+        Some("demo.loot-table.large-kobold")
+    );
+}
+
+#[test]
+fn level_fourteen_harvest_reuses_existing_mechanics_and_abilities() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actor = |id: &str| {
+        artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == id)
+            .unwrap_or_else(|| panic!("{id} should be imported"))
+    };
+    let ability_ids = |id: &str| {
+        actor(id)
+            .monster_casting
+            .as_ref()
+            .unwrap_or_else(|| panic!("{id} should retain monster casting"))
+            .abilities
+            .iter()
+            .map(|candidate| candidate.ability_id.as_str())
+            .collect::<BTreeSet<_>>()
+    };
+
+    for id in [
+        "demo.actor.death-sword",
+        "demo.actor.software-bug",
+        "demo.actor.lurker",
+        "demo.actor.nixie",
+        "demo.actor.vlasta",
+        "demo.actor.giant-white-dragon-fly",
+        "demo.actor.snaga-sapper",
+        "demo.actor.blue-icky-thing",
+        "demo.actor.gibbering-mouther",
+        "demo.actor.irish-wolfhound-of-flora",
+        "demo.actor.flesh-golem",
+        "demo.actor.cheerful-leprechaun",
+        "demo.actor.giant-flea",
+        "demo.actor.ufthak-of-cirith-ungol",
+        "demo.actor.orcish-artillery",
+        "demo.actor.hibagon",
+        "demo.actor.giant-cockroach",
+        "demo.actor.lion",
+        "demo.actor.snow-leopard",
+    ] {
+        assert_eq!(actor(id).level, 14, "{id} should remain level 14");
+    }
+
+    assert_eq!(
+        ability_ids("demo.actor.giant-white-dragon-fly"),
+        ["rfb-legacy.ability.breath-cold-20-900-r2"]
+            .into_iter()
+            .collect()
+    );
+    assert_eq!(
+        ability_ids("demo.actor.blue-icky-thing"),
+        [
+            "rfb-legacy.ability.blind",
+            "rfb-legacy.ability.confuse",
+            "rfb-legacy.ability.scare",
+        ]
+        .into_iter()
+        .collect()
+    );
+    assert_eq!(
+        ability_ids("demo.actor.gibbering-mouther"),
+        [
+            "rfb-legacy.ability.breath-light-17-400-r2",
+            "rfb-legacy.ability.confuse",
+            "rfb-legacy.ability.scare",
+        ]
+        .into_iter()
+        .collect()
+    );
+    assert_eq!(
+        ability_ids("demo.actor.cheerful-leprechaun"),
+        ["rfb-legacy.ability.blink"].into_iter().collect()
+    );
+    assert_eq!(
+        ability_ids("demo.actor.orcish-artillery"),
+        ["rfb-legacy.ability.bolt-physical-3d6"]
+            .into_iter()
+            .collect()
+    );
+
+    let software_bug = actor("demo.actor.software-bug")
+        .allocation
+        .as_ref()
+        .expect("Software bug allocation");
+    assert!(software_bug.multiplies);
+    assert_eq!(software_bug.random_movement_percent, 75);
+    assert!(
+        actor("demo.actor.snaga-sapper")
+            .melee_routine
+            .as_ref()
+            .and_then(|routine| routine.blows.get(1))
+            .is_some_and(|blow| blow.self_destructs)
+    );
+    assert_eq!(
+        actor("demo.actor.irish-wolfhound-of-flora")
+            .allocation
+            .as_ref()
+            .and_then(|allocation| allocation.friends)
+            .map(|friends| (friends.dice, friends.sides)),
+        Some((3, 3))
+    );
+    assert_eq!(
+        actor("demo.actor.lion")
+            .allocation
+            .as_ref()
+            .expect("Lion allocation")
+            .legacy_dungeon_indices,
+        [35]
+    );
+    assert!(actor("demo.actor.lion").rideable);
+    assert!(
+        actor("demo.actor.snow-leopard")
+            .allocation
+            .as_ref()
+            .is_some_and(|allocation| allocation.wild_only)
+    );
+    assert!(
+        actor("demo.actor.ufthak-of-cirith-ungol")
+            .tags
+            .iter()
+            .any(|tag| tag == "unique")
+    );
+}
+
+#[test]
+fn level_fifteen_direct_harvest_reuses_existing_mechanics_and_abilities() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actor = |id: &str| {
+        artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == id)
+            .unwrap_or_else(|| panic!("{id} should be imported"))
+    };
+    let ability_ids = |id: &str| {
+        actor(id)
+            .monster_casting
+            .as_ref()
+            .unwrap_or_else(|| panic!("{id} should retain monster casting"))
+            .abilities
+            .iter()
+            .map(|candidate| candidate.ability_id.as_str())
+            .collect::<BTreeSet<_>>()
+    };
+
+    for id in [
+        "demo.actor.hippogriff",
+        "demo.actor.illusionist",
+        "demo.actor.black-ogre",
+        "demo.actor.half-orc",
+        "demo.actor.giant-octopus",
+        "demo.actor.guardian-naga",
+        "demo.actor.light-hound",
+        "demo.actor.shadow-hound",
+        "demo.actor.flying-skull",
+        "demo.actor.giant-tarantula",
+        "demo.actor.giant-clear-centipede",
+        "demo.actor.mirkwood-spider",
+        "demo.actor.homonculus",
+        "demo.actor.clear-hound",
+        "demo.actor.carrion",
+        "demo.actor.unstable-worm-mass",
+        "demo.actor.the-ghost-q",
+        "demo.actor.mad-bear",
+        "demo.actor.trench-wurm",
+        "demo.actor.time-initiate",
+        "demo.actor.dimetrodon",
+        "demo.actor.duck-quacked-platypus",
+        "demo.actor.giant-yellow-toad",
+    ] {
+        assert_eq!(actor(id).level, 15, "{id} should remain level 15");
+    }
+    for id in [
+        "demo.actor.hippogriff",
+        "demo.actor.black-ogre",
+        "demo.actor.half-orc",
+        "demo.actor.giant-octopus",
+        "demo.actor.guardian-naga",
+        "demo.actor.flying-skull",
+        "demo.actor.giant-tarantula",
+        "demo.actor.giant-clear-centipede",
+        "demo.actor.mirkwood-spider",
+        "demo.actor.homonculus",
+        "demo.actor.clear-hound",
+        "demo.actor.carrion",
+        "demo.actor.unstable-worm-mass",
+        "demo.actor.the-ghost-q",
+        "demo.actor.mad-bear",
+        "demo.actor.trench-wurm",
+        "demo.actor.dimetrodon",
+        "demo.actor.giant-yellow-toad",
+    ] {
+        assert!(actor(id).monster_casting.is_none(), "{id} should not cast");
+    }
+
+    assert_eq!(
+        ability_ids("demo.actor.illusionist"),
+        [
+            "rfb-legacy.ability.blind",
+            "rfb-legacy.ability.blink",
+            "rfb-legacy.ability.confuse",
+            "rfb-legacy.ability.darkness",
+            "rfb-legacy.ability.escape",
+            "rfb-legacy.ability.haste-self",
+            "rfb-legacy.ability.paralyze",
+            "rfb-legacy.ability.slow",
+        ]
+        .into_iter()
+        .collect()
+    );
+    assert_eq!(
+        ability_ids("demo.actor.light-hound"),
+        ["rfb-legacy.ability.breath-light-17-400-r2"]
+            .into_iter()
+            .collect()
+    );
+    assert_eq!(
+        ability_ids("demo.actor.shadow-hound"),
+        ["rfb-legacy.ability.breath-dark-17-400-r2"]
+            .into_iter()
+            .collect()
+    );
+    assert_eq!(
+        ability_ids("demo.actor.time-initiate"),
+        ["rfb-legacy.ability.haste-self", "rfb-legacy.ability.slow",]
+            .into_iter()
+            .collect()
+    );
+    assert_eq!(
+        ability_ids("demo.actor.duck-quacked-platypus"),
+        ["rfb-legacy.ability.shriek"].into_iter().collect()
+    );
+
+    assert!(actor("demo.actor.hippogriff").rideable);
+    assert_eq!(
+        actor("demo.actor.light-hound")
+            .light
+            .as_ref()
+            .map(|light| (light.radius, light.intrinsic)),
+        Some((3, true))
+    );
+    let unstable = actor("demo.actor.unstable-worm-mass");
+    assert!(unstable.allocation.as_ref().is_some_and(
+        |allocation| allocation.multiplies && allocation.random_movement_percent == 75
+    ));
+    assert!(
+        unstable
+            .melee_routine
+            .as_ref()
+            .and_then(|routine| routine.blows.first())
+            .is_some_and(|blow| blow.self_destructs)
+    );
+    let ghost = actor("demo.actor.the-ghost-q");
+    assert!(ghost.tags.iter().any(|tag| tag == "unique"));
+    assert!(ghost.movement.modes.contains(&ActorMovementMode::PassWall));
+    assert!(
+        ghost
+            .melee_routine
+            .as_ref()
+            .is_some_and(|routine| routine.blows.iter().any(|blow| blow
+                .effects
+                .iter()
+                .any(|effect| matches!(effect, MeleeBlowEffectDefinition::EatFood { .. }))))
+    );
+    assert!(actor("demo.actor.trench-wurm").rideable);
+    assert!(
+        actor("demo.actor.trench-wurm")
+            .terrain_interaction
+            .destroys_walls
+    );
+    for id in [
+        "demo.actor.duck-quacked-platypus",
+        "demo.actor.giant-yellow-toad",
+    ] {
+        assert_eq!(
+            actor(id)
+                .allocation
+                .as_ref()
+                .expect("regional allocation")
+                .legacy_dungeon_indices,
+            [35]
+        );
+    }
+}
+
+#[test]
+fn level_fifteen_parameterized_casters_share_existing_effect_families() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actor = |id: &str| {
+        artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == id)
+            .unwrap_or_else(|| panic!("{id} should be imported"))
+    };
+    let ability_ids = |id: &str| {
+        actor(id)
+            .monster_casting
+            .as_ref()
+            .unwrap_or_else(|| panic!("{id} should retain monster casting"))
+            .abilities
+            .iter()
+            .map(|candidate| candidate.ability_id.as_str())
+            .collect::<BTreeSet<_>>()
+    };
+
+    for id in [
+        "demo.actor.dweller-on-the-threshold",
+        "demo.actor.dark-naga",
+        "demo.actor.wererat",
+        "demo.actor.mi-go",
+        "demo.actor.griffon",
+        "demo.actor.floating-orb",
+        "demo.actor.undead-devilfish",
+        "demo.actor.radiant-kavu",
+    ] {
+        assert_eq!(actor(id).level, 15, "{id} should remain level 15");
+    }
+
+    assert_eq!(
+        ability_ids("demo.actor.dweller-on-the-threshold"),
+        [
+            "rfb-legacy.ability.bolt-acid-7d8-5",
+            "rfb-legacy.ability.drain-mana-8",
+            "rfb-legacy.ability.scare",
+            "rfb-legacy.ability.summon-legacy-import-l15-1d1",
+        ]
+        .into_iter()
+        .collect()
+    );
+    assert_eq!(
+        ability_ids("demo.actor.dark-naga"),
+        [
+            "rfb-legacy.ability.bolt-cold-6d8-5",
+            "rfb-legacy.ability.confuse",
+            "rfb-legacy.ability.darkness",
+            "rfb-legacy.ability.heal-45",
+            "rfb-legacy.ability.paralyze",
+        ]
+        .into_iter()
+        .collect()
+    );
+    assert_eq!(
+        ability_ids("demo.actor.wererat"),
+        [
+            "rfb-legacy.ability.ball-poison-12d2",
+            "rfb-legacy.ability.blink",
+            "rfb-legacy.ability.bolt-cold-6d8-5",
+            "rfb-legacy.ability.curse-8d8",
+            "rfb-legacy.ability.kin-wererat",
+        ]
+        .into_iter()
+        .collect()
+    );
+    assert_eq!(
+        ability_ids("demo.actor.mi-go"),
+        [
+            "rfb-legacy.ability.confuse",
+            "rfb-legacy.ability.summon-demon-l15-1d3-1",
+            "rfb-legacy.ability.summon-legacy-import-l15-1d1",
+        ]
+        .into_iter()
+        .collect()
+    );
+    assert_eq!(
+        ability_ids("demo.actor.griffon"),
+        ["rfb-legacy.ability.bolt-physical-4d5"]
+            .into_iter()
+            .collect()
+    );
+    assert_eq!(
+        ability_ids("demo.actor.floating-orb"),
+        ["rfb-legacy.ability.bolt-physical-2d6-5"]
+            .into_iter()
+            .collect()
+    );
+    assert_eq!(
+        ability_ids("demo.actor.undead-devilfish"),
+        [
+            "rfb-legacy.ability.breath-disenchant-17-500-r2",
+            "rfb-legacy.ability.breath-nether-14-550-r2",
+            "rfb-legacy.ability.breath-nexus-33-250-r2",
+            "rfb-legacy.ability.breath-poison-17-600-r2",
+            "rfb-legacy.ability.breath-time-33-150-r2",
+        ]
+        .into_iter()
+        .collect()
+    );
+    assert_eq!(
+        ability_ids("demo.actor.radiant-kavu"),
+        ["rfb-legacy.ability.heal-45"].into_iter().collect()
+    );
+
+    assert!(
+        actor("demo.actor.dweller-on-the-threshold")
+            .movement
+            .never_moves
+    );
+    assert!(actor("demo.actor.floating-orb").movement.never_moves);
+    assert!(actor("demo.actor.griffon").rideable);
+    assert!(actor("demo.actor.radiant-kavu").rideable);
+    assert!(
+        actor("demo.actor.undead-devilfish")
+            .movement
+            .modes
+            .contains(&ActorMovementMode::Aquatic)
+    );
+    assert_eq!(
+        actor("demo.actor.radiant-kavu")
+            .light
+            .as_ref()
+            .map(|light| (light.radius, light.intrinsic)),
+        Some((1, true))
+    );
+}
+
+#[test]
+fn level_fifteen_p28_p29_bind_narrow_summon_and_target_blink() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actor = |id: &str| {
+        artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == id)
+            .unwrap_or_else(|| panic!("{id} should be imported"))
+    };
+    let ability = |id: &str| {
+        artifact
+            .content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == id)
+            .unwrap_or_else(|| panic!("{id} should be generated"))
+    };
+    let ability_ids = |id: &str| {
+        actor(id)
+            .monster_casting
+            .as_ref()
+            .unwrap_or_else(|| panic!("{id} should retain monster casting"))
+            .abilities
+            .iter()
+            .map(|candidate| candidate.ability_id.as_str())
+            .collect::<BTreeSet<_>>()
+    };
+
+    assert_eq!(actor("demo.actor.plaguebearer-of-nurgle").level, 15);
+    assert_eq!(actor("demo.actor.gnome-mage").level, 15);
+    assert_eq!(
+        ability_ids("demo.actor.plaguebearer-of-nurgle"),
+        [
+            "rfb-legacy.ability.curse-8d8",
+            "rfb-legacy.ability.scare",
+            "rfb-legacy.ability.slow",
+            "rfb-legacy.ability.summon-ant-l15-1d3-1",
+        ]
+        .into_iter()
+        .collect()
+    );
+    assert_eq!(
+        ability_ids("demo.actor.gnome-mage"),
+        [
+            "rfb-legacy.ability.blink",
+            "rfb-legacy.ability.blink-other",
+            "rfb-legacy.ability.bolt-cold-6d8-5",
+            "rfb-legacy.ability.darkness",
+            "rfb-legacy.ability.summon-legacy-import-l15-1d1",
+        ]
+        .into_iter()
+        .collect()
+    );
+    assert!(matches!(
+        ability("rfb-legacy.ability.summon-ant-l15-1d3-1").effect,
+        AbilityEffectDefinition::SummonCategory {
+            ref category,
+            maximum_level: 15,
+            count_dice: 1,
+            count_sides: 3,
+            count_bonus: 1,
+            ..
+        } if category == "ant"
+    ));
+    assert!(matches!(
+        ability("rfb-legacy.ability.blink-other").effect,
+        AbilityEffectDefinition::BlinkTarget { radius: 10 }
+    ));
+    assert!(
+        actor("demo.actor.plaguebearer-of-nurgle")
+            .tags
+            .iter()
+            .any(|tag| tag == "undead")
+    );
+    assert_eq!(
+        actor("demo.actor.gnome-mage")
+            .light
+            .as_ref()
+            .map(|light| (light.radius, light.intrinsic)),
+        Some((1, false))
+    );
+}
+
+#[test]
+fn level_fifteen_p30_buzzy_beetle_reflects_bolts() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actor = artifact
+        .content
+        .actors
+        .iter()
+        .find(|actor| actor.id == "demo.actor.buzzy-beetle")
+        .expect("Buzzy beetle should be imported");
+
+    assert_eq!(actor.level, 15);
+    assert!(actor.reflects_bolts);
+    assert!(actor.monster_casting.is_none());
+    assert!(actor.tags.iter().any(|tag| tag == "nonliving"));
+    assert_eq!(
+        actor
+            .melee_routine
+            .as_ref()
+            .map(|routine| routine.blows.len()),
+        Some(4)
+    );
 }
 
 #[test]
@@ -2517,6 +3503,30 @@ fn dungeon_entrance_guardians_and_entry_requirements_are_validated() {
         .instance_lifecycle = DungeonInstanceLifecycle::TurnTtl { ttl_turns: 0 };
     assert!(matches!(
         validate_and_normalize(&mut zero_ttl),
+        Err(ContentError::InvalidProceduralFloor(_))
+    ));
+
+    let mut zero_legacy_index = artifact.content.clone();
+    zero_legacy_index
+        .worlds
+        .iter_mut()
+        .find(|world| world.id == "demo.world.warrens-journey")
+        .expect("Warrens journey should remain available")
+        .dungeons
+        .iter_mut()
+        .find(|dungeon| dungeon.id == "demo.dungeon.warrens")
+        .expect("Warrens should remain available")
+        .legacy_index = Some(0);
+    assert!(matches!(
+        validate_and_normalize(&mut zero_legacy_index),
+        Err(ContentError::InvalidProceduralFloor(_))
+    ));
+
+    let mut duplicate_legacy_index = artifact.content.clone();
+    duplicate_legacy_index.worlds[0].dungeons[0].legacy_index = Some(30);
+    duplicate_legacy_index.worlds[0].dungeons[1].legacy_index = Some(30);
+    assert!(matches!(
+        validate_and_normalize(&mut duplicate_legacy_index),
         Err(ContentError::InvalidProceduralFloor(_))
     ));
 

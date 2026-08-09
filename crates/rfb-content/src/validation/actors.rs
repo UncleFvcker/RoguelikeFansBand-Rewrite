@@ -83,6 +83,7 @@ pub(super) fn validate_actors(
             || (actor.role != ActorRole::Monster
                 && (!actor.movement.modes.is_empty() || actor.movement.never_moves))
             || (actor.role != ActorRole::Monster && !actor.status_immunities.is_empty())
+            || (actor.role != ActorRole::Monster && actor.reflects_bolts)
         {
             return Err(ContentError::InvalidActorStats(actor.id.clone()));
         }
@@ -275,6 +276,11 @@ pub(super) fn validate_actors(
                 || allocation.rarity == 0
                 || allocation.rarity > 1_000_000
                 || allocation.max_depth > 10_000
+                || allocation.legacy_dungeon_indices.contains(&0)
+                || allocation
+                    .legacy_dungeon_indices
+                    .windows(2)
+                    .any(|window| window[0] >= window[1])
                 || !matches!(allocation.random_movement_percent, 0 | 25 | 50 | 75)
                 || (actor.movement.never_moves && allocation.random_movement_percent != 0)
                 || !friends_are_valid
@@ -282,6 +288,16 @@ pub(super) fn validate_actors(
             {
                 return Err(ContentError::InvalidActorStats(actor.id.clone()));
             }
+        }
+        if actor.contact_aura.is_some_and(|aura| {
+            aura.damage_type != ActorDamageType::Poison
+                || !(1..=100).contains(&aura.damage_dice)
+                || !(1..=10_000).contains(&aura.damage_sides)
+                || aura
+                    .chance_percent
+                    .is_some_and(|chance| !(1..=100).contains(&chance))
+        }) {
+            return Err(ContentError::InvalidActorStats(actor.id.clone()));
         }
         normalize_tags(&actor.id, &mut actor.tags)?;
         for tag in &actor.tags {
@@ -348,6 +364,11 @@ fn valid_melee_effect(effect: &MeleeBlowEffectDefinition) -> bool {
                     .any(|(index, attribute)| attributes[..index].contains(attribute))
         }
         MeleeBlowEffectDefinition::DrainResource {
+            chance_percent,
+            amount_dice,
+            amount_sides,
+        }
+        | MeleeBlowEffectDefinition::DrainExperience {
             chance_percent,
             amount_dice,
             amount_sides,

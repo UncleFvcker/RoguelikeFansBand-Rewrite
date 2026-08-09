@@ -1,6 +1,6 @@
 # RFB 全系统梳理与重构实现路线
 
-状态：长期规则实现路线；当前基线为协议 1.147 / contract-v204（P31–P98 进展见 8.3，玩家流程与 Outpost 进展见 Phase 17/18，物品接入见 Phase 19，Warrens 怪物机制见 W1–W14 清单，荒野世界图见 W0–W5）
+状态：长期规则实现路线；当前基线为协议 1.148 / contract-v214（P31–P98 进展见 8.3，玩家流程与 Outpost 进展见 Phase 17/18，物品接入见 Phase 19，Warrens 怪物机制见 W1–W14 清单，荒野世界图见 W0–W5）
 
 ## 1. 目的与边界
 
@@ -635,6 +635,26 @@ P30“首个非 Mana 职业资源”已由 contract-v90 完成：节奏资源按
 **十一级怪物 P19 进展（2026-08）**：contract-v203 接入多彩龙幼龙、锋锐兔、马头鱼尾怪、僵尸兽人、浅水洼和怪诞者卢格。六只怪物只使用现有吐息、闪现、水生、骑乘、Unique、掉落、抗性和近战状态路径，没有新增 ability 或 effect。严格同步达 170 条，正式包为 235 actors / 114 abilities；协议 1.145、Schema v68 不变，demo 1.199.0，内置 hash 为 `f3a9f16c4d40fa7b6b4472f856fbf22af7e33727324afc5f2962ad84cf11912b`。完整边界见 [Contract v203](contract-v203-warrens-content-p19-level-11-low-risk.md)。
 
 **集成收口（2026-08）**：荒野 W0–W5、物品 P1–P3.1 与怪物 P13–P19 共存于同一主线；协议统一为 1.147，逐格永久光在既有荒野/自动旅行 hash 输入上使 Schema 升至 v70，470 条 exact fixtures 统一刷新为 contract-v204，内容包统一为 1.200.0。
+
+**十一至十二级怪物 P20 进展（2026-08）**：contract-v205 分别以窄 `drain-experience`、毒素 `contactAura`、既有 `appearanceKindId` 投影、`DROP_WARRIOR_SHOOT` 别名和 dungeon legacy index 过滤接入混沌变形者、葡萄果冻、瘟疫鼠、骑士弓箭手、南蛮大王朵思大王和小袋鼠。正式包为 241 actors / 116 abilities，严格同步 176 条；协议 1.147、Schema v70 不变，demo 1.201.0，内置 hash 为 `e2fd133bcd3f2e3c2fd4d3ab8e25da6c437bfa18bede03d039d55a3db35406ae`。完整边界见 [Contract v205](contract-v205-warrens-content-p20-special-mechanics.md)。
+
+**十二级怪物 P21 进展（2026-08）**：contract-v206 直接接入 20 只非施法怪物，复用既有经验吸取、毒素/属性损伤、眩晕、死亡爆炸、繁殖、群体、护卫、荒野/地牢限定、水生、骑乘、穿墙/毁墙、隐形、Unique、尸骨和 Warrior 掉落字段。`S:BERSERK` / `S:MULTIPLY` 作为附身者专用提示不生成怪物施法。正式包为 261 actors / 116 abilities，严格同步 196 条；协议 1.147、Schema v70 不变，demo 1.202.0，内置 hash 为 `8f68bd58310207e0a9e7d1370d1a09731213fb1323753f6f28e2182b8ef2f8dc`。完整边界见 [Contract v206](contract-v206-warrens-content-p21-level-12-harvest.md)。
+
+**十二级怪物 P22 进展（2026-08）**：contract-v207 接入注视者、月兽、大师伊克、牧师、黑暗精灵祭司、呻吟的幽灵和魔鬼鱼，继续以稳定 ability ID 承载按完整参数签名去重的施法内容。新增 8 个参数签名，既有状态、位移、毒球、吐息、近战与职业掉落全部复用；没有新增 effect 或怪物数值覆盖层。正式包为 268 actors / 124 abilities，严格同步 203 条；协议 1.147、Schema v70 不变，demo 1.203.0，内置 hash 为 `463afcc8f813025b618ed68697d3cc67c99483ed56f5dc598d62a30a120c8502`。完整边界见 [Contract v207](contract-v207-warrens-content-p22-level-12-casters.md)。
+
+**十三级怪物 P23 进展（2026-08）**：contract-v208 接入蛛化精灵、猴蝠、杀手褐甲虫、伊克之王博尔多、食人魔、爬行秘银币、德鲁伊、暗幕魔兽、黑兽人和赭冻怪。新增治疗 39、自我加速、博尔多召唤同类、`9d8+4` 火焰箭和 `4d8+4` 闪电箭五条内容记录，其余施法、近战、群体、护卫与掉落全部复用。正式包为 278 actors / 129 abilities，严格同步 213 条；协议 1.147、Schema v70 不变，demo 1.204.0，内置 hash 为 `4b1c3378af39464ad9450bfc3148fc338b79f3ccd17bedf6fe2f776d226e23cb`。完整边界见 [Contract v208](contract-v208-warrens-content-p23-level-13.md)。
+
+**怪物公共行为 P24 进展（2026-08）**：contract-v209 接入原版公共怪物再生与 `MOVE_BODY`。当前层受伤怪物每 100 world ticks 恢复 `maxHP/100`，低 HP 只抽一次二分 RNG，`REGENERATE` 翻倍且单次封顶 400；换位严格要求更高经验值、同阵营和双方均可穿越交换前后的地形，并唤醒被交换者。黏菌复用尖叫并生成 `mind-blast-7d7` 内容记录。正式包为 279 actors / 130 abilities，严格同步 214 条；协议 1.147、Schema v70 不变，demo 1.205.0，内置 hash 为 `3d94f3bff136355b23ad4a864f8308197606e79d2c92a3f36ad07f6b69a2c886`。完整边界见 [Contract v209](contract-v209-warrens-content-p24-slime-mold.md)。
+
+**十四级怪物 P25 进展（2026-08）**：contract-v210 接入 19 只由既有内容契约完整承载的十四级怪物。冷气/光明吐息、致盲/混乱/恐惧、闪现、物理射击、繁殖、群体、Unique、骑乘、限定分配、爆炸和掉落均复用既有路径，没有新增 ability、effect 或兼容层。正式包为 298 actors / 130 abilities，严格同步 233 条；协议 1.147、Schema v70 不变，demo 1.206.0，内容 hash 为 `e4d423b5dc4cb246897e44a006f1b7cf3d638d30a5c88ab604140bbcafbba7bf`。完整边界见 [Contract v210](contract-v210-warrens-content-p25-level-14-harvest.md)。
+
+**十五级怪物 P26 进展（2026-08）**：contract-v211 接入 23 只由既有内容契约完整承载的十五级怪物。施法、明暗吐息、尖叫、繁殖、随机移动、穿墙、毁墙、骑乘、Unique 与限定分配均复用既有路径，没有新增 ability、effect 或兼容层。正式包为 321 actors / 130 abilities，严格同步 256 条；协议 1.147、Schema v70 不变，demo 1.207.0，内容 hash 为 `068d58f2b165c78eb608f589322dcfd65d8ba4652c8645b8ebb3d80ed82bc043`。完整边界见 [Contract v211](contract-v211-warrens-content-p26-level-15-direct-harvest.md)。
+
+**十五级参数化施法怪物 P27 进展（2026-08）**：contract-v212 接入门槛潜伏者、黑暗娜迦、兽化鼠人、米-戈、狮鹫、悬浮法球、不死魔鬼鱼和光耀卡甫。新增 11 条参数化 ability 与对应 Ability Program 记录，全部复用现有伤害、治疗、吸法、召唤和吐息 effect，没有新增 effect、协议或兼容层。正式包为 329 actors / 141 abilities，严格同步 264 条；协议 1.147、Schema v70 不变，demo 1.208.0，内容 hash 为 `068d5296c10176d40507e531b3a9cb3605e5c5d1288304ad36ed534527dd1bcd`。完整边界见 [Contract v212](contract-v212-warrens-content-p27-level-15-parameterized-casters.md)。
+
+**十五级怪物 P28/P29 进展（2026-08）**：contract-v213 接入纳垢携疫者和侏儒法师。`S_ANT` 直接映射为既有分类召唤参数 `summon-ant-l15-1d3-1`；`BLINK_OTHER` 增加怪物专用 `blink-target { radius: 10 }`，只在目标当前位置十格内选择可通行空格，不复用远距放逐。正式包为 331 actors / 143 abilities，严格同步 266 条；协议升至 1.148、Schema v70 不变，demo 1.209.0，内容 hash 为 `b0f60081b2b1971d643f93c619df721c43997661a496a8f4549b6bac8ce16cde`。完整边界见 [Contract v213](contract-v213-warrens-content-p28-p29-ant-summon-target-blink.md)。
+
+**十五级怪物 P30 进展（2026-08）**：contract-v214 接入铁甲虫及窄 `REFLECTING`。`reflectsBolts` 只让单体 ability/device bolt 按原版 75% 判定反射；方向重选、玩家/怪物命中和无奖励死亡复用现有投射与伤害路径，beam、ball、cone 和普通箭矢不受影响。正式包为 332 actors / 143 abilities，严格同步 267 条；协议 1.148、Schema v70 不变，demo 1.210.0，内容 hash 为 `b6f4741928ed2c1ae56f65d5614b06a25a200cdcb2eb9abe44f96fe1da424e00`。完整边界见 [Contract v214](contract-v214-warrens-content-p30-reflecting-buzzy-beetle.md)。
 
 ## 9. 内容迁移策略
 

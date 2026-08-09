@@ -1,0 +1,71 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 912,
+    "maxDepth": 50,
+    "rarity": 2
+  },
+  "attack": 3,
+  "damageDice": 1,
+  "damageSides": 1,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [
+      {
+        "percent": 60
+      }
+    ],
+    "itemTableId": "demo.loot-table.warrens",
+    "kind": "items"
+  },
+  "defense": 2,
+  "descriptionKey": "actor-demo-floating-orb-description",
+  "experienceValue": 50,
+  "formatVersion": 1,
+  "glyph": "*",
+  "hitPointDice": {
+    "dice": 10,
+    "sides": 7
+  },
+  "id": "demo.actor.floating-orb",
+  "level": 15,
+  "maxHp": 40,
+  "meleeRoutine": {
+    "blows": []
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.bolt-physical-2d6-5",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 100
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ],
+    "neverMoves": true
+  },
+  "nameKey": "actor-demo-floating-orb-name",
+  "resistances": {
+    "acid": "resistant",
+    "cold": "resistant",
+    "fire": "resistant",
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 120,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "legacy-import",
+    "nonliving",
+    "orb",
+    "warrens"
+  ]
+}

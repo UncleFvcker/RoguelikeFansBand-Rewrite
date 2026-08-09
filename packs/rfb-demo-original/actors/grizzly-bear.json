@@ -1,0 +1,90 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "habitats": [
+      "mountain",
+      "wood"
+    ],
+    "legacyIndex": 191,
+    "maxDepth": 45,
+    "rarity": 1,
+    "wildOnly": true
+  },
+  "attack": 3,
+  "damageDice": 1,
+  "damageSides": 11,
+  "damageType": "physical",
+  "defense": 4,
+  "descriptionKey": "actor-demo-grizzly-bear-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 75,
+  "formatVersion": 1,
+  "glyph": "q",
+  "hitPointDice": {
+    "dice": 12,
+    "sides": 15
+  },
+  "id": "demo.actor.grizzly-bear",
+  "level": 12,
+  "maxHp": 96,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 11,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 11,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 2,
+            "damageSides": 6,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      }
+    ]
+  },
+  "nameKey": "actor-demo-grizzly-bear-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "role": "monster",
+  "speed": 115,
+  "tags": [
+    "animal",
+    "bear",
+    "legacy-import",
+    "warrens"
+  ]
+}

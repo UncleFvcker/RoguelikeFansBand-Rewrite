@@ -317,7 +317,10 @@ impl Game {
                 AbilityEffectDefinition::BlinkSelf { .. }
                 | AbilityEffectDefinition::TeleportSelf { .. } => useful = true,
                 AbilityEffectDefinition::AggravateMonsters => useful = true,
-                AbilityEffectDefinition::TeleportTarget if hostile_target.is_some() => {
+                AbilityEffectDefinition::BlinkTarget { .. }
+                | AbilityEffectDefinition::TeleportTarget
+                    if hostile_target.is_some() =>
+                {
                     useful = true;
                 }
                 AbilityEffectDefinition::Heal { .. } => {
@@ -461,7 +464,8 @@ impl Game {
                     Some(target.position()),
                     vec![*destination],
                 ),
-                MonsterAbilityTargetPlan::BanishTarget { target, .. } => (
+                MonsterAbilityTargetPlan::BlinkTarget { target, .. }
+                | MonsterAbilityTargetPlan::BanishTarget { target, .. } => (
                     Some(target.entity_id().to_owned()),
                     Some(target.kind_id().to_owned()),
                     Some(target.position()),

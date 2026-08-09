@@ -621,22 +621,10 @@
         }
       },
       {
-        "kind": "combat.monster-hit",
-        "messageKey": "combat-monster-hit",
+        "kind": "combat.monster-miss",
+        "messageKey": "combat-monster-miss",
         "args": {
-          "damage": "0",
           "source": "demo.actor.ember-mote"
-        },
-        "outcome": {
-          "type": "damage",
-          "resolution": {
-            "rawDamage": 3,
-            "armorReduction": 0,
-            "resistanceAdjustment": 3,
-            "finalDamage": 0,
-            "damageType": "fire",
-            "resistance": "immune"
-          }
         }
       },
       {

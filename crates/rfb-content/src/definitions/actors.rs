@@ -166,6 +166,12 @@ pub enum MeleeBlowEffectDefinition {
         amount_dice: u16,
         amount_sides: u16,
     },
+    DrainExperience {
+        #[serde(default)]
+        chance_percent: Option<u8>,
+        amount_dice: u16,
+        amount_sides: u16,
+    },
     Bleeding {
         #[serde(default)]
         chance_percent: Option<u8>,
@@ -220,6 +226,17 @@ pub enum MeleeBlowEffectDefinition {
         #[serde(default)]
         chance_percent: Option<u8>,
     },
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ActorContactAuraDefinition {
+    pub damage_type: ActorDamageType,
+    pub damage_dice: u16,
+    pub damage_sides: u16,
+    #[serde(default)]
+    pub chance_percent: Option<u8>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -356,6 +373,8 @@ pub struct ActorDefinition {
     #[serde(default)]
     pub melee_routine: Option<MeleeRoutineDefinition>,
     #[serde(default)]
+    pub contact_aura: Option<ActorContactAuraDefinition>,
+    #[serde(default)]
     pub terrain_interaction: ActorTerrainInteractionDefinition,
     #[serde(default)]
     pub light: Option<ActorLightDefinition>,
@@ -389,6 +408,15 @@ pub struct ActorDefinition {
     /// Whether this actor attacks weaker actors that block its movement.
     #[serde(default)]
     pub kills_weaker_bodies: bool,
+    /// Whether this actor swaps places with weaker actors that block its movement.
+    #[serde(default)]
+    pub moves_weaker_bodies: bool,
+    /// Whether this actor receives twice the shared monster regeneration amount.
+    #[serde(default)]
+    pub regenerates: bool,
+    /// Whether this actor reflects single-target bolts.
+    #[serde(default)]
+    pub reflects_bolts: bool,
     /// Whether this actor can use its melee routine at RFB's two-grid reach.
     #[serde(default)]
     pub ranged_melee: bool,
@@ -418,6 +446,8 @@ pub struct ActorAllocationDefinition {
     pub wild_only: bool,
     #[serde(default)]
     pub habitats: Vec<ActorHabitat>,
+    #[serde(default)]
+    pub legacy_dungeon_indices: Vec<u16>,
     #[serde(default)]
     pub friends: Option<ActorFriendsDefinition>,
     #[serde(default)]

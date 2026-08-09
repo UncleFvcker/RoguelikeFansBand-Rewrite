@@ -50,13 +50,13 @@
       "turn": 1,
       "worldTick": 10,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 77,
+      "rngDrawCounter": 75,
       "floorId": "demo.floor.surface",
       "playerPosition": {
         "x": 3,
         "y": 3
       },
-      "playerHp": 2,
+      "playerHp": 9,
       "playerMaxHp": 136,
       "playerAttack": 3,
       "playerDefense": 2,
@@ -2896,12 +2896,12 @@
       "entityCount": 2,
       "entities": [
         {
-          "id": "summon.demo.ability.death-raise-dead.1.0",
+          "id": "summon.demo.ability.death-raise-dead.1.1",
           "position": {
-            "x": 2,
-            "y": 2
+            "x": 4,
+            "y": 3
           },
-          "hp": 32,
+          "hp": 26,
           "speed": 110,
           "energyNeed": 100
         },
@@ -2911,7 +2911,7 @@
             "x": 4,
             "y": 2
           },
-          "hp": 61,
+          "hp": 71,
           "speed": 110,
           "energyNeed": 100
         }
@@ -3194,7 +3194,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "848a3d016a80aa3be8d030acac2656c5b1bbb50d9e13b931585867ef05b3c902"
+      "stateHash": "263557e0072688b14fda322bb37fd3f898e8a3f269a62404e7ca015949c3a053"
     },
     "events": [
       {
@@ -3266,10 +3266,10 @@
             "hostile": true,
             "group": true,
             "summonedKindIds": [
-              "demo.actor.zombified-kobold",
               "demo.actor.jibaku-ghost",
-              "demo.actor.skeleton-orc",
-              "demo.actor.green-glutton-ghost"
+              "demo.actor.crypt-creep",
+              "demo.actor.flying-skull",
+              "demo.actor.the-ghost-q"
             ]
           }
         }
@@ -3280,7 +3280,7 @@
         "args": {
           "damage": "1",
           "method": "rfb.blow.touch",
-          "source": "demo.actor.green-glutton-ghost"
+          "source": "demo.actor.the-ghost-q"
         },
         "outcome": {
           "type": "damage",
@@ -3300,7 +3300,7 @@
         "args": {
           "damage": "1",
           "method": "rfb.blow.touch",
-          "source": "demo.actor.green-glutton-ghost"
+          "source": "demo.actor.the-ghost-q"
         },
         "outcome": {
           "type": "damage",
@@ -3315,12 +3315,132 @@
         }
       },
       {
+        "kind": "combat.monster-miss",
+        "messageKey": "combat-monster-miss",
+        "args": {
+          "method": "rfb.blow.touch",
+          "source": "demo.actor.the-ghost-q"
+        }
+      },
+      {
+        "kind": "combat.monster-hit",
+        "messageKey": "combat-monster-hit",
+        "args": {
+          "damage": "1",
+          "method": "rfb.blow.touch",
+          "source": "demo.actor.the-ghost-q"
+        },
+        "outcome": {
+          "type": "damage",
+          "resolution": {
+            "rawDamage": 1,
+            "armorReduction": 0,
+            "resistanceAdjustment": 0,
+            "finalDamage": 1,
+            "damageType": "physical",
+            "resistance": "normal"
+          }
+        }
+      },
+      {
+        "kind": "combat.monster-miss",
+        "messageKey": "combat-monster-miss",
+        "args": {
+          "method": "rfb.blow.hit",
+          "source": "demo.actor.jibaku-ghost"
+        }
+      },
+      {
+        "kind": "monster.ability-decision",
+        "messageKey": "monster-ability-decision",
+        "args": {
+          "frequency": "10",
+          "roll": "54",
+          "source": "demo.actor.crypt-creep",
+          "target": "none"
+        },
+        "outcome": {
+          "type": "monster-ability-decision",
+          "resolution": {
+            "sourceEntityId": "summon.demo.ability.death-raise-dead.1.1",
+            "sourceKindId": "demo.actor.crypt-creep",
+            "frequencyPercent": 10,
+            "frequencyRoll": 54,
+            "candidates": [
+              {
+                "abilityId": "rfb-legacy.ability.curse-3d8",
+                "baseWeight": 1,
+                "effectiveWeight": 1,
+                "targetEntityId": "demo.actor.player.1",
+                "targetKindId": "demo.actor.explorer",
+                "targetPosition": {
+                  "x": 3,
+                  "y": 3
+                },
+                "affectedPositions": [
+                  {
+                    "x": 3,
+                    "y": 3
+                  }
+                ],
+                "enemyTargetCount": 1,
+                "friendlyRiskCount": 0
+              },
+              {
+                "abilityId": "rfb-legacy.ability.summon-undead-l7-1d3-1",
+                "baseWeight": 1,
+                "effectiveWeight": 1,
+                "targetEntityId": "summon.demo.ability.death-raise-dead.1.1",
+                "targetKindId": "demo.actor.crypt-creep",
+                "targetPosition": {
+                  "x": 3,
+                  "y": 2
+                },
+                "affectedPositions": [
+                  {
+                    "x": 2,
+                    "y": 1
+                  },
+                  {
+                    "x": 3,
+                    "y": 1
+                  },
+                  {
+                    "x": 4,
+                    "y": 1
+                  },
+                  {
+                    "x": 2,
+                    "y": 3
+                  }
+                ],
+                "enemyTargetCount": 0,
+                "friendlyRiskCount": 0
+              }
+            ],
+            "viableAbilityIds": [
+              "rfb-legacy.ability.curse-3d8",
+              "rfb-legacy.ability.summon-undead-l7-1d3-1"
+            ],
+            "totalWeight": 2
+          }
+        }
+      },
+      {
+        "kind": "combat.monster-miss",
+        "messageKey": "combat-monster-miss",
+        "args": {
+          "method": "rfb.blow.bite",
+          "source": "demo.actor.flying-skull"
+        }
+      },
+      {
         "kind": "combat.monster-hit",
         "messageKey": "combat-monster-hit",
         "args": {
           "damage": "0",
-          "method": "rfb.blow.hit",
-          "source": "demo.actor.zombified-kobold"
+          "method": "rfb.blow.bite",
+          "source": "demo.actor.flying-skull"
         },
         "outcome": {
           "type": "damage",
@@ -3332,62 +3452,6 @@
             "damageType": "physical",
             "resistance": "normal"
           }
-        }
-      },
-      {
-        "kind": "combat.monster-hit",
-        "messageKey": "combat-monster-hit",
-        "args": {
-          "damage": "2",
-          "method": "rfb.blow.hit",
-          "source": "demo.actor.zombified-kobold"
-        },
-        "outcome": {
-          "type": "damage",
-          "resolution": {
-            "rawDamage": 3,
-            "armorReduction": 1,
-            "resistanceAdjustment": 0,
-            "finalDamage": 2,
-            "damageType": "physical",
-            "resistance": "normal"
-          }
-        }
-      },
-      {
-        "kind": "combat.monster-hit",
-        "messageKey": "combat-monster-hit",
-        "args": {
-          "damage": "6",
-          "method": "rfb.blow.hit",
-          "source": "demo.actor.jibaku-ghost"
-        },
-        "outcome": {
-          "type": "damage",
-          "resolution": {
-            "rawDamage": 7,
-            "armorReduction": 1,
-            "resistanceAdjustment": 0,
-            "finalDamage": 6,
-            "damageType": "physical",
-            "resistance": "normal"
-          }
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.hit",
-          "source": "demo.actor.skeleton-orc"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "method": "rfb.blow.touch",
-          "source": "demo.actor.green-glutton-ghost"
         }
       }
     ],
@@ -3401,14 +3465,26 @@
         "y": 3
       },
       {
+        "x": 2,
+        "y": 4
+      },
+      {
         "x": 3,
         "y": 2
       },
       {
+        "x": 3,
+        "y": 5
+      },
+      {
         "x": 4,
         "y": 2
+      },
+      {
+        "x": 4,
+        "y": 3
       }
     ],
-    "saveRoundTripStateHash": "848a3d016a80aa3be8d030acac2656c5b1bbb50d9e13b931585867ef05b3c902"
+    "saveRoundTripStateHash": "263557e0072688b14fda322bb37fd3f898e8a3f269a62404e7ca015949c3a053"
   }
 }

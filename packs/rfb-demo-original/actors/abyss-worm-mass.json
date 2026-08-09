@@ -1,0 +1,70 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 214,
+    "maxDepth": 40,
+    "multiplies": true,
+    "randomMovementPercent": 75,
+    "rarity": 4
+  },
+  "attack": 3,
+  "damageDice": 1,
+  "damageSides": 1,
+  "damageType": "physical",
+  "defense": 1,
+  "descriptionKey": "actor-demo-abyss-worm-mass-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 7,
+  "formatVersion": 1,
+  "glyph": "w",
+  "hitPointDice": {
+    "dice": 5,
+    "sides": 8
+  },
+  "id": "demo.actor.abyss-worm-mass",
+  "level": 12,
+  "maxHp": 22,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "amountDice": 10,
+            "amountSides": 6,
+            "type": "drain-experience"
+          }
+        ],
+        "methodId": "rfb.blow.crawl",
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "modes": [
+      "swim"
+    ]
+  },
+  "nameKey": "actor-demo-abyss-worm-mass-name",
+  "resistances": {
+    "dark": "resistant",
+    "light": "vulnerable"
+  },
+  "role": "monster",
+  "speed": 100,
+  "statusImmunities": [
+    "rfb.status.fear"
+  ],
+  "tags": [
+    "animal",
+    "evil",
+    "invisible",
+    "legacy-import",
+    "warrens",
+    "worm"
+  ],
+  "terrainInteraction": {
+    "destroysWalls": true
+  }
+}

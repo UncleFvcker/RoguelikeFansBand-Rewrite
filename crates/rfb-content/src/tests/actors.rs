@@ -1,3 +1,5 @@
+use std::collections::BTreeSet;
+
 use super::*;
 
 #[test]
@@ -24,6 +26,47 @@ fn p11_actor_facts_remain_explicit_and_narrow() {
     ] {
         assert!(actor(id).rideable, "{id} should retain RIDING");
     }
+}
+
+#[test]
+fn p24_slime_mold_retains_move_body_regeneration_and_existing_spells() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actor = artifact
+        .content
+        .actors
+        .iter()
+        .find(|actor| actor.id == "demo.actor.slime-mold")
+        .expect("P24 should contain the Slime Mold");
+
+    assert_eq!(
+        (actor.level, actor.experience_value, actor.max_hp),
+        (12, 10, 9)
+    );
+    assert!(actor.moves_weaker_bodies);
+    assert!(actor.regenerates);
+    assert_eq!(actor.movement.modes, vec![ActorMovementMode::Swim]);
+    assert_eq!(
+        actor
+            .monster_casting
+            .as_ref()
+            .expect("Slime Mold should cast")
+            .abilities
+            .iter()
+            .map(|candidate| candidate.ability_id.as_str())
+            .collect::<BTreeSet<_>>(),
+        [
+            "rfb-legacy.ability.mind-blast-7d7",
+            "rfb-legacy.ability.shriek",
+        ]
+        .into_iter()
+        .collect()
+    );
+    let allocation = actor
+        .allocation
+        .as_ref()
+        .expect("Slime Mold should remain allocatable");
+    assert!(allocation.multiplies);
+    assert_eq!(allocation.habitats, vec![ActorHabitat::Swamp]);
 }
 
 #[test]

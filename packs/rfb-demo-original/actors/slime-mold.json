@@ -1,0 +1,86 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "habitats": [
+      "swamp"
+    ],
+    "legacyIndex": 962,
+    "maxDepth": 30,
+    "multiplies": true,
+    "rarity": 4
+  },
+  "attack": 3,
+  "damageDice": 2,
+  "damageSides": 5,
+  "damageType": "poison",
+  "defense": 0,
+  "descriptionKey": "actor-demo-slime-mold-description",
+  "experienceValue": 10,
+  "formatVersion": 1,
+  "glyph": ",",
+  "hitPointDice": {
+    "dice": 2,
+    "sides": 8
+  },
+  "id": "demo.actor.slime-mold",
+  "level": 12,
+  "maxHp": 9,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "damageDice": 2,
+            "damageSides": 5,
+            "type": "poison"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "damageDice": 2,
+            "damageSides": 5,
+            "type": "poison"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.shriek",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.mind-blast-7d7",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 10
+  },
+  "movement": {
+    "modes": [
+      "swim"
+    ]
+  },
+  "movesWeakerBodies": true,
+  "nameKey": "actor-demo-slime-mold-name",
+  "regenerates": true,
+  "role": "monster",
+  "speed": 105,
+  "tags": [
+    "animal",
+    "good",
+    "legacy-import",
+    "mold",
+    "nonliving",
+    "resist-teleport",
+    "warrens"
+  ]
+}

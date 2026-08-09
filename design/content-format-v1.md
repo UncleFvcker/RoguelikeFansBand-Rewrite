@@ -1,6 +1,6 @@
 # RFB 内容数据格式 v1
 
-状态：P0 源格式、JSON Schema、确定性编译器和首个原创内容包已实现；当前内容包已扩展至 1.147.0
+状态：P0 源格式、JSON Schema、确定性编译器和首个原创内容包已实现；当前内容包已扩展至 1.204.0
 
 ## 1. 目标
 
@@ -287,6 +287,26 @@ contract-v198 以 1.194.0 增加窄怪物近战 `disenchant { chancePercent? }`�
 contract-v199 以 1.195.0 为既有 actor `light` 增加默认 false 的 `darkness`，并增加怪物施法 effect `darken-room`。负半径不另建第二套形状模型：同一个正整数 `radius` 描述作用域，`darkness` 只决定它压制永久房间光而不是产生主动光。`darken-room` 必须以非 self 的 position/entity 目标使用，当前不开放给玩家能力。
 
 集成包 1.200.0 同时包含荒野 W0–W5、物品 P1–P3.1 与怪物 P13–P19，共 86 terrain、235 actors、204 items、114 abilities，内容 hash 为 `2273089117afc9e9f5ac4947407da9463d6eb8946fcbf7fb3a1a3f27cebd336b`。
+
+contract-v205 / 包 1.201.0 为 actor 增加可选 `contactAura` 与分配字段 `legacyDungeonIndices`，为 dungeon 增加可选正整数 `legacyIndex`；经验吸取使用窄 `drain-experience` melee effect，变形继续复用既有 `appearanceKindId`。该版包共 86 terrain、241 actors、204 items、116 abilities，内容 hash 为 `e2fd133bcd3f2e3c2fd4d3ab8e25da6c437bfa18bede03d039d55a3db35406ae`。协议 1.147 与 state hash Schema v70 不变。
+
+contract-v206 / 包 1.202.0 只增加 20 条十二级非施法 actor 内容记录；既有 actor 字段完整承载经验吸取、毒素与属性损伤、眩晕、死亡爆炸、繁殖、群体、护卫、荒野/地牢限定、水生、骑乘、穿墙/毁墙、隐形、Unique、尸骨和 Warrior 掉落。该版包共 86 terrain、261 actors、204 items、116 abilities，严格同步 196 条，内容 hash 为 `8f68bd58310207e0a9e7d1370d1a09731213fb1323753f6f28e2182b8ef2f8dc`。协议 1.147 与 state hash Schema v70 不变。
+
+contract-v207 / 包 1.203.0 增加 7 条十二级施法 actor 与 8 个按完整参数签名去重的 ability 内容记录；没有增加数值覆盖层或 effect 类型。当前包共 86 terrain、268 actors、204 items、124 abilities，严格同步 203 条，内容 hash 为 `463afcc8f813025b618ed68697d3cc67c99483ed56f5dc598d62a30a120c8502`。协议 1.147 与 state hash Schema v70 不变。
+
+contract-v208 / 包 1.204.0 增加 10 条十三级 actor 与 5 个按完整参数签名生成的 ability 内容记录；自我加速只绑定既有 Haste 状态效果，没有增加数值覆盖层或 effect 类型。当前包共 86 terrain、278 actors、204 items、129 abilities，严格同步 213 条，内容 hash 为 `4b1c3378af39464ad9450bfc3148fc338b79f3ccd17bedf6fe2f776d226e23cb`。协议 1.147 与 state hash Schema v70 不变。
+
+contract-v209 / 包 1.205.0 为 actor 增加默认 false 的 `movesWeakerBodies` 与 `regenerates`。前者只控制符合经验值、阵营和双向地形条件的换位，后者只将公共怪物再生量翻倍；固定间隔、低 HP RNG 与 400 上限留在核心。黏菌及 `mind-blast-7d7` 进入正式包。当前包共 86 terrain、279 actors、204 items、130 abilities，严格同步 214 条，内容 hash 为 `3d94f3bff136355b23ad4a864f8308197606e79d2c92a3f36ad07f6b69a2c886`。协议 1.147 与 state hash Schema v70 不变。
+
+contract-v210 / 包 1.206.0 严格同步 19 只十四级怪物，只复用既有 actor 字段与 ability 内容，不增加 schema 或 effect。当前包共 86 terrain、298 actors、204 items、130 abilities，严格同步 233 条，内容 hash 为 `e4d423b5dc4cb246897e44a006f1b7cf3d638d30a5c88ab604140bbcafbba7bf`。协议 1.147 与 state hash Schema v70 不变。
+
+contract-v211 / 包 1.207.0 严格同步 23 只十五级怪物，只复用既有 actor 字段与 ability 内容，不增加 schema、ability 或 effect。当前包共 86 terrain、321 actors、204 items、130 abilities，严格同步 256 条，内容 hash 为 `068d58f2b165c78eb608f589322dcfd65d8ba4652c8645b8ebb3d80ed82bc043`。协议 1.147 与 state hash Schema v70 不变。
+
+contract-v212 / 包 1.208.0 严格同步 8 只十五级参数化施法怪物，生成 11 条 ability 与对应 Ability Program 内容记录，只复用既有 effect，不增加 schema。当前包共 86 terrain、329 actors、204 items、141 abilities，严格同步 264 条，内容 hash 为 `068d5296c10176d40507e531b3a9cb3605e5c5d1288304ad36ed534527dd1bcd`。协议 1.147 与 state hash Schema v70 不变。
+
+contract-v213 / 包 1.209.0 严格同步纳垢携疫者与侏儒法师，生成 `summon-ant-l15-1d3-1` 和 `blink-other` 两条 ability 及对应 Ability Program。前者复用既有分类召唤；后者新增怪物专用 `blink-target { radius }` effect，半径限定为 1–10。当前包共 86 terrain、331 actors、204 items、143 abilities，严格同步 266 条，内容 hash 为 `b0f60081b2b1971d643f93c619df721c43997661a496a8f4549b6bac8ce16cde`。协议升至 1.148，state hash Schema v70 不变。
+
+contract-v214 / 包 1.210.0 为 actor 增加默认 false、仅怪物可用的 `reflectsBolts`，只控制单体 ability/device bolt 的 75% 反射入口；反射方向与命中继续由核心投射和伤害管线解释。铁甲虫进入严格同步。当前包共 86 terrain、332 actors、204 items、143 abilities，严格同步 267 条，内容 hash 为 `b6f4741928ed2c1ae56f65d5614b06a25a200cdcb2eb9abe44f96fe1da424e00`。协议 1.148 与 state hash Schema v70 不变。
 
 contract-v83 以 1.75.0 增加 `detect` 能力效果、Echo Pulse 与 Echo Sight；类别/半径、FOV 与隐藏投影筛选、稳定结果顺序、瞬时/持久知识边界由核心定义，持久结果复用 `revealedTerrain`，state hash 升至 Schema v36。
 

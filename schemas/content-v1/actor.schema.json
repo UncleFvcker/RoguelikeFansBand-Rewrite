@@ -29,6 +29,16 @@
           },
           "type": "array"
         },
+        "legacyDungeonIndices": {
+          "default": [],
+          "items": {
+            "format": "uint16",
+            "maximum": 65535,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "type": "array"
+        },
         "legacyIndex": {
           "description": "Stable order from the original global monster allocation table.",
           "format": "uint32",
@@ -91,6 +101,42 @@
       "required": [
         "detectionDifficulty",
         "detectionRange"
+      ],
+      "type": "object"
+    },
+    "ActorContactAuraDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "chancePercent": {
+          "default": null,
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "damageDice": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "damageSides": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "damageType": {
+          "$ref": "#/$defs/ActorDamageType"
+        }
+      },
+      "required": [
+        "damageType",
+        "damageDice",
+        "damageSides"
       ],
       "type": "object"
     },
@@ -525,6 +571,43 @@
             },
             "type": {
               "const": "drain-resource",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "amountDice",
+            "amountSides"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "amountDice": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "amountSides": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "chancePercent": {
+              "default": null,
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "type": {
+              "const": "drain-experience",
               "type": "string"
             }
           },
@@ -1126,6 +1209,17 @@
         "null"
       ]
     },
+    "contactAura": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ActorContactAuraDefinition"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
     "corpseItemKindId": {
       "default": null,
       "type": [
@@ -1312,12 +1406,27 @@
         "neverMoves": false
       }
     },
+    "movesWeakerBodies": {
+      "default": false,
+      "description": "Whether this actor swaps places with weaker actors that block its movement.",
+      "type": "boolean"
+    },
     "nameKey": {
       "type": "string"
     },
     "rangedMelee": {
       "default": false,
       "description": "Whether this actor can use its melee routine at RFB's two-grid reach.",
+      "type": "boolean"
+    },
+    "reflectsBolts": {
+      "default": false,
+      "description": "Whether this actor reflects single-target bolts.",
+      "type": "boolean"
+    },
+    "regenerates": {
+      "default": false,
+      "description": "Whether this actor receives twice the shared monster regeneration amount.",
       "type": "boolean"
     },
     "remains": {

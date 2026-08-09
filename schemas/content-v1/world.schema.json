@@ -120,6 +120,16 @@
             "kind": "reset-on-surface"
           }
         },
+        "legacyIndex": {
+          "default": null,
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
         "rootFloorId": {
           "type": "string"
         }

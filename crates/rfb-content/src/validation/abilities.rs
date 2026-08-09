@@ -211,6 +211,7 @@ pub(super) fn validate_abilities(
                 | AbilityEffectDefinition::AggravateMonsters => true,
                 AbilityEffectDefinition::Teleport => true,
                 AbilityEffectDefinition::BlinkSelf { radius } => (1..=10).contains(radius),
+                AbilityEffectDefinition::BlinkTarget { radius } => (1..=10).contains(radius),
                 AbilityEffectDefinition::TeleportSelf { minimum_distance } => {
                     (1..=64).contains(minimum_distance)
                 }
@@ -631,7 +632,8 @@ pub(super) fn validate_abilities(
             }
             AbilityEffectDefinition::BlinkSelf { .. }
             | AbilityEffectDefinition::TeleportSelf { .. } => self_target_rule,
-            AbilityEffectDefinition::TeleportTarget => projectile_target_rule,
+            AbilityEffectDefinition::BlinkTarget { .. }
+            | AbilityEffectDefinition::TeleportTarget => projectile_target_rule,
             AbilityEffectDefinition::Sequence { effects } => {
                 (self_target_rule
                     && effects.iter().all(|effect| {
@@ -805,7 +807,8 @@ pub(super) fn validate_abilities(
                 | AbilityEffectDefinition::RemoveStatus { .. } => self_target || projectile_target,
                 AbilityEffectDefinition::BlinkSelf { .. }
                 | AbilityEffectDefinition::TeleportSelf { .. } => self_target,
-                AbilityEffectDefinition::TeleportTarget => projectile_target,
+                AbilityEffectDefinition::BlinkTarget { .. }
+                | AbilityEffectDefinition::TeleportTarget => projectile_target,
                 AbilityEffectDefinition::DrainLife { .. }
                 | AbilityEffectDefinition::Genocide { .. } => projectile_target,
                 AbilityEffectDefinition::AnimateDead { .. } => self_target,

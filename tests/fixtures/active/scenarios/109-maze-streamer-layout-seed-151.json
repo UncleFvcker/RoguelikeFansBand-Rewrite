@@ -428,7 +428,7 @@
             "x": 2,
             "y": 4
           },
-          "hp": 3,
+          "hp": 4,
           "speed": 110,
           "energyNeed": 100,
           "pack": {
@@ -520,7 +520,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "096099b70e14fce505e28cb739f37e09170782b2e41e64586dce7058eeb52040"
+      "stateHash": "b73dd8e76ff56debe763e57d88b046a8f19b82c7fbcda4825df56226db41f727"
     },
     "events": [
       {
@@ -1057,22 +1057,10 @@
         "args": {}
       },
       {
-        "kind": "combat.monster-hit",
-        "messageKey": "combat-monster-hit",
+        "kind": "combat.monster-miss",
+        "messageKey": "combat-monster-miss",
         "args": {
-          "damage": "0",
           "source": "demo.actor.chorus-captain"
-        },
-        "outcome": {
-          "type": "damage",
-          "resolution": {
-            "rawDamage": 1,
-            "armorReduction": 1,
-            "resistanceAdjustment": 0,
-            "finalDamage": 0,
-            "damageType": "physical",
-            "resistance": "immune"
-          }
         }
       },
       {
@@ -14505,6 +14493,6 @@
         "y": 3
       }
     ],
-    "saveRoundTripStateHash": "096099b70e14fce505e28cb739f37e09170782b2e41e64586dce7058eeb52040"
+    "saveRoundTripStateHash": "b73dd8e76ff56debe763e57d88b046a8f19b82c7fbcda4825df56226db41f727"
   }
 }

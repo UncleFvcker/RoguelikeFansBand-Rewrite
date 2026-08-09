@@ -226,6 +226,7 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::RemoveStatus { .. }
                     | AbilityEffectDefinition::Control { .. }
                     | AbilityEffectDefinition::DrainLife { .. }
+                    | AbilityEffectDefinition::BlinkTarget { .. }
                     | AbilityEffectDefinition::TeleportTarget
                     | AbilityEffectDefinition::NoOp { .. }
             ) || matches!(

@@ -297,6 +297,9 @@ pub enum AbilityEffectDefinition {
     BlinkSelf {
         radius: u8,
     },
+    BlinkTarget {
+        radius: u8,
+    },
     TeleportSelf {
         minimum_distance: u8,
     },

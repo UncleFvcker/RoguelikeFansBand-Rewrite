@@ -1,0 +1,124 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "habitats": [
+      "swamp"
+    ],
+    "legacyIndex": 252,
+    "maxDepth": 50,
+    "multiplies": true,
+    "randomMovementPercent": 50,
+    "rarity": 4
+  },
+  "attack": 3,
+  "damageDice": 1,
+  "damageSides": 4,
+  "damageType": "poison",
+  "defense": 2,
+  "descriptionKey": "actor-demo-blue-icky-thing-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 20,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "i",
+  "hitPointDice": {
+    "dice": 10,
+    "sides": 6
+  },
+  "id": "demo.actor.blue-icky-thing",
+  "level": 14,
+  "maxHp": 35,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "damageDice": 1,
+            "damageSides": 4,
+            "type": "poison"
+          }
+        ],
+        "methodId": "rfb.blow.crawl",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "type": "eat-food"
+          }
+        ],
+        "methodId": "rfb.blow.crawl",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 4,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 4,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.blind",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.confuse",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.scare",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 12
+  },
+  "movement": {
+    "modes": [
+      "swim"
+    ]
+  },
+  "nameKey": "actor-demo-blue-icky-thing-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 100,
+  "tags": [
+    "evil",
+    "icky-thing",
+    "legacy-import",
+    "warrens"
+  ]
+}

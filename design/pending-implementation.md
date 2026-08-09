@@ -1,6 +1,6 @@
 # 待实现内容清单
 
-状态：基于 contract-v1–v201、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
+状态：基于 contract-v1–v214、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
 
 本文件只记录已经在现有设计或原版对比中明确出现、但尚未实现的内容。长期设想仍保留在 [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)，这里用于跟踪可以实际排入后续 contract 的缺口。
 
@@ -78,6 +78,52 @@ contract-v202 将原版近战元素名 `LIGHT` 收窄为既有 `LITE`/`light` �
 contract-v203 接入多彩龙幼龙、锋锐兔、马头鱼尾怪、僵尸兽人、浅水洼和
 怪诞者卢格 6 只十一级怪物，全部复用既有字段与 effect。正式包 actor 增至
 235、ability 保持 114、严格同步增至 170；协议与 State Hash Schema 均不变。
+contract-v205 以五个窄契约完成经验吸取、毒素接触光环、外观变形、弓手特殊
+掉落别名和地牢索引限定，接入 6 只十一至十二级怪物，并恢复既有黏糊糊的
+软体接触光环。正式包 actor 增至 241、ability 增至 116、严格同步增至 176；
+协议保持 1.147，State Hash Schema 保持 v70。瘟疫鼠的 `COMPOST` 仍等待真实
+下水道任务消费者，不作为掉落或通用区域规则近似实现。
+contract-v206 直接接入 20 只十二级非施法怪物，全部复用既有 actor 字段。
+正式包 actor 增至 261、ability 保持 116、严格同步增至 196；协议保持 1.147，
+State Hash Schema 保持 v70。`S:BERSERK` 和 `S:MULTIPLY` 仍按原版边界只作为
+附身者提示，不生成怪物主动能力。
+contract-v207 接入 7 只十二级施法怪物，按完整参数签名共享或生成 ability。
+正式包 actor 增至 268、ability 增至 124、严格同步增至 203；协议保持 1.147，
+State Hash Schema 保持 v70。没有引入怪物数值覆盖、模板或第二条施法路径。
+contract-v208 接入 10 只十三级怪物，复用现有运行时并生成 5 条 ability 内容记录。
+正式包 actor 增至 278、ability 增至 129、严格同步增至 213；协议保持 1.147，
+State Hash Schema 保持 v70。没有引入新 effect、数值覆盖或兼容路径。
+contract-v209 为所有当前层受伤怪物接入每 100 world ticks 一次的基础再生，
+`REGENERATE` 只将结果翻倍并共享 400 上限；`MOVE_BODY` 以经验值、阵营与
+双向地形通行为窄换位条件。黏菌进入严格同步，正式包 actor 增至 279、
+ability 增至 130、严格同步增至 214；协议 1.147 与 State Hash Schema v70 不变。
+
+contract-v210 直接接入 19 只十四级怪物，正式包 actor 增至 298、ability 保持
+130、严格同步增至 233；协议 1.147 与 State Hash Schema v70 不变。座狼继续
+复用 Pest Control 的手写身份，瘟疫武僧与斯卡文刺客等待真实 `COMPOST` 任务
+消费者，祝融夫人与火焰乌鸦等待火焰接触光环，维护者等待 `POLYMORPH` 与
+软件漏洞定点召唤，均不以重复 actor 或近似规则提前接入。
+
+contract-v211 直接接入 23 只十五级怪物，正式包 actor 增至 321、ability 保持
+130、严格同步增至 256；协议 1.147 与 State Hash Schema v70 不变。幻术师、
+光明/暗影猎犬、时间学徒和鸭鸣鸭嘴兽只引用已有能力内容；附身者专用的
+`DETECT_MONSTERS`、`BERSERK` 与 `MULTIPLY` 提示仍不生成怪物能力。
+
+contract-v212 接入 8 只十五级参数化施法怪物，正式包 actor 增至 329、ability
+增至 141、严格同步增至 264；协议 1.147 与 State Hash Schema v70 不变。
+11 条新 ability 只携带权威数值并复用现有 effect；`BLESS` 与 `HEROISM` 仍按
+附身者提示处理，不生成怪物能力。
+
+contract-v213 接入纳垢携疫者和侏儒法师，正式包 actor 增至 331、ability
+增至 143、严格同步增至 266。`S_ANT` 复用分类召唤；`BLINK_OTHER` 使用新增的
+怪物专用十格目标闪现，不以远距放逐近似。协议升至 1.148，State Hash Schema
+保持 v70。
+
+contract-v214 接入铁甲虫，正式包 actor 增至 332、ability 保持 143、严格同步
+增至 267。`REFLECTING` 使用 actor 事实和既有投射/伤害路径，只反射单体
+ability/device bolt；协议 1.148 与 State Hash Schema v70 不变。黏土魔像仍等待
+玩家侧碎岩攻击，魔法蘑菇丛仍等待 `ANTI_MAGIC`/`POLYMORPH`，鼠巨魔仍等待
+真实下水道任务的 `COMPOST` 分配。
 
 荒野 W0 已导入 `master:w_info.txt` 的 `99x66` normal 世界图、15 类地形、
 危险等级、道路和起点，并只把现有 Outpost/Warrens 绑定为正式地点。W1 已完成
@@ -252,7 +298,7 @@ contract-v141 后的 importer 维护复用 P84 已有 `apply-poison`，将 tval 
 - Berserk Strength Potion 只实现普通职业的 Berserk + 治疗事务；原版 `_potion_power`、Alchemist 等职业特例与全局 10000-tick 上限继续留在缺口，不提前建立职业覆盖表或通用时长上限层；
 - Poetic Inspiration Potion 只实现普通 `1d100+100` Extend 与 Wisdom/Charisma 各 +5；原版 `_potion_power`、Potion Devicemaster 特例和全局 10000-tick 上限继续留在缺口；
 - Stone Skin Potion 只实现普通 `1d20+20` KeepStrongest 与饮用时等级防御；原版 `_potion_power`、持续期间升级重算、Magic Defense、Kata Musou 和职业特例继续留在缺口；
-- Restore Life Levels Potion 只恢复既有 `maximumExperience` 并增加 150 生命力；不建立通用成长事务、经验吸取、生命力损伤、Possessor/Mimic 上限或 Android 特例，也不提前开放设备 activation；
+- Restore Life Levels Potion 只恢复既有 `maximumExperience` 并增加 150 生命力；经验吸取已由 contract-v205 作为怪物近战窄路径建立，生命力损伤、Possessor/Mimic 上限与 Android 特例仍等待各自纵切，也不提前开放设备 activation；
 - 属性增长药水只覆盖六种单属性增长和固定六维 Augmentation；不建立可配置属性列表、通用成长事务或与等级提升点合流，也不提前加入 `_potion_power` 和职业特例；
 - 剩余 `scroll-effect` 15 继续按世界/地形、状态和物品/成长事务分组；Understanding 和 Inventory Protection 不并入本轮。
 - `consumable-effect` 现为 46，只统计缺少主动使用效果的药水和食物；全部 28 种食物另以 `food-nutrition` 记录尚未实现的营养/饥饿事务。装备属性损伤、临时属性修改和更一般的成长事务继续按独立纵切，不扩展通用序列或属性 effect DSL。

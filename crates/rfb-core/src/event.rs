@@ -64,6 +64,16 @@ impl From<ProjectileTrace> for ProjectileTraceDto {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) enum BoltReflectionOutcome {
+    Landed,
+    Hit {
+        target_kind_id: String,
+        damage: DamageOutcome,
+        fatal: bool,
+    },
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum DomainEvent {
     AbilityStudied {
         ability_id: String,
@@ -170,6 +180,12 @@ pub(crate) enum DomainEvent {
         damage: DamageOutcome,
         trace: ProjectileTrace,
     },
+    BoltReflected {
+        reflector_kind_id: String,
+        source_kind_id: String,
+        outcome: BoltReflectionOutcome,
+        trace: ProjectileTrace,
+    },
     AbilityHealed {
         ability_id: String,
         resolution: HealingResolutionDto,
@@ -188,6 +204,11 @@ pub(crate) enum DomainEvent {
     },
     MonsterBlinked {
         source_kind_id: String,
+        resolution: MonsterDisplacementResolutionDto,
+    },
+    MonsterBlinkedTarget {
+        source_kind_id: String,
+        target_kind_id: String,
         resolution: MonsterDisplacementResolutionDto,
     },
     MonsterTeleported {
@@ -243,10 +264,19 @@ pub(crate) enum DomainEvent {
         amount: u64,
         total: u64,
     },
+    ExperienceDrained {
+        source_kind_id: String,
+        amount: u64,
+        total: u64,
+    },
     PlayerLevelGained {
         level: u16,
         max_hp: i32,
         pending_attribute_increases: u16,
+    },
+    PlayerLevelLost {
+        level: u16,
+        max_hp: i32,
     },
     PlayerLevelCapUnlocked {
         level_cap: u16,
@@ -980,6 +1010,11 @@ pub(crate) enum DomainEvent {
         target_kind_id: String,
         damage: DamageOutcome,
     },
+    MonsterContactAuraApplied {
+        source_kind_id: String,
+        status_kind_id: String,
+        duration: u32,
+    },
     PlayerSlew {
         target_kind_id: String,
         damage: DamageOutcome,
@@ -1446,6 +1481,55 @@ impl DomainEvent {
                 ),
                 trace,
             ),
+            Self::BoltReflected {
+                reflector_kind_id,
+                source_kind_id,
+                outcome,
+                trace,
+            } => match outcome {
+                BoltReflectionOutcome::Landed => with_trace(
+                    dto(
+                        "combat.bolt-reflected",
+                        "combat-bolt-reflected",
+                        [("reflector", reflector_kind_id), ("source", source_kind_id)],
+                    ),
+                    trace,
+                ),
+                BoltReflectionOutcome::Hit {
+                    target_kind_id,
+                    damage,
+                    fatal,
+                } => with_trace(
+                    dto_with_outcome(
+                        if fatal {
+                            "combat.bolt-reflected-slay"
+                        } else {
+                            "combat.bolt-reflected-hit"
+                        },
+                        if fatal {
+                            "combat-bolt-reflected-slay"
+                        } else {
+                            "combat-bolt-reflected-hit"
+                        },
+                        [
+                            ("reflector", reflector_kind_id),
+                            ("source", source_kind_id),
+                            ("target", target_kind_id),
+                            ("damage", damage.applied.to_string()),
+                        ],
+                        if fatal {
+                            GameEventOutcomeDto::Death {
+                                resolution: damage.into(),
+                            }
+                        } else {
+                            GameEventOutcomeDto::Damage {
+                                resolution: damage.into(),
+                            }
+                        },
+                    ),
+                    trace,
+                ),
+            },
             Self::AbilityHealed {
                 ability_id,
                 resolution,
@@ -1489,6 +1573,16 @@ impl DomainEvent {
                 "monster.blinked",
                 "monster-blinked",
                 [("source", source_kind_id)],
+                GameEventOutcomeDto::MonsterDisplacement { resolution },
+            ),
+            Self::MonsterBlinkedTarget {
+                source_kind_id,
+                target_kind_id,
+                resolution,
+            } => dto_with_outcome(
+                "monster.blinked-target",
+                "monster-blinked-target",
+                [("source", source_kind_id), ("target", target_kind_id)],
                 GameEventOutcomeDto::MonsterDisplacement { resolution },
             ),
             Self::MonsterTeleported {
@@ -1639,6 +1733,19 @@ impl DomainEvent {
                 "player-experience-gained",
                 [("amount", amount.to_string()), ("total", total.to_string())],
             ),
+            Self::ExperienceDrained {
+                source_kind_id,
+                amount,
+                total,
+            } => dto(
+                "player.experience-drained",
+                "player-experience-drained",
+                [
+                    ("source", source_kind_id),
+                    ("amount", amount.to_string()),
+                    ("total", total.to_string()),
+                ],
+            ),
             Self::PlayerLevelGained {
                 level,
                 max_hp,
@@ -1654,6 +1761,11 @@ impl DomainEvent {
                         pending_attribute_increases.to_string(),
                     ),
                 ],
+            ),
+            Self::PlayerLevelLost { level, max_hp } => dto(
+                "player.level-lost",
+                "player-level-lost",
+                [("level", level.to_string()), ("maxHp", max_hp.to_string())],
             ),
             Self::PlayerLevelCapUnlocked {
                 level_cap,
@@ -3793,6 +3905,19 @@ impl DomainEvent {
                 GameEventOutcomeDto::Damage {
                     resolution: damage.into(),
                 },
+            ),
+            Self::MonsterContactAuraApplied {
+                source_kind_id,
+                status_kind_id,
+                duration,
+            } => dto(
+                "combat.monster-contact-aura",
+                "combat-monster-contact-aura",
+                [
+                    ("source", source_kind_id),
+                    ("status", status_kind_id),
+                    ("duration", duration.to_string()),
+                ],
             ),
             Self::PlayerSlew {
                 target_kind_id,
