@@ -2100,6 +2100,72 @@
       "id": "demonite",
       "tags": ["demon", "warrens"],
       "omittedFlags": ["CAN_SPEAK", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 310,
+      "id": "potion-mimic",
+      "tags": ["mimic", "warrens"],
+      "omittedFlags": ["ATTR_SEMIRAND", "CHAR_MULTI", "COLD_BLOOD", "EMPTY_MIND", "NASTY_GLYPH"]
+    },
+    {
+      "sourceIndex": 311,
+      "id": "door-mimic",
+      "tags": ["mimic", "warrens"],
+      "omittedFlags": ["CHAR_MULTI", "COLD_BLOOD", "EMPTY_MIND", "NASTY_GLYPH"]
+    },
+    {
+      "sourceIndex": 313,
+      "id": "uruk",
+      "tags": ["humanoid", "orc", "warrens"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 318,
+      "id": "chaos-beastman",
+      "tags": ["beastman", "humanoid", "warrens"],
+      "omittedFlags": ["ATTR_ANY", "ATTR_MULTI"]
+    },
+    {
+      "sourceIndex": 320,
+      "id": "giant-bronze-dragon-fly",
+      "tags": ["insect", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC", "WEIRD_MIND"]
+    },
+    {
+      "sourceIndex": 321,
+      "id": "stone-giant",
+      "tags": ["giant", "warrens"],
+      "omittedFlags": ["MALE", "POS_SUST_STR"]
+    },
+    {
+      "sourceIndex": 1280,
+      "id": "snow-golem",
+      "tags": ["golem", "warrens"],
+      "omittedFlags": ["COLD_BLOOD", "EMPTY_MIND", "POS_GAIN_AC", "POS_HOLD_LIFE"]
+    },
+    {
+      "sourceIndex": 1326,
+      "id": "bush-ranger",
+      "tags": ["human", "humanoid", "ranger", "warrens"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 278,
+      "id": "frost-giant",
+      "tags": ["giant", "warrens"],
+      "omittedFlags": ["MALE", "POS_SUST_STR"]
+    },
+    {
+      "sourceIndex": 337,
+      "id": "earth-hound",
+      "tags": ["hound", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 348,
+      "id": "dark-elven-lord",
+      "tags": ["dark-elf", "humanoid", "warrens"],
+      "omittedFlags": ["MALE", "POS_SEE_INVIS"]
     }
   ]
 }

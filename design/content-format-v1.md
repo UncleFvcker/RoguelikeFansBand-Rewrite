@@ -423,3 +423,10 @@ contract-v223 / 包 1.219.0 接入 15 只只使用现有怪物能力的 P37B 怪
 loot table；严格同步 348 条，内容 hash 为
 `c379c1b08743578fee07d0fb0678c3ce1a59ae080e62424ae01e84525ffd322a`。
 协议保持 1.152，State Hash Schema 保持 v72。
+
+contract-v224 / 包 1.220.0 接入 11 只 P38A 参数化伤害怪物。新增 11 条
+ability 和 ability program 仅保存现有 bolt、ball、breath effect 的权威参数。
+当前包包含 88 种地形、424 种 actor、249 种物品、163 个能力和 20 张 loot
+table；严格同步 359 条，内容 hash 为
+`60ccaee2d902a306b4e3615cfd22b61c98e41e5454af75af16c045566da8d82a`。
+协议保持 1.152，State Hash Schema 保持 v72。

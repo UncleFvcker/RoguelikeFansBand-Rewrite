@@ -1,6 +1,6 @@
 # 待实现内容清单
 
-状态：基于 contract-v1–v223、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
+状态：基于 contract-v1–v224、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
 
 本文件只记录已经在现有设计或原版对比中明确出现、但尚未实现的内容。长期设想仍保留在 [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)，这里用于跟踪可以实际排入后续 contract 的缺口。
 
@@ -167,6 +167,12 @@ contract-v223 接入 15 只只使用现有怪物能力的 P37B 怪物，正式�
 413、严格同步增至 348 条，ability 保持 152。火、冰、闪电、酸、毒素和声音
 吐息，以及 `blink`、`drag`、`shriek`、状态与诅咒能力全部直接复用；附身者
 `DETECT_MONSTERS` 不进入 casting profile。协议 1.152、State Hash Schema v72
+不变。
+
+contract-v224 接入 11 只 P38A 参数化伤害怪物，正式包 actor 增至 424、严格
+同步增至 359 条，ability 增至 163。新增内容记录只承载既有 bolt、ball 和
+breath effect 的权威骰值或生命比例上限；附身者 `DETECT_MONSTERS`、
+`DETECT_TRAPS` 不进入 casting profile。协议 1.152、State Hash Schema v72
 不变。
 
 荒野 W0 已导入 `master:w_info.txt` 的 `99x66` normal 世界图、15 类地形、

@@ -90,6 +90,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.brown-yeek", 141, 1, 40),
             ("demo.actor.brumby", 1334, 2, 35),
             ("demo.actor.bullroarer-the-hobbit", 914, 3, 999),
+            ("demo.actor.bush-ranger", 1326, 2, 50),
             ("demo.actor.buzzy-beetle", 951, 4, 60),
             ("demo.actor.carnivorous-flying-monkey", 145, 2, 40),
             ("demo.actor.carrion", 361, 1, 70),
@@ -97,6 +98,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.cave-lizard", 82, 1, 30),
             ("demo.actor.cave-orc", 126, 1, 40),
             ("demo.actor.cave-spider", 60, 1, 30),
+            ("demo.actor.chaos-beastman", 318, 2, 999),
             ("demo.actor.chaos-shapechanger", 203, 2, 40),
             ("demo.actor.cheerful-leprechaun", 258, 2, 50),
             ("demo.actor.chimera", 341, 1, 70),
@@ -117,6 +119,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.crypt-creep", 124, 2, 40),
             ("demo.actor.culverin", 867, 2, 50),
             ("demo.actor.dark-elf", 122, 2, 40),
+            ("demo.actor.dark-elven-lord", 348, 2, 70),
             ("demo.actor.dark-elven-mage", 178, 1, 40),
             ("demo.actor.dark-elven-priest", 226, 1, 50),
             ("demo.actor.dark-elven-warrior", 182, 1, 40),
@@ -133,12 +136,14 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ),
             ("demo.actor.disenchanter-eye", 104, 2, 40),
             ("demo.actor.disenchanter-mold", 192, 2, 40),
+            ("demo.actor.door-mimic", 311, 6, 80),
             ("demo.actor.drider", 234, 2, 50),
             ("demo.actor.druid", 241, 2, 50),
             ("demo.actor.duck", 1241, 1, 25),
             ("demo.actor.duck-quacked-platypus", 1325, 1, 36),
             ("demo.actor.dweller-on-the-threshold", 263, 5, 50),
             ("demo.actor.eagle", 172, 2, 40),
+            ("demo.actor.earth-hound", 337, 2, 90),
             ("demo.actor.earth-spirit", 305, 2, 80),
             ("demo.actor.electric-eel", 346, 2, 70),
             ("demo.actor.energy-hound", 309, 2, 70),
@@ -154,6 +159,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.forest-troll", 297, 1, 80),
             ("demo.actor.freesia", 57, 1, 999),
             ("demo.actor.freezing-sphere", 298, 1, 50),
+            ("demo.actor.frost-giant", 278, 3, 70),
             ("demo.actor.frost-spirit", 1249, 2, 80),
             ("demo.actor.frosty-jelly", 84, 1, 40),
             ("demo.actor.fruit-bat", 37, 1, 10),
@@ -162,6 +168,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.gelatinous-cube", 286, 4, 50),
             ("demo.actor.giant-black-ant", 49, 1, 20),
             ("demo.actor.giant-black-dragon-fly", 322, 2, 999),
+            ("demo.actor.giant-bronze-dragon-fly", 320, 1, 999),
             ("demo.actor.giant-brown-bat", 114, 1, 40),
             ("demo.actor.giant-clear-centipede", 276, 2, 30),
             ("demo.actor.giant-cockroach", 1007, 2, 40),
@@ -333,6 +340,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.plaguebearer-of-nurgle", 268, 2, 50),
             ("demo.actor.poltergeist", 65, 1, 30),
             ("demo.actor.portuguese-man-o-war", 160, 2, 40),
+            ("demo.actor.potion-mimic", 310, 3, 80),
             ("demo.actor.priest", 225, 1, 50),
             ("demo.actor.pseudo-dragon", 193, 2, 50),
             ("demo.actor.pumpkin-man", 1146, 1, 999),
@@ -380,6 +388,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.smeagol", 63, 2, 999),
             ("demo.actor.snaga", 118, 1, 40),
             ("demo.actor.snaga-sapper", 251, 2, 50),
+            ("demo.actor.snow-golem", 1280, 1, 35),
             ("demo.actor.snow-leopard", 1338, 2, 50),
             ("demo.actor.software-bug", 246, 2, 90),
             ("demo.actor.soldier-ant", 36, 1, 10),
@@ -388,6 +397,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.spider-bomb", 1016, 4, 50),
             ("demo.actor.spotted-jelly", 233, 3, 50),
             ("demo.actor.spotted-mushroom-patch", 72, 1, 30),
+            ("demo.actor.stone-giant", 321, 3, 70),
             ("demo.actor.stone-golem", 323, 2, 70),
             ("demo.actor.stunwall", 326, 5, 50),
             ("demo.actor.swamp-rabbit", 1387, 7, 42),
@@ -411,6 +421,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.undead-mass", 202, 2, 40),
             ("demo.actor.unruly-horse", 957, 2, 30),
             ("demo.actor.unstable-worm-mass", 876, 4, 50),
+            ("demo.actor.uruk", 313, 1, 60),
             ("demo.actor.vlasta", 249, 3, 50),
             ("demo.actor.vorpal-bunny", 205, 3, 40),
             ("demo.actor.wallaby", 1316, 2, 30),
@@ -2335,6 +2346,142 @@ fn p37b_direct_harvest_reuses_existing_monster_abilities() {
     let chimera = actor("demo.actor.chimera");
     assert!(chimera.rideable);
     assert!(chimera.movement.modes.contains(&ActorMovementMode::Fly));
+}
+
+#[test]
+fn p38a_monsters_bind_exact_parameterized_damage_abilities() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actor = |id: &str| {
+        artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == format!("demo.actor.{id}"))
+            .unwrap_or_else(|| panic!("{id} should be imported"))
+    };
+    let ability = |id: &str| {
+        artifact
+            .content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == format!("rfb-legacy.ability.{id}"))
+            .unwrap_or_else(|| panic!("{id} should be imported"))
+    };
+    let assert_abilities = |actor_id: &str, expected: &[&str]| {
+        let actual = actor(actor_id)
+            .monster_casting
+            .as_ref()
+            .unwrap_or_else(|| panic!("{actor_id} should retain monster casting"))
+            .abilities
+            .iter()
+            .map(|candidate| candidate.ability_id.clone())
+            .collect::<BTreeSet<_>>();
+        let expected = expected
+            .iter()
+            .map(|id| format!("rfb-legacy.ability.{id}"))
+            .collect::<BTreeSet<_>>();
+        assert_eq!(actual, expected, "{actor_id} ability set");
+    };
+
+    for id in ["potion-mimic", "door-mimic"] {
+        assert_abilities(
+            id,
+            &["blind", "bolt-cold-6d8-6", "confuse", "curse-8d8", "scare"],
+        );
+        assert!(actor(id).movement.never_moves);
+    }
+    assert_abilities("uruk", &["bolt-physical-3d5"]);
+    assert_abilities(
+        "chaos-beastman",
+        &[
+            "bolt-fire-9d8-6",
+            "bolt-physical-2d6-6",
+            "confuse",
+            "escape",
+        ],
+    );
+    assert_abilities("giant-bronze-dragon-fly", &["breath-confusion-17-400-r2"]);
+    assert_abilities("stone-giant", &["bolt-physical-1d1-53"]);
+    assert_abilities("snow-golem", &["ball-cold-1d1-17"]);
+    assert_abilities("bush-ranger", &["bolt-physical-8d6"]);
+    assert_abilities(
+        "frost-giant",
+        &[
+            "ball-cold-1d30-10",
+            "bolt-cold-6d8-6",
+            "bolt-physical-1d1-59",
+        ],
+    );
+    assert_abilities("earth-hound", &["breath-shards-17-500-r2"]);
+    assert_abilities(
+        "dark-elven-lord",
+        &[
+            "blind",
+            "bolt-cold-6d8-6",
+            "bolt-fire-9d8-6",
+            "bolt-physical-2d6-6",
+            "confuse",
+            "darkness",
+            "haste-self",
+        ],
+    );
+
+    for (id, damage_type, dice, sides, bonus) in [
+        ("bolt-cold-6d8-6", ActorDamageType::Cold, 6, 8, 6),
+        ("bolt-physical-3d5", ActorDamageType::Physical, 3, 5, 0),
+        ("bolt-physical-2d6-6", ActorDamageType::Physical, 2, 6, 6),
+        ("bolt-fire-9d8-6", ActorDamageType::Fire, 9, 8, 6),
+        ("bolt-physical-1d1-53", ActorDamageType::Physical, 1, 1, 53),
+        ("bolt-physical-8d6", ActorDamageType::Physical, 8, 6, 0),
+        ("bolt-physical-1d1-59", ActorDamageType::Physical, 1, 1, 59),
+    ] {
+        assert!(matches!(
+            ability(id).effect,
+            AbilityEffectDefinition::Damage {
+                damage_dice,
+                damage_sides,
+                damage_bonus,
+                damage_type: actual_type,
+            } if damage_dice == dice
+                && damage_sides == sides
+                && damage_bonus == bonus
+                && actual_type == damage_type
+        ));
+    }
+    for (id, sides, bonus) in [("ball-cold-1d1-17", 1, 17), ("ball-cold-1d30-10", 30, 10)] {
+        assert!(matches!(
+            ability(id).effect,
+            AbilityEffectDefinition::AreaDamage {
+                damage_dice: 1,
+                damage_sides,
+                damage_bonus,
+                damage_type: ActorDamageType::Cold,
+                radius: 2,
+                ..
+            } if damage_sides == sides && damage_bonus == bonus
+        ));
+    }
+    for (id, damage_type, hp_percent, max_damage) in [
+        (
+            "breath-confusion-17-400-r2",
+            ActorDamageType::Confusion,
+            17,
+            400,
+        ),
+        ("breath-shards-17-500-r2", ActorDamageType::Shards, 17, 500),
+    ] {
+        assert!(matches!(
+            ability(id).effect,
+            AbilityEffectDefinition::BreathDamage {
+                hp_percent: actual_percent,
+                max_damage: actual_max,
+                damage_type: actual_type,
+                radius: 2,
+            } if actual_percent == hp_percent
+                && actual_max == max_damage
+                && actual_type == damage_type
+        ));
+    }
 }
 
 #[test]
