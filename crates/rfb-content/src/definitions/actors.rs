@@ -25,6 +25,7 @@ pub enum ActorRole {
 #[serde(rename_all = "kebab-case")]
 pub enum ActorMovementMode {
     Aquatic,
+    Climb,
     Fly,
     PassWall,
     Swim,
@@ -374,8 +375,8 @@ pub struct ActorDefinition {
     pub status_immunities: Vec<String>,
     #[serde(default)]
     pub melee_routine: Option<MeleeRoutineDefinition>,
-    #[serde(default)]
-    pub contact_aura: Option<ActorContactAuraDefinition>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub contact_auras: Vec<ActorContactAuraDefinition>,
     #[serde(default)]
     pub terrain_interaction: ActorTerrainInteractionDefinition,
     #[serde(default)]
@@ -442,6 +443,9 @@ pub struct ActorAllocationDefinition {
     pub rarity: u32,
     /// Original maximum allocation depth; zero means unrestricted.
     pub max_depth: u16,
+    /// Optional task that exclusively owns this monster's allocation.
+    #[serde(default)]
+    pub task_id: Option<String>,
     #[serde(default)]
     pub force_depth: bool,
     #[serde(default)]

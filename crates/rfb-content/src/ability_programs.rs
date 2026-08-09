@@ -182,6 +182,7 @@ fn ability_program_input_accepts_step(
             matches!(
                 effect,
                 AbilityEffectDefinition::AreaDamage { .. }
+                    | AbilityEffectDefinition::JumpDamage { .. }
                     | AbilityEffectDefinition::AggravateMonsters
                     | AbilityEffectDefinition::Summon { .. }
                     | AbilityEffectDefinition::SummonCategory { .. }
@@ -228,6 +229,7 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::DrainLife { .. }
                     | AbilityEffectDefinition::BlinkTarget { .. }
                     | AbilityEffectDefinition::TeleportTarget
+                    | AbilityEffectDefinition::TeleportLevel
                     | AbilityEffectDefinition::NoOp { .. }
             ) || matches!(
                 effect,

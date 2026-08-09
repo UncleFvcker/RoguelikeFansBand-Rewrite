@@ -1,0 +1,16 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability-program.ball-cold-1d1-17",
+  "input": "cast-target",
+  "steps": [
+    {
+      "damageBonus": 17,
+      "damageDice": 1,
+      "damageSides": 1,
+      "damageType": "cold",
+      "radius": 2,
+      "type": "area-damage"
+    }
+  ]
+}

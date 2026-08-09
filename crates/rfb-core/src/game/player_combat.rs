@@ -431,7 +431,22 @@ impl Game {
                 damage,
             });
             self.wake_entity_after_damage(index, damage.applied, events);
-            self.resolve_monster_contact_aura(&definition, events);
+            let contact_aura_fatal = self.resolve_monster_contact_auras(&definition, events);
+            if contact_aura_fatal {
+                if application.fatal {
+                    self.resolve_actor_death(
+                        index,
+                        DomainEvent::PlayerSlew {
+                            target_kind_id: target_kind.clone(),
+                            damage,
+                        },
+                        events,
+                        changed,
+                        removed_entities,
+                    )?;
+                }
+                break;
+            }
             if vampiric_weapon
                 && vampiric_drain_remaining > 0
                 && damage.applied > 5
@@ -485,42 +500,62 @@ impl Game {
         Ok(())
     }
 
-    fn resolve_monster_contact_aura(
+    pub(super) fn resolve_monster_contact_auras(
         &mut self,
         definition: &rfb_content::ActorDefinition,
         events: &mut Vec<DomainEvent>,
-    ) {
-        let Some(aura) = definition.contact_aura else {
-            return;
-        };
-        if aura
-            .chance_percent
-            .is_some_and(|chance| self.rng.bounded(100) >= u64::from(chance))
-        {
-            return;
+    ) -> bool {
+        for aura in &definition.contact_auras {
+            if aura
+                .chance_percent
+                .is_some_and(|chance| self.rng.bounded(100) >= u64::from(chance))
+            {
+                continue;
+            }
+            let raw = self.roll_damage(aura.damage_dice, aura.damage_sides);
+            let damage_type = DamageType::from(aura.damage_type);
+            let damage = resolve_damage(
+                DamagePacket::new(raw, damage_type),
+                self.effective_player_resistances().level(damage_type),
+            );
+            if aura.damage_type != rfb_content::ActorDamageType::Poison {
+                if damage.applied <= 0 {
+                    continue;
+                }
+                let application =
+                    plan_damage_application(&self.player, damage, FatalityPolicy::BelowZero);
+                commit_damage_application(&mut self.player, &application);
+                events.push(DomainEvent::MonsterMeleeHit {
+                    source_kind_id: definition.id.clone(),
+                    method_id: None,
+                    damage,
+                });
+                if application.fatal {
+                    events.push(DomainEvent::PlayerDied {
+                        source_kind_id: definition.id.clone(),
+                        method_id: None,
+                        damage,
+                    });
+                    return true;
+                }
+                continue;
+            }
+            let duration = damage.applied.saturating_mul(7) / 4;
+            if duration <= 0 || self.player_status_immunities().contains(STATUS_POISON) {
+                continue;
+            }
+            let duration = u32::try_from(duration).unwrap_or(u32::MAX);
+            apply_status(
+                &mut self.player.statuses,
+                monster_combat::melee_status(STATUS_POISON, duration, &definition.id),
+            );
+            events.push(DomainEvent::MonsterContactAuraApplied {
+                source_kind_id: definition.id.clone(),
+                status_kind_id: STATUS_POISON.to_owned(),
+                duration,
+            });
         }
-        let raw = self.roll_damage(aura.damage_dice, aura.damage_sides);
-        let duration = resolve_damage(
-            DamagePacket::new(raw, DamageType::from(aura.damage_type)),
-            self.effective_player_resistances()
-                .level(DamageType::from(aura.damage_type)),
-        )
-        .applied
-        .saturating_mul(7)
-            / 4;
-        if duration <= 0 || self.player_status_immunities().contains(STATUS_POISON) {
-            return;
-        }
-        let duration = u32::try_from(duration).unwrap_or(u32::MAX);
-        apply_status(
-            &mut self.player.statuses,
-            monster_combat::melee_status(STATUS_POISON, duration, &definition.id),
-        );
-        events.push(DomainEvent::MonsterContactAuraApplied {
-            source_kind_id: definition.id.clone(),
-            status_kind_id: STATUS_POISON.to_owned(),
-            duration,
-        });
+        false
     }
 
     pub(super) fn resolve_confusing_strike(

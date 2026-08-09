@@ -1,0 +1,75 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 300,
+    "maxDepth": 60,
+    "rarity": 1
+  },
+  "attack": 4,
+  "contactAuras": [
+    {
+      "damageDice": 1,
+      "damageSides": 2,
+      "damageType": "electricity"
+    }
+  ],
+  "damageDice": 8,
+  "damageSides": 8,
+  "damageType": "electricity",
+  "defense": 3,
+  "descriptionKey": "actor-demo-ball-lightning-description",
+  "experienceValue": 50,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "*",
+  "hitPointDice": {
+    "dice": 6,
+    "sides": 6
+  },
+  "id": "demo.actor.ball-lightning",
+  "level": 17,
+  "light": {
+    "intrinsic": true,
+    "radius": 2
+  },
+  "maxHp": 21,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 8,
+            "damageSides": 8,
+            "damageType": "electricity",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.explode",
+        "selfDestructs": true,
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "nameKey": "actor-demo-ball-lightning-name",
+  "resistances": {
+    "electricity": "immune"
+  },
+  "role": "monster",
+  "speed": 120,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "legacy-import",
+    "nonliving",
+    "warrens"
+  ]
+}

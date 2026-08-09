@@ -1,0 +1,93 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "habitats": [
+      "snow"
+    ],
+    "legacyIndex": 1249,
+    "maxDepth": 80,
+    "randomMovementPercent": 25,
+    "rarity": 2
+  },
+  "attack": 5,
+  "contactAuras": [
+    {
+      "damageDice": 1,
+      "damageSides": 2,
+      "damageType": "cold"
+    }
+  ],
+  "damageDice": 2,
+  "damageSides": 7,
+  "damageType": "cold",
+  "defense": 3,
+  "descriptionKey": "actor-demo-frost-spirit-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 90,
+  "formatVersion": 1,
+  "glyph": "E",
+  "hitPointDice": {
+    "dice": 10,
+    "sides": 10
+  },
+  "id": "demo.actor.frost-spirit",
+  "level": 20,
+  "maxHp": 55,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 2,
+            "damageSides": 7,
+            "damageType": "cold",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 2,
+            "damageSides": 7,
+            "damageType": "cold",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "nameKey": "actor-demo-frost-spirit-name",
+  "resistances": {
+    "cold": "immune",
+    "fire": "vulnerable",
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 120,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "evil",
+    "legacy-import",
+    "nonliving",
+    "spirit",
+    "warrens"
+  ]
+}

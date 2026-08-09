@@ -1,0 +1,64 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 324,
+    "maxDepth": 40,
+    "rarity": 1
+  },
+  "attack": 4,
+  "damageDice": 4,
+  "damageSides": 4,
+  "damageType": "fire",
+  "defense": 1,
+  "descriptionKey": "actor-demo-red-mold-description",
+  "experienceValue": 64,
+  "formatVersion": 1,
+  "glyph": "m",
+  "hitPointDice": {
+    "dice": 17,
+    "sides": 8
+  },
+  "id": "demo.actor.red-mold",
+  "level": 19,
+  "maxHp": 76,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 4,
+            "damageSides": 4,
+            "damageType": "fire",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "modes": [
+      "swim"
+    ],
+    "neverMoves": true
+  },
+  "nameKey": "actor-demo-red-mold-name",
+  "resistances": {
+    "fire": "resistant",
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 110,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "legacy-import",
+    "mold",
+    "warrens"
+  ]
+}

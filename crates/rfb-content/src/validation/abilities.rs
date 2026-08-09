@@ -142,6 +142,22 @@ pub(super) fn validate_abilities(
                                 && actor_tag_values.contains(category)
                         })
                 }
+                AbilityEffectDefinition::JumpDamage {
+                    damage_dice,
+                    damage_sides,
+                    damage_multiplier_numerator,
+                    damage_multiplier_denominator,
+                    radius,
+                    blink_radius,
+                    ..
+                } => {
+                    (1..=100).contains(damage_dice)
+                        && (1..=10_000).contains(damage_sides)
+                        && (1..=100).contains(damage_multiplier_numerator)
+                        && (1..=100).contains(damage_multiplier_denominator)
+                        && (1..=16).contains(radius)
+                        && (1..=64).contains(blink_radius)
+                }
                 AbilityEffectDefinition::BeamDamage {
                     damage_dice,
                     damage_sides,
@@ -215,7 +231,8 @@ pub(super) fn validate_abilities(
                 AbilityEffectDefinition::TeleportSelf { minimum_distance } => {
                     (1..=64).contains(minimum_distance)
                 }
-                AbilityEffectDefinition::TeleportTarget => true,
+                AbilityEffectDefinition::TeleportTarget
+                | AbilityEffectDefinition::TeleportLevel => true,
                 AbilityEffectDefinition::Summon {
                     actor_kind_id,
                     count,
@@ -580,6 +597,7 @@ pub(super) fn validate_abilities(
             | AbilityEffectDefinition::TeleportAway { .. }
             | AbilityEffectDefinition::DrainResource { .. }
             | AbilityEffectDefinition::Amnesia
+            | AbilityEffectDefinition::TeleportLevel
             | AbilityEffectDefinition::DrainLife { .. }
             | AbilityEffectDefinition::DeathRay { .. }
             | AbilityEffectDefinition::RandomChoice { .. } => projectile_target_rule,
@@ -594,6 +612,7 @@ pub(super) fn validate_abilities(
             AbilityEffectDefinition::AreaDamage { .. } => {
                 self_target_rule || projectile_target_rule
             }
+            AbilityEffectDefinition::JumpDamage { .. } => self_target_rule,
             AbilityEffectDefinition::Control { .. } => projectile_target_rule,
             AbilityEffectDefinition::BreathDamage { .. } => projectile_target_rule,
             AbilityEffectDefinition::Teleport => {
@@ -792,7 +811,8 @@ pub(super) fn validate_abilities(
                 | AbilityEffectDefinition::CurseDamage { .. }
                 | AbilityEffectDefinition::TeleportAway { .. }
                 | AbilityEffectDefinition::DrainResource { .. }
-                | AbilityEffectDefinition::Amnesia => projectile_target,
+                | AbilityEffectDefinition::Amnesia
+                | AbilityEffectDefinition::TeleportLevel => projectile_target,
                 AbilityEffectDefinition::DarkenRoom => room_target,
                 AbilityEffectDefinition::ConeDamage { .. }
                 | AbilityEffectDefinition::BreathDamage { .. } => {
@@ -802,7 +822,8 @@ pub(super) fn validate_abilities(
                 AbilityEffectDefinition::Heal { .. }
                 | AbilityEffectDefinition::AggravateMonsters
                 | AbilityEffectDefinition::Summon { .. }
-                | AbilityEffectDefinition::SummonCategory { .. } => self_target,
+                | AbilityEffectDefinition::SummonCategory { .. }
+                | AbilityEffectDefinition::JumpDamage { .. } => self_target,
                 AbilityEffectDefinition::ApplyStatus { .. }
                 | AbilityEffectDefinition::RemoveStatus { .. } => self_target || projectile_target,
                 AbilityEffectDefinition::BlinkSelf { .. }

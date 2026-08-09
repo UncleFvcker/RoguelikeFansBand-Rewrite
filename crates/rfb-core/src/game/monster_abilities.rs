@@ -351,6 +351,116 @@ impl Game {
         }
     }
 
+    #[allow(clippy::too_many_arguments)]
+    pub(super) fn resolve_monster_jump_damage_plan(
+        &mut self,
+        source_index: usize,
+        source_entity_id: &str,
+        source_kind_id: &str,
+        plan: &MonsterAbilityPlan,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> MonsterAbilityPlanResolution {
+        let MonsterAbilityTargetPlan::JumpDamage {
+            affected_positions,
+            destinations,
+        } = &plan.target
+        else {
+            unreachable!("monster jump damage executor requires a jump target plan")
+        };
+        let AbilityEffectDefinition::JumpDamage {
+            damage_dice,
+            damage_sides,
+            damage_multiplier_numerator,
+            damage_multiplier_denominator,
+            damage_type,
+            ..
+        } = &plan.ability.effect
+        else {
+            unreachable!("monster jump damage plan must retain a jump damage effect")
+        };
+        let origin = self.entities[source_index].position;
+        let raw_damage = self
+            .roll_damage(*damage_dice, *damage_sides)
+            .saturating_mul(i32::from(*damage_multiplier_numerator))
+            .saturating_div(i32::from(*damage_multiplier_denominator))
+            .max(0);
+        let target_actors = self
+            .monster_hostile_targets(source_index)
+            .into_iter()
+            .filter(|target| affected_positions.contains(&target.position()))
+            .collect::<Vec<_>>();
+        let mut targets = Vec::with_capacity(target_actors.len());
+        for target in target_actors {
+            let position = target.position();
+            let distance = origin
+                .x
+                .abs_diff(position.x)
+                .max(origin.y.abs_diff(position.y));
+            let prepared = rfb_area_damage(raw_damage, distance);
+            let effect = self.resolve_monster_damage_to_hostile(
+                source_entity_id,
+                source_kind_id,
+                &plan.ability.id,
+                0,
+                raw_damage,
+                prepared,
+                DamageType::from(*damage_type),
+                &target,
+                events,
+            );
+            changed.insert(position);
+            targets.push(MonsterAbilityTargetResolutionDto {
+                target_entity_id: target.entity_id().to_owned(),
+                target_kind_id: target.kind_id().to_owned(),
+                target_position: position,
+                effects: vec![effect],
+            });
+        }
+        self.remove_defeated_monster_targets(
+            targets
+                .iter()
+                .map(|target| target.target_entity_id.as_str()),
+            events,
+            changed,
+            removed_entities,
+        );
+
+        let choice = usize::try_from(
+            self.rng
+                .bounded(u64::try_from(destinations.len()).expect("candidate count fits")),
+        )
+        .expect("bounded draw fits usize");
+        let destination = destinations[choice];
+        let source_index = self
+            .entities
+            .iter()
+            .position(|entity| entity.id == source_entity_id)
+            .expect("jumping monster must remain on the floor");
+        self.entities[source_index].position = destination;
+        changed.insert(origin);
+        changed.insert(destination);
+        events.push(DomainEvent::MonsterBlinked {
+            source_kind_id: source_kind_id.to_owned(),
+            resolution: MonsterDisplacementResolutionDto {
+                actor_id: source_entity_id.to_owned(),
+                from: origin,
+                to: destination,
+            },
+        });
+
+        MonsterAbilityPlanResolution {
+            target_entity_id: source_entity_id.to_owned(),
+            target_kind_id: source_kind_id.to_owned(),
+            affected_positions: affected_positions.clone(),
+            summon: None,
+            effects: Vec::new(),
+            targets,
+            trace: None,
+        }
+    }
+
     pub(super) fn resolve_monster_self_effects(
         &mut self,
         source_index: usize,
@@ -490,6 +600,7 @@ impl Game {
                 }
             }
             MonsterAbilityTargetPlan::Projectile { target, trace } => {
+                let floor_id = self.current_floor_id.clone();
                 let effects = self.resolve_monster_hostile_effects(
                     &source_entity_id,
                     source_kind_id,
@@ -498,25 +609,34 @@ impl Game {
                     events,
                     changed,
                 );
-                changed.insert(target.position());
+                let transitioned = self.current_floor_id != floor_id;
+                if !transitioned {
+                    changed.insert(target.position());
+                }
                 let targets = vec![MonsterAbilityTargetResolutionDto {
                     target_entity_id: target.entity_id().to_owned(),
                     target_kind_id: target.kind_id().to_owned(),
                     target_position: target.position(),
                     effects: effects.clone(),
                 }];
-                self.remove_defeated_monster_targets(
-                    targets
-                        .iter()
-                        .map(|target| target.target_entity_id.as_str()),
-                    events,
-                    changed,
-                    removed_entities,
-                );
+                if !transitioned {
+                    self.remove_defeated_monster_targets(
+                        targets
+                            .iter()
+                            .map(|target| target.target_entity_id.as_str()),
+                        events,
+                        changed,
+                        removed_entities,
+                    );
+                }
                 MonsterAbilityPlanResolution {
                     target_entity_id: target.entity_id().to_owned(),
                     target_kind_id: target.kind_id().to_owned(),
-                    affected_positions: vec![target.position()],
+                    affected_positions: if transitioned {
+                        Vec::new()
+                    } else {
+                        vec![target.position()]
+                    },
                     summon: None,
                     effects,
                     targets,
@@ -524,6 +644,15 @@ impl Game {
                 }
             }
             MonsterAbilityTargetPlan::Area { .. } => self.resolve_monster_area_damage_plan(
+                source_index,
+                &source_entity_id,
+                source_kind_id,
+                plan,
+                events,
+                changed,
+                removed_entities,
+            ),
+            MonsterAbilityTargetPlan::JumpDamage { .. } => self.resolve_monster_jump_damage_plan(
                 source_index,
                 &source_entity_id,
                 source_kind_id,
@@ -1099,6 +1228,46 @@ impl Game {
         resolutions
     }
 
+    fn monster_curse_save(&mut self, source_kind_id: &str, events: &mut Vec<DomainEvent>) -> bool {
+        let ability_stat = self.player_derived_stats().saving_throw_skill;
+        let caster_level = self
+            .content
+            .actor(source_kind_id)
+            .map_or(1, |definition| definition.level);
+        let mut difficulty_pipeline = DerivedStatsPipeline::new();
+        difficulty_pipeline.add(
+            StatKind::ActionDifficulty,
+            StatLayer::Environment,
+            source_kind_id,
+            i32::try_from(caster_level).unwrap_or(i32::MAX),
+        );
+        let check = resolve_check(
+            &mut self.rng,
+            CheckContext {
+                kind: CheckKind::SavingThrow,
+                actor_id: self.player.id.clone(),
+                target_id: Some(source_kind_id.to_owned()),
+                ability: ability_stat,
+                difficulty: difficulty_pipeline
+                    .resolve(StatKind::ActionDifficulty, StatBounds::NON_NEGATIVE),
+            },
+        );
+        let succeeded = check.succeeded();
+        let skill_id = self
+            .content
+            .skill_by_kind(SkillKind::SavingThrow)
+            .expect("validated saving throw skill must remain available")
+            .id
+            .clone();
+        events.push(DomainEvent::SavingThrowChecked {
+            source_kind_id: source_kind_id.to_owned(),
+            position: self.player.position,
+            succeeded,
+            resolution: check.to_dto(skill_id),
+        });
+        succeeded
+    }
+
     fn resolve_monster_player_effects(
         &mut self,
         source_entity_id: &str,
@@ -1156,43 +1325,7 @@ impl Game {
                     // A successful saving throw negates the curse before any
                     // damage dice are drawn; difficulty follows the caster's
                     // definition level.
-                    let ability_stat = self.player_derived_stats().saving_throw_skill;
-                    let caster_level = self
-                        .content
-                        .actor(source_kind_id)
-                        .map_or(1, |definition| definition.level);
-                    let mut difficulty_pipeline = DerivedStatsPipeline::new();
-                    difficulty_pipeline.add(
-                        StatKind::ActionDifficulty,
-                        StatLayer::Environment,
-                        source_kind_id,
-                        i32::try_from(caster_level).unwrap_or(i32::MAX),
-                    );
-                    let check = resolve_check(
-                        &mut self.rng,
-                        CheckContext {
-                            kind: CheckKind::SavingThrow,
-                            actor_id: self.player.id.clone(),
-                            target_id: Some(source_kind_id.to_owned()),
-                            ability: ability_stat,
-                            difficulty: difficulty_pipeline
-                                .resolve(StatKind::ActionDifficulty, StatBounds::NON_NEGATIVE),
-                        },
-                    );
-                    let succeeded = check.succeeded();
-                    let skill_id = self
-                        .content
-                        .skill_by_kind(SkillKind::SavingThrow)
-                        .expect("validated saving throw skill must remain available")
-                        .id
-                        .clone();
-                    events.push(DomainEvent::SavingThrowChecked {
-                        source_kind_id: source_kind_id.to_owned(),
-                        position: self.player.position,
-                        succeeded,
-                        resolution: check.to_dto(skill_id),
-                    });
-                    if succeeded {
+                    if self.monster_curse_save(source_kind_id, events) {
                         AbilityEffectResolutionDto::Skipped {
                             effect_index,
                             reason: AbilityEffectSkipReasonDto::Saved,
@@ -1212,6 +1345,60 @@ impl Game {
                             DamageType::Curse,
                             events,
                         )
+                    }
+                }
+                AbilityEffectDefinition::TeleportLevel => {
+                    let nexus = self.effective_player_resistances().level(DamageType::Nexus);
+                    self.record_monster_player_resistance(
+                        source_entity_id,
+                        DamageType::Nexus,
+                        nexus,
+                    );
+                    let nexus_resisted = self.rng.bounded(55)
+                        < u64::try_from(nexus.reduction_percent().max(0)).unwrap_or(0);
+                    if nexus_resisted || self.monster_curse_save(source_kind_id, events) {
+                        AbilityEffectResolutionDto::Skipped {
+                            effect_index,
+                            reason: AbilityEffectSkipReasonDto::Saved,
+                        }
+                    } else {
+                        let (upward_targets, downward_targets) = self.teleport_level_targets();
+                        let prefer_upward = self.rng.bounded(2) == 0;
+                        let targets = if prefer_upward {
+                            if upward_targets.is_empty() {
+                                downward_targets
+                            } else {
+                                upward_targets
+                            }
+                        } else if downward_targets.is_empty() {
+                            upward_targets
+                        } else {
+                            downward_targets
+                        };
+                        let target_index = if targets.len() == 1 {
+                            0
+                        } else {
+                            usize::try_from(self.rng.bounded(targets.len() as u64))
+                                .expect("bounded floor target index must fit usize")
+                        };
+                        let target = targets[target_index].clone();
+                        let from_floor_id = self.current_floor_id.clone();
+                        let transition = self
+                            .transition_floor(
+                                target.floor_id,
+                                target.arrival_connection_id,
+                                target.departure_connection_id,
+                                false,
+                            )
+                            .expect("planned monster level teleport must remain valid")
+                            .expect("planned monster level teleport must remain available");
+                        let to_floor_id = transition.to_floor_id.clone();
+                        self.record_floor_transition(transition, events, changed);
+                        AbilityEffectResolutionDto::TeleportLevel {
+                            effect_index,
+                            from_floor_id,
+                            to_floor_id,
+                        }
                     }
                 }
                 AbilityEffectDefinition::DrainResource { amount } => {
@@ -1267,43 +1454,7 @@ impl Game {
                 AbilityEffectDefinition::Amnesia => {
                     // The saving throw gates the memory wipe exactly like the
                     // curse family; success costs no further RNG.
-                    let ability_stat = self.player_derived_stats().saving_throw_skill;
-                    let caster_level = self
-                        .content
-                        .actor(source_kind_id)
-                        .map_or(1, |definition| definition.level);
-                    let mut difficulty_pipeline = DerivedStatsPipeline::new();
-                    difficulty_pipeline.add(
-                        StatKind::ActionDifficulty,
-                        StatLayer::Environment,
-                        source_kind_id,
-                        i32::try_from(caster_level).unwrap_or(i32::MAX),
-                    );
-                    let check = resolve_check(
-                        &mut self.rng,
-                        CheckContext {
-                            kind: CheckKind::SavingThrow,
-                            actor_id: self.player.id.clone(),
-                            target_id: Some(source_kind_id.to_owned()),
-                            ability: ability_stat,
-                            difficulty: difficulty_pipeline
-                                .resolve(StatKind::ActionDifficulty, StatBounds::NON_NEGATIVE),
-                        },
-                    );
-                    let succeeded = check.succeeded();
-                    let skill_id = self
-                        .content
-                        .skill_by_kind(SkillKind::SavingThrow)
-                        .expect("validated saving throw skill must remain available")
-                        .id
-                        .clone();
-                    events.push(DomainEvent::SavingThrowChecked {
-                        source_kind_id: source_kind_id.to_owned(),
-                        position: self.player.position,
-                        succeeded,
-                        resolution: check.to_dto(skill_id),
-                    });
-                    if succeeded {
+                    if self.monster_curse_save(source_kind_id, events) {
                         AbilityEffectResolutionDto::Skipped {
                             effect_index,
                             reason: AbilityEffectSkipReasonDto::Saved,
@@ -1458,6 +1609,7 @@ impl Game {
                 // Candidate kinds enumerate in stable id order and are
                 // filtered without RNG; the per-summon kind draws happen at
                 // execution time.
+                let current_task_id = self.current_floor_task_id();
                 let candidate_kind_ids = self
                     .content
                     .actor_definitions()
@@ -1467,6 +1619,12 @@ impl Game {
                             && definition.level <= u32::from(*maximum_level)
                             && definition.tags.iter().any(|tag| tag == category)
                             && !definition.tags.iter().any(|tag| tag == "guardian")
+                            && definition.allocation.as_ref().is_none_or(|allocation| {
+                                monster_ecology::actor_allocation_matches_task(
+                                    allocation,
+                                    current_task_id,
+                                )
+                            })
                             && (!unique || self.unique_actor_kind_is_available(&definition.id))
                     })
                     .map(|definition| definition.id.clone())
@@ -1529,6 +1687,54 @@ impl Game {
                 }
                 (MonsterAbilityTargetPlan::BlinkSelf { destinations }, 0, 0)
             }
+            AbilityEffectDefinition::JumpDamage {
+                radius,
+                blink_radius,
+                ..
+            } => {
+                let affected_positions = self
+                    .area_damage_cells(origin, *radius)
+                    .into_iter()
+                    .map(|(_, position)| position)
+                    .collect::<Vec<_>>();
+                let enemy_target_count = u16::try_from(
+                    self.monster_hostile_targets(index)
+                        .into_iter()
+                        .filter(|target| affected_positions.contains(&target.position()))
+                        .count(),
+                )
+                .unwrap_or(u16::MAX);
+                if enemy_target_count == 0 {
+                    return Err(MonsterAbilityPlanRejection {
+                        reason: MonsterAbilityRejectionReasonDto::InvalidTarget,
+                        enemy_target_count: 0,
+                        friendly_risk_count: 0,
+                    });
+                }
+                let blink_radius = u32::from(*blink_radius);
+                let destinations = self.displacement_destinations(index, |position| {
+                    origin
+                        .x
+                        .abs_diff(position.x)
+                        .max(origin.y.abs_diff(position.y))
+                        <= blink_radius
+                });
+                if destinations.is_empty() {
+                    return Err(MonsterAbilityPlanRejection {
+                        reason: MonsterAbilityRejectionReasonDto::NoSpace,
+                        enemy_target_count,
+                        friendly_risk_count: 0,
+                    });
+                }
+                (
+                    MonsterAbilityTargetPlan::JumpDamage {
+                        affected_positions,
+                        destinations,
+                    },
+                    enemy_target_count,
+                    0,
+                )
+            }
             AbilityEffectDefinition::TeleportSelf { minimum_distance } => {
                 let player = self.player.position;
                 let escape_candidates = |minimum: u32| {
@@ -1564,6 +1770,7 @@ impl Game {
             | AbilityEffectDefinition::TeleportAway { .. }
             | AbilityEffectDefinition::DrainResource { .. }
             | AbilityEffectDefinition::Amnesia
+            | AbilityEffectDefinition::TeleportLevel
             | AbilityEffectDefinition::DarkenRoom
             | AbilityEffectDefinition::ApplyStatus { .. }
             | AbilityEffectDefinition::RemoveStatus { .. }
@@ -1649,6 +1856,29 @@ impl Game {
                         positions: positions.clone(),
                     },
                     positions,
+                )
+            }
+            AbilityEffectDefinition::TeleportLevel => {
+                if !target.is_player() {
+                    return Err(MonsterAbilityPlanRejection {
+                        reason: MonsterAbilityRejectionReasonDto::InvalidTarget,
+                        enemy_target_count: 0,
+                        friendly_risk_count: 0,
+                    });
+                }
+                let (upward_targets, downward_targets) = self.teleport_level_targets();
+                if upward_targets.is_empty() && downward_targets.is_empty() {
+                    return Err(MonsterAbilityPlanRejection {
+                        reason: MonsterAbilityRejectionReasonDto::NoCandidates,
+                        enemy_target_count: 0,
+                        friendly_risk_count: 0,
+                    });
+                }
+                let trace =
+                    self.monster_projectile_trace(source_index, ability, &target, true, false)?;
+                (
+                    MonsterAbilityTargetPlan::Projectile { target, trace },
+                    vec![target_position],
                 )
             }
             AbilityEffectDefinition::AreaDamage { radius, .. } => {

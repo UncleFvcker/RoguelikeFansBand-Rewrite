@@ -184,7 +184,9 @@ impl Game {
         let target_position = monster_plan_target(&plan.target).map(MonsterHostileTarget::position);
         let distance_multiplier = if !matches!(
             &plan.target,
-            MonsterAbilityTargetPlan::SelfTarget | MonsterAbilityTargetPlan::Summon { .. }
+            MonsterAbilityTargetPlan::SelfTarget
+                | MonsterAbilityTargetPlan::JumpDamage { .. }
+                | MonsterAbilityTargetPlan::Summon { .. }
         ) && target_position.is_some_and(|position| {
             origin
                 .x
@@ -249,6 +251,7 @@ impl Game {
                 AbilityEffectDefinition::ApplyStatus {
                     resistance_type, ..
                 } => resistance_type.map(DamageType::from),
+                AbilityEffectDefinition::TeleportLevel => Some(DamageType::Nexus),
                 _ => None,
             })
             .filter_map(|damage_type| {
@@ -277,6 +280,7 @@ impl Game {
         if matches!(
             target,
             MonsterAbilityTargetPlan::Area { .. }
+                | MonsterAbilityTargetPlan::JumpDamage { .. }
                 | MonsterAbilityTargetPlan::Beam { .. }
                 | MonsterAbilityTargetPlan::Cone { .. }
                 | MonsterAbilityTargetPlan::TerrainTransform { .. }
@@ -314,6 +318,7 @@ impl Game {
                     useful = true;
                 }
                 AbilityEffectDefinition::DarkenRoom if player_target => useful = true,
+                AbilityEffectDefinition::TeleportLevel if player_target => useful = true,
                 AbilityEffectDefinition::BlinkSelf { .. }
                 | AbilityEffectDefinition::TeleportSelf { .. } => useful = true,
                 AbilityEffectDefinition::AggravateMonsters => useful = true,
@@ -405,6 +410,14 @@ impl Game {
                     Some(source.kind_id.clone()),
                     Some(source.position),
                     Vec::new(),
+                ),
+                MonsterAbilityTargetPlan::JumpDamage {
+                    affected_positions, ..
+                } => (
+                    Some(source.id.clone()),
+                    Some(source.kind_id.clone()),
+                    Some(source.position),
+                    affected_positions.clone(),
                 ),
                 MonsterAbilityTargetPlan::Summon { positions }
                 | MonsterAbilityTargetPlan::SummonCategory { positions, .. } => (

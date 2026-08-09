@@ -1,6 +1,6 @@
 # 待实现内容清单
 
-状态：基于 contract-v1–v214、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
+状态：基于 contract-v1–v226、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
 
 本文件只记录已经在现有设计或原版对比中明确出现、但尚未实现的内容。长期设想仍保留在 [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)，这里用于跟踪可以实际排入后续 contract 的缺口。
 
@@ -124,6 +124,67 @@ contract-v214 接入铁甲虫，正式包 actor 增至 332、ability 保持 143�
 ability/device bolt；协议 1.148 与 State Hash Schema v70 不变。黏土魔像仍等待
 玩家侧碎岩攻击，魔法蘑菇丛仍等待 `ANTI_MAGIC`/`POLYMORPH`，鼠巨魔仍等待
 真实下水道任务的 `COMPOST` 分配。
+
+contract-v216 直接接入粉红惧妖、铁锈怪、兽人队长、凝胶方块、巨型绿蜻蜓、
+巨鸣蜂、蜥蜴人、乌尔方之子乌尔法斯特、锤头鲨、狂战士、食人魔兽人和
+半兽人狂战士。正式包 actor 增至 344、ability 保持 143、严格同步增至 279；
+全部复用既有机制，协议 1.151 与 State Hash Schema v72 不变。十六级剩余的
+恐爪怪、夸塞魔、南蛮大王木鹿大王、老鼠王子尼祖基尔和布伦比野马继续按
+`HURT_ROCK`、`TELE_LEVEL`、`S_SPIDER`、下水道归属和 `CAN_CLIMB` 分批收口。
+
+contract-v217 以现有 `summon-category` 接入南蛮大王木鹿大王，并给导入器增加
+`S_SPIDER → spider` 的单条窄映射；正式包 actor 增至 345、ability 增至 145、
+严格同步增至 280。
+
+contract-v218 完成这四项十六级阻塞：恐爪怪以现有解离伤害记录 `HURT_ROCK`
+易伤，布伦比野马通过 `climb` 进入山地/冰川，夸塞魔以协议 1.152 的窄
+`teleport-level` effect 跨层，尼祖基尔和既有瘟疫鼠以 allocation `taskId`
+限定到 `demo.task.the-sewer`。完整下水道任务、地图和奖励仍是独立后续切片。
+
+contract-v219 直接接入斯芬克斯、森林巨魔、2头海德拉、沼泽怪物、
+水元素精灵、巨型粉红蝎、土元素精灵和南蛮大王兀突骨。正式包 actor 增至
+357、ability 保持 147、严格同步增至 292；全部复用现有能力和机制，协议
+1.152 与 State Hash Schema v72 不变。十七级剩余参数化施法、元素接触光环
+和矮人掉落主题继续分批收口。
+
+contract-v220 接入丘陵巨人、小恶魔、猫又、灰先知和矮人纳尔。正式包 actor
+增至 362、ability 增至 152、严格同步增至 297；五条新 ability 只参数化现有
+伤害、召唤和治疗 effect。`DROP_DWARF` 只增加一张引用现有物品的 Dwarf 掉落
+表，不建立新掉落框架。
+
+contract-v221 接入冰冻球、跳跃火球和球状闪电，正式包 actor 增至 365、严格
+同步增至 300，ability 保持 152。现有 `contactAura` 只窄扩展火焰、冰冷和闪电
+即时抗性伤害，复用伤害事务与事件；原有毒素持续状态和三只怪物的 `8d8` 同元素
+死亡爆炸保持不变。十七级怪物完成收口。
+
+contract-v222 按机制风险而非等级直接接入 33 只无怪物施法怪物，正式包 actor
+增至 398、严格同步增至 333 条，ability 保持 152。现有接触光环、繁殖、死亡
+爆炸、碎岩易伤、毁墙/换位、骑乘、水生与掉落结构直接承载，协议 1.152、
+State Hash Schema v72 不变。带参数施法、跳跃光、复合光环、变色龙和恐怖凝视
+继续留在 P38–P41。
+
+contract-v223 接入 15 只只使用现有怪物能力的 P37B 怪物，正式包 actor 增至
+413、严格同步增至 348 条，ability 保持 152。火、冰、闪电、酸、毒素和声音
+吐息，以及 `blink`、`drag`、`shriek`、状态与诅咒能力全部直接复用；附身者
+`DETECT_MONSTERS` 不进入 casting profile。协议 1.152、State Hash Schema v72
+不变。
+
+contract-v224 接入 11 只 P38A 参数化伤害怪物，正式包 actor 增至 424、严格
+同步增至 359 条，ability 增至 163。新增内容记录只承载既有 bolt、ball 和
+breath effect 的权威骰值或生命比例上限；附身者 `DETECT_MONSTERS`、
+`DETECT_TRAPS` 不进入 casting profile。协议 1.152、State Hash Schema v72
+不变。
+
+contract-v225 接入 6 只 P38B 治疗与召唤参数怪物，正式包 actor 增至 430、
+严格同步增至 365 条，ability 增至 171。新增内容只承载既有治疗、分类召唤、
+同族召唤和伤害 effect 的权威参数；附身者侦测、地图和祝福令牌不进入 casting
+profile。协议 1.152、State Hash Schema v72 不变。
+
+contract-v226 接入闪烁的灯光与黏糊恶心女王，正式包 actor 增至 432、严格同步
+增至 367 条，ability 增至 174。`jump-damage` 只承载原版“施法者中心范围光伤后
+闪现”的固定顺序；`contactAuras` 只把单光环字段迁移为声明有序列表，并按毒素、
+酸性顺序复用现有抗性、状态、伤害和死亡中止。协议 1.152、State Hash Schema v72
+不变。
 
 荒野 W0 已导入 `master:w_info.txt` 的 `99x66` normal 世界图、15 类地形、
 危险等级、道路和起点，并只把现有 Outpost/Warrens 绑定为正式地点。W1 已完成

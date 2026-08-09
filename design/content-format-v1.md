@@ -308,6 +308,20 @@ contract-v213 / 包 1.209.0 严格同步纳垢携疫者与侏儒法师，生成 
 
 contract-v214 / 包 1.210.0 为 actor 增加默认 false、仅怪物可用的 `reflectsBolts`，只控制单体 ability/device bolt 的 75% 反射入口；反射方向与命中继续由核心投射和伤害管线解释。铁甲虫进入严格同步。当前包共 86 terrain、332 actors、204 items、143 abilities，严格同步 267 条，内容 hash 为 `b6f4741928ed2c1ae56f65d5614b06a25a200cdcb2eb9abe44f96fe1da424e00`。协议 1.148 与 state hash Schema v70 不变。
 
+contract-v216 / 包 1.212.0 直接接入 12 只十六级怪物，全部复用既有 actor、近战、分配、掉落与怪物施法内容；`DETECT_OBJECTS`、`MULTIPLY` 和 `BERSERK` 的附身者提示不生成怪物能力。当前包共 88 terrain、344 actors、249 items、143 abilities，严格同步 279 条，内容 hash 为 `08dfc525ebb4f1f2af4e110dcc1490ffc37647f63feb088c0dfa4e8113e22f3f`。协议 1.151 与 state hash Schema v72 不变。
+
+contract-v217 / 包 1.213.0 给既有分类召唤白名单增加 `S_SPIDER → spider`，并接入南蛮大王木鹿大王。生成的 `summon-ant-l16-1d3-1` 与 `summon-spider-l16-1d3-1` ability 及其 Ability Program 只携带现有 `summon-category` 的权威参数。当前包共 88 terrain、345 actors、249 items、145 abilities，严格同步 280 条，内容 hash 为 `a5ff0d74568c28b7ac966b6a0f6dcbef64a6cb3cc9fc004b3ba6abbc8829d1eb`。协议 1.151 与 state hash Schema v72 不变。
+
+contract-v218 / 包 1.214.0 接入恐爪怪、夸塞魔、老鼠王子尼祖基尔和布伦比野马。actor allocation 增加可选 `taskId`，只用于 `COMPOST → demo.task.the-sewer`；movement mode 增加 `climb`；`HURT_ROCK` 复用解离易伤；`TELE_LEVEL` 使用新的怪物专用 `teleport-level` effect。当前包共 88 terrain、349 actors、249 items、147 abilities，严格同步 284 条，内容 hash 为 `94b3ab337a895fc36e1240bd2107c4f39ba259b6c814080333ddaa441119b451`。协议 1.152，state hash Schema v72 不变。
+
+contract-v219 / 包 1.215.0 直接接入斯芬克斯、森林巨魔、2头海德拉、沼泽怪物、水元素精灵、巨型粉红蝎、土元素精灵和南蛮大王兀突骨。八条记录全部复用既有施法、近战、移动、再生、抗性、区域和掉落结构，不增加 ability 或 effect。当前包共 88 terrain、357 actors、249 items、147 abilities，严格同步 292 条，内容 hash 为 `795cf896433897af45dbf9b6d7f1519fbec70f8cf926843cefe4179a37f83f97`。协议 1.152，state hash Schema v72 不变。
+
+contract-v220 / 包 1.216.0 接入丘陵巨人、小恶魔、猫又、灰先知和矮人纳尔，生成五条使用既有 effect 的参数化 ability。`DROP_DWARF` 映射到一张只引用现有镐、铲、小型金属盾和护身符的正式掉落表。当前包共 88 terrain、362 actors、249 items、152 abilities、20 loot tables，严格同步 297 条，内容 hash 为 `1a3ff3f7f41da01cc0a0860393b4b6cab1d86d1861f8b32476d2841f095f13c8`。协议 1.152，state hash Schema v72 不变。
+
+contract-v221 / 包 1.217.0 接入冰冻球、跳跃火球和球状闪电。既有 `contactAura` 只窄扩展火焰、冰冷和闪电即时抗性伤害，按原版 17 级公式生成 `1d2`，毒素持续状态与 `8d8` 同元素死亡爆炸保持原路径。当前包共 88 terrain、365 actors、249 items、152 abilities、20 loot tables，严格同步 300 条，内容 hash 为 `d70909839615bb837a0b3ee4d348d29a887989f145d42c22aa90461dff67fcca`。协议 1.152，state hash Schema v72 不变。
+
+contract-v222 / 包 1.218.0 按机制风险直接接入 33 只无怪物施法怪物。现有 `contactAura`、繁殖、死亡爆炸、`HURT_ROCK`、毁墙/`MOVE_BODY`、骑乘、水生、群体、Unique 和掉落定义完整承载，不新增 ability、effect 或状态字段。当前包共 88 terrain、398 actors、249 items、152 abilities、20 loot tables，严格同步 333 条，内容 hash 为 `845f251ddaf432b3e870ae30a365a1777706051a1d9fcd37a6ae8d7f55d17de5`。协议 1.152，state hash Schema v72 不变。
+
 contract-v83 以 1.75.0 增加 `detect` 能力效果、Echo Pulse 与 Echo Sight；类别/半径、FOV 与隐藏投影筛选、稳定结果顺序、瞬时/持久知识边界由核心定义，持久结果复用 `revealedTerrain`，state hash 升至 Schema v36。
 
 contract-v84 以 1.76.0 增加 `transform-terrain` 能力效果、Echo Delving 与 Echo Rampart；来源/目标 terrain 集、范围、FOV/line of effect、占用格、连接/边界保护和原子写入由核心定义，地形继续复用既有 save/state hash 字段。
@@ -403,3 +417,31 @@ v1 使用受限字段操作，不使用依赖数组下标的通用 JSON Patch：
 - 待完成：多包依赖图、patch、locale 回退和已安装内容集合迁移。
 
 首个包的真实编译 hash 与 contract-v1 使用的早期占位 content hash 不同。运行时激活通过 `contract-v2` 和 state hash Schema v2 完成；背包、装备、物品实例、战斗、行动调度与状态抗性依次迁移到 contract-v3–v9。contract-v12 至 v21 依次建立近战、怪物 routine、投射、重量、知识和消耗品；contract-v22–v25 建立 affix、质量、loot table 与怪物携带物；contract-v26–v45 建立程序化楼层、地形交互、多层探索和任务状态机；contract-v46–v69 建立生成表、分阶段地貌、树状地牢、实例身份、campaign 和生命周期；contract-v70–v90 建立成长、构筑、玩家/怪物施法、召唤物与职业资源；contract-v91–v103 建立导入所需的法术族、抗性、身体槽、装备旗标和动态 affix；contract-v104–v107 完成 Death 四册；contract-v108–v149 继续建立设备与窄物品效果；contract-v150–v172 建立 Warrens 玩家流程、Outpost、物品/背包/负重和可选玩家能力策略；contract-v173–v180 完成 Warrens W1–W13。v177–v180 为 actor 加入有序 melee effects、死亡爆炸、terrain interaction、typed light 与 death drop，为 terrain 加入 `monsterDestroyToTerrainId`，为 item/affix 加入 `resistsMonsterDestruction`。当前 state hash 为 Schema v63；内置内容 hash 为 `fed9c01421e0ee68a6cde5d0b864aee32f4a218d58457cc0d0d06ab6b7d6334f`。
+
+contract-v223 / 包 1.219.0 接入 15 只只使用现有怪物能力的 P37B 怪物。
+当前包包含 88 种地形、413 种 actor、249 种物品、152 个能力和 20 张
+loot table；严格同步 348 条，内容 hash 为
+`c379c1b08743578fee07d0fb0678c3ce1a59ae080e62424ae01e84525ffd322a`。
+协议保持 1.152，State Hash Schema 保持 v72。
+
+contract-v224 / 包 1.220.0 接入 11 只 P38A 参数化伤害怪物。新增 11 条
+ability 和 ability program 仅保存现有 bolt、ball、breath effect 的权威参数。
+当前包包含 88 种地形、424 种 actor、249 种物品、163 个能力和 20 张 loot
+table；严格同步 359 条，内容 hash 为
+`60ccaee2d902a306b4e3615cfd22b61c98e41e5454af75af16c045566da8d82a`。
+协议保持 1.152，State Hash Schema 保持 v72。
+
+contract-v225 / 包 1.221.0 接入 6 只 P38B 治疗与召唤参数怪物。新增 8 条
+ability 和 ability program 仅保存现有治疗、分类召唤、同族召唤和伤害 effect
+的权威参数。当前包包含 88 种地形、430 种 actor、249 种物品、171 个能力和
+20 张 loot table；严格同步 365 条，内容 hash 为
+`acc9186760331c90d5c3218755950ac186460f234760b8e9e995645ec41caba7`。
+协议保持 1.152，State Hash Schema 保持 v72。
+
+contract-v226 / 包 1.222.0 接入闪烁的灯光与黏糊恶心女王。怪物专用
+`jump-damage` 固定先结算施法者中心范围光伤、后闪现；actor `contactAuras`
+以声明有序列表替代单光环字段，毒素与酸性分别复用既有状态、抗性、伤害和死亡
+中止。当前包包含 88 种地形、432 种 actor、249 种物品、174 个能力和 20 张
+loot table；严格同步 367 条，内容 hash 为
+`604d16879ffd80f5e678cc6363a900f3a9491fd8768ffd84f8ee4c3f940630d2`。
+协议保持 1.152，State Hash Schema 保持 v72。

@@ -1,0 +1,87 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 1029,
+    "maxDepth": 50,
+    "randomMovementPercent": 25,
+    "rarity": 2
+  },
+  "attack": 5,
+  "damageDice": 3,
+  "damageSides": 5,
+  "damageType": "physical",
+  "defense": 5,
+  "descriptionKey": "actor-demo-demonite-description",
+  "doorInteraction": {
+    "opens": true
+  },
+  "experienceValue": 250,
+  "formatVersion": 1,
+  "glyph": "u",
+  "hitPointDice": {
+    "dice": 20,
+    "sides": 10
+  },
+  "id": "demo.actor.demonite",
+  "level": 20,
+  "maxHp": 110,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 3,
+            "damageSides": 5,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 3,
+            "damageSides": 5,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.breath-cold-20-900-r2",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 10
+  },
+  "movement": {
+    "modes": [
+      "swim"
+    ]
+  },
+  "nameKey": "actor-demo-demonite-name",
+  "resistances": {
+    "cold": "resistant",
+    "fire": "resistant",
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 115,
+  "tags": [
+    "demon",
+    "evil",
+    "legacy-import",
+    "nonliving",
+    "warrens"
+  ]
+}

@@ -99,7 +99,7 @@
       "sourceIndex": 63,
       "id": "smeagol",
       "tags": ["hobbit", "thief", "warrens"],
-      "omittedFlags": ["CAN_SPEAK", "MALE", "POS_SEE_INVIS", "SMART"]
+      "omittedFlags": ["CAN_SPEAK", "MALE", "POS_SEE_INVIS"]
     },
     {
       "sourceIndex": 64,
@@ -797,7 +797,7 @@
       "sourceIndex": 138,
       "id": "robin-hood-the-outlaw",
       "tags": ["human", "warrens"],
-      "omittedFlags": ["CAN_SPEAK", "MALE", "NO_QUEST"]
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
     },
     {
       "sourceIndex": 1063,
@@ -959,7 +959,7 @@
       "sourceIndex": 180,
       "id": "orfax-son-of-boldor",
       "tags": ["warrens", "yeek"],
-      "omittedFlags": ["CAN_SPEAK", "MALE", "SMART"]
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
     },
     {
       "sourceIndex": 181,
@@ -1049,7 +1049,7 @@
       "sourceIndex": 1298,
       "id": "plague-rat",
       "tags": ["rat", "warrens"],
-      "omittedFlags": ["COMPOST", "POS_GAIN_AC"]
+      "omittedFlags": ["POS_GAIN_AC"]
     },
     {
       "sourceIndex": 219,
@@ -1211,13 +1211,13 @@
       "sourceIndex": 225,
       "id": "priest",
       "tags": ["humanoid", "warrens"],
-      "omittedFlags": ["MALE", "SMART"]
+      "omittedFlags": ["MALE"]
     },
     {
       "sourceIndex": 226,
       "id": "dark-elven-priest",
       "tags": ["dark-elf", "humanoid", "warrens"],
-      "omittedFlags": ["MALE", "POS_SEE_INVIS", "SMART"]
+      "omittedFlags": ["MALE", "POS_SEE_INVIS"]
     },
     {
       "sourceIndex": 231,
@@ -1253,7 +1253,7 @@
       "sourceIndex": 237,
       "id": "boldor-king-of-the-yeeks",
       "tags": ["warrens", "yeek"],
-      "omittedFlags": ["CAN_SPEAK", "MALE", "SMART"]
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
     },
     {
       "sourceIndex": 238,
@@ -1271,7 +1271,7 @@
       "sourceIndex": 241,
       "id": "druid",
       "tags": ["druid", "humanoid", "warrens"],
-      "omittedFlags": ["MALE", "SMART"]
+      "omittedFlags": ["MALE"]
     },
     {
       "sourceIndex": 243,
@@ -1295,7 +1295,7 @@
       "sourceIndex": 962,
       "id": "slime-mold",
       "tags": ["mold", "warrens"],
-      "omittedFlags": ["COLD_BLOOD", "NASTY_GLYPH", "SMART", "WEIRD_MIND"]
+      "omittedFlags": ["COLD_BLOOD", "NASTY_GLYPH", "WEIRD_MIND"]
     },
     {
       "sourceIndex": 107,
@@ -1385,7 +1385,7 @@
       "sourceIndex": 954,
       "id": "orcish-artillery",
       "tags": ["humanoid", "orc", "warrens"],
-      "omittedFlags": ["SMART"]
+      "omittedFlags": []
     },
     {
       "sourceIndex": 983,
@@ -1421,7 +1421,7 @@
       "sourceIndex": 240,
       "id": "illusionist",
       "tags": ["humanoid", "warrens"],
-      "omittedFlags": ["MALE", "SMART"]
+      "omittedFlags": ["MALE"]
     },
     {
       "sourceIndex": 262,
@@ -1511,7 +1511,7 @@
       "sourceIndex": 1003,
       "id": "the-ghost-q",
       "tags": ["ghost", "warrens"],
-      "omittedFlags": ["CAN_SPEAK", "COLD_BLOOD", "MALE", "NO_QUEST", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+      "omittedFlags": ["CAN_SPEAK", "COLD_BLOOD", "MALE", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
     },
     {
       "sourceIndex": 1028,
@@ -1614,6 +1614,606 @@
       "id": "buzzy-beetle",
       "tags": ["beetle", "warrens"],
       "omittedFlags": ["EMPTY_MIND", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 242,
+      "id": "pink-horror",
+      "tags": ["demon", "warrens"],
+      "omittedFlags": ["POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 284,
+      "id": "rust-monster",
+      "tags": ["rust-monster", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC", "STUPID", "WEIRD_MIND"]
+    },
+    {
+      "sourceIndex": 285,
+      "id": "orc-captain",
+      "tags": ["humanoid", "orc", "warrens"],
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
+    },
+    {
+      "sourceIndex": 286,
+      "id": "gelatinous-cube",
+      "tags": ["jelly", "warrens"],
+      "omittedFlags": ["COLD_BLOOD", "EMPTY_MIND", "POS_GAIN_AC", "STUPID"]
+    },
+    {
+      "sourceIndex": 287,
+      "id": "giant-green-dragon-fly",
+      "tags": ["insect", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC", "WEIRD_MIND"]
+    },
+    {
+      "sourceIndex": 289,
+      "id": "hummerhorn",
+      "tags": ["insect", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC", "WEIRD_MIND"]
+    },
+    {
+      "sourceIndex": 290,
+      "id": "lizardman",
+      "tags": ["humanoid", "reptile", "warrens"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 291,
+      "id": "ulfast-son-of-ulfang",
+      "tags": ["human", "humanoid", "warrens"],
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
+    },
+    {
+      "sourceIndex": 292,
+      "id": "hammerhead",
+      "tags": ["fish", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 293,
+      "id": "berserker",
+      "tags": ["human", "humanoid", "warrens"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 1057,
+      "id": "ogrillon",
+      "tags": ["giant", "humanoid", "orc", "warrens"],
+      "omittedFlags": []
+    },
+    {
+      "sourceIndex": 1188,
+      "id": "orc-berserker",
+      "tags": ["humanoid", "orc", "warrens"],
+      "omittedFlags": []
+    },
+    {
+      "sourceIndex": 1077,
+      "id": "king-mulu-the-chief-of-southerings",
+      "tags": ["humanoid", "warrens"],
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
+    },
+    {
+      "sourceIndex": 283,
+      "id": "umber-hulk",
+      "tags": ["aberration", "warrens"],
+      "omittedFlags": ["COLD_BLOOD", "EMPTY_MIND", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 294,
+      "id": "quasit",
+      "tags": ["demon", "warrens"],
+      "omittedFlags": ["POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 1299,
+      "id": "nizukil-prince-of-rats",
+      "tags": ["rat", "sewer", "warrens"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 1334,
+      "id": "brumby",
+      "tags": ["mount", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 295,
+      "id": "sphinx",
+      "tags": ["animal", "mount", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 297,
+      "id": "forest-troll",
+      "tags": ["troll", "warrens"],
+      "omittedFlags": ["MALE", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 301,
+      "id": "2-headed-hydra",
+      "tags": ["hydra", "mount", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 302,
+      "id": "swamp-thing",
+      "tags": ["warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 303,
+      "id": "water-spirit",
+      "tags": ["spirit", "warrens"],
+      "omittedFlags": ["COLD_BLOOD", "EMPTY_MIND", "POS_GAIN_AC", "POS_HOLD_LIFE"]
+    },
+    {
+      "sourceIndex": 304,
+      "id": "giant-pink-scorpion",
+      "tags": ["scorpion", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC", "WEIRD_MIND"]
+    },
+    {
+      "sourceIndex": 305,
+      "id": "earth-spirit",
+      "tags": ["spirit", "warrens"],
+      "omittedFlags": ["COLD_BLOOD", "EMPTY_MIND", "POS_GAIN_AC", "POS_HOLD_LIFE"]
+    },
+    {
+      "sourceIndex": 1078,
+      "id": "wutugu-the-chief-of-southerings",
+      "tags": ["human", "humanoid", "warrens"],
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
+    },
+    {
+      "sourceIndex": 255,
+      "id": "hill-giant",
+      "tags": ["giant", "warrens"],
+      "omittedFlags": ["MALE", "POS_SUST_STR"]
+    },
+    {
+      "sourceIndex": 296,
+      "id": "imp",
+      "tags": ["demon", "warrens"],
+      "omittedFlags": ["COLD_BLOOD", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 986,
+      "id": "nekomata",
+      "tags": ["cat", "warrens"],
+      "omittedFlags": ["MALE", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 1296,
+      "id": "grey-seer",
+      "tags": ["sewer", "skaven", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 996,
+      "id": "nar-the-dwarf",
+      "tags": ["dwarf", "humanoid", "warrens"],
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
+    },
+    {
+      "sourceIndex": 298,
+      "id": "freezing-sphere",
+      "tags": ["warrens"],
+      "omittedFlags": ["COLD_BLOOD", "EMPTY_MIND", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 299,
+      "id": "jumping-fireball",
+      "tags": ["warrens"],
+      "omittedFlags": ["EMPTY_MIND", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 300,
+      "id": "ball-lightning",
+      "tags": ["warrens"],
+      "omittedFlags": ["EMPTY_MIND", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 306,
+      "id": "fire-spirit",
+      "tags": ["spirit", "warrens"],
+      "omittedFlags": ["EMPTY_MIND", "POS_GAIN_AC", "POS_HOLD_LIFE"]
+    },
+    {
+      "sourceIndex": 314,
+      "id": "shagrat-the-orc-captain",
+      "tags": ["humanoid", "orc", "warrens"],
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
+    },
+    {
+      "sourceIndex": 315,
+      "id": "gorbag-the-orc-captain",
+      "tags": ["humanoid", "orc", "warrens"],
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
+    },
+    {
+      "sourceIndex": 317,
+      "id": "white-shark",
+      "tags": ["aquatic", "shark", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 326,
+      "id": "stunwall",
+      "tags": ["construct", "warrens"],
+      "omittedFlags": ["CHAR_MULTI", "COLD_BLOOD", "EMPTY_MIND", "NASTY_GLYPH"]
+    },
+    {
+      "sourceIndex": 911,
+      "id": "quartz-vein",
+      "tags": ["warrens"],
+      "omittedFlags": ["COLD_BLOOD", "EMPTY_MIND", "NASTY_GLYPH", "NO_STUN"]
+    },
+    {
+      "sourceIndex": 925,
+      "id": "monkey-of-nikko",
+      "tags": ["animal", "warrens"],
+      "omittedFlags": []
+    },
+    {
+      "sourceIndex": 1310,
+      "id": "tiger-snake",
+      "tags": ["reptile", "snake", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 1330,
+      "id": "ozmanian-devil",
+      "tags": ["demon", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 323,
+      "id": "stone-golem",
+      "tags": ["golem", "warrens"],
+      "omittedFlags": ["COLD_BLOOD", "EMPTY_MIND", "POS_GAIN_AC", "POS_HOLD_LIFE"]
+    },
+    {
+      "sourceIndex": 324,
+      "id": "red-mold",
+      "tags": ["mold", "warrens"],
+      "omittedFlags": ["EMPTY_MIND", "POS_GAIN_AC", "STUPID"]
+    },
+    {
+      "sourceIndex": 910,
+      "id": "aquatic-golem",
+      "tags": ["aquatic", "golem", "warrens"],
+      "omittedFlags": ["COLD_BLOOD", "EMPTY_MIND", "POS_GAIN_AC", "POS_HOLD_LIFE"]
+    },
+    {
+      "sourceIndex": 1108,
+      "id": "orc-digger",
+      "tags": ["humanoid", "orc", "warrens"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 1318,
+      "id": "tin-golem",
+      "tags": ["golem", "warrens"],
+      "omittedFlags": ["COLD_BLOOD", "EMPTY_MIND", "POS_GAIN_AC", "POS_HOLD_LIFE"]
+    },
+    {
+      "sourceIndex": 332,
+      "id": "lizard-king",
+      "tags": ["humanoid", "reptile", "warrens"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 333,
+      "id": "landmine",
+      "tags": ["construct", "warrens"],
+      "omittedFlags": ["ATTR_CLEAR", "CHAR_CLEAR", "COLD_BLOOD", "EMPTY_MIND", "NASTY_GLYPH"]
+    },
+    {
+      "sourceIndex": 334,
+      "id": "wyvern",
+      "tags": ["dragon", "mount", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 336,
+      "id": "livingstone",
+      "tags": ["construct", "warrens"],
+      "omittedFlags": ["CHAR_MULTI", "COLD_BLOOD", "NASTY_GLYPH"]
+    },
+    {
+      "sourceIndex": 339,
+      "id": "sabre-tooth-tiger",
+      "tags": ["cat", "mount", "tiger", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 343,
+      "id": "sasquatch",
+      "tags": ["humanoid", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 344,
+      "id": "weir",
+      "tags": ["warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 345,
+      "id": "whale",
+      "tags": ["aquatic", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 346,
+      "id": "electric-eel",
+      "tags": ["aquatic", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 347,
+      "id": "werewolf",
+      "tags": ["warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 350,
+      "id": "ugluk-the-uruk",
+      "tags": ["humanoid", "orc", "warrens"],
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
+    },
+    {
+      "sourceIndex": 884,
+      "id": "noxious-fume",
+      "tags": ["warrens"],
+      "omittedFlags": ["COLD_BLOOD", "EMPTY_MIND", "NO_STUN"]
+    },
+    {
+      "sourceIndex": 984,
+      "id": "nue",
+      "tags": ["animal", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 1016,
+      "id": "spider-bomb",
+      "tags": ["construct", "spider", "warrens"],
+      "omittedFlags": ["COLD_BLOOD", "EMPTY_MIND", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 1222,
+      "id": "glyptodont",
+      "tags": ["animal", "mount", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 1249,
+      "id": "frost-spirit",
+      "tags": ["spirit", "warrens"],
+      "omittedFlags": ["EMPTY_MIND", "POS_GAIN_AC", "POS_HOLD_LIFE"]
+    },
+    {
+      "sourceIndex": 1308,
+      "id": "blue-ringed-octopus",
+      "tags": ["aquatic", "warrens"],
+      "omittedFlags": ["ATTR_MULTI", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 1309,
+      "id": "box-jellyfish",
+      "tags": ["jellyfish", "warrens"],
+      "omittedFlags": []
+    },
+    {
+      "sourceIndex": 1335,
+      "id": "yowie",
+      "tags": ["humanoid", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 307,
+      "id": "fire-hound",
+      "tags": ["hound", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 308,
+      "id": "cold-hound",
+      "tags": ["hound", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 309,
+      "id": "energy-hound",
+      "tags": ["hound", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 312,
+      "id": "blink-dog",
+      "tags": ["dog", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 316,
+      "id": "shambling-mound",
+      "tags": ["warrens"],
+      "omittedFlags": ["EMPTY_MIND", "NASTY_GLYPH", "STUPID"]
+    },
+    {
+      "sourceIndex": 322,
+      "id": "giant-black-dragon-fly",
+      "tags": ["insect", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC", "WEIRD_MIND"]
+    },
+    {
+      "sourceIndex": 325,
+      "id": "giant-gold-dragon-fly",
+      "tags": ["insect", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC", "WEIRD_MIND"]
+    },
+    {
+      "sourceIndex": 1146,
+      "id": "pumpkin-man",
+      "tags": ["warrens"],
+      "omittedFlags": []
+    },
+    {
+      "sourceIndex": 329,
+      "id": "huorn",
+      "tags": ["tree", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC", "WEIRD_MIND"]
+    },
+    {
+      "sourceIndex": 1323,
+      "id": "hopper-ant",
+      "tags": ["ant", "insect", "warrens"],
+      "omittedFlags": ["WEIRD_MIND"]
+    },
+    {
+      "sourceIndex": 331,
+      "id": "phase-spider",
+      "tags": ["spider", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC", "WEIRD_MIND"]
+    },
+    {
+      "sourceIndex": 338,
+      "id": "air-hound",
+      "tags": ["hound", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 340,
+      "id": "water-hound",
+      "tags": ["hound", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 341,
+      "id": "chimera",
+      "tags": ["mount", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 1029,
+      "id": "demonite",
+      "tags": ["demon", "warrens"],
+      "omittedFlags": ["CAN_SPEAK", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 310,
+      "id": "potion-mimic",
+      "tags": ["mimic", "warrens"],
+      "omittedFlags": ["ATTR_SEMIRAND", "CHAR_MULTI", "COLD_BLOOD", "EMPTY_MIND", "NASTY_GLYPH"]
+    },
+    {
+      "sourceIndex": 311,
+      "id": "door-mimic",
+      "tags": ["mimic", "warrens"],
+      "omittedFlags": ["CHAR_MULTI", "COLD_BLOOD", "EMPTY_MIND", "NASTY_GLYPH"]
+    },
+    {
+      "sourceIndex": 313,
+      "id": "uruk",
+      "tags": ["humanoid", "orc", "warrens"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 318,
+      "id": "chaos-beastman",
+      "tags": ["beastman", "humanoid", "warrens"],
+      "omittedFlags": ["ATTR_ANY", "ATTR_MULTI"]
+    },
+    {
+      "sourceIndex": 320,
+      "id": "giant-bronze-dragon-fly",
+      "tags": ["insect", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC", "WEIRD_MIND"]
+    },
+    {
+      "sourceIndex": 321,
+      "id": "stone-giant",
+      "tags": ["giant", "warrens"],
+      "omittedFlags": ["MALE", "POS_SUST_STR"]
+    },
+    {
+      "sourceIndex": 1280,
+      "id": "snow-golem",
+      "tags": ["golem", "warrens"],
+      "omittedFlags": ["COLD_BLOOD", "EMPTY_MIND", "POS_GAIN_AC", "POS_HOLD_LIFE"]
+    },
+    {
+      "sourceIndex": 1326,
+      "id": "bush-ranger",
+      "tags": ["human", "humanoid", "ranger", "warrens"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 278,
+      "id": "frost-giant",
+      "tags": ["giant", "warrens"],
+      "omittedFlags": ["MALE", "POS_SUST_STR"]
+    },
+    {
+      "sourceIndex": 337,
+      "id": "earth-hound",
+      "tags": ["hound", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 348,
+      "id": "dark-elven-lord",
+      "tags": ["dark-elf", "humanoid", "warrens"],
+      "omittedFlags": ["MALE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 319,
+      "id": "daemonette-of-slaanesh",
+      "tags": ["demon", "warrens"],
+      "omittedFlags": ["FEMALE", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 1030,
+      "id": "meng-huo-the-king-of-southerings",
+      "tags": ["humanoid", "warrens"],
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
+    },
+    {
+      "sourceIndex": 328,
+      "id": "ixitxachitl-priest",
+      "tags": ["fish", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 342,
+      "id": "quylthulg",
+      "tags": ["quylthulg", "warrens"],
+      "omittedFlags": ["EMPTY_MIND", "POS_SEE_INVIS", "POS_TELEPATHY", "STUPID"]
+    },
+    {
+      "sourceIndex": 1038,
+      "id": "paladin",
+      "tags": ["humanoid", "warrens"],
+      "omittedFlags": ["KNIGHT", "MALE"]
+    },
+    {
+      "sourceIndex": 1039,
+      "id": "ranger",
+      "tags": ["humanoid", "warrens"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 1279,
+      "id": "blinking-light",
+      "tags": ["wisp", "warrens"],
+      "omittedFlags": ["ATTR_MULTI", "EMPTY_MIND", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 909,
+      "id": "the-icky-queen",
+      "tags": ["icky", "warrens"],
+      "omittedFlags": ["CAN_SPEAK", "FEMALE", "WEIRD_MIND"]
     }
   ]
 }

@@ -5080,6 +5080,108 @@ fn blink_other_moves_the_target_within_ten_tiles_using_one_destination_draw() {
 }
 
 #[test]
+fn jump_light_damages_from_the_caster_then_blinks_with_one_destination_draw() {
+    let mut game = Game::new(0);
+    clear_monsters(&mut game);
+    for cell in game.terrain.iter_mut() {
+        *cell = "demo.terrain.wall".to_owned();
+    }
+    let player = game.player.position;
+    let caster = Position {
+        x: player.x + 1,
+        y: player.y,
+    };
+    let landing = Position {
+        x: caster.x + 4,
+        y: caster.y,
+    };
+    for position in [player, caster, landing] {
+        let index = game.index(position).expect("test cell should exist");
+        game.terrain[index] = "demo.terrain.floor".to_owned();
+    }
+    game.player.hp = 1;
+    game.entities.push(actor_from_runtime_spawn(
+        "generated.actor.blinking-light",
+        "demo.actor.blinking-light",
+        caster,
+        44,
+        115,
+        100,
+        true,
+    ));
+
+    let ability = game
+        .content
+        .ability("rfb-legacy.ability.jump-light-5d5")
+        .expect("P39A ability should compile")
+        .clone();
+    assert!(matches!(
+        ability.effect,
+        AbilityEffectDefinition::JumpDamage {
+            damage_dice: 5,
+            damage_sides: 5,
+            damage_multiplier_numerator: 5,
+            damage_multiplier_denominator: 4,
+            damage_type: rfb_content::ActorDamageType::Light,
+            radius: 5,
+            blink_radius: 10,
+        }
+    ));
+    let plan = game
+        .monster_ability_target_plan(0, ability, 1)
+        .expect("player inside the caster-centered burst should be valid");
+    let MonsterAbilityTargetPlan::JumpDamage {
+        affected_positions,
+        destinations,
+    } = &plan.target
+    else {
+        panic!("JMP_LIGHT should plan a caster-centered jump burst");
+    };
+    assert!(affected_positions.contains(&caster));
+    assert!(affected_positions.iter().all(|position| {
+        caster
+            .x
+            .abs_diff(position.x)
+            .max(caster.y.abs_diff(position.y))
+            <= 5
+    }));
+    assert_eq!(destinations, &[landing]);
+
+    let draws = game.rng_draw_counter();
+    let mut events = Vec::new();
+    let mut changed = BTreeSet::new();
+    let mut removed_entities = Vec::new();
+    let resolution = game.resolve_monster_ability_plan(
+        0,
+        "demo.actor.blinking-light",
+        &plan,
+        &mut events,
+        &mut changed,
+        &mut removed_entities,
+    );
+
+    assert_eq!(game.rng_draw_counter(), draws + 6);
+    assert_eq!(game.entities[0].position, landing);
+    let AbilityEffectResolutionDto::Damage {
+        resolution: damage, ..
+    } = &resolution.targets[0].effects[0]
+    else {
+        panic!("JMP_LIGHT should damage the player");
+    };
+    let possible_raw = (5..=25).map(|roll| roll * 5 / 4).collect::<BTreeSet<_>>();
+    assert!(possible_raw.contains(&damage.raw_damage));
+    assert_eq!(damage.final_damage, rfb_area_damage(damage.raw_damage, 1));
+    assert_eq!(damage.damage_type, DamageTypeDto::Light);
+    assert!(matches!(
+        events.as_slice(),
+        [
+            DomainEvent::PlayerDied { .. },
+            DomainEvent::MonsterBlinked { resolution, .. }
+        ] if resolution.from == caster && resolution.to == landing
+    ));
+}
+
+#[test]
 fn death_fourth_book_materializes_original_level_curves() {
     let projected = |level| {
         let mut game =

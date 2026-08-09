@@ -1,0 +1,76 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "friends": {
+      "chancePercent": 0,
+      "dice": 3,
+      "sides": 2
+    },
+    "habitats": [
+      "grass"
+    ],
+    "legacyIndex": 1222,
+    "maxDepth": 90,
+    "rarity": 3
+  },
+  "attack": 5,
+  "damageDice": 3,
+  "damageSides": 6,
+  "damageType": "physical",
+  "defense": 8,
+  "descriptionKey": "actor-demo-glyptodont-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 300,
+  "formatVersion": 1,
+  "glyph": "q",
+  "hitPointDice": {
+    "dice": 80,
+    "sides": 10
+  },
+  "id": "demo.actor.glyptodont",
+  "level": 20,
+  "maxHp": 440,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 3,
+            "damageSides": 6,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "armorMitigated": true,
+            "chancePercent": 50,
+            "damageDice": 3,
+            "damageSides": 6,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      }
+    ]
+  },
+  "nameKey": "actor-demo-glyptodont-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "rideable": true,
+  "role": "monster",
+  "speed": 107,
+  "tags": [
+    "animal",
+    "legacy-import",
+    "mount",
+    "warrens"
+  ]
+}

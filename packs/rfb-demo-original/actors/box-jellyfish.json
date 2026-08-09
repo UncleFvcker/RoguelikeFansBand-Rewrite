@@ -1,0 +1,96 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "friends": {
+      "chancePercent": 20,
+      "dice": 1,
+      "sides": 5
+    },
+    "legacyDungeonIndices": [
+      35
+    ],
+    "legacyIndex": 1309,
+    "maxDepth": 50,
+    "rarity": 1
+  },
+  "attack": 5,
+  "contactAuras": [
+    {
+      "damageDice": 2,
+      "damageSides": 15,
+      "damageType": "poison"
+    }
+  ],
+  "damageDice": 2,
+  "damageSides": 25,
+  "damageType": "poison",
+  "defense": 2,
+  "descriptionKey": "actor-demo-box-jellyfish-description",
+  "experienceValue": 25,
+  "formatVersion": 1,
+  "glyph": "j",
+  "hitPointDice": {
+    "dice": 7,
+    "sides": 7
+  },
+  "id": "demo.actor.box-jellyfish",
+  "level": 20,
+  "maxHp": 28,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "damageDice": 2,
+            "damageSides": 25,
+            "type": "poison"
+          },
+          {
+            "attributes": [
+              "constitution"
+            ],
+            "chancePercent": 10,
+            "type": "drain-attributes"
+          }
+        ],
+        "methodId": "rfb.blow.sting",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "damageDice": 2,
+            "damageSides": 25,
+            "type": "poison"
+          },
+          {
+            "chancePercent": 10,
+            "damageDice": 0,
+            "damageSides": 0,
+            "type": "disease"
+          }
+        ],
+        "methodId": "rfb.blow.sting",
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "modes": [
+      "aquatic"
+    ]
+  },
+  "nameKey": "actor-demo-box-jellyfish-name",
+  "resistances": {
+    "poison": "immune",
+    "water": "resistant"
+  },
+  "role": "monster",
+  "speed": 110,
+  "tags": [
+    "animal",
+    "jellyfish",
+    "legacy-import",
+    "warrens"
+  ]
+}

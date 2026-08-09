@@ -1,0 +1,74 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "habitats": [
+      "swamp",
+      "volcano"
+    ],
+    "legacyIndex": 884,
+    "maxDepth": 50,
+    "multiplies": true,
+    "randomMovementPercent": 75,
+    "rarity": 4
+  },
+  "attack": 5,
+  "damageDice": 3,
+  "damageSides": 3,
+  "damageType": "poison",
+  "defense": 3,
+  "descriptionKey": "actor-demo-noxious-fume-description",
+  "experienceValue": 15,
+  "formatVersion": 1,
+  "glyph": "#",
+  "hitPointDice": {
+    "dice": 3,
+    "sides": 3
+  },
+  "id": "demo.actor.noxious-fume",
+  "killsWeakerBodies": true,
+  "level": 20,
+  "maxHp": 6,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "damageDice": 3,
+            "damageSides": 3,
+            "type": "poison"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "modes": [
+      "fly",
+      "pass-wall",
+      "swim"
+    ]
+  },
+  "nameKey": "actor-demo-noxious-fume-name",
+  "resistances": {
+    "acid": "resistant",
+    "cold": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 90,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "invisible",
+    "legacy-import",
+    "nonliving",
+    "warrens"
+  ]
+}

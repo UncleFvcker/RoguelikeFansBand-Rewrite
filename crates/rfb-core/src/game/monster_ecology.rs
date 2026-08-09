@@ -38,7 +38,28 @@ pub(super) fn actor_allocation_matches_legacy_dungeon(
             .is_some_and(|index| allocation.legacy_dungeon_indices.contains(&index))
 }
 
+pub(super) fn actor_allocation_matches_task(
+    allocation: &ActorAllocationDefinition,
+    current_task_id: Option<&str>,
+) -> bool {
+    allocation
+        .task_id
+        .as_deref()
+        .is_none_or(|task_id| current_task_id == Some(task_id))
+}
+
 impl Game {
+    pub(super) fn current_floor_task_id(&self) -> Option<&str> {
+        self.content.world(&self.world_id).and_then(|world| {
+            world
+                .procedural_floors
+                .iter()
+                .find(|floor| floor.id == self.current_floor_id)?
+                .task_id
+                .as_deref()
+        })
+    }
+
     pub(super) fn maybe_apply_shadower_appearance(&mut self, actor: &mut Actor) {
         if self
             .content
@@ -490,6 +511,7 @@ impl Game {
                 &kind_id,
                 position,
                 level,
+                None,
                 &terrain,
                 self.width,
                 self.height,
@@ -637,11 +659,13 @@ impl Game {
         weight
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub(super) fn select_original_allocated_monster(
         &mut self,
         policy: &GlobalMonsterAllocationDefinition,
         base_level: u16,
         floor_depth: u16,
+        current_task_id: Option<&str>,
         target_floor_kind_ids: &[String],
         escort_leader_kind_id: Option<&str>,
         required_terrain: Option<&rfb_content::TerrainDefinition>,
@@ -686,6 +710,7 @@ impl Game {
                     || definition.level > u32::from(selection_level)
                     || (allocation.max_depth != 0 && allocation.max_depth < selection_level)
                     || (allocation.force_depth && definition.level > u32::from(floor_depth))
+                    || !actor_allocation_matches_task(allocation, current_task_id)
                     || !actor_allocation_matches_legacy_dungeon(
                         allocation,
                         current_legacy_dungeon_index,
@@ -854,6 +879,7 @@ impl Game {
         leader_kind_id: &str,
         leader_position: Position,
         depth: u16,
+        current_task_id: Option<&str>,
         terrain: &[String],
         width: u16,
         height: u16,
@@ -931,6 +957,7 @@ impl Game {
                     policy,
                     u16::try_from(leader.level).unwrap_or(u16::MAX),
                     depth,
+                    current_task_id,
                     &target_floor_kind_ids,
                     Some(leader_kind_id),
                     Some(&required_terrain),
@@ -1191,10 +1218,12 @@ impl Game {
         let Some(required_terrain) = required_terrain else {
             return Ok(());
         };
+        let current_task_id = self.current_floor_task_id().map(str::to_owned);
         let Some(kind_id) = self.select_original_allocated_monster(
             policy,
             depth,
             depth,
+            current_task_id.as_deref(),
             &target_floor_kind_ids,
             None,
             Some(&required_terrain),
@@ -1214,6 +1243,7 @@ impl Game {
             &kind_id,
             leader_position,
             depth,
+            current_task_id.as_deref(),
             &terrain,
             self.width,
             self.height,

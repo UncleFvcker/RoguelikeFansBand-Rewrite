@@ -30,6 +30,28 @@ fn movement_profile_controls_non_walkable_terrain_entry() {
 }
 
 #[test]
+fn climber_crosses_mountain_and_glacier_terrain() {
+    let game = Game::new(2);
+    let brumby = game
+        .content
+        .actor("demo.actor.brumby")
+        .expect("Brumby definition");
+    let walker = game
+        .content
+        .actor("demo.actor.small-kobold")
+        .expect("walker definition");
+
+    for terrain_id in [
+        "demo.terrain.surface-mountain",
+        "demo.terrain.surface-glacier",
+    ] {
+        let terrain = game.content.terrain(terrain_id).expect("climb terrain");
+        assert!(actor_can_cross_terrain(brumby, terrain));
+        assert!(!actor_can_cross_terrain(walker, terrain));
+    }
+}
+
+#[test]
 fn aquatic_and_wall_passing_domains_remain_distinct() {
     let game = Game::new(11);
     let floor = game

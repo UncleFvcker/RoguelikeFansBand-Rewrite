@@ -1,0 +1,76 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "habitats": [
+      "wood"
+    ],
+    "legacyDungeonIndices": [
+      35
+    ],
+    "legacyIndex": 1318,
+    "maxDepth": 40,
+    "rarity": 2
+  },
+  "attack": 4,
+  "damageDice": 6,
+  "damageSides": 8,
+  "damageType": "physical",
+  "defense": 5,
+  "descriptionKey": "actor-demo-tin-golem-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 100,
+  "formatVersion": 1,
+  "glyph": "g",
+  "hitPointDice": {
+    "dice": 25,
+    "sides": 8
+  },
+  "id": "demo.actor.tin-golem",
+  "level": 19,
+  "maxHp": 112,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 6,
+            "damageSides": 8,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "chancePercent": 75,
+            "durationDice": 3,
+            "durationSides": 7,
+            "type": "bleeding"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "nameKey": "actor-demo-tin-golem-name",
+  "resistances": {
+    "cold": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "poison": "immune"
+  },
+  "role": "monster",
+  "speed": 110,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "golem",
+    "legacy-import",
+    "nonliving",
+    "warrens"
+  ]
+}

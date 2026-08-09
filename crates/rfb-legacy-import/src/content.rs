@@ -45,6 +45,7 @@ const DEMO_MAGE_DROP_TABLE_ID: &str = "demo.loot-table.mage";
 const DEMO_PRIEST_DROP_TABLE_ID: &str = "demo.loot-table.priest";
 const DEMO_EVIL_PRIEST_DROP_TABLE_ID: &str = "demo.loot-table.evil-priest";
 const DEMO_PALADIN_DROP_TABLE_ID: &str = "demo.loot-table.paladin";
+const DEMO_DWARF_DROP_TABLE_ID: &str = "demo.loot-table.dwarf";
 const DEMO_CORPSE_ITEM_ID: &str = "demo.item.corpse-remains";
 const DEMO_SKELETON_ITEM_ID: &str = "demo.item.skeleton-remains";
 
@@ -57,6 +58,7 @@ fn demo_drop_theme_table_id(theme: &str) -> Option<&'static str> {
         "DROP_PRIEST" => Some(DEMO_PRIEST_DROP_TABLE_ID),
         "DROP_PRIEST_EVIL" => Some(DEMO_EVIL_PRIEST_DROP_TABLE_ID),
         "DROP_PALADIN" => Some(DEMO_PALADIN_DROP_TABLE_ID),
+        "DROP_DWARF" => Some(DEMO_DWARF_DROP_TABLE_ID),
         _ => None,
     }
 }
@@ -6365,16 +6367,20 @@ fn terrain_json(
     if entry.flags.iter().any(|flag| flag == "CAN_PASS") {
         value["allowsWallPassage"] = serde_json::json!(true);
     }
-    let movement_modes = [("CAN_FLY", "fly"), ("CAN_SWIM", "swim")]
-        .into_iter()
-        .filter_map(|(flag, mode)| {
-            entry
-                .flags
-                .iter()
-                .any(|value| value == flag)
-                .then_some(mode)
-        })
-        .collect::<Vec<_>>();
+    let movement_modes = [
+        ("CAN_CLIMB", "climb"),
+        ("CAN_FLY", "fly"),
+        ("CAN_SWIM", "swim"),
+    ]
+    .into_iter()
+    .filter_map(|(flag, mode)| {
+        entry
+            .flags
+            .iter()
+            .any(|value| value == flag)
+            .then_some(mode)
+    })
+    .collect::<Vec<_>>();
     if !movement_modes.is_empty() {
         value["movementModes"] = serde_json::json!(movement_modes);
     }
@@ -6706,6 +6712,45 @@ fn map_misc_spell_token(
     }
 }
 
+fn map_jump_spell_token(
+    token: &str,
+    abilities: &mut BTreeMap<String, serde_json::Value>,
+) -> Option<String> {
+    let (base, explicit) = token.split_once('(')?;
+    let explicit = explicit.strip_suffix(')')?;
+    if !matches!(base, "JMP_LIGHT" | "JMP_LITE") {
+        return None;
+    }
+    let (damage_dice, damage_sides, damage_bonus) = parse_explicit_damage_dice(explicit)?;
+    if damage_bonus != 0 {
+        return None;
+    }
+    let suffix = format!("jump-light-{damage_dice}d{damage_sides}");
+    let id = format!("rfb-legacy.ability.{suffix}");
+    abilities.entry(id.clone()).or_insert_with(|| {
+        serde_json::json!({
+            "$schema": format!("{SCHEMA_BASE}/ability.schema.json"),
+            "formatVersion": 1,
+            "id": id,
+            "nameKey": format!("ability-legacy-{suffix}-name"),
+            "descriptionKey": format!("ability-legacy-{suffix}-description"),
+            "target": { "modes": ["self"], "range": 0, "requiresLineOfEffect": false },
+            "effect": {
+                "type": "jump-damage",
+                "damageDice": damage_dice,
+                "damageSides": damage_sides,
+                "damageMultiplierNumerator": 5,
+                "damageMultiplierDenominator": 4,
+                "damageType": "light",
+                "radius": 5,
+                "blinkRadius": 10
+            },
+            "tags": ["legacy-import", "innate", "offense"]
+        })
+    });
+    Some(id)
+}
+
 /// CAUSE curses gate on the player's saving throw instead of armour or
 /// resistances; HAND_DOOM (percent-of-current-HP) stays a gap.
 fn map_curse_spell_token(
@@ -6889,6 +6934,12 @@ const RESISTANCE_ALL_TYPES: [&str; 27] = [
     "water",
 ];
 
+const MONSTER_CONTACT_AURA_FLAGS: [(&str, &str); 3] = [
+    ("AURA_FIRE", "fire"),
+    ("AURA_COLD", "cold"),
+    ("AURA_ELEC", "electricity"),
+];
+
 fn monster_flag_is_mapped(flag: &str) -> bool {
     if matches!(
         flag,
@@ -6920,6 +6971,11 @@ fn monster_flag_is_mapped(flag: &str) -> bool {
             | "DROP_GOOD"
             | "DROP_GREAT"
             | "SHAPECHANGER"
+            | "HURT_ROCK"
+            | "CAN_CLIMB"
+            | "COMPOST"
+            | "FIXED_UNIQUE"
+            | "NO_QUEST"
     ) {
         return true;
     }
@@ -7017,6 +7073,9 @@ fn resistances_from_flags(flags: &[String]) -> BTreeMap<&'static str, &'static s
             }
         }
     }
+    if flags.iter().any(|flag| flag == "HURT_ROCK") {
+        resistances.insert("disintegrate", "vulnerable");
+    }
     resistances
 }
 
@@ -7083,6 +7142,12 @@ fn monster_json(
     if entry.flags.iter().any(|flag| flag == "SHAPECHANGER") {
         tags.push("shapechanger".to_owned());
     }
+    if entry.flags.iter().any(|flag| flag == "FIXED_UNIQUE") {
+        tags.push("fixed-unique".to_owned());
+    }
+    if entry.flags.iter().any(|flag| flag == "NO_QUEST") {
+        tags.push("no-quest".to_owned());
+    }
     if entry
         .glyph
         .is_some_and(|glyph| matches!(glyph, 'L' | 'V' | 'W'))
@@ -7126,6 +7191,7 @@ fn monster_json(
     }
     let movement_modes = [
         ("AQUATIC", "aquatic"),
+        ("CAN_CLIMB", "climb"),
         ("CAN_FLY", "fly"),
         ("PASS_WALL", "pass-wall"),
         ("CAN_SWIM", "swim"),
@@ -7221,19 +7287,47 @@ fn monster_json(
     if let Some(routine) = melee_routine {
         value["meleeRoutine"] = routine;
     }
-    if let Some(aura) = entry.auras.first()
-        && aura.token == "POISON"
-        && let Some((damage_dice, damage_sides)) = aura.dice
-    {
-        let mut contact_aura = serde_json::json!({
-            "damageType": "poison",
-            "damageDice": damage_dice,
-            "damageSides": damage_sides,
-        });
-        if let Some(chance_percent) = aura.chance_percent {
-            contact_aura["chancePercent"] = serde_json::json!(chance_percent);
-        }
-        value["contactAura"] = contact_aura;
+    let mut contact_auras = entry
+        .auras
+        .iter()
+        .filter_map(|aura| {
+            let damage_type = match aura.token.as_str() {
+                "POISON" => "poison",
+                "ACID" => "acid",
+                _ => return None,
+            };
+            let (damage_dice, damage_sides) = aura.dice?;
+            let mut value = serde_json::json!({
+                "damageType": damage_type,
+                "damageDice": damage_dice,
+                "damageSides": damage_sides,
+            });
+            if let Some(chance_percent) = aura.chance_percent {
+                value["chancePercent"] = serde_json::json!(chance_percent);
+            }
+            Some(value)
+        })
+        .collect::<Vec<_>>();
+    let level = entry.level.unwrap_or_default();
+    contact_auras.extend(
+        MONSTER_CONTACT_AURA_FLAGS
+            .iter()
+            .filter_map(|(flag, damage_type)| {
+                entry
+                    .flags
+                    .iter()
+                    .any(|entry_flag| entry_flag == flag)
+                    .then(|| {
+                        serde_json::json!({
+                            "damageType": damage_type,
+                            "damageDice": 1 + level / 26,
+                            "damageSides": 1 + level / 17,
+                        })
+                    })
+            }),
+    );
+    if !contact_auras.is_empty() {
+        value["contactAuras"] = serde_json::json!(contact_auras);
     }
     if let Some(casting) = monster_casting {
         value["monsterCasting"] = casting;
@@ -7278,6 +7372,9 @@ fn monster_json(
             "multiplies": entry.flags.iter().any(|flag| flag == "MULTIPLY"),
             "randomMovementPercent": random_movement_percent,
         });
+        if entry.flags.iter().any(|flag| flag == "COMPOST") {
+            allocation["taskId"] = serde_json::json!("demo.task.the-sewer");
+        }
         let habitats = [
             ("WILD_ALL", "all"),
             ("WILD_GRASS", "grass"),
@@ -7321,7 +7418,10 @@ fn monster_json(
 }
 
 fn demo_monster_flag_is_handled(flag: &str) -> bool {
-    monster_flag_is_mapped(flag)
+    MONSTER_CONTACT_AURA_FLAGS
+        .iter()
+        .any(|(aura_flag, _)| flag == *aura_flag)
+        || monster_flag_is_mapped(flag)
         || matches!(
             flag,
             "FORCE_MAXHP"
@@ -7365,6 +7465,7 @@ fn demo_monster_flag_is_handled(flag: &str) -> bool {
                 | "RAND_50"
                 | "FRIENDS"
                 | "INVISIBLE"
+                | "SMART"
                 | "SHAPECHANGER"
                 | "WILD_ALL"
                 | "WILD_GRASS"
@@ -7469,13 +7570,17 @@ fn demo_monster_json(
         }
     }
     let monster_casting = (!ability_ids.is_empty()).then(|| {
-        serde_json::json!({
+        let mut casting = serde_json::json!({
             "frequencyPercent": frequency_percent.unwrap_or(10),
             "abilities": ability_ids
                 .iter()
                 .map(|ability_id| serde_json::json!({ "abilityId": ability_id, "weight": 1 }))
                 .collect::<Vec<_>>(),
-        })
+        });
+        if entry.flags.iter().any(|flag| flag == "SMART") {
+            casting["smart"] = serde_json::json!(true);
+        }
+        casting
     });
     if entry
         .drop_theme
@@ -7487,11 +7592,16 @@ fn demo_monster_json(
             selection.id
         )));
     }
-    if entry.auras.len() > 1
+    if entry.auras.len()
+        + MONSTER_CONTACT_AURA_FLAGS
+            .iter()
+            .filter(|(flag, _)| entry.flags.iter().any(|entry_flag| entry_flag == flag))
+            .count()
+        > 8
         || entry
             .auras
-            .first()
-            .is_some_and(|aura| aura.token != "POISON" || aura.dice.is_none())
+            .iter()
+            .any(|aura| !matches!(aura.token.as_str(), "POISON" | "ACID") || aura.dice.is_none())
     {
         return Err(LegacyImportError::InvalidDemoMonsterSelection(format!(
             "{} has an unsupported contact aura",
@@ -7595,6 +7705,8 @@ fn demo_monster_json(
         ("RES_ALL", "resist-all"),
         ("RES_TELE", "resist-teleport"),
         ("SHAPECHANGER", "shapechanger"),
+        ("FIXED_UNIQUE", "fixed-unique"),
+        ("NO_QUEST", "no-quest"),
     ] {
         if entry.flags.iter().any(|candidate| candidate == flag) {
             tags.insert(tag.to_owned());
@@ -7878,6 +7990,9 @@ fn map_spell_token(
     if let Some(id) = map_curse_spell_token(token, abilities) {
         return Some(id);
     }
+    if let Some(id) = map_jump_spell_token(token, abilities) {
+        return Some(id);
+    }
     if let Some(id) = map_misc_spell_token(token, level, abilities) {
         return Some(id);
     }
@@ -7963,6 +8078,17 @@ fn map_spell_token(
                 displacement_ability(
                     "drag",
                     serde_json::json!({"type": "teleport-target"}),
+                    false,
+                )
+            });
+            Some(id)
+        }
+        "TELE_LEVEL" => {
+            let id = "rfb-legacy.ability.teleport-level".to_owned();
+            abilities.entry(id.clone()).or_insert_with(|| {
+                displacement_ability(
+                    "teleport-level",
+                    serde_json::json!({"type": "teleport-level"}),
                     false,
                 )
             });
@@ -8108,6 +8234,7 @@ fn summon_spell_defaults(base: &str) -> Option<(&'static str, (u32, u32, u32))> 
         "S_HI_DRAGON" => ("dragon", (1, 3, 0)),
         "S_ANIMAL" => ("animal", (1, 3, 1)),
         "S_ANT" => ("ant", (1, 3, 1)),
+        "S_SPIDER" => ("spider", (1, 3, 1)),
         "S_LOUSE" => ("louse", (1, 3, 1)),
         _ => return None,
     };
@@ -8666,7 +8793,11 @@ fn convert_content_from(
             })
         });
         for flag in &entry.flags {
-            if monster_flag_is_mapped(flag) {
+            if monster_flag_is_mapped(flag)
+                || MONSTER_CONTACT_AURA_FLAGS
+                    .iter()
+                    .any(|(aura_flag, _)| flag == *aura_flag)
+            {
                 continue;
             }
             *report
@@ -11312,7 +11443,7 @@ mod tests {
     #[test]
     fn demo_monster_import_maps_special_mechanics_without_fallbacks() {
         let mut monsters = parse_r_info(
-            "N:1:test special monster\nG:j:v\nI:110:1d3:8:4:20:10\nW:12:1:50:40:0:0\nB:TOUCH:DRAIN_EXP(10d6)\nA:POISON(1d2)\nF:SHAPECHANGER | MOVE_BODY | REGENERATE | REFLECTING | DUNGEON_31 | DROP_1D2\nO:DROP_WARRIOR_SHOOT\n",
+            "N:1:test special monster\nG:j:v\nI:110:1d3:8:4:20:10\nW:12:1:50:40:0:0\nB:TOUCH:DRAIN_EXP(10d6)\nA:POISON(1d2):ACID(2d3)\nF:SHAPECHANGER | MOVE_BODY | REGENERATE | REFLECTING | DUNGEON_31 | DROP_1D2\nO:DROP_WARRIOR_SHOOT\n",
         )
         .expect("synthetic special monster should parse");
         let actor = demo_monster_json(
@@ -11332,9 +11463,12 @@ mod tests {
             actor["meleeRoutine"]["blows"][0]["effects"][0]["type"],
             "drain-experience"
         );
-        assert_eq!(actor["contactAura"]["damageType"], "poison");
-        assert_eq!(actor["contactAura"]["damageDice"], 1);
-        assert_eq!(actor["contactAura"]["damageSides"], 2);
+        assert_eq!(actor["contactAuras"][0]["damageType"], "poison");
+        assert_eq!(actor["contactAuras"][0]["damageDice"], 1);
+        assert_eq!(actor["contactAuras"][0]["damageSides"], 2);
+        assert_eq!(actor["contactAuras"][1]["damageType"], "acid");
+        assert_eq!(actor["contactAuras"][1]["damageDice"], 2);
+        assert_eq!(actor["contactAuras"][1]["damageSides"], 3);
         assert_eq!(actor["movesWeakerBodies"], true);
         assert_eq!(actor["regenerates"], true);
         assert_eq!(actor["reflectsBolts"], true);
@@ -11348,6 +11482,107 @@ mod tests {
             serde_json::json!([31])
         );
         assert_eq!(actor["deathDrop"]["themeTableId"], "demo.loot-table.archer");
+        assert_eq!(
+            demo_drop_theme_table_id("DROP_DWARF"),
+            Some("demo.loot-table.dwarf")
+        );
+    }
+
+    #[test]
+    fn demo_monster_import_maps_elemental_contact_aura_flags() {
+        let monsters = parse_r_info(
+            "N:1:test fire aura\nG:*:r\nI:120:6d6:100:30:0:25\nW:17:1:50:50:0:0\nB:EXPLODE:FIRE(8d8)\nF:AURA_FIRE | NEVER_MOVE\n\
+             N:2:test cold aura\nG:*:w\nI:120:6d6:100:30:0:25\nW:17:1:50:50:0:0\nB:EXPLODE:COLD(8d8)\nF:AURA_COLD | NEVER_MOVE\n\
+             N:3:test electricity aura\nG:*:B\nI:120:6d6:100:30:0:25\nW:17:1:50:50:0:0\nB:EXPLODE:ELEC(8d8)\nF:AURA_ELEC | NEVER_MOVE\n",
+        )
+        .expect("synthetic elemental aura monsters should parse");
+
+        for (entry, damage_type) in monsters.iter().zip(["fire", "cold", "electricity"]) {
+            let actor = demo_monster_json(
+                entry,
+                &DemoMonsterSelectionEntry {
+                    source_index: entry.index,
+                    source_id: None,
+                    id: kebab(&entry.name),
+                    tags: vec!["warrens".to_owned()],
+                    omitted_flags: Vec::new(),
+                },
+                &mut BTreeMap::new(),
+            )
+            .expect("elemental contact aura should import directly");
+            assert_eq!(actor["contactAuras"][0]["damageType"], damage_type);
+            assert_eq!(actor["contactAuras"][0]["damageDice"], 1);
+            assert_eq!(actor["contactAuras"][0]["damageSides"], 2);
+        }
+
+        let mut multiple = monsters[0].clone();
+        multiple.flags.push("AURA_ELEC".to_owned());
+        let actor = demo_monster_json(
+            &multiple,
+            &DemoMonsterSelectionEntry {
+                source_index: multiple.index,
+                source_id: None,
+                id: kebab(&multiple.name),
+                tags: vec!["warrens".to_owned()],
+                omitted_flags: Vec::new(),
+            },
+            &mut BTreeMap::new(),
+        )
+        .expect("multiple elemental contact auras should import directly");
+        assert_eq!(actor["contactAuras"][0]["damageType"], "fire");
+        assert_eq!(actor["contactAuras"][1]["damageType"], "electricity");
+    }
+
+    #[test]
+    fn demo_monster_import_maps_p33_blockers_without_fallbacks() {
+        let mut monsters = parse_r_info(
+            "N:1:test sewer climber\nG:u:w\nI:110:2d4:8:4:20:10\nW:16:2:50:40:0:0\nB:HIT:HURT(1d4)\nF:HURT_ROCK | CAN_CLIMB | COMPOST | FIXED_UNIQUE | NO_QUEST | SMART\nS:1_IN_10 | TELE_LEVEL\n",
+        )
+        .expect("synthetic P33 monster should parse");
+        let mut abilities = BTreeMap::new();
+        let actor = demo_monster_json(
+            &monsters.remove(0),
+            &DemoMonsterSelectionEntry {
+                source_index: 1,
+                source_id: None,
+                id: "test-sewer-climber".to_owned(),
+                tags: vec!["warrens".to_owned()],
+                omitted_flags: Vec::new(),
+            },
+            &mut abilities,
+        )
+        .expect("P33 mechanics should import directly");
+
+        assert_eq!(actor["resistances"]["disintegrate"], "vulnerable");
+        assert_eq!(actor["movement"]["modes"], serde_json::json!(["climb"]));
+        assert_eq!(actor["allocation"]["taskId"], "demo.task.the-sewer");
+        assert_eq!(actor["monsterCasting"]["smart"], true);
+        assert!(actor["tags"].as_array().is_some_and(|tags| {
+            tags.iter().any(|tag| tag == "fixed-unique") && tags.iter().any(|tag| tag == "no-quest")
+        }));
+        assert_eq!(
+            abilities["rfb-legacy.ability.teleport-level"]["effect"]["type"],
+            "teleport-level"
+        );
+    }
+
+    #[test]
+    fn terrain_import_maps_climbable_terrain_mode() {
+        let terrain = parse_f_info("N:1:STEEP\nG:#:w\nF:LOS | PROJECT | CAN_CLIMB | MOUNTAIN\n")
+            .expect("synthetic climb terrain should parse");
+        let outcome = convert_content(
+            &terrain,
+            &[],
+            &[],
+            &[],
+            &[],
+            &LegacyCharacterSources::default(),
+        );
+
+        assert_eq!(
+            outcome.terrain_files[0].1["movementModes"],
+            serde_json::json!(["climb"])
+        );
     }
 
     #[test]
@@ -11990,6 +12225,29 @@ S:FREQ_50 | BR_FIRE(40%) | BR_POISON | DETECT_MONSTERS | MAPPING\n";
     }
 
     #[test]
+    fn jump_light_maps_exact_damage_multiplier_radius_and_blink() {
+        let mut abilities = BTreeMap::new();
+        let id = map_spell_token(
+            "JMP_LIGHT(5d5)",
+            19,
+            2,
+            "demo.actor.blinking-light",
+            &mut abilities,
+        )
+        .expect("JMP_LIGHT should map");
+        assert_eq!(id, "rfb-legacy.ability.jump-light-5d5");
+        let effect = &abilities[&id]["effect"];
+        assert_eq!(effect["type"], "jump-damage");
+        assert_eq!(effect["damageDice"], 5);
+        assert_eq!(effect["damageSides"], 5);
+        assert_eq!(effect["damageMultiplierNumerator"], 5);
+        assert_eq!(effect["damageMultiplierDenominator"], 4);
+        assert_eq!(effect["damageType"], "light");
+        assert_eq!(effect["radius"], 5);
+        assert_eq!(effect["blinkRadius"], 10);
+    }
+
+    #[test]
     fn summon_tokens_map_to_category_and_kin_abilities() {
         const SUMMONER_R_INFO: &str = "\
 N:5:test bone caller\n\
@@ -11998,7 +12256,7 @@ I:110:8d8:20:20:10:10\n\
 W:20:2:20:9:10:40\n\
 B:HIT:HURT(1d6)\n\
 F:UNDEAD | DRAGON | RES_ALL | RES_TELE | NO_CONF\n\
-S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_ANT | S_LOUSE | S_CYBER\n";
+S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_ANT | S_SPIDER | S_LOUSE | S_CYBER\n";
         let monsters = parse_r_info(SUMMONER_R_INFO).expect("synthetic summoner should parse");
         assert_eq!(monsters.len(), 1);
 
@@ -12060,6 +12318,7 @@ S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_ANT | S_LOUSE | S_CYBER\n";
                 "rfb-legacy.ability.summon-undead-l20-1d3-1",
                 "rfb-legacy.ability.summon-legacy-import-l20-1d1",
                 "rfb-legacy.ability.summon-ant-l20-1d3-1",
+                "rfb-legacy.ability.summon-spider-l20-1d3-1",
                 "rfb-legacy.ability.summon-louse-l20-1d3-1",
             ]
         );
@@ -12114,6 +12373,17 @@ S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_ANT | S_LOUSE | S_CYBER\n";
         assert_eq!(ant["effect"]["countDice"], 1);
         assert_eq!(ant["effect"]["countSides"], 3);
         assert_eq!(ant["effect"]["countBonus"], 1);
+
+        let spider = outcome
+            .ability_files
+            .iter()
+            .find(|(name, _)| name == "summon-spider-l20-1d3-1.json")
+            .map(|(_, value)| value)
+            .expect("spider summon ability should be generated");
+        assert_eq!(spider["effect"]["category"], "spider");
+        assert_eq!(spider["effect"]["countDice"], 1);
+        assert_eq!(spider["effect"]["countSides"], 3);
+        assert_eq!(spider["effect"]["countBonus"], 1);
 
         let louse = outcome
             .ability_files

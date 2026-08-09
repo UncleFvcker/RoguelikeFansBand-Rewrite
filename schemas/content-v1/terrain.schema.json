@@ -39,6 +39,7 @@
     "ActorMovementMode": {
       "enum": [
         "aquatic",
+        "climb",
         "fly",
         "pass-wall",
         "swim"

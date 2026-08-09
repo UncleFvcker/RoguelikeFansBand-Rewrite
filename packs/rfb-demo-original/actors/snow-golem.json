@@ -1,0 +1,90 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "habitats": [
+      "snow"
+    ],
+    "legacyIndex": 1280,
+    "maxDepth": 35,
+    "rarity": 1
+  },
+  "attack": 4,
+  "damageDice": 4,
+  "damageSides": 5,
+  "damageType": "cold",
+  "defense": 2,
+  "descriptionKey": "actor-demo-snow-golem-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 90,
+  "formatVersion": 1,
+  "glyph": "g",
+  "hitPointDice": {
+    "dice": 16,
+    "sides": 12
+  },
+  "id": "demo.actor.snow-golem",
+  "level": 18,
+  "maxHp": 104,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 4,
+            "damageSides": 5,
+            "damageType": "cold",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 4,
+            "damageSides": 5,
+            "damageType": "acid",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.ball-cold-1d1-17",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 10
+  },
+  "nameKey": "actor-demo-snow-golem-name",
+  "resistances": {
+    "cold": "immune",
+    "electricity": "resistant",
+    "fire": "vulnerable",
+    "poison": "resistant",
+    "water": "resistant"
+  },
+  "role": "monster",
+  "speed": 110,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "golem",
+    "legacy-import",
+    "nonliving",
+    "warrens"
+  ]
+}

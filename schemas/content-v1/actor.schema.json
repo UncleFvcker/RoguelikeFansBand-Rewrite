@@ -68,6 +68,14 @@
           "minimum": 0,
           "type": "integer"
         },
+        "taskId": {
+          "default": null,
+          "description": "Optional task that exclusively owns this monster's allocation.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "wildOnly": {
           "default": false,
           "type": "boolean"
@@ -307,6 +315,7 @@
     "ActorMovementMode": {
       "enum": [
         "aquatic",
+        "climb",
         "fly",
         "pass-wall",
         "swim"
@@ -1211,16 +1220,11 @@
         "null"
       ]
     },
-    "contactAura": {
-      "anyOf": [
-        {
-          "$ref": "#/$defs/ActorContactAuraDefinition"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null
+    "contactAuras": {
+      "items": {
+        "$ref": "#/$defs/ActorContactAuraDefinition"
+      },
+      "type": "array"
     },
     "corpseItemKindId": {
       "default": null,

@@ -393,3 +393,7 @@ contract-v191 只增加内容层近战 effect 及对应运行时解释，不新�
 协议 1.152 新增 `MutationRatingDto`、`PlayerMutationDto` 与 `PlayerDto.mutations`，只投影角色当前 active 变异的稳定 ID、权威中文名称和描述、评级及锁定状态。`PlayerSaveDto` 必填保存排序后的 `activeMutationIds` 与 `lockedMutationIds`；未知 ID、重复 ID 及 locked 非 active 子集均拒绝载入。变异集合进入 state hash Schema v73，save 容器仍为 v1，旧开发存档不兼容。完整边界见 [Contract v216](contract-v216-mutation-authoritative-state.md)。
 
 协议 1.153 为每个 `AttributeValueDto` 增加个人 `potential` 投影，并在 `PlayerProgressSaveDto` 中必填保存六维 `attributePotentials`。自然属性的永久成长上限是个人潜力与当前全局阶段上限的较小值；新生药水重掷 HP 成长与潜力、恢复生命力并移除全部未锁定变异。新增状态进入 State Hash Schema v74，save 容器仍为 v1，旧开发存档不兼容。完整边界见 [Contract v217](contract-v217-new-life-and-attribute-potentials.md)。
+
+协议 1.152 为 `AbilityEffectSpecDto` 与 `AbilityEffectResolutionDto` 增加怪物专用 `teleport-level`。它复用现有楼层切换事务，先判定 Nexus 抗性与玩家豁免；不增加命令、存档字段或 state-hash 输入，save v1 与 Schema v72 不变。完整边界见 [Contract v218](contract-v218-warrens-content-p33-level-16-blockers.md)。
+
+集成协议 1.154 同时保留角色变异、属性潜力与怪物层间传送，State Hash Schema 保持 v74，契约基线统一为 contract-v226。

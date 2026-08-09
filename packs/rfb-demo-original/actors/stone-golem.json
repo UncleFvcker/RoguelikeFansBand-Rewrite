@@ -1,0 +1,71 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 323,
+    "maxDepth": 70,
+    "rarity": 2
+  },
+  "attack": 4,
+  "damageDice": 6,
+  "damageSides": 6,
+  "damageType": "physical",
+  "defense": 7,
+  "descriptionKey": "actor-demo-stone-golem-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 100,
+  "formatVersion": 1,
+  "glyph": "g",
+  "hitPointDice": {
+    "dice": 28,
+    "sides": 8
+  },
+  "id": "demo.actor.stone-golem",
+  "level": 19,
+  "maxHp": 126,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 6,
+            "damageSides": 6,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "chancePercent": 25,
+            "durationDice": 1,
+            "durationSides": 5,
+            "type": "stun"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "nameKey": "actor-demo-stone-golem-name",
+  "resistances": {
+    "cold": "resistant",
+    "disintegrate": "vulnerable",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "poison": "immune"
+  },
+  "role": "monster",
+  "speed": 110,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "golem",
+    "legacy-import",
+    "nonliving",
+    "warrens"
+  ]
+}

@@ -10,11 +10,13 @@
     "rarity": 1
   },
   "attack": 1,
-  "contactAura": {
-    "damageDice": 1,
-    "damageSides": 1,
-    "damageType": "poison"
-  },
+  "contactAuras": [
+    {
+      "damageDice": 1,
+      "damageSides": 1,
+      "damageType": "poison"
+    }
+  ],
   "damageDice": 1,
   "damageSides": 10,
   "damageType": "poison",

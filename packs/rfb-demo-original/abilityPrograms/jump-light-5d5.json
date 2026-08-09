@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability-program.jump-light-5d5",
+  "input": "self",
+  "steps": [
+    {
+      "blinkRadius": 10,
+      "damageDice": 5,
+      "damageMultiplierDenominator": 4,
+      "damageMultiplierNumerator": 5,
+      "damageSides": 5,
+      "damageType": "light",
+      "radius": 5,
+      "type": "jump-damage"
+    }
+  ]
+}

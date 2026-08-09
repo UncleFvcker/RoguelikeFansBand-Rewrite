@@ -1,0 +1,60 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 333,
+    "maxDepth": 999,
+    "rarity": 5
+  },
+  "attack": 5,
+  "damageDice": 25,
+  "damageSides": 2,
+  "damageType": "physical",
+  "defense": 2,
+  "descriptionKey": "actor-demo-landmine-description",
+  "experienceValue": 50,
+  "formatVersion": 1,
+  "glyph": ".",
+  "hitPointDice": {
+    "dice": 6,
+    "forceMaximum": true,
+    "sides": 6
+  },
+  "id": "demo.actor.landmine",
+  "level": 20,
+  "maxHp": 36,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 25,
+            "damageSides": 2,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.explode",
+        "selfDestructs": true,
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "neverMoves": true
+  },
+  "nameKey": "actor-demo-landmine-name",
+  "role": "monster",
+  "speed": 110,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "construct",
+    "invisible",
+    "legacy-import",
+    "warrens"
+  ]
+}

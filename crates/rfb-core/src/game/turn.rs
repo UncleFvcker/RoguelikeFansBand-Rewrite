@@ -419,6 +419,7 @@ impl Game {
             if self.try_original_reproduction(index, changed) {
                 continue;
             }
+            let floor_id = self.current_floor_id.clone();
             self.resolve_monster_action(
                 index,
                 events,
@@ -426,6 +427,9 @@ impl Game {
                 removed_entities,
                 &mut surround_reservations,
             )?;
+            if self.current_floor_id != floor_id {
+                break;
+            }
         }
         Ok(())
     }

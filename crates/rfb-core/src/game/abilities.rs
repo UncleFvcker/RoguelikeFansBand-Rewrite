@@ -2526,13 +2526,15 @@ impl Game {
             | AbilityEffectDefinition::BlinkTarget { .. }
             | AbilityEffectDefinition::TeleportSelf { .. }
             | AbilityEffectDefinition::TeleportTarget
+            | AbilityEffectDefinition::TeleportLevel
             | AbilityEffectDefinition::AggravateMonsters
             | AbilityEffectDefinition::BreathDamage { .. }
             | AbilityEffectDefinition::CurseDamage { .. }
             | AbilityEffectDefinition::TeleportAway { .. }
             | AbilityEffectDefinition::DrainResource { .. }
             | AbilityEffectDefinition::Amnesia
-            | AbilityEffectDefinition::DarkenRoom => None,
+            | AbilityEffectDefinition::DarkenRoom
+            | AbilityEffectDefinition::JumpDamage { .. } => None,
             AbilityEffectDefinition::Teleport => {
                 let TargetSelection::Position { position } = target else {
                     return None;

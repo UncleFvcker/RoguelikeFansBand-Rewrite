@@ -7,6 +7,6 @@
   "glyph": "#",
   "walkable": false,
   "blocksSight": true,
-  "movementModes": ["fly"],
+  "movementModes": ["climb", "fly"],
   "tags": ["mountain", "outdoor", "surface"]
 }
