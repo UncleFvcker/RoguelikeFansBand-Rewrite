@@ -648,6 +648,8 @@ P30“首个非 Mana 职业资源”已由 contract-v90 完成：节奏资源按
 
 **十四级怪物 P25 进展（2026-08）**：contract-v210 接入 19 只由既有内容契约完整承载的十四级怪物。冷气/光明吐息、致盲/混乱/恐惧、闪现、物理射击、繁殖、群体、Unique、骑乘、限定分配、爆炸和掉落均复用既有路径，没有新增 ability、effect 或兼容层。正式包为 298 actors / 130 abilities，严格同步 233 条；协议 1.147、Schema v70 不变，demo 1.206.0，内容 hash 为 `e4d423b5dc4cb246897e44a006f1b7cf3d638d30a5c88ab604140bbcafbba7bf`。完整边界见 [Contract v210](contract-v210-warrens-content-p25-level-14-harvest.md)。
 
+**十五级怪物 P26 进展（2026-08）**：contract-v211 接入 23 只由既有内容契约完整承载的十五级怪物。施法、明暗吐息、尖叫、繁殖、随机移动、穿墙、毁墙、骑乘、Unique 与限定分配均复用既有路径，没有新增 ability、effect 或兼容层。正式包为 321 actors / 130 abilities，严格同步 256 条；协议 1.147、Schema v70 不变，demo 1.207.0，内容 hash 为 `068d58f2b165c78eb608f589322dcfd65d8ba4652c8645b8ebb3d80ed82bc043`。完整边界见 [Contract v211](contract-v211-warrens-content-p26-level-15-direct-harvest.md)。
+
 ## 9. 内容迁移策略
 
 ### 9.1 当前阶段

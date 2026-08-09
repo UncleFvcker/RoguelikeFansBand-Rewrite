@@ -1,0 +1,67 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 876,
+    "maxDepth": 50,
+    "multiplies": true,
+    "randomMovementPercent": 75,
+    "rarity": 4
+  },
+  "attack": 3,
+  "damageDice": 5,
+  "damageSides": 5,
+  "damageType": "fire",
+  "defense": 1,
+  "descriptionKey": "actor-demo-unstable-worm-mass-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 7,
+  "formatVersion": 1,
+  "glyph": "w",
+  "hitPointDice": {
+    "dice": 3,
+    "sides": 10
+  },
+  "id": "demo.actor.unstable-worm-mass",
+  "level": 15,
+  "maxHp": 16,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 5,
+            "damageSides": 5,
+            "damageType": "fire",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.explode",
+        "selfDestructs": true,
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "modes": [
+      "swim"
+    ]
+  },
+  "nameKey": "actor-demo-unstable-worm-mass-name",
+  "resistances": {
+    "light": "vulnerable"
+  },
+  "role": "monster",
+  "speed": 100,
+  "statusImmunities": [
+    "rfb.status.fear"
+  ],
+  "tags": [
+    "animal",
+    "legacy-import",
+    "warrens",
+    "worm"
+  ]
+}

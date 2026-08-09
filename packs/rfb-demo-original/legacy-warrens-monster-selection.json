@@ -1410,6 +1410,144 @@
       "id": "snow-leopard",
       "tags": ["cat", "warrens"],
       "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 209,
+      "id": "hippogriff",
+      "tags": ["hippogriff", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 240,
+      "id": "illusionist",
+      "tags": ["humanoid", "warrens"],
+      "omittedFlags": ["MALE", "SMART"]
+    },
+    {
+      "sourceIndex": 262,
+      "id": "black-ogre",
+      "tags": ["ogre", "warrens"],
+      "omittedFlags": []
+    },
+    {
+      "sourceIndex": 264,
+      "id": "half-orc",
+      "tags": ["humanoid", "orc", "warrens"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 266,
+      "id": "giant-octopus",
+      "tags": ["octopus", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 269,
+      "id": "guardian-naga",
+      "tags": ["naga", "warrens"],
+      "omittedFlags": ["FEMALE"]
+    },
+    {
+      "sourceIndex": 271,
+      "id": "light-hound",
+      "tags": ["hound", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 272,
+      "id": "shadow-hound",
+      "tags": ["hound", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 273,
+      "id": "flying-skull",
+      "tags": ["skull", "warrens"],
+      "omittedFlags": ["COLD_BLOOD", "POS_HOLD_LIFE", "POS_SEE_INVIS", "WEIRD_MIND"]
+    },
+    {
+      "sourceIndex": 275,
+      "id": "giant-tarantula",
+      "tags": ["spider", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC", "WEIRD_MIND"]
+    },
+    {
+      "sourceIndex": 276,
+      "id": "giant-clear-centipede",
+      "tags": ["centipede", "insect", "warrens"],
+      "omittedFlags": ["ATTR_CLEAR", "POS_GAIN_AC", "WEIRD_MIND"]
+    },
+    {
+      "sourceIndex": 277,
+      "id": "mirkwood-spider",
+      "tags": ["spider", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC", "WEIRD_MIND"]
+    },
+    {
+      "sourceIndex": 280,
+      "id": "homonculus",
+      "tags": ["homonculus", "warrens"],
+      "omittedFlags": ["POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 282,
+      "id": "clear-hound",
+      "tags": ["hound", "warrens"],
+      "omittedFlags": ["ATTR_CLEAR", "POS_GAIN_AC", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 361,
+      "id": "carrion",
+      "tags": ["bird", "warrens"],
+      "omittedFlags": ["COLD_BLOOD", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 876,
+      "id": "unstable-worm-mass",
+      "tags": ["worm", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC", "STUPID", "WEIRD_MIND"]
+    },
+    {
+      "sourceIndex": 1003,
+      "id": "the-ghost-q",
+      "tags": ["ghost", "warrens"],
+      "omittedFlags": ["CAN_SPEAK", "COLD_BLOOD", "MALE", "NO_QUEST", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 1028,
+      "id": "mad-bear",
+      "tags": ["bear", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC", "WEIRD_MIND"]
+    },
+    {
+      "sourceIndex": 1070,
+      "id": "trench-wurm",
+      "tags": ["warrens", "wurm"],
+      "omittedFlags": ["COLD_BLOOD", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 1091,
+      "id": "time-initiate",
+      "tags": ["human", "humanoid", "warrens"],
+      "omittedFlags": []
+    },
+    {
+      "sourceIndex": 1223,
+      "id": "dimetrodon",
+      "tags": ["reptile", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 1325,
+      "id": "duck-quacked-platypus",
+      "tags": ["platypus", "warrens"],
+      "omittedFlags": []
+    },
+    {
+      "sourceIndex": 1329,
+      "id": "giant-yellow-toad",
+      "tags": ["toad", "warrens"],
+      "omittedFlags": []
     }
   ]
 }

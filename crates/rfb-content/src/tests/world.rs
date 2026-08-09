@@ -64,6 +64,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.black-harpy", 157, 1, 60),
             ("demo.actor.black-mamba", 210, 3, 40),
             ("demo.actor.black-naga", 71, 1, 30),
+            ("demo.actor.black-ogre", 262, 2, 60),
             ("demo.actor.black-orc", 244, 2, 50),
             ("demo.actor.blinking-dot", 22, 1, 10),
             ("demo.actor.bloodfang-the-wolf", 170, 1, 999),
@@ -81,6 +82,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.brown-yeek", 141, 1, 40),
             ("demo.actor.bullroarer-the-hobbit", 914, 3, 999),
             ("demo.actor.carnivorous-flying-monkey", 145, 2, 40),
+            ("demo.actor.carrion", 361, 1, 70),
             ("demo.actor.caustic-icky-thing", 132, 2, 40),
             ("demo.actor.cave-lizard", 82, 1, 30),
             ("demo.actor.cave-orc", 126, 1, 40),
@@ -88,6 +90,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.chaos-shapechanger", 203, 2, 40),
             ("demo.actor.cheerful-leprechaun", 258, 2, 50),
             ("demo.actor.chiokovo", 997, 3, 30),
+            ("demo.actor.clear-hound", 282, 3, 50),
             ("demo.actor.clear-icky-thing", 26, 1, 10),
             ("demo.actor.clear-mushroom-patch", 184, 2, 40),
             ("demo.actor.clear-worm-mass", 79, 2, 30),
@@ -107,6 +110,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.dark-elven-warrior", 182, 1, 40),
             ("demo.actor.death-sword", 107, 5, 40),
             ("demo.actor.devilfish", 918, 4, 50),
+            ("demo.actor.dimetrodon", 1223, 3, 90),
             (
                 "demo.actor.disembodied-hand-that-strangled-people",
                 112,
@@ -118,12 +122,14 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.drider", 234, 2, 50),
             ("demo.actor.druid", 241, 2, 50),
             ("demo.actor.duck", 1241, 1, 25),
+            ("demo.actor.duck-quacked-platypus", 1325, 1, 36),
             ("demo.actor.eagle", 172, 2, 40),
             ("demo.actor.ewok", 92, 2, 40),
             ("demo.actor.fang-farmer-maggots-dog", 55, 2, 999),
             ("demo.actor.filthy-street-urchin", 1, 2, 0),
             ("demo.actor.flesh-golem", 256, 1, 50),
             ("demo.actor.floating-eye", 32, 1, 10),
+            ("demo.actor.flying-skull", 273, 3, 50),
             ("demo.actor.freesia", 57, 1, 999),
             ("demo.actor.frosty-jelly", 84, 1, 40),
             ("demo.actor.fruit-bat", 37, 1, 10),
@@ -131,6 +137,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.gazer", 218, 1, 50),
             ("demo.actor.giant-black-ant", 49, 1, 20),
             ("demo.actor.giant-brown-bat", 114, 1, 40),
+            ("demo.actor.giant-clear-centipede", 276, 2, 30),
             ("demo.actor.giant-cockroach", 1007, 2, 40),
             ("demo.actor.giant-flea", 259, 1, 50),
             ("demo.actor.giant-fruit-fly", 197, 6, 40),
@@ -138,12 +145,14 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.giant-grey-rat", 156, 1, 40),
             ("demo.actor.giant-leech", 95, 1, 40),
             ("demo.actor.giant-moth", 1273, 2, 12),
+            ("demo.actor.giant-octopus", 266, 2, 50),
             ("demo.actor.giant-pink-ant", 168, 2, 80),
             ("demo.actor.giant-pink-frog", 121, 1, 40),
             ("demo.actor.giant-piranha", 187, 2, 90),
             ("demo.actor.giant-salamander", 143, 1, 40),
             ("demo.actor.giant-slug", 120, 1, 40),
             ("demo.actor.giant-spider", 175, 2, 40),
+            ("demo.actor.giant-tarantula", 275, 3, 60),
             ("demo.actor.giant-white-ant", 75, 1, 30),
             ("demo.actor.giant-white-centipede", 24, 1, 10),
             ("demo.actor.giant-white-dragon-fly", 250, 3, 50),
@@ -151,6 +160,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.giant-white-mouse", 27, 1, 10),
             ("demo.actor.giant-white-rat", 86, 1, 40),
             ("demo.actor.giant-white-tick", 176, 2, 40),
+            ("demo.actor.giant-yellow-toad", 1329, 6, 40),
             ("demo.actor.gibbering-mouther", 253, 4, 50),
             ("demo.actor.goblin", 87, 1, 40),
             ("demo.actor.golfimbul-the-hill-orc-chief", 215, 3, 999),
@@ -169,14 +179,19 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.grip-farmer-maggots-dog", 53, 2, 999),
             ("demo.actor.grishnakh-the-hill-orc", 186, 3, 999),
             ("demo.actor.grizzly-bear", 191, 1, 45),
+            ("demo.actor.guardian-naga", 269, 2, 50),
             ("demo.actor.hairy-mold", 190, 2, 40),
+            ("demo.actor.half-orc", 264, 3, 50),
             ("demo.actor.hellcat", 222, 1, 50),
             ("demo.actor.hibagon", 983, 10, 30),
             ("demo.actor.hill-orc", 149, 1, 40),
             ("demo.actor.hippocampus", 207, 1, 40),
+            ("demo.actor.hippogriff", 209, 1, 40),
             ("demo.actor.hobbes-the-tiger", 200, 2, 999),
+            ("demo.actor.homonculus", 280, 3, 50),
             ("demo.actor.horse", 956, 1, 20),
             ("demo.actor.hunting-hawk-of-julian", 151, 2, 40),
+            ("demo.actor.illusionist", 240, 2, 50),
             ("demo.actor.insect-swarm", 38, 1, 10),
             ("demo.actor.irish-wolfhound-of-flora", 254, 2, 50),
             ("demo.actor.ixitxachitl", 220, 1, 50),
@@ -202,12 +217,14 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.large-white-snake", 21, 1, 10),
             ("demo.actor.large-yellow-snake", 59, 1, 20),
             ("demo.actor.lemure", 148, 3, 40),
+            ("demo.actor.light-hound", 271, 2, 60),
             ("demo.actor.lion", 1321, 2, 50),
             ("demo.actor.lost-soul", 133, 2, 40),
             ("demo.actor.lousy-the-king-of-louses", 1063, 3, 999),
             ("demo.actor.lug-the-grotesque", 1183, 3, 999),
             ("demo.actor.lurker", 247, 3, 50),
             ("demo.actor.lynx", 1347, 2, 40),
+            ("demo.actor.mad-bear", 1028, 1, 40),
             ("demo.actor.manes", 128, 2, 40),
             ("demo.actor.master-yeek", 224, 2, 40),
             ("demo.actor.mauhur-the-orc-captain", 1072, 3, 999),
@@ -216,6 +233,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.metallic-green-centipede", 42, 1, 20),
             ("demo.actor.metallic-red-centipede", 77, 1, 30),
             ("demo.actor.mine-dog", 221, 4, 50),
+            ("demo.actor.mirkwood-spider", 277, 2, 50),
             ("demo.actor.moaning-spirit", 231, 2, 50),
             ("demo.actor.mongbat", 235, 3, 50),
             ("demo.actor.moon-beast", 223, 1, 50),
@@ -267,6 +285,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.scruffy-looking-hobbit", 74, 1, 30),
             ("demo.actor.servant-of-glaaki", 181, 1, 40),
             ("demo.actor.shadow-creature-of-fiona", 201, 2, 40),
+            ("demo.actor.shadow-hound", 272, 2, 60),
             ("demo.actor.shallow-puddle", 885, 6, 30),
             ("demo.actor.sheep", 1226, 4, 20),
             ("demo.actor.shrieker-mushroom-patch", 40, 1, 50),
@@ -297,10 +316,14 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.tax-collector", 199, 3, 40),
             ("demo.actor.tengu", 194, 1, 40),
             ("demo.actor.the-borshin", 177, 2, 999),
+            ("demo.actor.the-ghost-q", 1003, 3, 999),
             ("demo.actor.tiger", 230, 2, 50),
+            ("demo.actor.time-initiate", 1091, 3, 40),
+            ("demo.actor.trench-wurm", 1070, 1, 50),
             ("demo.actor.ufthak-of-cirith-ungol", 260, 3, 999),
             ("demo.actor.undead-mass", 202, 2, 40),
             ("demo.actor.unruly-horse", 957, 2, 30),
+            ("demo.actor.unstable-worm-mass", 876, 4, 50),
             ("demo.actor.vlasta", 249, 3, 50),
             ("demo.actor.vorpal-bunny", 205, 3, 40),
             ("demo.actor.wallaby", 1316, 2, 30),
@@ -930,6 +953,168 @@ fn level_fourteen_harvest_reuses_existing_mechanics_and_abilities() {
             .iter()
             .any(|tag| tag == "unique")
     );
+}
+
+#[test]
+fn level_fifteen_direct_harvest_reuses_existing_mechanics_and_abilities() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actor = |id: &str| {
+        artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == id)
+            .unwrap_or_else(|| panic!("{id} should be imported"))
+    };
+    let ability_ids = |id: &str| {
+        actor(id)
+            .monster_casting
+            .as_ref()
+            .unwrap_or_else(|| panic!("{id} should retain monster casting"))
+            .abilities
+            .iter()
+            .map(|candidate| candidate.ability_id.as_str())
+            .collect::<BTreeSet<_>>()
+    };
+
+    for id in [
+        "demo.actor.hippogriff",
+        "demo.actor.illusionist",
+        "demo.actor.black-ogre",
+        "demo.actor.half-orc",
+        "demo.actor.giant-octopus",
+        "demo.actor.guardian-naga",
+        "demo.actor.light-hound",
+        "demo.actor.shadow-hound",
+        "demo.actor.flying-skull",
+        "demo.actor.giant-tarantula",
+        "demo.actor.giant-clear-centipede",
+        "demo.actor.mirkwood-spider",
+        "demo.actor.homonculus",
+        "demo.actor.clear-hound",
+        "demo.actor.carrion",
+        "demo.actor.unstable-worm-mass",
+        "demo.actor.the-ghost-q",
+        "demo.actor.mad-bear",
+        "demo.actor.trench-wurm",
+        "demo.actor.time-initiate",
+        "demo.actor.dimetrodon",
+        "demo.actor.duck-quacked-platypus",
+        "demo.actor.giant-yellow-toad",
+    ] {
+        assert_eq!(actor(id).level, 15, "{id} should remain level 15");
+    }
+    for id in [
+        "demo.actor.hippogriff",
+        "demo.actor.black-ogre",
+        "demo.actor.half-orc",
+        "demo.actor.giant-octopus",
+        "demo.actor.guardian-naga",
+        "demo.actor.flying-skull",
+        "demo.actor.giant-tarantula",
+        "demo.actor.giant-clear-centipede",
+        "demo.actor.mirkwood-spider",
+        "demo.actor.homonculus",
+        "demo.actor.clear-hound",
+        "demo.actor.carrion",
+        "demo.actor.unstable-worm-mass",
+        "demo.actor.the-ghost-q",
+        "demo.actor.mad-bear",
+        "demo.actor.trench-wurm",
+        "demo.actor.dimetrodon",
+        "demo.actor.giant-yellow-toad",
+    ] {
+        assert!(actor(id).monster_casting.is_none(), "{id} should not cast");
+    }
+
+    assert_eq!(
+        ability_ids("demo.actor.illusionist"),
+        [
+            "rfb-legacy.ability.blind",
+            "rfb-legacy.ability.blink",
+            "rfb-legacy.ability.confuse",
+            "rfb-legacy.ability.darkness",
+            "rfb-legacy.ability.escape",
+            "rfb-legacy.ability.haste-self",
+            "rfb-legacy.ability.paralyze",
+            "rfb-legacy.ability.slow",
+        ]
+        .into_iter()
+        .collect()
+    );
+    assert_eq!(
+        ability_ids("demo.actor.light-hound"),
+        ["rfb-legacy.ability.breath-light-17-400-r2"]
+            .into_iter()
+            .collect()
+    );
+    assert_eq!(
+        ability_ids("demo.actor.shadow-hound"),
+        ["rfb-legacy.ability.breath-dark-17-400-r2"]
+            .into_iter()
+            .collect()
+    );
+    assert_eq!(
+        ability_ids("demo.actor.time-initiate"),
+        ["rfb-legacy.ability.haste-self", "rfb-legacy.ability.slow",]
+            .into_iter()
+            .collect()
+    );
+    assert_eq!(
+        ability_ids("demo.actor.duck-quacked-platypus"),
+        ["rfb-legacy.ability.shriek"].into_iter().collect()
+    );
+
+    assert!(actor("demo.actor.hippogriff").rideable);
+    assert_eq!(
+        actor("demo.actor.light-hound")
+            .light
+            .as_ref()
+            .map(|light| (light.radius, light.intrinsic)),
+        Some((3, true))
+    );
+    let unstable = actor("demo.actor.unstable-worm-mass");
+    assert!(unstable.allocation.as_ref().is_some_and(
+        |allocation| allocation.multiplies && allocation.random_movement_percent == 75
+    ));
+    assert!(
+        unstable
+            .melee_routine
+            .as_ref()
+            .and_then(|routine| routine.blows.first())
+            .is_some_and(|blow| blow.self_destructs)
+    );
+    let ghost = actor("demo.actor.the-ghost-q");
+    assert!(ghost.tags.iter().any(|tag| tag == "unique"));
+    assert!(ghost.movement.modes.contains(&ActorMovementMode::PassWall));
+    assert!(
+        ghost
+            .melee_routine
+            .as_ref()
+            .is_some_and(|routine| routine.blows.iter().any(|blow| blow
+                .effects
+                .iter()
+                .any(|effect| matches!(effect, MeleeBlowEffectDefinition::EatFood { .. }))))
+    );
+    assert!(actor("demo.actor.trench-wurm").rideable);
+    assert!(
+        actor("demo.actor.trench-wurm")
+            .terrain_interaction
+            .destroys_walls
+    );
+    for id in [
+        "demo.actor.duck-quacked-platypus",
+        "demo.actor.giant-yellow-toad",
+    ] {
+        assert_eq!(
+            actor(id)
+                .allocation
+                .as_ref()
+                .expect("regional allocation")
+                .legacy_dungeon_indices,
+            [35]
+        );
+    }
 }
 
 #[test]
