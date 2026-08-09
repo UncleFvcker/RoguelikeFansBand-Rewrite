@@ -3906,6 +3906,12 @@ impl Game {
             self.resolve_monster_melee_target(index, &target, events, changed, removed_entities)?;
             return Ok(ActorStepOutcome::Interacted);
         }
+        if let Some(broken) =
+            self.try_monster_break_warding_glyph(index, next_position, events, changed)
+            && !broken
+        {
+            return Ok(ActorStepOutcome::Interacted);
+        }
         if !self.actor_can_enter_position(index, next_position) {
             match self.try_monster_door_interaction(index, next_position, events, changed) {
                 Some(true) => {}
@@ -4690,7 +4696,7 @@ impl Game {
             || self.ambient_light(position, &sources) > 0
     }
 
-    fn darken_room(&mut self, origin: Position) -> Vec<Position> {
+    fn connected_glow_positions(&self, origin: Position) -> Vec<Position> {
         let Some(origin_index) = self.index(origin) else {
             return Vec::new();
         };
@@ -4698,11 +4704,11 @@ impl Game {
             return Vec::new();
         }
 
-        self.glow[origin_index] = false;
+        let mut visited = BTreeSet::from([origin]);
         let mut queue = VecDeque::from([origin]);
-        let mut darkened = Vec::new();
+        let mut positions = Vec::new();
         while let Some(position) = queue.pop_front() {
-            darkened.push(position);
+            positions.push(position);
             for dy in -1..=1 {
                 for dx in -1..=1 {
                     if dx == 0 && dy == 0 {
@@ -4715,12 +4721,22 @@ impl Game {
                     let Some(index) = self.index(neighbor) else {
                         continue;
                     };
-                    if self.glow[index] {
-                        self.glow[index] = false;
+                    if self.glow[index] && visited.insert(neighbor) {
                         queue.push_back(neighbor);
                     }
                 }
             }
+        }
+        positions
+    }
+
+    fn darken_room(&mut self, origin: Position) -> Vec<Position> {
+        let darkened = self.connected_glow_positions(origin);
+        for position in &darkened {
+            let index = self
+                .index(*position)
+                .expect("connected glow position must remain in bounds");
+            self.glow[index] = false;
         }
         darkened
     }

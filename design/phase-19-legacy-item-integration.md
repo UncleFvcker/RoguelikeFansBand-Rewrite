@@ -56,24 +56,24 @@ work: five unpaired launchers, five instant-artifact rows, two charisma flags,
 and two no-enchant flags. Those rows must not become active merely because the
 launcher multiplier or ammunition dice blocker is removed.
 
-The current audited snapshot after P3.3, against RFB `master` commit
+The current audited snapshot after P3.4, against RFB `master` commit
 `efd63661302866038f58d8cd2553b23e6af3bf9d`, is:
 
 | Measure | Count |
 | --- | ---: |
 | Authoritative source items | 544 |
-| Active source items | 196 |
+| Active source items | 201 |
 | Mechanics ready, not formalized | 106 |
-| Blocked source items | 242 |
-| Formal demo items | 221 |
-| Formal items mapped to RFB | 197 |
+| Blocked source items | 237 |
+| Formal demo items | 226 |
+| Formal items mapped to RFB | 202 |
 | Original formal items | 24 |
 
-The ledger has 149 formal adaptations for 148 unique source items; the generic
+The ledger has 154 formal adaptations for 153 unique source items; the generic
 Staff template intentionally maps to two formal devices. The largest current
 blocker groups are books (68), instant-artifact handling (42), the wallet/gold
-model (18), riding flags (17), and the remaining consumable, scroll, and folded
-ammunition rule gaps (12 each). Re-run the command after source, importer, or
+model (18), riding flags (17), and the remaining consumable and folded
+ammunition rule gaps (12 each); seven scroll effects remain blocked. Re-run the command after source, importer, or
 formal item changes instead of treating these snapshot counts as constants.
 
 ## First Batch
@@ -403,3 +403,42 @@ subject but deliberately does not bump protocol version, regenerate Web/Schema
 bindings, or refresh shared fixtures. The integration worktree must perform
 those generated-artifact and baseline updates once after merging all active
 directions. The save structure and state-hash input schema are unchanged.
+
+## P3.4 Map and Region Rules
+
+P3.4 moves all five planned identities from `blocked` to `active`: Darkness,
+Trap Creation, Light, Rune of Protection, and Destruction. Trap Creation reuses
+the existing fixed eight-neighbor terrain transaction and now treats creatures,
+ground items, gold, and floor connections as occupied. Rune of Protection only
+replaces a clean current floor cell. Its warding glyph rejects monster movement
+and summon placement; hostile monsters use the original resistance 550 break
+check, reduced to two thirds while the player is standing on the glyph, while
+player-side actors never break it.
+
+Light and Darkness use the already persisted and projected per-cell `glow`
+vector. Light changes the radius-two line-of-effect area; Darkness also clears
+the connected glowing room component and applies the original `1d5+3`
+blindness. The ledger records the deliberate omission of the original weak
+light/dark actor damage. Because `glow` already participates in current-floor
+storage, save/load, protocol terrain projection, and state hash, P3.4 adds no
+second lighting structure and does not bump the protocol or state-hash schema.
+
+Destruction is allowed only on non-task dungeon floors. It rolls the original
+13-17 radius and 10% granite / 25% quartz / 15% magma / 50% floor distribution,
+builds all terrain/entity/item/gold mutations before committing them, clears
+light, exploration, and revealed-terrain memory in affected cells, and deletes
+ordinary actors without rewards. The player cell, permanent terrain, every
+floor connection and passage/shop/task entrance, town floors, task floors, and
+unique or guardian actors are protected. The ledger records the deliberate
+omission of the original player flash damage.
+
+Light is regular Alchemist stock. Darkness is shallow Warrens loot, Trap
+Creation appears at depth 9, and Rune of Protection plus Destruction are Black
+Market stock. The authoritative audit reports 201 active, 106 mechanics-ready,
+and 237 blocked source items. The formal pack contains 202 mapped RFB items plus
+24 original items, for 226 total. P3.4 reports five `blockedToActive`, no
+remaining item, and no unresolved secondary blocker. Pack version 1.203.0 has
+content hash
+`7e31d738ec40807ac2ba1dd29727f68d3390aa03a6954b3fb4f44c097d90b04d`.
+The loot/shop change alters common new-game RNG, so shared replay refresh stays
+with the integration worktree.

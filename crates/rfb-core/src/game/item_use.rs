@@ -11,6 +11,13 @@ pub(super) enum ItemUsePlan {
     CreateAdjacentTerrain {
         replacements: Vec<(Position, String)>,
     },
+    CreateCurrentTerrain {
+        replacement: Option<(Position, String)>,
+    },
+    SetFloorGlow,
+    AreaDestruction {
+        allowed: bool,
+    },
     DestroyAdjacentTrapsAndDoors {
         replacements: Vec<(Position, String)>,
     },
@@ -38,6 +45,13 @@ pub(super) enum ItemUsePlan {
     },
     Recall(RecallUseAction),
     ResetRecall(floor::RecallDestination),
+}
+
+struct AreaDestructionPlan {
+    terrain_replacements: Vec<(Position, String)>,
+    entity_ids: BTreeSet<String>,
+    item_ids: BTreeSet<String>,
+    gold_pile_ids: BTreeSet<String>,
 }
 
 pub(super) struct SettledItemUse {
@@ -618,6 +632,7 @@ impl Game {
                 | ItemLocation::Shop { .. }
                 | ItemLocation::Home { .. } => None,
             }))
+            .chain(self.gold_piles.iter().map(|pile| pile.position))
             .collect::<BTreeSet<_>>();
         let connections = self
             .floor_connections
@@ -635,6 +650,29 @@ impl Game {
                 .then(|| (position, target_terrain_id.to_owned()))
             })
             .collect()
+    }
+
+    fn current_terrain_creation_replacement(
+        &self,
+        source_terrain_ids: &[String],
+        target_terrain_id: &str,
+    ) -> Option<(Position, String)> {
+        let position = self.player.position;
+        let index = self.index(position)?;
+        (source_terrain_ids.contains(&self.terrain[index])
+            && !self
+                .entities
+                .iter()
+                .any(|entity| entity.hp > 0 && entity.position == position)
+            && !self.items.iter().any(
+                |item| matches!(item.location, ItemLocation::Ground(ground) if ground == position),
+            )
+            && !self.gold_piles.iter().any(|pile| pile.position == position)
+            && !self
+                .floor_connections
+                .iter()
+                .any(|connection| connection.position == position))
+        .then(|| (position, target_terrain_id.to_owned()))
     }
 
     fn adjacent_trap_door_replacements(&self) -> Vec<(Position, String)> {
@@ -683,6 +721,321 @@ impl Game {
             source_kind_id: source_kind_id.to_owned(),
             display_name_key: self.item_display_name_key(source_kind_id),
             affected_positions,
+        });
+    }
+
+    fn resolve_item_current_terrain_creation(
+        &mut self,
+        source_kind_id: &str,
+        replacement: Option<(Position, String)>,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let affected_position = replacement.map(|(position, target_terrain_id)| {
+            let index = self
+                .index(position)
+                .expect("planned current terrain creation must remain in bounds");
+            self.terrain[index] = target_terrain_id;
+            self.revealed_terrain.remove(&position);
+            changed.insert(position);
+            position
+        });
+        if affected_position.is_some() {
+            self.mark_item_aware(source_kind_id);
+        }
+        events.push(DomainEvent::ItemCreatedCurrentTerrain {
+            source_kind_id: source_kind_id.to_owned(),
+            display_name_key: self.item_display_name_key(source_kind_id),
+            affected_position,
+        });
+    }
+
+    fn resolve_item_floor_glow(
+        &mut self,
+        source_kind_id: &str,
+        glow: bool,
+        radius: u8,
+        connected_glow: bool,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let mut positions = self
+            .area_damage_cells(self.player.position, radius)
+            .into_iter()
+            .map(|(_, position)| position)
+            .collect::<BTreeSet<_>>();
+        if connected_glow {
+            positions.extend(self.connected_glow_positions(self.player.position));
+        }
+        let affected_positions = positions
+            .into_iter()
+            .filter(|position| {
+                self.index(*position)
+                    .is_some_and(|index| self.glow[index] != glow)
+            })
+            .collect::<Vec<_>>();
+        for position in &affected_positions {
+            let index = self
+                .index(*position)
+                .expect("planned floor lighting position must remain in bounds");
+            self.glow[index] = glow;
+            changed.insert(*position);
+        }
+        if !affected_positions.is_empty() {
+            self.mark_item_aware(source_kind_id);
+        }
+        events.push(DomainEvent::ItemFloorGlowChanged {
+            source_kind_id: source_kind_id.to_owned(),
+            display_name_key: self.item_display_name_key(source_kind_id),
+            glow,
+            affected_positions,
+        });
+    }
+
+    fn area_destruction_allowed(&self) -> bool {
+        let Some(world) = self.content.world(&self.world_id) else {
+            return false;
+        };
+        let Some(floor) = world
+            .procedural_floors
+            .iter()
+            .find(|floor| floor.id == self.current_floor_id)
+        else {
+            return false;
+        };
+        floor.dungeon_id.is_some()
+            && !world.tasks.iter().any(|task| {
+                task_floors(world, &task.id).any(|floor| floor.id == self.current_floor_id)
+            })
+    }
+
+    fn terrain_is_area_destruction_protected(&self, position: Position) -> bool {
+        if position == self.player.position
+            || self
+                .floor_connections
+                .iter()
+                .any(|connection| connection.position == position)
+        {
+            return true;
+        }
+        if self.entities.iter().any(|entity| {
+            entity.hp > 0
+                && entity.position == position
+                && self.content.actor(&entity.kind_id).is_some_and(|actor| {
+                    actor
+                        .tags
+                        .iter()
+                        .any(|tag| matches!(tag.as_str(), "unique" | "guardian"))
+                })
+        }) {
+            return true;
+        }
+        self.index(position)
+            .and_then(|index| self.content.terrain(&self.terrain[index]))
+            .is_none_or(|terrain| {
+                terrain.tags.iter().any(|tag| {
+                    matches!(
+                        tag.as_str(),
+                        "permanent"
+                            | "passage"
+                            | "stairs-up"
+                            | "stairs-down"
+                            | "shaft"
+                            | "dungeon-entry"
+                            | "task-entry"
+                            | "shop-entrance"
+                    )
+                })
+            })
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn plan_area_destruction(
+        &mut self,
+        minimum_radius: u8,
+        maximum_radius: u8,
+        floor_terrain_id: &str,
+        wall_terrain_id: &str,
+        quartz_terrain_id: &str,
+        magma_terrain_id: &str,
+    ) -> AreaDestructionPlan {
+        let radius_span = u64::from(maximum_radius - minimum_radius) + 1;
+        let radius = minimum_radius
+            + u8::try_from(self.rng.bounded(radius_span))
+                .expect("validated destruction radius span must fit u8");
+        let center = self.player.position;
+        let radius_limit = u32::from(radius);
+        let radius_offset = i32::from(radius);
+        let mut positions = Vec::new();
+        for y in center.y.saturating_sub(radius_offset)..=center.y.saturating_add(radius_offset) {
+            for x in center.x.saturating_sub(radius_offset)..=center.x.saturating_add(radius_offset)
+            {
+                let position = Position { x, y };
+                if self.index(position).is_some()
+                    && rfb_distance(center, position) <= radius_limit
+                    && !self.terrain_is_area_destruction_protected(position)
+                {
+                    positions.push(position);
+                }
+            }
+        }
+        positions.sort_by_key(|position| (rfb_distance(center, *position), position.y, position.x));
+
+        let affected = positions.iter().copied().collect::<BTreeSet<_>>();
+        let entity_ids = self
+            .entities
+            .iter()
+            .filter(|entity| {
+                entity.hp > 0
+                    && affected.contains(&entity.position)
+                    && self
+                        .content
+                        .actor(&entity.kind_id)
+                        .is_some_and(|definition| {
+                            !definition
+                                .tags
+                                .iter()
+                                .any(|tag| matches!(tag.as_str(), "unique" | "guardian"))
+                        })
+            })
+            .map(|entity| entity.id.clone())
+            .collect::<BTreeSet<_>>();
+        let item_ids = self
+            .items
+            .iter()
+            .filter(|item| match &item.location {
+                ItemLocation::Ground(position) => affected.contains(position),
+                ItemLocation::CarriedBy { actor_id } => entity_ids.contains(actor_id),
+                ItemLocation::Inventory
+                | ItemLocation::Equipped { .. }
+                | ItemLocation::Shop { .. }
+                | ItemLocation::Home { .. } => false,
+            })
+            .map(|item| item.id.clone())
+            .collect::<BTreeSet<_>>();
+        let gold_pile_ids = self
+            .gold_piles
+            .iter()
+            .filter(|pile| affected.contains(&pile.position))
+            .map(|pile| pile.id.clone())
+            .collect::<BTreeSet<_>>();
+        let terrain_replacements = positions
+            .into_iter()
+            .map(|position| {
+                let roll = self.rng.bounded(200);
+                let terrain_id = if roll < 20 {
+                    wall_terrain_id
+                } else if roll < 70 {
+                    quartz_terrain_id
+                } else if roll < 100 {
+                    magma_terrain_id
+                } else {
+                    floor_terrain_id
+                };
+                (position, terrain_id.to_owned())
+            })
+            .collect();
+        AreaDestructionPlan {
+            terrain_replacements,
+            entity_ids,
+            item_ids,
+            gold_pile_ids,
+        }
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn resolve_item_area_destruction(
+        &mut self,
+        source_kind_id: &str,
+        allowed: bool,
+        minimum_radius: u8,
+        maximum_radius: u8,
+        floor_terrain_id: &str,
+        wall_terrain_id: &str,
+        quartz_terrain_id: &str,
+        magma_terrain_id: &str,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) {
+        if !allowed {
+            self.mark_item_aware(source_kind_id);
+            events.push(DomainEvent::ItemAreaDestruction {
+                source_kind_id: source_kind_id.to_owned(),
+                display_name_key: self.item_display_name_key(source_kind_id),
+                protected_floor: true,
+                affected_positions: Vec::new(),
+                removed_entities: 0,
+                removed_items: 0,
+                removed_gold_piles: 0,
+            });
+            return;
+        }
+        let plan = self.plan_area_destruction(
+            minimum_radius,
+            maximum_radius,
+            floor_terrain_id,
+            wall_terrain_id,
+            quartz_terrain_id,
+            magma_terrain_id,
+        );
+        let affected_positions = plan
+            .terrain_replacements
+            .iter()
+            .map(|(position, _)| *position)
+            .collect::<Vec<_>>();
+        for (position, terrain_id) in plan.terrain_replacements {
+            let index = self
+                .index(position)
+                .expect("planned destruction position must remain in bounds");
+            self.terrain[index] = terrain_id;
+            self.glow[index] = false;
+            self.explored[index] = false;
+            self.revealed_terrain.remove(&position);
+            changed.insert(position);
+        }
+        for entity_id in &plan.entity_ids {
+            let Some(index) = self
+                .entities
+                .iter()
+                .position(|entity| entity.id == *entity_id)
+            else {
+                continue;
+            };
+            let removed = self.entities.remove(index);
+            if self.riding_actor_id.as_deref() == Some(removed.id.as_str()) {
+                self.riding_actor_id = None;
+            }
+            if let Some(pack_id) = removed
+                .pack
+                .as_ref()
+                .and_then(|pack| (pack.role == MonsterPackRoleDto::Leader).then(|| pack.id.clone()))
+            {
+                for entity in &mut self.entities {
+                    if entity.pack.as_ref().is_some_and(|pack| pack.id == pack_id) {
+                        entity.pack = None;
+                    }
+                }
+            }
+            changed.insert(removed.position);
+            removed_entities.push(removed.id);
+        }
+        self.items
+            .retain(|item| !plan.item_ids.contains(item.id.as_str()));
+        for item_id in &plan.item_ids {
+            self.item_property_knowledge.remove(item_id);
+        }
+        self.gold_piles
+            .retain(|pile| !plan.gold_pile_ids.contains(pile.id.as_str()));
+        self.mark_item_aware(source_kind_id);
+        events.push(DomainEvent::ItemAreaDestruction {
+            source_kind_id: source_kind_id.to_owned(),
+            display_name_key: self.item_display_name_key(source_kind_id),
+            protected_floor: false,
+            affected_positions,
+            removed_entities: plan.entity_ids.len(),
+            removed_items: plan.item_ids.len(),
+            removed_gold_piles: plan.gold_pile_ids.len(),
         });
     }
 
@@ -1145,16 +1498,31 @@ impl Game {
         changed: &mut BTreeSet<Position>,
     ) {
         for effect in effects {
-            if matches!(effect, ItemUseEffectDefinition::Detect { .. }) {
-                self.resolve_item_detection(
-                    source_kind_id.to_owned(),
-                    None,
-                    effect,
+            match effect {
+                effect @ ItemUseEffectDefinition::Detect { .. } => {
+                    self.resolve_item_detection(
+                        source_kind_id.to_owned(),
+                        None,
+                        effect,
+                        events,
+                        changed,
+                    );
+                }
+                ItemUseEffectDefinition::SetFloorGlow {
+                    glow,
+                    radius,
+                    connected_glow,
+                } => self.resolve_item_floor_glow(
+                    source_kind_id,
+                    glow,
+                    radius,
+                    connected_glow,
                     events,
                     changed,
-                );
-            } else {
-                self.resolve_item_self_effect(source_kind_id, &effect, events);
+                ),
+                effect => {
+                    self.resolve_item_self_effect(source_kind_id, &effect, events);
+                }
             }
         }
     }
@@ -1569,6 +1937,48 @@ impl Game {
                 );
             }
             (
+                ItemUseEffectDefinition::CreateCurrentTerrain { .. },
+                ItemUsePlan::CreateCurrentTerrain { replacement },
+            ) => self.resolve_item_current_terrain_creation(&kind_id, replacement, events, changed),
+            (
+                ItemUseEffectDefinition::SetFloorGlow {
+                    glow,
+                    radius,
+                    connected_glow,
+                },
+                ItemUsePlan::SetFloorGlow,
+            ) => self.resolve_item_floor_glow(
+                &kind_id,
+                glow,
+                radius,
+                connected_glow,
+                events,
+                changed,
+            ),
+            (
+                ItemUseEffectDefinition::AreaDestruction {
+                    minimum_radius,
+                    maximum_radius,
+                    floor_terrain_id,
+                    wall_terrain_id,
+                    quartz_terrain_id,
+                    magma_terrain_id,
+                },
+                ItemUsePlan::AreaDestruction { allowed },
+            ) => self.resolve_item_area_destruction(
+                &kind_id,
+                allowed,
+                minimum_radius,
+                maximum_radius,
+                &floor_terrain_id,
+                &wall_terrain_id,
+                &quartz_terrain_id,
+                &magma_terrain_id,
+                events,
+                changed,
+                removed_entities,
+            ),
+            (
                 ItemUseEffectDefinition::DestroyAdjacentTrapsAndDoors,
                 ItemUsePlan::DestroyAdjacentTrapsAndDoors { replacements },
             ) => {
@@ -1765,6 +2175,21 @@ impl Game {
                 replacements: self
                     .adjacent_terrain_creation_replacements(source_terrain_ids, target_terrain_id),
             }),
+            ItemUseEffectDefinition::CreateCurrentTerrain {
+                source_terrain_ids,
+                target_terrain_id,
+            } => self_target.then(|| ItemUsePlan::CreateCurrentTerrain {
+                replacement: self
+                    .current_terrain_creation_replacement(source_terrain_ids, target_terrain_id),
+            }),
+            ItemUseEffectDefinition::SetFloorGlow { .. } => {
+                self_target.then_some(ItemUsePlan::SetFloorGlow)
+            }
+            ItemUseEffectDefinition::AreaDestruction { .. } => {
+                self_target.then(|| ItemUsePlan::AreaDestruction {
+                    allowed: self.area_destruction_allowed(),
+                })
+            }
             ItemUseEffectDefinition::DestroyAdjacentTrapsAndDoors => {
                 self_target.then(|| ItemUsePlan::DestroyAdjacentTrapsAndDoors {
                     replacements: self.adjacent_trap_door_replacements(),
@@ -3481,6 +3906,9 @@ impl Game {
             | ItemUseEffectDefinition::Genocide { .. }
             | ItemUseEffectDefinition::RechargeFromDevice { .. }
             | ItemUseEffectDefinition::CreateAdjacentTerrain { .. }
+            | ItemUseEffectDefinition::CreateCurrentTerrain { .. }
+            | ItemUseEffectDefinition::SetFloorGlow { .. }
+            | ItemUseEffectDefinition::AreaDestruction { .. }
             | ItemUseEffectDefinition::DestroyAdjacentTrapsAndDoors
             | ItemUseEffectDefinition::DispelCategory { .. }
             | ItemUseEffectDefinition::BanishVisible { .. }

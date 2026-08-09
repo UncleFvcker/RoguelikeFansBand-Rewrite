@@ -1421,6 +1421,101 @@
         {
           "additionalProperties": false,
           "properties": {
+            "sourceTerrainIds": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "targetTerrainId": {
+              "type": "string"
+            },
+            "type": {
+              "const": "create-current-terrain",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "sourceTerrainIds",
+            "targetTerrainId"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "connectedGlow": {
+              "default": false,
+              "type": "boolean"
+            },
+            "glow": {
+              "type": "boolean"
+            },
+            "radius": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "set-floor-glow",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "glow",
+            "radius"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "floorTerrainId": {
+              "type": "string"
+            },
+            "magmaTerrainId": {
+              "type": "string"
+            },
+            "maximumRadius": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "minimumRadius": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "quartzTerrainId": {
+              "type": "string"
+            },
+            "type": {
+              "const": "area-destruction",
+              "type": "string"
+            },
+            "wallTerrainId": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "minimumRadius",
+            "maximumRadius",
+            "floorTerrainId",
+            "wallTerrainId",
+            "quartzTerrainId",
+            "magmaTerrainId"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
             "type": {
               "const": "destroy-adjacent-traps-and-doors",
               "type": "string"

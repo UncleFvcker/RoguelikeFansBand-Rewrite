@@ -3349,6 +3349,422 @@ fn adjacent_terrain_creation_consumes_empty_result_as_tried_without_rng() {
 }
 
 #[test]
+fn p3_4_trap_creation_only_replaces_clean_adjacent_floor() {
+    let mut game = skill_check_game(205, "demo.build.scholar");
+    game.items.clear();
+    game.gold_piles.clear();
+    game.terrain.fill("demo.terrain.wall".to_owned());
+    let center = game.player.position;
+    replace_terrain(&mut game, center, "demo.terrain.floor");
+    let clean = Position {
+        x: center.x,
+        y: center.y - 1,
+    };
+    let gold = Position {
+        x: center.x + 1,
+        y: center.y - 1,
+    };
+    let connection = Position {
+        x: center.x + 1,
+        y: center.y,
+    };
+    let actor = Position {
+        x: center.x + 1,
+        y: center.y + 1,
+    };
+    let item = Position {
+        x: center.x,
+        y: center.y + 1,
+    };
+    for position in [clean, gold, connection, actor, item] {
+        replace_terrain(&mut game, position, "demo.terrain.floor");
+    }
+    game.gold_piles.push(GoldPile {
+        id: "test.gold.trap-blocker".to_owned(),
+        position: gold,
+        amount: 1,
+        appearance: GoldAppearanceDto::Copper,
+    });
+    game.floor_connections.push(FloorConnectionState {
+        id: "test.connection.trap-blocker".to_owned(),
+        position: connection,
+        target_floor_id: None,
+        target_connection_id: None,
+    });
+    game.push_generated_actor(
+        "test.actor.trap-blocker".to_owned(),
+        "demo.actor.ember-mote",
+        actor,
+    );
+    give_inventory_item(
+        &mut game,
+        "test.item.trap-blocker",
+        "demo.item.ration-of-food",
+    );
+    game.items
+        .iter_mut()
+        .find(|candidate| candidate.id == "test.item.trap-blocker")
+        .expect("ground blocker should exist")
+        .location = ItemLocation::Ground(item);
+    give_inventory_item(
+        &mut game,
+        "test.item.trap-creation.1",
+        "demo.item.trap-creation-scroll",
+    );
+    let mut events = Vec::new();
+    game.use_inventory_item(
+        "test.item.trap-creation.1",
+        None,
+        None,
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("trap creation should resolve");
+    assert_eq!(game.terrain_at(clean), "demo.terrain.created-trap");
+    for position in [gold, connection, actor, item] {
+        assert_eq!(game.terrain_at(position), "demo.terrain.floor");
+    }
+    assert!(matches!(
+        events.as_slice(),
+        [DomainEvent::ItemCreatedAdjacentTerrain {
+            affected_positions,
+            ..
+        }] if affected_positions == &[clean]
+    ));
+}
+
+#[test]
+fn p3_4_light_and_darkness_reuse_persisted_floor_glow() {
+    let mut game = skill_check_game(206, "demo.build.scholar");
+    game.glow.fill(false);
+    give_inventory_item(&mut game, "test.item.light.1", "demo.item.light-scroll");
+    let hash_before = game.state_hash();
+    let mut events = Vec::new();
+    game.use_inventory_item(
+        "test.item.light.1",
+        None,
+        None,
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("light scroll should resolve");
+    assert!(game.glow.iter().any(|glow| *glow));
+    assert_ne!(game.state_hash(), hash_before);
+    assert!(matches!(
+        events.as_slice(),
+        [DomainEvent::ItemFloorGlowChanged {
+            glow: true,
+            affected_positions,
+            ..
+        }] if !affected_positions.is_empty()
+    ));
+
+    let restored = Game::from_save(game.to_save()).expect("lit floor should reload");
+    assert_eq!(restored.glow, game.glow);
+    assert_eq!(restored.state_hash(), game.state_hash());
+
+    give_inventory_item(
+        &mut game,
+        "test.item.darkness.1",
+        "demo.item.darkness-scroll",
+    );
+    let mut darkness_events = Vec::new();
+    game.use_inventory_item(
+        "test.item.darkness.1",
+        None,
+        None,
+        &mut darkness_events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("darkness scroll should resolve");
+    assert!(game.glow.iter().all(|glow| !*glow));
+    assert!(darkness_events.iter().any(|event| matches!(
+        event,
+        DomainEvent::ItemFloorGlowChanged {
+            glow: false,
+            affected_positions,
+            ..
+        } if !affected_positions.is_empty()
+    )));
+}
+
+#[test]
+fn p3_4_rune_requires_clean_floor_and_uses_original_break_threshold() {
+    let mut blocked = skill_check_game(207, "demo.build.scholar");
+    let blocked_position = blocked.player.position;
+    replace_terrain(&mut blocked, blocked_position, "demo.terrain.floor");
+    blocked.gold_piles.push(GoldPile {
+        id: "test.gold.rune-blocker".to_owned(),
+        position: blocked.player.position,
+        amount: 1,
+        appearance: GoldAppearanceDto::Copper,
+    });
+    give_inventory_item(
+        &mut blocked,
+        "test.item.rune.blocked",
+        "demo.item.rune-of-protection-scroll",
+    );
+    let mut blocked_events = Vec::new();
+    blocked
+        .use_inventory_item(
+            "test.item.rune.blocked",
+            None,
+            None,
+            &mut blocked_events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("blocked rune should still consume the scroll");
+    assert_eq!(
+        blocked.terrain_at(blocked.player.position),
+        "demo.terrain.floor"
+    );
+    assert!(matches!(
+        blocked_events.as_slice(),
+        [DomainEvent::ItemCreatedCurrentTerrain {
+            affected_position: None,
+            ..
+        }]
+    ));
+
+    let mut game = game_with_actor_definition(208, "demo.actor.dread-vampire", |actor| {
+        actor.level = 400;
+    });
+    clear_monsters(&mut game);
+    let player_position = game.player.position;
+    replace_terrain(&mut game, player_position, "demo.terrain.floor");
+    give_inventory_item(
+        &mut game,
+        "test.item.rune.legal",
+        "demo.item.rune-of-protection-scroll",
+    );
+    game.use_inventory_item(
+        "test.item.rune.legal",
+        None,
+        None,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("legal rune should resolve");
+    assert_eq!(
+        game.terrain_at(game.player.position),
+        "demo.terrain.warding-glyph"
+    );
+    let monster_position = Position {
+        x: game.player.position.x + 1,
+        y: game.player.position.y,
+    };
+    replace_terrain(&mut game, monster_position, "demo.terrain.floor");
+    game.push_generated_actor(
+        "test.actor.rune-breaker".to_owned(),
+        "demo.actor.dread-vampire",
+        monster_position,
+    );
+    let mut events = Vec::new();
+    assert_eq!(
+        game.try_monster_break_warding_glyph(
+            0,
+            game.player.position,
+            &mut events,
+            &mut BTreeSet::new(),
+        ),
+        Some(true)
+    );
+    assert_eq!(game.terrain_at(game.player.position), "demo.terrain.floor");
+    assert!(matches!(
+        events.as_slice(),
+        [DomainEvent::WardingGlyphBroken { .. }]
+    ));
+}
+
+#[test]
+fn p3_4_destruction_commits_atomically_and_refuses_protected_floors() {
+    let mut protected = skill_check_game(209, "demo.build.scholar");
+    give_inventory_item(
+        &mut protected,
+        "test.item.destruction.protected",
+        "demo.item.destruction-scroll",
+    );
+    let terrain_before = protected.terrain.clone();
+    let draws_before = protected.rng_draw_counter();
+    let mut protected_events = Vec::new();
+    protected
+        .use_inventory_item(
+            "test.item.destruction.protected",
+            None,
+            None,
+            &mut protected_events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("town destruction should resolve as protected");
+    assert_eq!(protected.terrain, terrain_before);
+    assert_eq!(protected.rng_draw_counter(), draws_before);
+    assert!(matches!(
+        protected_events.as_slice(),
+        [DomainEvent::ItemAreaDestruction {
+            protected_floor: true,
+            ..
+        }]
+    ));
+    protected.current_floor_id = "demo.floor.echo-task-rift".to_owned();
+    give_inventory_item(
+        &mut protected,
+        "test.item.destruction.task",
+        "demo.item.destruction-scroll",
+    );
+    let task_draws_before = protected.rng_draw_counter();
+    let mut task_events = Vec::new();
+    protected
+        .use_inventory_item(
+            "test.item.destruction.task",
+            None,
+            None,
+            &mut task_events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("task destruction should resolve as protected");
+    assert_eq!(protected.rng_draw_counter(), task_draws_before);
+    assert!(matches!(
+        task_events.as_slice(),
+        [DomainEvent::ItemAreaDestruction {
+            protected_floor: true,
+            ..
+        }]
+    ));
+
+    let mut game = skill_check_game(210, "demo.build.scholar");
+    game.items.clear();
+    game.gold_piles.clear();
+    game.current_floor_id = "demo.floor.echo-depth-1".to_owned();
+    game.terrain.fill("demo.terrain.floor".to_owned());
+    game.glow.fill(true);
+    game.explored.fill(true);
+    let center = game.player.position;
+    let permanent = Position {
+        x: center.x + 1,
+        y: center.y,
+    };
+    let passage = Position {
+        x: center.x + 2,
+        y: center.y,
+    };
+    let connection = Position {
+        x: center.x - 1,
+        y: center.y,
+    };
+    let unique = Position {
+        x: center.x,
+        y: center.y - 1,
+    };
+    let destroyed = Position {
+        x: center.x,
+        y: center.y + 1,
+    };
+    replace_terrain(&mut game, permanent, "demo.terrain.permanent-wall");
+    replace_terrain(&mut game, passage, "demo.terrain.stairs-down");
+    game.floor_connections.push(FloorConnectionState {
+        id: "test.connection.destruction".to_owned(),
+        position: connection,
+        target_floor_id: None,
+        target_connection_id: None,
+    });
+    game.push_generated_actor(
+        "test.actor.destruction-target".to_owned(),
+        "demo.actor.ember-mote",
+        destroyed,
+    );
+    game.push_generated_actor(
+        "test.actor.destruction-unique".to_owned(),
+        "demo.actor.bloodfang-the-wolf",
+        unique,
+    );
+    give_inventory_item(
+        &mut game,
+        "test.item.destruction-ground",
+        "demo.item.ration-of-food",
+    );
+    game.items
+        .iter_mut()
+        .find(|item| item.id == "test.item.destruction-ground")
+        .expect("ground target should exist")
+        .location = ItemLocation::Ground(destroyed);
+    game.gold_piles.push(GoldPile {
+        id: "test.gold.destruction".to_owned(),
+        position: destroyed,
+        amount: 12,
+        appearance: GoldAppearanceDto::Silver,
+    });
+    give_inventory_item(
+        &mut game,
+        "test.item.destruction.legal",
+        "demo.item.destruction-scroll",
+    );
+    let mut events = Vec::new();
+    let mut changed = BTreeSet::new();
+    let mut removed = Vec::new();
+    game.use_inventory_item(
+        "test.item.destruction.legal",
+        None,
+        None,
+        &mut events,
+        &mut changed,
+        &mut removed,
+    )
+    .expect("dungeon destruction should resolve");
+
+    assert_eq!(game.terrain_at(center), "demo.terrain.floor");
+    assert_eq!(game.terrain_at(permanent), "demo.terrain.permanent-wall");
+    assert_eq!(game.terrain_at(passage), "demo.terrain.stairs-down");
+    assert_eq!(game.terrain_at(connection), "demo.terrain.floor");
+    assert_eq!(game.terrain_at(unique), "demo.terrain.floor");
+    for position in [center, permanent, passage, connection, unique] {
+        let index = game
+            .index(position)
+            .expect("protected cell must be in bounds");
+        assert!(game.glow[index]);
+        assert!(game.explored[index]);
+    }
+    assert!(
+        game.entities
+            .iter()
+            .any(|entity| entity.id == "test.actor.destruction-unique")
+    );
+    let destroyed_index = game.index(destroyed).expect("target must be in bounds");
+    assert!(!game.glow[destroyed_index]);
+    assert!(!game.explored[destroyed_index]);
+    assert!(changed.contains(&destroyed));
+    assert_eq!(removed, ["test.actor.destruction-target"]);
+    assert!(
+        !game
+            .items
+            .iter()
+            .any(|item| item.id == "test.item.destruction-ground")
+    );
+    assert!(
+        !game
+            .gold_piles
+            .iter()
+            .any(|pile| pile.id == "test.gold.destruction")
+    );
+    assert!(matches!(
+        events.as_slice(),
+        [DomainEvent::ItemAreaDestruction {
+            protected_floor: false,
+            removed_entities: 1,
+            removed_items: 1,
+            removed_gold_piles: 1,
+            ..
+        }]
+    ));
+}
+
+#[test]
 fn vengeance_retaliates_against_monster_spells_but_not_after_player_death() {
     fn vengeance_status() -> StatusInstance {
         StatusInstance {

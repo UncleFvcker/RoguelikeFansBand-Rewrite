@@ -140,23 +140,23 @@
           "id": "tile-mutations",
           "primaryBlockers": ["scroll-effect"],
           "items": [
-            { "sourceIndex": 322, "sourceName": "Trap Creation:wahx our gre", "sourceId": "trap-creation-wahx-our-gre" },
-            { "sourceIndex": 351, "sourceName": "Rune of Protection:sef unag famur", "sourceId": "rune-of-protection-sef-unag-famur" }
+            { "sourceIndex": 322, "sourceName": "Trap Creation:wahx our gre", "sourceId": "trap-creation-wahx-our-gre", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] },
+            { "sourceIndex": 351, "sourceName": "Rune of Protection:sef unag famur", "sourceId": "rune-of-protection-sef-unag-famur", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] }
           ]
         },
         {
           "id": "floor-lighting",
           "primaryBlockers": ["scroll-effect"],
           "items": [
-            { "sourceIndex": 315, "sourceName": "Darkness:fapay doea", "sourceId": "darkness-fapay-doea" },
-            { "sourceIndex": 338, "sourceName": "Light:misat dernin", "sourceId": "light-misat-dernin" }
+            { "sourceIndex": 315, "sourceName": "Darkness:fapay doea", "sourceId": "darkness-fapay-doea", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] },
+            { "sourceIndex": 338, "sourceName": "Light:misat dernin", "sourceId": "light-misat-dernin", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] }
           ]
         },
         {
           "id": "area-destruction",
           "primaryBlockers": ["scroll-effect"],
           "items": [
-            { "sourceIndex": 353, "sourceName": "Destruction:denmung ishbul", "sourceId": "destruction-denmung-ishbul" }
+            { "sourceIndex": 353, "sourceName": "Destruction:denmung ishbul", "sourceId": "destruction-denmung-ishbul", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] }
           ]
         }
       ]

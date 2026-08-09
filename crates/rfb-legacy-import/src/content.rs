@@ -1479,7 +1479,8 @@ pub fn parse_r_info(text: &str) -> Result<Vec<LegacyMonsterEntry>, LegacyImportE
     Ok(entries)
 }
 
-const MAPPED_TERRAIN_FLAGS: [&str; 5] = ["MOVE", "LOS", "PROJECT", "PERMANENT", "HURT_DISI"];
+const MAPPED_TERRAIN_FLAGS: [&str; 6] =
+    ["MOVE", "LOS", "PROJECT", "PERMANENT", "HURT_DISI", "GLYPH"];
 
 /// Parses k_info entries; `&` article and `~` plural markers strip out of
 /// names, and the `N:*:` auto-index form continues the running counter.
@@ -1860,8 +1861,13 @@ fn player_ability_book_for_item(entry: &LegacyItemEntry) -> Option<&'static str>
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 struct TerrainCreationImportIds {
     source_terrain_ids: Vec<String>,
+    floor_terrain_id: Option<String>,
+    created_trap_terrain_id: Option<String>,
+    glyph_terrain_id: Option<String>,
     tree_terrain_id: Option<String>,
     wall_terrain_id: Option<String>,
+    quartz_terrain_id: Option<String>,
+    magma_terrain_id: Option<String>,
 }
 
 fn terrain_creation_import_ids(terrain: &[LegacyTerrainEntry]) -> TerrainCreationImportIds {
@@ -1882,12 +1888,19 @@ fn terrain_creation_import_ids(terrain: &[LegacyTerrainEntry]) -> TerrainCreatio
             ids.source_terrain_ids.push(id.clone());
         }
         match entry.tag.as_str() {
+            "FLOOR" => ids.floor_terrain_id = Some(id.clone()),
+            "GLYPH" => ids.glyph_terrain_id = Some(id.clone()),
             "TREE" => ids.tree_terrain_id = Some(id),
-            "GRANITE" => ids.wall_terrain_id = Some(id),
+            "GRANITE" => ids.wall_terrain_id = Some(id.clone()),
+            "QUARTZ" => ids.quartz_terrain_id = Some(id.clone()),
+            "MAGMA" => ids.magma_terrain_id = Some(id),
             _ => {}
         }
     }
     ids.source_terrain_ids.sort();
+    if ids.floor_terrain_id.is_some() {
+        ids.created_trap_terrain_id = Some("rfb-legacy.terrain.created-trap".to_owned());
+    }
     ids
 }
 
@@ -1953,6 +1966,20 @@ fn fixed_consumable_use_action_with_terrain(
         return Some(serde_json::json!({"effect": effect}));
     }
     let effect = match (entry.tval, entry.sval) {
+        (70, 0) => sequence(vec![
+            serde_json::json!({
+                "type": "apply-blindness",
+                "durationDice": 1,
+                "durationSides": 5,
+                "durationBonus": 3
+            }),
+            serde_json::json!({
+                "type": "set-floor-glow",
+                "glow": false,
+                "radius": 3,
+                "connectedGlow": true
+            }),
+        ]),
         (70, 1) => serde_json::json!({"type": "aggravate-monsters"}),
         (70, 2) => serde_json::json!({"type": "curse-equipped-item", "target": "armor"}),
         (70, 3) => serde_json::json!({"type": "curse-equipped-item", "target": "weapon"}),
@@ -1986,6 +2013,14 @@ fn fixed_consumable_use_action_with_terrain(
             1,
             false,
         ),
+        (70, 7) => {
+            let terrain_creation = terrain_creation?;
+            serde_json::json!({
+                "type": "create-adjacent-terrain",
+                "sourceTerrainIds": terrain_creation.source_terrain_ids,
+                "targetTerrainId": terrain_creation.created_trap_terrain_id.as_ref()?
+            })
+        }
         (70, 8) => serde_json::json!({"type": "random-teleport", "maximumDistance": 10}),
         (70, 9) => serde_json::json!({"type": "random-teleport", "maximumDistance": 100}),
         (70, 10) => serde_json::json!({"type": "teleport-level"}),
@@ -2028,6 +2063,11 @@ fn fixed_consumable_use_action_with_terrain(
             "type": "recharge-from-device",
             "power": 100
         }),
+        (70, 24) => serde_json::json!({
+            "type": "set-floor-glow",
+            "glow": true,
+            "radius": 2
+        }),
         (70, 43) => serde_json::json!({
             "type": "increase-spell-learning-capacity"
         }),
@@ -2043,9 +2083,29 @@ fn fixed_consumable_use_action_with_terrain(
         (70, 35) => bless(48, 24),
         (70, 36) => serde_json::json!({"type": "prepare-confusing-strike"}),
         (70, 37) => serde_json::json!({"type": "protection-from-evil"}),
+        (70, 38) => {
+            let terrain_creation = terrain_creation?;
+            serde_json::json!({
+                "type": "create-current-terrain",
+                "sourceTerrainIds": terrain_creation.source_terrain_ids,
+                "targetTerrainId": terrain_creation.glyph_terrain_id.as_ref()?
+            })
+        }
         (70, 39) => serde_json::json!({
             "type": "destroy-adjacent-traps-and-doors"
         }),
+        (70, 41) => {
+            let terrain_creation = terrain_creation?;
+            serde_json::json!({
+                "type": "area-destruction",
+                "minimumRadius": 13,
+                "maximumRadius": 17,
+                "floorTerrainId": terrain_creation.floor_terrain_id.as_ref()?,
+                "wallTerrainId": terrain_creation.wall_terrain_id.as_ref()?,
+                "quartzTerrainId": terrain_creation.quartz_terrain_id.as_ref()?,
+                "magmaTerrainId": terrain_creation.magma_terrain_id.as_ref()?
+            })
+        }
         (70, 42) => serde_json::json!({
             "type": "dispel-category",
             "category": "undead",
@@ -6112,6 +6172,12 @@ fn terrain_json(
     if entry.flags.iter().any(|flag| flag == "TRAP") {
         tags.push("trap");
     }
+    if entry.flags.iter().any(|flag| flag == "PERMANENT") {
+        tags.push("permanent");
+    }
+    if entry.flags.iter().any(|flag| flag == "GLYPH") {
+        tags.push("warding-glyph");
+    }
     if entry.flags.iter().any(|flag| flag == "WATER") {
         tags.push("water");
     }
@@ -8143,8 +8209,12 @@ fn convert_content_from(
             terrain_creation.source_terrain_ids.push(terrain_id.clone());
         }
         match entry.tag.as_str() {
+            "FLOOR" => terrain_creation.floor_terrain_id = Some(terrain_id.clone()),
+            "GLYPH" => terrain_creation.glyph_terrain_id = Some(terrain_id.clone()),
             "TREE" => terrain_creation.tree_terrain_id = Some(terrain_id.clone()),
             "GRANITE" => terrain_creation.wall_terrain_id = Some(terrain_id.clone()),
+            "QUARTZ" => terrain_creation.quartz_terrain_id = Some(terrain_id.clone()),
+            "MAGMA" => terrain_creation.magma_terrain_id = Some(terrain_id.clone()),
             _ => {}
         }
         terrain_ids_by_tag
@@ -8168,6 +8238,32 @@ fn convert_content_from(
         terrain_files.push((format!("{id}.json"), terrain_json(entry, &id, destroy_to)));
     }
     terrain_creation.source_terrain_ids.sort();
+    if let Some(floor_terrain_id) = &terrain_creation.floor_terrain_id {
+        terrain_creation.created_trap_terrain_id =
+            Some("rfb-legacy.terrain.created-trap".to_owned());
+        terrain_files.push((
+            "created-trap.json".to_owned(),
+            serde_json::json!({
+                "$schema": format!("{SCHEMA_BASE}/terrain.schema.json"),
+                "formatVersion": 1,
+                "id": "rfb-legacy.terrain.created-trap",
+                "nameKey": "terrain-legacy-created-trap-name",
+                "descriptionKey": "terrain-legacy-created-trap-description",
+                "glyph": "^",
+                "walkable": true,
+                "blocksSight": false,
+                "concealedAsTerrainId": floor_terrain_id,
+                "searchCheckDifficulty": 10,
+                "trap": {
+                    "damage": 4,
+                    "damageType": "physical",
+                    "disarmToTerrainId": floor_terrain_id,
+                    "disarmCheckDifficulty": 10
+                },
+                "tags": ["legacy-import", "trap"]
+            }),
+        ));
+    }
 
     let mut actor_files = Vec::new();
     let mut seen_actor_ids = BTreeMap::new();
@@ -12860,6 +12956,44 @@ F:BRAND_VAMP | HOLD_LIFE
     }
 
     #[test]
+    fn p3_4_floor_and_area_scrolls_map_authoritative_effects() {
+        let terrain = TerrainCreationImportIds {
+            source_terrain_ids: vec!["rfb-legacy.terrain.floor".to_owned()],
+            floor_terrain_id: Some("rfb-legacy.terrain.floor".to_owned()),
+            created_trap_terrain_id: Some("rfb-legacy.terrain.created-trap".to_owned()),
+            glyph_terrain_id: Some("rfb-legacy.terrain.glyph".to_owned()),
+            wall_terrain_id: Some("rfb-legacy.terrain.granite".to_owned()),
+            quartz_terrain_id: Some("rfb-legacy.terrain.quartz".to_owned()),
+            magma_terrain_id: Some("rfb-legacy.terrain.magma".to_owned()),
+            ..TerrainCreationImportIds::default()
+        };
+        let effect = |sval| {
+            fixed_consumable_use_action_with_terrain(
+                &LegacyItemEntry {
+                    tval: 70,
+                    sval,
+                    ..LegacyItemEntry::default()
+                },
+                Some(&terrain),
+            )
+            .expect("P3.4 scroll should map")["effect"]
+                .clone()
+        };
+
+        assert_eq!(effect(0)["effects"][0]["type"], "apply-blindness");
+        assert_eq!(effect(0)["effects"][1]["connectedGlow"], true);
+        assert_eq!(
+            effect(7)["targetTerrainId"],
+            "rfb-legacy.terrain.created-trap"
+        );
+        assert_eq!(effect(24)["type"], "set-floor-glow");
+        assert_eq!(effect(38)["targetTerrainId"], "rfb-legacy.terrain.glyph");
+        assert_eq!(effect(41)["minimumRadius"], 13);
+        assert_eq!(effect(41)["maximumRadius"], 17);
+        assert_eq!(effect(41)["quartzTerrainId"], "rfb-legacy.terrain.quartz");
+    }
+
+    #[test]
     fn food_nutrition_gap_is_independent_from_active_effect_gap() {
         let cases = [
             (80, 99, Some(1), Some(1)),
@@ -12967,6 +13101,7 @@ F:BRAND_VAMP | HOLD_LIFE
         let _ = item_json(
             &LegacyItemEntry {
                 tval: 70,
+                sval: 19,
                 ..LegacyItemEntry::default()
             },
             "scroll-shell",
@@ -13791,6 +13926,7 @@ F:BRAND_VAMP | HOLD_LIFE
             ],
             tree_terrain_id: Some("rfb-legacy.terrain.tree".to_owned()),
             wall_terrain_id: Some("rfb-legacy.terrain.granite".to_owned()),
+            ..TerrainCreationImportIds::default()
         };
         for (sval, target_terrain_id) in [
             (48, "rfb-legacy.terrain.tree"),
@@ -13881,7 +14017,7 @@ F:BRAND_VAMP | HOLD_LIFE
         let _ = item_json(
             &LegacyItemEntry {
                 tval: 70,
-                sval: 0,
+                sval: 19,
                 ..LegacyItemEntry::default()
             },
             "unsupported-scroll",

@@ -407,6 +407,24 @@ pub enum ItemUseEffectDefinition {
         source_terrain_ids: Vec<String>,
         target_terrain_id: String,
     },
+    CreateCurrentTerrain {
+        source_terrain_ids: Vec<String>,
+        target_terrain_id: String,
+    },
+    SetFloorGlow {
+        glow: bool,
+        radius: u8,
+        #[serde(default)]
+        connected_glow: bool,
+    },
+    AreaDestruction {
+        minimum_radius: u8,
+        maximum_radius: u8,
+        floor_terrain_id: String,
+        wall_terrain_id: String,
+        quartz_terrain_id: String,
+        magma_terrain_id: String,
+    },
     DestroyAdjacentTrapsAndDoors,
     RemoveStatus {
         status_kind_id: String,

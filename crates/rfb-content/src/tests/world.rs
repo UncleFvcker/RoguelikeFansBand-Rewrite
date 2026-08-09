@@ -781,6 +781,7 @@ fn temple_and_alchemist_stock_are_strictly_separated() {
                 "demo.item.sight-potion",
                 "demo.item.antidote-potion",
                 "demo.item.curing-potion",
+                "demo.item.light-scroll",
             ]),
         ),
     ];
@@ -1015,6 +1016,8 @@ fn black_market_stocks_original_non_town_books_and_priced_p3_consumables() {
             "demo.item.enlightenment-potion",
             "demo.item.star-enlightenment-potion",
             "demo.item.self-knowledge-potion",
+            "demo.item.rune-of-protection-scroll",
+            "demo.item.destruction-scroll",
         ])
     );
     let values = artifact
@@ -1038,6 +1041,8 @@ fn black_market_stocks_original_non_town_books_and_priced_p3_consumables() {
     assert_eq!(values["demo.item.enlightenment-potion"], 800);
     assert_eq!(values["demo.item.star-enlightenment-potion"], 120_000);
     assert_eq!(values["demo.item.self-knowledge-potion"], 2_000);
+    assert_eq!(values["demo.item.rune-of-protection-scroll"], 500);
+    assert_eq!(values["demo.item.destruction-scroll"], 250);
 }
 
 #[test]
@@ -1161,6 +1166,41 @@ fn p3_3_items_all_have_a_shop_acquisition_path() {
         "demo.item.enlightenment-potion",
         "demo.item.star-enlightenment-potion",
         "demo.item.self-knowledge-potion",
+    ] {
+        assert!(
+            available.contains(item_id),
+            "{item_id} should be obtainable"
+        );
+    }
+}
+
+#[test]
+fn p3_4_items_all_have_a_shop_or_warrens_acquisition_path() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let shop_items = artifact
+        .content
+        .shops
+        .iter()
+        .flat_map(|shop| shop.stock.iter().map(|stock| stock.item_kind_id.as_str()));
+    let loot_items = artifact
+        .content
+        .loot_tables
+        .iter()
+        .filter(|table| table.id == "demo.loot-table.warrens")
+        .flat_map(|table| {
+            table
+                .entries
+                .iter()
+                .map(|entry| entry.item_kind_id.as_str())
+        });
+    let available = shop_items.chain(loot_items).collect::<BTreeSet<_>>();
+
+    for item_id in [
+        "demo.item.darkness-scroll",
+        "demo.item.trap-creation-scroll",
+        "demo.item.light-scroll",
+        "demo.item.rune-of-protection-scroll",
+        "demo.item.destruction-scroll",
     ] {
         assert!(
             available.contains(item_id),

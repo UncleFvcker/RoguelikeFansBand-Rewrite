@@ -409,6 +409,11 @@ export function createPresentationFormatter(
           source: contentName(event.args.source),
           terrain: contentName(event.args.terrain),
         });
+      case "monster-warding-glyph-held":
+      case "monster-warding-glyph-broken":
+        return localization.format(`message-${event.messageKey}`, {
+          source: contentName(event.args.source),
+        });
       case "monster-item-destroyed":
         return localization.format("message-monster-item-destroyed", {
           source: contentName(event.args.source),
@@ -937,6 +942,27 @@ export function createPresentationFormatter(
         return localization.format(`message-${event.messageKey}`, {
           source: visibleItemName(event.args.nameKey, event.args.source),
           count: event.args.count ?? "0",
+        });
+      case "item-use-create-current-terrain":
+      case "item-use-create-current-terrain-no-effect":
+        return localization.format(`message-${event.messageKey}`, {
+          source: visibleItemName(event.args.nameKey, event.args.source),
+        });
+      case "item-use-floor-light":
+      case "item-use-floor-darkness":
+      case "item-use-floor-glow-no-effect":
+        return localization.format(`message-${event.messageKey}`, {
+          source: visibleItemName(event.args.nameKey, event.args.source),
+          count: event.args.count ?? "0",
+        });
+      case "item-use-area-destruction":
+      case "item-use-area-destruction-protected":
+        return localization.format(`message-${event.messageKey}`, {
+          source: visibleItemName(event.args.nameKey, event.args.source),
+          count: event.args.count ?? "0",
+          entities: event.args.entities ?? "0",
+          items: event.args.items ?? "0",
+          gold: event.args.gold ?? "0",
         });
       case "item-use-elemental-blast":
         return localization.format("message-item-use-elemental-blast", {

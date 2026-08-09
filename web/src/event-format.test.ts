@@ -299,6 +299,44 @@ test("P3.3 knowledge events localize inventory identification and current report
   );
 });
 
+test("P3.4 terrain events localize lighting destruction and warding glyphs", () => {
+  assert.equal(
+    formatter.formatEvent({
+      kind: "item.use-floor-light",
+      messageKey: "item-use-floor-light",
+      args: {
+        source: "demo.item.light-scroll",
+        nameKey: "item-demo-light-scroll-name",
+        count: "12",
+      },
+    }),
+    "Scroll of Light permanently lights 12 spaces.",
+  );
+  assert.equal(
+    formatter.formatEvent({
+      kind: "item.use-area-destruction",
+      messageKey: "item-use-area-destruction",
+      args: {
+        source: "demo.item.destruction-scroll",
+        nameKey: "item-demo-destruction-scroll-name",
+        count: "41",
+        entities: "2",
+        items: "3",
+        gold: "4",
+      },
+    }),
+    "Scroll of Destruction remakes 41 spaces, removing 2 creatures, 3 items, and 4 treasure piles.",
+  );
+  assert.equal(
+    formatter.formatEvent({
+      kind: "monster.warding-glyph-held",
+      messageKey: "monster-warding-glyph-held",
+      args: { source: "demo.actor.bloodfang-the-wolf" },
+    }),
+    "The glyph of warding repels Bloodfang the Wolf.",
+  );
+});
+
 test("damage event formatting preserves typed resistance outcomes", () => {
   const event = {
     kind: "combat.hit",

@@ -192,6 +192,10 @@ pub(crate) fn valid_item_effect(
         ItemUseEffectDefinition::CreateAdjacentTerrain {
             source_terrain_ids,
             target_terrain_id,
+        }
+        | ItemUseEffectDefinition::CreateCurrentTerrain {
+            source_terrain_ids,
+            target_terrain_id,
         } => {
             !source_terrain_ids.is_empty()
                 && source_terrain_ids.len() <= 32
@@ -203,6 +207,27 @@ pub(crate) fn valid_item_effect(
                 && source_terrain_ids
                     .iter()
                     .all(|source_id| source_id != target_terrain_id)
+        }
+        ItemUseEffectDefinition::SetFloorGlow { radius, .. } => (1..=32).contains(radius),
+        ItemUseEffectDefinition::AreaDestruction {
+            minimum_radius,
+            maximum_radius,
+            floor_terrain_id,
+            wall_terrain_id,
+            quartz_terrain_id,
+            magma_terrain_id,
+        } => {
+            (1..=32).contains(minimum_radius)
+                && minimum_radius <= maximum_radius
+                && maximum_radius <= &32
+                && [
+                    floor_terrain_id,
+                    wall_terrain_id,
+                    quartz_terrain_id,
+                    magma_terrain_id,
+                ]
+                .into_iter()
+                .all(|terrain_id| terrain_tags.contains_key(terrain_id))
         }
         ItemUseEffectDefinition::RemoveStatus { status_kind_id } => {
             validate_id(status_kind_id).is_ok()
@@ -329,6 +354,7 @@ pub(crate) fn valid_item_effect(
                             | ItemUseEffectDefinition::IdentifyInventory
                             | ItemUseEffectDefinition::SelfKnowledge
                             | ItemUseEffectDefinition::Detect { .. }
+                            | ItemUseEffectDefinition::SetFloorGlow { .. }
                     ) && valid_item_effect(
                         effect,
                         terrain_tags,
@@ -502,6 +528,9 @@ pub(super) fn validate_items(
                     | ItemUseEffectDefinition::Genocide { .. }
                     | ItemUseEffectDefinition::IncreaseSpellLearningCapacity
                     | ItemUseEffectDefinition::CreateAdjacentTerrain { .. }
+                    | ItemUseEffectDefinition::CreateCurrentTerrain { .. }
+                    | ItemUseEffectDefinition::SetFloorGlow { .. }
+                    | ItemUseEffectDefinition::AreaDestruction { .. }
                     | ItemUseEffectDefinition::DestroyAdjacentTrapsAndDoors
                     | ItemUseEffectDefinition::RemoveStatus { .. }
                     | ItemUseEffectDefinition::ReduceStatus { .. }
@@ -662,12 +691,16 @@ pub(super) fn validate_items(
         {
             return Err(ContentError::InvalidThrowProfile(item.id.clone()));
         }
-        if let Some(action) = &mut item.use_action
-            && let ItemUseEffectDefinition::CreateAdjacentTerrain {
-                source_terrain_ids, ..
-            } = &mut action.effect
-        {
-            source_terrain_ids.sort();
+        if let Some(action) = &mut item.use_action {
+            match &mut action.effect {
+                ItemUseEffectDefinition::CreateAdjacentTerrain {
+                    source_terrain_ids, ..
+                }
+                | ItemUseEffectDefinition::CreateCurrentTerrain {
+                    source_terrain_ids, ..
+                } => source_terrain_ids.sort(),
+                _ => {}
+            }
         }
         if let Some(action) = &item.use_action {
             let valid_effect = valid_item_effect(
@@ -739,11 +772,14 @@ pub(super) fn validate_items(
                 .activations
                 .sort_by(|left, right| left.id.cmp(&right.id));
             for activation in &mut generation.activations {
-                if let ItemUseEffectDefinition::CreateAdjacentTerrain {
-                    source_terrain_ids, ..
-                } = &mut activation.effect
-                {
-                    source_terrain_ids.sort();
+                match &mut activation.effect {
+                    ItemUseEffectDefinition::CreateAdjacentTerrain {
+                        source_terrain_ids, ..
+                    }
+                    | ItemUseEffectDefinition::CreateCurrentTerrain {
+                        source_terrain_ids, ..
+                    } => source_terrain_ids.sort(),
+                    _ => {}
                 }
             }
             let mut activation_ids = BTreeSet::new();

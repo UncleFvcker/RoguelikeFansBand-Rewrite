@@ -769,6 +769,26 @@ pub(crate) enum DomainEvent {
         display_name_key: String,
         affected_positions: Vec<Position>,
     },
+    ItemCreatedCurrentTerrain {
+        source_kind_id: String,
+        display_name_key: String,
+        affected_position: Option<Position>,
+    },
+    ItemFloorGlowChanged {
+        source_kind_id: String,
+        display_name_key: String,
+        glow: bool,
+        affected_positions: Vec<Position>,
+    },
+    ItemAreaDestruction {
+        source_kind_id: String,
+        display_name_key: String,
+        protected_floor: bool,
+        affected_positions: Vec<Position>,
+        removed_entities: usize,
+        removed_items: usize,
+        removed_gold_piles: usize,
+    },
     ItemDestroyedAdjacentTrapsAndDoors {
         source_kind_id: String,
         display_name_key: String,
@@ -984,6 +1004,13 @@ pub(crate) enum DomainEvent {
         source_kind_id: String,
         terrain_kind_id: String,
         replacement_terrain_kind_id: String,
+        position: Position,
+    },
+    WardingGlyphHeld {
+        source_kind_id: String,
+    },
+    WardingGlyphBroken {
+        source_kind_id: String,
         position: Position,
     },
     MonsterItemDestroyed {
@@ -3091,6 +3118,77 @@ impl DomainEvent {
                     ("count", affected_positions.len().to_string()),
                 ],
             ),
+            Self::ItemCreatedCurrentTerrain {
+                source_kind_id,
+                display_name_key,
+                affected_position,
+            } => dto(
+                if affected_position.is_some() {
+                    "item.use-create-current-terrain"
+                } else {
+                    "item.use-create-current-terrain-no-effect"
+                },
+                if affected_position.is_some() {
+                    "item-use-create-current-terrain"
+                } else {
+                    "item-use-create-current-terrain-no-effect"
+                },
+                [("source", source_kind_id), ("nameKey", display_name_key)],
+            ),
+            Self::ItemFloorGlowChanged {
+                source_kind_id,
+                display_name_key,
+                glow,
+                affected_positions,
+            } => dto(
+                if affected_positions.is_empty() {
+                    "item.use-floor-glow-no-effect"
+                } else if glow {
+                    "item.use-floor-light"
+                } else {
+                    "item.use-floor-darkness"
+                },
+                if affected_positions.is_empty() {
+                    "item-use-floor-glow-no-effect"
+                } else if glow {
+                    "item-use-floor-light"
+                } else {
+                    "item-use-floor-darkness"
+                },
+                [
+                    ("source", source_kind_id),
+                    ("nameKey", display_name_key),
+                    ("count", affected_positions.len().to_string()),
+                ],
+            ),
+            Self::ItemAreaDestruction {
+                source_kind_id,
+                display_name_key,
+                protected_floor,
+                affected_positions,
+                removed_entities,
+                removed_items,
+                removed_gold_piles,
+            } => dto(
+                if protected_floor {
+                    "item.use-area-destruction-protected"
+                } else {
+                    "item.use-area-destruction"
+                },
+                if protected_floor {
+                    "item-use-area-destruction-protected"
+                } else {
+                    "item-use-area-destruction"
+                },
+                [
+                    ("source", source_kind_id),
+                    ("nameKey", display_name_key),
+                    ("count", affected_positions.len().to_string()),
+                    ("entities", removed_entities.to_string()),
+                    ("items", removed_items.to_string()),
+                    ("gold", removed_gold_piles.to_string()),
+                ],
+            ),
             Self::ItemDestroyedAdjacentTrapsAndDoors {
                 source_kind_id,
                 display_name_key,
@@ -3749,6 +3847,23 @@ impl DomainEvent {
                     ("source", source_kind_id),
                     ("terrain", terrain_kind_id),
                     ("replacement", replacement_terrain_kind_id),
+                    ("x", position.x.to_string()),
+                    ("y", position.y.to_string()),
+                ],
+            ),
+            Self::WardingGlyphHeld { source_kind_id } => dto(
+                "monster.warding-glyph-held",
+                "monster-warding-glyph-held",
+                [("source", source_kind_id)],
+            ),
+            Self::WardingGlyphBroken {
+                source_kind_id,
+                position,
+            } => dto(
+                "monster.warding-glyph-broken",
+                "monster-warding-glyph-broken",
+                [
+                    ("source", source_kind_id),
                     ("x", position.x.to_string()),
                     ("y", position.y.to_string()),
                 ],
