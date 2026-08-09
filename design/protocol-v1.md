@@ -381,3 +381,5 @@ contract-v191 只增加内容层近战 effect 及对应运行时解释，不新�
 协议 1.145 为 `TerrainSaveDto` 增加必填逐格 `glow`，并增加 `darken-room` ability spec 与带 `clearedCells` 的结算结果。当前层和离层存储使用同一 glow 数据；它进入 state hash Schema v68，旧开发存档不兼容。完整边界见 [Contract v199](contract-v199-warrens-content-p15-darkness.md)。
 
 集成协议 1.147 同时保留荒野 W1–W5 与房间永久光/黑暗字段；相对主线 1.146 新增的 `glow` 权威状态进入 state hash Schema v70，contract 基线统一刷新为 v204。
+
+协议 1.148 为 `AbilityEffectSpecDto` 增加怪物专用 `blink-target { radius }`。它使用既有投射目标与怪物位移结算，只在目标当前位置给定半径内选择可通行空格；P29 的半径固定为 10。该效果不增加命令、存档或 state-hash 输入，save v1 与 Schema v70 保持不变。完整边界见 [Contract v213](contract-v213-warrens-content-p28-p29-ant-summon-target-blink.md)。

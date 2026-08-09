@@ -165,6 +165,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.giant-white-tick", 176, 2, 40),
             ("demo.actor.giant-yellow-toad", 1329, 6, 40),
             ("demo.actor.gibbering-mouther", 253, 4, 50),
+            ("demo.actor.gnome-mage", 281, 2, 60),
             ("demo.actor.goblin", 87, 1, 40),
             ("demo.actor.golfimbul-the-hill-orc-chief", 215, 3, 999),
             ("demo.actor.goomba", 924, 1, 20),
@@ -270,6 +271,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.pink-naga", 130, 2, 40),
             ("demo.actor.piranha", 70, 1, 60),
             ("demo.actor.plague-rat", 1298, 2, 40),
+            ("demo.actor.plaguebearer-of-nurgle", 268, 2, 50),
             ("demo.actor.poltergeist", 65, 1, 30),
             ("demo.actor.portuguese-man-o-war", 160, 2, 40),
             ("demo.actor.priest", 225, 1, 50),
@@ -1254,6 +1256,91 @@ fn level_fifteen_parameterized_casters_share_existing_effect_families() {
             .as_ref()
             .map(|light| (light.radius, light.intrinsic)),
         Some((1, true))
+    );
+}
+
+#[test]
+fn level_fifteen_p28_p29_bind_narrow_summon_and_target_blink() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actor = |id: &str| {
+        artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == id)
+            .unwrap_or_else(|| panic!("{id} should be imported"))
+    };
+    let ability = |id: &str| {
+        artifact
+            .content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == id)
+            .unwrap_or_else(|| panic!("{id} should be generated"))
+    };
+    let ability_ids = |id: &str| {
+        actor(id)
+            .monster_casting
+            .as_ref()
+            .unwrap_or_else(|| panic!("{id} should retain monster casting"))
+            .abilities
+            .iter()
+            .map(|candidate| candidate.ability_id.as_str())
+            .collect::<BTreeSet<_>>()
+    };
+
+    assert_eq!(actor("demo.actor.plaguebearer-of-nurgle").level, 15);
+    assert_eq!(actor("demo.actor.gnome-mage").level, 15);
+    assert_eq!(
+        ability_ids("demo.actor.plaguebearer-of-nurgle"),
+        [
+            "rfb-legacy.ability.curse-8d8",
+            "rfb-legacy.ability.scare",
+            "rfb-legacy.ability.slow",
+            "rfb-legacy.ability.summon-ant-l15-1d3-1",
+        ]
+        .into_iter()
+        .collect()
+    );
+    assert_eq!(
+        ability_ids("demo.actor.gnome-mage"),
+        [
+            "rfb-legacy.ability.blink",
+            "rfb-legacy.ability.blink-other",
+            "rfb-legacy.ability.bolt-cold-6d8-5",
+            "rfb-legacy.ability.darkness",
+            "rfb-legacy.ability.summon-legacy-import-l15-1d1",
+        ]
+        .into_iter()
+        .collect()
+    );
+    assert!(matches!(
+        ability("rfb-legacy.ability.summon-ant-l15-1d3-1").effect,
+        AbilityEffectDefinition::SummonCategory {
+            ref category,
+            maximum_level: 15,
+            count_dice: 1,
+            count_sides: 3,
+            count_bonus: 1,
+            ..
+        } if category == "ant"
+    ));
+    assert!(matches!(
+        ability("rfb-legacy.ability.blink-other").effect,
+        AbilityEffectDefinition::BlinkTarget { radius: 10 }
+    ));
+    assert!(
+        actor("demo.actor.plaguebearer-of-nurgle")
+            .tags
+            .iter()
+            .any(|tag| tag == "undead")
+    );
+    assert_eq!(
+        actor("demo.actor.gnome-mage")
+            .light
+            .as_ref()
+            .map(|light| (light.radius, light.intrinsic)),
+        Some((1, false))
     );
 }
 

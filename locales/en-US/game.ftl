@@ -132,6 +132,7 @@ message-ability-healed = { $ability } restores { $amount } HP.
 message-resource-recovered = You recover { $amount } { $resource }.
 message-resource-gained = Your { $resource } rises by { $amount }.
 message-monster-blinked = { $source } blinks to a nearby spot.
+message-monster-blinked-target = { $source } blinks { $target } to a nearby spot!
 message-monster-teleported = { $source } tears open a rift and vanishes into the distance.
 message-monster-banished-target = { $source } banishes { $target } far away!
 message-monster-dragged-target = { $source } drags { $target } to its side!

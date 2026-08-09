@@ -433,6 +433,26 @@
         {
           "additionalProperties": false,
           "properties": {
+            "radius": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "blink-target",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "radius"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
             "minimumDistance": {
               "format": "uint8",
               "maximum": 255,

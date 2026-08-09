@@ -172,6 +172,11 @@ pub(crate) enum DomainEvent {
         source_kind_id: String,
         resolution: MonsterDisplacementResolutionDto,
     },
+    MonsterBlinkedTarget {
+        source_kind_id: String,
+        target_kind_id: String,
+        resolution: MonsterDisplacementResolutionDto,
+    },
     MonsterTeleported {
         source_kind_id: String,
         resolution: MonsterDisplacementResolutionDto,
@@ -1405,6 +1410,16 @@ impl DomainEvent {
                 "monster.blinked",
                 "monster-blinked",
                 [("source", source_kind_id)],
+                GameEventOutcomeDto::MonsterDisplacement { resolution },
+            ),
+            Self::MonsterBlinkedTarget {
+                source_kind_id,
+                target_kind_id,
+                resolution,
+            } => dto_with_outcome(
+                "monster.blinked-target",
+                "monster-blinked-target",
+                [("source", source_kind_id), ("target", target_kind_id)],
                 GameEventOutcomeDto::MonsterDisplacement { resolution },
             ),
             Self::MonsterTeleported {

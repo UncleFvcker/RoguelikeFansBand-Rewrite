@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.blink-other",
+  "descriptionKey": "ability-legacy-blink-other-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.blink-other",
+  "nameKey": "ability-legacy-blink-other-name",
+  "tags": [
+    "legacy-import",
+    "mobility"
+  ],
+  "target": {
+    "modes": [
+      "position",
+      "entity"
+    ],
+    "range": 8,
+    "requiresLineOfEffect": true
+  }
+}

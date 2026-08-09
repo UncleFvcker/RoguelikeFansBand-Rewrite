@@ -2331,6 +2331,7 @@ impl Game {
             // These forms are monster-casting-only. The player cast path
             // never produces a target plan for them.
             AbilityEffectDefinition::BlinkSelf { .. }
+            | AbilityEffectDefinition::BlinkTarget { .. }
             | AbilityEffectDefinition::TeleportSelf { .. }
             | AbilityEffectDefinition::TeleportTarget
             | AbilityEffectDefinition::AggravateMonsters

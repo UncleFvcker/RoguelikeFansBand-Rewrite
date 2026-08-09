@@ -719,13 +719,20 @@ impl Game {
                     trace: None,
                 }
             }
-            MonsterAbilityTargetPlan::BanishTarget {
+            MonsterAbilityTargetPlan::BlinkTarget {
+                target,
+                trace,
+                destinations,
+            }
+            | MonsterAbilityTargetPlan::BanishTarget {
                 target,
                 trace,
                 destinations,
             } => {
-                // One bounded draw picks the landing cell from the
-                // plan-collected candidates, mirroring the escape family.
+                let blink_target =
+                    matches!(&plan.target, MonsterAbilityTargetPlan::BlinkTarget { .. });
+                // One bounded draw picks the landing cell from the candidates
+                // collected during planning.
                 let choice = usize::try_from(
                     self.rng
                         .bounded(u64::try_from(destinations.len()).expect("candidate count fits")),
@@ -735,14 +742,23 @@ impl Game {
                 match target {
                     MonsterHostileTarget::Player { .. } => {
                         let from = self.player.position;
-                        events.push(DomainEvent::MonsterBanishedTarget {
-                            source_kind_id: source_kind_id.to_owned(),
-                            target_kind_id: target.kind_id().to_owned(),
-                            resolution: MonsterDisplacementResolutionDto {
-                                actor_id: target.entity_id().to_owned(),
-                                from,
-                                to: destination,
-                            },
+                        let resolution = MonsterDisplacementResolutionDto {
+                            actor_id: target.entity_id().to_owned(),
+                            from,
+                            to: destination,
+                        };
+                        events.push(if blink_target {
+                            DomainEvent::MonsterBlinkedTarget {
+                                source_kind_id: source_kind_id.to_owned(),
+                                target_kind_id: target.kind_id().to_owned(),
+                                resolution,
+                            }
+                        } else {
+                            DomainEvent::MonsterBanishedTarget {
+                                source_kind_id: source_kind_id.to_owned(),
+                                target_kind_id: target.kind_id().to_owned(),
+                                resolution,
+                            }
                         });
                         let relocation = self.relocate_player(destination, changed);
                         events.extend(relocation);
@@ -757,14 +773,23 @@ impl Game {
                             self.entities[banished_index].position = destination;
                             changed.insert(from);
                             changed.insert(destination);
-                            events.push(DomainEvent::MonsterBanishedTarget {
-                                source_kind_id: source_kind_id.to_owned(),
-                                target_kind_id: target.kind_id().to_owned(),
-                                resolution: MonsterDisplacementResolutionDto {
-                                    actor_id: entity_id.clone(),
-                                    from,
-                                    to: destination,
-                                },
+                            let resolution = MonsterDisplacementResolutionDto {
+                                actor_id: entity_id.clone(),
+                                from,
+                                to: destination,
+                            };
+                            events.push(if blink_target {
+                                DomainEvent::MonsterBlinkedTarget {
+                                    source_kind_id: source_kind_id.to_owned(),
+                                    target_kind_id: target.kind_id().to_owned(),
+                                    resolution,
+                                }
+                            } else {
+                                DomainEvent::MonsterBanishedTarget {
+                                    source_kind_id: source_kind_id.to_owned(),
+                                    target_kind_id: target.kind_id().to_owned(),
+                                    resolution,
+                                }
                             });
                         }
                     }
@@ -1543,6 +1568,7 @@ impl Game {
             | AbilityEffectDefinition::ApplyStatus { .. }
             | AbilityEffectDefinition::RemoveStatus { .. }
             | AbilityEffectDefinition::Sequence { .. }
+            | AbilityEffectDefinition::BlinkTarget { .. }
             | AbilityEffectDefinition::TeleportTarget
             | AbilityEffectDefinition::TransformTerrain { .. } => {
                 let mut first_rejection = None;
@@ -1708,6 +1734,50 @@ impl Game {
                     self.monster_projectile_trace(source_index, ability, &target, true, false)?;
                 (
                     MonsterAbilityTargetPlan::Projectile { target, trace },
+                    vec![target_position],
+                )
+            }
+            AbilityEffectDefinition::BlinkTarget { radius } => {
+                let trace =
+                    self.monster_projectile_trace(source_index, ability, &target, true, false)?;
+                let radius = u32::from(*radius);
+                let mut destinations = Vec::new();
+                for y in 0..self.height {
+                    for x in 0..self.width {
+                        let position = Position {
+                            x: i32::from(x),
+                            y: i32::from(y),
+                        };
+                        if position == self.player.position
+                            || target_position
+                                .x
+                                .abs_diff(position.x)
+                                .max(target_position.y.abs_diff(position.y))
+                                > radius
+                            || !self.monster_hostile_target_can_enter_position(&target, position)
+                            || self
+                                .entities
+                                .iter()
+                                .any(|entity| entity.hp > 0 && entity.position == position)
+                        {
+                            continue;
+                        }
+                        destinations.push(position);
+                    }
+                }
+                if destinations.is_empty() {
+                    return Err(MonsterAbilityPlanRejection {
+                        reason: MonsterAbilityRejectionReasonDto::NoSpace,
+                        enemy_target_count: 0,
+                        friendly_risk_count: 0,
+                    });
+                }
+                (
+                    MonsterAbilityTargetPlan::BlinkTarget {
+                        target,
+                        trace,
+                        destinations,
+                    },
                     vec![target_position],
                 )
             }

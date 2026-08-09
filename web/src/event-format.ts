@@ -228,6 +228,11 @@ export function createPresentationFormatter(
         return localization.format("message-monster-blinked", {
           source: contentName(event.args.source),
         });
+      case "monster-blinked-target":
+        return localization.format("message-monster-blinked-target", {
+          source: contentName(event.args.source),
+          target: contentName(event.args.target),
+        });
       case "monster-teleported":
         return localization.format("message-monster-teleported", {
           source: contentName(event.args.source),

@@ -370,6 +370,11 @@ enum MonsterAbilityTargetPlan {
     BlinkSelf {
         destinations: Vec<Position>,
     },
+    BlinkTarget {
+        target: MonsterHostileTarget,
+        trace: ProjectileTrace,
+        destinations: Vec<Position>,
+    },
     EscapeSelf {
         destinations: Vec<Position>,
     },
@@ -393,6 +398,7 @@ fn monster_plan_target(target: &MonsterAbilityTargetPlan) -> Option<&MonsterHost
         | MonsterAbilityTargetPlan::Cone { target, .. }
         | MonsterAbilityTargetPlan::TerrainTransform { target, .. }
         | MonsterAbilityTargetPlan::DragTarget { target, .. }
+        | MonsterAbilityTargetPlan::BlinkTarget { target, .. }
         | MonsterAbilityTargetPlan::BanishTarget { target, .. } => Some(target),
         MonsterAbilityTargetPlan::SelfTarget
         | MonsterAbilityTargetPlan::Summon { .. }
@@ -5480,6 +5486,9 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
     match effect {
         AbilityEffectDefinition::BlinkSelf { radius } => {
             AbilityEffectSpecDto::BlinkSelf { radius: *radius }
+        }
+        AbilityEffectDefinition::BlinkTarget { radius } => {
+            AbilityEffectSpecDto::BlinkTarget { radius: *radius }
         }
         AbilityEffectDefinition::TeleportSelf { minimum_distance } => {
             AbilityEffectSpecDto::TeleportSelf {

@@ -7589,6 +7589,17 @@ fn map_spell_token(
             });
             Some(id)
         }
+        "BLINK_OTHER" => {
+            let id = "rfb-legacy.ability.blink-other".to_owned();
+            abilities.entry(id.clone()).or_insert_with(|| {
+                displacement_ability(
+                    "blink-other",
+                    serde_json::json!({"type": "blink-target", "radius": 10}),
+                    false,
+                )
+            });
+            Some(id)
+        }
         "TELE_SELF" | "TELEPORT" => {
             let id = "rfb-legacy.ability.escape".to_owned();
             abilities.entry(id.clone()).or_insert_with(|| {
@@ -7750,6 +7761,7 @@ fn summon_spell_defaults(base: &str) -> Option<(&'static str, (u32, u32, u32))> 
         "S_DRAGON" => ("dragon", (1, 3, 1)),
         "S_HI_DRAGON" => ("dragon", (1, 3, 0)),
         "S_ANIMAL" => ("animal", (1, 3, 1)),
+        "S_ANT" => ("ant", (1, 3, 1)),
         "S_LOUSE" => ("louse", (1, 3, 1)),
         _ => return None,
     };
@@ -11464,7 +11476,7 @@ I:110:8d8:20:20:10:10\n\
 W:20:2:20:9:10:40\n\
 B:HIT:HURT(1d6)\n\
 F:UNDEAD | DRAGON | RES_ALL | RES_TELE | NO_CONF\n\
-S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_LOUSE | S_CYBER\n";
+S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_ANT | S_LOUSE | S_CYBER\n";
         let monsters = parse_r_info(SUMMONER_R_INFO).expect("synthetic summoner should parse");
         assert_eq!(monsters.len(), 1);
 
@@ -11525,6 +11537,7 @@ S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_LOUSE | S_CYBER\n";
                 "rfb-legacy.ability.kin-test-bone-caller",
                 "rfb-legacy.ability.summon-undead-l20-1d3-1",
                 "rfb-legacy.ability.summon-legacy-import-l20-1d1",
+                "rfb-legacy.ability.summon-ant-l20-1d3-1",
                 "rfb-legacy.ability.summon-louse-l20-1d3-1",
             ]
         );
@@ -11568,6 +11581,17 @@ S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_LOUSE | S_CYBER\n";
         assert_eq!(any["effect"]["countDice"], 1);
         assert_eq!(any["effect"]["countSides"], 1);
         assert!(any["effect"].get("countBonus").is_none());
+
+        let ant = outcome
+            .ability_files
+            .iter()
+            .find(|(name, _)| name == "summon-ant-l20-1d3-1.json")
+            .map(|(_, value)| value)
+            .expect("ant summon ability should be generated");
+        assert_eq!(ant["effect"]["category"], "ant");
+        assert_eq!(ant["effect"]["countDice"], 1);
+        assert_eq!(ant["effect"]["countSides"], 3);
+        assert_eq!(ant["effect"]["countBonus"], 1);
 
         let louse = outcome
             .ability_files

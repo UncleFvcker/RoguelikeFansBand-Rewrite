@@ -132,6 +132,7 @@ message-ability-healed = { $ability }令你恢复了 { $amount } 点生命。
 message-resource-recovered = 你恢复了 { $amount } 点{ $resource }。
 message-resource-gained = 你的{ $resource }增长了 { $amount } 点。
 message-monster-blinked = { $source }闪到了近处的新位置。
+message-monster-blinked-target = { $source }把{ $target }闪现到了近处的新位置！
 message-monster-teleported = { $source }撕开裂隙消失在远处。
 message-monster-dragged-target = { $source }把{ $target }拽到了自己身边！
 message-monster-banished-target = { $source }把{ $target }放逐到了远处！

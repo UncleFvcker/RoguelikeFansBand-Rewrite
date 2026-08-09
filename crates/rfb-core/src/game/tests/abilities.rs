@@ -4879,6 +4879,81 @@ fn escape_teleport_falls_back_to_half_distance_and_blink_rejects_without_space()
 }
 
 #[test]
+fn blink_other_moves_the_target_within_ten_tiles_using_one_destination_draw() {
+    let mut game = Game::new(0);
+    clear_monsters(&mut game);
+    for cell in game.terrain.iter_mut() {
+        *cell = "demo.terrain.wall".to_owned();
+    }
+    let player = game.player.position;
+    let caster = Position {
+        x: player.x + 1,
+        y: player.y,
+    };
+    let landing = Position {
+        x: player.x + 5,
+        y: player.y,
+    };
+    for position in [player, caster, landing] {
+        let index = game.index(position).expect("test cell should exist");
+        game.terrain[index] = "demo.terrain.floor".to_owned();
+    }
+    game.entities.push(actor_from_runtime_spawn(
+        "generated.actor.gnome-mage",
+        "demo.actor.gnome-mage",
+        caster,
+        31,
+        110,
+        100,
+        true,
+    ));
+
+    let ability = game
+        .content
+        .ability("rfb-legacy.ability.blink-other")
+        .expect("P29 ability should compile")
+        .clone();
+    assert!(matches!(
+        ability.effect,
+        AbilityEffectDefinition::BlinkTarget { radius: 10 }
+    ));
+    let plan = game
+        .monster_ability_target_plan(0, ability, 1)
+        .expect("adjacent player should be a valid blink target");
+    let MonsterAbilityTargetPlan::BlinkTarget { destinations, .. } = &plan.target else {
+        panic!("BLINK_OTHER should plan a target blink");
+    };
+    assert_eq!(destinations, &[landing]);
+    assert!(destinations.iter().all(|position| {
+        player
+            .x
+            .abs_diff(position.x)
+            .max(player.y.abs_diff(position.y))
+            <= 10
+    }));
+
+    let draws = game.rng_draw_counter();
+    let mut events = Vec::new();
+    let mut changed = BTreeSet::new();
+    let mut removed_entities = Vec::new();
+    game.resolve_monster_ability_plan(
+        0,
+        "demo.actor.gnome-mage",
+        &plan,
+        &mut events,
+        &mut changed,
+        &mut removed_entities,
+    );
+    assert_eq!(game.rng_draw_counter(), draws + 1);
+    assert_eq!(game.player.position, landing);
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::MonsterBlinkedTarget { resolution, .. }
+            if resolution.from == player && resolution.to == landing
+    )));
+}
+
+#[test]
 fn death_fourth_book_materializes_original_level_curves() {
     let projected = |level| {
         let mut game =
@@ -5109,20 +5184,28 @@ fn raise_dead_is_deterministic_and_enforces_faction_group_and_unique_rules() {
             .iter()
             .all(|kind_id| matches!(
                 kind_id.as_str(),
-                "demo.actor.crypt-creep"
+                "demo.actor.carrion"
+                    | "demo.actor.crypt-creep"
                     | "demo.actor.disembodied-hand-that-strangled-people"
+                    | "demo.actor.flying-skull"
                     | "demo.actor.green-glutton-ghost"
                     | "demo.actor.jibaku-ghost"
                     | "demo.actor.lost-soul"
                     | "demo.actor.moaning-spirit"
+                    | "demo.actor.plaguebearer-of-nurgle"
                     | "demo.actor.poltergeist"
                     | "demo.actor.risen-thrall"
                     | "demo.actor.rotting-corpse"
+                    | "demo.actor.servant-of-glaaki"
                     | "demo.actor.skeleton-human"
                     | "demo.actor.skeleton-kobold"
                     | "demo.actor.skeleton-orc"
+                    | "demo.actor.the-ghost-q"
+                    | "demo.actor.undead-devilfish"
+                    | "demo.actor.undead-mass"
                     | "demo.actor.zombified-human"
                     | "demo.actor.zombified-kobold"
+                    | "demo.actor.zombified-orc"
             ))
     );
     assert_eq!(shallow.state_hash(), cast(0, 25).0.state_hash());

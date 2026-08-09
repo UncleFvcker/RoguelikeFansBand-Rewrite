@@ -1596,6 +1596,18 @@
       "id": "radiant-kavu",
       "tags": ["kavu", "warrens"],
       "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 268,
+      "id": "plaguebearer-of-nurgle",
+      "tags": ["plaguebearer", "warrens"],
+      "omittedFlags": ["POS_HOLD_LIFE"]
+    },
+    {
+      "sourceIndex": 281,
+      "id": "gnome-mage",
+      "tags": ["gnome", "humanoid", "warrens"],
+      "omittedFlags": ["MALE"]
     }
   ]
 }
