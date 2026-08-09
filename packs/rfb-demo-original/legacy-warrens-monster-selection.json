@@ -1716,6 +1716,54 @@
       "id": "brumby",
       "tags": ["mount", "warrens"],
       "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 295,
+      "id": "sphinx",
+      "tags": ["animal", "mount", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 297,
+      "id": "forest-troll",
+      "tags": ["troll", "warrens"],
+      "omittedFlags": ["MALE", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 301,
+      "id": "2-headed-hydra",
+      "tags": ["hydra", "mount", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 302,
+      "id": "swamp-thing",
+      "tags": ["warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 303,
+      "id": "water-spirit",
+      "tags": ["spirit", "warrens"],
+      "omittedFlags": ["COLD_BLOOD", "EMPTY_MIND", "POS_GAIN_AC", "POS_HOLD_LIFE"]
+    },
+    {
+      "sourceIndex": 304,
+      "id": "giant-pink-scorpion",
+      "tags": ["scorpion", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC", "WEIRD_MIND"]
+    },
+    {
+      "sourceIndex": 305,
+      "id": "earth-spirit",
+      "tags": ["spirit", "warrens"],
+      "omittedFlags": ["COLD_BLOOD", "EMPTY_MIND", "POS_GAIN_AC", "POS_HOLD_LIFE"]
+    },
+    {
+      "sourceIndex": 1078,
+      "id": "wutugu-the-chief-of-southerings",
+      "tags": ["human", "humanoid", "warrens"],
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
     }
   ]
 }

@@ -1,0 +1,79 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "habitats": [
+      "swamp"
+    ],
+    "legacyIndex": 302,
+    "maxDepth": 70,
+    "rarity": 2
+  },
+  "attack": 4,
+  "damageDice": 2,
+  "damageSides": 5,
+  "damageType": "physical",
+  "defense": 6,
+  "descriptionKey": "actor-demo-swamp-thing-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 80,
+  "formatVersion": 1,
+  "glyph": "H",
+  "hitPointDice": {
+    "dice": 10,
+    "sides": 20
+  },
+  "id": "demo.actor.swamp-thing",
+  "level": 17,
+  "maxHp": 105,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 2,
+            "damageSides": 5,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "type": "terrify"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 5,
+            "damageSides": 2,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "type": "terrify"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "modes": [
+      "swim"
+    ]
+  },
+  "nameKey": "actor-demo-swamp-thing-name",
+  "role": "monster",
+  "speed": 110,
+  "tags": [
+    "legacy-import",
+    "warrens"
+  ]
+}

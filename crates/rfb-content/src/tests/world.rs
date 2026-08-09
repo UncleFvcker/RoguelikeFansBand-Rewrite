@@ -49,6 +49,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
     assert_eq!(
         allocation,
         vec![
+            ("demo.actor.2-headed-hydra", 301, 2, 70),
             ("demo.actor.abyss-worm-mass", 214, 4, 40),
             ("demo.actor.agent-of-black-market", 14, 1, 0),
             ("demo.actor.air-spirit", 227, 2, 50),
@@ -129,6 +130,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.duck-quacked-platypus", 1325, 1, 36),
             ("demo.actor.dweller-on-the-threshold", 263, 5, 50),
             ("demo.actor.eagle", 172, 2, 40),
+            ("demo.actor.earth-spirit", 305, 2, 80),
             ("demo.actor.ewok", 92, 2, 40),
             ("demo.actor.fang-farmer-maggots-dog", 55, 2, 999),
             ("demo.actor.filthy-street-urchin", 1, 2, 0),
@@ -136,6 +138,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.floating-eye", 32, 1, 10),
             ("demo.actor.floating-orb", 912, 2, 50),
             ("demo.actor.flying-skull", 273, 3, 50),
+            ("demo.actor.forest-troll", 297, 1, 80),
             ("demo.actor.freesia", 57, 1, 999),
             ("demo.actor.frosty-jelly", 84, 1, 40),
             ("demo.actor.fruit-bat", 37, 1, 10),
@@ -156,6 +159,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.giant-octopus", 266, 2, 50),
             ("demo.actor.giant-pink-ant", 168, 2, 80),
             ("demo.actor.giant-pink-frog", 121, 1, 40),
+            ("demo.actor.giant-pink-scorpion", 304, 1, 80),
             ("demo.actor.giant-piranha", 187, 2, 90),
             ("demo.actor.giant-salamander", 143, 1, 40),
             ("demo.actor.giant-slug", 120, 1, 40),
@@ -337,9 +341,11 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.software-bug", 246, 2, 90),
             ("demo.actor.soldier-ant", 36, 1, 10),
             ("demo.actor.space-monster", 144, 2, 40),
+            ("demo.actor.sphinx", 295, 2, 50),
             ("demo.actor.spotted-jelly", 233, 3, 50),
             ("demo.actor.spotted-mushroom-patch", 72, 1, 30),
             ("demo.actor.swamp-rabbit", 1387, 7, 42),
+            ("demo.actor.swamp-thing", 302, 2, 70),
             ("demo.actor.swordfish", 88, 2, 40),
             ("demo.actor.swordsman", 216, 1, 50),
             ("demo.actor.tax-collector", 199, 3, 40),
@@ -362,6 +368,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.war-bear", 173, 1, 40),
             ("demo.actor.warg", 257, 2, 50),
             ("demo.actor.warrens-keeper", 135, 3, 999),
+            ("demo.actor.water-spirit", 303, 1, 70),
             ("demo.actor.wererat", 270, 2, 50),
             ("demo.actor.white-harpy", 51, 1, 20),
             ("demo.actor.white-icky-thing", 25, 1, 10),
@@ -373,6 +380,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.wood-spider", 127, 3, 40),
             ("demo.actor.wormtongue-agent-of-saruman", 137, 2, 999),
             ("demo.actor.wounded-bear", 159, 1, 999),
+            ("demo.actor.wutugu-the-chief-of-southerings", 1078, 2, 999),
             ("demo.actor.yellow-jelly", 48, 1, 20),
             ("demo.actor.yellow-light", 81, 1, 30),
             ("demo.actor.yellow-mold", 76, 1, 30),
@@ -1630,6 +1638,166 @@ fn level_sixteen_p33_blockers_use_narrow_runtime_contracts() {
         ability("rfb-legacy.ability.heal-48").effect,
         AbilityEffectDefinition::Heal { amount: 48 }
     ));
+}
+
+#[test]
+fn level_seventeen_p34_harvest_reuses_existing_mechanics_and_abilities() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actor = |id: &str| {
+        artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == id)
+            .unwrap_or_else(|| panic!("{id} should be imported"))
+    };
+    let ability_ids = |id: &str| {
+        actor(id)
+            .monster_casting
+            .as_ref()
+            .unwrap_or_else(|| panic!("{id} should retain monster casting"))
+            .abilities
+            .iter()
+            .map(|candidate| candidate.ability_id.as_str())
+            .collect::<BTreeSet<_>>()
+    };
+
+    for id in [
+        "demo.actor.sphinx",
+        "demo.actor.forest-troll",
+        "demo.actor.2-headed-hydra",
+        "demo.actor.swamp-thing",
+        "demo.actor.water-spirit",
+        "demo.actor.giant-pink-scorpion",
+        "demo.actor.earth-spirit",
+        "demo.actor.wutugu-the-chief-of-southerings",
+    ] {
+        assert_eq!(actor(id).level, 17, "{id} should remain level 17");
+    }
+    for id in [
+        "demo.actor.forest-troll",
+        "demo.actor.swamp-thing",
+        "demo.actor.water-spirit",
+        "demo.actor.giant-pink-scorpion",
+        "demo.actor.earth-spirit",
+        "demo.actor.wutugu-the-chief-of-southerings",
+    ] {
+        assert!(actor(id).monster_casting.is_none(), "{id} should not cast");
+    }
+
+    assert_eq!(
+        ability_ids("demo.actor.sphinx"),
+        ["rfb-legacy.ability.confuse", "rfb-legacy.ability.scare"]
+            .into_iter()
+            .collect()
+    );
+    assert_eq!(
+        ability_ids("demo.actor.2-headed-hydra"),
+        ["rfb-legacy.ability.scare"].into_iter().collect()
+    );
+
+    let sphinx = actor("demo.actor.sphinx");
+    assert!(sphinx.rideable);
+    assert!(sphinx.movement.modes.contains(&ActorMovementMode::Fly));
+    assert_eq!(
+        sphinx
+            .allocation
+            .as_ref()
+            .expect("Sphinx allocation")
+            .habitats,
+        [ActorHabitat::Mountain]
+    );
+
+    let forest_troll = actor("demo.actor.forest-troll");
+    assert!(forest_troll.regenerates);
+    assert_eq!(
+        forest_troll.resistances.get(&ActorDamageType::Light),
+        Some(&ActorResistanceLevel::Vulnerable)
+    );
+
+    let hydra = actor("demo.actor.2-headed-hydra");
+    assert!(hydra.rideable);
+    assert!(hydra.moves_weaker_bodies);
+    assert!(hydra.movement.modes.contains(&ActorMovementMode::Swim));
+
+    assert!(
+        actor("demo.actor.swamp-thing")
+            .melee_routine
+            .as_ref()
+            .expect("Swamp thing melee")
+            .blows
+            .iter()
+            .flat_map(|blow| &blow.effects)
+            .any(|effect| matches!(effect, MeleeBlowEffectDefinition::Terrify { .. }))
+    );
+
+    let water_spirit = actor("demo.actor.water-spirit");
+    assert_eq!(
+        water_spirit
+            .allocation
+            .as_ref()
+            .expect("Water spirit allocation")
+            .random_movement_percent,
+        25
+    );
+    assert!(
+        water_spirit
+            .movement
+            .modes
+            .contains(&ActorMovementMode::Fly)
+    );
+    assert!(
+        !water_spirit
+            .movement
+            .modes
+            .contains(&ActorMovementMode::PassWall)
+    );
+    assert!(water_spirit.tags.iter().any(|tag| tag == "nonliving"));
+
+    assert!(
+        actor("demo.actor.giant-pink-scorpion")
+            .melee_routine
+            .as_ref()
+            .expect("Giant pink scorpion melee")
+            .blows
+            .iter()
+            .flat_map(|blow| &blow.effects)
+            .any(|effect| matches!(
+                effect,
+                MeleeBlowEffectDefinition::DrainAttributes { attributes, .. }
+                    if attributes.contains(&ItemAttributeDefinition::Strength)
+            ))
+    );
+
+    let earth_spirit = actor("demo.actor.earth-spirit");
+    assert!(
+        earth_spirit
+            .movement
+            .modes
+            .contains(&ActorMovementMode::PassWall)
+    );
+    assert_eq!(
+        earth_spirit.resistances.get(&ActorDamageType::Disintegrate),
+        Some(&ActorResistanceLevel::Vulnerable)
+    );
+
+    let wutugu = actor("demo.actor.wutugu-the-chief-of-southerings");
+    assert!(wutugu.tags.iter().any(|tag| tag == "unique"));
+    assert_eq!(
+        wutugu
+            .allocation
+            .as_ref()
+            .expect("Wutugu allocation")
+            .legacy_dungeon_indices,
+        [31]
+    );
+    assert_eq!(
+        wutugu
+            .death_drop
+            .as_ref()
+            .and_then(|drop| drop.theme_table_id.as_deref()),
+        Some("demo.loot-table.large-kobold")
+    );
 }
 
 #[test]

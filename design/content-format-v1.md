@@ -314,6 +314,8 @@ contract-v217 / 包 1.213.0 给既有分类召唤白名单增加 `S_SPIDER → s
 
 contract-v218 / 包 1.214.0 接入恐爪怪、夸塞魔、老鼠王子尼祖基尔和布伦比野马。actor allocation 增加可选 `taskId`，只用于 `COMPOST → demo.task.the-sewer`；movement mode 增加 `climb`；`HURT_ROCK` 复用解离易伤；`TELE_LEVEL` 使用新的怪物专用 `teleport-level` effect。当前包共 88 terrain、349 actors、249 items、147 abilities，严格同步 284 条，内容 hash 为 `94b3ab337a895fc36e1240bd2107c4f39ba259b6c814080333ddaa441119b451`。协议 1.152，state hash Schema v72 不变。
 
+contract-v219 / 包 1.215.0 直接接入斯芬克斯、森林巨魔、2头海德拉、沼泽怪物、水元素精灵、巨型粉红蝎、土元素精灵和南蛮大王兀突骨。八条记录全部复用既有施法、近战、移动、再生、抗性、区域和掉落结构，不增加 ability 或 effect。当前包共 88 terrain、357 actors、249 items、147 abilities，严格同步 292 条，内容 hash 为 `795cf896433897af45dbf9b6d7f1519fbec70f8cf926843cefe4179a37f83f97`。协议 1.152，state hash Schema v72 不变。
+
 contract-v83 以 1.75.0 增加 `detect` 能力效果、Echo Pulse 与 Echo Sight；类别/半径、FOV 与隐藏投影筛选、稳定结果顺序、瞬时/持久知识边界由核心定义，持久结果复用 `revealedTerrain`，state hash 升至 Schema v36。
 
 contract-v84 以 1.76.0 增加 `transform-terrain` 能力效果、Echo Delving 与 Echo Rampart；来源/目标 terrain 集、范围、FOV/line of effect、占用格、连接/边界保护和原子写入由核心定义，地形继续复用既有 save/state hash 字段。
