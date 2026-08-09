@@ -71,6 +71,7 @@ pub(crate) fn valid_item_effect(
         | ItemUseEffectDefinition::AugmentAttributes
         | ItemUseEffectDefinition::IdentifyInventory
         | ItemUseEffectDefinition::SelfKnowledge
+        | ItemUseEffectDefinition::TriggerTsuyoshiCrash
         | ItemUseEffectDefinition::MundanifyItem => true,
         ItemUseEffectDefinition::HealDice { dice, sides } => {
             (1..=100).contains(dice) && (1..=10_000).contains(sides)
@@ -126,6 +127,11 @@ pub(crate) fn valid_item_effect(
             duration_bonus,
         }
         | ItemUseEffectDefinition::ApplyBlindness {
+            duration_dice,
+            duration_sides,
+            duration_bonus,
+        }
+        | ItemUseEffectDefinition::ApplyTsuyoshi {
             duration_dice,
             duration_sides,
             duration_bonus,
@@ -245,6 +251,16 @@ pub(crate) fn valid_item_effect(
                 && (1..=100).contains(reduction_divisor)
         }
         ItemUseEffectDefinition::LoseExperienceFraction { divisor } => (2..=100).contains(divisor),
+        ItemUseEffectDefinition::GainRelativeExperience {
+            divisor,
+            bonus,
+            maximum_gain,
+        } => {
+            (2..=100).contains(divisor)
+                && (1..=1_000_000).contains(bonus)
+                && bonus <= maximum_gain
+                && maximum_gain <= &1_000_000
+        }
         ItemUseEffectDefinition::RestoreResource {
             resource_id,
             amount,
@@ -370,6 +386,9 @@ pub(crate) fn valid_item_effect(
                             | ItemUseEffectDefinition::ApplyGiantStrength { .. }
                             | ItemUseEffectDefinition::SelfDamage { .. }
                             | ItemUseEffectDefinition::LoseExperienceFraction { .. }
+                            | ItemUseEffectDefinition::GainRelativeExperience { .. }
+                            | ItemUseEffectDefinition::ApplyTsuyoshi { .. }
+                            | ItemUseEffectDefinition::TriggerTsuyoshiCrash
                             | ItemUseEffectDefinition::DrainAttribute { .. }
                             | ItemUseEffectDefinition::RestoreAttribute { .. }
                             | ItemUseEffectDefinition::IncreaseAttribute { .. }
@@ -557,6 +576,9 @@ pub(super) fn validate_items(
                     | ItemUseEffectDefinition::SelfLifeLoss { .. }
                     | ItemUseEffectDefinition::SelfDamage { .. }
                     | ItemUseEffectDefinition::LoseExperienceFraction { .. }
+                    | ItemUseEffectDefinition::GainRelativeExperience { .. }
+                    | ItemUseEffectDefinition::ApplyTsuyoshi { .. }
+                    | ItemUseEffectDefinition::TriggerTsuyoshiCrash
                     | ItemUseEffectDefinition::Vengeance { .. }
                     | ItemUseEffectDefinition::ProtectionFromEvil
                     | ItemUseEffectDefinition::PrepareConfusingStrike

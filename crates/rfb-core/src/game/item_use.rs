@@ -2050,6 +2050,9 @@ impl Game {
                 | ItemUseEffectDefinition::ApplyGiantStrength { .. }
                 | ItemUseEffectDefinition::SelfDamage { .. }
                 | ItemUseEffectDefinition::LoseExperienceFraction { .. }
+                | ItemUseEffectDefinition::GainRelativeExperience { .. }
+                | ItemUseEffectDefinition::ApplyTsuyoshi { .. }
+                | ItemUseEffectDefinition::TriggerTsuyoshiCrash
                 | ItemUseEffectDefinition::DrainAttribute { .. }
                 | ItemUseEffectDefinition::RestoreAttribute { .. }
                 | ItemUseEffectDefinition::IncreaseAttribute { .. }
@@ -2392,6 +2395,9 @@ impl Game {
             | ItemUseEffectDefinition::SelfLifeLoss { .. }
             | ItemUseEffectDefinition::SelfDamage { .. }
             | ItemUseEffectDefinition::LoseExperienceFraction { .. }
+            | ItemUseEffectDefinition::GainRelativeExperience { .. }
+            | ItemUseEffectDefinition::ApplyTsuyoshi { .. }
+            | ItemUseEffectDefinition::TriggerTsuyoshiCrash
             | ItemUseEffectDefinition::Vengeance { .. }
             | ItemUseEffectDefinition::ProtectionFromEvil
             | ItemUseEffectDefinition::PrepareConfusingStrike
@@ -3047,6 +3053,136 @@ impl Game {
             remaining: self.progress.experience,
         });
         true
+    }
+
+    fn resolve_item_relative_experience_gain(
+        &mut self,
+        source_kind_id: &str,
+        divisor: u8,
+        bonus: u64,
+        maximum_gain: u64,
+        events: &mut Vec<DomainEvent>,
+    ) -> bool {
+        let amount = (self.progress.experience / u64::from(divisor))
+            .saturating_add(bonus)
+            .min(maximum_gain);
+        let before = self.progress.experience;
+        self.apply_unscaled_player_experience(amount, events);
+        let noticed = self.progress.experience != before;
+        if noticed {
+            self.mark_item_aware(source_kind_id);
+        }
+        noticed
+    }
+
+    fn resolve_item_tsuyoshi(
+        &mut self,
+        source_kind_id: &str,
+        duration_dice: u16,
+        duration_sides: u32,
+        duration_bonus: u32,
+        events: &mut Vec<DomainEvent>,
+    ) -> bool {
+        let resolution = apply_ability_status_effect(
+            &mut self.player,
+            source_kind_id,
+            0,
+            STATUS_TSUYOSHI,
+            1,
+            duration_bonus,
+            duration_dice,
+            duration_sides,
+            AbilityStatusStackingDefinition::Extend,
+            None,
+            None,
+            &BTreeMap::new(),
+            &BTreeSet::new(),
+            &StatModifiers {
+                max_hp: 50,
+                strength: 4,
+                constitution: 4,
+                ..StatModifiers::default()
+            },
+            &EquipmentBonuses::default(),
+            &BTreeSet::new(),
+            None,
+            false,
+            100,
+            None,
+            None,
+            &mut self.rng,
+        );
+        let (duration, noticed) = match resolution {
+            AbilityEffectResolutionDto::ApplyStatus {
+                applied_duration_ticks,
+                change,
+                ..
+            } => (
+                applied_duration_ticks,
+                !matches!(change, AbilityStatusChangeDto::Unchanged),
+            ),
+            _ => unreachable!("Tsuyoshi must produce a status application resolution"),
+        };
+        if noticed {
+            self.mark_item_aware(source_kind_id);
+        }
+        events.push(DomainEvent::ItemStatusResolved {
+            source_kind_id: source_kind_id.to_owned(),
+            display_name_key: self.item_display_name_key(source_kind_id),
+            status_kind_id: STATUS_TSUYOSHI.to_owned(),
+            duration: Some(duration),
+            noticed,
+        });
+        noticed
+    }
+
+    pub(super) fn apply_tsuyoshi_crash(
+        &mut self,
+        source_kind_id: &str,
+        previous_max_hp: i32,
+        previous_resource_maxima: &BTreeMap<String, (u32, u32)>,
+        events: &mut Vec<DomainEvent>,
+    ) -> bool {
+        let mut noticed = false;
+        for attribute in [AttributeKind::Constitution, AttributeKind::Strength] {
+            let outcome =
+                apply_permanent_attribute_drain(&mut self.progress, attribute, 20, &mut self.rng);
+            noticed = noticed || outcome.changed;
+            events.push(DomainEvent::ItemAttributeChanged {
+                source_kind_id: source_kind_id.to_owned(),
+                display_name_key: self.item_display_name_key(source_kind_id),
+                attribute: outcome.attribute,
+                change: ItemAttributeChange::Drained,
+                before: outcome.before,
+                after: outcome.after,
+                maximum: outcome.maximum_after,
+                noticed: outcome.changed,
+            });
+        }
+        if noticed {
+            self.refresh_after_attribute_change(previous_max_hp, previous_resource_maxima);
+        }
+        noticed
+    }
+
+    fn resolve_item_tsuyoshi_crash(
+        &mut self,
+        source_kind_id: &str,
+        events: &mut Vec<DomainEvent>,
+    ) -> bool {
+        let previous_max_hp = self.effective_player_max_hp();
+        let previous_resource_maxima = self.player_resource_maxima();
+        self.player
+            .statuses
+            .retain(|status| status.kind_id != STATUS_TSUYOSHI);
+        let noticed = self.apply_tsuyoshi_crash(
+            source_kind_id,
+            previous_max_hp,
+            &previous_resource_maxima,
+            events,
+        );
+        self.mark_item_aware(source_kind_id);
+        noticed
     }
 
     fn resolve_item_status_reduction(
@@ -4165,6 +4301,31 @@ impl Game {
             }
             ItemUseEffectDefinition::LoseExperienceFraction { divisor } => {
                 self.resolve_item_experience_loss(source_kind_id, *divisor, events)
+            }
+            ItemUseEffectDefinition::GainRelativeExperience {
+                divisor,
+                bonus,
+                maximum_gain,
+            } => self.resolve_item_relative_experience_gain(
+                source_kind_id,
+                *divisor,
+                *bonus,
+                *maximum_gain,
+                events,
+            ),
+            ItemUseEffectDefinition::ApplyTsuyoshi {
+                duration_dice,
+                duration_sides,
+                duration_bonus,
+            } => self.resolve_item_tsuyoshi(
+                source_kind_id,
+                *duration_dice,
+                *duration_sides,
+                *duration_bonus,
+                events,
+            ),
+            ItemUseEffectDefinition::TriggerTsuyoshiCrash => {
+                self.resolve_item_tsuyoshi_crash(source_kind_id, events)
             }
             ItemUseEffectDefinition::Vengeance {
                 duration_dice,

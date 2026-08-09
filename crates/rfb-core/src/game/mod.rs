@@ -21,9 +21,9 @@ use crate::{
         STATUS_BASIC_RESISTANCE, STATUS_BLEEDING, STATUS_BLINDNESS, STATUS_CONFUSION, STATUS_FEAR,
         STATUS_GIANT_STRENGTH, STATUS_HASTE, STATUS_INVENTORY_PROTECTION, STATUS_PARALYSIS,
         STATUS_POISON, STATUS_PROTECTION_FROM_EVIL, STATUS_SIGHT, STATUS_SLEEP, STATUS_SLOW,
-        STATUS_STUN, STATUS_THERMAL_RESISTANCE, STATUS_UNDERSTANDING, STATUS_VENGEANCE,
-        StatusApplication, StatusChange, StatusInstance, StatusStacking, apply_effect,
-        apply_status, resolve_damage,
+        STATUS_STUN, STATUS_THERMAL_RESISTANCE, STATUS_TSUYOSHI, STATUS_UNDERSTANDING,
+        STATUS_VENGEANCE, StatusApplication, StatusChange, StatusInstance, StatusStacking,
+        apply_effect, apply_status, resolve_damage,
     },
     error::CoreError,
     event::{
@@ -163,9 +163,9 @@ use player_stats::{
 use progression::{
     LifeForceRestorationRequest, apply_attribute_drain, apply_attribute_restoration,
     apply_experience_restoration, apply_learning_capacity_increase, apply_life_force_restoration,
-    apply_permanent_attribute_increase, build_definitions, character_skill_progress,
-    combine_percentages, initial_character_attributes, initial_resource_pool,
-    profile_resource_maximum, resolve_character_build,
+    apply_permanent_attribute_drain, apply_permanent_attribute_increase, build_definitions,
+    character_skill_progress, combine_percentages, initial_character_attributes,
+    initial_resource_pool, profile_resource_maximum, resolve_character_build,
 };
 use status_effects::{
     ability_status_stacking_dto, apply_ability_status_effect, remove_ability_status_effect,

@@ -1017,6 +1017,8 @@ fn black_market_stocks_original_non_town_books_and_priced_p3_consumables() {
             "demo.item.enlightenment-potion",
             "demo.item.star-enlightenment-potion",
             "demo.item.self-knowledge-potion",
+            "demo.item.experience-potion",
+            "demo.item.neo-tsuyoshi-special",
             "demo.item.rune-of-protection-scroll",
             "demo.item.destruction-scroll",
             "demo.item.mundanity-scroll",
@@ -1275,6 +1277,39 @@ fn p3_6_launchers_and_ammunition_all_have_an_acquisition_path() {
         "demo.item.rounded-pebble",
         "demo.item.iron-shot",
         "demo.item.mithril-shot",
+    ] {
+        assert!(
+            available.contains(item_id),
+            "{item_id} should be obtainable"
+        );
+    }
+}
+
+#[test]
+fn p3_7_active_potions_all_have_an_acquisition_path() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let shop_items = artifact
+        .content
+        .shops
+        .iter()
+        .flat_map(|shop| shop.stock.iter().map(|stock| stock.item_kind_id.as_str()));
+    let warrens_items = artifact
+        .content
+        .loot_tables
+        .iter()
+        .filter(|table| table.id == "demo.loot-table.warrens")
+        .flat_map(|table| {
+            table
+                .entries
+                .iter()
+                .map(|entry| entry.item_kind_id.as_str())
+        });
+    let available = shop_items.chain(warrens_items).collect::<BTreeSet<_>>();
+
+    for item_id in [
+        "demo.item.experience-potion",
+        "demo.item.neo-tsuyoshi-special",
+        "demo.item.tsuyoshi-special",
     ] {
         assert!(
             available.contains(item_id),

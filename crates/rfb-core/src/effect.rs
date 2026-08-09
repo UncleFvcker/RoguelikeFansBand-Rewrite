@@ -30,6 +30,7 @@ pub const STATUS_INVULNERABILITY: &str = "rfb.status.invulnerability";
 pub const STATUS_GIANT_STRENGTH: &str = "rfb.status.giant-strength";
 pub const STATUS_UNDERSTANDING: &str = "rfb.status.understanding";
 pub const STATUS_INVENTORY_PROTECTION: &str = "rfb.status.inventory-protection";
+pub const STATUS_TSUYOSHI: &str = "rfb.status.tsuyoshi";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct DamagePacket {

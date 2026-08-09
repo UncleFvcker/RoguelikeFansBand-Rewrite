@@ -4663,6 +4663,163 @@ fn p3_2_invulnerability_and_giant_strength_reuse_status_payloads() {
 }
 
 #[test]
+fn p3_7_experience_potion_uses_unscaled_relative_gain_and_level_cap() {
+    let mut game =
+        Game::new_with_build(701, "demo.build.scholar").expect("scholar build should create");
+    clear_monsters(&mut game);
+    game.apply_unscaled_player_experience(100, &mut Vec::new());
+    assert_eq!(game.progress.experience, 100);
+    give_inventory_item(
+        &mut game,
+        "test.item.experience.1",
+        "demo.item.experience-potion",
+    );
+
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: "test.item.experience.1".to_owned(),
+            target: None,
+        },
+    );
+
+    assert_eq!(game.progress.experience, 160);
+    assert!(update.events.iter().any(|event| {
+        event.kind == "player.experience-gained"
+            && event.args.get("amount").map(String::as_str) == Some("60")
+    }));
+
+    let mut capped = Game::new(704);
+    clear_monsters(&mut capped);
+    capped.apply_unscaled_player_experience(4_500_000, &mut Vec::new());
+    assert_eq!(capped.progress.level, 50);
+    give_inventory_item(
+        &mut capped,
+        "test.item.experience.2",
+        "demo.item.experience-potion",
+    );
+    dispatch_next(
+        &mut capped,
+        GameCommand::UseItem {
+            item_id: "test.item.experience.2".to_owned(),
+            target: None,
+        },
+    );
+    assert_eq!(capped.progress.experience, 4_600_000);
+    assert_eq!(capped.progress.level, 50);
+}
+
+#[test]
+fn p3_7_neo_tsuyoshi_round_trips_and_crashes_on_expiry() {
+    let mut game = Game::new(702);
+    clear_monsters(&mut game);
+    game.player.statuses.push(StatusInstance {
+        kind_id: crate::effect::STATUS_HALLUCINATION.to_owned(),
+        intensity: 1,
+        remaining_ticks: 50,
+        source_id: Some("test.hallucination".to_owned()),
+        granted_resistances: BTreeMap::new(),
+        granted_brands: BTreeSet::new(),
+        granted_modifiers: StatModifiersDto::default(),
+        granted_equipment_bonuses: EquipmentBonusesDto::default(),
+        granted_status_immunities: BTreeSet::new(),
+        granted_race_id: None,
+        grants_wall_passage: false,
+        incoming_damage_percent: 100,
+    });
+    give_inventory_item(
+        &mut game,
+        "test.item.neo-tsuyoshi.1",
+        "demo.item.neo-tsuyoshi-special",
+    );
+
+    dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: "test.item.neo-tsuyoshi.1".to_owned(),
+            target: None,
+        },
+    );
+
+    assert!(!game.player_has_status_kind(crate::effect::STATUS_HALLUCINATION));
+    let tsuyoshi = game
+        .player
+        .statuses
+        .iter()
+        .find(|status| status.kind_id == STATUS_TSUYOSHI)
+        .expect("Neo-Tsuyoshi should remain active");
+    assert_eq!(tsuyoshi.granted_modifiers.strength, 4);
+    assert_eq!(tsuyoshi.granted_modifiers.constitution, 4);
+    assert_eq!(tsuyoshi.granted_modifiers.max_hp, 50);
+    assert!((91..=190).contains(&tsuyoshi.remaining_ticks));
+    let restored = Game::from_save(game.to_save()).expect("Tsuyoshi status should round trip");
+    assert_eq!(restored.snapshot(), game.snapshot());
+
+    game.progress.attributes.strength = 118;
+    game.progress.maximum_attributes.strength = 118;
+    game.progress.attributes.constitution = 118;
+    game.progress.maximum_attributes.constitution = 118;
+    game.player
+        .statuses
+        .iter_mut()
+        .find(|status| status.kind_id == STATUS_TSUYOSHI)
+        .expect("Tsuyoshi should remain active")
+        .remaining_ticks = 1;
+    let draws_before = game.rng_draw_counter();
+    let mut events = Vec::new();
+    game.process_status_tick(&mut events, &mut BTreeSet::new(), &mut Vec::new(), true)
+        .expect("Tsuyoshi expiry should resolve");
+
+    assert!(!game.player_has_status_kind(STATUS_TSUYOSHI));
+    assert!(game.progress.maximum_attributes.strength < 118);
+    assert!(game.progress.maximum_attributes.constitution < 118);
+    assert_eq!(
+        game.progress.attributes.strength,
+        game.progress.maximum_attributes.strength
+    );
+    assert_eq!(
+        game.progress.attributes.constitution,
+        game.progress.maximum_attributes.constitution
+    );
+    assert_eq!(game.rng_draw_counter(), draws_before + 4);
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::PlayerStatusExpired { status_kind_id }
+            if status_kind_id == STATUS_TSUYOSHI
+    )));
+}
+
+#[test]
+fn p3_7_tsuyoshi_special_triggers_the_same_permanent_crash_immediately() {
+    let mut game = Game::new(703);
+    clear_monsters(&mut game);
+    game.progress.attributes.strength = 18;
+    game.progress.maximum_attributes.strength = 18;
+    game.progress.attributes.constitution = 18;
+    game.progress.maximum_attributes.constitution = 18;
+    give_inventory_item(
+        &mut game,
+        "test.item.tsuyoshi.1",
+        "demo.item.tsuyoshi-special",
+    );
+
+    dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: "test.item.tsuyoshi.1".to_owned(),
+            target: None,
+        },
+    );
+
+    assert_eq!(game.progress.attributes.strength, 17);
+    assert_eq!(game.progress.maximum_attributes.strength, 17);
+    assert_eq!(game.progress.attributes.constitution, 17);
+    assert_eq!(game.progress.maximum_attributes.constitution, 17);
+    assert!(!game.player_has_status_kind(STATUS_TSUYOSHI));
+    assert!(game.player_has_status_kind(crate::effect::STATUS_HALLUCINATION));
+}
+
+#[test]
 fn p3_3_treasure_detection_reports_stable_gold_pile_ids() {
     let mut game = Game::new(205);
     clear_monsters(&mut game);

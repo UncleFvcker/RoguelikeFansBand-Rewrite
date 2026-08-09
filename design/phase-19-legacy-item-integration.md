@@ -478,3 +478,44 @@ original items, for 231 total. P3.5 reports five `blockedToActive` and one
 The save and state-hash schemas are unchanged. Black Market and Alchemist stock
 changes affect common new-game RNG, so shared fixture refresh remains an
 integration-worktree handoff.
+
+## P3.7 Character Growth Potions
+
+P3.7 moves three of its five planned identities from `blocked` to `active`:
+Experience, Neo-Tsuyoshi Special, and Tsuyoshi Special. Experience grants the
+smaller of 100,000 or half the current experience plus 10. It bypasses the
+ordinary monster-reward multiplier, then uses the existing progression path so
+level gains, attribute points, skills, resources, and the campaign's level-50
+or level-100 cap remain authoritative. The current supported race set contains
+neither Android nor a Fast Learner mutation, so no dormant race exception or
+item-owned substitute state is added.
+
+Neo-Tsuyoshi clears hallucination and extends a normal persisted status. The
+status grants four Strength and Constitution buckets plus 50 maximum HP. When
+the shared status clock expires it, the core applies the original 20-percent
+permanent Constitution and Strength drains to both current and maximum natural
+attributes. Tsuyoshi Special invokes that same crash immediately, removes any
+active Tsuyoshi status so the penalty cannot fire twice, and then applies
+hallucination through the existing chaos-resistance rule. High-stat crashes
+preserve the original four deterministic RNG draws: current and maximum values
+for Constitution, then Strength.
+
+New Life and Polymorph remain blocked. `hp_progression` already persists the
+authoritative life-growth sequence and can support a future rerate without a
+new life-rating field, but New Life also requires personal maximum-attribute
+potential and removal of all unlocked mutations. The project has neither that
+potential model nor character mutation identities, acquisition/removal rules,
+or a candidate pool. The ledger therefore records
+`character-mutation-and-attribute-potential` for New Life and
+`character-mutation-system` for Polymorph instead of emitting reduced effects.
+
+Experience and Neo-Tsuyoshi are Black Market stock. The zero-value harmful
+Tsuyoshi Special uses a depth-9 Warrens drop, matching the existing policy for
+zero-value harmful consumables. The authoritative `master` audit reports 224
+active, 106 mechanics-ready, and 214 blocked source items. The formal pack has
+225 mapped RFB items plus 24 original items, for 249 total. Pack version
+1.206.0 has content hash
+`e32733e922438bb34b2bf67886001de280d69be532061e485f20b9fd0fb0d33f`.
+The protocol, save structure, and state-hash schema are unchanged. Shop and
+loot changes affect common new-game RNG, so shared replay refresh remains an
+integration-worktree handoff.

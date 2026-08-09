@@ -395,6 +395,17 @@ pub enum ItemUseEffectDefinition {
     LoseExperienceFraction {
         divisor: u8,
     },
+    GainRelativeExperience {
+        divisor: u8,
+        bonus: u64,
+        maximum_gain: u64,
+    },
+    ApplyTsuyoshi {
+        duration_dice: u16,
+        duration_sides: u32,
+        duration_bonus: u32,
+    },
+    TriggerTsuyoshiCrash,
     Vengeance {
         duration_dice: u16,
         duration_sides: u32,

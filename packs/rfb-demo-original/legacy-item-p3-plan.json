@@ -241,23 +241,23 @@
           "id": "experience-growth",
           "primaryBlockers": ["consumable-effect"],
           "items": [
-            { "sourceIndex": 452, "sourceName": "Experience:Green Speckled", "sourceId": "experience-green-speckled" }
+            { "sourceIndex": 452, "sourceName": "Experience:Green Speckled", "sourceId": "experience-green-speckled", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] }
           ]
         },
         {
           "id": "life-and-mutation",
           "primaryBlockers": ["consumable-effect"],
           "items": [
-            { "sourceIndex": 456, "sourceName": "New Life:Bright Red", "sourceId": "new-life-bright-red" },
-            { "sourceIndex": 459, "sourceName": "Polymorph:Bronze", "sourceId": "polymorph-bronze" }
+            { "sourceIndex": 456, "sourceName": "New Life:Bright Red", "sourceId": "new-life-bright-red", "secondaryBlockers": ["character-mutation-and-attribute-potential"] },
+            { "sourceIndex": 459, "sourceName": "Polymorph:Bronze", "sourceId": "polymorph-bronze", "secondaryBlockers": ["character-mutation-system"] }
           ]
         },
         {
           "id": "timed-stat-side-effects",
           "primaryBlockers": ["consumable-effect"],
           "items": [
-            { "sourceIndex": 457, "sourceName": "Neo-Tsuyoshi Special:Sky Blue", "sourceId": "neo-tsuyoshi-special-sky-blue" },
-            { "sourceIndex": 458, "sourceName": "Tsuyoshi Special:Silver", "sourceId": "tsuyoshi-special-silver" }
+            { "sourceIndex": 457, "sourceName": "Neo-Tsuyoshi Special:Sky Blue", "sourceId": "neo-tsuyoshi-special-sky-blue", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] },
+            { "sourceIndex": 458, "sourceName": "Tsuyoshi Special:Silver", "sourceId": "tsuyoshi-special-silver", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] }
           ]
         }
       ]

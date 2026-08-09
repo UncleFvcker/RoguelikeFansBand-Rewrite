@@ -2496,6 +2496,12 @@ fn fixed_consumable_use_action_with_terrain(
             serde_json::json!({"type": "self-knowledge"}),
         ]),
         (75, 58) => serde_json::json!({"type": "self-knowledge"}),
+        (75, 59) => serde_json::json!({
+            "type": "gain-relative-experience",
+            "divisor": 2,
+            "bonus": 10,
+            "maximumGain": 100000
+        }),
         (75, 30) => serde_json::json!({
             "type": "apply-thermal-resistance",
             "durationDice": 1,
@@ -2531,6 +2537,27 @@ fn fixed_consumable_use_action_with_terrain(
             "stacking": "extend",
             "incomingDamagePercent": 0
         }),
+        (75, 64) => sequence(vec![
+            remove_status("rfb.status.hallucination"),
+            serde_json::json!({
+                "type": "apply-tsuyoshi",
+                "durationDice": 1,
+                "durationSides": 100,
+                "durationBonus": 100
+            }),
+        ]),
+        (75, 65) => sequence(vec![
+            serde_json::json!({"type": "trigger-tsuyoshi-crash"}),
+            serde_json::json!({
+                "type": "apply-status",
+                "statusKindId": "rfb.status.hallucination",
+                "durationDice": 1,
+                "durationSides": 50,
+                "durationBonus": 50,
+                "stacking": "keep-strongest",
+                "resistanceType": "chaos"
+            }),
+        ]),
         (75, 68) => serde_json::json!({
             "type": "apply-giant-strength",
             "durationDice": 1,
@@ -13152,6 +13179,45 @@ F:BRAND_VAMP | HOLD_LIFE
         );
         assert_eq!(report.item_behavior_gaps["random-artifact-identity"], 1);
         assert!(!report.item_behavior_gaps.contains_key("scroll-effect"));
+    }
+
+    #[test]
+    fn p3_7_growth_and_tsuyoshi_potions_map_without_fake_mutations() {
+        let effect = |sval| {
+            fixed_consumable_use_action(&LegacyItemEntry {
+                tval: 75,
+                sval,
+                ..LegacyItemEntry::default()
+            })
+            .expect("supported P3.7 potion should map")["effect"]
+                .clone()
+        };
+
+        assert_eq!(effect(59)["type"], "gain-relative-experience");
+        assert_eq!(effect(59)["maximumGain"], 100_000);
+        assert_eq!(effect(64)["effects"][0]["type"], "remove-status");
+        assert_eq!(effect(64)["effects"][1]["type"], "apply-tsuyoshi");
+        assert_eq!(effect(65)["effects"][0]["type"], "trigger-tsuyoshi-crash");
+        assert_eq!(
+            effect(65)["effects"][1]["statusKindId"],
+            "rfb.status.hallucination"
+        );
+
+        for sval in [63, 66] {
+            let mut report = ContentImportReport::default();
+            let _ = item_json(
+                &LegacyItemEntry {
+                    tval: 75,
+                    sval,
+                    ..LegacyItemEntry::default()
+                },
+                &format!("blocked-p3-7-{sval}"),
+                &LauncherAmmoIndex::default(),
+                None,
+                &mut report,
+            );
+            assert_eq!(report.item_behavior_gaps["consumable-effect"], 1);
+        }
     }
 
     #[test]
