@@ -33,6 +33,14 @@ pub struct MutationInnateAttackDefinition {
     pub weight_tenths_pound: u16,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct MutationRatioDefinition {
+    pub numerator: u16,
+    pub denominator: u16,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -58,6 +66,10 @@ pub struct MutationDefinition {
     #[serde(default)]
     pub stealth_skill: i32,
     #[serde(default)]
+    pub search_skill: i32,
+    #[serde(default)]
+    pub perception_skill: i32,
+    #[serde(default)]
     pub infravision: i32,
     /// Additive percentage adjustment to the natural HP regeneration rate.
     #[serde(default)]
@@ -78,6 +90,24 @@ pub struct MutationDefinition {
     pub mighty_throw: bool,
     #[serde(default)]
     pub innate_attack: Option<MutationInnateAttackDefinition>,
+    #[serde(default)]
+    pub spell_failure_modifier_percent: i32,
+    #[serde(default)]
+    pub kill_experience_bonus_percent: u16,
+    #[serde(default)]
+    pub relative_experience_multiplier: Option<MutationRatioDefinition>,
+    #[serde(default)]
+    pub auto_identify_items: bool,
+    #[serde(default)]
+    pub movement_energy_multiplier: Option<MutationRatioDefinition>,
+    #[serde(default)]
+    pub scroll_energy_multiplier: Option<MutationRatioDefinition>,
+    #[serde(default)]
+    pub black_market_standard_prices: bool,
+    #[serde(default)]
+    pub dispel_resistance_percent: u8,
+    #[serde(default)]
+    pub resource_drain_immunity: bool,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub removes_on_gain: Vec<String>,
 }

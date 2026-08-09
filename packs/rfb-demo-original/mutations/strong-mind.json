@@ -7,5 +7,6 @@
   "rating": "great",
   "sourceIndex": 140,
   "randomWeight": 0,
+  "resourceDrainImmunity": true,
   "removesOnGain": []
 }

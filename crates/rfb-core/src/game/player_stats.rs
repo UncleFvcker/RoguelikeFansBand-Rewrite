@@ -1361,6 +1361,8 @@ impl Game {
                         ),
                     ),
                     (StatKind::StealthSkill, mutation.stealth_skill),
+                    (StatKind::SearchSkill, mutation.search_skill),
+                    (StatKind::PerceptionSkill, mutation.perception_skill),
                 ] {
                     add_nonzero_stat(&mut pipeline, kind, StatLayer::Status, &mutation.id, value);
                 }

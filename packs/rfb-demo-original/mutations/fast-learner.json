@@ -7,5 +7,10 @@
   "rating": "great",
   "sourceIndex": 96,
   "randomWeight": 0,
+  "killExperienceBonusPercent": 20,
+  "relativeExperienceMultiplier": {
+    "numerator": 5,
+    "denominator": 3
+  },
   "removesOnGain": []
 }

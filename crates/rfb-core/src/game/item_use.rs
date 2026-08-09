@@ -3113,9 +3113,11 @@ impl Game {
         maximum_gain: u64,
         events: &mut Vec<DomainEvent>,
     ) -> bool {
-        let amount = (self.progress.experience / u64::from(divisor))
-            .saturating_add(bonus)
-            .min(maximum_gain);
+        let amount = self
+            .player_relative_experience_reward(
+                (self.progress.experience / u64::from(divisor)).saturating_add(bonus),
+            )
+            .min(self.player_relative_experience_reward(maximum_gain));
         let before = self.progress.experience;
         self.apply_unscaled_player_experience(amount, events);
         let noticed = self.progress.experience != before;

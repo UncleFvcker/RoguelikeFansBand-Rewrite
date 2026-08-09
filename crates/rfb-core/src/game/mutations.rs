@@ -7,6 +7,12 @@ use super::*;
 const GOOD_LUCK_MUTATION_ID: &str = "rfb.mutation.good-luck";
 const BAD_LUCK_MUTATION_ID: &str = "rfb.mutation.bad-luck";
 
+fn scale_by_ratio(value: u64, ratio: rfb_content::MutationRatioDefinition) -> u64 {
+    value
+        .saturating_mul(u64::from(ratio.numerator))
+        .saturating_div(u64::from(ratio.denominator))
+}
+
 #[derive(Clone, Copy)]
 enum RandomMutationOperation {
     Gain,
@@ -51,6 +57,12 @@ impl Game {
             mutation_id: definition.id,
             name: definition.name,
         });
+        if definition.auto_identify_items {
+            let count = self.identify_carried_items();
+            if count > 0 {
+                events.push(DomainEvent::ItemAutoIdentified { count });
+            }
+        }
         true
     }
 
@@ -216,5 +228,110 @@ impl Game {
                     .saturating_mul(10),
             )
             .max(10)
+    }
+
+    pub(super) fn player_mutation_action_energy_cost(&self, action: &GameAction, cost: i32) -> i32 {
+        let mut mutations = self
+            .content
+            .mutations()
+            .filter(|definition| self.progress.active_mutation_ids.contains(&definition.id))
+            .collect::<Vec<_>>();
+        let walking = matches!(
+            action,
+            GameAction::Move { .. } | GameAction::TravelWorld { .. }
+        );
+        let scroll_use = match action {
+            GameAction::UseItem { item_id, .. } => self
+                .items
+                .iter()
+                .find(|item| item.id == *item_id)
+                .and_then(|item| self.content.item(&item.kind_id))
+                .is_some_and(|definition| definition.tags.iter().any(|tag| tag == "scroll")),
+            _ => false,
+        };
+        if walking {
+            // RFB applies Limp before Fleet of Foot; descending source order
+            // preserves that integer-rounding order without hard-coded IDs.
+            mutations.sort_by_key(|definition| std::cmp::Reverse(definition.source_index));
+        }
+        let scaled = mutations.into_iter().fold(
+            u64::try_from(cost.max(0)).unwrap_or(0),
+            |value, mutation| {
+                if walking {
+                    mutation
+                        .movement_energy_multiplier
+                        .map_or(value, |ratio| scale_by_ratio(value, ratio))
+                } else if scroll_use {
+                    mutation
+                        .scroll_energy_multiplier
+                        .map_or(value, |ratio| scale_by_ratio(value, ratio))
+                } else {
+                    value
+                }
+            },
+        );
+        i32::try_from(scaled).unwrap_or(i32::MAX)
+    }
+
+    pub(super) fn player_kill_experience_reward(&self, amount: u64) -> u64 {
+        self.content
+            .mutations()
+            .filter(|mutation| self.progress.active_mutation_ids.contains(&mutation.id))
+            .fold(amount, |value, mutation| {
+                value
+                    .saturating_mul(
+                        100_u64.saturating_add(u64::from(mutation.kill_experience_bonus_percent)),
+                    )
+                    .saturating_div(100)
+            })
+    }
+
+    pub(super) fn player_relative_experience_reward(&self, amount: u64) -> u64 {
+        self.content
+            .mutations()
+            .filter(|mutation| self.progress.active_mutation_ids.contains(&mutation.id))
+            .filter_map(|mutation| mutation.relative_experience_multiplier)
+            .fold(amount, scale_by_ratio)
+    }
+
+    pub(super) fn player_spell_failure_modifier_percent(&self) -> i32 {
+        self.content
+            .mutations()
+            .filter(|mutation| self.progress.active_mutation_ids.contains(&mutation.id))
+            .fold(0_i32, |total, mutation| {
+                total.saturating_add(mutation.spell_failure_modifier_percent)
+            })
+    }
+
+    pub(super) fn player_auto_identifies_items(&self) -> bool {
+        self.content.mutations().any(|mutation| {
+            mutation.auto_identify_items && self.progress.active_mutation_ids.contains(&mutation.id)
+        })
+    }
+
+    pub(super) fn player_has_black_market_standard_prices(&self) -> bool {
+        self.content.mutations().any(|mutation| {
+            mutation.black_market_standard_prices
+                && self.progress.active_mutation_ids.contains(&mutation.id)
+        })
+    }
+
+    pub(super) fn player_resists_dispel(&mut self) -> bool {
+        let chance = self
+            .content
+            .mutations()
+            .filter(|mutation| self.progress.active_mutation_ids.contains(&mutation.id))
+            .fold(0_u8, |total, mutation| {
+                total.saturating_add(mutation.dispel_resistance_percent)
+            })
+            .min(100);
+        chance > 0 && self.rng.bounded(100) < u64::from(chance)
+    }
+
+    pub(super) fn player_has_resource_drain_immunity(&self) -> bool {
+        self.content.mutations().any(|mutation| {
+            mutation.resource_drain_immunity
+                && self.progress.active_mutation_ids.contains(&mutation.id)
+        })
     }
 }

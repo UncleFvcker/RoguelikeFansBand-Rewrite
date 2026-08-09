@@ -1779,10 +1779,8 @@
       "eligibilityConditions": [],
       "weightConditions": [],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "mutation-passive-bonus-system"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -1823,10 +1821,8 @@
         "lose:mutation-bad-luck=>weight-1"
       ],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "mutation-passive-bonus-system"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -2163,7 +2159,7 @@
       ],
       "status": "blocked",
       "blockers": [
-        "mutation-cross-system-query"
+        "luck-item-generation-device-outcome-and-curse-consumers"
       ],
       "sourceNoNumericEffect": false
     },
@@ -2234,7 +2230,7 @@
       ],
       "status": "blocked",
       "blockers": [
-        "mutation-cross-system-query"
+        "luck-item-generation-device-outcome-and-sensing-consumers"
       ],
       "sourceNoNumericEffect": false
     },
@@ -2254,10 +2250,8 @@
         "lose:mutation-good-luck=>weight-1"
       ],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "mutation-cross-system-query"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -2406,10 +2400,8 @@
         "lose:mutation-good-luck=>weight-1"
       ],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "mutation-passive-bonus-system"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -2428,10 +2420,8 @@
         "lose:mutation-good-luck=>weight-1"
       ],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "mutation-cross-system-query"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -2494,10 +2484,8 @@
         "lose:mutation-good-luck=>weight-1"
       ],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "mutation-cross-system-query"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -2564,10 +2552,8 @@
         "lose:mutation-good-luck=>weight-1"
       ],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "mutation-cross-system-query"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": true
     },
     {
@@ -2630,10 +2616,8 @@
         "lose:mutation-good-luck=>weight-1"
       ],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "mutation-cross-system-query"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -2654,7 +2638,7 @@
       "removesOnGain": [],
       "status": "blocked",
       "blockers": [
-        "mutation-cross-system-query"
+        "player-teleport-energy-cost-across-abilities-and-items"
       ],
       "sourceNoNumericEffect": false
     },
@@ -2676,7 +2660,7 @@
       "removesOnGain": [],
       "status": "blocked",
       "blockers": [
-        "mutation-cross-system-query"
+        "monster-device-charge-drain-consumer"
       ],
       "sourceNoNumericEffect": false
     },
@@ -2740,10 +2724,8 @@
         "lose:mutation-good-luck=>weight-1"
       ],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "mutation-cross-system-query"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -2762,10 +2744,8 @@
         "lose:mutation-good-luck=>weight-1"
       ],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "mutation-cross-system-query"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -2958,10 +2938,8 @@
         "lose:mutation-good-luck=>weight-1"
       ],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "mutation-passive-bonus-system"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -3027,7 +3005,7 @@
       "removesOnGain": [],
       "status": "blocked",
       "blockers": [
-        "mutation-cross-system-query"
+        "fatigue-minislow-state-recovery-and-physical-action-consumers"
       ],
       "sourceNoNumericEffect": false
     },
@@ -3212,7 +3190,7 @@
       "removesOnGain": [],
       "status": "blocked",
       "blockers": [
-        "mutation-cross-system-query"
+        "device-category-specific-failure-modifiers"
       ],
       "sourceNoNumericEffect": false
     },
@@ -3232,10 +3210,8 @@
         "lose:mutation-good-luck=>weight-1"
       ],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "mana-drain-consumer"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -3322,7 +3298,7 @@
       "removesOnGain": [],
       "status": "blocked",
       "blockers": [
-        "mutation-cross-system-query"
+        "fatigue-minislow-state-recovery-and-magic-ranged-consumers"
       ],
       "sourceNoNumericEffect": false
     },
@@ -3343,10 +3319,8 @@
         "lose:mutation-bad-luck=>weight-1"
       ],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "mutation-cross-system-query"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {

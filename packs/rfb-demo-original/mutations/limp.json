@@ -7,5 +7,9 @@
   "rating": "bad",
   "sourceIndex": 145,
   "randomWeight": 4,
+  "movementEnergyMultiplier": {
+    "numerator": 10,
+    "denominator": 9
+  },
   "removesOnGain": []
 }

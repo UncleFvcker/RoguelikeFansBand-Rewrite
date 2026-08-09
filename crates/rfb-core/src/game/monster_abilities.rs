@@ -1268,7 +1268,7 @@ impl Game {
         succeeded
     }
 
-    fn resolve_monster_player_effects(
+    pub(super) fn resolve_monster_player_effects(
         &mut self,
         source_entity_id: &str,
         source_kind_id: &str,
@@ -1415,7 +1415,9 @@ impl Game {
                                 .map(|(id, _)| id.clone())
                         });
                     let requested = *amount;
+                    let immune = self.player_has_resource_drain_immunity();
                     let (resource_id, drained) = match pool_id {
+                        Some(id) if immune => (id, 0),
                         Some(id) => {
                             let pool = self
                                 .resources
@@ -1545,7 +1547,14 @@ impl Game {
                     resolution
                 }
                 AbilityEffectDefinition::RemoveStatus { status_kind_id } => {
-                    remove_ability_status_effect(&mut self.player, effect_index, status_kind_id)
+                    if self.player_resists_dispel() {
+                        AbilityEffectResolutionDto::Skipped {
+                            effect_index,
+                            reason: AbilityEffectSkipReasonDto::Saved,
+                        }
+                    } else {
+                        remove_ability_status_effect(&mut self.player, effect_index, status_kind_id)
+                    }
                 }
                 _ => unreachable!(
                     "validated monster abilities contain only direct actor-target effects"

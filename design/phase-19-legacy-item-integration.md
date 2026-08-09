@@ -753,3 +753,42 @@ has content hash
 Protocol 1.157, save v1, State Hash Schema v77, and contract-v227 are unchanged;
 the innate-attack events use the existing generic event projection, and
 existing fixtures still begin without active mutations.
+
+## P3.7-M4E Cross-System Passives
+
+The fifth bounded passive batch activates thirteen complete identities: Extra
+Eyes, Extra Noise, Fast Learner, Loremaster, Arcane Mastery, One with Magic,
+Merchant's Friend, Fleet of Foot, Black Marketeer, Speed Reader, Draconian
+Lore, Strong Mind, and Limp. Merchant's Friend remains the authoritative
+source no-numeric-effect identity rather than inventing a local shop bonus.
+
+Extra Eyes contributes the original `+15` search and perception values, while
+Extra Noise contributes `-3` stealth through the existing derived-stat
+pipeline. Fast Learner applies `120%` monster-kill experience and the original
+`5/3` multiplier to relative experience effects. Loremaster and Draconian Lore
+reuse standard item identification on gain and after carried-item changes.
+Arcane Mastery subtracts three percentage points before the casting profile's
+minimum failure clamp.
+
+Fleet of Foot scales local and world-map walking energy by `3/5`; Limp first
+scales it by `10/9`, preserving the original integer-rounding order when both
+are active. Speed Reader halves scroll energy. Black Marketeer removes the Black Market's
+two-times purchase markup and one-half sale markdown. One with Magic uses one
+deterministic `77%` roll against hostile dispelling, and Strong Mind makes the
+existing monster resource-drain effect resolve with zero drain and zero caster
+healing.
+
+Good Luck and Bad Luck remain blocked until item generation, random device
+outcomes, curses, and sensing all consume the same luck rule. Easy Tiring and
+Easy Tiring II remain blocked on the original `minislow`/recovery state and all
+physical, ranged, and magic action consumers. Astral Guide remains blocked
+until every player-triggered teleport entry point can report and scale its
+energy cost. Device-charge drain and category-specific device failure modifiers
+also retain explicit blockers.
+
+The mutation audit reports 50 active and 102 blocked identities. Pack 1.225.0
+has content hash
+`40248e0e709f3f10e3549e61fb792b09700cc69d1ad4bd923c3691564733bcde`.
+Protocol 1.157, save v1, State Hash Schema v77, and contract-v227 are unchanged;
+all new state remains derived from the existing active-mutation set, so existing
+fixtures still begin without active mutations.

@@ -387,7 +387,8 @@ impl Game {
             self.defeated_unique_actor_kind_ids
                 .insert(removed.kind_id.clone());
         }
-        let experience_value = removed_definition.experience_value;
+        let experience_value =
+            self.player_kill_experience_reward(removed_definition.experience_value);
         if credit_player {
             self.apply_player_experience(experience_value, events);
         }

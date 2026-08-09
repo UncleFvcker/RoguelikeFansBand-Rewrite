@@ -1316,6 +1316,7 @@ impl Game {
         } else {
             action.energy_cost()
         };
+        action_cost = self.player_mutation_action_energy_cost(&action, action_cost);
         let automatic_pickup_after_move = matches!(&action, GameAction::Move { .. });
         let recover_after_wait = matches!(&action, GameAction::Wait);
         let mut turn_advance = 1_u32;
@@ -1945,7 +1946,8 @@ impl Game {
             self.record_mogaminator_resolutions(resolutions, &mut events, &mut changed);
         }
 
-        if self.player_has_status_kind(STATUS_UNDERSTANDING) {
+        if self.player_has_status_kind(STATUS_UNDERSTANDING) || self.player_auto_identifies_items()
+        {
             let count = self.identify_carried_items();
             if count > 0 {
                 events.push(DomainEvent::ItemAutoIdentified { count });

@@ -6,7 +6,7 @@ fn compiled_catalog_exposes_stable_runtime_indexes() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.224.0");
+    assert_eq!(catalog.pack_version(), "1.225.0");
     assert_eq!(catalog.mutations().count(), 152);
     assert_eq!(
         catalog.mutation("rfb.mutation.spit-acid").map(|mutation| (
@@ -1079,7 +1079,6 @@ fn second_passive_mutation_batch_keeps_resistance_sense_and_levitation_semantics
             "rfb.mutation.draconian-resistance",
             "draconian-subrace-identity",
         ),
-        ("rfb.mutation.strong-mind", "mana-drain-consumer"),
     ] {
         let entry = entries
             .iter()
@@ -1276,13 +1275,6 @@ fn fourth_passive_mutation_batch_keeps_innate_attack_and_combat_semantics() {
     )
     .expect("ledger should parse");
     let entries = ledger["mutations"].as_array().expect("mutation entries");
-    assert_eq!(
-        entries
-            .iter()
-            .filter(|entry| entry["status"] == "active")
-            .count(),
-        37
-    );
     for id in [
         "rfb.mutation.launcher",
         "rfb.mutation.scorpion-tail",
@@ -1321,6 +1313,165 @@ fn fourth_passive_mutation_batch_keeps_innate_attack_and_combat_semantics() {
         (
             "rfb.mutation.human-chr",
             "spell-failure-and-ranged-device-accuracy-modifiers",
+        ),
+    ] {
+        let entry = entries
+            .iter()
+            .find(|entry| entry["id"] == id)
+            .unwrap_or_else(|| panic!("{id}"));
+        assert_eq!(entry["status"], "blocked", "{id}");
+        assert_eq!(entry["blockers"], serde_json::json!([blocker]), "{id}");
+    }
+}
+
+#[test]
+fn fifth_passive_mutation_batch_keeps_cross_system_semantics_explicit() {
+    let pack = original_pack_path();
+    let catalog = ContentCatalog::from_artifact(
+        compile_pack_dir(&pack).expect("original pack should compile"),
+    );
+
+    let eyes = catalog.mutation("rfb.mutation.xtra-eyes").unwrap();
+    assert_eq!((eyes.search_skill, eyes.perception_skill), (15, 15));
+    assert_eq!(
+        catalog
+            .mutation("rfb.mutation.xtra-noise")
+            .unwrap()
+            .stealth_skill,
+        -3
+    );
+    let learner = catalog.mutation("rfb.mutation.fast-learner").unwrap();
+    assert_eq!(learner.kill_experience_bonus_percent, 20);
+    assert_eq!(
+        learner.relative_experience_multiplier,
+        Some(MutationRatioDefinition {
+            numerator: 5,
+            denominator: 3,
+        })
+    );
+    assert!(
+        catalog
+            .mutation("rfb.mutation.loremaster")
+            .unwrap()
+            .auto_identify_items
+    );
+    assert!(
+        catalog
+            .mutation("rfb.mutation.draconian-lore")
+            .unwrap()
+            .auto_identify_items
+    );
+    assert_eq!(
+        catalog
+            .mutation("rfb.mutation.arcane-mastery")
+            .unwrap()
+            .spell_failure_modifier_percent,
+        -3
+    );
+    assert_eq!(
+        catalog
+            .mutation("rfb.mutation.one-with-magic")
+            .unwrap()
+            .dispel_resistance_percent,
+        77
+    );
+    assert_eq!(
+        catalog
+            .mutation("rfb.mutation.fleet-of-foot")
+            .unwrap()
+            .movement_energy_multiplier,
+        Some(MutationRatioDefinition {
+            numerator: 3,
+            denominator: 5,
+        })
+    );
+    assert_eq!(
+        catalog
+            .mutation("rfb.mutation.limp")
+            .unwrap()
+            .movement_energy_multiplier,
+        Some(MutationRatioDefinition {
+            numerator: 10,
+            denominator: 9,
+        })
+    );
+    assert_eq!(
+        catalog
+            .mutation("rfb.mutation.speed-reader")
+            .unwrap()
+            .scroll_energy_multiplier,
+        Some(MutationRatioDefinition {
+            numerator: 1,
+            denominator: 2,
+        })
+    );
+    assert!(
+        catalog
+            .mutation("rfb.mutation.black-marketeer")
+            .unwrap()
+            .black_market_standard_prices
+    );
+    assert!(
+        catalog
+            .mutation("rfb.mutation.strong-mind")
+            .unwrap()
+            .resource_drain_immunity
+    );
+
+    let ledger: serde_json::Value = serde_json::from_slice(
+        &std::fs::read(pack.join("legacy-mutation-plan.json")).expect("ledger should read"),
+    )
+    .expect("ledger should parse");
+    let entries = ledger["mutations"].as_array().expect("mutation entries");
+    assert_eq!(
+        entries
+            .iter()
+            .filter(|entry| entry["status"] == "active")
+            .count(),
+        50
+    );
+    for id in [
+        "rfb.mutation.xtra-eyes",
+        "rfb.mutation.xtra-noise",
+        "rfb.mutation.fast-learner",
+        "rfb.mutation.loremaster",
+        "rfb.mutation.arcane-mastery",
+        "rfb.mutation.one-with-magic",
+        "rfb.mutation.merchants-friend",
+        "rfb.mutation.fleet-of-foot",
+        "rfb.mutation.black-marketeer",
+        "rfb.mutation.speed-reader",
+        "rfb.mutation.draconian-lore",
+        "rfb.mutation.strong-mind",
+        "rfb.mutation.limp",
+    ] {
+        let entry = entries
+            .iter()
+            .find(|entry| entry["id"] == id)
+            .unwrap_or_else(|| panic!("{id}"));
+        assert_eq!(entry["status"], "active", "{id}");
+        assert_eq!(entry["blockers"], serde_json::json!([]), "{id}");
+    }
+    for (id, blocker) in [
+        (
+            "rfb.mutation.bad-luck",
+            "luck-item-generation-device-outcome-and-curse-consumers",
+        ),
+        (
+            "rfb.mutation.good-luck",
+            "luck-item-generation-device-outcome-and-sensing-consumers",
+        ),
+        (
+            "rfb.mutation.astral-guide",
+            "player-teleport-energy-cost-across-abilities-and-items",
+        ),
+        (
+            "rfb.mutation.easy-tiring",
+            "fatigue-minislow-state-recovery-and-physical-action-consumers",
+        ),
+        (
+            "rfb.mutation.easy-tiring2",
+            "fatigue-minislow-state-recovery-and-magic-ranged-consumers",
         ),
     ] {
         let entry = entries
@@ -1398,6 +1549,18 @@ fn mutation_transaction_metadata_rejects_duplicate_order_and_invalid_removals() 
     });
     assert!(matches!(
         encode_content(invalid_innate),
+        Err(ContentError::InvalidMutation(_))
+    ));
+
+    let mut invalid_ratio = compile_pack_dir(&pack)
+        .expect("original pack should compile")
+        .content;
+    invalid_ratio.mutations[0].movement_energy_multiplier = Some(MutationRatioDefinition {
+        numerator: 1,
+        denominator: 0,
+    });
+    assert!(matches!(
+        encode_content(invalid_ratio),
         Err(ContentError::InvalidMutation(_))
     ));
 }
