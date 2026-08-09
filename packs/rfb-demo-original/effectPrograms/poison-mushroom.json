@@ -1,0 +1,1 @@
+{"$schema":"https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/effect-program.schema.json","formatVersion":1,"id":"demo.effect.poison-mushroom","input":"self","steps":[{"type":"apply-poison","durationDice":1,"durationSides":10,"durationBonus":9},{"type":"increase-nutrition","amount":500}]}

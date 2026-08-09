@@ -43,6 +43,41 @@
       "initialMaximum": 2,
       "maintenanceMinimum": 1,
       "maintenanceMaximum": 2
+    },
+    {
+      "itemKindId": "demo.item.greater-cleansing-scroll",
+      "initialMinimum": 1,
+      "initialMaximum": 2,
+      "maintenanceMinimum": 1,
+      "maintenanceMaximum": 2
+    },
+    {
+      "itemKindId": "demo.item.holy-prayer-scroll",
+      "initialMinimum": 1,
+      "initialMaximum": 2,
+      "maintenanceMinimum": 1,
+      "maintenanceMaximum": 2
+    },
+    {
+      "itemKindId": "demo.item.boldness-potion",
+      "initialMinimum": 1,
+      "initialMaximum": 3,
+      "maintenanceMinimum": 1,
+      "maintenanceMaximum": 3
+    },
+    {
+      "itemKindId": "demo.item.cure-serious-wounds-potion",
+      "initialMinimum": 1,
+      "initialMaximum": 3,
+      "maintenanceMinimum": 1,
+      "maintenanceMaximum": 3
+    },
+    {
+      "itemKindId": "demo.item.cure-critical-wounds-potion",
+      "initialMinimum": 1,
+      "initialMaximum": 2,
+      "maintenanceMinimum": 1,
+      "maintenanceMaximum": 2
     }
   ],
   "maintenance": {

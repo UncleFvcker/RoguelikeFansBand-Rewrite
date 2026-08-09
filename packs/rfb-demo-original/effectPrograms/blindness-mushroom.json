@@ -1,0 +1,1 @@
+{"$schema":"https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/effect-program.schema.json","formatVersion":1,"id":"demo.effect.blindness-mushroom","input":"self","steps":[{"type":"apply-blindness","durationDice":1,"durationSides":25,"durationBonus":24},{"type":"increase-nutrition","amount":500}]}

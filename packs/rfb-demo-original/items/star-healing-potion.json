@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 1500,
+  "descriptionKey": "item-demo-star-healing-potion-description",
+  "formatVersion": 1,
+  "glyph": "!",
+  "id": "demo.item.star-healing-potion",
+  "maxStack": 20,
+  "nameKey": "item-demo-star-healing-potion-name",
+  "tags": [
+    "consumable",
+    "rfb-compatibility",
+    "potion"
+  ],
+  "useAction": {
+    "effectProgramId": "demo.effect.star-healing-potion"
+  },
+  "weightTenthsPound": 4,
+  "appearanceNameKey": "item-demo-star-healing-potion-appearance"
+}

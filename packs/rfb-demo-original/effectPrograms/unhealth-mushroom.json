@@ -1,0 +1,1 @@
+{"$schema":"https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/effect-program.schema.json","formatVersion":1,"id":"demo.effect.unhealth-mushroom","input":"self","steps":[{"type":"self-damage","damageDice":10,"damageSides":10},{"type":"drain-attribute","attribute":"constitution"},{"type":"increase-nutrition","amount":500}]}

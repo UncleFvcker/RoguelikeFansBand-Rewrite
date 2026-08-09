@@ -3,11 +3,12 @@
   "formatVersion": 1,
   "id": "demo.item.strength-renewal-tonic",
   "nameKey": "item-demo-strength-renewal-tonic-name",
-  "appearanceNameKey": "item-demo-unfamiliar-potion-name",
+  "appearanceNameKey": "item-demo-strength-renewal-tonic-appearance",
   "descriptionKey": "item-demo-strength-renewal-tonic-description",
   "glyph": "!",
   "weightTenthsPound": 4,
   "maxStack": 20,
+  "baseValue": 220,
   "useAction": {
     "effectProgramId": "demo.effect.restore-strength"
   },

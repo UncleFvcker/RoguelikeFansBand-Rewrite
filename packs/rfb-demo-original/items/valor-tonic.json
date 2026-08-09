@@ -3,7 +3,7 @@
   "formatVersion": 1,
   "id": "demo.item.valor-tonic",
   "nameKey": "item-demo-valor-tonic-name",
-  "appearanceNameKey": "item-demo-unfamiliar-potion-name",
+  "appearanceNameKey": "item-demo-valor-tonic-appearance",
   "descriptionKey": "item-demo-valor-tonic-description",
   "glyph": "!",
   "weightTenthsPound": 4,

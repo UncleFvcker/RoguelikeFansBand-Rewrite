@@ -15,6 +15,7 @@ import type {
 import type { CellLight, CellVisibility, RenderCell } from "./renderer-backend";
 
 const DEFAULT_LIGHT: CellLight = { color: 0xffffff, intensity: 0 };
+const HALLUCINATION_STATUS_ID = "rfb.status.hallucination";
 
 export class RenderWorld {
   readonly #width: number;
@@ -23,7 +24,12 @@ export class RenderWorld {
   readonly #visibility: CellVisibility[];
   readonly #lights: CellLight[];
   readonly #entityKinds = new Map<string, string>();
+  #actorKindIds: string[] = [];
+  #itemKindIds: string[] = [];
+  #playerId = "";
   #playerPosition: Position = { x: 0, y: 0 };
+  #hallucinating = false;
+  #hallucinationPhase = 0;
 
   constructor(width: number, height: number) {
     this.#width = width;
@@ -45,6 +51,7 @@ export class RenderWorld {
 
   applySnapshot(snapshot: GameSnapshot): RenderCell[] {
     this.#syncEntityKinds(snapshot.player, snapshot.entities, snapshot.items, snapshot.goldPiles);
+    this.#syncHallucination(snapshot.player, snapshot.worldTick);
     this.#playerPosition = snapshot.player.position;
     this.#visibility.fill("hidden");
     this.#lights.fill(DEFAULT_LIGHT);
@@ -54,7 +61,10 @@ export class RenderWorld {
   }
 
   applyUpdate(update: GameUpdate): RenderCell[] {
+    const previousHallucinating = this.#hallucinating;
+    const previousPhase = this.#hallucinationPhase;
     this.#syncEntityKinds(update.player, update.entities, update.items, update.goldPiles);
+    this.#syncHallucination(update.player, update.worldTick);
     this.#playerPosition = update.player.position;
     const dirty = new Set<number>();
     for (const cell of update.changedCells) {
@@ -64,6 +74,12 @@ export class RenderWorld {
     for (const visual of update.changedVisualCells) {
       const index = this.#storeVisual(visual);
       if (index !== undefined) dirty.add(index);
+    }
+    if (
+      previousHallucinating !== this.#hallucinating ||
+      (this.#hallucinating && previousPhase !== this.#hallucinationPhase)
+    ) {
+      return this.allCells();
     }
     return [...dirty]
       .sort((left, right) => left - right)
@@ -100,10 +116,32 @@ export class RenderWorld {
     goldPiles: GoldPileDto[],
   ): void {
     this.#entityKinds.clear();
+    this.#playerId = player.id;
     this.#entityKinds.set(player.id, player.kindId);
     for (const entity of entities) this.#entityKinds.set(entity.id, entity.kindId);
     for (const item of items) this.#entityKinds.set(item.id, item.kindId);
     for (const pile of goldPiles) this.#entityKinds.set(pile.id, goldVisualId(pile.appearance));
+    this.#actorKindIds = [...new Set([player.kindId, ...entities.map((entity) => entity.kindId)])]
+      .sort();
+    this.#itemKindIds = [
+      ...new Set([
+        ...items.map((item) => item.kindId),
+        ...goldPiles.map((pile) => goldVisualId(pile.appearance)),
+      ]),
+    ].sort();
+  }
+
+  #syncHallucination(player: PlayerDto, worldTick: number): void {
+    this.#hallucinating = player.statuses?.some(
+      (status) => status.kindId === HALLUCINATION_STATUS_ID,
+    ) ?? false;
+    this.#hallucinationPhase = worldTick ?? 0;
+  }
+
+  #hallucinatedKind(actualKindId: string, candidates: string[], index: number, salt: number): string {
+    if (!this.#hallucinating || candidates.length < 2) return actualKindId;
+    const choice = (index * 31 + this.#hallucinationPhase * 17 + salt) % candidates.length;
+    return candidates[choice] ?? actualKindId;
   }
 
   #storeCell(cell: CellDto): number | undefined {
@@ -138,10 +176,27 @@ export class RenderWorld {
         y,
         terrainId: cell.terrainId,
         ...(occupantsVisible && cell.itemId
-          ? { itemKindId: this.#entityKinds.get(cell.itemId) ?? cell.itemId }
+          ? {
+              itemKindId: this.#hallucinatedKind(
+                this.#entityKinds.get(cell.itemId) ?? cell.itemId,
+                this.#itemKindIds,
+                index,
+                7,
+              ),
+            }
           : {}),
         ...(occupantsVisible && cell.actorId
-          ? { actorKindId: this.#entityKinds.get(cell.actorId) ?? cell.actorId }
+          ? {
+              actorKindId:
+                cell.actorId === this.#playerId
+                  ? (this.#entityKinds.get(cell.actorId) ?? cell.actorId)
+                  : this.#hallucinatedKind(
+                      this.#entityKinds.get(cell.actorId) ?? cell.actorId,
+                      this.#actorKindIds,
+                      index,
+                      13,
+                    ),
+            }
           : {}),
         visibility,
         light: this.#lights[index] ?? DEFAULT_LIGHT,

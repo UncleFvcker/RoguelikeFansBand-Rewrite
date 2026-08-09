@@ -143,6 +143,44 @@ test("food events report eating hunger changes fainting and starvation", () => {
   );
   assert.equal(
     formatter.formatEvent({
+      kind: "item.use-hunger-satisfied",
+      messageKey: "item-use-hunger-satisfied",
+      args: {
+        target: "demo.item.satisfy-hunger-scroll",
+        nameKey: "item-demo-satisfy-hunger-scroll-name",
+        nutrition: "14999",
+      },
+    }),
+    "You use Scroll of Satisfy Hunger; your food rises to 14999 / 15000.",
+  );
+  assert.equal(
+    formatter.formatEvent({
+      kind: "item.use-status-applied",
+      messageKey: "item-use-status-applied",
+      args: {
+        source: "demo.item.hallucination-mushroom",
+        nameKey: "item-demo-hallucination-mushroom-name",
+        status: "rfb.status.hallucination",
+        duration: "30",
+      },
+    }),
+    "You use Mushroom of Hallucination and gain hallucination for 30 ticks.",
+  );
+  assert.equal(
+    formatter.formatEvent({
+      kind: "item.use-resource-drained",
+      messageKey: "item-use-resource-drained",
+      args: {
+        source: "demo.item.hallucination-mushroom",
+        nameKey: "item-demo-hallucination-mushroom-name",
+        resource: "demo.resource.mana",
+        amount: "50",
+      },
+    }),
+    "Mushroom of Hallucination drains 50 Mana.",
+  );
+  assert.equal(
+    formatter.formatEvent({
       kind: "hunger.state-changed",
       messageKey: "hunger-state-changed",
       args: { from: "normal", to: "hungry", nutrition: "1990" },

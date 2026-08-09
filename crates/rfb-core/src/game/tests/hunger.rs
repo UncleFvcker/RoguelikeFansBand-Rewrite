@@ -133,6 +133,109 @@ fn ration_caps_at_maximum_before_bloated_world_processing() {
 }
 
 #[test]
+fn satisfy_hunger_sets_food_to_the_original_maximum_minus_one() {
+    let mut game = Game::new(31);
+    clear_monsters(&mut game);
+    game.nutrition = 123;
+    give_inventory_item(
+        &mut game,
+        "test.item.satisfy-hunger.1",
+        "demo.item.satisfy-hunger-scroll",
+    );
+
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: "test.item.satisfy-hunger.1".to_owned(),
+            target: None,
+        },
+    );
+
+    assert_eq!(game.nutrition, rfb_protocol::PLAYER_NUTRITION_MAXIMUM - 1);
+    assert!(
+        update
+            .events
+            .iter()
+            .any(|event| event.kind == "item.use-hunger-satisfied")
+    );
+}
+
+#[test]
+fn hallucination_food_applies_status_drains_mana_then_adds_nutrition() {
+    let mut game =
+        Game::new_with_build(37, "demo.build.scholar").expect("scholar should create with mana");
+    clear_monsters(&mut game);
+    game.nutrition = 0;
+    game.resources
+        .get_mut("demo.resource.mana")
+        .expect("scholar should have mana")
+        .current = 50;
+    give_inventory_item(
+        &mut game,
+        "test.item.hallucination.1",
+        "demo.item.hallucination-mushroom",
+    );
+
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: "test.item.hallucination.1".to_owned(),
+            target: None,
+        },
+    );
+
+    assert!(game.player_has_status_kind(crate::effect::STATUS_HALLUCINATION));
+    assert_eq!(game.resources["demo.resource.mana"].current, 0);
+    assert_eq!(game.nutrition, 500);
+    let effects = update
+        .events
+        .iter()
+        .filter(|event| {
+            matches!(
+                event.kind.as_str(),
+                "item.use-status-applied" | "item.use-resource-drained" | "item.use-food"
+            )
+        })
+        .map(|event| event.kind.as_str())
+        .collect::<Vec<_>>();
+    assert_eq!(
+        effects,
+        [
+            "item.use-status-applied",
+            "item.use-resource-drained",
+            "item.use-food"
+        ]
+    );
+}
+
+#[test]
+fn sleep_potion_uses_the_paralysis_status() {
+    let mut game = Game::new(41);
+    clear_monsters(&mut game);
+    give_inventory_item(&mut game, "test.item.sleep.1", "demo.item.sleep-potion");
+
+    dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: "test.item.sleep.1".to_owned(),
+            target: None,
+        },
+    );
+
+    assert!(game.player_has_status_kind(STATUS_PARALYSIS));
+    assert!(!game.player_has_status_kind(STATUS_SLEEP));
+    let remaining = game
+        .player
+        .statuses
+        .iter()
+        .find(|status| status.kind_id == STATUS_PARALYSIS)
+        .expect("sleep should leave paralysis active")
+        .remaining_ticks;
+    assert!((10..=40).contains(&remaining));
+    assert_eq!(remaining % 10, 0);
+}
+
+#[test]
 fn digestion_uses_world_tick_and_current_scheduler_speed() {
     let mut normal = Game::new(42);
     normal.nutrition = 9_000;

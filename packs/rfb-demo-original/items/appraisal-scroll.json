@@ -3,11 +3,12 @@
   "formatVersion": 1,
   "id": "demo.item.appraisal-scroll",
   "nameKey": "item-demo-appraisal-scroll-name",
-  "appearanceNameKey": "item-demo-unfamiliar-scroll-name",
+  "appearanceNameKey": "item-demo-appraisal-scroll-appearance",
   "descriptionKey": "item-demo-appraisal-scroll-description",
   "glyph": "?",
-  "weightTenthsPound": 1,
+  "weightTenthsPound": 5,
   "maxStack": 20,
+  "baseValue": 50,
   "useAction": {
     "effectProgramId": "demo.effect.appraise-item"
   },

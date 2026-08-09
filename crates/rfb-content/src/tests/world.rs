@@ -702,6 +702,11 @@ fn temple_and_alchemist_stock_are_strictly_separated() {
                 "demo.item.valor-tonic",
                 "demo.item.homeward-scroll",
                 "demo.item.cleansing-scroll",
+                "demo.item.greater-cleansing-scroll",
+                "demo.item.holy-prayer-scroll",
+                "demo.item.boldness-potion",
+                "demo.item.cure-serious-wounds-potion",
+                "demo.item.cure-critical-wounds-potion",
             ]),
         ),
         (
@@ -712,6 +717,22 @@ fn temple_and_alchemist_stock_are_strictly_separated() {
                 "demo.item.seeking-scroll",
                 "demo.item.trapfinding-scroll",
                 "demo.item.temperate-tonic",
+                "demo.item.appraisal-scroll",
+                "demo.item.revelation-scroll",
+                "demo.item.recharging-scroll",
+                "demo.item.cartography-scroll",
+                "demo.item.door-stair-location-scroll",
+                "demo.item.detect-invisible-scroll",
+                "demo.item.confusing-touch-scroll",
+                "demo.item.detect-monsters-scroll",
+                "demo.item.fury-draught",
+                "demo.item.renewal-tonic",
+                "demo.item.strength-renewal-tonic",
+                "demo.item.restore-intelligence-potion",
+                "demo.item.restore-wisdom-potion",
+                "demo.item.restore-dexterity-potion",
+                "demo.item.restore-constitution-potion",
+                "demo.item.restore-charisma-potion",
             ]),
         ),
     ];
@@ -729,6 +750,49 @@ fn temple_and_alchemist_stock_are_strictly_separated() {
                 .collect::<BTreeSet<_>>(),
             item_ids
         );
+    }
+}
+
+#[test]
+fn supported_legacy_consumables_are_available_at_their_source_depths() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let warrens = artifact
+        .content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.warrens")
+        .expect("Warrens loot table should exist");
+    let expected = [
+        ("demo.item.seeking-scroll", 0),
+        ("demo.item.veil-draught", 0),
+        ("demo.item.light-healing-potion", 0),
+        ("demo.item.summoning-scroll", 1),
+        ("demo.item.flicker-scroll", 1),
+        ("demo.item.appraisal-scroll", 1),
+        ("demo.item.detect-invisible-scroll", 1),
+        ("demo.item.benediction-scroll", 1),
+        ("demo.item.slowness-potion", 1),
+        ("demo.item.boldness-potion", 1),
+        ("demo.item.swiftstep-tonic", 1),
+        ("demo.item.temperate-tonic", 1),
+        ("demo.item.vigor-potion", 1),
+        ("demo.item.valor-tonic", 1),
+        ("demo.item.venom-draught", 3),
+        ("demo.item.frailty-tonic", 3),
+        ("demo.item.clamor-scroll", 5),
+        ("demo.item.cartography-scroll", 5),
+        ("demo.item.trapfinding-scroll", 5),
+        ("demo.item.door-stair-location-scroll", 5),
+        ("demo.item.confusing-touch-scroll", 5),
+        ("demo.item.clumsiness-potion", 5),
+    ];
+    for (item_id, min_depth) in expected {
+        let entry = warrens
+            .entries
+            .iter()
+            .find(|entry| entry.item_kind_id == item_id)
+            .unwrap_or_else(|| panic!("{item_id} should be available in the Warrens"));
+        assert_eq!((entry.min_depth, entry.max_depth), (min_depth, 9));
     }
 }
 
@@ -758,6 +822,14 @@ fn selected_legacy_equipment_is_exposed_by_its_shop_and_warrens_depth() {
             "demo.item.small-sword",
             "demo.item.cutlass",
             "demo.item.mace",
+            "demo.item.khopesh",
+            "demo.item.scimitar",
+            "demo.item.hatchet",
+            "demo.item.sickle",
+            "demo.item.awl-pike",
+            "demo.item.lucerne-hammer",
+            "demo.item.quarterstaff",
+            "demo.item.morning-star",
             "demo.item.shovel",
             "demo.item.pick",
         ])
@@ -863,7 +935,7 @@ fn bookstore_stocks_original_town_books() {
 }
 
 #[test]
-fn black_market_stocks_original_non_town_books() {
+fn black_market_stocks_original_non_town_books_and_priced_p3_foods() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let shop_id = "demo.shop.outpost-black-market";
     let shop = artifact
@@ -880,7 +952,14 @@ fn black_market_stocks_original_non_town_books() {
             .iter()
             .map(|stock| stock.item_kind_id.as_str())
             .collect::<BTreeSet<_>>(),
-        BTreeSet::from(["demo.item.black-channels", "demo.item.necronomicon"])
+        BTreeSet::from([
+            "demo.item.black-channels",
+            "demo.item.disease-mushroom",
+            "demo.item.necronomicon",
+            "demo.item.restore-constitution-mushroom",
+            "demo.item.restore-strength-mushroom",
+            "demo.item.unhealth-mushroom",
+        ])
     );
     let values = artifact
         .content
@@ -891,6 +970,68 @@ fn black_market_stocks_original_non_town_books() {
         .collect::<std::collections::BTreeMap<_, _>>();
     assert_eq!(values["demo.item.black-channels"], 15_000);
     assert_eq!(values["demo.item.necronomicon"], 100_000);
+    assert_eq!(values["demo.item.unhealth-mushroom"], 50);
+    assert_eq!(values["demo.item.disease-mushroom"], 50);
+    assert_eq!(values["demo.item.restore-constitution-mushroom"], 350);
+    assert_eq!(values["demo.item.restore-strength-mushroom"], 350);
+}
+
+#[test]
+fn p3_1_items_all_have_a_shop_or_warrens_acquisition_path() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let shop_items = artifact
+        .content
+        .shops
+        .iter()
+        .flat_map(|shop| shop.stock.iter().map(|stock| stock.item_kind_id.as_str()));
+    let loot_items = artifact
+        .content
+        .loot_tables
+        .iter()
+        .filter(|table| {
+            matches!(
+                table.id.as_str(),
+                "demo.loot-table.warrens" | "demo.loot-table.kobold"
+            )
+        })
+        .flat_map(|table| {
+            table
+                .entries
+                .iter()
+                .map(|entry| entry.item_kind_id.as_str())
+        });
+    let available = shop_items.chain(loot_items).collect::<BTreeSet<_>>();
+
+    for item_id in [
+        "demo.item.poison-mushroom",
+        "demo.item.blindness-mushroom",
+        "demo.item.paranoia-mushroom",
+        "demo.item.confusion-mushroom",
+        "demo.item.hallucination-mushroom",
+        "demo.item.paralysis-mushroom",
+        "demo.item.weakness-mushroom",
+        "demo.item.sickness-mushroom",
+        "demo.item.stupidity-mushroom",
+        "demo.item.naivety-mushroom",
+        "demo.item.unhealth-mushroom",
+        "demo.item.disease-mushroom",
+        "demo.item.cure-poison-mushroom",
+        "demo.item.cure-blindness-mushroom",
+        "demo.item.cure-paranoia-mushroom",
+        "demo.item.cure-confusion-mushroom",
+        "demo.item.restore-constitution-mushroom",
+        "demo.item.restore-strength-mushroom",
+        "demo.item.hard-biscuit",
+        "demo.item.strip-of-venison",
+        "demo.item.slime-mold",
+        "demo.item.satisfy-hunger-scroll",
+        "demo.item.sleep-potion",
+    ] {
+        assert!(
+            available.contains(item_id),
+            "{item_id} should be obtainable"
+        );
+    }
 }
 
 #[test]

@@ -3,11 +3,12 @@
   "formatVersion": 1,
   "id": "demo.item.undead-summoning-scroll",
   "nameKey": "item-demo-undead-summoning-scroll-name",
-  "appearanceNameKey": "item-demo-unfamiliar-scroll-name",
+  "appearanceNameKey": "item-demo-undead-summoning-scroll-appearance",
   "descriptionKey": "item-demo-undead-summoning-scroll-description",
   "glyph": "?",
-  "weightTenthsPound": 1,
+  "weightTenthsPound": 5,
   "maxStack": 20,
+  "baseValue": 0,
   "useAction": {
     "effectProgramId": "demo.effect.summon-hostile-undead"
   },

@@ -26,7 +26,13 @@
     { "itemKindId": "demo.item.sabre", "weight": 5, "quantity": 1, "minDepth": 7, "maxDepth": 9 },
     { "itemKindId": "demo.item.short-sword", "weight": 1, "quantity": 1, "minDepth": 7, "maxDepth": 9 },
     { "itemKindId": "demo.item.spear", "weight": 5, "quantity": 1, "minDepth": 7, "maxDepth": 9 },
-    { "itemKindId": "demo.item.trapfinding-scroll", "weight": 1, "quantity": 1, "minDepth": 7, "maxDepth": 9 }
+    { "itemKindId": "demo.item.trapfinding-scroll", "weight": 1, "quantity": 1, "minDepth": 7, "maxDepth": 9 },
+    { "itemKindId": "demo.item.hallucination-mushroom", "weight": 1, "quantity": 1, "minDepth": 8, "maxDepth": 9 },
+    { "itemKindId": "demo.item.paralysis-mushroom", "weight": 1, "quantity": 1, "minDepth": 8, "maxDepth": 9 },
+    { "itemKindId": "demo.item.weakness-mushroom", "weight": 1, "quantity": 1, "minDepth": 8, "maxDepth": 9 },
+    { "itemKindId": "demo.item.sickness-mushroom", "weight": 1, "quantity": 1, "minDepth": 8, "maxDepth": 9 },
+    { "itemKindId": "demo.item.stupidity-mushroom", "weight": 1, "quantity": 1, "minDepth": 8, "maxDepth": 9 },
+    { "itemKindId": "demo.item.naivety-mushroom", "weight": 1, "quantity": 1, "minDepth": 8, "maxDepth": 9 }
   ],
   "qualityWeights": [{ "quality": "ordinary", "weight": 1 }],
   "affixWeights": [{ "weight": 1 }]

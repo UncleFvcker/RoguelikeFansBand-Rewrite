@@ -546,6 +546,19 @@ pub(crate) enum DomainEvent {
         amount: u16,
         nutrition: u16,
     },
+    ItemNutritionSatisfied {
+        source_kind_id: String,
+        display_name_key: String,
+        nutrition: u16,
+        noticed: bool,
+    },
+    ItemStatusResolved {
+        source_kind_id: String,
+        display_name_key: String,
+        status_kind_id: String,
+        duration: Option<u32>,
+        noticed: bool,
+    },
     ItemStatusRemoved {
         source_kind_id: String,
         display_name_key: String,
@@ -634,6 +647,12 @@ pub(crate) enum DomainEvent {
         display_name_key: String,
         duration: Option<u32>,
         noticed: bool,
+    },
+    ItemResourceDrained {
+        source_kind_id: String,
+        display_name_key: String,
+        resource_id: String,
+        drained: u32,
     },
     ItemDetonation {
         source_kind_id: String,
@@ -2305,6 +2324,56 @@ impl DomainEvent {
                     ("nutrition", nutrition.to_string()),
                 ],
             ),
+            Self::ItemNutritionSatisfied {
+                source_kind_id,
+                display_name_key,
+                nutrition,
+                noticed,
+            } => dto(
+                if noticed {
+                    "item.use-hunger-satisfied"
+                } else {
+                    "item.use-hunger-no-effect"
+                },
+                if noticed {
+                    "item-use-hunger-satisfied"
+                } else {
+                    "item-use-hunger-no-effect"
+                },
+                [
+                    ("target", source_kind_id),
+                    ("nameKey", display_name_key),
+                    ("nutrition", nutrition.to_string()),
+                ],
+            ),
+            Self::ItemStatusResolved {
+                source_kind_id,
+                display_name_key,
+                status_kind_id,
+                duration,
+                noticed,
+            } => dto(
+                if duration.is_none() {
+                    "item.use-status-resisted"
+                } else if noticed {
+                    "item.use-status-applied"
+                } else {
+                    "item.use-status-no-new-effect"
+                },
+                if duration.is_none() {
+                    "item-use-status-resisted"
+                } else if noticed {
+                    "item-use-status-applied"
+                } else {
+                    "item-use-status-no-new-effect"
+                },
+                [
+                    ("source", source_kind_id),
+                    ("nameKey", display_name_key),
+                    ("status", status_kind_id),
+                    ("duration", duration.unwrap_or_default().to_string()),
+                ],
+            ),
             Self::ItemStatusRemoved {
                 source_kind_id,
                 display_name_key,
@@ -2645,6 +2714,29 @@ impl DomainEvent {
                     [("source", source_kind_id), ("nameKey", display_name_key)],
                 ),
             },
+            Self::ItemResourceDrained {
+                source_kind_id,
+                display_name_key,
+                resource_id,
+                drained,
+            } => dto(
+                if drained > 0 {
+                    "item.use-resource-drained"
+                } else {
+                    "item.use-resource-drain-no-effect"
+                },
+                if drained > 0 {
+                    "item-use-resource-drained"
+                } else {
+                    "item-use-resource-drain-no-effect"
+                },
+                [
+                    ("source", source_kind_id),
+                    ("nameKey", display_name_key),
+                    ("resource", resource_id),
+                    ("amount", drained.to_string()),
+                ],
+            ),
             Self::ItemDetonation {
                 source_kind_id,
                 display_name_key,

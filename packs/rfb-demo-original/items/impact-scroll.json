@@ -3,11 +3,12 @@
   "formatVersion": 1,
   "id": "demo.item.impact-scroll",
   "nameKey": "item-demo-impact-scroll-name",
-  "appearanceNameKey": "item-demo-unfamiliar-scroll-name",
+  "appearanceNameKey": "item-demo-impact-scroll-appearance",
   "descriptionKey": "item-demo-impact-scroll-description",
   "glyph": "?",
-  "weightTenthsPound": 1,
+  "weightTenthsPound": 5,
   "maxStack": 20,
+  "baseValue": 250,
   "useAction": {
     "effectProgramId": "demo.effect.enchant-impact"
   },

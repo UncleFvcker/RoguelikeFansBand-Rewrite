@@ -24,8 +24,18 @@ pub(crate) fn valid_item_effect(
 ) -> bool {
     match effect {
         ItemUseEffectDefinition::IncreaseNutrition { amount } => (1..=15_000).contains(amount),
+        ItemUseEffectDefinition::SatisfyHunger => true,
         ItemUseEffectDefinition::Heal { amount }
         | ItemUseEffectDefinition::SelfLifeLoss { amount } => (1..=1_000_000).contains(amount),
+        ItemUseEffectDefinition::SelfDamage {
+            damage_dice,
+            damage_sides,
+            damage_bonus,
+        } => {
+            (1..=100).contains(damage_dice)
+                && (1..=10_000).contains(damage_sides)
+                && *damage_bonus <= 10_000
+        }
         ItemUseEffectDefinition::ApplyDetonation {
             damage_dice,
             damage_sides,
@@ -123,6 +133,18 @@ pub(crate) fn valid_item_effect(
                 && (1..=10_000).contains(duration_sides)
                 && *duration_bonus <= 1_000_000
         }
+        ItemUseEffectDefinition::ApplyStatus {
+            status_kind_id,
+            duration_dice,
+            duration_sides,
+            duration_bonus,
+            ..
+        } => {
+            validate_id(status_kind_id).is_ok()
+                && (1..=100).contains(duration_dice)
+                && (1..=10_000).contains(duration_sides)
+                && *duration_bonus <= 1_000_000
+        }
         ItemUseEffectDefinition::SelfCenteredElementalBlast {
             base_damage,
             radius,
@@ -177,6 +199,9 @@ pub(crate) fn valid_item_effect(
                 && *bonus <= 1_000_000
         }
         ItemUseEffectDefinition::RestoreResourceFull { resource_id } => {
+            resource_ids.contains(resource_id)
+        }
+        ItemUseEffectDefinition::DrainResourceFull { resource_id } => {
             resource_ids.contains(resource_id)
         }
         ItemUseEffectDefinition::IdentifyItem { .. } => true,
@@ -247,12 +272,21 @@ pub(crate) fn valid_item_effect(
                 && effects.iter().all(|effect| {
                     matches!(
                         effect,
-                        ItemUseEffectDefinition::Heal { .. }
+                        ItemUseEffectDefinition::IncreaseNutrition { .. }
+                            | ItemUseEffectDefinition::SatisfyHunger
+                            | ItemUseEffectDefinition::Heal { .. }
                             | ItemUseEffectDefinition::HealDice { .. }
+                            | ItemUseEffectDefinition::ApplyPoison { .. }
+                            | ItemUseEffectDefinition::ApplyBlindness { .. }
+                            | ItemUseEffectDefinition::ApplyStatus { .. }
+                            | ItemUseEffectDefinition::SelfDamage { .. }
+                            | ItemUseEffectDefinition::DrainAttribute { .. }
+                            | ItemUseEffectDefinition::RestoreAttribute { .. }
                             | ItemUseEffectDefinition::RemoveStatus { .. }
                             | ItemUseEffectDefinition::RestoreResource { .. }
                             | ItemUseEffectDefinition::RestoreResourceDice { .. }
                             | ItemUseEffectDefinition::RestoreResourceFull { .. }
+                            | ItemUseEffectDefinition::DrainResourceFull { .. }
                     ) && valid_item_effect(
                         effect,
                         terrain_tags,
@@ -385,6 +419,7 @@ pub(super) fn validate_items(
             modes_are_unique
                 && match effect {
                     ItemUseEffectDefinition::IncreaseNutrition { .. }
+                    | ItemUseEffectDefinition::SatisfyHunger
                     | ItemUseEffectDefinition::Heal { .. }
                     | ItemUseEffectDefinition::HealDice { .. }
                     | ItemUseEffectDefinition::Bless { .. }
@@ -407,8 +442,10 @@ pub(super) fn validate_items(
                     | ItemUseEffectDefinition::ApplyBasicResistance { .. }
                     | ItemUseEffectDefinition::ApplyPoison { .. }
                     | ItemUseEffectDefinition::ApplyBlindness { .. }
+                    | ItemUseEffectDefinition::ApplyStatus { .. }
                     | ItemUseEffectDefinition::ApplyDetonation { .. }
                     | ItemUseEffectDefinition::SelfLifeLoss { .. }
+                    | ItemUseEffectDefinition::SelfDamage { .. }
                     | ItemUseEffectDefinition::Vengeance { .. }
                     | ItemUseEffectDefinition::ProtectionFromEvil
                     | ItemUseEffectDefinition::PrepareConfusingStrike
@@ -423,6 +460,7 @@ pub(super) fn validate_items(
                     | ItemUseEffectDefinition::RestoreResource { .. }
                     | ItemUseEffectDefinition::RestoreResourceDice { .. }
                     | ItemUseEffectDefinition::RestoreResourceFull { .. }
+                    | ItemUseEffectDefinition::DrainResourceFull { .. }
                     | ItemUseEffectDefinition::Sequence { .. }
                     | ItemUseEffectDefinition::Detect { .. }
                     | ItemUseEffectDefinition::RandomTeleport { .. }

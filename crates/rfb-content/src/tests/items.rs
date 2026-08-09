@@ -568,6 +568,35 @@ fn selected_legacy_equipment_keeps_fixed_source_values_and_slots() {
         ("demo.item.short-sword", 90, 80, "weapon", 0, Some((1, 8))),
         ("demo.item.cutlass", 85, 110, "weapon", 0, Some((1, 9))),
         ("demo.item.mace", 130, 120, "weapon", 0, Some((2, 5))),
+        ("demo.item.khopesh", 190, 130, "weapon", 0, Some((2, 5))),
+        ("demo.item.scimitar", 250, 130, "weapon", 0, Some((2, 6))),
+        ("demo.item.hatchet", 120, 60, "weapon", 0, Some((1, 6))),
+        ("demo.item.sickle", 110, 70, "weapon", 0, Some((2, 4))),
+        ("demo.item.awl-pike", 340, 160, "weapon", 0, Some((1, 10))),
+        (
+            "demo.item.lucerne-hammer",
+            376,
+            120,
+            "weapon",
+            0,
+            Some((2, 6)),
+        ),
+        (
+            "demo.item.quarterstaff",
+            200,
+            150,
+            "weapon",
+            0,
+            Some((1, 10)),
+        ),
+        (
+            "demo.item.morning-star",
+            396,
+            150,
+            "weapon",
+            0,
+            Some((2, 7)),
+        ),
         ("demo.item.shovel", 10, 60, "tool", 0, Some((1, 3))),
         ("demo.item.pick", 50, 150, "tool", 0, Some((1, 5))),
         ("demo.item.cloak", 3, 10, "cloak", 1, None),
@@ -675,4 +704,79 @@ fn arrows_stack_up_to_ninety_nine() {
         .expect("original pack should contain arrows");
 
     assert_eq!(arrow.max_stack, 99);
+}
+
+#[test]
+fn supported_legacy_scrolls_and_potions_keep_source_identity_and_values() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let scrolls = artifact
+        .content
+        .items
+        .iter()
+        .filter(|item| item.tags.iter().any(|tag| tag == "scroll"))
+        .collect::<Vec<_>>();
+    let potions = artifact
+        .content
+        .items
+        .iter()
+        .filter(|item| item.tags.iter().any(|tag| tag == "potion"))
+        .collect::<Vec<_>>();
+
+    assert_eq!(scrolls.len(), 46);
+    assert_eq!(potions.len(), 45);
+    assert!(scrolls.iter().all(|item| item.weight_tenths_pound == 5));
+    assert!(potions.iter().all(|item| item.weight_tenths_pound == 4));
+
+    let appearance_keys = scrolls
+        .iter()
+        .chain(potions.iter())
+        .map(|item| {
+            item.appearance_name_key
+                .as_deref()
+                .expect("supported consumables should have source flavor")
+        })
+        .collect::<std::collections::BTreeSet<_>>();
+    assert_eq!(appearance_keys.len(), 91);
+
+    let added_values = [
+        ("demo.item.door-stair-location-scroll", 10),
+        ("demo.item.detect-invisible-scroll", 5),
+        ("demo.item.holy-chant-scroll", 40),
+        ("demo.item.holy-prayer-scroll", 80),
+        ("demo.item.detect-monsters-scroll", 10),
+        ("demo.item.satisfy-hunger-scroll", 10),
+        ("demo.item.sleep-potion", 1),
+        ("demo.item.stupidity-potion", 0),
+        ("demo.item.naivety-potion", 0),
+        ("demo.item.clumsiness-potion", 0),
+        ("demo.item.sickliness-potion", 0),
+        ("demo.item.ugliness-potion", 0),
+        ("demo.item.boldness-potion", 200),
+        ("demo.item.vigor-potion", 200),
+        ("demo.item.cure-serious-wounds-potion", 50),
+        ("demo.item.cure-critical-wounds-potion", 150),
+        ("demo.item.healing-potion", 500),
+        ("demo.item.star-healing-potion", 1_500),
+        ("demo.item.restore-intelligence-potion", 220),
+        ("demo.item.restore-wisdom-potion", 220),
+        ("demo.item.restore-dexterity-potion", 220),
+        ("demo.item.restore-constitution-potion", 220),
+        ("demo.item.restore-charisma-potion", 220),
+        ("demo.item.intelligence-potion", 25_000),
+        ("demo.item.wisdom-potion", 25_000),
+        ("demo.item.dexterity-potion", 25_000),
+        ("demo.item.constitution-potion", 25_000),
+        ("demo.item.charisma-potion", 25_000),
+        ("demo.item.blood-potion", 1_234),
+    ];
+    for (id, base_value) in added_values {
+        let item = artifact
+            .content
+            .items
+            .iter()
+            .find(|item| item.id == id)
+            .unwrap_or_else(|| panic!("{id} should exist"));
+        assert_eq!(item.base_value, base_value, "{id} source value");
+        assert!(item.use_action.is_some(), "{id} should be usable");
+    }
 }
