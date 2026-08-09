@@ -836,6 +836,7 @@ impl Game {
             width,
             height,
             terrain,
+            glow: vec![false; usize::from(width) * usize::from(height)],
             player_position: Position {
                 x: i32::from(inline_map.player_position.x),
                 y: i32::from(inline_map.player_position.y),
@@ -2510,12 +2511,20 @@ impl Game {
         }
         generated_regions.sort_by(|left, right| left.state.region_id.cmp(&right.state.region_id));
         self.resolve_floor_connection_targets(definition, &mut floor_connections)?;
+        let mut glow = vec![false; usize::from(width) * usize::from(height)];
+        for position in rooms.iter().flat_map(generated_room_cells) {
+            let index = usize::try_from(position.y).expect("generated room y must fit usize")
+                * usize::from(width)
+                + usize::try_from(position.x).expect("generated room x must fit usize");
+            glow[index] = true;
+        }
         Ok(FloorState {
             id: definition.id.clone(),
             dungeon_instance_id,
             width,
             height,
             terrain,
+            glow,
             player_position: first_center,
             entities,
             items,

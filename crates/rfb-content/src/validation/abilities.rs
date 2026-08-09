@@ -206,9 +206,9 @@ pub(super) fn validate_abilities(
                 AbilityEffectDefinition::DrainResource { amount } => {
                     (1..=1_000_000).contains(amount)
                 }
-                AbilityEffectDefinition::Amnesia | AbilityEffectDefinition::AggravateMonsters => {
-                    true
-                }
+                AbilityEffectDefinition::Amnesia
+                | AbilityEffectDefinition::DarkenRoom
+                | AbilityEffectDefinition::AggravateMonsters => true,
                 AbilityEffectDefinition::Teleport => true,
                 AbilityEffectDefinition::BlinkSelf { radius } => (1..=10).contains(radius),
                 AbilityEffectDefinition::TeleportSelf { minimum_distance } => {
@@ -556,6 +556,13 @@ pub(super) fn validate_abilities(
         let projectile_target_rule = !self_targeted
             && (1..=64).contains(&ability.target.range)
             && ability.target.requires_line_of_effect;
+        let room_target_rule = !self_targeted
+            && (1..=64).contains(&ability.target.range)
+            && ability
+                .target
+                .modes
+                .contains(&AbilityTargetModeDefinition::Entity)
+            && !ability.target.requires_line_of_effect;
         let item_target_rule = ability.target.modes.as_slice()
             == [AbilityTargetModeDefinition::Item]
             && ability.target.range == 0
@@ -572,6 +579,7 @@ pub(super) fn validate_abilities(
             | AbilityEffectDefinition::DrainLife { .. }
             | AbilityEffectDefinition::DeathRay { .. }
             | AbilityEffectDefinition::RandomChoice { .. } => projectile_target_rule,
+            AbilityEffectDefinition::DarkenRoom => room_target_rule,
             AbilityEffectDefinition::Genocide { scope, .. } => match scope {
                 AbilityGenocideScopeDefinition::Nearby => self_target_rule,
                 AbilityGenocideScopeDefinition::Single | AbilityGenocideScopeDefinition::Glyph => {
@@ -762,6 +770,15 @@ pub(super) fn validate_abilities(
             let position_target = ability.target.modes.as_slice()
                 == [AbilityTargetModeDefinition::Position]
                 && ability.target.requires_line_of_effect;
+            let room_target = ability
+                .target
+                .modes
+                .contains(&AbilityTargetModeDefinition::Entity)
+                && !ability
+                    .target
+                    .modes
+                    .contains(&AbilityTargetModeDefinition::SelfTarget)
+                && !ability.target.requires_line_of_effect;
             let supported = match &ability.effect {
                 AbilityEffectDefinition::Damage { .. }
                 | AbilityEffectDefinition::AreaDamage { .. }
@@ -771,6 +788,7 @@ pub(super) fn validate_abilities(
                 | AbilityEffectDefinition::TeleportAway { .. }
                 | AbilityEffectDefinition::DrainResource { .. }
                 | AbilityEffectDefinition::Amnesia => projectile_target,
+                AbilityEffectDefinition::DarkenRoom => room_target,
                 AbilityEffectDefinition::ConeDamage { .. }
                 | AbilityEffectDefinition::BreathDamage { .. } => {
                     ability.target.modes.as_slice() == [AbilityTargetModeDefinition::Direction]

@@ -278,6 +278,8 @@ contract-v197 以 1.193.0 收紧既有怪物近战内容：只有 `armorMitigate
 
 contract-v198 以 1.194.0 增加窄怪物近战 `disenchant { chancePercent? }`。它不携带伤害骰，只复用玩家有效 Disenchant 抗性、已建模正面状态移除和已装备物品的 `enchantments`；带骰 `DISENCHANT` 仍是普通 damage effect。当前格式不为原版 pval、逐件 `OF_RES_DISEN` 或怪物装备另建影子字段。
 
+contract-v199 以 1.195.0 为既有 actor `light` 增加默认 false 的 `darkness`，并增加怪物施法 effect `darken-room`。负半径不另建第二套形状模型：同一个正整数 `radius` 描述作用域，`darkness` 只决定它压制永久房间光而不是产生主动光。`darken-room` 必须以非 self 的 position/entity 目标使用，当前不开放给玩家能力。
+
 contract-v83 以 1.75.0 增加 `detect` 能力效果、Echo Pulse 与 Echo Sight；类别/半径、FOV 与隐藏投影筛选、稳定结果顺序、瞬时/持久知识边界由核心定义，持久结果复用 `revealedTerrain`，state hash 升至 Schema v36。
 
 contract-v84 以 1.76.0 增加 `transform-terrain` 能力效果、Echo Delving 与 Echo Rampart；来源/目标 terrain 集、范围、FOV/line of effect、占用格、连接/边界保护和原子写入由核心定义，地形继续复用既有 save/state hash 字段。

@@ -86,6 +86,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.crow-of-durthang", 1224, 2, 40),
             ("demo.actor.crypt-creep", 124, 2, 40),
             ("demo.actor.culverin", 867, 2, 50),
+            ("demo.actor.dark-elf", 122, 2, 40),
             (
                 "demo.actor.disembodied-hand-that-strangled-people",
                 112,
@@ -188,6 +189,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.scruffy-looking-hobbit", 74, 1, 30),
             ("demo.actor.sheep", 1226, 4, 20),
             ("demo.actor.shrieker-mushroom-patch", 40, 1, 50),
+            ("demo.actor.silver-jelly", 73, 2, 30),
             ("demo.actor.skaven", 158, 1, 40),
             ("demo.actor.skaven-shaman", 217, 1, 50),
             ("demo.actor.skeleton-kobold", 91, 1, 40),

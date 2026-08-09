@@ -60,6 +60,10 @@ Dark elf 3 条。
 contract-v198 将无骰 `DISENCHANT` 收窄为已有抗性、正面状态移除和装备
 强化削减的近战 effect，接入解除附魔之眼及其 3 点吸取法力；浅层正式 actor
 增至 166 条、严格同步增至 134 条。只剩 Silver jelly 和 Dark elf 2 条。
+contract-v199 为程序化房间增加持久 `glow`，以窄 `darken-room` 清除目标所在
+连通房间的永久光，并让怪物黑暗源只压制永久房间光；银色果冻和黑暗精灵
+进入严格同步。浅层正式 actor 增至 168 条、严格同步增至 136 条，浅层普查
+剩余活跃记录清零。
 
 荒野 W0 已导入 `master:w_info.txt` 的 `99x66` normal 世界图、15 类地形、
 危险等级、道路和起点，并只把现有 Outpost/Warrens 绑定为正式地点。尚未实现

@@ -259,6 +259,9 @@ pub struct ActorLightDefinition {
     /// Intrinsic light remains active while the actor sleeps. Carried light does not.
     #[serde(default)]
     pub intrinsic: bool,
+    /// Darkness suppresses permanent room glow, but not carried light sources.
+    #[serde(default)]
+    pub darkness: bool,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]

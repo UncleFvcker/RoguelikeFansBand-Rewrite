@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.144";
+pub const PROTOCOL_VERSION: &str = "1.145";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -676,6 +676,7 @@ pub enum AbilityEffectSpecDto {
         amount: u32,
     },
     Amnesia,
+    DarkenRoom,
     AggravateMonsters,
     Teleport,
     Summon {
@@ -1569,6 +1570,10 @@ pub enum AbilityEffectResolutionDto {
         caster_healed: u32,
     },
     Amnesia {
+        effect_index: u8,
+        cleared_cells: u32,
+    },
+    DarkenRoom {
         effect_index: u8,
         cleared_cells: u32,
     },
@@ -2874,6 +2879,7 @@ pub struct TerrainSaveDto {
     pub width: u16,
     pub height: u16,
     pub terrain_ids: Vec<String>,
+    pub glow: Vec<bool>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -3714,6 +3720,7 @@ mod tests {
                 width: 1,
                 height: 1,
                 terrain_ids: vec!["demo.terrain.floor".to_owned()],
+                glow: vec![false],
             },
             player: PlayerDto {
                 id: "demo.player".to_owned(),

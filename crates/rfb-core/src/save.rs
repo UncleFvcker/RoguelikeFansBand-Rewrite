@@ -1264,6 +1264,7 @@ pub(crate) fn floor_to_save(floor: &FloorState) -> FloorSaveDto {
             width: floor.width,
             height: floor.height,
             terrain_ids: floor.terrain.clone(),
+            glow: floor.glow.clone(),
         },
         entities: actors_to_save(&floor.entities),
         items: items_to_save(&floor.items),
@@ -1280,6 +1281,13 @@ pub(crate) fn floor_from_save(
     floor: FloorSaveDto,
     content: &ContentCatalog,
 ) -> Result<FloorState, CoreError> {
+    let expected_len = usize::from(floor.terrain.width) * usize::from(floor.terrain.height);
+    if expected_len == 0
+        || floor.terrain.terrain_ids.len() != expected_len
+        || floor.terrain.glow.len() != expected_len
+    {
+        return Err(CoreError::InvalidSave("terrain dimensions are invalid"));
+    }
     let revealed_terrain = revealed_terrain_from_save(
         floor.revealed_terrain,
         &floor.terrain.terrain_ids,
@@ -1318,6 +1326,7 @@ pub(crate) fn floor_from_save(
         width: floor.terrain.width,
         height: floor.terrain.height,
         terrain: floor.terrain.terrain_ids,
+        glow: floor.terrain.glow,
         player_position: floor.player_position,
         entities,
         items,

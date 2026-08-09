@@ -5996,6 +5996,16 @@ fn map_misc_spell_token(
                 .or_insert_with(|| misc_ability("amnesia", serde_json::json!({"type": "amnesia"})));
             Some(id)
         }
+        "DARKNESS" => {
+            let id = "rfb-legacy.ability.darkness".to_owned();
+            abilities.entry(id.clone()).or_insert_with(|| {
+                let mut ability =
+                    misc_ability("darkness", serde_json::json!({"type": "darken-room"}));
+                ability["target"]["requiresLineOfEffect"] = serde_json::json!(false);
+                ability
+            });
+            Some(id)
+        }
         "DISPEL_MAGIC" => {
             let id = "rfb-legacy.ability.dispel".to_owned();
             abilities.entry(id.clone()).or_insert_with(|| {
@@ -6208,6 +6218,10 @@ fn monster_flag_is_mapped(flag: &str) -> bool {
             | "HAS_LITE_2"
             | "SELF_LITE_1"
             | "SELF_LITE_2"
+            | "HAS_DARK_1"
+            | "HAS_DARK_2"
+            | "SELF_DARK_1"
+            | "SELF_DARK_2"
             | "FORCE_SLEEP"
             | "ONLY_ITEM"
             | "ONLY_GOLD"
@@ -6467,24 +6481,40 @@ fn monster_json(
             "picksUpItems": picks_up_items,
         });
     }
-    let light_radius = u8::from(
+    let light_radius = i8::from(
         entry
             .flags
             .iter()
             .any(|flag| matches!(flag.as_str(), "HAS_LITE_1" | "SELF_LITE_1")),
-    ) + 2 * u8::from(
+    ) + 2 * i8::from(
         entry
             .flags
             .iter()
             .any(|flag| matches!(flag.as_str(), "HAS_LITE_2" | "SELF_LITE_2")),
+    ) - i8::from(
+        entry
+            .flags
+            .iter()
+            .any(|flag| matches!(flag.as_str(), "HAS_DARK_1" | "SELF_DARK_1")),
+    ) - 2 * i8::from(
+        entry
+            .flags
+            .iter()
+            .any(|flag| matches!(flag.as_str(), "HAS_DARK_2" | "SELF_DARK_2")),
     );
-    if light_radius > 0 {
+    if light_radius != 0 {
+        let darkness = light_radius < 0;
         value["light"] = serde_json::json!({
-            "radius": light_radius,
-            "intrinsic": entry.flags.iter().any(|flag| {
+            "radius": light_radius.unsigned_abs(),
+            "intrinsic": entry.flags.iter().any(|flag| if darkness {
+                matches!(flag.as_str(), "SELF_DARK_1" | "SELF_DARK_2")
+            } else {
                 matches!(flag.as_str(), "SELF_LITE_1" | "SELF_LITE_2")
             }),
         });
+        if darkness {
+            value["light"]["darkness"] = serde_json::json!(true);
+        }
     }
     if entry.flags.iter().any(|flag| flag == "FORCE_SLEEP") {
         value["forceSleep"] = serde_json::json!(true);
@@ -9752,6 +9782,27 @@ mod tests {
     }
 
     #[test]
+    fn monster_import_maps_carried_darkness_as_negative_light() {
+        let monsters = parse_r_info(
+            "N:1:test shadow jelly\nG:j:D\nI:110:1d3:8:4:20:10\nW:3:1:10:3:0:0\nB:TOUCH:DAM(1d2)\nF:HAS_DARK_1\n",
+        )
+        .expect("synthetic darkness monster should parse");
+        let outcome = convert_content(
+            &[],
+            &monsters,
+            &[],
+            &[],
+            &[],
+            &LegacyCharacterSources::default(),
+        );
+        let actor = &outcome.actor_files[0].1;
+
+        assert_eq!(actor["light"]["radius"], 1);
+        assert_eq!(actor["light"]["intrinsic"], false);
+        assert_eq!(actor["light"]["darkness"], true);
+    }
+
+    #[test]
     fn terrain_import_uses_destroyed_target_for_disintegration() {
         let terrain = parse_f_info(
             "N:1:FLOOR\nG:.:w\nF:LOS | PROJECT | MOVE | FLOOR\nN:2:WALL\nG:#:w\nK:DESTROYED:*FLOOR*\nF:WALL | HURT_DISI\n",
@@ -12684,10 +12735,10 @@ S:1_IN_3 | TELE_OTHER | DRAIN_MANA | AMNESIA | DISPEL_MAGIC | DARKNESS
                 "rfb-legacy.ability.drain-mana-11",
                 "rfb-legacy.ability.amnesia",
                 "rfb-legacy.ability.dispel",
+                "rfb-legacy.ability.darkness",
             ]
         );
-        // Room unlighting has no neutral state yet.
-        assert_eq!(outcome.report.unmapped_spells["DARKNESS"], 1);
+        assert!(!outcome.report.unmapped_spells.contains_key("DARKNESS"));
         let drain = outcome
             .ability_files
             .iter()
@@ -12704,6 +12755,14 @@ S:1_IN_3 | TELE_OTHER | DRAIN_MANA | AMNESIA | DISPEL_MAGIC | DARKNESS
             .expect("banish ability should be generated");
         assert_eq!(banish["effect"]["type"], "teleport-away");
         assert_eq!(banish["effect"]["minimumDistance"], 10);
+        let darkness = outcome
+            .ability_files
+            .iter()
+            .find(|(name, _)| name == "darkness.json")
+            .map(|(_, value)| value)
+            .expect("darkness ability should be generated");
+        assert_eq!(darkness["effect"]["type"], "darken-room");
+        assert_eq!(darkness["target"]["requiresLineOfEffect"], false);
     }
 
     #[test]

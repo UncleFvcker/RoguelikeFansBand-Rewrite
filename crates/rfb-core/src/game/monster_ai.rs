@@ -313,6 +313,7 @@ impl Game {
                 {
                     useful = true;
                 }
+                AbilityEffectDefinition::DarkenRoom if player_target => useful = true,
                 AbilityEffectDefinition::BlinkSelf { .. }
                 | AbilityEffectDefinition::TeleportSelf { .. } => useful = true,
                 AbilityEffectDefinition::AggravateMonsters => useful = true,

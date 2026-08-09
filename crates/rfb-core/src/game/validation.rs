@@ -500,9 +500,9 @@ impl Game {
                 "active floor region state is invalid",
             ));
         }
-        if self.explored.len() != self.terrain.len() {
+        if self.explored.len() != self.terrain.len() || self.glow.len() != self.terrain.len() {
             return Err(CoreError::InvalidSave(
-                "exploration memory dimensions are invalid",
+                "terrain state dimensions are invalid",
             ));
         }
         if !revealed_terrain_is_valid(
@@ -757,6 +757,7 @@ impl Game {
             let expected_len = usize::from(floor.width) * usize::from(floor.height);
             if floor.terrain.len() != expected_len
                 || floor.explored.len() != expected_len
+                || floor.glow.len() != expected_len
                 || !revealed_terrain_is_valid(
                     &floor.revealed_terrain,
                     &floor.terrain,

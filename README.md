@@ -187,6 +187,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Contract v196：Warrens P12 特殊生命周期收口](design/contract-v196-warrens-content-p12-special-lifecycles.md)
 - [Contract v197：Warrens P13 浅层直接收割](design/contract-v197-warrens-content-p13-shallow-harvest.md)
 - [Contract v198：Warrens P14 解除附魔之眼](design/contract-v198-warrens-content-p14-disenchanter-eye.md)
+- [Contract v199：Warrens P15 黑暗机制收口](design/contract-v199-warrens-content-p15-darkness.md)
 - [荒野世界地图 W0：权威数据导入](design/wilderness-w0-authoritative-data.md)
 - [旧版物品导入 v2（k_info / e_info / a_info）](design/legacy-item-import-v2.md)
 - [旧版内容导入优先级规划 v1](design/legacy-import-priority-v1.md)
@@ -211,7 +212,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Rust 权威可见性与光照 v1](design/visibility-lighting-v1.md)
 - [静态地形 Chunk 渲染 v1](design/terrain-chunk-rendering-v1.md)
 
-当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v198`，共 470 条 exact fixtures、零 waiver，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
+当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v199`，共 470 条 exact fixtures、零 waiver，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
 
 fixture 使用受控的主分类。日常开发只验证或刷新受影响分类；普通 `cargo test -p rfb-contract` 只做快速的 schema、分类、ID 唯一性和契约单元测试，不回放全部场景：
 
@@ -511,6 +512,8 @@ contract-v196 推进正式内容 P12：`FRIENDLY` 让航海士娜美作为自主
 contract-v197 推进正式内容 P13：高阶地狱兽、黄色果冻、佐格虫、巧言、罗宾汉、虱子王劳西和鸭子共 7 只进入严格同步。无骰 `HURT` 只表达为受护甲减免的精确 `0d0`，`S_LOUSE` 复用既有类别召唤并由唯一 `louse` 标签候选锁定巨型白虱；巧言和罗宾汉同时生成寒冰箭、恶臭之云与射击能力。协议保持 1.144、state hash Schema 保持 v67，demo 升至 1.193.0；正式包现有 198 种 actor、104 个 ability，浅层正式 actor 165 条、严格同步 133 条，content hash 为 `de810d68f142e4f1574f5d17ed58323c0d10f877c29373dc752a7b0493394698`。详见 [Contract v197](design/contract-v197-warrens-content-p13-shallow-harvest.md)。
 
 contract-v198 推进正式内容 P14：无骰 `DISENCHANT` 成为窄近战 effect，按原版 4:1 分支清除当前已建模正面时效或削减随机已装备武器、护甲、弹药的正强化，并复用解除附魔抗性与神器 71% 抵抗；负面状态、HP、actor 对 actor 装备语义均不被近似改写。解除附魔之眼按索引 104 加入严格同步并生成 3 点吸取法力。协议保持 1.144、state hash Schema 保持 v67，demo 升至 1.194.0；正式包现有 199 种 actor、105 个 ability，浅层正式 actor 166 条、严格同步 134 条，content hash 为 `47efafab50f3e2787d0a713aa2726b226fbddb8c93bc958a662a08411c2c369b`。详见 [Contract v198](design/contract-v198-warrens-content-p14-disenchanter-eye.md)。
+
+contract-v199 推进正式内容 P15：程序化房间生成持久 `glow`，当前层、离层存储、save 与 state hash 使用同一逐格状态；`darken-room` 只清除施法落点所在的连通房间永久光，银色果冻的半径 1 黑暗源也只压制永久房间光，不压制玩家光源或怪物主动光。银色果冻与黑暗精灵进入严格同步，浅层普查至此收口。协议升至 1.145、state hash Schema 升至 v68，demo 升至 1.195.0；正式包现有 201 种 actor、106 个 ability，浅层正式 actor 168 条、严格同步 136 条，content hash 为 `b67309b1973ab483e71c90fce594d20af1d66bbb7b4ada6665fbcdbd4f513e18`。详见 [Contract v199](design/contract-v199-warrens-content-p15-darkness.md)。
 
 ### 本地验证
 
