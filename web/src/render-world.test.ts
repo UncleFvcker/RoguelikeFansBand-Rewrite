@@ -30,7 +30,7 @@ test("render world keeps item and actor layers separate", () => {
   const world = new RenderWorld(2, 1);
   const cells = world.applySnapshot(snapshotFixture());
   assert.equal(cells[0].terrainId, "demo.terrain.floor");
-  assert.equal(cells[0].itemKindId, "demo.item.luminous-shard");
+  assert.equal(cells[0].itemKindId, "demo.item.ration-of-food");
   assert.equal(cells[0].actorKindId, "demo.actor.explorer");
 });
 
@@ -159,7 +159,7 @@ function snapshotFixture() {
     width: 2,
     height: 1,
     cells: [
-      cell(0, 0, "demo.actor.player.1", "demo.item.luminous-shard.1"),
+      cell(0, 0, "demo.actor.player.1", "demo.item.ration-of-food.1"),
       cell(1, 0),
     ],
     visualCells: [
@@ -170,8 +170,8 @@ function snapshotFixture() {
     entities: [],
     items: [
       {
-        id: "demo.item.luminous-shard.1",
-        kindId: "demo.item.luminous-shard",
+        id: "demo.item.ration-of-food.1",
+        kindId: "demo.item.ration-of-food",
         position: { x: 0, y: 0 },
         quantity: 1,
       },

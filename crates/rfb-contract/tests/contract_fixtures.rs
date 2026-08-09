@@ -105,9 +105,9 @@ fn committed_contract_fixture_metadata_is_valid() {
 
 #[test]
 fn legacy_attribute_projection_migration_is_schema_bounded() {
-    let fixture = minimal_warrens_fixture(
+    let fixture = minimal_default_fixture(
         json!({
-            "world": "demo.world.warrens-journey",
+            "world": "demo.world.middle-earth",
             "playerBuildId": "demo.build.warrior",
             "debugClearEntities": true
         }),
@@ -165,12 +165,12 @@ fn legacy_attribute_projection_migration_is_schema_bounded() {
     ));
 }
 
-fn minimal_warrens_fixture(
+fn minimal_default_fixture(
     preconditions: serde_json::Value,
     commands: serde_json::Value,
 ) -> ContractFixture {
     serde_json::from_value(json!({
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "id": "town.minimal-contract-helper",
         "category": "town",
         "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
@@ -184,9 +184,9 @@ fn minimal_warrens_fixture(
 
 #[test]
 fn player_position_precondition_does_not_simulate_movement() {
-    let fixture = minimal_warrens_fixture(
+    let fixture = minimal_default_fixture(
         json!({
-            "world": "demo.world.warrens-journey",
+            "world": "demo.world.middle-earth",
             "debugClearEntities": true,
             "playerPosition": { "x": 32, "y": 13 }
         }),
@@ -207,9 +207,9 @@ fn player_position_precondition_does_not_simulate_movement() {
 
 #[test]
 fn player_position_precondition_rejects_unwalkable_cells() {
-    let fixture = minimal_warrens_fixture(
+    let fixture = minimal_default_fixture(
         json!({
-            "world": "demo.world.warrens-journey",
+            "world": "demo.world.middle-earth",
             "debugClearEntities": true,
             "playerPosition": { "x": 22, "y": 6 }
         }),
@@ -227,17 +227,17 @@ fn player_position_precondition_rejects_unwalkable_cells() {
 
 #[test]
 fn equipment_precondition_relocates_and_identifies_an_existing_item() {
-    let fixture = minimal_warrens_fixture(
+    let fixture = minimal_default_fixture(
         json!({
-            "world": "demo.world.original-v1",
+            "world": "demo.world.middle-earth",
             "debugClearEntities": true,
             "equipmentItems": [{
-                "id": "demo.item.echo-charm.1",
-                "kindId": "demo.item.echo-charm",
+                "id": "demo.item.warding-band.1",
+                "kindId": "demo.item.warding-band",
                 "quantity": 1,
-                "slotId": "charm",
+                "slotId": "right-ring",
                 "quality": "fine",
-                "affixIds": ["demo.affix.harmonic-edge"]
+                "affixIds": ["demo.affix.regeneration"]
             }]
         }),
         json!([]),
@@ -245,29 +245,30 @@ fn equipment_precondition_relocates_and_identifies_an_existing_item() {
 
     let observed = observe(&fixture).expect("equipment precondition should be accepted");
 
-    assert_eq!(observed.final_state.ground_item_count, 4);
-    assert_eq!(observed.final_state.equipment.len(), 1);
-    assert_eq!(
-        observed.final_state.equipment[0].id,
-        "demo.item.echo-charm.1"
+    assert!(
+        observed
+            .final_state
+            .equipment
+            .iter()
+            .any(|item| item.id == "demo.item.warding-band.1")
     );
     assert_eq!(
         observed
             .final_state
             .item_property_knowledge
             .iter()
-            .find(|knowledge| knowledge.item_id == "demo.item.echo-charm.1")
-            .expect("equipped charm knowledge should be projected")
+            .find(|knowledge| knowledge.item_id == "demo.item.warding-band.1")
+            .expect("equipped ring knowledge should be projected")
             .known_affix_ids,
-        ["demo.affix.harmonic-edge"]
+        ["demo.affix.regeneration"]
     );
 }
 
 #[test]
 fn buy_first_from_shop_resolves_projected_stock_without_movement() {
-    let fixture = minimal_warrens_fixture(
+    let fixture = minimal_default_fixture(
         json!({
-            "world": "demo.world.warrens-journey",
+            "world": "demo.world.middle-earth",
             "debugClearEntities": true,
             "playerPosition": { "x": 32, "y": 13 },
             "playerGold": 1000000

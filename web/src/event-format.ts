@@ -1424,14 +1424,7 @@ export function createPresentationFormatter(
 
   function floorName(id: string | undefined): string {
     if (id === "demo.floor.surface") {
-      return localization.format(
-        getState().currentWorldId === "demo.world.warrens-journey"
-          ? "floor-demo-surface-name"
-          : "world-demo-original-lab-name",
-      );
-    }
-    if (id === "demo.floor.echo-depth-1") {
-      return localization.format("floor-demo-echo-depth-1-name");
+      return localization.format("floor-demo-surface-name");
     }
     if (/^demo\.floor\.warrens-depth-\d+$/.test(id ?? "")) {
       return localization.format("floor-demo-warrens-depth-name");
@@ -1442,81 +1435,6 @@ export function createPresentationFormatter(
   function contentName(id: string | undefined): string {
     if (id === "demo.resource.mana") {
       return localization.format("resource-demo-mana-name");
-    }
-    if (id === "demo.ability.resonant-bolt") {
-      return localization.format("ability-demo-resonant-bolt-name");
-    }
-    if (id === "demo.ability.harmonic-spark") {
-      return localization.format("ability-demo-harmonic-spark-name");
-    }
-    if (id === "demo.ability.echo-burst") {
-      return localization.format("ability-demo-echo-burst-name");
-    }
-    if (id === "demo.ability.echo-companion") {
-      return localization.format("ability-demo-echo-companion-name");
-    }
-    if (id === "demo.ability.echo-pulse") {
-      return localization.format("ability-demo-echo-pulse-name");
-    }
-    if (id === "demo.ability.echo-sight") {
-      return localization.format("ability-demo-echo-sight-name");
-    }
-    if (id === "demo.ability.echo-delving") {
-      return localization.format("ability-demo-echo-delving-name");
-    }
-    if (id === "demo.ability.echo-rampart") {
-      return localization.format("ability-demo-echo-rampart-name");
-    }
-    if (id === "demo.ability.echo-binding") {
-      return localization.format("ability-demo-echo-binding-name");
-    }
-    if (id === "demo.ability.echo-quickening") {
-      return localization.format("ability-demo-echo-quickening-name");
-    }
-    if (id === "demo.ability.mending-echo") {
-      return localization.format("ability-demo-mending-echo-name");
-    }
-    if (id === "demo.item.echo-primer") {
-      return localization.format("item-demo-echo-primer-name");
-    }
-    if (id === "demo.item.stillwater-notes") {
-      return localization.format("item-demo-stillwater-notes-name");
-    }
-    if (id === "demo.item.luminous-shard") {
-      return localization.format("item-demo-luminous-shard-name");
-    }
-    if (id === "demo.item.echo-charm") {
-      return localization.format("item-demo-echo-charm-name");
-    }
-    if (id === "demo.item.echo-blade") {
-      return localization.format("item-demo-echo-blade-name");
-    }
-    if (id === "demo.item.resonance-sling") {
-      return localization.format("item-demo-resonance-sling-name");
-    }
-    if (id === "demo.item.resonance-pellet") {
-      return localization.format("item-demo-resonance-pellet-name");
-    }
-    if (id === "demo.actor.ember-mote") {
-      return localization.format("actor-demo-ember-mote-name");
-    }
-    if (id === "demo.actor.acid-seep") {
-      return localization.format("actor-demo-acid-seep-name");
-    }
-    if (id === "demo.actor.storm-spark") {
-      return localization.format("actor-demo-storm-spark-name");
-    }
-    if (id === "demo.actor.frost-wisp") {
-      return localization.format("actor-demo-frost-wisp-name");
-    }
-    if (id === "demo.actor.venom-spore") {
-      return localization.format("actor-demo-venom-spore-name");
-    }
-    if (id === "demo.actor.echo-hound") {
-      return localization.format("actor-demo-echo-hound-name");
-    }
-    if (id === "demo.actor.echo-cantor") {
-      return localization.format("actor-demo-echo-cantor-name");
     }
     if (id === "demo.terrain.floor") {
       return localization.format("terrain-demo-floor-name");
@@ -1541,9 +1459,6 @@ export function createPresentationFormatter(
     }
     if (id === "demo.terrain.surface-tree") {
       return localization.format("terrain-demo-surface-tree-name");
-    }
-    if (id === "demo.terrain.echo-rubble") {
-      return localization.format("terrain-demo-echo-rubble-name");
     }
     if (id) {
       const [namespace, kind, ...nameParts] = id.split(".");
@@ -1600,14 +1515,11 @@ export function createPresentationFormatter(
       currentEquipment.find((item) => item.kindId === kindId) ??
       currentStatus?.items.find((item) => item.kindId === kindId);
     if (projected) return visibleItemName(projected.displayNameKey, kindId);
-    if (kindId === "demo.item.luminous-shard") {
-      return localization.format("item-demo-unfamiliar-shard-name");
-    }
     return contentName(kindId);
   }
 
   function itemPropertyName(nameKey: string | undefined): string {
-    if (nameKey === "affix-demo-harmonic-edge-name") {
+    if (nameKey && localization.hasMessage(localization.locale, nameKey)) {
       return localization.format(nameKey);
     }
     return localization.format("item-unknown-name");

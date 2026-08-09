@@ -12,7 +12,7 @@ const glyphs = {
   "demo.terrain.wall": "#",
   "demo.actor.warrior-player": "@",
   "demo.actor.explorer": "@",
-  "demo.actor.ember-mote": "*",
+  "demo.actor.small-kobold": "k",
 };
 
 function readManifest(path: string): unknown {
@@ -288,7 +288,7 @@ test("missing image tiles fall back to the shared glyph path", () => {
   const image = parseTilesetManifest(readManifest("../public/tilesets/image-demo/tileset.json"));
   const floorImage = resolveTilesetVisual(image, "demo.terrain.floor", glyphs, true);
   const floorWithoutAtlas = resolveTilesetVisual(image, "demo.terrain.floor", glyphs, false);
-  const monsterWithoutTile = resolveTilesetVisual(image, "demo.actor.ember-mote", glyphs, true);
+  const monsterWithoutTile = resolveTilesetVisual(image, "demo.actor.small-kobold", glyphs, true);
 
   assert.equal(floorImage.source, "image");
   assert.deepEqual(floorImage.tile, { x: 0, y: 0 });
@@ -296,7 +296,7 @@ test("missing image tiles fall back to the shared glyph path", () => {
   assert.equal(floorWithoutAtlas.glyph, ".");
   assert.equal(floorWithoutAtlas.usedFallback, true);
   assert.equal(monsterWithoutTile.source, "glyph");
-  assert.equal(monsterWithoutTile.glyph, "✦");
+  assert.equal(monsterWithoutTile.glyph, "k");
 });
 
 test("unknown semantic IDs use the visible fallback style", () => {

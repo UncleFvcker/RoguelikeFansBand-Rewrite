@@ -140,7 +140,7 @@ export function selectJourneyDungeonStatus(
   knownWorldId?: string,
 ): JourneyDungeonStatus {
   const worldId = "worldId" in state ? state.worldId : knownWorldId;
-  if (worldId !== "demo.world.warrens-journey") {
+  if (worldId !== "demo.world.middle-earth") {
     return { dungeonNameKey: "journey-dungeon-none" };
   }
   if (state.floorId === "demo.floor.surface") {
@@ -302,7 +302,7 @@ export class JourneyGuidance {
     );
     const surfaceEntrance =
       prompt.id === "stairs" &&
-      this.#worldId === "demo.world.warrens-journey" &&
+      this.#worldId === "demo.world.middle-earth" &&
       state.floorId === "demo.floor.surface";
     this.#dom.onboardingTitle.textContent = this.#localization.format(
       surfaceEntrance ? "onboarding-warrens-entrance-title" : prompt.titleKey,

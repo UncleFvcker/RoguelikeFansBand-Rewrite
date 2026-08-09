@@ -25,7 +25,7 @@ fn warrior_birth_rolls_five_to_nine_rations_after_gold() {
             .expect("Warrior should receive birth torches after rations");
         let shop_draws_before = expected_rng.draw_counter;
 
-        let game = Game::new_warrens_journey_with_build(seed, RFB_WARRIOR_BUILD_ID)
+        let game = Game::new_with_build(seed, RFB_WARRIOR_BUILD_ID)
             .expect("Warrens Warrior should create");
         let ration = game
             .items
@@ -63,8 +63,8 @@ fn historical_builds_do_not_gain_rations_or_birth_rng_draws() {
 
 #[test]
 fn ration_use_consumes_one_restores_food_and_pays_normal_action_cost() {
-    let mut game = Game::new_warrens_journey_with_build(7, RFB_WARRIOR_BUILD_ID)
-        .expect("Warrens Warrior should create");
+    let mut game =
+        Game::new_with_build(7, RFB_WARRIOR_BUILD_ID).expect("Warrens Warrior should create");
     game.entities.clear();
     game.nutrition = rfb_protocol::PLAYER_NUTRITION_BIRTH;
     let ration = game
@@ -104,8 +104,8 @@ fn ration_use_consumes_one_restores_food_and_pays_normal_action_cost() {
 
 #[test]
 fn ration_caps_at_maximum_before_bloated_world_processing() {
-    let mut game = Game::new_warrens_journey_with_build(9, RFB_WARRIOR_BUILD_ID)
-        .expect("Warrens Warrior should create");
+    let mut game =
+        Game::new_with_build(9, RFB_WARRIOR_BUILD_ID).expect("Warrens Warrior should create");
     game.entities.clear();
     game.nutrition = 14_000;
     let ration_id = game
@@ -344,8 +344,8 @@ fn starvation_damage_precedes_recovery_and_can_kill() {
 
 #[test]
 fn nutrition_round_trips() {
-    let mut game = Game::new_warrens_journey_with_build(17, RFB_WARRIOR_BUILD_ID)
-        .expect("Warrens Warrior should create");
+    let mut game =
+        Game::new_with_build(17, RFB_WARRIOR_BUILD_ID).expect("Warrens Warrior should create");
     game.nutrition = 321;
     let restored = Game::from_save(game.to_save()).expect("nutrition should round trip");
     assert_eq!(restored.nutrition, 321);
@@ -357,9 +357,9 @@ fn warrens_ration_attempts_are_deterministic_walkable_and_persistent() {
     let mut saw_guaranteed_tail = false;
     let mut saw_other_tail = false;
     for seed in 1..=32 {
-        let mut left = Game::new_warrens_journey_with_build(seed, RFB_WARRIOR_BUILD_ID)
+        let mut left = Game::new_with_build(seed, RFB_WARRIOR_BUILD_ID)
             .expect("Warrens Warrior should create");
-        let mut right = Game::new_warrens_journey_with_build(seed, RFB_WARRIOR_BUILD_ID)
+        let mut right = Game::new_with_build(seed, RFB_WARRIOR_BUILD_ID)
             .expect("matching Warrens Warrior should create");
         descend_one_floor(&mut left);
         descend_one_floor(&mut right);

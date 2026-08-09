@@ -68,11 +68,6 @@ use rfb_content::{
     TechniqueAttribute, TechniqueProfileDefinition, TerrainFeatureEntryDefinition,
     ThemeVaultCandidateDefinition, WeaponBrand,
 };
-#[cfg(test)]
-use rfb_content::{
-    ContentPosition, DungeonEntryRequirementDefinition, DungeonEntryTaskStatus,
-    TerrainFeaturePlacement, VaultTransform,
-};
 use rfb_protocol::{
     AbilityAreaDamageResolutionDto, AbilityBeamDamageResolutionDto, AbilityCastResolutionDto,
     AbilityConeDamageResolutionDto, AbilityControlOutcomeDto, AbilityDetectResolutionDto,
@@ -159,12 +154,10 @@ use inventory::{
     ItemIdentificationRequest, ItemKnowledgeState, ItemPropertyKnowledgeState, PickUpOutcome,
     RemoveEquippedCursesRequest,
 };
-#[cfg(test)]
-use item_use::ItemUsePlan;
 use mogaminator::MogaminatorState;
 use player_abilities::AbilityProgress;
 #[cfg(test)]
-use player_abilities::{SPELL_EXP_EXPERT, SPELL_EXP_MASTER};
+use player_abilities::SPELL_EXP_MASTER;
 use player_stats::{
     ResolvedThrowProfile, actor_melee_routine_dto, derived_speed, resolved_melee_blows,
 };
@@ -184,24 +177,16 @@ use tasks::{
 };
 use terrain::{DoorBashOutcome, DoorOpenOutcome, TerrainDigOutcome, TrapDisarmOutcome};
 #[cfg(test)]
-use world::generation::{
-    GeneratedRoom, TerrainFeaturePlacementContext, set_generated_terrain,
-    terrain_feature_placement_candidates,
-};
-use world::geometry::{floor_actor_position_is_enterable, floor_position_is_walkable};
+use world::generation::GeneratedRoom;
 #[cfg(test)]
-use world::geometry::{
-    generated_terrain_index, generated_terrain_is_connected, maze_floor_anchors,
-    maze_floor_distances, terrain_is_connectable, transformed_vault_dimensions,
-    transformed_vault_position, vault_entrance_outward,
-};
+use world::geometry::generated_terrain_is_connected;
+use world::geometry::{floor_actor_position_is_enterable, floor_position_is_walkable};
 
-pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
+pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 pub const STATE_HASH_SCHEMA_VERSION: u16 = 79;
-pub const WARRENS_JOURNEY_WORLD_ID: &str = "demo.world.warrens-journey";
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const VISIBILITY_RADIUS: i32 = 8;
 const BASE_THROW_RANGE_BUDGET: u16 = 50;
@@ -824,7 +809,7 @@ impl Game {
         Self::from_content(
             seed,
             load_built_in_content().expect("built-in content should decode"),
-            BUILT_IN_WORLD_ID,
+            DEFAULT_WORLD_ID,
         )
         .expect("built-in world should create a game")
     }
@@ -833,16 +818,7 @@ impl Game {
         Self::from_content_with_build(
             seed,
             load_built_in_content().expect("built-in content should decode"),
-            BUILT_IN_WORLD_ID,
-            build_id,
-        )
-    }
-
-    pub fn new_warrens_journey_with_build(seed: u64, build_id: &str) -> Result<Self, CoreError> {
-        Self::from_content_with_build(
-            seed,
-            load_built_in_content().expect("built-in content should decode"),
-            WARRENS_JOURNEY_WORLD_ID,
+            DEFAULT_WORLD_ID,
             build_id,
         )
     }

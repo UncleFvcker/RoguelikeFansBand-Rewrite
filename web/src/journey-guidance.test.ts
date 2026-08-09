@@ -13,7 +13,7 @@ import {
 function state(overrides = {}) {
   return {
     turn: 0,
-    worldId: "demo.world.warrens-journey",
+    worldId: "demo.world.middle-earth",
     floorId: "demo.floor.surface",
     player: { position: { x: 3, y: 3 }, resources: [] },
     inventory: [],

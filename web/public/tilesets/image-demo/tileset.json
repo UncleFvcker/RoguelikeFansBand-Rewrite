@@ -98,19 +98,10 @@
       "foreground": "#ddd8c9",
       "background": "#403d37"
     },
-    "demo.actor.explorer": {
+    "demo.actor.warrior-player": {
       "foreground": "#8ed8ff",
       "background": "#17324a",
       "tile": { "x": 2, "y": 0 }
-    },
-    "demo.actor.ember-mote": {
-      "glyph": "✦",
-      "foreground": "#ff9b5e",
-      "background": "#47251c"
-    },
-    "demo.item.luminous-shard": {
-      "foreground": "#f6e58d",
-      "background": "#2f2b19"
     },
     "core.gold.copper": {
       "glyph": "$",

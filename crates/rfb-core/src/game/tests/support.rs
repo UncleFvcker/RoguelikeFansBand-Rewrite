@@ -48,21 +48,6 @@ pub(super) fn place_player_on_terrain(game: &mut Game, terrain_id: &str) {
     };
 }
 
-pub(super) fn connection_position(game: &Game, connection_id: &str) -> Position {
-    game.floor_connections
-        .iter()
-        .find(|connection| connection.id == connection_id)
-        .unwrap_or_else(|| panic!("floor should contain connection {connection_id}"))
-        .position
-}
-
-pub(super) fn traverse_connection(game: &mut Game, connection_id: &str) {
-    game.player.position = connection_position(game, connection_id);
-    game.traverse_stairs(false)
-        .expect("connection traversal should resolve")
-        .expect("connection traversal should transition");
-}
-
 pub(super) fn stored_floor<'a>(game: &'a Game, floor_id: &str) -> &'a FloorState {
     game.stored_floors
         .values()
@@ -81,13 +66,6 @@ pub(super) fn generated_encounter_leader_count(game: &Game) -> usize {
                 .is_some_and(|ordinal| ordinal.parse::<u16>().is_ok())
         })
         .count()
-}
-
-pub(super) fn region_at(game: &Game, position: Position) -> &FloorRegionState {
-    game.floor_regions
-        .iter()
-        .find(|region| region.cells.contains(&position))
-        .unwrap_or_else(|| panic!("position {position:?} should belong to a floor region"))
 }
 
 pub(super) fn visual_at(snapshot: &GameSnapshot, position: Position) -> CellVisualDto {
@@ -171,80 +149,6 @@ pub(super) fn replace_terrain(game: &mut Game, position: Position, terrain_id: &
     game.terrain[index] = terrain_id.to_owned();
 }
 
-pub(super) fn check_resolution<'a>(
-    update: &'a GameUpdate,
-    event_kind: &str,
-) -> &'a CheckResolutionDto {
-    update
-        .events
-        .iter()
-        .find(|event| event.kind == event_kind)
-        .and_then(|event| event.outcome.as_ref())
-        .and_then(|outcome| match outcome {
-            GameEventOutcomeDto::Check { resolution } => Some(resolution),
-            _ => None,
-        })
-        .unwrap_or_else(|| panic!("check event {event_kind} should exist"))
-}
-
-pub(super) fn ability_book_item_id(game: &Game) -> String {
-    ability_book_item_id_for(game, "demo.item.echo-primer")
-}
-
-pub(super) fn ability_book_item_id_for(game: &Game, kind_id: &str) -> String {
-    game.items
-        .iter()
-        .find(|item| item.kind_id == kind_id && item.location == ItemLocation::Inventory)
-        .map(|item| item.id.clone())
-        .unwrap_or_else(|| panic!("scholar should carry {kind_id}"))
-}
-
-pub(super) fn ability_cast_resolution(update: &GameUpdate) -> &AbilityCastResolutionDto {
-    update
-        .events
-        .iter()
-        .find_map(|event| match event.outcome.as_ref() {
-            Some(GameEventOutcomeDto::AbilityCast { resolution }) => Some(resolution),
-            _ => None,
-        })
-        .expect("ability cast resolution should exist")
-}
-
-pub(super) fn assert_teleport_target_rejected(
-    game: &mut Game,
-    ability_id: &str,
-    target: TargetSelection,
-) {
-    let position_before = game.player.position;
-    let mana_before = game.resources["demo.resource.mana"].current;
-    let draws_before = game.rng_draw_counter();
-    let progress_before = game.ability_progress[ability_id];
-    let update = dispatch_next(
-        game,
-        GameCommand::CastAbility {
-            ability_id: ability_id.to_owned(),
-            target,
-        },
-    );
-    assert_eq!(game.player.position, position_before);
-    assert_eq!(game.resources["demo.resource.mana"].current, mana_before);
-    assert_eq!(game.rng_draw_counter(), draws_before);
-    assert_eq!(game.ability_progress[ability_id], progress_before);
-    assert!(
-        update
-            .events
-            .iter()
-            .any(|event| event.kind == "ability.target-unavailable")
-    );
-    assert!(!update.events.iter().any(|event| {
-        matches!(
-            event.outcome.as_ref(),
-            Some(GameEventOutcomeDto::AbilityCast { .. })
-                | Some(GameEventOutcomeDto::AbilityTeleport { .. })
-        )
-    }));
-}
-
 pub(super) fn rest_resolution(update: &GameUpdate) -> &RestResolutionDto {
     update
         .events
@@ -256,68 +160,8 @@ pub(super) fn rest_resolution(update: &GameUpdate) -> &RestResolutionDto {
         .expect("rest resolution should exist")
 }
 
-pub(super) fn assert_check(
-    resolution: &CheckResolutionDto,
-    skill_id: &str,
-    ability: i32,
-    difficulty: i32,
-    percentile_roll: u8,
-    contest_roll: Option<i32>,
-    threshold: i32,
-) {
-    assert_eq!(resolution.skill_id, skill_id);
-    assert_eq!(resolution.ability, ability);
-    assert_eq!(resolution.difficulty, difficulty);
-    assert_eq!(resolution.percentile_roll, percentile_roll);
-    assert_eq!(resolution.contest_roll, contest_roll);
-    assert_eq!(resolution.threshold, threshold);
-}
-
-pub(super) fn collect_both_demo_items(game: &mut Game) {
-    game.dispatch(command(
-        1,
-        0,
-        GameCommand::Move {
-            direction: Direction::East,
-        },
-    ))
-    .expect("movement to shard should execute");
-    game.dispatch(command(2, 1, GameCommand::PickUp))
-        .expect("shard pickup should execute");
-    game.dispatch(command(
-        3,
-        2,
-        GameCommand::Move {
-            direction: Direction::East,
-        },
-    ))
-    .expect("movement to charm should execute");
-    game.dispatch(command(4, 3, GameCommand::PickUp))
-        .expect("charm pickup should execute");
-}
-
-pub(super) fn add_player_summon(
-    game: &mut Game,
-    entity_id: &str,
-    position: Position,
-    remaining_turns: u16,
-) {
-    let mut companion =
-        game.generated_actor(entity_id.to_owned(), "demo.actor.echo-companion", position);
-    companion.summon = Some(SummonIdentity {
-        owner_id: game.player.id.clone(),
-        source_ability_id: "demo.ability.echo-companion".to_owned(),
-        remaining_turns,
-    });
-    game.entities.push(companion);
-}
-
 pub(super) fn clear_monsters(game: &mut Game) {
     game.entities.clear();
-    game.dungeon_states
-        .get_mut("demo.dungeon.resonance-descent")
-        .expect("resonance dungeon state should exist")
-        .entrance_guardian_defeated = true;
     game.items
         .retain(|item| !matches!(item.location, ItemLocation::CarriedBy { .. }));
 }
@@ -344,7 +188,7 @@ pub(super) fn game_with_actor_definition(
         rfb_content::encode_content(artifact.content)
             .expect("custom actor definition should remain valid"),
     ));
-    Game::from_content(seed, catalog, BUILT_IN_WORLD_ID)
+    Game::from_content(seed, catalog, DEFAULT_WORLD_ID)
         .expect("custom actor definition should create a game")
 }
 
@@ -361,8 +205,8 @@ pub(super) fn task_service_game(seed: u64) -> Game {
         .content
         .worlds
         .iter_mut()
-        .find(|world| world.id == WARRENS_JOURNEY_WORLD_ID)
-        .expect("Warrens world should remain available");
+        .find(|world| world.id == DEFAULT_WORLD_ID)
+        .expect("Middle-earth world should remain available");
     world.tasks.push(rfb_content::TaskDefinition {
         id: task_id.to_owned(),
         name_key: "test-task-name".to_owned(),
@@ -386,7 +230,7 @@ pub(super) fn task_service_game(seed: u64) -> Game {
         completion_exit_terrain_id: None,
         reward: rfb_content::TaskRewardDefinition {
             item_instance_id: "demo.task.test-warrens-depth.reward.1".to_owned(),
-            item_kind_id: "demo.item.echo-charm".to_owned(),
+            item_kind_id: "demo.item.ration-of-food".to_owned(),
             quantity: 1,
         },
     });
@@ -414,7 +258,7 @@ pub(super) fn task_service_game(seed: u64) -> Game {
         completion_exit_terrain_id: None,
         reward: rfb_content::TaskRewardDefinition {
             item_instance_id: "demo.task.test-prerequisite.reward.1".to_owned(),
-            item_kind_id: "demo.item.luminous-shard".to_owned(),
+            item_kind_id: "demo.item.water-potion".to_owned(),
             quantity: 1,
         },
     });
@@ -431,6 +275,6 @@ pub(super) fn task_service_game(seed: u64) -> Game {
         rfb_content::encode_content(artifact.content)
             .expect("custom task service definition should remain valid"),
     ));
-    Game::from_content(seed, catalog, WARRENS_JOURNEY_WORLD_ID)
+    Game::from_content(seed, catalog, DEFAULT_WORLD_ID)
         .expect("custom task service game should create")
 }

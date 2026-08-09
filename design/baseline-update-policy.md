@@ -6,7 +6,7 @@
 
 contract fixture 是规则兼容边界，不能把测试失败简单处理为“刷新预期结果”。政策用于保证每次规则变化只修改真正受影响的场景，同时保留可审查的失败原因。
 
-当前逻辑基线是 `contract-v237`，机器可读政策固定在：
+当前逻辑基线是 `contract-v239`，机器可读政策固定在：
 
 ```text
 tests/fixtures/active/baseline-policy.json
@@ -27,7 +27,7 @@ cargo run -p rfb-contract -- verify-category tests/fixtures/active/baseline-poli
 cargo run -p rfb-contract -- refresh-category tests/fixtures/active/baseline-policy.json inventory equipment
 ```
 
-`refresh-category` 会先为选中分类计算全部断言；任一场景计算失败时不会写入该批文件。普通 `cargo test -p rfb-contract` 仍快速检查全部 fixture 的 JSON、schema、分类和 ID 唯一性，但不会运行 471 条完整回放。
+`refresh-category` 会先为选中分类计算全部断言；任一场景计算失败时不会写入该批文件。普通 `cargo test -p rfb-contract` 仍快速检查全部 fixture 的 JSON、schema、分类和 ID 唯一性，但不会运行 21 条完整回放。
 
 只有以下变化默认需要全量回放或刷新：
 
@@ -76,7 +76,7 @@ cargo run -p rfb-contract -- validate-policy tests/fixtures/active/baseline-poli
 6. 新场景加入 active 目录，并相应提高 policy 的 `minimumFixtureCount`。
 7. 更新 `ACTIVE_BASELINE` 和 policy 的 `baseline`，执行 policy 与全部 exact fixture 验证。
 
-禁止批量 refresh 未受影响场景，也禁止为了“让测试通过”降低最低 fixture 数量。仅改变默认字段是否落盘的全量重写属于表示迁移，必须在不调用 `observe` 的情况下完成，并证明重写前后的反序列化对象完全相等。
+禁止批量 refresh 未受影响场景，也禁止为了“让测试通过”降低最低 fixture 数量。退役内容或删除已由核心单元测试覆盖的重复矩阵时，可以随新 baseline 一并降低数量，但保留集必须通过 policy 与 `verify-all`。仅改变默认字段是否落盘的全量重写属于表示迁移，必须在不调用 `observe` 的情况下完成，并证明重写前后的反序列化对象完全相等。
 
 ## 4. Policy v2
 
@@ -96,4 +96,6 @@ cargo run -p rfb-contract -- validate-policy tests/fixtures/active/baseline-poli
 
 ## 5. 当前边界
 
-`contract-v119` 接入可见亡灵驱散与逐目标放逐，协议 DTO 和 state hash Schema 均未改变。边界由 [Contract v119](contract-v119-scroll-visible-actor-effects.md) 定义。active 集包含 422 个 exact fixtures，零 waiver。
+`contract-v238` 退役 Original Lab / Echo / Resonance fixture，并将 active 集收敛为 21 个跨协议、存档和关键状态边界的 exact fixture。怪物、装置和地下城布局矩阵由对应核心单元测试负责；active 集零 waiver。
+
+`contract-v239` 将 fixture schema 升至 v4：能力断言只保存 ID、熟练度、施法统计和剩余冷却，build 只在成长分类保存 ID，任务只在任务分类保存运行状态，地图变更格只由移动、地牢和城镇分类收集。完整 `AbilityDto` 由单独的协议投影测试保护。

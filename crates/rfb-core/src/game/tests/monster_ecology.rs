@@ -8,8 +8,8 @@ use super::support::*;
 use super::*;
 
 fn enter_warrens(seed: u64) -> Game {
-    let mut game = Game::new_warrens_journey_with_build(seed, "demo.build.warrior")
-        .expect("Warrens journey should create");
+    let mut game =
+        Game::new_with_build(seed, "demo.build.warrior").expect("Warrens journey should create");
     place_player_on_terrain(&mut game, "demo.terrain.stairs-down");
     game.traverse_stairs(false)
         .expect("Warrens entry should resolve")
@@ -37,8 +37,8 @@ fn eldritch_seed(saving_throw_skill: i32, consequence_saves: &[bool]) -> u64 {
 }
 
 fn game_with_ghast() -> (Game, usize) {
-    let mut game = Game::new_warrens_journey_with_build(1, "demo.build.warrior")
-        .expect("Warrens journey should create");
+    let mut game =
+        Game::new_with_build(1, "demo.build.warrior").expect("Warrens journey should create");
     let position = Position {
         x: game.player.position.x + 1,
         y: game.player.position.y,
@@ -71,8 +71,8 @@ fn compost_monsters_allocate_only_in_the_sewer_task() {
 
 #[test]
 fn shapechanger_projects_another_monster_and_rerolls_each_action() {
-    let mut game = Game::new_warrens_journey_with_build(1, "demo.build.warrior")
-        .expect("Warrens journey should create");
+    let mut game =
+        Game::new_with_build(1, "demo.build.warrior").expect("Warrens journey should create");
     game.push_generated_actor(
         "test.shapechanger".to_owned(),
         "demo.actor.chaos-shapechanger",
@@ -104,8 +104,8 @@ fn shapechanger_projects_another_monster_and_rerolls_each_action() {
 
 #[test]
 fn chameleon_keeps_its_identity_while_its_form_drives_runtime_behavior() {
-    let mut game = Game::new_warrens_journey_with_build(1, "demo.build.warrior")
-        .expect("Warrens journey should create");
+    let mut game =
+        Game::new_with_build(1, "demo.build.warrior").expect("Warrens journey should create");
     game.push_generated_actor(
         "test.chameleon".to_owned(),
         "demo.actor.chameleon",
@@ -175,8 +175,8 @@ fn chameleon_keeps_its_identity_while_its_form_drives_runtime_behavior() {
 
 #[test]
 fn chameleon_change_check_uses_one_in_thirteen_before_selecting_a_form() {
-    let mut game = Game::new_warrens_journey_with_build(1, "demo.build.warrior")
-        .expect("Warrens journey should create");
+    let mut game =
+        Game::new_with_build(1, "demo.build.warrior").expect("Warrens journey should create");
     game.push_generated_actor(
         "test.chameleon".to_owned(),
         "demo.actor.chameleon",
@@ -273,8 +273,8 @@ fn eldritch_horror_reuses_attribute_amnesia_and_weird_mind_contracts() {
 
 #[test]
 fn legacy_dungeon_restrictions_match_only_the_declared_region() {
-    let game = Game::new_warrens_journey_with_build(1, "demo.build.warrior")
-        .expect("Warrens journey should create");
+    let game =
+        Game::new_with_build(1, "demo.build.warrior").expect("Warrens journey should create");
     let allocation = |actor_id: &str| {
         game.content
             .actor(actor_id)
@@ -471,8 +471,8 @@ fn fixed_guardian_without_allocation_generates_on_global_allocation_floor() {
     let mut game = enter_warrens(72);
     let mut floor = game
         .content
-        .world(WARRENS_JOURNEY_WORLD_ID)
-        .expect("Warrens world definition")
+        .world(DEFAULT_WORLD_ID)
+        .expect("Middle-earth world definition")
         .procedural_floors
         .iter()
         .find(|floor| floor.id == "demo.floor.warrens-depth-9")

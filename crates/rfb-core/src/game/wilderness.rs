@@ -2081,8 +2081,8 @@ mod tests {
 
     #[test]
     fn monster_candidates_exclude_the_actual_town_rectangle_only() {
-        let mut game = Game::new_warrens_journey_with_build(42, "demo.build.warrior")
-            .expect("Warrens journey should create");
+        let mut game =
+            Game::new_with_build(42, "demo.build.warrior").expect("Warrens journey should create");
         game.wilderness_position = Some(Position { x: 26, y: 39 });
         game.wilderness_view_offset = Position::default();
         let view = wilderness_view_positions();
@@ -2099,8 +2099,8 @@ mod tests {
 
     #[test]
     fn adjacent_cached_views_share_the_same_overlapping_terrain() {
-        let mut game = Game::new_warrens_journey_with_build(42, "demo.build.warrior")
-            .expect("Warrens journey should create");
+        let mut game =
+            Game::new_with_build(42, "demo.build.warrior").expect("Warrens journey should create");
         let position = game
             .wilderness_position
             .expect("Warrens journey should define a wilderness start");
@@ -2121,8 +2121,8 @@ mod tests {
 
     #[test]
     fn town_terrain_is_composed_after_the_seeded_cache() {
-        let mut game = Game::new_warrens_journey_with_build(42, "demo.build.warrior")
-            .expect("Warrens journey should create");
+        let mut game =
+            Game::new_with_build(42, "demo.build.warrior").expect("Warrens journey should create");
         let position = game
             .wilderness_position
             .expect("Warrens journey should define a wilderness start");
@@ -2145,8 +2145,8 @@ mod tests {
 
     #[test]
     fn town_terrain_stays_fixed_when_wilderness_seed_advances() {
-        let mut game = Game::new_warrens_journey_with_build(42, "demo.build.warrior")
-            .expect("Warrens journey should create");
+        let mut game =
+            Game::new_with_build(42, "demo.build.warrior").expect("Warrens journey should create");
         let anambar = Position { x: 26, y: 39 };
         let initial = game.cached_wilderness_view_terrain(anambar);
         game.advance_wilderness_generation();
@@ -2170,8 +2170,8 @@ mod tests {
 
     #[test]
     fn adjacent_view_crops_town_at_its_map_origin() {
-        let mut game = Game::new_warrens_journey_with_build(42, "demo.build.warrior")
-            .expect("Warrens journey should create");
+        let mut game =
+            Game::new_with_build(42, "demo.build.warrior").expect("Warrens journey should create");
         let anambar = Position { x: 26, y: 39 };
         let full = game.cached_wilderness_view_terrain(anambar);
 
@@ -2191,8 +2191,8 @@ mod tests {
 
     #[test]
     fn town_overlay_remains_continuous_when_revealed_from_each_direction() {
-        let mut game = Game::new_warrens_journey_with_build(42, "demo.build.warrior")
-            .expect("Warrens journey should create");
+        let mut game =
+            Game::new_with_build(42, "demo.build.warrior").expect("Warrens journey should create");
         let anambar = Position { x: 26, y: 39 };
         let approaches = [
             (
@@ -2253,8 +2253,8 @@ mod tests {
 
     #[test]
     fn birth_town_uses_the_continuous_wilderness_surface() {
-        let game = Game::new_warrens_journey_with_build(42, "demo.build.warrior")
-            .expect("Warrens journey should create");
+        let game =
+            Game::new_with_build(42, "demo.build.warrior").expect("Warrens journey should create");
 
         assert_eq!(game.current_floor_id, WILDERNESS_FLOOR_ID);
         assert_eq!((game.width, game.height), (96, 33));
@@ -2272,8 +2272,8 @@ mod tests {
 
     #[test]
     fn town_state_moves_to_backing_storage_and_returns_with_the_view() {
-        let mut game = Game::new_warrens_journey_with_build(42, "demo.build.warrior")
-            .expect("Warrens journey should create");
+        let mut game =
+            Game::new_with_build(42, "demo.build.warrior").expect("Warrens journey should create");
         let remembered = Position { x: 10, y: 10 };
         let actor_definition = game
             .content
@@ -2380,8 +2380,8 @@ mod tests {
 
     #[test]
     fn first_visible_anambar_slice_initializes_its_backing_floor() {
-        let mut game = Game::new_warrens_journey_with_build(42, "demo.build.warrior")
-            .expect("Warrens journey should create");
+        let mut game =
+            Game::new_with_build(42, "demo.build.warrior").expect("Warrens journey should create");
         game.store_visible_town_states();
         game.wilderness_position = Some(Position { x: 25, y: 39 });
         game.wilderness_view_offset = Position { x: 1, y: 0 };
@@ -2404,8 +2404,8 @@ mod tests {
 
     #[test]
     fn wilderness_terrain_cache_is_derived_bounded_and_seeded_by_generation() {
-        let mut game = Game::new_warrens_journey_with_build(42, "demo.build.warrior")
-            .expect("Warrens journey should create");
+        let mut game =
+            Game::new_with_build(42, "demo.build.warrior").expect("Warrens journey should create");
         let position = game
             .wilderness_position
             .expect("Warrens journey should define a wilderness start");
@@ -2447,8 +2447,8 @@ mod tests {
 
     #[test]
     fn world_movement_rejects_edges_but_allows_unmounted_deep_water_entry() {
-        let game = Game::new_warrens_journey_with_build(42, "demo.build.warrior")
-            .expect("Warrens journey should create");
+        let game =
+            Game::new_with_build(42, "demo.build.warrior").expect("Warrens journey should create");
 
         assert!(!game.player_can_enter_world_cell(Position { x: 0, y: 0 }));
         assert!(game.player_can_enter_world_cell(Position { x: 1, y: 1 }));
@@ -2457,8 +2457,8 @@ mod tests {
 
     #[test]
     fn world_travel_uses_eight_direction_pathfinding() {
-        let game = Game::new_warrens_journey_with_build(42, "demo.build.warrior")
-            .expect("Warrens journey should create");
+        let game =
+            Game::new_with_build(42, "demo.build.warrior").expect("Warrens journey should create");
 
         assert_eq!(
             game.next_world_travel_direction(Position { x: 29, y: 52 }),
@@ -2476,8 +2476,8 @@ mod tests {
 
     #[test]
     fn low_level_interesting_sites_paint_the_authoritative_ruined_home() {
-        let mut game = Game::new_warrens_journey_with_build(42, "demo.build.warrior")
-            .expect("Warrens journey should create");
+        let mut game =
+            Game::new_with_build(42, "demo.build.warrior").expect("Warrens journey should create");
         let site = (0..66)
             .flat_map(|y| (0..99).map(move |x| Position { x, y }))
             .find(|position| {

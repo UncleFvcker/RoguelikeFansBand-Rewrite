@@ -1,12 +1,12 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "id": "technique.save-round-trip",
   "category": "techniques",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
   "preconditions": {
-    "world": "demo.world.original-v1",
+    "world": "demo.world.middle-earth",
     "debugClearEntities": true,
     "playerBuildId": "demo.build.duelist",
     "playerResources": [
@@ -49,11 +49,220 @@
       "turn": 1,
       "worldTick": 10,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 3,
-      "floorId": "demo.floor.surface",
+      "rngDrawCounter": 138,
+      "floorId": "core.floor.wilderness",
+      "town": {
+        "id": "demo.town.outpost",
+        "nameKey": "town-demo-outpost-name",
+        "descriptionKey": "town-demo-outpost-description",
+        "floorId": "demo.floor.surface",
+        "visited": true
+      },
+      "shops": [
+        {
+          "id": "demo.shop.outpost-alchemist",
+          "nameKey": "shop-demo-outpost-alchemist-name",
+          "descriptionKey": "shop-demo-outpost-alchemist-description",
+          "category": "alchemist",
+          "entrancePosition": {
+            "x": 53,
+            "y": 13
+          },
+          "entranceTerrainId": "demo.terrain.alchemist-entrance",
+          "visited": false,
+          "playerAtEntrance": false,
+          "owner": {
+            "id": "demo.shop-owner.outpost-ilyra-moss",
+            "nameKey": "shop-owner-demo-outpost-ilyra-moss-name",
+            "raceId": "demo.race.rfb-human",
+            "greedPercent": 111,
+            "purchasePriceCap": 10000,
+            "priceFactorPercent": 127
+          },
+          "stock": [],
+          "sellQuotes": []
+        },
+        {
+          "id": "demo.shop.outpost-armoury",
+          "nameKey": "shop-demo-outpost-armoury-name",
+          "descriptionKey": "shop-demo-outpost-armoury-description",
+          "category": "armoury",
+          "entrancePosition": {
+            "x": 30,
+            "y": 19
+          },
+          "entranceTerrainId": "demo.terrain.armoury-entrance",
+          "visited": false,
+          "playerAtEntrance": false,
+          "owner": {
+            "id": "demo.shop-owner.outpost-dagro",
+            "nameKey": "shop-owner-demo-outpost-dagro-name",
+            "raceId": "demo.race.rfb-human",
+            "greedPercent": 111,
+            "purchasePriceCap": 20000,
+            "priceFactorPercent": 127
+          },
+          "stock": [],
+          "sellQuotes": []
+        },
+        {
+          "id": "demo.shop.outpost-black-market",
+          "nameKey": "shop-demo-outpost-black-market-name",
+          "descriptionKey": "shop-demo-outpost-black-market-description",
+          "category": "black-market",
+          "entrancePosition": {
+            "x": 55,
+            "y": 19
+          },
+          "entranceTerrainId": "demo.terrain.black-market-entrance",
+          "visited": false,
+          "playerAtEntrance": false,
+          "owner": {
+            "id": "demo.shop-owner.outpost-topi",
+            "nameKey": "shop-owner-demo-outpost-topi-name",
+            "raceId": "demo.race.rfb-human",
+            "greedPercent": 150,
+            "purchasePriceCap": 30000,
+            "priceFactorPercent": 171
+          },
+          "stock": [],
+          "sellQuotes": []
+        },
+        {
+          "id": "demo.shop.outpost-bookstore",
+          "nameKey": "shop-demo-outpost-bookstore-name",
+          "descriptionKey": "shop-demo-outpost-bookstore-description",
+          "category": "bookstore",
+          "entrancePosition": {
+            "x": 55,
+            "y": 13
+          },
+          "entranceTerrainId": "demo.terrain.bookstore-entrance",
+          "visited": false,
+          "playerAtEntrance": false,
+          "owner": {
+            "id": "demo.shop-owner.outpost-doraf",
+            "nameKey": "shop-owner-demo-outpost-doraf-name",
+            "raceId": "demo.race.rfb-human",
+            "greedPercent": 108,
+            "purchasePriceCap": 10000,
+            "priceFactorPercent": 123
+          },
+          "stock": [],
+          "sellQuotes": []
+        },
+        {
+          "id": "demo.shop.outpost-general-store",
+          "nameKey": "shop-demo-outpost-general-store-name",
+          "descriptionKey": "shop-demo-outpost-general-store-description",
+          "category": "general-store",
+          "entrancePosition": {
+            "x": 32,
+            "y": 13
+          },
+          "entranceTerrainId": "demo.terrain.general-store-entrance",
+          "visited": false,
+          "playerAtEntrance": false,
+          "owner": {
+            "id": "demo.shop-owner.outpost-mara-venn",
+            "nameKey": "shop-owner-demo-outpost-mara-venn-name",
+            "raceId": "demo.race.rfb-human",
+            "greedPercent": 108,
+            "purchasePriceCap": 500,
+            "priceFactorPercent": 123
+          },
+          "stock": [],
+          "sellQuotes": []
+        },
+        {
+          "id": "demo.shop.outpost-magic-shop",
+          "nameKey": "shop-demo-outpost-magic-shop-name",
+          "descriptionKey": "shop-demo-outpost-magic-shop-description",
+          "category": "magic-shop",
+          "entrancePosition": {
+            "x": 57,
+            "y": 13
+          },
+          "entranceTerrainId": "demo.terrain.magic-shop-entrance",
+          "visited": false,
+          "playerAtEntrance": false,
+          "owner": {
+            "id": "demo.shop-owner.outpost-edrin-sol",
+            "nameKey": "shop-owner-demo-outpost-edrin-sol-name",
+            "raceId": "demo.race.rfb-human",
+            "greedPercent": 110,
+            "purchasePriceCap": 20000,
+            "priceFactorPercent": 125
+          },
+          "stock": [],
+          "sellQuotes": []
+        },
+        {
+          "id": "demo.shop.outpost-temple",
+          "nameKey": "shop-demo-outpost-temple-name",
+          "descriptionKey": "shop-demo-outpost-temple-description",
+          "category": "temple",
+          "entrancePosition": {
+            "x": 45,
+            "y": 19
+          },
+          "entranceTerrainId": "demo.terrain.temple-entrance",
+          "visited": false,
+          "playerAtEntrance": false,
+          "owner": {
+            "id": "demo.shop-owner.outpost-aldren-vale",
+            "nameKey": "shop-owner-demo-outpost-aldren-vale-name",
+            "raceId": "demo.race.rfb-human",
+            "greedPercent": 109,
+            "purchasePriceCap": 30000,
+            "priceFactorPercent": 124
+          },
+          "stock": [],
+          "sellQuotes": []
+        },
+        {
+          "id": "demo.shop.outpost-weaponsmith",
+          "nameKey": "shop-demo-outpost-weaponsmith-name",
+          "descriptionKey": "shop-demo-outpost-weaponsmith-description",
+          "category": "weaponsmith",
+          "entrancePosition": {
+            "x": 34,
+            "y": 19
+          },
+          "entranceTerrainId": "demo.terrain.weaponsmith-entrance",
+          "visited": false,
+          "playerAtEntrance": false,
+          "owner": {
+            "id": "demo.shop-owner.outpost-arndal",
+            "nameKey": "shop-owner-demo-outpost-arndal-name",
+            "raceId": "demo.race.rfb-human",
+            "greedPercent": 110,
+            "purchasePriceCap": 20000,
+            "priceFactorPercent": 125
+          },
+          "stock": [],
+          "sellQuotes": []
+        }
+      ],
+      "homes": [
+        {
+          "id": "demo.town-facility.outpost-home",
+          "nameKey": "town-facility-demo-outpost-home-name",
+          "descriptionKey": "town-facility-demo-outpost-home-description",
+          "entrancePosition": {
+            "x": 42,
+            "y": 13
+          },
+          "entranceTerrainId": "demo.terrain.home-entrance",
+          "visited": false,
+          "playerAtEntrance": false,
+          "storedItems": [],
+          "depositItems": []
+        }
+      ],
       "playerPosition": {
-        "x": 3,
-        "y": 3
+        "x": 44,
+        "y": 16
       },
       "playerHp": 27,
       "playerMaxHp": 27,
@@ -61,7 +270,7 @@
       "playerDefense": 1,
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
-      "playerCarriedWeightTenthsPound": 30,
+      "playerCarriedWeightTenthsPound": 80,
       "playerCarryCapacityTenthsPound": 1100,
       "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 0,
@@ -209,18 +418,6 @@
           }
         ]
       },
-      "playerBuild": {
-        "buildId": "demo.build.duelist",
-        "buildNameKey": "build-demo-duelist-name",
-        "raceId": "demo.race.human",
-        "raceNameKey": "race-demo-human-name",
-        "classId": "demo.class.duelist",
-        "classNameKey": "class-demo-duelist-name",
-        "personalityId": "demo.personality.combat",
-        "personalityNameKey": "personality-demo-combat-name",
-        "lifePercent": 108,
-        "experiencePercent": 110
-      },
       "playerResources": [
         {
           "id": "demo.resource.tempo",
@@ -237,124 +434,24 @@
       "playerAbilities": [
         {
           "id": "demo.ability.crescent-cut",
-          "nameKey": "ability-demo-crescent-cut-name",
-          "descriptionKey": "ability-demo-crescent-cut-description",
-          "minimumLevel": 1,
-          "innate": true,
-          "resourceId": "demo.resource.tempo",
-          "baseResourceCost": 4,
-          "resourceCost": 7,
-          "failurePercent": 2,
           "proficiency": 128,
-          "proficiencyCap": 1600,
-          "proficiencyRank": "unskilled",
-          "castCount": 1,
-          "failCount": 0,
-          "cooldownRemaining": 0,
-          "cooldownTurns": 0,
-          "effects": [
-            {
-              "type": "damage",
-              "damageDice": 3,
-              "damageSides": 4,
-              "damageBonus": 0,
-              "damageType": "physical"
-            }
-          ],
-          "targetSpec": {
-            "modes": [
-              "direction"
-            ],
-            "range": 1,
-            "requiresLineOfEffect": true
-          },
-          "learned": false,
-          "canStudy": false,
-          "canForget": false,
-          "canCast": false
+          "castCount": 1
         },
         {
-          "id": "demo.ability.surging-tempo",
-          "nameKey": "ability-demo-surging-tempo-name",
-          "descriptionKey": "ability-demo-surging-tempo-description",
-          "minimumLevel": 1,
-          "innate": true,
-          "resourceId": "demo.resource.tempo",
-          "baseResourceCost": 6,
-          "resourceCost": 10,
-          "failurePercent": 2,
-          "proficiency": 0,
-          "proficiencyCap": 1600,
-          "proficiencyRank": "unskilled",
-          "castCount": 0,
-          "failCount": 0,
-          "cooldownRemaining": 0,
-          "cooldownTurns": 0,
-          "effects": [
-            {
-              "type": "apply-status",
-              "statusKindId": "rfb.status.haste",
-              "intensity": 1,
-              "durationTicks": 25,
-              "durationDice": 0,
-              "durationSides": 0,
-              "stacking": "extend",
-              "grantedModifiers": {
-                "attack": 0,
-                "defense": 0,
-                "maxHp": 0,
-                "strength": 0,
-                "intelligence": 0,
-                "wisdom": 0,
-                "dexterity": 0,
-                "constitution": 0,
-                "charisma": 0,
-                "speed": 0
-              },
-              "grantedEquipmentBonuses": {
-                "meleeAttacks": 0,
-                "meleeSkill": 0,
-                "meleeDamage": 0,
-                "rangedSkill": 0,
-                "throwingSkill": 0,
-                "deviceSkill": 0,
-                "savingThrowSkill": 0,
-                "stealthSkill": 0,
-                "searchSkill": 0,
-                "perceptionSkill": 0,
-                "disarmingSkill": 0,
-                "diggingSkill": 0,
-                "infravision": 0,
-                "lightRadius": 0
-              },
-              "grantsWallPassage": false,
-              "incomingDamagePercent": 100
-            }
-          ],
-          "targetSpec": {
-            "modes": [
-              "self"
-            ],
-            "range": 0,
-            "requiresLineOfEffect": false
-          },
-          "learned": false,
-          "canStudy": false,
-          "canForget": false,
-          "canCast": false
+          "id": "demo.ability.surging-tempo"
         }
       ],
       "entityCount": 0,
-      "groundItemCount": 5,
+      "groundItemCount": 2,
       "equipmentCount": 1,
       "equipment": [
         {
           "id": "generated.item.1",
-          "kindId": "demo.item.echo-blade",
-          "displayNameKey": "item-demo-echo-blade-name",
+          "kindId": "demo.item.short-sword",
+          "displayNameKey": "item-demo-short-sword-name",
           "knowledge": "aware",
           "quantity": 1,
-          "weightTenthsPound": 30,
+          "weightTenthsPound": 80,
           "slotId": "weapon",
           "modifiers": {
             "attack": 0,
@@ -371,12 +468,12 @@
           "identification": "identified",
           "quality": "ordinary",
           "meleeProfile": {
-            "attacks": 2,
-            "toHit": 10,
-            "toDamage": 1,
+            "attacks": 1,
+            "toHit": 0,
+            "toDamage": 0,
             "damage": {
               "dice": 1,
-              "sides": 2,
+              "sides": 8,
               "damageType": "physical"
             },
             "sourceItemId": "generated.item.1"
@@ -385,23 +482,11 @@
       ],
       "itemPropertyKnowledge": [
         {
-          "itemId": "demo.item.echo-blade.1",
+          "itemId": "demo.item.warrens-light-healing-potion.1",
           "discovered": true
         },
         {
-          "itemId": "demo.item.echo-charm.1",
-          "discovered": true
-        },
-        {
-          "itemId": "demo.item.luminous-shard.1",
-          "discovered": true
-        },
-        {
-          "itemId": "demo.item.resonance-pellet.1",
-          "discovered": true
-        },
-        {
-          "itemId": "demo.item.resonance-sling.1",
+          "itemId": "demo.item.warrens-short-sword.1",
           "discovered": true
         },
         {
@@ -411,80 +496,15 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 3,
+      "nextItemInstanceSerial": 160,
       "nextGoldPileSerial": 1,
-      "terrainInteractions": [
-        {
-          "kind": "dig-terrain",
-          "direction": "south-west",
-          "position": {
-            "x": 2,
-            "y": 4
-          },
-          "terrainId": "demo.terrain.echo-rubble",
-          "requiresCheck": true,
-          "available": true
-        }
-      ],
-      "tasks": [
-        {
-          "taskId": "demo.task.echo-bounty",
-          "floorId": "demo.floor.echo-bounty-rift",
-          "nameKey": "floor-demo-echo-bounty-rift-name",
-          "descriptionKey": "terrain-demo-bounty-rift-description",
-          "status": "available",
-          "current": 0,
-          "required": 2,
-          "stage": 1,
-          "stages": 1,
-          "retakesUsed": 0,
-          "maxRetakes": 1
-        },
-        {
-          "taskId": "demo.task.echo-chain",
-          "floorId": "demo.floor.echo-chain-rift",
-          "nameKey": "floor-demo-echo-chain-rift-name",
-          "descriptionKey": "terrain-demo-chain-rift-description",
-          "status": "available",
-          "current": 0,
-          "required": 1,
-          "stage": 1,
-          "stages": 3,
-          "retakesUsed": 0,
-          "maxRetakes": 2
-        },
-        {
-          "taskId": "demo.task.echo-hunt",
-          "floorId": "demo.floor.echo-hunt-rift",
-          "nameKey": "floor-demo-echo-hunt-rift-name",
-          "descriptionKey": "terrain-demo-hunt-rift-description",
-          "status": "available",
-          "current": 0,
-          "required": 1,
-          "stage": 1,
-          "stages": 1,
-          "retakesUsed": 0
-        },
-        {
-          "taskId": "demo.task.echo-rift",
-          "floorId": "demo.floor.echo-task-rift",
-          "nameKey": "floor-demo-echo-task-rift-name",
-          "descriptionKey": "terrain-demo-task-rift-description",
-          "status": "available",
-          "current": 0,
-          "required": 1,
-          "stage": 1,
-          "stages": 1,
-          "retakesUsed": 0
-        }
-      ],
       "campaign": {
         "status": "active",
         "score": 0,
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "428572749515cea9aa2dd062a0099caacdca14b9621ef1a99c4dd2ea7514cd77"
+      "stateHash": "0272af5d457097fd9de34ea328a653fb076c7296634bc85767d7066bd51c2344"
     },
     "events": [
       {
@@ -493,6 +513,6 @@
         "args": {}
       }
     ],
-    "saveRoundTripStateHash": "428572749515cea9aa2dd062a0099caacdca14b9621ef1a99c4dd2ea7514cd77"
+    "saveRoundTripStateHash": "0272af5d457097fd9de34ea328a653fb076c7296634bc85767d7066bd51c2344"
   }
 }

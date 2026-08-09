@@ -61,10 +61,10 @@ test("Fluent formats locale-specific grammar and plural selection", () => {
   );
   assert.equal(
     localization.format("message-item-pickup-success", {
-      target: "luminous shard",
+      target: "Ration of Food",
       quantity: 3,
     }),
-    "You pick up luminous shard ×3.",
+    "You pick up Ration of Food ×3.",
   );
 
   localization.setLocale("zh-CN");

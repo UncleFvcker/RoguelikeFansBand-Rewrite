@@ -295,22 +295,22 @@ mod tests {
     fn bundled_resources_format_in_both_languages() {
         let mut localizer = Localizer::new(Locale::EnUs).expect("resources should load");
         let mut args = FluentArgs::new();
-        args.set("target", "luminous shard");
+        args.set("target", "ration of food");
         args.set("quantity", 3);
         assert_eq!(
             localizer
                 .format("message-item-pickup-success", Some(&args))
                 .expect("English should format"),
-            "You pick up luminous shard ×3."
+            "You pick up ration of food ×3."
         );
 
         localizer.set_locale(Locale::ZhCn);
-        args.set("target", "发光碎片");
+        args.set("target", "食物口粮");
         assert_eq!(
             localizer
                 .format("message-item-pickup-success", Some(&args))
                 .expect("Chinese should format"),
-            "你将 3 个发光碎片收入了背包。"
+            "你将 3 个食物口粮收入了背包。"
         );
     }
 
@@ -322,7 +322,7 @@ mod tests {
                 "app-title",
                 "controls-numpad",
                 "message-combat-hit",
-                "item-demo-luminous-shard-name",
+                "item-demo-ration-of-food-name",
             ] {
                 assert!(localizer.has_message(locale, key), "{locale:?}/{key}");
             }
@@ -372,7 +372,7 @@ mod tests {
             names
                 .item_name(
                     &content,
-                    "demo.item.echo-blade",
+                    "demo.item.short-sword",
                     &[
                         "demo.affix.vampiric".to_owned(),
                         "demo.affix.vampiric".to_owned(),
@@ -380,7 +380,7 @@ mod tests {
                     None,
                 )
                 .expect("name should resolve"),
-            "回声刃 吸血"
+            "短剑 吸血"
         );
         assert_eq!(
             names
@@ -417,12 +417,12 @@ mod tests {
             names
                 .item_name(
                     &content,
-                    "demo.item.echo-blade",
+                    "demo.item.short-sword",
                     &["demo.affix.vampiric".to_owned()],
                     None,
                 )
                 .expect("name should resolve"),
-            "echo blade vampiric"
+            "Short Sword vampiric"
         );
         assert_eq!(
             names
@@ -435,12 +435,6 @@ mod tests {
                 .item_name(&content, "demo.item.sixfold-provision", &[], None)
                 .expect("RFB matching name should resolve"),
             "Mushroom of Restoring"
-        );
-        assert_eq!(
-            names
-                .item_name(&content, "demo.item.resonance-pellet", &[], None)
-                .expect("rewrite matching alias should resolve"),
-            "Resonance Shot"
         );
         assert_eq!(
             names

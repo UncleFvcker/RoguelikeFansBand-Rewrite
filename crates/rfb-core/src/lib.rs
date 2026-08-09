@@ -16,8 +16,5 @@ mod state;
 pub mod stats;
 
 pub use error::CoreError;
-pub use game::{
-    BUILT_IN_WORLD_ID, Game, STATE_HASH_SCHEMA_VERSION, WARRENS_JOURNEY_WORLD_ID,
-    load_built_in_content,
-};
+pub use game::{DEFAULT_WORLD_ID, Game, STATE_HASH_SCHEMA_VERSION, load_built_in_content};
 pub use rng::{RNG_ALGORITHM, RfbRng};

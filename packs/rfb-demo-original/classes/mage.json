@@ -31,21 +31,18 @@
     "beamChanceBonus": 0,
     "abilityBookIds": [
       "demo.ability-book.stench-of-death",
-      "demo.ability-book.echo-primer",
       "demo.ability-book.sepulchral-ways",
       "demo.ability-book.black-channels",
-      "demo.ability-book.necronomicon",
-      "demo.ability-book.stillwater-notes"
+      "demo.ability-book.necronomicon"
     ]
   },
   "startingItems": [
-    { "itemKindId": "demo.item.echo-charm", "quantity": 1, "equipped": true },
-    { "itemKindId": "demo.item.luminous-shard", "quantity": 2 },
-    { "itemKindId": "demo.item.echo-primer", "quantity": 1 },
+    { "itemKindId": "demo.item.dagger", "quantity": 1, "equipped": true },
+    { "itemKindId": "demo.item.robe", "quantity": 1, "equipped": true },
+    { "itemKindId": "demo.item.stench-of-death", "quantity": 1 },
     { "itemKindId": "demo.item.sepulchral-ways", "quantity": 1 },
     { "itemKindId": "demo.item.black-channels", "quantity": 1 },
-    { "itemKindId": "demo.item.necronomicon", "quantity": 1 },
-    { "itemKindId": "demo.item.stillwater-notes", "quantity": 1 }
+    { "itemKindId": "demo.item.necronomicon", "quantity": 1 }
   ],
   "favoriteWeaponTags": ["weapon", "shooter"],
   "ickyEquipmentSlots": ["gloves"],

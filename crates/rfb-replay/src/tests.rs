@@ -1,0 +1,242 @@
+// SPDX-License-Identifier: MPL-2.0
+
+use rfb_protocol::{
+    Direction, GameCommand, MapScaleDto, MonsterPackBehaviorDto, Position, TargetSelection,
+};
+
+use super::*;
+
+#[test]
+fn combat_replay_records_authoritative_rng_draws() {
+    let initial = Game::new(42);
+    let mut recorder = ReplayRecorder::new(initial.clone());
+    for command in path_to_monster_and_three_attacks() {
+        recorder.dispatch(command).expect("command should execute");
+    }
+    let (final_game, replay) = recorder.finish();
+
+    assert!(final_game.rng_draw_counter() > 0);
+    assert_eq!(replay.checkpoints.len(), 1);
+    assert_eq!(
+        replay.checkpoints[0].rng_draw_counter,
+        final_game.rng_draw_counter()
+    );
+    verify(&replay, initial).expect("combat replay should verify");
+}
+
+#[test]
+fn item_replay_survives_shop_save_reload() {
+    let mut payload = Game::new_with_build(42, "demo.build.warrior")
+        .expect("warrior game should start")
+        .to_save();
+    payload.entities.clear();
+    payload.carried_items.clear();
+    payload.player.position = Position { x: 32, y: 13 };
+    payload
+        .shop_states
+        .iter_mut()
+        .find(|state| state.shop_id == "demo.shop.outpost-general-store")
+        .expect("General Store state should exist")
+        .visited = true;
+    let initial = Game::from_save(payload).expect("shop precondition should restore");
+    let mut recorder = ReplayRecorder::new(initial.clone());
+    let shop = recorder
+        .game()
+        .snapshot()
+        .shops
+        .into_iter()
+        .find(|shop| shop.id == "demo.shop.outpost-general-store")
+        .expect("General Store should be projected");
+    let stock_item_id = shop
+        .stock
+        .first()
+        .expect("General Store should stock an item")
+        .id
+        .clone();
+    recorder
+        .dispatch(GameCommand::BuyFromShop {
+            shop_id: shop.id,
+            item_id: stock_item_id,
+            quantity: 1,
+        })
+        .expect("purchase should execute");
+    let (midpoint, replay) = recorder.finish();
+    verify(&replay, initial).expect("purchase replay should verify");
+
+    let saved = midpoint.to_save();
+    let restored = Game::from_save(saved.clone()).expect("shop state should restore");
+    let replay_initial = Game::from_save(saved).expect("replay state should restore");
+    let ration_item_id = restored
+        .snapshot()
+        .inventory
+        .iter()
+        .find(|item| item.kind_id == "demo.item.ration-of-food")
+        .expect("warrior should carry rations")
+        .id
+        .clone();
+    let mut recorder = ReplayRecorder::new(restored);
+    recorder
+        .dispatch(GameCommand::SellToShop {
+            shop_id: "demo.shop.outpost-general-store".to_owned(),
+            item_id: ration_item_id,
+            quantity: 1,
+        })
+        .expect("sale should execute");
+    let (final_game, replay) = recorder.finish();
+    let verification = verify(&replay, replay_initial).expect("sale replay should verify");
+
+    assert_eq!(verification.commands_verified, 1);
+    assert_eq!(verification.final_state_hash, final_game.state_hash());
+}
+
+#[test]
+fn ability_replay_preserves_duelist_runtime_state() {
+    let mut payload = Game::new_with_build(42, "demo.build.duelist")
+        .expect("duelist game should start")
+        .to_save();
+    payload.entities.clear();
+    payload.carried_items.clear();
+    payload
+        .player
+        .resources
+        .iter_mut()
+        .find(|resource| resource.id == "demo.resource.tempo")
+        .expect("duelist should own tempo")
+        .current = 20;
+    let mut initial = Game::from_save(payload).expect("ability precondition should restore");
+    initial.debug_set_ability_casts_succeed(true);
+    let mut recorder = ReplayRecorder::new(initial.clone());
+    recorder
+        .dispatch(GameCommand::CastAbility {
+            ability_id: "demo.ability.surging-tempo".to_owned(),
+            target: TargetSelection::SelfTarget,
+        })
+        .expect("technique should execute");
+    let (final_game, replay) = recorder.finish();
+    let verification = verify(&replay, initial).expect("ability replay should verify");
+    let snapshot = final_game.snapshot();
+
+    assert!(
+        snapshot
+            .player
+            .statuses
+            .iter()
+            .any(|status| status.kind_id == "rfb.status.haste")
+    );
+    assert!(
+        snapshot
+            .player
+            .abilities
+            .iter()
+            .find(|ability| ability.id == "demo.ability.surging-tempo")
+            .is_some_and(|ability| ability.cast_count == 1)
+    );
+    assert_eq!(verification.final_state_hash, final_game.state_hash());
+}
+
+#[test]
+fn floor_replay_preserves_world_map_state() {
+    let initial =
+        Game::new_with_build(42, "demo.build.warrior").expect("warrior game should start");
+    let mut recorder = ReplayRecorder::new(initial.clone());
+    let update = recorder
+        .dispatch(GameCommand::EnterWorldMap {
+            leave_pets: false,
+            cancel_recall: false,
+        })
+        .expect("world map should open");
+    assert_eq!(update.map_scale, MapScaleDto::World);
+    let (final_game, replay) = recorder.finish();
+
+    let verification = verify(&replay, initial).expect("world map replay should verify");
+    assert_eq!(verification.commands_verified, 1);
+    assert_eq!(verification.final_state_hash, final_game.state_hash());
+    assert_eq!(final_game.snapshot().map_scale, MapScaleDto::World);
+}
+
+#[test]
+fn replay_tampering_is_rejected() {
+    let initial = quiet_game(42);
+    let mut recorder = ReplayRecorder::new(initial.clone());
+    dispatch_waits(&mut recorder, 3);
+    let (_, replay) = recorder.finish();
+
+    let mut altered_replay = replay.clone();
+    altered_replay.commands[0].command = GameCommand::Move {
+        direction: Direction::East,
+    };
+    assert!(matches!(
+        verify(&altered_replay, initial),
+        Err(ReplayError::CheckpointMismatch { .. })
+    ));
+
+    let mut bytes = encode(&replay).expect("replay should encode");
+    let last = bytes.len() - 1;
+    bytes[last] ^= 0x01;
+    assert!(matches!(decode(&bytes), Err(ReplayError::ChecksumMismatch)));
+}
+
+#[test]
+fn long_replay_records_periodic_and_final_checkpoints() {
+    let initial = quiet_game(42);
+    let mut recorder = ReplayRecorder::new(initial.clone());
+    dispatch_waits(&mut recorder, 250);
+    let (final_game, replay) = recorder.finish();
+
+    assert_eq!(
+        replay
+            .checkpoints
+            .iter()
+            .map(|checkpoint| checkpoint.after_command_seq)
+            .collect::<Vec<_>>(),
+        vec![100, 200, 250]
+    );
+    let verification = verify(&replay, initial).expect("long replay should verify");
+    assert_eq!(verification.commands_verified, 250);
+    assert_eq!(verification.checkpoints_verified, 3);
+    assert_eq!(verification.final_state_hash, final_game.state_hash());
+}
+
+fn dispatch_waits(recorder: &mut ReplayRecorder, count: usize) {
+    for _ in 0..count {
+        recorder
+            .dispatch(GameCommand::Wait)
+            .expect("wait should execute");
+    }
+}
+
+fn quiet_game(seed: u64) -> Game {
+    let mut payload = Game::new(seed).to_save();
+    payload.entities.retain(|entity| {
+        entity
+            .pack
+            .as_ref()
+            .is_some_and(|pack| pack.behavior == MonsterPackBehaviorDto::GuardPosition)
+    });
+    payload.carried_items.clear();
+    Game::from_save(payload).expect("quiet replay fixture should restore")
+}
+
+fn path_to_monster_and_three_attacks() -> Vec<GameCommand> {
+    let mut commands = vec![
+        GameCommand::Move {
+            direction: Direction::East,
+        };
+        4
+    ];
+    commands.push(GameCommand::Move {
+        direction: Direction::South,
+    });
+    commands.extend([
+        GameCommand::Move {
+            direction: Direction::SouthEast,
+        },
+        GameCommand::Move {
+            direction: Direction::SouthEast,
+        },
+        GameCommand::Move {
+            direction: Direction::SouthEast,
+        },
+    ]);
+    commands
+}

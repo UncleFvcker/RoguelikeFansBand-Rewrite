@@ -9,8 +9,6 @@ use serde::Serialize;
 use tauri::Manager;
 
 use rfb_core::Game;
-#[cfg(feature = "webdriver")]
-use rfb_protocol::BodySlotSaveDto;
 use rfb_protocol::{
     CharacterSummary, GameCommand, GameCommandEnvelope, GameSnapshot, GameUpdate, PROTOCOL_VERSION,
     SAVE_HEADER_SCHEMA_VERSION, SaveHeaderV1,
@@ -160,41 +158,8 @@ impl AppState {
     }
 }
 
-#[cfg(not(feature = "webdriver"))]
 fn initial_game(seed: u64, build_id: &str) -> Result<Game, String> {
-    Game::new_warrens_journey_with_build(seed, build_id).map_err(|error| error.to_string())
-}
-
-#[cfg(feature = "webdriver")]
-fn initial_game(seed: u64, build_id: &str) -> Result<Game, String> {
-    if std::env::var_os("RFB_E2E_WORLD").as_deref() == Some(std::ffi::OsStr::new("warrens")) {
-        return Game::new_warrens_journey_with_build(seed, build_id)
-            .map_err(|error| error.to_string());
-    }
-    // The existing webdriver suite is a debug-only technical regression harness
-    // over the original lab. Gate 6 replaces its scripted state assumptions with
-    // the normal Warrens journey; production sessions already use Warrens above.
-    // Its historical charm scenario needs one debug-only slot that is not part
-    // of Warrior's production RFB Standard body.
-    let mut payload = Game::new_with_build(seed, build_id)
-        .map_err(|error| error.to_string())?
-        .to_save();
-    payload.entities.clear();
-    payload.carried_items.clear();
-    payload.inventory.clear();
-    payload.equipment.clear();
-    payload.item_knowledge.clear();
-    payload.item_property_knowledge.clear();
-    payload.player.body_slots.push(BodySlotSaveDto {
-        id: "charm".to_owned(),
-        slot_type: "charm".to_owned(),
-    });
-    payload
-        .dungeon_states
-        .iter_mut()
-        .filter(|state| state.dungeon_id == "demo.dungeon.resonance-descent")
-        .for_each(|state| state.entrance_guardian_defeated = Some(true));
-    Game::from_save(payload).map_err(|error| error.to_string())
+    Game::new_with_build(seed, build_id).map_err(|error| error.to_string())
 }
 
 #[derive(Serialize)]
@@ -521,8 +486,8 @@ mod tests {
             .expect("save should restore in a new native session");
 
         assert_eq!(verification.commands_verified, 1);
-        assert_eq!(initial.world_id, rfb_core::WARRENS_JOURNEY_WORLD_ID);
-        assert_eq!(saved_payload.world_id, rfb_core::WARRENS_JOURNEY_WORLD_ID);
+        assert_eq!(initial.world_id, rfb_core::DEFAULT_WORLD_ID);
+        assert_eq!(saved_payload.world_id, rfb_core::DEFAULT_WORLD_ID);
         assert_eq!(verification.final_state_hash, update.state_hash);
         assert_eq!(restored.revision, update.revision);
         assert_eq!(restored.last_command_seq, update.command_seq);

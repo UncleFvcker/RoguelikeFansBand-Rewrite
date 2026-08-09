@@ -78,7 +78,7 @@ test("the object list keeps Shift+O distinct from lowercase open-door input", ()
 
 test("connection actions distinguish the Warrens entrance and generated stairs", () => {
   const state = new AppState();
-  state.worldId = "demo.world.warrens-journey";
+  state.worldId = "demo.world.middle-earth";
   state.contentGlyphs.set("demo.terrain.stairs-down", ">");
   state.contentGlyphs.set("demo.terrain.stairs-up", "<");
   state.status = {

@@ -16,7 +16,7 @@
   "baseHp": 2,
   "skillSetId": "demo.skill-set.artificer",
   "deviceRechargeProfile": {
-    "resourceId": "demo.resource.resonance",
+    "resourceId": "demo.resource.mana",
     "governingAttribute": "intelligence",
     "baseCapacity": 8,
     "capacityPerLevel": 2,
@@ -25,9 +25,9 @@
     "sourceItemDestructionOneIn": 3
   },
   "startingItems": [
-    { "itemKindId": "demo.item.echo-charm", "quantity": 1, "equipped": true },
-    { "itemKindId": "demo.item.luminous-shard", "quantity": 3 },
-    { "itemKindId": "demo.item.resonance-stabilizer", "quantity": 1 }
+    { "itemKindId": "demo.item.dagger", "quantity": 1, "equipped": true },
+    { "itemKindId": "demo.item.resonance-rod", "quantity": 1 },
+    { "itemKindId": "demo.item.light-healing-potion", "quantity": 1 }
   ],
   "favoriteWeaponTags": ["weapon", "shooter"],
   "tags": ["device-user", "prototype"]

@@ -62,29 +62,3 @@ fn a_successful_bash_moves_the_monster_into_the_doorway() {
         [DomainEvent::DoorBashedOpen { .. }]
     ));
 }
-
-#[test]
-fn unlocking_a_locked_door_changes_it_to_closed_without_moving() {
-    let (mut game, origin, door) =
-        door_game("demo.actor.warrens-keeper", "demo.terrain.door-locked");
-    game.entities[0].hp = 150;
-    game.entities[0].max_hp = 150;
-    let seed = (0..10_000)
-        .find(|seed| RfbRng::seeded(*seed).bounded(15) > 1)
-        .expect("a successful unlock seed should exist");
-    game.rng = RfbRng::seeded(seed);
-    let mut events = Vec::new();
-
-    let outcome = game
-        .move_entity(0, door, &mut events, &mut BTreeSet::new(), &mut Vec::new())
-        .expect("unlock action should resolve");
-
-    assert_eq!(outcome, ActorStepOutcome::Interacted);
-    assert_eq!(game.entities[0].position, origin);
-    assert_eq!(game.terrain_at(door), "demo.terrain.door-closed");
-    assert_eq!(game.rng.draw_counter, 1);
-    assert!(matches!(
-        events.as_slice(),
-        [DomainEvent::DoorUnlocked { .. }]
-    ));
-}

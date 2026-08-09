@@ -45,7 +45,7 @@ test("mutation aura events use the typed damage element", () => {
   const event = {
     kind: "mutation.aura-hit",
     messageKey: "mutation-aura-hit",
-    args: { target: "demo.actor.echo-hound", damage: "4" },
+    args: { target: "demo.actor.small-kobold", damage: "4" },
     outcome: {
       type: "damage",
       resolution: {
@@ -59,9 +59,9 @@ test("mutation aura events use the typed damage element", () => {
     },
   };
 
-  assert.equal(formatter.formatEvent(event), "Your fire aura hits echo hound for 4 damage.");
+  assert.equal(formatter.formatEvent(event), "Your fire aura hits Small Kobold for 4 damage.");
   localization.setLocale("zh-CN");
-  assert.equal(formatter.formatEvent(event), "你的火焰光环击中了回声猎犬，造成 4 点伤害。");
+  assert.equal(formatter.formatEvent(event), "你的火焰光环击中了小狗头人，造成 4 点伤害。");
   localization.setLocale("en-US");
 });
 
@@ -72,14 +72,14 @@ test("mutation melee events retain the authoritative innate attack name", () => 
     args: {
       source: "rfb.mutation.scorpion-tail",
       attack: "尾巴",
-      target: "demo.actor.echo-hound",
+      target: "demo.actor.small-kobold",
       damage: "7",
     },
   };
 
-  assert.equal(formatter.formatEvent(event), "Your 尾巴 hits echo hound for 7 damage.");
+  assert.equal(formatter.formatEvent(event), "Your 尾巴 hits Small Kobold for 7 damage.");
   localization.setLocale("zh-CN");
-  assert.equal(formatter.formatEvent(event), "你的尾巴击中了回声猎犬，造成 7 点伤害。");
+  assert.equal(formatter.formatEvent(event), "你的尾巴击中了小狗头人，造成 7 点伤害。");
   localization.setLocale("en-US");
 });
 
@@ -119,20 +119,20 @@ test("item event formatting follows projected knowledge and locale changes", () 
   const event = {
     kind: "item.pickup",
     messageKey: "item-pickup-success",
-    args: { target: "demo.item.luminous-shard", quantity: "3" },
+    args: { target: "demo.item.light-healing-potion", quantity: "3" },
   };
 
-  assert.equal(formatter.formatEvent(event), "You pick up unfamiliar pale shard ×3.");
+  assert.equal(formatter.formatEvent(event), "You pick up Potion of Cure Light Wounds ×3.");
   state.currentInventory = [
     {
-      kindId: "demo.item.luminous-shard",
-      displayNameKey: "item-demo-luminous-shard-name",
+      kindId: "demo.item.light-healing-potion",
+      displayNameKey: "item-demo-light-healing-potion-appearance",
     },
   ];
-  assert.equal(formatter.formatEvent(event), "You pick up luminous shard ×3.");
+  assert.equal(formatter.formatEvent(event), "You pick up Gold Potion ×3.");
 
   localization.setLocale("zh-CN");
-  assert.equal(formatter.formatEvent(event), "你将 3 个发光碎片收入了背包。");
+  assert.equal(formatter.formatEvent(event), "你将 3 个金色药水收入了背包。");
   localization.setLocale("en-US");
 });
 
@@ -474,7 +474,7 @@ test("damage event formatting preserves typed resistance outcomes", () => {
   const event = {
     kind: "combat.hit",
     messageKey: "combat-player-hit",
-    args: { target: "demo.actor.echo-hound", damage: "10" },
+    args: { target: "demo.actor.small-kobold", damage: "10" },
     outcome: {
       type: "damage",
       resolution: {
@@ -490,18 +490,18 @@ test("damage event formatting preserves typed resistance outcomes", () => {
 
   assert.equal(
     formatter.formatEvent(event),
-    "You hit echo hound for 7 fire damage (3 resisted).",
+    "You hit Small Kobold for 7 fire damage (3 resisted).",
   );
   localization.setLocale("zh-CN");
   assert.equal(
     formatter.formatEvent(event),
-    "你击中了回声猎犬，造成 7 点火焰伤害（抵抗了 3 点）。",
+    "你击中了小狗头人，造成 7 点火焰伤害（抵抗了 3 点）。",
   );
   localization.setLocale("en-US");
 });
 
 test("Warrens transitions name the Outpost and stairs without legacy Echo text", () => {
-  state.currentWorldId = "demo.world.warrens-journey";
+  state.currentWorldId = "demo.world.middle-earth";
   const event = {
     kind: "floor.transition",
     messageKey: "floor-transition",

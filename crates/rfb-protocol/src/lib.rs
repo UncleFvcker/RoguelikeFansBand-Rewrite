@@ -3860,7 +3860,7 @@ mod tests {
     fn command_messagepack_round_trip() {
         for (index, command) in [
             GameCommand::Appraise {
-                item_id: "demo.item.echo-charm.1".to_owned(),
+                item_id: "demo.item.chain-mail.1".to_owned(),
             },
             GameCommand::BashDoor {
                 direction: Direction::South,
@@ -3891,10 +3891,10 @@ mod tests {
                 slot_id: "charm".to_owned(),
             },
             GameCommand::Drop {
-                item_ids: vec!["demo.item.echo-charm.1".to_owned()],
+                item_ids: vec!["demo.item.chain-mail.1".to_owned()],
             },
             GameCommand::DropQuantity {
-                item_id: "demo.item.luminous-shard.1".to_owned(),
+                item_id: "demo.item.ration-of-food.1".to_owned(),
                 quantity: 2,
             },
             GameCommand::Fire {
@@ -3902,7 +3902,7 @@ mod tests {
             },
             GameCommand::FireTarget {
                 target: TargetSelection::Entity {
-                    entity_id: "demo.monster.ember-mote.1".to_owned(),
+                    entity_id: "demo.actor.small-kobold.1".to_owned(),
                 },
             },
             GameCommand::EnterWorldMap {
@@ -3917,7 +3917,7 @@ mod tests {
                 destination: Position { x: 40, y: 12 },
             },
             GameCommand::Throw {
-                item_id: "demo.item.luminous-shard.1".to_owned(),
+                item_id: "demo.item.ration-of-food.1".to_owned(),
                 direction: Direction::North,
             },
             GameCommand::TraverseStairs,
@@ -3928,7 +3928,7 @@ mod tests {
                 quantity: 1,
             },
             GameCommand::UseItem {
-                item_id: "demo.item.luminous-shard.1".to_owned(),
+                item_id: "demo.item.ration-of-food.1".to_owned(),
                 target: None,
             },
             GameCommand::UseItemByGlyph {
@@ -3937,29 +3937,29 @@ mod tests {
             },
             GameCommand::UseItemForRecharge {
                 item_id: "demo.item.recharging-scroll.1".to_owned(),
-                source_item_id: "demo.item.resonance-wand.1".to_owned(),
-                target_item_id: "demo.item.resonance-rod.1".to_owned(),
+                source_item_id: "demo.item.magic-missile-wand.1".to_owned(),
+                target_item_id: "demo.item.detect-objects-staff.1".to_owned(),
             },
             GameCommand::RechargeItem {
-                target_item_id: "demo.item.resonance-rod.1".to_owned(),
+                target_item_id: "demo.item.detect-objects-staff.1".to_owned(),
                 source: DeviceRechargeSourceDto::Resource,
             },
             GameCommand::RechargeItem {
-                target_item_id: "demo.item.resonance-rod.1".to_owned(),
+                target_item_id: "demo.item.detect-objects-staff.1".to_owned(),
                 source: DeviceRechargeSourceDto::Item {
-                    item_id: "demo.item.resonance-wand.1".to_owned(),
+                    item_id: "demo.item.magic-missile-wand.1".to_owned(),
                 },
             },
             GameCommand::CastAbility {
-                ability_id: "demo.ability.mending-echo".to_owned(),
+                ability_id: "demo.ability.death-dark-bolt".to_owned(),
                 target: TargetSelection::SelfTarget,
             },
             GameCommand::StudyAbility {
                 book_item_id: "generated.item.2".to_owned(),
-                ability_id: "demo.ability.resonant-bolt".to_owned(),
+                ability_id: "demo.ability.death-dark-bolt".to_owned(),
             },
             GameCommand::ForgetAbility {
-                ability_id: "demo.ability.resonant-bolt".to_owned(),
+                ability_id: "demo.ability.death-dark-bolt".to_owned(),
             },
             GameCommand::Rest { turns: 100 },
             GameCommand::Wait,
@@ -3998,7 +3998,7 @@ mod tests {
     #[test]
     fn rolled_affix_save_migrates_supported_passives_and_rejects_unknown_values() {
         let migrated: RolledAffixSaveDto = serde_json::from_value(serde_json::json!({
-            "affixId": "demo.affix.adaptive-echo",
+            "affixId": "demo.affix.regeneration",
             "passives": [
                 "hold-life",
                 "regeneration",
@@ -4028,7 +4028,7 @@ mod tests {
         );
 
         let encoded = to_msgpack(&serde_json::json!({
-            "affixId": "demo.affix.adaptive-echo",
+            "affixId": "demo.affix.regeneration",
             "passives": [
                 "hold-life",
                 "regeneration",
@@ -4048,7 +4048,7 @@ mod tests {
         assert_eq!(migrated_from_msgpack, migrated);
 
         let unknown = serde_json::from_value::<RolledAffixSaveDto>(serde_json::json!({
-            "affixId": "demo.affix.adaptive-echo",
+            "affixId": "demo.affix.regeneration",
             "passives": ["unknown-passive"]
         }));
         assert!(unknown.is_err(), "unknown passives must remain load errors");

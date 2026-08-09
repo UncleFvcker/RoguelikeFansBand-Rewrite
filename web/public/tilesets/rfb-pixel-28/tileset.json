@@ -130,16 +130,6 @@
       "background": "#2c3938",
       "tile": { "x": 0, "y": 3 }
     },
-    "demo.terrain.trap-echo-snare": {
-      "foreground": "#91a0ad",
-      "background": "#2c3938",
-      "tile": { "x": 0, "y": 3 }
-    },
-    "demo.terrain.trap-resonance-ward": {
-      "foreground": "#91a0ad",
-      "background": "#2c3938",
-      "tile": { "x": 0, "y": 3 }
-    },
     "core.gold.copper": {
       "foreground": "#bf704d",
       "tile": { "x": 1, "y": 3 }

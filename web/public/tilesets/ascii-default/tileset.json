@@ -92,34 +92,9 @@
       "foreground": "#ddd8c9",
       "background": "#403d37"
     },
-    "demo.actor.explorer": {
+    "demo.actor.warrior-player": {
       "foreground": "#8ed8ff",
       "background": "#17324a"
-    },
-    "demo.actor.ember-mote": {
-      "glyph": "✦",
-      "foreground": "#ff9b5e",
-      "background": "#47251c"
-    },
-    "demo.actor.echo-hound": {
-      "foreground": "#b8d8ff",
-      "background": "#1c2947"
-    },
-    "demo.item.luminous-shard": {
-      "foreground": "#f6e58d",
-      "background": "#2f2b19"
-    },
-    "demo.item.echo-blade": {
-      "foreground": "#a9dcff",
-      "background": "#182b3a"
-    },
-    "demo.item.resonance-sling": {
-      "foreground": "#9ee7d8",
-      "background": "#17312f"
-    },
-    "demo.item.resonance-pellet": {
-      "foreground": "#d5f4ee",
-      "background": "#213633"
     },
     "core.gold.copper": {
       "glyph": "$",

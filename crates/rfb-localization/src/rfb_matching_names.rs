@@ -99,7 +99,6 @@ pub(super) fn english_item_name(kind_id: &str) -> Option<&'static str> {
         "demo.item.renewal-tonic" => Some("Potion of Restore Life Levels"),
         "demo.item.reprisal-scroll" => Some("Scroll of Vengeance"),
         "demo.item.resonance-breach-scroll" => Some("Scroll of Trap/Door Destruction"),
-        "demo.item.resonance-pellet" => Some("Resonance Shot"),
         "demo.item.resonance-rod" => Some("Rod"),
         "demo.item.restore-charisma-potion" => Some("Potion of Restore Charisma"),
         "demo.item.restore-constitution-mushroom" => Some("Mushroom of Restore Constitution"),

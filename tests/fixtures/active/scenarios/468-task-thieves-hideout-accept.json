@@ -1,12 +1,12 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "id": "task.thieves-hideout-accept-at-count",
   "category": "tasks",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "42",
   "preconditions": {
-    "world": "demo.world.warrens-journey",
+    "world": "demo.world.middle-earth",
     "playerBuildId": "demo.build.warrior",
     "playerPosition": {
       "x": 26,
@@ -395,18 +395,6 @@
             "growthPerTenLevels": 20
           }
         ]
-      },
-      "playerBuild": {
-        "buildId": "demo.build.warrior",
-        "buildNameKey": "build-demo-warrior-name",
-        "raceId": "demo.race.rfb-human",
-        "raceNameKey": "race-demo-rfb-human-name",
-        "classId": "demo.class.warrior",
-        "classNameKey": "class-demo-warrior-name",
-        "personalityId": "demo.personality.ordinary",
-        "personalityNameKey": "personality-demo-ordinary-name",
-        "lifePercent": 115,
-        "experiencePercent": 100
       },
       "entityCount": 0,
       "groundItemCount": 2,
@@ -834,29 +822,17 @@
       "tasks": [
         {
           "taskId": "demo.task.pest-control",
-          "floorId": "demo.floor.warrens-depth-5",
-          "nameKey": "task-demo-pest-control-name",
-          "descriptionKey": "task-demo-pest-control-description",
-          "sourceFacilityId": "demo.town-facility.outpost-count",
           "status": "locked",
-          "current": 0,
           "required": 8,
           "stage": 1,
-          "stages": 1,
-          "retakesUsed": 0
+          "stages": 1
         },
         {
           "taskId": "demo.task.thieves-hideout",
-          "floorId": "demo.floor.thieves-hideout",
-          "nameKey": "task-demo-thieves-hideout-name",
-          "descriptionKey": "task-demo-thieves-hideout-description",
-          "sourceFacilityId": "demo.town-facility.outpost-count",
           "status": "taken",
-          "current": 0,
           "required": 1,
           "stage": 1,
-          "stages": 1,
-          "retakesUsed": 0
+          "stages": 1
         }
       ],
       "campaign": {
@@ -865,7 +841,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "7875126410a2e41d49da22f16ef6d4da98079a06f617ee0ba9aa2f152bcff644"
+      "stateHash": "ea2574b732beeab561313a3db5b6fcb5aeaadb64e526aae7f80e72bb1f09bbbf"
     },
     "events": [
       {
@@ -874,12 +850,6 @@
         "args": {
           "task": "demo.task.thieves-hideout"
         }
-      }
-    ],
-    "changedCells": [
-      {
-        "x": 63,
-        "y": 11
       }
     ]
   }

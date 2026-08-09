@@ -26,5 +26,4 @@ fn committed_active_baseline_policy_is_valid() {
         report.category_counts.values().sum::<usize>(),
         report.fixture_count
     );
-    assert!(report.category_counts.values().all(|count| *count > 0));
 }

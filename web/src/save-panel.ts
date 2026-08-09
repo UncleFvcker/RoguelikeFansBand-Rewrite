@@ -261,11 +261,14 @@ export class NativeSavePanel {
     if (summary.turn === null || summary.savedAt === null) {
       return this.#localization.format("native-save-meta-unavailable");
     }
+    const locationKey = summary.locationKey;
+    const location =
+      locationKey !== null &&
+      this.#localization.hasMessage(this.#localization.locale, locationKey)
+        ? this.#localization.format(locationKey)
+        : this.#localization.format("native-save-location-unknown");
     return this.#localization.format("native-save-meta", {
-      location:
-        summary.locationKey === "world-demo-original-lab-name"
-          ? this.#localization.format("world-demo-original-lab-name")
-          : this.#localization.format("native-save-location-unknown"),
+      location,
       turn: summary.turn,
       savedAt: this.#date(summary.savedAt),
     });

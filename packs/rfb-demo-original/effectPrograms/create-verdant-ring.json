@@ -7,11 +7,9 @@
     {
       "type": "create-adjacent-terrain",
       "sourceTerrainIds": [
-        "demo.terrain.floor",
-        "demo.terrain.resonance-cavern",
-        "demo.terrain.resonant-floor"
+        "demo.terrain.floor"
       ],
-      "targetTerrainId": "demo.terrain.echo-tree"
+      "targetTerrainId": "demo.terrain.surface-tree"
     }
   ]
 }

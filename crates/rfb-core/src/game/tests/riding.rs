@@ -10,10 +10,10 @@ fn mount_moves_with_player_round_trips_and_dismounts() {
         actor.level = 1;
     });
     clear_monsters(&mut game);
-    let start = Position { x: 4, y: 3 };
-    let mount_position = Position { x: 5, y: 3 };
-    let moved_position = Position { x: 6, y: 3 };
-    let dismount_position = Position { x: 6, y: 2 };
+    let start = Position { x: 48, y: 16 };
+    let mount_position = Position { x: 49, y: 16 };
+    let moved_position = Position { x: 50, y: 16 };
+    let dismount_position = Position { x: 50, y: 15 };
     for position in [start, mount_position, moved_position, dismount_position] {
         replace_terrain(&mut game, position, "demo.terrain.floor");
     }
@@ -83,8 +83,8 @@ fn sheep_preserves_the_authoritative_refusal() {
 
 #[test]
 fn current_mount_follows_a_floor_transition() {
-    let mut game = Game::new_warrens_journey_with_build(42, "demo.build.warrior")
-        .expect("Warrens journey should create");
+    let mut game =
+        Game::new_with_build(42, "demo.build.warrior").expect("Warrens journey should create");
     game.entities.clear();
     game.items
         .retain(|item| !matches!(item.location, ItemLocation::CarriedBy { .. }));

@@ -107,7 +107,7 @@ async function runSupplyLoop(driver) {
     return true;
   `);
   await driver.waitFor(
-    `return document.documentElement.dataset.appMode === "playing" && document.querySelector("#map-host")?.dataset.worldId === "demo.world.warrens-journey"`,
+    `return document.documentElement.dataset.appMode === "playing" && document.querySelector("#map-host")?.dataset.worldId === "demo.world.middle-earth"`,
     "Warrens Warrior session",
     60_000,
   );
@@ -380,7 +380,7 @@ async function runSupplyLoop(driver) {
   assert.equal(fullMapCamera.playerVisible, true);
   await dispatchKey(driver, "Period", ">");
   await driver.waitFor(
-    `return document.querySelector("#map-host")?.dataset.worldId === "demo.world.warrens-journey" && document.querySelector("#journey-depth")?.textContent.includes("1")`,
+    `return document.querySelector("#map-host")?.dataset.worldId === "demo.world.middle-earth" && document.querySelector("#journey-depth")?.textContent.includes("1")`,
     "entering Warrens depth 1",
     30_000,
   );

@@ -707,8 +707,8 @@ mod w3_tests {
 
     #[test]
     fn daylight_excludes_light_vulnerable_wilderness_monsters() {
-        let game = Game::new_warrens_journey_with_build(42, "demo.build.warrior")
-            .expect("Warrens journey should create");
+        let game =
+            Game::new_with_build(42, "demo.build.warrior").expect("Warrens journey should create");
         let cave_spider = game
             .content
             .actor("demo.actor.cave-spider")

@@ -1,12 +1,12 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "id": "gold.warrior-starting-wallet",
   "category": "inventory",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "42",
   "preconditions": {
-    "world": "demo.world.warrens-journey",
+    "world": "demo.world.middle-earth",
     "playerBuildId": "demo.build.warrior"
   },
   "commands": [],
@@ -384,18 +384,6 @@
             "growthPerTenLevels": 20
           }
         ]
-      },
-      "playerBuild": {
-        "buildId": "demo.build.warrior",
-        "buildNameKey": "build-demo-warrior-name",
-        "raceId": "demo.race.rfb-human",
-        "raceNameKey": "race-demo-rfb-human-name",
-        "classId": "demo.class.warrior",
-        "classNameKey": "class-demo-warrior-name",
-        "personalityId": "demo.personality.ordinary",
-        "personalityNameKey": "personality-demo-ordinary-name",
-        "lifePercent": 115,
-        "experiencePercent": 100
       },
       "entityCount": 0,
       "groundItemCount": 2,
@@ -820,42 +808,14 @@
       ],
       "nextItemInstanceSerial": 168,
       "nextGoldPileSerial": 1,
-      "tasks": [
-        {
-          "taskId": "demo.task.pest-control",
-          "floorId": "demo.floor.warrens-depth-5",
-          "nameKey": "task-demo-pest-control-name",
-          "descriptionKey": "task-demo-pest-control-description",
-          "sourceFacilityId": "demo.town-facility.outpost-count",
-          "status": "locked",
-          "current": 0,
-          "required": 8,
-          "stage": 1,
-          "stages": 1,
-          "retakesUsed": 0
-        },
-        {
-          "taskId": "demo.task.thieves-hideout",
-          "floorId": "demo.floor.thieves-hideout",
-          "nameKey": "task-demo-thieves-hideout-name",
-          "descriptionKey": "task-demo-thieves-hideout-description",
-          "sourceFacilityId": "demo.town-facility.outpost-count",
-          "status": "available",
-          "current": 0,
-          "required": 1,
-          "stage": 1,
-          "stages": 1,
-          "retakesUsed": 0
-        }
-      ],
       "campaign": {
         "status": "active",
         "score": 0,
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "5b16c19900ad66fb041dca4ac60bc209cfa44604d7881f23027b53b1ef9edd7e"
+      "stateHash": "4295b855634ffaedf0a0af5c284e0aeab13fe0e7559b3309d62bb98fc153c55d"
     },
-    "saveRoundTripStateHash": "5b16c19900ad66fb041dca4ac60bc209cfa44604d7881f23027b53b1ef9edd7e"
+    "saveRoundTripStateHash": "4295b855634ffaedf0a0af5c284e0aeab13fe0e7559b3309d62bb98fc153c55d"
   }
 }

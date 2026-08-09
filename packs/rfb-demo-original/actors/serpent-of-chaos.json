@@ -15,6 +15,5 @@
   "damageDice": 1,
   "damageSides": 2,
   "damageType": "physical",
-  "lootTableId": "demo.loot-table.resonant-warden",
   "tags": ["final-boss", "guardian", "serpent-of-chaos", "unique"]
 }

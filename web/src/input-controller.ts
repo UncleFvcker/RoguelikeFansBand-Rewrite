@@ -303,7 +303,7 @@ export class InputController {
     );
     const connectionAction = connectionActionForState(this.#state);
     const waitingAtWarrensSurface =
-      this.#state.worldId === "demo.world.warrens-journey" &&
+      this.#state.worldId === "demo.world.middle-earth" &&
       this.#state.status?.floorId === "demo.floor.surface";
     this.#dom.traverseStairs.textContent = this.#localization.format(
       connectionAction === "enter-world-map"
@@ -905,7 +905,7 @@ export function connectionActionForState(state: AppState): ConnectionAction | un
   const glyph = terrainId ? state.contentGlyphs.get(terrainId) : undefined;
   if (glyph === "<") return "ascend";
   if (glyph === ">") {
-    return state.worldId === "demo.world.warrens-journey" &&
+    return state.worldId === "demo.world.middle-earth" &&
       status.floorId === "demo.floor.surface"
       ? "enter-warrens"
       : "descend";
@@ -917,7 +917,7 @@ export function connectionActionForState(state: AppState): ConnectionAction | un
         entity.faction === "hostile" &&
         (entity.id.includes(".ambush.") || entity.summon?.ownerId.includes(".ambush.")),
     );
-  return state.worldId === "demo.world.warrens-journey" &&
+  return state.worldId === "demo.world.middle-earth" &&
     !ambushThreatRemains &&
     (status.floorId === "demo.floor.surface" ||
       status.floorId === "core.floor.wilderness")

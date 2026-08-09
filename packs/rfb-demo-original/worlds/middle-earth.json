@@ -1,0 +1,1300 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/world.schema.json",
+  "formatVersion": 1,
+  "id": "demo.world.middle-earth",
+  "nameKey": "world-demo-middle-earth-name",
+  "initialFloorId": "demo.floor.surface",
+  "townId": "demo.town.outpost",
+  "wilderness": {
+    "height": 66,
+    "legend": [
+      {
+        "level": 0,
+        "road": false,
+        "symbol": "#",
+        "terrain": "edge"
+      },
+      {
+        "level": 10,
+        "road": false,
+        "symbol": ".",
+        "terrain": "grass"
+      },
+      {
+        "level": 20,
+        "road": false,
+        "symbol": ",",
+        "terrain": "dirt"
+      },
+      {
+        "level": 30,
+        "road": false,
+        "symbol": "D",
+        "terrain": "desert"
+      },
+      {
+        "level": 25,
+        "road": false,
+        "symbol": "T",
+        "terrain": "trees"
+      },
+      {
+        "level": 15,
+        "road": false,
+        "symbol": "S",
+        "terrain": "shallow-water"
+      },
+      {
+        "level": 40,
+        "road": false,
+        "symbol": "_",
+        "terrain": "shallow-water"
+      },
+      {
+        "level": 60,
+        "road": false,
+        "symbol": "V",
+        "terrain": "shallow-water"
+      },
+      {
+        "level": 60,
+        "road": false,
+        "symbol": "~",
+        "terrain": "deep-water"
+      },
+      {
+        "level": 50,
+        "road": false,
+        "symbol": "^",
+        "terrain": "mountain"
+      },
+      {
+        "level": 80,
+        "road": false,
+        "symbol": "M",
+        "terrain": "mountain"
+      },
+      {
+        "level": 50,
+        "road": false,
+        "symbol": "g",
+        "terrain": "glacier"
+      },
+      {
+        "level": 35,
+        "road": false,
+        "symbol": "G",
+        "terrain": "glacier"
+      },
+      {
+        "level": 60,
+        "road": false,
+        "symbol": "&",
+        "terrain": "deep-lava"
+      },
+      {
+        "level": 40,
+        "road": false,
+        "symbol": "$",
+        "terrain": "shallow-lava"
+      },
+      {
+        "level": 35,
+        "road": false,
+        "symbol": "=",
+        "terrain": "swamp"
+      },
+      {
+        "level": 60,
+        "road": false,
+        "symbol": "%",
+        "terrain": "pack-ice"
+      },
+      {
+        "level": 80,
+        "road": false,
+        "symbol": "i",
+        "terrain": "pack-ice"
+      },
+      {
+        "level": 20,
+        "road": false,
+        "symbol": "s",
+        "terrain": "snow"
+      },
+      {
+        "level": 0,
+        "road": true,
+        "symbol": "1",
+        "terrain": "grass"
+      },
+      {
+        "level": 0,
+        "road": true,
+        "symbol": "2",
+        "terrain": "grass"
+      },
+      {
+        "level": 0,
+        "road": true,
+        "symbol": "3",
+        "terrain": "grass"
+      },
+      {
+        "level": 4,
+        "road": true,
+        "symbol": "4",
+        "terrain": "trees"
+      },
+      {
+        "level": 0,
+        "road": true,
+        "symbol": "5",
+        "terrain": "grass"
+      },
+      {
+        "level": 0,
+        "road": true,
+        "symbol": "6",
+        "terrain": "grass"
+      },
+      {
+        "level": 20,
+        "road": false,
+        "symbol": "7",
+        "terrain": "mountain"
+      },
+      {
+        "level": 3,
+        "road": true,
+        "symbol": "*",
+        "terrain": "grass"
+      },
+      {
+        "level": 3,
+        "road": true,
+        "symbol": "!",
+        "terrain": "dirt"
+      },
+      {
+        "level": 3,
+        "road": true,
+        "symbol": "+",
+        "terrain": "trees"
+      },
+      {
+        "level": 3,
+        "road": true,
+        "symbol": "-",
+        "terrain": "snow"
+      }
+    ],
+    "locations": [
+      {
+        "kind": "town",
+        "position": {
+          "x": 28,
+          "y": 52
+        },
+        "mapOrigin": {
+          "x": 0,
+          "y": 0
+        },
+        "townId": "demo.town.outpost"
+      },
+      {
+        "kind": "town",
+        "position": {
+          "x": 26,
+          "y": 39
+        },
+        "mapOrigin": {
+          "x": 27,
+          "y": 6
+        },
+        "townId": "demo.town.anambar"
+      },
+      {
+        "dungeonId": "demo.dungeon.warrens",
+        "kind": "dungeon",
+        "position": {
+          "x": 28,
+          "y": 52
+        }
+      }
+    ],
+    "rows": [
+      "###################################################################################################",
+      "#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%%%%%%%%%%%%%%iiii%%%%%%%%%%%%%%%%%%%%%%%~~____~~#",
+      "#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%%%%%%%%%%%%%ii%%%%%%ssssgggss%%%%%%%~~~_,,,,_~#",
+      "#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%%%%~~~~%%%%%%sssssssgggggggss%%%__~~_,,,,_~~#",
+      "#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~__%%ssssssssggggggggssss..________~~~#",
+      "#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~____..ssssssssGgg^^^Gggss..___.._______#",
+      "#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~___....*ssssssGG^^7^^^^....__........._#",
+      "#~~~___~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~___~~~__...***...TTTT^^^^^^^^..............__#",
+      "#~__MMM_~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~_,,,_____...*....TTTTT^^^^^^^^....========.__~#",
+      "#~_MMMMM_~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~___,,,,___...*...TTTTTT^^^^^^^...==========___~#",
+      "#~_MMMMM_~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~____,,,,_...**...TTTTTTT^^^^^TTT===========__~~#",
+      "#~~_MMM_~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~____,,,,_..**....TTTTTTTT^^^TTTT============_~~#",
+      "#~~~___~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~___,,,,,,,*....TTTTTTTTTT^^TTTTT==========__~~#",
+      "#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~____,,,,,!!,.__TTTTTTTTTTTTTTTTT=====_=====__~#",
+      "#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~____,,,,,,!,,_____TTTTTTTTTTTTTT====______===_~#",
+      "#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~_____,,,,,,!,,__~~____TTTTTTTTTT________________#",
+      "#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~_____,,,,,!!!,,_~~~____TTTTTT_____________~~~~~#",
+      "#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~___,,,,~~~~!!!___~~~~___________TTTTT__~~~~~~~#",
+      "#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~__~~~~~_________________~~~~~__TTTTTTT^^==__~~~~~~~~#",
+      "#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~_,,___~~~~~__________***___~~~_____TT^^^==___~~~~~~~~#",
+      "#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~_,,_,,_~~~~~_______....*.______TTTTTTTT===___~~~~~~~~#",
+      "#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~_,,_,,_~~~~~~____....*****+++++++++TTTT=...___~~~~~~~#",
+      "#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~_,^,,,_~~~~~~___.....*....TTT+TTTT++TT.......__~~~~~~#",
+      "#~~~~~~~~~~~~__~~~~~~~~~~~~~~~~~~~~~~~~~~~~~_,,^,,^,_~~~____,,....*....TTT4TTTTT+T........__~~~~~~#",
+      "#~~~~~~~~~~~~___~~~~~~~~~~~~~~~~~~~~~~~~~~~~_,,,_,^,_~~~_,__,,....*...TTTTTTTTT.*....^^^...__~~~~~#",
+      "#~~~~~~~~~~~__,__~~~~~~~~~~~~~~~~~~~~~~~~~~~~____,,_~~~~_,,,,,.****..TTTTTTTTT..**....^^^^..._~~~~#",
+      "#~~~~~~~~~~~_^^___~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~__~~~~~_,,,,***....TTTTTT.^^^...*.....^^^^..._~~~#",
+      "#~~~~~~~~~~~_^^^__~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~_,,,*.^...TTTT...^^^^^..*.....^^^...._~~~#",
+      "#~~~~~~~~~~~~_^,,SS~~~~~~~~~~~~~~~~~~~~~~~~~___~~~~~~~~~~___.*.^...........^^^^..**.....^^...__~~~#",
+      "#~~~~~~~~~~~~~_,,6S_~~~~~~~~~~~~~~~~~~~~~_______~~~~~~~~~___.*.^.........^^^^^^...***....^...._~~~#",
+      "#~~~~~~~~~~~~~_,..S_~~~~~~~~~~~~~~~~~~~_____..__~~~~~~~~~___**^..........^^^^^^.....**......_._~~~#",
+      "#~~~~~~~~~~~~~__.._~~~~~~~~~~~~~~~~~_______..._~~~~~~~~~___**^...........^^^^^^......**.....__~~~~#",
+      "#~~~~~~~~~~~~~~____~~~~~~~~~~~~~~~~~~_____..T.__~~~~~~~~__**__...........^^^^^^^......*......__~~~#",
+      "#~~~~~~~~~~~~~~~__~~~~~~~~~~~~~~~~~~~~~____.T.__~~~~~~~~_**..___.........^^^^^^^TT....*....___~~~~#",
+      "#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~____.TT____~~~~~~_*^^^..__.........^^^^M^TTT...*....___~~~~#",
+      "#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~____..TT..__~~~~~_*^^^^^._...........^^MMTTTT.**....____~~~#",
+      "#~~~~~~~~~~~~~~~~~~~~~~~~________~~~________..T....~~~~~**^^^^^__^^..........MM^TTTT**.....___~~~~#",
+      "#~~~~~~~~~~~~~~~~~~~~_______,,,,_____________.........***TTTT++++^GGT.........M^TTT**......___~~~~#",
+      "#__~~~~~~~~~~~~~~~~____..SSS,,DDDDDD_________.......***.***+++T_++----**..._VVVTTTT*........___~~~#",
+      "#_____~~~~~~~~~_______....5*!!!DDDDDDDDD____......***......T____T^^GGgg**.__.._TTTT*....^...__~~~~#",
+      "#_______~~~~~________.*****.T,!!DDDDDDDDD.....*****........T_TTT^^gggggg**_..._TTTT*...^^^..=_~~~~#",
+      "#____________________.*...==T,,!!DDDDDDDDD...**............__TTT^^ggggg__*_...___TT*...^^^.==_~~~~#",
+      "#____________________.*..T===T,,!!!!DDDDDD..**...^^^......._TT^^^gggggg_g*......_TT*....^^.==_~~~~#",
+      "#____________________.*...T==TT,,,,!!DDDDD.**.....^^^......__T^^GGggggggg**.....__T**...^^===__~~~#",
+      "#____________________.*....TT^^,,,,,!!!DDD**.....^.^........___^GGGggggg^^***...._TT*....^===__~~~#",
+      "#____________________.*..^^^^^...,,,,,!!!.*...................^__GGgggggg^^^***..__T*...=====___~~#",
+      "#___...__________..****^^^^.............***............====...^^GGgggggggg^^^^***.__*__=_________~#",
+      "#__.....******.__.**_.**...*******........*****......====__....^^gggggggggg^^^^.******___==_______#",
+      "#_.....**....******__..*****.....****.........**....===____...^^^^^^gggggggM^^^^^....*..=.=======_#",
+      "#_.....*..........____.......___....******.....*....==_____.....^^^^^gggggMMM^^^^....**2....====__#",
+      "#_...==*....^^...._______________........******3...==_____.***....^^^^^ggMMMMM^^^......*..__..==__#",
+      "#_...==**..^^^^.T..______.....___________*___..***.__==*****T***...^^^^^^^MMMM^^^^.....*.__..T.==_#",
+      "#_...==.*.^^&&^^....____....1**.________**_____..*******TTTTTTT***..^^^^^^^MM^^$$$^^..**.__..T..._#",
+      "#__..==.**.$&&^^....___...T...**.____...*....______TTTTTTTTTTTTTT*****,^^^^^^^^&&&^^^.*...__....__#",
+      "#___.=...*.$$&^^.T..__..TTT....***__..***......_____TTTTTTTTTTTTTT...****,^^^^$&&^^^^^*...___..___#",
+      "#_____...*...^^.T.___..TTT.......******.TTTT....__TTTTTTTTTTTTTTTTT..___*,,,^^^$$^^^^^*...._______#",
+      "#____TTT**..^^.T..___.....,,,......*TTTTTTTTT..._TTTTTTTTTTTTTTTTTT..___**,,,,^^^^^^^**^^...____~~#",
+      "#___TTT**T......T..__....,,,,,.....*TTTTTT^TT..__TTTTTTTTTTTTTTTTTTT____,*,,,,,^^^^^**^^^^^.___~~~#",
+      "#__TTTT*TTT..^.....__.....,,,,,,,,,*TTTTT^^^TTT._TTTTTTTTTTTTTTTTTTT___,,************^^^^^^___~~~~#",
+      "#_TTTTTTT__,,.^....._...,,,,,,,,,,!*..TTTT^TTTT.__TTTTTTTTTTTTTTT_______,,,,,,,,,,~~~~~^^^___~~~~~#",
+      "#__TTTT_____,,......___,,,,,,,______...TTTTTTT..___TTTTTTTTTTTTTTT_______________~~~~^^^^^^__~~~~~#",
+      "#__TTT___&&_,,,...______,,,,____________.........___TTTTTTTTTTTTTT___________~~~~~~~_^^^^^^_~~&~~~#",
+      "#__TTT___&&_,,,,,.________________~~_________..________TTTTTTTTT______~~~~~~~~~~~~~~~_^^^^_~~&&&~~#",
+      "#_TTTTTT___,,,,,_______________~~~~~~~~_____________________________~~~~~~~~~~~~~~~~~~____~~~~&~~~#",
+      "#_________________________~~~~~~~~~~~~~~~________~~~~____________~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#",
+      "###################################################################################################"
+    ],
+    "startPosition": {
+      "x": 28,
+      "y": 52
+    },
+    "width": 99
+  },
+  "width": 96,
+  "height": 32,
+  "fillTerrainId": "demo.terrain.surface-grass",
+  "borderTerrainId": "demo.terrain.surface-tree",
+  "terrainOverrides": [
+    {
+      "terrainId": "demo.terrain.surface-path",
+      "positions": [
+        { "x": 18, "y": 16 }, { "x": 19, "y": 16 }, { "x": 20, "y": 16 }, { "x": 21, "y": 16 },
+        { "x": 23, "y": 16 }, { "x": 24, "y": 16 }, { "x": 25, "y": 16 }, { "x": 26, "y": 16 },
+        { "x": 27, "y": 16 }, { "x": 28, "y": 16 }, { "x": 29, "y": 16 },
+        { "x": 30, "y": 16 }, { "x": 31, "y": 16 }, { "x": 32, "y": 16 },
+        { "x": 33, "y": 16 }, { "x": 34, "y": 16 }, { "x": 35, "y": 16 },
+        { "x": 36, "y": 16 }, { "x": 37, "y": 16 }, { "x": 38, "y": 16 },
+        { "x": 39, "y": 16 }, { "x": 40, "y": 16 }, { "x": 41, "y": 16 },
+        { "x": 42, "y": 16 }, { "x": 43, "y": 16 }, { "x": 44, "y": 16 },
+        { "x": 45, "y": 16 }, { "x": 46, "y": 16 }, { "x": 47, "y": 16 },
+        { "x": 48, "y": 16 }, { "x": 49, "y": 16 }, { "x": 50, "y": 16 },
+        { "x": 51, "y": 16 }, { "x": 52, "y": 16 }, { "x": 53, "y": 16 },
+        { "x": 54, "y": 16 }, { "x": 55, "y": 16 }, { "x": 56, "y": 16 },
+        { "x": 57, "y": 16 }, { "x": 58, "y": 16 }, { "x": 59, "y": 16 },
+        { "x": 60, "y": 16 }, { "x": 61, "y": 16 }, { "x": 62, "y": 16 },
+        { "x": 63, "y": 16 }, { "x": 64, "y": 16 }, { "x": 65, "y": 16 },
+        { "x": 67, "y": 16 }, { "x": 68, "y": 16 },
+        { "x": 69, "y": 16 }, { "x": 70, "y": 16 }, { "x": 71, "y": 16 },
+        { "x": 72, "y": 16 }, { "x": 73, "y": 16 },
+        { "x": 70, "y": 17 }, { "x": 70, "y": 18 }, { "x": 70, "y": 19 },
+        { "x": 70, "y": 20 }, { "x": 71, "y": 20 }, { "x": 72, "y": 20 },
+        { "x": 73, "y": 20 }, { "x": 74, "y": 20 }, { "x": 75, "y": 20 },
+        { "x": 76, "y": 20 }, { "x": 77, "y": 20 }, { "x": 78, "y": 20 },
+        { "x": 79, "y": 20 }, { "x": 80, "y": 20 }, { "x": 81, "y": 20 },
+        { "x": 82, "y": 20 }, { "x": 83, "y": 20 }, { "x": 84, "y": 20 },
+        { "x": 85, "y": 20 }, { "x": 86, "y": 20 }, { "x": 87, "y": 20 },
+        { "x": 88, "y": 20 }, { "x": 89, "y": 20 }, { "x": 90, "y": 20 },
+        { "x": 91, "y": 20 }, { "x": 92, "y": 20 }, { "x": 93, "y": 20 },
+        { "x": 94, "y": 20 }, { "x": 94, "y": 19 }, { "x": 94, "y": 18 },
+        { "x": 94, "y": 17 }, { "x": 94, "y": 16 }, { "x": 95, "y": 16 },
+        { "x": 32, "y": 14 }, { "x": 32, "y": 15 },
+        { "x": 41, "y": 15 }, { "x": 42, "y": 15 }, { "x": 43, "y": 15 },
+        { "x": 44, "y": 15 }, { "x": 45, "y": 15 }, { "x": 46, "y": 15 }, { "x": 47, "y": 15 },
+        { "x": 41, "y": 17 }, { "x": 42, "y": 17 }, { "x": 43, "y": 17 },
+        { "x": 44, "y": 17 }, { "x": 45, "y": 17 }, { "x": 46, "y": 17 }, { "x": 47, "y": 17 },
+        { "x": 45, "y": 18 },
+        { "x": 42, "y": 14 },
+        { "x": 53, "y": 14 }, { "x": 53, "y": 15 },
+        { "x": 55, "y": 14 }, { "x": 55, "y": 15 },
+        { "x": 57, "y": 14 }, { "x": 57, "y": 15 },
+        { "x": 30, "y": 17 }, { "x": 30, "y": 18 },
+        { "x": 34, "y": 17 }, { "x": 34, "y": 18 },
+        { "x": 55, "y": 17 }, { "x": 55, "y": 18 },
+        { "x": 26, "y": 14 }, { "x": 27, "y": 14 }, { "x": 28, "y": 14 },
+        { "x": 29, "y": 14 }, { "x": 30, "y": 14 }, { "x": 31, "y": 14 },
+        { "x": 63, "y": 12 }, { "x": 63, "y": 13 }, { "x": 63, "y": 14 },
+        { "x": 63, "y": 15 }
+      ]
+    },
+    {
+      "terrainId": "demo.terrain.outpost-fortification",
+      "positions": [
+        { "x": 22, "y": 6 }, { "x": 23, "y": 6 }, { "x": 24, "y": 6 }, { "x": 25, "y": 6 },
+        { "x": 26, "y": 6 }, { "x": 27, "y": 6 }, { "x": 28, "y": 6 }, { "x": 29, "y": 6 },
+        { "x": 30, "y": 6 }, { "x": 31, "y": 6 }, { "x": 32, "y": 6 }, { "x": 33, "y": 6 },
+        { "x": 34, "y": 6 }, { "x": 35, "y": 6 }, { "x": 36, "y": 6 }, { "x": 37, "y": 6 },
+        { "x": 38, "y": 6 }, { "x": 39, "y": 6 }, { "x": 40, "y": 6 }, { "x": 41, "y": 6 },
+        { "x": 42, "y": 6 }, { "x": 43, "y": 6 }, { "x": 44, "y": 6 }, { "x": 45, "y": 6 },
+        { "x": 46, "y": 6 }, { "x": 47, "y": 6 }, { "x": 48, "y": 6 }, { "x": 49, "y": 6 },
+        { "x": 50, "y": 6 }, { "x": 51, "y": 6 }, { "x": 52, "y": 6 }, { "x": 53, "y": 6 },
+        { "x": 54, "y": 6 }, { "x": 55, "y": 6 }, { "x": 56, "y": 6 }, { "x": 57, "y": 6 },
+        { "x": 58, "y": 6 }, { "x": 59, "y": 6 }, { "x": 60, "y": 6 }, { "x": 61, "y": 6 },
+        { "x": 62, "y": 6 }, { "x": 63, "y": 6 }, { "x": 64, "y": 6 }, { "x": 65, "y": 6 },
+        { "x": 66, "y": 6 },
+        { "x": 22, "y": 25 }, { "x": 23, "y": 25 }, { "x": 24, "y": 25 }, { "x": 25, "y": 25 },
+        { "x": 26, "y": 25 }, { "x": 27, "y": 25 }, { "x": 28, "y": 25 }, { "x": 29, "y": 25 },
+        { "x": 30, "y": 25 }, { "x": 31, "y": 25 }, { "x": 32, "y": 25 }, { "x": 33, "y": 25 },
+        { "x": 34, "y": 25 }, { "x": 35, "y": 25 }, { "x": 36, "y": 25 }, { "x": 37, "y": 25 },
+        { "x": 38, "y": 25 }, { "x": 39, "y": 25 }, { "x": 40, "y": 25 }, { "x": 41, "y": 25 },
+        { "x": 42, "y": 25 }, { "x": 43, "y": 25 }, { "x": 44, "y": 25 }, { "x": 45, "y": 25 },
+        { "x": 46, "y": 25 }, { "x": 47, "y": 25 }, { "x": 48, "y": 25 }, { "x": 49, "y": 25 },
+        { "x": 50, "y": 25 }, { "x": 51, "y": 25 }, { "x": 52, "y": 25 }, { "x": 53, "y": 25 },
+        { "x": 54, "y": 25 }, { "x": 55, "y": 25 }, { "x": 56, "y": 25 }, { "x": 57, "y": 25 },
+        { "x": 58, "y": 25 }, { "x": 59, "y": 25 }, { "x": 60, "y": 25 }, { "x": 61, "y": 25 },
+        { "x": 62, "y": 25 }, { "x": 63, "y": 25 }, { "x": 64, "y": 25 }, { "x": 65, "y": 25 },
+        { "x": 66, "y": 25 },
+        { "x": 22, "y": 7 }, { "x": 66, "y": 7 }, { "x": 22, "y": 8 }, { "x": 66, "y": 8 },
+        { "x": 22, "y": 9 }, { "x": 66, "y": 9 }, { "x": 22, "y": 10 }, { "x": 66, "y": 10 },
+        { "x": 22, "y": 11 }, { "x": 66, "y": 11 }, { "x": 22, "y": 12 }, { "x": 66, "y": 12 },
+        { "x": 22, "y": 13 }, { "x": 66, "y": 13 }, { "x": 22, "y": 14 }, { "x": 66, "y": 14 },
+        { "x": 22, "y": 15 }, { "x": 66, "y": 15 }, { "x": 22, "y": 17 }, { "x": 66, "y": 17 },
+        { "x": 22, "y": 18 }, { "x": 66, "y": 18 }, { "x": 22, "y": 19 }, { "x": 66, "y": 19 },
+        { "x": 22, "y": 20 }, { "x": 66, "y": 20 }, { "x": 22, "y": 21 }, { "x": 66, "y": 21 },
+        { "x": 22, "y": 22 }, { "x": 66, "y": 22 }, { "x": 22, "y": 23 }, { "x": 66, "y": 23 },
+        { "x": 22, "y": 24 }, { "x": 66, "y": 24 }
+      ]
+    },
+    {
+      "terrainId": "demo.terrain.outpost-gate",
+      "positions": [{ "x": 22, "y": 16 }, { "x": 66, "y": 16 }]
+    },
+    {
+      "terrainId": "demo.terrain.outpost-wall",
+      "positions": [
+        { "x": 29, "y": 10 }, { "x": 30, "y": 10 }, { "x": 31, "y": 10 }, { "x": 32, "y": 10 },
+        { "x": 33, "y": 10 }, { "x": 34, "y": 10 }, { "x": 35, "y": 10 },
+        { "x": 29, "y": 11 }, { "x": 30, "y": 11 }, { "x": 31, "y": 11 }, { "x": 32, "y": 11 },
+        { "x": 33, "y": 11 }, { "x": 34, "y": 11 }, { "x": 35, "y": 11 },
+        { "x": 29, "y": 12 }, { "x": 30, "y": 12 }, { "x": 31, "y": 12 }, { "x": 32, "y": 12 },
+        { "x": 33, "y": 12 }, { "x": 34, "y": 12 }, { "x": 35, "y": 12 },
+        { "x": 29, "y": 13 }, { "x": 30, "y": 13 }, { "x": 31, "y": 13 },
+        { "x": 33, "y": 13 }, { "x": 34, "y": 13 }, { "x": 35, "y": 13 },
+        { "x": 39, "y": 10 }, { "x": 40, "y": 10 }, { "x": 41, "y": 10 }, { "x": 42, "y": 10 }, { "x": 43, "y": 10 }, { "x": 44, "y": 10 }, { "x": 45, "y": 10 },
+        { "x": 39, "y": 11 }, { "x": 40, "y": 11 }, { "x": 41, "y": 11 }, { "x": 42, "y": 11 }, { "x": 43, "y": 11 }, { "x": 44, "y": 11 }, { "x": 45, "y": 11 },
+        { "x": 39, "y": 12 }, { "x": 40, "y": 12 }, { "x": 41, "y": 12 }, { "x": 42, "y": 12 }, { "x": 43, "y": 12 }, { "x": 44, "y": 12 }, { "x": 45, "y": 12 },
+        { "x": 39, "y": 13 }, { "x": 40, "y": 13 }, { "x": 41, "y": 13 }, { "x": 43, "y": 13 }, { "x": 44, "y": 13 }, { "x": 45, "y": 13 },
+        { "x": 50, "y": 10 }, { "x": 51, "y": 10 }, { "x": 52, "y": 10 }, { "x": 53, "y": 10 },
+        { "x": 54, "y": 10 }, { "x": 55, "y": 10 }, { "x": 56, "y": 10 }, { "x": 57, "y": 10 },
+        { "x": 58, "y": 10 }, { "x": 59, "y": 10 }, { "x": 60, "y": 10 },
+        { "x": 50, "y": 11 }, { "x": 51, "y": 11 }, { "x": 52, "y": 11 }, { "x": 53, "y": 11 },
+        { "x": 54, "y": 11 }, { "x": 55, "y": 11 }, { "x": 56, "y": 11 }, { "x": 57, "y": 11 },
+        { "x": 58, "y": 11 }, { "x": 59, "y": 11 }, { "x": 60, "y": 11 },
+        { "x": 50, "y": 12 }, { "x": 51, "y": 12 }, { "x": 52, "y": 12 }, { "x": 53, "y": 12 },
+        { "x": 54, "y": 12 }, { "x": 55, "y": 12 }, { "x": 56, "y": 12 }, { "x": 57, "y": 12 },
+        { "x": 58, "y": 12 }, { "x": 59, "y": 12 }, { "x": 60, "y": 12 },
+        { "x": 50, "y": 13 }, { "x": 51, "y": 13 }, { "x": 52, "y": 13 },
+        { "x": 54, "y": 13 }, { "x": 56, "y": 13 },
+        { "x": 58, "y": 13 }, { "x": 59, "y": 13 }, { "x": 60, "y": 13 },
+        { "x": 27, "y": 19 }, { "x": 28, "y": 19 }, { "x": 29, "y": 19 },
+        { "x": 31, "y": 19 }, { "x": 32, "y": 19 }, { "x": 33, "y": 19 },
+        { "x": 35, "y": 19 }, { "x": 36, "y": 19 }, { "x": 37, "y": 19 },
+        { "x": 27, "y": 20 }, { "x": 28, "y": 20 }, { "x": 29, "y": 20 },
+        { "x": 30, "y": 20 }, { "x": 31, "y": 20 }, { "x": 32, "y": 20 },
+        { "x": 33, "y": 20 }, { "x": 34, "y": 20 }, { "x": 35, "y": 20 },
+        { "x": 36, "y": 20 }, { "x": 37, "y": 20 },
+        { "x": 27, "y": 21 }, { "x": 28, "y": 21 }, { "x": 29, "y": 21 },
+        { "x": 30, "y": 21 }, { "x": 31, "y": 21 }, { "x": 32, "y": 21 },
+        { "x": 33, "y": 21 }, { "x": 34, "y": 21 }, { "x": 35, "y": 21 },
+        { "x": 36, "y": 21 }, { "x": 37, "y": 21 },
+        { "x": 27, "y": 22 }, { "x": 28, "y": 22 }, { "x": 29, "y": 22 },
+        { "x": 30, "y": 22 }, { "x": 31, "y": 22 }, { "x": 32, "y": 22 },
+        { "x": 33, "y": 22 }, { "x": 34, "y": 22 }, { "x": 35, "y": 22 },
+        { "x": 36, "y": 22 }, { "x": 37, "y": 22 },
+        { "x": 53, "y": 19 }, { "x": 54, "y": 19 }, { "x": 56, "y": 19 },
+        { "x": 53, "y": 20 }, { "x": 54, "y": 20 }, { "x": 55, "y": 20 }, { "x": 56, "y": 20 },
+        { "x": 53, "y": 21 }, { "x": 54, "y": 21 }, { "x": 55, "y": 21 }, { "x": 56, "y": 21 },
+        { "x": 24, "y": 10 }, { "x": 25, "y": 10 }, { "x": 26, "y": 10 }, { "x": 27, "y": 10 }, { "x": 28, "y": 10 },
+        { "x": 24, "y": 11 }, { "x": 25, "y": 11 }, { "x": 26, "y": 11 }, { "x": 27, "y": 11 }, { "x": 28, "y": 11 },
+        { "x": 24, "y": 12 }, { "x": 25, "y": 12 }, { "x": 26, "y": 12 }, { "x": 27, "y": 12 }, { "x": 28, "y": 12 },
+        { "x": 24, "y": 13 }, { "x": 25, "y": 13 }, { "x": 27, "y": 13 }, { "x": 28, "y": 13 },
+        { "x": 62, "y": 8 }, { "x": 63, "y": 8 }, { "x": 64, "y": 8 }, { "x": 65, "y": 8 },
+        { "x": 62, "y": 9 }, { "x": 65, "y": 9 },
+        { "x": 62, "y": 10 }, { "x": 65, "y": 10 },
+        { "x": 62, "y": 11 }, { "x": 64, "y": 11 }, { "x": 65, "y": 11 }
+      ]
+    },
+    {
+      "terrainId": "demo.terrain.temple-wall",
+      "positions": [
+        { "x": 41, "y": 19 }, { "x": 42, "y": 19 }, { "x": 43, "y": 19 }, { "x": 44, "y": 19 },
+        { "x": 46, "y": 19 }, { "x": 47, "y": 19 }, { "x": 48, "y": 19 }, { "x": 49, "y": 19 },
+        { "x": 41, "y": 20 }, { "x": 42, "y": 20 }, { "x": 43, "y": 20 }, { "x": 44, "y": 20 }, { "x": 45, "y": 20 },
+        { "x": 46, "y": 20 }, { "x": 47, "y": 20 }, { "x": 48, "y": 20 }, { "x": 49, "y": 20 },
+        { "x": 39, "y": 21 }, { "x": 40, "y": 21 }, { "x": 41, "y": 21 }, { "x": 42, "y": 21 },
+        { "x": 43, "y": 21 }, { "x": 44, "y": 21 }, { "x": 45, "y": 21 }, { "x": 46, "y": 21 },
+        { "x": 47, "y": 21 }, { "x": 48, "y": 21 }, { "x": 49, "y": 21 }, { "x": 50, "y": 21 }, { "x": 51, "y": 21 },
+        { "x": 41, "y": 22 }, { "x": 42, "y": 22 }, { "x": 43, "y": 22 }, { "x": 44, "y": 22 }, { "x": 45, "y": 22 },
+        { "x": 46, "y": 22 }, { "x": 47, "y": 22 }, { "x": 48, "y": 22 }, { "x": 49, "y": 22 },
+        { "x": 43, "y": 23 }, { "x": 44, "y": 23 }, { "x": 45, "y": 23 }, { "x": 46, "y": 23 }, { "x": 47, "y": 23 }
+      ]
+    },
+    {
+      "terrainId": "demo.terrain.general-store-entrance",
+      "positions": [{ "x": 32, "y": 13 }]
+    },
+    {
+      "terrainId": "demo.terrain.count-entrance",
+      "positions": [{ "x": 26, "y": 13 }]
+    },
+    {
+      "terrainId": "demo.terrain.home-entrance",
+      "positions": [{ "x": 42, "y": 13 }]
+    },
+    {
+      "terrainId": "demo.terrain.temple-entrance",
+      "positions": [{ "x": 45, "y": 19 }]
+    },
+    {
+      "terrainId": "demo.terrain.alchemist-entrance",
+      "positions": [{ "x": 53, "y": 13 }]
+    },
+    {
+      "terrainId": "demo.terrain.magic-shop-entrance",
+      "positions": [{ "x": 57, "y": 13 }]
+    },
+    {
+      "terrainId": "demo.terrain.bookstore-entrance",
+      "positions": [{ "x": 55, "y": 13 }]
+    },
+    {
+      "terrainId": "demo.terrain.armoury-entrance",
+      "positions": [{ "x": 30, "y": 19 }]
+    },
+    {
+      "terrainId": "demo.terrain.weaponsmith-entrance",
+      "positions": [{ "x": 34, "y": 19 }]
+    },
+    {
+      "terrainId": "demo.terrain.black-market-entrance",
+      "positions": [{ "x": 55, "y": 19 }]
+    },
+    {
+      "terrainId": "demo.terrain.thieves-hideout-entry-available",
+      "positions": [{ "x": 63, "y": 11 }]
+    },
+    {
+      "terrainId": "demo.terrain.surface-rock",
+      "positions": [
+        { "x": 71, "y": 13 }, { "x": 72, "y": 13 }, { "x": 73, "y": 13 }, { "x": 74, "y": 13 },
+        { "x": 75, "y": 13 }, { "x": 76, "y": 13 }, { "x": 77, "y": 13 },
+        { "x": 71, "y": 14 }, { "x": 77, "y": 14 },
+        { "x": 71, "y": 15 }, { "x": 77, "y": 15 },
+        { "x": 77, "y": 16 },
+        { "x": 71, "y": 17 }, { "x": 77, "y": 17 },
+        { "x": 71, "y": 18 }, { "x": 77, "y": 18 },
+        { "x": 71, "y": 19 }, { "x": 72, "y": 19 }, { "x": 73, "y": 19 }, { "x": 74, "y": 19 },
+        { "x": 75, "y": 19 }, { "x": 76, "y": 19 }, { "x": 77, "y": 19 }
+      ]
+    },
+    {
+      "terrainId": "demo.terrain.surface-woodland",
+      "positions": [
+        { "x": 4, "y": 7 }, { "x": 5, "y": 7 }, { "x": 6, "y": 7 }, { "x": 7, "y": 7 },
+        { "x": 8, "y": 7 }, { "x": 9, "y": 7 }, { "x": 10, "y": 7 }, { "x": 11, "y": 7 },
+        { "x": 12, "y": 7 }, { "x": 13, "y": 7 }, { "x": 14, "y": 7 },
+        { "x": 4, "y": 8 }, { "x": 5, "y": 8 }, { "x": 6, "y": 8 }, { "x": 7, "y": 8 },
+        { "x": 8, "y": 8 }, { "x": 9, "y": 8 }, { "x": 10, "y": 8 }, { "x": 11, "y": 8 },
+        { "x": 12, "y": 8 }, { "x": 13, "y": 8 }, { "x": 14, "y": 8 },
+        { "x": 5, "y": 9 }, { "x": 6, "y": 9 }, { "x": 7, "y": 9 }, { "x": 8, "y": 9 },
+        { "x": 9, "y": 9 }, { "x": 10, "y": 9 }, { "x": 11, "y": 9 }, { "x": 12, "y": 9 },
+        { "x": 13, "y": 9 }, { "x": 14, "y": 9 },
+        { "x": 4, "y": 21 }, { "x": 5, "y": 21 }, { "x": 6, "y": 21 }, { "x": 7, "y": 21 },
+        { "x": 8, "y": 21 }, { "x": 9, "y": 21 }, { "x": 10, "y": 21 }, { "x": 11, "y": 21 },
+        { "x": 12, "y": 21 }, { "x": 13, "y": 21 }, { "x": 14, "y": 21 },
+        { "x": 4, "y": 22 }, { "x": 5, "y": 22 }, { "x": 6, "y": 22 }, { "x": 7, "y": 22 },
+        { "x": 8, "y": 22 }, { "x": 9, "y": 22 }, { "x": 10, "y": 22 }, { "x": 11, "y": 22 },
+        { "x": 12, "y": 22 }, { "x": 13, "y": 22 }, { "x": 14, "y": 22 },
+        { "x": 5, "y": 23 }, { "x": 6, "y": 23 }, { "x": 7, "y": 23 }, { "x": 8, "y": 23 },
+        { "x": 9, "y": 23 }, { "x": 10, "y": 23 }, { "x": 11, "y": 23 }, { "x": 12, "y": 23 },
+        { "x": 13, "y": 23 }, { "x": 14, "y": 23 }
+      ]
+    },
+    {
+      "terrainId": "demo.terrain.surface-water-shallow",
+      "positions": [
+        { "x": 81, "y": 8 }, { "x": 82, "y": 8 }, { "x": 83, "y": 8 }, { "x": 84, "y": 8 },
+        { "x": 85, "y": 8 }, { "x": 86, "y": 8 }, { "x": 87, "y": 8 }, { "x": 88, "y": 8 },
+        { "x": 89, "y": 8 }, { "x": 90, "y": 8 },
+        { "x": 80, "y": 9 }, { "x": 81, "y": 9 }, { "x": 82, "y": 9 }, { "x": 83, "y": 9 },
+        { "x": 84, "y": 9 }, { "x": 85, "y": 9 }, { "x": 86, "y": 9 }, { "x": 87, "y": 9 },
+        { "x": 88, "y": 9 }, { "x": 89, "y": 9 }, { "x": 90, "y": 9 }, { "x": 91, "y": 9 },
+        { "x": 80, "y": 10 }, { "x": 81, "y": 10 }, { "x": 82, "y": 10 }, { "x": 83, "y": 10 },
+        { "x": 84, "y": 10 }, { "x": 85, "y": 10 }, { "x": 86, "y": 10 }, { "x": 87, "y": 10 },
+        { "x": 88, "y": 10 }, { "x": 89, "y": 10 }, { "x": 90, "y": 10 }, { "x": 91, "y": 10 },
+        { "x": 79, "y": 11 }, { "x": 80, "y": 11 }, { "x": 81, "y": 11 }, { "x": 82, "y": 11 },
+        { "x": 83, "y": 11 }, { "x": 84, "y": 11 }, { "x": 85, "y": 11 }, { "x": 86, "y": 11 },
+        { "x": 87, "y": 11 }, { "x": 88, "y": 11 }, { "x": 89, "y": 11 }, { "x": 90, "y": 11 },
+        { "x": 91, "y": 11 }, { "x": 92, "y": 11 },
+        { "x": 79, "y": 12 }, { "x": 80, "y": 12 }, { "x": 81, "y": 12 }, { "x": 82, "y": 12 },
+        { "x": 83, "y": 12 }, { "x": 88, "y": 12 }, { "x": 89, "y": 12 }, { "x": 90, "y": 12 },
+        { "x": 91, "y": 12 }, { "x": 92, "y": 12 },
+        { "x": 79, "y": 13 }, { "x": 80, "y": 13 }, { "x": 81, "y": 13 }, { "x": 82, "y": 13 },
+        { "x": 83, "y": 13 }, { "x": 89, "y": 13 }, { "x": 90, "y": 13 },
+        { "x": 91, "y": 13 }, { "x": 92, "y": 13 },
+        { "x": 79, "y": 14 }, { "x": 80, "y": 14 }, { "x": 81, "y": 14 }, { "x": 82, "y": 14 },
+        { "x": 89, "y": 14 }, { "x": 90, "y": 14 },
+        { "x": 91, "y": 14 }, { "x": 92, "y": 14 },
+        { "x": 79, "y": 15 }, { "x": 80, "y": 15 }, { "x": 81, "y": 15 }, { "x": 82, "y": 15 },
+        { "x": 89, "y": 15 }, { "x": 90, "y": 15 },
+        { "x": 91, "y": 15 }, { "x": 92, "y": 15 },
+        { "x": 79, "y": 16 }, { "x": 80, "y": 16 }, { "x": 81, "y": 16 }, { "x": 82, "y": 16 },
+        { "x": 83, "y": 16 }, { "x": 88, "y": 16 }, { "x": 89, "y": 16 }, { "x": 90, "y": 16 },
+        { "x": 91, "y": 16 }, { "x": 92, "y": 16 },
+        { "x": 80, "y": 17 }, { "x": 81, "y": 17 }, { "x": 82, "y": 17 }, { "x": 83, "y": 17 },
+        { "x": 84, "y": 17 }, { "x": 85, "y": 17 }, { "x": 86, "y": 17 }, { "x": 87, "y": 17 },
+        { "x": 88, "y": 17 }, { "x": 89, "y": 17 }, { "x": 90, "y": 17 }, { "x": 91, "y": 17 },
+        { "x": 80, "y": 18 }, { "x": 81, "y": 18 }, { "x": 82, "y": 18 }, { "x": 83, "y": 18 },
+        { "x": 84, "y": 18 }, { "x": 85, "y": 18 }, { "x": 86, "y": 18 }, { "x": 87, "y": 18 },
+        { "x": 88, "y": 18 }, { "x": 89, "y": 18 }, { "x": 90, "y": 18 }, { "x": 91, "y": 18 },
+        { "x": 81, "y": 19 }, { "x": 82, "y": 19 }, { "x": 83, "y": 19 }, { "x": 84, "y": 19 },
+        { "x": 85, "y": 19 }, { "x": 86, "y": 19 }, { "x": 87, "y": 19 }, { "x": 88, "y": 19 },
+        { "x": 89, "y": 19 }, { "x": 90, "y": 19 }
+      ]
+    },
+    {
+      "terrainId": "demo.terrain.surface-water-deep",
+      "positions": [
+        { "x": 84, "y": 12 }, { "x": 85, "y": 12 }, { "x": 86, "y": 12 }, { "x": 87, "y": 12 },
+        { "x": 84, "y": 13 }, { "x": 85, "y": 13 }, { "x": 86, "y": 13 }, { "x": 87, "y": 13 },
+        { "x": 88, "y": 13 },
+        { "x": 83, "y": 14 }, { "x": 84, "y": 14 }, { "x": 85, "y": 14 }, { "x": 86, "y": 14 },
+        { "x": 87, "y": 14 }, { "x": 88, "y": 14 },
+        { "x": 83, "y": 15 }, { "x": 84, "y": 15 }, { "x": 85, "y": 15 }, { "x": 86, "y": 15 },
+        { "x": 87, "y": 15 }, { "x": 88, "y": 15 },
+        { "x": 84, "y": 16 }, { "x": 85, "y": 16 }, { "x": 86, "y": 16 }, { "x": 87, "y": 16 }
+      ]
+    },
+    {
+      "terrainId": "demo.terrain.surface-tree",
+      "positions": [
+        { "x": 18, "y": 9 }, { "x": 20, "y": 10 }, { "x": 19, "y": 13 },
+        { "x": 17, "y": 20 }, { "x": 19, "y": 22 }, { "x": 21, "y": 23 },
+        { "x": 26, "y": 9 },
+        { "x": 61, "y": 9 }, { "x": 62, "y": 21 },
+        { "x": 69, "y": 8 }, { "x": 73, "y": 9 }, { "x": 77, "y": 10 },
+        { "x": 68, "y": 22 }, { "x": 74, "y": 22 }, { "x": 78, "y": 21 }
+      ]
+    },
+    {
+      "terrainId": "demo.terrain.stairs-down",
+      "positions": [{ "x": 74, "y": 16 }]
+    }
+  ],
+  "player": {
+    "instanceId": "demo.actor.warrens-player.1",
+    "kindId": "demo.actor.warrior-player",
+    "position": { "x": 44, "y": 16 }
+  },
+  "playerBuildId": "demo.build.warrior",
+  "actors": [],
+  "items": [
+    {
+      "instanceId": "demo.item.warrens-short-sword.1",
+      "kindId": "demo.item.short-sword",
+      "position": { "x": 45, "y": 16 },
+      "quantity": 1
+    },
+    {
+      "instanceId": "demo.item.warrens-light-healing-potion.1",
+      "kindId": "demo.item.light-healing-potion",
+      "position": { "x": 46, "y": 16 },
+      "quantity": 2
+    }
+  ],
+  "surfaceActorAllocation": { "rolls": 12, "level": 9 },
+  "dungeons": [
+    {
+      "id": "demo.dungeon.warrens",
+      "legacyIndex": 30,
+      "rootFloorId": "demo.floor.warrens-depth-1",
+      "guardianActorKindId": "demo.actor.warrens-keeper"
+    }
+  ],
+  "campaign": {
+    "victoryDungeonIds": ["demo.dungeon.warrens"],
+    "dungeonConquestPoints": 10000,
+    "taskCompletionPoints": 1000,
+    "victoryBonus": 50000,
+    "turnPenaltyInterval": 100,
+    "turnPenaltyPoints": 1
+  },
+  "tasks": [
+    {
+      "id": "demo.task.thieves-hideout",
+      "nameKey": "task-demo-thieves-hideout-name",
+      "descriptionKey": "task-demo-thieves-hideout-description",
+      "sourceFacilityId": "demo.town-facility.outpost-count",
+      "location": {
+        "kind": "dedicated-floors",
+        "floorIds": ["demo.floor.thieves-hideout"]
+      },
+      "objectives": [
+        {
+          "kind": "clear-floor",
+          "floorId": "demo.floor.thieves-hideout"
+        }
+      ],
+      "reward": {
+        "itemInstanceId": "demo.task.thieves-hideout.reward.1",
+        "itemKindId": "demo.item.broad-sword",
+        "quantity": 1
+      }
+    },
+    {
+      "id": "demo.task.pest-control",
+      "nameKey": "task-demo-pest-control-name",
+      "descriptionKey": "task-demo-pest-control-description",
+      "sourceFacilityId": "demo.town-facility.outpost-count",
+      "prerequisiteTaskId": "demo.task.thieves-hideout",
+      "location": {
+        "kind": "dungeon-depth",
+        "dungeonId": "demo.dungeon.warrens",
+        "depth": 5
+      },
+      "objectives": [
+        {
+          "kind": "kill-actor-kind",
+          "floorId": "demo.floor.warrens-depth-5",
+          "required": 8,
+          "actorKindId": "demo.actor.warg"
+        }
+      ],
+      "targetPlacements": [
+        {
+          "objectiveIndex": 0,
+          "floorId": "demo.floor.warrens-depth-5",
+          "spawnCount": 8
+        }
+      ],
+      "completionExitTerrainId": "demo.terrain.stairs-down",
+      "reward": {
+        "itemInstanceId": "demo.task.pest-control.reward.1",
+        "itemKindId": "demo.item.fur-cloak",
+        "quantity": 1
+      }
+    }
+  ],
+  "proceduralFloors": [
+    {
+      "id": "demo.floor.warrens-depth-1",
+      "nameKey": "floor-demo-warrens-depth-name",
+      "returnFloorId": "demo.floor.surface",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.warrens",
+      "encounterTableId": "demo.encounter-table.warrens",
+      "lootTableId": "demo.loot-table.warrens",
+      "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
+      "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
+      "guaranteedItems": [
+        { "id": "demo.guaranteed.warrens-food", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.ration-of-food", "weight": 1 }] },
+        { "id": "demo.guaranteed.warrens-light", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.flask-of-oil", "weight": 1 }, { "itemKindId": "demo.item.brass-lantern", "weight": 2 }] }
+      ],
+      "generationBudget": { "actorSlots": 4, "lootPlacements": 5, "roomPlacements": 5, "roomAreaTiles": 450, "streamerPlacements": 2, "streamerAreaTiles": 24 },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 18,
+          "minHeight": 7,
+          "maxHeight": 9,
+          "shapes": [
+            { "shape": "cavern", "weight": 9 },
+            { "shape": "rectangle", "weight": 1 }
+          ]
+        },
+        "streamers": [
+          { "terrainId": "demo.terrain.magma-vein", "weight": 1 },
+          { "terrainId": "demo.terrain.quartz-vein", "weight": 1 }
+        ],
+        "stairs": {
+          "up": { "minimum": 1, "maximum": 2 },
+          "down": { "minimum": 4, "maximum": 5 }
+        }
+      },
+      "entryTerrainId": "demo.terrain.stairs-down",
+      "nextFloorId": "demo.floor.warrens-depth-2",
+      "depth": 1,
+      "width": 66,
+      "height": 22,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.warrens-depth-2",
+      "nameKey": "floor-demo-warrens-depth-name",
+      "returnFloorId": "demo.floor.warrens-depth-1",
+      "dungeonId": "demo.dungeon.warrens",
+      "encounterTableId": "demo.encounter-table.warrens",
+      "lootTableId": "demo.loot-table.warrens",
+      "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
+      "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
+      "guaranteedItems": [
+        { "id": "demo.guaranteed.warrens-food", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.ration-of-food", "weight": 1 }] },
+        { "id": "demo.guaranteed.warrens-light", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.flask-of-oil", "weight": 1 }, { "itemKindId": "demo.item.brass-lantern", "weight": 2 }] }
+      ],
+      "generationBudget": { "actorSlots": 4, "lootPlacements": 5, "roomPlacements": 5, "roomAreaTiles": 450, "streamerPlacements": 2, "streamerAreaTiles": 24 },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 18,
+          "minHeight": 7,
+          "maxHeight": 9,
+          "shapes": [
+            { "shape": "cavern", "weight": 9 },
+            { "shape": "rectangle", "weight": 1 }
+          ]
+        },
+        "streamers": [
+          { "terrainId": "demo.terrain.magma-vein", "weight": 1 },
+          { "terrainId": "demo.terrain.quartz-vein", "weight": 1 }
+        ],
+        "stairs": {
+          "up": { "minimum": 1, "maximum": 2 },
+          "down": { "minimum": 4, "maximum": 5 }
+        }
+      },
+      "nextFloorId": "demo.floor.warrens-depth-3",
+      "depth": 2,
+      "width": 66,
+      "height": 22,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.warrens-depth-3",
+      "nameKey": "floor-demo-warrens-depth-name",
+      "returnFloorId": "demo.floor.warrens-depth-2",
+      "dungeonId": "demo.dungeon.warrens",
+      "encounterTableId": "demo.encounter-table.warrens",
+      "lootTableId": "demo.loot-table.warrens",
+      "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
+      "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
+      "guaranteedItems": [
+        { "id": "demo.guaranteed.warrens-food", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.ration-of-food", "weight": 1 }] },
+        { "id": "demo.guaranteed.warrens-light", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.flask-of-oil", "weight": 1 }, { "itemKindId": "demo.item.brass-lantern", "weight": 2 }] }
+      ],
+      "generationBudget": { "actorSlots": 4, "lootPlacements": 5, "roomPlacements": 5, "roomAreaTiles": 450, "streamerPlacements": 2, "streamerAreaTiles": 24 },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 18,
+          "minHeight": 7,
+          "maxHeight": 9,
+          "shapes": [
+            { "shape": "cavern", "weight": 9 },
+            { "shape": "rectangle", "weight": 1 }
+          ]
+        },
+        "streamers": [
+          { "terrainId": "demo.terrain.magma-vein", "weight": 1 },
+          { "terrainId": "demo.terrain.quartz-vein", "weight": 1 }
+        ],
+        "stairs": {
+          "up": { "minimum": 1, "maximum": 2 },
+          "down": { "minimum": 4, "maximum": 5 }
+        }
+      },
+      "nextFloorId": "demo.floor.warrens-depth-4",
+      "depth": 3,
+      "width": 66,
+      "height": 22,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.warrens-depth-4",
+      "nameKey": "floor-demo-warrens-depth-name",
+      "returnFloorId": "demo.floor.warrens-depth-3",
+      "dungeonId": "demo.dungeon.warrens",
+      "encounterTableId": "demo.encounter-table.warrens",
+      "lootTableId": "demo.loot-table.warrens",
+      "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
+      "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
+      "guaranteedItems": [
+        { "id": "demo.guaranteed.warrens-food", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.ration-of-food", "weight": 1 }] },
+        { "id": "demo.guaranteed.warrens-light", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.flask-of-oil", "weight": 1 }, { "itemKindId": "demo.item.brass-lantern", "weight": 2 }] }
+      ],
+      "generationBudget": { "actorSlots": 4, "lootPlacements": 5, "roomPlacements": 5, "roomAreaTiles": 450, "streamerPlacements": 2, "streamerAreaTiles": 24 },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 18,
+          "minHeight": 7,
+          "maxHeight": 9,
+          "shapes": [
+            { "shape": "cavern", "weight": 9 },
+            { "shape": "rectangle", "weight": 1 }
+          ]
+        },
+        "streamers": [
+          { "terrainId": "demo.terrain.magma-vein", "weight": 1 },
+          { "terrainId": "demo.terrain.quartz-vein", "weight": 1 }
+        ],
+        "stairs": {
+          "up": { "minimum": 1, "maximum": 2 },
+          "down": { "minimum": 4, "maximum": 5 }
+        }
+      },
+      "nextFloorId": "demo.floor.warrens-depth-5",
+      "depth": 4,
+      "width": 66,
+      "height": 22,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.warrens-depth-5",
+      "nameKey": "floor-demo-warrens-depth-name",
+      "returnFloorId": "demo.floor.warrens-depth-4",
+      "dungeonId": "demo.dungeon.warrens",
+      "encounterTableId": "demo.encounter-table.warrens",
+      "lootTableId": "demo.loot-table.warrens",
+      "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
+      "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
+      "guaranteedItems": [
+        { "id": "demo.guaranteed.warrens-food", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.ration-of-food", "weight": 1 }] },
+        { "id": "demo.guaranteed.warrens-light", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.flask-of-oil", "weight": 1 }, { "itemKindId": "demo.item.brass-lantern", "weight": 2 }] }
+      ],
+      "generationBudget": { "actorSlots": 4, "lootPlacements": 5, "roomPlacements": 5, "roomAreaTiles": 450, "streamerPlacements": 2, "streamerAreaTiles": 24 },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 18,
+          "minHeight": 7,
+          "maxHeight": 9,
+          "shapes": [
+            { "shape": "cavern", "weight": 9 },
+            { "shape": "rectangle", "weight": 1 }
+          ]
+        },
+        "streamers": [
+          { "terrainId": "demo.terrain.magma-vein", "weight": 1 },
+          { "terrainId": "demo.terrain.quartz-vein", "weight": 1 }
+        ],
+        "stairs": {
+          "up": { "minimum": 1, "maximum": 2 },
+          "down": { "minimum": 4, "maximum": 5 }
+        }
+      },
+      "nextFloorId": "demo.floor.warrens-depth-6",
+      "depth": 5,
+      "width": 66,
+      "height": 22,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.warrens-depth-6",
+      "nameKey": "floor-demo-warrens-depth-name",
+      "returnFloorId": "demo.floor.warrens-depth-5",
+      "dungeonId": "demo.dungeon.warrens",
+      "encounterTableId": "demo.encounter-table.warrens",
+      "lootTableId": "demo.loot-table.warrens",
+      "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
+      "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
+      "guaranteedItems": [
+        { "id": "demo.guaranteed.warrens-food", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.ration-of-food", "weight": 1 }] },
+        { "id": "demo.guaranteed.warrens-light", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.flask-of-oil", "weight": 1 }, { "itemKindId": "demo.item.brass-lantern", "weight": 2 }] }
+      ],
+      "generationBudget": { "actorSlots": 4, "lootPlacements": 5, "roomPlacements": 5, "roomAreaTiles": 450, "streamerPlacements": 2, "streamerAreaTiles": 24 },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 18,
+          "minHeight": 7,
+          "maxHeight": 9,
+          "shapes": [
+            { "shape": "cavern", "weight": 9 },
+            { "shape": "rectangle", "weight": 1 }
+          ]
+        },
+        "streamers": [
+          { "terrainId": "demo.terrain.magma-vein", "weight": 1 },
+          { "terrainId": "demo.terrain.quartz-vein", "weight": 1 }
+        ],
+        "stairs": {
+          "up": { "minimum": 1, "maximum": 2 },
+          "down": { "minimum": 4, "maximum": 5 }
+        }
+      },
+      "nextFloorId": "demo.floor.warrens-depth-7",
+      "depth": 6,
+      "width": 66,
+      "height": 22,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.warrens-depth-7",
+      "nameKey": "floor-demo-warrens-depth-name",
+      "returnFloorId": "demo.floor.warrens-depth-6",
+      "dungeonId": "demo.dungeon.warrens",
+      "encounterTableId": "demo.encounter-table.warrens",
+      "lootTableId": "demo.loot-table.warrens",
+      "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
+      "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
+      "guaranteedItems": [
+        { "id": "demo.guaranteed.warrens-food", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.ration-of-food", "weight": 1 }] },
+        { "id": "demo.guaranteed.warrens-light", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.flask-of-oil", "weight": 1 }, { "itemKindId": "demo.item.brass-lantern", "weight": 2 }] }
+      ],
+      "generationBudget": { "actorSlots": 4, "lootPlacements": 5, "roomPlacements": 5, "roomAreaTiles": 450, "streamerPlacements": 2, "streamerAreaTiles": 24 },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 18,
+          "minHeight": 7,
+          "maxHeight": 9,
+          "shapes": [
+            { "shape": "cavern", "weight": 9 },
+            { "shape": "rectangle", "weight": 1 }
+          ]
+        },
+        "streamers": [
+          { "terrainId": "demo.terrain.magma-vein", "weight": 1 },
+          { "terrainId": "demo.terrain.quartz-vein", "weight": 1 }
+        ],
+        "stairs": {
+          "up": { "minimum": 1, "maximum": 2 },
+          "down": { "minimum": 4, "maximum": 5 }
+        }
+      },
+      "nextFloorId": "demo.floor.warrens-depth-8",
+      "depth": 7,
+      "width": 66,
+      "height": 22,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.warrens-depth-8",
+      "nameKey": "floor-demo-warrens-depth-name",
+      "returnFloorId": "demo.floor.warrens-depth-7",
+      "dungeonId": "demo.dungeon.warrens",
+      "encounterTableId": "demo.encounter-table.warrens",
+      "lootTableId": "demo.loot-table.warrens",
+      "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
+      "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
+      "guaranteedItems": [
+        { "id": "demo.guaranteed.warrens-food", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.ration-of-food", "weight": 1 }] },
+        { "id": "demo.guaranteed.warrens-light", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.flask-of-oil", "weight": 1 }, { "itemKindId": "demo.item.brass-lantern", "weight": 2 }] }
+      ],
+      "generationBudget": { "actorSlots": 4, "lootPlacements": 5, "roomPlacements": 5, "roomAreaTiles": 450, "streamerPlacements": 2, "streamerAreaTiles": 24 },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 18,
+          "minHeight": 7,
+          "maxHeight": 9,
+          "shapes": [
+            { "shape": "cavern", "weight": 9 },
+            { "shape": "rectangle", "weight": 1 }
+          ]
+        },
+        "streamers": [
+          { "terrainId": "demo.terrain.magma-vein", "weight": 1 },
+          { "terrainId": "demo.terrain.quartz-vein", "weight": 1 }
+        ],
+        "stairs": {
+          "up": { "minimum": 1, "maximum": 2 },
+          "down": { "minimum": 4, "maximum": 5 }
+        }
+      },
+      "nextFloorId": "demo.floor.warrens-depth-9",
+      "depth": 8,
+      "width": 66,
+      "height": 22,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.warrens-depth-9",
+      "nameKey": "floor-demo-warrens-depth-name",
+      "returnFloorId": "demo.floor.warrens-depth-8",
+      "dungeonId": "demo.dungeon.warrens",
+      "encounterTableId": "demo.encounter-table.warrens",
+      "lootTableId": "demo.loot-table.warrens",
+      "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
+      "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
+      "guaranteedItems": [
+        { "id": "demo.guaranteed.warrens-food", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.ration-of-food", "weight": 1 }] },
+        { "id": "demo.guaranteed.warrens-light", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.flask-of-oil", "weight": 1 }, { "itemKindId": "demo.item.brass-lantern", "weight": 2 }] }
+      ],
+      "generationBudget": { "actorSlots": 5, "lootPlacements": 5, "roomPlacements": 5, "roomAreaTiles": 450, "streamerPlacements": 2, "streamerAreaTiles": 24 },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 18,
+          "minHeight": 7,
+          "maxHeight": 9,
+          "shapes": [
+            { "shape": "cavern", "weight": 9 },
+            { "shape": "rectangle", "weight": 1 }
+          ]
+        },
+        "streamers": [
+          { "terrainId": "demo.terrain.magma-vein", "weight": 1 },
+          { "terrainId": "demo.terrain.quartz-vein", "weight": 1 }
+        ],
+        "stairs": { "up": { "minimum": 1, "maximum": 2 } }
+      },
+      "finalFloor": true,
+      "guardian": {
+        "instanceId": "demo.guardian.warrens.1",
+        "actorKindId": "demo.actor.warrens-keeper",
+        "rewardLootTableId": "demo.loot-table.warrens-final-reward"
+      },
+      "depth": 9,
+      "width": 66,
+      "height": 22,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.anambar",
+      "nameKey": "floor-demo-anambar-name",
+      "returnFloorId": "demo.floor.surface",
+      "lifecycle": "town",
+      "depth": 0,
+      "width": 23,
+      "height": 11,
+      "wallTerrainId": "demo.terrain.outpost-wall",
+      "floorTerrainId": "demo.terrain.surface-grass",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "closedDoorTerrainId": "demo.terrain.door-closed",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": [],
+      "inlineMap": {
+        "playerPosition": { "x": 21, "y": 9 },
+        "terrainOverrides": [
+          {
+            "terrainId": "demo.terrain.surface-grass",
+            "positions": [
+              { "x": 1, "y": 2 }, { "x": 2, "y": 2 }, { "x": 3, "y": 2 }, { "x": 4, "y": 2 }, { "x": 5, "y": 2 }, { "x": 6, "y": 2 }, { "x": 7, "y": 2 }, { "x": 8, "y": 2 }, { "x": 9, "y": 2 }, { "x": 10, "y": 2 }, { "x": 11, "y": 2 }, { "x": 12, "y": 2 }, { "x": 13, "y": 2 }, { "x": 14, "y": 2 }, { "x": 15, "y": 2 }, { "x": 16, "y": 2 }, { "x": 17, "y": 2 }, { "x": 18, "y": 2 }, { "x": 19, "y": 2 }, { "x": 20, "y": 2 },
+              { "x": 1, "y": 3 }, { "x": 2, "y": 3 }, { "x": 3, "y": 3 }, { "x": 4, "y": 3 }, { "x": 5, "y": 3 }, { "x": 6, "y": 3 }, { "x": 7, "y": 3 }, { "x": 8, "y": 3 }, { "x": 9, "y": 3 }, { "x": 10, "y": 3 }, { "x": 11, "y": 3 }, { "x": 12, "y": 3 }, { "x": 13, "y": 3 }, { "x": 14, "y": 3 }, { "x": 15, "y": 3 }, { "x": 16, "y": 3 }, { "x": 17, "y": 3 }, { "x": 18, "y": 3 }, { "x": 19, "y": 3 }, { "x": 20, "y": 3 },
+              { "x": 1, "y": 4 }, { "x": 2, "y": 4 }, { "x": 3, "y": 4 }, { "x": 4, "y": 4 }, { "x": 5, "y": 4 }, { "x": 6, "y": 4 }, { "x": 7, "y": 4 }, { "x": 8, "y": 4 }, { "x": 9, "y": 4 }, { "x": 10, "y": 4 }, { "x": 11, "y": 4 }, { "x": 12, "y": 4 }, { "x": 13, "y": 4 }, { "x": 14, "y": 4 }, { "x": 15, "y": 4 }, { "x": 16, "y": 4 }, { "x": 17, "y": 4 }, { "x": 18, "y": 4 }, { "x": 19, "y": 4 }, { "x": 20, "y": 4 },
+              { "x": 1, "y": 6 }, { "x": 2, "y": 6 }, { "x": 3, "y": 6 }, { "x": 4, "y": 6 }, { "x": 5, "y": 6 }, { "x": 6, "y": 6 }, { "x": 7, "y": 6 }, { "x": 8, "y": 6 }, { "x": 9, "y": 6 }, { "x": 10, "y": 6 }, { "x": 11, "y": 6 }, { "x": 12, "y": 6 }, { "x": 13, "y": 6 }, { "x": 14, "y": 6 }, { "x": 15, "y": 6 }, { "x": 16, "y": 6 }, { "x": 17, "y": 6 }, { "x": 18, "y": 6 }, { "x": 19, "y": 6 }, { "x": 20, "y": 6 },
+              { "x": 1, "y": 7 }, { "x": 2, "y": 7 }, { "x": 3, "y": 7 }, { "x": 4, "y": 7 }, { "x": 5, "y": 7 }, { "x": 6, "y": 7 }, { "x": 7, "y": 7 }, { "x": 8, "y": 7 }, { "x": 9, "y": 7 }, { "x": 10, "y": 7 }, { "x": 11, "y": 7 }, { "x": 12, "y": 7 }, { "x": 13, "y": 7 }, { "x": 14, "y": 7 }, { "x": 15, "y": 7 }, { "x": 16, "y": 7 }, { "x": 17, "y": 7 }, { "x": 18, "y": 7 }, { "x": 19, "y": 7 }, { "x": 20, "y": 7 },
+              { "x": 1, "y": 8 }, { "x": 2, "y": 8 }, { "x": 3, "y": 8 }, { "x": 4, "y": 8 }, { "x": 5, "y": 8 }, { "x": 6, "y": 8 }, { "x": 7, "y": 8 }, { "x": 8, "y": 8 }, { "x": 9, "y": 8 }, { "x": 10, "y": 8 }, { "x": 11, "y": 8 }, { "x": 12, "y": 8 }, { "x": 13, "y": 8 }, { "x": 14, "y": 8 }, { "x": 15, "y": 8 }, { "x": 16, "y": 8 }, { "x": 17, "y": 8 }, { "x": 18, "y": 8 }, { "x": 19, "y": 8 }, { "x": 20, "y": 8 }
+            ]
+          },
+          {
+            "terrainId": "demo.terrain.surface-path",
+            "positions": [
+              { "x": 1, "y": 5 }, { "x": 2, "y": 5 }, { "x": 3, "y": 5 }, { "x": 4, "y": 5 }, { "x": 5, "y": 5 }, { "x": 6, "y": 5 }, { "x": 7, "y": 5 }, { "x": 8, "y": 5 }, { "x": 9, "y": 5 }, { "x": 10, "y": 5 }, { "x": 11, "y": 5 }, { "x": 12, "y": 5 }, { "x": 13, "y": 5 }, { "x": 14, "y": 5 }, { "x": 15, "y": 5 }, { "x": 16, "y": 5 }, { "x": 17, "y": 5 }, { "x": 18, "y": 5 }, { "x": 19, "y": 5 }, { "x": 20, "y": 5 }, { "x": 21, "y": 5 },
+              { "x": 21, "y": 2 }, { "x": 21, "y": 3 }, { "x": 21, "y": 4 }, { "x": 21, "y": 6 }, { "x": 21, "y": 7 }, { "x": 21, "y": 8 }, { "x": 21, "y": 9 }
+            ]
+          },
+          { "terrainId": "demo.terrain.general-store-entrance", "positions": [{ "x": 2, "y": 1 }] },
+          { "terrainId": "demo.terrain.armoury-entrance", "positions": [{ "x": 6, "y": 1 }] },
+          { "terrainId": "demo.terrain.weaponsmith-entrance", "positions": [{ "x": 10, "y": 1 }] },
+          { "terrainId": "demo.terrain.temple-entrance", "positions": [{ "x": 14, "y": 1 }] },
+          { "terrainId": "demo.terrain.alchemist-entrance", "positions": [{ "x": 18, "y": 1 }] },
+          { "terrainId": "demo.terrain.magic-shop-entrance", "positions": [{ "x": 2, "y": 9 }] },
+          { "terrainId": "demo.terrain.black-market-entrance", "positions": [{ "x": 6, "y": 9 }] },
+          { "terrainId": "demo.terrain.home-entrance", "positions": [{ "x": 10, "y": 9 }] },
+          { "terrainId": "demo.terrain.bookstore-entrance", "positions": [{ "x": 14, "y": 9 }] },
+          { "terrainId": "demo.terrain.inn-entrance", "positions": [{ "x": 18, "y": 9 }] },
+          { "terrainId": "demo.terrain.outpost-gate", "positions": [{ "x": 21, "y": 10 }] }
+        ]
+      }
+    },
+    {
+      "id": "demo.floor.thieves-hideout",
+      "nameKey": "floor-demo-thieves-hideout-name",
+      "returnFloorId": "demo.floor.surface",
+      "lifecycle": "one-shot",
+      "entryTerrainId": "demo.terrain.thieves-hideout-entry",
+      "availableEntryTerrainId": "demo.terrain.thieves-hideout-entry-available",
+      "completedEntryTerrainId": "demo.terrain.thieves-hideout-entry-completed",
+      "failedEntryTerrainId": "demo.terrain.thieves-hideout-entry-failed",
+      "abandonedEntryTerrainId": "demo.terrain.thieves-hideout-entry-abandoned",
+      "taskId": "demo.task.thieves-hideout",
+      "depth": 5,
+      "width": 21,
+      "height": 8,
+      "wallTerrainId": "demo.terrain.permanent-wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "closedDoorTerrainId": "demo.terrain.door-closed",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "inlineMap": {
+        "playerPosition": { "x": 1, "y": 4 },
+        "terrainOverrides": [
+          {
+            "terrainId": "demo.terrain.floor",
+            "positions": [
+              { "x": 5, "y": 1 }, { "x": 6, "y": 1 }, { "x": 7, "y": 1 },
+              { "x": 9, "y": 1 }, { "x": 10, "y": 1 }, { "x": 11, "y": 1 },
+              { "x": 13, "y": 1 }, { "x": 14, "y": 1 }, { "x": 15, "y": 1 },
+              { "x": 17, "y": 1 }, { "x": 18, "y": 1 }, { "x": 19, "y": 1 },
+              { "x": 5, "y": 2 }, { "x": 6, "y": 2 }, { "x": 7, "y": 2 },
+              { "x": 9, "y": 2 }, { "x": 10, "y": 2 }, { "x": 11, "y": 2 },
+              { "x": 13, "y": 2 }, { "x": 14, "y": 2 }, { "x": 15, "y": 2 },
+              { "x": 17, "y": 2 }, { "x": 18, "y": 2 }, { "x": 19, "y": 2 },
+              { "x": 5, "y": 3 }, { "x": 7, "y": 3 },
+              { "x": 9, "y": 3 }, { "x": 10, "y": 3 }, { "x": 11, "y": 3 },
+              { "x": 13, "y": 3 }, { "x": 14, "y": 3 }, { "x": 15, "y": 3 },
+              { "x": 17, "y": 3 }, { "x": 19, "y": 3 },
+              { "x": 2, "y": 4 }, { "x": 3, "y": 4 },
+              { "x": 1, "y": 5 }, { "x": 5, "y": 5 }, { "x": 6, "y": 5 },
+              { "x": 7, "y": 5 }, { "x": 8, "y": 5 }, { "x": 10, "y": 5 },
+              { "x": 11, "y": 5 }, { "x": 12, "y": 5 }, { "x": 14, "y": 5 },
+              { "x": 15, "y": 5 }, { "x": 17, "y": 5 }, { "x": 18, "y": 5 }, { "x": 19, "y": 5 },
+              { "x": 1, "y": 6 }, { "x": 3, "y": 6 },
+              { "x": 5, "y": 6 }, { "x": 6, "y": 6 }, { "x": 7, "y": 6 },
+              { "x": 8, "y": 6 }, { "x": 9, "y": 6 }, { "x": 10, "y": 6 },
+              { "x": 11, "y": 6 }, { "x": 12, "y": 6 }, { "x": 13, "y": 6 },
+              { "x": 14, "y": 6 }, { "x": 15, "y": 6 }, { "x": 16, "y": 6 },
+              { "x": 17, "y": 6 }, { "x": 18, "y": 6 }, { "x": 19, "y": 6 }
+            ]
+          },
+          {
+            "terrainId": "demo.terrain.door-closed",
+            "positions": [
+              { "x": 6, "y": 4 }, { "x": 10, "y": 4 }, { "x": 14, "y": 4 },
+              { "x": 18, "y": 4 }, { "x": 4, "y": 6 }
+            ]
+          },
+          {
+            "terrainId": "demo.terrain.stairs-up",
+            "positions": [{ "x": 1, "y": 4 }]
+          },
+          {
+            "terrainId": "demo.terrain.warren-snare",
+            "chancePercent": 50,
+            "otherwiseTerrainId": "demo.terrain.floor",
+            "positions": [
+              { "x": 6, "y": 3 }, { "x": 18, "y": 3 },
+              { "x": 2, "y": 5 }, { "x": 3, "y": 5 }, { "x": 9, "y": 5 },
+              { "x": 13, "y": 5 }, { "x": 16, "y": 5 }, { "x": 2, "y": 6 }
+            ]
+          }
+        ],
+        "lootSpawns": [
+          { "id": "demo.loot.thieves-hideout.1", "position": { "x": 7, "y": 1 }, "lootTableId": "demo.loot-table.warrens" },
+          { "id": "demo.loot.thieves-hideout.2", "position": { "x": 11, "y": 1 }, "lootTableId": "demo.loot-table.warrens" },
+          { "id": "demo.loot.thieves-hideout.3", "position": { "x": 15, "y": 1 }, "lootTableId": "demo.loot-table.warrens" },
+          { "id": "demo.loot.thieves-hideout.4", "position": { "x": 19, "y": 1 }, "lootTableId": "demo.loot-table.warrens" }
+        ],
+        "monsterFormation": {
+          "candidateActorKindIds": [
+            "demo.actor.filthy-street-urchin",
+            "demo.actor.agent-of-black-market",
+            "demo.actor.novice-rogue",
+            "demo.actor.scruffy-looking-hobbit",
+            "demo.actor.nibelung",
+            "demo.actor.bandit",
+            "demo.actor.tax-collector"
+          ],
+          "drawCount": 10,
+          "placementIndices": [0, 2, 4, 5, 7, 8],
+          "positions": [
+            { "x": 8, "y": 6 }, { "x": 6, "y": 2 }, { "x": 18, "y": 2 },
+            { "x": 10, "y": 2 }, { "x": 14, "y": 2 }, { "x": 15, "y": 6 }
+          ]
+        }
+      },
+      "actorSpawns": [],
+      "lootSpawns": []
+    }
+  ]
+}

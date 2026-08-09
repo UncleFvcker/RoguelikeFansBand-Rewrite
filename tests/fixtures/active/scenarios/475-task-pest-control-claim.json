@@ -1,12 +1,12 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "id": "task.pest-control-claim-fur-cloak",
   "category": "tasks",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "42",
   "preconditions": {
-    "world": "demo.world.warrens-journey",
+    "world": "demo.world.middle-earth",
     "playerBuildId": "demo.build.warrior",
     "playerPosition": {
       "x": 26,
@@ -422,18 +422,6 @@
             "growthPerTenLevels": 20
           }
         ]
-      },
-      "playerBuild": {
-        "buildId": "demo.build.warrior",
-        "buildNameKey": "build-demo-warrior-name",
-        "raceId": "demo.race.rfb-human",
-        "raceNameKey": "race-demo-rfb-human-name",
-        "classId": "demo.class.warrior",
-        "classNameKey": "class-demo-warrior-name",
-        "personalityId": "demo.personality.ordinary",
-        "personalityNameKey": "personality-demo-ordinary-name",
-        "lifePercent": 115,
-        "experiencePercent": 100
       },
       "entityCount": 0,
       "groundItemCount": 2,
@@ -890,29 +878,19 @@
       "tasks": [
         {
           "taskId": "demo.task.pest-control",
-          "floorId": "demo.floor.warrens-depth-5",
-          "nameKey": "task-demo-pest-control-name",
-          "descriptionKey": "task-demo-pest-control-description",
-          "sourceFacilityId": "demo.town-facility.outpost-count",
           "status": "completed",
           "current": 8,
           "required": 8,
           "stage": 1,
-          "stages": 1,
-          "retakesUsed": 0
+          "stages": 1
         },
         {
           "taskId": "demo.task.thieves-hideout",
-          "floorId": "demo.floor.thieves-hideout",
-          "nameKey": "task-demo-thieves-hideout-name",
-          "descriptionKey": "task-demo-thieves-hideout-description",
-          "sourceFacilityId": "demo.town-facility.outpost-count",
           "status": "completed",
           "current": 1,
           "required": 1,
           "stage": 1,
-          "stages": 1,
-          "retakesUsed": 0
+          "stages": 1
         }
       ],
       "campaign": {
@@ -921,7 +899,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 2
       },
-      "stateHash": "f0bfe0b2065a0446b4594a0fdc0a8c3dad46a9e6874c4c0526c08ccf6d31c9b3"
+      "stateHash": "b83bc207f81655ae5b0e52c212dc92bfec674263096ae39f9f06e070e7f09d74"
     },
     "events": [
       {

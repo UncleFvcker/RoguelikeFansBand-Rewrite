@@ -54,7 +54,7 @@ fn warrior_birth_rolls_three_to_seven_matching_torches_after_food() {
             .expect("Warrior should receive birth torches");
         let shop_draws_before = expected_rng.draw_counter;
 
-        let game = Game::new_warrens_journey_with_build(seed, RFB_WARRIOR_BUILD_ID)
+        let game = Game::new_with_build(seed, RFB_WARRIOR_BUILD_ID)
             .expect("Warrens Warrior should create");
         let torches = game
             .items
@@ -257,8 +257,8 @@ fn equipped_light_spends_one_fuel_per_ten_ticks_and_reports_extinction() {
 
 #[test]
 fn surface_is_ambient_lit_and_dungeon_visibility_follows_equipped_light_radius() {
-    let mut game = Game::new_warrens_journey_with_build(42, RFB_WARRIOR_BUILD_ID)
-        .expect("Warrens Warrior should create");
+    let mut game =
+        Game::new_with_build(42, RFB_WARRIOR_BUILD_ID).expect("Warrens Warrior should create");
     let surface_neighbor = Position {
         x: game.player.position.x + 1,
         y: game.player.position.y,
@@ -391,73 +391,9 @@ fn invisible_actors_are_hidden_until_detected_and_detection_round_trips() {
 }
 
 #[test]
-fn sleep_suppresses_carried_actor_light_but_not_intrinsic_light() {
-    let prepare = |intrinsic| {
-        let mut game = game_with_actor_definition(7, "demo.actor.ember-mote", |actor| {
-            actor.light = Some(rfb_content::ActorLightDefinition {
-                radius: 1,
-                intrinsic,
-                darkness: false,
-            });
-        });
-        game.current_floor_id = "demo.floor.echo-depth-1".to_owned();
-        game.entities.truncate(1);
-        game.items.clear();
-        game.entities[0].position = Position { x: 5, y: 3 };
-        game.entities[0].statuses.push(StatusInstance {
-            kind_id: STATUS_SLEEP.to_owned(),
-            intensity: 1,
-            remaining_ticks: 10,
-            source_id: None,
-            granted_resistances: BTreeMap::new(),
-            granted_brands: BTreeSet::new(),
-            granted_modifiers: StatModifiersDto::default(),
-            granted_equipment_bonuses: EquipmentBonusesDto::default(),
-            granted_status_immunities: BTreeSet::new(),
-            granted_race_id: None,
-            grants_wall_passage: false,
-            incoming_damage_percent: 100,
-        });
-        game
-    };
-
-    let diagonal = Position { x: 4, y: 2 };
-    assert!(!prepare(false).position_is_lit(diagonal));
-    assert!(prepare(true).position_is_lit(diagonal));
-    assert!(!prepare(true).position_is_lit(Position { x: 3, y: 3 }));
-}
-
-#[test]
-fn actor_darkness_suppresses_room_glow_but_not_carried_light() {
-    let mut game = Game::new(12);
-    clear_monsters(&mut game);
-    game.current_floor_id = "demo.floor.echo-depth-1".to_owned();
-    game.items.clear();
-    game.glow.fill(false);
-    let player_position = game.player.position;
-    let target = Position { x: 4, y: 3 };
-    replace_terrain(&mut game, player_position, "demo.terrain.floor");
-    replace_terrain(&mut game, target, "demo.terrain.floor");
-    let target_index = game.index(target).expect("target should be in bounds");
-    game.glow[target_index] = true;
-    assert!(game.position_is_lit(target));
-
-    game.push_generated_actor(
-        "test.silver-jelly".to_owned(),
-        "demo.actor.silver-jelly",
-        target,
-    );
-    assert!(!game.position_is_lit(target));
-
-    give_inventory_item(&mut game, "test.torch", TORCH_KIND_ID);
-    set_inventory_light_equipped(&mut game, "test.torch");
-    assert!(game.position_is_lit(target));
-}
-
-#[test]
 fn room_glow_darkening_persists_in_stored_floor_save_and_state_hash() {
-    let mut game = Game::new_warrens_journey_with_build(42, RFB_WARRIOR_BUILD_ID)
-        .expect("Warrens Warrior should create");
+    let mut game =
+        Game::new_with_build(42, RFB_WARRIOR_BUILD_ID).expect("Warrens Warrior should create");
     descend_one_floor(&mut game);
     let floor_id = game.current_floor_id.clone();
     assert!(game.glow.iter().any(|glow| *glow));
@@ -484,9 +420,9 @@ fn warrens_light_attempts_are_seeded_walkable_weighted_and_persistent() {
     let mut saw_oil = false;
     let mut saw_lantern = false;
     for seed in 1..=64 {
-        let mut left = Game::new_warrens_journey_with_build(seed, RFB_WARRIOR_BUILD_ID)
+        let mut left = Game::new_with_build(seed, RFB_WARRIOR_BUILD_ID)
             .expect("Warrens Warrior should create");
-        let mut right = Game::new_warrens_journey_with_build(seed, RFB_WARRIOR_BUILD_ID)
+        let mut right = Game::new_with_build(seed, RFB_WARRIOR_BUILD_ID)
             .expect("matching Warrens Warrior should create");
         descend_one_floor(&mut left);
         descend_one_floor(&mut right);

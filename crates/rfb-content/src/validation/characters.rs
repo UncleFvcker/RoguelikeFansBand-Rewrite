@@ -83,9 +83,11 @@ pub(super) fn validate_characters(
     for (required, kind, name) in [
         (
             items.iter().any(|item| {
-                item.use_action
-                    .as_ref()
-                    .is_some_and(|action| action.device_check_difficulty.is_some())
+                item.device_generation.is_some()
+                    || item
+                        .use_action
+                        .as_ref()
+                        .is_some_and(|action| action.device_check_difficulty.is_some())
             }),
             SkillKind::Device,
             "device",

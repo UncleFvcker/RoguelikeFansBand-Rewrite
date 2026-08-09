@@ -1457,8 +1457,6 @@ fn melee_method_triggers_contact_aura(method_id: Option<&str>) -> bool {
                 | "rfb.blow.engulf"
                 | "rfb.blow.charge"
                 | "rfb.blow.crawl"
-                | "rfb.blow.echo-bite"
-                | "rfb.blow.echo-rake"
         )
     )
 }

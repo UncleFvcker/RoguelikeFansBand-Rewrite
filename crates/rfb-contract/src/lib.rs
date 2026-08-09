@@ -3,17 +3,17 @@
 use std::{collections::BTreeSet, fmt, str::FromStr};
 
 use rfb_content::WildernessLocationDefinition;
-use rfb_core::{CoreError, Game, load_built_in_content};
+use rfb_core::{CoreError, DEFAULT_WORLD_ID, Game, load_built_in_content};
 use rfb_protocol::{
     AbilityDto, AbilityLearningDto, AbilityProgressSaveDto, CampaignStateDto, CampaignStateSaveDto,
     CharacterSummary, EntityFactionDto, EquipmentItemDto, EquipmentItemSaveDto, GameCommand,
     GameCommandEnvelope, GameEventDto, GoldPileDto, HomeDto, InventoryItemDto,
     InventoryItemSaveDto, ItemActivationDto, ItemChargesDto, ItemCurseSeverityDto,
     ItemEnchantmentsDto, ItemFuelDto, ItemKnowledgeSaveDto, ItemPropertyKnowledgeSaveDto,
-    ItemQualityDto, MonsterPackSaveDto, NaturalAttributeSetSaveDto, PROTOCOL_VERSION,
-    PlayerBuildDto, Position, RecallStateDto, ResistanceDto, ResistanceSaveDto, ResourcePoolDto,
-    ResourcePoolSaveDto, RolledAffixSaveDto, SAVE_HEADER_SCHEMA_VERSION, SaveHeaderV1, ShopDto,
-    StatusDto, StatusSaveDto, SummonCommandDto, SummonSaveDto, TaskStateSaveDto, TaskStatusDto,
+    ItemQualityDto, MonsterPackSaveDto, NaturalAttributeSetSaveDto, PROTOCOL_VERSION, Position,
+    RecallStateDto, ResistanceDto, ResistanceSaveDto, ResourcePoolDto, ResourcePoolSaveDto,
+    RolledAffixSaveDto, SAVE_HEADER_SCHEMA_VERSION, SaveHeaderV1, ShopDto, StatusDto,
+    StatusSaveDto, SummonCommandDto, SummonSaveDto, TaskStateSaveDto, TaskStatusKindDto,
     TerrainInteractionDto, TownDto,
 };
 use serde::{Deserialize, Serialize};
@@ -22,13 +22,11 @@ use thiserror::Error;
 pub mod policy;
 pub mod snapshot;
 
-pub const CONTRACT_SCHEMA_VERSION: u16 = 3;
-pub const ACTIVE_BASELINE: &str = "contract-v237";
+pub const CONTRACT_SCHEMA_VERSION: u16 = 4;
+pub const ACTIVE_BASELINE: &str = "contract-v239";
 pub const ACTIVE_FIXTURE_DIRECTORY: &str = "active";
 pub const LEGACY_BASELINE_COMMIT: &str = "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9";
-pub const ORIGINAL_TEST_WORLD: &str = "demo.world.original-v1";
 pub const HISTORICAL_TEST_WORLD: &str = "demo.original-v1";
-pub const WARRENS_TEST_WORLD: &str = "demo.world.warrens-journey";
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -441,13 +439,13 @@ pub struct FinalStateAssertion {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub player_attributes: Option<rfb_protocol::PlayerProgressDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub player_build: Option<PlayerBuildDto>,
+    pub player_build_id: Option<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub player_resources: Vec<ResourcePoolDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub player_ability_learning: Option<AbilityLearningDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub player_abilities: Vec<AbilityDto>,
+    pub player_abilities: Vec<PlayerAbilityRuntimeAssertion>,
     #[serde(default, skip_serializing_if = "summon_command_is_default")]
     pub player_summon_command: SummonCommandDto,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -478,12 +476,54 @@ pub struct FinalStateAssertion {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub terrain_interactions: Vec<TerrainInteractionDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub tasks: Vec<TaskStatusDto>,
+    pub tasks: Vec<TaskRuntimeAssertion>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub campaign: Option<CampaignStateDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub revealed_terrain: Vec<Position>,
     pub state_hash: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct PlayerAbilityRuntimeAssertion {
+    pub id: String,
+    #[serde(default, skip_serializing_if = "is_zero_u16")]
+    pub proficiency: u16,
+    #[serde(default, skip_serializing_if = "is_zero_u32")]
+    pub cast_count: u32,
+    #[serde(default, skip_serializing_if = "is_zero_u32")]
+    pub fail_count: u32,
+    #[serde(default, skip_serializing_if = "is_zero_u16")]
+    pub cooldown_remaining: u16,
+}
+
+impl From<&AbilityDto> for PlayerAbilityRuntimeAssertion {
+    fn from(ability: &AbilityDto) -> Self {
+        Self {
+            id: ability.id.clone(),
+            proficiency: ability.proficiency,
+            cast_count: ability.cast_count,
+            fail_count: ability.fail_count,
+            cooldown_remaining: ability.cooldown_remaining,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct TaskRuntimeAssertion {
+    pub task_id: String,
+    pub status: TaskStatusKindDto,
+    #[serde(default, skip_serializing_if = "is_zero_u32")]
+    pub current: u32,
+    pub required: u32,
+    pub stage: u32,
+    pub stages: u32,
+    #[serde(default, skip_serializing_if = "is_zero_u16")]
+    pub retakes_used: u16,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub max_retakes: Option<u16>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -540,24 +580,14 @@ pub enum CommandErrorKind {
 pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, ContractError> {
     validate_fixture(fixture)?;
     let seed = parse_seed(&fixture.seed)?;
-    let initial_game = match fixture.preconditions.world.as_str() {
-        WARRENS_TEST_WORLD => Game::new_warrens_journey_with_build(
-            seed,
-            fixture
-                .preconditions
-                .player_build_id
-                .as_deref()
-                .unwrap_or("demo.build.warrior"),
-        )?,
-        _ => fixture
-            .preconditions
-            .player_build_id
-            .as_deref()
-            .map_or_else(
-                || Ok(Game::new(seed)),
-                |build_id| Game::new_with_build(seed, build_id),
-            )?,
-    };
+    let initial_game = fixture
+        .preconditions
+        .player_build_id
+        .as_deref()
+        .map_or_else(
+            || Ok(Game::new(seed)),
+            |build_id| Game::new_with_build(seed, build_id),
+        )?;
     let mut payload = initial_game.to_save();
     if let Some(player_hp) = fixture.preconditions.player_hp {
         payload.player.hp = player_hp;
@@ -838,11 +868,6 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
     if fixture.preconditions.debug_clear_entities {
         payload.entities.clear();
         payload.carried_items.clear();
-        for state in &mut payload.dungeon_states {
-            if state.dungeon_id == "demo.dungeon.resonance-descent" {
-                state.entrance_guardian_defeated = Some(true);
-            }
-        }
     }
     let mut game = Game::from_save(payload)?;
     if fixture.preconditions.enter_task_floor {
@@ -911,7 +936,13 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
         match game.dispatch(envelope) {
             Ok(update) => {
                 events.extend(update.events);
-                changed_cells.extend(update.changed_cells.into_iter().map(|cell| cell.position));
+                if matches!(
+                    fixture.category,
+                    FixtureCategory::Movement | FixtureCategory::Dungeon | FixtureCategory::Town
+                ) {
+                    changed_cells
+                        .extend(update.changed_cells.into_iter().map(|cell| cell.position));
+                }
                 removed_entities.extend(update.removed_entities);
             }
             Err(error) => errors.push(CommandErrorAssertion {
@@ -962,10 +993,23 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
                 snapshot.player.progress.pending_attribute_increases,
             ),
             player_attributes: Some(snapshot.player.progress.clone()),
-            player_build: snapshot.player.build.clone(),
+            player_build_id: (fixture.category == FixtureCategory::Progression)
+                .then(|| {
+                    snapshot
+                        .player
+                        .build
+                        .as_ref()
+                        .map(|build| build.build_id.clone())
+                })
+                .flatten(),
             player_resources: snapshot.player.resources.clone(),
             player_ability_learning: snapshot.player.ability_learning,
-            player_abilities: snapshot.player.abilities.clone(),
+            player_abilities: snapshot
+                .player
+                .abilities
+                .iter()
+                .map(PlayerAbilityRuntimeAssertion::from)
+                .collect(),
             player_summon_command: snapshot.player.summon_command,
             player_recall: snapshot.player.recall,
             entity_count: snapshot.entities.len(),
@@ -1002,7 +1046,24 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
             next_item_instance_serial: Some(save.next_item_instance_serial),
             next_gold_pile_serial: Some(save.next_gold_pile_serial),
             terrain_interactions: snapshot.terrain_interactions,
-            tasks: snapshot.tasks,
+            tasks: if fixture.category == FixtureCategory::Tasks {
+                snapshot
+                    .tasks
+                    .into_iter()
+                    .map(|task| TaskRuntimeAssertion {
+                        task_id: task.task_id,
+                        status: task.status,
+                        current: task.current,
+                        required: task.required,
+                        stage: task.stage,
+                        stages: task.stages,
+                        retakes_used: task.retakes_used,
+                        max_retakes: task.max_retakes,
+                    })
+                    .collect()
+            } else {
+                Vec::new()
+            },
             campaign: Some(snapshot.campaign),
             revealed_terrain: save.revealed_terrain,
             state_hash: snapshot.state_hash,
@@ -1086,9 +1147,8 @@ fn validate_fixture(fixture: &ContractFixture) -> Result<(), ContractError> {
     if fixture.legacy_commit != LEGACY_BASELINE_COMMIT {
         return Err(ContractError::LegacyCommit(fixture.legacy_commit.clone()));
     }
-    if fixture.preconditions.world != ORIGINAL_TEST_WORLD
+    if fixture.preconditions.world != DEFAULT_WORLD_ID
         && fixture.preconditions.world != HISTORICAL_TEST_WORLD
-        && fixture.preconditions.world != WARRENS_TEST_WORLD
     {
         return Err(ContractError::UnknownWorld(
             fixture.preconditions.world.clone(),
