@@ -90,6 +90,9 @@ State Hash Schema 保持 v70。`S:BERSERK` 和 `S:MULTIPLY` 仍按原版边界�
 contract-v207 接入 7 只十二级施法怪物，按完整参数签名共享或生成 ability。
 正式包 actor 增至 268、ability 增至 124、严格同步增至 203；协议保持 1.147，
 State Hash Schema 保持 v70。没有引入怪物数值覆盖、模板或第二条施法路径。
+contract-v208 接入 10 只十三级怪物，复用现有运行时并生成 5 条 ability 内容记录。
+正式包 actor 增至 278、ability 增至 129、严格同步增至 213；协议保持 1.147，
+State Hash Schema 保持 v70。没有引入新 effect、数值覆盖或兼容路径。
 
 荒野 W0 已导入 `master:w_info.txt` 的 `99x66` normal 世界图、15 类地形、
 危险等级、道路和起点，并只把现有 Outpost/Warrens 绑定为正式地点。W1 已完成

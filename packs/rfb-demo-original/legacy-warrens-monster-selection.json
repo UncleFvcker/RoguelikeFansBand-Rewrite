@@ -1230,6 +1230,66 @@
       "id": "devilfish",
       "tags": ["fish", "warrens"],
       "omittedFlags": ["ATTR_MULTI", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 234,
+      "id": "drider",
+      "tags": ["dark-elf", "spider", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 235,
+      "id": "mongbat",
+      "tags": ["bat", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC", "WEIRD_MIND"]
+    },
+    {
+      "sourceIndex": 236,
+      "id": "killer-brown-beetle",
+      "tags": ["beetle", "insect", "warrens"],
+      "omittedFlags": ["POS_GAIN_AC", "WEIRD_MIND"]
+    },
+    {
+      "sourceIndex": 237,
+      "id": "boldor-king-of-the-yeeks",
+      "tags": ["warrens", "yeek"],
+      "omittedFlags": ["CAN_SPEAK", "MALE", "SMART"]
+    },
+    {
+      "sourceIndex": 238,
+      "id": "ogre",
+      "tags": ["ogre", "warrens"],
+      "omittedFlags": []
+    },
+    {
+      "sourceIndex": 239,
+      "id": "creeping-mithril-coins",
+      "tags": ["coin", "warrens"],
+      "omittedFlags": ["COLD_BLOOD"]
+    },
+    {
+      "sourceIndex": 241,
+      "id": "druid",
+      "tags": ["druid", "humanoid", "warrens"],
+      "omittedFlags": ["MALE", "SMART"]
+    },
+    {
+      "sourceIndex": 243,
+      "id": "cloaker",
+      "tags": ["cloaker", "warrens"],
+      "omittedFlags": ["CHAR_MULTI", "COLD_BLOOD", "EMPTY_MIND", "NASTY_GLYPH", "STUPID"]
+    },
+    {
+      "sourceIndex": 244,
+      "id": "black-orc",
+      "tags": ["humanoid", "orc", "warrens"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 245,
+      "id": "ochre-jelly",
+      "tags": ["jelly", "warrens"],
+      "omittedFlags": ["COLD_BLOOD", "EMPTY_MIND", "POS_GAIN_AC", "STUPID"]
     }
   ]
 }

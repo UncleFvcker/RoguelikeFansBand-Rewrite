@@ -1,6 +1,6 @@
 # RFB 内容数据格式 v1
 
-状态：P0 源格式、JSON Schema、确定性编译器和首个原创内容包已实现；当前内容包已扩展至 1.203.0
+状态：P0 源格式、JSON Schema、确定性编译器和首个原创内容包已实现；当前内容包已扩展至 1.204.0
 
 ## 1. 目标
 
@@ -293,6 +293,8 @@ contract-v205 / 包 1.201.0 为 actor 增加可选 `contactAura` 与分配字段
 contract-v206 / 包 1.202.0 只增加 20 条十二级非施法 actor 内容记录；既有 actor 字段完整承载经验吸取、毒素与属性损伤、眩晕、死亡爆炸、繁殖、群体、护卫、荒野/地牢限定、水生、骑乘、穿墙/毁墙、隐形、Unique、尸骨和 Warrior 掉落。该版包共 86 terrain、261 actors、204 items、116 abilities，严格同步 196 条，内容 hash 为 `8f68bd58310207e0a9e7d1370d1a09731213fb1323753f6f28e2182b8ef2f8dc`。协议 1.147 与 state hash Schema v70 不变。
 
 contract-v207 / 包 1.203.0 增加 7 条十二级施法 actor 与 8 个按完整参数签名去重的 ability 内容记录；没有增加数值覆盖层或 effect 类型。当前包共 86 terrain、268 actors、204 items、124 abilities，严格同步 203 条，内容 hash 为 `463afcc8f813025b618ed68697d3cc67c99483ed56f5dc598d62a30a120c8502`。协议 1.147 与 state hash Schema v70 不变。
+
+contract-v208 / 包 1.204.0 增加 10 条十三级 actor 与 5 个按完整参数签名生成的 ability 内容记录；自我加速只绑定既有 Haste 状态效果，没有增加数值覆盖层或 effect 类型。当前包共 86 terrain、278 actors、204 items、129 abilities，严格同步 213 条，内容 hash 为 `4b1c3378af39464ad9450bfc3148fc338b79f3ccd17bedf6fe2f776d226e23cb`。协议 1.147 与 state hash Schema v70 不变。
 
 contract-v83 以 1.75.0 增加 `detect` 能力效果、Echo Pulse 与 Echo Sight；类别/半径、FOV 与隐藏投影筛选、稳定结果顺序、瞬时/持久知识边界由核心定义，持久结果复用 `revealedTerrain`，state hash 升至 Schema v36。
 

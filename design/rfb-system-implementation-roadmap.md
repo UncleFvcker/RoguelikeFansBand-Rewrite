@@ -1,6 +1,6 @@
 # RFB 全系统梳理与重构实现路线
 
-状态：长期规则实现路线；当前基线为协议 1.147 / contract-v207（P31–P98 进展见 8.3，玩家流程与 Outpost 进展见 Phase 17/18，物品接入见 Phase 19，Warrens 怪物机制见 W1–W14 清单，荒野世界图见 W0–W5）
+状态：长期规则实现路线；当前基线为协议 1.147 / contract-v208（P31–P98 进展见 8.3，玩家流程与 Outpost 进展见 Phase 17/18，物品接入见 Phase 19，Warrens 怪物机制见 W1–W14 清单，荒野世界图见 W0–W5）
 
 ## 1. 目的与边界
 
@@ -641,6 +641,8 @@ P30“首个非 Mana 职业资源”已由 contract-v90 完成：节奏资源按
 **十二级怪物 P21 进展（2026-08）**：contract-v206 直接接入 20 只非施法怪物，复用既有经验吸取、毒素/属性损伤、眩晕、死亡爆炸、繁殖、群体、护卫、荒野/地牢限定、水生、骑乘、穿墙/毁墙、隐形、Unique、尸骨和 Warrior 掉落字段。`S:BERSERK` / `S:MULTIPLY` 作为附身者专用提示不生成怪物施法。正式包为 261 actors / 116 abilities，严格同步 196 条；协议 1.147、Schema v70 不变，demo 1.202.0，内置 hash 为 `8f68bd58310207e0a9e7d1370d1a09731213fb1323753f6f28e2182b8ef2f8dc`。完整边界见 [Contract v206](contract-v206-warrens-content-p21-level-12-harvest.md)。
 
 **十二级怪物 P22 进展（2026-08）**：contract-v207 接入注视者、月兽、大师伊克、牧师、黑暗精灵祭司、呻吟的幽灵和魔鬼鱼，继续以稳定 ability ID 承载按完整参数签名去重的施法内容。新增 8 个参数签名，既有状态、位移、毒球、吐息、近战与职业掉落全部复用；没有新增 effect 或怪物数值覆盖层。正式包为 268 actors / 124 abilities，严格同步 203 条；协议 1.147、Schema v70 不变，demo 1.203.0，内置 hash 为 `463afcc8f813025b618ed68697d3cc67c99483ed56f5dc598d62a30a120c8502`。完整边界见 [Contract v207](contract-v207-warrens-content-p22-level-12-casters.md)。
+
+**十三级怪物 P23 进展（2026-08）**：contract-v208 接入蛛化精灵、猴蝠、杀手褐甲虫、伊克之王博尔多、食人魔、爬行秘银币、德鲁伊、暗幕魔兽、黑兽人和赭冻怪。新增治疗 39、自我加速、博尔多召唤同类、`9d8+4` 火焰箭和 `4d8+4` 闪电箭五条内容记录，其余施法、近战、群体、护卫与掉落全部复用。正式包为 278 actors / 129 abilities，严格同步 213 条；协议 1.147、Schema v70 不变，demo 1.204.0，内置 hash 为 `4b1c3378af39464ad9450bfc3148fc338b79f3ccd17bedf6fe2f776d226e23cb`。完整边界见 [Contract v208](contract-v208-warrens-content-p23-level-13.md)。
 
 ## 9. 内容迁移策略
 

@@ -64,6 +64,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.black-harpy", 157, 1, 60),
             ("demo.actor.black-mamba", 210, 3, 40),
             ("demo.actor.black-naga", 71, 1, 30),
+            ("demo.actor.black-orc", 244, 2, 50),
             ("demo.actor.blinking-dot", 22, 1, 10),
             ("demo.actor.bloodfang-the-wolf", 170, 1, 999),
             ("demo.actor.bloodshot-eye", 129, 3, 40),
@@ -71,6 +72,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.blubbering-icky-thing", 41, 1, 20),
             ("demo.actor.blue-horror", 189, 3, 40),
             ("demo.actor.blue-yeek", 52, 1, 20),
+            ("demo.actor.boldor-king-of-the-yeeks", 237, 3, 999),
             ("demo.actor.bomb-mosquito", 1017, 3, 20),
             ("demo.actor.brodda-the-easterling", 169, 2, 999),
             ("demo.actor.broken-death-sword", 953, 5, 40),
@@ -87,9 +89,11 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.clear-icky-thing", 26, 1, 10),
             ("demo.actor.clear-mushroom-patch", 184, 2, 40),
             ("demo.actor.clear-worm-mass", 79, 2, 30),
+            ("demo.actor.cloaker", 243, 5, 50),
             ("demo.actor.copperhead-snake", 106, 1, 40),
             ("demo.actor.creeping-copper-coins", 85, 2, 40),
             ("demo.actor.creeping-gold-coins", 195, 3, 40),
+            ("demo.actor.creeping-mithril-coins", 239, 4, 50),
             ("demo.actor.creeping-silver-coins", 117, 2, 40),
             ("demo.actor.crow", 61, 2, 20),
             ("demo.actor.crow-of-durthang", 1224, 2, 40),
@@ -108,6 +112,8 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ),
             ("demo.actor.disenchanter-eye", 104, 2, 40),
             ("demo.actor.disenchanter-mold", 192, 2, 40),
+            ("demo.actor.drider", 234, 2, 50),
+            ("demo.actor.druid", 241, 2, 50),
             ("demo.actor.duck", 1241, 1, 25),
             ("demo.actor.eagle", 172, 2, 40),
             ("demo.actor.ewok", 92, 2, 40),
@@ -168,6 +174,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.jibaku-ghost", 1012, 2, 40),
             ("demo.actor.kamikaze-yeek", 179, 1, 40),
             ("demo.actor.killer-bee", 174, 2, 40),
+            ("demo.actor.killer-brown-beetle", 236, 2, 50),
             ("demo.actor.king-cobra", 171, 2, 40),
             (
                 "demo.actor.king-duosi-the-chief-of-southerings",
@@ -198,6 +205,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.metallic-red-centipede", 77, 1, 30),
             ("demo.actor.mine-dog", 221, 4, 50),
             ("demo.actor.moaning-spirit", 231, 2, 50),
+            ("demo.actor.mongbat", 235, 3, 50),
             ("demo.actor.moon-beast", 223, 1, 50),
             ("demo.actor.nami-the-mate", 1021, 4, 999),
             ("demo.actor.nether-worm-mass", 213, 4, 40),
@@ -214,6 +222,8 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.novice-rogue", 44, 1, 30),
             ("demo.actor.novice-warrior", 110, 2, 40),
             ("demo.actor.nurgling", 139, 2, 40),
+            ("demo.actor.ochre-jelly", 245, 3, 50),
+            ("demo.actor.ogre", 238, 2, 50),
             ("demo.actor.orc-shaman", 162, 1, 40),
             ("demo.actor.orfax-son-of-boldor", 180, 3, 999),
             ("demo.actor.owlbear", 188, 1, 40),
@@ -663,6 +673,115 @@ fn level_twelve_casters_share_parameterized_abilities() {
             .as_ref()
             .and_then(|drop| drop.theme_table_id.as_deref()),
         Some("demo.loot-table.evil-priest")
+    );
+}
+
+#[test]
+fn level_thirteen_monsters_reuse_existing_mechanics_and_parameterized_abilities() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actor = |id: &str| {
+        artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == id)
+            .unwrap_or_else(|| panic!("{id} should be imported"))
+    };
+    let ability_ids = |id: &str| {
+        actor(id)
+            .monster_casting
+            .as_ref()
+            .unwrap_or_else(|| panic!("{id} should retain monster casting"))
+            .abilities
+            .iter()
+            .map(|candidate| candidate.ability_id.as_str())
+            .collect::<BTreeSet<_>>()
+    };
+
+    for id in [
+        "demo.actor.drider",
+        "demo.actor.mongbat",
+        "demo.actor.killer-brown-beetle",
+        "demo.actor.boldor-king-of-the-yeeks",
+        "demo.actor.ogre",
+        "demo.actor.creeping-mithril-coins",
+        "demo.actor.druid",
+        "demo.actor.cloaker",
+        "demo.actor.black-orc",
+        "demo.actor.ochre-jelly",
+    ] {
+        assert_eq!(actor(id).level, 13, "{id} should remain level 13");
+    }
+    for id in [
+        "demo.actor.mongbat",
+        "demo.actor.killer-brown-beetle",
+        "demo.actor.ogre",
+        "demo.actor.creeping-mithril-coins",
+        "demo.actor.cloaker",
+        "demo.actor.ochre-jelly",
+    ] {
+        assert!(actor(id).monster_casting.is_none(), "{id} should not cast");
+    }
+
+    assert_eq!(
+        ability_ids("demo.actor.drider"),
+        [
+            "rfb-legacy.ability.bolt-physical-2d6-4",
+            "rfb-legacy.ability.bolt-physical-3d6",
+            "rfb-legacy.ability.confuse",
+            "rfb-legacy.ability.curse-3d8",
+            "rfb-legacy.ability.darkness",
+        ]
+        .into_iter()
+        .collect()
+    );
+    assert_eq!(
+        ability_ids("demo.actor.boldor-king-of-the-yeeks"),
+        [
+            "rfb-legacy.ability.blind",
+            "rfb-legacy.ability.blink",
+            "rfb-legacy.ability.escape",
+            "rfb-legacy.ability.heal-39",
+            "rfb-legacy.ability.kin-boldor-king-of-the-yeeks",
+            "rfb-legacy.ability.slow",
+        ]
+        .into_iter()
+        .collect()
+    );
+    assert_eq!(
+        ability_ids("demo.actor.druid"),
+        [
+            "rfb-legacy.ability.blind",
+            "rfb-legacy.ability.blink",
+            "rfb-legacy.ability.bolt-electricity-4d8-4",
+            "rfb-legacy.ability.bolt-fire-9d8-4",
+            "rfb-legacy.ability.haste-self",
+            "rfb-legacy.ability.paralyze",
+            "rfb-legacy.ability.slow",
+        ]
+        .into_iter()
+        .collect()
+    );
+    assert_eq!(
+        ability_ids("demo.actor.black-orc"),
+        ["rfb-legacy.ability.bolt-physical-2d7"]
+            .into_iter()
+            .collect()
+    );
+    assert!(actor("demo.actor.cloaker").movement.never_moves);
+    assert_eq!(
+        actor("demo.actor.black-orc")
+            .death_drop
+            .as_ref()
+            .and_then(|drop| drop.theme_table_id.as_deref()),
+        Some("demo.loot-table.archer")
+    );
+    assert_eq!(
+        actor("demo.actor.ogre")
+            .death_drop
+            .as_ref()
+            .and_then(|drop| drop.theme_table_id.as_deref()),
+        Some("demo.loot-table.large-kobold")
     );
 }
 
