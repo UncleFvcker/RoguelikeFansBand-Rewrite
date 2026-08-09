@@ -1711,10 +1711,8 @@
         "rfb.mutation.steel-skin",
         "rfb.mutation.regen"
       ],
-      "status": "blocked",
-      "blockers": [
-        "mutation-passive-bonus-system"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -1927,10 +1925,8 @@
         "lose:mutation-good-luck=>weight-1"
       ],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "mutation-passive-bonus-system"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -1950,10 +1946,8 @@
         "lose:mutation-good-luck=>weight-1"
       ],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "mutation-passive-bonus-system"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -2085,10 +2079,8 @@
       "removesOnGain": [
         "rfb.mutation.flesh-rot"
       ],
-      "status": "blocked",
-      "blockers": [
-        "mutation-passive-bonus-system"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -2858,7 +2850,7 @@
       "removesOnGain": [],
       "status": "blocked",
       "blockers": [
-        "mutation-passive-bonus-system"
+        "draconian-subrace-identity-and-aura-selection"
       ],
       "sourceNoNumericEffect": false
     },
@@ -2944,10 +2936,8 @@
         "lose:mutation-good-luck=>weight-1"
       ],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "mutation-passive-bonus-system"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {

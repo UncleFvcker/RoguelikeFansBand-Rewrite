@@ -7,5 +7,6 @@
   "rating": "good",
   "sourceIndex": 81,
   "randomWeight": 4,
+  "contactAura": "electricity",
   "removesOnGain": []
 }

@@ -118,6 +118,8 @@ pub(crate) fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<
             || !(-1_000_000..=1_000_000).contains(&mutation.saving_throw_skill)
             || !(-1_000_000..=1_000_000).contains(&mutation.saving_throw_skill_per_five_levels)
             || !(-64..=64).contains(&mutation.infravision)
+            || !(-1_000..=1_000).contains(&mutation.regeneration_rate_modifier_percent)
+            || !(-8..=8).contains(&mutation.light_radius)
         {
             return Err(ContentError::InvalidMutation(mutation.id.clone()));
         }

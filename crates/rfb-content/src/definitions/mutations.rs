@@ -42,6 +42,9 @@ pub struct MutationDefinition {
     pub saving_throw_skill_per_five_levels: i32,
     #[serde(default)]
     pub infravision: i32,
+    /// Additive percentage adjustment to the natural HP regeneration rate.
+    #[serde(default)]
+    pub regeneration_rate_modifier_percent: i32,
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub resistances: BTreeMap<ActorDamageType, ActorResistanceLevel>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -50,6 +53,10 @@ pub struct MutationDefinition {
     pub levitation: bool,
     #[serde(default)]
     pub telepathy: bool,
+    #[serde(default)]
+    pub contact_aura: Option<ActorDamageType>,
+    #[serde(default)]
+    pub light_radius: i32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub removes_on_gain: Vec<String>,
 }

@@ -1121,6 +1121,14 @@ pub(crate) enum DomainEvent {
         target_kind_id: String,
         amount: u16,
     },
+    MutationAuraHit {
+        target_kind_id: String,
+        damage: DamageOutcome,
+    },
+    MutationAuraSlew {
+        target_kind_id: String,
+        damage: DamageOutcome,
+    },
     VengeanceHit {
         target_kind_id: String,
         damage: DamageOutcome,
@@ -4191,6 +4199,31 @@ impl DomainEvent {
                     ("target", target_kind_id),
                     ("amount", amount.to_string()),
                 ],
+            ),
+            Self::MutationAuraHit {
+                target_kind_id,
+                damage,
+            } => dto_with_outcome(
+                "mutation.aura-hit",
+                "mutation-aura-hit",
+                [
+                    ("target", target_kind_id),
+                    ("damage", damage.applied.to_string()),
+                ],
+                GameEventOutcomeDto::Damage {
+                    resolution: damage.into(),
+                },
+            ),
+            Self::MutationAuraSlew {
+                target_kind_id,
+                damage,
+            } => dto_with_outcome(
+                "mutation.aura-slay",
+                "mutation-aura-slay",
+                [("target", target_kind_id)],
+                GameEventOutcomeDto::Death {
+                    resolution: damage.into(),
+                },
             ),
             Self::VengeanceHit {
                 target_kind_id,

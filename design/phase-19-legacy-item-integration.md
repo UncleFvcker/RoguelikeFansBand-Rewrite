@@ -681,3 +681,38 @@ The shared protocol enum gains fear and blindness values; protocol-version and
 release-fixture consolidation remain owned by the integration worktree. Save
 v1 and State Hash Schema v74 are structurally unchanged, and existing fixtures
 still begin without active mutations.
+
+## P3.7-M4C Regeneration, Contact Auras, and Intrinsic Light
+
+The third bounded passive batch activates five complete original mutations:
+Flesh Rot, Electrical Aura, Fire Aura, Regeneration, and Draconian
+Regeneration. Their exact RFB regeneration adjustments feed the existing
+natural-HP recovery calculation as additive rate modifiers: Flesh Rot `-80%`,
+Regeneration `+100%`, and Draconian Regeneration `+150%`. The independent M2
+unlocked-mutation penalty is applied afterwards, matching the original order.
+Flesh Rot also carries its complete `-2` constitution and `-1` charisma
+penalties and retains the ordered conflict with Steel Skin and Regeneration.
+
+Fire and electrical mutation auras use the original player-aura roll
+`2 + (2 * aura level - 1 + player level / 10)d(2 + player level / 10)` after a
+successful contact-method monster blow. Fire resolves before electricity;
+resistant, strong, and immune monsters suppress that aura without consuming its
+damage RNG. Damage, wake, death credit, drops, changed cells, and removed actor
+IDs all pass through the shared actor damage/death transaction. Gaze, spit,
+spore, wail, and explosion methods do not trigger contact auras. Fire Aura also
+provides the original minimum one-grid intrinsic player light and combines with
+equipped light by taking the stronger radius rather than adding radii.
+
+`MutationDefinition` adds only three consumed fields: an additive regeneration
+rate modifier, an optional contact-aura damage type, and intrinsic light radius.
+No parallel HP, aura, lighting, or persistence state is introduced. Draconian
+Shield remains blocked on `draconian-subrace-identity-and-aura-selection`
+because its authoritative armor amount and fire/cold/electricity/shards aura
+depend on the missing draconian subrace identity.
+
+The mutation audit reports 26 active and 126 blocked identities. Pack 1.217.0
+has content hash
+`64d79464b93f82eb07b411f9508b0c64a0b90783623d92e49e0c699c52f15519`.
+Protocol 1.153, save v1, State Hash Schema v74, and contract-v217 are unchanged;
+the new aura events use the existing generic event projection, and existing
+fixtures still begin without active mutations.

@@ -7,6 +7,7 @@
   "rating": "good",
   "sourceIndex": 88,
   "randomWeight": 4,
+  "regenerationRateModifierPercent": 100,
   "removesOnGain": [
     "rfb.mutation.flesh-rot"
   ]

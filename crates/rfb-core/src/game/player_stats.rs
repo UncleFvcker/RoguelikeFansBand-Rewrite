@@ -543,6 +543,28 @@ impl Game {
         })
     }
 
+    pub(super) fn player_regeneration_rate_percent(&self) -> u64 {
+        let modifier = self
+            .content
+            .mutations()
+            .filter(|mutation| self.progress.active_mutation_ids.contains(&mutation.id))
+            .fold(0_i32, |total, mutation| {
+                total.saturating_add(mutation.regeneration_rate_modifier_percent)
+            });
+        u64::try_from(100_i32.saturating_add(modifier).max(0))
+            .expect("non-negative regeneration rate must fit u64")
+    }
+
+    pub(super) fn player_mutation_light_radius(&self) -> i32 {
+        self.content
+            .mutations()
+            .filter(|mutation| self.progress.active_mutation_ids.contains(&mutation.id))
+            .map(|mutation| mutation.light_radius)
+            .max()
+            .unwrap_or_default()
+            .max(0)
+    }
+
     pub(super) fn equipment_modifiers(&self) -> StatModifiersDto {
         self.items
             .iter()

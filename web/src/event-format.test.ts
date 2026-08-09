@@ -41,6 +41,30 @@ test("mutation events use their authoritative projected names", () => {
   localization.setLocale("en-US");
 });
 
+test("mutation aura events use the typed damage element", () => {
+  const event = {
+    kind: "mutation.aura-hit",
+    messageKey: "mutation-aura-hit",
+    args: { target: "demo.actor.echo-hound", damage: "4" },
+    outcome: {
+      type: "damage",
+      resolution: {
+        rawDamage: 4,
+        armorReduction: 0,
+        resistanceAdjustment: 0,
+        finalDamage: 4,
+        damageType: "fire",
+        resistance: "normal",
+      },
+    },
+  };
+
+  assert.equal(formatter.formatEvent(event), "Your fire aura hits echo hound for 4 damage.");
+  localization.setLocale("zh-CN");
+  assert.equal(formatter.formatEvent(event), "你的火焰光环击中了回声猎犬，造成 4 点伤害。");
+  localization.setLocale("en-US");
+});
+
 test("wilderness ambush events use the dedicated localized message", () => {
   assert.equal(
     formatter.formatEvent({

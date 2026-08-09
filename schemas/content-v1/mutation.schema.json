@@ -1,5 +1,41 @@
 {
   "$defs": {
+    "ActorDamageType": {
+      "enum": [
+        "physical",
+        "acid",
+        "electricity",
+        "fire",
+        "cold",
+        "poison",
+        "light",
+        "dark",
+        "blindness",
+        "fear",
+        "confusion",
+        "nether",
+        "nexus",
+        "sound",
+        "shards",
+        "chaos",
+        "disenchant",
+        "time",
+        "mana",
+        "gravity",
+        "inertia",
+        "plasma",
+        "force",
+        "nuke",
+        "disintegrate",
+        "storm",
+        "holy-fire",
+        "hell-fire",
+        "ice",
+        "water",
+        "psi"
+      ],
+      "type": "string"
+    },
     "ActorResistanceLevel": {
       "description": "Content-declared resistance tier; `normal` is expressed by omission.",
       "enum": [
@@ -90,6 +126,17 @@
       "format": "int32",
       "type": "integer"
     },
+    "contactAura": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ActorDamageType"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
     "description": {
       "type": "string"
     },
@@ -110,6 +157,11 @@
     "levitation": {
       "default": false,
       "type": "boolean"
+    },
+    "lightRadius": {
+      "default": 0,
+      "format": "int32",
+      "type": "integer"
     },
     "modifiers": {
       "$ref": "#/$defs/StatModifiers",
@@ -137,6 +189,12 @@
     },
     "rating": {
       "$ref": "#/$defs/MutationRatingDefinition"
+    },
+    "regenerationRateModifierPercent": {
+      "default": 0,
+      "description": "Additive percentage adjustment to the natural HP regeneration rate.",
+      "format": "int32",
+      "type": "integer"
     },
     "removesOnGain": {
       "items": {

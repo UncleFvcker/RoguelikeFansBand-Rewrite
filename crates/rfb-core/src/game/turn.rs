@@ -73,6 +73,8 @@ impl Game {
         let regeneration = maximum
             .saturating_mul(factor)
             .saturating_add(NATURAL_HP_REGENERATION_BASE)
+            .saturating_mul(self.player_regeneration_rate_percent())
+            .saturating_div(100)
             .saturating_mul(self.mutation_regeneration_percent())
             .saturating_div(100);
         let recovered = period

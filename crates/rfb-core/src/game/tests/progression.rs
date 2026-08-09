@@ -421,6 +421,61 @@ fn esp_core_detects_normal_minds_but_not_explicit_empty_minds() {
 }
 
 #[test]
+fn m4c_regeneration_and_fire_light_feed_existing_player_pipelines() {
+    let mut game = Game::new(0);
+    clear_monsters(&mut game);
+    let constitution = game.effective_player_attributes().constitution;
+
+    assert_eq!(game.player_regeneration_rate_percent(), 100);
+    assert!(game.gain_mutation("rfb.mutation.regen", &mut Vec::new()));
+    assert_eq!(game.player_regeneration_rate_percent(), 200);
+    assert!(game.gain_mutation("rfb.mutation.flesh-rot", &mut Vec::new()));
+    assert!(
+        !game
+            .progress
+            .active_mutation_ids
+            .contains("rfb.mutation.regen")
+    );
+    assert_eq!(game.player_regeneration_rate_percent(), 20);
+    assert_eq!(
+        game.effective_player_attributes().constitution,
+        constitution - 2
+    );
+
+    let mut draconian = Game::new(0);
+    assert!(draconian.gain_mutation("rfb.mutation.draconian-regen", &mut Vec::new()));
+    assert_eq!(draconian.player_regeneration_rate_percent(), 250);
+
+    let recovered = |mutation_id: Option<&str>| {
+        let mut candidate = Game::new(0);
+        if let Some(mutation_id) = mutation_id {
+            candidate
+                .progress
+                .active_mutation_ids
+                .insert(mutation_id.to_owned());
+            candidate
+                .progress
+                .locked_mutation_ids
+                .insert(mutation_id.to_owned());
+        }
+        candidate.progress.hp_progression[0] = 10_000;
+        candidate.player.hp = 1;
+        candidate.world_tick = NATURAL_HP_REGENERATION_INTERVAL_TICKS;
+        candidate.process_natural_hp_regeneration(false);
+        candidate.player.hp - 1
+    };
+    assert!(recovered(Some("rfb.mutation.regen")) > recovered(None));
+    assert!(recovered(Some("rfb.mutation.flesh-rot")) < recovered(None));
+
+    let mut light = Game::new(0);
+    assert_eq!(light.player_light_radius(), None);
+    assert!(light.gain_mutation("rfb.mutation.fire-aura", &mut Vec::new()));
+    assert_eq!(light.player_light_radius(), Some(1));
+    assert!(light.lose_mutation("rfb.mutation.fire-aura", &mut Vec::new()));
+    assert_eq!(light.player_light_radius(), None);
+}
+
+#[test]
 fn new_life_is_one_seeded_transaction_with_locked_mutation_protection() {
     const ITEM_ID: &str = "test.item.new-life.1";
     const KIND_ID: &str = "demo.item.new-life-potion";

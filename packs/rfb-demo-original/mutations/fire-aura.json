@@ -7,5 +7,7 @@
   "rating": "good",
   "sourceIndex": 82,
   "randomWeight": 4,
+  "contactAura": "fire",
+  "lightRadius": 1,
   "removesOnGain": []
 }

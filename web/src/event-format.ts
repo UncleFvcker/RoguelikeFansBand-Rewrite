@@ -217,6 +217,23 @@ export function createPresentationFormatter(
           ability: contentName(event.args.source),
           target: contentName(event.args.target),
         });
+      case "mutation-aura-hit":
+      case "mutation-aura-slay": {
+        const resolution =
+          event.outcome?.type === "damage" || event.outcome?.type === "death"
+            ? event.outcome.resolution
+            : undefined;
+        return localization.format(
+          event.messageKey === "mutation-aura-slay"
+            ? "message-mutation-aura-slay"
+            : "message-mutation-aura-hit",
+          {
+            type: resolution ? damageTypeName(resolution.damageType) : "?",
+            target: contentName(event.args.target),
+            damage: event.args.damage ?? "?",
+          },
+        );
+      }
       case "combat-bolt-reflected":
         return localization.format("message-combat-bolt-reflected", {
           reflector: contentName(event.args.reflector),

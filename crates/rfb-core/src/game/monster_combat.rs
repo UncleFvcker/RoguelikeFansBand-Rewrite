@@ -279,7 +279,8 @@ impl Game {
             }
             let source_entity_id = self.entities[source_index].id.clone();
             let player_hp_before = self.player.hp;
-            let self_destructs = self.resolve_monster_melee(source_index, events, changed)?;
+            let self_destructs =
+                self.resolve_monster_melee(source_index, events, changed, removed_entities)?;
             if self_destructs {
                 if let Some(index) = self
                     .entities
@@ -296,7 +297,11 @@ impl Game {
                         removed_entities,
                     )?;
                 }
-            } else {
+            } else if self
+                .entities
+                .iter()
+                .any(|entity| entity.id == source_entity_id)
+            {
                 self.resolve_vengeance_retaliation(
                     &source_entity_id,
                     player_hp_before.saturating_sub(self.player.hp),
@@ -906,6 +911,7 @@ impl Game {
         index: usize,
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
     ) -> Result<bool, CoreError> {
         let kind_id = self.entities[index].kind_id.clone();
         let nice = self.entities[index].nice;
@@ -1233,9 +1239,80 @@ impl Game {
                     }
                 }
             }
+            if melee_method_triggers_contact_aura(blow.method_id.as_deref())
+                && self.resolve_mutation_contact_auras(index, events, changed, removed_entities)?
+            {
+                return Ok(false);
+            }
         }
         if blink_after_melee && self.player.hp > 0 {
             self.blink_monster_after_theft(index, events, changed);
+        }
+        Ok(false)
+    }
+
+    fn resolve_mutation_contact_auras(
+        &mut self,
+        target_index: usize,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<bool, CoreError> {
+        for damage_type in [DamageType::Fire, DamageType::Electricity] {
+            let level = self
+                .content
+                .mutations()
+                .filter(|mutation| self.progress.active_mutation_ids.contains(&mutation.id))
+                .filter(|mutation| mutation.contact_aura.map(DamageType::from) == Some(damage_type))
+                .count();
+            if level == 0 {
+                continue;
+            }
+            let resistance = self.entities[target_index].resistances.level(damage_type);
+            if matches!(
+                resistance,
+                ResistanceLevel::Resistant | ResistanceLevel::Strong | ResistanceLevel::Immune
+            ) {
+                continue;
+            }
+            let level = u16::try_from(level).expect("validated mutation count must fit u16");
+            let player_level = self.progress.level / 10;
+            let raw = 2_i32.saturating_add(
+                self.roll_damage(
+                    level
+                        .saturating_mul(2)
+                        .saturating_sub(1)
+                        .saturating_add(player_level),
+                    2_u16.saturating_add(player_level),
+                ),
+            );
+            let damage =
+                resolve_damage(DamagePacket::new(raw, damage_type), ResistanceLevel::Normal);
+            let target_kind_id = self.entities[target_index].kind_id.clone();
+            let application = plan_damage_application(
+                &self.entities[target_index],
+                damage,
+                FatalityPolicy::AtOrBelowZero,
+            );
+            commit_damage_application(&mut self.entities[target_index], &application);
+            if application.fatal {
+                self.resolve_actor_death(
+                    target_index,
+                    DomainEvent::MutationAuraSlew {
+                        target_kind_id,
+                        damage,
+                    },
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+                return Ok(true);
+            }
+            events.push(DomainEvent::MutationAuraHit {
+                target_kind_id,
+                damage,
+            });
+            self.wake_entity_after_damage(target_index, damage.applied, events);
         }
         Ok(false)
     }
@@ -1366,6 +1443,29 @@ impl Game {
         }
         Ok(())
     }
+}
+
+fn melee_method_triggers_contact_aura(method_id: Option<&str>) -> bool {
+    matches!(
+        method_id,
+        None | Some(
+            "rfb.blow.hit"
+                | "rfb.blow.touch"
+                | "rfb.blow.punch"
+                | "rfb.blow.kick"
+                | "rfb.blow.claw"
+                | "rfb.blow.bite"
+                | "rfb.blow.sting"
+                | "rfb.blow.slash"
+                | "rfb.blow.butt"
+                | "rfb.blow.crush"
+                | "rfb.blow.engulf"
+                | "rfb.blow.charge"
+                | "rfb.blow.crawl"
+                | "rfb.blow.echo-bite"
+                | "rfb.blow.echo-rake"
+        )
+    )
 }
 
 #[cfg(test)]

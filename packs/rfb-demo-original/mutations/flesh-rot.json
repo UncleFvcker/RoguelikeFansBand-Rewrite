@@ -7,6 +7,11 @@
   "rating": "awful",
   "sourceIndex": 71,
   "randomWeight": 6,
+  "modifiers": {
+    "constitution": -2,
+    "charisma": -1
+  },
+  "regenerationRateModifierPercent": -80,
   "removesOnGain": [
     "rfb.mutation.steel-skin",
     "rfb.mutation.regen"

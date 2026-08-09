@@ -1144,7 +1144,7 @@ impl Game {
         let player_position_before_command = self.player.position;
         let floor_before_command = self.current_floor_id.clone();
         let wilderness_position_before_command = self.wilderness_position;
-        let light_radius_before_command = self.equipped_light_radius();
+        let light_radius_before_command = self.player_light_radius();
         let see_invisible_sources_before_command = self.player_see_invisible_sources();
         let entity_positions_before_command = self
             .entities
@@ -1885,7 +1885,7 @@ impl Game {
 
         let full_visibility_refresh = self.player.position != player_position_before_command
             || self.current_floor_id != floor_before_command
-            || self.equipped_light_radius() != light_radius_before_command
+            || self.player_light_radius() != light_radius_before_command
             || self.player_see_invisible_sources() != see_invisible_sources_before_command;
         self.refresh_invisible_visibility(
             full_visibility_refresh,
@@ -4824,7 +4824,7 @@ impl Game {
         // entities, then ground items) so strict-greater comparisons keep
         // resolving ties identically.
         let mut sources = Vec::new();
-        if let Some(radius) = self.equipped_light_radius() {
+        if let Some(radius) = self.player_light_radius() {
             sources.push(LightSource {
                 position: self.player.position,
                 radius,

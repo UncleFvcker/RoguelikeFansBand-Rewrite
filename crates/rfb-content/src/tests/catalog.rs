@@ -6,7 +6,7 @@ fn compiled_catalog_exposes_stable_runtime_indexes() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.216.0");
+    assert_eq!(catalog.pack_version(), "1.217.0");
     assert_eq!(catalog.mutations().count(), 152);
     assert_eq!(
         catalog.mutation("rfb.mutation.spit-acid").map(|mutation| (
@@ -1062,13 +1062,6 @@ fn second_passive_mutation_batch_keeps_resistance_sense_and_levitation_semantics
     )
     .expect("ledger should parse");
     let entries = ledger["mutations"].as_array().expect("mutation entries");
-    assert_eq!(
-        entries
-            .iter()
-            .filter(|entry| entry["status"] == "active")
-            .count(),
-        21
-    );
     for id in expected_active {
         let entry = entries
             .iter()
@@ -1095,6 +1088,89 @@ fn second_passive_mutation_batch_keeps_resistance_sense_and_levitation_semantics
         assert_eq!(entry["status"], "blocked", "{id}");
         assert_eq!(entry["blockers"], serde_json::json!([blocker]), "{id}");
     }
+}
+
+#[test]
+fn third_passive_mutation_batch_keeps_regeneration_aura_and_light_semantics() {
+    let pack = original_pack_path();
+    let catalog = ContentCatalog::from_artifact(
+        compile_pack_dir(&pack).expect("original pack should compile"),
+    );
+
+    for (id, modifier) in [
+        ("rfb.mutation.flesh-rot", -80),
+        ("rfb.mutation.regen", 100),
+        ("rfb.mutation.draconian-regen", 150),
+    ] {
+        assert_eq!(
+            catalog
+                .mutation(id)
+                .unwrap_or_else(|| panic!("{id}"))
+                .regeneration_rate_modifier_percent,
+            modifier,
+            "{id} regeneration modifier"
+        );
+    }
+    let flesh_rot = catalog.mutation("rfb.mutation.flesh-rot").unwrap();
+    assert_eq!(flesh_rot.modifiers.constitution, -2);
+    assert_eq!(flesh_rot.modifiers.charisma, -1);
+    assert_eq!(
+        catalog
+            .mutation("rfb.mutation.fire-aura")
+            .unwrap()
+            .contact_aura,
+        Some(ActorDamageType::Fire)
+    );
+    assert_eq!(
+        catalog
+            .mutation("rfb.mutation.fire-aura")
+            .unwrap()
+            .light_radius,
+        1
+    );
+    assert_eq!(
+        catalog
+            .mutation("rfb.mutation.elec-aura")
+            .unwrap()
+            .contact_aura,
+        Some(ActorDamageType::Electricity)
+    );
+
+    let ledger: serde_json::Value = serde_json::from_slice(
+        &std::fs::read(pack.join("legacy-mutation-plan.json")).expect("ledger should read"),
+    )
+    .expect("ledger should parse");
+    let entries = ledger["mutations"].as_array().expect("mutation entries");
+    assert_eq!(
+        entries
+            .iter()
+            .filter(|entry| entry["status"] == "active")
+            .count(),
+        26
+    );
+    for id in [
+        "rfb.mutation.flesh-rot",
+        "rfb.mutation.elec-aura",
+        "rfb.mutation.fire-aura",
+        "rfb.mutation.regen",
+        "rfb.mutation.draconian-regen",
+    ] {
+        let entry = entries
+            .iter()
+            .find(|entry| entry["id"] == id)
+            .unwrap_or_else(|| panic!("{id}"));
+        assert_eq!(entry["status"], "active", "{id}");
+        assert_eq!(entry["blockers"], serde_json::json!([]), "{id}");
+    }
+    let shield = entries
+        .iter()
+        .find(|entry| entry["id"] == "rfb.mutation.draconian-shield")
+        .expect("draconian shield ledger entry");
+    assert_eq!(shield["status"], "blocked");
+    assert_eq!(
+        shield["blockers"],
+        serde_json::json!(["draconian-subrace-identity-and-aura-selection"])
+    );
 }
 
 #[test]
@@ -1137,6 +1213,15 @@ fn mutation_transaction_metadata_rejects_duplicate_order_and_invalid_removals() 
     invalid_sense.mutations[0].infravision = 65;
     assert!(matches!(
         encode_content(invalid_sense),
+        Err(ContentError::InvalidMutation(_))
+    ));
+
+    let mut invalid_regeneration = compile_pack_dir(&pack)
+        .expect("original pack should compile")
+        .content;
+    invalid_regeneration.mutations[0].regeneration_rate_modifier_percent = 1_001;
+    assert!(matches!(
+        encode_content(invalid_regeneration),
         Err(ContentError::InvalidMutation(_))
     ));
 }
