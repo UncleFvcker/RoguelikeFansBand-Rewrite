@@ -300,7 +300,7 @@
   "width": 96,
   "height": 32,
   "fillTerrainId": "demo.terrain.surface-grass",
-  "borderTerrainId": "demo.terrain.surface-tree",
+  "borderTerrainId": "demo.terrain.surface-grass",
   "terrainOverrides": [
     {
       "terrainId": "demo.terrain.surface-path",

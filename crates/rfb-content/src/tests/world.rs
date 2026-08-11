@@ -3001,6 +3001,7 @@ fn outpost_has_walls_inner_shops_and_an_exterior_warrens_entrance() {
         .find(|terrain| terrain.terrain_id == "demo.terrain.outpost-fortification")
         .expect("fixture should contain town fortifications");
     assert_eq!((world.width, world.height), (96, 32));
+    assert_eq!(world.border_terrain_id, "demo.terrain.surface-grass");
     assert!(
         world
             .procedural_floors

@@ -169,7 +169,7 @@ fn middle_earth_starts_on_an_outdoor_surface_with_a_working_warrens_entrance() {
     );
     assert_eq!(
         game.terrain_at(Position { x: 0, y: 0 }),
-        "demo.terrain.surface-tree"
+        "demo.terrain.surface-grass"
     );
 
     game.player.position = Position { x: 73, y: 16 };
