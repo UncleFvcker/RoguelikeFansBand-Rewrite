@@ -226,7 +226,12 @@ export type EntityFactionDto = "hostile" | "player" | "friendly";
 
 export type SummonDto = { ownerId: string, sourceAbilityId: string, remainingTurns: number, };
 
-export type EntityDto = { id: string, kindId: string, position: Position, hp: number, maxHp: number, speed: number, energyNeed: number, alerted: boolean, castingCooldownRemaining: number, observedPlayerResistances?: Array<ResistanceDto>, attack: number, defense: number, meleeSkill: number, armorClass: number, meleeDamage: DamageDiceDto, meleeProfile: AttackProfileDto, meleeRoutine: MeleeRoutineDto, statuses: Array<StatusDto>, faction: EntityFactionDto, controllerId?: string | null, summon?: SummonDto | null, };
+export type EntityDto = { id: string, kindId: string,
+/**
+ * The currently projected map glyph. Telepathy may conceal kind identity
+ * while retaining the original monster symbol.
+ */
+glyph: string, position: Position, hp: number, maxHp: number, speed: number, energyNeed: number, alerted: boolean, castingCooldownRemaining: number, observedPlayerResistances?: Array<ResistanceDto>, attack: number, defense: number, meleeSkill: number, armorClass: number, meleeDamage: DamageDiceDto, meleeProfile: AttackProfileDto, meleeRoutine: MeleeRoutineDto, statuses: Array<StatusDto>, faction: EntityFactionDto, controllerId?: string | null, summon?: SummonDto | null, };
 
 export type ItemDto = { id: string, kindId: string, displayNameKey: string, knowledge: ItemKnowledgeDto, position: Position, quantity: number, inscription?: string | null, fuel?: ItemFuelDto | null, enchantments?: ItemEnchantmentsDto, curse?: ItemCurseSeverityDto | null, };
 

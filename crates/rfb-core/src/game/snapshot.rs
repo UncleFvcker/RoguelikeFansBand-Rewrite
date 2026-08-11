@@ -17,9 +17,9 @@ use rfb_protocol::{
     AbilityTerrainTransformSpecDto, AttackProfileDto, AttributeSetDto, AttributeValueDto,
     BodySlotDto, CampaignStateDto, CellDto, CellVisualDto, ContentVisualDto, DamageDiceDto,
     DeviceRechargeDto, EntityDto, EntityFactionDto, EquipmentItemDto, GameSnapshot,
-    InventoryItemDto, ItemDto, ItemKnowledgeDto, MapScaleDto, MutationRatingDto, PROTOCOL_VERSION,
-    PlayerBuildDto, PlayerDto, PlayerMutationDto, PlayerProgressDto, Position, ResistanceDto,
-    ResourcePoolDto, SkillProgressDto, SummonDto, TaskServiceDto, TaskStatusDto,
+    InventoryItemDto, ItemDto, ItemKnowledgeDto, MapScaleDto, MeleeRoutineDto, MutationRatingDto,
+    PROTOCOL_VERSION, PlayerBuildDto, PlayerDto, PlayerMutationDto, PlayerProgressDto, Position,
+    ResistanceDto, ResourcePoolDto, SkillProgressDto, SummonDto, TaskServiceDto, TaskStatusDto,
     TerrainInteractionDto, TerrainInteractionKindDto, VisibilityState, WildernessLocationDto,
     WildernessLocationKindDto,
 };
@@ -493,12 +493,25 @@ impl Game {
                     .actor_runtime_definition(entity)
                     .expect("entity actor definition must remain available");
                 let stats = self.actor_derived_stats(entity, definition, false);
+                let fuzzy = self.entity_is_fuzzy_to_player(entity);
+                let projected_kind_id = entity
+                    .appearance_kind_id
+                    .as_deref()
+                    .unwrap_or(&entity.kind_id);
+                let glyph = self
+                    .content
+                    .actor(projected_kind_id)
+                    .unwrap_or(definition)
+                    .glyph
+                    .clone();
                 EntityDto {
                     id: entity.id.clone(),
-                    kind_id: entity
-                        .appearance_kind_id
-                        .clone()
-                        .unwrap_or_else(|| entity.kind_id.clone()),
+                    kind_id: if fuzzy {
+                        "core.actor.fuzzy-monster".to_owned()
+                    } else {
+                        projected_kind_id.to_owned()
+                    },
+                    glyph,
                     position: entity.position,
                     hp: entity.hp,
                     max_hp: entity.max_hp,
@@ -506,40 +519,60 @@ impl Game {
                     energy_need: entity.energy_need,
                     alerted: entity.alerted,
                     casting_cooldown_remaining: entity.casting_cooldown_remaining,
-                    observed_player_resistances: entity
-                        .observed_player_resistances
-                        .iter()
-                        .map(|(damage_type, level)| ResistanceDto {
-                            damage_type: (*damage_type).into(),
-                            level: (*level).into(),
-                        })
-                        .collect(),
-                    attack: stats.attack.value,
-                    defense: stats.defense.value,
-                    melee_skill: stats.melee_skill.value,
-                    armor_class: stats.armor_class.value,
-                    melee_damage: DamageDiceDto {
-                        dice: definition.damage_dice,
-                        sides: definition.damage_sides,
-                        damage_type: DamageType::from(definition.damage_type).into(),
+                    observed_player_resistances: if fuzzy {
+                        Vec::new()
+                    } else {
+                        entity
+                            .observed_player_resistances
+                            .iter()
+                            .map(|(damage_type, level)| ResistanceDto {
+                                damage_type: (*damage_type).into(),
+                                level: (*level).into(),
+                            })
+                            .collect()
                     },
-                    melee_profile: AttackProfileDto {
-                        attacks: 1,
-                        to_hit: 0,
-                        to_damage: 0,
-                        damage: DamageDiceDto {
+                    attack: if fuzzy { 0 } else { stats.attack.value },
+                    defense: if fuzzy { 0 } else { stats.defense.value },
+                    melee_skill: if fuzzy { 0 } else { stats.melee_skill.value },
+                    armor_class: if fuzzy { 0 } else { stats.armor_class.value },
+                    melee_damage: if fuzzy {
+                        DamageDiceDto::default()
+                    } else {
+                        DamageDiceDto {
                             dice: definition.damage_dice,
                             sides: definition.damage_sides,
                             damage_type: DamageType::from(definition.damage_type).into(),
-                        },
-                        source_item_id: None,
+                        }
                     },
-                    melee_routine: actor_melee_routine_dto(definition),
-                    statuses: entity
-                        .statuses
-                        .iter()
-                        .map(crate::effect::StatusInstance::to_dto)
-                        .collect(),
+                    melee_profile: if fuzzy {
+                        AttackProfileDto::default()
+                    } else {
+                        AttackProfileDto {
+                            attacks: 1,
+                            to_hit: 0,
+                            to_damage: 0,
+                            damage: DamageDiceDto {
+                                dice: definition.damage_dice,
+                                sides: definition.damage_sides,
+                                damage_type: DamageType::from(definition.damage_type).into(),
+                            },
+                            source_item_id: None,
+                        }
+                    },
+                    melee_routine: if fuzzy {
+                        MeleeRoutineDto::default()
+                    } else {
+                        actor_melee_routine_dto(definition)
+                    },
+                    statuses: if fuzzy {
+                        Vec::new()
+                    } else {
+                        entity
+                            .statuses
+                            .iter()
+                            .map(crate::effect::StatusInstance::to_dto)
+                            .collect()
+                    },
                     faction: if self.actor_is_player_aligned(entity) {
                         EntityFactionDto::Player
                     } else if self.actor_is_friendly(entity) {
@@ -547,12 +580,16 @@ impl Game {
                     } else {
                         EntityFactionDto::Hostile
                     },
-                    controller_id: entity.controller_id.clone(),
-                    summon: entity.summon.as_ref().map(|summon| SummonDto {
-                        owner_id: summon.owner_id.clone(),
-                        source_ability_id: summon.source_ability_id.clone(),
-                        remaining_turns: summon.remaining_turns,
-                    }),
+                    controller_id: (!fuzzy).then(|| entity.controller_id.clone()).flatten(),
+                    summon: (!fuzzy)
+                        .then(|| {
+                            entity.summon.as_ref().map(|summon| SummonDto {
+                                owner_id: summon.owner_id.clone(),
+                                source_ability_id: summon.source_ability_id.clone(),
+                                remaining_turns: summon.remaining_turns,
+                            })
+                        })
+                        .flatten(),
                 }
             })
             .collect::<Vec<_>>();

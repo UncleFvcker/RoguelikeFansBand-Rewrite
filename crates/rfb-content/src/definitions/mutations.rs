@@ -82,6 +82,10 @@ pub struct MutationDefinition {
     pub levitation: bool,
     #[serde(default)]
     pub telepathy: bool,
+    /// Masks charisma changes from other mutations and guarantees the
+    /// level-scaled minimum appearance used by the original Ill Norm mutation.
+    #[serde(default)]
+    pub normal_appearance: bool,
     #[serde(default)]
     pub contact_aura: Option<ActorDamageType>,
     #[serde(default)]

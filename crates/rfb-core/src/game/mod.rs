@@ -186,7 +186,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 79;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 80;
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const VISIBILITY_RADIUS: i32 = 8;
 const BASE_THROW_RANGE_BUDGET: u16 = 50;
@@ -1100,6 +1100,7 @@ impl Game {
         game.initialize_carried_loot()?;
         game.initialize_continuous_wilderness_surface()?;
         game.refresh_invisible_visibility(true, &BTreeMap::new());
+        game.refresh_weird_mind_visibility(true, &BTreeMap::new());
         game.reveal_current_visibility();
         Ok(game)
     }
@@ -1156,6 +1157,7 @@ impl Game {
         let wilderness_view_offset_before_command = self.wilderness_view_offset;
         let light_radius_before_command = self.player_light_radius();
         let see_invisible_sources_before_command = self.player_see_invisible_sources();
+        let telepathy_before_command = self.player_has_telepathy();
         let entity_positions_before_command = self
             .entities
             .iter()
@@ -2021,10 +2023,15 @@ impl Game {
         let full_visibility_refresh = self.player.position != player_position_before_command
             || self.current_floor_id != floor_before_command
             || self.player_light_radius() != light_radius_before_command
-            || self.player_see_invisible_sources() != see_invisible_sources_before_command;
+            || self.player_see_invisible_sources() != see_invisible_sources_before_command
+            || self.player_has_telepathy() != telepathy_before_command;
         let visible_eldritch_horrors_before_invisible_refresh =
             self.visible_eldritch_horror_entity_ids();
         self.refresh_invisible_visibility(
+            full_visibility_refresh,
+            &entity_positions_before_command,
+        );
+        self.refresh_weird_mind_visibility(
             full_visibility_refresh,
             &entity_positions_before_command,
         );
@@ -4848,23 +4855,38 @@ impl Game {
     }
 
     fn entity_is_visible_to_player(&self, entity: &Actor) -> bool {
-        ((self.is_visible(entity.position) || self.entity_is_visible_by_infravision(entity))
-            && (!self.actor_is_invisible(entity) || entity.visible_invisible))
+        self.entity_is_visually_visible_to_player(entity)
             || self.entity_is_visible_by_telepathy(entity)
     }
 
+    fn entity_is_visually_visible_to_player(&self, entity: &Actor) -> bool {
+        (self.is_visible(entity.position) || self.entity_is_visible_by_infravision(entity))
+            && (!self.actor_is_invisible(entity) || entity.visible_invisible)
+    }
+
     fn entity_is_visible_by_telepathy(&self, entity: &Actor) -> bool {
-        self.player_has_telepathy()
-            && squared_distance(self.player.position, entity.position)
-                <= VISIBILITY_RADIUS * VISIBILITY_RADIUS
-            && self
-                .actor_runtime_definition(entity)
-                .is_some_and(|definition| {
-                    !definition
-                        .tags
-                        .iter()
-                        .any(|tag| matches!(tag.as_str(), "empty-mind" | "weird-mind"))
-                })
+        if !self.player_has_telepathy()
+            || squared_distance(self.player.position, entity.position)
+                > VISIBILITY_RADIUS * VISIBILITY_RADIUS
+        {
+            return false;
+        }
+        self.actor_runtime_definition(entity)
+            .is_some_and(|definition| {
+                if definition.tags.iter().any(|tag| tag == "empty-mind") {
+                    false
+                } else if definition.tags.iter().any(|tag| tag == "weird-mind") {
+                    entity.visible_weird_mind
+                } else {
+                    true
+                }
+            })
+    }
+
+    fn entity_is_fuzzy_to_player(&self, entity: &Actor) -> bool {
+        !self.actor_is_player_aligned(entity)
+            && !self.entity_is_visually_visible_to_player(entity)
+            && self.entity_is_visible_by_telepathy(entity)
     }
 
     fn entity_is_visible_by_infravision(&self, entity: &Actor) -> bool {
@@ -4921,6 +4943,48 @@ impl Game {
             let difficulty = u64::from(50_u32.saturating_add(level / 2));
             self.entities[index].visible_invisible =
                 (0..sources).any(|_| self.rng.bounded(difficulty) < search_skill);
+        }
+    }
+
+    fn refresh_weird_mind_visibility(
+        &mut self,
+        full: bool,
+        previous_positions: &BTreeMap<String, Position>,
+    ) {
+        let has_telepathy = self.player_has_telepathy();
+        let candidates = self
+            .entities
+            .iter()
+            .enumerate()
+            .filter_map(|(index, entity)| {
+                self.actor_runtime_definition(entity)?
+                    .tags
+                    .iter()
+                    .any(|tag| tag == "weird-mind")
+                    .then_some((
+                        index,
+                        entity.id.clone(),
+                        entity.position,
+                        entity.visible_weird_mind,
+                    ))
+            })
+            .collect::<Vec<_>>();
+        for (index, id, position, was_visible) in candidates {
+            if !has_telepathy
+                || squared_distance(self.player.position, position)
+                    > VISIBILITY_RADIUS * VISIBILITY_RADIUS
+            {
+                self.entities[index].visible_weird_mind = false;
+                continue;
+            }
+            let moved = previous_positions
+                .get(&id)
+                .is_none_or(|before| *before != position);
+            if !full && !moved {
+                self.entities[index].visible_weird_mind = was_visible;
+                continue;
+            }
+            self.entities[index].visible_weird_mind = self.rng.bounded(10) == 0;
         }
     }
 

@@ -59,6 +59,10 @@ pub(crate) fn valid_item_effect(
         ItemUseEffectDefinition::ApplyRestorativeFeast {
             healing_dice,
             healing_sides,
+        }
+        | ItemUseEffectDefinition::ApplyElvishWaybread {
+            healing_dice,
+            healing_sides,
         } => (1..=100).contains(healing_dice) && (1..=10_000).contains(healing_sides),
         ItemUseEffectDefinition::ApplyLifeRestoration {
             healing_amount,
@@ -558,6 +562,7 @@ pub(super) fn validate_items(
                     | ItemUseEffectDefinition::RestoreAllAttributes
                     | ItemUseEffectDefinition::RestoreAllVitality { .. }
                     | ItemUseEffectDefinition::ApplyRestorativeFeast { .. }
+                    | ItemUseEffectDefinition::ApplyElvishWaybread { .. }
                     | ItemUseEffectDefinition::ApplyLifeRestoration { .. }
                     | ItemUseEffectDefinition::DrainAttribute { .. }
                     | ItemUseEffectDefinition::RestoreAttribute { .. }
@@ -828,6 +833,7 @@ pub(super) fn validate_items(
                         | ItemUseEffectDefinition::RestoreAllAttributes
                         | ItemUseEffectDefinition::RestoreAllVitality { .. }
                         | ItemUseEffectDefinition::ApplyRestorativeFeast { .. }
+                        | ItemUseEffectDefinition::ApplyElvishWaybread { .. }
                         | ItemUseEffectDefinition::ApplyLifeRestoration { .. }
                         | ItemUseEffectDefinition::IncreaseAttribute { .. }
                         | ItemUseEffectDefinition::AugmentAttributes

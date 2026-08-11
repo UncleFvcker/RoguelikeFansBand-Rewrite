@@ -299,6 +299,11 @@
     "name": {
       "type": "string"
     },
+    "normalAppearance": {
+      "default": false,
+      "description": "Masks charisma changes from other mutations and guarantees the\nlevel-scaled minimum appearance used by the original Ill Norm mutation.",
+      "type": "boolean"
+    },
     "perceptionSkill": {
       "default": 0,
       "format": "int32",

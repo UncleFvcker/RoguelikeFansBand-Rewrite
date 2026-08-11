@@ -324,6 +324,10 @@ pub enum ItemUseEffectDefinition {
         healing_dice: u16,
         healing_sides: u16,
     },
+    ApplyElvishWaybread {
+        healing_dice: u16,
+        healing_sides: u16,
+    },
     ApplyLifeRestoration {
         healing_amount: u32,
         life_force_amount: u16,

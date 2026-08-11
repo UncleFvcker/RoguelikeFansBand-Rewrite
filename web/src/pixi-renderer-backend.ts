@@ -410,7 +410,11 @@ export class PixiRendererBackend implements RendererBackend {
   ): void {
     const terrain = tileset.resolve(cell.terrainId);
     const item = cell.itemKindId ? tileset.resolve(cell.itemKindId) : undefined;
-    const actor = cell.actorKindId ? tileset.resolve(cell.actorKindId) : undefined;
+    const actor = cell.actorGlyph
+      ? tileset.resolveGlyph(cell.actorGlyph)
+      : cell.actorKindId
+        ? tileset.resolve(cell.actorKindId)
+        : undefined;
     const terrainBackground = terrain.background ?? DEFAULT_BACKGROUND;
     applyLayerVisual(
       view.itemBackground,

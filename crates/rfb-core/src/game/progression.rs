@@ -346,6 +346,7 @@ fn effective_attributes<'a>(
     mutation_modifiers: impl IntoIterator<Item = &'a StatModifiers>,
     equipment_modifiers: StatModifiersDto,
     status_modifiers: impl IntoIterator<Item = StatModifiersDto>,
+    normal_appearance_minimum: Option<u16>,
     cap: u16,
 ) -> AttributeSet {
     if let Some(modifiers) = character_modifiers {
@@ -354,11 +355,18 @@ fn effective_attributes<'a>(
         }
     }
     for modifiers in mutation_modifiers {
+        let charisma = attributes.charisma;
         attributes = apply_attribute_modifiers(attributes, modifiers, cap);
+        if normal_appearance_minimum.is_some() {
+            attributes.charisma = charisma;
+        }
     }
     attributes = apply_attribute_dto_modifiers(attributes, equipment_modifiers, cap);
     for modifiers in status_modifiers {
         attributes = apply_attribute_dto_modifiers(attributes, modifiers, cap);
+    }
+    if let Some(minimum) = normal_appearance_minimum {
+        attributes.charisma = attributes.charisma.max(minimum.min(cap));
     }
     attributes
 }
@@ -526,6 +534,15 @@ impl Game {
 
     pub(super) fn effective_player_attributes(&self) -> AttributeSet {
         let cap = CharacterProgress::attribute_cap(self.victory_level_cap_unlocked());
+        let active_mutations = self
+            .content
+            .mutations()
+            .filter(|mutation| self.progress.active_mutation_ids.contains(&mutation.id))
+            .collect::<Vec<_>>();
+        let normal_appearance_minimum = active_mutations
+            .iter()
+            .any(|mutation| mutation.normal_appearance)
+            .then(|| 8_u16.saturating_add(self.progress.level.saturating_mul(2)));
         let character_modifiers =
             self.character_definitions()
                 .map(|(_, race, class, personality)| {
@@ -534,15 +551,13 @@ impl Game {
         effective_attributes(
             self.progress.attributes,
             character_modifiers,
-            self.content
-                .mutations()
-                .filter(|mutation| self.progress.active_mutation_ids.contains(&mutation.id))
-                .map(|mutation| &mutation.modifiers),
+            active_mutations.iter().map(|mutation| &mutation.modifiers),
             self.equipment_modifiers(),
             self.player
                 .statuses
                 .iter()
                 .map(|status| status.granted_modifiers),
+            normal_appearance_minimum,
             cap,
         )
     }
@@ -729,6 +744,72 @@ impl Game {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn normal_appearance_masks_only_mutation_charisma_and_applies_its_level_floor() {
+        let base = AttributeSet {
+            charisma: 10,
+            ..AttributeSet::default()
+        };
+        let character = StatModifiers {
+            charisma: 1,
+            ..StatModifiers::default()
+        };
+        let mutation = StatModifiers {
+            strength: 1,
+            charisma: -3,
+            ..StatModifiers::default()
+        };
+        let equipment = StatModifiersDto {
+            charisma: 1,
+            ..StatModifiersDto::default()
+        };
+        let status = StatModifiersDto {
+            charisma: -1,
+            ..StatModifiersDto::default()
+        };
+
+        let attributes = effective_attributes(
+            base,
+            Some([
+                &character,
+                &StatModifiers::default(),
+                &StatModifiers::default(),
+            ]),
+            [&mutation],
+            equipment,
+            [status],
+            Some(18),
+            118,
+        );
+
+        assert_eq!(
+            attributes.strength, 14,
+            "non-charisma mutation bonuses remain active"
+        );
+        assert_eq!(attributes.charisma, 18, "the level floor is applied last");
+
+        let above_floor = effective_attributes(
+            AttributeSet {
+                charisma: 18,
+                ..AttributeSet::default()
+            },
+            Some([
+                &character,
+                &StatModifiers::default(),
+                &StatModifiers::default(),
+            ]),
+            [&mutation],
+            equipment,
+            [status],
+            Some(8),
+            118,
+        );
+        assert_eq!(
+            above_floor.charisma, 28,
+            "character, equipment, and status charisma remain effective"
+        );
+    }
 
     #[test]
     fn progression_capabilities_report_bounded_source_neutral_outcomes() {

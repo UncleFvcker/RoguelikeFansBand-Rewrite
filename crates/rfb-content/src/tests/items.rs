@@ -87,6 +87,47 @@ fn food_effect_requires_positive_bounded_nutrition() {
 }
 
 #[test]
+fn elvish_waybread_keeps_original_shape_effect_and_town_acquisition() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let waybread = artifact
+        .content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.piece-of-elvish-waybread")
+        .expect("Elvish Waybread should exist");
+
+    assert_eq!(waybread.glyph, ",");
+    assert_eq!(waybread.generation_level, 5);
+    assert_eq!(waybread.weight_tenths_pound, 3);
+    assert_eq!(waybread.base_value, 30);
+    assert!(matches!(
+        waybread.use_action.as_ref().map(|action| &action.effect),
+        Some(ItemUseEffectDefinition::ApplyElvishWaybread {
+            healing_dice: 4,
+            healing_sides: 8,
+        })
+    ));
+
+    for shop_id in [
+        "demo.shop.outpost-general-store",
+        "demo.shop.anambar-general-store",
+    ] {
+        assert!(
+            artifact
+                .content
+                .shops
+                .iter()
+                .find(|shop| shop.id == shop_id)
+                .unwrap_or_else(|| panic!("{shop_id} should exist"))
+                .stock
+                .iter()
+                .any(|stock| stock.item_kind_id == waybread.id),
+            "{shop_id} should stock Elvish Waybread"
+        );
+    }
+}
+
+#[test]
 fn restorative_item_sequences_require_bounded_effects_and_known_resources() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let clarity = artifact

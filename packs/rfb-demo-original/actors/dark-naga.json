@@ -121,6 +121,7 @@
   "role": "monster",
   "speed": 110,
   "tags": [
+    "empty-mind",
     "evil",
     "legacy-import",
     "naga",

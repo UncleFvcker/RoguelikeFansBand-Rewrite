@@ -34,6 +34,22 @@ test("render world keeps item and actor layers separate", () => {
   assert.equal(cells[0].actorKindId, "demo.actor.explorer");
 });
 
+test("fuzzy telepathy keeps the monster glyph without exposing its kind", () => {
+  const world = new RenderWorld(2, 1);
+  const snapshot = snapshotFixture();
+  snapshot.cells[0] = cell(0, 0, "demo.monster.1");
+  snapshot.visualCells[0] = visual(0, 0, "hidden", 0xffffff, 0);
+  snapshot.entities = [{
+    id: "demo.monster.1",
+    kindId: "core.actor.fuzzy-monster",
+    glyph: "D",
+  }];
+
+  const cellView = world.applySnapshot(snapshot)[0];
+  assert.equal(cellView.actorKindId, "core.actor.fuzzy-monster");
+  assert.equal(cellView.actorGlyph, "D");
+});
+
 test("render world resolves gold pile IDs to their stable visual IDs", () => {
   const world = new RenderWorld(2, 1);
   const snapshot = snapshotFixture();

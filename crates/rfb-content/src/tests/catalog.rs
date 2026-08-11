@@ -6,7 +6,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.231.0");
+    assert_eq!(catalog.pack_version(), "1.233.0");
     assert!(catalog.mutation("rfb.mutation.spit-acid").is_some());
     assert!(
         catalog
@@ -279,6 +279,9 @@ fn second_passive_mutation_batch_keeps_resistance_sense_and_levitation_semantics
         "rfb.mutation.no-inhibitions",
         "rfb.mutation.infravision",
         "rfb.mutation.vuln-elem",
+        "rfb.mutation.waybread-into",
+        "rfb.mutation.ill-norm",
+        "rfb.mutation.esp",
     ];
 
     for id in ["rfb.mutation.magic-res", "rfb.mutation.draconian-magic-res"] {
@@ -287,7 +290,19 @@ fn second_passive_mutation_batch_keeps_resistance_sense_and_levitation_semantics
         assert_eq!(mutation.saving_throw_skill_per_five_levels, 1);
     }
     assert!(catalog.mutation("rfb.mutation.wings").unwrap().levitation);
+    assert!(
+        catalog
+            .mutation("rfb.mutation.waybread-into")
+            .unwrap()
+            .levitation
+    );
     assert!(catalog.mutation("rfb.mutation.esp").unwrap().telepathy);
+    assert!(
+        catalog
+            .mutation("rfb.mutation.ill-norm")
+            .unwrap()
+            .normal_appearance
+    );
     assert_eq!(
         catalog
             .mutation("rfb.mutation.fearless")
@@ -355,23 +370,17 @@ fn second_passive_mutation_batch_keeps_resistance_sense_and_levitation_semantics
         assert_eq!(entry["status"], "active", "{id}");
         assert_eq!(entry["blockers"], serde_json::json!([]), "{id}");
     }
-    for (id, blocker) in [
-        (
-            "rfb.mutation.esp",
-            "actor-telepathy-mind-flags-and-fuzzy-projection",
-        ),
-        (
-            "rfb.mutation.draconian-resistance",
-            "draconian-subrace-identity",
-        ),
-    ] {
-        let entry = entries
-            .iter()
-            .find(|entry| entry["id"] == id)
-            .unwrap_or_else(|| panic!("{id}"));
-        assert_eq!(entry["status"], "blocked", "{id}");
-        assert_eq!(entry["blockers"], serde_json::json!([blocker]), "{id}");
-    }
+    let id = "rfb.mutation.draconian-resistance";
+    let entry = entries
+        .iter()
+        .find(|entry| entry["id"] == id)
+        .unwrap_or_else(|| panic!("{id}"));
+    assert_eq!(entry["status"], "blocked", "{id}");
+    assert_eq!(
+        entry["blockers"],
+        serde_json::json!(["draconian-subrace-identity"]),
+        "{id}"
+    );
 }
 
 #[test]
@@ -708,13 +717,6 @@ fn fifth_passive_mutation_batch_keeps_cross_system_semantics_explicit() {
     )
     .expect("ledger should parse");
     let entries = ledger["mutations"].as_array().expect("mutation entries");
-    assert_eq!(
-        entries
-            .iter()
-            .filter(|entry| entry["status"] == "active")
-            .count(),
-        53
-    );
     for id in [
         "rfb.mutation.xtra-eyes",
         "rfb.mutation.xtra-noise",

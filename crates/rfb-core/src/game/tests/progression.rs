@@ -410,7 +410,7 @@ fn m4b_passives_feed_resistance_sense_skill_and_flight_pipelines() {
 }
 
 #[test]
-fn esp_core_detects_normal_minds_but_not_explicit_empty_minds() {
+fn esp_respects_mind_flags_and_conceals_nonvisual_identity() {
     let position = Position { x: 5, y: 3 };
     let mut normal = Game::new(0);
     clear_monsters(&mut normal);
@@ -423,6 +423,19 @@ fn esp_core_detects_normal_minds_but_not_explicit_empty_minds() {
     assert!(!normal.entity_is_visible_by_telepathy(&normal.entities[0]));
     assert!(normal.gain_mutation("rfb.mutation.esp", &mut Vec::new()));
     assert!(normal.entity_is_visible_by_telepathy(&normal.entities[0]));
+    normal.apply_player_melee_status(crate::effect::STATUS_BLINDNESS, 100, "test.blindness");
+    let projected = normal
+        .snapshot()
+        .entities
+        .into_iter()
+        .find(|entity| entity.id == "test.normal-mind")
+        .expect("telepathy should project the unseen normal mind");
+    assert_eq!(projected.kind_id, "core.actor.fuzzy-monster");
+    assert_eq!(projected.glyph, "k");
+    assert_eq!(
+        projected.attack, 0,
+        "fuzzy projection must not leak combat identity"
+    );
 
     let mut empty = game_with_actor_definition(0, "demo.actor.small-kobold", |actor| {
         actor.tags.push("empty-mind".to_owned());
@@ -436,6 +449,24 @@ fn esp_core_detects_normal_minds_but_not_explicit_empty_minds() {
     );
     assert!(empty.gain_mutation("rfb.mutation.esp", &mut Vec::new()));
     assert!(!empty.entity_is_visible_by_telepathy(&empty.entities[0]));
+
+    let mut weird = game_with_actor_definition(0, "demo.actor.small-kobold", |actor| {
+        actor.tags.push("weird-mind".to_owned());
+    });
+    clear_monsters(&mut weird);
+    weird.player.position = Position { x: 3, y: 3 };
+    weird.push_generated_actor(
+        "test.weird-mind".to_owned(),
+        "demo.actor.small-kobold",
+        position,
+    );
+    assert!(weird.gain_mutation("rfb.mutation.esp", &mut Vec::new()));
+    assert!(!weird.entity_is_visible_by_telepathy(&weird.entities[0]));
+    weird.entities[0].visible_weird_mind = true;
+    assert!(weird.entity_is_visible_by_telepathy(&weird.entities[0]));
+    let restored = Game::from_save_with_content(weird.to_save(), weird.content.clone())
+        .expect("weird-mind detection should reload");
+    assert!(restored.entities[0].visible_weird_mind);
 }
 
 #[test]

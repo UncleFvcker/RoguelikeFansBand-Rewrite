@@ -1,6 +1,6 @@
 # RFB CoreTransport 协议 v1
 
-状态：协议 1.160、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
+状态：协议 1.161、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
 
 ## 1. 适用边界
 
@@ -459,3 +459,8 @@ contract-v237 不改变协议 DTO。可变尺寸城镇以 `mapOrigin` 嵌入同�
 荒野视口；卷动继续使用既有 `mapTranslation`，Town、Shop、Home 与任务设施继续
 使用既有 DTO。城镇地表状态在活动视口与既有 `storedFloors` 之间裁剪同步，未新增
 存档字段；协议保持 1.160，State Hash Schema 保持 v79，save 容器保持 v1。
+
+协议 1.161 为 `EntityDto` 增加必填 `glyph`。ESP 仅通过心灵感应发现、但未被视觉
+看到的敌人继续投影原怪物 glyph，同时把 `kindId` 和战斗细节替换为通用“怪物”
+身份；`EMPTY_MIND` 永不被基础 ESP 发现，`WEIRD_MIND` 的 1/10 感知结果进入存档与
+state hash，因此 State Hash Schema 升至 v80。save 容器保持 v1，旧开发存档不兼容。

@@ -272,7 +272,7 @@
             { "sourceIndex": 20, "sourceName": "Fast Recovery:Wrinkled", "sourceId": "fast-recovery-wrinkled" },
             { "sourceIndex": 36, "sourceName": "Pint of Fine Ale", "sourceId": "pint-of-fine-ale" },
             { "sourceIndex": 37, "sourceName": "Pint of Fine Wine", "sourceId": "pint-of-fine-wine" },
-            { "sourceIndex": 38, "sourceName": "Piece of Elvish Waybread", "sourceId": "piece-of-elvish-waybread" }
+            { "sourceIndex": 38, "sourceName": "Piece of Elvish Waybread", "sourceId": "piece-of-elvish-waybread", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] }
           ]
         },
         {

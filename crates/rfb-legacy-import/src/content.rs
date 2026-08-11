@@ -2949,6 +2949,13 @@ fn p3_1_food_effect(entry: &LegacyItemEntry) -> Option<serde_json::Value> {
     if entry.tval != 80 {
         return None;
     }
+    if entry.sval == 37 {
+        return Some(serde_json::json!({
+            "type": "apply-elvish-waybread",
+            "healingDice": 4,
+            "healingSides": 8
+        }));
+    }
     let effect = match entry.sval {
         0 => Some(serde_json::json!({
             "type": "apply-poison",
@@ -7394,6 +7401,8 @@ fn monster_json(
         ("TROLL", "troll"),
         ("GIANT", "giant"),
         ("NONLIVING", "nonliving"),
+        ("EMPTY_MIND", "empty-mind"),
+        ("WEIRD_MIND", "weird-mind"),
     ] {
         if entry.flags.iter().any(|value| value == flag) {
             tags.push(tag.to_owned());
@@ -7746,6 +7755,8 @@ fn demo_monster_flag_is_handled(flag: &str) -> bool {
                 | "RAND_50"
                 | "FRIENDS"
                 | "INVISIBLE"
+                | "EMPTY_MIND"
+                | "WEIRD_MIND"
                 | "SMART"
                 | "ELDRITCH_HORROR"
                 | "CHAMELEON"
@@ -7992,6 +8003,8 @@ fn demo_monster_json(
         ("SHAPECHANGER", "shapechanger"),
         ("FIXED_UNIQUE", "fixed-unique"),
         ("NO_QUEST", "no-quest"),
+        ("EMPTY_MIND", "empty-mind"),
+        ("WEIRD_MIND", "weird-mind"),
     ] {
         if entry.flags.iter().any(|candidate| candidate == flag) {
             tags.insert(tag.to_owned());
@@ -12949,6 +12962,44 @@ F:UNDEAD | ELDRITCH_HORROR\n";
     }
 
     #[test]
+    fn monster_mind_flags_become_runtime_telepathy_tags() {
+        const MIND_R_INFO: &str = "\
+N:1041:Empty mind\n\
+G:m:w\n\
+I:110:1d1:1:1:1:1\n\
+W:1:1:1:1:0:0\n\
+F:EMPTY_MIND | NEVER_BLOW\n\
+N:1042:Weird mind\n\
+G:m:w\n\
+I:110:1d1:1:1:1:1\n\
+W:1:1:1:1:0:0\n\
+F:WEIRD_MIND | NEVER_BLOW\n";
+        let monsters = parse_r_info(MIND_R_INFO).expect("synthetic minds should parse");
+        for (monster, id, tag) in [
+            (&monsters[0], "empty-mind", "empty-mind"),
+            (&monsters[1], "weird-mind", "weird-mind"),
+        ] {
+            let selection: DemoMonsterSelectionEntry = serde_json::from_value(serde_json::json!({
+                "sourceIndex": monster.index,
+                "id": id,
+                "tags": ["warrens"],
+                "omittedFlags": []
+            }))
+            .expect("synthetic selection should parse");
+            let actor = demo_monster_json(monster, &selection, &mut BTreeMap::new())
+                .expect("mind flag should be handled");
+            assert!(
+                actor["tags"]
+                    .as_array()
+                    .expect("tags should be an array")
+                    .iter()
+                    .any(|candidate| candidate == tag),
+                "{tag}"
+            );
+        }
+    }
+
+    #[test]
     fn summon_tokens_map_to_category_and_kin_abilities() {
         const SUMMONER_R_INFO: &str = "\
 N:5:test bone caller\n\
@@ -14521,15 +14572,18 @@ F:BRAND_VAMP | HOLD_LIFE
             serde_json::json!({"type": "increase-nutrition", "amount": 1500})
         );
 
-        assert!(
+        assert_eq!(
             p3_1_food_effect(&LegacyItemEntry {
                 tval: 80,
-                sval: 40,
-                pval: 15_000,
+                sval: 37,
+                pval: 7_500,
                 ..LegacyItemEntry::default()
-            })
-            .is_none(),
-            "Elvish Waybread stays in P3.8 until its complete semantics exist"
+            }),
+            Some(serde_json::json!({
+                "type": "apply-elvish-waybread",
+                "healingDice": 4,
+                "healingSides": 8
+            }))
         );
     }
 

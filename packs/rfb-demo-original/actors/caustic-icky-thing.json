@@ -64,6 +64,7 @@
   "role": "monster",
   "speed": 110,
   "tags": [
+    "empty-mind",
     "icky-thing",
     "legacy-import",
     "warrens"

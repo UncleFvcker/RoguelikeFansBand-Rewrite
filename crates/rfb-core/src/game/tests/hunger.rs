@@ -236,6 +236,115 @@ fn sleep_potion_uses_the_paralysis_status() {
 }
 
 #[test]
+fn elvish_waybread_uses_normal_and_intolerant_branches() {
+    const ITEM_KIND_ID: &str = "demo.item.piece-of-elvish-waybread";
+
+    let mut normal = Game::new(43);
+    clear_monsters(&mut normal);
+    normal.nutrition = 123;
+    normal.player.hp = 1;
+    normal.player.statuses.push(StatusInstance {
+        kind_id: STATUS_POISON.to_owned(),
+        intensity: 1,
+        remaining_ticks: 2_000,
+        source_id: None,
+        granted_resistances: BTreeMap::new(),
+        granted_brands: BTreeSet::new(),
+        granted_modifiers: StatModifiersDto::default(),
+        granted_equipment_bonuses: EquipmentBonusesDto::default(),
+        granted_status_immunities: BTreeSet::new(),
+        granted_race_id: None,
+        grants_wall_passage: false,
+        incoming_damage_percent: 100,
+    });
+    give_inventory_item(&mut normal, "test.item.waybread.normal", ITEM_KIND_ID);
+
+    let update = dispatch_next(
+        &mut normal,
+        GameCommand::UseItem {
+            item_id: "test.item.waybread.normal".to_owned(),
+            target: None,
+        },
+    );
+
+    assert_eq!(normal.nutrition, rfb_protocol::PLAYER_NUTRITION_MAXIMUM - 1);
+    assert!((5..=33).contains(&normal.player.hp));
+    let poison_reduction = update
+        .events
+        .iter()
+        .find(|event| event.kind == "item.use-status-reduced")
+        .expect("normal Waybread should reduce poison");
+    assert_eq!(poison_reduction.args["before"], "2000");
+    assert_eq!(poison_reduction.args["after"], "1000");
+    assert!(
+        update
+            .events
+            .iter()
+            .any(|event| event.kind == "item.use-heal")
+    );
+    assert!(
+        update
+            .events
+            .iter()
+            .any(|event| event.kind == "item.use-hunger-satisfied")
+    );
+
+    let mut intolerant = Game::new(47);
+    clear_monsters(&mut intolerant);
+    assert!(intolerant.gain_mutation("rfb.mutation.waybread-into", &mut Vec::new()));
+    assert!(intolerant.player_levitates());
+    intolerant.nutrition = rfb_protocol::PLAYER_NUTRITION_BIRTH;
+    intolerant.player.statuses.push(StatusInstance {
+        kind_id: STATUS_POISON.to_owned(),
+        intensity: 1,
+        remaining_ticks: 2_000,
+        source_id: None,
+        granted_resistances: BTreeMap::new(),
+        granted_brands: BTreeSet::new(),
+        granted_modifiers: StatModifiersDto::default(),
+        granted_equipment_bonuses: EquipmentBonusesDto::default(),
+        granted_status_immunities: BTreeSet::new(),
+        granted_race_id: None,
+        grants_wall_passage: false,
+        incoming_damage_percent: 100,
+    });
+    let hp_before = intolerant.player.hp;
+    give_inventory_item(
+        &mut intolerant,
+        "test.item.waybread.intolerant",
+        ITEM_KIND_ID,
+    );
+
+    let update = dispatch_next(
+        &mut intolerant,
+        GameCommand::UseItem {
+            item_id: "test.item.waybread.intolerant".to_owned(),
+            target: None,
+        },
+    );
+
+    assert_eq!(
+        intolerant.nutrition,
+        crate::game::hunger::NUTRITION_STARVING - 1
+    );
+    assert_eq!(intolerant.player.hp, hp_before);
+    assert!(!intolerant.player_has_status_kind(STATUS_POISON));
+    assert!(intolerant.player_has_status_kind(STATUS_PARALYSIS));
+    assert!(
+        !update
+            .events
+            .iter()
+            .any(|event| event.kind == "item.use-heal")
+    );
+    assert!(
+        update
+            .events
+            .iter()
+            .any(|event| event.kind == "item.use-status-removed")
+    );
+}
+
+#[test]
 fn digestion_uses_world_tick_and_current_scheduler_speed() {
     let mut normal = Game::new(42);
     normal.nutrition = 9_000;

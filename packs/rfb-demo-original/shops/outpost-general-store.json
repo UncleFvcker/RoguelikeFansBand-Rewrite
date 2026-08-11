@@ -24,6 +24,13 @@
       "maintenanceMaximum": 5
     },
     {
+      "itemKindId": "demo.item.piece-of-elvish-waybread",
+      "initialMinimum": 1,
+      "initialMaximum": 1,
+      "maintenanceMinimum": 1,
+      "maintenanceMaximum": 1
+    },
+    {
       "itemKindId": "demo.item.wooden-torch",
       "initialMinimum": 1,
       "initialMaximum": 5,

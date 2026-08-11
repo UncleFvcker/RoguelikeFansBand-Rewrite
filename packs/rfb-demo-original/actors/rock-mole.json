@@ -67,7 +67,8 @@
     "animal",
     "legacy-import",
     "mole",
-    "warrens"
+    "warrens",
+    "weird-mind"
   ],
   "terrainInteraction": {
     "destroysItems": true,

@@ -793,6 +793,54 @@ Protocol 1.157, save v1, State Hash Schema v77, and contract-v227 are unchanged;
 all new state remains derived from the existing active-mutation set, so existing
 fixtures still begin without active mutations.
 
-The current M0--M4E status, the missing random-candidate closure gate, and the
+## P3.8 Elvish Waybread and M4F-B1 Intolerance
+
+P3.8 activates source item 38, Piece of Elvish Waybread, together with the
+cross-system `rfb.mutation.waybread-into` behavior it depends on. The formal
+item preserves the source level 5, weight 0.3 lb, value 30, comma glyph, exact
+Chinese name `路粮(兰巴斯)`, and town acquisition through both General Stores.
+
+Normal use reduces poison by one fifth or at least 100 original poison units,
+heals `4d8`, and raises nutrition to at least `PY_FOOD_MAX - 1`. The dedicated
+Rewrite effect converts that poison floor to 1,000 world ticks and delegates
+poison reduction, healing, and hunger satisfaction to existing item
+transactions. With Waybread Intolerance active, use instead sets nutrition to
+`PY_FOOD_STARVE - 1`, applies `1d4` turns of paralysis, clears poison, and skips
+both healing and normal nutrition. The same mutation definition supplies its
+original levitation bonus through the existing derived movement query. No
+mutation-specific persistent state or general conditional-effect DSL was
+added.
+
+The item audit reports 226 active, 106 mechanics-ready, and 212 blocked source
+items, with 227 mapped formal items, 10 original formal items, and 237 formal
+items total. The mutation audit reports 54 active and 98 blocked identities.
+Pack 1.232.0 has content hash
+`5d72eab9952b7a09568a3f2b127c723a44f6fb6aa80ad9c047b690eea9e51e7c`.
+Protocol 1.160, save v1, State Hash Schema v79, and contract-v239 remain
+unchanged. Adding Waybread to both General Stores changes shared new-game shop
+RNG, so all 21 retained exact fixtures were refreshed and verified.
+
+The current mutation status, the missing random-candidate closure gate, and the
 M5--M8 continuation plan are consolidated in
 [`handoff-p3-7-mutation-system.md`](handoff-p3-7-mutation-system.md).
+
+## M4F-B2/B3 Ill Norm and ESP
+
+Ill Norm now preserves all race, class, personality, equipment, and status
+charisma changes while masking charisma modifiers contributed by mutations. It
+then enforces the original level-scaled minimum of `8 + 2 * level` after all
+other attribute layers.
+
+ESP now consumes the authoritative `EMPTY_MIND` and `WEIRD_MIND` monster flags.
+Empty minds remain undetectable, while weird minds retain a saved 1-in-10
+detection result between visibility refreshes. A monster sensed only by
+telepathy projects the original glyph in white but replaces its kind and combat
+details with the generic Monster identity, so the client cannot recover the
+hidden race from the DTO.
+
+The mutation audit reports 56 active and 96 blocked identities. Pack 1.233.0
+has content hash
+`6d326f2dd4735e6122b34a6f71903afe2c480e56d3095cd88c7d45e097b06a19`.
+Entity glyph projection raises Protocol to 1.161; persisted Weird Mind sensing
+raises State Hash Schema to v80. Save container v1 remains, and the 21 retained
+fixtures move to contract-v240.

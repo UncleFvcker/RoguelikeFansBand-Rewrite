@@ -16,6 +16,7 @@ import type { CellLight, CellVisibility, RenderCell } from "./renderer-backend";
 
 const DEFAULT_LIGHT: CellLight = { color: 0xffffff, intensity: 0 };
 const HALLUCINATION_STATUS_ID = "rfb.status.hallucination";
+const FUZZY_MONSTER_KIND_ID = "core.actor.fuzzy-monster";
 
 export class RenderWorld {
   readonly #width: number;
@@ -24,6 +25,7 @@ export class RenderWorld {
   readonly #visibility: CellVisibility[];
   readonly #lights: CellLight[];
   readonly #entityKinds = new Map<string, string>();
+  readonly #fuzzyEntityGlyphs = new Map<string, string>();
   #actorKindIds: string[] = [];
   #itemKindIds: string[] = [];
   #playerId = "";
@@ -116,9 +118,15 @@ export class RenderWorld {
     goldPiles: GoldPileDto[],
   ): void {
     this.#entityKinds.clear();
+    this.#fuzzyEntityGlyphs.clear();
     this.#playerId = player.id;
     this.#entityKinds.set(player.id, player.kindId);
-    for (const entity of entities) this.#entityKinds.set(entity.id, entity.kindId);
+    for (const entity of entities) {
+      this.#entityKinds.set(entity.id, entity.kindId);
+      if (entity.kindId === FUZZY_MONSTER_KIND_ID) {
+        this.#fuzzyEntityGlyphs.set(entity.id, entity.glyph);
+      }
+    }
     for (const item of items) this.#entityKinds.set(item.id, item.kindId);
     for (const pile of goldPiles) this.#entityKinds.set(pile.id, goldVisualId(pile.appearance));
     this.#actorKindIds = [...new Set([player.kindId, ...entities.map((entity) => entity.kindId)])]
@@ -185,7 +193,7 @@ export class RenderWorld {
               ),
             }
           : {}),
-        ...(occupantsVisible && cell.actorId
+        ...((occupantsVisible || (cell.actorId && this.#fuzzyEntityGlyphs.has(cell.actorId))) && cell.actorId
           ? {
               actorKindId:
                 cell.actorId === this.#playerId
@@ -196,6 +204,9 @@ export class RenderWorld {
                       index,
                       13,
                     ),
+              ...(!this.#hallucinating && this.#fuzzyEntityGlyphs.has(cell.actorId)
+                ? { actorGlyph: this.#fuzzyEntityGlyphs.get(cell.actorId) }
+                : {}),
             }
           : {}),
         visibility,

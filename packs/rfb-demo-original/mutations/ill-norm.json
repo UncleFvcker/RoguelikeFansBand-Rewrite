@@ -7,5 +7,6 @@
   "rating": "average",
   "sourceIndex": 74,
   "randomWeight": 2,
+  "normalAppearance": true,
   "removesOnGain": []
 }

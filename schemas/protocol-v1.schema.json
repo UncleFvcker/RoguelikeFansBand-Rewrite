@@ -3423,6 +3423,10 @@
           "$ref": "#/$defs/EntityFactionDto",
           "default": "hostile"
         },
+        "glyph": {
+          "description": "The currently projected map glyph. Telepathy may conceal kind identity\nwhile retaining the original monster symbol.",
+          "type": "string"
+        },
         "hp": {
           "type": "integer",
           "format": "int32"
@@ -3506,6 +3510,7 @@
       "required": [
         "id",
         "kindId",
+        "glyph",
         "position",
         "hp",
         "maxHp"

@@ -592,6 +592,7 @@ export class StatusPanel {
         id: `actor:${entity.id}`,
         kind: entity.faction === "hostile" ? "hostile" : "ally",
         contentId: entity.kindId,
+        glyph: entity.glyph,
         name: this.#contentName(entity.kindId),
         distance,
         direction: directionKey(player, entity.position),
@@ -645,7 +646,7 @@ export class StatusPanel {
         const glyph = document.createElement("span");
         glyph.className = "nearby-glyph";
         glyph.setAttribute("aria-hidden", "true");
-        glyph.textContent = this.#state.contentGlyphs.get(entry.contentId) ?? "?";
+        glyph.textContent = entry.glyph ?? this.#state.contentGlyphs.get(entry.contentId) ?? "?";
         const details = document.createElement("span");
         details.className = "nearby-details";
         const name = document.createElement("strong");
@@ -851,6 +852,7 @@ interface NearbyEntry {
   readonly id: string;
   readonly kind: NearbyKind;
   readonly contentId: string;
+  readonly glyph?: string;
   readonly name: string;
   readonly distance: number;
   readonly direction: NearbyDirection;

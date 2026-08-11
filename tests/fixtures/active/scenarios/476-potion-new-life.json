@@ -35,7 +35,7 @@
       "turn": 1,
       "worldTick": 10,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 431,
+      "rngDrawCounter": 378,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -281,35 +281,35 @@
           "strength": {
             "natural": 13,
             "maximumNatural": 13,
-            "potential": 148,
+            "potential": 138,
             "effective": 17,
             "index": 14
           },
           "intelligence": {
             "natural": 13,
             "maximumNatural": 13,
-            "potential": 88,
+            "potential": 108,
             "effective": 11,
             "index": 8
           },
           "wisdom": {
             "natural": 13,
             "maximumNatural": 13,
-            "potential": 138,
+            "potential": 108,
             "effective": 11,
             "index": 8
           },
           "dexterity": {
             "natural": 13,
             "maximumNatural": 13,
-            "potential": 108,
+            "potential": 138,
             "effective": 15,
             "index": 12
           },
           "constitution": {
             "natural": 13,
             "maximumNatural": 13,
-            "potential": 138,
+            "potential": 128,
             "effective": 15,
             "index": 12
           },
@@ -832,7 +832,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 168,
+      "nextItemInstanceSerial": 167,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -840,7 +840,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "d98f18b2cd95a28d32d26861dfa845f0c9993281cd1e09e9d9b121c00d010fb4"
+      "stateHash": "375c5948a334578c07edbc876359b0af374a4d9a5042001569a849292fbef09f"
     },
     "events": [
       {
@@ -852,6 +852,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "d98f18b2cd95a28d32d26861dfa845f0c9993281cd1e09e9d9b121c00d010fb4"
+    "saveRoundTripStateHash": "375c5948a334578c07edbc876359b0af374a4d9a5042001569a849292fbef09f"
   }
 }

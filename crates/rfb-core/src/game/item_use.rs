@@ -2,6 +2,8 @@
 
 use super::*;
 
+const WAYBREAD_INTOLERANCE_MUTATION_ID: &str = "rfb.mutation.waybread-into";
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) enum ItemUsePlan {
     SelfTarget,
@@ -66,6 +68,93 @@ pub(super) struct SettledItemUse {
 }
 
 impl Game {
+    fn resolve_item_satisfy_hunger(
+        &mut self,
+        source_kind_id: &str,
+        preserve_higher_nutrition: bool,
+        events: &mut Vec<DomainEvent>,
+    ) -> bool {
+        let before_state = self.nutrition_state();
+        let target = rfb_protocol::PLAYER_NUTRITION_MAXIMUM - 1;
+        let target = if preserve_higher_nutrition {
+            self.nutrition.max(target)
+        } else {
+            target
+        };
+        let noticed = self.nutrition != target;
+        self.nutrition = target;
+        self.mark_item_aware(source_kind_id);
+        events.push(DomainEvent::ItemNutritionSatisfied {
+            source_kind_id: source_kind_id.to_owned(),
+            display_name_key: self.item_display_name_key(source_kind_id),
+            nutrition: self.nutrition,
+            noticed,
+        });
+        let after_state = self.nutrition_state();
+        if after_state != before_state {
+            events.push(DomainEvent::NutritionStateChanged {
+                from: before_state,
+                to: after_state,
+                nutrition: self.nutrition,
+            });
+        }
+        noticed
+    }
+
+    fn resolve_item_elvish_waybread(
+        &mut self,
+        source_kind_id: &str,
+        healing_dice: u16,
+        healing_sides: u16,
+        events: &mut Vec<DomainEvent>,
+    ) -> bool {
+        if self
+            .progress
+            .active_mutation_ids
+            .contains(WAYBREAD_INTOLERANCE_MUTATION_ID)
+        {
+            let before_state = self.nutrition_state();
+            self.nutrition = hunger::NUTRITION_STARVING - 1;
+            let after_state = self.nutrition_state();
+            if after_state != before_state {
+                events.push(DomainEvent::NutritionStateChanged {
+                    from: before_state,
+                    to: after_state,
+                    nutrition: self.nutrition,
+                });
+            }
+            self.resolve_item_status(
+                source_kind_id,
+                STATUS_PARALYSIS,
+                1,
+                4,
+                0,
+                AbilityStatusStackingDefinition::Extend,
+                None,
+                &BTreeMap::new(),
+                &StatModifiers::default(),
+                &EquipmentBonuses::default(),
+                100,
+                events,
+            );
+            self.resolve_item_status_removal(source_kind_id, STATUS_POISON, events);
+            self.mark_item_aware(source_kind_id);
+            return true;
+        }
+
+        self.resolve_item_status_reduction(source_kind_id, STATUS_POISON, 1_000, 5, events);
+        self.resolve_item_restorative_resource_effect(
+            source_kind_id,
+            &ItemUseEffectDefinition::HealDice {
+                dice: healing_dice,
+                sides: healing_sides,
+            },
+            events,
+        );
+        self.resolve_item_satisfy_hunger(source_kind_id, true, events);
+        true
+    }
+
     pub(super) fn resolve_item_recall(
         &mut self,
         source_kind_id: String,
@@ -2052,6 +2141,7 @@ impl Game {
                 | ItemUseEffectDefinition::RestoreAllAttributes
                 | ItemUseEffectDefinition::RestoreAllVitality { .. }
                 | ItemUseEffectDefinition::ApplyRestorativeFeast { .. }
+                | ItemUseEffectDefinition::ApplyElvishWaybread { .. }
                 | ItemUseEffectDefinition::ApplyLifeRestoration { .. }
                 | ItemUseEffectDefinition::ApplyThermalResistance { .. }
                 | ItemUseEffectDefinition::ApplyBasicResistance { .. }
@@ -2392,6 +2482,7 @@ impl Game {
             | ItemUseEffectDefinition::RestoreAllAttributes
             | ItemUseEffectDefinition::RestoreAllVitality { .. }
             | ItemUseEffectDefinition::ApplyRestorativeFeast { .. }
+            | ItemUseEffectDefinition::ApplyElvishWaybread { .. }
             | ItemUseEffectDefinition::ApplyLifeRestoration { .. }
             | ItemUseEffectDefinition::DrainAttribute { .. }
             | ItemUseEffectDefinition::RestoreAttribute { .. }
@@ -4100,26 +4191,7 @@ impl Game {
                 true
             }
             ItemUseEffectDefinition::SatisfyHunger => {
-                let before_state = self.nutrition_state();
-                let target = rfb_protocol::PLAYER_NUTRITION_MAXIMUM - 1;
-                let noticed = self.nutrition != target;
-                self.nutrition = target;
-                self.mark_item_aware(source_kind_id);
-                events.push(DomainEvent::ItemNutritionSatisfied {
-                    source_kind_id: source_kind_id.to_owned(),
-                    display_name_key: self.item_display_name_key(source_kind_id),
-                    nutrition: self.nutrition,
-                    noticed,
-                });
-                let after_state = self.nutrition_state();
-                if after_state != before_state {
-                    events.push(DomainEvent::NutritionStateChanged {
-                        from: before_state,
-                        to: after_state,
-                        nutrition: self.nutrition,
-                    });
-                }
-                noticed
+                self.resolve_item_satisfy_hunger(source_kind_id, false, events)
             }
             effect @ (ItemUseEffectDefinition::Heal { .. }
             | ItemUseEffectDefinition::HealDice { .. }
@@ -4215,6 +4287,15 @@ impl Game {
             | ItemUseEffectDefinition::ApplyLifeRestoration { .. }) => {
                 self.resolve_item_vitality_restoration_effect(source_kind_id, effect, events)
             }
+            ItemUseEffectDefinition::ApplyElvishWaybread {
+                healing_dice,
+                healing_sides,
+            } => self.resolve_item_elvish_waybread(
+                source_kind_id,
+                *healing_dice,
+                *healing_sides,
+                events,
+            ),
             ItemUseEffectDefinition::DrainAttribute { attribute } => self
                 .resolve_item_drain_attribute(
                     source_kind_id,

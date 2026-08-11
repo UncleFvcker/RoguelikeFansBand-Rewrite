@@ -18,6 +18,7 @@ export interface RenderCell {
   terrainId: string;
   itemKindId?: string;
   actorKindId?: string;
+  actorGlyph?: string;
   visibility: CellVisibility;
   light: CellLight;
 }

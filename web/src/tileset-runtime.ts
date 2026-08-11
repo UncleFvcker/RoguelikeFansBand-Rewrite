@@ -135,6 +135,15 @@ export class TilesetRuntime {
     return resolved;
   }
 
+  resolveGlyph(glyph: string): RuntimeTileVisual {
+    return {
+      source: "glyph",
+      texture: this.#glyphAtlas.texture(glyph),
+      tint: 0xffffff,
+      usedFallback: false,
+    };
+  }
+
   #resolveUncached(semanticId: string): RuntimeTileVisual {
     const mapping = this.manifest.mappings[semanticId];
     const standaloneImage = mapping?.image

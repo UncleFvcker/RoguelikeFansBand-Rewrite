@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.160";
+pub const PROTOCOL_VERSION: &str = "1.161";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -2302,6 +2302,9 @@ pub struct DeviceRechargeDto {
 pub struct EntityDto {
     pub id: String,
     pub kind_id: String,
+    /// The currently projected map glyph. Telepathy may conceal kind identity
+    /// while retaining the original monster symbol.
+    pub glyph: String,
     pub position: Position,
     pub hp: i32,
     pub max_hp: i32,
@@ -3331,6 +3334,8 @@ pub struct ActorSaveDto {
     #[serde(default)]
     pub visible_invisible: bool,
     #[serde(default, skip_serializing_if = "is_false")]
+    pub visible_weird_mind: bool,
+    #[serde(default, skip_serializing_if = "is_false")]
     pub eldritch_horror_triggered: bool,
     #[serde(default)]
     pub casting_cooldown_remaining: u16,
@@ -4133,6 +4138,7 @@ mod tests {
             entities: vec![EntityDto {
                 id: "demo.monster.1".to_owned(),
                 kind_id: "demo.actor.monster".to_owned(),
+                glyph: "m".to_owned(),
                 position: Position { x: 1, y: 0 },
                 hp: 3,
                 max_hp: 3,

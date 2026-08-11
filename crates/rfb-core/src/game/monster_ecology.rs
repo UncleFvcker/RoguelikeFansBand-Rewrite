@@ -461,6 +461,7 @@ impl Game {
             actor.observed_player_resistances.clear();
         }
         actor.visible_invisible = false;
+        actor.visible_weird_mind = false;
         actor.appearance_kind_id = Some(definition.id);
     }
 
@@ -537,6 +538,7 @@ impl Game {
                 actor.casting_cooldown_remaining = 0;
                 actor.observed_player_resistances.clear();
                 actor.visible_invisible = false;
+                actor.visible_weird_mind = false;
                 actor.appearance_kind_id = Some(form_kind_id);
             }
             return true;

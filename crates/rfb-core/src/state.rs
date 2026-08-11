@@ -26,6 +26,7 @@ pub(crate) struct Actor {
     pub(crate) alerted: bool,
     pub(crate) nice: bool,
     pub(crate) visible_invisible: bool,
+    pub(crate) visible_weird_mind: bool,
     pub(crate) eldritch_horror_triggered: bool,
     pub(crate) casting_cooldown_remaining: u16,
     pub(crate) observed_player_resistances: BTreeMap<DamageType, ResistanceLevel>,

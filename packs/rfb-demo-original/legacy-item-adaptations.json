@@ -24,6 +24,7 @@
     { "sourceIndex": 33, "sourceName": "Hard Biscuit", "sourceId": "hard-biscuit", "itemId": "demo.item.hard-biscuit", "status": "active", "contract": "phase-19-p3-1-food-status" },
     { "sourceIndex": 34, "sourceName": "Strip of Venison", "sourceId": "strip-of-venison", "itemId": "demo.item.strip-of-venison", "status": "active", "contract": "phase-19-p3-1-food-status" },
     { "sourceIndex": 35, "sourceName": "Slime Mold", "sourceId": "slime-mold", "itemId": "demo.item.slime-mold", "status": "active", "contract": "phase-19-p3-1-food-status" },
+    { "sourceIndex": 38, "sourceName": "Piece of Elvish Waybread", "sourceId": "piece-of-elvish-waybread", "itemId": "demo.item.piece-of-elvish-waybread", "status": "active", "contract": "phase-19-p3-8-waybread-intolerance" },
     { "sourceIndex": 39, "sourceName": "Serving of Ambrosia", "sourceId": "serving-of-ambrosia", "itemId": "demo.item.sunlit-feast", "status": "active", "contract": "contract-v149-restoration-combinations" },
     { "sourceIndex": 54, "sourceName": "Sabre", "sourceId": "sabre", "itemId": "demo.item.sabre", "status": "active", "contract": "contract-v164-outpost-armoury-weaponsmith" },
     { "sourceIndex": 59, "sourceName": "Broad Sword", "sourceId": "broad-sword", "itemId": "demo.item.broad-sword", "status": "active", "contract": "contract-v164-outpost-armoury-weaponsmith" },

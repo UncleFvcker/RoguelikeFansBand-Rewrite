@@ -97,7 +97,8 @@
   "tags": [
     "legacy-import",
     "rust-monster",
-    "warrens"
+    "warrens",
+    "weird-mind"
   ],
   "terrainInteraction": {
     "destroysItems": true

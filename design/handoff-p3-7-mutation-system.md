@@ -11,7 +11,9 @@ P3.7-M0 至 M4E 原始批次记录。权威内容覆盖账本是
 - 分支：`main`
 - M0--M4E 已进入当前集成历史；`366960bc`（M4D）与 `54af6c07`（M4E）均为
   当前 `HEAD` 的祖先，没有待合并的旧 item 工作树提交。
-- M4F-A 从 `a3c2590f fix: remove Outpost border tree wall` 后的干净基线开始。
+- M4F-A 已由 `a9a5dbde feat: activate M4F-A passive mutations` 独立提交；
+  M4F-B1 在该提交之上实现 P3.8 Elvish Waybread 与兰巴斯不耐受；M4F-B2/B3
+  继续完成 Ill Norm 与 ESP。
 - RFB 权威源：`D:/codex/Frogcomposband` 的 Git `master` ref；覆盖审计当前锁定
   `efd63661302866038f58d8cd2553b23e6af3bf9d`。不要读取该仓库工作树文件替代
   `master` Git 对象。
@@ -20,17 +22,18 @@ P3.7-M0 至 M4E 原始批次记录。权威内容覆盖账本是
 
 | 项目 | 当前值 |
 | --- | --- |
-| Protocol | `1.160` |
+| Protocol | `1.161` |
 | Save container | `v1` |
-| State Hash Schema | `v79` |
-| Contract baseline | `contract-v239`，21 个 exact fixtures |
+| State Hash Schema | `v80` |
+| Contract baseline | `contract-v240`，21 个 exact fixtures |
 | Contract Schema | `v4` |
-| Content pack | `1.231.0` |
-| Content hash | `50eababc3aaf7bd486c0521f6c636048741476ff2f09c7a4adb79cc90a747912` |
+| Content pack | `1.233.0` |
+| Content hash | `6d326f2dd4735e6122b34a6f71903afe2c480e56d3095cd88c7d45e097b06a19` |
 
-当前 82 个 content、331 个 core、56 个 legacy-import 测试全部通过，并保留 21 个
-exact fixtures。M4F-A 不改变协议、状态哈希输入、公共初始化或 RNG，因此不刷新
-contract fixtures。
+当前 83 个 content、333 个 core、57 个 legacy-import 测试全部通过，并保留 21 个
+exact fixtures。M4F-B1 为两座城镇杂货店加入兰巴斯并改变公共初始化 RNG；
+M4F-B3 为实体投影增加 glyph，并持久化 Weird Mind 的感知结果，因此协议、状态
+哈希 Schema 与全部精简 fixture 在本批次统一推进。
 
 早期计划中基于 `436b1967` 推算的 Protocol `1.152`、State Hash Schema `73`、
 Pack `1.212.0` 已经是历史值。后续只能从上表当前值顺延，并且版本、生成绑定、
@@ -42,13 +45,13 @@ RFB `master` 共 152 项变异：104 个基础随机候选，48 个零权重身�
 
 | 机制族 | active | blocked | 总数 |
 | --- | ---: | ---: | ---: |
-| passive-bonus | 43 | 8 | 51 |
-| cross-system-query | 10 | 28 | 38 |
+| passive-bonus | 44 | 7 | 51 |
+| cross-system-query | 12 | 26 | 38 |
 | activation | 0 | 35 | 35 |
 | periodic-effect | 0 | 28 | 28 |
-| 合计 | 53 | 99 | 152 |
+| 合计 | 56 | 96 | 152 |
 
-随机候选中已有 38 项 active，仍有 66 项 blocked。现有随机选择器会读取所有
+随机候选中已有 41 项 active，仍有 63 项 blocked。现有随机选择器会读取所有
 `randomWeight > 0` 的正式定义，并不知道覆盖账本的 `active/blocked` 状态。因此在
 104 个随机候选全部拥有真实行为前，不得把 Polymorph 或其他随机获得入口接到
 `gain_random_mutation`，否则会正式授予无行为的壳。
@@ -70,6 +73,9 @@ RFB `master` 共 152 项变异：104 个基础随机候选，48 个零权重身�
 | M4D | 11 项天生攻击及战斗被动 active；提交 `366960bc` 已集成。 |
 | M4E | 13 项经验、知识、步行、施法、商店和怪物能力等跨系统变异 active；提交 `54af6c07` 已集成。 |
 | M4F-A | Infravision、Elemental Vulnerability、Pultitis 复用现有红外、四系易伤和属性管线 active。 |
+| M4F-B1 | Elvish Waybread 已按原版食物行为加入；Waybread Intolerance 复用饥饿、麻痹、解毒与飞行管线 active。 |
+| M4F-B2 | Ill Norm 屏蔽其他变异的魅力修正，并在最终属性上保证 `8 + 2 × 等级` 的最低魅力。 |
+| M4F-B3 | ESP 接入 Empty/Weird Mind 标记；Weird Mind 按 1/10 刷新感知，非视觉目标只投影白色原 glyph 与通用“怪物”身份。 |
 
 当前唯一权威角色状态仍是 `CharacterProgress.active_mutation_ids` 与
 `locked_mutation_ids`。属性潜力继续由 `CharacterProgress.attribute_potentials`
@@ -91,7 +97,7 @@ RFB `master` 共 152 项变异：104 个基础随机候选，48 个零权重身�
 ## 4. M7 前缺失的随机候选闭环
 
 原计划的 M5 包含 source index 0--30 的 31 个常规主动候选，M6 包含 27 个
-常规周期候选。M4F-A 已完成其中 3 项；即使 M5/M6 全部完成，仍需闭合以下 8 个
+常规周期候选。M4F-A 与 M4F-B1 已完成其中 4 项；即使 M5/M6 全部完成，仍需闭合以下 7 个
 不属于 M5/M6 的随机候选：
 
 | ID | 中文名 | 当前账本 blocker | 闭环重点 |
@@ -102,7 +108,6 @@ RFB `master` 共 152 项变异：104 个基础随机候选，48 个零权重身�
 | `rfb.mutation.bad-luck` | 黑色光环 | `luck-item-generation-device-outcome-and-curse-consumers` | 统一全部坏运气消费者 |
 | `rfb.mutation.good-luck` | 白色光环 | `luck-item-generation-device-outcome-and-sensing-consumers` | 统一全部好运气消费者 |
 | `rfb.mutation.easy-tiring` | 易疲劳 | `fatigue-minislow-state-recovery-and-physical-action-consumers` | `minislow`、恢复与物理动作 |
-| `rfb.mutation.waybread-into` | 兰巴斯不耐受 | `mutation-cross-system-query` | 与 P3.8 Elvish Waybread 一起完成 |
 | `rfb.mutation.impotence` | 魔法无能 | `device-category-specific-failure-modifiers` | 设备类别失败率消费者 |
 
 将这一门槛记为 **M4F：随机候选闭环**。它可以和 M5/M6 分别设计，但必须在
@@ -110,8 +115,8 @@ M7 之前合并并通过审计。建议按以下顺序推进：
 
 1. M4F-A（已完成）：Infravision、Elemental Vulnerability、Pultitis 已复用现有
    派生值和抗性管线。
-2. M4F-B：ESP、Ill Norm、Waybread Intolerance 等需要内容身份、物品或投影
-   支撑的项目；Waybread 必须和 P3.8 食物行为一起完成，不做缩水实现。
+2. M4F-B1（已完成）：Waybread Intolerance 与 P3.8 Elvish Waybread 同批完成。
+   M4F-B 后续只保留 ESP 与 Ill Norm 的怪物身份、知识和投影支撑。
 3. M4F-C：Good Luck、Bad Luck、Easy Tiring、Impotence、Chaos Gift 等多消费者
    规则。必须先统一所有消费者，再把账本状态改成 active。
 
