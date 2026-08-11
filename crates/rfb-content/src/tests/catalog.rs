@@ -6,7 +6,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.229.0");
+    assert_eq!(catalog.pack_version(), "1.231.0");
     assert!(catalog.mutation("rfb.mutation.spit-acid").is_some());
     assert!(
         catalog
@@ -148,6 +148,14 @@ fn first_passive_mutation_batch_keeps_original_attribute_speed_and_armor_bonuses
             0,
         ),
         (
+            "rfb.mutation.pultitis",
+            StatModifiers {
+                intelligence: -3,
+                ..StatModifiers::default()
+            },
+            0,
+        ),
+        (
             "rfb.mutation.resilient",
             StatModifiers {
                 constitution: 4,
@@ -269,6 +277,8 @@ fn second_passive_mutation_batch_keeps_resistance_sense_and_levitation_semantics
         "rfb.mutation.draconian-magic-res",
         "rfb.mutation.sensitive-eyes",
         "rfb.mutation.no-inhibitions",
+        "rfb.mutation.infravision",
+        "rfb.mutation.vuln-elem",
     ];
 
     for id in ["rfb.mutation.magic-res", "rfb.mutation.draconian-magic-res"] {
@@ -301,6 +311,29 @@ fn second_passive_mutation_batch_keeps_resistance_sense_and_levitation_semantics
             .infravision,
         4
     );
+    assert_eq!(
+        catalog
+            .mutation("rfb.mutation.infravision")
+            .unwrap()
+            .infravision,
+        3
+    );
+    let elemental_vulnerability = &catalog
+        .mutation("rfb.mutation.vuln-elem")
+        .unwrap()
+        .resistances;
+    for damage_type in [
+        ActorDamageType::Acid,
+        ActorDamageType::Cold,
+        ActorDamageType::Electricity,
+        ActorDamageType::Fire,
+    ] {
+        assert_eq!(
+            elemental_vulnerability.get(&damage_type),
+            Some(&ActorResistanceLevel::Vulnerable),
+            "{damage_type:?} vulnerability"
+        );
+    }
     assert_eq!(
         catalog
             .mutation("rfb.mutation.weird-mind")
@@ -680,7 +713,7 @@ fn fifth_passive_mutation_batch_keeps_cross_system_semantics_explicit() {
             .iter()
             .filter(|entry| entry["status"] == "active")
             .count(),
-        50
+        53
     );
     for id in [
         "rfb.mutation.xtra-eyes",

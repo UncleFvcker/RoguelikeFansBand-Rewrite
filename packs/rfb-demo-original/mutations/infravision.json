@@ -7,5 +7,6 @@
   "rating": "average",
   "sourceIndex": 78,
   "randomWeight": 6,
+  "infravision": 3,
   "removesOnGain": []
 }

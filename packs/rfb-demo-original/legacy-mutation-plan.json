@@ -1839,10 +1839,8 @@
       "eligibilityConditions": [],
       "weightConditions": [],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "mutation-passive-bonus-system"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -2180,10 +2178,8 @@
         "lose:mutation-bad-luck=>weight-1"
       ],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "mutation-cross-system-query"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -3093,10 +3089,8 @@
         "rfb.mutation.hyper-int",
         "rfb.mutation.moronic"
       ],
-      "status": "blocked",
-      "blockers": [
-        "mutation-passive-bonus-system"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {

@@ -7,14 +7,11 @@ P3.7-M0 至 M4E 原始批次记录。权威内容覆盖账本是
 
 ## 1. 当前基线
 
-- item 工作树：`D:/codex/rfb-items`
-- 分支：`work/items`
-- 集成基线：`40570042 merge: integrate town worktree updates`
-- 待集成的功能提交：
-  - `366960bc feat(items): activate innate combat mutations`（M4D）
-  - `54af6c07 feat(items): activate cross-system mutations`（M4E）
-- M0--M4C 已通过 `8a3fc15e merge: integrate items worktree updates` 进入当前
-  集成历史。
+- 当前工作树：`D:/codex/RoguelikeFansBand-Rewrite`
+- 分支：`main`
+- M0--M4E 已进入当前集成历史；`366960bc`（M4D）与 `54af6c07`（M4E）均为
+  当前 `HEAD` 的祖先，没有待合并的旧 item 工作树提交。
+- M4F-A 从 `a3c2590f fix: remove Outpost border tree wall` 后的干净基线开始。
 - RFB 权威源：`D:/codex/Frogcomposband` 的 Git `master` ref；覆盖审计当前锁定
   `efd63661302866038f58d8cd2553b23e6af3bf9d`。不要读取该仓库工作树文件替代
   `master` Git 对象。
@@ -23,16 +20,17 @@ P3.7-M0 至 M4E 原始批次记录。权威内容覆盖账本是
 
 | 项目 | 当前值 |
 | --- | --- |
-| Protocol | `1.157` |
+| Protocol | `1.160` |
 | Save container | `v1` |
-| State Hash Schema | `v77` |
-| Contract baseline | `contract-v227`，471 个 exact fixtures |
-| Content pack | `1.225.0` |
-| Content hash | `40248e0e709f3f10e3549e61fb792b09700cc69d1ad4bd923c3691564733bcde` |
+| State Hash Schema | `v79` |
+| Contract baseline | `contract-v239`，21 个 exact fixtures |
+| Contract Schema | `v4` |
+| Content pack | `1.231.0` |
+| Content hash | `50eababc3aaf7bd486c0521f6c636048741476ff2f09c7a4adb79cc90a747912` |
 
-M4E 功能基线已通过 91 个 content、531 个 core、54 个 legacy-import 测试，
-mutation audit、source verification、content Schema freshness、格式检查和
-零警告 Clippy。
+当前 82 个 content、331 个 core、56 个 legacy-import 测试全部通过，并保留 21 个
+exact fixtures。M4F-A 不改变协议、状态哈希输入、公共初始化或 RNG，因此不刷新
+contract fixtures。
 
 早期计划中基于 `436b1967` 推算的 Protocol `1.152`、State Hash Schema `73`、
 Pack `1.212.0` 已经是历史值。后续只能从上表当前值顺延，并且版本、生成绑定、
@@ -44,13 +42,13 @@ RFB `master` 共 152 项变异：104 个基础随机候选，48 个零权重身�
 
 | 机制族 | active | blocked | 总数 |
 | --- | ---: | ---: | ---: |
-| passive-bonus | 41 | 10 | 51 |
-| cross-system-query | 9 | 29 | 38 |
+| passive-bonus | 43 | 8 | 51 |
+| cross-system-query | 10 | 28 | 38 |
 | activation | 0 | 35 | 35 |
 | periodic-effect | 0 | 28 | 28 |
-| 合计 | 50 | 102 | 152 |
+| 合计 | 53 | 99 | 152 |
 
-随机候选中已有 35 项 active，仍有 69 项 blocked。现有随机选择器会读取所有
+随机候选中已有 38 项 active，仍有 66 项 blocked。现有随机选择器会读取所有
 `randomWeight > 0` 的正式定义，并不知道覆盖账本的 `active/blocked` 状态。因此在
 104 个随机候选全部拥有真实行为前，不得把 Polymorph 或其他随机获得入口接到
 `gain_random_mutation`，否则会正式授予无行为的壳。
@@ -69,8 +67,9 @@ RFB `master` 共 152 项变异：104 个基础随机候选，48 个零权重身�
 | M4A | 14 项属性、速度和护甲被动 active。 |
 | M4B | 7 项抗性、感知和飞行被动 active。 |
 | M4C | 5 项再生、接触光环和固有光照被动 active。 |
-| M4D | 11 项天生攻击及战斗被动 active；提交 `366960bc` 待集成。 |
-| M4E | 13 项经验、知识、步行、施法、商店和怪物能力等跨系统变异 active；提交 `54af6c07` 待集成。 |
+| M4D | 11 项天生攻击及战斗被动 active；提交 `366960bc` 已集成。 |
+| M4E | 13 项经验、知识、步行、施法、商店和怪物能力等跨系统变异 active；提交 `54af6c07` 已集成。 |
+| M4F-A | Infravision、Elemental Vulnerability、Pultitis 复用现有红外、四系易伤和属性管线 active。 |
 
 当前唯一权威角色状态仍是 `CharacterProgress.active_mutation_ids` 与
 `locked_mutation_ids`。属性潜力继续由 `CharacterProgress.attribute_potentials`
@@ -92,27 +91,25 @@ RFB `master` 共 152 项变异：104 个基础随机候选，48 个零权重身�
 ## 4. M7 前缺失的随机候选闭环
 
 原计划的 M5 包含 source index 0--30 的 31 个常规主动候选，M6 包含 27 个
-常规周期候选。即使两批全部完成，仍会有以下 11 个随机候选不属于 M5/M6：
+常规周期候选。M4F-A 已完成其中 3 项；即使 M5/M6 全部完成，仍需闭合以下 8 个
+不属于 M5/M6 的随机候选：
 
 | ID | 中文名 | 当前账本 blocker | 闭环重点 |
 | --- | --- | --- | --- |
 | `rfb.mutation.chaos-gift` | 混沌神明 | `mutation-cross-system-query` | 审计并收窄混沌馈赠消费者 |
 | `rfb.mutation.ill-norm` | 安心幻象 | `mutation-cross-system-query` | 审计并收窄外观/知识投影 |
-| `rfb.mutation.infravision` | 红外视力 | `mutation-passive-bonus-system` | 复用现有 infravision 派生值 |
 | `rfb.mutation.esp` | 心灵感应 | `actor-telepathy-mind-flags-and-fuzzy-projection` | 怪物 mind flags 与模糊身份投影 |
 | `rfb.mutation.bad-luck` | 黑色光环 | `luck-item-generation-device-outcome-and-curse-consumers` | 统一全部坏运气消费者 |
-| `rfb.mutation.vuln-elem` | 脆弱 | `mutation-cross-system-query` | 审计并收窄完整元素易伤消费者 |
 | `rfb.mutation.good-luck` | 白色光环 | `luck-item-generation-device-outcome-and-sensing-consumers` | 统一全部好运气消费者 |
 | `rfb.mutation.easy-tiring` | 易疲劳 | `fatigue-minislow-state-recovery-and-physical-action-consumers` | `minislow`、恢复与物理动作 |
 | `rfb.mutation.waybread-into` | 兰巴斯不耐受 | `mutation-cross-system-query` | 与 P3.8 Elvish Waybread 一起完成 |
-| `rfb.mutation.pultitis` | 大脑化脓 | `mutation-passive-bonus-system` | 审计并收窄完整被动消费者 |
 | `rfb.mutation.impotence` | 魔法无能 | `device-category-specific-failure-modifiers` | 设备类别失败率消费者 |
 
 将这一门槛记为 **M4F：随机候选闭环**。它可以和 M5/M6 分别设计，但必须在
 M7 之前合并并通过审计。建议按以下顺序推进：
 
-1. M4F-A：Infravision、Elemental Vulnerability、Pultitis 等可复用现有派生值
-   或抗性管线的项目。
+1. M4F-A（已完成）：Infravision、Elemental Vulnerability、Pultitis 已复用现有
+   派生值和抗性管线。
 2. M4F-B：ESP、Ill Norm、Waybread Intolerance 等需要内容身份、物品或投影
    支撑的项目；Waybread 必须和 P3.8 食物行为一起完成，不做缩水实现。
 3. M4F-C：Good Luck、Bad Luck、Easy Tiring、Impotence、Chaos Gift 等多消费者
@@ -141,6 +138,10 @@ Kin；它们不属于 104 候选的 M7 门槛，应保留独立的职业/龙族�
 active mutation 动态授予引用的既有 AbilityDefinition，但使用独立的变异施放
 参数。不要把它写入学习列表或 `ability_progress`：变异能力不占学习容量、不遗忘、
 不获得熟练度，也不需要新增持久状态。
+
+变异只负责来源、触发、冷却和消耗；伤害、治疗、状态、传送、召唤、地形、资源和
+物品变化继续调用来源无关的现有事务。只有出现第二个真实调用方时才抽取窄核心
+事务，不合并现有 Ability/Item 效果枚举，也不建立大一统效果脚本引擎。
 
 施放成本保留 RFB 的 SP 优先、短缺部分扣 HP 规则。复用现有资源和伤害事务；
 没有现成 SP 池时，不为变异伪造一个资源池。目标取消、等级不足或其他前置拒绝的
@@ -241,7 +242,8 @@ P3.7 发布门槛：
 
 ## 9. 工作树与合并边界
 
-建议 M4F、M5、M6、M7 在同一 item/变异工作树按顺序推进，因为它们都会修改
+当前只保留 `main` 工作树。M4F、M5、M6、M7 应在同一连续变异基线上按顺序推进，
+因为它们都会修改
 `MutationDefinition`、`game/mutations.rs`、覆盖账本和同一组测试。若必须拆给多个
 对话，应显式独占文件，并在每批后先合并回统一变异基线，避免平行引入两种能力或
 tick 合同。
@@ -272,13 +274,12 @@ git diff --check
 ```
 
 只有协议投影改变时才运行并提交协议绑定生成；只有状态哈希输入、共享初始化或 RNG
-行为改变时才刷新对应 replay/contract fixtures。桌面大 E2E 留给明确里程碑，不作为
-每个子批默认检查。
+行为改变时才刷新对应 replay/contract fixtures。过期桌面 E2E 已退出本阶段验收，
+不再运行或维护。
 
 ## 11. 下一对话启动清单
 
-1. 确认 `work/items` 已包含 `366960bc` 与 `54af6c07`，或确认它们已进入新的集成
-   基线。
+1. 确认从当前 `main` 的干净基线继续；不要恢复已经删除的 `work/items` 工作树。
 2. 运行 mutation audit，记录开始时的 active/blocked 和 104 候选闭环数字。
 3. 一次只认领 M4F、M5、M6、M7 或 M8 中一个明确子批，并声明拥有的文件。
 4. 开工前用 `git show master:<path>` 读取 RFB 权威实现；中文名必须使用 master

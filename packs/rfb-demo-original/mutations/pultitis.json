@@ -7,6 +7,9 @@
   "rating": "awful",
   "sourceIndex": 135,
   "randomWeight": 4,
+  "modifiers": {
+    "intelligence": -3
+  },
   "removesOnGain": [
     "rfb.mutation.hyper-int",
     "rfb.mutation.moronic"

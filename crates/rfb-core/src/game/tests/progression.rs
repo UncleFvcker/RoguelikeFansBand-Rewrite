@@ -210,6 +210,7 @@ fn passive_mutations_feed_existing_attribute_speed_armor_and_hp_pipelines() {
         "rfb.mutation.puny",
         "rfb.mutation.hyper-int",
         "rfb.mutation.moronic",
+        "rfb.mutation.pultitis",
         "rfb.mutation.resilient",
         "rfb.mutation.xtra-fat",
         "rfb.mutation.albino",
@@ -371,6 +372,23 @@ fn m4b_passives_feed_resistance_sense_skill_and_flight_pipelines() {
             .remaining_ticks,
         150
     );
+    assert!(game.lose_mutation("rfb.mutation.sensitive-eyes", &mut Vec::new()));
+    assert!(game.gain_mutation("rfb.mutation.infravision", &mut Vec::new()));
+    assert_eq!(game.player_infravision_range(), 3);
+
+    assert!(game.gain_mutation("rfb.mutation.vuln-elem", &mut Vec::new()));
+    for damage_type in [
+        DamageType::Acid,
+        DamageType::Cold,
+        DamageType::Electricity,
+        DamageType::Fire,
+    ] {
+        assert_eq!(
+            game.effective_player_resistances().level(damage_type),
+            ResistanceLevel::Vulnerable,
+            "{damage_type:?} vulnerability"
+        );
+    }
 
     assert!(game.gain_mutation("rfb.mutation.weird-mind", &mut Vec::new()));
     game.apply_player_melee_status(
