@@ -41,6 +41,61 @@ test("mutation events use their authoritative projected names", () => {
   localization.setLocale("en-US");
 });
 
+test("Polymorph's rare cure uses the authoritative bilingual message", () => {
+  const event = {
+    kind: "mutation.all-cured",
+    messageKey: "mutation-all-cured",
+    args: {},
+  };
+
+  assert.equal(formatter.formatEvent(event), "All of your mutations are cured.");
+  localization.setLocale("zh-CN");
+  assert.equal(formatter.formatEvent(event), "你所有的变异都被治愈了。");
+  localization.setLocale("en-US");
+});
+
+test("mutation ability events report the SP and HP actually paid", () => {
+  const event = {
+    kind: "ability.cast-failure",
+    messageKey: "ability-cast-failure",
+    args: { target: "rfb.ability.mutation.spit-acid" },
+    outcome: {
+      type: "ability-cast",
+      resolution: {
+        abilityId: "rfb.ability.mutation.spit-acid",
+        resourceId: "demo.resource.mana",
+        baseResourceCost: 7,
+        resourceCost: 7,
+        resourceBefore: 3,
+        resourceAfter: 0,
+        resourcePaid: 3,
+        hpPaid: 4,
+        failurePercent: 35,
+        percentileRoll: 22,
+        succeeded: false,
+        proficiencyBefore: 0,
+        proficiencyAfter: 0,
+        proficiencyRank: "unskilled",
+        castCount: 0,
+        failCount: 0,
+        cooldownBefore: 0,
+        cooldownAfter: 0,
+      },
+    },
+  };
+
+  assert.equal(
+    formatter.formatEvent(event),
+    "Your attempt to cast Spit Acid fails (roll 22, failure 35%, cost 3 Mana + 4 HP).",
+  );
+  localization.setLocale("zh-CN");
+  assert.equal(
+    formatter.formatEvent(event),
+    "你施放喷吐酸液失败了（掷骰 22，失败率 35%，消耗 3 点法力 + 4 点生命）。",
+  );
+  localization.setLocale("en-US");
+});
+
 test("M6-B mutation events describe fumbling and delayed reality changes", () => {
   const fumbling = {
     kind: "mutation.fumbled-drop",

@@ -85,6 +85,7 @@ pub(crate) enum DomainEvent {
         mutation_id: String,
         name: String,
     },
+    MutationAllCured,
     MutationPeriodicTriggered {
         mutation_id: String,
         name: String,
@@ -1282,6 +1283,7 @@ impl DomainEvent {
                 "mutation-lost",
                 [("target", mutation_id), ("name", name)],
             ),
+            Self::MutationAllCured => dto_without_args("mutation.all-cured", "mutation-all-cured"),
             Self::MutationPeriodicTriggered { mutation_id, name } => dto(
                 "mutation.periodic-triggered",
                 "mutation-periodic-triggered",

@@ -1336,6 +1336,7 @@ impl Game {
             if removed.is_empty() {
                 return false;
             }
+            events.push(DomainEvent::MutationAllCured);
             for (mutation_id, name) in removed {
                 events.push(DomainEvent::MutationLost { mutation_id, name });
             }

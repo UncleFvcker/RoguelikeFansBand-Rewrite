@@ -11,6 +11,7 @@ import type {
   GameSnapshot,
   GameUpdate,
   PlayerBuildDto,
+  PlayerMutationDto,
   PlayerProgressDto,
   ResourcePoolDto,
   SummonCommandDto,
@@ -46,6 +47,7 @@ type StatusDom = Pick<
   | "progressionMultipliersValue"
   | "attributeList"
   | "skillList"
+  | "mutationList"
   | "resourceList"
   | "abilityList"
   | "resourceRest"
@@ -221,6 +223,7 @@ export class StatusPanel {
       state.player.equipmentModifiers.defense,
     );
     this.#renderProgression(state.player.progress, state.player.build);
+    this.#renderMutations(state.player.mutations ?? []);
     this.#renderAbilities(
       state.player.abilities ?? [],
       state.player.resources ?? [],
@@ -482,6 +485,47 @@ export class StatusPanel {
     }
   }
 
+  #renderMutations(mutations: PlayerMutationDto[]): void {
+    const document = this.#dom.mutationList.ownerDocument;
+    if (mutations.length === 0) {
+      const empty = document.createElement("li");
+      empty.className = "mutation-empty";
+      empty.textContent = this.#localization.format("mutation-empty");
+      this.#dom.mutationList.replaceChildren(empty);
+      return;
+    }
+    this.#dom.mutationList.replaceChildren(
+      ...mutations.map((mutation) => {
+        const row = document.createElement("li");
+        row.className = "mutation-row";
+        row.dataset.rating = mutation.rating;
+        const heading = document.createElement("div");
+        heading.className = "mutation-heading";
+        const name = document.createElement("strong");
+        name.className = "mutation-name";
+        name.textContent = mutation.name;
+        const badges = document.createElement("span");
+        badges.className = "mutation-badges";
+        const rating = document.createElement("span");
+        rating.className = "mutation-rating";
+        rating.textContent = this.#localization.format(mutationRatingMessageKey(mutation.rating));
+        badges.append(rating);
+        if (mutation.locked) {
+          const locked = document.createElement("span");
+          locked.className = "mutation-locked";
+          locked.textContent = this.#localization.format("mutation-locked");
+          badges.append(locked);
+        }
+        const description = document.createElement("p");
+        description.className = "mutation-description";
+        description.textContent = mutation.description;
+        heading.append(name, badges);
+        row.append(heading, description);
+        return row;
+      }),
+    );
+  }
+
   #renderAbilities(
     abilities: AbilityDto[],
     resources: ResourcePoolDto[],
@@ -713,15 +757,7 @@ export class StatusPanel {
     });
     const status = document.createElement("span");
     status.className = "ability-status";
-    status.textContent = this.#localization.format(
-      ability.source === "technique"
-        ? "ability-status-innate"
-        : ability.source === "mutation"
-          ? "ability-status-mutation"
-        : ability.learned
-          ? "ability-status-learned"
-          : "ability-status-unlearned",
-    );
+    status.textContent = this.#localization.format(abilityStatusMessageKey(ability));
     details.append(name, summary, proficiency, status);
     this.#appendAbilityDetails(details, ability);
     const actions = document.createElement("div");
@@ -837,6 +873,18 @@ export class StatusPanel {
       { value, bonus: signedModifier(equipmentModifier) },
     );
   }
+}
+
+export function mutationRatingMessageKey(rating: PlayerMutationDto["rating"]): MessageKey {
+  return `mutation-rating-${rating}`;
+}
+
+export function abilityStatusMessageKey(
+  ability: Pick<AbilityDto, "source" | "learned">,
+): MessageKey {
+  if (ability.source === "technique") return "ability-status-innate";
+  if (ability.source === "mutation") return "ability-status-mutation";
+  return ability.learned ? "ability-status-learned" : "ability-status-unlearned";
 }
 
 export function formatAttributeValue(value: number): string {

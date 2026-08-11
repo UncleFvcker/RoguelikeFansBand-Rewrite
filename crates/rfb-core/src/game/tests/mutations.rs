@@ -1068,6 +1068,14 @@ fn m7_polymorph_rare_cure_preserves_locks_and_loses_in_source_order() {
     assert!(game.resolve_polymorph_mutations(&mut events));
 
     assert_eq!(game.rng, expected_rng);
+    assert!(matches!(
+        events.first(),
+        Some(DomainEvent::MutationAllCured)
+    ));
+    assert_eq!(
+        project_events(events.clone())[0].message_key,
+        "mutation-all-cured"
+    );
     assert_eq!(
         game.progress.active_mutation_ids,
         BTreeSet::from(["rfb.mutation.infravision".to_owned()])

@@ -18,6 +18,8 @@ P3.7-M0 至 M4E 原始批次记录。权威内容覆盖账本是
 - M6.0 的唯一周期入口以及 M6-A--D 共二十七项周期变异均已接入。
 - M4F-C 已完成 Good/Bad Luck、Easy Tiring、Impotence 与 Chaos Gift；104 个随机候选
   已全部闭环。
+- M7 与 M8 已完成：Polymorph 药水合同、角色变异清单、主动变异能力来源和双语事件
+  文本均已接入现有核心与 Web 管线。
 - RFB 权威源：`D:/codex/Frogcomposband` 的 Git `master` ref；覆盖审计当前锁定
   `efd63661302866038f58d8cd2553b23e6af3bf9d`。不要读取该仓库工作树文件替代
   `master` Git 对象。
@@ -109,6 +111,7 @@ blocked 均为零权重职业、种族、人格或特殊身份，留给 M9 收�
 | M6-C | Flatulence、三类吸引、Raw Chaos 与 Eat Light 复用范围伤害、分类召唤、角色群体生成、光源燃料和区域熄灭事务 active。 |
 | M6-D | Normality、Wraithform、Polymorph Wounds、Wasting、Random Telepathy、Nausea 与 Warning 复用现有变异、属性、状态、饥饿和实体等级事务 active。 |
 | M7 | 变形药水复用统一随机 gain/lose、锁定保护和互斥移除事务；原版循环、1/23 全治愈和 Black Market 获取路径已完成。 |
+| M8 | 角色详情显示变异评级、锁定与描述；主动变异复用能力界面；实际 SP/HP 成本及 Polymorph 全治愈事件已完成双语呈现。 |
 | M4F-C1--C3 | Good/Bad Luck、Easy Tiring 与 Impotence 已接入共享物品生成、属性、tick、近战/投掷和设备检定入口。 |
 | M4F-C4 | Chaos Gift 已导入 16 位神明和完整奖励表；出生神明身份、最高等级触发与全部可达奖励已闭环。 |
 
@@ -279,20 +282,25 @@ item adaptation/coverage 账本已经从 blocked 改为 active。
 改变、gain-time 互斥移除、事件顺序、物品消耗与 RNG 次数；确定性由同种子状态与
 现有 replay/fixture 合同共同验证。
 
-## 8. P3.7-M8：界面与集中收口
+## 8. P3.7-M8：界面与集中收口（已完成）
 
-核心已经通过 `PlayerDto.mutations` 投影名称、描述、评级和锁定标记，但 Web 当前
-只生成了 TypeScript 类型，没有角色面板消费。M8 需要：
+M8 直接消费已有 `PlayerDto.mutations` 与 `AbilitySourceDto::Mutation`，没有新增角色
+页、施放 UI 或持久状态：
 
-1. 角色面板显示 active mutation 列表、评级、锁定标记和描述。
-2. 主动变异进入现有能力界面；来源应可区分为 mutation，但不要复制一套施放 UI。
-3. 补齐 gain、lose、冲突移除、周期触发、施放失败/成本和 Polymorph 的权威中英文
-   事件文本。
-4. 确认 New Life 与 Polymorph 两件物品均为 active，拥有来源身份、flavor 和获取
-   途径，item 与 mutation 两份覆盖账本数字一致。
-5. 由集成工作树统一升级实际需要的 Protocol、State Hash Schema、pack version、
-   content lock、生成绑定和受影响 fixtures。内容-only 变化不得无故升级协议或
-   State Hash Schema。
+1. 角色详情显示 active mutation 的权威名称、描述、评级和锁定标记；无变异时显示
+   明确空状态。
+2. 主动变异继续进入现有能力界面，并以 mutation 来源标记；学习、遗忘和熟练度仍
+   不适用于变异能力。
+3. gain、lose、冲突移除和周期触发继续使用统一变异事件；能力施放消息改为显示实际
+   支付的 SP/HP，Polymorph 的 1/23 全治愈分支使用 RFB `master` 的权威中文消息，
+   英文界面提供对应文本。
+4. New Life 与 Polymorph 两件物品在 item 账本中均为 active，并具备来源身份、
+   flavor 与 Black Market 获取路径；mutation 审计保持 119 active / 33 blocked，
+   104/104 随机候选 active。
+5. 本批只增加通用事件种类与 Web 呈现，不改变协议形状、状态哈希输入、内容或公共
+   初始化。因此 Protocol 保持 1.168、State Hash Schema 保持 v85、内容包保持
+   1.242.0、Contract baseline 保持 contract-v250；生成绑定、content lock 与 21 个
+   exact fixtures 经检查均无需改写。
 
 P3.7 发布门槛：
 

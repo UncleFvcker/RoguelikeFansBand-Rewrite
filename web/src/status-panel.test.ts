@@ -5,10 +5,25 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  abilityStatusMessageKey,
   formatAttributeValue,
+  mutationRatingMessageKey,
   nutritionPercentage,
   wildernessClock,
 } from "./status-panel.ts";
+
+test("mutation presentation exposes ratings and the shared ability source", () => {
+  assert.equal(mutationRatingMessageKey("awful"), "mutation-rating-awful");
+  assert.equal(mutationRatingMessageKey("great"), "mutation-rating-great");
+  assert.equal(
+    abilityStatusMessageKey({ source: "mutation", learned: false }),
+    "ability-status-mutation",
+  );
+  assert.equal(
+    abilityStatusMessageKey({ source: "learned", learned: true }),
+    "ability-status-learned",
+  );
+});
 
 test("status panel preserves exceptional attribute display values", () => {
   assert.equal(formatAttributeValue(18), "18");

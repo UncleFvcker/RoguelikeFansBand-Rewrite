@@ -43,6 +43,8 @@ export function createPresentationFormatter(
         return localization.format("message-mutation-lost", {
           mutation: event.args.name ?? event.args.target ?? "?",
         });
+      case "mutation-all-cured":
+        return localization.format("message-mutation-all-cured");
       case "mutation-periodic-triggered":
         return localization.format("message-mutation-periodic-triggered", {
           mutation: event.args.name ?? event.args.target ?? "?",
@@ -108,7 +110,7 @@ export function createPresentationFormatter(
             ability: contentName(event.args.target),
             roll: resolution?.percentileRoll ?? "?",
             failure: resolution?.failurePercent ?? "?",
-            cost: resolution?.resourceCost ?? "?",
+            cost: abilityCastCost(resolution),
           },
         );
       }
@@ -1507,6 +1509,31 @@ export function createPresentationFormatter(
 
   function abilityUnavailableReason(reason: string | undefined): string {
     return localization.format(`ability-unavailable-${reason ?? "unknown"}` as MessageKey);
+  }
+
+  function abilityCastCost(
+    resolution:
+      | Extract<GameEventDto["outcome"], { type: "ability-cast" }>["resolution"]
+      | undefined,
+  ): string {
+    if (!resolution) return "?";
+    if (resolution.resourcePaid > 0 && resolution.hpPaid > 0) {
+      return localization.format("message-ability-cast-cost-split", {
+        resourceAmount: resolution.resourcePaid,
+        resource: contentName(resolution.resourceId ?? undefined),
+        hpAmount: resolution.hpPaid,
+      });
+    }
+    if (resolution.resourcePaid > 0) {
+      return localization.format("message-ability-cast-cost-resource", {
+        amount: resolution.resourcePaid,
+        resource: contentName(resolution.resourceId ?? undefined),
+      });
+    }
+    if (resolution.hpPaid > 0) {
+      return localization.format("message-ability-cast-cost-hp", { amount: resolution.hpPaid });
+    }
+    return localization.format("message-ability-cast-cost-none");
   }
 
   function restStopReason(reason: string | undefined): string {

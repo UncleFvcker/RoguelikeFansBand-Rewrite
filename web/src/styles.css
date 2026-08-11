@@ -694,6 +694,69 @@ h1 {
   list-style: none;
 }
 
+.mutation-list {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0.45rem 0.85rem 0.8rem;
+  list-style: none;
+}
+
+.mutation-row {
+  display: grid;
+  gap: 0.25rem;
+  border-left: 2px solid #647482;
+  padding: 0.45rem 0.55rem;
+  background: rgb(103 137 168 / 8%);
+}
+
+.mutation-row[data-rating="awful"],
+.mutation-row[data-rating="bad"] {
+  border-left-color: #a96565;
+}
+
+.mutation-row[data-rating="good"],
+.mutation-row[data-rating="great"] {
+  border-left-color: #5c9a7e;
+}
+
+.mutation-heading,
+.mutation-badges {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.mutation-heading {
+  justify-content: space-between;
+}
+
+.mutation-name {
+  color: #dcecff;
+  font-size: 0.78rem;
+}
+
+.mutation-rating,
+.mutation-locked {
+  border: 1px solid rgb(103 137 168 / 28%);
+  border-radius: 999px;
+  padding: 0.08rem 0.35rem;
+  color: #9fb5ca;
+  font-size: 0.62rem;
+}
+
+.mutation-locked {
+  color: #d8bd72;
+}
+
+.mutation-description,
+.mutation-empty {
+  margin: 0;
+  color: #7890a7;
+  font-size: 0.7rem;
+  line-height: 1.45;
+}
+
 .skill-row {
   display: flex;
   min-width: 0;
