@@ -6,7 +6,7 @@
 
 contract fixture 是规则兼容边界，不能把测试失败简单处理为“刷新预期结果”。政策用于保证每次规则变化只修改真正受影响的场景，同时保留可审查的失败原因。
 
-当前逻辑基线是 `contract-v243`，机器可读政策固定在：
+当前逻辑基线是 `contract-v248`，机器可读政策固定在：
 
 ```text
 tests/fixtures/active/baseline-policy.json
@@ -103,3 +103,26 @@ cargo run -p rfb-contract -- validate-policy tests/fixtures/active/baseline-poli
 `contract-v243` 完成主动变异 M5-C/D。Sterility 把当前楼层的怪物繁殖压制纳入
 权威存档与 State Hash Schema v81；21 个 fixture 只刷新受该公共哈希结构影响的
 `stateHash` 与 `saveRoundTripStateHash`，具体九项能力分支由聚焦核心测试覆盖。
+
+`contract-v244` 完成周期变异 M6-A。`minorSlow` 与 Produce Mana 的待选方向进入
+权威存档和 State Hash Schema v82；协议升至 1.165。21 个 fixture 刷新公共状态
+投影与哈希，十项周期分支、RNG 顺序和方向恢复由 Core 与 Web 聚焦测试覆盖。
+
+`contract-v245` 完成周期变异 M6-B。通用现实改变倒计时进入权威存档和 State
+Hash Schema v83，协议升至 1.166。21 个 fixture 刷新公共状态投影与哈希；传送、
+放逐、程序地下城重生成和武器掉落由 Core 聚焦测试覆盖。
+
+`contract-v246` 完成周期变异 M6-C。Flatulence、Raw Chaos 与 Eat Light 复用范围
+伤害，三类吸引复用分类召唤和角色群体生成；照明模块增加来源无关的区域熄灭事务。
+本批没有协议、存档或 State Hash 结构变化，现有 21 个 fixture 无需刷新，具体分支
+由 Core 聚焦测试覆盖。
+
+`contract-v247` 完成周期变异 M6-D。Normality、Polymorph Wounds、Wasting、
+Random Telepathy、Nausea、Warning 与 Wraithform 复用变异移除、属性、状态、饥饿
+和实体等级事务。本批没有协议、存档或 State Hash 结构变化，现有 21 个 fixture
+无需刷新，七项周期分支和 RNG 顺序由 Core 聚焦测试覆盖。
+
+`contract-v248` 完成变异 M7。变形药水复用唯一随机 gain/lose 事务，并保持锁定
+保护、互斥移除、原版循环与精确 RNG 顺序。药水加入两座城镇的 Black Market，
+固定库存改变新游戏公共初始化与物品实例分配，因此 21 个 fixture 全量刷新；算法
+分支、零候选和物品消耗由 Core 聚焦测试覆盖。协议、存档和 State Hash 结构不变。

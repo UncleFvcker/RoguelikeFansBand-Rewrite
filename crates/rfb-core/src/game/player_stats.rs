@@ -623,9 +623,10 @@ impl Game {
     }
 
     pub(super) fn player_has_telepathy(&self) -> bool {
-        self.content.mutations().any(|mutation| {
-            mutation.telepathy && self.progress.active_mutation_ids.contains(&mutation.id)
-        })
+        self.player_has_status_kind(STATUS_TELEPATHY)
+            || self.content.mutations().any(|mutation| {
+                mutation.telepathy && self.progress.active_mutation_ids.contains(&mutation.id)
+            })
     }
 
     pub(super) fn player_regeneration_rate_percent(&self) -> u64 {
@@ -1536,6 +1537,14 @@ impl Game {
                     StatLayer::Environment,
                     "rfb.encumbrance",
                     encumbrance_penalty.saturating_neg(),
+                );
+            }
+            if self.minor_slow > 0 {
+                pipeline.add(
+                    StatKind::Speed,
+                    StatLayer::Status,
+                    "rfb.status.minor-slow",
+                    -i32::from(self.minor_slow),
                 );
             }
         }

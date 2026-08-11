@@ -6,7 +6,8 @@
   "description": "你会吸引动物。",
   "rating": "bad",
   "sourceIndex": 47,
-  "randomSelectionEnabled": false,
+  "randomSelectionEnabled": true,
   "randomWeight": 2,
+  "periodicEffect": { "type": "attract-animal" },
   "removesOnGain": []
 }

@@ -20,6 +20,7 @@ export type TargetingIntent =
   | { type: "look" }
   | { type: "local-travel" }
   | { type: "projectile" }
+  | { type: "mutation-direction" }
   | { type: "ability"; abilityId: string }
   | { type: "item"; itemId: string };
 
@@ -46,7 +47,12 @@ export class AppState {
   terrainInteractionMode: TerrainInteractionMode | undefined;
 
   get commandBlocked(): boolean {
-    return this.mode !== "playing" || this.playerDead || this.campaignEnded;
+    return (
+      this.mode !== "playing" ||
+      this.playerDead ||
+      this.campaignEnded ||
+      this.status?.player.pendingMutationDirection != null
+    );
   }
 
   get worldMap(): boolean {

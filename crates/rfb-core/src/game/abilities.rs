@@ -801,22 +801,50 @@ impl Game {
         else {
             unreachable!("player area damage executor requires an area damage effect");
         };
-        let (trace, _) = self.trace_projectile_path_with_actor_policy(path, stop_at_actor);
-        let center = trace.landing;
-        let (affected_positions, targets) =
-            self.area_damage_targets(center, *radius, target_category.as_deref());
-        changed.extend(affected_positions.iter().copied());
         let base_raw_damage = self
             .roll_damage(*damage_dice, *damage_sides)
             .saturating_add(i32::from(*damage_bonus))
             .max(0);
+        self.resolve_player_area_damage_with_base(
+            &ability.id,
+            path,
+            stop_at_actor,
+            DamageType::from(*damage_type),
+            *radius,
+            target_category.as_deref(),
+            base_raw_damage,
+            events,
+            changed,
+            removed_entities,
+        )
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    pub(super) fn resolve_player_area_damage_with_base(
+        &mut self,
+        source_id: &str,
+        path: Vec<Position>,
+        stop_at_actor: bool,
+        damage_type: DamageType,
+        radius: u8,
+        target_category: Option<&str>,
+        base_raw_damage: i32,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        let (trace, _) = self.trace_projectile_path_with_actor_policy(path, stop_at_actor);
+        let center = trace.landing;
+        let (affected_positions, targets) =
+            self.area_damage_targets(center, radius, target_category);
+        changed.extend(affected_positions.iter().copied());
         events.push(DomainEvent::AbilityAreaDamage {
-            ability_id: ability.id.clone(),
+            ability_id: source_id.to_owned(),
             resolution: AbilityAreaDamageResolutionDto {
                 center,
-                radius: *radius,
+                radius,
                 base_raw_damage,
-                damage_type: DamageType::from(*damage_type).into(),
+                damage_type: damage_type.into(),
                 affected_positions,
                 target_count: u16::try_from(targets.len()).unwrap_or(u16::MAX),
             },
@@ -833,8 +861,8 @@ impl Game {
             let falloff_damage = rfb_area_damage(base_raw_damage, distance);
             self.resolve_ability_damage_to_entity(
                 index,
-                &ability.id,
-                DamageType::from(*damage_type),
+                source_id,
+                damage_type,
                 falloff_damage,
                 trace.clone(),
                 events,
@@ -862,19 +890,41 @@ impl Game {
         else {
             unreachable!("player beam damage executor requires a beam damage effect");
         };
-        let (trace, _) = self.trace_projectile_path_with_actor_policy(path, false);
-        let affected_positions = trace.traversed.clone();
-        let targets = self.beam_damage_targets(&affected_positions);
-        changed.extend(affected_positions.iter().copied());
         let base_raw_damage = self
             .roll_damage(*damage_dice, *damage_sides)
             .saturating_add(i32::from(*damage_bonus))
             .max(0);
+        self.resolve_player_beam_damage_with_base(
+            &ability.id,
+            path,
+            DamageType::from(*damage_type),
+            base_raw_damage,
+            events,
+            changed,
+            removed_entities,
+        )
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    pub(super) fn resolve_player_beam_damage_with_base(
+        &mut self,
+        source_id: &str,
+        path: Vec<Position>,
+        damage_type: DamageType,
+        base_raw_damage: i32,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        let (trace, _) = self.trace_projectile_path_with_actor_policy(path, false);
+        let affected_positions = trace.traversed.clone();
+        let targets = self.beam_damage_targets(&affected_positions);
+        changed.extend(affected_positions.iter().copied());
         events.push(DomainEvent::AbilityBeamDamage {
-            ability_id: ability.id.clone(),
+            ability_id: source_id.to_owned(),
             resolution: AbilityBeamDamageResolutionDto {
                 base_raw_damage,
-                damage_type: DamageType::from(*damage_type).into(),
+                damage_type: damage_type.into(),
                 affected_positions,
                 target_count: u16::try_from(targets.len()).unwrap_or(u16::MAX),
             },
@@ -890,8 +940,8 @@ impl Game {
             };
             self.resolve_ability_damage_to_entity(
                 index,
-                &ability.id,
-                DamageType::from(*damage_type),
+                source_id,
+                damage_type,
                 base_raw_damage,
                 trace.clone(),
                 events,
@@ -3085,45 +3135,7 @@ impl Game {
 
         if power > i32::try_from(self.rng.bounded(5)).expect("polymorph roll must fit i32") {
             power -= 5;
-            let healing = self.roll_damage(self.progress.level.max(1), 5);
-            self.player.hp = self.player.hp.saturating_add(healing).min(previous_max_hp);
-            let nasty = self.rng.bounded(5) == 0;
-            if nasty {
-                self.player.hp = self.player.hp.saturating_sub(healing / 2);
-                let bleeding_ticks = u32::try_from(healing.max(1)).unwrap_or(u32::MAX);
-                apply_status_application(
-                    &mut self.player.statuses,
-                    StatusApplication {
-                        status: StatusInstance {
-                            kind_id: STATUS_BLEEDING.to_owned(),
-                            intensity: 1,
-                            remaining_ticks: bleeding_ticks,
-                            source_id: Some(ability.id.clone()),
-                            granted_resistances: BTreeMap::new(),
-                            granted_brands: BTreeSet::new(),
-                            granted_modifiers: StatModifiersDto::default(),
-                            granted_equipment_bonuses: EquipmentBonusesDto::default(),
-                            granted_status_immunities: BTreeSet::new(),
-                            granted_race_id: None,
-                            grants_wall_passage: false,
-                            incoming_damage_percent: 100,
-                        },
-                        stacking: StatusStacking::Replace,
-                    },
-                );
-            } else if let Some(bleeding) = self
-                .player
-                .statuses
-                .iter_mut()
-                .find(|status| status.kind_id == STATUS_BLEEDING)
-            {
-                bleeding.remaining_ticks = bleeding
-                    .remaining_ticks
-                    .saturating_sub(u32::try_from(healing / 2).unwrap_or(u32::MAX));
-            }
-            self.player
-                .statuses
-                .retain(|status| status.remaining_ticks > 0);
+            self.resolve_polymorph_wounds(&ability.id, previous_max_hp);
         }
 
         let mut swapped_attributes = Vec::new();

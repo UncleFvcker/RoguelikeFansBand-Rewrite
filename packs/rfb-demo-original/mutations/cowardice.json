@@ -6,8 +6,9 @@
   "description": "你容易退缩。",
   "rating": "bad",
   "sourceIndex": 33,
-  "randomSelectionEnabled": false,
+  "randomSelectionEnabled": true,
   "randomWeight": 2,
+  "periodicEffect": { "type": "cowardice" },
   "removesOnGain": [
     "rfb.mutation.fearless",
     "rfb.mutation.no-inhibitions"

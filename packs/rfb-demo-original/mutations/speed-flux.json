@@ -6,7 +6,8 @@
   "description": "你的移动速度会随机变快或变慢。",
   "rating": "bad",
   "sourceIndex": 43,
-  "randomSelectionEnabled": false,
+  "randomSelectionEnabled": true,
   "randomWeight": 4,
+  "periodicEffect": { "type": "speed-flux" },
   "removesOnGain": []
 }

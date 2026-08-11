@@ -541,6 +541,9 @@ pub(crate) fn player_to_save(
         base_max_hp: player.max_hp,
         base_speed: player.speed,
         energy_need: player.energy_need,
+        minor_slow: 0,
+        reality_change_ticks: 0,
+        pending_mutation_direction: None,
         statuses: player
             .statuses
             .iter()

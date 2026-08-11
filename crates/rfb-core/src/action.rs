@@ -71,6 +71,9 @@ pub(crate) enum GameAction {
     DigTerrain {
         direction: Direction,
     },
+    ResolveMutationDirection {
+        direction: Direction,
+    },
     Move {
         direction: Direction,
     },
@@ -191,6 +194,7 @@ impl GameAction {
             | Self::AutoGet { .. }
             | Self::PickUp
             | Self::ResolveMogaminatorQuery { .. }
+            | Self::ResolveMutationDirection { .. }
             | Self::InscribeItem { .. }
             | Self::SetInterfaceLocale { .. } => 0,
             Self::TravelLocal { .. } => 0,
@@ -275,6 +279,9 @@ impl From<GameCommand> for GameAction {
             }
             GameCommand::DisarmTrap { direction } => Self::DisarmTrap { direction },
             GameCommand::DigTerrain { direction } => Self::DigTerrain { direction },
+            GameCommand::ResolveMutationDirection { direction } => {
+                Self::ResolveMutationDirection { direction }
+            }
             GameCommand::EnterWorldMap {
                 leave_pets,
                 cancel_recall,

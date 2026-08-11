@@ -26,7 +26,7 @@ export class GameSession {
 
   async dispatch(command: GameCommand): Promise<void> {
     if (
-      this.#state.commandBlocked ||
+      (this.#state.commandBlocked && command.type !== "resolve-mutation-direction") ||
       (this.#state.worldMap &&
         command.type !== "move" &&
         command.type !== "travel-world" &&

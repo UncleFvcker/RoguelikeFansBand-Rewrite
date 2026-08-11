@@ -97,6 +97,9 @@ impl Game {
             nutrition_state: self.nutrition_state(),
             speed: derived_speed(&stats.speed),
             energy_need: self.player.energy_need,
+            minor_slow: self.minor_slow,
+            reality_change_ticks: self.reality_change_ticks,
+            pending_mutation_direction: self.pending_mutation_direction.clone(),
             carried_weight_tenths_pound: self.carried_weight_tenths_pound(),
             carry_capacity_tenths_pound: self.player_carry_capacity_tenths_pound(),
             encumbrance_speed_penalty: u16::try_from(self.player_encumbrance_speed_penalty())

@@ -6,7 +6,8 @@
   "description": "你会吸引恶魔。",
   "rating": "bad",
   "sourceIndex": 41,
-  "randomSelectionEnabled": false,
+  "randomSelectionEnabled": true,
   "randomWeight": 4,
+  "periodicEffect": { "type": "attract-demon" },
   "removesOnGain": []
 }

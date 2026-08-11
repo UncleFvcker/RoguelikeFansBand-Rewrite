@@ -36,6 +36,22 @@ pub(super) fn starting_torch_supply(
 }
 
 impl Game {
+    pub(super) fn extinguish_area(&mut self, origin: Position, radius: u8) -> Vec<Position> {
+        let darkened = self
+            .area_damage_cells(origin, radius)
+            .into_iter()
+            .map(|(_, position)| position)
+            .filter(|position| self.index(*position).is_some_and(|index| self.glow[index]))
+            .collect::<Vec<_>>();
+        for position in &darkened {
+            let index = self
+                .index(*position)
+                .expect("area light position must remain in bounds");
+            self.glow[index] = false;
+        }
+        darkened
+    }
+
     pub(super) fn refuel_light_unavailable_reason(
         &self,
         target_item_id: &str,

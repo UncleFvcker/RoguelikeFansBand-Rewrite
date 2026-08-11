@@ -287,6 +287,23 @@ export class InputController {
     ) {
       this.cancelTargeting(false);
     }
+    const pendingDirection = state.player.pendingMutationDirection;
+    if (pendingDirection && this.#state.targetingIntent?.type !== "mutation-direction") {
+      this.cancelTargeting(false);
+      const targeting = beginTargeting(state.player.position, {
+        modes: ["direction"],
+        range: Math.max(state.width, state.height),
+        requiresLineOfEffect: false,
+      });
+      if (targeting) {
+        this.#state.targeting = targeting;
+        this.#state.targetingIntent = { type: "mutation-direction" };
+        this.#announce("message-mutation-direction-required", undefined, "mutation");
+        this.#onLookOrTargeting("targeting");
+      }
+    } else if (!pendingDirection && this.#state.targetingIntent?.type === "mutation-direction") {
+      this.cancelTargeting(false);
+    }
   }
 
   render(): void {
@@ -381,6 +398,7 @@ export class InputController {
   }
 
   readonly #handleTargetToggle = (): void => {
+    if (this.#state.targetingIntent?.type === "mutation-direction") return;
     if (this.#state.targeting && this.#state.targetingIntent?.type !== "look") {
       this.cancelTargeting();
     } else {
@@ -415,7 +433,6 @@ export class InputController {
   readonly #handleKeydown = (event: KeyboardEvent): void => {
     if (
       this.#state.busy ||
-      this.#state.commandBlocked ||
       this.#dom.mapHost.ownerDocument.querySelector("dialog[open]") ||
       isTextInput(event.target)
     ) return;
@@ -423,6 +440,7 @@ export class InputController {
       this.#handleTargetingKey(event);
       return;
     }
+    if (this.#state.commandBlocked) return;
     if (this.#state.terrainInteractionMode) {
       this.#handleTerrainDirection(event);
       return;
@@ -516,6 +534,7 @@ export class InputController {
   #handleTargetingKey(event: KeyboardEvent): void {
     if (event.key === "Escape") {
       event.preventDefault();
+      if (this.#state.targetingIntent?.type === "mutation-direction") return;
       this.cancelTargeting();
       return;
     }
@@ -660,7 +679,9 @@ export class InputController {
     }
     this.cancelTargeting(false);
     await this.#dispatch(
-      intent.type === "ability"
+      intent.type === "mutation-direction" && target.type === "direction"
+        ? { type: "resolve-mutation-direction", direction: target.direction }
+        : intent.type === "ability"
         ? { type: "cast-ability", abilityId: intent.abilityId, target }
         : intent.type === "item"
           ? { type: "use-item", itemId: intent.itemId, target }
@@ -939,6 +960,13 @@ function targetSpecForIntent(
   intent: TargetingIntent,
 ): TargetSpecDto | null | undefined {
   if (intent.type === "look" || intent.type === "local-travel") return undefined;
+  if (intent.type === "mutation-direction") {
+    return {
+      modes: ["direction"],
+      range: Math.max(state.width, state.height),
+      requiresLineOfEffect: false,
+    };
+  }
   if (intent.type === "projectile") return state.player.projectileProfile?.targetSpec;
   if (intent.type === "item") {
     return state.inventory.find(

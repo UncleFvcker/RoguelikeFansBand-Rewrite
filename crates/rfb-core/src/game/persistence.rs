@@ -548,7 +548,7 @@ fn item_property_knowledge_from_save(
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-struct StateHashPayloadV81<'a> {
+struct StateHashPayloadV82<'a> {
     schema_version: u16,
     revision: u32,
     turn: u32,
@@ -878,6 +878,26 @@ impl Game {
         let recall = payload.player.recall.clone();
         let riding_actor_id = payload.player.riding_actor_id.clone();
         let confusing_strike_ready = payload.player.confusing_strike_ready;
+        let minor_slow = payload.player.minor_slow;
+        if minor_slow > 10 {
+            return Err(CoreError::InvalidSave("player minor slow is invalid"));
+        }
+        let reality_change_ticks = payload.player.reality_change_ticks;
+        if reality_change_ticks > 35 {
+            return Err(CoreError::InvalidSave(
+                "player reality change countdown is invalid",
+            ));
+        }
+        let pending_mutation_direction = payload.player.pending_mutation_direction.clone();
+        if pending_mutation_direction.as_ref().is_some_and(|pending| {
+            pending.mutation_id != "rfb.mutation.prod-mana"
+                || !progress.active_mutation_ids.contains(&pending.mutation_id)
+                || payload.map_scale != MapScaleDto::Local
+        }) {
+            return Err(CoreError::InvalidSave(
+                "pending mutation direction is invalid",
+            ));
+        }
         // Body slots are save-authoritative once present; pre-template saves
         // derive them from the build's race (or the standard body) with no
         // RNG involvement.
@@ -1183,6 +1203,9 @@ impl Game {
             summon_command,
             recall,
             confusing_strike_ready,
+            minor_slow,
+            reality_change_ticks,
+            pending_mutation_direction,
             next_item_instance_serial,
             next_gold_pile_serial,
             explored,
@@ -1298,7 +1321,7 @@ impl Game {
 
     #[must_use]
     pub fn state_hash(&self) -> String {
-        let payload = StateHashPayloadV81 {
+        let payload = StateHashPayloadV82 {
             schema_version: STATE_HASH_SCHEMA_VERSION,
             revision: self.revision,
             turn: self.turn,
@@ -1407,6 +1430,9 @@ impl Game {
         player.recall = self.recall.clone();
         player.riding_actor_id = self.riding_actor_id.clone();
         player.confusing_strike_ready = self.confusing_strike_ready;
+        player.minor_slow = self.minor_slow;
+        player.reality_change_ticks = self.reality_change_ticks;
+        player.pending_mutation_direction = self.pending_mutation_direction.clone();
         player.body_slots = self
             .body_slots
             .iter()

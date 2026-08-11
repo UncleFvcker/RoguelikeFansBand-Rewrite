@@ -6,7 +6,8 @@
   "description": "你偶尔会被原始混沌所包围。",
   "rating": "average",
   "sourceIndex": 49,
-  "randomSelectionEnabled": false,
+  "randomSelectionEnabled": true,
   "randomWeight": 2,
+  "periodicEffect": { "type": "raw-chaos" },
   "removesOnGain": []
 }

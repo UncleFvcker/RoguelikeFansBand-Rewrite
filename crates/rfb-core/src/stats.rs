@@ -532,8 +532,17 @@ impl CharacterProgress {
     }
 
     pub fn drain_attribute(&mut self, kind: AttributeKind, rng: &mut RfbRng) -> bool {
+        self.drain_attribute_by(kind, 10, rng)
+    }
+
+    pub fn drain_attribute_by(
+        &mut self,
+        kind: AttributeKind,
+        amount: u8,
+        rng: &mut RfbRng,
+    ) -> bool {
         let current = self.attributes.value(kind);
-        let next = drain_attribute_value(current, 10, rng);
+        let next = drain_attribute_value(current, amount, rng);
         self.set_current_attribute(kind, next)
     }
 

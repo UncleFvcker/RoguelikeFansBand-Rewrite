@@ -6,7 +6,8 @@
   "description": "你的身体会分泌酒精。",
   "rating": "bad",
   "sourceIndex": 35,
-  "randomSelectionEnabled": false,
+  "randomSelectionEnabled": true,
   "randomWeight": 2,
+  "periodicEffect": { "type": "alcohol" },
   "removesOnGain": []
 }

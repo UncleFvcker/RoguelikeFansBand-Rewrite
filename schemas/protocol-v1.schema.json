@@ -5026,6 +5026,22 @@
         {
           "type": "object",
           "properties": {
+            "direction": {
+              "$ref": "#/$defs/Direction"
+            },
+            "type": {
+              "type": "string",
+              "const": "resolve-mutation-direction"
+            }
+          },
+          "required": [
+            "type",
+            "direction"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "itemIds": {
               "type": "array",
               "items": {
@@ -7847,6 +7863,21 @@
         "starving"
       ]
     },
+    "PendingMutationDirectionDto": {
+      "type": "object",
+      "properties": {
+        "mutationId": {
+          "type": "string"
+        },
+        "resting": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "mutationId",
+        "resting"
+      ]
+    },
     "PlayerBuildDto": {
       "type": "object",
       "properties": {
@@ -8076,6 +8107,13 @@
           "format": "int32",
           "default": 0
         },
+        "minorSlow": {
+          "type": "integer",
+          "format": "uint8",
+          "default": 0,
+          "maximum": 255,
+          "minimum": 0
+        },
         "mutations": {
           "type": "array",
           "items": {
@@ -8093,6 +8131,16 @@
           "$ref": "#/$defs/NutritionStateDto",
           "default": "normal"
         },
+        "pendingMutationDirection": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PendingMutationDirectionDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "position": {
           "$ref": "#/$defs/Position"
         },
@@ -8108,6 +8156,13 @@
               "type": "null"
             }
           ]
+        },
+        "realityChangeTicks": {
+          "type": "integer",
+          "format": "uint8",
+          "default": 0,
+          "maximum": 255,
+          "minimum": 0
         },
         "recall": {
           "anyOf": [
@@ -8585,6 +8640,7 @@
         "full-resources",
         "invalid-turns",
         "player-died",
+        "mutation-direction-required",
         "turn-limit"
       ]
     },

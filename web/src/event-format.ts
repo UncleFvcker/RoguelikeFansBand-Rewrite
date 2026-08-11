@@ -43,6 +43,32 @@ export function createPresentationFormatter(
         return localization.format("message-mutation-lost", {
           mutation: event.args.name ?? event.args.target ?? "?",
         });
+      case "mutation-periodic-triggered":
+        return localization.format("message-mutation-periodic-triggered", {
+          mutation: event.args.name ?? event.args.target ?? "?",
+        });
+      case "mutation-warning-extreme":
+      case "mutation-warning-afraid":
+      case "mutation-warning-worried":
+      case "mutation-warning-paranoid":
+      case "mutation-warning-safe":
+      case "mutation-warning-lonely":
+        return localization.format(`message-${event.messageKey}` as MessageKey, {
+          danger: event.args.danger ?? "?",
+        });
+      case "mutation-fumbled":
+        return localization.format("message-mutation-fumbled", {
+          damage: event.args.damage ?? "?",
+        });
+      case "mutation-fumbled-drop":
+        return localization.format("message-mutation-fumbled-drop", {
+          damage: event.args.damage ?? "?",
+          target: visibleItemNameForKind(event.args.target),
+        });
+      case "mutation-reality-changed":
+        return localization.format("message-mutation-reality-changed");
+      case "mutation-reality-unchanged":
+        return localization.format("message-mutation-reality-unchanged");
       case "ability-studied":
         return localization.format("message-ability-studied", {
           ability: contentName(event.args.target),
@@ -1609,6 +1635,9 @@ export function createPresentationFormatter(
     }
     if (statusId === "rfb.status.invulnerability") {
       return localization.format("status-invulnerability-name");
+    }
+    if (statusId === "rfb.status.unwell") {
+      return localization.format("status-unwell-name");
     }
     if (statusId === "rfb.status.giant-strength") {
       return localization.format("status-giant-strength-name");

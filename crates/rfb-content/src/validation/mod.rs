@@ -147,6 +147,56 @@ pub(crate) fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<
         }) {
             return Err(ContentError::InvalidMutation(mutation.id.clone()));
         }
+        if mutation
+            .periodic_effect
+            .as_ref()
+            .is_some_and(|effect| match effect {
+                MutationPeriodicEffectDefinition::ApplyStatus {
+                    trigger_one_in,
+                    status_kind_id,
+                    intensity,
+                    duration_ticks,
+                    duration_dice,
+                    duration_sides,
+                    ..
+                } => {
+                    *trigger_one_in == 0
+                        || status_kind_id.trim().is_empty()
+                        || *intensity == 0
+                        || (*duration_ticks == 0 && *duration_dice == 0)
+                        || (*duration_dice == 0) != (*duration_sides == 0)
+                }
+                MutationPeriodicEffectDefinition::BerserkRage
+                | MutationPeriodicEffectDefinition::Cowardice
+                | MutationPeriodicEffectDefinition::Alcohol
+                | MutationPeriodicEffectDefinition::Hallucination
+                | MutationPeriodicEffectDefinition::ProduceMana
+                | MutationPeriodicEffectDefinition::SpeedFlux
+                | MutationPeriodicEffectDefinition::Invulnerability
+                | MutationPeriodicEffectDefinition::SpToHp
+                | MutationPeriodicEffectDefinition::HpToSp
+                | MutationPeriodicEffectDefinition::Hypochondria
+                | MutationPeriodicEffectDefinition::RandomTeleport
+                | MutationPeriodicEffectDefinition::RandomBanish
+                | MutationPeriodicEffectDefinition::ShadowWalk
+                | MutationPeriodicEffectDefinition::Fumbling
+                | MutationPeriodicEffectDefinition::Flatulence
+                | MutationPeriodicEffectDefinition::AttractDemon
+                | MutationPeriodicEffectDefinition::EatLight
+                | MutationPeriodicEffectDefinition::AttractAnimal
+                | MutationPeriodicEffectDefinition::RawChaos
+                | MutationPeriodicEffectDefinition::AttractDragon
+                | MutationPeriodicEffectDefinition::Normality
+                | MutationPeriodicEffectDefinition::Wraithform
+                | MutationPeriodicEffectDefinition::PolymorphWounds
+                | MutationPeriodicEffectDefinition::Wasting
+                | MutationPeriodicEffectDefinition::RandomTelepathy
+                | MutationPeriodicEffectDefinition::Nausea
+                | MutationPeriodicEffectDefinition::Warning => false,
+            })
+        {
+            return Err(ContentError::InvalidMutation(mutation.id.clone()));
+        }
         if [
             mutation.relative_experience_multiplier,
             mutation.movement_energy_multiplier,

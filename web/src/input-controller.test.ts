@@ -262,6 +262,46 @@ test("look and targeting cursors follow wilderness map translations", () => {
   assert.deepEqual(focused, [{ x: 38, y: 20 }]);
 });
 
+test("a pending Produce Mana effect opens mandatory direction targeting", () => {
+  const state = new AppState();
+  const announcements = [];
+  const controller = new InputController({
+    state,
+    dom: {},
+    localization: {},
+    window: {},
+    getInputPreset: () => "vi",
+    getZoom: () => 1,
+    dispatch: async () => {},
+    describeLook: () => "",
+    openObjectList: () => {},
+    openMogaminator: () => {},
+    onLookOrTargeting: () => {},
+    onLookFocusChange: () => {},
+    announce: (key) => announcements.push(key),
+  });
+  const update = {
+    mapScale: "local",
+    worldTravelDestination: null,
+    width: 96,
+    height: 33,
+    floorId: "core.floor.wilderness",
+    player: {
+      position: { x: 48, y: 16 },
+      pendingMutationDirection: {
+        mutationId: "rfb.mutation.prod-mana",
+        resting: false,
+      },
+    },
+  };
+
+  controller.reconcileStatus(update);
+
+  assert.equal(state.targetingIntent?.type, "mutation-direction");
+  assert.deepEqual(state.targeting?.spec.modes, ["direction"]);
+  assert.deepEqual(announcements, ["message-mutation-direction-required"]);
+});
+
 test("auto-get locks one target, then requests the next Core target", async () => {
   const state = new AppState();
   state.mode = "playing";

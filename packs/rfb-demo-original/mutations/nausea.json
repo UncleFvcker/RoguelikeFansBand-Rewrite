@@ -6,7 +6,8 @@
   "description": "你的胃非常不舒服。",
   "rating": "bad",
   "sourceIndex": 56,
-  "randomSelectionEnabled": false,
+  "randomSelectionEnabled": true,
   "randomWeight": 2,
-  "removesOnGain": []
+  "removesOnGain": [],
+  "periodicEffect": { "type": "nausea" }
 }

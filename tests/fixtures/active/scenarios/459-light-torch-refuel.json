@@ -53,7 +53,7 @@
       "turn": 2,
       "worldTick": 15,
       "lastCommandSeq": 2,
-      "rngDrawCounter": 144,
+      "rngDrawCounter": 145,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -878,7 +878,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 166,
+      "nextItemInstanceSerial": 169,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -886,7 +886,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "6e436c27a8c1a607abdbf7bdc6377cef0dec30007cea35705438ef030a20119d"
+      "stateHash": "dfd4635a8c7e9d2b06dd1a277a129a123716c9c5c8c5f108374a1f348cc1e7a4"
     },
     "events": [
       {
@@ -910,6 +910,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "6e436c27a8c1a607abdbf7bdc6377cef0dec30007cea35705438ef030a20119d"
+    "saveRoundTripStateHash": "dfd4635a8c7e9d2b06dd1a277a129a123716c9c5c8c5f108374a1f348cc1e7a4"
   }
 }

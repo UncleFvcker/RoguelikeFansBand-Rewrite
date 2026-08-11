@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.164";
+pub const PROTOCOL_VERSION: &str = "1.166";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -68,6 +68,14 @@ impl Direction {
             Self::NorthWest => (-1, -1),
         }
     }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct PendingMutationDirectionDto {
+    pub mutation_id: String,
+    pub resting: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -138,6 +146,9 @@ pub enum GameCommand {
         direction: Direction,
     },
     DigTerrain {
+        direction: Direction,
+    },
+    ResolveMutationDirection {
         direction: Direction,
     },
     Drop {
@@ -2230,6 +2241,7 @@ pub enum RestStopReasonDto {
     FullResources,
     InvalidTurns,
     PlayerDied,
+    MutationDirectionRequired,
     TurnLimit,
 }
 
@@ -2383,6 +2395,12 @@ pub struct PlayerDto {
     pub speed: u16,
     #[serde(default)]
     pub energy_need: i32,
+    #[serde(default)]
+    pub minor_slow: u8,
+    #[serde(default)]
+    pub reality_change_ticks: u8,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pending_mutation_direction: Option<PendingMutationDirectionDto>,
     #[serde(default)]
     pub carried_weight_tenths_pound: u32,
     #[serde(default)]
@@ -3196,6 +3214,7 @@ pub fn generated_typescript() -> String {
     }
 
     push_declaration!(Direction);
+    push_declaration!(PendingMutationDirectionDto);
     push_declaration!(DeviceRechargeSourceDto);
     push_declaration!(LocaleDto);
     push_declaration!(AutoGetModeDto);
@@ -3388,6 +3407,10 @@ pub struct PlayerSaveDto {
     pub base_speed: u16,
     #[serde(default)]
     pub energy_need: i32,
+    pub minor_slow: u8,
+    #[serde(default)]
+    pub reality_change_ticks: u8,
+    pub pending_mutation_direction: Option<PendingMutationDirectionDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub statuses: Vec<StatusSaveDto>,
     #[serde(default, skip_serializing_if = "is_false")]
@@ -4280,6 +4303,9 @@ mod tests {
                 nutrition_state: NutritionStateDto::Normal,
                 speed: 110,
                 energy_need: 0,
+                minor_slow: 0,
+                reality_change_ticks: 0,
+                pending_mutation_direction: None,
                 carried_weight_tenths_pound: 5,
                 carry_capacity_tenths_pound: 100,
                 encumbrance_speed_penalty: 0,
@@ -4506,6 +4532,9 @@ mod tests {
             base_max_hp: 10,
             base_speed: 110,
             energy_need: 0,
+            minor_slow: 0,
+            reality_change_ticks: 0,
+            pending_mutation_direction: None,
             statuses: Vec::new(),
             confusing_strike_ready: false,
             resistances: Vec::new(),

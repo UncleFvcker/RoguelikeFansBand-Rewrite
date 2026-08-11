@@ -18,16 +18,28 @@ const SPEC: TargetSpecDto = {
   requiresLineOfEffect: true,
 };
 
-test("target mode requires a grid or entity selection mode", () => {
+test("target mode accepts direction, grid, or entity selection", () => {
   assert.equal(beginTargeting({ x: 3, y: 3 }, undefined), undefined);
-  assert.equal(
+  assert.deepEqual(
     beginTargeting(
       { x: 3, y: 3 },
       { modes: ["direction"], range: 6, requiresLineOfEffect: true },
-    ),
-    undefined,
+    )?.cursor,
+    { x: 3, y: 3 },
   );
   assert.deepEqual(beginTargeting({ x: 3, y: 3 }, SPEC)?.cursor, { x: 3, y: 3 });
+});
+
+test("direction targeting projects the cursor delta to one of eight directions", () => {
+  let state = beginTargeting(
+    { x: 3, y: 3 },
+    { modes: ["direction"], range: 6, requiresLineOfEffect: false },
+  )!;
+  state = moveTargetCursor(state, "north-east", 10, 10);
+  assert.deepEqual(targetSelectionAtCursor(state, []), {
+    type: "direction",
+    direction: "north-east",
+  });
 });
 
 test("target cursor stays inside both the map and Chebyshev range", () => {

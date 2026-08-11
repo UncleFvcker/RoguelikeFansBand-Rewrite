@@ -60,6 +60,19 @@ struct AreaDestructionPlan {
     gold_pile_ids: BTreeSet<String>,
 }
 
+pub(super) enum VisibleBanishmentOutcome {
+    Resisted {
+        target_kind_id: String,
+    },
+    NoSpace {
+        target_kind_id: String,
+    },
+    Banished {
+        target_kind_id: String,
+        resolution: MonsterDisplacementResolutionDto,
+    },
+}
+
 pub(super) struct SettledItemUse {
     pub(super) kind_id: String,
     pub(super) profile_id: Option<String>,
@@ -436,7 +449,7 @@ impl Game {
         });
     }
 
-    fn item_visible_actor_ids(&self) -> Vec<String> {
+    pub(super) fn item_visible_actor_ids(&self) -> Vec<String> {
         self.entities
             .iter()
             .filter(|entity| {
@@ -463,7 +476,48 @@ impl Game {
             return;
         }
 
+        let outcomes = self.banish_visible_actors(maximum_distance, actor_ids, changed);
         let mut noticed = false;
+        for outcome in outcomes {
+            match outcome {
+                VisibleBanishmentOutcome::Resisted { target_kind_id } => {
+                    events.push(DomainEvent::ItemBanishmentResisted {
+                        source_kind_id: source_kind_id.to_owned(),
+                        target_kind_id,
+                    });
+                }
+                VisibleBanishmentOutcome::NoSpace { target_kind_id } => {
+                    noticed = true;
+                    events.push(DomainEvent::ItemBanishmentNoSpace {
+                        source_kind_id: source_kind_id.to_owned(),
+                        target_kind_id,
+                    });
+                }
+                VisibleBanishmentOutcome::Banished {
+                    target_kind_id,
+                    resolution,
+                } => {
+                    noticed = true;
+                    events.push(DomainEvent::ItemBanishedActor {
+                        source_kind_id: source_kind_id.to_owned(),
+                        target_kind_id,
+                        resolution,
+                    });
+                }
+            }
+        }
+        if noticed {
+            self.mark_item_aware(source_kind_id);
+        }
+    }
+
+    pub(super) fn banish_visible_actors(
+        &mut self,
+        maximum_distance: u16,
+        actor_ids: Vec<String>,
+        changed: &mut BTreeSet<Position>,
+    ) -> Vec<VisibleBanishmentOutcome> {
+        let mut outcomes = Vec::new();
         for actor_id in actor_ids {
             let Some(index) = self
                 .entities
@@ -490,18 +544,15 @@ impl Game {
                             > u32::try_from(self.rng.bounded(100) + 1)
                                 .expect("bounded teleport resistance roll must fit u32")));
             if resisted {
-                events.push(DomainEvent::ItemBanishmentResisted {
-                    source_kind_id: source_kind_id.to_owned(),
+                outcomes.push(VisibleBanishmentOutcome::Resisted {
                     target_kind_id: definition.id,
                 });
                 continue;
             }
 
-            noticed = true;
             let destinations = self.item_banishment_destinations(index, maximum_distance);
             if destinations.is_empty() {
-                events.push(DomainEvent::ItemBanishmentNoSpace {
-                    source_kind_id: source_kind_id.to_owned(),
+                outcomes.push(VisibleBanishmentOutcome::NoSpace {
                     target_kind_id: definition.id,
                 });
                 continue;
@@ -515,15 +566,12 @@ impl Game {
             self.entities[index].position = to;
             changed.insert(from);
             changed.insert(to);
-            events.push(DomainEvent::ItemBanishedActor {
-                source_kind_id: source_kind_id.to_owned(),
+            outcomes.push(VisibleBanishmentOutcome::Banished {
                 target_kind_id: definition.id,
                 resolution: MonsterDisplacementResolutionDto { actor_id, from, to },
             });
         }
-        if noticed {
-            self.mark_item_aware(source_kind_id);
-        }
+        outcomes
     }
 
     fn item_banishment_destinations(
@@ -2188,6 +2236,7 @@ impl Game {
                 | ItemUseEffectDefinition::IncreaseAttribute { .. }
                 | ItemUseEffectDefinition::AugmentAttributes
                 | ItemUseEffectDefinition::NewLife
+                | ItemUseEffectDefinition::PolymorphMutations
                 | ItemUseEffectDefinition::Vengeance { .. }
                 | ItemUseEffectDefinition::ProtectionFromEvil
                 | ItemUseEffectDefinition::PrepareConfusingStrike
@@ -2518,6 +2567,7 @@ impl Game {
             | ItemUseEffectDefinition::IncreaseAttribute { .. }
             | ItemUseEffectDefinition::AugmentAttributes
             | ItemUseEffectDefinition::NewLife
+            | ItemUseEffectDefinition::PolymorphMutations
             | ItemUseEffectDefinition::ApplyThermalResistance { .. }
             | ItemUseEffectDefinition::ApplyBasicResistance { .. }
             | ItemUseEffectDefinition::ApplyPoison { .. }
@@ -4356,6 +4406,13 @@ impl Game {
                 events,
             ),
             ItemUseEffectDefinition::NewLife => self.resolve_item_new_life(source_kind_id, events),
+            ItemUseEffectDefinition::PolymorphMutations => {
+                let noticed = self.resolve_polymorph_mutations(events);
+                if noticed {
+                    self.mark_item_aware(source_kind_id);
+                }
+                noticed
+            }
             ItemUseEffectDefinition::ApplyThermalResistance {
                 duration_dice,
                 duration_sides,

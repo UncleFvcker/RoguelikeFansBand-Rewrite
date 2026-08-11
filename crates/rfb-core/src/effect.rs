@@ -24,6 +24,7 @@ pub const STATUS_VENGEANCE: &str = "rfb.status.vengeance";
 pub const STATUS_PROTECTION_FROM_EVIL: &str = "rfb.status.protection-from-evil";
 pub const STATUS_THERMAL_RESISTANCE: &str = "rfb.status.thermal-resistance";
 pub const STATUS_BASIC_RESISTANCE: &str = "rfb.status.basic-resistance";
+pub const STATUS_BERSERK: &str = "rfb.status.berserk";
 pub const STATUS_SIGHT: &str = "rfb.status.sight";
 pub const STATUS_POISON_RESISTANCE: &str = "rfb.status.poison-resistance";
 pub const STATUS_INVULNERABILITY: &str = "rfb.status.invulnerability";
@@ -31,6 +32,9 @@ pub const STATUS_GIANT_STRENGTH: &str = "rfb.status.giant-strength";
 pub const STATUS_UNDERSTANDING: &str = "rfb.status.understanding";
 pub const STATUS_INVENTORY_PROTECTION: &str = "rfb.status.inventory-protection";
 pub const STATUS_TSUYOSHI: &str = "rfb.status.tsuyoshi";
+pub const STATUS_UNWELL: &str = "rfb.status.unwell";
+pub const STATUS_TELEPATHY: &str = "rfb.status.telepathy";
+pub const STATUS_WRAITHFORM: &str = "rfb.status.wraithform";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct DamagePacket {

@@ -6,7 +6,8 @@
   "description": "你偶尔感觉自己是无敌的。",
   "rating": "good",
   "sourceIndex": 60,
-  "randomSelectionEnabled": false,
+  "randomSelectionEnabled": true,
   "randomWeight": 2,
+  "periodicEffect": { "type": "invulnerability" },
   "removesOnGain": []
 }

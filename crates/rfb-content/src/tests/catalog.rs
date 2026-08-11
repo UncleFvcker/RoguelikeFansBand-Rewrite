@@ -6,7 +6,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.235.0");
+    assert_eq!(catalog.pack_version(), "1.240.0");
     assert!(catalog.mutation("rfb.mutation.spit-acid").is_some());
     assert!(
         catalog
@@ -63,6 +63,109 @@ fn compiled_catalog_indexes_current_rfb_content() {
     assert!(catalog.loot_table("demo.loot-table.warrens").is_some());
     assert!(catalog.item("demo.item.magic-missile-wand").is_some());
     assert!(catalog.affix("demo.affix.regeneration").is_some());
+}
+
+#[test]
+fn m6_a_periodic_mutations_are_random_candidates_with_typed_effects() {
+    let catalog = ContentCatalog::from_artifact(
+        compile_pack_dir(&original_pack_path()).expect("original pack should compile"),
+    );
+    for id in [
+        "rfb.mutation.bers-rage",
+        "rfb.mutation.cowardice",
+        "rfb.mutation.alcohol",
+        "rfb.mutation.hallucination",
+        "rfb.mutation.prod-mana",
+        "rfb.mutation.speed-flux",
+        "rfb.mutation.invuln",
+        "rfb.mutation.sp-to-hp",
+        "rfb.mutation.hp-to-sp",
+        "rfb.mutation.hypochondria",
+    ] {
+        let mutation = catalog.mutation(id).expect("M6-A mutation should exist");
+        assert!(
+            mutation.random_selection_enabled,
+            "{id} should be selectable"
+        );
+        assert!(
+            mutation.periodic_effect.is_some(),
+            "{id} should be periodic"
+        );
+    }
+}
+
+#[test]
+fn m6_b_periodic_mutations_are_random_candidates_with_typed_effects() {
+    let catalog = ContentCatalog::from_artifact(
+        compile_pack_dir(&original_pack_path()).expect("original pack should compile"),
+    );
+    for id in [
+        "rfb.mutation.teleport-rnd",
+        "rfb.mutation.banish-all-rnd",
+        "rfb.mutation.shadow-walk",
+        "rfb.mutation.fumbling",
+    ] {
+        let mutation = catalog.mutation(id).expect("M6-B mutation should exist");
+        assert!(
+            mutation.random_selection_enabled,
+            "{id} should be selectable"
+        );
+        assert!(
+            mutation.periodic_effect.is_some(),
+            "{id} should be periodic"
+        );
+    }
+}
+
+#[test]
+fn m6_c_periodic_mutations_are_random_candidates_with_typed_effects() {
+    let catalog = ContentCatalog::from_artifact(
+        compile_pack_dir(&original_pack_path()).expect("original pack should compile"),
+    );
+    for id in [
+        "rfb.mutation.flatulent",
+        "rfb.mutation.attract-demon",
+        "rfb.mutation.eat-light",
+        "rfb.mutation.attract-animal",
+        "rfb.mutation.raw-chaos",
+        "rfb.mutation.attract-dragon",
+    ] {
+        let mutation = catalog.mutation(id).expect("M6-C mutation should exist");
+        assert!(
+            mutation.random_selection_enabled,
+            "{id} should be selectable"
+        );
+        assert!(
+            mutation.periodic_effect.is_some(),
+            "{id} should be periodic"
+        );
+    }
+}
+
+#[test]
+fn m6_d_periodic_mutations_are_random_candidates_with_typed_effects() {
+    let catalog = ContentCatalog::from_artifact(
+        compile_pack_dir(&original_pack_path()).expect("original pack should compile"),
+    );
+    for id in [
+        "rfb.mutation.normality",
+        "rfb.mutation.wraith",
+        "rfb.mutation.poly-wound",
+        "rfb.mutation.wasting",
+        "rfb.mutation.random-telepathy",
+        "rfb.mutation.nausea",
+        "rfb.mutation.warning",
+    ] {
+        let mutation = catalog.mutation(id).expect("M6-D mutation should exist");
+        assert!(
+            mutation.random_selection_enabled,
+            "{id} should be selectable"
+        );
+        assert!(
+            mutation.periodic_effect.is_some(),
+            "{id} should be periodic"
+        );
+    }
 }
 
 #[test]
@@ -850,6 +953,24 @@ fn mutation_transaction_metadata_rejects_duplicate_order_and_invalid_removals() 
         encode_content(invalid_ratio),
         Err(ContentError::InvalidMutation(_))
     ));
+
+    let mut invalid_periodic = compile_pack_dir(&pack)
+        .expect("original pack should compile")
+        .content;
+    invalid_periodic.mutations[0].periodic_effect =
+        Some(MutationPeriodicEffectDefinition::ApplyStatus {
+            trigger_one_in: 0,
+            status_kind_id: "rfb.status.test".to_owned(),
+            intensity: 1,
+            duration_ticks: 1,
+            duration_dice: 0,
+            duration_sides: 0,
+            stacking: AbilityStatusStackingDefinition::Replace,
+        });
+    assert!(matches!(
+        encode_content(invalid_periodic),
+        Err(ContentError::InvalidMutation(_))
+    ));
 }
 
 #[test]
@@ -1008,7 +1129,7 @@ fn active_mutation_batches_are_bound_to_authoritative_abilities() {
             .iter()
             .filter(|entry| entry["status"] == "active")
             .count(),
-        87
+        114
     );
     assert_eq!(
         entries
@@ -1020,7 +1141,7 @@ fn active_mutation_batches_are_bound_to_authoritative_abilities() {
                         .is_some_and(|weight| weight > 0)
             })
             .count(),
-        72
+        99
     );
     assert!(entries.iter().all(|entry| {
         entry["status"] == "active"

@@ -6,7 +6,8 @@
   "description": "你的生命值受混沌力量的影响。",
   "rating": "average",
   "sourceIndex": 52,
-  "randomSelectionEnabled": false,
+  "randomSelectionEnabled": true,
   "randomWeight": 2,
-  "removesOnGain": []
+  "removesOnGain": [],
+  "periodicEffect": { "type": "polymorph-wounds" }
 }

@@ -109,3 +109,29 @@ test("game session restores controls after failure and blocks terminal commands"
     ["controls", false],
   ]);
 });
+
+test("pending mutation direction blocks ordinary commands but accepts its resolver", async () => {
+  const state = sessionState();
+  state.pending = true;
+  Object.defineProperty(state, "commandBlocked", {
+    get() {
+      return this.playerDead || this.campaignEnded || this.pending;
+    },
+  });
+  const calls = [];
+  const session = new GameSession({
+    state,
+    execute: async (command) => {
+      calls.push(command.type);
+      return { turn: 1 };
+    },
+    applyUpdate: () => {},
+    refreshBusyControls: () => {},
+    showError: () => {},
+  });
+
+  await session.dispatch({ type: "wait" });
+  await session.dispatch({ type: "resolve-mutation-direction", direction: "east" });
+
+  assert.deepEqual(calls, ["resolve-mutation-direction"]);
+});

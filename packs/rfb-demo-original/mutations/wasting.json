@@ -6,7 +6,8 @@
   "description": "你患有可怕的枯萎病。",
   "rating": "awful",
   "sourceIndex": 53,
-  "randomSelectionEnabled": false,
+  "randomSelectionEnabled": true,
   "randomWeight": 2,
-  "removesOnGain": []
+  "removesOnGain": [],
+  "periodicEffect": { "type": "wasting" }
 }

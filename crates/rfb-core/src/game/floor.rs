@@ -1289,6 +1289,72 @@ impl Game {
         (followed, Vec::new())
     }
 
+    pub(super) fn regenerate_current_procedural_dungeon(
+        &mut self,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<bool, CoreError> {
+        let Some(definition) = self
+            .content
+            .world(&self.world_id)
+            .and_then(|world| {
+                world.procedural_floors.iter().find(|floor| {
+                    floor.id == self.current_floor_id
+                        && floor.lifecycle == FloorLifecycle::Dungeon
+                        && floor.task_id.is_none()
+                        && floor.inline_map.is_none()
+                        && floor.layout.is_some()
+                })
+            })
+            .cloned()
+        else {
+            return Ok(false);
+        };
+
+        let previous_connections = self.floor_connections.clone();
+        let mut floor =
+            self.generate_procedural_floor(&definition, self.current_dungeon_instance_id.clone())?;
+        for connection in &mut floor.connections {
+            if let Some(previous) = previous_connections
+                .iter()
+                .find(|previous| previous.id == connection.id)
+            {
+                connection.target_floor_id = previous.target_floor_id.clone();
+                connection.target_connection_id = previous.target_connection_id.clone();
+            }
+        }
+
+        removed_entities.extend(self.entities.iter().map(|entity| entity.id.clone()));
+        let all_items = std::mem::take(&mut self.items);
+        let (discarded, global_items): (Vec<_>, Vec<_>) = all_items.into_iter().partition(|item| {
+            matches!(
+                item.location,
+                ItemLocation::Ground(_) | ItemLocation::CarriedBy { .. }
+            )
+        });
+        let discarded_ids = discarded
+            .into_iter()
+            .map(|item| item.id)
+            .collect::<BTreeSet<_>>();
+        self.item_property_knowledge
+            .retain(|item_id, _| !discarded_ids.contains(item_id));
+        self.riding_actor_id = None;
+        self.activate_floor(floor, global_items);
+        if self.summon_command.mode == SummonCommandModeDto::Guard {
+            self.summon_command.guard_position = Some(self.player.position);
+        }
+        self.last_visual_cells = None;
+        for y in 0..self.height {
+            for x in 0..self.width {
+                changed.insert(Position {
+                    x: i32::from(x),
+                    y: i32::from(y),
+                });
+            }
+        }
+        Ok(true)
+    }
+
     pub(super) fn activate_floor(
         &mut self,
         floor: FloorState,

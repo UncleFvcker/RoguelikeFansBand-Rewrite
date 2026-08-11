@@ -6,7 +6,8 @@
   "description": "你患有产生幻觉的疯狂。",
   "rating": "bad",
   "sourceIndex": 36,
-  "randomSelectionEnabled": false,
+  "randomSelectionEnabled": true,
   "randomWeight": 2,
+  "periodicEffect": { "type": "hallucination" },
   "removesOnGain": []
 }

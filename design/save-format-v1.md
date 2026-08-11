@@ -368,3 +368,13 @@ contract-v237 取消本地步行进入城镇时的独立层切换。活动地表
 既有 `FloorState`，按可见矩形与活动视口双向同步。`wildernessPosition`、
 `wildernessViewOffset` 和 `wildernessSeed` 已足以恢复视口；未新增城镇缓存或
 `insideTown` 字段。save 容器保持 v1，State Hash Schema 保持 v79。
+
+contract-v244 为 M6-A 在 `PlayerSaveDto` 增加必填 `minorSlow` 和可选
+`pendingMutationDirection`。`minorSlow` 只允许 0..=10；待选方向只允许引用当前
+active 的 Produce Mana 且只能出现在本地地图。两者进入 State Hash Schema v82；
+`unwell` 继续复用既有状态保存。save 容器保持 v1，不兼容旧开发存档。
+
+contract-v245 为 M6-B 在 `PlayerSaveDto` 增加 `realityChangeTicks`，合法范围为
+0..=35。该倒计时与当前楼层、RNG 一起进入 State Hash Schema v83；到零时仅允许
+普通程序地下城重生成。固定任务层、城镇和连续荒野不会被替换，也不会推进
+`wildernessSeed`。save 容器保持 v1，不兼容旧开发存档。

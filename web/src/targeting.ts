@@ -36,7 +36,9 @@ export function beginTargeting(
   if (
     !spec ||
     spec.range < 1 ||
-    (!spec.modes.includes("position") && !spec.modes.includes("entity"))
+    (!spec.modes.includes("position") &&
+      !spec.modes.includes("entity") &&
+      !spec.modes.includes("direction"))
   ) {
     return undefined;
   }
@@ -107,9 +109,23 @@ export function targetSelectionAtCursor(
       .sort((left, right) => left.id.localeCompare(right.id))[0];
     if (entity) return { type: "entity", entityId: entity.id };
   }
-  return state.spec.modes.includes("position")
-    ? { type: "position", position: { ...state.cursor } }
+  if (state.spec.modes.includes("position")) {
+    return { type: "position", position: { ...state.cursor } };
+  }
+  return state.spec.modes.includes("direction")
+    ? {
+        type: "direction",
+        direction: directionFromDelta(
+          Math.sign(state.cursor.x - state.origin.x),
+          Math.sign(state.cursor.y - state.origin.y),
+        ),
+      }
     : undefined;
+}
+
+function directionFromDelta(dx: number, dy: number): Direction {
+  return (Object.entries(DIRECTION_DELTAS) as [Direction, readonly [number, number]][])
+    .find(([, [candidateX, candidateY]]) => candidateX === dx && candidateY === dy)![0];
 }
 
 export function chebyshevDistance(left: Position, right: Position): number {

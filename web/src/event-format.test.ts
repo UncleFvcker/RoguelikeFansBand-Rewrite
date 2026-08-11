@@ -41,6 +41,43 @@ test("mutation events use their authoritative projected names", () => {
   localization.setLocale("en-US");
 });
 
+test("M6-B mutation events describe fumbling and delayed reality changes", () => {
+  const fumbling = {
+    kind: "mutation.fumbled-drop",
+    messageKey: "mutation-fumbled-drop",
+    args: { target: "demo.item.dagger", damage: "7" },
+  };
+  const reality = {
+    kind: "mutation.reality-changed",
+    messageKey: "mutation-reality-changed",
+    args: {},
+  };
+
+  assert.equal(
+    formatter.formatEvent(fumbling),
+    "You trip over your own feet, take 7 damage, and drop Dagger.",
+  );
+  localization.setLocale("zh-CN");
+  assert.equal(
+    formatter.formatEvent(reality),
+    "你拒绝了这个现实，并用另一个现实取而代之！",
+  );
+  localization.setLocale("en-US");
+});
+
+test("M6-D warning events use the authoritative danger bands", () => {
+  const warning = {
+    kind: "mutation.warning.extreme",
+    messageKey: "mutation-warning-extreme",
+    args: { danger: "120" },
+  };
+
+  assert.equal(formatter.formatEvent(warning), "You feel utterly terrified!");
+  localization.setLocale("zh-CN");
+  assert.equal(formatter.formatEvent(warning), "你感到极度恐惧！");
+  localization.setLocale("en-US");
+});
+
 test("mutation aura events use the typed damage element", () => {
   const event = {
     kind: "mutation.aura-hit",

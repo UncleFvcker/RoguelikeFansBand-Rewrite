@@ -781,6 +781,19 @@
         {
           "additionalProperties": false,
           "properties": {
+            "type": {
+              "const": "polymorph-mutations",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
             "durationBonus": {
               "format": "uint32",
               "minimum": 0,

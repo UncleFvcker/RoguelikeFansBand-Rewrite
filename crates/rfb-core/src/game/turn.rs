@@ -27,28 +27,71 @@ impl Game {
                 self.process_monster_regeneration();
             }
             self.process_equipped_light_fuel(events);
-            self.process_equipment_regeneration(events);
-            self.process_inventory_device_recovery(events);
-            if local_floor_active {
-                if !self.current_floor_has_active_task() {
-                    self.process_ambient_monster_allocation(changed)?;
-                }
-                self.resolve_newly_visible_eldritch_horrors(
-                    &visible_eldritch_horrors_before_tick,
-                    events,
-                    changed,
-                );
-                self.process_monster_energy_pulse(events, changed, removed_entities)?;
+            self.process_periodic_mutations(
+                local_floor_active,
+                resting,
+                events,
+                changed,
+                removed_entities,
+            )?;
+            if self.pending_mutation_direction.is_some() {
+                return Ok(());
             }
-            if self.player_is_dead() {
-                break;
-            }
-            let speed = derived_speed(&self.player_derived_stats().speed);
-            gain_energy(&mut self.player.energy_need, speed);
-            if self.player.energy_need <= 0 {
+            if self.finish_world_tick_after_periodic_mutations(
+                local_floor_active,
+                &visible_eldritch_horrors_before_tick,
+                events,
+                changed,
+                removed_entities,
+            )? {
                 break;
             }
         }
+        self.finish_player_ready_advance(local_floor_active, events, changed, removed_entities)?;
+        Ok(())
+    }
+
+    fn finish_world_tick_after_periodic_mutations(
+        &mut self,
+        local_floor_active: bool,
+        visible_eldritch_horrors_before_tick: &BTreeSet<String>,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<bool, CoreError> {
+        if self.player_is_dead() {
+            return Ok(true);
+        }
+        self.process_equipment_regeneration(events);
+        self.process_inventory_device_recovery(events);
+        let reality_changed =
+            local_floor_active && self.advance_reality_change(events, changed, removed_entities)?;
+        if local_floor_active && !reality_changed {
+            if !self.current_floor_has_active_task() {
+                self.process_ambient_monster_allocation(changed)?;
+            }
+            self.resolve_newly_visible_eldritch_horrors(
+                visible_eldritch_horrors_before_tick,
+                events,
+                changed,
+            );
+            self.process_monster_energy_pulse(events, changed, removed_entities)?;
+        }
+        if self.player_is_dead() {
+            return Ok(true);
+        }
+        let speed = derived_speed(&self.player_derived_stats().speed);
+        gain_energy(&mut self.player.energy_need, speed);
+        Ok(self.player.energy_need <= 0)
+    }
+
+    fn finish_player_ready_advance(
+        &mut self,
+        local_floor_active: bool,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
         if local_floor_active {
             self.advance_summon_lifetimes(events, changed, removed_entities);
         }
@@ -56,6 +99,38 @@ impl Game {
             self.advance_recall(events, changed)?;
         }
         Ok(())
+    }
+
+    pub(super) fn resume_after_periodic_mutation(
+        &mut self,
+        pending: PendingMutationDirectionDto,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        let local_floor_active = self.map_scale != MapScaleDto::World;
+        self.resume_periodic_mutations(&pending, events, changed, removed_entities)?;
+        if self.pending_mutation_direction.is_some() {
+            return Ok(());
+        }
+        let visible_eldritch_horrors = self.visible_eldritch_horror_entity_ids();
+        if self.finish_world_tick_after_periodic_mutations(
+            local_floor_active,
+            &visible_eldritch_horrors,
+            events,
+            changed,
+            removed_entities,
+        )? {
+            self.finish_player_ready_advance(local_floor_active, events, changed, removed_entities)
+        } else {
+            self.advance_until_player_ready(
+                pending.resting,
+                local_floor_active,
+                events,
+                changed,
+                removed_entities,
+            )
+        }
     }
 
     pub(super) fn process_natural_hp_regeneration(&mut self, resting: bool) {

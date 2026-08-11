@@ -6,7 +6,8 @@
   "description": "你有时候会吸收周围的光线作为养分。",
   "rating": "average",
   "sourceIndex": 45,
-  "randomSelectionEnabled": false,
+  "randomSelectionEnabled": true,
   "randomWeight": 2,
+  "periodicEffect": { "type": "eat-light" },
   "removesOnGain": []
 }

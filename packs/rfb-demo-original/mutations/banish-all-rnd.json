@@ -6,7 +6,8 @@
   "description": "你有时候会导致附近的生物消失。",
   "rating": "average",
   "sourceIndex": 44,
-  "randomSelectionEnabled": false,
+  "randomSelectionEnabled": true,
   "randomWeight": 4,
+  "periodicEffect": { "type": "random-banish" },
   "removesOnGain": []
 }

@@ -18,12 +18,13 @@ use crate::{
     },
     effect::{
         DamageOutcome, DamagePacket, EffectOutcome, EffectSpec, EffectTarget,
-        STATUS_BASIC_RESISTANCE, STATUS_BLEEDING, STATUS_BLINDNESS, STATUS_CONFUSION, STATUS_FEAR,
-        STATUS_GIANT_STRENGTH, STATUS_HALLUCINATION, STATUS_HASTE, STATUS_INVENTORY_PROTECTION,
-        STATUS_PARALYSIS, STATUS_POISON, STATUS_PROTECTION_FROM_EVIL, STATUS_SIGHT, STATUS_SLEEP,
-        STATUS_SLOW, STATUS_STUN, STATUS_THERMAL_RESISTANCE, STATUS_TSUYOSHI, STATUS_UNDERSTANDING,
-        STATUS_VENGEANCE, StatusApplication, StatusChange, StatusInstance, StatusStacking,
-        apply_effect, apply_status, resolve_damage,
+        STATUS_BASIC_RESISTANCE, STATUS_BERSERK, STATUS_BLEEDING, STATUS_BLINDNESS,
+        STATUS_CONFUSION, STATUS_FEAR, STATUS_GIANT_STRENGTH, STATUS_HALLUCINATION, STATUS_HASTE,
+        STATUS_INVENTORY_PROTECTION, STATUS_INVULNERABILITY, STATUS_PARALYSIS, STATUS_POISON,
+        STATUS_PROTECTION_FROM_EVIL, STATUS_SIGHT, STATUS_SLEEP, STATUS_SLOW, STATUS_STUN,
+        STATUS_TELEPATHY, STATUS_THERMAL_RESISTANCE, STATUS_TSUYOSHI, STATUS_UNDERSTANDING,
+        STATUS_UNWELL, STATUS_VENGEANCE, STATUS_WRAITHFORM, StatusApplication, StatusChange,
+        StatusInstance, StatusStacking, apply_effect, apply_status, resolve_damage,
     },
     error::CoreError,
     event::{
@@ -62,12 +63,12 @@ use rfb_content::{
     ItemCurseTargetDefinition, ItemEnchantmentRollDefinition, ItemSummonLevelSourceDefinition,
     ItemSummonSelectorDefinition, ItemUseEffectDefinition, MeleeBlowEffectDefinition,
     MonsterDropKindDefinition, MonsterPackBehavior, MutationActivationDefinition,
-    PlayerAbilityDefinition, ProceduralLayoutMode, ProceduralMazeDefinition,
-    ProceduralPitDefinition, ProceduralRoomGeometryDefinition, ProceduralRoomPlacement,
-    ProceduralRoomShape, ProceduralStreamerCandidateDefinition, SkillKind, SlayLevel, SlayTarget,
-    StartingItemDefinition, StatModifiers, TaskObjectiveKind, TechniqueAttribute,
-    TechniqueProfileDefinition, TerrainFeatureEntryDefinition, ThemeVaultCandidateDefinition,
-    WeaponBrand,
+    MutationPeriodicEffectDefinition, PlayerAbilityDefinition, ProceduralLayoutMode,
+    ProceduralMazeDefinition, ProceduralPitDefinition, ProceduralRoomGeometryDefinition,
+    ProceduralRoomPlacement, ProceduralRoomShape, ProceduralStreamerCandidateDefinition, SkillKind,
+    SlayLevel, SlayTarget, StartingItemDefinition, StatModifiers, TaskObjectiveKind,
+    TechniqueAttribute, TechniqueProfileDefinition, TerrainFeatureEntryDefinition,
+    ThemeVaultCandidateDefinition, WeaponBrand,
 };
 use rfb_protocol::{
     AbilityAreaDamageResolutionDto, AbilityBeamDamageResolutionDto, AbilityCastResolutionDto,
@@ -88,10 +89,10 @@ use rfb_protocol::{
     MonsterAbilityCandidateResolutionDto, MonsterAbilityCastResolutionDto,
     MonsterAbilityDecisionResolutionDto, MonsterAbilityRejectionReasonDto,
     MonsterAbilityTargetResolutionDto, MonsterDisplacementResolutionDto, MonsterPackBehaviorDto,
-    MonsterPackRoleDto, Position, ProjectileProfileDto, RecallStateDto, ResistanceDto,
-    ResourceGainResolutionDto, ResourceGainSourceDto, ResourcePoolSaveDto,
-    ResourceRecoveryResolutionDto, RestResolutionDto, RestStopReasonDto, SlayDto, SlayLevelDto,
-    SlayTargetDto, StatModifiersDto, SummonCommandDto, SummonCommandModeDto,
+    MonsterPackRoleDto, PendingMutationDirectionDto, Position, ProjectileProfileDto,
+    RecallStateDto, ResistanceDto, ResourceGainResolutionDto, ResourceGainSourceDto,
+    ResourcePoolSaveDto, ResourceRecoveryResolutionDto, RestResolutionDto, RestStopReasonDto,
+    SlayDto, SlayLevelDto, SlayTargetDto, StatModifiersDto, SummonCommandDto, SummonCommandModeDto,
     SummonCommandResolutionDto, TargetModeDto, TargetSelection, TargetSpecDto, TaskStatusKindDto,
     ThrowProfileDto, WeaponBrandDto,
 };
@@ -164,11 +165,12 @@ use player_stats::{
     ResolvedThrowProfile, actor_melee_routine_dto, derived_speed, resolved_melee_blows,
 };
 use progression::{
-    LifeForceRestorationRequest, apply_attribute_drain, apply_attribute_restoration,
-    apply_experience_restoration, apply_learning_capacity_increase, apply_life_force_restoration,
-    apply_permanent_attribute_drain, apply_permanent_attribute_increase, build_definitions,
-    character_skill_progress, combine_percentages, initial_character_attributes,
-    initial_resource_pool, profile_resource_maximum, resolve_character_build,
+    LifeForceRestorationRequest, apply_attribute_drain, apply_attribute_drain_with_amount,
+    apply_attribute_restoration, apply_experience_restoration, apply_learning_capacity_increase,
+    apply_life_force_restoration, apply_permanent_attribute_drain,
+    apply_permanent_attribute_increase, build_definitions, character_skill_progress,
+    combine_percentages, initial_character_attributes, initial_resource_pool,
+    profile_resource_maximum, resolve_character_build,
 };
 use status_effects::{
     ability_status_stacking_dto, apply_ability_status_effect, remove_ability_status_effect,
@@ -188,7 +190,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 81;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 83;
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const VISIBILITY_RADIUS: i32 = 8;
 const BASE_THROW_RANGE_BUDGET: u16 = 50;
@@ -785,6 +787,9 @@ pub struct Game {
     summon_command: SummonCommandDto,
     recall: Option<RecallStateDto>,
     confusing_strike_ready: bool,
+    minor_slow: u8,
+    reality_change_ticks: u8,
+    pending_mutation_direction: Option<PendingMutationDirectionDto>,
     next_item_instance_serial: u64,
     next_gold_pile_serial: u64,
     explored: Vec<bool>,
@@ -1073,6 +1078,9 @@ impl Game {
             summon_command: SummonCommandDto::default(),
             recall: None,
             confusing_strike_ready: false,
+            minor_slow: 0,
+            reality_change_ticks: 0,
+            pending_mutation_direction: None,
             next_item_instance_serial,
             next_gold_pile_serial: 1,
             explored: vec![false; usize::from(width) * usize::from(height)],
@@ -1131,6 +1139,16 @@ impl Game {
         }
 
         let mut action = GameAction::from(envelope.command);
+        if self.pending_mutation_direction.is_some()
+            && !matches!(action, GameAction::ResolveMutationDirection { .. })
+        {
+            return Err(CoreError::MutationDirectionRequired);
+        }
+        if self.pending_mutation_direction.is_none()
+            && matches!(action, GameAction::ResolveMutationDirection { .. })
+        {
+            return Err(CoreError::MutationDirectionUnavailable);
+        }
         let reevaluate_all_mogaminator_items = matches!(
             &action,
             GameAction::ConfigureMogaminator { .. } | GameAction::SetInterfaceLocale { .. }
@@ -1295,6 +1313,7 @@ impl Game {
                     | GameAction::AutoGet { .. }
                     | GameAction::PickUp
                     | GameAction::ResolveMogaminatorQuery { .. }
+                    | GameAction::ResolveMutationDirection { .. }
                     | GameAction::InscribeItem { .. }
                     | GameAction::SetInterfaceLocale { .. }
             );
@@ -1443,6 +1462,20 @@ impl Game {
                 if let Some(outcome) = self.resolve_mogaminator_query(&item_id, pick_up)? {
                     self.record_pick_up_outcome(outcome, &mut events, &mut changed);
                 }
+            }
+            GameAction::ResolveMutationDirection { direction } => {
+                let pending = self.resolve_pending_mutation_direction(
+                    direction,
+                    &mut events,
+                    &mut changed,
+                    &mut removed_entities,
+                )?;
+                self.resume_after_periodic_mutation(
+                    pending,
+                    &mut events,
+                    &mut changed,
+                    &mut removed_entities,
+                )?;
             }
             GameAction::DestroyItem { item_id, quantity } => {
                 match self.destroy_item(&item_id, quantity) {
@@ -3153,7 +3186,7 @@ impl Game {
     }
 
     fn targeted_projectile_path(&self, target: Position, range: u16) -> Option<Vec<Position>> {
-        self.targeted_projectile_path_with_policy(target, range, false)
+        self.projectile_path_to_position(target, range, false, true)
     }
 
     fn targeted_projectile_path_through_target(
@@ -3161,19 +3194,24 @@ impl Game {
         target: Position,
         range: u16,
     ) -> Option<Vec<Position>> {
-        self.targeted_projectile_path_with_policy(target, range, true)
+        self.projectile_path_to_position(target, range, true, true)
     }
 
-    fn targeted_projectile_path_with_policy(
+    fn untargeted_projectile_path(&self, target: Position, range: u16) -> Option<Vec<Position>> {
+        self.projectile_path_to_position(target, range, false, false)
+    }
+
+    fn projectile_path_to_position(
         &self,
         target: Position,
         range: u16,
         continue_through_target: bool,
+        require_visible: bool,
     ) -> Option<Vec<Position>> {
         let origin = self.player.position;
         if target == origin
             || self.index(target).is_none()
-            || !self.is_visible(target)
+            || (require_visible && !self.is_visible(target))
             || origin.x.abs_diff(target.x).max(origin.y.abs_diff(target.y)) > u32::from(range)
         {
             return None;

@@ -9,6 +9,7 @@ use rfb_content::{
 use rfb_protocol::StatModifiersDto;
 
 use crate::{
+    effect::STATUS_UNWELL,
     error::CoreError,
     event::DomainEvent,
     rng::RfbRng,
@@ -75,6 +76,18 @@ pub(super) fn apply_attribute_drain(
     let before = progress.attributes.value(attribute);
     let maximum_before = progress.maximum_attributes.value(attribute);
     let changed = progress.drain_attribute(attribute, rng);
+    attribute_mutation_outcome(progress, attribute, before, maximum_before, changed)
+}
+
+pub(super) fn apply_attribute_drain_with_amount(
+    progress: &mut CharacterProgress,
+    attribute: AttributeKind,
+    amount: u8,
+    rng: &mut RfbRng,
+) -> AttributeMutationOutcome {
+    let before = progress.attributes.value(attribute);
+    let maximum_before = progress.maximum_attributes.value(attribute);
+    let changed = progress.drain_attribute_by(attribute, amount, rng);
     attribute_mutation_outcome(progress, attribute, before, maximum_before, changed)
 }
 
@@ -548,15 +561,32 @@ impl Game {
                 .map(|(_, race, class, personality)| {
                     [&race.modifiers, &class.modifiers, &personality.modifiers]
                 });
+        let status_modifiers = self
+            .player
+            .statuses
+            .iter()
+            .map(|status| {
+                let mut modifiers = status.granted_modifiers;
+                if status.kind_id == STATUS_UNWELL {
+                    let penalty = if status.remaining_ticks > 55 {
+                        0
+                    } else if status.remaining_ticks > 30 {
+                        4
+                    } else {
+                        i32::try_from(status.remaining_ticks.div_ceil(10)).unwrap_or(i32::MAX)
+                    };
+                    modifiers.dexterity = modifiers.dexterity.saturating_sub(penalty);
+                    modifiers.constitution = modifiers.constitution.saturating_sub(penalty);
+                }
+                modifiers
+            })
+            .collect::<Vec<_>>();
         effective_attributes(
             self.progress.attributes,
             character_modifiers,
             active_mutations.iter().map(|mutation| &mutation.modifiers),
             self.equipment_modifiers(),
-            self.player
-                .statuses
-                .iter()
-                .map(|status| status.granted_modifiers),
+            status_modifiers,
             normal_appearance_minimum,
             cap,
         )

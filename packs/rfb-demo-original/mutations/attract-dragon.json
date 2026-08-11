@@ -6,7 +6,8 @@
   "description": "你会吸引龙类。",
   "rating": "bad",
   "sourceIndex": 54,
-  "randomSelectionEnabled": false,
+  "randomSelectionEnabled": true,
   "randomWeight": 2,
+  "periodicEffect": { "type": "attract-dragon" },
   "removesOnGain": []
 }

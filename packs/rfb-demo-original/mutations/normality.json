@@ -6,7 +6,8 @@
   "description": "你也许变异了，但你正在恢复。",
   "rating": "bad",
   "sourceIndex": 50,
-  "randomSelectionEnabled": false,
+  "randomSelectionEnabled": true,
   "randomWeight": 6,
-  "removesOnGain": []
+  "removesOnGain": [],
+  "periodicEffect": { "type": "normality" }
 }

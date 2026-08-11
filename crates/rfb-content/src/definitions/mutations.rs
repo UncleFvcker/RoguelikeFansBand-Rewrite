@@ -5,7 +5,10 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
-use super::{ActorDamageType, ActorResistanceLevel, StatModifiers, TechniqueAttribute};
+use super::{
+    AbilityStatusStackingDefinition, ActorDamageType, ActorResistanceLevel, StatModifiers,
+    TechniqueAttribute,
+};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
@@ -67,6 +70,53 @@ pub struct MutationActivationDefinition {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(
+    tag = "type",
+    rename_all = "kebab-case",
+    rename_all_fields = "camelCase",
+    deny_unknown_fields
+)]
+pub enum MutationPeriodicEffectDefinition {
+    ApplyStatus {
+        trigger_one_in: u32,
+        status_kind_id: String,
+        intensity: u16,
+        duration_ticks: u32,
+        duration_dice: u16,
+        duration_sides: u32,
+        stacking: AbilityStatusStackingDefinition,
+    },
+    BerserkRage,
+    Cowardice,
+    Alcohol,
+    Hallucination,
+    ProduceMana,
+    SpeedFlux,
+    Invulnerability,
+    SpToHp,
+    HpToSp,
+    Hypochondria,
+    RandomTeleport,
+    RandomBanish,
+    ShadowWalk,
+    Fumbling,
+    Flatulence,
+    AttractDemon,
+    EatLight,
+    AttractAnimal,
+    RawChaos,
+    AttractDragon,
+    Normality,
+    Wraithform,
+    PolymorphWounds,
+    Wasting,
+    RandomTelepathy,
+    Nausea,
+    Warning,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct MutationDefinition {
     #[serde(rename = "$schema")]
@@ -82,6 +132,8 @@ pub struct MutationDefinition {
     pub random_selection_enabled: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub activation: Option<MutationActivationDefinition>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub periodic_effect: Option<MutationPeriodicEffectDefinition>,
     #[serde(default)]
     pub modifiers: StatModifiers,
     /// Direct armor-class adjustment from the original mutation bonus.

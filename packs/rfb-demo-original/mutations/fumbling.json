@@ -6,7 +6,8 @@
   "description": "你偶尔会绊倒并弄丢东西。",
   "rating": "bad",
   "sourceIndex": 63,
-  "randomSelectionEnabled": false,
+  "randomSelectionEnabled": true,
   "randomWeight": 2,
+  "periodicEffect": { "type": "fumbling" },
   "removesOnGain": []
 }

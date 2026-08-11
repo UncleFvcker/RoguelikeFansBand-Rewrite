@@ -778,6 +778,9 @@ impl Game {
                 spend_energy(&mut self.player.energy_need, STANDARD_ACTION_COST);
                 self.advance_until_player_ready(true, true, events, changed, removed_entities)?;
                 completed_turns = completed_turns.saturating_add(1);
+                if self.pending_mutation_direction.is_some() {
+                    break RestStopReasonDto::MutationDirectionRequired;
+                }
                 if self.player_is_dead() {
                     break RestStopReasonDto::PlayerDied;
                 }

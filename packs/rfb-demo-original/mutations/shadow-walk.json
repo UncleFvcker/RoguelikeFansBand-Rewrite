@@ -6,7 +6,8 @@
   "description": "你偶尔会跌入其他阴影中。",
   "rating": "bad",
   "sourceIndex": 58,
-  "randomSelectionEnabled": false,
+  "randomSelectionEnabled": true,
   "randomWeight": 2,
+  "periodicEffect": { "type": "shadow-walk" },
   "removesOnGain": []
 }

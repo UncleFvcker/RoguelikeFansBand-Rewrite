@@ -85,6 +85,20 @@ pub(crate) enum DomainEvent {
         mutation_id: String,
         name: String,
     },
+    MutationPeriodicTriggered {
+        mutation_id: String,
+        name: String,
+    },
+    MutationFumbled {
+        damage: DamageOutcome,
+        dropped_item_kind_id: Option<String>,
+    },
+    MutationWarning {
+        danger_amount: u32,
+    },
+    RealityChangeResolved {
+        regenerated: bool,
+    },
     AbilityStudied {
         ability_id: String,
     },
@@ -1263,6 +1277,58 @@ impl DomainEvent {
                 "mutation-lost",
                 [("target", mutation_id), ("name", name)],
             ),
+            Self::MutationPeriodicTriggered { mutation_id, name } => dto(
+                "mutation.periodic-triggered",
+                "mutation-periodic-triggered",
+                [("target", mutation_id), ("name", name)],
+            ),
+            Self::MutationWarning { danger_amount } => {
+                let (kind, message_key) = if danger_amount > 100 {
+                    ("mutation.warning.extreme", "mutation-warning-extreme")
+                } else if danger_amount > 50 {
+                    ("mutation.warning.afraid", "mutation-warning-afraid")
+                } else if danger_amount > 20 {
+                    ("mutation.warning.worried", "mutation-warning-worried")
+                } else if danger_amount > 10 {
+                    ("mutation.warning.paranoid", "mutation-warning-paranoid")
+                } else if danger_amount > 5 {
+                    ("mutation.warning.safe", "mutation-warning-safe")
+                } else {
+                    ("mutation.warning.lonely", "mutation-warning-lonely")
+                };
+                dto(kind, message_key, [("danger", danger_amount.to_string())])
+            }
+            Self::MutationFumbled {
+                damage,
+                dropped_item_kind_id: Some(target_kind_id),
+            } => dto_with_outcome(
+                "mutation.fumbled-drop",
+                "mutation-fumbled-drop",
+                [
+                    ("target", target_kind_id),
+                    ("damage", damage.applied.to_string()),
+                ],
+                GameEventOutcomeDto::Damage {
+                    resolution: damage.into(),
+                },
+            ),
+            Self::MutationFumbled {
+                damage,
+                dropped_item_kind_id: None,
+            } => dto_with_outcome(
+                "mutation.fumbled",
+                "mutation-fumbled",
+                [("damage", damage.applied.to_string())],
+                GameEventOutcomeDto::Damage {
+                    resolution: damage.into(),
+                },
+            ),
+            Self::RealityChangeResolved { regenerated: true } => {
+                dto_without_args("mutation.reality-changed", "mutation-reality-changed")
+            }
+            Self::RealityChangeResolved { regenerated: false } => {
+                dto_without_args("mutation.reality-unchanged", "mutation-reality-unchanged")
+            }
             Self::AbilityStudied { ability_id } => dto(
                 "ability.studied",
                 "ability-studied",
@@ -4637,6 +4703,7 @@ fn rest_stop_reason(reason: &RestStopReasonDto) -> String {
         RestStopReasonDto::EnemyVisible => "enemy-visible",
         RestStopReasonDto::FullResources => "full-resources",
         RestStopReasonDto::InvalidTurns => "invalid-turns",
+        RestStopReasonDto::MutationDirectionRequired => "mutation-direction-required",
         RestStopReasonDto::PlayerDied => "player-died",
         RestStopReasonDto::TurnLimit => "turn-limit",
     }

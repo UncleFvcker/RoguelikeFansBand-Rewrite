@@ -6,7 +6,8 @@
   "description": "你的心智会随机地扩展和收缩。",
   "rating": "average",
   "sourceIndex": 55,
-  "randomSelectionEnabled": false,
+  "randomSelectionEnabled": true,
   "randomWeight": 4,
-  "removesOnGain": []
+  "removesOnGain": [],
+  "periodicEffect": { "type": "random-telepathy" }
 }

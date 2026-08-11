@@ -3579,6 +3579,7 @@ fn black_market_stocks_original_non_town_books_and_priced_p3_consumables() {
             "demo.item.star-acquirement-scroll",
             "demo.item.crafting-scroll",
             "demo.item.new-life-potion",
+            "demo.item.polymorph-potion",
         ])
     );
     let values = artifact
@@ -3604,6 +3605,7 @@ fn black_market_stocks_original_non_town_books_and_priced_p3_consumables() {
     assert_eq!(values["demo.item.self-knowledge-potion"], 2_000);
     assert_eq!(values["demo.item.rune-of-protection-scroll"], 500);
     assert_eq!(values["demo.item.destruction-scroll"], 250);
+    assert_eq!(values["demo.item.polymorph-potion"], 5_000);
 }
 
 #[test]

@@ -13,6 +13,10 @@ pub enum CoreError {
     PlayerDead,
     #[error("the campaign has ended and cannot accept more commands")]
     CampaignEnded,
+    #[error("a periodic mutation is waiting for a direction")]
+    MutationDirectionRequired,
+    #[error("no periodic mutation is waiting for a direction")]
+    MutationDirectionUnavailable,
     #[error("world map transition is unavailable from the current state")]
     WorldMapTransitionUnavailable,
     #[error("the command is unavailable while viewing the world map")]

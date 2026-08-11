@@ -6,7 +6,8 @@
   "description": "你容易陷入狂暴状态。",
   "rating": "bad",
   "sourceIndex": 32,
-  "randomSelectionEnabled": false,
+  "randomSelectionEnabled": true,
   "randomWeight": 2,
+  "periodicEffect": { "type": "berserk-rage" },
   "removesOnGain": []
 }

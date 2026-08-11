@@ -6,7 +6,8 @@
   "description": "你患有疑病症。",
   "rating": "bad",
   "sourceIndex": 136,
-  "randomSelectionEnabled": false,
+  "randomSelectionEnabled": true,
   "randomWeight": 4,
+  "periodicEffect": { "type": "hypochondria" },
   "removesOnGain": []
 }

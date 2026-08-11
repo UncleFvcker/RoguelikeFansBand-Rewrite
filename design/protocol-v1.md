@@ -477,3 +477,14 @@ state hash，因此 State Hash Schema 升至 v80。save 容器保持 v1，旧开
 进入既有 Detect 枚举，吸血可声明进食，群体状态可携带抗性检定。新增结构化的取物、
 换位与 Recall 结算；22 个变异仍通过统一 `CastAbility` 入口施放，不增加存档字段，
 save v1 与 State Hash Schema v80 不变，基线推进至 contract-v242。
+
+协议 1.165 为 M6-A 增加 `ResolveMutationDirection`、
+`PlayerDto.pendingMutationDirection`、`PlayerDto.minorSlow` 与休息中断原因。Produce
+Mana 触发后暂停当前周期序列，客户端必须选择八方向之一；解析后从下一项周期变异
+继续并完成同一 tick。待选方向与 `minorSlow` 进入 save v1 和 State Hash Schema
+v82；旧开发存档不兼容。
+
+协议 1.166 为 M6-B 在 `PlayerDto` 增加 `realityChangeTicks`，投影影中漫步触发的
+通用延迟现实改变倒计时。倒计时结束时只有普通程序地下城重生成；固定任务层、城镇
+和连续荒野保持不变，荒野 seed 不推进。笨手笨脚的伤害与可选武器掉落通过结构化
+事件投影。倒计时进入 save v1 和 State Hash Schema v83；旧开发存档不兼容。

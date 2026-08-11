@@ -15,6 +15,7 @@ P3.7-M0 至 M4E 原始批次记录。权威内容覆盖账本是
   M4F-B1 在该提交之上实现 P3.8 Elvish Waybread 与兰巴斯不耐受；M4F-B2/B3
   继续完成 Ill Norm 与 ESP。
 - M5.0 已建立主动变异统一施放合同；M5-A--D 的 31 项具体能力和窄事务均已接入。
+- M6.0 的唯一周期入口以及 M6-A--D 共二十七项周期变异均已接入。
 - RFB 权威源：`D:/codex/Frogcomposband` 的 Git `master` ref；覆盖审计当前锁定
   `efd63661302866038f58d8cd2553b23e6af3bf9d`。不要读取该仓库工作树文件替代
   `master` Git 对象。
@@ -23,13 +24,13 @@ P3.7-M0 至 M4E 原始批次记录。权威内容覆盖账本是
 
 | 项目 | 当前值 |
 | --- | --- |
-| Protocol | `1.164` |
+| Protocol | `1.166` |
 | Save container | `v1` |
-| State Hash Schema | `v81` |
-| Contract baseline | `contract-v243`，21 个 exact fixtures |
+| State Hash Schema | `v83` |
+| Contract baseline | `contract-v248`，21 个 exact fixtures |
 | Contract Schema | `v4` |
-| Content pack | `1.235.0` |
-| Content hash | `94777282896f77f5b7a88e4da410176f6d1528ee10288beac49c71a49facbb3d` |
+| Content pack | `1.240.0` |
+| Content hash | `7676a7f483c522d0dc9bec9b633187a7382fd68eda3d1b82a599d35cf5c1a846` |
 
 当前保留 21 个聚焦 exact fixtures。M4F-B1 为两座城镇杂货店加入兰巴斯并改变公共初始化 RNG；
 M4F-B3 为实体投影增加 glyph，并持久化 Weird Mind 的感知结果，因此协议、状态
@@ -37,6 +38,20 @@ M4F-B3 为实体投影增加 glyph，并持久化 Weird Mind 的感知结果，�
 M5-A/B 加入 22 个正式能力及其窄效果投影。M5-C/D 再加入 9 项正式能力；绝育术的
 楼层级繁殖压制进入现有 `FloorState`，因此协议推进至 1.164、State Hash Schema
 推进至 v81，基线推进至 contract-v243。
+M6-A 激活十项周期状态/资源变异；Produce Mana 的待选方向与 Speed Flux 的
+`minorSlow` 进入存档，协议推进至 1.165、State Hash Schema v82、基线
+contract-v244。
+M6-B 激活 Random Teleport、Random Banish、Shadow Walk 与 Fumbling；通用现实
+改变倒计时进入存档，协议推进至 1.166、State Hash Schema v83、基线
+contract-v245。
+M6-C 激活 Flatulence、Attract Demon/Animal/Dragon、Raw Chaos 与 Eat Light；
+复用现有范围伤害、分类召唤与角色群体生成，并增加来源无关的区域熄灭事务。
+本批不增加协议或持久状态，基线推进至 contract-v246。
+M6-D 激活 Normality、Wraithform、Polymorph Wounds、Wasting、Random Telepathy、
+Nausea 与 Warning；复用变异移除、属性衰减、临时状态、饥饿和实体等级事务。
+本批不增加协议或持久状态，基线推进至 contract-v247。
+M7 加入变形药水及唯一 Polymorph 事务；两座城镇 Black Market 的固定库存改变
+公共初始化，因此基线推进至 contract-v248，但协议和 State Hash Schema 不变。
 
 早期计划中基于 `436b1967` 推算的 Protocol `1.152`、State Hash Schema `73`、
 Pack `1.212.0` 已经是历史值。后续只能从上表当前值顺延，并且版本、生成绑定、
@@ -51,11 +66,11 @@ RFB `master` 共 152 项变异：104 个基础随机候选，48 个零权重身�
 | passive-bonus | 44 | 7 | 51 |
 | cross-system-query | 12 | 26 | 38 |
 | activation | 31 | 4 | 35 |
-| periodic-effect | 0 | 28 | 28 |
-| 合计 | 87 | 65 | 152 |
+| periodic-effect | 27 | 1 | 28 |
+| 合计 | 114 | 38 | 152 |
 
-随机候选中已有 72 项 active，仍有 32 项 blocked。`randomSelectionEnabled` 将这
-32 项行为壳显式排除在现有随机选择器之外；主动 Polymorph 因而继续复用
+随机候选中已有 99 项 active，仍有 5 项 blocked。`randomSelectionEnabled` 将这
+5 项行为壳显式排除在现有随机选择器之外；主动 Polymorph 因而继续复用
 `gain_random_mutation`，却不会授予未实现内容。每项 blocked 候选转为 active 时，
 必须同时删除该排除标记。
 
@@ -83,6 +98,11 @@ RFB `master` 共 152 项变异：104 个基础随机候选，48 个零权重身�
 | M5-B | 13 项喷吐、吐息、凝视、射线、吸血、触碰、范围攻击、狂暴与元素抗性主动变异 active。 |
 | M5-C | Eat Rock、Midas Touch、Eat Magic、Weigh Magic 与 Earthquake 的地形、物品、资源和地下城事务 active。 |
 | M5-D | Grow Mold、Sterility、Panic Hit 与主动 Polymorph 的召唤、楼层繁殖压制、近战传送和角色变形事务 active。 |
+| M6-A | Berserk Rage、Cowardice、Alcohol、Hallucination、Produce Mana、Speed Flux、Invulnerability、SP/HP 转换与 Hypochondria active。 |
+| M6-B | Random Teleport、Random Banish、Shadow Walk 与 Fumbling 复用位移、放逐、程序地下城生成、伤害和装备掉落事务 active。 |
+| M6-C | Flatulence、三类吸引、Raw Chaos 与 Eat Light 复用范围伤害、分类召唤、角色群体生成、光源燃料和区域熄灭事务 active。 |
+| M6-D | Normality、Wraithform、Polymorph Wounds、Wasting、Random Telepathy、Nausea 与 Warning 复用现有变异、属性、状态、饥饿和实体等级事务 active。 |
+| M7 | 变形药水复用统一随机 gain/lose、锁定保护和互斥移除事务；原版循环、1/23 全治愈和 Black Market 获取路径已完成。 |
 
 当前唯一权威角色状态仍是 `CharacterProgress.active_mutation_ids` 与
 `locked_mutation_ids`。属性潜力继续由 `CharacterProgress.attribute_potentials`
@@ -196,30 +216,44 @@ Constitution（`rfb.mutation.human-con`）不属于 M7 的 104 候选门槛，�
 
 - 只在本地地图 tick 处理；世界地图模式不触发。
 - 按 `sourceIndex` 升序检查 active 周期变异，不能依赖集合迭代顺序。
-- 每项先锁定权威触发概率，再执行该项自己的后续 RNG；无适用目标时是否消耗 RNG
-  必须由原版行为决定。
+- 每项执行前重新检查 active；严格保持原版前置条件、抗性、触发判定和后续 RNG
+  的实际顺序。无适用目标时是否消耗 RNG 必须由原版行为决定。
 - UI 动画、文本扰动和幻觉表现不得消耗核心 RNG。
 - 伤害、状态、传送、召唤、资源、物品和地形改变继续走现有事务。
 
+M6.0 已完成：`turn.rs` 在状态和光源处理后、设备恢复前调用唯一周期入口；入口在
+世界地图直接返回，将带 `periodicEffect` 的 active 定义按 `sourceIndex` 排序，逐项
+复查 active 并在玩家死亡后短路。内容合同已加入首个来源无关的 `apply-status`
+变体，包含触发分母、固定/骰子时长、强度和叠加规则。固定种子测试覆盖顺序、准确
+draw count、触发未命中和世界地图零 RNG。
+
 ### M6 分批
 
-1. M6-A：状态与资源，包括 Berserk Rage、Cowardice、Alcohol、Hallucination、
-   Produce Mana、Speed Flux、Invulnerability、SP/HP 转换和 Hypochondria。
-2. M6-B：传送、位移和放逐，包括 Random Teleport、Random Banish、Shadow Walk
-   与 Fumbling。
-3. M6-C：召唤、环境和范围影响，包括 Flatulence、Attract Demon/Animal/Dragon、
-   Raw Chaos 与 Eat Light。
-4. M6-D：变异、伤口、感知和特殊效果，包括 Normality、Polymorph Wounds、
-   Wasting、Random Telepathy、Nausea、Warning 与 Wraithform。
+1. M6-A（已完成）：状态与资源，包括 Berserk Rage、Cowardice、Alcohol、
+   Hallucination、Produce Mana、Speed Flux、Invulnerability、SP/HP 转换和
+   Hypochondria。Produce Mana 暂停周期序列并复用方向瞄准器，选择后从下一项继续；
+   `minorSlow`、`unwell` 及喷嚏冷气射线复用现有状态、派生属性和伤害事务。
+2. M6-B（已完成）：Random Teleport 复用半径 40 随机传送；Random Banish 复用
+   距离 100 的可见怪物放逐；Shadow Walk 使用 15..=35 tick 的可持久现实改变
+   倒计时，首轮只重生成普通程序地下城；Fumbling 造成 1d25 伤害并随机掉落一件
+   可卸下近战武器。城镇、固定任务层和连续荒野不会被重生成或推进 seed。
+3. M6-C（已完成）：Flatulence 与 Raw Chaos 复用以玩家为中心的范围伤害；三类
+   吸引复用分类召唤、原版友好概率和角色自身的群体骰；Eat Light 吸收脚下光照、
+   减半非神器装备光源燃料，并复用来源无关的区域熄灭事务。
+4. M6-D（已完成）：Normality 复用未锁定随机失去事务；Polymorph Wounds 与主动
+   Polymorph 共用伤口事务；Wasting 尊重六项 Sustain；Random Telepathy、Nausea、
+   Warning 与 Wraithform 复用状态、营养、实体等级和墙体通行/减伤管线。
 
 每个子批使用固定种子测试准确触发/不触发分支、同 tick 多项顺序、死亡短路、地图
 范围、事件顺序和 RNG draw count。世界地图测试必须证明零周期触发、零额外 RNG。
 
-## 7. P3.7-M7：Polymorph 药水
+## 7. P3.7-M7：Polymorph 药水（已完成）
 
-M7 只能在 M4F、M5、M6 合并后开始，并以“104 个随机候选全部有真实行为”的
-覆盖审计为硬门槛。`gain_random_mutation` 和 `lose_random_mutation` 已存在，M7
-只应增加一个可审计的 Polymorph 事务，不再创建第二套候选选择器。
+M7 已在 M4F、M5、M6 基线上完成。原计划要求先闭环 104 个随机候选；按后续推进
+决定，事务先行落地，但仍把该断言保留为 P3.7 发布硬门槛。现有选择器严格排除
+Good Luck、Bad Luck、Easy Tiring、Impotence 与 Chaos Gift 五个行为壳，因此药水
+现在可安全使用，却不会提前授予未实现内容。`gain_random_mutation` 和
+`lose_random_mutation` 继续是唯一候选选择器。
 
 药水 source index 459 的原版算法：
 
@@ -231,11 +265,12 @@ M7 只能在 M4F、M5、M6 合并后开始，并以“104 个随机候选全部�
 6. 没有合法 gain/loss 候选时必须安全结束，不能死循环，也不能额外消耗无意义 RNG。
 7. 整个物品事务完成后只刷新一次属性、HP、资源和能力投影。
 
-完成后把 Polymorph 药水加入正式 items、权威中英文名称/flavor、Black Market 或
-权威获取途径，并把 item adaptation/coverage 账本从 blocked 改为 active。
+Polymorph 药水已加入正式 items、权威中英文名称/flavor 与两座城镇 Black Market，
+item adaptation/coverage 账本已经从 blocked 改为 active。
 
-验收必须覆盖：零候选、只有锁定变异、`count` 为 0/1/5/6、`1/23` 全清、连续多次
-改变、gain-time 互斥移除、事件顺序、物品消耗、RNG 次数和确定性重放。
+聚焦测试覆盖零候选、只有锁定变异、`count` 为 0/1/5/6、`1/23` 全清、连续多次
+改变、gain-time 互斥移除、事件顺序、物品消耗与 RNG 次数；确定性由同种子状态与
+现有 replay/fixture 合同共同验证。
 
 ## 8. P3.7-M8：界面与集中收口
 

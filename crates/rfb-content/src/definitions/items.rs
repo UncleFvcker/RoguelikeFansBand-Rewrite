@@ -343,6 +343,7 @@ pub enum ItemUseEffectDefinition {
     },
     AugmentAttributes,
     NewLife,
+    PolymorphMutations,
     ApplyThermalResistance {
         duration_dice: u16,
         duration_sides: u32,

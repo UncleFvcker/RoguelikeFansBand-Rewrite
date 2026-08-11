@@ -6,7 +6,8 @@
   "description": "你在物质现实中忽隐忽现。",
   "rating": "good",
   "sourceIndex": 51,
-  "randomSelectionEnabled": false,
+  "randomSelectionEnabled": true,
   "randomWeight": 2,
-  "removesOnGain": []
+  "removesOnGain": [],
+  "periodicEffect": { "type": "wraithform" }
 }

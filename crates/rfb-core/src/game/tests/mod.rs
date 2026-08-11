@@ -22,6 +22,7 @@ mod monster_doors;
 mod monster_ecology;
 mod monster_hit_points;
 mod monster_movement;
+mod mutations;
 mod persistence;
 mod progression;
 mod riding;
