@@ -1702,6 +1702,59 @@ impl Game {
         }
     }
 
+    fn overlay_visible_dungeon_entrances(&self, world_position: Position, terrain: &mut [String]) {
+        let world = self
+            .content
+            .world(&self.world_id)
+            .expect("active world must remain available");
+        let wilderness = world
+            .wilderness
+            .as_ref()
+            .expect("local wilderness requires wilderness content");
+        for location in &wilderness.locations {
+            let WildernessLocationDefinition::Dungeon {
+                position,
+                dungeon_id,
+            } = location
+            else {
+                continue;
+            };
+            let dungeon_world_position = position_from_content(*position);
+            if wilderness_has_town(wilderness, dungeon_world_position) {
+                continue;
+            }
+            let view = Position {
+                x: (dungeon_world_position.x - world_position.x) * i32::from(WILDERNESS_VIEW_WIDTH)
+                    + i32::from(WILDERNESS_VIEW_WIDTH / 2)
+                    - self.wilderness_view_offset.x * i32::from(WILDERNESS_CHUNK_WIDTH),
+                y: (dungeon_world_position.y - world_position.y)
+                    * i32::from(WILDERNESS_VIEW_HEIGHT)
+                    + i32::from(WILDERNESS_VIEW_HEIGHT / 2)
+                    - self.wilderness_view_offset.y * i32::from(WILDERNESS_CHUNK_HEIGHT),
+            };
+            if !(0..i32::from(WILDERNESS_VIEW_WIDTH)).contains(&view.x)
+                || !(0..i32::from(WILDERNESS_VIEW_HEIGHT)).contains(&view.y)
+            {
+                continue;
+            }
+            let dungeon = world
+                .dungeons
+                .iter()
+                .find(|dungeon| dungeon.id == *dungeon_id)
+                .expect("validated wilderness dungeon must remain available");
+            let entrance = world
+                .procedural_floors
+                .iter()
+                .find(|floor| floor.id == dungeon.root_floor_id)
+                .and_then(|floor| floor.entry_terrain_id.as_ref())
+                .expect("validated dungeon root must retain an entrance");
+            let index = usize::try_from(view.y).expect("dungeon entrance y must fit usize")
+                * usize::from(WILDERNESS_VIEW_WIDTH)
+                + usize::try_from(view.x).expect("dungeon entrance x must fit usize");
+            terrain[index] = entrance.clone();
+        }
+    }
+
     fn cached_wilderness_view_terrain(&mut self, world_position: Position) -> Vec<String> {
         let center = wilderness_view_center_chunk(world_position, self.wilderness_view_offset);
         self.wilderness_terrain_cache.retain(|position, _| {
@@ -1747,6 +1800,7 @@ impl Game {
             }
         }
         self.overlay_visible_town_terrain(world_position, &mut terrain);
+        self.overlay_visible_dungeon_entrances(world_position, &mut terrain);
         terrain
     }
 
@@ -1768,14 +1822,32 @@ impl Game {
         let player_index = usize::try_from(player_position.y).expect("arrival y must fit usize")
             * usize::from(width)
             + usize::try_from(player_position.x).expect("arrival x must fit usize");
-        terrain[player_index] = if current_road {
-            SURFACE_PATH_ID
-        } else {
-            let current = wilderness_legend_at(self.wilderness(), world_position)
-                .expect("validated wilderness position must remain defined");
-            terrain_id_for_wilderness(current.terrain)
+        let player_on_dungeon_entrance = self
+            .content
+            .world(&self.world_id)
+            .expect("active world must remain available")
+            .procedural_floors
+            .iter()
+            .any(|floor| {
+                floor.lifecycle == FloorLifecycle::Dungeon
+                    && floor.return_floor_id
+                        == self
+                            .content
+                            .world(&self.world_id)
+                            .expect("active world must remain available")
+                            .initial_floor_id
+                    && floor.entry_terrain_id.as_deref() == Some(terrain[player_index].as_str())
+            });
+        if !player_on_dungeon_entrance {
+            terrain[player_index] = if current_road {
+                SURFACE_PATH_ID
+            } else {
+                let current = wilderness_legend_at(self.wilderness(), world_position)
+                    .expect("validated wilderness position must remain defined");
+                terrain_id_for_wilderness(current.terrain)
+            }
+            .to_owned();
         }
-        .to_owned();
         FloorState {
             id: WILDERNESS_FLOOR_ID.to_owned(),
             dungeon_instance_id: None,

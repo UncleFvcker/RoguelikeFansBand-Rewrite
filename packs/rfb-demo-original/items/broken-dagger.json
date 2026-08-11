@@ -4,6 +4,7 @@
   "descriptionKey": "item-demo-broken-dagger-description",
   "equipmentSlot": "weapon",
   "formatVersion": 1,
+  "generationLevel": 0,
   "glyph": "|",
   "id": "demo.item.broken-dagger",
   "maxStack": 1,
@@ -14,13 +15,12 @@
     "toDamage": -4,
     "toHit": -2
   },
+  "mogaminatorRare": false,
   "nameKey": "item-demo-broken-dagger-name",
   "tags": [
     "equipment",
     "rfb-compatibility",
     "weapon"
   ],
-  "generationLevel": 0,
-  "mogaminatorRare": false,
   "weightTenthsPound": 5
 }

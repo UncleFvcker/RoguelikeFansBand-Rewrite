@@ -10,6 +10,7 @@ pub(super) fn melee_effect_chance(effect: &MeleeBlowEffectDefinition) -> Option<
         | MeleeBlowEffectDefinition::DrainAttributes { chance_percent, .. }
         | MeleeBlowEffectDefinition::DrainResource { chance_percent, .. }
         | MeleeBlowEffectDefinition::DrainExperience { chance_percent, .. }
+        | MeleeBlowEffectDefinition::Unlife { chance_percent, .. }
         | MeleeBlowEffectDefinition::Bleeding { chance_percent, .. }
         | MeleeBlowEffectDefinition::Blind { chance_percent }
         | MeleeBlowEffectDefinition::Confusion { chance_percent, .. }
@@ -92,6 +93,15 @@ fn reduce_disenchanted_component(rng: &mut RfbRng, value: u16) -> u16 {
 }
 
 impl Game {
+    fn scale_monster_damage(&self, source_entity_id: &str, damage: i32) -> i32 {
+        let power_per_mille = self
+            .entities
+            .iter()
+            .find(|entity| entity.id == source_entity_id)
+            .map_or(BASE_ACTOR_POWER_PER_MILLE, |entity| entity.power_per_mille);
+        scale_actor_power(damage, power_per_mille)
+    }
+
     pub(super) fn player_is_nonliving(&self) -> bool {
         self.character_definitions()
             .is_some_and(|(_, race, _, _)| race.tags.iter().any(|tag| tag == "nonliving"))
@@ -115,6 +125,123 @@ impl Game {
         if source.hp != hp_before {
             changed.insert(source.position);
         }
+    }
+
+    pub(super) fn roll_monster_melee_effect(
+        &mut self,
+        source_index: usize,
+        dice: u16,
+        sides: u16,
+        nice: bool,
+    ) -> i32 {
+        let rolled = self.roll_damage(dice, sides);
+        nice_melee_roll(
+            scale_actor_power(rolled, self.entities[source_index].power_per_mille),
+            nice,
+        )
+    }
+
+    fn resolve_monster_unlife_against_player(
+        &mut self,
+        source_index: usize,
+        amount: u16,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        if amount == 0 || self.player_is_nonliving() || self.player_saves_unlife(source_index) {
+            return;
+        }
+        let life_force = self.drain_player_life_force(amount);
+        let source = &mut self.entities[source_index];
+        let power_before = source.power_per_mille;
+        source.power_per_mille = source.power_per_mille.saturating_add(amount);
+        changed.insert(source.position);
+        events.push(DomainEvent::MonsterUnlifeDrained {
+            source_kind_id: source.kind_id.clone(),
+            amount,
+            life_force_before: life_force.before,
+            life_force_after: life_force.after,
+            power_before,
+            power_after: source.power_per_mille,
+        });
+    }
+
+    fn player_saves_unlife(&mut self, source_index: usize) -> bool {
+        let sources = self.player_hold_life_sources();
+        if sources == 0 {
+            return false;
+        }
+        const CHARISMA_SAVE_ADJUSTMENT: [i32; 38] = [
+            -25, -15, -10, -7, -6, -5, -4, -3, -2, -2, -1, -1, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8,
+            9, 10, 12, 14, 16, 18, 20, 23, 26, 29, 33, 37, 42, 50,
+        ];
+        let mut player_level = i32::from(self.progress.level);
+        if self
+            .progress
+            .active_mutation_ids
+            .contains("rfb.mutation.human-int")
+        {
+            player_level = player_level.saturating_sub(10).max(1);
+        }
+        player_level = if player_level <= 40 {
+            player_level.saturating_add(5)
+        } else {
+            45_i32.saturating_add(player_level.saturating_sub(40).saturating_mul(2))
+        };
+        let charisma_index = usize::from(
+            self.effective_player_attributes()
+                .index(AttributeKind::Charisma),
+        )
+        .min(CHARISMA_SAVE_ADJUSTMENT.len() - 1);
+        let player_power = u64::try_from(
+            player_level
+                .saturating_add(CHARISMA_SAVE_ADJUSTMENT[charisma_index])
+                .max(1),
+        )
+        .unwrap_or(1);
+        let source = &self.entities[source_index];
+        let monster_level = self
+            .actor_runtime_definition(source)
+            .map_or(1, |definition| definition.level.max(4));
+        let monster_power = u64::try_from(
+            scale_actor_power(
+                i32::try_from(monster_level).unwrap_or(i32::MAX),
+                source.power_per_mille,
+            )
+            .max(1),
+        )
+        .unwrap_or(1);
+        (0..sources).any(|_| self.rng.bounded(monster_power) <= self.rng.bounded(player_power))
+    }
+
+    pub(super) fn resolve_monster_unlife_against_actor(
+        &mut self,
+        source_kind_id: &str,
+        target_index: usize,
+        amount: u16,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let target_is_living = self
+            .actor_runtime_definition(&self.entities[target_index])
+            .is_some_and(|definition| !definition.tags.iter().any(|tag| tag == "nonliving"));
+        if amount == 0 || !target_is_living {
+            return;
+        }
+        let target = &mut self.entities[target_index];
+        let power_before = target.power_per_mille;
+        target.power_per_mille = target.power_per_mille.saturating_sub(amount).max(100);
+        if target.power_per_mille == power_before {
+            return;
+        }
+        changed.insert(target.position);
+        events.push(DomainEvent::MonsterUnlifeWeakened {
+            source_kind_id: source_kind_id.to_owned(),
+            target_kind_id: target.kind_id.clone(),
+            amount,
+            power_before,
+            power_after: target.power_per_mille,
+        });
     }
 
     pub(super) fn actor_has_status_immunity(&self, index: usize, status_kind_id: &str) -> bool {
@@ -205,6 +332,8 @@ impl Game {
                 reason: AbilityEffectSkipReasonDto::TargetDead,
             };
         };
+        let raw_damage = self.scale_monster_damage(source_entity_id, raw_damage);
+        let prepared_damage = self.scale_monster_damage(source_entity_id, prepared_damage);
         let resistance = self.entities[target_index].resistances.level(damage_type);
         let damage = resolve_damage(
             DamagePacket::after_armor(raw_damage, prepared_damage, damage_type),
@@ -235,6 +364,8 @@ impl Game {
         damage_type: DamageType,
         events: &mut Vec<DomainEvent>,
     ) -> AbilityEffectResolutionDto {
+        let raw_damage = self.scale_monster_damage(source_entity_id, raw_damage);
+        let prepared_damage = self.scale_monster_damage(source_entity_id, prepared_damage);
         let resistance = self.effective_player_resistances().level(damage_type);
         self.record_monster_player_resistance(source_entity_id, damage_type, resistance);
         let damage = self.reduce_player_damage(resolve_damage(
@@ -427,7 +558,12 @@ impl Game {
                         armor_mitigated,
                         ..
                     } => {
-                        let raw = self.roll_damage(*damage_dice, *damage_sides);
+                        let raw = self.roll_monster_melee_effect(
+                            source_index,
+                            *damage_dice,
+                            *damage_sides,
+                            false,
+                        );
                         let damage_type = DamageType::from(*damage_type);
                         let resistance = self.entities[target_index].resistances.level(damage_type);
                         Some(if *armor_mitigated {
@@ -446,7 +582,12 @@ impl Game {
                         damage_sides,
                         ..
                     } => {
-                        let raw = self.roll_damage(*damage_dice, *damage_sides);
+                        let raw = self.roll_monster_melee_effect(
+                            source_index,
+                            *damage_dice,
+                            *damage_sides,
+                            false,
+                        );
                         let duration = resolve_damage(
                             DamagePacket::new(raw, DamageType::Poison),
                             self.entities[target_index]
@@ -469,7 +610,12 @@ impl Game {
                         damage_sides,
                         ..
                     } => {
-                        let raw = self.roll_damage(*damage_dice, *damage_sides);
+                        let raw = self.roll_monster_melee_effect(
+                            source_index,
+                            *damage_dice,
+                            *damage_sides,
+                            false,
+                        );
                         Some(resolve_damage(
                             DamagePacket::new(raw, DamageType::Poison),
                             self.entities[target_index]
@@ -481,12 +627,41 @@ impl Game {
                     | MeleeBlowEffectDefinition::DrainResource { .. }
                     | MeleeBlowEffectDefinition::DrainExperience { .. }
                     | MeleeBlowEffectDefinition::Disenchant { .. } => None,
+                    MeleeBlowEffectDefinition::Unlife {
+                        amount_dice,
+                        amount_sides,
+                        ..
+                    } => {
+                        let amount = u16::try_from(
+                            self.roll_monster_melee_effect(
+                                source_index,
+                                *amount_dice,
+                                *amount_sides,
+                                false,
+                            )
+                            .max(0),
+                        )
+                        .unwrap_or(u16::MAX);
+                        self.resolve_monster_unlife_against_actor(
+                            &source_kind_id,
+                            target_index,
+                            amount,
+                            events,
+                            changed,
+                        );
+                        None
+                    }
                     MeleeBlowEffectDefinition::Bleeding {
                         duration_dice,
                         duration_sides,
                         ..
                     } => {
-                        let duration = self.roll_damage(*duration_dice, *duration_sides);
+                        let duration = self.roll_monster_melee_effect(
+                            source_index,
+                            *duration_dice,
+                            *duration_sides,
+                            false,
+                        );
                         self.apply_actor_melee_status(
                             target_index,
                             STATUS_BLEEDING,
@@ -513,8 +688,14 @@ impl Game {
                         let resistance = self.entities[target_index]
                             .resistances
                             .level(DamageType::Confusion);
-                        let raw = (*damage_dice > 0)
-                            .then(|| self.roll_damage(*damage_dice, *damage_sides));
+                        let raw = (*damage_dice > 0).then(|| {
+                            self.roll_monster_melee_effect(
+                                source_index,
+                                *damage_dice,
+                                *damage_sides,
+                                false,
+                            )
+                        });
                         let duration = resisted_status_duration(
                             u32::try_from(10 + self.roll_damage(1, 20)).unwrap_or(u32::MAX),
                             resistance,
@@ -556,7 +737,12 @@ impl Game {
                         duration_sides,
                         ..
                     } => {
-                        let duration = self.roll_damage(*duration_dice, *duration_sides);
+                        let duration = self.roll_monster_melee_effect(
+                            source_index,
+                            *duration_dice,
+                            *duration_sides,
+                            false,
+                        );
                         self.apply_actor_melee_status(
                             target_index,
                             STATUS_STUN,
@@ -1034,8 +1220,12 @@ impl Game {
                         armor_mitigated,
                         ..
                     } => {
-                        let raw =
-                            nice_melee_roll(self.roll_damage(*damage_dice, *damage_sides), nice);
+                        let raw = self.roll_monster_melee_effect(
+                            index,
+                            *damage_dice,
+                            *damage_sides,
+                            nice,
+                        );
                         let damage_type = DamageType::from(*damage_type);
                         let resistance = self.effective_player_resistances().level(damage_type);
                         Some(self.reduce_player_damage(if *armor_mitigated {
@@ -1049,8 +1239,12 @@ impl Game {
                         damage_sides,
                         ..
                     } => {
-                        let raw =
-                            nice_melee_roll(self.roll_damage(*damage_dice, *damage_sides), nice);
+                        let raw = self.roll_monster_melee_effect(
+                            index,
+                            *damage_dice,
+                            *damage_sides,
+                            nice,
+                        );
                         let duration = resolve_damage(
                             DamagePacket::new(raw, DamageType::Poison),
                             self.effective_player_resistances()
@@ -1077,8 +1271,12 @@ impl Game {
                         damage_sides,
                         ..
                     } => {
-                        let raw =
-                            nice_melee_roll(self.roll_damage(*damage_dice, *damage_sides), nice);
+                        let raw = self.roll_monster_melee_effect(
+                            index,
+                            *damage_dice,
+                            *damage_sides,
+                            nice,
+                        );
                         Some(
                             self.reduce_player_damage(resolve_damage(
                                 DamagePacket::new(raw, DamageType::Physical),
@@ -1100,9 +1298,16 @@ impl Game {
                         amount_sides,
                         ..
                     } => {
-                        let requested =
-                            u32::try_from(self.roll_damage(*amount_dice, *amount_sides).max(0))
-                                .unwrap_or(u32::MAX);
+                        let requested = u32::try_from(
+                            self.roll_monster_melee_effect(
+                                index,
+                                *amount_dice,
+                                *amount_sides,
+                                nice,
+                            )
+                            .max(0),
+                        )
+                        .unwrap_or(u32::MAX);
                         let pool_id = self
                             .casting_profile()
                             .map(|profile| profile.resource_id.clone())
@@ -1138,8 +1343,12 @@ impl Game {
                         amount_sides,
                         ..
                     } => {
-                        let rolled =
-                            nice_melee_roll(self.roll_damage(*amount_dice, *amount_sides), nice);
+                        let rolled = self.roll_monster_melee_effect(
+                            index,
+                            *amount_dice,
+                            *amount_sides,
+                            nice,
+                        );
                         let requested = u64::try_from(rolled.max(0))
                             .unwrap_or(u64::MAX)
                             .saturating_add(self.progress.experience.saturating_mul(2) / 100)
@@ -1147,13 +1356,33 @@ impl Game {
                         self.apply_player_experience_drain(requested, &kind_id, events);
                         None
                     }
+                    MeleeBlowEffectDefinition::Unlife {
+                        amount_dice,
+                        amount_sides,
+                        ..
+                    } => {
+                        let amount = u16::try_from(
+                            self.roll_monster_melee_effect(
+                                index,
+                                *amount_dice,
+                                *amount_sides,
+                                nice,
+                            )
+                            .max(0),
+                        )
+                        .unwrap_or(u16::MAX);
+                        self.resolve_monster_unlife_against_player(index, amount, events, changed);
+                        None
+                    }
                     MeleeBlowEffectDefinition::Bleeding {
                         duration_dice,
                         duration_sides,
                         ..
                     } => {
-                        let duration = nice_melee_roll(
-                            self.roll_damage(*duration_dice, *duration_sides),
+                        let duration = self.roll_monster_melee_effect(
+                            index,
+                            *duration_dice,
+                            *duration_sides,
                             nice,
                         );
                         if duration > 0
@@ -1184,7 +1413,7 @@ impl Game {
                             .effective_player_resistances()
                             .level(DamageType::Confusion);
                         let raw = (*damage_dice > 0).then(|| {
-                            nice_melee_roll(self.roll_damage(*damage_dice, *damage_sides), nice)
+                            self.roll_monster_melee_effect(index, *damage_dice, *damage_sides, nice)
                         });
                         let duration = resisted_status_duration(
                             u32::try_from(10 + self.roll_damage(1, 20)).unwrap_or(u32::MAX),
@@ -1216,8 +1445,10 @@ impl Game {
                         duration_sides,
                         ..
                     } => {
-                        let duration = nice_melee_roll(
-                            self.roll_damage(*duration_dice, *duration_sides),
+                        let duration = self.roll_monster_melee_effect(
+                            index,
+                            *duration_dice,
+                            *duration_sides,
                             nice,
                         );
                         self.apply_player_melee_status(STATUS_STUN, duration, &kind_id);

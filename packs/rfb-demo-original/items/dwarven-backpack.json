@@ -4,17 +4,17 @@
   "descriptionKey": "item-demo-dwarven-backpack-description",
   "equipmentSlot": "container",
   "formatVersion": 1,
+  "generationLevel": 50,
   "glyph": "~",
   "id": "demo.item.dwarven-backpack",
   "inventorySlotBonus": 12,
   "maxStack": 1,
+  "mogaminatorRare": false,
   "nameKey": "item-demo-dwarven-backpack-name",
   "tags": [
     "container",
     "equipment",
     "rfb-compatibility"
   ],
-  "generationLevel": 50,
-  "mogaminatorRare": false,
   "weightTenthsPound": 10
 }

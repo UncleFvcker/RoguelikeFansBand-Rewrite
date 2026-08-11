@@ -66,6 +66,7 @@
   "role": "monster",
   "speed": 110,
   "tags": [
+    "kin-glyph-104",
     "legacy-import",
     "nixie",
     "warrens"

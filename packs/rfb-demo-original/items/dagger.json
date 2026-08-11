@@ -4,6 +4,7 @@
   "descriptionKey": "item-demo-dagger-description",
   "equipmentSlot": "weapon",
   "formatVersion": 1,
+  "generationLevel": 0,
   "glyph": "|",
   "id": "demo.item.dagger",
   "maxStack": 1,
@@ -14,13 +15,12 @@
     "toDamage": 0,
     "toHit": 0
   },
+  "mogaminatorRare": false,
   "nameKey": "item-demo-dagger-name",
   "tags": [
     "equipment",
     "rfb-compatibility",
     "weapon"
   ],
-  "generationLevel": 0,
-  "mogaminatorRare": false,
   "weightTenthsPound": 12
 }

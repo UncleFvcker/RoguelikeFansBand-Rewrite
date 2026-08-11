@@ -48,6 +48,7 @@
   "role": "monster",
   "speed": 110,
   "tags": [
+    "kin-glyph-44",
     "legacy-import",
     "mushroom",
     "warrens",

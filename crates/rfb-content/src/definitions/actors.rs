@@ -178,6 +178,12 @@ pub enum MeleeBlowEffectDefinition {
         amount_dice: u16,
         amount_sides: u16,
     },
+    Unlife {
+        #[serde(default)]
+        chance_percent: Option<u8>,
+        amount_dice: u16,
+        amount_sides: u16,
+    },
     Bleeding {
         #[serde(default)]
         chance_percent: Option<u8>,

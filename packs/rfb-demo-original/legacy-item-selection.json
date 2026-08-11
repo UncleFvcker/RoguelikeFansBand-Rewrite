@@ -82,6 +82,7 @@
     { "sourceIndex": 273, "id": "chain-mail" },
     { "sourceIndex": 722, "id": "fabric-bag" },
     { "sourceIndex": 723, "id": "leather-pouch" },
-    { "sourceIndex": 724, "id": "dwarven-backpack" }
+    { "sourceIndex": 724, "id": "dwarven-backpack" },
+    { "sourceIndex": 310, "id": "ring" }
   ]
 }

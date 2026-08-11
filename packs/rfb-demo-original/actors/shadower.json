@@ -23,6 +23,7 @@
   "role": "monster",
   "speed": 110,
   "tags": [
+    "kin-glyph-78",
     "legacy-import",
     "shadower-appearance",
     "warrens"

@@ -4,6 +4,7 @@
   "descriptionKey": "item-demo-club-description",
   "equipmentSlot": "weapon",
   "formatVersion": 1,
+  "generationLevel": 0,
   "glyph": "\\",
   "id": "demo.item.club",
   "maxStack": 1,
@@ -14,13 +15,12 @@
     "toDamage": 0,
     "toHit": 0
   },
+  "mogaminatorRare": false,
   "nameKey": "item-demo-club-name",
   "tags": [
     "equipment",
     "rfb-compatibility",
     "weapon"
   ],
-  "generationLevel": 0,
-  "mogaminatorRare": false,
   "weightTenthsPound": 100
 }

@@ -42,9 +42,9 @@ use crate::{
         gain_energy, spend_energy,
     },
     state::{
-        Actor, FloorConnectionState, FloorRegionState, FloorState, GoldPile, HomeState,
-        ItemInstance, ItemLocation, MonsterPackIdentity, ResourcePool, RolledAffixState, ShopState,
-        SummonIdentity, TownState,
+        Actor, BASE_ACTOR_POWER_PER_MILLE, FloorConnectionState, FloorRegionState, FloorState,
+        GoldPile, HomeState, ItemInstance, ItemLocation, MonsterPackIdentity, ResourcePool,
+        RolledAffixState, ShopState, SummonIdentity, TownState,
     },
     stats::{
         AttributeKind, AttributeSet, CharacterBuildIdentity, CharacterProgress, DerivedStat,
@@ -192,7 +192,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 85;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 86;
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const VISIBILITY_RADIUS: i32 = 8;
 const BASE_THROW_RANGE_BUDGET: u16 = 50;
@@ -219,6 +219,21 @@ const TERRAIN_INTERACTION_DIRECTIONS: [Direction; 8] = [
     Direction::NorthWest,
 ];
 const ITEM_LIGHT_RADIUS: i32 = 4;
+
+fn scale_actor_power(value: i32, power_per_mille: u16) -> i32 {
+    i32::try_from(
+        i64::from(value)
+            .saturating_mul(i64::from(power_per_mille))
+            .saturating_div(i64::from(BASE_ACTOR_POWER_PER_MILLE)),
+    )
+    .unwrap_or_else(|_| {
+        if value.is_negative() {
+            i32::MIN
+        } else {
+            i32::MAX
+        }
+    })
+}
 const PLAYER_LIGHT_COLOR: u32 = 0xffd7a3;
 const ACTOR_LIGHT_COLOR: u32 = 0xff8a4c;
 const ITEM_LIGHT_COLOR: u32 = 0x8ad9ff;
@@ -5539,6 +5554,7 @@ const fn equipment_passive_dto(passive: EquipmentPassive) -> EquipmentPassiveDto
         EquipmentPassive::Regeneration => EquipmentPassiveDto::Regeneration,
         EquipmentPassive::SeeInvisible => EquipmentPassiveDto::SeeInvisible,
         EquipmentPassive::Vampiric => EquipmentPassiveDto::Vampiric,
+        EquipmentPassive::HoldLife => EquipmentPassiveDto::HoldLife,
         EquipmentPassive::SustainStrength => EquipmentPassiveDto::SustainStrength,
         EquipmentPassive::SustainIntelligence => EquipmentPassiveDto::SustainIntelligence,
         EquipmentPassive::SustainWisdom => EquipmentPassiveDto::SustainWisdom,

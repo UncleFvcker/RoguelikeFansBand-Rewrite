@@ -4,9 +4,11 @@
   "descriptionKey": "item-demo-sling-description",
   "equipmentSlot": "launcher",
   "formatVersion": 1,
+  "generationLevel": 5,
   "glyph": "}",
   "id": "demo.item.sling",
   "maxStack": 1,
+  "mogaminatorRare": false,
   "nameKey": "item-demo-sling-name",
   "projectileProfile": {
     "ammunitionType": "shot",
@@ -20,7 +22,5 @@
     "launcher",
     "rfb-compatibility"
   ],
-  "generationLevel": 5,
-  "mogaminatorRare": false,
   "weightTenthsPound": 5
 }

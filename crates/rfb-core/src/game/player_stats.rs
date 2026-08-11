@@ -24,6 +24,43 @@ pub(in crate::game) struct ActorDerivedStats {
     pub(in crate::game) dig_skill: DerivedStat,
 }
 
+fn apply_monster_power(
+    stat: DerivedStat,
+    actor: &Actor,
+    definition: &rfb_content::ActorDefinition,
+    bounds: StatBounds,
+) -> DerivedStat {
+    if definition.role != ActorRole::Monster || actor.power_per_mille == BASE_ACTOR_POWER_PER_MILLE
+    {
+        return stat;
+    }
+    let scaled = scale_actor_power(stat.value, actor.power_per_mille);
+    stat.with_modifier(
+        StatLayer::Status,
+        "rfb.monster-power",
+        scaled.saturating_sub(stat.value),
+        bounds,
+    )
+}
+
+fn apply_player_life_force(stat: DerivedStat, life_force: u16) -> DerivedStat {
+    if life_force >= 1_000 {
+        return stat;
+    }
+    let lost = i32::try_from(
+        i64::from(stat.value.max(0))
+            .saturating_mul(i64::from(1_000_u16.saturating_sub(life_force)))
+            .saturating_div(2_000),
+    )
+    .unwrap_or(i32::MAX);
+    stat.with_modifier(
+        StatLayer::Status,
+        "rfb.life-force",
+        lost.saturating_neg(),
+        StatBounds::NON_NEGATIVE,
+    )
+}
+
 #[derive(Clone)]
 pub(in crate::game) struct ResolvedAttackProfile {
     pub(in crate::game) attacks: u16,
@@ -167,6 +204,7 @@ fn projected_blow_damage(effects: &[MeleeBlowEffectDefinition]) -> DamageDiceDto
             MeleeBlowEffectDefinition::DrainAttributes { .. }
             | MeleeBlowEffectDefinition::DrainResource { .. }
             | MeleeBlowEffectDefinition::DrainExperience { .. }
+            | MeleeBlowEffectDefinition::Unlife { .. }
             | MeleeBlowEffectDefinition::Bleeding { .. }
             | MeleeBlowEffectDefinition::Blind { .. }
             | MeleeBlowEffectDefinition::Paralysis { .. }
@@ -570,6 +608,16 @@ impl Game {
             })
             .flat_map(|item| self.item_passives(item))
             .collect()
+    }
+
+    pub(super) fn player_hold_life_sources(&self) -> usize {
+        self.items
+            .iter()
+            .filter(|item| {
+                matches!(&item.location, ItemLocation::Equipped { slot_id } if self.body_slot_type(slot_id) != Some("tool"))
+                    && self.item_passives(item).contains(&EquipmentPassive::HoldLife)
+            })
+            .count()
     }
 
     pub(super) fn player_see_invisible_sources(&self) -> usize {
@@ -1200,6 +1248,18 @@ impl Game {
         include_equipment: bool,
     ) -> ActorDerivedStats {
         let definition = self.actor_runtime_definition(actor).unwrap_or(definition);
+        let monster_level = if definition.role == ActorRole::Monster {
+            u32::try_from(
+                scale_actor_power(
+                    i32::try_from(definition.level).unwrap_or(i32::MAX),
+                    actor.power_per_mille,
+                )
+                .max(1),
+            )
+            .unwrap_or(u32::MAX)
+        } else {
+            definition.level
+        };
         let mut pipeline = DerivedStatsPipeline::new();
         let base_source = definition.id.as_str();
         pipeline.add(
@@ -1246,7 +1306,7 @@ impl Game {
             StatLayer::Base,
             base_source,
             if definition.role == ActorRole::Monster {
-                monster_melee_skill(definition.attack, definition.level)
+                monster_melee_skill(definition.attack, monster_level)
             } else if include_equipment && self.build.is_some() {
                 0
             } else {
@@ -1631,13 +1691,33 @@ impl Game {
             }
         }
 
+        let max_hp = pipeline.resolve(StatKind::MaxHp, StatBounds::UNBOUNDED);
         ActorDerivedStats {
-            max_hp: pipeline.resolve(StatKind::MaxHp, StatBounds::UNBOUNDED),
-            attack: pipeline.resolve(StatKind::Attack, StatBounds::NON_NEGATIVE),
-            defense: pipeline.resolve(StatKind::Defense, StatBounds::NON_NEGATIVE),
+            max_hp: if include_equipment {
+                apply_player_life_force(max_hp, self.progress.life_force)
+            } else {
+                max_hp
+            },
+            attack: apply_monster_power(
+                pipeline.resolve(StatKind::Attack, StatBounds::NON_NEGATIVE),
+                actor,
+                definition,
+                StatBounds::NON_NEGATIVE,
+            ),
+            defense: apply_monster_power(
+                pipeline.resolve(StatKind::Defense, StatBounds::NON_NEGATIVE),
+                actor,
+                definition,
+                StatBounds::NON_NEGATIVE,
+            ),
             speed: pipeline.resolve(StatKind::Speed, StatBounds::ACTOR_SPEED),
             melee_skill: pipeline.resolve(StatKind::MeleeSkill, StatBounds::NON_NEGATIVE),
-            armor_class: pipeline.resolve(StatKind::ArmorClass, StatBounds::NON_NEGATIVE),
+            armor_class: apply_monster_power(
+                pipeline.resolve(StatKind::ArmorClass, StatBounds::NON_NEGATIVE),
+                actor,
+                definition,
+                StatBounds::NON_NEGATIVE,
+            ),
             melee_attacks: pipeline.resolve(StatKind::MeleeAttacks, StatBounds::NON_NEGATIVE),
             melee_damage_bonus: pipeline.resolve(StatKind::MeleeDamageBonus, StatBounds::UNBOUNDED),
             ranged_skill: pipeline.resolve(StatKind::RangedSkill, StatBounds::NON_NEGATIVE),

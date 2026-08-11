@@ -9,6 +9,7 @@
     "world": "demo.world.middle-earth",
     "debugClearEntities": true,
     "debugClearCarriedItems": true,
+    "playerHp": 19,
     "playerLifeForce": 125,
     "inventoryItems": [
       {
@@ -840,7 +841,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "a0f3999c989f60a34ff3b9eac98a5b16e33ec960e6425850a99960101720d027"
+      "stateHash": "c48fa3bc8ad6bb66b2da569b43b272c256c5bdd088927955de32e88d8c78a36f"
     },
     "events": [
       {
@@ -852,6 +853,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "a0f3999c989f60a34ff3b9eac98a5b16e33ec960e6425850a99960101720d027"
+    "saveRoundTripStateHash": "c48fa3bc8ad6bb66b2da569b43b272c256c5bdd088927955de32e88d8c78a36f"
   }
 }

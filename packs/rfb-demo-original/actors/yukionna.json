@@ -106,6 +106,7 @@
   "role": "monster",
   "speed": 110,
   "tags": [
+    "kin-glyph-112",
     "legacy-import",
     "nonliving",
     "orc-cave"

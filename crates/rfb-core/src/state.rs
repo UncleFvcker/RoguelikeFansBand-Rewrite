@@ -13,6 +13,8 @@ use serde::{Deserialize, Serialize};
 use crate::resistance::{DamageType, ResistanceLevel};
 use crate::{effect::StatusInstance, resistance::ResistanceProfile};
 
+pub(crate) const BASE_ACTOR_POWER_PER_MILLE: u16 = 1_000;
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct Actor {
     pub(crate) id: String,
@@ -21,6 +23,7 @@ pub(crate) struct Actor {
     pub(crate) position: Position,
     pub(crate) hp: i32,
     pub(crate) max_hp: i32,
+    pub(crate) power_per_mille: u16,
     pub(crate) speed: u16,
     pub(crate) energy_need: i32,
     pub(crate) alerted: bool,

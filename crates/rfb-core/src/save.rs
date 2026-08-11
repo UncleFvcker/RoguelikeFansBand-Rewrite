@@ -7,8 +7,9 @@ use crate::{
     error::CoreError,
     resistance::{DamageType, ResistanceLevel, ResistanceProfile},
     state::{
-        Actor, FloorConnectionState, FloorRegionState, FloorState, GoldPile, ItemInstance,
-        ItemLocation, MonsterPackIdentity, RolledAffixState, SummonIdentity,
+        Actor, BASE_ACTOR_POWER_PER_MILLE, FloorConnectionState, FloorRegionState, FloorState,
+        GoldPile, ItemInstance, ItemLocation, MonsterPackIdentity, RolledAffixState,
+        SummonIdentity,
     },
     stats::{CharacterBuildIdentity, CharacterProgress},
 };
@@ -78,6 +79,7 @@ pub(crate) fn actor_from_spawn(
         position: position_from_content(position),
         hp: max_hp,
         max_hp,
+        power_per_mille: BASE_ACTOR_POWER_PER_MILLE,
         speed,
         energy_need,
         alerted,
@@ -111,6 +113,7 @@ pub(crate) fn actor_from_runtime_spawn(
         position,
         hp: max_hp,
         max_hp,
+        power_per_mille: BASE_ACTOR_POWER_PER_MILLE,
         speed,
         energy_need,
         alerted,
@@ -157,6 +160,7 @@ pub(crate) fn actor_from_player(
         position: player.position,
         hp: player.hp,
         max_hp: definition.max_hp,
+        power_per_mille: BASE_ACTOR_POWER_PER_MILLE,
         speed: player.base_speed,
         energy_need: player.energy_need,
         alerted: true,
@@ -243,6 +247,9 @@ pub(crate) fn actor_from_entity(
     if entity.base_speed != runtime_definition.speed {
         return Err(CoreError::InvalidSave("entity base speed is invalid"));
     }
+    if entity.power_per_mille < 100 {
+        return Err(CoreError::InvalidSave("entity power is invalid"));
+    }
     let statuses = statuses_from_save(entity.statuses)?;
     let resistances = resistances_from_save(entity.resistances)?;
     let observed_player_resistances =
@@ -254,6 +261,7 @@ pub(crate) fn actor_from_entity(
         position: entity.position,
         hp: entity.hp,
         max_hp: entity.max_hp,
+        power_per_mille: entity.power_per_mille,
         speed: entity.base_speed,
         energy_need: entity.energy_need,
         alerted: entity.alerted.unwrap_or_else(|| {
@@ -630,6 +638,7 @@ pub(crate) fn actors_to_save(entities: &[Actor]) -> Vec<ActorSaveDto> {
             position: entity.position,
             hp: entity.hp,
             max_hp: entity.max_hp,
+            power_per_mille: entity.power_per_mille,
             base_speed: entity.speed,
             energy_need: entity.energy_need,
             alerted: Some(entity.alerted),
@@ -1177,6 +1186,7 @@ const fn equipment_passive_dto(value: EquipmentPassive) -> EquipmentPassiveDto {
         EquipmentPassive::Regeneration => EquipmentPassiveDto::Regeneration,
         EquipmentPassive::SeeInvisible => EquipmentPassiveDto::SeeInvisible,
         EquipmentPassive::Vampiric => EquipmentPassiveDto::Vampiric,
+        EquipmentPassive::HoldLife => EquipmentPassiveDto::HoldLife,
         EquipmentPassive::SustainStrength => EquipmentPassiveDto::SustainStrength,
         EquipmentPassive::SustainIntelligence => EquipmentPassiveDto::SustainIntelligence,
         EquipmentPassive::SustainWisdom => EquipmentPassiveDto::SustainWisdom,
@@ -1191,6 +1201,7 @@ const fn equipment_passive(value: EquipmentPassiveDto) -> EquipmentPassive {
         EquipmentPassiveDto::Regeneration => EquipmentPassive::Regeneration,
         EquipmentPassiveDto::SeeInvisible => EquipmentPassive::SeeInvisible,
         EquipmentPassiveDto::Vampiric => EquipmentPassive::Vampiric,
+        EquipmentPassiveDto::HoldLife => EquipmentPassive::HoldLife,
         EquipmentPassiveDto::SustainStrength => EquipmentPassive::SustainStrength,
         EquipmentPassiveDto::SustainIntelligence => EquipmentPassive::SustainIntelligence,
         EquipmentPassiveDto::SustainWisdom => EquipmentPassive::SustainWisdom,

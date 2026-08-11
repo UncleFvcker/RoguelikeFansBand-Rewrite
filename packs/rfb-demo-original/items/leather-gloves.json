@@ -4,19 +4,19 @@
   "descriptionKey": "item-demo-leather-gloves-description",
   "equipmentSlot": "gloves",
   "formatVersion": 1,
+  "generationLevel": 1,
   "glyph": "]",
   "id": "demo.item.leather-gloves",
   "maxStack": 1,
   "modifiers": {
     "defense": 1
   },
+  "mogaminatorRare": false,
   "nameKey": "item-demo-leather-gloves-name",
   "tags": [
     "armor",
     "equipment",
     "rfb-compatibility"
   ],
-  "generationLevel": 1,
-  "mogaminatorRare": false,
   "weightTenthsPound": 5
 }

@@ -836,7 +836,12 @@ impl Game {
                         armor_mitigated,
                         ..
                     } => {
-                        let raw = self.roll_damage(*damage_dice, *damage_sides);
+                        let raw = self.roll_monster_melee_effect(
+                            source_index,
+                            *damage_dice,
+                            *damage_sides,
+                            false,
+                        );
                         let damage_type = DamageType::from(*damage_type);
                         let resistance = self.entities[target_index].resistances.level(damage_type);
                         Some(if *armor_mitigated {
@@ -855,7 +860,12 @@ impl Game {
                         damage_sides,
                         ..
                     } => {
-                        let raw = self.roll_damage(*damage_dice, *damage_sides);
+                        let raw = self.roll_monster_melee_effect(
+                            source_index,
+                            *damage_dice,
+                            *damage_sides,
+                            false,
+                        );
                         let duration = resolve_damage(
                             DamagePacket::new(raw, DamageType::Poison),
                             self.entities[target_index]
@@ -878,7 +888,12 @@ impl Game {
                         damage_sides,
                         ..
                     } => {
-                        let raw = self.roll_damage(*damage_dice, *damage_sides);
+                        let raw = self.roll_monster_melee_effect(
+                            source_index,
+                            *damage_dice,
+                            *damage_sides,
+                            false,
+                        );
                         Some(resolve_damage(
                             DamagePacket::new(raw, DamageType::Poison),
                             self.entities[target_index]
@@ -890,12 +905,41 @@ impl Game {
                     | MeleeBlowEffectDefinition::DrainResource { .. }
                     | MeleeBlowEffectDefinition::DrainExperience { .. }
                     | MeleeBlowEffectDefinition::Disenchant { .. } => None,
+                    MeleeBlowEffectDefinition::Unlife {
+                        amount_dice,
+                        amount_sides,
+                        ..
+                    } => {
+                        let amount = u16::try_from(
+                            self.roll_monster_melee_effect(
+                                source_index,
+                                *amount_dice,
+                                *amount_sides,
+                                false,
+                            )
+                            .max(0),
+                        )
+                        .unwrap_or(u16::MAX);
+                        self.resolve_monster_unlife_against_actor(
+                            &source_kind_id,
+                            target_index,
+                            amount,
+                            events,
+                            changed,
+                        );
+                        None
+                    }
                     MeleeBlowEffectDefinition::Bleeding {
                         duration_dice,
                         duration_sides,
                         ..
                     } => {
-                        let duration = self.roll_damage(*duration_dice, *duration_sides);
+                        let duration = self.roll_monster_melee_effect(
+                            source_index,
+                            *duration_dice,
+                            *duration_sides,
+                            false,
+                        );
                         self.apply_actor_melee_status(
                             target_index,
                             STATUS_BLEEDING,
@@ -922,8 +966,14 @@ impl Game {
                         let resistance = self.entities[target_index]
                             .resistances
                             .level(DamageType::Confusion);
-                        let raw = (*damage_dice > 0)
-                            .then(|| self.roll_damage(*damage_dice, *damage_sides));
+                        let raw = (*damage_dice > 0).then(|| {
+                            self.roll_monster_melee_effect(
+                                source_index,
+                                *damage_dice,
+                                *damage_sides,
+                                false,
+                            )
+                        });
                         let duration = resisted_status_duration(
                             u32::try_from(10 + self.roll_damage(1, 20)).unwrap_or(u32::MAX),
                             resistance,
@@ -965,7 +1015,12 @@ impl Game {
                         duration_sides,
                         ..
                     } => {
-                        let duration = self.roll_damage(*duration_dice, *duration_sides);
+                        let duration = self.roll_monster_melee_effect(
+                            source_index,
+                            *duration_dice,
+                            *duration_sides,
+                            false,
+                        );
                         self.apply_actor_melee_status(
                             target_index,
                             STATUS_STUN,

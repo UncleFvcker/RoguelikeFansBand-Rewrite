@@ -381,6 +381,11 @@ fn valid_melee_effect(effect: &MeleeBlowEffectDefinition) -> bool {
             chance_percent,
             amount_dice,
             amount_sides,
+        }
+        | MeleeBlowEffectDefinition::Unlife {
+            chance_percent,
+            amount_dice,
+            amount_sides,
         } => valid_chance(*chance_percent) && valid_dice(*amount_dice, *amount_sides),
         MeleeBlowEffectDefinition::Bleeding {
             chance_percent,

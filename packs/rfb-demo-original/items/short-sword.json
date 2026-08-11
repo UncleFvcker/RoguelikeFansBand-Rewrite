@@ -4,6 +4,7 @@
   "descriptionKey": "item-demo-short-sword-description",
   "equipmentSlot": "weapon",
   "formatVersion": 1,
+  "generationLevel": 5,
   "glyph": "|",
   "id": "demo.item.short-sword",
   "maxStack": 1,
@@ -14,13 +15,12 @@
     "toDamage": 0,
     "toHit": 0
   },
+  "mogaminatorRare": false,
   "nameKey": "item-demo-short-sword-name",
   "tags": [
     "equipment",
     "rfb-compatibility",
     "weapon"
   ],
-  "generationLevel": 5,
-  "mogaminatorRare": false,
   "weightTenthsPound": 80
 }

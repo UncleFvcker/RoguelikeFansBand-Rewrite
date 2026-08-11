@@ -4,19 +4,19 @@
   "descriptionKey": "item-demo-soft-studded-leather-description",
   "equipmentSlot": "body",
   "formatVersion": 1,
+  "generationLevel": 3,
   "glyph": "(",
   "id": "demo.item.soft-studded-leather",
   "maxStack": 1,
   "modifiers": {
     "defense": 5
   },
+  "mogaminatorRare": false,
   "nameKey": "item-demo-soft-studded-leather-name",
   "tags": [
     "armor",
     "equipment",
     "rfb-compatibility"
   ],
-  "generationLevel": 3,
-  "mogaminatorRare": false,
   "weightTenthsPound": 90
 }

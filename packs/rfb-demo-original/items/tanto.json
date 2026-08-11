@@ -4,6 +4,7 @@
   "descriptionKey": "item-demo-tanto-description",
   "equipmentSlot": "weapon",
   "formatVersion": 1,
+  "generationLevel": 3,
   "glyph": "|",
   "id": "demo.item.tanto",
   "maxStack": 1,
@@ -14,13 +15,12 @@
     "toDamage": 0,
     "toHit": 0
   },
+  "mogaminatorRare": false,
   "nameKey": "item-demo-tanto-name",
   "tags": [
     "equipment",
     "rfb-compatibility",
     "weapon"
   ],
-  "generationLevel": 3,
-  "mogaminatorRare": false,
   "weightTenthsPound": 20
 }

@@ -502,3 +502,5 @@ message-item-use-crafting = { $source }以{ $affix }改造了{ $target }。
 message-item-use-rumour = { $source }上写着：“{ $rumour }”
 message-monster-warding-glyph-held = 守护符文挡住了{ $source }。
 message-monster-warding-glyph-broken = { $source }破坏了守护符文。
+monster-unlife-drained = { $source }吸取了{ $amount }点生命力，并变得更加强大！
+monster-unlife-weakened = { $source }从{ $target }身上吸取了{ $amount }点力量。

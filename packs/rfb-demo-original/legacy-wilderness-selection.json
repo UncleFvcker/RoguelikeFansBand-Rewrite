@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "worldId": "demo.world.middle-earth",
   "towns": [
     {
@@ -18,6 +18,11 @@
       "sourceIndex": 30,
       "sourceName": "Warrens",
       "id": "demo.dungeon.warrens"
+    },
+    {
+      "sourceIndex": 3,
+      "sourceName": "Orc cave",
+      "id": "demo.dungeon.orc-cave"
     }
   ],
   "townPlans": [
@@ -54,7 +59,7 @@
       }
     }
   ],
-  "plannedDungeons": [
+  "dungeonPlans": [
     {
       "sourceIndex": 3,
       "sourceName": "Orc cave",
@@ -87,18 +92,5 @@
       "finalEgoSourceIndex": 206,
       "substituteSourceIndex": 36
     }
-  ],
-  "gaps": {
-    "orcCaveMonsters": {
-      "minimumLevel": 21,
-      "maximumLevel": 32,
-      "status": "deferred"
-    },
-    "orcCaveRewards": [
-      { "kind": "dungeon-loot", "status": "audit-required" },
-      { "kind": "guardian", "sourceIndex": 1185, "status": "deferred" },
-      { "kind": "final-object", "tval": 45, "sval": 0, "status": "deferred" },
-      { "kind": "final-ego", "sourceIndex": 206, "status": "deferred" }
-    ]
-  }
+  ]
 }

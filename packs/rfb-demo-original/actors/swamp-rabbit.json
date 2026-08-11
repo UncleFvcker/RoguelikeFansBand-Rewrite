@@ -120,6 +120,7 @@
   "role": "monster",
   "speed": 120,
   "tags": [
+    "kin-glyph-114",
     "legacy-import",
     "rabbit",
     "warrens"

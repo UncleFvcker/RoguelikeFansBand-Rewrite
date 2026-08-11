@@ -335,6 +335,7 @@ impl Game {
         }
         let valid_floor = |floor_id: &str| {
             floor_id == world.initial_floor_id
+                || (floor_id == wilderness::WILDERNESS_FLOOR_ID && world.wilderness.is_some())
                 || world
                     .procedural_floors
                     .iter()

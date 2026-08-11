@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 500,
+  "descriptionKey": "item-demo-ring-description",
+  "equipmentSlot": "ring",
+  "formatVersion": 1,
+  "generationLevel": 10,
+  "glyph": "=",
+  "id": "demo.item.ring",
+  "maxStack": 1,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-ring-name",
+  "tags": [
+    "equipment",
+    "jewelry",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 2
+}

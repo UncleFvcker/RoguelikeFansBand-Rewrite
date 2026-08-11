@@ -4,19 +4,19 @@
   "descriptionKey": "item-demo-small-leather-shield-description",
   "equipmentSlot": "shield",
   "formatVersion": 1,
+  "generationLevel": 3,
   "glyph": ")",
   "id": "demo.item.small-leather-shield",
   "maxStack": 1,
   "modifiers": {
     "defense": 3
   },
+  "mogaminatorRare": false,
   "nameKey": "item-demo-small-leather-shield-name",
   "tags": [
     "armor",
     "equipment",
     "rfb-compatibility"
   ],
-  "generationLevel": 3,
-  "mogaminatorRare": false,
   "weightTenthsPound": 50
 }

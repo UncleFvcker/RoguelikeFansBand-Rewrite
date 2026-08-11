@@ -2459,7 +2459,7 @@ pub(super) fn validate_world(
         else {
             return Err(ContentError::InvalidProceduralFloor(members[0].id.clone()));
         };
-        if roots.len() != 1 || roots[0].id != root.id || root.depth != 1 {
+        if roots.len() != 1 || roots[0].id != root.id || root.depth == 0 {
             return Err(ContentError::InvalidProceduralFloor(root.id.clone()));
         }
 

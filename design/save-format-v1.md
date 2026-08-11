@@ -378,3 +378,9 @@ contract-v245 为 M6-B 在 `PlayerSaveDto` 增加 `realityChangeTicks`，合法�
 0..=35。该倒计时与当前楼层、RNG 一起进入 State Hash Schema v83；到零时仅允许
 普通程序地下城重生成。固定任务层、城镇和连续荒野不会被替换，也不会推进
 `wildernessSeed`。save 容器保持 v1，不兼容旧开发存档。
+
+contract-v260 不增加存档字段。玩家从连续荒野进入非城镇地表地牢时，当前活动
+荒野层复用既有 `FloorState` 保存到 `storedFloors["core.floor.wilderness"]`；
+从地牢返回时恢复该层及其世界坐标、视口偏移、实体和地面物品。载入验证只在
+当前世界定义了荒野时允许这个保留 ID。save 容器保持 v1，State Hash Schema
+保持 v86。

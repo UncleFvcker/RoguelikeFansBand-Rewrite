@@ -4,16 +4,16 @@
   "descriptionKey": "item-demo-filthy-rag-description",
   "equipmentSlot": "body",
   "formatVersion": 1,
+  "generationLevel": 0,
   "glyph": "(",
   "id": "demo.item.filthy-rag",
   "maxStack": 1,
+  "mogaminatorRare": false,
   "nameKey": "item-demo-filthy-rag-name",
   "tags": [
     "armor",
     "equipment",
     "rfb-compatibility"
   ],
-  "generationLevel": 0,
-  "mogaminatorRare": false,
   "weightTenthsPound": 20
 }

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.kin-othrod-lord-of-the-orcs",
+  "descriptionKey": "ability-legacy-kin-othrod-lord-of-the-orcs-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.kin-othrod-lord-of-the-orcs",
+  "nameKey": "ability-legacy-kin-othrod-lord-of-the-orcs-name",
+  "tags": [
+    "legacy-import",
+    "summon"
+  ],
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  }
+}

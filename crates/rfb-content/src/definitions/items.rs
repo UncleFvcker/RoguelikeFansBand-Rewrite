@@ -60,6 +60,7 @@ pub enum EquipmentPassive {
     Regeneration,
     SeeInvisible,
     Vampiric,
+    HoldLife,
     SustainStrength,
     SustainIntelligence,
     SustainWisdom,

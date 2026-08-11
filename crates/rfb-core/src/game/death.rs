@@ -73,6 +73,7 @@ impl Game {
                 | MeleeBlowEffectDefinition::DrainAttributes { .. }
                 | MeleeBlowEffectDefinition::DrainResource { .. }
                 | MeleeBlowEffectDefinition::DrainExperience { .. }
+                | MeleeBlowEffectDefinition::Unlife { .. }
                 | MeleeBlowEffectDefinition::Bleeding { .. }
                 | MeleeBlowEffectDefinition::Blind { .. }
                 | MeleeBlowEffectDefinition::Confusion { .. }

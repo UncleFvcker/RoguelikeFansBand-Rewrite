@@ -4,19 +4,19 @@
   "descriptionKey": "item-demo-soft-leather-armour-description",
   "equipmentSlot": "body",
   "formatVersion": 1,
+  "generationLevel": 3,
   "glyph": "(",
   "id": "demo.item.soft-leather-armour",
   "maxStack": 1,
   "modifiers": {
     "defense": 4
   },
+  "mogaminatorRare": false,
   "nameKey": "item-demo-soft-leather-armour-name",
   "tags": [
     "armor",
     "equipment",
     "rfb-compatibility"
   ],
-  "generationLevel": 3,
-  "mogaminatorRare": false,
   "weightTenthsPound": 80
 }

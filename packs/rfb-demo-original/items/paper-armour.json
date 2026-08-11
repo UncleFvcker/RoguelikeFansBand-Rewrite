@@ -4,19 +4,19 @@
   "descriptionKey": "item-demo-paper-armour-description",
   "equipmentSlot": "body",
   "formatVersion": 1,
+  "generationLevel": 5,
   "glyph": "(",
   "id": "demo.item.paper-armour",
   "maxStack": 1,
   "modifiers": {
     "defense": 4
   },
+  "mogaminatorRare": false,
   "nameKey": "item-demo-paper-armour-name",
   "tags": [
     "armor",
     "equipment",
     "rfb-compatibility"
   ],
-  "generationLevel": 5,
-  "mogaminatorRare": false,
   "weightTenthsPound": 30
 }

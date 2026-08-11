@@ -4,6 +4,7 @@
   "descriptionKey": "item-demo-hatchet-description",
   "equipmentSlot": "weapon",
   "formatVersion": 1,
+  "generationLevel": 10,
   "glyph": "/",
   "id": "demo.item.hatchet",
   "maxStack": 1,
@@ -14,13 +15,12 @@
     "toDamage": 0,
     "toHit": 0
   },
+  "mogaminatorRare": false,
   "nameKey": "item-demo-hatchet-name",
   "tags": [
     "equipment",
     "rfb-compatibility",
     "weapon"
   ],
-  "generationLevel": 10,
-  "mogaminatorRare": false,
   "weightTenthsPound": 60
 }

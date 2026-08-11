@@ -1,6 +1,6 @@
 # Warrens 怪物机制实现清单
 
-状态：由 contract-v171 的 Warrens 生态对照建立；W1–W14 与 1–20 级分批同步已经完成，contract-v252 接入 `COLD_BLOOD` 与 Orc Cave 21–28 级的直接候选，contract-v253 增加 `audit-demo-monsters`、将 10 条地点范围不属于 Orc Cave 的记录保留为全局内容并移除其 `orc-cave` 归属，同时接入 29–32 级最后 45 条无需新机制的候选。contract-v254 完成元素跳跃、Hydra 分类召唤、Zoopi 凝胶方块召唤和 7 条相应记录；contract-v255 完成 VAMP 近战吸血并接入 3 条记录；contract-v256 完成 ANIM_DEAD 并接入 Arch-vile 与 Orc warlock；contract-v257 完成显式火焰、闪电、诅咒接触光环与目标 `POLYMORPH`；contract-v258 完成反击/恐惧光环、狸猫外观伪装与 `UNIQUE2` 伪唯一生命周期，并接入 7 条相应记录。当前审计剩余 7 条机制阻塞、28 条 Orc Cave 地点范围排除和 guardian 奥斯罗德；后续继续按账本机制簇推进。
+状态：由 contract-v171 的 Warrens 生态对照建立；W1–W14 与 Orc Cave O0–O7 均已完成。contract-v252–v259 依次收口 `COLD_BLOOD`、直接候选、元素跳跃、分类召唤、VAMP、ANIM_DEAD、接触光环、目标 `POLYMORPH`、O5 traits 与 `UNLIFE`；contract-v260 最终接入奥斯罗德、15–32 层、入口、偏好分配、深层掉落与战斗之戒奖励。审计中的 28 条地点范围排除继续保留，它们不是 Orc Cave 缺口；已导入的全局内容仍可用于其正确的野外或专属地牢位置。
 
 当前权威原版来源为 `master` Git ref 的 commit `efd63661302866038f58d8cd2553b23e6af3bf9d`。Warrens 在 `d_info.txt` 中为深度 1–9，主字形集合为 `kKyYrRfFcCbB`，并带有 `MONSTER_DIV_16`。本清单只记录该来源明确要求、而当前重写版还不能完整表达的机制，不把标签或近似行为标成已完成规则。
 

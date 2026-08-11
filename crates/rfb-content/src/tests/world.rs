@@ -593,7 +593,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         .iter()
         .filter(|actor| actor.tags.iter().any(|tag| tag == "orc-cave"))
         .collect::<Vec<_>>();
-    assert_eq!(orc_cave.len(), 191);
+    assert_eq!(orc_cave.len(), 194);
 
     for id in [
         "demo.actor.bunyip",
@@ -639,7 +639,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
     }
     assert_eq!(
         level_counts,
-        [16, 14, 12, 17, 24, 17, 18, 17, 18, 21, 7, 10]
+        [16, 14, 12, 17, 24, 17, 19, 17, 18, 21, 7, 12]
     );
 
     let mouse = artifact
@@ -3200,6 +3200,183 @@ fn orc_cave_o5_traits_keep_explicit_runtime_tags() {
 }
 
 #[test]
+fn orc_cave_o6_unlife_stays_separate_from_hp_damage() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actor = |id: &str| {
+        artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == format!("demo.actor.{id}"))
+            .unwrap_or_else(|| panic!("{id} should be imported"))
+    };
+
+    for id in ["vampire", "ghoulking"] {
+        assert!(
+            actor(id)
+                .melee_routine
+                .as_ref()
+                .into_iter()
+                .flat_map(|routine| &routine.blows)
+                .flat_map(|blow| &blow.effects)
+                .any(|effect| matches!(effect, MeleeBlowEffectDefinition::Unlife { .. })),
+            "{id} should retain its UNLIFE blow"
+        );
+    }
+}
+
+#[test]
+fn orc_cave_o7_binds_othrod_depths_ecology_and_final_reward() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let content = &artifact.content;
+    let othrod = content
+        .actors
+        .iter()
+        .find(|actor| actor.id == "demo.actor.othrod-lord-of-the-orcs")
+        .expect("Othrod should be imported");
+    assert_eq!(othrod.level, 32);
+    assert_eq!(othrod.glyph, "o");
+    assert!(othrod.tags.iter().any(|tag| tag == "orc"));
+    assert!(othrod.tags.iter().any(|tag| tag == "unique"));
+    assert!(othrod.tags.iter().any(|tag| tag == "kin-glyph-111"));
+    assert_eq!(
+        othrod
+            .melee_routine
+            .as_ref()
+            .expect("Othrod should retain four melee blows")
+            .blows
+            .len(),
+        4
+    );
+    assert!(
+        othrod
+            .monster_casting
+            .as_ref()
+            .expect("Othrod should summon orc kin")
+            .abilities
+            .iter()
+            .any(|ability| ability.ability_id == "rfb-legacy.ability.kin-othrod-lord-of-the-orcs")
+    );
+
+    let world = content
+        .worlds
+        .iter()
+        .find(|world| world.id == "demo.world.middle-earth")
+        .expect("Middle-earth should exist");
+    let dungeon = world
+        .dungeons
+        .iter()
+        .find(|dungeon| dungeon.id == "demo.dungeon.orc-cave")
+        .expect("Orc Cave should be active");
+    assert_eq!(dungeon.legacy_index, Some(3));
+    assert_eq!(dungeon.root_floor_id, "demo.floor.orc-cave-depth-15");
+    assert_eq!(
+        dungeon.guardian_actor_kind_id,
+        "demo.actor.othrod-lord-of-the-orcs"
+    );
+    assert!(
+        world
+            .wilderness
+            .as_ref()
+            .expect("Middle-earth should retain wilderness")
+            .locations
+            .iter()
+            .any(|location| matches!(
+                location,
+                WildernessLocationDefinition::Dungeon {
+                    position: ContentPosition { x: 30, y: 45 },
+                    dungeon_id,
+                } if dungeon_id == "demo.dungeon.orc-cave"
+            ))
+    );
+
+    let mut floors = world
+        .procedural_floors
+        .iter()
+        .filter(|floor| floor.dungeon_id.as_deref() == Some("demo.dungeon.orc-cave"))
+        .collect::<Vec<_>>();
+    floors.sort_by_key(|floor| floor.depth);
+    assert_eq!(floors.len(), 18);
+    assert_eq!(floors.first().map(|floor| floor.depth), Some(15));
+    assert_eq!(floors.last().map(|floor| floor.depth), Some(32));
+    assert!(
+        floors
+            .iter()
+            .all(|floor| (floor.width, floor.height) == (96, 33))
+    );
+    assert!(floors.windows(2).all(|pair| {
+        pair[0].next_floor_id.as_deref() == Some(pair[1].id.as_str())
+            && pair[1].return_floor_id == pair[0].id
+    }));
+    assert_eq!(
+        floors[0].entry_terrain_id.as_deref(),
+        Some("demo.terrain.orc-cave-entrance")
+    );
+    let final_floor = floors.last().expect("Orc Cave should have a final floor");
+    assert!(final_floor.final_floor);
+    let guardian = final_floor
+        .guardian
+        .as_ref()
+        .expect("depth 32 should contain Othrod");
+    assert_eq!(guardian.instance_id, "demo.guardian.orc-cave.1");
+    assert_eq!(
+        guardian.reward_loot_table_id.as_deref(),
+        Some("demo.loot-table.orc-cave-final-reward")
+    );
+
+    let policy = content
+        .encounter_tables
+        .iter()
+        .find(|table| table.id == "demo.encounter-table.orc-cave")
+        .and_then(|table| table.global_allocation.as_ref())
+        .expect("Orc Cave should use global allocation");
+    assert_eq!(policy.special_div, 16);
+    assert_eq!(policy.ambient_chance_one_in, 160);
+    assert_eq!(
+        policy
+            .preferred_tags
+            .iter()
+            .map(String::as_str)
+            .collect::<BTreeSet<_>>(),
+        ["animal", "orc", "troll"].into_iter().collect()
+    );
+    assert_eq!(
+        policy
+            .preferred_glyphs
+            .iter()
+            .map(String::as_str)
+            .collect::<BTreeSet<_>>(),
+        ["o", "O", "T", "C"].into_iter().collect()
+    );
+
+    let reward = content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.orc-cave-final-reward")
+        .expect("Othrod should have a fixed reward table");
+    assert_eq!(reward.entries[0].item_kind_id, "demo.item.ring");
+    assert_eq!(
+        reward.affix_weights[0].affix_id.as_deref(),
+        Some("rfb-legacy.affix.combat")
+    );
+    let combat = content
+        .affixes
+        .iter()
+        .find(|affix| affix.id == "rfb-legacy.affix.combat")
+        .expect("the Combat ego should be imported");
+    assert_eq!(combat.roll_groups.len(), 1);
+    assert_eq!(combat.roll_groups[0].rolls, 3);
+    assert_eq!(
+        combat.roll_groups[0]
+            .candidates
+            .iter()
+            .map(|candidate| candidate.weight)
+            .sum::<u32>(),
+        100
+    );
+}
+
+#[test]
 fn p40_chameleon_retains_the_authoritative_form_change_marker() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let chameleon = artifact
@@ -3305,6 +3482,10 @@ fn outpost_has_walls_inner_shops_and_an_exterior_warrens_entrance() {
                 position: ContentPosition { x: 28, y: 52 },
                 dungeon_id: "demo.dungeon.warrens".to_owned(),
             },
+            WildernessLocationDefinition::Dungeon {
+                position: ContentPosition { x: 30, y: 45 },
+                dungeon_id: "demo.dungeon.orc-cave".to_owned(),
+            },
         ]
     );
     let anambar = artifact
@@ -3384,7 +3565,7 @@ fn outpost_has_walls_inner_shops_and_an_exterior_warrens_entrance() {
         world
             .procedural_floors
             .iter()
-            .filter(|floor| floor.lifecycle == FloorLifecycle::Dungeon)
+            .filter(|floor| floor.dungeon_id.as_deref() == Some("demo.dungeon.warrens"))
             .all(|floor| (floor.width, floor.height) == (66, 22))
     );
     let expected_fortifications = (22..=66)

@@ -4,19 +4,19 @@
   "descriptionKey": "item-demo-pair-of-hard-leather-boots-description",
   "equipmentSlot": "boots",
   "formatVersion": 1,
+  "generationLevel": 5,
   "glyph": "]",
   "id": "demo.item.pair-of-hard-leather-boots",
   "maxStack": 1,
   "modifiers": {
     "defense": 3
   },
+  "mogaminatorRare": false,
   "nameKey": "item-demo-pair-of-hard-leather-boots-name",
   "tags": [
     "armor",
     "equipment",
     "rfb-compatibility"
   ],
-  "generationLevel": 5,
-  "mogaminatorRare": false,
   "weightTenthsPound": 40
 }

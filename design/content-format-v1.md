@@ -500,3 +500,20 @@ Suke-san、Kaku-san 与 Silver Angel，当前包包含 49 种地形、618 种 ac
 物品、271 个能力和 13 张 loot table；严格同步 571 条，内容 hash 为
 `1c7fdbf5023bd0ad898d8b828e024350f53d40c99a49b0bc7f8c58000fcffa2d`。协议保持
 1.170，State Hash Schema 保持 v85。
+
+contract-v259 / 包 1.250.0 增加怪物近战 `unlife`，以独立生命力事务替代 HP、暗影
+伤害或经验吸取近似；装备 passive 同时支持 `hold-life`。成功吸取后怪物实例的
+`powerPerMille` 持久提高，并统一影响派生攻防、近战效果和怪物能力伤害。新增 Vampire
+与 Ghoulking，以及 Ghoulking 的亡灵召唤能力。当前包包含 49 种地形、620 种 actor、
+255 种物品、272 个能力和 13 张 loot table；严格同步 573 条，内容 hash 为
+`fb79eaccc3e80ef67093237baf089ba53beb53701e9ae91723298be8b538a94a`。协议升至
+1.171，State Hash Schema 升至 v86。
+
+contract-v260 / 包 1.251.0 激活 Orc Cave dungeon 3：在 `(30,45)` 合成独立荒野
+入口，建立 15–32 层与 `oOTC`、animal/orc/troll、`MONSTER_DIV_16` 全局分配策略。
+新增奥斯罗德、裸 Ring、`of Combat` 三次物化 roll、深层普通/warrior/final loot 表；
+守关死亡只征服 Orc Cave，不改变 Warrens campaign 胜利条件。当前包包含 50 种地形、
+621 种 actor、256 种物品、273 个能力、5 个 affix、2 张 encounter table 和 16 张
+loot table；严格同步 574 条，content hash 为
+`587db0f265c15d2714c238bb7a0cac4c18c8efa3efd55151bd379a4f1c6bf64f`。协议保持
+1.171，State Hash Schema 保持 v86。

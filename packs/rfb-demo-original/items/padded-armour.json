@@ -4,19 +4,19 @@
   "descriptionKey": "item-demo-padded-armour-description",
   "equipmentSlot": "body",
   "formatVersion": 1,
+  "generationLevel": 2,
   "glyph": "(",
   "id": "demo.item.padded-armour",
   "maxStack": 1,
   "modifiers": {
     "defense": 5
   },
+  "mogaminatorRare": false,
   "nameKey": "item-demo-padded-armour-name",
   "tags": [
     "armor",
     "equipment",
     "rfb-compatibility"
   ],
-  "generationLevel": 2,
-  "mogaminatorRare": false,
   "weightTenthsPound": 60
 }

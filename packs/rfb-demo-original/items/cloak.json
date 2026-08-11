@@ -4,19 +4,19 @@
   "descriptionKey": "item-demo-cloak-description",
   "equipmentSlot": "cloak",
   "formatVersion": 1,
+  "generationLevel": 1,
   "glyph": "(",
   "id": "demo.item.cloak",
   "maxStack": 1,
   "modifiers": {
     "defense": 1
   },
+  "mogaminatorRare": false,
   "nameKey": "item-demo-cloak-name",
   "tags": [
     "armor",
     "equipment",
     "rfb-compatibility"
   ],
-  "generationLevel": 1,
-  "mogaminatorRare": false,
   "weightTenthsPound": 10
 }

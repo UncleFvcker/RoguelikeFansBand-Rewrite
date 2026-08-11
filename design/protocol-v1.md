@@ -516,3 +516,10 @@ Schema 仍为 v85，save 容器仍为 v1。
 contract-v258 的反击/恐惧光环、狸猫外观和 `UNIQUE2` 生命周期均复用现有 DTO；
 恐惧光环只产生通用事件，狸猫继续使用 `appearanceKindId`。协议保持 1.170，State
 Hash Schema 保持 v85，save 容器保持 v1。
+
+协议 1.171 / contract-v259 为 `ActorSaveDto` 增加默认 1000、常态省略的
+`powerPerMille`，保存 UNLIFE 对怪物造成的永久强度变化；Actor 投影继续按派生属性
+显示结果，不暴露第二套战斗 DTO。装备 passive 增加 `hold-life`，供生命力吸取前的
+逐来源豁免使用。生命力仍复用现有 `CharacterProgress.lifeForce`，但现在参与最大生命
+派生与当前生命同比例缩放。State Hash Schema 升至 v86，save 容器保持 v1；旧开发
+存档不作为兼容边界。完整边界见 [Contract v259](contract-v259-orc-cave-unlife.md)。

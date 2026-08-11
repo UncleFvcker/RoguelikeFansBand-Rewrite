@@ -4,9 +4,11 @@
   "descriptionKey": "item-demo-short-bow-description",
   "equipmentSlot": "launcher",
   "formatVersion": 1,
+  "generationLevel": 10,
   "glyph": "}",
   "id": "demo.item.short-bow",
   "maxStack": 1,
+  "mogaminatorRare": false,
   "nameKey": "item-demo-short-bow-name",
   "projectileProfile": {
     "ammunitionType": "arrow",
@@ -20,7 +22,5 @@
     "launcher",
     "rfb-compatibility"
   ],
-  "generationLevel": 10,
-  "mogaminatorRare": false,
   "weightTenthsPound": 30
 }

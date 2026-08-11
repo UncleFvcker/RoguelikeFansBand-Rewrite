@@ -99,6 +99,7 @@
   "role": "monster",
   "speed": 110,
   "tags": [
+    "kin-glyph-72",
     "legacy-import",
     "mount",
     "warrens"

@@ -4,19 +4,19 @@
   "descriptionKey": "item-demo-robe-description",
   "equipmentSlot": "body",
   "formatVersion": 1,
+  "generationLevel": 1,
   "glyph": "(",
   "id": "demo.item.robe",
   "maxStack": 1,
   "modifiers": {
     "defense": 2
   },
+  "mogaminatorRare": false,
   "nameKey": "item-demo-robe-name",
   "tags": [
     "armor",
     "equipment",
     "rfb-compatibility"
   ],
-  "generationLevel": 1,
-  "mogaminatorRare": false,
   "weightTenthsPound": 20
 }

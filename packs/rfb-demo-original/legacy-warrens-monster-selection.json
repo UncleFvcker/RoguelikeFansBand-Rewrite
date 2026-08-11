@@ -3438,6 +3438,24 @@
       "id": "silver-angel",
       "tags": ["orc-cave"],
       "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 432,
+      "id": "vampire",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 483,
+      "id": "ghoulking",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_HOLD_LIFE"]
+    },
+    {
+      "sourceIndex": 1185,
+      "id": "othrod-lord-of-the-orcs",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
     }
   ]
 }

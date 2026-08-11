@@ -517,3 +517,5 @@ message-item-use-crafting = { $source } crafts { $target } with { $affix }.
 message-item-use-rumour = { $source } reads: “{ $rumour }”
 message-monster-warding-glyph-held = The glyph of warding repels { $source }.
 message-monster-warding-glyph-broken = { $source } breaks the glyph of warding.
+monster-unlife-drained = { $source } drains { $amount } life force and grows stronger.
+monster-unlife-weakened = { $source } drains { $amount } power from { $target }.

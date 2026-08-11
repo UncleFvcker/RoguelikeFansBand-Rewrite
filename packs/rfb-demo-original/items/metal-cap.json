@@ -4,19 +4,19 @@
   "descriptionKey": "item-demo-metal-cap-description",
   "equipmentSlot": "head",
   "formatVersion": 1,
+  "generationLevel": 10,
   "glyph": "]",
   "id": "demo.item.metal-cap",
   "maxStack": 1,
   "modifiers": {
     "defense": 3
   },
+  "mogaminatorRare": false,
   "nameKey": "item-demo-metal-cap-name",
   "tags": [
     "armor",
     "equipment",
     "rfb-compatibility"
   ],
-  "generationLevel": 10,
-  "mogaminatorRare": false,
   "weightTenthsPound": 20
 }

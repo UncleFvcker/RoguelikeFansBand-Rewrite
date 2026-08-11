@@ -9,12 +9,20 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.170";
+pub const PROTOCOL_VERSION: &str = "1.171";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
 const fn default_actor_speed() -> u16 {
     110
+}
+
+const fn default_actor_power_per_mille() -> u16 {
+    1_000
+}
+
+fn is_default_actor_power_per_mille(value: &u16) -> bool {
+    *value == default_actor_power_per_mille()
 }
 
 pub const PLAYER_NUTRITION_MAXIMUM: u16 = 15_000;
@@ -521,6 +529,7 @@ pub enum EquipmentPassiveDto {
     Regeneration,
     SeeInvisible,
     Vampiric,
+    HoldLife,
     SustainStrength,
     SustainIntelligence,
     SustainWisdom,
@@ -539,14 +548,14 @@ where
             "regeneration" => Some(Ok(EquipmentPassiveDto::Regeneration)),
             "see-invisible" => Some(Ok(EquipmentPassiveDto::SeeInvisible)),
             "vampiric" => Some(Ok(EquipmentPassiveDto::Vampiric)),
+            "hold-life" => Some(Ok(EquipmentPassiveDto::HoldLife)),
             "sustain-strength" => Some(Ok(EquipmentPassiveDto::SustainStrength)),
             "sustain-intelligence" => Some(Ok(EquipmentPassiveDto::SustainIntelligence)),
             "sustain-wisdom" => Some(Ok(EquipmentPassiveDto::SustainWisdom)),
             "sustain-dexterity" => Some(Ok(EquipmentPassiveDto::SustainDexterity)),
             "sustain-constitution" => Some(Ok(EquipmentPassiveDto::SustainConstitution)),
             "sustain-charisma" => Some(Ok(EquipmentPassiveDto::SustainCharisma)),
-            "telepathy" | "levitation" | "hold-life" | "blessed" | "easy-spell"
-            | "device-power" => None,
+            "telepathy" | "levitation" | "blessed" | "easy-spell" | "device-power" => None,
             _ => Some(Err(serde::de::Error::custom(format!(
                 "unknown rolled affix passive `{passive}`"
             )))),
@@ -3544,6 +3553,11 @@ pub struct ActorSaveDto {
     pub hp: i32,
     #[serde(default)]
     pub max_hp: i32,
+    #[serde(
+        default = "default_actor_power_per_mille",
+        skip_serializing_if = "is_default_actor_power_per_mille"
+    )]
+    pub power_per_mille: u16,
     #[serde(default = "default_actor_speed")]
     pub base_speed: u16,
     #[serde(default = "default_monster_energy_need")]
@@ -4246,6 +4260,7 @@ mod tests {
         assert_eq!(
             migrated.passives,
             [
+                EquipmentPassiveDto::HoldLife,
                 EquipmentPassiveDto::Regeneration,
                 EquipmentPassiveDto::SustainStrength,
                 EquipmentPassiveDto::SustainIntelligence,

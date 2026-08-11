@@ -24,6 +24,7 @@ use super::tasks::{
     task_initial_state, task_objectives, task_resolution_for_departure, task_state_after_departure,
     task_succeeded,
 };
+use super::wilderness;
 use super::{
     DungeonState, Game, chebyshev_distance, initial_item_curse, initial_item_runtime_state,
 };
@@ -570,8 +571,11 @@ impl Game {
             .procedural_floors
             .iter()
             .find(|floor| floor.id == target.floor_id);
-        let from_floor_id = source_floor_id.unwrap_or(&self.current_floor_id).to_owned();
-        if from_floor_id == *initial_floor_id
+        let logical_from_floor_id = source_floor_id.unwrap_or(&self.current_floor_id).to_owned();
+        let continuous_wilderness_source = self.is_wilderness_floor()
+            && logical_from_floor_id == *initial_floor_id
+            && self.current_town().is_none();
+        if logical_from_floor_id == *initial_floor_id
             && let Some(target_floor) =
                 target_definition.filter(|floor| floor.lifecycle == FloorLifecycle::Dungeon)
         {
@@ -612,7 +616,7 @@ impl Game {
         let source_definition = world
             .procedural_floors
             .iter()
-            .find(|floor| floor.id == from_floor_id);
+            .find(|floor| floor.id == logical_from_floor_id);
         let mut retained_instance_action = RetainedInstanceAction::None;
         let mut allocated_dungeon_instance = None;
         let target_dungeon_instance_id = if let Some(target_floor) =
@@ -632,7 +636,7 @@ impl Game {
                 .is_some_and(|source| source.dungeon_id.as_deref() == Some(dungeon_id))
             {
                 from_dungeon_instance_id.clone()
-            } else if from_floor_id == *initial_floor_id {
+            } else if logical_from_floor_id == *initial_floor_id {
                 let (action, retained_instance_id) = plan_retained_instance_action(
                     dungeon_id,
                     lifecycle,
@@ -740,10 +744,26 @@ impl Game {
                 }
             });
 
+        let from_floor_id = if continuous_wilderness_source {
+            self.current_floor_id.clone()
+        } else {
+            logical_from_floor_id
+        };
         let from_storage_key =
             dungeon_instance_storage_key(from_dungeon_instance_id.as_deref(), &from_floor_id);
-        let target_storage_key =
-            dungeon_instance_storage_key(target_dungeon_instance_id.as_deref(), &target.floor_id);
+        let target_storage_floor_id = if target.floor_id == *initial_floor_id
+            && self
+                .stored_floors
+                .contains_key(wilderness::WILDERNESS_FLOOR_ID)
+        {
+            wilderness::WILDERNESS_FLOOR_ID
+        } else {
+            target.floor_id.as_str()
+        };
+        let target_storage_key = dungeon_instance_storage_key(
+            target_dungeon_instance_id.as_deref(),
+            target_storage_floor_id,
+        );
         if !self.stored_floors.contains_key(&target_storage_key) && target_definition.is_none() {
             return Err(CoreError::InvalidSave("return floor state is missing"));
         }
@@ -856,6 +876,10 @@ impl Game {
             .flatten();
         let source_floor_id = embedded_town_floor_id
             .as_deref()
+            .or_else(|| {
+                self.is_wilderness_floor()
+                    .then_some(world.initial_floor_id.as_str())
+            })
             .unwrap_or(&self.current_floor_id);
         let Some(target) = stair_transition_target(
             world,
@@ -895,8 +919,10 @@ impl Game {
                 return Ok(None);
             }
         }
+        let planning_source_floor_id =
+            (source_floor_id != self.current_floor_id).then_some(source_floor_id);
         let Some(plan) =
-            self.plan_floor_transition(target, abandon_task, embedded_town_floor_id.as_deref())?
+            self.plan_floor_transition(target, abandon_task, planning_source_floor_id)?
         else {
             return Ok(None);
         };

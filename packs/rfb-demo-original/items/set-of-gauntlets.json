@@ -8,19 +8,19 @@
   },
   "equipmentSlot": "gloves",
   "formatVersion": 1,
+  "generationLevel": 10,
   "glyph": "]",
   "id": "demo.item.set-of-gauntlets",
   "maxStack": 1,
   "modifiers": {
     "defense": 4
   },
+  "mogaminatorRare": false,
   "nameKey": "item-demo-set-of-gauntlets-name",
   "tags": [
     "armor",
     "equipment",
     "rfb-compatibility"
   ],
-  "generationLevel": 10,
-  "mogaminatorRare": false,
   "weightTenthsPound": 20
 }

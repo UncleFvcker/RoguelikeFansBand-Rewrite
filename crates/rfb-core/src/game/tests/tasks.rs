@@ -909,3 +909,128 @@ fn warrens_dungeon_conquest_returns_retires_and_round_trips() {
         CampaignStatusDto::Retired
     );
 }
+
+#[test]
+fn orc_cave_guardian_conquest_reward_and_surface_return_round_trip() {
+    let mut game =
+        Game::new_with_build(1185, "demo.build.warrior").expect("Middle-earth should create");
+    game.player
+        .resistances
+        .set(DamageType::Physical, ResistanceLevel::Immune);
+
+    dispatch_next(
+        &mut game,
+        GameCommand::EnterWorldMap {
+            leave_pets: false,
+            cancel_recall: false,
+        },
+    );
+    game.wilderness_position = Some(Position { x: 30, y: 45 });
+    dispatch_next(&mut game, GameCommand::LeaveWorldMap);
+    assert_eq!(game.current_floor_id, wilderness::WILDERNESS_FLOOR_ID);
+    place_player_on_terrain(&mut game, "demo.terrain.orc-cave-entrance");
+
+    for depth in 15..=32 {
+        let update = dispatch_next(&mut game, GameCommand::TraverseStairs);
+        assert_eq!(
+            update.floor_id,
+            format!("demo.floor.orc-cave-depth-{depth}")
+        );
+        assert_eq!(update.campaign.status, CampaignStatusDto::Active);
+        if depth < 32 {
+            game.entities.clear();
+            place_player_on_terrain(&mut game, "demo.terrain.stairs-down");
+        }
+    }
+
+    let guardian_index = game
+        .entities
+        .iter()
+        .position(|entity| entity.id == "demo.guardian.orc-cave.1")
+        .expect("Orc Cave depth 32 should spawn Othrod");
+    assert_eq!(
+        game.entities[guardian_index].kind_id,
+        "demo.actor.othrod-lord-of-the-orcs"
+    );
+    let guardian_position = game.entities[guardian_index].position;
+    let item_ids_before_guardian = game
+        .items
+        .iter()
+        .map(|item| item.id.clone())
+        .collect::<BTreeSet<_>>();
+    game.entities[guardian_index].hp = 1;
+    game.entities[guardian_index].statuses = vec![StatusInstance {
+        kind_id: STATUS_POISON.to_owned(),
+        intensity: 3,
+        remaining_ticks: 1,
+        source_id: Some(game.player.id.clone()),
+        granted_resistances: BTreeMap::new(),
+        granted_brands: BTreeSet::new(),
+        granted_modifiers: StatModifiersDto::default(),
+        granted_equipment_bonuses: EquipmentBonusesDto::default(),
+        granted_status_immunities: BTreeSet::new(),
+        granted_race_id: None,
+        grants_wall_passage: false,
+        incoming_damage_percent: 100,
+    }];
+
+    let conquered = dispatch_next(&mut game, GameCommand::Wait);
+    assert!(
+        conquered
+            .events
+            .iter()
+            .any(|event| event.kind == "dungeon.guardian-defeated")
+    );
+    assert!(
+        conquered
+            .events
+            .iter()
+            .all(|event| event.kind != "campaign.victorious")
+    );
+    assert_eq!(conquered.campaign.status, CampaignStatusDto::Active);
+    assert_eq!(conquered.campaign.conquered_dungeons, 1);
+    assert_eq!(conquered.campaign.score, 10_000);
+    assert!(game.dungeon_states["demo.dungeon.orc-cave"].guardian_defeated);
+
+    let combat_ring = game
+        .items
+        .iter()
+        .filter(|item| !item_ids_before_guardian.contains(&item.id))
+        .find(|item| item.kind_id == "demo.item.ring")
+        .expect("Othrod should drop the fixed Combat ring");
+    assert_eq!(
+        combat_ring.location,
+        ItemLocation::Ground(guardian_position)
+    );
+    assert_eq!(combat_ring.quality, ItemQualityDto::Fine);
+    assert_eq!(combat_ring.affix_ids, ["rfb-legacy.affix.combat"]);
+    assert_eq!(combat_ring.rolled_affixes.len(), 1);
+    assert_eq!(
+        combat_ring.rolled_affixes[0].affix_id,
+        "rfb-legacy.affix.combat"
+    );
+
+    let conquered_hash = game.state_hash();
+    let mut restored = Game::from_save(game.to_save()).expect("Orc Cave should round-trip");
+    assert_eq!(restored.state_hash(), conquered_hash);
+    assert!(restored.dungeon_states["demo.dungeon.orc-cave"].guardian_defeated);
+
+    restored.entities.clear();
+    for expected_depth in (15..=31).rev() {
+        place_player_on_terrain(&mut restored, "demo.terrain.stairs-up");
+        let update = dispatch_next(&mut restored, GameCommand::TraverseStairs);
+        assert_eq!(
+            update.floor_id,
+            format!("demo.floor.orc-cave-depth-{expected_depth}")
+        );
+        restored.entities.clear();
+    }
+    place_player_on_terrain(&mut restored, "demo.terrain.stairs-up");
+    let surface = dispatch_next(&mut restored, GameCommand::TraverseStairs);
+    assert_eq!(surface.floor_id, wilderness::WILDERNESS_FLOOR_ID);
+    assert_eq!(
+        restored.wilderness_position,
+        Some(Position { x: 30, y: 45 })
+    );
+    assert_eq!(surface.campaign.status, CampaignStatusDto::Active);
+}

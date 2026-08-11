@@ -334,8 +334,7 @@ struct DemoWildernessSelection {
     towns: Vec<DemoWildernessLocationSelection>,
     dungeons: Vec<DemoWildernessLocationSelection>,
     town_plans: Vec<DemoWildernessTownPlan>,
-    planned_dungeons: Vec<DemoWildernessDungeonPlan>,
-    gaps: DemoWildernessGapPlan,
+    dungeon_plans: Vec<DemoWildernessDungeonPlan>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -427,38 +426,6 @@ struct DemoDungeonGuardianPlan {
 struct DemoDungeonObjectPlan {
     tval: u16,
     sval: u16,
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-struct DemoWildernessGapPlan {
-    orc_cave_monsters: DemoDungeonMonsterGap,
-    orc_cave_rewards: Vec<DemoDungeonRewardGap>,
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-struct DemoDungeonMonsterGap {
-    minimum_level: u16,
-    maximum_level: u16,
-    status: DemoWildernessGapStatus,
-}
-
-#[derive(Debug, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
-#[serde(rename_all = "kebab-case")]
-enum DemoWildernessGapStatus {
-    Deferred,
-    AuditRequired,
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-struct DemoDungeonRewardGap {
-    kind: String,
-    source_index: Option<u32>,
-    tval: Option<u16>,
-    sval: Option<u16>,
-    status: DemoWildernessGapStatus,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -3508,6 +3475,7 @@ fn demo_item_json(
     ammo: &LauncherAmmoIndex,
 ) -> Result<serde_json::Value, LegacyImportError> {
     let shape = item_shape(entry.tval).expect("every tval resolves a shape");
+    let bare_jewelry = matches!(shape.slot, Some("ring" | "amulet"));
     let ordinary_equipment = matches!(
         shape.slot,
         Some(
@@ -3521,22 +3489,26 @@ fn demo_item_json(
                 | "tool"
                 | "container"
                 | "launcher"
+                | "ring"
         )
     );
     if (!ordinary_equipment && !shape.tags_contain("ammunition"))
-        || shape.behavior_gap.is_some()
+        || (shape.behavior_gap.is_some() && !bare_jewelry)
         || fixed_consumable_use_action_with_terrain(entry, None).is_some()
         || legacy_device_generation(entry).is_some()
         || player_ability_book_for_item(entry).is_some()
     {
         return Err(LegacyImportError::InvalidDemoItemSelection(format!(
-            "{id} is not a behavior-complete ordinary weapon or armor item"
+            "{id} is not a behavior-complete ordinary equipment or ammunition item"
         )));
     }
 
     let mut report = ContentImportReport::default();
     let mut value = item_json_with_terrain(entry, id, ammo, None, None, &mut report);
     report.unmapped_item_flags.remove("TOWN");
+    if bare_jewelry {
+        report.item_behavior_gaps.remove("effect-jewelry");
+    }
     if !report.item_behavior_gaps.is_empty() || !report.unmapped_item_flags.is_empty() {
         return Err(LegacyImportError::InvalidDemoItemSelection(format!(
             "{id} still has import gaps"
@@ -4055,6 +4027,7 @@ fn equipment_fold(flags: &[String], pval: i32) -> EquipmentFold {
         ("REGEN", "regeneration"),
         ("SEE_INVIS", "see-invisible"),
         ("BRAND_VAMP", "vampiric"),
+        ("HOLD_LIFE", "hold-life"),
         ("SUST_STR", "sustain-strength"),
         ("SUST_INT", "sustain-intelligence"),
         ("SUST_WIS", "sustain-wisdom"),
@@ -4222,11 +4195,30 @@ fn apply_ego_roll_recipe(value: &mut serde_json::Value, entry: &LegacyEgoEntry) 
             "rolls": 1,
             "candidates": speed_roll_candidates(entry.index == 209),
         })],
+        // `of Combat` jewelry rolls fighting attributes, accuracy, damage,
+        // or fear resistance. Three materialized rolls preserve that mix for
+        // the Orc Cave guardian reward without adding an item-only runtime.
+        206 => vec![serde_json::json!({
+            "rolls": 3,
+            "candidates": combat_ring_roll_candidates(),
+        })],
         _ => Vec::new(),
     };
     if !groups.is_empty() {
         value["rollGroups"] = serde_json::Value::Array(groups);
     }
+}
+
+fn combat_ring_roll_candidates() -> Vec<serde_json::Value> {
+    vec![
+        serde_json::json!({"weight": 10, "properties": {"modifiers": {"constitution": 1}}}),
+        serde_json::json!({"weight": 10, "properties": {"modifiers": {"dexterity": 1}}}),
+        serde_json::json!({"weight": 10, "properties": {"modifiers": {"strength": 1}}}),
+        serde_json::json!({"weight": 20, "properties": {"equipmentBonuses": {"meleeSkill": 5}}}),
+        serde_json::json!({"weight": 20, "properties": {"equipmentBonuses": {"meleeDamage": 5}}}),
+        serde_json::json!({"weight": 20, "properties": {"equipmentBonuses": {"meleeSkill": 4, "meleeDamage": 4}}}),
+        serde_json::json!({"weight": 10, "properties": {"statusImmunities": ["rfb.status.fear"]}}),
+    ]
 }
 
 fn slaying_roll_candidates() -> Vec<serde_json::Value> {
@@ -6900,6 +6892,14 @@ fn melee_effect_json(effect: &LegacyBlowEffect) -> Option<serde_json::Value> {
                 "amountSides": amount_sides.clamp(1, 10_000),
             })
         }
+        "UNLIFE" => {
+            let (amount_dice, amount_sides) = effect.dice?;
+            serde_json::json!({
+                "type": "unlife",
+                "amountDice": amount_dice.clamp(1, 100),
+                "amountSides": amount_sides.clamp(1, 10_000),
+            })
+        }
         "LOSE_STR" | "LOSE_INT" | "LOSE_WIS" | "LOSE_DEX" | "LOSE_CON" | "LOSE_CHR"
         | "LOSE_ALL" => {
             let attributes: &[&str] = match effect.token.as_str() {
@@ -8197,6 +8197,9 @@ fn demo_monster_json(
 
     let mut tags = selection.tags.iter().cloned().collect::<BTreeSet<_>>();
     tags.insert("legacy-import".to_owned());
+    if let Some(glyph) = entry.glyph {
+        tags.insert(format!("kin-glyph-{}", u32::from(glyph)));
+    }
     if entry.glyph == Some('M') {
         tags.insert("hydra".to_owned());
     }
@@ -8283,9 +8286,16 @@ fn demo_monster_json(
     }
     if let Some(death_drop) = value.get_mut("deathDrop") {
         if death_drop.get("itemTableId").is_some() {
-            death_drop["itemTableId"] = serde_json::json!(DEMO_DROP_TABLE_ID);
+            death_drop["itemTableId"] = serde_json::json!(if entry.index == 1185 {
+                "demo.loot-table.orc-cave"
+            } else {
+                DEMO_DROP_TABLE_ID
+            });
         }
-        if let Some(theme_table_id) = entry
+        if entry.index == 1185 {
+            death_drop["themeTableId"] = serde_json::json!("demo.loot-table.orc-cave-warrior");
+            death_drop["themeChancePercent"] = serde_json::json!(50);
+        } else if let Some(theme_table_id) = entry
             .drop_theme
             .as_deref()
             .and_then(demo_drop_theme_table_id)
@@ -8796,9 +8806,13 @@ fn map_summon_spell_token(
         let caster_tail = caster_kind_id.rsplit('.').next()?;
         let suffix = format!("kin-{caster_tail}");
         let id = format!("rfb-legacy.ability.{suffix}");
-        abilities
-            .entry(id.clone())
-            .or_insert_with(|| summon_kin_ability(&suffix, caster_kind_id));
+        abilities.entry(id.clone()).or_insert_with(|| {
+            if caster_tail == "othrod-lord-of-the-orcs" {
+                summon_category_ability(&suffix, "kin-glyph-111", u32::from(level), 1, 1, 1)
+            } else {
+                summon_kin_ability(&suffix, caster_kind_id)
+            }
+        });
         return Some(id);
     }
     let (category, default_dice) = summon_spell_defaults(base)?;
@@ -10764,7 +10778,7 @@ fn validate_demo_wilderness_plans(
         &read_legacy_object_at(source, source_commit, R_NAME_ZH_SOURCE)?,
         R_NAME_ZH_SOURCE,
     )?;
-    for dungeon in &selection.planned_dungeons {
+    for dungeon in &selection.dungeon_plans {
         let record = dungeons.get(&dungeon.source_index).ok_or_else(|| {
             invalid_wilderness_selection(format!(
                 "unknown planned dungeon index {}",
@@ -10848,74 +10862,6 @@ fn validate_demo_wilderness_plans(
         }
     }
 
-    validate_demo_wilderness_gaps(selection)
-}
-
-fn validate_demo_wilderness_gaps(
-    selection: &DemoWildernessSelection,
-) -> Result<(), LegacyImportError> {
-    let orc_cave = selection
-        .planned_dungeons
-        .iter()
-        .find(|dungeon| dungeon.id == "demo.dungeon.orc-cave")
-        .ok_or_else(|| invalid_wilderness_selection("missing planned Orc Cave"))?;
-    let gaps = &selection.gaps;
-    if gaps.orc_cave_monsters.minimum_level != 21
-        || gaps.orc_cave_monsters.maximum_level != orc_cave.maximum_depth
-        || gaps.orc_cave_monsters.status != DemoWildernessGapStatus::Deferred
-    {
-        return Err(invalid_wilderness_selection(
-            "Orc Cave monster gap must defer source levels 21 through 32",
-        ));
-    }
-    let reward_gaps = gaps
-        .orc_cave_rewards
-        .iter()
-        .map(|gap| {
-            (
-                gap.kind.as_str(),
-                gap.source_index,
-                gap.tval,
-                gap.sval,
-                &gap.status,
-            )
-        })
-        .collect::<BTreeSet<_>>();
-    let expected_reward_gaps = BTreeSet::from([
-        (
-            "dungeon-loot",
-            None,
-            None,
-            None,
-            &DemoWildernessGapStatus::AuditRequired,
-        ),
-        (
-            "guardian",
-            Some(orc_cave.guardian.source_index),
-            None,
-            None,
-            &DemoWildernessGapStatus::Deferred,
-        ),
-        (
-            "final-object",
-            None,
-            Some(orc_cave.final_object.tval),
-            Some(orc_cave.final_object.sval),
-            &DemoWildernessGapStatus::Deferred,
-        ),
-        (
-            "final-ego",
-            Some(orc_cave.final_ego_source_index),
-            None,
-            None,
-            &DemoWildernessGapStatus::Deferred,
-        ),
-    ]);
-    if reward_gaps != expected_reward_gaps {
-        return Err(invalid_wilderness_selection(
-            "Orc Cave reward gaps must cover dungeon loot, its guardian, final object, and final ego",
-        ));
-    }
     Ok(())
 }
 
@@ -10933,14 +10879,14 @@ pub fn sync_demo_wilderness(
         ));
     }
     let selection: DemoWildernessSelection = serde_json::from_slice(&fs::read(selection_path)?)?;
-    if selection.schema_version != 3
+    if selection.schema_version != 4
         || selection.towns.is_empty()
         || selection.dungeons.is_empty()
         || selection.town_plans.is_empty()
-        || selection.planned_dungeons.is_empty()
+        || selection.dungeon_plans.is_empty()
     {
         return Err(LegacyImportError::InvalidDemoWildernessSelection(
-            "selection must use schemaVersion 3 and contain active towns, town plans, and active and planned dungeons"
+            "selection must use schemaVersion 4 and contain active towns, town plans, active dungeons, and dungeon plans"
                 .to_owned(),
         ));
     }
@@ -11008,11 +10954,25 @@ pub fn sync_demo_wilderness(
                 selected.source_index, location.name, selected.source_name
             )));
         }
-        locations.push(serde_json::json!({
+        let mut location_json = serde_json::json!({
             "kind": "town",
             "position": { "x": location.x, "y": location.y },
             "townId": selected.id,
-        }));
+        });
+        if let Some(map_origin) = world
+            .pointer("/wilderness/locations")
+            .and_then(serde_json::Value::as_array)
+            .into_iter()
+            .flatten()
+            .find(|candidate| {
+                candidate.get("townId").and_then(serde_json::Value::as_str)
+                    == Some(selected.id.as_str())
+            })
+            .and_then(|candidate| candidate.get("mapOrigin"))
+        {
+            location_json["mapOrigin"] = map_origin.clone();
+        }
+        locations.push(location_json);
     }
     for selected in &selection.dungeons {
         if !selected_source_indexes.insert(("dungeon", selected.source_index))
@@ -11051,14 +11011,14 @@ pub fn sync_demo_wilderness(
             "dungeonId": selected.id,
         }));
     }
-    for planned in &selection.planned_dungeons {
-        if !selected_source_indexes.insert(("dungeon", planned.source_index))
-            || !selected_ids.insert(planned.id.as_str())
-            || planned.position.x >= wilderness.width
+    for planned in &selection.dungeon_plans {
+        if !selection.dungeons.iter().any(|selected| {
+            selected.source_index == planned.source_index && selected.id == planned.id
+        }) || planned.position.x >= wilderness.width
             || planned.position.y >= wilderness.height
         {
             return Err(invalid_wilderness_selection(format!(
-                "duplicate or out-of-bounds planned dungeon selection {}",
+                "inactive or out-of-bounds dungeon plan {}",
                 planned.id
             )));
         }
@@ -12512,6 +12472,16 @@ mod tests {
     }
 
     #[test]
+    fn unlife_melee_maps_to_life_force_drain_instead_of_hp_damage() {
+        let blow = parse_blow("TOUCH:UNLIFE(3d4)", 1).expect("UNLIFE melee should parse");
+        let effect = melee_effect_json(&blow.effects[0]).expect("UNLIFE melee should map");
+        assert_eq!(effect["type"], "unlife");
+        assert_eq!(effect["amountDice"], 3);
+        assert_eq!(effect["amountSides"], 4);
+        assert!(effect.get("damageType").is_none());
+    }
+
+    #[test]
     fn dice_less_disenchant_maps_to_narrow_melee_effect() {
         let blow = parse_blow("GAZE:DISENCHANT", 1).expect("dice-less DISENCHANT should parse");
         let effect = melee_effect_json(&blow.effects[0]).expect("DISENCHANT should map");
@@ -13732,11 +13702,30 @@ S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_ANT | S_SPIDER | S_HYDRA | S_LO
             &mut BTreeMap::new(),
         )
         .expect("demo monster should preserve the generic summon category");
-        assert!(
-            demo["tags"]
-                .as_array()
-                .is_some_and(|tags| { tags.iter().any(|tag| tag == "legacy-import") })
-        );
+        assert!(demo["tags"].as_array().is_some_and(|tags| {
+            tags.iter().any(|tag| tag == "legacy-import")
+                && tags.iter().any(|tag| tag == "kin-glyph-76")
+        }));
+    }
+
+    #[test]
+    fn othrod_summons_two_orc_kin_instead_of_cloning_the_unique() {
+        let mut abilities = BTreeMap::new();
+        let id = map_spell_token(
+            "S_KIN",
+            32,
+            2,
+            "demo.actor.othrod-lord-of-the-orcs",
+            &mut abilities,
+        )
+        .expect("Othrod's kin summon should map");
+        let effect = &abilities[&id]["effect"];
+        assert_eq!(effect["type"], "summon-category");
+        assert_eq!(effect["category"], "kin-glyph-111");
+        assert_eq!(effect["maximumLevel"], 32);
+        assert_eq!(effect["countDice"], 1);
+        assert_eq!(effect["countSides"], 1);
+        assert_eq!(effect["countBonus"], 1);
     }
 
     #[test]
@@ -14724,8 +14713,43 @@ F:BRAND_VAMP | HOLD_LIFE
                 .iter()
                 .any(|value| value == "vampiric")
         );
+        assert!(
+            death["passives"]
+                .as_array()
+                .expect("death passives")
+                .iter()
+                .any(|value| value == "hold-life")
+        );
         assert!(!outcome.report.unmapped_ego_flags.contains_key("BRAND_VAMP"));
-        assert_eq!(outcome.report.unmapped_ego_flags["HOLD_LIFE"], 1);
+        assert!(!outcome.report.unmapped_ego_flags.contains_key("HOLD_LIFE"));
+    }
+
+    #[test]
+    fn combat_ring_ego_materializes_three_original_weighted_rolls() {
+        let egos = parse_e_info("N:206:of Combat\nT:RING\nW:10:*:2\nF:HIDE_TYPE\n")
+            .expect("Combat ego should parse");
+        let outcome = convert_content(
+            &[],
+            &[],
+            &[],
+            &egos,
+            &[],
+            &LegacyCharacterSources::default(),
+        );
+        let combat = &outcome.affix_files[0].1;
+        assert_eq!(combat["id"], "rfb-legacy.affix.combat");
+        assert_eq!(combat["rollGroups"][0]["rolls"], 3);
+        let candidates = combat["rollGroups"][0]["candidates"]
+            .as_array()
+            .expect("Combat ego should retain weighted candidates");
+        assert_eq!(candidates.len(), 7);
+        assert_eq!(
+            candidates
+                .iter()
+                .map(|candidate| candidate["weight"].as_u64().unwrap())
+                .sum::<u64>(),
+            100
+        );
     }
 
     #[test]

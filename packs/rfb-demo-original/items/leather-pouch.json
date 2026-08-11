@@ -4,17 +4,17 @@
   "descriptionKey": "item-demo-leather-pouch-description",
   "equipmentSlot": "container",
   "formatVersion": 1,
+  "generationLevel": 20,
   "glyph": "~",
   "id": "demo.item.leather-pouch",
   "inventorySlotBonus": 8,
   "maxStack": 1,
+  "mogaminatorRare": false,
   "nameKey": "item-demo-leather-pouch-name",
   "tags": [
     "container",
     "equipment",
     "rfb-compatibility"
   ],
-  "generationLevel": 20,
-  "mogaminatorRare": false,
   "weightTenthsPound": 10
 }

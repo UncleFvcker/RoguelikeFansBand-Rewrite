@@ -36,6 +36,7 @@ use super::town::{
     home_state_to_save, restore_home_states, restore_town_and_shop_states, shop_state_to_save,
     world_town_for_floor,
 };
+use super::wilderness;
 use super::wilderness::WILDERNESS_FLOOR_ID;
 use super::{
     BodySlot, CampaignState, DungeonState, Game, ItemKnowledgeState, ItemPropertyKnowledgeState,
@@ -992,6 +993,7 @@ impl Game {
             if (floor.id == current_floor_id
                 && floor.dungeon_instance_id == current_dungeon_instance_id)
                 || (floor.id != world.initial_floor_id
+                    && floor.id != wilderness::WILDERNESS_FLOOR_ID
                     && !world
                         .procedural_floors
                         .iter()

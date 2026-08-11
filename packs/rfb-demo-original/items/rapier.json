@@ -4,6 +4,7 @@
   "descriptionKey": "item-demo-rapier-description",
   "equipmentSlot": "weapon",
   "formatVersion": 1,
+  "generationLevel": 5,
   "glyph": "|",
   "id": "demo.item.rapier",
   "maxStack": 1,
@@ -14,13 +15,12 @@
     "toDamage": 0,
     "toHit": 0
   },
+  "mogaminatorRare": false,
   "nameKey": "item-demo-rapier-name",
   "tags": [
     "equipment",
     "rfb-compatibility",
     "weapon"
   ],
-  "generationLevel": 5,
-  "mogaminatorRare": false,
   "weightTenthsPound": 40
 }

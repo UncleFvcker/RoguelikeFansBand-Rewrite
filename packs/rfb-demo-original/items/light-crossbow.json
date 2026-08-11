@@ -4,9 +4,11 @@
   "descriptionKey": "item-demo-light-crossbow-description",
   "equipmentSlot": "launcher",
   "formatVersion": 1,
+  "generationLevel": 15,
   "glyph": "}",
   "id": "demo.item.light-crossbow",
   "maxStack": 1,
+  "mogaminatorRare": false,
   "nameKey": "item-demo-light-crossbow-name",
   "projectileProfile": {
     "ammunitionType": "bolt",
@@ -20,7 +22,5 @@
     "launcher",
     "rfb-compatibility"
   ],
-  "generationLevel": 15,
-  "mogaminatorRare": false,
   "weightTenthsPound": 110
 }

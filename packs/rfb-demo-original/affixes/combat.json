@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "formatVersion": 1,
+  "id": "rfb-legacy.affix.combat",
+  "nameKey": "affix-legacy-combat-name",
+  "descriptionKey": "affix-legacy-combat-description",
+  "generationLevel": 10,
+  "rollGroups": [
+    {
+      "rolls": 3,
+      "candidates": [
+        { "weight": 10, "properties": { "modifiers": { "constitution": 1 } } },
+        { "weight": 10, "properties": { "modifiers": { "dexterity": 1 } } },
+        { "weight": 10, "properties": { "modifiers": { "strength": 1 } } },
+        { "weight": 20, "properties": { "equipmentBonuses": { "meleeSkill": 5 } } },
+        { "weight": 20, "properties": { "equipmentBonuses": { "meleeDamage": 5 } } },
+        { "weight": 20, "properties": { "equipmentBonuses": { "meleeSkill": 4, "meleeDamage": 4 } } },
+        { "weight": 10, "properties": { "statusImmunities": ["rfb.status.fear"] } }
+      ]
+    }
+  ],
+  "tags": ["jewelry", "legacy-import", "ring"]
+}

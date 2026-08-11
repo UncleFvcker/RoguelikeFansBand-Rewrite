@@ -390,6 +390,142 @@ fn vampiric_melee_heals_from_applied_damage_but_not_from_nonliving_players() {
 }
 
 #[test]
+fn unlife_melee_drains_life_force_and_persistently_empowers_the_monster() {
+    let effect = MeleeBlowEffectDefinition::Unlife {
+        chance_percent: None,
+        amount_dice: 100,
+        amount_sides: 1,
+    };
+    let mut game = monster_effect_game(0, effect.clone());
+    let full_max_hp = game.effective_player_max_hp();
+    game.player.hp = full_max_hp;
+    let base_attack = game
+        .actor_derived_stats(
+            &game.entities[0],
+            game.content
+                .actor(&game.entities[0].kind_id)
+                .expect("test monster definition should exist"),
+            false,
+        )
+        .attack
+        .value;
+    let mut events = Vec::new();
+    let mut changed = BTreeSet::new();
+
+    game.resolve_monster_melee(0, &mut events, &mut changed, &mut Vec::new())
+        .expect("UNLIFE melee should resolve");
+
+    assert_eq!(game.progress.life_force, 900);
+    assert_eq!(game.entities[0].power_per_mille, 1_100);
+    assert_eq!(
+        game.effective_player_max_hp(),
+        full_max_hp - full_max_hp * 100 / 2_000
+    );
+    assert_eq!(game.player.hp, game.effective_player_max_hp());
+    assert!(changed.contains(&game.entities[0].position));
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::MonsterUnlifeDrained {
+            amount: 100,
+            life_force_before: 1_000,
+            life_force_after: 900,
+            power_before: 1_000,
+            power_after: 1_100,
+            ..
+        }
+    )));
+    assert_eq!(
+        game.actor_derived_stats(
+            &game.entities[0],
+            game.content
+                .actor(&game.entities[0].kind_id)
+                .expect("test monster definition should exist"),
+            false,
+        )
+        .attack
+        .value,
+        base_attack * 11 / 10
+    );
+
+    let spell = game.resolve_monster_damage_to_player(
+        &game.entities[0].id.clone(),
+        &game.entities[0].kind_id.clone(),
+        "test.ability.unlife-power",
+        0,
+        10,
+        10,
+        DamageType::Mana,
+        &mut events,
+    );
+    assert!(matches!(
+        spell,
+        AbilityEffectResolutionDto::Damage { resolution, .. }
+            if resolution.final_damage == 11
+    ));
+
+    let restored = Game::from_save_with_content(game.to_save(), game.content.clone())
+        .expect("empowered monster should round trip");
+    assert_eq!(restored.entities[0].power_per_mille, 1_100);
+    assert_eq!(restored.state_hash(), game.state_hash());
+
+    let mut nonliving = monster_effect_game(0, effect);
+    let mut race_status =
+        monster_combat::melee_status("test.status.nonliving", 10, "test.setup").status;
+    race_status.granted_race_id = Some("demo.race.vampire-lord".to_owned());
+    nonliving.player.statuses.push(race_status);
+    nonliving
+        .resolve_monster_melee(0, &mut Vec::new(), &mut BTreeSet::new(), &mut Vec::new())
+        .expect("UNLIFE should harmlessly reach a nonliving player");
+    assert_eq!(nonliving.progress.life_force, 1_000);
+    assert_eq!(nonliving.entities[0].power_per_mille, 1_000);
+}
+
+#[test]
+fn hold_life_can_save_against_unlife_without_changing_life_force_or_monster_power() {
+    let effect = MeleeBlowEffectDefinition::Unlife {
+        chance_percent: None,
+        amount_dice: 100,
+        amount_sides: 1,
+    };
+    let mut protected = monster_effect_game(0, effect.clone());
+    protected.progress.level = 50;
+    let equipment_index = protected
+        .items
+        .iter()
+        .position(|item| {
+            matches!(&item.location, ItemLocation::Equipped { slot_id } if protected.body_slot_type(slot_id) != Some("tool"))
+        })
+        .expect("test character should have non-tool equipment");
+    protected.items[equipment_index]
+        .rolled_affixes
+        .push(RolledAffixState {
+            affix_id: "test.affix.hold-life".to_owned(),
+            properties: AffixPropertyBundleDefinition {
+                passives: BTreeSet::from([EquipmentPassive::HoldLife]),
+                ..AffixPropertyBundleDefinition::default()
+            },
+        });
+
+    let save_seed = (0..100)
+        .find(|seed| {
+            let mut game = protected.clone();
+            game.rng = RfbRng::seeded(*seed);
+            game.resolve_monster_melee(0, &mut Vec::new(), &mut BTreeSet::new(), &mut Vec::new())
+                .expect("protected UNLIFE melee should resolve");
+            game.progress.life_force == 1_000 && game.entities[0].power_per_mille == 1_000
+        })
+        .expect("Hold Life should save for at least one deterministic seed");
+
+    let mut unprotected = monster_effect_game(save_seed, effect);
+    unprotected.progress.level = 50;
+    unprotected
+        .resolve_monster_melee(0, &mut Vec::new(), &mut BTreeSet::new(), &mut Vec::new())
+        .expect("unprotected UNLIFE melee should resolve");
+    assert_eq!(unprotected.progress.life_force, 900);
+    assert_eq!(unprotected.entities[0].power_per_mille, 1_100);
+}
+
+#[test]
 fn disenchant_melee_removes_positive_status_or_reduces_equipment_enchantments() {
     let effect = MeleeBlowEffectDefinition::Disenchant {
         chance_percent: None,

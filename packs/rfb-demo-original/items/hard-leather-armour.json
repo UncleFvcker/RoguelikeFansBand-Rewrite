@@ -7,19 +7,19 @@
   },
   "equipmentSlot": "body",
   "formatVersion": 1,
+  "generationLevel": 5,
   "glyph": "(",
   "id": "demo.item.hard-leather-armour",
   "maxStack": 1,
   "modifiers": {
     "defense": 6
   },
+  "mogaminatorRare": false,
   "nameKey": "item-demo-hard-leather-armour-name",
   "tags": [
     "armor",
     "equipment",
     "rfb-compatibility"
   ],
-  "generationLevel": 5,
-  "mogaminatorRare": false,
   "weightTenthsPound": 100
 }

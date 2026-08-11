@@ -11,15 +11,15 @@
   "breakChancePercent": 10,
   "descriptionKey": "item-demo-iron-shot-description",
   "formatVersion": 1,
+  "generationLevel": 3,
   "glyph": "{",
   "id": "demo.item.iron-shot",
   "maxStack": 99,
+  "mogaminatorRare": false,
   "nameKey": "item-demo-iron-shot-name",
   "tags": [
     "ammunition",
     "rfb-compatibility"
   ],
-  "generationLevel": 3,
-  "mogaminatorRare": false,
   "weightTenthsPound": 5
 }

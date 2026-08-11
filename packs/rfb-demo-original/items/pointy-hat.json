@@ -4,19 +4,19 @@
   "descriptionKey": "item-demo-pointy-hat-description",
   "equipmentSlot": "head",
   "formatVersion": 1,
+  "generationLevel": 3,
   "glyph": "]",
   "id": "demo.item.pointy-hat",
   "maxStack": 1,
   "modifiers": {
     "defense": 1
   },
+  "mogaminatorRare": false,
   "nameKey": "item-demo-pointy-hat-name",
   "tags": [
     "armor",
     "equipment",
     "rfb-compatibility"
   ],
-  "generationLevel": 3,
-  "mogaminatorRare": false,
   "weightTenthsPound": 20
 }

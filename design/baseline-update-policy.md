@@ -6,16 +6,16 @@
 
 contract fixture 是规则兼容边界，不能把测试失败简单处理为“刷新预期结果”。政策用于保证每次规则变化只修改真正受影响的场景，同时保留可审查的失败原因。
 
-当前逻辑基线是 `contract-v258`，机器可读政策固定在：
+当前逻辑基线是 `contract-v260`，机器可读政策固定在：
 
 ```text
 tests/fixtures/active/baseline-policy.json
 ```
 
-`contract-v258` 接入 `AURA_REVENGE`、`AURA_FEAR`、`TANUKI` 与 `UNIQUE2`。
-反击和恐惧复用既有近战、豁免与状态事务；狸猫只覆盖外观；伪唯一同一时刻最多
-存活一只，但死亡不进入永久击杀表。新增 7 条 Orc Cave 记录，严格选择现有 191
-条记录。协议保持 1.170，State Hash Schema 保持 v85，save 容器保持 v1。
+`contract-v260` 激活 Orc Cave 15–32 层、独立入口、原版偏好分配、奥斯罗德守关
+生命周期及最终战斗之戒。连续荒野离层状态复用既有 `FloorState` 完成存档与返回；
+新增 dungeon 初始状态改变共同初始化，因此统一刷新 22 条 active fixture。协议保持
+1.171，State Hash Schema 保持 v86，save 容器保持 v1。
 
 ## 分类验证
 

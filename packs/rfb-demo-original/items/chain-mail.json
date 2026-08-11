@@ -7,19 +7,19 @@
   },
   "equipmentSlot": "body",
   "formatVersion": 1,
+  "generationLevel": 25,
   "glyph": "[",
   "id": "demo.item.chain-mail",
   "maxStack": 1,
   "modifiers": {
     "defense": 14
   },
+  "mogaminatorRare": false,
   "nameKey": "item-demo-chain-mail-name",
   "tags": [
     "armor",
     "equipment",
     "rfb-compatibility"
   ],
-  "generationLevel": 25,
-  "mogaminatorRare": false,
   "weightTenthsPound": 220
 }

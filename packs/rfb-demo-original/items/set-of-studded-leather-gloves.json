@@ -7,19 +7,19 @@
   },
   "equipmentSlot": "gloves",
   "formatVersion": 1,
+  "generationLevel": 5,
   "glyph": "]",
   "id": "demo.item.set-of-studded-leather-gloves",
   "maxStack": 1,
   "modifiers": {
     "defense": 1
   },
+  "mogaminatorRare": false,
   "nameKey": "item-demo-set-of-studded-leather-gloves-name",
   "tags": [
     "armor",
     "equipment",
     "rfb-compatibility"
   ],
-  "generationLevel": 5,
-  "mogaminatorRare": false,
   "weightTenthsPound": 5
 }

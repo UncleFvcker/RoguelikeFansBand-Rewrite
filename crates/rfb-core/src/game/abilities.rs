@@ -2464,10 +2464,8 @@ impl Game {
             unreachable!("vitality executor requires a restore vitality effect");
         };
         let experience = apply_experience_restoration(&mut self.progress);
-        let life_force = apply_life_force_restoration(
-            &mut self.progress,
-            LifeForceRestorationRequest::at_least(life_force),
-        );
+        let life_force =
+            self.restore_player_life_force(LifeForceRestorationRequest::at_least(life_force));
         self.apply_player_experience(0, events);
         events.push(DomainEvent::AbilityEffectsResolved {
             ability_id: ability.id.clone(),

@@ -4,9 +4,11 @@
   "descriptionKey": "item-demo-long-bow-description",
   "equipmentSlot": "launcher",
   "formatVersion": 1,
+  "generationLevel": 30,
   "glyph": "}",
   "id": "demo.item.long-bow",
   "maxStack": 1,
+  "mogaminatorRare": false,
   "nameKey": "item-demo-long-bow-name",
   "projectileProfile": {
     "ammunitionType": "arrow",
@@ -20,7 +22,5 @@
     "launcher",
     "rfb-compatibility"
   ],
-  "generationLevel": 30,
-  "mogaminatorRare": false,
   "weightTenthsPound": 40
 }

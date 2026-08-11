@@ -4,19 +4,19 @@
   "descriptionKey": "item-demo-knit-cap-description",
   "equipmentSlot": "head",
   "formatVersion": 1,
+  "generationLevel": 3,
   "glyph": "]",
   "id": "demo.item.knit-cap",
   "maxStack": 1,
   "modifiers": {
     "defense": 1
   },
+  "mogaminatorRare": false,
   "nameKey": "item-demo-knit-cap-name",
   "tags": [
     "armor",
     "equipment",
     "rfb-compatibility"
   ],
-  "generationLevel": 3,
-  "mogaminatorRare": false,
   "weightTenthsPound": 8
 }

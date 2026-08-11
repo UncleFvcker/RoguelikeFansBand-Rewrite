@@ -174,7 +174,7 @@ impl LifeForceRestorationRequest {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(super) struct LifeForceRestorationOutcome {
+pub(super) struct LifeForceChangeOutcome {
     pub(super) before: u16,
     pub(super) after: u16,
 }
@@ -182,13 +182,25 @@ pub(super) struct LifeForceRestorationOutcome {
 pub(super) fn apply_life_force_restoration(
     progress: &mut CharacterProgress,
     request: LifeForceRestorationRequest,
-) -> LifeForceRestorationOutcome {
+) -> LifeForceChangeOutcome {
     let before = progress.life_force;
     progress.life_force = match request.restoration {
         LifeForceRestoration::Add(amount) => progress.life_force.saturating_add(amount).min(1_000),
         LifeForceRestoration::AtLeast(minimum) => progress.life_force.max(minimum).min(1_000),
     };
-    LifeForceRestorationOutcome {
+    LifeForceChangeOutcome {
+        before,
+        after: progress.life_force,
+    }
+}
+
+pub(super) fn apply_life_force_drain(
+    progress: &mut CharacterProgress,
+    amount: u16,
+) -> LifeForceChangeOutcome {
+    let before = progress.life_force;
+    progress.life_force = progress.life_force.saturating_sub(amount);
+    LifeForceChangeOutcome {
         before,
         after: progress.life_force,
     }
@@ -528,6 +540,30 @@ fn rescale_u32(current: u32, previous_maximum: u32, next_maximum: u32) -> u32 {
 }
 
 impl Game {
+    pub(super) fn restore_player_life_force(
+        &mut self,
+        request: LifeForceRestorationRequest,
+    ) -> LifeForceChangeOutcome {
+        let previous_max_hp = self.effective_player_max_hp();
+        let outcome = apply_life_force_restoration(&mut self.progress, request);
+        self.rescale_player_hp_after_life_force_change(previous_max_hp);
+        outcome
+    }
+
+    pub(super) fn drain_player_life_force(&mut self, amount: u16) -> LifeForceChangeOutcome {
+        let previous_max_hp = self.effective_player_max_hp();
+        let outcome = apply_life_force_drain(&mut self.progress, amount);
+        self.rescale_player_hp_after_life_force_change(previous_max_hp);
+        outcome
+    }
+
+    fn rescale_player_hp_after_life_force_change(&mut self, previous_max_hp: i32) {
+        let next_max_hp = self.effective_player_max_hp();
+        if previous_max_hp > 0 && next_max_hp != previous_max_hp {
+            self.player.hp = rescale_i32(self.player.hp, previous_max_hp, next_max_hp);
+        }
+    }
+
     pub(super) fn character_definitions(&self) -> Option<CharacterDefinitions<'_>> {
         let (build, base_race, class, personality) = self
             .build
@@ -874,14 +910,14 @@ mod tests {
         progress.life_force = 900;
         assert_eq!(
             apply_life_force_restoration(&mut progress, LifeForceRestorationRequest::add(150),),
-            LifeForceRestorationOutcome {
+            LifeForceChangeOutcome {
                 before: 900,
                 after: 1_000,
             }
         );
         assert_eq!(
             apply_life_force_restoration(&mut progress, LifeForceRestorationRequest::at_least(700),),
-            LifeForceRestorationOutcome {
+            LifeForceChangeOutcome {
                 before: 1_000,
                 after: 1_000,
             }

@@ -3054,10 +3054,8 @@ impl Game {
     ) -> bool {
         let experience = apply_experience_restoration(&mut self.progress);
         self.apply_player_experience(0, events);
-        let life_force = apply_life_force_restoration(
-            &mut self.progress,
-            LifeForceRestorationRequest::add(life_force_amount),
-        );
+        let life_force =
+            self.restore_player_life_force(LifeForceRestorationRequest::add(life_force_amount));
         experience.after != experience.before || life_force.after != life_force.before
     }
 
