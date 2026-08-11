@@ -13,6 +13,7 @@ use rfb_protocol::{
 };
 
 use crate::{
+    effect::{STATUS_BLEEDING, STATUS_POISON},
     error::CoreError,
     rng::RfbRng,
     save::position_from_content,
@@ -23,6 +24,7 @@ use crate::{
 use super::{
     Game, initial_item_curse, initial_item_runtime_state,
     inventory::{item_instances_stack_compatible, item_properties_match},
+    wilderness,
 };
 use crate::save::{
     GENERATED_ITEM_ID_PREFIX, initial_item_fuel, inventory_item_from_dto, inventory_to_save,
@@ -34,6 +36,18 @@ const CHARISMA_PRICE_ADJUST_PERCENT: [u16; 38] = [
 ];
 
 pub(super) type TownAndShopStates = (BTreeMap<String, TownState>, BTreeMap<String, ShopState>);
+
+const ANAMBAR_INN_ID: &str = "demo.shop.anambar-inn";
+const ANAMBAR_INN_STAY_COST: u32 = 25;
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct InnStayOutcome {
+    pub(crate) facility_id: String,
+    pub(crate) cost: u32,
+    pub(crate) gold_balance: u32,
+    pub(crate) elapsed_ticks: u32,
+    pub(crate) world_tick: u32,
+}
 
 fn world_town_ids(world: &WorldDefinition) -> impl Iterator<Item = &str> {
     world
@@ -1003,6 +1017,66 @@ fn transfer_group_to_shop(
 }
 
 impl Game {
+    pub(super) fn stay_at_inn(
+        &mut self,
+        facility_id: &str,
+    ) -> Result<InnStayOutcome, &'static str> {
+        if facility_id != ANAMBAR_INN_ID {
+            return Err("unknown-inn");
+        }
+        let Some(inn) = self.content.shop(facility_id).cloned() else {
+            return Err("unknown-inn");
+        };
+        if !shop_accessible(self, &inn) {
+            return Err("inn-unreachable");
+        }
+        if self.player_has_status_kind(STATUS_POISON)
+            || self.player_has_status_kind(STATUS_BLEEDING)
+        {
+            return Err("needs-healer");
+        }
+        if self.gold < ANAMBAR_INN_STAY_COST {
+            return Err("insufficient-gold");
+        }
+
+        self.gold -= ANAMBAR_INN_STAY_COST;
+        let before = self.world_tick;
+        let half_day = wilderness::WILDERNESS_DAY_TICKS / 2;
+        let remaining = half_day - before % half_day;
+        self.world_tick = before.saturating_add(remaining);
+
+        self.player.statuses.clear();
+        self.minor_slow = 0;
+        self.minor_slow_energy = 0;
+        self.reality_change_ticks = 0;
+        self.confusing_strike_ready = false;
+        if self.recall_is_active() {
+            self.cancel_recall();
+        }
+        self.refresh_player_resource_maxima();
+        self.player.hp = self.effective_player_max_hp();
+        for pool in self.resources.values_mut() {
+            pool.current = pool.maximum;
+        }
+        for item in &mut self.items {
+            if item.location != ItemLocation::Inventory {
+                continue;
+            }
+            if let Some(charges) = item.charges.as_mut() {
+                charges.current = charges.maximum;
+                item.device_recovery_progress = 0;
+            }
+        }
+
+        Ok(InnStayOutcome {
+            facility_id: facility_id.to_owned(),
+            cost: ANAMBAR_INN_STAY_COST,
+            gold_balance: self.gold,
+            elapsed_ticks: self.world_tick - before,
+            world_tick: self.world_tick,
+        })
+    }
+
     pub(super) fn deposit_at_home(
         &mut self,
         facility_id: &str,

@@ -1315,6 +1315,7 @@ impl Game {
                     | GameAction::LeaveWorldMap
                     | GameAction::Rest { .. }
                     | GameAction::SellToShop { .. }
+                    | GameAction::StayAtInn { .. }
                     | GameAction::WithdrawFromHome { .. }
                     | GameAction::SetSummonCommand { .. }
                     | GameAction::ConfigureMogaminator { .. }
@@ -1428,6 +1429,13 @@ impl Game {
                 Err(reason) => events.push(DomainEvent::ShopTransactionUnavailable {
                     shop_id,
                     item_id,
+                    reason: reason.to_owned(),
+                }),
+            },
+            GameAction::StayAtInn { facility_id } => match self.stay_at_inn(&facility_id) {
+                Ok(outcome) => events.push(DomainEvent::InnStayCompleted { outcome }),
+                Err(reason) => events.push(DomainEvent::InnStayUnavailable {
+                    facility_id,
                     reason: reason.to_owned(),
                 }),
             },

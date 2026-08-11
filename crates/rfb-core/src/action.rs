@@ -110,6 +110,9 @@ pub(crate) enum GameAction {
         item_id: String,
         quantity: u32,
     },
+    StayAtInn {
+        facility_id: String,
+    },
     WithdrawFromHome {
         facility_id: String,
         item_id: String,
@@ -188,6 +191,7 @@ impl GameAction {
             | Self::LeaveWorldMap
             | Self::Retire
             | Self::SellToShop { .. }
+            | Self::StayAtInn { .. }
             | Self::WithdrawFromHome { .. }
             | Self::SetSummonCommand { .. }
             | Self::ConfigureMogaminator { .. }
@@ -330,6 +334,7 @@ impl From<GameCommand> for GameAction {
                 item_id,
                 quantity,
             },
+            GameCommand::StayAtInn { facility_id } => Self::StayAtInn { facility_id },
             GameCommand::WithdrawFromHome {
                 facility_id,
                 item_id,

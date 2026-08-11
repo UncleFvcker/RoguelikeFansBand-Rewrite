@@ -16,7 +16,10 @@ use rfb_protocol::{
     SummonCommandResolutionDto,
 };
 
-use crate::{effect::DamageOutcome, game::town::ShopTransactionOutcome};
+use crate::{
+    effect::DamageOutcome,
+    game::town::{InnStayOutcome, ShopTransactionOutcome},
+};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum ItemAttributeChange {
@@ -541,6 +544,13 @@ pub(crate) enum DomainEvent {
         shop_id: String,
         item_id: String,
         reason: String,
+    },
+    InnStayUnavailable {
+        facility_id: String,
+        reason: String,
+    },
+    InnStayCompleted {
+        outcome: InnStayOutcome,
     },
     HomeItemDeposited {
         outcome: crate::game::town::HomeTransferOutcome,
@@ -2491,6 +2501,28 @@ impl DomainEvent {
                     ("shop", shop_id.clone()),
                     ("item", item_id.clone()),
                     ("reason", reason.clone()),
+                ],
+            ),
+            Self::InnStayUnavailable {
+                facility_id,
+                reason,
+            } => dto(
+                "inn.stay-unavailable",
+                "inn-stay-unavailable",
+                [
+                    ("facility", facility_id.clone()),
+                    ("reason", reason.clone()),
+                ],
+            ),
+            Self::InnStayCompleted { outcome } => dto(
+                "inn.stay",
+                "inn-stay-completed",
+                [
+                    ("facility", outcome.facility_id.clone()),
+                    ("cost", outcome.cost.to_string()),
+                    ("balance", outcome.gold_balance.to_string()),
+                    ("elapsedTicks", outcome.elapsed_ticks.to_string()),
+                    ("worldTick", outcome.world_tick.to_string()),
                 ],
             ),
             Self::HomeItemDeposited { outcome } => dto(

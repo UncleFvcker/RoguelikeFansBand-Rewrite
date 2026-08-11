@@ -6,11 +6,16 @@
 
 contract fixture 是规则兼容边界，不能把测试失败简单处理为“刷新预期结果”。政策用于保证每次规则变化只修改真正受影响的场景，同时保留可审查的失败原因。
 
-当前逻辑基线是 `contract-v250`，机器可读政策固定在：
+当前逻辑基线是 `contract-v251`，机器可读政策固定在：
 
 ```text
 tests/fixtures/active/baseline-policy.json
 ```
+
+`contract-v251` 增加阿南巴旅店住宿合同。协议 1.169 新增窄命令
+`StayAtInn { facilityId }`；成功住宿支付 25 金币，把 `worldTick` 推进到下一个半日
+边界，并恢复当前已建模的生命、资源、临时状态与背包设备。中毒、流血、金币不足
+或未站在旅店入口时原子拒绝。State Hash Schema 保持 v85，save 容器保持 v1。
 
 ## 分类验证
 
@@ -27,7 +32,7 @@ cargo run -p rfb-contract -- verify-category tests/fixtures/active/baseline-poli
 cargo run -p rfb-contract -- refresh-category tests/fixtures/active/baseline-policy.json inventory equipment
 ```
 
-`refresh-category` 会先为选中分类计算全部断言；任一场景计算失败时不会写入该批文件。普通 `cargo test -p rfb-contract` 仍快速检查全部 fixture 的 JSON、schema、分类和 ID 唯一性，但不会运行 21 条完整回放。
+`refresh-category` 会先为选中分类计算全部断言；任一场景计算失败时不会写入该批文件。普通 `cargo test -p rfb-contract` 仍快速检查全部 fixture 的 JSON、schema、分类和 ID 唯一性，但不会运行 22 条完整回放。
 
 只有以下变化默认需要全量回放或刷新：
 

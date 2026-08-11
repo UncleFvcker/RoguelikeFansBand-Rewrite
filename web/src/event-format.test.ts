@@ -592,6 +592,27 @@ test("damage event formatting preserves typed resistance outcomes", () => {
   localization.setLocale("en-US");
 });
 
+test("inn stay results use focused bilingual messages", () => {
+  const completed = {
+    kind: "inn.stay",
+    messageKey: "inn-stay-completed",
+    args: { cost: "25", balance: "75" },
+  };
+  const unavailable = {
+    kind: "inn.stay-unavailable",
+    messageKey: "inn-stay-unavailable",
+    args: { reason: "needs-healer" },
+  };
+
+  assert.equal(
+    formatter.formatEvent(completed),
+    "You stay overnight and wake refreshed. Paid 25 gold; balance 75.",
+  );
+  localization.setLocale("zh-CN");
+  assert.equal(formatter.formatEvent(unavailable), "无法住宿：你需要的是治疗师，而不是房间。");
+  localization.setLocale("en-US");
+});
+
 test("Warrens transitions name the Outpost and stairs without legacy Echo text", () => {
   state.currentWorldId = "demo.world.middle-earth";
   const event = {

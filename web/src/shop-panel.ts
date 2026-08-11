@@ -44,8 +44,11 @@ interface ShopDom {
   readonly goldAfter: HTMLElement;
   readonly weightAfter: HTMLElement;
   readonly confirm: HTMLButtonElement;
+  readonly stay: HTMLButtonElement;
   readonly feedback: HTMLElement;
 }
+
+const ANAMBAR_INN_ID = "demo.shop.anambar-inn";
 
 type Feedback =
   | { readonly source: "message"; readonly key: MessageKey; readonly kind: string }
@@ -113,6 +116,7 @@ export class ShopPanel {
     this.#dom.quantityIncrease.addEventListener("click", this.#increaseQuantity);
     this.#dom.quantityMaximum.addEventListener("click", this.#maximizeQuantity);
     this.#dom.confirm.addEventListener("click", this.#confirmTransaction);
+    this.#dom.stay.addEventListener("click", this.#stayAtInn);
   }
 
   dispose(): void {
@@ -128,6 +132,7 @@ export class ShopPanel {
     this.#dom.quantityIncrease.removeEventListener("click", this.#increaseQuantity);
     this.#dom.quantityMaximum.removeEventListener("click", this.#maximizeQuantity);
     this.#dom.confirm.removeEventListener("click", this.#confirmTransaction);
+    this.#dom.stay.removeEventListener("click", this.#stayAtInn);
   }
 
   render(state: GameSnapshot | GameUpdate): void {
@@ -136,7 +141,7 @@ export class ShopPanel {
       this.#feedback = {
         source: "event",
         event: transactionEvent,
-        kind: transactionEvent.kind === "shop.transaction-unavailable" ? "error" : "success",
+        kind: transactionEvent.kind.endsWith("unavailable") ? "error" : "success",
       };
     }
 
@@ -262,6 +267,27 @@ export class ShopPanel {
     });
   };
 
+  readonly #stayAtInn = (): void => {
+    const command = stayAtInnCommand(this.#shop);
+    if (!command || this.#state.busy) return;
+    this.#feedback = {
+      source: "message",
+      key: "inn-stay-pending",
+      kind: "pending",
+    };
+    this.#renderTransaction();
+    void this.#dispatch(command).then(() => {
+      if (this.#feedback?.source === "message" && this.#feedback.kind === "pending") {
+        this.#feedback = {
+          source: "message",
+          key: "inn-stay-no-response",
+          kind: "error",
+        };
+        this.#renderTransaction();
+      }
+    });
+  };
+
   #setMode(mode: ShopMode): void {
     if (this.#mode === mode) return;
     this.#mode = mode;
@@ -315,6 +341,8 @@ export class ShopPanel {
       this.#localization,
       this.#contentName,
     );
+    this.#dom.stay.hidden = shop.id !== ANAMBAR_INN_ID;
+    this.#dom.stay.textContent = this.#localization.format("action-inn-stay");
     this.#renderItems();
     this.#renderTransaction();
   }
@@ -406,6 +434,7 @@ export class ShopPanel {
       this.#state.busy || !valid || (quantity ?? 0) >= maximum;
     this.#dom.quantityMaximum.disabled = this.#state.busy || maximum <= 1;
     this.#dom.confirm.disabled = this.#state.busy || !valid;
+    this.#dom.stay.disabled = this.#state.busy;
     this.#dom.confirm.textContent = this.#localization.format(
       this.#mode === "buy" ? "action-shop-buy" : "action-shop-sell",
     );
@@ -522,6 +551,14 @@ export function parseShopQuantity(value: string, maximum: number): number | unde
     : undefined;
 }
 
+export function stayAtInnCommand(
+  shop: Pick<ShopDto, "id"> | undefined,
+): GameCommand | undefined {
+  return shop?.id === ANAMBAR_INN_ID
+    ? { type: "stay-at-inn", facilityId: shop.id }
+    : undefined;
+}
+
 export function calculateShopTransactionPreview(
   mode: ShopMode,
   quantity: number,
@@ -585,7 +622,7 @@ function lastShopEvent(state: GameSnapshot | GameUpdate): GameEventDto | undefin
   if (!("events" in state)) return undefined;
   for (let index = state.events.length - 1; index >= 0; index -= 1) {
     const event = state.events[index];
-    if (event?.kind.startsWith("shop.")) return event;
+    if (event && (event.kind.startsWith("shop.") || event.kind.startsWith("inn."))) return event;
   }
   return undefined;
 }
@@ -618,6 +655,7 @@ function createShopDom(document: Document): ShopDom {
     goldAfter: element("shop-gold-after"),
     weightAfter: element("shop-weight-after"),
     confirm: element("shop-confirm"),
+    stay: element("shop-stay"),
     feedback: element("shop-feedback"),
   };
 }

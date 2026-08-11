@@ -11,6 +11,7 @@ import {
   equippedLightText,
   parseShopQuantity,
   shopTransactionReason,
+  stayAtInnCommand,
 } from "./shop-panel.ts";
 
 const localization = new Localization("en-US", {
@@ -38,6 +39,14 @@ test("shop previews show post-transaction gold and carried weight without mutati
     goldAfter: 247,
     weightAfterTenthsPound: 292,
   });
+});
+
+test("Anambar inn interaction dispatches the narrow stay command", () => {
+  assert.deepEqual(stayAtInnCommand({ id: "demo.shop.anambar-inn" }), {
+    type: "stay-at-inn",
+    facilityId: "demo.shop.anambar-inn",
+  });
+  assert.equal(stayAtInnCommand({ id: "demo.shop.outpost-general-store" }), undefined);
 });
 
 test("shop rejection reasons and equipped light summaries are localized", () => {

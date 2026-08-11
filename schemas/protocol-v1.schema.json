@@ -5378,6 +5378,22 @@
         {
           "type": "object",
           "properties": {
+            "facilityId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "stay-at-inn"
+            }
+          },
+          "required": [
+            "type",
+            "facilityId"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "source": {
               "$ref": "#/$defs/DeviceRechargeSourceDto"
             },

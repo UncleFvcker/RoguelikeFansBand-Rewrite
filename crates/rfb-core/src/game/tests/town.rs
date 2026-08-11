@@ -30,6 +30,24 @@ fn store_game(seed: u64) -> Game {
     game
 }
 
+fn anambar_inn_game(seed: u64) -> Game {
+    let mut game =
+        Game::new_with_build(seed, "demo.build.scholar").expect("Middle-earth game should start");
+    dispatch_next(
+        &mut game,
+        GameCommand::EnterWorldMap {
+            leave_pets: false,
+            cancel_recall: false,
+        },
+    );
+    game.wilderness_position = Some(Position { x: 26, y: 39 });
+    dispatch_next(&mut game, GameCommand::LeaveWorldMap);
+    game.player.position = Position { x: 45, y: 15 };
+    game.mark_shop_visited_at_player().unwrap();
+    assert!(projected_shop(&game.snapshot().shops, ANAMBAR_INN_ID).player_at_entrance);
+    game
+}
+
 fn stock_item_id(game: &Game, kind_id: &str) -> String {
     game.shop_states[GENERAL_STORE_ID]
         .inventory
@@ -97,6 +115,125 @@ fn birth_town_starts_without_surface_monsters() {
     let game = Game::new_with_build(0, "demo.build.warrior").expect("Warrens game should start");
 
     assert!(game.entities.is_empty());
+}
+
+#[test]
+fn anambar_inn_stay_advances_half_day_and_restores_the_player() {
+    let mut game = anambar_inn_game(42);
+    game.world_tick = 12_345;
+    game.gold = 100;
+    game.player.hp = 1;
+    game.player
+        .statuses
+        .push(monster_combat::melee_status(STATUS_HASTE, 20, "test.inn-rest").status);
+    game.minor_slow = 3;
+    game.minor_slow_energy = 41;
+    game.reality_change_ticks = 20;
+    game.resources
+        .values_mut()
+        .for_each(|pool| pool.current = 0);
+    support::give_inventory_item(
+        &mut game,
+        "test.inn.device",
+        "demo.item.detect-objects-staff",
+    );
+    let device = game
+        .items
+        .iter_mut()
+        .find(|item| item.id == "test.inn.device")
+        .expect("test device should exist");
+    device
+        .charges
+        .as_mut()
+        .expect("test staff should have charges")
+        .current = 0;
+    device.device_recovery_progress = 500;
+    let nutrition = game.nutrition;
+    let draws = game.rng_draw_counter();
+
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::StayAtInn {
+            facility_id: ANAMBAR_INN_ID.to_owned(),
+        },
+    );
+
+    let event = update
+        .events
+        .iter()
+        .find(|event| event.kind == "inn.stay")
+        .expect("successful inn stay should be explicit");
+    assert_eq!(event.args["cost"], "25");
+    assert_eq!(event.args["balance"], "75");
+    assert_eq!(event.args["elapsedTicks"], "37655");
+    assert_eq!(game.world_tick, 50_000);
+    assert_eq!(game.gold, 75);
+    assert_eq!(game.player.hp, game.effective_player_max_hp());
+    assert!(game.player.statuses.is_empty());
+    assert_eq!((game.minor_slow, game.minor_slow_energy), (0, 0));
+    assert_eq!(game.reality_change_ticks, 0);
+    assert!(
+        game.resources
+            .values()
+            .all(|pool| pool.current == pool.maximum)
+    );
+    let device = game
+        .items
+        .iter()
+        .find(|item| item.id == "test.inn.device")
+        .expect("test device should remain carried");
+    let charges = device.charges.expect("test staff should retain charges");
+    assert_eq!(charges.current, charges.maximum);
+    assert_eq!(device.device_recovery_progress, 0);
+    assert_eq!(game.nutrition, nutrition);
+    assert_eq!(game.rng_draw_counter(), draws);
+
+    let restored = Game::from_save(game.to_save()).expect("inn result should round-trip");
+    assert_eq!(restored.state_hash(), game.state_hash());
+}
+
+#[test]
+fn anambar_inn_rejections_do_not_charge_or_advance_time() {
+    for status_kind_id in [STATUS_POISON, STATUS_BLEEDING] {
+        let mut game = anambar_inn_game(42);
+        game.gold = 100;
+        game.world_tick = 12_345;
+        game.player
+            .statuses
+            .push(monster_combat::melee_status(status_kind_id, 20, "test.inn-rest").status);
+        let draws = game.rng_draw_counter();
+
+        let update = dispatch_next(
+            &mut game,
+            GameCommand::StayAtInn {
+                facility_id: ANAMBAR_INN_ID.to_owned(),
+            },
+        );
+
+        let event = update
+            .events
+            .iter()
+            .find(|event| event.kind == "inn.stay-unavailable")
+            .expect("unsafe inn stay should be rejected");
+        assert_eq!(event.args["reason"], "needs-healer");
+        assert_eq!(game.gold, 100);
+        assert_eq!(game.world_tick, 12_345);
+        assert_eq!(game.rng_draw_counter(), draws);
+        assert!(game.player_has_status_kind(status_kind_id));
+    }
+
+    let mut poor = anambar_inn_game(42);
+    poor.gold = 24;
+    let tick = poor.world_tick;
+    let update = dispatch_next(
+        &mut poor,
+        GameCommand::StayAtInn {
+            facility_id: ANAMBAR_INN_ID.to_owned(),
+        },
+    );
+    assert_eq!(update.events[0].args["reason"], "insufficient-gold");
+    assert_eq!(poor.gold, 24);
+    assert_eq!(poor.world_tick, tick);
 }
 
 #[test]

@@ -704,6 +704,15 @@ export function createPresentationFormatter(
         return localization.format("shop-transaction-unavailable", {
           reason: shopTransactionReason(event.args.reason),
         });
+      case "inn-stay-completed":
+        return localization.format("inn-stay-completed", {
+          cost: event.args.cost ?? "?",
+          balance: event.args.balance ?? "?",
+        });
+      case "inn-stay-unavailable":
+        return localization.format("inn-stay-unavailable", {
+          reason: innStayReason(event.args.reason),
+        });
       case "home-deposit-success":
         return localization.format("home-deposit-success", {
           target: visibleItemNameForKind(event.args.target),
@@ -1545,6 +1554,13 @@ export function createPresentationFormatter(
     return localization.hasMessage(localization.locale, key) || localization.hasMessage("en-US", key)
       ? localization.format(key)
       : localization.format("shop-transaction-reason-unknown");
+  }
+
+  function innStayReason(reason: string | undefined): string {
+    const key = `inn-stay-reason-${reason ?? "unknown"}`;
+    return localization.hasMessage(localization.locale, key) || localization.hasMessage("en-US", key)
+      ? localization.format(key)
+      : localization.format("inn-stay-reason-unknown");
   }
 
   function itemDestroyReason(reason: string | undefined): string {

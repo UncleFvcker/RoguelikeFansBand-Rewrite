@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.168";
+pub const PROTOCOL_VERSION: &str = "1.169";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -212,6 +212,9 @@ pub enum GameCommand {
         shop_id: String,
         item_id: String,
         quantity: u32,
+    },
+    StayAtInn {
+        facility_id: String,
     },
     RechargeItem {
         target_item_id: String,
@@ -4143,6 +4146,9 @@ mod tests {
                 item_id: "generated.item.1".to_owned(),
                 quantity: 1,
             },
+            GameCommand::StayAtInn {
+                facility_id: "demo.shop.anambar-inn".to_owned(),
+            },
             GameCommand::UseItem {
                 item_id: "demo.item.ration-of-food.1".to_owned(),
                 target: None,
@@ -4593,6 +4599,7 @@ mod tests {
         assert!(typescript.contains("{ \"type\": \"recharge-item\""));
         assert!(typescript.contains("{ \"type\": \"use-item-by-glyph\""));
         assert!(typescript.contains("{ \"type\": \"use-item-for-recharge\""));
+        assert!(typescript.contains("{ \"type\": \"stay-at-inn\""));
         assert!(typescript.contains("{ \"type\": \"wait\" }"));
         assert!(
             typescript
