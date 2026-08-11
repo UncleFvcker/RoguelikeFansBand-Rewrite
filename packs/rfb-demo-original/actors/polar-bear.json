@@ -1,0 +1,104 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "friends": {
+      "chancePercent": 33,
+      "dice": 1,
+      "sides": 3
+    },
+    "habitats": [
+      "snow"
+    ],
+    "legacyIndex": 1340,
+    "maxDepth": 60,
+    "rarity": 3,
+    "wildOnly": true
+  },
+  "attack": 6,
+  "damageDice": 2,
+  "damageSides": 9,
+  "damageType": "physical",
+  "defense": 6,
+  "descriptionKey": "actor-demo-polar-bear-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 220,
+  "formatVersion": 1,
+  "glyph": "q",
+  "hitPointDice": {
+    "dice": 20,
+    "sides": 26
+  },
+  "id": "demo.actor.polar-bear",
+  "level": 25,
+  "maxHp": 270,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 2,
+            "damageSides": 9,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 2,
+            "damageSides": 9,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 2,
+            "damageSides": 9,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "modes": [
+      "climb",
+      "swim"
+    ]
+  },
+  "nameKey": "actor-demo-polar-bear-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 4,
+    "skeletonItemKindId": "demo.item.skeleton-remains",
+    "skeletonWeight": 1
+  },
+  "resistances": {
+    "cold": "immune"
+  },
+  "role": "monster",
+  "speed": 115,
+  "tags": [
+    "animal",
+    "legacy-import",
+    "orc-cave"
+  ]
+}

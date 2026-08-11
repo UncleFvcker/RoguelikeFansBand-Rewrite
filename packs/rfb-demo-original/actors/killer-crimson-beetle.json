@@ -1,0 +1,81 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "habitats": [
+      "all"
+    ],
+    "legacyIndex": 405,
+    "maxDepth": 60,
+    "randomMovementPercent": 25,
+    "rarity": 2
+  },
+  "attack": 6,
+  "damageDice": 4,
+  "damageSides": 4,
+  "damageType": "physical",
+  "defense": 5,
+  "descriptionKey": "actor-demo-killer-crimson-beetle-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 85,
+  "formatVersion": 1,
+  "glyph": "K",
+  "hitPointDice": {
+    "dice": 20,
+    "sides": 8
+  },
+  "id": "demo.actor.killer-crimson-beetle",
+  "level": 25,
+  "maxHp": 90,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 4,
+            "damageSides": 4,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "attributes": [
+              "strength"
+            ],
+            "chancePercent": 50,
+            "type": "drain-attributes"
+          },
+          {
+            "chancePercent": 50,
+            "damageDice": 4,
+            "damageSides": 4,
+            "type": "poison"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "nameKey": "actor-demo-killer-crimson-beetle-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "role": "monster",
+  "speed": 110,
+  "tags": [
+    "animal",
+    "legacy-import",
+    "orc-cave",
+    "weird-mind"
+  ]
+}

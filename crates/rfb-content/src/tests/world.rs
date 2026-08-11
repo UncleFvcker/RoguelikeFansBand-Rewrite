@@ -138,6 +138,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         .content
         .actors
         .iter()
+        .filter(|actor| !actor.tags.iter().any(|tag| tag == "orc-cave"))
         .filter_map(|actor| {
             actor.allocation.as_ref().map(|entry| {
                 (
@@ -574,6 +575,26 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.zombified-orc", 208, 1, 40),
         ]
     );
+
+    let orc_cave = artifact
+        .content
+        .actors
+        .iter()
+        .filter(|actor| actor.tags.iter().any(|tag| tag == "orc-cave"))
+        .collect::<Vec<_>>();
+    assert_eq!(orc_cave.len(), 134);
+    let mut level_counts = [0_usize; 8];
+    let mut source_indices = BTreeSet::new();
+    for actor in orc_cave {
+        assert!((21..=28).contains(&actor.level));
+        let allocation = actor
+            .allocation
+            .as_ref()
+            .expect("Orc Cave candidates should remain globally allocatable");
+        assert!(source_indices.insert(allocation.legacy_index));
+        level_counts[(actor.level - 21) as usize] += 1;
+    }
+    assert_eq!(level_counts, [15, 15, 12, 16, 23, 16, 18, 19]);
 
     let mouse = artifact
         .content

@@ -1,0 +1,138 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "friends": {
+      "chancePercent": 60,
+      "dice": 2,
+      "sides": 4
+    },
+    "habitats": [
+      "grass",
+      "waste"
+    ],
+    "legacyDungeonIndices": [
+      35
+    ],
+    "legacyIndex": 1317,
+    "maxDepth": 50,
+    "randomMovementPercent": 25,
+    "rarity": 2
+  },
+  "attack": 5,
+  "damageDice": 3,
+  "damageSides": 3,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [
+      {
+        "percent": 60
+      },
+      {
+        "guaranteedForUnique": true,
+        "percent": 90
+      }
+    ],
+    "itemTableId": "demo.loot-table.warrens",
+    "kind": "items-and-gold"
+  },
+  "defense": 4,
+  "descriptionKey": "actor-demo-kangaroo-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 225,
+  "formatVersion": 1,
+  "glyph": "q",
+  "hitPointDice": {
+    "dice": 12,
+    "sides": 18
+  },
+  "id": "demo.actor.kangaroo",
+  "level": 23,
+  "maxHp": 114,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 3,
+            "damageSides": 3,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "durationDice": 3,
+            "durationSides": 3,
+            "type": "bleeding"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 11,
+            "damageSides": 1,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "durationDice": 3,
+            "durationSides": 3,
+            "type": "bleeding"
+          }
+        ],
+        "methodId": "rfb.blow.kick",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 11,
+            "damageSides": 1,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "chancePercent": 50,
+            "durationDice": 3,
+            "durationSides": 3,
+            "type": "stun"
+          }
+        ],
+        "methodId": "rfb.blow.kick",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.blink",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 25
+  },
+  "nameKey": "actor-demo-kangaroo-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "fire": "resistant"
+  },
+  "role": "monster",
+  "speed": 125,
+  "tags": [
+    "animal",
+    "legacy-import",
+    "orc-cave"
+  ]
+}

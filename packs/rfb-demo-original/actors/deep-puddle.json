@@ -1,0 +1,80 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 944,
+    "maxDepth": 60,
+    "rarity": 6
+  },
+  "attack": 5,
+  "damageDice": 4,
+  "damageSides": 3,
+  "damageType": "acid",
+  "defense": 4,
+  "descriptionKey": "actor-demo-deep-puddle-description",
+  "experienceValue": 70,
+  "formatVersion": 1,
+  "glyph": "~",
+  "hitPointDice": {
+    "dice": 17,
+    "sides": 6
+  },
+  "id": "demo.actor.deep-puddle",
+  "level": 23,
+  "maxHp": 59,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 4,
+            "damageSides": 3,
+            "damageType": "acid",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 3,
+            "damageSides": 3,
+            "damageType": "acid",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "modes": [
+      "swim"
+    ],
+    "neverMoves": true
+  },
+  "nameKey": "actor-demo-deep-puddle-name",
+  "resistances": {
+    "acid": "resistant",
+    "electricity": "resistant",
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 125,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "cold-blooded",
+    "empty-mind",
+    "legacy-import",
+    "nonliving",
+    "orc-cave"
+  ]
+}

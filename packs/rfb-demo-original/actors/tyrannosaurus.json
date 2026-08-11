@@ -1,0 +1,105 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "habitats": [
+      "grass"
+    ],
+    "legacyIndex": 389,
+    "maxDepth": 70,
+    "rarity": 2
+  },
+  "attack": 6,
+  "damageDice": 1,
+  "damageSides": 6,
+  "damageType": "physical",
+  "defense": 7,
+  "descriptionKey": "actor-demo-tyrannosaurus-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 400,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "R",
+  "hitPointDice": {
+    "dice": 200,
+    "sides": 3
+  },
+  "id": "demo.actor.tyrannosaurus",
+  "level": 24,
+  "maxHp": 400,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 6,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 6,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 3,
+            "damageSides": 6,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 3,
+            "damageSides": 6,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      }
+    ]
+  },
+  "movesWeakerBodies": true,
+  "nameKey": "actor-demo-tyrannosaurus-name",
+  "rangedMelee": true,
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "rideable": true,
+  "role": "monster",
+  "speed": 120,
+  "tags": [
+    "animal",
+    "legacy-import",
+    "orc-cave"
+  ]
+}

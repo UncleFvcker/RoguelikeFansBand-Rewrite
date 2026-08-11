@@ -1,0 +1,81 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 351,
+    "maxDepth": 70,
+    "randomMovementPercent": 50,
+    "rarity": 1
+  },
+  "attack": 5,
+  "damageDice": 1,
+  "damageSides": 3,
+  "damageType": "electricity",
+  "defense": 2,
+  "descriptionKey": "actor-demo-blue-dragon-bat-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 54,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "b",
+  "hitPointDice": {
+    "dice": 4,
+    "sides": 4
+  },
+  "id": "demo.actor.blue-dragon-bat",
+  "level": 21,
+  "light": {
+    "intrinsic": true,
+    "radius": 1
+  },
+  "maxHp": 10,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 1,
+            "damageSides": 3,
+            "damageType": "electricity",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.breath-electricity-20-900-r2",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 25
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "nameKey": "actor-demo-blue-dragon-bat-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "electricity": "resistant"
+  },
+  "role": "monster",
+  "speed": 130,
+  "tags": [
+    "animal",
+    "legacy-import",
+    "orc-cave"
+  ]
+}

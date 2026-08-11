@@ -1,0 +1,103 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 435,
+    "maxDepth": 70,
+    "rarity": 2
+  },
+  "attack": 6,
+  "contactAuras": [
+    {
+      "damageDice": 2,
+      "damageSides": 2,
+      "damageType": "electricity"
+    }
+  ],
+  "damageDice": 3,
+  "damageSides": 8,
+  "damageType": "electricity",
+  "defense": 8,
+  "descriptionKey": "actor-demo-colbran-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 900,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "g",
+  "hitPointDice": {
+    "dice": 80,
+    "sides": 12
+  },
+  "id": "demo.actor.colbran",
+  "level": 27,
+  "light": {
+    "intrinsic": true,
+    "radius": 1
+  },
+  "maxHp": 520,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 3,
+            "damageSides": 8,
+            "damageType": "electricity",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 3,
+            "damageSides": 8,
+            "damageType": "electricity",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.bolt-electricity-4d8-9",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 33
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "nameKey": "actor-demo-colbran-name",
+  "reflectsBolts": true,
+  "resistances": {
+    "electricity": "immune",
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 120,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "cold-blooded",
+    "empty-mind",
+    "legacy-import",
+    "nonliving",
+    "orc-cave"
+  ]
+}

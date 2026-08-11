@@ -1,0 +1,68 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 411,
+    "maxDepth": 70,
+    "randomMovementPercent": 25,
+    "rarity": 1
+  },
+  "attack": 6,
+  "damageDice": 3,
+  "damageSides": 6,
+  "damageType": "fire",
+  "defense": 5,
+  "descriptionKey": "actor-demo-giant-red-tick-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 90,
+  "formatVersion": 1,
+  "glyph": "S",
+  "hitPointDice": {
+    "dice": 16,
+    "sides": 8
+  },
+  "id": "demo.actor.giant-red-tick",
+  "level": 26,
+  "maxHp": 72,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 3,
+            "damageSides": 6,
+            "damageType": "fire",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "nameKey": "actor-demo-giant-red-tick-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "fire": "resistant"
+  },
+  "role": "monster",
+  "speed": 110,
+  "tags": [
+    "animal",
+    "legacy-import",
+    "orc-cave",
+    "weird-mind"
+  ]
+}

@@ -1,0 +1,89 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "friends": {
+      "chancePercent": 0,
+      "dice": 1,
+      "sides": 3
+    },
+    "legacyIndex": 395,
+    "maxDepth": 60,
+    "randomMovementPercent": 25,
+    "rarity": 2
+  },
+  "attack": 6,
+  "damageDice": 2,
+  "damageSides": 6,
+  "damageType": "physical",
+  "defense": 4,
+  "descriptionKey": "actor-demo-carrion-crawler-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 60,
+  "formatVersion": 1,
+  "glyph": "c",
+  "hitPointDice": {
+    "dice": 20,
+    "sides": 12
+  },
+  "id": "demo.actor.carrion-crawler",
+  "level": 25,
+  "maxHp": 130,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 2,
+            "damageSides": 6,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "chancePercent": 50,
+            "type": "paralysis"
+          }
+        ],
+        "methodId": "rfb.blow.sting",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 2,
+            "damageSides": 6,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "chancePercent": 50,
+            "type": "paralysis"
+          }
+        ],
+        "methodId": "rfb.blow.sting",
+        "toHit": 20
+      }
+    ]
+  },
+  "nameKey": "actor-demo-carrion-crawler-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseWeight": 0,
+    "skeletonItemKindId": "demo.item.skeleton-remains",
+    "skeletonWeight": 1
+  },
+  "resistances": {
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 110,
+  "tags": [
+    "animal",
+    "legacy-import",
+    "orc-cave",
+    "weird-mind"
+  ]
+}

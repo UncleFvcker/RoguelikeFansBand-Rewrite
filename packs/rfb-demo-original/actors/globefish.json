@@ -1,0 +1,97 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "habitats": [
+      "all"
+    ],
+    "legacyIndex": 360,
+    "maxDepth": 60,
+    "rarity": 1
+  },
+  "attack": 5,
+  "damageDice": 3,
+  "damageSides": 5,
+  "damageType": "physical",
+  "defense": 3,
+  "descriptionKey": "actor-demo-globefish-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 200,
+  "formatVersion": 1,
+  "glyph": "l",
+  "hitPointDice": {
+    "dice": 20,
+    "forceMaximum": true,
+    "sides": 10
+  },
+  "id": "demo.actor.globefish",
+  "level": 21,
+  "maxHp": 200,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 3,
+            "damageSides": 5,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "damageDice": 2,
+            "damageSides": 7,
+            "type": "poison"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 3,
+            "damageSides": 5,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "damageDice": 2,
+            "damageSides": 7,
+            "type": "poison"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.breath-poison-17-600-r2",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 10
+  },
+  "movement": {
+    "modes": [
+      "aquatic"
+    ]
+  },
+  "nameKey": "actor-demo-globefish-name",
+  "resistances": {
+    "poison": "resistant",
+    "water": "resistant"
+  },
+  "role": "monster",
+  "speed": 110,
+  "tags": [
+    "empty-mind",
+    "legacy-import",
+    "orc-cave"
+  ]
+}

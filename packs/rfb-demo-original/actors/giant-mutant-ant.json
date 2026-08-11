@@ -1,0 +1,97 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "friends": {
+      "chancePercent": 80,
+      "dice": 3,
+      "sides": 3
+    },
+    "habitats": [
+      "wood"
+    ],
+    "legacyDungeonIndices": [
+      35
+    ],
+    "legacyIndex": 1324,
+    "maxDepth": 70,
+    "randomMovementPercent": 25,
+    "rarity": 2
+  },
+  "attack": 7,
+  "damageDice": 2,
+  "damageSides": 12,
+  "damageType": "physical",
+  "defense": 7,
+  "descriptionKey": "actor-demo-giant-mutant-ant-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 250,
+  "formatVersion": 1,
+  "glyph": "a",
+  "hitPointDice": {
+    "dice": 19,
+    "sides": 13
+  },
+  "id": "demo.actor.giant-mutant-ant",
+  "killsWeakerBodies": true,
+  "level": 28,
+  "maxHp": 133,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 2,
+            "damageSides": 12,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 2,
+            "damageSides": 12,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "damageDice": 2,
+            "damageSides": 12,
+            "type": "poison"
+          },
+          {
+            "chancePercent": 10,
+            "damageDice": 0,
+            "damageSides": 0,
+            "type": "disease"
+          }
+        ],
+        "methodId": "rfb.blow.sting",
+        "toHit": 20
+      }
+    ]
+  },
+  "nameKey": "actor-demo-giant-mutant-ant-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "role": "monster",
+  "speed": 115,
+  "tags": [
+    "animal",
+    "ant",
+    "legacy-import",
+    "orc-cave",
+    "weird-mind"
+  ]
+}

@@ -1,0 +1,124 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 965,
+    "maxDepth": 999,
+    "rarity": 6
+  },
+  "attack": 5,
+  "damageDice": 2,
+  "damageSides": 3,
+  "damageType": "confusion",
+  "defense": 4,
+  "descriptionKey": "actor-demo-statue-of-chest-mimic-mimic-description",
+  "experienceValue": 70,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "`",
+  "hitPointDice": {
+    "dice": 10,
+    "sides": 14
+  },
+  "id": "demo.actor.statue-of-chest-mimic-mimic",
+  "level": 21,
+  "maxHp": 75,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "damageDice": 2,
+            "damageSides": 3,
+            "type": "confusion"
+          }
+        ],
+        "methodId": "rfb.blow.gaze",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "damageDice": 3,
+            "damageSides": 4,
+            "type": "poison"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "damageDice": 3,
+            "damageSides": 4,
+            "type": "poison"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 2,
+            "damageSides": 3,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "type": "blind"
+          }
+        ],
+        "methodId": "rfb.blow.spit",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.blind",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.confuse",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.scare",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.curse-8d8",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-poison-12d2",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-legacy-import-l21-1d1",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 20
+  },
+  "movement": {
+    "neverMoves": true
+  },
+  "nameKey": "actor-demo-statue-of-chest-mimic-mimic-name",
+  "role": "monster",
+  "speed": 110,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "cold-blooded",
+    "empty-mind",
+    "legacy-import",
+    "orc-cave"
+  ]
+}

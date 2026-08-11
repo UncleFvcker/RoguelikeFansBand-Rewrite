@@ -1,0 +1,81 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "habitats": [
+      "all"
+    ],
+    "legacyIndex": 366,
+    "maxDepth": 60,
+    "randomMovementPercent": 25,
+    "rarity": 1
+  },
+  "attack": 5,
+  "damageDice": 1,
+  "damageSides": 12,
+  "damageType": "physical",
+  "defense": 5,
+  "descriptionKey": "actor-demo-killer-stag-beetle-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 80,
+  "formatVersion": 1,
+  "glyph": "K",
+  "hitPointDice": {
+    "dice": 20,
+    "sides": 8
+  },
+  "id": "demo.actor.killer-stag-beetle",
+  "level": 22,
+  "maxHp": 90,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 12,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 12,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "nameKey": "actor-demo-killer-stag-beetle-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "role": "monster",
+  "speed": 110,
+  "tags": [
+    "animal",
+    "legacy-import",
+    "orc-cave",
+    "weird-mind"
+  ]
+}

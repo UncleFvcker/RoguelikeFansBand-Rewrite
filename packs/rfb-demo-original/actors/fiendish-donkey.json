@@ -1,0 +1,114 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "friends": {
+      "chancePercent": 0,
+      "dice": 3,
+      "sides": 3
+    },
+    "legacyIndex": 1145,
+    "maxDepth": 999,
+    "rarity": 1
+  },
+  "attack": 6,
+  "damageDice": 2,
+  "damageSides": 5,
+  "damageType": "physical",
+  "defense": 5,
+  "descriptionKey": "actor-demo-fiendish-donkey-description",
+  "doorInteraction": {
+    "opens": true
+  },
+  "experienceValue": 666,
+  "formatVersion": 1,
+  "glyph": "q",
+  "hitPointDice": {
+    "dice": 40,
+    "sides": 12
+  },
+  "id": "demo.actor.fiendish-donkey",
+  "level": 26,
+  "maxHp": 260,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 2,
+            "damageSides": 5,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.butt",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 6,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "damageDice": 1,
+            "damageSides": 6,
+            "type": "poison"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 3,
+            "damageSides": 4,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.kick",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.breath-poison-17-600-r2",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.shriek",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 5
+  },
+  "nameKey": "actor-demo-fiendish-donkey-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "acid": "resistant",
+    "nether": "resistant",
+    "poison": "resistant"
+  },
+  "rideable": true,
+  "role": "monster",
+  "speed": 112,
+  "tags": [
+    "animal",
+    "legacy-import",
+    "no-quest",
+    "orc-cave"
+  ]
+}

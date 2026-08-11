@@ -1,0 +1,78 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 906,
+    "maxDepth": 70,
+    "rarity": 2
+  },
+  "attack": 5,
+  "damageDice": 7,
+  "damageSides": 7,
+  "damageType": "physical",
+  "defense": 4,
+  "descriptionKey": "actor-demo-lava-golem-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 150,
+  "formatVersion": 1,
+  "glyph": "g",
+  "hitPointDice": {
+    "dice": 25,
+    "sides": 15
+  },
+  "id": "demo.actor.lava-golem",
+  "killsWeakerBodies": true,
+  "level": 22,
+  "maxHp": 200,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 7,
+            "damageSides": 7,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "armorMitigated": false,
+            "damageDice": 7,
+            "damageSides": 7,
+            "damageType": "fire",
+            "type": "damage"
+          },
+          {
+            "chancePercent": 25,
+            "durationDice": 1,
+            "durationSides": 6,
+            "type": "stun"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "nameKey": "actor-demo-lava-golem-name",
+  "resistances": {
+    "fire": "resistant"
+  },
+  "role": "monster",
+  "speed": 110,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "empty-mind",
+    "legacy-import",
+    "nonliving",
+    "orc-cave"
+  ],
+  "terrainInteraction": {
+    "destroysItems": true
+  }
+}

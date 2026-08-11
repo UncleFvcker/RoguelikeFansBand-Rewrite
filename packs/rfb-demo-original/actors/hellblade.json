@@ -1,0 +1,106 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 420,
+    "maxDepth": 999,
+    "rarity": 2
+  },
+  "attack": 6,
+  "damageDice": 2,
+  "damageSides": 13,
+  "damageType": "physical",
+  "defense": 4,
+  "descriptionKey": "actor-demo-hellblade-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 130,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "|",
+  "hitPointDice": {
+    "dice": 13,
+    "forceMaximum": true,
+    "sides": 13
+  },
+  "id": "demo.actor.hellblade",
+  "level": 27,
+  "maxHp": 169,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 2,
+            "damageSides": 13,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "amountDice": 20,
+            "amountSides": 6,
+            "type": "drain-experience"
+          },
+          {
+            "chancePercent": 20,
+            "durationDice": 3,
+            "durationSides": 3,
+            "type": "bleeding"
+          }
+        ],
+        "methodId": "rfb.blow.slash",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 2,
+            "damageSides": 13,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "amountDice": 20,
+            "amountSides": 6,
+            "type": "drain-experience"
+          },
+          {
+            "chancePercent": 20,
+            "durationDice": 3,
+            "durationSides": 3,
+            "type": "bleeding"
+          }
+        ],
+        "methodId": "rfb.blow.slash",
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "nameKey": "actor-demo-hellblade-name",
+  "resistances": {
+    "chaos": "resistant",
+    "cold": "resistant",
+    "poison": "immune"
+  },
+  "role": "monster",
+  "speed": 120,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "cold-blooded",
+    "evil",
+    "legacy-import",
+    "nonliving",
+    "orc-cave"
+  ]
+}

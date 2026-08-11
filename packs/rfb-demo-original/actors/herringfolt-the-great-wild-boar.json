@@ -1,0 +1,104 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "habitats": [
+      "wood"
+    ],
+    "legacyIndex": 1278,
+    "maxDepth": 999,
+    "rarity": 1,
+    "wildOnly": true
+  },
+  "attack": 6,
+  "damageDice": 5,
+  "damageSides": 10,
+  "damageType": "physical",
+  "defense": 7,
+  "descriptionKey": "actor-demo-herringfolt-the-great-wild-boar-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 1210,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "q",
+  "hitPointDice": {
+    "dice": 66,
+    "forceMaximum": true,
+    "sides": 11
+  },
+  "id": "demo.actor.herringfolt-the-great-wild-boar",
+  "level": 24,
+  "maxHp": 726,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 5,
+            "damageSides": 10,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "durationDice": 3,
+            "durationSides": 4,
+            "type": "stun"
+          }
+        ],
+        "methodId": "rfb.blow.crush",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 4,
+            "damageSides": 10,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "durationDice": 5,
+            "durationSides": 6,
+            "type": "bleeding"
+          }
+        ],
+        "methodId": "rfb.blow.butt",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 3,
+            "damageSides": 6,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      }
+    ]
+  },
+  "nameKey": "actor-demo-herringfolt-the-great-wild-boar-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "role": "monster",
+  "speed": 125,
+  "statusImmunities": [
+    "rfb.status.confusion"
+  ],
+  "tags": [
+    "animal",
+    "legacy-import",
+    "orc-cave",
+    "unique"
+  ]
+}

@@ -1,0 +1,81 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 377,
+    "maxDepth": 70,
+    "randomMovementPercent": 50,
+    "rarity": 1
+  },
+  "attack": 5,
+  "damageDice": 1,
+  "damageSides": 3,
+  "damageType": "fire",
+  "defense": 2,
+  "descriptionKey": "actor-demo-red-dragon-bat-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 60,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "b",
+  "hitPointDice": {
+    "dice": 3,
+    "sides": 8
+  },
+  "id": "demo.actor.red-dragon-bat",
+  "level": 23,
+  "light": {
+    "intrinsic": true,
+    "radius": 1
+  },
+  "maxHp": 13,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 1,
+            "damageSides": 3,
+            "damageType": "fire",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.breath-fire-20-900-r2",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 25
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "nameKey": "actor-demo-red-dragon-bat-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "fire": "resistant"
+  },
+  "role": "monster",
+  "speed": 130,
+  "tags": [
+    "animal",
+    "legacy-import",
+    "orc-cave"
+  ]
+}

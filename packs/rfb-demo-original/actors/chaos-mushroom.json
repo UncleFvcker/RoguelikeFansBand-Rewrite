@@ -1,0 +1,99 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 904,
+    "maxDepth": 70,
+    "rarity": 5
+  },
+  "attack": 5,
+  "damageDice": 3,
+  "damageSides": 4,
+  "damageType": "poison",
+  "defense": 0,
+  "descriptionKey": "actor-demo-chaos-mushroom-description",
+  "experienceValue": 242,
+  "formatVersion": 1,
+  "glyph": ",",
+  "hitPointDice": {
+    "dice": 16,
+    "sides": 6
+  },
+  "id": "demo.actor.chaos-mushroom",
+  "level": 23,
+  "maxHp": 56,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "damageDice": 3,
+            "damageSides": 4,
+            "type": "poison"
+          }
+        ],
+        "methodId": "rfb.blow.spore",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "damageDice": 3,
+            "damageSides": 4,
+            "type": "confusion"
+          }
+        ],
+        "methodId": "rfb.blow.spore",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 3,
+            "damageSides": 4,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "type": "blind"
+          }
+        ],
+        "methodId": "rfb.blow.spore",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.breath-nuke-17-600-r2",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-poison-17-600-r2",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 9
+  },
+  "movement": {
+    "neverMoves": true
+  },
+  "nameKey": "actor-demo-chaos-mushroom-name",
+  "resistances": {
+    "disenchant": "resistant",
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 120,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "empty-mind",
+    "legacy-import",
+    "orc-cave"
+  ]
+}

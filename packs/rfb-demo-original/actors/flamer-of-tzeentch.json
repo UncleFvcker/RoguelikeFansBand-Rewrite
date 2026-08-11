@@ -1,0 +1,97 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 425,
+    "maxDepth": 80,
+    "rarity": 2
+  },
+  "attack": 6,
+  "contactAuras": [
+    {
+      "damageDice": 2,
+      "damageSides": 2,
+      "damageType": "fire"
+    }
+  ],
+  "damageDice": 3,
+  "damageSides": 6,
+  "damageType": "fire",
+  "defense": 7,
+  "descriptionKey": "actor-demo-flamer-of-tzeentch-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 500,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": ",",
+  "hitPointDice": {
+    "dice": 60,
+    "sides": 15
+  },
+  "id": "demo.actor.flamer-of-tzeentch",
+  "level": 27,
+  "maxHp": 480,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 3,
+            "damageSides": 6,
+            "damageType": "fire",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.engulf",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 3,
+            "damageSides": 6,
+            "damageType": "fire",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.engulf",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.bolt-fire-9d8-9",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-fire-1d94-10",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 33
+  },
+  "nameKey": "actor-demo-flamer-of-tzeentch-name",
+  "resistances": {
+    "fire": "resistant",
+    "plasma": "resistant",
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 110,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "demon",
+    "evil",
+    "legacy-import",
+    "nonliving",
+    "orc-cave"
+  ]
+}

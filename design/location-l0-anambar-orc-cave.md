@@ -24,9 +24,10 @@ the plan remains the source-drift check for those imported facts.
 
 ## Machine-checked gaps
 
-The same selection keeps three explicit deferred groups:
+The same selection keeps two explicit deferred groups after contract-v252 imported
+the 134 directly expressible level 21–28 allocation candidates:
 
-1. Orc Cave allocation candidates from levels 21–32.
+1. Orc Cave allocation candidates from levels 29–32.
 2. Generic dungeon loot, guardian 1185, and the final object/ego reward.
 Anambar shop stock is no longer a gap: L2 exposes only item kinds whose current
 runtime behavior is complete. Home has no stock and shares the Outpost storage.

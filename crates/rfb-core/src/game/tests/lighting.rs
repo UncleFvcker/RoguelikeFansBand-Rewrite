@@ -339,6 +339,43 @@ fn surface_is_ambient_lit_and_dungeon_visibility_follows_equipped_light_radius()
 }
 
 #[test]
+fn infravision_does_not_reveal_cold_blooded_monsters() {
+    let mut game =
+        Game::new_with_build(43, RFB_WARRIOR_BUILD_ID).expect("Warrens Warrior should create");
+    descend_one_floor(&mut game);
+    clear_monsters(&mut game);
+    game.glow.fill(false);
+    game.player.position = Position { x: 10, y: 10 };
+    for item in &mut game.items {
+        if matches!(item.location, ItemLocation::Equipped { .. }) {
+            item.location = ItemLocation::Inventory;
+        }
+    }
+    assert!(game.gain_mutation("rfb.mutation.infravision", &mut Vec::new()));
+    let warm_position = Position { x: 11, y: 10 };
+    let cold_position = Position { x: 10, y: 11 };
+    for position in [game.player.position, warm_position, cold_position] {
+        replace_terrain(&mut game, position, "demo.terrain.floor");
+    }
+    game.push_generated_actor("test.warm".to_owned(), "demo.actor.newt", warm_position);
+    game.push_generated_actor("test.cold".to_owned(), "demo.actor.ghast", cold_position);
+
+    let snapshot = game.snapshot();
+    assert!(
+        snapshot
+            .entities
+            .iter()
+            .any(|actor| actor.id == "test.warm")
+    );
+    assert!(
+        snapshot
+            .entities
+            .iter()
+            .all(|actor| actor.id != "test.cold")
+    );
+}
+
+#[test]
 fn invisible_actors_are_hidden_until_detected_and_detection_round_trips() {
     let mut game = Game::new(12);
     clear_monsters(&mut game);

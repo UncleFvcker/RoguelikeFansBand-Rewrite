@@ -93,6 +93,7 @@
     "rfb.status.sleep"
   ],
   "tags": [
+    "cold-blooded",
     "construct",
     "evil",
     "legacy-import",

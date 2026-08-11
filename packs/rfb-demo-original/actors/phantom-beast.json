@@ -1,0 +1,83 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 385,
+    "maxDepth": 70,
+    "rarity": 1
+  },
+  "attack": 6,
+  "damageDice": 44,
+  "damageSides": 2,
+  "damageType": "physical",
+  "defense": 4,
+  "descriptionKey": "actor-demo-phantom-beast-description",
+  "experienceValue": 242,
+  "formatVersion": 1,
+  "glyph": "G",
+  "hitPointDice": {
+    "dice": 12,
+    "forceMaximum": true,
+    "sides": 12
+  },
+  "id": "demo.actor.phantom-beast",
+  "level": 24,
+  "maxHp": 144,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 44,
+            "damageSides": 2,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 22,
+            "damageSides": 2,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "attributes": [
+              "charisma"
+            ],
+            "chancePercent": 25,
+            "type": "drain-attributes"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "modes": [
+      "fly",
+      "pass-wall"
+    ]
+  },
+  "nameKey": "actor-demo-phantom-beast-name",
+  "role": "monster",
+  "speed": 110,
+  "statusImmunities": [
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "cold-blooded",
+    "empty-mind",
+    "legacy-import",
+    "nonliving",
+    "orc-cave",
+    "resist-teleport"
+  ]
+}

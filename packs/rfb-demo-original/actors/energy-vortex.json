@@ -1,0 +1,88 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 359,
+    "maxDepth": 999,
+    "randomMovementPercent": 50,
+    "rarity": 2
+  },
+  "attack": 5,
+  "contactAuras": [
+    {
+      "damageDice": 1,
+      "damageSides": 2,
+      "damageType": "electricity"
+    }
+  ],
+  "damageDice": 5,
+  "damageSides": 5,
+  "damageType": "electricity",
+  "defense": 3,
+  "descriptionKey": "actor-demo-energy-vortex-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 60,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "v",
+  "hitPointDice": {
+    "dice": 12,
+    "sides": 12
+  },
+  "id": "demo.actor.energy-vortex",
+  "level": 21,
+  "light": {
+    "intrinsic": true,
+    "radius": 2
+  },
+  "maxHp": 78,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 5,
+            "damageSides": 5,
+            "damageType": "electricity",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.engulf",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.breath-electricity-20-900-r2",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 16
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "nameKey": "actor-demo-energy-vortex-name",
+  "resistances": {
+    "electricity": "immune"
+  },
+  "role": "monster",
+  "speed": 110,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "empty-mind",
+    "legacy-import",
+    "nonliving",
+    "orc-cave"
+  ]
+}

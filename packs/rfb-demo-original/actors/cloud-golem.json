@@ -1,0 +1,80 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 905,
+    "maxDepth": 70,
+    "rarity": 2
+  },
+  "attack": 5,
+  "damageDice": 7,
+  "damageSides": 7,
+  "damageType": "physical",
+  "defense": 3,
+  "descriptionKey": "actor-demo-cloud-golem-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 150,
+  "formatVersion": 1,
+  "glyph": "g",
+  "hitPointDice": {
+    "dice": 20,
+    "sides": 15
+  },
+  "id": "demo.actor.cloud-golem",
+  "level": 22,
+  "maxHp": 160,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 7,
+            "damageSides": 7,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "armorMitigated": false,
+            "damageDice": 7,
+            "damageSides": 7,
+            "damageType": "electricity",
+            "type": "damage"
+          },
+          {
+            "chancePercent": 25,
+            "durationDice": 1,
+            "durationSides": 6,
+            "type": "stun"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "nameKey": "actor-demo-cloud-golem-name",
+  "resistances": {
+    "cold": "resistant",
+    "electricity": "resistant"
+  },
+  "role": "monster",
+  "speed": 110,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "empty-mind",
+    "legacy-import",
+    "nonliving",
+    "orc-cave"
+  ]
+}

@@ -1,0 +1,81 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 367,
+    "maxDepth": 70,
+    "rarity": 2
+  },
+  "attack": 5,
+  "damageDice": 7,
+  "damageSides": 7,
+  "damageType": "physical",
+  "defense": 8,
+  "descriptionKey": "actor-demo-iron-golem-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 160,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "g",
+  "hitPointDice": {
+    "dice": 80,
+    "sides": 12
+  },
+  "id": "demo.actor.iron-golem",
+  "level": 22,
+  "maxHp": 520,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 7,
+            "damageSides": 7,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "chancePercent": 35,
+            "durationDice": 1,
+            "durationSides": 5,
+            "type": "stun"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.slow",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 14
+  },
+  "nameKey": "actor-demo-iron-golem-name",
+  "resistances": {
+    "cold": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "poison": "immune"
+  },
+  "role": "monster",
+  "speed": 110,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "cold-blooded",
+    "empty-mind",
+    "legacy-import",
+    "nonliving",
+    "orc-cave"
+  ]
+}

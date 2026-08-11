@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.bolt-fire-9d8-9",
+  "descriptionKey": "ability-legacy-bolt-fire-9d8-9-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.bolt-fire-9d8-9",
+  "nameKey": "ability-legacy-bolt-fire-9d8-9-name",
+  "tags": [
+    "legacy-import",
+    "damage"
+  ],
+  "target": {
+    "modes": [
+      "position",
+      "entity"
+    ],
+    "range": 8,
+    "requiresLineOfEffect": true
+  }
+}

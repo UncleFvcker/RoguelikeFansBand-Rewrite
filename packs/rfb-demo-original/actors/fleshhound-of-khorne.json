@@ -1,0 +1,104 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 374,
+    "maxDepth": 999,
+    "rarity": 3
+  },
+  "attack": 5,
+  "damageDice": 4,
+  "damageSides": 1,
+  "damageType": "physical",
+  "defense": 3,
+  "descriptionKey": "actor-demo-fleshhound-of-khorne-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 150,
+  "formatVersion": 1,
+  "glyph": "C",
+  "hitPointDice": {
+    "dice": 20,
+    "sides": 20
+  },
+  "id": "demo.actor.fleshhound-of-khorne",
+  "level": 23,
+  "maxHp": 210,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 4,
+            "damageSides": 1,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 4,
+            "damageSides": 1,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 6,
+            "damageSides": 1,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 6,
+            "damageSides": 1,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      }
+    ]
+  },
+  "nameKey": "actor-demo-fleshhound-of-khorne-name",
+  "resistances": {
+    "disenchant": "resistant",
+    "fire": "resistant",
+    "nether": "resistant",
+    "nexus": "resistant",
+    "plasma": "resistant"
+  },
+  "role": "monster",
+  "speed": 120,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "animal",
+    "demon",
+    "evil",
+    "legacy-import",
+    "orc-cave"
+  ]
+}

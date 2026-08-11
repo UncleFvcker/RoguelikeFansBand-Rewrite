@@ -52,7 +52,7 @@ pub(super) fn validate_actors(
                     / 2
             };
             actor.role == ActorRole::Monster
-                && (1..=100).contains(&hit_points.dice)
+                && hit_points.dice > 0
                 && (1..=10_000).contains(&hit_points.sides)
                 && maximum <= 1_000_000
                 && actor.max_hp == expected_definition_hp

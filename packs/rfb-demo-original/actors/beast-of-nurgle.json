@@ -1,0 +1,93 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 422,
+    "maxDepth": 70,
+    "rarity": 2
+  },
+  "attack": 6,
+  "damageDice": 3,
+  "damageSides": 3,
+  "damageType": "poison",
+  "defense": 5,
+  "descriptionKey": "actor-demo-beast-of-nurgle-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 100,
+  "formatVersion": 1,
+  "glyph": "q",
+  "hitPointDice": {
+    "dice": 15,
+    "sides": 10
+  },
+  "id": "demo.actor.beast-of-nurgle",
+  "level": 27,
+  "maxHp": 82,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "damageDice": 3,
+            "damageSides": 3,
+            "type": "poison"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "damageDice": 3,
+            "damageSides": 3,
+            "type": "disease"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 2,
+            "damageSides": 5,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "armorMitigated": false,
+            "damageDice": 2,
+            "damageSides": 5,
+            "damageType": "acid",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "modes": [
+      "swim"
+    ]
+  },
+  "nameKey": "actor-demo-beast-of-nurgle-name",
+  "resistances": {
+    "acid": "resistant",
+    "fire": "resistant",
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 110,
+  "tags": [
+    "demon",
+    "evil",
+    "legacy-import",
+    "orc-cave",
+    "weird-mind"
+  ]
+}

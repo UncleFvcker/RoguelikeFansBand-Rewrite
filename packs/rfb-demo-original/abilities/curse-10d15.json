@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.curse-10d15",
+  "descriptionKey": "ability-legacy-curse-10d15-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.curse-10d15",
+  "nameKey": "ability-legacy-curse-10d15-name",
+  "tags": [
+    "curse",
+    "legacy-import"
+  ],
+  "target": {
+    "modes": [
+      "position",
+      "entity"
+    ],
+    "range": 8,
+    "requiresLineOfEffect": true
+  }
+}

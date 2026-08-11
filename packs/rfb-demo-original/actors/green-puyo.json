@@ -1,0 +1,65 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 961,
+    "maxDepth": 60,
+    "multiplies": true,
+    "rarity": 8
+  },
+  "attack": 6,
+  "damageDice": 10,
+  "damageSides": 2,
+  "damageType": "acid",
+  "defense": 2,
+  "descriptionKey": "actor-demo-green-puyo-description",
+  "experienceValue": 50,
+  "formatVersion": 1,
+  "glyph": "j",
+  "hitPointDice": {
+    "dice": 3,
+    "sides": 1
+  },
+  "id": "demo.actor.green-puyo",
+  "level": 25,
+  "maxHp": 3,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 10,
+            "damageSides": 2,
+            "damageType": "acid",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.explode",
+        "selfDestructs": true,
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "neverMoves": true
+  },
+  "nameKey": "actor-demo-green-puyo-name",
+  "resistances": {
+    "cold": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 120,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "empty-mind",
+    "legacy-import",
+    "orc-cave"
+  ]
+}

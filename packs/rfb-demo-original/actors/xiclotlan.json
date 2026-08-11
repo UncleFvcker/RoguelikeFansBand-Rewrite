@@ -1,0 +1,91 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 396,
+    "maxDepth": 60,
+    "randomMovementPercent": 25,
+    "rarity": 2
+  },
+  "attack": 6,
+  "damageDice": 6,
+  "damageSides": 4,
+  "damageType": "physical",
+  "defense": 6,
+  "descriptionKey": "actor-demo-xiclotlan-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 60,
+  "formatVersion": 1,
+  "glyph": "#",
+  "hitPointDice": {
+    "dice": 25,
+    "forceMaximum": true,
+    "sides": 25
+  },
+  "id": "demo.actor.xiclotlan",
+  "level": 25,
+  "maxHp": 625,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 6,
+            "damageSides": 4,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.crush",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 6,
+            "damageSides": 4,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.crush",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 3,
+            "damageSides": 2,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      }
+    ]
+  },
+  "nameKey": "actor-demo-xiclotlan-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "electricity": "resistant",
+    "poison": "immune"
+  },
+  "rideable": true,
+  "role": "monster",
+  "speed": 110,
+  "tags": [
+    "empty-mind",
+    "legacy-import",
+    "orc-cave"
+  ]
+}

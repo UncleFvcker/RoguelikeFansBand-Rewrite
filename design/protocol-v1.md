@@ -491,4 +491,4 @@ v82；旧开发存档不兼容。
 
 协议 1.169 增加窄命令 `StayAtInn { facilityId }`。阿南巴旅店住宿通过既有通用事件
 投影成功、费用、余额、时间跨度和拒绝原因；不新增持久字段或专用建筑服务框架。
-State Hash Schema 保持 v85，save 容器保持 v1，基线推进至 contract-v251。
+State Hash Schema 保持 v85，save 容器保持 v1，基线推进至 contract-v252。

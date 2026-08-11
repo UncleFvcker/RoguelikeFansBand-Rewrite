@@ -127,6 +127,7 @@
   "role": "monster",
   "speed": 110,
   "tags": [
+    "cold-blooded",
     "demon",
     "evil",
     "invisible",

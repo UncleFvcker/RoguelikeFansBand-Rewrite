@@ -7265,6 +7265,7 @@ fn monster_flag_is_mapped(flag: &str) -> bool {
             | "COMPOST"
             | "FIXED_UNIQUE"
             | "NO_QUEST"
+            | "COLD_BLOOD"
     ) {
         return true;
     }
@@ -7403,6 +7404,7 @@ fn monster_json(
         ("TROLL", "troll"),
         ("GIANT", "giant"),
         ("NONLIVING", "nonliving"),
+        ("COLD_BLOOD", "cold-blooded"),
         ("EMPTY_MIND", "empty-mind"),
         ("WEIRD_MIND", "weird-mind"),
     ] {
@@ -7995,6 +7997,7 @@ fn demo_monster_json(
         ("TROLL", "troll"),
         ("GIANT", "giant"),
         ("NONLIVING", "nonliving"),
+        ("COLD_BLOOD", "cold-blooded"),
         ("UNIQUE", "unique"),
         ("THIEF", "thief"),
         ("INVISIBLE", "invisible"),
@@ -12999,6 +13002,36 @@ F:WEIRD_MIND | NEVER_BLOW\n";
                 "{tag}"
             );
         }
+    }
+
+    #[test]
+    fn cold_blood_flag_becomes_an_infravision_tag() {
+        const COLD_BLOOD_R_INFO: &str = "\
+N:1043:Cold blooded beast\n\
+G:R:w\n\
+I:110:1d1:1:1:1:1\n\
+W:1:1:1:1:0:0\n\
+B:BITE:HURT(1d1)\n\
+F:ANIMAL | COLD_BLOOD\n";
+        let monsters =
+            parse_r_info(COLD_BLOOD_R_INFO).expect("synthetic cold-blooded monster should parse");
+        let selection: DemoMonsterSelectionEntry = serde_json::from_value(serde_json::json!({
+            "sourceIndex": 1043,
+            "id": "cold-blooded-beast",
+            "tags": ["warrens"],
+            "omittedFlags": []
+        }))
+        .expect("synthetic selection should parse");
+        let actor = demo_monster_json(&monsters[0], &selection, &mut BTreeMap::new())
+            .expect("cold blood should be handled");
+
+        assert!(
+            actor["tags"]
+                .as_array()
+                .expect("tags should be an array")
+                .iter()
+                .any(|candidate| candidate == "cold-blooded")
+        );
     }
 
     #[test]

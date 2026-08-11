@@ -1,0 +1,77 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 355,
+    "maxDepth": 999,
+    "randomMovementPercent": 50,
+    "rarity": 2
+  },
+  "attack": 5,
+  "damageDice": 3,
+  "damageSides": 3,
+  "damageType": "acid",
+  "defense": 3,
+  "descriptionKey": "actor-demo-water-vortex-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 60,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "v",
+  "hitPointDice": {
+    "dice": 9,
+    "sides": 9
+  },
+  "id": "demo.actor.water-vortex",
+  "level": 21,
+  "maxHp": 45,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 3,
+            "damageSides": 3,
+            "damageType": "acid",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.engulf",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.breath-acid-20-900-r2",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 16
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "nameKey": "actor-demo-water-vortex-name",
+  "resistances": {
+    "acid": "immune"
+  },
+  "role": "monster",
+  "speed": 110,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "empty-mind",
+    "legacy-import",
+    "nonliving",
+    "orc-cave"
+  ]
+}

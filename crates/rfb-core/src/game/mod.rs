@@ -5041,7 +5041,13 @@ impl Game {
             && has_line_of_sight(self, self.player.position, entity.position)
             && self
                 .actor_runtime_definition(entity)
-                .is_some_and(|definition| actor_matches_category(definition, "living"))
+                .is_some_and(|definition| {
+                    !definition.tags.iter().any(|tag| tag == "cold-blooded")
+                        || definition
+                            .contact_auras
+                            .iter()
+                            .any(|aura| aura.damage_type == ActorDamageType::Fire)
+                })
     }
 
     fn refresh_invisible_visibility(
