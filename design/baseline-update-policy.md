@@ -6,7 +6,7 @@
 
 contract fixture 是规则兼容边界，不能把测试失败简单处理为“刷新预期结果”。政策用于保证每次规则变化只修改真正受影响的场景，同时保留可审查的失败原因。
 
-当前逻辑基线是 `contract-v248`，机器可读政策固定在：
+当前逻辑基线是 `contract-v249`，机器可读政策固定在：
 
 ```text
 tests/fixtures/active/baseline-policy.json
@@ -126,3 +126,9 @@ Random Telepathy、Nausea、Warning 与 Wraithform 复用变异移除、属性�
 保护、互斥移除、原版循环与精确 RNG 顺序。药水加入两座城镇的 Black Market，
 固定库存改变新游戏公共初始化与物品实例分配，因此 21 个 fixture 全量刷新；算法
 分支、零候选和物品消耗由 Core 聚焦测试覆盖。协议、存档和 State Hash 结构不变。
+
+`contract-v249` 完成 M4F-C 的 Good/Bad Luck、Easy Tiring 与 Impotence。幸运统一
+影响随机变异权重、物品质量/生成深度和永久属性提升；易疲劳复用 `minorSlow` 并
+新增持久的恢复能量；魔法无能在共享设备检定入口按 staff/rod 与特殊效果修正技能。
+`minorSlowEnergy` 使协议升至 1.167、State Hash Schema 升至 v84，21 个 fixture
+全量刷新；具体概率、疲劳恢复和设备类别分支由 Core 聚焦测试覆盖。

@@ -8,11 +8,42 @@ use super::*;
 
 const GOOD_LUCK_MUTATION_ID: &str = "rfb.mutation.good-luck";
 const BAD_LUCK_MUTATION_ID: &str = "rfb.mutation.bad-luck";
+const EASY_TIRING_MUTATION_ID: &str = "rfb.mutation.easy-tiring";
+const IMPOTENCE_MUTATION_ID: &str = "rfb.mutation.impotence";
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) enum LuckBias {
+    Bad,
+    Neutral,
+    Good,
+}
+
+impl LuckBias {
+    pub(super) const fn attribute_increase_threshold(self, value: u16) -> u64 {
+        if value == 17 {
+            58
+        } else {
+            match self {
+                Self::Bad => 80,
+                Self::Neutral => 75,
+                Self::Good => 70,
+            }
+        }
+    }
+}
 
 fn scale_by_ratio(value: u64, ratio: rfb_content::MutationRatioDefinition) -> u64 {
     value
         .saturating_mul(u64::from(ratio.numerator))
         .saturating_div(u64::from(ratio.denominator))
+}
+
+fn impotence_extra_effect(effect: &ItemUseEffectDefinition) -> bool {
+    match effect {
+        ItemUseEffectDefinition::ApplySpeed { .. } => true,
+        ItemUseEffectDefinition::Sequence { effects } => effects.iter().any(impotence_extra_effect),
+        _ => false,
+    }
 }
 
 #[derive(Clone, Copy)]
@@ -1159,6 +1190,14 @@ impl Game {
         true
     }
 
+    fn mutation_can_be_gained(&self, definition: &MutationDefinition) -> bool {
+        !self.progress.active_mutation_ids.contains(&definition.id)
+            && !definition
+                .removes_on_gain
+                .iter()
+                .any(|mutation_id| self.progress.locked_mutation_ids.contains(mutation_id))
+    }
+
     pub(super) fn lose_mutation(
         &mut self,
         mutation_id: &str,
@@ -1365,9 +1404,7 @@ impl Game {
                     return None;
                 }
                 let eligible = match operation {
-                    RandomMutationOperation::Gain => {
-                        !self.progress.active_mutation_ids.contains(&definition.id)
-                    }
+                    RandomMutationOperation::Gain => self.mutation_can_be_gained(definition),
                     RandomMutationOperation::Lose => {
                         self.progress.active_mutation_ids.contains(&definition.id)
                             && !self.progress.locked_mutation_ids.contains(&definition.id)
@@ -1391,14 +1428,7 @@ impl Game {
         if base == 0 {
             return 0;
         }
-        let good_luck = self
-            .progress
-            .active_mutation_ids
-            .contains(GOOD_LUCK_MUTATION_ID);
-        let bad_luck = self
-            .progress
-            .active_mutation_ids
-            .contains(BAD_LUCK_MUTATION_ID);
+        let luck = self.player_luck_bias();
         let positive = matches!(
             definition.rating,
             MutationRatingDefinition::Good | MutationRatingDefinition::Great
@@ -1408,10 +1438,112 @@ impl Game {
             MutationRatingDefinition::Awful | MutationRatingDefinition::Bad
         );
         let reduced = match operation {
-            RandomMutationOperation::Gain => (good_luck && negative) || (bad_luck && positive),
-            RandomMutationOperation::Lose => (good_luck && positive) || (bad_luck && negative),
+            RandomMutationOperation::Gain => {
+                (luck == LuckBias::Good && negative) || (luck == LuckBias::Bad && positive)
+            }
+            RandomMutationOperation::Lose => {
+                (luck == LuckBias::Good && positive) || (luck == LuckBias::Bad && negative)
+            }
         };
         if reduced { 1 } else { base }
+    }
+
+    pub(super) fn player_luck_bias(&self) -> LuckBias {
+        match (
+            self.progress
+                .active_mutation_ids
+                .contains(GOOD_LUCK_MUTATION_ID),
+            self.progress
+                .active_mutation_ids
+                .contains(BAD_LUCK_MUTATION_ID),
+        ) {
+            (true, false) => LuckBias::Good,
+            (false, true) => LuckBias::Bad,
+            _ => LuckBias::Neutral,
+        }
+    }
+
+    pub(super) fn apply_easy_tiring_fatigue(&mut self, energy: i32) {
+        if energy < 1
+            || !self
+                .progress
+                .active_mutation_ids
+                .contains(EASY_TIRING_MUTATION_ID)
+            || self.rng.bounded(u64::from(16 - self.minor_slow)) != 0
+        {
+            return;
+        }
+        let energy = u16::try_from(energy).unwrap_or(u16::MAX);
+        if self.minor_slow_energy >= energy {
+            self.minor_slow_energy -= energy;
+        } else if self.minor_slow < 10 {
+            self.minor_slow += 1;
+            self.minor_slow_energy = self
+                .minor_slow_energy
+                .saturating_add(100_u16.saturating_sub(energy));
+        } else {
+            self.minor_slow_energy = 0;
+        }
+    }
+
+    pub(super) fn process_minor_slow_recovery(&mut self) {
+        if self.minor_slow == 0 {
+            self.minor_slow_energy = 0;
+            return;
+        }
+        let mut regeneration = self.player_regeneration_rate_percent() / 100;
+        if regeneration == 0 && self.rng.bounded(3) == 0 {
+            regeneration = 1;
+        }
+        let recovered = regeneration
+            .saturating_mul(u64::from(self.minor_slow) * 2 + 2)
+            .saturating_div(3);
+        self.minor_slow_energy = self
+            .minor_slow_energy
+            .saturating_add(u16::try_from(recovered).unwrap_or(u16::MAX));
+        if self.minor_slow_energy >= 100 {
+            self.minor_slow_energy -= 100;
+            self.minor_slow -= 1;
+        }
+    }
+
+    pub(super) fn apply_impotence_device_skill_modifier(
+        &self,
+        ability: &DerivedStat,
+        item: &ItemInstance,
+        definition: &rfb_content::ItemDefinition,
+        effect: &ItemUseEffectDefinition,
+    ) -> DerivedStat {
+        if !self
+            .progress
+            .active_mutation_ids
+            .contains(IMPOTENCE_MUTATION_ID)
+            || !definition
+                .tags
+                .iter()
+                .any(|tag| tag == "staff" || tag == "rod")
+        {
+            return ability.clone();
+        }
+        let extra = impotence_extra_effect(effect)
+            || definition
+                .tags
+                .iter()
+                .any(|tag| tag == "fireball" || tag == "quickness")
+            || item.affix_ids.iter().any(|affix_id| {
+                self.content.affix(affix_id).is_some_and(|affix| {
+                    affix
+                        .tags
+                        .iter()
+                        .any(|tag| tag == "fireball" || tag == "quickness")
+                })
+            });
+        ability.with_modifier(
+            StatLayer::Status,
+            IMPOTENCE_MUTATION_ID,
+            if extra { -30 } else { -10 },
+            StatBounds::NON_NEGATIVE,
+        )
     }
 
     pub(super) fn mutation_regeneration_percent(&self) -> u64 {

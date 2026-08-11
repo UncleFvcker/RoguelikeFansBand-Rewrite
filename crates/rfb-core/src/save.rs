@@ -542,6 +542,7 @@ pub(crate) fn player_to_save(
         base_speed: player.speed,
         energy_need: player.energy_need,
         minor_slow: 0,
+        minor_slow_energy: 0,
         reality_change_ticks: 0,
         pending_mutation_direction: None,
         statuses: player

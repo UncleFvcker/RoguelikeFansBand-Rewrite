@@ -6,7 +6,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.240.0");
+    assert_eq!(catalog.pack_version(), "1.241.0");
     assert!(catalog.mutation("rfb.mutation.spit-acid").is_some());
     assert!(
         catalog
@@ -834,6 +834,10 @@ fn fifth_passive_mutation_batch_keeps_cross_system_semantics_explicit() {
         "rfb.mutation.draconian-lore",
         "rfb.mutation.strong-mind",
         "rfb.mutation.limp",
+        "rfb.mutation.bad-luck",
+        "rfb.mutation.good-luck",
+        "rfb.mutation.easy-tiring",
+        "rfb.mutation.impotence",
     ] {
         let entry = entries
             .iter()
@@ -844,20 +848,8 @@ fn fifth_passive_mutation_batch_keeps_cross_system_semantics_explicit() {
     }
     for (id, blocker) in [
         (
-            "rfb.mutation.bad-luck",
-            "luck-item-generation-device-outcome-and-curse-consumers",
-        ),
-        (
-            "rfb.mutation.good-luck",
-            "luck-item-generation-device-outcome-and-sensing-consumers",
-        ),
-        (
             "rfb.mutation.astral-guide",
             "player-teleport-energy-cost-across-abilities-and-items",
-        ),
-        (
-            "rfb.mutation.easy-tiring",
-            "fatigue-minislow-state-recovery-and-physical-action-consumers",
         ),
         (
             "rfb.mutation.easy-tiring2",
@@ -1129,7 +1121,7 @@ fn active_mutation_batches_are_bound_to_authoritative_abilities() {
             .iter()
             .filter(|entry| entry["status"] == "active")
             .count(),
-        114
+        118
     );
     assert_eq!(
         entries
@@ -1141,7 +1133,7 @@ fn active_mutation_batches_are_bound_to_authoritative_abilities() {
                         .is_some_and(|weight| weight > 0)
             })
             .count(),
-        99
+        103
     );
     assert!(entries.iter().all(|entry| {
         entry["status"] == "active"

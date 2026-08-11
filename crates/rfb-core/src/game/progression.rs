@@ -117,11 +117,17 @@ pub(super) fn apply_permanent_attribute_increase(
     progress: &mut CharacterProgress,
     attribute: AttributeKind,
     victorious: bool,
+    below_eighteen_threshold: u64,
     rng: &mut RfbRng,
 ) -> AttributeMutationOutcome {
     let before = progress.attributes.value(attribute);
     let maximum_before = progress.maximum_attributes.value(attribute);
-    let changed = progress.increase_attribute_permanently(attribute, victorious, rng);
+    let changed = progress.increase_attribute_permanently(
+        attribute,
+        victorious,
+        below_eighteen_threshold,
+        rng,
+    );
     attribute_mutation_outcome(progress, attribute, before, maximum_before, changed)
 }
 

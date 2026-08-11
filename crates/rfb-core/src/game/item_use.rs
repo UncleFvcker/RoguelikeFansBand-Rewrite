@@ -2012,14 +2012,18 @@ impl Game {
         let previous_max_hp = self.effective_player_max_hp();
         let previous_resource_maxima = self.player_resource_maxima();
         let victorious = self.victory_level_cap_unlocked();
+        let luck = self.player_luck_bias();
         let mut noticed = false;
         let mut resolutions = Vec::with_capacity(attributes.len());
 
         for &attribute in attributes {
+            let threshold = luck
+                .attribute_increase_threshold(self.progress.maximum_attributes.value(attribute));
             let outcome = apply_permanent_attribute_increase(
                 &mut self.progress,
                 attribute,
                 victorious,
+                threshold,
                 &mut self.rng,
             );
             let change = if outcome.maximum_after > outcome.maximum_before {
@@ -2097,7 +2101,7 @@ impl Game {
                     profile.effect.clone(),
                     plan,
                 )
-            } else if let Some(action) = definition.use_action {
+            } else if let Some(action) = &definition.use_action {
                 let Some(plan) =
                     self.item_use_plan(item_id, &action.effect, None, target, target_glyph)
                 else {
@@ -2108,7 +2112,7 @@ impl Game {
                     None,
                     action.device_check_difficulty,
                     action.charges.map(|charges| charges.cost),
-                    action.effect,
+                    action.effect.clone(),
                     plan,
                 )
             } else {
@@ -2126,7 +2130,12 @@ impl Game {
 
         self.mark_item_tried(&kind_id);
         if let Some(difficulty) = difficulty {
-            let ability = self.player_derived_stats().device_skill;
+            let ability = self.apply_impotence_device_skill_modifier(
+                &self.player_derived_stats().device_skill,
+                &self.items[index],
+                &definition,
+                &effect,
+            );
             let mut difficulty_pipeline = DerivedStatsPipeline::new();
             difficulty_pipeline.add(
                 StatKind::ActionDifficulty,

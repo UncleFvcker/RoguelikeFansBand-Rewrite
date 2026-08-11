@@ -116,6 +116,143 @@ fn process_m6(game: &mut Game) -> Vec<DomainEvent> {
 }
 
 #[test]
+fn m4f_c_luck_bias_adjusts_quality_depth_and_attribute_thresholds() {
+    let mut game = m6_game("rfb.mutation.good-luck", "demo.build.warrior");
+    assert_eq!(game.player_luck_bias(), LuckBias::Good);
+    assert_eq!(game.player_luck_bias().attribute_increase_threshold(16), 70);
+    assert_eq!(game.player_luck_bias().attribute_increase_threshold(17), 58);
+    let mut locked_luck = polymorph_game(
+        &["rfb.mutation.bad-luck"],
+        &["rfb.mutation.good-luck"],
+        &["rfb.mutation.good-luck"],
+    );
+    assert_eq!(locked_luck.gain_random_mutation(&mut Vec::new()), None);
+    let weights = game
+        .content
+        .loot_table("demo.loot-table.warrens")
+        .expect("Warrens loot table should exist")
+        .quality_weights
+        .clone();
+    let raw_weights = weights.iter().map(|entry| entry.weight).collect::<Vec<_>>();
+    game.rng = RfbRng::seeded(seed_matching(|rng| rng.bounded(100) == 96));
+    assert_eq!(
+        game.roll_loot_quality(&weights, &raw_weights, rfb_content::ItemQuality::Ordinary,),
+        ItemQualityDto::Fine
+    );
+    game.rng = RfbRng::seeded(seed_matching(|rng| rng.bounded(100) == 99));
+    assert_eq!(
+        game.roll_loot_quality(&weights, &raw_weights, rfb_content::ItemQuality::Ordinary,),
+        ItemQualityDto::Exceptional
+    );
+
+    game.progress.active_mutation_ids.clear();
+    game.progress
+        .active_mutation_ids
+        .insert("rfb.mutation.bad-luck".to_owned());
+    assert_eq!(game.player_luck_bias(), LuckBias::Bad);
+    assert_eq!(game.player_luck_bias().attribute_increase_threshold(16), 80);
+    let weights = game
+        .content
+        .loot_table("demo.loot-table.warrens-keeper")
+        .expect("Keeper loot table should exist")
+        .quality_weights
+        .clone();
+    let raw_weights = weights.iter().map(|entry| entry.weight).collect::<Vec<_>>();
+    game.rng = RfbRng::seeded(seed_matching(|rng| rng.bounded(100) == 0));
+    assert_eq!(
+        game.roll_loot_quality(&weights, &raw_weights, rfb_content::ItemQuality::Ordinary,),
+        ItemQualityDto::Ordinary
+    );
+    game.rng = RfbRng::seeded(seed_matching(|rng| rng.bounded(20) != 0));
+    assert_eq!(game.luck_adjusted_item_generation_depth(90, false), 75);
+}
+
+#[test]
+fn m4f_c_easy_tiring_accumulates_and_recovers_shared_minor_slow() {
+    let mut game = m6_game("rfb.mutation.easy-tiring", "demo.build.warrior");
+    game.rng = RfbRng::seeded(seed_matching(|rng| rng.bounded(16) == 0));
+    game.apply_easy_tiring_fatigue(50);
+    assert_eq!(game.minor_slow, 1);
+    assert_eq!(game.minor_slow_energy, 50);
+
+    game.rng = RfbRng::seeded(seed_matching(|rng| rng.bounded(15) == 0));
+    game.apply_easy_tiring_fatigue(50);
+    assert_eq!(game.minor_slow, 1);
+    assert_eq!(game.minor_slow_energy, 0);
+
+    game.minor_slow_energy = 99;
+    game.process_minor_slow_recovery();
+    assert_eq!(game.minor_slow, 0);
+    assert_eq!(game.minor_slow_energy, 0);
+
+    game.minor_slow = 2;
+    game.minor_slow_energy = 41;
+    let restored = Game::from_save(game.to_save()).expect("fatigue should reload");
+    assert_eq!(restored.minor_slow, 2);
+    assert_eq!(restored.minor_slow_energy, 41);
+    assert_eq!(restored.state_hash(), game.state_hash());
+}
+
+#[test]
+fn m4f_c_impotence_penalizes_staffs_and_rods_but_not_wands() {
+    let mut game = m6_game("rfb.mutation.impotence", "demo.build.warrior");
+    clear_monsters(&mut game);
+    for (item_id, kind_id, expected_penalty) in [
+        ("test.staff", "demo.item.detect-objects-staff", 10),
+        ("test.rod", "demo.item.resonance-rod", 10),
+        ("test.wand", "demo.item.magic-missile-wand", 0),
+    ] {
+        give_inventory_item(&mut game, item_id, kind_id);
+        let item = game
+            .items
+            .iter()
+            .find(|item| item.id == item_id)
+            .expect("test device should exist");
+        let definition = game
+            .content
+            .item(kind_id)
+            .expect("test device definition should exist");
+        let activation = item
+            .activation
+            .as_ref()
+            .expect("test device should activate");
+        let effect = &definition
+            .device_generation
+            .as_ref()
+            .expect("test device should generate")
+            .activations
+            .iter()
+            .find(|candidate| candidate.id == activation.profile_id)
+            .expect("test activation should exist")
+            .effect;
+        let base = game.player_derived_stats().device_skill;
+        let adjusted = game.apply_impotence_device_skill_modifier(&base, item, definition, effect);
+        assert_eq!(adjusted.value, (base.value - expected_penalty).max(0));
+    }
+
+    let base = game.player_derived_stats().device_skill;
+    let staff = game
+        .items
+        .iter()
+        .find(|item| item.id == "test.staff")
+        .expect("test staff should exist");
+    let definition = game
+        .content
+        .item(&staff.kind_id)
+        .expect("test staff definition should exist");
+    let speed = ItemUseEffectDefinition::ApplySpeed {
+        duration_dice: 1,
+        duration_sides: 1,
+        duration_bonus: 0,
+    };
+    assert_eq!(
+        game.apply_impotence_device_skill_modifier(&base, staff, definition, &speed)
+            .value,
+        (base.value - 30).max(0)
+    );
+}
+
+#[test]
 fn periodic_mutations_use_source_order_and_exact_trigger_draws() {
     let mut game = periodic_game(1, 1);
     game.rng = RfbRng::seeded(7);

@@ -158,6 +158,7 @@ use inventory::{
     RemoveEquippedCursesRequest,
 };
 use mogaminator::MogaminatorState;
+use mutations::LuckBias;
 use player_abilities::AbilityProgress;
 #[cfg(test)]
 use player_abilities::SPELL_EXP_MASTER;
@@ -190,7 +191,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 83;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 84;
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const VISIBILITY_RADIUS: i32 = 8;
 const BASE_THROW_RANGE_BUDGET: u16 = 50;
@@ -788,6 +789,7 @@ pub struct Game {
     recall: Option<RecallStateDto>,
     confusing_strike_ready: bool,
     minor_slow: u8,
+    minor_slow_energy: u16,
     reality_change_ticks: u8,
     pending_mutation_direction: Option<PendingMutationDirectionDto>,
     next_item_instance_serial: u64,
@@ -1079,6 +1081,7 @@ impl Game {
             recall: None,
             confusing_strike_ready: false,
             minor_slow: 0,
+            minor_slow_energy: 0,
             reality_change_ticks: 0,
             pending_mutation_direction: None,
             next_item_instance_serial,
@@ -4667,14 +4670,15 @@ impl Game {
         let mut generated = Vec::with_capacity(usize::from(roll_count));
         for _ in 0..roll_count {
             let entry_index = self.roll_weighted_index(&entry_weights);
-            let quality_index = self.roll_weighted_index(&quality_weights);
-            let affix_index = self.roll_weighted_index(&affix_weights);
             let entry = eligible_entries[entry_index];
-            let rolled_quality = item_quality_dto(
-                table.quality_weights[quality_index]
-                    .quality
-                    .max(minimum_quality),
-            );
+            let staff = self
+                .content
+                .item(&entry.item_kind_id)
+                .is_some_and(|definition| definition.tags.iter().any(|tag| tag == "staff"));
+            let generation_depth = self.luck_adjusted_item_generation_depth(context.depth, staff);
+            let rolled_quality =
+                self.roll_loot_quality(&table.quality_weights, &quality_weights, minimum_quality);
+            let affix_index = self.roll_weighted_index(&affix_weights);
             let supports_quality = self.content.item(&entry.item_kind_id).is_some_and(|item| {
                 item.max_stack == 1 && item.equipment_slot.is_some() && entry.quantity == 1
             });
@@ -4692,12 +4696,12 @@ impl Game {
                     .cloned()
                     .collect()
             };
-            let rolled_affixes = self.roll_affix_properties(&affix_ids, context.depth);
+            let rolled_affixes = self.roll_affix_properties(&affix_ids, generation_depth);
             let (activation, charges) = initial_item_runtime_state(
                 &self.content,
                 &mut self.rng,
                 &entry.item_kind_id,
-                context.depth,
+                generation_depth,
             );
             let item = ItemInstance {
                 id: self.allocate_item_instance_id()?,
@@ -4719,6 +4723,73 @@ impl Game {
             generated.push(item);
         }
         Ok(generated)
+    }
+
+    fn roll_loot_quality(
+        &mut self,
+        weights: &[rfb_content::LootQualityWeightDefinition],
+        raw_weights: &[u32],
+        minimum: rfb_content::ItemQuality,
+    ) -> ItemQualityDto {
+        let luck = self.player_luck_bias();
+        if luck == LuckBias::Neutral {
+            let index = self.roll_weighted_index(raw_weights);
+            return item_quality_dto(weights[index].quality.max(minimum));
+        }
+
+        let total = weights
+            .iter()
+            .map(|entry| u64::from(entry.weight))
+            .sum::<u64>();
+        let fine = weights
+            .iter()
+            .filter(|entry| entry.quality == rfb_content::ItemQuality::Fine)
+            .map(|entry| u64::from(entry.weight))
+            .sum::<u64>();
+        let exceptional = weights
+            .iter()
+            .filter(|entry| entry.quality == rfb_content::ItemQuality::Exceptional)
+            .map(|entry| u64::from(entry.weight))
+            .sum::<u64>();
+        let scale = total.saturating_mul(100);
+        let mut good_or_better = fine.saturating_add(exceptional).saturating_mul(100);
+        let mut exceptional = exceptional.saturating_mul(100);
+        match luck {
+            LuckBias::Good => {
+                good_or_better = good_or_better.saturating_add(total.saturating_mul(5));
+                exceptional = exceptional.saturating_add(total.saturating_mul(2));
+            }
+            LuckBias::Bad => {
+                good_or_better = good_or_better.saturating_sub(total.saturating_mul(5));
+                exceptional = exceptional.saturating_sub(exceptional / 4);
+            }
+            LuckBias::Neutral => unreachable!(),
+        }
+        good_or_better = good_or_better.min(scale);
+        exceptional = exceptional.min(good_or_better);
+        let ordinary = scale.saturating_sub(good_or_better);
+        let fine = good_or_better.saturating_sub(exceptional);
+        let roll = self.rng.bounded(scale);
+        let quality = if roll < ordinary {
+            rfb_content::ItemQuality::Ordinary
+        } else if roll < ordinary.saturating_add(fine) {
+            rfb_content::ItemQuality::Fine
+        } else {
+            rfb_content::ItemQuality::Exceptional
+        };
+        item_quality_dto(quality.max(minimum))
+    }
+
+    fn luck_adjusted_item_generation_depth(&mut self, depth: u16, staff: bool) -> u16 {
+        if self.player_luck_bias() != LuckBias::Bad {
+            return depth;
+        }
+        let divisor = if self.rng.bounded(20) == 0 { 20 } else { 6 };
+        let mut adjusted = depth.saturating_sub(depth / divisor);
+        if staff {
+            adjusted = adjusted.saturating_sub(adjusted / 15);
+        }
+        adjusted
     }
 
     fn roll_affix_properties(&mut self, affix_ids: &[String], depth: u16) -> Vec<RolledAffixState> {

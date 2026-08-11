@@ -2037,10 +2037,8 @@
       "removesOnGain": [
         "rfb.mutation.good-luck"
       ],
-      "status": "blocked",
-      "blockers": [
-        "luck-item-generation-device-outcome-and-curse-consumers"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -2106,10 +2104,8 @@
       "removesOnGain": [
         "rfb.mutation.bad-luck"
       ],
-      "status": "blocked",
-      "blockers": [
-        "luck-item-generation-device-outcome-and-sensing-consumers"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -2881,10 +2877,8 @@
         "lose:mutation-bad-luck=>weight-1"
       ],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "fatigue-minislow-state-recovery-and-physical-action-consumers"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -3060,10 +3054,8 @@
         "lose:mutation-bad-luck=>weight-1"
       ],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "device-category-specific-failure-modifiers"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {

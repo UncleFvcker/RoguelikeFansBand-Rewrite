@@ -599,6 +599,7 @@ impl CharacterProgress {
         &mut self,
         kind: AttributeKind,
         victorious: bool,
+        below_eighteen_threshold: u64,
         rng: &mut RfbRng,
     ) -> bool {
         let restored = self.restore_attribute(kind);
@@ -609,7 +610,11 @@ impl CharacterProgress {
         }
 
         let next = if value < 18 {
-            let threshold = if value == 17 { 58 } else { 75 };
+            let threshold = if value == 17 {
+                58
+            } else {
+                below_eighteen_threshold
+            };
             let gain = if rng.bounded(100) < threshold { 1 } else { 2 };
             value + gain
         } else if value < cap - 2 {
@@ -1242,7 +1247,12 @@ mod tests {
             let mut rng = RfbRng::seeded(seed);
 
             assert_eq!(
-                progress.increase_attribute_permanently(AttributeKind::Strength, false, &mut rng,),
+                progress.increase_attribute_permanently(
+                    AttributeKind::Strength,
+                    false,
+                    75,
+                    &mut rng,
+                ),
                 changed
             );
             assert_eq!(progress.attributes.strength, expected);

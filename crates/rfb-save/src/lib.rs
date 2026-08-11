@@ -206,6 +206,7 @@ mod tests {
                 base_speed: 110,
                 energy_need: 0,
                 minor_slow: 0,
+                minor_slow_energy: 0,
                 reality_change_ticks: 0,
                 pending_mutation_direction: None,
                 statuses: Vec::new(),

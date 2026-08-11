@@ -882,6 +882,7 @@ impl Game {
         if minor_slow > 10 {
             return Err(CoreError::InvalidSave("player minor slow is invalid"));
         }
+        let minor_slow_energy = payload.player.minor_slow_energy;
         let reality_change_ticks = payload.player.reality_change_ticks;
         if reality_change_ticks > 35 {
             return Err(CoreError::InvalidSave(
@@ -1204,6 +1205,7 @@ impl Game {
             recall,
             confusing_strike_ready,
             minor_slow,
+            minor_slow_energy,
             reality_change_ticks,
             pending_mutation_direction,
             next_item_instance_serial,
@@ -1431,6 +1433,7 @@ impl Game {
         player.riding_actor_id = self.riding_actor_id.clone();
         player.confusing_strike_ready = self.confusing_strike_ready;
         player.minor_slow = self.minor_slow;
+        player.minor_slow_energy = self.minor_slow_energy;
         player.reality_change_ticks = self.reality_change_ticks;
         player.pending_mutation_direction = self.pending_mutation_direction.clone();
         player.body_slots = self

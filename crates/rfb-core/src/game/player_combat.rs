@@ -358,6 +358,7 @@ impl Game {
         thrown.location = ItemLocation::Ground(landing);
         self.items.push(thrown);
         changed.insert(landing);
+        self.apply_easy_tiring_fatigue(STANDARD_ACTION_COST);
         Ok(())
     }
 
@@ -396,6 +397,7 @@ impl Game {
             let damage_multiplier =
                 self.player_melee_damage_multiplier(&profile, &self.entities[index], &definition);
             for _ in 0..profile.attacks {
+                self.apply_easy_tiring_fatigue(50);
                 if profile.melee_skill.value <= 0
                     || !resolve_check(
                         &mut self.rng,
