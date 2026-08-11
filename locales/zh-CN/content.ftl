@@ -2594,5 +2594,13 @@ actor-demo-vampiric-ixitxachitl-name = 吸血异西鳐
 actor-demo-vampiric-ixitxachitl-description = 来自深海的恶魔鳐鱼，拥有吸血的能力。
 actor-demo-vampiric-mist-name = 吸血雾气
 actor-demo-vampiric-mist-description = 一团邪恶的、有知觉的雾气。
+ability-legacy-animate-dead-name = 唤起死灵
+ability-legacy-animate-dead-description = 将附近的尸体和骸骨转化为敌对死灵。
+ability-legacy-bolt-nether-5d5-53-name = 地狱之矢
+ability-legacy-bolt-nether-5d5-53-description = 向目标发射一道造成 5d5+53 点幽冥伤害的箭矢。
+actor-demo-arch-vile-name = 高阶恶灵
+actor-demo-arch-vile-description = 一个苍白、像尸体一样的低级恶魔，它移动速度极快，并且在各处散播邪恶。
+actor-demo-orc-warlock-name = 半兽人邪术师
+actor-demo-orc-warlock-description = 一个为了获得可怕力量而与邪恶势力签订契约的半兽人。
 
 actor-core-fuzzy-monster-name = 怪物

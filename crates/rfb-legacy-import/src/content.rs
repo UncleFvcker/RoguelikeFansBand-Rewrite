@@ -7123,6 +7123,43 @@ fn map_misc_spell_token(
             });
             Some(id)
         }
+        "ANIM_DEAD" => {
+            let id = "rfb-legacy.ability.animate-dead".to_owned();
+            abilities.entry(id.clone()).or_insert_with(|| {
+                let mut ability = misc_ability(
+                    "animate-dead",
+                    serde_json::json!({
+                        "type": "sequence",
+                        "effects": [
+                            {
+                                "type": "animate-dead",
+                                "actorKindId": "demo.actor.risen-thrall",
+                                "corpseItemKindId": DEMO_CORPSE_ITEM_ID,
+                                "radius": 5,
+                                "count": 8,
+                                "failureChancePercent": 20
+                            },
+                            {
+                                "type": "animate-dead",
+                                "actorKindId": "demo.actor.risen-thrall",
+                                "corpseItemKindId": DEMO_SKELETON_ITEM_ID,
+                                "radius": 5,
+                                "count": 8,
+                                "failureChancePercent": 40
+                            }
+                        ]
+                    }),
+                );
+                ability["target"] = serde_json::json!({
+                    "modes": ["self"],
+                    "range": 0,
+                    "requiresLineOfEffect": false
+                });
+                ability["tags"] = serde_json::json!(["legacy-import", "summon", "undead"]);
+                ability
+            });
+            Some(id)
+        }
         _ => None,
     }
 }
@@ -16214,7 +16251,7 @@ G:u:v
 I:110:5d5:20:10:10:10
 W:20:2:20:9:10:40
 B:HIT:HURT(1d4)
-S:1_IN_3 | TELE_OTHER | DRAIN_MANA | AMNESIA | DISPEL_MAGIC | DARKNESS
+S:1_IN_3 | TELE_OTHER | DRAIN_MANA | AMNESIA | DISPEL_MAGIC | DARKNESS | ANIM_DEAD
 ";
         let monsters = parse_r_info(WARDEN_R_INFO).expect("synthetic warden should parse");
         let outcome = convert_content(
@@ -16240,6 +16277,7 @@ S:1_IN_3 | TELE_OTHER | DRAIN_MANA | AMNESIA | DISPEL_MAGIC | DARKNESS
                 "rfb-legacy.ability.amnesia",
                 "rfb-legacy.ability.dispel",
                 "rfb-legacy.ability.darkness",
+                "rfb-legacy.ability.animate-dead",
             ]
         );
         assert!(!outcome.report.unmapped_spells.contains_key("DARKNESS"));
@@ -16267,6 +16305,30 @@ S:1_IN_3 | TELE_OTHER | DRAIN_MANA | AMNESIA | DISPEL_MAGIC | DARKNESS
             .expect("darkness ability should be generated");
         assert_eq!(darkness["effect"]["type"], "darken-room");
         assert_eq!(darkness["target"]["requiresLineOfEffect"], false);
+        let animate_dead = outcome
+            .ability_files
+            .iter()
+            .find(|(name, _)| name == "animate-dead.json")
+            .map(|(_, value)| value)
+            .expect("animate dead ability should be generated");
+        assert_eq!(animate_dead["target"]["modes"], serde_json::json!(["self"]));
+        assert_eq!(animate_dead["effect"]["type"], "sequence");
+        assert_eq!(
+            animate_dead["effect"]["effects"][0]["corpseItemKindId"],
+            DEMO_CORPSE_ITEM_ID
+        );
+        assert_eq!(
+            animate_dead["effect"]["effects"][0]["failureChancePercent"],
+            20
+        );
+        assert_eq!(
+            animate_dead["effect"]["effects"][1]["corpseItemKindId"],
+            DEMO_SKELETON_ITEM_ID
+        );
+        assert_eq!(
+            animate_dead["effect"]["effects"][1]["failureChancePercent"],
+            40
+        );
     }
 
     #[test]

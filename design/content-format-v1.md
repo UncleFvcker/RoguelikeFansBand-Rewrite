@@ -476,3 +476,11 @@ mist、Black 和 Vampiric ixitxachitl，当前包包含 49 种地形、605 种 a
 255 种物品、264 个能力和 13 张 loot table；严格同步 558 条，内容 hash 为
 `9fe4504149460bb615380075d2459064eb09c958a20f4780519b4656c47fee1a`。
 协议保持 1.169，State Hash Schema 保持 v85。
+
+contract-v256 / 包 1.247.0 为既有 `animate-dead` 内容效果增加默认零值的
+`failureChancePercent`。怪物可以按遗骸类型声明失败率，并继续复用相同的地面物品
+消耗、召唤与结算 DTO；玩家已有能力的默认行为不变。新增 Arch-vile 与 Orc
+warlock，当前包包含 49 种地形、607 种 actor、255 种物品、266 个能力和 13 张
+loot table；严格同步 560 条，内容 hash 为
+`75d2145cc9702089759ce75b2c3ce1a0dfe4cb5b5f0b88717e29b792b0ce3901`。
+协议保持 1.169，State Hash Schema 保持 v85。

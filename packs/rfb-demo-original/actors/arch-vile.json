@@ -1,0 +1,93 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 357,
+    "maxDepth": 999,
+    "randomMovementPercent": 50,
+    "rarity": 1
+  },
+  "attack": 5,
+  "damageDice": 3,
+  "damageSides": 9,
+  "damageType": "physical",
+  "defense": 3,
+  "descriptionKey": "actor-demo-arch-vile-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 350,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "u",
+  "hitPointDice": {
+    "dice": 11,
+    "forceMaximum": true,
+    "sides": 11
+  },
+  "id": "demo.actor.arch-vile",
+  "level": 21,
+  "maxHp": 121,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 3,
+            "damageSides": 9,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 3,
+            "damageSides": 9,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.ball-fire-1d73-10",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.animate-dead",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 33
+  },
+  "nameKey": "actor-demo-arch-vile-name",
+  "resistances": {
+    "fire": "immune",
+    "nether": "resistant"
+  },
+  "role": "monster",
+  "speed": 125,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "cold-blooded",
+    "demon",
+    "evil",
+    "legacy-import",
+    "nonliving",
+    "orc-cave"
+  ]
+}

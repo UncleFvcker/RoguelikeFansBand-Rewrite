@@ -592,7 +592,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         .iter()
         .filter(|actor| actor.tags.iter().any(|tag| tag == "orc-cave"))
         .collect::<Vec<_>>();
-    assert_eq!(orc_cave.len(), 179);
+    assert_eq!(orc_cave.len(), 181);
 
     for id in [
         "demo.actor.bunyip",
@@ -638,7 +638,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
     }
     assert_eq!(
         level_counts,
-        [15, 14, 11, 16, 24, 15, 17, 17, 17, 16, 7, 10]
+        [16, 14, 12, 16, 24, 15, 17, 17, 17, 16, 7, 10]
     );
 
     let mouse = artifact
@@ -3053,6 +3053,55 @@ fn orc_cave_vampiric_melee_stays_physical_and_unarmored() {
             })
             .count();
         assert!(vampiric > 0, "{id} should retain its VAMP blow");
+    }
+}
+
+#[test]
+fn orc_cave_animate_dead_preserves_remain_specific_failure_rates() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let ability = artifact
+        .content
+        .abilities
+        .iter()
+        .find(|ability| ability.id == "rfb-legacy.ability.animate-dead")
+        .expect("animate dead should be imported");
+    let AbilityEffectDefinition::Sequence { effects } = &ability.effect else {
+        panic!("animate dead should keep corpse and skeleton steps")
+    };
+    assert!(matches!(
+        effects.as_slice(),
+        [
+            AbilityEffectDefinition::AnimateDead {
+                corpse_item_kind_id,
+                radius: 5,
+                count: 8,
+                failure_chance_percent: 20,
+                ..
+            },
+            AbilityEffectDefinition::AnimateDead {
+                corpse_item_kind_id: skeleton_item_kind_id,
+                radius: 5,
+                count: 8,
+                failure_chance_percent: 40,
+                ..
+            }
+        ] if corpse_item_kind_id == "demo.item.corpse-remains"
+            && skeleton_item_kind_id == "demo.item.skeleton-remains"
+    ));
+
+    for id in ["demo.actor.arch-vile", "demo.actor.orc-warlock"] {
+        let actor = artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == id)
+            .unwrap_or_else(|| panic!("{id} should be imported"));
+        assert!(actor.monster_casting.as_ref().is_some_and(|casting| {
+            casting
+                .abilities
+                .iter()
+                .any(|candidate| candidate.ability_id == ability.id)
+        }));
     }
 }
 

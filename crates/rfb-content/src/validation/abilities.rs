@@ -565,11 +565,13 @@ pub(super) fn validate_abilities(
                     corpse_item_kind_id,
                     radius,
                     count,
+                    failure_chance_percent,
                 } => {
                     validate_id(actor_kind_id).is_ok()
                         && validate_id(corpse_item_kind_id).is_ok()
                         && (1..=8).contains(radius)
                         && (1..=8).contains(count)
+                        && *failure_chance_percent <= 100
                 }
                 AbilityEffectDefinition::Heal { amount } => (1..=1_000_000).contains(amount),
                 AbilityEffectDefinition::VisibleDamage {
@@ -784,6 +786,7 @@ pub(super) fn validate_abilities(
                             AbilityEffectDefinition::Heal { .. }
                                 | AbilityEffectDefinition::ApplyStatus { .. }
                                 | AbilityEffectDefinition::RemoveStatus { .. }
+                                | AbilityEffectDefinition::AnimateDead { .. }
                                 | AbilityEffectDefinition::VisibleDamage { .. }
                                 | AbilityEffectDefinition::VisibleApplyStatus { .. }
                                 | AbilityEffectDefinition::AreaDamage { .. }
@@ -865,14 +868,16 @@ pub(super) fn validate_abilities(
         if let AbilityEffectDefinition::Summon { actor_kind_id, .. } = &ability.effect {
             require_actor_role(actor_roles, actor_kind_id, ActorRole::Monster, &ability.id)?;
         }
-        if let AbilityEffectDefinition::AnimateDead {
-            actor_kind_id,
-            corpse_item_kind_id,
-            ..
-        } = &ability.effect
-        {
-            require_actor_role(actor_roles, actor_kind_id, ActorRole::Monster, &ability.id)?;
-            ability_corpse_item_ids.push((ability.id.clone(), corpse_item_kind_id.clone()));
+        for effect in ability.effect.ordered_effects() {
+            if let AbilityEffectDefinition::AnimateDead {
+                actor_kind_id,
+                corpse_item_kind_id,
+                ..
+            } = effect
+            {
+                require_actor_role(actor_roles, actor_kind_id, ActorRole::Monster, &ability.id)?;
+                ability_corpse_item_ids.push((ability.id.clone(), corpse_item_kind_id.clone()));
+            }
         }
         if let AbilityEffectDefinition::TransformTerrain {
             source_terrain_ids,
@@ -979,6 +984,7 @@ pub(super) fn validate_abilities(
                                 AbilityEffectDefinition::Heal { .. }
                                     | AbilityEffectDefinition::ApplyStatus { .. }
                                     | AbilityEffectDefinition::RemoveStatus { .. }
+                                    | AbilityEffectDefinition::AnimateDead { .. }
                             )
                         }))
                         || (projectile_target

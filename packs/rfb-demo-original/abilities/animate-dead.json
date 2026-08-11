@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.animate-dead",
+  "descriptionKey": "ability-legacy-animate-dead-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.animate-dead",
+  "nameKey": "ability-legacy-animate-dead-name",
+  "tags": [
+    "legacy-import",
+    "summon",
+    "undead"
+  ],
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  }
+}

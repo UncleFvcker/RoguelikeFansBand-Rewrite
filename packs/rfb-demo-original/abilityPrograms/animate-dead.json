@@ -1,0 +1,24 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability-program.animate-dead",
+  "input": "self",
+  "steps": [
+    {
+      "actorKindId": "demo.actor.risen-thrall",
+      "corpseItemKindId": "demo.item.corpse-remains",
+      "count": 8,
+      "failureChancePercent": 20,
+      "radius": 5,
+      "type": "animate-dead"
+    },
+    {
+      "actorKindId": "demo.actor.risen-thrall",
+      "corpseItemKindId": "demo.item.skeleton-remains",
+      "count": 8,
+      "failureChancePercent": 40,
+      "radius": 5,
+      "type": "animate-dead"
+    }
+  ]
+}

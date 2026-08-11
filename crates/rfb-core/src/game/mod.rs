@@ -6428,6 +6428,7 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             corpse_item_kind_id,
             radius,
             count,
+            ..
         } => AbilityEffectSpecDto::AnimateDead {
             actor_kind_id: actor_kind_id.clone(),
             corpse_item_kind_id: corpse_item_kind_id.clone(),

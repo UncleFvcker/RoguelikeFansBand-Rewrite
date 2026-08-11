@@ -3360,6 +3360,18 @@
       "id": "vampiric-ixitxachitl",
       "tags": ["orc-cave"],
       "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 357,
+      "id": "arch-vile",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 1189,
+      "id": "orc-warlock",
+      "tags": ["orc-cave"],
+      "omittedFlags": []
     }
   ]
 }

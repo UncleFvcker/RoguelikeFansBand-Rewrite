@@ -6,16 +6,16 @@
 
 contract fixture 是规则兼容边界，不能把测试失败简单处理为“刷新预期结果”。政策用于保证每次规则变化只修改真正受影响的场景，同时保留可审查的失败原因。
 
-当前逻辑基线是 `contract-v255`，机器可读政策固定在：
+当前逻辑基线是 `contract-v256`，机器可读政策固定在：
 
 ```text
 tests/fixtures/active/baseline-policy.json
 ```
 
-`contract-v255` 为既有怪物近战物理伤害增加窄 `vampiric` 标记，以实际结算伤害
-治疗攻击者；非生命玩家仍承受伤害，但不会提供治疗。新增 3 条 Orc Cave 记录。
-上一批 10 条地点范围不属于 Orc Cave 的记录继续保留为全局内容，仅移除
-`orc-cave` 归属；严格选择现有 179 条 Orc Cave 记录。冷血红外规则保持不变；
+`contract-v256` 复用既有尸体、骸骨与召唤事务实现怪物 `ANIM_DEAD`：尸体和骸骨
+分别按原版 20% 与 40% 失败率化为尘埃，成功时生成敌对死灵。新增 Arch-vile 与
+Orc warlock；Kharis 与 Ghoulking 仍由各自的接触光环和 `UNLIFE` 独立阻塞。
+严格选择现有 181 条 Orc Cave 记录。冷血红外与 VAMP 规则保持不变；
 协议保持 1.169，State Hash Schema 保持 v85，save 容器保持 v1。
 
 ## 分类验证

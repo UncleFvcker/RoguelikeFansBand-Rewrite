@@ -2594,5 +2594,13 @@ actor-demo-vampiric-ixitxachitl-name = Vampiric ixitxachitl
 actor-demo-vampiric-ixitxachitl-description = A creature recorded in the original RFB bestiary as Vampiric ixitxachitl.
 actor-demo-vampiric-mist-name = Vampiric mist
 actor-demo-vampiric-mist-description = A creature recorded in the original RFB bestiary as Vampiric mist.
+ability-legacy-animate-dead-name = Animate dead
+ability-legacy-animate-dead-description = Turns nearby corpses and skeletons into hostile undead.
+ability-legacy-bolt-nether-5d5-53-name = Nether bolt
+ability-legacy-bolt-nether-5d5-53-description = Hurls a bolt that deals 5d5+53 nether damage.
+actor-demo-arch-vile-name = Arch-vile
+actor-demo-arch-vile-description = A pale, corpse-like lesser demon that moves with great speed and spreads evil wherever it goes.
+actor-demo-orc-warlock-name = Orc warlock
+actor-demo-orc-warlock-description = An orc who made a pact with evil forces in exchange for terrible power.
 
 actor-core-fuzzy-monster-name = Monster

@@ -3653,34 +3653,21 @@ impl Game {
         });
     }
 
-    pub(super) fn resolve_player_animate_dead_effect(
-        &mut self,
-        ability: &AbilityDefinition,
-        events: &mut Vec<DomainEvent>,
-        changed: &mut BTreeSet<Position>,
-    ) -> Result<(), CoreError> {
-        let AbilityEffectDefinition::AnimateDead {
-            actor_kind_id,
-            corpse_item_kind_id,
-            radius,
-            count,
-        } = &ability.effect
-        else {
-            unreachable!("animate dead executor requires an animate dead effect");
-        };
-        let origin = self.player.position;
-        let definition = self
-            .content
-            .actor(actor_kind_id)
-            .expect("validated animated actor must remain available")
-            .clone();
+    pub(super) fn animate_dead_candidates(
+        &self,
+        origin: Position,
+        actor_kind_id: &str,
+        corpse_item_kind_id: &str,
+        radius: u8,
+        count: u8,
+    ) -> Vec<(String, Position)> {
         let mut corpses = self
             .items
             .iter()
             .filter_map(|item| match item.location {
                 ItemLocation::Ground(position)
-                    if item.kind_id == corpse_item_kind_id.as_str()
-                        && chebyshev_distance(origin, position) <= u32::from(*radius)
+                    if item.kind_id == corpse_item_kind_id
+                        && chebyshev_distance(origin, position) <= u32::from(radius)
                         && self.actor_kind_can_enter_position(actor_kind_id, position) =>
                 {
                     Some((
@@ -3695,10 +3682,45 @@ impl Game {
             })
             .collect::<Vec<_>>();
         corpses.sort();
-        corpses.truncate(usize::from(*count));
+        corpses.truncate(usize::from(count));
+        corpses
+            .into_iter()
+            .map(|(_, _, _, item_id, position)| (item_id, position))
+            .collect()
+    }
+
+    pub(super) fn resolve_player_animate_dead_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) -> Result<(), CoreError> {
+        let AbilityEffectDefinition::AnimateDead {
+            actor_kind_id,
+            corpse_item_kind_id,
+            radius,
+            count,
+            failure_chance_percent,
+        } = &ability.effect
+        else {
+            unreachable!("animate dead executor requires an animate dead effect");
+        };
+        let origin = self.player.position;
+        let definition = self
+            .content
+            .actor(actor_kind_id)
+            .expect("validated animated actor must remain available")
+            .clone();
+        let corpses = self.animate_dead_candidates(
+            origin,
+            actor_kind_id,
+            corpse_item_kind_id,
+            *radius,
+            *count,
+        );
         let consumed_corpse_item_ids = corpses
             .iter()
-            .map(|corpse| corpse.3.clone())
+            .map(|corpse| corpse.0.clone())
             .collect::<Vec<_>>();
         self.items
             .retain(|item| !consumed_corpse_item_ids.contains(&item.id));
@@ -3707,7 +3729,13 @@ impl Game {
         }
         let mut entity_ids = Vec::with_capacity(corpses.len());
         let mut positions = Vec::with_capacity(corpses.len());
-        for (ordinal, (_, _, _, _, position)) in corpses.into_iter().enumerate() {
+        for (ordinal, (_, position)) in corpses.into_iter().enumerate() {
+            changed.insert(position);
+            if *failure_chance_percent > 0
+                && self.rng.bounded(100) < u64::from(*failure_chance_percent)
+            {
+                continue;
+            }
             let id = self.summon_entity_id(&ability.id, ordinal);
             let mut entity = spawn_actor_from_definition(
                 &mut self.rng,
@@ -3719,7 +3747,6 @@ impl Game {
             );
             entity.controller_id = Some(self.player.id.clone());
             self.entities.push(entity);
-            changed.insert(position);
             entity_ids.push(id);
             positions.push(position);
         }

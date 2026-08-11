@@ -1577,6 +1577,13 @@
               "minimum": 0,
               "type": "integer"
             },
+            "failureChancePercent": {
+              "default": 0,
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
             "radius": {
               "format": "uint8",
               "maximum": 255,

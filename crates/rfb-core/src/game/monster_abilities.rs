@@ -3,6 +3,119 @@
 use super::*;
 
 impl Game {
+    fn resolve_monster_animate_dead_effect(
+        &mut self,
+        source_index: usize,
+        ability_id: &str,
+        effect_index: u8,
+        effect: &AbilityEffectDefinition,
+        changed: &mut BTreeSet<Position>,
+    ) -> (AbilityEffectResolutionDto, Vec<Position>) {
+        let AbilityEffectDefinition::AnimateDead {
+            actor_kind_id,
+            corpse_item_kind_id,
+            radius,
+            count,
+            failure_chance_percent,
+        } = effect
+        else {
+            unreachable!("monster animate dead executor requires an animate dead effect")
+        };
+        let origin = self.entities[source_index].position;
+        let owner_id = self.entities[source_index].id.clone();
+        let definition = self
+            .content
+            .actor(actor_kind_id)
+            .expect("validated animated actor must remain available")
+            .clone();
+        let corpses = self.animate_dead_candidates(
+            origin,
+            actor_kind_id,
+            corpse_item_kind_id,
+            *radius,
+            *count,
+        );
+        let consumed_corpse_item_ids = corpses
+            .iter()
+            .map(|(item_id, _)| item_id.clone())
+            .collect::<Vec<_>>();
+        self.items
+            .retain(|item| !consumed_corpse_item_ids.contains(&item.id));
+        for item_id in &consumed_corpse_item_ids {
+            self.item_property_knowledge.remove(item_id);
+        }
+        let affected_positions = corpses
+            .iter()
+            .map(|(_, position)| *position)
+            .collect::<Vec<_>>();
+        changed.extend(affected_positions.iter().copied());
+        let mut entity_ids = Vec::with_capacity(corpses.len());
+        let mut positions = Vec::with_capacity(corpses.len());
+        for (ordinal, (_, position)) in corpses.into_iter().enumerate() {
+            if *failure_chance_percent > 0
+                && self.rng.bounded(100) < u64::from(*failure_chance_percent)
+            {
+                continue;
+            }
+            let id = self.summon_entity_id(ability_id, ordinal);
+            let mut entity = spawn_actor_from_definition(
+                &mut self.rng,
+                &definition,
+                &id,
+                position,
+                INITIAL_MONSTER_ENERGY_NEED,
+                true,
+            );
+            entity.summon = Some(SummonIdentity {
+                owner_id: owner_id.clone(),
+                source_ability_id: ability_id.to_owned(),
+                remaining_turns: 0,
+            });
+            self.entities.push(entity);
+            entity_ids.push(id);
+            positions.push(position);
+        }
+        (
+            AbilityEffectResolutionDto::AnimateDead {
+                effect_index,
+                actor_kind_id: actor_kind_id.clone(),
+                consumed_corpse_item_ids,
+                entity_ids,
+                positions,
+            },
+            affected_positions,
+        )
+    }
+
+    fn monster_has_animatable_remains(
+        &self,
+        source_index: usize,
+        effect: &AbilityEffectDefinition,
+    ) -> bool {
+        let origin = self.entities[source_index].position;
+        effect.ordered_effects().iter().any(|effect| {
+            let AbilityEffectDefinition::AnimateDead {
+                actor_kind_id,
+                corpse_item_kind_id,
+                radius,
+                count,
+                ..
+            } = effect
+            else {
+                return false;
+            };
+            !self
+                .animate_dead_candidates(
+                    origin,
+                    actor_kind_id,
+                    corpse_item_kind_id,
+                    *radius,
+                    *count,
+                )
+                .is_empty()
+        })
+    }
+
     pub(super) fn resolve_monster_fixed_summon_plan(
         &mut self,
         source_index: usize,
@@ -556,6 +669,17 @@ impl Game {
                         awakened,
                         hastened,
                     }
+                }
+                effect @ AbilityEffectDefinition::AnimateDead { .. } => {
+                    let (resolution, positions) = self.resolve_monster_animate_dead_effect(
+                        source_index,
+                        &ability.id,
+                        effect_index,
+                        effect,
+                        changed,
+                    );
+                    affected_positions.extend(positions);
+                    resolution
                 }
                 _ => unreachable!("validated monster self effects must remain actor effects"),
             };
@@ -1656,6 +1780,32 @@ impl Game {
                     0,
                     0,
                 )
+            }
+            effect @ AbilityEffectDefinition::AnimateDead { .. }
+                if self.monster_has_animatable_remains(index, effect) =>
+            {
+                (MonsterAbilityTargetPlan::SelfTarget, 0, 0)
+            }
+            effect @ AbilityEffectDefinition::Sequence { effects }
+                if effects.iter().any(|effect| {
+                    matches!(effect, AbilityEffectDefinition::AnimateDead { .. })
+                }) =>
+            {
+                if !self.monster_has_animatable_remains(index, effect) {
+                    return Err(MonsterAbilityPlanRejection {
+                        reason: MonsterAbilityRejectionReasonDto::NoCandidates,
+                        enemy_target_count: 0,
+                        friendly_risk_count: 0,
+                    });
+                }
+                (MonsterAbilityTargetPlan::SelfTarget, 0, 0)
+            }
+            AbilityEffectDefinition::AnimateDead { .. } => {
+                return Err(MonsterAbilityPlanRejection {
+                    reason: MonsterAbilityRejectionReasonDto::NoCandidates,
+                    enemy_target_count: 0,
+                    friendly_risk_count: 0,
+                });
             }
             AbilityEffectDefinition::ApplyStatus { .. }
             | AbilityEffectDefinition::RemoveStatus { .. }

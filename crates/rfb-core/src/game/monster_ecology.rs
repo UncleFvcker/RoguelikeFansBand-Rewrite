@@ -626,7 +626,8 @@ impl Game {
                 | AbilityEffectDefinition::DeathRay { .. }
                 | AbilityEffectDefinition::DrainLife { .. } => (true, false),
                 AbilityEffectDefinition::Summon { .. }
-                | AbilityEffectDefinition::SummonCategory { .. } => (false, true),
+                | AbilityEffectDefinition::SummonCategory { .. }
+                | AbilityEffectDefinition::AnimateDead { .. } => (false, true),
                 AbilityEffectDefinition::Sequence { effects } => effects
                     .iter()
                     .map(classify)

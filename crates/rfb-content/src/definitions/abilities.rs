@@ -496,6 +496,8 @@ pub enum AbilityEffectDefinition {
         corpse_item_kind_id: String,
         radius: u8,
         count: u8,
+        #[serde(default)]
+        failure_chance_percent: u8,
     },
     Heal {
         amount: u32,

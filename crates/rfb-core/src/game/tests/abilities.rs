@@ -1115,6 +1115,92 @@ fn ordinary_death_creates_a_corpse_and_animate_dead_consumes_it_persistently() {
 }
 
 #[test]
+fn monster_animate_dead_consumes_failed_remains_and_spawns_hostile_summons() {
+    let mut game = Game::new(31);
+    clear_monsters(&mut game);
+    game.items.clear();
+    let source_position = Position {
+        x: game.player.position.x + 1,
+        y: game.player.position.y,
+    };
+    let corpse_position = Position {
+        x: game.player.position.x + 2,
+        y: game.player.position.y,
+    };
+    let skeleton_position = Position {
+        x: game.player.position.x + 2,
+        y: game.player.position.y + 1,
+    };
+    for position in [source_position, corpse_position, skeleton_position] {
+        replace_terrain(&mut game, position, "demo.terrain.floor");
+    }
+    let necromancer = game.generated_actor(
+        "test.actor.necromancer".to_owned(),
+        "demo.actor.small-kobold",
+        source_position,
+    );
+    game.entities.push(necromancer);
+    give_inventory_item(&mut game, "test.item.corpse", "demo.item.corpse-remains");
+    give_inventory_item(
+        &mut game,
+        "test.item.skeleton",
+        "demo.item.skeleton-remains",
+    );
+    game.items[0].location = ItemLocation::Ground(corpse_position);
+    game.items[1].location = ItemLocation::Ground(skeleton_position);
+
+    let mut ability = game
+        .content
+        .ability("demo.ability.death-animate-dead")
+        .expect("animate dead ability should exist")
+        .clone();
+    ability.id = "test.ability.monster-animate-dead".to_owned();
+    ability.effect = AbilityEffectDefinition::Sequence {
+        effects: vec![
+            AbilityEffectDefinition::AnimateDead {
+                actor_kind_id: "demo.actor.risen-thrall".to_owned(),
+                corpse_item_kind_id: "demo.item.corpse-remains".to_owned(),
+                radius: 5,
+                count: 8,
+                failure_chance_percent: 100,
+            },
+            AbilityEffectDefinition::AnimateDead {
+                actor_kind_id: "demo.actor.risen-thrall".to_owned(),
+                corpse_item_kind_id: "demo.item.skeleton-remains".to_owned(),
+                radius: 5,
+                count: 8,
+                failure_chance_percent: 0,
+            },
+        ],
+    };
+
+    let mut changed = BTreeSet::new();
+    let (resolutions, affected_positions) =
+        game.resolve_monster_self_effects(0, &ability, &mut changed);
+
+    assert_eq!(resolutions.len(), 2);
+    assert!(game.items.is_empty());
+    assert_eq!(affected_positions, [corpse_position, skeleton_position]);
+    assert!(changed.contains(&corpse_position));
+    assert!(changed.contains(&skeleton_position));
+    let summoned = game
+        .entities
+        .iter()
+        .filter(|entity| entity.kind_id == "demo.actor.risen-thrall")
+        .collect::<Vec<_>>();
+    assert_eq!(summoned.len(), 1);
+    assert_eq!(summoned[0].position, skeleton_position);
+    assert!(summoned.iter().all(|entity| {
+        entity.controller_id.is_none()
+            && entity.summon.as_ref().is_some_and(|summon| {
+                summon.owner_id == "test.actor.necromancer"
+                    && summon.source_ability_id == ability.id
+                    && summon.remaining_turns == 0
+            })
+    }));
+}
+
+#[test]
 fn sleep_power_resolves_then_skips_energy_and_damage_wakes_the_target() {
     let mut game = Game::new(0);
     let template = game.generated_actor(

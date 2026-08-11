@@ -272,6 +272,7 @@ fn ability_program_step_is_composable(
             AbilityEffectDefinition::Heal { .. }
                 | AbilityEffectDefinition::ApplyStatus { .. }
                 | AbilityEffectDefinition::RemoveStatus { .. }
+                | AbilityEffectDefinition::AnimateDead { .. }
                 | AbilityEffectDefinition::AreaDamage { .. }
                 | AbilityEffectDefinition::AggravateMonsters
                 | AbilityEffectDefinition::Detect { .. }
