@@ -5,7 +5,8 @@
         "terrain",
         "actor",
         "item",
-        "gold"
+        "gold",
+        "curse"
       ],
       "type": "string"
     },

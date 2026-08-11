@@ -6,6 +6,13 @@
   "description": "你可以闻出附近的贵重金属。",
   "rating": "good",
   "sourceIndex": 8,
+  "activation": {
+    "minimumLevel": 3,
+    "governingAttribute": "intelligence",
+    "cost": 2,
+    "baseFailurePercent": 30,
+    "abilityId": "rfb.ability.mutation.smell-metal"
+  },
   "randomWeight": 6,
   "removesOnGain": []
 }

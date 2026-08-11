@@ -126,7 +126,8 @@
         "status-melee-damage",
         "control-power",
         "genocide-power",
-        "summon-maximum-level"
+        "summon-maximum-level",
+        "maximum-weight"
       ],
       "type": "string"
     },

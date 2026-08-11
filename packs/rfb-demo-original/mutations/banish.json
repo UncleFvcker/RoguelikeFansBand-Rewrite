@@ -6,6 +6,13 @@
   "description": "你可以把邪恶生物直接送进地狱。",
   "rating": "good",
   "sourceIndex": 29,
+  "activation": {
+    "minimumLevel": 25,
+    "governingAttribute": "wisdom",
+    "cost": 25,
+    "baseFailurePercent": 70,
+    "abilityId": "rfb.ability.mutation.banish"
+  },
   "randomWeight": 2,
   "removesOnGain": []
 }

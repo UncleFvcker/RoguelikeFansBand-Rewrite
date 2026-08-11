@@ -1,6 +1,6 @@
 # RFB CoreTransport 协议 v1
 
-状态：协议 1.161、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
+状态：协议 1.163、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
 
 ## 1. 适用边界
 
@@ -464,3 +464,16 @@ contract-v237 不改变协议 DTO。可变尺寸城镇以 `mapOrigin` 嵌入同�
 看到的敌人继续投影原怪物 glyph，同时把 `kindId` 和战斗细节替换为通用“怪物”
 身份；`EMPTY_MIND` 永不被基础 ESP 发现，`WEIRD_MIND` 的 1/10 感知结果进入存档与
 state hash，因此 State Hash Schema 升至 v80。save 容器保持 v1，旧开发存档不兼容。
+
+协议 1.162 用 `AbilitySourceDto` 的 `learned`、`technique`、`mutation` 取代
+`AbilityDto.innate`，并允许没有 SP 池的主动变异省略 `resourceId`。
+`AbilityCastResolutionDto` 新增实际支付的 `resourcePaid` 与 `hpPaid`；普通技能仍
+全部支付职业资源，主动变异则按 RFB 规则先支付现有 SP、再以 HP 支付差额。
+变异能力继续复用 `CastAbility`、目标与效果结果 DTO，不进入学习、熟练度或冷却
+持久状态。save 与 state hash 输入未变化，State Hash Schema 保持 v80。
+
+协议 1.163 为 M5-A/B 主动变异补齐来源无关的效果投影：随机自身传送、隔空取物、
+换位、Recall、元素抗性、等级阈值伤害，以及带类别/疲劳参数的 Banish。诅咒探测
+进入既有 Detect 枚举，吸血可声明进食，群体状态可携带抗性检定。新增结构化的取物、
+换位与 Recall 结算；22 个变异仍通过统一 `CastAbility` 入口施放，不增加存档字段，
+save v1 与 State Hash Schema v80 不变，基线推进至 contract-v242。

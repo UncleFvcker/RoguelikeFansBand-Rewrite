@@ -6,6 +6,13 @@
   "description": "你可以通过触碰来冻结事物。",
   "rating": "average",
   "sourceIndex": 30,
+  "activation": {
+    "minimumLevel": 2,
+    "governingAttribute": "constitution",
+    "cost": 2,
+    "baseFailurePercent": 30,
+    "abilityId": "rfb.ability.mutation.cold-touch"
+  },
   "randomWeight": 4,
   "removesOnGain": []
 }

@@ -6,6 +6,18 @@
   "description": "你可以使自己强化，以抵御元素的摧残。",
   "rating": "great",
   "sourceIndex": 20,
+  "activation": {
+    "minimumLevel": 25,
+    "governingAttribute": "constitution",
+    "cost": 10,
+    "costScaling": {
+      "startLevel": 20,
+      "levelInterval": 10,
+      "amount": 5
+    },
+    "baseFailurePercent": 50,
+    "abilityId": "rfb.ability.mutation.resist"
+  },
   "randomWeight": 6,
   "removesOnGain": []
 }

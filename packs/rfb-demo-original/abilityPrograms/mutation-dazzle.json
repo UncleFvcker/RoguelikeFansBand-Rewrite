@@ -1,0 +1,35 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.ability-program.mutation.dazzle",
+  "input": "self",
+  "steps": [
+    {
+      "type": "visible-apply-status",
+      "statusKindId": "rfb.status.stun",
+      "intensity": 5,
+      "durationTicks": 5,
+      "stacking": "replace",
+      "resistanceType": "sound",
+      "power": 5
+    },
+    {
+      "type": "visible-apply-status",
+      "statusKindId": "rfb.status.confusion",
+      "intensity": 1,
+      "durationTicks": 4,
+      "stacking": "replace",
+      "resistanceType": "confusion",
+      "power": 4
+    },
+    {
+      "type": "visible-apply-status",
+      "statusKindId": "rfb.status.fear",
+      "intensity": 1,
+      "durationTicks": 4,
+      "stacking": "replace",
+      "resistanceType": "fear",
+      "power": 4
+    }
+  ]
+}

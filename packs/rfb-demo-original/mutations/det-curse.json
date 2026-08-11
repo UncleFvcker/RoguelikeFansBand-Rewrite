@@ -6,6 +6,13 @@
   "description": "你能感觉到邪恶魔法的危险。",
   "rating": "average",
   "sourceIndex": 15,
+  "activation": {
+    "minimumLevel": 7,
+    "governingAttribute": "wisdom",
+    "cost": 14,
+    "baseFailurePercent": 30,
+    "abilityId": "rfb.ability.mutation.det-curse"
+  },
   "randomWeight": 4,
   "removesOnGain": []
 }

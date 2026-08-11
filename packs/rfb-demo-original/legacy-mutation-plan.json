@@ -30,10 +30,8 @@
         "lose:mutation-good-luck=>weight-1"
       ],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "mutation-activation-system"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -55,10 +53,8 @@
         "lose:mutation-good-luck=>weight-1"
       ],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "mutation-activation-system"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -79,10 +75,8 @@
         "gain:race-vampire=>weight-50"
       ],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "mutation-activation-system"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -101,10 +95,8 @@
       ],
       "weightConditions": [],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "mutation-activation-system"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -128,10 +120,8 @@
       "removesOnGain": [
         "rfb.mutation.teleport-rnd"
       ],
-      "status": "blocked",
-      "blockers": [
-        "mutation-activation-system"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -153,10 +143,8 @@
         "lose:mutation-good-luck=>weight-1"
       ],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "mutation-activation-system"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -178,10 +166,8 @@
         "lose:mutation-good-luck=>weight-1"
       ],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "mutation-activation-system"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -203,10 +189,8 @@
         "lose:mutation-good-luck=>weight-1"
       ],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "mutation-activation-system"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -228,10 +212,8 @@
         "lose:mutation-good-luck=>weight-1"
       ],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "mutation-activation-system"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -253,10 +235,8 @@
         "lose:mutation-good-luck=>weight-1"
       ],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "mutation-activation-system"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -280,10 +260,8 @@
         "lose:mutation-good-luck=>weight-1"
       ],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "mutation-activation-system"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -307,7 +285,7 @@
       "removesOnGain": [],
       "status": "blocked",
       "blockers": [
-        "mutation-activation-system"
+        "terrain-consumption-transaction"
       ],
       "sourceNoNumericEffect": false
     },
@@ -330,10 +308,8 @@
         "lose:mutation-good-luck=>weight-1"
       ],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "mutation-activation-system"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -356,10 +332,8 @@
         "gain:race-yeek=>weight-50"
       ],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "mutation-activation-system"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -378,10 +352,8 @@
       ],
       "weightConditions": [],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "mutation-activation-system"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -400,10 +372,8 @@
       ],
       "weightConditions": [],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "mutation-activation-system"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -425,10 +395,8 @@
         "lose:mutation-good-luck=>weight-1"
       ],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "mutation-activation-system"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -451,7 +419,7 @@
       "removesOnGain": [],
       "status": "blocked",
       "blockers": [
-        "mutation-activation-system"
+        "mutation-polymorph-transaction"
       ],
       "sourceNoNumericEffect": false
     },
@@ -477,7 +445,7 @@
       "removesOnGain": [],
       "status": "blocked",
       "blockers": [
-        "mutation-activation-system"
+        "item-alchemy-transaction"
       ],
       "sourceNoNumericEffect": false
     },
@@ -502,7 +470,7 @@
       "removesOnGain": [],
       "status": "blocked",
       "blockers": [
-        "mutation-activation-system"
+        "mutation-summoning-transaction"
       ],
       "sourceNoNumericEffect": false
     },
@@ -525,10 +493,8 @@
         "lose:mutation-good-luck=>weight-1"
       ],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "mutation-activation-system"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -549,7 +515,7 @@
       "removesOnGain": [],
       "status": "blocked",
       "blockers": [
-        "mutation-activation-system"
+        "terrain-earthquake-transaction"
       ],
       "sourceNoNumericEffect": false
     },
@@ -574,7 +540,7 @@
       "removesOnGain": [],
       "status": "blocked",
       "blockers": [
-        "mutation-activation-system"
+        "device-drain-transaction"
       ],
       "sourceNoNumericEffect": false
     },
@@ -596,7 +562,7 @@
       "removesOnGain": [],
       "status": "blocked",
       "blockers": [
-        "mutation-activation-system"
+        "item-magic-analysis"
       ],
       "sourceNoNumericEffect": false
     },
@@ -621,7 +587,7 @@
       "removesOnGain": [],
       "status": "blocked",
       "blockers": [
-        "mutation-activation-system"
+        "monster-reproduction-transaction"
       ],
       "sourceNoNumericEffect": false
     },
@@ -646,7 +612,7 @@
       "removesOnGain": [],
       "status": "blocked",
       "blockers": [
-        "mutation-activation-system"
+        "melee-teleport-transaction"
       ],
       "sourceNoNumericEffect": false
     },
@@ -669,10 +635,8 @@
         "lose:mutation-good-luck=>weight-1"
       ],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "mutation-activation-system"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -694,10 +658,8 @@
         "lose:mutation-good-luck=>weight-1"
       ],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "mutation-activation-system"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -719,10 +681,8 @@
         "lose:mutation-good-luck=>weight-1"
       ],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "mutation-activation-system"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -744,10 +704,8 @@
         "lose:mutation-good-luck=>weight-1"
       ],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "mutation-activation-system"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -766,10 +724,8 @@
       ],
       "weightConditions": [],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "mutation-activation-system"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {

@@ -109,6 +109,7 @@ pub enum AbilityDetectSubjectDefinition {
     Actor,
     Item,
     Gold,
+    Curse,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
@@ -130,6 +131,7 @@ pub enum AbilityLevelScalingField {
     ControlPower,
     GenocidePower,
     SummonMaximumLevel,
+    MaximumWeight,
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -269,6 +271,16 @@ pub enum AbilityEffectDefinition {
         damage_type: ActorDamageType,
         beam_chance_percent: u8,
     },
+    BoltOrAreaDamage {
+        damage_dice: u16,
+        damage_sides: u16,
+        #[serde(default)]
+        damage_bonus: u16,
+        #[serde(default)]
+        damage_type: ActorDamageType,
+        area_from_level: u16,
+        radius: u8,
+    },
     ConeDamage {
         damage_dice: u16,
         damage_sides: u16,
@@ -304,6 +316,22 @@ pub enum AbilityEffectDefinition {
     DarkenRoom,
     AggravateMonsters,
     Teleport,
+    FetchItem {
+        maximum_weight_tenths_pound: u32,
+    },
+    SwapPosition,
+    Recall {
+        delay_dice: u16,
+        delay_sides: u16,
+        #[serde(default)]
+        delay_bonus: u16,
+    },
+    ResistElements {
+        duration_dice: u16,
+        duration_sides: u32,
+        #[serde(default)]
+        duration_bonus: u32,
+    },
     BlinkSelf {
         radius: u8,
     },
@@ -411,12 +439,18 @@ pub enum AbilityEffectDefinition {
         target_category: String,
         #[serde(default = "default_ability_effect_repeat")]
         repeat: u8,
+        #[serde(default)]
+        feeds: bool,
     },
     Genocide {
         scope: AbilityGenocideScopeDefinition,
         power: u16,
         #[serde(default)]
         radius: u8,
+        #[serde(default)]
+        target_category: Option<String>,
+        #[serde(default = "default_true")]
+        fatigue: bool,
     },
     IdentifyItem {
         full_identify_power: u16,
@@ -450,6 +484,10 @@ pub enum AbilityEffectDefinition {
         duration_ticks: u32,
         stacking: AbilityStatusStackingDefinition,
         #[serde(default)]
+        resistance_type: Option<ActorDamageType>,
+        #[serde(default)]
+        power: Option<u16>,
+        #[serde(default)]
         target_category: Option<String>,
     },
     EnchantEquippedWeapon {
@@ -473,6 +511,10 @@ const fn default_ability_effect_repeat() -> u8 {
     1
 }
 
+const fn default_true() -> bool {
+    true
+}
+
 impl AbilityEffectDefinition {
     #[must_use]
     pub fn ordered_effects(&self) -> &[Self] {
@@ -494,6 +536,7 @@ fn ability_level_scaling_base_and_limit(
             | AbilityEffectDefinition::JumpDamage { damage_dice, .. }
             | AbilityEffectDefinition::BeamDamage { damage_dice, .. }
             | AbilityEffectDefinition::BoltOrBeamDamage { damage_dice, .. }
+            | AbilityEffectDefinition::BoltOrAreaDamage { damage_dice, .. }
             | AbilityEffectDefinition::ConeDamage { damage_dice, .. }
             | AbilityEffectDefinition::CurseDamage { damage_dice, .. }
             | AbilityEffectDefinition::VisibleDamage { damage_dice, .. }
@@ -506,6 +549,7 @@ fn ability_level_scaling_base_and_limit(
             | AbilityEffectDefinition::JumpDamage { damage_sides, .. }
             | AbilityEffectDefinition::BeamDamage { damage_sides, .. }
             | AbilityEffectDefinition::BoltOrBeamDamage { damage_sides, .. }
+            | AbilityEffectDefinition::BoltOrAreaDamage { damage_sides, .. }
             | AbilityEffectDefinition::ConeDamage { damage_sides, .. }
             | AbilityEffectDefinition::CurseDamage { damage_sides, .. }
             | AbilityEffectDefinition::VisibleDamage { damage_sides, .. }
@@ -517,6 +561,7 @@ fn ability_level_scaling_base_and_limit(
             | AbilityEffectDefinition::AreaDamage { damage_bonus, .. }
             | AbilityEffectDefinition::BeamDamage { damage_bonus, .. }
             | AbilityEffectDefinition::BoltOrBeamDamage { damage_bonus, .. }
+            | AbilityEffectDefinition::BoltOrAreaDamage { damage_bonus, .. }
             | AbilityEffectDefinition::ConeDamage { damage_bonus, .. }
             | AbilityEffectDefinition::CurseDamage { damage_bonus, .. }
             | AbilityEffectDefinition::VisibleDamage { damage_bonus, .. }
@@ -536,10 +581,15 @@ fn ability_level_scaling_base_and_limit(
         (
             AbilityEffectDefinition::AreaDamage { radius, .. }
             | AbilityEffectDefinition::JumpDamage { radius, .. }
+            | AbilityEffectDefinition::BoltOrAreaDamage { radius, .. }
             | AbilityEffectDefinition::ConeDamage { radius, .. }
-            | AbilityEffectDefinition::BreathDamage { radius, .. },
+            | AbilityEffectDefinition::BreathDamage { radius, .. }
+            | AbilityEffectDefinition::Detect { radius, .. },
             AbilityLevelScalingField::Radius,
         ) => Some((u64::from(*radius), 16)),
+        (AbilityEffectDefinition::BlinkSelf { radius }, AbilityLevelScalingField::Radius) => {
+            Some((u64::from(*radius), 255))
+        }
         (
             AbilityEffectDefinition::BoltOrBeamDamage {
                 beam_chance_percent,
@@ -548,11 +598,13 @@ fn ability_level_scaling_base_and_limit(
             AbilityLevelScalingField::BeamChancePercent,
         ) => Some((u64::from(*beam_chance_percent), 100)),
         (
-            AbilityEffectDefinition::ApplyStatus { intensity, .. },
+            AbilityEffectDefinition::ApplyStatus { intensity, .. }
+            | AbilityEffectDefinition::VisibleApplyStatus { intensity, .. },
             AbilityLevelScalingField::StatusIntensity,
         ) => Some((u64::from(*intensity), 1_000)),
         (
-            AbilityEffectDefinition::ApplyStatus { duration_ticks, .. },
+            AbilityEffectDefinition::ApplyStatus { duration_ticks, .. }
+            | AbilityEffectDefinition::VisibleApplyStatus { duration_ticks, .. },
             AbilityLevelScalingField::StatusDurationTicks,
         ) => Some((u64::from(*duration_ticks), 1_000_000)),
         (
@@ -561,6 +613,9 @@ fn ability_level_scaling_base_and_limit(
         ) => Some((u64::from(*duration_sides), 1_000_000)),
         (
             AbilityEffectDefinition::ApplyStatus {
+                power: Some(power), ..
+            }
+            | AbilityEffectDefinition::VisibleApplyStatus {
                 power: Some(power), ..
             },
             AbilityLevelScalingField::StatusPower,
@@ -587,6 +642,12 @@ fn ability_level_scaling_base_and_limit(
             AbilityEffectDefinition::SummonCategory { maximum_level, .. },
             AbilityLevelScalingField::SummonMaximumLevel,
         ) => Some((u64::from(*maximum_level), 1_000)),
+        (
+            AbilityEffectDefinition::FetchItem {
+                maximum_weight_tenths_pound,
+            },
+            AbilityLevelScalingField::MaximumWeight,
+        ) => Some((u64::from(*maximum_weight_tenths_pound), 1_000_000)),
         _ => None,
     }
 }

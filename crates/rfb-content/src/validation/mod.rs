@@ -129,6 +129,21 @@ pub(crate) fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<
         {
             return Err(ContentError::InvalidMutation(mutation.id.clone()));
         }
+        if mutation.activation.as_ref().is_some_and(|activation| {
+            !(1..=100).contains(&activation.minimum_level)
+                || activation.cost > 1_000_000
+                || activation.cost_scaling.is_some_and(|scaling| {
+                    !(1..=100).contains(&scaling.start_level)
+                        || scaling.level_interval == 0
+                        || scaling.level_interval > 100
+                        || scaling.amount == 0
+                        || scaling.amount > 1_000_000
+                })
+                || activation.base_failure_percent > 95
+                || validate_definition_id(&activation.ability_id, "ability").is_err()
+        }) {
+            return Err(ContentError::InvalidMutation(mutation.id.clone()));
+        }
         if [
             mutation.relative_experience_multiplier,
             mutation.movement_energy_multiplier,
@@ -264,6 +279,30 @@ pub(crate) fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<
         },
         &mut all_ids,
     )?;
+
+    let ordinary_player_ability_ids = content
+        .ability_books
+        .iter()
+        .flat_map(|book| book.ability_ids.iter().cloned())
+        .chain(content.classes.iter().flat_map(|class| {
+            class
+                .technique_profiles
+                .iter()
+                .flat_map(|profile| profile.innate_ability_ids.iter().cloned())
+        }))
+        .collect::<BTreeSet<_>>();
+    let mut mutation_ability_ids = BTreeSet::new();
+    for mutation in &content.mutations {
+        let Some(activation) = &mutation.activation else {
+            continue;
+        };
+        if !ability_ids.contains(&activation.ability_id)
+            || ordinary_player_ability_ids.contains(&activation.ability_id)
+            || !mutation_ability_ids.insert(activation.ability_id.clone())
+        {
+            return Err(ContentError::InvalidMutation(mutation.id.clone()));
+        }
+    }
 
     let TableValidationOutputs {
         loot_table_ids,

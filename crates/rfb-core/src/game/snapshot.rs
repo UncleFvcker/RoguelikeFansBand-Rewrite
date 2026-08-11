@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 use crate::{
     resistance::DamageType,
@@ -13,7 +13,7 @@ use rfb_content::{
     TownFacilityCategory, WildernessDefinition, WildernessLocationDefinition, WildernessTerrain,
 };
 use rfb_protocol::{
-    AbilityDetectSpecDto, AbilityDto, AbilityLearningDto, AbilitySummonSpecDto,
+    AbilityDetectSpecDto, AbilityDto, AbilityLearningDto, AbilitySourceDto, AbilitySummonSpecDto,
     AbilityTerrainTransformSpecDto, AttackProfileDto, AttributeSetDto, AttributeValueDto,
     BodySlotDto, CampaignStateDto, CellDto, CellVisualDto, ContentVisualDto, DamageDiceDto,
     DeviceRechargeDto, EntityDto, EntityFactionDto, EquipmentItemDto, GameSnapshot,
@@ -26,7 +26,7 @@ use rfb_protocol::{
 
 use super::tasks::projected_task_state;
 use super::{
-    Game, LightSource, TERRAIN_INTERACTION_DIRECTIONS, ability_detect_subject_dto,
+    AbilityProgress, Game, LightSource, TERRAIN_INTERACTION_DIRECTIONS, ability_detect_subject_dto,
     ability_effect_spec_dto, ability_target_spec_dto, actor_melee_routine_dto, combine_percentages,
     derived_speed, item_target_spec, light_from_sources, task_definition, task_floors,
     task_objectives,
@@ -236,26 +236,39 @@ impl Game {
             .iter()
             .flat_map(|profile| profile.innate_ability_ids.iter().cloned())
             .collect::<BTreeSet<_>>();
+        let mutation_activations = self
+            .content
+            .mutations()
+            .filter(|mutation| self.progress.active_mutation_ids.contains(&mutation.id))
+            .filter_map(|mutation| mutation.activation.as_ref())
+            .map(|activation| (activation.ability_id.clone(), activation.clone()))
+            .collect::<BTreeMap<_, _>>();
         book_ability_ids
             .iter()
             .cloned()
             .chain(innate_ability_ids.iter().cloned())
+            .chain(mutation_activations.keys().cloned())
             .collect::<BTreeSet<_>>()
             .into_iter()
             .filter_map(|ability_id| {
                 let ability = self.content.ability(&ability_id)?;
-                let innate = innate_ability_ids.contains(&ability_id);
-                let mut effective_ability = if innate {
-                    ability.clone()
+                let source = if innate_ability_ids.contains(&ability_id) {
+                    AbilitySourceDto::Technique
+                } else if mutation_activations.contains_key(&ability_id) {
+                    AbilitySourceDto::Mutation
                 } else {
-                    Self::effective_casting_ability(
+                    AbilitySourceDto::Learned
+                };
+                let mut effective_ability = match source {
+                    AbilitySourceDto::Learned => Self::effective_casting_ability(
                         casting_profile.expect("book ability requires casting profile"),
                         ability,
-                    )
+                    ),
+                    AbilitySourceDto::Technique | AbilitySourceDto::Mutation => ability.clone(),
                 };
                 Self::apply_player_level_scaling(&mut effective_ability, self.progress.level);
-                if let Some(profile) = casting_profile
-                    && !innate
+                if source == AbilitySourceDto::Learned
+                    && let Some(profile) = casting_profile
                 {
                     Self::apply_casting_profile_effect_scaling(
                         profile,
@@ -264,36 +277,90 @@ impl Game {
                     );
                 }
                 let ability = &effective_ability;
-                let player = Self::player_ability_parameters(ability);
-                let progress = self.ability_progress_value(ability);
-                let resource_cost = self.ability_effective_resource_cost(ability, progress);
-                let cooldown_remaining = self.ability_cooldown_remaining(ability);
-                let learned = self.learned_abilities.contains(&ability_id);
-                let book_item_id = if innate {
-                    None
+                let mutation_activation = mutation_activations.get(&ability_id);
+                let (
+                    minimum_level,
+                    resource_id,
+                    base_resource_cost,
+                    resource_cost,
+                    failure_percent,
+                    progress,
+                    cooldown_remaining,
+                    cooldown_turns,
+                    cooldown_group_id,
+                ) = if source == AbilitySourceDto::Mutation {
+                    let activation = mutation_activation
+                        .expect("mutation ability source requires an activation");
+                    (
+                        activation.minimum_level,
+                        casting_profile.map(|profile| profile.resource_id.clone()),
+                        activation.cost,
+                        self.mutation_resource_cost(activation),
+                        self.mutation_failure_percent(activation),
+                        AbilityProgress {
+                            proficiency: 0,
+                            proficiency_cap: 0,
+                            cast_count: 0,
+                            fail_count: 0,
+                            cooldown_remaining: 0,
+                        },
+                        0,
+                        0,
+                        None,
+                    )
                 } else {
+                    let player = Self::player_ability_parameters(ability);
+                    let progress = self.ability_progress_value(ability);
+                    (
+                        player.minimum_level,
+                        Some(player.resource_id.clone()),
+                        player.resource_cost,
+                        self.ability_effective_resource_cost(ability, progress),
+                        if source == AbilitySourceDto::Technique {
+                            let profile = self.technique_profile_for_ability(ability)?;
+                            self.technique_failure_percent(profile, ability)
+                        } else {
+                            self.ability_failure_percent(casting_profile?, ability)
+                        },
+                        progress,
+                        self.ability_cooldown_remaining(ability),
+                        player.cooldown.as_ref().map_or(0, |value| value.turns),
+                        player
+                            .cooldown
+                            .as_ref()
+                            .and_then(|value| value.group_id.clone()),
+                    )
+                };
+                let learned = source == AbilitySourceDto::Learned
+                    && self.learned_abilities.contains(&ability_id);
+                let book_item_id = if source == AbilitySourceDto::Learned {
                     casting_profile
                         .and_then(|profile| self.ability_book_item_id(profile, &ability_id))
-                };
-                let level_available = self.progress.level >= player.minimum_level;
-                let resource_available = self
-                    .resources
-                    .get(&player.resource_id)
-                    .is_some_and(|pool| pool.current >= resource_cost);
-                let failure_percent = if innate {
-                    let profile = self.technique_profile_for_ability(ability)?;
-                    self.technique_failure_percent(profile, ability)
                 } else {
-                    self.ability_failure_percent(casting_profile?, ability)
+                    None
+                };
+                let level_available = self.progress.level >= minimum_level;
+                let resource_available = if source == AbilitySourceDto::Mutation {
+                    let resource = resource_id
+                        .as_deref()
+                        .and_then(|id| self.resources.get(id))
+                        .map_or(0, |pool| pool.current);
+                    let hp = u32::try_from(self.player.hp.max(0)).unwrap_or(0);
+                    resource.saturating_add(hp) >= resource_cost
+                } else {
+                    resource_id
+                        .as_deref()
+                        .and_then(|id| self.resources.get(id))
+                        .is_some_and(|pool| pool.current >= resource_cost)
                 };
                 Some(AbilityDto {
                     id: ability.id.clone(),
                     name_key: ability.name_key.clone(),
                     description_key: ability.description_key.clone(),
-                    minimum_level: player.minimum_level,
-                    innate,
-                    resource_id: player.resource_id.clone(),
-                    base_resource_cost: player.resource_cost,
+                    minimum_level,
+                    source,
+                    resource_id,
+                    base_resource_cost,
                     resource_cost,
                     failure_percent,
                     proficiency: progress.proficiency,
@@ -302,11 +369,8 @@ impl Game {
                     cast_count: progress.cast_count,
                     fail_count: progress.fail_count,
                     cooldown_remaining,
-                    cooldown_turns: player.cooldown.as_ref().map_or(0, |value| value.turns),
-                    cooldown_group_id: player
-                        .cooldown
-                        .as_ref()
-                        .and_then(|value| value.group_id.clone()),
+                    cooldown_turns,
+                    cooldown_group_id,
                     area_radius: match ability.effect {
                         AbilityEffectDefinition::AreaDamage { radius, .. } => Some(radius),
                         _ => None,
@@ -371,22 +435,25 @@ impl Game {
                     target_spec: ability_target_spec_dto(ability),
                     learned,
                     book_item_id: book_item_id.clone(),
-                    can_study: !innate
+                    can_study: source == AbilitySourceDto::Learned
                         && !learned
                         && level_available
                         && book_item_id.is_some()
                         && self
                             .player_ability_learning_dto()
                             .is_some_and(|learning| learning.remaining_slots > 0),
-                    can_forget: !innate && learned,
-                    can_cast: if innate {
-                        level_available && resource_available && cooldown_remaining == 0
-                    } else {
-                        learned
-                            && level_available
-                            && resource_available
-                            && cooldown_remaining == 0
-                            && book_item_id.is_some()
+                    can_forget: source == AbilitySourceDto::Learned && learned,
+                    can_cast: match source {
+                        AbilitySourceDto::Technique | AbilitySourceDto::Mutation => {
+                            level_available && resource_available && cooldown_remaining == 0
+                        }
+                        AbilitySourceDto::Learned => {
+                            learned
+                                && level_available
+                                && resource_available
+                                && cooldown_remaining == 0
+                                && book_item_id.is_some()
+                        }
                     },
                 })
             })

@@ -46,6 +46,80 @@
       ],
       "type": "string"
     },
+    "MutationActivationCostScalingDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "amount": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "levelInterval": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "startLevel": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "startLevel",
+        "levelInterval",
+        "amount"
+      ],
+      "type": "object"
+    },
+    "MutationActivationDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "abilityId": {
+          "type": "string"
+        },
+        "baseFailurePercent": {
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "cost": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "costScaling": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MutationActivationCostScalingDefinition"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "governingAttribute": {
+          "$ref": "#/$defs/TechniqueAttribute"
+        },
+        "minimumLevel": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "minimumLevel",
+        "governingAttribute",
+        "cost",
+        "baseFailurePercent",
+        "abilityId"
+      ],
+      "type": "object"
+    },
     "MutationInnateAttackDefinition": {
       "additionalProperties": false,
       "properties": {
@@ -181,6 +255,17 @@
         }
       },
       "type": "object"
+    },
+    "TechniqueAttribute": {
+      "enum": [
+        "strength",
+        "intelligence",
+        "wisdom",
+        "dexterity",
+        "constitution",
+        "charisma"
+      ],
+      "type": "string"
     }
   },
   "$id": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/mutation.schema.json",
@@ -189,6 +274,16 @@
   "properties": {
     "$schema": {
       "type": "string"
+    },
+    "activation": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/MutationActivationDefinition"
+        },
+        {
+          "type": "null"
+        }
+      ]
     },
     "armorClass": {
       "default": 0,

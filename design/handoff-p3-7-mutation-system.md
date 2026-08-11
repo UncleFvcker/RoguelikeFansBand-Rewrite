@@ -14,6 +14,8 @@ P3.7-M0 至 M4E 原始批次记录。权威内容覆盖账本是
 - M4F-A 已由 `a9a5dbde feat: activate M4F-A passive mutations` 独立提交；
   M4F-B1 在该提交之上实现 P3.8 Elvish Waybread 与兰巴斯不耐受；M4F-B2/B3
   继续完成 Ill Norm 与 ESP。
+- M5.0 已建立主动变异统一施放合同；M5-A/B 的 22 项具体能力已接入，M5-C/D
+  仍有 9 项窄事务待完成。
 - RFB 权威源：`D:/codex/Frogcomposband` 的 Git `master` ref；覆盖审计当前锁定
   `efd63661302866038f58d8cd2553b23e6af3bf9d`。不要读取该仓库工作树文件替代
   `master` Git 对象。
@@ -22,18 +24,19 @@ P3.7-M0 至 M4E 原始批次记录。权威内容覆盖账本是
 
 | 项目 | 当前值 |
 | --- | --- |
-| Protocol | `1.161` |
+| Protocol | `1.163` |
 | Save container | `v1` |
 | State Hash Schema | `v80` |
-| Contract baseline | `contract-v240`，21 个 exact fixtures |
+| Contract baseline | `contract-v242`，21 个 exact fixtures |
 | Contract Schema | `v4` |
-| Content pack | `1.233.0` |
-| Content hash | `6d326f2dd4735e6122b34a6f71903afe2c480e56d3095cd88c7d45e097b06a19` |
+| Content pack | `1.234.0` |
+| Content hash | `86e9e7b13c53a835e4c4c7654d3d3104c647c808b39342631e38c3dd7e7f4cc2` |
 
-当前 83 个 content、333 个 core、57 个 legacy-import 测试全部通过，并保留 21 个
-exact fixtures。M4F-B1 为两座城镇杂货店加入兰巴斯并改变公共初始化 RNG；
+当前保留 21 个聚焦 exact fixtures。M4F-B1 为两座城镇杂货店加入兰巴斯并改变公共初始化 RNG；
 M4F-B3 为实体投影增加 glyph，并持久化 Weird Mind 的感知结果，因此协议、状态
 哈希 Schema 与全部精简 fixture 在本批次统一推进。
+M5-A/B 再加入 22 个正式能力及其窄效果投影，使协议推进至 1.163、基线推进至
+contract-v242；没有新增持久状态，因此 State Hash Schema 继续保持 v80。
 
 早期计划中基于 `436b1967` 推算的 Protocol `1.152`、State Hash Schema `73`、
 Pack `1.212.0` 已经是历史值。后续只能从上表当前值顺延，并且版本、生成绑定、
@@ -47,11 +50,11 @@ RFB `master` 共 152 项变异：104 个基础随机候选，48 个零权重身�
 | --- | ---: | ---: | ---: |
 | passive-bonus | 44 | 7 | 51 |
 | cross-system-query | 12 | 26 | 38 |
-| activation | 0 | 35 | 35 |
+| activation | 22 | 13 | 35 |
 | periodic-effect | 0 | 28 | 28 |
-| 合计 | 56 | 96 | 152 |
+| 合计 | 78 | 74 | 152 |
 
-随机候选中已有 41 项 active，仍有 63 项 blocked。现有随机选择器会读取所有
+随机候选中已有 63 项 active，仍有 41 项 blocked。现有随机选择器会读取所有
 `randomWeight > 0` 的正式定义，并不知道覆盖账本的 `active/blocked` 状态。因此在
 104 个随机候选全部拥有真实行为前，不得把 Polymorph 或其他随机获得入口接到
 `gain_random_mutation`，否则会正式授予无行为的壳。
@@ -76,6 +79,8 @@ RFB `master` 共 152 项变异：104 个基础随机候选，48 个零权重身�
 | M4F-B1 | Elvish Waybread 已按原版食物行为加入；Waybread Intolerance 复用饥饿、麻痹、解毒与飞行管线 active。 |
 | M4F-B2 | Ill Norm 屏蔽其他变异的魅力修正，并在最终属性上保证 `8 + 2 × 等级` 的最低魅力。 |
 | M4F-B3 | ESP 接入 Empty/Weird Mind 标记；Weird Mind 按 1/10 刷新感知，非视觉目标只投影白色原 glyph 与通用“怪物”身份。 |
+| M5-A | 9 项探测、随机传送、隔空取物、换位、Recall 与邪恶放逐主动变异 active。 |
+| M5-B | 13 项喷吐、吐息、凝视、射线、吸血、触碰、范围攻击、狂暴与元素抗性主动变异 active。 |
 
 当前唯一权威角色状态仍是 `CharacterProgress.active_mutation_ids` 与
 `locked_mutation_ids`。属性潜力继续由 `CharacterProgress.attribute_potentials`
@@ -97,14 +102,12 @@ RFB `master` 共 152 项变异：104 个基础随机候选，48 个零权重身�
 ## 4. M7 前缺失的随机候选闭环
 
 原计划的 M5 包含 source index 0--30 的 31 个常规主动候选，M6 包含 27 个
-常规周期候选。M4F-A 与 M4F-B1 已完成其中 4 项；即使 M5/M6 全部完成，仍需闭合以下 7 个
+常规周期候选。M4F-A 与 M4F-B1--B3 已完成 6 项；即使 M5/M6 全部完成，仍需闭合以下 5 个
 不属于 M5/M6 的随机候选：
 
 | ID | 中文名 | 当前账本 blocker | 闭环重点 |
 | --- | --- | --- | --- |
 | `rfb.mutation.chaos-gift` | 混沌神明 | `mutation-cross-system-query` | 审计并收窄混沌馈赠消费者 |
-| `rfb.mutation.ill-norm` | 安心幻象 | `mutation-cross-system-query` | 审计并收窄外观/知识投影 |
-| `rfb.mutation.esp` | 心灵感应 | `actor-telepathy-mind-flags-and-fuzzy-projection` | 怪物 mind flags 与模糊身份投影 |
 | `rfb.mutation.bad-luck` | 黑色光环 | `luck-item-generation-device-outcome-and-curse-consumers` | 统一全部坏运气消费者 |
 | `rfb.mutation.good-luck` | 白色光环 | `luck-item-generation-device-outcome-and-sensing-consumers` | 统一全部好运气消费者 |
 | `rfb.mutation.easy-tiring` | 易疲劳 | `fatigue-minislow-state-recovery-and-physical-action-consumers` | `minislow`、恢复与物理动作 |
@@ -115,8 +118,8 @@ M7 之前合并并通过审计。建议按以下顺序推进：
 
 1. M4F-A（已完成）：Infravision、Elemental Vulnerability、Pultitis 已复用现有
    派生值和抗性管线。
-2. M4F-B1（已完成）：Waybread Intolerance 与 P3.8 Elvish Waybread 同批完成。
-   M4F-B 后续只保留 ESP 与 Ill Norm 的怪物身份、知识和投影支撑。
+2. M4F-B1--B3（已完成）：Waybread Intolerance 与 P3.8 Elvish Waybread 同批完成，
+   Ill Norm 与 ESP 的怪物身份、知识和投影支撑也已闭合。
 3. M4F-C：Good Luck、Bad Luck、Easy Tiring、Impotence、Chaos Gift 等多消费者
    规则。必须先统一所有消费者，再把账本状态改成 active。
 
@@ -132,11 +135,20 @@ Kin；它们不属于 104 候选的 M7 门槛，应保留独立的职业/龙族�
 
 ### M5.0 统一施放合同
 
+状态：已完成。`MutationDefinition.activation` 保存等级、六维主属性、成本、基础失败率
+与独占 `abilityId`；动态投影使用 `AbilitySourceDto::Mutation`。目标验证沿用既有
+Ability 入口，失败率复刻 RFB `calculate_fail_rate` 的等级/属性表，支付按 SP 优先、
+不足转扣 HP。没有施法资源池的构筑直接用 HP，但不会创建伪资源池。成功和失败均不
+写入 `ability_progress`，gain/lose 与存档恢复仅从现有 active mutation 集合重建投影。
+协议 1.162 建立来源/支付合同；M5-A/B 的效果投影使协议顺延至 1.163，State Hash
+Schema 维持 v80。22 个具体主动变异已激活，M5-C/D 尚余 9 项。
+
 在 `MutationDefinition` 增加一个可选、窄范围的主动能力配置：
 
 - `minimumLevel`
 - `governingAttribute`
 - `cost`
+- 可选 `costScaling { startLevel, levelInterval, amount }`
 - `baseFailurePercent`
 - `abilityId`
 
@@ -144,7 +156,7 @@ active mutation 动态授予引用的既有 AbilityDefinition，但使用独立�
 参数。不要把它写入学习列表或 `ability_progress`：变异能力不占学习容量、不遗忘、
 不获得熟练度，也不需要新增持久状态。
 
-变异只负责来源、触发、冷却和消耗；伤害、治疗、状态、传送、召唤、地形、资源和
+变异只负责来源、施放参数和消耗；伤害、治疗、状态、传送、召唤、地形、资源和
 物品变化继续调用来源无关的现有事务。只有出现第二个真实调用方时才抽取窄核心
 事务，不合并现有 Ability/Item 效果枚举，也不建立大一统效果脚本引擎。
 
@@ -154,10 +166,13 @@ active mutation 动态授予引用的既有 AbilityDefinition，但使用独立�
 
 ### M5 分批
 
-1. M5-A：探测、传送和位移。优先复用 Detect、Teleport、Blink、Swap Position、
-   Recall、Banish 等现有能力。
-2. M5-B：射线、吐息、凝视、近战触碰和范围攻击。复用伤害、状态、目标和死亡
-   事务，不复制第二套战斗结算。
+1. M5-A（已完成，9 项）：Telekinesis、Teleport、Smell Metal、Smell Monsters、
+   Blink、Swap Position、Detect Curses、Recall、Banish Evil。复用 Detect、随机
+   传送、方向路径、Recall 与 Genocide；Banish 只增加类别与无疲劳参数。
+2. M5-B（已完成，13 项）：Spit Acid、Fire Breath、Hypnotic Gaze、Mind Blast、
+   Radiation、Vampirism、Shriek、Illumination、Berserk、Elemental Resistance、
+   Dazzle、Laser Eye、Cold Touch。复用伤害、状态、目标、死亡、营养与激怒事务，
+   不复制第二套战斗结算。
 3. M5-C：地形、物品、炼金和资源操作。Eat Rock、Midas Touch、Eat Magic、
    Weigh Magic 等只能在目标、物品实例、堆叠和资源语义完整后 active。
 4. M5-D：召唤、变形和特殊能力。Grow Mold、Sterility 和主动 Polymorph 等不得

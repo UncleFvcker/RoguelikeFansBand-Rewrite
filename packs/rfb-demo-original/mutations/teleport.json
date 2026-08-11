@@ -6,6 +6,13 @@
   "description": "你可以随心所欲地传送。",
   "rating": "good",
   "sourceIndex": 4,
+  "activation": {
+    "minimumLevel": 7,
+    "governingAttribute": "wisdom",
+    "cost": 7,
+    "baseFailurePercent": 30,
+    "abilityId": "rfb.ability.mutation.teleport"
+  },
   "randomWeight": 6,
   "removesOnGain": [
     "rfb.mutation.teleport-rnd"

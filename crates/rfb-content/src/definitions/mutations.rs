@@ -5,7 +5,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
-use super::{ActorDamageType, ActorResistanceLevel, StatModifiers};
+use super::{ActorDamageType, ActorResistanceLevel, StatModifiers, TechniqueAttribute};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
@@ -41,6 +41,28 @@ pub struct MutationRatioDefinition {
     pub denominator: u16,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct MutationActivationCostScalingDefinition {
+    pub start_level: u16,
+    pub level_interval: u16,
+    pub amount: u32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct MutationActivationDefinition {
+    pub minimum_level: u16,
+    pub governing_attribute: TechniqueAttribute,
+    pub cost: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cost_scaling: Option<MutationActivationCostScalingDefinition>,
+    pub base_failure_percent: u8,
+    pub ability_id: String,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -54,6 +76,8 @@ pub struct MutationDefinition {
     pub rating: MutationRatingDefinition,
     pub source_index: u16,
     pub random_weight: u8,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub activation: Option<MutationActivationDefinition>,
     #[serde(default)]
     pub modifiers: StatModifiers,
     /// Direct armor-class adjustment from the original mutation bonus.

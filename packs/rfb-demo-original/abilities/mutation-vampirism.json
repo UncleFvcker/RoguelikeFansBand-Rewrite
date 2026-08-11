@@ -1,0 +1,29 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.ability.mutation.vampirism",
+  "nameKey": "ability-rfb-mutation-vampirism-name",
+  "descriptionKey": "ability-rfb-mutation-vampirism-description",
+  "target": {
+    "modes": [
+      "direction"
+    ],
+    "range": 1,
+    "requiresLineOfEffect": true
+  },
+  "abilityProgramId": "rfb.ability-program.mutation.vampirism",
+  "levelScaling": [
+    {
+      "effectIndex": 0,
+      "field": "damage-bonus",
+      "levelOffset": 1,
+      "multiplier": 2,
+      "divisor": 1
+    }
+  ],
+  "tags": [
+    "drain",
+    "mutation",
+    "vampiric"
+  ]
+}

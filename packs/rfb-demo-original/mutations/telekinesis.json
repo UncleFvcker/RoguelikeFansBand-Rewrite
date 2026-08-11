@@ -6,6 +6,13 @@
   "description": "你拥有了心灵遥控能力。",
   "rating": "average",
   "sourceIndex": 3,
+  "activation": {
+    "minimumLevel": 9,
+    "governingAttribute": "wisdom",
+    "cost": 9,
+    "baseFailurePercent": 40,
+    "abilityId": "rfb.ability.mutation.telekinesis"
+  },
   "randomWeight": 4,
   "removesOnGain": []
 }

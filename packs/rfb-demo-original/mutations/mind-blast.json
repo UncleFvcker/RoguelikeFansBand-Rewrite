@@ -6,6 +6,13 @@
   "description": "你可以用心灵震爆攻击你的敌人。",
   "rating": "good",
   "sourceIndex": 5,
+  "activation": {
+    "minimumLevel": 5,
+    "governingAttribute": "wisdom",
+    "cost": 3,
+    "baseFailurePercent": 30,
+    "abilityId": "rfb.ability.mutation.mind-blast"
+  },
   "randomWeight": 4,
   "removesOnGain": []
 }

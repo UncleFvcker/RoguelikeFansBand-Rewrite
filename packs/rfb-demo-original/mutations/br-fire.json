@@ -6,6 +6,18 @@
   "description": "你可以喷吐火焰（伤害为 等级 * 2）。",
   "rating": "good",
   "sourceIndex": 1,
+  "activation": {
+    "minimumLevel": 20,
+    "governingAttribute": "constitution",
+    "cost": 0,
+    "costScaling": {
+      "startLevel": 1,
+      "levelInterval": 2,
+      "amount": 1
+    },
+    "baseFailurePercent": 40,
+    "abilityId": "rfb.ability.mutation.br-fire"
+  },
   "randomWeight": 6,
   "removesOnGain": []
 }

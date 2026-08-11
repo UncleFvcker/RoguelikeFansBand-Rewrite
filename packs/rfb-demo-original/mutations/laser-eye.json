@@ -6,6 +6,13 @@
   "description": "你的眼睛可以发射激光束。",
   "rating": "good",
   "sourceIndex": 27,
+  "activation": {
+    "minimumLevel": 7,
+    "governingAttribute": "wisdom",
+    "cost": 10,
+    "baseFailurePercent": 50,
+    "abilityId": "rfb.ability.mutation.laser-eye"
+  },
   "randomWeight": 6,
   "removesOnGain": []
 }

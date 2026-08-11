@@ -6,6 +6,18 @@
   "description": "你可以喷吐酸液（伤害为 等级*2）。",
   "rating": "good",
   "sourceIndex": 0,
+  "activation": {
+    "minimumLevel": 9,
+    "governingAttribute": "dexterity",
+    "cost": 9,
+    "costScaling": {
+      "startLevel": 5,
+      "levelInterval": 5,
+      "amount": 1
+    },
+    "baseFailurePercent": 30,
+    "abilityId": "rfb.ability.mutation.spit-acid"
+  },
   "randomWeight": 8,
   "removesOnGain": []
 }

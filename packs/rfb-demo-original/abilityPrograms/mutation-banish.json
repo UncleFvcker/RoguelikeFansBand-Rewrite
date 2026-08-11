@@ -1,0 +1,15 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.ability-program.mutation.banish",
+  "input": "cast-target",
+  "steps": [
+    {
+      "type": "genocide",
+      "scope": "single",
+      "power": 51,
+      "targetCategory": "evil",
+      "fatigue": false
+    }
+  ]
+}

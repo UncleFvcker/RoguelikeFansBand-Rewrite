@@ -8,6 +8,14 @@ pub(in crate::game) const SPELL_EXP_EXPERT: u16 = 1400;
 pub(in crate::game) const SPELL_EXP_MASTER: u16 = 1600;
 const SPELL_MANA_CONST: u64 = 2400;
 const SPELL_MANA_EXPERT: u64 = 1400;
+const RFB_MAGIC_FAILURE_MINIMUM: [u8; 38] = [
+    99, 99, 99, 99, 99, 50, 30, 20, 15, 12, 11, 10, 9, 8, 7, 6, 6, 5, 5, 5, 4, 4, 4, 4, 3, 3, 2, 2,
+    2, 2, 1, 1, 1, 1, 1, 0, 0, 0,
+];
+const RFB_MAGIC_STAT_ADJUSTMENT: [u8; 38] = [
+    0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 5, 6, 7, 8, 9, 10, 11, 12,
+    13, 14, 15, 16, 17, 18, 19, 20,
+];
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(in crate::game) struct AbilityProgress {
@@ -177,6 +185,42 @@ impl Game {
             TechniqueAttribute::Constitution => AttributeKind::Constitution,
             TechniqueAttribute::Charisma => AttributeKind::Charisma,
         }
+    }
+
+    pub(super) fn mutation_failure_percent(&self, activation: &MutationActivationDefinition) -> u8 {
+        if self.progress.level < activation.minimum_level {
+            return 100;
+        }
+        if activation.base_failure_percent == 0 {
+            return 0;
+        }
+        let attribute = Self::technique_attribute_kind(activation.governing_attribute);
+        let index = usize::from(
+            self.effective_player_attributes()
+                .index(attribute)
+                .min(crate::stats::PRE_VICTORY_ATTRIBUTE_INDEX_CAP),
+        );
+        let chance = i32::from(activation.base_failure_percent)
+            .saturating_sub(
+                i32::from(self.progress.level.saturating_sub(activation.minimum_level))
+                    .saturating_mul(3),
+            )
+            .saturating_sub((i32::from(RFB_MAGIC_STAT_ADJUSTMENT[index]) - 1).saturating_mul(3))
+            .saturating_add(self.player_spell_failure_modifier_percent())
+            .clamp(i32::from(RFB_MAGIC_FAILURE_MINIMUM[index]), 95);
+        u8::try_from(chance).expect("bounded mutation failure chance must fit u8")
+    }
+
+    pub(super) fn mutation_resource_cost(&self, activation: &MutationActivationDefinition) -> u32 {
+        let extra = activation.cost_scaling.map_or(0, |scaling| {
+            if self.progress.level < scaling.start_level {
+                0
+            } else {
+                u32::from((self.progress.level - scaling.start_level) / scaling.level_interval + 1)
+                    .saturating_mul(scaling.amount)
+            }
+        });
+        activation.cost.saturating_add(extra)
     }
 
     fn technique_resource_maximum(&self, profile: &TechniqueProfileDefinition) -> u32 {

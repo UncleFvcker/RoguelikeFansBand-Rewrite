@@ -13,6 +13,15 @@ pub(super) enum AbilityTargetPlan {
     Teleport {
         destination: Position,
     },
+    RandomTeleport {
+        candidates: Vec<Position>,
+    },
+    FetchItem {
+        path: Vec<Position>,
+    },
+    Recall {
+        action: RecallUseAction,
+    },
     Projectile {
         path: Vec<Position>,
         stop_at_actor: bool,
@@ -55,8 +64,10 @@ impl Game {
         let technique_profile = ability
             .as_ref()
             .and_then(|ability| self.technique_profile_for_ability(ability).cloned());
+        let mutation_activation = self.mutation_activation_for_ability(ability_id).cloned();
         let casting_profile = self.casting_profile().cloned();
-        if technique_profile.is_none() && casting_profile.is_none() {
+        if technique_profile.is_none() && mutation_activation.is_none() && casting_profile.is_none()
+        {
             events.push(DomainEvent::AbilityCastUnavailable {
                 ability_id: ability_id.to_owned(),
                 reason: "no-casting-profile".to_owned(),
@@ -70,44 +81,69 @@ impl Game {
             });
             return Ok(());
         };
-        let mut ability = match (&technique_profile, &casting_profile) {
-            (None, Some(profile)) => Self::effective_casting_ability(profile, &ability),
-            _ => ability,
+        let source = if technique_profile.is_some() {
+            AbilitySourceDto::Technique
+        } else if mutation_activation.is_some() {
+            AbilitySourceDto::Mutation
+        } else if casting_profile.is_some() {
+            AbilitySourceDto::Learned
+        } else {
+            unreachable!("at least one validated ability source must be available")
+        };
+        let mut ability = match source {
+            AbilitySourceDto::Learned => Self::effective_casting_ability(
+                casting_profile
+                    .as_ref()
+                    .expect("learned ability source requires a casting profile"),
+                &ability,
+            ),
+            AbilitySourceDto::Technique | AbilitySourceDto::Mutation => ability,
         };
         Self::apply_player_level_scaling(&mut ability, self.progress.level);
-        if let Some(profile) = &casting_profile
-            && technique_profile.is_none()
-        {
-            Self::apply_casting_profile_effect_scaling(profile, &mut ability, self.progress.level);
+        if source == AbilitySourceDto::Learned {
+            Self::apply_casting_profile_effect_scaling(
+                casting_profile
+                    .as_ref()
+                    .expect("learned ability source requires a casting profile"),
+                &mut ability,
+                self.progress.level,
+            );
         }
-        let player = Self::player_ability_parameters(&ability).clone();
-        // Innate technique abilities skip the study/book pipeline: they are
-        // granted by the class technique profile and only gate on level,
-        // cooldown, and resource availability.
-        let unavailable_reason = if technique_profile.is_some() {
-            if self.progress.level < player.minimum_level {
-                Some("level-too-low")
-            } else if self.ability_cooldown_remaining(&ability) > 0 {
-                Some("cooldown")
-            } else {
-                None
+        let unavailable_reason = match source {
+            AbilitySourceDto::Technique => {
+                let player = Self::player_ability_parameters(&ability);
+                if self.progress.level < player.minimum_level {
+                    Some("level-too-low")
+                } else if self.ability_cooldown_remaining(&ability) > 0 {
+                    Some("cooldown")
+                } else {
+                    None
+                }
             }
-        } else {
-            let profile = casting_profile
-                .as_ref()
-                .expect("casting profile must exist for non-technique abilities");
-            if !self.learned_abilities.contains(ability_id) {
-                Some("not-learned")
-            } else if self.progress.level < player.minimum_level {
-                Some("level-too-low")
-            } else if !self.profile_supports_ability(profile, ability_id) {
-                Some("ability-not-supported")
-            } else if self.ability_book_item_id(profile, ability_id).is_none() {
-                Some("book-unavailable")
-            } else if self.ability_cooldown_remaining(&ability) > 0 {
-                Some("cooldown")
-            } else {
-                None
+            AbilitySourceDto::Mutation => {
+                let activation = mutation_activation
+                    .as_ref()
+                    .expect("mutation ability source requires an activation");
+                (self.progress.level < activation.minimum_level).then_some("level-too-low")
+            }
+            AbilitySourceDto::Learned => {
+                let player = Self::player_ability_parameters(&ability);
+                let profile = casting_profile
+                    .as_ref()
+                    .expect("learned ability source requires a casting profile");
+                if !self.learned_abilities.contains(ability_id) {
+                    Some("not-learned")
+                } else if self.progress.level < player.minimum_level {
+                    Some("level-too-low")
+                } else if !self.profile_supports_ability(profile, ability_id) {
+                    Some("ability-not-supported")
+                } else if self.ability_book_item_id(profile, ability_id).is_none() {
+                    Some("book-unavailable")
+                } else if self.ability_cooldown_remaining(&ability) > 0 {
+                    Some("cooldown")
+                } else {
+                    None
+                }
             }
         };
         if let Some(reason) = unavailable_reason {
@@ -118,7 +154,7 @@ impl Game {
             return Ok(());
         }
 
-        // Validate the target before charging Mana or drawing the spell
+        // Validate the target before charging resources/HP or drawing the
         // failure/damage RNG. The command remains a normal scheduled action,
         // but an impossible target cannot consume resources or proficiency.
         let Some(mut target_plan) = self.ability_target_plan(&ability, &target) else {
@@ -128,51 +164,134 @@ impl Game {
             return Ok(());
         };
 
-        let progress_before = self.ability_progress_value(&ability);
-        let cooldown_before = self.ability_cooldown_remaining(&ability);
-        let resource_cost = self.ability_effective_resource_cost(&ability, progress_before);
+        let mutation_progress = AbilityProgress {
+            proficiency: 0,
+            proficiency_cap: 0,
+            cast_count: 0,
+            fail_count: 0,
+            cooldown_remaining: 0,
+        };
+        let progress_before = if source == AbilitySourceDto::Mutation {
+            mutation_progress
+        } else {
+            self.ability_progress_value(&ability)
+        };
+        let cooldown_before = if source == AbilitySourceDto::Mutation {
+            0
+        } else {
+            self.ability_cooldown_remaining(&ability)
+        };
+        let (base_resource_cost, resource_cost, resource_id) =
+            if source == AbilitySourceDto::Mutation {
+                let activation = mutation_activation
+                    .as_ref()
+                    .expect("mutation ability source requires an activation");
+                let cost = self.mutation_resource_cost(activation);
+                (
+                    activation.cost,
+                    cost,
+                    casting_profile
+                        .as_ref()
+                        .map(|profile| profile.resource_id.clone()),
+                )
+            } else {
+                let player = Self::player_ability_parameters(&ability);
+                (
+                    player.resource_cost,
+                    self.ability_effective_resource_cost(&ability, progress_before),
+                    Some(player.resource_id.clone()),
+                )
+            };
         let failure_percent = if self.debug_ability_casts_succeed {
             0
         } else {
-            match &technique_profile {
-                Some(profile) => self.technique_failure_percent(profile, &ability),
-                None => self.ability_failure_percent(
+            match source {
+                AbilitySourceDto::Technique => self.technique_failure_percent(
+                    technique_profile
+                        .as_ref()
+                        .expect("technique ability source requires a profile"),
+                    &ability,
+                ),
+                AbilitySourceDto::Mutation => self.mutation_failure_percent(
+                    mutation_activation
+                        .as_ref()
+                        .expect("mutation ability source requires an activation"),
+                ),
+                AbilitySourceDto::Learned => self.ability_failure_percent(
                     casting_profile
                         .as_ref()
-                        .expect("casting profile must exist for non-technique abilities"),
+                        .expect("learned ability source requires a casting profile"),
                     &ability,
                 ),
             }
         };
-        let Some(pool) = self.resources.get_mut(&player.resource_id) else {
+        let resource_before = resource_id
+            .as_deref()
+            .and_then(|id| self.resources.get(id))
+            .map_or(0, |pool| pool.current);
+        if source != AbilitySourceDto::Mutation
+            && resource_id
+                .as_deref()
+                .is_none_or(|id| !self.resources.contains_key(id))
+        {
             events.push(DomainEvent::AbilityCastUnavailable {
                 ability_id: ability_id.to_owned(),
                 reason: "resource-unavailable".to_owned(),
             });
             return Ok(());
+        }
+        let resource_paid = if source == AbilitySourceDto::Mutation {
+            resource_before.min(resource_cost)
+        } else {
+            resource_cost
         };
-        if pool.current < resource_cost {
+        let hp_paid = resource_cost.saturating_sub(resource_paid);
+        let affordable = if source == AbilitySourceDto::Mutation {
+            hp_paid <= u32::try_from(self.player.hp.max(0)).unwrap_or(0)
+        } else {
+            resource_before >= resource_cost
+        };
+        if !affordable {
             events.push(DomainEvent::AbilityCastUnavailable {
                 ability_id: ability_id.to_owned(),
                 reason: "insufficient-resource".to_owned(),
             });
             return Ok(());
         }
-        let resource_before = pool.current;
-        pool.current -= resource_cost;
-        let resource_after = pool.current;
-        self.resources_touched.insert(player.resource_id.clone());
+        if resource_paid > 0 {
+            let id = resource_id
+                .as_ref()
+                .expect("positive resource payment requires a resource id");
+            let pool = self
+                .resources
+                .get_mut(id)
+                .expect("positive resource payment requires an available pool");
+            pool.current -= resource_paid;
+            self.resources_touched.insert(id.clone());
+        }
+        if hp_paid > 0 {
+            self.player.hp = self.player.hp.saturating_sub(
+                i32::try_from(hp_paid).expect("validated mutation cost must fit i32"),
+            );
+        }
+        let resource_after = resource_before.saturating_sub(resource_paid);
         let percentile_roll =
             u8::try_from(self.rng.bounded(100)).expect("percentile ability roll must fit u8");
         let succeeded = percentile_roll >= failure_percent;
-        let progress_after = self.record_ability_cast(&ability, succeeded);
+        let progress_after = if source == AbilitySourceDto::Mutation {
+            mutation_progress
+        } else {
+            self.record_ability_cast(&ability, succeeded)
+        };
         let resolution = AbilityCastResolutionDto {
             ability_id: ability.id.clone(),
-            resource_id: player.resource_id.clone(),
-            base_resource_cost: player.resource_cost,
+            resource_id,
+            base_resource_cost,
             resource_cost,
             resource_before,
             resource_after,
+            resource_paid,
+            hp_paid,
             failure_percent,
             percentile_roll,
             succeeded,
@@ -182,7 +301,11 @@ impl Game {
             cast_count: progress_after.cast_count,
             fail_count: progress_after.fail_count,
             cooldown_before,
-            cooldown_after: self.ability_cooldown_remaining(&ability),
+            cooldown_after: if source == AbilitySourceDto::Mutation {
+                0
+            } else {
+                self.ability_cooldown_remaining(&ability)
+            },
         };
         if !succeeded {
             events.push(DomainEvent::AbilityCastFailed { resolution });
@@ -283,6 +406,24 @@ impl Game {
         match (ability.effect.clone(), target_plan) {
             (AbilityEffectDefinition::Teleport, AbilityTargetPlan::Teleport { destination }) => {
                 self.resolve_player_teleport_effect(&ability, destination, events, changed);
+            }
+            (
+                AbilityEffectDefinition::BlinkSelf { .. },
+                AbilityTargetPlan::RandomTeleport { candidates },
+            ) => {
+                self.resolve_player_random_teleport_effect(&ability, candidates, events, changed);
+            }
+            (AbilityEffectDefinition::FetchItem { .. }, AbilityTargetPlan::FetchItem { path }) => {
+                self.resolve_player_fetch_item_effect(&ability, path, events, changed)
+            }
+            (AbilityEffectDefinition::SwapPosition, AbilityTargetPlan::Projectile { path, .. }) => {
+                self.resolve_player_swap_position_effect(&ability, path, events, changed)
+            }
+            (AbilityEffectDefinition::Recall { .. }, AbilityTargetPlan::Recall { action }) => {
+                self.resolve_player_recall_effect(&ability, action, events)
+            }
+            (AbilityEffectDefinition::ResistElements { .. }, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_player_resist_elements_effect(&ability, events)
             }
             (AbilityEffectDefinition::Summon { .. }, AbilityTargetPlan::Summon { positions }) => {
                 self.resolve_player_summon_effect(&ability, positions, events, changed);
@@ -400,6 +541,22 @@ impl Game {
                 )?;
             }
             (
+                AbilityEffectDefinition::BoltOrAreaDamage { .. },
+                AbilityTargetPlan::Projectile {
+                    path,
+                    stop_at_actor,
+                },
+            ) => {
+                self.resolve_player_bolt_or_area_damage_effect(
+                    &ability,
+                    path,
+                    stop_at_actor,
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+            }
+            (
                 AbilityEffectDefinition::ConeDamage { .. },
                 target_plan @ AbilityTargetPlan::Cone { .. },
             ) => {
@@ -430,6 +587,9 @@ impl Game {
             }
             (AbilityEffectDefinition::VisibleApplyStatus { .. }, AbilityTargetPlan::SelfTarget) => {
                 self.resolve_player_visible_status_effect(&ability, events, changed);
+            }
+            (AbilityEffectDefinition::AggravateMonsters, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_player_aggravate_monsters_effect(&ability, events, changed);
             }
             (
                 AbilityEffectDefinition::EnchantEquippedWeapon { .. },
@@ -751,6 +911,61 @@ impl Game {
             )?;
         }
         Ok(())
+    }
+
+    fn resolve_player_bolt_or_area_damage_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        path: Vec<Position>,
+        stop_at_actor: bool,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        let AbilityEffectDefinition::BoltOrAreaDamage {
+            damage_dice,
+            damage_sides,
+            damage_bonus,
+            damage_type,
+            area_from_level,
+            radius,
+        } = ability.effect
+        else {
+            unreachable!("bolt-or-area executor requires a matching effect");
+        };
+        let mut resolved = ability.clone();
+        if self.progress.level < area_from_level {
+            resolved.effect = AbilityEffectDefinition::Damage {
+                damage_dice,
+                damage_sides,
+                damage_bonus,
+                damage_type,
+            };
+            self.resolve_player_projectile_damage_effect(
+                &resolved,
+                path,
+                events,
+                changed,
+                removed_entities,
+            )
+        } else {
+            resolved.effect = AbilityEffectDefinition::AreaDamage {
+                damage_dice,
+                damage_sides,
+                damage_bonus,
+                damage_type,
+                radius,
+                target_category: None,
+            };
+            self.resolve_player_area_damage_effect(
+                &resolved,
+                path,
+                stop_at_actor,
+                events,
+                changed,
+                removed_entities,
+            )
+        }
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -1199,6 +1414,7 @@ impl Game {
             damage_type,
             target_category,
             repeat,
+            feeds,
         } = &ability.effect
         else {
             unreachable!("drain life executor requires a drain life effect");
@@ -1260,7 +1476,11 @@ impl Game {
                 changed,
                 removed_entities,
             )?;
-            let requested = damage.applied.min(hp_before);
+            let requested = if !*feeds || self.nutrition < hunger::NUTRITION_FULL {
+                damage.applied.min(hp_before)
+            } else {
+                0
+            };
             let max_hp = self.effective_player_max_hp();
             let EffectOutcome::Healed { requested, applied } = apply_effect(
                 &mut EffectTarget {
@@ -1273,6 +1493,16 @@ impl Game {
             ) else {
                 unreachable!("drain life healing must produce a healing outcome");
             };
+            if *feeds && damage.applied > 0 {
+                let nutrition = u16::try_from(raw_damage.saturating_mul(100).min(5_000))
+                    .expect("bounded vampiric nutrition must fit u16");
+                if self.nutrition < rfb_protocol::PLAYER_NUTRITION_MAXIMUM {
+                    self.nutrition = self
+                        .nutrition
+                        .saturating_add(nutrition)
+                        .min(rfb_protocol::PLAYER_NUTRITION_MAXIMUM - 1);
+                }
+            }
             events.push(DomainEvent::AbilityEffectsResolved {
                 ability_id: ability.id.clone(),
                 resolution: AbilityEffectsResolutionDto {
@@ -1580,6 +1810,38 @@ impl Game {
         let AbilityEffectDefinition::Sequence { effects } = &ability.effect else {
             unreachable!("ordered sequence executor requires a sequence effect");
         };
+        if matches!(target_plan, AbilityTargetPlan::SelfTarget)
+            && effects.iter().any(|effect| {
+                !matches!(
+                    effect,
+                    AbilityEffectDefinition::Heal { .. }
+                        | AbilityEffectDefinition::ApplyStatus { .. }
+                        | AbilityEffectDefinition::RemoveStatus { .. }
+                )
+            })
+        {
+            for effect in effects {
+                let mut step = ability.clone();
+                step.effect = effect.clone();
+                let plan = match effect {
+                    AbilityEffectDefinition::AreaDamage { .. } => AbilityTargetPlan::Projectile {
+                        path: Vec::new(),
+                        stop_at_actor: false,
+                    },
+                    AbilityEffectDefinition::Detect { .. } => AbilityTargetPlan::Detect,
+                    AbilityEffectDefinition::Heal { .. }
+                    | AbilityEffectDefinition::ApplyStatus { .. }
+                    | AbilityEffectDefinition::RemoveStatus { .. }
+                    | AbilityEffectDefinition::VisibleDamage { .. }
+                    | AbilityEffectDefinition::VisibleApplyStatus { .. }
+                    | AbilityEffectDefinition::AggravateMonsters
+                    | AbilityEffectDefinition::NoOp { .. } => AbilityTargetPlan::SelfTarget,
+                    _ => unreachable!("validated self sequence must remain self-targeted"),
+                };
+                self.resolve_player_ability_effect(step, plan, events, changed, removed_entities)?;
+            }
+            return Ok(());
+        }
         match target_plan {
             AbilityTargetPlan::SelfTarget => {
                 let target_entity_id = self.player.id.clone();
@@ -1846,6 +2108,8 @@ impl Game {
             intensity,
             duration_ticks,
             stacking,
+            resistance_type,
+            power,
             target_category,
         } = &ability.effect
         else {
@@ -1877,6 +2141,10 @@ impl Game {
                 continue;
             };
             let target_kind_id = self.entities[index].kind_id.clone();
+            let target_level = self
+                .content
+                .actor(&target_kind_id)
+                .map(|definition| definition.level);
             let resolution = apply_ability_status_effect(
                 &mut self.entities[index],
                 &ability.id,
@@ -1887,8 +2155,8 @@ impl Game {
                 0,
                 0,
                 *stacking,
-                None,
-                None,
+                *resistance_type,
+                *power,
                 &empty_resistances,
                 &empty_brands,
                 &StatModifiers::default(),
@@ -1897,7 +2165,7 @@ impl Game {
                 None,
                 false,
                 100,
-                None,
+                target_level,
                 None,
                 &mut self.rng,
             );
@@ -2102,6 +2370,265 @@ impl Game {
         events.extend(self.relocate_player(destination, changed));
     }
 
+    fn resolve_player_random_teleport_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        candidates: Vec<Position>,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let index = usize::try_from(self.rng.bounded(candidates.len() as u64))
+            .expect("bounded teleport candidate index must fit usize");
+        self.resolve_player_teleport_effect(ability, candidates[index], events, changed);
+    }
+
+    fn resolve_player_fetch_item_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        path: Vec<Position>,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let AbilityEffectDefinition::FetchItem {
+            maximum_weight_tenths_pound,
+        } = ability.effect
+        else {
+            unreachable!("fetch item executor requires a fetch item effect");
+        };
+        let candidate = path.iter().find_map(|position| {
+            self.items
+                .iter()
+                .enumerate()
+                .filter(|(_, item)| matches!(item.location, ItemLocation::Ground(at) if at == *position))
+                .min_by(|left, right| left.1.id.cmp(&right.1.id))
+                .map(|(index, item)| (index, item.id.clone(), *position))
+        });
+        let mut item_id = None;
+        let mut from = None;
+        let mut moved = false;
+        if let Some((index, id, position)) = candidate {
+            let weight = u32::from(self.item_weight_tenths_pound(&self.items[index].kind_id))
+                .saturating_mul(self.items[index].quantity);
+            item_id = Some(id);
+            from = Some(position);
+            if weight <= maximum_weight_tenths_pound {
+                self.items[index].location = ItemLocation::Ground(self.player.position);
+                changed.insert(position);
+                changed.insert(self.player.position);
+                moved = true;
+            }
+        }
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: None,
+                target_kind_id: None,
+                effects: vec![AbilityEffectResolutionDto::FetchItem {
+                    effect_index: 0,
+                    item_id,
+                    from,
+                    to: self.player.position,
+                    moved,
+                }],
+            },
+            trace: None,
+        });
+    }
+
+    fn resolve_player_swap_position_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        path: Vec<Position>,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let (trace, target_index) = self.trace_projectile_path(path);
+        let player_from = self.player.position;
+        let mut target_entity_id = None;
+        let mut target_from = None;
+        if let Some(index) = target_index {
+            let position = self.entities[index].position;
+            target_entity_id = Some(self.entities[index].id.clone());
+            target_from = Some(position);
+            self.entities[index].position = player_from;
+            self.player.position = position;
+            changed.insert(player_from);
+            changed.insert(position);
+        }
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: target_entity_id.clone(),
+                target_kind_id: target_entity_id.as_ref().and_then(|id| {
+                    self.entities
+                        .iter()
+                        .find(|entity| &entity.id == id)
+                        .map(|entity| entity.kind_id.clone())
+                }),
+                effects: vec![AbilityEffectResolutionDto::SwapPosition {
+                    effect_index: 0,
+                    target_entity_id,
+                    player_from,
+                    target_from,
+                    swapped: target_from.is_some(),
+                }],
+            },
+            trace: Some(trace),
+        });
+    }
+
+    fn resolve_player_recall_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        action: RecallUseAction,
+        events: &mut Vec<DomainEvent>,
+    ) {
+        let AbilityEffectDefinition::Recall {
+            delay_dice,
+            delay_sides,
+            delay_bonus,
+        } = ability.effect
+        else {
+            unreachable!("recall executor requires a recall effect");
+        };
+        let recall = self
+            .recall
+            .as_ref()
+            .expect("planned recall must retain its destination")
+            .clone();
+        let (action_dto, delay) = match action {
+            RecallUseAction::Start => {
+                let rolled = self
+                    .roll_damage(delay_dice, delay_sides)
+                    .saturating_add(i32::from(delay_bonus));
+                let rolled = u16::try_from(rolled.max(1)).expect("validated recall delay fits u16");
+                let delay = self.debug_recall_delay_turns.unwrap_or(rolled).max(1);
+                self.start_recall(delay);
+                (AbilityRecallActionDto::Start, Some(delay))
+            }
+            RecallUseAction::Cancel => {
+                self.cancel_recall();
+                (AbilityRecallActionDto::Cancel, None)
+            }
+        };
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: Some(self.player.id.clone()),
+                target_kind_id: Some(self.player.kind_id.clone()),
+                effects: vec![AbilityEffectResolutionDto::Recall {
+                    effect_index: 0,
+                    action: action_dto,
+                    delay,
+                    dungeon_id: recall.dungeon_id,
+                    floor_id: recall.floor_id,
+                }],
+            },
+            trace: None,
+        });
+    }
+
+    fn resolve_player_resist_elements_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        events: &mut Vec<DomainEvent>,
+    ) {
+        let AbilityEffectDefinition::ResistElements {
+            duration_dice,
+            duration_sides,
+            duration_bonus,
+        } = ability.effect
+        else {
+            unreachable!("resist elements executor requires a resist elements effect");
+        };
+        let rolled_duration = (0..duration_dice).fold(duration_bonus, |total, _| {
+            total.saturating_add(
+                u32::try_from(self.rng.bounded(u64::from(duration_sides)) + 1)
+                    .expect("validated resistance duration roll must fit u32"),
+            )
+        });
+        let mut remaining = self.progress.level / 10;
+        let candidates = [
+            (5_u16, ActorDamageType::Acid, "rfb.status.resist-acid"),
+            (
+                4,
+                ActorDamageType::Electricity,
+                "rfb.status.resist-electricity",
+            ),
+            (3, ActorDamageType::Fire, "rfb.status.resist-fire"),
+            (2, ActorDamageType::Cold, "rfb.status.resist-cold"),
+            (1, ActorDamageType::Poison, "rfb.status.resist-poison"),
+        ];
+        let empty_brands = BTreeSet::new();
+        let empty_immunities = BTreeSet::new();
+        let mut resolutions = Vec::new();
+        for (denominator, damage_type, status_kind_id) in candidates {
+            if remaining == 0 || self.rng.bounded(u64::from(denominator)) >= u64::from(remaining) {
+                continue;
+            }
+            remaining -= 1;
+            let mut resistances = BTreeMap::new();
+            resistances.insert(damage_type, ActorResistanceLevel::Resistant);
+            let effect_index = u8::try_from(resolutions.len())
+                .expect("elemental resistance effect count must fit u8");
+            resolutions.push(apply_ability_status_effect(
+                &mut self.player,
+                &ability.id,
+                effect_index,
+                status_kind_id,
+                1,
+                rolled_duration,
+                0,
+                0,
+                AbilityStatusStackingDefinition::Replace,
+                None,
+                None,
+                &resistances,
+                &empty_brands,
+                &StatModifiers::default(),
+                &EquipmentBonuses::default(),
+                &empty_immunities,
+                None,
+                false,
+                100,
+                None,
+                None,
+                &mut self.rng,
+            ));
+        }
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: Some(self.player.id.clone()),
+                target_kind_id: Some(self.player.kind_id.clone()),
+                effects: resolutions,
+            },
+            trace: None,
+        });
+    }
+
+    fn resolve_player_aggravate_monsters_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let (awakened, hastened, _) = self.aggravate_monsters(None, &ability.id, changed);
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: None,
+                target_kind_id: None,
+                effects: vec![AbilityEffectResolutionDto::AggravateMonsters {
+                    effect_index: 0,
+                    awakened,
+                    hastened,
+                }],
+            },
+            trace: None,
+        });
+    }
+
     pub(super) fn resolve_player_summon_effect(
         &mut self,
         ability: &AbilityDefinition,
@@ -2249,6 +2776,8 @@ impl Game {
             scope,
             power,
             radius,
+            target_category,
+            fatigue,
         } = &ability.effect
         else {
             unreachable!("genocide executor requires a genocide effect");
@@ -2296,6 +2825,11 @@ impl Game {
             .iter()
             .filter(|entity| {
                 entity.hp > 0
+                    && target_category.as_ref().is_none_or(|category| {
+                        self.content
+                            .actor(&entity.kind_id)
+                            .is_some_and(|definition| actor_matches_category(definition, category))
+                    })
                     && match scope {
                         AbilityGenocideScopeDefinition::Single => {
                             target_entity_id.as_deref() == Some(entity.id.as_str())
@@ -2318,6 +2852,7 @@ impl Game {
             candidate_ids,
             *scope,
             *power,
+            *fatigue,
             changed,
             removed_entities,
         );
@@ -2462,11 +2997,38 @@ impl Game {
                 self.mark_gold_piles_discovered(&detected.1);
                 detected
             }
+            AbilityDetectSubjectDefinition::Curse => {
+                let mut item_ids = self
+                    .items
+                    .iter()
+                    .filter(|item| {
+                        item.curse.is_some()
+                            && matches!(
+                                item.location,
+                                ItemLocation::Inventory | ItemLocation::Equipped { .. }
+                            )
+                    })
+                    .map(|item| item.id.clone())
+                    .collect::<Vec<_>>();
+                item_ids.sort();
+                for item_id in &item_ids {
+                    self.identify_item_instance(item_id, ItemIdentificationRequest::new(false));
+                }
+                (
+                    (!item_ids.is_empty())
+                        .then_some(self.player.position)
+                        .into_iter()
+                        .collect(),
+                    item_ids,
+                )
+            }
         };
         if *persistent
             || matches!(
                 subject,
-                AbilityDetectSubjectDefinition::Item | AbilityDetectSubjectDefinition::Gold
+                AbilityDetectSubjectDefinition::Item
+                    | AbilityDetectSubjectDefinition::Gold
+                    | AbilityDetectSubjectDefinition::Curse
             )
         {
             changed.extend(detected_positions.iter().copied());
@@ -2531,12 +3093,10 @@ impl Game {
         match ability.effect {
             // These forms are monster-casting-only. The player cast path
             // never produces a target plan for them.
-            AbilityEffectDefinition::BlinkSelf { .. }
-            | AbilityEffectDefinition::BlinkTarget { .. }
+            AbilityEffectDefinition::BlinkTarget { .. }
             | AbilityEffectDefinition::TeleportSelf { .. }
             | AbilityEffectDefinition::TeleportTarget
             | AbilityEffectDefinition::TeleportLevel
-            | AbilityEffectDefinition::AggravateMonsters
             | AbilityEffectDefinition::BreathDamage { .. }
             | AbilityEffectDefinition::CurseDamage { .. }
             | AbilityEffectDefinition::TeleportAway { .. }
@@ -2550,6 +3110,46 @@ impl Game {
                 };
                 self.teleport_destination(ability, *position)
                     .map(|destination| AbilityTargetPlan::Teleport { destination })
+            }
+            AbilityEffectDefinition::BlinkSelf { radius } => {
+                if !matches!(target, TargetSelection::SelfTarget)
+                    || !ability
+                        .target
+                        .modes
+                        .contains(&AbilityTargetModeDefinition::SelfTarget)
+                {
+                    return None;
+                }
+                let candidates = self.random_teleport_candidates(u16::from(radius));
+                (!candidates.is_empty()).then_some(AbilityTargetPlan::RandomTeleport { candidates })
+            }
+            AbilityEffectDefinition::FetchItem { .. } => self
+                .ability_path(ability, target)
+                .map(|path| AbilityTargetPlan::FetchItem { path }),
+            AbilityEffectDefinition::SwapPosition => {
+                self.ability_path(ability, target)
+                    .map(|path| AbilityTargetPlan::Projectile {
+                        path,
+                        stop_at_actor: true,
+                    })
+            }
+            AbilityEffectDefinition::Recall { .. } => {
+                (matches!(target, TargetSelection::SelfTarget)
+                    && ability
+                        .target
+                        .modes
+                        .contains(&AbilityTargetModeDefinition::SelfTarget))
+                .then(|| self.recall_use_plan())
+                .flatten()
+                .map(|action| AbilityTargetPlan::Recall { action })
+            }
+            AbilityEffectDefinition::ResistElements { .. } => {
+                (matches!(target, TargetSelection::SelfTarget)
+                    && ability
+                        .target
+                        .modes
+                        .contains(&AbilityTargetModeDefinition::SelfTarget))
+                .then_some(AbilityTargetPlan::SelfTarget)
             }
             AbilityEffectDefinition::Summon {
                 ref actor_kind_id,
@@ -2746,6 +3346,7 @@ impl Game {
             }
             AbilityEffectDefinition::VisibleDamage { .. }
             | AbilityEffectDefinition::VisibleApplyStatus { .. }
+            | AbilityEffectDefinition::AggravateMonsters
             | AbilityEffectDefinition::EnchantEquippedWeapon { .. }
             | AbilityEffectDefinition::NoOp { .. } => {
                 (matches!(target, TargetSelection::SelfTarget)
@@ -2794,6 +3395,12 @@ impl Game {
                 .map(|path| AbilityTargetPlan::Projectile {
                     path,
                     stop_at_actor: false,
+                }),
+            AbilityEffectDefinition::BoltOrAreaDamage { .. } => self
+                .ability_path(ability, target)
+                .map(|path| AbilityTargetPlan::Projectile {
+                    path,
+                    stop_at_actor: matches!(target, TargetSelection::Direction { .. }),
                 }),
             AbilityEffectDefinition::Genocide {
                 scope: AbilityGenocideScopeDefinition::Nearby,

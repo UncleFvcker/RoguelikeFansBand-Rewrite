@@ -844,3 +844,39 @@ has content hash
 Entity glyph projection raises Protocol to 1.161; persisted Weird Mind sensing
 raises State Hash Schema to v80. Save container v1 remains, and the 21 retained
 fixtures move to contract-v240.
+
+## M5.0 Active Mutation Casting Contract
+
+M5.0 adds optional activation metadata to mutation definitions and dynamically
+projects active mutation powers through the existing player ability surface.
+The shared cast path preserves target-before-RNG validation and RFB's
+SP-first, HP-shortfall payment rule. Mutation powers do not enter learned
+abilities, proficiency, cast statistics, or persistent cooldown state.
+
+Protocol 1.162 replaces the ambiguous ability `innate` flag with the explicit
+learned/technique/mutation source and reports actual resource/HP payment. Save
+v1 and State Hash Schema v80 remain unchanged. The focused baseline advances to
+contract-v241; no concrete source-index mutation is activated until M5-A--D.
+
+## M5-A/B Active Mutation Powers
+
+The first two active-power batches bind 22 source-index mutations to the shared
+ability path. M5-A covers Telekinesis, Teleport, Smell Metal, Smell Monsters,
+Blink, Swap Position, Detect Curses, Recall, and Banish Evil. M5-B covers Spit
+Acid, Fire Breath, Hypnotic Gaze, Mind Blast, Radiation, Vampirism, Shriek,
+Illumination, Berserk, Elemental Resistance, Dazzle, Laser Eye, and Cold Touch.
+
+The implementation reuses detection, damage, status, death, aggravation, recall,
+nutrition, and targeting transactions. The only new reusable ability effects
+are random self-teleport, directional item fetch, position swap, recall,
+multi-element resistance, and level-threshold bolt/area damage; Banish gains
+explicit category and fatigue parameters. Mutation activation cost scaling
+preserves the authoritative level formulas for acid, fire breath, vampirism,
+and resistance.
+
+The mutation audit now reports 78 active and 74 blocked identities, including
+63 of 104 weighted random candidates. Pack 1.234.0 has content hash
+`86e9e7b13c53a835e4c4c7654d3d3104c647c808b39342631e38c3dd7e7f4cc2` and
+176 formal abilities. Protocol 1.163 adds the new effect and structured
+resolution DTOs; save v1 and State Hash Schema v80 remain unchanged, and the
+focused baseline advances to contract-v242.

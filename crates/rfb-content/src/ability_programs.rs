@@ -184,6 +184,8 @@ fn ability_program_input_accepts_step(
                 AbilityEffectDefinition::AreaDamage { .. }
                     | AbilityEffectDefinition::JumpDamage { .. }
                     | AbilityEffectDefinition::AggravateMonsters
+                    | AbilityEffectDefinition::Recall { .. }
+                    | AbilityEffectDefinition::ResistElements { .. }
                     | AbilityEffectDefinition::Summon { .. }
                     | AbilityEffectDefinition::SummonCategory { .. }
                     | AbilityEffectDefinition::Detect { .. }
@@ -213,6 +215,7 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::AreaDamage { .. }
                     | AbilityEffectDefinition::BeamDamage { .. }
                     | AbilityEffectDefinition::BoltOrBeamDamage { .. }
+                    | AbilityEffectDefinition::BoltOrAreaDamage { .. }
                     | AbilityEffectDefinition::ConeDamage { .. }
                     | AbilityEffectDefinition::BreathDamage { .. }
                     | AbilityEffectDefinition::CurseDamage { .. }
@@ -222,6 +225,8 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::Amnesia
                     | AbilityEffectDefinition::DarkenRoom
                     | AbilityEffectDefinition::Teleport
+                    | AbilityEffectDefinition::FetchItem { .. }
+                    | AbilityEffectDefinition::SwapPosition
                     | AbilityEffectDefinition::TransformTerrain { .. }
                     | AbilityEffectDefinition::ApplyStatus { .. }
                     | AbilityEffectDefinition::RemoveStatus { .. }
@@ -256,6 +261,9 @@ fn ability_program_step_is_composable(
             AbilityEffectDefinition::Heal { .. }
                 | AbilityEffectDefinition::ApplyStatus { .. }
                 | AbilityEffectDefinition::RemoveStatus { .. }
+                | AbilityEffectDefinition::AreaDamage { .. }
+                | AbilityEffectDefinition::AggravateMonsters
+                | AbilityEffectDefinition::Detect { .. }
                 | AbilityEffectDefinition::VisibleDamage { .. }
                 | AbilityEffectDefinition::VisibleApplyStatus { .. }
                 | AbilityEffectDefinition::NoOp { .. }

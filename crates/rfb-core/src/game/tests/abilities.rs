@@ -346,6 +346,7 @@ fn death_second_book_materializes_original_mage_scaling_and_beam_profile() {
             scope: AbilityGenocideScopeDto::Single,
             power: 90,
             radius: 0,
+            ..
         }]
     ));
     assert!(matches!(
@@ -961,6 +962,8 @@ fn genocide_erases_without_rewards_or_corpses_and_uniques_resist() {
         scope: AbilityGenocideScopeDefinition::Glyph,
         power: 1_000,
         radius: 0,
+        target_category: None,
+        fatigue: true,
     };
     game.resolve_player_genocide_effect(
         &ability,
@@ -1457,6 +1460,675 @@ fn natural_regeneration_and_rest_restore_warrior_health() {
     assert_eq!(game.player.hp, maximum);
 }
 
+const MUTATION_CONTRACT_ABILITY_ID: &str = "demo.ability.mutation-contract";
+const MUTATION_CONTRACT_ID: &str = "rfb.mutation.spit-acid";
+
+fn mutation_ability_catalog(
+    minimum_level: u16,
+    cost: u32,
+    base_failure_percent: u8,
+) -> Arc<rfb_content::ContentCatalog> {
+    let pack_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(std::path::Path::parent)
+        .expect("core crate should be inside the workspace")
+        .join("packs/rfb-demo-original");
+    let mut artifact = rfb_content::compile_pack_dir(&pack_root).expect("demo pack should compile");
+    let mut ability = artifact
+        .content
+        .abilities
+        .iter()
+        .find(|ability| ability.id == "demo.ability.warrens-scare")
+        .expect("monster scare ability should exist")
+        .clone();
+    ability.id = MUTATION_CONTRACT_ABILITY_ID.to_owned();
+    ability.name_key = "ability-mutation-contract-name".to_owned();
+    ability.description_key = "ability-mutation-contract-description".to_owned();
+    ability.target = AbilityTargetDefinition {
+        modes: vec![AbilityTargetModeDefinition::SelfTarget],
+        range: 0,
+        requires_line_of_effect: false,
+    };
+    ability.effect = AbilityEffectDefinition::NoOp {
+        reason: "mutation-contract".to_owned(),
+    };
+    ability.level_scaling.clear();
+    ability.player = None;
+    artifact.content.abilities.push(ability);
+    artifact
+        .content
+        .mutations
+        .iter_mut()
+        .find(|mutation| mutation.id == MUTATION_CONTRACT_ID)
+        .expect("Spit Acid mutation should exist")
+        .activation = Some(MutationActivationDefinition {
+        minimum_level,
+        governing_attribute: TechniqueAttribute::Constitution,
+        cost,
+        cost_scaling: None,
+        base_failure_percent,
+        ability_id: MUTATION_CONTRACT_ABILITY_ID.to_owned(),
+    });
+    Arc::new(rfb_content::ContentCatalog::from_artifact(
+        rfb_content::encode_content(artifact.content)
+            .expect("mutation ability contract content should remain valid"),
+    ))
+}
+
+fn mutation_ability_game(catalog: Arc<rfb_content::ContentCatalog>, build_id: &str) -> Game {
+    let mut game = Game::from_content_with_build(0, catalog, DEFAULT_WORLD_ID, build_id)
+        .expect("mutation ability test build should create");
+    clear_monsters(&mut game);
+    game.progress
+        .active_mutation_ids
+        .insert(MUTATION_CONTRACT_ID.to_owned());
+    game
+}
+
+fn mutation_cast_resolution(events: &[DomainEvent]) -> &AbilityCastResolutionDto {
+    events
+        .iter()
+        .find_map(|event| match event {
+            DomainEvent::AbilityCastSucceeded { resolution }
+            | DomainEvent::AbilityCastFailed { resolution } => Some(resolution),
+            _ => None,
+        })
+        .expect("mutation cast should produce a resolution")
+}
+
+#[test]
+fn active_mutation_projects_without_learning_progress_or_persistent_cooldown() {
+    let catalog = mutation_ability_catalog(1, 7, 30);
+    let mut game =
+        Game::from_content_with_build(0, catalog.clone(), DEFAULT_WORLD_ID, "demo.build.warrior")
+            .expect("warrior build should create");
+    assert!(
+        game.snapshot()
+            .player
+            .abilities
+            .iter()
+            .all(|ability| ability.id != MUTATION_CONTRACT_ABILITY_ID)
+    );
+
+    let mut events = Vec::new();
+    assert!(game.gain_mutation(MUTATION_CONTRACT_ID, &mut events));
+    let ability = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .find(|ability| ability.id == MUTATION_CONTRACT_ABILITY_ID)
+        .expect("gaining the mutation should project its ability");
+    assert_eq!(ability.source, AbilitySourceDto::Mutation);
+    assert_eq!(ability.resource_id, None);
+    assert_eq!(ability.base_resource_cost, 7);
+    assert_eq!(ability.resource_cost, 7);
+    assert_eq!(ability.proficiency, 0);
+    assert_eq!(ability.proficiency_cap, 0);
+    assert_eq!(ability.cast_count, 0);
+    assert_eq!(ability.fail_count, 0);
+    assert_eq!(ability.cooldown_remaining, 0);
+    assert_eq!(ability.cooldown_turns, 0);
+    assert!(!ability.learned);
+    assert!(!ability.can_study);
+    assert!(!ability.can_forget);
+    assert!(ability.can_cast);
+    assert!(
+        !game
+            .ability_progress
+            .contains_key(MUTATION_CONTRACT_ABILITY_ID)
+    );
+
+    let mut restored = Game::from_save_with_content(game.to_save(), catalog)
+        .expect("active mutation ability should restore from existing mutation state");
+    assert!(
+        restored
+            .snapshot()
+            .player
+            .abilities
+            .iter()
+            .any(|ability| ability.id == MUTATION_CONTRACT_ABILITY_ID)
+    );
+    events.clear();
+    assert!(restored.lose_mutation(MUTATION_CONTRACT_ID, &mut events));
+    assert!(
+        restored
+            .snapshot()
+            .player
+            .abilities
+            .iter()
+            .all(|ability| ability.id != MUTATION_CONTRACT_ABILITY_ID)
+    );
+}
+
+#[test]
+fn mutation_cast_spills_sp_into_hp_and_keeps_rejections_atomic() {
+    let catalog = mutation_ability_catalog(1, 7, 30);
+    let mut mana = mutation_ability_game(catalog.clone(), "demo.build.scholar");
+    mana.debug_set_ability_casts_succeed(true);
+    let resource_id = mana
+        .casting_profile()
+        .expect("scholar should have a casting profile")
+        .resource_id
+        .clone();
+    mana.resources
+        .get_mut(&resource_id)
+        .expect("scholar should have an SP pool")
+        .current = 10;
+    let hp_before = mana.player.hp;
+    let mut events = Vec::new();
+    mana.resolve_player_ability(
+        MUTATION_CONTRACT_ABILITY_ID,
+        TargetSelection::SelfTarget,
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("mutation ability should resolve");
+    let resolution = mutation_cast_resolution(&events);
+    assert_eq!(
+        resolution.resource_id.as_deref(),
+        Some(resource_id.as_str())
+    );
+    assert_eq!(resolution.resource_before, 10);
+    assert_eq!(resolution.resource_after, 3);
+    assert_eq!(resolution.resource_paid, 7);
+    assert_eq!(resolution.hp_paid, 0);
+    assert_eq!(mana.player.hp, hp_before);
+    assert!(
+        !mana
+            .ability_progress
+            .contains_key(MUTATION_CONTRACT_ABILITY_ID)
+    );
+
+    let mut spill = mutation_ability_game(catalog.clone(), "demo.build.scholar");
+    spill.debug_set_ability_casts_succeed(true);
+    spill
+        .resources
+        .get_mut(&resource_id)
+        .expect("scholar should have an SP pool")
+        .current = 3;
+    let hp_before = spill.player.hp;
+    events.clear();
+    spill
+        .resolve_player_ability(
+            MUTATION_CONTRACT_ABILITY_ID,
+            TargetSelection::SelfTarget,
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("mutation ability should spill into HP");
+    let resolution = mutation_cast_resolution(&events);
+    assert_eq!(resolution.resource_paid, 3);
+    assert_eq!(resolution.hp_paid, 4);
+    assert_eq!(spill.player.hp, hp_before - 4);
+
+    let mut hp_only = mutation_ability_game(catalog.clone(), "demo.build.warrior");
+    hp_only.debug_set_ability_casts_succeed(true);
+    let hp_before = hp_only.player.hp;
+    events.clear();
+    hp_only
+        .resolve_player_ability(
+            MUTATION_CONTRACT_ABILITY_ID,
+            TargetSelection::SelfTarget,
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("a build without SP should pay HP only");
+    let resolution = mutation_cast_resolution(&events);
+    assert_eq!(resolution.resource_id, None);
+    assert_eq!(resolution.resource_paid, 0);
+    assert_eq!(resolution.hp_paid, 7);
+    assert_eq!(hp_only.player.hp, hp_before - 7);
+
+    let mut rejected = mutation_ability_game(catalog, "demo.build.warrior");
+    rejected.player.hp = 6;
+    let draws_before = rejected.rng_draw_counter();
+    events.clear();
+    rejected
+        .resolve_player_ability(
+            MUTATION_CONTRACT_ABILITY_ID,
+            TargetSelection::SelfTarget,
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("insufficient mutation budget should reject cleanly");
+    assert_eq!(rejected.player.hp, 6);
+    assert_eq!(rejected.rng_draw_counter(), draws_before);
+    assert!(matches!(
+        events.as_slice(),
+        [DomainEvent::AbilityCastUnavailable { reason, .. }] if reason == "insufficient-resource"
+    ));
+
+    rejected.player.hp = 20;
+    events.clear();
+    rejected
+        .resolve_player_ability(
+            MUTATION_CONTRACT_ABILITY_ID,
+            TargetSelection::Direction {
+                direction: Direction::North,
+            },
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("invalid mutation target should reject cleanly");
+    assert_eq!(rejected.player.hp, 20);
+    assert_eq!(rejected.rng_draw_counter(), draws_before);
+    assert!(matches!(
+        events.as_slice(),
+        [DomainEvent::AbilityTargetUnavailable { .. }]
+    ));
+}
+
+#[test]
+fn mutation_level_and_failure_paths_do_not_create_ability_progress() {
+    let low_catalog = mutation_ability_catalog(2, 1, 30);
+    let mut low = mutation_ability_game(low_catalog, "demo.build.warrior");
+    let draws_before = low.rng_draw_counter();
+    let hp_before = low.player.hp;
+    let mut events = Vec::new();
+    low.resolve_player_ability(
+        MUTATION_CONTRACT_ABILITY_ID,
+        TargetSelection::SelfTarget,
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("low-level mutation ability should reject cleanly");
+    assert_eq!(low.player.hp, hp_before);
+    assert_eq!(low.rng_draw_counter(), draws_before);
+    assert!(matches!(
+        events.as_slice(),
+        [DomainEvent::AbilityCastUnavailable { reason, .. }] if reason == "level-too-low"
+    ));
+
+    let fail_catalog = mutation_ability_catalog(1, 1, 95);
+    let mut failed = mutation_ability_game(fail_catalog, "demo.build.warrior");
+    failed.player.hp = 20;
+    events.clear();
+    failed
+        .resolve_player_ability(
+            MUTATION_CONTRACT_ABILITY_ID,
+            TargetSelection::SelfTarget,
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("mutation failure should resolve");
+    assert!(matches!(
+        events.first(),
+        Some(DomainEvent::AbilityCastFailed { .. })
+    ));
+    assert_eq!(failed.player.hp, 19);
+    assert!(
+        !failed
+            .ability_progress
+            .contains_key(MUTATION_CONTRACT_ABILITY_ID)
+    );
+    let resolution = mutation_cast_resolution(&events);
+    assert_eq!(resolution.failure_percent, 92);
+    assert_eq!(resolution.hp_paid, 1);
+    assert_eq!(resolution.proficiency_before, 0);
+    assert_eq!(resolution.proficiency_after, 0);
+    assert_eq!(resolution.cast_count, 0);
+    assert_eq!(resolution.fail_count, 0);
+}
+
+#[test]
+fn first_two_active_mutation_batches_project_scaled_costs_and_effects() {
+    let mut game = Game::new(0);
+    clear_monsters(&mut game);
+    game.progress.level = 25;
+    let suffixes = [
+        "spit-acid",
+        "br-fire",
+        "hypn-gaze",
+        "telekinesis",
+        "teleport",
+        "mind-blast",
+        "radiation",
+        "vampirism",
+        "smell-metal",
+        "smell-monsters",
+        "blink",
+        "swap-pos",
+        "shriek",
+        "illumine",
+        "det-curse",
+        "berserk",
+        "resist",
+        "dazzle",
+        "laser-eye",
+        "recall",
+        "banish",
+        "cold-touch",
+    ];
+    for suffix in suffixes {
+        assert!(game.gain_mutation(&format!("rfb.mutation.{suffix}"), &mut Vec::new()));
+    }
+    let abilities = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .filter(|ability| ability.source == AbilitySourceDto::Mutation)
+        .map(|ability| (ability.id.clone(), ability))
+        .collect::<BTreeMap<_, _>>();
+    assert_eq!(abilities.len(), 22);
+
+    let acid = &abilities["rfb.ability.mutation.spit-acid"];
+    assert_eq!((acid.base_resource_cost, acid.resource_cost), (9, 14));
+    assert!(matches!(
+        acid.effects.as_slice(),
+        [AbilityEffectSpecDto::BoltOrAreaDamage {
+            damage_dice: 1,
+            damage_sides: 1,
+            damage_bonus: 49,
+            area_from_level: 25,
+            radius: 2,
+            ..
+        }]
+    ));
+    assert_eq!(abilities["rfb.ability.mutation.br-fire"].resource_cost, 13);
+    assert_eq!(abilities["rfb.ability.mutation.vampirism"].resource_cost, 9);
+    assert_eq!(abilities["rfb.ability.mutation.resist"].resource_cost, 15);
+    assert!(matches!(
+        abilities["rfb.ability.mutation.teleport"]
+            .effects
+            .as_slice(),
+        [AbilityEffectSpecDto::BlinkSelf { radius: 110 }]
+    ));
+    assert!(matches!(
+        abilities["rfb.ability.mutation.banish"].effects.as_slice(),
+        [AbilityEffectSpecDto::Genocide {
+            power: 75,
+            target_category: Some(category),
+            fatigue: false,
+            ..
+        }] if category == "evil"
+    ));
+    assert_eq!(abilities["rfb.ability.mutation.illumine"].effects.len(), 2);
+    assert_eq!(abilities["rfb.ability.mutation.dazzle"].effects.len(), 3);
+}
+
+fn active_source_mutation_game(seed: u64, suffix: &str, level: u16) -> Game {
+    let mut game =
+        Game::new_with_build(seed, "demo.build.scholar").expect("scholar build should create");
+    clear_monsters(&mut game);
+    game.progress.level = level;
+    game.progress.max_level = level;
+    game.debug_set_ability_casts_succeed(true);
+    assert!(game.gain_mutation(&format!("rfb.mutation.{suffix}"), &mut Vec::new()));
+    let mana = game
+        .resources
+        .get_mut("demo.resource.mana")
+        .expect("scholar should have mana");
+    mana.current = 1_000;
+    mana.maximum = 1_000;
+    game
+}
+
+#[test]
+fn mutation_telekinesis_and_swap_position_reuse_directional_targeting() {
+    let mut fetch = active_source_mutation_game(17, "telekinesis", 9);
+    fetch.items.clear();
+    let origin = fetch.player.position;
+    for step in 0..=3 {
+        replace_terrain(
+            &mut fetch,
+            Position {
+                x: origin.x + step,
+                y: origin.y,
+            },
+            "demo.terrain.floor",
+        );
+    }
+    give_inventory_item(
+        &mut fetch,
+        "test.item.fetch",
+        "demo.item.detect-objects-staff",
+    );
+    fetch
+        .items
+        .iter_mut()
+        .find(|item| item.id == "test.item.fetch")
+        .expect("fetched item")
+        .location = ItemLocation::Ground(Position {
+        x: origin.x + 3,
+        y: origin.y,
+    });
+    let mut events = Vec::new();
+    fetch
+        .resolve_player_ability(
+            "rfb.ability.mutation.telekinesis",
+            TargetSelection::Direction {
+                direction: Direction::East,
+            },
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("telekinesis should resolve");
+    assert!(
+        matches!(
+            fetch
+                .items
+                .iter()
+                .find(|item| item.id == "test.item.fetch")
+                .map(|item| &item.location),
+            Some(ItemLocation::Ground(position)) if *position == origin
+        ),
+        "telekinesis events: {events:?}"
+    );
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::AbilityEffectsResolved { resolution, .. }
+            if matches!(resolution.effects.as_slice(), [AbilityEffectResolutionDto::FetchItem { moved: true, .. }])
+    )));
+
+    let mut swap = active_source_mutation_game(19, "swap-pos", 15);
+    let origin = swap.player.position;
+    let target = Position {
+        x: origin.x + 2,
+        y: origin.y,
+    };
+    for step in 0..=2 {
+        replace_terrain(
+            &mut swap,
+            Position {
+                x: origin.x + step,
+                y: origin.y,
+            },
+            "demo.terrain.floor",
+        );
+    }
+    swap.entities.push(actor_from_runtime_spawn(
+        "test.actor.swap",
+        "demo.actor.gnome-mage",
+        target,
+        20,
+        50,
+        100,
+        true,
+    ));
+    swap.resolve_player_ability(
+        "rfb.ability.mutation.swap-pos",
+        TargetSelection::Direction {
+            direction: Direction::East,
+        },
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("swap position should resolve");
+    assert_eq!(swap.player.position, target);
+    assert_eq!(swap.entities[0].position, origin);
+}
+
+#[test]
+fn mutation_detection_recall_and_resistance_use_existing_authoritative_state() {
+    let mut detection = active_source_mutation_game(23, "det-curse", 7);
+    give_inventory_item(&mut detection, "test.item.cursed", "demo.item.broad-sword");
+    detection
+        .items
+        .iter_mut()
+        .find(|item| item.id == "test.item.cursed")
+        .expect("cursed item")
+        .curse = Some(ItemCurseSeverityDto::Normal);
+    detection
+        .resolve_player_ability(
+            "rfb.ability.mutation.det-curse",
+            TargetSelection::SelfTarget,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("curse detection should resolve");
+    assert_eq!(
+        detection.item_identification(
+            detection
+                .items
+                .iter()
+                .find(|item| item.id == "test.item.cursed")
+                .unwrap()
+        ),
+        ItemIdentificationDto::Appraised
+    );
+
+    let mut recall = active_source_mutation_game(29, "recall", 17);
+    let dungeon = recall
+        .content
+        .world(&recall.world_id)
+        .unwrap()
+        .dungeons
+        .first()
+        .expect("world dungeon");
+    let dungeon_id = dungeon.id.clone();
+    let floor_id = dungeon.root_floor_id.clone();
+    recall.current_floor_id = floor_id.clone();
+    recall.recall = Some(RecallStateDto {
+        dungeon_id,
+        floor_id,
+        remaining_turns: None,
+    });
+    recall.debug_set_recall_delay_turns(Some(7));
+    recall
+        .resolve_player_ability(
+            "rfb.ability.mutation.recall",
+            TargetSelection::SelfTarget,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("recall should resolve");
+    assert_eq!(recall.recall.unwrap().remaining_turns, Some(8));
+
+    let mut resist = active_source_mutation_game(31, "resist", 25);
+    resist
+        .resolve_player_ability(
+            "rfb.ability.mutation.resist",
+            TargetSelection::SelfTarget,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("resist elements should resolve");
+    assert_eq!(
+        resist
+            .player
+            .statuses
+            .iter()
+            .filter(|status| status.kind_id.starts_with("rfb.status.resist-"))
+            .count(),
+        2
+    );
+}
+
+#[test]
+fn mutation_vampirism_feeds_without_crossing_the_original_full_cap() {
+    let mut game = active_source_mutation_game(37, "vampirism", 2);
+    let origin = game.player.position;
+    let target = Position {
+        x: origin.x + 1,
+        y: origin.y,
+    };
+    replace_terrain(&mut game, target, "demo.terrain.floor");
+    game.entities.push(actor_from_runtime_spawn(
+        "test.actor.vampirism",
+        "demo.actor.gnome-mage",
+        target,
+        20,
+        50,
+        100,
+        true,
+    ));
+    game.nutrition = rfb_protocol::PLAYER_NUTRITION_MAXIMUM - 2;
+
+    game.resolve_player_ability(
+        "rfb.ability.mutation.vampirism",
+        TargetSelection::Direction {
+            direction: Direction::East,
+        },
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("vampirism should resolve");
+
+    assert_eq!(game.nutrition, rfb_protocol::PLAYER_NUTRITION_MAXIMUM - 1);
+}
+
+#[test]
+fn mutation_spit_acid_changes_from_bolt_to_area_at_level_twenty_five() {
+    let cast = |level| {
+        let mut game = active_source_mutation_game(41, "spit-acid", level);
+        let origin = game.player.position;
+        for step in 0..=3 {
+            replace_terrain(
+                &mut game,
+                Position {
+                    x: origin.x + step,
+                    y: origin.y,
+                },
+                "demo.terrain.floor",
+            );
+        }
+        let mut events = Vec::new();
+        game.resolve_player_ability(
+            "rfb.ability.mutation.spit-acid",
+            TargetSelection::Direction {
+                direction: Direction::East,
+            },
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("acid spit should resolve");
+        events
+    };
+
+    let bolt = cast(24);
+    assert!(
+        bolt.iter()
+            .any(|event| matches!(event, DomainEvent::AbilityLanded { .. }))
+    );
+    assert!(
+        !bolt
+            .iter()
+            .any(|event| matches!(event, DomainEvent::AbilityAreaDamage { .. }))
+    );
+
+    let area = cast(25);
+    assert!(area.iter().any(|event| matches!(
+        event,
+        DomainEvent::AbilityAreaDamage { resolution, .. } if resolution.radius == 2
+    )));
+}
+
 #[test]
 fn duelist_initializes_innate_techniques_and_empty_tempo_pool() {
     let game = Game::new_with_build(0, "demo.build.duelist").expect("duelist build should create");
@@ -1480,12 +2152,12 @@ fn duelist_initializes_innate_techniques_and_empty_tempo_pool() {
     assert!(snapshot.player.ability_learning.is_none());
     assert_eq!(snapshot.player.abilities.len(), 2);
     for ability in &snapshot.player.abilities {
-        assert!(ability.innate);
+        assert_eq!(ability.source, AbilitySourceDto::Technique);
         assert!(!ability.learned);
         assert!(!ability.can_study);
         assert!(!ability.can_forget);
         assert!(!ability.can_cast, "tempo starts empty");
-        assert_eq!(ability.resource_id, "demo.resource.tempo");
+        assert_eq!(ability.resource_id.as_deref(), Some("demo.resource.tempo"));
         assert!(ability.book_item_id.is_none());
     }
 
@@ -1528,7 +2200,7 @@ fn duelist_projects_the_complete_crescent_cut_protocol_dto() {
             "nameKey": "ability-demo-crescent-cut-name",
             "descriptionKey": "ability-demo-crescent-cut-description",
             "minimumLevel": 1,
-            "innate": true,
+            "source": "technique",
             "resourceId": "demo.resource.tempo",
             "baseResourceCost": 4,
             "resourceCost": 7,
@@ -1860,6 +2532,7 @@ fn death_fourth_book_materializes_original_level_curves() {
             scope: AbilityGenocideScopeDto::Nearby,
             power: 92,
             radius: 20,
+            ..
         }]
     ));
     assert!(matches!(

@@ -20,6 +20,17 @@ enum RandomMutationOperation {
 }
 
 impl Game {
+    pub(super) fn mutation_activation_for_ability(
+        &self,
+        ability_id: &str,
+    ) -> Option<&MutationActivationDefinition> {
+        self.content
+            .mutations()
+            .filter(|mutation| self.progress.active_mutation_ids.contains(&mutation.id))
+            .filter_map(|mutation| mutation.activation.as_ref())
+            .find(|activation| activation.ability_id == ability_id)
+    }
+
     pub(super) fn gain_mutation(
         &mut self,
         mutation_id: &str,

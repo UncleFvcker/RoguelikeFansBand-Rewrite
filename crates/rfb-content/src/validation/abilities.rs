@@ -180,6 +180,20 @@ pub(super) fn validate_abilities(
                         && *damage_bonus <= 10_000
                         && *beam_chance_percent <= 100
                 }
+                AbilityEffectDefinition::BoltOrAreaDamage {
+                    damage_dice,
+                    damage_sides,
+                    damage_bonus,
+                    area_from_level,
+                    radius,
+                    ..
+                } => {
+                    (1..=100).contains(damage_dice)
+                        && (1..=10_000).contains(damage_sides)
+                        && *damage_bonus <= 10_000
+                        && (1..=100).contains(area_from_level)
+                        && (1..=16).contains(radius)
+                }
                 AbilityEffectDefinition::ConeDamage {
                     damage_dice,
                     damage_sides,
@@ -224,15 +238,44 @@ pub(super) fn validate_abilities(
                 }
                 AbilityEffectDefinition::Amnesia
                 | AbilityEffectDefinition::DarkenRoom
-                | AbilityEffectDefinition::AggravateMonsters => true,
+                | AbilityEffectDefinition::AggravateMonsters
+                | AbilityEffectDefinition::SwapPosition => true,
                 AbilityEffectDefinition::Teleport => true,
-                AbilityEffectDefinition::BlinkSelf { radius } => (1..=10).contains(radius),
+                AbilityEffectDefinition::BlinkSelf { radius } => {
+                    (1..=255).contains(radius)
+                        && (*radius <= 10 || has_level_scaling(AbilityLevelScalingField::Radius))
+                }
                 AbilityEffectDefinition::BlinkTarget { radius } => (1..=10).contains(radius),
                 AbilityEffectDefinition::TeleportSelf { minimum_distance } => {
                     (1..=64).contains(minimum_distance)
                 }
                 AbilityEffectDefinition::TeleportTarget
                 | AbilityEffectDefinition::TeleportLevel => true,
+                AbilityEffectDefinition::FetchItem {
+                    maximum_weight_tenths_pound,
+                } => {
+                    (1..=1_000_000).contains(maximum_weight_tenths_pound)
+                        || (*maximum_weight_tenths_pound == 0
+                            && has_level_scaling(AbilityLevelScalingField::MaximumWeight))
+                }
+                AbilityEffectDefinition::Recall {
+                    delay_dice,
+                    delay_sides,
+                    delay_bonus,
+                } => {
+                    (1..=100).contains(delay_dice)
+                        && (1..=10_000).contains(delay_sides)
+                        && *delay_bonus <= 10_000
+                }
+                AbilityEffectDefinition::ResistElements {
+                    duration_dice,
+                    duration_sides,
+                    duration_bonus,
+                } => {
+                    (1..=100).contains(duration_dice)
+                        && (1..=1_000_000).contains(duration_sides)
+                        && *duration_bonus <= 1_000_000
+                }
                 AbilityEffectDefinition::Summon {
                     actor_kind_id,
                     count,
@@ -242,7 +285,7 @@ pub(super) fn validate_abilities(
                 } => {
                     validate_id(actor_kind_id).is_ok()
                         && (1..=8).contains(count)
-                        && (1..=8).contains(radius)
+                        && (1..=64).contains(radius)
                         && ((*hostile && *duration_turns <= 10_000)
                             || (!*hostile && (1..=10_000).contains(duration_turns)))
                 }
@@ -303,7 +346,7 @@ pub(super) fn validate_abilities(
                                     + u16::from(*group_count_bonus)
                                     <= 8
                         }
-                        && (1..=8).contains(radius)
+                        && (1..=64).contains(radius)
                         && *duration_turns <= 10_000
                 }
                 AbilityEffectDefinition::Detect {
@@ -319,13 +362,16 @@ pub(super) fn validate_abilities(
                                 || byte.is_ascii_digit()
                                 || matches!(byte, b'-' | b'_')
                         })
-                        && (1..=8).contains(radius)
+                        && (1..=64).contains(radius)
                         && match subject {
                             AbilityDetectSubjectDefinition::Terrain => {
-                                terrain_tags.values().any(|tags| tags.contains(category))
+                                category == "map"
+                                    || terrain_tags.values().any(|tags| tags.contains(category))
                             }
                             AbilityDetectSubjectDefinition::Actor => {
-                                !persistent && actor_tag_values.contains(category)
+                                !persistent
+                                    && (category == "any-monster"
+                                        || actor_tag_values.contains(category))
                             }
                             AbilityDetectSubjectDefinition::Item => {
                                 !persistent
@@ -333,6 +379,9 @@ pub(super) fn validate_abilities(
                             }
                             AbilityDetectSubjectDefinition::Gold => {
                                 !persistent && category == "gold"
+                            }
+                            AbilityDetectSubjectDefinition::Curse => {
+                                !persistent && category == "curse"
                             }
                         }
                 }
@@ -402,7 +451,7 @@ pub(super) fn validate_abilities(
                                 || byte.is_ascii_digit()
                                 || matches!(byte, b'-' | b'_')
                         })
-                        && actor_tag_values.contains(category)
+                        && (category == "any-monster" || actor_tag_values.contains(category))
                         && (1..=1_000).contains(power)
                 }
                 AbilityEffectDefinition::DrainLife {
@@ -430,6 +479,8 @@ pub(super) fn validate_abilities(
                     scope,
                     power,
                     radius,
+                    target_category,
+                    ..
                 } => {
                     ((1..=1_000).contains(power)
                         || (*power == 0
@@ -439,6 +490,9 @@ pub(super) fn validate_abilities(
                             | AbilityGenocideScopeDefinition::Glyph => *radius == 0,
                             AbilityGenocideScopeDefinition::Nearby => (1..=64).contains(radius),
                         }
+                        && target_category.as_ref().is_none_or(|category| {
+                            category == "any-monster" || actor_tag_values.contains(category)
+                        })
                 }
                 AbilityEffectDefinition::IdentifyItem {
                     full_identify_power,
@@ -482,12 +536,14 @@ pub(super) fn validate_abilities(
                     status_kind_id,
                     intensity,
                     duration_ticks,
+                    power,
                     target_category,
                     ..
                 } => {
                     validate_id(status_kind_id).is_ok()
                         && (1..=1_000).contains(intensity)
                         && (1..=1_000_000).contains(duration_ticks)
+                        && power.is_none_or(|power| (1..=1_000).contains(&power))
                         && target_category
                             .as_ref()
                             .is_none_or(|category| actor_tag_values.contains(category))
@@ -592,6 +648,7 @@ pub(super) fn validate_abilities(
             AbilityEffectDefinition::Damage { .. }
             | AbilityEffectDefinition::BeamDamage { .. }
             | AbilityEffectDefinition::BoltOrBeamDamage { .. }
+            | AbilityEffectDefinition::BoltOrAreaDamage { .. }
             | AbilityEffectDefinition::ConeDamage { .. }
             | AbilityEffectDefinition::CurseDamage { .. }
             | AbilityEffectDefinition::TeleportAway { .. }
@@ -601,6 +658,9 @@ pub(super) fn validate_abilities(
             | AbilityEffectDefinition::DrainLife { .. }
             | AbilityEffectDefinition::DeathRay { .. }
             | AbilityEffectDefinition::RandomChoice { .. } => projectile_target_rule,
+            AbilityEffectDefinition::FetchItem { .. } | AbilityEffectDefinition::SwapPosition => {
+                projectile_target_rule
+            }
             AbilityEffectDefinition::DarkenRoom => room_target_rule,
             AbilityEffectDefinition::Genocide { scope, .. } => match scope {
                 AbilityGenocideScopeDefinition::Nearby => self_target_rule,
@@ -630,6 +690,8 @@ pub(super) fn validate_abilities(
             }
             AbilityEffectDefinition::Heal { .. }
             | AbilityEffectDefinition::AggravateMonsters
+            | AbilityEffectDefinition::Recall { .. }
+            | AbilityEffectDefinition::ResistElements { .. }
             | AbilityEffectDefinition::VisibleDamage { .. }
             | AbilityEffectDefinition::VisibleApplyStatus { .. }
             | AbilityEffectDefinition::EnchantEquippedWeapon { .. }
@@ -663,6 +725,9 @@ pub(super) fn validate_abilities(
                                 | AbilityEffectDefinition::RemoveStatus { .. }
                                 | AbilityEffectDefinition::VisibleDamage { .. }
                                 | AbilityEffectDefinition::VisibleApplyStatus { .. }
+                                | AbilityEffectDefinition::AreaDamage { .. }
+                                | AbilityEffectDefinition::AggravateMonsters
+                                | AbilityEffectDefinition::Detect { .. }
                                 | AbilityEffectDefinition::NoOp { .. }
                         )
                     }))

@@ -464,6 +464,7 @@ pub(crate) fn valid_item_effect(
                         !persistent && (category == "item" || item_tag_values.contains(category))
                     }
                     AbilityDetectSubjectDefinition::Gold => !persistent && category == "gold",
+                    AbilityDetectSubjectDefinition::Curse => !persistent && category == "curse",
                 }
         }
         ItemUseEffectDefinition::RandomTeleport { maximum_distance } => {

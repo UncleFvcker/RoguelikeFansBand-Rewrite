@@ -135,6 +135,11 @@
           "maximum": 255,
           "minimum": 0
         },
+        "hpPaid": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
         "percentileRoll": {
           "type": "integer",
           "format": "uint8",
@@ -175,7 +180,15 @@
           "minimum": 0
         },
         "resourceId": {
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "resourcePaid": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
         },
         "succeeded": {
           "type": "boolean"
@@ -183,10 +196,11 @@
       },
       "required": [
         "abilityId",
-        "resourceId",
         "resourceCost",
         "resourceBefore",
         "resourceAfter",
+        "resourcePaid",
+        "hpPaid",
         "failurePercent",
         "percentileRoll",
         "succeeded"
@@ -309,7 +323,8 @@
         "terrain",
         "actor",
         "item",
-        "gold"
+        "gold",
+        "curse"
       ]
     },
     "AbilityDto": {
@@ -419,9 +434,6 @@
         "id": {
           "type": "string"
         },
-        "innate": {
-          "type": "boolean"
-        },
         "learned": {
           "type": "boolean"
         },
@@ -458,7 +470,13 @@
           "minimum": 0
         },
         "resourceId": {
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "source": {
+          "$ref": "#/$defs/AbilitySourceDto"
         },
         "summon": {
           "anyOf": [
@@ -492,7 +510,7 @@
         "nameKey",
         "descriptionKey",
         "minimumLevel",
-        "resourceId",
+        "source",
         "resourceCost",
         "failurePercent",
         "targetSpec",
@@ -666,6 +684,132 @@
             "type",
             "effectIndex",
             "resolution"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "from": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Position"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "itemId": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "moved": {
+              "type": "boolean"
+            },
+            "to": {
+              "$ref": "#/$defs/Position"
+            },
+            "type": {
+              "type": "string",
+              "const": "fetch-item"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex",
+            "to",
+            "moved"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "playerFrom": {
+              "$ref": "#/$defs/Position"
+            },
+            "swapped": {
+              "type": "boolean"
+            },
+            "targetEntityId": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "targetFrom": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Position"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": {
+              "type": "string",
+              "const": "swap-position"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex",
+            "playerFrom",
+            "swapped"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "action": {
+              "$ref": "#/$defs/AbilityRecallActionDto"
+            },
+            "delay": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "dungeonId": {
+              "type": "string"
+            },
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "floorId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "recall"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex",
+            "action",
+            "dungeonId",
+            "floorId"
           ]
         },
         {
@@ -1533,6 +1677,57 @@
         {
           "type": "object",
           "properties": {
+            "areaFromLevel": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "damageBonus": {
+              "type": "integer",
+              "format": "uint16",
+              "default": 0,
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "damageDice": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "damageSides": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "damageType": {
+              "$ref": "#/$defs/DamageTypeDto"
+            },
+            "radius": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "bolt-or-area-damage"
+            }
+          },
+          "required": [
+            "type",
+            "damageDice",
+            "damageSides",
+            "damageType",
+            "areaFromLevel",
+            "radius"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "damageBonus": {
               "type": "integer",
               "format": "uint16",
@@ -1745,6 +1940,100 @@
           },
           "required": [
             "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "maximumWeightTenthsPound": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "fetch-item"
+            }
+          },
+          "required": [
+            "type",
+            "maximumWeightTenthsPound"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "swap-position"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "delayBonus": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "delayDice": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "delaySides": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "recall"
+            }
+          },
+          "required": [
+            "type",
+            "delayDice",
+            "delaySides",
+            "delayBonus"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "durationBonus": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "durationDice": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "durationSides": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "resist-elements"
+            }
+          },
+          "required": [
+            "type",
+            "durationDice",
+            "durationSides",
+            "durationBonus"
           ]
         },
         {
@@ -2247,6 +2536,10 @@
             "damageType": {
               "$ref": "#/$defs/DamageTypeDto"
             },
+            "feeds": {
+              "type": "boolean",
+              "default": false
+            },
             "repeat": {
               "type": "integer",
               "format": "uint8",
@@ -2273,6 +2566,10 @@
         {
           "type": "object",
           "properties": {
+            "fatigue": {
+              "type": "boolean",
+              "default": true
+            },
             "power": {
               "type": "integer",
               "format": "uint16",
@@ -2288,6 +2585,12 @@
             },
             "scope": {
               "$ref": "#/$defs/AbilityGenocideScopeDto"
+            },
+            "targetCategory": {
+              "type": [
+                "string",
+                "null"
+              ]
             },
             "type": {
               "type": "string",
@@ -2453,6 +2756,25 @@
               "format": "uint16",
               "maximum": 65535,
               "minimum": 0
+            },
+            "power": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "resistanceType": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/DamageTypeDto"
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
             "stacking": {
               "$ref": "#/$defs/AbilityStatusStackingDto"
@@ -2645,6 +2967,21 @@
       "enum": [
         "cast-target",
         "self-target"
+      ]
+    },
+    "AbilityRecallActionDto": {
+      "type": "string",
+      "enum": [
+        "start",
+        "cancel"
+      ]
+    },
+    "AbilitySourceDto": {
+      "type": "string",
+      "enum": [
+        "learned",
+        "technique",
+        "mutation"
       ]
     },
     "AbilityStatusChangeDto": {

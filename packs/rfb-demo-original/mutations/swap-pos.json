@@ -6,6 +6,13 @@
   "description": "你可以与另一个生物交换位置。",
   "rating": "good",
   "sourceIndex": 12,
+  "activation": {
+    "minimumLevel": 15,
+    "governingAttribute": "dexterity",
+    "cost": 12,
+    "baseFailurePercent": 40,
+    "abilityId": "rfb.ability.mutation.swap-pos"
+  },
   "randomWeight": 4,
   "removesOnGain": []
 }

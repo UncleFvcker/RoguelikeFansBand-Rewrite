@@ -6,7 +6,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.233.0");
+    assert_eq!(catalog.pack_version(), "1.234.0");
     assert!(catalog.mutation("rfb.mutation.spit-acid").is_some());
     assert!(
         catalog
@@ -850,4 +850,146 @@ fn mutation_transaction_metadata_rejects_duplicate_order_and_invalid_removals() 
         encode_content(invalid_ratio),
         Err(ContentError::InvalidMutation(_))
     ));
+}
+
+#[test]
+fn mutation_activation_is_bounded_unique_and_uses_an_unowned_ability() {
+    let pack = original_pack_path();
+    let artifact = compile_pack_dir(&pack).expect("original pack should compile");
+    let mutation_id = artifact.content.mutations[0].id.clone();
+    let activation = MutationActivationDefinition {
+        minimum_level: 1,
+        governing_attribute: TechniqueAttribute::Constitution,
+        cost: 0,
+        cost_scaling: None,
+        base_failure_percent: 30,
+        ability_id: "demo.ability.warrens-scare".to_owned(),
+    };
+
+    let mut valid = artifact.content.clone();
+    valid.mutations[0].activation = Some(activation.clone());
+    encode_content(valid).expect("a mutation may grant an otherwise unowned ability");
+
+    let mut invalid_level = artifact.content.clone();
+    invalid_level.mutations[0].activation = Some(MutationActivationDefinition {
+        minimum_level: 0,
+        ..activation.clone()
+    });
+    assert!(matches!(
+        encode_content(invalid_level),
+        Err(ContentError::InvalidMutation(id)) if id == mutation_id
+    ));
+
+    let mut dangling = artifact.content.clone();
+    dangling.mutations[0].activation = Some(MutationActivationDefinition {
+        ability_id: "rfb.ability.missing".to_owned(),
+        ..activation.clone()
+    });
+    assert!(matches!(
+        encode_content(dangling),
+        Err(ContentError::InvalidMutation(_))
+    ));
+
+    let mut ordinary = artifact.content.clone();
+    ordinary.mutations[0].activation = Some(MutationActivationDefinition {
+        ability_id: "demo.ability.death-dark-bolt".to_owned(),
+        ..activation.clone()
+    });
+    assert!(matches!(
+        encode_content(ordinary),
+        Err(ContentError::InvalidMutation(_))
+    ));
+
+    let mut duplicate = artifact.content;
+    duplicate.mutations[0].activation = Some(activation.clone());
+    duplicate.mutations[1].activation = Some(activation);
+    assert!(matches!(
+        encode_content(duplicate),
+        Err(ContentError::InvalidMutation(_))
+    ));
+}
+
+#[test]
+fn first_two_active_mutation_batches_are_bound_to_authoritative_abilities() {
+    let pack = original_pack_path();
+    let artifact = compile_pack_dir(&pack).expect("original pack should compile");
+    let catalog = ContentCatalog::from_artifact(artifact);
+    let expected = [
+        ("spit-acid", 9, TechniqueAttribute::Dexterity, 9, 30),
+        ("br-fire", 20, TechniqueAttribute::Constitution, 0, 40),
+        ("hypn-gaze", 12, TechniqueAttribute::Charisma, 12, 40),
+        ("telekinesis", 9, TechniqueAttribute::Wisdom, 9, 40),
+        ("teleport", 7, TechniqueAttribute::Wisdom, 7, 30),
+        ("mind-blast", 5, TechniqueAttribute::Wisdom, 3, 30),
+        ("radiation", 15, TechniqueAttribute::Constitution, 15, 30),
+        ("vampirism", 2, TechniqueAttribute::Constitution, 1, 30),
+        ("smell-metal", 3, TechniqueAttribute::Intelligence, 2, 30),
+        ("smell-monsters", 5, TechniqueAttribute::Intelligence, 4, 30),
+        ("blink", 3, TechniqueAttribute::Wisdom, 3, 30),
+        ("swap-pos", 15, TechniqueAttribute::Dexterity, 12, 40),
+        ("shriek", 20, TechniqueAttribute::Constitution, 14, 40),
+        ("illumine", 3, TechniqueAttribute::Intelligence, 2, 30),
+        ("det-curse", 7, TechniqueAttribute::Wisdom, 14, 30),
+        ("berserk", 8, TechniqueAttribute::Strength, 8, 50),
+        ("resist", 25, TechniqueAttribute::Constitution, 10, 50),
+        ("dazzle", 7, TechniqueAttribute::Charisma, 15, 60),
+        ("laser-eye", 7, TechniqueAttribute::Wisdom, 10, 50),
+        ("recall", 17, TechniqueAttribute::Intelligence, 50, 70),
+        ("banish", 25, TechniqueAttribute::Wisdom, 25, 70),
+        ("cold-touch", 2, TechniqueAttribute::Constitution, 2, 30),
+    ];
+    for (suffix, minimum_level, attribute, cost, failure) in expected {
+        let mutation_id = format!("rfb.mutation.{suffix}");
+        let ability_id = format!("rfb.ability.mutation.{suffix}");
+        let activation = catalog
+            .mutation(&mutation_id)
+            .and_then(|mutation| mutation.activation.as_ref())
+            .unwrap_or_else(|| panic!("{mutation_id}"));
+        assert_eq!(activation.minimum_level, minimum_level, "{mutation_id}");
+        assert_eq!(activation.governing_attribute, attribute, "{mutation_id}");
+        assert_eq!(activation.cost, cost, "{mutation_id}");
+        assert_eq!(activation.base_failure_percent, failure, "{mutation_id}");
+        assert_eq!(activation.ability_id, ability_id, "{mutation_id}");
+        assert!(catalog.ability(&ability_id).is_some(), "{ability_id}");
+    }
+
+    assert_eq!(
+        catalog
+            .mutation("rfb.mutation.spit-acid")
+            .unwrap()
+            .activation
+            .as_ref()
+            .unwrap()
+            .cost_scaling,
+        Some(MutationActivationCostScalingDefinition {
+            start_level: 5,
+            level_interval: 5,
+            amount: 1,
+        })
+    );
+
+    let ledger: serde_json::Value = serde_json::from_slice(
+        &std::fs::read(pack.join("legacy-mutation-plan.json")).expect("ledger should read"),
+    )
+    .expect("ledger should parse");
+    let entries = ledger["mutations"].as_array().expect("mutation entries");
+    assert_eq!(
+        entries
+            .iter()
+            .filter(|entry| entry["status"] == "active")
+            .count(),
+        78
+    );
+    assert_eq!(
+        entries
+            .iter()
+            .filter(|entry| {
+                entry["status"] == "active"
+                    && entry["randomWeight"]
+                        .as_u64()
+                        .is_some_and(|weight| weight > 0)
+            })
+            .count(),
+        63
+    );
 }

@@ -55,18 +55,19 @@ use rfb_content::{
     AbilityGenocideScopeDefinition, AbilityLevelScalingCurveDefinition,
     AbilityLevelScalingDefinition, AbilityLevelScalingField, AbilityRandomTargetDefinition,
     AbilityStatusStackingDefinition, AbilityTargetDefinition, AbilityTargetModeDefinition,
-    ActorResistanceLevel, ActorRole, AffixPropertyBundleDefinition, CastingAttribute,
-    CastingProfileDefinition, ContentCatalog, DeviceRechargeProfileDefinition,
+    ActorDamageType, ActorResistanceLevel, ActorRole, AffixPropertyBundleDefinition,
+    CastingAttribute, CastingProfileDefinition, ContentCatalog, DeviceRechargeProfileDefinition,
     DungeonInstanceLifecycle, EncounterEntryDefinition, EncounterTableDefinition, EquipmentBonuses,
     EquipmentPassive, FloorLifecycle, ItemAttributeDefinition, ItemCurseSeverityDefinition,
     ItemCurseTargetDefinition, ItemEnchantmentRollDefinition, ItemSummonLevelSourceDefinition,
     ItemSummonSelectorDefinition, ItemUseEffectDefinition, MeleeBlowEffectDefinition,
-    MonsterDropKindDefinition, MonsterPackBehavior, PlayerAbilityDefinition, ProceduralLayoutMode,
-    ProceduralMazeDefinition, ProceduralPitDefinition, ProceduralRoomGeometryDefinition,
-    ProceduralRoomPlacement, ProceduralRoomShape, ProceduralStreamerCandidateDefinition, SkillKind,
-    SlayLevel, SlayTarget, StartingItemDefinition, StatModifiers, TaskObjectiveKind,
-    TechniqueAttribute, TechniqueProfileDefinition, TerrainFeatureEntryDefinition,
-    ThemeVaultCandidateDefinition, WeaponBrand,
+    MonsterDropKindDefinition, MonsterPackBehavior, MutationActivationDefinition,
+    PlayerAbilityDefinition, ProceduralLayoutMode, ProceduralMazeDefinition,
+    ProceduralPitDefinition, ProceduralRoomGeometryDefinition, ProceduralRoomPlacement,
+    ProceduralRoomShape, ProceduralStreamerCandidateDefinition, SkillKind, SlayLevel, SlayTarget,
+    StartingItemDefinition, StatModifiers, TaskObjectiveKind, TechniqueAttribute,
+    TechniqueProfileDefinition, TerrainFeatureEntryDefinition, ThemeVaultCandidateDefinition,
+    WeaponBrand,
 };
 use rfb_protocol::{
     AbilityAreaDamageResolutionDto, AbilityBeamDamageResolutionDto, AbilityCastResolutionDto,
@@ -74,24 +75,25 @@ use rfb_protocol::{
     AbilityDetectSubjectDto, AbilityEffectResolutionDto, AbilityEffectSkipReasonDto,
     AbilityEffectSpecDto, AbilityEffectsResolutionDto, AbilityGenocideScopeDto,
     AbilityProficiencyRankDto, AbilityProgressSaveDto, AbilityRandomBranchSpecDto,
-    AbilityRandomTargetDto, AbilityStatusChangeDto, AbilityStatusStackingDto,
-    AbilitySummonResolutionDto, AbilityTeleportResolutionDto, AbilityTerrainTransformResolutionDto,
-    AbilityVisibleDamageResolutionDto, AttackProfileDto, AutoGetModeDto, CampaignStatusDto,
-    CellLightDto, CellVisualDto, DamageDiceDto, DeviceRechargeSourceDto, Direction,
-    EquipmentBonusesDto, EquipmentPassiveDto, GameCommandEnvelope, GameUpdate, GoldAppearanceDto,
-    HealingResolutionDto, ItemActivationDto, ItemChargesDto, ItemCurseRemovalResolutionDto,
-    ItemCurseResolutionDto, ItemCurseSeverityDto, ItemEnchantmentComponentResolutionDto,
-    ItemEnchantmentResolutionDto, ItemEnchantmentsDto, ItemIdentificationDto,
-    ItemIdentifyResolutionDto, ItemKnowledgeDto, ItemPropertyDto, ItemQualityDto, LocaleDto,
-    MapScaleDto, MeleeBlowDto, MeleeRoutineDto, MonsterAbilityCandidateResolutionDto,
-    MonsterAbilityCastResolutionDto, MonsterAbilityDecisionResolutionDto,
-    MonsterAbilityRejectionReasonDto, MonsterAbilityTargetResolutionDto,
-    MonsterDisplacementResolutionDto, MonsterPackBehaviorDto, MonsterPackRoleDto, Position,
-    ProjectileProfileDto, RecallStateDto, ResistanceDto, ResourceGainResolutionDto,
-    ResourceGainSourceDto, ResourcePoolSaveDto, ResourceRecoveryResolutionDto, RestResolutionDto,
-    RestStopReasonDto, SlayDto, SlayLevelDto, SlayTargetDto, StatModifiersDto, SummonCommandDto,
-    SummonCommandModeDto, SummonCommandResolutionDto, TargetModeDto, TargetSelection,
-    TargetSpecDto, TaskStatusKindDto, ThrowProfileDto, WeaponBrandDto,
+    AbilityRandomTargetDto, AbilityRecallActionDto, AbilitySourceDto, AbilityStatusChangeDto,
+    AbilityStatusStackingDto, AbilitySummonResolutionDto, AbilityTeleportResolutionDto,
+    AbilityTerrainTransformResolutionDto, AbilityVisibleDamageResolutionDto, AttackProfileDto,
+    AutoGetModeDto, CampaignStatusDto, CellLightDto, CellVisualDto, DamageDiceDto,
+    DeviceRechargeSourceDto, Direction, EquipmentBonusesDto, EquipmentPassiveDto,
+    GameCommandEnvelope, GameUpdate, GoldAppearanceDto, HealingResolutionDto, ItemActivationDto,
+    ItemChargesDto, ItemCurseRemovalResolutionDto, ItemCurseResolutionDto, ItemCurseSeverityDto,
+    ItemEnchantmentComponentResolutionDto, ItemEnchantmentResolutionDto, ItemEnchantmentsDto,
+    ItemIdentificationDto, ItemIdentifyResolutionDto, ItemKnowledgeDto, ItemPropertyDto,
+    ItemQualityDto, LocaleDto, MapScaleDto, MeleeBlowDto, MeleeRoutineDto,
+    MonsterAbilityCandidateResolutionDto, MonsterAbilityCastResolutionDto,
+    MonsterAbilityDecisionResolutionDto, MonsterAbilityRejectionReasonDto,
+    MonsterAbilityTargetResolutionDto, MonsterDisplacementResolutionDto, MonsterPackBehaviorDto,
+    MonsterPackRoleDto, Position, ProjectileProfileDto, RecallStateDto, ResistanceDto,
+    ResourceGainResolutionDto, ResourceGainSourceDto, ResourcePoolSaveDto,
+    ResourceRecoveryResolutionDto, RestResolutionDto, RestStopReasonDto, SlayDto, SlayLevelDto,
+    SlayTargetDto, StatModifiersDto, SummonCommandDto, SummonCommandModeDto,
+    SummonCommandResolutionDto, TargetModeDto, TargetSelection, TargetSpecDto, TaskStatusKindDto,
+    ThrowProfileDto, WeaponBrandDto,
 };
 
 mod abilities;
@@ -2384,6 +2386,7 @@ impl Game {
         candidate_ids: Vec<String>,
         scope: AbilityGenocideScopeDefinition,
         power: u16,
+        applies_fatigue: bool,
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
     ) -> GenocideResolution {
@@ -2409,10 +2412,12 @@ impl Game {
                 AbilityGenocideScopeDefinition::Nearby => 3,
             }
             .max(1);
-            fatigue_damage = fatigue_damage.saturating_add(
-                i32::try_from(self.rng.bounded(u64::from(fatigue_sides)) + 1)
-                    .expect("genocide fatigue roll must fit i32"),
-            );
+            if applies_fatigue {
+                fatigue_damage = fatigue_damage.saturating_add(
+                    i32::try_from(self.rng.bounded(u64::from(fatigue_sides)) + 1)
+                        .expect("genocide fatigue roll must fit i32"),
+                );
+            }
             if protected {
                 resisted_entity_ids.push(entity_id);
                 continue;
@@ -2819,7 +2824,7 @@ impl Game {
                     && self
                         .content
                         .actor(&entity.kind_id)
-                        .is_some_and(|definition| definition.tags.iter().any(|tag| tag == category))
+                        .is_some_and(|definition| actor_matches_category(definition, category))
             })
             .map(|entity| {
                 (
@@ -5572,6 +5577,9 @@ fn slay_target_matches(target: SlayTarget, definition: &rfb_content::ActorDefini
 }
 
 fn actor_matches_category(definition: &rfb_content::ActorDefinition, category: &str) -> bool {
+    if category == "any-monster" {
+        return definition.role == ActorRole::Monster;
+    }
     if category == "living" {
         return !definition
             .tags
@@ -5613,6 +5621,7 @@ const fn ability_detect_subject_dto(
         AbilityDetectSubjectDefinition::Actor => AbilityDetectSubjectDto::Actor,
         AbilityDetectSubjectDefinition::Item => AbilityDetectSubjectDto::Item,
         AbilityDetectSubjectDefinition::Gold => AbilityDetectSubjectDto::Gold,
+        AbilityDetectSubjectDefinition::Curse => AbilityDetectSubjectDto::Curse,
     }
 }
 
@@ -5694,6 +5703,7 @@ fn apply_ability_level_scaling(
             | AbilityEffectDefinition::AreaDamage { damage_dice, .. }
             | AbilityEffectDefinition::BeamDamage { damage_dice, .. }
             | AbilityEffectDefinition::BoltOrBeamDamage { damage_dice, .. }
+            | AbilityEffectDefinition::BoltOrAreaDamage { damage_dice, .. }
             | AbilityEffectDefinition::ConeDamage { damage_dice, .. }
             | AbilityEffectDefinition::CurseDamage { damage_dice, .. }
             | AbilityEffectDefinition::VisibleDamage { damage_dice, .. }
@@ -5712,6 +5722,7 @@ fn apply_ability_level_scaling(
             | AbilityEffectDefinition::AreaDamage { damage_sides, .. }
             | AbilityEffectDefinition::BeamDamage { damage_sides, .. }
             | AbilityEffectDefinition::BoltOrBeamDamage { damage_sides, .. }
+            | AbilityEffectDefinition::BoltOrAreaDamage { damage_sides, .. }
             | AbilityEffectDefinition::ConeDamage { damage_sides, .. }
             | AbilityEffectDefinition::CurseDamage { damage_sides, .. }
             | AbilityEffectDefinition::VisibleDamage { damage_sides, .. }
@@ -5730,6 +5741,7 @@ fn apply_ability_level_scaling(
             | AbilityEffectDefinition::AreaDamage { damage_bonus, .. }
             | AbilityEffectDefinition::BeamDamage { damage_bonus, .. }
             | AbilityEffectDefinition::BoltOrBeamDamage { damage_bonus, .. }
+            | AbilityEffectDefinition::BoltOrAreaDamage { damage_bonus, .. }
             | AbilityEffectDefinition::ConeDamage { damage_bonus, .. }
             | AbilityEffectDefinition::CurseDamage { damage_bonus, .. }
             | AbilityEffectDefinition::VisibleDamage { damage_bonus, .. }
@@ -5781,8 +5793,11 @@ fn apply_ability_level_scaling(
         }
         (
             AbilityEffectDefinition::AreaDamage { radius, .. }
+            | AbilityEffectDefinition::BoltOrAreaDamage { radius, .. }
             | AbilityEffectDefinition::ConeDamage { radius, .. }
-            | AbilityEffectDefinition::BreathDamage { radius, .. },
+            | AbilityEffectDefinition::BreathDamage { radius, .. }
+            | AbilityEffectDefinition::Detect { radius, .. }
+            | AbilityEffectDefinition::BlinkSelf { radius },
             AbilityLevelScalingField::Radius,
         ) => {
             *radius = u8::try_from(scaled_ability_level_value(
@@ -5793,7 +5808,8 @@ fn apply_ability_level_scaling(
             .expect("validated level-scaled radius must fit u8");
         }
         (
-            AbilityEffectDefinition::ApplyStatus { intensity, .. },
+            AbilityEffectDefinition::ApplyStatus { intensity, .. }
+            | AbilityEffectDefinition::VisibleApplyStatus { intensity, .. },
             AbilityLevelScalingField::StatusIntensity,
         ) => {
             *intensity = u16::try_from(scaled_ability_level_value(
@@ -5804,7 +5820,8 @@ fn apply_ability_level_scaling(
             .expect("validated level-scaled status intensity must fit u16");
         }
         (
-            AbilityEffectDefinition::ApplyStatus { duration_ticks, .. },
+            AbilityEffectDefinition::ApplyStatus { duration_ticks, .. }
+            | AbilityEffectDefinition::VisibleApplyStatus { duration_ticks, .. },
             AbilityLevelScalingField::StatusDurationTicks,
         ) => {
             *duration_ticks = u32::try_from(scaled_ability_level_value(
@@ -5827,6 +5844,9 @@ fn apply_ability_level_scaling(
         }
         (
             AbilityEffectDefinition::ApplyStatus {
+                power: Some(power), ..
+            }
+            | AbilityEffectDefinition::VisibleApplyStatus {
                 power: Some(power), ..
             },
             AbilityLevelScalingField::StatusPower,
@@ -5856,6 +5876,19 @@ fn apply_ability_level_scaling(
                 level,
             ))
             .expect("validated level-scaled summon maximum level must fit u16");
+        }
+        (
+            AbilityEffectDefinition::FetchItem {
+                maximum_weight_tenths_pound,
+            },
+            AbilityLevelScalingField::MaximumWeight,
+        ) => {
+            *maximum_weight_tenths_pound = u32::try_from(scaled_ability_level_value(
+                u64::from(*maximum_weight_tenths_pound),
+                scaling,
+                level,
+            ))
+            .expect("validated level-scaled fetch weight must fit u32");
         }
         (
             AbilityEffectDefinition::ApplyStatus {
@@ -5944,6 +5977,21 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             damage_type: DamageType::from(*damage_type).into(),
             beam_chance_percent: *beam_chance_percent,
         },
+        AbilityEffectDefinition::BoltOrAreaDamage {
+            damage_dice,
+            damage_sides,
+            damage_bonus,
+            damage_type,
+            area_from_level,
+            radius,
+        } => AbilityEffectSpecDto::BoltOrAreaDamage {
+            damage_dice: *damage_dice,
+            damage_sides: *damage_sides,
+            damage_bonus: *damage_bonus,
+            damage_type: DamageType::from(*damage_type).into(),
+            area_from_level: *area_from_level,
+            radius: *radius,
+        },
         AbilityEffectDefinition::ConeDamage {
             damage_dice,
             damage_sides,
@@ -5992,6 +6040,30 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
         AbilityEffectDefinition::DarkenRoom => AbilityEffectSpecDto::DarkenRoom,
         AbilityEffectDefinition::AggravateMonsters => AbilityEffectSpecDto::AggravateMonsters,
         AbilityEffectDefinition::Teleport => AbilityEffectSpecDto::Teleport,
+        AbilityEffectDefinition::FetchItem {
+            maximum_weight_tenths_pound,
+        } => AbilityEffectSpecDto::FetchItem {
+            maximum_weight_tenths_pound: *maximum_weight_tenths_pound,
+        },
+        AbilityEffectDefinition::SwapPosition => AbilityEffectSpecDto::SwapPosition,
+        AbilityEffectDefinition::Recall {
+            delay_dice,
+            delay_sides,
+            delay_bonus,
+        } => AbilityEffectSpecDto::Recall {
+            delay_dice: *delay_dice,
+            delay_sides: *delay_sides,
+            delay_bonus: *delay_bonus,
+        },
+        AbilityEffectDefinition::ResistElements {
+            duration_dice,
+            duration_sides,
+            duration_bonus,
+        } => AbilityEffectSpecDto::ResistElements {
+            duration_dice: *duration_dice,
+            duration_sides: *duration_sides,
+            duration_bonus: *duration_bonus,
+        },
         AbilityEffectDefinition::Summon {
             actor_kind_id,
             count,
@@ -6121,6 +6193,7 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             damage_type,
             target_category,
             repeat,
+            feeds,
         } => AbilityEffectSpecDto::DrainLife {
             damage_dice: *damage_dice,
             damage_sides: *damage_sides,
@@ -6128,15 +6201,20 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             damage_type: DamageType::from(*damage_type).into(),
             target_category: target_category.clone(),
             repeat: *repeat,
+            feeds: *feeds,
         },
         AbilityEffectDefinition::Genocide {
             scope,
             power,
             radius,
+            target_category,
+            fatigue,
         } => AbilityEffectSpecDto::Genocide {
             scope: ability_genocide_scope_dto(*scope),
             power: *power,
             radius: *radius,
+            target_category: target_category.clone(),
+            fatigue: *fatigue,
         },
         AbilityEffectDefinition::IdentifyItem {
             full_identify_power,
@@ -6180,12 +6258,16 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             intensity,
             duration_ticks,
             stacking,
+            resistance_type,
+            power,
             target_category,
         } => AbilityEffectSpecDto::VisibleApplyStatus {
             status_kind_id: status_kind_id.clone(),
             intensity: *intensity,
             duration_ticks: *duration_ticks,
             stacking: ability_status_stacking_dto(*stacking),
+            resistance_type: resistance_type.map(DamageType::from).map(Into::into),
+            power: *power,
             target_category: target_category.clone(),
         },
         AbilityEffectDefinition::EnchantEquippedWeapon { affix_id } => {

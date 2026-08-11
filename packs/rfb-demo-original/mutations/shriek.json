@@ -6,6 +6,13 @@
   "description": "你可以发出一声可怕的尖啸。",
   "rating": "good",
   "sourceIndex": 13,
+  "activation": {
+    "minimumLevel": 20,
+    "governingAttribute": "constitution",
+    "cost": 14,
+    "baseFailurePercent": 40,
+    "abilityId": "rfb.ability.mutation.shriek"
+  },
   "randomWeight": 6,
   "removesOnGain": []
 }

@@ -6,6 +6,18 @@
   "description": "你可以像吸血鬼一样从敌人身上吸取生命。",
   "rating": "good",
   "sourceIndex": 7,
+  "activation": {
+    "minimumLevel": 2,
+    "governingAttribute": "constitution",
+    "cost": 1,
+    "costScaling": {
+      "startLevel": 3,
+      "levelInterval": 3,
+      "amount": 1
+    },
+    "baseFailurePercent": 30,
+    "abilityId": "rfb.ability.mutation.vampirism"
+  },
   "randomWeight": 4,
   "removesOnGain": []
 }

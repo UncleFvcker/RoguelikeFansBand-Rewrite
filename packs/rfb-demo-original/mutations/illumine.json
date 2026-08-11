@@ -6,6 +6,13 @@
   "description": "你可以散发出明亮的光芒。",
   "rating": "average",
   "sourceIndex": 14,
+  "activation": {
+    "minimumLevel": 3,
+    "governingAttribute": "intelligence",
+    "cost": 2,
+    "baseFailurePercent": 30,
+    "abilityId": "rfb.ability.mutation.illumine"
+  },
   "randomWeight": 6,
   "removesOnGain": []
 }

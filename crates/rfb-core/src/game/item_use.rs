@@ -253,7 +253,7 @@ impl Game {
         Ok(())
     }
 
-    fn random_teleport_candidates(&self, maximum_distance: u16) -> Vec<Position> {
+    pub(super) fn random_teleport_candidates(&self, maximum_distance: u16) -> Vec<Position> {
         let origin = self.player.position;
         let occupied = self
             .entities
@@ -654,6 +654,7 @@ impl Game {
             candidate_ids,
             AbilityGenocideScopeDefinition::Nearby,
             power,
+            true,
             changed,
             removed_entities,
         );
@@ -693,6 +694,7 @@ impl Game {
             candidate_ids,
             AbilityGenocideScopeDefinition::Glyph,
             power,
+            true,
             changed,
             removed_entities,
         );
@@ -1193,11 +1195,38 @@ impl Game {
                 self.mark_gold_piles_discovered(&detected.1);
                 detected
             }
+            AbilityDetectSubjectDefinition::Curse => {
+                let mut item_ids = self
+                    .items
+                    .iter()
+                    .filter(|item| {
+                        item.curse.is_some()
+                            && matches!(
+                                item.location,
+                                ItemLocation::Inventory | ItemLocation::Equipped { .. }
+                            )
+                    })
+                    .map(|item| item.id.clone())
+                    .collect::<Vec<_>>();
+                item_ids.sort();
+                for item_id in &item_ids {
+                    self.identify_item_instance(item_id, ItemIdentificationRequest::new(false));
+                }
+                (
+                    (!item_ids.is_empty())
+                        .then_some(self.player.position)
+                        .into_iter()
+                        .collect(),
+                    item_ids,
+                )
+            }
         };
         if persistent
             || matches!(
                 subject,
-                AbilityDetectSubjectDefinition::Item | AbilityDetectSubjectDefinition::Gold
+                AbilityDetectSubjectDefinition::Item
+                    | AbilityDetectSubjectDefinition::Gold
+                    | AbilityDetectSubjectDefinition::Curse
             )
         {
             changed.extend(detected_positions.iter().copied());

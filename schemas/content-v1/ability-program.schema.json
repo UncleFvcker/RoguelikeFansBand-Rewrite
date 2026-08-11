@@ -5,7 +5,8 @@
         "terrain",
         "actor",
         "item",
-        "gold"
+        "gold",
+        "curse"
       ],
       "type": "string"
     },
@@ -246,6 +247,58 @@
         {
           "additionalProperties": false,
           "properties": {
+            "areaFromLevel": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "damageBonus": {
+              "default": 0,
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "damageDice": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "damageSides": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "damageType": {
+              "$ref": "#/$defs/ActorDamageType",
+              "default": "physical"
+            },
+            "radius": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "bolt-or-area-damage",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "damageDice",
+            "damageSides",
+            "areaFromLevel",
+            "radius"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
             "damageBonus": {
               "default": 0,
               "format": "uint16",
@@ -467,6 +520,104 @@
           },
           "required": [
             "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "maximumWeightTenthsPound": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "fetch-item",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "maximumWeightTenthsPound"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "swap-position",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "delayBonus": {
+              "default": 0,
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "delayDice": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "delaySides": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "recall",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "delayDice",
+            "delaySides"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "durationBonus": {
+              "default": 0,
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "durationDice": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "durationSides": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "resist-elements",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "durationDice",
+            "durationSides"
           ],
           "type": "object"
         },
@@ -1083,6 +1234,10 @@
               "$ref": "#/$defs/ActorDamageType",
               "default": "physical"
             },
+            "feeds": {
+              "default": false,
+              "type": "boolean"
+            },
             "repeat": {
               "default": 1,
               "format": "uint8",
@@ -1109,6 +1264,10 @@
         {
           "additionalProperties": false,
           "properties": {
+            "fatigue": {
+              "default": true,
+              "type": "boolean"
+            },
             "power": {
               "format": "uint16",
               "maximum": 65535,
@@ -1124,6 +1283,13 @@
             },
             "scope": {
               "$ref": "#/$defs/AbilityGenocideScopeDefinition"
+            },
+            "targetCategory": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
             },
             "type": {
               "const": "genocide",
@@ -1296,6 +1462,27 @@
               "maximum": 65535,
               "minimum": 0,
               "type": "integer"
+            },
+            "power": {
+              "default": null,
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "resistanceType": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ActorDamageType"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
             },
             "stacking": {
               "$ref": "#/$defs/AbilityStatusStackingDefinition"

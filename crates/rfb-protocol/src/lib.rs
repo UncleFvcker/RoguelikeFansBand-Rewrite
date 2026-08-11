@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.161";
+pub const PROTOCOL_VERSION: &str = "1.163";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -783,6 +783,7 @@ pub enum AbilityDetectSubjectDto {
     Actor,
     Item,
     Gold,
+    Curse,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -862,6 +863,15 @@ pub enum AbilityEffectSpecDto {
         damage_type: DamageTypeDto,
         beam_chance_percent: u8,
     },
+    BoltOrAreaDamage {
+        damage_dice: u16,
+        damage_sides: u16,
+        #[serde(default)]
+        damage_bonus: u16,
+        damage_type: DamageTypeDto,
+        area_from_level: u16,
+        radius: u8,
+    },
     ConeDamage {
         damage_dice: u16,
         damage_sides: u16,
@@ -894,6 +904,20 @@ pub enum AbilityEffectSpecDto {
     DarkenRoom,
     AggravateMonsters,
     Teleport,
+    FetchItem {
+        maximum_weight_tenths_pound: u32,
+    },
+    SwapPosition,
+    Recall {
+        delay_dice: u16,
+        delay_sides: u16,
+        delay_bonus: u16,
+    },
+    ResistElements {
+        duration_dice: u16,
+        duration_sides: u32,
+        duration_bonus: u32,
+    },
     Summon {
         actor_kind_id: String,
         count: u8,
@@ -998,12 +1022,18 @@ pub enum AbilityEffectSpecDto {
         target_category: String,
         #[serde(default = "default_ability_effect_repeat")]
         repeat: u8,
+        #[serde(default)]
+        feeds: bool,
     },
     Genocide {
         scope: AbilityGenocideScopeDto,
         power: u16,
         #[serde(default)]
         radius: u8,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        target_category: Option<String>,
+        #[serde(default = "default_true")]
+        fatigue: bool,
     },
     IdentifyItem {
         full_identify_power: u16,
@@ -1035,6 +1065,10 @@ pub enum AbilityEffectSpecDto {
         duration_ticks: u32,
         stacking: AbilityStatusStackingDto,
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        resistance_type: Option<DamageTypeDto>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        power: Option<u16>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
         target_category: Option<String>,
     },
     EnchantEquippedWeapon {
@@ -1054,12 +1088,25 @@ const fn default_ability_effect_repeat() -> u8 {
     1
 }
 
+const fn default_true() -> bool {
+    true
+}
+
 const fn default_incoming_damage_percent() -> u8 {
     100
 }
 
 const fn default_life_force() -> u16 {
     1_000
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum AbilitySourceDto {
+    Learned,
+    Technique,
+    Mutation,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -1070,9 +1117,9 @@ pub struct AbilityDto {
     pub name_key: String,
     pub description_key: String,
     pub minimum_level: u16,
-    #[serde(default, skip_serializing_if = "is_false")]
-    pub innate: bool,
-    pub resource_id: String,
+    pub source: AbilitySourceDto,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub resource_id: Option<String>,
     #[serde(default)]
     pub base_resource_cost: u32,
     pub resource_cost: u32,
@@ -1587,12 +1634,15 @@ pub struct CheckResolutionDto {
 #[serde(rename_all = "camelCase")]
 pub struct AbilityCastResolutionDto {
     pub ability_id: String,
-    pub resource_id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub resource_id: Option<String>,
     #[serde(default)]
     pub base_resource_cost: u32,
     pub resource_cost: u32,
     pub resource_before: u32,
     pub resource_after: u32,
+    pub resource_paid: u32,
+    pub hp_paid: u32,
     pub failure_percent: u8,
     pub percentile_roll: u8,
     pub succeeded: bool,
@@ -1733,6 +1783,14 @@ pub enum AbilityEffectSkipReasonDto {
     Ineligible,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum AbilityRecallActionDto {
+    Start,
+    Cancel,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(
@@ -1770,6 +1828,32 @@ pub enum AbilityEffectResolutionDto {
     Heal {
         effect_index: u8,
         resolution: HealingResolutionDto,
+    },
+    FetchItem {
+        effect_index: u8,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        item_id: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        from: Option<Position>,
+        to: Position,
+        moved: bool,
+    },
+    SwapPosition {
+        effect_index: u8,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        target_entity_id: Option<String>,
+        player_from: Position,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        target_from: Option<Position>,
+        swapped: bool,
+    },
+    Recall {
+        effect_index: u8,
+        action: AbilityRecallActionDto,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        delay: Option<u16>,
+        dungeon_id: String,
+        floor_id: String,
     },
     TeleportLevel {
         effect_index: u8,
@@ -3047,6 +3131,7 @@ pub fn generated_typescript() -> String {
     push_declaration!(ResourcePoolDto);
     push_declaration!(AbilityLearningDto);
     push_declaration!(AbilityProficiencyRankDto);
+    push_declaration!(AbilitySourceDto);
     push_declaration!(AbilityStatusStackingDto);
     push_declaration!(AbilityDetectSubjectDto);
     push_declaration!(AbilityControlOutcomeDto);
@@ -3095,6 +3180,7 @@ pub fn generated_typescript() -> String {
     push_declaration!(AbilitySummonResolutionDto);
     push_declaration!(AbilityDetectResolutionDto);
     push_declaration!(AbilityTerrainTransformResolutionDto);
+    push_declaration!(AbilityRecallActionDto);
     push_declaration!(AbilityStatusChangeDto);
     push_declaration!(AbilityEffectSkipReasonDto);
     push_declaration!(AbilityEffectResolutionDto);

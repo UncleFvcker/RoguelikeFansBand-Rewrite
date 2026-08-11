@@ -6,6 +6,13 @@
   "description": "你可以使自己进入狂暴状态。",
   "rating": "great",
   "sourceIndex": 16,
+  "activation": {
+    "minimumLevel": 8,
+    "governingAttribute": "strength",
+    "cost": 8,
+    "baseFailurePercent": 50,
+    "abilityId": "rfb.ability.mutation.berserk"
+  },
   "randomWeight": 6,
   "removesOnGain": []
 }

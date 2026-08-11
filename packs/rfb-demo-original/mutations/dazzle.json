@@ -6,6 +6,13 @@
   "description": "你可以散发出令人混乱的致盲辐射。",
   "rating": "good",
   "sourceIndex": 26,
+  "activation": {
+    "minimumLevel": 7,
+    "governingAttribute": "charisma",
+    "cost": 15,
+    "baseFailurePercent": 60,
+    "abilityId": "rfb.ability.mutation.dazzle"
+  },
   "randomWeight": 6,
   "removesOnGain": []
 }

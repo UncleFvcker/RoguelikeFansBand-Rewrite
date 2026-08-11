@@ -6,6 +6,13 @@
   "description": "你可以闻出附近的怪物。",
   "rating": "good",
   "sourceIndex": 9,
+  "activation": {
+    "minimumLevel": 5,
+    "governingAttribute": "intelligence",
+    "cost": 4,
+    "baseFailurePercent": 30,
+    "abilityId": "rfb.ability.mutation.smell-monsters"
+  },
   "randomWeight": 8,
   "removesOnGain": []
 }

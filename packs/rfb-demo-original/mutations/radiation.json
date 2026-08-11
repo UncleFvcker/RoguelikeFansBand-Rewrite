@@ -6,6 +6,13 @@
   "description": "你可以随心所欲地散发强辐射。",
   "rating": "good",
   "sourceIndex": 6,
+  "activation": {
+    "minimumLevel": 15,
+    "governingAttribute": "constitution",
+    "cost": 15,
+    "baseFailurePercent": 30,
+    "abilityId": "rfb.ability.mutation.radiation"
+  },
   "randomWeight": 4,
   "removesOnGain": []
 }

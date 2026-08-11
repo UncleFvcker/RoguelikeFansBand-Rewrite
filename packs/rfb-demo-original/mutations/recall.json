@@ -6,6 +6,13 @@
   "description": "你可以往返于城镇和深渊之间。",
   "rating": "good",
   "sourceIndex": 28,
+  "activation": {
+    "minimumLevel": 17,
+    "governingAttribute": "intelligence",
+    "cost": 50,
+    "baseFailurePercent": 70,
+    "abilityId": "rfb.ability.mutation.recall"
+  },
   "randomWeight": 4,
   "removesOnGain": []
 }

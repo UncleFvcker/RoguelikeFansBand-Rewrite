@@ -714,8 +714,10 @@ export class StatusPanel {
     const status = document.createElement("span");
     status.className = "ability-status";
     status.textContent = this.#localization.format(
-      ability.innate
+      ability.source === "technique"
         ? "ability-status-innate"
+        : ability.source === "mutation"
+          ? "ability-status-mutation"
         : ability.learned
           ? "ability-status-learned"
           : "ability-status-unlearned",

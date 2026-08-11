@@ -1,6 +1,6 @@
 # RFB 全系统梳理与重构实现路线
 
-状态：长期规则实现路线；当前基线为协议 1.161 / contract-v240 / state hash Schema v80（P31–P98 进展见 8.3，玩家流程与 Outpost 进展见 Phase 17/18，物品与变异接入见 Phase 19，Warrens 怪物机制见 W1–W14 清单，荒野世界图见 W0–W5、区块卷动、条带怪物生成、客户端同步与连续城镇）
+状态：长期规则实现路线；当前基线为协议 1.163 / contract-v242 / state hash Schema v80（P31–P98 进展见 8.3，玩家流程与 Outpost 进展见 Phase 17/18，物品与变异接入见 Phase 19，Warrens 怪物机制见 W1–W14 清单，荒野世界图见 W0–W5、区块卷动、条带怪物生成、客户端同步与连续城镇）
 
 ## 1. 目的与边界
 
@@ -697,6 +697,8 @@ P30“首个非 Mana 职业资源”已由 contract-v90 完成：节奏资源按
 **怪物 P40 真实变色龙进展（2026-08）**：contract-v228 接入变色龙。现有 `appearanceKindId` 保存当前形态，`kindId` 保持真实身份；每次清醒行动以 `1/13` 判定换形，成功后按合法分配池选形并按新最大生命等比调整当前生命。形态驱动速度、抗性、派生属性、近战、移动和施法，存档与 State Hash 直接复用既有字段。正式包为 433 actors / 174 abilities，严格同步 368 条；协议 1.157、Schema v77 不变，demo 1.224.0，内容 hash 为 `f2f6891805e8b6b23673e2b6f48abcdf894cfc0578a39bc798f15eb66f7af267`。完整边界见 [Contract v228](contract-v228-warrens-content-p40-chameleon.md)。
 
 **怪物 P41 妖鬼进展（2026-08）**：contract-v229 接入妖鬼与真实 `ELDRITCH_HORROR`。敌对怪物从不可见转为可见时，按等级及 Unique/群体修正进行触发和玩家豁免；同一实例成功触发后仅以额外 `1/5` 门重触发。分层后果复用混乱、幻觉、麻痹、属性损伤、当前层地图失忆与既有精神变异，Weird Mind 直接免疫。正式包为 434 actors / 174 abilities，严格同步 369 条；协议 1.158、Schema v78，demo 1.225.0，内容 hash 为 `005d3db278c595029ef2a65e8f46dcd3748c303bc96681a1a513dfc24b54c43d`。完整边界见 [Contract v229](contract-v229-warrens-content-p41-eldritch-horror.md)。
+
+**变异 M5-A/B 进展（2026-08）**：22 个 source index 0--30 主动随机变异接入统一能力入口，覆盖探测、随机传送、取物、换位、Recall、邪恶放逐，以及喷吐、吐息、凝视、射线、吸血、触碰、范围攻击、狂暴和元素抗性。新增机制保持为可复用的窄 Ability effect；成本按等级缩放并继续遵守 SP 优先、HP 补差。账本为 78 active / 74 blocked，随机候选为 63/104 active；协议 1.163、contract-v242、Schema v80、demo 1.234.0。
 
 ## 9. 内容迁移策略
 
