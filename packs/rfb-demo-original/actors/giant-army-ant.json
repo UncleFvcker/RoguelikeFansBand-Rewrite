@@ -1,0 +1,67 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "friends": {
+      "chancePercent": 0,
+      "dice": 3,
+      "sides": 3
+    },
+    "legacyIndex": 473,
+    "maxDepth": 90,
+    "randomMovementPercent": 25,
+    "rarity": 3
+  },
+  "attack": 7,
+  "damageDice": 2,
+  "damageSides": 12,
+  "damageType": "physical",
+  "defense": 4,
+  "descriptionKey": "actor-demo-giant-army-ant-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 90,
+  "formatVersion": 1,
+  "glyph": "a",
+  "hitPointDice": {
+    "dice": 19,
+    "sides": 6
+  },
+  "id": "demo.actor.giant-army-ant",
+  "killsWeakerBodies": true,
+  "level": 30,
+  "maxHp": 66,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 2,
+            "damageSides": 12,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      }
+    ]
+  },
+  "nameKey": "actor-demo-giant-army-ant-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "role": "monster",
+  "speed": 120,
+  "tags": [
+    "animal",
+    "ant",
+    "legacy-import",
+    "orc-cave",
+    "weird-mind"
+  ]
+}

@@ -1,0 +1,83 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "habitats": [
+      "all"
+    ],
+    "legacyIndex": 478,
+    "maxDepth": 70,
+    "rarity": 3
+  },
+  "attack": 7,
+  "damageDice": 5,
+  "damageSides": 4,
+  "damageType": "physical",
+  "defense": 6,
+  "descriptionKey": "actor-demo-death-watch-beetle-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 190,
+  "formatVersion": 1,
+  "glyph": "K",
+  "hitPointDice": {
+    "dice": 25,
+    "sides": 12
+  },
+  "id": "demo.actor.death-watch-beetle",
+  "level": 31,
+  "maxHp": 162,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 5,
+            "damageSides": 4,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 5,
+            "damageSides": 6,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "type": "terrify"
+          }
+        ],
+        "methodId": "rfb.blow.wail",
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "nameKey": "actor-demo-death-watch-beetle-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "role": "monster",
+  "speed": 110,
+  "tags": [
+    "animal",
+    "legacy-import",
+    "orc-cave",
+    "weird-mind"
+  ]
+}

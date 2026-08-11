@@ -1,0 +1,93 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 898,
+    "maxDepth": 70,
+    "multiplies": true,
+    "rarity": 2
+  },
+  "attack": 7,
+  "damageDice": 8,
+  "damageSides": 8,
+  "damageType": "acid",
+  "deathDrop": {
+    "chanceRolls": [
+      {
+        "guaranteedForUnique": true,
+        "percent": 90
+      }
+    ],
+    "kind": "gold"
+  },
+  "defense": 12,
+  "descriptionKey": "actor-demo-granite-wall-description",
+  "experienceValue": 250,
+  "formatVersion": 1,
+  "glyph": "#",
+  "hitPointDice": {
+    "dice": 15,
+    "sides": 15
+  },
+  "id": "demo.actor.granite-wall",
+  "level": 30,
+  "maxHp": 120,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 8,
+            "damageSides": 8,
+            "damageType": "acid",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 3,
+            "damageSides": 3,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "type": "paralysis"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "neverMoves": true
+  },
+  "nameKey": "actor-demo-granite-wall-name",
+  "resistances": {
+    "cold": "resistant",
+    "disintegrate": "vulnerable",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "poison": "resistant",
+    "shards": "resistant"
+  },
+  "role": "monster",
+  "speed": 100,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "animal",
+    "cold-blooded",
+    "empty-mind",
+    "legacy-import",
+    "orc-cave"
+  ]
+}

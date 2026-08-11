@@ -2825,7 +2825,7 @@ fn blink_other_moves_the_target_within_ten_tiles_using_one_destination_draw() {
 }
 
 #[test]
-fn jump_light_damages_from_the_caster_then_blinks_with_one_destination_draw() {
+fn level_based_jump_damage_uses_no_damage_rng_then_blinks() {
     let mut game = Game::new(0);
     clear_monsters(&mut game);
     for cell in game.terrain.iter_mut() {
@@ -2857,17 +2857,18 @@ fn jump_light_damages_from_the_caster_then_blinks_with_one_destination_draw() {
 
     let ability = game
         .content
-        .ability("rfb-legacy.ability.jump-light-5d5")
-        .expect("P39A ability should compile")
+        .ability("rfb-legacy.ability.jump-fire-l31")
+        .expect("Orc Cave jump ability should compile")
         .clone();
     assert!(matches!(
         ability.effect,
         AbilityEffectDefinition::JumpDamage {
-            damage_dice: 5,
-            damage_sides: 5,
+            damage_dice: 0,
+            damage_sides: 0,
+            damage_bonus: 31,
             damage_multiplier_numerator: 5,
             damage_multiplier_denominator: 4,
-            damage_type: rfb_content::ActorDamageType::Light,
+            damage_type: rfb_content::ActorDamageType::Fire,
             radius: 5,
             blink_radius: 10,
         }
@@ -2880,7 +2881,7 @@ fn jump_light_damages_from_the_caster_then_blinks_with_one_destination_draw() {
         destinations,
     } = &plan.target
     else {
-        panic!("JMP_LIGHT should plan a caster-centered jump burst");
+        panic!("JMP_FIRE should plan a caster-centered jump burst");
     };
     assert!(affected_positions.contains(&caster));
     assert!(affected_positions.iter().all(|position| {
@@ -2905,18 +2906,17 @@ fn jump_light_damages_from_the_caster_then_blinks_with_one_destination_draw() {
         &mut removed_entities,
     );
 
-    assert_eq!(game.rng_draw_counter(), draws + 6);
+    assert_eq!(game.rng_draw_counter(), draws + 1);
     assert_eq!(game.entities[0].position, landing);
     let AbilityEffectResolutionDto::Damage {
         resolution: damage, ..
     } = &resolution.targets[0].effects[0]
     else {
-        panic!("JMP_LIGHT should damage the player");
+        panic!("JMP_FIRE should damage the player");
     };
-    let possible_raw = (5..=25).map(|roll| roll * 5 / 4).collect::<BTreeSet<_>>();
-    assert!(possible_raw.contains(&damage.raw_damage));
+    assert_eq!(damage.raw_damage, 38);
     assert_eq!(damage.final_damage, rfb_area_damage(damage.raw_damage, 1));
-    assert_eq!(damage.damage_type, DamageTypeDto::Light);
+    assert_eq!(damage.damage_type, DamageTypeDto::Fire);
     assert!(matches!(
         events.as_slice(),
         [
@@ -3052,35 +3052,20 @@ fn raise_dead_is_deterministic_and_enforces_faction_group_and_unique_rules() {
 
     let (shallow, shallow_resolution) = cast(0, 25);
     assert_eq!(shallow_resolution.actor_kind_id, "undead");
+    let shallow_candidates = shallow.summon_category_candidate_kind_ids(
+        "undead",
+        Some("high-undead"),
+        25 * 3 / 2,
+        false,
+    );
     assert!(
         shallow_resolution
             .summoned_kind_ids
             .iter()
-            .all(|kind_id| matches!(
-                kind_id.as_str(),
-                "demo.actor.carrion"
-                    | "demo.actor.crypt-creep"
-                    | "demo.actor.disembodied-hand-that-strangled-people"
-                    | "demo.actor.flying-skull"
-                    | "demo.actor.green-glutton-ghost"
-                    | "demo.actor.jibaku-ghost"
-                    | "demo.actor.lost-soul"
-                    | "demo.actor.moaning-spirit"
-                    | "demo.actor.plaguebearer-of-nurgle"
-                    | "demo.actor.poltergeist"
-                    | "demo.actor.risen-thrall"
-                    | "demo.actor.rotting-corpse"
-                    | "demo.actor.servant-of-glaaki"
-                    | "demo.actor.skeleton-human"
-                    | "demo.actor.skeleton-kobold"
-                    | "demo.actor.skeleton-orc"
-                    | "demo.actor.the-ghost-q"
-                    | "demo.actor.undead-devilfish"
-                    | "demo.actor.undead-mass"
-                    | "demo.actor.zombified-human"
-                    | "demo.actor.zombified-kobold"
-                    | "demo.actor.zombified-orc"
-            ))
+            .all(|kind_id| shallow_candidates.contains(kind_id)),
+        "summoned {:?}, candidates {:?}",
+        shallow_resolution.summoned_kind_ids,
+        shallow_candidates
     );
     assert_eq!(shallow.state_hash(), cast(0, 25).0.state_hash());
 

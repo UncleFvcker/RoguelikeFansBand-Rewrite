@@ -1,0 +1,76 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 486,
+    "maxDepth": 999,
+    "rarity": 3
+  },
+  "attack": 8,
+  "damageDice": 1,
+  "damageSides": 4,
+  "damageType": "confusion",
+  "defense": 0,
+  "descriptionKey": "actor-demo-memory-moss-description",
+  "experienceValue": 150,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": ",",
+  "hitPointDice": {
+    "dice": 1,
+    "sides": 2
+  },
+  "id": "demo.actor.memory-moss",
+  "level": 32,
+  "maxHp": 1,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "damageDice": 1,
+            "damageSides": 4,
+            "type": "confusion"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "damageDice": 1,
+            "damageSides": 4,
+            "type": "confusion"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.amnesia",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 16
+  },
+  "movement": {
+    "neverMoves": true
+  },
+  "nameKey": "actor-demo-memory-moss-name",
+  "role": "monster",
+  "speed": 110,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "empty-mind",
+    "legacy-import",
+    "orc-cave"
+  ]
+}

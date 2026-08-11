@@ -1,20 +1,126 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
-  "formatVersion": 1,
-  "id": "demo.actor.grave-wight",
-  "role": "monster",
-  "nameKey": "actor-demo-grave-wight-name",
-  "descriptionKey": "actor-demo-grave-wight-description",
-  "glyph": "W",
-  "level": 32,
-  "experienceValue": 900,
-  "maxHp": 84,
-  "speed": 110,
+  "allocation": {
+    "legacyIndex": 470,
+    "maxDepth": 70,
+    "randomMovementPercent": 25,
+    "rarity": 1
+  },
   "attack": 7,
-  "defense": 6,
-  "damageDice": 2,
-  "damageSides": 6,
-  "damageType": "nether",
-  "resistances": { "cold": "resistant", "nether": "immune", "poison": "immune" },
-  "tags": ["evil", "high-undead", "nonliving", "undead"]
+  "damageDice": 1,
+  "damageSides": 7,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 1,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.warrens",
+    "kind": "items"
+  },
+  "defense": 5,
+  "descriptionKey": "actor-demo-grave-wight-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 325,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "W",
+  "hitPointDice": {
+    "dice": 12,
+    "sides": 10
+  },
+  "id": "demo.actor.grave-wight",
+  "level": 30,
+  "maxHp": 66,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 7,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 7,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "amountDice": 20,
+            "amountSides": 6,
+            "type": "drain-experience"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.scare",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.curse-10d15",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.darkness",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 12
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "nameKey": "actor-demo-grave-wight-name",
+  "resistances": {
+    "cold": "resistant",
+    "dark": "resistant",
+    "light": "vulnerable",
+    "nether": "resistant",
+    "poison": "immune"
+  },
+  "role": "monster",
+  "speed": 110,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "cold-blooded",
+    "evil",
+    "high-undead",
+    "legacy-import",
+    "orc-cave",
+    "undead"
+  ]
 }

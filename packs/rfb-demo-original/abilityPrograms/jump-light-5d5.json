@@ -6,6 +6,7 @@
   "steps": [
     {
       "blinkRadius": 10,
+      "damageBonus": 0,
       "damageDice": 5,
       "damageMultiplierDenominator": 4,
       "damageMultiplierNumerator": 5,

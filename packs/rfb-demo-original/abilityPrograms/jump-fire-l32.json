@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability-program.jump-fire-l32",
+  "input": "self",
+  "steps": [
+    {
+      "blinkRadius": 10,
+      "damageBonus": 32,
+      "damageDice": 0,
+      "damageMultiplierDenominator": 4,
+      "damageMultiplierNumerator": 5,
+      "damageSides": 0,
+      "damageType": "fire",
+      "radius": 5,
+      "type": "jump-damage"
+    }
+  ]
+}

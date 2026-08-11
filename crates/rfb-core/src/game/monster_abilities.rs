@@ -373,6 +373,7 @@ impl Game {
         let AbilityEffectDefinition::JumpDamage {
             damage_dice,
             damage_sides,
+            damage_bonus,
             damage_multiplier_numerator,
             damage_multiplier_denominator,
             damage_type,
@@ -384,6 +385,7 @@ impl Game {
         let origin = self.entities[source_index].position;
         let raw_damage = self
             .roll_damage(*damage_dice, *damage_sides)
+            .saturating_add(i32::from(*damage_bonus))
             .saturating_mul(i32::from(*damage_multiplier_numerator))
             .saturating_div(i32::from(*damage_multiplier_denominator))
             .max(0);

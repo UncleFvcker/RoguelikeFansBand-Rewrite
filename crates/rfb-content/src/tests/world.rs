@@ -196,10 +196,12 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.brown-yeek", 141, 1, 40),
             ("demo.actor.brumby", 1334, 2, 35),
             ("demo.actor.bullroarer-the-hobbit", 914, 3, 999),
+            ("demo.actor.bunyip", 1322, 2, 60),
             ("demo.actor.bush-ranger", 1326, 2, 50),
             ("demo.actor.buzzy-beetle", 951, 4, 60),
             ("demo.actor.carnivorous-flying-monkey", 145, 2, 40),
             ("demo.actor.carrion", 361, 1, 70),
+            ("demo.actor.cassowary", 1327, 2, 50),
             ("demo.actor.caustic-icky-thing", 132, 2, 40),
             ("demo.actor.cave-lizard", 82, 1, 30),
             ("demo.actor.cave-orc", 126, 1, 40),
@@ -246,6 +248,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.disenchanter-mold", 192, 2, 40),
             ("demo.actor.door-mimic", 311, 6, 80),
             ("demo.actor.drider", 234, 2, 50),
+            ("demo.actor.drop-bear", 1315, 255, 40),
             ("demo.actor.druid", 241, 2, 50),
             ("demo.actor.duck", 1241, 1, 25),
             ("demo.actor.duck-quacked-platypus", 1325, 1, 36),
@@ -275,6 +278,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.gazer", 218, 1, 50),
             ("demo.actor.gelatinous-cube", 286, 4, 50),
             ("demo.actor.ghast", 327, 1, 70),
+            ("demo.actor.ghost-skier", 1339, 2, 70),
             ("demo.actor.giant-black-ant", 49, 1, 20),
             ("demo.actor.giant-black-dragon-fly", 322, 2, 999),
             ("demo.actor.giant-bronze-dragon-fly", 320, 1, 999),
@@ -283,12 +287,14 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.giant-cockroach", 1007, 2, 40),
             ("demo.actor.giant-flea", 259, 1, 50),
             ("demo.actor.giant-fruit-fly", 197, 6, 40),
+            ("demo.actor.giant-funnel-web-spider", 1313, 2, 60),
             ("demo.actor.giant-gold-dragon-fly", 325, 2, 999),
             ("demo.actor.giant-green-dragon-fly", 287, 2, 50),
             ("demo.actor.giant-green-frog", 56, 1, 20),
             ("demo.actor.giant-grey-rat", 156, 1, 40),
             ("demo.actor.giant-leech", 95, 1, 40),
             ("demo.actor.giant-moth", 1273, 2, 12),
+            ("demo.actor.giant-mutant-ant", 1324, 2, 70),
             ("demo.actor.giant-octopus", 266, 2, 50),
             ("demo.actor.giant-pink-ant", 168, 2, 80),
             ("demo.actor.giant-pink-frog", 121, 1, 40),
@@ -334,6 +340,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.half-orc", 264, 3, 50),
             ("demo.actor.hammerhead", 292, 3, 50),
             ("demo.actor.hellcat", 222, 1, 50),
+            ("demo.actor.herringfolt-the-great-wild-boar", 1278, 1, 999),
             ("demo.actor.hibagon", 983, 10, 30),
             ("demo.actor.hill-giant", 255, 3, 60),
             ("demo.actor.hill-orc", 149, 1, 40),
@@ -356,6 +363,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.jibaku-ghost", 1012, 2, 40),
             ("demo.actor.jumping-fireball", 299, 1, 50),
             ("demo.actor.kamikaze-yeek", 179, 1, 40),
+            ("demo.actor.kangaroo", 1317, 2, 50),
             ("demo.actor.killer-bee", 174, 2, 40),
             ("demo.actor.killer-brown-beetle", 236, 2, 50),
             ("demo.actor.king-cobra", 171, 2, 40),
@@ -450,6 +458,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.piranha", 70, 1, 60),
             ("demo.actor.plague-rat", 1298, 2, 40),
             ("demo.actor.plaguebearer-of-nurgle", 268, 2, 50),
+            ("demo.actor.polar-bear", 1340, 3, 60),
             ("demo.actor.poltergeist", 65, 1, 30),
             ("demo.actor.portuguese-man-o-war", 160, 2, 40),
             ("demo.actor.potion-mimic", 310, 3, 80),
@@ -518,6 +527,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.swamp-thing", 302, 2, 70),
             ("demo.actor.swordfish", 88, 2, 40),
             ("demo.actor.swordsman", 216, 1, 50),
+            ("demo.actor.taipan", 1311, 3, 50),
             ("demo.actor.tax-collector", 199, 3, 40),
             ("demo.actor.tengu", 194, 1, 40),
             ("demo.actor.the-borshin", 177, 2, 999),
@@ -582,11 +592,43 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         .iter()
         .filter(|actor| actor.tags.iter().any(|tag| tag == "orc-cave"))
         .collect::<Vec<_>>();
-    assert_eq!(orc_cave.len(), 134);
-    let mut level_counts = [0_usize; 8];
+    assert_eq!(orc_cave.len(), 176);
+
+    for id in [
+        "demo.actor.bunyip",
+        "demo.actor.cassowary",
+        "demo.actor.drop-bear",
+        "demo.actor.ghost-skier",
+        "demo.actor.giant-funnel-web-spider",
+        "demo.actor.giant-mutant-ant",
+        "demo.actor.herringfolt-the-great-wild-boar",
+        "demo.actor.kangaroo",
+        "demo.actor.polar-bear",
+        "demo.actor.taipan",
+    ] {
+        let actor = artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == id)
+            .unwrap_or_else(|| panic!("{id} should remain globally imported"));
+        assert!(!actor.tags.iter().any(|tag| tag == "orc-cave"));
+        let allocation = actor
+            .allocation
+            .as_ref()
+            .expect("retained actor should preserve its source allocation");
+        assert!(
+            allocation.wild_only
+                || allocation
+                    .legacy_dungeon_indices
+                    .iter()
+                    .any(|index| *index != 3)
+        );
+    }
+    let mut level_counts = [0_usize; 12];
     let mut source_indices = BTreeSet::new();
     for actor in orc_cave {
-        assert!((21..=28).contains(&actor.level));
+        assert!((21..=32).contains(&actor.level));
         let allocation = actor
             .allocation
             .as_ref()
@@ -594,7 +636,10 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         assert!(source_indices.insert(allocation.legacy_index));
         level_counts[(actor.level - 21) as usize] += 1;
     }
-    assert_eq!(level_counts, [15, 15, 12, 16, 23, 16, 18, 19]);
+    assert_eq!(
+        level_counts,
+        [15, 13, 11, 16, 23, 14, 17, 17, 17, 16, 7, 10]
+    );
 
     let mouse = artifact
         .content
@@ -2824,6 +2869,7 @@ fn p39_monsters_bind_jump_damage_and_ordered_contact_auras() {
         AbilityEffectDefinition::JumpDamage {
             damage_dice: 5,
             damage_sides: 5,
+            damage_bonus: 0,
             damage_multiplier_numerator: 5,
             damage_multiplier_denominator: 4,
             damage_type: ActorDamageType::Light,
@@ -2868,6 +2914,111 @@ fn p39_monsters_bind_jump_damage_and_ordered_contact_auras() {
             ..
         } if actor_kind_id == "demo.actor.the-icky-queen"
     ));
+}
+
+#[test]
+fn orc_cave_small_casting_mechanics_reuse_jump_and_category_summons() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actor = |id: &str| {
+        artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == format!("demo.actor.{id}"))
+            .unwrap_or_else(|| panic!("{id} should be imported"))
+    };
+    let ability = |id: &str| {
+        artifact
+            .content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == format!("rfb-legacy.ability.{id}"))
+            .unwrap_or_else(|| panic!("{id} should be imported"))
+    };
+
+    for (id, bonus, damage_type) in [
+        ("jump-fire-l31", 31, ActorDamageType::Fire),
+        ("jump-fire-l32", 32, ActorDamageType::Fire),
+        ("jump-poison-l32", 32, ActorDamageType::Poison),
+        ("jump-confusion-l32", 32, ActorDamageType::Confusion),
+    ] {
+        assert!(matches!(
+            ability(id).effect,
+            AbilityEffectDefinition::JumpDamage {
+                damage_dice: 0,
+                damage_sides: 0,
+                damage_bonus,
+                damage_multiplier_numerator: 5,
+                damage_multiplier_denominator: 4,
+                damage_type: actual_type,
+                radius: 5,
+                blink_radius: 10,
+            } if damage_bonus == bonus && actual_type == damage_type
+        ));
+    }
+    assert!(matches!(
+        ability("jump-dark-2d4").effect,
+        AbilityEffectDefinition::JumpDamage {
+            damage_dice: 2,
+            damage_sides: 4,
+            damage_bonus: 0,
+            damage_type: ActorDamageType::Dark,
+            ..
+        }
+    ));
+
+    for (actor_id, ability_id, maximum_level) in [
+        ("it", "summon-hydra-l24-1d3-1", 24),
+        ("gachapin", "summon-hydra-l29-1d3-1", 29),
+    ] {
+        assert!(
+            actor(actor_id)
+                .monster_casting
+                .as_ref()
+                .unwrap()
+                .abilities
+                .iter()
+                .any(|candidate| candidate.ability_id.ends_with(ability_id))
+        );
+        assert!(matches!(
+            ability(ability_id).effect,
+            AbilityEffectDefinition::SummonCategory {
+                ref category,
+                maximum_level: actual_level,
+                count_dice: 1,
+                count_sides: 3,
+                count_bonus: 1,
+                ..
+            } if category == "hydra" && actual_level == maximum_level
+        ));
+    }
+    for id in ["2-headed-hydra", "4-headed-hydra", "5-headed-hydra"] {
+        assert!(actor(id).tags.iter().any(|tag| tag == "hydra"));
+    }
+    assert!(
+        actor("gelatinous-cube")
+            .tags
+            .iter()
+            .any(|tag| tag == "gelatinous-cube")
+    );
+    assert!(matches!(
+        ability("summon-gelatinous-cube-l16-1d3").effect,
+        AbilityEffectDefinition::SummonCategory {
+            ref category,
+            maximum_level: 16,
+            count_dice: 1,
+            count_sides: 3,
+            count_bonus: 0,
+            ..
+        } if category == "gelatinous-cube"
+    ));
+    assert_eq!(
+        actor("ninja")
+            .death_drop
+            .as_ref()
+            .and_then(|drop| drop.theme_table_id.as_deref()),
+        Some("demo.loot-table.ninja")
+    );
 }
 
 #[test]

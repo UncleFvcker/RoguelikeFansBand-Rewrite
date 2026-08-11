@@ -4,8 +4,8 @@ use std::{env, path::PathBuf, process::ExitCode};
 
 use rfb_legacy_import::{
     content::{
-        audit_demo_item_names, audit_demo_items, audit_demo_mutations, import_content,
-        sync_demo_items, sync_demo_monsters, sync_demo_wilderness,
+        audit_demo_item_names, audit_demo_items, audit_demo_monsters, audit_demo_mutations,
+        import_content, sync_demo_items, sync_demo_monsters, sync_demo_wilderness,
     },
     inspect_file, record_catalog, verify_catalog,
 };
@@ -23,10 +23,10 @@ fn main() -> ExitCode {
 fn run() -> Result<(), Box<dyn std::error::Error>> {
     let mut args = env::args_os().skip(1);
     let mode = args.next().ok_or(
-        "usage: rfb-legacy-import <inspect-prefix|record-catalog|verify-catalog|import-content> <path> | <sync-demo-items|sync-demo-monsters|sync-demo-wilderness> <selection> <output> | audit-demo-item-names <selection> <en-content.ftl> <zh-content.ftl> | audit-demo-items <selection> <adaptations> <plan> <items> | audit-demo-mutations <plan>",
+        "usage: rfb-legacy-import <inspect-prefix|record-catalog|verify-catalog|import-content> <path> | <sync-demo-items|sync-demo-monsters|sync-demo-wilderness> <selection> <output> | audit-demo-monsters <selection> | audit-demo-mutations <plan> | audit-demo-item-names <selection> <en-content.ftl> <zh-content.ftl> | audit-demo-items <selection> <adaptations> <plan> <items>",
     )?;
     let path = PathBuf::from(args.next().ok_or(
-        "usage: rfb-legacy-import <inspect-prefix|record-catalog|verify-catalog|import-content> <path> | <sync-demo-items|sync-demo-monsters|sync-demo-wilderness> <selection> <output> | audit-demo-item-names <selection> <en-content.ftl> <zh-content.ftl> | audit-demo-items <selection> <adaptations> <plan> <items> | audit-demo-mutations <plan>",
+        "usage: rfb-legacy-import <inspect-prefix|record-catalog|verify-catalog|import-content> <path> | <sync-demo-items|sync-demo-monsters|sync-demo-wilderness> <selection> <output> | audit-demo-monsters <selection> | audit-demo-mutations <plan> | audit-demo-item-names <selection> <en-content.ftl> <zh-content.ftl> | audit-demo-items <selection> <adaptations> <plan> <items>",
     )?);
     match mode.to_string_lossy().as_ref() {
         "inspect-prefix" => {
@@ -108,6 +108,18 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
                 serde_json::to_string_pretty(&audit_demo_mutations(&source, &path)?)?
             );
         }
+        "audit-demo-monsters" => {
+            if args.next().is_some() {
+                return Err("audit-demo-monsters accepts exactly one selection path".into());
+            }
+            let source = PathBuf::from(env::var_os("RFB_LEGACY_SOURCE").ok_or(
+                "audit-demo-monsters requires RFB_LEGACY_SOURCE to point at the legacy repository",
+            )?);
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&audit_demo_monsters(&source, &path)?)?
+            );
+        }
         "audit-demo-item-names" => {
             let en_content = PathBuf::from(args.next().ok_or(
                 "audit-demo-item-names requires selection, en-US, and zh-CN content paths",
@@ -154,7 +166,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
         }
         _ => {
             return Err(
-                "mode must be inspect-prefix, record-catalog, verify-catalog, import-content, audit-demo-item-names, audit-demo-items, audit-demo-mutations, sync-demo-items, sync-demo-monsters, or sync-demo-wilderness".into(),
+                "mode must be inspect-prefix, record-catalog, verify-catalog, import-content, audit-demo-item-names, audit-demo-items, audit-demo-monsters, audit-demo-mutations, sync-demo-items, sync-demo-monsters, or sync-demo-wilderness".into(),
             );
         }
     }

@@ -1,0 +1,152 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "escort": true,
+    "legacyIndex": 1090,
+    "maxDepth": 999,
+    "rarity": 5
+  },
+  "attack": 7,
+  "damageDice": 3,
+  "damageSides": 7,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 1,
+        "sides": 2
+      },
+      {
+        "dice": 3,
+        "sides": 2
+      },
+      {
+        "dice": 4,
+        "sides": 2
+      }
+    ],
+    "kind": "gold"
+  },
+  "defense": 8,
+  "descriptionKey": "actor-demo-the-hoard-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 1452,
+  "formatVersion": 1,
+  "glyph": "$",
+  "hitPointDice": {
+    "dice": 40,
+    "forceMaximum": true,
+    "sides": 25
+  },
+  "id": "demo.actor.the-hoard",
+  "level": 30,
+  "maxHp": 1000,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 3,
+            "damageSides": 7,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "damageDice": 3,
+            "damageSides": 7,
+            "type": "poison"
+          }
+        ],
+        "methodId": "rfb.blow.crush",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 3,
+            "damageSides": 7,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "damageDice": 3,
+            "damageSides": 7,
+            "type": "poison"
+          }
+        ],
+        "methodId": "rfb.blow.crush",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 3,
+            "damageSides": 7,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "type": "eat-item"
+          }
+        ],
+        "methodId": "rfb.blow.crush",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 3,
+            "damageSides": 7,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "type": "eat-gold"
+          }
+        ],
+        "methodId": "rfb.blow.crush",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.kin-the-hoard",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 33,
+    "smart": true
+  },
+  "movesWeakerBodies": true,
+  "nameKey": "actor-demo-the-hoard-name",
+  "reflectsBolts": true,
+  "resistances": {
+    "acid": "resistant",
+    "cold": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 115,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "evil",
+    "legacy-import",
+    "orc-cave",
+    "unique"
+  ]
+}

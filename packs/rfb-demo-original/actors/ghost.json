@@ -1,0 +1,142 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 477,
+    "maxDepth": 80,
+    "randomMovementPercent": 25,
+    "rarity": 1
+  },
+  "attack": 7,
+  "damageDice": 1,
+  "damageSides": 1,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [
+      {
+        "percent": 60
+      }
+    ],
+    "countDice": [
+      {
+        "dice": 1,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.warrens",
+    "kind": "items-and-gold"
+  },
+  "defense": 3,
+  "descriptionKey": "actor-demo-ghost-description",
+  "experienceValue": 100,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "G",
+  "hitPointDice": {
+    "dice": 13,
+    "sides": 8
+  },
+  "id": "demo.actor.ghost",
+  "level": 31,
+  "maxHp": 58,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "type": "terrify"
+          }
+        ],
+        "methodId": "rfb.blow.wail",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "amountDice": 20,
+            "amountSides": 6,
+            "type": "drain-experience"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 10,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "attributes": [
+              "wisdom"
+            ],
+            "chancePercent": 50,
+            "type": "drain-attributes"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "amountDice": 2,
+            "amountSides": 8,
+            "type": "drain-resource"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.blind",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.paralyze",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.drain-mana-16",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 6
+  },
+  "movement": {
+    "modes": [
+      "fly",
+      "pass-wall"
+    ]
+  },
+  "nameKey": "actor-demo-ghost-name",
+  "resistances": {
+    "cold": "resistant",
+    "nether": "resistant",
+    "poison": "immune"
+  },
+  "role": "monster",
+  "speed": 120,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "cold-blooded",
+    "evil",
+    "invisible",
+    "legacy-import",
+    "orc-cave",
+    "undead"
+  ],
+  "terrainInteraction": {
+    "picksUpItems": true
+  }
+}

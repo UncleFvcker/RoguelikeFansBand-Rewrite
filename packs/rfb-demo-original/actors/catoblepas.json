@@ -1,0 +1,126 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "habitats": [
+      "swamp"
+    ],
+    "legacyIndex": 447,
+    "maxDepth": 70,
+    "rarity": 2
+  },
+  "attack": 7,
+  "damageDice": 2,
+  "damageSides": 4,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 2,
+        "sides": 2
+      }
+    ],
+    "kind": "gold"
+  },
+  "defense": 5,
+  "descriptionKey": "actor-demo-catoblepas-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 400,
+  "formatVersion": 1,
+  "glyph": "q",
+  "hitPointDice": {
+    "dice": 30,
+    "sides": 10
+  },
+  "id": "demo.actor.catoblepas",
+  "level": 29,
+  "maxHp": 165,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 2,
+            "damageSides": 4,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "type": "terrify"
+          }
+        ],
+        "methodId": "rfb.blow.gaze",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 2,
+            "damageSides": 4,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "type": "blind"
+          }
+        ],
+        "methodId": "rfb.blow.gaze",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 2,
+            "damageSides": 6,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.butt",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 2,
+            "damageSides": 12,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "modes": [
+      "swim"
+    ]
+  },
+  "nameKey": "actor-demo-catoblepas-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "poison": "resistant"
+  },
+  "rideable": true,
+  "role": "monster",
+  "speed": 110,
+  "tags": [
+    "animal",
+    "evil",
+    "legacy-import",
+    "orc-cave"
+  ]
+}

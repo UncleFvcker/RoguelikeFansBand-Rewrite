@@ -6,14 +6,16 @@
 
 contract fixture 是规则兼容边界，不能把测试失败简单处理为“刷新预期结果”。政策用于保证每次规则变化只修改真正受影响的场景，同时保留可审查的失败原因。
 
-当前逻辑基线是 `contract-v252`，机器可读政策固定在：
+当前逻辑基线是 `contract-v254`，机器可读政策固定在：
 
 ```text
 tests/fixtures/active/baseline-policy.json
 ```
 
-`contract-v252` 接入原版 `COLD_BLOOD` 红外视觉语义，并为 Orc Cave 导入 21–28 级
-的 134 条直接候选。冷血怪物不再被红外视觉揭示，但原版火焰光环例外仍会发热；
+`contract-v254` 扩展既有怪物 `jump-damage` 的固定伤害与火焰、毒素、混乱、黑暗
+类型，接入 Hydra 分类召唤和 Zoopi 的凝胶方块窄召唤，并新增 7 条 Orc Cave 记录。
+上一批 10 条地点范围不属于 Orc Cave 的记录继续保留为全局内容，仅移除
+`orc-cave` 归属；严格选择现有 176 条 Orc Cave 记录。冷血红外规则保持不变；
 协议保持 1.169，State Hash Schema 保持 v85，save 容器保持 v1。
 
 ## 分类验证

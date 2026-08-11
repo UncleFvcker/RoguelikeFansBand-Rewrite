@@ -1,0 +1,129 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "friends": {
+      "chancePercent": 0,
+      "dice": 3,
+      "sides": 3
+    },
+    "legacyIndex": 463,
+    "maxDepth": 80,
+    "rarity": 4
+  },
+  "attack": 7,
+  "damageDice": 1,
+  "damageSides": 6,
+  "damageType": "physical",
+  "defense": 6,
+  "descriptionKey": "actor-demo-aklash-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 300,
+  "formatVersion": 1,
+  "glyph": "T",
+  "hitPointDice": {
+    "dice": 30,
+    "sides": 9
+  },
+  "id": "demo.actor.aklash",
+  "level": 29,
+  "maxHp": 150,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 6,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 6,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 10,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "damageDice": 1,
+            "damageSides": 12,
+            "type": "poison"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 2,
+            "damageSides": 9,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "chancePercent": 10,
+            "durationDice": 1,
+            "durationSides": 4,
+            "type": "stun"
+          }
+        ],
+        "methodId": "rfb.blow.crush",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.breath-poison-17-600-r2",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 10
+  },
+  "nameKey": "actor-demo-aklash-name",
+  "regenerates": true,
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "acid": "resistant",
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 110,
+  "tags": [
+    "evil",
+    "legacy-import",
+    "orc-cave",
+    "troll"
+  ]
+}

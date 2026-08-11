@@ -1,0 +1,127 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "habitats": [
+      "wood"
+    ],
+    "legacyIndex": 472,
+    "maxDepth": 60,
+    "rarity": 2
+  },
+  "attack": 7,
+  "damageDice": 4,
+  "damageSides": 4,
+  "damageType": "physical",
+  "defense": 1,
+  "descriptionKey": "actor-demo-manticore-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 300,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "H",
+  "hitPointDice": {
+    "dice": 25,
+    "forceMaximum": true,
+    "sides": 12
+  },
+  "id": "demo.actor.manticore",
+  "level": 30,
+  "maxHp": 300,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 4,
+            "damageSides": 4,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 4,
+            "damageSides": 4,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 2,
+            "damageSides": 6,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "durationDice": 2,
+            "durationSides": 6,
+            "type": "bleeding"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 2,
+            "damageSides": 6,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "durationDice": 2,
+            "durationSides": 6,
+            "type": "bleeding"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.bolt-physical-7d6",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 10
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "nameKey": "actor-demo-manticore-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "rideable": true,
+  "role": "monster",
+  "speed": 120,
+  "tags": [
+    "evil",
+    "legacy-import",
+    "orc-cave"
+  ]
+}

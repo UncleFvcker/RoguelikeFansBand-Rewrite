@@ -1,0 +1,101 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 484,
+    "maxDepth": 90,
+    "rarity": 2
+  },
+  "attack": 8,
+  "contactAuras": [
+    {
+      "damageDice": 2,
+      "damageSides": 2,
+      "damageType": "fire"
+    }
+  ],
+  "damageDice": 5,
+  "damageSides": 4,
+  "damageType": "fire",
+  "defense": 7,
+  "descriptionKey": "actor-demo-doombat-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 250,
+  "formatVersion": 1,
+  "glyph": "b",
+  "hitPointDice": {
+    "dice": 24,
+    "sides": 24
+  },
+  "id": "demo.actor.doombat",
+  "level": 32,
+  "maxHp": 300,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 5,
+            "damageSides": 4,
+            "damageType": "fire",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 5,
+            "damageSides": 4,
+            "damageType": "fire",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 5,
+            "damageSides": 4,
+            "damageType": "fire",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "nameKey": "actor-demo-doombat-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "fire": "resistant"
+  },
+  "role": "monster",
+  "speed": 120,
+  "tags": [
+    "animal",
+    "evil",
+    "legacy-import",
+    "orc-cave",
+    "weird-mind"
+  ]
+}

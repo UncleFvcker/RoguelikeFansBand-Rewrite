@@ -1,0 +1,119 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "friends": {
+      "chancePercent": 0,
+      "dice": 2,
+      "sides": 2
+    },
+    "legacyIndex": 1168,
+    "maxDepth": 90,
+    "randomMovementPercent": 50,
+    "rarity": 3
+  },
+  "attack": 8,
+  "damageDice": 6,
+  "damageSides": 2,
+  "damageType": "physical",
+  "defense": 11,
+  "descriptionKey": "actor-demo-cacodemon-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 1000,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "U",
+  "hitPointDice": {
+    "dice": 60,
+    "forceMaximum": true,
+    "sides": 12
+  },
+  "id": "demo.actor.cacodemon",
+  "level": 32,
+  "maxHp": 720,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 6,
+            "damageSides": 2,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 6,
+            "damageSides": 2,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 12,
+            "damageSides": 1,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "armorMitigated": false,
+            "damageDice": 1,
+            "damageSides": 12,
+            "damageType": "plasma",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.bolt-plasma-8d7-42",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 25
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "nameKey": "actor-demo-cacodemon-name",
+  "resistances": {
+    "fire": "resistant",
+    "plasma": "resistant",
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 106,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "demon",
+    "evil",
+    "legacy-import",
+    "nonliving",
+    "orc-cave"
+  ]
+}

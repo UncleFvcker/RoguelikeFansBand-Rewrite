@@ -1,0 +1,112 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "habitats": [
+      "grass"
+    ],
+    "legacyIndex": 1221,
+    "maxDepth": 90,
+    "rarity": 2
+  },
+  "attack": 7,
+  "damageDice": 4,
+  "damageSides": 6,
+  "damageType": "physical",
+  "defense": 5,
+  "descriptionKey": "actor-demo-giant-land-sloth-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 500,
+  "formatVersion": 1,
+  "glyph": "Y",
+  "hitPointDice": {
+    "dice": 110,
+    "sides": 10
+  },
+  "id": "demo.actor.giant-land-sloth",
+  "level": 30,
+  "maxHp": 605,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 4,
+            "damageSides": 6,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "damageDice": 4,
+            "damageSides": 6,
+            "type": "poison"
+          },
+          {
+            "chancePercent": 50,
+            "durationDice": 2,
+            "durationSides": 6,
+            "type": "bleeding"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 4,
+            "damageSides": 6,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "damageDice": 4,
+            "damageSides": 6,
+            "type": "poison"
+          },
+          {
+            "chancePercent": 50,
+            "durationDice": 2,
+            "durationSides": 6,
+            "type": "bleeding"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.slow",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 20
+  },
+  "nameKey": "actor-demo-giant-land-sloth-name",
+  "rangedMelee": true,
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 104,
+  "tags": [
+    "animal",
+    "legacy-import",
+    "orc-cave"
+  ],
+  "terrainInteraction": {
+    "destroysWalls": true
+  }
+}

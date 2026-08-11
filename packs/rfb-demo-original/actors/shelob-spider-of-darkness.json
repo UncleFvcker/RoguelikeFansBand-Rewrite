@@ -1,0 +1,176 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "escort": true,
+    "legacyIndex": 481,
+    "maxDepth": 999,
+    "rarity": 3
+  },
+  "attack": 8,
+  "damageDice": 2,
+  "damageSides": 10,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 1,
+        "sides": 2
+      },
+      {
+        "dice": 2,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.warrens",
+    "kind": "items",
+    "minimumQuality": "fine"
+  },
+  "defense": 8,
+  "descriptionKey": "actor-demo-shelob-spider-of-darkness-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 1500,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "S",
+  "hitPointDice": {
+    "dice": 12,
+    "forceMaximum": true,
+    "sides": 100
+  },
+  "id": "demo.actor.shelob-spider-of-darkness",
+  "level": 32,
+  "maxHp": 1200,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 2,
+            "damageSides": 10,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "damageDice": 2,
+            "damageSides": 6,
+            "type": "poison"
+          }
+        ],
+        "methodId": "rfb.blow.sting",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 4,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "attributes": [
+              "strength"
+            ],
+            "type": "drain-attributes"
+          }
+        ],
+        "methodId": "rfb.blow.sting",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "damageDice": 2,
+            "damageSides": 6,
+            "type": "poison"
+          }
+        ],
+        "methodId": "rfb.blow.sting",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.breath-dark-17-400-r2",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.curse-10d15",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.curse-15d15",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.heal-96",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.blind",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.slow",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.confuse",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.scare",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.traps",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-spider-l32-1d3-1",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 30,
+    "smart": true
+  },
+  "nameKey": "actor-demo-shelob-spider-of-darkness-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "dark": "resistant",
+    "light": "vulnerable",
+    "poison": "immune"
+  },
+  "role": "monster",
+  "speed": 110,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "animal",
+    "evil",
+    "legacy-import",
+    "orc-cave",
+    "spider",
+    "unique"
+  ]
+}

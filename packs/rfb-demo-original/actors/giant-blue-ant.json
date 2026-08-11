@@ -1,0 +1,67 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "habitats": [
+      "all"
+    ],
+    "legacyIndex": 469,
+    "maxDepth": 80,
+    "randomMovementPercent": 25,
+    "rarity": 2
+  },
+  "attack": 7,
+  "damageDice": 5,
+  "damageSides": 5,
+  "damageType": "electricity",
+  "defense": 5,
+  "descriptionKey": "actor-demo-giant-blue-ant-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 80,
+  "formatVersion": 1,
+  "glyph": "a",
+  "hitPointDice": {
+    "dice": 8,
+    "sides": 8
+  },
+  "id": "demo.actor.giant-blue-ant",
+  "level": 30,
+  "maxHp": 36,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 5,
+            "damageSides": 5,
+            "damageType": "electricity",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      }
+    ]
+  },
+  "nameKey": "actor-demo-giant-blue-ant-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "electricity": "resistant"
+  },
+  "role": "monster",
+  "speed": 110,
+  "tags": [
+    "animal",
+    "ant",
+    "legacy-import",
+    "orc-cave",
+    "weird-mind"
+  ]
+}

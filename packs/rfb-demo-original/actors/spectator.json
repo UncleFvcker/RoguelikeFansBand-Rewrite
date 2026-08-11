@@ -1,0 +1,121 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 488,
+    "maxDepth": 70,
+    "rarity": 3
+  },
+  "attack": 8,
+  "damageDice": 1,
+  "damageSides": 4,
+  "damageType": "physical",
+  "defense": 0,
+  "descriptionKey": "actor-demo-spectator-description",
+  "experienceValue": 150,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "e",
+  "hitPointDice": {
+    "dice": 20,
+    "sides": 10
+  },
+  "id": "demo.actor.spectator",
+  "level": 32,
+  "maxHp": 110,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 1,
+            "damageSides": 4,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "type": "paralysis"
+          }
+        ],
+        "methodId": "rfb.blow.gaze",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "damageDice": 1,
+            "damageSides": 4,
+            "type": "confusion"
+          }
+        ],
+        "methodId": "rfb.blow.gaze",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "type": "disenchant"
+          }
+        ],
+        "methodId": "rfb.blow.gaze",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "amountDice": 1,
+            "amountSides": 10,
+            "type": "drain-resource"
+          }
+        ],
+        "methodId": "rfb.blow.gaze",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.amnesia",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.curse-8d8",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.paralyze",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.slow",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 16
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "nameKey": "actor-demo-spectator-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "role": "monster",
+  "speed": 110,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "empty-mind",
+    "legacy-import",
+    "orc-cave"
+  ]
+}

@@ -23,7 +23,7 @@ pub mod policy;
 pub mod snapshot;
 
 pub const CONTRACT_SCHEMA_VERSION: u16 = 4;
-pub const ACTIVE_BASELINE: &str = "contract-v252";
+pub const ACTIVE_BASELINE: &str = "contract-v254";
 pub const ACTIVE_FIXTURE_DIRECTORY: &str = "active";
 pub const LEGACY_BASELINE_COMMIT: &str = "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9";
 pub const HISTORICAL_TEST_WORLD: &str = "demo.original-v1";

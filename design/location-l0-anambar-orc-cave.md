@@ -24,11 +24,16 @@ the plan remains the source-drift check for those imported facts.
 
 ## Machine-checked gaps
 
-The same selection keeps two explicit deferred groups after contract-v252 imported
-the 134 directly expressible level 21–28 allocation candidates:
+After contract-v253, `audit-demo-monsters` is the authority for the remaining
+level 21–32 records. The global import selection retains 186 records in this
+range; 176 are directly expressible Orc Cave allocation candidates. The other
+10 imported records keep their wilderness or dedicated-dungeon allocation and
+do not carry the `orc-cave` tag. The audit keeps three explicit deferred groups:
 
-1. Orc Cave allocation candidates from levels 29–32.
-2. Generic dungeon loot, guardian 1185, and the final object/ego reward.
+1. 22 records blocked by a real monster mechanism.
+2. 28 records excluded from Orc Cave by Camelot, another dedicated dungeon,
+   wilderness/ocean, or fixed-unique location scope; 10 remain globally imported.
+3. Generic dungeon loot, guardian 1185, and the final object/ego reward.
 Anambar shop stock is no longer a gap: L2 exposes only item kinds whose current
 runtime behavior is complete. Home has no stock and shares the Outpost storage.
 The inn uses the existing shop transaction path for food and drink, so its

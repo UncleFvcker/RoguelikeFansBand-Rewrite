@@ -1,0 +1,105 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "friends": {
+      "chancePercent": 0,
+      "dice": 3,
+      "sides": 3
+    },
+    "legacyIndex": 1065,
+    "maxDepth": 999,
+    "rarity": 100
+  },
+  "attack": 7,
+  "damageDice": 1,
+  "damageSides": 1,
+  "damageType": "physical",
+  "defense": 3,
+  "descriptionKey": "actor-demo-octopus-of-kshitigarbha-description",
+  "experienceValue": 30,
+  "formatVersion": 1,
+  "glyph": "l",
+  "hitPointDice": {
+    "dice": 10,
+    "sides": 20
+  },
+  "id": "demo.actor.octopus-of-kshitigarbha",
+  "level": 30,
+  "maxHp": 105,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "type": "blind"
+          }
+        ],
+        "methodId": "rfb.blow.spit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "damageDice": 0,
+            "damageSides": 0,
+            "type": "confusion"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 6,
+            "damageSides": 6,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.crush",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "damageDice": 4,
+            "damageSides": 4,
+            "type": "poison"
+          }
+        ],
+        "methodId": "rfb.blow.crawl",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.breath-dark-17-400-r2",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 15
+  },
+  "movement": {
+    "modes": [
+      "swim"
+    ]
+  },
+  "nameKey": "actor-demo-octopus-of-kshitigarbha-name",
+  "resistances": {
+    "dark": "resistant",
+    "poison": "resistant",
+    "water": "resistant"
+  },
+  "role": "monster",
+  "speed": 110,
+  "tags": [
+    "animal",
+    "legacy-import",
+    "orc-cave",
+    "weird-mind"
+  ]
+}

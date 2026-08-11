@@ -49,6 +49,7 @@ const DEMO_PRIEST_DROP_TABLE_ID: &str = "demo.loot-table.priest";
 const DEMO_EVIL_PRIEST_DROP_TABLE_ID: &str = "demo.loot-table.evil-priest";
 const DEMO_PALADIN_DROP_TABLE_ID: &str = "demo.loot-table.paladin";
 const DEMO_DWARF_DROP_TABLE_ID: &str = "demo.loot-table.dwarf";
+const DEMO_NINJA_DROP_TABLE_ID: &str = "demo.loot-table.ninja";
 const DEMO_CORPSE_ITEM_ID: &str = "demo.item.corpse-remains";
 const DEMO_SKELETON_ITEM_ID: &str = "demo.item.skeleton-remains";
 
@@ -62,6 +63,7 @@ fn demo_drop_theme_table_id(theme: &str) -> Option<&'static str> {
         "DROP_PRIEST_EVIL" => Some(DEMO_EVIL_PRIEST_DROP_TABLE_ID),
         "DROP_PALADIN" => Some(DEMO_PALADIN_DROP_TABLE_ID),
         "DROP_DWARF" => Some(DEMO_DWARF_DROP_TABLE_ID),
+        "DROP_NINJA" => Some(DEMO_NINJA_DROP_TABLE_ID),
         _ => None,
     }
 }
@@ -93,6 +95,129 @@ struct DemoMonsterSelectionEntry {
     tags: Vec<String>,
     #[serde(default)]
     omitted_flags: Vec<String>,
+}
+
+#[derive(Debug, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct DemoMonsterAuditReport {
+    schema_version: u16,
+    source_ref: &'static str,
+    source_commit: String,
+    minimum_level: u16,
+    maximum_level: u16,
+    record_count: usize,
+    imported_count: usize,
+    selected_count: usize,
+    direct_count: usize,
+    blocked_count: usize,
+    excluded_count: usize,
+    guardian_count: usize,
+    entries: Vec<DemoMonsterAuditEntry>,
+}
+
+#[derive(Debug, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+struct DemoMonsterAuditEntry {
+    source_index: u32,
+    source_name: String,
+    source_chinese_name: String,
+    level: u16,
+    imported: bool,
+    location_eligible: bool,
+    location_restrictions: Vec<String>,
+    status: DemoMonsterAuditStatus,
+    blockers: Vec<String>,
+    suggested_id: String,
+    suggested_tags: Vec<String>,
+    omitted_flags: Vec<String>,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "kebab-case")]
+enum DemoMonsterAuditStatus {
+    Selected,
+    Direct,
+    Blocked,
+    Excluded,
+    Guardian,
+}
+
+fn demo_monster_location_restrictions(entry: &LegacyMonsterEntry) -> Vec<String> {
+    const ORC_CAVE_DUNGEON_INDEX: u16 = 3;
+
+    let mut restrictions = Vec::new();
+    let dungeon_indices = entry
+        .flags
+        .iter()
+        .filter_map(|flag| flag.strip_prefix("DUNGEON_")?.parse::<u16>().ok())
+        .collect::<BTreeSet<_>>();
+    if dungeon_indices.contains(&2) {
+        restrictions.push("camelot-only".to_owned());
+    }
+    if dungeon_indices
+        .iter()
+        .any(|index| *index != ORC_CAVE_DUNGEON_INDEX && *index != 2)
+    {
+        restrictions.push("other-dungeon".to_owned());
+    }
+    for (flag, reason) in [
+        ("WILD_ONLY", "wilderness-only"),
+        ("WILD_OCEAN", "ocean-only"),
+        ("FIXED_UNIQUE", "fixed-unique"),
+    ] {
+        if entry.flags.iter().any(|candidate| candidate == flag) {
+            restrictions.push(reason.to_owned());
+        }
+    }
+    restrictions
+}
+
+fn demo_monster_audit_status(
+    selected: bool,
+    source_index: u32,
+    location_eligible: bool,
+    blocked: bool,
+) -> DemoMonsterAuditStatus {
+    const OTHROD_SOURCE_INDEX: u32 = 1185;
+
+    if source_index == OTHROD_SOURCE_INDEX {
+        DemoMonsterAuditStatus::Guardian
+    } else if !location_eligible {
+        DemoMonsterAuditStatus::Excluded
+    } else if blocked {
+        DemoMonsterAuditStatus::Blocked
+    } else if selected {
+        DemoMonsterAuditStatus::Selected
+    } else {
+        DemoMonsterAuditStatus::Direct
+    }
+}
+
+fn demo_monster_audit_omission_is_safe(flag: &str) -> bool {
+    matches!(
+        flag,
+        "ATTR_ANY"
+            | "ATTR_CLEAR"
+            | "ATTR_MULTI"
+            | "ATTR_SEMIRAND"
+            | "AUSSIE"
+            | "CAN_SPEAK"
+            | "CHAR_CLEAR"
+            | "CHAR_MULTI"
+            | "FEMALE"
+            | "KNIGHT"
+            | "MALE"
+            | "NASTY_GLYPH"
+            | "NO_STUN"
+            | "POS_GAIN_AC"
+            | "POS_HOLD_LIFE"
+            | "POS_SEE_INVIS"
+            | "POS_SUST_CON"
+            | "POS_SUST_STR"
+            | "POS_TELEPATHY"
+            | "RES_WALL"
+            | "STUPID"
+    )
 }
 
 impl DemoMonsterSelectionEntry {
@@ -7001,18 +7126,34 @@ fn map_misc_spell_token(
 
 fn map_jump_spell_token(
     token: &str,
+    level: u16,
     abilities: &mut BTreeMap<String, serde_json::Value>,
 ) -> Option<String> {
-    let (base, explicit) = token.split_once('(')?;
-    let explicit = explicit.strip_suffix(')')?;
-    if !matches!(base, "JMP_LIGHT" | "JMP_LITE") {
-        return None;
-    }
-    let (damage_dice, damage_sides, damage_bonus) = parse_explicit_damage_dice(explicit)?;
-    if damage_bonus != 0 {
-        return None;
-    }
-    let suffix = format!("jump-light-{damage_dice}d{damage_sides}");
+    let (base, explicit) = match token.split_once('(') {
+        Some((base, rest)) => (base, Some(rest.strip_suffix(')')?)),
+        None => (token, None),
+    };
+    let damage_type = match base {
+        "JMP_FIRE" => "fire",
+        "JMP_POISON" => "poison",
+        "JMP_CONFUSION" => "confusion",
+        "JMP_DARK" => "dark",
+        "JMP_LIGHT" | "JMP_LITE" => "light",
+        _ => return None,
+    };
+    let (damage_dice, damage_sides, damage_bonus) = match explicit {
+        Some(spec) => parse_explicit_damage_dice(spec)?,
+        None => (0, 0, u32::from(level.max(1))),
+    };
+    let suffix = if damage_dice == 0 {
+        format!("jump-{damage_type}-l{damage_bonus}")
+    } else {
+        let mut suffix = format!("jump-{damage_type}-{damage_dice}d{damage_sides}");
+        if damage_bonus > 0 {
+            suffix.push_str(&format!("-{damage_bonus}"));
+        }
+        suffix
+    };
     let id = format!("rfb-legacy.ability.{suffix}");
     abilities.entry(id.clone()).or_insert_with(|| {
         serde_json::json!({
@@ -7026,9 +7167,10 @@ fn map_jump_spell_token(
                 "type": "jump-damage",
                 "damageDice": damage_dice,
                 "damageSides": damage_sides,
+                "damageBonus": damage_bonus,
                 "damageMultiplierNumerator": 5,
                 "damageMultiplierDenominator": 4,
-                "damageType": "light",
+                "damageType": damage_type,
                 "radius": 5,
                 "blinkRadius": 10
             },
@@ -7391,6 +7533,12 @@ fn monster_json(
     let mut tags = vec!["legacy-import".to_owned()];
     if let Some(glyph) = entry.glyph {
         tags.push(format!("kin-glyph-{}", u32::from(glyph)));
+    }
+    if entry.glyph == Some('M') {
+        tags.push("hydra".to_owned());
+    }
+    if entry.index == 286 {
+        tags.push("gelatinous-cube".to_owned());
     }
     for (flag, tag) in [
         ("ANIMAL", "animal"),
@@ -7780,6 +7928,15 @@ fn demo_monster_flag_is_handled(flag: &str) -> bool {
         || flag.starts_with("DUNGEON_")
 }
 
+fn demo_monster_omitted_flags(entry: &LegacyMonsterEntry) -> BTreeSet<String> {
+    entry
+        .flags
+        .iter()
+        .filter(|flag| !demo_monster_flag_is_handled(flag))
+        .cloned()
+        .collect()
+}
+
 fn demo_monster_json(
     entry: &LegacyMonsterEntry,
     selection: &DemoMonsterSelectionEntry,
@@ -7796,12 +7953,7 @@ fn demo_monster_json(
             selection.id
         )));
     }
-    let actual_omissions = entry
-        .flags
-        .iter()
-        .filter(|flag| !demo_monster_flag_is_handled(flag))
-        .cloned()
-        .collect::<BTreeSet<_>>();
+    let actual_omissions = demo_monster_omitted_flags(entry);
     if declared_omissions != actual_omissions {
         return Err(LegacyImportError::InvalidDemoMonsterSelection(format!(
             "{} omitted flags differ: declared {declared_omissions:?}, source {actual_omissions:?}",
@@ -7982,6 +8134,12 @@ fn demo_monster_json(
 
     let mut tags = selection.tags.iter().cloned().collect::<BTreeSet<_>>();
     tags.insert("legacy-import".to_owned());
+    if entry.glyph == Some('M') {
+        tags.insert("hydra".to_owned());
+    }
+    if entry.index == 286 {
+        tags.insert("gelatinous-cube".to_owned());
+    }
     if entry.flags.iter().any(|flag| flag == "KAGE") {
         tags.insert("shadower-appearance".to_owned());
     }
@@ -8293,7 +8451,7 @@ fn map_spell_token(
     if let Some(id) = map_curse_spell_token(token, abilities) {
         return Some(id);
     }
-    if let Some(id) = map_jump_spell_token(token, abilities) {
+    if let Some(id) = map_jump_spell_token(token, level, abilities) {
         return Some(id);
     }
     if let Some(id) = map_misc_spell_token(token, level, abilities) {
@@ -8538,6 +8696,7 @@ fn summon_spell_defaults(base: &str) -> Option<(&'static str, (u32, u32, u32))> 
         "S_ANIMAL" => ("animal", (1, 3, 1)),
         "S_ANT" => ("ant", (1, 3, 1)),
         "S_SPIDER" => ("spider", (1, 3, 1)),
+        "S_HYDRA" => ("hydra", (1, 3, 1)),
         "S_LOUSE" => ("louse", (1, 3, 1)),
         _ => return None,
     };
@@ -8558,6 +8717,14 @@ fn map_summon_spell_token(
         Some((base, rest)) => (base, Some(rest.strip_suffix(')')?)),
         None => (token, None),
     };
+    if base == "S_SPECIAL" && caster_kind_id.rsplit('.').next() == Some("zoopi-the-cube-king") {
+        let suffix = "summon-gelatinous-cube-l16-1d3";
+        let id = format!("rfb-legacy.ability.{suffix}");
+        abilities
+            .entry(id.clone())
+            .or_insert_with(|| summon_category_ability(suffix, "gelatinous-cube", 16, 1, 3, 0));
+        return Some(id);
+    }
     if base == "S_KIN" {
         let caster_tail = caster_kind_id.rsplit('.').next()?;
         let suffix = format!("kin-{caster_tail}");
@@ -11020,6 +11187,160 @@ pub fn sync_demo_monsters(
     Ok(files.len())
 }
 
+pub fn audit_demo_monsters(
+    source: &Path,
+    selection_path: &Path,
+) -> Result<DemoMonsterAuditReport, LegacyImportError> {
+    const MINIMUM_LEVEL: u16 = 21;
+    const MAXIMUM_LEVEL: u16 = 32;
+    let selection: DemoMonsterSelection = serde_json::from_slice(&fs::read(selection_path)?)?;
+    if selection.schema_version != 1 || selection.monsters.is_empty() {
+        return Err(LegacyImportError::InvalidDemoMonsterSelection(
+            "selection must use schemaVersion 1 and contain at least one monster".to_owned(),
+        ));
+    }
+    let source_commit = resolve_legacy_content_commit(source)?;
+    let monsters = parse_r_info(&read_legacy_object_at(
+        source,
+        &source_commit,
+        R_INFO_SOURCE,
+    )?)?;
+    let chinese_names = parse_chinese_name_table(
+        &read_legacy_object_at(source, &source_commit, R_NAME_ZH_SOURCE)?,
+        R_NAME_ZH_SOURCE,
+    )?;
+    let selected = selection
+        .monsters
+        .iter()
+        .map(|entry| (entry.source_index, entry))
+        .collect::<BTreeMap<_, _>>();
+    if selected.len() != selection.monsters.len() {
+        return Err(LegacyImportError::InvalidDemoMonsterSelection(
+            "monster source indexes must be unique".to_owned(),
+        ));
+    }
+    let selected_ids = selection
+        .monsters
+        .iter()
+        .map(|entry| entry.id.as_str())
+        .collect::<BTreeSet<_>>();
+    if selected_ids.len() != selection.monsters.len() {
+        return Err(LegacyImportError::InvalidDemoMonsterSelection(
+            "monster ids must be unique".to_owned(),
+        ));
+    }
+    let mut entries = monsters
+        .iter()
+        .filter(|entry| {
+            entry
+                .level
+                .is_some_and(|level| (MINIMUM_LEVEL..=MAXIMUM_LEVEL).contains(&level))
+                && entry.rarity.unwrap_or(0) > 0
+                && entry.glyph.is_some()
+                && !entry.flags.iter().any(|flag| flag == "DEPRECATED")
+        })
+        .map(|entry| {
+            let level = entry.level.expect("audit range requires a level");
+            let omitted_flags = demo_monster_omitted_flags(entry);
+            let suggested_id = kebab(&entry.name);
+            let location_restrictions = demo_monster_location_restrictions(entry);
+            let location_eligible = location_restrictions.is_empty();
+
+            let mut blockers = omitted_flags
+                .iter()
+                .filter(|flag| !demo_monster_audit_omission_is_safe(flag))
+                .map(|flag| format!("flag:{flag}"))
+                .collect::<Vec<_>>();
+            if !selected.contains_key(&entry.index) && selected_ids.contains(suggested_id.as_str())
+            {
+                blockers.push(format!("id-collision:{suggested_id}"));
+            }
+            let audit_selection = DemoMonsterSelectionEntry {
+                source_index: entry.index,
+                source_id: None,
+                id: suggested_id.clone(),
+                tags: vec!["orc-cave".to_owned()],
+                omitted_flags: omitted_flags.iter().cloned().collect(),
+            };
+            let mut abilities = BTreeMap::new();
+            if let Err(error) = demo_monster_json(entry, &audit_selection, &mut abilities) {
+                let detail = match error {
+                    LegacyImportError::InvalidDemoMonsterSelection(detail) => detail
+                        .strip_prefix(&format!("{suggested_id} "))
+                        .unwrap_or(&detail)
+                        .to_owned(),
+                    other => other.to_string(),
+                };
+                blockers.push(detail);
+            }
+            blockers.sort();
+            blockers.dedup();
+
+            let status = demo_monster_audit_status(
+                selected.contains_key(&entry.index),
+                entry.index,
+                location_eligible,
+                !blockers.is_empty(),
+            );
+            let mut suggested_tags = vec!["orc-cave".to_owned()];
+            match entry.glyph {
+                Some('a') => suggested_tags.push("ant".to_owned()),
+                Some('S') => suggested_tags.push("spider".to_owned()),
+                _ => {}
+            }
+            suggested_tags.sort();
+
+            Ok(DemoMonsterAuditEntry {
+                source_index: entry.index,
+                source_name: entry.name.clone(),
+                source_chinese_name: chinese_names
+                    .get(entry.index as usize)
+                    .and_then(Option::as_deref)
+                    .filter(|name| !name.is_empty())
+                    .ok_or_else(|| {
+                        LegacyImportError::InvalidDemoMonsterSelection(format!(
+                            "source index {} ({}) has no authoritative Chinese name",
+                            entry.index, entry.name
+                        ))
+                    })?
+                    .to_owned(),
+                level,
+                imported: selected.contains_key(&entry.index),
+                location_eligible,
+                location_restrictions,
+                status,
+                blockers,
+                suggested_id,
+                suggested_tags,
+                omitted_flags: omitted_flags.into_iter().collect(),
+            })
+        })
+        .collect::<Result<Vec<_>, LegacyImportError>>()?;
+    entries.sort_by_key(|entry| (entry.level, entry.source_index));
+
+    let count = |status| {
+        entries
+            .iter()
+            .filter(|entry| entry.status == status)
+            .count()
+    };
+    Ok(DemoMonsterAuditReport {
+        schema_version: 1,
+        source_ref: LEGACY_CONTENT_REFERENCE,
+        source_commit,
+        minimum_level: MINIMUM_LEVEL,
+        maximum_level: MAXIMUM_LEVEL,
+        record_count: entries.len(),
+        imported_count: entries.iter().filter(|entry| entry.imported).count(),
+        selected_count: count(DemoMonsterAuditStatus::Selected),
+        direct_count: count(DemoMonsterAuditStatus::Direct),
+        blocked_count: count(DemoMonsterAuditStatus::Blocked),
+        excluded_count: count(DemoMonsterAuditStatus::Excluded),
+        guardian_count: count(DemoMonsterAuditStatus::Guardian),
+        entries,
+    })
+}
+
 fn item_coverage_system_blocker(tval: u16) -> Option<&'static str> {
     match tval {
         1 => Some("remains-system"),
@@ -11840,6 +12161,58 @@ pub fn sync_demo_items(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn demo_monster_audit_separates_location_scope_from_mechanism_status() {
+        let camelot = LegacyMonsterEntry {
+            flags: vec!["DUNGEON_2".to_owned()],
+            ..LegacyMonsterEntry::default()
+        };
+        assert_eq!(
+            demo_monster_location_restrictions(&camelot),
+            vec!["camelot-only"]
+        );
+
+        let wilderness_unique = LegacyMonsterEntry {
+            flags: vec![
+                "WILD_ONLY".to_owned(),
+                "WILD_OCEAN".to_owned(),
+                "FIXED_UNIQUE".to_owned(),
+            ],
+            ..LegacyMonsterEntry::default()
+        };
+        assert_eq!(
+            demo_monster_location_restrictions(&wilderness_unique),
+            vec!["wilderness-only", "ocean-only", "fixed-unique"]
+        );
+
+        assert_eq!(
+            demo_monster_audit_status(true, 1, false, true),
+            DemoMonsterAuditStatus::Excluded
+        );
+        assert_eq!(
+            demo_monster_audit_status(false, 1185, false, true),
+            DemoMonsterAuditStatus::Guardian
+        );
+        assert_eq!(
+            demo_monster_audit_status(false, 2, false, false),
+            DemoMonsterAuditStatus::Excluded
+        );
+        assert_eq!(
+            demo_monster_audit_status(false, 3, true, true),
+            DemoMonsterAuditStatus::Blocked
+        );
+        assert_eq!(
+            demo_monster_audit_status(false, 4, true, false),
+            DemoMonsterAuditStatus::Direct
+        );
+        assert_eq!(
+            demo_monster_audit_status(true, 5, true, false),
+            DemoMonsterAuditStatus::Selected
+        );
+        assert!(demo_monster_audit_omission_is_safe("POS_GAIN_AC"));
+        assert!(!demo_monster_audit_omission_is_safe("AURA_REVENGE"));
+    }
 
     fn assert_content_parse_error<T>(
         result: Result<T, LegacyImportError>,
@@ -12886,7 +13259,7 @@ S:FREQ_50 | BR_FIRE(40%) | BR_POISON | DETECT_MONSTERS | MAPPING\n";
     }
 
     #[test]
-    fn jump_light_maps_exact_damage_multiplier_radius_and_blink() {
+    fn jump_elements_map_exact_damage_multiplier_radius_and_blink() {
         let mut abilities = BTreeMap::new();
         let id = map_spell_token(
             "JMP_LIGHT(5d5)",
@@ -12901,11 +13274,40 @@ S:FREQ_50 | BR_FIRE(40%) | BR_POISON | DETECT_MONSTERS | MAPPING\n";
         assert_eq!(effect["type"], "jump-damage");
         assert_eq!(effect["damageDice"], 5);
         assert_eq!(effect["damageSides"], 5);
+        assert_eq!(effect["damageBonus"], 0);
         assert_eq!(effect["damageMultiplierNumerator"], 5);
         assert_eq!(effect["damageMultiplierDenominator"], 4);
         assert_eq!(effect["damageType"], "light");
         assert_eq!(effect["radius"], 5);
         assert_eq!(effect["blinkRadius"], 10);
+
+        for (token, level, suffix, damage_type, dice, sides, bonus) in [
+            ("JMP_FIRE", 31, "jump-fire-l31", "fire", 0, 0, 31),
+            ("JMP_POISON", 32, "jump-poison-l32", "poison", 0, 0, 32),
+            (
+                "JMP_CONFUSION",
+                32,
+                "jump-confusion-l32",
+                "confusion",
+                0,
+                0,
+                32,
+            ),
+            ("JMP_DARK(2d4)", 29, "jump-dark-2d4", "dark", 2, 4, 0),
+        ] {
+            let id = map_spell_token(token, level, 2, "demo.actor.jump-test", &mut abilities)
+                .unwrap_or_else(|| panic!("{token} should map"));
+            assert_eq!(id, format!("rfb-legacy.ability.{suffix}"));
+            let effect = &abilities[&id]["effect"];
+            assert_eq!(effect["damageDice"], dice);
+            assert_eq!(effect["damageSides"], sides);
+            assert_eq!(effect["damageBonus"], bonus);
+            assert_eq!(effect["damageType"], damage_type);
+            assert_eq!(effect["damageMultiplierNumerator"], 5);
+            assert_eq!(effect["damageMultiplierDenominator"], 4);
+            assert_eq!(effect["radius"], 5);
+            assert_eq!(effect["blinkRadius"], 10);
+        }
     }
 
     #[test]
@@ -13043,7 +13445,7 @@ I:110:8d8:20:20:10:10\n\
 W:20:2:20:9:10:40\n\
 B:HIT:HURT(1d6)\n\
 F:UNDEAD | DRAGON | RES_ALL | RES_TELE | NO_CONF\n\
-S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_ANT | S_SPIDER | S_LOUSE | S_CYBER\n";
+S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_ANT | S_SPIDER | S_HYDRA | S_LOUSE | S_CYBER\n";
         let monsters = parse_r_info(SUMMONER_R_INFO).expect("synthetic summoner should parse");
         assert_eq!(monsters.len(), 1);
 
@@ -13106,6 +13508,7 @@ S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_ANT | S_SPIDER | S_LOUSE | S_CY
                 "rfb-legacy.ability.summon-legacy-import-l20-1d1",
                 "rfb-legacy.ability.summon-ant-l20-1d3-1",
                 "rfb-legacy.ability.summon-spider-l20-1d3-1",
+                "rfb-legacy.ability.summon-hydra-l20-1d3-1",
                 "rfb-legacy.ability.summon-louse-l20-1d3-1",
             ]
         );
@@ -13172,6 +13575,17 @@ S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_ANT | S_SPIDER | S_LOUSE | S_CY
         assert_eq!(spider["effect"]["countSides"], 3);
         assert_eq!(spider["effect"]["countBonus"], 1);
 
+        let hydra = outcome
+            .ability_files
+            .iter()
+            .find(|(name, _)| name == "summon-hydra-l20-1d3-1.json")
+            .map(|(_, value)| value)
+            .expect("hydra summon ability should be generated");
+        assert_eq!(hydra["effect"]["category"], "hydra");
+        assert_eq!(hydra["effect"]["countDice"], 1);
+        assert_eq!(hydra["effect"]["countSides"], 3);
+        assert_eq!(hydra["effect"]["countBonus"], 1);
+
         let louse = outcome
             .ability_files
             .iter()
@@ -13201,6 +13615,37 @@ S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_ANT | S_SPIDER | S_LOUSE | S_CY
             demo["tags"]
                 .as_array()
                 .is_some_and(|tags| { tags.iter().any(|tag| tag == "legacy-import") })
+        );
+    }
+
+    #[test]
+    fn zoopi_special_maps_only_to_gelatinous_cubes() {
+        let mut abilities = BTreeMap::new();
+        let id = map_spell_token(
+            "S_SPECIAL",
+            25,
+            2,
+            "demo.actor.zoopi-the-cube-king",
+            &mut abilities,
+        )
+        .expect("Zoopi special should map");
+        assert_eq!(id, "rfb-legacy.ability.summon-gelatinous-cube-l16-1d3");
+        let effect = &abilities[&id]["effect"];
+        assert_eq!(effect["type"], "summon-category");
+        assert_eq!(effect["category"], "gelatinous-cube");
+        assert_eq!(effect["maximumLevel"], 16);
+        assert_eq!(effect["countDice"], 1);
+        assert_eq!(effect["countSides"], 3);
+        assert!(effect.get("countBonus").is_none());
+        assert!(
+            map_spell_token(
+                "S_SPECIAL",
+                25,
+                2,
+                "demo.actor.someone-else",
+                &mut abilities,
+            )
+            .is_none()
         );
     }
 

@@ -1,0 +1,98 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 458,
+    "maxDepth": 999,
+    "multiplies": true,
+    "rarity": 6
+  },
+  "attack": 7,
+  "damageDice": 3,
+  "damageSides": 4,
+  "damageType": "poison",
+  "defense": 6,
+  "descriptionKey": "actor-demo-chaos-tile-description",
+  "experienceValue": 120,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": ".",
+  "hitPointDice": {
+    "dice": 3,
+    "sides": 5
+  },
+  "id": "demo.actor.chaos-tile",
+  "level": 29,
+  "maxHp": 9,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "damageDice": 3,
+            "damageSides": 4,
+            "type": "poison"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "damageDice": 3,
+            "damageSides": 4,
+            "type": "confusion"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.blind",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.confuse",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.scare",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.curse-8d8",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.blink",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-legacy-import-l29-1d1",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 25
+  },
+  "movement": {
+    "neverMoves": true
+  },
+  "nameKey": "actor-demo-chaos-tile-name",
+  "role": "monster",
+  "speed": 120,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "cold-blooded",
+    "empty-mind",
+    "legacy-import",
+    "orc-cave"
+  ]
+}

@@ -461,3 +461,11 @@ contract-v229 / 包 1.225.0 接入妖鬼。`eldritch-horror` 标签在怪物从�
 174 个能力和 20 张 loot table；严格同步 369 条，内容 hash 为
 `005d3db278c595029ef2a65e8f46dcd3748c303bc96681a1a513dfc24b54c43d`。实例级
 重复触发标记进入 save 与 State Hash，协议升至 1.158，State Hash Schema 升至 v78。
+
+contract-v254 / 包 1.245.0 为怪物专用 `jump-damage` 增加默认零值的
+`damageBonus`，并允许 `0d0 + 正固定值`，从而不消耗伤害 RNG 地表达原版按怪物
+等级计算的元素跳跃。火焰、毒素、混乱和黑暗继续复用既有伤害类型；Hydra 与
+Zoopi 继续复用 `summon-category`，没有新增特殊召唤脚本。当前包包含 49 种地形、
+602 种 actor、255 种物品、263 个能力和 13 张 loot table；严格同步 555 条，
+内容 hash 为 `7c978853943a6bb4a81e46072bbd089cad526bfc0688711664c3ce709a4aa217`。
+协议保持 1.169，State Hash Schema 保持 v85。

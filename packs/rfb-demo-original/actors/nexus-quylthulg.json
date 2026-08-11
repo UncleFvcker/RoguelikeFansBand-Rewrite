@@ -1,0 +1,62 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 480,
+    "maxDepth": 999,
+    "rarity": 3
+  },
+  "attack": 8,
+  "damageDice": 1,
+  "damageSides": 1,
+  "damageType": "physical",
+  "defense": 0,
+  "descriptionKey": "actor-demo-nexus-quylthulg-description",
+  "experienceValue": 300,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "Q",
+  "hitPointDice": {
+    "dice": 10,
+    "sides": 12
+  },
+  "id": "demo.actor.nexus-quylthulg",
+  "level": 32,
+  "maxHp": 65,
+  "meleeRoutine": {
+    "blows": []
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.blink",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.banish",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 100
+  },
+  "movement": {
+    "neverMoves": true
+  },
+  "nameKey": "actor-demo-nexus-quylthulg-name",
+  "resistances": {
+    "nexus": "resistant"
+  },
+  "role": "monster",
+  "speed": 110,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "empty-mind",
+    "invisible",
+    "legacy-import",
+    "orc-cave",
+    "resist-teleport"
+  ]
+}

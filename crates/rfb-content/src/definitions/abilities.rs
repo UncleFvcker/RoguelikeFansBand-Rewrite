@@ -247,6 +247,8 @@ pub enum AbilityEffectDefinition {
     JumpDamage {
         damage_dice: u16,
         damage_sides: u16,
+        #[serde(default)]
+        damage_bonus: u16,
         damage_multiplier_numerator: u8,
         damage_multiplier_denominator: u8,
         #[serde(default)]

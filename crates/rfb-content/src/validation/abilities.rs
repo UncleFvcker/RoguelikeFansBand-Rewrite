@@ -151,14 +151,16 @@ pub(super) fn validate_abilities(
                 AbilityEffectDefinition::JumpDamage {
                     damage_dice,
                     damage_sides,
+                    damage_bonus,
                     damage_multiplier_numerator,
                     damage_multiplier_denominator,
                     radius,
                     blink_radius,
                     ..
                 } => {
-                    (1..=100).contains(damage_dice)
-                        && (1..=10_000).contains(damage_sides)
+                    (((1..=100).contains(damage_dice) && (1..=10_000).contains(damage_sides))
+                        || (*damage_dice == 0 && *damage_sides == 0 && *damage_bonus > 0))
+                        && *damage_bonus <= 10_000
                         && (1..=100).contains(damage_multiplier_numerator)
                         && (1..=100).contains(damage_multiplier_denominator)
                         && (1..=16).contains(radius)

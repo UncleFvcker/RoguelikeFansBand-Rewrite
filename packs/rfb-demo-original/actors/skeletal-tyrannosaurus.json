@@ -1,0 +1,110 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 466,
+    "maxDepth": 70,
+    "rarity": 2
+  },
+  "attack": 7,
+  "damageDice": 1,
+  "damageSides": 8,
+  "damageType": "physical",
+  "defense": 5,
+  "descriptionKey": "actor-demo-skeletal-tyrannosaurus-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 400,
+  "formatVersion": 1,
+  "glyph": "R",
+  "hitPointDice": {
+    "dice": 50,
+    "sides": 10
+  },
+  "id": "demo.actor.skeletal-tyrannosaurus",
+  "level": 30,
+  "maxHp": 275,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 8,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 8,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 4,
+            "damageSides": 6,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "attributes": [
+              "constitution"
+            ],
+            "chancePercent": 50,
+            "type": "drain-attributes"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "type": "terrify"
+          }
+        ],
+        "methodId": "rfb.blow.gaze",
+        "toHit": 20
+      }
+    ]
+  },
+  "nameKey": "actor-demo-skeletal-tyrannosaurus-name",
+  "resistances": {
+    "cold": "resistant",
+    "nether": "resistant",
+    "poison": "immune"
+  },
+  "rideable": true,
+  "role": "monster",
+  "speed": 120,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "animal",
+    "cold-blooded",
+    "empty-mind",
+    "evil",
+    "legacy-import",
+    "orc-cave",
+    "undead"
+  ]
+}

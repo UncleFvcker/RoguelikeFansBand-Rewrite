@@ -1,0 +1,82 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 464,
+    "maxDepth": 80,
+    "rarity": 4
+  },
+  "attack": 7,
+  "damageDice": 10,
+  "damageSides": 10,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 2,
+        "sides": 2
+      }
+    ],
+    "kind": "gold"
+  },
+  "defense": 10,
+  "descriptionKey": "actor-demo-mithril-golem-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 500,
+  "formatVersion": 1,
+  "glyph": "g",
+  "hitPointDice": {
+    "dice": 80,
+    "sides": 15
+  },
+  "id": "demo.actor.mithril-golem",
+  "level": 30,
+  "maxHp": 640,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 10,
+            "damageSides": 10,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "chancePercent": 35,
+            "durationDice": 2,
+            "durationSides": 5,
+            "type": "stun"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "nameKey": "actor-demo-mithril-golem-name",
+  "reflectsBolts": true,
+  "resistances": {
+    "cold": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "poison": "immune"
+  },
+  "role": "monster",
+  "speed": 110,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "cold-blooded",
+    "empty-mind",
+    "legacy-import",
+    "nonliving",
+    "orc-cave"
+  ]
+}
