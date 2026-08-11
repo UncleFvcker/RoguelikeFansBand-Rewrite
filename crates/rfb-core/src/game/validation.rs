@@ -330,6 +330,9 @@ impl Game {
             .content
             .world(&self.world_id)
             .ok_or_else(|| CoreError::UnknownWorld(self.world_id.clone()))?;
+        if !self.chaos_patron_state_is_valid() {
+            return Err(CoreError::InvalidSave("player chaos patron is invalid"));
+        }
         let valid_floor = |floor_id: &str| {
             floor_id == world.initial_floor_id
                 || world

@@ -50,6 +50,7 @@ pub enum WeaponBrand {
     Fire,
     Cold,
     Poison,
+    Chaos,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]

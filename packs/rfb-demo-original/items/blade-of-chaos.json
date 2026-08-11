@@ -1,0 +1,29 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 4000,
+  "descriptionKey": "item-demo-blade-of-chaos-description",
+  "equipmentSlot": "weapon",
+  "formatVersion": 1,
+  "generationLevel": 70,
+  "glyph": "|",
+  "id": "demo.item.blade-of-chaos",
+  "maxStack": 1,
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 5,
+    "damageSides": 6,
+    "toDamage": 0,
+    "toHit": 0
+  },
+  "mogaminatorRare": true,
+  "nameKey": "item-demo-blade-of-chaos-name",
+  "resistances": {
+    "chaos": "resistant"
+  },
+  "tags": [
+    "equipment",
+    "rfb-compatibility",
+    "weapon"
+  ],
+  "weightTenthsPound": 180
+}

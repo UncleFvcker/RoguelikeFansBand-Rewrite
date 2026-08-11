@@ -96,6 +96,10 @@ pub(crate) enum DomainEvent {
     MutationWarning {
         danger_amount: u32,
     },
+    ChaosPatronReward {
+        patron_id: String,
+        patron_name: String,
+    },
     RealityChangeResolved {
         regenerated: bool,
     },
@@ -322,6 +326,7 @@ pub(crate) enum DomainEvent {
         level: u16,
         max_hp: i32,
         pending_attribute_increases: u16,
+        reached_new_maximum: bool,
     },
     PlayerLevelLost {
         level: u16,
@@ -1298,6 +1303,14 @@ impl DomainEvent {
                 };
                 dto(kind, message_key, [("danger", danger_amount.to_string())])
             }
+            Self::ChaosPatronReward {
+                patron_id,
+                patron_name,
+            } => dto(
+                "mutation.chaos-patron-reward",
+                "mutation-chaos-patron-reward",
+                [("target", patron_id), ("patron", patron_name)],
+            ),
             Self::MutationFumbled {
                 damage,
                 dropped_item_kind_id: Some(target_kind_id),
@@ -1957,6 +1970,7 @@ impl DomainEvent {
                 level,
                 max_hp,
                 pending_attribute_increases,
+                reached_new_maximum: _,
             } => dto(
                 "player.level-gained",
                 "player-level-gained",

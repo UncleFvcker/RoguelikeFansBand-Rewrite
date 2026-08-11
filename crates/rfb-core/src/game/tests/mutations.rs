@@ -102,6 +102,94 @@ fn seed_matching(mut predicate: impl FnMut(&mut RfbRng) -> bool) -> u64 {
         .expect("a matching deterministic seed should exist")
 }
 
+#[test]
+fn chaos_gift_assigns_and_persists_one_authoritative_patron() {
+    let game = Game::new(42);
+    let patron_id = game
+        .chaos_patron_id
+        .clone()
+        .expect("new characters should receive a chaos patron");
+    assert_eq!(chaos_patron::chaos_patrons(&game.content).len(), 16);
+    assert!(
+        game.chaos_patron()
+            .is_some_and(|patron| patron.id == patron_id)
+    );
+
+    let restored = Game::from_save(game.to_save()).expect("chaos patron should reload");
+    assert_eq!(
+        restored.chaos_patron_id.as_deref(),
+        Some(patron_id.as_str())
+    );
+    assert_eq!(restored.state_hash(), game.state_hash());
+}
+
+#[test]
+fn chaos_gift_rewards_only_a_new_highest_level() {
+    let mut game = m6_game(chaos_patron::CHAOS_GIFT_MUTATION_ID, "demo.build.warrior");
+    clear_monsters(&mut game);
+    game.rng = RfbRng::seeded(seed_matching(|rng| rng.bounded(6) == 0));
+    let mut events = Vec::new();
+    game.apply_unscaled_player_experience(
+        crate::stats::experience_required_for_level(2),
+        &mut events,
+    );
+    let mut event_cursor = 0;
+    game.process_chaos_patron_level_rewards(
+        &mut events,
+        &mut event_cursor,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("new maximum reward should resolve");
+    assert_eq!(
+        events
+            .iter()
+            .filter(|event| matches!(event, DomainEvent::ChaosPatronReward { .. }))
+            .count(),
+        1
+    );
+
+    let mut regained = Game::new(43);
+    regained.progress.active_mutation_ids.clear();
+    let level_two = crate::stats::experience_required_for_level(2);
+    regained.apply_unscaled_player_experience(level_two, &mut Vec::new());
+    regained.apply_player_experience_drain(level_two, "test", &mut Vec::new());
+    regained
+        .progress
+        .active_mutation_ids
+        .insert(chaos_patron::CHAOS_GIFT_MUTATION_ID.to_owned());
+    let mut events = Vec::new();
+    regained.apply_unscaled_player_experience(level_two, &mut events);
+    let mut event_cursor = 0;
+    regained
+        .process_chaos_patron_level_rewards(
+            &mut events,
+            &mut event_cursor,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("regained level should remain valid");
+    assert!(
+        !events
+            .iter()
+            .any(|event| matches!(event, DomainEvent::ChaosPatronReward { .. }))
+    );
+}
+
+#[test]
+fn chaos_weapon_table_preserves_original_level_bands() {
+    assert_eq!(chaos_patron::chaos_weapon_kind_id(1), "demo.item.dagger");
+    assert_eq!(chaos_patron::chaos_weapon_kind_id(30), "demo.item.falchion");
+    assert_eq!(
+        chaos_patron::chaos_weapon_kind_id(38),
+        "demo.item.falcon-sword"
+    );
+    assert_eq!(
+        chaos_patron::chaos_weapon_kind_id(39),
+        "demo.item.blade-of-chaos"
+    );
+}
+
 fn process_m6(game: &mut Game) -> Vec<DomainEvent> {
     let mut events = Vec::new();
     game.process_periodic_mutations(

@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.167";
+pub const PROTOCOL_VERSION: &str = "1.168";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -1563,6 +1563,7 @@ pub enum WeaponBrandDto {
     Fire,
     Cold,
     Poison,
+    Chaos,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -3409,6 +3410,7 @@ pub struct PlayerSaveDto {
     pub energy_need: i32,
     pub minor_slow: u8,
     pub minor_slow_energy: u16,
+    pub chaos_patron_id: Option<String>,
     #[serde(default)]
     pub reality_change_ticks: u8,
     pub pending_mutation_direction: Option<PendingMutationDirectionDto>,
@@ -4536,6 +4538,7 @@ mod tests {
             energy_need: 0,
             minor_slow: 0,
             minor_slow_energy: 0,
+            chaos_patron_id: None,
             reality_change_ticks: 0,
             pending_mutation_direction: None,
             statuses: Vec::new(),

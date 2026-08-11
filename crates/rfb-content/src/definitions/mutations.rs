@@ -21,6 +21,54 @@ pub enum MutationRatingDefinition {
     Great,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum ChaosPatronRewardKind {
+    PolymorphSelf,
+    GainExperience,
+    LoseExperience,
+    GoodObject,
+    GreatObject,
+    ChaosWeapon,
+    GoodObjects,
+    GreatObjects,
+    TyCurse,
+    SummonMonsters,
+    HighSummon,
+    Havoc,
+    GainAttribute,
+    LoseAttribute,
+    RuinAttributes,
+    AugmentAttributes,
+    PolymorphWounds,
+    FullHealing,
+    HurtBadly,
+    CurseWeapon,
+    CurseArmor,
+    Anger,
+    Wrath,
+    Destruction,
+    Genocide,
+    MassGenocide,
+    DispelMonsters,
+    Ignore,
+    UndeadServant,
+    DemonServant,
+    MonsterServant,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ChaosPatronDefinition {
+    pub id: String,
+    pub name: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub favored_attribute: Option<TechniqueAttribute>,
+    pub rewards: Vec<ChaosPatronRewardKind>,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -134,6 +182,8 @@ pub struct MutationDefinition {
     pub activation: Option<MutationActivationDefinition>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub periodic_effect: Option<MutationPeriodicEffectDefinition>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub chaos_patrons: Vec<ChaosPatronDefinition>,
     #[serde(default)]
     pub modifiers: StatModifiers,
     /// Direct armor-class adjustment from the original mutation bonus.

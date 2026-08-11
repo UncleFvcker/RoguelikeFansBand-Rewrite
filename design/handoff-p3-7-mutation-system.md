@@ -16,7 +16,8 @@ P3.7-M0 至 M4E 原始批次记录。权威内容覆盖账本是
   继续完成 Ill Norm 与 ESP。
 - M5.0 已建立主动变异统一施放合同；M5-A--D 的 31 项具体能力和窄事务均已接入。
 - M6.0 的唯一周期入口以及 M6-A--D 共二十七项周期变异均已接入。
-- M4F-C 已完成 Good/Bad Luck、Easy Tiring 与 Impotence；只剩 Chaos Gift 尚未闭环。
+- M4F-C 已完成 Good/Bad Luck、Easy Tiring、Impotence 与 Chaos Gift；104 个随机候选
+  已全部闭环。
 - RFB 权威源：`D:/codex/Frogcomposband` 的 Git `master` ref；覆盖审计当前锁定
   `efd63661302866038f58d8cd2553b23e6af3bf9d`。不要读取该仓库工作树文件替代
   `master` Git 对象。
@@ -25,12 +26,12 @@ P3.7-M0 至 M4E 原始批次记录。权威内容覆盖账本是
 
 | 项目 | 当前值 |
 | --- | --- |
-| Protocol | `1.167` |
+| Protocol | `1.168` |
 | Save container | `v1` |
-| State Hash Schema | `v84` |
-| Contract baseline | `contract-v249`，21 个 exact fixtures |
+| State Hash Schema | `v85` |
+| Contract baseline | `contract-v250`，21 个 exact fixtures |
 | Contract Schema | `v4` |
-| Content pack | `1.241.0` |
+| Content pack | `1.242.0` |
 | Content hash | 见 `packs/rfb-demo-original/content.lock.json` |
 
 当前保留 21 个聚焦 exact fixtures。M4F-B1 为两座城镇杂货店加入兰巴斯并改变公共初始化 RNG；
@@ -56,6 +57,9 @@ M7 加入变形药水及唯一 Polymorph 事务；两座城镇 Black Market 的�
 M4F-C 的幸运、易疲劳和魔法无能复用共享物品、属性、tick 与设备检定入口；
 `minorSlowEnergy` 进入存档，因此协议推进至 1.167、State Hash Schema v84、基线
 推进至 contract-v249。
+Chaos Gift 导入 16 位权威混沌神明及其 16×20 奖励表；所有新角色的神明身份进入
+出生初始化、存档与状态哈希，因此协议推进至 1.168、State Hash Schema v85、基线
+推进至 contract-v250。104 个随机候选至此全部 active。
 
 早期计划中基于 `436b1967` 推算的 Protocol `1.152`、State Hash Schema `73`、
 Pack `1.212.0` 已经是历史值。后续只能从上表当前值顺延，并且版本、生成绑定、
@@ -68,15 +72,13 @@ RFB `master` 共 152 项变异：104 个基础随机候选，48 个零权重身�
 | 机制族 | active | blocked | 总数 |
 | --- | ---: | ---: | ---: |
 | passive-bonus | 44 | 7 | 51 |
-| cross-system-query | 16 | 22 | 38 |
+| cross-system-query | 17 | 21 | 38 |
 | activation | 31 | 4 | 35 |
 | periodic-effect | 27 | 1 | 28 |
-| 合计 | 118 | 34 | 152 |
+| 合计 | 119 | 33 | 152 |
 
-随机候选中已有 103 项 active，只剩 Chaos Gift blocked。`randomSelectionEnabled` 将该
-行为壳显式排除在现有随机选择器之外；主动 Polymorph 因而继续复用
-`gain_random_mutation`，却不会授予未实现内容。每项 blocked 候选转为 active 时，
-必须同时删除该排除标记。
+104 个基础随机候选已经全部 active，现有随机选择器不会再遇到行为壳。剩余 33 项
+blocked 均为零权重职业、种族、人格或特殊身份，留给 M9 收口。
 
 `rfb.mutation.merchants-friend` 是唯一一个 RFB 本来就没有数值效果的身份；它已
 被明确记录为 active，不应给它补写本地商店加成。
@@ -108,6 +110,7 @@ RFB `master` 共 152 项变异：104 个基础随机候选，48 个零权重身�
 | M6-D | Normality、Wraithform、Polymorph Wounds、Wasting、Random Telepathy、Nausea 与 Warning 复用现有变异、属性、状态、饥饿和实体等级事务 active。 |
 | M7 | 变形药水复用统一随机 gain/lose、锁定保护和互斥移除事务；原版循环、1/23 全治愈和 Black Market 获取路径已完成。 |
 | M4F-C1--C3 | Good/Bad Luck、Easy Tiring 与 Impotence 已接入共享物品生成、属性、tick、近战/投掷和设备检定入口。 |
+| M4F-C4 | Chaos Gift 已导入 16 位神明和完整奖励表；出生神明身份、最高等级触发与全部可达奖励已闭环。 |
 
 当前唯一权威角色状态仍是 `CharacterProgress.active_mutation_ids` 与
 `locked_mutation_ids`。属性潜力继续由 `CharacterProgress.attribute_potentials`
@@ -126,15 +129,15 @@ RFB `master` 共 152 项变异：104 个基础随机候选，48 个零权重身�
 - 主要回归测试：`crates/rfb-content/src/tests/catalog.rs`、
   `crates/rfb-core/src/game/tests/progression.rs`
 
-## 4. M7 前缺失的随机候选闭环
+## 4. M7 前随机候选闭环（已完成）
 
 原计划的 M5 包含 source index 0--30 的 31 个常规主动候选，M6 包含 27 个
 常规周期候选。M4F-A 与 M4F-B1--B3 已完成 6 项；即使 M5/M6 全部完成，仍需闭合以下 5 个
-不属于 M5/M6 的随机候选；其中四项已在 M4F-C1--C3 完成：
+不属于 M5/M6 的随机候选；现已全部完成：
 
 | ID | 中文名 | 当前账本 blocker | 闭环重点 |
 | --- | --- | --- | --- |
-| `rfb.mutation.chaos-gift` | 混沌神明 | `mutation-cross-system-query` | 审计并收窄混沌馈赠消费者 |
+| `rfb.mutation.chaos-gift` | 混沌神明 | 已完成 | 出生神明身份、最高等级触发与完整奖励表 |
 | `rfb.mutation.bad-luck` | 黑色光环 | 已完成 | 共享幸运查询、物品深度/质量与属性消费者 |
 | `rfb.mutation.good-luck` | 白色光环 | 已完成 | 共享幸运查询、物品质量与属性消费者 |
 | `rfb.mutation.easy-tiring` | 易疲劳 | 已完成 | `minorSlowEnergy`、恢复与物理动作 |
@@ -147,8 +150,8 @@ M7 之前合并并通过审计。建议按以下顺序推进：
    派生值和抗性管线。
 2. M4F-B1--B3（已完成）：Waybread Intolerance 与 P3.8 Elvish Waybread 同批完成，
    Ill Norm 与 ESP 的怪物身份、知识和投影支撑也已闭合。
-3. M4F-C1--C3（已完成）：Good Luck、Bad Luck、Easy Tiring 与 Impotence 的现有
-   消费者已经统一。M4F-C4 只剩 Chaos Gift 的神明与升级奖励事务。
+3. M4F-C1--C4（已完成）：Good Luck、Bad Luck、Easy Tiring 与 Impotence 的现有
+   消费者已经统一；Chaos Gift 的神明身份与升级奖励事务也已闭环。
 
 M7 前置断言应直接检查：152 项定义仍完整、`randomWeight > 0` 恰好 104 项，且
 这 104 项账本状态全部为 active。只检查总 active 数不够。
@@ -255,9 +258,8 @@ draw count、触发未命中和世界地图零 RNG。
 ## 7. P3.7-M7：Polymorph 药水（已完成）
 
 M7 已在 M4F、M5、M6 基线上完成。原计划要求先闭环 104 个随机候选；按后续推进
-决定，事务先行落地，但仍把该断言保留为 P3.7 发布硬门槛。现有选择器只排除
-Chaos Gift 这一个行为壳，因此药水
-现在可安全使用，却不会提前授予未实现内容。`gain_random_mutation` 和
+决定，事务先行落地；当前该断言已经满足。现有选择器的 104 个候选均有真实行为，
+Polymorph 药水可以安全授予其中任一项。`gain_random_mutation` 和
 `lose_random_mutation` 继续是唯一候选选择器。
 
 药水 source index 459 的原版算法：

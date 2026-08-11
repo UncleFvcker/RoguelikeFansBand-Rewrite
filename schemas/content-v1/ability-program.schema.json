@@ -2044,7 +2044,8 @@
         "electricity",
         "fire",
         "cold",
-        "poison"
+        "poison",
+        "chaos"
       ],
       "type": "string"
     }

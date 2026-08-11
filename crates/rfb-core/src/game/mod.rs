@@ -99,6 +99,7 @@ use rfb_protocol::{
 
 mod abilities;
 mod capabilities;
+mod chaos_patron;
 mod damage;
 mod death;
 mod environment_combat;
@@ -191,7 +192,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 84;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 85;
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const VISIBILITY_RADIUS: i32 = 8;
 const BASE_THROW_RANGE_BUDGET: u16 = 50;
@@ -790,6 +791,7 @@ pub struct Game {
     confusing_strike_ready: bool,
     minor_slow: u8,
     minor_slow_energy: u16,
+    chaos_patron_id: Option<String>,
     reality_change_ticks: u8,
     pending_mutation_direction: Option<PendingMutationDirectionDto>,
     next_item_instance_serial: u64,
@@ -1031,6 +1033,7 @@ impl Game {
             &mut next_item_instance_serial,
         )?;
         let home_states = town::initial_home_states(world, &content);
+        let chaos_patron_id = chaos_patron::initial_chaos_patron_id(&content, &mut rng);
         let mogaminator = MogaminatorState::for_character(&content, seed);
         let mut game = Self {
             content,
@@ -1082,6 +1085,7 @@ impl Game {
             confusing_strike_ready: false,
             minor_slow: 0,
             minor_slow_energy: 0,
+            chaos_patron_id,
             reality_change_ticks: 0,
             pending_mutation_direction: None,
             next_item_instance_serial,
@@ -1199,6 +1203,7 @@ impl Game {
             .unwrap_or_else(|| self.visual_cells());
         let mut changed = BTreeSet::new();
         let mut events = Vec::new();
+        let mut chaos_patron_event_cursor = 0;
         let mut removed_entities = Vec::new();
         let mut map_translation = None;
         let mut mogaminator_diagnostics = Vec::new();
@@ -1982,6 +1987,13 @@ impl Game {
             },
         }
 
+        self.process_chaos_patron_level_rewards(
+            &mut events,
+            &mut chaos_patron_event_cursor,
+            &mut changed,
+            &mut removed_entities,
+        )?;
+
         self.resolve_newly_visible_eldritch_horrors(
             &visible_eldritch_horrors_before_action,
             &mut events,
@@ -2058,6 +2070,12 @@ impl Game {
         }
         self.apply_task_events(&mut events)?;
         self.apply_campaign_events(&mut events);
+        self.process_chaos_patron_level_rewards(
+            &mut events,
+            &mut chaos_patron_event_cursor,
+            &mut changed,
+            &mut removed_entities,
+        )?;
         self.clear_stale_mogaminator_query();
 
         let full_visibility_refresh = self.player.position != player_position_before_command
@@ -5657,6 +5675,7 @@ const fn weapon_brand_dto(brand: WeaponBrand) -> WeaponBrandDto {
         WeaponBrand::Fire => WeaponBrandDto::Fire,
         WeaponBrand::Cold => WeaponBrandDto::Cold,
         WeaponBrand::Poison => WeaponBrandDto::Poison,
+        WeaponBrand::Chaos => WeaponBrandDto::Chaos,
     }
 }
 
@@ -5667,6 +5686,7 @@ const fn brand_damage_type(brand: WeaponBrand) -> DamageType {
         WeaponBrand::Fire => DamageType::Fire,
         WeaponBrand::Cold => DamageType::Cold,
         WeaponBrand::Poison => DamageType::Poison,
+        WeaponBrand::Chaos => DamageType::Chaos,
     }
 }
 

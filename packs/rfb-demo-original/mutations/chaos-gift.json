@@ -6,7 +6,184 @@
   "description": "混沌神明会给予你礼物。",
   "rating": "great",
   "sourceIndex": 57,
-  "randomSelectionEnabled": false,
+  "randomSelectionEnabled": true,
   "randomWeight": 4,
+  "chaosPatrons": [
+    {
+      "id": "rfb.chaos-patron.slortar",
+      "name": "斯洛塔",
+      "favoredAttribute": "constitution",
+      "rewards": [
+        "wrath", "curse-weapon", "curse-armor", "ruin-attributes", "lose-attribute",
+        "ignore", "ignore", "ignore", "polymorph-wounds", "polymorph-self",
+        "polymorph-self", "polymorph-self", "gain-attribute", "gain-attribute", "gain-experience",
+        "good-object", "chaos-weapon", "great-object", "augment-attributes", "augment-attributes"
+      ]
+    },
+    {
+      "id": "rfb.chaos-patron.mabelode",
+      "name": "马贝罗德",
+      "favoredAttribute": "constitution",
+      "rewards": [
+        "wrath", "curse-weapon", "curse-armor", "high-summon", "summon-monsters",
+        "summon-monsters", "ignore", "ignore", "polymorph-wounds", "polymorph-wounds",
+        "polymorph-self", "full-healing", "full-healing", "gain-attribute", "undead-servant",
+        "chaos-weapon", "good-object", "good-object", "good-objects", "good-objects"
+      ]
+    },
+    {
+      "id": "rfb.chaos-patron.chardros",
+      "name": "查卓斯",
+      "favoredAttribute": "strength",
+      "rewards": [
+        "wrath", "wrath", "hurt-badly", "anger", "high-summon",
+        "summon-monsters", "ignore", "ignore", "destruction", "undead-servant",
+        "genocide", "mass-genocide", "mass-genocide", "dispel-monsters", "good-object",
+        "chaos-weapon", "good-objects", "good-objects", "augment-attributes", "augment-attributes"
+      ]
+    },
+    {
+      "id": "rfb.chaos-patron.hionhurn",
+      "name": "希恩霍恩",
+      "favoredAttribute": "strength",
+      "rewards": [
+        "wrath", "wrath", "curse-weapon", "curse-armor", "ruin-attributes",
+        "ignore", "ignore", "undead-servant", "destruction", "genocide",
+        "mass-genocide", "mass-genocide", "full-healing", "gain-attribute", "gain-attribute",
+        "chaos-weapon", "good-objects", "good-objects", "augment-attributes", "augment-attributes"
+      ]
+    },
+    {
+      "id": "rfb.chaos-patron.xiombarg",
+      "name": "希昂芭格",
+      "favoredAttribute": "strength",
+      "rewards": [
+        "ty-curse", "ty-curse", "anger", "ruin-attributes", "lose-attribute",
+        "ignore", "polymorph-self", "polymorph-self", "polymorph-wounds", "polymorph-wounds",
+        "genocide", "dispel-monsters", "good-object", "good-object", "monster-servant",
+        "gain-attribute", "chaos-weapon", "gain-experience", "augment-attributes", "good-objects"
+      ]
+    },
+    {
+      "id": "rfb.chaos-patron.pyaray",
+      "name": "派拉伊",
+      "favoredAttribute": "intelligence",
+      "rewards": [
+        "wrath", "ty-curse", "anger", "high-summon", "high-summon",
+        "ignore", "ignore", "ignore", "polymorph-wounds", "polymorph-self",
+        "polymorph-self", "demon-servant", "full-healing", "gain-attribute", "gain-attribute",
+        "chaos-weapon", "havoc", "good-object", "great-object", "great-objects"
+      ]
+    },
+    {
+      "id": "rfb.chaos-patron.balaan",
+      "name": "巴兰",
+      "favoredAttribute": "strength",
+      "rewards": [
+        "ty-curse", "hurt-badly", "curse-weapon", "curse-armor", "ruin-attributes",
+        "summon-monsters", "lose-experience", "polymorph-self", "polymorph-self", "polymorph-wounds",
+        "undead-servant", "full-healing", "full-healing", "gain-experience", "gain-experience",
+        "chaos-weapon", "good-object", "good-objects", "great-objects", "augment-attributes"
+      ]
+    },
+    {
+      "id": "rfb.chaos-patron.arioch",
+      "name": "阿里奥克",
+      "favoredAttribute": "intelligence",
+      "rewards": [
+        "wrath", "anger", "ruin-attributes", "lose-experience", "high-summon",
+        "ignore", "ignore", "ignore", "ignore", "polymorph-self",
+        "polymorph-self", "mass-genocide", "demon-servant", "full-healing", "chaos-weapon",
+        "chaos-weapon", "good-object", "gain-experience", "great-object", "augment-attributes"
+      ]
+    },
+    {
+      "id": "rfb.chaos-patron.eequor",
+      "name": "依奎尔",
+      "favoredAttribute": "constitution",
+      "rewards": [
+        "wrath", "ty-curse", "anger", "curse-weapon", "ruin-attributes",
+        "ignore", "ignore", "polymorph-self", "polymorph-self", "polymorph-wounds",
+        "good-object", "good-object", "monster-servant", "full-healing", "gain-experience",
+        "gain-attribute", "chaos-weapon", "good-objects", "great-object", "augment-attributes"
+      ]
+    },
+    {
+      "id": "rfb.chaos-patron.narjhan",
+      "name": "纳尔詹",
+      "favoredAttribute": "charisma",
+      "rewards": [
+        "wrath", "curse-armor", "curse-weapon", "curse-weapon", "curse-armor",
+        "ignore", "ignore", "ignore", "polymorph-self", "polymorph-self",
+        "polymorph-wounds", "full-healing", "full-healing", "gain-experience", "augment-attributes",
+        "good-object", "good-object", "chaos-weapon", "great-object", "great-objects"
+      ]
+    },
+    {
+      "id": "rfb.chaos-patron.balo",
+      "name": "巴洛",
+      "rewards": [
+        "wrath", "demon-servant", "curse-weapon", "curse-armor", "lose-experience",
+        "gain-attribute", "lose-attribute", "polymorph-wounds", "polymorph-self", "ignore",
+        "destruction", "mass-genocide", "chaos-weapon", "great-object", "hurt-badly",
+        "augment-attributes", "ruin-attributes", "high-summon", "great-objects", "augment-attributes"
+      ]
+    },
+    {
+      "id": "rfb.chaos-patron.khorne",
+      "name": "恐虐",
+      "favoredAttribute": "strength",
+      "rewards": [
+        "wrath", "hurt-badly", "hurt-badly", "high-summon", "high-summon",
+        "ignore", "ignore", "ignore", "monster-servant", "demon-servant",
+        "polymorph-self", "polymorph-wounds", "full-healing", "good-object", "good-object",
+        "chaos-weapon", "good-objects", "good-objects", "great-object", "great-objects"
+      ]
+    },
+    {
+      "id": "rfb.chaos-patron.slaanesh",
+      "name": "色孽",
+      "favoredAttribute": "charisma",
+      "rewards": [
+        "wrath", "anger", "anger", "ruin-attributes", "lose-attribute",
+        "lose-experience", "ignore", "ignore", "polymorph-wounds", "demon-servant",
+        "polymorph-self", "full-healing", "full-healing", "good-object", "gain-experience",
+        "gain-experience", "chaos-weapon", "gain-attribute", "great-object", "augment-attributes"
+      ]
+    },
+    {
+      "id": "rfb.chaos-patron.nurgle",
+      "name": "纳垢",
+      "favoredAttribute": "constitution",
+      "rewards": [
+        "wrath", "anger", "hurt-badly", "ruin-attributes", "lose-attribute",
+        "lose-experience", "ignore", "ignore", "ignore", "polymorph-self",
+        "polymorph-self", "polymorph-wounds", "full-healing", "good-object", "gain-attribute",
+        "gain-attribute", "undead-servant", "chaos-weapon", "great-object", "augment-attributes"
+      ]
+    },
+    {
+      "id": "rfb.chaos-patron.tzeentch",
+      "name": "奸奇",
+      "favoredAttribute": "intelligence",
+      "rewards": [
+        "wrath", "curse-weapon", "curse-armor", "ruin-attributes", "lose-attribute",
+        "lose-experience", "ignore", "polymorph-self", "polymorph-self", "polymorph-self",
+        "polymorph-self", "polymorph-wounds", "full-healing", "chaos-weapon", "great-object",
+        "gain-attribute", "gain-attribute", "gain-experience", "gain-experience", "augment-attributes"
+      ]
+    },
+    {
+      "id": "rfb.chaos-patron.khaine",
+      "name": "凯恩",
+      "favoredAttribute": "strength",
+      "rewards": [
+        "wrath", "hurt-badly", "anger", "lose-attribute", "lose-experience",
+        "ignore", "ignore", "dispel-monsters", "havoc", "havoc",
+        "polymorph-self", "polymorph-self", "gain-experience", "gain-attribute", "gain-attribute",
+        "monster-servant", "good-object", "chaos-weapon", "great-object", "good-objects"
+      ]
+    }
+  ],
   "removesOnGain": []
 }

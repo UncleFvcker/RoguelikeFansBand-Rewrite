@@ -35,7 +35,7 @@
       "turn": 1,
       "worldTick": 10,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 379,
+      "rngDrawCounter": 311,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -281,35 +281,35 @@
           "strength": {
             "natural": 13,
             "maximumNatural": 13,
-            "potential": 108,
+            "potential": 98,
             "effective": 17,
             "index": 14
           },
           "intelligence": {
             "natural": 13,
             "maximumNatural": 13,
-            "potential": 108,
+            "potential": 138,
             "effective": 11,
             "index": 8
           },
           "wisdom": {
             "natural": 13,
             "maximumNatural": 13,
-            "potential": 138,
+            "potential": 128,
             "effective": 11,
             "index": 8
           },
           "dexterity": {
             "natural": 13,
             "maximumNatural": 13,
-            "potential": 128,
+            "potential": 88,
             "effective": 15,
             "index": 12
           },
           "constitution": {
             "natural": 13,
             "maximumNatural": 13,
-            "potential": 88,
+            "potential": 118,
             "effective": 15,
             "index": 12
           },
@@ -840,7 +840,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "83de11ed302108575ded5e343e71c2a8f57b290e9f3efb27fd5d884a729ccb17"
+      "stateHash": "db335aaae6f36780fff525765a71a9213cedc088153edbda070c851ff837d8ef"
     },
     "events": [
       {
@@ -852,6 +852,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "83de11ed302108575ded5e343e71c2a8f57b290e9f3efb27fd5d884a729ccb17"
+    "saveRoundTripStateHash": "db335aaae6f36780fff525765a71a9213cedc088153edbda070c851ff837d8ef"
   }
 }

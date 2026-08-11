@@ -3745,7 +3745,8 @@ fn defensive_resistance_type(token: &str) -> Option<&'static str> {
 /// Durability and display flags with no RFB behaviour to express: items
 /// never corrode and names always render from content keys.
 fn item_flag_not_applicable(flag: &str) -> bool {
-    flag.starts_with("IGNORE_") || matches!(flag, "SHOW_MODS" | "HIDE_TYPE" | "FULL_NAME")
+    flag.starts_with("IGNORE_")
+        || matches!(flag, "SHOW_MODS" | "HIDE_TYPE" | "FULL_NAME" | "RIDING")
 }
 
 #[derive(Debug, Default)]
@@ -3834,12 +3835,13 @@ const OFFENSIVE_SLAY_TARGETS: [(&str, &str); 11] = [
     ("DRAGON", "dragon"),
 ];
 
-const OFFENSIVE_BRANDS: [(&str, &str); 5] = [
+const OFFENSIVE_BRANDS: [(&str, &str); 6] = [
     ("BRAND_ACID", "acid"),
     ("BRAND_ELEC", "electricity"),
     ("BRAND_FIRE", "fire"),
     ("BRAND_COLD", "cold"),
     ("BRAND_POIS", "poison"),
+    ("BRAND_CHAOS", "chaos"),
 ];
 
 #[derive(Debug, Default)]
@@ -15654,7 +15656,8 @@ F:CHR
         assert_eq!(fang["modifiers"]["dexterity"], 2);
         assert_eq!(fang["slays"]["evil"], "slay");
         assert_eq!(fang["slays"]["dragon"], "kill");
-        assert_eq!(fang["brands"][0], "fire");
+        assert_eq!(fang["brands"][0], "chaos");
+        assert_eq!(fang["brands"][1], "fire");
         assert!(
             !outcome
                 .report
@@ -15673,7 +15676,12 @@ F:CHR
                 .unmapped_artifact_flags
                 .contains_key("BRAND_FIRE")
         );
-        assert_eq!(outcome.report.unmapped_artifact_flags["BRAND_CHAOS"], 1);
+        assert!(
+            !outcome
+                .report
+                .unmapped_artifact_flags
+                .contains_key("BRAND_CHAOS")
+        );
 
         // Fixed-pval jewelry proves the split: the base ring stays bare while
         // the artifact carries the attribute bonus. The defensive fold rides

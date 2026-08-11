@@ -543,6 +543,7 @@ pub(crate) fn player_to_save(
         energy_need: player.energy_need,
         minor_slow: 0,
         minor_slow_energy: 0,
+        chaos_patron_id: None,
         reality_change_ticks: 0,
         pending_mutation_direction: None,
         statuses: player
@@ -1152,6 +1153,7 @@ const fn weapon_brand_dto(value: WeaponBrand) -> WeaponBrandDto {
         WeaponBrand::Fire => WeaponBrandDto::Fire,
         WeaponBrand::Cold => WeaponBrandDto::Cold,
         WeaponBrand::Poison => WeaponBrandDto::Poison,
+        WeaponBrand::Chaos => WeaponBrandDto::Chaos,
     }
 }
 
@@ -1162,6 +1164,7 @@ const fn weapon_brand(value: WeaponBrandDto) -> WeaponBrand {
         WeaponBrandDto::Fire => WeaponBrand::Fire,
         WeaponBrandDto::Cold => WeaponBrand::Cold,
         WeaponBrandDto::Poison => WeaponBrand::Poison,
+        WeaponBrandDto::Chaos => WeaponBrand::Chaos,
     }
 }
 

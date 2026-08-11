@@ -54,6 +54,75 @@
       ],
       "type": "string"
     },
+    "ChaosPatronDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "favoredAttribute": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TechniqueAttribute"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "rewards": {
+          "items": {
+            "$ref": "#/$defs/ChaosPatronRewardKind"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "rewards"
+      ],
+      "type": "object"
+    },
+    "ChaosPatronRewardKind": {
+      "enum": [
+        "polymorph-self",
+        "gain-experience",
+        "lose-experience",
+        "good-object",
+        "great-object",
+        "chaos-weapon",
+        "good-objects",
+        "great-objects",
+        "ty-curse",
+        "summon-monsters",
+        "high-summon",
+        "havoc",
+        "gain-attribute",
+        "lose-attribute",
+        "ruin-attributes",
+        "augment-attributes",
+        "polymorph-wounds",
+        "full-healing",
+        "hurt-badly",
+        "curse-weapon",
+        "curse-armor",
+        "anger",
+        "wrath",
+        "destruction",
+        "genocide",
+        "mass-genocide",
+        "dispel-monsters",
+        "ignore",
+        "undead-servant",
+        "demon-servant",
+        "monster-servant"
+      ],
+      "type": "string"
+    },
     "MutationActivationCostScalingDefinition": {
       "additionalProperties": false,
       "properties": {
@@ -723,6 +792,12 @@
     "blackMarketStandardPrices": {
       "default": false,
       "type": "boolean"
+    },
+    "chaosPatrons": {
+      "items": {
+        "$ref": "#/$defs/ChaosPatronDefinition"
+      },
+      "type": "array"
     },
     "contactAura": {
       "anyOf": [

@@ -340,6 +340,7 @@ const fn weapon_brand_dto(brand: WeaponBrand) -> WeaponBrandDto {
         WeaponBrand::Fire => WeaponBrandDto::Fire,
         WeaponBrand::Cold => WeaponBrandDto::Cold,
         WeaponBrand::Poison => WeaponBrandDto::Poison,
+        WeaponBrand::Chaos => WeaponBrandDto::Chaos,
     }
 }
 

@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "formatVersion": 1,
+  "id": "demo.affix.chaos",
+  "nameKey": "affix-demo-chaos-name",
+  "descriptionKey": "affix-demo-chaos-description",
+  "generationLevel": 30,
+  "resistances": { "chaos": "resistant" },
+  "brands": ["chaos"],
+  "tags": ["chaos", "offense", "resistance"]
+}

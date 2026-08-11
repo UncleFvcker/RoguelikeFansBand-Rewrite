@@ -147,6 +147,18 @@ pub(crate) fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<
         }) {
             return Err(ContentError::InvalidMutation(mutation.id.clone()));
         }
+        let mut patron_ids = BTreeSet::new();
+        if (!mutation.chaos_patrons.is_empty()
+            && (mutation.id != "rfb.mutation.chaos-gift" || mutation.chaos_patrons.len() != 16))
+            || mutation.chaos_patrons.iter().any(|patron| {
+                validate_definition_id(&patron.id, "chaos-patron").is_err()
+                    || patron.name.trim().is_empty()
+                    || patron.rewards.len() != 20
+                    || !patron_ids.insert(patron.id.clone())
+            })
+        {
+            return Err(ContentError::InvalidMutation(mutation.id.clone()));
+        }
         if mutation
             .periodic_effect
             .as_ref()

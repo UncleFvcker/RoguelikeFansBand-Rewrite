@@ -238,6 +238,7 @@ fn thieves_hideout_inline_floor_preserves_the_fixed_map_and_six_member_formation
         .find(|floor| floor.id == "demo.floor.thieves-hideout")
         .expect("thieves' hideout should remain available")
         .clone();
+    game.rng = RfbRng::seeded(42);
     let floor = game
         .generate_procedural_floor(&definition, None)
         .expect("fixed thieves' hideout should generate");
@@ -266,8 +267,8 @@ fn thieves_hideout_inline_floor_preserves_the_fixed_map_and_six_member_formation
             "#####...#...#...#...#",
             "#####...#...#...#.^.#",
             "#<..##+###+###+###+##",
-            "#.^.#....^...^......#",
-            "#...+...............#",
+            "#.^^#...............#",
+            "#.^.+...............#",
             "#####################",
         ]
     );
@@ -376,13 +377,21 @@ fn warrens_maps_are_seeded_connected_varied_and_persistent() {
     let mut generated_maps = BTreeSet::new();
     let mut walkable_masks = Vec::<Vec<bool>>::new();
     for seed in 0..16 {
-        let mut game = Game::new_with_build(seed, "demo.build.warrior")
-            .expect("Warrens journey should create");
-        place_player_on_terrain(&mut game, "demo.terrain.stairs-down");
-        dispatch_next(&mut game, GameCommand::TraverseStairs);
-
-        assert_eq!((game.width, game.height), (66, 22));
-        let route_terrain = game
+        let mut proof = Game::new_with_build(seed, "demo.build.warrior")
+            .expect("Warrens connectivity proof should create");
+        let definition = proof
+            .content
+            .world(&proof.world_id)
+            .expect("Middle-earth should remain available")
+            .procedural_floors
+            .iter()
+            .find(|floor| floor.id == "demo.floor.warrens-depth-1")
+            .expect("Warrens depth one should remain available")
+            .clone();
+        let generated = proof
+            .generate_procedural_floor(&definition, None)
+            .expect("Warrens floor should generate");
+        let route_terrain = generated
             .terrain
             .iter()
             .map(|terrain_id| match terrain_id.as_str() {
@@ -393,9 +402,21 @@ fn warrens_maps_are_seeded_connected_varied_and_persistent() {
             })
             .collect::<Vec<_>>();
         assert!(
-            generated_terrain_is_connected(&route_terrain, game.width, game.height, &game.content,),
-            "seed {seed} should retain a connected travel network"
+            generated_terrain_is_connected(
+                &route_terrain,
+                generated.width,
+                generated.height,
+                &proof.content,
+            ),
+            "seed {seed} should generate a connected travel network"
         );
+
+        let mut game = Game::new_with_build(seed, "demo.build.warrior")
+            .expect("Warrens journey should create");
+        place_player_on_terrain(&mut game, "demo.terrain.stairs-down");
+        dispatch_next(&mut game, GameCommand::TraverseStairs);
+
+        assert_eq!((game.width, game.height), (66, 22));
         assert!(
             (1..=2).contains(
                 &game

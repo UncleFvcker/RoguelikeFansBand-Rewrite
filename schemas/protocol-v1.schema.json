@@ -9552,7 +9552,8 @@
         "electricity",
         "fire",
         "cold",
-        "poison"
+        "poison",
+        "chaos"
       ]
     },
     "WildernessLocationDto": {

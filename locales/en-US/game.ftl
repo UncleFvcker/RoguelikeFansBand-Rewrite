@@ -102,6 +102,7 @@ message-projectile-slay = Your shot destroys { $target }.
 message-projectile-ammo-recovered = Your { $target } lands intact.
 message-projectile-ammo-broken = Your { $target } breaks on impact.
 message-mutation-gained = You gain the { $mutation } mutation.
+message-mutation-chaos-patron-reward = { $patron } grants you a chaotic gift.
 message-mutation-lost = You lose the { $mutation } mutation.
 message-mutation-periodic-triggered = Your { $mutation } mutation activates.
 message-mutation-warning-extreme = You feel utterly terrified!

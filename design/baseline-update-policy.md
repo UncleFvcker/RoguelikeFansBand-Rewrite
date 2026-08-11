@@ -6,7 +6,7 @@
 
 contract fixture 是规则兼容边界，不能把测试失败简单处理为“刷新预期结果”。政策用于保证每次规则变化只修改真正受影响的场景，同时保留可审查的失败原因。
 
-当前逻辑基线是 `contract-v249`，机器可读政策固定在：
+当前逻辑基线是 `contract-v250`，机器可读政策固定在：
 
 ```text
 tests/fixtures/active/baseline-policy.json
@@ -132,3 +132,9 @@ Random Telepathy、Nausea、Warning 与 Wraithform 复用变异移除、属性�
 新增持久的恢复能量；魔法无能在共享设备检定入口按 staff/rod 与特殊效果修正技能。
 `minorSlowEnergy` 使协议升至 1.167、State Hash Schema 升至 v84，21 个 fixture
 全量刷新；具体概率、疲劳恢复和设备类别分支由 Core 聚焦测试覆盖。
+
+`contract-v250` 完成随机候选 Chaos Gift。所有新角色出生时确定并持久化一位 RFB
+权威混沌神明；拥有该变异的角色首次达到新最高等级时按原版奖励表结算。神明身份
+增加公共初始化 RNG 与存档字段，因此协议升至 1.168、State Hash Schema 升至 v85，
+21 个 fixture 全量刷新。奖励选择、最高等级门槛和混沌武器等级表由 Core 聚焦测试
+覆盖；104 个随机候选至此全部 active。

@@ -1191,11 +1191,19 @@ impl Game {
     }
 
     fn mutation_can_be_gained(&self, definition: &MutationDefinition) -> bool {
-        !self.progress.active_mutation_ids.contains(&definition.id)
-            && !definition
-                .removes_on_gain
-                .iter()
-                .any(|mutation_id| self.progress.locked_mutation_ids.contains(mutation_id))
+        if self.progress.active_mutation_ids.contains(&definition.id)
+            || (definition.id == chaos_patron::CHAOS_GIFT_MUTATION_ID
+                && self
+                    .progress
+                    .active_mutation_ids
+                    .contains(chaos_patron::PURPLE_GIFT_MUTATION_ID))
+        {
+            return false;
+        }
+        !definition
+            .removes_on_gain
+            .iter()
+            .any(|mutation_id| self.progress.locked_mutation_ids.contains(mutation_id))
     }
 
     pub(super) fn lose_mutation(

@@ -1,0 +1,26 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 600,
+  "descriptionKey": "item-demo-flamberge-description",
+  "equipmentSlot": "weapon",
+  "formatVersion": 1,
+  "generationLevel": 40,
+  "glyph": "|",
+  "id": "demo.item.flamberge",
+  "maxStack": 1,
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 3,
+    "damageSides": 8,
+    "toDamage": 0,
+    "toHit": 0
+  },
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-flamberge-name",
+  "tags": [
+    "equipment",
+    "rfb-compatibility",
+    "weapon"
+  ],
+  "weightTenthsPound": 230
+}

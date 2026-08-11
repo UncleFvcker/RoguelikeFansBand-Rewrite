@@ -326,6 +326,7 @@ weapon-brand-electricity-name = 闪电
 weapon-brand-fire-name = 火焰
 weapon-brand-cold-name = 寒霜
 weapon-brand-poison-name = 毒素
+weapon-brand-chaos-name = 混沌
 resistance-level-vulnerable = 易伤
 resistance-level-resistant = 抵抗
 resistance-level-strong = 强抗

@@ -53,11 +53,18 @@ pub(super) enum ItemUsePlan {
     ResetRecall(floor::RecallDestination),
 }
 
-struct AreaDestructionPlan {
+pub(super) struct AreaDestructionPlan {
     terrain_replacements: Vec<(Position, String)>,
     entity_ids: BTreeSet<String>,
     item_ids: BTreeSet<String>,
     gold_pile_ids: BTreeSet<String>,
+}
+
+pub(super) struct AreaDestructionOutcome {
+    pub(super) affected_positions: Vec<Position>,
+    pub(super) removed_entities: usize,
+    pub(super) removed_items: usize,
+    pub(super) removed_gold_piles: usize,
 }
 
 pub(super) enum VisibleBanishmentOutcome {
@@ -993,7 +1000,7 @@ impl Game {
     }
 
     #[allow(clippy::too_many_arguments)]
-    fn plan_area_destruction(
+    pub(super) fn plan_area_destruction(
         &mut self,
         minimum_radius: u8,
         maximum_radius: u8,
@@ -1086,47 +1093,22 @@ impl Game {
         }
     }
 
-    #[allow(clippy::too_many_arguments)]
-    fn resolve_item_area_destruction(
+    pub(super) fn apply_area_destruction_plan(
         &mut self,
-        source_kind_id: &str,
-        allowed: bool,
-        minimum_radius: u8,
-        maximum_radius: u8,
-        floor_terrain_id: &str,
-        wall_terrain_id: &str,
-        quartz_terrain_id: &str,
-        magma_terrain_id: &str,
-        events: &mut Vec<DomainEvent>,
+        plan: AreaDestructionPlan,
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
-    ) {
-        if !allowed {
-            self.mark_item_aware(source_kind_id);
-            events.push(DomainEvent::ItemAreaDestruction {
-                source_kind_id: source_kind_id.to_owned(),
-                display_name_key: self.item_display_name_key(source_kind_id),
-                protected_floor: true,
-                affected_positions: Vec::new(),
-                removed_entities: 0,
-                removed_items: 0,
-                removed_gold_piles: 0,
-            });
-            return;
-        }
-        let plan = self.plan_area_destruction(
-            minimum_radius,
-            maximum_radius,
-            floor_terrain_id,
-            wall_terrain_id,
-            quartz_terrain_id,
-            magma_terrain_id,
-        );
-        let affected_positions = plan
-            .terrain_replacements
-            .iter()
-            .map(|(position, _)| *position)
-            .collect::<Vec<_>>();
+    ) -> AreaDestructionOutcome {
+        let outcome = AreaDestructionOutcome {
+            affected_positions: plan
+                .terrain_replacements
+                .iter()
+                .map(|(position, _)| *position)
+                .collect(),
+            removed_entities: plan.entity_ids.len(),
+            removed_items: plan.item_ids.len(),
+            removed_gold_piles: plan.gold_pile_ids.len(),
+        };
         for (position, terrain_id) in plan.terrain_replacements {
             let index = self
                 .index(position)
@@ -1170,15 +1152,55 @@ impl Game {
         }
         self.gold_piles
             .retain(|pile| !plan.gold_pile_ids.contains(pile.id.as_str()));
+        outcome
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn resolve_item_area_destruction(
+        &mut self,
+        source_kind_id: &str,
+        allowed: bool,
+        minimum_radius: u8,
+        maximum_radius: u8,
+        floor_terrain_id: &str,
+        wall_terrain_id: &str,
+        quartz_terrain_id: &str,
+        magma_terrain_id: &str,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) {
+        if !allowed {
+            self.mark_item_aware(source_kind_id);
+            events.push(DomainEvent::ItemAreaDestruction {
+                source_kind_id: source_kind_id.to_owned(),
+                display_name_key: self.item_display_name_key(source_kind_id),
+                protected_floor: true,
+                affected_positions: Vec::new(),
+                removed_entities: 0,
+                removed_items: 0,
+                removed_gold_piles: 0,
+            });
+            return;
+        }
+        let plan = self.plan_area_destruction(
+            minimum_radius,
+            maximum_radius,
+            floor_terrain_id,
+            wall_terrain_id,
+            quartz_terrain_id,
+            magma_terrain_id,
+        );
+        let outcome = self.apply_area_destruction_plan(plan, changed, removed_entities);
         self.mark_item_aware(source_kind_id);
         events.push(DomainEvent::ItemAreaDestruction {
             source_kind_id: source_kind_id.to_owned(),
             display_name_key: self.item_display_name_key(source_kind_id),
             protected_floor: false,
-            affected_positions,
-            removed_entities: plan.entity_ids.len(),
-            removed_items: plan.item_ids.len(),
-            removed_gold_piles: plan.gold_pile_ids.len(),
+            affected_positions: outcome.affected_positions,
+            removed_entities: outcome.removed_entities,
+            removed_items: outcome.removed_items,
+            removed_gold_piles: outcome.removed_gold_piles,
         });
     }
 

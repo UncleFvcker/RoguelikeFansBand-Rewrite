@@ -669,6 +669,7 @@ impl Game {
         events: &mut Vec<DomainEvent>,
     ) {
         let previous_level = self.progress.level;
+        let previous_max_level = self.progress.max_level;
         let mut previous_max_hp = self.player_max_hp_at_level(previous_level);
         let ExperienceGainPlan {
             amount,
@@ -696,6 +697,7 @@ impl Game {
                 level,
                 max_hp,
                 pending_attribute_increases: self.progress.pending_attribute_increases,
+                reached_new_maximum: level > previous_max_level,
             });
         }
     }

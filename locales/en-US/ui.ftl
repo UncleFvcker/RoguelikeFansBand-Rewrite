@@ -330,6 +330,7 @@ weapon-brand-electricity-name = electricity
 weapon-brand-fire-name = fire
 weapon-brand-cold-name = cold
 weapon-brand-poison-name = poison
+weapon-brand-chaos-name = chaos
 resistance-level-vulnerable = vulnerable
 resistance-level-resistant = resistant
 resistance-level-strong = strong

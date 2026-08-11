@@ -139,7 +139,7 @@ export type SlayTargetDto = "animal" | "evil" | "good" | "living" | "human" | "u
 
 export type SlayLevelDto = "slay" | "kill";
 
-export type WeaponBrandDto = "acid" | "electricity" | "fire" | "cold" | "poison";
+export type WeaponBrandDto = "acid" | "electricity" | "fire" | "cold" | "poison" | "chaos";
 
 export type SlayDto = { target: SlayTargetDto, level: SlayLevelDto, };
 

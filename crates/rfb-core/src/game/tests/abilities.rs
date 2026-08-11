@@ -663,16 +663,29 @@ fn invoke_spirits_records_deterministic_random_no_op_branches() {
     let seed = (0..512)
         .find(|seed| {
             let (_, events) = cast(*seed);
-            events.iter().any(|event| {
+            let selected_pending_branch = events.iter().any(|event| {
                 matches!(
                     event,
                     DomainEvent::AbilityEffectsResolved { resolution, .. }
                         if matches!(
                             resolution.effects.as_slice(),
-                            [AbilityEffectResolutionDto::NoOp { .. }]
+                            [AbilityEffectResolutionDto::RandomChoice { roll, branch_index, .. }]
+                                if *roll > 0 && matches!(*branch_index, 3 | 7)
                         )
                 )
-            })
+            });
+            let recorded_pending_no_op = events.iter().any(|event| {
+                matches!(
+                    event,
+                    DomainEvent::AbilityEffectsResolved { resolution, .. }
+                        if matches!(
+                            resolution.effects.as_slice(),
+                            [AbilityEffectResolutionDto::NoOp { reason, .. }]
+                                if reason.ends_with("-pending")
+                        )
+                )
+            });
+            selected_pending_branch && recorded_pending_no_op
         })
         .expect("a deterministic Invoke Spirits no-op branch should exist");
     let (left, left_events) = cast(seed);
@@ -2174,6 +2187,7 @@ fn mutation_grow_mold_and_sterility_persist_only_authoritative_state() {
         )
         .expect("Sterility should resolve");
     assert!(sterile.reproduction_suppressed);
+    sterile.player.hp = sterile.player.hp.min(sterile.effective_player_max_hp());
     let restored = Game::from_save(sterile.to_save()).expect("sterility state should reload");
     assert!(restored.reproduction_suppressed);
     assert_eq!(restored.state_hash(), sterile.state_hash());

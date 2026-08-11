@@ -207,6 +207,7 @@ mod tests {
                 energy_need: 0,
                 minor_slow: 0,
                 minor_slow_energy: 0,
+                chaos_patron_id: None,
                 reality_change_ticks: 0,
                 pending_mutation_direction: None,
                 statuses: Vec::new(),

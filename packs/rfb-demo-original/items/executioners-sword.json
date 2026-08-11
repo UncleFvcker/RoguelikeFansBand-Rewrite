@@ -1,0 +1,26 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 850,
+  "descriptionKey": "item-demo-executioners-sword-description",
+  "equipmentSlot": "weapon",
+  "formatVersion": 1,
+  "generationLevel": 40,
+  "glyph": "|",
+  "id": "demo.item.executioners-sword",
+  "maxStack": 1,
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 4,
+    "damageSides": 6,
+    "toDamage": 0,
+    "toHit": 0
+  },
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-executioners-sword-name",
+  "tags": [
+    "equipment",
+    "rfb-compatibility",
+    "weapon"
+  ],
+  "weightTenthsPound": 260
+}

@@ -3069,7 +3069,7 @@ impl Game {
         Ok(())
     }
 
-    fn resolve_player_polymorph_self_effect(
+    pub(super) fn resolve_player_polymorph_self_effect(
         &mut self,
         ability: &AbilityDefinition,
         events: &mut Vec<DomainEvent>,

@@ -6,7 +6,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.241.0");
+    assert_eq!(catalog.pack_version(), "1.242.0");
     assert!(catalog.mutation("rfb.mutation.spit-acid").is_some());
     assert!(
         catalog
@@ -207,6 +207,27 @@ fn mutation_definitions_match_the_frozen_legacy_ledger() {
             expected["removesOnGain"]
         );
     }
+    assert_eq!(
+        catalog
+            .mutations()
+            .filter(|mutation| mutation.random_weight > 0)
+            .count(),
+        104
+    );
+    assert_eq!(
+        catalog
+            .mutations()
+            .filter(|mutation| mutation.random_weight > 0 && mutation.random_selection_enabled)
+            .count(),
+        104
+    );
+    assert_eq!(
+        mutations
+            .iter()
+            .filter(|mutation| mutation["status"] == "active")
+            .count(),
+        119
+    );
 }
 
 #[test]
@@ -1121,7 +1142,7 @@ fn active_mutation_batches_are_bound_to_authoritative_abilities() {
             .iter()
             .filter(|entry| entry["status"] == "active")
             .count(),
-        118
+        119
     );
     assert_eq!(
         entries
@@ -1133,7 +1154,7 @@ fn active_mutation_batches_are_bound_to_authoritative_abilities() {
                         .is_some_and(|weight| weight > 0)
             })
             .count(),
-        103
+        104
     );
     assert!(entries.iter().all(|entry| {
         entry["status"] == "active"

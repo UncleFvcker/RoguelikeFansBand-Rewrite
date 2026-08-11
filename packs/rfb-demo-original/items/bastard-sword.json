@@ -1,0 +1,26 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 350,
+  "descriptionKey": "item-demo-bastard-sword-description",
+  "equipmentSlot": "weapon",
+  "formatVersion": 1,
+  "generationLevel": 15,
+  "glyph": "|",
+  "id": "demo.item.bastard-sword",
+  "maxStack": 1,
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 3,
+    "damageSides": 5,
+    "toDamage": 0,
+    "toHit": 0
+  },
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-bastard-sword-name",
+  "tags": [
+    "equipment",
+    "rfb-compatibility",
+    "weapon"
+  ],
+  "weightTenthsPound": 140
+}

@@ -47,6 +47,10 @@ export function createPresentationFormatter(
         return localization.format("message-mutation-periodic-triggered", {
           mutation: event.args.name ?? event.args.target ?? "?",
         });
+      case "mutation-chaos-patron-reward":
+        return localization.format("message-mutation-chaos-patron-reward", {
+          patron: event.args.patron ?? event.args.target ?? "?",
+        });
       case "mutation-warning-extreme":
       case "mutation-warning-afraid":
       case "mutation-warning-worried":

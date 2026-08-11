@@ -570,6 +570,10 @@ fn slowness_potion_refreshes_existing_slow_without_becoming_aware() {
         grants_wall_passage: false,
         incoming_damage_percent: 100,
     });
+    let duration_seed = (0..512)
+        .find(|seed| RfbRng::seeded(*seed).bounded(25) == 24)
+        .expect("a maximum slowness duration roll should exist");
+    game.rng = RfbRng::seeded(duration_seed);
     let draws_before = game.rng_draw_counter();
 
     let update = dispatch_next(

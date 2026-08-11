@@ -1,0 +1,29 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 3500,
+  "descriptionKey": "item-demo-falcon-sword-description",
+  "equipmentBonuses": {
+    "meleeAttacks": 3
+  },
+  "equipmentSlot": "weapon",
+  "formatVersion": 1,
+  "generationLevel": 65,
+  "glyph": "|",
+  "id": "demo.item.falcon-sword",
+  "maxStack": 1,
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 1,
+    "damageSides": 7,
+    "toDamage": 0,
+    "toHit": 0
+  },
+  "mogaminatorRare": true,
+  "nameKey": "item-demo-falcon-sword-name",
+  "tags": [
+    "equipment",
+    "rfb-compatibility",
+    "weapon"
+  ],
+  "weightTenthsPound": 30
+}
