@@ -484,3 +484,12 @@ warlock，当前包包含 49 种地形、607 种 actor、255 种物品、266 个
 loot table；严格同步 560 条，内容 hash 为
 `75d2145cc9702089759ce75b2c3ce1a0dfe4cb5b5f0b88717e29b792b0ce3901`。
 协议保持 1.169，State Hash Schema 保持 v85。
+
+contract-v257 / 包 1.248.0 扩展显式接触光环导入，`A:FIRE`、`A:ELEC` 与
+`A:CAUSE_2` 分别映射为 fire、electricity 与 curse；诅咒继续复用现有豁免和伤害
+边界。新增怪物专用 `polymorph-target` 内容效果，复用玩家变异重组与 actor 形态选择
+事务，不增加第二套形态系统。新增 Kharis、Hisser、Dokkaebi 与 Flaming crow，当前包
+包含 49 种地形、611 种 actor、255 种物品、271 个能力和 13 张 loot table；严格
+同步 564 条，内容 hash 为
+`3f31646c59caea5c6959112540cb820110a17000cafd0c763b14b9bd058973ba`。协议升至
+1.170，State Hash Schema 保持 v85。

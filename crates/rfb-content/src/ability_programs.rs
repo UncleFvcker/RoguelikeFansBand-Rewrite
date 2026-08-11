@@ -241,6 +241,7 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::BlinkTarget { .. }
                     | AbilityEffectDefinition::TeleportTarget
                     | AbilityEffectDefinition::TeleportLevel
+                    | AbilityEffectDefinition::PolymorphTarget
                     | AbilityEffectDefinition::NoOp { .. }
             ) || matches!(
                 effect,

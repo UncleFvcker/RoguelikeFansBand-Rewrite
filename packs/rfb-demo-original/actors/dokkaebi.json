@@ -1,0 +1,158 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 1393,
+    "maxDepth": 85,
+    "rarity": 4
+  },
+  "attack": 7,
+  "damageDice": 2,
+  "damageSides": 7,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [
+      {
+        "guaranteedForUnique": true,
+        "percent": 90
+      }
+    ],
+    "countDice": [
+      {
+        "dice": 1,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.warrens",
+    "kind": "items-and-gold",
+    "minimumQuality": "fine"
+  },
+  "defense": 4,
+  "descriptionKey": "actor-demo-dokkaebi-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 968,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "h",
+  "hitPointDice": {
+    "dice": 22,
+    "sides": 33
+  },
+  "id": "demo.actor.dokkaebi",
+  "level": 30,
+  "maxHp": 374,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 2,
+            "damageSides": 7,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "armorMitigated": false,
+            "damageDice": 2,
+            "damageSides": 7,
+            "damageType": "electricity",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "type": "terrify"
+          }
+        ],
+        "methodId": "rfb.blow.gaze",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "attributes": [
+              "strength"
+            ],
+            "type": "drain-attributes"
+          },
+          {
+            "chancePercent": 25,
+            "damageDice": 0,
+            "damageSides": 0,
+            "type": "confusion"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.summon-legacy-import-l30-1d3-1",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.mind-blast-7d7",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.confuse",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.polymorph-target",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.banish",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.haste-self",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-electricity-1d90-20",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.shriek",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 50
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "nameKey": "actor-demo-dokkaebi-name",
+  "regenerates": true,
+  "resistances": {
+    "electricity": "resistant",
+    "fire": "resistant",
+    "nexus": "resistant",
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 115,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "legacy-import",
+    "orc-cave",
+    "resist-teleport"
+  ]
+}

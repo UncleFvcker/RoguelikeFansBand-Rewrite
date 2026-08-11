@@ -103,6 +103,7 @@ pub enum ActorDamageType {
     Ice,
     Water,
     Psi,
+    Curse,
 }
 
 /// Content-declared resistance tier; `normal` is expressed by omission.

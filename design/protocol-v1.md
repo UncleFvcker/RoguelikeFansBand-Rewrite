@@ -507,3 +507,8 @@ contract-v255 为怪物近战物理伤害增加仅用于内容和运行时结算
 contract-v256 复用既有 `AnimateDead` 效果与结算 DTO，为内容侧增加怪物专用的遗骸
 失败率，并生成敌对召唤物。不增加协议字段或持久状态，协议仍为 1.169，State Hash
 Schema 仍为 v85，save 容器仍为 v1。
+
+协议 1.170 / contract-v257 增加怪物专用 `PolymorphTarget` 能力效果与窄结算 DTO。
+玩家目标复用既有变异重组事务；玩家阵营召唤物复用变色龙候选选择与形态属性刷新，
+并直接替换实际 actor kind。接触光环的火焰、闪电和诅咒仍走既有伤害、抗性与豁免
+事件，不增加专用协议。State Hash Schema 保持 v85，save 容器保持 v1。

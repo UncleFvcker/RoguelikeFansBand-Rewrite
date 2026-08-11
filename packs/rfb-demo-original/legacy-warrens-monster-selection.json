@@ -3372,6 +3372,30 @@
       "id": "orc-warlock",
       "tags": ["orc-cave"],
       "omittedFlags": []
+    },
+    {
+      "sourceIndex": 409,
+      "id": "kharis-the-powerslave",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE", "POS_HOLD_LIFE"]
+    },
+    {
+      "sourceIndex": 1284,
+      "id": "hisser",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 1393,
+      "id": "dokkaebi",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 1312,
+      "id": "flaming-crow",
+      "tags": [],
+      "omittedFlags": ["POS_GAIN_AC"]
     }
   ]
 }

@@ -298,6 +298,7 @@ pub(super) fn validate_actors(
                         | ActorDamageType::Fire
                         | ActorDamageType::Cold
                         | ActorDamageType::Electricity
+                        | ActorDamageType::Curse
                 ) || !(1..=100).contains(&aura.damage_dice)
                     || !(1..=10_000).contains(&aura.damage_sides)
                     || aura

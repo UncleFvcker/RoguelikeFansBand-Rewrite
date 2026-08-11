@@ -2603,4 +2603,23 @@ actor-demo-arch-vile-description = 一个苍白、像尸体一样的低级恶魔
 actor-demo-orc-warlock-name = 半兽人邪术师
 actor-demo-orc-warlock-description = 一个为了获得可怕力量而与邪恶势力签订契约的半兽人。
 
+ability-legacy-ball-electricity-1d90-20-name = 闪电球
+ability-legacy-ball-electricity-1d90-20-description = 制造一团半径 2、造成 1d90+20 点闪电伤害的爆发。
+ability-legacy-kin-kharis-the-powerslave-name = 召唤同族
+ability-legacy-kin-kharis-the-powerslave-description = 召唤一至三个卡里斯的同族。
+ability-legacy-polymorph-target-name = 变形他人
+ability-legacy-polymorph-target-description = 尝试将目标变形成另一种形态。
+ability-legacy-summon-legacy-import-l30-1d3-1-name = 召唤怪物
+ability-legacy-summon-legacy-import-l30-1d3-1-description = 召唤二至四只等级不高于 30 的怪物。
+ability-legacy-summon-undead-l26-1d3-1-name = 召唤死灵
+ability-legacy-summon-undead-l26-1d3-1-description = 召唤二至四只等级不高于 26 的死灵。
+actor-demo-kharis-the-powerslave-name = 奴隶木乃伊卡里斯
+actor-demo-kharis-the-powerslave-description = 他出来是为了向亵渎了他坟墓的你复仇。
+actor-demo-hisser-name = 嘶嘶怪
+actor-demo-hisser-description = 一个幽灵般的幻影，隐约可见一个淡蓝色的轮廓，伴随着嘶嘶声，周身闪烁着噼啪作响的电光。
+actor-demo-dokkaebi-name = 多克比
+actor-demo-dokkaebi-description = 一个小巧、可爱、长着角的漂浮毛球；它太充满恶意了，不能被称为天使，外表又太天真了，不能被称为恶魔，而且长得太奇怪了，不能被称为猫。
+actor-demo-flaming-crow-name = 火焰乌鸦
+actor-demo-flaming-crow-description = 至少它不像这片奇异土地上的大多数本土生物那样有毒。
+
 actor-core-fuzzy-monster-name = 怪物

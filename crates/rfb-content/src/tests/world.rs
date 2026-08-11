@@ -263,6 +263,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.filthy-street-urchin", 1, 2, 0),
             ("demo.actor.fire-hound", 307, 2, 70),
             ("demo.actor.fire-spirit", 306, 2, 80),
+            ("demo.actor.flaming-crow", 1312, 2, 40),
             ("demo.actor.flesh-golem", 256, 1, 50),
             ("demo.actor.floating-eye", 32, 1, 10),
             ("demo.actor.floating-orb", 912, 2, 50),
@@ -592,7 +593,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         .iter()
         .filter(|actor| actor.tags.iter().any(|tag| tag == "orc-cave"))
         .collect::<Vec<_>>();
-    assert_eq!(orc_cave.len(), 181);
+    assert_eq!(orc_cave.len(), 184);
 
     for id in [
         "demo.actor.bunyip",
@@ -638,7 +639,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
     }
     assert_eq!(
         level_counts,
-        [16, 14, 12, 16, 24, 15, 17, 17, 17, 16, 7, 10]
+        [16, 14, 12, 16, 24, 17, 17, 17, 17, 17, 7, 10]
     );
 
     let mouse = artifact
@@ -3103,6 +3104,59 @@ fn orc_cave_animate_dead_preserves_remain_specific_failure_rates() {
                 .any(|candidate| candidate.ability_id == ability.id)
         }));
     }
+}
+
+#[test]
+fn orc_cave_contact_auras_and_polymorph_keep_explicit_effects() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actor = |id: &str| {
+        artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == format!("demo.actor.{id}"))
+            .unwrap_or_else(|| panic!("{id} should be imported"))
+    };
+
+    for (id, damage_type, dice, sides) in [
+        ("kharis-the-powerslave", ActorDamageType::Curse, 1, 3),
+        ("hisser", ActorDamageType::Electricity, 2, 3),
+        ("flaming-crow", ActorDamageType::Fire, 1, 2),
+    ] {
+        assert!(actor(id).contact_auras.iter().any(|aura| {
+            aura.damage_type == damage_type
+                && aura.damage_dice == dice
+                && aura.damage_sides == sides
+        }));
+    }
+    assert!(
+        !actor("flaming-crow")
+            .tags
+            .iter()
+            .any(|tag| tag == "orc-cave")
+    );
+
+    let polymorph = artifact
+        .content
+        .abilities
+        .iter()
+        .find(|ability| ability.id == "rfb-legacy.ability.polymorph-target")
+        .expect("polymorph target should be imported");
+    assert!(matches!(
+        polymorph.effect,
+        AbilityEffectDefinition::PolymorphTarget
+    ));
+    assert!(
+        actor("dokkaebi")
+            .monster_casting
+            .as_ref()
+            .is_some_and(|casting| {
+                casting
+                    .abilities
+                    .iter()
+                    .any(|candidate| candidate.ability_id == polymorph.id)
+            })
+    );
 }
 
 #[test]

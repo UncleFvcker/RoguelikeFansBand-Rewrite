@@ -108,6 +108,73 @@ fn mutation_contact_auras_retaliate_only_against_unresisted_contact_attacks() {
 }
 
 #[test]
+fn monster_contact_auras_apply_elemental_damage_and_curse_saves() {
+    let template = game_with_actor_definition(0, "demo.actor.small-kobold", |actor| {
+        actor.level = 50;
+        actor.contact_auras = vec![
+            rfb_content::ActorContactAuraDefinition {
+                damage_type: rfb_content::ActorDamageType::Fire,
+                damage_dice: 1,
+                damage_sides: 1,
+                chance_percent: None,
+            },
+            rfb_content::ActorContactAuraDefinition {
+                damage_type: rfb_content::ActorDamageType::Electricity,
+                damage_dice: 1,
+                damage_sides: 1,
+                chance_percent: None,
+            },
+            rfb_content::ActorContactAuraDefinition {
+                damage_type: rfb_content::ActorDamageType::Curse,
+                damage_dice: 1,
+                damage_sides: 1,
+                chance_percent: None,
+            },
+        ];
+    });
+    let (game, events) = (0..1_000)
+        .find_map(|seed| {
+            let mut game = template.clone();
+            game.rng = RfbRng::seeded(seed);
+            game.player.hp = 100;
+            game.player.max_hp = 100;
+            let definition = game
+                .content
+                .actor("demo.actor.small-kobold")
+                .expect("test monster should exist")
+                .clone();
+            let mut events = Vec::new();
+            game.resolve_monster_contact_auras(&definition, &mut events);
+            events
+                .iter()
+                .any(|event| {
+                    matches!(
+                        event,
+                        DomainEvent::SavingThrowChecked {
+                            succeeded: false,
+                            ..
+                        }
+                    )
+                })
+                .then_some((game, events))
+        })
+        .expect("a bounded seed should fail the curse save");
+
+    assert_eq!(game.player.hp, 97);
+    let damage_types = events
+        .iter()
+        .filter_map(|event| match event {
+            DomainEvent::MonsterMeleeHit { damage, .. } => Some(damage.damage_type),
+            _ => None,
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(
+        damage_types,
+        vec![DamageType::Fire, DamageType::Electricity, DamageType::Curse]
+    );
+}
+
+#[test]
 fn fatal_mutation_aura_uses_the_shared_actor_death_transaction() {
     let mut game = monster_effect_game(
         0,

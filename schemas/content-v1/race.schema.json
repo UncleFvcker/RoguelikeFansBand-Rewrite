@@ -198,6 +198,9 @@
         "confusion": {
           "$ref": "#/$defs/ActorResistanceLevel"
         },
+        "curse": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
         "dark": {
           "$ref": "#/$defs/ActorResistanceLevel"
         },

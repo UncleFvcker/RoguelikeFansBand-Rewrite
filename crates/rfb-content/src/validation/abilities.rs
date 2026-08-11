@@ -282,9 +282,9 @@ pub(super) fn validate_abilities(
                         && *level_multiplier <= 1_000
                         && (1..=1_000).contains(level_divisor)
                 }
-                AbilityEffectDefinition::ReportMagic | AbilityEffectDefinition::PolymorphSelf => {
-                    true
-                }
+                AbilityEffectDefinition::ReportMagic
+                | AbilityEffectDefinition::PolymorphSelf
+                | AbilityEffectDefinition::PolymorphTarget => true,
                 AbilityEffectDefinition::Earthquake {
                     radius,
                     affect_chance_percent,
@@ -711,6 +711,7 @@ pub(super) fn validate_abilities(
             | AbilityEffectDefinition::DrainResource { .. }
             | AbilityEffectDefinition::Amnesia
             | AbilityEffectDefinition::TeleportLevel
+            | AbilityEffectDefinition::PolymorphTarget
             | AbilityEffectDefinition::DrainLife { .. }
             | AbilityEffectDefinition::DeathRay { .. }
             | AbilityEffectDefinition::RandomChoice { .. } => projectile_target_rule,
@@ -954,7 +955,8 @@ pub(super) fn validate_abilities(
                 | AbilityEffectDefinition::TeleportAway { .. }
                 | AbilityEffectDefinition::DrainResource { .. }
                 | AbilityEffectDefinition::Amnesia
-                | AbilityEffectDefinition::TeleportLevel => projectile_target,
+                | AbilityEffectDefinition::TeleportLevel
+                | AbilityEffectDefinition::PolymorphTarget => projectile_target,
                 AbilityEffectDefinition::DarkenRoom => room_target,
                 AbilityEffectDefinition::ConeDamage { .. }
                 | AbilityEffectDefinition::BreathDamage { .. } => {

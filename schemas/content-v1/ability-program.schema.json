@@ -758,6 +758,19 @@
           "additionalProperties": false,
           "properties": {
             "type": {
+              "const": "polymorph-target",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
               "const": "swap-position",
               "type": "string"
             }
@@ -1231,6 +1244,9 @@
                   "$ref": "#/$defs/ActorResistanceLevel"
                 },
                 "confusion": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
+                "curse": {
                   "$ref": "#/$defs/ActorResistanceLevel"
                 },
                 "dark": {
@@ -1906,7 +1922,8 @@
         "hell-fire",
         "ice",
         "water",
-        "psi"
+        "psi",
+        "curse"
       ],
       "type": "string"
     },

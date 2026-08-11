@@ -40,7 +40,8 @@
         "hell-fire",
         "ice",
         "water",
-        "psi"
+        "psi",
+        "curse"
       ],
       "type": "string"
     },
@@ -966,6 +967,9 @@
           "$ref": "#/$defs/ActorResistanceLevel"
         },
         "confusion": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "curse": {
           "$ref": "#/$defs/ActorResistanceLevel"
         },
         "dark": {

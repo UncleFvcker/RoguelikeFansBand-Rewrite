@@ -371,7 +371,11 @@ impl Game {
         });
     }
 
-    fn roll_chameleon_form(&mut self, actor_kind_id: &str, position: Position) -> Option<String> {
+    pub(super) fn roll_chameleon_form(
+        &mut self,
+        actor_kind_id: &str,
+        position: Position,
+    ) -> Option<String> {
         let terrain_id = self
             .index(position)
             .map(|index| self.terrain[index].clone());
@@ -400,6 +404,7 @@ impl Game {
                             || allocation.max_depth >= u16::try_from(level).unwrap_or(u16::MAX))
                         && !definition.friendly
                         && !actor_is_unique(definition)
+                        && !actor_is_guardian(definition)
                         && !allocation.multiplies
                         && !definition.tags.iter().any(|tag| tag == "chameleon")
                         && !explodes
@@ -433,7 +438,7 @@ impl Game {
         None
     }
 
-    pub(super) fn apply_chameleon_form(&mut self, index: usize, form_kind_id: &str) {
+    fn apply_actor_form(&mut self, index: usize, form_kind_id: &str, replace_kind: bool) {
         let definition = self
             .content
             .actor(form_kind_id)
@@ -462,7 +467,20 @@ impl Game {
         }
         actor.visible_invisible = false;
         actor.visible_weird_mind = false;
-        actor.appearance_kind_id = Some(definition.id);
+        if replace_kind {
+            actor.kind_id = definition.id;
+            actor.appearance_kind_id = None;
+        } else {
+            actor.appearance_kind_id = Some(definition.id);
+        }
+    }
+
+    pub(super) fn apply_chameleon_form(&mut self, index: usize, form_kind_id: &str) {
+        self.apply_actor_form(index, form_kind_id, false);
+    }
+
+    pub(super) fn apply_polymorph_form(&mut self, index: usize, form_kind_id: &str) {
+        self.apply_actor_form(index, form_kind_id, true);
     }
 
     pub(super) fn maybe_change_chameleon_form(&mut self, index: usize) -> bool {
@@ -625,6 +643,7 @@ impl Game {
                 | AbilityEffectDefinition::CurseDamage { .. }
                 | AbilityEffectDefinition::DeathRay { .. }
                 | AbilityEffectDefinition::DrainLife { .. } => (true, false),
+                AbilityEffectDefinition::PolymorphTarget => (false, false),
                 AbilityEffectDefinition::Summon { .. }
                 | AbilityEffectDefinition::SummonCategory { .. }
                 | AbilityEffectDefinition::AnimateDead { .. } => (false, true),

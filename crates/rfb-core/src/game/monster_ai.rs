@@ -308,6 +308,9 @@ impl Game {
                 AbilityEffectDefinition::CurseDamage { .. } if hostile_target.is_some() => {
                     useful = true;
                 }
+                AbilityEffectDefinition::PolymorphTarget if hostile_target.is_some() => {
+                    useful = true;
+                }
                 AbilityEffectDefinition::TeleportAway { .. }
                 | AbilityEffectDefinition::DrainResource { .. }
                 | AbilityEffectDefinition::Amnesia

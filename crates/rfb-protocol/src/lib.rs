@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.169";
+pub const PROTOCOL_VERSION: &str = "1.170";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -950,6 +950,7 @@ pub enum AbilityEffectSpecDto {
         failure_threshold: u16,
     },
     PolymorphSelf,
+    PolymorphTarget,
     SwapPosition,
     Recall {
         delay_dice: u16,
@@ -1949,6 +1950,13 @@ pub enum AbilityEffectResolutionDto {
         swapped_attributes: Vec<AttributeKindDto>,
         hp_before: i32,
         hp_after: i32,
+    },
+    PolymorphTarget {
+        effect_index: u8,
+        target_entity_id: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        form_kind_id: Option<String>,
+        changed: bool,
     },
     SwapPosition {
         effect_index: u8,

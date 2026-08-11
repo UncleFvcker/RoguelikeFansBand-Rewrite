@@ -2603,4 +2603,23 @@ actor-demo-arch-vile-description = A pale, corpse-like lesser demon that moves w
 actor-demo-orc-warlock-name = Orc warlock
 actor-demo-orc-warlock-description = An orc who made a pact with evil forces in exchange for terrible power.
 
+ability-legacy-ball-electricity-1d90-20-name = Lightning ball
+ability-legacy-ball-electricity-1d90-20-description = Creates a radius-2 burst for 1d90+20 electricity damage.
+ability-legacy-kin-kharis-the-powerslave-name = Summon kin
+ability-legacy-kin-kharis-the-powerslave-description = Summons one to three allies of Kharis.
+ability-legacy-polymorph-target-name = Polymorph other
+ability-legacy-polymorph-target-description = Attempts to polymorph the target into another form.
+ability-legacy-summon-legacy-import-l30-1d3-1-name = Summon monster
+ability-legacy-summon-legacy-import-l30-1d3-1-description = Summons two to four imported monsters of level 30 or lower.
+ability-legacy-summon-undead-l26-1d3-1-name = Summon undead
+ability-legacy-summon-undead-l26-1d3-1-description = Summons two to four undead creatures of level 26 or lower.
+actor-demo-kharis-the-powerslave-name = Kharis the Powerslave
+actor-demo-kharis-the-powerslave-description = He is here to avenge your desecration of his tomb.
+actor-demo-hisser-name = Hisser
+actor-demo-hisser-description = A ghostly apparition, barely visible as a pale blue outline with a hissing sound and crackling electrical energy.
+actor-demo-dokkaebi-name = Dokkaebi
+actor-demo-dokkaebi-description = A small, cute, horned floating ball of fur; too malicious to be an angel, too innocent-looking to be a demon, and too strange to be a cat.
+actor-demo-flaming-crow-name = Flaming crow
+actor-demo-flaming-crow-description = At least it is not poisonous, unlike most of the native creatures of this strange land.
+
 actor-core-fuzzy-monster-name = Monster

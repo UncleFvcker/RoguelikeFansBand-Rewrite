@@ -1,0 +1,104 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "friends": {
+      "chancePercent": 0,
+      "dice": 0,
+      "sides": 0
+    },
+    "habitats": [
+      "mountain",
+      "waste",
+      "wood"
+    ],
+    "legacyDungeonIndices": [
+      35
+    ],
+    "legacyIndex": 1312,
+    "maxDepth": 40,
+    "rarity": 2
+  },
+  "attack": 3,
+  "contactAuras": [
+    {
+      "damageDice": 1,
+      "damageSides": 2,
+      "damageType": "fire"
+    }
+  ],
+  "damageDice": 1,
+  "damageSides": 6,
+  "damageType": "fire",
+  "defense": 1,
+  "descriptionKey": "actor-demo-flaming-crow-description",
+  "experienceValue": 22,
+  "formatVersion": 1,
+  "glyph": "B",
+  "hitPointDice": {
+    "dice": 3,
+    "sides": 8
+  },
+  "id": "demo.actor.flaming-crow",
+  "level": 14,
+  "maxHp": 13,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 1,
+            "damageSides": 6,
+            "damageType": "fire",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 1,
+            "damageSides": 4,
+            "damageType": "fire",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.breath-fire-20-900-r2",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 6
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "nameKey": "actor-demo-flaming-crow-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "fire": "immune"
+  },
+  "role": "monster",
+  "speed": 120,
+  "tags": [
+    "animal",
+    "legacy-import"
+  ]
+}

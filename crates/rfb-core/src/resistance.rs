@@ -209,6 +209,7 @@ impl From<rfb_content::ActorDamageType> for DamageType {
             rfb_content::ActorDamageType::Ice => Self::Ice,
             rfb_content::ActorDamageType::Water => Self::Water,
             rfb_content::ActorDamageType::Psi => Self::Psi,
+            rfb_content::ActorDamageType::Curse => Self::Curse,
         }
     }
 }

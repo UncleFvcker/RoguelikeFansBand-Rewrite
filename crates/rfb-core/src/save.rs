@@ -1041,6 +1041,7 @@ const fn damage_type_dto(value: ActorDamageType) -> DamageTypeDto {
         ActorDamageType::Ice => DamageTypeDto::Ice,
         ActorDamageType::Water => DamageTypeDto::Water,
         ActorDamageType::Psi => DamageTypeDto::Psi,
+        ActorDamageType::Curse => DamageTypeDto::Curse,
     }
 }
 
@@ -1077,7 +1078,7 @@ const fn actor_damage_type(value: DamageTypeDto) -> Option<ActorDamageType> {
         DamageTypeDto::Ice => ActorDamageType::Ice,
         DamageTypeDto::Water => ActorDamageType::Water,
         DamageTypeDto::Psi => ActorDamageType::Psi,
-        DamageTypeDto::Curse => return None,
+        DamageTypeDto::Curse => ActorDamageType::Curse,
     })
 }
 

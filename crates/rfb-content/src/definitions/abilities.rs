@@ -351,6 +351,7 @@ pub enum AbilityEffectDefinition {
         failure_threshold: u16,
     },
     PolymorphSelf,
+    PolymorphTarget,
     SwapPosition,
     Recall {
         delay_dice: u16,

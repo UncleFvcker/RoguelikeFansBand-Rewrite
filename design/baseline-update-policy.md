@@ -6,17 +6,16 @@
 
 contract fixture 是规则兼容边界，不能把测试失败简单处理为“刷新预期结果”。政策用于保证每次规则变化只修改真正受影响的场景，同时保留可审查的失败原因。
 
-当前逻辑基线是 `contract-v256`，机器可读政策固定在：
+当前逻辑基线是 `contract-v257`，机器可读政策固定在：
 
 ```text
 tests/fixtures/active/baseline-policy.json
 ```
 
-`contract-v256` 复用既有尸体、骸骨与召唤事务实现怪物 `ANIM_DEAD`：尸体和骸骨
-分别按原版 20% 与 40% 失败率化为尘埃，成功时生成敌对死灵。新增 Arch-vile 与
-Orc warlock；Kharis 与 Ghoulking 仍由各自的接触光环和 `UNLIFE` 独立阻塞。
-严格选择现有 181 条 Orc Cave 记录。冷血红外与 VAMP 规则保持不变；
-协议保持 1.169，State Hash Schema 保持 v85，save 容器保持 v1。
+`contract-v257` 接入显式火焰、闪电和 `CAUSE_2` 诅咒接触光环，并以既有怪物
+形态选择和玩家变异重组事务实现目标 `POLYMORPH`。新增 Kharis、Hisser、Dokkaebi
+与可用于野外的 Flaming crow；严格选择现有 184 条 Orc Cave 记录。协议升至
+1.170，State Hash Schema 保持 v85，save 容器保持 v1。
 
 ## 分类验证
 

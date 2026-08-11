@@ -3013,6 +3013,102 @@ fn level_based_jump_damage_uses_no_damage_rng_then_blinks() {
 }
 
 #[test]
+fn monster_polymorph_reuses_mutation_and_actor_form_transactions() {
+    let ability = Game::new(0)
+        .content
+        .ability("rfb-legacy.ability.polymorph-target")
+        .expect("polymorph target ability should compile")
+        .clone();
+    assert!(matches!(
+        ability.effect,
+        AbilityEffectDefinition::PolymorphTarget
+    ));
+
+    let template = Game::new(0);
+    let (player_game, player_resolution) = (0..1_000)
+        .find_map(|seed| {
+            let mut game = template.clone();
+            game.rng = RfbRng::seeded(seed);
+            let resolutions = game.resolve_monster_player_effects(
+                "test.monster.dokkaebi",
+                "demo.actor.dokkaebi",
+                &ability,
+                &mut Vec::new(),
+                &mut BTreeSet::new(),
+            );
+            matches!(
+                resolutions.as_slice(),
+                [AbilityEffectResolutionDto::PolymorphTarget { changed: true, .. }]
+            )
+            .then_some((game, resolutions.into_iter().next().unwrap()))
+        })
+        .expect("a bounded seed should fail the save and change mutations");
+    assert!(!player_game.progress.active_mutation_ids.is_empty());
+    assert!(matches!(
+        player_resolution,
+        AbilityEffectResolutionDto::PolymorphTarget {
+            form_kind_id: None,
+            changed: true,
+            ..
+        }
+    ));
+
+    let mut summon_game = Game::new(0);
+    clear_monsters(&mut summon_game);
+    summon_game.player.position = Position { x: 80, y: 20 };
+    let caster_position = Position { x: 4, y: 3 };
+    let summon_position = Position { x: 5, y: 3 };
+    summon_game.entities.push(actor_from_runtime_spawn(
+        "test.monster.dokkaebi",
+        "demo.actor.dokkaebi",
+        caster_position,
+        374,
+        115,
+        100,
+        true,
+    ));
+    let mut summon = actor_from_runtime_spawn(
+        "test.summon.kobold",
+        "demo.actor.small-kobold",
+        summon_position,
+        12,
+        100,
+        100,
+        true,
+    );
+    summon.controller_id = Some(summon_game.player.id.clone());
+    summon_game.entities.push(summon);
+    let plan = summon_game
+        .monster_ability_target_plan(0, ability, 1)
+        .expect("adjacent player summon should be a valid polymorph target");
+    let mut changed = BTreeSet::new();
+    let resolution = summon_game.resolve_monster_ability_plan(
+        0,
+        "demo.actor.dokkaebi",
+        &plan,
+        &mut Vec::new(),
+        &mut changed,
+        &mut Vec::new(),
+    );
+    let transformed = &summon_game.entities[1];
+    assert_ne!(transformed.kind_id, "demo.actor.small-kobold");
+    assert_eq!(transformed.appearance_kind_id, None);
+    assert_eq!(
+        transformed.controller_id.as_deref(),
+        Some(summon_game.player.id.as_str())
+    );
+    assert!(changed.contains(&summon_position));
+    assert!(matches!(
+        resolution.effects.as_slice(),
+        [AbilityEffectResolutionDto::PolymorphTarget {
+            form_kind_id: Some(form_kind_id),
+            changed: true,
+            ..
+        }] if form_kind_id == &transformed.kind_id
+    ));
+}
+
+#[test]
 fn death_fourth_book_materializes_original_level_curves() {
     let projected = |level| {
         let mut game =

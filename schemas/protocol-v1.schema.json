@@ -1113,6 +1113,39 @@
         {
           "type": "object",
           "properties": {
+            "changed": {
+              "type": "boolean"
+            },
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "formKindId": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "targetEntityId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "polymorph-target"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex",
+            "targetEntityId",
+            "changed"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "effectIndex": {
               "type": "integer",
               "format": "uint8",
@@ -2532,6 +2565,18 @@
             "type": {
               "type": "string",
               "const": "polymorph-self"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "polymorph-target"
             }
           },
           "required": [

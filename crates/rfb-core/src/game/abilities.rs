@@ -3905,7 +3905,8 @@ impl Game {
             | AbilityEffectDefinition::DrainResource { .. }
             | AbilityEffectDefinition::Amnesia
             | AbilityEffectDefinition::DarkenRoom
-            | AbilityEffectDefinition::JumpDamage { .. } => None,
+            | AbilityEffectDefinition::JumpDamage { .. }
+            | AbilityEffectDefinition::PolymorphTarget => None,
             AbilityEffectDefinition::Teleport => {
                 let TargetSelection::Position { position } = target else {
                     return None;

@@ -540,6 +540,11 @@ impl Game {
                 continue;
             }
             let raw = self.roll_damage(aura.damage_dice, aura.damage_sides);
+            if aura.damage_type == rfb_content::ActorDamageType::Curse
+                && self.monster_curse_save(&definition.id, events)
+            {
+                continue;
+            }
             let damage_type = DamageType::from(aura.damage_type);
             let damage = resolve_damage(
                 DamagePacket::new(raw, damage_type),

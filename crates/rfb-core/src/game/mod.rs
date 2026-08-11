@@ -6240,6 +6240,7 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             failure_threshold: *failure_threshold,
         },
         AbilityEffectDefinition::PolymorphSelf => AbilityEffectSpecDto::PolymorphSelf,
+        AbilityEffectDefinition::PolymorphTarget => AbilityEffectSpecDto::PolymorphTarget,
         AbilityEffectDefinition::SwapPosition => AbilityEffectSpecDto::SwapPosition,
         AbilityEffectDefinition::Recall {
             delay_dice,

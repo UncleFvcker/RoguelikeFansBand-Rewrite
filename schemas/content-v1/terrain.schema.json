@@ -32,7 +32,8 @@
         "hell-fire",
         "ice",
         "water",
-        "psi"
+        "psi",
+        "curse"
       ],
       "type": "string"
     },

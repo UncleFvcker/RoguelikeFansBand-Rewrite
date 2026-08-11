@@ -7160,6 +7160,16 @@ fn map_misc_spell_token(
             });
             Some(id)
         }
+        "POLYMORPH" => {
+            let id = "rfb-legacy.ability.polymorph-target".to_owned();
+            abilities.entry(id.clone()).or_insert_with(|| {
+                misc_ability(
+                    "polymorph-target",
+                    serde_json::json!({"type": "polymorph-target"}),
+                )
+            });
+            Some(id)
+        }
         _ => None,
     }
 }
@@ -7781,6 +7791,9 @@ fn monster_json(
             let damage_type = match aura.token.as_str() {
                 "POISON" => "poison",
                 "ACID" => "acid",
+                "ELEC" => "electricity",
+                "FIRE" => "fire",
+                "CAUSE_2" => "curse",
                 _ => return None,
             };
             let (damage_dice, damage_sides) = aura.dice?;
@@ -8088,10 +8101,12 @@ fn demo_monster_json(
             .filter(|(flag, _)| entry.flags.iter().any(|entry_flag| entry_flag == flag))
             .count()
         > 8
-        || entry
-            .auras
-            .iter()
-            .any(|aura| !matches!(aura.token.as_str(), "POISON" | "ACID") || aura.dice.is_none())
+        || entry.auras.iter().any(|aura| {
+            !matches!(
+                aura.token.as_str(),
+                "POISON" | "ACID" | "ELEC" | "FIRE" | "CAUSE_2"
+            ) || aura.dice.is_none()
+        })
     {
         return Err(LegacyImportError::InvalidDemoMonsterSelection(format!(
             "{} has an unsupported contact aura",
@@ -12530,7 +12545,7 @@ mod tests {
     #[test]
     fn demo_monster_import_maps_special_mechanics_without_fallbacks() {
         let mut monsters = parse_r_info(
-            "N:1:test special monster\nG:j:v\nI:110:1d3:8:4:20:10\nW:12:1:50:40:0:0\nB:TOUCH:DRAIN_EXP(10d6)\nA:POISON(1d2):ACID(2d3)\nF:SHAPECHANGER | MOVE_BODY | REGENERATE | REFLECTING | DUNGEON_31 | DROP_1D2\nO:DROP_WARRIOR_SHOOT\n",
+            "N:1:test special monster\nG:j:v\nI:110:1d3:8:4:20:10\nW:12:1:50:40:0:0\nB:TOUCH:DRAIN_EXP(10d6)\nA:POISON(1d2):ACID(2d3):ELEC(3d4):FIRE(4d5):CAUSE_2(5d6)\nF:SHAPECHANGER | MOVE_BODY | REGENERATE | REFLECTING | DUNGEON_31 | DROP_1D2\nO:DROP_WARRIOR_SHOOT\nS:1_IN_5 | POLYMORPH\n",
         )
         .expect("synthetic special monster should parse");
         let actor = demo_monster_json(
@@ -12556,6 +12571,19 @@ mod tests {
         assert_eq!(actor["contactAuras"][1]["damageType"], "acid");
         assert_eq!(actor["contactAuras"][1]["damageDice"], 2);
         assert_eq!(actor["contactAuras"][1]["damageSides"], 3);
+        assert_eq!(actor["contactAuras"][2]["damageType"], "electricity");
+        assert_eq!(actor["contactAuras"][2]["damageDice"], 3);
+        assert_eq!(actor["contactAuras"][2]["damageSides"], 4);
+        assert_eq!(actor["contactAuras"][3]["damageType"], "fire");
+        assert_eq!(actor["contactAuras"][3]["damageDice"], 4);
+        assert_eq!(actor["contactAuras"][3]["damageSides"], 5);
+        assert_eq!(actor["contactAuras"][4]["damageType"], "curse");
+        assert_eq!(actor["contactAuras"][4]["damageDice"], 5);
+        assert_eq!(actor["contactAuras"][4]["damageSides"], 6);
+        assert_eq!(
+            actor["monsterCasting"]["abilities"][0]["abilityId"],
+            "rfb-legacy.ability.polymorph-target"
+        );
         assert_eq!(actor["movesWeakerBodies"], true);
         assert_eq!(actor["regenerates"], true);
         assert_eq!(actor["reflectsBolts"], true);

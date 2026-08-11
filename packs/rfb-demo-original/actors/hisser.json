@@ -1,0 +1,103 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 1284,
+    "maxDepth": 60,
+    "randomMovementPercent": 25,
+    "rarity": 2
+  },
+  "attack": 6,
+  "contactAuras": [
+    {
+      "damageDice": 2,
+      "damageSides": 3,
+      "damageType": "electricity"
+    }
+  ],
+  "damageDice": 1,
+  "damageSides": 1,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [
+      {
+        "percent": 60
+      }
+    ],
+    "itemTableId": "demo.loot-table.warrens",
+    "kind": "items-and-gold"
+  },
+  "defense": 3,
+  "descriptionKey": "actor-demo-hisser-description",
+  "experienceValue": 220,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "G",
+  "hitPointDice": {
+    "dice": 18,
+    "sides": 18
+  },
+  "id": "demo.actor.hisser",
+  "level": 26,
+  "maxHp": 171,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "type": "terrify"
+          }
+        ],
+        "methodId": "rfb.blow.gaze",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 3,
+            "damageSides": 8,
+            "damageType": "electricity",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.scare",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 10
+  },
+  "movement": {
+    "modes": [
+      "fly",
+      "pass-wall"
+    ]
+  },
+  "nameKey": "actor-demo-hisser-name",
+  "resistances": {
+    "cold": "resistant",
+    "electricity": "resistant",
+    "nether": "resistant",
+    "poison": "immune"
+  },
+  "role": "monster",
+  "speed": 115,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "cold-blooded",
+    "evil",
+    "legacy-import",
+    "orc-cave",
+    "undead"
+  ]
+}
