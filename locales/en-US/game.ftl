@@ -68,6 +68,7 @@ message-combat-player-miss = You miss { $target }.
 message-combat-monster-miss = { $source } misses you.
 message-combat-monster-hit = { $source } hits you for { $damage } damage.
 message-combat-monster-contact-aura = Contact with { $source } inflicts { $status } for { $duration } ticks.
+message-combat-monster-fear-aura = { $source }'s aura fills you with fear for { $duration } ticks.
 message-combat-monster-hit-resisted = { $source } hits you for { $damage } { $type } damage ({ $adjustment } resisted).
 message-combat-monster-hit-amplified = { $source } hits you for { $damage } { $type } damage (vulnerability added { $adjustment }).
 message-combat-monster-hit-immune = You are immune to { $source }'s { $type } attack.

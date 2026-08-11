@@ -6,16 +6,16 @@
 
 contract fixture 是规则兼容边界，不能把测试失败简单处理为“刷新预期结果”。政策用于保证每次规则变化只修改真正受影响的场景，同时保留可审查的失败原因。
 
-当前逻辑基线是 `contract-v257`，机器可读政策固定在：
+当前逻辑基线是 `contract-v258`，机器可读政策固定在：
 
 ```text
 tests/fixtures/active/baseline-policy.json
 ```
 
-`contract-v257` 接入显式火焰、闪电和 `CAUSE_2` 诅咒接触光环，并以既有怪物
-形态选择和玩家变异重组事务实现目标 `POLYMORPH`。新增 Kharis、Hisser、Dokkaebi
-与可用于野外的 Flaming crow；严格选择现有 184 条 Orc Cave 记录。协议升至
-1.170，State Hash Schema 保持 v85，save 容器保持 v1。
+`contract-v258` 接入 `AURA_REVENGE`、`AURA_FEAR`、`TANUKI` 与 `UNIQUE2`。
+反击和恐惧复用既有近战、豁免与状态事务；狸猫只覆盖外观；伪唯一同一时刻最多
+存活一只，但死亡不进入永久击杀表。新增 7 条 Orc Cave 记录，严格选择现有 191
+条记录。协议保持 1.170，State Hash Schema 保持 v85，save 容器保持 v1。
 
 ## 分类验证
 

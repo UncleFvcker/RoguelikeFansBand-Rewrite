@@ -512,3 +512,7 @@ Schema 仍为 v85，save 容器仍为 v1。
 玩家目标复用既有变异重组事务；玩家阵营召唤物复用变色龙候选选择与形态属性刷新，
 并直接替换实际 actor kind。接触光环的火焰、闪电和诅咒仍走既有伤害、抗性与豁免
 事件，不增加专用协议。State Hash Schema 保持 v85，save 容器保持 v1。
+
+contract-v258 的反击/恐惧光环、狸猫外观和 `UNIQUE2` 生命周期均复用现有 DTO；
+恐惧光环只产生通用事件，狸猫继续使用 `appearanceKindId`。协议保持 1.170，State
+Hash Schema 保持 v85，save 容器保持 v1。

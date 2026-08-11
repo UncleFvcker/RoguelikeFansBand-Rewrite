@@ -206,7 +206,7 @@ pub(crate) fn actor_from_entity(
         let changes_form = definition
             .tags
             .iter()
-            .any(|tag| matches!(tag.as_str(), "shapechanger" | "chameleon"));
+            .any(|tag| matches!(tag.as_str(), "shapechanger" | "chameleon" | "tanuki"));
         let valid = if changes_form {
             appearance.role == rfb_content::ActorRole::Monster
                 && appearance.id != definition.id
@@ -220,7 +220,10 @@ pub(crate) fn actor_from_entity(
                 .iter()
                 .any(|tag| tag == "shadower-appearance")
                 && definition.level >= 10
-                && !definition.tags.iter().any(|tag| tag == "unique")
+                && !definition
+                    .tags
+                    .iter()
+                    .any(|tag| matches!(tag.as_str(), "unique" | "unique2"))
         };
         if !valid {
             return Err(CoreError::InvalidSave("entity appearance is invalid"));

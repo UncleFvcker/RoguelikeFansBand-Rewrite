@@ -12,7 +12,7 @@ impl Game {
         removed_entities: &mut Vec<String>,
     ) -> Result<(), CoreError> {
         loop {
-            let visible_eldritch_horrors_before_tick = self.visible_eldritch_horror_entity_ids();
+            let visible_monster_auras_before_tick = self.visible_monster_aura_entity_ids();
             self.world_tick = self.world_tick.saturating_add(1);
             self.process_status_tick(events, changed, removed_entities, local_floor_active)?;
             if self.player_is_dead() {
@@ -40,7 +40,7 @@ impl Game {
             }
             if self.finish_world_tick_after_periodic_mutations(
                 local_floor_active,
-                &visible_eldritch_horrors_before_tick,
+                &visible_monster_auras_before_tick,
                 events,
                 changed,
                 removed_entities,
@@ -55,7 +55,7 @@ impl Game {
     fn finish_world_tick_after_periodic_mutations(
         &mut self,
         local_floor_active: bool,
-        visible_eldritch_horrors_before_tick: &BTreeSet<String>,
+        visible_monster_auras_before_tick: &BTreeSet<String>,
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
@@ -71,8 +71,8 @@ impl Game {
             if !self.current_floor_has_active_task() {
                 self.process_ambient_monster_allocation(changed)?;
             }
-            self.resolve_newly_visible_eldritch_horrors(
-                visible_eldritch_horrors_before_tick,
+            self.resolve_newly_visible_monster_auras(
+                visible_monster_auras_before_tick,
                 events,
                 changed,
             );
@@ -114,10 +114,10 @@ impl Game {
         if self.pending_mutation_direction.is_some() {
             return Ok(());
         }
-        let visible_eldritch_horrors = self.visible_eldritch_horror_entity_ids();
+        let visible_monster_auras = self.visible_monster_aura_entity_ids();
         if self.finish_world_tick_after_periodic_mutations(
             local_floor_active,
-            &visible_eldritch_horrors,
+            &visible_monster_auras,
             events,
             changed,
             removed_entities,
@@ -500,7 +500,7 @@ impl Game {
                 continue;
             }
             let floor_id = self.current_floor_id.clone();
-            let visible_eldritch_horrors_before_action = self.visible_eldritch_horror_entity_ids();
+            let visible_monster_auras_before_action = self.visible_monster_aura_entity_ids();
             self.resolve_monster_action(
                 index,
                 events,
@@ -508,8 +508,8 @@ impl Game {
                 removed_entities,
                 &mut surround_reservations,
             )?;
-            self.resolve_newly_visible_eldritch_horrors(
-                &visible_eldritch_horrors_before_action,
+            self.resolve_newly_visible_monster_auras(
+                &visible_monster_auras_before_action,
                 events,
                 changed,
             );

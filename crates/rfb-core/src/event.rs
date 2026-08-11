@@ -1091,6 +1091,11 @@ pub(crate) enum DomainEvent {
         status_kind_id: String,
         duration: u32,
     },
+    MonsterFearAuraApplied {
+        source_kind_id: String,
+        trigger: &'static str,
+        duration: u32,
+    },
     PlayerSlew {
         target_kind_id: String,
         damage: DamageOutcome,
@@ -4202,6 +4207,19 @@ impl DomainEvent {
                 [
                     ("source", source_kind_id),
                     ("status", status_kind_id),
+                    ("duration", duration.to_string()),
+                ],
+            ),
+            Self::MonsterFearAuraApplied {
+                source_kind_id,
+                trigger,
+                duration,
+            } => dto(
+                "combat.monster-fear-aura",
+                "combat-monster-fear-aura",
+                [
+                    ("source", source_kind_id),
+                    ("trigger", trigger.to_string()),
                     ("duration", duration.to_string()),
                 ],
             ),

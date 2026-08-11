@@ -7605,6 +7605,10 @@ fn monster_json(
         ("COLD_BLOOD", "cold-blooded"),
         ("EMPTY_MIND", "empty-mind"),
         ("WEIRD_MIND", "weird-mind"),
+        ("AURA_REVENGE", "aura-revenge"),
+        ("AURA_FEAR", "aura-fear"),
+        ("TANUKI", "tanuki"),
+        ("UNIQUE2", "unique2"),
     ] {
         if entry.flags.iter().any(|value| value == flag) {
             tags.push(tag.to_owned());
@@ -7966,6 +7970,10 @@ fn demo_monster_flag_is_handled(flag: &str) -> bool {
                 | "ELDRITCH_HORROR"
                 | "CHAMELEON"
                 | "SHAPECHANGER"
+                | "AURA_REVENGE"
+                | "AURA_FEAR"
+                | "TANUKI"
+                | "UNIQUE2"
                 | "WILD_ALL"
                 | "WILD_GRASS"
                 | "WILD_MOUNTAIN"
@@ -8223,6 +8231,10 @@ fn demo_monster_json(
         ("NO_QUEST", "no-quest"),
         ("EMPTY_MIND", "empty-mind"),
         ("WEIRD_MIND", "weird-mind"),
+        ("AURA_REVENGE", "aura-revenge"),
+        ("AURA_FEAR", "aura-fear"),
+        ("TANUKI", "tanuki"),
+        ("UNIQUE2", "unique2"),
     ] {
         if entry.flags.iter().any(|candidate| candidate == flag) {
             tags.insert(tag.to_owned());
@@ -12266,7 +12278,11 @@ mod tests {
             DemoMonsterAuditStatus::Selected
         );
         assert!(demo_monster_audit_omission_is_safe("POS_GAIN_AC"));
-        assert!(!demo_monster_audit_omission_is_safe("AURA_REVENGE"));
+        assert!(demo_monster_flag_is_handled("AURA_REVENGE"));
+        assert!(demo_monster_flag_is_handled("AURA_FEAR"));
+        assert!(demo_monster_flag_is_handled("TANUKI"));
+        assert!(demo_monster_flag_is_handled("UNIQUE2"));
+        assert!(!demo_monster_flag_is_handled("WILD_OCEAN"));
     }
 
     fn assert_content_parse_error<T>(
@@ -12646,6 +12662,30 @@ mod tests {
         .expect("multiple elemental contact auras should import directly");
         assert_eq!(actor["contactAuras"][0]["damageType"], "fire");
         assert_eq!(actor["contactAuras"][1]["damageType"], "electricity");
+    }
+
+    #[test]
+    fn demo_monster_import_maps_o5_traits_without_omissions() {
+        let mut monsters = parse_r_info(
+            "N:1:test O5 monster\nG:p:w\nI:120:6d6:100:30:0:25\nW:30:1:50:50:0:0\nB:HIT:HURT(1d4)\nF:AURA_REVENGE | AURA_FEAR | TANUKI | UNIQUE2\n",
+        )
+        .expect("synthetic O5 monster should parse");
+        let actor = demo_monster_json(
+            &monsters.remove(0),
+            &DemoMonsterSelectionEntry {
+                source_index: 1,
+                source_id: None,
+                id: "test-o5-monster".to_owned(),
+                tags: vec!["orc-cave".to_owned()],
+                omitted_flags: Vec::new(),
+            },
+            &mut BTreeMap::new(),
+        )
+        .expect("O5 traits should import directly");
+        let tags = actor["tags"].as_array().expect("tags should be an array");
+        for expected in ["aura-revenge", "aura-fear", "tanuki", "unique2"] {
+            assert!(tags.iter().any(|tag| tag == expected), "missing {expected}");
+        }
     }
 
     #[test]

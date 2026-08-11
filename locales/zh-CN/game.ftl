@@ -68,6 +68,7 @@ message-combat-player-miss = 你没有击中{ $target }。
 message-combat-monster-miss = { $source }没有击中你。
 message-combat-monster-hit = { $source }击中了你，造成 { $damage } 点伤害。
 message-combat-monster-contact-aura = 接触{ $source }使你受到{ $status }，持续 { $duration } 刻。
+message-combat-monster-fear-aura = { $source }的恐惧光环使你陷入恐惧，持续 { $duration } 刻。
 message-combat-monster-hit-resisted = { $source }击中了你，造成 { $damage } 点{ $type }伤害（抵抗了 { $adjustment } 点）。
 message-combat-monster-hit-amplified = { $source }击中了你，造成 { $damage } 点{ $type }伤害（弱点额外增加 { $adjustment } 点）。
 message-combat-monster-hit-immune = 你免疫了{ $source }的{ $type }攻击。

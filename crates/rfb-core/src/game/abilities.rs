@@ -1491,6 +1491,9 @@ impl Game {
                 trace: trace.clone(),
             });
             self.wake_entity_after_damage(target_index, damage.applied, events);
+            if !application.fatal {
+                self.resolve_monster_fear_aura(target_index, "hurt", true, events);
+            }
             if application.fatal {
                 self.resolve_actor_death(
                     target_index,
@@ -2910,6 +2913,9 @@ impl Game {
                     trace: trace.clone(),
                 });
                 self.wake_entity_after_damage(actor_index, damage.applied, events);
+                if !application.fatal {
+                    self.resolve_monster_fear_aura(actor_index, "hurt", true, events);
+                }
                 if application.fatal {
                     self.resolve_actor_death(
                         actor_index,
@@ -4066,10 +4072,12 @@ impl Game {
                 radius,
                 ..
             } => {
-                let unique = self
-                    .content
-                    .actor(actor_kind_id)
-                    .is_some_and(|definition| definition.tags.iter().any(|tag| tag == "unique"));
+                let unique = self.content.actor(actor_kind_id).is_some_and(|definition| {
+                    definition
+                        .tags
+                        .iter()
+                        .any(|tag| matches!(tag.as_str(), "unique" | "unique2"))
+                });
                 (matches!(target, TargetSelection::SelfTarget)
                     && ability
                         .target

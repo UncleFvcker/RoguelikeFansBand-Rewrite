@@ -3106,6 +3106,54 @@ fn monster_polymorph_reuses_mutation_and_actor_form_transactions() {
             ..
         }] if form_kind_id == &transformed.kind_id
     ));
+
+    let mut protected = Game::new(0);
+    clear_monsters(&mut protected);
+    protected.player.position = Position { x: 80, y: 20 };
+    protected.entities.push(actor_from_runtime_spawn(
+        "test.monster.dokkaebi",
+        "demo.actor.dokkaebi",
+        caster_position,
+        374,
+        115,
+        100,
+        true,
+    ));
+    let mut unique2 = actor_from_runtime_spawn(
+        "test.unique2.silver-angel",
+        "demo.actor.silver-angel",
+        summon_position,
+        300,
+        130,
+        100,
+        true,
+    );
+    unique2.controller_id = Some(protected.player.id.clone());
+    protected.entities.push(unique2);
+    let polymorph = protected
+        .content
+        .ability("rfb-legacy.ability.polymorph-target")
+        .expect("polymorph target ability should compile")
+        .clone();
+    let plan = protected
+        .monster_ability_target_plan(0, polymorph, 1)
+        .expect("UNIQUE2 target planning should remain valid");
+    let resolution = protected.resolve_monster_ability_plan(
+        0,
+        "demo.actor.dokkaebi",
+        &plan,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    );
+    assert_eq!(protected.entities[1].kind_id, "demo.actor.silver-angel");
+    assert!(matches!(
+        resolution.effects.as_slice(),
+        [AbilityEffectResolutionDto::Skipped {
+            reason: AbilityEffectSkipReasonDto::Ineligible,
+            ..
+        }]
+    ));
 }
 
 #[test]

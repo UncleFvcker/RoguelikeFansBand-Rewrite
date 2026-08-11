@@ -79,6 +79,9 @@ impl Game {
         commit_damage_application(&mut self.entities[target_index], &application);
         changed.insert(target_position);
         self.wake_entity_after_damage(target_index, damage.applied, events);
+        if !application.fatal {
+            self.resolve_monster_fear_aura(target_index, "hurt", true, events);
+        }
         if application.fatal {
             self.resolve_actor_death(
                 target_index,
@@ -155,6 +158,9 @@ impl Game {
             commit_damage_application(&mut self.entities[index], &application);
             changed.insert(target_position);
             self.wake_entity_after_damage(index, damage.applied, events);
+            if !application.fatal {
+                self.resolve_monster_fear_aura(index, "hurt", true, events);
+            }
             if application.fatal {
                 self.resolve_actor_death(
                     index,
@@ -243,6 +249,9 @@ impl Game {
             commit_damage_application(&mut self.entities[index], &application);
             changed.insert(target_position);
             self.wake_entity_after_damage(index, damage.applied, events);
+            if !application.fatal {
+                self.resolve_monster_fear_aura(index, "hurt", true, events);
+            }
             if application.fatal {
                 self.resolve_actor_death(
                     index,

@@ -400,7 +400,10 @@ impl Game {
                 self.content
                     .actor(&actor.kind_id)
                     .is_some_and(|definition| {
-                        definition.tags.iter().any(|tag| tag == "unique")
+                        definition
+                            .tags
+                            .iter()
+                            .any(|tag| matches!(tag.as_str(), "unique" | "unique2"))
                             && !definition.tags.iter().any(|tag| tag == "guardian")
                     })
             })
@@ -1399,7 +1402,7 @@ impl Game {
             let changes_form = definition
                 .tags
                 .iter()
-                .any(|tag| matches!(tag.as_str(), "shapechanger" | "chameleon"));
+                .any(|tag| matches!(tag.as_str(), "shapechanger" | "chameleon" | "tanuki"));
             expected_role == ActorRole::Monster
                 && self.content.actor(kind_id).is_some_and(|appearance| {
                     if changes_form {
@@ -1411,7 +1414,10 @@ impl Game {
                                 .any(|tag| tag == "shadower-appearance")
                     } else {
                         definition.level >= 10
-                            && !definition.tags.iter().any(|tag| tag == "unique")
+                            && !definition
+                                .tags
+                                .iter()
+                                .any(|tag| matches!(tag.as_str(), "unique" | "unique2"))
                             && appearance
                                 .tags
                                 .iter()

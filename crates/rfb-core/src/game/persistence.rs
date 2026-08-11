@@ -1227,6 +1227,7 @@ impl Game {
             revision: payload.revision,
             turn: payload.turn,
             world_tick: payload.world_tick,
+            last_non_melee_fear_aura_tick: None,
             last_command_seq: payload.last_command_seq,
             debug_ability_casts_succeed: false,
             debug_recharge_attempts_succeed: false,

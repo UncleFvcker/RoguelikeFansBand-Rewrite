@@ -17,6 +17,7 @@ const SHADOWER_APPEARANCE_KIND_ID: &str = "demo.actor.shadower";
 const SHADOWER_ONE_IN: u64 = 333;
 const CHAMELEON_CHANGE_ONE_IN: u64 = 13;
 const ELDRITCH_HORROR_TAG: &str = "eldritch-horror";
+const FEAR_AURA_TAG: &str = "aura-fear";
 const ELDRITCH_HORROR_IMMUNITY: &str = "rfb.status.eldritch-horror";
 const ELDRITCH_HORROR_REPEAT_ONE_IN: u64 = 5;
 const ELDRITCH_HIGH_RESISTANCE_ROLL: u64 = 33;
@@ -72,7 +73,18 @@ impl Game {
             .or(Some(definition))
     }
 
-    pub(super) fn visible_eldritch_horror_entity_ids(&self) -> BTreeSet<String> {
+    pub(super) fn actor_apparent_definition<'a>(
+        &'a self,
+        actor: &Actor,
+    ) -> Option<&'a ActorDefinition> {
+        actor
+            .appearance_kind_id
+            .as_deref()
+            .and_then(|kind_id| self.content.actor(kind_id))
+            .or_else(|| self.content.actor(&actor.kind_id))
+    }
+
+    pub(super) fn visible_monster_aura_entity_ids(&self) -> BTreeSet<String> {
         if self.map_scale != MapScaleDto::Local {
             return BTreeSet::new();
         }
@@ -82,24 +94,29 @@ impl Game {
                 actor.hp > 0
                     && !self.actor_is_player_aligned(actor)
                     && self.entity_is_visible_to_player(actor)
-                    && self
+                    && (self
                         .actor_runtime_definition(actor)
                         .is_some_and(|definition| {
                             definition.tags.iter().any(|tag| tag == ELDRITCH_HORROR_TAG)
                         })
+                        || self
+                            .actor_apparent_definition(actor)
+                            .is_some_and(|definition| {
+                                definition.tags.iter().any(|tag| tag == FEAR_AURA_TAG)
+                            }))
             })
             .map(|actor| actor.id.clone())
             .collect()
     }
 
-    pub(super) fn resolve_newly_visible_eldritch_horrors(
+    pub(super) fn resolve_newly_visible_monster_auras(
         &mut self,
         previously_visible: &BTreeSet<String>,
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
     ) {
         let newly_visible = self
-            .visible_eldritch_horror_entity_ids()
+            .visible_monster_aura_entity_ids()
             .difference(previously_visible)
             .cloned()
             .collect::<Vec<_>>();
@@ -108,7 +125,66 @@ impl Game {
                 continue;
             };
             self.resolve_eldritch_horror(index, events, changed);
+            self.resolve_monster_fear_aura(index, "sight", false, events);
         }
+    }
+
+    pub(super) fn resolve_monster_fear_aura(
+        &mut self,
+        index: usize,
+        trigger: &'static str,
+        scale_by_distance: bool,
+        events: &mut Vec<DomainEvent>,
+    ) -> bool {
+        if self.entity_is_player_aligned(index) {
+            return false;
+        }
+        let Some(definition) = self
+            .actor_apparent_definition(&self.entities[index])
+            .cloned()
+        else {
+            return false;
+        };
+        if !definition.tags.iter().any(|tag| tag == FEAR_AURA_TAG)
+            || self.player_status_immunities().contains(STATUS_FEAR)
+        {
+            return false;
+        }
+        let divisor = if scale_by_distance {
+            rfb_distance(self.player.position, self.entities[index].position)
+                .saturating_sub(2)
+                .max(1)
+        } else {
+            1
+        };
+        let power = definition.level.saturating_div(divisor).max(1);
+        if self.monster_saving_throw(&definition.id, power, events) {
+            return false;
+        }
+        if scale_by_distance && self.last_non_melee_fear_aura_tick == Some(self.world_tick) {
+            return false;
+        }
+        let duration = resisted_status_duration(
+            power,
+            self.effective_player_resistances().level(DamageType::Fear),
+        );
+        if duration == 0 {
+            return false;
+        }
+        self.apply_player_melee_status(
+            STATUS_FEAR,
+            i32::try_from(duration).unwrap_or(i32::MAX),
+            &definition.id,
+        );
+        events.push(DomainEvent::MonsterFearAuraApplied {
+            source_kind_id: definition.id,
+            trigger,
+            duration,
+        });
+        if scale_by_distance {
+            self.last_non_melee_fear_aura_tick = Some(self.world_tick);
+        }
+        true
     }
 
     fn eldritch_percent_save(&mut self, chance: i32) -> bool {
@@ -571,6 +647,14 @@ impl Game {
         if self
             .content
             .actor(&actor.kind_id)
+            .is_some_and(|definition| definition.tags.iter().any(|tag| tag == "tanuki"))
+        {
+            actor.appearance_kind_id = self.roll_shapechanger_appearance(&actor.kind_id);
+            return;
+        }
+        if self
+            .content
+            .actor(&actor.kind_id)
             .is_some_and(|definition| definition.tags.iter().any(|tag| tag == "shapechanger"))
         {
             actor.appearance_kind_id = self.roll_shapechanger_appearance(&actor.kind_id);
@@ -581,7 +665,7 @@ impl Game {
             .actor(&actor.kind_id)
             .is_some_and(|definition| {
                 definition.level >= 10
-                    && !definition.tags.iter().any(|tag| tag == "unique")
+                    && !actor_is_unique(definition)
                     && definition.id != SHADOWER_APPEARANCE_KIND_ID
             })
             && self
@@ -750,7 +834,10 @@ struct OriginalAllocationCandidate {
 }
 
 fn actor_is_unique(definition: &ActorDefinition) -> bool {
-    definition.tags.iter().any(|tag| tag == "unique")
+    definition
+        .tags
+        .iter()
+        .any(|tag| matches!(tag.as_str(), "unique" | "unique2"))
 }
 
 fn actor_is_guardian(definition: &ActorDefinition) -> bool {

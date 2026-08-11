@@ -804,6 +804,7 @@ pub struct Game {
     revision: u32,
     turn: u32,
     world_tick: u32,
+    last_non_melee_fear_aura_tick: Option<u32>,
     last_command_seq: u32,
     debug_ability_casts_succeed: bool,
     debug_recharge_attempts_succeed: bool,
@@ -1098,6 +1099,7 @@ impl Game {
             revision: 0,
             turn: 0,
             world_tick: 0,
+            last_non_melee_fear_aura_tick: None,
             last_command_seq: 0,
             debug_ability_casts_succeed: false,
             debug_recharge_attempts_succeed: false,
@@ -1181,7 +1183,7 @@ impl Game {
         let world_tick_before_command = self.world_tick;
         let player_position_before_command = self.player.position;
         let floor_before_command = self.current_floor_id.clone();
-        let visible_eldritch_horrors_before_action = self.visible_eldritch_horror_entity_ids();
+        let visible_monster_auras_before_action = self.visible_monster_aura_entity_ids();
         let wilderness_position_before_command = self.wilderness_position;
         let wilderness_view_offset_before_command = self.wilderness_view_offset;
         let light_radius_before_command = self.player_light_radius();
@@ -2002,8 +2004,8 @@ impl Game {
             &mut removed_entities,
         )?;
 
-        self.resolve_newly_visible_eldritch_horrors(
-            &visible_eldritch_horrors_before_action,
+        self.resolve_newly_visible_monster_auras(
+            &visible_monster_auras_before_action,
             &mut events,
             &mut changed,
         );
@@ -2091,8 +2093,7 @@ impl Game {
             || self.player_light_radius() != light_radius_before_command
             || self.player_see_invisible_sources() != see_invisible_sources_before_command
             || self.player_has_telepathy() != telepathy_before_command;
-        let visible_eldritch_horrors_before_invisible_refresh =
-            self.visible_eldritch_horror_entity_ids();
+        let visible_monster_auras_before_invisible_refresh = self.visible_monster_aura_entity_ids();
         self.refresh_invisible_visibility(
             full_visibility_refresh,
             &entity_positions_before_command,
@@ -2101,8 +2102,8 @@ impl Game {
             full_visibility_refresh,
             &entity_positions_before_command,
         );
-        self.resolve_newly_visible_eldritch_horrors(
-            &visible_eldritch_horrors_before_invisible_refresh,
+        self.resolve_newly_visible_monster_auras(
+            &visible_monster_auras_before_invisible_refresh,
             &mut events,
             &mut changed,
         );
@@ -2469,7 +2470,7 @@ impl Game {
             let protected = definition
                 .tags
                 .iter()
-                .any(|tag| matches!(tag.as_str(), "unique" | "guardian"));
+                .any(|tag| matches!(tag.as_str(), "unique" | "unique2" | "guardian"));
             let fatigue_sides = match scope {
                 AbilityGenocideScopeDefinition::Single => target_level.div_ceil(2),
                 AbilityGenocideScopeDefinition::Glyph => 4,
@@ -2562,7 +2563,10 @@ impl Game {
         self.content
             .actor_definitions()
             .filter(|definition| {
-                let unique = definition.tags.iter().any(|tag| tag == "unique");
+                let unique = definition
+                    .tags
+                    .iter()
+                    .any(|tag| matches!(tag.as_str(), "unique" | "unique2"));
                 definition.role == ActorRole::Monster
                     && definition.level <= u32::from(maximum_level)
                     && (category == "any-monster" || actor_matches_category(definition, category))
@@ -2649,7 +2653,11 @@ impl Game {
                 .actor(&kind_id)
                 .expect("planned summon candidate must remain available")
                 .clone();
-            if definition.tags.iter().any(|tag| tag == "unique") {
+            if definition
+                .tags
+                .iter()
+                .any(|tag| matches!(tag.as_str(), "unique" | "unique2"))
+            {
                 candidates.remove(choice);
             }
             let id = self.summon_entity_id(spec.source_id, entity_ids.len());

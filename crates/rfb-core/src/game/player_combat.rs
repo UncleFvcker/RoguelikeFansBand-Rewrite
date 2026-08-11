@@ -146,6 +146,9 @@ impl Game {
                     trace: trace.clone(),
                 });
                 self.wake_entity_after_damage(index, damage.applied, events);
+                if !application.fatal {
+                    self.resolve_monster_fear_aura(index, "hurt", true, events);
+                }
                 if application.fatal {
                     self.resolve_actor_death(
                         index,
@@ -213,6 +216,9 @@ impl Game {
             trace: trace.clone(),
         });
         self.wake_entity_after_damage(index, damage.applied, events);
+        if !application.fatal {
+            self.resolve_monster_fear_aura(index, "hurt", true, events);
+        }
         if application.fatal {
             self.resolve_actor_death(
                 index,
@@ -334,6 +340,9 @@ impl Game {
                     trace: trace.clone(),
                 });
                 self.wake_entity_after_damage(index, damage.applied, events);
+                if !application.fatal {
+                    self.resolve_monster_fear_aura(index, "hurt", true, events);
+                }
                 if application.fatal {
                     self.resolve_actor_death(
                         index,
@@ -373,6 +382,7 @@ impl Game {
             .actor_runtime_definition(&self.entities[index])
             .expect("monster actor definition must remain available")
             .clone();
+        let target_entity_id = self.entities[index].id.clone();
         let target_kind = self.entities[index].kind_id.clone();
         self.entities[index].alerted = true;
         let attacker = self.player_derived_stats();
@@ -384,6 +394,8 @@ impl Game {
             self.player_mutation_innate_attack_profiles(&attacker, equipped_weapon_id.as_deref()),
         );
         let mut vampiric_drain_remaining = 50_i32;
+        let mut retaliation_blow_index = 0_usize;
+        let mut touched_surviving_target = false;
         'profiles: for profile in profiles {
             let vampiric_weapon = profile.source_item_id.as_ref().is_some_and(|item_id| {
                 self.items
@@ -439,8 +451,22 @@ impl Game {
                 commit_damage_application(&mut self.entities[index], &application);
                 events.push(profile.hit_event(&target_kind, damage));
                 self.wake_entity_after_damage(index, damage.applied, events);
-                let contact_aura_fatal = self.resolve_monster_contact_auras(&definition, events);
-                if contact_aura_fatal {
+                let mut revenge_stop = false;
+                if !application.fatal
+                    && let Some(stop) = self.resolve_monster_revenge_aura(
+                        index,
+                        retaliation_blow_index,
+                        events,
+                        changed,
+                        removed_entities,
+                    )?
+                {
+                    retaliation_blow_index = retaliation_blow_index.saturating_add(1);
+                    revenge_stop = stop;
+                }
+                let contact_aura_fatal =
+                    !revenge_stop && self.resolve_monster_contact_auras(&definition, events);
+                if contact_aura_fatal || revenge_stop {
                     if application.fatal {
                         self.resolve_actor_death(
                             index,
@@ -498,10 +524,74 @@ impl Game {
                     self.gain_player_melee_resources(ResourceGainSourceDto::MeleeKill, events);
                     break 'profiles;
                 }
+                touched_surviving_target = true;
                 self.resolve_confusing_strike(index, &definition, events);
             }
         }
+        if touched_surviving_target
+            && !self.player_is_dead()
+            && let Some(index) = self
+                .entities
+                .iter()
+                .position(|entity| entity.id == target_entity_id)
+        {
+            self.resolve_monster_fear_aura(index, "contact", false, events);
+        }
         Ok(())
+    }
+
+    pub(super) fn resolve_monster_revenge_aura(
+        &mut self,
+        index: usize,
+        blow_index: usize,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<Option<bool>, CoreError> {
+        let definition = self
+            .content
+            .actor(&self.entities[index].kind_id)
+            .expect("revenge aura actor definition must remain available");
+        let incapacitated = self.entities[index]
+            .statuses
+            .iter()
+            .any(|status| matches!(status.kind_id.as_str(), STATUS_CONFUSION | STATUS_PARALYSIS));
+        if self.entities[index].hp <= 0
+            || incapacitated
+            || !definition.tags.iter().any(|tag| tag == "aura-revenge")
+            || self.rng.bounded(150) >= u64::from(definition.level)
+        {
+            return Ok(None);
+        }
+        let source_entity_id = self.entities[index].id.clone();
+        let self_destructs = self.resolve_monster_revenge_blow(
+            index,
+            blow_index,
+            events,
+            changed,
+            removed_entities,
+        )?;
+        if self_destructs
+            && let Some(index) = self
+                .entities
+                .iter()
+                .position(|entity| entity.id == source_entity_id)
+        {
+            let source_kind_id = self.entities[index].kind_id.clone();
+            self.resolve_actor_death(
+                index,
+                DomainEvent::MonsterSelfDestructed { source_kind_id },
+                events,
+                changed,
+                removed_entities,
+            )?;
+        }
+        let source_still_adjacent = self
+            .entities
+            .iter()
+            .find(|entity| entity.id == source_entity_id)
+            .is_some_and(|entity| adjacent(entity.position, self.player.position));
+        Ok(Some(self.player_is_dead() || !source_still_adjacent))
     }
 
     pub(super) fn roll_innate_critical_multiplier(

@@ -890,7 +890,11 @@ impl Game {
                         .actor(&kind_id)
                         .expect("validated summon candidate must remain available")
                         .clone();
-                    if definition.tags.iter().any(|tag| tag == "unique") {
+                    if definition
+                        .tags
+                        .iter()
+                        .any(|tag| matches!(tag.as_str(), "unique" | "unique2"))
+                    {
                         candidate_kind_ids.remove(choice);
                     }
                     let id = self.summon_entity_id(&plan.ability.id, entity_ids.len());
@@ -1294,7 +1298,7 @@ impl Game {
                     if target_definition
                         .tags
                         .iter()
-                        .any(|tag| matches!(tag.as_str(), "unique" | "guardian"))
+                        .any(|tag| matches!(tag.as_str(), "unique" | "unique2" | "guardian"))
                     {
                         AbilityEffectResolutionDto::Skipped {
                             effect_index,
@@ -1414,17 +1418,26 @@ impl Game {
         source_kind_id: &str,
         events: &mut Vec<DomainEvent>,
     ) -> bool {
-        let ability_stat = self.player_derived_stats().saving_throw_skill;
         let caster_level = self
             .content
             .actor(source_kind_id)
             .map_or(1, |definition| definition.level);
+        self.monster_saving_throw(source_kind_id, caster_level, events)
+    }
+
+    pub(super) fn monster_saving_throw(
+        &mut self,
+        source_kind_id: &str,
+        difficulty: u32,
+        events: &mut Vec<DomainEvent>,
+    ) -> bool {
+        let ability_stat = self.player_derived_stats().saving_throw_skill;
         let mut difficulty_pipeline = DerivedStatsPipeline::new();
         difficulty_pipeline.add(
             StatKind::ActionDifficulty,
             StatLayer::Environment,
             source_kind_id,
-            i32::try_from(caster_level).unwrap_or(i32::MAX),
+            i32::try_from(difficulty).unwrap_or(i32::MAX),
         );
         let check = resolve_check(
             &mut self.rng,
@@ -1768,10 +1781,12 @@ impl Game {
                 radius,
                 ..
             } => {
-                let unique = self
-                    .content
-                    .actor(actor_kind_id)
-                    .is_some_and(|definition| definition.tags.iter().any(|tag| tag == "unique"));
+                let unique = self.content.actor(actor_kind_id).is_some_and(|definition| {
+                    definition
+                        .tags
+                        .iter()
+                        .any(|tag| matches!(tag.as_str(), "unique" | "unique2"))
+                });
                 if unique && !self.unique_actor_kind_is_available(actor_kind_id) {
                     return Err(MonsterAbilityPlanRejection {
                         reason: MonsterAbilityRejectionReasonDto::NoCandidates,
@@ -1810,7 +1825,10 @@ impl Game {
                     .content
                     .actor_definitions()
                     .filter(|definition| {
-                        let unique = definition.tags.iter().any(|tag| tag == "unique");
+                        let unique = definition
+                            .tags
+                            .iter()
+                            .any(|tag| matches!(tag.as_str(), "unique" | "unique2"));
                         definition.role == ActorRole::Monster
                             && definition.level <= u32::from(*maximum_level)
                             && definition.tags.iter().any(|tag| tag == category)

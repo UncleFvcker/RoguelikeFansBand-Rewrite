@@ -593,7 +593,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         .iter()
         .filter(|actor| actor.tags.iter().any(|tag| tag == "orc-cave"))
         .collect::<Vec<_>>();
-    assert_eq!(orc_cave.len(), 184);
+    assert_eq!(orc_cave.len(), 191);
 
     for id in [
         "demo.actor.bunyip",
@@ -639,7 +639,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
     }
     assert_eq!(
         level_counts,
-        [16, 14, 12, 16, 24, 17, 17, 17, 17, 17, 7, 10]
+        [16, 14, 12, 17, 24, 17, 18, 17, 18, 21, 7, 10]
     );
 
     let mouse = artifact
@@ -3157,6 +3157,46 @@ fn orc_cave_contact_auras_and_polymorph_keep_explicit_effects() {
                     .any(|candidate| candidate.ability_id == polymorph.id)
             })
     );
+}
+
+#[test]
+fn orc_cave_o5_traits_keep_explicit_runtime_tags() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actor = |id: &str| {
+        artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == format!("demo.actor.{id}"))
+            .unwrap_or_else(|| panic!("{id} should be imported"))
+    };
+
+    assert!(
+        actor("grendel")
+            .tags
+            .iter()
+            .any(|tag| tag == "aura-revenge")
+    );
+    assert!(
+        actor("jade-monk")
+            .tags
+            .iter()
+            .any(|tag| tag == "aura-revenge")
+    );
+    assert!(
+        actor("fearmaster")
+            .tags
+            .iter()
+            .any(|tag| tag == "aura-fear")
+    );
+    assert!(actor("tanuki").tags.iter().any(|tag| tag == "tanuki"));
+    for id in [
+        "suke-san-the-mitsukuni-s-warder",
+        "kaku-san-the-mitsukuni-s-warder",
+        "silver-angel",
+    ] {
+        assert!(actor(id).tags.iter().any(|tag| tag == "unique2"));
+    }
 }
 
 #[test]

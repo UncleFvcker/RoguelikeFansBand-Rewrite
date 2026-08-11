@@ -175,6 +175,77 @@ fn monster_contact_auras_apply_elemental_damage_and_curse_saves() {
 }
 
 #[test]
+fn monster_revenge_aura_uses_one_blow_and_cannot_recurse() {
+    let mut game = game_with_actor_definition(0, "demo.actor.small-kobold", |actor| {
+        actor.level = 150;
+        actor.attack = 1_000_000;
+        actor.tags.push("aura-revenge".to_owned());
+        actor.melee_routine = Some(rfb_content::MeleeRoutineDefinition {
+            blows: vec![rfb_content::MeleeBlowDefinition {
+                method_id: "rfb.blow.hit".to_owned(),
+                to_hit: 0,
+                self_destructs: false,
+                effects: vec![MeleeBlowEffectDefinition::Damage {
+                    chance_percent: None,
+                    damage_dice: 1,
+                    damage_sides: 1,
+                    damage_type: rfb_content::ActorDamageType::Physical,
+                    armor_mitigated: false,
+                    vampiric: false,
+                }],
+            }],
+        });
+    });
+    clear_monsters(&mut game);
+    game.player.position = Position { x: 3, y: 3 };
+    game.player.hp = 100;
+    game.player.max_hp = 100;
+    game.push_generated_actor(
+        "test.revenge".to_owned(),
+        "demo.actor.small-kobold",
+        Position { x: 4, y: 3 },
+    );
+    let mut events = Vec::new();
+
+    assert_eq!(
+        game.resolve_monster_revenge_aura(
+            0,
+            0,
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("revenge aura should resolve"),
+        Some(false)
+    );
+    assert_eq!(game.player.hp, 99);
+    assert_eq!(
+        events
+            .iter()
+            .filter(|event| matches!(event, DomainEvent::MonsterMeleeHit { .. }))
+            .count(),
+        1
+    );
+
+    game.entities[0]
+        .statuses
+        .push(monster_combat::melee_status(STATUS_CONFUSION, 10, "test").status);
+    let draws_before = game.rng.draw_counter;
+    assert_eq!(
+        game.resolve_monster_revenge_aura(
+            0,
+            0,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("incapacitated revenge aura should be skipped"),
+        None
+    );
+    assert_eq!(game.rng.draw_counter, draws_before);
+}
+
+#[test]
 fn fatal_mutation_aura_uses_the_shared_actor_death_transaction() {
     let mut game = monster_effect_game(
         0,

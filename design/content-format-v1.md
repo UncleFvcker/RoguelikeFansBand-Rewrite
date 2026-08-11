@@ -493,3 +493,10 @@ contract-v257 / 包 1.248.0 扩展显式接触光环导入，`A:FIRE`、`A:ELEC`
 同步 564 条，内容 hash 为
 `3f31646c59caea5c6959112540cb820110a17000cafd0c763b14b9bd058973ba`。协议升至
 1.170，State Hash Schema 保持 v85。
+
+contract-v258 / 包 1.249.0 将 `AURA_REVENGE`、`AURA_FEAR`、`TANUKI` 与
+`UNIQUE2` 映射为正式 actor 标签。新增 Tanuki、Grendel、Fearmaster、Jade monk、
+Suke-san、Kaku-san 与 Silver Angel，当前包包含 49 种地形、618 种 actor、255 种
+物品、271 个能力和 13 张 loot table；严格同步 571 条，内容 hash 为
+`1c7fdbf5023bd0ad898d8b828e024350f53d40c99a49b0bc7f8c58000fcffa2d`。协议保持
+1.170，State Hash Schema 保持 v85。

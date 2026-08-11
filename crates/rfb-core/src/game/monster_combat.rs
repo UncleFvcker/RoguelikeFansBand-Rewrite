@@ -942,6 +942,28 @@ impl Game {
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
     ) -> Result<bool, CoreError> {
+        self.resolve_monster_melee_blow(index, None, events, changed, removed_entities)
+    }
+
+    pub(super) fn resolve_monster_revenge_blow(
+        &mut self,
+        index: usize,
+        blow_index: usize,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<bool, CoreError> {
+        self.resolve_monster_melee_blow(index, Some(blow_index), events, changed, removed_entities)
+    }
+
+    fn resolve_monster_melee_blow(
+        &mut self,
+        index: usize,
+        only_blow_index: Option<usize>,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<bool, CoreError> {
         let source_entity_id = self.entities[index].id.clone();
         let kind_id = self.entities[index].kind_id.clone();
         let nice = self.entities[index].nice;
@@ -953,7 +975,10 @@ impl Game {
         let target = self.player_derived_stats();
         let armor_class = target.armor_class.value;
         let mut blink_after_melee = false;
-        for blow in resolved_melee_blows(&definition) {
+        for (blow_index, blow) in resolved_melee_blows(&definition).into_iter().enumerate() {
+            if only_blow_index.is_some_and(|selected| selected != blow_index) {
+                continue;
+            }
             let ability = attacker.melee_skill.with_modifier(
                 StatLayer::Base,
                 blow.method_id.as_deref().unwrap_or(definition.id.as_str()),

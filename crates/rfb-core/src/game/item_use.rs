@@ -975,7 +975,7 @@ impl Game {
                     actor
                         .tags
                         .iter()
-                        .any(|tag| matches!(tag.as_str(), "unique" | "guardian"))
+                        .any(|tag| matches!(tag.as_str(), "unique" | "unique2" | "guardian"))
                 })
         }) {
             return true;
@@ -1042,10 +1042,9 @@ impl Game {
                         .content
                         .actor(&entity.kind_id)
                         .is_some_and(|definition| {
-                            !definition
-                                .tags
-                                .iter()
-                                .any(|tag| matches!(tag.as_str(), "unique" | "guardian"))
+                            !definition.tags.iter().any(|tag| {
+                                matches!(tag.as_str(), "unique" | "unique2" | "guardian")
+                            })
                         })
             })
             .map(|entity| entity.id.clone())

@@ -103,6 +103,80 @@ fn shapechanger_projects_another_monster_and_rerolls_each_action() {
 }
 
 #[test]
+fn tanuki_keeps_true_runtime_stats_behind_one_persistent_disguise() {
+    let mut game = Game::new(1);
+    clear_monsters(&mut game);
+    game.push_generated_actor(
+        "test.tanuki".to_owned(),
+        "demo.actor.tanuki",
+        Position { x: 5, y: 3 },
+    );
+    let mut actor = game.entities.pop().expect("tanuki should exist");
+    game.maybe_apply_shadower_appearance(&mut actor);
+    game.entities.push(actor);
+
+    let appearance = game.entities[0]
+        .appearance_kind_id
+        .clone()
+        .expect("tanuki should receive an initial disguise");
+    assert_ne!(appearance, "demo.actor.tanuki");
+    assert_eq!(
+        game.actor_runtime_definition(&game.entities[0])
+            .expect("tanuki runtime definition")
+            .id,
+        "demo.actor.tanuki"
+    );
+    assert_eq!(
+        game.actor_apparent_definition(&game.entities[0])
+            .expect("tanuki apparent definition")
+            .id,
+        appearance
+    );
+    let draws_before = game.rng.draw_counter;
+    game.reroll_shapechanger_appearance(0);
+    assert_eq!(game.rng.draw_counter, draws_before);
+    assert_eq!(
+        game.entities[0].appearance_kind_id.as_deref(),
+        Some(appearance.as_str())
+    );
+
+    let restored = Game::from_save(game.to_save()).expect("tanuki disguise should round-trip");
+    assert_eq!(
+        restored.entities[0].appearance_kind_id.as_deref(),
+        Some(appearance.as_str())
+    );
+}
+
+#[test]
+fn fear_aura_uses_apparent_level_and_only_lands_once_per_tick_at_range() {
+    let mut game = game_with_actor_definition(0, "demo.actor.fearmaster", |actor| {
+        actor.level = 500;
+    });
+    clear_monsters(&mut game);
+    game.player.position = Position { x: 3, y: 3 };
+    game.push_generated_actor(
+        "test.fearmaster".to_owned(),
+        "demo.actor.fearmaster",
+        Position { x: 5, y: 3 },
+    );
+    let seed = first_seed_for(|rng| rng.bounded(100) >= 95);
+    game.rng = RfbRng::seeded(seed);
+    let mut events = Vec::new();
+
+    assert!(game.resolve_monster_fear_aura(0, "hurt", true, &mut events));
+    game.rng = RfbRng::seeded(seed);
+    assert!(!game.resolve_monster_fear_aura(0, "hurt", true, &mut events));
+    assert_eq!(
+        events
+            .iter()
+            .filter(|event| matches!(event, DomainEvent::MonsterFearAuraApplied { .. }))
+            .count(),
+        1
+    );
+    assert!(game.player_has_status_kind(STATUS_FEAR));
+}
+
+#[test]
 fn chameleon_keeps_its_identity_while_its_form_drives_runtime_behavior() {
     let mut game =
         Game::new_with_build(1, "demo.build.warrior").expect("Warrens journey should create");
@@ -203,16 +277,16 @@ fn chameleon_change_check_uses_one_in_thirteen_before_selecting_a_form() {
 #[test]
 fn eldritch_horror_triggers_on_fresh_sight_and_persists_its_repeat_gate() {
     let (mut game, index) = game_with_ghast();
-    let visible = game.visible_eldritch_horror_entity_ids();
+    let visible = game.visible_monster_aura_entity_ids();
     let saving_throw = game.player_derived_stats().saving_throw_skill.value;
     let seed = eldritch_seed(saving_throw, &[false]);
     game.rng = RfbRng::seeded(seed);
     let mut events = Vec::new();
     let mut changed = BTreeSet::new();
 
-    game.resolve_newly_visible_eldritch_horrors(&visible, &mut events, &mut changed);
+    game.resolve_newly_visible_monster_auras(&visible, &mut events, &mut changed);
     assert_eq!(game.rng.draw_counter, 0, "continuous sight must be safe");
-    game.resolve_newly_visible_eldritch_horrors(&BTreeSet::new(), &mut events, &mut changed);
+    game.resolve_newly_visible_monster_auras(&BTreeSet::new(), &mut events, &mut changed);
     assert!(game.entities[index].eldritch_horror_triggered);
     assert!(game.player_has_status_kind(STATUS_CONFUSION));
     assert!(events.iter().any(|event| matches!(
@@ -623,6 +697,46 @@ fn defeated_unique_state_round_trips_after_normal_unique_death() {
             .contains("demo.actor.dread-vampire")
     );
     assert!(!restored.unique_actor_kind_is_available("demo.actor.dread-vampire"));
+}
+
+#[test]
+fn unique2_allows_one_living_instance_but_returns_after_death() {
+    let mut game = enter_warrens(10);
+    game.entities.clear();
+    game.push_generated_actor(
+        "test.unique2".to_owned(),
+        "demo.actor.silver-angel",
+        game.player.position,
+    );
+    assert!(!game.unique_actor_kind_is_available("demo.actor.silver-angel"));
+
+    game.resolve_actor_death(
+        0,
+        DomainEvent::EntityDiedFromStatus {
+            target_kind_id: "demo.actor.silver-angel".to_owned(),
+            status_kind_id: STATUS_POISON.to_owned(),
+            damage: DamageOutcome {
+                raw: 1,
+                armor_reduction: 0,
+                requested: 1,
+                applied: 1,
+                resistance_delta: 0,
+                damage_type: DamageType::Poison,
+                resistance: ResistanceLevel::Normal,
+            },
+        },
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("UNIQUE2 death should resolve");
+
+    assert!(game.unique_actor_kind_is_available("demo.actor.silver-angel"));
+    assert!(
+        !game
+            .defeated_unique_actor_kind_ids
+            .contains("demo.actor.silver-angel")
+    );
 }
 
 #[test]
