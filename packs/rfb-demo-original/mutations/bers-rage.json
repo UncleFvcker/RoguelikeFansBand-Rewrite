@@ -6,6 +6,7 @@
   "description": "你容易陷入狂暴状态。",
   "rating": "bad",
   "sourceIndex": 32,
+  "randomSelectionEnabled": false,
   "randomWeight": 2,
   "removesOnGain": []
 }

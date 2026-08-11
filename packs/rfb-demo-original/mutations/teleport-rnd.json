@@ -6,6 +6,7 @@
   "description": "你会随机传送。",
   "rating": "bad",
   "sourceIndex": 34,
+  "randomSelectionEnabled": false,
   "randomWeight": 2,
   "removesOnGain": [
     "rfb.mutation.teleport"

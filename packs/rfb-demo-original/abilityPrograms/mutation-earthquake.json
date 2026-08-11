@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.ability-program.mutation.earthquake",
+  "input": "self",
+  "steps": [
+    {
+      "type": "earthquake",
+      "radius": 10,
+      "affectChancePercent": 15,
+      "floorTerrainId": "demo.terrain.floor",
+      "wallTerrainIds": [
+        "demo.terrain.wall",
+        "demo.terrain.quartz-vein",
+        "demo.terrain.magma-vein"
+      ]
+    }
+  ]
+}

@@ -6,6 +6,7 @@
   "description": "你会收到关于敌人的预警。",
   "rating": "average",
   "sourceIndex": 59,
+  "randomSelectionEnabled": false,
   "randomWeight": 2,
   "removesOnGain": []
 }

@@ -207,7 +207,15 @@ impl Game {
             )
             .saturating_sub((i32::from(RFB_MAGIC_STAT_ADJUSTMENT[index]) - 1).saturating_mul(3))
             .saturating_add(self.player_spell_failure_modifier_percent())
-            .clamp(i32::from(RFB_MAGIC_FAILURE_MINIMUM[index]), 95);
+            .clamp(
+                i32::from(
+                    activation
+                        .minimum_failure_percent
+                        .unwrap_or(RFB_MAGIC_FAILURE_MINIMUM[index])
+                        .max(RFB_MAGIC_FAILURE_MINIMUM[index]),
+                ),
+                95,
+            );
         u8::try_from(chance).expect("bounded mutation failure chance must fit u8")
     }
 

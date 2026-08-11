@@ -6,6 +6,7 @@
   "description": "有时你会气血上涌。",
   "rating": "average",
   "sourceIndex": 62,
+  "randomSelectionEnabled": false,
   "randomWeight": 2,
   "removesOnGain": []
 }

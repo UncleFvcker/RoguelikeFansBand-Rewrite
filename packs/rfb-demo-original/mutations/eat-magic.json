@@ -6,6 +6,14 @@
   "description": "你可以吞噬魔法能量供自己使用。",
   "rating": "great",
   "sourceIndex": 22,
+  "activation": {
+    "minimumLevel": 17,
+    "governingAttribute": "wisdom",
+    "cost": 1,
+    "baseFailurePercent": 80,
+    "minimumFailurePercent": 11,
+    "abilityId": "rfb.ability.mutation.eat-magic"
+  },
   "randomWeight": 2,
   "removesOnGain": []
 }

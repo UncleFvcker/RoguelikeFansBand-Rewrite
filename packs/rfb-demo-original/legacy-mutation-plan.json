@@ -283,10 +283,8 @@
         "lose:mutation-good-luck=>weight-1"
       ],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "terrain-consumption-transaction"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -417,10 +415,8 @@
         "gain:race-beastman=>weight-50"
       ],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "mutation-polymorph-transaction"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -443,10 +439,8 @@
         "lose:mutation-good-luck=>weight-1"
       ],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "item-alchemy-transaction"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -468,10 +462,8 @@
         "lose:mutation-good-luck=>weight-1"
       ],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "mutation-summoning-transaction"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -513,10 +505,8 @@
       ],
       "weightConditions": [],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "terrain-earthquake-transaction"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -538,10 +528,8 @@
         "lose:mutation-good-luck=>weight-1"
       ],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "device-drain-transaction"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -560,10 +548,8 @@
       ],
       "weightConditions": [],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "item-magic-analysis"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -585,10 +571,8 @@
         "lose:mutation-good-luck=>weight-1"
       ],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "monster-reproduction-transaction"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -610,10 +594,8 @@
         "lose:mutation-good-luck=>weight-1"
       ],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "melee-teleport-transaction"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {

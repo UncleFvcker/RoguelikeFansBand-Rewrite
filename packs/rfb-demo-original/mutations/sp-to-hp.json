@@ -6,6 +6,7 @@
   "description": "有时你的气血会涌入肌肉。",
   "rating": "average",
   "sourceIndex": 61,
+  "randomSelectionEnabled": false,
   "randomWeight": 4,
   "removesOnGain": []
 }

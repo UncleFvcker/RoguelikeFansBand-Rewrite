@@ -6,6 +6,13 @@
   "description": "你可以使霉菌在你附近生长。",
   "rating": "good",
   "sourceIndex": 19,
+  "activation": {
+    "minimumLevel": 1,
+    "governingAttribute": "constitution",
+    "cost": 6,
+    "baseFailurePercent": 60,
+    "abilityId": "rfb.ability.mutation.grow-mold"
+  },
   "randomWeight": 2,
   "removesOnGain": []
 }

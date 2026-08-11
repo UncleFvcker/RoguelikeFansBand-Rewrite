@@ -969,6 +969,7 @@ impl Game {
         let current = FloorState {
             id: plan.from_floor_id.clone(),
             dungeon_instance_id: plan.from_dungeon_instance_id.clone(),
+            reproduction_suppressed: self.reproduction_suppressed,
             width: self.width,
             height: self.height,
             terrain: std::mem::take(&mut self.terrain),
@@ -1295,6 +1296,7 @@ impl Game {
     ) {
         self.current_floor_id = floor.id;
         self.current_dungeon_instance_id = floor.dungeon_instance_id;
+        self.reproduction_suppressed = floor.reproduction_suppressed;
         self.width = floor.width;
         self.height = floor.height;
         self.terrain = floor.terrain;

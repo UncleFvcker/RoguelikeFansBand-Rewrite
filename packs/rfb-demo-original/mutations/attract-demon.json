@@ -6,6 +6,7 @@
   "description": "你会吸引恶魔。",
   "rating": "bad",
   "sourceIndex": 41,
+  "randomSelectionEnabled": false,
   "randomWeight": 4,
   "removesOnGain": []
 }

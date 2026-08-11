@@ -1077,6 +1077,7 @@ impl Game {
             FloorState {
                 id: self.current_floor_id.clone(),
                 dungeon_instance_id: self.current_dungeon_instance_id.clone(),
+                reproduction_suppressed: self.reproduction_suppressed,
                 width: self.width,
                 height: self.height,
                 terrain: std::mem::take(&mut self.terrain),
@@ -1778,6 +1779,7 @@ impl Game {
         FloorState {
             id: WILDERNESS_FLOOR_ID.to_owned(),
             dungeon_instance_id: None,
+            reproduction_suppressed: false,
             width,
             height,
             terrain,

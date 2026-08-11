@@ -6,6 +6,13 @@
   "description": "你可以导致大规模的阳痿。",
   "rating": "great",
   "sourceIndex": 24,
+  "activation": {
+    "minimumLevel": 12,
+    "governingAttribute": "charisma",
+    "cost": 23,
+    "baseFailurePercent": 70,
+    "abilityId": "rfb.ability.mutation.sterility"
+  },
   "randomWeight": 2,
   "removesOnGain": []
 }

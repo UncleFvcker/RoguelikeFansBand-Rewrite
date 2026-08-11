@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.163";
+pub const PROTOCOL_VERSION: &str = "1.164";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -907,6 +907,35 @@ pub enum AbilityEffectSpecDto {
     FetchItem {
         maximum_weight_tenths_pound: u32,
     },
+    ConsumeTerrain {
+        nutrition: u16,
+    },
+    TransmuteItemToGold {
+        value_divisor: u8,
+        unit_value_cap: u32,
+    },
+    DrainItemMagic {
+        base_power: u16,
+        level_multiplier: u16,
+        level_divisor: u16,
+    },
+    ReportMagic,
+    Earthquake {
+        radius: u8,
+        affect_chance_percent: u8,
+        floor_terrain_id: String,
+        wall_terrain_ids: Vec<String>,
+    },
+    SuppressMonsterReproduction {
+        damage_dice: u16,
+        damage_sides: u16,
+        damage_bonus: u16,
+    },
+    MeleeThenTeleport {
+        radius: u8,
+        failure_threshold: u16,
+    },
+    PolymorphSelf,
     SwapPosition,
     Recall {
         delay_dice: u16,
@@ -1837,6 +1866,74 @@ pub enum AbilityEffectResolutionDto {
         from: Option<Position>,
         to: Position,
         moved: bool,
+    },
+    ConsumeTerrain {
+        effect_index: u8,
+        position: Position,
+        source_terrain_id: String,
+        target_terrain_id: String,
+        nutrition_before: u16,
+        nutrition_after: u16,
+    },
+    TransmuteItemToGold {
+        effect_index: u8,
+        item_id: String,
+        item_kind_id: String,
+        quantity: u32,
+        gold_gained: u32,
+        gold_balance: u32,
+    },
+    DrainItemMagic {
+        effect_index: u8,
+        item_id: String,
+        item_kind_id: String,
+        charges_before: u32,
+        charges_after: u32,
+        drained: u32,
+        destroyed: bool,
+        failed: bool,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        resource_id: Option<String>,
+        resource_before: u32,
+        resource_after: u32,
+    },
+    ReportMagic {
+        effect_index: u8,
+        statuses: Vec<StatusDto>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        recall: Option<RecallStateDto>,
+    },
+    Earthquake {
+        effect_index: u8,
+        radius: u8,
+        affected_positions: Vec<Position>,
+        wall_positions: Vec<Position>,
+        floor_positions: Vec<Position>,
+        removed_items: u32,
+        removed_gold_piles: u32,
+    },
+    SuppressMonsterReproduction {
+        effect_index: u8,
+        damage: i32,
+        fatal: bool,
+        already_suppressed: bool,
+    },
+    MeleeThenTeleport {
+        effect_index: u8,
+        target_entity_id: String,
+        target_kind_id: String,
+        player_from: Position,
+        player_to: Position,
+        teleport_attempted: bool,
+        teleported: bool,
+    },
+    PolymorphSelf {
+        effect_index: u8,
+        gained_mutation_ids: Vec<String>,
+        lost_mutation_ids: Vec<String>,
+        swapped_attributes: Vec<AttributeKindDto>,
+        hp_before: i32,
+        hp_after: i32,
     },
     SwapPosition {
         effect_index: u8,
@@ -3658,6 +3755,7 @@ pub struct FloorSaveDto {
     pub id: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub dungeon_instance_id: Option<String>,
+    pub reproduction_suppressed: bool,
     pub player_position: Position,
     pub terrain: TerrainSaveDto,
     pub entities: Vec<ActorSaveDto>,
@@ -3857,6 +3955,7 @@ pub struct SavePayloadV1 {
     pub current_floor_id: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub current_dungeon_instance_id: Option<String>,
+    pub reproduction_suppressed: bool,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub stored_floors: Vec<FloorSaveDto>,
 }
@@ -4353,6 +4452,7 @@ mod tests {
         current["entities"][0]["nice"] = serde_json::json!(false);
         current["player"]["activeMutationIds"] = serde_json::json!([]);
         current["player"]["lockedMutationIds"] = serde_json::json!([]);
+        current["reproductionSuppressed"] = serde_json::json!(false);
         let mut missing_view_offset = current.clone();
         missing_view_offset
             .as_object_mut()

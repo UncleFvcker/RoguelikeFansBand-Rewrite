@@ -833,6 +833,7 @@ impl Game {
         Ok(FloorState {
             id: definition.id.clone(),
             dungeon_instance_id,
+            reproduction_suppressed: false,
             width,
             height,
             terrain,
@@ -2536,6 +2537,7 @@ impl Game {
         Ok(FloorState {
             id: definition.id.clone(),
             dungeon_instance_id,
+            reproduction_suppressed: false,
             width,
             height,
             terrain,

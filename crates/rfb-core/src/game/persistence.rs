@@ -548,7 +548,7 @@ fn item_property_knowledge_from_save(
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-struct StateHashPayloadV79<'a> {
+struct StateHashPayloadV81<'a> {
     schema_version: u16,
     revision: u32,
     turn: u32,
@@ -594,6 +594,7 @@ struct StateHashPayloadV79<'a> {
     world_id: &'a str,
     current_floor_id: &'a str,
     current_dungeon_instance_id: Option<&'a str>,
+    reproduction_suppressed: bool,
     stored_floors: Vec<FloorSaveForHash<'a>>,
 }
 
@@ -618,6 +619,7 @@ struct FloorSaveForHash<'a> {
     id: &'a str,
     #[serde(skip_serializing_if = "Option::is_none")]
     dungeon_instance_id: Option<&'a str>,
+    reproduction_suppressed: bool,
     player_position: Position,
     terrain: TerrainSaveRef<'a>,
     entities: Vec<ActorSaveDto>,
@@ -638,6 +640,7 @@ fn floor_save_for_hash(floor: &FloorState) -> FloorSaveForHash<'_> {
     FloorSaveForHash {
         id: &floor.id,
         dungeon_instance_id: floor.dungeon_instance_id.as_deref(),
+        reproduction_suppressed: floor.reproduction_suppressed,
         player_position: floor.player_position,
         terrain: TerrainSaveRef {
             width: floor.width,
@@ -1145,6 +1148,7 @@ impl Game {
             mogaminator,
             current_floor_id,
             current_dungeon_instance_id,
+            reproduction_suppressed: payload.reproduction_suppressed,
             stored_floors,
             width: payload.terrain.width,
             height: payload.terrain.height,
@@ -1287,13 +1291,14 @@ impl Game {
             world_id: self.world_id.clone(),
             current_floor_id: self.current_floor_id.clone(),
             current_dungeon_instance_id: self.current_dungeon_instance_id.clone(),
+            reproduction_suppressed: self.reproduction_suppressed,
             stored_floors: self.stored_floors.values().map(floor_to_save).collect(),
         }
     }
 
     #[must_use]
     pub fn state_hash(&self) -> String {
-        let payload = StateHashPayloadV79 {
+        let payload = StateHashPayloadV81 {
             schema_version: STATE_HASH_SCHEMA_VERSION,
             revision: self.revision,
             turn: self.turn,
@@ -1358,6 +1363,7 @@ impl Game {
             world_id: &self.world_id,
             current_floor_id: &self.current_floor_id,
             current_dungeon_instance_id: self.current_dungeon_instance_id.as_deref(),
+            reproduction_suppressed: self.reproduction_suppressed,
             stored_floors: self
                 .stored_floors
                 .values()

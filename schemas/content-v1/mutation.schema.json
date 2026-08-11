@@ -104,6 +104,15 @@
         "governingAttribute": {
           "$ref": "#/$defs/TechniqueAttribute"
         },
+        "minimumFailurePercent": {
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
         "minimumLevel": {
           "format": "uint16",
           "maximum": 65535,
@@ -403,6 +412,10 @@
       "default": 0,
       "format": "int32",
       "type": "integer"
+    },
+    "randomSelectionEnabled": {
+      "default": true,
+      "type": "boolean"
     },
     "randomWeight": {
       "format": "uint8",

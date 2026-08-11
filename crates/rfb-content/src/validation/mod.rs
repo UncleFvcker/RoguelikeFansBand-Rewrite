@@ -140,6 +140,9 @@ pub(crate) fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<
                         || scaling.amount > 1_000_000
                 })
                 || activation.base_failure_percent > 95
+                || activation
+                    .minimum_failure_percent
+                    .is_some_and(|minimum| minimum > activation.base_failure_percent)
                 || validate_definition_id(&activation.ability_id, "ability").is_err()
         }) {
             return Err(ContentError::InvalidMutation(mutation.id.clone()));

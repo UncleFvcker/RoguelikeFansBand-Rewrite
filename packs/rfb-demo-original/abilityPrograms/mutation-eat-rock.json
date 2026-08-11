@@ -1,0 +1,12 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.ability-program.mutation.eat-rock",
+  "input": "cast-target",
+  "steps": [
+    {
+      "type": "consume-terrain",
+      "nutrition": 3000
+    }
+  ]
+}

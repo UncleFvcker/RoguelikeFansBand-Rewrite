@@ -14,8 +14,7 @@ P3.7-M0 至 M4E 原始批次记录。权威内容覆盖账本是
 - M4F-A 已由 `a9a5dbde feat: activate M4F-A passive mutations` 独立提交；
   M4F-B1 在该提交之上实现 P3.8 Elvish Waybread 与兰巴斯不耐受；M4F-B2/B3
   继续完成 Ill Norm 与 ESP。
-- M5.0 已建立主动变异统一施放合同；M5-A/B 的 22 项具体能力已接入，M5-C/D
-  仍有 9 项窄事务待完成。
+- M5.0 已建立主动变异统一施放合同；M5-A--D 的 31 项具体能力和窄事务均已接入。
 - RFB 权威源：`D:/codex/Frogcomposband` 的 Git `master` ref；覆盖审计当前锁定
   `efd63661302866038f58d8cd2553b23e6af3bf9d`。不要读取该仓库工作树文件替代
   `master` Git 对象。
@@ -24,19 +23,20 @@ P3.7-M0 至 M4E 原始批次记录。权威内容覆盖账本是
 
 | 项目 | 当前值 |
 | --- | --- |
-| Protocol | `1.163` |
+| Protocol | `1.164` |
 | Save container | `v1` |
-| State Hash Schema | `v80` |
-| Contract baseline | `contract-v242`，21 个 exact fixtures |
+| State Hash Schema | `v81` |
+| Contract baseline | `contract-v243`，21 个 exact fixtures |
 | Contract Schema | `v4` |
-| Content pack | `1.234.0` |
-| Content hash | `86e9e7b13c53a835e4c4c7654d3d3104c647c808b39342631e38c3dd7e7f4cc2` |
+| Content pack | `1.235.0` |
+| Content hash | `94777282896f77f5b7a88e4da410176f6d1528ee10288beac49c71a49facbb3d` |
 
 当前保留 21 个聚焦 exact fixtures。M4F-B1 为两座城镇杂货店加入兰巴斯并改变公共初始化 RNG；
 M4F-B3 为实体投影增加 glyph，并持久化 Weird Mind 的感知结果，因此协议、状态
 哈希 Schema 与全部精简 fixture 在本批次统一推进。
-M5-A/B 再加入 22 个正式能力及其窄效果投影，使协议推进至 1.163、基线推进至
-contract-v242；没有新增持久状态，因此 State Hash Schema 继续保持 v80。
+M5-A/B 加入 22 个正式能力及其窄效果投影。M5-C/D 再加入 9 项正式能力；绝育术的
+楼层级繁殖压制进入现有 `FloorState`，因此协议推进至 1.164、State Hash Schema
+推进至 v81，基线推进至 contract-v243。
 
 早期计划中基于 `436b1967` 推算的 Protocol `1.152`、State Hash Schema `73`、
 Pack `1.212.0` 已经是历史值。后续只能从上表当前值顺延，并且版本、生成绑定、
@@ -50,14 +50,14 @@ RFB `master` 共 152 项变异：104 个基础随机候选，48 个零权重身�
 | --- | ---: | ---: | ---: |
 | passive-bonus | 44 | 7 | 51 |
 | cross-system-query | 12 | 26 | 38 |
-| activation | 22 | 13 | 35 |
+| activation | 31 | 4 | 35 |
 | periodic-effect | 0 | 28 | 28 |
-| 合计 | 78 | 74 | 152 |
+| 合计 | 87 | 65 | 152 |
 
-随机候选中已有 63 项 active，仍有 41 项 blocked。现有随机选择器会读取所有
-`randomWeight > 0` 的正式定义，并不知道覆盖账本的 `active/blocked` 状态。因此在
-104 个随机候选全部拥有真实行为前，不得把 Polymorph 或其他随机获得入口接到
-`gain_random_mutation`，否则会正式授予无行为的壳。
+随机候选中已有 72 项 active，仍有 32 项 blocked。`randomSelectionEnabled` 将这
+32 项行为壳显式排除在现有随机选择器之外；主动 Polymorph 因而继续复用
+`gain_random_mutation`，却不会授予未实现内容。每项 blocked 候选转为 active 时，
+必须同时删除该排除标记。
 
 `rfb.mutation.merchants-friend` 是唯一一个 RFB 本来就没有数值效果的身份；它已
 被明确记录为 active，不应给它补写本地商店加成。
@@ -81,6 +81,8 @@ RFB `master` 共 152 项变异：104 个基础随机候选，48 个零权重身�
 | M4F-B3 | ESP 接入 Empty/Weird Mind 标记；Weird Mind 按 1/10 刷新感知，非视觉目标只投影白色原 glyph 与通用“怪物”身份。 |
 | M5-A | 9 项探测、随机传送、隔空取物、换位、Recall 与邪恶放逐主动变异 active。 |
 | M5-B | 13 项喷吐、吐息、凝视、射线、吸血、触碰、范围攻击、狂暴与元素抗性主动变异 active。 |
+| M5-C | Eat Rock、Midas Touch、Eat Magic、Weigh Magic 与 Earthquake 的地形、物品、资源和地下城事务 active。 |
+| M5-D | Grow Mold、Sterility、Panic Hit 与主动 Polymorph 的召唤、楼层繁殖压制、近战传送和角色变形事务 active。 |
 
 当前唯一权威角色状态仍是 `CharacterProgress.active_mutation_ids` 与
 `locked_mutation_ids`。属性潜力继续由 `CharacterProgress.attribute_potentials`
@@ -140,8 +142,9 @@ Kin；它们不属于 104 候选的 M7 门槛，应保留独立的职业/龙族�
 Ability 入口，失败率复刻 RFB `calculate_fail_rate` 的等级/属性表，支付按 SP 优先、
 不足转扣 HP。没有施法资源池的构筑直接用 HP，但不会创建伪资源池。成功和失败均不
 写入 `ability_progress`，gain/lose 与存档恢复仅从现有 active mutation 集合重建投影。
-协议 1.162 建立来源/支付合同；M5-A/B 的效果投影使协议顺延至 1.163，State Hash
-Schema 维持 v80。22 个具体主动变异已激活，M5-C/D 尚余 9 项。
+协议 1.162 建立来源/支付合同；M5-A/B 的效果投影使协议顺延至 1.163。M5-C/D
+完成全部 31 项常规主动变异，并因 Sterility 的楼层状态将协议顺延至 1.164、
+State Hash Schema 升至 v81。
 
 在 `MutationDefinition` 增加一个可选、窄范围的主动能力配置：
 
@@ -150,6 +153,7 @@ Schema 维持 v80。22 个具体主动变异已激活，M5-C/D 尚余 9 项。
 - `cost`
 - 可选 `costScaling { startLevel, levelInterval, amount }`
 - `baseFailurePercent`
+- 可选 `minimumFailurePercent`（当前 Eat Magic 按原版固定为 11%）
 - `abilityId`
 
 active mutation 动态授予引用的既有 AbilityDefinition，但使用独立的变异施放
@@ -173,11 +177,11 @@ active mutation 动态授予引用的既有 AbilityDefinition，但使用独立�
    Radiation、Vampirism、Shriek、Illumination、Berserk、Elemental Resistance、
    Dazzle、Laser Eye、Cold Touch。复用伤害、状态、目标、死亡、营养与激怒事务，
    不复制第二套战斗结算。
-3. M5-C：地形、物品、炼金和资源操作。Eat Rock、Midas Touch、Eat Magic、
-   Weigh Magic 等只能在目标、物品实例、堆叠和资源语义完整后 active。
-4. M5-D：召唤、变形和特殊能力。Grow Mold、Sterility 和主动 Polymorph 等不得
-   用近似效果代替。主动 Polymorph 的原版 `do_poly_self` 合同明显大于药水的
-   变异增删算法，二者只能共享底层事务，不能当成同一个效果。
+3. M5-C（已完成，5 项）：Eat Rock、Midas Touch、Eat Magic、Weigh Magic 与
+   Earthquake 复用目标、物品实例、堆叠、资源、地形和角色死亡事务。
+4. M5-D（已完成，4 项）：Grow Mold 复用分类召唤；Sterility 保存楼层级繁殖压制；
+   Panic Hit 组合既有近战与随机传送；主动 Polymorph 复用变异、HP 成长、伤口和
+   属性事务，没有第二套脚本或角色状态。它仍与 M7 的 Polymorph 药水保持独立入口。
 
 每个子批验收至少覆盖成功、失败、等级不足、SP 足够、SP 不足转扣 HP、HP 不足、
 取消目标、RNG 次数、事件顺序、存档往返，以及 gain/lose 后能力投影即时增删。

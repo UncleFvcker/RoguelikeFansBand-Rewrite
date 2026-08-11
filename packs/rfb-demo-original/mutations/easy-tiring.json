@@ -6,6 +6,7 @@
   "description": "物理战斗会使你疲惫。",
   "rating": "awful",
   "sourceIndex": 131,
+  "randomSelectionEnabled": false,
   "randomWeight": 4,
   "removesOnGain": []
 }

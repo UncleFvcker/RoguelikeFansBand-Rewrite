@@ -100,6 +100,12 @@ pub(super) fn validate_abilities(
             {
                 source_terrain_ids.sort();
             }
+            if let AbilityEffectDefinition::Earthquake {
+                wall_terrain_ids, ..
+            } = effect
+            {
+                wall_terrain_ids.sort();
+            }
         }
         let mut modes = BTreeSet::new();
         let valid_single_effect = |effect: &AbilityEffectDefinition, effect_index: usize| {
@@ -258,6 +264,52 @@ pub(super) fn validate_abilities(
                         || (*maximum_weight_tenths_pound == 0
                             && has_level_scaling(AbilityLevelScalingField::MaximumWeight))
                 }
+                AbilityEffectDefinition::ConsumeTerrain { nutrition } => {
+                    (1..=65_535).contains(nutrition)
+                }
+                AbilityEffectDefinition::TransmuteItemToGold {
+                    value_divisor,
+                    unit_value_cap,
+                } => (1..=100).contains(value_divisor) && (1..=1_000_000).contains(unit_value_cap),
+                AbilityEffectDefinition::DrainItemMagic {
+                    base_power,
+                    level_multiplier,
+                    level_divisor,
+                } => {
+                    *base_power <= 10_000
+                        && *level_multiplier <= 1_000
+                        && (1..=1_000).contains(level_divisor)
+                }
+                AbilityEffectDefinition::ReportMagic | AbilityEffectDefinition::PolymorphSelf => {
+                    true
+                }
+                AbilityEffectDefinition::Earthquake {
+                    radius,
+                    affect_chance_percent,
+                    floor_terrain_id,
+                    wall_terrain_ids,
+                } => {
+                    (1..=12).contains(radius)
+                        && (1..=100).contains(affect_chance_percent)
+                        && !floor_terrain_id.is_empty()
+                        && !wall_terrain_ids.is_empty()
+                        && wall_terrain_ids.len() <= 8
+                        && wall_terrain_ids.windows(2).all(|pair| pair[0] != pair[1])
+                        && wall_terrain_ids.iter().all(|id| id != floor_terrain_id)
+                }
+                AbilityEffectDefinition::SuppressMonsterReproduction {
+                    damage_dice,
+                    damage_sides,
+                    damage_bonus,
+                } => {
+                    (1..=100).contains(damage_dice)
+                        && (1..=10_000).contains(damage_sides)
+                        && *damage_bonus <= 10_000
+                }
+                AbilityEffectDefinition::MeleeThenTeleport {
+                    radius,
+                    failure_threshold,
+                } => (1..=255).contains(radius) && *failure_threshold <= 1_000,
                 AbilityEffectDefinition::Recall {
                     delay_dice,
                     delay_sides,
@@ -658,9 +710,10 @@ pub(super) fn validate_abilities(
             | AbilityEffectDefinition::DrainLife { .. }
             | AbilityEffectDefinition::DeathRay { .. }
             | AbilityEffectDefinition::RandomChoice { .. } => projectile_target_rule,
-            AbilityEffectDefinition::FetchItem { .. } | AbilityEffectDefinition::SwapPosition => {
-                projectile_target_rule
-            }
+            AbilityEffectDefinition::FetchItem { .. }
+            | AbilityEffectDefinition::ConsumeTerrain { .. }
+            | AbilityEffectDefinition::MeleeThenTeleport { .. }
+            | AbilityEffectDefinition::SwapPosition => projectile_target_rule,
             AbilityEffectDefinition::DarkenRoom => room_target_rule,
             AbilityEffectDefinition::Genocide { scope, .. } => match scope {
                 AbilityGenocideScopeDefinition::Nearby => self_target_rule,
@@ -668,7 +721,9 @@ pub(super) fn validate_abilities(
                     projectile_target_rule
                 }
             },
-            AbilityEffectDefinition::IdentifyItem { .. } => item_target_rule,
+            AbilityEffectDefinition::IdentifyItem { .. }
+            | AbilityEffectDefinition::TransmuteItemToGold { .. }
+            | AbilityEffectDefinition::DrainItemMagic { .. } => item_target_rule,
             AbilityEffectDefinition::AreaDamage { .. } => {
                 self_target_rule || projectile_target_rule
             }
@@ -696,6 +751,10 @@ pub(super) fn validate_abilities(
             | AbilityEffectDefinition::VisibleApplyStatus { .. }
             | AbilityEffectDefinition::EnchantEquippedWeapon { .. }
             | AbilityEffectDefinition::RestoreVitality { .. }
+            | AbilityEffectDefinition::ReportMagic
+            | AbilityEffectDefinition::Earthquake { .. }
+            | AbilityEffectDefinition::SuppressMonsterReproduction { .. }
+            | AbilityEffectDefinition::PolymorphSelf
             | AbilityEffectDefinition::NoOp { .. } => self_target_rule,
             AbilityEffectDefinition::Detect { .. } => {
                 ability.target.modes.as_slice() == [AbilityTargetModeDefinition::SelfTarget]
@@ -823,6 +882,17 @@ pub(super) fn validate_abilities(
                 require_reference(terrain_ids, source_terrain_id, &ability.id)?;
             }
             require_reference(terrain_ids, target_terrain_id, &ability.id)?;
+        }
+        if let AbilityEffectDefinition::Earthquake {
+            floor_terrain_id,
+            wall_terrain_ids,
+            ..
+        } = &ability.effect
+        {
+            require_reference(terrain_ids, floor_terrain_id, &ability.id)?;
+            for wall_terrain_id in wall_terrain_ids {
+                require_reference(terrain_ids, wall_terrain_id, &ability.id)?;
+            }
         }
         normalize_tags(&ability.id, &mut ability.tags)?;
         insert_definition_id(all_ids, &ability.id)?;

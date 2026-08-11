@@ -6,6 +6,13 @@
   "description": "你可以吞噬坚固的岩石。",
   "rating": "good",
   "sourceIndex": 11,
+  "activation": {
+    "minimumLevel": 8,
+    "governingAttribute": "constitution",
+    "cost": 12,
+    "baseFailurePercent": 40,
+    "abilityId": "rfb.ability.mutation.eat-rock"
+  },
   "randomWeight": 4,
   "removesOnGain": []
 }

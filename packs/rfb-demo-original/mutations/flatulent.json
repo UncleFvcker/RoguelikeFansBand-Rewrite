@@ -6,6 +6,7 @@
   "description": "你会不受控制地肠胃胀气。",
   "rating": "average",
   "sourceIndex": 37,
+  "randomSelectionEnabled": false,
   "randomWeight": 2,
   "removesOnGain": []
 }

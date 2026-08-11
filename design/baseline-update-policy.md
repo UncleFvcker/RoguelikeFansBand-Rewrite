@@ -6,7 +6,7 @@
 
 contract fixture 是规则兼容边界，不能把测试失败简单处理为“刷新预期结果”。政策用于保证每次规则变化只修改真正受影响的场景，同时保留可审查的失败原因。
 
-当前逻辑基线是 `contract-v242`，机器可读政策固定在：
+当前逻辑基线是 `contract-v243`，机器可读政策固定在：
 
 ```text
 tests/fixtures/active/baseline-policy.json
@@ -99,3 +99,7 @@ cargo run -p rfb-contract -- validate-policy tests/fixtures/active/baseline-poli
 `contract-v238` 退役 Original Lab / Echo / Resonance fixture，并将 active 集收敛为 21 个跨协议、存档和关键状态边界的 exact fixture。怪物、装置和地下城布局矩阵由对应核心单元测试负责；active 集零 waiver。
 
 `contract-v239` 将 fixture schema 升至 v4：能力断言只保存 ID、熟练度、施法统计和剩余冷却，build 只在成长分类保存 ID，任务只在任务分类保存运行状态，地图变更格只由移动、地牢和城镇分类收集。完整 `AbilityDto` 由单独的协议投影测试保护。
+
+`contract-v243` 完成主动变异 M5-C/D。Sterility 把当前楼层的怪物繁殖压制纳入
+权威存档与 State Hash Schema v81；21 个 fixture 只刷新受该公共哈希结构影响的
+`stateHash` 与 `saveRoundTripStateHash`，具体九项能力分支由聚焦核心测试覆盖。

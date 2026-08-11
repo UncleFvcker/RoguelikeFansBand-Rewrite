@@ -19,6 +19,15 @@ pub(super) enum AbilityTargetPlan {
     FetchItem {
         path: Vec<Position>,
     },
+    ConsumeTerrain {
+        position: Position,
+        source_terrain_id: String,
+        target_terrain_id: String,
+    },
+    MeleeThenTeleport {
+        target_entity_id: String,
+        teleport_candidates: Vec<Position>,
+    },
     Recall {
         action: RecallUseAction,
     },
@@ -42,6 +51,28 @@ pub(super) enum AbilityTargetPlan {
     Item {
         item_id: String,
     },
+}
+
+fn attribute_kind_dto(kind: AttributeKind) -> rfb_protocol::AttributeKindDto {
+    match kind {
+        AttributeKind::Strength => rfb_protocol::AttributeKindDto::Strength,
+        AttributeKind::Intelligence => rfb_protocol::AttributeKindDto::Intelligence,
+        AttributeKind::Wisdom => rfb_protocol::AttributeKindDto::Wisdom,
+        AttributeKind::Dexterity => rfb_protocol::AttributeKindDto::Dexterity,
+        AttributeKind::Constitution => rfb_protocol::AttributeKindDto::Constitution,
+        AttributeKind::Charisma => rfb_protocol::AttributeKindDto::Charisma,
+    }
+}
+
+fn set_attribute_value(attributes: &mut AttributeSet, kind: AttributeKind, value: u16) {
+    match kind {
+        AttributeKind::Strength => attributes.strength = value,
+        AttributeKind::Intelligence => attributes.intelligence = value,
+        AttributeKind::Wisdom => attributes.wisdom = value,
+        AttributeKind::Dexterity => attributes.dexterity = value,
+        AttributeKind::Constitution => attributes.constitution = value,
+        AttributeKind::Charisma => attributes.charisma = value,
+    }
 }
 
 impl Game {
@@ -415,6 +446,56 @@ impl Game {
             }
             (AbilityEffectDefinition::FetchItem { .. }, AbilityTargetPlan::FetchItem { path }) => {
                 self.resolve_player_fetch_item_effect(&ability, path, events, changed)
+            }
+            (
+                AbilityEffectDefinition::ConsumeTerrain { .. },
+                AbilityTargetPlan::ConsumeTerrain {
+                    position,
+                    source_terrain_id,
+                    target_terrain_id,
+                },
+            ) => self.resolve_player_consume_terrain_effect(
+                &ability,
+                position,
+                source_terrain_id,
+                target_terrain_id,
+                events,
+                changed,
+            ),
+            (
+                AbilityEffectDefinition::TransmuteItemToGold { .. },
+                AbilityTargetPlan::Item { item_id },
+            ) => self.resolve_player_transmute_item_effect(&ability, &item_id, events),
+            (
+                AbilityEffectDefinition::DrainItemMagic { .. },
+                AbilityTargetPlan::Item { item_id },
+            ) => self.resolve_player_drain_item_magic_effect(&ability, &item_id, events),
+            (AbilityEffectDefinition::ReportMagic, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_player_report_magic_effect(&ability, events)
+            }
+            (AbilityEffectDefinition::Earthquake { .. }, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_player_earthquake_effect(&ability, events, changed, removed_entities)?;
+            }
+            (
+                AbilityEffectDefinition::SuppressMonsterReproduction { .. },
+                AbilityTargetPlan::SelfTarget,
+            ) => self.resolve_player_suppress_reproduction_effect(&ability, events),
+            (
+                AbilityEffectDefinition::MeleeThenTeleport { .. },
+                AbilityTargetPlan::MeleeThenTeleport {
+                    target_entity_id,
+                    teleport_candidates,
+                },
+            ) => self.resolve_player_melee_then_teleport_effect(
+                &ability,
+                &target_entity_id,
+                teleport_candidates,
+                events,
+                changed,
+                removed_entities,
+            )?,
+            (AbilityEffectDefinition::PolymorphSelf, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_player_polymorph_self_effect(&ability, events)
             }
             (AbilityEffectDefinition::SwapPosition, AbilityTargetPlan::Projectile { path, .. }) => {
                 self.resolve_player_swap_position_effect(&ability, path, events, changed)
@@ -2435,6 +2516,688 @@ impl Game {
         });
     }
 
+    fn resolve_player_consume_terrain_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        position: Position,
+        source_terrain_id: String,
+        target_terrain_id: String,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let AbilityEffectDefinition::ConsumeTerrain {
+            nutrition: base_nutrition,
+        } = ability.effect
+        else {
+            unreachable!("terrain consumption executor requires a consume-terrain effect");
+        };
+        let source = self
+            .content
+            .terrain(&source_terrain_id)
+            .expect("planned consumed terrain must remain available");
+        let nutrition = if source.tags.iter().any(|tag| tag == "vein") {
+            base_nutrition.max(5_000)
+        } else if source
+            .tags
+            .iter()
+            .any(|tag| matches!(tag.as_str(), "diggable" | "door"))
+        {
+            base_nutrition
+        } else {
+            base_nutrition.max(10_000)
+        };
+        let nutrition_before = self.nutrition;
+        self.increase_nutrition(nutrition);
+        let index = self
+            .index(position)
+            .expect("planned consumed terrain must remain in bounds");
+        self.terrain[index].clone_from(&target_terrain_id);
+        self.revealed_terrain.remove(&position);
+        changed.insert(position);
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: None,
+                target_kind_id: None,
+                effects: vec![AbilityEffectResolutionDto::ConsumeTerrain {
+                    effect_index: 0,
+                    position,
+                    source_terrain_id,
+                    target_terrain_id,
+                    nutrition_before,
+                    nutrition_after: self.nutrition,
+                }],
+            },
+            trace: None,
+        });
+        events.extend(self.relocate_player(position, changed));
+    }
+
+    fn resolve_player_transmute_item_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        item_id: &str,
+        events: &mut Vec<DomainEvent>,
+    ) {
+        let AbilityEffectDefinition::TransmuteItemToGold {
+            value_divisor,
+            unit_value_cap,
+        } = ability.effect
+        else {
+            unreachable!("item transmutation executor requires a transmute-item-to-gold effect");
+        };
+        let item = self
+            .items
+            .iter()
+            .find(|item| item.id == item_id)
+            .expect("planned transmutation item must remain available")
+            .clone();
+        let unit_value = self
+            .content
+            .item(&item.kind_id)
+            .expect("planned transmutation item definition must remain available")
+            .base_value
+            .saturating_div(u32::from(value_divisor))
+            .min(unit_value_cap);
+        let requested = unit_value.saturating_mul(item.quantity);
+        self.destroy_item(item_id, item.quantity)
+            .expect("planned transmutation must remain valid");
+        let before = self.gold;
+        self.gold = self
+            .gold
+            .saturating_add(requested)
+            .min(super::gold::MAX_PLAYER_GOLD);
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: None,
+                target_kind_id: Some(item.kind_id.clone()),
+                effects: vec![AbilityEffectResolutionDto::TransmuteItemToGold {
+                    effect_index: 0,
+                    item_id: item.id,
+                    item_kind_id: item.kind_id,
+                    quantity: item.quantity,
+                    gold_gained: self.gold.saturating_sub(before),
+                    gold_balance: self.gold,
+                }],
+            },
+            trace: None,
+        });
+    }
+
+    fn resolve_player_drain_item_magic_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        item_id: &str,
+        events: &mut Vec<DomainEvent>,
+    ) {
+        let AbilityEffectDefinition::DrainItemMagic {
+            base_power,
+            level_multiplier,
+            level_divisor,
+        } = ability.effect
+        else {
+            unreachable!("magic drain executor requires a drain-item-magic effect");
+        };
+        let index = self
+            .items
+            .iter()
+            .position(|item| item.id == item_id)
+            .expect("planned magic drain item must remain available");
+        let item_kind_id = self.items[index].kind_id.clone();
+        let artifact = self
+            .content
+            .item(&item_kind_id)
+            .is_some_and(|definition| definition.tags.iter().any(|tag| tag == "artifact"));
+        let difficulty = self.items[index]
+            .activation
+            .as_ref()
+            .map_or(0, |activation| {
+                u32::try_from(activation.device_check_difficulty.max(0)).unwrap_or(0)
+            });
+        let charges_before = self.items[index]
+            .charges
+            .expect("planned magic drain item must retain charges")
+            .current;
+        let drained = difficulty.min(charges_before);
+        let power = u32::from(base_power).saturating_add(
+            u32::from(self.progress.level).saturating_mul(u32::from(level_multiplier))
+                / u32::from(level_divisor),
+        );
+        let failure_odds = power.saturating_sub(difficulty / 2) / 5;
+        let failed = failure_odds > 0 && self.rng.bounded(u64::from(failure_odds)) == 0;
+        let mut destroyed = false;
+        if failed && !artifact && self.rng.bounded(10) == 0 {
+            if self.items[index].quantity == 1 {
+                let removed = self.items.remove(index);
+                self.item_property_knowledge.remove(&removed.id);
+            } else {
+                self.items[index].quantity -= 1;
+            }
+            destroyed = true;
+        } else {
+            let charges = self.items[index]
+                .charges
+                .as_mut()
+                .expect("planned magic drain item must retain charges");
+            charges.current = if failed {
+                0
+            } else {
+                charges.current.saturating_sub(drained)
+            };
+        }
+        let resource_id = self
+            .casting_profile()
+            .map(|profile| profile.resource_id.clone());
+        let resource_before = resource_id
+            .as_deref()
+            .and_then(|id| self.resources.get(id))
+            .map_or(0, |pool| pool.current);
+        if !failed
+            && let Some(resource_id) = resource_id.as_deref()
+            && let Some(pool) = self.resources.get_mut(resource_id)
+        {
+            pool.current = pool.current.saturating_add(drained).min(pool.maximum);
+            self.resources_touched.insert(resource_id.to_owned());
+        }
+        let resource_after = resource_id
+            .as_deref()
+            .and_then(|id| self.resources.get(id))
+            .map_or(0, |pool| pool.current);
+        let charges_after = if destroyed {
+            0
+        } else {
+            self.items
+                .iter()
+                .find(|item| item.id == item_id)
+                .and_then(|item| item.charges)
+                .map_or(0, |charges| charges.current)
+        };
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: None,
+                target_kind_id: Some(item_kind_id.clone()),
+                effects: vec![AbilityEffectResolutionDto::DrainItemMagic {
+                    effect_index: 0,
+                    item_id: item_id.to_owned(),
+                    item_kind_id,
+                    charges_before,
+                    charges_after,
+                    drained: if failed { charges_before } else { drained },
+                    destroyed,
+                    failed,
+                    resource_id,
+                    resource_before,
+                    resource_after,
+                }],
+            },
+            trace: None,
+        });
+    }
+
+    fn resolve_player_report_magic_effect(
+        &self,
+        ability: &AbilityDefinition,
+        events: &mut Vec<DomainEvent>,
+    ) {
+        let mut statuses = self
+            .player
+            .statuses
+            .iter()
+            .map(StatusInstance::to_dto)
+            .collect::<Vec<_>>();
+        statuses.sort_by(|left, right| left.kind_id.cmp(&right.kind_id));
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: None,
+                target_kind_id: None,
+                effects: vec![AbilityEffectResolutionDto::ReportMagic {
+                    effect_index: 0,
+                    statuses,
+                    recall: self.recall.clone(),
+                }],
+            },
+            trace: None,
+        });
+    }
+
+    fn resolve_player_earthquake_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        let AbilityEffectDefinition::Earthquake {
+            radius,
+            affect_chance_percent,
+            ref floor_terrain_id,
+            ref wall_terrain_ids,
+        } = ability.effect
+        else {
+            unreachable!("earthquake executor requires an earthquake effect");
+        };
+        let center = self.player.position;
+        let radius_squared = i32::from(radius).pow(2);
+        let mut affected_positions = Vec::new();
+        for y in center.y - i32::from(radius)..=center.y + i32::from(radius) {
+            for x in center.x - i32::from(radius)..=center.x + i32::from(radius) {
+                let position = Position { x, y };
+                let dx = x - center.x;
+                let dy = y - center.y;
+                if position == center
+                    || dx.saturating_mul(dx).saturating_add(dy.saturating_mul(dy)) > radius_squared
+                    || x <= 0
+                    || y <= 0
+                    || x >= i32::from(self.width) - 1
+                    || y >= i32::from(self.height) - 1
+                    || self
+                        .floor_connections
+                        .iter()
+                        .any(|connection| connection.position == position)
+                {
+                    continue;
+                }
+                if self.rng.bounded(100) < u64::from(affect_chance_percent) {
+                    affected_positions.push(position);
+                }
+            }
+        }
+        let affected = affected_positions.iter().copied().collect::<BTreeSet<_>>();
+        let removed_items = self
+            .items
+            .iter()
+            .filter(|item| matches!(item.location, ItemLocation::Ground(position) if affected.contains(&position)))
+            .count();
+        self.items.retain(|item| {
+            !matches!(item.location, ItemLocation::Ground(position) if affected.contains(&position))
+        });
+        let removed_gold_piles = self
+            .gold_piles
+            .iter()
+            .filter(|pile| affected.contains(&pile.position))
+            .count();
+        self.gold_piles
+            .retain(|pile| !affected.contains(&pile.position));
+
+        let mut wall_positions = Vec::new();
+        let mut floor_positions = Vec::new();
+        for position in &affected_positions {
+            let index = self
+                .index(*position)
+                .expect("planned earthquake position must remain in bounds");
+            let actor_index = self
+                .entities
+                .iter()
+                .position(|entity| entity.position == *position);
+            if let Some(actor_index) = actor_index {
+                let target_kind_id = self.entities[actor_index].kind_id.clone();
+                let damage = resolve_damage(
+                    DamagePacket::new(self.roll_damage(4, 8), DamageType::Physical),
+                    self.entities[actor_index]
+                        .resistances
+                        .level(DamageType::Physical),
+                );
+                let application = plan_damage_application(
+                    &self.entities[actor_index],
+                    damage,
+                    FatalityPolicy::AtOrBelowZero,
+                );
+                commit_damage_application(&mut self.entities[actor_index], &application);
+                self.entities[actor_index].alerted = true;
+                let trace = ProjectileTrace {
+                    origin: center,
+                    impact: *position,
+                    landing: *position,
+                    traversed: vec![*position],
+                };
+                events.push(DomainEvent::AbilityHit {
+                    ability_id: ability.id.clone(),
+                    target_kind_id: target_kind_id.clone(),
+                    damage,
+                    trace: trace.clone(),
+                });
+                self.wake_entity_after_damage(actor_index, damage.applied, events);
+                if application.fatal {
+                    self.resolve_actor_death(
+                        actor_index,
+                        DomainEvent::AbilitySlew {
+                            ability_id: ability.id.clone(),
+                            target_kind_id,
+                            damage,
+                            trace,
+                        },
+                        events,
+                        changed,
+                        removed_entities,
+                    )?;
+                }
+                self.terrain[index].clone_from(floor_terrain_id);
+                floor_positions.push(*position);
+            } else if self.is_walkable(*position) {
+                let roll = self.rng.bounded(100);
+                let wall_index = if wall_terrain_ids.len() == 1 || roll < 20 {
+                    0
+                } else if wall_terrain_ids.len() == 2 || roll < 70 {
+                    1
+                } else {
+                    2
+                };
+                self.terrain[index].clone_from(&wall_terrain_ids[wall_index]);
+                wall_positions.push(*position);
+            } else {
+                self.terrain[index].clone_from(floor_terrain_id);
+                floor_positions.push(*position);
+            }
+            self.revealed_terrain.remove(position);
+            changed.insert(*position);
+        }
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: None,
+                target_kind_id: None,
+                effects: vec![AbilityEffectResolutionDto::Earthquake {
+                    effect_index: 0,
+                    radius,
+                    affected_positions,
+                    wall_positions,
+                    floor_positions,
+                    removed_items: u32::try_from(removed_items).unwrap_or(u32::MAX),
+                    removed_gold_piles: u32::try_from(removed_gold_piles).unwrap_or(u32::MAX),
+                }],
+            },
+            trace: None,
+        });
+        Ok(())
+    }
+
+    fn resolve_player_suppress_reproduction_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        events: &mut Vec<DomainEvent>,
+    ) {
+        let AbilityEffectDefinition::SuppressMonsterReproduction {
+            damage_dice,
+            damage_sides,
+            damage_bonus,
+        } = ability.effect
+        else {
+            unreachable!("reproduction suppression executor requires its matching effect");
+        };
+        let damage = self
+            .roll_damage(damage_dice, damage_sides)
+            .saturating_add(i32::from(damage_bonus));
+        self.player.hp = self.player.hp.saturating_sub(damage);
+        let already_suppressed = self.reproduction_suppressed;
+        self.reproduction_suppressed = true;
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: None,
+                target_kind_id: None,
+                effects: vec![AbilityEffectResolutionDto::SuppressMonsterReproduction {
+                    effect_index: 0,
+                    damage,
+                    fatal: self.player_is_dead(),
+                    already_suppressed,
+                }],
+            },
+            trace: None,
+        });
+    }
+
+    fn resolve_player_melee_then_teleport_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        target_entity_id: &str,
+        teleport_candidates: Vec<Position>,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        let AbilityEffectDefinition::MeleeThenTeleport {
+            failure_threshold, ..
+        } = ability.effect
+        else {
+            unreachable!("panic melee executor requires a melee-then-teleport effect");
+        };
+        let index = self
+            .entities
+            .iter()
+            .position(|entity| entity.id == target_entity_id)
+            .expect("planned panic-hit target must remain available");
+        let target_kind_id = self.entities[index].kind_id.clone();
+        let player_from = self.player.position;
+        self.resolve_player_melee(index, events, changed, removed_entities)?;
+        let skill =
+            u64::try_from(self.player_derived_stats().disarm_skill.value.max(1)).unwrap_or(1);
+        let teleport_attempted = self.rng.bounded(skill) >= u64::from(failure_threshold);
+        let candidates = teleport_candidates
+            .into_iter()
+            .filter(|position| {
+                self.is_walkable(*position)
+                    && self
+                        .entities
+                        .iter()
+                        .all(|entity| entity.position != *position)
+            })
+            .collect::<Vec<_>>();
+        let teleported = teleport_attempted && !candidates.is_empty() && !self.player_is_dead();
+        if teleported {
+            let destination_index = usize::try_from(
+                self.rng
+                    .bounded(u64::try_from(candidates.len()).unwrap_or(u64::MAX)),
+            )
+            .expect("panic teleport candidate index must fit usize");
+            self.resolve_player_teleport_effect(
+                ability,
+                candidates[destination_index],
+                events,
+                changed,
+            );
+        }
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: Some(target_entity_id.to_owned()),
+                target_kind_id: Some(target_kind_id.clone()),
+                effects: vec![AbilityEffectResolutionDto::MeleeThenTeleport {
+                    effect_index: 0,
+                    target_entity_id: target_entity_id.to_owned(),
+                    target_kind_id,
+                    player_from,
+                    player_to: self.player.position,
+                    teleport_attempted,
+                    teleported,
+                }],
+            },
+            trace: None,
+        });
+        Ok(())
+    }
+
+    fn resolve_player_polymorph_self_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        events: &mut Vec<DomainEvent>,
+    ) {
+        const ATTRIBUTES: [AttributeKind; 6] = [
+            AttributeKind::Strength,
+            AttributeKind::Intelligence,
+            AttributeKind::Wisdom,
+            AttributeKind::Dexterity,
+            AttributeKind::Constitution,
+            AttributeKind::Charisma,
+        ];
+
+        let active_before = self.progress.active_mutation_ids.clone();
+        let hp_before = self.player.hp;
+        let previous_max_hp = self.effective_player_max_hp();
+        let previous_resource_maxima = self.player_resource_maxima();
+        let mut power = i32::from(self.progress.level);
+
+        if power > i32::try_from(self.rng.bounded(30)).expect("polymorph roll must fit i32")
+            && self.rng.bounded(6) == 0
+        {
+            power -= 20;
+            for attribute in ATTRIBUTES {
+                let amount = u8::try_from(self.rng.bounded(6) + 7)
+                    .expect("polymorph attribute drain must fit u8");
+                self.progress
+                    .permanently_drain_attribute(attribute, amount, &mut self.rng);
+            }
+            if self.rng.bounded(6) == 0 {
+                let dice = u16::try_from(self.rng.bounded(10) + 1)
+                    .expect("polymorph life-loss dice must fit u16");
+                self.player.hp = self
+                    .player
+                    .hp
+                    .saturating_sub(self.roll_damage(dice, self.progress.level.max(1)));
+                power -= 10;
+            }
+        }
+
+        if power > i32::try_from(self.rng.bounded(20)).expect("polymorph roll must fit i32")
+            && self.rng.bounded(4) == 0
+        {
+            power -= 10;
+            let base_max_hp = self
+                .progress
+                .hp_progression
+                .first()
+                .copied()
+                .unwrap_or(self.player.max_hp);
+            self.progress.hp_progression =
+                CharacterProgress::roll_hp_progression(base_max_hp, &mut self.rng);
+        }
+
+        while power > i32::try_from(self.rng.bounded(15)).expect("polymorph roll must fit i32")
+            && self.rng.bounded(3) == 0
+        {
+            power -= 7;
+            if self.gain_random_mutation_without_refresh(events).is_none() {
+                break;
+            }
+        }
+
+        if power > i32::try_from(self.rng.bounded(5)).expect("polymorph roll must fit i32") {
+            power -= 5;
+            let healing = self.roll_damage(self.progress.level.max(1), 5);
+            self.player.hp = self.player.hp.saturating_add(healing).min(previous_max_hp);
+            let nasty = self.rng.bounded(5) == 0;
+            if nasty {
+                self.player.hp = self.player.hp.saturating_sub(healing / 2);
+                let bleeding_ticks = u32::try_from(healing.max(1)).unwrap_or(u32::MAX);
+                apply_status_application(
+                    &mut self.player.statuses,
+                    StatusApplication {
+                        status: StatusInstance {
+                            kind_id: STATUS_BLEEDING.to_owned(),
+                            intensity: 1,
+                            remaining_ticks: bleeding_ticks,
+                            source_id: Some(ability.id.clone()),
+                            granted_resistances: BTreeMap::new(),
+                            granted_brands: BTreeSet::new(),
+                            granted_modifiers: StatModifiersDto::default(),
+                            granted_equipment_bonuses: EquipmentBonusesDto::default(),
+                            granted_status_immunities: BTreeSet::new(),
+                            granted_race_id: None,
+                            grants_wall_passage: false,
+                            incoming_damage_percent: 100,
+                        },
+                        stacking: StatusStacking::Replace,
+                    },
+                );
+            } else if let Some(bleeding) = self
+                .player
+                .statuses
+                .iter_mut()
+                .find(|status| status.kind_id == STATUS_BLEEDING)
+            {
+                bleeding.remaining_ticks = bleeding
+                    .remaining_ticks
+                    .saturating_sub(u32::try_from(healing / 2).unwrap_or(u32::MAX));
+            }
+            self.player
+                .statuses
+                .retain(|status| status.remaining_ticks > 0);
+        }
+
+        let mut swapped_attributes = Vec::new();
+        while power > 0 {
+            let left_index = usize::try_from(self.rng.bounded(6))
+                .expect("polymorph attribute index must fit usize");
+            let mut right_index = usize::try_from(self.rng.bounded(5))
+                .expect("polymorph attribute index must fit usize");
+            if right_index >= left_index {
+                right_index += 1;
+            }
+            let left = ATTRIBUTES[left_index];
+            let right = ATTRIBUTES[right_index];
+            let left_current = self.progress.attributes.value(left);
+            let right_current = self.progress.attributes.value(right);
+            let left_maximum = self.progress.maximum_attributes.value(left);
+            let right_maximum = self.progress.maximum_attributes.value(right);
+            let left_cap = self.progress.attribute_potentials.value(left);
+            let right_cap = self.progress.attribute_potentials.value(right);
+            let next_left_maximum = right_maximum.min(left_cap);
+            let next_right_maximum = left_maximum.min(right_cap);
+            set_attribute_value(
+                &mut self.progress.maximum_attributes,
+                left,
+                next_left_maximum,
+            );
+            set_attribute_value(
+                &mut self.progress.maximum_attributes,
+                right,
+                next_right_maximum,
+            );
+            set_attribute_value(
+                &mut self.progress.attributes,
+                left,
+                right_current.min(next_left_maximum),
+            );
+            set_attribute_value(
+                &mut self.progress.attributes,
+                right,
+                left_current.min(next_right_maximum),
+            );
+            swapped_attributes.push(attribute_kind_dto(left));
+            swapped_attributes.push(attribute_kind_dto(right));
+            power -= 1;
+        }
+
+        self.refresh_after_attribute_change(previous_max_hp, &previous_resource_maxima);
+        let active_after = &self.progress.active_mutation_ids;
+        let gained_mutation_ids = active_after
+            .difference(&active_before)
+            .cloned()
+            .collect::<Vec<_>>();
+        let lost_mutation_ids = active_before
+            .difference(active_after)
+            .cloned()
+            .collect::<Vec<_>>();
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: None,
+                target_kind_id: None,
+                effects: vec![AbilityEffectResolutionDto::PolymorphSelf {
+                    effect_index: 0,
+                    gained_mutation_ids,
+                    lost_mutation_ids,
+                    swapped_attributes,
+                    hp_before,
+                    hp_after: self.player.hp,
+                }],
+            },
+            trace: None,
+        });
+    }
+
     fn resolve_player_swap_position_effect(
         &mut self,
         ability: &AbilityDefinition,
@@ -3126,6 +3889,99 @@ impl Game {
             AbilityEffectDefinition::FetchItem { .. } => self
                 .ability_path(ability, target)
                 .map(|path| AbilityTargetPlan::FetchItem { path }),
+            AbilityEffectDefinition::ConsumeTerrain { .. } => {
+                let TargetSelection::Direction { direction } = target else {
+                    return None;
+                };
+                if !ability
+                    .target
+                    .modes
+                    .contains(&AbilityTargetModeDefinition::Direction)
+                {
+                    return None;
+                }
+                let position = self.position_in_direction(*direction);
+                let index = self.index(position)?;
+                if self
+                    .entities
+                    .iter()
+                    .any(|entity| entity.position == position)
+                    || self
+                        .floor_connections
+                        .iter()
+                        .any(|connection| connection.position == position)
+                {
+                    return None;
+                }
+                let terrain = self.content.terrain(&self.terrain[index])?;
+                if terrain
+                    .tags
+                    .iter()
+                    .any(|tag| matches!(tag.as_str(), "permanent" | "tree" | "glass"))
+                {
+                    return None;
+                }
+                let target_terrain_id = terrain
+                    .dig_to_terrain_id
+                    .as_ref()
+                    .or(terrain.monster_destroy_to_terrain_id.as_ref())?
+                    .clone();
+                Some(AbilityTargetPlan::ConsumeTerrain {
+                    position,
+                    source_terrain_id: terrain.id.clone(),
+                    target_terrain_id,
+                })
+            }
+            AbilityEffectDefinition::TransmuteItemToGold { .. } => {
+                let TargetSelection::Item { item_id } = target else {
+                    return None;
+                };
+                self.items
+                    .iter()
+                    .find(|item| {
+                        item.id == *item_id
+                            && (item.location == ItemLocation::Inventory
+                                || item.location == ItemLocation::Ground(self.player.position))
+                            && self.can_destroy_item(item).is_ok()
+                    })
+                    .map(|_| AbilityTargetPlan::Item {
+                        item_id: item_id.clone(),
+                    })
+            }
+            AbilityEffectDefinition::DrainItemMagic { .. } => {
+                let TargetSelection::Item { item_id } = target else {
+                    return None;
+                };
+                self.items
+                    .iter()
+                    .find(|item| {
+                        item.id == *item_id
+                            && (item.location == ItemLocation::Inventory
+                                || item.location == ItemLocation::Ground(self.player.position))
+                            && item.charges.is_some_and(|charges| charges.current > 0)
+                    })
+                    .map(|_| AbilityTargetPlan::Item {
+                        item_id: item_id.clone(),
+                    })
+            }
+            AbilityEffectDefinition::MeleeThenTeleport { radius, .. } => {
+                let TargetSelection::Direction { direction } = target else {
+                    return None;
+                };
+                let position = self.position_in_direction(*direction);
+                let target_entity_id = self
+                    .entities
+                    .iter()
+                    .find(|entity| {
+                        entity.position == position && !self.actor_is_player_side(entity)
+                    })?
+                    .id
+                    .clone();
+                Some(AbilityTargetPlan::MeleeThenTeleport {
+                    target_entity_id,
+                    teleport_candidates: self.random_teleport_candidates(u16::from(radius)),
+                })
+            }
             AbilityEffectDefinition::SwapPosition => {
                 self.ability_path(ability, target)
                     .map(|path| AbilityTargetPlan::Projectile {
@@ -3143,12 +3999,25 @@ impl Game {
                 .flatten()
                 .map(|action| AbilityTargetPlan::Recall { action })
             }
-            AbilityEffectDefinition::ResistElements { .. } => {
+            AbilityEffectDefinition::ResistElements { .. }
+            | AbilityEffectDefinition::ReportMagic
+            | AbilityEffectDefinition::SuppressMonsterReproduction { .. }
+            | AbilityEffectDefinition::PolymorphSelf => {
                 (matches!(target, TargetSelection::SelfTarget)
                     && ability
                         .target
                         .modes
                         .contains(&AbilityTargetModeDefinition::SelfTarget))
+                .then_some(AbilityTargetPlan::SelfTarget)
+            }
+            AbilityEffectDefinition::Earthquake { .. } => {
+                let world = self.content.world(&self.world_id)?;
+                (matches!(target, TargetSelection::SelfTarget)
+                    && ability
+                        .target
+                        .modes
+                        .contains(&AbilityTargetModeDefinition::SelfTarget)
+                    && floor_dungeon_id(world, &self.current_floor_id).is_some())
                 .then_some(AbilityTargetPlan::SelfTarget)
             }
             AbilityEffectDefinition::Summon {

@@ -6,6 +6,7 @@
   "description": "你会吸引龙类。",
   "rating": "bad",
   "sourceIndex": 54,
+  "randomSelectionEnabled": false,
   "randomWeight": 2,
   "removesOnGain": []
 }

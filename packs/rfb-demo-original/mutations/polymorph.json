@@ -6,6 +6,13 @@
   "description": "你可以随意变形自己。",
   "rating": "average",
   "sourceIndex": 17,
+  "activation": {
+    "minimumLevel": 18,
+    "governingAttribute": "constitution",
+    "cost": 20,
+    "baseFailurePercent": 50,
+    "abilityId": "rfb.ability.mutation.polymorph"
+  },
   "randomWeight": 2,
   "removesOnGain": []
 }

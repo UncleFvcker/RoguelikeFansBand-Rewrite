@@ -6,6 +6,7 @@
   "description": "混沌神明会给予你礼物。",
   "rating": "great",
   "sourceIndex": 57,
+  "randomSelectionEnabled": false,
   "randomWeight": 4,
   "removesOnGain": []
 }

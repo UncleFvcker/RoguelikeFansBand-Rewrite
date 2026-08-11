@@ -6,6 +6,7 @@
   "description": "你患有可怕的枯萎病。",
   "rating": "awful",
   "sourceIndex": 53,
+  "randomSelectionEnabled": false,
   "randomWeight": 2,
   "removesOnGain": []
 }

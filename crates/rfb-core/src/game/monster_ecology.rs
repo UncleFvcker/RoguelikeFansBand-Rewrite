@@ -1483,6 +1483,9 @@ impl Game {
         index: usize,
         changed: &mut BTreeSet<Position>,
     ) -> bool {
+        if self.reproduction_suppressed {
+            return false;
+        }
         let kind_id = self.entities[index].kind_id.clone();
         if !self
             .content

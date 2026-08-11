@@ -6,6 +6,7 @@
   "description": "你的周围环绕着黑色的光环。",
   "rating": "awful",
   "sourceIndex": 92,
+  "randomSelectionEnabled": false,
   "randomWeight": 2,
   "removesOnGain": [
     "rfb.mutation.good-luck"

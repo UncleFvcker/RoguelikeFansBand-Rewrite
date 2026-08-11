@@ -6,7 +6,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.234.0");
+    assert_eq!(catalog.pack_version(), "1.235.0");
     assert!(catalog.mutation("rfb.mutation.spit-acid").is_some());
     assert!(
         catalog
@@ -863,6 +863,7 @@ fn mutation_activation_is_bounded_unique_and_uses_an_unowned_ability() {
         cost: 0,
         cost_scaling: None,
         base_failure_percent: 30,
+        minimum_failure_percent: None,
         ability_id: "demo.ability.warrens-scare".to_owned(),
     };
 
@@ -878,6 +879,16 @@ fn mutation_activation_is_bounded_unique_and_uses_an_unowned_ability() {
     assert!(matches!(
         encode_content(invalid_level),
         Err(ContentError::InvalidMutation(id)) if id == mutation_id
+    ));
+
+    let mut invalid_minimum = artifact.content.clone();
+    invalid_minimum.mutations[0].activation = Some(MutationActivationDefinition {
+        minimum_failure_percent: Some(31),
+        ..activation.clone()
+    });
+    assert!(matches!(
+        encode_content(invalid_minimum),
+        Err(ContentError::InvalidMutation(_))
     ));
 
     let mut dangling = artifact.content.clone();
@@ -910,7 +921,7 @@ fn mutation_activation_is_bounded_unique_and_uses_an_unowned_ability() {
 }
 
 #[test]
-fn first_two_active_mutation_batches_are_bound_to_authoritative_abilities() {
+fn active_mutation_batches_are_bound_to_authoritative_abilities() {
     let pack = original_pack_path();
     let artifact = compile_pack_dir(&pack).expect("original pack should compile");
     let catalog = ContentCatalog::from_artifact(artifact);
@@ -937,6 +948,15 @@ fn first_two_active_mutation_batches_are_bound_to_authoritative_abilities() {
         ("recall", 17, TechniqueAttribute::Intelligence, 50, 70),
         ("banish", 25, TechniqueAttribute::Wisdom, 25, 70),
         ("cold-touch", 2, TechniqueAttribute::Constitution, 2, 30),
+        ("eat-rock", 8, TechniqueAttribute::Constitution, 12, 40),
+        ("polymorph", 18, TechniqueAttribute::Constitution, 20, 50),
+        ("midas-touch", 10, TechniqueAttribute::Intelligence, 5, 70),
+        ("grow-mold", 1, TechniqueAttribute::Constitution, 6, 60),
+        ("earthquake", 12, TechniqueAttribute::Strength, 12, 50),
+        ("eat-magic", 17, TechniqueAttribute::Wisdom, 1, 80),
+        ("weigh-magic", 6, TechniqueAttribute::Intelligence, 6, 50),
+        ("sterility", 12, TechniqueAttribute::Charisma, 23, 70),
+        ("panic-hit", 10, TechniqueAttribute::Dexterity, 12, 60),
     ];
     for (suffix, minimum_level, attribute, cost, failure) in expected {
         let mutation_id = format!("rfb.mutation.{suffix}");
@@ -967,6 +987,16 @@ fn first_two_active_mutation_batches_are_bound_to_authoritative_abilities() {
             amount: 1,
         })
     );
+    assert_eq!(
+        catalog
+            .mutation("rfb.mutation.eat-magic")
+            .unwrap()
+            .activation
+            .as_ref()
+            .unwrap()
+            .minimum_failure_percent,
+        Some(11)
+    );
 
     let ledger: serde_json::Value = serde_json::from_slice(
         &std::fs::read(pack.join("legacy-mutation-plan.json")).expect("ledger should read"),
@@ -978,7 +1008,7 @@ fn first_two_active_mutation_batches_are_bound_to_authoritative_abilities() {
             .iter()
             .filter(|entry| entry["status"] == "active")
             .count(),
-        78
+        87
     );
     assert_eq!(
         entries
@@ -990,6 +1020,15 @@ fn first_two_active_mutation_batches_are_bound_to_authoritative_abilities() {
                         .is_some_and(|weight| weight > 0)
             })
             .count(),
-        63
+        72
     );
+    assert!(entries.iter().all(|entry| {
+        entry["status"] == "active"
+            || entry["randomWeight"]
+                .as_u64()
+                .is_none_or(|weight| weight == 0)
+            || catalog
+                .mutation(entry["id"].as_str().expect("mutation ID"))
+                .is_some_and(|mutation| !mutation.random_selection_enabled)
+    }));
 }

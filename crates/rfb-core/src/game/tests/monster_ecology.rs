@@ -402,6 +402,24 @@ fn giant_white_mouse_reproduction_adds_one_adjacent_mouse() {
 }
 
 #[test]
+fn sterility_suppresses_reproduction_without_spending_rng() {
+    let mut game = enter_warrens(69);
+    game.entities.clear();
+    let origin = game.player.position;
+    game.push_generated_actor(
+        "test.mouse".to_owned(),
+        "demo.actor.giant-white-mouse",
+        origin,
+    );
+    game.reproduction_suppressed = true;
+    let draws_before = game.rng.draw_counter;
+
+    assert!(!game.try_original_reproduction(0, &mut BTreeSet::new()));
+    assert_eq!(game.entities.len(), 1);
+    assert_eq!(game.rng.draw_counter, draws_before);
+}
+
+#[test]
 fn same_kind_reproduction_stops_at_one_hundred_living_monsters() {
     let mut game = enter_warrens(70);
     game.entities.clear();

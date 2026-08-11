@@ -319,6 +319,36 @@ pub enum AbilityEffectDefinition {
     FetchItem {
         maximum_weight_tenths_pound: u32,
     },
+    ConsumeTerrain {
+        nutrition: u16,
+    },
+    TransmuteItemToGold {
+        value_divisor: u8,
+        unit_value_cap: u32,
+    },
+    DrainItemMagic {
+        base_power: u16,
+        level_multiplier: u16,
+        level_divisor: u16,
+    },
+    ReportMagic,
+    Earthquake {
+        radius: u8,
+        affect_chance_percent: u8,
+        floor_terrain_id: String,
+        wall_terrain_ids: Vec<String>,
+    },
+    SuppressMonsterReproduction {
+        damage_dice: u16,
+        damage_sides: u16,
+        #[serde(default)]
+        damage_bonus: u16,
+    },
+    MeleeThenTeleport {
+        radius: u8,
+        failure_threshold: u16,
+    },
+    PolymorphSelf,
     SwapPosition,
     Recall {
         delay_dice: u16,

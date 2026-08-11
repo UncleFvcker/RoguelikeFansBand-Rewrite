@@ -6,6 +6,7 @@
   "description": "你会吸引动物。",
   "rating": "bad",
   "sourceIndex": 47,
+  "randomSelectionEnabled": false,
   "randomWeight": 2,
   "removesOnGain": []
 }

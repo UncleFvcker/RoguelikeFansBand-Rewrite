@@ -36,15 +36,26 @@ impl Game {
         mutation_id: &str,
         events: &mut Vec<DomainEvent>,
     ) -> bool {
+        let previous_max_hp = self.effective_player_max_hp();
+        let previous_resource_maxima = self.player_resource_maxima();
+        if !self.gain_mutation_without_refresh(mutation_id, events) {
+            return false;
+        }
+        self.refresh_after_attribute_change(previous_max_hp, &previous_resource_maxima);
+        true
+    }
+
+    pub(super) fn gain_mutation_without_refresh(
+        &mut self,
+        mutation_id: &str,
+        events: &mut Vec<DomainEvent>,
+    ) -> bool {
         let Some(definition) = self.content.mutation(mutation_id).cloned() else {
             return false;
         };
         if self.progress.active_mutation_ids.contains(mutation_id) {
             return false;
         }
-
-        let previous_max_hp = self.effective_player_max_hp();
-        let previous_resource_maxima = self.player_resource_maxima();
         for removed_id in &definition.removes_on_gain {
             if self.progress.active_mutation_ids.contains(removed_id)
                 && !self.progress.locked_mutation_ids.contains(removed_id)
@@ -63,7 +74,6 @@ impl Game {
         self.progress
             .active_mutation_ids
             .insert(definition.id.clone());
-        self.refresh_after_attribute_change(previous_max_hp, &previous_resource_maxima);
         events.push(DomainEvent::MutationGained {
             mutation_id: definition.id,
             name: definition.name,
@@ -82,6 +92,20 @@ impl Game {
         mutation_id: &str,
         events: &mut Vec<DomainEvent>,
     ) -> bool {
+        let previous_max_hp = self.effective_player_max_hp();
+        let previous_resource_maxima = self.player_resource_maxima();
+        if !self.lose_mutation_without_refresh(mutation_id, events) {
+            return false;
+        }
+        self.refresh_after_attribute_change(previous_max_hp, &previous_resource_maxima);
+        true
+    }
+
+    pub(super) fn lose_mutation_without_refresh(
+        &mut self,
+        mutation_id: &str,
+        events: &mut Vec<DomainEvent>,
+    ) -> bool {
         let Some(definition) = self.content.mutation(mutation_id).cloned() else {
             return false;
         };
@@ -90,11 +114,7 @@ impl Game {
         {
             return false;
         }
-
-        let previous_max_hp = self.effective_player_max_hp();
-        let previous_resource_maxima = self.player_resource_maxima();
         self.progress.active_mutation_ids.remove(mutation_id);
-        self.refresh_after_attribute_change(previous_max_hp, &previous_resource_maxima);
         events.push(DomainEvent::MutationLost {
             mutation_id: definition.id,
             name: definition.name,
@@ -155,9 +175,29 @@ impl Game {
         gained.then_some(mutation_id)
     }
 
+    pub(super) fn gain_random_mutation_without_refresh(
+        &mut self,
+        events: &mut Vec<DomainEvent>,
+    ) -> Option<String> {
+        let mutation_id = self.select_random_mutation(RandomMutationOperation::Gain)?;
+        let gained = self.gain_mutation_without_refresh(&mutation_id, events);
+        debug_assert!(gained, "selected mutation must remain gainable");
+        gained.then_some(mutation_id)
+    }
+
     pub(super) fn lose_random_mutation(&mut self, events: &mut Vec<DomainEvent>) -> Option<String> {
         let mutation_id = self.select_random_mutation(RandomMutationOperation::Lose)?;
         let lost = self.lose_mutation(&mutation_id, events);
+        debug_assert!(lost, "selected mutation must remain removable");
+        lost.then_some(mutation_id)
+    }
+
+    pub(super) fn lose_random_mutation_without_refresh(
+        &mut self,
+        events: &mut Vec<DomainEvent>,
+    ) -> Option<String> {
+        let mutation_id = self.select_random_mutation(RandomMutationOperation::Lose)?;
+        let lost = self.lose_mutation_without_refresh(&mutation_id, events);
         debug_assert!(lost, "selected mutation must remain removable");
         lost.then_some(mutation_id)
     }
@@ -167,6 +207,9 @@ impl Game {
             .content
             .mutations()
             .filter_map(|definition| {
+                if !definition.random_selection_enabled {
+                    return None;
+                }
                 let eligible = match operation {
                     RandomMutationOperation::Gain => {
                         !self.progress.active_mutation_ids.contains(&definition.id)

@@ -6,6 +6,7 @@
   "description": "你患有疑病症。",
   "rating": "bad",
   "sourceIndex": 136,
+  "randomSelectionEnabled": false,
   "randomWeight": 4,
   "removesOnGain": []
 }

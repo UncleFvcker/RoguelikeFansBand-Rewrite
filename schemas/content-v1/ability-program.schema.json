@@ -545,6 +545,211 @@
         {
           "additionalProperties": false,
           "properties": {
+            "nutrition": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "consume-terrain",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "nutrition"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "transmute-item-to-gold",
+              "type": "string"
+            },
+            "unitValueCap": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "valueDivisor": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "type",
+            "valueDivisor",
+            "unitValueCap"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "basePower": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "levelDivisor": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "levelMultiplier": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "drain-item-magic",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "basePower",
+            "levelMultiplier",
+            "levelDivisor"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "report-magic",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "affectChancePercent": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "floorTerrainId": {
+              "type": "string"
+            },
+            "radius": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "earthquake",
+              "type": "string"
+            },
+            "wallTerrainIds": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "type",
+            "radius",
+            "affectChancePercent",
+            "floorTerrainId",
+            "wallTerrainIds"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "damageBonus": {
+              "default": 0,
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "damageDice": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "damageSides": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "suppress-monster-reproduction",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "damageDice",
+            "damageSides"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "failureThreshold": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "radius": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "melee-then-teleport",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "radius",
+            "failureThreshold"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "polymorph-self",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
             "type": {
               "const": "swap-position",
               "type": "string"

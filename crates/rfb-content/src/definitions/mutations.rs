@@ -60,6 +60,8 @@ pub struct MutationActivationDefinition {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cost_scaling: Option<MutationActivationCostScalingDefinition>,
     pub base_failure_percent: u8,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub minimum_failure_percent: Option<u8>,
     pub ability_id: String,
 }
 
@@ -76,6 +78,8 @@ pub struct MutationDefinition {
     pub rating: MutationRatingDefinition,
     pub source_index: u16,
     pub random_weight: u8,
+    #[serde(default = "default_true")]
+    pub random_selection_enabled: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub activation: Option<MutationActivationDefinition>,
     #[serde(default)]
@@ -138,4 +142,8 @@ pub struct MutationDefinition {
     pub resource_drain_immunity: bool,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub removes_on_gain: Vec<String>,
+}
+
+const fn default_true() -> bool {
+    true
 }

@@ -6,6 +6,13 @@
   "description": "你可以在打中目标后拼命逃跑。",
   "rating": "good",
   "sourceIndex": 25,
+  "activation": {
+    "minimumLevel": 10,
+    "governingAttribute": "dexterity",
+    "cost": 12,
+    "baseFailurePercent": 60,
+    "abilityId": "rfb.ability.mutation.panic-hit"
+  },
   "randomWeight": 4,
   "removesOnGain": []
 }

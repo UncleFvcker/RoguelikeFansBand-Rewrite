@@ -199,6 +199,10 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::EnchantEquippedWeapon { .. }
                     | AbilityEffectDefinition::BlinkSelf { .. }
                     | AbilityEffectDefinition::TeleportSelf { .. }
+                    | AbilityEffectDefinition::ReportMagic
+                    | AbilityEffectDefinition::Earthquake { .. }
+                    | AbilityEffectDefinition::SuppressMonsterReproduction { .. }
+                    | AbilityEffectDefinition::PolymorphSelf
                     | AbilityEffectDefinition::NoOp { .. }
             ) || matches!(
                 effect,
@@ -226,6 +230,8 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::DarkenRoom
                     | AbilityEffectDefinition::Teleport
                     | AbilityEffectDefinition::FetchItem { .. }
+                    | AbilityEffectDefinition::ConsumeTerrain { .. }
+                    | AbilityEffectDefinition::MeleeThenTeleport { .. }
                     | AbilityEffectDefinition::SwapPosition
                     | AbilityEffectDefinition::TransformTerrain { .. }
                     | AbilityEffectDefinition::ApplyStatus { .. }
@@ -246,7 +252,12 @@ fn ability_program_input_accepts_step(
             )
         }
         AbilityProgramInputDefinition::Item => {
-            matches!(effect, AbilityEffectDefinition::IdentifyItem { .. })
+            matches!(
+                effect,
+                AbilityEffectDefinition::IdentifyItem { .. }
+                    | AbilityEffectDefinition::TransmuteItemToGold { .. }
+                    | AbilityEffectDefinition::DrainItemMagic { .. }
+            )
         }
     }
 }

@@ -1507,6 +1507,7 @@ fn mutation_ability_catalog(
         cost,
         cost_scaling: None,
         base_failure_percent,
+        minimum_failure_percent: None,
         ability_id: MUTATION_CONTRACT_ABILITY_ID.to_owned(),
     });
     Arc::new(rfb_content::ContentCatalog::from_artifact(
@@ -1779,7 +1780,7 @@ fn mutation_level_and_failure_paths_do_not_create_ability_progress() {
 }
 
 #[test]
-fn first_two_active_mutation_batches_project_scaled_costs_and_effects() {
+fn active_mutation_batches_project_scaled_costs_and_effects() {
     let mut game = Game::new(0);
     clear_monsters(&mut game);
     game.progress.level = 25;
@@ -1806,6 +1807,15 @@ fn first_two_active_mutation_batches_project_scaled_costs_and_effects() {
         "recall",
         "banish",
         "cold-touch",
+        "eat-rock",
+        "polymorph",
+        "midas-touch",
+        "grow-mold",
+        "earthquake",
+        "eat-magic",
+        "weigh-magic",
+        "sterility",
+        "panic-hit",
     ];
     for suffix in suffixes {
         assert!(game.gain_mutation(&format!("rfb.mutation.{suffix}"), &mut Vec::new()));
@@ -1818,7 +1828,7 @@ fn first_two_active_mutation_batches_project_scaled_costs_and_effects() {
         .filter(|ability| ability.source == AbilitySourceDto::Mutation)
         .map(|ability| (ability.id.clone(), ability))
         .collect::<BTreeMap<_, _>>();
-    assert_eq!(abilities.len(), 22);
+    assert_eq!(abilities.len(), 31);
 
     let acid = &abilities["rfb.ability.mutation.spit-acid"];
     assert_eq!((acid.base_resource_cost, acid.resource_cost), (9, 14));
@@ -1853,6 +1863,67 @@ fn first_two_active_mutation_batches_project_scaled_costs_and_effects() {
     ));
     assert_eq!(abilities["rfb.ability.mutation.illumine"].effects.len(), 2);
     assert_eq!(abilities["rfb.ability.mutation.dazzle"].effects.len(), 3);
+    assert!(matches!(
+        abilities["rfb.ability.mutation.eat-rock"]
+            .effects
+            .as_slice(),
+        [AbilityEffectSpecDto::ConsumeTerrain { nutrition: 3000 }]
+    ));
+    assert!(matches!(
+        abilities["rfb.ability.mutation.midas-touch"]
+            .effects
+            .as_slice(),
+        [AbilityEffectSpecDto::TransmuteItemToGold {
+            value_divisor: 3,
+            unit_value_cap: 30_000,
+        }]
+    ));
+    assert!(matches!(
+        abilities["rfb.ability.mutation.grow-mold"]
+            .effects
+            .as_slice(),
+        [AbilityEffectSpecDto::SummonCategory {
+            maximum_level: 25,
+            count_dice: 8,
+            count_sides: 1,
+            ..
+        }]
+    ));
+    assert!(matches!(
+        abilities["rfb.ability.mutation.earthquake"]
+            .effects
+            .as_slice(),
+        [AbilityEffectSpecDto::Earthquake {
+            radius: 10,
+            affect_chance_percent: 15,
+            ..
+        }]
+    ));
+    assert!(matches!(
+        abilities["rfb.ability.mutation.sterility"]
+            .effects
+            .as_slice(),
+        [AbilityEffectSpecDto::SuppressMonsterReproduction {
+            damage_dice: 1,
+            damage_sides: 17,
+            damage_bonus: 17,
+        }]
+    ));
+    assert!(matches!(
+        abilities["rfb.ability.mutation.panic-hit"]
+            .effects
+            .as_slice(),
+        [AbilityEffectSpecDto::MeleeThenTeleport {
+            radius: 30,
+            failure_threshold: 7,
+        }]
+    ));
+    assert!(matches!(
+        abilities["rfb.ability.mutation.polymorph"]
+            .effects
+            .as_slice(),
+        [AbilityEffectSpecDto::PolymorphSelf]
+    ));
 }
 
 fn active_source_mutation_game(seed: u64, suffix: &str, level: u16) -> Game {
@@ -1861,15 +1932,383 @@ fn active_source_mutation_game(seed: u64, suffix: &str, level: u16) -> Game {
     clear_monsters(&mut game);
     game.progress.level = level;
     game.progress.max_level = level;
+    game.refresh_character_skills();
     game.debug_set_ability_casts_succeed(true);
     assert!(game.gain_mutation(&format!("rfb.mutation.{suffix}"), &mut Vec::new()));
     let mana = game
         .resources
         .get_mut("demo.resource.mana")
         .expect("scholar should have mana");
-    mana.current = 1_000;
-    mana.maximum = 1_000;
+    mana.current = mana.maximum;
     game
+}
+
+#[test]
+fn mutation_eat_rock_and_midas_touch_commit_their_narrow_transactions() {
+    let mut eater = active_source_mutation_game(43, "eat-rock", 8);
+    let origin = eater.player.position;
+    let rock = Position {
+        x: origin.x + 1,
+        y: origin.y,
+    };
+    replace_terrain(&mut eater, rock, "demo.terrain.wall");
+    eater.nutrition = 1_000;
+    let mut events = Vec::new();
+    eater
+        .resolve_player_ability(
+            "rfb.ability.mutation.eat-rock",
+            TargetSelection::Direction {
+                direction: Direction::East,
+            },
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("Eat Rock should resolve");
+    assert_eq!(eater.player.position, rock);
+    assert_eq!(
+        eater.terrain[eater.index(rock).unwrap()],
+        "demo.terrain.floor"
+    );
+    assert_eq!(eater.nutrition, 11_000);
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::AbilityEffectsResolved { resolution, .. }
+            if matches!(
+                resolution.effects.as_slice(),
+                [AbilityEffectResolutionDto::ConsumeTerrain {
+                    position,
+                    nutrition_before: 1000,
+                    nutrition_after: 11000,
+                    ..
+                }] if *position == rock
+            )
+    )));
+
+    let mut alchemist = active_source_mutation_game(47, "midas-touch", 10);
+    give_inventory_item(&mut alchemist, "test.item.midas", "demo.item.broad-sword");
+    let item = alchemist
+        .items
+        .iter_mut()
+        .find(|item| item.id == "test.item.midas")
+        .unwrap();
+    item.quantity = 2;
+    let expected_gold = alchemist
+        .content
+        .item("demo.item.broad-sword")
+        .unwrap()
+        .base_value
+        / 3
+        * 2;
+    let gold_before = alchemist.gold;
+    alchemist
+        .resolve_player_ability(
+            "rfb.ability.mutation.midas-touch",
+            TargetSelection::Item {
+                item_id: "test.item.midas".to_owned(),
+            },
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("Midas Touch should resolve");
+    assert!(
+        !alchemist
+            .items
+            .iter()
+            .any(|item| item.id == "test.item.midas")
+    );
+    assert_eq!(alchemist.gold, gold_before + expected_gold);
+}
+
+#[test]
+fn mutation_eat_magic_and_weigh_magic_use_existing_device_and_status_state() {
+    let capped_failure = active_source_mutation_game(51, "eat-magic", 100);
+    let activation = capped_failure
+        .content
+        .mutation("rfb.mutation.eat-magic")
+        .unwrap()
+        .activation
+        .clone()
+        .unwrap();
+    assert_eq!(capped_failure.mutation_failure_percent(&activation), 11);
+
+    let mut eater = active_source_mutation_game(53, "eat-magic", 17);
+    give_inventory_item(
+        &mut eater,
+        "test.item.magic-food",
+        "demo.item.detect-objects-staff",
+    );
+    let item = eater
+        .items
+        .iter_mut()
+        .find(|item| item.id == "test.item.magic-food")
+        .unwrap();
+    item.activation
+        .as_mut()
+        .expect("staff should have an activation")
+        .device_check_difficulty = 100;
+    item.charges
+        .as_mut()
+        .expect("staff should have charges")
+        .current = 20;
+    eater
+        .resources
+        .get_mut("demo.resource.mana")
+        .unwrap()
+        .current = 10;
+    let mut events = Vec::new();
+    eater
+        .resolve_player_ability(
+            "rfb.ability.mutation.eat-magic",
+            TargetSelection::Item {
+                item_id: "test.item.magic-food".to_owned(),
+            },
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("Eat Magic should resolve");
+    assert_eq!(eater.resources["demo.resource.mana"].current, 29);
+    assert_eq!(
+        eater
+            .items
+            .iter()
+            .find(|item| item.id == "test.item.magic-food")
+            .unwrap()
+            .charges
+            .unwrap()
+            .current,
+        0
+    );
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::AbilityEffectsResolved { resolution, .. }
+            if matches!(
+                resolution.effects.as_slice(),
+                [AbilityEffectResolutionDto::DrainItemMagic {
+                    drained: 20,
+                    failed: false,
+                    resource_before: 9,
+                    resource_after: 29,
+                    ..
+                }]
+            )
+    )));
+
+    let mut observer = active_source_mutation_game(59, "weigh-magic", 6);
+    observer.player.statuses.push(StatusInstance {
+        kind_id: STATUS_HASTE.to_owned(),
+        intensity: 1,
+        remaining_ticks: 20,
+        source_id: Some("test.status".to_owned()),
+        granted_resistances: BTreeMap::new(),
+        granted_brands: BTreeSet::new(),
+        granted_modifiers: StatModifiersDto::default(),
+        granted_equipment_bonuses: EquipmentBonusesDto::default(),
+        granted_status_immunities: BTreeSet::new(),
+        granted_race_id: None,
+        grants_wall_passage: false,
+        incoming_damage_percent: 100,
+    });
+    observer.recall = Some(RecallStateDto {
+        dungeon_id: "demo.dungeon.warrens".to_owned(),
+        floor_id: "demo.floor.warrens.1".to_owned(),
+        remaining_turns: Some(9),
+    });
+    events.clear();
+    observer
+        .resolve_player_ability(
+            "rfb.ability.mutation.weigh-magic",
+            TargetSelection::SelfTarget,
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("Weigh Magic should resolve");
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::AbilityEffectsResolved { resolution, .. }
+            if matches!(
+                resolution.effects.as_slice(),
+                [AbilityEffectResolutionDto::ReportMagic { statuses, recall, .. }]
+                    if statuses.iter().any(|status| status.kind_id == STATUS_HASTE)
+                        && recall.as_ref().is_some_and(|state| state.remaining_turns == Some(9))
+            )
+    )));
+}
+
+#[test]
+fn mutation_grow_mold_and_sterility_persist_only_authoritative_state() {
+    let mut grower = active_source_mutation_game(61, "grow-mold", 8);
+    for terrain in &mut grower.terrain {
+        *terrain = "demo.terrain.floor".to_owned();
+    }
+    grower
+        .resolve_player_ability(
+            "rfb.ability.mutation.grow-mold",
+            TargetSelection::SelfTarget,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("Grow Mold should resolve");
+    assert_eq!(grower.entities.len(), 8);
+    assert!(grower.entities.iter().all(|entity| {
+        entity.controller_id.as_deref() == Some(grower.player.id.as_str())
+            && grower
+                .content
+                .actor(&entity.kind_id)
+                .is_some_and(|actor| actor.tags.iter().any(|tag| tag == "mold"))
+    }));
+
+    let mut sterile = active_source_mutation_game(67, "sterility", 12);
+    sterile.player.hp = 100;
+    sterile
+        .resolve_player_ability(
+            "rfb.ability.mutation.sterility",
+            TargetSelection::SelfTarget,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("Sterility should resolve");
+    assert!(sterile.reproduction_suppressed);
+    let restored = Game::from_save(sterile.to_save()).expect("sterility state should reload");
+    assert!(restored.reproduction_suppressed);
+    assert_eq!(restored.state_hash(), sterile.state_hash());
+}
+
+#[test]
+fn mutation_earthquake_panic_hit_and_polymorph_enforce_their_boundaries() {
+    let mut quake = active_source_mutation_game(71, "earthquake", 12);
+    let mana_before = quake.resources["demo.resource.mana"].current;
+    let draws_before = quake.rng_draw_counter();
+    let mut events = Vec::new();
+    quake
+        .resolve_player_ability(
+            "rfb.ability.mutation.earthquake",
+            TargetSelection::SelfTarget,
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("surface earthquake should reject cleanly");
+    assert_eq!(quake.resources["demo.resource.mana"].current, mana_before);
+    assert_eq!(quake.rng_draw_counter(), draws_before);
+    assert!(matches!(
+        events.as_slice(),
+        [DomainEvent::AbilityTargetUnavailable { .. }]
+    ));
+    descend_one_floor(&mut quake);
+    clear_monsters(&mut quake);
+    events.clear();
+    quake
+        .resolve_player_ability(
+            "rfb.ability.mutation.earthquake",
+            TargetSelection::SelfTarget,
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("dungeon earthquake should resolve");
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::AbilityEffectsResolved { resolution, .. }
+            if matches!(
+                resolution.effects.as_slice(),
+                [AbilityEffectResolutionDto::Earthquake { affected_positions, .. }]
+                    if !affected_positions.is_empty()
+            )
+    )));
+
+    let mut panic = active_source_mutation_game(73, "panic-hit", 10);
+    let origin = panic.player.position;
+    let target = Position {
+        x: origin.x + 1,
+        y: origin.y,
+    };
+    for terrain in &mut panic.terrain {
+        *terrain = "demo.terrain.floor".to_owned();
+    }
+    panic.entities.push(actor_from_runtime_spawn(
+        "test.actor.panic",
+        "demo.actor.gnome-mage",
+        target,
+        20,
+        100,
+        100,
+        true,
+    ));
+    let mut panic_events = Vec::new();
+    panic
+        .resolve_player_ability(
+            "rfb.ability.mutation.panic-hit",
+            TargetSelection::Direction {
+                direction: Direction::East,
+            },
+            &mut panic_events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("Panic Hit should resolve");
+    assert!(panic_events.iter().any(|event| matches!(
+        event,
+        DomainEvent::AbilityEffectsResolved { resolution, .. }
+            if matches!(
+                resolution.effects.as_slice(),
+                [AbilityEffectResolutionDto::MeleeThenTeleport { target_entity_id, .. }]
+                    if target_entity_id == "test.actor.panic"
+            )
+    )));
+
+    let mut polymorph = active_source_mutation_game(79, "polymorph", 18);
+    let disabled_ids = polymorph
+        .content
+        .mutations()
+        .filter(|mutation| !mutation.random_selection_enabled)
+        .map(|mutation| mutation.id.clone())
+        .collect::<BTreeSet<_>>();
+    events.clear();
+    polymorph
+        .resolve_player_ability(
+            "rfb.ability.mutation.polymorph",
+            TargetSelection::SelfTarget,
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("Polymorph Self should resolve");
+    assert!(
+        polymorph
+            .progress
+            .active_mutation_ids
+            .is_disjoint(&disabled_ids)
+    );
+    let attributes = [
+        AttributeKind::Strength,
+        AttributeKind::Intelligence,
+        AttributeKind::Wisdom,
+        AttributeKind::Dexterity,
+        AttributeKind::Constitution,
+        AttributeKind::Charisma,
+    ];
+    assert!(attributes.into_iter().all(|attribute| {
+        polymorph.progress.attributes.value(attribute)
+            <= polymorph.progress.maximum_attributes.value(attribute)
+            && polymorph.progress.maximum_attributes.value(attribute)
+                <= polymorph.progress.attribute_potentials.value(attribute)
+    }));
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::AbilityEffectsResolved { resolution, .. }
+            if matches!(
+                resolution.effects.as_slice(),
+                [AbilityEffectResolutionDto::PolymorphSelf { .. }]
+            )
+    )));
+    let restored = Game::from_save(polymorph.to_save()).expect("polymorph state should reload");
+    assert_eq!(restored.state_hash(), polymorph.state_hash());
 }
 
 #[test]

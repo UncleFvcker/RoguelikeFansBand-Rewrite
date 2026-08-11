@@ -106,6 +106,7 @@ pub(crate) struct GoldPile {
 pub(crate) struct FloorState {
     pub(crate) id: String,
     pub(crate) dungeon_instance_id: Option<String>,
+    pub(crate) reproduction_suppressed: bool,
     pub(crate) width: u16,
     pub(crate) height: u16,
     pub(crate) terrain: Vec<String>,

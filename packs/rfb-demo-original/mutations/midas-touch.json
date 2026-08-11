@@ -6,6 +6,13 @@
   "description": "你可以把普通物品变成金子。",
   "rating": "good",
   "sourceIndex": 18,
+  "activation": {
+    "minimumLevel": 10,
+    "governingAttribute": "intelligence",
+    "cost": 5,
+    "baseFailurePercent": 70,
+    "abilityId": "rfb.ability.mutation.midas-touch"
+  },
   "randomWeight": 4,
   "removesOnGain": []
 }

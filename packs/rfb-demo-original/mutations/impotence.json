@@ -6,6 +6,7 @@
   "description": "你魔法无能。",
   "rating": "bad",
   "sourceIndex": 139,
+  "randomSelectionEnabled": false,
   "randomWeight": 4,
   "removesOnGain": []
 }

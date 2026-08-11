@@ -46,7 +46,7 @@ use crate::{
         SummonIdentity, TownState,
     },
     stats::{
-        AttributeKind, CharacterBuildIdentity, CharacterProgress, DerivedStat,
+        AttributeKind, AttributeSet, CharacterBuildIdentity, CharacterProgress, DerivedStat,
         DerivedStatsPipeline, StatBounds, StatKind, StatLayer,
     },
 };
@@ -188,7 +188,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 80;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 81;
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const VISIBILITY_RADIUS: i32 = 8;
 const BASE_THROW_RANGE_BUDGET: u16 = 50;
@@ -750,6 +750,7 @@ pub struct Game {
     mogaminator: MogaminatorState,
     current_floor_id: String,
     current_dungeon_instance_id: Option<String>,
+    reproduction_suppressed: bool,
     stored_floors: BTreeMap<String, FloorState>,
     width: u16,
     height: u16,
@@ -1037,6 +1038,7 @@ impl Game {
             mogaminator,
             current_floor_id: initial_floor_id,
             current_dungeon_instance_id: None,
+            reproduction_suppressed: false,
             stored_floors: BTreeMap::new(),
             width,
             height,
@@ -6045,6 +6047,56 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
         } => AbilityEffectSpecDto::FetchItem {
             maximum_weight_tenths_pound: *maximum_weight_tenths_pound,
         },
+        AbilityEffectDefinition::ConsumeTerrain { nutrition } => {
+            AbilityEffectSpecDto::ConsumeTerrain {
+                nutrition: *nutrition,
+            }
+        }
+        AbilityEffectDefinition::TransmuteItemToGold {
+            value_divisor,
+            unit_value_cap,
+        } => AbilityEffectSpecDto::TransmuteItemToGold {
+            value_divisor: *value_divisor,
+            unit_value_cap: *unit_value_cap,
+        },
+        AbilityEffectDefinition::DrainItemMagic {
+            base_power,
+            level_multiplier,
+            level_divisor,
+        } => AbilityEffectSpecDto::DrainItemMagic {
+            base_power: *base_power,
+            level_multiplier: *level_multiplier,
+            level_divisor: *level_divisor,
+        },
+        AbilityEffectDefinition::ReportMagic => AbilityEffectSpecDto::ReportMagic,
+        AbilityEffectDefinition::Earthquake {
+            radius,
+            affect_chance_percent,
+            floor_terrain_id,
+            wall_terrain_ids,
+        } => AbilityEffectSpecDto::Earthquake {
+            radius: *radius,
+            affect_chance_percent: *affect_chance_percent,
+            floor_terrain_id: floor_terrain_id.clone(),
+            wall_terrain_ids: wall_terrain_ids.clone(),
+        },
+        AbilityEffectDefinition::SuppressMonsterReproduction {
+            damage_dice,
+            damage_sides,
+            damage_bonus,
+        } => AbilityEffectSpecDto::SuppressMonsterReproduction {
+            damage_dice: *damage_dice,
+            damage_sides: *damage_sides,
+            damage_bonus: *damage_bonus,
+        },
+        AbilityEffectDefinition::MeleeThenTeleport {
+            radius,
+            failure_threshold,
+        } => AbilityEffectSpecDto::MeleeThenTeleport {
+            radius: *radius,
+            failure_threshold: *failure_threshold,
+        },
+        AbilityEffectDefinition::PolymorphSelf => AbilityEffectSpecDto::PolymorphSelf,
         AbilityEffectDefinition::SwapPosition => AbilityEffectSpecDto::SwapPosition,
         AbilityEffectDefinition::Recall {
             delay_dice,
