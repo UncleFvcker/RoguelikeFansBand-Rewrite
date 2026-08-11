@@ -2588,5 +2588,11 @@ actor-demo-xylibbogaz-the-disembodied-mouth-name = 无体巨口克西里波加�
 actor-demo-xylibbogaz-the-disembodied-mouth-description = 你看到的只有一个邪恶的咧嘴笑……然后连这个笑容也消失了。
 actor-demo-zoopi-the-cube-king-name = 方块国王祖比
 actor-demo-zoopi-the-cube-king-description = 一个来自三维空间的凝胶国王。
+actor-demo-black-name = 黑色物质
+actor-demo-black-description = 伊波·兹特尔那可怕的血液只被称为“黑色物质”：它是一种无定形物质，会吸干你的生命并将其献给伊波·兹特尔。
+actor-demo-vampiric-ixitxachitl-name = 吸血异西鳐
+actor-demo-vampiric-ixitxachitl-description = 来自深海的恶魔鳐鱼，拥有吸血的能力。
+actor-demo-vampiric-mist-name = 吸血雾气
+actor-demo-vampiric-mist-description = 一团邪恶的、有知觉的雾气。
 
 actor-core-fuzzy-monster-name = 怪物

@@ -3342,6 +3342,24 @@
       "id": "ninja",
       "tags": ["orc-cave"],
       "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 365,
+      "id": "vampiric-mist",
+      "tags": ["orc-cave"],
+      "omittedFlags": []
+    },
+    {
+      "sourceIndex": 402,
+      "id": "black",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 406,
+      "id": "vampiric-ixitxachitl",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
     }
   ]
 }

@@ -105,6 +105,7 @@ pub(in crate::game) fn resolved_melee_blows(
                     damage_sides: definition.damage_sides,
                     damage_type: definition.damage_type,
                     armor_mitigated: true,
+                    vampiric: false,
                 }],
             }]
         },

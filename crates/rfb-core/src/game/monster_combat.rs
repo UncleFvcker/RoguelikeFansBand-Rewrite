@@ -92,6 +92,31 @@ fn reduce_disenchanted_component(rng: &mut RfbRng, value: u16) -> u16 {
 }
 
 impl Game {
+    pub(super) fn player_is_nonliving(&self) -> bool {
+        self.character_definitions()
+            .is_some_and(|(_, race, _, _)| race.tags.iter().any(|tag| tag == "nonliving"))
+    }
+
+    pub(super) fn heal_vampiric_melee_source(
+        &mut self,
+        source_entity_id: &str,
+        damage: i32,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let Some(source) = self
+            .entities
+            .iter_mut()
+            .find(|entity| entity.id == source_entity_id)
+        else {
+            return;
+        };
+        let hp_before = source.hp;
+        source.hp = source.hp.saturating_add(damage.max(0)).min(source.max_hp);
+        if source.hp != hp_before {
+            changed.insert(source.position);
+        }
+    }
+
     pub(super) fn actor_has_status_immunity(&self, index: usize, status_kind_id: &str) -> bool {
         self.actor_runtime_definition(&self.entities[index])
             .is_some_and(|definition| {
@@ -329,6 +354,7 @@ impl Game {
             let target_definition = self
                 .actor_runtime_definition(&self.entities[target_index])
                 .expect("monster melee target definition must remain available");
+            let target_is_nonliving = target_definition.tags.iter().any(|tag| tag == "nonliving");
             let target_stats =
                 self.actor_derived_stats(&self.entities[target_index], target_definition, false);
             let ability = attacker.melee_skill.with_modifier(
@@ -389,6 +415,10 @@ impl Game {
                 else {
                     break;
                 };
+                let vampiric = matches!(
+                    effect,
+                    MeleeBlowEffectDefinition::Damage { vampiric: true, .. }
+                ) && !target_is_nonliving;
                 let damage = match effect {
                     MeleeBlowEffectDefinition::Damage {
                         damage_dice,
@@ -582,6 +612,9 @@ impl Game {
                         removed_entities,
                     )?;
                     break;
+                }
+                if vampiric {
+                    self.heal_vampiric_melee_source(&source_entity_id, damage.applied, changed);
                 }
                 events.push(DomainEvent::MonsterMeleeEntityHit {
                     source_kind_id: source_kind_id.clone(),
@@ -909,6 +942,7 @@ impl Game {
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
     ) -> Result<bool, CoreError> {
+        let source_entity_id = self.entities[index].id.clone();
         let kind_id = self.entities[index].kind_id.clone();
         let nice = self.entities[index].nice;
         let definition = self
@@ -963,6 +997,10 @@ impl Game {
                 {
                     continue;
                 }
+                let vampiric = matches!(
+                    effect,
+                    MeleeBlowEffectDefinition::Damage { vampiric: true, .. }
+                ) && !self.player_is_nonliving();
                 let damage = match effect {
                     MeleeBlowEffectDefinition::Damage {
                         damage_dice,
@@ -1211,6 +1249,9 @@ impl Game {
                         damage,
                     });
                     return Ok(false);
+                }
+                if vampiric {
+                    self.heal_vampiric_melee_source(&source_entity_id, damage.applied, changed);
                 }
                 if matches!(effect, MeleeBlowEffectDefinition::Disease { .. }) {
                     let duration = resolve_damage(

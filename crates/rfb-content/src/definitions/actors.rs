@@ -145,6 +145,8 @@ pub enum MeleeBlowEffectDefinition {
         damage_type: ActorDamageType,
         #[serde(default)]
         armor_mitigated: bool,
+        #[serde(default)]
+        vampiric: bool,
     },
     Poison {
         #[serde(default)]

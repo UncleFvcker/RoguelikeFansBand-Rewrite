@@ -442,6 +442,10 @@
             "type": {
               "const": "damage",
               "type": "string"
+            },
+            "vampiric": {
+              "default": false,
+              "type": "boolean"
             }
           },
           "required": [

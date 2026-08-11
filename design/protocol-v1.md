@@ -499,3 +499,7 @@ contract-v253 只增加只读怪物审计命令并同步 Orc Cave 29–32 级现
 contract-v254 扩展仅供怪物使用的内容侧 `jump-damage` 固定伤害，并复用既有分类召唤
 接入 Hydra 与 Zoopi；不增加协议 DTO 或持久状态。协议仍为 1.169，State Hash Schema
 仍为 v85，save 容器仍为 v1。
+
+contract-v255 为怪物近战物理伤害增加仅用于内容和运行时结算的 `vampiric` 标记，
+按实际伤害治疗攻击者；非生命玩家不提供治疗。不增加协议 DTO 或持久状态，协议仍为
+1.169，State Hash Schema 仍为 v85，save 容器仍为 v1。

@@ -667,6 +667,7 @@ impl Game {
             let target_definition = self
                 .actor_runtime_definition(&self.entities[target_index])
                 .expect("summon melee target definition must remain available");
+            let target_is_nonliving = target_definition.tags.iter().any(|tag| tag == "nonliving");
             let target_stats =
                 self.actor_derived_stats(&self.entities[target_index], target_definition, false);
             let ability = attacker.melee_skill.with_modifier(
@@ -728,6 +729,10 @@ impl Game {
                 else {
                     break;
                 };
+                let vampiric = matches!(
+                    effect,
+                    MeleeBlowEffectDefinition::Damage { vampiric: true, .. }
+                ) && !target_is_nonliving;
                 let damage = match effect {
                     MeleeBlowEffectDefinition::Damage {
                         damage_dice,
@@ -913,6 +918,9 @@ impl Game {
                         removed_entities,
                     )?;
                     break;
+                }
+                if vampiric {
+                    self.heal_vampiric_melee_source(&source_entity_id, damage.applied, changed);
                 }
                 if matches!(effect, MeleeBlowEffectDefinition::Disease { .. }) {
                     let duration = resolve_damage(

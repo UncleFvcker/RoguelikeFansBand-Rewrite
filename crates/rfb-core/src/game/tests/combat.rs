@@ -40,6 +40,7 @@ fn mutation_contact_auras_retaliate_only_against_unresisted_contact_attacks() {
         damage_sides: 0,
         damage_type: rfb_content::ActorDamageType::Physical,
         armor_mitigated: true,
+        vampiric: false,
     };
     let mut game = monster_effect_game(0, harmless.clone());
     assert!(game.gain_mutation("rfb.mutation.fire-aura", &mut Vec::new()));
@@ -116,6 +117,7 @@ fn fatal_mutation_aura_uses_the_shared_actor_death_transaction() {
             damage_sides: 0,
             damage_type: rfb_content::ActorDamageType::Physical,
             armor_mitigated: true,
+            vampiric: false,
         },
     );
     assert!(game.gain_mutation("rfb.mutation.fire-aura", &mut Vec::new()));
@@ -163,6 +165,7 @@ fn zero_dice_hurt_hits_without_dealing_damage() {
             damage_sides: 0,
             damage_type: rfb_content::ActorDamageType::Physical,
             armor_mitigated: true,
+            vampiric: false,
         },
     );
     let hp_before = game.player.hp;
@@ -204,6 +207,48 @@ fn resource_drain_melee_heals_six_times_the_amount_actually_drained() {
 
     assert_eq!(game.resources["test.resource.mana"].current, 0);
     assert_eq!(game.entities[0].hp, 7);
+}
+
+#[test]
+fn vampiric_melee_heals_from_applied_damage_but_not_from_nonliving_players() {
+    let effect = MeleeBlowEffectDefinition::Damage {
+        chance_percent: None,
+        damage_dice: 1,
+        damage_sides: 4,
+        damage_type: rfb_content::ActorDamageType::Physical,
+        armor_mitigated: false,
+        vampiric: true,
+    };
+    let mut living = monster_effect_game(0, effect.clone());
+    living.entities[0].hp = 1;
+    living.entities[0].max_hp = 20;
+    let mut events = Vec::new();
+    living
+        .resolve_monster_melee(0, &mut events, &mut BTreeSet::new(), &mut Vec::new())
+        .expect("vampiric melee should resolve");
+    let applied = events
+        .iter()
+        .find_map(|event| match event {
+            DomainEvent::MonsterMeleeHit { damage, .. } => Some(damage.applied),
+            _ => None,
+        })
+        .expect("vampiric melee should damage the player");
+    assert!(applied > 0);
+    assert_eq!(living.entities[0].hp, 1 + applied);
+
+    let mut nonliving = monster_effect_game(0, effect);
+    nonliving.entities[0].hp = 1;
+    nonliving.entities[0].max_hp = 20;
+    let mut race_status =
+        monster_combat::melee_status("test.status.nonliving", 10, "test.setup").status;
+    race_status.granted_race_id = Some("demo.race.vampire-lord".to_owned());
+    nonliving.player.statuses.push(race_status);
+    let hp_before = nonliving.player.hp;
+    nonliving
+        .resolve_monster_melee(0, &mut Vec::new(), &mut BTreeSet::new(), &mut Vec::new())
+        .expect("vampiric melee against a nonliving player should resolve");
+    assert!(nonliving.player.hp < hp_before);
+    assert_eq!(nonliving.entities[0].hp, 1);
 }
 
 #[test]
@@ -407,6 +452,7 @@ fn content_driven_fire_melee_uses_the_player_resistance_profile() {
         damage_sides: 4,
         damage_type: rfb_content::ActorDamageType::Fire,
         armor_mitigated: false,
+        vampiric: false,
     };
     let (seed, normal_damage) = (0_u64..1_000)
         .find_map(|seed| {

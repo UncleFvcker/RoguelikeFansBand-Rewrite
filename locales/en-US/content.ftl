@@ -2588,5 +2588,11 @@ actor-demo-xylibbogaz-the-disembodied-mouth-name = Xylibbogaz, the Disembodied M
 actor-demo-xylibbogaz-the-disembodied-mouth-description = A creature recorded in the original RFB bestiary as Xylibbogaz, the Disembodied Mouth.
 actor-demo-zoopi-the-cube-king-name = Zoopi, the Cube King
 actor-demo-zoopi-the-cube-king-description = A creature recorded in the original RFB bestiary as Zoopi, the Cube King.
+actor-demo-black-name = Black
+actor-demo-black-description = A creature recorded in the original RFB bestiary as Black.
+actor-demo-vampiric-ixitxachitl-name = Vampiric ixitxachitl
+actor-demo-vampiric-ixitxachitl-description = A creature recorded in the original RFB bestiary as Vampiric ixitxachitl.
+actor-demo-vampiric-mist-name = Vampiric mist
+actor-demo-vampiric-mist-description = A creature recorded in the original RFB bestiary as Vampiric mist.
 
 actor-core-fuzzy-monster-name = Monster

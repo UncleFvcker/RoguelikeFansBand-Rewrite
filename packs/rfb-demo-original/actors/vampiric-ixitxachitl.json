@@ -1,0 +1,111 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "habitats": [
+      "all"
+    ],
+    "legacyIndex": 406,
+    "maxDepth": 70,
+    "rarity": 1
+  },
+  "attack": 6,
+  "damageDice": 2,
+  "damageSides": 10,
+  "damageType": "poison",
+  "defense": 5,
+  "descriptionKey": "actor-demo-vampiric-ixitxachitl-description",
+  "experienceValue": 120,
+  "formatVersion": 1,
+  "glyph": "l",
+  "hitPointDice": {
+    "dice": 22,
+    "sides": 22
+  },
+  "id": "demo.actor.vampiric-ixitxachitl",
+  "level": 26,
+  "maxHp": 253,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "damageDice": 2,
+            "damageSides": 10,
+            "type": "poison"
+          }
+        ],
+        "methodId": "rfb.blow.sting",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 8,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "armorMitigated": false,
+            "damageDice": 1,
+            "damageSides": 8,
+            "damageType": "physical",
+            "type": "damage",
+            "vampiric": true
+          }
+        ],
+        "methodId": "rfb.blow.sting",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.heal-78",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.scare",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.curse-10d15",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.blind",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.amnesia",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.haste-self",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 16
+  },
+  "movement": {
+    "modes": [
+      "aquatic"
+    ]
+  },
+  "nameKey": "actor-demo-vampiric-ixitxachitl-name",
+  "resistances": {
+    "nether": "resistant",
+    "poison": "resistant",
+    "water": "resistant"
+  },
+  "role": "monster",
+  "speed": 110,
+  "tags": [
+    "animal",
+    "evil",
+    "legacy-import",
+    "orc-cave"
+  ]
+}

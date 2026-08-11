@@ -469,3 +469,10 @@ Zoopi 继续复用 `summon-category`，没有新增特殊召唤脚本。当前�
 602 种 actor、255 种物品、263 个能力和 13 张 loot table；严格同步 555 条，
 内容 hash 为 `7c978853943a6bb4a81e46072bbd089cad526bfc0688711664c3ce709a4aa217`。
 协议保持 1.169，State Hash Schema 保持 v85。
+
+contract-v255 / 包 1.246.0 为怪物近战 `damage` 增加默认关闭的 `vampiric` 标记。
+该标记只在实际伤害结算完成后治疗攻击者；非生命目标不提供治疗。新增 Vampiric
+mist、Black 和 Vampiric ixitxachitl，当前包包含 49 种地形、605 种 actor、
+255 种物品、264 个能力和 13 张 loot table；严格同步 558 条，内容 hash 为
+`9fe4504149460bb615380075d2459064eb09c958a20f4780519b4656c47fee1a`。
+协议保持 1.169，State Hash Schema 保持 v85。

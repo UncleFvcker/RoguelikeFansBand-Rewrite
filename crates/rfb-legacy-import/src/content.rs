@@ -6801,7 +6801,7 @@ fn terrain_json(
 
 fn melee_damage_type(token: &str) -> Option<&'static str> {
     match token {
-        "HURT" | "DAM" => Some("physical"),
+        "HURT" | "DAM" | "VAMP" => Some("physical"),
         "FIRE" => Some("fire"),
         "COLD" => Some("cold"),
         "ACID" => Some("acid"),
@@ -6940,6 +6940,9 @@ fn melee_effect_json(effect: &LegacyBlowEffect) -> Option<serde_json::Value> {
             })
         }
     };
+    if effect.token == "VAMP" {
+        value["vampiric"] = serde_json::json!(true);
+    }
     if let Some(chance_percent) = effect.chance_percent {
         value["chancePercent"] = serde_json::json!(chance_percent);
     }
@@ -12425,6 +12428,19 @@ mod tests {
             melee_effect_json(&light.effects[0]).expect("LIGHT should map")["damageType"],
             "light"
         );
+    }
+
+    #[test]
+    fn vampiric_melee_maps_to_unarmored_physical_damage_and_healing() {
+        let blow = parse_blow("BITE:VAMP(2d6)", 1).expect("VAMP melee should parse");
+        let effect = melee_effect_json(&blow.effects[0]).expect("VAMP melee should map");
+
+        assert_eq!(effect["type"], "damage");
+        assert_eq!(effect["damageDice"], 2);
+        assert_eq!(effect["damageSides"], 6);
+        assert_eq!(effect["damageType"], "physical");
+        assert_eq!(effect["armorMitigated"], false);
+        assert_eq!(effect["vampiric"], true);
     }
 
     #[test]

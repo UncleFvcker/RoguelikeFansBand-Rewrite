@@ -1,0 +1,78 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "friends": {
+      "chancePercent": 0,
+      "dice": 0,
+      "sides": 0
+    },
+    "legacyIndex": 402,
+    "maxDepth": 60,
+    "randomMovementPercent": 25,
+    "rarity": 3
+  },
+  "attack": 6,
+  "damageDice": 2,
+  "damageSides": 6,
+  "damageType": "physical",
+  "defense": 6,
+  "descriptionKey": "actor-demo-black-description",
+  "experienceValue": 50,
+  "formatVersion": 1,
+  "glyph": "j",
+  "hitPointDice": {
+    "dice": 14,
+    "sides": 14
+  },
+  "id": "demo.actor.black",
+  "level": 25,
+  "maxHp": 105,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 2,
+            "damageSides": 6,
+            "damageType": "physical",
+            "type": "damage",
+            "vampiric": true
+          }
+        ],
+        "methodId": "rfb.blow.engulf",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 2,
+            "damageSides": 6,
+            "damageType": "physical",
+            "type": "damage",
+            "vampiric": true
+          }
+        ],
+        "methodId": "rfb.blow.engulf",
+        "toHit": 20
+      }
+    ]
+  },
+  "nameKey": "actor-demo-black-name",
+  "resistances": {
+    "acid": "resistant",
+    "cold": "resistant",
+    "nether": "resistant",
+    "poison": "immune"
+  },
+  "role": "monster",
+  "speed": 111,
+  "tags": [
+    "cold-blooded",
+    "empty-mind",
+    "evil",
+    "legacy-import",
+    "orc-cave"
+  ]
+}

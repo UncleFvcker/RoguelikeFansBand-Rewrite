@@ -24,13 +24,13 @@ the plan remains the source-drift check for those imported facts.
 
 ## Machine-checked gaps
 
-After contract-v253, `audit-demo-monsters` is the authority for the remaining
-level 21–32 records. The global import selection retains 186 records in this
-range; 176 are directly expressible Orc Cave allocation candidates. The other
+After contract-v255, `audit-demo-monsters` is the authority for the remaining
+level 21–32 records. The global import selection retains 189 records in this
+range; 179 are directly expressible Orc Cave allocation candidates. The other
 10 imported records keep their wilderness or dedicated-dungeon allocation and
 do not carry the `orc-cave` tag. The audit keeps three explicit deferred groups:
 
-1. 22 records blocked by a real monster mechanism.
+1. 19 records blocked by a real monster mechanism.
 2. 28 records excluded from Orc Cave by Camelot, another dedicated dungeon,
    wilderness/ocean, or fixed-unique location scope; 10 remain globally imported.
 3. Generic dungeon loot, guardian 1185, and the final object/ego reward.

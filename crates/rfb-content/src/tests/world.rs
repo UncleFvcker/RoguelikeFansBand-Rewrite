@@ -592,7 +592,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         .iter()
         .filter(|actor| actor.tags.iter().any(|tag| tag == "orc-cave"))
         .collect::<Vec<_>>();
-    assert_eq!(orc_cave.len(), 176);
+    assert_eq!(orc_cave.len(), 179);
 
     for id in [
         "demo.actor.bunyip",
@@ -638,7 +638,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
     }
     assert_eq!(
         level_counts,
-        [15, 13, 11, 16, 23, 14, 17, 17, 17, 16, 7, 10]
+        [15, 14, 11, 16, 24, 15, 17, 17, 17, 16, 7, 10]
     );
 
     let mouse = artifact
@@ -3019,6 +3019,41 @@ fn orc_cave_small_casting_mechanics_reuse_jump_and_category_summons() {
             .and_then(|drop| drop.theme_table_id.as_deref()),
         Some("demo.loot-table.ninja")
     );
+}
+
+#[test]
+fn orc_cave_vampiric_melee_stays_physical_and_unarmored() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actor = |id: &str| {
+        artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == format!("demo.actor.{id}"))
+            .unwrap_or_else(|| panic!("{id} should be imported"))
+    };
+
+    for id in ["vampiric-mist", "black", "vampiric-ixitxachitl"] {
+        let vampiric = actor(id)
+            .melee_routine
+            .as_ref()
+            .into_iter()
+            .flat_map(|routine| &routine.blows)
+            .flat_map(|blow| &blow.effects)
+            .filter(|effect| {
+                matches!(
+                    effect,
+                    MeleeBlowEffectDefinition::Damage {
+                        damage_type: ActorDamageType::Physical,
+                        armor_mitigated: false,
+                        vampiric: true,
+                        ..
+                    }
+                )
+            })
+            .count();
+        assert!(vampiric > 0, "{id} should retain its VAMP blow");
+    }
 }
 
 #[test]
