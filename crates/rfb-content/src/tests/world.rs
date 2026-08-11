@@ -130,6 +130,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             .into_iter()
             .collect::<BTreeSet<_>>()
     );
+    assert!(policy.preferred_tags.is_empty());
     assert_eq!(policy.special_div, 16);
     assert_eq!(policy.ambient_chance_one_in, 160);
 
@@ -692,6 +693,33 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             vec![60]
         );
     }
+}
+
+#[test]
+fn global_monster_allocation_accepts_known_actor_tags() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let mut content = artifact.content.clone();
+    let allocation = content
+        .encounter_tables
+        .iter_mut()
+        .find(|table| table.id == "demo.encounter-table.warrens")
+        .and_then(|table| table.global_allocation.as_mut())
+        .expect("Warrens global allocation policy");
+    allocation.preferred_glyphs.clear();
+    allocation.preferred_tags = vec!["animal".to_owned()];
+    validate_and_normalize(&mut content).expect("known actor tag should be accepted");
+
+    let allocation = content
+        .encounter_tables
+        .iter_mut()
+        .find(|table| table.id == "demo.encounter-table.warrens")
+        .and_then(|table| table.global_allocation.as_mut())
+        .expect("Warrens global allocation policy");
+    allocation.preferred_tags = vec!["missing-monster-tag".to_owned()];
+    assert!(matches!(
+        validate_and_normalize(&mut content),
+        Err(ContentError::InvalidEncounterTable(_))
+    ));
 }
 
 #[test]

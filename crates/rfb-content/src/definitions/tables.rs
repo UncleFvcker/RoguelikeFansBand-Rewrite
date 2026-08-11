@@ -96,6 +96,8 @@ pub struct EncounterTableDefinition {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct GlobalMonsterAllocationDefinition {
     pub preferred_glyphs: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub preferred_tags: Vec<String>,
     /// Weight numerator over the original fixed denominator of 64.
     pub special_div: u8,
     pub ambient_chance_one_in: u16,

@@ -210,6 +210,12 @@
           },
           "type": "array"
         },
+        "preferredTags": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
         "specialDiv": {
           "description": "Weight numerator over the original fixed denominator of 64.",
           "format": "uint8",

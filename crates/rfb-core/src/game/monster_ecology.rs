@@ -940,6 +940,7 @@ impl Game {
         let terrain = self.terrain.clone();
         let group_policy = GlobalMonsterAllocationDefinition {
             preferred_glyphs: Vec::new(),
+            preferred_tags: Vec::new(),
             special_div: 64,
             ambient_chance_one_in: 1,
         };
@@ -1133,6 +1134,10 @@ impl Game {
             .preferred_glyphs
             .iter()
             .any(|glyph| glyph == &definition.glyph)
+            || policy
+                .preferred_tags
+                .iter()
+                .any(|tag| definition.tags.contains(tag))
         {
             return base;
         }

@@ -11,8 +11,9 @@ use crate::{
 };
 
 use super::shared::{
-    insert_definition_id, require_actor_role, require_format_version, require_reference,
-    require_schema, validate_definition_id, validate_glyph, validate_id, validate_message_key,
+    insert_definition_id, normalize_tags, require_actor_role, require_format_version,
+    require_reference, require_schema, validate_definition_id, validate_glyph, validate_id,
+    validate_message_key,
 };
 
 pub(super) struct TableDefinitions<'a> {
@@ -29,6 +30,7 @@ pub(super) struct TableValidationRefs<'a> {
     pub(super) affix_ids: &'a BTreeSet<String>,
     pub(super) actor_loot_table_ids: Vec<(String, String)>,
     pub(super) actor_roles: &'a BTreeMap<String, ActorRole>,
+    pub(super) actor_tag_values: &'a BTreeSet<String>,
     pub(super) actor_levels: &'a BTreeMap<String, u32>,
     pub(super) terrain_ids: &'a BTreeSet<String>,
     pub(super) terrain_walkability: &'a BTreeMap<String, bool>,
@@ -56,6 +58,7 @@ pub(super) fn validate_tables(
         affix_ids,
         actor_loot_table_ids,
         actor_roles,
+        actor_tag_values,
         actor_levels,
         terrain_ids,
         terrain_walkability,
@@ -184,13 +187,19 @@ pub(super) fn validate_tables(
         }
         if let Some(allocation) = &mut table.global_allocation {
             allocation.preferred_glyphs.sort();
+            normalize_tags(&table.id, &mut allocation.preferred_tags)?;
             let mut glyphs = BTreeSet::new();
             if !table.entries.is_empty()
-                || allocation.preferred_glyphs.is_empty()
+                || (allocation.preferred_glyphs.is_empty() && allocation.preferred_tags.is_empty())
                 || allocation.preferred_glyphs.len() > 64
+                || allocation.preferred_tags.len() > 64
                 || allocation.special_div > 64
                 || allocation.ambient_chance_one_in == 0
                 || allocation.ambient_chance_one_in > 10_000
+                || allocation
+                    .preferred_tags
+                    .iter()
+                    .any(|tag| !actor_tag_values.contains(tag))
                 || allocation.preferred_glyphs.iter().any(|glyph| {
                     validate_glyph(&table.id, glyph).is_err() || !glyphs.insert(glyph.clone())
                 })

@@ -324,6 +324,33 @@ fn non_preferred_glyph_uses_original_monster_div_sixteen_weight() {
 }
 
 #[test]
+fn preferred_glyph_or_tag_uses_full_original_weight_without_rng() {
+    let mut game = enter_warrens(2);
+    let mut policy = game
+        .content
+        .encounter_table("demo.encounter-table.warrens")
+        .and_then(|table| table.global_allocation.as_ref())
+        .expect("Warrens global allocation policy")
+        .clone();
+    policy.preferred_tags = vec!["animal".to_owned()];
+    let mut actor = game
+        .content
+        .actor("demo.actor.newt")
+        .expect("Newt definition")
+        .clone();
+    actor.glyph = "o".to_owned();
+    let draws_before = game.rng.draw_counter;
+
+    assert_eq!(game.original_dungeon_weight(&actor, &policy), 100);
+    assert_eq!(game.rng.draw_counter, draws_before);
+
+    actor.glyph = "R".to_owned();
+    actor.tags.clear();
+    assert_eq!(game.original_dungeon_weight(&actor, &policy), 100);
+    assert_eq!(game.rng.draw_counter, draws_before);
+}
+
+#[test]
 fn warg_friend_count_uses_three_d_three_including_the_leader() {
     let mut game = enter_warrens(4);
     let warg = game
