@@ -6647,8 +6647,8 @@ fn death_first_book_json(ability_ids: &[String]) -> serde_json::Value {
         "$schema": format!("{SCHEMA_BASE}/ability-book.schema.json"),
         "formatVersion": 1,
         "id": DEATH_FIRST_BOOK_ID,
-        "nameKey": "ability-book-legacy-death-stench-of-death-name",
-        "descriptionKey": "ability-book-legacy-death-stench-of-death-description",
+        "nameKey": "ability-book-legacy-death-black-prayers-name",
+        "descriptionKey": "ability-book-legacy-death-black-prayers-description",
         "realmId": "death",
         "rank": 1,
         "abilityIds": ability_ids,
@@ -6661,8 +6661,8 @@ fn death_second_book_json(ability_ids: &[String]) -> serde_json::Value {
         "$schema": format!("{SCHEMA_BASE}/ability-book.schema.json"),
         "formatVersion": 1,
         "id": DEATH_SECOND_BOOK_ID,
-        "nameKey": "ability-book-legacy-death-sepulchral-ways-name",
-        "descriptionKey": "ability-book-legacy-death-sepulchral-ways-description",
+        "nameKey": "ability-book-legacy-death-black-mass-name",
+        "descriptionKey": "ability-book-legacy-death-black-mass-description",
         "realmId": "death",
         "rank": 2,
         "abilityIds": ability_ids,
@@ -8510,13 +8510,13 @@ pub struct ContentImportOutcome {
 const LEGACY_RESOURCE_ID: &str = "rfb-legacy.resource.essence";
 const LEGACY_MANA_RESOURCE_ID: &str = "rfb-legacy.resource.mana";
 const DEATH_REALM_INDEX: u8 = 4;
-const DEATH_BOOK_TVAL: u16 = 100;
+const DEATH_BOOK_TVAL: u16 = 94;
 const DEATH_FIRST_BOOK_SVAL: u16 = 0;
 const DEATH_SECOND_BOOK_SVAL: u16 = 1;
 const DEATH_THIRD_BOOK_SVAL: u16 = 2;
 const DEATH_FOURTH_BOOK_SVAL: u16 = 3;
-const DEATH_FIRST_BOOK_ID: &str = "rfb-legacy.ability-book.death-stench-of-death";
-const DEATH_SECOND_BOOK_ID: &str = "rfb-legacy.ability-book.death-sepulchral-ways";
+const DEATH_FIRST_BOOK_ID: &str = "rfb-legacy.ability-book.death-black-prayers";
+const DEATH_SECOND_BOOK_ID: &str = "rfb-legacy.ability-book.death-black-mass";
 const DEATH_THIRD_BOOK_ID: &str = "rfb-legacy.ability-book.death-black-channels";
 const DEATH_FOURTH_BOOK_ID: &str = "rfb-legacy.ability-book.death-necronomicon";
 const LEGACY_VAMPIRE_LORD_RACE_ID: &str = "rfb-legacy.race.vampire-lord-form";
@@ -9979,7 +9979,7 @@ fn convert_content_from(
         report.player_abilities_imported += ability_ids.len();
         report.player_ability_books_imported += 1;
         ability_book_files.push((
-            "death-stench-of-death.json".to_owned(),
+            "death-black-prayers.json".to_owned(),
             death_first_book_json(&ability_ids),
         ));
     }
@@ -9988,7 +9988,7 @@ fn convert_content_from(
         report.player_abilities_imported += ability_ids.len();
         report.player_ability_books_imported += 1;
         ability_book_files.push((
-            "death-sepulchral-ways.json".to_owned(),
+            "death-black-mass.json".to_owned(),
             death_second_book_json(&ability_ids),
         ));
     }
@@ -15401,29 +15401,39 @@ F:BRAND_VAMP | HOLD_LIFE
     }
 
     #[test]
-    fn death_third_physical_book_maps_to_black_channels() {
-        let item = LegacyItemEntry {
-            tval: DEATH_BOOK_TVAL,
-            sval: DEATH_THIRD_BOOK_SVAL,
-            ..LegacyItemEntry::default()
-        };
+    fn death_physical_books_use_the_master_tval_without_capturing_necromancy() {
         assert_eq!(
-            player_ability_book_for_item(&item),
-            Some(DEATH_THIRD_BOOK_ID)
+            death_first_book_json(&[])["nameKey"],
+            "ability-book-legacy-death-black-prayers-name"
         );
-    }
+        assert_eq!(
+            death_second_book_json(&[])["nameKey"],
+            "ability-book-legacy-death-black-mass-name"
+        );
 
-    #[test]
-    fn death_fourth_physical_book_maps_to_necronomicon() {
-        let item = LegacyItemEntry {
-            tval: DEATH_BOOK_TVAL,
-            sval: DEATH_FOURTH_BOOK_SVAL,
-            ..LegacyItemEntry::default()
-        };
-        assert_eq!(
-            player_ability_book_for_item(&item),
-            Some(DEATH_FOURTH_BOOK_ID)
-        );
+        for (sval, expected_book_id) in [
+            (DEATH_FIRST_BOOK_SVAL, DEATH_FIRST_BOOK_ID),
+            (DEATH_SECOND_BOOK_SVAL, DEATH_SECOND_BOOK_ID),
+            (DEATH_THIRD_BOOK_SVAL, DEATH_THIRD_BOOK_ID),
+            (DEATH_FOURTH_BOOK_SVAL, DEATH_FOURTH_BOOK_ID),
+        ] {
+            let death_book = LegacyItemEntry {
+                tval: DEATH_BOOK_TVAL,
+                sval,
+                ..LegacyItemEntry::default()
+            };
+            assert_eq!(
+                player_ability_book_for_item(&death_book),
+                Some(expected_book_id)
+            );
+
+            let necromancy_book = LegacyItemEntry {
+                tval: 100,
+                sval,
+                ..LegacyItemEntry::default()
+            };
+            assert_eq!(player_ability_book_for_item(&necromancy_book), None);
+        }
     }
 
     #[test]
