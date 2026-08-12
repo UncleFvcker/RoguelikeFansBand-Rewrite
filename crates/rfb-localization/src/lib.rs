@@ -330,6 +330,25 @@ mod tests {
     }
 
     #[test]
+    fn trouble_at_home_uses_authoritative_chinese_names() {
+        let localizer = Localizer::new(Locale::ZhCn).expect("resources should load");
+        for (key, expected) in [
+            ("task-demo-trouble-at-home-name", "家里的麻烦 (前哨镇)"),
+            ("actor-demo-mean-looking-mercenary-name", "面相凶狠的雇佣兵"),
+            ("actor-demo-singing-happy-drunk-name", "快乐唱歌的醉汉"),
+            ("item-demo-piece-of-elvish-waybread-name", "精灵干粮"),
+            ("item-demo-booze-potion-name", "烈酒"),
+        ] {
+            assert_eq!(
+                localizer
+                    .format_exact(Locale::ZhCn, key, None)
+                    .expect("Trouble at Home name should format"),
+                expected
+            );
+        }
+    }
+
+    #[test]
     fn all_item_affix_and_artifact_names_have_exact_matching_messages() {
         let pack = Path::new(env!("CARGO_MANIFEST_DIR"))
             .parent()

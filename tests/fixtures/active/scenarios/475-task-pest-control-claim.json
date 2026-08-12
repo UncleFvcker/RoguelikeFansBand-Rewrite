@@ -969,6 +969,13 @@
           "required": 1,
           "stage": 1,
           "stages": 1
+        },
+        {
+          "taskId": "demo.task.trouble-at-home",
+          "status": "available",
+          "required": 5,
+          "stage": 1,
+          "stages": 1
         }
       ],
       "campaign": {
@@ -977,7 +984,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 2
       },
-      "stateHash": "0acddfd8f0c41040c218978c4ce6401f8d759d198cae6938d4df447a480cf7fe"
+      "stateHash": "02bcc8c9503cb80ca11351e9f933eb2222a74447cc9e7911c49f8ddf8f5fb906"
     },
     "events": [
       {

@@ -549,3 +549,11 @@ contract-v265 / 包 1.256.0 将 `TaskRewardDefinition` 的固定物品替换为�
 `entries`，并允许按 `classId` 提供覆盖列表。每个条目包含物品、数量、权重和可选固定
 `affixIds`；任务仍只拥有一个固定实例 ID。单条目不消耗选择 RNG，多条目只消耗一次。
 盗贼藏身处归还伯爵府，白马旅店任务服务暂留空列表，等待其独立任务链。
+
+contract-v266 / 包 1.257.0 接入白马旅店 quest 50“家里的麻烦”。38×17 固定地图保留
+5 名目标雇佣兵、7 名非目标醉汉、一个受限随机怪物、固定物品与一次二元物品乱序；
+`InlineFloorMapDefinition` 只增加 `itemSpawns` 和 `scrambledItemPair` 两个窄字段。
+当前 Human/Warrior 的专属奖励为镶钉皮手套，烈酒使用独立效果复刻当前身份可观察的
+混乱、幻觉、失忆与传送分支。包包含 71 种地形、647 种 actor 和 258 种物品，内容
+hash 为 `824828fff84a945b868acb37c48781adc0ab9d7ad8fd3f52beb7cfa3fd5b2c46`。
+协议保持 1.175，State Hash Schema 保持 v87。

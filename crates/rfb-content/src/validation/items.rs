@@ -70,6 +70,7 @@ pub(crate) fn valid_item_effect(
             life_force_amount,
         } => (1..=1_000_000).contains(healing_amount) && (1..=1_000).contains(life_force_amount),
         ItemUseEffectDefinition::RestoreAllAttributes
+        | ItemUseEffectDefinition::ApplyBooze
         | ItemUseEffectDefinition::DrainAttribute { .. }
         | ItemUseEffectDefinition::RestoreAttribute { .. }
         | ItemUseEffectDefinition::IncreaseAttribute { .. }
@@ -567,6 +568,7 @@ pub(super) fn validate_items(
                     | ItemUseEffectDefinition::RestoreAllVitality { .. }
                     | ItemUseEffectDefinition::ApplyRestorativeFeast { .. }
                     | ItemUseEffectDefinition::ApplyElvishWaybread { .. }
+                    | ItemUseEffectDefinition::ApplyBooze
                     | ItemUseEffectDefinition::ApplyFastRecovery
                     | ItemUseEffectDefinition::ApplyLifeRestoration { .. }
                     | ItemUseEffectDefinition::DrainAttribute { .. }

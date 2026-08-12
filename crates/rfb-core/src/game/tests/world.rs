@@ -116,6 +116,8 @@ fn game_with_second_town(seed: u64) -> (Game, Position) {
             },
         ],
         actor_spawns: Vec::new(),
+        item_spawns: Vec::new(),
+        scrambled_item_pair: None,
         loot_spawns: Vec::new(),
         monster_formation: None,
     });
@@ -334,6 +336,173 @@ fn thieves_hideout_inline_floor_preserves_the_fixed_map_and_six_member_formation
         selected_order.windows(2).all(|pair| {
             pair[0].0 > pair[1].0 || pair[0].0 == pair[1].0 && pair[0].1 <= pair[1].1
         })
+    );
+}
+
+#[test]
+fn trouble_at_home_inline_floor_preserves_map_spawns_and_two_item_scramble() {
+    let mut game =
+        Game::new_with_build(42, "demo.build.warrior").expect("Warrens journey should create");
+    let definition = game
+        .content
+        .world(&game.world_id)
+        .expect("Middle-earth world should remain available")
+        .procedural_floors
+        .iter()
+        .find(|floor| floor.id == "demo.floor.trouble-at-home")
+        .expect("Trouble at Home should remain available")
+        .clone();
+    game.rng = RfbRng::seeded(42);
+    let floor = game
+        .generate_procedural_floor(&definition, None)
+        .expect("fixed Trouble at Home floor should generate");
+
+    let rows = floor
+        .terrain
+        .chunks(usize::from(floor.width))
+        .map(|row| {
+            row.iter()
+                .map(|terrain_id| match terrain_id.as_str() {
+                    "demo.terrain.permanent-wall" => '#',
+                    "demo.terrain.floor" => '.',
+                    "demo.terrain.door-closed" => '+',
+                    "demo.terrain.stairs-up" => '<',
+                    other => panic!("unexpected Trouble at Home terrain {other}"),
+                })
+                .collect::<String>()
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(
+        rows,
+        [
+            "######################################",
+            "#............#....#.......#..........#",
+            "#............+....+.......#..........#",
+            "#............#....#########..........#",
+            "##############....#..................#",
+            "#............#....#############++++###",
+            "#............+.......................#",
+            "#............#.......................#",
+            "##############.....##.....##.....##..#",
+            "#............#.....##.....##.....##..#",
+            "#............+.......................#",
+            "#............#.......................#",
+            "##############.....##.....##.....##..#",
+            "#............#.....##.....##.....##..#",
+            "#............+.......................#",
+            "#............#...........<...........#",
+            "######################################",
+        ]
+    );
+    assert_eq!(floor.player_position, Position { x: 25, y: 15 });
+    assert_eq!(floor.entities.len(), 13);
+
+    let fixed_actors = floor
+        .entities
+        .iter()
+        .filter(|entity| entity.id != "demo.floor.trouble-at-home.formation.1")
+        .map(|entity| (entity.kind_id.as_str(), entity.position))
+        .collect::<BTreeSet<_>>();
+    assert_eq!(
+        fixed_actors,
+        [
+            (
+                "demo.actor.mean-looking-mercenary",
+                Position { x: 21, y: 8 }
+            ),
+            (
+                "demo.actor.mean-looking-mercenary",
+                Position { x: 28, y: 8 }
+            ),
+            (
+                "demo.actor.mean-looking-mercenary",
+                Position { x: 35, y: 8 }
+            ),
+            (
+                "demo.actor.mean-looking-mercenary",
+                Position { x: 28, y: 12 }
+            ),
+            (
+                "demo.actor.mean-looking-mercenary",
+                Position { x: 35, y: 12 }
+            ),
+            ("demo.actor.singing-happy-drunk", Position { x: 3, y: 2 }),
+            ("demo.actor.singing-happy-drunk", Position { x: 3, y: 6 }),
+            ("demo.actor.singing-happy-drunk", Position { x: 21, y: 9 }),
+            ("demo.actor.singing-happy-drunk", Position { x: 35, y: 9 }),
+            ("demo.actor.singing-happy-drunk", Position { x: 25, y: 12 }),
+            ("demo.actor.singing-happy-drunk", Position { x: 32, y: 12 }),
+            ("demo.actor.singing-happy-drunk", Position { x: 28, y: 13 }),
+        ]
+        .into_iter()
+        .collect()
+    );
+    assert_eq!(
+        floor
+            .entities
+            .iter()
+            .find(|entity| entity.id == "demo.floor.trouble-at-home.formation.1")
+            .expect("the random monster should be generated")
+            .position,
+        Position { x: 6, y: 10 }
+    );
+
+    let fixed_waybread = floor
+        .items
+        .iter()
+        .filter(|item| item.id.starts_with("demo.item.trouble-at-home.waybread."))
+        .filter_map(|item| match item.location {
+            ItemLocation::Ground(position) => Some(position),
+            _ => None,
+        })
+        .collect::<BTreeSet<_>>();
+    assert_eq!(
+        fixed_waybread,
+        BTreeSet::from([
+            Position { x: 23, y: 1 },
+            Position { x: 24, y: 1 },
+            Position { x: 23, y: 2 },
+            Position { x: 24, y: 2 },
+        ])
+    );
+
+    let mut scramble_only = definition.clone();
+    let inline_map = scramble_only
+        .inline_map
+        .as_mut()
+        .expect("Trouble at Home should retain its inline map");
+    inline_map.actor_spawns.clear();
+    inline_map.monster_formation = None;
+    inline_map.loot_spawns.clear();
+    let mut mappings = BTreeSet::new();
+    for seed in 0..64 {
+        game.rng = RfbRng::seeded(seed);
+        let generated = game
+            .generate_procedural_floor(&scramble_only, None)
+            .expect("isolated item scramble should generate");
+        assert_eq!(game.rng.draw_counter, 1);
+        let position = |id: &str| {
+            generated
+                .items
+                .iter()
+                .find(|item| item.id == id)
+                .and_then(|item| match item.location {
+                    ItemLocation::Ground(position) => Some(position),
+                    _ => None,
+                })
+                .expect("scrambled item should be on the floor")
+        };
+        mappings.insert((
+            position("demo.item.trouble-at-home.boldness.1"),
+            position("demo.item.trouble-at-home.booze.1"),
+        ));
+    }
+    assert_eq!(
+        mappings,
+        BTreeSet::from([
+            (Position { x: 25, y: 1 }, Position { x: 25, y: 2 }),
+            (Position { x: 25, y: 2 }, Position { x: 25, y: 1 }),
+        ])
     );
 }
 

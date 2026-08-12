@@ -338,7 +338,10 @@ fn white_horse_inn_uses_its_content_price() {
         .find(|service| service.id == "demo.town-facility.outpost-white-horse")
         .expect("White Horse should expose its task service at the inn entrance");
     assert!(service.player_at_entrance);
-    assert!(service.tasks.is_empty());
+    assert_eq!(
+        service.tasks.first().map(|task| task.task_id.as_str()),
+        Some("demo.task.trouble-at-home")
+    );
 
     let update = dispatch_next(
         &mut game,

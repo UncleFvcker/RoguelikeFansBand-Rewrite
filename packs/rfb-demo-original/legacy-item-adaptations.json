@@ -100,6 +100,7 @@
     { "sourceIndex": 403, "sourceName": "Slowness:Metallic Blue", "sourceId": "slowness-metallic-blue", "itemId": "demo.item.slowness-potion", "status": "active", "contract": "contract-v133-potion-slowness" },
     { "sourceIndex": 405, "sourceName": "Poison:Light Green", "sourceId": "poison-light-green", "itemId": "demo.item.venom-draught", "status": "active", "contract": "contract-v135-potion-poison" },
     { "sourceIndex": 406, "sourceName": "Blindness:Indigo", "sourceId": "blindness-indigo", "itemId": "demo.item.veil-draught", "status": "active", "contract": "contract-v144-potion-blindness" },
+    { "sourceIndex": 407, "sourceName": "Booze:Light Blue", "sourceId": "booze-light-blue", "itemId": "demo.item.booze-potion", "status": "active", "adaptation": "floor-memory-only:no-virtue-or-monk-suiken-system", "contract": "contract-v266-trouble-at-home" },
     { "sourceIndex": 408, "sourceName": "Sleep:Hazy", "sourceId": "sleep-hazy", "itemId": "demo.item.sleep-potion", "status": "active", "contract": "phase-19-p3-1-food-status" },
     { "sourceIndex": 409, "sourceName": "Lose Memories:Orange", "sourceId": "lose-memories-orange", "itemId": "demo.item.lose-memories-potion", "status": "active", "contract": "phase-19-p3-2-low-coupling-potions" },
     { "sourceIndex": 410, "sourceName": "Ruination:Pungent", "sourceId": "ruination-pungent", "itemId": "demo.item.ruination-potion", "status": "active", "contract": "phase-19-p3-2-low-coupling-potions" },

@@ -3,6 +3,145 @@ use super::support::*;
 use super::*;
 
 #[test]
+fn booze_applies_original_confusion_hallucination_and_blackout_ranges() {
+    let mut saw_hallucination = false;
+    let mut saw_clear_head = false;
+    let mut saw_blackout = false;
+    for seed in 0..256 {
+        let mut game = Game::new_with_build(seed, "demo.build.warrior")
+            .expect("Warrens journey should create");
+        clear_monsters(&mut game);
+        game.rng = RfbRng::seeded(seed);
+        game.explored.fill(true);
+        let origin = game.player.position;
+        game.resolve_item_booze(
+            "demo.item.booze-potion",
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+        );
+
+        let confusion = game
+            .player
+            .statuses
+            .iter()
+            .find(|status| status.kind_id == STATUS_CONFUSION)
+            .expect("an unresisted drink should always confuse a Warrior");
+        assert!((160..=350).contains(&confusion.remaining_ticks));
+        if let Some(hallucination) = game
+            .player
+            .statuses
+            .iter()
+            .find(|status| status.kind_id == STATUS_HALLUCINATION)
+        {
+            assert!((260..=500).contains(&hallucination.remaining_ticks));
+            saw_hallucination = true;
+        } else {
+            saw_clear_head = true;
+        }
+        if game.player.position != origin {
+            assert!(game.explored.iter().all(|explored| !explored));
+            saw_blackout = true;
+        }
+    }
+    assert!(saw_hallucination && saw_clear_head && saw_blackout);
+}
+
+#[test]
+fn booze_keeps_a_longer_existing_confusion_duration() {
+    let mut game =
+        Game::new_with_build(0, "demo.build.warrior").expect("Warrens journey should create");
+    game.player.statuses.push(StatusInstance {
+        kind_id: STATUS_CONFUSION.to_owned(),
+        remaining_ticks: 10_000,
+        intensity: 1,
+        source_id: Some("test.existing-confusion".to_owned()),
+        granted_resistances: BTreeMap::new(),
+        granted_brands: BTreeSet::new(),
+        granted_modifiers: StatModifiersDto::default(),
+        granted_equipment_bonuses: EquipmentBonusesDto::default(),
+        granted_status_immunities: BTreeSet::new(),
+        granted_race_id: None,
+        grants_wall_passage: false,
+        incoming_damage_percent: 100,
+    });
+
+    game.resolve_item_booze(
+        "demo.item.booze-potion",
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+    );
+
+    let confusion = game
+        .player
+        .statuses
+        .iter()
+        .find(|status| status.kind_id == STATUS_CONFUSION)
+        .expect("existing confusion should remain");
+    assert_eq!(confusion.remaining_ticks, 10_000);
+    assert_eq!(
+        confusion.source_id.as_deref(),
+        Some("test.existing-confusion")
+    );
+}
+
+#[test]
+fn booze_refreshes_existing_statuses_without_identifying_itself() {
+    let mut verified = false;
+    for seed in 0..256 {
+        let mut game = Game::new_with_build(seed, "demo.build.warrior")
+            .expect("Warrens journey should create");
+        clear_monsters(&mut game);
+        game.rng = RfbRng::seeded(seed);
+        game.mark_item_tried("demo.item.booze-potion");
+        for status_kind_id in [STATUS_CONFUSION, STATUS_HALLUCINATION] {
+            game.player.statuses.push(StatusInstance {
+                kind_id: status_kind_id.to_owned(),
+                remaining_ticks: 10,
+                intensity: 1,
+                source_id: Some("test.existing-status".to_owned()),
+                granted_resistances: BTreeMap::new(),
+                granted_brands: BTreeSet::new(),
+                granted_modifiers: StatModifiersDto::default(),
+                granted_equipment_bonuses: EquipmentBonusesDto::default(),
+                granted_status_immunities: BTreeSet::new(),
+                granted_race_id: None,
+                grants_wall_passage: false,
+                incoming_damage_percent: 100,
+            });
+        }
+        let mut events = Vec::new();
+        game.resolve_item_booze("demo.item.booze-potion", &mut events, &mut BTreeSet::new());
+        if events
+            .iter()
+            .any(|event| matches!(event, DomainEvent::ItemTeleported { .. }))
+        {
+            continue;
+        }
+
+        assert!(
+            game.player
+                .statuses
+                .iter()
+                .find(|status| status.kind_id == STATUS_CONFUSION)
+                .is_some_and(|status| status.remaining_ticks > 10)
+        );
+        assert!(
+            events.iter().all(|event| !matches!(
+                event,
+                DomainEvent::ItemStatusResolved { noticed: true, .. }
+            ))
+        );
+        assert_eq!(
+            game.item_knowledge_dto("demo.item.booze-potion"),
+            ItemKnowledgeDto::Tried
+        );
+        verified = true;
+        break;
+    }
+    assert!(verified, "a non-blackout booze seed should be available");
+}
+
+#[test]
 fn restorative_item_sequence_recovers_resource_then_removes_status() {
     const ITEM_ID: &str = "test.item.clarity-draught.1";
     let mut game = test_caster_game(19);

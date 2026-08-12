@@ -3600,6 +3600,18 @@
       "id": "black-reaver",
       "tags": ["outpost-quest", "royal-crypt"],
       "omittedFlags": ["POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 15,
+      "id": "singing-happy-drunk",
+      "tags": ["outpost-quest", "trouble-at-home"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 17,
+      "id": "mean-looking-mercenary",
+      "tags": ["outpost-quest", "trouble-at-home"],
+      "omittedFlags": ["MALE"]
     }
   ]
 }

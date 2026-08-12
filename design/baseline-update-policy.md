@@ -6,7 +6,7 @@
 
 contract fixture 是规则兼容边界，不能把测试失败简单处理为“刷新预期结果”。政策用于保证每次规则变化只修改真正受影响的场景，同时保留可审查的失败原因。
 
-当前逻辑基线是 `contract-v265`，机器可读政策固定在：
+当前逻辑基线是 `contract-v266`，机器可读政策固定在：
 
 ```text
 tests/fixtures/active/baseline-policy.json
@@ -24,6 +24,12 @@ fixture；同时删除节奏技法与原创装置师职业充能的内容、协�
 `contract-v265` 将盗贼藏身处任务归还伯爵府，并为任务奖励建立默认加权列表、按
 `classId` 覆盖和固定 affix 列表。单条目奖励保持零额外选择 RNG；Protocol 1.175、
 State Hash Schema v87 与 save v1 均不变，内容包升级到 1.256.0。
+
+`contract-v266` 接入白马旅店 quest 50“家里的麻烦”，增加其固定任务层、目标编队、
+固定/二元乱序物品、烈酒效果和当前 Warrior 的权威奖励。Protocol 1.175、State Hash
+Schema v87 与 save v1 均不变，内容包升级到 1.257.0。任务入口替换改变所有新游戏共有
+的 Outpost 初始地形及状态哈希，因此统一刷新 21 条 active fixture；active 集保持
+21 条且零 waiver。
 
 ## 分类验证
 

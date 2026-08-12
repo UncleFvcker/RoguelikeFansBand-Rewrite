@@ -423,10 +423,10 @@ fn task_rewards_use_one_weighted_default_choice_and_class_affix_overrides() {
 }
 
 #[test]
-fn accepting_thieves_hideout_at_the_count_opens_only_its_northeastern_entry() {
+fn accepting_thieves_hideout_at_the_count_opens_its_count_district_entry() {
     let mut game =
         Game::new_with_build(42, "demo.build.warrior").expect("Warrens journey should create");
-    let entry = Position { x: 63, y: 11 };
+    let entry = Position { x: 30, y: 9 };
     assert_eq!(
         game.terrain_at(entry),
         "demo.terrain.thieves-hideout-entry-available"
@@ -450,6 +450,124 @@ fn accepting_thieves_hideout_at_the_count_opens_only_its_northeastern_entry() {
 }
 
 #[test]
+fn trouble_at_home_runs_from_white_horse_targets_only_mercenaries_and_rewards_warrior() {
+    let mut game =
+        Game::new_with_build(142, "demo.build.warrior").expect("Warrens journey should create");
+    let entry = Position { x: 63, y: 11 };
+    assert_eq!(
+        game.terrain_at(entry),
+        "demo.terrain.trouble-at-home-entry-available"
+    );
+    game.player.position = Position { x: 63, y: 13 };
+    dispatch_next(
+        &mut game,
+        GameCommand::AcceptTask {
+            facility_id: "demo.town-facility.outpost-white-horse".to_owned(),
+            task_id: "demo.task.trouble-at-home".to_owned(),
+        },
+    );
+    assert_eq!(
+        game.task_states["demo.task.trouble-at-home"].status,
+        TaskStatusKindDto::Taken
+    );
+    assert_eq!(game.terrain_at(entry), "demo.terrain.trouble-at-home-entry");
+
+    game.player.position = entry;
+    dispatch_next(&mut game, GameCommand::TraverseStairs);
+    assert_eq!(game.current_floor_id, "demo.floor.trouble-at-home");
+    assert_eq!(game.entities.len(), 13);
+    assert_eq!(
+        game.entities
+            .iter()
+            .filter(|actor| actor.kind_id == "demo.actor.mean-looking-mercenary")
+            .count(),
+        5
+    );
+    assert_eq!(
+        game.entities
+            .iter()
+            .filter(|actor| actor.kind_id == "demo.actor.singing-happy-drunk")
+            .count(),
+        7
+    );
+    assert_eq!(
+        game.items
+            .iter()
+            .filter(|item| item.id.starts_with("demo.item.trouble-at-home.waybread."))
+            .count(),
+        4
+    );
+    let scrambled_positions = game
+        .items
+        .iter()
+        .filter(|item| {
+            matches!(
+                item.id.as_str(),
+                "demo.item.trouble-at-home.boldness.1" | "demo.item.trouble-at-home.booze.1"
+            )
+        })
+        .filter_map(|item| match item.location {
+            ItemLocation::Ground(position) => Some(position),
+            _ => None,
+        })
+        .collect::<BTreeSet<_>>();
+    assert_eq!(
+        scrambled_positions,
+        BTreeSet::from([Position { x: 25, y: 1 }, Position { x: 25, y: 2 }])
+    );
+
+    let targets = game
+        .entities
+        .iter()
+        .filter(|actor| actor.kind_id == "demo.actor.mean-looking-mercenary")
+        .map(|actor| ActorDeathRecord {
+            actor_id: actor.id.clone(),
+            actor_kind_id: actor.kind_id.clone(),
+            position: actor.position,
+            credit_player: true,
+        })
+        .collect::<Vec<_>>();
+    game.entities
+        .retain(|actor| actor.kind_id != "demo.actor.mean-looking-mercenary");
+    game.command_actor_deaths.extend(targets);
+    let mut events = Vec::new();
+    game.apply_task_events(&mut events)
+        .expect("five mercenary deaths should complete Trouble at Home");
+    assert_eq!(
+        game.task_states["demo.task.trouble-at-home"].status,
+        TaskStatusKindDto::RewardAvailable
+    );
+    assert_eq!(game.entities.len(), 8);
+
+    game.player.position = Position { x: 25, y: 15 };
+    dispatch_next(&mut game, GameCommand::TraverseStairs);
+    assert_eq!(game.current_floor_id, wilderness::WILDERNESS_FLOOR_ID);
+    assert_eq!(
+        game.terrain_at(entry),
+        "demo.terrain.trouble-at-home-entry-completed"
+    );
+    game.player.position = Position { x: 63, y: 13 };
+    let before_draws = game.rng_draw_counter();
+    dispatch_next(
+        &mut game,
+        GameCommand::ClaimTaskReward {
+            facility_id: "demo.town-facility.outpost-white-horse".to_owned(),
+            task_id: "demo.task.trouble-at-home".to_owned(),
+        },
+    );
+    assert_eq!(
+        game.task_states["demo.task.trouble-at-home"].status,
+        TaskStatusKindDto::Completed
+    );
+    assert_eq!(game.rng_draw_counter(), before_draws);
+    assert!(game.items.iter().any(|item| {
+        item.id == "demo.task.trouble-at-home.reward.1"
+            && item.kind_id == "demo.item.set-of-studded-leather-gloves"
+            && item.location == ItemLocation::Inventory
+    }));
+}
+
+#[test]
 fn clearing_thieves_hideout_closes_the_floor_without_granting_the_reward() {
     let mut game =
         Game::new_with_build(43, "demo.build.warrior").expect("Warrens journey should create");
@@ -461,7 +579,7 @@ fn clearing_thieves_hideout_closes_the_floor_without_granting_the_reward() {
             task_id: "demo.task.thieves-hideout".to_owned(),
         },
     );
-    game.player.position = Position { x: 63, y: 11 };
+    game.player.position = Position { x: 30, y: 9 };
     dispatch_next(&mut game, GameCommand::TraverseStairs);
     assert_eq!(game.current_floor_id, "demo.floor.thieves-hideout");
 
@@ -480,7 +598,7 @@ fn clearing_thieves_hideout_closes_the_floor_without_granting_the_reward() {
         TaskStatusKindDto::RewardAvailable
     );
     assert_eq!(
-        game.terrain_at(Position { x: 63, y: 11 }),
+        game.terrain_at(Position { x: 30, y: 9 }),
         "demo.terrain.thieves-hideout-entry-completed"
     );
     assert!(
@@ -509,7 +627,7 @@ fn leaving_thieves_hideout_uncleared_fails_and_closes_the_entry() {
             task_id: "demo.task.thieves-hideout".to_owned(),
         },
     );
-    game.player.position = Position { x: 63, y: 11 };
+    game.player.position = Position { x: 30, y: 9 };
     dispatch_next(&mut game, GameCommand::TraverseStairs);
     game.player.position = Position { x: 1, y: 4 };
     dispatch_next(&mut game, GameCommand::TraverseStairs);
@@ -519,7 +637,7 @@ fn leaving_thieves_hideout_uncleared_fails_and_closes_the_entry() {
         TaskStatusKindDto::Failed
     );
     assert_eq!(
-        game.terrain_at(Position { x: 63, y: 11 }),
+        game.terrain_at(Position { x: 30, y: 9 }),
         "demo.terrain.thieves-hideout-entry-failed"
     );
 }

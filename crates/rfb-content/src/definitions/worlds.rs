@@ -399,6 +399,10 @@ pub struct InlineFloorMapDefinition {
     #[serde(default)]
     pub actor_spawns: Vec<ActorSpawn>,
     #[serde(default)]
+    pub item_spawns: Vec<ItemSpawn>,
+    #[serde(default)]
+    pub scrambled_item_pair: Option<[ItemSpawn; 2]>,
+    #[serde(default)]
     pub loot_spawns: Vec<InlineFloorLootSpawnDefinition>,
     #[serde(default)]
     pub monster_formation: Option<InlineMonsterFormationDefinition>,

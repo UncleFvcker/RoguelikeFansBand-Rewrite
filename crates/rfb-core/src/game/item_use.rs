@@ -2344,6 +2344,9 @@ impl Game {
             ) => {
                 self.resolve_item_self_effect(&kind_id, &effect, events);
             }
+            (ItemUseEffectDefinition::ApplyBooze, ItemUsePlan::SelfTarget) => {
+                self.resolve_item_booze(&kind_id, events, changed);
+            }
             (ItemUseEffectDefinition::Sequence { effects }, ItemUsePlan::SelfTarget) => {
                 self.resolve_item_sequence(&kind_id, effects, events, changed)
             }
@@ -2652,6 +2655,7 @@ impl Game {
             | ItemUseEffectDefinition::RestoreAllVitality { .. }
             | ItemUseEffectDefinition::ApplyRestorativeFeast { .. }
             | ItemUseEffectDefinition::ApplyElvishWaybread { .. }
+            | ItemUseEffectDefinition::ApplyBooze
             | ItemUseEffectDefinition::ApplyFastRecovery
             | ItemUseEffectDefinition::ApplyLifeRestoration { .. }
             | ItemUseEffectDefinition::DrainAttribute { .. }
@@ -3222,18 +3226,9 @@ impl Game {
         incoming_damage_percent: u8,
         events: &mut Vec<DomainEvent>,
     ) -> bool {
-        let immunity = self.player_status_immunities().contains(status_kind_id);
-        let resistance_threshold = resistance_type.map_or(0, |damage_type| {
-            u64::try_from(
-                self.effective_player_resistances()
-                    .level(damage_type.into())
-                    .reduction_percent()
-                    .max(0),
-            )
-            .expect("status resistance threshold must be non-negative")
-        });
-        let resisted =
-            immunity || (resistance_type.is_some() && self.rng.bounded(55) < resistance_threshold);
+        let resisted = self.player_status_immunities().contains(status_kind_id)
+            || resistance_type
+                .is_some_and(|damage_type| self.item_status_resisted(damage_type, status_kind_id));
         let (duration, noticed) = if resisted {
             (None, false)
         } else {
@@ -3288,6 +3283,120 @@ impl Game {
             noticed,
         });
         noticed
+    }
+
+    fn item_status_resisted(
+        &mut self,
+        damage_type: rfb_content::ActorDamageType,
+        status_kind_id: &str,
+    ) -> bool {
+        if self.player_status_immunities().contains(status_kind_id) {
+            return true;
+        }
+        let resistance_threshold = u64::try_from(
+            self.effective_player_resistances()
+                .level(damage_type.into())
+                .reduction_percent()
+                .max(0),
+        )
+        .expect("status resistance threshold must be non-negative");
+        self.rng.bounded(55) < resistance_threshold
+    }
+
+    fn resolve_booze_status(
+        &mut self,
+        source_kind_id: &str,
+        status_kind_id: &str,
+        duration_sides: u16,
+        duration_bonus: u32,
+        stacking: StatusStacking,
+        events: &mut Vec<DomainEvent>,
+    ) {
+        let source_turns = u32::try_from(self.roll_damage(1, duration_sides))
+            .expect("booze status duration must fit u32")
+            .saturating_add(duration_bonus);
+        let duration = source_turns.saturating_add(1).saturating_mul(10);
+        let change = apply_status_application(
+            &mut self.player.statuses,
+            StatusApplication {
+                status: StatusInstance {
+                    kind_id: status_kind_id.to_owned(),
+                    intensity: 1,
+                    remaining_ticks: duration,
+                    source_id: Some(source_kind_id.to_owned()),
+                    granted_resistances: BTreeMap::new(),
+                    granted_brands: BTreeSet::new(),
+                    granted_modifiers: StatModifiersDto::default(),
+                    granted_equipment_bonuses: EquipmentBonusesDto::default(),
+                    granted_status_immunities: BTreeSet::new(),
+                    granted_race_id: None,
+                    grants_wall_passage: false,
+                    incoming_damage_percent: 100,
+                },
+                stacking,
+            },
+        )
+        .change;
+        let noticed = matches!(change, StatusChange::Added);
+        if noticed {
+            self.mark_item_aware(source_kind_id);
+        }
+        events.push(DomainEvent::ItemStatusResolved {
+            source_kind_id: source_kind_id.to_owned(),
+            display_name_key: self.item_display_name_key(source_kind_id),
+            status_kind_id: status_kind_id.to_owned(),
+            duration: Some(duration),
+            noticed,
+        });
+    }
+
+    pub(super) fn resolve_item_booze(
+        &mut self,
+        source_kind_id: &str,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        if !self.item_status_resisted(rfb_content::ActorDamageType::Confusion, STATUS_CONFUSION) {
+            self.resolve_booze_status(
+                source_kind_id,
+                STATUS_CONFUSION,
+                20,
+                14,
+                StatusStacking::KeepStrongest,
+                events,
+            );
+        }
+
+        if self.item_status_resisted(rfb_content::ActorDamageType::Chaos, STATUS_HALLUCINATION) {
+            return;
+        }
+        if self.rng.bounded(2) == 0 {
+            self.resolve_booze_status(
+                source_kind_id,
+                STATUS_HALLUCINATION,
+                25,
+                24,
+                StatusStacking::Extend,
+                events,
+            );
+        }
+
+        if self.rng.bounded(13) == 0 {
+            let _lose_all_information = self.rng.bounded(3) == 0;
+            self.mark_item_aware(source_kind_id);
+            self.clear_current_floor_memory(changed);
+            let candidates = self.random_teleport_candidates(100);
+            if !candidates.is_empty() {
+                self.resolve_item_random_teleport(
+                    source_kind_id.to_owned(),
+                    None,
+                    candidates,
+                    events,
+                    changed,
+                );
+            }
+            self.clear_current_floor_memory(changed);
+        }
     }
 
     fn resolve_item_giant_strength(
@@ -4463,6 +4572,9 @@ impl Game {
                 *healing_sides,
                 events,
             ),
+            ItemUseEffectDefinition::ApplyBooze => {
+                unreachable!("booze resolves through its map-aware executor")
+            }
             ItemUseEffectDefinition::ApplyFastRecovery => {
                 self.resolve_item_fast_recovery(source_kind_id, events)
             }

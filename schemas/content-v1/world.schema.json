@@ -354,6 +354,13 @@
           },
           "type": "array"
         },
+        "itemSpawns": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/ItemSpawn"
+          },
+          "type": "array"
+        },
         "lootSpawns": {
           "default": [],
           "items": {
@@ -374,6 +381,18 @@
         },
         "playerPosition": {
           "$ref": "#/$defs/ContentPosition"
+        },
+        "scrambledItemPair": {
+          "default": null,
+          "items": {
+            "$ref": "#/$defs/ItemSpawn"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": [
+            "array",
+            "null"
+          ]
         },
         "terrainOverrides": {
           "items": {

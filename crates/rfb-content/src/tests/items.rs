@@ -580,7 +580,7 @@ fn supported_legacy_scrolls_and_potions_keep_source_identity_and_values() {
         .collect::<Vec<_>>();
 
     assert_eq!(scrolls.len(), 59);
-    assert_eq!(potions.len(), 64);
+    assert_eq!(potions.len(), 65);
     assert!(scrolls.iter().all(|item| item.weight_tenths_pound == 5));
     assert!(potions.iter().all(|item| item.weight_tenths_pound == 4));
 
@@ -593,7 +593,7 @@ fn supported_legacy_scrolls_and_potions_keep_source_identity_and_values() {
                 .expect("supported consumables should have source flavor")
         })
         .collect::<std::collections::BTreeSet<_>>();
-    assert_eq!(appearance_keys.len(), 123);
+    assert_eq!(appearance_keys.len(), 124);
 
     let added_values = [
         ("demo.item.door-stair-location-scroll", 10),
@@ -609,6 +609,7 @@ fn supported_legacy_scrolls_and_potions_keep_source_identity_and_values() {
         ("demo.item.sickliness-potion", 0),
         ("demo.item.ugliness-potion", 0),
         ("demo.item.boldness-potion", 200),
+        ("demo.item.booze-potion", 1),
         ("demo.item.vigor-potion", 200),
         ("demo.item.cure-serious-wounds-potion", 50),
         ("demo.item.cure-critical-wounds-potion", 150),

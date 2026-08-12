@@ -7597,7 +7597,7 @@ fn monster_json(
     } else {
         (hp_dice.saturating_mul(hp_sides.saturating_add(1)) / 2).max(1)
     };
-    let level = entry.level.unwrap_or(1).max(1);
+    let level = entry.level.unwrap_or(1);
     let (damage_dice, damage_sides) = blow.and_then(blow_primary_dice).unwrap_or((1, 1));
     // Legacy type flags become category tags so summon filters can select
     // by monster class; the shared legacy-import tag doubles as "any".
@@ -12531,6 +12531,23 @@ mod tests {
         assert_eq!(actor["deathDrop"]["countDice"][0]["dice"], 1);
         assert_eq!(actor["deathDrop"]["minimumQuality"], "fine");
         assert_eq!(actor["deathDrop"]["themeChancePercent"], 50);
+    }
+
+    #[test]
+    fn monster_import_preserves_source_level_zero() {
+        let monsters =
+            parse_r_info("N:1:test townsperson\nG:t:w\nI:110:1d3:8:4:20:10\nW:0:1:0:0:0:0\n")
+                .expect("synthetic level-zero monster should parse");
+        let actor = monster_json(
+            &monsters[0],
+            "test-townsperson",
+            None,
+            "physical",
+            Some(serde_json::json!({ "blows": [] })),
+            None,
+        );
+
+        assert_eq!(actor["level"], 0);
     }
 
     #[test]

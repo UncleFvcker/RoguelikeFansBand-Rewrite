@@ -3728,6 +3728,221 @@ fn thieves_hideout_uses_the_original_fixed_map_and_formation_contract() {
 }
 
 #[test]
+fn trouble_at_home_uses_the_original_map_targets_items_and_warrior_reward() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let world = artifact
+        .content
+        .worlds
+        .iter()
+        .find(|world| world.id == "demo.world.middle-earth")
+        .expect("fixture should contain Middle-earth");
+    let task = world
+        .tasks
+        .iter()
+        .find(|task| task.id == "demo.task.trouble-at-home")
+        .expect("fixture should contain Trouble at Home");
+    assert_eq!(
+        task.source_facility_id.as_deref(),
+        Some("demo.town-facility.outpost-white-horse")
+    );
+    assert_eq!(task.objectives.len(), 1);
+    assert_eq!(task.objectives[0].kind, TaskObjectiveKind::KillActorKind);
+    assert_eq!(task.objectives[0].required, 5);
+    assert_eq!(
+        task.objectives[0].actor_kind_id.as_deref(),
+        Some("demo.actor.mean-looking-mercenary")
+    );
+    assert_eq!(
+        task.reward.entries[0].item_kind_id,
+        "demo.item.hard-studded-leather"
+    );
+    assert_eq!(
+        task.reward.class_overrides[0].class_id,
+        "demo.class.warrior"
+    );
+    assert_eq!(
+        task.reward.class_overrides[0].entries[0].item_kind_id,
+        "demo.item.set-of-studded-leather-gloves"
+    );
+
+    let floor = world
+        .procedural_floors
+        .iter()
+        .find(|floor| floor.id == "demo.floor.trouble-at-home")
+        .expect("fixture should contain the White Horse back room");
+    assert_eq!((floor.width, floor.height, floor.depth), (38, 17, 5));
+    let inline_map = floor
+        .inline_map
+        .as_ref()
+        .expect("Trouble at Home should retain its inline map");
+    assert_eq!(inline_map.player_position, ContentPosition { x: 25, y: 15 });
+    assert_eq!(inline_map.actor_spawns.len(), 12);
+    assert_eq!(
+        inline_map
+            .actor_spawns
+            .iter()
+            .filter(|spawn| spawn.kind_id == "demo.actor.mean-looking-mercenary")
+            .count(),
+        5
+    );
+    assert_eq!(
+        inline_map
+            .actor_spawns
+            .iter()
+            .filter(|spawn| spawn.kind_id == "demo.actor.singing-happy-drunk")
+            .count(),
+        7
+    );
+    for actor_id in [
+        "demo.actor.mean-looking-mercenary",
+        "demo.actor.singing-happy-drunk",
+    ] {
+        assert_eq!(
+            artifact
+                .content
+                .actors
+                .iter()
+                .find(|actor| actor.id == actor_id)
+                .unwrap_or_else(|| panic!("{actor_id} should be imported"))
+                .level,
+            0,
+            "{actor_id} should retain its source level"
+        );
+    }
+    assert_eq!(inline_map.item_spawns.len(), 4);
+    assert!(inline_map.item_spawns.iter().all(|spawn| {
+        spawn.kind_id == "demo.item.piece-of-elvish-waybread" && spawn.quantity == 1
+    }));
+    let pair = inline_map
+        .scrambled_item_pair
+        .as_ref()
+        .expect("boldness and booze should retain their two-position scramble");
+    assert_eq!(
+        pair.iter()
+            .map(|spawn| spawn.kind_id.as_str())
+            .collect::<BTreeSet<_>>(),
+        BTreeSet::from(["demo.item.boldness-potion", "demo.item.booze-potion"])
+    );
+    assert_eq!(inline_map.loot_spawns.len(), 3);
+    assert_eq!(
+        inline_map
+            .terrain_overrides
+            .iter()
+            .find(|override_| override_.terrain_id == "demo.terrain.door-closed")
+            .expect("fixed map should contain closed doors")
+            .positions
+            .len(),
+        9
+    );
+
+    let formation = inline_map
+        .monster_formation
+        .as_ref()
+        .expect("the original random monster cell should be retained");
+    assert_eq!(formation.draw_count, 1);
+    assert_eq!(formation.placement_indices, [0]);
+    assert_eq!(formation.positions, [ContentPosition { x: 6, y: 10 }]);
+    let expected_candidates = artifact
+        .content
+        .actors
+        .iter()
+        .filter(|actor| {
+            let Some(allocation) = &actor.allocation else {
+                return false;
+            };
+            let has_tag = |tag| actor.tags.iter().any(|candidate| candidate == tag);
+            let aquatic = actor.movement.modes.contains(&ActorMovementMode::Aquatic);
+            let flies = actor.movement.modes.contains(&ActorMovementMode::Fly);
+            actor.role == ActorRole::Monster
+                && actor.level <= 10
+                && !has_tag("unique")
+                && !has_tag("guardian")
+                && !has_tag("no-quest")
+                && (!has_tag("outpost-quest") || has_tag("trouble-at-home"))
+                && !allocation.wild_only
+                && (allocation.max_depth == 0 || allocation.max_depth >= 10)
+                && (!allocation.force_depth || actor.level <= 5)
+                && allocation
+                    .task_id
+                    .as_deref()
+                    .is_none_or(|task_id| task_id == "demo.task.trouble-at-home")
+                && allocation.legacy_dungeon_indices.is_empty()
+                && (!aquatic || flies)
+        })
+        .map(|actor| actor.id.as_str())
+        .collect::<BTreeSet<_>>();
+    assert_eq!(expected_candidates.len(), 161);
+    assert_eq!(
+        formation
+            .candidate_actor_kind_ids
+            .iter()
+            .map(String::as_str)
+            .collect::<BTreeSet<_>>(),
+        expected_candidates
+    );
+
+    let booze = artifact
+        .content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.booze-potion")
+        .expect("the original booze potion should be imported");
+    assert_eq!((booze.generation_level, booze.weight_tenths_pound), (0, 4));
+    assert_eq!(booze.base_value, 1);
+    assert!(matches!(
+        booze.use_action.as_ref().map(|action| &action.effect),
+        Some(ItemUseEffectDefinition::ApplyBooze)
+    ));
+}
+
+#[test]
+fn inline_floor_items_reject_duplicate_or_blocked_placements() {
+    fn trouble_inline(content: &mut CompiledContentV1) -> &mut InlineFloorMapDefinition {
+        content
+            .worlds
+            .iter_mut()
+            .find(|world| world.id == "demo.world.middle-earth")
+            .and_then(|world| {
+                world
+                    .procedural_floors
+                    .iter_mut()
+                    .find(|floor| floor.id == "demo.floor.trouble-at-home")
+            })
+            .and_then(|floor| floor.inline_map.as_mut())
+            .expect("Trouble at Home should retain its inline map")
+    }
+
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+
+    let mut duplicate_id = artifact.content.clone();
+    let inline_map = trouble_inline(&mut duplicate_id);
+    inline_map.scrambled_item_pair.as_mut().unwrap()[0].instance_id =
+        inline_map.item_spawns[0].instance_id.clone();
+    assert!(matches!(
+        validate_and_normalize(&mut duplicate_id),
+        Err(ContentError::InvalidProceduralFloor(_))
+    ));
+
+    let mut duplicate_position = artifact.content.clone();
+    let pair = trouble_inline(&mut duplicate_position)
+        .scrambled_item_pair
+        .as_mut()
+        .unwrap();
+    pair[1].position = pair[0].position;
+    assert!(matches!(
+        validate_and_normalize(&mut duplicate_position),
+        Err(ContentError::InvalidProceduralFloor(_))
+    ));
+
+    let mut blocked_position = artifact.content.clone();
+    trouble_inline(&mut blocked_position).item_spawns[0].position = ContentPosition { x: 0, y: 0 };
+    assert!(matches!(
+        validate_and_normalize(&mut blocked_position),
+        Err(ContentError::InvalidProceduralFloor(_))
+    ));
+}
+
+#[test]
 fn general_store_economy_content_enforces_generic_stock_rules() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let store_id = "demo.shop.outpost-general-store";
@@ -4658,15 +4873,15 @@ fn outpost_count_services_and_follow_up_tasks_match_the_original_sequence() {
             "demo.task.royal-crypt",
         ]
     );
-    assert!(
+    assert_eq!(
         artifact
             .content
             .town_facilities
             .iter()
             .find(|facility| facility.id == "demo.town-facility.outpost-white-horse")
             .expect("Outpost should contain the White Horse task service")
-            .task_ids
-            .is_empty()
+            .task_ids,
+        ["demo.task.trouble-at-home"]
     );
 
     let world = artifact
@@ -4821,6 +5036,8 @@ fn wilderness_towns_accept_fixed_town_floors_and_derive_world_ownership() {
             },
         ],
         actor_spawns: Vec::new(),
+        item_spawns: Vec::new(),
+        scrambled_item_pair: None,
         loot_spawns: Vec::new(),
         monster_formation: None,
     });

@@ -7,7 +7,7 @@
   "townId": "demo.town.outpost",
   "category": "quest-giver",
   "ownerNameKey": "shop-owner-demo-outpost-otik-the-good-name",
-  "taskIds": [],
+  "taskIds": ["demo.task.trouble-at-home"],
   "entrancePosition": { "x": 63, "y": 13 },
   "entranceTerrainId": "demo.terrain.inn-entrance"
 }

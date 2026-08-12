@@ -1,0 +1,68 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "habitats": [
+      "town"
+    ],
+    "legacyIndex": 15,
+    "maxDepth": 0,
+    "randomMovementPercent": 50,
+    "rarity": 1,
+    "wildOnly": true
+  },
+  "attack": 1,
+  "damageDice": 1,
+  "damageSides": 1,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [
+      {
+        "percent": 60
+      }
+    ],
+    "kind": "gold"
+  },
+  "defense": 0,
+  "descriptionKey": "actor-demo-singing-happy-drunk-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 0,
+  "formatVersion": 1,
+  "glyph": "t",
+  "hitPointDice": {
+    "dice": 2,
+    "sides": 3
+  },
+  "id": "demo.actor.singing-happy-drunk",
+  "level": 0,
+  "light": {
+    "intrinsic": false,
+    "radius": 1
+  },
+  "maxHp": 4,
+  "meleeRoutine": {
+    "blows": []
+  },
+  "nameKey": "actor-demo-singing-happy-drunk-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 4,
+    "skeletonItemKindId": "demo.item.skeleton-remains",
+    "skeletonWeight": 1
+  },
+  "role": "monster",
+  "speed": 110,
+  "tags": [
+    "human",
+    "kin-glyph-116",
+    "legacy-import",
+    "outpost-quest",
+    "trouble-at-home"
+  ],
+  "terrainInteraction": {
+    "picksUpItems": true
+  }
+}
