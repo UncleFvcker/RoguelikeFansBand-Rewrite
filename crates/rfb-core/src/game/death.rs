@@ -80,6 +80,7 @@ impl Game {
                 | MeleeBlowEffectDefinition::Blind { .. }
                 | MeleeBlowEffectDefinition::Confusion { .. }
                 | MeleeBlowEffectDefinition::Paralysis { .. }
+                | MeleeBlowEffectDefinition::Amnesia { .. }
                 | MeleeBlowEffectDefinition::Slow { .. }
                 | MeleeBlowEffectDefinition::Stun { .. }
                 | MeleeBlowEffectDefinition::Terrify { .. }

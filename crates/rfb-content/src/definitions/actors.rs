@@ -214,6 +214,10 @@ pub enum MeleeBlowEffectDefinition {
         #[serde(default)]
         chance_percent: Option<u8>,
     },
+    Amnesia {
+        #[serde(default)]
+        chance_percent: Option<u8>,
+    },
     Slow {
         #[serde(default)]
         chance_percent: Option<u8>,

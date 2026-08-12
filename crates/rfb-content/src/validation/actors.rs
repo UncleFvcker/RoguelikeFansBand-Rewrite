@@ -415,6 +415,7 @@ fn valid_melee_effect(effect: &MeleeBlowEffectDefinition) -> bool {
         MeleeBlowEffectDefinition::Blind { chance_percent }
         | MeleeBlowEffectDefinition::DrainCharges { chance_percent }
         | MeleeBlowEffectDefinition::Paralysis { chance_percent }
+        | MeleeBlowEffectDefinition::Amnesia { chance_percent }
         | MeleeBlowEffectDefinition::Slow { chance_percent }
         | MeleeBlowEffectDefinition::Terrify { chance_percent }
         | MeleeBlowEffectDefinition::Disenchant { chance_percent }

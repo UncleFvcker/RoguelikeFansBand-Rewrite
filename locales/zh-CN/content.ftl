@@ -3464,3 +3464,7 @@ actor-demo-chthonian-name = 钻地魔虫
 actor-demo-chthonian-description = 一只盘绕地下、能碾碎岩石的庞大魔虫。
 actor-demo-rock-giant-name = 岩石巨人
 actor-demo-rock-giant-description = 一个由活岩构成、拳击如地震般猛烈的巨人。
+actor-demo-beholder-name = 眼魔
+actor-demo-beholder-description = 一只漂浮的巨眼，远处凝视也带有近身攻击的全部恶意。
+ability-legacy-gaze-name = 凝视
+ability-legacy-gaze-description = 沿视线投射施法者的完整近战例程。

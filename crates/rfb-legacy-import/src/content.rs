@@ -6878,7 +6878,8 @@ fn melee_effect_json(effect: &LegacyBlowEffect) -> Option<serde_json::Value> {
                 "damageSides": damage_sides.min(10_000),
             })
         }
-        "PARALYZE" => serde_json::json!({ "type": "paralysis" }),
+        "PARALYZE" | "SLEEP" => serde_json::json!({ "type": "paralysis" }),
+        "AMNESIA" => serde_json::json!({ "type": "amnesia" }),
         "SLOW" => serde_json::json!({ "type": "slow" }),
         "STUN" => {
             let (duration_dice, duration_sides) = effect.dice?;
@@ -8580,6 +8581,31 @@ fn map_spell_token(
     caster_kind_id: &str,
     abilities: &mut BTreeMap<String, serde_json::Value>,
 ) -> Option<String> {
+    if token == "GAZE" {
+        let id = "rfb-legacy.ability.gaze".to_owned();
+        abilities.entry(id.clone()).or_insert_with(|| {
+            serde_json::json!({
+                "$schema": format!("{SCHEMA_BASE}/ability.schema.json"),
+                "formatVersion": 1,
+                "id": id,
+                "nameKey": "ability-legacy-gaze-name",
+                "descriptionKey": "ability-legacy-gaze-description",
+                "minimumLevel": 1,
+                "resourceId": LEGACY_RESOURCE_ID,
+                "resourceCost": 1,
+                "baseFailurePercent": 20,
+                "target": { "modes": ["position", "entity"], "range": 8, "requiresLineOfEffect": true },
+                "effect": {
+                    "type": "damage",
+                    "damageDice": 1,
+                    "damageSides": 1,
+                    "damageType": "physical"
+                },
+                "tags": ["legacy-import", "gaze"],
+            })
+        });
+        return Some(id);
+    }
     if let Some(id) = map_summon_spell_token(token, level, caster_kind_id, abilities) {
         return Some(id);
     }
@@ -12828,6 +12854,41 @@ mod tests {
         assert_eq!(
             actor["meleeRoutine"]["blows"][0]["effects"][0]["type"],
             "shatter"
+        );
+    }
+
+    #[test]
+    fn demo_monster_import_maps_gaze_sleep_and_amnesia() {
+        let mut monsters = parse_r_info(
+            "N:603:Beholder\nG:e:v\nI:120:20d20:30:80:0:200\nW:38:3:999:5000:0:0\nB:GAZE:DAM(2d4):TERRIFY:SLEEP(35%)\nB:GAZE:DAM(2d4):STUN(3d3):AMNESIA(25%)\nF:EVIL\nS:FREQ_35 | GAZE\n",
+        )
+        .expect("synthetic beholder should parse");
+        let mut abilities = BTreeMap::new();
+        let actor = demo_monster_json(
+            &monsters.remove(0),
+            &DemoMonsterSelectionEntry {
+                source_index: 603,
+                source_id: None,
+                id: "beholder".to_owned(),
+                tags: vec!["orc-cave".to_owned()],
+                omitted_flags: Vec::new(),
+            },
+            &mut abilities,
+        )
+        .expect("Beholder mechanics should import");
+
+        assert_eq!(
+            actor["meleeRoutine"]["blows"][0]["effects"][2]["type"],
+            "paralysis"
+        );
+        assert_eq!(
+            actor["meleeRoutine"]["blows"][1]["effects"][2]["type"],
+            "amnesia"
+        );
+        assert!(
+            abilities["rfb-legacy.ability.gaze"]["tags"]
+                .as_array()
+                .is_some_and(|tags| tags.iter().any(|tag| tag == "gaze"))
         );
     }
 

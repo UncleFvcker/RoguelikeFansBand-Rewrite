@@ -529,6 +529,76 @@ fn shatter_melee_uses_the_shared_earthquake_only_above_the_damage_threshold() {
 }
 
 #[test]
+fn gaze_projects_the_melee_routine_to_a_distant_target() {
+    let mut game = game_with_actor_definition(0, "demo.actor.beholder", |actor| {
+        actor.attack = 1_000_000;
+        actor
+            .monster_casting
+            .as_mut()
+            .expect("Beholder should cast")
+            .frequency_percent = 100;
+    });
+    clear_monsters(&mut game);
+    let origin = Position { x: 4, y: 3 };
+    game.player.position = Position { x: 8, y: 3 };
+    for x in 4..=8 {
+        replace_terrain(&mut game, Position { x, y: 3 }, "demo.terrain.floor");
+    }
+    game.push_generated_actor("test.beholder".to_owned(), "demo.actor.beholder", origin);
+    game.entities[0].nice = false;
+    let mut events = Vec::new();
+
+    assert!(game.resolve_monster_ability(0, &mut events));
+    assert_eq!(game.entities[0].position, origin);
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::MonsterAbilityCast { resolution, .. }
+            if resolution.ability_id == "rfb-legacy.ability.gaze"
+    )));
+    assert!(
+        events
+            .iter()
+            .any(|event| matches!(event, DomainEvent::MonsterMeleeHit { .. }))
+    );
+}
+
+#[test]
+fn melee_amnesia_uses_the_existing_save_and_floor_memory_wipe() {
+    let template = monster_effect_game(
+        0,
+        MeleeBlowEffectDefinition::Amnesia {
+            chance_percent: None,
+        },
+    );
+    let seed = (0..1_000)
+        .find(|seed| {
+            let mut trial = template.clone();
+            trial.explored.fill(true);
+            trial.rng = RfbRng::seeded(*seed);
+            let mut events = Vec::new();
+            trial
+                .resolve_monster_melee(0, &mut events, &mut BTreeSet::new(), &mut Vec::new())
+                .expect("melee amnesia should resolve");
+            events
+                .iter()
+                .any(|event| matches!(event, DomainEvent::MonsterMeleeAmnesia { .. }))
+        })
+        .expect("a deterministic seed should fail the amnesia save");
+    let mut game = template;
+    game.explored.fill(true);
+    game.rng = RfbRng::seeded(seed);
+    let mut events = Vec::new();
+
+    game.resolve_monster_melee(0, &mut events, &mut BTreeSet::new(), &mut Vec::new())
+        .expect("melee amnesia should resolve");
+    assert!(game.explored.iter().all(|explored| !explored));
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::MonsterMeleeAmnesia { cleared_cells, .. } if *cleared_cells > 0
+    )));
+}
+
+#[test]
 fn unlife_melee_drains_life_force_and_persistently_empowers_the_monster() {
     let effect = MeleeBlowEffectDefinition::Unlife {
         chance_percent: None,

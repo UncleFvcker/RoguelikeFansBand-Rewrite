@@ -244,6 +244,10 @@ pub(crate) enum DomainEvent {
         source_kind_id: String,
         resolution: AbilityEffectsResolutionDto,
     },
+    MonsterMeleeAmnesia {
+        source_kind_id: String,
+        cleared_cells: u32,
+    },
     MonsterBlinkedTarget {
         source_kind_id: String,
         target_kind_id: String,
@@ -1810,6 +1814,17 @@ impl DomainEvent {
                 "monster-earthquake",
                 [("source", source_kind_id)],
                 GameEventOutcomeDto::AbilityEffects { resolution },
+            ),
+            Self::MonsterMeleeAmnesia {
+                source_kind_id,
+                cleared_cells,
+            } => dto(
+                "monster.melee-amnesia",
+                "monster-melee-amnesia",
+                [
+                    ("source", source_kind_id),
+                    ("count", cleared_cells.to_string()),
+                ],
             ),
             Self::MonsterBlinkedTarget {
                 source_kind_id,

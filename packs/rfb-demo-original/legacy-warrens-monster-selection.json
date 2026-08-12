@@ -4734,6 +4734,12 @@
       "id": "rock-giant",
       "tags": ["orc-cave"],
       "omittedFlags": ["MALE", "POS_GAIN_AC", "POS_SUST_STR"]
+    },
+    {
+      "sourceIndex": 603,
+      "id": "beholder",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC", "POS_TELEPATHY"]
     }
   ]
 }

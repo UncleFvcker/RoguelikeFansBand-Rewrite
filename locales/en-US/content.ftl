@@ -3464,3 +3464,7 @@ actor-demo-chthonian-name = Chthonian
 actor-demo-chthonian-description = A vast burrowing horror that crushes stone beneath its coils.
 actor-demo-rock-giant-name = Rock giant
 actor-demo-rock-giant-description = A giant of living stone whose fists strike like earthquakes.
+actor-demo-beholder-name = Beholder
+actor-demo-beholder-description = A floating eye whose distant gaze carries every cruelty of its close attack.
+ability-legacy-gaze-name = Gaze
+ability-legacy-gaze-description = Projects the caster's complete melee routine along a line of sight.

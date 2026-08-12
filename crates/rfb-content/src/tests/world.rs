@@ -3712,8 +3712,8 @@ fn p44a_monsters_generate_only_parameterized_existing_effects() {
 #[test]
 fn p44b_monsters_complete_the_parameterized_existing_effect_harvest() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
-    assert_eq!(artifact.content.actors.len(), 834);
-    assert_eq!(artifact.content.abilities.len(), 455);
+    assert_eq!(artifact.content.actors.len(), 835);
+    assert_eq!(artifact.content.abilities.len(), 456);
     let ability_ids = artifact
         .content
         .abilities
@@ -4000,6 +4000,45 @@ fn p46_shatter_monsters_share_the_authoritative_melee_effect() {
             })
         }));
     }
+}
+
+#[test]
+fn p46_beholder_keeps_gaze_sleep_and_amnesia() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let beholder = artifact
+        .content
+        .actors
+        .iter()
+        .find(|actor| actor.id == "demo.actor.beholder")
+        .expect("Beholder should be imported");
+    let routine = beholder
+        .melee_routine
+        .as_ref()
+        .expect("Beholder should retain its gaze routine");
+
+    assert_eq!(
+        beholder
+            .allocation
+            .as_ref()
+            .map(|allocation| allocation.legacy_index),
+        Some(603)
+    );
+    assert!(routine.blows.iter().any(|blow| {
+        blow.effects
+            .iter()
+            .any(|effect| matches!(effect, MeleeBlowEffectDefinition::Paralysis { .. }))
+    }));
+    assert!(routine.blows.iter().any(|blow| {
+        blow.effects
+            .iter()
+            .any(|effect| matches!(effect, MeleeBlowEffectDefinition::Amnesia { .. }))
+    }));
+    assert!(beholder.monster_casting.as_ref().is_some_and(|casting| {
+        casting
+            .abilities
+            .iter()
+            .any(|candidate| candidate.ability_id == "rfb-legacy.ability.gaze")
+    }));
 }
 
 #[test]

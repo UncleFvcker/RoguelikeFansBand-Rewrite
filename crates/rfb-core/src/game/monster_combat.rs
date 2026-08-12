@@ -17,6 +17,7 @@ pub(super) fn melee_effect_chance(effect: &MeleeBlowEffectDefinition) -> Option<
         | MeleeBlowEffectDefinition::Blind { chance_percent }
         | MeleeBlowEffectDefinition::Confusion { chance_percent, .. }
         | MeleeBlowEffectDefinition::Paralysis { chance_percent }
+        | MeleeBlowEffectDefinition::Amnesia { chance_percent }
         | MeleeBlowEffectDefinition::Slow { chance_percent }
         | MeleeBlowEffectDefinition::Stun { chance_percent, .. }
         | MeleeBlowEffectDefinition::Terrify { chance_percent }
@@ -658,7 +659,8 @@ impl Game {
                     | MeleeBlowEffectDefinition::DrainResource { .. }
                     | MeleeBlowEffectDefinition::DrainCharges { .. }
                     | MeleeBlowEffectDefinition::DrainExperience { .. }
-                    | MeleeBlowEffectDefinition::Disenchant { .. } => None,
+                    | MeleeBlowEffectDefinition::Disenchant { .. }
+                    | MeleeBlowEffectDefinition::Amnesia { .. } => None,
                     MeleeBlowEffectDefinition::Unlife {
                         amount_dice,
                         amount_sides,
@@ -1565,6 +1567,16 @@ impl Game {
                     MeleeBlowEffectDefinition::Paralysis { .. } => {
                         let duration = self.roll_damage(1, 3);
                         self.apply_player_melee_status(STATUS_PARALYSIS, duration, &kind_id);
+                        None
+                    }
+                    MeleeBlowEffectDefinition::Amnesia { .. } => {
+                        if !self.monster_curse_save(&kind_id, events) {
+                            let cleared_cells = self.clear_current_floor_memory(changed);
+                            events.push(DomainEvent::MonsterMeleeAmnesia {
+                                source_kind_id: kind_id.clone(),
+                                cleared_cells,
+                            });
+                        }
                         None
                     }
                     MeleeBlowEffectDefinition::Slow { .. } => {
