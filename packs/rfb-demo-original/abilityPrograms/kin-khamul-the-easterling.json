@@ -1,0 +1,15 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability-program.kin-khamul-the-easterling",
+  "input": "self",
+  "steps": [
+    {
+      "actorKindId": "demo.actor.khamul-the-easterling",
+      "count": 2,
+      "durationTurns": 10000,
+      "radius": 2,
+      "type": "summon"
+    }
+  ]
+}

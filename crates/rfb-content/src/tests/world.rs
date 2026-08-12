@@ -719,7 +719,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         .iter()
         .filter(|actor| actor.tags.iter().any(|tag| tag == "orc-cave"))
         .collect::<Vec<_>>();
-    assert_eq!(orc_cave.len(), 500);
+    assert_eq!(orc_cave.len(), 511);
 
     for id in [
         "demo.actor.bunyip",
@@ -752,10 +752,10 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
                     .any(|index| *index != 3)
         );
     }
-    let mut level_counts = [0_usize; 32];
+    let mut level_counts = [0_usize; 34];
     let mut source_indices = BTreeSet::new();
     for actor in orc_cave {
-        assert!((21..=52).contains(&actor.level));
+        assert!((21..=54).contains(&actor.level));
         let allocation = actor
             .allocation
             .as_ref()
@@ -767,7 +767,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         level_counts,
         [
             16, 14, 12, 17, 24, 17, 19, 17, 18, 21, 7, 12, 29, 15, 27, 28, 19, 19, 11, 42, 12, 6,
-            12, 14, 14, 7, 10, 6, 6, 14, 11, 4,
+            12, 14, 14, 7, 10, 6, 6, 14, 11, 4, 3, 8,
         ]
     );
 
@@ -4739,6 +4739,42 @@ fn p51b_level_51_52_direct_monsters_keep_source_identity() {
 }
 
 #[test]
+fn p52a_level_53_54_direct_monsters_keep_source_identity() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+
+    for (id, legacy_index, level) in [
+        ("eihort-the-thing-in-the-labyrinth", 734, 53),
+        ("the-king-in-yellow", 735, 53),
+        ("khamul-the-easterling", 738, 53),
+        ("hound-of-tindalos", 739, 54),
+        ("great-ice-wyrm", 741, 54),
+        ("the-phoenix", 743, 54),
+        ("nightcrawler", 744, 54),
+        ("shudde-m-ell", 747, 54),
+        ("petshop", 1043, 54),
+        ("elder-vampire", 1058, 54),
+        ("great-bile-wyrm", 1066, 54),
+    ] {
+        let actor_id = format!("demo.actor.{id}");
+        let actor = artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == actor_id)
+            .unwrap_or_else(|| panic!("{actor_id} should be imported"));
+        assert_eq!(actor.level, level, "{actor_id} level");
+        assert_eq!(
+            actor
+                .allocation
+                .as_ref()
+                .map(|allocation| allocation.legacy_index),
+            Some(legacy_index),
+            "{actor_id} source index"
+        );
+    }
+}
+
+#[test]
 fn outpost_has_walls_inner_shops_and_an_exterior_warrens_entrance() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let world = artifact
@@ -6164,7 +6200,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
                     == Some("demo.loot-table.base-items")
             })
             .count(),
-        456
+        465
     );
 }
 
