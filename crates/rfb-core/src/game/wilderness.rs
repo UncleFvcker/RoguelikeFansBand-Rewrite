@@ -589,6 +589,20 @@ fn wilderness_monster_rolls_for_allowed_area(
 }
 
 impl Game {
+    pub(super) fn wilderness_terrain_at_view_position(
+        &self,
+        position: Position,
+    ) -> Option<WildernessTerrain> {
+        let center =
+            wilderness_view_center_chunk(self.wilderness_position?, self.wilderness_view_offset);
+        let chunk = Position {
+            x: center.x + position.x.div_euclid(i32::from(WILDERNESS_CHUNK_WIDTH)) - 1,
+            y: center.y + position.y.div_euclid(i32::from(WILDERNESS_CHUNK_HEIGHT)) - 1,
+        };
+        wilderness_legend_at(self.wilderness(), wilderness_chunk_world_position(chunk))
+            .map(|entry| entry.terrain)
+    }
+
     pub(super) fn is_wilderness_floor(&self) -> bool {
         self.current_floor_id == WILDERNESS_FLOOR_ID
     }

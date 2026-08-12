@@ -386,6 +386,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.energy-hound", 309, 2, 70),
             ("demo.actor.ewok", 92, 2, 40),
             ("demo.actor.fang-farmer-maggots-dog", 55, 2, 999),
+            ("demo.actor.fastitocalon", 704, 3, 999),
             ("demo.actor.filthy-street-urchin", 1, 2, 0),
             ("demo.actor.fire-hound", 307, 2, 70),
             ("demo.actor.fire-spirit", 306, 2, 80),
@@ -517,6 +518,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.large-white-snake", 21, 1, 10),
             ("demo.actor.large-yellow-snake", 59, 1, 20),
             ("demo.actor.lemure", 148, 3, 40),
+            ("demo.actor.lesser-kraken", 740, 2, 999),
             ("demo.actor.light-hound", 271, 2, 60),
             ("demo.actor.lion", 1321, 2, 50),
             ("demo.actor.livingstone", 336, 4, 70),
@@ -528,6 +530,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.lurker", 247, 3, 50),
             ("demo.actor.lynx", 1347, 2, 40),
             ("demo.actor.mad-bear", 1028, 1, 40),
+            ("demo.actor.makara", 1377, 2, 999),
             ("demo.actor.manes", 128, 2, 40),
             ("demo.actor.master-yeek", 224, 2, 40),
             ("demo.actor.mauhur-the-orc-captain", 1072, 3, 999),
@@ -599,6 +602,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.quylthulg", 342, 2, 999),
             ("demo.actor.radiant-kavu", 1071, 1, 50),
             ("demo.actor.radiation-eye", 80, 1, 30),
+            ("demo.actor.rakshasa", 1386, 4, 999),
             ("demo.actor.ranger", 1039, 1, 80),
             ("demo.actor.rat-thing", 115, 1, 40),
             ("demo.actor.rattlesnake", 119, 1, 40),
@@ -674,6 +678,8 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.unruly-horse", 957, 2, 30),
             ("demo.actor.unstable-worm-mass", 876, 4, 50),
             ("demo.actor.uruk", 313, 1, 60),
+            ("demo.actor.vanara", 1367, 4, 999),
+            ("demo.actor.vanara-sage", 1375, 7, 999),
             ("demo.actor.vlasta", 249, 3, 50),
             ("demo.actor.vorpal-bunny", 205, 3, 40),
             ("demo.actor.wallaby", 1316, 2, 30),
@@ -5061,6 +5067,50 @@ fn p54_ancient_roc_uses_the_dedicated_bird_drop_effect() {
 }
 
 #[test]
+fn p55a_monsters_retain_their_dedicated_location_boundaries() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actor = |id: &str| {
+        artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == id)
+            .unwrap_or_else(|| panic!("P55A should contain {id}"))
+    };
+
+    for (id, source_index) in [
+        ("demo.actor.vanara", 1367),
+        ("demo.actor.makara", 1377),
+        ("demo.actor.rakshasa", 1386),
+        ("demo.actor.vanara-sage", 1375),
+    ] {
+        let actor = actor(id);
+        let allocation = actor
+            .allocation
+            .as_ref()
+            .expect("Mount Meru monsters should retain allocation metadata");
+        assert_eq!(allocation.legacy_index, source_index);
+        assert_eq!(allocation.legacy_dungeon_indices, vec![43]);
+        assert!(!allocation.wild_only);
+        assert!(actor.tags.iter().any(|tag| tag == "mount-meru"));
+        assert!(!actor.tags.iter().any(|tag| tag == "orc-cave"));
+    }
+
+    for id in ["demo.actor.fastitocalon", "demo.actor.lesser-kraken"] {
+        let actor = actor(id);
+        let allocation = actor
+            .allocation
+            .as_ref()
+            .expect("ocean monsters should retain allocation metadata");
+        assert!(allocation.wild_only);
+        assert_eq!(allocation.habitats, vec![ActorHabitat::Ocean]);
+        assert!(allocation.legacy_dungeon_indices.is_empty());
+        assert!(actor.tags.iter().any(|tag| tag == "ocean"));
+        assert!(!actor.tags.iter().any(|tag| tag == "orc-cave"));
+    }
+}
+
+#[test]
 fn outpost_has_walls_inner_shops_and_an_exterior_warrens_entrance() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let world = artifact
@@ -6486,7 +6536,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
                     == Some("demo.loot-table.base-items")
             })
             .count(),
-        490
+        495
     );
 }
 

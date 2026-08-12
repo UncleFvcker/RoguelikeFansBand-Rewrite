@@ -4,7 +4,7 @@ use super::movement::actor_can_cross_terrain;
 use super::*;
 use rfb_content::{
     ActorAllocationDefinition, ActorDamageType, ActorDefinition, ActorHabitat, ActorMovementMode,
-    ActorResistanceLevel, GlobalMonsterAllocationDefinition,
+    ActorResistanceLevel, GlobalMonsterAllocationDefinition, WildernessTerrain,
 };
 
 const ORIGINAL_NASTY_MON_ONE_IN: u64 = 40;
@@ -849,6 +849,7 @@ fn habitat_tag(habitat: ActorHabitat) -> Option<&'static str> {
         ActorHabitat::All => None,
         ActorHabitat::Grass => Some("grass"),
         ActorHabitat::Mountain => Some("mountain"),
+        ActorHabitat::Ocean => Some("water"),
         ActorHabitat::Shore => Some("shore"),
         ActorHabitat::Snow => Some("snow"),
         ActorHabitat::Swamp => Some("swamp"),
@@ -859,10 +860,22 @@ fn habitat_tag(habitat: ActorHabitat) -> Option<&'static str> {
     }
 }
 
-fn actor_matches_surface_habitat(
+pub(super) fn actor_matches_surface_habitat(
     definition: &ActorDefinition,
     terrain: &rfb_content::TerrainDefinition,
+    wilderness_terrain: Option<WildernessTerrain>,
 ) -> bool {
+    let Some(allocation) = &definition.allocation else {
+        return false;
+    };
+    if !allocation.legacy_dungeon_indices.is_empty() && !allocation.wild_only {
+        return false;
+    }
+    if allocation.habitats.contains(&ActorHabitat::Ocean)
+        && wilderness_terrain != Some(WildernessTerrain::DeepWater)
+    {
+        return false;
+    }
     let aquatic = definition
         .movement
         .modes
@@ -870,9 +883,6 @@ fn actor_matches_surface_habitat(
     if aquatic && terrain.tags.iter().any(|tag| tag == "water") {
         return true;
     }
-    let Some(allocation) = &definition.allocation else {
-        return false;
-    };
     allocation.wild_only
         && allocation.habitats.iter().any(|habitat| {
             habitat_tag(*habitat)
@@ -961,6 +971,7 @@ impl Game {
         &mut self,
         level: u16,
         terrain: &rfb_content::TerrainDefinition,
+        wilderness_terrain: Option<WildernessTerrain>,
         target_floor_kind_ids: &[String],
     ) -> Option<String> {
         let daytime = self.wilderness_is_daytime();
@@ -980,7 +991,7 @@ impl Game {
                             && !target_floor_kind_ids
                                 .iter()
                                 .any(|kind_id| kind_id == &definition.id)))
-                    && actor_matches_surface_habitat(definition, terrain)
+                    && actor_matches_surface_habitat(definition, terrain, wilderness_terrain)
                     && actor_matches_wilderness_daytime(definition, daytime)
                     && actor_can_cross_terrain(definition, terrain)
             })
@@ -1095,6 +1106,7 @@ impl Game {
             let Some(kind_id) = self.select_surface_allocated_monster(
                 level,
                 &required_terrain,
+                self.wilderness_terrain_at_view_position(position),
                 &target_floor_kind_ids,
             ) else {
                 continue;

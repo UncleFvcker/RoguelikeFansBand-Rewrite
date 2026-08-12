@@ -38,6 +38,7 @@ pub enum ActorHabitat {
     All,
     Grass,
     Mountain,
+    Ocean,
     Shore,
     Snow,
     Swamp,

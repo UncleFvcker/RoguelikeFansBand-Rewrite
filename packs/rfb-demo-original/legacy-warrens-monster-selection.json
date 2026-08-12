@@ -5255,7 +5255,7 @@
       "sourceIndex": 544,
       "id": "sea-troll",
       "tags": ["old-castle", "outpost-quest"],
-      "omittedFlags": ["MALE", "POS_GAIN_AC", "WILD_OCEAN"]
+      "omittedFlags": ["MALE", "POS_GAIN_AC"]
     },
     {
       "sourceIndex": 555,
@@ -5838,6 +5838,42 @@
       "id": "the-ancient-roc-of-okeldad",
       "tags": ["orc-cave"],
       "omittedFlags": ["POS_GAIN_AC", "RES_WALL"]
+    },
+    {
+      "sourceIndex": 1367,
+      "id": "vanara",
+      "tags": ["mount-meru"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 1377,
+      "id": "makara",
+      "tags": ["mount-meru"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 1386,
+      "id": "rakshasa",
+      "tags": ["mount-meru"],
+      "omittedFlags": []
+    },
+    {
+      "sourceIndex": 1375,
+      "id": "vanara-sage",
+      "tags": ["mount-meru"],
+      "omittedFlags": ["MALE", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 704,
+      "id": "fastitocalon",
+      "tags": ["ocean"],
+      "omittedFlags": ["POS_GAIN_AC", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 740,
+      "id": "lesser-kraken",
+      "tags": ["ocean"],
+      "omittedFlags": ["POS_GAIN_AC"]
     }
   ]
 }

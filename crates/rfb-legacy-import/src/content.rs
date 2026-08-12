@@ -8020,7 +8020,7 @@ fn monster_json(
             "rarity": rarity,
             "maxDepth": entry.max_level.unwrap_or(0),
             "forceDepth": entry.flags.iter().any(|flag| flag == "FORCE_DEPTH"),
-            "wildOnly": entry.flags.iter().any(|flag| flag == "WILD_ONLY"),
+            "wildOnly": entry.flags.iter().any(|flag| matches!(flag.as_str(), "WILD_ONLY" | "WILD_OCEAN")),
             "escort": entry.flags.iter().any(|flag| flag == "ESCORT"),
             "multiplies": entry.flags.iter().any(|flag| flag == "MULTIPLY"),
             "randomMovementPercent": random_movement_percent,
@@ -8032,6 +8032,7 @@ fn monster_json(
             ("WILD_ALL", "all"),
             ("WILD_GRASS", "grass"),
             ("WILD_MOUNTAIN", "mountain"),
+            ("WILD_OCEAN", "ocean"),
             ("WILD_SHORE", "shore"),
             ("WILD_SNOW", "snow"),
             ("WILD_SWAMP", "swamp"),
@@ -8112,6 +8113,7 @@ fn demo_monster_flag_is_handled(flag: &str) -> bool {
                 | "NO_SLEEP"
                 | "FORCE_DEPTH"
                 | "WILD_ONLY"
+                | "WILD_OCEAN"
                 | "ESCORT"
                 | "MULTIPLY"
                 | "RAND_25"
@@ -12557,7 +12559,34 @@ mod tests {
         assert!(demo_monster_flag_is_handled("AURA_FEAR"));
         assert!(demo_monster_flag_is_handled("TANUKI"));
         assert!(demo_monster_flag_is_handled("UNIQUE2"));
-        assert!(!demo_monster_flag_is_handled("WILD_OCEAN"));
+        assert!(demo_monster_flag_is_handled("WILD_OCEAN"));
+    }
+
+    #[test]
+    fn demo_monster_import_maps_ocean_only_allocation() {
+        let mut monsters = parse_r_info(
+            "N:1:test ocean monster\nG:D:g\nI:110:2d4:8:4:20:10\nW:20:2:999:40:0:0\nB:BITE:HURT(1d4)\nF:AQUATIC | WILD_OCEAN\n",
+        )
+        .expect("synthetic ocean monster should parse");
+        let actor = demo_monster_json(
+            &monsters.remove(0),
+            &DemoMonsterSelectionEntry {
+                source_index: 1,
+                source_id: None,
+                id: "test-ocean-monster".to_owned(),
+                tags: vec!["ocean".to_owned()],
+                omitted_flags: Vec::new(),
+                omitted_spells: Vec::new(),
+            },
+            &mut BTreeMap::new(),
+        )
+        .expect("WILD_OCEAN should import directly");
+
+        assert_eq!(actor["allocation"]["wildOnly"], true);
+        assert_eq!(
+            actor["allocation"]["habitats"],
+            serde_json::json!(["ocean"])
+        );
     }
 
     fn assert_content_parse_error<T>(

@@ -1,0 +1,136 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "habitats": [
+      "ocean"
+    ],
+    "legacyIndex": 704,
+    "maxDepth": 999,
+    "rarity": 3,
+    "wildOnly": true
+  },
+  "attack": 12,
+  "damageDice": 5,
+  "damageSides": 8,
+  "damageType": "physical",
+  "defense": 15,
+  "descriptionKey": "actor-demo-fastitocalon-description",
+  "experienceValue": 16000,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "D",
+  "hitPointDice": {
+    "dice": 45,
+    "forceMaximum": true,
+    "sides": 100
+  },
+  "id": "demo.actor.fastitocalon",
+  "level": 51,
+  "maxHp": 4500,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 5,
+            "damageSides": 8,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "damageDice": 1,
+            "damageSides": 8,
+            "type": "poison"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 5,
+            "damageSides": 8,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "damageDice": 1,
+            "damageSides": 8,
+            "type": "poison"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 2,
+            "damageSides": 10,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.crush",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 2,
+            "damageSides": 10,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.crush",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.breath-fire-20-900-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-acid-20-900-r3",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 8
+  },
+  "movement": {
+    "modes": [
+      "aquatic"
+    ]
+  },
+  "nameKey": "actor-demo-fastitocalon-name",
+  "resistances": {
+    "acid": "resistant",
+    "cold": "resistant",
+    "fire": "resistant",
+    "poison": "resistant",
+    "water": "resistant"
+  },
+  "rideable": true,
+  "role": "monster",
+  "speed": 120,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "dragon",
+    "kin-glyph-68",
+    "legacy-import",
+    "ocean",
+    "resist-teleport"
+  ]
+}

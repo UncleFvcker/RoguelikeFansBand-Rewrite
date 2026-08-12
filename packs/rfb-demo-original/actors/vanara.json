@@ -1,0 +1,130 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "friends": {
+      "chancePercent": 0,
+      "dice": 3,
+      "sides": 3
+    },
+    "habitats": [
+      "wood"
+    ],
+    "legacyDungeonIndices": [
+      43
+    ],
+    "legacyIndex": 1367,
+    "maxDepth": 999,
+    "rarity": 4
+  },
+  "attack": 12,
+  "damageDice": 3,
+  "damageSides": 12,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [
+      {
+        "guaranteedForUnique": true,
+        "percent": 90
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items-and-gold"
+  },
+  "defense": 7,
+  "descriptionKey": "actor-demo-vanara-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 800,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "Y",
+  "hitPointDice": {
+    "dice": 50,
+    "sides": 25
+  },
+  "id": "demo.actor.vanara",
+  "level": 50,
+  "maxHp": 650,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 3,
+            "damageSides": 12,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "chancePercent": 30,
+            "durationDice": 3,
+            "durationSides": 4,
+            "type": "stun"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 3,
+            "damageSides": 12,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.blink",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.drag",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.bolt-physical-1d1-74",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 14,
+    "smart": true
+  },
+  "nameKey": "actor-demo-vanara-name",
+  "regenerates": true,
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 4,
+    "skeletonItemKindId": "demo.item.skeleton-remains",
+    "skeletonWeight": 1
+  },
+  "resistances": {
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 125,
+  "statusImmunities": [
+    "rfb.status.confusion"
+  ],
+  "tags": [
+    "animal",
+    "kin-glyph-89",
+    "legacy-import",
+    "mount-meru"
+  ],
+  "terrainInteraction": {
+    "picksUpItems": true
+  }
+}
