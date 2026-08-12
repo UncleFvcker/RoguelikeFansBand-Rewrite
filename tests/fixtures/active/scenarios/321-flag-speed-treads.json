@@ -35,7 +35,7 @@
       "turn": 2,
       "worldTick": 10,
       "lastCommandSeq": 2,
-      "rngDrawCounter": 154,
+      "rngDrawCounter": 163,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -313,10 +313,10 @@
       "playerDefense": 15,
       "playerSpeed": 120,
       "playerEnergyNeed": 0,
-      "playerCarriedWeightTenthsPound": 754,
+      "playerCarriedWeightTenthsPound": 674,
       "playerCarryCapacityTenthsPound": 1200,
       "playerEncumbranceSpeedPenalty": 0,
-      "playerGold": 570,
+      "playerGold": 424,
       "playerNutrition": 9999,
       "playerLevel": 1,
       "playerExperience": 0,
@@ -463,7 +463,7 @@
       },
       "entityCount": 0,
       "groundItemCount": 2,
-      "inventoryStackCount": 9,
+      "inventoryStackCount": 7,
       "equipmentCount": 4,
       "inventory": [
         {
@@ -474,7 +474,7 @@
           "usable": true,
           "canReceiveRecharge": false,
           "canSupplyRecharge": false,
-          "quantity": 8,
+          "quantity": 6,
           "weightTenthsPound": 10,
           "equipmentSlot": null,
           "modifiers": {
@@ -500,7 +500,7 @@
           "usable": false,
           "fuel": {
             "kind": "torch",
-            "current": 3500,
+            "current": 2000,
             "maximum": 5000,
             "lightRadius": 1
           },
@@ -532,7 +532,7 @@
           "usable": false,
           "fuel": {
             "kind": "torch",
-            "current": 3500,
+            "current": 2000,
             "maximum": 5000,
             "lightRadius": 1
           },
@@ -564,7 +564,7 @@
           "usable": false,
           "fuel": {
             "kind": "torch",
-            "current": 3500,
+            "current": 2000,
             "maximum": 5000,
             "lightRadius": 1
           },
@@ -596,7 +596,7 @@
           "usable": false,
           "fuel": {
             "kind": "torch",
-            "current": 3500,
+            "current": 2000,
             "maximum": 5000,
             "lightRadius": 1
           },
@@ -628,7 +628,7 @@
           "usable": false,
           "fuel": {
             "kind": "torch",
-            "current": 3500,
+            "current": 2000,
             "maximum": 5000,
             "lightRadius": 1
           },
@@ -654,70 +654,6 @@
         },
         {
           "id": "generated.item.7",
-          "kindId": "demo.item.wooden-torch",
-          "displayNameKey": "item-demo-wooden-torch-name",
-          "knowledge": "aware",
-          "usable": false,
-          "fuel": {
-            "kind": "torch",
-            "current": 3500,
-            "maximum": 5000,
-            "lightRadius": 1
-          },
-          "canReceiveRecharge": false,
-          "canSupplyRecharge": false,
-          "quantity": 1,
-          "weightTenthsPound": 30,
-          "equipmentSlot": "light",
-          "modifiers": {
-            "attack": 0,
-            "defense": 0,
-            "maxHp": 0,
-            "strength": 0,
-            "intelligence": 0,
-            "wisdom": 0,
-            "dexterity": 0,
-            "constitution": 0,
-            "charisma": 0,
-            "speed": 0,
-            "spellPowerBonus": 0
-          },
-          "identification": "unexamined"
-        },
-        {
-          "id": "generated.item.8",
-          "kindId": "demo.item.wooden-torch",
-          "displayNameKey": "item-demo-wooden-torch-name",
-          "knowledge": "aware",
-          "usable": false,
-          "fuel": {
-            "kind": "torch",
-            "current": 3500,
-            "maximum": 5000,
-            "lightRadius": 1
-          },
-          "canReceiveRecharge": false,
-          "canSupplyRecharge": false,
-          "quantity": 1,
-          "weightTenthsPound": 30,
-          "equipmentSlot": "light",
-          "modifiers": {
-            "attack": 0,
-            "defense": 0,
-            "maxHp": 0,
-            "strength": 0,
-            "intelligence": 0,
-            "wisdom": 0,
-            "dexterity": 0,
-            "constitution": 0,
-            "charisma": 0,
-            "speed": 0,
-            "spellPowerBonus": 0
-          },
-          "identification": "unexamined"
-        },
-        {
-          "id": "generated.item.9",
           "kindId": "demo.item.arrow",
           "displayNameKey": "item-demo-arrow-name",
           "knowledge": "aware",
@@ -745,7 +681,7 @@
       ],
       "equipment": [
         {
-          "id": "generated.item.11",
+          "id": "generated.item.9",
           "kindId": "demo.item.chain-mail",
           "displayNameKey": "item-demo-chain-mail-name",
           "knowledge": "aware",
@@ -809,7 +745,7 @@
           "quality": "ordinary"
         },
         {
-          "id": "generated.item.10",
+          "id": "generated.item.8",
           "kindId": "demo.item.broad-sword",
           "displayNameKey": "item-demo-broad-sword-name",
           "knowledge": "aware",
@@ -840,11 +776,11 @@
               "sides": 6,
               "damageType": "physical"
             },
-            "sourceItemId": "generated.item.10"
+            "sourceItemId": "generated.item.8"
           }
         },
         {
-          "id": "generated.item.12",
+          "id": "generated.item.10",
           "kindId": "demo.item.short-bow",
           "displayNameKey": "item-demo-short-bow-name",
           "knowledge": "aware",
@@ -885,7 +821,7 @@
               "range": 16,
               "requiresLineOfEffect": true
             },
-            "sourceItemId": "generated.item.12"
+            "sourceItemId": "generated.item.10"
           }
         }
       ],
@@ -910,18 +846,6 @@
         },
         {
           "itemId": "generated.item.10",
-          "discovered": true,
-          "appraised": true,
-          "identified": true
-        },
-        {
-          "itemId": "generated.item.11",
-          "discovered": true,
-          "appraised": true,
-          "identified": true
-        },
-        {
-          "itemId": "generated.item.12",
           "discovered": true,
           "appraised": true,
           "identified": true
@@ -952,14 +876,18 @@
         },
         {
           "itemId": "generated.item.8",
-          "discovered": true
+          "discovered": true,
+          "appraised": true,
+          "identified": true
         },
         {
           "itemId": "generated.item.9",
-          "discovered": true
+          "discovered": true,
+          "appraised": true,
+          "identified": true
         }
       ],
-      "nextItemInstanceSerial": 177,
+      "nextItemInstanceSerial": 174,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -967,7 +895,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "d7f198ff9afeaa137d7dda296f5d15b974fdbfe0e25b3b516f8f4cc5e1071ca2"
+      "stateHash": "696ecb69ebbd46719efb6872b329e65a2b5a7d516db23ddb4d91db6104dc989f"
     },
     "events": [
       {
@@ -984,6 +912,6 @@
         "args": {}
       }
     ],
-    "saveRoundTripStateHash": "d7f198ff9afeaa137d7dda296f5d15b974fdbfe0e25b3b516f8f4cc5e1071ca2"
+    "saveRoundTripStateHash": "696ecb69ebbd46719efb6872b329e65a2b5a7d516db23ddb4d91db6104dc989f"
   }
 }

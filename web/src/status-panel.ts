@@ -16,6 +16,7 @@ import type {
   ResourcePoolDto,
   SummonCommandDto,
   SummonCommandModeDto,
+  VirtueDto,
 } from "./protocol";
 import { REST_UNTIL_RECOVERED_TURNS } from "./rest.ts";
 import { goldVisualId } from "./render-world.ts";
@@ -48,6 +49,7 @@ type StatusDom = Pick<
   | "progressionMultipliersValue"
   | "attributeList"
   | "skillList"
+  | "virtueList"
   | "mutationList"
   | "resourceList"
   | "abilityList"
@@ -225,6 +227,7 @@ export class StatusPanel {
     );
     this.#dom.progressionNameValue.textContent = state.player.name;
     this.#renderProgression(state.player.progress, state.player.build);
+    this.#renderVirtues(state.player.virtues);
     this.#renderMutations(state.player.mutations ?? []);
     this.#renderAbilities(
       state.player.abilities ?? [],
@@ -486,6 +489,24 @@ export class StatusPanel {
         this.#state.busy || this.#state.commandBlocked || this.#state.worldMap || selected;
       button.setAttribute("aria-pressed", String(selected));
     }
+  }
+
+  #renderVirtues(virtues: VirtueDto[]): void {
+    const document = this.#dom.virtueList.ownerDocument;
+    this.#dom.virtueList.replaceChildren(
+      ...virtues.map((virtue) => {
+        const row = document.createElement("li");
+        row.className = "virtue-row";
+        const name = document.createElement("span");
+        name.className = "virtue-name";
+        name.textContent = this.#localization.format(`virtue-${virtue.kind}`);
+        const value = document.createElement("span");
+        value.className = "virtue-value";
+        value.textContent = String(virtue.value);
+        row.append(name, value);
+        return row;
+      }),
+    );
   }
 
   #renderMutations(mutations: PlayerMutationDto[]): void {

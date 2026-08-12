@@ -40,14 +40,16 @@ fn fuel(game: &Game, item_id: &str) -> ItemFuelDto {
 
 #[test]
 fn warrior_birth_rolls_three_to_seven_matching_torches_after_food() {
+    let content = Game::new(0).content;
     for seed in 0..32 {
         let build = CharacterBuildIdentity {
             build_id: RFB_WARRIOR_BUILD_ID.to_owned(),
-            race_id: String::new(),
-            class_id: String::new(),
-            personality_id: String::new(),
+            race_id: "demo.race.rfb-human".to_owned(),
+            class_id: "demo.class.warrior".to_owned(),
+            personality_id: "demo.personality.ordinary".to_owned(),
         };
         let mut expected_rng = RfbRng::seeded(seed);
+        let _ = crate::game::virtues::initial_virtues(&content, Some(&build), &mut expected_rng);
         let _ = starting_gold(Some(&build), &mut expected_rng);
         let _ = starting_ration_quantity(Some(&build), &mut expected_rng);
         let expected = starting_torch_supply(Some(&build), &mut expected_rng)

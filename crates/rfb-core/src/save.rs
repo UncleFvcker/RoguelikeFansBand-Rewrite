@@ -26,7 +26,7 @@ use rfb_protocol::{
     NaturalAttributeSetSaveDto, PlayerBuildSaveDto, PlayerProgressSaveDto, PlayerSaveDto, Position,
     ResistanceDto, ResistanceLevelDto, ResistanceSaveDto, RolledAffixSaveDto, SkillProgressSaveDto,
     SlayDto, SlayLevelDto, SlayTargetDto, StatModifiersDto, StatusSaveDto, SummonSaveDto,
-    TargetModeDto, TargetSpecDto, TerrainSaveDto, WeaponBrandDto,
+    TargetModeDto, TargetSpecDto, TerrainSaveDto, VirtueDto, WeaponBrandDto,
 };
 
 pub(crate) const GENERATED_ITEM_ID_PREFIX: &str = "generated.item.";
@@ -603,6 +603,7 @@ pub(crate) fn player_to_save(
     player: &Actor,
     progress: &CharacterProgress,
     build: Option<&CharacterBuildIdentity>,
+    virtues: &[VirtueDto],
 ) -> PlayerSaveDto {
     PlayerSaveDto {
         id: player.id.clone(),
@@ -673,6 +674,7 @@ pub(crate) fn player_to_save(
         }),
         active_mutation_ids: progress.active_mutation_ids.iter().cloned().collect(),
         locked_mutation_ids: progress.locked_mutation_ids.iter().cloned().collect(),
+        virtues: virtues.to_vec(),
         build: build.map(|build| PlayerBuildSaveDto {
             build_id: build.build_id.clone(),
             race_id: build.race_id.clone(),

@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.180";
+pub const PROTOCOL_VERSION: &str = "1.181";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -1377,6 +1377,38 @@ pub struct PlayerMutationDto {
     pub locked: bool,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum VirtueKindDto {
+    Compassion,
+    Honour,
+    Justice,
+    Sacrifice,
+    Knowledge,
+    Faith,
+    Enlightenment,
+    Enchantment,
+    Chance,
+    Nature,
+    Harmony,
+    Vitality,
+    Unlife,
+    Patience,
+    Temperance,
+    Diligence,
+    Valour,
+    Individualism,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct VirtueDto {
+    pub kind: VirtueKindDto,
+    pub value: i16,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
@@ -1897,7 +1929,7 @@ pub enum AbilityRecallActionDto {
 pub enum AbilityEffectResolutionDto {
     RandomChoice {
         effect_index: u8,
-        roll: u16,
+        roll: i32,
         branch_index: u16,
         maximum_roll: u16,
     },
@@ -2514,6 +2546,7 @@ pub struct PlayerDto {
     pub resources: Vec<ResourcePoolDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub mutations: Vec<PlayerMutationDto>,
+    pub virtues: Vec<VirtueDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub ability_learning: Option<AbilityLearningDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -3398,6 +3431,8 @@ pub fn generated_typescript() -> String {
     push_declaration!(NutritionStateDto);
     push_declaration!(MutationRatingDto);
     push_declaration!(PlayerMutationDto);
+    push_declaration!(VirtueKindDto);
+    push_declaration!(VirtueDto);
     push_declaration!(PlayerDto);
     push_declaration!(EntityFactionDto);
     push_declaration!(SummonDto);
@@ -3500,6 +3535,7 @@ pub struct PlayerSaveDto {
     pub progress: Option<PlayerProgressSaveDto>,
     pub active_mutation_ids: Vec<String>,
     pub locked_mutation_ids: Vec<String>,
+    pub virtues: Vec<VirtueDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub build: Option<PlayerBuildSaveDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -4458,6 +4494,7 @@ mod tests {
                 build: None,
                 resources: Vec::new(),
                 mutations: Vec::new(),
+                virtues: Vec::new(),
                 ability_learning: None,
                 abilities: Vec::new(),
                 summon_command: SummonCommandDto::default(),
@@ -4663,6 +4700,7 @@ mod tests {
             progress: None,
             active_mutation_ids: Vec::new(),
             locked_mutation_ids: Vec::new(),
+            virtues: Vec::new(),
             build: None,
             resources: Vec::new(),
             bonus_spell_learning_capacity: 0,
@@ -4702,6 +4740,7 @@ mod tests {
         assert!(typescript.contains("alerted: boolean"));
         assert!(typescript.contains("equipment: Array<EquipmentItemDto>"));
         assert!(typescript.contains("mutations?: Array<PlayerMutationDto>"));
+        assert!(typescript.contains("virtues: Array<VirtueDto>"));
         assert!(typescript.contains("canReceiveRecharge: boolean"));
         assert!(typescript.contains("requiresTargetGlyph?: boolean"));
         assert!(typescript.contains("requiresRechargeTargets?: boolean"));
@@ -4721,5 +4760,11 @@ mod tests {
         .expect("generated protocol schema should be valid JSON");
         assert_eq!(schema["title"], "ProtocolSchemaV1");
         assert!(schema["$defs"]["GameCommand"].is_object());
+        assert_eq!(
+            schema["$defs"]["VirtueKindDto"]["enum"]
+                .as_array()
+                .map(Vec::len),
+            Some(18)
+        );
     }
 }

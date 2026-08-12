@@ -31,7 +31,7 @@
       "turn": 1,
       "worldTick": 10,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 155,
+      "rngDrawCounter": 177,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -301,7 +301,7 @@
       ],
       "playerPosition": {
         "x": 34,
-        "y": 16
+        "y": 7
       },
       "playerHp": 33,
       "playerMaxHp": 33,
@@ -309,10 +309,10 @@
       "playerDefense": 15,
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
-      "playerCarriedWeightTenthsPound": 629,
+      "playerCarriedWeightTenthsPound": 619,
       "playerCarryCapacityTenthsPound": 1200,
       "playerEncumbranceSpeedPenalty": 0,
-      "playerGold": 531,
+      "playerGold": 328,
       "playerNutrition": 9999,
       "playerLevel": 1,
       "playerExperience": 0,
@@ -470,7 +470,7 @@
           "usable": true,
           "canReceiveRecharge": false,
           "canSupplyRecharge": false,
-          "quantity": 9,
+          "quantity": 8,
           "weightTenthsPound": 10,
           "equipmentSlot": null,
           "modifiers": {
@@ -818,7 +818,7 @@
           "discovered": true
         }
       ],
-      "nextItemInstanceSerial": 176,
+      "nextItemInstanceSerial": 171,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -826,7 +826,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "9a1e60d82bd592c04de4d17ea2bb59ed0d3c4081c86fe238e5f347d64dfbb571"
+      "stateHash": "0e6a4c1f702b7d051177281ab9ad45ab3a9d9026f5f28861f780bfbdbfd3f633"
     },
     "events": [
       {
@@ -837,7 +837,7 @@
           "fromY": "16",
           "source": "demo.item.flicker-scroll",
           "toX": "34",
-          "toY": "16"
+          "toY": "7"
         },
         "outcome": {
           "type": "ability-teleport",
@@ -848,12 +848,12 @@
             },
             "to": {
               "x": 34,
-              "y": 16
+              "y": 7
             }
           }
         }
       }
     ],
-    "saveRoundTripStateHash": "9a1e60d82bd592c04de4d17ea2bb59ed0d3c4081c86fe238e5f347d64dfbb571"
+    "saveRoundTripStateHash": "0e6a4c1f702b7d051177281ab9ad45ab3a9d9026f5f28861f780bfbdbfd3f633"
   }
 }

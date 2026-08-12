@@ -565,9 +565,7 @@
             },
             "roll": {
               "type": "integer",
-              "format": "uint16",
-              "maximum": 65535,
-              "minimum": 0
+              "format": "int32"
             },
             "type": {
               "type": "string",
@@ -8624,6 +8622,12 @@
         },
         "summonCommand": {
           "$ref": "#/$defs/SummonCommandDto"
+        },
+        "virtues": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/VirtueDto"
+          }
         }
       },
       "required": [
@@ -8632,7 +8636,8 @@
         "kindId",
         "position",
         "hp",
-        "maxHp"
+        "maxHp",
+        "virtues"
       ]
     },
     "PlayerMutationDto": {
@@ -9934,6 +9939,48 @@
         "descriptionKey",
         "floorId",
         "visited"
+      ]
+    },
+    "VirtueDto": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/VirtueKindDto"
+        },
+        "value": {
+          "type": "integer",
+          "format": "int16",
+          "maximum": 32767,
+          "minimum": -32768
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "value"
+      ]
+    },
+    "VirtueKindDto": {
+      "type": "string",
+      "enum": [
+        "compassion",
+        "honour",
+        "justice",
+        "sacrifice",
+        "knowledge",
+        "faith",
+        "enlightenment",
+        "enchantment",
+        "chance",
+        "nature",
+        "harmony",
+        "vitality",
+        "unlife",
+        "patience",
+        "temperance",
+        "diligence",
+        "valour",
+        "individualism"
       ]
     },
     "VisibilityState": {

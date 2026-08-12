@@ -30,7 +30,7 @@
       "revision": 1,
       "turn": 1,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 154,
+      "rngDrawCounter": 165,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -308,10 +308,10 @@
       "playerDefense": 15,
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
-      "playerCarriedWeightTenthsPound": 714,
+      "playerCarriedWeightTenthsPound": 694,
       "playerCarryCapacityTenthsPound": 1200,
       "playerEncumbranceSpeedPenalty": 0,
-      "playerGold": 346,
+      "playerGold": 405,
       "playerNutrition": 9999,
       "playerLevel": 1,
       "playerExperience": 0,
@@ -469,7 +469,7 @@
           "usable": true,
           "canReceiveRecharge": false,
           "canSupplyRecharge": false,
-          "quantity": 9,
+          "quantity": 7,
           "weightTenthsPound": 10,
           "equipmentSlot": null,
           "modifiers": {
@@ -495,7 +495,7 @@
           "usable": false,
           "fuel": {
             "kind": "torch",
-            "current": 2000,
+            "current": 1500,
             "maximum": 5000,
             "lightRadius": 1
           },
@@ -527,7 +527,7 @@
           "usable": false,
           "fuel": {
             "kind": "torch",
-            "current": 2000,
+            "current": 1500,
             "maximum": 5000,
             "lightRadius": 1
           },
@@ -559,7 +559,7 @@
           "usable": false,
           "fuel": {
             "kind": "torch",
-            "current": 2000,
+            "current": 1500,
             "maximum": 5000,
             "lightRadius": 1
           },
@@ -591,7 +591,7 @@
           "usable": false,
           "fuel": {
             "kind": "torch",
-            "current": 2000,
+            "current": 1500,
             "maximum": 5000,
             "lightRadius": 1
           },
@@ -623,7 +623,7 @@
           "usable": false,
           "fuel": {
             "kind": "torch",
-            "current": 2000,
+            "current": 1500,
             "maximum": 5000,
             "lightRadius": 1
           },
@@ -655,7 +655,7 @@
           "usable": false,
           "fuel": {
             "kind": "torch",
-            "current": 2000,
+            "current": 1500,
             "maximum": 5000,
             "lightRadius": 1
           },
@@ -888,7 +888,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 175,
+      "nextItemInstanceSerial": 170,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "retired",
@@ -898,7 +898,7 @@
         "victoryTurn": 0,
         "retiredTurn": 1
       },
-      "stateHash": "eb93c10ddf11469b47e867e13c42475374b6c58c23a4b486f74d3cef5169240a"
+      "stateHash": "2afb373d47859eff8817407a6164e479b37155d5b3fd4448054bb7263d47c893"
     },
     "events": [
       {
@@ -913,9 +913,9 @@
       {
         "step": 2,
         "kind": "campaign-ended",
-        "stateHash": "eb93c10ddf11469b47e867e13c42475374b6c58c23a4b486f74d3cef5169240a"
+        "stateHash": "2afb373d47859eff8817407a6164e479b37155d5b3fd4448054bb7263d47c893"
       }
     ],
-    "saveRoundTripStateHash": "eb93c10ddf11469b47e867e13c42475374b6c58c23a4b486f74d3cef5169240a"
+    "saveRoundTripStateHash": "2afb373d47859eff8817407a6164e479b37155d5b3fd4448054bb7263d47c893"
   }
 }

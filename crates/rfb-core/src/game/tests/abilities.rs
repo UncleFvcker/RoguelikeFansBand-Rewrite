@@ -2,6 +2,10 @@
 use super::support::*;
 use super::*;
 
+fn set_test_virtue(game: &mut Game, slot: usize, kind: VirtueKindDto, value: i16) {
+    game.virtues[slot] = VirtueDto { kind, value };
+}
+
 #[test]
 fn anti_magic_status_blocks_learned_spells_without_spending_resources() {
     let mut game = prepare_death_caster(7, 40, "demo.ability.death-berserk");
@@ -654,6 +658,8 @@ fn corrected_death_spells_project_authoritative_values_at_levels_one_twenty_and_
 #[test]
 fn death_vampiric_drain_heals_and_feeds_up_to_the_original_caps() {
     let mut game = prepare_death_caster(0, 50, "demo.ability.death-vampiric-drain");
+    set_test_virtue(&mut game, 0, VirtueKindDto::Sacrifice, 0);
+    set_test_virtue(&mut game, 1, VirtueKindDto::Vitality, 0);
     game.debug_set_ability_casts_succeed(true);
     let target = Position {
         x: game.player.position.x + 1,
@@ -687,6 +693,8 @@ fn death_vampiric_drain_heals_and_feeds_up_to_the_original_caps() {
     assert!(game.entities[0].hp < 500);
     assert_eq!(game.player.hp, maximum_hp);
     assert_eq!(game.nutrition, rfb_protocol::PLAYER_NUTRITION_MAXIMUM - 1);
+    assert_eq!(game.virtue_current(VirtueKindDto::Sacrifice), -1);
+    assert_eq!(game.virtue_current(VirtueKindDto::Vitality), -1);
 }
 
 #[test]
@@ -806,6 +814,7 @@ fn death_weapon_branding_targets_plain_weapons_across_player_locations() {
             40
         };
         let mut game = prepare_death_caster(7, level, ability_id);
+        set_test_virtue(&mut game, 0, VirtueKindDto::Enchantment, 0);
         game.debug_set_ability_casts_succeed(true);
         game.player.position = Position { x: 5, y: 5 };
         game.items.retain(|item| {
@@ -841,6 +850,7 @@ fn death_weapon_branding_targets_plain_weapons_across_player_locations() {
         assert_eq!(item.origin_kind, Some(ItemOriginKindDto::PlayerMade));
         assert_eq!(item.discount_percent, 99);
         assert_eq!(item.quality, ItemQualityDto::Fine);
+        assert_eq!(game.virtue_current(VirtueKindDto::Enchantment), 2);
         assert!((0..=6).contains(&item.enchantments.to_hit));
         assert!((0..=6).contains(&item.enchantments.to_damage));
         if ability_id.ends_with("poison-branding") {
@@ -1149,6 +1159,8 @@ fn vampirism_true_retraces_the_path_after_each_kill() {
     let mut selected = None;
     for seed in 0..128 {
         let mut game = prepare_death_caster(seed, 36, ability_id);
+        set_test_virtue(&mut game, 0, VirtueKindDto::Sacrifice, 0);
+        set_test_virtue(&mut game, 1, VirtueKindDto::Vitality, 0);
         for (ordinal, x) in (game.player.position.x + 1..=game.player.position.x + 3).enumerate() {
             let position = Position {
                 x,
@@ -1186,6 +1198,8 @@ fn vampirism_true_retraces_the_path_after_each_kill() {
     let (game, events, removed) = selected.expect("a deterministic triple drain should succeed");
     assert_eq!(removed.len(), 3);
     assert!(game.entities.is_empty());
+    assert_eq!(game.virtue_current(VirtueKindDto::Sacrifice), -1);
+    assert_eq!(game.virtue_current(VirtueKindDto::Vitality), -1);
     assert_eq!(
         events
             .iter()
@@ -1571,6 +1585,51 @@ fn invoke_spirits_resolves_all_twenty_three_branches_deterministically() {
             _ => {}
         }
     }
+}
+
+#[test]
+fn invoke_spirits_lowest_outcome_updates_chance_and_unlife() {
+    let ability_id = "demo.ability.death-invoke-spirits";
+    let mut game = prepare_death_caster(0, 10, ability_id);
+    descend_one_floor(&mut game);
+    clear_monsters(&mut game);
+    game.debug_set_ability_casts_succeed(true);
+    set_test_virtue(&mut game, 0, VirtueKindDto::Chance, 0);
+    set_test_virtue(&mut game, 1, VirtueKindDto::Unlife, 0);
+    let seed = (0..4_096)
+        .find(|seed| {
+            let mut rng = RfbRng::seeded(*seed);
+            let _failure_roll = rng.bounded(100);
+            rng.bounded(100) + 1 + 10 / 5 <= 7
+        })
+        .expect("the lowest Invoke Spirits outcome should be reachable");
+    game.rng = RfbRng::seeded(seed);
+    let mut events = Vec::new();
+
+    game.resolve_player_ability(
+        ability_id,
+        TargetSelection::Direction {
+            direction: Direction::East,
+        },
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Invoke Spirits should resolve");
+
+    assert_eq!(game.virtue_current(VirtueKindDto::Chance), 1);
+    assert_eq!(game.virtue_current(VirtueKindDto::Unlife), 1);
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::AbilityEffectsResolved { resolution, .. }
+            if matches!(
+                resolution.effects.as_slice(),
+                [AbilityEffectResolutionDto::RandomChoice {
+                    branch_index: 0,
+                    ..
+                }]
+            )
+    )));
 }
 
 #[test]
@@ -3933,6 +3992,7 @@ fn death_fourth_book_materializes_original_level_curves() {
 fn raise_dead_is_deterministic_and_enforces_faction_group_and_unique_rules() {
     let cast = |seed: u64, level: u16| {
         let mut game = prepare_death_caster(seed, level, "demo.ability.death-raise-dead");
+        let unlife_before = game.virtue_current(VirtueKindDto::Unlife);
         game.debug_set_ability_casts_succeed(true);
         let mut events = Vec::new();
         game.resolve_player_ability(
@@ -3950,6 +4010,10 @@ fn raise_dead_is_deterministic_and_enforces_faction_group_and_unique_rules() {
                 _ => None,
             })
             .expect("Raise Dead should summon");
+        assert_eq!(
+            game.virtue_current(VirtueKindDto::Unlife),
+            unlife_before + 1
+        );
         (game, resolution)
     };
 

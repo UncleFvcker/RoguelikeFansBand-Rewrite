@@ -872,6 +872,15 @@ impl Game {
             &content,
         )?;
         let saved_resources = payload.player.resources.clone();
+        if !super::virtues::validate_virtues(&payload.player.virtues) {
+            return Err(CoreError::InvalidSave("player virtue state is invalid"));
+        }
+        let virtues = payload
+            .player
+            .virtues
+            .clone()
+            .try_into()
+            .expect("validated virtue count must fill every slot");
         let bonus_spell_learning_capacity = payload.player.bonus_spell_learning_capacity;
         let saved_learned_ability_ids = payload.player.learned_ability_ids.clone();
         let saved_ability_progress = payload.player.ability_progress.clone();
@@ -1195,6 +1204,7 @@ impl Game {
             build,
             body_slots,
             progress,
+            virtues,
             resources: BTreeMap::new(),
             last_visual_cells: None,
             bonus_spell_learning_capacity,
@@ -1421,6 +1431,7 @@ impl Game {
             &self.player,
             &self.progress,
             self.build.as_ref(),
+            &self.virtues,
         );
         player.gold = self.gold;
         player.nutrition = self.nutrition;

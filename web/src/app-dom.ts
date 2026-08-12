@@ -65,6 +65,7 @@ export interface AppDom {
   readonly progressionMultipliersValue: HTMLElement;
   readonly attributeList: HTMLUListElement;
   readonly skillList: HTMLUListElement;
+  readonly virtueList: HTMLUListElement;
   readonly mutationList: HTMLUListElement;
   readonly resourceList: HTMLUListElement;
   readonly abilityList: HTMLUListElement;
@@ -175,6 +176,7 @@ export function createAppDom(document: DocumentLookup): Readonly<AppDom> {
     ),
     attributeList: element<HTMLUListElement>(document, "attribute-list"),
     skillList: element<HTMLUListElement>(document, "skill-list"),
+    virtueList: element<HTMLUListElement>(document, "virtue-list"),
     mutationList: element<HTMLUListElement>(document, "mutation-list"),
     resourceList: element<HTMLUListElement>(document, "resource-list"),
     abilityList: element<HTMLUListElement>(document, "ability-list"),

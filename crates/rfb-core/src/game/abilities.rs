@@ -2,6 +2,13 @@
 
 use super::*;
 
+const DEATH_INVOKE_SPIRITS_ABILITY_ID: &str = "demo.ability.death-invoke-spirits";
+const DEATH_POISON_BRANDING_ABILITY_ID: &str = "demo.ability.death-poison-branding";
+const DEATH_RAISE_DEAD_ABILITY_ID: &str = "demo.ability.death-raise-dead";
+const DEATH_VAMPIRIC_DRAIN_ABILITY_ID: &str = "demo.ability.death-vampiric-drain";
+const DEATH_VAMPIRIC_BRANDING_ABILITY_ID: &str = "demo.ability.death-vampiric-branding";
+const DEATH_VAMPIRISM_TRUE_ABILITY_ID: &str = "demo.ability.death-vampirism-true";
+
 enum EarthquakeSource {
     Ability(String),
     Monster(String),
@@ -392,19 +399,34 @@ impl Game {
             resolution: resolution.clone(),
         });
 
-        if matches!(
+        let random_branch_index = if matches!(
             &ability.effect,
             AbilityEffectDefinition::RandomChoice { .. }
         ) {
-            self.select_player_random_choice_branch(
+            Some(self.select_player_random_choice_branch(
                 &mut ability,
                 &target,
                 &mut target_plan,
                 events,
-            );
-        }
+            ))
+        } else {
+            None
+        };
 
-        self.resolve_player_ability_effect(ability, target_plan, events, changed, removed_entities)
+        let result = self.resolve_player_ability_effect(
+            ability,
+            target_plan,
+            events,
+            changed,
+            removed_entities,
+        );
+        if result.is_ok()
+            && ability_id == DEATH_INVOKE_SPIRITS_ABILITY_ID
+            && random_branch_index == Some(0)
+        {
+            self.add_virtue(VirtueKindDto::Unlife, 1);
+        }
+        result
     }
 
     fn select_player_random_choice_branch(
@@ -413,7 +435,7 @@ impl Game {
         target: &TargetSelection,
         target_plan: &mut AbilityTargetPlan,
         events: &mut Vec<DomainEvent>,
-    ) {
+    ) -> u16 {
         let AbilityEffectDefinition::RandomChoice {
             roll_sides,
             level_bonus_divisor,
@@ -429,18 +451,31 @@ impl Game {
             .level
             .checked_div(level_bonus_divisor)
             .unwrap_or(0);
-        let roll = u16::try_from(spell_powered_ability_value(
+        let mut roll = i32::try_from(spell_powered_ability_value(
             ability,
             0,
             AbilitySpellPowerField::RandomChoiceRoll,
             u64::from(base_roll.saturating_add(level_bonus)),
         ))
-        .expect("spell-powered random ability roll must fit u16");
+        .expect("spell-powered random ability roll must fit i32");
+        if ability.id == DEATH_INVOKE_SPIRITS_ABILITY_ID {
+            roll = self.adjust_roll_by_chance_virtue(roll);
+            if roll < 26 {
+                self.add_virtue(VirtueKindDto::Chance, 1);
+            }
+        }
         let (branch_index, branch) = branches
             .iter()
             .enumerate()
-            .find(|(_, branch)| roll <= branch.maximum_roll)
+            .find(|(_, branch)| roll <= i32::from(branch.maximum_roll))
+            .or_else(|| {
+                (ability.id == DEATH_INVOKE_SPIRITS_ABILITY_ID)
+                    .then(|| branches.iter().enumerate().next_back())
+                    .flatten()
+            })
             .expect("validated random ability branches must cover every roll");
+        let branch_index =
+            u16::try_from(branch_index).expect("validated random branch index must fit u16");
         events.push(DomainEvent::AbilityEffectsResolved {
             ability_id: ability.id.clone(),
             resolution: AbilityEffectsResolutionDto {
@@ -449,8 +484,7 @@ impl Game {
                 effects: vec![AbilityEffectResolutionDto::RandomChoice {
                     effect_index: 0,
                     roll,
-                    branch_index: u16::try_from(branch_index)
-                        .expect("validated random branch index must fit u16"),
+                    branch_index,
                     maximum_roll: branch.maximum_roll,
                 }],
             },
@@ -474,6 +508,7 @@ impl Game {
                     .expect("validated random branch must accept a self target");
             }
         }
+        branch_index
     }
 }
 
@@ -947,7 +982,7 @@ impl Game {
             u16::try_from(self.rng.bounded(5) + 1).expect("Malediction trigger roll must fit u16");
         let mut choices = vec![AbilityEffectResolutionDto::RandomChoice {
             effect_index: 0,
-            roll: trigger_roll,
+            roll: i32::from(trigger_roll),
             branch_index: u16::from(trigger_roll == 1),
             maximum_roll: 5,
         }];
@@ -977,7 +1012,7 @@ impl Game {
         };
         choices.push(AbilityEffectResolutionDto::RandomChoice {
             effect_index: 0,
-            roll: rider_roll,
+            roll: i32::from(rider_roll),
             branch_index,
             maximum_roll: 1_000,
         });
@@ -2019,6 +2054,10 @@ impl Game {
         else {
             unreachable!("drain life executor requires a drain life effect");
         };
+        if ability.id == DEATH_VAMPIRISM_TRUE_ABILITY_ID {
+            self.add_virtue(VirtueKindDto::Sacrifice, -1);
+            self.add_virtue(VirtueKindDto::Vitality, -1);
+        }
         for _ in 0..*repeat {
             let (trace, target_index) = self.trace_projectile_path(path.clone());
             let Some(target_index) = target_index else {
@@ -2083,6 +2122,10 @@ impl Game {
                 changed,
                 removed_entities,
             )?;
+            if ability.id == DEATH_VAMPIRIC_DRAIN_ABILITY_ID && damage.applied > 0 {
+                self.add_virtue(VirtueKindDto::Sacrifice, -1);
+                self.add_virtue(VirtueKindDto::Vitality, -1);
+            }
             let requested = if !*feeds || self.nutrition < hunger::NUTRITION_FULL {
                 damage.applied.min(hp_before)
             } else {
@@ -2915,6 +2958,12 @@ impl Game {
             item_id,
             ItemEnchantmentRequest::new(enchantment_attempts, enchantment_attempts, 0),
         );
+        if matches!(
+            ability.id.as_str(),
+            DEATH_POISON_BRANDING_ABILITY_ID | DEATH_VAMPIRIC_BRANDING_ABILITY_ID
+        ) {
+            self.add_virtue(VirtueKindDto::Enchantment, 2);
+        }
         self.identify_item_instance(item_id, ItemIdentificationRequest::new(true));
         self.clamp_player_hp_to_effective_max();
         events.push(DomainEvent::AbilityEffectsResolved {
@@ -4627,6 +4676,9 @@ impl Game {
             positions,
             changed,
         );
+        if ability.id == DEATH_RAISE_DEAD_ABILITY_ID && !resolution.entity_ids.is_empty() {
+            self.add_virtue(VirtueKindDto::Unlife, 1);
+        }
         events.push(DomainEvent::AbilitySummoned {
             ability_id: ability.id.clone(),
             resolution,

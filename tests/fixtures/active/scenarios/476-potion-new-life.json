@@ -36,7 +36,7 @@
       "turn": 1,
       "worldTick": 10,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 457,
+      "rngDrawCounter": 357,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -314,10 +314,10 @@
       "playerDefense": 15,
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
-      "playerCarriedWeightTenthsPound": 714,
+      "playerCarriedWeightTenthsPound": 724,
       "playerCarryCapacityTenthsPound": 1200,
       "playerEncumbranceSpeedPenalty": 0,
-      "playerGold": 446,
+      "playerGold": 523,
       "playerNutrition": 9999,
       "playerLevel": 1,
       "playerExperience": 0,
@@ -346,21 +346,21 @@
           "intelligence": {
             "natural": 13,
             "maximumNatural": 13,
-            "potential": 98,
+            "potential": 148,
             "effective": 11,
             "index": 8
           },
           "wisdom": {
             "natural": 13,
             "maximumNatural": 13,
-            "potential": 148,
+            "potential": 88,
             "effective": 11,
             "index": 8
           },
           "dexterity": {
             "natural": 13,
             "maximumNatural": 13,
-            "potential": 118,
+            "potential": 148,
             "effective": 15,
             "index": 12
           },
@@ -374,7 +374,7 @@
           "charisma": {
             "natural": 13,
             "maximumNatural": 13,
-            "potential": 128,
+            "potential": 108,
             "effective": 14,
             "index": 11
           }
@@ -464,7 +464,7 @@
       },
       "entityCount": 0,
       "groundItemCount": 2,
-      "inventoryStackCount": 8,
+      "inventoryStackCount": 9,
       "equipmentCount": 3,
       "inventory": [
         {
@@ -475,7 +475,7 @@
           "usable": true,
           "canReceiveRecharge": false,
           "canSupplyRecharge": false,
-          "quantity": 9,
+          "quantity": 7,
           "weightTenthsPound": 10,
           "equipmentSlot": null,
           "modifiers": {
@@ -501,7 +501,7 @@
           "usable": false,
           "fuel": {
             "kind": "torch",
-            "current": 3500,
+            "current": 2000,
             "maximum": 5000,
             "lightRadius": 1
           },
@@ -533,7 +533,7 @@
           "usable": false,
           "fuel": {
             "kind": "torch",
-            "current": 3500,
+            "current": 2000,
             "maximum": 5000,
             "lightRadius": 1
           },
@@ -565,7 +565,7 @@
           "usable": false,
           "fuel": {
             "kind": "torch",
-            "current": 3500,
+            "current": 2000,
             "maximum": 5000,
             "lightRadius": 1
           },
@@ -597,7 +597,7 @@
           "usable": false,
           "fuel": {
             "kind": "torch",
-            "current": 3500,
+            "current": 2000,
             "maximum": 5000,
             "lightRadius": 1
           },
@@ -629,7 +629,7 @@
           "usable": false,
           "fuel": {
             "kind": "torch",
-            "current": 3500,
+            "current": 2000,
             "maximum": 5000,
             "lightRadius": 1
           },
@@ -661,7 +661,7 @@
           "usable": false,
           "fuel": {
             "kind": "torch",
-            "current": 3500,
+            "current": 2000,
             "maximum": 5000,
             "lightRadius": 1
           },
@@ -687,6 +687,38 @@
         },
         {
           "id": "generated.item.8",
+          "kindId": "demo.item.wooden-torch",
+          "displayNameKey": "item-demo-wooden-torch-name",
+          "knowledge": "aware",
+          "usable": false,
+          "fuel": {
+            "kind": "torch",
+            "current": 2000,
+            "maximum": 5000,
+            "lightRadius": 1
+          },
+          "canReceiveRecharge": false,
+          "canSupplyRecharge": false,
+          "quantity": 1,
+          "weightTenthsPound": 30,
+          "equipmentSlot": "light",
+          "modifiers": {
+            "attack": 0,
+            "defense": 0,
+            "maxHp": 0,
+            "strength": 0,
+            "intelligence": 0,
+            "wisdom": 0,
+            "dexterity": 0,
+            "constitution": 0,
+            "charisma": 0,
+            "speed": 0,
+            "spellPowerBonus": 0
+          },
+          "identification": "unexamined"
+        },
+        {
+          "id": "generated.item.9",
           "kindId": "demo.item.arrow",
           "displayNameKey": "item-demo-arrow-name",
           "knowledge": "aware",
@@ -714,7 +746,7 @@
       ],
       "equipment": [
         {
-          "id": "generated.item.10",
+          "id": "generated.item.11",
           "kindId": "demo.item.chain-mail",
           "displayNameKey": "item-demo-chain-mail-name",
           "knowledge": "aware",
@@ -754,7 +786,7 @@
           "quality": "ordinary"
         },
         {
-          "id": "generated.item.9",
+          "id": "generated.item.10",
           "kindId": "demo.item.broad-sword",
           "displayNameKey": "item-demo-broad-sword-name",
           "knowledge": "aware",
@@ -785,11 +817,11 @@
               "sides": 6,
               "damageType": "physical"
             },
-            "sourceItemId": "generated.item.9"
+            "sourceItemId": "generated.item.10"
           }
         },
         {
-          "id": "generated.item.11",
+          "id": "generated.item.12",
           "kindId": "demo.item.short-bow",
           "displayNameKey": "item-demo-short-bow-name",
           "knowledge": "aware",
@@ -830,7 +862,7 @@
               "range": 16,
               "requiresLineOfEffect": true
             },
-            "sourceItemId": "generated.item.11"
+            "sourceItemId": "generated.item.12"
           }
         }
       ],
@@ -867,6 +899,12 @@
           "identified": true
         },
         {
+          "itemId": "generated.item.12",
+          "discovered": true,
+          "appraised": true,
+          "identified": true
+        },
+        {
           "itemId": "generated.item.2",
           "discovered": true
         },
@@ -896,12 +934,10 @@
         },
         {
           "itemId": "generated.item.9",
-          "discovered": true,
-          "appraised": true,
-          "identified": true
+          "discovered": true
         }
       ],
-      "nextItemInstanceSerial": 177,
+      "nextItemInstanceSerial": 176,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -909,7 +945,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "3be64e87ce58f70ef735ca7cec245b764ff5b4c7350f6c3ceadf400c9762a3d6"
+      "stateHash": "ed292bc46986961af28a994d5662e08e688476987c0ac36d5d3254bd96aeffc9"
     },
     "events": [
       {
@@ -921,6 +957,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "3be64e87ce58f70ef735ca7cec245b764ff5b4c7350f6c3ceadf400c9762a3d6"
+    "saveRoundTripStateHash": "ed292bc46986961af28a994d5662e08e688476987c0ac36d5d3254bd96aeffc9"
   }
 }

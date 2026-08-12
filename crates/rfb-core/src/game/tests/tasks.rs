@@ -934,7 +934,7 @@ fn vapor_quest_unlocks_after_old_man_willow_clears_the_cellar_and_rewards_detect
             .iter()
             .filter(|item| item.id.starts_with("demo.item.vapor-quest."))
             .count(),
-        12
+        11
     );
     game.entities.clear();
     dispatch_next(&mut game, GameCommand::Wait);

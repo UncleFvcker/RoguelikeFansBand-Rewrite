@@ -32,4 +32,5 @@ mod snapshots;
 pub(crate) mod support;
 mod tasks;
 mod town;
+mod virtue_state;
 mod world;

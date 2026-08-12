@@ -96,7 +96,8 @@ use rfb_protocol::{
     RecallStateDto, ResistanceDto, ResourcePoolSaveDto, ResourceRecoveryResolutionDto,
     RestResolutionDto, RestStopReasonDto, SlayDto, SlayLevelDto, SlayTargetDto, StatModifiersDto,
     SummonCommandDto, SummonCommandModeDto, SummonCommandResolutionDto, TargetModeDto,
-    TargetSelection, TargetSpecDto, TaskStatusKindDto, ThrowProfileDto, WeaponBrandDto,
+    TargetSelection, TargetSpecDto, TaskStatusKindDto, ThrowProfileDto, VirtueDto, VirtueKindDto,
+    WeaponBrandDto,
 };
 
 mod abilities;
@@ -136,6 +137,7 @@ pub(crate) mod town;
 mod travel;
 mod turn;
 mod validation;
+mod virtues;
 mod wilderness;
 mod world;
 
@@ -193,7 +195,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 89;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 90;
 #[cfg(test)]
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const VISIBILITY_RADIUS: i32 = 8;
@@ -799,6 +801,7 @@ pub struct Game {
     build: Option<CharacterBuildIdentity>,
     body_slots: Vec<BodySlot>,
     progress: CharacterProgress,
+    virtues: [VirtueDto; virtues::VIRTUE_SLOT_COUNT],
     resources: BTreeMap<String, ResourcePool>,
     last_visual_cells: Option<Vec<CellVisualDto>>,
     bonus_spell_learning_capacity: u16,
@@ -957,6 +960,7 @@ impl Game {
             true,
         );
         let mut rng = RfbRng::seeded(seed);
+        let virtues = virtues::initial_virtues(&content, build.as_ref(), &mut rng);
         let gold = gold::starting_gold(build.as_ref(), &mut rng);
         let starting_ration_quantity = hunger::starting_ration_quantity(build.as_ref(), &mut rng);
         let starting_torches = lighting::starting_torch_supply(build.as_ref(), &mut rng);
@@ -1128,6 +1132,7 @@ impl Game {
             build,
             body_slots,
             progress,
+            virtues,
             resources: BTreeMap::new(),
             last_visual_cells: None,
             bonus_spell_learning_capacity: 0,

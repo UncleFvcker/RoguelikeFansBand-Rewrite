@@ -198,6 +198,7 @@ mod tests {
             player: PlayerSaveDto {
                 id: "demo.player".to_owned(),
                 kind_id: "demo.actor.explorer".to_owned(),
+                name: "Adventurer".to_owned(),
                 position: Position { x: 0, y: 0 },
                 hp: 10,
                 gold: 0,
@@ -216,6 +217,7 @@ mod tests {
                 progress: None,
                 active_mutation_ids: Vec::new(),
                 locked_mutation_ids: Vec::new(),
+                virtues: Vec::new(),
                 build: None,
                 resources: Vec::new(),
                 bonus_spell_learning_capacity: 0,

@@ -138,6 +138,7 @@ impl Game {
             build: self.player_build_dto(),
             resources: self.player_resource_dtos(),
             mutations: self.player_mutation_dtos(),
+            virtues: self.virtues.to_vec(),
             ability_learning: self.player_ability_learning_dto(),
             abilities: self.player_ability_dtos(),
             summon_command: self.summon_command.clone(),

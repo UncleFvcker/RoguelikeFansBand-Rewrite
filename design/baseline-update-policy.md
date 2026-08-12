@@ -6,7 +6,7 @@
 
 contract fixture 是规则兼容边界，不能把测试失败简单处理为“刷新预期结果”。政策用于保证每次规则变化只修改真正受影响的场景，同时保留可审查的失败原因。
 
-当前逻辑基线是 `contract-v272`，机器可读政策固定在：
+当前逻辑基线是 `contract-v273`，机器可读政策固定在：
 
 ```text
 tests/fixtures/active/baseline-policy.json
@@ -65,6 +65,12 @@ content hash 为 `2f88338bb3fe9bfa13ac703d0b58ae4521bade19619805c5fe37da977a8b48
 进入权威投影和状态哈希，32 个死亡法术按源调用点显式声明受缩放字段；Protocol 升至
 1.180、State Hash Schema 升至 v89，内容包升级到 1.280.0。公共物品 modifier 投影与
 状态哈希结构变化要求统一刷新 21 条 active fixture；active 集保持 21 条且零 waiver。
+
+`contract-v273` 接入 RFB Virtue 基础状态：18 种类型、每角色 8 个唯一槽位、职业/种族/
+领域初始化、权威随机补齐和 50/80/100 软上限。Virtue 进入存档、玩家只读投影与状态
+哈希，并接通死亡领域已有的武器烙印、吸血、召唤亡灵及 Invoke Spirits 调用点。
+Protocol 升至 1.181、State Hash Schema 升至 v90；出生初始化新增 RNG 消费且公共玩家
+投影改变，因此统一刷新 21 条 active fixture。save 容器仍为 v1，零 waiver。
 
 ## 分类验证
 
