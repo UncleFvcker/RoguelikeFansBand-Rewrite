@@ -733,7 +733,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         .iter()
         .filter(|actor| actor.tags.iter().any(|tag| tag == "orc-cave"))
         .collect::<Vec<_>>();
-    assert_eq!(orc_cave.len(), 583);
+    assert_eq!(orc_cave.len(), 584);
 
     for id in [
         "demo.actor.bunyip",
@@ -781,7 +781,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         level_counts,
         [
             16, 14, 12, 17, 24, 17, 19, 17, 18, 21, 7, 12, 29, 15, 27, 28, 19, 19, 11, 42, 12, 6,
-            12, 14, 14, 7, 10, 6, 6, 17, 11, 8, 3, 8, 17, 9, 1, 6, 4, 17, 3, 3, 4, 1,
+            12, 14, 14, 7, 10, 6, 6, 17, 11, 8, 3, 8, 17, 9, 1, 6, 4, 17, 4, 3, 4, 1,
         ]
     );
 
@@ -5077,6 +5077,83 @@ fn p59bc_location_restricted_monsters_keep_source_allocation() {
 }
 
 #[test]
+fn p60_gragomani_keeps_curse_melee_and_weighted_batch_followers() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actor = artifact
+        .content
+        .actors
+        .iter()
+        .find(|actor| actor.id == "demo.actor.gragomani-the-leprechaun-prophet")
+        .expect("Gragomani should be imported");
+    assert_eq!(actor.level, 61);
+    assert_eq!(
+        actor
+            .allocation
+            .as_ref()
+            .map(|allocation| allocation.legacy_index),
+        Some(1285)
+    );
+    let curse = &actor
+        .melee_routine
+        .as_ref()
+        .expect("Gragomani should retain melee")
+        .blows[3]
+        .effects[0];
+    assert!(matches!(
+        curse,
+        MeleeBlowEffectDefinition::Damage {
+            damage_dice: 6,
+            damage_sides: 6,
+            damage_type: ActorDamageType::Curse,
+            armor_mitigated: false,
+            ..
+        }
+    ));
+    assert!(
+        actor
+            .monster_casting
+            .as_ref()
+            .expect("Gragomani should cast")
+            .abilities
+            .iter()
+            .any(|candidate| candidate.ability_id
+                == "rfb-legacy.ability.summon-gragomani-followers-1d4-4")
+    );
+    let ability = artifact
+        .content
+        .abilities
+        .iter()
+        .find(|ability| ability.id == "rfb-legacy.ability.summon-gragomani-followers-1d4-4")
+        .expect("Gragomani special summon should be imported");
+    let AbilityEffectDefinition::SummonCategory {
+        category,
+        count_dice,
+        count_sides,
+        count_bonus,
+        batch_candidates,
+        ..
+    } = &ability.effect
+    else {
+        panic!("Gragomani special should remain a category summon");
+    };
+    assert_eq!(category, "kin-glyph-104");
+    assert_eq!((*count_dice, *count_sides, *count_bonus), (1, 4, 4));
+    assert_eq!(
+        batch_candidates,
+        &[
+            AbilitySummonCandidateDefinition {
+                actor_kind_id: "demo.actor.malicious-leprechaun".to_owned(),
+                weight: 1,
+            },
+            AbilitySummonCandidateDefinition {
+                actor_kind_id: "demo.actor.leprechaun-fanatic".to_owned(),
+                weight: 3,
+            },
+        ]
+    );
+}
+
+#[test]
 fn p53a_ice_jump_and_angel_summons_reuse_shared_effects() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let actor = |id: &str| {
@@ -6978,7 +7055,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
                     == Some("demo.loot-table.base-items")
             })
             .count(),
-        535
+        536
     );
 }
 

@@ -7021,6 +7021,7 @@ fn melee_damage_type(token: &str) -> Option<&'static str> {
         "STORM" => Some("storm"),
         "HOLY_FIRE" => Some("holy-fire"),
         "HELL_FIRE" => Some("hell-fire"),
+        "CAUSE_1" | "CAUSE_2" | "CAUSE_3" | "CAUSE_4" => Some("curse"),
         "ICE" => Some("ice"),
         "WATER" => Some("water"),
         "POIS" => Some("poison"),
@@ -9269,6 +9270,26 @@ fn map_summon_spell_token(
         None => (token, None),
     };
     if base == "S_SPECIAL" {
+        if caster_kind_id.rsplit('.').next()? == "gragomani-the-leprechaun-prophet" {
+            let suffix = "summon-gragomani-followers-1d4-4";
+            let id = format!("rfb-legacy.ability.{suffix}");
+            abilities.entry(id.clone()).or_insert_with(|| {
+                let mut ability =
+                    summon_category_ability(suffix, "kin-glyph-104", 61, 1, 4, 4, None);
+                ability["effect"]["batchCandidates"] = serde_json::json!([
+                    {
+                        "actorKindId": "demo.actor.malicious-leprechaun",
+                        "weight": 1,
+                    },
+                    {
+                        "actorKindId": "demo.actor.leprechaun-fanatic",
+                        "weight": 3,
+                    },
+                ]);
+                ability
+            });
+            return Some(id);
+        }
         let (suffix, category, maximum_level, dice, sides, bonus, maximum_count) =
             match caster_kind_id.rsplit('.').next()? {
                 "zoopi-the-cube-king" => (
@@ -15279,6 +15300,30 @@ S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_ANT | S_SPIDER | S_HYDRA | S_LO
         assert_eq!(gospel["countDice"], 1);
         assert_eq!(gospel["countSides"], 4);
         assert_eq!(gospel["maximumCount"], 3);
+        let gragomani_id = map_spell_token(
+            "S_SPECIAL",
+            61,
+            3,
+            "demo.actor.gragomani-the-leprechaun-prophet",
+            &mut abilities,
+        )
+        .expect("Gragomani special should map");
+        assert_eq!(
+            gragomani_id,
+            "rfb-legacy.ability.summon-gragomani-followers-1d4-4"
+        );
+        let gragomani = &abilities[&gragomani_id]["effect"];
+        assert_eq!(gragomani["category"], "kin-glyph-104");
+        assert_eq!(gragomani["countDice"], 1);
+        assert_eq!(gragomani["countSides"], 4);
+        assert_eq!(gragomani["countBonus"], 4);
+        assert_eq!(
+            gragomani["batchCandidates"],
+            serde_json::json!([
+                { "actorKindId": "demo.actor.malicious-leprechaun", "weight": 1 },
+                { "actorKindId": "demo.actor.leprechaun-fanatic", "weight": 3 },
+            ])
+        );
         assert!(
             map_spell_token(
                 "S_SPECIAL",

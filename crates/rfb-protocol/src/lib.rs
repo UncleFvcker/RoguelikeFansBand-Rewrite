@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.186";
+pub const PROTOCOL_VERSION: &str = "1.187";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -855,6 +855,14 @@ pub struct AbilityRandomBranchSpecDto {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct AbilitySummonCandidateSpecDto {
+    pub actor_kind_id: String,
+    pub weight: u16,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(
     tag = "type",
     rename_all = "kebab-case",
@@ -1033,6 +1041,8 @@ pub enum AbilityEffectSpecDto {
         count_bonus: u8,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         maximum_count: Option<u8>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        batch_candidates: Vec<AbilitySummonCandidateSpecDto>,
         #[serde(default)]
         hostile_chance_percent: u8,
         #[serde(default)]
@@ -3465,6 +3475,7 @@ pub fn generated_typescript() -> String {
     push_declaration!(AbilityGenocideScopeDto);
     push_declaration!(AbilityRandomTargetDto);
     push_declaration!(AbilityRandomBranchSpecDto);
+    push_declaration!(AbilitySummonCandidateSpecDto);
     push_declaration!(AbilityEffectSpecDto);
     push_declaration!(AbilitySummonSpecDto);
     push_declaration!(AbilityDetectSpecDto);

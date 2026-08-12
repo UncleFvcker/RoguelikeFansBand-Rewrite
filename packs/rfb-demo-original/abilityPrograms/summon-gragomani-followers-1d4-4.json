@@ -1,0 +1,28 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability-program.summon-gragomani-followers-1d4-4",
+  "input": "self",
+  "steps": [
+    {
+      "batchCandidates": [
+        {
+          "actorKindId": "demo.actor.malicious-leprechaun",
+          "weight": 1
+        },
+        {
+          "actorKindId": "demo.actor.leprechaun-fanatic",
+          "weight": 3
+        }
+      ],
+      "category": "kin-glyph-104",
+      "countBonus": 4,
+      "countDice": 1,
+      "countSides": 4,
+      "durationTurns": 10000,
+      "maximumLevel": 61,
+      "radius": 2,
+      "type": "summon-category"
+    }
+  ]
+}

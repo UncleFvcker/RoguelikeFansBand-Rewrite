@@ -6180,6 +6180,12 @@
       "id": "asura",
       "tags": ["mount-meru"],
       "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 1285,
+      "id": "gragomani-the-leprechaun-prophet",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
     }
   ]
 }

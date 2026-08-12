@@ -1306,13 +1306,19 @@ impl Game {
                             *damage_sides,
                             nice,
                         );
-                        let damage_type = DamageType::from(*damage_type);
-                        let resistance = self.effective_player_resistances().level(damage_type);
-                        Some(self.reduce_player_damage(if *armor_mitigated {
-                            resolve_armored_damage(raw, damage_type, armor_class, resistance)
+                        if *damage_type == ActorDamageType::Curse
+                            && self.monster_curse_save(&kind_id, events)
+                        {
+                            None
                         } else {
-                            resolve_damage(DamagePacket::new(raw, damage_type), resistance)
-                        }))
+                            let damage_type = DamageType::from(*damage_type);
+                            let resistance = self.effective_player_resistances().level(damage_type);
+                            Some(self.reduce_player_damage(if *armor_mitigated {
+                                resolve_armored_damage(raw, damage_type, armor_class, resistance)
+                            } else {
+                                resolve_damage(DamagePacket::new(raw, damage_type), resistance)
+                            }))
+                        }
                     }
                     MeleeBlowEffectDefinition::Shatter {
                         damage_dice,

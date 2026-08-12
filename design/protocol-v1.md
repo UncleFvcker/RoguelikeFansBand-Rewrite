@@ -592,3 +592,7 @@ State Hash Schema 保持 v92，save 容器保持 v1。
 协议 1.186 / P56B 为 `AbilityEffectSpecDto::SummonCategory` 增加可选
 `maximumCount`，用于保留 `min(1d4, 3)` 这类召唤数量上限。没有新增持久状态，
 State Hash Schema 保持 v88，save 容器保持 v1。
+
+协议 1.187 / P60 为 `AbilityEffectSpecDto::SummonCategory` 增加可选
+`batchCandidates`，用于先掷数量、再以一次加权选择固定整批召唤对象。该字段仅允许怪物
+能力使用；没有新增持久状态，State Hash Schema 保持 v92，save 容器保持 v1。
