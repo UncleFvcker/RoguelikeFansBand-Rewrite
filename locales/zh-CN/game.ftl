@@ -139,6 +139,7 @@ message-ability-summon = { $ability } 在附近空地召唤了 { $count } 个{ $
 message-ability-detect = { $ability }侦测到附近 { $count } 处“{ $category }”地形线索。
 message-ability-terrain-transform = { $ability }把 { $count } 个地形格重塑为{ $terrain }。
 message-ability-effects = { $ability }依次结算了 { $count } 项效果。
+message-ability-create-ammunition = 你通过{ $ability }获得了{ $item } × { $quantity }。
 message-monster-ability-decision-cast = { $source }选择了{ $ability }（施法检定 { $roll }/{ $frequency }）。
 message-monster-ability-decision-fallback = { $source }没有施法（施法检定 { $roll }/{ $frequency }）。
 message-monster-ability-cast = { $source }施放了{ $ability }，对 { $targetCount } 个目标依次结算 { $count } 项效果。

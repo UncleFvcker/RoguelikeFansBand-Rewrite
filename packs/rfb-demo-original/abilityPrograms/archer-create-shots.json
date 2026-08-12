@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-program.archer-create-shots",
+  "input": "cast-target",
+  "steps": [
+    {
+      "type": "create-ammunition",
+      "itemKindIds": [
+        "demo.item.rounded-pebble",
+        "demo.item.iron-shot",
+        "demo.item.mithril-shot"
+      ],
+      "quantityMinimum": 15,
+      "quantityMaximum": 30,
+      "sourceTerrainTags": ["stone"]
+    }
+  ]
+}

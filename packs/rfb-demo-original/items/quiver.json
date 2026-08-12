@@ -1,0 +1,16 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.quiver",
+  "nameKey": "item-demo-quiver-name",
+  "descriptionKey": "item-demo-quiver-description",
+  "glyph": "}",
+  "generationLevel": 20,
+  "mogaminatorRare": false,
+  "weightTenthsPound": 10,
+  "maxStack": 1,
+  "baseValue": 30,
+  "equipmentSlot": "quiver",
+  "ammunitionCapacity": 60,
+  "tags": ["container", "equipment", "quiver", "rfb-compatibility"]
+}

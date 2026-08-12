@@ -157,6 +157,12 @@ pub struct ClassDefinition {
     pub casting_profile: Option<CastingProfileDefinition>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub abilities: Vec<ClassAbilityDefinition>,
+    /// Percentage-point change to RFB's shooter breakage factor.
+    #[serde(default)]
+    pub ammunition_breakage_factor_modifier: i16,
+    /// RFB ranged-critical chance bonus gained for each character level.
+    #[serde(default)]
+    pub projectile_critical_chance_bonus_percent_per_level: u8,
     #[serde(default)]
     pub starting_items: Vec<StartingItemDefinition>,
     /// Item tags accepted by Mogaminator's favorite-weapon predicate.
@@ -213,8 +219,10 @@ pub enum CastingFailureFormula {
 pub struct ClassAbilityDefinition {
     pub ability_id: String,
     pub minimum_level: u16,
-    pub governing_attribute: TechniqueAttribute,
-    pub resource_id: String,
+    #[serde(default)]
+    pub governing_attribute: Option<TechniqueAttribute>,
+    #[serde(default)]
+    pub resource_id: Option<String>,
     pub resource_cost: u32,
     pub base_failure_percent: u8,
     pub minimum_failure_percent: u8,

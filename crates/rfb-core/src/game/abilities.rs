@@ -24,6 +24,14 @@ pub(super) enum AbilityTargetPlan {
         source_terrain_id: String,
         target_terrain_id: String,
     },
+    CreateAmmunitionFromTerrain {
+        position: Position,
+        source_terrain_id: String,
+        target_terrain_id: String,
+    },
+    CreateAmmunitionFromItem {
+        item_id: String,
+    },
     MeleeThenTeleport {
         target_entity_id: String,
         teleport_candidates: Vec<Position>,
@@ -110,6 +118,15 @@ impl Game {
             });
             return Ok(());
         };
+        if ability.tags.iter().any(|tag| tag == "requires-sight")
+            && self.player_has_status_kind(STATUS_BLINDNESS)
+        {
+            events.push(DomainEvent::AbilityCastUnavailable {
+                ability_id: ability_id.to_owned(),
+                reason: "blind".to_owned(),
+            });
+            return Ok(());
+        }
         let source = if mutation_activation.is_some() {
             AbilitySourceDto::Mutation
         } else if class_activation.is_some() {
@@ -241,7 +258,7 @@ impl Game {
                 (
                     activation.resource_cost,
                     activation.resource_cost,
-                    Some(activation.resource_id.clone()),
+                    activation.resource_id.clone(),
                 )
             }
             AbilitySourceDto::Learned => {
@@ -280,6 +297,7 @@ impl Game {
             .and_then(|id| self.resources.get(id))
             .map_or(0, |pool| pool.current);
         if source != AbilitySourceDto::Mutation
+            && resource_cost > 0
             && resource_id
                 .as_deref()
                 .is_none_or(|id| !self.resources.contains_key(id))
@@ -484,6 +502,30 @@ impl Game {
                 events,
                 changed,
             ),
+            (
+                AbilityEffectDefinition::CreateAmmunition { .. },
+                AbilityTargetPlan::CreateAmmunitionFromTerrain {
+                    position,
+                    source_terrain_id,
+                    target_terrain_id,
+                },
+            ) => self.resolve_player_create_ammunition_effect(
+                &ability,
+                None,
+                Some((position, source_terrain_id, target_terrain_id)),
+                events,
+                changed,
+            )?,
+            (
+                AbilityEffectDefinition::CreateAmmunition { .. },
+                AbilityTargetPlan::CreateAmmunitionFromItem { item_id },
+            ) => self.resolve_player_create_ammunition_effect(
+                &ability,
+                Some(item_id),
+                None,
+                events,
+                changed,
+            )?,
             (
                 AbilityEffectDefinition::TransmuteItemToGold { .. },
                 AbilityTargetPlan::Item { item_id },
@@ -2646,6 +2688,132 @@ impl Game {
         events.extend(self.relocate_player(position, changed));
     }
 
+    fn roll_rfb_ammunition_tier(&mut self, maximum: u16) -> usize {
+        let level = self.progress.level.min(127);
+        let product = maximum.saturating_mul(level);
+        let mut mean = i32::from(product / 128);
+        if self.rng.bounded(128) < u64::from(product % 128) {
+            mean += 1;
+        }
+        let mut deviation = maximum / 4;
+        if self.rng.bounded(4) < u64::from(maximum % 4) {
+            deviation += 1;
+        }
+        let value = if deviation == 0 {
+            mean
+        } else {
+            // For Create Ammo, m_bonus has max 2 or 3, so randnor's
+            // deviation is at most one. These are the exact quarter-table
+            // cutoffs used by RFB's 256-entry normal distribution table.
+            let roll = self.rng.bounded(32_768);
+            let offset = match roll {
+                0..=22_245 => 0,
+                22_246..=31_249 => 1,
+                31_250..=32_677 => 2,
+                _ => 3,
+            } * i32::from(deviation);
+            if self.rng.bounded(100) < 50 {
+                mean.saturating_sub(offset)
+            } else {
+                mean.saturating_add(offset)
+            }
+        };
+        usize::try_from(value.clamp(0, i32::from(maximum)))
+            .expect("bounded ammunition tier must fit usize")
+    }
+
+    fn resolve_player_create_ammunition_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        source_item_id: Option<String>,
+        source_terrain: Option<(Position, String, String)>,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) -> Result<(), CoreError> {
+        let AbilityEffectDefinition::CreateAmmunition {
+            item_kind_ids,
+            quantity_minimum,
+            quantity_maximum,
+            ..
+        } = &ability.effect
+        else {
+            unreachable!("ammunition creation executor requires a create-ammunition effect");
+        };
+        let maximum_tier = u16::try_from(item_kind_ids.len() - 1)
+            .expect("validated ammunition tier count must fit u16");
+        let tier = self.roll_rfb_ammunition_tier(maximum_tier);
+        let item_kind_id = item_kind_ids[tier].clone();
+        let quantity = quantity_minimum.saturating_add(
+            u32::try_from(
+                self.rng
+                    .bounded(u64::from(quantity_maximum - quantity_minimum + 1)),
+            )
+            .expect("validated ammunition quantity must fit u32"),
+        );
+
+        if let Some(item_id) = source_item_id.as_deref() {
+            self.destroy_item(item_id, 1)
+                .expect("planned ammunition material must remain destroyable");
+        }
+        if let Some((position, _, target_terrain_id)) = &source_terrain {
+            let index = self
+                .index(*position)
+                .expect("planned ammunition terrain must remain in bounds");
+            self.terrain[index].clone_from(target_terrain_id);
+            self.revealed_terrain.remove(position);
+            changed.insert(*position);
+        }
+
+        let item_id = self.allocate_item_instance_id()?;
+        let mut item = ItemInstance {
+            id: item_id.clone(),
+            kind_id: item_kind_id.clone(),
+            quantity,
+            inscription: None,
+            origin_actor_kind_id: None,
+            quality: ItemQualityDto::Ordinary,
+            affix_ids: Vec::new(),
+            rolled_affixes: Vec::new(),
+            enchantments: ItemEnchantmentsDto::default(),
+            curse: None,
+            activation: None,
+            charges: None,
+            fuel: None,
+            device_recovery_progress: 0,
+            location: ItemLocation::Inventory,
+        };
+        let destination_item_ids = if self.inventory_quantity_capacity_for(&item, false) >= quantity
+        {
+            self.carry_shop_purchase_item(item)
+        } else {
+            item.location = ItemLocation::Ground(self.player.position);
+            self.items.push(item);
+            changed.insert(self.player.position);
+            vec![item_id]
+        };
+        self.mark_item_aware(&item_kind_id);
+        for destination_id in &destination_item_ids {
+            self.identify_item_instance(destination_id, ItemIdentificationRequest::new(true));
+        }
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: None,
+                target_kind_id: None,
+                effects: vec![AbilityEffectResolutionDto::CreateAmmunition {
+                    effect_index: 0,
+                    source_item_id,
+                    source_position: source_terrain.as_ref().map(|(position, _, _)| *position),
+                    item_kind_id,
+                    quantity,
+                    destination_item_ids,
+                }],
+            },
+            trace: None,
+        });
+        Ok(())
+    }
+
     fn resolve_player_transmute_item_effect(
         &mut self,
         ability: &AbilityDefinition,
@@ -3992,6 +4160,67 @@ impl Game {
                     .or(terrain.monster_destroy_to_terrain_id.as_ref())?
                     .clone();
                 Some(AbilityTargetPlan::ConsumeTerrain {
+                    position,
+                    source_terrain_id: terrain.id.clone(),
+                    target_terrain_id,
+                })
+            }
+            AbilityEffectDefinition::CreateAmmunition {
+                ref source_item_tags,
+                ref source_terrain_tags,
+                ..
+            } => {
+                if !source_item_tags.is_empty() {
+                    let TargetSelection::Item { item_id } = target else {
+                        return None;
+                    };
+                    return self
+                        .items
+                        .iter()
+                        .find(|item| {
+                            item.id == *item_id
+                                && (item.location == ItemLocation::Inventory
+                                    || item.location == ItemLocation::Ground(self.player.position))
+                                && self.can_destroy_item(item).is_ok()
+                                && self.content.item(&item.kind_id).is_some_and(|definition| {
+                                    source_item_tags
+                                        .iter()
+                                        .any(|tag| definition.tags.contains(tag))
+                                })
+                        })
+                        .map(|_| AbilityTargetPlan::CreateAmmunitionFromItem {
+                            item_id: item_id.clone(),
+                        });
+                }
+                let TargetSelection::Direction { direction } = target else {
+                    return None;
+                };
+                let position = self.position_in_direction(*direction);
+                let index = self.index(position)?;
+                if self
+                    .entities
+                    .iter()
+                    .any(|entity| entity.position == position)
+                    || self
+                        .floor_connections
+                        .iter()
+                        .any(|connection| connection.position == position)
+                {
+                    return None;
+                }
+                let terrain = self.content.terrain(&self.terrain[index])?;
+                if !source_terrain_tags
+                    .iter()
+                    .any(|tag| terrain.tags.contains(tag))
+                {
+                    return None;
+                }
+                let target_terrain_id = terrain
+                    .dig_to_terrain_id
+                    .as_ref()
+                    .or(terrain.monster_destroy_to_terrain_id.as_ref())?
+                    .clone();
+                Some(AbilityTargetPlan::CreateAmmunitionFromTerrain {
                     position,
                     source_terrain_id: terrain.id.clone(),
                     target_terrain_id,

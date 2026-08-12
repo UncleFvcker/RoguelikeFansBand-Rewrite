@@ -923,6 +923,13 @@ pub enum AbilityEffectSpecDto {
     ConsumeTerrain {
         nutrition: u16,
     },
+    CreateAmmunition {
+        item_kind_ids: Vec<String>,
+        quantity_minimum: u32,
+        quantity_maximum: u32,
+        source_item_tags: Vec<String>,
+        source_terrain_tags: Vec<String>,
+    },
     TransmuteItemToGold {
         value_divisor: u8,
         unit_value_cap: u32,
@@ -1893,6 +1900,16 @@ pub enum AbilityEffectResolutionDto {
         target_terrain_id: String,
         nutrition_before: u16,
         nutrition_after: u16,
+    },
+    CreateAmmunition {
+        effect_index: u8,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        source_item_id: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        source_position: Option<Position>,
+        item_kind_id: String,
+        quantity: u32,
+        destination_item_ids: Vec<String>,
     },
     TransmuteItemToGold {
         effect_index: u8,

@@ -1,0 +1,14 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.archer-create-arrows",
+  "nameKey": "ability-demo-archer-create-arrows-name",
+  "descriptionKey": "ability-demo-archer-create-arrows-description",
+  "target": {
+    "modes": ["item"],
+    "range": 0,
+    "requiresLineOfEffect": false
+  },
+  "abilityProgramId": "demo.ability-program.archer-create-arrows",
+  "tags": ["archer", "class-power", "requires-sight"]
+}

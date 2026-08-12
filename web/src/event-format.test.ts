@@ -103,6 +103,37 @@ test("mutation ability events report the SP and HP actually paid", () => {
   localization.setLocale("en-US");
 });
 
+test("Archer ammunition creation reports the generated kind and quantity", () => {
+  const event = {
+    kind: "ability.effects",
+    messageKey: "ability-effects",
+    args: { target: "demo.ability.archer-create-arrows", count: "1" },
+    outcome: {
+      type: "ability-effects",
+      resolution: {
+        targetEntityId: null,
+        targetKindId: null,
+        effects: [
+          {
+            type: "create-ammunition",
+            effectIndex: 0,
+            sourceItemId: "test.skeleton",
+            sourcePosition: null,
+            itemKindId: "demo.item.arrow",
+            quantity: 7,
+            destinationItemIds: ["generated.item.1"],
+          },
+        ],
+      },
+    },
+  };
+
+  assert.equal(formatter.formatEvent(event), "Create Arrows creates Arrow × 7.");
+  localization.setLocale("zh-CN");
+  assert.equal(formatter.formatEvent(event), "你通过制造箭矢获得了箭 × 7。");
+  localization.setLocale("en-US");
+});
+
 test("M6-B mutation events describe fumbling and delayed reality changes", () => {
   const fumbling = {
     kind: "mutation.fumbled-drop",

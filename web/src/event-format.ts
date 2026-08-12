@@ -169,6 +169,18 @@ export function createPresentationFormatter(
           count: event.args.count ?? "0",
         });
       case "ability-effects":
+        if (event.outcome?.type === "ability-effects") {
+          const ammunition = event.outcome.resolution.effects.find(
+            (effect) => effect.type === "create-ammunition",
+          );
+          if (ammunition?.type === "create-ammunition") {
+            return localization.format("message-ability-create-ammunition", {
+              ability: contentName(event.args.target),
+              item: contentName(ammunition.itemKindId),
+              quantity: ammunition.quantity,
+            });
+          }
+        }
         return localization.format("message-ability-effects", {
           ability: contentName(event.args.target),
           count: event.args.count ?? "0",

@@ -404,7 +404,11 @@ impl Game {
         if activation.base_failure_percent == 0 {
             return 0;
         }
-        let attribute = Self::mutation_attribute_kind(activation.governing_attribute);
+        let attribute = Self::mutation_attribute_kind(
+            activation
+                .governing_attribute
+                .expect("validated failable class ability requires an attribute"),
+        );
         let index = usize::from(
             self.effective_player_attributes()
                 .index(attribute)

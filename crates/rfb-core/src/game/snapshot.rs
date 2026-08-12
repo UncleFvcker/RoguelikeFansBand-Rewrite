@@ -323,7 +323,7 @@ impl Game {
                             class_activation.expect("class ability source requires an activation");
                         (
                             activation.minimum_level,
-                            Some(activation.resource_id.clone()),
+                            activation.resource_id.clone(),
                             activation.resource_cost,
                             activation.resource_cost,
                             self.class_ability_failure_percent(activation),
@@ -368,7 +368,9 @@ impl Game {
                 };
                 let book = ability_books.get(&ability_id);
                 let level_available = self.progress.level >= minimum_level;
-                let resource_available = if source == AbilitySourceDto::Mutation {
+                let resource_available = if resource_cost == 0 {
+                    true
+                } else if source == AbilitySourceDto::Mutation {
                     let resource = resource_id
                         .as_deref()
                         .and_then(|id| self.resources.get(id))

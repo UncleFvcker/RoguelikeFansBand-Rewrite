@@ -96,6 +96,7 @@ pub(in crate::game) struct ResolvedProjectileProfile {
     pub(in crate::game) damage_type: DamageType,
     pub(in crate::game) ammo_item_id: Option<String>,
     pub(in crate::game) ammo_kind_id: String,
+    pub(in crate::game) ammunition_weight_tenths_pound: u16,
     pub(in crate::game) ammo_break_chance_percent: u8,
     pub(in crate::game) source_item_id: String,
 }
@@ -915,7 +916,27 @@ impl Game {
                             })
                         })?;
                     let ammo_profile = ammo_definition.ammunition_profile.as_ref()?;
-                    let ammo_break_chance_percent = ammo_definition.break_chance_percent;
+                    let ranged_skill = self.player_derived_stats().ranged_skill.value;
+                    let breakage_modifier =
+                        self.character_definitions().map_or(0, |(_, _, class, _)| {
+                            class.ammunition_breakage_factor_modifier
+                        });
+                    let ammo_break_chance_percent = if breakage_modifier == 0 {
+                        ammo_definition.break_chance_percent
+                    } else {
+                        let factor = if ranged_skill > 80 {
+                            90_i32.saturating_sub((ranged_skill - 80) / 2)
+                        } else {
+                            100
+                        }
+                        .saturating_add(i32::from(breakage_modifier))
+                        .max(0);
+                        u8::try_from(
+                            i32::from(ammo_definition.break_chance_percent).saturating_mul(factor)
+                                / 100,
+                        )
+                        .unwrap_or(u8::MAX)
+                    };
                     let ammunition_to_hit = ammo_profile.to_hit.saturating_add(i32::from(
                         ammunition.map_or(0, |item| item.enchantments.to_hit),
                     ));
@@ -944,6 +965,7 @@ impl Game {
                         damage_type: DamageType::from(ammo_profile.damage_type),
                         ammo_item_id: ammunition.map(|item| item.id.clone()),
                         ammo_kind_id: ammo_definition.id.clone(),
+                        ammunition_weight_tenths_pound: ammo_definition.weight_tenths_pound,
                         ammo_break_chance_percent,
                         source_item_id: item.id.clone(),
                     })

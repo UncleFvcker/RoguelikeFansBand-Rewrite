@@ -6183,6 +6183,19 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
                 nutrition: *nutrition,
             }
         }
+        AbilityEffectDefinition::CreateAmmunition {
+            item_kind_ids,
+            quantity_minimum,
+            quantity_maximum,
+            source_item_tags,
+            source_terrain_tags,
+        } => AbilityEffectSpecDto::CreateAmmunition {
+            item_kind_ids: item_kind_ids.clone(),
+            quantity_minimum: *quantity_minimum,
+            quantity_maximum: *quantity_maximum,
+            source_item_tags: source_item_tags.clone(),
+            source_terrain_tags: source_terrain_tags.clone(),
+        },
         AbilityEffectDefinition::TransmuteItemToGold {
             value_divisor,
             unit_value_cap,

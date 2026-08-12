@@ -312,6 +312,15 @@ pub enum AbilityEffectDefinition {
     ConsumeTerrain {
         nutrition: u16,
     },
+    CreateAmmunition {
+        item_kind_ids: Vec<String>,
+        quantity_minimum: u32,
+        quantity_maximum: u32,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        source_item_tags: Vec<String>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        source_terrain_tags: Vec<String>,
+    },
     TransmuteItemToGold {
         value_divisor: u8,
         unit_value_cap: u32,

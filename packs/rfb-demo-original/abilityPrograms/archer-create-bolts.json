@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-program.archer-create-bolts",
+  "input": "item",
+  "steps": [
+    {
+      "type": "create-ammunition",
+      "itemKindIds": [
+        "demo.item.bolt",
+        "demo.item.steel-bolt",
+        "demo.item.mithril-bolt",
+        "demo.item.seeker-bolt"
+      ],
+      "quantityMinimum": 4,
+      "quantityMaximum": 8,
+      "sourceItemTags": ["skeleton"]
+    }
+  ]
+}

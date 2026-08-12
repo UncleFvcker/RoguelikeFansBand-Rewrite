@@ -279,6 +279,7 @@ pub(crate) fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<
         ability_resources,
         ability_ids,
         ability_corpse_item_ids,
+        ability_created_item_ids,
         ability_race_ids,
         ability_books_by_id,
         ability_book_ids,
@@ -316,6 +317,7 @@ pub(crate) fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<
             ability_book_ids: &ability_book_ids,
             actor_corpse_item_ids,
             ability_corpse_item_ids,
+            ability_created_item_ids,
         },
         &mut all_ids,
     )?;

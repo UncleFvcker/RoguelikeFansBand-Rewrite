@@ -792,6 +792,58 @@
         {
           "type": "object",
           "properties": {
+            "destinationItemIds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "itemKindId": {
+              "type": "string"
+            },
+            "quantity": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "sourceItemId": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "sourcePosition": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Position"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": {
+              "type": "string",
+              "const": "create-ammunition"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex",
+            "itemKindId",
+            "quantity",
+            "destinationItemIds"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "effectIndex": {
               "type": "integer",
               "format": "uint8",
@@ -2406,6 +2458,51 @@
           "required": [
             "type",
             "nutrition"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "itemKindIds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "quantityMaximum": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "quantityMinimum": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "sourceItemTags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "sourceTerrainTags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "type": {
+              "type": "string",
+              "const": "create-ammunition"
+            }
+          },
+          "required": [
+            "type",
+            "itemKindIds",
+            "quantityMinimum",
+            "quantityMaximum",
+            "sourceItemTags",
+            "sourceTerrainTags"
           ]
         },
         {

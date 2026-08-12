@@ -333,6 +333,11 @@ pub(super) fn validate_characters(
         class
             .abilities
             .sort_by(|left, right| left.ability_id.cmp(&right.ability_id));
+        if !(-100..=100).contains(&class.ammunition_breakage_factor_modifier)
+            || class.projectile_critical_chance_bonus_percent_per_level > 10
+        {
+            return Err(ContentError::InvalidCharacterSource(class.id.clone()));
+        }
         let mut class_ability_ids = BTreeSet::new();
         for activation in &class.abilities {
             if !class_ability_ids.insert(activation.ability_id.clone())
@@ -340,6 +345,9 @@ pub(super) fn validate_characters(
                 || activation.resource_cost > 1_000_000
                 || activation.base_failure_percent > 95
                 || activation.minimum_failure_percent > 95
+                || (activation.resource_id.is_none() && activation.resource_cost != 0)
+                || (activation.governing_attribute.is_none()
+                    && activation.base_failure_percent != 0)
                 || abilities
                     .iter()
                     .find(|ability| ability.id == activation.ability_id)
@@ -347,7 +355,9 @@ pub(super) fn validate_characters(
             {
                 return Err(ContentError::InvalidCharacterSource(class.id.clone()));
             }
-            require_reference(resource_ids, &activation.resource_id, &class.id)?;
+            if let Some(resource_id) = &activation.resource_id {
+                require_reference(resource_ids, resource_id, &class.id)?;
+            }
         }
         normalize_tags(&class.id, &mut class.favorite_weapon_tags)?;
         normalize_tags(&class.id, &mut class.special_item_tags)?;

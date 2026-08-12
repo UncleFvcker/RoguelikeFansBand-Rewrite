@@ -285,14 +285,42 @@ enum PickUpPlan {
     Nothing,
 }
 
-fn inventory_used_slots(items: &[ItemInstance]) -> u16 {
-    u16::try_from(
-        items
-            .iter()
-            .filter(|item| item.location == ItemLocation::Inventory)
-            .count(),
-    )
-    .unwrap_or(u16::MAX)
+fn equipped_ammunition_capacity(content: &ContentCatalog, items: &[ItemInstance]) -> u32 {
+    items
+        .iter()
+        .filter(|item| matches!(item.location, ItemLocation::Equipped { .. }))
+        .filter_map(|item| content.item(&item.kind_id))
+        .fold(0_u32, |capacity, definition| {
+            capacity.saturating_add(u32::from(definition.ammunition_capacity))
+        })
+}
+
+fn inventory_used_slots(content: &ContentCatalog, items: &[ItemInstance]) -> u16 {
+    let mut ordinary_slots = 0_u16;
+    let mut ammunition_stacks = Vec::new();
+    for item in items
+        .iter()
+        .filter(|item| item.location == ItemLocation::Inventory)
+    {
+        if content
+            .item(&item.kind_id)
+            .is_some_and(|definition| definition.ammunition_profile.is_some())
+        {
+            ammunition_stacks.push((item.quantity, item.id.as_str()));
+        } else {
+            ordinary_slots = ordinary_slots.saturating_add(1);
+        }
+    }
+    ammunition_stacks.sort_unstable();
+    let mut quiver_capacity = equipped_ammunition_capacity(content, items);
+    for (quantity, _) in ammunition_stacks {
+        if quantity <= quiver_capacity {
+            quiver_capacity -= quantity;
+        } else {
+            ordinary_slots = ordinary_slots.saturating_add(1);
+        }
+    }
+    ordinary_slots
 }
 
 fn compatible_inventory_space(
@@ -334,18 +362,42 @@ pub(super) fn additional_inventory_slots(
     let Some(definition) = content.item(&incoming.kind_id) else {
         return u16::MAX;
     };
-    let remaining = quantity.saturating_sub(compatible_inventory_space(
-        content,
-        items,
-        item_property_knowledge,
-        incoming,
-        match_knowledge,
-    ));
-    if remaining == 0 {
-        return 0;
+    let incoming_knowledge = item_property_knowledge.get(&incoming.id);
+    let mut projected = items.to_vec();
+    let mut stack_indices = projected
+        .iter()
+        .enumerate()
+        .filter(|(_, carried)| {
+            carried.location == ItemLocation::Inventory
+                && carried.quantity < definition.max_stack
+                && item_instances_stack_compatible(carried, incoming)
+                && (!match_knowledge
+                    || item_properties_match(
+                        item_property_knowledge.get(&carried.id),
+                        incoming_knowledge,
+                    ))
+        })
+        .map(|(index, _)| index)
+        .collect::<Vec<_>>();
+    stack_indices.sort_by(|left, right| projected[*left].id.cmp(&projected[*right].id));
+    let mut remaining = quantity;
+    for stack_index in stack_indices {
+        let transferred = remaining.min(definition.max_stack - projected[stack_index].quantity);
+        projected[stack_index].quantity += transferred;
+        remaining -= transferred;
+        if remaining == 0 {
+            break;
+        }
     }
-    let slots = remaining.div_ceil(definition.max_stack);
-    u16::try_from(slots).unwrap_or(u16::MAX)
+    while remaining > 0 {
+        let mut stack = incoming.clone();
+        stack.id = format!("projected-inventory-{}", projected.len());
+        stack.quantity = remaining.min(definition.max_stack);
+        stack.location = ItemLocation::Inventory;
+        remaining -= stack.quantity;
+        projected.push(stack);
+    }
+    inventory_used_slots(content, &projected).saturating_sub(inventory_used_slots(content, items))
 }
 
 pub(super) fn inventory_quantity_capacity(
@@ -359,6 +411,10 @@ pub(super) fn inventory_quantity_capacity(
     let Some(definition) = content.item(&incoming.kind_id) else {
         return 0;
     };
+    let current_used = inventory_used_slots(content, items);
+    if current_used > slot_capacity {
+        return 0;
+    }
     let stack_space = compatible_inventory_space(
         content,
         items,
@@ -366,8 +422,44 @@ pub(super) fn inventory_quantity_capacity(
         incoming,
         match_knowledge,
     );
-    let free_slots = slot_capacity.saturating_sub(inventory_used_slots(items));
-    stack_space.saturating_add(u32::from(free_slots).saturating_mul(definition.max_stack))
+    let carried_ammunition = items
+        .iter()
+        .filter(|item| item.location == ItemLocation::Inventory)
+        .filter(|item| {
+            content
+                .item(&item.kind_id)
+                .is_some_and(|definition| definition.ammunition_profile.is_some())
+        })
+        .fold(0_u32, |quantity, item| {
+            quantity.saturating_add(item.quantity)
+        });
+    let free_quiver_capacity = if definition.ammunition_profile.is_some() {
+        equipped_ammunition_capacity(content, items).saturating_sub(carried_ammunition)
+    } else {
+        0
+    };
+    let free_slots = slot_capacity.saturating_sub(current_used);
+    let mut low = 0_u32;
+    let mut high = stack_space
+        .saturating_add(u32::from(free_slots).saturating_mul(definition.max_stack))
+        .saturating_add(free_quiver_capacity);
+    while low < high {
+        let middle = low.saturating_add(high).saturating_add(1) / 2;
+        let required = additional_inventory_slots(
+            content,
+            items,
+            item_property_knowledge,
+            incoming,
+            middle,
+            match_knowledge,
+        );
+        if current_used.saturating_add(required) <= slot_capacity {
+            low = middle;
+        } else {
+            high = middle - 1;
+        }
+    }
+    low
 }
 
 fn plan_batch_drop(items: &[ItemInstance], item_ids: &[String]) -> Option<BatchDropPlan> {
@@ -504,7 +596,7 @@ fn plan_pick_up(
         .ok_or_else(|| CoreError::UnknownItem(kind_id.clone()))?;
     let original_quantity = pickup_item.quantity;
 
-    let used_slots = inventory_used_slots(items);
+    let used_slots = inventory_used_slots(content, items);
     let required_slots = additional_inventory_slots(
         content,
         items,
@@ -664,7 +756,7 @@ impl Game {
     }
 
     pub(super) fn inventory_used_slots(&self) -> u16 {
-        inventory_used_slots(&self.items)
+        inventory_used_slots(&self.content, &self.items)
     }
 
     pub(super) fn inventory_slot_capacity(&self) -> u16 {
@@ -1254,10 +1346,14 @@ impl Game {
         let projected_capacity = current_capacity
             .saturating_sub(replaced_bonus)
             .saturating_add(equipped_bonus);
-        let projected_used = self
-            .inventory_used_slots()
-            .saturating_sub(1)
-            .saturating_add(u16::from(plan.replaced_index.is_some()));
+        let mut projected_items = self.items.clone();
+        if let Some(index) = plan.replaced_index {
+            projected_items[index].location = ItemLocation::Inventory;
+        }
+        projected_items[plan.inventory_index].location = ItemLocation::Equipped {
+            slot_id: plan.slot_id.clone(),
+        };
+        let projected_used = inventory_used_slots(&self.content, &projected_items);
         if projected_used > projected_capacity {
             return None;
         }
@@ -1315,7 +1411,9 @@ impl Game {
         }
         let removed_bonus = self.content.item(&plan.kind_id)?.inventory_slot_bonus;
         let projected_capacity = self.inventory_slot_capacity().saturating_sub(removed_bonus);
-        if self.inventory_used_slots().saturating_add(1) > projected_capacity {
+        let mut projected_items = self.items.clone();
+        projected_items[plan.item_index].location = ItemLocation::Inventory;
+        if inventory_used_slots(&self.content, &projected_items) > projected_capacity {
             return None;
         }
         self.items[plan.item_index].location = ItemLocation::Inventory;

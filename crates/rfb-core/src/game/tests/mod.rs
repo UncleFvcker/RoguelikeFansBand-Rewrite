@@ -9,6 +9,7 @@ use rfb_protocol::{
 use super::*;
 
 mod abilities;
+mod archer;
 mod combat;
 mod deterministic_replay;
 mod generation;

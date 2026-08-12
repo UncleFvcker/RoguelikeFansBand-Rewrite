@@ -1,0 +1,53 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/class.schema.json",
+  "formatVersion": 1,
+  "id": "demo.class.archer",
+  "nameKey": "class-demo-archer-name",
+  "descriptionKey": "class-demo-archer-description",
+  "modifiers": {
+    "strength": 2,
+    "intelligence": -1,
+    "wisdom": -1,
+    "dexterity": 2,
+    "constitution": 1,
+    "charisma": 0
+  },
+  "lifePercent": 110,
+  "experiencePercent": 110,
+  "baseHp": 12,
+  "skillSetId": "demo.skill-set.archer",
+  "ammunitionBreakageFactorModifier": -10,
+  "projectileCriticalChanceBonusPercentPerLevel": 1,
+  "abilities": [
+    {
+      "abilityId": "demo.ability.archer-create-shots",
+      "minimumLevel": 1,
+      "resourceCost": 0,
+      "baseFailurePercent": 0,
+      "minimumFailurePercent": 0
+    },
+    {
+      "abilityId": "demo.ability.archer-create-arrows",
+      "minimumLevel": 10,
+      "resourceCost": 0,
+      "baseFailurePercent": 0,
+      "minimumFailurePercent": 0
+    },
+    {
+      "abilityId": "demo.ability.archer-create-bolts",
+      "minimumLevel": 20,
+      "resourceCost": 0,
+      "baseFailurePercent": 0,
+      "minimumFailurePercent": 0
+    }
+  ],
+  "startingItems": [
+    { "itemKindId": "demo.item.short-sword", "quantity": 1, "equipped": true },
+    { "itemKindId": "demo.item.leather-scale-mail", "quantity": 1, "equipped": true },
+    { "itemKindId": "demo.item.short-bow", "quantity": 1, "equipped": true },
+    { "itemKindId": "demo.item.quiver", "quantity": 1, "equipped": true },
+    { "itemKindId": "demo.item.arrow", "quantity": 30, "maximumQuantity": 50 }
+  ],
+  "favoriteWeaponTags": ["shooter"],
+  "tags": ["archer", "martial", "rfb-compatibility"]
+}

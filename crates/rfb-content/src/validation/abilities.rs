@@ -37,6 +37,7 @@ pub(super) struct AbilityValidationOutputs {
     pub(super) ability_resources: BTreeMap<String, String>,
     pub(super) ability_ids: BTreeSet<String>,
     pub(super) ability_corpse_item_ids: Vec<(String, String)>,
+    pub(super) ability_created_item_ids: Vec<(String, String)>,
     pub(super) ability_race_ids: Vec<(String, String)>,
     pub(super) ability_books_by_id: BTreeMap<String, AbilityBookDefinition>,
     pub(super) ability_book_ids: BTreeSet<String>,
@@ -73,6 +74,7 @@ pub(super) fn validate_abilities(
     let mut ability_resources = BTreeMap::new();
     let mut ability_ids = BTreeSet::new();
     let mut ability_corpse_item_ids = Vec::new();
+    let mut ability_created_item_ids = Vec::new();
     let mut ability_race_ids = Vec::new();
     for ability in definitions.abilities.iter_mut() {
         require_schema(&ability.schema, ABILITY_SCHEMA, &ability.id)?;
@@ -99,6 +101,15 @@ pub(super) fn validate_abilities(
             } = effect
             {
                 wall_terrain_ids.sort();
+            }
+            if let AbilityEffectDefinition::CreateAmmunition {
+                source_item_tags,
+                source_terrain_tags,
+                ..
+            } = effect
+            {
+                normalize_tags(&ability.id, source_item_tags)?;
+                normalize_tags(&ability.id, source_terrain_tags)?;
             }
         }
         let mut modes = BTreeSet::new();
@@ -262,6 +273,29 @@ pub(super) fn validate_abilities(
                 }
                 AbilityEffectDefinition::ConsumeTerrain { nutrition } => {
                     (1..=65_535).contains(nutrition)
+                }
+                AbilityEffectDefinition::CreateAmmunition {
+                    item_kind_ids,
+                    quantity_minimum,
+                    quantity_maximum,
+                    source_item_tags,
+                    source_terrain_tags,
+                } => {
+                    let mut item_ids = BTreeSet::new();
+                    (1..=4).contains(&item_kind_ids.len())
+                        && item_kind_ids
+                            .iter()
+                            .all(|id| validate_id(id).is_ok() && item_ids.insert(id.as_str()))
+                        && (1..=99).contains(quantity_minimum)
+                        && quantity_minimum <= quantity_maximum
+                        && *quantity_maximum <= 99
+                        && (source_item_tags.is_empty() != source_terrain_tags.is_empty())
+                        && source_item_tags
+                            .iter()
+                            .all(|tag| item_tag_values.contains(tag))
+                        && source_terrain_tags
+                            .iter()
+                            .all(|tag| terrain_tags.values().any(|terrain| terrain.contains(tag)))
                 }
                 AbilityEffectDefinition::TransmuteItemToGold {
                     value_divisor,
@@ -675,6 +709,12 @@ pub(super) fn validate_abilities(
             &ability.effect,
             AbilityEffectDefinition::ConeDamage { .. }
                 | AbilityEffectDefinition::BreathDamage { .. }
+        ) || matches!(
+            &ability.effect,
+            AbilityEffectDefinition::CreateAmmunition {
+                source_terrain_tags,
+                ..
+            } if !source_terrain_tags.is_empty()
         );
         let self_target_rule = ability.target.modes.as_slice()
             == [AbilityTargetModeDefinition::SelfTarget]
@@ -713,6 +753,15 @@ pub(super) fn validate_abilities(
             | AbilityEffectDefinition::ConsumeTerrain { .. }
             | AbilityEffectDefinition::MeleeThenTeleport { .. }
             | AbilityEffectDefinition::SwapPosition => projectile_target_rule,
+            AbilityEffectDefinition::CreateAmmunition {
+                source_item_tags, ..
+            } => {
+                if source_item_tags.is_empty() {
+                    projectile_target_rule
+                } else {
+                    item_target_rule
+                }
+            }
             AbilityEffectDefinition::DarkenRoom => room_target_rule,
             AbilityEffectDefinition::Genocide { scope, .. } => match scope {
                 AbilityGenocideScopeDefinition::Nearby => self_target_rule,
@@ -872,6 +921,14 @@ pub(super) fn validate_abilities(
             {
                 require_actor_role(actor_roles, actor_kind_id, ActorRole::Monster, &ability.id)?;
                 ability_corpse_item_ids.push((ability.id.clone(), corpse_item_kind_id.clone()));
+            }
+            if let AbilityEffectDefinition::CreateAmmunition { item_kind_ids, .. } = effect {
+                ability_created_item_ids.extend(
+                    item_kind_ids
+                        .iter()
+                        .cloned()
+                        .map(|item_id| (ability.id.clone(), item_id)),
+                );
             }
         }
         if let AbilityEffectDefinition::TransformTerrain {
@@ -1044,6 +1101,7 @@ pub(super) fn validate_abilities(
         ability_resources,
         ability_ids,
         ability_corpse_item_ids,
+        ability_created_item_ids,
         ability_race_ids,
         ability_books_by_id,
         ability_book_ids,

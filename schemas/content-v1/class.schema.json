@@ -390,7 +390,15 @@
           "type": "integer"
         },
         "governingAttribute": {
-          "$ref": "#/$defs/TechniqueAttribute"
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TechniqueAttribute"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         },
         "minimumFailurePercent": {
           "format": "uint8",
@@ -410,14 +418,16 @@
           "type": "integer"
         },
         "resourceId": {
-          "type": "string"
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
         }
       },
       "required": [
         "abilityId",
         "minimumLevel",
-        "governingAttribute",
-        "resourceId",
         "resourceCost",
         "baseFailurePercent",
         "minimumFailurePercent"
@@ -535,6 +545,14 @@
       },
       "type": "array"
     },
+    "ammunitionBreakageFactorModifier": {
+      "default": 0,
+      "description": "Percentage-point change to RFB's shooter breakage factor.",
+      "format": "int16",
+      "maximum": 32767,
+      "minimum": -32768,
+      "type": "integer"
+    },
     "baseHp": {
       "default": 0,
       "format": "int32",
@@ -610,6 +628,14 @@
     },
     "nameKey": {
       "type": "string"
+    },
+    "projectileCriticalChanceBonusPercentPerLevel": {
+      "default": 0,
+      "description": "RFB ranged-critical chance bonus gained for each character level.",
+      "format": "uint8",
+      "maximum": 255,
+      "minimum": 0,
+      "type": "integer"
     },
     "skillSetId": {
       "type": "string"

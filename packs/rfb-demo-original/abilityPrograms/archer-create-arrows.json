@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-program.archer-create-arrows",
+  "input": "item",
+  "steps": [
+    {
+      "type": "create-ammunition",
+      "itemKindIds": [
+        "demo.item.arrow",
+        "demo.item.sheaf-arrow",
+        "demo.item.mithril-arrow",
+        "demo.item.seeker-arrow"
+      ],
+      "quantityMinimum": 5,
+      "quantityMaximum": 10,
+      "sourceItemTags": ["skeleton"]
+    }
+  ]
+}

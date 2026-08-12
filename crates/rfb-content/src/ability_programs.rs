@@ -245,6 +245,12 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::NoOp { .. }
             ) || matches!(
                 effect,
+                AbilityEffectDefinition::CreateAmmunition {
+                    source_terrain_tags,
+                    ..
+                } if !source_terrain_tags.is_empty()
+            ) || matches!(
+                effect,
                 AbilityEffectDefinition::Genocide {
                     scope: AbilityGenocideScopeDefinition::Single
                         | AbilityGenocideScopeDefinition::Glyph,
@@ -258,6 +264,12 @@ fn ability_program_input_accepts_step(
                 AbilityEffectDefinition::IdentifyItem { .. }
                     | AbilityEffectDefinition::TransmuteItemToGold { .. }
                     | AbilityEffectDefinition::DrainItemMagic { .. }
+            ) || matches!(
+                effect,
+                AbilityEffectDefinition::CreateAmmunition {
+                    source_item_tags,
+                    ..
+                } if !source_item_tags.is_empty()
             )
         }
     }

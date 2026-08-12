@@ -5,13 +5,15 @@ use super::*;
 fn projectile_raw_damage(
     rolled_ammunition_damage: i32,
     ammunition_to_damage: i32,
+    ammunition_critical_multiplier_percent: i32,
     damage_multiplier_percent: u16,
     launcher_to_damage: i32,
 ) -> i32 {
-    rolled_ammunition_damage
+    let ammunition_damage = rolled_ammunition_damage
         .saturating_add(ammunition_to_damage)
-        .saturating_mul(i32::from(damage_multiplier_percent))
-        / 100
+        .saturating_mul(ammunition_critical_multiplier_percent)
+        / 100;
+    ammunition_damage.saturating_mul(i32::from(damage_multiplier_percent)) / 100
         + launcher_to_damage
 }
 
@@ -77,9 +79,15 @@ impl Game {
                     trace: trace.clone(),
                 });
             } else {
+                let ammunition_critical_multiplier = self.roll_projectile_critical_multiplier(
+                    profile.ammunition_weight_tenths_pound,
+                    profile.to_hit,
+                    attacker.ranged_skill.value,
+                );
                 let raw_damage = projectile_raw_damage(
                     self.roll_damage(profile.damage_dice, profile.damage_sides),
                     profile.ammunition_to_damage,
+                    ammunition_critical_multiplier,
                     profile.damage_multiplier_percent,
                     profile.launcher_to_damage,
                 )
@@ -547,6 +555,39 @@ impl Game {
             .find(|entity| entity.id == source_entity_id)
             .is_some_and(|entity| adjacent(entity.position, self.player.position));
         Ok(Some(self.player_is_dead() || !source_still_adjacent))
+    }
+
+    pub(super) fn roll_projectile_critical_multiplier(
+        &mut self,
+        ammunition_weight_tenths_pound: u16,
+        to_hit: i32,
+        ranged_skill: i32,
+    ) -> i32 {
+        let bonus_per_level = self.character_definitions().map_or(0, |(_, _, class, _)| {
+            class.projectile_critical_chance_bonus_percent_per_level
+        });
+        if bonus_per_level == 0 {
+            return 100;
+        }
+        let base_chance = i64::from(to_hit)
+            .saturating_mul(3)
+            .saturating_add(i64::from(ranged_skill).saturating_mul(2))
+            .max(0);
+        let chance = base_chance.saturating_add(
+            base_chance
+                .saturating_mul(i64::from(self.progress.level))
+                .saturating_mul(i64::from(bonus_per_level))
+                / 100,
+        );
+        let roll = i64::try_from(self.rng.bounded(5_000) + 1)
+            .expect("projectile critical roll must fit i64");
+        if roll > chance {
+            return 100;
+        }
+        let quality =
+            u64::from(ammunition_weight_tenths_pound).saturating_mul(self.rng.bounded(500) + 1);
+        150_i32
+            .saturating_add(i32::try_from(quality.saturating_mul(200) / 2_000).unwrap_or(i32::MAX))
     }
 
     pub(super) fn roll_innate_critical_multiplier(
@@ -1061,7 +1102,8 @@ mod tests {
 
     #[test]
     fn ammunition_damage_and_bonus_are_scaled_before_launcher_bonus() {
-        assert_eq!(projectile_raw_damage(7, 2, 250, 3), 25);
-        assert_eq!(projectile_raw_damage(7, 2, 350, 3), 34);
+        assert_eq!(projectile_raw_damage(7, 2, 100, 250, 3), 25);
+        assert_eq!(projectile_raw_damage(7, 2, 100, 350, 3), 34);
+        assert_eq!(projectile_raw_damage(7, 2, 200, 250, 3), 48);
     }
 }

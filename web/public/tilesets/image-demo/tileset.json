@@ -113,6 +113,11 @@
       "background": "#34204a",
       "tile": { "x": 2, "y": 0 }
     },
+    "demo.actor.archer-player": {
+      "foreground": "#8fd6a3",
+      "background": "#203b2c",
+      "tile": { "x": 2, "y": 0 }
+    },
     "core.gold.copper": {
       "glyph": "$",
       "foreground": "#c98254",
