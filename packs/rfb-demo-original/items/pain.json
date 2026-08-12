@@ -11,6 +11,12 @@
   "baseValue": 50000,
   "equipmentSlot": "weapon",
   "weaponProficiencyBaseItemId": "demo.item.glaive",
+  "artifactGeneration": {
+    "sourceIndex": 94,
+    "baseItemKindId": "demo.item.glaive",
+    "rarityOneIn": 25,
+    "instant": false
+  },
   "meleeProfile": {
     "attacks": 1,
     "toHit": 0,

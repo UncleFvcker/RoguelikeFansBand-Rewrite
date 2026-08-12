@@ -87,6 +87,102 @@ fn weapon_proficiency_content_rejects_invalid_bounds_and_base_aliases() {
 }
 
 #[test]
+fn fixed_artifact_generation_matches_rfb_records_and_rejects_invalid_content() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    for (item_id, source_index, base_item_kind_id, rarity_one_in) in [
+        (
+            "demo.item.crisdurian",
+            80,
+            "demo.item.executioners-sword",
+            15,
+        ),
+        ("demo.item.pain", 94, "demo.item.glaive", 25),
+        ("demo.item.slayer", 123, "demo.item.executioners-sword", 60),
+    ] {
+        let generation = artifact
+            .content
+            .items
+            .iter()
+            .find(|item| item.id == item_id)
+            .and_then(|item| item.artifact_generation.as_ref())
+            .unwrap_or_else(|| panic!("{item_id} should have fixed-artifact generation data"));
+        assert_eq!(generation.source_index, source_index);
+        assert_eq!(generation.base_item_kind_id, base_item_kind_id);
+        assert_eq!(generation.rarity_one_in, rarity_one_in);
+        assert!(!generation.instant);
+    }
+    assert!(
+        artifact
+            .content
+            .items
+            .iter()
+            .find(|item| item.id == "demo.item.relic-blade")
+            .expect("demo relic blade should exist")
+            .artifact_generation
+            .is_none()
+    );
+
+    let mut invalid = artifact.content.clone();
+    invalid
+        .items
+        .iter_mut()
+        .find(|item| item.id == "demo.item.crisdurian")
+        .and_then(|item| item.artifact_generation.as_mut())
+        .expect("Crisdurian generation data")
+        .rarity_one_in = 0;
+    assert!(matches!(
+        validate_and_normalize(&mut invalid),
+        Err(ContentError::InvalidArtifactGeneration(_))
+    ));
+
+    let mut invalid = artifact.content.clone();
+    let pain_index = invalid
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.pain")
+        .and_then(|item| item.artifact_generation.as_ref())
+        .expect("Pain generation data")
+        .source_index;
+    invalid
+        .items
+        .iter_mut()
+        .find(|item| item.id == "demo.item.crisdurian")
+        .and_then(|item| item.artifact_generation.as_mut())
+        .expect("Crisdurian generation data")
+        .source_index = pain_index;
+    assert!(matches!(
+        validate_and_normalize(&mut invalid),
+        Err(ContentError::InvalidArtifactGeneration(_))
+    ));
+
+    let mut invalid = artifact.content.clone();
+    invalid
+        .items
+        .iter_mut()
+        .find(|item| item.id == "demo.item.crisdurian")
+        .and_then(|item| item.artifact_generation.as_mut())
+        .expect("Crisdurian generation data")
+        .base_item_kind_id = "demo.item.chain-mail".to_owned();
+    assert!(matches!(
+        validate_and_normalize(&mut invalid),
+        Err(ContentError::InvalidArtifactGeneration(_))
+    ));
+
+    let mut invalid = artifact.content.clone();
+    invalid
+        .loot_tables
+        .iter_mut()
+        .find(|table| table.id == "demo.loot-table.base-items")
+        .expect("base-item loot table")
+        .entries[0]
+        .item_kind_id = "demo.item.crisdurian".to_owned();
+    assert!(matches!(
+        validate_and_normalize(&mut invalid),
+        Err(ContentError::InvalidLootTable(_))
+    ));
+}
+
+#[test]
 fn natural_affix_compatibility_uses_slot_depth_and_explicit_none_fallback() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let slaying = artifact

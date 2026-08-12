@@ -11,6 +11,12 @@
   "baseValue": 111000,
   "equipmentSlot": "weapon",
   "weaponProficiencyBaseItemId": "demo.item.executioners-sword",
+  "artifactGeneration": {
+    "sourceIndex": 80,
+    "baseItemKindId": "demo.item.executioners-sword",
+    "rarityOneIn": 15,
+    "instant": false
+  },
   "meleeProfile": {
     "attacks": 1,
     "toHit": 23,

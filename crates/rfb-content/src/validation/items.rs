@@ -657,6 +657,22 @@ pub(super) fn validate_items(
             )
         })
         .collect::<BTreeMap<_, _>>();
+    let artifact_items = items
+        .iter()
+        .map(|item| {
+            (
+                item.id.clone(),
+                (
+                    item.tags.iter().any(|tag| tag == "artifact"),
+                    item.equipment_slot.clone(),
+                    item.melee_profile.is_some(),
+                    item.projectile_profile.is_some(),
+                    item.ammunition_profile.is_some(),
+                ),
+            )
+        })
+        .collect::<BTreeMap<_, _>>();
+    let mut artifact_source_indices = BTreeSet::new();
     let mut item_limits = BTreeMap::new();
     for item in items.iter_mut() {
         require_schema(&item.schema, ITEM_SCHEMA, &item.id)?;
@@ -730,6 +746,27 @@ pub(super) fn validate_items(
                 || item.projectile_profile.is_some() != *base_projectile
             {
                 return Err(ContentError::InvalidWeaponProficiency(item.id.clone()));
+            }
+        }
+        if let Some(generation) = &item.artifact_generation {
+            let Some((base_is_artifact, base_slot, base_melee, base_projectile, base_ammunition)) =
+                artifact_items.get(&generation.base_item_kind_id)
+            else {
+                return Err(ContentError::InvalidArtifactGeneration(item.id.clone()));
+            };
+            if generation.source_index == 0
+                || generation.rarity_one_in == 0
+                || !artifact_source_indices.insert(generation.source_index)
+                || !item.tags.iter().any(|tag| tag == "artifact")
+                || item.max_stack != 1
+                || generation.base_item_kind_id == item.id
+                || *base_is_artifact
+                || item.equipment_slot != *base_slot
+                || item.melee_profile.is_some() != *base_melee
+                || item.projectile_profile.is_some() != *base_projectile
+                || item.ammunition_profile.is_some() != *base_ammunition
+            {
+                return Err(ContentError::InvalidArtifactGeneration(item.id.clone()));
             }
         }
         if item.inventory_slot_bonus > 100

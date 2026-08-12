@@ -694,6 +694,20 @@ pub struct ItemFuelDefinition {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ArtifactGenerationDefinition {
+    /// Original `a_info` record order used by fixed-artifact allocation.
+    pub source_index: u32,
+    /// Ordinary base kind replaced when this fixed artifact is selected.
+    pub base_item_kind_id: String,
+    /// Original one-in-N rarity gate.
+    pub rarity_one_in: u16,
+    #[serde(default)]
+    pub instant: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ItemDefinition {
     #[serde(rename = "$schema")]
     pub schema: String,
@@ -725,6 +739,10 @@ pub struct ItemDefinition {
     /// Canonical base item whose RFB weapon proficiency this item shares.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub weapon_proficiency_base_item_id: Option<String>,
+    /// Original fixed-artifact allocation identity. Scripted demo artifacts
+    /// without an RFB `a_info` record intentionally leave this unset.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub artifact_generation: Option<ArtifactGenerationDefinition>,
     /// Extra shared-pack stack slots granted while this container is equipped.
     #[serde(default)]
     pub inventory_slot_bonus: u16,

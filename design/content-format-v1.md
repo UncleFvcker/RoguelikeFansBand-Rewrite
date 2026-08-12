@@ -668,3 +668,10 @@ Schema 保持 v88。
 的正整数值。运行时用它计算当前受控 actor 的派生维持比例；该字段不声明宠物容量、
 忠诚数值或职业专用宠物类型。content hash 为
 当前 hash 以 `content.lock.json` 为准；协议升至 1.184，State Hash Schema 保持 v92。
+
+包 1.294.0 为物品增加可选 `artifactGeneration`：`sourceIndex` 保留 `a_info` 遍历顺序，
+`baseItemKindId` 引用被替换的普通基础物品，`rarityOneIn` 保存原版稀有度，`instant` 保存
+`INSTA_ART` 身份。编译器要求序号唯一、引用存在、基础物品不是神器、装备类型一致、神器
+不可堆叠且不得进入普通 loot table。当前只登记 Crisdurian、Pain 和 Slayer；该字段尚无
+运行时消费者，Protocol 1.186、State Hash Schema v92 与 contract-v282 不变。content
+hash 为 `ee2a72864ac9b521e5825f79a9e020cf798ff1a398e887ca2e7a2b1a5b8edbed`。

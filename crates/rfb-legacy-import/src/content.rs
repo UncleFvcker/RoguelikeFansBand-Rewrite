@@ -735,6 +735,7 @@ pub struct LegacyArtifactEntry {
     pub sval: u16,
     pub pval: i32,
     pub level: u16,
+    pub rarity_one_in: u16,
     pub weight_tenths_pound: u16,
     pub base_value: u32,
     pub armor_class: i32,
@@ -3778,7 +3779,7 @@ pub fn parse_a_info(text: &str) -> Result<Vec<LegacyArtifactEntry>, LegacyImport
                 "W.level",
                 parts.first().copied(),
             )?;
-            let _: i64 = parse_number(
+            entry.rarity_one_in = parse_number(
                 A_INFO_SOURCE,
                 line_number,
                 "W.rarity",
@@ -4394,6 +4395,7 @@ fn speed_roll_candidates(ring: bool) -> Vec<serde_json::Value> {
 fn artifact_json(
     entry: &LegacyArtifactEntry,
     id: &str,
+    base_item_kind_id: Option<&str>,
     ammo: &LauncherAmmoIndex,
     report: &mut ContentImportReport,
 ) -> serde_json::Value {
@@ -4405,11 +4407,20 @@ fn artifact_json(
         "nameKey": format!("item-legacy-artifact-{id}-name"),
         "descriptionKey": format!("item-legacy-artifact-{id}-description"),
         "glyph": "*",
+        "generationLevel": entry.level,
         "weightTenthsPound": entry.weight_tenths_pound.max(1),
         "maxStack": 1,
         "baseValue": entry.base_value,
         "tags": ["artifact", "legacy-import"],
     });
+    if let Some(base_item_kind_id) = base_item_kind_id {
+        value["artifactGeneration"] = serde_json::json!({
+            "sourceIndex": entry.index,
+            "baseItemKindId": base_item_kind_id,
+            "rarityOneIn": entry.rarity_one_in,
+            "instant": entry.flags.iter().any(|flag| flag == "INSTA_ART"),
+        });
+    }
     if let Some(slot) = shape.slot {
         value["equipmentSlot"] = serde_json::json!(slot);
     }
@@ -9914,6 +9925,7 @@ fn convert_content_from(
     let mut item_files = Vec::new();
     let mut seen_item_ids = BTreeMap::new();
     let mut imported_item_ids = BTreeMap::new();
+    let mut imported_item_ids_by_kind = BTreeMap::new();
     report.items_total = items.len();
     // Prepass: the first shot/arrow/bolt entry becomes the canonical ammo
     // partner for its launcher class.
@@ -9937,6 +9949,9 @@ fn convert_content_from(
         }
         *duplicates += 1;
         imported_item_ids.insert(entry.index, format!("rfb-legacy.item.{id}"));
+        imported_item_ids_by_kind
+            .entry((entry.tval, entry.sval))
+            .or_insert_with(|| format!("rfb-legacy.item.{id}"));
         item_files.push((
             format!("{id}.json"),
             item_json_with_terrain(
@@ -10075,7 +10090,15 @@ fn convert_content_from(
         *duplicates += 1;
         item_files.push((
             format!("artifact-{id}.json"),
-            artifact_json(entry, &id, &ammo_index, &mut report),
+            artifact_json(
+                entry,
+                &id,
+                imported_item_ids_by_kind
+                    .get(&(entry.tval, entry.sval))
+                    .map(String::as_str),
+                &ammo_index,
+                &mut report,
+            ),
         ));
         report.artifacts_imported += 1;
     }
@@ -18035,10 +18058,20 @@ F:CHR
 ";
         let artifacts = parse_a_info(SYNTHETIC_A_INFO).expect("synthetic artifacts should parse");
         assert_eq!(artifacts.len(), 4);
+        assert_eq!(artifacts[0].rarity_one_in, 1);
+        assert_eq!(artifacts[1].rarity_one_in, 5);
+        let base_items = [LegacyItemEntry {
+            index: 1,
+            name: "Test Light".to_owned(),
+            glyph: Some('~'),
+            tval: 39,
+            sval: 4,
+            ..LegacyItemEntry::default()
+        }];
         let outcome = convert_content(
             &[],
             &[],
-            &[],
+            &base_items,
             &[],
             &artifacts,
             &LegacyCharacterSources::default(),
@@ -18060,6 +18093,14 @@ F:CHR
         let radiance = get("artifact-test-radiance.json");
         assert_eq!(radiance["id"], "rfb-legacy.item.artifact-test-radiance");
         assert_eq!(radiance["glyph"], "*");
+        assert_eq!(radiance["generationLevel"], 30);
+        assert_eq!(radiance["artifactGeneration"]["sourceIndex"], 1);
+        assert_eq!(
+            radiance["artifactGeneration"]["baseItemKindId"],
+            "rfb-legacy.item.test-light"
+        );
+        assert_eq!(radiance["artifactGeneration"]["rarityOneIn"], 1);
+        assert_eq!(radiance["artifactGeneration"]["instant"], true);
         assert_eq!(radiance["equipmentSlot"], "light");
         assert_eq!(radiance["modifiers"]["wisdom"], 3);
         assert_eq!(radiance["resistances"]["dark"], "resistant");

@@ -131,6 +131,38 @@
       ],
       "type": "string"
     },
+    "ArtifactGenerationDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "baseItemKindId": {
+          "description": "Ordinary base kind replaced when this fixed artifact is selected.",
+          "type": "string"
+        },
+        "instant": {
+          "default": false,
+          "type": "boolean"
+        },
+        "rarityOneIn": {
+          "description": "Original one-in-N rarity gate.",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "sourceIndex": {
+          "description": "Original `a_info` record order used by fixed-artifact allocation.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "sourceIndex",
+        "baseItemKindId",
+        "rarityOneIn"
+      ],
+      "type": "object"
+    },
     "AttackProfileDefinition": {
       "additionalProperties": false,
       "properties": {
@@ -697,6 +729,17 @@
         "string",
         "null"
       ]
+    },
+    "artifactGeneration": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ArtifactGenerationDefinition"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
     },
     "baseValue": {
       "default": 0,

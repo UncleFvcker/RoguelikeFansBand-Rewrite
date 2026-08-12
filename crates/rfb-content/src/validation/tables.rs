@@ -130,6 +130,12 @@ pub(super) fn validate_tables(
                     target: entry.item_kind_id.clone(),
                 });
             };
+            if items
+                .iter()
+                .any(|item| item.id == entry.item_kind_id && item.artifact_generation.is_some())
+            {
+                return Err(ContentError::InvalidLootTable(table.id.clone()));
+            }
             // RFB's integer 100/chance conversion intentionally leaves its
             // 1/255 allocations at zero; the table total must still be positive.
             if entry.quantity == 0

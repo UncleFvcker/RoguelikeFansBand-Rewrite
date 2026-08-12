@@ -8,8 +8,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     AbilityTargetDefinition, ActorDamageType, ActorResistanceLevel, AmmunitionProfileDefinition,
-    AttackProfileDefinition, ContentError, EquipmentBonuses, EquipmentPassive,
-    ItemChargeDefinition, ItemCurseSeverityDefinition, ItemDefinition,
+    ArtifactGenerationDefinition, AttackProfileDefinition, ContentError, EquipmentBonuses,
+    EquipmentPassive, ItemChargeDefinition, ItemCurseSeverityDefinition, ItemDefinition,
     ItemDeviceActivationDefinition, ItemDeviceChargeRangeDefinition,
     ItemDeviceGenerationDefinition, ItemDeviceRecoveryDefinition, ItemFuelDefinition,
     ItemUseActionDefinition, ProjectileProfileDefinition, SlayLevel, SlayTarget, StatModifiers,
@@ -47,6 +47,8 @@ pub(crate) struct SourceItemDefinition {
     equipment_slot: Option<String>,
     #[serde(default)]
     weapon_proficiency_base_item_id: Option<String>,
+    #[serde(default)]
+    artifact_generation: Option<ArtifactGenerationDefinition>,
     #[serde(default)]
     inventory_slot_bonus: u16,
     #[serde(default)]
@@ -227,6 +229,7 @@ impl SourceItemDefinition {
             base_value: self.base_value,
             equipment_slot: self.equipment_slot,
             weapon_proficiency_base_item_id: self.weapon_proficiency_base_item_id,
+            artifact_generation: self.artifact_generation,
             inventory_slot_bonus: self.inventory_slot_bonus,
             ammunition_capacity: self.ammunition_capacity,
             initial_curse: self.initial_curse,

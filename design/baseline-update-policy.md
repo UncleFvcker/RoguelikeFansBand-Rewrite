@@ -133,6 +133,12 @@ Protocol 升至 1.183、State Hash Schema 升至 v92；出生初始化新增 RNG
 升至 1.282.0；没有新增存档字段或状态哈希输入，State Hash Schema 保持 v92。公共玩家
 投影新增派生的维持摘要，因此统一复核并刷新 active fixture，零 waiver。
 
+包 1.294.0 只增加固定神器生成的内容底座。`ItemDefinition.artifactGeneration` 保存
+`a_info` 序号、基础物品、稀有度与 `INSTA_ART` 身份；当前仅 Crisdurian、Pain 和 Slayer
+获得权威记录，旧 demo `relic-blade` 不进入生成池。尚无运行时消费者、持久状态或协议
+投影，因此 Protocol 1.186、State Hash Schema v92、save v1 与 active baseline
+`contract-v282` 均保持不变，现有 fixture 不刷新。
+
 ## 分类验证
 
 每条 fixture 必须声明一个受控的主 `category`。分类表示该 fixture 主要保护的行为，不是自由标签；跨系统改动一次选择多个分类即可。当前分类可通过下列命令查询，输出同时给出各类数量：
