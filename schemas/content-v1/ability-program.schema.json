@@ -463,11 +463,19 @@
               "minimum": 0,
               "type": "integer"
             },
+            "damageIsCurrentHpPercent": {
+              "default": false,
+              "type": "boolean"
+            },
             "damageSides": {
               "format": "uint16",
               "maximum": 65535,
               "minimum": 0,
               "type": "integer"
+            },
+            "nonlethal": {
+              "default": false,
+              "type": "boolean"
             },
             "type": {
               "const": "curse-damage",
@@ -517,6 +525,19 @@
           "required": [
             "type",
             "minimumDistance"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "bird-drop",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
           ],
           "type": "object"
         },
@@ -1198,6 +1219,15 @@
               "maximum": 255,
               "minimum": 0,
               "type": "integer"
+            },
+            "maximumCount": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ]
             },
             "maximumLevel": {
               "format": "uint16",

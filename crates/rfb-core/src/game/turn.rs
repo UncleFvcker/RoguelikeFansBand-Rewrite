@@ -3,6 +3,31 @@
 use super::*;
 
 impl Game {
+    pub(super) fn try_clear_monster_confusion(
+        &mut self,
+        index: usize,
+        events: &mut Vec<DomainEvent>,
+    ) -> bool {
+        let clears_confusion = self
+            .actor_runtime_definition(&self.entities[index])
+            .is_some_and(|definition| definition.tags.iter().any(|tag| tag == "clear-head"));
+        if !clears_confusion || self.rng.bounded(4) != 0 {
+            return false;
+        }
+        let before = self.entities[index].statuses.len();
+        self.entities[index]
+            .statuses
+            .retain(|status| status.kind_id != STATUS_CONFUSION);
+        if self.entities[index].statuses.len() == before {
+            return false;
+        }
+        events.push(DomainEvent::EntityStatusExpired {
+            target_kind_id: self.entities[index].kind_id.clone(),
+            status_kind_id: STATUS_CONFUSION.to_owned(),
+        });
+        true
+    }
+
     pub(super) fn quantum_slot_denominator(entity_id: &str) -> u64 {
         entity_id
             .bytes()
@@ -593,6 +618,7 @@ impl Game {
             if self.try_quantum_turn(index, events, changed, removed_entities)? {
                 continue;
             }
+            self.try_clear_monster_confusion(index, events);
             if self.entities[index]
                 .statuses
                 .iter()

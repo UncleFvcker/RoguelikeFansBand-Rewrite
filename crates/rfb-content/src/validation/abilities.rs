@@ -252,10 +252,18 @@ pub(super) fn validate_abilities(
                     damage_dice,
                     damage_sides,
                     damage_bonus,
+                    damage_is_current_hp_percent,
+                    nonlethal,
                 } => {
                     (1..=100).contains(damage_dice)
                         && (1..=10_000).contains(damage_sides)
                         && *damage_bonus <= 10_000
+                        && (!*damage_is_current_hp_percent
+                            || u32::from(*damage_dice)
+                                .saturating_mul(u32::from(*damage_sides))
+                                .saturating_add(u32::from(*damage_bonus))
+                                <= 100)
+                        && (!*nonlethal || *damage_is_current_hp_percent)
                 }
                 AbilityEffectDefinition::DeathRay { power } => {
                     (1..=1_000_000).contains(power)
@@ -265,6 +273,7 @@ pub(super) fn validate_abilities(
                 AbilityEffectDefinition::TeleportAway { minimum_distance } => {
                     (1..=64).contains(minimum_distance)
                 }
+                AbilityEffectDefinition::BirdDrop => true,
                 AbilityEffectDefinition::DrainResource { amount } => {
                     (1..=1_000_000).contains(amount)
                 }
@@ -418,6 +427,7 @@ pub(super) fn validate_abilities(
                     count_dice,
                     count_sides,
                     count_bonus,
+                    maximum_count,
                     hostile_chance_percent,
                     friendly_group_chance_percent,
                     hostile_group_chance_percent,
@@ -451,6 +461,12 @@ pub(super) fn validate_abilities(
                         && u16::from(*count_dice) * u16::from(*count_sides)
                             + u16::from(*count_bonus)
                             <= 8
+                        && maximum_count.is_none_or(|maximum_count| {
+                            (1..=8).contains(&maximum_count)
+                                && u16::from(maximum_count)
+                                    <= u16::from(*count_dice) * u16::from(*count_sides)
+                                        + u16::from(*count_bonus)
+                        })
                         && *hostile_chance_percent <= 100
                         && *friendly_group_chance_percent <= 100
                         && *hostile_group_chance_percent <= 100
@@ -559,7 +575,7 @@ pub(super) fn validate_abilities(
                         && granted_race_id
                             .as_ref()
                             .is_none_or(|race_id| validate_id(race_id).is_ok())
-                        && (1..=100).contains(incoming_damage_percent)
+                        && *incoming_damage_percent <= 100
                 }
                 AbilityEffectDefinition::RemoveStatus { status_kind_id } => {
                     validate_id(status_kind_id).is_ok()
@@ -816,6 +832,7 @@ pub(super) fn validate_abilities(
             | AbilityEffectDefinition::ConeDamage { .. }
             | AbilityEffectDefinition::CurseDamage { .. }
             | AbilityEffectDefinition::TeleportAway { .. }
+            | AbilityEffectDefinition::BirdDrop
             | AbilityEffectDefinition::DrainResource { .. }
             | AbilityEffectDefinition::Amnesia
             | AbilityEffectDefinition::TeleportLevel
@@ -1108,6 +1125,7 @@ pub(super) fn validate_abilities(
                 | AbilityEffectDefinition::BoltOrBeamDamage { .. }
                 | AbilityEffectDefinition::CurseDamage { .. }
                 | AbilityEffectDefinition::TeleportAway { .. }
+                | AbilityEffectDefinition::BirdDrop
                 | AbilityEffectDefinition::DrainResource { .. }
                 | AbilityEffectDefinition::Amnesia
                 | AbilityEffectDefinition::TeleportLevel

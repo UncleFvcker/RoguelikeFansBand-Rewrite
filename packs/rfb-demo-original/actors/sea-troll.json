@@ -6,9 +6,13 @@
       "dice": 3,
       "sides": 3
     },
+    "habitats": [
+      "ocean"
+    ],
     "legacyIndex": 544,
     "maxDepth": 999,
-    "rarity": 1
+    "rarity": 1,
+    "wildOnly": true
   },
   "attack": 8,
   "damageDice": 1,

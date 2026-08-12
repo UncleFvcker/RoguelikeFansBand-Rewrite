@@ -2,7 +2,160 @@
 
 use super::*;
 
+fn prepare_curse_damage(
+    rolled: i32,
+    current_hp: i32,
+    damage_is_current_hp_percent: bool,
+    nonlethal: bool,
+) -> i32 {
+    if !damage_is_current_hp_percent {
+        return rolled.max(0);
+    }
+    let current_hp = current_hp.max(0);
+    let damage = i64::from(current_hp)
+        .saturating_mul(i64::from(rolled.max(0)))
+        .saturating_div(100)
+        .clamp(0, i64::from(i32::MAX)) as i32;
+    if nonlethal {
+        damage.min(current_hp.saturating_sub(1))
+    } else {
+        damage
+    }
+}
+
 impl Game {
+    #[allow(clippy::too_many_arguments)]
+    fn resolve_monster_bird_drop_plan(
+        &mut self,
+        source_index: usize,
+        source_entity_id: &str,
+        source_kind_id: &str,
+        plan: &MonsterAbilityPlan,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> MonsterAbilityPlanResolution {
+        let MonsterAbilityTargetPlan::BirdDrop {
+            target,
+            trace,
+            destination,
+            escape_destinations,
+        } = &plan.target
+        else {
+            unreachable!("bird drop executor requires a bird drop target plan")
+        };
+        let source_position = self.entities[source_index].position;
+        if self.rng.bounded(3) == 0 {
+            let mut affected_positions = vec![source_position];
+            if !escape_destinations.is_empty() {
+                let choice = usize::try_from(self.rng.bounded(
+                    u64::try_from(escape_destinations.len()).expect("candidate count fits"),
+                ))
+                .expect("bounded draw fits usize");
+                let destination = escape_destinations[choice];
+                self.entities[source_index].position = destination;
+                changed.insert(source_position);
+                changed.insert(destination);
+                affected_positions.push(destination);
+                events.push(DomainEvent::MonsterTeleported {
+                    source_kind_id: source_kind_id.to_owned(),
+                    resolution: MonsterDisplacementResolutionDto {
+                        actor_id: source_entity_id.to_owned(),
+                        from: source_position,
+                        to: destination,
+                    },
+                });
+            }
+            return MonsterAbilityPlanResolution {
+                target_entity_id: target.entity_id().to_owned(),
+                target_kind_id: target.kind_id().to_owned(),
+                affected_positions,
+                summon: None,
+                effects: Vec::new(),
+                targets: vec![MonsterAbilityTargetResolutionDto {
+                    target_entity_id: target.entity_id().to_owned(),
+                    target_kind_id: target.kind_id().to_owned(),
+                    target_position: target.position(),
+                    effects: Vec::new(),
+                }],
+                trace: Some(trace.clone()),
+            };
+        }
+
+        let target_levitates = if target.is_player() {
+            self.player_levitates()
+        } else {
+            self.content
+                .actor(target.kind_id())
+                .is_some_and(|definition| {
+                    definition.movement.modes.contains(&ActorMovementMode::Fly)
+                })
+        };
+        let target_from = target.position();
+        events.push(DomainEvent::MonsterDraggedTarget {
+            source_kind_id: source_kind_id.to_owned(),
+            target_kind_id: target.kind_id().to_owned(),
+            resolution: MonsterDisplacementResolutionDto {
+                actor_id: target.entity_id().to_owned(),
+                from: target_from,
+                to: *destination,
+            },
+        });
+        match target {
+            MonsterHostileTarget::Player { .. } => {
+                events.extend(self.relocate_player(*destination, changed));
+            }
+            MonsterHostileTarget::Summon { entity_id, .. } => {
+                if let Some(target_index) = self
+                    .entities
+                    .iter()
+                    .position(|entity| entity.id == *entity_id && entity.hp > 0)
+                {
+                    self.entities[target_index].position = *destination;
+                    changed.insert(target_from);
+                    changed.insert(*destination);
+                }
+            }
+        }
+
+        let mut raw_damage = self.roll_damage(4, 8);
+        if !target_levitates {
+            raw_damage = raw_damage.saturating_add(self.roll_damage(6, 8));
+        }
+        let effect = self.resolve_monster_damage_to_hostile(
+            source_entity_id,
+            source_kind_id,
+            &plan.ability.id,
+            0,
+            raw_damage,
+            raw_damage,
+            DamageType::Physical,
+            target,
+            events,
+        );
+        let effects = vec![effect];
+        self.remove_defeated_monster_targets(
+            std::iter::once(target.entity_id()),
+            events,
+            changed,
+            removed_entities,
+        );
+        MonsterAbilityPlanResolution {
+            target_entity_id: target.entity_id().to_owned(),
+            target_kind_id: target.kind_id().to_owned(),
+            affected_positions: vec![target_from, *destination],
+            summon: None,
+            effects: effects.clone(),
+            targets: vec![MonsterAbilityTargetResolutionDto {
+                target_entity_id: target.entity_id().to_owned(),
+                target_kind_id: target.kind_id().to_owned(),
+                target_position: *destination,
+                effects,
+            }],
+            trace: Some(trace.clone()),
+        }
+    }
+
     fn resolve_monster_animate_dead_effect(
         &mut self,
         source_index: usize,
@@ -770,6 +923,15 @@ impl Game {
                     trace: Some(trace.clone()),
                 }
             }
+            MonsterAbilityTargetPlan::BirdDrop { .. } => self.resolve_monster_bird_drop_plan(
+                source_index,
+                &source_entity_id,
+                source_kind_id,
+                plan,
+                events,
+                changed,
+                removed_entities,
+            ),
             MonsterAbilityTargetPlan::Area { .. } => self.resolve_monster_area_damage_plan(
                 source_index,
                 &source_entity_id,
@@ -843,6 +1005,7 @@ impl Game {
                     count_dice,
                     count_sides,
                     count_bonus,
+                    maximum_count,
                     duration_turns,
                     ..
                 } = plan.ability.effect
@@ -856,7 +1019,10 @@ impl Game {
                     .roll_damage(u16::from(count_dice), u16::from(count_sides))
                     .saturating_add(i32::from(count_bonus))
                     .max(1);
-                let count = usize::try_from(rolled).unwrap_or(1).min(positions.len());
+                let count = usize::try_from(rolled)
+                    .unwrap_or(1)
+                    .min(maximum_count.map_or(usize::MAX, usize::from))
+                    .min(positions.len());
                 let owner_id = self.entities[source_index].id.clone();
                 let mut entity_ids = Vec::with_capacity(count);
                 let mut summoned_kind_ids = Vec::with_capacity(count);
@@ -1269,24 +1435,48 @@ impl Game {
                     damage_dice,
                     damage_sides,
                     damage_bonus,
+                    damage_is_current_hp_percent,
+                    nonlethal,
                 } => {
                     // Summoned targets have no saving-throw skill; the curse
                     // lands in full (documented v98 simplification).
-                    let raw_damage = self
-                        .roll_damage(*damage_dice, *damage_sides)
-                        .saturating_add(i32::from(*damage_bonus))
-                        .max(0);
-                    self.resolve_monster_damage_to_hostile(
-                        source_entity_id,
-                        source_kind_id,
-                        &ability.id,
-                        effect_index,
-                        raw_damage,
-                        raw_damage,
-                        DamageType::Curse,
-                        target,
-                        events,
-                    )
+                    let target_definition = self
+                        .content
+                        .actor(&self.entities[target_index].kind_id)
+                        .expect("monster target definition must remain available");
+                    if *damage_is_current_hp_percent
+                        && target_definition
+                            .tags
+                            .iter()
+                            .any(|tag| matches!(tag.as_str(), "unique" | "unique2" | "guardian"))
+                    {
+                        AbilityEffectResolutionDto::Skipped {
+                            effect_index,
+                            reason: AbilityEffectSkipReasonDto::Ineligible,
+                        }
+                    } else {
+                        let rolled = self
+                            .roll_damage(*damage_dice, *damage_sides)
+                            .saturating_add(i32::from(*damage_bonus))
+                            .max(0);
+                        let raw_damage = prepare_curse_damage(
+                            rolled,
+                            self.entities[target_index].hp,
+                            *damage_is_current_hp_percent,
+                            *nonlethal,
+                        );
+                        self.resolve_monster_damage_to_hostile(
+                            source_entity_id,
+                            source_kind_id,
+                            &ability.id,
+                            effect_index,
+                            raw_damage,
+                            raw_damage,
+                            DamageType::Curse,
+                            target,
+                            events,
+                        )
+                    }
                 }
                 AbilityEffectDefinition::PolymorphTarget => {
                     let caster_level = self
@@ -1479,6 +1669,8 @@ impl Game {
                     damage_dice,
                     damage_sides,
                     damage_bonus,
+                    damage_is_current_hp_percent,
+                    nonlethal,
                 } => {
                     // A successful saving throw negates the curse before any
                     // damage dice are drawn; difficulty follows the caster's
@@ -1489,10 +1681,16 @@ impl Game {
                             reason: AbilityEffectSkipReasonDto::Saved,
                         }
                     } else {
-                        let raw_damage = self
+                        let rolled = self
                             .roll_damage(*damage_dice, *damage_sides)
                             .saturating_add(i32::from(*damage_bonus))
                             .max(0);
+                        let raw_damage = prepare_curse_damage(
+                            rolled,
+                            self.player.hp,
+                            *damage_is_current_hp_percent,
+                            *nonlethal,
+                        );
                         self.resolve_monster_damage_to_player(
                             source_entity_id,
                             source_kind_id,
@@ -1774,6 +1972,7 @@ impl Game {
                 count_dice,
                 count_sides,
                 count_bonus,
+                maximum_count,
                 radius,
                 ..
             } => {
@@ -1810,8 +2009,9 @@ impl Game {
                         friendly_risk_count: 0,
                     });
                 }
-                let maximum_count = usize::from(*count_dice) * usize::from(*count_sides)
-                    + usize::from(*count_bonus);
+                let maximum_count = (usize::from(*count_dice) * usize::from(*count_sides)
+                    + usize::from(*count_bonus))
+                .min(maximum_count.map_or(usize::MAX, usize::from));
                 let positions = self
                     .open_positions_around_for_actor_kinds(origin, *radius, &candidate_kind_ids)
                     .into_iter()
@@ -1968,6 +2168,7 @@ impl Game {
             | AbilityEffectDefinition::BreathDamage { .. }
             | AbilityEffectDefinition::CurseDamage { .. }
             | AbilityEffectDefinition::TeleportAway { .. }
+            | AbilityEffectDefinition::BirdDrop
             | AbilityEffectDefinition::DrainResource { .. }
             | AbilityEffectDefinition::Amnesia
             | AbilityEffectDefinition::TeleportLevel
@@ -2166,6 +2367,62 @@ impl Game {
                     self.monster_projectile_trace(source_index, ability, &target, true, false)?;
                 (
                     MonsterAbilityTargetPlan::Projectile { target, trace },
+                    vec![target_position],
+                )
+            }
+            AbilityEffectDefinition::BirdDrop => {
+                let trace =
+                    self.monster_projectile_trace(source_index, ability, &target, true, false)?;
+                const DELTAS: [(i32, i32); 8] = [
+                    (0, -1),
+                    (1, -1),
+                    (1, 0),
+                    (1, 1),
+                    (0, 1),
+                    (-1, 1),
+                    (-1, 0),
+                    (-1, -1),
+                ];
+                let destination = DELTAS
+                    .iter()
+                    .map(|(dx, dy)| Position {
+                        x: origin.x + dx,
+                        y: origin.y + dy,
+                    })
+                    .find(|position| {
+                        self.index(*position).is_some()
+                            && self.monster_hostile_target_can_enter_position(&target, *position)
+                            && *position != self.player.position
+                            && !self
+                                .entities
+                                .iter()
+                                .any(|entity| entity.hp > 0 && entity.position == *position)
+                    })
+                    .ok_or(MonsterAbilityPlanRejection {
+                        reason: MonsterAbilityRejectionReasonDto::NoSpace,
+                        enemy_target_count: 0,
+                        friendly_risk_count: 0,
+                    })?;
+                let escape_destinations_at_least = |minimum_distance| {
+                    self.displacement_destinations(source_index, |position| {
+                        let distance = origin
+                            .x
+                            .abs_diff(position.x)
+                            .max(origin.y.abs_diff(position.y));
+                        (minimum_distance..=10).contains(&distance)
+                    })
+                };
+                let mut escape_destinations = escape_destinations_at_least(5);
+                if escape_destinations.is_empty() {
+                    escape_destinations = escape_destinations_at_least(0);
+                }
+                (
+                    MonsterAbilityTargetPlan::BirdDrop {
+                        target,
+                        trace,
+                        destination,
+                        escape_destinations,
+                    },
                     vec![target_position],
                 )
             }

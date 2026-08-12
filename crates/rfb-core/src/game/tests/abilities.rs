@@ -2376,6 +2376,68 @@ fn magic_affinity_and_strong_mind_gate_existing_dispel_and_resource_drain_effect
 }
 
 #[test]
+fn hand_of_doom_uses_a_save_gated_nonlethal_percentage_of_current_hp() {
+    let template = Game::new(0);
+    let ability = template
+        .content
+        .ability("rfb-legacy.ability.hand-of-doom")
+        .expect("Hand of Doom should compile")
+        .clone();
+    let (seed, damaged, resolution, events) = (0..1_000_u64)
+        .find_map(|seed| {
+            let mut game = template.clone();
+            game.rng = RfbRng::seeded(seed);
+            game.player.hp = 1_000;
+            game.player.max_hp = 1_000;
+            let mut events = Vec::new();
+            let resolutions = game.resolve_monster_player_effects(
+                "test.monster.shadow-fiend",
+                "demo.actor.the-shadow-fiend",
+                &ability,
+                &mut events,
+                &mut BTreeSet::new(),
+            );
+            let resolution = resolutions.into_iter().next().expect("one effect");
+            matches!(resolution, AbilityEffectResolutionDto::Damage { .. })
+                .then_some((seed, game, resolution, events))
+        })
+        .expect("a deterministic seed should fail the saving throw");
+
+    let AbilityEffectResolutionDto::Damage {
+        resolution: damage, ..
+    } = resolution
+    else {
+        unreachable!()
+    };
+    assert!((410..=600).contains(&damage.raw_damage));
+    assert_eq!(damaged.player.hp, 1_000 - damage.final_damage);
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::SavingThrowChecked {
+            succeeded: false,
+            ..
+        }
+    )));
+
+    let mut nonlethal = template;
+    nonlethal.rng = RfbRng::seeded(seed);
+    nonlethal.player.hp = 1;
+    let resolutions = nonlethal.resolve_monster_player_effects(
+        "test.monster.shadow-fiend",
+        "demo.actor.the-shadow-fiend",
+        &ability,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+    );
+    assert_eq!(nonlethal.player.hp, 1);
+    assert!(matches!(
+        resolutions.as_slice(),
+        [AbilityEffectResolutionDto::Damage { resolution, .. }]
+            if resolution.raw_damage == 0 && resolution.final_damage == 0
+    ));
+}
+
+#[test]
 fn waiting_and_resting_recover_mana_until_the_pool_is_full() {
     let mut game = test_caster_game(0);
     clear_monsters(&mut game);
@@ -3743,6 +3805,315 @@ fn level_based_jump_damage_uses_no_damage_rng_then_blinks() {
             DomainEvent::MonsterBlinked { resolution, .. }
         ] if resolution.from == caster && resolution.to == landing
     ));
+}
+
+#[test]
+fn bird_drop_flies_away_or_drops_targets_with_levitation_reduction() {
+    fn cast(
+        seed: u64,
+        levitating: bool,
+    ) -> (
+        Game,
+        MonsterAbilityPlanResolution,
+        Vec<DomainEvent>,
+        u64,
+        Position,
+        Position,
+        Position,
+    ) {
+        let mut game = Game::new(seed);
+        clear_monsters(&mut game);
+        for cell in &mut game.terrain {
+            *cell = "demo.terrain.wall".to_owned();
+        }
+        let player = game.player.position;
+        let caster = Position {
+            x: player.x + 3,
+            y: player.y,
+        };
+        let landing = Position {
+            x: caster.x,
+            y: caster.y - 1,
+        };
+        let escape = Position {
+            x: caster.x + 5,
+            y: caster.y,
+        };
+        for position in [
+            player,
+            Position {
+                x: player.x + 1,
+                y: player.y,
+            },
+            Position {
+                x: player.x + 2,
+                y: player.y,
+            },
+            caster,
+            landing,
+            escape,
+        ] {
+            let index = game.index(position).expect("test cell should exist");
+            game.terrain[index] = "demo.terrain.floor".to_owned();
+        }
+        game.player.hp = 1_000;
+        if levitating {
+            game.progress
+                .active_mutation_ids
+                .insert("rfb.mutation.wings".to_owned());
+        }
+        game.entities.push(actor_from_runtime_spawn(
+            "generated.actor.ancient-roc",
+            "demo.actor.the-ancient-roc-of-okeldad",
+            caster,
+            3_872,
+            130,
+            100,
+            true,
+        ));
+        let ability = game
+            .content
+            .ability("rfb-legacy.ability.bird-drop")
+            .expect("P54 bird drop should compile")
+            .clone();
+        assert!(matches!(ability.effect, AbilityEffectDefinition::BirdDrop));
+        let plan = game
+            .monster_ability_target_plan(0, ability, 1)
+            .expect("the player should be a valid bird drop target");
+        let MonsterAbilityTargetPlan::BirdDrop { destination, .. } = &plan.target else {
+            panic!("BIRD_DROP should retain its dedicated target plan");
+        };
+        assert_eq!(*destination, landing);
+        let draws = game.rng_draw_counter();
+        let mut events = Vec::new();
+        let resolution = game.resolve_monster_ability_plan(
+            0,
+            "demo.actor.the-ancient-roc-of-okeldad",
+            &plan,
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        );
+        (game, resolution, events, draws, player, caster, landing)
+    }
+
+    let (fly_seed, fly) = (0..1_000)
+        .find_map(|seed| {
+            let result = cast(seed, false);
+            result.1.effects.is_empty().then_some((seed, result))
+        })
+        .expect("a bounded seed should take the one-in-three escape branch");
+    assert_ne!(fly.0.entities[0].position, fly.5);
+    let escape_distance = fly
+        .5
+        .x
+        .abs_diff(fly.0.entities[0].position.x)
+        .max(fly.5.y.abs_diff(fly.0.entities[0].position.y));
+    assert!((5..=10).contains(&escape_distance));
+    assert_eq!(fly.0.player.position, fly.4);
+    assert_eq!(fly.0.player.hp, 1_000);
+    assert_eq!(fly.0.rng_draw_counter(), fly.3 + 2);
+    assert!(fly.2.iter().any(|event| matches!(
+        event,
+        DomainEvent::MonsterTeleported { resolution, .. }
+            if resolution.actor_id == "generated.actor.ancient-roc"
+    )));
+
+    let drop_seed = (0..1_000)
+        .find(|seed| *seed != fly_seed && !cast(*seed, false).1.effects.is_empty())
+        .expect("a bounded seed should take the drop branch");
+    let (ordinary, ordinary_resolution, ordinary_events, ordinary_draws, player, _, landing) =
+        cast(drop_seed, false);
+    let (levitating, levitating_resolution, _, levitating_draws, _, _, _) = cast(drop_seed, true);
+    let damage = |resolution: &MonsterAbilityPlanResolution| {
+        let AbilityEffectResolutionDto::Damage { resolution, .. } = &resolution.effects[0] else {
+            panic!("the drop branch should resolve physical damage");
+        };
+        resolution.raw_damage
+    };
+    let ordinary_damage = damage(&ordinary_resolution);
+    let levitating_damage = damage(&levitating_resolution);
+    assert!((10..=80).contains(&ordinary_damage));
+    assert!((4..=32).contains(&levitating_damage));
+    assert!(ordinary_damage > levitating_damage);
+    assert_eq!(ordinary.rng_draw_counter(), ordinary_draws + 11);
+    assert_eq!(levitating.rng_draw_counter(), levitating_draws + 5);
+    assert_eq!(ordinary.player.position, landing);
+    assert_eq!(levitating.player.position, landing);
+    assert!(ordinary_events.iter().any(|event| matches!(
+        event,
+        DomainEvent::MonsterDraggedTarget { resolution, .. }
+            if resolution.from == player && resolution.to == landing
+    )));
+
+    let mut flying_target = Game::new(drop_seed);
+    clear_monsters(&mut flying_target);
+    for cell in &mut flying_target.terrain {
+        *cell = "demo.terrain.wall".to_owned();
+    }
+    flying_target.player.position = Position { x: 70, y: 20 };
+    let caster = Position { x: 4, y: 4 };
+    let target = Position { x: 7, y: 4 };
+    let landing = Position { x: 4, y: 3 };
+    for position in [
+        caster,
+        Position { x: 5, y: 4 },
+        Position { x: 6, y: 4 },
+        target,
+        landing,
+    ] {
+        let index = flying_target
+            .index(position)
+            .expect("test cell should exist");
+        flying_target.terrain[index] = "demo.terrain.floor".to_owned();
+    }
+    flying_target.entities.push(actor_from_runtime_spawn(
+        "generated.actor.ancient-roc",
+        "demo.actor.the-ancient-roc-of-okeldad",
+        caster,
+        3_872,
+        130,
+        100,
+        true,
+    ));
+    let mut bat = actor_from_runtime_spawn(
+        "generated.summon.fruit-bat",
+        "demo.actor.fruit-bat",
+        target,
+        1_000,
+        110,
+        100,
+        true,
+    );
+    bat.controller_id = Some(flying_target.player.id.clone());
+    flying_target.entities.push(bat);
+    let ability = flying_target
+        .content
+        .ability("rfb-legacy.ability.bird-drop")
+        .expect("P54 bird drop should compile")
+        .clone();
+    let plan = flying_target
+        .monster_ability_target_plan(0, ability, 1)
+        .expect("the flying summon should be a valid bird drop target");
+    let draws = flying_target.rng_draw_counter();
+    let resolution = flying_target.resolve_monster_ability_plan(
+        0,
+        "demo.actor.the-ancient-roc-of-okeldad",
+        &plan,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    );
+    assert!((4..=32).contains(&damage(&resolution)));
+    assert_eq!(flying_target.rng_draw_counter(), draws + 5);
+    assert_eq!(flying_target.entities[1].position, landing);
+}
+
+#[test]
+fn p55b_eagle_summon_includes_unseen_unique_eagles() {
+    let mut game = Game::new(0);
+    clear_monsters(&mut game);
+    let caster_position = Position {
+        x: game.player.position.x + 4,
+        y: game.player.position.y,
+    };
+    game.entities.push(actor_from_runtime_spawn(
+        "generated.actor.ancient-roc",
+        "demo.actor.the-ancient-roc-of-okeldad",
+        caster_position,
+        3_872,
+        130,
+        100,
+        true,
+    ));
+    let ability = game
+        .content
+        .ability("rfb-legacy.ability.summon-eagle-l55-1d3-1")
+        .expect("P55B eagle summon should compile")
+        .clone();
+    let plan = game
+        .monster_ability_target_plan(0, ability, 1)
+        .expect("unseen eagles should be summon candidates");
+    let MonsterAbilityTargetPlan::SummonCategory {
+        candidate_kind_ids, ..
+    } = plan.target
+    else {
+        panic!("S_EAGLE should retain a category summon plan");
+    };
+    assert_eq!(
+        candidate_kind_ids.into_iter().collect::<BTreeSet<_>>(),
+        [
+            "demo.actor.eagle".to_owned(),
+            "demo.actor.great-eagle".to_owned(),
+            "demo.actor.gwaihir-the-windlord".to_owned(),
+            "demo.actor.meneldor-the-swift".to_owned(),
+            "demo.actor.thorondor".to_owned(),
+        ]
+        .into_iter()
+        .collect()
+    );
+}
+
+#[test]
+fn p56b_gospel_summon_caps_one_d_four_at_three_tracking_pixels() {
+    fn summon(seed: u64, capped: bool) -> Vec<String> {
+        let mut game = Game::new(seed);
+        clear_monsters(&mut game);
+        game.terrain.fill("demo.terrain.floor".to_owned());
+        game.player.position = Position { x: 80, y: 20 };
+        game.entities.push(actor_from_runtime_spawn(
+            "generated.actor.gospel",
+            "demo.actor.the-gospel-of-mug",
+            Position { x: 4, y: 3 },
+            1_665,
+            128,
+            100,
+            true,
+        ));
+        let mut ability = game
+            .content
+            .ability("rfb-legacy.ability.summon-tracking-pixel-l56-1d4-max3")
+            .expect("P56B Gospel summon should compile")
+            .clone();
+        assert!(matches!(
+            ability_effect_spec_dto(&ability.effect),
+            AbilityEffectSpecDto::SummonCategory {
+                maximum_count: Some(3),
+                ..
+            }
+        ));
+        if !capped
+            && let AbilityEffectDefinition::SummonCategory { maximum_count, .. } =
+                &mut ability.effect
+        {
+            *maximum_count = None;
+        }
+        let plan = game
+            .monster_ability_target_plan(0, ability, 1)
+            .expect("Gospel special summon should have a target plan");
+        game.resolve_monster_ability_plan(
+            0,
+            "demo.actor.the-gospel-of-mug",
+            &plan,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .summon
+        .expect("Gospel special should summon")
+        .summoned_kind_ids
+    }
+
+    let seed = (0..128)
+        .find(|seed| summon(*seed, false).len() == 4)
+        .expect("a bounded seed should roll four summons");
+    let summoned = summon(seed, true);
+    assert_eq!(summoned.len(), 3);
+    assert!(
+        summoned
+            .iter()
+            .all(|kind_id| kind_id == "demo.actor.tracking-pixel")
+    );
 }
 
 #[test]

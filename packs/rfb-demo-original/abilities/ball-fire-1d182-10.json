@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.ball-fire-1d182-10",
+  "descriptionKey": "ability-legacy-ball-fire-1d182-10-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.ball-fire-1d182-10",
+  "nameKey": "ability-legacy-ball-fire-1d182-10-name",
+  "tags": [
+    "legacy-import",
+    "damage"
+  ],
+  "target": {
+    "modes": [
+      "position",
+      "entity"
+    ],
+    "range": 8,
+    "requiresLineOfEffect": true
+  }
+}

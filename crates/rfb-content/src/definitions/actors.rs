@@ -38,6 +38,7 @@ pub enum ActorHabitat {
     All,
     Grass,
     Mountain,
+    Ocean,
     Shore,
     Snow,
     Swamp,
@@ -155,6 +156,12 @@ pub enum MeleeBlowEffectDefinition {
         damage_dice: u16,
         damage_sides: u16,
     },
+    Bomb {
+        #[serde(default)]
+        chance_percent: Option<u8>,
+        damage_dice: u16,
+        damage_sides: u16,
+    },
     Poison {
         #[serde(default)]
         chance_percent: Option<u8>,
@@ -223,6 +230,10 @@ pub enum MeleeBlowEffectDefinition {
         chance_percent: Option<u8>,
     },
     Slow {
+        #[serde(default)]
+        chance_percent: Option<u8>,
+    },
+    Inertia {
         #[serde(default)]
         chance_percent: Option<u8>,
     },

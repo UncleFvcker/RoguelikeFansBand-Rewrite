@@ -145,7 +145,13 @@ pub(super) fn validate_actors(
                                     effect,
                                     MeleeBlowEffectDefinition::Damage { .. }
                                         | MeleeBlowEffectDefinition::Poison { .. }
+                                        | MeleeBlowEffectDefinition::Bomb { .. }
+                                        | MeleeBlowEffectDefinition::Slow { .. }
                                 )
+                            }))
+                        || (!blow.self_destructs
+                            && blow.effects.iter().any(|effect| {
+                                matches!(effect, MeleeBlowEffectDefinition::Bomb { .. })
                             }))
                         || blow
                             .effects
@@ -298,8 +304,11 @@ pub(super) fn validate_actors(
                         | ActorDamageType::Acid
                         | ActorDamageType::Fire
                         | ActorDamageType::Cold
+                        | ActorDamageType::Ice
+                        | ActorDamageType::Light
                         | ActorDamageType::Electricity
                         | ActorDamageType::Curse
+                        | ActorDamageType::Shards
                 ) || !(1..=100).contains(&aura.damage_dice)
                     || !(1..=10_000).contains(&aura.damage_sides)
                     || aura
@@ -348,6 +357,11 @@ fn valid_melee_effect(effect: &MeleeBlowEffectDefinition) -> bool {
                     || valid_dice(*damage_dice, *damage_sides))
         }
         MeleeBlowEffectDefinition::Shatter {
+            chance_percent,
+            damage_dice,
+            damage_sides,
+        } => valid_chance(*chance_percent) && valid_dice(*damage_dice, *damage_sides),
+        MeleeBlowEffectDefinition::Bomb {
             chance_percent,
             damage_dice,
             damage_sides,
@@ -418,6 +432,7 @@ fn valid_melee_effect(effect: &MeleeBlowEffectDefinition) -> bool {
         | MeleeBlowEffectDefinition::Amnesia { chance_percent }
         | MeleeBlowEffectDefinition::Time { chance_percent }
         | MeleeBlowEffectDefinition::Slow { chance_percent }
+        | MeleeBlowEffectDefinition::Inertia { chance_percent }
         | MeleeBlowEffectDefinition::Terrify { chance_percent }
         | MeleeBlowEffectDefinition::Disenchant { chance_percent }
         | MeleeBlowEffectDefinition::EatGold { chance_percent }

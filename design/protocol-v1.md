@@ -585,3 +585,10 @@ v88，save 容器保持 v1。
 `PlayerDto.petUpkeep` 摘要，以及宠物维持法力损失、零法力解散要求和冷落结果事件。
 维持摘要不保存；它由当前职业、等级、法力池和存活的玩家控制 actor 重新计算。
 State Hash Schema 保持 v92，save 容器保持 v1。
+协议 1.185 / P50 为 `AbilityEffectSpecDto::CurseDamage` 增加
+`damageIsCurrentHpPercent` 与 `nonlethal`，用于准确投影“毁灭之手”的当前生命百分比和
+非致死语义。没有新增持久状态，State Hash Schema 保持 v88，save 容器保持 v1。
+
+协议 1.186 / P56B 为 `AbilityEffectSpecDto::SummonCategory` 增加可选
+`maximumCount`，用于保留 `min(1d4, 3)` 这类召唤数量上限。没有新增持久状态，
+State Hash Schema 保持 v88，save 容器保持 v1。

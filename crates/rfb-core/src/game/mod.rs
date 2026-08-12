@@ -57,20 +57,21 @@ use rfb_content::{
     AbilityGenocideScopeDefinition, AbilityLevelScalingCurveDefinition,
     AbilityLevelScalingDefinition, AbilityLevelScalingField, AbilityRandomTargetDefinition,
     AbilitySpellPowerDefinition, AbilitySpellPowerField, AbilityStatusStackingDefinition,
-    AbilityTargetDefinition, AbilityTargetModeDefinition, ActorDamageType, ActorResistanceLevel,
-    ActorRole, AffixPropertyBundleDefinition, CastingAttribute, CastingCapacityFormula,
-    CastingFailureFormula, CastingLearningFormula, CastingProfileDefinition,
-    CastingRealmProfileDefinition, CastingStudyMode, ClassAbilityDefinition, ContentCatalog,
-    DungeonInstanceLifecycle, EncounterEntryDefinition, EncounterTableDefinition, EquipmentBonuses,
-    EquipmentPassive, FloorLifecycle, ItemAttributeDefinition, ItemCurseSeverityDefinition,
-    ItemCurseTargetDefinition, ItemEnchantmentRollDefinition, ItemSummonLevelSourceDefinition,
-    ItemSummonSelectorDefinition, ItemUseEffectDefinition, MeleeBlowEffectDefinition,
-    MonsterDropKindDefinition, MonsterPackBehavior, MutationActivationDefinition,
-    MutationPeriodicEffectDefinition, PlayerAbilityDefinition, ProceduralLayoutMode,
-    ProceduralMazeDefinition, ProceduralPitDefinition, ProceduralRoomGeometryDefinition,
-    ProceduralRoomPlacement, ProceduralRoomShape, ProceduralStreamerCandidateDefinition, SkillKind,
-    SlayLevel, SlayTarget, StartingItemDefinition, StatModifiers, TaskObjectiveKind,
-    TechniqueAttribute, TerrainFeatureEntryDefinition, ThemeVaultCandidateDefinition, WeaponBrand,
+    AbilityTargetDefinition, AbilityTargetModeDefinition, ActorDamageType, ActorMovementMode,
+    ActorResistanceLevel, ActorRole, AffixPropertyBundleDefinition, CastingAttribute,
+    CastingCapacityFormula, CastingFailureFormula, CastingLearningFormula,
+    CastingProfileDefinition, CastingRealmProfileDefinition, CastingStudyMode,
+    ClassAbilityDefinition, ContentCatalog, DungeonInstanceLifecycle, EncounterEntryDefinition,
+    EncounterTableDefinition, EquipmentBonuses, EquipmentPassive, FloorLifecycle,
+    ItemAttributeDefinition, ItemCurseSeverityDefinition, ItemCurseTargetDefinition,
+    ItemEnchantmentRollDefinition, ItemSummonLevelSourceDefinition, ItemSummonSelectorDefinition,
+    ItemUseEffectDefinition, MeleeBlowEffectDefinition, MonsterDropKindDefinition,
+    MonsterPackBehavior, MutationActivationDefinition, MutationPeriodicEffectDefinition,
+    PlayerAbilityDefinition, ProceduralLayoutMode, ProceduralMazeDefinition,
+    ProceduralPitDefinition, ProceduralRoomGeometryDefinition, ProceduralRoomPlacement,
+    ProceduralRoomShape, ProceduralStreamerCandidateDefinition, SkillKind, SlayLevel, SlayTarget,
+    StartingItemDefinition, StatModifiers, TaskObjectiveKind, TechniqueAttribute,
+    TerrainFeatureEntryDefinition, ThemeVaultCandidateDefinition, WeaponBrand,
     affix_is_compatible_with_item,
 };
 use rfb_protocol::{
@@ -261,6 +262,7 @@ struct CategorySummonSpec<'a> {
     count_dice: u8,
     count_sides: u8,
     count_bonus: u8,
+    maximum_count: Option<u8>,
     hostile: bool,
     group_chance_percent: u8,
     group_count_dice: u8,
@@ -417,6 +419,12 @@ enum MonsterAbilityTargetPlan {
         trace: ProjectileTrace,
         destinations: Vec<Position>,
     },
+    BirdDrop {
+        target: MonsterHostileTarget,
+        trace: ProjectileTrace,
+        destination: Position,
+        escape_destinations: Vec<Position>,
+    },
 }
 
 fn monster_plan_target(target: &MonsterAbilityTargetPlan) -> Option<&MonsterHostileTarget> {
@@ -428,7 +436,8 @@ fn monster_plan_target(target: &MonsterAbilityTargetPlan) -> Option<&MonsterHost
         | MonsterAbilityTargetPlan::TerrainTransform { target, .. }
         | MonsterAbilityTargetPlan::DragTarget { target, .. }
         | MonsterAbilityTargetPlan::BlinkTarget { target, .. }
-        | MonsterAbilityTargetPlan::BanishTarget { target, .. } => Some(target),
+        | MonsterAbilityTargetPlan::BanishTarget { target, .. }
+        | MonsterAbilityTargetPlan::BirdDrop { target, .. } => Some(target),
         MonsterAbilityTargetPlan::SelfTarget
         | MonsterAbilityTargetPlan::JumpDamage { .. }
         | MonsterAbilityTargetPlan::Summon { .. }
@@ -2845,7 +2854,10 @@ impl Game {
             .roll_damage(u16::from(dice), u16::from(sides))
             .saturating_add(i32::from(bonus))
             .max(1);
-        let count = usize::try_from(rolled).unwrap_or(1).min(positions.len());
+        let count = usize::try_from(rolled)
+            .unwrap_or(1)
+            .min(spec.maximum_count.map_or(usize::MAX, usize::from))
+            .min(positions.len());
         let mut entity_ids = Vec::with_capacity(count);
         let mut summoned_kind_ids = Vec::with_capacity(count);
         let mut used_positions = Vec::with_capacity(count);
@@ -6435,8 +6447,8 @@ fn spell_powered_ability_value(
 
 fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpecDto {
     match effect {
-        AbilityEffectDefinition::JumpDamage { .. } => {
-            unreachable!("monster-only jump damage is never projected as a player ability")
+        AbilityEffectDefinition::JumpDamage { .. } | AbilityEffectDefinition::BirdDrop => {
+            unreachable!("monster-only effects are never projected as player abilities")
         }
         AbilityEffectDefinition::BlinkSelf { radius } => {
             AbilityEffectSpecDto::BlinkSelf { radius: *radius }
@@ -6568,10 +6580,14 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             damage_dice,
             damage_sides,
             damage_bonus,
+            damage_is_current_hp_percent,
+            nonlethal,
         } => AbilityEffectSpecDto::CurseDamage {
             damage_dice: *damage_dice,
             damage_sides: *damage_sides,
             damage_bonus: *damage_bonus,
+            damage_is_current_hp_percent: *damage_is_current_hp_percent,
+            nonlethal: *nonlethal,
         },
         AbilityEffectDefinition::DeathRay { power } => {
             AbilityEffectSpecDto::DeathRay { power: *power }
@@ -6712,6 +6728,7 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             count_dice,
             count_sides,
             count_bonus,
+            maximum_count,
             hostile_chance_percent,
             friendly_group_chance_percent,
             hostile_group_chance_percent,
@@ -6729,6 +6746,7 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             count_dice: *count_dice,
             count_sides: *count_sides,
             count_bonus: *count_bonus,
+            maximum_count: *maximum_count,
             hostile_chance_percent: *hostile_chance_percent,
             friendly_group_chance_percent: *friendly_group_chance_percent,
             hostile_group_chance_percent: *hostile_group_chance_percent,

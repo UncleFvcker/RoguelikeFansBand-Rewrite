@@ -1,0 +1,15 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability-program.bolt-water-10d10-49",
+  "input": "cast-target",
+  "steps": [
+    {
+      "damageBonus": 49,
+      "damageDice": 10,
+      "damageSides": 10,
+      "damageType": "water",
+      "type": "damage"
+    }
+  ]
+}

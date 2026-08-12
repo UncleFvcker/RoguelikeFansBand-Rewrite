@@ -639,6 +639,7 @@ impl Game {
                 count_dice: 0,
                 count_sides: 0,
                 count_bonus: 1,
+                maximum_count: None,
                 hostile: !friendly,
                 group_chance_percent: u8::from(count > 1).saturating_mul(100),
                 group_count_dice: 0,

@@ -144,6 +144,10 @@
       {
         "abilityId": "rfb-legacy.ability.bolt-nether-5d5-111",
         "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.invulnerability-self",
+        "weight": 1
       }
     ],
     "frequencyPercent": 33,
@@ -169,6 +173,7 @@
   "role": "monster",
   "speed": 130,
   "tags": [
+    "angel",
     "evil",
     "kin-glyph-65",
     "legacy-import",

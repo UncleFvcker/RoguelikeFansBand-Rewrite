@@ -499,6 +499,11 @@ impl Game {
                     target,
                     destination,
                     ..
+                }
+                | MonsterAbilityTargetPlan::BirdDrop {
+                    target,
+                    destination,
+                    ..
                 } => (
                     Some(target.entity_id().to_owned()),
                     Some(target.kind_id().to_owned()),

@@ -1,0 +1,200 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 664,
+    "maxDepth": 999,
+    "rarity": 4
+  },
+  "attack": 10,
+  "damageDice": 2,
+  "damageSides": 6,
+  "damageType": "psi",
+  "defense": 10,
+  "descriptionKey": "actor-demo-undead-beholder-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 9000,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "e",
+  "hitPointDice": {
+    "dice": 27,
+    "forceMaximum": true,
+    "sides": 100
+  },
+  "id": "demo.actor.undead-beholder",
+  "level": 42,
+  "light": {
+    "darkness": true,
+    "intrinsic": false,
+    "radius": 1
+  },
+  "maxHp": 2700,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 2,
+            "damageSides": 6,
+            "damageType": "psi",
+            "type": "damage"
+          },
+          {
+            "damageDice": 0,
+            "damageSides": 0,
+            "type": "confusion"
+          },
+          {
+            "amountDice": 7,
+            "amountSides": 7,
+            "type": "drain-resource"
+          },
+          {
+            "damageDice": 0,
+            "damageSides": 0,
+            "type": "confusion"
+          },
+          {
+            "amountDice": 2,
+            "amountSides": 6,
+            "type": "unlife"
+          }
+        ],
+        "methodId": "rfb.blow.gaze",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 2,
+            "damageSides": 6,
+            "damageType": "psi",
+            "type": "damage"
+          },
+          {
+            "damageDice": 0,
+            "damageSides": 0,
+            "type": "confusion"
+          },
+          {
+            "type": "terrify"
+          },
+          {
+            "type": "paralysis"
+          },
+          {
+            "amountDice": 2,
+            "amountSides": 6,
+            "type": "unlife"
+          }
+        ],
+        "methodId": "rfb.blow.gaze",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 2,
+            "damageSides": 6,
+            "damageType": "psi",
+            "type": "damage"
+          },
+          {
+            "damageDice": 0,
+            "damageSides": 0,
+            "type": "confusion"
+          },
+          {
+            "durationDice": 3,
+            "durationSides": 3,
+            "type": "stun"
+          },
+          {
+            "chancePercent": 25,
+            "type": "amnesia"
+          },
+          {
+            "attributes": [
+              "intelligence"
+            ],
+            "chancePercent": 50,
+            "type": "drain-attributes"
+          }
+        ],
+        "methodId": "rfb.blow.gaze",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.gaze",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.curse-15d15",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.mind-blast-7d7",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.brain-smash-12d12",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.bolt-mana-1d147-50",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.animate-dead",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-nether-10d10-92",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-undead-l42-1d3-1",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 35
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "nameKey": "actor-demo-undead-beholder-name",
+  "resistances": {
+    "acid": "resistant",
+    "cold": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "nether": "resistant",
+    "poison": "immune"
+  },
+  "role": "monster",
+  "speed": 120,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "cold-blooded",
+    "evil",
+    "kin-glyph-101",
+    "legacy-import",
+    "orc-cave",
+    "resist-teleport",
+    "undead"
+  ]
+}

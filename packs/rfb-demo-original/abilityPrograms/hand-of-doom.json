@@ -1,0 +1,16 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability-program.hand-of-doom",
+  "input": "cast-target",
+  "steps": [
+    {
+      "damageBonus": 40,
+      "damageDice": 1,
+      "damageIsCurrentHpPercent": true,
+      "damageSides": 20,
+      "nonlethal": true,
+      "type": "curse-damage"
+    }
+  ]
+}

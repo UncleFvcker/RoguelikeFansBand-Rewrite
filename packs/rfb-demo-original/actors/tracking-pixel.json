@@ -1,0 +1,117 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 1291,
+    "maxDepth": 999,
+    "rarity": 9
+  },
+  "attack": 13,
+  "damageDice": 1,
+  "damageSides": 1,
+  "damageType": "physical",
+  "defense": 6,
+  "descriptionKey": "actor-demo-tracking-pixel-description",
+  "experienceValue": 1998,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": ".",
+  "hitPointDice": {
+    "dice": 18,
+    "sides": 37
+  },
+  "id": "demo.actor.tracking-pixel",
+  "level": 52,
+  "maxHp": 342,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "type": "slow"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "damageDice": 4,
+            "damageSides": 4,
+            "type": "disease"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "amountDice": 4,
+            "amountSides": 4,
+            "type": "drain-resource"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "type": "drain-charges"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.shriek",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-legacy-import-l52-1d3-1",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-demon-l52-1d3-1",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 50,
+    "smart": true
+  },
+  "movement": {
+    "modes": [
+      "fly",
+      "pass-wall"
+    ]
+  },
+  "nameKey": "actor-demo-tracking-pixel-name",
+  "resistances": {
+    "chaos": "resistant",
+    "dark": "resistant",
+    "electricity": "immune",
+    "nether": "resistant",
+    "nexus": "resistant",
+    "poison": "immune"
+  },
+  "role": "monster",
+  "speed": 123,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "evil",
+    "invisible",
+    "kin-glyph-46",
+    "legacy-import",
+    "nonliving",
+    "orc-cave",
+    "tracking-pixel"
+  ]
+}

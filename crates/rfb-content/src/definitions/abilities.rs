@@ -331,6 +331,10 @@ pub enum AbilityEffectDefinition {
         damage_sides: u16,
         #[serde(default)]
         damage_bonus: u16,
+        #[serde(default)]
+        damage_is_current_hp_percent: bool,
+        #[serde(default)]
+        nonlethal: bool,
     },
     DeathRay {
         power: u32,
@@ -338,6 +342,7 @@ pub enum AbilityEffectDefinition {
     TeleportAway {
         minimum_distance: u8,
     },
+    BirdDrop,
     DrainResource {
         amount: u32,
     },
@@ -439,6 +444,8 @@ pub enum AbilityEffectDefinition {
         count_sides: u8,
         #[serde(default)]
         count_bonus: u8,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        maximum_count: Option<u8>,
         #[serde(default)]
         hostile_chance_percent: u8,
         #[serde(default)]

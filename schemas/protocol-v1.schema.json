@@ -2446,11 +2446,19 @@
               "maximum": 65535,
               "minimum": 0
             },
+            "damageIsCurrentHpPercent": {
+              "type": "boolean",
+              "default": false
+            },
             "damageSides": {
               "type": "integer",
               "format": "uint16",
               "maximum": 65535,
               "minimum": 0
+            },
+            "nonlethal": {
+              "type": "boolean",
+              "default": false
             },
             "type": {
               "type": "string",
@@ -3071,6 +3079,15 @@
               "type": "integer",
               "format": "uint8",
               "default": 0,
+              "maximum": 255,
+              "minimum": 0
+            },
+            "maximumCount": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint8",
               "maximum": 255,
               "minimum": 0
             },

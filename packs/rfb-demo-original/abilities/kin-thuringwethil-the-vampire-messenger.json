@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.kin-thuringwethil-the-vampire-messenger",
+  "descriptionKey": "ability-legacy-kin-thuringwethil-the-vampire-messenger-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.kin-thuringwethil-the-vampire-messenger",
+  "nameKey": "ability-legacy-kin-thuringwethil-the-vampire-messenger-name",
+  "tags": [
+    "legacy-import",
+    "summon"
+  ],
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  }
+}

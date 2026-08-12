@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: MPL-2.0
 use crate::game::monster_ecology::{
     OriginalGroupRole, actor_allocation_matches_legacy_dungeon, actor_allocation_matches_task,
+    actor_matches_surface_habitat,
 };
 use crate::rng::RfbRng;
+use rfb_content::WildernessTerrain;
 
 use super::support::*;
 use super::*;
@@ -21,6 +23,39 @@ fn first_seed_for(mut predicate: impl FnMut(&mut RfbRng) -> bool) -> u64 {
     (0..1_000_000)
         .find(|seed| predicate(&mut RfbRng::seeded(*seed)))
         .expect("bounded deterministic seed search should find a match")
+}
+
+#[test]
+fn p55a_ocean_monsters_require_a_deep_water_wilderness_cell() {
+    let game = Game::new(0);
+    let deep_water = game
+        .content
+        .terrain("demo.terrain.surface-water-deep")
+        .expect("surface deep water should exist");
+    let fastitocalon = game
+        .content
+        .actor("demo.actor.fastitocalon")
+        .expect("P55A should import Fastitocalon");
+    assert!(actor_matches_surface_habitat(
+        fastitocalon,
+        deep_water,
+        Some(WildernessTerrain::DeepWater),
+    ));
+    assert!(!actor_matches_surface_habitat(
+        fastitocalon,
+        deep_water,
+        Some(WildernessTerrain::Grass),
+    ));
+
+    let makara = game
+        .content
+        .actor("demo.actor.makara")
+        .expect("P55A should import Makara");
+    assert!(!actor_matches_surface_habitat(
+        makara,
+        deep_water,
+        Some(WildernessTerrain::DeepWater),
+    ));
 }
 
 fn eldritch_seed(saving_throw_skill: i32, consequence_saves: &[bool]) -> u64 {

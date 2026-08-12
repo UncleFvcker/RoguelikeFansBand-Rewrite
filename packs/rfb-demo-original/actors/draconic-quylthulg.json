@@ -1,0 +1,66 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 759,
+    "maxDepth": 999,
+    "rarity": 5
+  },
+  "attack": 13,
+  "damageDice": 1,
+  "damageSides": 1,
+  "damageType": "physical",
+  "defense": 0,
+  "descriptionKey": "actor-demo-draconic-quylthulg-description",
+  "experienceValue": 5500,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "Q",
+  "hitPointDice": {
+    "dice": 72,
+    "forceMaximum": true,
+    "sides": 10
+  },
+  "id": "demo.actor.draconic-quylthulg",
+  "level": 55,
+  "maxHp": 720,
+  "meleeRoutine": {
+    "blows": []
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.blink",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.escape",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-dragon-l55-1d3-1",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 50
+  },
+  "movement": {
+    "neverMoves": true
+  },
+  "nameKey": "actor-demo-draconic-quylthulg-name",
+  "role": "monster",
+  "speed": 120,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "animal",
+    "empty-mind",
+    "evil",
+    "invisible",
+    "kin-glyph-81",
+    "legacy-import",
+    "orc-cave"
+  ]
+}

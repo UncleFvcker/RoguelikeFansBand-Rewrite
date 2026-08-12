@@ -370,6 +370,51 @@ fn quantum_turn_uses_the_stable_entity_id_and_can_naturally_vanish() {
 }
 
 #[test]
+fn clear_head_has_a_one_in_four_chance_to_remove_monster_confusion() {
+    let mut game = game_with_actor_definition(0, "demo.actor.small-kobold", |actor| {
+        actor.tags.push("clear-head".to_owned());
+    });
+    game.entities.clear();
+    game.push_generated_actor(
+        "test.clear-head".to_owned(),
+        "demo.actor.small-kobold",
+        Position { x: 4, y: 3 },
+    );
+    game.entities[0].statuses.push(StatusInstance {
+        kind_id: STATUS_CONFUSION.to_owned(),
+        intensity: 1,
+        remaining_ticks: 25,
+        source_id: None,
+        granted_resistances: BTreeMap::new(),
+        granted_brands: BTreeSet::new(),
+        granted_modifiers: StatModifiersDto::default(),
+        granted_equipment_bonuses: EquipmentBonusesDto::default(),
+        granted_status_immunities: BTreeSet::new(),
+        granted_race_id: None,
+        grants_wall_passage: false,
+        incoming_damage_percent: 100,
+    });
+    let seed = (0..100)
+        .find(|seed| {
+            let mut trial = game.clone();
+            trial.rng = RfbRng::seeded(*seed);
+            trial.try_clear_monster_confusion(0, &mut Vec::new())
+        })
+        .expect("a deterministic seed should hit the one-in-four clear roll");
+    game.rng = RfbRng::seeded(seed);
+    let mut events = Vec::new();
+
+    assert!(game.try_clear_monster_confusion(0, &mut events));
+    assert!(game.entities[0].statuses.is_empty());
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::EntityStatusExpired { target_kind_id, status_kind_id }
+            if target_kind_id == "demo.actor.small-kobold"
+                && status_kind_id == STATUS_CONFUSION
+    )));
+}
+
+#[test]
 fn never_move_monster_waits_at_range_and_can_attack_adjacent() {
     let mut game = game_with_actor_definition(7, "demo.actor.grey-mold", |actor| {
         actor.attack = 1_000_000;

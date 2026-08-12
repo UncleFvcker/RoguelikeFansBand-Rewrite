@@ -166,6 +166,18 @@ fn monster_contact_auras_apply_elemental_damage_and_curse_saves() {
                 chance_percent: None,
             },
             rfb_content::ActorContactAuraDefinition {
+                damage_type: rfb_content::ActorDamageType::Ice,
+                damage_dice: 1,
+                damage_sides: 1,
+                chance_percent: None,
+            },
+            rfb_content::ActorContactAuraDefinition {
+                damage_type: rfb_content::ActorDamageType::Light,
+                damage_dice: 1,
+                damage_sides: 1,
+                chance_percent: None,
+            },
+            rfb_content::ActorContactAuraDefinition {
                 damage_type: rfb_content::ActorDamageType::Curse,
                 damage_dice: 1,
                 damage_sides: 1,
@@ -201,7 +213,7 @@ fn monster_contact_auras_apply_elemental_damage_and_curse_saves() {
         })
         .expect("a bounded seed should fail the curse save");
 
-    assert_eq!(game.player.hp, 97);
+    assert_eq!(game.player.hp, 95);
     let damage_types = events
         .iter()
         .filter_map(|event| match event {
@@ -211,7 +223,13 @@ fn monster_contact_auras_apply_elemental_damage_and_curse_saves() {
         .collect::<Vec<_>>();
     assert_eq!(
         damage_types,
-        vec![DamageType::Fire, DamageType::Electricity, DamageType::Curse]
+        vec![
+            DamageType::Fire,
+            DamageType::Electricity,
+            DamageType::Ice,
+            DamageType::Light,
+            DamageType::Curse,
+        ]
     );
 }
 
@@ -386,6 +404,293 @@ fn resource_drain_melee_heals_six_times_the_amount_actually_drained() {
 
     assert_eq!(game.resources["test.resource.mana"].current, 0);
     assert_eq!(game.entities[0].hp, 7);
+}
+
+#[test]
+fn percent_gated_resource_drain_uses_level_power_and_heals_the_caster() {
+    let game = (0..100_u64)
+        .find_map(|seed| {
+            let mut game = monster_effect_game(
+                seed,
+                MeleeBlowEffectDefinition::DrainResource {
+                    chance_percent: Some(25),
+                    amount_dice: 1,
+                    amount_sides: 25,
+                },
+            );
+            game.resources.insert(
+                "test.resource.mana".to_owned(),
+                ResourcePool {
+                    current: 25,
+                    maximum: 25,
+                },
+            );
+            game.entities[0].hp = 1;
+            game.entities[0].max_hp = 200;
+            game.resolve_monster_melee(0, &mut Vec::new(), &mut BTreeSet::new(), &mut Vec::new())
+                .expect("percent-gated resource drain should resolve");
+            (game.resources["test.resource.mana"].current < 25).then_some(game)
+        })
+        .expect("a deterministic seed should pass the 25% gate");
+
+    let drained = 25 - game.resources["test.resource.mana"].current;
+    assert!((1..=25).contains(&drained));
+    assert_eq!(game.entities[0].hp, 1 + i32::try_from(drained * 6).unwrap());
+}
+
+#[test]
+fn inertia_melee_uses_minor_slow_and_free_action_reduces_it() {
+    let inertia = MeleeBlowEffectDefinition::Inertia {
+        chance_percent: None,
+    };
+    let mut ordinary = monster_effect_game(0, inertia.clone());
+    ordinary
+        .resolve_monster_melee(0, &mut Vec::new(), &mut BTreeSet::new(), &mut Vec::new())
+        .expect("inertia melee should resolve");
+    assert_eq!(ordinary.minor_slow, 5);
+
+    let mut free_action = monster_effect_game(0, inertia);
+    give_inventory_item(
+        &mut free_action,
+        "test.item.free-action",
+        "demo.item.calm-pendant",
+    );
+    free_action
+        .items
+        .iter_mut()
+        .find(|item| item.id == "test.item.free-action")
+        .expect("free-action item should exist")
+        .location = ItemLocation::Equipped {
+        slot_id: "amulet".to_owned(),
+    };
+    free_action
+        .resolve_monster_melee(0, &mut Vec::new(), &mut BTreeSet::new(), &mut Vec::new())
+        .expect("free action inertia melee should resolve");
+    assert_eq!(free_action.minor_slow, 1);
+}
+
+#[test]
+fn amberite_death_can_curse_equipment_and_apply_multiple_nonlethal_ty_curses() {
+    let game = (0..64)
+        .find_map(|seed| {
+            let mut game = game_with_actor_definition(seed, "demo.actor.small-kobold", |actor| {
+                actor.level = 41;
+                actor.tags.push("amberite".to_owned());
+            });
+            clear_monsters(&mut game);
+            for item in game
+                .items
+                .iter_mut()
+                .filter(|item| matches!(item.location, ItemLocation::Equipped { .. }))
+            {
+                item.location = ItemLocation::Inventory;
+            }
+            give_inventory_item(&mut game, "test.item.dagger", "demo.item.dagger");
+            game.items
+                .iter_mut()
+                .find(|item| item.id == "test.item.dagger")
+                .expect("dagger should exist")
+                .location = ItemLocation::Equipped {
+                slot_id: "weapon".to_owned(),
+            };
+            game.debug_set_item_curses_land(true);
+            game.player.hp = 500;
+            game.player.max_hp = 500;
+            let monster = game.generated_actor(
+                "test.actor.amberite".to_owned(),
+                "demo.actor.small-kobold",
+                Position { x: 4, y: 3 },
+            );
+            game.entities.push(monster);
+            game.resolve_actor_death_without_rewards(
+                0,
+                None,
+                &mut Vec::new(),
+                &mut BTreeSet::new(),
+                &mut Vec::new(),
+            )
+            .expect("Amberite death should resolve");
+            (game.player.hp < 500).then_some(game)
+        })
+        .expect("a deterministic seed should trigger the blood curse");
+
+    assert!((1..500).contains(&game.player.hp));
+    assert!(matches!(
+        game.items
+            .iter()
+            .find(|item| item.id == "test.item.dagger")
+            .expect("dagger should remain equipped")
+            .curse,
+        Some(ItemCurseSeverityDto::Normal | ItemCurseSeverityDto::Heavy)
+    ));
+    for status_kind_id in [STATUS_CONFUSION, STATUS_STUN] {
+        let status = game
+            .player
+            .statuses
+            .iter()
+            .find(|status| status.kind_id == status_kind_id)
+            .expect("blood curse should apply its status");
+        assert!((82..=164).contains(&status.remaining_ticks));
+        assert_eq!(status.source_id.as_deref(), Some("demo.actor.small-kobold"));
+    }
+}
+
+#[test]
+fn bomb_death_explosion_splits_sound_and_shards_with_status_riders() {
+    fn bomb_game(resistant: bool) -> Game {
+        let mut game = game_with_actor_definition(0, "demo.actor.small-kobold", |actor| {
+            actor.melee_routine = Some(rfb_content::MeleeRoutineDefinition {
+                blows: vec![rfb_content::MeleeBlowDefinition {
+                    method_id: "rfb.blow.explode".to_owned(),
+                    to_hit: 20,
+                    self_destructs: true,
+                    effects: vec![MeleeBlowEffectDefinition::Bomb {
+                        chance_percent: None,
+                        damage_dice: 90,
+                        damage_sides: 1,
+                    }],
+                }],
+            });
+        });
+        clear_monsters(&mut game);
+        game.player.hp = 500;
+        game.player.max_hp = 500;
+        if resistant {
+            game.player
+                .resistances
+                .set(DamageType::Shards, ResistanceLevel::Resistant);
+            game.player
+                .resistances
+                .set(DamageType::Sound, ResistanceLevel::Resistant);
+        }
+        let position = Position {
+            x: game.player.position.x + 1,
+            y: game.player.position.y,
+        };
+        let monster = game.generated_actor(
+            "test.actor.bomb".to_owned(),
+            "demo.actor.small-kobold",
+            position,
+        );
+        game.entities.push(monster);
+        game.resolve_actor_death_without_rewards(
+            0,
+            None,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("bomb death should resolve");
+        game
+    }
+
+    let normal = bomb_game(false);
+    assert_eq!(normal.player.hp, 446);
+    let bleeding = normal
+        .player
+        .statuses
+        .iter()
+        .find(|status| status.kind_id == STATUS_BLEEDING)
+        .expect("unresisted shards should cause bleeding");
+    assert_eq!(bleeding.remaining_ticks, 24);
+    let stun = normal
+        .player
+        .statuses
+        .iter()
+        .find(|status| status.kind_id == STATUS_STUN)
+        .expect("unresisted sound should cause stun");
+    assert!((1..=15).contains(&stun.remaining_ticks));
+
+    let resistant = bomb_game(true);
+    assert_eq!(resistant.player.hp, 473);
+    assert!(
+        resistant
+            .player
+            .statuses
+            .iter()
+            .all(|status| { !matches!(status.kind_id.as_str(), STATUS_BLEEDING | STATUS_STUN) })
+    );
+}
+
+#[test]
+fn slow_death_explosion_uses_radius_free_action_and_monster_saves() {
+    fn slow_game(target_kind_id: Option<&str>, free_action: bool) -> Game {
+        let mut game = game_with_actor_definition(0, "demo.actor.small-kobold", |actor| {
+            actor.melee_routine = Some(rfb_content::MeleeRoutineDefinition {
+                blows: vec![rfb_content::MeleeBlowDefinition {
+                    method_id: "rfb.blow.explode".to_owned(),
+                    to_hit: 20,
+                    self_destructs: true,
+                    effects: vec![MeleeBlowEffectDefinition::Slow {
+                        chance_percent: None,
+                    }],
+                }],
+            });
+        });
+        clear_monsters(&mut game);
+        game.terrain.fill("demo.terrain.floor".to_owned());
+        game.player.position = Position { x: 6, y: 3 };
+        if free_action {
+            give_inventory_item(&mut game, "test.item.free-action", "demo.item.calm-pendant");
+            game.items
+                .iter_mut()
+                .find(|item| item.id == "test.item.free-action")
+                .expect("free-action item should exist")
+                .location = ItemLocation::Equipped {
+                slot_id: "amulet".to_owned(),
+            };
+        }
+        let source = game.generated_actor(
+            "test.actor.exploder".to_owned(),
+            "demo.actor.small-kobold",
+            Position { x: 3, y: 3 },
+        );
+        game.entities.push(source);
+        if let Some(target_kind_id) = target_kind_id {
+            let mut target = game.generated_actor(
+                "test.actor.target".to_owned(),
+                target_kind_id,
+                Position { x: 3, y: 4 },
+            );
+            target.hp = 1_000;
+            target.max_hp = 1_000;
+            game.entities.push(target);
+        }
+        game.resolve_actor_death_without_rewards(
+            0,
+            None,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("slow death explosion should resolve");
+        game
+    }
+
+    let ordinary = slow_game(Some("demo.actor.small-kobold"), false);
+    assert_eq!(
+        ordinary.minor_slow, 1,
+        "radius-three player should be slowed"
+    );
+    assert!(
+        ordinary.entities[0]
+            .statuses
+            .iter()
+            .any(|status| status.kind_id == STATUS_SLOW)
+    );
+
+    let free_action = slow_game(None, true);
+    assert_eq!(free_action.minor_slow, 0);
+
+    for protected_kind_id in ["demo.actor.aether-vortex", "demo.actor.smeagol"] {
+        let protected = slow_game(Some(protected_kind_id), false);
+        assert!(
+            protected.entities[0]
+                .statuses
+                .iter()
+                .all(|status| status.kind_id != STATUS_SLOW)
+        );
+    }
 }
 
 #[test]

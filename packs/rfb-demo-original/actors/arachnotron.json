@@ -1,0 +1,103 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "friends": {
+      "chancePercent": 25,
+      "dice": 1,
+      "sides": 3
+    },
+    "legacyIndex": 1290,
+    "maxDepth": 999,
+    "rarity": 7
+  },
+  "attack": 13,
+  "damageDice": 5,
+  "damageSides": 5,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [
+      {
+        "percent": 60
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items"
+  },
+  "defense": 7,
+  "descriptionKey": "actor-demo-arachnotron-description",
+  "experienceValue": 3872,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "S",
+  "hitPointDice": {
+    "dice": 32,
+    "sides": 56
+  },
+  "id": "demo.actor.arachnotron",
+  "level": 52,
+  "maxHp": 912,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 5,
+            "damageSides": 5,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.crush",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 6,
+            "damageSides": 6,
+            "damageType": "plasma",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.spit",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.bolt-plasma-4d4-32",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 95
+  },
+  "nameKey": "actor-demo-arachnotron-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "nether": "resistant",
+    "plasma": "resistant",
+    "poison": "immune"
+  },
+  "role": "monster",
+  "speed": 120,
+  "statusImmunities": [
+    "rfb.status.confusion"
+  ],
+  "tags": [
+    "demon",
+    "evil",
+    "kin-glyph-83",
+    "legacy-import",
+    "nonliving",
+    "orc-cave"
+  ]
+}

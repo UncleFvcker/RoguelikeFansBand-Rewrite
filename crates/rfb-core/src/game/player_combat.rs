@@ -1004,7 +1004,8 @@ impl Game {
                                 .level(DamageType::Poison),
                         ))
                     }
-                    MeleeBlowEffectDefinition::DrainAttributes { .. }
+                    MeleeBlowEffectDefinition::Bomb { .. }
+                    | MeleeBlowEffectDefinition::DrainAttributes { .. }
                     | MeleeBlowEffectDefinition::DrainResource { .. }
                     | MeleeBlowEffectDefinition::DrainExperience { .. }
                     | MeleeBlowEffectDefinition::Disenchant { .. }
@@ -1107,6 +1108,15 @@ impl Game {
                         None
                     }
                     MeleeBlowEffectDefinition::Slow { .. } => {
+                        self.apply_actor_melee_status(
+                            target_index,
+                            STATUS_SLOW,
+                            25,
+                            &source_kind_id,
+                        );
+                        None
+                    }
+                    MeleeBlowEffectDefinition::Inertia { .. } => {
                         self.apply_actor_melee_status(
                             target_index,
                             STATUS_SLOW,

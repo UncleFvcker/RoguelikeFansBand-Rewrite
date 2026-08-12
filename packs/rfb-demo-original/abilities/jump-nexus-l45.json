@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.jump-nexus-l45",
+  "descriptionKey": "ability-legacy-jump-nexus-l45-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.jump-nexus-l45",
+  "nameKey": "ability-legacy-jump-nexus-l45-name",
+  "tags": [
+    "legacy-import",
+    "innate",
+    "offense"
+  ],
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  }
+}
