@@ -6307,20 +6307,20 @@ fn death_spell_ability(
                     {"maximumRoll": 13, "target": "self-target", "effect": {"type": "apply-status", "statusKindId": "rfb.status.fear", "intensity": 3, "durationTicks": 50, "stacking": "keep-strongest"}},
                     {"maximumRoll": 25, "target": "self-target", "effect": {"type": "apply-status", "statusKindId": "rfb.status.confusion", "intensity": 1, "durationTicks": 4, "durationDice": 1, "durationSides": 4, "stacking": "extend"}},
                     {"maximumRoll": 30, "effect": {"type": "polymorph-target"}},
-                    {"maximumRoll": 35, "effect": {"type": "bolt-or-beam-damage", "damageDice": 4, "damageSides": 4, "damageType": "physical", "beamChancePercent": 0}},
-                    {"maximumRoll": 40, "effect": {"type": "apply-status", "statusKindId": "rfb.status.confusion", "intensity": 1, "durationTicks": 10, "stacking": "keep-strongest"}},
-                    {"maximumRoll": 45, "effect": {"type": "area-damage", "damageDice": 1, "damageSides": 1, "damageBonus": 24, "damageType": "poison", "radius": 3}},
+                    {"maximumRoll": 35, "effect": {"type": "bolt-or-beam-damage", "damageDice": 3, "damageSides": 4, "damageType": "physical", "beamChancePercent": 0}, "levelScaling": [{"effectIndex": 0, "field": "damage-dice", "levelOffset": 1, "multiplier": 1, "divisor": 5}]},
+                    {"maximumRoll": 40, "effect": {"type": "apply-status", "statusKindId": "rfb.status.confusion", "intensity": 1, "durationTicks": 10, "stacking": "keep-strongest", "power": 1}, "levelScaling": [{"effectIndex": 0, "field": "status-power", "levelOffset": 1, "multiplier": 1, "divisor": 1}]},
+                    {"maximumRoll": 45, "effect": {"type": "area-damage", "damageDice": 1, "damageSides": 1, "damageBonus": 19, "damageType": "poison", "radius": 3}, "levelScaling": [{"effectIndex": 0, "field": "damage-bonus", "multiplier": 1, "divisor": 2}]},
                     {"maximumRoll": 50, "effect": {"type": "light-line", "damageDice": 6, "damageSides": 8}},
-                    {"maximumRoll": 55, "effect": {"type": "bolt-or-beam-damage", "damageDice": 4, "damageSides": 8, "damageType": "electricity", "beamChancePercent": 0}},
-                    {"maximumRoll": 60, "effect": {"type": "bolt-or-beam-damage", "damageDice": 6, "damageSides": 8, "damageType": "cold", "beamChancePercent": 0}},
-                    {"maximumRoll": 65, "effect": {"type": "bolt-or-beam-damage", "damageDice": 7, "damageSides": 8, "damageType": "acid", "beamChancePercent": 0}},
-                    {"maximumRoll": 70, "effect": {"type": "bolt-or-beam-damage", "damageDice": 9, "damageSides": 8, "damageType": "fire", "beamChancePercent": 0}},
+                    {"maximumRoll": 55, "effect": {"type": "bolt-or-beam-damage", "damageDice": 3, "damageSides": 8, "damageType": "electricity", "beamChancePercent": 0}, "levelScaling": [{"effectIndex": 0, "field": "damage-dice", "levelOffset": 5, "multiplier": 1, "divisor": 4}]},
+                    {"maximumRoll": 60, "effect": {"type": "bolt-or-beam-damage", "damageDice": 5, "damageSides": 8, "damageType": "cold", "beamChancePercent": 0}, "levelScaling": [{"effectIndex": 0, "field": "damage-dice", "levelOffset": 5, "multiplier": 1, "divisor": 4}]},
+                    {"maximumRoll": 65, "effect": {"type": "bolt-or-beam-damage", "damageDice": 6, "damageSides": 8, "damageType": "acid", "beamChancePercent": 0}, "levelScaling": [{"effectIndex": 0, "field": "damage-dice", "levelOffset": 5, "multiplier": 1, "divisor": 4}]},
+                    {"maximumRoll": 70, "effect": {"type": "bolt-or-beam-damage", "damageDice": 8, "damageSides": 8, "damageType": "fire", "beamChancePercent": 0}, "levelScaling": [{"effectIndex": 0, "field": "damage-dice", "levelOffset": 5, "multiplier": 1, "divisor": 4}]},
                     {"maximumRoll": 75, "effect": {"type": "drain-life", "damageDice": 1, "damageSides": 1, "damageBonus": 74, "damageType": "nether", "targetCategory": "living"}},
-                    {"maximumRoll": 80, "effect": {"type": "area-damage", "damageDice": 1, "damageSides": 1, "damageBonus": 34, "damageType": "electricity", "radius": 2}},
-                    {"maximumRoll": 85, "effect": {"type": "area-damage", "damageDice": 1, "damageSides": 1, "damageBonus": 49, "damageType": "acid", "radius": 2}},
-                    {"maximumRoll": 90, "effect": {"type": "area-damage", "damageDice": 1, "damageSides": 1, "damageBonus": 79, "damageType": "ice", "radius": 3}},
-                    {"maximumRoll": 95, "effect": {"type": "area-damage", "damageDice": 1, "damageSides": 1, "damageBonus": 89, "damageType": "fire", "radius": 3}},
-                    {"maximumRoll": 100, "effect": {"type": "drain-life", "damageDice": 1, "damageSides": 1, "damageBonus": 109, "damageType": "nether", "targetCategory": "living"}},
+                    {"maximumRoll": 80, "effect": {"type": "area-damage", "damageDice": 1, "damageSides": 1, "damageBonus": 29, "damageType": "electricity", "radius": 2}, "levelScaling": [{"effectIndex": 0, "field": "damage-bonus", "multiplier": 1, "divisor": 2}]},
+                    {"maximumRoll": 85, "effect": {"type": "area-damage", "damageDice": 1, "damageSides": 1, "damageBonus": 39, "damageType": "acid", "radius": 2}, "levelScaling": [{"effectIndex": 0, "field": "damage-bonus", "multiplier": 1, "divisor": 1}]},
+                    {"maximumRoll": 90, "effect": {"type": "area-damage", "damageDice": 1, "damageSides": 1, "damageBonus": 69, "damageType": "ice", "radius": 3}, "levelScaling": [{"effectIndex": 0, "field": "damage-bonus", "multiplier": 1, "divisor": 1}]},
+                    {"maximumRoll": 95, "effect": {"type": "area-damage", "damageDice": 1, "damageSides": 1, "damageBonus": 79, "damageType": "fire", "radius": 3}, "levelScaling": [{"effectIndex": 0, "field": "damage-bonus", "multiplier": 1, "divisor": 1}]},
+                    {"maximumRoll": 100, "effect": {"type": "drain-life", "damageDice": 1, "damageSides": 1, "damageBonus": 99, "damageType": "nether", "targetCategory": "living"}, "levelScaling": [{"effectIndex": 0, "field": "damage-bonus", "multiplier": 1, "divisor": 1}]},
                     {"maximumRoll": 103, "target": "self-target", "effect": {
                         "type": "earthquake",
                         "radius": 12,
@@ -6341,9 +6341,17 @@ fn death_spell_ability(
                         "quartzTerrainId": terrain_creation.quartz_terrain_id.as_ref()?,
                         "magmaTerrainId": terrain_creation.magma_terrain_id.as_ref()?,
                     }},
-                    {"maximumRoll": 107, "effect": {"type": "genocide", "scope": "glyph", "power": 60}},
+                    {"maximumRoll": 107, "effect": {"type": "genocide", "scope": "glyph", "power": 50}, "levelScaling": [{"effectIndex": 0, "field": "genocide-power", "multiplier": 1, "divisor": 1}]},
                     {"maximumRoll": 109, "target": "self-target", "effect": {"type": "visible-damage", "damageDice": 1, "damageSides": 1, "damageBonus": 119}},
-                    {"maximumRoll": 120, "target": "self-target", "effect": {"type": "visible-damage", "damageDice": 1, "damageSides": 1, "damageBonus": 149}},
+                    {"maximumRoll": 120, "target": "self-target", "effect": {"type": "sequence", "effects": [
+                        {"type": "visible-damage", "damageDice": 1, "damageSides": 1, "damageBonus": 149},
+                        {"type": "visible-apply-status", "statusKindId": "rfb.status.slow", "intensity": 1, "durationTicks": 50, "stacking": "extend", "power": 1},
+                        {"type": "visible-apply-status", "statusKindId": "rfb.status.sleep", "intensity": 1, "durationTicks": 500, "stacking": "keep-strongest", "power": 1},
+                        {"type": "heal", "amount": 300},
+                    ]}, "levelScaling": [
+                        {"effectIndex": 1, "field": "status-power", "levelOffset": 1, "multiplier": 1, "divisor": 1},
+                        {"effectIndex": 2, "field": "status-power", "levelOffset": 1, "multiplier": 1, "divisor": 1},
+                    ]},
                 ],
             }),
             Vec::new(),
@@ -13657,6 +13665,28 @@ S:2:0:6000
         assert_eq!(invoke_branches[7]["effect"]["type"], "light-line");
         assert_eq!(invoke_branches[18]["effect"]["type"], "earthquake");
         assert_eq!(invoke_branches[19]["effect"]["type"], "area-destruction");
+        assert_eq!(invoke_branches[4]["effect"]["damageDice"], 3);
+        assert_eq!(
+            invoke_branches[4]["levelScaling"][0]["field"],
+            "damage-dice"
+        );
+        assert_eq!(invoke_branches[5]["effect"]["power"], 1);
+        assert_eq!(invoke_branches[12]["effect"]["damageBonus"], 74);
+        assert_eq!(invoke_branches[17]["effect"]["damageBonus"], 99);
+        assert_eq!(invoke_branches[20]["effect"]["power"], 50);
+        assert_eq!(invoke_branches[22]["effect"]["type"], "sequence");
+        assert_eq!(
+            invoke_branches[22]["effect"]["effects"]
+                .as_array()
+                .map(Vec::len),
+            Some(4)
+        );
+        assert_eq!(invoke_branches[22]["effect"]["effects"][3]["amount"], 300);
+        assert!(
+            !serde_json::to_string(invoke_branches)
+                .expect("Invoke Spirits branches should serialize")
+                .contains("no-op")
+        );
         let vampirism_true = outcome
             .ability_files
             .iter()

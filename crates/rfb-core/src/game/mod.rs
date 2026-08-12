@@ -6638,9 +6638,9 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
         AbilityEffectDefinition::NoOp { reason } => AbilityEffectSpecDto::NoOp {
             reason: reason.clone(),
         },
-        AbilityEffectDefinition::Sequence { .. } => {
-            unreachable!("nested ability effect sequences are rejected by content validation")
-        }
+        AbilityEffectDefinition::Sequence { effects } => AbilityEffectSpecDto::Sequence {
+            effects: effects.iter().map(ability_effect_spec_dto).collect(),
+        },
     }
 }
 

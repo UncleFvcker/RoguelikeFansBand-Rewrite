@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.177";
+pub const PROTOCOL_VERSION: &str = "1.178";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -1140,6 +1140,9 @@ pub enum AbilityEffectSpecDto {
         roll_sides: u16,
         level_bonus_divisor: u16,
         branches: Vec<AbilityRandomBranchSpecDto>,
+    },
+    Sequence {
+        effects: Vec<AbilityEffectSpecDto>,
     },
     NoOp {
         reason: String,

@@ -134,6 +134,20 @@ impl Game {
     }
 
     pub(super) fn apply_player_level_scaling(ability: &mut AbilityDefinition, level: u16) {
+        if let AbilityEffectDefinition::RandomChoice { branches, .. } = &mut ability.effect {
+            for branch in branches {
+                for scaling in branch.level_scaling.clone() {
+                    let effects = match branch.effect.as_mut() {
+                        AbilityEffectDefinition::Sequence { effects } => effects.as_mut_slice(),
+                        effect => std::slice::from_mut(effect),
+                    };
+                    let effect = effects
+                        .get_mut(usize::from(scaling.effect_index))
+                        .expect("validated random branch scaling index must remain available");
+                    apply_ability_level_scaling(effect, &scaling, level);
+                }
+            }
+        }
         for scaling in ability.level_scaling.clone() {
             let effect = match &mut ability.effect {
                 AbilityEffectDefinition::Sequence { effects } => effects

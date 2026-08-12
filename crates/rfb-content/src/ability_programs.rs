@@ -12,6 +12,7 @@ use super::{
     AbilityTargetDefinition, AbilityTargetModeDefinition, ContentError,
 };
 use crate::player_ability_bindings::ResolvedPlayerAbilityBinding;
+use crate::valid_ability_level_scaling;
 use crate::validation::{require_format_version, require_schema, validate_definition_id};
 
 pub type AbilityProgramStepDefinition = AbilityEffectDefinition;
@@ -142,32 +143,48 @@ fn ability_program_top_level_random_choice_is_valid(
     (2..=10_000).contains(roll_sides)
         && (*level_bonus_divisor == 0 || *level_bonus_divisor <= 100)
         && (2..=64).contains(&branches.len())
-        && branches.iter().all(|branch| match branch.target {
-            AbilityRandomTargetDefinition::SelfTarget => matches!(
-                branch.effect.as_ref(),
-                AbilityEffectDefinition::Heal { .. }
-                    | AbilityEffectDefinition::ApplyStatus { .. }
-                    | AbilityEffectDefinition::Summon { .. }
-                    | AbilityEffectDefinition::VisibleDamage { .. }
-                    | AbilityEffectDefinition::VisibleApplyStatus { .. }
-                    | AbilityEffectDefinition::EnchantEquippedWeapon { .. }
-                    | AbilityEffectDefinition::Earthquake { .. }
-                    | AbilityEffectDefinition::AreaDestruction { .. }
-                    | AbilityEffectDefinition::NoOp { .. }
-            ),
-            AbilityRandomTargetDefinition::CastTarget => matches!(
-                branch.effect.as_ref(),
-                AbilityEffectDefinition::Damage { .. }
-                    | AbilityEffectDefinition::AreaDamage { .. }
-                    | AbilityEffectDefinition::BeamDamage { .. }
-                    | AbilityEffectDefinition::LightLine { .. }
-                    | AbilityEffectDefinition::BoltOrBeamDamage { .. }
-                    | AbilityEffectDefinition::ApplyStatus { .. }
-                    | AbilityEffectDefinition::DrainLife { .. }
-                    | AbilityEffectDefinition::Genocide { .. }
-                    | AbilityEffectDefinition::PolymorphTarget
-                    | AbilityEffectDefinition::NoOp { .. }
-            ),
+        && branches.iter().all(|branch| {
+            valid_ability_level_scaling(&branch.effect, &branch.level_scaling)
+                && match branch.target {
+                    AbilityRandomTargetDefinition::SelfTarget => match branch.effect.as_ref() {
+                        AbilityEffectDefinition::Sequence { effects } => {
+                            (2..=8).contains(&effects.len())
+                                && effects.iter().all(|effect| {
+                                    matches!(
+                                        effect,
+                                        AbilityEffectDefinition::Heal { .. }
+                                            | AbilityEffectDefinition::VisibleDamage { .. }
+                                            | AbilityEffectDefinition::VisibleApplyStatus { .. }
+                                    )
+                                })
+                        }
+                        effect => matches!(
+                            effect,
+                            AbilityEffectDefinition::Heal { .. }
+                                | AbilityEffectDefinition::ApplyStatus { .. }
+                                | AbilityEffectDefinition::Summon { .. }
+                                | AbilityEffectDefinition::VisibleDamage { .. }
+                                | AbilityEffectDefinition::VisibleApplyStatus { .. }
+                                | AbilityEffectDefinition::EnchantEquippedWeapon { .. }
+                                | AbilityEffectDefinition::Earthquake { .. }
+                                | AbilityEffectDefinition::AreaDestruction { .. }
+                                | AbilityEffectDefinition::NoOp { .. }
+                        ),
+                    },
+                    AbilityRandomTargetDefinition::CastTarget => matches!(
+                        branch.effect.as_ref(),
+                        AbilityEffectDefinition::Damage { .. }
+                            | AbilityEffectDefinition::AreaDamage { .. }
+                            | AbilityEffectDefinition::BeamDamage { .. }
+                            | AbilityEffectDefinition::LightLine { .. }
+                            | AbilityEffectDefinition::BoltOrBeamDamage { .. }
+                            | AbilityEffectDefinition::ApplyStatus { .. }
+                            | AbilityEffectDefinition::DrainLife { .. }
+                            | AbilityEffectDefinition::Genocide { .. }
+                            | AbilityEffectDefinition::PolymorphTarget
+                            | AbilityEffectDefinition::NoOp { .. }
+                    ),
+                }
         })
         && branches
             .windows(2)
@@ -507,6 +524,7 @@ mod tests {
                     maximum_roll: 1,
                     target: AbilityRandomTargetDefinition::SelfTarget,
                     effect: Box::new(AbilityEffectDefinition::Heal { amount: 1 }),
+                    level_scaling: Vec::new(),
                 },
                 AbilityRandomBranchDefinition {
                     maximum_roll: 2,
@@ -517,6 +535,7 @@ mod tests {
                         damage_bonus: 0,
                         damage_type: ActorDamageType::Physical,
                     }),
+                    level_scaling: Vec::new(),
                 },
             ],
         };
@@ -533,8 +552,9 @@ mod tests {
             Some(&random_choice)
         );
 
-        let mut nested_random_choice = random_choice.clone();
-        let AbilityEffectDefinition::RandomChoice { branches, .. } = &mut nested_random_choice
+        let mut self_sequence_random_choice = random_choice.clone();
+        let AbilityEffectDefinition::RandomChoice { branches, .. } =
+            &mut self_sequence_random_choice
         else {
             unreachable!("test effect should remain random choice");
         };
@@ -544,11 +564,32 @@ mod tests {
                 AbilityEffectDefinition::Heal { amount: 1 },
             ],
         };
+        compile_ability_program_catalog(vec![ability_program(
+            "demo.ability-program.self-sequence-random",
+            AbilityProgramInputDefinition::CastTarget,
+            vec![self_sequence_random_choice.clone()],
+        )])
+        .expect("one non-nested self sequence should compile inside a random branch");
+
+        let AbilityEffectDefinition::RandomChoice { branches, .. } =
+            &mut self_sequence_random_choice
+        else {
+            unreachable!("test effect should remain random choice");
+        };
+        let AbilityEffectDefinition::Sequence { effects } = branches[0].effect.as_mut() else {
+            unreachable!("test branch should remain a sequence");
+        };
+        effects[0] = AbilityEffectDefinition::Sequence {
+            effects: vec![
+                AbilityEffectDefinition::Heal { amount: 1 },
+                AbilityEffectDefinition::Heal { amount: 1 },
+            ],
+        };
         assert!(matches!(
             compile_ability_program_catalog(vec![ability_program(
                 "demo.ability-program.nested-random",
                 AbilityProgramInputDefinition::CastTarget,
-                vec![nested_random_choice],
+                vec![self_sequence_random_choice],
             )]),
             Err(ContentError::InvalidAbilityProgram(id))
                 if id == "demo.ability-program.nested-random"

@@ -759,13 +759,178 @@ fn vampirism_true_retraces_the_path_after_each_kill() {
 }
 
 #[test]
-fn invoke_spirits_resolves_the_four_former_no_op_branches_deterministically() {
+fn invoke_spirits_scales_every_source_formula_without_nested_random_effects() {
+    fn contains_no_op(effect: &AbilityEffectDefinition) -> bool {
+        match effect {
+            AbilityEffectDefinition::NoOp { .. } => true,
+            AbilityEffectDefinition::Sequence { effects } => effects.iter().any(contains_no_op),
+            AbilityEffectDefinition::RandomChoice { branches, .. } => {
+                branches.iter().any(|branch| contains_no_op(&branch.effect))
+            }
+            _ => false,
+        }
+    }
+
+    let game = test_caster_game(0);
+    let source = game
+        .content
+        .ability("demo.ability.death-invoke-spirits")
+        .expect("Invoke Spirits should exist");
+    assert!(!contains_no_op(&source.effect));
+
+    for (level, expected_dice, expected_bonuses) in [
+        (1, [3, 3, 5, 6, 8], [19, 29, 40, 70, 80, 100]),
+        (20, [6, 6, 8, 9, 11], [29, 39, 59, 89, 99, 119]),
+        (50, [12, 14, 16, 17, 19], [44, 54, 89, 119, 129, 149]),
+    ] {
+        let mut ability = source.clone();
+        Game::apply_player_level_scaling(&mut ability, level);
+        let AbilityEffectDefinition::RandomChoice { branches, .. } = &ability.effect else {
+            unreachable!("Invoke Spirits should remain a random choice");
+        };
+        assert_eq!(branches.len(), 23);
+        assert_eq!(
+            branches
+                .iter()
+                .map(|branch| branch.maximum_roll)
+                .collect::<Vec<_>>(),
+            vec![
+                7, 13, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 103, 105,
+                107, 109, 120,
+            ]
+        );
+        let damage_dice = |index: usize| match branches[index].effect.as_ref() {
+            AbilityEffectDefinition::BoltOrBeamDamage { damage_dice, .. } => *damage_dice,
+            _ => unreachable!("branch {index} should be bolt-or-beam damage"),
+        };
+        assert_eq!(
+            [
+                damage_dice(4),
+                damage_dice(8),
+                damage_dice(9),
+                damage_dice(10),
+                damage_dice(11),
+            ],
+            expected_dice
+        );
+        let damage_bonus = |index: usize| match branches[index].effect.as_ref() {
+            AbilityEffectDefinition::AreaDamage { damage_bonus, .. }
+            | AbilityEffectDefinition::DrainLife { damage_bonus, .. } => *damage_bonus,
+            _ => unreachable!("branch {index} should have a flat damage bonus"),
+        };
+        assert_eq!(
+            [
+                damage_bonus(6),
+                damage_bonus(13),
+                damage_bonus(14),
+                damage_bonus(15),
+                damage_bonus(16),
+                damage_bonus(17),
+            ],
+            expected_bonuses
+        );
+        assert!(matches!(
+            branches[5].effect.as_ref(),
+            AbilityEffectDefinition::ApplyStatus {
+                power: Some(power),
+                ..
+            } if *power == level
+        ));
+        assert!(matches!(
+            branches[12].effect.as_ref(),
+            AbilityEffectDefinition::DrainLife {
+                damage_bonus: 74,
+                ..
+            }
+        ));
+        assert!(matches!(
+            branches[18].effect.as_ref(),
+            AbilityEffectDefinition::Earthquake { radius: 12, .. }
+        ));
+        assert!(matches!(
+            branches[19].effect.as_ref(),
+            AbilityEffectDefinition::AreaDestruction {
+                minimum_radius: 13,
+                maximum_radius: 17,
+                ..
+            }
+        ));
+        assert!(matches!(
+            branches[20].effect.as_ref(),
+            AbilityEffectDefinition::Genocide { power, .. } if *power == level + 50
+        ));
+        let AbilityEffectDefinition::Sequence { effects } = branches[22].effect.as_ref() else {
+            unreachable!("the highest Invoke Spirits branch should be a self sequence");
+        };
+        assert!(matches!(
+            effects.as_slice(),
+            [
+                AbilityEffectDefinition::VisibleDamage {
+                    damage_dice: 1,
+                    damage_sides: 1,
+                    damage_bonus: 149,
+                    ..
+                },
+                AbilityEffectDefinition::VisibleApplyStatus {
+                    status_kind_id: slow,
+                    duration_ticks: 50,
+                    power: Some(slow_power),
+                    ..
+                },
+                AbilityEffectDefinition::VisibleApplyStatus {
+                    status_kind_id: sleep,
+                    duration_ticks: 500,
+                    power: Some(sleep_power),
+                    ..
+                },
+                AbilityEffectDefinition::Heal { amount: 300 },
+            ] if slow == "rfb.status.slow"
+                && sleep == "rfb.status.sleep"
+                && *slow_power == level
+                && *sleep_power == level
+        ));
+    }
+
+    let mut game = test_caster_game(0);
+    game.progress.level = 50;
+    let projected = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .find(|ability| ability.id == "demo.ability.death-invoke-spirits")
+        .expect("Invoke Spirits should be projected");
+    let [AbilityEffectSpecDto::RandomChoice { branches, .. }] = projected.effects.as_slice() else {
+        unreachable!("Invoke Spirits projection should remain a random choice");
+    };
+    assert!(
+        matches!(
+            branches[22].effect.as_ref(),
+            AbilityEffectSpecDto::Sequence { effects }
+                if matches!(
+                    effects.as_slice(),
+                    [
+                        AbilityEffectSpecDto::VisibleDamage { damage_bonus: 149, .. },
+                        AbilityEffectSpecDto::VisibleApplyStatus { power: Some(50), .. },
+                        AbilityEffectSpecDto::VisibleApplyStatus { power: Some(50), .. },
+                        AbilityEffectSpecDto::Heal { amount: 300 },
+                    ]
+                )
+        ),
+        "projected highest branch: {:?}",
+        branches[22].effect
+    );
+}
+
+#[test]
+fn invoke_spirits_resolves_all_twenty_three_branches_deterministically() {
     let ability_id = "demo.ability.death-invoke-spirits";
-    let cast = |seed| {
-        let mut game = prepare_death_caster(seed, 50, ability_id);
+    let prepare = |level| {
+        let mut game = prepare_death_caster(0, level, ability_id);
         descend_one_floor(&mut game);
         clear_monsters(&mut game);
         game.debug_set_ability_casts_succeed(true);
+        game.player.hp = 1;
         game.player.position = Position { x: 20, y: 10 };
         for x in 20..=28 {
             let index = game
@@ -778,7 +943,7 @@ fn invoke_spirits_resolves_the_four_former_no_op_branches_deterministically() {
             "generated.actor.invoke-spirits-target",
             "demo.actor.cave-orc",
             Position { x: 22, y: 10 },
-            100,
+            1_000,
             100,
             100,
             true,
@@ -792,11 +957,22 @@ fn invoke_spirits_resolves_the_four_former_no_op_branches_deterministically() {
             "generated.actor.invoke-spirits-light-immune",
             "demo.actor.small-kobold",
             Position { x: 24, y: 10 },
-            100,
+            1_000,
             100,
             100,
             true,
         ));
+        game
+    };
+    let low_level = prepare(10);
+    let high_level = prepare(50);
+    let cast = |branch_index, seed| {
+        let mut game = if branch_index <= 18 {
+            low_level.clone()
+        } else {
+            high_level.clone()
+        };
+        game.rng = RfbRng::seeded(seed);
         let mut events = Vec::new();
         game.resolve_player_ability(
             ability_id,
@@ -810,27 +986,49 @@ fn invoke_spirits_resolves_the_four_former_no_op_branches_deterministically() {
         .expect("Invoke Spirits should resolve");
         (game, events)
     };
-    for branch_index in [3_u16, 7, 18, 19] {
+    let maximum_rolls = [
+        7_u16, 13, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 103, 105, 107,
+        109, 120,
+    ];
+    for branch_index in 0_u16..23 {
+        let level = if branch_index <= 18 { 10 } else { 50 };
         let seed = (0..4_096)
             .find(|seed| {
-                let (_, events) = cast(*seed);
-                events.iter().any(|event| {
-                    matches!(
-                        event,
-                        DomainEvent::AbilityEffectsResolved { resolution, .. }
-                            if matches!(
-                                resolution.effects.as_slice(),
-                                [AbilityEffectResolutionDto::RandomChoice { branch_index: selected, .. }]
-                                    if *selected == branch_index
-                            )
-                    )
-                })
+                let mut rng = RfbRng::seeded(*seed);
+                let _failure_roll = rng.bounded(100);
+                let roll = u16::try_from(rng.bounded(100) + 1)
+                    .expect("bounded roll should fit u16")
+                    .saturating_add(level / 5);
+                maximum_rolls.iter().position(|maximum| roll <= *maximum)
+                    == Some(usize::from(branch_index))
             })
             .unwrap_or_else(|| panic!("Invoke Spirits branch {branch_index} should be reachable"));
-        let (left, left_events) = cast(seed);
-        let (right, right_events) = cast(seed);
+        let (left, left_events) = cast(branch_index, seed);
+        let (right, right_events) = cast(branch_index, seed);
         assert_eq!(left_events, right_events);
         assert_eq!(left.state_hash(), right.state_hash());
+        let selected = left_events
+            .iter()
+            .filter_map(|event| match event {
+                DomainEvent::AbilityEffectsResolved { resolution, .. } => {
+                    match resolution.effects.as_slice() {
+                        [
+                            AbilityEffectResolutionDto::RandomChoice {
+                                branch_index: selected,
+                                ..
+                            },
+                        ] => Some(*selected),
+                        _ => None,
+                    }
+                }
+                _ => None,
+            })
+            .collect::<Vec<_>>();
+        assert_eq!(
+            selected,
+            vec![branch_index],
+            "branch {branch_index} should be selected exactly once; seed {seed}; events {left_events:?}"
+        );
         assert!(!left_events.iter().any(|event| matches!(
             event,
             DomainEvent::AbilityEffectsResolved { resolution, .. }
@@ -867,15 +1065,14 @@ fn invoke_spirits_resolves_the_four_former_no_op_branches_deterministically() {
                         .is_some_and(|index| left.glow[index]))
                 );
                 assert!(left.entities.iter().any(|entity| {
-                    entity.id == "generated.actor.invoke-spirits-target"
-                        && (52..=94).contains(&entity.hp)
+                    entity.id == "generated.actor.invoke-spirits-target" && entity.hp < 1_000
                 }));
                 assert_eq!(
                     left.entities
                         .iter()
                         .find(|entity| entity.id == "generated.actor.invoke-spirits-light-immune")
                         .map(|entity| entity.hp),
-                    Some(100)
+                    Some(1_000)
                 );
             }
             18 => assert!(left_events.iter().any(|event| matches!(
@@ -898,7 +1095,15 @@ fn invoke_spirits_resolves_the_four_former_no_op_branches_deterministically() {
                         }] if !affected_positions.is_empty()
                     )
             ))),
-            _ => unreachable!(),
+            22 => {
+                assert!(left.player.hp > 1);
+                assert!(
+                    left_events
+                        .iter()
+                        .any(|event| matches!(event, DomainEvent::AbilityVisibleDamage { .. }))
+                );
+            }
+            _ => {}
         }
     }
 }

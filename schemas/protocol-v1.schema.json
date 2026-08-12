@@ -3710,6 +3710,25 @@
         {
           "type": "object",
           "properties": {
+            "effects": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/AbilityEffectSpecDto"
+              }
+            },
+            "type": {
+              "type": "string",
+              "const": "sequence"
+            }
+          },
+          "required": [
+            "type",
+            "effects"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "reason": {
               "type": "string"
             },

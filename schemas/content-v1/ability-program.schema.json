@@ -1958,6 +1958,99 @@
       ],
       "type": "string"
     },
+    "AbilityLevelScalingCurveDefinition": {
+      "enum": [
+        "linear",
+        "prorated"
+      ],
+      "type": "string"
+    },
+    "AbilityLevelScalingDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "cubicWeight": {
+          "default": 0,
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "curve": {
+          "$ref": "#/$defs/AbilityLevelScalingCurveDefinition",
+          "default": "linear"
+        },
+        "divisor": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "effectIndex": {
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "field": {
+          "$ref": "#/$defs/AbilityLevelScalingField"
+        },
+        "levelOffset": {
+          "default": 0,
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "maximum": {
+          "default": null,
+          "format": "uint64",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "multiplier": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "quadraticWeight": {
+          "default": 0,
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "effectIndex",
+        "field",
+        "multiplier",
+        "divisor"
+      ],
+      "type": "object"
+    },
+    "AbilityLevelScalingField": {
+      "enum": [
+        "damage-dice",
+        "damage-sides",
+        "damage-bonus",
+        "death-ray-power",
+        "identify-power",
+        "radius",
+        "beam-chance-percent",
+        "status-intensity",
+        "status-duration-ticks",
+        "status-duration-sides",
+        "status-power",
+        "status-melee-damage",
+        "control-power",
+        "genocide-power",
+        "summon-maximum-level",
+        "maximum-weight"
+      ],
+      "type": "string"
+    },
     "AbilityProgramInputDefinition": {
       "enum": [
         "self",
@@ -1971,6 +2064,12 @@
       "properties": {
         "effect": {
           "$ref": "#/$defs/AbilityEffectDefinition"
+        },
+        "levelScaling": {
+          "items": {
+            "$ref": "#/$defs/AbilityLevelScalingDefinition"
+          },
+          "type": "array"
         },
         "maximumRoll": {
           "format": "uint16",

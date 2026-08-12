@@ -181,6 +181,8 @@ pub struct AbilityRandomBranchDefinition {
     #[serde(default)]
     pub target: AbilityRandomTargetDefinition,
     pub effect: Box<AbilityEffectDefinition>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub level_scaling: Vec<AbilityLevelScalingDefinition>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]

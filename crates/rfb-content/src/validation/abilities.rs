@@ -85,6 +85,13 @@ pub(super) fn validate_abilities(
         ability
             .level_scaling
             .sort_by_key(|scaling| (scaling.effect_index, scaling.field));
+        if let AbilityEffectDefinition::RandomChoice { branches, .. } = &mut ability.effect {
+            for branch in branches {
+                branch
+                    .level_scaling
+                    .sort_by_key(|scaling| (scaling.effect_index, scaling.field));
+            }
+        }
         let ordered_effects = match &mut ability.effect {
             AbilityEffectDefinition::Sequence { effects } => effects.as_mut_slice(),
             effect => std::slice::from_mut(effect),
@@ -689,33 +696,61 @@ pub(super) fn validate_abilities(
                     && (*level_bonus_divisor == 0 || *level_bonus_divisor <= 100)
                     && (2..=64).contains(&branches.len())
                     && branches.iter().all(|branch| {
-                        valid_single_effect(&branch.effect, usize::MAX)
+                        valid_ability_level_scaling(&branch.effect, &branch.level_scaling)
                             && match branch.target {
-                                AbilityRandomTargetDefinition::SelfTarget => matches!(
-                                    branch.effect.as_ref(),
-                                    AbilityEffectDefinition::Heal { .. }
-                                        | AbilityEffectDefinition::ApplyStatus { .. }
-                                        | AbilityEffectDefinition::Summon { .. }
-                                        | AbilityEffectDefinition::VisibleDamage { .. }
-                                        | AbilityEffectDefinition::VisibleApplyStatus { .. }
-                                        | AbilityEffectDefinition::EnchantEquippedWeapon { .. }
-                                        | AbilityEffectDefinition::Earthquake { .. }
-                                        | AbilityEffectDefinition::AreaDestruction { .. }
-                                        | AbilityEffectDefinition::NoOp { .. }
-                                ),
-                                AbilityRandomTargetDefinition::CastTarget => matches!(
-                                    branch.effect.as_ref(),
-                                    AbilityEffectDefinition::Damage { .. }
-                                        | AbilityEffectDefinition::AreaDamage { .. }
-                                        | AbilityEffectDefinition::BeamDamage { .. }
-                                        | AbilityEffectDefinition::LightLine { .. }
-                                        | AbilityEffectDefinition::BoltOrBeamDamage { .. }
-                                        | AbilityEffectDefinition::ApplyStatus { .. }
-                                        | AbilityEffectDefinition::DrainLife { .. }
-                                        | AbilityEffectDefinition::Genocide { .. }
-                                        | AbilityEffectDefinition::PolymorphTarget
-                                        | AbilityEffectDefinition::NoOp { .. }
-                                ),
+                                AbilityRandomTargetDefinition::SelfTarget => {
+                                    match branch.effect.as_ref() {
+                                        AbilityEffectDefinition::Sequence { effects } => {
+                                            (2..=8).contains(&effects.len())
+                                                && effects.iter().enumerate().all(
+                                                    |(index, effect)| {
+                                                        valid_single_effect(effect, index)
+                                                            && matches!(
+                                                                effect,
+                                                                AbilityEffectDefinition::Heal {
+                                                                    ..
+                                                                } | AbilityEffectDefinition::VisibleDamage {
+                                                                    ..
+                                                                } | AbilityEffectDefinition::VisibleApplyStatus {
+                                                                    ..
+                                                                }
+                                                            )
+                                                    },
+                                                )
+                                        }
+                                        effect => {
+                                            valid_single_effect(effect, usize::MAX)
+                                                && matches!(
+                                                    effect,
+                                                    AbilityEffectDefinition::Heal { .. }
+                                                        | AbilityEffectDefinition::ApplyStatus { .. }
+                                                        | AbilityEffectDefinition::Summon { .. }
+                                                        | AbilityEffectDefinition::VisibleDamage { .. }
+                                                        | AbilityEffectDefinition::VisibleApplyStatus { .. }
+                                                        | AbilityEffectDefinition::EnchantEquippedWeapon { .. }
+                                                        | AbilityEffectDefinition::Earthquake { .. }
+                                                        | AbilityEffectDefinition::AreaDestruction { .. }
+                                                        | AbilityEffectDefinition::NoOp { .. }
+                                                )
+                                        }
+                                    }
+                                }
+                                AbilityRandomTargetDefinition::CastTarget => {
+                                    valid_single_effect(&branch.effect, usize::MAX)
+                                        && matches!(
+                                            branch.effect.as_ref(),
+                                            AbilityEffectDefinition::Damage { .. }
+                                                | AbilityEffectDefinition::AreaDamage { .. }
+                                                | AbilityEffectDefinition::BeamDamage { .. }
+                                                | AbilityEffectDefinition::LightLine { .. }
+                                                | AbilityEffectDefinition::BoltOrBeamDamage { .. }
+                                                | AbilityEffectDefinition::ApplyStatus { .. }
+                                                | AbilityEffectDefinition::DrainLife { .. }
+                                                | AbilityEffectDefinition::Genocide { .. }
+                                                | AbilityEffectDefinition::PolymorphTarget
+                                                | AbilityEffectDefinition::NoOp { .. }
+                                        )
+                                }
                             }
                     })
                     && branches
@@ -920,7 +955,7 @@ pub(super) fn validate_abilities(
         let referenced_effects = match &ability.effect {
             AbilityEffectDefinition::RandomChoice { branches, .. } => branches
                 .iter()
-                .map(|branch| branch.effect.as_ref())
+                .flat_map(|branch| branch.effect.ordered_effects())
                 .collect::<Vec<_>>(),
             effect => vec![effect],
         };

@@ -553,3 +553,8 @@ v88，save 容器保持 v1。
 并为后者增加结构化结算结果；怪物变形与地震继续复用既有 DTO。该变化只完成
 `Invoke Spirits` 的既有随机分支，不增加命令、待处理输入或存档字段。State Hash
 Schema 保持 v88，save 容器保持 v1。
+
+协议 1.178 为 `AbilityEffectSpecDto` 增加窄化的 `sequence` 投影，用于
+`Invoke Spirits` 最高随机档的一层 self 组合效果。随机分支的等级缩放在服务端物化后
+再投影，不新增客户端配置 DTO、命令、待处理输入或存档字段。State Hash Schema 保持
+v88，save 容器保持 v1。
