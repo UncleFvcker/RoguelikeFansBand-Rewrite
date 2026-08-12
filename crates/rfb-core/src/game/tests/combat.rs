@@ -485,6 +485,50 @@ fn vampiric_melee_heals_from_applied_damage_but_not_from_nonliving_players() {
 }
 
 #[test]
+fn shatter_melee_uses_the_shared_earthquake_only_above_the_damage_threshold() {
+    let mut strong = monster_effect_game(
+        0,
+        MeleeBlowEffectDefinition::Shatter {
+            chance_percent: None,
+            damage_dice: 10,
+            damage_sides: 10,
+        },
+    );
+    strong.player.hp = 10_000;
+    strong.player.max_hp = 10_000;
+    let mut events = Vec::new();
+    strong
+        .resolve_monster_melee(0, &mut events, &mut BTreeSet::new(), &mut Vec::new())
+        .expect("strong shatter should resolve");
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::MonsterEarthquakeResolved { resolution, .. }
+            if matches!(
+                resolution.effects.as_slice(),
+                [AbilityEffectResolutionDto::Earthquake { radius: 8, .. }]
+            )
+    )));
+
+    let mut weak = monster_effect_game(
+        0,
+        MeleeBlowEffectDefinition::Shatter {
+            chance_percent: None,
+            damage_dice: 1,
+            damage_sides: 1,
+        },
+    );
+    weak.resolve_monster_melee(0, &mut events, &mut BTreeSet::new(), &mut Vec::new())
+        .expect("weak shatter should resolve");
+    assert_eq!(
+        events
+            .iter()
+            .filter(|event| matches!(event, DomainEvent::MonsterEarthquakeResolved { .. }))
+            .count(),
+        1
+    );
+}
+
+#[test]
 fn unlife_melee_drains_life_force_and_persistently_empowers_the_monster() {
     let effect = MeleeBlowEffectDefinition::Unlife {
         chance_percent: None,

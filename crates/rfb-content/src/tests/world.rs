@@ -3712,8 +3712,8 @@ fn p44a_monsters_generate_only_parameterized_existing_effects() {
 #[test]
 fn p44b_monsters_complete_the_parameterized_existing_effect_harvest() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
-    assert_eq!(artifact.content.actors.len(), 831);
-    assert_eq!(artifact.content.abilities.len(), 453);
+    assert_eq!(artifact.content.actors.len(), 834);
+    assert_eq!(artifact.content.abilities.len(), 455);
     let ability_ids = artifact
         .content
         .abilities
@@ -3969,6 +3969,37 @@ fn p46_quantum_monster_keeps_its_source_identity_and_turn_tag() {
         Some(863)
     );
     assert!(quantum.tags.iter().any(|tag| tag == "quantum"));
+}
+
+#[test]
+fn p46_shatter_monsters_share_the_authoritative_melee_effect() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    for (actor_id, legacy_index) in [
+        ("demo.actor.colossus", 558),
+        ("demo.actor.chthonian", 619),
+        ("demo.actor.rock-giant", 1124),
+    ] {
+        let actor = artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == actor_id)
+            .expect("SHATTER actor should be imported");
+        assert_eq!(
+            actor
+                .allocation
+                .as_ref()
+                .map(|allocation| allocation.legacy_index),
+            Some(legacy_index)
+        );
+        assert!(actor.melee_routine.as_ref().is_some_and(|routine| {
+            routine.blows.iter().any(|blow| {
+                blow.effects
+                    .iter()
+                    .any(|effect| matches!(effect, MeleeBlowEffectDefinition::Shatter { .. }))
+            })
+        }));
+    }
 }
 
 #[test]

@@ -4716,6 +4716,24 @@
       "id": "quantum-dot",
       "tags": ["orc-cave"],
       "omittedFlags": ["ATTR_ANY", "ATTR_MULTI", "NASTY_GLYPH", "NO_STUN", "STUPID"]
+    },
+    {
+      "sourceIndex": 558,
+      "id": "colossus",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE"]
+    },
+    {
+      "sourceIndex": 619,
+      "id": "chthonian",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 1124,
+      "id": "rock-giant",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "POS_GAIN_AC", "POS_SUST_STR"]
     }
   ]
 }

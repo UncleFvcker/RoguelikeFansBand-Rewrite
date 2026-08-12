@@ -195,6 +195,11 @@ fn projected_blow_damage(effects: &[MeleeBlowEffectDefinition]) -> DamageDiceDto
                 damage_type,
                 ..
             } => Some((*damage_dice, *damage_sides, DamageType::from(*damage_type))),
+            MeleeBlowEffectDefinition::Shatter {
+                damage_dice,
+                damage_sides,
+                ..
+            } => Some((*damage_dice, *damage_sides, DamageType::Physical)),
             MeleeBlowEffectDefinition::Poison {
                 damage_dice,
                 damage_sides,

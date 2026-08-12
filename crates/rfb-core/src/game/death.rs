@@ -70,6 +70,7 @@ impl Game {
                     ..
                 } => (*damage_dice, *damage_sides, DamageType::Poison),
                 MeleeBlowEffectDefinition::Disease { .. }
+                | MeleeBlowEffectDefinition::Shatter { .. }
                 | MeleeBlowEffectDefinition::DrainAttributes { .. }
                 | MeleeBlowEffectDefinition::DrainResource { .. }
                 | MeleeBlowEffectDefinition::DrainCharges { .. }

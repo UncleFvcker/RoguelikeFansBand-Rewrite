@@ -5,6 +5,7 @@ use super::*;
 pub(super) fn melee_effect_chance(effect: &MeleeBlowEffectDefinition) -> Option<u8> {
     match effect {
         MeleeBlowEffectDefinition::Damage { chance_percent, .. }
+        | MeleeBlowEffectDefinition::Shatter { chance_percent, .. }
         | MeleeBlowEffectDefinition::Poison { chance_percent, .. }
         | MeleeBlowEffectDefinition::Disease { chance_percent, .. }
         | MeleeBlowEffectDefinition::DrainAttributes { chance_percent, .. }
@@ -587,6 +588,26 @@ impl Game {
                             resolve_damage(DamagePacket::new(raw, damage_type), resistance)
                         })
                     }
+                    MeleeBlowEffectDefinition::Shatter {
+                        damage_dice,
+                        damage_sides,
+                        ..
+                    } => {
+                        let raw = self.roll_monster_melee_effect(
+                            source_index,
+                            *damage_dice,
+                            *damage_sides,
+                            false,
+                        );
+                        Some(resolve_armored_damage(
+                            raw,
+                            DamageType::Physical,
+                            target_stats.armor_class.value,
+                            self.entities[target_index]
+                                .resistances
+                                .level(DamageType::Physical),
+                        ))
+                    }
                     MeleeBlowEffectDefinition::Poison {
                         damage_dice,
                         damage_sides,
@@ -788,6 +809,9 @@ impl Game {
                 let Some(damage) = damage else {
                     continue;
                 };
+                let shatters = matches!(effect, MeleeBlowEffectDefinition::Shatter { .. })
+                    && damage.applied > 23;
+                let quake_center = self.entities[source_index].position;
                 let application = plan_damage_application(
                     &self.entities[target_index],
                     damage,
@@ -808,6 +832,15 @@ impl Game {
                         changed,
                         removed_entities,
                     )?;
+                    if shatters {
+                        self.resolve_monster_shatter_earthquake(
+                            quake_center,
+                            source_kind_id.clone(),
+                            events,
+                            changed,
+                            removed_entities,
+                        )?;
+                    }
                     break;
                 }
                 if vampiric {
@@ -819,6 +852,15 @@ impl Game {
                     method_id: blow.method_id.clone(),
                     damage,
                 });
+                if shatters {
+                    self.resolve_monster_shatter_earthquake(
+                        quake_center,
+                        source_kind_id.clone(),
+                        events,
+                        changed,
+                        removed_entities,
+                    )?;
+                }
             }
         }
         if blink_after_melee
@@ -1253,6 +1295,27 @@ impl Game {
                             resolve_damage(DamagePacket::new(raw, damage_type), resistance)
                         }))
                     }
+                    MeleeBlowEffectDefinition::Shatter {
+                        damage_dice,
+                        damage_sides,
+                        ..
+                    } => {
+                        let raw = self.roll_monster_melee_effect(
+                            index,
+                            *damage_dice,
+                            *damage_sides,
+                            nice,
+                        );
+                        Some(
+                            self.reduce_player_damage(resolve_armored_damage(
+                                raw,
+                                DamageType::Physical,
+                                armor_class,
+                                self.effective_player_resistances()
+                                    .level(DamageType::Physical),
+                            )),
+                        )
+                    }
                     MeleeBlowEffectDefinition::Poison {
                         damage_dice,
                         damage_sides,
@@ -1558,6 +1621,9 @@ impl Game {
                 let Some(damage) = damage else {
                     continue;
                 };
+                let shatters = matches!(effect, MeleeBlowEffectDefinition::Shatter { .. })
+                    && damage.applied > 23;
+                let quake_center = self.entities[index].position;
                 let application =
                     plan_damage_application(&self.player, damage, FatalityPolicy::BelowZero);
                 commit_damage_application(&mut self.player, &application);
@@ -1596,6 +1662,18 @@ impl Game {
                     }
                     if self.rng.bounded(100) < 10 {
                         self.resolve_monster_attribute_drain(AttributeKind::Constitution);
+                    }
+                }
+                if shatters {
+                    self.resolve_monster_shatter_earthquake(
+                        quake_center,
+                        kind_id.clone(),
+                        events,
+                        changed,
+                        removed_entities,
+                    )?;
+                    if self.player_is_dead() {
+                        return Ok(false);
                     }
                 }
             }

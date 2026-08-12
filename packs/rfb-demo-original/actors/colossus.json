@@ -1,0 +1,80 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 558,
+    "maxDepth": 999,
+    "rarity": 4
+  },
+  "attack": 9,
+  "damageDice": 14,
+  "damageSides": 14,
+  "damageType": "physical",
+  "defense": 15,
+  "descriptionKey": "actor-demo-colossus-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 2375,
+  "formatVersion": 1,
+  "glyph": "g",
+  "hitPointDice": {
+    "dice": 15,
+    "forceMaximum": true,
+    "sides": 100
+  },
+  "id": "demo.actor.colossus",
+  "level": 36,
+  "maxHp": 1500,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 14,
+            "damageSides": 14,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "damageDice": 8,
+            "damageSides": 8,
+            "type": "shatter"
+          },
+          {
+            "chancePercent": 40,
+            "durationDice": 2,
+            "durationSides": 8,
+            "type": "stun"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "nameKey": "actor-demo-colossus-name",
+  "reflectsBolts": true,
+  "resistances": {
+    "cold": "resistant",
+    "disintegrate": "vulnerable",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "poison": "immune"
+  },
+  "role": "monster",
+  "speed": 105,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "cold-blooded",
+    "empty-mind",
+    "kin-glyph-103",
+    "legacy-import",
+    "nonliving",
+    "orc-cave"
+  ]
+}

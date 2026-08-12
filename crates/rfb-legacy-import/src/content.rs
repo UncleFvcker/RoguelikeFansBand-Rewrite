@@ -6853,6 +6853,14 @@ fn melee_effect_json(effect: &LegacyBlowEffect) -> Option<serde_json::Value> {
                 "damageSides": damage_sides.min(10_000),
             })
         }
+        "SHATTER" => {
+            let (damage_dice, damage_sides) = effect.dice?;
+            serde_json::json!({
+                "type": "shatter",
+                "damageDice": damage_dice.clamp(1, 100),
+                "damageSides": damage_sides.clamp(1, 10_000),
+            })
+        }
         "CUT" => {
             let (duration_dice, duration_sides) = effect.dice?;
             serde_json::json!({
@@ -12795,6 +12803,31 @@ mod tests {
             actor["tags"]
                 .as_array()
                 .is_some_and(|tags| tags.iter().any(|tag| tag == "quantum"))
+        );
+    }
+
+    #[test]
+    fn demo_monster_import_maps_shatter_as_a_shared_melee_effect() {
+        let mut monsters = parse_r_info(
+            "N:558:Colossus\nG:g:w\nI:120:30d30:30:120:0:400\nW:36:3:999:10000:0:0\nB:HIT:SHATTER(8d8)\nF:GIANT\n",
+        )
+        .expect("synthetic shatter monster should parse");
+        let actor = demo_monster_json(
+            &monsters.remove(0),
+            &DemoMonsterSelectionEntry {
+                source_index: 558,
+                source_id: None,
+                id: "colossus".to_owned(),
+                tags: vec!["orc-cave".to_owned()],
+                omitted_flags: Vec::new(),
+            },
+            &mut BTreeMap::new(),
+        )
+        .expect("SHATTER should import through the shared melee effect");
+
+        assert_eq!(
+            actor["meleeRoutine"]["blows"][0]["effects"][0]["type"],
+            "shatter"
         );
     }
 

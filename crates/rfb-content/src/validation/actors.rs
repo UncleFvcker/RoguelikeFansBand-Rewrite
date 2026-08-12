@@ -347,6 +347,11 @@ fn valid_melee_effect(effect: &MeleeBlowEffectDefinition) -> bool {
                     && *damage_sides == 0)
                     || valid_dice(*damage_dice, *damage_sides))
         }
+        MeleeBlowEffectDefinition::Shatter {
+            chance_percent,
+            damage_dice,
+            damage_sides,
+        } => valid_chance(*chance_percent) && valid_dice(*damage_dice, *damage_sides),
         MeleeBlowEffectDefinition::Poison {
             chance_percent,
             damage_dice,
