@@ -237,6 +237,21 @@ pub(crate) enum DomainEvent {
         source_kind_id: String,
         resolution: MonsterDisplacementResolutionDto,
     },
+    MonsterQuantumVanished {
+        source_kind_id: String,
+    },
+    MonsterEarthquakeResolved {
+        source_kind_id: String,
+        resolution: AbilityEffectsResolutionDto,
+    },
+    MonsterMeleeAmnesia {
+        source_kind_id: String,
+        cleared_cells: u32,
+    },
+    MonsterTimeRavaged {
+        source_kind_id: String,
+        attribute_count: u8,
+    },
     MonsterBlinkedTarget {
         source_kind_id: String,
         target_kind_id: String,
@@ -1169,6 +1184,9 @@ pub(crate) enum DomainEvent {
         method_id: Option<String>,
         damage: DamageOutcome,
     },
+    MonsterBegged {
+        source_kind_id: String,
+    },
     MonsterSelfDestructed {
         source_kind_id: String,
     },
@@ -1272,6 +1290,10 @@ pub(crate) enum DomainEvent {
         target_kind_id: String,
         method_id: Option<String>,
         damage: DamageOutcome,
+    },
+    MonsterBeggedEntity {
+        source_kind_id: String,
+        target_kind_id: String,
     },
     MonsterFled {
         source_kind_id: String,
@@ -1782,6 +1804,42 @@ impl DomainEvent {
                 "monster-blinked",
                 [("source", source_kind_id)],
                 GameEventOutcomeDto::MonsterDisplacement { resolution },
+            ),
+            Self::MonsterQuantumVanished { source_kind_id } => dto(
+                "monster.quantum-vanished",
+                "monster-quantum-vanished",
+                [("source", source_kind_id)],
+            ),
+            Self::MonsterEarthquakeResolved {
+                source_kind_id,
+                resolution,
+            } => dto_with_outcome(
+                "monster.earthquake",
+                "monster-earthquake",
+                [("source", source_kind_id)],
+                GameEventOutcomeDto::AbilityEffects { resolution },
+            ),
+            Self::MonsterMeleeAmnesia {
+                source_kind_id,
+                cleared_cells,
+            } => dto(
+                "monster.melee-amnesia",
+                "monster-melee-amnesia",
+                [
+                    ("source", source_kind_id),
+                    ("count", cleared_cells.to_string()),
+                ],
+            ),
+            Self::MonsterTimeRavaged {
+                source_kind_id,
+                attribute_count,
+            } => dto(
+                "monster.time-ravaged",
+                "monster-time-ravaged",
+                [
+                    ("source", source_kind_id),
+                    ("count", attribute_count.to_string()),
+                ],
             ),
             Self::MonsterBlinkedTarget {
                 source_kind_id,
@@ -4464,6 +4522,11 @@ impl DomainEvent {
                 ),
                 method_id,
             ),
+            Self::MonsterBegged { source_kind_id } => dto(
+                "combat.monster-beg",
+                "combat-monster-beg",
+                [("source", source_kind_id)],
+            ),
             Self::MonsterSelfDestructed { source_kind_id } => dto(
                 "combat.monster-self-destructed",
                 "combat-monster-self-destructed",
@@ -4740,6 +4803,14 @@ impl DomainEvent {
                     },
                 ),
                 method_id,
+            ),
+            Self::MonsterBeggedEntity {
+                source_kind_id,
+                target_kind_id,
+            } => dto(
+                "combat.monster-entity-beg",
+                "combat-monster-entity-beg",
+                [("source", source_kind_id), ("target", target_kind_id)],
             ),
             Self::MonsterFled {
                 source_kind_id,

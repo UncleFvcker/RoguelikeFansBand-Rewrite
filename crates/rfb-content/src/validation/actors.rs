@@ -136,7 +136,8 @@ pub(super) fn validate_actors(
                     validate_id(&blow.method_id).is_err()
                         || blow.to_hit < -1_000_000
                         || blow.to_hit > 1_000_000
-                        || blow.effects.is_empty()
+                        || (blow.effects.is_empty()
+                            && (blow.method_id != "rfb.blow.beg" || blow.self_destructs))
                         || blow.effects.len() > 8
                         || (blow.self_destructs
                             && blow.effects.iter().any(|effect| {
@@ -346,6 +347,11 @@ fn valid_melee_effect(effect: &MeleeBlowEffectDefinition) -> bool {
                     && *damage_sides == 0)
                     || valid_dice(*damage_dice, *damage_sides))
         }
+        MeleeBlowEffectDefinition::Shatter {
+            chance_percent,
+            damage_dice,
+            damage_sides,
+        } => valid_chance(*chance_percent) && valid_dice(*damage_dice, *damage_sides),
         MeleeBlowEffectDefinition::Poison {
             chance_percent,
             damage_dice,
@@ -409,6 +415,8 @@ fn valid_melee_effect(effect: &MeleeBlowEffectDefinition) -> bool {
         MeleeBlowEffectDefinition::Blind { chance_percent }
         | MeleeBlowEffectDefinition::DrainCharges { chance_percent }
         | MeleeBlowEffectDefinition::Paralysis { chance_percent }
+        | MeleeBlowEffectDefinition::Amnesia { chance_percent }
+        | MeleeBlowEffectDefinition::Time { chance_percent }
         | MeleeBlowEffectDefinition::Slow { chance_percent }
         | MeleeBlowEffectDefinition::Terrify { chance_percent }
         | MeleeBlowEffectDefinition::Disenchant { chance_percent }
@@ -416,5 +424,47 @@ fn valid_melee_effect(effect: &MeleeBlowEffectDefinition) -> bool {
         | MeleeBlowEffectDefinition::EatItem { chance_percent }
         | MeleeBlowEffectDefinition::EatFood { chance_percent }
         | MeleeBlowEffectDefinition::EatLight { chance_percent } => valid_chance(*chance_percent),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn actor_with_effectless_blow(method_id: &str) -> ActorDefinition {
+        serde_json::from_value(serde_json::json!({
+            "$schema": ACTOR_SCHEMA,
+            "formatVersion": 1,
+            "id": "test.actor.effectless-blow",
+            "role": "monster",
+            "nameKey": "test-actor-effectless-blow-name",
+            "descriptionKey": "test-actor-effectless-blow-description",
+            "glyph": "t",
+            "level": 1,
+            "maxHp": 1,
+            "attack": 1,
+            "defense": 0,
+            "damageDice": 1,
+            "damageSides": 1,
+            "meleeRoutine": {
+                "blows": [{ "methodId": method_id, "toHit": 20, "effects": [] }]
+            },
+            "tags": []
+        }))
+        .expect("synthetic actor should deserialize")
+    }
+
+    #[test]
+    fn only_beg_allows_an_effectless_melee_blow() {
+        let mut beg = vec![actor_with_effectless_blow("rfb.blow.beg")];
+        if let Err(error) = validate_actors(&mut beg, &mut BTreeSet::new()) {
+            panic!("{error:?}");
+        }
+
+        let mut hit = vec![actor_with_effectless_blow("rfb.blow.hit")];
+        assert!(matches!(
+            validate_actors(&mut hit, &mut BTreeSet::new()),
+            Err(ContentError::InvalidMeleeRoutine(id)) if id == "test.actor.effectless-blow"
+        ));
     }
 }

@@ -1,0 +1,132 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 698,
+    "maxDepth": 999,
+    "rarity": 2
+  },
+  "attack": 11,
+  "damageDice": 1,
+  "damageSides": 1,
+  "damageType": "physical",
+  "defense": 9,
+  "descriptionKey": "actor-demo-the-stormbringer-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 13333,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "|",
+  "hitPointDice": {
+    "dice": 13,
+    "forceMaximum": true,
+    "sides": 123
+  },
+  "id": "demo.actor.the-stormbringer",
+  "level": 45,
+  "maxHp": 1599,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "type": "terrify"
+          }
+        ],
+        "methodId": "rfb.blow.wail",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 66,
+            "damageSides": 1,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "amountDice": 80,
+            "amountSides": 6,
+            "type": "drain-experience"
+          },
+          {
+            "durationDice": 6,
+            "durationSides": 6,
+            "type": "bleeding"
+          }
+        ],
+        "methodId": "rfb.blow.slash",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 66,
+            "damageSides": 1,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "amountDice": 80,
+            "amountSides": 6,
+            "type": "drain-experience"
+          },
+          {
+            "durationDice": 6,
+            "durationSides": 6,
+            "type": "bleeding"
+          }
+        ],
+        "methodId": "rfb.blow.slash",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 8,
+            "damageSides": 8,
+            "damageType": "physical",
+            "type": "damage",
+            "vampiric": true
+          }
+        ],
+        "methodId": "rfb.blow.slash",
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "nameKey": "actor-demo-the-stormbringer-name",
+  "resistances": {
+    "chaos": "resistant",
+    "cold": "resistant",
+    "fire": "resistant",
+    "nether": "resistant",
+    "poison": "immune"
+  },
+  "role": "monster",
+  "speed": 120,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "aura-revenge",
+    "cold-blooded",
+    "evil",
+    "kin-glyph-124",
+    "legacy-import",
+    "nonliving",
+    "orc-cave",
+    "unique"
+  ]
+}

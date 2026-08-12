@@ -1,0 +1,15 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability-program.bolt-fire-18d8-22",
+  "input": "cast-target",
+  "steps": [
+    {
+      "damageBonus": 22,
+      "damageDice": 18,
+      "damageSides": 8,
+      "damageType": "fire",
+      "type": "damage"
+    }
+  ]
+}

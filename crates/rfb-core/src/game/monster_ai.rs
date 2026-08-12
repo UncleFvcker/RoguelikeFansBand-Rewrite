@@ -125,6 +125,7 @@ impl Game {
         self.entities[index].casting_cooldown_remaining =
             monster_casting_cooldown(casting.frequency_percent);
         let player_hp_before = self.player.hp;
+        let gaze = plan.ability.tags.iter().any(|tag| tag == "gaze");
         let MonsterAbilityPlanResolution {
             target_entity_id,
             target_kind_id,
@@ -133,14 +134,38 @@ impl Game {
             effects,
             targets,
             trace,
-        } = self.resolve_monster_ability_plan(
-            index,
-            &source_kind_id,
-            &plan,
-            events,
-            changed,
-            removed_entities,
-        );
+        } = if gaze {
+            let MonsterAbilityTargetPlan::Projectile { target, trace } = &plan.target else {
+                unreachable!("gaze abilities use the projectile target plan");
+            };
+            let target_entity_id = target.entity_id().to_owned();
+            let target_kind_id = target.kind_id().to_owned();
+            let target_position = target.position();
+            self.resolve_monster_melee_target(index, target, events, changed, removed_entities)?;
+            MonsterAbilityPlanResolution {
+                target_entity_id: target_entity_id.clone(),
+                target_kind_id: target_kind_id.clone(),
+                affected_positions: vec![target_position],
+                summon: None,
+                effects: Vec::new(),
+                targets: vec![MonsterAbilityTargetResolutionDto {
+                    target_entity_id,
+                    target_kind_id,
+                    target_position,
+                    effects: Vec::new(),
+                }],
+                trace: Some(trace.clone()),
+            }
+        } else {
+            self.resolve_monster_ability_plan(
+                index,
+                &source_kind_id,
+                &plan,
+                events,
+                changed,
+                removed_entities,
+            )
+        };
         events.push(DomainEvent::MonsterAbilityCast {
             resolution: Box::new(MonsterAbilityCastResolutionDto {
                 source_entity_id: source_entity_id.clone(),
@@ -155,13 +180,15 @@ impl Game {
             }),
             trace,
         });
-        self.resolve_vengeance_retaliation(
-            &source_entity_id,
-            player_hp_before.saturating_sub(self.player.hp),
-            events,
-            changed,
-            removed_entities,
-        )?;
+        if !gaze {
+            self.resolve_vengeance_retaliation(
+                &source_entity_id,
+                player_hp_before.saturating_sub(self.player.hp),
+                events,
+                changed,
+                removed_entities,
+            )?;
+        }
         Ok(true)
     }
 

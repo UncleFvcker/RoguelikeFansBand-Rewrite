@@ -29,5 +29,5 @@
     "skeletonWeight": 1
   },
   "allocation": { "legacyIndex": 35, "rarity": 1, "maxDepth": 5, "friends": { "dice": 3, "sides": 3 } },
-  "tags": ["animal", "beast", "warrens"]
+  "tags": ["animal", "beast", "hound", "warrens"]
 }

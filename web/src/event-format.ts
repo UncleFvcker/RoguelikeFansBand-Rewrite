@@ -489,6 +489,10 @@ export function createPresentationFormatter(
         });
       case "combat-monster-hit":
         return formatMonsterDamageEvent(event);
+      case "combat-monster-beg":
+        return localization.format("message-combat-monster-beg", {
+          source: contentName(event.args.source),
+        });
       case "combat-monster-self-destructed":
         return localization.format("message-combat-monster-self-destructed", {
           source: contentName(event.args.source),
@@ -568,6 +572,11 @@ export function createPresentationFormatter(
         });
       case "combat-monster-entity-slew":
         return localization.format("message-combat-monster-entity-slew", {
+          source: contentName(event.args.source),
+          target: contentName(event.args.target),
+        });
+      case "combat-monster-entity-beg":
+        return localization.format("message-combat-monster-entity-beg", {
           source: contentName(event.args.source),
           target: contentName(event.args.target),
         });

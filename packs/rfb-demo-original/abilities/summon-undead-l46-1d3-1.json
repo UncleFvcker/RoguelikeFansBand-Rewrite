@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.summon-undead-l46-1d3-1",
+  "descriptionKey": "ability-legacy-summon-undead-l46-1d3-1-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.summon-undead-l46-1d3-1",
+  "nameKey": "ability-legacy-summon-undead-l46-1d3-1-name",
+  "tags": [
+    "legacy-import",
+    "summon"
+  ],
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  }
+}

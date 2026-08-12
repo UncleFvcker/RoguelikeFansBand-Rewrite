@@ -108,6 +108,47 @@ fn mutation_contact_auras_retaliate_only_against_unresisted_contact_attacks() {
 }
 
 #[test]
+fn effectless_beg_always_succeeds_without_damage_contact_or_rng() {
+    let mut game = game_with_actor_definition(0, "demo.actor.small-kobold", |actor| {
+        actor.attack = 1;
+        actor.melee_routine = Some(rfb_content::MeleeRoutineDefinition {
+            blows: vec![rfb_content::MeleeBlowDefinition {
+                method_id: "rfb.blow.beg".to_owned(),
+                to_hit: -1_000_000,
+                self_destructs: false,
+                effects: Vec::new(),
+            }],
+        });
+    });
+    clear_monsters(&mut game);
+    let beggar = game.generated_actor(
+        "test.monster.beggar".to_owned(),
+        "demo.actor.small-kobold",
+        Position { x: 4, y: 3 },
+    );
+    game.entities.push(beggar);
+    assert!(game.gain_mutation("rfb.mutation.fire-aura", &mut Vec::new()));
+    game.entities[0].hp = 100;
+    game.entities[0].max_hp = 100;
+    let player_hp = game.player.hp;
+    let monster_hp = game.entities[0].hp;
+    let draws = game.rng.draw_counter;
+    let mut events = Vec::new();
+
+    game.resolve_monster_melee(0, &mut events, &mut BTreeSet::new(), &mut Vec::new())
+        .expect("BEG should resolve");
+
+    assert_eq!(game.player.hp, player_hp);
+    assert_eq!(game.entities[0].hp, monster_hp);
+    assert_eq!(game.rng.draw_counter, draws);
+    assert!(matches!(
+        events.as_slice(),
+        [DomainEvent::MonsterBegged { source_kind_id }]
+            if source_kind_id == "demo.actor.small-kobold"
+    ));
+}
+
+#[test]
 fn monster_contact_auras_apply_elemental_damage_and_curse_saves() {
     let template = game_with_actor_definition(0, "demo.actor.small-kobold", |actor| {
         actor.level = 50;
@@ -441,6 +482,186 @@ fn vampiric_melee_heals_from_applied_damage_but_not_from_nonliving_players() {
         .expect("vampiric melee against a nonliving player should resolve");
     assert!(nonliving.player.hp < hp_before);
     assert_eq!(nonliving.entities[0].hp, 1);
+}
+
+#[test]
+fn shatter_melee_uses_the_shared_earthquake_only_above_the_damage_threshold() {
+    let mut strong = monster_effect_game(
+        0,
+        MeleeBlowEffectDefinition::Shatter {
+            chance_percent: None,
+            damage_dice: 10,
+            damage_sides: 10,
+        },
+    );
+    strong.player.hp = 10_000;
+    strong.player.max_hp = 10_000;
+    let mut events = Vec::new();
+    strong
+        .resolve_monster_melee(0, &mut events, &mut BTreeSet::new(), &mut Vec::new())
+        .expect("strong shatter should resolve");
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::MonsterEarthquakeResolved { resolution, .. }
+            if matches!(
+                resolution.effects.as_slice(),
+                [AbilityEffectResolutionDto::Earthquake { radius: 8, .. }]
+            )
+    )));
+
+    let mut weak = monster_effect_game(
+        0,
+        MeleeBlowEffectDefinition::Shatter {
+            chance_percent: None,
+            damage_dice: 1,
+            damage_sides: 1,
+        },
+    );
+    weak.resolve_monster_melee(0, &mut events, &mut BTreeSet::new(), &mut Vec::new())
+        .expect("weak shatter should resolve");
+    assert_eq!(
+        events
+            .iter()
+            .filter(|event| matches!(event, DomainEvent::MonsterEarthquakeResolved { .. }))
+            .count(),
+        1
+    );
+}
+
+#[test]
+fn gaze_projects_the_melee_routine_to_a_distant_target() {
+    let mut game = game_with_actor_definition(0, "demo.actor.beholder", |actor| {
+        actor.attack = 1_000_000;
+        actor
+            .monster_casting
+            .as_mut()
+            .expect("Beholder should cast")
+            .frequency_percent = 100;
+    });
+    clear_monsters(&mut game);
+    let origin = Position { x: 4, y: 3 };
+    game.player.position = Position { x: 8, y: 3 };
+    for x in 4..=8 {
+        replace_terrain(&mut game, Position { x, y: 3 }, "demo.terrain.floor");
+    }
+    game.push_generated_actor("test.beholder".to_owned(), "demo.actor.beholder", origin);
+    game.entities[0].nice = false;
+    let mut events = Vec::new();
+
+    assert!(game.resolve_monster_ability(0, &mut events));
+    assert_eq!(game.entities[0].position, origin);
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::MonsterAbilityCast { resolution, .. }
+            if resolution.ability_id == "rfb-legacy.ability.gaze"
+    )));
+    assert!(
+        events
+            .iter()
+            .any(|event| matches!(event, DomainEvent::MonsterMeleeHit { .. }))
+    );
+}
+
+#[test]
+fn melee_amnesia_uses_the_existing_save_and_floor_memory_wipe() {
+    let template = monster_effect_game(
+        0,
+        MeleeBlowEffectDefinition::Amnesia {
+            chance_percent: None,
+        },
+    );
+    let seed = (0..1_000)
+        .find(|seed| {
+            let mut trial = template.clone();
+            trial.explored.fill(true);
+            trial.rng = RfbRng::seeded(*seed);
+            let mut events = Vec::new();
+            trial
+                .resolve_monster_melee(0, &mut events, &mut BTreeSet::new(), &mut Vec::new())
+                .expect("melee amnesia should resolve");
+            events
+                .iter()
+                .any(|event| matches!(event, DomainEvent::MonsterMeleeAmnesia { .. }))
+        })
+        .expect("a deterministic seed should fail the amnesia save");
+    let mut game = template;
+    game.explored.fill(true);
+    game.rng = RfbRng::seeded(seed);
+    let mut events = Vec::new();
+
+    game.resolve_monster_melee(0, &mut events, &mut BTreeSet::new(), &mut Vec::new())
+        .expect("melee amnesia should resolve");
+    assert!(game.explored.iter().all(|explored| !explored));
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::MonsterMeleeAmnesia { cleared_cells, .. } if *cleared_cells > 0
+    )));
+}
+
+#[test]
+fn dice_less_time_uses_exp_or_fractional_attribute_ravaging_without_damage() {
+    let template = Game::new(0);
+    let exp_seed = (0..100)
+        .find(|seed| {
+            let mut trial = template.clone();
+            trial.rng = RfbRng::seeded(*seed);
+            trial.progress.experience = 1_000;
+            trial.progress.maximum_experience = 1_000;
+            let mut events = Vec::new();
+            trial.resolve_time_melee("demo.actor.chronomage", &mut events);
+            events
+                .iter()
+                .any(|event| matches!(event, DomainEvent::ExperienceDrained { .. }))
+        })
+        .expect("a deterministic seed should select TIME experience drain");
+    let mut exp = template.clone();
+    exp.rng = RfbRng::seeded(exp_seed);
+    exp.progress.experience = 1_000;
+    exp.progress.maximum_experience = 1_000;
+    let hp_before = exp.player.hp;
+    exp.resolve_time_melee("demo.actor.chronomage", &mut Vec::new());
+    assert_eq!(exp.progress.experience, 880);
+    assert_eq!(exp.player.hp, hp_before);
+
+    let all_seed = (0..100)
+        .find(|seed| {
+            let mut trial = template.clone();
+            trial.rng = RfbRng::seeded(*seed);
+            let mut events = Vec::new();
+            trial.resolve_time_melee("demo.actor.chronomage", &mut events);
+            events.iter().any(|event| {
+                matches!(
+                    event,
+                    DomainEvent::MonsterTimeRavaged {
+                        attribute_count: 6,
+                        ..
+                    }
+                )
+            })
+        })
+        .expect("a deterministic seed should select all-attribute TIME ravaging");
+    let mut all = template;
+    all.rng = RfbRng::seeded(all_seed);
+    all.progress.attributes = AttributeSet {
+        strength: 16,
+        intelligence: 16,
+        wisdom: 16,
+        dexterity: 16,
+        constitution: 16,
+        charisma: 16,
+    };
+    all.resolve_time_melee("demo.actor.chronomage", &mut Vec::new());
+    assert_eq!(
+        all.progress.attributes,
+        AttributeSet {
+            strength: 14,
+            intelligence: 14,
+            wisdom: 14,
+            dexterity: 14,
+            constitution: 14,
+            charisma: 14,
+        }
+    );
 }
 
 #[test]

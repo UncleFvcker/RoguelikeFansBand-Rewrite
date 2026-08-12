@@ -3,6 +3,89 @@
 use super::*;
 
 impl Game {
+    pub(super) fn quantum_slot_denominator(entity_id: &str) -> u64 {
+        entity_id
+            .bytes()
+            .fold(14_695_981_039_346_656_037_u64, |hash, byte| {
+                (hash ^ u64::from(byte)).wrapping_mul(1_099_511_628_211)
+            })
+            % 100
+            + 10
+    }
+
+    pub(super) fn try_quantum_turn(
+        &mut self,
+        index: usize,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<bool, CoreError> {
+        let Some(definition) = self.actor_runtime_definition(&self.entities[index]) else {
+            return Ok(false);
+        };
+        if !definition.tags.iter().any(|tag| tag == "quantum") {
+            return Ok(false);
+        }
+        let questor = definition
+            .allocation
+            .as_ref()
+            .is_some_and(|allocation| allocation.task_id.is_some())
+            || definition.tags.iter().any(|tag| tag == "guardian");
+        if self.rng.bounded(2) == 0 {
+            return Ok(true);
+        }
+        let denominator = Self::quantum_slot_denominator(&self.entities[index].id);
+        if self.rng.bounded(denominator) != 0 || questor {
+            return Ok(false);
+        }
+        let source_kind_id = self.entities[index].kind_id.clone();
+        self.resolve_actor_death_without_credit(
+            index,
+            DomainEvent::MonsterQuantumVanished { source_kind_id },
+            events,
+            changed,
+            removed_entities,
+        )?;
+        Ok(true)
+    }
+
+    pub(super) fn try_trump_blink(
+        &mut self,
+        index: usize,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let trump = self
+            .actor_runtime_definition(&self.entities[index])
+            .is_some_and(|definition| definition.tags.iter().any(|tag| tag == "trump"));
+        if !trump || self.rng.bounded(2) != 0 {
+            return;
+        }
+        if self.entities[index]
+            .statuses
+            .iter()
+            .any(|status| status.kind_id == STATUS_SLEEP)
+        {
+            return;
+        }
+        let actor_id = self.entities[index].id.clone();
+        let source_kind_id = self.entities[index].kind_id.clone();
+        let from = self.entities[index].position;
+        let destinations = self.open_positions_around_for_actor_kind(from, 5, &source_kind_id);
+        if destinations.is_empty() {
+            return;
+        }
+        let choice = usize::try_from(self.rng.bounded(destinations.len() as u64))
+            .expect("trump destination index must fit usize");
+        let to = destinations[choice];
+        self.entities[index].position = to;
+        changed.extend([from, to]);
+        events.push(DomainEvent::MonsterBlinked {
+            source_kind_id,
+            resolution: MonsterDisplacementResolutionDto { actor_id, from, to },
+        });
+    }
+
     pub(super) fn advance_until_player_ready(
         &mut self,
         resting: bool,
@@ -486,6 +569,10 @@ impl Game {
                 continue;
             }
             spend_energy(&mut self.entities[index].energy_need, STANDARD_ACTION_COST);
+            self.try_trump_blink(index, events, changed);
+            if self.try_quantum_turn(index, events, changed, removed_entities)? {
+                continue;
+            }
             if self.entities[index]
                 .statuses
                 .iter()

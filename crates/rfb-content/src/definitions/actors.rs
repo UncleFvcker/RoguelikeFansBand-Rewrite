@@ -149,6 +149,12 @@ pub enum MeleeBlowEffectDefinition {
         #[serde(default)]
         vampiric: bool,
     },
+    Shatter {
+        #[serde(default)]
+        chance_percent: Option<u8>,
+        damage_dice: u16,
+        damage_sides: u16,
+    },
     Poison {
         #[serde(default)]
         chance_percent: Option<u8>,
@@ -205,6 +211,14 @@ pub enum MeleeBlowEffectDefinition {
         damage_sides: u16,
     },
     Paralysis {
+        #[serde(default)]
+        chance_percent: Option<u8>,
+    },
+    Amnesia {
+        #[serde(default)]
+        chance_percent: Option<u8>,
+    },
+    Time {
         #[serde(default)]
         chance_percent: Option<u8>,
     },

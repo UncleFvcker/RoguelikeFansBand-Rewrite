@@ -3123,14 +3123,26 @@ fn raise_dead_is_deterministic_and_enforces_faction_group_and_unique_rules() {
         (game, resolution)
     };
 
-    let (shallow, shallow_resolution) = cast(0, 25);
-    assert_eq!(shallow_resolution.actor_kind_id, "undead");
-    let shallow_candidates = shallow.summon_category_candidate_kind_ids(
+    let shallow_setup = prepare_death_caster(0, 25, "demo.ability.death-raise-dead");
+    let shallow_friendly_candidates = shallow_setup.summon_category_candidate_kind_ids(
         "undead",
         Some("high-undead"),
         25 * 3 / 2,
         false,
     );
+    let shallow_hostile_candidates = shallow_setup.summon_category_candidate_kind_ids(
+        "undead",
+        Some("high-undead"),
+        25 * 3 / 2,
+        true,
+    );
+    let (shallow, shallow_resolution) = cast(0, 25);
+    assert_eq!(shallow_resolution.actor_kind_id, "undead");
+    let shallow_candidates = if shallow_resolution.hostile {
+        shallow_hostile_candidates
+    } else {
+        shallow_friendly_candidates
+    };
     assert!(
         shallow_resolution
             .summoned_kind_ids

@@ -5,6 +5,7 @@ use super::*;
 pub(super) fn melee_effect_chance(effect: &MeleeBlowEffectDefinition) -> Option<u8> {
     match effect {
         MeleeBlowEffectDefinition::Damage { chance_percent, .. }
+        | MeleeBlowEffectDefinition::Shatter { chance_percent, .. }
         | MeleeBlowEffectDefinition::Poison { chance_percent, .. }
         | MeleeBlowEffectDefinition::Disease { chance_percent, .. }
         | MeleeBlowEffectDefinition::DrainAttributes { chance_percent, .. }
@@ -16,6 +17,8 @@ pub(super) fn melee_effect_chance(effect: &MeleeBlowEffectDefinition) -> Option<
         | MeleeBlowEffectDefinition::Blind { chance_percent }
         | MeleeBlowEffectDefinition::Confusion { chance_percent, .. }
         | MeleeBlowEffectDefinition::Paralysis { chance_percent }
+        | MeleeBlowEffectDefinition::Amnesia { chance_percent }
+        | MeleeBlowEffectDefinition::Time { chance_percent }
         | MeleeBlowEffectDefinition::Slow { chance_percent }
         | MeleeBlowEffectDefinition::Stun { chance_percent, .. }
         | MeleeBlowEffectDefinition::Terrify { chance_percent }
@@ -498,17 +501,18 @@ impl Game {
                 blow.to_hit,
                 StatBounds::NON_NEGATIVE,
             );
-            if !resolve_check(
-                &mut self.rng,
-                CheckContext {
-                    kind: CheckKind::MeleeHit,
-                    actor_id: self.entities[source_index].id.clone(),
-                    target_id: Some(target.entity_id().to_owned()),
-                    ability,
-                    difficulty: target_stats.armor_class.clone(),
-                },
-            )
-            .succeeded()
+            if !blow.effects.is_empty()
+                && !resolve_check(
+                    &mut self.rng,
+                    CheckContext {
+                        kind: CheckKind::MeleeHit,
+                        actor_id: self.entities[source_index].id.clone(),
+                        target_id: Some(target.entity_id().to_owned()),
+                        ability,
+                        difficulty: target_stats.armor_class.clone(),
+                    },
+                )
+                .succeeded()
             {
                 events.push(DomainEvent::MonsterMeleeEntityMissed {
                     source_kind_id: source_kind_id.clone(),
@@ -535,6 +539,14 @@ impl Game {
                     )?;
                 }
                 break;
+            }
+
+            if blow.effects.is_empty() {
+                events.push(DomainEvent::MonsterBeggedEntity {
+                    source_kind_id: source_kind_id.clone(),
+                    target_kind_id: target.kind_id().to_owned(),
+                });
+                continue;
             }
 
             for effect in &blow.effects {
@@ -580,6 +592,26 @@ impl Game {
                         } else {
                             resolve_damage(DamagePacket::new(raw, damage_type), resistance)
                         })
+                    }
+                    MeleeBlowEffectDefinition::Shatter {
+                        damage_dice,
+                        damage_sides,
+                        ..
+                    } => {
+                        let raw = self.roll_monster_melee_effect(
+                            source_index,
+                            *damage_dice,
+                            *damage_sides,
+                            false,
+                        );
+                        Some(resolve_armored_damage(
+                            raw,
+                            DamageType::Physical,
+                            target_stats.armor_class.value,
+                            self.entities[target_index]
+                                .resistances
+                                .level(DamageType::Physical),
+                        ))
                     }
                     MeleeBlowEffectDefinition::Poison {
                         damage_dice,
@@ -631,7 +663,9 @@ impl Game {
                     | MeleeBlowEffectDefinition::DrainResource { .. }
                     | MeleeBlowEffectDefinition::DrainCharges { .. }
                     | MeleeBlowEffectDefinition::DrainExperience { .. }
-                    | MeleeBlowEffectDefinition::Disenchant { .. } => None,
+                    | MeleeBlowEffectDefinition::Disenchant { .. }
+                    | MeleeBlowEffectDefinition::Amnesia { .. }
+                    | MeleeBlowEffectDefinition::Time { .. } => None,
                     MeleeBlowEffectDefinition::Unlife {
                         amount_dice,
                         amount_sides,
@@ -782,6 +816,9 @@ impl Game {
                 let Some(damage) = damage else {
                     continue;
                 };
+                let shatters = matches!(effect, MeleeBlowEffectDefinition::Shatter { .. })
+                    && damage.applied > 23;
+                let quake_center = self.entities[source_index].position;
                 let application = plan_damage_application(
                     &self.entities[target_index],
                     damage,
@@ -802,6 +839,15 @@ impl Game {
                         changed,
                         removed_entities,
                     )?;
+                    if shatters {
+                        self.resolve_monster_shatter_earthquake(
+                            quake_center,
+                            source_kind_id.clone(),
+                            events,
+                            changed,
+                            removed_entities,
+                        )?;
+                    }
                     break;
                 }
                 if vampiric {
@@ -813,6 +859,15 @@ impl Game {
                     method_id: blow.method_id.clone(),
                     damage,
                 });
+                if shatters {
+                    self.resolve_monster_shatter_earthquake(
+                        quake_center,
+                        source_kind_id.clone(),
+                        events,
+                        changed,
+                        removed_entities,
+                    )?;
+                }
             }
         }
         if blink_after_melee
@@ -1176,17 +1231,18 @@ impl Game {
                 blow.to_hit,
                 StatBounds::NON_NEGATIVE,
             );
-            if !resolve_check(
-                &mut self.rng,
-                CheckContext {
-                    kind: CheckKind::MeleeHit,
-                    actor_id: self.entities[index].id.clone(),
-                    target_id: Some(self.player.id.clone()),
-                    ability,
-                    difficulty: target.armor_class.clone(),
-                },
-            )
-            .succeeded()
+            if !blow.effects.is_empty()
+                && !resolve_check(
+                    &mut self.rng,
+                    CheckContext {
+                        kind: CheckKind::MeleeHit,
+                        actor_id: self.entities[index].id.clone(),
+                        target_id: Some(self.player.id.clone()),
+                        ability,
+                        difficulty: target.armor_class.clone(),
+                    },
+                )
+                .succeeded()
             {
                 events.push(DomainEvent::MonsterMeleeMissed {
                     source_kind_id: kind_id.clone(),
@@ -1205,6 +1261,13 @@ impl Game {
 
             if blow.self_destructs {
                 return Ok(true);
+            }
+
+            if blow.effects.is_empty() {
+                events.push(DomainEvent::MonsterBegged {
+                    source_kind_id: kind_id.clone(),
+                });
+                continue;
             }
 
             for effect in &blow.effects {
@@ -1238,6 +1301,27 @@ impl Game {
                         } else {
                             resolve_damage(DamagePacket::new(raw, damage_type), resistance)
                         }))
+                    }
+                    MeleeBlowEffectDefinition::Shatter {
+                        damage_dice,
+                        damage_sides,
+                        ..
+                    } => {
+                        let raw = self.roll_monster_melee_effect(
+                            index,
+                            *damage_dice,
+                            *damage_sides,
+                            nice,
+                        );
+                        Some(
+                            self.reduce_player_damage(resolve_armored_damage(
+                                raw,
+                                DamageType::Physical,
+                                armor_class,
+                                self.effective_player_resistances()
+                                    .level(DamageType::Physical),
+                            )),
+                        )
                     }
                     MeleeBlowEffectDefinition::Poison {
                         damage_dice,
@@ -1490,6 +1574,20 @@ impl Game {
                         self.apply_player_melee_status(STATUS_PARALYSIS, duration, &kind_id);
                         None
                     }
+                    MeleeBlowEffectDefinition::Amnesia { .. } => {
+                        if !self.monster_curse_save(&kind_id, events) {
+                            let cleared_cells = self.clear_current_floor_memory(changed);
+                            events.push(DomainEvent::MonsterMeleeAmnesia {
+                                source_kind_id: kind_id.clone(),
+                                cleared_cells,
+                            });
+                        }
+                        None
+                    }
+                    MeleeBlowEffectDefinition::Time { .. } => {
+                        self.resolve_time_melee(&kind_id, events);
+                        None
+                    }
                     MeleeBlowEffectDefinition::Slow { .. } => {
                         self.apply_player_melee_status(STATUS_SLOW, 25, &kind_id);
                         None
@@ -1544,6 +1642,9 @@ impl Game {
                 let Some(damage) = damage else {
                     continue;
                 };
+                let shatters = matches!(effect, MeleeBlowEffectDefinition::Shatter { .. })
+                    && damage.applied > 23;
+                let quake_center = self.entities[index].position;
                 let application =
                     plan_damage_application(&self.player, damage, FatalityPolicy::BelowZero);
                 commit_damage_application(&mut self.player, &application);
@@ -1582,6 +1683,18 @@ impl Game {
                     }
                     if self.rng.bounded(100) < 10 {
                         self.resolve_monster_attribute_drain(AttributeKind::Constitution);
+                    }
+                }
+                if shatters {
+                    self.resolve_monster_shatter_earthquake(
+                        quake_center,
+                        kind_id.clone(),
+                        events,
+                        changed,
+                        removed_entities,
+                    )?;
+                    if self.player_is_dead() {
+                        return Ok(false);
                     }
                 }
             }
@@ -1661,6 +1774,91 @@ impl Game {
             self.wake_entity_after_damage(target_index, damage.applied, events);
         }
         Ok(false)
+    }
+
+    pub(super) fn resolve_time_melee(
+        &mut self,
+        source_kind_id: &str,
+        events: &mut Vec<DomainEvent>,
+    ) {
+        let resistance = self
+            .effective_player_resistances()
+            .level(DamageType::Time)
+            .reduction_percent()
+            .max(0) as u64;
+        if self.rng.bounded(100) < resistance {
+            return;
+        }
+        match self.rng.bounded(10) {
+            0..=4 => {
+                let amount =
+                    100_u64.saturating_add(self.progress.experience.saturating_mul(2) / 100);
+                self.apply_player_experience_drain(amount, source_kind_id, events);
+            }
+            5..=8 => {
+                let attributes = [
+                    AttributeKind::Strength,
+                    AttributeKind::Intelligence,
+                    AttributeKind::Wisdom,
+                    AttributeKind::Dexterity,
+                    AttributeKind::Constitution,
+                    AttributeKind::Charisma,
+                ];
+                let index = usize::try_from(self.rng.bounded(attributes.len() as u64))
+                    .expect("time attribute roll must fit usize");
+                self.ravage_time_attributes(&[attributes[index]], 3, 4);
+                events.push(DomainEvent::MonsterTimeRavaged {
+                    source_kind_id: source_kind_id.to_owned(),
+                    attribute_count: 1,
+                });
+            }
+            _ => {
+                self.ravage_time_attributes(
+                    &[
+                        AttributeKind::Strength,
+                        AttributeKind::Intelligence,
+                        AttributeKind::Wisdom,
+                        AttributeKind::Dexterity,
+                        AttributeKind::Constitution,
+                        AttributeKind::Charisma,
+                    ],
+                    7,
+                    8,
+                );
+                events.push(DomainEvent::MonsterTimeRavaged {
+                    source_kind_id: source_kind_id.to_owned(),
+                    attribute_count: 6,
+                });
+            }
+        }
+    }
+
+    fn ravage_time_attributes(
+        &mut self,
+        attributes: &[AttributeKind],
+        numerator: u16,
+        denominator: u16,
+    ) {
+        let previous_max_hp = self.effective_player_max_hp();
+        let previous_resource_maxima = self.player_resource_maxima();
+        let mut changed = false;
+        for attribute in attributes {
+            let current = self.progress.attributes.value(*attribute);
+            let next = current.saturating_mul(numerator) / denominator;
+            let next = next.max(3);
+            changed |= current != next;
+            match attribute {
+                AttributeKind::Strength => self.progress.attributes.strength = next,
+                AttributeKind::Intelligence => self.progress.attributes.intelligence = next,
+                AttributeKind::Wisdom => self.progress.attributes.wisdom = next,
+                AttributeKind::Dexterity => self.progress.attributes.dexterity = next,
+                AttributeKind::Constitution => self.progress.attributes.constitution = next,
+                AttributeKind::Charisma => self.progress.attributes.charisma = next,
+            }
+        }
+        if changed {
+            self.refresh_after_attribute_change(previous_max_hp, &previous_resource_maxima);
+        }
     }
 
     fn resolve_monster_attribute_drain(&mut self, attribute: AttributeKind) {

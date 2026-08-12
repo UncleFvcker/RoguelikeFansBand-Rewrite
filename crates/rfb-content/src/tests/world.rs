@@ -719,7 +719,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         .iter()
         .filter(|actor| actor.tags.iter().any(|tag| tag == "orc-cave"))
         .collect::<Vec<_>>();
-    assert_eq!(orc_cave.len(), 194);
+    assert_eq!(orc_cave.len(), 453);
 
     for id in [
         "demo.actor.bunyip",
@@ -752,10 +752,10 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
                     .any(|index| *index != 3)
         );
     }
-    let mut level_counts = [0_usize; 12];
+    let mut level_counts = [0_usize; 28];
     let mut source_indices = BTreeSet::new();
     for actor in orc_cave {
-        assert!((21..=32).contains(&actor.level));
+        assert!((21..=48).contains(&actor.level));
         let allocation = actor
             .allocation
             .as_ref()
@@ -765,7 +765,10 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
     }
     assert_eq!(
         level_counts,
-        [16, 14, 12, 17, 24, 17, 19, 17, 18, 21, 7, 12]
+        [
+            16, 14, 12, 17, 24, 17, 19, 17, 18, 21, 7, 12, 29, 15, 27, 28, 19, 19, 11, 42, 10, 5,
+            10, 12, 12, 6, 10, 4,
+        ]
     );
 
     let mouse = artifact
@@ -3571,6 +3574,804 @@ fn p41_ghast_retains_the_authoritative_eldritch_horror_marker() {
 }
 
 #[test]
+fn p42a_direct_monsters_keep_source_identity_without_new_abilities() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+
+    for (id, legacy_index, level) in [
+        ("half-troll", 491, 33),
+        ("cave-troll", 496, 33),
+        ("giant-skeleton-troll", 500, 33),
+        ("water-troll", 509, 33),
+        ("triceratops", 1217, 33),
+        ("night-stalker", 514, 34),
+        ("velociraptor", 515, 34),
+        ("bloodletter-of-khorne", 523, 34),
+        ("giant-grey-scorpion", 524, 34),
+        ("pegasus", 990, 34),
+        ("ulfang-the-black", 1046, 34),
+        ("diplodocus", 1218, 34),
+        ("sheer-heart-attack-the-bomb-hand", 531, 35),
+        ("dagashi", 532, 35),
+        ("leng-spider", 535, 35),
+        ("star-vampire", 536, 35),
+        ("acidic-cytoplasm", 541, 35),
+        ("wooly-rhinoceros", 547, 35),
+        ("giant-fire-ant", 548, 35),
+        ("the-minotaur-of-the-labyrinth", 1034, 35),
+        ("ankylosaur", 1219, 35),
+        ("xorn", 550, 36),
+        ("rogrog-the-black-troll", 551, 36),
+        ("mist-giant", 552, 36),
+        ("trapper", 565, 36),
+        ("chaos-spawn", 574, 36),
+        ("exploding-ant", 1109, 36),
+    ] {
+        let actor_id = format!("demo.actor.{id}");
+        let actor = artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == actor_id)
+            .unwrap_or_else(|| panic!("{actor_id} should be imported"));
+        assert_eq!(actor.level, level, "{actor_id} level");
+        assert_eq!(
+            actor
+                .allocation
+                .as_ref()
+                .map(|allocation| allocation.legacy_index),
+            Some(legacy_index),
+            "{actor_id} source index"
+        );
+        assert!(
+            actor.monster_casting.is_none(),
+            "{actor_id} should not gain monster casting"
+        );
+    }
+}
+
+#[test]
+fn p42b_direct_monsters_complete_the_ability_free_harvest() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+
+    for (id, legacy_index, level) in [
+        ("black-pudding", 585, 37),
+        ("killer-iridescent-beetle", 586, 37),
+        ("night-mare", 622, 39),
+        ("spawn-of-ubbo-sathla", 626, 40),
+        ("morgenstern-julian-s-steed", 629, 40),
+        ("spirit-troll", 630, 40),
+        ("war-troll", 631, 40),
+        ("disenchanter-worm-mass", 632, 40),
+        ("xaren", 639, 40),
+        ("jubjub-bird", 640, 40),
+        ("minotaur", 641, 40),
+        ("mumak", 673, 40),
+        ("ashram-the-ebony-knight", 974, 40),
+        ("unicorn", 985, 39),
+        ("kokuo-raou-s-steed", 1019, 40),
+        ("narwhal", 1042, 40),
+        ("pteranodon", 1220, 40),
+    ] {
+        let actor_id = format!("demo.actor.{id}");
+        let actor = artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == actor_id)
+            .unwrap_or_else(|| panic!("{actor_id} should be imported"));
+        assert_eq!(actor.level, level, "{actor_id} level");
+        assert_eq!(
+            actor
+                .allocation
+                .as_ref()
+                .map(|allocation| allocation.legacy_index),
+            Some(legacy_index),
+            "{actor_id} source index"
+        );
+        assert!(
+            actor.monster_casting.is_none(),
+            "{actor_id} should not gain monster casting"
+        );
+    }
+}
+
+#[test]
+fn p43_monsters_reuse_the_existing_ability_catalog() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let ability_ids = artifact
+        .content
+        .abilities
+        .iter()
+        .map(|ability| ability.id.as_str())
+        .collect::<BTreeSet<_>>();
+
+    for (id, legacy_index, level) in [
+        ("shadow-drake", 471, 33),
+        ("barrow-wight", 499, 33),
+        ("chaos-drake", 501, 33),
+        ("law-drake", 502, 33),
+        ("balance-drake", 503, 33),
+        ("ethereal-drake", 504, 33),
+        ("logrus-ghost", 507, 33),
+        ("multi-hued-hound", 513, 33),
+        ("lich", 518, 34),
+        ("oriental-vampire", 521, 34),
+        ("doom-drake", 527, 34),
+        ("gargoyle", 528, 34),
+        ("malicious-leprechaun", 529, 35),
+        ("shard-vortex", 897, 35),
+        ("topaz-monk", 1047, 35),
+        ("beer-elemental", 1228, 35),
+        ("booze-hound", 1341, 35),
+        ("pattern-ghost", 553, 36),
+        ("young-gold-dragon", 559, 36),
+        ("mature-bronze-dragon", 562, 36),
+        ("mezzodaemon", 568, 36),
+        ("ebony-monk", 870, 36),
+        ("botei-building-the-emperor", 963, 36),
+        ("demonologist", 1008, 36),
+        ("chaos-butterfly", 578, 37),
+        ("time-ghost", 579, 37),
+        ("will-o-the-wisp", 582, 37),
+        ("shan", 583, 37),
+        ("nexus-vortex", 587, 37),
+        ("mature-gold-dragon", 590, 37),
+        ("crystal-drake", 591, 37),
+        ("sky-whale", 594, 38),
+        ("time-vortex", 599, 38),
+        ("emperor-wight", 604, 38),
+        ("scylla", 610, 39),
+        ("7-headed-hydra", 614, 39),
+        ("clubber-demon", 648, 40),
+        ("eol-the-dark-elven-smith", 976, 40),
+        ("vrock", 1158, 40),
+    ] {
+        let actor_id = format!("demo.actor.{id}");
+        let actor = artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == actor_id)
+            .unwrap_or_else(|| panic!("{actor_id} should be imported"));
+        assert_eq!(actor.level, level, "{actor_id} level");
+        assert_eq!(
+            actor
+                .allocation
+                .as_ref()
+                .map(|allocation| allocation.legacy_index),
+            Some(legacy_index),
+            "{actor_id} source index"
+        );
+        let casting = actor
+            .monster_casting
+            .as_ref()
+            .unwrap_or_else(|| panic!("{actor_id} should retain monster casting"));
+        assert!(!casting.abilities.is_empty(), "{actor_id} ability set");
+        assert!(
+            casting
+                .abilities
+                .iter()
+                .all(|candidate| ability_ids.contains(candidate.ability_id.as_str())),
+            "{actor_id} should only reference existing abilities"
+        );
+    }
+}
+
+#[test]
+fn p44a_monsters_generate_only_parameterized_existing_effects() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let ability_ids = artifact
+        .content
+        .abilities
+        .iter()
+        .map(|ability| ability.id.as_str())
+        .collect::<BTreeSet<_>>();
+
+    for (id, legacy_index, level) in [
+        ("bokrug", 489, 33),
+        ("biclops", 490, 33),
+        ("ivory-monk", 492, 33),
+        ("logrus-master", 498, 33),
+        ("fasolt-the-giant", 506, 33),
+        ("fire-elemental", 510, 33),
+        ("cherub", 511, 33),
+        ("water-elemental", 512, 33),
+        ("mystic", 915, 33),
+        ("that-black-bat", 975, 33),
+        ("rusalka", 1143, 33),
+        ("nidaros-the-clairvoyant", 1240, 33),
+        ("earth-elemental", 525, 34),
+        ("king-koopa", 928, 34),
+        ("storm-giant", 487, 35),
+        ("headless-ghost", 533, 35),
+        ("dread-knight", 534, 35),
+        ("smoke-elemental", 537, 35),
+        ("halfling-slinger", 539, 35),
+        ("gravity-hound", 540, 35),
+        ("inertia-hound", 542, 35),
+        ("impact-hound", 543, 35),
+        ("ooze-elemental", 545, 35),
+        ("mature-white-dragon", 549, 35),
+        ("bazooker", 896, 35),
+        ("pip-the-braver-from-another-world", 1004, 35),
+        ("young-multi-hued-dragon", 556, 36),
+        ("mature-blue-dragon", 560, 36),
+        ("mature-green-dragon", 561, 36),
+        ("young-red-dragon", 563, 36),
+        ("bodak", 566, 36),
+        ("elder-thing", 569, 36),
+        ("ice-elemental", 570, 36),
+        ("the-greater-hell-magic-mushroom-were-quylthulg", 572, 36),
+        ("lord-borel-of-hendrake", 573, 36),
+        ("sky-golem", 895, 36),
+        ("young-silver-dragon", 1208, 36),
+        ("implorington-iii", 1231, 36),
+        ("lorgan-chief-of-the-easterlings", 1232, 36),
+    ] {
+        let actor_id = format!("demo.actor.{id}");
+        let actor = artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == actor_id)
+            .unwrap_or_else(|| panic!("{actor_id} should be imported"));
+        assert_eq!(actor.level, level, "{actor_id} level");
+        assert_eq!(
+            actor
+                .allocation
+                .as_ref()
+                .map(|allocation| allocation.legacy_index),
+            Some(legacy_index),
+            "{actor_id} source index"
+        );
+        assert!(
+            actor.monster_casting.as_ref().is_some_and(|casting| {
+                !casting.abilities.is_empty()
+                    && casting
+                        .abilities
+                        .iter()
+                        .all(|candidate| ability_ids.contains(candidate.ability_id.as_str()))
+            }),
+            "{actor_id} should bind generated parameter records"
+        );
+    }
+}
+
+#[test]
+fn p44b_monsters_complete_the_parameterized_existing_effect_harvest() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let ability_ids = artifact
+        .content
+        .abilities
+        .iter()
+        .map(|ability| ability.id.as_str())
+        .collect::<BTreeSet<_>>();
+
+    for (id, legacy_index, level) in [
+        ("fire-angel", 576, 37),
+        ("flying-polyp", 580, 37),
+        ("the-queen-ant", 581, 37),
+        ("magma-elemental", 584, 37),
+        ("plasma-vortex", 588, 37),
+        ("mature-red-dragon", 589, 37),
+        ("mature-black-dragon", 592, 37),
+        ("bone-dragon", 941, 37),
+        ("mature-silver-dragon", 1209, 37),
+        ("mature-multi-hued-dragon", 593, 38),
+        ("father-dagon", 595, 38),
+        ("mother-hydra", 596, 38),
+        ("mandor-master-of-the-logrus", 598, 38),
+        ("ancient-blue-dragon", 601, 38),
+        ("ancient-bronze-dragon", 602, 38),
+        ("seraph", 605, 38),
+        ("loge-spirit-of-fire", 606, 38),
+        ("nightgaunt", 608, 38),
+        ("baron-of-hell", 609, 38),
+        ("ar-pharazon-the-golden", 978, 38),
+        ("gazhak-the-ogre-tyrant", 1255, 38),
+        ("castamir-the-usurper", 1286, 38),
+        ("fire-vampire", 613, 39),
+        ("kavlax-the-many-headed", 616, 39),
+        ("ancient-white-dragon", 617, 39),
+        ("ancient-green-dragon", 618, 39),
+        ("ettin", 621, 39),
+        ("ancient-black-dragon", 624, 39),
+        ("eldrak", 620, 40),
+        ("rotting-quylthulg", 633, 40),
+        ("9-headed-hydra", 635, 40),
+        ("archpriest", 637, 40),
+        ("jasra-brand-s-mistress", 642, 40),
+        ("ancient-gold-dragon", 645, 40),
+        ("great-crystal-drake", 646, 40),
+        ("wyrd-sister", 647, 40),
+        ("death-quasit", 649, 40),
+        ("dread", 667, 40),
+        ("djinni", 892, 40),
+        ("efreeti", 893, 40),
+        ("troll-king", 894, 40),
+        ("dao", 993, 40),
+        ("high-elven-ranger", 1006, 40),
+        ("m-bison", 1014, 40),
+        ("master-mindcrafter", 1056, 40),
+        ("flame-spider", 1171, 40),
+        ("venom-spider", 1174, 40),
+        ("the-marquis-de-la-tour", 1206, 40),
+        ("ancient-silver-dragon", 1210, 40),
+        ("spulga-the-troll-priestess", 1304, 40),
+    ] {
+        let actor_id = format!("demo.actor.{id}");
+        let actor = artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == actor_id)
+            .unwrap_or_else(|| panic!("{actor_id} should be imported"));
+        assert_eq!(actor.level, level, "{actor_id} level");
+        assert_eq!(
+            actor
+                .allocation
+                .as_ref()
+                .map(|allocation| allocation.legacy_index),
+            Some(legacy_index),
+            "{actor_id} source index"
+        );
+        assert!(
+            actor.monster_casting.as_ref().is_some_and(|casting| {
+                !casting.abilities.is_empty()
+                    && casting
+                        .abilities
+                        .iter()
+                        .all(|candidate| ability_ids.contains(candidate.ability_id.as_str()))
+            }),
+            "{actor_id} should bind generated parameter records"
+        );
+    }
+}
+
+#[test]
+fn p45_monsters_bind_low_risk_shared_mappings() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actor = |id: &str| {
+        artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == format!("demo.actor.{id}"))
+            .unwrap_or_else(|| panic!("{id} should be imported"))
+    };
+    let ability_ids = artifact
+        .content
+        .abilities
+        .iter()
+        .map(|ability| ability.id.as_str())
+        .collect::<BTreeSet<_>>();
+
+    for (id, legacy_index, level) in [
+        ("bert-the-stone-troll", 493, 33),
+        ("bill-the-stone-troll", 494, 33),
+        ("tom-the-stone-troll", 495, 33),
+        ("ishikawa-goemon", 505, 33),
+        ("master-thief", 516, 34),
+        ("nightblade", 564, 36),
+        ("ratatosk-the-world-tree-squirrel", 1357, 37),
+        ("rolento", 1013, 38),
+        ("devil-s-huntsman", 1147, 38),
+        ("malekith-the-accursed", 628, 40),
+        ("marilith", 1130, 40),
+    ] {
+        let actor = actor(id);
+        assert_eq!(actor.level, level, "{id} level");
+        assert_eq!(
+            actor
+                .allocation
+                .as_ref()
+                .map(|allocation| allocation.legacy_index),
+            Some(legacy_index),
+            "{id} source index"
+        );
+    }
+
+    for task_actor in ["anti-paladin", "revenant", "death-knight", "sorcerer"] {
+        assert!(
+            artifact
+                .content
+                .actors
+                .iter()
+                .all(|candidate| candidate.id != format!("demo.actor.{task_actor}")),
+            "{task_actor} remains task-owned"
+        );
+    }
+    for table_id in [
+        "demo.loot-table.evil-paladin",
+        "demo.loot-table.rogue",
+        "demo.loot-table.samurai",
+    ] {
+        assert!(
+            artifact
+                .content
+                .loot_tables
+                .iter()
+                .any(|table| table.id == table_id),
+            "{table_id} should be formal content"
+        );
+    }
+
+    let bert_has_poison_damage = actor("bert-the-stone-troll")
+        .melee_routine
+        .as_ref()
+        .into_iter()
+        .flat_map(|routine| &routine.blows)
+        .flat_map(|blow| &blow.effects)
+        .any(|effect| {
+            matches!(
+                effect,
+                MeleeBlowEffectDefinition::Damage {
+                    damage_type: ActorDamageType::Poison,
+                    ..
+                }
+            )
+        });
+    assert!(bert_has_poison_damage);
+    assert!(
+        actor("malekith-the-accursed")
+            .contact_auras
+            .iter()
+            .any(|aura| aura.damage_type == ActorDamageType::Curse)
+    );
+    assert!(
+        actor("hand-grenade")
+            .tags
+            .iter()
+            .any(|tag| tag == "hand-grenade")
+    );
+    assert_eq!(actor("hand-grenade").level, 38);
+    assert!(actor("hand-grenade").allocation.is_none());
+    for hound in artifact
+        .content
+        .actors
+        .iter()
+        .filter(|candidate| matches!(candidate.glyph.as_str(), "C" | "Z"))
+    {
+        assert!(
+            hound.tags.iter().any(|tag| tag == "hound"),
+            "{} should match the original C/Z hound summon predicate",
+            hound.id
+        );
+    }
+
+    for ability_id in [
+        "rfb-legacy.ability.beam-hell-fire-1d1-75",
+        "rfb-legacy.ability.summon-hand-grenade-l38-1d3-1",
+        "rfb-legacy.ability.summon-hound-l38-1d2-1",
+    ] {
+        assert!(ability_ids.contains(ability_id), "missing {ability_id}");
+    }
+    for id in ["rolento", "devil-s-huntsman", "malekith-the-accursed"] {
+        assert!(actor(id).monster_casting.as_ref().is_some_and(|casting| {
+            casting
+                .abilities
+                .iter()
+                .all(|candidate| ability_ids.contains(candidate.ability_id.as_str()))
+        }));
+    }
+}
+
+#[test]
+fn p46_trump_monster_keeps_its_source_identity_and_turn_tag() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let jurt = artifact
+        .content
+        .actors
+        .iter()
+        .find(|actor| actor.id == "demo.actor.jurt-the-living-trump")
+        .expect("Jurt should be imported");
+
+    assert_eq!(jurt.level, 34);
+    assert_eq!(
+        jurt.allocation
+            .as_ref()
+            .map(|allocation| allocation.legacy_index),
+        Some(517)
+    );
+    assert!(jurt.tags.iter().any(|tag| tag == "trump"));
+}
+
+#[test]
+fn p46_quantum_monster_keeps_its_source_identity_and_turn_tag() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let quantum = artifact
+        .content
+        .actors
+        .iter()
+        .find(|actor| actor.id == "demo.actor.quantum-dot")
+        .expect("Quantum dot should be imported");
+
+    assert_eq!(quantum.level, 35);
+    assert_eq!(
+        quantum
+            .allocation
+            .as_ref()
+            .map(|allocation| allocation.legacy_index),
+        Some(863)
+    );
+    assert!(quantum.tags.iter().any(|tag| tag == "quantum"));
+}
+
+#[test]
+fn p46_shatter_monsters_share_the_authoritative_melee_effect() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    for (actor_id, legacy_index) in [
+        ("demo.actor.colossus", 558),
+        ("demo.actor.chthonian", 619),
+        ("demo.actor.rock-giant", 1124),
+    ] {
+        let actor = artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == actor_id)
+            .expect("SHATTER actor should be imported");
+        assert_eq!(
+            actor
+                .allocation
+                .as_ref()
+                .map(|allocation| allocation.legacy_index),
+            Some(legacy_index)
+        );
+        assert!(actor.melee_routine.as_ref().is_some_and(|routine| {
+            routine.blows.iter().any(|blow| {
+                blow.effects
+                    .iter()
+                    .any(|effect| matches!(effect, MeleeBlowEffectDefinition::Shatter { .. }))
+            })
+        }));
+    }
+}
+
+#[test]
+fn p46_beholder_keeps_gaze_sleep_and_amnesia() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let beholder = artifact
+        .content
+        .actors
+        .iter()
+        .find(|actor| actor.id == "demo.actor.beholder")
+        .expect("Beholder should be imported");
+    let routine = beholder
+        .melee_routine
+        .as_ref()
+        .expect("Beholder should retain its gaze routine");
+
+    assert_eq!(
+        beholder
+            .allocation
+            .as_ref()
+            .map(|allocation| allocation.legacy_index),
+        Some(603)
+    );
+    assert!(routine.blows.iter().any(|blow| {
+        blow.effects
+            .iter()
+            .any(|effect| matches!(effect, MeleeBlowEffectDefinition::Paralysis { .. }))
+    }));
+    assert!(routine.blows.iter().any(|blow| {
+        blow.effects
+            .iter()
+            .any(|effect| matches!(effect, MeleeBlowEffectDefinition::Amnesia { .. }))
+    }));
+    assert!(beholder.monster_casting.as_ref().is_some_and(|casting| {
+        casting
+            .abilities
+            .iter()
+            .any(|candidate| candidate.ability_id == "rfb-legacy.ability.gaze")
+    }));
+}
+
+#[test]
+fn p46_chronomage_keeps_dice_less_time_as_a_rider() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let chronomage = artifact
+        .content
+        .actors
+        .iter()
+        .find(|actor| actor.id == "demo.actor.chronomage")
+        .expect("Chronomage should be imported");
+
+    assert_eq!(
+        chronomage
+            .allocation
+            .as_ref()
+            .map(|allocation| allocation.legacy_index),
+        Some(1092)
+    );
+    let routine = chronomage
+        .melee_routine
+        .as_ref()
+        .expect("Chronomage should retain its melee routine");
+    assert_eq!(routine.blows.len(), 3);
+    assert!(
+        routine
+            .blows
+            .iter()
+            .all(|blow| blow.effects.iter().any(|effect| matches!(
+                effect,
+                MeleeBlowEffectDefinition::Time {
+                    chance_percent: Some(25)
+                }
+            )))
+    );
+}
+
+#[test]
+fn p47a_level_41_42_direct_monsters_keep_source_identity() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+
+    for (id, legacy_index, level) in [
+        ("strygalldwir", 651, 41),
+        ("giant-headless", 653, 41),
+        ("judge-fire", 654, 41),
+        ("ubbo-sathla-the-unbegotten-source", 655, 41),
+        ("judge-mortis", 656, 41),
+        ("dark-elven-sorcerer", 657, 41),
+        ("byakhee", 659, 41),
+        ("formless-spawn-of-tsathoggua", 662, 41),
+        ("gorlim-betrayer-of-barahir", 891, 41),
+        ("hezrou", 1153, 41),
+        ("hunting-horror", 663, 42),
+        ("greater-basilisk", 668, 42),
+        ("jack-of-shadows", 670, 42),
+        ("the-lurking-horror", 1196, 42),
+        ("bloodfreezer", 1388, 42),
+    ] {
+        let actor_id = format!("demo.actor.{id}");
+        let actor = artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == actor_id)
+            .unwrap_or_else(|| panic!("{actor_id} should be imported"));
+        assert_eq!(actor.level, level, "{actor_id} level");
+        assert_eq!(
+            actor
+                .allocation
+                .as_ref()
+                .map(|allocation| allocation.legacy_index),
+            Some(legacy_index),
+            "{actor_id} source index"
+        );
+    }
+}
+
+#[test]
+fn p47b_level_43_44_direct_monsters_keep_source_identity() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+
+    for (id, legacy_index, level) in [
+        ("zephyr-lord", 671, 43),
+        ("juggernaut-of-khorne", 672, 43),
+        ("judge-fear", 674, 43),
+        ("ancient-multi-hued-dragon", 675, 43),
+        ("ethereal-dragon", 676, 43),
+        ("dark-young-of-shub-niggurath", 677, 43),
+        ("colour-out-of-space", 678, 43),
+        ("devu-chiokovo", 999, 43),
+        ("glabrezu", 1155, 43),
+        ("eskimo", 1262, 43),
+        ("death-leprechaun", 680, 44),
+        ("chaugnar-faugn-horror-from-the-hills", 681, 44),
+        ("lloigor", 682, 44),
+        ("quachil-uttaus-treader-of-the-dust", 684, 44),
+        ("shoggoth", 685, 44),
+        ("judge-death", 686, 44),
+        ("ariel-queen-of-air", 687, 44),
+        ("11-headed-hydra", 688, 44),
+        ("scatha-the-worm", 692, 44),
+        ("vore", 888, 44),
+        ("kamikaze-hound", 952, 44),
+        ("dwar-dog-lord-of-waw", 1009, 44),
+    ] {
+        let actor_id = format!("demo.actor.{id}");
+        let actor = artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == actor_id)
+            .unwrap_or_else(|| panic!("{actor_id} should be imported"));
+        assert_eq!(actor.level, level, "{actor_id} level");
+        assert_eq!(
+            actor
+                .allocation
+                .as_ref()
+                .map(|allocation| allocation.legacy_index),
+            Some(legacy_index),
+            "{actor_id} source index"
+        );
+    }
+}
+
+#[test]
+fn p48a_level_45_46_direct_monsters_keep_source_identity() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+
+    for (id, legacy_index, level) in [
+        ("warrior-of-the-dawn", 693, 45),
+        ("zoth-ommog", 695, 45),
+        ("smaug-the-golden", 697, 45),
+        ("the-stormbringer", 698, 45),
+        ("durahan", 982, 45),
+        ("marid", 994, 45),
+        ("chameleon-lord", 1041, 45),
+        ("stone-dragon", 1048, 45),
+        ("death-beast", 1082, 45),
+        ("nalfeshnee", 1156, 45),
+        ("ruby-serpent", 1211, 45),
+        ("death-pumpkin", 1300, 45),
+        ("dracolisk", 703, 46),
+        ("yibb-tstll-the-patient-one", 706, 46),
+        ("ghatanothoa", 707, 46),
+        ("ent", 708, 46),
+        ("grand-master-thief", 1024, 46),
+        ("emerald-serpent", 1212, 46),
+    ] {
+        let actor_id = format!("demo.actor.{id}");
+        let actor = artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == actor_id)
+            .unwrap_or_else(|| panic!("{actor_id} should be imported"));
+        assert_eq!(actor.level, level, "{actor_id} level");
+        assert_eq!(
+            actor
+                .allocation
+                .as_ref()
+                .map(|allocation| allocation.legacy_index),
+            Some(legacy_index),
+            "{actor_id} source index"
+        );
+    }
+}
+
+#[test]
+fn p48b_level_47_48_direct_monsters_keep_source_identity() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+
+    for (id, legacy_index, level) in [
+        ("itangast-the-fire-drake", 710, 47),
+        ("death-mold", 711, 47),
+        ("fafner-the-dragon", 712, 47),
+        ("fangorn", 713, 47),
+        ("zhar-the-twin-obscenity", 714, 47),
+        ("shuten-douji-king-ogre-of-ooe-mountain", 979, 47),
+        ("charon-boatman-of-the-styx", 1025, 47),
+        ("amethyst-serpent", 1213, 47),
+        ("ice-weasel", 1237, 47),
+        ("mummified-sorcerer", 1268, 47),
+        ("drolem", 691, 48),
+        ("glaurung-father-of-the-dragons", 715, 48),
+        ("beld-ruler-of-marmo", 973, 48),
+        ("winged-horror", 1216, 48),
+    ] {
+        let actor_id = format!("demo.actor.{id}");
+        let actor = artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == actor_id)
+            .unwrap_or_else(|| panic!("{actor_id} should be imported"));
+        assert_eq!(actor.level, level, "{actor_id} level");
+        assert_eq!(
+            actor
+                .allocation
+                .as_ref()
+                .map(|allocation| allocation.legacy_index),
+            Some(legacy_index),
+            "{actor_id} source index"
+        );
+    }
+}
+
+#[test]
 fn outpost_has_walls_inner_shops_and_an_exterior_warrens_entrance() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let world = artifact
@@ -4278,7 +5079,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
                     == Some("demo.loot-table.base-items")
             })
             .count(),
-        235
+        409
     );
 }
 
@@ -4343,7 +5144,7 @@ fn formal_drop_themes_use_source_allocations_and_rfb_depth_quality() {
                 .filter(|drop| drop.theme_table_id.as_deref() == Some("demo.loot-table.warrior"))
         })
         .collect::<Vec<_>>();
-    assert_eq!(warrior_drops.len(), 58);
+    assert_eq!(warrior_drops.len(), 81);
     assert!(
         warrior_drops
             .iter()

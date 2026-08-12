@@ -1,0 +1,71 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "friends": {
+      "chancePercent": 25,
+      "dice": 3,
+      "sides": 3
+    },
+    "legacyIndex": 1109,
+    "maxDepth": 90,
+    "rarity": 1
+  },
+  "attack": 9,
+  "damageDice": 20,
+  "damageSides": 5,
+  "damageType": "acid",
+  "defense": 4,
+  "descriptionKey": "actor-demo-exploding-ant-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 350,
+  "formatVersion": 1,
+  "glyph": "a",
+  "hitPointDice": {
+    "dice": 20,
+    "forceMaximum": true,
+    "sides": 10
+  },
+  "id": "demo.actor.exploding-ant",
+  "level": 36,
+  "maxHp": 200,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 20,
+            "damageSides": 5,
+            "damageType": "acid",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.explode",
+        "selfDestructs": true,
+        "toHit": 20
+      }
+    ]
+  },
+  "nameKey": "actor-demo-exploding-ant-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "acid": "resistant"
+  },
+  "role": "monster",
+  "speed": 115,
+  "tags": [
+    "animal",
+    "ant",
+    "kin-glyph-97",
+    "legacy-import",
+    "orc-cave",
+    "weird-mind"
+  ]
+}

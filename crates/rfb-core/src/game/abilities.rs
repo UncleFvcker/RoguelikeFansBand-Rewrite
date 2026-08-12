@@ -2,6 +2,11 @@
 
 use super::*;
 
+enum EarthquakeSource {
+    Ability(String),
+    Monster(String),
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) enum AbilityTargetPlan {
     SelfTarget,
@@ -3232,7 +3237,57 @@ impl Game {
         else {
             unreachable!("earthquake executor requires an earthquake effect");
         };
-        let center = self.player.position;
+        self.resolve_earthquake(
+            self.player.position,
+            radius,
+            affect_chance_percent,
+            floor_terrain_id,
+            wall_terrain_ids,
+            EarthquakeSource::Ability(ability.id.clone()),
+            events,
+            changed,
+            removed_entities,
+        )
+    }
+
+    pub(super) fn resolve_monster_shatter_earthquake(
+        &mut self,
+        center: Position,
+        source_kind_id: String,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        self.resolve_earthquake(
+            center,
+            8,
+            15,
+            "demo.terrain.floor",
+            &[
+                "demo.terrain.wall".to_owned(),
+                "demo.terrain.quartz-vein".to_owned(),
+                "demo.terrain.magma-vein".to_owned(),
+            ],
+            EarthquakeSource::Monster(source_kind_id),
+            events,
+            changed,
+            removed_entities,
+        )
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn resolve_earthquake(
+        &mut self,
+        center: Position,
+        radius: u8,
+        affect_chance_percent: u8,
+        floor_terrain_id: &str,
+        wall_terrain_ids: &[String],
+        source: EarthquakeSource,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
         let radius_squared = i32::from(radius).pow(2);
         let mut affected_positions = Vec::new();
         for y in center.y - i32::from(radius)..=center.y + i32::from(radius) {
@@ -3281,6 +3336,51 @@ impl Game {
             let index = self
                 .index(*position)
                 .expect("planned earthquake position must remain in bounds");
+            if self.player.position == *position && !self.player_is_dead() {
+                let raw_damage = self.roll_damage(4, 8);
+                let damage = self.reduce_player_damage(resolve_damage(
+                    DamagePacket::new(raw_damage, DamageType::Physical),
+                    self.effective_player_resistances()
+                        .level(DamageType::Physical),
+                ));
+                let application =
+                    plan_damage_application(&self.player, damage, FatalityPolicy::BelowZero);
+                commit_damage_application(&mut self.player, &application);
+                match &source {
+                    EarthquakeSource::Ability(ability_id) => {
+                        events.push(DomainEvent::AbilityHit {
+                            ability_id: ability_id.clone(),
+                            target_kind_id: self.player.kind_id.clone(),
+                            damage,
+                            trace: ProjectileTrace {
+                                origin: center,
+                                impact: *position,
+                                landing: *position,
+                                traversed: vec![*position],
+                            },
+                        });
+                    }
+                    EarthquakeSource::Monster(source_kind_id) => {
+                        events.push(DomainEvent::MonsterMeleeHit {
+                            source_kind_id: source_kind_id.clone(),
+                            method_id: Some("rfb.blow.shatter".to_owned()),
+                            damage,
+                        });
+                        if application.fatal {
+                            events.push(DomainEvent::PlayerDied {
+                                source_kind_id: source_kind_id.clone(),
+                                method_id: Some("rfb.blow.shatter".to_owned()),
+                                damage,
+                            });
+                        }
+                    }
+                }
+                self.terrain[index] = floor_terrain_id.to_owned();
+                floor_positions.push(*position);
+                self.revealed_terrain.remove(position);
+                changed.insert(*position);
+                continue;
+            }
             let actor_index = self
                 .entities
                 .iter()
@@ -3306,31 +3406,55 @@ impl Game {
                     landing: *position,
                     traversed: vec![*position],
                 };
-                events.push(DomainEvent::AbilityHit {
-                    ability_id: ability.id.clone(),
-                    target_kind_id: target_kind_id.clone(),
-                    damage,
-                    trace: trace.clone(),
-                });
+                if let EarthquakeSource::Ability(ability_id) = &source {
+                    events.push(DomainEvent::AbilityHit {
+                        ability_id: ability_id.clone(),
+                        target_kind_id: target_kind_id.clone(),
+                        damage,
+                        trace: trace.clone(),
+                    });
+                }
                 self.wake_entity_after_damage(actor_index, damage.applied, events);
                 if !application.fatal {
                     self.resolve_monster_fear_aura(actor_index, "hurt", true, events);
                 }
                 if application.fatal {
-                    self.resolve_actor_death(
-                        actor_index,
-                        DomainEvent::AbilitySlew {
-                            ability_id: ability.id.clone(),
-                            target_kind_id,
-                            damage,
-                            trace,
-                        },
-                        events,
-                        changed,
-                        removed_entities,
-                    )?;
+                    match &source {
+                        EarthquakeSource::Ability(ability_id) => self.resolve_actor_death(
+                            actor_index,
+                            DomainEvent::AbilitySlew {
+                                ability_id: ability_id.clone(),
+                                target_kind_id,
+                                damage,
+                                trace,
+                            },
+                            events,
+                            changed,
+                            removed_entities,
+                        )?,
+                        EarthquakeSource::Monster(source_kind_id) => self
+                            .resolve_actor_death_without_rewards(
+                                actor_index,
+                                Some(DomainEvent::MonsterMeleeEntitySlew {
+                                    source_kind_id: source_kind_id.clone(),
+                                    target_kind_id,
+                                    method_id: Some("rfb.blow.shatter".to_owned()),
+                                    damage,
+                                }),
+                                events,
+                                changed,
+                                removed_entities,
+                            )?,
+                    }
+                } else if let EarthquakeSource::Monster(source_kind_id) = &source {
+                    events.push(DomainEvent::MonsterMeleeEntityHit {
+                        source_kind_id: source_kind_id.clone(),
+                        target_kind_id,
+                        method_id: Some("rfb.blow.shatter".to_owned()),
+                        damage,
+                    });
                 }
-                self.terrain[index].clone_from(floor_terrain_id);
+                self.terrain[index] = floor_terrain_id.to_owned();
                 floor_positions.push(*position);
             } else if self.is_walkable(*position) {
                 let roll = self.rng.bounded(100);
@@ -3344,29 +3468,40 @@ impl Game {
                 self.terrain[index].clone_from(&wall_terrain_ids[wall_index]);
                 wall_positions.push(*position);
             } else {
-                self.terrain[index].clone_from(floor_terrain_id);
+                self.terrain[index] = floor_terrain_id.to_owned();
                 floor_positions.push(*position);
             }
             self.revealed_terrain.remove(position);
             changed.insert(*position);
         }
-        events.push(DomainEvent::AbilityEffectsResolved {
-            ability_id: ability.id.clone(),
-            resolution: AbilityEffectsResolutionDto {
-                target_entity_id: None,
-                target_kind_id: None,
-                effects: vec![AbilityEffectResolutionDto::Earthquake {
-                    effect_index: 0,
-                    radius,
-                    affected_positions,
-                    wall_positions,
-                    floor_positions,
-                    removed_items: u32::try_from(removed_items).unwrap_or(u32::MAX),
-                    removed_gold_piles: u32::try_from(removed_gold_piles).unwrap_or(u32::MAX),
-                }],
-            },
-            trace: None,
-        });
+        let resolution = AbilityEffectsResolutionDto {
+            target_entity_id: None,
+            target_kind_id: None,
+            effects: vec![AbilityEffectResolutionDto::Earthquake {
+                effect_index: 0,
+                radius,
+                affected_positions,
+                wall_positions,
+                floor_positions,
+                removed_items: u32::try_from(removed_items).unwrap_or(u32::MAX),
+                removed_gold_piles: u32::try_from(removed_gold_piles).unwrap_or(u32::MAX),
+            }],
+        };
+        match source {
+            EarthquakeSource::Ability(ability_id) => {
+                events.push(DomainEvent::AbilityEffectsResolved {
+                    ability_id,
+                    resolution,
+                    trace: None,
+                });
+            }
+            EarthquakeSource::Monster(source_kind_id) => {
+                events.push(DomainEvent::MonsterEarthquakeResolved {
+                    source_kind_id,
+                    resolution,
+                });
+            }
+        }
         Ok(())
     }
 

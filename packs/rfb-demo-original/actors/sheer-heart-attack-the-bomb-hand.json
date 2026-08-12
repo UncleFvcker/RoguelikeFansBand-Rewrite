@@ -1,0 +1,73 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 531,
+    "maxDepth": 999,
+    "rarity": 2
+  },
+  "attack": 8,
+  "damageDice": 75,
+  "damageSides": 2,
+  "damageType": "shards",
+  "defense": 15,
+  "descriptionKey": "actor-demo-sheer-heart-attack-the-bomb-hand-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 200,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "{",
+  "hitPointDice": {
+    "dice": 12,
+    "forceMaximum": true,
+    "sides": 12
+  },
+  "id": "demo.actor.sheer-heart-attack-the-bomb-hand",
+  "level": 35,
+  "maxHp": 144,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 75,
+            "damageSides": 2,
+            "damageType": "shards",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.explode",
+        "selfDestructs": true,
+        "toHit": 20
+      }
+    ]
+  },
+  "nameKey": "actor-demo-sheer-heart-attack-the-bomb-hand-name",
+  "reflectsBolts": true,
+  "resistances": {
+    "cold": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 120,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "cold-blooded",
+    "empty-mind",
+    "kin-glyph-123",
+    "legacy-import",
+    "no-quest",
+    "nonliving",
+    "orc-cave",
+    "resist-teleport",
+    "unique"
+  ]
+}

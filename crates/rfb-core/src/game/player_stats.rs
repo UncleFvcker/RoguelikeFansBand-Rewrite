@@ -182,6 +182,13 @@ pub(in crate::game) fn actor_melee_routine_dto(
 }
 
 fn projected_blow_damage(effects: &[MeleeBlowEffectDefinition]) -> DamageDiceDto {
+    if effects.is_empty() {
+        return DamageDiceDto {
+            dice: 0,
+            sides: 0,
+            damage_type: DamageType::Physical.into(),
+        };
+    }
     let (dice, sides, damage_type) = effects
         .iter()
         .find_map(|effect| match effect {
@@ -191,6 +198,11 @@ fn projected_blow_damage(effects: &[MeleeBlowEffectDefinition]) -> DamageDiceDto
                 damage_type,
                 ..
             } => Some((*damage_dice, *damage_sides, DamageType::from(*damage_type))),
+            MeleeBlowEffectDefinition::Shatter {
+                damage_dice,
+                damage_sides,
+                ..
+            } => Some((*damage_dice, *damage_sides, DamageType::Physical)),
             MeleeBlowEffectDefinition::Poison {
                 damage_dice,
                 damage_sides,
@@ -212,6 +224,8 @@ fn projected_blow_damage(effects: &[MeleeBlowEffectDefinition]) -> DamageDiceDto
             | MeleeBlowEffectDefinition::Bleeding { .. }
             | MeleeBlowEffectDefinition::Blind { .. }
             | MeleeBlowEffectDefinition::Paralysis { .. }
+            | MeleeBlowEffectDefinition::Amnesia { .. }
+            | MeleeBlowEffectDefinition::Time { .. }
             | MeleeBlowEffectDefinition::Slow { .. }
             | MeleeBlowEffectDefinition::Stun { .. }
             | MeleeBlowEffectDefinition::Terrify { .. }

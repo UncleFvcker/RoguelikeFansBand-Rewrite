@@ -70,6 +70,7 @@ impl Game {
                     ..
                 } => (*damage_dice, *damage_sides, DamageType::Poison),
                 MeleeBlowEffectDefinition::Disease { .. }
+                | MeleeBlowEffectDefinition::Shatter { .. }
                 | MeleeBlowEffectDefinition::DrainAttributes { .. }
                 | MeleeBlowEffectDefinition::DrainResource { .. }
                 | MeleeBlowEffectDefinition::DrainCharges { .. }
@@ -79,6 +80,8 @@ impl Game {
                 | MeleeBlowEffectDefinition::Blind { .. }
                 | MeleeBlowEffectDefinition::Confusion { .. }
                 | MeleeBlowEffectDefinition::Paralysis { .. }
+                | MeleeBlowEffectDefinition::Amnesia { .. }
+                | MeleeBlowEffectDefinition::Time { .. }
                 | MeleeBlowEffectDefinition::Slow { .. }
                 | MeleeBlowEffectDefinition::Stun { .. }
                 | MeleeBlowEffectDefinition::Terrify { .. }
@@ -332,6 +335,24 @@ impl Game {
             .retain(|item| !carried_item_ids.contains(item.id.as_str()));
         changed.insert(dying_actor.position);
         Ok(())
+    }
+
+    pub(super) fn resolve_actor_death_without_credit(
+        &mut self,
+        index: usize,
+        death_event: DomainEvent,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        self.resolve_actor_death_with_credit(
+            index,
+            death_event,
+            false,
+            events,
+            changed,
+            removed_entities,
+        )
     }
 
     #[allow(clippy::too_many_arguments)]

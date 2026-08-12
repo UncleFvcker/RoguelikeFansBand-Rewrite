@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.kin-castamir-the-usurper",
+  "descriptionKey": "ability-legacy-kin-castamir-the-usurper-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.kin-castamir-the-usurper",
+  "nameKey": "ability-legacy-kin-castamir-the-usurper-name",
+  "tags": [
+    "legacy-import",
+    "summon"
+  ],
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  }
+}

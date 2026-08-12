@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.jump-fire-l40",
+  "descriptionKey": "ability-legacy-jump-fire-l40-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.jump-fire-l40",
+  "nameKey": "ability-legacy-jump-fire-l40-name",
+  "tags": [
+    "legacy-import",
+    "innate",
+    "offense"
+  ],
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  }
+}

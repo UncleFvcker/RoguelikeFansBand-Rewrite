@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.kin-bokrug",
+  "descriptionKey": "ability-legacy-kin-bokrug-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.kin-bokrug",
+  "nameKey": "ability-legacy-kin-bokrug-name",
+  "tags": [
+    "legacy-import",
+    "summon"
+  ],
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  }
+}

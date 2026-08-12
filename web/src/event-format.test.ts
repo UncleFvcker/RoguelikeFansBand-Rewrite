@@ -48,6 +48,19 @@ test("mutation events use their authoritative projected names", () => {
   localization.setLocale("en-US");
 });
 
+test("effectless BEG actions remain visible without fake damage", () => {
+  const event = {
+    kind: "combat.monster-beg",
+    messageKey: "combat-monster-beg",
+    args: { source: "demo.actor.small-kobold" },
+  };
+
+  assert.equal(formatter.formatEvent(event), "Small Kobold begs you.");
+  localization.setLocale("zh-CN");
+  assert.equal(formatter.formatEvent(event), "小狗头人向你乞求。");
+  localization.setLocale("en-US");
+});
+
 test("Polymorph's rare cure uses the authoritative bilingual message", () => {
   const event = {
     kind: "mutation.all-cured",

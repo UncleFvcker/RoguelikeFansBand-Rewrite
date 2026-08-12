@@ -1,0 +1,15 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability-program.breath-poison-50-600-r2",
+  "input": "cast-target",
+  "steps": [
+    {
+      "damageType": "poison",
+      "hpPercent": 50,
+      "maxDamage": 600,
+      "radius": 2,
+      "type": "breath-damage"
+    }
+  ]
+}

@@ -48,6 +48,9 @@ const DEMO_MAGE_DROP_TABLE_ID: &str = "demo.loot-table.mage";
 const DEMO_PRIEST_DROP_TABLE_ID: &str = "demo.loot-table.priest";
 const DEMO_EVIL_PRIEST_DROP_TABLE_ID: &str = "demo.loot-table.evil-priest";
 const DEMO_PALADIN_DROP_TABLE_ID: &str = "demo.loot-table.paladin";
+const DEMO_EVIL_PALADIN_DROP_TABLE_ID: &str = "demo.loot-table.evil-paladin";
+const DEMO_SAMURAI_DROP_TABLE_ID: &str = "demo.loot-table.samurai";
+const DEMO_ROGUE_DROP_TABLE_ID: &str = "demo.loot-table.rogue";
 const DEMO_DWARF_DROP_TABLE_ID: &str = "demo.loot-table.dwarf";
 const DEMO_NINJA_DROP_TABLE_ID: &str = "demo.loot-table.ninja";
 const DEMO_CORPSE_ITEM_ID: &str = "demo.item.corpse-remains";
@@ -62,6 +65,9 @@ fn demo_drop_theme_table_id(theme: &str) -> Option<&'static str> {
         "DROP_PRIEST" => Some(DEMO_PRIEST_DROP_TABLE_ID),
         "DROP_PRIEST_EVIL" => Some(DEMO_EVIL_PRIEST_DROP_TABLE_ID),
         "DROP_PALADIN" => Some(DEMO_PALADIN_DROP_TABLE_ID),
+        "DROP_PALADIN_EVIL" => Some(DEMO_EVIL_PALADIN_DROP_TABLE_ID),
+        "DROP_SAMURAI" => Some(DEMO_SAMURAI_DROP_TABLE_ID),
+        "DROP_ROGUE" => Some(DEMO_ROGUE_DROP_TABLE_ID),
         "DROP_DWARF" => Some(DEMO_DWARF_DROP_TABLE_ID),
         "DROP_NINJA" => Some(DEMO_NINJA_DROP_TABLE_ID),
         _ => None,
@@ -211,10 +217,15 @@ fn demo_monster_audit_omission_is_safe(flag: &str) -> bool {
             | "NO_STUN"
             | "POS_GAIN_AC"
             | "POS_HOLD_LIFE"
+            | "POS_BACKSTAB"
             | "POS_SEE_INVIS"
             | "POS_SUST_CON"
+            | "POS_SUST_INT"
             | "POS_SUST_STR"
             | "POS_TELEPATHY"
+            | "EGYPTIAN2"
+            | "HINDU2"
+            | "NORSE2"
             | "RES_WALL"
             | "STUPID"
     )
@@ -6845,6 +6856,7 @@ fn melee_damage_type(token: &str) -> Option<&'static str> {
         "HELL_FIRE" => Some("hell-fire"),
         "ICE" => Some("ice"),
         "WATER" => Some("water"),
+        "POIS" => Some("poison"),
         _ => None,
     }
 }
@@ -6867,6 +6879,14 @@ fn melee_effect_json(effect: &LegacyBlowEffect) -> Option<serde_json::Value> {
                 "damageSides": damage_sides.min(10_000),
             })
         }
+        "SHATTER" => {
+            let (damage_dice, damage_sides) = effect.dice?;
+            serde_json::json!({
+                "type": "shatter",
+                "damageDice": damage_dice.clamp(1, 100),
+                "damageSides": damage_sides.clamp(1, 10_000),
+            })
+        }
         "CUT" => {
             let (duration_dice, duration_sides) = effect.dice?;
             serde_json::json!({
@@ -6884,7 +6904,9 @@ fn melee_effect_json(effect: &LegacyBlowEffect) -> Option<serde_json::Value> {
                 "damageSides": damage_sides.min(10_000),
             })
         }
-        "PARALYZE" => serde_json::json!({ "type": "paralysis" }),
+        "PARALYZE" | "SLEEP" => serde_json::json!({ "type": "paralysis" }),
+        "AMNESIA" => serde_json::json!({ "type": "amnesia" }),
+        "TIME" if effect.dice.is_none() => serde_json::json!({ "type": "time" }),
         "SLOW" => serde_json::json!({ "type": "slow" }),
         "STUN" => {
             let (duration_dice, duration_sides) = effect.dice?;
@@ -7486,6 +7508,8 @@ fn monster_flag_is_mapped(flag: &str) -> bool {
             | "SELF_DARK_1"
             | "SELF_DARK_2"
             | "FORCE_SLEEP"
+            | "TRUMP"
+            | "QUANTUM"
             | "ONLY_ITEM"
             | "ONLY_GOLD"
             | "DROP_60"
@@ -7634,6 +7658,9 @@ fn monster_json(
     if entry.glyph == Some('M') {
         tags.push("hydra".to_owned());
     }
+    if matches!(entry.glyph, Some('C' | 'Z')) {
+        tags.push("hound".to_owned());
+    }
     if entry.index == 286 {
         tags.push("gelatinous-cube".to_owned());
     }
@@ -7656,6 +7683,8 @@ fn monster_json(
         ("AURA_FEAR", "aura-fear"),
         ("TANUKI", "tanuki"),
         ("UNIQUE2", "unique2"),
+        ("TRUMP", "trump"),
+        ("QUANTUM", "quantum"),
     ] {
         if entry.flags.iter().any(|value| value == flag) {
             tags.push(tag.to_owned());
@@ -7844,7 +7873,7 @@ fn monster_json(
                 "ACID" => "acid",
                 "ELEC" => "electricity",
                 "FIRE" => "fire",
-                "CAUSE_2" => "curse",
+                "CAUSE_2" | "CAUSE_3" => "curse",
                 _ => return None,
             };
             let (damage_dice, damage_sides) = aura.dice?;
@@ -8159,7 +8188,7 @@ fn demo_monster_json(
         || entry.auras.iter().any(|aura| {
             !matches!(
                 aura.token.as_str(),
-                "POISON" | "ACID" | "ELEC" | "FIRE" | "CAUSE_2"
+                "POISON" | "ACID" | "ELEC" | "FIRE" | "CAUSE_2" | "CAUSE_3"
             ) || aura.dice.is_none()
         })
     {
@@ -8182,9 +8211,9 @@ fn demo_monster_json(
     }
     let mut blows = Vec::with_capacity(entry.blows.len());
     for blow in &entry.blows {
-        // RFB permits purely presentational methods such as DROOL with no
-        // effect payload. They do not create a gameplay blow in this model.
-        if blow.effects.is_empty() {
+        // BEG is an always-successful, observable action despite having no
+        // effect payload. Other presentational methods remain out of scope.
+        if blow.effects.is_empty() && blow.method != "BEG" {
             continue;
         }
         let effects = blow
@@ -8234,6 +8263,14 @@ fn demo_monster_json(
     if entry.flags.iter().any(|flag| flag == "FRIENDLY") {
         value["friendly"] = serde_json::json!(true);
     }
+    // Rolento's grenade exists only as a fixed summon; legacy rarity 255 is
+    // a sentinel, not a low-probability global allocation weight.
+    if entry.index == 1023 {
+        value
+            .as_object_mut()
+            .expect("actor JSON must be an object")
+            .remove("allocation");
+    }
     if entry.flags.iter().any(|flag| flag == "KAGE") {
         value
             .as_object_mut()
@@ -8249,6 +8286,9 @@ fn demo_monster_json(
     }
     if entry.glyph == Some('M') {
         tags.insert("hydra".to_owned());
+    }
+    if matches!(entry.glyph, Some('C' | 'Z')) {
+        tags.insert("hound".to_owned());
     }
     if entry.index == 286 {
         tags.insert("gelatinous-cube".to_owned());
@@ -8285,6 +8325,8 @@ fn demo_monster_json(
         ("AURA_FEAR", "aura-fear"),
         ("TANUKI", "tanuki"),
         ("UNIQUE2", "unique2"),
+        ("TRUMP", "trump"),
+        ("QUANTUM", "quantum"),
     ] {
         if entry.flags.iter().any(|candidate| candidate == flag) {
             tags.insert(tag.to_owned());
@@ -8566,6 +8608,31 @@ fn map_spell_token(
     caster_kind_id: &str,
     abilities: &mut BTreeMap<String, serde_json::Value>,
 ) -> Option<String> {
+    if token == "GAZE" {
+        let id = "rfb-legacy.ability.gaze".to_owned();
+        abilities.entry(id.clone()).or_insert_with(|| {
+            serde_json::json!({
+                "$schema": format!("{SCHEMA_BASE}/ability.schema.json"),
+                "formatVersion": 1,
+                "id": id,
+                "nameKey": "ability-legacy-gaze-name",
+                "descriptionKey": "ability-legacy-gaze-description",
+                "minimumLevel": 1,
+                "resourceId": LEGACY_RESOURCE_ID,
+                "resourceCost": 1,
+                "baseFailurePercent": 20,
+                "target": { "modes": ["position", "entity"], "range": 8, "requiresLineOfEffect": true },
+                "effect": {
+                    "type": "damage",
+                    "damageDice": 1,
+                    "damageSides": 1,
+                    "damageType": "physical"
+                },
+                "tags": ["legacy-import", "gaze"],
+            })
+        });
+        return Some(id);
+    }
     if let Some(id) = map_summon_spell_token(token, level, caster_kind_id, abilities) {
         return Some(id);
     }
@@ -8711,11 +8778,12 @@ fn map_spell_token(
     }
 }
 
-/// The two dice-based direct-damage shapes harvested from legacy S: lines.
+/// Direct-damage shapes harvested from legacy S: lines.
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum DamageSpellShape {
     Bolt,
     Ball,
+    Beam,
     /// Legacy MSF_BALL4 storms explode with radius four.
     BigBall,
 }
@@ -8725,6 +8793,7 @@ impl DamageSpellShape {
         match self {
             Self::Bolt => "bolt",
             Self::Ball | Self::BigBall => "ball",
+            Self::Beam => "beam",
         }
     }
 
@@ -8733,6 +8802,7 @@ impl DamageSpellShape {
             Self::Bolt => 0,
             Self::Ball => 2,
             Self::BigBall => 4,
+            Self::Beam => 0,
         }
     }
 }
@@ -8745,7 +8815,7 @@ fn damage_spell_defaults(
     base: &str,
     level: u32,
 ) -> Option<(DamageSpellShape, &'static str, (u32, u32, u32))> {
-    use DamageSpellShape::{Ball, BigBall, Bolt};
+    use DamageSpellShape::{Ball, Beam, BigBall, Bolt};
     let entry = match base {
         "BO_ACID" => (Bolt, "acid", (7, 8, level / 3)),
         "BO_ELEC" => (Bolt, "electricity", (4, 8, level / 3)),
@@ -8766,6 +8836,7 @@ fn damage_spell_defaults(
         // Legacy THROW is a radius-zero ball; a single-target bolt is the
         // faithful neutral shape. Its flat damage uses the 1d1+(F-1) identity.
         "THROW" => (Bolt, "physical", (1, 1, (3 * level).saturating_sub(1))),
+        "HELL_LANCE" => (Beam, "hell-fire", (1, 1, (2 * level).saturating_sub(1))),
         "BA_ACID" => (Ball, "acid", (1, 3 * level, 15)),
         "BA_ELEC" => (Ball, "electricity", (1, 3 * level / 2, 8)),
         "BA_FIRE" => (Ball, "fire", (1, 7 * level / 2, 10)),
@@ -8820,6 +8891,7 @@ fn summon_spell_defaults(base: &str) -> Option<(&'static str, (u32, u32, u32))> 
         "S_ANIMAL" => ("animal", (1, 3, 1)),
         "S_ANT" => ("ant", (1, 3, 1)),
         "S_SPIDER" => ("spider", (1, 3, 1)),
+        "S_HOUND" => ("hound", (1, 2, 1)),
         "S_HYDRA" => ("hydra", (1, 3, 1)),
         "S_LOUSE" => ("louse", (1, 3, 1)),
         _ => return None,
@@ -8847,6 +8919,14 @@ fn map_summon_spell_token(
         abilities
             .entry(id.clone())
             .or_insert_with(|| summon_category_ability(suffix, "gelatinous-cube", 16, 1, 3, 0));
+        return Some(id);
+    }
+    if base == "S_SPECIAL" && caster_kind_id.rsplit('.').next() == Some("rolento") {
+        let suffix = "summon-hand-grenade-l38-1d3-1";
+        let id = format!("rfb-legacy.ability.{suffix}");
+        abilities
+            .entry(id.clone())
+            .or_insert_with(|| summon_category_ability(suffix, "hand-grenade", 38, 1, 3, 1));
         return Some(id);
     }
     if base == "S_KIN" {
@@ -9063,6 +9143,7 @@ fn damage_spell_ability(
         "type": match shape {
             DamageSpellShape::Bolt => "damage",
             DamageSpellShape::Ball | DamageSpellShape::BigBall => "area-damage",
+            DamageSpellShape::Beam => "beam-damage",
         },
         "damageDice": dice,
         "damageSides": sides,
@@ -11246,9 +11327,14 @@ pub fn sync_demo_monsters(
 pub fn audit_demo_monsters(
     source: &Path,
     selection_path: &Path,
+    minimum_level: u16,
+    maximum_level: u16,
 ) -> Result<DemoMonsterAuditReport, LegacyImportError> {
-    const MINIMUM_LEVEL: u16 = 21;
-    const MAXIMUM_LEVEL: u16 = 32;
+    if minimum_level > maximum_level {
+        return Err(LegacyImportError::InvalidDemoMonsterSelection(format!(
+            "audit minimum level {minimum_level} exceeds maximum level {maximum_level}"
+        )));
+    }
     let selection: DemoMonsterSelection = serde_json::from_slice(&fs::read(selection_path)?)?;
     if selection.schema_version != 1 || selection.monsters.is_empty() {
         return Err(LegacyImportError::InvalidDemoMonsterSelection(
@@ -11290,7 +11376,7 @@ pub fn audit_demo_monsters(
         .filter(|entry| {
             entry
                 .level
-                .is_some_and(|level| (MINIMUM_LEVEL..=MAXIMUM_LEVEL).contains(&level))
+                .is_some_and(|level| (minimum_level..=maximum_level).contains(&level))
                 && entry.rarity.unwrap_or(0) > 0
                 && entry.glyph.is_some()
                 && !entry.flags.iter().any(|flag| flag == "DEPRECATED")
@@ -11384,8 +11470,8 @@ pub fn audit_demo_monsters(
         schema_version: 1,
         source_ref: LEGACY_CONTENT_REFERENCE,
         source_commit,
-        minimum_level: MINIMUM_LEVEL,
-        maximum_level: MAXIMUM_LEVEL,
+        minimum_level,
+        maximum_level,
         record_count: entries.len(),
         imported_count: entries.iter().filter(|entry| entry.imported).count(),
         selected_count: count(DemoMonsterAuditStatus::Selected),
@@ -12219,6 +12305,15 @@ mod tests {
     use super::*;
 
     #[test]
+    fn demo_monster_audit_rejects_an_inverted_level_range() {
+        assert!(matches!(
+            audit_demo_monsters(Path::new("unused"), Path::new("unused"), 40, 33),
+            Err(LegacyImportError::InvalidDemoMonsterSelection(detail))
+                if detail == "audit minimum level 40 exceeds maximum level 33"
+        ));
+    }
+
+    #[test]
     fn demo_monster_audit_separates_location_scope_from_mechanism_status() {
         let camelot = LegacyMonsterEntry {
             flags: vec!["DUNGEON_2".to_owned()],
@@ -12267,6 +12362,11 @@ mod tests {
             DemoMonsterAuditStatus::Selected
         );
         assert!(demo_monster_audit_omission_is_safe("POS_GAIN_AC"));
+        assert!(demo_monster_audit_omission_is_safe("POS_BACKSTAB"));
+        assert!(demo_monster_audit_omission_is_safe("POS_SUST_INT"));
+        assert!(demo_monster_audit_omission_is_safe("EGYPTIAN2"));
+        assert!(demo_monster_audit_omission_is_safe("HINDU2"));
+        assert!(demo_monster_audit_omission_is_safe("NORSE2"));
         assert!(demo_monster_flag_is_handled("AURA_REVENGE"));
         assert!(demo_monster_flag_is_handled("AURA_FEAR"));
         assert!(demo_monster_flag_is_handled("TANUKI"));
@@ -12461,6 +12561,29 @@ mod tests {
     }
 
     #[test]
+    fn demo_monster_import_preserves_effectless_beg() {
+        let mut monsters =
+            parse_r_info("N:1:test beggar\nG:t:y\nI:110:2d3:10:1:0:175\nW:0:1:0:0:0:0\nB:BEG\n")
+                .expect("synthetic beggar should parse");
+        let actor = demo_monster_json(
+            &monsters.remove(0),
+            &DemoMonsterSelectionEntry {
+                source_index: 1,
+                source_id: None,
+                id: "test-beggar".to_owned(),
+                tags: Vec::new(),
+                omitted_flags: Vec::new(),
+            },
+            &mut BTreeMap::new(),
+        )
+        .expect("BEG should import directly");
+        let blow = &actor["meleeRoutine"]["blows"][0];
+
+        assert_eq!(blow["methodId"], "rfb.blow.beg");
+        assert_eq!(blow["effects"], serde_json::json!([]));
+    }
+
+    #[test]
     fn dice_less_hurt_maps_to_exact_zero_damage_only() {
         let hurt = parse_blow("GAZE:HURT", 1).expect("dice-less HURT should parse");
         let effect = melee_effect_json(&hurt.effects[0]).expect("HURT should map");
@@ -12615,6 +12738,207 @@ mod tests {
         assert_eq!(
             demo_drop_theme_table_id("DROP_DWARF"),
             Some("demo.loot-table.dwarf")
+        );
+    }
+
+    #[test]
+    fn demo_monster_import_maps_p45_shared_mechanics() {
+        let mut monsters = parse_r_info(
+            "N:1013:Rolento\nG:C:u\nI:150:90d10:70:150:4:170\nW:38:4:999:4000:0:0\nB:HIT:POIS(2d3)\nA:CAUSE_3(3d3)\nF:FORCE_MAXHP | ONLY_ITEM | DROP_1D2 | NORSE2 | POS_BACKSTAB\nO:DROP_ROGUE\nS:1_IN_3 | HELL_LANCE | S_HOUND | S_SPECIAL\n",
+        )
+        .expect("synthetic P45 monster should parse");
+        let mut abilities = BTreeMap::new();
+        let actor = demo_monster_json(
+            &monsters.remove(0),
+            &DemoMonsterSelectionEntry {
+                source_index: 1013,
+                source_id: None,
+                id: "rolento".to_owned(),
+                tags: vec!["orc-cave".to_owned()],
+                omitted_flags: vec!["NORSE2".to_owned(), "POS_BACKSTAB".to_owned()],
+            },
+            &mut abilities,
+        )
+        .expect("P45 mechanics should import directly");
+
+        let effect = &actor["meleeRoutine"]["blows"][0]["effects"][0];
+        assert_eq!(effect["type"], "damage");
+        assert_eq!(effect["damageType"], "poison");
+        assert_eq!(actor["contactAuras"][0]["damageType"], "curse");
+        assert_eq!(actor["deathDrop"]["themeTableId"], "demo.loot-table.rogue");
+        assert!(
+            actor["tags"]
+                .as_array()
+                .is_some_and(|tags| { tags.iter().any(|tag| tag == "hound") })
+        );
+
+        let hell_lance = &abilities["rfb-legacy.ability.beam-hell-fire-1d1-75"];
+        assert_eq!(hell_lance["effect"]["type"], "beam-damage");
+        assert_eq!(hell_lance["effect"]["damageType"], "hell-fire");
+        let hounds = &abilities["rfb-legacy.ability.summon-hound-l38-1d2-1"];
+        assert_eq!(hounds["effect"]["category"], "hound");
+        assert_eq!(hounds["effect"]["countDice"], 1);
+        assert_eq!(hounds["effect"]["countSides"], 2);
+        assert_eq!(hounds["effect"]["countBonus"], 1);
+        let grenades = &abilities["rfb-legacy.ability.summon-hand-grenade-l38-1d3-1"];
+        assert_eq!(grenades["effect"]["category"], "hand-grenade");
+        assert_eq!(grenades["effect"]["countDice"], 1);
+        assert_eq!(grenades["effect"]["countSides"], 3);
+        assert_eq!(grenades["effect"]["countBonus"], 1);
+
+        let explicit = map_spell_token(
+            "HELL_LANCE(66)",
+            33,
+            2,
+            "demo.actor.anti-paladin",
+            &mut abilities,
+        )
+        .expect("explicit hell lance should map through the beam effect");
+        assert_eq!(explicit, "rfb-legacy.ability.beam-hell-fire-1d1-65");
+        assert_eq!(
+            demo_drop_theme_table_id("DROP_PALADIN_EVIL"),
+            Some("demo.loot-table.evil-paladin")
+        );
+        assert_eq!(
+            demo_drop_theme_table_id("DROP_SAMURAI"),
+            Some("demo.loot-table.samurai")
+        );
+    }
+
+    #[test]
+    fn demo_monster_import_maps_trump_as_a_shared_turn_tag() {
+        let mut monsters = parse_r_info(
+            "N:517:Jurt the Living Trump\nG:p:R\nI:120:10d100:20:90:40:150\nW:34:5:999:2662:0:0\nB:HIT:HURT(5d5)\nF:FORCE_MAXHP | TRUMP\n",
+        )
+        .expect("synthetic trump monster should parse");
+        let actor = demo_monster_json(
+            &monsters.remove(0),
+            &DemoMonsterSelectionEntry {
+                source_index: 517,
+                source_id: None,
+                id: "jurt-the-living-trump".to_owned(),
+                tags: vec!["orc-cave".to_owned()],
+                omitted_flags: Vec::new(),
+            },
+            &mut BTreeMap::new(),
+        )
+        .expect("TRUMP should import through the shared tag");
+
+        assert!(
+            actor["tags"]
+                .as_array()
+                .is_some_and(|tags| { tags.iter().any(|tag| tag == "trump") })
+        );
+    }
+
+    #[test]
+    fn demo_monster_import_maps_quantum_as_a_shared_turn_tag() {
+        let mut monsters = parse_r_info(
+            "N:863:Quantum dot\nG:*:v\nI:130:10d10:10:70:0:20\nW:35:3:999:1600:0:0\nB:SPORE:HURT(2d4)\nF:QUANTUM | STUPID\n",
+        )
+        .expect("synthetic quantum monster should parse");
+        let actor = demo_monster_json(
+            &monsters.remove(0),
+            &DemoMonsterSelectionEntry {
+                source_index: 863,
+                source_id: None,
+                id: "quantum-dot".to_owned(),
+                tags: vec!["orc-cave".to_owned()],
+                omitted_flags: vec!["STUPID".to_owned()],
+            },
+            &mut BTreeMap::new(),
+        )
+        .expect("QUANTUM should import through the shared tag");
+
+        assert!(
+            actor["tags"]
+                .as_array()
+                .is_some_and(|tags| tags.iter().any(|tag| tag == "quantum"))
+        );
+    }
+
+    #[test]
+    fn demo_monster_import_maps_shatter_as_a_shared_melee_effect() {
+        let mut monsters = parse_r_info(
+            "N:558:Colossus\nG:g:w\nI:120:30d30:30:120:0:400\nW:36:3:999:10000:0:0\nB:HIT:SHATTER(8d8)\nF:GIANT\n",
+        )
+        .expect("synthetic shatter monster should parse");
+        let actor = demo_monster_json(
+            &monsters.remove(0),
+            &DemoMonsterSelectionEntry {
+                source_index: 558,
+                source_id: None,
+                id: "colossus".to_owned(),
+                tags: vec!["orc-cave".to_owned()],
+                omitted_flags: Vec::new(),
+            },
+            &mut BTreeMap::new(),
+        )
+        .expect("SHATTER should import through the shared melee effect");
+
+        assert_eq!(
+            actor["meleeRoutine"]["blows"][0]["effects"][0]["type"],
+            "shatter"
+        );
+    }
+
+    #[test]
+    fn demo_monster_import_maps_gaze_sleep_and_amnesia() {
+        let mut monsters = parse_r_info(
+            "N:603:Beholder\nG:e:v\nI:120:20d20:30:80:0:200\nW:38:3:999:5000:0:0\nB:GAZE:DAM(2d4):TERRIFY:SLEEP(35%)\nB:GAZE:DAM(2d4):STUN(3d3):AMNESIA(25%)\nF:EVIL\nS:FREQ_35 | GAZE\n",
+        )
+        .expect("synthetic beholder should parse");
+        let mut abilities = BTreeMap::new();
+        let actor = demo_monster_json(
+            &monsters.remove(0),
+            &DemoMonsterSelectionEntry {
+                source_index: 603,
+                source_id: None,
+                id: "beholder".to_owned(),
+                tags: vec!["orc-cave".to_owned()],
+                omitted_flags: Vec::new(),
+            },
+            &mut abilities,
+        )
+        .expect("Beholder mechanics should import");
+
+        assert_eq!(
+            actor["meleeRoutine"]["blows"][0]["effects"][2]["type"],
+            "paralysis"
+        );
+        assert_eq!(
+            actor["meleeRoutine"]["blows"][1]["effects"][2]["type"],
+            "amnesia"
+        );
+        assert!(
+            abilities["rfb-legacy.ability.gaze"]["tags"]
+                .as_array()
+                .is_some_and(|tags| tags.iter().any(|tag| tag == "gaze"))
+        );
+    }
+
+    #[test]
+    fn demo_monster_import_maps_dice_less_time_without_inventing_damage() {
+        let mut monsters = parse_r_info(
+            "N:1092:Chronomage\nG:p:B\nI:120:20d20:30:80:0:200\nW:40:3:999:5000:0:0\nB:HIT:HURT(3d7):TIME(25%)\nF:SMART\n",
+        )
+        .expect("synthetic chronomage should parse");
+        let actor = demo_monster_json(
+            &monsters.remove(0),
+            &DemoMonsterSelectionEntry {
+                source_index: 1092,
+                source_id: None,
+                id: "chronomage".to_owned(),
+                tags: vec!["orc-cave".to_owned()],
+                omitted_flags: Vec::new(),
+            },
+            &mut BTreeMap::new(),
+        )
+        .expect("dice-less TIME should import");
+
+        assert_eq!(
+            actor["meleeRoutine"]["blows"][0]["effects"][1],
+            serde_json::json!({"type": "time", "chancePercent": 25})
         );
     }
 

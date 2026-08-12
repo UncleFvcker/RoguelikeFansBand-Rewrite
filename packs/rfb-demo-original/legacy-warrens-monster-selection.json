@@ -3600,6 +3600,1566 @@
       "id": "black-reaver",
       "tags": ["outpost-quest", "royal-crypt"],
       "omittedFlags": ["POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 491,
+      "id": "half-troll",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 496,
+      "id": "cave-troll",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 500,
+      "id": "giant-skeleton-troll",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 509,
+      "id": "water-troll",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 1217,
+      "id": "triceratops",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 514,
+      "id": "night-stalker",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE"]
+    },
+    {
+      "sourceIndex": 515,
+      "id": "velociraptor",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 523,
+      "id": "bloodletter-of-khorne",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 524,
+      "id": "giant-grey-scorpion",
+      "tags": ["orc-cave", "spider"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 990,
+      "id": "pegasus",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 1046,
+      "id": "ulfang-the-black",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 1218,
+      "id": "diplodocus",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 531,
+      "id": "sheer-heart-attack-the-bomb-hand",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["NASTY_GLYPH"]
+    },
+    {
+      "sourceIndex": 532,
+      "id": "dagashi",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 535,
+      "id": "leng-spider",
+      "tags": ["orc-cave", "spider"],
+      "omittedFlags": ["POS_GAIN_AC", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 536,
+      "id": "star-vampire",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["NO_STUN", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 541,
+      "id": "acidic-cytoplasm",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC", "STUPID"]
+    },
+    {
+      "sourceIndex": 547,
+      "id": "wooly-rhinoceros",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 548,
+      "id": "giant-fire-ant",
+      "tags": ["ant", "orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 1034,
+      "id": "the-minotaur-of-the-labyrinth",
+      "tags": ["orc-cave"],
+      "omittedFlags": []
+    },
+    {
+      "sourceIndex": 1219,
+      "id": "ankylosaur",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 550,
+      "id": "xorn",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 551,
+      "id": "rogrog-the-black-troll",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 552,
+      "id": "mist-giant",
+      "tags": ["orc-cave"],
+      "omittedFlags": []
+    },
+    {
+      "sourceIndex": 565,
+      "id": "trapper",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["ATTR_CLEAR", "CHAR_CLEAR", "NASTY_GLYPH"]
+    },
+    {
+      "sourceIndex": 574,
+      "id": "chaos-spawn",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC", "POS_TELEPATHY"]
+    },
+    {
+      "sourceIndex": 1109,
+      "id": "exploding-ant",
+      "tags": ["ant", "orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 585,
+      "id": "black-pudding",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC", "STUPID"]
+    },
+    {
+      "sourceIndex": 586,
+      "id": "killer-iridescent-beetle",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["ATTR_MULTI", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 622,
+      "id": "night-mare",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 626,
+      "id": "spawn-of-ubbo-sathla",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["ATTR_ANY", "ATTR_MULTI", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 629,
+      "id": "morgenstern-julian-s-steed",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 630,
+      "id": "spirit-troll",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 631,
+      "id": "war-troll",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 632,
+      "id": "disenchanter-worm-mass",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["ATTR_MULTI", "POS_GAIN_AC", "STUPID"]
+    },
+    {
+      "sourceIndex": 639,
+      "id": "xaren",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 640,
+      "id": "jubjub-bird",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 641,
+      "id": "minotaur",
+      "tags": ["orc-cave"],
+      "omittedFlags": []
+    },
+    {
+      "sourceIndex": 673,
+      "id": "mumak",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 974,
+      "id": "ashram-the-ebony-knight",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
+    },
+    {
+      "sourceIndex": 985,
+      "id": "unicorn",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 1019,
+      "id": "kokuo-raou-s-steed",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 1042,
+      "id": "narwhal",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 1220,
+      "id": "pteranodon",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 471,
+      "id": "shadow-drake",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 499,
+      "id": "barrow-wight",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 501,
+      "id": "chaos-drake",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["ATTR_ANY", "ATTR_MULTI", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 502,
+      "id": "law-drake",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 503,
+      "id": "balance-drake",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["ATTR_ANY", "ATTR_MULTI", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 504,
+      "id": "ethereal-drake",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 507,
+      "id": "logrus-ghost",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["ATTR_ANY", "ATTR_MULTI", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 513,
+      "id": "multi-hued-hound",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["ATTR_MULTI", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 518,
+      "id": "lich",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 521,
+      "id": "oriental-vampire",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 527,
+      "id": "doom-drake",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 528,
+      "id": "gargoyle",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 529,
+      "id": "malicious-leprechaun",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 897,
+      "id": "shard-vortex",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE"]
+    },
+    {
+      "sourceIndex": 1047,
+      "id": "topaz-monk",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 1228,
+      "id": "beer-elemental",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["AUSSIE", "POS_GAIN_AC", "POS_HOLD_LIFE"]
+    },
+    {
+      "sourceIndex": 1341,
+      "id": "booze-hound",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 553,
+      "id": "pattern-ghost",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 559,
+      "id": "young-gold-dragon",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 562,
+      "id": "mature-bronze-dragon",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 568,
+      "id": "mezzodaemon",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 870,
+      "id": "ebony-monk",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 963,
+      "id": "botei-building-the-emperor",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
+    },
+    {
+      "sourceIndex": 1008,
+      "id": "demonologist",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 578,
+      "id": "chaos-butterfly",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["ATTR_ANY", "ATTR_MULTI", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 579,
+      "id": "time-ghost",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 582,
+      "id": "will-o-the-wisp",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE"]
+    },
+    {
+      "sourceIndex": 583,
+      "id": "shan",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 587,
+      "id": "nexus-vortex",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE"]
+    },
+    {
+      "sourceIndex": 590,
+      "id": "mature-gold-dragon",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 591,
+      "id": "crystal-drake",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["ATTR_CLEAR", "POS_GAIN_AC", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 594,
+      "id": "sky-whale",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 599,
+      "id": "time-vortex",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE"]
+    },
+    {
+      "sourceIndex": 604,
+      "id": "emperor-wight",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 610,
+      "id": "scylla",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 614,
+      "id": "7-headed-hydra",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 648,
+      "id": "clubber-demon",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 976,
+      "id": "eol-the-dark-elven-smith",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 1158,
+      "id": "vrock",
+      "tags": ["orc-cave"],
+      "omittedFlags": []
+    },
+    {
+      "sourceIndex": 489,
+      "id": "bokrug",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK","POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 490,
+      "id": "biclops",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_SUST_STR"]
+    },
+    {
+      "sourceIndex": 492,
+      "id": "ivory-monk",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 498,
+      "id": "logrus-master",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["ATTR_ANY","MALE","POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 506,
+      "id": "fasolt-the-giant",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK","MALE","POS_SUST_STR"]
+    },
+    {
+      "sourceIndex": 510,
+      "id": "fire-elemental",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC","POS_HOLD_LIFE"]
+    },
+    {
+      "sourceIndex": 511,
+      "id": "cherub",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC","POS_HOLD_LIFE","POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 512,
+      "id": "water-elemental",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC","POS_HOLD_LIFE"]
+    },
+    {
+      "sourceIndex": 915,
+      "id": "mystic",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE","POS_GAIN_AC","POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 975,
+      "id": "that-black-bat",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 1143,
+      "id": "rusalka",
+      "tags": ["orc-cave"],
+      "omittedFlags": []
+    },
+    {
+      "sourceIndex": 1240,
+      "id": "nidaros-the-clairvoyant",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE","NO_STUN","POS_TELEPATHY"]
+    },
+    {
+      "sourceIndex": 525,
+      "id": "earth-elemental",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC","POS_HOLD_LIFE"]
+    },
+    {
+      "sourceIndex": 928,
+      "id": "king-koopa",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE","POS_GAIN_AC","POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 487,
+      "id": "storm-giant",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE","POS_SUST_STR"]
+    },
+    {
+      "sourceIndex": 533,
+      "id": "headless-ghost",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_HOLD_LIFE","POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 534,
+      "id": "dread-knight",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_HOLD_LIFE","POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 537,
+      "id": "smoke-elemental",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC","POS_HOLD_LIFE"]
+    },
+    {
+      "sourceIndex": 539,
+      "id": "halfling-slinger",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 540,
+      "id": "gravity-hound",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 542,
+      "id": "inertia-hound",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 543,
+      "id": "impact-hound",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC","RES_WALL"]
+    },
+    {
+      "sourceIndex": 545,
+      "id": "ooze-elemental",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC","POS_HOLD_LIFE"]
+    },
+    {
+      "sourceIndex": 549,
+      "id": "mature-white-dragon",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 896,
+      "id": "bazooker",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 1004,
+      "id": "pip-the-braver-from-another-world",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK","MALE"]
+    },
+    {
+      "sourceIndex": 556,
+      "id": "young-multi-hued-dragon",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["ATTR_MULTI","POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 560,
+      "id": "mature-blue-dragon",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 561,
+      "id": "mature-green-dragon",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 563,
+      "id": "young-red-dragon",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 566,
+      "id": "bodak",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_HOLD_LIFE","POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 569,
+      "id": "elder-thing",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC","POS_HOLD_LIFE","POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 570,
+      "id": "ice-elemental",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC","POS_HOLD_LIFE"]
+    },
+    {
+      "sourceIndex": 572,
+      "id": "the-greater-hell-magic-mushroom-were-quylthulg",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["NO_STUN","POS_GAIN_AC","POS_HOLD_LIFE","POS_SEE_INVIS","RES_WALL"]
+    },
+    {
+      "sourceIndex": 573,
+      "id": "lord-borel-of-hendrake",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK","MALE"]
+    },
+    {
+      "sourceIndex": 895,
+      "id": "sky-golem",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC","POS_HOLD_LIFE"]
+    },
+    {
+      "sourceIndex": 1208,
+      "id": "young-silver-dragon",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 1231,
+      "id": "implorington-iii",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK","MALE","POS_SEE_INVIS","POS_TELEPATHY"]
+    },
+    {
+      "sourceIndex": 1232,
+      "id": "lorgan-chief-of-the-easterlings",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 576,
+      "id": "fire-angel",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 580,
+      "id": "flying-polyp",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC", "RES_WALL"]
+    },
+    {
+      "sourceIndex": 581,
+      "id": "the-queen-ant",
+      "tags": ["ant", "orc-cave"],
+      "omittedFlags": ["FEMALE", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 584,
+      "id": "magma-elemental",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE"]
+    },
+    {
+      "sourceIndex": 588,
+      "id": "plasma-vortex",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE"]
+    },
+    {
+      "sourceIndex": 589,
+      "id": "mature-red-dragon",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 592,
+      "id": "mature-black-dragon",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 941,
+      "id": "bone-dragon",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["NO_STUN", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 1209,
+      "id": "mature-silver-dragon",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 593,
+      "id": "mature-multi-hued-dragon",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["ATTR_MULTI", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 595,
+      "id": "father-dagon",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE", "POS_GAIN_AC", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 596,
+      "id": "mother-hydra",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "FEMALE", "POS_GAIN_AC", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 598,
+      "id": "mandor-master-of-the-logrus",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
+    },
+    {
+      "sourceIndex": 601,
+      "id": "ancient-blue-dragon",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 602,
+      "id": "ancient-bronze-dragon",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 605,
+      "id": "seraph",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 606,
+      "id": "loge-spirit-of-fire",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE", "POS_GAIN_AC", "POS_HOLD_LIFE"]
+    },
+    {
+      "sourceIndex": 608,
+      "id": "nightgaunt",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 609,
+      "id": "baron-of-hell",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 978,
+      "id": "ar-pharazon-the-golden",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
+    },
+    {
+      "sourceIndex": 1255,
+      "id": "gazhak-the-ogre-tyrant",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE", "RES_WALL"]
+    },
+    {
+      "sourceIndex": 1286,
+      "id": "castamir-the-usurper",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 613,
+      "id": "fire-vampire",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["NO_STUN", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 616,
+      "id": "kavlax-the-many-headed",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["ATTR_ANY", "ATTR_MULTI", "CAN_SPEAK", "MALE", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 617,
+      "id": "ancient-white-dragon",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 618,
+      "id": "ancient-green-dragon",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 621,
+      "id": "ettin",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 624,
+      "id": "ancient-black-dragon",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 620,
+      "id": "eldrak",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 633,
+      "id": "rotting-quylthulg",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_SEE_INVIS", "POS_TELEPATHY", "STUPID"]
+    },
+    {
+      "sourceIndex": 635,
+      "id": "9-headed-hydra",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 637,
+      "id": "archpriest",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 642,
+      "id": "jasra-brand-s-mistress",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "FEMALE"]
+    },
+    {
+      "sourceIndex": 645,
+      "id": "ancient-gold-dragon",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 646,
+      "id": "great-crystal-drake",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["ATTR_CLEAR", "POS_GAIN_AC", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 647,
+      "id": "wyrd-sister",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["FEMALE"]
+    },
+    {
+      "sourceIndex": 649,
+      "id": "death-quasit",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 667,
+      "id": "dread",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 892,
+      "id": "djinni",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_SUST_STR"]
+    },
+    {
+      "sourceIndex": 893,
+      "id": "efreeti",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_SUST_STR"]
+    },
+    {
+      "sourceIndex": 894,
+      "id": "troll-king",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 993,
+      "id": "dao",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_SUST_STR"]
+    },
+    {
+      "sourceIndex": 1006,
+      "id": "high-elven-ranger",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 1014,
+      "id": "m-bison",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
+    },
+    {
+      "sourceIndex": 1056,
+      "id": "master-mindcrafter",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "POS_TELEPATHY"]
+    },
+    {
+      "sourceIndex": 1171,
+      "id": "flame-spider",
+      "tags": ["orc-cave", "spider"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 1174,
+      "id": "venom-spider",
+      "tags": ["orc-cave", "spider"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 1206,
+      "id": "the-marquis-de-la-tour",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
+    },
+    {
+      "sourceIndex": 1210,
+      "id": "ancient-silver-dragon",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 1304,
+      "id": "spulga-the-troll-priestess",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "FEMALE"]
+    },
+    {
+      "sourceIndex": 493,
+      "id": "bert-the-stone-troll",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 494,
+      "id": "bill-the-stone-troll",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 495,
+      "id": "tom-the-stone-troll",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 505,
+      "id": "ishikawa-goemon",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
+    },
+    {
+      "sourceIndex": 516,
+      "id": "master-thief",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 564,
+      "id": "nightblade",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "POS_BACKSTAB", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 1357,
+      "id": "ratatosk-the-world-tree-squirrel",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "NORSE2", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 1013,
+      "id": "rolento",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
+    },
+    {
+      "sourceIndex": 1023,
+      "id": "hand-grenade",
+      "tags": ["hand-grenade"],
+      "omittedFlags": ["NO_STUN"]
+    },
+    {
+      "sourceIndex": 1147,
+      "id": "devil-s-huntsman",
+      "tags": ["orc-cave"],
+      "omittedFlags": []
+    },
+    {
+      "sourceIndex": 628,
+      "id": "malekith-the-accursed",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 1130,
+      "id": "marilith",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["FEMALE", "HINDU2", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 517,
+      "id": "jurt-the-living-trump",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 863,
+      "id": "quantum-dot",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["ATTR_ANY", "ATTR_MULTI", "NASTY_GLYPH", "NO_STUN", "STUPID"]
+    },
+    {
+      "sourceIndex": 558,
+      "id": "colossus",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE"]
+    },
+    {
+      "sourceIndex": 619,
+      "id": "chthonian",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 1124,
+      "id": "rock-giant",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "POS_GAIN_AC", "POS_SUST_STR"]
+    },
+    {
+      "sourceIndex": 603,
+      "id": "beholder",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC", "POS_TELEPATHY"]
+    },
+    {
+      "sourceIndex": 1092,
+      "id": "chronomage",
+      "tags": ["orc-cave"],
+      "omittedFlags": []
+    },
+    {
+      "sourceIndex": 651,
+      "id": "strygalldwir",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 653,
+      "id": "giant-headless",
+      "tags": ["orc-cave"],
+      "omittedFlags": []
+    },
+    {
+      "sourceIndex": 654,
+      "id": "judge-fire",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 655,
+      "id": "ubbo-sathla-the-unbegotten-source",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS", "POS_SUST_CON", "POS_SUST_STR"]
+    },
+    {
+      "sourceIndex": 656,
+      "id": "judge-mortis",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 657,
+      "id": "dark-elven-sorcerer",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 659,
+      "id": "byakhee",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 662,
+      "id": "formless-spawn-of-tsathoggua",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 891,
+      "id": "gorlim-betrayer-of-barahir",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 1153,
+      "id": "hezrou",
+      "tags": ["orc-cave"],
+      "omittedFlags": []
+    },
+    {
+      "sourceIndex": 663,
+      "id": "hunting-horror",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 668,
+      "id": "greater-basilisk",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 670,
+      "id": "jack-of-shadows",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE", "POS_TELEPATHY"]
+    },
+    {
+      "sourceIndex": 1196,
+      "id": "the-lurking-horror",
+      "tags": ["orc-cave"],
+      "omittedFlags": []
+    },
+    {
+      "sourceIndex": 1388,
+      "id": "bloodfreezer",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE", "POS_TELEPATHY"]
+    },
+    {
+      "sourceIndex": 671,
+      "id": "zephyr-lord",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["ATTR_MULTI", "MALE", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 672,
+      "id": "juggernaut-of-khorne",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE"]
+    },
+    {
+      "sourceIndex": 674,
+      "id": "judge-fear",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 675,
+      "id": "ancient-multi-hued-dragon",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["ATTR_MULTI", "POS_GAIN_AC", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 676,
+      "id": "ethereal-dragon",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 677,
+      "id": "dark-young-of-shub-niggurath",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 678,
+      "id": "colour-out-of-space",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["ATTR_ANY", "ATTR_MULTI", "CHAR_CLEAR", "NASTY_GLYPH", "NO_STUN"]
+    },
+    {
+      "sourceIndex": 999,
+      "id": "devu-chiokovo",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 1155,
+      "id": "glabrezu",
+      "tags": ["orc-cave"],
+      "omittedFlags": []
+    },
+    {
+      "sourceIndex": 1262,
+      "id": "eskimo",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "NO_STUN", "POS_TELEPATHY"]
+    },
+    {
+      "sourceIndex": 680,
+      "id": "death-leprechaun",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 681,
+      "id": "chaugnar-faugn-horror-from-the-hills",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 682,
+      "id": "lloigor",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE"]
+    },
+    {
+      "sourceIndex": 684,
+      "id": "quachil-uttaus-treader-of-the-dust",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 685,
+      "id": "shoggoth",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS", "POS_SUST_CON", "POS_SUST_STR"]
+    },
+    {
+      "sourceIndex": 686,
+      "id": "judge-death",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 687,
+      "id": "ariel-queen-of-air",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "FEMALE", "POS_GAIN_AC", "POS_HOLD_LIFE"]
+    },
+    {
+      "sourceIndex": 688,
+      "id": "11-headed-hydra",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 692,
+      "id": "scatha-the-worm",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "POS_GAIN_AC", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 888,
+      "id": "vore",
+      "tags": ["orc-cave", "spider"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 952,
+      "id": "kamikaze-hound",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 1009,
+      "id": "dwar-dog-lord-of-waw",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 693,
+      "id": "warrior-of-the-dawn",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 695,
+      "id": "zoth-ommog",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 697,
+      "id": "smaug-the-golden",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE", "POS_GAIN_AC", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 698,
+      "id": "the-stormbringer",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CHAR_MULTI", "NASTY_GLYPH"]
+    },
+    {
+      "sourceIndex": 982,
+      "id": "durahan",
+      "tags": ["orc-cave"],
+      "omittedFlags": []
+    },
+    {
+      "sourceIndex": 994,
+      "id": "marid",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_SUST_STR"]
+    },
+    {
+      "sourceIndex": 1041,
+      "id": "chameleon-lord",
+      "tags": ["orc-cave"],
+      "omittedFlags": []
+    },
+    {
+      "sourceIndex": 1048,
+      "id": "stone-dragon",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["NO_STUN", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 1082,
+      "id": "death-beast",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 1156,
+      "id": "nalfeshnee",
+      "tags": ["orc-cave"],
+      "omittedFlags": []
+    },
+    {
+      "sourceIndex": 1211,
+      "id": "ruby-serpent",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["ATTR_CLEAR", "POS_GAIN_AC", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 1300,
+      "id": "death-pumpkin",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 703,
+      "id": "dracolisk",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 706,
+      "id": "yibb-tstll-the-patient-one",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "POS_SUST_STR"]
+    },
+    {
+      "sourceIndex": 707,
+      "id": "ghatanothoa",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC", "RES_WALL"]
+    },
+    {
+      "sourceIndex": 708,
+      "id": "ent",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 1024,
+      "id": "grand-master-thief",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "POS_SEE_INVIS", "POS_TELEPATHY"]
+    },
+    {
+      "sourceIndex": 1212,
+      "id": "emerald-serpent",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["ATTR_CLEAR", "POS_GAIN_AC", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 710,
+      "id": "itangast-the-fire-drake",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "POS_GAIN_AC", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 711,
+      "id": "death-mold",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC", "POS_TELEPATHY"]
+    },
+    {
+      "sourceIndex": 712,
+      "id": "fafner-the-dragon",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE", "POS_GAIN_AC", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 713,
+      "id": "fangorn",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 714,
+      "id": "zhar-the-twin-obscenity",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 979,
+      "id": "shuten-douji-king-ogre-of-ooe-mountain",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
+    },
+    {
+      "sourceIndex": 1025,
+      "id": "charon-boatman-of-the-styx",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 1213,
+      "id": "amethyst-serpent",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["ATTR_CLEAR", "POS_GAIN_AC", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 1237,
+      "id": "ice-weasel",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 1268,
+      "id": "mummified-sorcerer",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["EGYPTIAN2", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 691,
+      "id": "drolem",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE"]
+    },
+    {
+      "sourceIndex": 715,
+      "id": "glaurung-father-of-the-dragons",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE", "POS_GAIN_AC", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 973,
+      "id": "beld-ruler-of-marmo",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
+    },
+    {
+      "sourceIndex": 1216,
+      "id": "winged-horror",
+      "tags": ["orc-cave"],
+      "omittedFlags": []
     }
   ]
 }

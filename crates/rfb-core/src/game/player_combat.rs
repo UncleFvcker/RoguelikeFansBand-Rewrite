@@ -860,6 +860,26 @@ impl Game {
                             resolve_damage(DamagePacket::new(raw, damage_type), resistance)
                         })
                     }
+                    MeleeBlowEffectDefinition::Shatter {
+                        damage_dice,
+                        damage_sides,
+                        ..
+                    } => {
+                        let raw = self.roll_monster_melee_effect(
+                            source_index,
+                            *damage_dice,
+                            *damage_sides,
+                            false,
+                        );
+                        Some(resolve_armored_damage(
+                            raw,
+                            DamageType::Physical,
+                            target_stats.armor_class.value,
+                            self.entities[target_index]
+                                .resistances
+                                .level(DamageType::Physical),
+                        ))
+                    }
                     MeleeBlowEffectDefinition::Poison {
                         damage_dice,
                         damage_sides,
@@ -909,7 +929,9 @@ impl Game {
                     MeleeBlowEffectDefinition::DrainAttributes { .. }
                     | MeleeBlowEffectDefinition::DrainResource { .. }
                     | MeleeBlowEffectDefinition::DrainExperience { .. }
-                    | MeleeBlowEffectDefinition::Disenchant { .. } => None,
+                    | MeleeBlowEffectDefinition::Disenchant { .. }
+                    | MeleeBlowEffectDefinition::Amnesia { .. }
+                    | MeleeBlowEffectDefinition::Time { .. } => None,
                     MeleeBlowEffectDefinition::Unlife {
                         amount_dice,
                         amount_sides,
@@ -1052,6 +1074,9 @@ impl Game {
                 let Some(damage) = damage else {
                     continue;
                 };
+                let shatters = matches!(effect, MeleeBlowEffectDefinition::Shatter { .. })
+                    && damage.applied > 23;
+                let quake_center = self.entities[source_index].position;
                 let application = plan_damage_application(
                     &self.entities[target_index],
                     damage,
@@ -1073,6 +1098,15 @@ impl Game {
                         changed,
                         removed_entities,
                     )?;
+                    if shatters {
+                        self.resolve_monster_shatter_earthquake(
+                            quake_center,
+                            source_kind_id.clone(),
+                            events,
+                            changed,
+                            removed_entities,
+                        )?;
+                    }
                     break;
                 }
                 if vampiric {
@@ -1099,6 +1133,15 @@ impl Game {
                     method_id: blow.method_id.clone(),
                     damage,
                 });
+                if shatters {
+                    self.resolve_monster_shatter_earthquake(
+                        quake_center,
+                        source_kind_id.clone(),
+                        events,
+                        changed,
+                        removed_entities,
+                    )?;
+                }
             }
         }
         Ok(())

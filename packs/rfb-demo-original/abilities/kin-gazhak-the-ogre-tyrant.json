@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.kin-gazhak-the-ogre-tyrant",
+  "descriptionKey": "ability-legacy-kin-gazhak-the-ogre-tyrant-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.kin-gazhak-the-ogre-tyrant",
+  "nameKey": "ability-legacy-kin-gazhak-the-ogre-tyrant-name",
+  "tags": [
+    "legacy-import",
+    "summon"
+  ],
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  }
+}
