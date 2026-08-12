@@ -275,19 +275,21 @@ impl Game {
                     AbilitySourceDto::Class | AbilitySourceDto::Mutation => ability.clone(),
                 };
                 Self::apply_player_level_scaling(&mut effective_ability, self.progress.level);
-                if source == AbilitySourceDto::Learned
-                    && let Some(profile) = casting_profile
-                {
-                    Self::apply_casting_profile_effect_scaling(
-                        profile,
-                        &mut effective_ability,
-                        self.progress.level,
-                    );
-                    Self::apply_casting_profile_damage_bonus(
-                        profile,
-                        &mut effective_ability,
-                        self.progress.level,
-                    );
+                if let Some(profile) = casting_profile {
+                    if source == AbilitySourceDto::Learned {
+                        Self::apply_casting_profile_effect_scaling(
+                            profile,
+                            &mut effective_ability,
+                            self.progress.level,
+                        );
+                    }
+                    if source != AbilitySourceDto::Mutation {
+                        Self::apply_casting_profile_damage_bonus(
+                            profile,
+                            &mut effective_ability,
+                            self.progress.level,
+                        );
+                    }
                 }
                 let ability = &effective_ability;
                 let mutation_activation = mutation_activations.get(&ability_id);

@@ -208,3 +208,19 @@ git diff --stat
   `132b2a15ebcd5b74e2949817b45c88e576c0fae37eaa2e72548972249d70e1ae`。
 - 下一步预留 ability ID 仍为 `demo.ability.paladin-hell-lance`；同时补 40 级恐惧抗性。
   摧毁高级异教书经验和逐武器熟练度继续单列，不在本批伪造。
+
+## 11. main 当前交接（圣骑士职业能力）
+
+- `demo.ability.paladin-hell-lance` 已由 class 方向正式占用，并引用新的
+  `demo.ability-program.paladin-hell-lance`；其他方向不得重复定义同 ID。
+- 地狱长枪在 30 级开放，WIS 检定、Mana 消耗 30、基础失败参数 70、最低失败率 5；
+  地狱火 beam 伤害为 `level × 3 + spellDamageBonus`。class power 与 learned spell
+  共享施法伤害加成，但不会获得 learned spell 专用的 beam 几率调整。
+- `ClassDefinition.levelResistances` 是通用、可选且按等级排序的职业抗性门槛；当前唯一
+  内容是圣骑士 40 级恐惧抗性。抗性由 class/level 派生，不新增存档或协议字段。
+- 本批没有新增或占用任何 item ID。摧毁高级异教书经验等待生命/圣战高级书正式导入，
+  禁止为此建立占位书；逐武器熟练度仍是
+  [`legacy-class-import-v1.md`](legacy-class-import-v1.md) 第 3 节记录的共享缺口。
+- 共享协调点：Protocol `1.177`、State Hash Schema v88、save v1、active baseline
+  `contract-v274`、pack `1.274.0`，content hash 为
+  `e94926512734080f4743341e0eff07e3c96f371fe8cdac674089654b28fa2010`。

@@ -605,3 +605,10 @@ actor。职业使用 WIS、`rfb-mana`、最低失败率 5、`450/20/1200` 负重
 表；出生引用既有阔剑、环甲和死亡第一册。content hash 为
 `132b2a15ebcd5b74e2949817b45c88e576c0fae37eaa2e72548972249d70e1ae`；协议与 State
 Hash Schema 保持 1.177 / v88。
+
+contract-v274 / 包 1.274.0 为 `ClassDefinition` 增加可选 `levelResistances`，按职业等级
+门槛声明内在抗性；死亡圣骑士据此在 40 级获得恐惧抗性。新增 30 级职业能力
+`demo.ability.paladin-hell-lance`，沿用通用 class ability、Mana、beam 与能力等级缩放，
+伤害为 `level × 3 + spellDamageBonus`。content hash 为
+`e94926512734080f4743341e0eff07e3c96f371fe8cdac674089654b28fa2010`；Protocol 1.177、
+State Hash Schema v88 与 save v1 不变。

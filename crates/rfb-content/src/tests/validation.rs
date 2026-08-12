@@ -42,3 +42,35 @@ fn semantic_versions_are_checked_strictly() {
         ));
     }
 }
+
+#[test]
+fn class_level_resistance_thresholds_are_strict() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let mut duplicate = artifact.content.clone();
+    let paladin = duplicate
+        .classes
+        .iter_mut()
+        .find(|class| class.id == "demo.class.paladin")
+        .expect("Paladin class should exist");
+    paladin
+        .level_resistances
+        .push(paladin.level_resistances[0].clone());
+    assert!(matches!(
+        validate_and_normalize(&mut duplicate),
+        Err(ContentError::InvalidCharacterSource(id)) if id == "demo.class.paladin"
+    ));
+
+    let mut empty = artifact.content;
+    empty
+        .classes
+        .iter_mut()
+        .find(|class| class.id == "demo.class.paladin")
+        .expect("Paladin class should exist")
+        .level_resistances[0]
+        .resistances
+        .clear();
+    assert!(matches!(
+        validate_and_normalize(&mut empty),
+        Err(ContentError::InvalidCharacterSource(id)) if id == "demo.class.paladin"
+    ));
+}

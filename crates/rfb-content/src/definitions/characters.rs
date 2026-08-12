@@ -157,6 +157,10 @@ pub struct ClassDefinition {
     pub casting_profile: Option<CastingProfileDefinition>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub abilities: Vec<ClassAbilityDefinition>,
+    /// Intrinsic resistance tiers gained when the character reaches a class
+    /// level threshold.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub level_resistances: Vec<ClassLevelResistanceDefinition>,
     /// Percentage-point change to RFB's shooter breakage factor.
     #[serde(default)]
     pub ammunition_breakage_factor_modifier: i16,
@@ -175,6 +179,14 @@ pub struct ClassDefinition {
     #[serde(default)]
     pub special_item_tags: Vec<String>,
     pub tags: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ClassLevelResistanceDefinition {
+    pub minimum_level: u16,
+    pub resistances: BTreeMap<ActorDamageType, ActorResistanceLevel>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]

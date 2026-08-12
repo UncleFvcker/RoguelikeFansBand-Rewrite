@@ -87,6 +87,25 @@
       }
     ]
   },
+  "abilities": [
+    {
+      "abilityId": "demo.ability.paladin-hell-lance",
+      "minimumLevel": 30,
+      "governingAttribute": "wisdom",
+      "resourceId": "demo.resource.mana",
+      "resourceCost": 30,
+      "baseFailurePercent": 70,
+      "minimumFailurePercent": 5
+    }
+  ],
+  "levelResistances": [
+    {
+      "minimumLevel": 40,
+      "resistances": {
+        "fear": "resistant"
+      }
+    }
+  ],
   "startingItems": [
     { "itemKindId": "demo.item.broad-sword", "quantity": 1, "equipped": true },
     { "itemKindId": "demo.item.ring-mail", "quantity": 1, "equipped": true }

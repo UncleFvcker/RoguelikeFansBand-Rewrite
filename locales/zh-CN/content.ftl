@@ -19,6 +19,8 @@ class-demo-archer-description = 弓箭手之于弓如同战士之于近战。他
     弓箭手拥有一项职业能力——“制造弹药”——可以把碎石转化成石子或弹丸，也可以把骨骸转化成箭和弩箭。
 class-demo-paladin-name = 圣骑士
 class-demo-paladin-description = 圣骑士是战士和牧师的结合体。圣骑士擅长近战，但在远程战斗中表现平平；他们的潜行、察觉和使用魔法装置的技能同样平庸，不过他们与神明的结盟赋予了他们不错的豁免能力。感知决定了圣骑士向其神明祈祷的成功率。
+ability-demo-paladin-hell-lance-name = 地狱长枪
+ability-demo-paladin-hell-lance-description = 发射一道纯粹的地狱火射线。
     圣骑士可以从生命、圣战、恶魔和死亡中选择一个领域。和牧师一样，他们不能选择要学习哪些祈祷，而是由他们的神明赐予新的祈祷。他们可以学习所有法术，但不如牧师快。他们极其厌恶异教，甚至可以通过摧毁高级的异教法术书来获得经验：“异教”对于死亡/恶魔圣骑士来说指的是生命或圣战法术书，而对于生命/圣战圣骑士来说指的是除生命或圣战之外的所有法术书。圣骑士会获得一项职业能力：“神圣长枪”或“地狱长枪”，具体取决于他们领域的阵营。
 personality-demo-ordinary-name = 普通
 personality-demo-ordinary-description = 不提供额外修正的中性性格。

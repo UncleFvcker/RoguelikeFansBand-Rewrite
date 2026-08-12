@@ -418,12 +418,23 @@ impl Game {
                 record(*damage_type, *level);
             }
         }
-        if let Some((_, race, _, _)) = self.character_definitions() {
+        if let Some((_, race, class, _)) = self.character_definitions() {
             for (damage_type, level) in &race.resistances {
                 record(
                     DamageType::from(*damage_type),
                     ResistanceLevel::from(*level),
                 );
+            }
+            for entry in &class.level_resistances {
+                if self.progress.level < entry.minimum_level {
+                    continue;
+                }
+                for (damage_type, level) in &entry.resistances {
+                    record(
+                        DamageType::from(*damage_type),
+                        ResistanceLevel::from(*level),
+                    );
+                }
             }
         }
         for mutation in self

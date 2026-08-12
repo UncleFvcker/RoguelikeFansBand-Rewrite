@@ -333,8 +333,21 @@ pub(super) fn validate_characters(
         class
             .abilities
             .sort_by(|left, right| left.ability_id.cmp(&right.ability_id));
+        class
+            .level_resistances
+            .sort_by_key(|entry| entry.minimum_level);
         if !(-100..=100).contains(&class.ammunition_breakage_factor_modifier)
             || class.projectile_critical_chance_bonus_percent_per_level > 10
+            || class.level_resistances.len() > 32
+            || class.level_resistances.iter().any(|entry| {
+                !(1..=100).contains(&entry.minimum_level)
+                    || entry.resistances.is_empty()
+                    || entry.resistances.len() > 32
+            })
+            || class
+                .level_resistances
+                .windows(2)
+                .any(|entries| entries[0].minimum_level == entries[1].minimum_level)
         {
             return Err(ContentError::InvalidCharacterSource(class.id.clone()));
         }

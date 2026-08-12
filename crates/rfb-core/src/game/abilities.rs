@@ -166,13 +166,11 @@ impl Game {
                 &mut ability,
                 self.progress.level,
             );
-            Self::apply_casting_profile_damage_bonus(
-                casting_profile
-                    .as_ref()
-                    .expect("learned ability source requires a casting profile"),
-                &mut ability,
-                self.progress.level,
-            );
+        }
+        if source != AbilitySourceDto::Mutation
+            && let Some(profile) = casting_profile.as_ref()
+        {
+            Self::apply_casting_profile_damage_bonus(profile, &mut ability, self.progress.level);
         }
         let unavailable_reason = match source {
             AbilitySourceDto::Mutation => {

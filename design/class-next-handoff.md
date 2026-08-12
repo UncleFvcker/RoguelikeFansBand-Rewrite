@@ -65,6 +65,13 @@ ammo-slaying ID。若 items 方向随后导入陶器碎片或断木棍，也应�
   `demo.item.black-prayers`；没有新增物品或能力 ID。
 - Paladin 的原版属性、八项技能、WIS 施法、`450/20/1200` 负重及 32 条 Death
   `m_info` 覆盖已导入，学习模式复用 `divine-random`。
-- 当前协调点：pack 1.273.0、Protocol 1.177、State Hash Schema v88、
-  contract-v273；下一职业步骤预留 `demo.ability.paladin-hell-lance`，并补 40 级恐惧
-  抗性，不在其他分支重复占用该 ID。
+- 第二步协调点：pack 1.273.0、Protocol 1.177、State Hash Schema v88、
+  contract-v273。
+- 后续 contract-v274 已正式占用 `demo.ability.paladin-hell-lance`：30 级 WIS、消耗 30、
+  基础失败参数 70，伤害 `level × 3 + spellDamageBonus`；40 级恐惧抗性使用通用
+  `ClassDefinition.levelResistances`，没有新增物品 ID。
+- 当前最终协调点：pack 1.274.0、Protocol 1.177、State Hash Schema v88、
+  contract-v274，content hash 为
+  `e94926512734080f4743341e0eff07e3c96f371fe8cdac674089654b28fa2010`。
+- 摧毁高级异教书经验继续等待生命/圣战高级书本，不导入占位书；逐武器熟练度继续是
+  [`legacy-class-import-v1.md`](legacy-class-import-v1.md) 第 3 节记录的共享内容模型缺口。

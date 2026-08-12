@@ -6,7 +6,7 @@
 
 contract fixture 是规则兼容边界，不能把测试失败简单处理为“刷新预期结果”。政策用于保证每次规则变化只修改真正受影响的场景，同时保留可审查的失败原因。
 
-当前逻辑基线是 `contract-v273`，机器可读政策固定在：
+当前逻辑基线是 `contract-v274`，机器可读政策固定在：
 
 ```text
 tests/fixtures/active/baseline-policy.json
@@ -71,6 +71,12 @@ WIS 施法与 32 条死亡祈祷参数，并复用 contract-v272 的神授学习
 1.273.0；Protocol 1.177、State Hash Schema v88 与 save v1 不变。新增可选 build 不
 改变既有 Warrior fixture 初始化，统一复验 21 条 active fixture 零语义漂移；active
 集保持 21 条且零 waiver。
+
+`contract-v274` 完成死亡领域圣骑士的职业能力：30 级 WIS“地狱长枪”造成
+`level × 3 + spellDamageBonus` 的地狱火射线伤害，40 级通过通用职业等级门槛抗性数据
+获得恐惧抗性。内容包升至 1.274.0；Protocol 1.177、State Hash Schema v88 与 save v1
+不变。新增内容与派生职业抗性不改变既有 Warrior fixture 初始化，统一复验 21 条 active
+fixture 零语义漂移；active 集保持 21 条且零 waiver。
 
 ## 分类验证
 

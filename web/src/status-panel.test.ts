@@ -82,6 +82,21 @@ test("mutation presentation exposes ratings and the shared ability source", () =
   );
 });
 
+test("Paladin Hell Lance stays visible as a level-gated class power", () => {
+  const hellLance = {
+    id: "demo.ability.paladin-hell-lance",
+    minimumLevel: 30,
+    source: "class",
+    learned: false,
+    canCast: false,
+  };
+
+  assert.deepEqual(abilityPresentation([hellLance], 29), [
+    { type: "ability", ability: hellLance },
+  ]);
+  assert.equal(abilityStatusMessageKey(hellLance), "ability-status-class");
+});
+
 test("status panel preserves exceptional attribute display values", () => {
   assert.equal(formatAttributeValue(18), "18");
   assert.equal(formatAttributeValue(19), "18/1");
