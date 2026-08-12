@@ -1,21 +1,22 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
   "allocation": {
-    "legacyIndex": 511,
+    "legacyIndex": 1037,
     "maxDepth": 999,
-    "rarity": 4
+    "rarity": 2
   },
-  "attack": 8,
-  "damageDice": 4,
-  "damageSides": 3,
+  "attack": 13,
+  "damageDice": 10,
+  "damageSides": 5,
   "damageType": "physical",
   "deathDrop": {
-    "chanceRolls": [],
-    "countDice": [
+    "chanceRolls": [
       {
-        "dice": 1,
-        "sides": 2
-      },
+        "guaranteedForUnique": true,
+        "percent": 90
+      }
+    ],
+    "countDice": [
       {
         "dice": 2,
         "sides": 2
@@ -26,36 +27,35 @@
     "themeChancePercent": 50,
     "themeTableId": "demo.loot-table.paladin"
   },
-  "defense": 6,
-  "descriptionKey": "actor-demo-cherub-description",
+  "defense": 13,
+  "descriptionKey": "actor-demo-knight-templar-description",
   "doorInteraction": {
     "bashes": true,
     "opens": true
   },
-  "experienceValue": 400,
-  "forceSleep": true,
+  "experienceValue": 5000,
   "formatVersion": 1,
-  "glyph": "A",
+  "glyph": "p",
   "hitPointDice": {
-    "dice": 45,
+    "dice": 60,
     "forceMaximum": true,
-    "sides": 10
+    "sides": 25
   },
-  "id": "demo.actor.cherub",
-  "level": 33,
+  "id": "demo.actor.knight-templar",
+  "level": 52,
   "light": {
-    "intrinsic": true,
-    "radius": 2
+    "intrinsic": false,
+    "radius": 1
   },
-  "maxHp": 450,
+  "maxHp": 1500,
   "meleeRoutine": {
     "blows": [
       {
         "effects": [
           {
             "armorMitigated": true,
-            "damageDice": 4,
-            "damageSides": 3,
+            "damageDice": 10,
+            "damageSides": 5,
             "damageType": "physical",
             "type": "damage"
           }
@@ -67,8 +67,8 @@
         "effects": [
           {
             "armorMitigated": true,
-            "damageDice": 3,
-            "damageSides": 8,
+            "damageDice": 10,
+            "damageSides": 5,
             "damageType": "physical",
             "type": "damage"
           }
@@ -80,17 +80,10 @@
         "effects": [
           {
             "armorMitigated": true,
-            "damageDice": 4,
-            "damageSides": 3,
+            "damageDice": 10,
+            "damageSides": 5,
             "damageType": "physical",
             "type": "damage"
-          },
-          {
-            "attributes": [
-              "charisma"
-            ],
-            "chancePercent": 25,
-            "type": "drain-attributes"
           }
         ],
         "methodId": "rfb.blow.hit",
@@ -100,8 +93,8 @@
         "effects": [
           {
             "armorMitigated": true,
-            "damageDice": 3,
-            "damageSides": 8,
+            "damageDice": 10,
+            "damageSides": 5,
             "damageType": "physical",
             "type": "damage"
           }
@@ -114,7 +107,19 @@
   "monsterCasting": {
     "abilities": [
       {
-        "abilityId": "rfb-legacy.ability.heal-99",
+        "abilityId": "rfb-legacy.ability.heal-156",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.scare",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.curse-10d15",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.curse-15d15",
         "weight": 1
       },
       {
@@ -126,53 +131,32 @@
         "weight": 1
       },
       {
-        "abilityId": "rfb-legacy.ability.scare",
-        "weight": 1
-      },
-      {
-        "abilityId": "rfb-legacy.ability.mind-blast-7d7",
-        "weight": 1
-      },
-      {
-        "abilityId": "rfb-legacy.ability.bolt-fire-18d8-22",
-        "weight": 1
-      },
-      {
-        "abilityId": "rfb-legacy.ability.summon-legacy-import-l33-1d3-1",
+        "abilityId": "rfb-legacy.ability.summon-angel-l52-1d3-1",
         "weight": 1
       }
     ],
-    "frequencyPercent": 33,
+    "frequencyPercent": 25,
     "smart": true
   },
-  "movement": {
-    "modes": [
-      "fly"
-    ]
-  },
-  "movesWeakerBodies": true,
-  "nameKey": "actor-demo-cherub-name",
-  "reflectsBolts": true,
-  "resistances": {
-    "acid": "resistant",
-    "cold": "resistant",
-    "electricity": "resistant",
-    "fire": "resistant",
-    "poison": "resistant"
+  "nameKey": "actor-demo-knight-templar-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 4,
+    "skeletonItemKindId": "demo.item.skeleton-remains",
+    "skeletonWeight": 1
   },
   "role": "monster",
   "speed": 120,
   "statusImmunities": [
-    "rfb.status.confusion",
     "rfb.status.sleep"
   ],
   "tags": [
-    "angel",
     "good",
-    "kin-glyph-65",
+    "human",
+    "kin-glyph-112",
     "legacy-import",
-    "orc-cave",
-    "resist-teleport"
+    "orc-cave"
   ],
   "terrainInteraction": {
     "picksUpItems": true

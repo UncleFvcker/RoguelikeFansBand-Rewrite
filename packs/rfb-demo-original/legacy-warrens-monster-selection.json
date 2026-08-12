@@ -5796,6 +5796,30 @@
       "id": "mummy-king",
       "tags": ["orc-cave"],
       "omittedFlags": ["EGYPTIAN2", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 942,
+      "id": "planetar",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 1173,
+      "id": "ice-spider",
+      "tags": ["orc-cave", "spider"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 1037,
+      "id": "knight-templar",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["KNIGHT", "MALE"]
+    },
+    {
+      "sourceIndex": 1394,
+      "id": "greater-dokkaebi",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["NO_STUN", "POS_SEE_INVIS", "POS_TELEPATHY"]
     }
   ]
 }

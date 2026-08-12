@@ -303,6 +303,7 @@ pub(super) fn validate_actors(
                         | ActorDamageType::Acid
                         | ActorDamageType::Fire
                         | ActorDamageType::Cold
+                        | ActorDamageType::Ice
                         | ActorDamageType::Electricity
                         | ActorDamageType::Curse
                         | ActorDamageType::Shards

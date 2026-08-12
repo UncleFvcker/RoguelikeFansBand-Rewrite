@@ -719,7 +719,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         .iter()
         .filter(|actor| actor.tags.iter().any(|tag| tag == "orc-cave"))
         .collect::<Vec<_>>();
-    assert_eq!(orc_cave.len(), 536);
+    assert_eq!(orc_cave.len(), 540);
 
     for id in [
         "demo.actor.bunyip",
@@ -767,7 +767,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         level_counts,
         [
             16, 14, 12, 17, 24, 17, 19, 17, 18, 21, 7, 12, 29, 15, 27, 28, 19, 19, 11, 42, 12, 6,
-            12, 14, 14, 7, 10, 6, 6, 14, 11, 4, 3, 8, 16, 9,
+            12, 14, 14, 7, 10, 6, 6, 16, 11, 5, 3, 8, 17, 9,
         ]
     );
 
@@ -4825,6 +4825,111 @@ fn p52b_level_55_56_direct_monsters_keep_source_identity() {
 }
 
 #[test]
+fn p53a_ice_jump_and_angel_summons_reuse_shared_effects() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actor = |id: &str| {
+        artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == format!("demo.actor.{id}"))
+            .unwrap_or_else(|| panic!("{id} should be imported"))
+    };
+    let ability = |id: &str| {
+        artifact
+            .content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == format!("rfb-legacy.ability.{id}"))
+            .unwrap_or_else(|| panic!("{id} should be imported"))
+    };
+
+    for (id, legacy_index, level) in [
+        ("planetar", 942, 50),
+        ("ice-spider", 1173, 50),
+        ("knight-templar", 1037, 52),
+        ("greater-dokkaebi", 1394, 55),
+    ] {
+        let actor = actor(id);
+        assert_eq!(actor.level, level, "{id} level");
+        assert_eq!(
+            actor
+                .allocation
+                .as_ref()
+                .map(|allocation| allocation.legacy_index),
+            Some(legacy_index),
+            "{id} source index"
+        );
+    }
+
+    assert_eq!(
+        actor("ice-spider")
+            .contact_auras
+            .iter()
+            .map(|aura| (aura.damage_type, aura.damage_dice, aura.damage_sides))
+            .collect::<Vec<_>>(),
+        vec![(ActorDamageType::Ice, 3, 3)]
+    );
+    assert!(matches!(
+        ability("jump-ice-l50").effect,
+        AbilityEffectDefinition::JumpDamage {
+            damage_dice: 0,
+            damage_sides: 0,
+            damage_bonus: 50,
+            damage_multiplier_numerator: 5,
+            damage_multiplier_denominator: 4,
+            damage_type: ActorDamageType::Ice,
+            radius: 5,
+            blink_radius: 10,
+        }
+    ));
+
+    for level in [50, 52, 55] {
+        assert!(matches!(
+            ability(&format!("summon-angel-l{level}-1d3-1")).effect,
+            AbilityEffectDefinition::SummonCategory {
+                ref category,
+                maximum_level,
+                count_dice: 1,
+                count_sides: 3,
+                count_bonus: 1,
+                ..
+            } if category == "angel" && maximum_level == level
+        ));
+    }
+
+    let angel_ids = artifact
+        .content
+        .actors
+        .iter()
+        .filter(|actor| actor.tags.iter().any(|tag| tag == "angel"))
+        .map(|actor| actor.id.as_str())
+        .collect::<BTreeSet<_>>();
+    assert_eq!(
+        angel_ids,
+        [
+            "demo.actor.angel",
+            "demo.actor.archangel",
+            "demo.actor.archon",
+            "demo.actor.cherub",
+            "demo.actor.fallen-angel",
+            "demo.actor.planetar",
+            "demo.actor.seraph",
+        ]
+        .into_iter()
+        .collect()
+    );
+    assert!(artifact.content.actors.iter().all(|actor| {
+        !actor.tags.iter().any(|tag| tag == "angel")
+            || (actor.glyph == "A"
+                && actor
+                    .tags
+                    .iter()
+                    .any(|tag| matches!(tag.as_str(), "evil" | "good")))
+    }));
+}
+
+#[test]
 fn outpost_has_walls_inner_shops_and_an_exterior_warrens_entrance() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let world = artifact
@@ -6250,7 +6355,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
                     == Some("demo.loot-table.base-items")
             })
             .count(),
-        485
+        488
     );
 }
 

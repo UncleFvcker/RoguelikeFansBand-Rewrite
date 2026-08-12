@@ -166,6 +166,12 @@ fn monster_contact_auras_apply_elemental_damage_and_curse_saves() {
                 chance_percent: None,
             },
             rfb_content::ActorContactAuraDefinition {
+                damage_type: rfb_content::ActorDamageType::Ice,
+                damage_dice: 1,
+                damage_sides: 1,
+                chance_percent: None,
+            },
+            rfb_content::ActorContactAuraDefinition {
                 damage_type: rfb_content::ActorDamageType::Curse,
                 damage_dice: 1,
                 damage_sides: 1,
@@ -201,7 +207,7 @@ fn monster_contact_auras_apply_elemental_damage_and_curse_saves() {
         })
         .expect("a bounded seed should fail the curse save");
 
-    assert_eq!(game.player.hp, 97);
+    assert_eq!(game.player.hp, 96);
     let damage_types = events
         .iter()
         .filter_map(|event| match event {
@@ -211,7 +217,12 @@ fn monster_contact_auras_apply_elemental_damage_and_curse_saves() {
         .collect::<Vec<_>>();
     assert_eq!(
         damage_types,
-        vec![DamageType::Fire, DamageType::Electricity, DamageType::Curse]
+        vec![
+            DamageType::Fire,
+            DamageType::Electricity,
+            DamageType::Ice,
+            DamageType::Curse,
+        ]
     );
 }
 

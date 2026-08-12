@@ -7306,6 +7306,7 @@ fn map_jump_spell_token(
     };
     let damage_type = match base {
         "JMP_FIRE" => "fire",
+        "JMP_ICE" => "ice",
         "JMP_POISON" => "poison",
         "JMP_CONFUSION" => "confusion",
         "JMP_DARK" => "dark",
@@ -7725,6 +7726,14 @@ fn monster_json(
     if matches!(entry.glyph, Some('C' | 'Z')) {
         tags.push("hound".to_owned());
     }
+    if entry.glyph == Some('A')
+        && entry
+            .flags
+            .iter()
+            .any(|flag| matches!(flag.as_str(), "EVIL" | "GOOD"))
+    {
+        tags.push("angel".to_owned());
+    }
     if entry.index == 286 {
         tags.push("gelatinous-cube".to_owned());
     }
@@ -7939,6 +7948,7 @@ fn monster_json(
                 "ACID" => "acid",
                 "ELEC" => "electricity",
                 "FIRE" => "fire",
+                "ICE" => "ice",
                 "CAUSE_2" | "CAUSE_3" => "curse",
                 "SHARDS" => "shards",
                 _ => return None,
@@ -8278,7 +8288,7 @@ fn demo_monster_json(
         || entry.auras.iter().any(|aura| {
             !matches!(
                 aura.token.as_str(),
-                "POISON" | "ACID" | "ELEC" | "FIRE" | "CAUSE_2" | "CAUSE_3" | "SHARDS"
+                "POISON" | "ACID" | "ELEC" | "FIRE" | "ICE" | "CAUSE_2" | "CAUSE_3" | "SHARDS"
             ) || aura.dice.is_none()
         })
     {
@@ -8393,6 +8403,14 @@ fn demo_monster_json(
     }
     if matches!(entry.glyph, Some('C' | 'Z')) {
         tags.insert("hound".to_owned());
+    }
+    if entry.glyph == Some('A')
+        && entry
+            .flags
+            .iter()
+            .any(|flag| matches!(flag.as_str(), "EVIL" | "GOOD"))
+    {
+        tags.insert("angel".to_owned());
     }
     if entry.index == 286 {
         tags.insert("gelatinous-cube".to_owned());
@@ -9024,6 +9042,7 @@ fn summon_spell_defaults(base: &str) -> Option<(&'static str, (u32, u32, u32))> 
         "S_SPIDER" => ("spider", (1, 3, 1)),
         "S_HOUND" => ("hound", (1, 2, 1)),
         "S_HYDRA" => ("hydra", (1, 3, 1)),
+        "S_ANGEL" => ("angel", (1, 3, 1)),
         "S_LOUSE" => ("louse", (1, 3, 1)),
         _ => return None,
     };
@@ -13406,6 +13425,28 @@ mod tests {
             assert_eq!(actor["contactAuras"][0]["damageSides"], 2);
         }
 
+        let ice = parse_r_info(
+            "N:4:test ice aura\nG:S:w\nI:120:6d6:100:30:0:25\nW:50:1:999:50:0:0\nB:BITE:ICE(1d8)\nA:ICE(3d3)\nF:NEVER_MOVE\n",
+        )
+        .expect("synthetic ice aura monster should parse")
+        .remove(0);
+        let actor = demo_monster_json(
+            &ice,
+            &DemoMonsterSelectionEntry {
+                source_index: ice.index,
+                source_id: None,
+                id: kebab(&ice.name),
+                tags: vec!["orc-cave".to_owned()],
+                omitted_flags: Vec::new(),
+                omitted_spells: Vec::new(),
+            },
+            &mut BTreeMap::new(),
+        )
+        .expect("explicit ice contact aura should import directly");
+        assert_eq!(actor["contactAuras"][0]["damageType"], "ice");
+        assert_eq!(actor["contactAuras"][0]["damageDice"], 3);
+        assert_eq!(actor["contactAuras"][0]["damageSides"], 3);
+
         let mut multiple = monsters[0].clone();
         multiple.flags.push("AURA_ELEC".to_owned());
         let actor = demo_monster_json(
@@ -14167,6 +14208,7 @@ S:FREQ_50 | BR_FIRE(40%) | BR_POISON | DETECT_MONSTERS | MAPPING\n";
 
         for (token, level, suffix, damage_type, dice, sides, bonus) in [
             ("JMP_FIRE", 31, "jump-fire-l31", "fire", 0, 0, 31),
+            ("JMP_ICE", 50, "jump-ice-l50", "ice", 0, 0, 50),
             ("JMP_POISON", 32, "jump-poison-l32", "poison", 0, 0, 32),
             (
                 "JMP_CONFUSION",
@@ -14192,6 +14234,43 @@ S:FREQ_50 | BR_FIRE(40%) | BR_POISON | DETECT_MONSTERS | MAPPING\n";
             assert_eq!(effect["radius"], 5);
             assert_eq!(effect["blinkRadius"], 10);
         }
+    }
+
+    #[test]
+    fn angel_summon_uses_the_original_aligned_a_glyph_category() {
+        let mut abilities = BTreeMap::new();
+        let id = map_spell_token("S_ANGEL", 50, 4, "demo.actor.planetar", &mut abilities)
+            .expect("S_ANGEL should map");
+        assert_eq!(id, "rfb-legacy.ability.summon-angel-l50-1d3-1");
+        let effect = &abilities[&id]["effect"];
+        assert_eq!(effect["type"], "summon-category");
+        assert_eq!(effect["category"], "angel");
+        assert_eq!(effect["maximumLevel"], 50);
+        assert_eq!(effect["countDice"], 1);
+        assert_eq!(effect["countSides"], 3);
+        assert_eq!(effect["countBonus"], 1);
+
+        const ANGEL_R_INFO: &str = "N:1:aligned angel\nG:A:w\nI:110:8d8:20:20:10:10\nW:20:2:20:9:10:40\nB:HIT:HURT(1d6)\nF:GOOD\nN:2:unaligned a glyph\nG:A:w\nI:110:8d8:20:20:10:10\nW:20:2:20:9:10:40\nB:HIT:HURT(1d6)\nF:SMART\n";
+        let monsters = parse_r_info(ANGEL_R_INFO).expect("synthetic angels should parse");
+        let aligned = monster_json(&monsters[0], "aligned-angel", None, "physical", None, None);
+        let unaligned = monster_json(
+            &monsters[1],
+            "unaligned-a-glyph",
+            None,
+            "physical",
+            None,
+            None,
+        );
+        assert!(
+            aligned["tags"]
+                .as_array()
+                .is_some_and(|tags| tags.iter().any(|tag| tag == "angel"))
+        );
+        assert!(
+            unaligned["tags"]
+                .as_array()
+                .is_some_and(|tags| tags.iter().all(|tag| tag != "angel"))
+        );
     }
 
     #[test]

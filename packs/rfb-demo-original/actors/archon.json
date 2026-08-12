@@ -167,6 +167,7 @@
   "role": "monster",
   "speed": 130,
   "tags": [
+    "angel",
     "good",
     "kin-glyph-65",
     "legacy-import",
