@@ -1,0 +1,123 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 570,
+    "maxDepth": 999,
+    "rarity": 2
+  },
+  "attack": 9,
+  "contactAuras": [
+    {
+      "damageDice": 2,
+      "damageSides": 3,
+      "damageType": "cold"
+    }
+  ],
+  "damageDice": 1,
+  "damageSides": 5,
+  "damageType": "cold",
+  "defense": 6,
+  "descriptionKey": "actor-demo-ice-elemental-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 500,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "E",
+  "hitPointDice": {
+    "dice": 35,
+    "sides": 10
+  },
+  "id": "demo.actor.ice-elemental",
+  "killsWeakerBodies": true,
+  "level": 36,
+  "maxHp": 192,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 1,
+            "damageSides": 5,
+            "damageType": "cold",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 4,
+            "damageSides": 6,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 1,
+            "damageSides": 5,
+            "damageType": "cold",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.bolt-ice-6d8-36",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-cold-1d54-10",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 20
+  },
+  "movement": {
+    "modes": [
+      "swim"
+    ]
+  },
+  "nameKey": "actor-demo-ice-elemental-name",
+  "resistances": {
+    "cold": "immune",
+    "electricity": "resistant",
+    "fire": "vulnerable",
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 110,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "cold-blooded",
+    "empty-mind",
+    "evil",
+    "kin-glyph-69",
+    "legacy-import",
+    "nonliving",
+    "orc-cave"
+  ],
+  "terrainInteraction": {
+    "destroysItems": true
+  }
+}

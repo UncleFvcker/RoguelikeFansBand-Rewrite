@@ -1,0 +1,105 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "friends": {
+      "chancePercent": 0,
+      "dice": 0,
+      "sides": 0
+    },
+    "legacyIndex": 539,
+    "maxDepth": 80,
+    "rarity": 1
+  },
+  "attack": 8,
+  "damageDice": 2,
+  "damageSides": 6,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [
+      {
+        "guaranteedForUnique": true,
+        "percent": 90
+      }
+    ],
+    "itemTableId": "demo.loot-table.warrens",
+    "kind": "items-and-gold",
+    "themeChancePercent": 50,
+    "themeTableId": "demo.loot-table.archer"
+  },
+  "defense": 4,
+  "descriptionKey": "actor-demo-halfling-slinger-description",
+  "doorInteraction": {
+    "opens": true
+  },
+  "experienceValue": 330,
+  "formatVersion": 1,
+  "glyph": "h",
+  "hitPointDice": {
+    "dice": 30,
+    "forceMaximum": true,
+    "sides": 9
+  },
+  "id": "demo.actor.halfling-slinger",
+  "level": 35,
+  "maxHp": 270,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 2,
+            "damageSides": 6,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 2,
+            "damageSides": 6,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.bolt-physical-6d6",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 15,
+    "smart": true
+  },
+  "nameKey": "actor-demo-halfling-slinger-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 4,
+    "skeletonItemKindId": "demo.item.skeleton-remains",
+    "skeletonWeight": 1
+  },
+  "resistances": {
+    "cold": "resistant",
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 110,
+  "tags": [
+    "evil",
+    "kin-glyph-104",
+    "legacy-import",
+    "orc-cave"
+  ]
+}

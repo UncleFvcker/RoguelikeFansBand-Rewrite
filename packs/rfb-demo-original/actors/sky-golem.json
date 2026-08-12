@@ -1,0 +1,107 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 895,
+    "maxDepth": 999,
+    "rarity": 4
+  },
+  "attack": 9,
+  "damageDice": 10,
+  "damageSides": 10,
+  "damageType": "physical",
+  "defense": 11,
+  "descriptionKey": "actor-demo-sky-golem-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 1331,
+  "formatVersion": 1,
+  "glyph": "g",
+  "hitPointDice": {
+    "dice": 10,
+    "forceMaximum": true,
+    "sides": 80
+  },
+  "id": "demo.actor.sky-golem",
+  "level": 36,
+  "maxHp": 800,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 10,
+            "damageSides": 10,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "armorMitigated": false,
+            "damageDice": 7,
+            "damageSides": 7,
+            "damageType": "cold",
+            "type": "damage"
+          },
+          {
+            "chancePercent": 35,
+            "durationDice": 2,
+            "durationSides": 8,
+            "type": "stun"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.breath-light-17-400-r2",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-cold-1d54-10",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-cold-20-900-r2",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.bolt-ice-6d8-36",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.bolt-cold-6d8-12",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-time-33-150-r2",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 10
+  },
+  "nameKey": "actor-demo-sky-golem-name",
+  "resistances": {
+    "cold": "resistant",
+    "light": "resistant",
+    "time": "resistant"
+  },
+  "role": "monster",
+  "speed": 110,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "empty-mind",
+    "kin-glyph-103",
+    "legacy-import",
+    "nonliving",
+    "orc-cave"
+  ]
+}

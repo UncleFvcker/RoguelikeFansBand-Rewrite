@@ -1,0 +1,111 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 525,
+    "maxDepth": 80,
+    "rarity": 2
+  },
+  "attack": 8,
+  "damageDice": 4,
+  "damageSides": 6,
+  "damageType": "physical",
+  "defense": 6,
+  "descriptionKey": "actor-demo-earth-elemental-description",
+  "experienceValue": 375,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "E",
+  "hitPointDice": {
+    "dice": 30,
+    "sides": 10
+  },
+  "id": "demo.actor.earth-elemental",
+  "killsWeakerBodies": true,
+  "level": 34,
+  "maxHp": 165,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 4,
+            "damageSides": 6,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 4,
+            "damageSides": 6,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 4,
+            "damageSides": 6,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.bolt-acid-7d8-11",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 12
+  },
+  "movement": {
+    "modes": [
+      "pass-wall"
+    ]
+  },
+  "nameKey": "actor-demo-earth-elemental-name",
+  "resistances": {
+    "cold": "resistant",
+    "disintegrate": "vulnerable",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "poison": "resistant",
+    "shards": "resistant"
+  },
+  "role": "monster",
+  "speed": 100,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "cold-blooded",
+    "empty-mind",
+    "evil",
+    "kin-glyph-69",
+    "legacy-import",
+    "nonliving",
+    "orc-cave"
+  ],
+  "terrainInteraction": {
+    "destroysItems": true
+  }
+}

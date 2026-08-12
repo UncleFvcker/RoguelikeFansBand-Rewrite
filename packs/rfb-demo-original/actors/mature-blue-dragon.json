@@ -1,0 +1,148 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "habitats": [
+      "mountain",
+      "wood"
+    ],
+    "legacyIndex": 560,
+    "maxDepth": 999,
+    "rarity": 1
+  },
+  "attack": 9,
+  "damageDice": 1,
+  "damageSides": 8,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [
+      {
+        "percent": 60
+      },
+      {
+        "guaranteedForUnique": true,
+        "percent": 90
+      }
+    ],
+    "countDice": [
+      {
+        "dice": 2,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.warrens",
+    "kind": "items-and-gold"
+  },
+  "defense": 7,
+  "descriptionKey": "actor-demo-mature-blue-dragon-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 1400,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "d",
+  "hitPointDice": {
+    "dice": 40,
+    "forceMaximum": true,
+    "sides": 10
+  },
+  "id": "demo.actor.mature-blue-dragon",
+  "level": 36,
+  "light": {
+    "intrinsic": true,
+    "radius": 1
+  },
+  "maxHp": 400,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 8,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 8,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 2,
+            "damageSides": 10,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "armorMitigated": false,
+            "damageDice": 2,
+            "damageSides": 5,
+            "damageType": "electricity",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.scare",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-electricity-50-900-r2",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 9
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "nameKey": "actor-demo-mature-blue-dragon-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "electricity": "resistant"
+  },
+  "rideable": true,
+  "role": "monster",
+  "speed": 115,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "dragon",
+    "evil",
+    "kin-glyph-100",
+    "legacy-import",
+    "orc-cave"
+  ]
+}

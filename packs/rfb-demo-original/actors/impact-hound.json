@@ -1,0 +1,117 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "friends": {
+      "chancePercent": 0,
+      "dice": 3,
+      "sides": 3
+    },
+    "legacyIndex": 543,
+    "maxDepth": 999,
+    "rarity": 4
+  },
+  "attack": 8,
+  "damageDice": 2,
+  "damageSides": 12,
+  "damageType": "physical",
+  "defense": 3,
+  "descriptionKey": "actor-demo-impact-hound-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 500,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "Z",
+  "hitPointDice": {
+    "dice": 35,
+    "sides": 10
+  },
+  "id": "demo.actor.impact-hound",
+  "level": 35,
+  "maxHp": 192,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 2,
+            "damageSides": 12,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 2,
+            "damageSides": 12,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 2,
+            "damageSides": 12,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 3,
+            "damageSides": 3,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.breath-force-33-200-r2",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 8
+  },
+  "nameKey": "actor-demo-impact-hound-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "role": "monster",
+  "speed": 110,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "animal",
+    "kin-glyph-90",
+    "legacy-import",
+    "orc-cave"
+  ]
+}

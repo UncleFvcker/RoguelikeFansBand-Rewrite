@@ -1,0 +1,157 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 975,
+    "maxDepth": 999,
+    "randomMovementPercent": 75,
+    "rarity": 4
+  },
+  "attack": 8,
+  "damageDice": 1,
+  "damageSides": 1,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [
+      {
+        "guaranteedForUnique": true,
+        "percent": 90
+      }
+    ],
+    "countDice": [
+      {
+        "dice": 1,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.warrens",
+    "kind": "items-and-gold",
+    "minimumQuality": "fine"
+  },
+  "defense": 7,
+  "descriptionKey": "actor-demo-that-black-bat-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 1331,
+  "formatVersion": 1,
+  "glyph": "b",
+  "hitPointDice": {
+    "dice": 30,
+    "forceMaximum": true,
+    "sides": 10
+  },
+  "id": "demo.actor.that-black-bat",
+  "level": 33,
+  "maxHp": 300,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 1,
+            "damageSides": 1,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "type": "eat-food"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 1,
+            "damageSides": 1,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "type": "eat-gold"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 1,
+            "damageSides": 1,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "type": "eat-item"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 1,
+            "damageSides": 1,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "type": "eat-item"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.summon-dragon-l33-1d3-1",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 14,
+    "smart": true
+  },
+  "movement": {
+    "modes": [
+      "fly",
+      "pass-wall"
+    ]
+  },
+  "movesWeakerBodies": true,
+  "nameKey": "actor-demo-that-black-bat-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "role": "monster",
+  "speed": 130,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "animal",
+    "empty-mind",
+    "evil",
+    "kin-glyph-98",
+    "legacy-import",
+    "orc-cave",
+    "unique"
+  ],
+  "terrainInteraction": {
+    "picksUpItems": true
+  }
+}

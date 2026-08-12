@@ -1,0 +1,112 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "habitats": [
+      "volcano"
+    ],
+    "legacyIndex": 510,
+    "maxDepth": 999,
+    "randomMovementPercent": 25,
+    "rarity": 2
+  },
+  "attack": 8,
+  "contactAuras": [
+    {
+      "damageDice": 2,
+      "damageSides": 2,
+      "damageType": "fire"
+    }
+  ],
+  "damageDice": 4,
+  "damageSides": 6,
+  "damageType": "fire",
+  "defense": 5,
+  "descriptionKey": "actor-demo-fire-elemental-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 300,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "E",
+  "hitPointDice": {
+    "dice": 30,
+    "sides": 8
+  },
+  "id": "demo.actor.fire-elemental",
+  "killsWeakerBodies": true,
+  "level": 33,
+  "light": {
+    "intrinsic": true,
+    "radius": 1
+  },
+  "maxHp": 135,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 4,
+            "damageSides": 6,
+            "damageType": "fire",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 4,
+            "damageSides": 6,
+            "damageType": "fire",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.bolt-fire-9d8-11",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 16
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "nameKey": "actor-demo-fire-elemental-name",
+  "resistances": {
+    "cold": "vulnerable",
+    "fire": "immune",
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 110,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "empty-mind",
+    "evil",
+    "kin-glyph-69",
+    "legacy-import",
+    "nonliving",
+    "orc-cave"
+  ],
+  "terrainInteraction": {
+    "destroysItems": true
+  }
+}

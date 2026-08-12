@@ -594,7 +594,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         .iter()
         .filter(|actor| actor.tags.iter().any(|tag| tag == "orc-cave"))
         .collect::<Vec<_>>();
-    assert_eq!(orc_cave.len(), 277);
+    assert_eq!(orc_cave.len(), 316);
 
     for id in [
         "demo.actor.bunyip",
@@ -641,7 +641,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
     assert_eq!(
         level_counts,
         [
-            16, 14, 12, 17, 24, 17, 19, 17, 18, 21, 7, 12, 13, 11, 14, 13, 9, 3, 4, 16,
+            16, 14, 12, 17, 24, 17, 19, 17, 18, 21, 7, 12, 25, 13, 26, 26, 9, 3, 4, 16,
         ]
     );
 
@@ -3504,7 +3504,6 @@ fn p42a_direct_monsters_keep_source_identity_without_new_abilities() {
 #[test]
 fn p42b_direct_monsters_complete_the_ability_free_harvest() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
-    assert_eq!(artifact.content.abilities.len(), 331);
 
     for (id, legacy_index, level) in [
         ("black-pudding", 585, 37),
@@ -3551,8 +3550,6 @@ fn p42b_direct_monsters_complete_the_ability_free_harvest() {
 #[test]
 fn p43_monsters_reuse_the_existing_ability_catalog() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
-    assert_eq!(artifact.content.actors.len(), 728);
-    assert_eq!(artifact.content.abilities.len(), 331);
     let ability_ids = artifact
         .content
         .abilities
@@ -3628,6 +3625,88 @@ fn p43_monsters_reuse_the_existing_ability_catalog() {
                 .iter()
                 .all(|candidate| ability_ids.contains(candidate.ability_id.as_str())),
             "{actor_id} should only reference existing abilities"
+        );
+    }
+}
+
+#[test]
+fn p44a_monsters_generate_only_parameterized_existing_effects() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    assert_eq!(artifact.content.actors.len(), 767);
+    assert_eq!(artifact.content.abilities.len(), 377);
+    let ability_ids = artifact
+        .content
+        .abilities
+        .iter()
+        .map(|ability| ability.id.as_str())
+        .collect::<BTreeSet<_>>();
+
+    for (id, legacy_index, level) in [
+        ("bokrug", 489, 33),
+        ("biclops", 490, 33),
+        ("ivory-monk", 492, 33),
+        ("logrus-master", 498, 33),
+        ("fasolt-the-giant", 506, 33),
+        ("fire-elemental", 510, 33),
+        ("cherub", 511, 33),
+        ("water-elemental", 512, 33),
+        ("mystic", 915, 33),
+        ("that-black-bat", 975, 33),
+        ("rusalka", 1143, 33),
+        ("nidaros-the-clairvoyant", 1240, 33),
+        ("earth-elemental", 525, 34),
+        ("king-koopa", 928, 34),
+        ("storm-giant", 487, 35),
+        ("headless-ghost", 533, 35),
+        ("dread-knight", 534, 35),
+        ("smoke-elemental", 537, 35),
+        ("halfling-slinger", 539, 35),
+        ("gravity-hound", 540, 35),
+        ("inertia-hound", 542, 35),
+        ("impact-hound", 543, 35),
+        ("ooze-elemental", 545, 35),
+        ("mature-white-dragon", 549, 35),
+        ("bazooker", 896, 35),
+        ("pip-the-braver-from-another-world", 1004, 35),
+        ("young-multi-hued-dragon", 556, 36),
+        ("mature-blue-dragon", 560, 36),
+        ("mature-green-dragon", 561, 36),
+        ("young-red-dragon", 563, 36),
+        ("bodak", 566, 36),
+        ("elder-thing", 569, 36),
+        ("ice-elemental", 570, 36),
+        ("the-greater-hell-magic-mushroom-were-quylthulg", 572, 36),
+        ("lord-borel-of-hendrake", 573, 36),
+        ("sky-golem", 895, 36),
+        ("young-silver-dragon", 1208, 36),
+        ("implorington-iii", 1231, 36),
+        ("lorgan-chief-of-the-easterlings", 1232, 36),
+    ] {
+        let actor_id = format!("demo.actor.{id}");
+        let actor = artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == actor_id)
+            .unwrap_or_else(|| panic!("{actor_id} should be imported"));
+        assert_eq!(actor.level, level, "{actor_id} level");
+        assert_eq!(
+            actor
+                .allocation
+                .as_ref()
+                .map(|allocation| allocation.legacy_index),
+            Some(legacy_index),
+            "{actor_id} source index"
+        );
+        assert!(
+            actor.monster_casting.as_ref().is_some_and(|casting| {
+                !casting.abilities.is_empty()
+                    && casting
+                        .abilities
+                        .iter()
+                        .all(|candidate| ability_ids.contains(candidate.ability_id.as_str()))
+            }),
+            "{actor_id} should bind generated parameter records"
         );
     }
 }
