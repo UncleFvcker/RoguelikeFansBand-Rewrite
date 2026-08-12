@@ -1,0 +1,172 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 1009,
+    "maxDepth": 999,
+    "rarity": 3
+  },
+  "attack": 11,
+  "damageDice": 5,
+  "damageSides": 5,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 4,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.warrens",
+    "kind": "items",
+    "minimumQuality": "fine"
+  },
+  "defense": 9,
+  "descriptionKey": "actor-demo-dwar-dog-lord-of-waw-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 13000,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "W",
+  "hitPointDice": {
+    "dice": 20,
+    "forceMaximum": true,
+    "sides": 100
+  },
+  "id": "demo.actor.dwar-dog-lord-of-waw",
+  "level": 44,
+  "maxHp": 2000,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 5,
+            "damageSides": 5,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 5,
+            "damageSides": 5,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 5,
+            "damageSides": 5,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "amountDice": 5,
+            "amountSides": 5,
+            "type": "unlife"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "type": "terrify"
+          },
+          {
+            "amountDice": 5,
+            "amountSides": 5,
+            "type": "unlife"
+          }
+        ],
+        "methodId": "rfb.blow.wail",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.blind",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.paralyze",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.scare",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.curse-10d15",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-fire-1d154-10",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-nether-10d10-94",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-legacy-import-l44-1d3-1",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-undead-l44-1d3-1",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-hound-l44-1d2-1",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 33,
+    "smart": true
+  },
+  "movesWeakerBodies": true,
+  "nameKey": "actor-demo-dwar-dog-lord-of-waw-name",
+  "resistances": {
+    "cold": "resistant",
+    "dark": "resistant",
+    "fire": "resistant",
+    "light": "vulnerable",
+    "nether": "resistant",
+    "poison": "immune"
+  },
+  "role": "monster",
+  "speed": 120,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "aura-fear",
+    "cold-blooded",
+    "evil",
+    "kin-glyph-87",
+    "legacy-import",
+    "orc-cave",
+    "undead",
+    "unique"
+  ]
+}

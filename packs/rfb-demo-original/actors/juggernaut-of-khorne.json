@@ -1,0 +1,110 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 672,
+    "maxDepth": 999,
+    "rarity": 3
+  },
+  "attack": 10,
+  "damageDice": 8,
+  "damageSides": 6,
+  "damageType": "physical",
+  "defense": 9,
+  "descriptionKey": "actor-demo-juggernaut-of-khorne-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 2500,
+  "formatVersion": 1,
+  "glyph": "g",
+  "hitPointDice": {
+    "dice": 90,
+    "sides": 19
+  },
+  "id": "demo.actor.juggernaut-of-khorne",
+  "level": 43,
+  "maxHp": 900,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 8,
+            "damageSides": 6,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.butt",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 10,
+            "damageSides": 6,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.crush",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 10,
+            "damageSides": 6,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.crush",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 8,
+            "damageSides": 6,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.butt",
+        "toHit": 20
+      }
+    ]
+  },
+  "nameKey": "actor-demo-juggernaut-of-khorne-name",
+  "reflectsBolts": true,
+  "resistances": {
+    "cold": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "poison": "immune"
+  },
+  "rideable": true,
+  "role": "monster",
+  "speed": 120,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "demon",
+    "evil",
+    "kin-glyph-103",
+    "legacy-import",
+    "nonliving",
+    "orc-cave"
+  ],
+  "terrainInteraction": {
+    "destroysItems": true
+  }
+}

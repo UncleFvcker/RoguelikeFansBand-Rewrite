@@ -1,0 +1,66 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "friends": {
+      "chancePercent": 0,
+      "dice": 3,
+      "sides": 3
+    },
+    "legacyIndex": 952,
+    "maxDepth": 999,
+    "rarity": 6
+  },
+  "attack": 11,
+  "damageDice": 30,
+  "damageSides": 3,
+  "damageType": "physical",
+  "defense": 5,
+  "descriptionKey": "actor-demo-kamikaze-hound-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 500,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "Z",
+  "hitPointDice": {
+    "dice": 30,
+    "sides": 10
+  },
+  "id": "demo.actor.kamikaze-hound",
+  "level": 44,
+  "maxHp": 165,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 30,
+            "damageSides": 3,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.explode",
+        "selfDestructs": true,
+        "toHit": 20
+      }
+    ]
+  },
+  "nameKey": "actor-demo-kamikaze-hound-name",
+  "role": "monster",
+  "speed": 130,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "animal",
+    "hound",
+    "kin-glyph-90",
+    "legacy-import",
+    "orc-cave"
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability-program.ball-fire-1d154-10",
+  "input": "cast-target",
+  "steps": [
+    {
+      "damageBonus": 10,
+      "damageDice": 1,
+      "damageSides": 154,
+      "damageType": "fire",
+      "radius": 2,
+      "type": "area-damage"
+    }
+  ]
+}
