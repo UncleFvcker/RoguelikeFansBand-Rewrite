@@ -23,6 +23,9 @@
       "cubicWeight": 2
     }
   ],
+  "spellPowerFields": [
+    { "effectIndex": 0, "field": "genocide-power" }
+  ],
   "tags": [
     "death",
     "genocide",

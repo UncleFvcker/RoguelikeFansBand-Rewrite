@@ -28,9 +28,9 @@ use rfb_protocol::{
 use super::tasks::projected_task_state;
 use super::{
     AbilityProgress, Game, LightSource, TERRAIN_INTERACTION_DIRECTIONS, ability_detect_subject_dto,
-    ability_effect_spec_dto, ability_target_spec_dto, actor_melee_routine_dto, combine_percentages,
-    derived_speed, item_target_spec, light_from_sources, task_definition, task_floors,
-    task_objectives,
+    ability_target_spec_dto, actor_melee_routine_dto, combine_percentages, derived_speed,
+    item_target_spec, light_from_sources, player_ability_effect_spec_dto, task_definition,
+    task_floors, task_objectives,
 };
 
 const WILDERNESS_TOWN_ID: &str = "core.wilderness.town";
@@ -283,6 +283,10 @@ impl Game {
                         self.progress.level,
                     );
                 }
+                Self::apply_player_spell_power(
+                    &mut effective_ability,
+                    self.effective_player_spell_power_bonus(),
+                );
                 let ability = &effective_ability;
                 let mutation_activation = mutation_activations.get(&ability_id);
                 let class_activation = class_activations.get(&ability_id);
@@ -467,7 +471,15 @@ impl Game {
                         .effect
                         .ordered_effects()
                         .iter()
-                        .map(ability_effect_spec_dto)
+                        .enumerate()
+                        .map(|(index, effect)| {
+                            player_ability_effect_spec_dto(
+                                ability,
+                                u8::try_from(index)
+                                    .expect("validated ability effect index must fit u8"),
+                                effect,
+                            )
+                        })
                         .collect(),
                     target_spec: ability_target_spec_dto(ability),
                     learned,

@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.179";
+pub const PROTOCOL_VERSION: &str = "1.180";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -476,6 +476,8 @@ pub struct StatModifiersDto {
     pub charisma: i32,
     #[serde(default)]
     pub speed: i32,
+    #[serde(default)]
+    pub spell_power_bonus: i32,
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -850,6 +852,8 @@ pub enum AbilityEffectSpecDto {
         #[serde(default)]
         damage_bonus: u16,
         damage_type: DamageTypeDto,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        final_damage_spell_power_bonus: Option<i32>,
     },
     AreaDamage {
         damage_dice: u16,
@@ -860,6 +864,8 @@ pub enum AbilityEffectSpecDto {
         radius: u8,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         target_category: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        final_damage_spell_power_bonus: Option<i32>,
     },
     BeamDamage {
         damage_dice: u16,
@@ -867,6 +873,8 @@ pub enum AbilityEffectSpecDto {
         #[serde(default)]
         damage_bonus: u16,
         damage_type: DamageTypeDto,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        final_damage_spell_power_bonus: Option<i32>,
     },
     LightLine {
         damage_dice: u16,
@@ -879,6 +887,8 @@ pub enum AbilityEffectSpecDto {
         damage_bonus: u16,
         damage_type: DamageTypeDto,
         beam_chance_percent: u8,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        final_damage_spell_power_bonus: Option<i32>,
     },
     BoltOrAreaDamage {
         damage_dice: u16,
@@ -888,6 +898,8 @@ pub enum AbilityEffectSpecDto {
         damage_type: DamageTypeDto,
         area_from_level: u16,
         radius: u8,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        final_damage_spell_power_bonus: Option<i32>,
     },
     ConeDamage {
         damage_dice: u16,
@@ -896,6 +908,8 @@ pub enum AbilityEffectSpecDto {
         damage_bonus: u16,
         damage_type: DamageTypeDto,
         radius: u8,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        final_damage_spell_power_bonus: Option<i32>,
     },
     BreathDamage {
         hp_percent: u8,
@@ -1086,6 +1100,8 @@ pub enum AbilityEffectSpecDto {
         repeat: u8,
         #[serde(default)]
         feeds: bool,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        final_damage_spell_power_bonus: Option<i32>,
     },
     Genocide {
         scope: AbilityGenocideScopeDto,
@@ -1120,6 +1136,8 @@ pub enum AbilityEffectSpecDto {
         damage_type: DamageTypeDto,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         target_category: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        final_damage_spell_power_bonus: Option<i32>,
     },
     VisibleApplyStatus {
         status_kind_id: String,
@@ -1144,6 +1162,8 @@ pub enum AbilityEffectSpecDto {
         roll_sides: u16,
         level_bonus_divisor: u16,
         branches: Vec<AbilityRandomBranchSpecDto>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        roll_spell_power_bonus: Option<i32>,
     },
     Sequence {
         effects: Vec<AbilityEffectSpecDto>,

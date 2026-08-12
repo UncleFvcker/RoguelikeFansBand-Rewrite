@@ -7,7 +7,7 @@ use crate::{
     AbilityDetectSubjectDefinition, AbilityEffectDefinition, AbilityGenocideScopeDefinition,
     AbilityLevelScalingField, AbilityRandomTargetDefinition, AbilityTargetModeDefinition,
     ActorRole, ContentError, MonsterCastingDefinition, RESOURCE_SCHEMA, ResourceDefinition,
-    valid_ability_level_scaling,
+    valid_ability_level_scaling, valid_ability_spell_power,
 };
 
 use super::shared::{
@@ -85,6 +85,9 @@ pub(super) fn validate_abilities(
         ability
             .level_scaling
             .sort_by_key(|scaling| (scaling.effect_index, scaling.field));
+        ability
+            .spell_power_fields
+            .sort_by_key(|definition| (definition.effect_index, definition.field));
         if let AbilityEffectDefinition::RandomChoice { branches, .. } = &mut ability.effect {
             for branch in branches {
                 branch
@@ -768,6 +771,8 @@ pub(super) fn validate_abilities(
         };
         let valid_level_scaling =
             valid_ability_level_scaling(&ability.effect, &ability.level_scaling);
+        let valid_spell_power =
+            valid_ability_spell_power(&ability.effect, &ability.spell_power_fields);
         let self_targeted = ability
             .target
             .modes
@@ -950,6 +955,7 @@ pub(super) fn validate_abilities(
             || !valid_target
             || !valid_effect
             || !valid_level_scaling
+            || !valid_spell_power
             || !directional_target
         {
             return Err(ContentError::InvalidAbility(ability.id.clone()));

@@ -506,7 +506,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -531,7 +532,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -562,7 +564,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -593,7 +596,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -624,7 +628,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -655,7 +660,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -686,7 +692,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -717,7 +724,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -742,7 +750,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "unexamined"
         }
@@ -766,7 +775,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "equipmentBonuses": {
             "meleeAttacks": 0,
@@ -805,7 +815,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "identified",
           "quality": "ordinary",
@@ -839,7 +850,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "identified",
           "quality": "ordinary",
@@ -1012,7 +1024,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 2
       },
-      "stateHash": "be20161cfca5adb83b0e976ffc0cb62829401921c3f9c67c0cb472db4091ce94"
+      "stateHash": "ba5fdde7cc39b0c2ddd8856e5c75512f5625c6b59011fcc7317d1fcd7d08221d"
     },
     "events": [
       {

@@ -26,6 +26,13 @@
       "divisor": 2
     }
   ],
+  "spellPowerFields": [
+    { "effectIndex": 0, "field": "status-duration-ticks" },
+    { "effectIndex": 0, "field": "status-duration-sides" },
+    { "effectIndex": 1, "field": "status-duration-ticks" },
+    { "effectIndex": 1, "field": "status-duration-sides" },
+    { "effectIndex": 2, "field": "status-duration-ticks" }
+  ],
   "tags": [
     "blessed",
     "death",

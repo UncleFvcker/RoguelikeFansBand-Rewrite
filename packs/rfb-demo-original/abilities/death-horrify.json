@@ -28,6 +28,9 @@
       "divisor": 5
     }
   ],
+  "spellPowerFields": [
+    { "effectIndex": 0, "field": "status-power" }
+  ],
   "tags": [
     "death",
     "fear",

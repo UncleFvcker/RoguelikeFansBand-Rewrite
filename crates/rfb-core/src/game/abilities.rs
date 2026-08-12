@@ -174,6 +174,7 @@ impl Game {
                 self.progress.level,
             );
         }
+        Self::apply_player_spell_power(&mut ability, self.effective_player_spell_power_bonus());
         let unavailable_reason = match source {
             AbilitySourceDto::Mutation => {
                 let activation = mutation_activation
@@ -428,7 +429,13 @@ impl Game {
             .level
             .checked_div(level_bonus_divisor)
             .unwrap_or(0);
-        let roll = base_roll.saturating_add(level_bonus);
+        let roll = u16::try_from(spell_powered_ability_value(
+            ability,
+            0,
+            AbilitySpellPowerField::RandomChoiceRoll,
+            u64::from(base_roll.saturating_add(level_bonus)),
+        ))
+        .expect("spell-powered random ability roll must fit u16");
         let (branch_index, branch) = branches
             .iter()
             .enumerate()
@@ -859,6 +866,13 @@ impl Game {
             .roll_damage(*damage_dice, *damage_sides)
             .saturating_add(i32::from(*damage_bonus))
             .max(0);
+        let raw_damage = i32::try_from(spell_powered_ability_value(
+            ability,
+            0,
+            AbilitySpellPowerField::FinalDamage,
+            u64::try_from(raw_damage).expect("ability damage must be non-negative"),
+        ))
+        .expect("spell-powered ability damage must fit i32");
         if self.try_reflect_player_bolt(
             index,
             &ability.id,
@@ -903,6 +917,13 @@ impl Game {
             .roll_damage(damage_dice, damage_sides)
             .saturating_add(i32::from(damage_bonus))
             .max(0);
+        let raw_damage = i32::try_from(spell_powered_ability_value(
+            ability,
+            0,
+            AbilitySpellPowerField::FinalDamage,
+            u64::try_from(raw_damage).expect("Malediction damage must be non-negative"),
+        ))
+        .expect("spell-powered Malediction damage must fit i32");
         let (trace, target_index) = self.trace_projectile_path(path.clone());
         if let Some(target_index) = target_index {
             self.resolve_ability_damage_to_entity(
@@ -974,7 +995,13 @@ impl Game {
         if rider_roll == 666 {
             let mut rider = ability.clone();
             rider.effect = AbilityEffectDefinition::DeathRay {
-                power: u32::from(level).saturating_mul(200),
+                power: u32::try_from(spell_powered_ability_value(
+                    ability,
+                    0,
+                    AbilitySpellPowerField::MaledictionDeathRayPower,
+                    u64::from(level) * 200,
+                ))
+                .expect("spell-powered Malediction death ray must fit u32"),
             };
             return self.resolve_player_death_ray_effect(
                 &rider,
@@ -995,7 +1022,14 @@ impl Game {
                     .saturating_mul(3)
                     .saturating_add(1)
             };
-            (STATUS_FEAR, duration_ticks, Some(level))
+            let power = u16::try_from(spell_powered_ability_value(
+                ability,
+                0,
+                AbilitySpellPowerField::MaledictionFearPower,
+                u64::from(level),
+            ))
+            .expect("spell-powered Malediction fear power must fit u16");
+            (STATUS_FEAR, duration_ticks, Some(power))
         } else if rider_roll < 800 {
             let power = (level / 2)
                 .max(u16::try_from(raw_damage.min(100)).expect("Malediction damage must fit u16"));
@@ -1136,6 +1170,13 @@ impl Game {
             .roll_damage(*damage_dice, *damage_sides)
             .saturating_add(i32::from(*damage_bonus))
             .max(0);
+        let base_raw_damage = i32::try_from(spell_powered_ability_value(
+            ability,
+            0,
+            AbilitySpellPowerField::FinalDamage,
+            u64::try_from(base_raw_damage).expect("area damage must be non-negative"),
+        ))
+        .expect("spell-powered area damage must fit i32");
         self.resolve_player_area_damage_with_base(
             &ability.id,
             path,
@@ -1225,6 +1266,13 @@ impl Game {
             .roll_damage(*damage_dice, *damage_sides)
             .saturating_add(i32::from(*damage_bonus))
             .max(0);
+        let base_raw_damage = i32::try_from(spell_powered_ability_value(
+            ability,
+            0,
+            AbilitySpellPowerField::FinalDamage,
+            u64::try_from(base_raw_damage).expect("beam damage must be non-negative"),
+        ))
+        .expect("spell-powered beam damage must fit i32");
         self.resolve_player_beam_damage_with_base(
             &ability.id,
             path,
@@ -1373,6 +1421,13 @@ impl Game {
             .roll_damage(*damage_dice, *damage_sides)
             .saturating_add(i32::from(*damage_bonus))
             .max(0);
+        let base_raw_damage = i32::try_from(spell_powered_ability_value(
+            ability,
+            0,
+            AbilitySpellPowerField::FinalDamage,
+            u64::try_from(base_raw_damage).expect("bolt or beam damage must be non-negative"),
+        ))
+        .expect("spell-powered bolt or beam damage must fit i32");
         if beam {
             let (trace, _) = self.trace_projectile_path_with_actor_policy(path, false);
             let affected_positions = trace.traversed.clone();
@@ -1696,6 +1751,13 @@ impl Game {
             .roll_damage(*damage_dice, *damage_sides)
             .saturating_add(i32::from(*damage_bonus))
             .max(0);
+        let base_raw_damage = i32::try_from(spell_powered_ability_value(
+            ability,
+            0,
+            AbilitySpellPowerField::FinalDamage,
+            u64::try_from(base_raw_damage).expect("cone damage must be non-negative"),
+        ))
+        .expect("spell-powered cone damage must fit i32");
         events.push(DomainEvent::AbilityConeDamage {
             ability_id: ability.id.clone(),
             resolution: AbilityConeDamageResolutionDto {
@@ -1770,6 +1832,13 @@ impl Game {
             .roll_damage(*damage_dice, *damage_sides)
             .saturating_add(i32::from(*damage_bonus))
             .max(0);
+        let base_raw_damage = i32::try_from(spell_powered_ability_value(
+            ability,
+            0,
+            AbilitySpellPowerField::FinalDamage,
+            u64::try_from(base_raw_damage).expect("visible damage must be non-negative"),
+        ))
+        .expect("spell-powered visible damage must fit i32");
         events.push(DomainEvent::AbilityVisibleDamage {
             ability_id: ability.id.clone(),
             resolution: AbilityVisibleDamageResolutionDto {
@@ -1997,6 +2066,13 @@ impl Game {
                 .roll_damage(*damage_dice, *damage_sides)
                 .saturating_add(i32::from(*damage_bonus))
                 .max(0);
+            let raw_damage = i32::try_from(spell_powered_ability_value(
+                ability,
+                0,
+                AbilitySpellPowerField::FinalDamage,
+                u64::try_from(raw_damage).expect("drain life damage must be non-negative"),
+            ))
+            .expect("spell-powered drain life damage must fit i32");
             let damage = self.resolve_ability_damage_to_entity(
                 target_index,
                 &ability.id,

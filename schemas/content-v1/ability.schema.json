@@ -93,6 +93,43 @@
       ],
       "type": "string"
     },
+    "AbilitySpellPowerDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "effectIndex": {
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "field": {
+          "$ref": "#/$defs/AbilitySpellPowerField"
+        }
+      },
+      "required": [
+        "effectIndex",
+        "field"
+      ],
+      "type": "object"
+    },
+    "AbilitySpellPowerField": {
+      "enum": [
+        "final-damage",
+        "damage-sides",
+        "damage-bonus",
+        "radius",
+        "status-duration-ticks",
+        "status-duration-sides",
+        "status-power",
+        "control-power",
+        "genocide-power",
+        "identify-power",
+        "random-choice-roll",
+        "malediction-death-ray-power",
+        "malediction-fear-power"
+      ],
+      "type": "string"
+    },
     "AbilityTargetDefinition": {
       "additionalProperties": false,
       "properties": {
@@ -160,6 +197,12 @@
     },
     "nameKey": {
       "type": "string"
+    },
+    "spellPowerFields": {
+      "items": {
+        "$ref": "#/$defs/AbilitySpellPowerDefinition"
+      },
+      "type": "array"
     },
     "tags": {
       "items": {

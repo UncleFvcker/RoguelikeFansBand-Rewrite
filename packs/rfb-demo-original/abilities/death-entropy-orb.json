@@ -28,6 +28,9 @@
       "maximum": 3
     }
   ],
+  "spellPowerFields": [
+    { "effectIndex": 0, "field": "final-damage" }
+  ],
   "tags": [
     "area",
     "death",

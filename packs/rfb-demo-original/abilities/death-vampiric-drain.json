@@ -28,6 +28,10 @@
       "divisor": 1
     }
   ],
+  "spellPowerFields": [
+    { "effectIndex": 0, "field": "damage-sides" },
+    { "effectIndex": 0, "field": "damage-bonus" }
+  ],
   "tags": [
     "death",
     "drain",

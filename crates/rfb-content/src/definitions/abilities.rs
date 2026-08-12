@@ -122,6 +122,33 @@ pub enum AbilityLevelScalingField {
     MaximumWeight,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum AbilitySpellPowerField {
+    FinalDamage,
+    DamageSides,
+    DamageBonus,
+    Radius,
+    StatusDurationTicks,
+    StatusDurationSides,
+    StatusPower,
+    ControlPower,
+    GenocidePower,
+    IdentifyPower,
+    RandomChoiceRoll,
+    MaledictionDeathRayPower,
+    MaledictionFearPower,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct AbilitySpellPowerDefinition {
+    pub effect_index: u8,
+    pub field: AbilitySpellPowerField,
+}
+
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
@@ -764,6 +791,96 @@ pub(crate) fn valid_ability_level_scaling(
         })
 }
 
+pub(crate) fn valid_ability_spell_power(
+    effect: &AbilityEffectDefinition,
+    fields: &[AbilitySpellPowerDefinition],
+) -> bool {
+    let mut unique = BTreeSet::new();
+    fields.len() <= 32
+        && fields.iter().all(|definition| {
+            let Some(effect) = effect
+                .ordered_effects()
+                .get(usize::from(definition.effect_index))
+            else {
+                return false;
+            };
+            let valid = match definition.field {
+                AbilitySpellPowerField::FinalDamage => matches!(
+                    effect,
+                    AbilityEffectDefinition::Damage { .. }
+                        | AbilityEffectDefinition::Malediction { .. }
+                        | AbilityEffectDefinition::AreaDamage { .. }
+                        | AbilityEffectDefinition::BeamDamage { .. }
+                        | AbilityEffectDefinition::BoltOrBeamDamage { .. }
+                        | AbilityEffectDefinition::BoltOrAreaDamage { .. }
+                        | AbilityEffectDefinition::ConeDamage { .. }
+                        | AbilityEffectDefinition::VisibleDamage { .. }
+                        | AbilityEffectDefinition::DrainLife { .. }
+                ),
+                AbilitySpellPowerField::DamageSides => matches!(
+                    effect,
+                    AbilityEffectDefinition::Damage { .. }
+                        | AbilityEffectDefinition::Malediction { .. }
+                        | AbilityEffectDefinition::AreaDamage { .. }
+                        | AbilityEffectDefinition::BeamDamage { .. }
+                        | AbilityEffectDefinition::BoltOrBeamDamage { .. }
+                        | AbilityEffectDefinition::BoltOrAreaDamage { .. }
+                        | AbilityEffectDefinition::ConeDamage { .. }
+                        | AbilityEffectDefinition::VisibleDamage { .. }
+                        | AbilityEffectDefinition::DrainLife { .. }
+                ),
+                AbilitySpellPowerField::DamageBonus => matches!(
+                    effect,
+                    AbilityEffectDefinition::Damage { .. }
+                        | AbilityEffectDefinition::Malediction { .. }
+                        | AbilityEffectDefinition::AreaDamage { .. }
+                        | AbilityEffectDefinition::BeamDamage { .. }
+                        | AbilityEffectDefinition::BoltOrBeamDamage { .. }
+                        | AbilityEffectDefinition::BoltOrAreaDamage { .. }
+                        | AbilityEffectDefinition::ConeDamage { .. }
+                        | AbilityEffectDefinition::VisibleDamage { .. }
+                        | AbilityEffectDefinition::DrainLife { .. }
+                ),
+                AbilitySpellPowerField::Radius => matches!(
+                    effect,
+                    AbilityEffectDefinition::AreaDamage { .. }
+                        | AbilityEffectDefinition::BoltOrAreaDamage { .. }
+                        | AbilityEffectDefinition::ConeDamage { .. }
+                ),
+                AbilitySpellPowerField::StatusDurationTicks => matches!(
+                    effect,
+                    AbilityEffectDefinition::ApplyStatus { .. }
+                        | AbilityEffectDefinition::VisibleApplyStatus { .. }
+                ),
+                AbilitySpellPowerField::StatusDurationSides => {
+                    matches!(effect, AbilityEffectDefinition::ApplyStatus { .. })
+                }
+                AbilitySpellPowerField::StatusPower => matches!(
+                    effect,
+                    AbilityEffectDefinition::ApplyStatus { power: Some(_), .. }
+                        | AbilityEffectDefinition::VisibleApplyStatus { power: Some(_), .. }
+                ),
+                AbilitySpellPowerField::ControlPower => {
+                    matches!(effect, AbilityEffectDefinition::Control { .. })
+                }
+                AbilitySpellPowerField::GenocidePower => {
+                    matches!(effect, AbilityEffectDefinition::Genocide { .. })
+                }
+                AbilitySpellPowerField::IdentifyPower => {
+                    matches!(effect, AbilityEffectDefinition::IdentifyItem { .. })
+                }
+                AbilitySpellPowerField::RandomChoiceRoll => {
+                    matches!(effect, AbilityEffectDefinition::RandomChoice { .. })
+                }
+                AbilitySpellPowerField::MaledictionDeathRayPower
+                | AbilitySpellPowerField::MaledictionFearPower => {
+                    matches!(effect, AbilityEffectDefinition::Malediction { .. })
+                }
+            };
+            valid && unique.insert((definition.effect_index, definition.field))
+        })
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -792,6 +909,11 @@ pub struct AbilityDefinition {
     pub effect: AbilityEffectDefinition,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub level_scaling: Vec<AbilityLevelScalingDefinition>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub spell_power_fields: Vec<AbilitySpellPowerDefinition>,
+    #[serde(skip)]
+    #[cfg_attr(feature = "schemas", schemars(skip))]
+    pub spell_power_bonus: i32,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub player: Option<PlayerAbilityDefinition>,
     pub tags: Vec<String>,

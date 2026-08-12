@@ -23,6 +23,9 @@
       "cubicWeight": 2
     }
   ],
+  "spellPowerFields": [
+    { "effectIndex": 0, "field": "identify-power" }
+  ],
   "tags": [
     "death",
     "identify",

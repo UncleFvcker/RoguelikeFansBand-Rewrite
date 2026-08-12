@@ -3480,6 +3480,7 @@ fn item_json_with_terrain(
     if fold.speed != 0 {
         modifiers.insert("speed".to_owned(), serde_json::json!(fold.speed));
     }
+    fold_spell_power_modifier(&entry.flags, entry.pval, &mut modifiers, &mut equipment);
     if !modifiers.is_empty() {
         value["modifiers"] = serde_json::Value::Object(modifiers);
     }
@@ -4088,6 +4089,27 @@ fn equipment_fold(flags: &[String], pval: i32) -> EquipmentFold {
     fold
 }
 
+fn fold_spell_power_modifier(
+    flags: &[String],
+    pval: i32,
+    modifiers: &mut serde_json::Map<String, serde_json::Value>,
+    equipment: &mut EquipmentFold,
+) {
+    let pval = pval.clamp(-100, 100);
+    let mut bonus = 0_i32;
+    if flags.iter().any(|flag| flag == "SPELL_POWER") {
+        bonus = bonus.saturating_add(pval);
+        equipment.consumed.insert("SPELL_POWER".to_owned());
+    }
+    if flags.iter().any(|flag| flag == "DEC_SPELL_POWER") {
+        bonus = bonus.saturating_sub(pval);
+        equipment.consumed.insert("DEC_SPELL_POWER".to_owned());
+    }
+    if bonus != 0 {
+        modifiers.insert("spellPowerBonus".to_owned(), serde_json::json!(bonus));
+    }
+}
+
 fn add_equipment_bonus(fold: &mut EquipmentFold, field: &str, amount: i32) {
     if amount == 0 {
         return;
@@ -4156,10 +4178,11 @@ fn ego_json(
     // SPEED folds the max pval, resistances and free action are binary.
     let fold = defensive_fold(&entry.flags, entry.max_pval);
     let offense = offensive_fold(&entry.flags);
-    let equipment = equipment_fold(&entry.flags, entry.max_pval);
+    let mut equipment = equipment_fold(&entry.flags, entry.max_pval);
     if fold.speed != 0 {
         modifiers.insert("speed".to_owned(), serde_json::json!(fold.speed));
     }
+    fold_spell_power_modifier(&entry.flags, entry.max_pval, &mut modifiers, &mut equipment);
     if entry.has_activation {
         *report
             .item_behavior_gaps
@@ -4422,7 +4445,7 @@ fn artifact_json(
     } else {
         OffensiveFold::default()
     };
-    let equipment = if has_slot {
+    let mut equipment = if has_slot {
         equipment_fold(&entry.flags, entry.pval)
     } else {
         EquipmentFold::default()
@@ -4443,6 +4466,7 @@ fn artifact_json(
         if fold.speed != 0 {
             modifiers.insert("speed".to_owned(), serde_json::json!(fold.speed));
         }
+        fold_spell_power_modifier(&entry.flags, entry.pval, &mut modifiers, &mut equipment);
     }
     if !modifiers.is_empty() {
         value["modifiers"] = serde_json::Value::Object(modifiers);
@@ -5926,6 +5950,38 @@ fn death_realm(profile: &LegacyMagicProfile) -> Option<&LegacyRealmProfile> {
         .find(|realm| realm.index == DEATH_REALM_INDEX && realm.readable)
 }
 
+fn death_spell_power_fields(spell_index: u8) -> Vec<serde_json::Value> {
+    let field =
+        |effect_index, field| serde_json::json!({"effectIndex": effect_index, "field": field});
+    match spell_index {
+        1 => vec![
+            field(0, "final-damage"),
+            field(0, "malediction-death-ray-power"),
+            field(0, "malediction-fear-power"),
+        ],
+        3 | 8 | 9 | 18 | 21 | 22 => vec![field(0, "final-damage")],
+        4 | 6 => vec![field(0, "status-power")],
+        5 | 16 | 27 | 31 => vec![
+            field(0, "status-duration-ticks"),
+            field(0, "status-duration-sides"),
+        ],
+        7 => vec![field(0, "control-power")],
+        10 | 23 | 30 => vec![field(0, "final-damage"), field(0, "radius")],
+        11 | 15 | 29 => vec![field(0, "genocide-power")],
+        13 => vec![field(0, "damage-sides"), field(0, "damage-bonus")],
+        17 => vec![field(0, "random-choice-roll")],
+        19 => vec![
+            field(0, "status-duration-ticks"),
+            field(0, "status-duration-sides"),
+            field(1, "status-duration-ticks"),
+            field(1, "status-duration-sides"),
+            field(2, "status-duration-ticks"),
+        ],
+        26 => vec![field(0, "identify-power")],
+        _ => Vec::new(),
+    }
+}
+
 fn death_spell_ability(
     spell: &LegacySpellProfile,
     terrain_creation: &TerrainCreationImportIds,
@@ -6353,7 +6409,7 @@ fn death_spell_ability(
                     }},
                     {"maximumRoll": 107, "effect": {"type": "genocide", "scope": "glyph", "power": 50}, "levelScaling": [{"effectIndex": 0, "field": "genocide-power", "multiplier": 1, "divisor": 1}]},
                     {"maximumRoll": 109, "target": "self-target", "effect": {"type": "visible-damage", "damageDice": 1, "damageSides": 1, "damageBonus": 119}},
-                    {"maximumRoll": 120, "target": "self-target", "effect": {"type": "sequence", "effects": [
+                    {"maximumRoll": 65535, "target": "self-target", "effect": {"type": "sequence", "effects": [
                         {"type": "visible-damage", "damageDice": 1, "damageSides": 1, "damageBonus": 149},
                         {"type": "visible-apply-status", "statusKindId": "rfb.status.slow", "intensity": 1, "durationTicks": 50, "stacking": "extend", "power": 1},
                         {"type": "visible-apply-status", "statusKindId": "rfb.status.sleep", "intensity": 1, "durationTicks": 500, "stacking": "keep-strongest", "power": 1},
@@ -6680,6 +6736,10 @@ fn death_spell_ability(
     });
     if !level_scaling.is_empty() {
         ability["levelScaling"] = serde_json::Value::Array(level_scaling);
+    }
+    let spell_power_fields = death_spell_power_fields(spell.index);
+    if !spell_power_fields.is_empty() {
+        ability["spellPowerFields"] = serde_json::Value::Array(spell_power_fields);
     }
     Some((ability_id, ability))
 }
@@ -13618,6 +13678,10 @@ S:2:0:6000
         assert_eq!(malediction["effect"]["type"], "malediction");
         assert_eq!(malediction["effect"]["damageDice"], 3);
         assert_eq!(malediction["effect"]["damageSides"], 4);
+        assert_eq!(
+            malediction["spellPowerFields"].as_array().map(Vec::len),
+            Some(3)
+        );
         let poison_branding = outcome
             .ability_files
             .iter()
@@ -13663,6 +13727,13 @@ S:2:0:6000
         assert_eq!(resistance["effect"]["durationTicks"], 20);
         assert_eq!(resistance["effect"]["durationDice"], 1);
         assert_eq!(resistance["effect"]["durationSides"], 20);
+        assert_eq!(
+            resistance["spellPowerFields"],
+            serde_json::json!([
+                {"effectIndex": 0, "field": "status-duration-ticks"},
+                {"effectIndex": 0, "field": "status-duration-sides"}
+            ])
+        );
         let vampiric_drain = outcome
             .ability_files
             .iter()
@@ -13704,6 +13775,10 @@ S:2:0:6000
             .map(|(_, value)| value)
             .expect("invoke spirits ability should be generated");
         assert_eq!(invoke_spirits["effect"]["type"], "random-choice");
+        assert_eq!(
+            invoke_spirits["spellPowerFields"][0]["field"],
+            "random-choice-roll"
+        );
         assert_eq!(
             invoke_spirits["effect"]["branches"]
                 .as_array()
@@ -15363,6 +15438,7 @@ E:BERSERK:50:100
 N:3:(Test Aura)
 T:WEAPON
 W:50:*:6
+C:0:0:0:2
 F:SPELL_POWER
 
 N:4:of Test Warding
@@ -15392,12 +15468,14 @@ F:BRAND_VAMP | HOLD_LIFE
             &LegacyCharacterSources::default(),
         );
         assert_eq!(outcome.report.egos_total, 6);
-        // The aura ego has no expressible modifier surface: skipped with a
-        // reason while its flag still lands in the gap report.
-        assert_eq!(outcome.report.egos_imported, 5);
-        assert_eq!(outcome.affix_files.len(), 5);
-        assert_eq!(outcome.report.skip_reasons["ego-inexpressible"], 1);
-        assert_eq!(outcome.report.unmapped_ego_flags["SPELL_POWER"], 1);
+        assert_eq!(outcome.report.egos_imported, 6);
+        assert_eq!(outcome.affix_files.len(), 6);
+        assert!(
+            !outcome
+                .report
+                .unmapped_ego_flags
+                .contains_key("SPELL_POWER")
+        );
 
         let (name, testing) = &outcome.affix_files[0];
         assert_eq!(name, "testing.json");
@@ -15429,6 +15507,9 @@ F:BRAND_VAMP | HOLD_LIFE
                 .any(|tag| tag == "amulet")
         );
         assert_eq!(outcome.report.item_behavior_gaps["ego-activation"], 1);
+
+        let (_, aura) = &outcome.affix_files[2];
+        assert_eq!(aura["modifiers"]["spellPowerBonus"], 2);
         assert_eq!(outcome.report.not_applicable_item_flags["HIDE_TYPE"], 1);
         assert!(!outcome.report.unmapped_ego_flags.contains_key("STR"));
         assert!(!outcome.report.unmapped_ego_flags.contains_key("DEC_INT"));
@@ -15452,7 +15533,7 @@ F:BRAND_VAMP | HOLD_LIFE
 
         // A purely defensive ego used to be inexpressible; the flag fold now
         // carries its elemental defenses and status immunities.
-        let (name, warding) = &outcome.affix_files[2];
+        let (name, warding) = &outcome.affix_files[3];
         assert_eq!(name, "test-warding.json");
         assert!(warding.get("modifiers").is_none());
         assert_eq!(warding["resistances"]["fire"], "resistant");
@@ -15471,7 +15552,7 @@ F:BRAND_VAMP | HOLD_LIFE
         assert!(!outcome.report.unmapped_ego_flags.contains_key("VULN_LITE"));
         assert!(!outcome.report.unmapped_ego_flags.contains_key("FREE_ACT"));
 
-        let (_, dragonfire) = &outcome.affix_files[3];
+        let (_, dragonfire) = &outcome.affix_files[4];
         assert_eq!(dragonfire["slays"]["dragon"], "slay");
         assert_eq!(dragonfire["brands"][0], "fire");
         assert!(
@@ -15482,7 +15563,7 @@ F:BRAND_VAMP | HOLD_LIFE
         );
         assert!(!outcome.report.unmapped_ego_flags.contains_key("BRAND_FIRE"));
 
-        let (_, death) = &outcome.affix_files[4];
+        let (_, death) = &outcome.affix_files[5];
         assert_eq!(death["id"], LEGACY_DEATH_WEAPON_AFFIX_ID);
         assert!(
             death["passives"]
@@ -15500,6 +15581,23 @@ F:BRAND_VAMP | HOLD_LIFE
         );
         assert!(!outcome.report.unmapped_ego_flags.contains_key("BRAND_VAMP"));
         assert!(!outcome.report.unmapped_ego_flags.contains_key("HOLD_LIFE"));
+    }
+
+    #[test]
+    fn equipment_flags_map_spell_power_and_its_decrease() {
+        let flags = vec!["SPELL_POWER".to_owned()];
+        let mut modifiers = serde_json::Map::new();
+        let mut equipment = equipment_fold(&flags, 3);
+        fold_spell_power_modifier(&flags, 3, &mut modifiers, &mut equipment);
+        assert_eq!(modifiers["spellPowerBonus"], 3);
+        assert!(equipment.consumed.contains("SPELL_POWER"));
+
+        let flags = vec!["DEC_SPELL_POWER".to_owned()];
+        let mut modifiers = serde_json::Map::new();
+        let mut equipment = equipment_fold(&flags, 4);
+        fold_spell_power_modifier(&flags, 4, &mut modifiers, &mut equipment);
+        assert_eq!(modifiers["spellPowerBonus"], -4);
+        assert!(equipment.consumed.contains("DEC_SPELL_POWER"));
     }
 
     #[test]

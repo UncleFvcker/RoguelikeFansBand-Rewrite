@@ -466,7 +466,7 @@ contract-v141 后的 importer 维护复用 P84 已有 `apply-poison`，将 tval 
 - status power 采用稳定的 power/target 双有界骰中性公式，Control 采用 `power-10` 对目标等级的有界检定；两者不是原版所有 GF 的逐函数概率公式；
 - Control 保存 controller identity 并复用召唤物 AI，但没有解除控制时限、宠物维护上限、忠诚或主人死亡联动；
 - actor Detect 只返回瞬时位置与 entity ID，不写地图记忆；怪物回忆/长期知识仍是独立系统；
-- 玩家法术的 `spell_power`、`to_d_spell`、施法负重、精确 Mana 容量和学习容量公式仍未接入。
+- 玩家法术的 `to_d_spell`、施法负重、精确 Mana 容量和学习容量公式仍未接入。
 
 ## contract-v103 明确遗留
 

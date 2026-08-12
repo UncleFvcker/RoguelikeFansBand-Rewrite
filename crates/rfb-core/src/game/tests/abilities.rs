@@ -326,6 +326,126 @@ fn death_abilities_materialize_player_level_scaling_in_projection() {
 }
 
 #[test]
+fn spell_power_uses_shared_formula_and_modifier_sources_in_projection() {
+    assert_eq!(spell_power_value(100, -20), 0);
+    assert_eq!(spell_power_value(0, 7), 0);
+    assert_eq!(spell_power_value(10, 1), 10);
+    assert_eq!(spell_power_value(100, 7), 153);
+
+    let mut game = prepare_death_caster(7, 20, "demo.ability.death-stinking-cloud");
+    let equipped = game
+        .items
+        .iter_mut()
+        .find(|item| matches!(item.location, ItemLocation::Equipped { .. }))
+        .expect("test caster should start with equipment");
+    equipped.rolled_affixes.push(RolledAffixState {
+        affix_id: "test.affix.spell-power".to_owned(),
+        properties: AffixPropertyBundleDefinition {
+            modifiers: StatModifiers {
+                spell_power_bonus: 3,
+                ..StatModifiers::default()
+            },
+            ..AffixPropertyBundleDefinition::default()
+        },
+    });
+    game.player.statuses.push(StatusInstance {
+        kind_id: "test.status.blood-rite".to_owned(),
+        intensity: 1,
+        remaining_ticks: 10,
+        source_id: Some("test.ability.blood-rite".to_owned()),
+        granted_modifiers: StatModifiersDto {
+            spell_power_bonus: 7,
+            ..StatModifiersDto::default()
+        },
+        granted_resistances: BTreeMap::new(),
+        granted_brands: BTreeSet::new(),
+        granted_equipment_bonuses: EquipmentBonusesDto::default(),
+        granted_status_immunities: BTreeSet::new(),
+        granted_race_id: None,
+        grants_wall_passage: false,
+        incoming_damage_percent: 100,
+    });
+
+    let abilities = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .map(|ability| (ability.id.clone(), ability))
+        .collect::<BTreeMap<_, _>>();
+    assert!(matches!(
+        abilities["demo.ability.death-stinking-cloud"]
+            .effects
+            .as_slice(),
+        [AbilityEffectSpecDto::AreaDamage {
+            damage_bonus: 19,
+            final_damage_spell_power_bonus: Some(10),
+            ..
+        }]
+    ));
+    assert!(matches!(
+        abilities["demo.ability.death-necromantic-resistance"]
+            .effects
+            .as_slice(),
+        [AbilityEffectSpecDto::ApplyStatus {
+            duration_ticks: 35,
+            duration_sides: 35,
+            ..
+        }]
+    ));
+    assert!(matches!(
+        abilities["demo.ability.death-vampiric-drain"]
+            .effects
+            .as_slice(),
+        [AbilityEffectSpecDto::DrainLife {
+            damage_sides: 70,
+            damage_bonus: 70,
+            ..
+        }]
+    ));
+    assert!(matches!(
+        abilities["demo.ability.death-invoke-spirits"]
+            .effects
+            .as_slice(),
+        [AbilityEffectSpecDto::RandomChoice {
+            roll_spell_power_bonus: Some(10),
+            ..
+        }]
+    ));
+
+    game.debug_set_ability_casts_succeed(true);
+    game.player.position = Position { x: 3, y: 3 };
+    for position in [Position { x: 3, y: 3 }, Position { x: 4, y: 3 }] {
+        replace_terrain(&mut game, position, "demo.terrain.floor");
+    }
+    game.entities.push(actor_from_runtime_spawn(
+        "test.actor.spell-power-target",
+        "demo.actor.cinder-adept",
+        Position { x: 4, y: 3 },
+        100_000,
+        100,
+        100,
+        true,
+    ));
+    let mut events = Vec::new();
+    game.resolve_player_ability(
+        "demo.ability.death-stinking-cloud",
+        TargetSelection::Entity {
+            entity_id: "test.actor.spell-power-target".to_owned(),
+        },
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("spell-powered stinking cloud should resolve");
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::AbilityAreaDamage { resolution, .. }
+            if resolution.base_raw_damage == 35
+    )));
+}
+
+#[test]
 fn malediction_resolves_all_riders_and_skips_the_d1000_when_not_triggered() {
     #[derive(Clone, Copy)]
     enum ExpectedRider {
@@ -1119,8 +1239,29 @@ fn invoke_spirits_scales_every_source_formula_without_nested_random_effects() {
                 .map(|branch| branch.maximum_roll)
                 .collect::<Vec<_>>(),
             vec![
-                7, 13, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 103, 105,
-                107, 109, 120,
+                7,
+                13,
+                25,
+                30,
+                35,
+                40,
+                45,
+                50,
+                55,
+                60,
+                65,
+                70,
+                75,
+                80,
+                85,
+                90,
+                95,
+                100,
+                103,
+                105,
+                107,
+                109,
+                u16::MAX,
             ]
         );
         let damage_dice = |index: usize| match branches[index].effect.as_ref() {

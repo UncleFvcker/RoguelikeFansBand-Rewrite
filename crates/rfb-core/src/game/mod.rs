@@ -56,21 +56,21 @@ use rfb_content::{
     AbilityDefinition, AbilityDetectSubjectDefinition, AbilityEffectDefinition,
     AbilityGenocideScopeDefinition, AbilityLevelScalingCurveDefinition,
     AbilityLevelScalingDefinition, AbilityLevelScalingField, AbilityRandomTargetDefinition,
-    AbilityStatusStackingDefinition, AbilityTargetDefinition, AbilityTargetModeDefinition,
-    ActorDamageType, ActorResistanceLevel, ActorRole, AffixPropertyBundleDefinition,
-    CastingAttribute, CastingCapacityFormula, CastingFailureFormula, CastingLearningFormula,
-    CastingProfileDefinition, CastingRealmProfileDefinition, ClassAbilityDefinition,
-    ContentCatalog, DungeonInstanceLifecycle, EncounterEntryDefinition, EncounterTableDefinition,
-    EquipmentBonuses, EquipmentPassive, FloorLifecycle, ItemAttributeDefinition,
-    ItemCurseSeverityDefinition, ItemCurseTargetDefinition, ItemEnchantmentRollDefinition,
-    ItemSummonLevelSourceDefinition, ItemSummonSelectorDefinition, ItemUseEffectDefinition,
-    MeleeBlowEffectDefinition, MonsterDropKindDefinition, MonsterPackBehavior,
-    MutationActivationDefinition, MutationPeriodicEffectDefinition, PlayerAbilityDefinition,
-    ProceduralLayoutMode, ProceduralMazeDefinition, ProceduralPitDefinition,
-    ProceduralRoomGeometryDefinition, ProceduralRoomPlacement, ProceduralRoomShape,
-    ProceduralStreamerCandidateDefinition, SkillKind, SlayLevel, SlayTarget,
-    StartingItemDefinition, StatModifiers, TaskObjectiveKind, TechniqueAttribute,
-    TerrainFeatureEntryDefinition, ThemeVaultCandidateDefinition, WeaponBrand,
+    AbilitySpellPowerDefinition, AbilitySpellPowerField, AbilityStatusStackingDefinition,
+    AbilityTargetDefinition, AbilityTargetModeDefinition, ActorDamageType, ActorResistanceLevel,
+    ActorRole, AffixPropertyBundleDefinition, CastingAttribute, CastingCapacityFormula,
+    CastingFailureFormula, CastingLearningFormula, CastingProfileDefinition,
+    CastingRealmProfileDefinition, ClassAbilityDefinition, ContentCatalog,
+    DungeonInstanceLifecycle, EncounterEntryDefinition, EncounterTableDefinition, EquipmentBonuses,
+    EquipmentPassive, FloorLifecycle, ItemAttributeDefinition, ItemCurseSeverityDefinition,
+    ItemCurseTargetDefinition, ItemEnchantmentRollDefinition, ItemSummonLevelSourceDefinition,
+    ItemSummonSelectorDefinition, ItemUseEffectDefinition, MeleeBlowEffectDefinition,
+    MonsterDropKindDefinition, MonsterPackBehavior, MutationActivationDefinition,
+    MutationPeriodicEffectDefinition, PlayerAbilityDefinition, ProceduralLayoutMode,
+    ProceduralMazeDefinition, ProceduralPitDefinition, ProceduralRoomGeometryDefinition,
+    ProceduralRoomPlacement, ProceduralRoomShape, ProceduralStreamerCandidateDefinition, SkillKind,
+    SlayLevel, SlayTarget, StartingItemDefinition, StatModifiers, TaskObjectiveKind,
+    TechniqueAttribute, TerrainFeatureEntryDefinition, ThemeVaultCandidateDefinition, WeaponBrand,
     affix_is_compatible_with_item,
 };
 use rfb_protocol::{
@@ -193,7 +193,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 88;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 89;
 #[cfg(test)]
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const VISIBILITY_RADIUS: i32 = 8;
@@ -5540,6 +5540,7 @@ fn stat_modifiers_dto(modifiers: &StatModifiers) -> StatModifiersDto {
         constitution: modifiers.constitution,
         charisma: modifiers.charisma,
         speed: modifiers.speed,
+        spell_power_bonus: modifiers.spell_power_bonus,
     }
 }
 
@@ -5554,6 +5555,9 @@ fn add_stat_modifiers_dto(total: &mut StatModifiersDto, addition: &StatModifiers
     total.constitution = total.constitution.saturating_add(addition.constitution);
     total.charisma = total.charisma.saturating_add(addition.charisma);
     total.speed = total.speed.saturating_add(addition.speed);
+    total.spell_power_bonus = total
+        .spell_power_bonus
+        .saturating_add(addition.spell_power_bonus);
 }
 
 fn equipment_bonuses_dto(bonuses: &EquipmentBonuses) -> EquipmentBonusesDto {
@@ -5696,6 +5700,9 @@ fn merge_stat_modifiers(total: &mut StatModifiers, addition: &StatModifiers) {
     total.constitution = total.constitution.saturating_add(addition.constitution);
     total.charisma = total.charisma.saturating_add(addition.charisma);
     total.speed = total.speed.saturating_add(addition.speed);
+    total.spell_power_bonus = total
+        .spell_power_bonus
+        .saturating_add(addition.spell_power_bonus);
 }
 
 fn merge_equipment_bonuses(total: &mut EquipmentBonuses, addition: &EquipmentBonuses) {
@@ -6162,6 +6169,135 @@ fn apply_ability_level_scaling(
     }
 }
 
+fn spell_power_value(value: u64, bonus: i32) -> u64 {
+    let value = i128::from(value);
+    let adjusted = value + value * i128::from(bonus) / 13;
+    u64::try_from(adjusted.max(0)).expect("non-negative spell power must fit u64")
+}
+
+fn apply_ability_spell_power(
+    effect: &mut AbilityEffectDefinition,
+    definition: AbilitySpellPowerDefinition,
+    bonus: i32,
+) {
+    let scaled = |value| spell_power_value(value, bonus);
+    match (effect, definition.field) {
+        (
+            AbilityEffectDefinition::Damage { damage_sides, .. }
+            | AbilityEffectDefinition::Malediction { damage_sides, .. }
+            | AbilityEffectDefinition::AreaDamage { damage_sides, .. }
+            | AbilityEffectDefinition::BeamDamage { damage_sides, .. }
+            | AbilityEffectDefinition::BoltOrBeamDamage { damage_sides, .. }
+            | AbilityEffectDefinition::BoltOrAreaDamage { damage_sides, .. }
+            | AbilityEffectDefinition::ConeDamage { damage_sides, .. }
+            | AbilityEffectDefinition::VisibleDamage { damage_sides, .. }
+            | AbilityEffectDefinition::DrainLife { damage_sides, .. },
+            AbilitySpellPowerField::DamageSides,
+        ) => {
+            *damage_sides = u16::try_from(scaled(u64::from(*damage_sides)))
+                .expect("spell-powered damage sides must fit u16");
+        }
+        (
+            AbilityEffectDefinition::Damage { damage_bonus, .. }
+            | AbilityEffectDefinition::Malediction { damage_bonus, .. }
+            | AbilityEffectDefinition::AreaDamage { damage_bonus, .. }
+            | AbilityEffectDefinition::BeamDamage { damage_bonus, .. }
+            | AbilityEffectDefinition::BoltOrBeamDamage { damage_bonus, .. }
+            | AbilityEffectDefinition::BoltOrAreaDamage { damage_bonus, .. }
+            | AbilityEffectDefinition::ConeDamage { damage_bonus, .. }
+            | AbilityEffectDefinition::VisibleDamage { damage_bonus, .. }
+            | AbilityEffectDefinition::DrainLife { damage_bonus, .. },
+            AbilitySpellPowerField::DamageBonus,
+        ) => {
+            *damage_bonus = u16::try_from(scaled(u64::from(*damage_bonus)))
+                .expect("spell-powered damage bonus must fit u16");
+        }
+        (
+            AbilityEffectDefinition::AreaDamage { radius, .. }
+            | AbilityEffectDefinition::BoltOrAreaDamage { radius, .. }
+            | AbilityEffectDefinition::ConeDamage { radius, .. },
+            AbilitySpellPowerField::Radius,
+        ) => {
+            *radius =
+                u8::try_from(scaled(u64::from(*radius))).expect("spell-powered radius must fit u8");
+        }
+        (
+            AbilityEffectDefinition::ApplyStatus { duration_ticks, .. }
+            | AbilityEffectDefinition::VisibleApplyStatus { duration_ticks, .. },
+            AbilitySpellPowerField::StatusDurationTicks,
+        ) => {
+            *duration_ticks = u32::try_from(scaled(u64::from(*duration_ticks)))
+                .expect("spell-powered status duration must fit u32");
+        }
+        (
+            AbilityEffectDefinition::ApplyStatus { duration_sides, .. },
+            AbilitySpellPowerField::StatusDurationSides,
+        ) => {
+            *duration_sides = u32::try_from(scaled(u64::from(*duration_sides)))
+                .expect("spell-powered status duration sides must fit u32");
+        }
+        (
+            AbilityEffectDefinition::ApplyStatus {
+                power: Some(power), ..
+            }
+            | AbilityEffectDefinition::VisibleApplyStatus {
+                power: Some(power), ..
+            },
+            AbilitySpellPowerField::StatusPower,
+        )
+        | (AbilityEffectDefinition::Control { power, .. }, AbilitySpellPowerField::ControlPower)
+        | (
+            AbilityEffectDefinition::Genocide { power, .. },
+            AbilitySpellPowerField::GenocidePower,
+        ) => {
+            *power = u16::try_from(scaled(u64::from(*power)))
+                .expect("spell-powered effect power must fit u16");
+        }
+        (
+            AbilityEffectDefinition::IdentifyItem {
+                full_identify_power,
+                ..
+            },
+            AbilitySpellPowerField::IdentifyPower,
+        ) => {
+            *full_identify_power = u16::try_from(scaled(u64::from(*full_identify_power)))
+                .expect("spell-powered identify power must fit u16");
+        }
+        (
+            _,
+            AbilitySpellPowerField::FinalDamage
+            | AbilitySpellPowerField::RandomChoiceRoll
+            | AbilitySpellPowerField::MaledictionDeathRayPower
+            | AbilitySpellPowerField::MaledictionFearPower,
+        ) => {}
+        _ => unreachable!("content validation must reject incompatible spell power fields"),
+    }
+}
+
+fn ability_has_spell_power_field(
+    ability: &AbilityDefinition,
+    effect_index: u8,
+    field: AbilitySpellPowerField,
+) -> bool {
+    ability
+        .spell_power_fields
+        .iter()
+        .any(|definition| definition.effect_index == effect_index && definition.field == field)
+}
+
+fn spell_powered_ability_value(
+    ability: &AbilityDefinition,
+    effect_index: u8,
+    field: AbilitySpellPowerField,
+    value: u64,
+) -> u64 {
+    if ability_has_spell_power_field(ability, effect_index, field) {
+        spell_power_value(value, ability.spell_power_bonus)
+    } else {
+        value
+    }
+}
+
 fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpecDto {
     match effect {
         AbilityEffectDefinition::JumpDamage { .. } => {
@@ -6190,6 +6326,7 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             damage_sides: *damage_sides,
             damage_bonus: *damage_bonus,
             damage_type: DamageType::from(*damage_type).into(),
+            final_damage_spell_power_bonus: None,
         },
         AbilityEffectDefinition::Malediction {
             damage_dice,
@@ -6200,6 +6337,7 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             damage_sides: *damage_sides,
             damage_bonus: *damage_bonus,
             damage_type: DamageType::HellFire.into(),
+            final_damage_spell_power_bonus: None,
         },
         AbilityEffectDefinition::AreaDamage {
             damage_dice,
@@ -6215,6 +6353,7 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             damage_type: DamageType::from(*damage_type).into(),
             radius: *radius,
             target_category: target_category.clone(),
+            final_damage_spell_power_bonus: None,
         },
         AbilityEffectDefinition::BeamDamage {
             damage_dice,
@@ -6226,6 +6365,7 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             damage_sides: *damage_sides,
             damage_bonus: *damage_bonus,
             damage_type: DamageType::from(*damage_type).into(),
+            final_damage_spell_power_bonus: None,
         },
         AbilityEffectDefinition::LightLine {
             damage_dice,
@@ -6246,6 +6386,7 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             damage_bonus: *damage_bonus,
             damage_type: DamageType::from(*damage_type).into(),
             beam_chance_percent: *beam_chance_percent,
+            final_damage_spell_power_bonus: None,
         },
         AbilityEffectDefinition::BoltOrAreaDamage {
             damage_dice,
@@ -6261,6 +6402,7 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             damage_type: DamageType::from(*damage_type).into(),
             area_from_level: *area_from_level,
             radius: *radius,
+            final_damage_spell_power_bonus: None,
         },
         AbilityEffectDefinition::ConeDamage {
             damage_dice,
@@ -6274,6 +6416,7 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             damage_bonus: *damage_bonus,
             damage_type: DamageType::from(*damage_type).into(),
             radius: *radius,
+            final_damage_spell_power_bonus: None,
         },
         AbilityEffectDefinition::BreathDamage {
             hp_percent,
@@ -6551,6 +6694,7 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             target_category: target_category.clone(),
             repeat: *repeat,
             feeds: *feeds,
+            final_damage_spell_power_bonus: None,
         },
         AbilityEffectDefinition::Genocide {
             scope,
@@ -6602,6 +6746,7 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             damage_bonus: *damage_bonus,
             damage_type: DamageType::from(*damage_type).into(),
             target_category: target_category.clone(),
+            final_damage_spell_power_bonus: None,
         },
         AbilityEffectDefinition::VisibleApplyStatus {
             status_kind_id,
@@ -6651,6 +6796,7 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
                     effect: Box::new(ability_effect_spec_dto(&branch.effect)),
                 })
                 .collect(),
+            roll_spell_power_bonus: None,
         },
         AbilityEffectDefinition::NoOp { reason } => AbilityEffectSpecDto::NoOp {
             reason: reason.clone(),
@@ -6659,6 +6805,70 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             effects: effects.iter().map(ability_effect_spec_dto).collect(),
         },
     }
+}
+
+fn player_ability_effect_spec_dto(
+    ability: &AbilityDefinition,
+    effect_index: u8,
+    effect: &AbilityEffectDefinition,
+) -> AbilityEffectSpecDto {
+    let mut spec = ability_effect_spec_dto(effect);
+    if ability.spell_power_bonus == 0 {
+        return spec;
+    }
+    if ability_has_spell_power_field(ability, effect_index, AbilitySpellPowerField::FinalDamage) {
+        let bonus = Some(ability.spell_power_bonus);
+        match &mut spec {
+            AbilityEffectSpecDto::Damage {
+                final_damage_spell_power_bonus,
+                ..
+            }
+            | AbilityEffectSpecDto::AreaDamage {
+                final_damage_spell_power_bonus,
+                ..
+            }
+            | AbilityEffectSpecDto::BeamDamage {
+                final_damage_spell_power_bonus,
+                ..
+            }
+            | AbilityEffectSpecDto::BoltOrBeamDamage {
+                final_damage_spell_power_bonus,
+                ..
+            }
+            | AbilityEffectSpecDto::BoltOrAreaDamage {
+                final_damage_spell_power_bonus,
+                ..
+            }
+            | AbilityEffectSpecDto::ConeDamage {
+                final_damage_spell_power_bonus,
+                ..
+            }
+            | AbilityEffectSpecDto::DrainLife {
+                final_damage_spell_power_bonus,
+                ..
+            }
+            | AbilityEffectSpecDto::VisibleDamage {
+                final_damage_spell_power_bonus,
+                ..
+            } => *final_damage_spell_power_bonus = bonus,
+            _ => unreachable!("validated final damage marker must project a damage effect"),
+        }
+    }
+    if ability_has_spell_power_field(
+        ability,
+        effect_index,
+        AbilitySpellPowerField::RandomChoiceRoll,
+    ) {
+        let AbilityEffectSpecDto::RandomChoice {
+            roll_spell_power_bonus,
+            ..
+        } = &mut spec
+        else {
+            unreachable!("validated random roll marker must project a random choice effect");
+        };
+        *roll_spell_power_bonus = Some(ability.spell_power_bonus);
+    }
+    spec
 }
 
 fn ability_target_spec_dto(ability: &AbilityDefinition) -> TargetSpecDto {

@@ -12,6 +12,9 @@
     "requiresLineOfEffect": true
   },
   "abilityProgramId": "demo.ability-program.death-invoke-spirits",
+  "spellPowerFields": [
+    { "effectIndex": 0, "field": "random-choice-roll" }
+  ],
   "tags": [
     "death",
     "random",

@@ -354,7 +354,7 @@
           }
         },
         {
-          "maximumRoll": 120,
+          "maximumRoll": 65535,
           "target": "self-target",
           "effect": {
             "type": "sequence",

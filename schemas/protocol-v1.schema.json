@@ -2090,6 +2090,13 @@
             "damageType": {
               "$ref": "#/$defs/DamageTypeDto"
             },
+            "finalDamageSpellPowerBonus": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int32"
+            },
             "type": {
               "type": "string",
               "const": "damage"
@@ -2126,6 +2133,13 @@
             },
             "damageType": {
               "$ref": "#/$defs/DamageTypeDto"
+            },
+            "finalDamageSpellPowerBonus": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int32"
             },
             "radius": {
               "type": "integer",
@@ -2176,6 +2190,13 @@
             },
             "damageType": {
               "$ref": "#/$defs/DamageTypeDto"
+            },
+            "finalDamageSpellPowerBonus": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int32"
             },
             "type": {
               "type": "string",
@@ -2246,6 +2267,13 @@
             "damageType": {
               "$ref": "#/$defs/DamageTypeDto"
             },
+            "finalDamageSpellPowerBonus": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int32"
+            },
             "type": {
               "type": "string",
               "const": "bolt-or-beam-damage"
@@ -2289,6 +2317,13 @@
             },
             "damageType": {
               "$ref": "#/$defs/DamageTypeDto"
+            },
+            "finalDamageSpellPowerBonus": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int32"
             },
             "radius": {
               "type": "integer",
@@ -2334,6 +2369,13 @@
             },
             "damageType": {
               "$ref": "#/$defs/DamageTypeDto"
+            },
+            "finalDamageSpellPowerBonus": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int32"
             },
             "radius": {
               "type": "integer",
@@ -3195,6 +3237,7 @@
                 "intelligence": 0,
                 "maxHp": 0,
                 "speed": 0,
+                "spellPowerBonus": 0,
                 "strength": 0,
                 "wisdom": 0
               }
@@ -3421,6 +3464,13 @@
               "type": "boolean",
               "default": false
             },
+            "finalDamageSpellPowerBonus": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int32"
+            },
             "repeat": {
               "type": "integer",
               "format": "uint8",
@@ -3605,6 +3655,13 @@
             "damageType": {
               "$ref": "#/$defs/DamageTypeDto"
             },
+            "finalDamageSpellPowerBonus": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int32"
+            },
             "targetCategory": {
               "type": [
                 "string",
@@ -3738,6 +3795,13 @@
               "format": "uint16",
               "maximum": 65535,
               "minimum": 0
+            },
+            "rollSpellPowerBonus": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int32"
             },
             "type": {
               "type": "string",
@@ -4892,6 +4956,7 @@
             "intelligence": 0,
             "maxHp": 0,
             "speed": 0,
+            "spellPowerBonus": 0,
             "strength": 0,
             "wisdom": 0
           }
@@ -7158,6 +7223,7 @@
             "intelligence": 0,
             "maxHp": 0,
             "speed": 0,
+            "spellPowerBonus": 0,
             "strength": 0,
             "wisdom": 0
           }
@@ -7638,6 +7704,7 @@
             "intelligence": 0,
             "maxHp": 0,
             "speed": 0,
+            "spellPowerBonus": 0,
             "strength": 0,
             "wisdom": 0
           }
@@ -8383,6 +8450,7 @@
             "intelligence": 0,
             "maxHp": 0,
             "speed": 0,
+            "spellPowerBonus": 0,
             "strength": 0,
             "wisdom": 0
           }
@@ -9308,6 +9376,11 @@
           "format": "int32",
           "default": 0
         },
+        "spellPowerBonus": {
+          "type": "integer",
+          "format": "int32",
+          "default": 0
+        },
         "strength": {
           "type": "integer",
           "format": "int32",
@@ -9359,6 +9432,7 @@
             "intelligence": 0,
             "maxHp": 0,
             "speed": 0,
+            "spellPowerBonus": 0,
             "strength": 0,
             "wisdom": 0
           }

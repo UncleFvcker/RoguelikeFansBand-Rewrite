@@ -162,6 +162,22 @@ impl Game {
         }
     }
 
+    pub(super) fn apply_player_spell_power(ability: &mut AbilityDefinition, bonus: i32) {
+        ability.spell_power_bonus = bonus;
+        for definition in ability.spell_power_fields.clone() {
+            let effect = match &mut ability.effect {
+                AbilityEffectDefinition::Sequence { effects } => effects
+                    .get_mut(usize::from(definition.effect_index))
+                    .expect("validated spell power effect index must remain available"),
+                effect => {
+                    debug_assert_eq!(definition.effect_index, 0);
+                    effect
+                }
+            };
+            apply_ability_spell_power(effect, definition, bonus);
+        }
+    }
+
     pub(super) fn apply_casting_profile_effect_scaling(
         profile: &CastingProfileDefinition,
         ability: &mut AbilityDefinition,

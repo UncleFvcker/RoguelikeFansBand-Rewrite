@@ -6,7 +6,7 @@
 
 contract fixture 是规则兼容边界，不能把测试失败简单处理为“刷新预期结果”。政策用于保证每次规则变化只修改真正受影响的场景，同时保留可审查的失败原因。
 
-当前逻辑基线是 `contract-v271`，机器可读政策固定在：
+当前逻辑基线是 `contract-v272`，机器可读政策固定在：
 
 ```text
 tests/fixtures/active/baseline-policy.json
@@ -60,6 +60,11 @@ active 集保持 21 条且零 waiver。
 content hash 为 `2f88338bb3fe9bfa13ac703d0b58ae4521bade19619805c5fe37da977a8b4858`。
 白马旅店附近新增任务入口状态与 contract-v266 的共享物品状态输入共同改变状态哈希，
 因此在四个方向全部合入后统一刷新 21 条 active fixture；active 集保持 21 条且零 waiver。
+
+`contract-v272` 接入 RFB 通用 `spell_power`。装备、affix 与状态的法术强度 modifier
+进入权威投影和状态哈希，32 个死亡法术按源调用点显式声明受缩放字段；Protocol 升至
+1.180、State Hash Schema 升至 v89，内容包升级到 1.280.0。公共物品 modifier 投影与
+状态哈希结构变化要求统一刷新 21 条 active fixture；active 集保持 21 条且零 waiver。
 
 ## 分类验证
 
