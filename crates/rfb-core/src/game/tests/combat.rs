@@ -420,6 +420,72 @@ fn inertia_melee_uses_minor_slow_and_free_action_reduces_it() {
 }
 
 #[test]
+fn amberite_death_can_curse_equipment_and_apply_multiple_nonlethal_ty_curses() {
+    let game = (0..64)
+        .find_map(|seed| {
+            let mut game = game_with_actor_definition(seed, "demo.actor.small-kobold", |actor| {
+                actor.level = 41;
+                actor.tags.push("amberite".to_owned());
+            });
+            clear_monsters(&mut game);
+            for item in game
+                .items
+                .iter_mut()
+                .filter(|item| matches!(item.location, ItemLocation::Equipped { .. }))
+            {
+                item.location = ItemLocation::Inventory;
+            }
+            give_inventory_item(&mut game, "test.item.dagger", "demo.item.dagger");
+            game.items
+                .iter_mut()
+                .find(|item| item.id == "test.item.dagger")
+                .expect("dagger should exist")
+                .location = ItemLocation::Equipped {
+                slot_id: "weapon".to_owned(),
+            };
+            game.debug_set_item_curses_land(true);
+            game.player.hp = 500;
+            game.player.max_hp = 500;
+            let monster = game.generated_actor(
+                "test.actor.amberite".to_owned(),
+                "demo.actor.small-kobold",
+                Position { x: 4, y: 3 },
+            );
+            game.entities.push(monster);
+            game.resolve_actor_death_without_rewards(
+                0,
+                None,
+                &mut Vec::new(),
+                &mut BTreeSet::new(),
+                &mut Vec::new(),
+            )
+            .expect("Amberite death should resolve");
+            (game.player.hp < 500).then_some(game)
+        })
+        .expect("a deterministic seed should trigger the blood curse");
+
+    assert!((1..500).contains(&game.player.hp));
+    assert!(matches!(
+        game.items
+            .iter()
+            .find(|item| item.id == "test.item.dagger")
+            .expect("dagger should remain equipped")
+            .curse,
+        Some(ItemCurseSeverityDto::Normal | ItemCurseSeverityDto::Heavy)
+    ));
+    for status_kind_id in [STATUS_CONFUSION, STATUS_STUN] {
+        let status = game
+            .player
+            .statuses
+            .iter()
+            .find(|status| status.kind_id == status_kind_id)
+            .expect("blood curse should apply its status");
+        assert!((82..=164).contains(&status.remaining_ticks));
+        assert_eq!(status.source_id.as_deref(), Some("demo.actor.small-kobold"));
+    }
+}
+
+#[test]
 fn charge_drain_melee_consumes_a_carried_device_or_player_nutrition() {
     let effect = MeleeBlowEffectDefinition::DrainCharges {
         chance_percent: None,

@@ -4063,3 +4063,7 @@ ability-legacy-bolt-water-10d10-43-name = 水箭
 ability-legacy-bolt-water-10d10-43-description = 发射造成 10d10+43 水系伤害的魔法箭。
 ability-legacy-summon-spider-l43-1d3-1-name = 召唤蜘蛛
 ability-legacy-summon-spider-l43-1d3-1-description = 召唤最高 43 级的蜘蛛。
+actor-demo-rinaldo-son-of-brand-name = 布兰德之子里纳尔多
+actor-demo-rinaldo-son-of-brand-description = 原版怪物：布兰德之子里纳尔多。
+ability-legacy-ball-chaos-10d10-41-name = 唤起罗格鲁斯
+ability-legacy-ball-chaos-10d10-41-description = 使用 RFB 原版怪物法术“唤起罗格鲁斯”。

@@ -102,6 +102,7 @@ pub(super) struct ItemEnchantmentOutcome {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum EquippedItemCurseTarget {
+    Any,
     Weapon,
     Armor,
 }
@@ -109,11 +110,20 @@ pub(super) enum EquippedItemCurseTarget {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) struct CurseEquippedItemRequest {
     target: EquippedItemCurseTarget,
+    heavy_chance_percent: u8,
 }
 
 impl CurseEquippedItemRequest {
     pub(super) const fn new(target: EquippedItemCurseTarget) -> Self {
-        Self { target }
+        Self {
+            target,
+            heavy_chance_percent: 0,
+        }
+    }
+
+    pub(super) const fn with_heavy_chance(mut self, chance_percent: u8) -> Self {
+        self.heavy_chance_percent = chance_percent;
+        self
     }
 }
 
@@ -1050,6 +1060,7 @@ impl Game {
                 };
                 let definition = self.content.item(&item.kind_id)?;
                 let matches_target = match request.target {
+                    EquippedItemCurseTarget::Any => true,
                     EquippedItemCurseTarget::Weapon => {
                         definition.tags.iter().any(|tag| tag == "weapon")
                     }
@@ -1093,10 +1104,15 @@ impl Game {
             };
         let before = self.items[item_index].curse;
         if !resisted {
+            let severity = if request.heavy_chance_percent > 0
+                && self.rng.bounded(100) < u64::from(request.heavy_chance_percent)
+            {
+                ItemCurseSeverityDto::Heavy
+            } else {
+                ItemCurseSeverityDto::Normal
+            };
             self.items[item_index].curse =
-                Some(before.map_or(ItemCurseSeverityDto::Normal, |severity| {
-                    severity.max(ItemCurseSeverityDto::Normal)
-                }));
+                Some(before.map_or(severity, |current| current.max(severity)));
         }
         CurseEquippedItemOutcome {
             item_id: Some(item_id),

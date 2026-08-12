@@ -194,7 +194,7 @@ impl Game {
                 let count = u16::try_from(self.rng.bounded(2) + 2).expect("count must fit u16");
                 self.drop_patron_loot(&patron.id, count, ItemQuality::Exceptional, changed)?;
             }
-            ChaosPatronRewardKind::TyCurse => self.apply_nonlethal_ty_curse(level),
+            ChaosPatronRewardKind::TyCurse => self.apply_nonlethal_ty_curse(level, &patron.id),
             ChaosPatronRewardKind::SummonMonsters => {
                 let count = u8::try_from(self.rng.bounded(5) + 2).expect("count must fit u8");
                 self.summon_patron_creatures(
@@ -388,7 +388,7 @@ impl Game {
         self.player.hp = self.effective_player_max_hp();
     }
 
-    fn apply_nonlethal_ty_curse(&mut self, level: u16) {
+    pub(super) fn apply_nonlethal_ty_curse(&mut self, level: u16, source_id: &str) {
         let maximum_damage = self.player.hp.saturating_sub(1).max(0);
         let damage = i32::from(level)
             .saturating_add(
@@ -405,7 +405,7 @@ impl Game {
                         kind_id: status_kind_id.to_owned(),
                         intensity: 1,
                         remaining_ticks: u32::from(level.max(5)),
-                        source_id: self.chaos_patron_id.clone(),
+                        source_id: Some(source_id.to_owned()),
                         granted_resistances: BTreeMap::new(),
                         granted_brands: BTreeSet::new(),
                         granted_modifiers: StatModifiersDto::default(),
@@ -430,7 +430,7 @@ impl Game {
         removed_entities: &mut Vec<String>,
     ) {
         match self.rng.bounded(4) {
-            0 => self.apply_nonlethal_ty_curse(level),
+            0 => self.apply_nonlethal_ty_curse(level, patron_id),
             1 => self.high_patron_summon(patron_id, level, events, changed),
             2 => {
                 let target = if self.rng.bounded(2) == 0 {
@@ -463,7 +463,7 @@ impl Game {
         }
         self.ruin_patron_attributes(false);
         self.high_patron_summon(patron_id, level, events, changed);
-        self.apply_nonlethal_ty_curse(level);
+        self.apply_nonlethal_ty_curse(level, patron_id);
         if self.rng.bounded(2) == 0 {
             self.curse_equipped_item(CurseEquippedItemRequest::new(
                 EquippedItemCurseTarget::Weapon,

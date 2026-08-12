@@ -7534,6 +7534,7 @@ fn monster_flag_is_mapped(flag: &str) -> bool {
             | "TRUMP"
             | "QUANTUM"
             | "CLEAR_HEAD"
+            | "AMBERITE"
             | "ONLY_ITEM"
             | "ONLY_GOLD"
             | "DROP_60"
@@ -7710,6 +7711,7 @@ fn monster_json(
         ("TRUMP", "trump"),
         ("QUANTUM", "quantum"),
         ("CLEAR_HEAD", "clear-head"),
+        ("AMBERITE", "amberite"),
     ] {
         if entry.flags.iter().any(|value| value == flag) {
             tags.push(tag.to_owned());
@@ -8380,6 +8382,7 @@ fn demo_monster_json(
         ("TRUMP", "trump"),
         ("QUANTUM", "quantum"),
         ("CLEAR_HEAD", "clear-head"),
+        ("AMBERITE", "amberite"),
     ] {
         if entry.flags.iter().any(|candidate| candidate == flag) {
             tags.insert(tag.to_owned());
@@ -13086,6 +13089,33 @@ mod tests {
         assert_eq!(
             actor["meleeRoutine"]["blows"][0]["effects"][1]["type"],
             "inertia"
+        );
+    }
+
+    #[test]
+    fn demo_monster_import_maps_amberite_as_a_death_trigger_tag() {
+        let mut monsters = parse_r_info(
+            "N:660:Rinaldo, Son of Brand\nG:p:w\nI:120:16d100:20:120:40:170\nW:41:3:999:9000:0:0\nB:HIT:HURT(8d6)\nF:UNIQUE | AMBERITE | HUMAN\n",
+        )
+        .expect("synthetic Amberite should parse");
+        let actor = demo_monster_json(
+            &monsters.remove(0),
+            &DemoMonsterSelectionEntry {
+                source_index: 660,
+                source_id: None,
+                id: "rinaldo-son-of-brand".to_owned(),
+                tags: vec!["orc-cave".to_owned()],
+                omitted_flags: Vec::new(),
+                omitted_spells: Vec::new(),
+            },
+            &mut BTreeMap::new(),
+        )
+        .expect("AMBERITE should import through the shared tag");
+
+        assert!(
+            actor["tags"]
+                .as_array()
+                .is_some_and(|tags| tags.iter().any(|tag| tag == "amberite"))
         );
     }
 

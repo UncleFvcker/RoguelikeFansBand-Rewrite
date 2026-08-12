@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.ball-chaos-10d10-41",
+  "descriptionKey": "ability-legacy-ball-chaos-10d10-41-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.ball-chaos-10d10-41",
+  "nameKey": "ability-legacy-ball-chaos-10d10-41-name",
+  "tags": [
+    "legacy-import",
+    "damage"
+  ],
+  "target": {
+    "modes": [
+      "position",
+      "entity"
+    ],
+    "range": 8,
+    "requiresLineOfEffect": true
+  }
+}

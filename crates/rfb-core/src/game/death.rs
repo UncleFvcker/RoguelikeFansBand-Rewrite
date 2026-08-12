@@ -14,8 +14,9 @@ use crate::{
 };
 
 use super::{
-    ActorDeathRecord, FatalityPolicy, Game, commit_damage_application, initial_item_curse,
-    initial_item_runtime_state, plan_damage_application, rfb_area_damage,
+    ActorDeathRecord, CurseEquippedItemRequest, EquippedItemCurseTarget, FatalityPolicy, Game,
+    commit_damage_application, initial_item_curse, initial_item_runtime_state,
+    plan_damage_application, rfb_area_damage,
 };
 use crate::save::initial_item_fuel;
 
@@ -36,6 +37,29 @@ struct ActorDeathPlan {
 }
 
 impl Game {
+    fn apply_amberite_blood_curse(&mut self, actor: &Actor) {
+        let Some(level) = self.content.actor(&actor.kind_id).and_then(|definition| {
+            definition
+                .tags
+                .iter()
+                .any(|tag| tag == "amberite")
+                .then(|| u16::try_from(definition.level).unwrap_or(u16::MAX))
+        }) else {
+            return;
+        };
+        if self.player_is_dead() || self.rng.bounded(2) != 0 {
+            return;
+        }
+
+        self.curse_equipped_item(
+            CurseEquippedItemRequest::new(EquippedItemCurseTarget::Any).with_heavy_chance(50),
+        );
+        let curse_count = self.rng.bounded(3) + 2;
+        for _ in 0..curse_count {
+            self.apply_nonlethal_ty_curse(level, &actor.kind_id);
+        }
+    }
+
     fn actor_death_explosion(
         &mut self,
         actor: &Actor,
@@ -319,6 +343,7 @@ impl Game {
         if let Some(death_event) = death_event {
             events.push(death_event);
         }
+        self.apply_amberite_blood_curse(&dying_actor);
         self.actor_death_explosion(&dying_actor, events, changed, removed_entities)?;
         let index = self
             .entities
@@ -372,6 +397,7 @@ impl Game {
         }
         self.entities[index].hp = self.entities[index].hp.min(0);
         events.push(death_event.clone());
+        self.apply_amberite_blood_curse(&dying_actor);
         self.actor_death_explosion(&dying_actor, events, changed, removed_entities)?;
         let index = self
             .entities

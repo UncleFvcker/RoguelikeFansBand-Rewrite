@@ -4062,3 +4062,7 @@ ability-legacy-bolt-water-10d10-43-name = Water bolt
 ability-legacy-bolt-water-10d10-43-description = Fires a bolt for 10d10+43 water damage.
 ability-legacy-summon-spider-l43-1d3-1-name = Summon spiders
 ability-legacy-summon-spider-l43-1d3-1-description = Summons spiders of level 43 or lower.
+actor-demo-rinaldo-son-of-brand-name = Rinaldo, Son of Brand
+actor-demo-rinaldo-son-of-brand-description = A creature recorded in the original RFB bestiary as Rinaldo, Son of Brand.
+ability-legacy-ball-chaos-10d10-41-name = Chaos ball
+ability-legacy-ball-chaos-10d10-41-description = Uses the Chaos ball monster spell from RFB.

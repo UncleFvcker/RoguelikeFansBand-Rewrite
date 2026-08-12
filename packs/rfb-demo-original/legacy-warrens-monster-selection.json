@@ -5346,6 +5346,12 @@
       "id": "baba-yaga",
       "tags": ["orc-cave"],
       "omittedFlags": ["CAN_SPEAK", "FEMALE"]
+    },
+    {
+      "sourceIndex": 660,
+      "id": "rinaldo-son-of-brand",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
     }
   ]
 }
