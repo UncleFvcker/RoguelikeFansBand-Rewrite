@@ -123,10 +123,21 @@ const ORIGINAL_STRENGTH_CARRY_CAPACITY_DECA_POUNDS: [u16; 38] = [
     32, 33, 33, 34, 34, 35, 35, 36, 36, 37, 37, 38, 38, 39,
 ];
 
+const ORIGINAL_STRENGTH_HOLD_POUNDS: [u16; 38] = [
+    4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28,
+    30, 31, 32, 33, 34, 35, 37, 40, 44, 48, 50, 50, 50,
+];
+
 #[must_use]
 pub fn carry_capacity_tenths_pound(strength: u16) -> u32 {
     let index = stat_index(strength).min(PRE_VICTORY_ATTRIBUTE_INDEX_CAP);
     u32::from(ORIGINAL_STRENGTH_CARRY_CAPACITY_DECA_POUNDS[index as usize]) * 50
+}
+
+#[must_use]
+pub fn strength_hold_pounds(strength: u16) -> u16 {
+    let index = stat_index(strength).min(PRE_VICTORY_ATTRIBUTE_INDEX_CAP);
+    ORIGINAL_STRENGTH_HOLD_POUNDS[index as usize]
 }
 
 #[must_use]
@@ -1059,6 +1070,13 @@ mod tests {
             1_950
         );
         assert_eq!(carry_capacity_tenths_pound(VICTORY_ATTRIBUTE_CAP), 1_950);
+
+        assert_eq!(strength_hold_pounds(3), 4);
+        assert_eq!(strength_hold_pounds(15), 16);
+        assert_eq!(strength_hold_pounds(18), 19);
+        assert_eq!(strength_hold_pounds(118), 30);
+        assert_eq!(strength_hold_pounds(PRE_VICTORY_ATTRIBUTE_CAP), 50);
+        assert_eq!(strength_hold_pounds(VICTORY_ATTRIBUTE_CAP), 50);
     }
 
     #[test]

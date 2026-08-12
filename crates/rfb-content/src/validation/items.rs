@@ -755,6 +755,7 @@ pub(super) fn validate_items(
                 || profile.range > 32
                 || profile.damage_multiplier_percent < 100
                 || profile.damage_multiplier_percent > 1_000
+                || profile.shot_energy == 0
                 || profile.to_hit < -1_000_000
                 || profile.to_hit > 1_000_000
                 || profile.to_damage < -1_000_000

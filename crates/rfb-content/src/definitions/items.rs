@@ -181,6 +181,8 @@ pub struct ProjectileProfileDefinition {
     pub range: u16,
     /// Original launcher multiplier scaled by 100 (x2.50 = 250).
     pub damage_multiplier_percent: u16,
+    /// Original `bow_energy` value; 10_000 is one standard action at one shot.
+    pub shot_energy: u16,
     pub to_hit: i32,
     pub to_damage: i32,
     pub ammunition_type: AmmunitionTypeDefinition,

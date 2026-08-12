@@ -1389,6 +1389,12 @@ impl Game {
         }
         let mut action_cost = if map_scale_before_command == MapScaleDto::World && advances_world {
             STANDARD_ACTION_COST.saturating_mul(wilderness::WORLD_MAP_ACTION_MULTIPLIER)
+        } else if matches!(
+            &action,
+            GameAction::Fire { .. } | GameAction::FireTarget { .. }
+        ) {
+            self.player_projectile_profile()
+                .map_or_else(|| action.energy_cost(), |profile| profile.energy_cost)
         } else {
             action.energy_cost()
         };

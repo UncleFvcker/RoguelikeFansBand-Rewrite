@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
-use super::support::give_inventory_item;
+use super::support::{clear_monsters, dispatch_next, give_inventory_item};
 use super::*;
 
 const ARCHER_BUILD_ID: &str = "demo.build.archer";
@@ -262,6 +262,103 @@ fn archer_breakage_and_projectile_critical_hooks_are_active() {
 
     let mut warrior = Game::new(19);
     assert_eq!(warrior.roll_projectile_critical_multiplier(2, 0, 500), 100);
+}
+
+#[test]
+fn archer_shooting_energy_and_heavy_launcher_rules_match_original() {
+    let breakage_factor = |ranged_skill: i32, class_modifier: i32| {
+        (if ranged_skill > 80 {
+            90_i32.saturating_sub((ranged_skill - 80) / 2)
+        } else {
+            100
+        })
+        .saturating_add(class_modifier)
+        .max(0)
+    };
+
+    let mut novice = archer_game(29);
+    clear_monsters(&mut novice);
+    let novice_profile = novice
+        .player_projectile_profile()
+        .expect("birth bow should resolve");
+    let novice_skill = novice.player_derived_stats().ranged_skill.value;
+    assert_eq!(novice_profile.energy_cost, 88);
+    assert_eq!(
+        novice_profile.ammo_break_chance_percent,
+        u8::try_from(20 * breakage_factor(novice_skill, -10) / 100).unwrap()
+    );
+    let novice_gain = energy_gain(derived_speed(&novice.player_derived_stats().speed));
+    let novice_tick = novice.world_tick;
+    dispatch_next(
+        &mut novice,
+        GameCommand::Fire {
+            direction: Direction::East,
+        },
+    );
+    let novice_ticks = novice.world_tick - novice_tick;
+    assert_eq!(
+        novice_ticks,
+        u32::try_from((novice_profile.energy_cost + novice_gain - 1) / novice_gain).unwrap()
+    );
+
+    let mut expert = archer_game(29);
+    clear_monsters(&mut expert);
+    expert.progress.level = 50;
+    expert.progress.max_level = 50;
+    let expert_profile = expert
+        .player_projectile_profile()
+        .expect("expert bow should resolve");
+    let expert_skill = expert.player_derived_stats().ranged_skill.value;
+    assert_eq!(expert_profile.energy_cost, 8_888 / expert_skill);
+    assert!(expert_profile.energy_cost < novice_profile.energy_cost);
+    let expert_gain = energy_gain(derived_speed(&expert.player_derived_stats().speed));
+    let expert_tick = expert.world_tick;
+    dispatch_next(
+        &mut expert,
+        GameCommand::Fire {
+            direction: Direction::East,
+        },
+    );
+    let expert_ticks = expert.world_tick - expert_tick;
+    assert_eq!(
+        expert_ticks,
+        u32::try_from((expert_profile.energy_cost + expert_gain - 1) / expert_gain).unwrap()
+    );
+    assert!(expert_ticks < novice_ticks);
+
+    let mut heavy = archer_game(31);
+    heavy
+        .items
+        .iter_mut()
+        .find(|item| {
+            matches!(item.location, ItemLocation::Equipped { ref slot_id } if slot_id == "shooting")
+        })
+        .expect("birth bow should be equipped")
+        .location = ItemLocation::Inventory;
+    give_inventory_item(
+        &mut heavy,
+        "test.heavy-crossbow",
+        "demo.item.heavy-crossbow",
+    );
+    give_inventory_item(&mut heavy, "test.bolt", "demo.item.bolt");
+    heavy
+        .items
+        .iter_mut()
+        .find(|item| item.id == "test.heavy-crossbow")
+        .expect("heavy crossbow should exist")
+        .location = ItemLocation::Equipped {
+        slot_id: "shooting".to_owned(),
+    };
+    let heavy_profile = heavy
+        .player_projectile_profile()
+        .expect("heavy crossbow should resolve");
+    let heavy_skill = heavy.player_derived_stats().ranged_skill.value;
+    assert_eq!(heavy_profile.to_hit, -8);
+    assert_eq!(heavy_profile.energy_cost, 133);
+    assert_eq!(
+        heavy_profile.ammo_break_chance_percent,
+        u8::try_from(10 * breakage_factor(heavy_skill, 0) / 100).unwrap()
+    );
 }
 
 #[test]

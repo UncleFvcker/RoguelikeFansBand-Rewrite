@@ -57,7 +57,7 @@ impl Game {
             let ranged_skill = attacker.ranged_skill.with_modifier(
                 StatLayer::Equipment,
                 profile.ammo_kind_id.clone(),
-                profile.ammunition_to_hit,
+                profile.to_hit,
                 StatBounds::NON_NEGATIVE,
             );
             let target = self.actor_derived_stats(&self.entities[index], &definition, false);

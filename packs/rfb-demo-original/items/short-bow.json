@@ -14,6 +14,7 @@
     "ammunitionType": "arrow",
     "damageMultiplierPercent": 250,
     "range": 16,
+    "shotEnergy": 8888,
     "toDamage": 0,
     "toHit": 0
   },
