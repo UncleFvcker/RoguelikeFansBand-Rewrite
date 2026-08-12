@@ -518,6 +518,12 @@
               "type": "null"
             }
           ]
+        },
+        "uiGroupNameKey": {
+          "type": [
+            "string",
+            "null"
+          ]
         }
       },
       "required": [

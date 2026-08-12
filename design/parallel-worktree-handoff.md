@@ -92,6 +92,11 @@ git merge-base HEAD main
 内容锁。协议版本、State Hash Schema、Contract baseline 和批量 fixture 刷新同样只在
 集成阶段统一执行一次。
 
+例外：用户已明确授权 `codex/class-next` 的 Archer Commit 3 在方向分支完成一次完整
+收口。该提交暂时独占 `AbilityDto.uiGroupNameKey`、Protocol `1.176`、State Hash Schema
+v88、`contract-v266`、公共 fixtures 与 pack `1.261.0`；其他方向不得并行编辑这些协调点，
+集成时以 main 的最新版本为准重放一次机械版本合并。
+
 若两个方向都需要同一个共享文件，优先采取以下顺序：
 
 1. 指定一个方向暂时独占该文件；
@@ -151,3 +156,21 @@ git diff --stat
 
 严重冲突无法在不改变任一方向语义的情况下解决时，停止合并并给出修复 plan：列出
 冲突文件、双方合同、建议权威实现、依赖顺序、版本影响和重新验收范围。
+
+## 8. class-next 当前交接（Archer Commit 3）
+
+- 分支：`codex/class-next`；起始基线仍为 `main@3fb94bcd`。
+- Archer 的一个原版“制造弹药”菜单由三个既有执行 ID 组成：
+  `demo.ability.archer-create-shots`、`demo.ability.archer-create-arrows`、
+  `demo.ability.archer-create-bolts`；没有新增 ability ID 或命令。
+- 三项 `ClassAbilityDefinition.uiGroupNameKey` 均为
+  `ability-group-demo-archer-create-ammo-name`。前端只对分组子项执行等级隐藏，1/10/20
+  级依次开放；方向和物品目标选择完全复用既有流程。
+- 内容 ID 所有权保持：`demo.item.shard-of-pottery`、`demo.item.broken-stick`、
+  `demo.affix.ammo-elemental`；`rfb-legacy.affix.slaying` 与 items 方向同 ID 合并，禁止
+  再建 ammo-slaying。
+- 共享协调点：Protocol `1.176`、State Hash Schema v88、active baseline
+  `contract-v266`、pack `1.261.0`。合并其他方向后重新生成协议/内容 Schema、内容锁，
+  并只在最终 State Hash 版本再刷新一次 fixtures。
+- 明确剩余：Good/Bad Luck、Chance virtue、coffee/special mode、地下城 good/great
+  上限和全局 `no_egos` 继续归共享物品生成上下文，不在 Archer 内建立替代规则。

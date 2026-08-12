@@ -22,6 +22,7 @@
     {
       "abilityId": "demo.ability.archer-create-shots",
       "minimumLevel": 1,
+      "uiGroupNameKey": "ability-group-demo-archer-create-ammo-name",
       "resourceCost": 0,
       "baseFailurePercent": 0,
       "minimumFailurePercent": 0
@@ -29,6 +30,7 @@
     {
       "abilityId": "demo.ability.archer-create-arrows",
       "minimumLevel": 10,
+      "uiGroupNameKey": "ability-group-demo-archer-create-ammo-name",
       "resourceCost": 0,
       "baseFailurePercent": 0,
       "minimumFailurePercent": 0
@@ -36,6 +38,7 @@
     {
       "abilityId": "demo.ability.archer-create-bolts",
       "minimumLevel": 20,
+      "uiGroupNameKey": "ability-group-demo-archer-create-ammo-name",
       "resourceCost": 0,
       "baseFailurePercent": 0,
       "minimumFailurePercent": 0

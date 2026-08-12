@@ -928,6 +928,7 @@ ability-demo-archer-create-arrows-name = 制造箭矢
 ability-demo-archer-create-arrows-description = 从骨骸制造五至十支箭。
 ability-demo-archer-create-bolts-name = 制造弩栓
 ability-demo-archer-create-bolts-description = 从骨骸制造四至八支弩栓。
+ability-group-demo-archer-create-ammo-name = 制造弹药
 item-demo-soft-leather-armour-name = 软皮甲
 item-demo-soft-leather-armour-description = 一件由柔韧皮革和较厚皮夹克制成的胸甲。
 item-demo-metal-cap-name = 金属帽

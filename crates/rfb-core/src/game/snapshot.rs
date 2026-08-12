@@ -288,6 +288,7 @@ impl Game {
                 let class_activation = class_activations.get(&ability_id);
                 let (
                     minimum_level,
+                    ui_group_name_key,
                     resource_id,
                     base_resource_cost,
                     resource_cost,
@@ -302,6 +303,7 @@ impl Game {
                             .expect("mutation ability source requires an activation");
                         (
                             activation.minimum_level,
+                            None,
                             casting_profile.map(|profile| profile.resource_id.clone()),
                             activation.cost,
                             self.mutation_resource_cost(activation),
@@ -323,6 +325,7 @@ impl Game {
                             class_activation.expect("class ability source requires an activation");
                         (
                             activation.minimum_level,
+                            activation.ui_group_name_key.clone(),
                             activation.resource_id.clone(),
                             activation.resource_cost,
                             activation.resource_cost,
@@ -344,6 +347,7 @@ impl Game {
                         let progress = self.ability_progress_value(ability);
                         (
                             player.minimum_level,
+                            None,
                             Some(player.resource_id.clone()),
                             player.resource_cost,
                             self.ability_effective_resource_cost(ability, progress),
@@ -387,6 +391,7 @@ impl Game {
                     id: ability.id.clone(),
                     name_key: ability.name_key.clone(),
                     description_key: ability.description_key.clone(),
+                    ui_group_name_key,
                     book_name_key: book.map(|book| book.name_key.clone()),
                     book_rank: book.and_then(|book| book.rank),
                     minimum_level,

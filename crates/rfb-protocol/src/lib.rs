@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.175";
+pub const PROTOCOL_VERSION: &str = "1.176";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -1166,6 +1166,8 @@ pub struct AbilityDto {
     pub id: String,
     pub name_key: String,
     pub description_key: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ui_group_name_key: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub book_name_key: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]

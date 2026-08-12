@@ -423,6 +423,12 @@
             "string",
             "null"
           ]
+        },
+        "uiGroupNameKey": {
+          "type": [
+            "string",
+            "null"
+          ]
         }
       },
       "required": [

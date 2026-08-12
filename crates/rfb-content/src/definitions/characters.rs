@@ -219,6 +219,8 @@ pub enum CastingFailureFormula {
 pub struct ClassAbilityDefinition {
     pub ability_id: String,
     pub minimum_level: u16,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ui_group_name_key: Option<String>,
     #[serde(default)]
     pub governing_attribute: Option<TechniqueAttribute>,
     #[serde(default)]

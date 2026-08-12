@@ -5,12 +5,35 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  abilityPresentation,
   abilityStatusMessageKey,
   formatAttributeValue,
   mutationRatingMessageKey,
   nutritionPercentage,
   wildernessClock,
 } from "./status-panel.ts";
+
+test("Archer Create Ammo presents one level-gated menu", () => {
+  const group = "ability-group-demo-archer-create-ammo-name";
+  const abilities = [
+    { id: "shots", minimumLevel: 1, uiGroupNameKey: group },
+    { id: "arrows", minimumLevel: 10, uiGroupNameKey: group },
+    { id: "bolts", minimumLevel: 20, uiGroupNameKey: group },
+  ];
+  const labels = (level: number) =>
+    abilityPresentation(abilities, level).map((entry) =>
+      entry.type === "heading" ? `heading:${entry.nameKey}` : `ability:${entry.ability.id}`,
+    );
+
+  assert.deepEqual(labels(1), [`heading:${group}`, "ability:shots"]);
+  assert.deepEqual(labels(10), [`heading:${group}`, "ability:shots", "ability:arrows"]);
+  assert.deepEqual(labels(20), [
+    `heading:${group}`,
+    "ability:shots",
+    "ability:arrows",
+    "ability:bolts",
+  ]);
+});
 
 test("mutation presentation exposes ratings and the shared ability source", () => {
   assert.equal(mutationRatingMessageKey("awful"), "mutation-rating-awful");

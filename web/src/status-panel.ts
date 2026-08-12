@@ -230,6 +230,7 @@ export class StatusPanel {
       state.player.abilities ?? [],
       state.player.resources ?? [],
       state.player.abilityLearning,
+      state.player.progress?.level ?? 1,
     );
     this.#renderSummonCommand(state.player.summonCommand, state.entities);
     this.#renderNearby(state);
@@ -532,6 +533,7 @@ export class StatusPanel {
     abilities: AbilityDto[],
     resources: ResourcePoolDto[],
     learning: AbilityLearningDto | null | undefined,
+    playerLevel: number,
   ): void {
     const document = this.#dom.abilityList.ownerDocument;
     this.#dom.resourceList.replaceChildren();
@@ -603,23 +605,15 @@ export class StatusPanel {
       });
       this.#dom.resourceList.append(row);
     }
-    const orderedAbilities = [...abilities].sort((left, right) =>
-      (left.bookRank ?? Number.MAX_SAFE_INTEGER) -
-        (right.bookRank ?? Number.MAX_SAFE_INTEGER) ||
-      (left.bookNameKey ?? "").localeCompare(right.bookNameKey ?? "") ||
-      left.minimumLevel - right.minimumLevel ||
-      left.id.localeCompare(right.id),
-    );
-    let currentBookNameKey: string | undefined;
-    for (const ability of orderedAbilities) {
-      if (ability.bookNameKey && ability.bookNameKey !== currentBookNameKey) {
+    for (const entry of abilityPresentation(abilities, playerLevel)) {
+      if (entry.type === "heading") {
         const heading = document.createElement("li");
         heading.className = "ability-book-heading";
-        heading.textContent = this.#localization.format(ability.bookNameKey as MessageKey);
+        heading.textContent = this.#localization.format(entry.nameKey as MessageKey);
         this.#dom.abilityList.append(heading);
-        currentBookNameKey = ability.bookNameKey;
+      } else {
+        this.#dom.abilityList.append(this.#abilityRow(entry.ability));
       }
-      this.#dom.abilityList.append(this.#abilityRow(ability));
     }
   }
 
@@ -894,6 +888,38 @@ export function abilityStatusMessageKey(
   if (ability.source === "mutation") return "ability-status-mutation";
   if (ability.source === "class") return "ability-status-class";
   return ability.learned ? "ability-status-learned" : "ability-status-unlearned";
+}
+
+export type AbilityPresentationEntry =
+  | { type: "heading"; nameKey: string }
+  | { type: "ability"; ability: AbilityDto };
+
+export function abilityPresentation(
+  abilities: readonly AbilityDto[],
+  playerLevel: number,
+): AbilityPresentationEntry[] {
+  const ordered = [...abilities]
+    .filter((ability) => !ability.uiGroupNameKey || ability.minimumLevel <= playerLevel)
+    .sort(
+      (left, right) =>
+        (left.uiGroupNameKey ?? "").localeCompare(right.uiGroupNameKey ?? "") ||
+        (left.bookRank ?? Number.MAX_SAFE_INTEGER) -
+          (right.bookRank ?? Number.MAX_SAFE_INTEGER) ||
+        (left.bookNameKey ?? "").localeCompare(right.bookNameKey ?? "") ||
+        left.minimumLevel - right.minimumLevel ||
+        left.id.localeCompare(right.id),
+    );
+  const entries: AbilityPresentationEntry[] = [];
+  let currentHeading: string | undefined;
+  for (const ability of ordered) {
+    const heading = ability.uiGroupNameKey ?? ability.bookNameKey ?? undefined;
+    if (heading && heading !== currentHeading) {
+      entries.push({ type: "heading", nameKey: heading });
+    }
+    currentHeading = heading;
+    entries.push({ type: "ability", ability });
+  }
+  return entries;
 }
 
 export function formatAttributeValue(value: number): string {

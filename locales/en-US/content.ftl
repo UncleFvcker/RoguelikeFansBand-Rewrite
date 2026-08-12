@@ -927,6 +927,7 @@ ability-demo-archer-create-arrows-name = Create Arrows
 ability-demo-archer-create-arrows-description = Turn skeleton remains into five to ten arrows.
 ability-demo-archer-create-bolts-name = Create Bolts
 ability-demo-archer-create-bolts-description = Turn skeleton remains into four to eight bolts.
+ability-group-demo-archer-create-ammo-name = Create Ammo
 item-demo-soft-leather-armour-name = Soft Leather Armour
 item-demo-soft-leather-armour-description = A flexible leather cuirass worn over a thicker leather jacket.
 item-demo-metal-cap-name = Metal Cap

@@ -92,6 +92,9 @@ fn archer_birth_uses_the_original_class_identity_skills_and_kit() {
         .filter(|ability| ability.source == AbilitySourceDto::Class)
         .collect::<Vec<_>>();
     assert_eq!(abilities.len(), 3);
+    assert!(abilities.iter().all(|ability| {
+        ability.ui_group_name_key.as_deref() == Some("ability-group-demo-archer-create-ammo-name")
+    }));
     assert!(
         abilities
             .iter()

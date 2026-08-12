@@ -13,7 +13,7 @@ use crate::{
 use super::shared::{
     attribute_modifiers_out_of_range, insert_definition_id, normalize_tags, require_format_version,
     require_reference, require_schema, validate_definition_id, validate_definition_text,
-    validate_equipment_slot, validate_status_immunities,
+    validate_equipment_slot, validate_message_key, validate_status_immunities,
 };
 
 pub(super) struct CharacterDefinitions<'a> {
@@ -354,6 +354,10 @@ pub(super) fn validate_characters(
                     .is_none_or(|ability| ability.player.is_some())
             {
                 return Err(ContentError::InvalidCharacterSource(class.id.clone()));
+            }
+            if let Some(key) = &activation.ui_group_name_key {
+                validate_message_key(key)
+                    .map_err(|_| ContentError::InvalidCharacterSource(class.id.clone()))?;
             }
             if let Some(resource_id) = &activation.resource_id {
                 require_reference(resource_ids, resource_id, &class.id)?;
