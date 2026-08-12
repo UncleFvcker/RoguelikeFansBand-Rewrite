@@ -5937,7 +5937,7 @@ fn death_spell_ability(spell: &LegacySpellProfile) -> Option<(String, serde_json
                 "type": "detect",
                 "subject": "actor",
                 "category": "nonliving",
-                "radius": 8,
+                "radius": 30,
             }),
             Vec::new(),
             vec!["death", "detection", "spell"],
@@ -5967,7 +5967,7 @@ fn death_spell_ability(spell: &LegacySpellProfile) -> Option<(String, serde_json
                 "type": "detect",
                 "subject": "actor",
                 "category": "evil",
-                "radius": 8,
+                "radius": 30,
             }),
             Vec::new(),
             vec!["death", "detection", "spell"],
@@ -6018,7 +6018,9 @@ fn death_spell_ability(spell: &LegacySpellProfile) -> Option<(String, serde_json
                 "type": "apply-status",
                 "statusKindId": "rfb.status.necromantic-resistance",
                 "intensity": 1,
-                "durationTicks": 300,
+                "durationTicks": 20,
+                "durationDice": 1,
+                "durationSides": 20,
                 "stacking": "replace",
                 "grantedResistances": {
                     "cold": "resistant",
@@ -6200,6 +6202,7 @@ fn death_spell_ability(spell: &LegacySpellProfile) -> Option<(String, serde_json
                 "damageBonus": 2,
                 "damageType": "physical",
                 "targetCategory": "living",
+                "feeds": true,
             }),
             vec![
                 serde_json::json!({
@@ -9875,11 +9878,6 @@ fn convert_content_from(
                         .player_spell_behavior_gaps
                         .entry("malediction-random-rider".to_owned())
                         .or_default() += 1;
-                } else if spell.index == 5 {
-                    *report
-                        .player_spell_behavior_gaps
-                        .entry("random-resistance-duration".to_owned())
-                        .or_default() += 1;
                 } else if spell.index == 17 {
                     for gap in [
                         "invoke-spirits-actor-polymorph",
@@ -13506,9 +13504,11 @@ S:2:0:6000
                 .player_spell_behavior_gaps
                 .contains_key("monster-status-power-resolution")
         );
-        assert_eq!(
-            outcome.report.player_spell_behavior_gaps["random-resistance-duration"],
-            1
+        assert!(
+            !outcome
+                .report
+                .player_spell_behavior_gaps
+                .contains_key("random-resistance-duration")
         );
         for gap in [
             "invoke-spirits-actor-polymorph",
@@ -13557,6 +13557,14 @@ S:2:0:6000
             serde_json::json!(["self"])
         );
         assert_eq!(detect_unlife["effect"]["subject"], "actor");
+        assert_eq!(detect_unlife["effect"]["radius"], 30);
+        let detect_evil = outcome
+            .ability_files
+            .iter()
+            .find(|(name, _)| name == "death-detect-evil.json")
+            .map(|(_, value)| value)
+            .expect("detect evil ability should be generated");
+        assert_eq!(detect_evil["effect"]["radius"], 30);
         let resistance = outcome
             .ability_files
             .iter()
@@ -13567,6 +13575,16 @@ S:2:0:6000
             resistance["effect"]["grantedResistances"]["poison"],
             "resistant"
         );
+        assert_eq!(resistance["effect"]["durationTicks"], 20);
+        assert_eq!(resistance["effect"]["durationDice"], 1);
+        assert_eq!(resistance["effect"]["durationSides"], 20);
+        let vampiric_drain = outcome
+            .ability_files
+            .iter()
+            .find(|(name, _)| name == "death-vampiric-drain.json")
+            .map(|(_, value)| value)
+            .expect("vampiric drain ability should be generated");
+        assert_eq!(vampiric_drain["effect"]["feeds"], true);
         let control = outcome
             .ability_files
             .iter()

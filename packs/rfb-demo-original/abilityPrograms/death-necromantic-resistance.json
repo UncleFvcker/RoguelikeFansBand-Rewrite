@@ -8,7 +8,9 @@
       "type": "apply-status",
       "statusKindId": "rfb.status.necromantic-resistance",
       "intensity": 1,
-      "durationTicks": 300,
+      "durationTicks": 20,
+      "durationDice": 1,
+      "durationSides": 20,
       "stacking": "replace",
       "grantedResistances": {
         "cold": "resistant",

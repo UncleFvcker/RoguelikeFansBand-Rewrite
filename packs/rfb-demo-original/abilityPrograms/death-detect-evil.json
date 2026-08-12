@@ -8,7 +8,7 @@
       "type": "detect",
       "subject": "actor",
       "category": "evil",
-      "radius": 8
+      "radius": 30
     }
   ]
 }

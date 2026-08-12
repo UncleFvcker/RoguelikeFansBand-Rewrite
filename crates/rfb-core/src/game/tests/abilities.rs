@@ -326,6 +326,91 @@ fn death_abilities_materialize_player_level_scaling_in_projection() {
 }
 
 #[test]
+fn corrected_death_spells_project_authoritative_values_at_levels_one_twenty_and_fifty() {
+    for level in [1, 20, 50] {
+        let mut game = test_caster_game(0);
+        game.progress.level = level;
+        let abilities = game
+            .snapshot()
+            .player
+            .abilities
+            .into_iter()
+            .map(|ability| (ability.id.clone(), ability))
+            .collect::<BTreeMap<_, _>>();
+
+        for ability_id in [
+            "demo.ability.death-detect-unlife",
+            "demo.ability.death-detect-evil",
+        ] {
+            assert!(matches!(
+                abilities[ability_id].effects.as_slice(),
+                [AbilityEffectSpecDto::Detect { radius: 30, .. }]
+            ));
+        }
+        assert!(matches!(
+            abilities["demo.ability.death-necromantic-resistance"]
+                .effects
+                .as_slice(),
+            [AbilityEffectSpecDto::ApplyStatus {
+                duration_ticks: 20,
+                duration_dice: 1,
+                duration_sides: 20,
+                ..
+            }]
+        ));
+        assert!(matches!(
+            abilities["demo.ability.death-vampiric-drain"]
+                .effects
+                .as_slice(),
+            [AbilityEffectSpecDto::DrainLife {
+                damage_sides,
+                damage_bonus,
+                feeds: true,
+                ..
+            }] if *damage_sides == level * 2 && *damage_bonus == level * 2
+        ));
+    }
+}
+
+#[test]
+fn death_vampiric_drain_heals_and_feeds_up_to_the_original_caps() {
+    let mut game = prepare_death_caster(0, 50, "demo.ability.death-vampiric-drain");
+    game.debug_set_ability_casts_succeed(true);
+    let target = Position {
+        x: game.player.position.x + 1,
+        y: game.player.position.y,
+    };
+    replace_terrain(&mut game, target, "demo.terrain.floor");
+    game.entities.push(actor_from_runtime_spawn(
+        "test.actor.death-vampiric-drain",
+        "demo.actor.gnome-mage",
+        target,
+        500,
+        100,
+        100,
+        true,
+    ));
+    let maximum_hp = game.effective_player_max_hp();
+    game.player.hp = maximum_hp - 1;
+    game.nutrition = rfb_protocol::PLAYER_NUTRITION_BIRTH;
+
+    game.resolve_player_ability(
+        "demo.ability.death-vampiric-drain",
+        TargetSelection::Direction {
+            direction: Direction::East,
+        },
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("vampiric drain should resolve");
+
+    assert!(game.entities[0].hp < 500);
+    assert_eq!(game.player.hp, maximum_hp);
+    assert_eq!(game.nutrition, rfb_protocol::PLAYER_NUTRITION_MAXIMUM - 1);
+}
+
+#[test]
 fn death_second_book_materializes_original_mage_scaling_and_beam_profile() {
     let mut game = test_caster_game(0);
     game.progress.level = 30;

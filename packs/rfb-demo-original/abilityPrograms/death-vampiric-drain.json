@@ -10,7 +10,8 @@
       "damageSides": 2,
       "damageBonus": 2,
       "damageType": "physical",
-      "targetCategory": "living"
+      "targetCategory": "living",
+      "feeds": true
     }
   ]
 }
