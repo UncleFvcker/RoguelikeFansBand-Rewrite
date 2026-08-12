@@ -4710,6 +4710,12 @@
       "id": "jurt-the-living-trump",
       "tags": ["orc-cave"],
       "omittedFlags": ["CAN_SPEAK", "MALE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 863,
+      "id": "quantum-dot",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["ATTR_ANY", "ATTR_MULTI", "NASTY_GLYPH", "NO_STUN", "STUPID"]
     }
   ]
 }

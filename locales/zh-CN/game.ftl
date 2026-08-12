@@ -162,6 +162,7 @@ message-mutation-aura-slay = 你的{ $type }光环消灭了{ $target }。
 message-ability-healed = { $ability }令你恢复了 { $amount } 点生命。
 message-resource-recovered = 你恢复了 { $amount } 点{ $resource }。
 message-monster-blinked = { $source }闪到了近处的新位置。
+message-monster-quantum-vanished = { $source }在量子不确定性中消失了。
 message-monster-blinked-target = { $source }把{ $target }闪现到了近处的新位置！
 message-monster-teleported = { $source }撕开裂隙消失在远处。
 message-monster-eldritch-horror =

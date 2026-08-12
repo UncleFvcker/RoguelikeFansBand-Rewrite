@@ -3712,7 +3712,7 @@ fn p44a_monsters_generate_only_parameterized_existing_effects() {
 #[test]
 fn p44b_monsters_complete_the_parameterized_existing_effect_harvest() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
-    assert_eq!(artifact.content.actors.len(), 830);
+    assert_eq!(artifact.content.actors.len(), 831);
     assert_eq!(artifact.content.abilities.len(), 453);
     let ability_ids = artifact
         .content
@@ -3948,6 +3948,27 @@ fn p46_trump_monster_keeps_its_source_identity_and_turn_tag() {
         Some(517)
     );
     assert!(jurt.tags.iter().any(|tag| tag == "trump"));
+}
+
+#[test]
+fn p46_quantum_monster_keeps_its_source_identity_and_turn_tag() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let quantum = artifact
+        .content
+        .actors
+        .iter()
+        .find(|actor| actor.id == "demo.actor.quantum-dot")
+        .expect("Quantum dot should be imported");
+
+    assert_eq!(quantum.level, 35);
+    assert_eq!(
+        quantum
+            .allocation
+            .as_ref()
+            .map(|allocation| allocation.legacy_index),
+        Some(863)
+    );
+    assert!(quantum.tags.iter().any(|tag| tag == "quantum"));
 }
 
 #[test]

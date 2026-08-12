@@ -3456,3 +3456,5 @@ ability-legacy-summon-legacy-import-l40-1d3-1-name = Summon monster
 ability-legacy-summon-legacy-import-l40-1d3-1-description = Uses the summon monster monster spell from RFB.
 actor-demo-jurt-the-living-trump-name = Jurt the Living Trump
 actor-demo-jurt-the-living-trump-description = A Chaos devotee transformed into a living trump, never quite occupying the same place twice.
+actor-demo-quantum-dot-name = Quantum dot
+actor-demo-quantum-dot-description = A tiny point that flickers in and out of quantum uncertainty.

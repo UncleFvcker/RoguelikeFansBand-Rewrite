@@ -7473,6 +7473,7 @@ fn monster_flag_is_mapped(flag: &str) -> bool {
             | "SELF_DARK_2"
             | "FORCE_SLEEP"
             | "TRUMP"
+            | "QUANTUM"
             | "ONLY_ITEM"
             | "ONLY_GOLD"
             | "DROP_60"
@@ -7647,6 +7648,7 @@ fn monster_json(
         ("TANUKI", "tanuki"),
         ("UNIQUE2", "unique2"),
         ("TRUMP", "trump"),
+        ("QUANTUM", "quantum"),
     ] {
         if entry.flags.iter().any(|value| value == flag) {
             tags.push(tag.to_owned());
@@ -8288,6 +8290,7 @@ fn demo_monster_json(
         ("TANUKI", "tanuki"),
         ("UNIQUE2", "unique2"),
         ("TRUMP", "trump"),
+        ("QUANTUM", "quantum"),
     ] {
         if entry.flags.iter().any(|candidate| candidate == flag) {
             tags.insert(tag.to_owned());
@@ -12766,6 +12769,32 @@ mod tests {
             actor["tags"]
                 .as_array()
                 .is_some_and(|tags| { tags.iter().any(|tag| tag == "trump") })
+        );
+    }
+
+    #[test]
+    fn demo_monster_import_maps_quantum_as_a_shared_turn_tag() {
+        let mut monsters = parse_r_info(
+            "N:863:Quantum dot\nG:*:v\nI:130:10d10:10:70:0:20\nW:35:3:999:1600:0:0\nB:SPORE:HURT(2d4)\nF:QUANTUM | STUPID\n",
+        )
+        .expect("synthetic quantum monster should parse");
+        let actor = demo_monster_json(
+            &monsters.remove(0),
+            &DemoMonsterSelectionEntry {
+                source_index: 863,
+                source_id: None,
+                id: "quantum-dot".to_owned(),
+                tags: vec!["orc-cave".to_owned()],
+                omitted_flags: vec!["STUPID".to_owned()],
+            },
+            &mut BTreeMap::new(),
+        )
+        .expect("QUANTUM should import through the shared tag");
+
+        assert!(
+            actor["tags"]
+                .as_array()
+                .is_some_and(|tags| tags.iter().any(|tag| tag == "quantum"))
         );
     }
 

@@ -326,6 +326,50 @@ fn living_trump_blinks_for_free_before_its_action() {
 }
 
 #[test]
+fn quantum_turn_uses_the_stable_entity_id_and_can_naturally_vanish() {
+    assert_eq!(
+        Game::quantum_slot_denominator("stable.quantum.1"),
+        Game::quantum_slot_denominator("stable.quantum.1")
+    );
+
+    let mut game = Game::new(0);
+    game.entities.clear();
+    game.push_generated_actor(
+        "stable.quantum.1".to_owned(),
+        "demo.actor.quantum-dot",
+        Position { x: 4, y: 3 },
+    );
+    let seed = (0..10_000)
+        .find(|seed| {
+            let mut trial = game.clone();
+            trial.rng = RfbRng::seeded(*seed);
+            let mut events = Vec::new();
+            trial
+                .try_quantum_turn(0, &mut events, &mut BTreeSet::new(), &mut Vec::new())
+                .expect("quantum turn should resolve");
+            events
+                .iter()
+                .any(|event| matches!(event, DomainEvent::MonsterQuantumVanished { .. }))
+        })
+        .expect("a deterministic seed should trigger natural quantum disappearance");
+    game.rng = RfbRng::seeded(seed);
+    let mut events = Vec::new();
+    let mut removed = Vec::new();
+
+    assert!(
+        game.try_quantum_turn(0, &mut events, &mut BTreeSet::new(), &mut removed)
+            .expect("quantum turn should resolve")
+    );
+    assert!(game.entities.is_empty());
+    assert_eq!(removed, ["stable.quantum.1"]);
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::MonsterQuantumVanished { source_kind_id }
+            if source_kind_id == "demo.actor.quantum-dot"
+    )));
+}
+
+#[test]
 fn never_move_monster_waits_at_range_and_can_attack_adjacent() {
     let mut game = game_with_actor_definition(7, "demo.actor.grey-mold", |actor| {
         actor.attack = 1_000_000;

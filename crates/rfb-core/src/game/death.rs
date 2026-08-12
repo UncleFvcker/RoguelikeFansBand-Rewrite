@@ -331,6 +331,24 @@ impl Game {
         Ok(())
     }
 
+    pub(super) fn resolve_actor_death_without_credit(
+        &mut self,
+        index: usize,
+        death_event: DomainEvent,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        self.resolve_actor_death_with_credit(
+            index,
+            death_event,
+            false,
+            events,
+            changed,
+            removed_entities,
+        )
+    }
+
     #[allow(clippy::too_many_arguments)]
     fn resolve_actor_death_with_credit(
         &mut self,

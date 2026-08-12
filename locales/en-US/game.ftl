@@ -162,6 +162,7 @@ message-mutation-aura-slay = Your { $type } aura destroys { $target }.
 message-ability-healed = { $ability } restores { $amount } HP.
 message-resource-recovered = You recover { $amount } { $resource }.
 message-monster-blinked = { $source } blinks to a nearby spot.
+message-monster-quantum-vanished = { $source } vanishes in quantum uncertainty.
 message-monster-blinked-target = { $source } blinks { $target } to a nearby spot!
 message-monster-teleported = { $source } tears open a rift and vanishes into the distance.
 message-monster-eldritch-horror =
