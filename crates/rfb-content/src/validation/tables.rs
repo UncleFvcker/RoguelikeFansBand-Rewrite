@@ -4,10 +4,11 @@ use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
 use crate::{
     ActorRole, AffixDefinition, ContentError, ContentPosition, ENCOUNTER_TABLE_SCHEMA,
-    EncounterTableDefinition, ItemDefinition, LOOT_TABLE_SCHEMA, LootTableDefinition,
-    MonsterPackBehavior, REGION_TABLE_SCHEMA, RegionTableDefinition, TERRAIN_FEATURE_TABLE_SCHEMA,
-    THEME_TABLE_SCHEMA, TerrainDefinition, TerrainFeaturePlacement, TerrainFeatureTableDefinition,
-    ThemeTableDefinition, VAULT_SCHEMA, VaultDefinition, affix_is_compatible_with_item,
+    EncounterTableDefinition, ItemDefinition, LOOT_TABLE_SCHEMA, LootQualityPolicyDefinition,
+    LootTableDefinition, MonsterPackBehavior, REGION_TABLE_SCHEMA, RegionTableDefinition,
+    TERRAIN_FEATURE_TABLE_SCHEMA, THEME_TABLE_SCHEMA, TerrainDefinition, TerrainFeaturePlacement,
+    TerrainFeatureTableDefinition, ThemeTableDefinition, VAULT_SCHEMA, VaultDefinition,
+    affix_is_compatible_with_item,
 };
 
 use super::shared::{
@@ -78,6 +79,7 @@ pub(super) fn validate_tables(
         let maximum_rolls = table.roll_dice.map_or(u32::from(table.rolls), |dice| {
             u32::from(table.rolls) + u32::from(dice.dice) * u32::from(dice.sides)
         });
+        let has_quality_weights = !table.quality_weights.is_empty();
         if maximum_rolls == 0
             || maximum_rolls > 16
             || table
@@ -88,8 +90,14 @@ pub(super) fn validate_tables(
                 .is_some_and(|dice| dice.dice == 0 || dice.sides == 0)
             || table.entries.is_empty()
             || table.entries.len() > 128
-            || table.quality_weights.is_empty()
             || table.quality_weights.len() > 3
+            || has_quality_weights == table.quality_policy.is_some()
+            || table.quality_policy.is_some_and(|policy| match policy {
+                LootQualityPolicyDefinition::RfbDepth {
+                    good_cap_percent,
+                    great_cap_percent,
+                } => good_cap_percent > 100 || great_cap_percent > 100,
+            })
             || table.affix_weights.is_empty()
             || table.affix_weights.len() > 64
         {
@@ -191,7 +199,10 @@ pub(super) fn validate_tables(
         {
             return Err(ContentError::InvalidLootTable(table.id.clone()));
         }
-        if entry_weight == 0 || quality_weight == 0 || affix_weight == 0 {
+        if entry_weight == 0
+            || (table.quality_policy.is_none() && quality_weight == 0)
+            || affix_weight == 0
+        {
             return Err(ContentError::InvalidLootTable(table.id.clone()));
         }
         insert_definition_id(all_ids, &table.id)?;

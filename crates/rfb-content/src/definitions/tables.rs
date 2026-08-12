@@ -49,6 +49,20 @@ pub struct LootQualityWeightDefinition {
     pub weight: u32,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(tag = "kind", rename_all = "kebab-case", deny_unknown_fields)]
+pub enum LootQualityPolicyDefinition {
+    RfbDepth {
+        #[serde(rename = "goodCapPercent")]
+        #[cfg_attr(feature = "schemas", schemars(range(max = 100)))]
+        good_cap_percent: u8,
+        #[serde(rename = "greatCapPercent")]
+        #[cfg_attr(feature = "schemas", schemars(range(max = 100)))]
+        great_cap_percent: u8,
+    },
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -72,7 +86,10 @@ pub struct LootTableDefinition {
     #[serde(default)]
     pub roll_dice: Option<LootRollDiceDefinition>,
     pub entries: Vec<LootEntryDefinition>,
+    #[serde(default)]
     pub quality_weights: Vec<LootQualityWeightDefinition>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub quality_policy: Option<LootQualityPolicyDefinition>,
     pub affix_weights: Vec<LootAffixWeightDefinition>,
 }
 

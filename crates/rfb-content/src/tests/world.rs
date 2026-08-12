@@ -47,6 +47,66 @@ fn loot_table_validation_uses_current_warrens_tables() {
 }
 
 #[test]
+fn loot_table_validation_accepts_exactly_one_quality_source() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let policy = LootQualityPolicyDefinition::RfbDepth {
+        good_cap_percent: 75,
+        great_cap_percent: 20,
+    };
+
+    let mut valid = artifact.content.clone();
+    let table = valid
+        .loot_tables
+        .iter_mut()
+        .find(|table| table.id == "demo.loot-table.warrens")
+        .expect("Warrens loot table should exist");
+    table.quality_weights.clear();
+    table.quality_policy = Some(policy);
+    validate_and_normalize(&mut valid).expect("RFB depth policy should replace static weights");
+
+    let mut invalid = artifact.content.clone();
+    invalid
+        .loot_tables
+        .iter_mut()
+        .find(|table| table.id == "demo.loot-table.warrens")
+        .expect("Warrens loot table should exist")
+        .quality_policy = Some(policy);
+    assert!(matches!(
+        validate_and_normalize(&mut invalid),
+        Err(ContentError::InvalidLootTable(_))
+    ));
+
+    let mut invalid = artifact.content.clone();
+    invalid
+        .loot_tables
+        .iter_mut()
+        .find(|table| table.id == "demo.loot-table.warrens")
+        .expect("Warrens loot table should exist")
+        .quality_weights
+        .clear();
+    assert!(matches!(
+        validate_and_normalize(&mut invalid),
+        Err(ContentError::InvalidLootTable(_))
+    ));
+
+    let mut invalid = artifact.content.clone();
+    let table = invalid
+        .loot_tables
+        .iter_mut()
+        .find(|table| table.id == "demo.loot-table.warrens")
+        .expect("Warrens loot table should exist");
+    table.quality_weights.clear();
+    table.quality_policy = Some(LootQualityPolicyDefinition::RfbDepth {
+        good_cap_percent: 101,
+        great_cap_percent: 20,
+    });
+    assert!(matches!(
+        validate_and_normalize(&mut invalid),
+        Err(ContentError::InvalidLootTable(_))
+    ));
+}
+
+#[test]
 fn procedural_floor_validation_uses_current_warrens_floors() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
 
