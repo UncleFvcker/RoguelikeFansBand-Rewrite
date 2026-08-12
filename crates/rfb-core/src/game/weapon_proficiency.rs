@@ -100,15 +100,15 @@ fn proficiency_bonus(current: u16, crossbow: bool) -> i32 {
     }
 }
 
-fn proficiency_rank(current: u16) -> rfb_protocol::WeaponProficiencyRankDto {
-    use rfb_protocol::WeaponProficiencyRankDto;
+pub(super) fn proficiency_rank(current: u16) -> rfb_protocol::ProficiencyRankDto {
+    use rfb_protocol::ProficiencyRankDto;
 
     match current {
-        ..4_000 => WeaponProficiencyRankDto::Unskilled,
-        4_000..6_000 => WeaponProficiencyRankDto::Beginner,
-        6_000..7_000 => WeaponProficiencyRankDto::Skilled,
-        7_000..8_000 => WeaponProficiencyRankDto::Expert,
-        _ => WeaponProficiencyRankDto::Master,
+        ..4_000 => ProficiencyRankDto::Unskilled,
+        4_000..6_000 => ProficiencyRankDto::Beginner,
+        6_000..7_000 => ProficiencyRankDto::Skilled,
+        7_000..8_000 => ProficiencyRankDto::Expert,
+        _ => ProficiencyRankDto::Master,
     }
 }
 
@@ -263,13 +263,13 @@ mod tests {
 
     #[test]
     fn original_rank_boundaries_are_projected_exactly() {
-        use rfb_protocol::WeaponProficiencyRankDto;
+        use rfb_protocol::ProficiencyRankDto;
 
-        assert_eq!(proficiency_rank(3_999), WeaponProficiencyRankDto::Unskilled);
-        assert_eq!(proficiency_rank(4_000), WeaponProficiencyRankDto::Beginner);
-        assert_eq!(proficiency_rank(6_000), WeaponProficiencyRankDto::Skilled);
-        assert_eq!(proficiency_rank(7_000), WeaponProficiencyRankDto::Expert);
-        assert_eq!(proficiency_rank(8_000), WeaponProficiencyRankDto::Master);
+        assert_eq!(proficiency_rank(3_999), ProficiencyRankDto::Unskilled);
+        assert_eq!(proficiency_rank(4_000), ProficiencyRankDto::Beginner);
+        assert_eq!(proficiency_rank(6_000), ProficiencyRankDto::Skilled);
+        assert_eq!(proficiency_rank(7_000), ProficiencyRankDto::Expert);
+        assert_eq!(proficiency_rank(8_000), ProficiencyRankDto::Master);
     }
 
     #[test]

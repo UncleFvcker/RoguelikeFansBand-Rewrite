@@ -10,11 +10,12 @@ use rfb_protocol::{
     EquipmentItemSaveDto, GameCommand, GameCommandEnvelope, GameEventDto, GoldPileDto, HomeDto,
     InventoryItemDto, InventoryItemSaveDto, ItemActivationDto, ItemChargesDto,
     ItemCurseSeverityDto, ItemEnchantmentsDto, ItemFuelDto, ItemKnowledgeSaveDto,
-    ItemPropertyKnowledgeSaveDto, ItemQualityDto, MonsterPackSaveDto, NaturalAttributeSetSaveDto,
-    PROTOCOL_VERSION, Position, RecallStateDto, ResistanceDto, ResistanceSaveDto, ResourcePoolDto,
-    ResourcePoolSaveDto, RolledAffixSaveDto, SAVE_HEADER_SCHEMA_VERSION, SaveHeaderV1, ShopDto,
-    StatusDto, StatusSaveDto, SummonCommandDto, SummonSaveDto, TaskStateSaveDto, TaskStatusKindDto,
-    TerrainInteractionDto, TownDto, WeaponProficiencySaveDto,
+    ItemPropertyKnowledgeSaveDto, ItemQualityDto, MaterialSaveDto, MonsterPackSaveDto,
+    NaturalAttributeSetSaveDto, PROTOCOL_VERSION, Position, RecallStateDto, ResistanceDto,
+    ResistanceSaveDto, ResourcePoolDto, ResourcePoolSaveDto, RolledAffixSaveDto,
+    SAVE_HEADER_SCHEMA_VERSION, SaveHeaderV1, ShopDto, StatusDto, StatusSaveDto, SummonCommandDto,
+    SummonSaveDto, TaskStateSaveDto, TaskStatusKindDto, TerrainInteractionDto, TownDto,
+    WeaponProficiencySaveDto,
 };
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -23,7 +24,7 @@ pub mod policy;
 pub mod snapshot;
 
 pub const CONTRACT_SCHEMA_VERSION: u16 = 4;
-pub const ACTIVE_BASELINE: &str = "contract-v277";
+pub const ACTIVE_BASELINE: &str = "contract-v278";
 pub const ACTIVE_FIXTURE_DIRECTORY: &str = "active";
 pub const LEGACY_BASELINE_COMMIT: &str = "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9";
 pub const HISTORICAL_TEST_WORLD: &str = "demo.original-v1";
@@ -191,6 +192,10 @@ pub struct Preconditions {
     pub player_attributes: Option<NaturalAttributeSetSaveDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub player_weapon_proficiencies: Vec<WeaponProficiencySaveDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub player_mining_proficiency: Option<u16>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub player_materials: Vec<MaterialSaveDto>,
     #[serde(default, skip_serializing_if = "is_false")]
     pub legacy_player_progress: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -652,6 +657,23 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
             .ok_or(ContractError::MissingProgressPrecondition)?
             .weapon_proficiencies
             .clone_from(&fixture.preconditions.player_weapon_proficiencies);
+    }
+    if let Some(mining_proficiency) = fixture.preconditions.player_mining_proficiency {
+        payload
+            .player
+            .progress
+            .as_mut()
+            .ok_or(ContractError::MissingProgressPrecondition)?
+            .mining_proficiency = mining_proficiency;
+    }
+    if !fixture.preconditions.player_materials.is_empty() {
+        payload
+            .player
+            .progress
+            .as_mut()
+            .ok_or(ContractError::MissingProgressPrecondition)?
+            .materials
+            .clone_from(&fixture.preconditions.player_materials);
     }
     if fixture.preconditions.legacy_player_ability_state {
         payload.player.resources.clear();

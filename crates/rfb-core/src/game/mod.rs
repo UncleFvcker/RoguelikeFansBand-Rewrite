@@ -113,6 +113,7 @@ mod item_combat;
 mod item_knowledge;
 mod item_use;
 mod lighting;
+mod mining;
 mod mogaminator;
 mod monster_abilities;
 mod monster_ai;
@@ -194,7 +195,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 89;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 90;
 #[cfg(test)]
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const VISIBILITY_RADIUS: i32 = 8;
@@ -2098,9 +2099,15 @@ impl Game {
                 None => events.push(DomainEvent::TrapDisarmUnavailable),
             },
             GameAction::DigTerrain { direction } => match self.dig_terrain(direction) {
-                Some(TerrainDigOutcome::Succeeded { position }) => {
+                Some(TerrainDigOutcome::Succeeded {
+                    position,
+                    proficiency_improved,
+                }) => {
                     changed.insert(position);
                     events.push(DomainEvent::TerrainDug { position });
+                    if proficiency_improved {
+                        events.push(DomainEvent::MiningProficiencyImproved);
+                    }
                 }
                 Some(TerrainDigOutcome::Failed {
                     position,

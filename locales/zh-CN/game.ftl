@@ -105,6 +105,7 @@ message-projectile-slay = 你的射击消灭了{ $target }。
 message-projectile-ammo-recovered = 你的{ $target }完整地落在了地上。
 message-projectile-ammo-broken = 你的{ $target }在撞击中损坏了。
 message-weapon-proficiency-improved = 你的{ $target }技能正在提升。
+message-mining-proficiency-improved = 你的挖矿熟练度提升了。
 message-mutation-gained = 你获得了变异“{ $mutation }”。
 message-mutation-chaos-patron-reward = { $patron }赐予了你一份混沌馈赠。
 message-mutation-lost = 你失去了变异“{ $mutation }”。

@@ -74,6 +74,19 @@ test("weapon proficiency growth localizes the canonical base weapon", () => {
   localization.setLocale("en-US");
 });
 
+test("mining proficiency growth uses the original bilingual message", () => {
+  const event = {
+    kind: "progress.mining-proficiency-improved",
+    messageKey: "mining-proficiency-improved",
+    args: {},
+  };
+
+  assert.equal(formatter.formatEvent(event), "Your mining proficiency has improved.");
+  localization.setLocale("zh-CN");
+  assert.equal(formatter.formatEvent(event), "你的挖矿熟练度提升了。");
+  localization.setLocale("en-US");
+});
+
 test("Polymorph's rare cure uses the authoritative bilingual message", () => {
   const event = {
     kind: "mutation.all-cured",

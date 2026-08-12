@@ -21,9 +21,18 @@ pub(super) enum TrapDisarmOutcome {
 }
 
 pub(super) enum TerrainDigOutcome {
-    Succeeded { position: Position },
-    Failed { position: Position, retryable: bool },
-    ActorBlocked { position: Position, index: usize },
+    Succeeded {
+        position: Position,
+        proficiency_improved: bool,
+    },
+    Failed {
+        position: Position,
+        retryable: bool,
+    },
+    ActorBlocked {
+        position: Position,
+        index: usize,
+    },
 }
 
 pub(super) enum DoorOpenOutcome {
@@ -501,6 +510,9 @@ impl Game {
                 retryable,
             });
         }
+        let proficiency_improved = plan.digging.vein_yield.is_some_and(|vein_yield| {
+            self.train_mining_proficiency(vein_yield, plan.digging.power)
+        });
         let target_id = plan
             .digging
             .result_terrain_id
@@ -509,6 +521,7 @@ impl Game {
         self.revealed_terrain.remove(&plan.position);
         Some(TerrainDigOutcome::Succeeded {
             position: plan.position,
+            proficiency_improved,
         })
     }
 

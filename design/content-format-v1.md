@@ -633,3 +633,7 @@ contract-v277 / 包 1.276.0 以 `TerrainDefinition.digging` 的
 限定为 `soft/hard/permanent`，永久地形不得声明结果，矿脉产出只用于 hard 地形。
 `ItemDefinition.tunnelingPval` 与物品重量共同派生武器/工具挖掘贡献。新增
 `demo.terrain.rubble`，没有新增 item、ability 或 affix ID。
+
+contract-v278 不修改内容 schema 或包内容，继续使用包 1.276.0。十种 `rfb.material.*`
+身份属于玩家材料状态，不是 ItemDefinition，也不占用 items 分支的 item ID；内容 hash
+保持 `ee561b30744f44fd627805d8ed0a45eb64b21ec4c13991033b6f6254b29156b9`。

@@ -1143,6 +1143,64 @@
             "maximum": 8000,
             "hitBonus": 0
           }
+        ],
+        "miningProficiency": {
+          "diggingPower": 23,
+          "rank": "unskilled",
+          "current": 0,
+          "maximum": 8000
+        },
+        "materials": [
+          {
+            "materialId": "rfb.material.iron-ore",
+            "nameKey": "material-iron-ore",
+            "quantity": 0
+          },
+          {
+            "materialId": "rfb.material.silver-ore",
+            "nameKey": "material-silver-ore",
+            "quantity": 0
+          },
+          {
+            "materialId": "rfb.material.mithril-dust",
+            "nameKey": "material-mithril-dust",
+            "quantity": 0
+          },
+          {
+            "materialId": "rfb.material.crystal-shard",
+            "nameKey": "material-crystal-shard",
+            "quantity": 0
+          },
+          {
+            "materialId": "rfb.material.herb",
+            "nameKey": "material-herb",
+            "quantity": 0
+          },
+          {
+            "materialId": "rfb.material.beast-meat",
+            "nameKey": "material-beast-meat",
+            "quantity": 0
+          },
+          {
+            "materialId": "rfb.material.dragon-scale",
+            "nameKey": "material-dragon-scale",
+            "quantity": 0
+          },
+          {
+            "materialId": "rfb.material.demon-ichor",
+            "nameKey": "material-demon-ichor",
+            "quantity": 0
+          },
+          {
+            "materialId": "rfb.material.arcane-essence",
+            "nameKey": "material-arcane-essence",
+            "quantity": 0
+          },
+          {
+            "materialId": "rfb.material.rare-catalyst",
+            "nameKey": "material-rare-catalyst",
+            "quantity": 0
+          }
         ]
       },
       "entityCount": 0,
@@ -1613,7 +1671,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "253d49a763abeb0bc3f6aad92b0aed1508e031c3a233776a4e06084e002345ce"
+      "stateHash": "145ff9cc662c344b1594e3a50d30d837e166ca6820bdcdaac56c94a91588c505"
     },
     "events": [
       {

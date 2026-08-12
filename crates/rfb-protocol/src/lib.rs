@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.179";
+pub const PROTOCOL_VERSION: &str = "1.180";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -1330,6 +1330,10 @@ pub struct PlayerProgressDto {
     pub skills: Vec<SkillProgressDto>,
     #[serde(default)]
     pub weapon_proficiencies: Vec<WeaponProficiencyDto>,
+    #[serde(default)]
+    pub mining_proficiency: MiningProficiencyDto,
+    #[serde(default)]
+    pub materials: Vec<MaterialDto>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -1340,10 +1344,11 @@ pub enum WeaponProficiencyCategoryDto {
     Launcher,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "kebab-case")]
-pub enum WeaponProficiencyRankDto {
+pub enum ProficiencyRankDto {
+    #[default]
     Unskilled,
     Beginner,
     Skilled,
@@ -1358,10 +1363,29 @@ pub struct WeaponProficiencyDto {
     pub item_kind_id: String,
     pub name_key: String,
     pub category: WeaponProficiencyCategoryDto,
-    pub rank: WeaponProficiencyRankDto,
+    pub rank: ProficiencyRankDto,
     pub current: u16,
     pub maximum: u16,
     pub hit_bonus: i32,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct MiningProficiencyDto {
+    pub digging_power: i32,
+    pub rank: ProficiencyRankDto,
+    pub current: u16,
+    pub maximum: u16,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct MaterialDto {
+    pub material_id: String,
+    pub name_key: String,
+    pub quantity: u32,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -3312,8 +3336,10 @@ pub fn generated_typescript() -> String {
     push_declaration!(PlayerProgressDto);
     push_declaration!(SkillProgressDto);
     push_declaration!(WeaponProficiencyCategoryDto);
-    push_declaration!(WeaponProficiencyRankDto);
+    push_declaration!(ProficiencyRankDto);
     push_declaration!(WeaponProficiencyDto);
+    push_declaration!(MiningProficiencyDto);
+    push_declaration!(MaterialDto);
     push_declaration!(PlayerBuildDto);
     push_declaration!(DamageDiceDto);
     push_declaration!(AttackProfileDto);
@@ -3587,6 +3613,8 @@ pub struct PlayerProgressSaveDto {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub skills: Vec<SkillProgressSaveDto>,
     pub weapon_proficiencies: Vec<WeaponProficiencySaveDto>,
+    pub mining_proficiency: u16,
+    pub materials: Vec<MaterialSaveDto>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -3604,6 +3632,13 @@ pub struct SkillProgressSaveDto {
 pub struct WeaponProficiencySaveDto {
     pub item_kind_id: String,
     pub current: u16,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct MaterialSaveDto {
+    pub material_id: String,
+    pub quantity: u32,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

@@ -108,7 +108,7 @@ fn growth_uses_original_gates_rng_remainders_and_bonus_notifications() {
 
 #[test]
 fn ordinary_melee_trains_once_before_multiple_missed_blows() {
-    let mut game = Game::new(0x4d45_4c45_45);
+    let mut game = Game::new(0x004d_454c_4545);
     place_training_target(&mut game);
     game.player.statuses.push(StatusInstance {
         kind_id: STATUS_STUN.to_owned(),
@@ -149,7 +149,7 @@ fn ordinary_melee_trains_once_before_multiple_missed_blows() {
 #[test]
 fn projectile_collision_trains_but_an_empty_shot_does_not_touch_progress_or_rng() {
     let mut collision =
-        Game::new_with_build(0x424f_57, "demo.build.archer").expect("Archer should create");
+        Game::new_with_build(0x0042_4f57, "demo.build.archer").expect("Archer should create");
     let direction = place_training_target(&mut collision);
     collision
         .resolve_player_projectile(
@@ -168,7 +168,7 @@ fn projectile_collision_trains_but_an_empty_shot_does_not_touch_progress_or_rng(
     );
 
     let mut empty =
-        Game::new_with_build(0x454d_5054_59, "demo.build.archer").expect("Archer should create");
+        Game::new_with_build(0x0045_4d50_5459, "demo.build.archer").expect("Archer should create");
     empty.entities.clear();
     empty
         .progress
@@ -221,7 +221,7 @@ fn artifact_training_uses_only_the_canonical_base_weapon_key() {
 
 #[test]
 fn progression_projection_lists_base_weapons_with_original_ranks_and_bonuses() {
-    let snapshot = Game::new(0x5052_4f4a_4543_54).snapshot();
+    let snapshot = Game::new(0x0050_524f_4a45_4354).snapshot();
     let proficiencies = &snapshot.player.progress.weapon_proficiencies;
     assert!(
         proficiencies
@@ -246,7 +246,7 @@ fn progression_projection_lists_base_weapons_with_original_ranks_and_bonuses() {
     assert_eq!(bow.current, 4_000);
     assert_eq!(bow.maximum, 7_000);
     assert_eq!(bow.hit_bonus, 0);
-    assert_eq!(bow.rank, rfb_protocol::WeaponProficiencyRankDto::Beginner);
+    assert_eq!(bow.rank, rfb_protocol::ProficiencyRankDto::Beginner);
     assert_eq!(
         bow.category,
         rfb_protocol::WeaponProficiencyCategoryDto::Launcher
@@ -329,7 +329,7 @@ fn sparse_weapon_progress_round_trips_and_rejects_noncanonical_or_out_of_range_e
         ))
     ));
 
-    let empty = Game::new(0x454d_5054_59).to_save();
+    let empty = Game::new(0x0045_4d50_5459).to_save();
     assert!(
         empty
             .player

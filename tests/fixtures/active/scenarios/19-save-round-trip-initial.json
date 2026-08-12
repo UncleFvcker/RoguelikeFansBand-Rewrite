@@ -1063,6 +1063,64 @@
             "maximum": 8000,
             "hitBonus": 0
           }
+        ],
+        "miningProficiency": {
+          "diggingPower": 23,
+          "rank": "unskilled",
+          "current": 0,
+          "maximum": 8000
+        },
+        "materials": [
+          {
+            "materialId": "rfb.material.iron-ore",
+            "nameKey": "material-iron-ore",
+            "quantity": 0
+          },
+          {
+            "materialId": "rfb.material.silver-ore",
+            "nameKey": "material-silver-ore",
+            "quantity": 0
+          },
+          {
+            "materialId": "rfb.material.mithril-dust",
+            "nameKey": "material-mithril-dust",
+            "quantity": 0
+          },
+          {
+            "materialId": "rfb.material.crystal-shard",
+            "nameKey": "material-crystal-shard",
+            "quantity": 0
+          },
+          {
+            "materialId": "rfb.material.herb",
+            "nameKey": "material-herb",
+            "quantity": 0
+          },
+          {
+            "materialId": "rfb.material.beast-meat",
+            "nameKey": "material-beast-meat",
+            "quantity": 0
+          },
+          {
+            "materialId": "rfb.material.dragon-scale",
+            "nameKey": "material-dragon-scale",
+            "quantity": 0
+          },
+          {
+            "materialId": "rfb.material.demon-ichor",
+            "nameKey": "material-demon-ichor",
+            "quantity": 0
+          },
+          {
+            "materialId": "rfb.material.arcane-essence",
+            "nameKey": "material-arcane-essence",
+            "quantity": 0
+          },
+          {
+            "materialId": "rfb.material.rare-catalyst",
+            "nameKey": "material-rare-catalyst",
+            "quantity": 0
+          }
         ]
       },
       "entityCount": 0,
@@ -1459,8 +1517,8 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "3d745cc19d9b39647f7663c2ee2307ecebc20608ed8f4d108b87a5d6c6c59b40"
+      "stateHash": "aece12c4702fcbc1c8a0ccea786075dc240057b0e6bdcafcfbd6db7b75cca257"
     },
-    "saveRoundTripStateHash": "3d745cc19d9b39647f7663c2ee2307ecebc20608ed8f4d108b87a5d6c6c59b40"
+    "saveRoundTripStateHash": "aece12c4702fcbc1c8a0ccea786075dc240057b0e6bdcafcfbd6db7b75cca257"
   }
 }

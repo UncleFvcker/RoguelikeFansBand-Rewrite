@@ -645,6 +645,8 @@ export function createPresentationFormatter(
         return localization.format("message-weapon-proficiency-improved", {
           target: visibleItemNameForKind(event.args.target),
         });
+      case "mining-proficiency-improved":
+        return localization.format("message-mining-proficiency-improved");
       case "status-player-damage":
         return localization.format("message-status-player-damage", {
           status: statusName(event.args.status),

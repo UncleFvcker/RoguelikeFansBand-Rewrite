@@ -1078,6 +1078,64 @@
             "maximum": 8000,
             "hitBonus": 0
           }
+        ],
+        "miningProficiency": {
+          "diggingPower": 23,
+          "rank": "unskilled",
+          "current": 0,
+          "maximum": 8000
+        },
+        "materials": [
+          {
+            "materialId": "rfb.material.iron-ore",
+            "nameKey": "material-iron-ore",
+            "quantity": 0
+          },
+          {
+            "materialId": "rfb.material.silver-ore",
+            "nameKey": "material-silver-ore",
+            "quantity": 0
+          },
+          {
+            "materialId": "rfb.material.mithril-dust",
+            "nameKey": "material-mithril-dust",
+            "quantity": 0
+          },
+          {
+            "materialId": "rfb.material.crystal-shard",
+            "nameKey": "material-crystal-shard",
+            "quantity": 0
+          },
+          {
+            "materialId": "rfb.material.herb",
+            "nameKey": "material-herb",
+            "quantity": 0
+          },
+          {
+            "materialId": "rfb.material.beast-meat",
+            "nameKey": "material-beast-meat",
+            "quantity": 0
+          },
+          {
+            "materialId": "rfb.material.dragon-scale",
+            "nameKey": "material-dragon-scale",
+            "quantity": 0
+          },
+          {
+            "materialId": "rfb.material.demon-ichor",
+            "nameKey": "material-demon-ichor",
+            "quantity": 0
+          },
+          {
+            "materialId": "rfb.material.arcane-essence",
+            "nameKey": "material-arcane-essence",
+            "quantity": 0
+          },
+          {
+            "materialId": "rfb.material.rare-catalyst",
+            "nameKey": "material-rare-catalyst",
+            "quantity": 0
+          }
         ]
       },
       "entityCount": 0,
@@ -1511,7 +1569,7 @@
         "victoryTurn": 0,
         "retiredTurn": 1
       },
-      "stateHash": "60a52b7846ccad08bf7cd7404f588d0e1e48dd3fc1422561955cb998476eef0b"
+      "stateHash": "7e4f9bd5274d9f380e696b5dbe864e44006823983a06730ce6df23fb4853890e"
     },
     "events": [
       {
@@ -1526,9 +1584,9 @@
       {
         "step": 2,
         "kind": "campaign-ended",
-        "stateHash": "60a52b7846ccad08bf7cd7404f588d0e1e48dd3fc1422561955cb998476eef0b"
+        "stateHash": "7e4f9bd5274d9f380e696b5dbe864e44006823983a06730ce6df23fb4853890e"
       }
     ],
-    "saveRoundTripStateHash": "60a52b7846ccad08bf7cd7404f588d0e1e48dd3fc1422561955cb998476eef0b"
+    "saveRoundTripStateHash": "7e4f9bd5274d9f380e696b5dbe864e44006823983a06730ce6df23fb4853890e"
   }
 }

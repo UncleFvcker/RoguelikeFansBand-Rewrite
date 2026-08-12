@@ -14,12 +14,12 @@ import type {
   PlayerBuildDto,
   PlayerMutationDto,
   PlayerProgressDto,
+  ProficiencyRankDto,
   ResourcePoolDto,
   SummonCommandDto,
   SummonCommandModeDto,
   WeaponProficiencyCategoryDto,
   WeaponProficiencyDto,
-  WeaponProficiencyRankDto,
 } from "./protocol";
 import { REST_UNTIL_RECOVERED_TURNS } from "./rest.ts";
 import { goldVisualId } from "./render-world.ts";
@@ -54,6 +54,8 @@ type StatusDom = Pick<
   | "skillList"
   | "weaponProficiencyMeleeList"
   | "weaponProficiencyLauncherList"
+  | "miningProficiencyList"
+  | "materialList"
   | "mutationList"
   | "resourceList"
   | "abilityList"
@@ -107,8 +109,8 @@ export function weaponProficienciesByCategory(
   return proficiencies.filter((proficiency) => proficiency.category === category);
 }
 
-export function weaponProficiencyRankMessageKey(rank: WeaponProficiencyRankDto): MessageKey {
-  return `weapon-proficiency-rank-${rank}` as MessageKey;
+export function proficiencyRankMessageKey(rank: ProficiencyRankDto): MessageKey {
+  return `proficiency-rank-${rank}` as MessageKey;
 }
 
 export class StatusPanel {
@@ -382,6 +384,8 @@ export class StatusPanel {
       this.#dom.skillList.replaceChildren();
       this.#dom.weaponProficiencyMeleeList.replaceChildren();
       this.#dom.weaponProficiencyLauncherList.replaceChildren();
+      this.#dom.miningProficiencyList.replaceChildren();
+      this.#dom.materialList.replaceChildren();
       return;
     }
     this.#dom.progressionLevelValue.textContent = this.#localization.format(
@@ -494,7 +498,7 @@ export class StatusPanel {
             const value = document.createElement("span");
             value.className = "weapon-proficiency-value";
             value.textContent = this.#localization.format("weapon-proficiency-value", {
-              rank: this.#localization.format(weaponProficiencyRankMessageKey(proficiency.rank)),
+              rank: this.#localization.format(proficiencyRankMessageKey(proficiency.rank)),
               current: proficiency.current,
               maximum: proficiency.maximum,
               hit: `${proficiency.hitBonus >= 0 ? "+" : ""}${proficiency.hitBonus}`,
@@ -506,6 +510,36 @@ export class StatusPanel {
       );
     renderWeaponProficiencies(this.#dom.weaponProficiencyMeleeList, "melee");
     renderWeaponProficiencies(this.#dom.weaponProficiencyLauncherList, "launcher");
+    const mining = progress.miningProficiency;
+    const miningRow = document.createElement("li");
+    miningRow.className = "weapon-proficiency-row";
+    const miningName = document.createElement("span");
+    miningName.className = "weapon-proficiency-name";
+    miningName.textContent = this.#localization.format("mining-proficiency");
+    const miningValue = document.createElement("span");
+    miningValue.className = "weapon-proficiency-value";
+    miningValue.textContent = this.#localization.format("mining-proficiency-value", {
+      power: mining.diggingPower,
+      rank: this.#localization.format(proficiencyRankMessageKey(mining.rank)),
+      current: mining.current,
+      maximum: mining.maximum,
+    });
+    miningRow.append(miningName, miningValue);
+    this.#dom.miningProficiencyList.replaceChildren(miningRow);
+    this.#dom.materialList.replaceChildren(
+      ...progress.materials.map((material) => {
+        const row = document.createElement("li");
+        row.className = "weapon-proficiency-row";
+        const name = document.createElement("span");
+        name.className = "weapon-proficiency-name";
+        name.textContent = this.#localization.format(material.nameKey as MessageKey);
+        const value = document.createElement("span");
+        value.className = "weapon-proficiency-value";
+        value.textContent = String(material.quantity);
+        row.append(name, value);
+        return row;
+      }),
+    );
   }
 
   #renderSummonCommand(

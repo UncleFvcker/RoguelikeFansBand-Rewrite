@@ -7527,6 +7527,27 @@
         "world"
       ]
     },
+    "MaterialDto": {
+      "type": "object",
+      "properties": {
+        "materialId": {
+          "type": "string"
+        },
+        "nameKey": {
+          "type": "string"
+        },
+        "quantity": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "materialId",
+        "nameKey",
+        "quantity"
+      ]
+    },
     "MeleeBlowDto": {
       "type": "object",
       "properties": {
@@ -7559,6 +7580,36 @@
       },
       "required": [
         "blows"
+      ]
+    },
+    "MiningProficiencyDto": {
+      "type": "object",
+      "properties": {
+        "current": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "diggingPower": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "maximum": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "rank": {
+          "$ref": "#/$defs/ProficiencyRankDto"
+        }
+      },
+      "required": [
+        "diggingPower",
+        "rank",
+        "current",
+        "maximum"
       ]
     },
     "MogaminatorActionDto": {
@@ -8493,6 +8544,13 @@
           "maximum": 65535,
           "minimum": 0
         },
+        "materials": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/MaterialDto"
+          }
+        },
         "maxLevel": {
           "type": "integer",
           "format": "uint16",
@@ -8504,6 +8562,15 @@
           "format": "uint64",
           "default": 0,
           "minimum": 0
+        },
+        "miningProficiency": {
+          "$ref": "#/$defs/MiningProficiencyDto",
+          "default": {
+            "current": 0,
+            "diggingPower": 0,
+            "maximum": 0,
+            "rank": "unskilled"
+          }
         },
         "pendingAttributeIncreases": {
           "type": "integer",
@@ -8555,6 +8622,16 @@
       "required": [
         "x",
         "y"
+      ]
+    },
+    "ProficiencyRankDto": {
+      "type": "string",
+      "enum": [
+        "unskilled",
+        "beginner",
+        "skilled",
+        "expert",
+        "master"
       ]
     },
     "ProjectileProfileDto": {
@@ -9772,7 +9849,7 @@
           "type": "string"
         },
         "rank": {
-          "$ref": "#/$defs/WeaponProficiencyRankDto"
+          "$ref": "#/$defs/ProficiencyRankDto"
         }
       },
       "required": [
@@ -9783,16 +9860,6 @@
         "current",
         "maximum",
         "hitBonus"
-      ]
-    },
-    "WeaponProficiencyRankDto": {
-      "type": "string",
-      "enum": [
-        "unskilled",
-        "beginner",
-        "skilled",
-        "expert",
-        "master"
       ]
     },
     "WildernessLocationDto": {

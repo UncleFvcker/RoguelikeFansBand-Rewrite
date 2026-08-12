@@ -22,7 +22,7 @@ use rfb_protocol::{
     ActorSaveDto, CarriedItemSaveDto, DamageTypeDto, EquipmentBonusesDto, EquipmentItemSaveDto,
     EquipmentPassiveDto, FloorConnectionSaveDto, FloorRegionSaveDto, FloorSaveDto, GoldPileDto,
     InventoryItemSaveDto, ItemActivationDto, ItemChargesDto, ItemEnchantmentsDto, ItemFuelDto,
-    ItemFuelKindDto, ItemOriginKindDto, ItemSaveDto, MonsterPackSaveDto,
+    ItemFuelKindDto, ItemOriginKindDto, ItemSaveDto, MaterialSaveDto, MonsterPackSaveDto,
     NaturalAttributeSetSaveDto, PlayerBuildSaveDto, PlayerProgressSaveDto, PlayerSaveDto, Position,
     ResistanceDto, ResistanceLevelDto, ResistanceSaveDto, RolledAffixSaveDto, SkillProgressSaveDto,
     SlayDto, SlayLevelDto, SlayTargetDto, StatModifiersDto, StatusSaveDto, SummonSaveDto,
@@ -674,6 +674,15 @@ pub(crate) fn player_to_save(
                 .map(|(item_kind_id, current)| WeaponProficiencySaveDto {
                     item_kind_id: item_kind_id.clone(),
                     current: *current,
+                })
+                .collect(),
+            mining_proficiency: progress.mining_proficiency,
+            materials: progress
+                .materials
+                .iter()
+                .map(|(material_id, quantity)| MaterialSaveDto {
+                    material_id: material_id.clone(),
+                    quantity: *quantity,
                 })
                 .collect(),
         }),

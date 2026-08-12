@@ -127,3 +127,15 @@ ammo-slaying ID。若 items 方向随后导入陶器碎片或断木棍，也应�
   baseline contract-v277；content hash 为
   `ee561b30744f44fd627805d8ed0a45eb64b21ec4c13991033b6f6254b29156b9`。
 - 矿脉财宝、碎石掉落和挖掘疲劳尚未接入，后续不得在职业代码中另建挖矿判定。
+
+## 挖矿系统第二步
+
+- 新增通用挖矿熟练度：出生 0、上限 8000，只由玩家成功移除矿脉增长；普通/富矿公式、
+  等级边界与跨档中文提示均来自 RFB master。
+- 新增只读材料袋和十个 `rfb.material.*` 状态 ID；这些不是物品 ID，不与 items 分支争用。
+  本批不生成材料，也不实现烹饪、炼药和材料转化。
+- `PlayerProgressSaveDto` 的挖矿/材料字段必填并严格校验；`PlayerProgressDto` 投影挖掘力、
+  共享熟练度等级、当前值/8000 及十种材料数量，角色面板提供默认折叠入口。
+- 共享协调点：pack 1.276.0、Protocol 1.180、State Hash Schema v90、save v1、active
+  baseline contract-v278（25 条 exact fixture、零 waiver）；content hash 保持
+  `ee561b30744f44fd627805d8ed0a45eb64b21ec4c13991033b6f6254b29156b9`。

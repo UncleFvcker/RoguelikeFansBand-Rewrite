@@ -105,6 +105,7 @@ message-projectile-slay = Your shot destroys { $target }.
 message-projectile-ammo-recovered = Your { $target } lands intact.
 message-projectile-ammo-broken = Your { $target } breaks on impact.
 message-weapon-proficiency-improved = Your skill with { $target } is improving.
+message-mining-proficiency-improved = Your mining proficiency has improved.
 message-mutation-gained = You gain the { $mutation } mutation.
 message-mutation-chaos-patron-reward = { $patron } grants you a chaotic gift.
 message-mutation-lost = You lose the { $mutation } mutation.

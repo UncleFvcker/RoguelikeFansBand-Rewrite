@@ -1070,6 +1070,64 @@
             "maximum": 8000,
             "hitBonus": 0
           }
+        ],
+        "miningProficiency": {
+          "diggingPower": 23,
+          "rank": "unskilled",
+          "current": 0,
+          "maximum": 8000
+        },
+        "materials": [
+          {
+            "materialId": "rfb.material.iron-ore",
+            "nameKey": "material-iron-ore",
+            "quantity": 0
+          },
+          {
+            "materialId": "rfb.material.silver-ore",
+            "nameKey": "material-silver-ore",
+            "quantity": 0
+          },
+          {
+            "materialId": "rfb.material.mithril-dust",
+            "nameKey": "material-mithril-dust",
+            "quantity": 0
+          },
+          {
+            "materialId": "rfb.material.crystal-shard",
+            "nameKey": "material-crystal-shard",
+            "quantity": 0
+          },
+          {
+            "materialId": "rfb.material.herb",
+            "nameKey": "material-herb",
+            "quantity": 0
+          },
+          {
+            "materialId": "rfb.material.beast-meat",
+            "nameKey": "material-beast-meat",
+            "quantity": 0
+          },
+          {
+            "materialId": "rfb.material.dragon-scale",
+            "nameKey": "material-dragon-scale",
+            "quantity": 0
+          },
+          {
+            "materialId": "rfb.material.demon-ichor",
+            "nameKey": "material-demon-ichor",
+            "quantity": 0
+          },
+          {
+            "materialId": "rfb.material.arcane-essence",
+            "nameKey": "material-arcane-essence",
+            "quantity": 0
+          },
+          {
+            "materialId": "rfb.material.rare-catalyst",
+            "nameKey": "material-rare-catalyst",
+            "quantity": 0
+          }
         ]
       },
       "entityCount": 0,
@@ -1501,7 +1559,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "015ba95a8328d51d3aa15492957817e6d4ea3f3f40f313f0c2f9504a682d153f"
+      "stateHash": "16759380ee8e32b58e10c172304295e60ae6bb726c67103bdc1d4ad65b0fe151"
     },
     "changedCells": [
       {

@@ -197,6 +197,7 @@ mod tests {
             },
             player: PlayerSaveDto {
                 id: "demo.player".to_owned(),
+                name: "Hero".to_owned(),
                 kind_id: "demo.actor.explorer".to_owned(),
                 position: Position { x: 0, y: 0 },
                 hp: 10,

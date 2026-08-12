@@ -67,6 +67,8 @@ export interface AppDom {
   readonly skillList: HTMLUListElement;
   readonly weaponProficiencyMeleeList: HTMLUListElement;
   readonly weaponProficiencyLauncherList: HTMLUListElement;
+  readonly miningProficiencyList: HTMLUListElement;
+  readonly materialList: HTMLUListElement;
   readonly mutationList: HTMLUListElement;
   readonly resourceList: HTMLUListElement;
   readonly abilityList: HTMLUListElement;
@@ -185,6 +187,8 @@ export function createAppDom(document: DocumentLookup): Readonly<AppDom> {
       document,
       "weapon-proficiency-launcher-list",
     ),
+    miningProficiencyList: element<HTMLUListElement>(document, "mining-proficiency-list"),
+    materialList: element<HTMLUListElement>(document, "material-list"),
     mutationList: element<HTMLUListElement>(document, "mutation-list"),
     resourceList: element<HTMLUListElement>(document, "resource-list"),
     abilityList: element<HTMLUListElement>(document, "ability-list"),

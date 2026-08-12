@@ -561,3 +561,9 @@ State Hash Schema v89；save 容器保持 v1，不兼容缺少该字段的旧开
 协议 1.179 / contract-v276 为 `PlayerProgressDto` 增加只读 `weaponProficiencies`，每项
 投影规范基础武器、近战/发射器分类、当前值、职业上限、原版等级与原版命中加成。该字段
 不增加权威状态，State Hash Schema 保持 v89，save 容器保持 v1。
+
+协议 1.180 / contract-v278 将 `WeaponProficiencyRankDto` 泛化为
+`ProficiencyRankDto`，并为 `PlayerProgressDto` 增加 `miningProficiency` 与 `materials`：
+前者投影当前挖掘力、原版等级、当前值和 8000 上限，后者按固定身份投影十种材料数量。
+`PlayerProgressSaveDto` 同步增加必填挖矿熟练度和稀疏材料数组；权威状态进入 State Hash
+Schema v90，save 容器保持 v1。

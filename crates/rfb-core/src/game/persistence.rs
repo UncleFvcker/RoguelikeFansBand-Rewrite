@@ -421,6 +421,15 @@ fn restore_character_progress(
             ));
         }
     }
+    let mut materials = BTreeMap::new();
+    for material in &saved.materials {
+        if materials
+            .insert(material.material_id.clone(), material.quantity)
+            .is_some()
+        {
+            return Err(CoreError::InvalidSave("player material state is invalid"));
+        }
+    }
     let attributes = AttributeSet {
         strength: saved.attributes.strength,
         intelligence: saved.attributes.intelligence,
@@ -482,6 +491,8 @@ fn restore_character_progress(
         hp_progression: saved.hp_progression.clone(),
         skills,
         weapon_proficiencies,
+        mining_proficiency: saved.mining_proficiency,
+        materials,
         active_mutation_ids,
         locked_mutation_ids,
     };
@@ -490,6 +501,11 @@ fn restore_character_progress(
     ) {
         return Err(CoreError::InvalidSave(
             "player weapon proficiency state is invalid",
+        ));
+    }
+    if !super::mining::mining_progress_is_valid(&progress) {
+        return Err(CoreError::InvalidSave(
+            "player mining or material state is invalid",
         ));
     }
     Ok(progress)

@@ -280,3 +280,19 @@ git diff --stat
 - 共享协调点：pack `1.276.0`、Protocol `1.179`、State Hash Schema v89、save v1、
   active baseline `contract-v277`，content hash 为
   `ee561b30744f44fd627805d8ed0a45eb64b21ec4c13991033b6f6254b29156b9`。
+
+## 16. main 当前交接（挖矿熟练度与只读材料袋）
+
+- `CharacterProgress.miningProficiency` 出生 0、上限 8000，只在玩家成功移除带
+  `veinYield` 的矿脉后按原版公式成长；非矿脉、魔法、怪物破墙和地震不得调用成长入口。
+- `WeaponProficiencyRankDto` 已泛化为共享 `ProficiencyRankDto`。面板从核心投影读取
+  挖掘力、等级、当前值/8000，不在前端重算等级。
+- 新占用的非物品状态 ID 为：`rfb.material.iron-ore`、`silver-ore`、`mithril-dust`、
+  `crystal-shard`、`herb`、`beast-meat`、`dragon-scale`、`demon-ichor`、
+  `arcane-essence`、`rare-catalyst`（全部带 `rfb.material.` 前缀）。它们不是 item ID；
+  items 分支不得把同名物品改为这些 ID，后续物品产出应通过明确转换引用材料身份。
+- 材料袋本批只做权威稀疏存档与只读十项投影，不生成材料，不导入烹饪、炼药或材料转化。
+  读档拒绝缺字段、挖矿值越界、重复/未知/零数量材料。
+- 共享协调点：pack `1.276.0`、Protocol `1.180`、State Hash Schema v90、save v1、
+  active baseline `contract-v278`（25 条 exact fixture、零 waiver）；content hash 保持
+  `ee561b30744f44fd627805d8ed0a45eb64b21ec4c13991033b6f6254b29156b9`。

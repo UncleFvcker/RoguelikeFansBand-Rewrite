@@ -556,6 +556,8 @@ impl Game {
                 })
                 .collect(),
             weapon_proficiencies: self.player_weapon_proficiencies(),
+            mining_proficiency: self.player_mining_proficiency(),
+            materials: self.player_materials(),
         }
     }
 

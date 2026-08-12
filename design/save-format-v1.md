@@ -411,3 +411,8 @@ contract-v275 为 `PlayerProgressSaveDto` 增加必填 `weaponProficiencies`。�
 不会重复写入存档。载入严格拒绝字段缺失、重复 ID、未知或非武器 ID、神器/特殊变体别名、
 不高于出生值或超过职业上限的记录，不提供旧开发存档迁移。该稀疏表进入 State Hash
 Schema v89；Protocol 升至 1.178，save 容器保持 v1。
+
+contract-v278 为 `PlayerProgressSaveDto` 增加必填 `miningProficiency` 与 `materials`。
+挖矿熟练度范围为 0–8000；材料使用固定 `rfb.material.*` 身份的稀疏非零数组。载入严格
+拒绝缺字段、熟练度越界、重复/未知材料 ID 和零数量材料，不提供旧开发存档兼容。
+两者进入 State Hash Schema v90；Protocol 升至 1.180，save 容器保持 v1。

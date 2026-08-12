@@ -1094,6 +1094,7 @@ pub(crate) enum DomainEvent {
     WeaponProficiencyImproved {
         item_kind_id: String,
     },
+    MiningProficiencyImproved,
     PlayerMeleeMissed {
         target_kind_id: String,
     },
@@ -4296,6 +4297,10 @@ impl DomainEvent {
                 "progress.weapon-proficiency-improved",
                 "weapon-proficiency-improved",
                 [("target", item_kind_id)],
+            ),
+            Self::MiningProficiencyImproved => dto_without_args(
+                "progress.mining-proficiency-improved",
+                "mining-proficiency-improved",
             ),
             Self::PlayerMeleeMissed { target_kind_id } => dto(
                 "combat.miss",

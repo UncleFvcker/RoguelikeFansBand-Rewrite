@@ -40,8 +40,10 @@ test("the application DOM registry is immutable and preserves stable element IDs
   assert.equal(dom.mutationList.id, "mutation-list");
   assert.equal(dom.weaponProficiencyMeleeList.id, "weapon-proficiency-melee-list");
   assert.equal(dom.weaponProficiencyLauncherList.id, "weapon-proficiency-launcher-list");
+  assert.equal(dom.miningProficiencyList.id, "mining-proficiency-list");
+  assert.equal(dom.materialList.id, "material-list");
   assert.equal(dom.summonCommandButtons["keep-distance"].id, "summon-command-keep-distance");
-  assert.equal(elements.size, 105);
+  assert.equal(elements.size, 107);
   assert.equal(Object.isFrozen(dom), true);
   assert.equal(Object.isFrozen(dom.summonCommandButtons), true);
 });

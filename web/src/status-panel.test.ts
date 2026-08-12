@@ -11,7 +11,7 @@ import {
   mutationRatingMessageKey,
   nutritionPercentage,
   weaponProficienciesByCategory,
-  weaponProficiencyRankMessageKey,
+  proficiencyRankMessageKey,
   wildernessClock,
 } from "./status-panel.ts";
 
@@ -117,8 +117,8 @@ test("weapon proficiency presentation keeps original groups and rank names", () 
 
   assert.deepEqual(weaponProficienciesByCategory([launcher, melee], "melee"), [melee]);
   assert.deepEqual(weaponProficienciesByCategory([launcher, melee], "launcher"), [launcher]);
-  assert.equal(weaponProficiencyRankMessageKey("unskilled"), "weapon-proficiency-rank-unskilled");
-  assert.equal(weaponProficiencyRankMessageKey("master"), "weapon-proficiency-rank-master");
+  assert.equal(proficiencyRankMessageKey("unskilled"), "proficiency-rank-unskilled");
+  assert.equal(proficiencyRankMessageKey("master"), "proficiency-rank-master");
 });
 
 test("wilderness clock follows the original half-day boundaries", () => {

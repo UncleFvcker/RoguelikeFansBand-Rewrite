@@ -221,3 +221,7 @@ G1 的自动拾取目标选择不消费 RNG。候选先按模式、发现知识�
 G2 的 `AutoGet { objectId }` 先与当前权威候选集核对。远端目标转换为普通单步移动，完全复用移动 RNG 与结算；脚下或失效目标不推进世界时间，也不消费 RNG。`autoGetTarget` 增加对象 ID 只改变协议投影，state hash Schema 保持 v76；行为基线刷新至 contract-v219。
 
 G3 的 Ctrl+G 循环只连续派发 G2 命令，不保存前端旅行状态，也不引入第二套 RNG。每次更新后从权威玩家、实体、背包、楼层和墨家名器投影判断是否中断；锁定对象消失后才读取下一目标。协议、save、state hash Schema 与 contract-v219 均不变。
+
+contract-v278 的挖矿熟练度成长是成功 `DigTerrain` 移除矿脉后的纯整数计算，不增加 RNG
+消耗；失败挖掘的 RNG 仍完全由 contract-v277 的地形检定决定。熟练度与稀疏材料袋进入
+State Hash Schema v90；只读材料投影不生成材料，也不消费 RNG。
