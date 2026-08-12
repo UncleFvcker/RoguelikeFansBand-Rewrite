@@ -7036,6 +7036,20 @@ fn melee_effects_json(
     melee_effect_json(effect, monster_level).map(|effect| vec![effect])
 }
 
+fn self_destruct_effect_is_supported(
+    effect: &LegacyBlowEffect,
+    monster_level: Option<u16>,
+) -> bool {
+    melee_effects_json(effect, monster_level).is_some_and(|effects| {
+        effects.iter().all(|effect| {
+            matches!(
+                effect.get("type").and_then(serde_json::Value::as_str),
+                Some("damage" | "poison" | "bomb")
+            )
+        })
+    })
+}
+
 fn blow_primary_dice(blow: &LegacyBlow) -> Option<(u16, u16)> {
     blow.effects.iter().find_map(|effect| {
         (effect.token == "POISON"
@@ -8291,6 +8305,17 @@ fn demo_monster_json(
         // effect payload. Other presentational methods remain out of scope.
         if blow.effects.is_empty() && blow.method != "BEG" {
             continue;
+        }
+        if blow.method == "EXPLODE"
+            && let Some(effect) = blow
+                .effects
+                .iter()
+                .find(|effect| !self_destruct_effect_is_supported(effect, entry.level))
+        {
+            return Err(LegacyImportError::InvalidDemoMonsterSelection(format!(
+                "{} has unsupported self-destruct effect {}",
+                selection.id, effect.token
+            )));
         }
         let effects = blow
             .effects
@@ -13206,6 +13231,33 @@ mod tests {
                 "chancePercent": 25,
             })
         );
+    }
+
+    #[test]
+    fn demo_monster_import_rejects_unresolved_self_destruct_riders() {
+        let mut monsters = parse_r_info(
+            "N:921:Internet Exploder\nG:e:B\nI:140:20d20:25:0:1:300\nW:50:4:999:1000:0:0\nB:EXPLODE:TIME(10d20):SLOW\nF:NONLIVING\n",
+        )
+        .expect("synthetic self-destruct rider should parse");
+        let error = demo_monster_json(
+            &monsters.remove(0),
+            &DemoMonsterSelectionEntry {
+                source_index: 921,
+                source_id: None,
+                id: "internet-exploder".to_owned(),
+                tags: vec!["orc-cave".to_owned()],
+                omitted_flags: Vec::new(),
+                omitted_spells: Vec::new(),
+            },
+            &mut BTreeMap::new(),
+        )
+        .expect_err("SLOW must not be silently dropped from a self-destruct blow");
+
+        assert!(matches!(
+            error,
+            LegacyImportError::InvalidDemoMonsterSelection(detail)
+                if detail.contains("unsupported self-destruct effect SLOW")
+        ));
     }
 
     #[test]

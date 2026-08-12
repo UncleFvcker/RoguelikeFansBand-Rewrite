@@ -719,7 +719,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         .iter()
         .filter(|actor| actor.tags.iter().any(|tag| tag == "orc-cave"))
         .collect::<Vec<_>>();
-    assert_eq!(orc_cave.len(), 465);
+    assert_eq!(orc_cave.len(), 485);
 
     for id in [
         "demo.actor.bunyip",
@@ -752,10 +752,10 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
                     .any(|index| *index != 3)
         );
     }
-    let mut level_counts = [0_usize; 28];
+    let mut level_counts = [0_usize; 30];
     let mut source_indices = BTreeSet::new();
     for actor in orc_cave {
-        assert!((21..=48).contains(&actor.level));
+        assert!((21..=50).contains(&actor.level));
         let allocation = actor
             .allocation
             .as_ref()
@@ -767,7 +767,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         level_counts,
         [
             16, 14, 12, 17, 24, 17, 19, 17, 18, 21, 7, 12, 29, 15, 27, 28, 19, 19, 11, 42, 12, 6,
-            12, 14, 14, 7, 10, 6,
+            12, 14, 14, 7, 10, 6, 6, 14,
         ]
     );
 
@@ -4654,6 +4654,51 @@ fn p50_percent_mana_drain_imports_draugr() {
 }
 
 #[test]
+fn p51a_level_49_50_direct_monsters_keep_source_identity() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+
+    for (id, legacy_index, level) in [
+        ("charybdis", 669, 49),
+        ("garm-guardian-of-hel", 717, 49),
+        ("lesser-balrog", 940, 49),
+        ("nine-tailed-fox", 987, 49),
+        ("moe-the-cyclops", 1236, 49),
+        ("atomic-elemental", 1336, 49),
+        ("greater-wall-monster", 718, 50),
+        ("nycadaemon", 719, 50),
+        ("goat-of-mendes", 721, 50),
+        ("nightwing", 722, 50),
+        ("maulotaur", 723, 50),
+        ("master-mystic", 916, 50),
+        ("golden-angel", 1010, 50),
+        ("taepodong", 1015, 50),
+        ("nappa-the-saiyan", 1022, 50),
+        ("reindeer", 1081, 50),
+        ("ice-giant", 1125, 50),
+        ("elder-fire-giant", 1126, 50),
+        ("the-grand-inquisitor", 1203, 50),
+        ("the-midnight-dragon", 1214, 50),
+    ] {
+        let actor_id = format!("demo.actor.{id}");
+        let actor = artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == actor_id)
+            .unwrap_or_else(|| panic!("{actor_id} should be imported"));
+        assert_eq!(actor.level, level, "{actor_id} level");
+        assert_eq!(
+            actor
+                .allocation
+                .as_ref()
+                .map(|allocation| allocation.legacy_index),
+            Some(legacy_index),
+            "{actor_id} source index"
+        );
+    }
+}
+
+#[test]
 fn outpost_has_walls_inner_shops_and_an_exterior_warrens_entrance() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let world = artifact
@@ -6079,7 +6124,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
                     == Some("demo.loot-table.base-items")
             })
             .count(),
-        433
+        448
     );
 }
 
@@ -6144,7 +6189,7 @@ fn formal_drop_themes_use_source_allocations_and_rfb_depth_quality() {
                 .filter(|drop| drop.theme_table_id.as_deref() == Some("demo.loot-table.warrior"))
         })
         .collect::<Vec<_>>();
-    assert_eq!(warrior_drops.len(), 86);
+    assert_eq!(warrior_drops.len(), 87);
     assert!(
         warrior_drops
             .iter()

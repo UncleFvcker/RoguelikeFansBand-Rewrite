@@ -1,0 +1,71 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 1015,
+    "maxDepth": 999,
+    "rarity": 10
+  },
+  "attack": 12,
+  "damageDice": 100,
+  "damageSides": 2,
+  "damageType": "shards",
+  "defense": 8,
+  "descriptionKey": "actor-demo-taepodong-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 200,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "{",
+  "hitPointDice": {
+    "dice": 7,
+    "forceMaximum": true,
+    "sides": 14
+  },
+  "id": "demo.actor.taepodong",
+  "level": 50,
+  "maxHp": 98,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 100,
+            "damageSides": 2,
+            "damageType": "shards",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.explode",
+        "selfDestructs": true,
+        "toHit": 20
+      }
+    ]
+  },
+  "nameKey": "actor-demo-taepodong-name",
+  "reflectsBolts": true,
+  "resistances": {
+    "cold": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 120,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "cold-blooded",
+    "empty-mind",
+    "kin-glyph-123",
+    "legacy-import",
+    "nonliving",
+    "orc-cave",
+    "resist-teleport"
+  ]
+}
