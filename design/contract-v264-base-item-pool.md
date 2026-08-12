@@ -7,7 +7,7 @@
   `W.maximumLevel` becomes `maxDepth`. `W.level` remains the item definition's
   `generationLevel` and is not an allocation fallback.
 - The pool contains every active RFB source item that has an `A:` record:
-  249 item kinds and 283 allocation entries. The ten active source items without
+  270 item kinds and 304 allocation entries. The ten active source items without
   an `A:` record remain available only through their explicit shop, reward, or
   other acquisition paths.
 - Source index 313 is one original `Staff` allocation adapted into two formal

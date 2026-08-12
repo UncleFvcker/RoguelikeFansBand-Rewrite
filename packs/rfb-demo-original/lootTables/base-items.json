@@ -74,6 +74,12 @@
       "minDepth": 10
     },
     {
+      "itemKindId": "demo.item.ball-and-chain",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 20
+    },
+    {
       "itemKindId": "demo.item.banishment-scroll",
       "weight": 25,
       "quantity": 1,
@@ -87,6 +93,18 @@
     },
     {
       "itemKindId": "demo.item.bastard-sword",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 15
+    },
+    {
+      "itemKindId": "demo.item.battle-axe",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 15
+    },
+    {
+      "itemKindId": "demo.item.beaked-axe",
       "weight": 100,
       "quantity": 1,
       "minDepth": 15
@@ -112,6 +130,12 @@
       "maxDepth": 30
     },
     {
+      "itemKindId": "demo.item.bo-staff",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 20
+    },
+    {
       "itemKindId": "demo.item.boldness-potion",
       "weight": 100,
       "quantity": 1,
@@ -130,6 +154,18 @@
       "quantity": 1,
       "minDepth": 3,
       "maxDepth": 30
+    },
+    {
+      "itemKindId": "demo.item.broad-axe",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 15
+    },
+    {
+      "itemKindId": "demo.item.broad-spear",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 14
     },
     {
       "itemKindId": "demo.item.broad-sword",
@@ -500,10 +536,22 @@
       "minDepth": 15
     },
     {
+      "itemKindId": "demo.item.fauchard",
+      "weight": 50,
+      "quantity": 1,
+      "minDepth": 18
+    },
+    {
       "itemKindId": "demo.item.filthy-rag",
       "weight": 100,
       "quantity": 1,
       "minDepth": 0
+    },
+    {
+      "itemKindId": "demo.item.flail",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 10
     },
     {
       "itemKindId": "demo.item.flamberge",
@@ -557,6 +605,12 @@
       "minDepth": 30
     },
     {
+      "itemKindId": "demo.item.glaive",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 20
+    },
+    {
       "itemKindId": "demo.item.glyph-severance-scroll",
       "weight": 25,
       "quantity": 1,
@@ -567,6 +621,12 @@
       "weight": 25,
       "quantity": 1,
       "minDepth": 80
+    },
+    {
+      "itemKindId": "demo.item.gnomish-shovel",
+      "weight": 25,
+      "quantity": 1,
+      "minDepth": 20
     },
     {
       "itemKindId": "demo.item.granite-tonic",
@@ -721,6 +781,12 @@
       "minDepth": 16
     },
     {
+      "itemKindId": "demo.item.jo-staff",
+      "weight": 50,
+      "quantity": 1,
+      "minDepth": 11
+    },
+    {
       "itemKindId": "demo.item.katana",
       "weight": 100,
       "quantity": 1,
@@ -745,6 +811,12 @@
       "minDepth": 3
     },
     {
+      "itemKindId": "demo.item.lance",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 10
+    },
+    {
       "itemKindId": "demo.item.large-leather-shield",
       "weight": 100,
       "quantity": 1,
@@ -757,10 +829,22 @@
       "minDepth": 30
     },
     {
+      "itemKindId": "demo.item.lead-filled-mace",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 15
+    },
+    {
       "itemKindId": "demo.item.leather-gloves",
       "weight": 100,
       "quantity": 1,
       "minDepth": 1
+    },
+    {
+      "itemKindId": "demo.item.leather-jacket",
+      "weight": 33,
+      "quantity": 1,
+      "minDepth": 20
     },
     {
       "itemKindId": "demo.item.leather-pouch",
@@ -956,6 +1040,12 @@
       "minDepth": 35
     },
     {
+      "itemKindId": "demo.item.nunchaku",
+      "weight": 50,
+      "quantity": 1,
+      "minDepth": 16
+    },
+    {
       "itemKindId": "demo.item.orcish-pick",
       "weight": 25,
       "quantity": 1,
@@ -1035,6 +1125,12 @@
       "weight": 100,
       "quantity": 1,
       "minDepth": 10
+    },
+    {
+      "itemKindId": "demo.item.pike",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 15
     },
     {
       "itemKindId": "demo.item.pointy-hat",
@@ -1207,6 +1303,12 @@
       "minDepth": 50
     },
     {
+      "itemKindId": "demo.item.rhino-hide-armour",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 15
+    },
+    {
       "itemKindId": "demo.item.rime-surge-scroll",
       "weight": 33,
       "quantity": 1,
@@ -1217,6 +1319,12 @@
       "weight": 100,
       "quantity": 1,
       "minDepth": 10
+    },
+    {
+      "itemKindId": "demo.item.ring-mail",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 20
     },
     {
       "itemKindId": "demo.item.robe",
@@ -1619,6 +1727,12 @@
       "maxDepth": 60
     },
     {
+      "itemKindId": "demo.item.three-piece-rod",
+      "weight": 33,
+      "quantity": 1,
+      "minDepth": 20
+    },
+    {
       "itemKindId": "demo.item.trap-creation-scroll",
       "weight": 100,
       "quantity": 1,
@@ -1638,6 +1752,12 @@
       "quantity": 1,
       "minDepth": 0,
       "maxDepth": 20
+    },
+    {
+      "itemKindId": "demo.item.trident",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 5
     },
     {
       "itemKindId": "demo.item.tsuyoshi-special",
@@ -1740,6 +1860,12 @@
       "weight": 33,
       "quantity": 1,
       "minDepth": 15
+    },
+    {
+      "itemKindId": "demo.item.war-hammer",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 5
     },
     {
       "itemKindId": "demo.item.weakness-mushroom",

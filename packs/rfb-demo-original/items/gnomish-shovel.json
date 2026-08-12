@@ -1,0 +1,30 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 100,
+  "descriptionKey": "item-demo-gnomish-shovel-description",
+  "equipmentBonuses": {
+    "diggingSkill": 3
+  },
+  "equipmentSlot": "tool",
+  "formatVersion": 1,
+  "generationLevel": 20,
+  "glyph": "\\",
+  "id": "demo.item.gnomish-shovel",
+  "maxStack": 1,
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 1,
+    "damageSides": 3,
+    "toDamage": 0,
+    "toHit": 0
+  },
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-gnomish-shovel-name",
+  "tags": [
+    "equipment",
+    "rfb-compatibility",
+    "tool",
+    "weapon"
+  ],
+  "weightTenthsPound": 60
+}

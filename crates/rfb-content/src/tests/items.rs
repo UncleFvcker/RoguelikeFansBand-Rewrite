@@ -639,6 +639,55 @@ fn selected_legacy_equipment_keeps_fixed_source_values_and_slots() {
         ("demo.item.hard-leather-cap", 12, 15, "head", 2, None),
         ("demo.item.small-leather-shield", 15, 50, "shield", 3, None),
         ("demo.item.chain-mail", 750, 220, "body", 14, None),
+        ("demo.item.trident", 120, 70, "weapon", 0, Some((1, 10))),
+        ("demo.item.fauchard", 301, 155, "weapon", 0, Some((1, 12))),
+        (
+            "demo.item.broad-spear",
+            240,
+            100,
+            "weapon",
+            0,
+            Some((1, 11)),
+        ),
+        ("demo.item.pike", 358, 160, "weapon", 0, Some((2, 6))),
+        ("demo.item.beaked-axe", 408, 120, "weapon", 0, Some((2, 7))),
+        ("demo.item.broad-axe", 304, 130, "weapon", 0, Some((2, 7))),
+        ("demo.item.glaive", 363, 190, "weapon", 0, Some((2, 7))),
+        ("demo.item.lance", 230, 300, "weapon", 0, Some((2, 10))),
+        ("demo.item.battle-axe", 334, 170, "weapon", 0, Some((2, 9))),
+        ("demo.item.nunchaku", 120, 60, "weapon", 0, Some((2, 4))),
+        (
+            "demo.item.ball-and-chain",
+            200,
+            150,
+            "weapon",
+            0,
+            Some((2, 5)),
+        ),
+        ("demo.item.jo-staff", 200, 70, "weapon", 0, Some((1, 8))),
+        ("demo.item.war-hammer", 225, 120, "weapon", 0, Some((3, 4))),
+        (
+            "demo.item.three-piece-rod",
+            350,
+            120,
+            "weapon",
+            0,
+            Some((4, 3)),
+        ),
+        ("demo.item.flail", 353, 150, "weapon", 0, Some((2, 7))),
+        ("demo.item.bo-staff", 310, 160, "weapon", 0, Some((1, 12))),
+        (
+            "demo.item.lead-filled-mace",
+            502,
+            180,
+            "weapon",
+            0,
+            Some((3, 5)),
+        ),
+        ("demo.item.gnomish-shovel", 100, 60, "tool", 0, Some((1, 3))),
+        ("demo.item.rhino-hide-armour", 400, 110, "body", 8, None),
+        ("demo.item.leather-jacket", 700, 130, "body", 12, None),
+        ("demo.item.ring-mail", 500, 200, "body", 12, None),
     ];
 
     for (id, value, weight, slot, defense, damage) in expected {
@@ -687,6 +736,10 @@ fn selected_legacy_armor_and_gloves_keep_melee_combat_modifiers() {
     assert_eq!(bonuses("demo.item.chain-mail").melee_skill, -2);
     assert_eq!(bonuses("demo.item.shovel").digging_skill, 2);
     assert_eq!(bonuses("demo.item.pick").digging_skill, 2);
+    assert_eq!(bonuses("demo.item.gnomish-shovel").digging_skill, 3);
+    assert_eq!(bonuses("demo.item.rhino-hide-armour").melee_skill, -1);
+    assert_eq!(bonuses("demo.item.leather-jacket").melee_skill, -1);
+    assert_eq!(bonuses("demo.item.ring-mail").melee_skill, -2);
 }
 
 #[test]

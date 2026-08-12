@@ -2389,6 +2389,9 @@ fn level_seventeen_p35_casters_reuse_parameterized_abilities_and_dwarf_drops() {
             .map(|entry| entry.item_kind_id.as_str())
             .collect::<BTreeSet<_>>(),
         [
+            "demo.item.battle-axe",
+            "demo.item.beaked-axe",
+            "demo.item.broad-axe",
             "demo.item.iron-helm",
             "demo.item.pair-of-metal-shod-boots",
             "demo.item.small-metal-shield",
@@ -4120,7 +4123,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
         .find(|table| table.id == "demo.loot-table.base-items")
         .expect("base item pool should exist");
 
-    assert_eq!(base_items.entries.len(), 283);
+    assert_eq!(base_items.entries.len(), 304);
 
     let selection: serde_json::Value = serde_json::from_slice(
         &std::fs::read(pack_path.join("legacy-item-selection.json"))
@@ -4168,7 +4171,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
                     .to_owned()
             });
     }
-    assert_eq!(active_source_items.len(), 259);
+    assert_eq!(active_source_items.len(), 280);
 
     let source_items_without_allocations =
         BTreeSet::from([33, 34, 36, 37, 345, 346, 347, 400, 401, 460]);
@@ -4182,7 +4185,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
         .iter()
         .map(|entry| entry.item_kind_id.as_str())
         .collect::<BTreeSet<_>>();
-    assert_eq!(expected_item_ids.len(), 249);
+    assert_eq!(expected_item_ids.len(), 270);
     assert_eq!(actual_item_ids, expected_item_ids);
 
     // Source 313 is one Staff allocation split into two formal adaptations.
@@ -4288,13 +4291,13 @@ fn formal_drop_themes_use_source_allocations_and_rfb_depth_quality() {
     });
 
     for (table_id, expected_entries) in [
-        ("demo.loot-table.warrior", 49),
+        ("demo.loot-table.warrior", 59),
         ("demo.loot-table.archer", 13),
         ("demo.loot-table.mage", 53),
-        ("demo.loot-table.priest", 31),
-        ("demo.loot-table.evil-priest", 9),
-        ("demo.loot-table.paladin", 63),
-        ("demo.loot-table.dwarf", 3),
+        ("demo.loot-table.priest", 39),
+        ("demo.loot-table.evil-priest", 17),
+        ("demo.loot-table.paladin", 73),
+        ("demo.loot-table.dwarf", 6),
         ("demo.loot-table.ninja", 3),
     ] {
         let table = artifact
@@ -4413,6 +4416,140 @@ fn base_pool_and_global_warrior_theme_use_source_depths() {
         if let Some(entry) = warrior_entry {
             assert_eq!((entry.min_depth, entry.max_depth), (min_depth, u16::MAX));
         }
+    }
+}
+
+#[test]
+fn low_mid_equipment_uses_source_allocations_and_theme_predicates() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let table = |id: &str| {
+        artifact
+            .content
+            .loot_tables
+            .iter()
+            .find(|table| table.id == id)
+            .unwrap_or_else(|| panic!("{id} should exist"))
+    };
+    let base_items = table("demo.loot-table.base-items");
+    let expected_allocations = [
+        ("demo.item.trident", 5, 100),
+        ("demo.item.fauchard", 18, 50),
+        ("demo.item.broad-spear", 14, 100),
+        ("demo.item.pike", 15, 100),
+        ("demo.item.beaked-axe", 15, 100),
+        ("demo.item.broad-axe", 15, 100),
+        ("demo.item.glaive", 20, 100),
+        ("demo.item.lance", 10, 100),
+        ("demo.item.battle-axe", 15, 100),
+        ("demo.item.nunchaku", 16, 50),
+        ("demo.item.ball-and-chain", 20, 100),
+        ("demo.item.jo-staff", 11, 50),
+        ("demo.item.war-hammer", 5, 100),
+        ("demo.item.three-piece-rod", 20, 33),
+        ("demo.item.flail", 10, 100),
+        ("demo.item.bo-staff", 20, 100),
+        ("demo.item.lead-filled-mace", 15, 100),
+        ("demo.item.gnomish-shovel", 20, 25),
+        ("demo.item.rhino-hide-armour", 15, 100),
+        ("demo.item.leather-jacket", 20, 33),
+        ("demo.item.ring-mail", 20, 100),
+    ];
+
+    for (item_id, min_depth, weight) in expected_allocations {
+        let allocations = base_items
+            .entries
+            .iter()
+            .filter(|entry| entry.item_kind_id == item_id)
+            .map(|entry| (entry.min_depth, entry.max_depth, entry.weight))
+            .collect::<Vec<_>>();
+        assert_eq!(
+            allocations,
+            vec![(min_depth, u16::MAX, weight)],
+            "{item_id}"
+        );
+    }
+
+    let new_item_ids = expected_allocations
+        .iter()
+        .map(|(item_id, _, _)| *item_id)
+        .collect::<BTreeSet<_>>();
+    for (table_id, expected_item_ids) in [
+        (
+            "demo.loot-table.warrior",
+            &[
+                "demo.item.battle-axe",
+                "demo.item.beaked-axe",
+                "demo.item.broad-axe",
+                "demo.item.broad-spear",
+                "demo.item.fauchard",
+                "demo.item.glaive",
+                "demo.item.lance",
+                "demo.item.pike",
+                "demo.item.ring-mail",
+                "demo.item.trident",
+            ][..],
+        ),
+        (
+            "demo.loot-table.paladin",
+            &[
+                "demo.item.battle-axe",
+                "demo.item.beaked-axe",
+                "demo.item.broad-axe",
+                "demo.item.broad-spear",
+                "demo.item.fauchard",
+                "demo.item.glaive",
+                "demo.item.lance",
+                "demo.item.pike",
+                "demo.item.ring-mail",
+                "demo.item.trident",
+            ][..],
+        ),
+        (
+            "demo.loot-table.priest",
+            &[
+                "demo.item.ball-and-chain",
+                "demo.item.bo-staff",
+                "demo.item.flail",
+                "demo.item.jo-staff",
+                "demo.item.lead-filled-mace",
+                "demo.item.nunchaku",
+                "demo.item.three-piece-rod",
+                "demo.item.war-hammer",
+            ][..],
+        ),
+        (
+            "demo.loot-table.evil-priest",
+            &[
+                "demo.item.ball-and-chain",
+                "demo.item.bo-staff",
+                "demo.item.flail",
+                "demo.item.jo-staff",
+                "demo.item.lead-filled-mace",
+                "demo.item.nunchaku",
+                "demo.item.three-piece-rod",
+                "demo.item.war-hammer",
+            ][..],
+        ),
+        (
+            "demo.loot-table.dwarf",
+            &[
+                "demo.item.battle-axe",
+                "demo.item.beaked-axe",
+                "demo.item.broad-axe",
+            ][..],
+        ),
+    ] {
+        let actual_item_ids = table(table_id)
+            .entries
+            .iter()
+            .map(|entry| entry.item_kind_id.as_str())
+            .filter(|item_id| new_item_ids.contains(item_id))
+            .collect::<BTreeSet<_>>();
+        assert_eq!(
+            actual_item_ids,
+            expected_item_ids.iter().copied().collect(),
+            "{table_id}"
+        );
     }
 }
 
