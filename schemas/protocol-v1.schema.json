@@ -8520,6 +8520,13 @@
         },
         "victoryLevelCapUnlocked": {
           "type": "boolean"
+        },
+        "weaponProficiencies": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/WeaponProficiencyDto"
+          }
         }
       },
       "required": [
@@ -9727,6 +9734,65 @@
         "cold",
         "poison",
         "chaos"
+      ]
+    },
+    "WeaponProficiencyCategoryDto": {
+      "type": "string",
+      "enum": [
+        "melee",
+        "launcher"
+      ]
+    },
+    "WeaponProficiencyDto": {
+      "type": "object",
+      "properties": {
+        "category": {
+          "$ref": "#/$defs/WeaponProficiencyCategoryDto"
+        },
+        "current": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "hitBonus": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "itemKindId": {
+          "type": "string"
+        },
+        "maximum": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "nameKey": {
+          "type": "string"
+        },
+        "rank": {
+          "$ref": "#/$defs/WeaponProficiencyRankDto"
+        }
+      },
+      "required": [
+        "itemKindId",
+        "nameKey",
+        "category",
+        "rank",
+        "current",
+        "maximum",
+        "hitBonus"
+      ]
+    },
+    "WeaponProficiencyRankDto": {
+      "type": "string",
+      "enum": [
+        "unskilled",
+        "beginner",
+        "skilled",
+        "expert",
+        "master"
       ]
     },
     "WildernessLocationDto": {

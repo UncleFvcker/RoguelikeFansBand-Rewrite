@@ -10,6 +10,8 @@ import {
   formatAttributeValue,
   mutationRatingMessageKey,
   nutritionPercentage,
+  weaponProficienciesByCategory,
+  weaponProficiencyRankMessageKey,
   wildernessClock,
 } from "./status-panel.ts";
 
@@ -107,6 +109,16 @@ test("status panel displays nutrition relative to the 10000 baseline", () => {
   assert.equal(nutritionPercentage(15_000), 150);
   assert.equal(nutritionPercentage(10_000), 100);
   assert.equal(nutritionPercentage(9_999), 99);
+});
+
+test("weapon proficiency presentation keeps original groups and rank names", () => {
+  const melee = { itemKindId: "sword", category: "melee", rank: "beginner" };
+  const launcher = { itemKindId: "bow", category: "launcher", rank: "expert" };
+
+  assert.deepEqual(weaponProficienciesByCategory([launcher, melee], "melee"), [melee]);
+  assert.deepEqual(weaponProficienciesByCategory([launcher, melee], "launcher"), [launcher]);
+  assert.equal(weaponProficiencyRankMessageKey("unskilled"), "weapon-proficiency-rank-unskilled");
+  assert.equal(weaponProficiencyRankMessageKey("master"), "weapon-proficiency-rank-master");
 });
 
 test("wilderness clock follows the original half-day boundaries", () => {

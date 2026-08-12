@@ -100,6 +100,18 @@ fn proficiency_bonus(current: u16, crossbow: bool) -> i32 {
     }
 }
 
+fn proficiency_rank(current: u16) -> rfb_protocol::WeaponProficiencyRankDto {
+    use rfb_protocol::WeaponProficiencyRankDto;
+
+    match current {
+        ..4_000 => WeaponProficiencyRankDto::Unskilled,
+        4_000..6_000 => WeaponProficiencyRankDto::Beginner,
+        6_000..7_000 => WeaponProficiencyRankDto::Skilled,
+        7_000..8_000 => WeaponProficiencyRankDto::Expert,
+        _ => WeaponProficiencyRankDto::Master,
+    }
+}
+
 pub(super) fn weapon_proficiency_progress_is_valid(
     content: &ContentCatalog,
     class_id: Option<&str>,
@@ -146,6 +158,32 @@ impl Game {
             resolved.base_item_id,
             proficiency_bonus(resolved.current, resolved.crossbow).saturating_mul(3),
         ))
+    }
+
+    pub(super) fn player_weapon_proficiencies(&self) -> Vec<rfb_protocol::WeaponProficiencyDto> {
+        self.content
+            .item_definitions()
+            .filter(|item| item.weapon_proficiency_base_item_id.is_none())
+            .filter_map(|item| {
+                let category = if item.projectile_profile.is_some() {
+                    rfb_protocol::WeaponProficiencyCategoryDto::Launcher
+                } else if item.melee_profile.is_some() {
+                    rfb_protocol::WeaponProficiencyCategoryDto::Melee
+                } else {
+                    return None;
+                };
+                let resolved = self.weapon_proficiency(&item.id)?;
+                Some(rfb_protocol::WeaponProficiencyDto {
+                    item_kind_id: item.id.clone(),
+                    name_key: item.name_key.clone(),
+                    category,
+                    rank: proficiency_rank(resolved.current),
+                    current: resolved.current,
+                    maximum: resolved.maximum,
+                    hit_bonus: proficiency_bonus(resolved.current, resolved.crossbow),
+                })
+            })
+            .collect()
     }
 
     pub(super) fn train_weapon_proficiency(
@@ -221,6 +259,17 @@ mod tests {
         assert_eq!(proficiency_bonus(8_000, false), 20);
         assert_eq!(proficiency_bonus(2_000, true), 5);
         assert_eq!(proficiency_bonus(8_000, true), 20);
+    }
+
+    #[test]
+    fn original_rank_boundaries_are_projected_exactly() {
+        use rfb_protocol::WeaponProficiencyRankDto;
+
+        assert_eq!(proficiency_rank(3_999), WeaponProficiencyRankDto::Unskilled);
+        assert_eq!(proficiency_rank(4_000), WeaponProficiencyRankDto::Beginner);
+        assert_eq!(proficiency_rank(6_000), WeaponProficiencyRankDto::Skilled);
+        assert_eq!(proficiency_rank(7_000), WeaponProficiencyRankDto::Expert);
+        assert_eq!(proficiency_rank(8_000), WeaponProficiencyRankDto::Master);
     }
 
     #[test]

@@ -448,6 +448,638 @@
             "base": 55,
             "growthPerTenLevels": 20
           }
+        ],
+        "weaponProficiencies": [
+          {
+            "itemKindId": "demo.item.awl-pike",
+            "nameKey": "item-demo-awl-pike-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.ball-and-chain",
+            "nameKey": "item-demo-ball-and-chain-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.basillard",
+            "nameKey": "item-demo-basillard-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.bastard-sword",
+            "nameKey": "item-demo-bastard-sword-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.battle-axe",
+            "nameKey": "item-demo-battle-axe-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.beaked-axe",
+            "nameKey": "item-demo-beaked-axe-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.blade-of-chaos",
+            "nameKey": "item-demo-blade-of-chaos-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.bo-staff",
+            "nameKey": "item-demo-bo-staff-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.broad-axe",
+            "nameKey": "item-demo-broad-axe-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.broad-spear",
+            "nameKey": "item-demo-broad-spear-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.broad-sword",
+            "nameKey": "item-demo-broad-sword-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.broken-dagger",
+            "nameKey": "item-demo-broken-dagger-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.broken-sword",
+            "nameKey": "item-demo-broken-sword-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.claymore",
+            "nameKey": "item-demo-claymore-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.club",
+            "nameKey": "item-demo-club-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.cutlass",
+            "nameKey": "item-demo-cutlass-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.dagger",
+            "nameKey": "item-demo-dagger-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.dragon-bane",
+            "nameKey": "item-demo-dragon-bane-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.ember-edge",
+            "nameKey": "item-demo-ember-edge-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.espadon",
+            "nameKey": "item-demo-espadon-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.executioners-sword",
+            "nameKey": "item-demo-executioners-sword-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.falchion",
+            "nameKey": "item-demo-falchion-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.falcon-sword",
+            "nameKey": "item-demo-falcon-sword-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.fauchard",
+            "nameKey": "item-demo-fauchard-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.flail",
+            "nameKey": "item-demo-flail-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.flamberge",
+            "nameKey": "item-demo-flamberge-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.glaive",
+            "nameKey": "item-demo-glaive-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.gnomish-shovel",
+            "nameKey": "item-demo-gnomish-shovel-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.halberd",
+            "nameKey": "item-demo-halberd-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.hatchet",
+            "nameKey": "item-demo-hatchet-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.heavy-crossbow",
+            "nameKey": "item-demo-heavy-crossbow-name",
+            "category": "launcher",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 7000,
+            "hitBonus": 10
+          },
+          {
+            "itemKindId": "demo.item.jo-staff",
+            "nameKey": "item-demo-jo-staff-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.katana",
+            "nameKey": "item-demo-katana-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.khopesh",
+            "nameKey": "item-demo-khopesh-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.lance",
+            "nameKey": "item-demo-lance-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.lead-filled-mace",
+            "nameKey": "item-demo-lead-filled-mace-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.light-crossbow",
+            "nameKey": "item-demo-light-crossbow-name",
+            "category": "launcher",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 7000,
+            "hitBonus": 10
+          },
+          {
+            "itemKindId": "demo.item.long-bow",
+            "nameKey": "item-demo-long-bow-name",
+            "category": "launcher",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 7000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.long-sword",
+            "nameKey": "item-demo-long-sword-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.lucerne-hammer",
+            "nameKey": "item-demo-lucerne-hammer-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.mace",
+            "nameKey": "item-demo-mace-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.main-gauche",
+            "nameKey": "item-demo-main-gauche-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.morning-star",
+            "nameKey": "item-demo-morning-star-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.ninjato",
+            "nameKey": "item-demo-ninjato-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.no-dachi",
+            "nameKey": "item-demo-no-dachi-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.nunchaku",
+            "nameKey": "item-demo-nunchaku-name",
+            "category": "melee",
+            "rank": "unskilled",
+            "current": 2000,
+            "maximum": 6000,
+            "hitBonus": -10
+          },
+          {
+            "itemKindId": "demo.item.orcish-pick",
+            "nameKey": "item-demo-orcish-pick-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.pick",
+            "nameKey": "item-demo-pick-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.pike",
+            "nameKey": "item-demo-pike-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.quarterstaff",
+            "nameKey": "item-demo-quarterstaff-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.rapier",
+            "nameKey": "item-demo-rapier-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.relic-blade",
+            "nameKey": "item-demo-relic-blade-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.sabre",
+            "nameKey": "item-demo-sabre-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.scimitar",
+            "nameKey": "item-demo-scimitar-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.short-bow",
+            "nameKey": "item-demo-short-bow-name",
+            "category": "launcher",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 7000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.short-sword",
+            "nameKey": "item-demo-short-sword-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.shovel",
+            "nameKey": "item-demo-shovel-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.sickle",
+            "nameKey": "item-demo-sickle-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.sling",
+            "nameKey": "item-demo-sling-name",
+            "category": "launcher",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 7000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.small-sword",
+            "nameKey": "item-demo-small-sword-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.spear",
+            "nameKey": "item-demo-spear-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.tanto",
+            "nameKey": "item-demo-tanto-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.three-piece-rod",
+            "nameKey": "item-demo-three-piece-rod-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.trident",
+            "nameKey": "item-demo-trident-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.tulwar",
+            "nameKey": "item-demo-tulwar-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.two-handed-sword",
+            "nameKey": "item-demo-two-handed-sword-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.wakizashi",
+            "nameKey": "item-demo-wakizashi-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.war-hammer",
+            "nameKey": "item-demo-war-hammer-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.whip",
+            "nameKey": "item-demo-whip-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.zweihander",
+            "nameKey": "item-demo-zweihander-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          }
         ]
       },
       "entityCount": 0,

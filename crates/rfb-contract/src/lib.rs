@@ -5,16 +5,16 @@ use std::{collections::BTreeSet, fmt, str::FromStr};
 use rfb_content::WildernessLocationDefinition;
 use rfb_core::{CoreError, DEFAULT_WORLD_ID, Game, load_built_in_content};
 use rfb_protocol::{
-    AbilityDto, AbilityLearningDto, AbilityProgressSaveDto, CampaignStateDto, CampaignStateSaveDto,
-    CharacterSummary, EntityFactionDto, EquipmentItemDto, EquipmentItemSaveDto, GameCommand,
-    GameCommandEnvelope, GameEventDto, GoldPileDto, HomeDto, InventoryItemDto,
-    InventoryItemSaveDto, ItemActivationDto, ItemChargesDto, ItemCurseSeverityDto,
-    ItemEnchantmentsDto, ItemFuelDto, ItemKnowledgeSaveDto, ItemPropertyKnowledgeSaveDto,
-    ItemQualityDto, MonsterPackSaveDto, NaturalAttributeSetSaveDto, PROTOCOL_VERSION, Position,
-    RecallStateDto, ResistanceDto, ResistanceSaveDto, ResourcePoolDto, ResourcePoolSaveDto,
-    RolledAffixSaveDto, SAVE_HEADER_SCHEMA_VERSION, SaveHeaderV1, ShopDto, StatusDto,
-    StatusSaveDto, SummonCommandDto, SummonSaveDto, TaskStateSaveDto, TaskStatusKindDto,
-    TerrainInteractionDto, TownDto,
+    AbilityDto, AbilityLearningDto, AbilityProgressSaveDto, ActorSaveDto, CampaignStateDto,
+    CampaignStateSaveDto, CharacterSummary, EntityFactionDto, EquipmentItemDto,
+    EquipmentItemSaveDto, GameCommand, GameCommandEnvelope, GameEventDto, GoldPileDto, HomeDto,
+    InventoryItemDto, InventoryItemSaveDto, ItemActivationDto, ItemChargesDto,
+    ItemCurseSeverityDto, ItemEnchantmentsDto, ItemFuelDto, ItemKnowledgeSaveDto,
+    ItemPropertyKnowledgeSaveDto, ItemQualityDto, MonsterPackSaveDto, NaturalAttributeSetSaveDto,
+    PROTOCOL_VERSION, Position, RecallStateDto, ResistanceDto, ResistanceSaveDto, ResourcePoolDto,
+    ResourcePoolSaveDto, RolledAffixSaveDto, SAVE_HEADER_SCHEMA_VERSION, SaveHeaderV1, ShopDto,
+    StatusDto, StatusSaveDto, SummonCommandDto, SummonSaveDto, TaskStateSaveDto, TaskStatusKindDto,
+    TerrainInteractionDto, TownDto, WeaponProficiencySaveDto,
 };
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -23,7 +23,7 @@ pub mod policy;
 pub mod snapshot;
 
 pub const CONTRACT_SCHEMA_VERSION: u16 = 4;
-pub const ACTIVE_BASELINE: &str = "contract-v275";
+pub const ACTIVE_BASELINE: &str = "contract-v276";
 pub const ACTIVE_FIXTURE_DIRECTORY: &str = "active";
 pub const LEGACY_BASELINE_COMMIT: &str = "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9";
 pub const HISTORICAL_TEST_WORLD: &str = "demo.original-v1";
@@ -189,6 +189,8 @@ pub struct Preconditions {
     pub player_pending_attribute_increases: Option<u16>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub player_attributes: Option<NaturalAttributeSetSaveDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub player_weapon_proficiencies: Vec<WeaponProficiencySaveDto>,
     #[serde(default, skip_serializing_if = "is_false")]
     pub legacy_player_progress: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -205,6 +207,8 @@ pub struct Preconditions {
     pub player_resistances: Vec<ResistanceSaveDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub entity_effects: Vec<EntityEffectsPrecondition>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub entities: Vec<ActorSaveDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub inventory_items: Vec<InventoryItemPrecondition>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -640,6 +644,15 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
     if fixture.preconditions.legacy_player_progress {
         payload.player.progress = None;
     }
+    if !fixture.preconditions.player_weapon_proficiencies.is_empty() {
+        payload
+            .player
+            .progress
+            .as_mut()
+            .ok_or(ContractError::MissingProgressPrecondition)?
+            .weapon_proficiencies
+            .clone_from(&fixture.preconditions.player_weapon_proficiencies);
+    }
     if fixture.preconditions.legacy_player_ability_state {
         payload.player.resources.clear();
         payload.player.learned_ability_ids.clear();
@@ -826,6 +839,10 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
             .task_states
             .retain(|state| state.task_id != task_state.task_id);
         payload.task_states.push(task_state.clone());
+    }
+    for entity in &fixture.preconditions.entities {
+        payload.entities.retain(|current| current.id != entity.id);
+        payload.entities.push(entity.clone());
     }
     for effects in &fixture.preconditions.entity_effects {
         let entity = payload

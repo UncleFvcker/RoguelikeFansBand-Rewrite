@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.178";
+pub const PROTOCOL_VERSION: &str = "1.179";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -1328,6 +1328,40 @@ pub struct PlayerProgressDto {
     pub attributes: AttributeSetDto,
     #[serde(default)]
     pub skills: Vec<SkillProgressDto>,
+    #[serde(default)]
+    pub weapon_proficiencies: Vec<WeaponProficiencyDto>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum WeaponProficiencyCategoryDto {
+    Melee,
+    Launcher,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum WeaponProficiencyRankDto {
+    Unskilled,
+    Beginner,
+    Skilled,
+    Expert,
+    Master,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct WeaponProficiencyDto {
+    pub item_kind_id: String,
+    pub name_key: String,
+    pub category: WeaponProficiencyCategoryDto,
+    pub rank: WeaponProficiencyRankDto,
+    pub current: u16,
+    pub maximum: u16,
+    pub hit_bonus: i32,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -3277,6 +3311,9 @@ pub fn generated_typescript() -> String {
     push_declaration!(AttributeSetDto);
     push_declaration!(PlayerProgressDto);
     push_declaration!(SkillProgressDto);
+    push_declaration!(WeaponProficiencyCategoryDto);
+    push_declaration!(WeaponProficiencyRankDto);
+    push_declaration!(WeaponProficiencyDto);
     push_declaration!(PlayerBuildDto);
     push_declaration!(DamageDiceDto);
     push_declaration!(AttackProfileDto);

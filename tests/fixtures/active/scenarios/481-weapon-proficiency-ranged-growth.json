@@ -1,42 +1,51 @@
 {
   "schemaVersion": 4,
-  "id": "item.potion-new-life",
-  "category": "potions",
+  "id": "progression.weapon-proficiency.ranged-growth",
+  "category": "progression",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
-  "seed": "705",
+  "seed": "0x424f57",
   "preconditions": {
     "world": "demo.world.middle-earth",
-    "debugClearEntities": true,
-    "debugClearCarriedItems": true,
-    "playerHp": 19,
-    "playerLifeForce": 125,
-    "inventoryItems": [
+    "playerBuildId": "demo.build.warrior",
+    "playerPosition": {
+      "x": 44,
+      "y": 16
+    },
+    "entities": [
       {
-        "id": "test.item.new-life.1",
-        "kindId": "demo.item.new-life-potion"
+        "id": "contract.weapon-proficiency-target",
+        "kindId": "demo.actor.adobe-golem",
+        "position": {
+          "x": 46,
+          "y": 16
+        },
+        "hp": 84,
+        "maxHp": 84,
+        "baseSpeed": 109,
+        "energyNeed": 100,
+        "alerted": false,
+        "nice": false,
+        "visibleInvisible": false,
+        "castingCooldownRemaining": 0
       }
     ]
   },
   "commands": [
     {
       "command": {
-        "type": "use-item",
-        "itemId": "test.item.new-life.1",
-        "target": {
-          "type": "self"
-        }
+        "type": "fire",
+        "direction": "east"
       }
     }
   ],
-  "saveRoundTrip": true,
   "assertions": {
     "finalState": {
       "revision": 1,
       "turn": 1,
-      "worldTick": 10,
+      "worldTick": 9,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 457,
+      "rngDrawCounter": 156,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -313,11 +322,11 @@
       "playerAttack": 2,
       "playerDefense": 15,
       "playerSpeed": 110,
-      "playerEnergyNeed": 0,
-      "playerCarriedWeightTenthsPound": 714,
+      "playerEnergyNeed": -2,
+      "playerCarriedWeightTenthsPound": 622,
       "playerCarryCapacityTenthsPound": 1200,
       "playerEncumbranceSpeedPenalty": 0,
-      "playerGold": 446,
+      "playerGold": 297,
       "playerNutrition": 9999,
       "playerLevel": 1,
       "playerExperience": 0,
@@ -339,42 +348,42 @@
           "strength": {
             "natural": 13,
             "maximumNatural": 13,
-            "potential": 98,
+            "potential": 118,
             "effective": 17,
             "index": 14
           },
           "intelligence": {
             "natural": 13,
             "maximumNatural": 13,
-            "potential": 98,
+            "potential": 128,
             "effective": 11,
             "index": 8
           },
           "wisdom": {
             "natural": 13,
             "maximumNatural": 13,
-            "potential": 148,
+            "potential": 98,
             "effective": 11,
             "index": 8
           },
           "dexterity": {
             "natural": 13,
             "maximumNatural": 13,
-            "potential": 118,
+            "potential": 138,
             "effective": 15,
             "index": 12
           },
           "constitution": {
             "natural": 13,
             "maximumNatural": 13,
-            "potential": 118,
+            "potential": 138,
             "effective": 15,
             "index": 12
           },
           "charisma": {
             "natural": 13,
             "maximumNatural": 13,
-            "potential": 128,
+            "potential": 88,
             "effective": 14,
             "index": 11
           }
@@ -953,7 +962,7 @@
             "nameKey": "item-demo-short-bow-name",
             "category": "launcher",
             "rank": "beginner",
-            "current": 4000,
+            "current": 4008,
             "maximum": 7000,
             "hitBonus": 0
           },
@@ -1094,9 +1103,22 @@
           }
         ]
       },
-      "entityCount": 0,
-      "groundItemCount": 2,
-      "inventoryStackCount": 8,
+      "playerBuildId": "demo.build.warrior",
+      "entityCount": 1,
+      "entities": [
+        {
+          "id": "contract.weapon-proficiency-target",
+          "position": {
+            "x": 46,
+            "y": 16
+          },
+          "hp": 84,
+          "speed": 109,
+          "energyNeed": 19
+        }
+      ],
+      "groundItemCount": 3,
+      "inventoryStackCount": 6,
       "equipmentCount": 3,
       "inventory": [
         {
@@ -1107,7 +1129,7 @@
           "usable": true,
           "canReceiveRecharge": false,
           "canSupplyRecharge": false,
-          "quantity": 9,
+          "quantity": 6,
           "weightTenthsPound": 10,
           "equipmentSlot": null,
           "modifiers": {
@@ -1250,75 +1272,13 @@
         },
         {
           "id": "generated.item.6",
-          "kindId": "demo.item.wooden-torch",
-          "displayNameKey": "item-demo-wooden-torch-name",
-          "knowledge": "aware",
-          "usable": false,
-          "fuel": {
-            "kind": "torch",
-            "current": 3500,
-            "maximum": 5000,
-            "lightRadius": 1
-          },
-          "canReceiveRecharge": false,
-          "canSupplyRecharge": false,
-          "quantity": 1,
-          "weightTenthsPound": 30,
-          "equipmentSlot": "light",
-          "modifiers": {
-            "attack": 0,
-            "defense": 0,
-            "maxHp": 0,
-            "strength": 0,
-            "intelligence": 0,
-            "wisdom": 0,
-            "dexterity": 0,
-            "constitution": 0,
-            "charisma": 0,
-            "speed": 0
-          },
-          "identification": "unexamined"
-        },
-        {
-          "id": "generated.item.7",
-          "kindId": "demo.item.wooden-torch",
-          "displayNameKey": "item-demo-wooden-torch-name",
-          "knowledge": "aware",
-          "usable": false,
-          "fuel": {
-            "kind": "torch",
-            "current": 3500,
-            "maximum": 5000,
-            "lightRadius": 1
-          },
-          "canReceiveRecharge": false,
-          "canSupplyRecharge": false,
-          "quantity": 1,
-          "weightTenthsPound": 30,
-          "equipmentSlot": "light",
-          "modifiers": {
-            "attack": 0,
-            "defense": 0,
-            "maxHp": 0,
-            "strength": 0,
-            "intelligence": 0,
-            "wisdom": 0,
-            "dexterity": 0,
-            "constitution": 0,
-            "charisma": 0,
-            "speed": 0
-          },
-          "identification": "unexamined"
-        },
-        {
-          "id": "generated.item.8",
           "kindId": "demo.item.arrow",
           "displayNameKey": "item-demo-arrow-name",
           "knowledge": "aware",
           "usable": false,
           "canReceiveRecharge": false,
           "canSupplyRecharge": false,
-          "quantity": 22,
+          "quantity": 21,
           "weightTenthsPound": 2,
           "equipmentSlot": null,
           "modifiers": {
@@ -1338,7 +1298,7 @@
       ],
       "equipment": [
         {
-          "id": "generated.item.10",
+          "id": "generated.item.8",
           "kindId": "demo.item.chain-mail",
           "displayNameKey": "item-demo-chain-mail-name",
           "knowledge": "aware",
@@ -1377,7 +1337,7 @@
           "quality": "ordinary"
         },
         {
-          "id": "generated.item.9",
+          "id": "generated.item.7",
           "kindId": "demo.item.broad-sword",
           "displayNameKey": "item-demo-broad-sword-name",
           "knowledge": "aware",
@@ -1407,11 +1367,11 @@
               "sides": 6,
               "damageType": "physical"
             },
-            "sourceItemId": "generated.item.9"
+            "sourceItemId": "generated.item.7"
           }
         },
         {
-          "id": "generated.item.11",
+          "id": "generated.item.9",
           "kindId": "demo.item.short-bow",
           "displayNameKey": "item-demo-short-bow-name",
           "knowledge": "aware",
@@ -1451,15 +1411,8 @@
               "range": 16,
               "requiresLineOfEffect": true
             },
-            "sourceItemId": "generated.item.11"
+            "sourceItemId": "generated.item.9"
           }
-        }
-      ],
-      "itemKnowledge": [
-        {
-          "kindId": "demo.item.new-life-potion",
-          "tried": true,
-          "aware": true
         }
       ],
       "itemPropertyKnowledge": [
@@ -1476,16 +1429,8 @@
           "discovered": true
         },
         {
-          "itemId": "generated.item.10",
-          "discovered": true,
-          "appraised": true,
-          "identified": true
-        },
-        {
-          "itemId": "generated.item.11",
-          "discovered": true,
-          "appraised": true,
-          "identified": true
+          "itemId": "generated.item.167",
+          "discovered": true
         },
         {
           "itemId": "generated.item.2",
@@ -1509,11 +1454,15 @@
         },
         {
           "itemId": "generated.item.7",
-          "discovered": true
+          "discovered": true,
+          "appraised": true,
+          "identified": true
         },
         {
           "itemId": "generated.item.8",
-          "discovered": true
+          "discovered": true,
+          "appraised": true,
+          "identified": true
         },
         {
           "itemId": "generated.item.9",
@@ -1522,7 +1471,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 177,
+      "nextItemInstanceSerial": 168,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -1530,18 +1479,47 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "2d732e0e53bf95babff4d574169e33285b940c5d732da6d4805e9a6bafbf52b6"
+      "stateHash": "2a40c86b42678b31d8df5608262ec9af742ea4fc7d62f3b80e0b9882e120163c"
     },
     "events": [
       {
-        "kind": "item.use-restoration",
-        "messageKey": "item-use-restoration",
+        "kind": "combat.projectile-miss",
+        "messageKey": "projectile-miss",
         "args": {
-          "nameKey": "item-demo-new-life-potion-name",
-          "source": "demo.item.new-life-potion"
+          "target": "demo.actor.adobe-golem"
+        },
+        "trace": {
+          "origin": {
+            "x": 44,
+            "y": 16
+          },
+          "impact": {
+            "x": 46,
+            "y": 16
+          },
+          "landing": {
+            "x": 46,
+            "y": 16
+          },
+          "traversed": [
+            {
+              "x": 45,
+              "y": 16
+            },
+            {
+              "x": 46,
+              "y": 16
+            }
+          ]
+        }
+      },
+      {
+        "kind": "combat.projectile-ammo-recovered",
+        "messageKey": "projectile-ammo-recovered",
+        "args": {
+          "target": "demo.item.arrow"
         }
       }
-    ],
-    "saveRoundTripStateHash": "2d732e0e53bf95babff4d574169e33285b940c5d732da6d4805e9a6bafbf52b6"
+    ]
   }
 }

@@ -252,3 +252,17 @@ git diff --stat
   `4274e13bce1b7c3e1808267ac12c1fe4f5fa83e6f256c602c693205396767fa2`。
 - 后续 UI 只能投影这份权威稀疏表与职业初始/上限，不得复制成长状态。武术、双持、骑乘
   仍为独立缺口。
+
+## 14. main 当前交接（逐武器熟练度角色面板）
+
+- `PlayerProgressDto.weaponProficiencies` 是第 13 节权威状态的只读投影；包含规范基础物品
+  ID/name key、近战/发射器分类、当前值、职业上限、原版等级与原版命中加成。
+- 神器和特殊变体不会投影第二行；角色成长面板仅按基础武器显示，并默认折叠。
+- 英文等级为 `Unskilled / Beginner / Skilled / Expert / Master`，中文为“生疏 / 入门 /
+  熟练 / 专家 / 大师”。前端不得从数值重新推导等级或弓弩公式。
+- 本批没有新增或占用 item/ability/affix ID，也没有新增状态哈希输入。共享协调点：pack
+  `1.275.0`、Protocol `1.179`、State Hash Schema v89、save v1、active baseline
+  `contract-v276`；content hash 保持
+  `4274e13bce1b7c3e1808267ac12c1fe4f5fa83e6f256c602c693205396767fa2`。
+- active fixture 共 24 条，含近战成长、射击成长和熟练度存档回放 3 条聚焦契约。武术、
+  双持、骑乘仍是独立缺口。

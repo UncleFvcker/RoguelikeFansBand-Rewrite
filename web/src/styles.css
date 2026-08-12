@@ -694,6 +694,18 @@ h1 {
   list-style: none;
 }
 
+.weapon-proficiency-list {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0.45rem 0.85rem 0.8rem;
+  list-style: none;
+}
+
+.weapon-proficiency-groups section + section {
+  border-top: 1px solid var(--ui-line-soft);
+}
+
 .mutation-list {
   display: grid;
   gap: 0.45rem;
@@ -757,7 +769,8 @@ h1 {
   line-height: 1.45;
 }
 
-.skill-row {
+.skill-row,
+.weapon-proficiency-row {
   display: flex;
   min-width: 0;
   justify-content: space-between;
@@ -766,14 +779,16 @@ h1 {
   font-size: 0.76rem;
 }
 
-.skill-name {
+.skill-name,
+.weapon-proficiency-name {
   overflow: hidden;
   color: #9fb5ca;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.skill-value {
+.skill-value,
+.weapon-proficiency-value {
   flex: none;
   color: #dcecff;
   font-family: "Cascadia Mono", Consolas, monospace;
@@ -1797,7 +1812,8 @@ summary:focus-visible {
 }
 
 .attribute-list,
-.skill-list {
+.skill-list,
+.weapon-proficiency-list {
   padding: 0.5rem 0.65rem;
 }
 

@@ -6,7 +6,7 @@
 
 contract fixture 是规则兼容边界，不能把测试失败简单处理为“刷新预期结果”。政策用于保证每次规则变化只修改真正受影响的场景，同时保留可审查的失败原因。
 
-当前逻辑基线是 `contract-v275`，机器可读政策固定在：
+当前逻辑基线是 `contract-v276`，机器可读政策固定在：
 
 ```text
 tests/fixtures/active/baseline-policy.json
@@ -90,6 +90,13 @@ Protocol 升至 1.178，State Hash Schema 升至 v89，save 容器保持 v1；�
 变化要求统一刷新并复验 21 条 active fixture，active 集保持零 waiver。内容包仍为
 1.275.0。
 
+`contract-v276` 在 `PlayerProgressDto` 投影全部规范基础武器的当前值、职业上限、原版
+等级、原版命中加成及近战/发射器分类；神器与特殊变体不重复出现。角色成长面板新增
+默认折叠的“武器熟练度”区域。Protocol 升至 1.179；没有新增权威状态或状态哈希输入，
+State Hash Schema 保持 v89、save v1 和内容包 1.275.0 不变。共享玩家投影要求刷新原有
+21 条 fixture，并新增近战成长、射击成长和存档回放 3 条聚焦契约；active 集共 24 条、
+零 waiver。
+
 ## 分类验证
 
 每条 fixture 必须声明一个受控的主 `category`。分类表示该 fixture 主要保护的行为，不是自由标签；跨系统改动一次选择多个分类即可。当前分类可通过下列命令查询，输出同时给出各类数量：
@@ -105,7 +112,7 @@ cargo run -p rfb-contract -- verify-category tests/fixtures/active/baseline-poli
 cargo run -p rfb-contract -- refresh-category tests/fixtures/active/baseline-policy.json inventory equipment
 ```
 
-`refresh-category` 会先为选中分类计算全部断言；任一场景计算失败时不会写入该批文件。普通 `cargo test -p rfb-contract` 仍快速检查全部 fixture 的 JSON、schema、分类和 ID 唯一性，但不会运行 21 条完整回放。
+`refresh-category` 会先为选中分类计算全部断言；任一场景计算失败时不会写入该批文件。普通 `cargo test -p rfb-contract` 仍快速检查全部 fixture 的 JSON、schema、分类和 ID 唯一性，但不会运行 24 条完整回放。
 
 只有以下变化默认需要全量回放或刷新：
 

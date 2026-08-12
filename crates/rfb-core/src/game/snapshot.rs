@@ -555,6 +555,7 @@ impl Game {
                     growth_per_ten_levels: skill.growth_per_ten_levels,
                 })
                 .collect(),
+            weapon_proficiencies: self.player_weapon_proficiencies(),
         }
     }
 

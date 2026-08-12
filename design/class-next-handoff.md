@@ -101,5 +101,16 @@ ammo-slaying ID。若 items 方向随后导入陶器碎片或断木棍，也应�
 - 本步没有新增或占用任何内容 ID。共享协调点为 pack 1.275.0、Protocol 1.178、State
   Hash Schema v89、save v1、active baseline contract-v275；content hash 保持
   `4274e13bce1b7c3e1808267ac12c1fe4f5fa83e6f256c602c693205396767fa2`。
-- 下一步只需增加角色面板的逐武器列表、等级名称与当前/上限投影；武术、双持、骑乘仍是
-  独立缺口。
+- 角色面板收口见下一节；武术、双持、骑乘仍是独立缺口。
+
+## 逐武器熟练度第三步
+
+- `PlayerProgressDto.weaponProficiencies` 投影 67 种规范基础武器，包含近战/发射器分类、
+  当前值、职业上限、原版等级及原版命中加成；神器和特殊变体不重复出现。
+- 角色成长面板新增默认折叠的“武器熟练度”，按近战武器和发射器分组；中英文等级固定为
+  `Unskilled / Beginner / Skilled / Expert / Master` 与“生疏 / 入门 / 熟练 / 专家 / 大师”。
+- 本步没有新增权威状态、内容字段或内容 ID。共享协调点为 pack 1.275.0、Protocol 1.179、
+  State Hash Schema v89、save v1、active baseline contract-v276；content hash 保持
+  `4274e13bce1b7c3e1808267ac12c1fe4f5fa83e6f256c602c693205396767fa2`。
+- active fixture 为 24 条：原 21 条共享投影已刷新，并新增近战成长、射击成长和熟练度
+  存档回放。武术、双持、骑乘仍为独立缺口。

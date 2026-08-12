@@ -553,3 +553,11 @@ v88，save 容器保持 v1。
 `AbilityLearningDto.studyMode` 区分玩家点选的 `chosen` 与神授随机的
 `divine-random`。成功继续产生既有 `ability.studied` 事件；没有新增待处理状态、存档
 字段或状态哈希输入，State Hash Schema 保持 v88，save 容器保持 v1。
+
+协议 1.178 / contract-v275 为 `PlayerProgressSaveDto` 增加必填的稀疏
+`weaponProficiencies`，保存高于职业出生值的规范基础武器训练值。该权威成长状态进入
+State Hash Schema v89；save 容器保持 v1，不兼容缺少该字段的旧开发存档。
+
+协议 1.179 / contract-v276 为 `PlayerProgressDto` 增加只读 `weaponProficiencies`，每项
+投影规范基础武器、近战/发射器分类、当前值、职业上限、原版等级与原版命中加成。该字段
+不增加权威状态，State Hash Schema 保持 v89，save 容器保持 v1。

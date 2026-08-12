@@ -17,6 +17,9 @@ import type {
   ResourcePoolDto,
   SummonCommandDto,
   SummonCommandModeDto,
+  WeaponProficiencyCategoryDto,
+  WeaponProficiencyDto,
+  WeaponProficiencyRankDto,
 } from "./protocol";
 import { REST_UNTIL_RECOVERED_TURNS } from "./rest.ts";
 import { goldVisualId } from "./render-world.ts";
@@ -49,6 +52,8 @@ type StatusDom = Pick<
   | "progressionMultipliersValue"
   | "attributeList"
   | "skillList"
+  | "weaponProficiencyMeleeList"
+  | "weaponProficiencyLauncherList"
   | "mutationList"
   | "resourceList"
   | "abilityList"
@@ -93,6 +98,17 @@ export function wildernessClock(worldTick: number): WildernessClock {
     minute: minuteOfDay % 60,
     daytime: withinDay < WILDERNESS_DAY_TICKS / 2,
   };
+}
+
+export function weaponProficienciesByCategory(
+  proficiencies: readonly WeaponProficiencyDto[],
+  category: WeaponProficiencyCategoryDto,
+): WeaponProficiencyDto[] {
+  return proficiencies.filter((proficiency) => proficiency.category === category);
+}
+
+export function weaponProficiencyRankMessageKey(rank: WeaponProficiencyRankDto): MessageKey {
+  return `weapon-proficiency-rank-${rank}` as MessageKey;
 }
 
 export class StatusPanel {
@@ -364,6 +380,8 @@ export class StatusPanel {
       this.#dom.progressionMultipliersValue.textContent = unavailable;
       this.#dom.attributeList.replaceChildren();
       this.#dom.skillList.replaceChildren();
+      this.#dom.weaponProficiencyMeleeList.replaceChildren();
+      this.#dom.weaponProficiencyLauncherList.replaceChildren();
       return;
     }
     this.#dom.progressionLevelValue.textContent = this.#localization.format(
@@ -461,6 +479,33 @@ export class StatusPanel {
         return row;
       }),
     );
+    const renderWeaponProficiencies = (
+      list: HTMLUListElement,
+      category: WeaponProficiencyCategoryDto,
+    ) =>
+      list.replaceChildren(
+        ...weaponProficienciesByCategory(progress.weaponProficiencies, category).map(
+          (proficiency) => {
+            const row = document.createElement("li");
+            row.className = "weapon-proficiency-row";
+            const name = document.createElement("span");
+            name.className = "weapon-proficiency-name";
+            name.textContent = this.#localization.format(proficiency.nameKey as MessageKey);
+            const value = document.createElement("span");
+            value.className = "weapon-proficiency-value";
+            value.textContent = this.#localization.format("weapon-proficiency-value", {
+              rank: this.#localization.format(weaponProficiencyRankMessageKey(proficiency.rank)),
+              current: proficiency.current,
+              maximum: proficiency.maximum,
+              hit: `${proficiency.hitBonus >= 0 ? "+" : ""}${proficiency.hitBonus}`,
+            });
+            row.append(name, value);
+            return row;
+          },
+        ),
+      );
+    renderWeaponProficiencies(this.#dom.weaponProficiencyMeleeList, "melee");
+    renderWeaponProficiencies(this.#dom.weaponProficiencyLauncherList, "launcher");
   }
 
   #renderSummonCommand(

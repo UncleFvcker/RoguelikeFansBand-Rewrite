@@ -220,6 +220,47 @@ fn artifact_training_uses_only_the_canonical_base_weapon_key() {
 }
 
 #[test]
+fn progression_projection_lists_base_weapons_with_original_ranks_and_bonuses() {
+    let snapshot = Game::new(0x5052_4f4a_4543_54).snapshot();
+    let proficiencies = &snapshot.player.progress.weapon_proficiencies;
+    assert!(
+        proficiencies
+            .iter()
+            .all(|entry| entry.item_kind_id != "demo.item.crisdurian")
+    );
+
+    let executioner = proficiencies
+        .iter()
+        .find(|entry| entry.item_kind_id == "demo.item.executioners-sword")
+        .expect("the canonical artifact base should be projected");
+    assert_eq!(executioner.name_key, "item-demo-executioners-sword-name");
+    assert_eq!(
+        executioner.category,
+        rfb_protocol::WeaponProficiencyCategoryDto::Melee
+    );
+
+    let bow = proficiencies
+        .iter()
+        .find(|entry| entry.item_kind_id == "demo.item.short-bow")
+        .expect("short bow proficiency should be projected");
+    assert_eq!(bow.current, 4_000);
+    assert_eq!(bow.maximum, 7_000);
+    assert_eq!(bow.hit_bonus, 0);
+    assert_eq!(bow.rank, rfb_protocol::WeaponProficiencyRankDto::Beginner);
+    assert_eq!(
+        bow.category,
+        rfb_protocol::WeaponProficiencyCategoryDto::Launcher
+    );
+
+    let crossbow = proficiencies
+        .iter()
+        .find(|entry| entry.item_kind_id == "demo.item.light-crossbow")
+        .expect("light crossbow proficiency should be projected");
+    assert_eq!(crossbow.current, 4_000);
+    assert_eq!(crossbow.hit_bonus, 10);
+}
+
+#[test]
 fn sparse_weapon_progress_round_trips_and_rejects_noncanonical_or_out_of_range_entries() {
     let mut game = Game::new(0x5341_5645);
     game.progress

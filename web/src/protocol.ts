@@ -43,9 +43,15 @@ export type AttributeValueDto = { natural: number, maximumNatural: number, poten
 
 export type AttributeSetDto = { strength: AttributeValueDto, intelligence: AttributeValueDto, wisdom: AttributeValueDto, dexterity: AttributeValueDto, constitution: AttributeValueDto, charisma: AttributeValueDto, };
 
-export type PlayerProgressDto = { level: number, maxLevel: number, experience: bigint, maximumExperience: bigint, lifeForce: number, levelCap: number, attributeCap: number, attributeIndexCap: number, experienceForNextLevel?: bigint | null, pendingAttributeIncreases: number, victoryLevelCapUnlocked: boolean, attributes: AttributeSetDto, skills: Array<SkillProgressDto>, };
+export type PlayerProgressDto = { level: number, maxLevel: number, experience: bigint, maximumExperience: bigint, lifeForce: number, levelCap: number, attributeCap: number, attributeIndexCap: number, experienceForNextLevel?: bigint | null, pendingAttributeIncreases: number, victoryLevelCapUnlocked: boolean, attributes: AttributeSetDto, skills: Array<SkillProgressDto>, weaponProficiencies: Array<WeaponProficiencyDto>, };
 
 export type SkillProgressDto = { id: string, nameKey: string, current: number, maximum: number, base: number, growthPerTenLevels: number, };
+
+export type WeaponProficiencyCategoryDto = "melee" | "launcher";
+
+export type WeaponProficiencyRankDto = "unskilled" | "beginner" | "skilled" | "expert" | "master";
+
+export type WeaponProficiencyDto = { itemKindId: string, nameKey: string, category: WeaponProficiencyCategoryDto, rank: WeaponProficiencyRankDto, current: number, maximum: number, hitBonus: number, };
 
 export type PlayerBuildDto = { buildId: string, buildNameKey: string, raceId: string, raceNameKey: string, classId: string, classNameKey: string, personalityId: string, personalityNameKey: string, lifePercent: number, experiencePercent: number, };
 
