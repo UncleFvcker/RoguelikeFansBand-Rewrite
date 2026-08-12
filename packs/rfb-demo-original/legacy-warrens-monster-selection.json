@@ -5038,7 +5038,7 @@
     {
       "sourceIndex": 1300,
       "id": "death-pumpkin",
-      "tags": ["orc-cave"],
+      "tags": ["death-pumpkin", "orc-cave"],
       "omittedFlags": ["POS_GAIN_AC"]
     },
     {
@@ -5464,7 +5464,7 @@
     {
       "sourceIndex": 1081,
       "id": "reindeer",
-      "tags": ["orc-cave"],
+      "tags": ["orc-cave", "reindeer"],
       "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
     },
     {
@@ -5820,6 +5820,18 @@
       "id": "greater-dokkaebi",
       "tags": ["orc-cave"],
       "omittedFlags": ["NO_STUN", "POS_SEE_INVIS", "POS_TELEPATHY"]
+    },
+    {
+      "sourceIndex": 733,
+      "id": "santa-claus",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 1302,
+      "id": "jack-of-lanterns",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE", "POS_TELEPATHY"]
     }
   ]
 }

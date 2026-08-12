@@ -7949,6 +7949,7 @@ fn monster_json(
                 "ELEC" => "electricity",
                 "FIRE" => "fire",
                 "ICE" => "ice",
+                "LIGHT" | "LITE" => "light",
                 "CAUSE_2" | "CAUSE_3" => "curse",
                 "SHARDS" => "shards",
                 _ => return None,
@@ -8288,7 +8289,16 @@ fn demo_monster_json(
         || entry.auras.iter().any(|aura| {
             !matches!(
                 aura.token.as_str(),
-                "POISON" | "ACID" | "ELEC" | "FIRE" | "ICE" | "CAUSE_2" | "CAUSE_3" | "SHARDS"
+                "POISON"
+                    | "ACID"
+                    | "ELEC"
+                    | "FIRE"
+                    | "ICE"
+                    | "LIGHT"
+                    | "LITE"
+                    | "CAUSE_2"
+                    | "CAUSE_3"
+                    | "SHARDS"
             ) || aura.dice.is_none()
         })
     {
@@ -9063,20 +9073,28 @@ fn map_summon_spell_token(
         Some((base, rest)) => (base, Some(rest.strip_suffix(')')?)),
         None => (token, None),
     };
-    if base == "S_SPECIAL" && caster_kind_id.rsplit('.').next() == Some("zoopi-the-cube-king") {
-        let suffix = "summon-gelatinous-cube-l16-1d3";
+    if base == "S_SPECIAL" {
+        let (suffix, category, maximum_level, dice, sides, bonus) = match caster_kind_id
+            .rsplit('.')
+            .next()?
+        {
+            "zoopi-the-cube-king" => (
+                "summon-gelatinous-cube-l16-1d3",
+                "gelatinous-cube",
+                16,
+                1,
+                3,
+                0,
+            ),
+            "rolento" => ("summon-hand-grenade-l38-1d3-1", "hand-grenade", 38, 1, 3, 1),
+            "santa-claus" => ("summon-reindeer-l52-1d4", "reindeer", 52, 1, 4, 0),
+            "jack-of-lanterns" => ("summon-death-pumpkin-l52-1d4", "death-pumpkin", 52, 1, 4, 0),
+            _ => return None,
+        };
         let id = format!("rfb-legacy.ability.{suffix}");
-        abilities
-            .entry(id.clone())
-            .or_insert_with(|| summon_category_ability(suffix, "gelatinous-cube", 16, 1, 3, 0));
-        return Some(id);
-    }
-    if base == "S_SPECIAL" && caster_kind_id.rsplit('.').next() == Some("rolento") {
-        let suffix = "summon-hand-grenade-l38-1d3-1";
-        let id = format!("rfb-legacy.ability.{suffix}");
-        abilities
-            .entry(id.clone())
-            .or_insert_with(|| summon_category_ability(suffix, "hand-grenade", 38, 1, 3, 1));
+        abilities.entry(id.clone()).or_insert_with(|| {
+            summon_category_ability(suffix, category, maximum_level, dice, sides, bonus)
+        });
         return Some(id);
     }
     if base == "S_KIN" {
@@ -13447,6 +13465,28 @@ mod tests {
         assert_eq!(actor["contactAuras"][0]["damageDice"], 3);
         assert_eq!(actor["contactAuras"][0]["damageSides"], 3);
 
+        let light = parse_r_info(
+            "N:5:test light aura\nG:p:o\nI:120:6d6:100:30:0:25\nW:52:1:999:50:0:0\nB:HIT:HURT(1d8)\nA:LITE(3d3)\nF:NEVER_MOVE\n",
+        )
+        .expect("synthetic light aura monster should parse")
+        .remove(0);
+        let actor = demo_monster_json(
+            &light,
+            &DemoMonsterSelectionEntry {
+                source_index: light.index,
+                source_id: None,
+                id: kebab(&light.name),
+                tags: vec!["orc-cave".to_owned()],
+                omitted_flags: Vec::new(),
+                omitted_spells: Vec::new(),
+            },
+            &mut BTreeMap::new(),
+        )
+        .expect("explicit light contact aura should import directly");
+        assert_eq!(actor["contactAuras"][0]["damageType"], "light");
+        assert_eq!(actor["contactAuras"][0]["damageDice"], 3);
+        assert_eq!(actor["contactAuras"][0]["damageSides"], 3);
+
         let mut multiple = monsters[0].clone();
         multiple.flags.push("AURA_ELEC".to_owned());
         let actor = demo_monster_json(
@@ -14602,7 +14642,7 @@ S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_ANT | S_SPIDER | S_HYDRA | S_LO
     }
 
     #[test]
-    fn zoopi_special_maps_only_to_gelatinous_cubes() {
+    fn special_summons_map_only_to_their_fixed_actor_categories() {
         let mut abilities = BTreeMap::new();
         let id = map_spell_token(
             "S_SPECIAL",
@@ -14620,6 +14660,29 @@ S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_ANT | S_SPIDER | S_HYDRA | S_LO
         assert_eq!(effect["countDice"], 1);
         assert_eq!(effect["countSides"], 3);
         assert!(effect.get("countBonus").is_none());
+        for (caster, expected_id, category) in [
+            (
+                "demo.actor.santa-claus",
+                "rfb-legacy.ability.summon-reindeer-l52-1d4",
+                "reindeer",
+            ),
+            (
+                "demo.actor.jack-of-lanterns",
+                "rfb-legacy.ability.summon-death-pumpkin-l52-1d4",
+                "death-pumpkin",
+            ),
+        ] {
+            let id = map_spell_token("S_SPECIAL", 52, 4, caster, &mut abilities)
+                .unwrap_or_else(|| panic!("{caster} special should map"));
+            assert_eq!(id, expected_id);
+            let effect = &abilities[&id]["effect"];
+            assert_eq!(effect["type"], "summon-category");
+            assert_eq!(effect["category"], category);
+            assert_eq!(effect["maximumLevel"], 52);
+            assert_eq!(effect["countDice"], 1);
+            assert_eq!(effect["countSides"], 4);
+            assert!(effect.get("countBonus").is_none());
+        }
         assert!(
             map_spell_token(
                 "S_SPECIAL",

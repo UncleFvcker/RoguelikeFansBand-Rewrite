@@ -719,7 +719,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         .iter()
         .filter(|actor| actor.tags.iter().any(|tag| tag == "orc-cave"))
         .collect::<Vec<_>>();
-    assert_eq!(orc_cave.len(), 540);
+    assert_eq!(orc_cave.len(), 542);
 
     for id in [
         "demo.actor.bunyip",
@@ -767,7 +767,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         level_counts,
         [
             16, 14, 12, 17, 24, 17, 19, 17, 18, 21, 7, 12, 29, 15, 27, 28, 19, 19, 11, 42, 12, 6,
-            12, 14, 14, 7, 10, 6, 6, 16, 11, 5, 3, 8, 17, 9,
+            12, 14, 14, 7, 10, 6, 6, 16, 11, 7, 3, 8, 17, 9,
         ]
     );
 
@@ -4930,6 +4930,92 @@ fn p53a_ice_jump_and_angel_summons_reuse_shared_effects() {
 }
 
 #[test]
+fn p53b_fixed_special_summons_target_reindeer_and_death_pumpkins() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actor = |id: &str| {
+        artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == format!("demo.actor.{id}"))
+            .unwrap_or_else(|| panic!("{id} should be imported"))
+    };
+    let ability = |id: &str| {
+        artifact
+            .content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == format!("rfb-legacy.ability.{id}"))
+            .unwrap_or_else(|| panic!("{id} should be imported"))
+    };
+
+    for (id, legacy_index) in [("santa-claus", 733), ("jack-of-lanterns", 1302)] {
+        let actor = actor(id);
+        assert_eq!(actor.level, 52, "{id} level");
+        assert_eq!(
+            actor
+                .allocation
+                .as_ref()
+                .map(|allocation| allocation.legacy_index),
+            Some(legacy_index),
+            "{id} source index"
+        );
+    }
+
+    for (caster_id, target_id, category, ability_id) in [
+        (
+            "santa-claus",
+            "reindeer",
+            "reindeer",
+            "summon-reindeer-l52-1d4",
+        ),
+        (
+            "jack-of-lanterns",
+            "death-pumpkin",
+            "death-pumpkin",
+            "summon-death-pumpkin-l52-1d4",
+        ),
+    ] {
+        assert!(
+            actor(target_id).tags.iter().any(|tag| tag == category),
+            "{target_id} should belong to its fixed summon category"
+        );
+        assert!(
+            actor(caster_id)
+                .monster_casting
+                .as_ref()
+                .expect("special summoner should retain monster casting")
+                .abilities
+                .iter()
+                .any(|candidate| {
+                    candidate.ability_id == format!("rfb-legacy.ability.{ability_id}")
+                }),
+            "{caster_id} should cast {ability_id}"
+        );
+        assert!(matches!(
+            ability(ability_id).effect,
+            AbilityEffectDefinition::SummonCategory {
+                ref category,
+                maximum_level: 52,
+                count_dice: 1,
+                count_sides: 4,
+                count_bonus: 0,
+                ..
+            } if category == target_id
+        ));
+    }
+
+    assert_eq!(
+        actor("jack-of-lanterns")
+            .contact_auras
+            .iter()
+            .map(|aura| (aura.damage_type, aura.damage_dice, aura.damage_sides))
+            .collect::<Vec<_>>(),
+        vec![(ActorDamageType::Light, 3, 3)]
+    );
+}
+
+#[test]
 fn outpost_has_walls_inner_shops_and_an_exterior_warrens_entrance() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let world = artifact
@@ -6355,7 +6441,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
                     == Some("demo.loot-table.base-items")
             })
             .count(),
-        488
+        490
     );
 }
 
