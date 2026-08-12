@@ -1,0 +1,82 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 599,
+    "maxDepth": 999,
+    "randomMovementPercent": 75,
+    "rarity": 7
+  },
+  "attack": 9,
+  "damageDice": 5,
+  "damageSides": 5,
+  "damageType": "physical",
+  "defense": 4,
+  "descriptionKey": "actor-demo-time-vortex-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 900,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "v",
+  "hitPointDice": {
+    "dice": 32,
+    "sides": 10
+  },
+  "id": "demo.actor.time-vortex",
+  "level": 38,
+  "maxHp": 176,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 5,
+            "damageSides": 5,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "chancePercent": 50,
+            "type": "slow"
+          }
+        ],
+        "methodId": "rfb.blow.engulf",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.breath-time-33-150-r2",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 8
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "nameKey": "actor-demo-time-vortex-name",
+  "resistances": {
+    "time": "resistant"
+  },
+  "role": "monster",
+  "speed": 130,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "empty-mind",
+    "kin-glyph-118",
+    "legacy-import",
+    "nonliving",
+    "orc-cave"
+  ]
+}

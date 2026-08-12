@@ -1,0 +1,100 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 529,
+    "maxDepth": 80,
+    "multiplies": true,
+    "randomMovementPercent": 25,
+    "rarity": 4
+  },
+  "attack": 8,
+  "damageDice": 1,
+  "damageSides": 1,
+  "damageType": "physical",
+  "defense": 1,
+  "descriptionKey": "actor-demo-malicious-leprechaun-description",
+  "doorInteraction": {
+    "opens": true
+  },
+  "experienceValue": 85,
+  "formatVersion": 1,
+  "glyph": "h",
+  "hitPointDice": {
+    "dice": 4,
+    "sides": 5
+  },
+  "id": "demo.actor.malicious-leprechaun",
+  "level": 35,
+  "light": {
+    "intrinsic": false,
+    "radius": 1
+  },
+  "maxHp": 12,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "type": "eat-gold"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "type": "eat-item"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.blink",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.escape",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.drag",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.curse-3d8",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 16
+  },
+  "nameKey": "actor-demo-malicious-leprechaun-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "light": "vulnerable"
+  },
+  "role": "monster",
+  "speed": 120,
+  "tags": [
+    "cold-blooded",
+    "evil",
+    "invisible",
+    "kin-glyph-104",
+    "legacy-import",
+    "orc-cave",
+    "thief"
+  ],
+  "terrainInteraction": {
+    "picksUpItems": true
+  }
+}

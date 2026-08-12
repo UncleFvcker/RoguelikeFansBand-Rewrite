@@ -594,7 +594,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         .iter()
         .filter(|actor| actor.tags.iter().any(|tag| tag == "orc-cave"))
         .collect::<Vec<_>>();
-    assert_eq!(orc_cave.len(), 238);
+    assert_eq!(orc_cave.len(), 277);
 
     for id in [
         "demo.actor.bunyip",
@@ -641,7 +641,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
     assert_eq!(
         level_counts,
         [
-            16, 14, 12, 17, 24, 17, 19, 17, 18, 21, 7, 12, 5, 7, 9, 6, 2, 0, 2, 13,
+            16, 14, 12, 17, 24, 17, 19, 17, 18, 21, 7, 12, 13, 11, 14, 13, 9, 3, 4, 16,
         ]
     );
 
@@ -3504,7 +3504,6 @@ fn p42a_direct_monsters_keep_source_identity_without_new_abilities() {
 #[test]
 fn p42b_direct_monsters_complete_the_ability_free_harvest() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
-    assert_eq!(artifact.content.actors.len(), 689);
     assert_eq!(artifact.content.abilities.len(), 331);
 
     for (id, legacy_index, level) in [
@@ -3545,6 +3544,90 @@ fn p42b_direct_monsters_complete_the_ability_free_harvest() {
         assert!(
             actor.monster_casting.is_none(),
             "{actor_id} should not gain monster casting"
+        );
+    }
+}
+
+#[test]
+fn p43_monsters_reuse_the_existing_ability_catalog() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    assert_eq!(artifact.content.actors.len(), 728);
+    assert_eq!(artifact.content.abilities.len(), 331);
+    let ability_ids = artifact
+        .content
+        .abilities
+        .iter()
+        .map(|ability| ability.id.as_str())
+        .collect::<BTreeSet<_>>();
+
+    for (id, legacy_index, level) in [
+        ("shadow-drake", 471, 33),
+        ("barrow-wight", 499, 33),
+        ("chaos-drake", 501, 33),
+        ("law-drake", 502, 33),
+        ("balance-drake", 503, 33),
+        ("ethereal-drake", 504, 33),
+        ("logrus-ghost", 507, 33),
+        ("multi-hued-hound", 513, 33),
+        ("lich", 518, 34),
+        ("oriental-vampire", 521, 34),
+        ("doom-drake", 527, 34),
+        ("gargoyle", 528, 34),
+        ("malicious-leprechaun", 529, 35),
+        ("shard-vortex", 897, 35),
+        ("topaz-monk", 1047, 35),
+        ("beer-elemental", 1228, 35),
+        ("booze-hound", 1341, 35),
+        ("pattern-ghost", 553, 36),
+        ("young-gold-dragon", 559, 36),
+        ("mature-bronze-dragon", 562, 36),
+        ("mezzodaemon", 568, 36),
+        ("ebony-monk", 870, 36),
+        ("botei-building-the-emperor", 963, 36),
+        ("demonologist", 1008, 36),
+        ("chaos-butterfly", 578, 37),
+        ("time-ghost", 579, 37),
+        ("will-o-the-wisp", 582, 37),
+        ("shan", 583, 37),
+        ("nexus-vortex", 587, 37),
+        ("mature-gold-dragon", 590, 37),
+        ("crystal-drake", 591, 37),
+        ("sky-whale", 594, 38),
+        ("time-vortex", 599, 38),
+        ("emperor-wight", 604, 38),
+        ("scylla", 610, 39),
+        ("7-headed-hydra", 614, 39),
+        ("clubber-demon", 648, 40),
+        ("eol-the-dark-elven-smith", 976, 40),
+        ("vrock", 1158, 40),
+    ] {
+        let actor_id = format!("demo.actor.{id}");
+        let actor = artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == actor_id)
+            .unwrap_or_else(|| panic!("{actor_id} should be imported"));
+        assert_eq!(actor.level, level, "{actor_id} level");
+        assert_eq!(
+            actor
+                .allocation
+                .as_ref()
+                .map(|allocation| allocation.legacy_index),
+            Some(legacy_index),
+            "{actor_id} source index"
+        );
+        let casting = actor
+            .monster_casting
+            .as_ref()
+            .unwrap_or_else(|| panic!("{actor_id} should retain monster casting"));
+        assert!(!casting.abilities.is_empty(), "{actor_id} ability set");
+        assert!(
+            casting
+                .abilities
+                .iter()
+                .all(|candidate| ability_ids.contains(candidate.ability_id.as_str())),
+            "{actor_id} should only reference existing abilities"
         );
     }
 }

@@ -1,0 +1,112 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 579,
+    "maxDepth": 999,
+    "randomMovementPercent": 50,
+    "rarity": 5
+  },
+  "attack": 9,
+  "damageDice": 3,
+  "damageSides": 4,
+  "damageType": "time",
+  "deathDrop": {
+    "chanceRolls": [
+      {
+        "guaranteedForUnique": true,
+        "percent": 90
+      }
+    ],
+    "itemTableId": "demo.loot-table.warrens",
+    "kind": "items-and-gold"
+  },
+  "defense": 7,
+  "descriptionKey": "actor-demo-time-ghost-description",
+  "experienceValue": 1210,
+  "formatVersion": 1,
+  "glyph": "G",
+  "hitPointDice": {
+    "dice": 30,
+    "sides": 15
+  },
+  "id": "demo.actor.time-ghost",
+  "level": 37,
+  "maxHp": 240,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 3,
+            "damageSides": 4,
+            "damageType": "time",
+            "type": "damage"
+          },
+          {
+            "chancePercent": 50,
+            "type": "slow"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 3,
+            "damageSides": 4,
+            "damageType": "time",
+            "type": "damage"
+          },
+          {
+            "chancePercent": 50,
+            "type": "slow"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.slow",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-time-33-150-r2",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 5
+  },
+  "movement": {
+    "modes": [
+      "fly",
+      "pass-wall"
+    ]
+  },
+  "nameKey": "actor-demo-time-ghost-name",
+  "resistances": {
+    "electricity": "resistant",
+    "fire": "resistant",
+    "poison": "resistant",
+    "time": "resistant"
+  },
+  "role": "monster",
+  "speed": 125,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "cold-blooded",
+    "kin-glyph-71",
+    "legacy-import",
+    "orc-cave",
+    "undead"
+  ]
+}

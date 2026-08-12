@@ -1,0 +1,143 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 976,
+    "maxDepth": 999,
+    "rarity": 3
+  },
+  "attack": 10,
+  "damageDice": 1,
+  "damageSides": 1,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 3,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.warrens",
+    "kind": "items",
+    "minimumQuality": "fine"
+  },
+  "defense": 11,
+  "descriptionKey": "actor-demo-eol-the-dark-elven-smith-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 8000,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "h",
+  "hitPointDice": {
+    "dice": 22,
+    "forceMaximum": true,
+    "sides": 100
+  },
+  "id": "demo.actor.eol-the-dark-elven-smith",
+  "level": 40,
+  "maxHp": 2200,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "type": "paralysis"
+          }
+        ],
+        "methodId": "rfb.blow.gaze",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 5,
+            "damageSides": 12,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 5,
+            "damageSides": 12,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 5,
+            "damageSides": 12,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.paralyze",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.scare",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.darkness",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.blind",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 33,
+    "smart": true
+  },
+  "movesWeakerBodies": true,
+  "nameKey": "actor-demo-eol-the-dark-elven-smith-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "acid": "resistant",
+    "cold": "resistant",
+    "dark": "resistant",
+    "fire": "resistant",
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 120,
+  "statusImmunities": [
+    "rfb.status.confusion"
+  ],
+  "tags": [
+    "evil",
+    "kin-glyph-104",
+    "legacy-import",
+    "orc-cave",
+    "unique"
+  ]
+}

@@ -1,0 +1,156 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 594,
+    "maxDepth": 70,
+    "rarity": 6
+  },
+  "attack": 9,
+  "damageDice": 20,
+  "damageSides": 2,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [
+      {
+        "percent": 60
+      },
+      {
+        "guaranteedForUnique": true,
+        "percent": 90
+      }
+    ],
+    "countDice": [
+      {
+        "dice": 2,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.warrens",
+    "kind": "items-and-gold"
+  },
+  "defense": 7,
+  "descriptionKey": "actor-demo-sky-whale-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 1750,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "l",
+  "hitPointDice": {
+    "dice": 80,
+    "forceMaximum": true,
+    "sides": 10
+  },
+  "id": "demo.actor.sky-whale",
+  "level": 38,
+  "maxHp": 800,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 20,
+            "damageSides": 2,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.crush",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 20,
+            "damageSides": 2,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.crush",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 20,
+            "damageSides": 2,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.crush",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.brain-smash-12d12",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.confuse",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.scare",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.amnesia",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.drag",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.banish",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.shriek",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 11,
+    "smart": true
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "nameKey": "actor-demo-sky-whale-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "disenchant": "resistant",
+    "nexus": "resistant",
+    "water": "resistant"
+  },
+  "rideable": true,
+  "role": "monster",
+  "speed": 110,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "good",
+    "kin-glyph-108",
+    "legacy-import",
+    "orc-cave",
+    "resist-teleport"
+  ]
+}
