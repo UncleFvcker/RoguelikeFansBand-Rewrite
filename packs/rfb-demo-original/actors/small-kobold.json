@@ -22,7 +22,7 @@
   "deathDrop": {
     "kind": "items-and-gold",
     "itemTableId": "demo.loot-table.base-items",
-    "themeTableId": "demo.loot-table.small-kobold",
+    "themeTableId": "demo.loot-table.warrior",
     "themeChancePercent": 50,
     "chanceRolls": [{ "percent": 60 }]
   },

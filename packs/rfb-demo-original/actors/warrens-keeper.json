@@ -30,7 +30,7 @@
   "deathDrop": {
     "kind": "items",
     "itemTableId": "demo.loot-table.base-items",
-    "themeTableId": "demo.loot-table.warrens-keeper",
+    "themeTableId": "demo.loot-table.warrior",
     "themeChancePercent": 50,
     "countDice": [{ "dice": 1, "sides": 2 }],
     "minimumQuality": "fine"

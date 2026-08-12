@@ -42,7 +42,7 @@ const R_NAME_ZH_SOURCE: &str = "src/monster_name_zh.inc";
 const LEGACY_DROP_TABLE_ID: &str = "rfb-legacy.loot-table.monster-drops";
 const LEGACY_WARRIOR_DROP_TABLE_ID: &str = "rfb-legacy.loot-table.monster-drops-warrior";
 const DEMO_DROP_TABLE_ID: &str = "demo.loot-table.base-items";
-const DEMO_WARRIOR_DROP_TABLE_ID: &str = "demo.loot-table.large-kobold";
+const DEMO_WARRIOR_DROP_TABLE_ID: &str = "demo.loot-table.warrior";
 const DEMO_ARCHER_DROP_TABLE_ID: &str = "demo.loot-table.archer";
 const DEMO_MAGE_DROP_TABLE_ID: &str = "demo.loot-table.mage";
 const DEMO_PRIEST_DROP_TABLE_ID: &str = "demo.loot-table.priest";
@@ -8340,7 +8340,7 @@ fn demo_monster_json(
             });
         }
         if entry.index == 1185 {
-            death_drop["themeTableId"] = serde_json::json!("demo.loot-table.orc-cave-warrior");
+            death_drop["themeTableId"] = serde_json::json!(DEMO_WARRIOR_DROP_TABLE_ID);
             death_drop["themeChancePercent"] = serde_json::json!(50);
         } else if let Some(theme_table_id) = entry
             .drop_theme
@@ -9508,7 +9508,7 @@ fn convert_content_from(
     };
     let loot_entries = loot_entries_for(|_| true);
     let warrior_loot_entries = loot_entries_for(|entry| {
-        matches!(entry.tval, 17 | 18 | 30..=34 | 36..=38)
+        matches!(entry.tval, 22 | 30 | 31 | 32 | 34 | 37 | 38 | 40 | 45)
             || (entry.tval == 23 && (11..32).contains(&entry.sval))
             || (entry.tval == 75 && matches!(entry.sval, 32 | 33))
     });
@@ -14007,6 +14007,91 @@ W:1:0:0:4:5
             entries
                 .iter()
                 .all(|entry| { entry["itemKindId"] != "rfb-legacy.item.unallocated-potion" })
+        );
+        let warrior_entries = outcome
+            .loot_table_files
+            .iter()
+            .find(|(name, _)| name == "monster-drops-warrior.json")
+            .and_then(|(_, table)| table["entries"].as_array())
+            .expect("legacy Warrior loot table should import");
+        assert_eq!(warrior_entries.len(), 3);
+        assert!(
+            warrior_entries
+                .iter()
+                .all(|entry| entry["itemKindId"] == "rfb-legacy.item.allocated-sword")
+        );
+    }
+
+    #[test]
+    fn legacy_warrior_theme_uses_the_original_kind_predicate() {
+        const SYNTHETIC_K_INFO: &str = "N:1:Arrow
+G:|:w
+I:17:1:0
+W:1:0:0:1:1
+A:1/1
+N:2:Soft Armor
+G:[:w
+I:36:1:0
+W:1:0:0:1:1
+A:1/1
+N:3:Ring
+G:=:w
+I:45:0:0
+W:1:0:0:1:1
+A:1/1
+N:4:Amulet
+G:\":w
+I:40:0:0
+W:1:0:0:1:1
+A:1/1
+N:5:Polearm
+G:/:w
+I:22:1:0
+W:1:0:0:1:1
+A:1/1
+N:6:Short Sword
+G:|:w
+I:23:10:0
+W:1:0:0:1:1
+A:1/1
+N:7:Sabre
+G:|:w
+I:23:11:0
+W:1:0:0:1:1
+A:1/1
+N:8:Heroism
+G:!:w
+I:75:32:0
+W:1:0:0:1:1
+A:1/1
+";
+        let items = parse_k_info(SYNTHETIC_K_INFO).expect("theme kinds should parse");
+        let outcome = convert_content(
+            &[],
+            &[],
+            &items,
+            &[],
+            &[],
+            &LegacyCharacterSources::default(),
+        );
+        let item_ids = outcome
+            .loot_table_files
+            .iter()
+            .find(|(name, _)| name == "monster-drops-warrior.json")
+            .and_then(|(_, table)| table["entries"].as_array())
+            .expect("legacy Warrior loot table should import")
+            .iter()
+            .map(|entry| entry["itemKindId"].as_str().expect("item ID"))
+            .collect::<BTreeSet<_>>();
+        assert_eq!(
+            item_ids,
+            BTreeSet::from([
+                "rfb-legacy.item.amulet",
+                "rfb-legacy.item.heroism",
+                "rfb-legacy.item.polearm",
+                "rfb-legacy.item.ring",
+                "rfb-legacy.item.sabre",
+            ])
         );
     }
 

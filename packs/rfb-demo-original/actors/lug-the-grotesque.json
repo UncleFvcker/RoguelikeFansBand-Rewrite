@@ -25,7 +25,7 @@
     "kind": "items",
     "minimumQuality": "fine",
     "themeChancePercent": 50,
-    "themeTableId": "demo.loot-table.large-kobold"
+    "themeTableId": "demo.loot-table.warrior"
   },
   "defense": 2,
   "descriptionKey": "actor-demo-lug-the-grotesque-description",

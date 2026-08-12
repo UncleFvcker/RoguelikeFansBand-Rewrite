@@ -20,7 +20,7 @@
     "itemTableId": "demo.loot-table.base-items",
     "kind": "items",
     "themeChancePercent": 50,
-    "themeTableId": "demo.loot-table.large-kobold"
+    "themeTableId": "demo.loot-table.warrior"
   },
   "defense": 6,
   "descriptionKey": "actor-demo-cloud-giant-description",

@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/loot-table.schema.json",
   "formatVersion": 1,
-  "id": "demo.loot-table.paladin",
+  "id": "demo.loot-table.warrior",
   "rolls": 1,
   "entries": [
     { "itemKindId": "demo.item.augmented-chain-mail", "weight": 100, "quantity": 1, "minDepth": 30 },
@@ -11,8 +11,6 @@
     { "itemKindId": "demo.item.broad-sword", "weight": 100, "quantity": 1, "minDepth": 10 },
     { "itemKindId": "demo.item.chain-mail", "weight": 100, "quantity": 1, "minDepth": 25 },
     { "itemKindId": "demo.item.claymore", "weight": 50, "quantity": 1, "minDepth": 40 },
-    { "itemKindId": "demo.item.cure-critical-wounds-potion", "weight": 50, "quantity": 1, "minDepth": 20, "maxDepth": 60 },
-    { "itemKindId": "demo.item.cure-serious-wounds-potion", "weight": 100, "quantity": 1, "minDepth": 10, "maxDepth": 30 },
     { "itemKindId": "demo.item.cutlass", "weight": 100, "quantity": 1, "minDepth": 5 },
     { "itemKindId": "demo.item.espadon", "weight": 33, "quantity": 1, "minDepth": 40 },
     { "itemKindId": "demo.item.executioners-sword", "weight": 100, "quantity": 1, "minDepth": 40 },
@@ -22,10 +20,6 @@
     { "itemKindId": "demo.item.halberd", "weight": 100, "quantity": 1, "minDepth": 25 },
     { "itemKindId": "demo.item.hard-leather-cap", "weight": 100, "quantity": 1, "minDepth": 3 },
     { "itemKindId": "demo.item.hatchet", "weight": 50, "quantity": 1, "minDepth": 10 },
-    { "itemKindId": "demo.item.healing-potion", "weight": 100, "quantity": 1, "minDepth": 31 },
-    { "itemKindId": "demo.item.healing-potion", "weight": 100, "quantity": 1, "minDepth": 60 },
-    { "itemKindId": "demo.item.healing-potion", "weight": 100, "quantity": 1, "minDepth": 80 },
-    { "itemKindId": "demo.item.holy-prayer-scroll", "weight": 100, "quantity": 1, "minDepth": 25 },
     { "itemKindId": "demo.item.iron-helm", "weight": 100, "quantity": 1, "minDepth": 20 },
     { "itemKindId": "demo.item.jingasa", "weight": 50, "quantity": 1, "minDepth": 16 },
     { "itemKindId": "demo.item.katana", "weight": 100, "quantity": 1, "minDepth": 20 },
@@ -34,7 +28,6 @@
     { "itemKindId": "demo.item.large-leather-shield", "weight": 100, "quantity": 1, "minDepth": 15 },
     { "itemKindId": "demo.item.large-metal-shield", "weight": 100, "quantity": 1, "minDepth": 30 },
     { "itemKindId": "demo.item.leather-gloves", "weight": 100, "quantity": 1, "minDepth": 1 },
-    { "itemKindId": "demo.item.light-healing-potion", "weight": 100, "quantity": 1, "minDepth": 0, "maxDepth": 20 },
     { "itemKindId": "demo.item.long-sword", "weight": 100, "quantity": 1, "minDepth": 10 },
     { "itemKindId": "demo.item.lucerne-hammer", "weight": 100, "quantity": 1, "minDepth": 10 },
     { "itemKindId": "demo.item.metal-cap", "weight": 100, "quantity": 1, "minDepth": 10 },
@@ -44,8 +37,6 @@
     { "itemKindId": "demo.item.pair-of-metal-shod-boots", "weight": 100, "quantity": 1, "minDepth": 20 },
     { "itemKindId": "demo.item.pointy-hat", "weight": 20, "quantity": 1, "minDepth": 10 },
     { "itemKindId": "demo.item.pointy-hat", "weight": 33, "quantity": 1, "minDepth": 40 },
-    { "itemKindId": "demo.item.protection-from-evil-scroll", "weight": 100, "quantity": 1, "minDepth": 30 },
-    { "itemKindId": "demo.item.reprisal-scroll", "weight": 12, "quantity": 1, "minDepth": 80 },
     { "itemKindId": "demo.item.ring", "weight": 100, "quantity": 1, "minDepth": 10 },
     { "itemKindId": "demo.item.sabre", "weight": 100, "quantity": 1, "minDepth": 5 },
     { "itemKindId": "demo.item.scimitar", "weight": 100, "quantity": 1, "minDepth": 10 },
@@ -57,14 +48,9 @@
     { "itemKindId": "demo.item.small-metal-shield", "weight": 100, "quantity": 1, "minDepth": 10 },
     { "itemKindId": "demo.item.soft-leather-boots", "weight": 100, "quantity": 1, "minDepth": 3 },
     { "itemKindId": "demo.item.spear", "weight": 100, "quantity": 1, "minDepth": 5 },
-    { "itemKindId": "demo.item.star-healing-potion", "weight": 12, "quantity": 1, "minDepth": 40 },
-    { "itemKindId": "demo.item.star-healing-potion", "weight": 25, "quantity": 1, "minDepth": 60 },
-    { "itemKindId": "demo.item.star-healing-potion", "weight": 50, "quantity": 1, "minDepth": 80 },
     { "itemKindId": "demo.item.tulwar", "weight": 100, "quantity": 1, "minDepth": 5 },
     { "itemKindId": "demo.item.two-handed-sword", "weight": 100, "quantity": 1, "minDepth": 30 },
     { "itemKindId": "demo.item.valor-tonic", "weight": 100, "quantity": 1, "minDepth": 1 },
-    { "itemKindId": "demo.item.vitalis-elixir", "weight": 12, "quantity": 1, "minDepth": 60 },
-    { "itemKindId": "demo.item.vitalis-elixir", "weight": 25, "quantity": 1, "minDepth": 100 },
     { "itemKindId": "demo.item.wakizashi", "weight": 33, "quantity": 1, "minDepth": 15 },
     { "itemKindId": "demo.item.zweihander", "weight": 33, "quantity": 1, "minDepth": 40 }
   ],
@@ -73,5 +59,8 @@
     "goodCapPercent": 75,
     "greatCapPercent": 20
   },
-  "affixWeights": [{ "weight": 1 }]
+  "affixWeights": [
+    { "weight": 9 },
+    { "affixId": "rfb-legacy.affix.slaying", "weight": 1 }
+  ]
 }

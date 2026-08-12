@@ -22,7 +22,7 @@
     "kind": "items",
     "minimumQuality": "fine",
     "themeChancePercent": 50,
-    "themeTableId": "demo.loot-table.large-kobold"
+    "themeTableId": "demo.loot-table.warrior"
   },
   "defense": 10,
   "descriptionKey": "actor-demo-grendel-description",

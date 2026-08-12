@@ -10,8 +10,8 @@ fn loot_table_validation_uses_a_current_static_table() {
     invalid
         .loot_tables
         .iter_mut()
-        .find(|table| table.id == "demo.loot-table.small-kobold")
-        .expect("small kobold loot table should exist")
+        .find(|table| table.id == "demo.loot-table.warrens-final-reward")
+        .expect("static loot table should exist")
         .entries
         .iter_mut()
         .for_each(|entry| entry.weight = 0);
@@ -24,8 +24,8 @@ fn loot_table_validation_uses_a_current_static_table() {
     invalid
         .loot_tables
         .iter_mut()
-        .find(|table| table.id == "demo.loot-table.small-kobold")
-        .expect("small kobold loot table should exist")
+        .find(|table| table.id == "demo.loot-table.warrens-final-reward")
+        .expect("static loot table should exist")
         .roll_chance_percent = Some(0);
     assert!(matches!(
         validate_and_normalize(&mut invalid),
@@ -36,8 +36,8 @@ fn loot_table_validation_uses_a_current_static_table() {
     let entry = &mut invalid
         .loot_tables
         .iter_mut()
-        .find(|table| table.id == "demo.loot-table.small-kobold")
-        .expect("small kobold loot table should exist")
+        .find(|table| table.id == "demo.loot-table.warrens-final-reward")
+        .expect("static loot table should exist")
         .entries[0];
     entry.min_depth = 2;
     entry.max_depth = 1;
@@ -54,8 +54,8 @@ fn loot_table_validation_allows_distinct_allocations_for_one_item() {
     let table = valid
         .loot_tables
         .iter_mut()
-        .find(|table| table.id == "demo.loot-table.small-kobold")
-        .expect("small kobold loot table should exist");
+        .find(|table| table.id == "demo.loot-table.warrens-final-reward")
+        .expect("static loot table should exist");
     let mut second_allocation = table.entries[0].clone();
     second_allocation.min_depth = second_allocation.min_depth.saturating_add(1);
     second_allocation.weight = 0;
@@ -66,8 +66,8 @@ fn loot_table_validation_allows_distinct_allocations_for_one_item() {
     let table = invalid
         .loot_tables
         .iter_mut()
-        .find(|table| table.id == "demo.loot-table.small-kobold")
-        .expect("small kobold loot table should exist");
+        .find(|table| table.id == "demo.loot-table.warrens-final-reward")
+        .expect("static loot table should exist");
     table.entries.push(table.entries[0].clone());
     assert!(matches!(
         validate_and_normalize(&mut invalid),
@@ -78,8 +78,8 @@ fn loot_table_validation_allows_distinct_allocations_for_one_item() {
     let table = valid
         .loot_tables
         .iter_mut()
-        .find(|table| table.id == "demo.loot-table.small-kobold")
-        .expect("small kobold loot table should exist");
+        .find(|table| table.id == "demo.loot-table.warrens-final-reward")
+        .expect("static loot table should exist");
     let mut allocation = table.entries[0].clone();
     allocation.max_depth = u16::MAX;
     table.entries = (0..512)
@@ -94,14 +94,14 @@ fn loot_table_validation_allows_distinct_allocations_for_one_item() {
     let table = invalid
         .loot_tables
         .iter_mut()
-        .find(|table| table.id == "demo.loot-table.small-kobold")
-        .expect("small kobold loot table should exist");
+        .find(|table| table.id == "demo.loot-table.warrens-final-reward")
+        .expect("static loot table should exist");
     allocation.min_depth = 512;
     table.entries = valid
         .loot_tables
         .iter()
-        .find(|table| table.id == "demo.loot-table.small-kobold")
-        .expect("normalized small kobold loot table should exist")
+        .find(|table| table.id == "demo.loot-table.warrens-final-reward")
+        .expect("normalized static loot table should exist")
         .entries
         .clone();
     table.entries.push(allocation);
@@ -123,8 +123,8 @@ fn loot_table_validation_accepts_exactly_one_quality_source() {
     let table = valid
         .loot_tables
         .iter_mut()
-        .find(|table| table.id == "demo.loot-table.small-kobold")
-        .expect("small kobold loot table should exist");
+        .find(|table| table.id == "demo.loot-table.warrens-final-reward")
+        .expect("static loot table should exist");
     table.quality_weights.clear();
     table.quality_policy = Some(policy);
     validate_and_normalize(&mut valid).expect("RFB depth policy should replace static weights");
@@ -133,8 +133,8 @@ fn loot_table_validation_accepts_exactly_one_quality_source() {
     invalid
         .loot_tables
         .iter_mut()
-        .find(|table| table.id == "demo.loot-table.small-kobold")
-        .expect("small kobold loot table should exist")
+        .find(|table| table.id == "demo.loot-table.warrens-final-reward")
+        .expect("static loot table should exist")
         .quality_policy = Some(policy);
     assert!(matches!(
         validate_and_normalize(&mut invalid),
@@ -145,8 +145,8 @@ fn loot_table_validation_accepts_exactly_one_quality_source() {
     invalid
         .loot_tables
         .iter_mut()
-        .find(|table| table.id == "demo.loot-table.small-kobold")
-        .expect("small kobold loot table should exist")
+        .find(|table| table.id == "demo.loot-table.warrens-final-reward")
+        .expect("static loot table should exist")
         .quality_weights
         .clear();
     assert!(matches!(
@@ -158,8 +158,8 @@ fn loot_table_validation_accepts_exactly_one_quality_source() {
     let table = invalid
         .loot_tables
         .iter_mut()
-        .find(|table| table.id == "demo.loot-table.small-kobold")
-        .expect("small kobold loot table should exist");
+        .find(|table| table.id == "demo.loot-table.warrens-final-reward")
+        .expect("static loot table should exist");
     table.quality_weights.clear();
     table.quality_policy = Some(LootQualityPolicyDefinition::RfbDepth {
         good_cap_percent: 101,
@@ -1266,7 +1266,7 @@ fn level_thirteen_monsters_reuse_existing_mechanics_and_parameterized_abilities(
             .death_drop
             .as_ref()
             .and_then(|drop| drop.theme_table_id.as_deref()),
-        Some("demo.loot-table.large-kobold")
+        Some("demo.loot-table.warrior")
     );
 }
 
@@ -2197,7 +2197,7 @@ fn level_seventeen_p34_harvest_reuses_existing_mechanics_and_abilities() {
             .death_drop
             .as_ref()
             .and_then(|drop| drop.theme_table_id.as_deref()),
-        Some("demo.loot-table.large-kobold")
+        Some("demo.loot-table.warrior")
     );
 }
 
@@ -2389,9 +2389,8 @@ fn level_seventeen_p35_casters_reuse_parameterized_abilities_and_dwarf_drops() {
             .map(|entry| entry.item_kind_id.as_str())
             .collect::<BTreeSet<_>>(),
         [
-            "demo.item.pick",
-            "demo.item.sealed-amulet",
-            "demo.item.shovel",
+            "demo.item.iron-helm",
+            "demo.item.pair-of-metal-shod-boots",
             "demo.item.small-metal-shield",
         ]
         .into_iter()
@@ -4205,7 +4204,98 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
 }
 
 #[test]
-fn base_pool_and_orc_warrior_theme_use_source_depths() {
+fn formal_drop_themes_use_source_allocations_and_rfb_depth_quality() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let policy = Some(LootQualityPolicyDefinition::RfbDepth {
+        good_cap_percent: 75,
+        great_cap_percent: 20,
+    });
+
+    for (table_id, expected_entries) in [
+        ("demo.loot-table.warrior", 49),
+        ("demo.loot-table.archer", 13),
+        ("demo.loot-table.mage", 53),
+        ("demo.loot-table.priest", 31),
+        ("demo.loot-table.evil-priest", 9),
+        ("demo.loot-table.paladin", 63),
+        ("demo.loot-table.dwarf", 3),
+        ("demo.loot-table.ninja", 3),
+    ] {
+        let table = artifact
+            .content
+            .loot_tables
+            .iter()
+            .find(|table| table.id == table_id)
+            .unwrap_or_else(|| panic!("{table_id} should exist"));
+        assert_eq!(table.entries.len(), expected_entries, "{table_id}");
+        assert_eq!(table.quality_policy, policy, "{table_id}");
+        assert!(table.quality_weights.is_empty(), "{table_id}");
+        assert!(
+            table
+                .entries
+                .iter()
+                .all(|entry| !matches!(entry.max_depth, 9 | 32)),
+            "{table_id} should not retain a dungeon depth cap"
+        );
+    }
+
+    let retired = [
+        "demo.loot-table.large-kobold",
+        "demo.loot-table.small-kobold",
+        "demo.loot-table.kobold",
+        "demo.loot-table.warrens-keeper",
+        "demo.loot-table.orc-cave-warrior",
+    ];
+    assert!(
+        artifact
+            .content
+            .loot_tables
+            .iter()
+            .all(|table| !retired.contains(&table.id.as_str()))
+    );
+    let warrior_drops = artifact
+        .content
+        .actors
+        .iter()
+        .filter_map(|actor| {
+            actor
+                .death_drop
+                .as_ref()
+                .filter(|drop| drop.theme_table_id.as_deref() == Some("demo.loot-table.warrior"))
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(warrior_drops.len(), 58);
+    assert!(
+        warrior_drops
+            .iter()
+            .all(|drop| drop.theme_chance_percent == 50)
+    );
+
+    let warrior = artifact
+        .content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.warrior")
+        .expect("Warrior drop table should exist");
+    assert!(warrior.entries.iter().any(|entry| {
+        entry.item_kind_id == "demo.item.bastard-sword"
+            && entry.weight == 100
+            && entry.min_depth == 15
+            && entry.max_depth == u16::MAX
+    }));
+    assert_eq!(
+        warrior
+            .entries
+            .iter()
+            .filter(|entry| entry.item_kind_id == "demo.item.pointy-hat")
+            .map(|entry| (entry.min_depth, entry.weight))
+            .collect::<Vec<_>>(),
+        vec![(10, 20), (40, 33)]
+    );
+}
+
+#[test]
+fn base_pool_and_global_warrior_theme_use_source_depths() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let normal = artifact
         .content
@@ -4217,8 +4307,8 @@ fn base_pool_and_orc_warrior_theme_use_source_depths() {
         .content
         .loot_tables
         .iter()
-        .find(|table| table.id == "demo.loot-table.orc-cave-warrior")
-        .expect("Orc Cave Warrior loot should exist");
+        .find(|table| table.id == "demo.loot-table.warrior")
+        .expect("Warrior loot should exist");
 
     for (item_id, min_depth, warrior_item) in [
         ("demo.item.leather-scale-mail", 15, false),
@@ -4245,7 +4335,7 @@ fn base_pool_and_orc_warrior_theme_use_source_depths() {
             .find(|entry| entry.item_kind_id == item_id);
         assert_eq!(warrior_entry.is_some(), warrior_item, "{item_id}");
         if let Some(entry) = warrior_entry {
-            assert_eq!((entry.min_depth, entry.max_depth), (min_depth, 32));
+            assert_eq!((entry.min_depth, entry.max_depth), (min_depth, u16::MAX));
         }
     }
 }
@@ -4474,12 +4564,7 @@ fn p3_1_allocated_items_all_have_a_shop_or_base_pool_path() {
         .content
         .loot_tables
         .iter()
-        .filter(|table| {
-            matches!(
-                table.id.as_str(),
-                "demo.loot-table.base-items" | "demo.loot-table.kobold"
-            )
-        })
+        .filter(|table| matches!(table.id.as_str(), "demo.loot-table.base-items"))
         .flat_map(|table| {
             table
                 .entries
@@ -4493,12 +4578,6 @@ fn p3_1_allocated_items_all_have_a_shop_or_base_pool_path() {
         "demo.item.blindness-mushroom",
         "demo.item.paranoia-mushroom",
         "demo.item.confusion-mushroom",
-        "demo.item.hallucination-mushroom",
-        "demo.item.paralysis-mushroom",
-        "demo.item.weakness-mushroom",
-        "demo.item.sickness-mushroom",
-        "demo.item.stupidity-mushroom",
-        "demo.item.naivety-mushroom",
         "demo.item.unhealth-mushroom",
         "demo.item.disease-mushroom",
         "demo.item.cure-poison-mushroom",
@@ -4531,12 +4610,7 @@ fn p3_2_items_all_have_a_shop_or_warrens_acquisition_path() {
         .content
         .loot_tables
         .iter()
-        .filter(|table| {
-            matches!(
-                table.id.as_str(),
-                "demo.loot-table.base-items" | "demo.loot-table.kobold"
-            )
-        })
+        .filter(|table| matches!(table.id.as_str(), "demo.loot-table.base-items"))
         .flat_map(|table| {
             table
                 .entries
@@ -4549,8 +4623,6 @@ fn p3_2_items_all_have_a_shop_or_warrens_acquisition_path() {
         "demo.item.water-potion",
         "demo.item.apple-juice",
         "demo.item.slime-mold-juice",
-        "demo.item.lose-memories-potion",
-        "demo.item.ruination-potion",
         "demo.item.sight-potion",
         "demo.item.antidote-potion",
         "demo.item.curing-potion",
@@ -4650,48 +4722,37 @@ fn p3_5_items_all_have_a_shop_acquisition_path() {
 }
 
 #[test]
-fn p3_6_launchers_and_ammunition_all_have_an_acquisition_path() {
+fn archer_theme_uses_only_implemented_source_predicate_members() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
-    let shop_items = artifact
-        .content
-        .shops
-        .iter()
-        .flat_map(|shop| shop.stock.iter().map(|stock| stock.item_kind_id.as_str()));
-    let archer_ammunition = artifact
+    let archer_items = artifact
         .content
         .loot_tables
         .iter()
-        .filter(|table| table.id == "demo.loot-table.archer")
-        .flat_map(|table| {
-            table
-                .entries
-                .iter()
-                .map(|entry| entry.item_kind_id.as_str())
-        });
-    let available = shop_items.chain(archer_ammunition).collect::<BTreeSet<_>>();
+        .find(|table| table.id == "demo.loot-table.archer")
+        .expect("Archer drop table should exist")
+        .entries
+        .iter()
+        .map(|entry| entry.item_kind_id.as_str())
+        .collect::<BTreeSet<_>>();
 
-    for item_id in [
-        "demo.item.sling",
-        "demo.item.long-bow",
-        "demo.item.light-crossbow",
-        "demo.item.heavy-crossbow",
-        "demo.item.sheaf-arrow",
-        "demo.item.mithril-arrow",
-        "demo.item.seeker-arrow",
-        "demo.item.bolt",
-        "demo.item.steel-bolt",
-        "demo.item.mithril-bolt",
-        "demo.item.seeker-bolt",
-        "demo.item.adamantine-bolt",
-        "demo.item.rounded-pebble",
-        "demo.item.iron-shot",
-        "demo.item.mithril-shot",
-    ] {
-        assert!(
-            available.contains(item_id),
-            "{item_id} should be obtainable"
-        );
-    }
+    assert_eq!(
+        archer_items,
+        BTreeSet::from([
+            "demo.item.arrow",
+            "demo.item.dwarven-backpack",
+            "demo.item.fabric-bag",
+            "demo.item.heavy-crossbow",
+            "demo.item.leather-pouch",
+            "demo.item.light-crossbow",
+            "demo.item.long-bow",
+            "demo.item.mithril-arrow",
+            "demo.item.ring",
+            "demo.item.seeker-arrow",
+            "demo.item.sheaf-arrow",
+            "demo.item.short-bow",
+            "demo.item.sling",
+        ])
+    );
 }
 
 #[test]

@@ -26,7 +26,7 @@
     "kind": "items",
     "minimumQuality": "fine",
     "themeChancePercent": 50,
-    "themeTableId": "demo.loot-table.large-kobold"
+    "themeTableId": "demo.loot-table.warrior"
   },
   "defense": 8,
   "descriptionKey": "actor-demo-angamaite-of-umbar-description",

@@ -4,16 +4,24 @@
   "id": "demo.loot-table.archer",
   "rolls": 1,
   "entries": [
-    { "itemKindId": "demo.item.arrow", "weight": 1, "quantity": 5, "minDepth": 0, "maxDepth": 9 },
-    { "itemKindId": "demo.item.sheaf-arrow", "weight": 1, "quantity": 5, "minDepth": 5, "maxDepth": 9 },
-    { "itemKindId": "demo.item.mithril-arrow", "weight": 1, "quantity": 5, "minDepth": 7, "maxDepth": 9 },
-    { "itemKindId": "demo.item.seeker-arrow", "weight": 1, "quantity": 5, "minDepth": 9, "maxDepth": 9 },
-    { "itemKindId": "demo.item.steel-bolt", "weight": 1, "quantity": 5, "minDepth": 5, "maxDepth": 9 },
-    { "itemKindId": "demo.item.mithril-bolt", "weight": 1, "quantity": 5, "minDepth": 7, "maxDepth": 9 },
-    { "itemKindId": "demo.item.seeker-bolt", "weight": 1, "quantity": 5, "minDepth": 9, "maxDepth": 9 },
-    { "itemKindId": "demo.item.adamantine-bolt", "weight": 1, "quantity": 5, "minDepth": 9, "maxDepth": 9 },
-    { "itemKindId": "demo.item.mithril-shot", "weight": 1, "quantity": 5, "minDepth": 7, "maxDepth": 9 }
+    { "itemKindId": "demo.item.arrow", "weight": 100, "quantity": 1, "minDepth": 3, "maxDepth": 60 },
+    { "itemKindId": "demo.item.dwarven-backpack", "weight": 25, "quantity": 1, "minDepth": 70 },
+    { "itemKindId": "demo.item.fabric-bag", "weight": 33, "quantity": 1, "minDepth": 20, "maxDepth": 40 },
+    { "itemKindId": "demo.item.heavy-crossbow", "weight": 50, "quantity": 1, "minDepth": 40 },
+    { "itemKindId": "demo.item.leather-pouch", "weight": 33, "quantity": 1, "minDepth": 50, "maxDepth": 50 },
+    { "itemKindId": "demo.item.light-crossbow", "weight": 100, "quantity": 1, "minDepth": 25 },
+    { "itemKindId": "demo.item.long-bow", "weight": 50, "quantity": 1, "minDepth": 30 },
+    { "itemKindId": "demo.item.mithril-arrow", "weight": 50, "quantity": 1, "minDepth": 50 },
+    { "itemKindId": "demo.item.ring", "weight": 100, "quantity": 1, "minDepth": 10 },
+    { "itemKindId": "demo.item.seeker-arrow", "weight": 50, "quantity": 1, "minDepth": 70 },
+    { "itemKindId": "demo.item.sheaf-arrow", "weight": 50, "quantity": 1, "minDepth": 30, "maxDepth": 80 },
+    { "itemKindId": "demo.item.short-bow", "weight": 100, "quantity": 1, "minDepth": 10 },
+    { "itemKindId": "demo.item.sling", "weight": 100, "quantity": 1, "minDepth": 5 }
   ],
-  "qualityWeights": [{ "quality": "ordinary", "weight": 1 }],
+  "qualityPolicy": {
+    "kind": "rfb-depth",
+    "goodCapPercent": 75,
+    "greatCapPercent": 20
+  },
   "affixWeights": [{ "weight": 1 }]
 }

@@ -4,11 +4,14 @@
   "id": "demo.loot-table.dwarf",
   "rolls": 1,
   "entries": [
-    { "itemKindId": "demo.item.shovel", "weight": 1, "quantity": 1, "minDepth": 1, "maxDepth": 9 },
-    { "itemKindId": "demo.item.pick", "weight": 1, "quantity": 1, "minDepth": 5, "maxDepth": 9 },
-    { "itemKindId": "demo.item.small-metal-shield", "weight": 1, "quantity": 1, "minDepth": 1, "maxDepth": 9 },
-    { "itemKindId": "demo.item.sealed-amulet", "weight": 1, "quantity": 1, "minDepth": 1, "maxDepth": 9 }
+    { "itemKindId": "demo.item.iron-helm", "weight": 100, "quantity": 1, "minDepth": 20 },
+    { "itemKindId": "demo.item.pair-of-metal-shod-boots", "weight": 100, "quantity": 1, "minDepth": 20 },
+    { "itemKindId": "demo.item.small-metal-shield", "weight": 100, "quantity": 1, "minDepth": 10 }
   ],
-  "qualityWeights": [{ "quality": "ordinary", "weight": 1 }],
+  "qualityPolicy": {
+    "kind": "rfb-depth",
+    "goodCapPercent": 75,
+    "greatCapPercent": 20
+  },
   "affixWeights": [{ "weight": 1 }]
 }

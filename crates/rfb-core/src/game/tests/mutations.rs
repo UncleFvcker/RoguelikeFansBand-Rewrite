@@ -218,7 +218,7 @@ fn m4f_c_luck_bias_adjusts_quality_depth_and_attribute_thresholds() {
     assert_eq!(locked_luck.gain_random_mutation(&mut Vec::new()), None);
     let weights = game
         .content
-        .loot_table("demo.loot-table.small-kobold")
+        .loot_table("demo.loot-table.warrens-final-reward")
         .expect("static loot table should exist")
         .quality_weights
         .clone();
@@ -242,8 +242,8 @@ fn m4f_c_luck_bias_adjusts_quality_depth_and_attribute_thresholds() {
     assert_eq!(game.player_luck_bias().attribute_increase_threshold(16), 80);
     let weights = game
         .content
-        .loot_table("demo.loot-table.warrens-keeper")
-        .expect("Keeper loot table should exist")
+        .loot_table("demo.loot-table.warrens-final-reward")
+        .expect("static loot table should exist")
         .quality_weights
         .clone();
     let raw_weights = weights.iter().map(|entry| entry.weight).collect::<Vec<_>>();
@@ -262,10 +262,13 @@ fn rfb_depth_quality_uses_original_thresholds_and_one_draw() {
         good_cap_percent: 75,
         great_cap_percent: 20,
     };
-    assert_eq!(
-        rfb_depth_quality_percentages(policy, 15, false, LuckBias::Neutral),
-        (25, 16)
-    );
+    for (depth, expected) in [(1, (11, 7)), (9, (19, 12)), (15, (25, 16)), (32, (42, 20))] {
+        assert_eq!(
+            rfb_depth_quality_percentages(policy, depth, false, LuckBias::Neutral),
+            expected,
+            "depth {depth}"
+        );
+    }
     assert_eq!(
         rfb_depth_quality_percentages(policy, 15, true, LuckBias::Neutral),
         (55, 16)

@@ -4,11 +4,20 @@
   "id": "demo.loot-table.evil-priest",
   "rolls": 1,
   "entries": [
-    { "itemKindId": "demo.item.club", "weight": 1, "quantity": 1, "minDepth": 0, "maxDepth": 9 },
-    { "itemKindId": "demo.item.whip", "weight": 1, "quantity": 1, "minDepth": 3, "maxDepth": 9 },
-    { "itemKindId": "demo.item.mace", "weight": 1, "quantity": 1, "minDepth": 5, "maxDepth": 9 },
-    { "itemKindId": "demo.item.stench-of-death", "weight": 1, "quantity": 1, "minDepth": 5, "maxDepth": 9 }
+    { "itemKindId": "demo.item.club", "weight": 100, "quantity": 1, "minDepth": 0 },
+    { "itemKindId": "demo.item.glyph-severance-scroll", "weight": 25, "quantity": 1, "minDepth": 40 },
+    { "itemKindId": "demo.item.glyph-severance-scroll", "weight": 25, "quantity": 1, "minDepth": 80 },
+    { "itemKindId": "demo.item.mace", "weight": 100, "quantity": 1, "minDepth": 5 },
+    { "itemKindId": "demo.item.morning-star", "weight": 100, "quantity": 1, "minDepth": 10 },
+    { "itemKindId": "demo.item.quarterstaff", "weight": 100, "quantity": 1, "minDepth": 10 },
+    { "itemKindId": "demo.item.severance-scroll", "weight": 25, "quantity": 1, "minDepth": 50 },
+    { "itemKindId": "demo.item.severance-scroll", "weight": 25, "quantity": 1, "minDepth": 100 },
+    { "itemKindId": "demo.item.whip", "weight": 100, "quantity": 1, "minDepth": 3 }
   ],
-  "qualityWeights": [{ "quality": "ordinary", "weight": 1 }],
+  "qualityPolicy": {
+    "kind": "rfb-depth",
+    "goodCapPercent": 75,
+    "greatCapPercent": 20
+  },
   "affixWeights": [{ "weight": 1 }]
 }
