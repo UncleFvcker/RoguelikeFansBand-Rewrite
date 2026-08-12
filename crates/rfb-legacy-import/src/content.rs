@@ -671,6 +671,12 @@ pub struct LegacyMonsterEntry {
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct LegacyItemAllocation {
+    pub level: u16,
+    pub chance: u32,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct LegacyItemEntry {
     pub index: u32,
     pub name: String,
@@ -679,6 +685,8 @@ pub struct LegacyItemEntry {
     pub sval: u16,
     pub pval: i32,
     pub level: u16,
+    pub max_level: u16,
+    pub allocations: Vec<LegacyItemAllocation>,
     pub weight_tenths_pound: u16,
     pub base_value: u32,
     pub armor_class: i32,
@@ -1897,7 +1905,7 @@ pub fn parse_k_info(text: &str) -> Result<Vec<LegacyItemEntry>, LegacyImportErro
             });
             continue;
         }
-        let recognized = ["G:", "I:", "W:", "P:", "F:"]
+        let recognized = ["G:", "I:", "W:", "A:", "P:", "F:"]
             .iter()
             .any(|prefix| line.starts_with(prefix));
         let entry = match current.as_mut() {
@@ -1937,7 +1945,7 @@ pub fn parse_k_info(text: &str) -> Result<Vec<LegacyItemEntry>, LegacyImportErro
             )?;
             let _: i64 =
                 parse_number(K_INFO_SOURCE, line_number, "W.extra", parts.get(1).copied())?;
-            let _: i64 = parse_number(
+            entry.max_level = parse_number(
                 K_INFO_SOURCE,
                 line_number,
                 "W.maximumLevel",
@@ -1951,6 +1959,20 @@ pub fn parse_k_info(text: &str) -> Result<Vec<LegacyItemEntry>, LegacyImportErro
             )?;
             entry.base_value =
                 parse_number(K_INFO_SOURCE, line_number, "W.cost", parts.get(4).copied())?;
+        } else if let Some(rest) = line.strip_prefix("A:") {
+            for pair in rest.split(':') {
+                let (level, chance) = pair
+                    .split_once('/')
+                    .map_or((pair, None), |(level, chance)| (level, Some(chance)));
+                let level = parse_number(K_INFO_SOURCE, line_number, "A.level", Some(level))?;
+                let chance = chance.map_or(Ok(1), |chance| {
+                    parse_number::<u32>(K_INFO_SOURCE, line_number, "A.chance", Some(chance))
+                        .map(|chance| chance.max(1))
+                })?;
+                entry
+                    .allocations
+                    .push(LegacyItemAllocation { level, chance });
+            }
         } else if let Some(rest) = line.strip_prefix("P:") {
             let parts = parse_fields(K_INFO_SOURCE, line_number, "P", rest, 5)?;
             entry.armor_class = parse_number(
@@ -9459,39 +9481,37 @@ fn convert_content_from(
     ));
     report.items_imported += 1;
 
-    let loot_entries = items
-        .iter()
-        .filter(|entry| {
-            !entry.name.is_empty() && entry.name != "something" && entry.glyph.is_some()
-        })
-        .map(|entry| {
-            serde_json::json!({
-                "itemKindId": imported_item_ids[&entry.index],
-                "weight": 1,
-                "quantity": 1,
-                "minDepth": entry.level,
+    let loot_entries_for = |eligible: fn(&LegacyItemEntry) -> bool| {
+        items
+            .iter()
+            .filter(|entry| {
+                eligible(entry)
+                    && !entry.name.is_empty()
+                    && entry.name != "something"
+                    && entry.glyph.is_some()
             })
-        })
-        .collect::<Vec<_>>();
-    let warrior_loot_entries = items
-        .iter()
-        .filter(|entry| {
-            matches!(entry.tval, 17 | 18 | 30..=34 | 36..=38)
-                || (entry.tval == 23 && (11..32).contains(&entry.sval))
-                || (entry.tval == 75 && matches!(entry.sval, 32 | 33))
-        })
-        .filter(|entry| {
-            !entry.name.is_empty() && entry.name != "something" && entry.glyph.is_some()
-        })
-        .map(|entry| {
-            serde_json::json!({
-                "itemKindId": imported_item_ids[&entry.index],
-                "weight": 1,
-                "quantity": 1,
-                "minDepth": entry.level,
+            .flat_map(|entry| {
+                entry.allocations.iter().map(|allocation| {
+                    let mut value = serde_json::json!({
+                        "itemKindId": imported_item_ids[&entry.index],
+                        "weight": 100 / allocation.chance,
+                        "quantity": 1,
+                        "minDepth": allocation.level,
+                    });
+                    if entry.max_level > 0 {
+                        value["maxDepth"] = serde_json::json!(entry.max_level);
+                    }
+                    value
+                })
             })
-        })
-        .collect::<Vec<_>>();
+            .collect::<Vec<_>>()
+    };
+    let loot_entries = loot_entries_for(|_| true);
+    let warrior_loot_entries = loot_entries_for(|entry| {
+        matches!(entry.tval, 17 | 18 | 30..=34 | 36..=38)
+            || (entry.tval == 23 && (11..32).contains(&entry.sval))
+            || (entry.tval == 75 && matches!(entry.sval, 32 | 33))
+    });
     let loot_table = |id: &str, entries: Vec<serde_json::Value>| {
         serde_json::json!({
             "$schema": format!("{SCHEMA_BASE}/loot-table.schema.json"),
@@ -13910,6 +13930,84 @@ W:5:0:0:150:80
         assert_eq!(harp["equipmentSlot"], "launcher");
         assert!(harp.get("projectileProfile").is_none());
         assert_eq!(outcome.report.item_behavior_gaps["launcher-unpaired"], 1);
+    }
+
+    #[test]
+    fn k_info_allocations_drive_legacy_loot_entries() {
+        const SYNTHETIC_K_INFO: &str = "N:1:Allocated Sword
+G:|:w
+I:23:17:0
+W:42:0:60:100:200
+A:5/2:20/4:30/255
+N:2:Open Ended Potion
+G:!:b
+I:75:1:0
+W:7:0:0:4:10
+A:3/5
+N:3:Unallocated Potion
+G:!:r
+I:75:2:0
+W:1:0:0:4:5
+";
+        let items = parse_k_info(SYNTHETIC_K_INFO).expect("allocations should parse");
+        assert_eq!(items[0].level, 42);
+        assert_eq!(items[0].max_level, 60);
+        assert_eq!(
+            items[0].allocations,
+            vec![
+                LegacyItemAllocation {
+                    level: 5,
+                    chance: 2
+                },
+                LegacyItemAllocation {
+                    level: 20,
+                    chance: 4
+                },
+                LegacyItemAllocation {
+                    level: 30,
+                    chance: 255
+                },
+            ]
+        );
+        assert!(items[2].allocations.is_empty());
+
+        let outcome = convert_content(
+            &[],
+            &[],
+            &items,
+            &[],
+            &[],
+            &LegacyCharacterSources::default(),
+        );
+        let item = outcome
+            .item_files
+            .iter()
+            .find(|(name, _)| name == "allocated-sword.json")
+            .map(|(_, value)| value)
+            .expect("allocated item should import");
+        assert_eq!(item["generationLevel"], 42);
+
+        let entries = outcome
+            .loot_table_files
+            .iter()
+            .find(|(name, _)| name == "monster-drops.json")
+            .and_then(|(_, table)| table["entries"].as_array())
+            .expect("legacy loot table should import");
+        assert_eq!(entries.len(), 4);
+        assert_eq!(entries[0]["minDepth"], 5);
+        assert_eq!(entries[0]["weight"], 50);
+        assert_eq!(entries[0]["maxDepth"], 60);
+        assert_eq!(entries[1]["minDepth"], 20);
+        assert_eq!(entries[1]["weight"], 25);
+        assert_eq!(entries[2]["weight"], 0);
+        assert_eq!(entries[3]["minDepth"], 3);
+        assert_eq!(entries[3]["weight"], 20);
+        assert!(entries[3].get("maxDepth").is_none());
+        assert!(
+            entries
+                .iter()
+                .all(|entry| { entry["itemKindId"] != "rfb-legacy.item.unallocated-potion" })
+        );
     }
 
     #[test]

@@ -89,7 +89,7 @@ pub(super) fn validate_tables(
                 .roll_dice
                 .is_some_and(|dice| dice.dice == 0 || dice.sides == 0)
             || table.entries.is_empty()
-            || table.entries.len() > 128
+            || table.entries.len() > 512
             || table.quality_weights.len() > 3
             || has_quality_weights == table.quality_policy.is_some()
             || table.quality_policy.is_some_and(|policy| match policy {
@@ -108,13 +108,16 @@ pub(super) fn validate_tables(
             left.item_kind_id
                 .cmp(&right.item_kind_id)
                 .then(left.quantity.cmp(&right.quantity))
+                .then(left.min_depth.cmp(&right.min_depth))
+                .then(left.max_depth.cmp(&right.max_depth))
+                .then(left.weight.cmp(&right.weight))
         });
         table.quality_weights.sort_by_key(|entry| entry.quality);
         table
             .affix_weights
             .sort_by(|left, right| left.affix_id.as_deref().cmp(&right.affix_id.as_deref()));
 
-        let mut entry_ids = BTreeSet::new();
+        let mut entry_keys = BTreeSet::new();
         let mut quality_ids = BTreeSet::new();
         let mut affix_entries = BTreeSet::new();
         let mut entry_weight = 0_u64;
@@ -127,11 +130,18 @@ pub(super) fn validate_tables(
                     target: entry.item_kind_id.clone(),
                 });
             };
-            if entry.weight == 0
-                || entry.quantity == 0
+            // RFB's integer 100/chance conversion intentionally leaves its
+            // 1/255 allocations at zero; the table total must still be positive.
+            if entry.quantity == 0
                 || entry.quantity > *max_stack
                 || entry.min_depth > entry.max_depth
-                || !entry_ids.insert(entry.item_kind_id.as_str())
+                || !entry_keys.insert((
+                    entry.item_kind_id.as_str(),
+                    entry.weight,
+                    entry.quantity,
+                    entry.min_depth,
+                    entry.max_depth,
+                ))
             {
                 return Err(ContentError::InvalidLootTable(table.id.clone()));
             }

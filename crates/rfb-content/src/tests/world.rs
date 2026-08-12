@@ -12,8 +12,9 @@ fn loot_table_validation_uses_current_warrens_tables() {
         .iter_mut()
         .find(|table| table.id == "demo.loot-table.warrens")
         .expect("Warrens loot table should exist")
-        .entries[0]
-        .weight = 0;
+        .entries
+        .iter_mut()
+        .for_each(|entry| entry.weight = 0);
     assert!(matches!(
         validate_and_normalize(&mut invalid),
         Err(ContentError::InvalidLootTable(_))
@@ -40,6 +41,70 @@ fn loot_table_validation_uses_current_warrens_tables() {
         .entries[0];
     entry.min_depth = 2;
     entry.max_depth = 1;
+    assert!(matches!(
+        validate_and_normalize(&mut invalid),
+        Err(ContentError::InvalidLootTable(_))
+    ));
+}
+
+#[test]
+fn loot_table_validation_allows_distinct_allocations_for_one_item() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let mut valid = artifact.content.clone();
+    let table = valid
+        .loot_tables
+        .iter_mut()
+        .find(|table| table.id == "demo.loot-table.warrens")
+        .expect("Warrens loot table should exist");
+    let mut second_allocation = table.entries[0].clone();
+    second_allocation.min_depth = second_allocation.min_depth.saturating_add(1);
+    second_allocation.weight = 0;
+    table.entries.push(second_allocation);
+    validate_and_normalize(&mut valid).expect("distinct source allocations should be valid");
+
+    let mut invalid = artifact.content.clone();
+    let table = invalid
+        .loot_tables
+        .iter_mut()
+        .find(|table| table.id == "demo.loot-table.warrens")
+        .expect("Warrens loot table should exist");
+    table.entries.push(table.entries[0].clone());
+    assert!(matches!(
+        validate_and_normalize(&mut invalid),
+        Err(ContentError::InvalidLootTable(_))
+    ));
+
+    let mut valid = artifact.content.clone();
+    let table = valid
+        .loot_tables
+        .iter_mut()
+        .find(|table| table.id == "demo.loot-table.warrens")
+        .expect("Warrens loot table should exist");
+    let mut allocation = table.entries[0].clone();
+    allocation.max_depth = u16::MAX;
+    table.entries = (0..512)
+        .map(|min_depth| LootEntryDefinition {
+            min_depth,
+            ..allocation.clone()
+        })
+        .collect();
+    validate_and_normalize(&mut valid).expect("a full RFB allocation table should fit");
+
+    let mut invalid = artifact.content.clone();
+    let table = invalid
+        .loot_tables
+        .iter_mut()
+        .find(|table| table.id == "demo.loot-table.warrens")
+        .expect("Warrens loot table should exist");
+    allocation.min_depth = 512;
+    table.entries = valid
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.warrens")
+        .expect("normalized Warrens loot table should exist")
+        .entries
+        .clone();
+    table.entries.push(allocation);
     assert!(matches!(
         validate_and_normalize(&mut invalid),
         Err(ContentError::InvalidLootTable(_))
