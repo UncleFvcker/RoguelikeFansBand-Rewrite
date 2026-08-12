@@ -406,6 +406,27 @@ mod tests {
     }
 
     #[test]
+    fn old_castle_uses_authoritative_chinese_names() {
+        let localizer = Localizer::new(Locale::ZhCn).expect("resources should load");
+        for (key, expected) in [
+            ("task-demo-old-castle-name", "旧城堡 (前哨镇)"),
+            ("actor-demo-anti-paladin-name", "反圣武士"),
+            ("actor-demo-ancient-red-dragon-name", "上古红龙"),
+            ("actor-demo-dracolich-name", "龙巫妖"),
+            ("item-demo-crisdurian-name", "刽子手之剑『克里斯杜瑞安』"),
+            ("item-demo-slayer-name", "刽子手之剑『杀戮者』"),
+            ("item-demo-pain-name", "痛苦之大刀"),
+        ] {
+            assert_eq!(
+                localizer
+                    .format_exact(Locale::ZhCn, key, None)
+                    .expect("Old Castle name should format"),
+                expected
+            );
+        }
+    }
+
+    #[test]
     fn all_item_affix_and_artifact_names_have_exact_matching_messages() {
         let pack = Path::new(env!("CARGO_MANIFEST_DIR"))
             .parent()

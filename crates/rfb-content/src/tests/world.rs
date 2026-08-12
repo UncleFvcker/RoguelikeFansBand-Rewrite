@@ -4269,6 +4269,100 @@ fn vapor_quest_uses_the_original_map_formation_jewelry_and_detection_rod() {
 }
 
 #[test]
+fn old_castle_uses_the_original_map_fixed_formation_and_warrior_artifact_pool() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let world = artifact
+        .content
+        .worlds
+        .iter()
+        .find(|world| world.id == "demo.world.middle-earth")
+        .expect("fixture should contain Middle-earth");
+    let task = world
+        .tasks
+        .iter()
+        .find(|task| task.id == "demo.task.old-castle")
+        .expect("fixture should contain the Old Castle");
+    assert_eq!(
+        task.source_facility_id.as_deref(),
+        Some("demo.town-facility.outpost-white-horse")
+    );
+    assert_eq!(
+        task.prerequisite_task_id.as_deref(),
+        Some("demo.task.vapor-quest")
+    );
+    assert_eq!(task.objectives[0].kind, TaskObjectiveKind::ClearFloor);
+    assert_eq!(task.reward.entries[0].item_kind_id, "demo.item.crisdurian");
+    assert_eq!(task.reward.class_overrides.len(), 1);
+    assert_eq!(
+        task.reward.class_overrides[0]
+            .entries
+            .iter()
+            .map(|entry| (entry.item_kind_id.as_str(), entry.weight))
+            .collect::<BTreeMap<_, _>>(),
+        BTreeMap::from([("demo.item.pain", 4), ("demo.item.slayer", 1)])
+    );
+
+    let floor = world
+        .procedural_floors
+        .iter()
+        .find(|floor| floor.id == "demo.floor.old-castle")
+        .expect("fixture should contain the Old Castle floor");
+    assert_eq!((floor.width, floor.height, floor.depth), (71, 28, 50));
+    let inline_map = floor.inline_map.as_ref().expect("map should stay inline");
+    assert_eq!(inline_map.player_position, ContentPosition { x: 31, y: 1 });
+    assert_eq!(inline_map.actor_spawns.len(), 68);
+    assert_eq!(inline_map.item_spawns.len(), 13);
+    assert_eq!(inline_map.loot_spawns.len(), 72);
+    assert_eq!(
+        inline_map
+            .actor_spawns
+            .iter()
+            .map(|spawn| spawn.kind_id.as_str())
+            .fold(BTreeMap::new(), |mut counts, id| {
+                *counts.entry(id).or_insert(0) += 1;
+                counts
+            })["demo.actor.anti-paladin"],
+        5
+    );
+    assert_eq!(
+        inline_map
+            .monster_formation
+            .as_ref()
+            .expect("seven source-random cells should use the formation roller")
+            .positions
+            .len(),
+        7
+    );
+
+    for (id, dice, sides, to_hit, to_damage) in [
+        ("demo.item.crisdurian", 4, 6, 23, 24),
+        ("demo.item.slayer", 5, 6, 15, 15),
+        ("demo.item.pain", 9, 7, 0, 30),
+    ] {
+        let item = artifact
+            .content
+            .items
+            .iter()
+            .find(|item| item.id == id)
+            .expect("Old Castle artifact should exist");
+        let melee = item
+            .melee_profile
+            .as_ref()
+            .expect("artifact should be a weapon");
+        assert_eq!(
+            (
+                melee.damage_dice,
+                melee.damage_sides,
+                melee.to_hit,
+                melee.to_damage
+            ),
+            (dice, sides, to_hit, to_damage)
+        );
+        assert!(item.tags.iter().any(|tag| tag == "artifact"));
+    }
+}
+
+#[test]
 fn inline_floor_items_reject_duplicate_or_blocked_placements() {
     fn trouble_inline(content: &mut CompiledContentV1) -> &mut InlineFloorMapDefinition {
         content
@@ -5294,7 +5388,8 @@ fn outpost_count_services_and_follow_up_tasks_match_the_original_sequence() {
             "demo.task.trouble-at-home",
             "demo.task.crows-nest",
             "demo.task.old-man-willow",
-            "demo.task.vapor-quest"
+            "demo.task.vapor-quest",
+            "demo.task.old-castle"
         ]
     );
 

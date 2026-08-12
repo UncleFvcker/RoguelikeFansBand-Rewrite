@@ -859,6 +859,76 @@ fn vapor_quest_unlocks_after_old_man_willow_clears_the_cellar_and_rewards_detect
 }
 
 #[test]
+fn old_castle_unlocks_after_vapor_quest_and_rewards_the_warrior_artifact_pool() {
+    let mut game =
+        Game::new_with_build(271, "demo.build.warrior").expect("Warrens journey should create");
+    let task_id = "demo.task.old-castle";
+    let entry = Position { x: 65, y: 13 };
+    assert_eq!(
+        game.terrain_at(entry),
+        "demo.terrain.old-castle-entry-available"
+    );
+    game.player.position = Position { x: 63, y: 13 };
+    assert_eq!(
+        game.accept_task("demo.town-facility.outpost-white-horse", task_id),
+        Err("task-locked")
+    );
+
+    game.task_states.insert(
+        "demo.task.vapor-quest".to_owned(),
+        TaskState {
+            status: TaskStatusKindDto::Completed,
+            stage_index: 0,
+            current: 1,
+            required: 1,
+            active_floor_id: None,
+            retakes_used: 0,
+        },
+    );
+    dispatch_next(
+        &mut game,
+        GameCommand::AcceptTask {
+            facility_id: "demo.town-facility.outpost-white-horse".to_owned(),
+            task_id: task_id.to_owned(),
+        },
+    );
+    assert_eq!(game.task_states[task_id].status, TaskStatusKindDto::Taken);
+    assert_eq!(game.terrain_at(entry), "demo.terrain.old-castle-entry");
+
+    game.player.position = entry;
+    dispatch_next(&mut game, GameCommand::TraverseStairs);
+    assert_eq!(game.current_floor_id, "demo.floor.old-castle");
+    assert!(game.entities.len() >= 75);
+    game.entities.clear();
+    dispatch_next(&mut game, GameCommand::Wait);
+    assert_eq!(
+        game.task_states[task_id].status,
+        TaskStatusKindDto::RewardAvailable
+    );
+
+    game.player.position = Position { x: 31, y: 1 };
+    dispatch_next(&mut game, GameCommand::TraverseStairs);
+    game.player.position = Position { x: 63, y: 13 };
+    dispatch_next(
+        &mut game,
+        GameCommand::ClaimTaskReward {
+            facility_id: "demo.town-facility.outpost-white-horse".to_owned(),
+            task_id: task_id.to_owned(),
+        },
+    );
+    let reward = game
+        .items
+        .iter()
+        .find(|item| item.id == "demo.task.old-castle.reward.1")
+        .expect("Old Castle should grant an artifact");
+    assert!(matches!(
+        reward.kind_id.as_str(),
+        "demo.item.slayer" | "demo.item.pain"
+    ));
+    assert_eq!(reward.location, ItemLocation::Inventory);
+}
+
+#[test]
 fn clearing_thieves_hideout_closes_the_floor_without_granting_the_reward() {
     let mut game =
         Game::new_with_build(43, "demo.build.warrior").expect("Warrens journey should create");

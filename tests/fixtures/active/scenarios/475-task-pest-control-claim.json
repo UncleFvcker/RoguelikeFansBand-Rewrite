@@ -948,6 +948,13 @@
           "stages": 1
         },
         {
+          "taskId": "demo.task.old-castle",
+          "status": "locked",
+          "required": 1,
+          "stage": 1,
+          "stages": 1
+        },
+        {
           "taskId": "demo.task.old-man-willow",
           "status": "locked",
           "required": 1,
@@ -1005,7 +1012,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 2
       },
-      "stateHash": "beb3ef6280313e384fbc6066a86e99a51de027fffa873aa17efb34e34d497000"
+      "stateHash": "113c6aa4b16d7bd29db5fdbc1af1a29355385171b399896eedbab13acf957ea2"
     },
     "events": [
       {

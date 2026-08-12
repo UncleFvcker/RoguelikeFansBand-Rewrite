@@ -580,3 +580,10 @@ RFB 首饰种类与 ego 分配。默认探测魔棒以有序 `detect` 序列探�
 通道、金币、物品和全部怪物，容量 45、单次消耗 17、设备难度 30。content hash 为
 `49ea9859fc399bced90e2eaabda21bc25984885c9ed5cea7b8ce7bb19d5dec19`；协议保持
 1.175，State Hash Schema 保持 v87。
+
+contract-v270 / 包 1.261.0 接入白马旅店 quest 27“旧城堡”。71×28 固定地图保留
+68 只声明顺序固定怪物和 7 个由任务怪物池抽取的位置；三件任务神器直接表达当前
+装备模型支持的权威武器骰、命中/伤害、斩杀、品牌和被动。当前 Warrior 以 1:4 权重
+获得“杀戮者”或“痛苦”，默认“克里斯杜瑞安”保留给后续职业。content hash 为
+`3cf3a2e3f1ce0314aa5782acd700d81133a06cbab0444f24b6cba4537c47cca5`；协议保持
+1.175，State Hash Schema 保持 v87。

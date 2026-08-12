@@ -1,0 +1,84 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 530,
+    "maxDepth": 999,
+    "rarity": 4
+  },
+  "attack": 8,
+  "damageDice": 14,
+  "damageSides": 14,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 2,
+        "sides": 2
+      }
+    ],
+    "kind": "gold"
+  },
+  "defense": 12,
+  "descriptionKey": "actor-demo-eog-golem-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 1000,
+  "formatVersion": 1,
+  "glyph": "g",
+  "hitPointDice": {
+    "dice": 100,
+    "sides": 20
+  },
+  "id": "demo.actor.eog-golem",
+  "level": 35,
+  "maxHp": 1050,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 14,
+            "damageSides": 14,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "chancePercent": 35,
+            "durationDice": 2,
+            "durationSides": 6,
+            "type": "stun"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "nameKey": "actor-demo-eog-golem-name",
+  "reflectsBolts": true,
+  "resistances": {
+    "cold": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "poison": "immune"
+  },
+  "role": "monster",
+  "speed": 110,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "cold-blooded",
+    "empty-mind",
+    "kin-glyph-103",
+    "legacy-import",
+    "nonliving",
+    "old-castle",
+    "outpost-quest"
+  ]
+}

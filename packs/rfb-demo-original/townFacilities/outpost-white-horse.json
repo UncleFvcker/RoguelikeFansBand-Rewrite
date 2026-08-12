@@ -7,7 +7,7 @@
   "townId": "demo.town.outpost",
   "category": "quest-giver",
   "ownerNameKey": "shop-owner-demo-outpost-otik-the-good-name",
-  "taskIds": ["demo.task.trouble-at-home", "demo.task.crows-nest", "demo.task.old-man-willow", "demo.task.vapor-quest"],
+  "taskIds": ["demo.task.trouble-at-home", "demo.task.crows-nest", "demo.task.old-man-willow", "demo.task.vapor-quest", "demo.task.old-castle"],
   "entrancePosition": { "x": 63, "y": 13 },
   "entranceTerrainId": "demo.terrain.inn-entrance"
 }

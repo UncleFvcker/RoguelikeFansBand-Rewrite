@@ -1,0 +1,109 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 555,
+    "maxDepth": 70,
+    "rarity": 1
+  },
+  "attack": 9,
+  "damageDice": 2,
+  "damageSides": 10,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [
+      {
+        "percent": 60
+      },
+      {
+        "guaranteedForUnique": true,
+        "percent": 90
+      }
+    ],
+    "itemTableId": "demo.loot-table.warrens",
+    "kind": "items-and-gold",
+    "themeChancePercent": 50,
+    "themeTableId": "demo.loot-table.paladin"
+  },
+  "defense": 7,
+  "descriptionKey": "actor-demo-revenant-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 800,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "W",
+  "hitPointDice": {
+    "dice": 111,
+    "forceMaximum": true,
+    "sides": 2
+  },
+  "id": "demo.actor.revenant",
+  "level": 36,
+  "maxHp": 222,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 2,
+            "damageSides": 10,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 2,
+            "damageSides": 10,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.bolt-fire-9d8-12",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 25
+  },
+  "movesWeakerBodies": true,
+  "nameKey": "actor-demo-revenant-name",
+  "regenerates": true,
+  "resistances": {
+    "cold": "resistant",
+    "dark": "resistant",
+    "light": "vulnerable",
+    "nether": "resistant",
+    "poison": "immune"
+  },
+  "role": "monster",
+  "speed": 125,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "cold-blooded",
+    "evil",
+    "kin-glyph-87",
+    "legacy-import",
+    "old-castle",
+    "outpost-quest",
+    "undead"
+  ]
+}

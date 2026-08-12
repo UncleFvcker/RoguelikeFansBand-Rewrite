@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/terrain.schema.json",
+  "formatVersion": 1,
+  "id": "demo.terrain.old-castle-entry-completed",
+  "nameKey": "terrain-demo-old-castle-entry-completed-name",
+  "descriptionKey": "terrain-demo-old-castle-entry-completed-description",
+  "glyph": "·",
+  "walkable": true,
+  "blocksSight": false,
+  "tags": ["building", "outdoor", "surface", "task-entry-completed"]
+}

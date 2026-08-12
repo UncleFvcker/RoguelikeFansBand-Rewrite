@@ -3638,6 +3638,104 @@
       "omittedFlags": ["ATTR_ANY", "ATTR_MULTI"]
     },
     {
+      "sourceIndex": 497,
+      "id": "anti-paladin",
+      "tags": ["old-castle", "outpost-quest"],
+      "omittedFlags": ["MALE"],
+      "omittedSpells": ["HELL_LANCE(66)"]
+    },
+    {
+      "sourceIndex": 530,
+      "id": "eog-golem",
+      "tags": ["old-castle", "outpost-quest"],
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE"]
+    },
+    {
+      "sourceIndex": 538,
+      "id": "olog",
+      "tags": ["old-castle", "outpost-quest"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 544,
+      "id": "sea-troll",
+      "tags": ["old-castle", "outpost-quest"],
+      "omittedFlags": ["MALE", "POS_GAIN_AC", "WILD_OCEAN"]
+    },
+    {
+      "sourceIndex": 555,
+      "id": "revenant",
+      "tags": ["old-castle", "outpost-quest"],
+      "omittedFlags": ["POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 567,
+      "id": "time-bomb",
+      "tags": ["old-castle", "outpost-quest"],
+      "omittedFlags": ["ATTR_CLEAR", "CHAR_CLEAR", "NASTY_GLYPH"]
+    },
+    {
+      "sourceIndex": 575,
+      "id": "mummified-troll",
+      "tags": ["old-castle", "outpost-quest"],
+      "omittedFlags": ["POS_HOLD_LIFE"]
+    },
+    {
+      "sourceIndex": 597,
+      "id": "death-knight",
+      "tags": ["old-castle", "outpost-quest"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 634,
+      "id": "lesser-titan",
+      "tags": ["old-castle", "outpost-quest"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 636,
+      "id": "enchantress",
+      "tags": ["old-castle", "outpost-quest"],
+      "omittedFlags": ["FEMALE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 638,
+      "id": "sorcerer",
+      "tags": ["old-castle", "outpost-quest"],
+      "omittedFlags": ["MALE", "POS_SUST_INT"]
+    },
+    {
+      "sourceIndex": 643,
+      "id": "death-drake",
+      "tags": ["old-castle", "outpost-quest"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 644,
+      "id": "ancient-red-dragon",
+      "tags": ["old-castle", "outpost-quest"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 652,
+      "id": "fallen-angel",
+      "tags": ["old-castle", "outpost-quest"],
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS"],
+      "omittedSpells": ["INVULN"]
+    },
+    {
+      "sourceIndex": 701,
+      "id": "dracolich",
+      "tags": ["old-castle", "outpost-quest"],
+      "omittedFlags": ["POS_GAIN_AC", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 702,
+      "id": "greater-titan",
+      "tags": ["old-castle", "outpost-quest"],
+      "omittedFlags": ["MALE"]
+    },
+    {
       "sourceIndex": 206,
       "id": "old-man-willow",
       "tags": ["old-man-willow", "outpost-quest", "tree"],
