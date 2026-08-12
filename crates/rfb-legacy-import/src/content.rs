@@ -696,6 +696,7 @@ pub struct LegacyEgoEntry {
     pub name: String,
     pub slots: Vec<String>,
     pub level: u16,
+    pub max_level: Option<u16>,
     pub max_to_hit: i32,
     pub max_to_damage: i32,
     pub max_to_armor: i32,
@@ -3592,12 +3593,12 @@ pub fn parse_e_info(text: &str) -> Result<Vec<LegacyEgoEntry>, LegacyImportError
                 parts.first().copied(),
             )?;
             if parts[1] != "*" {
-                let _: i64 = parse_number(
+                entry.max_level = Some(parse_number(
                     E_INFO_SOURCE,
                     line_number,
-                    "W.rarity",
+                    "W.max_level",
                     parts.get(1).copied(),
-                )?;
+                )?);
             }
             let _: i64 = parse_number(
                 E_INFO_SOURCE,
@@ -4155,6 +4156,9 @@ fn ego_json(
         "generationLevel": entry.level,
         "tags": tags,
     });
+    if let Some(max_level) = entry.max_level {
+        value["generationMaxLevel"] = serde_json::json!(max_level);
+    }
     if !modifiers.is_empty() {
         value["modifiers"] = serde_json::Value::Object(modifiers);
     }
@@ -14578,7 +14582,7 @@ static personality_ptr _get_test_calm_personality(void)
         const SYNTHETIC_E_INFO: &str = "V:1.1.0
 N:1:of Testing
 T:WEAPON
-W:0:*:2
+W:0:35:2
 C:8:6:0:0
 F:SHOW_MODS
 
@@ -14611,6 +14615,7 @@ F:BRAND_VAMP | HOLD_LIFE
 ";
         let egos = parse_e_info(SYNTHETIC_E_INFO).expect("synthetic egos should parse");
         assert_eq!(egos.len(), 6);
+        assert_eq!(egos[0].max_level, Some(35));
         let outcome = convert_content(
             &[],
             &[],
@@ -14630,6 +14635,7 @@ F:BRAND_VAMP | HOLD_LIFE
         let (name, testing) = &outcome.affix_files[0];
         assert_eq!(name, "testing.json");
         assert_eq!(testing["id"], "rfb-legacy.affix.testing");
+        assert_eq!(testing["generationMaxLevel"], 35);
         // C: maxima fold into a deterministic ceiling; attack takes the
         // larger of to-hit/to-damage.
         assert_eq!(testing["modifiers"]["attack"], 8);

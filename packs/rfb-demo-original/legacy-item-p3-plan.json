@@ -79,7 +79,7 @@
           "id": "salt-water",
           "primaryBlockers": ["consumable-effect"],
           "items": [
-            { "sourceIndex": 404, "sourceName": "Salt Water:Orange Speckled", "sourceId": "salt-water-orange-speckled" }
+            { "sourceIndex": 404, "sourceName": "Salt Water:Orange Speckled", "sourceId": "salt-water-orange-speckled", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] }
           ]
         },
         {

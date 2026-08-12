@@ -69,6 +69,7 @@ use rfb_content::{
     ProceduralRoomPlacement, ProceduralRoomShape, ProceduralStreamerCandidateDefinition, SkillKind,
     SlayLevel, SlayTarget, StartingItemDefinition, StatModifiers, TaskObjectiveKind,
     TechniqueAttribute, TerrainFeatureEntryDefinition, ThemeVaultCandidateDefinition, WeaponBrand,
+    affix_is_compatible_with_item,
 };
 use rfb_protocol::{
     AbilityAreaDamageResolutionDto, AbilityBeamDamageResolutionDto, AbilityCastResolutionDto,
@@ -4630,11 +4631,6 @@ impl Game {
             .iter()
             .map(|entry| entry.weight)
             .collect::<Vec<_>>();
-        let affix_weights = table
-            .affix_weights
-            .iter()
-            .map(|entry| entry.weight)
-            .collect::<Vec<_>>();
         let mut roll_count = roll_count_override.unwrap_or(table.rolls);
         if roll_count_override.is_none()
             && roll_table_chance
@@ -4664,7 +4660,27 @@ impl Game {
             let generation_depth = self.luck_adjusted_item_generation_depth(context.depth, staff);
             let rolled_quality =
                 self.roll_loot_quality(&table.quality_weights, &quality_weights, minimum_quality);
-            let affix_index = self.roll_weighted_index(&affix_weights);
+            let eligible_affixes = table
+                .affix_weights
+                .iter()
+                .filter(|affix_weight| {
+                    affix_weight.affix_id.as_ref().is_none_or(|affix_id| {
+                        self.content.affix(affix_id).is_some_and(|affix| {
+                            self.content.item(&entry.item_kind_id).is_some_and(|item| {
+                                affix_is_compatible_with_item(affix, item, generation_depth)
+                            })
+                        })
+                    })
+                })
+                .collect::<Vec<_>>();
+            let affix_weights = eligible_affixes
+                .iter()
+                .map(|entry| entry.weight)
+                .collect::<Vec<_>>();
+            let rolled_affix_id = (!eligible_affixes.is_empty()).then(|| {
+                let affix_index = self.roll_weighted_index(&affix_weights);
+                eligible_affixes[affix_index].affix_id.clone()
+            });
             let supports_quality = self.content.item(&entry.item_kind_id).is_some_and(|item| {
                 item.max_stack == 1 && item.equipment_slot.is_some() && entry.quantity == 1
             });
@@ -4676,11 +4692,7 @@ impl Game {
             let affix_ids = if quality == ItemQualityDto::Ordinary {
                 Vec::new()
             } else {
-                table.affix_weights[affix_index]
-                    .affix_id
-                    .iter()
-                    .cloned()
-                    .collect()
+                rolled_affix_id.flatten().iter().cloned().collect()
             };
             let rolled_affixes = self.roll_affix_properties(&affix_ids, generation_depth);
             let (activation, charges) = initial_item_runtime_state(

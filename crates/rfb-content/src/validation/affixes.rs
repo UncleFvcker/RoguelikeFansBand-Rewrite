@@ -64,6 +64,7 @@ pub(super) fn validate_affixes(
             || !affix.passives.is_empty()
             || roll_substance;
         if !has_substance
+            || affix.generation_level > affix.generation_max_level
             || modifiers.max_hp < -1_000_000
             || modifiers.max_hp > 1_000_000
             || modifiers.attack < -1_000_000

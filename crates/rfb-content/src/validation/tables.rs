@@ -3,11 +3,11 @@
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
 use crate::{
-    ActorRole, ContentError, ContentPosition, ENCOUNTER_TABLE_SCHEMA, EncounterTableDefinition,
-    ItemQuality, LOOT_TABLE_SCHEMA, LootTableDefinition, MonsterPackBehavior, REGION_TABLE_SCHEMA,
-    RegionTableDefinition, TERRAIN_FEATURE_TABLE_SCHEMA, THEME_TABLE_SCHEMA, TerrainDefinition,
-    TerrainFeaturePlacement, TerrainFeatureTableDefinition, ThemeTableDefinition, VAULT_SCHEMA,
-    VaultDefinition,
+    ActorRole, AffixDefinition, ContentError, ContentPosition, ENCOUNTER_TABLE_SCHEMA,
+    EncounterTableDefinition, ItemDefinition, LOOT_TABLE_SCHEMA, LootTableDefinition,
+    MonsterPackBehavior, REGION_TABLE_SCHEMA, RegionTableDefinition, TERRAIN_FEATURE_TABLE_SCHEMA,
+    THEME_TABLE_SCHEMA, TerrainDefinition, TerrainFeaturePlacement, TerrainFeatureTableDefinition,
+    ThemeTableDefinition, VAULT_SCHEMA, VaultDefinition, affix_is_compatible_with_item,
 };
 
 use super::shared::{
@@ -28,6 +28,8 @@ pub(super) struct TableDefinitions<'a> {
 pub(super) struct TableValidationRefs<'a> {
     pub(super) item_limits: &'a BTreeMap<String, (u32, bool)>,
     pub(super) affix_ids: &'a BTreeSet<String>,
+    pub(super) items: &'a [ItemDefinition],
+    pub(super) affixes: &'a [AffixDefinition],
     pub(super) actor_loot_table_ids: Vec<(String, String)>,
     pub(super) actor_roles: &'a BTreeMap<String, ActorRole>,
     pub(super) actor_tag_values: &'a BTreeSet<String>,
@@ -56,6 +58,8 @@ pub(super) fn validate_tables(
     let TableValidationRefs {
         item_limits,
         affix_ids,
+        items,
+        affixes,
         actor_loot_table_ids,
         actor_roles,
         actor_tag_values,
@@ -109,7 +113,7 @@ pub(super) fn validate_tables(
         let mut quality_weight = 0_u64;
         let mut affix_weight = 0_u64;
         for entry in &table.entries {
-            let Some((max_stack, equippable)) = item_limits.get(&entry.item_kind_id) else {
+            let Some((max_stack, _)) = item_limits.get(&entry.item_kind_id) else {
                 return Err(ContentError::DanglingReference {
                     owner: table.id.clone(),
                     target: entry.item_kind_id.clone(),
@@ -120,20 +124,6 @@ pub(super) fn validate_tables(
                 || entry.quantity > *max_stack
                 || entry.min_depth > entry.max_depth
                 || !entry_ids.insert(entry.item_kind_id.as_str())
-                || ((table
-                    .quality_weights
-                    .iter()
-                    .any(|quality| quality.quality != ItemQuality::Ordinary)
-                    || table
-                        .affix_weights
-                        .iter()
-                        .any(|affix| affix.affix_id.is_some()))
-                    && (*max_stack != 1 || entry.quantity != 1))
-                || (table
-                    .affix_weights
-                    .iter()
-                    .any(|affix| affix.affix_id.is_some())
-                    && !equippable)
             {
                 return Err(ContentError::InvalidLootTable(table.id.clone()));
             }
@@ -164,6 +154,42 @@ pub(super) fn validate_tables(
             affix_weight = affix_weight
                 .checked_add(u64::from(entry.weight))
                 .ok_or_else(|| ContentError::InvalidLootTable(table.id.clone()))?;
+        }
+        let named_affixes = table
+            .affix_weights
+            .iter()
+            .filter_map(|entry| entry.affix_id.as_deref())
+            .map(|affix_id| {
+                affixes
+                    .iter()
+                    .find(|affix| affix.id == affix_id)
+                    .expect("validated affix reference must remain available")
+            })
+            .collect::<Vec<_>>();
+        let entry_accepts_affix = |entry: &crate::LootEntryDefinition, affix: &AffixDefinition| {
+            let Some(item) = items.iter().find(|item| item.id == entry.item_kind_id) else {
+                return false;
+            };
+            let generation_depth = entry.min_depth.max(affix.generation_level);
+            generation_depth <= entry.max_depth.min(affix.generation_max_level)
+                && affix_is_compatible_with_item(affix, item, generation_depth)
+        };
+        if named_affixes.iter().any(|affix| {
+            !table
+                .entries
+                .iter()
+                .any(|entry| entry_accepts_affix(entry, affix))
+        }) || (table
+            .affix_weights
+            .iter()
+            .all(|entry| entry.affix_id.is_some())
+            && table.entries.iter().any(|entry| {
+                !named_affixes
+                    .iter()
+                    .any(|affix| entry_accepts_affix(entry, affix))
+            }))
+        {
+            return Err(ContentError::InvalidLootTable(table.id.clone()));
         }
         if entry_weight == 0 || quality_weight == 0 || affix_weight == 0 {
             return Err(ContentError::InvalidLootTable(table.id.clone()));

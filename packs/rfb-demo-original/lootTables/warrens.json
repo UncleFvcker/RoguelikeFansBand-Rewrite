@@ -68,6 +68,7 @@
     { "itemKindId": "demo.item.confusion-mushroom", "weight": 1, "quantity": 1, "minDepth": 5, "maxDepth": 9 },
     { "itemKindId": "demo.item.satisfy-hunger-scroll", "weight": 1, "quantity": 1, "minDepth": 5, "maxDepth": 9 },
     { "itemKindId": "demo.item.slime-mold-juice", "weight": 1, "quantity": 1, "minDepth": 0, "maxDepth": 9 },
+    { "itemKindId": "demo.item.salt-water", "weight": 1, "quantity": 1, "minDepth": 0, "maxDepth": 9 },
     { "itemKindId": "demo.item.darkness-scroll", "weight": 1, "quantity": 1, "minDepth": 1, "maxDepth": 9 },
     { "itemKindId": "demo.item.trap-creation-scroll", "weight": 1, "quantity": 1, "minDepth": 9, "maxDepth": 9 },
     { "itemKindId": "demo.item.tsuyoshi-special", "weight": 1, "quantity": 1, "minDepth": 9, "maxDepth": 9 }

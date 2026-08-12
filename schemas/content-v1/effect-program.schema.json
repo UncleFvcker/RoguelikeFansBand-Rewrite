@@ -680,6 +680,19 @@
           "additionalProperties": false,
           "properties": {
             "type": {
+              "const": "apply-salt-water",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
               "const": "apply-fast-recovery",
               "type": "string"
             }

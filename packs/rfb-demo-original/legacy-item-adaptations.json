@@ -100,6 +100,7 @@
     { "sourceIndex": 401, "sourceName": "Apple Juice:Light Brown", "sourceId": "apple-juice-light-brown", "itemId": "demo.item.apple-juice", "status": "active", "adaptation": "intentional-no-numeric-effect:no-thirst-system", "contract": "phase-19-p3-2-low-coupling-potions" },
     { "sourceIndex": 402, "sourceName": "Slime Mold Juice:Icky Green", "sourceId": "slime-mold-juice-icky-green", "itemId": "demo.item.slime-mold-juice", "status": "active", "adaptation": "intentional-no-numeric-effect:no-thirst-system", "contract": "phase-19-p3-2-low-coupling-potions" },
     { "sourceIndex": 403, "sourceName": "Slowness:Metallic Blue", "sourceId": "slowness-metallic-blue", "itemId": "demo.item.slowness-potion", "status": "active", "contract": "contract-v133-potion-slowness" },
+    { "sourceIndex": 404, "sourceName": "Salt Water:Orange Speckled", "sourceId": "salt-water-orange-speckled", "itemId": "demo.item.salt-water", "status": "active", "contract": "phase-19-p3-2-salt-water" },
     { "sourceIndex": 405, "sourceName": "Poison:Light Green", "sourceId": "poison-light-green", "itemId": "demo.item.venom-draught", "status": "active", "contract": "contract-v135-potion-poison" },
     { "sourceIndex": 406, "sourceName": "Blindness:Indigo", "sourceId": "blindness-indigo", "itemId": "demo.item.veil-draught", "status": "active", "contract": "contract-v144-potion-blindness" },
     { "sourceIndex": 408, "sourceName": "Sleep:Hazy", "sourceId": "sleep-hazy", "itemId": "demo.item.sleep-potion", "status": "active", "contract": "phase-19-p3-1-food-status" },

@@ -133,32 +133,7 @@ impl Game {
             .active_mutation_ids
             .contains(WAYBREAD_INTOLERANCE_MUTATION_ID)
         {
-            let before_state = self.nutrition_state();
-            self.nutrition = hunger::NUTRITION_STARVING - 1;
-            let after_state = self.nutrition_state();
-            if after_state != before_state {
-                events.push(DomainEvent::NutritionStateChanged {
-                    from: before_state,
-                    to: after_state,
-                    nutrition: self.nutrition,
-                });
-            }
-            self.resolve_item_status(
-                source_kind_id,
-                STATUS_PARALYSIS,
-                1,
-                4,
-                0,
-                AbilityStatusStackingDefinition::Extend,
-                None,
-                &BTreeMap::new(),
-                &StatModifiers::default(),
-                &EquipmentBonuses::default(),
-                100,
-                events,
-            );
-            self.resolve_item_status_removal(source_kind_id, STATUS_POISON, events);
-            self.mark_item_aware(source_kind_id);
+            self.resolve_starvation_paralysis_antidote(source_kind_id, events);
             return true;
         }
 
@@ -173,6 +148,59 @@ impl Game {
         );
         self.resolve_item_satisfy_hunger(source_kind_id, true, events);
         true
+    }
+
+    fn resolve_starvation_paralysis_antidote(
+        &mut self,
+        source_kind_id: &str,
+        events: &mut Vec<DomainEvent>,
+    ) {
+        let before_state = self.nutrition_state();
+        self.nutrition = hunger::NUTRITION_STARVING - 1;
+        let after_state = self.nutrition_state();
+        if after_state != before_state {
+            events.push(DomainEvent::NutritionStateChanged {
+                from: before_state,
+                to: after_state,
+                nutrition: self.nutrition,
+            });
+        }
+        self.resolve_item_status(
+            source_kind_id,
+            STATUS_PARALYSIS,
+            1,
+            4,
+            0,
+            AbilityStatusStackingDefinition::Extend,
+            None,
+            &BTreeMap::new(),
+            &StatModifiers::default(),
+            &EquipmentBonuses::default(),
+            100,
+            events,
+        );
+        self.resolve_item_status_removal(source_kind_id, STATUS_POISON, events);
+        self.mark_item_aware(source_kind_id);
+    }
+
+    fn resolve_item_salt_water(
+        &mut self,
+        source_kind_id: &str,
+        events: &mut Vec<DomainEvent>,
+    ) -> bool {
+        let affected = self
+            .character_definitions()
+            .is_some_and(|(_, race, _, _)| Self::salt_water_affects_race(&race.id, &race.tags));
+        if affected {
+            self.resolve_starvation_paralysis_antidote(source_kind_id, events);
+        }
+        affected
+    }
+
+    pub(super) fn salt_water_affects_race(race_id: &str, race_tags: &[String]) -> bool {
+        race_id == "rfb-legacy.race.einheri"
+            || (race_id != "rfb-legacy.race.mon-jelly"
+                && !race_tags.iter().any(|tag| tag == "nonliving"))
     }
 
     fn resolve_item_fast_recovery(
@@ -2310,6 +2338,7 @@ impl Game {
                 | ItemUseEffectDefinition::RestoreAllVitality { .. }
                 | ItemUseEffectDefinition::ApplyRestorativeFeast { .. }
                 | ItemUseEffectDefinition::ApplyElvishWaybread { .. }
+                | ItemUseEffectDefinition::ApplySaltWater
                 | ItemUseEffectDefinition::ApplyLifeRestoration { .. }
                 | ItemUseEffectDefinition::ApplyThermalResistance { .. }
                 | ItemUseEffectDefinition::ApplyBasicResistance { .. }
@@ -2652,6 +2681,7 @@ impl Game {
             | ItemUseEffectDefinition::RestoreAllVitality { .. }
             | ItemUseEffectDefinition::ApplyRestorativeFeast { .. }
             | ItemUseEffectDefinition::ApplyElvishWaybread { .. }
+            | ItemUseEffectDefinition::ApplySaltWater
             | ItemUseEffectDefinition::ApplyFastRecovery
             | ItemUseEffectDefinition::ApplyLifeRestoration { .. }
             | ItemUseEffectDefinition::DrainAttribute { .. }
@@ -4463,6 +4493,9 @@ impl Game {
                 *healing_sides,
                 events,
             ),
+            ItemUseEffectDefinition::ApplySaltWater => {
+                self.resolve_item_salt_water(source_kind_id, events)
+            }
             ItemUseEffectDefinition::ApplyFastRecovery => {
                 self.resolve_item_fast_recovery(source_kind_id, events)
             }

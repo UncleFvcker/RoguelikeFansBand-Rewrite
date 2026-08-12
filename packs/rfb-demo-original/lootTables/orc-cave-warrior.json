@@ -22,6 +22,12 @@
     { "itemKindId": "demo.item.large-metal-shield", "weight": 2, "quantity": 1, "minDepth": 30, "maxDepth": 32 },
     { "itemKindId": "demo.item.augmented-chain-mail", "weight": 2, "quantity": 1, "minDepth": 30, "maxDepth": 32 }
   ],
-  "qualityWeights": [{ "quality": "ordinary", "weight": 1 }],
-  "affixWeights": [{ "weight": 1 }]
+  "qualityWeights": [
+    { "quality": "ordinary", "weight": 9 },
+    { "quality": "fine", "weight": 1 }
+  ],
+  "affixWeights": [
+    { "weight": 9 },
+    { "affixId": "rfb-legacy.affix.slaying", "weight": 1 }
+  ]
 }

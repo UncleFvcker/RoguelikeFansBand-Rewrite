@@ -1,0 +1,38 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "formatVersion": 1,
+  "id": "rfb-legacy.affix.slaying",
+  "nameKey": "affix-legacy-slaying-name",
+  "descriptionKey": "affix-legacy-slaying-description",
+  "generationLevel": 0,
+  "rollGroups": [
+    {
+      "rolls": 2,
+      "candidates": [
+        { "weight": 38100, "maxDepth": 20, "properties": { "slays": { "orc": "slay" } } },
+        { "weight": 12700, "maxDepth": 20, "properties": { "slays": { "orc": "kill" } } },
+        { "weight": 38100, "maxDepth": 30, "properties": { "slays": { "troll": "slay" } } },
+        { "weight": 12700, "maxDepth": 30, "properties": { "slays": { "troll": "kill" } } },
+        { "weight": 38100, "maxDepth": 40, "properties": { "slays": { "giant": "slay" } } },
+        { "weight": 12700, "maxDepth": 40, "properties": { "slays": { "giant": "kill" } } },
+        { "weight": 30223, "maxDepth": 80, "properties": { "slays": { "dragon": "slay" } } },
+        { "weight": 3777, "maxDepth": 80, "properties": { "slays": { "dragon": "kill" } } },
+        { "weight": 30223, "maxDepth": 90, "properties": { "slays": { "demon": "slay" } } },
+        { "weight": 3777, "maxDepth": 90, "properties": { "slays": { "demon": "kill" } } },
+        { "weight": 30223, "maxDepth": 95, "properties": { "slays": { "undead": "slay" } } },
+        { "weight": 3777, "maxDepth": 95, "properties": { "slays": { "undead": "kill" } } },
+        { "weight": 38100, "maxDepth": 60, "properties": { "slays": { "animal": "slay" } } },
+        { "weight": 12700, "maxDepth": 60, "properties": { "slays": { "animal": "kill" } } },
+        { "weight": 30223, "maxDepth": 50, "properties": { "slays": { "human": "slay" } } },
+        { "weight": 3777, "maxDepth": 50, "properties": { "slays": { "human": "kill" } } },
+        { "weight": 19584, "properties": { "slays": { "evil": "slay" } } },
+        { "weight": 816, "properties": { "slays": { "evil": "kill" } } },
+        { "weight": 19584, "properties": { "slays": { "good": "slay" } } },
+        { "weight": 816, "properties": { "slays": { "good": "kill" } } },
+        { "weight": 4788, "properties": { "slays": { "living": "slay" } } },
+        { "weight": 12, "properties": { "slays": { "living": "kill" } } }
+      ]
+    }
+  ],
+  "tags": ["legacy-import", "weapon"]
+}

@@ -57,6 +57,93 @@ fn item_shape_validation_uses_current_rfb_content() {
 }
 
 #[test]
+fn natural_affix_compatibility_uses_slot_depth_and_explicit_none_fallback() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let slaying = artifact
+        .content
+        .affixes
+        .iter()
+        .find(|affix| affix.id == "rfb-legacy.affix.slaying")
+        .expect("Slaying should exist");
+    let halberd = artifact
+        .content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.halberd")
+        .expect("halberd should exist");
+    let crossbow = artifact
+        .content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.light-crossbow")
+        .expect("crossbow should exist");
+    assert!(affix_is_compatible_with_item(slaying, halberd, 32));
+    assert!(!affix_is_compatible_with_item(slaying, crossbow, 32));
+
+    let mut bounded = slaying.clone();
+    bounded.generation_level = 20;
+    bounded.generation_max_level = 30;
+    assert!(!affix_is_compatible_with_item(&bounded, halberd, 19));
+    assert!(affix_is_compatible_with_item(&bounded, halberd, 20));
+    assert!(!affix_is_compatible_with_item(&bounded, halberd, 31));
+
+    let mut missing_fallback = artifact.content.clone();
+    missing_fallback
+        .loot_tables
+        .iter_mut()
+        .find(|table| table.id == "demo.loot-table.orc-cave")
+        .expect("Orc Cave loot should exist")
+        .affix_weights
+        .retain(|entry| entry.affix_id.is_some());
+    assert!(matches!(
+        validate_and_normalize(&mut missing_fallback),
+        Err(ContentError::InvalidLootTable(id)) if id == "demo.loot-table.orc-cave"
+    ));
+
+    let mut outside_depth = artifact.content.clone();
+    outside_depth
+        .affixes
+        .iter_mut()
+        .find(|affix| affix.id == "rfb-legacy.affix.slaying")
+        .expect("Slaying should exist")
+        .generation_max_level = 10;
+    assert!(matches!(
+        validate_and_normalize(&mut outside_depth),
+        Err(ContentError::InvalidLootTable(_))
+    ));
+}
+
+#[test]
+fn salt_water_keeps_authoritative_shape_effect_and_shallow_acquisition() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let item = artifact
+        .content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.salt-water")
+        .expect("Salt Water should exist");
+    assert_eq!(item.generation_level, 0);
+    assert_eq!(item.weight_tenths_pound, 4);
+    assert_eq!(item.base_value, 1);
+    assert!(matches!(
+        item.use_action.as_ref().map(|action| &action.effect),
+        Some(ItemUseEffectDefinition::ApplySaltWater)
+    ));
+    let warrens = artifact
+        .content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.warrens")
+        .expect("Warrens loot should exist");
+    let entry = warrens
+        .entries
+        .iter()
+        .find(|entry| entry.item_kind_id == item.id)
+        .expect("Salt Water should be shallow loot");
+    assert_eq!((entry.min_depth, entry.max_depth), (0, 9));
+}
+
+#[test]
 fn food_effect_requires_positive_bounded_nutrition() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let ration = artifact
@@ -622,7 +709,7 @@ fn supported_legacy_scrolls_and_potions_keep_source_identity_and_values() {
         .collect::<Vec<_>>();
 
     assert_eq!(scrolls.len(), 59);
-    assert_eq!(potions.len(), 64);
+    assert_eq!(potions.len(), 65);
     assert!(scrolls.iter().all(|item| item.weight_tenths_pound == 5));
     assert!(potions.iter().all(|item| item.weight_tenths_pound == 4));
 
@@ -635,7 +722,7 @@ fn supported_legacy_scrolls_and_potions_keep_source_identity_and_values() {
                 .expect("supported consumables should have source flavor")
         })
         .collect::<std::collections::BTreeSet<_>>();
-    assert_eq!(appearance_keys.len(), 123);
+    assert_eq!(appearance_keys.len(), 124);
 
     let added_values = [
         ("demo.item.door-stair-location-scroll", 10),

@@ -64,7 +64,9 @@ pub(crate) fn valid_item_effect(
             healing_dice,
             healing_sides,
         } => (1..=100).contains(healing_dice) && (1..=10_000).contains(healing_sides),
-        ItemUseEffectDefinition::ApplyFastRecovery => true,
+        ItemUseEffectDefinition::ApplySaltWater | ItemUseEffectDefinition::ApplyFastRecovery => {
+            true
+        }
         ItemUseEffectDefinition::ApplyLifeRestoration {
             healing_amount,
             life_force_amount,
@@ -567,6 +569,7 @@ pub(super) fn validate_items(
                     | ItemUseEffectDefinition::RestoreAllVitality { .. }
                     | ItemUseEffectDefinition::ApplyRestorativeFeast { .. }
                     | ItemUseEffectDefinition::ApplyElvishWaybread { .. }
+                    | ItemUseEffectDefinition::ApplySaltWater
                     | ItemUseEffectDefinition::ApplyFastRecovery
                     | ItemUseEffectDefinition::ApplyLifeRestoration { .. }
                     | ItemUseEffectDefinition::DrainAttribute { .. }
@@ -840,6 +843,7 @@ pub(super) fn validate_items(
                         | ItemUseEffectDefinition::RestoreAllVitality { .. }
                         | ItemUseEffectDefinition::ApplyRestorativeFeast { .. }
                         | ItemUseEffectDefinition::ApplyElvishWaybread { .. }
+                        | ItemUseEffectDefinition::ApplySaltWater
                         | ItemUseEffectDefinition::ApplyLifeRestoration { .. }
                         | ItemUseEffectDefinition::IncreaseAttribute { .. }
                         | ItemUseEffectDefinition::AugmentAttributes

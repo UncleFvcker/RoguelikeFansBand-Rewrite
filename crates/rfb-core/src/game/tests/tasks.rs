@@ -47,6 +47,44 @@ fn direct_warrens_death_drops(
 }
 
 #[test]
+fn orc_cave_natural_affixes_never_cross_item_slots() {
+    let mut game =
+        Game::new_with_build(67, RFB_WARRIOR_BUILD_ID).expect("Orc Cave loot test should create");
+    let context = LootContext {
+        table_id: "demo.loot-table.orc-cave".to_owned(),
+        floor_id: "demo.floor.orc-cave-depth-32".to_owned(),
+        depth: 32,
+        source: LootSource::MonsterDeath {
+            actor_id: "test.orc-cave.loot-source".to_owned(),
+        },
+    };
+    let mut saw_slaying = false;
+    let mut saw_fine_incompatible_fallback = false;
+    for _ in 0..20_000 {
+        let drops = game
+            .generate_loot_instances(&context, ItemLocation::Ground(game.player.position))
+            .expect("Orc Cave loot should generate");
+        for item in drops {
+            let definition = game
+                .content
+                .item(&item.kind_id)
+                .expect("generated item definition should exist");
+            if item.affix_ids == ["rfb-legacy.affix.slaying"] {
+                saw_slaying = true;
+                assert_eq!(definition.equipment_slot.as_deref(), Some("weapon"));
+            } else if item.quality == ItemQualityDto::Fine
+                && definition.equipment_slot.as_deref() != Some("weapon")
+            {
+                saw_fine_incompatible_fallback = true;
+                assert!(item.affix_ids.is_empty());
+            }
+        }
+    }
+    assert!(saw_slaying);
+    assert!(saw_fine_incompatible_fallback);
+}
+
+#[test]
 fn warrens_keeper_drop_count_is_one_d_two_and_items_only() {
     let mut saw_one = false;
     let mut saw_two = false;

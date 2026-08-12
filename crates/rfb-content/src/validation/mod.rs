@@ -387,6 +387,8 @@ pub(crate) fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<
         TableValidationRefs {
             item_limits: &item_limits,
             affix_ids: &affix_ids,
+            items: &content.items,
+            affixes: &content.affixes,
             actor_loot_table_ids,
             actor_roles: &actor_roles,
             actor_tag_values: &actor_tag_values,
