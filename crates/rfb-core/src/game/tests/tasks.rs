@@ -568,6 +568,95 @@ fn trouble_at_home_runs_from_white_horse_targets_only_mercenaries_and_rewards_wa
 }
 
 #[test]
+fn crows_nest_unlocks_after_trouble_at_home_clears_all_birds_and_rewards_a_staff() {
+    let mut game =
+        Game::new_with_build(143, "demo.build.warrior").expect("Warrens journey should create");
+    let task_id = "demo.task.crows-nest";
+    let entry = Position { x: 72, y: 23 };
+    assert_eq!(
+        game.terrain_at(entry),
+        "demo.terrain.crows-nest-entry-available"
+    );
+    game.player.position = Position { x: 63, y: 13 };
+    assert_eq!(
+        game.accept_task("demo.town-facility.outpost-white-horse", task_id),
+        Err("task-locked")
+    );
+
+    game.task_states.insert(
+        "demo.task.trouble-at-home".to_owned(),
+        TaskState {
+            status: TaskStatusKindDto::Completed,
+            stage_index: 0,
+            current: 5,
+            required: 5,
+            active_floor_id: None,
+            retakes_used: 0,
+        },
+    );
+    dispatch_next(
+        &mut game,
+        GameCommand::AcceptTask {
+            facility_id: "demo.town-facility.outpost-white-horse".to_owned(),
+            task_id: task_id.to_owned(),
+        },
+    );
+    assert_eq!(game.task_states[task_id].status, TaskStatusKindDto::Taken);
+    assert_eq!(game.terrain_at(entry), "demo.terrain.crows-nest-entry");
+
+    game.player.position = entry;
+    dispatch_next(&mut game, GameCommand::TraverseStairs);
+    assert_eq!(game.current_floor_id, "demo.floor.crows-nest");
+    assert_eq!(game.entities.len(), 9);
+    game.entities.clear();
+    dispatch_next(&mut game, GameCommand::Wait);
+    assert_eq!(
+        game.task_states[task_id].status,
+        TaskStatusKindDto::RewardAvailable
+    );
+
+    game.player.position = Position { x: 2, y: 14 };
+    dispatch_next(&mut game, GameCommand::TraverseStairs);
+    assert_eq!(game.current_floor_id, wilderness::WILDERNESS_FLOOR_ID);
+    assert_eq!(
+        game.terrain_at(entry),
+        "demo.terrain.crows-nest-entry-completed"
+    );
+    game.player.position = Position { x: 63, y: 13 };
+    dispatch_next(
+        &mut game,
+        GameCommand::ClaimTaskReward {
+            facility_id: "demo.town-facility.outpost-white-horse".to_owned(),
+            task_id: task_id.to_owned(),
+        },
+    );
+    assert_eq!(
+        game.task_states[task_id].status,
+        TaskStatusKindDto::Completed
+    );
+    let reward = game
+        .items
+        .iter()
+        .find(|item| item.id == "demo.task.crows-nest.reward.1")
+        .expect("Crow's Nest should grant its fixed reward");
+    assert_eq!(reward.kind_id, "demo.item.enlightenment-staff");
+    assert_eq!(reward.location, ItemLocation::Inventory);
+    assert_eq!(
+        reward
+            .activation
+            .as_ref()
+            .map(|activation| activation.profile_id.as_str()),
+        Some("demo.device-activation.enlightenment")
+    );
+    assert_eq!(
+        reward
+            .charges
+            .map(|charges| (charges.current, charges.maximum)),
+        Some((60, 60))
+    );
+}
+
+#[test]
 fn clearing_thieves_hideout_closes_the_floor_without_granting_the_reward() {
     let mut game =
         Game::new_with_build(43, "demo.build.warrior").expect("Warrens journey should create");

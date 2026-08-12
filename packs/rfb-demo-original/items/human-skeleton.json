@@ -1,0 +1,13 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.human-skeleton",
+  "nameKey": "item-demo-human-skeleton-name",
+  "descriptionKey": "item-demo-human-skeleton-description",
+  "glyph": "~",
+  "generationLevel": 5,
+  "weightTenthsPound": 60,
+  "maxStack": 1,
+  "baseValue": 0,
+  "tags": ["corpse", "human", "remains", "skeleton"]
+}

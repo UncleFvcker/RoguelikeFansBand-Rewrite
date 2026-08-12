@@ -557,3 +557,11 @@ contract-v266 / 包 1.257.0 接入白马旅店 quest 50“家里的麻烦”。3
 混乱、幻觉、失忆与传送分支。包包含 71 种地形、647 种 actor 和 258 种物品，内容
 hash 为 `824828fff84a945b868acb37c48781adc0ab9d7ad8fd3f52beb7cfa3fd5b2c46`。
 协议保持 1.175，State Hash Schema 保持 v87。
+
+contract-v267 / 包 1.258.0 接入白马旅店 quest 62“乌鸦巢”。38×17 固定地图保留
+泥土/石墙地形、6 只乌鸦、2 只杜尔桑的乌鸦、1 只腐肉鸟、5 具固定人类骨架，以及
+10 具骨架与 10 个随机物品位置的整组二元乱序；`InlineFloorMapDefinition` 为此增加
+窄化的 `scrambledItemLootPair`。默认奖励是带 60 点容量、10 点消耗、20 级难度和
+半径 30 地图探测的启明法杖。content hash 为
+`c4ac995bbb20437d110ad78e3dbc6c0431c57e2c8f1a5a4e8c9d6c2dd989073d`；协议保持
+1.175，State Hash Schema 保持 v87。

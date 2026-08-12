@@ -382,6 +382,17 @@
         "playerPosition": {
           "$ref": "#/$defs/ContentPosition"
         },
+        "scrambledItemLootPair": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/InlineScrambledItemLootPairDefinition"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
         "scrambledItemPair": {
           "default": null,
           "items": {
@@ -443,6 +454,28 @@
         "drawCount",
         "placementIndices",
         "positions"
+      ],
+      "type": "object"
+    },
+    "InlineScrambledItemLootPairDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "itemSpawns": {
+          "items": {
+            "$ref": "#/$defs/ItemSpawn"
+          },
+          "type": "array"
+        },
+        "lootSpawns": {
+          "items": {
+            "$ref": "#/$defs/InlineFloorLootSpawnDefinition"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "itemSpawns",
+        "lootSpawns"
       ],
       "type": "object"
     },

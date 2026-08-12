@@ -533,6 +533,10 @@
       "positions": [{ "x": 63, "y": 11 }]
     },
     {
+      "terrainId": "demo.terrain.crows-nest-entry-available",
+      "positions": [{ "x": 72, "y": 23 }]
+    },
+    {
       "terrainId": "demo.terrain.thieves-hideout-entry-available",
       "positions": [{ "x": 30, "y": 9 }]
     },
@@ -729,6 +733,26 @@
               { "itemKindId": "demo.item.set-of-studded-leather-gloves", "quantity": 1, "weight": 1 }
             ]
           }
+        ]
+      }
+    },
+    {
+      "id": "demo.task.crows-nest",
+      "nameKey": "task-demo-crows-nest-name",
+      "descriptionKey": "task-demo-crows-nest-description",
+      "sourceFacilityId": "demo.town-facility.outpost-white-horse",
+      "prerequisiteTaskId": "demo.task.trouble-at-home",
+      "location": {
+        "kind": "dedicated-floors",
+        "floorIds": ["demo.floor.crows-nest"]
+      },
+      "objectives": [
+        { "kind": "clear-floor", "floorId": "demo.floor.crows-nest" }
+      ],
+      "reward": {
+        "itemInstanceId": "demo.task.crows-nest.reward.1",
+        "entries": [
+          { "itemKindId": "demo.item.enlightenment-staff", "quantity": 1, "weight": 1 }
         ]
       }
     },
@@ -4225,6 +4249,87 @@
             }
           ]
         }
+      },
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.crows-nest",
+      "nameKey": "floor-demo-crows-nest-name",
+      "returnFloorId": "demo.floor.surface",
+      "lifecycle": "one-shot",
+      "entryTerrainId": "demo.terrain.crows-nest-entry",
+      "availableEntryTerrainId": "demo.terrain.crows-nest-entry-available",
+      "completedEntryTerrainId": "demo.terrain.crows-nest-entry-completed",
+      "failedEntryTerrainId": "demo.terrain.crows-nest-entry-failed",
+      "abandonedEntryTerrainId": "demo.terrain.crows-nest-entry-abandoned",
+      "taskId": "demo.task.crows-nest",
+      "depth": 15,
+      "width": 38,
+      "height": 17,
+      "wallTerrainId": "demo.terrain.permanent-wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "closedDoorTerrainId": "demo.terrain.door-closed",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "inlineMap": {
+        "playerPosition": { "x": 2, "y": 14 },
+        "terrainOverrides": [
+          {
+            "terrainId": "demo.terrain.floor",
+            "positions": [{"x":11,"y":1},{"x":12,"y":1},{"x":13,"y":1},{"x":14,"y":1},{"x":15,"y":1},{"x":16,"y":1},{"x":17,"y":1},{"x":18,"y":1},{"x":19,"y":1},{"x":20,"y":1},{"x":21,"y":1},{"x":22,"y":1},{"x":23,"y":1},{"x":24,"y":1},{"x":25,"y":1},{"x":5,"y":2},{"x":7,"y":2},{"x":9,"y":2},{"x":12,"y":2},{"x":13,"y":2},{"x":14,"y":2},{"x":15,"y":2},{"x":16,"y":2},{"x":17,"y":2},{"x":18,"y":2},{"x":19,"y":2},{"x":20,"y":2},{"x":21,"y":2},{"x":22,"y":2},{"x":23,"y":2},{"x":24,"y":2},{"x":25,"y":2},{"x":26,"y":2},{"x":2,"y":3},{"x":6,"y":3},{"x":7,"y":3},{"x":10,"y":3},{"x":13,"y":3},{"x":14,"y":3},{"x":15,"y":3},{"x":16,"y":3},{"x":17,"y":3},{"x":18,"y":3},{"x":19,"y":3},{"x":20,"y":3},{"x":21,"y":3},{"x":22,"y":3},{"x":23,"y":3},{"x":24,"y":3},{"x":25,"y":3},{"x":26,"y":3},{"x":2,"y":4},{"x":3,"y":4},{"x":5,"y":4},{"x":8,"y":4},{"x":9,"y":4},{"x":11,"y":4},{"x":13,"y":4},{"x":14,"y":4},{"x":15,"y":4},{"x":16,"y":4},{"x":17,"y":4},{"x":18,"y":4},{"x":19,"y":4},{"x":20,"y":4},{"x":21,"y":4},{"x":22,"y":4},{"x":23,"y":4},{"x":24,"y":4},{"x":25,"y":4},{"x":2,"y":5},{"x":3,"y":5},{"x":6,"y":5},{"x":7,"y":5},{"x":10,"y":5},{"x":13,"y":5},{"x":14,"y":5},{"x":15,"y":5},{"x":16,"y":5},{"x":17,"y":5},{"x":18,"y":5},{"x":19,"y":5},{"x":20,"y":5},{"x":21,"y":5},{"x":22,"y":5},{"x":2,"y":6},{"x":3,"y":6},{"x":4,"y":6},{"x":8,"y":6},{"x":9,"y":6},{"x":13,"y":6},{"x":14,"y":6},{"x":15,"y":6},{"x":16,"y":6},{"x":17,"y":6},{"x":18,"y":6},{"x":19,"y":6},{"x":20,"y":6},{"x":21,"y":6},{"x":22,"y":6},{"x":3,"y":7},{"x":4,"y":7},{"x":5,"y":7},{"x":12,"y":7},{"x":13,"y":7},{"x":14,"y":7},{"x":15,"y":7},{"x":16,"y":7},{"x":17,"y":7},{"x":18,"y":7},{"x":21,"y":7},{"x":22,"y":7},{"x":23,"y":7},{"x":29,"y":7},{"x":30,"y":7},{"x":31,"y":7},{"x":5,"y":8},{"x":6,"y":8},{"x":7,"y":8},{"x":8,"y":8},{"x":9,"y":8},{"x":10,"y":8},{"x":11,"y":8},{"x":12,"y":8},{"x":13,"y":8},{"x":14,"y":8},{"x":15,"y":8},{"x":16,"y":8},{"x":23,"y":8},{"x":24,"y":8},{"x":28,"y":8},{"x":29,"y":8},{"x":30,"y":8},{"x":31,"y":8},{"x":32,"y":8},{"x":24,"y":9},{"x":25,"y":9},{"x":27,"y":9},{"x":28,"y":9},{"x":32,"y":9},{"x":33,"y":9},{"x":25,"y":10},{"x":26,"y":10},{"x":27,"y":10},{"x":33,"y":10},{"x":34,"y":10},{"x":26,"y":11},{"x":27,"y":11},{"x":32,"y":11},{"x":33,"y":11},{"x":26,"y":12},{"x":33,"y":12},{"x":34,"y":12},{"x":1,"y":13},{"x":2,"y":13},{"x":3,"y":13},{"x":4,"y":13},{"x":5,"y":13},{"x":11,"y":13},{"x":12,"y":13},{"x":15,"y":13},{"x":17,"y":13},{"x":18,"y":13},{"x":22,"y":13},{"x":23,"y":13},{"x":24,"y":13},{"x":25,"y":13},{"x":26,"y":13},{"x":30,"y":13},{"x":31,"y":13},{"x":32,"y":13},{"x":33,"y":13},{"x":34,"y":13},{"x":35,"y":13},{"x":36,"y":13},{"x":1,"y":14},{"x":3,"y":14},{"x":4,"y":14},{"x":5,"y":14},{"x":6,"y":14},{"x":7,"y":14},{"x":8,"y":14},{"x":9,"y":14},{"x":10,"y":14},{"x":11,"y":14},{"x":12,"y":14},{"x":13,"y":14},{"x":14,"y":14},{"x":15,"y":14},{"x":16,"y":14},{"x":17,"y":14},{"x":18,"y":14},{"x":19,"y":14},{"x":20,"y":14},{"x":21,"y":14},{"x":22,"y":14},{"x":30,"y":14},{"x":31,"y":14},{"x":32,"y":14},{"x":33,"y":14},{"x":34,"y":14},{"x":35,"y":14},{"x":36,"y":14},{"x":1,"y":15},{"x":2,"y":15},{"x":3,"y":15},{"x":4,"y":15},{"x":5,"y":15},{"x":13,"y":15},{"x":14,"y":15},{"x":19,"y":15},{"x":20,"y":15},{"x":21,"y":15},{"x":30,"y":15},{"x":31,"y":15},{"x":32,"y":15},{"x":33,"y":15},{"x":34,"y":15},{"x":35,"y":15},{"x":36,"y":15}]
+          },
+          {
+            "terrainId": "demo.terrain.dirt",
+            "positions": [{"x":5,"y":1},{"x":6,"y":1},{"x":7,"y":1},{"x":8,"y":1},{"x":9,"y":1},{"x":10,"y":1},{"x":3,"y":2},{"x":4,"y":2},{"x":6,"y":2},{"x":8,"y":2},{"x":10,"y":2},{"x":11,"y":2},{"x":3,"y":3},{"x":4,"y":3},{"x":5,"y":3},{"x":8,"y":3},{"x":9,"y":3},{"x":11,"y":3},{"x":12,"y":3},{"x":4,"y":4},{"x":6,"y":4},{"x":7,"y":4},{"x":10,"y":4},{"x":12,"y":4},{"x":4,"y":5},{"x":5,"y":5},{"x":8,"y":5},{"x":9,"y":5},{"x":11,"y":5},{"x":12,"y":5},{"x":5,"y":6},{"x":6,"y":6},{"x":7,"y":6},{"x":10,"y":6},{"x":11,"y":6},{"x":12,"y":6},{"x":6,"y":7},{"x":7,"y":7},{"x":8,"y":7},{"x":9,"y":7},{"x":10,"y":7},{"x":11,"y":7}]
+          },
+          { "terrainId": "demo.terrain.stairs-up", "positions": [{ "x": 2, "y": 14 }] }
+        ],
+        "actorSpawns": [
+          { "instanceId": "demo.actor.crows-nest.crow.1", "kindId": "demo.actor.crow", "position": { "x": 23, "y": 3 } },
+          { "instanceId": "demo.actor.crows-nest.crow.2", "kindId": "demo.actor.crow", "position": { "x": 20, "y": 5 } },
+          { "instanceId": "demo.actor.crows-nest.crow.3", "kindId": "demo.actor.crow", "position": { "x": 17, "y": 6 } },
+          { "instanceId": "demo.actor.crows-nest.crow.4", "kindId": "demo.actor.crow", "position": { "x": 11, "y": 13 } },
+          { "instanceId": "demo.actor.crows-nest.crow.5", "kindId": "demo.actor.crow", "position": { "x": 22, "y": 13 } },
+          { "instanceId": "demo.actor.crows-nest.crow.6", "kindId": "demo.actor.crow", "position": { "x": 19, "y": 15 } },
+          { "instanceId": "demo.actor.crows-nest.carrion.1", "kindId": "demo.actor.carrion", "position": { "x": 33, "y": 14 } },
+          { "instanceId": "demo.actor.crows-nest.durthang.1", "kindId": "demo.actor.crow-of-durthang", "position": { "x": 14, "y": 1 } },
+          { "instanceId": "demo.actor.crows-nest.durthang.2", "kindId": "demo.actor.crow-of-durthang", "position": { "x": 8, "y": 4 } }
+        ],
+        "itemSpawns": [
+          { "instanceId": "demo.item.crows-nest.human-skeleton.fixed.1", "kindId": "demo.item.human-skeleton", "position": { "x": 5, "y": 2 }, "quantity": 1 },
+          { "instanceId": "demo.item.crows-nest.human-skeleton.fixed.2", "kindId": "demo.item.human-skeleton", "position": { "x": 7, "y": 2 }, "quantity": 1 },
+          { "instanceId": "demo.item.crows-nest.human-skeleton.fixed.3", "kindId": "demo.item.human-skeleton", "position": { "x": 8, "y": 6 }, "quantity": 1 },
+          { "instanceId": "demo.item.crows-nest.human-skeleton.fixed.4", "kindId": "demo.item.human-skeleton", "position": { "x": 9, "y": 6 }, "quantity": 1 },
+          { "instanceId": "demo.item.crows-nest.human-skeleton.fixed.5", "kindId": "demo.item.human-skeleton", "position": { "x": 36, "y": 13 }, "quantity": 1 }
+        ],
+        "scrambledItemLootPair": {
+          "itemSpawns": [
+            { "instanceId": "demo.item.crows-nest.human-skeleton.scrambled.1", "kindId": "demo.item.human-skeleton", "position": { "x": 11, "y": 1 }, "quantity": 1 },
+            { "instanceId": "demo.item.crows-nest.human-skeleton.scrambled.2", "kindId": "demo.item.human-skeleton", "position": { "x": 7, "y": 3 }, "quantity": 1 },
+            { "instanceId": "demo.item.crows-nest.human-skeleton.scrambled.3", "kindId": "demo.item.human-skeleton", "position": { "x": 10, "y": 3 }, "quantity": 1 },
+            { "instanceId": "demo.item.crows-nest.human-skeleton.scrambled.4", "kindId": "demo.item.human-skeleton", "position": { "x": 5, "y": 4 }, "quantity": 1 },
+            { "instanceId": "demo.item.crows-nest.human-skeleton.scrambled.5", "kindId": "demo.item.human-skeleton", "position": { "x": 9, "y": 4 }, "quantity": 1 },
+            { "instanceId": "demo.item.crows-nest.human-skeleton.scrambled.6", "kindId": "demo.item.human-skeleton", "position": { "x": 6, "y": 5 }, "quantity": 1 },
+            { "instanceId": "demo.item.crows-nest.human-skeleton.scrambled.7", "kindId": "demo.item.human-skeleton", "position": { "x": 31, "y": 13 }, "quantity": 1 },
+            { "instanceId": "demo.item.crows-nest.human-skeleton.scrambled.8", "kindId": "demo.item.human-skeleton", "position": { "x": 32, "y": 14 }, "quantity": 1 },
+            { "instanceId": "demo.item.crows-nest.human-skeleton.scrambled.9", "kindId": "demo.item.human-skeleton", "position": { "x": 33, "y": 15 }, "quantity": 1 },
+            { "instanceId": "demo.item.crows-nest.human-skeleton.scrambled.10", "kindId": "demo.item.human-skeleton", "position": { "x": 35, "y": 15 }, "quantity": 1 }
+          ],
+          "lootSpawns": [
+            { "id": "demo.loot.crows-nest.scrambled.1", "position": { "x": 9, "y": 2 }, "lootTableId": "demo.loot-table.warrens" },
+            { "id": "demo.loot.crows-nest.scrambled.2", "position": { "x": 6, "y": 3 }, "lootTableId": "demo.loot-table.warrens" },
+            { "id": "demo.loot.crows-nest.scrambled.3", "position": { "x": 11, "y": 4 }, "lootTableId": "demo.loot-table.warrens" },
+            { "id": "demo.loot.crows-nest.scrambled.4", "position": { "x": 7, "y": 5 }, "lootTableId": "demo.loot-table.warrens" },
+            { "id": "demo.loot.crows-nest.scrambled.5", "position": { "x": 10, "y": 5 }, "lootTableId": "demo.loot-table.warrens" },
+            { "id": "demo.loot.crows-nest.scrambled.6", "position": { "x": 4, "y": 6 }, "lootTableId": "demo.loot-table.warrens" },
+            { "id": "demo.loot.crows-nest.scrambled.7", "position": { "x": 34, "y": 13 }, "lootTableId": "demo.loot-table.warrens" },
+            { "id": "demo.loot.crows-nest.scrambled.8", "position": { "x": 30, "y": 14 }, "lootTableId": "demo.loot-table.warrens" },
+            { "id": "demo.loot.crows-nest.scrambled.9", "position": { "x": 35, "y": 14 }, "lootTableId": "demo.loot-table.warrens" },
+            { "id": "demo.loot.crows-nest.scrambled.10", "position": { "x": 31, "y": 15 }, "lootTableId": "demo.loot-table.warrens" }
+          ]
+        },
+        "lootSpawns": []
       },
       "actorSpawns": [],
       "lootSpawns": []

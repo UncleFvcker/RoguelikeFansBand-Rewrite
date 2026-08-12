@@ -857,6 +857,39 @@ impl Game {
                 items.push(self.inline_item_instance(definition, spawn, position));
             }
         }
+        if let Some(pair) = &inline_map.scrambled_item_loot_pair {
+            let swap = self.rng.bounded(2) == 1;
+            for (index, spawn) in pair.item_spawns.iter().enumerate() {
+                let position = if swap {
+                    pair.loot_spawns[index].position
+                } else {
+                    spawn.position
+                };
+                items.push(self.inline_item_instance(definition, spawn, position));
+            }
+            for (index, spawn) in pair.loot_spawns.iter().enumerate() {
+                let position = if swap {
+                    pair.item_spawns[index].position
+                } else {
+                    spawn.position
+                };
+                items.extend(self.generate_loot_instances(
+                    &LootContext {
+                        table_id: spawn.loot_table_id.clone(),
+                        floor_id: definition.id.clone(),
+                        depth: definition.depth,
+                        source: LootSource::FloorRoom {
+                            room_id: "inline-map".to_owned(),
+                            spawn_id: spawn.id.clone(),
+                        },
+                    },
+                    ItemLocation::Ground(Position {
+                        x: i32::from(position.x),
+                        y: i32::from(position.y),
+                    }),
+                )?);
+            }
+        }
         for spawn in &inline_map.loot_spawns {
             items.extend(self.generate_loot_instances(
                 &LootContext {

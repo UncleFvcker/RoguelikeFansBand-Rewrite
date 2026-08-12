@@ -1,4 +1,4 @@
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 use super::*;
 
@@ -3896,6 +3896,112 @@ fn trouble_at_home_uses_the_original_map_targets_items_and_warrior_reward() {
 }
 
 #[test]
+fn crows_nest_uses_the_original_map_clear_goal_birds_scramble_and_reward() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let world = artifact
+        .content
+        .worlds
+        .iter()
+        .find(|world| world.id == "demo.world.middle-earth")
+        .expect("fixture should contain Middle-earth");
+    let task = world
+        .tasks
+        .iter()
+        .find(|task| task.id == "demo.task.crows-nest")
+        .expect("fixture should contain Crow's Nest");
+    assert_eq!(
+        task.source_facility_id.as_deref(),
+        Some("demo.town-facility.outpost-white-horse")
+    );
+    assert_eq!(
+        task.prerequisite_task_id.as_deref(),
+        Some("demo.task.trouble-at-home")
+    );
+    assert_eq!(task.objectives.len(), 1);
+    assert_eq!(task.objectives[0].kind, TaskObjectiveKind::ClearFloor);
+    assert_eq!(
+        task.reward.entries[0].item_kind_id,
+        "demo.item.enlightenment-staff"
+    );
+
+    let floor = world
+        .procedural_floors
+        .iter()
+        .find(|floor| floor.id == "demo.floor.crows-nest")
+        .expect("fixture should contain Crow's Nest");
+    assert_eq!((floor.width, floor.height, floor.depth), (38, 17, 15));
+    let inline_map = floor
+        .inline_map
+        .as_ref()
+        .expect("Crow's Nest should retain its inline map");
+    assert_eq!(inline_map.player_position, ContentPosition { x: 2, y: 14 });
+    assert_eq!(inline_map.actor_spawns.len(), 9);
+    assert_eq!(
+        inline_map
+            .actor_spawns
+            .iter()
+            .map(|spawn| spawn.kind_id.as_str())
+            .fold(BTreeMap::new(), |mut counts, id| {
+                *counts.entry(id).or_insert(0) += 1;
+                counts
+            }),
+        BTreeMap::from([
+            ("demo.actor.carrion", 1),
+            ("demo.actor.crow", 6),
+            ("demo.actor.crow-of-durthang", 2),
+        ])
+    );
+    assert_eq!(inline_map.item_spawns.len(), 5);
+    assert!(
+        inline_map
+            .item_spawns
+            .iter()
+            .all(|spawn| { spawn.kind_id == "demo.item.human-skeleton" && spawn.quantity == 1 })
+    );
+    let pair = inline_map
+        .scrambled_item_loot_pair
+        .as_ref()
+        .expect("skeleton and random-loot glyphs should retain their group scramble");
+    assert_eq!((pair.item_spawns.len(), pair.loot_spawns.len()), (10, 10));
+    assert!(
+        pair.item_spawns
+            .iter()
+            .all(|spawn| spawn.kind_id == "demo.item.human-skeleton")
+    );
+    assert!(
+        pair.loot_spawns
+            .iter()
+            .all(|spawn| spawn.loot_table_id == "demo.loot-table.warrens")
+    );
+    let terrain_counts = inline_map
+        .terrain_overrides
+        .iter()
+        .map(|override_| (override_.terrain_id.as_str(), override_.positions.len()))
+        .collect::<BTreeMap<_, _>>();
+    assert_eq!(terrain_counts["demo.terrain.floor"], 220);
+    assert_eq!(terrain_counts["demo.terrain.dirt"], 42);
+    assert_eq!(terrain_counts["demo.terrain.stairs-up"], 1);
+
+    let staff = artifact
+        .content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.enlightenment-staff")
+        .expect("the fixed quest reward should exist");
+    let activation = &staff
+        .device_generation
+        .as_ref()
+        .expect("the reward should be a device")
+        .activations[0];
+    assert_eq!(activation.device_check_difficulty, 20);
+    assert_eq!(
+        (activation.charges.minimum, activation.charges.maximum),
+        (60, 60)
+    );
+    assert_eq!(activation.charges.cost, 10);
+}
+
+#[test]
 fn inline_floor_items_reject_duplicate_or_blocked_placements() {
     fn trouble_inline(content: &mut CompiledContentV1) -> &mut InlineFloorMapDefinition {
         content
@@ -3938,6 +4044,42 @@ fn inline_floor_items_reject_duplicate_or_blocked_placements() {
     trouble_inline(&mut blocked_position).item_spawns[0].position = ContentPosition { x: 0, y: 0 };
     assert!(matches!(
         validate_and_normalize(&mut blocked_position),
+        Err(ContentError::InvalidProceduralFloor(_))
+    ));
+}
+
+#[test]
+fn scrambled_item_loot_pair_requires_equal_nonempty_disjoint_groups() {
+    fn crows_pair(content: &mut CompiledContentV1) -> &mut InlineScrambledItemLootPairDefinition {
+        content
+            .worlds
+            .iter_mut()
+            .find(|world| world.id == "demo.world.middle-earth")
+            .and_then(|world| {
+                world
+                    .procedural_floors
+                    .iter_mut()
+                    .find(|floor| floor.id == "demo.floor.crows-nest")
+            })
+            .and_then(|floor| floor.inline_map.as_mut())
+            .and_then(|inline_map| inline_map.scrambled_item_loot_pair.as_mut())
+            .expect("Crow's Nest should retain its item/loot scramble")
+    }
+
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+
+    let mut mismatched = artifact.content.clone();
+    crows_pair(&mut mismatched).loot_spawns.pop();
+    assert!(matches!(
+        validate_and_normalize(&mut mismatched),
+        Err(ContentError::InvalidProceduralFloor(_))
+    ));
+
+    let mut overlapping = artifact.content.clone();
+    let pair = crows_pair(&mut overlapping);
+    pair.loot_spawns[0].position = pair.item_spawns[0].position;
+    assert!(matches!(
+        validate_and_normalize(&mut overlapping),
         Err(ContentError::InvalidProceduralFloor(_))
     ));
 }
@@ -4881,7 +5023,7 @@ fn outpost_count_services_and_follow_up_tasks_match_the_original_sequence() {
             .find(|facility| facility.id == "demo.town-facility.outpost-white-horse")
             .expect("Outpost should contain the White Horse task service")
             .task_ids,
-        ["demo.task.trouble-at-home"]
+        ["demo.task.trouble-at-home", "demo.task.crows-nest"]
     );
 
     let world = artifact
@@ -5038,6 +5180,7 @@ fn wilderness_towns_accept_fixed_town_floors_and_derive_world_ownership() {
         actor_spawns: Vec::new(),
         item_spawns: Vec::new(),
         scrambled_item_pair: None,
+        scrambled_item_loot_pair: None,
         loot_spawns: Vec::new(),
         monster_formation: None,
     });

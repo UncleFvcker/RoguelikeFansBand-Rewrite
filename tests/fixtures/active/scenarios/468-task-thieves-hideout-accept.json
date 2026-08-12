@@ -878,6 +878,13 @@
       "nextGoldPileSerial": 1,
       "tasks": [
         {
+          "taskId": "demo.task.crows-nest",
+          "status": "locked",
+          "required": 1,
+          "stage": 1,
+          "stages": 1
+        },
+        {
           "taskId": "demo.task.haunted-house",
           "status": "locked",
           "required": 1,
@@ -926,7 +933,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "54ebe068c5f6e2bf500f2556eec633eacb9924363de91d40e77e8d7448dcc1d0"
+      "stateHash": "ee67cdc5c3d503c2c7b0c72b3b6c5e22dc4a6223dc9e529be6e926caeb48bef5"
     },
     "events": [
       {

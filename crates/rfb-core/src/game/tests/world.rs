@@ -118,6 +118,7 @@ fn game_with_second_town(seed: u64) -> (Game, Position) {
         actor_spawns: Vec::new(),
         item_spawns: Vec::new(),
         scrambled_item_pair: None,
+        scrambled_item_loot_pair: None,
         loot_spawns: Vec::new(),
         monster_formation: None,
     });
@@ -502,6 +503,146 @@ fn trouble_at_home_inline_floor_preserves_map_spawns_and_two_item_scramble() {
         BTreeSet::from([
             (Position { x: 25, y: 1 }, Position { x: 25, y: 2 }),
             (Position { x: 25, y: 2 }, Position { x: 25, y: 1 }),
+        ])
+    );
+}
+
+#[test]
+fn crows_nest_inline_floor_preserves_map_birds_and_group_scramble() {
+    let mut game =
+        Game::new_with_build(42, "demo.build.warrior").expect("Warrens journey should create");
+    let definition = game
+        .content
+        .world(&game.world_id)
+        .expect("Middle-earth world should remain available")
+        .procedural_floors
+        .iter()
+        .find(|floor| floor.id == "demo.floor.crows-nest")
+        .expect("Crow's Nest should remain available")
+        .clone();
+    game.rng = RfbRng::seeded(42);
+    let floor = game
+        .generate_procedural_floor(&definition, None)
+        .expect("fixed Crow's Nest floor should generate");
+
+    let rows = floor
+        .terrain
+        .chunks(usize::from(floor.width))
+        .map(|row| {
+            row.iter()
+                .map(|terrain_id| match terrain_id.as_str() {
+                    "demo.terrain.permanent-wall" => '#',
+                    "demo.terrain.floor" => '.',
+                    "demo.terrain.dirt" => ',',
+                    "demo.terrain.stairs-up" => '<',
+                    other => panic!("unexpected Crow's Nest terrain {other}"),
+                })
+                .collect::<String>()
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(
+        rows,
+        [
+            "######################################",
+            "#####,,,,,,...............############",
+            "###,,.,.,.,,...............###########",
+            "##.,,,..,,.,,..............###########",
+            "##..,.,,..,.,.............############",
+            "##..,,..,,.,,..........###############",
+            "##...,,,..,,,..........###############",
+            "###...,,,,,,.......##...#####...######",
+            "#####............######..###.....#####",
+            "########################..#..###..####",
+            "#########################...#####..###",
+            "##########################..####..####",
+            "##########################.######..###",
+            "#.....#####..##.#..###.....###.......#",
+            "#.<....................#######.......#",
+            "#.....#######..####...########.......#",
+            "######################################",
+        ]
+    );
+    assert_eq!(floor.player_position, Position { x: 2, y: 14 });
+    assert_eq!(floor.entities.len(), 9);
+    assert_eq!(
+        floor
+            .entities
+            .iter()
+            .map(|entity| entity.kind_id.as_str())
+            .fold(BTreeMap::new(), |mut counts, id| {
+                *counts.entry(id).or_insert(0) += 1;
+                counts
+            }),
+        BTreeMap::from([
+            ("demo.actor.carrion", 1),
+            ("demo.actor.crow", 6),
+            ("demo.actor.crow-of-durthang", 2),
+        ])
+    );
+    assert_eq!(
+        floor
+            .items
+            .iter()
+            .filter(|item| item.kind_id == "demo.item.human-skeleton")
+            .count(),
+        15
+    );
+
+    let mut scramble_only = definition.clone();
+    let inline_map = scramble_only
+        .inline_map
+        .as_mut()
+        .expect("Crow's Nest should retain its inline map");
+    inline_map.actor_spawns.clear();
+    inline_map.item_spawns.clear();
+    let mut mappings = BTreeSet::new();
+    for seed in 0..64 {
+        game.rng = RfbRng::seeded(seed);
+        let generated = game
+            .generate_procedural_floor(&scramble_only, None)
+            .expect("isolated item/loot scramble should generate");
+        let positions = generated
+            .items
+            .iter()
+            .filter(|item| {
+                item.id
+                    .starts_with("demo.item.crows-nest.human-skeleton.scrambled.")
+            })
+            .filter_map(|item| match item.location {
+                ItemLocation::Ground(position) => Some(position),
+                _ => None,
+            })
+            .collect::<BTreeSet<_>>();
+        assert_eq!(positions.len(), 10);
+        mappings.insert(positions);
+    }
+    assert_eq!(
+        mappings,
+        BTreeSet::from([
+            BTreeSet::from([
+                Position { x: 11, y: 1 },
+                Position { x: 7, y: 3 },
+                Position { x: 10, y: 3 },
+                Position { x: 5, y: 4 },
+                Position { x: 9, y: 4 },
+                Position { x: 6, y: 5 },
+                Position { x: 31, y: 13 },
+                Position { x: 32, y: 14 },
+                Position { x: 33, y: 15 },
+                Position { x: 35, y: 15 },
+            ]),
+            BTreeSet::from([
+                Position { x: 9, y: 2 },
+                Position { x: 6, y: 3 },
+                Position { x: 11, y: 4 },
+                Position { x: 7, y: 5 },
+                Position { x: 10, y: 5 },
+                Position { x: 4, y: 6 },
+                Position { x: 34, y: 13 },
+                Position { x: 30, y: 14 },
+                Position { x: 35, y: 14 },
+                Position { x: 31, y: 15 },
+            ]),
         ])
     );
 }

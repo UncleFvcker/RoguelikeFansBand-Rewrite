@@ -349,6 +349,24 @@ mod tests {
     }
 
     #[test]
+    fn crows_nest_uses_authoritative_chinese_names() {
+        let localizer = Localizer::new(Locale::ZhCn).expect("resources should load");
+        for (key, expected) in [
+            ("task-demo-crows-nest-name", "乌鸦巢 (前哨镇)"),
+            ("item-demo-human-skeleton-name", "一具人类骨架"),
+            ("item-demo-enlightenment-staff-name", "启明法杖"),
+            ("device-activation-demo-enlightenment-name", "启示"),
+        ] {
+            assert_eq!(
+                localizer
+                    .format_exact(Locale::ZhCn, key, None)
+                    .expect("Crow's Nest name should format"),
+                expected
+            );
+        }
+    }
+
+    #[test]
     fn all_item_affix_and_artifact_names_have_exact_matching_messages() {
         let pack = Path::new(env!("CARGO_MANIFEST_DIR"))
             .parent()

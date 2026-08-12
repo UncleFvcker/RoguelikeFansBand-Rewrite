@@ -1932,13 +1932,29 @@ pub(super) fn validate_world(
                         validate_inline_item(spawn)?;
                     }
                 }
+                if let Some(pair) = &mut inline_map.scrambled_item_loot_pair {
+                    pair.item_spawns.sort_by_key(|spawn| spawn.position);
+                    for spawn in &mut pair.item_spawns {
+                        validate_inline_item(spawn)?;
+                    }
+                }
             }
 
             inline_map
                 .loot_spawns
                 .sort_by(|left, right| left.id.cmp(&right.id));
             let mut inline_loot_ids = BTreeSet::new();
-            for spawn in &inline_map.loot_spawns {
+            let scrambled_loot_spawns = if let Some(pair) = &mut inline_map.scrambled_item_loot_pair
+            {
+                if pair.item_spawns.is_empty() || pair.item_spawns.len() != pair.loot_spawns.len() {
+                    return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+                }
+                pair.loot_spawns.sort_by_key(|spawn| spawn.position);
+                pair.loot_spawns.as_slice()
+            } else {
+                &[]
+            };
+            for spawn in inline_map.loot_spawns.iter().chain(scrambled_loot_spawns) {
                 validate_id(&spawn.id)?;
                 validate_position(
                     spawn.position,

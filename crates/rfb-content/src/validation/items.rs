@@ -452,7 +452,7 @@ pub(crate) fn valid_item_effect(
                         || byte.is_ascii_digit()
                         || matches!(byte, b'-' | b'_')
                 })
-                && (*radius > 0 && (*radius <= 8 || (*radius == u8::MAX && *through_walls)))
+                && (*radius > 0 && (*radius <= 30 || (*radius == u8::MAX && *through_walls)))
                 && match subject {
                     AbilityDetectSubjectDefinition::Terrain => {
                         if category == "map" {
