@@ -4117,6 +4117,86 @@ fn p56b_gospel_summon_caps_one_d_four_at_three_tracking_pixels() {
 }
 
 #[test]
+fn p60_gragomani_rolls_count_then_one_weighted_kind_for_the_whole_batch() {
+    fn expected(seed: u64) -> (usize, &'static str) {
+        let mut rng = RfbRng::seeded(seed);
+        let count = usize::try_from(rng.bounded(4) + 5).expect("1d4+4 fits usize");
+        let kind_id = if rng.bounded(4) == 0 {
+            "demo.actor.malicious-leprechaun"
+        } else {
+            "demo.actor.leprechaun-fanatic"
+        };
+        (count, kind_id)
+    }
+
+    fn summon(seed: u64) -> Vec<String> {
+        let mut game = Game::new(0);
+        clear_monsters(&mut game);
+        game.terrain.fill("demo.terrain.floor".to_owned());
+        game.player.position = Position { x: 80, y: 20 };
+        game.entities.push(actor_from_runtime_spawn(
+            "generated.actor.gragomani",
+            "demo.actor.gragomani-the-leprechaun-prophet",
+            Position { x: 4, y: 3 },
+            5_082,
+            131,
+            100,
+            true,
+        ));
+        let ability = game
+            .content
+            .ability("rfb-legacy.ability.summon-gragomani-followers-1d4-4")
+            .expect("P60 Gragomani summon should compile")
+            .clone();
+        let AbilityEffectSpecDto::SummonCategory {
+            batch_candidates, ..
+        } = ability_effect_spec_dto(&ability.effect)
+        else {
+            panic!("Gragomani special should remain a category summon");
+        };
+        assert_eq!(
+            batch_candidates,
+            vec![
+                AbilitySummonCandidateSpecDto {
+                    actor_kind_id: "demo.actor.malicious-leprechaun".to_owned(),
+                    weight: 1,
+                },
+                AbilitySummonCandidateSpecDto {
+                    actor_kind_id: "demo.actor.leprechaun-fanatic".to_owned(),
+                    weight: 3,
+                },
+            ]
+        );
+        game.rng = RfbRng::seeded(seed);
+        let plan = game
+            .monster_ability_target_plan(0, ability, 1)
+            .expect("Gragomani special summon should have a target plan");
+        game.resolve_monster_ability_plan(
+            0,
+            "demo.actor.gragomani-the-leprechaun-prophet",
+            &plan,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .summon
+        .expect("Gragomani special should summon")
+        .summoned_kind_ids
+    }
+
+    let malicious_seed = (0..128)
+        .find(|seed| expected(*seed).1 == "demo.actor.malicious-leprechaun")
+        .expect("a bounded seed should select the 1-in-4 candidate");
+    let fanatic_seed = (0..128)
+        .find(|seed| expected(*seed).1 == "demo.actor.leprechaun-fanatic")
+        .expect("a bounded seed should select the 3-in-4 candidate");
+    for seed in [malicious_seed, fanatic_seed] {
+        let (count, kind_id) = expected(seed);
+        assert_eq!(summon(seed), vec![kind_id.to_owned(); count]);
+    }
+}
+
+#[test]
 fn monster_polymorph_reuses_mutation_and_actor_form_transactions() {
     let ability = Game::new(0)
         .content

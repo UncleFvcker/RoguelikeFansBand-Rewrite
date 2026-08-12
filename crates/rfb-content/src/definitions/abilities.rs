@@ -212,6 +212,14 @@ pub struct AbilityRandomBranchDefinition {
     pub level_scaling: Vec<AbilityLevelScalingDefinition>,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct AbilitySummonCandidateDefinition {
+    pub actor_kind_id: String,
+    pub weight: u16,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
@@ -446,6 +454,8 @@ pub enum AbilityEffectDefinition {
         count_bonus: u8,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         maximum_count: Option<u8>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        batch_candidates: Vec<AbilitySummonCandidateDefinition>,
         #[serde(default)]
         hostile_chance_percent: u8,
         #[serde(default)]

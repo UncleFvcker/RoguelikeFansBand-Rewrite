@@ -1150,6 +1150,12 @@
               "default": false,
               "type": "boolean"
             },
+            "batchCandidates": {
+              "items": {
+                "$ref": "#/$defs/AbilitySummonCandidateDefinition"
+              },
+              "type": "array"
+            },
             "category": {
               "type": "string"
             },
@@ -2189,6 +2195,25 @@
         "keep-strongest"
       ],
       "type": "string"
+    },
+    "AbilitySummonCandidateDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "actorKindId": {
+          "type": "string"
+        },
+        "weight": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "actorKindId",
+        "weight"
+      ],
+      "type": "object"
     },
     "ActorDamageType": {
       "enum": [

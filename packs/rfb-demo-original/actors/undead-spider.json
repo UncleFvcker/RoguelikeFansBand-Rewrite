@@ -1,0 +1,111 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "friends": {
+      "chancePercent": 0,
+      "dice": 3,
+      "sides": 3
+    },
+    "legacyIndex": 1176,
+    "maxDepth": 999,
+    "rarity": 4
+  },
+  "attack": 15,
+  "contactAuras": [
+    {
+      "damageDice": 3,
+      "damageSides": 3,
+      "damageType": "nether"
+    }
+  ],
+  "damageDice": 2,
+  "damageSides": 8,
+  "damageType": "physical",
+  "defense": 5,
+  "descriptionKey": "actor-demo-undead-spider-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 1250,
+  "formatVersion": 1,
+  "glyph": "S",
+  "hitPointDice": {
+    "dice": 40,
+    "sides": 20
+  },
+  "id": "demo.actor.undead-spider",
+  "level": 60,
+  "light": {
+    "darkness": true,
+    "intrinsic": true,
+    "radius": 1
+  },
+  "maxHp": 420,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 2,
+            "damageSides": 8,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "amountDice": 2,
+            "amountSides": 6,
+            "type": "unlife"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 2,
+            "damageSides": 8,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "amountDice": 2,
+            "amountSides": 6,
+            "type": "unlife"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.jump-nether-l60",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 20
+  },
+  "nameKey": "actor-demo-undead-spider-name",
+  "resistances": {
+    "light": "vulnerable",
+    "nether": "resistant",
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 120,
+  "tags": [
+    "animal",
+    "evil",
+    "kin-glyph-83",
+    "legacy-import",
+    "orc-cave",
+    "spider",
+    "undead",
+    "weird-mind"
+  ]
+}

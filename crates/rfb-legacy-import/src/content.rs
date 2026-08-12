@@ -7193,6 +7193,7 @@ fn melee_damage_type(token: &str) -> Option<&'static str> {
         "STORM" => Some("storm"),
         "HOLY_FIRE" => Some("holy-fire"),
         "HELL_FIRE" => Some("hell-fire"),
+        "CAUSE_1" | "CAUSE_2" | "CAUSE_3" | "CAUSE_4" => Some("curse"),
         "ICE" => Some("ice"),
         "WATER" => Some("water"),
         "POIS" => Some("poison"),
@@ -7647,6 +7648,7 @@ fn map_jump_spell_token(
         "JMP_CONFUSION" => "confusion",
         "JMP_DARK" => "dark",
         "JMP_LIGHT" | "JMP_LITE" => "light",
+        "JMP_NETHER" => "nether",
         "JMP_NEXUS" => "nexus",
         _ => return None,
     };
@@ -8286,6 +8288,8 @@ fn monster_json(
                 "FIRE" => "fire",
                 "ICE" => "ice",
                 "LIGHT" | "LITE" => "light",
+                "NETHER" => "nether",
+                "HOLY_FIRE" => "holy-fire",
                 "CAUSE_2" | "CAUSE_3" => "curse",
                 "SHARDS" => "shards",
                 _ => return None,
@@ -8634,6 +8638,8 @@ fn demo_monster_json(
                     | "ICE"
                     | "LIGHT"
                     | "LITE"
+                    | "NETHER"
+                    | "HOLY_FIRE"
                     | "CAUSE_2"
                     | "CAUSE_3"
                     | "SHARDS"
@@ -9436,6 +9442,26 @@ fn map_summon_spell_token(
         None => (token, None),
     };
     if base == "S_SPECIAL" {
+        if caster_kind_id.rsplit('.').next()? == "gragomani-the-leprechaun-prophet" {
+            let suffix = "summon-gragomani-followers-1d4-4";
+            let id = format!("rfb-legacy.ability.{suffix}");
+            abilities.entry(id.clone()).or_insert_with(|| {
+                let mut ability =
+                    summon_category_ability(suffix, "kin-glyph-104", 61, 1, 4, 4, None);
+                ability["effect"]["batchCandidates"] = serde_json::json!([
+                    {
+                        "actorKindId": "demo.actor.malicious-leprechaun",
+                        "weight": 1,
+                    },
+                    {
+                        "actorKindId": "demo.actor.leprechaun-fanatic",
+                        "weight": 3,
+                    },
+                ]);
+                ability
+            });
+            return Some(id);
+        }
         let (suffix, category, maximum_level, dice, sides, bonus, maximum_count) =
             match caster_kind_id.rsplit('.').next()? {
                 "zoopi-the-cube-king" => (
@@ -14296,6 +14322,32 @@ mod tests {
         assert_eq!(actor["contactAuras"][0]["damageDice"], 3);
         assert_eq!(actor["contactAuras"][0]["damageSides"], 3);
 
+        for (index, token, damage_type) in [(6, "NETHER", "nether"), (7, "HOLY_FIRE", "holy-fire")]
+        {
+            let source = format!(
+                "N:{index}:test P59A aura\nG:p:o\nI:120:6d6:100:30:0:25\nW:63:1:999:50:0:0\nB:HIT:HURT(1d8)\nA:{token}(3d3)\nF:NEVER_MOVE\n"
+            );
+            let entry = parse_r_info(&source)
+                .expect("synthetic P59A aura monster should parse")
+                .remove(0);
+            let actor = demo_monster_json(
+                &entry,
+                &DemoMonsterSelectionEntry {
+                    source_index: entry.index,
+                    source_id: None,
+                    id: kebab(&entry.name),
+                    tags: vec!["orc-cave".to_owned()],
+                    omitted_flags: Vec::new(),
+                    omitted_spells: Vec::new(),
+                },
+                &mut BTreeMap::new(),
+            )
+            .expect("P59A contact aura should import directly");
+            assert_eq!(actor["contactAuras"][0]["damageType"], damage_type);
+            assert_eq!(actor["contactAuras"][0]["damageDice"], 3);
+            assert_eq!(actor["contactAuras"][0]["damageSides"], 3);
+        }
+
         let mut multiple = monsters[0].clone();
         multiple.flags.push("AURA_ELEC".to_owned());
         let actor = demo_monster_json(
@@ -15203,6 +15255,7 @@ S:FREQ_50 | BR_FIRE(40%) | BR_POISON | DETECT_MONSTERS | MAPPING\n";
         for (token, level, suffix, damage_type, dice, sides, bonus) in [
             ("JMP_FIRE", 31, "jump-fire-l31", "fire", 0, 0, 31),
             ("JMP_ICE", 50, "jump-ice-l50", "ice", 0, 0, 50),
+            ("JMP_NETHER", 60, "jump-nether-l60", "nether", 0, 0, 60),
             ("JMP_POISON", 32, "jump-poison-l32", "poison", 0, 0, 32),
             (
                 "JMP_CONFUSION",
@@ -15675,6 +15728,30 @@ S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_ANT | S_SPIDER | S_HYDRA | S_LO
         assert_eq!(gospel["countDice"], 1);
         assert_eq!(gospel["countSides"], 4);
         assert_eq!(gospel["maximumCount"], 3);
+        let gragomani_id = map_spell_token(
+            "S_SPECIAL",
+            61,
+            3,
+            "demo.actor.gragomani-the-leprechaun-prophet",
+            &mut abilities,
+        )
+        .expect("Gragomani special should map");
+        assert_eq!(
+            gragomani_id,
+            "rfb-legacy.ability.summon-gragomani-followers-1d4-4"
+        );
+        let gragomani = &abilities[&gragomani_id]["effect"];
+        assert_eq!(gragomani["category"], "kin-glyph-104");
+        assert_eq!(gragomani["countDice"], 1);
+        assert_eq!(gragomani["countSides"], 4);
+        assert_eq!(gragomani["countBonus"], 4);
+        assert_eq!(
+            gragomani["batchCandidates"],
+            serde_json::json!([
+                { "actorKindId": "demo.actor.malicious-leprechaun", "weight": 1 },
+                { "actorKindId": "demo.actor.leprechaun-fanatic", "weight": 3 },
+            ])
+        );
         assert!(
             map_spell_token(
                 "S_SPECIAL",

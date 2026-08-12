@@ -3013,6 +3013,12 @@
               "type": "boolean",
               "default": false
             },
+            "batchCandidates": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/AbilitySummonCandidateSpecDto"
+              }
+            },
             "category": {
               "type": "string"
             },
@@ -4012,6 +4018,25 @@
       "enum": [
         "chosen",
         "divine-random"
+      ]
+    },
+    "AbilitySummonCandidateSpecDto": {
+      "type": "object",
+      "properties": {
+        "actorKindId": {
+          "type": "string"
+        },
+        "weight": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "actorKindId",
+        "weight"
       ]
     },
     "AbilitySummonResolutionDto": {

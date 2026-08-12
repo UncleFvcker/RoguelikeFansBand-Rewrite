@@ -1043,15 +1043,16 @@ impl Game {
                     count_sides,
                     count_bonus,
                     maximum_count,
+                    ref batch_candidates,
                     duration_turns,
                     ..
                 } = plan.ability.effect
                 else {
                     unreachable!("monster category summon plan must retain its effect");
                 };
-                // The count dice roll first, then one bounded draw picks each
-                // summon's kind; space shortfalls truncate to the secured
-                // cells (planning guaranteed at least one).
+                // The count dice roll comes first. Batch candidates then use
+                // one weighted draw for the whole group; ordinary category
+                // summons retain one kind draw per summon.
                 let rolled = self
                     .roll_damage(u16::from(count_dice), u16::from(count_sides))
                     .saturating_add(i32::from(count_bonus))
@@ -1065,41 +1066,71 @@ impl Game {
                 let mut summoned_kind_ids = Vec::with_capacity(count);
                 let mut used_positions = Vec::with_capacity(count);
                 let planned_positions = positions.iter().copied().take(count).collect::<Vec<_>>();
+                let batch_kind_id = if batch_candidates.is_empty() {
+                    None
+                } else {
+                    let eligible = batch_candidates
+                        .iter()
+                        .filter(|candidate| candidate_kind_ids.contains(&candidate.actor_kind_id))
+                        .filter(|candidate| {
+                            planned_positions.iter().any(|position| {
+                                self.actor_kind_can_enter_position(
+                                    &candidate.actor_kind_id,
+                                    *position,
+                                )
+                            })
+                        })
+                        .map(|candidate| {
+                            (candidate.actor_kind_id.clone(), u32::from(candidate.weight))
+                        })
+                        .collect::<Vec<_>>();
+                    let weights = eligible
+                        .iter()
+                        .map(|(_, weight)| *weight)
+                        .collect::<Vec<_>>();
+                    Some(eligible[self.roll_weighted_index(&weights)].0.clone())
+                };
                 for position in planned_positions {
                     if candidate_kind_ids.is_empty() {
                         break;
                     }
-                    let eligible_choices = candidate_kind_ids
-                        .iter()
-                        .enumerate()
-                        .filter_map(|(index, kind_id)| {
-                            self.actor_kind_can_enter_position(kind_id, position)
-                                .then_some(index)
-                        })
-                        .collect::<Vec<_>>();
-                    if eligible_choices.is_empty() {
-                        continue;
-                    }
-                    let eligible_choice = usize::try_from(
-                        self.rng.bounded(
-                            u64::try_from(eligible_choices.len())
-                                .expect("eligible candidate count fits"),
-                        ),
-                    )
-                    .expect("bounded draw fits usize");
-                    let choice = eligible_choices[eligible_choice];
-                    let kind_id = candidate_kind_ids[choice].clone();
+                    let kind_id = if let Some(kind_id) = &batch_kind_id {
+                        if !self.actor_kind_can_enter_position(kind_id, position) {
+                            continue;
+                        }
+                        kind_id.clone()
+                    } else {
+                        let eligible_choices = candidate_kind_ids
+                            .iter()
+                            .enumerate()
+                            .filter_map(|(index, kind_id)| {
+                                self.actor_kind_can_enter_position(kind_id, position)
+                                    .then_some(index)
+                            })
+                            .collect::<Vec<_>>();
+                        if eligible_choices.is_empty() {
+                            continue;
+                        }
+                        let eligible_choice = usize::try_from(
+                            self.rng.bounded(
+                                u64::try_from(eligible_choices.len())
+                                    .expect("eligible candidate count fits"),
+                            ),
+                        )
+                        .expect("bounded draw fits usize");
+                        candidate_kind_ids[eligible_choices[eligible_choice]].clone()
+                    };
                     let definition = self
                         .content
                         .actor(&kind_id)
                         .expect("validated summon candidate must remain available")
                         .clone();
-                    if definition
+                    let unique = definition
                         .tags
                         .iter()
-                        .any(|tag| matches!(tag.as_str(), "unique" | "unique2"))
-                    {
-                        candidate_kind_ids.remove(choice);
+                        .any(|tag| matches!(tag.as_str(), "unique" | "unique2"));
+                    if unique && batch_kind_id.is_none() {
+                        candidate_kind_ids.retain(|candidate| candidate != &kind_id);
                     }
                     let id = self.summon_entity_id(&plan.ability.id, entity_ids.len());
                     let mut entity = spawn_actor_from_definition(
@@ -1121,6 +1152,9 @@ impl Game {
                     summoned_kind_ids.push(kind_id);
                     used_positions.push(position);
                     self.entities.push(entity);
+                    if unique {
+                        break;
+                    }
                 }
                 let summon = AbilitySummonResolutionDto {
                     owner_id: owner_id.clone(),
@@ -2010,35 +2044,45 @@ impl Game {
                 count_sides,
                 count_bonus,
                 maximum_count,
+                batch_candidates,
                 radius,
                 ..
             } => {
-                // Candidate kinds enumerate in stable id order and are
-                // filtered without RNG; the per-summon kind draws happen at
-                // execution time.
+                // Candidate kinds are filtered without RNG. Ordinary
+                // categories enumerate in stable id order; batch candidates
+                // preserve their declared weighted order for execution.
                 let current_task_id = self.current_floor_task_id();
-                let candidate_kind_ids = self
-                    .content
-                    .actor_definitions()
-                    .filter(|definition| {
-                        let unique = definition
-                            .tags
-                            .iter()
-                            .any(|tag| matches!(tag.as_str(), "unique" | "unique2"));
-                        definition.role == ActorRole::Monster
-                            && definition.level <= u32::from(*maximum_level)
-                            && definition.tags.iter().any(|tag| tag == category)
-                            && !definition.tags.iter().any(|tag| tag == "guardian")
-                            && definition.allocation.as_ref().is_none_or(|allocation| {
-                                monster_ecology::actor_allocation_matches_task(
-                                    allocation,
-                                    current_task_id,
-                                )
-                            })
-                            && (!unique || self.unique_actor_kind_is_available(&definition.id))
-                    })
-                    .map(|definition| definition.id.clone())
-                    .collect::<Vec<_>>();
+                let eligible = |definition: &rfb_content::ActorDefinition| {
+                    let unique = definition
+                        .tags
+                        .iter()
+                        .any(|tag| matches!(tag.as_str(), "unique" | "unique2"));
+                    definition.role == ActorRole::Monster
+                        && definition.level <= u32::from(*maximum_level)
+                        && definition.tags.iter().any(|tag| tag == category)
+                        && !definition.tags.iter().any(|tag| tag == "guardian")
+                        && definition.allocation.as_ref().is_none_or(|allocation| {
+                            monster_ecology::actor_allocation_matches_task(
+                                allocation,
+                                current_task_id,
+                            )
+                        })
+                        && (!unique || self.unique_actor_kind_is_available(&definition.id))
+                };
+                let candidate_kind_ids = if batch_candidates.is_empty() {
+                    self.content
+                        .actor_definitions()
+                        .filter(|definition| eligible(definition))
+                        .map(|definition| definition.id.clone())
+                        .collect::<Vec<_>>()
+                } else {
+                    batch_candidates
+                        .iter()
+                        .filter_map(|candidate| self.content.actor(&candidate.actor_kind_id))
+                        .filter(|definition| eligible(definition))
+                        .map(|definition| definition.id.clone())
+                        .collect::<Vec<_>>()
+                };
                 if candidate_kind_ids.is_empty() {
                     return Err(MonsterAbilityPlanRejection {
                         reason: MonsterAbilityRejectionReasonDto::NoCandidates,

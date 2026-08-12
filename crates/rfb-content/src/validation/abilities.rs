@@ -446,6 +446,7 @@ pub(super) fn validate_abilities(
                     count_sides,
                     count_bonus,
                     maximum_count,
+                    batch_candidates,
                     hostile_chance_percent,
                     friendly_group_chance_percent,
                     hostile_group_chance_percent,
@@ -485,6 +486,17 @@ pub(super) fn validate_abilities(
                                     <= u16::from(*count_dice) * u16::from(*count_sides)
                                         + u16::from(*count_bonus)
                         })
+                        && batch_candidates.len() <= 8
+                        && batch_candidates
+                            .iter()
+                            .all(|candidate| candidate.weight > 0)
+                        && batch_candidates
+                            .iter()
+                            .map(|candidate| candidate.actor_kind_id.as_str())
+                            .collect::<BTreeSet<_>>()
+                            .len()
+                            == batch_candidates.len()
+                        && (batch_candidates.is_empty() || ability.player.is_none())
                         && *hostile_chance_percent <= 100
                         && *friendly_group_chance_percent <= 100
                         && *hostile_group_chance_percent <= 100
@@ -1009,6 +1021,19 @@ pub(super) fn validate_abilities(
         for effect in referenced_effects {
             if let AbilityEffectDefinition::Summon { actor_kind_id, .. } = effect {
                 require_actor_role(actor_roles, actor_kind_id, ActorRole::Monster, &ability.id)?;
+            }
+            if let AbilityEffectDefinition::SummonCategory {
+                batch_candidates, ..
+            } = effect
+            {
+                for candidate in batch_candidates {
+                    require_actor_role(
+                        actor_roles,
+                        &candidate.actor_kind_id,
+                        ActorRole::Monster,
+                        &ability.id,
+                    )?;
+                }
             }
             if let AbilityEffectDefinition::BrandWeapon { affix_id, .. } = effect {
                 require_reference(affix_ids, affix_id, &ability.id)?;

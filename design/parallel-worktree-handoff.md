@@ -348,3 +348,14 @@ git diff --stat
   `ee2a72864ac9b521e5825f79a9e020cf798ff1a398e887ca2e7a2b1a5b8edbed`、Protocol `1.187`、
   State Hash Schema v93、save v1；active baseline 推进至 `contract-v284`。现有 26 条 exact
   fixture 不进入新增品质分支，逐条及全量 verify 均零漂移，因此不刷新无关快照，零 waiver。
+
+## 20. main 当前交接（items / monsters 新增量整合）
+
+- items 的元素地面物品破坏与 main 的固定神器生成共用当前物品定义；固定神器和声明忽略
+  对应元素的物品不会被地面效果销毁。新增 `endurance` affix 后当前共 11 个 affix。
+- monsters 的 P59/P60 已接入 8 个 actor、14 个 ability；P60 批量召唤通过
+  `SummonCategory.batchCandidates` 先掷数量、再一次选择整批候选，不新增持久状态。
+- 共享协调点：pack `1.297.0` / content hash
+  `f7aebe082ef8e6b0d5e98633ea229592d516f9d9251db5645a99e11712098744`、Protocol `1.188`、
+  State Hash Schema v93、save v1、active baseline `contract-v284`（26 条 exact fixture、
+  零 waiver）。`codex/items-next` 与 `codex/monsters-next` 分支及工作树继续保留。

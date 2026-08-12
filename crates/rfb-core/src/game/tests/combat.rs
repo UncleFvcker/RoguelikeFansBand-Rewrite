@@ -33,6 +33,36 @@ fn monster_effect_game_with_method(
 }
 
 #[test]
+fn p60_melee_curse_damage_uses_the_existing_monster_curse_save() {
+    fn resolve(seed: u64) -> Option<(bool, i32)> {
+        let mut game = monster_effect_game(
+            0,
+            MeleeBlowEffectDefinition::Damage {
+                chance_percent: None,
+                damage_dice: 6,
+                damage_sides: 6,
+                damage_type: ActorDamageType::Curse,
+                armor_mitigated: false,
+                vampiric: false,
+            },
+        );
+        game.rng = RfbRng::seeded(seed);
+        let hp_before = game.player.hp;
+        let mut events = Vec::new();
+        game.resolve_monster_melee(0, &mut events, &mut BTreeSet::new(), &mut Vec::new())
+            .expect("curse melee should resolve");
+        let saved = events.iter().find_map(|event| match event {
+            DomainEvent::SavingThrowChecked { succeeded, .. } => Some(*succeeded),
+            _ => None,
+        });
+        saved.map(|saved| (saved, hp_before - game.player.hp))
+    }
+
+    assert_eq!(resolve(0), Some((true, 0)));
+    assert!(matches!(resolve(7), Some((false, 6..=36))));
+}
+
+#[test]
 fn mutation_contact_auras_retaliate_only_against_unresisted_contact_attacks() {
     let harmless = MeleeBlowEffectDefinition::Damage {
         chance_percent: None,

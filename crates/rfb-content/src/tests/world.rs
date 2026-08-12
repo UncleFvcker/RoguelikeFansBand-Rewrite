@@ -286,6 +286,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.air-hound", 338, 2, 90),
             ("demo.actor.air-spirit", 227, 2, 50),
             ("demo.actor.aquatic-golem", 910, 1, 70),
+            ("demo.actor.asura", 1374, 5, 999),
             ("demo.actor.baby-black-dragon", 166, 2, 40),
             ("demo.actor.baby-blue-dragon", 163, 2, 40),
             ("demo.actor.baby-green-dragon", 165, 2, 40),
@@ -296,6 +297,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.ball-lightning", 300, 1, 60),
             ("demo.actor.bandit", 150, 2, 40),
             ("demo.actor.barracuda", 96, 2, 40),
+            ("demo.actor.behemoth", 716, 3, 999),
             ("demo.actor.berserker", 293, 3, 80),
             ("demo.actor.black-harpy", 157, 1, 60),
             ("demo.actor.black-mamba", 210, 3, 40),
@@ -450,6 +452,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.grape-jelly", 212, 3, 40),
             ("demo.actor.great-eagle", 335, 2, 70),
             ("demo.actor.greater-hell-beast", 39, 6, 999),
+            ("demo.actor.greater-kraken", 775, 2, 999),
             ("demo.actor.green-glutton-ghost", 100, 1, 40),
             ("demo.actor.green-jelly", 66, 1, 30),
             ("demo.actor.green-mold", 146, 2, 40),
@@ -480,6 +483,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.homonculus", 280, 3, 50),
             ("demo.actor.hopper-ant", 1323, 3, 36),
             ("demo.actor.horse", 956, 1, 20),
+            ("demo.actor.hugin-the-scheming-raven", 1346, 4, 999),
             ("demo.actor.hummerhorn", 289, 5, 50),
             ("demo.actor.hunting-hawk-of-julian", 151, 2, 40),
             ("demo.actor.huorn", 329, 1, 70),
@@ -729,7 +733,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         .iter()
         .filter(|actor| actor.tags.iter().any(|tag| tag == "orc-cave"))
         .collect::<Vec<_>>();
-    assert_eq!(orc_cave.len(), 580);
+    assert_eq!(orc_cave.len(), 584);
 
     for id in [
         "demo.actor.bunyip",
@@ -762,10 +766,10 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
                     .any(|index| *index != 3)
         );
     }
-    let mut level_counts = [0_usize; 43];
+    let mut level_counts = [0_usize; 44];
     let mut source_indices = BTreeSet::new();
     for actor in orc_cave {
-        assert!((21..=63).contains(&actor.level));
+        assert!((21..=64).contains(&actor.level));
         let allocation = actor
             .allocation
             .as_ref()
@@ -777,7 +781,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         level_counts,
         [
             16, 14, 12, 17, 24, 17, 19, 17, 18, 21, 7, 12, 29, 15, 27, 28, 19, 19, 11, 42, 12, 6,
-            12, 14, 14, 7, 10, 6, 6, 17, 11, 8, 3, 8, 17, 9, 1, 6, 4, 16, 3, 3, 3,
+            12, 14, 14, 7, 10, 6, 6, 17, 11, 8, 3, 8, 17, 9, 1, 6, 4, 17, 4, 3, 4, 1,
         ]
     );
 
@@ -4946,6 +4950,210 @@ fn p58_level_61_63_direct_monsters_keep_source_identity() {
 }
 
 #[test]
+fn p59a_nether_jump_and_contact_auras_keep_source_semantics() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actor = |id: &str| {
+        artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == format!("demo.actor.{id}"))
+            .unwrap_or_else(|| panic!("{id} should be imported"))
+    };
+
+    for (id, legacy_index, level) in [
+        ("undead-spider", 1176, 60),
+        ("vlad-dracula-prince-of-darkness", 780, 63),
+        ("solar", 943, 64),
+    ] {
+        let actor = actor(id);
+        assert_eq!(actor.level, level, "{id} level");
+        assert_eq!(
+            actor
+                .allocation
+                .as_ref()
+                .map(|allocation| allocation.legacy_index),
+            Some(legacy_index),
+            "{id} source index"
+        );
+    }
+
+    for (id, damage_type, dice, sides) in [
+        ("undead-spider", ActorDamageType::Nether, 3, 3),
+        (
+            "vlad-dracula-prince-of-darkness",
+            ActorDamageType::Nether,
+            3,
+            6,
+        ),
+        ("solar", ActorDamageType::HolyFire, 3, 3),
+    ] {
+        let aura = &actor(id).contact_auras[0];
+        assert_eq!(aura.damage_type, damage_type, "{id} aura type");
+        assert_eq!((aura.damage_dice, aura.damage_sides), (dice, sides));
+    }
+
+    let undead_spider = actor("undead-spider");
+    assert!(
+        undead_spider
+            .monster_casting
+            .as_ref()
+            .expect("Undead spider should cast")
+            .abilities
+            .iter()
+            .any(|candidate| candidate.ability_id == "rfb-legacy.ability.jump-nether-l60")
+    );
+    let jump = artifact
+        .content
+        .abilities
+        .iter()
+        .find(|ability| ability.id == "rfb-legacy.ability.jump-nether-l60")
+        .expect("Nether jump should be imported");
+    assert!(matches!(
+        jump.effect,
+        AbilityEffectDefinition::JumpDamage {
+            damage_dice: 0,
+            damage_sides: 0,
+            damage_bonus: 60,
+            damage_multiplier_numerator: 5,
+            damage_multiplier_denominator: 4,
+            damage_type: ActorDamageType::Nether,
+            radius: 5,
+            blink_radius: 10,
+        }
+    ));
+}
+
+#[test]
+fn p59bc_location_restricted_monsters_keep_source_allocation() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actor = |id: &str| {
+        artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == format!("demo.actor.{id}"))
+            .unwrap_or_else(|| panic!("{id} should be imported"))
+    };
+
+    for (id, legacy_index, level) in [
+        ("greater-kraken", 775, 63),
+        ("behemoth", 716, 64),
+        ("hugin-the-scheming-raven", 1346, 58),
+        ("asura", 1374, 58),
+    ] {
+        let actor = actor(id);
+        assert_eq!(actor.level, level, "{id} level");
+        assert_eq!(
+            actor
+                .allocation
+                .as_ref()
+                .map(|allocation| allocation.legacy_index),
+            Some(legacy_index),
+            "{id} source index"
+        );
+        assert!(!actor.tags.iter().any(|tag| tag == "orc-cave"));
+    }
+
+    for id in ["greater-kraken", "behemoth"] {
+        let actor = actor(id);
+        let allocation = actor.allocation.as_ref().expect("ocean allocation");
+        assert!(allocation.wild_only);
+        assert_eq!(allocation.habitats, vec![ActorHabitat::Ocean]);
+        assert!(allocation.legacy_dungeon_indices.is_empty());
+        assert!(actor.tags.iter().any(|tag| tag == "ocean"));
+    }
+
+    for (id, dungeon_index, tag) in [
+        ("hugin-the-scheming-raven", 39, "asgard"),
+        ("asura", 43, "mount-meru"),
+    ] {
+        let actor = actor(id);
+        let allocation = actor.allocation.as_ref().expect("dungeon allocation");
+        assert!(!allocation.wild_only);
+        assert_eq!(allocation.legacy_dungeon_indices, vec![dungeon_index]);
+        assert!(actor.tags.iter().any(|actor_tag| actor_tag == tag));
+    }
+}
+
+#[test]
+fn p60_gragomani_keeps_curse_melee_and_weighted_batch_followers() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actor = artifact
+        .content
+        .actors
+        .iter()
+        .find(|actor| actor.id == "demo.actor.gragomani-the-leprechaun-prophet")
+        .expect("Gragomani should be imported");
+    assert_eq!(actor.level, 61);
+    assert_eq!(
+        actor
+            .allocation
+            .as_ref()
+            .map(|allocation| allocation.legacy_index),
+        Some(1285)
+    );
+    let curse = &actor
+        .melee_routine
+        .as_ref()
+        .expect("Gragomani should retain melee")
+        .blows[3]
+        .effects[0];
+    assert!(matches!(
+        curse,
+        MeleeBlowEffectDefinition::Damage {
+            damage_dice: 6,
+            damage_sides: 6,
+            damage_type: ActorDamageType::Curse,
+            armor_mitigated: false,
+            ..
+        }
+    ));
+    assert!(
+        actor
+            .monster_casting
+            .as_ref()
+            .expect("Gragomani should cast")
+            .abilities
+            .iter()
+            .any(|candidate| candidate.ability_id
+                == "rfb-legacy.ability.summon-gragomani-followers-1d4-4")
+    );
+    let ability = artifact
+        .content
+        .abilities
+        .iter()
+        .find(|ability| ability.id == "rfb-legacy.ability.summon-gragomani-followers-1d4-4")
+        .expect("Gragomani special summon should be imported");
+    let AbilityEffectDefinition::SummonCategory {
+        category,
+        count_dice,
+        count_sides,
+        count_bonus,
+        batch_candidates,
+        ..
+    } = &ability.effect
+    else {
+        panic!("Gragomani special should remain a category summon");
+    };
+    assert_eq!(category, "kin-glyph-104");
+    assert_eq!((*count_dice, *count_sides, *count_bonus), (1, 4, 4));
+    assert_eq!(
+        batch_candidates,
+        &[
+            AbilitySummonCandidateDefinition {
+                actor_kind_id: "demo.actor.malicious-leprechaun".to_owned(),
+                weight: 1,
+            },
+            AbilitySummonCandidateDefinition {
+                actor_kind_id: "demo.actor.leprechaun-fanatic".to_owned(),
+                weight: 3,
+            },
+        ]
+    );
+}
+
+#[test]
 fn p53a_ice_jump_and_angel_summons_reuse_shared_effects() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let actor = |id: &str| {
@@ -5036,6 +5244,7 @@ fn p53a_ice_jump_and_angel_summons_reuse_shared_effects() {
             "demo.actor.fallen-angel",
             "demo.actor.planetar",
             "demo.actor.seraph",
+            "demo.actor.solar",
         ]
         .into_iter()
         .collect()
@@ -6846,7 +7055,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
                     == Some("demo.loot-table.base-items")
             })
             .count(),
-        530
+        536
     );
 }
 

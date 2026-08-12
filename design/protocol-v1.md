@@ -597,3 +597,7 @@ State Hash Schema 保持 v88，save 容器保持 v1。
 物品 ID 保存已生成的 RFB 固定神器。该字段不进入游戏快照，普通物品品质枚举也不增加
 “神器”伪值；固定神器身份继续来自内容定义。权威集合进入 State Hash Schema v93，
 save 容器保持 v1，不兼容缺少该字段的旧开发存档。
+
+协议 1.188 / P60 为 `AbilityEffectSpecDto::SummonCategory` 增加可选
+`batchCandidates`，用于先掷数量、再以一次加权选择固定整批召唤对象。该字段仅允许怪物
+能力使用；没有新增持久状态，State Hash Schema 保持 v93，save 容器保持 v1。
