@@ -462,7 +462,6 @@ contract-v141 后的 importer 维护复用 P84 已有 `apply-poison`，将 tval 
 
 ## contract-v104 明确遗留
 
-- Malediction 暂无原版 1/5 随机 rider（death ray / fear / confusion / stun）；先保持纯 hell-fire，等待通用随机效果分支；
 - Necromantic Resistance 固定 300 ticks，尚未复刻 `20+1d20` 回合；随机持续时间继续留在真实导入报告；
 - status power 采用稳定的 power/target 双有界骰中性公式，Control 采用 `power-10` 对目标等级的有界检定；两者不是原版所有 GF 的逐函数概率公式；
 - Control 保存 controller identity 并复用召唤物 AI，但没有解除控制时限、宠物维护上限、忠诚或主人死亡联动；

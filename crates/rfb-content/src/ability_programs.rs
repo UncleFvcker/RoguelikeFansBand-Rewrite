@@ -238,6 +238,7 @@ fn ability_program_input_accepts_step(
             matches!(
                 effect,
                 AbilityEffectDefinition::Damage { .. }
+                    | AbilityEffectDefinition::Malediction { .. }
                     | AbilityEffectDefinition::AreaDamage { .. }
                     | AbilityEffectDefinition::BeamDamage { .. }
                     | AbilityEffectDefinition::LightLine { .. }

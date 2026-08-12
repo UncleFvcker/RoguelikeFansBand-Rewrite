@@ -606,3 +606,10 @@ Schema 保持 v88。
 150 点群体伤害、群体减速、群体催眠和 300 点治疗。content hash 为
 `a7a3d1e2d87097f95114a416a97217102434c47741c8bb2927e682fe7609fe20`；协议升至
 1.178，State Hash Schema 保持 v88。
+
+包 1.278.0 增加窄化的 `malediction` 能力效果：主投射固定为 hell-fire，并在结算后按
+原版顺序执行 1/5 触发判定与条件性的 1d1000 rider，覆盖死亡射线、恐惧、混乱和震慑。
+该类型只接受既有伤害骰与加值缩放，不开放递归 `RandomChoice`/`Sequence`；协议投影仍为
+普通 hell-fire `Damage`。content hash 为
+`b3ee9a07221cac567b5f70c3753e9d417f410bdc0e92647bc2cb3a1ecece27a1`；协议保持
+1.178，State Hash Schema 保持 v88。

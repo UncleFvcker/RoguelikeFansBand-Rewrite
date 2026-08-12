@@ -223,6 +223,12 @@ pub enum AbilityEffectDefinition {
         #[serde(default)]
         damage_type: ActorDamageType,
     },
+    Malediction {
+        damage_dice: u16,
+        damage_sides: u16,
+        #[serde(default)]
+        damage_bonus: u16,
+    },
     AreaDamage {
         damage_dice: u16,
         damage_sides: u16,
@@ -578,6 +584,7 @@ fn ability_level_scaling_base_and_limit(
     match (effect, field) {
         (
             AbilityEffectDefinition::Damage { damage_dice, .. }
+            | AbilityEffectDefinition::Malediction { damage_dice, .. }
             | AbilityEffectDefinition::AreaDamage { damage_dice, .. }
             | AbilityEffectDefinition::JumpDamage { damage_dice, .. }
             | AbilityEffectDefinition::BeamDamage { damage_dice, .. }
@@ -591,6 +598,7 @@ fn ability_level_scaling_base_and_limit(
         ) => Some((u64::from(*damage_dice), 100)),
         (
             AbilityEffectDefinition::Damage { damage_sides, .. }
+            | AbilityEffectDefinition::Malediction { damage_sides, .. }
             | AbilityEffectDefinition::AreaDamage { damage_sides, .. }
             | AbilityEffectDefinition::JumpDamage { damage_sides, .. }
             | AbilityEffectDefinition::BeamDamage { damage_sides, .. }
@@ -604,6 +612,7 @@ fn ability_level_scaling_base_and_limit(
         ) => Some((u64::from(*damage_sides), 10_000)),
         (
             AbilityEffectDefinition::Damage { damage_bonus, .. }
+            | AbilityEffectDefinition::Malediction { damage_bonus, .. }
             | AbilityEffectDefinition::AreaDamage { damage_bonus, .. }
             | AbilityEffectDefinition::BeamDamage { damage_bonus, .. }
             | AbilityEffectDefinition::BoltOrBeamDamage { damage_bonus, .. }

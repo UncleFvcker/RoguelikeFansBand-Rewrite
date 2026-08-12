@@ -10,6 +10,14 @@ fn abilities_validate_actor_detection_control_and_level_scaling() {
         .iter()
         .find(|ability| ability.id == "demo.ability.death-malediction")
         .expect("fixture should contain level-scaled damage");
+    assert!(matches!(
+        malediction.effect,
+        AbilityEffectDefinition::Malediction {
+            damage_dice: 3,
+            damage_sides: 4,
+            damage_bonus: 0,
+        }
+    ));
     assert_eq!(malediction.level_scaling.len(), 1);
     let unlife = valid
         .abilities

@@ -5949,10 +5949,9 @@ fn death_spell_ability(
             "death-malediction",
             directional_target.clone(),
             serde_json::json!({
-                "type": "damage",
+                "type": "malediction",
                 "damageDice": 3,
                 "damageSides": 4,
-                "damageType": "hell-fire",
             }),
             vec![serde_json::json!({
                 "effectIndex": 0,
@@ -9902,12 +9901,6 @@ fn convert_content_from(
                 ));
                 report.player_spell_parameter_overrides += 1;
                 report.player_spell_mapped_rows += 1;
-                if spell.index == 1 {
-                    *report
-                        .player_spell_behavior_gaps
-                        .entry("malediction-random-rider".to_owned())
-                        .or_default() += 1;
-                }
                 let mut override_ = serde_json::json!({
                     "abilityId": ability_id,
                     "minimumLevel": spell.level.max(entry.caster_profile.as_ref()?.minimum_level).max(1),
@@ -13543,6 +13536,12 @@ S:2:0:6000
                 .player_spell_behavior_gaps
                 .contains_key("random-resistance-duration")
         );
+        assert!(
+            !outcome
+                .report
+                .player_spell_behavior_gaps
+                .contains_key("malediction-random-rider")
+        );
         for gap in [
             "invoke-spirits-actor-polymorph",
             "invoke-spirits-line-light",
@@ -13598,6 +13597,15 @@ S:2:0:6000
             .map(|(_, value)| value)
             .expect("detect evil ability should be generated");
         assert_eq!(detect_evil["effect"]["radius"], 30);
+        let malediction = outcome
+            .ability_files
+            .iter()
+            .find(|(name, _)| name == "death-malediction.json")
+            .map(|(_, value)| value)
+            .expect("Malediction ability should be generated");
+        assert_eq!(malediction["effect"]["type"], "malediction");
+        assert_eq!(malediction["effect"]["damageDice"], 3);
+        assert_eq!(malediction["effect"]["damageSides"], 4);
         let resistance = outcome
             .ability_files
             .iter()

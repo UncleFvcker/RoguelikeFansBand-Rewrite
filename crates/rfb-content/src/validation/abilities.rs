@@ -132,6 +132,11 @@ pub(super) fn validate_abilities(
                     damage_sides,
                     damage_bonus,
                     ..
+                }
+                | AbilityEffectDefinition::Malediction {
+                    damage_dice,
+                    damage_sides,
+                    damage_bonus,
                 } => {
                     (1..=100).contains(damage_dice)
                         && (1..=10_000).contains(damage_sides)
@@ -799,6 +804,7 @@ pub(super) fn validate_abilities(
             && !ability.target.requires_line_of_effect;
         let valid_target = match &ability.effect {
             AbilityEffectDefinition::Damage { .. }
+            | AbilityEffectDefinition::Malediction { .. }
             | AbilityEffectDefinition::BeamDamage { .. }
             | AbilityEffectDefinition::LightLine { .. }
             | AbilityEffectDefinition::BoltOrBeamDamage { .. }

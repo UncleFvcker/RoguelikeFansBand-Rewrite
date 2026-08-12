@@ -651,6 +651,18 @@ impl Game {
                 )?;
             }
             (
+                AbilityEffectDefinition::Malediction { .. },
+                AbilityTargetPlan::Projectile { path, .. },
+            ) => {
+                self.resolve_player_malediction_effect(
+                    &ability,
+                    path,
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+            }
+            (
                 AbilityEffectDefinition::DeathRay { .. },
                 AbilityTargetPlan::Projectile { path, .. },
             ) => {
@@ -872,6 +884,235 @@ impl Game {
             removed_entities,
         )?;
         Ok(())
+    }
+
+    fn resolve_player_malediction_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        path: Vec<Position>,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        let AbilityEffectDefinition::Malediction {
+            damage_dice,
+            damage_sides,
+            damage_bonus,
+        } = ability.effect
+        else {
+            unreachable!("Malediction executor requires a Malediction effect");
+        };
+        let raw_damage = self
+            .roll_damage(damage_dice, damage_sides)
+            .saturating_add(i32::from(damage_bonus))
+            .max(0);
+        let (trace, target_index) = self.trace_projectile_path(path.clone());
+        if let Some(target_index) = target_index {
+            self.resolve_ability_damage_to_entity(
+                target_index,
+                &ability.id,
+                DamageType::HellFire,
+                raw_damage,
+                trace.clone(),
+                events,
+                changed,
+                removed_entities,
+            )?;
+        } else {
+            events.push(DomainEvent::AbilityLanded {
+                ability_id: ability.id.clone(),
+                trace: trace.clone(),
+            });
+        }
+
+        let trigger_roll =
+            u16::try_from(self.rng.bounded(5) + 1).expect("Malediction trigger roll must fit u16");
+        let mut choices = vec![AbilityEffectResolutionDto::RandomChoice {
+            effect_index: 0,
+            roll: trigger_roll,
+            branch_index: u16::from(trigger_roll == 1),
+            maximum_roll: 5,
+        }];
+        if trigger_roll != 1 {
+            events.push(DomainEvent::AbilityEffectsResolved {
+                ability_id: ability.id.clone(),
+                resolution: AbilityEffectsResolutionDto {
+                    target_entity_id: None,
+                    target_kind_id: None,
+                    effects: choices,
+                },
+                trace: Some(trace),
+            });
+            return Ok(());
+        }
+
+        let rider_roll = u16::try_from(self.rng.bounded(1_000) + 1)
+            .expect("Malediction rider roll must fit u16");
+        let branch_index = if rider_roll == 666 {
+            0
+        } else if rider_roll < 500 {
+            1
+        } else if rider_roll < 800 {
+            2
+        } else {
+            3
+        };
+        choices.push(AbilityEffectResolutionDto::RandomChoice {
+            effect_index: 0,
+            roll: rider_roll,
+            branch_index,
+            maximum_roll: 1_000,
+        });
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: None,
+                target_kind_id: None,
+                effects: choices,
+            },
+            trace: Some(trace),
+        });
+
+        let level = self.progress.level;
+        if rider_roll == 666 {
+            let mut rider = ability.clone();
+            rider.effect = AbilityEffectDefinition::DeathRay {
+                power: u32::from(level).saturating_mul(200),
+            };
+            return self.resolve_player_death_ray_effect(
+                &rider,
+                path,
+                events,
+                changed,
+                removed_entities,
+            );
+        }
+
+        let (status_kind_id, duration_ticks, power) = if rider_roll < 500 {
+            let duration_sides = level / 2;
+            let duration_ticks = if duration_sides == 0 {
+                1
+            } else {
+                u32::try_from(self.rng.bounded(u64::from(duration_sides)) + 1)
+                    .expect("Malediction fear duration roll must fit u32")
+                    .saturating_mul(3)
+                    .saturating_add(1)
+            };
+            (STATUS_FEAR, duration_ticks, Some(level))
+        } else if rider_roll < 800 {
+            let power = (level / 2)
+                .max(u16::try_from(raw_damage.min(100)).expect("Malediction damage must fit u16"));
+            let duration_sides = power / 2;
+            let duration_ticks = u32::try_from(self.rng.bounded(u64::from(duration_sides)) + 1)
+                .expect("Malediction confusion duration roll must fit u32")
+                .saturating_mul(3)
+                .saturating_add(1);
+            (STATUS_CONFUSION, duration_ticks, Some(power))
+        } else {
+            (
+                STATUS_STUN,
+                u32::try_from(raw_damage).expect("Malediction damage must be non-negative"),
+                None,
+            )
+        };
+        self.resolve_player_malediction_status_rider(
+            &ability.id,
+            path,
+            status_kind_id,
+            duration_ticks,
+            power,
+            events,
+            changed,
+        );
+        Ok(())
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn resolve_player_malediction_status_rider(
+        &mut self,
+        ability_id: &str,
+        path: Vec<Position>,
+        status_kind_id: &str,
+        duration_ticks: u32,
+        power: Option<u16>,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let (trace, target_index) = self.trace_projectile_path(path);
+        let Some(target_index) = target_index else {
+            events.push(DomainEvent::AbilityLanded {
+                ability_id: ability_id.to_owned(),
+                trace: trace.clone(),
+            });
+            events.push(DomainEvent::AbilityEffectsResolved {
+                ability_id: ability_id.to_owned(),
+                resolution: AbilityEffectsResolutionDto {
+                    target_entity_id: None,
+                    target_kind_id: None,
+                    effects: vec![AbilityEffectResolutionDto::Skipped {
+                        effect_index: 0,
+                        reason: AbilityEffectSkipReasonDto::NoTarget,
+                    }],
+                },
+                trace: Some(trace),
+            });
+            return;
+        };
+
+        let target_entity_id = self.entities[target_index].id.clone();
+        let target_kind_id = self.entities[target_index].kind_id.clone();
+        let definition = self
+            .actor_runtime_definition(&self.entities[target_index])
+            .expect("Malediction target definition must remain available");
+        let target_level =
+            definition
+                .level
+                .saturating_add(if definition.tags.iter().any(|tag| tag == "unique") {
+                    3
+                } else {
+                    0
+                });
+        let immunities = if self.actor_has_status_immunity(target_index, status_kind_id) {
+            BTreeSet::from([status_kind_id.to_owned()])
+        } else {
+            BTreeSet::new()
+        };
+        let resistances = ResistanceProfile::default();
+        self.entities[target_index].alerted = true;
+        changed.insert(self.entities[target_index].position);
+        let resolution = apply_ability_status_effect(
+            &mut self.entities[target_index],
+            ability_id,
+            0,
+            status_kind_id,
+            1,
+            duration_ticks,
+            0,
+            0,
+            AbilityStatusStackingDefinition::Extend,
+            None,
+            power,
+            &BTreeMap::new(),
+            &BTreeSet::new(),
+            &StatModifiers::default(),
+            &EquipmentBonuses::default(),
+            &BTreeSet::new(),
+            None,
+            false,
+            100,
+            Some(target_level),
+            Some((&resistances, &immunities)),
+            &mut self.rng,
+        );
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability_id.to_owned(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: Some(target_entity_id),
+                target_kind_id: Some(target_kind_id),
+                effects: vec![resolution],
+            },
+            trace: Some(trace),
+        });
     }
 
     pub(super) fn resolve_player_area_damage_effect(
@@ -5091,6 +5332,7 @@ impl Game {
                     })
             }
             AbilityEffectDefinition::Damage { .. }
+            | AbilityEffectDefinition::Malediction { .. }
             | AbilityEffectDefinition::DeathRay { .. }
             | AbilityEffectDefinition::PolymorphTarget => {
                 self.ability_path(ability, target)

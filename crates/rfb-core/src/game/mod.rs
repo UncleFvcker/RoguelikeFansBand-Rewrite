@@ -5950,6 +5950,7 @@ fn apply_ability_level_scaling(
     match (effect, scaling.field) {
         (
             AbilityEffectDefinition::Damage { damage_dice, .. }
+            | AbilityEffectDefinition::Malediction { damage_dice, .. }
             | AbilityEffectDefinition::AreaDamage { damage_dice, .. }
             | AbilityEffectDefinition::BeamDamage { damage_dice, .. }
             | AbilityEffectDefinition::BoltOrBeamDamage { damage_dice, .. }
@@ -5969,6 +5970,7 @@ fn apply_ability_level_scaling(
         }
         (
             AbilityEffectDefinition::Damage { damage_sides, .. }
+            | AbilityEffectDefinition::Malediction { damage_sides, .. }
             | AbilityEffectDefinition::AreaDamage { damage_sides, .. }
             | AbilityEffectDefinition::BeamDamage { damage_sides, .. }
             | AbilityEffectDefinition::BoltOrBeamDamage { damage_sides, .. }
@@ -5988,6 +5990,7 @@ fn apply_ability_level_scaling(
         }
         (
             AbilityEffectDefinition::Damage { damage_bonus, .. }
+            | AbilityEffectDefinition::Malediction { damage_bonus, .. }
             | AbilityEffectDefinition::AreaDamage { damage_bonus, .. }
             | AbilityEffectDefinition::BeamDamage { damage_bonus, .. }
             | AbilityEffectDefinition::BoltOrBeamDamage { damage_bonus, .. }
@@ -6187,6 +6190,16 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             damage_sides: *damage_sides,
             damage_bonus: *damage_bonus,
             damage_type: DamageType::from(*damage_type).into(),
+        },
+        AbilityEffectDefinition::Malediction {
+            damage_dice,
+            damage_sides,
+            damage_bonus,
+        } => AbilityEffectSpecDto::Damage {
+            damage_dice: *damage_dice,
+            damage_sides: *damage_sides,
+            damage_bonus: *damage_bonus,
+            damage_type: DamageType::HellFire.into(),
         },
         AbilityEffectDefinition::AreaDamage {
             damage_dice,

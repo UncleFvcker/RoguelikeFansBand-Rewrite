@@ -326,6 +326,165 @@ fn death_abilities_materialize_player_level_scaling_in_projection() {
 }
 
 #[test]
+fn malediction_resolves_all_riders_and_skips_the_d1000_when_not_triggered() {
+    #[derive(Clone, Copy)]
+    enum ExpectedRider {
+        None,
+        DeathRay,
+        Fear,
+        Confusion,
+        Stun,
+    }
+
+    let seed_for = |expected| {
+        (0..100_000)
+            .find(|seed| {
+                let mut rng = RfbRng::seeded(*seed);
+                rng.bounded(100);
+                for _ in 0..4 {
+                    rng.bounded(4);
+                }
+                let trigger_roll = rng.bounded(5) + 1;
+                if matches!(expected, ExpectedRider::None) {
+                    return trigger_roll != 1 && rng.draw_counter == 6;
+                }
+                if trigger_roll != 1 {
+                    return false;
+                }
+                let rider_roll = rng.bounded(1_000) + 1;
+                match expected {
+                    ExpectedRider::None => false,
+                    ExpectedRider::DeathRay => rider_roll == 666,
+                    ExpectedRider::Fear => rider_roll < 500 && rider_roll != 666,
+                    ExpectedRider::Confusion => (500..800).contains(&rider_roll),
+                    ExpectedRider::Stun => rider_roll >= 800,
+                }
+            })
+            .expect("bounded seed search should cover every Malediction branch")
+    };
+
+    for expected in [
+        ExpectedRider::None,
+        ExpectedRider::DeathRay,
+        ExpectedRider::Fear,
+        ExpectedRider::Confusion,
+        ExpectedRider::Stun,
+    ] {
+        let seed = seed_for(expected);
+        let mut game = prepare_death_caster(0, 10, "demo.ability.death-malediction");
+        game.debug_set_ability_casts_succeed(true);
+        game.player.position = Position { x: 3, y: 3 };
+        for position in [Position { x: 3, y: 3 }, Position { x: 4, y: 3 }] {
+            replace_terrain(&mut game, position, "demo.terrain.floor");
+        }
+        let target_id = "test.actor.malediction-target";
+        game.entities.push(actor_from_runtime_spawn(
+            target_id,
+            "demo.actor.cinder-adept",
+            Position { x: 4, y: 3 },
+            100_000,
+            100,
+            100,
+            true,
+        ));
+        game.rng = RfbRng::seeded(seed);
+        let mut events = Vec::new();
+
+        game.resolve_player_ability(
+            "demo.ability.death-malediction",
+            TargetSelection::Entity {
+                entity_id: target_id.to_owned(),
+            },
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("Malediction should resolve");
+
+        let raw_damage = events
+            .iter()
+            .find_map(|event| match event {
+                DomainEvent::AbilityHit { damage, .. } => Some(damage.raw),
+                _ => None,
+            })
+            .expect("Malediction should apply its primary hell-fire damage");
+        let random_choices = events
+            .iter()
+            .filter_map(|event| match event {
+                DomainEvent::AbilityEffectsResolved { resolution, .. } => {
+                    Some(resolution.effects.iter().filter_map(|effect| match effect {
+                        AbilityEffectResolutionDto::RandomChoice {
+                            roll,
+                            branch_index,
+                            maximum_roll,
+                            ..
+                        } => Some((*roll, *branch_index, *maximum_roll)),
+                        _ => None,
+                    }))
+                }
+                _ => None,
+            })
+            .flatten()
+            .collect::<Vec<_>>();
+
+        if matches!(expected, ExpectedRider::None) {
+            assert_eq!(game.rng_draw_counter(), 6);
+            assert_eq!(random_choices.len(), 1);
+            assert_ne!(random_choices[0].0, 1);
+            continue;
+        }
+
+        assert_eq!(random_choices.len(), 2);
+        assert_eq!(random_choices[0], (1, 1, 5));
+        assert_eq!(random_choices[1].2, 1_000);
+        let rider_resolution = events.iter().find_map(|event| match event {
+            DomainEvent::AbilityEffectsResolved { resolution, .. } => resolution
+                .effects
+                .iter()
+                .find(|effect| !matches!(effect, AbilityEffectResolutionDto::RandomChoice { .. })),
+            _ => None,
+        });
+        match expected {
+            ExpectedRider::None => unreachable!(),
+            ExpectedRider::DeathRay => assert!(matches!(
+                rider_resolution,
+                Some(AbilityEffectResolutionDto::DeathRay { power: 2_000, .. })
+            )),
+            ExpectedRider::Fear => assert!(matches!(
+                rider_resolution,
+                Some(AbilityEffectResolutionDto::ApplyStatus {
+                    status_kind_id,
+                    power: Some(10),
+                    ..
+                }) if status_kind_id == STATUS_FEAR
+            )),
+            ExpectedRider::Confusion => {
+                let expected_power = 5_u16
+                    .max(u16::try_from(raw_damage.min(100)).expect("damage power should fit u16"));
+                assert!(matches!(
+                    rider_resolution,
+                    Some(AbilityEffectResolutionDto::ApplyStatus {
+                        status_kind_id,
+                        power: Some(power),
+                        ..
+                    }) if status_kind_id == STATUS_CONFUSION && *power == expected_power
+                ));
+            }
+            ExpectedRider::Stun => assert!(matches!(
+                rider_resolution,
+                Some(AbilityEffectResolutionDto::ApplyStatus {
+                    status_kind_id,
+                    requested_duration_ticks,
+                    power: None,
+                    ..
+                }) if status_kind_id == STATUS_STUN
+                    && *requested_duration_ticks == u32::try_from(raw_damage).unwrap()
+            )),
+        }
+    }
+}
+
+#[test]
 fn corrected_death_spells_project_authoritative_values_at_levels_one_twenty_and_fifty() {
     for level in [1, 20, 50] {
         let mut game = test_caster_game(0);

@@ -202,6 +202,7 @@ impl Game {
         fn apply(effect: &mut AbilityEffectDefinition, bonus: u16) {
             match effect {
                 AbilityEffectDefinition::Damage { damage_bonus, .. }
+                | AbilityEffectDefinition::Malediction { damage_bonus, .. }
                 | AbilityEffectDefinition::AreaDamage { damage_bonus, .. }
                 | AbilityEffectDefinition::JumpDamage { damage_bonus, .. }
                 | AbilityEffectDefinition::BeamDamage { damage_bonus, .. }
