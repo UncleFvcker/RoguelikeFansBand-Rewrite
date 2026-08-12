@@ -6,6 +6,7 @@ pub(super) fn melee_effect_chance(effect: &MeleeBlowEffectDefinition) -> Option<
     match effect {
         MeleeBlowEffectDefinition::Damage { chance_percent, .. }
         | MeleeBlowEffectDefinition::Shatter { chance_percent, .. }
+        | MeleeBlowEffectDefinition::Bomb { chance_percent, .. }
         | MeleeBlowEffectDefinition::Poison { chance_percent, .. }
         | MeleeBlowEffectDefinition::Disease { chance_percent, .. }
         | MeleeBlowEffectDefinition::DrainAttributes { chance_percent, .. }
@@ -660,7 +661,8 @@ impl Game {
                                 .level(DamageType::Poison),
                         ))
                     }
-                    MeleeBlowEffectDefinition::DrainAttributes { .. }
+                    MeleeBlowEffectDefinition::Bomb { .. }
+                    | MeleeBlowEffectDefinition::DrainAttributes { .. }
                     | MeleeBlowEffectDefinition::DrainResource { .. }
                     | MeleeBlowEffectDefinition::DrainCharges { .. }
                     | MeleeBlowEffectDefinition::DrainExperience { .. }
@@ -1383,6 +1385,9 @@ impl Game {
                                     .level(DamageType::Physical),
                             )),
                         )
+                    }
+                    MeleeBlowEffectDefinition::Bomb { .. } => {
+                        unreachable!("bomb effects require a self-destructing blow")
                     }
                     MeleeBlowEffectDefinition::DrainAttributes { attributes, .. } => {
                         for attribute in attributes {

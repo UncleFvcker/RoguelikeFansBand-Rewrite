@@ -926,7 +926,8 @@ impl Game {
                                 .level(DamageType::Poison),
                         ))
                     }
-                    MeleeBlowEffectDefinition::DrainAttributes { .. }
+                    MeleeBlowEffectDefinition::Bomb { .. }
+                    | MeleeBlowEffectDefinition::DrainAttributes { .. }
                     | MeleeBlowEffectDefinition::DrainResource { .. }
                     | MeleeBlowEffectDefinition::DrainExperience { .. }
                     | MeleeBlowEffectDefinition::Disenchant { .. }

@@ -6891,6 +6891,14 @@ fn melee_effect_json(effect: &LegacyBlowEffect) -> Option<serde_json::Value> {
                 "damageSides": damage_sides.clamp(1, 10_000),
             })
         }
+        "BOMB" => {
+            let (damage_dice, damage_sides) = effect.dice?;
+            serde_json::json!({
+                "type": "bomb",
+                "damageDice": damage_dice.clamp(1, 100),
+                "damageSides": damage_sides.clamp(1, 10_000),
+            })
+        }
         "CUT" => {
             let (duration_dice, duration_sides) = effect.dice?;
             serde_json::json!({
@@ -13116,6 +13124,38 @@ mod tests {
             actor["tags"]
                 .as_array()
                 .is_some_and(|tags| tags.iter().any(|tag| tag == "amberite"))
+        );
+    }
+
+    #[test]
+    fn demo_monster_import_maps_bomb_as_a_composite_self_destruct_effect() {
+        let mut monsters = parse_r_info(
+            "N:700:Leprechaun fanatic\nG:h:D\nI:123:6d6:8:13:8:50\nW:46:6:80:80:0:0\nB:EXPLODE:BOMB(12d12)\nF:MULTIPLY | RAND_25 | EVIL\n",
+        )
+        .expect("synthetic bomb monster should parse");
+        let actor = demo_monster_json(
+            &monsters.remove(0),
+            &DemoMonsterSelectionEntry {
+                source_index: 700,
+                source_id: None,
+                id: "leprechaun-fanatic".to_owned(),
+                tags: vec!["orc-cave".to_owned()],
+                omitted_flags: Vec::new(),
+                omitted_spells: Vec::new(),
+            },
+            &mut BTreeMap::new(),
+        )
+        .expect("BOMB should import through the self-destruct effect");
+
+        let blow = &actor["meleeRoutine"]["blows"][0];
+        assert_eq!(blow["selfDestructs"], true);
+        assert_eq!(
+            blow["effects"][0],
+            serde_json::json!({
+                "type": "bomb",
+                "damageDice": 12,
+                "damageSides": 12,
+            })
         );
     }
 

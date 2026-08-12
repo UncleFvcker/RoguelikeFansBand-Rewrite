@@ -4066,3 +4066,5 @@ actor-demo-rinaldo-son-of-brand-name = Rinaldo, Son of Brand
 actor-demo-rinaldo-son-of-brand-description = A creature recorded in the original RFB bestiary as Rinaldo, Son of Brand.
 ability-legacy-ball-chaos-10d10-41-name = Chaos ball
 ability-legacy-ball-chaos-10d10-41-description = Uses the Chaos ball monster spell from RFB.
+actor-demo-leprechaun-fanatic-name = Leprechaun fanatic
+actor-demo-leprechaun-fanatic-description = A creature recorded in the original RFB bestiary as Leprechaun fanatic.

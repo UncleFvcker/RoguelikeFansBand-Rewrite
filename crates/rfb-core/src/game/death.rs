@@ -6,10 +6,10 @@ use rfb_content::MeleeBlowEffectDefinition;
 use rfb_protocol::{ItemEnchantmentsDto, ItemQualityDto, MonsterPackRoleDto, Position};
 
 use crate::{
-    effect::{DamagePacket, resolve_damage},
+    effect::{DamageOutcome, DamagePacket, STATUS_BLEEDING, STATUS_STUN, resolve_damage},
     error::CoreError,
     event::DomainEvent,
-    resistance::DamageType,
+    resistance::{DamageType, ResistanceLevel},
     state::{Actor, GoldPile, ItemInstance, ItemLocation},
 };
 
@@ -34,6 +34,64 @@ struct ActorDeathPlan {
     carried: Vec<CarriedDrop>,
     has_drops: bool,
     dissolved_pack_id: Option<String>,
+}
+
+#[derive(Debug, Clone, Copy)]
+struct BombDamage {
+    damage: DamageOutcome,
+    shard_damage: i32,
+    sound_damage: i32,
+    shards_resisted: bool,
+    sound_resisted: bool,
+}
+
+fn resistance_prevents_bomb_status(resistance: ResistanceLevel) -> bool {
+    matches!(
+        resistance,
+        ResistanceLevel::Resistant | ResistanceLevel::Strong | ResistanceLevel::Immune
+    )
+}
+
+fn rfb_bomb_damage(
+    raw_damage: i32,
+    distance: u32,
+    shard_resistance: ResistanceLevel,
+    sound_resistance: ResistanceLevel,
+) -> BombDamage {
+    let raw_damage = raw_damage.max(0);
+    let mut sound_raw = raw_damage.saturating_mul(2).saturating_add(2) / 3;
+    let mut shard_raw = raw_damage.saturating_sub(sound_raw);
+    for _ in 0..distance {
+        shard_raw = shard_raw.saturating_sub(shard_raw / 5);
+    }
+    sound_raw = sound_raw.saturating_add(i32::try_from(distance).unwrap_or(i32::MAX))
+        / i32::try_from(distance.saturating_add(1)).unwrap_or(i32::MAX);
+
+    let shards = resolve_damage(
+        DamagePacket::new(shard_raw, DamageType::Shards),
+        shard_resistance,
+    );
+    let sound = resolve_damage(
+        DamagePacket::new(sound_raw, DamageType::Sound),
+        sound_resistance,
+    );
+    let prepared_raw = shard_raw.saturating_add(sound_raw);
+    let applied = shards.applied.saturating_add(sound.applied);
+    BombDamage {
+        damage: DamageOutcome {
+            raw: prepared_raw,
+            armor_reduction: 0,
+            requested: prepared_raw,
+            applied,
+            resistance_delta: prepared_raw.saturating_sub(applied),
+            damage_type: DamageType::Shards,
+            resistance: ResistanceLevel::Normal,
+        },
+        shard_damage: shards.applied,
+        sound_damage: sound.applied,
+        shards_resisted: resistance_prevents_bomb_status(shard_resistance),
+        sound_resisted: resistance_prevents_bomb_status(sound_resistance),
+    }
 }
 
 impl Game {
@@ -81,18 +139,28 @@ impl Game {
         let cells = self.area_damage_cells(actor.position, 3);
         changed.extend(cells.iter().map(|(_, position)| *position));
         for effect in &blow.effects {
-            let (damage_dice, damage_sides, damage_type) = match effect {
+            let (damage_dice, damage_sides, damage_type, bomb) = match effect {
                 MeleeBlowEffectDefinition::Damage {
                     damage_dice,
                     damage_sides,
                     damage_type,
                     ..
-                } => (*damage_dice, *damage_sides, DamageType::from(*damage_type)),
+                } => (
+                    *damage_dice,
+                    *damage_sides,
+                    DamageType::from(*damage_type),
+                    false,
+                ),
                 MeleeBlowEffectDefinition::Poison {
                     damage_dice,
                     damage_sides,
                     ..
-                } => (*damage_dice, *damage_sides, DamageType::Poison),
+                } => (*damage_dice, *damage_sides, DamageType::Poison, false),
+                MeleeBlowEffectDefinition::Bomb {
+                    damage_dice,
+                    damage_sides,
+                    ..
+                } => (*damage_dice, *damage_sides, DamageType::Shards, true),
                 MeleeBlowEffectDefinition::Disease { .. }
                 | MeleeBlowEffectDefinition::Shatter { .. }
                 | MeleeBlowEffectDefinition::DrainAttributes { .. }
@@ -122,13 +190,48 @@ impl Game {
             for (distance, position) in &cells {
                 let prepared_damage = rfb_area_damage(raw_damage, *distance);
                 if self.player.position == *position && !self.player_is_dead() {
-                    let damage = self.reduce_player_damage(resolve_damage(
-                        DamagePacket::new(prepared_damage, damage_type),
-                        self.effective_player_resistances().level(damage_type),
+                    let bomb_damage = bomb.then(|| {
+                        rfb_bomb_damage(
+                            raw_damage,
+                            *distance,
+                            self.effective_player_resistances()
+                                .level(DamageType::Shards),
+                            self.effective_player_resistances().level(DamageType::Sound),
+                        )
+                    });
+                    let damage = self.reduce_player_damage(bomb_damage.map_or_else(
+                        || {
+                            resolve_damage(
+                                DamagePacket::new(prepared_damage, damage_type),
+                                self.effective_player_resistances().level(damage_type),
+                            )
+                        },
+                        |damage| damage.damage,
                     ));
                     let application =
                         plan_damage_application(&self.player, damage, FatalityPolicy::BelowZero);
                     commit_damage_application(&mut self.player, &application);
+                    if !application.fatal
+                        && let Some(bomb_damage) = bomb_damage
+                    {
+                        if !bomb_damage.shards_resisted {
+                            self.apply_player_melee_status(
+                                STATUS_BLEEDING,
+                                bomb_damage.shard_damage,
+                                &actor.kind_id,
+                            );
+                        }
+                        if !bomb_damage.sound_resisted && bomb_damage.sound_damage > 0 {
+                            let maximum = if bomb_damage.sound_damage > 90 {
+                                35
+                            } else {
+                                bomb_damage.sound_damage / 3 + 5
+                            };
+                            let duration = i32::try_from(self.rng.bounded(maximum as u64) + 1)
+                                .expect("bomb stun duration must fit i32");
+                            self.apply_player_melee_status(STATUS_STUN, duration, &actor.kind_id);
+                        }
+                    }
                     events.push(DomainEvent::MonsterDeathExplosionHit {
                         source_kind_id: actor.kind_id.clone(),
                         target_kind_id: self.player.kind_id.clone(),
@@ -160,9 +263,26 @@ impl Game {
                     .expect("death explosion target must remain available");
                 let target_is_player_aligned = self.entity_is_player_aligned(target_index);
                 let target_kind_id = self.entities[target_index].kind_id.clone();
-                let damage = resolve_damage(
-                    DamagePacket::new(prepared_damage, damage_type),
-                    self.entities[target_index].resistances.level(damage_type),
+                let bomb_damage = bomb.then(|| {
+                    rfb_bomb_damage(
+                        raw_damage,
+                        *distance,
+                        self.entities[target_index]
+                            .resistances
+                            .level(DamageType::Shards),
+                        self.entities[target_index]
+                            .resistances
+                            .level(DamageType::Sound),
+                    )
+                });
+                let damage = bomb_damage.map_or_else(
+                    || {
+                        resolve_damage(
+                            DamagePacket::new(prepared_damage, damage_type),
+                            self.entities[target_index].resistances.level(damage_type),
+                        )
+                    },
+                    |damage| damage.damage,
                 );
                 let application = plan_damage_application(
                     &self.entities[target_index],
@@ -171,6 +291,25 @@ impl Game {
                 );
                 commit_damage_application(&mut self.entities[target_index], &application);
                 self.wake_entity_after_damage(target_index, damage.applied, events);
+                if !application.fatal
+                    && let Some(bomb_damage) = bomb_damage
+                    && !bomb_damage.sound_resisted
+                    && bomb_damage.sound_damage > 0
+                {
+                    let maximum = if bomb_damage.sound_damage > 90 {
+                        35
+                    } else {
+                        bomb_damage.sound_damage / 3 + 5
+                    };
+                    let duration = i32::try_from(self.rng.bounded(maximum as u64) + 1)
+                        .expect("bomb stun duration must fit i32");
+                    self.apply_actor_melee_status(
+                        target_index,
+                        STATUS_STUN,
+                        duration,
+                        &actor.kind_id,
+                    );
+                }
                 if application.fatal {
                     let death_event = DomainEvent::MonsterDeathExplosionSlew {
                         source_kind_id: actor.kind_id.clone(),

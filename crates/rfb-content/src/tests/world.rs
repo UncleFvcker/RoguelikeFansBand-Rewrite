@@ -719,7 +719,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         .iter()
         .filter(|actor| actor.tags.iter().any(|tag| tag == "orc-cave"))
         .collect::<Vec<_>>();
-    assert_eq!(orc_cave.len(), 462);
+    assert_eq!(orc_cave.len(), 463);
 
     for id in [
         "demo.actor.bunyip",
@@ -767,7 +767,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         level_counts,
         [
             16, 14, 12, 17, 24, 17, 19, 17, 18, 21, 7, 12, 29, 15, 27, 28, 19, 19, 11, 42, 12, 6,
-            12, 14, 14, 6, 10, 4,
+            12, 14, 14, 7, 10, 4,
         ]
     );
 
@@ -4549,6 +4549,39 @@ fn p50_amberite_imports_rinaldo() {
         Some(660)
     );
     assert!(actor.tags.iter().any(|tag| tag == "amberite"));
+}
+
+#[test]
+fn p50_bomb_imports_leprechaun_fanatic() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actor = artifact
+        .content
+        .actors
+        .iter()
+        .find(|actor| actor.id == "demo.actor.leprechaun-fanatic")
+        .expect("Leprechaun fanatic should be imported");
+
+    assert_eq!(actor.level, 46);
+    assert_eq!(
+        actor
+            .allocation
+            .as_ref()
+            .map(|allocation| allocation.legacy_index),
+        Some(700)
+    );
+    assert!(matches!(
+        actor
+            .melee_routine
+            .as_ref()
+            .expect("Leprechaun fanatic should retain melee")
+            .blows[0]
+            .effects[0],
+        MeleeBlowEffectDefinition::Bomb {
+            damage_dice: 12,
+            damage_sides: 12,
+            ..
+        }
+    ));
 }
 
 #[test]

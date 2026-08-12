@@ -4067,3 +4067,5 @@ actor-demo-rinaldo-son-of-brand-name = 布兰德之子里纳尔多
 actor-demo-rinaldo-son-of-brand-description = 原版怪物：布兰德之子里纳尔多。
 ability-legacy-ball-chaos-10d10-41-name = 唤起罗格鲁斯
 ability-legacy-ball-chaos-10d10-41-description = 使用 RFB 原版怪物法术“唤起罗格鲁斯”。
+actor-demo-leprechaun-fanatic-name = 狂热矮妖
+actor-demo-leprechaun-fanatic-description = 原版怪物：狂热矮妖。

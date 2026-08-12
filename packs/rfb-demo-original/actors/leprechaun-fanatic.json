@@ -1,0 +1,80 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 700,
+    "maxDepth": 80,
+    "multiplies": true,
+    "randomMovementPercent": 25,
+    "rarity": 6
+  },
+  "attack": 11,
+  "damageDice": 1,
+  "damageSides": 1,
+  "damageType": "physical",
+  "defense": 1,
+  "descriptionKey": "actor-demo-leprechaun-fanatic-description",
+  "doorInteraction": {
+    "opens": true
+  },
+  "experienceValue": 80,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "h",
+  "hitPointDice": {
+    "dice": 6,
+    "sides": 6
+  },
+  "id": "demo.actor.leprechaun-fanatic",
+  "level": 46,
+  "light": {
+    "intrinsic": false,
+    "radius": 1
+  },
+  "maxHp": 21,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "damageDice": 12,
+            "damageSides": 12,
+            "type": "bomb"
+          }
+        ],
+        "methodId": "rfb.blow.explode",
+        "selfDestructs": true,
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.blink",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.escape",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.drag",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 16,
+    "smart": true
+  },
+  "nameKey": "actor-demo-leprechaun-fanatic-name",
+  "role": "monster",
+  "speed": 123,
+  "tags": [
+    "evil",
+    "kin-glyph-104",
+    "legacy-import",
+    "orc-cave"
+  ],
+  "terrainInteraction": {
+    "picksUpItems": true
+  }
+}

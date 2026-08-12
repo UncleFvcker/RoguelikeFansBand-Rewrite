@@ -5352,6 +5352,12 @@
       "id": "rinaldo-son-of-brand",
       "tags": ["orc-cave"],
       "omittedFlags": ["CAN_SPEAK", "MALE"]
+    },
+    {
+      "sourceIndex": 700,
+      "id": "leprechaun-fanatic",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE"]
     }
   ]
 }

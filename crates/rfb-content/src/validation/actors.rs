@@ -145,7 +145,12 @@ pub(super) fn validate_actors(
                                     effect,
                                     MeleeBlowEffectDefinition::Damage { .. }
                                         | MeleeBlowEffectDefinition::Poison { .. }
+                                        | MeleeBlowEffectDefinition::Bomb { .. }
                                 )
+                            }))
+                        || (!blow.self_destructs
+                            && blow.effects.iter().any(|effect| {
+                                matches!(effect, MeleeBlowEffectDefinition::Bomb { .. })
                             }))
                         || blow
                             .effects
@@ -349,6 +354,11 @@ fn valid_melee_effect(effect: &MeleeBlowEffectDefinition) -> bool {
                     || valid_dice(*damage_dice, *damage_sides))
         }
         MeleeBlowEffectDefinition::Shatter {
+            chance_percent,
+            damage_dice,
+            damage_sides,
+        } => valid_chance(*chance_percent) && valid_dice(*damage_dice, *damage_sides),
+        MeleeBlowEffectDefinition::Bomb {
             chance_percent,
             damage_dice,
             damage_sides,

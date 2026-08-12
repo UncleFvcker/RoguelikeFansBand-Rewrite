@@ -486,6 +486,83 @@ fn amberite_death_can_curse_equipment_and_apply_multiple_nonlethal_ty_curses() {
 }
 
 #[test]
+fn bomb_death_explosion_splits_sound_and_shards_with_status_riders() {
+    fn bomb_game(resistant: bool) -> Game {
+        let mut game = game_with_actor_definition(0, "demo.actor.small-kobold", |actor| {
+            actor.melee_routine = Some(rfb_content::MeleeRoutineDefinition {
+                blows: vec![rfb_content::MeleeBlowDefinition {
+                    method_id: "rfb.blow.explode".to_owned(),
+                    to_hit: 20,
+                    self_destructs: true,
+                    effects: vec![MeleeBlowEffectDefinition::Bomb {
+                        chance_percent: None,
+                        damage_dice: 90,
+                        damage_sides: 1,
+                    }],
+                }],
+            });
+        });
+        clear_monsters(&mut game);
+        game.player.hp = 500;
+        game.player.max_hp = 500;
+        if resistant {
+            game.player
+                .resistances
+                .set(DamageType::Shards, ResistanceLevel::Resistant);
+            game.player
+                .resistances
+                .set(DamageType::Sound, ResistanceLevel::Resistant);
+        }
+        let position = Position {
+            x: game.player.position.x + 1,
+            y: game.player.position.y,
+        };
+        let monster = game.generated_actor(
+            "test.actor.bomb".to_owned(),
+            "demo.actor.small-kobold",
+            position,
+        );
+        game.entities.push(monster);
+        game.resolve_actor_death_without_rewards(
+            0,
+            None,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("bomb death should resolve");
+        game
+    }
+
+    let normal = bomb_game(false);
+    assert_eq!(normal.player.hp, 446);
+    let bleeding = normal
+        .player
+        .statuses
+        .iter()
+        .find(|status| status.kind_id == STATUS_BLEEDING)
+        .expect("unresisted shards should cause bleeding");
+    assert_eq!(bleeding.remaining_ticks, 24);
+    let stun = normal
+        .player
+        .statuses
+        .iter()
+        .find(|status| status.kind_id == STATUS_STUN)
+        .expect("unresisted sound should cause stun");
+    assert!((1..=15).contains(&stun.remaining_ticks));
+
+    let resistant = bomb_game(true);
+    assert_eq!(resistant.player.hp, 473);
+    assert!(
+        resistant
+            .player
+            .statuses
+            .iter()
+            .all(|status| { !matches!(status.kind_id.as_str(), STATUS_BLEEDING | STATUS_STUN) })
+    );
+}
+
+#[test]
 fn charge_drain_melee_consumes_a_carried_device_or_player_nutrition() {
     let effect = MeleeBlowEffectDefinition::DrainCharges {
         chance_percent: None,
