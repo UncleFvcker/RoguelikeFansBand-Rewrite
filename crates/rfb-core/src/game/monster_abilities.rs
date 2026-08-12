@@ -1288,57 +1288,16 @@ impl Game {
                     )
                 }
                 AbilityEffectDefinition::PolymorphTarget => {
-                    let target_entity_id = self.entities[target_index].id.clone();
-                    let target_kind_id = self.entities[target_index].kind_id.clone();
-                    let target_position = self.entities[target_index].position;
-                    let target_definition = self
+                    let caster_level = self
                         .content
-                        .actor(&target_kind_id)
-                        .expect("monster target definition must remain available");
-                    if target_definition
-                        .tags
-                        .iter()
-                        .any(|tag| matches!(tag.as_str(), "unique" | "unique2" | "guardian"))
-                    {
-                        AbilityEffectResolutionDto::Skipped {
-                            effect_index,
-                            reason: AbilityEffectSkipReasonDto::Ineligible,
-                        }
-                    } else {
-                        let caster_level = self
-                            .content
-                            .actor(source_kind_id)
-                            .map_or(1, |definition| definition.level);
-                        let resistance_bound = caster_level.saturating_sub(10).max(1);
-                        let resistance_roll =
-                            u32::try_from(self.rng.bounded(u64::from(resistance_bound)) + 1)
-                                .expect("bounded polymorph resistance roll must fit u32")
-                                .saturating_add(10);
-                        if target_definition.level > resistance_roll {
-                            AbilityEffectResolutionDto::Skipped {
-                                effect_index,
-                                reason: AbilityEffectSkipReasonDto::Saved,
-                            }
-                        } else if let Some(form_kind_id) =
-                            self.roll_chameleon_form(&target_kind_id, target_position)
-                        {
-                            self.apply_polymorph_form(target_index, &form_kind_id);
-                            changed.insert(target_position);
-                            AbilityEffectResolutionDto::PolymorphTarget {
-                                effect_index,
-                                target_entity_id,
-                                form_kind_id: Some(form_kind_id),
-                                changed: true,
-                            }
-                        } else {
-                            AbilityEffectResolutionDto::PolymorphTarget {
-                                effect_index,
-                                target_entity_id,
-                                form_kind_id: None,
-                                changed: false,
-                            }
-                        }
-                    }
+                        .actor(source_kind_id)
+                        .map_or(1, |definition| definition.level);
+                    self.resolve_actor_polymorph_target(
+                        target_index,
+                        caster_level,
+                        effect_index,
+                        changed,
+                    )
                 }
                 AbilityEffectDefinition::DrainResource { .. }
                 | AbilityEffectDefinition::Amnesia

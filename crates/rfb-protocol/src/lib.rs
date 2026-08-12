@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.176";
+pub const PROTOCOL_VERSION: &str = "1.177";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -868,6 +868,10 @@ pub enum AbilityEffectSpecDto {
         damage_bonus: u16,
         damage_type: DamageTypeDto,
     },
+    LightLine {
+        damage_dice: u16,
+        damage_sides: u16,
+    },
     BoltOrBeamDamage {
         damage_dice: u16,
         damage_sides: u16,
@@ -945,6 +949,14 @@ pub enum AbilityEffectSpecDto {
         affect_chance_percent: u8,
         floor_terrain_id: String,
         wall_terrain_ids: Vec<String>,
+    },
+    AreaDestruction {
+        minimum_radius: u8,
+        maximum_radius: u8,
+        floor_terrain_id: String,
+        wall_terrain_id: String,
+        quartz_terrain_id: String,
+        magma_terrain_id: String,
     },
     SuppressMonsterReproduction {
         damage_dice: u16,
@@ -1947,6 +1959,14 @@ pub enum AbilityEffectResolutionDto {
         affected_positions: Vec<Position>,
         wall_positions: Vec<Position>,
         floor_positions: Vec<Position>,
+        removed_items: u32,
+        removed_gold_piles: u32,
+    },
+    AreaDestruction {
+        effect_index: u8,
+        protected_floor: bool,
+        affected_positions: Vec<Position>,
+        removed_entities: u32,
         removed_items: u32,
         removed_gold_piles: u32,
     },

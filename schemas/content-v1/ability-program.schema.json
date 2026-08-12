@@ -209,6 +209,33 @@
         {
           "additionalProperties": false,
           "properties": {
+            "damageDice": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "damageSides": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "light-line",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "damageDice",
+            "damageSides"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
             "beamChancePercent": {
               "format": "uint8",
               "maximum": 255,
@@ -721,6 +748,49 @@
             "affectChancePercent",
             "floorTerrainId",
             "wallTerrainIds"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "floorTerrainId": {
+              "type": "string"
+            },
+            "magmaTerrainId": {
+              "type": "string"
+            },
+            "maximumRadius": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "minimumRadius": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "quartzTerrainId": {
+              "type": "string"
+            },
+            "type": {
+              "const": "area-destruction",
+              "type": "string"
+            },
+            "wallTerrainId": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "minimumRadius",
+            "maximumRadius",
+            "floorTerrainId",
+            "wallTerrainId",
+            "quartzTerrainId",
+            "magmaTerrainId"
           ],
           "type": "object"
         },

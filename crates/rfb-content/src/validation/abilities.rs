@@ -181,6 +181,10 @@ pub(super) fn validate_abilities(
                         && (1..=10_000).contains(damage_sides)
                         && *damage_bonus <= 10_000
                 }
+                AbilityEffectDefinition::LightLine {
+                    damage_dice,
+                    damage_sides,
+                } => (1..=100).contains(damage_dice) && (1..=10_000).contains(damage_sides),
                 AbilityEffectDefinition::BoltOrBeamDamage {
                     damage_dice,
                     damage_sides,
@@ -326,6 +330,26 @@ pub(super) fn validate_abilities(
                         && wall_terrain_ids.len() <= 8
                         && wall_terrain_ids.windows(2).all(|pair| pair[0] != pair[1])
                         && wall_terrain_ids.iter().all(|id| id != floor_terrain_id)
+                }
+                AbilityEffectDefinition::AreaDestruction {
+                    minimum_radius,
+                    maximum_radius,
+                    floor_terrain_id,
+                    wall_terrain_id,
+                    quartz_terrain_id,
+                    magma_terrain_id,
+                } => {
+                    (1..=32).contains(minimum_radius)
+                        && minimum_radius <= maximum_radius
+                        && *maximum_radius <= 32
+                        && [
+                            floor_terrain_id,
+                            wall_terrain_id,
+                            quartz_terrain_id,
+                            magma_terrain_id,
+                        ]
+                        .iter()
+                        .all(|id| !id.is_empty())
                 }
                 AbilityEffectDefinition::SuppressMonsterReproduction {
                     damage_dice,
@@ -675,6 +699,8 @@ pub(super) fn validate_abilities(
                                         | AbilityEffectDefinition::VisibleDamage { .. }
                                         | AbilityEffectDefinition::VisibleApplyStatus { .. }
                                         | AbilityEffectDefinition::EnchantEquippedWeapon { .. }
+                                        | AbilityEffectDefinition::Earthquake { .. }
+                                        | AbilityEffectDefinition::AreaDestruction { .. }
                                         | AbilityEffectDefinition::NoOp { .. }
                                 ),
                                 AbilityRandomTargetDefinition::CastTarget => matches!(
@@ -682,10 +708,12 @@ pub(super) fn validate_abilities(
                                     AbilityEffectDefinition::Damage { .. }
                                         | AbilityEffectDefinition::AreaDamage { .. }
                                         | AbilityEffectDefinition::BeamDamage { .. }
+                                        | AbilityEffectDefinition::LightLine { .. }
                                         | AbilityEffectDefinition::BoltOrBeamDamage { .. }
                                         | AbilityEffectDefinition::ApplyStatus { .. }
                                         | AbilityEffectDefinition::DrainLife { .. }
                                         | AbilityEffectDefinition::Genocide { .. }
+                                        | AbilityEffectDefinition::PolymorphTarget
                                         | AbilityEffectDefinition::NoOp { .. }
                                 ),
                             }
@@ -737,6 +765,7 @@ pub(super) fn validate_abilities(
         let valid_target = match &ability.effect {
             AbilityEffectDefinition::Damage { .. }
             | AbilityEffectDefinition::BeamDamage { .. }
+            | AbilityEffectDefinition::LightLine { .. }
             | AbilityEffectDefinition::BoltOrBeamDamage { .. }
             | AbilityEffectDefinition::BoltOrAreaDamage { .. }
             | AbilityEffectDefinition::ConeDamage { .. }
@@ -801,6 +830,7 @@ pub(super) fn validate_abilities(
             | AbilityEffectDefinition::RestoreVitality { .. }
             | AbilityEffectDefinition::ReportMagic
             | AbilityEffectDefinition::Earthquake { .. }
+            | AbilityEffectDefinition::AreaDestruction { .. }
             | AbilityEffectDefinition::SuppressMonsterReproduction { .. }
             | AbilityEffectDefinition::PolymorphSelf
             | AbilityEffectDefinition::NoOp { .. } => self_target_rule,
@@ -907,6 +937,34 @@ pub(super) fn validate_abilities(
             } = effect
             {
                 ability_race_ids.push((ability.id.clone(), race_id.clone()));
+            }
+            if let AbilityEffectDefinition::Earthquake {
+                floor_terrain_id,
+                wall_terrain_ids,
+                ..
+            } = effect
+            {
+                require_reference(terrain_ids, floor_terrain_id, &ability.id)?;
+                for wall_terrain_id in wall_terrain_ids {
+                    require_reference(terrain_ids, wall_terrain_id, &ability.id)?;
+                }
+            }
+            if let AbilityEffectDefinition::AreaDestruction {
+                floor_terrain_id,
+                wall_terrain_id,
+                quartz_terrain_id,
+                magma_terrain_id,
+                ..
+            } = effect
+            {
+                for terrain_id in [
+                    floor_terrain_id,
+                    wall_terrain_id,
+                    quartz_terrain_id,
+                    magma_terrain_id,
+                ] {
+                    require_reference(terrain_ids, terrain_id, &ability.id)?;
+                }
             }
         }
         if let AbilityEffectDefinition::Summon { actor_kind_id, .. } = &ability.effect {

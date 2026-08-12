@@ -165,6 +165,56 @@ impl Game {
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
     ) -> Result<DamageOutcome, CoreError> {
+        self.resolve_ability_damage_to_entity_with_resistance(
+            index,
+            ability_id,
+            damage_type,
+            raw_damage,
+            trace,
+            None,
+            events,
+            changed,
+            removed_entities,
+        )
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    pub(super) fn resolve_weak_light_damage_to_entity(
+        &mut self,
+        index: usize,
+        ability_id: &str,
+        raw_damage: i32,
+        trace: ProjectileTrace,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<DamageOutcome, CoreError> {
+        self.resolve_ability_damage_to_entity_with_resistance(
+            index,
+            ability_id,
+            DamageType::Light,
+            raw_damage,
+            trace,
+            Some(ResistanceLevel::Normal),
+            events,
+            changed,
+            removed_entities,
+        )
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn resolve_ability_damage_to_entity_with_resistance(
+        &mut self,
+        index: usize,
+        ability_id: &str,
+        damage_type: DamageType,
+        raw_damage: i32,
+        trace: ProjectileTrace,
+        resistance_override: Option<ResistanceLevel>,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<DamageOutcome, CoreError> {
         let definition = self
             .actor_runtime_definition(&self.entities[index])
             .expect("ability target definition must remain available")
@@ -173,7 +223,8 @@ impl Game {
         self.entities[index].alerted = true;
         changed.insert(self.entities[index].position);
         let target = self.actor_derived_stats(&self.entities[index], &definition, false);
-        let resistance = self.entities[index].resistances.level(damage_type);
+        let resistance = resistance_override
+            .unwrap_or_else(|| self.entities[index].resistances.level(damage_type));
         let damage = resolve_armored_damage(
             raw_damage,
             damage_type,

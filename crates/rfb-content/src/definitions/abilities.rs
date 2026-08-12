@@ -252,6 +252,10 @@ pub enum AbilityEffectDefinition {
         #[serde(default)]
         damage_type: ActorDamageType,
     },
+    LightLine {
+        damage_dice: u16,
+        damage_sides: u16,
+    },
     BoltOrBeamDamage {
         damage_dice: u16,
         damage_sides: u16,
@@ -336,6 +340,14 @@ pub enum AbilityEffectDefinition {
         affect_chance_percent: u8,
         floor_terrain_id: String,
         wall_terrain_ids: Vec<String>,
+    },
+    AreaDestruction {
+        minimum_radius: u8,
+        maximum_radius: u8,
+        floor_terrain_id: String,
+        wall_terrain_id: String,
+        quartz_terrain_id: String,
+        magma_terrain_id: String,
     },
     SuppressMonsterReproduction {
         damage_dice: u16,

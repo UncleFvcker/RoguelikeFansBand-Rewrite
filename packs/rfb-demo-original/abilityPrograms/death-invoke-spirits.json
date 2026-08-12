@@ -48,8 +48,7 @@
         {
           "maximumRoll": 30,
           "effect": {
-            "type": "no-op",
-            "reason": "actor-polymorph-pending"
+            "type": "polymorph-target"
           }
         },
         {
@@ -86,8 +85,9 @@
         {
           "maximumRoll": 50,
           "effect": {
-            "type": "no-op",
-            "reason": "line-light-pending"
+            "type": "light-line",
+            "damageDice": 6,
+            "damageSides": 8
           }
         },
         {
@@ -200,16 +200,28 @@
           "maximumRoll": 103,
           "target": "self-target",
           "effect": {
-            "type": "no-op",
-            "reason": "earthquake-pending"
+            "type": "earthquake",
+            "radius": 12,
+            "affectChancePercent": 15,
+            "floorTerrainId": "demo.terrain.floor",
+            "wallTerrainIds": [
+              "demo.terrain.wall",
+              "demo.terrain.quartz-vein",
+              "demo.terrain.magma-vein"
+            ]
           }
         },
         {
           "maximumRoll": 105,
           "target": "self-target",
           "effect": {
-            "type": "no-op",
-            "reason": "destroy-area-pending"
+            "type": "area-destruction",
+            "minimumRadius": 13,
+            "maximumRadius": 17,
+            "floorTerrainId": "demo.terrain.floor",
+            "wallTerrainId": "demo.terrain.wall",
+            "quartzTerrainId": "demo.terrain.quartz-vein",
+            "magmaTerrainId": "demo.terrain.magma-vein"
           }
         },
         {

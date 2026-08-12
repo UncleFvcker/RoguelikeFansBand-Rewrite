@@ -559,6 +559,53 @@ impl Game {
         self.apply_actor_form(index, form_kind_id, true);
     }
 
+    pub(super) fn resolve_actor_polymorph_target(
+        &mut self,
+        target_index: usize,
+        caster_level: u32,
+        effect_index: u8,
+        changed: &mut BTreeSet<Position>,
+    ) -> AbilityEffectResolutionDto {
+        let target_entity_id = self.entities[target_index].id.clone();
+        let target_kind_id = self.entities[target_index].kind_id.clone();
+        let target_position = self.entities[target_index].position;
+        let target_definition = self
+            .content
+            .actor(&target_kind_id)
+            .expect("polymorph target definition must remain available");
+        if target_definition
+            .tags
+            .iter()
+            .any(|tag| matches!(tag.as_str(), "unique" | "unique2" | "guardian"))
+        {
+            return AbilityEffectResolutionDto::Skipped {
+                effect_index,
+                reason: AbilityEffectSkipReasonDto::Ineligible,
+            };
+        }
+        let resistance_bound = caster_level.saturating_sub(10).max(1);
+        let resistance_roll = u32::try_from(self.rng.bounded(u64::from(resistance_bound)) + 1)
+            .expect("bounded polymorph resistance roll must fit u32")
+            .saturating_add(10);
+        if target_definition.level > resistance_roll {
+            return AbilityEffectResolutionDto::Skipped {
+                effect_index,
+                reason: AbilityEffectSkipReasonDto::Saved,
+            };
+        }
+        let form_kind_id = self.roll_chameleon_form(&target_kind_id, target_position);
+        if let Some(form_kind_id) = &form_kind_id {
+            self.apply_polymorph_form(target_index, form_kind_id);
+            changed.insert(target_position);
+        }
+        AbilityEffectResolutionDto::PolymorphTarget {
+            effect_index,
+            target_entity_id,
+            changed: form_kind_id.is_some(),
+            form_kind_id,
+        }
+    }
+
     pub(super) fn maybe_change_chameleon_form(&mut self, index: usize) -> bool {
         let actor_kind_id = self.entities[index].kind_id.clone();
         if !self

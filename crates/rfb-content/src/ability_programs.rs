@@ -151,6 +151,8 @@ fn ability_program_top_level_random_choice_is_valid(
                     | AbilityEffectDefinition::VisibleDamage { .. }
                     | AbilityEffectDefinition::VisibleApplyStatus { .. }
                     | AbilityEffectDefinition::EnchantEquippedWeapon { .. }
+                    | AbilityEffectDefinition::Earthquake { .. }
+                    | AbilityEffectDefinition::AreaDestruction { .. }
                     | AbilityEffectDefinition::NoOp { .. }
             ),
             AbilityRandomTargetDefinition::CastTarget => matches!(
@@ -158,10 +160,12 @@ fn ability_program_top_level_random_choice_is_valid(
                 AbilityEffectDefinition::Damage { .. }
                     | AbilityEffectDefinition::AreaDamage { .. }
                     | AbilityEffectDefinition::BeamDamage { .. }
+                    | AbilityEffectDefinition::LightLine { .. }
                     | AbilityEffectDefinition::BoltOrBeamDamage { .. }
                     | AbilityEffectDefinition::ApplyStatus { .. }
                     | AbilityEffectDefinition::DrainLife { .. }
                     | AbilityEffectDefinition::Genocide { .. }
+                    | AbilityEffectDefinition::PolymorphTarget
                     | AbilityEffectDefinition::NoOp { .. }
             ),
         })
@@ -201,6 +205,7 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::TeleportSelf { .. }
                     | AbilityEffectDefinition::ReportMagic
                     | AbilityEffectDefinition::Earthquake { .. }
+                    | AbilityEffectDefinition::AreaDestruction { .. }
                     | AbilityEffectDefinition::SuppressMonsterReproduction { .. }
                     | AbilityEffectDefinition::PolymorphSelf
                     | AbilityEffectDefinition::NoOp { .. }
@@ -218,6 +223,7 @@ fn ability_program_input_accepts_step(
                 AbilityEffectDefinition::Damage { .. }
                     | AbilityEffectDefinition::AreaDamage { .. }
                     | AbilityEffectDefinition::BeamDamage { .. }
+                    | AbilityEffectDefinition::LightLine { .. }
                     | AbilityEffectDefinition::BoltOrBeamDamage { .. }
                     | AbilityEffectDefinition::BoltOrAreaDamage { .. }
                     | AbilityEffectDefinition::ConeDamage { .. }

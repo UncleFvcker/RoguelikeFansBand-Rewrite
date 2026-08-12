@@ -1061,6 +1061,54 @@
         {
           "type": "object",
           "properties": {
+            "affectedPositions": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Position"
+              }
+            },
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "protectedFloor": {
+              "type": "boolean"
+            },
+            "removedEntities": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "removedGoldPiles": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "removedItems": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "area-destruction"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex",
+            "protectedFloor",
+            "affectedPositions",
+            "removedEntities",
+            "removedItems",
+            "removedGoldPiles"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "alreadySuppressed": {
               "type": "boolean"
             },
@@ -2120,6 +2168,32 @@
         {
           "type": "object",
           "properties": {
+            "damageDice": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "damageSides": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "light-line"
+            }
+          },
+          "required": [
+            "type",
+            "damageDice",
+            "damageSides"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "beamChancePercent": {
               "type": "integer",
               "format": "uint8",
@@ -2616,6 +2690,48 @@
             "affectChancePercent",
             "floorTerrainId",
             "wallTerrainIds"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "floorTerrainId": {
+              "type": "string"
+            },
+            "magmaTerrainId": {
+              "type": "string"
+            },
+            "maximumRadius": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "minimumRadius": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "quartzTerrainId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "area-destruction"
+            },
+            "wallTerrainId": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "minimumRadius",
+            "maximumRadius",
+            "floorTerrainId",
+            "wallTerrainId",
+            "quartzTerrainId",
+            "magmaTerrainId"
           ]
         },
         {

@@ -5918,7 +5918,10 @@ fn death_realm(profile: &LegacyMagicProfile) -> Option<&LegacyRealmProfile> {
         .find(|realm| realm.index == DEATH_REALM_INDEX && realm.readable)
 }
 
-fn death_spell_ability(spell: &LegacySpellProfile) -> Option<(String, serde_json::Value)> {
+fn death_spell_ability(
+    spell: &LegacySpellProfile,
+    terrain_creation: &TerrainCreationImportIds,
+) -> Option<(String, serde_json::Value)> {
     let self_target = serde_json::json!({
         "modes": ["self"],
         "range": 0,
@@ -6303,11 +6306,11 @@ fn death_spell_ability(spell: &LegacySpellProfile) -> Option<(String, serde_json
                     {"maximumRoll": 7, "target": "self-target", "effect": {"type": "summon", "actorKindId": "rfb-legacy.actor.skeleton-human", "count": 1, "radius": 2, "durationTurns": 0, "hostile": true}},
                     {"maximumRoll": 13, "target": "self-target", "effect": {"type": "apply-status", "statusKindId": "rfb.status.fear", "intensity": 3, "durationTicks": 50, "stacking": "keep-strongest"}},
                     {"maximumRoll": 25, "target": "self-target", "effect": {"type": "apply-status", "statusKindId": "rfb.status.confusion", "intensity": 1, "durationTicks": 4, "durationDice": 1, "durationSides": 4, "stacking": "extend"}},
-                    {"maximumRoll": 30, "effect": {"type": "no-op", "reason": "actor-polymorph-pending"}},
+                    {"maximumRoll": 30, "effect": {"type": "polymorph-target"}},
                     {"maximumRoll": 35, "effect": {"type": "bolt-or-beam-damage", "damageDice": 4, "damageSides": 4, "damageType": "physical", "beamChancePercent": 0}},
                     {"maximumRoll": 40, "effect": {"type": "apply-status", "statusKindId": "rfb.status.confusion", "intensity": 1, "durationTicks": 10, "stacking": "keep-strongest"}},
                     {"maximumRoll": 45, "effect": {"type": "area-damage", "damageDice": 1, "damageSides": 1, "damageBonus": 24, "damageType": "poison", "radius": 3}},
-                    {"maximumRoll": 50, "effect": {"type": "no-op", "reason": "line-light-pending"}},
+                    {"maximumRoll": 50, "effect": {"type": "light-line", "damageDice": 6, "damageSides": 8}},
                     {"maximumRoll": 55, "effect": {"type": "bolt-or-beam-damage", "damageDice": 4, "damageSides": 8, "damageType": "electricity", "beamChancePercent": 0}},
                     {"maximumRoll": 60, "effect": {"type": "bolt-or-beam-damage", "damageDice": 6, "damageSides": 8, "damageType": "cold", "beamChancePercent": 0}},
                     {"maximumRoll": 65, "effect": {"type": "bolt-or-beam-damage", "damageDice": 7, "damageSides": 8, "damageType": "acid", "beamChancePercent": 0}},
@@ -6318,8 +6321,26 @@ fn death_spell_ability(spell: &LegacySpellProfile) -> Option<(String, serde_json
                     {"maximumRoll": 90, "effect": {"type": "area-damage", "damageDice": 1, "damageSides": 1, "damageBonus": 79, "damageType": "ice", "radius": 3}},
                     {"maximumRoll": 95, "effect": {"type": "area-damage", "damageDice": 1, "damageSides": 1, "damageBonus": 89, "damageType": "fire", "radius": 3}},
                     {"maximumRoll": 100, "effect": {"type": "drain-life", "damageDice": 1, "damageSides": 1, "damageBonus": 109, "damageType": "nether", "targetCategory": "living"}},
-                    {"maximumRoll": 103, "target": "self-target", "effect": {"type": "no-op", "reason": "earthquake-pending"}},
-                    {"maximumRoll": 105, "target": "self-target", "effect": {"type": "no-op", "reason": "destroy-area-pending"}},
+                    {"maximumRoll": 103, "target": "self-target", "effect": {
+                        "type": "earthquake",
+                        "radius": 12,
+                        "affectChancePercent": 15,
+                        "floorTerrainId": terrain_creation.floor_terrain_id.as_ref()?,
+                        "wallTerrainIds": [
+                            terrain_creation.wall_terrain_id.as_ref()?,
+                            terrain_creation.quartz_terrain_id.as_ref()?,
+                            terrain_creation.magma_terrain_id.as_ref()?,
+                        ],
+                    }},
+                    {"maximumRoll": 105, "target": "self-target", "effect": {
+                        "type": "area-destruction",
+                        "minimumRadius": 13,
+                        "maximumRadius": 17,
+                        "floorTerrainId": terrain_creation.floor_terrain_id.as_ref()?,
+                        "wallTerrainId": terrain_creation.wall_terrain_id.as_ref()?,
+                        "quartzTerrainId": terrain_creation.quartz_terrain_id.as_ref()?,
+                        "magmaTerrainId": terrain_creation.magma_terrain_id.as_ref()?,
+                    }},
                     {"maximumRoll": 107, "effect": {"type": "genocide", "scope": "glyph", "power": 60}},
                     {"maximumRoll": 109, "target": "self-target", "effect": {"type": "visible-damage", "damageDice": 1, "damageSides": 1, "damageBonus": 119}},
                     {"maximumRoll": 120, "target": "self-target", "effect": {"type": "visible-damage", "damageDice": 1, "damageSides": 1, "damageBonus": 149}},
@@ -9851,7 +9872,7 @@ fn convert_content_from(
             .spells
             .iter()
             .filter_map(|spell| {
-                let (ability_id, ability) = death_spell_ability(spell)?;
+                let (ability_id, ability) = death_spell_ability(spell, &terrain_creation)?;
                 shared_abilities.entry(ability_id.clone()).or_insert(ability);
                 if spell.index < 8 {
                     has_first_book = true;
@@ -9878,18 +9899,6 @@ fn convert_content_from(
                         .player_spell_behavior_gaps
                         .entry("malediction-random-rider".to_owned())
                         .or_default() += 1;
-                } else if spell.index == 17 {
-                    for gap in [
-                        "invoke-spirits-actor-polymorph",
-                        "invoke-spirits-line-light",
-                        "invoke-spirits-earthquake",
-                        "invoke-spirits-destroy-area",
-                    ] {
-                        *report
-                            .player_spell_behavior_gaps
-                            .entry(gap.to_owned())
-                            .or_default() += 1;
-                    }
                 }
                 let mut override_ = serde_json::json!({
                     "abilityId": ability_id,
@@ -13474,7 +13483,23 @@ S:2:0:6000
             proficiency_profiles,
             ..LegacyCharacterSources::default()
         };
-        let outcome = convert_content(&[], &[], &[], &[], &[], &characters);
+        let terrain = ["FLOOR", "GRANITE", "QUARTZ", "MAGMA"]
+            .into_iter()
+            .enumerate()
+            .map(|(index, tag)| LegacyTerrainEntry {
+                index: u32::try_from(index).expect("synthetic terrain index fits u32"),
+                tag: tag.to_owned(),
+                display_name: Some(tag.to_owned()),
+                glyph: Some(if tag == "FLOOR" { '.' } else { '#' }),
+                flags: if tag == "FLOOR" {
+                    vec!["FLOOR".to_owned(), "MOVE".to_owned()]
+                } else {
+                    Vec::new()
+                },
+                destroyed_tag: None,
+            })
+            .collect::<Vec<_>>();
+        let outcome = convert_content(&terrain, &[], &[], &[], &[], &characters);
         assert_eq!(outcome.report.classes_imported, 1);
         assert_eq!(outcome.report.magic_spell_profile_rows, 26);
         assert_eq!(outcome.report.realm_readability["life"], 1);
@@ -13516,7 +13541,7 @@ S:2:0:6000
             "invoke-spirits-earthquake",
             "invoke-spirits-destroy-area",
         ] {
-            assert_eq!(outcome.report.player_spell_behavior_gaps[gap], 1);
+            assert!(!outcome.report.player_spell_behavior_gaps.contains_key(gap));
         }
         assert_eq!(
             outcome.report.class_proficiency_gaps["weapon-proficiency"],
@@ -13625,6 +13650,13 @@ S:2:0:6000
                 .map(Vec::len),
             Some(23)
         );
+        let invoke_branches = invoke_spirits["effect"]["branches"]
+            .as_array()
+            .expect("Invoke Spirits branches should be an array");
+        assert_eq!(invoke_branches[3]["effect"]["type"], "polymorph-target");
+        assert_eq!(invoke_branches[7]["effect"]["type"], "light-line");
+        assert_eq!(invoke_branches[18]["effect"]["type"], "earthquake");
+        assert_eq!(invoke_branches[19]["effect"]["type"], "area-destruction");
         let vampirism_true = outcome
             .ability_files
             .iter()

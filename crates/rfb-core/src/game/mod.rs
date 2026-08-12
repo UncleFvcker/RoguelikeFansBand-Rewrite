@@ -6214,6 +6214,13 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             damage_bonus: *damage_bonus,
             damage_type: DamageType::from(*damage_type).into(),
         },
+        AbilityEffectDefinition::LightLine {
+            damage_dice,
+            damage_sides,
+        } => AbilityEffectSpecDto::LightLine {
+            damage_dice: *damage_dice,
+            damage_sides: *damage_sides,
+        },
         AbilityEffectDefinition::BoltOrBeamDamage {
             damage_dice,
             damage_sides,
@@ -6340,6 +6347,21 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             affect_chance_percent: *affect_chance_percent,
             floor_terrain_id: floor_terrain_id.clone(),
             wall_terrain_ids: wall_terrain_ids.clone(),
+        },
+        AbilityEffectDefinition::AreaDestruction {
+            minimum_radius,
+            maximum_radius,
+            floor_terrain_id,
+            wall_terrain_id,
+            quartz_terrain_id,
+            magma_terrain_id,
+        } => AbilityEffectSpecDto::AreaDestruction {
+            minimum_radius: *minimum_radius,
+            maximum_radius: *maximum_radius,
+            floor_terrain_id: floor_terrain_id.clone(),
+            wall_terrain_id: wall_terrain_id.clone(),
+            quartz_terrain_id: quartz_terrain_id.clone(),
+            magma_terrain_id: magma_terrain_id.clone(),
         },
         AbilityEffectDefinition::SuppressMonsterReproduction {
             damage_dice,

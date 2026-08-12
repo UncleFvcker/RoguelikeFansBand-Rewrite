@@ -548,3 +548,8 @@ destinationTownId }`。旅行固定收费 500 金币，直接重建目标城镇�
 既有制造端点使用同一分组名，前端按 `minimumLevel` 只展示已开放子项；执行仍复用
 `CastAbility` 和既有目标选择。玩家制造弹药物品的持久字段正式纳入 State Hash Schema
 v88，save 容器保持 v1。
+
+协议 1.177 为能力 effect 投影增加窄化的 `light-line` 与 `area-destruction` 规格，
+并为后者增加结构化结算结果；怪物变形与地震继续复用既有 DTO。该变化只完成
+`Invoke Spirits` 的既有随机分支，不增加命令、待处理输入或存档字段。State Hash
+Schema 保持 v88，save 容器保持 v1。

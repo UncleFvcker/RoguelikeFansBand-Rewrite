@@ -759,10 +759,44 @@ fn vampirism_true_retraces_the_path_after_each_kill() {
 }
 
 #[test]
-fn invoke_spirits_records_deterministic_random_no_op_branches() {
+fn invoke_spirits_resolves_the_four_former_no_op_branches_deterministically() {
     let ability_id = "demo.ability.death-invoke-spirits";
     let cast = |seed| {
-        let mut game = prepare_death_caster(seed, 10, ability_id);
+        let mut game = prepare_death_caster(seed, 50, ability_id);
+        descend_one_floor(&mut game);
+        clear_monsters(&mut game);
+        game.debug_set_ability_casts_succeed(true);
+        game.player.position = Position { x: 20, y: 10 };
+        for x in 20..=28 {
+            let index = game
+                .index(Position { x, y: 10 })
+                .expect("Invoke Spirits test corridor should remain in bounds");
+            game.terrain[index] = "demo.terrain.floor".to_owned();
+            game.glow[index] = false;
+        }
+        game.entities.push(actor_from_runtime_spawn(
+            "generated.actor.invoke-spirits-target",
+            "demo.actor.cave-orc",
+            Position { x: 22, y: 10 },
+            100,
+            100,
+            100,
+            true,
+        ));
+        game.entities
+            .last_mut()
+            .expect("light-vulnerable target should exist")
+            .resistances
+            .set(DamageType::Light, ResistanceLevel::Vulnerable);
+        game.entities.push(actor_from_runtime_spawn(
+            "generated.actor.invoke-spirits-light-immune",
+            "demo.actor.small-kobold",
+            Position { x: 24, y: 10 },
+            100,
+            100,
+            100,
+            true,
+        ));
         let mut events = Vec::new();
         game.resolve_player_ability(
             ability_id,
@@ -776,56 +810,97 @@ fn invoke_spirits_records_deterministic_random_no_op_branches() {
         .expect("Invoke Spirits should resolve");
         (game, events)
     };
-    let seed = (0..512)
-        .find(|seed| {
-            let (_, events) = cast(*seed);
-            let selected_pending_branch = events.iter().any(|event| {
-                matches!(
-                    event,
-                    DomainEvent::AbilityEffectsResolved { resolution, .. }
-                        if matches!(
-                            resolution.effects.as_slice(),
-                            [AbilityEffectResolutionDto::RandomChoice { roll, branch_index, .. }]
-                                if *roll > 0 && matches!(*branch_index, 3 | 7)
-                        )
+    for branch_index in [3_u16, 7, 18, 19] {
+        let seed = (0..4_096)
+            .find(|seed| {
+                let (_, events) = cast(*seed);
+                events.iter().any(|event| {
+                    matches!(
+                        event,
+                        DomainEvent::AbilityEffectsResolved { resolution, .. }
+                            if matches!(
+                                resolution.effects.as_slice(),
+                                [AbilityEffectResolutionDto::RandomChoice { branch_index: selected, .. }]
+                                    if *selected == branch_index
+                            )
+                    )
+                })
+            })
+            .unwrap_or_else(|| panic!("Invoke Spirits branch {branch_index} should be reachable"));
+        let (left, left_events) = cast(seed);
+        let (right, right_events) = cast(seed);
+        assert_eq!(left_events, right_events);
+        assert_eq!(left.state_hash(), right.state_hash());
+        assert!(!left_events.iter().any(|event| matches!(
+            event,
+            DomainEvent::AbilityEffectsResolved { resolution, .. }
+                if matches!(
+                    resolution.effects.as_slice(),
+                    [AbilityEffectResolutionDto::NoOp { reason, .. }]
+                        if reason.ends_with("-pending")
                 )
-            });
-            let recorded_pending_no_op = events.iter().any(|event| {
-                matches!(
-                    event,
-                    DomainEvent::AbilityEffectsResolved { resolution, .. }
-                        if matches!(
-                            resolution.effects.as_slice(),
-                            [AbilityEffectResolutionDto::NoOp { reason, .. }]
-                                if reason.ends_with("-pending")
-                        )
-                )
-            });
-            selected_pending_branch && recorded_pending_no_op
-        })
-        .expect("a deterministic Invoke Spirits no-op branch should exist");
-    let (left, left_events) = cast(seed);
-    let (right, right_events) = cast(seed);
-    assert_eq!(left_events, right_events);
-    assert_eq!(left.state_hash(), right.state_hash());
-    assert!(left_events.iter().any(|event| matches!(
-        event,
-        DomainEvent::AbilityEffectsResolved { resolution, .. }
-            if matches!(
-                resolution.effects.as_slice(),
-                [AbilityEffectResolutionDto::RandomChoice { roll, branch_index, .. }]
-                    if *roll > 0 && matches!(*branch_index, 3 | 7)
-            )
-    )));
-    assert!(left_events.iter().any(|event| matches!(
-        event,
-        DomainEvent::AbilityEffectsResolved { resolution, .. }
-            if matches!(
-                resolution.effects.as_slice(),
-                [AbilityEffectResolutionDto::NoOp { reason, .. }]
-                    if reason.ends_with("-pending")
-            )
-    )));
+        )));
+        match branch_index {
+            3 => assert!(left_events.iter().any(|event| matches!(
+                event,
+                DomainEvent::AbilityEffectsResolved { resolution, .. }
+                    if matches!(
+                        resolution.effects.as_slice(),
+                        [AbilityEffectResolutionDto::PolymorphTarget { changed: true, .. }]
+                    )
+            ))),
+            7 => {
+                let lit = left_events.iter().find_map(|event| match event {
+                    DomainEvent::AbilityBeamDamage { resolution, .. }
+                        if resolution.damage_type == DamageTypeDto::Light
+                            && resolution.target_count == 1 =>
+                    {
+                        Some(&resolution.affected_positions)
+                    }
+                    _ => None,
+                });
+                let lit = lit.expect("line-light branch should project weak light damage");
+                assert!(!lit.is_empty());
+                assert!(
+                    lit.iter().all(|position| left
+                        .index(*position)
+                        .is_some_and(|index| left.glow[index]))
+                );
+                assert!(left.entities.iter().any(|entity| {
+                    entity.id == "generated.actor.invoke-spirits-target"
+                        && (52..=94).contains(&entity.hp)
+                }));
+                assert_eq!(
+                    left.entities
+                        .iter()
+                        .find(|entity| entity.id == "generated.actor.invoke-spirits-light-immune")
+                        .map(|entity| entity.hp),
+                    Some(100)
+                );
+            }
+            18 => assert!(left_events.iter().any(|event| matches!(
+                event,
+                DomainEvent::AbilityEffectsResolved { resolution, .. }
+                    if matches!(
+                        resolution.effects.as_slice(),
+                        [AbilityEffectResolutionDto::Earthquake { radius: 12, .. }]
+                    )
+            ))),
+            19 => assert!(left_events.iter().any(|event| matches!(
+                event,
+                DomainEvent::AbilityEffectsResolved { resolution, .. }
+                    if matches!(
+                        resolution.effects.as_slice(),
+                        [AbilityEffectResolutionDto::AreaDestruction {
+                            protected_floor: false,
+                            affected_positions,
+                            ..
+                        }] if !affected_positions.is_empty()
+                    )
+            ))),
+            _ => unreachable!(),
+        }
+    }
 }
 
 #[test]

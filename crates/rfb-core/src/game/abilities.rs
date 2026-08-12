@@ -545,6 +545,14 @@ impl Game {
             (AbilityEffectDefinition::Earthquake { .. }, AbilityTargetPlan::SelfTarget) => {
                 self.resolve_player_earthquake_effect(&ability, events, changed, removed_entities)?;
             }
+            (AbilityEffectDefinition::AreaDestruction { .. }, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_player_area_destruction_effect(
+                    &ability,
+                    events,
+                    changed,
+                    removed_entities,
+                );
+            }
             (
                 AbilityEffectDefinition::SuppressMonsterReproduction { .. },
                 AbilityTargetPlan::SelfTarget,
@@ -566,6 +574,10 @@ impl Game {
             (AbilityEffectDefinition::PolymorphSelf, AbilityTargetPlan::SelfTarget) => {
                 self.resolve_player_polymorph_self_effect(&ability, events)
             }
+            (
+                AbilityEffectDefinition::PolymorphTarget,
+                AbilityTargetPlan::Projectile { path, .. },
+            ) => self.resolve_player_polymorph_target_effect(&ability, path, events, changed),
             (AbilityEffectDefinition::SwapPosition, AbilityTargetPlan::Projectile { path, .. }) => {
                 self.resolve_player_swap_position_effect(&ability, path, events, changed)
             }
@@ -671,6 +683,18 @@ impl Game {
                 AbilityTargetPlan::Projectile { path, .. },
             ) => {
                 self.resolve_player_beam_damage_effect(
+                    &ability,
+                    path,
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+            }
+            (
+                AbilityEffectDefinition::LightLine { .. },
+                AbilityTargetPlan::Projectile { path, .. },
+            ) => {
+                self.resolve_player_light_line_effect(
                     &ability,
                     path,
                     events,
@@ -1011,6 +1035,72 @@ impl Game {
                 index,
                 source_id,
                 damage_type,
+                base_raw_damage,
+                trace.clone(),
+                events,
+                changed,
+                removed_entities,
+            )?;
+        }
+        Ok(())
+    }
+
+    fn resolve_player_light_line_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        path: Vec<Position>,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        let AbilityEffectDefinition::LightLine {
+            damage_dice,
+            damage_sides,
+        } = ability.effect
+        else {
+            unreachable!("light-line executor requires a light-line effect");
+        };
+        let (trace, _) = self.trace_projectile_path_with_actor_policy(path.clone(), false);
+        let affected_positions = trace.traversed.clone();
+        for position in &affected_positions {
+            if let Some(index) = self.index(*position) {
+                self.glow[index] = true;
+                changed.insert(*position);
+            }
+        }
+        let base_raw_damage = self.roll_damage(damage_dice, damage_sides).max(0);
+        let targets = self
+            .beam_damage_targets(&affected_positions)
+            .into_iter()
+            .filter(|entity_id| {
+                self.entities.iter().any(|entity| {
+                    entity.id == *entity_id
+                        && entity.resistances.level(DamageType::Light)
+                            == ResistanceLevel::Vulnerable
+                })
+            })
+            .collect::<Vec<_>>();
+        events.push(DomainEvent::AbilityBeamDamage {
+            ability_id: ability.id.clone(),
+            resolution: AbilityBeamDamageResolutionDto {
+                base_raw_damage,
+                damage_type: DamageType::Light.into(),
+                affected_positions,
+                target_count: u16::try_from(targets.len()).unwrap_or(u16::MAX),
+            },
+            trace: trace.clone(),
+        });
+        for entity_id in targets {
+            let Some(index) = self
+                .entities
+                .iter()
+                .position(|entity| entity.id == entity_id && entity.hp > 0)
+            else {
+                continue;
+            };
+            self.resolve_weak_light_damage_to_entity(
+                index,
+                &ability.id,
                 base_raw_damage,
                 trace.clone(),
                 events,
@@ -3250,6 +3340,68 @@ impl Game {
         )
     }
 
+    fn resolve_player_area_destruction_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) {
+        let AbilityEffectDefinition::AreaDestruction {
+            minimum_radius,
+            maximum_radius,
+            ref floor_terrain_id,
+            ref wall_terrain_id,
+            ref quartz_terrain_id,
+            ref magma_terrain_id,
+        } = ability.effect
+        else {
+            unreachable!("area-destruction executor requires an area-destruction effect");
+        };
+        let (
+            protected_floor,
+            affected_positions,
+            removed_entity_count,
+            removed_items,
+            removed_gold_piles,
+        ) = if self.area_destruction_allowed() {
+            let plan = self.plan_area_destruction(
+                minimum_radius,
+                maximum_radius,
+                floor_terrain_id,
+                wall_terrain_id,
+                quartz_terrain_id,
+                magma_terrain_id,
+            );
+            let outcome = self.apply_area_destruction_plan(plan, changed, removed_entities);
+            (
+                false,
+                outcome.affected_positions,
+                outcome.removed_entities,
+                outcome.removed_items,
+                outcome.removed_gold_piles,
+            )
+        } else {
+            (true, Vec::new(), 0, 0, 0)
+        };
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: None,
+                target_kind_id: None,
+                effects: vec![AbilityEffectResolutionDto::AreaDestruction {
+                    effect_index: 0,
+                    protected_floor,
+                    affected_positions,
+                    removed_entities: u32::try_from(removed_entity_count).unwrap_or(u32::MAX),
+                    removed_items: u32::try_from(removed_items).unwrap_or(u32::MAX),
+                    removed_gold_piles: u32::try_from(removed_gold_piles).unwrap_or(u32::MAX),
+                }],
+            },
+            trace: None,
+        });
+    }
+
     pub(super) fn resolve_monster_shatter_earthquake(
         &mut self,
         center: Position,
@@ -3608,6 +3760,52 @@ impl Game {
             trace: None,
         });
         Ok(())
+    }
+
+    fn resolve_player_polymorph_target_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        path: Vec<Position>,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let (trace, target_index) = self.trace_projectile_path(path);
+        let Some(target_index) = target_index else {
+            events.push(DomainEvent::AbilityLanded {
+                ability_id: ability.id.clone(),
+                trace: trace.clone(),
+            });
+            events.push(DomainEvent::AbilityEffectsResolved {
+                ability_id: ability.id.clone(),
+                resolution: AbilityEffectsResolutionDto {
+                    target_entity_id: None,
+                    target_kind_id: None,
+                    effects: vec![AbilityEffectResolutionDto::Skipped {
+                        effect_index: 0,
+                        reason: AbilityEffectSkipReasonDto::NoTarget,
+                    }],
+                },
+                trace: Some(trace),
+            });
+            return;
+        };
+        let target_entity_id = self.entities[target_index].id.clone();
+        let target_kind_id = self.entities[target_index].kind_id.clone();
+        let resolution = self.resolve_actor_polymorph_target(
+            target_index,
+            u32::from(self.progress.level),
+            0,
+            changed,
+        );
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: Some(target_entity_id),
+                target_kind_id: Some(target_kind_id),
+                effects: vec![resolution],
+            },
+            trace: Some(trace),
+        });
     }
 
     pub(super) fn resolve_player_polymorph_self_effect(
@@ -4446,8 +4644,7 @@ impl Game {
             | AbilityEffectDefinition::DrainResource { .. }
             | AbilityEffectDefinition::Amnesia
             | AbilityEffectDefinition::DarkenRoom
-            | AbilityEffectDefinition::JumpDamage { .. }
-            | AbilityEffectDefinition::PolymorphTarget => None,
+            | AbilityEffectDefinition::JumpDamage { .. } => None,
             AbilityEffectDefinition::Teleport => {
                 let TargetSelection::Position { position } = target else {
                     return None;
@@ -4659,6 +4856,7 @@ impl Game {
             }
             AbilityEffectDefinition::ResistElements { .. }
             | AbilityEffectDefinition::ReportMagic
+            | AbilityEffectDefinition::AreaDestruction { .. }
             | AbilityEffectDefinition::SuppressMonsterReproduction { .. }
             | AbilityEffectDefinition::PolymorphSelf => {
                 (matches!(target, TargetSelection::SelfTarget)
@@ -4892,7 +5090,9 @@ impl Game {
                         stop_at_actor: true,
                     })
             }
-            AbilityEffectDefinition::Damage { .. } | AbilityEffectDefinition::DeathRay { .. } => {
+            AbilityEffectDefinition::Damage { .. }
+            | AbilityEffectDefinition::DeathRay { .. }
+            | AbilityEffectDefinition::PolymorphTarget => {
                 self.ability_path(ability, target)
                     .map(|path| AbilityTargetPlan::Projectile {
                         path,
@@ -4919,6 +5119,7 @@ impl Game {
                 }
             }
             AbilityEffectDefinition::BeamDamage { .. }
+            | AbilityEffectDefinition::LightLine { .. }
             | AbilityEffectDefinition::BoltOrBeamDamage { .. } => self
                 .beam_ability_path(ability, target)
                 .map(|path| AbilityTargetPlan::Projectile {
