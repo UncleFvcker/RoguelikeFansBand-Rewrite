@@ -1695,6 +1695,9 @@ export function createPresentationFormatter(
     if (statusId === "rfb.status.inventory-protection") {
       return localization.format("status-inventory-protection-name");
     }
+    if (statusId === "rfb.status.regeneration") {
+      return localization.format("status-regeneration-name");
+    }
     return localization.format("status-unknown-name");
   }
 

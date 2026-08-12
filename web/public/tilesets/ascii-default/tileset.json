@@ -62,6 +62,11 @@
       "foreground": "#d5b878",
       "background": "#30281b"
     },
+    "demo.terrain.shroomery-entrance": {
+      "glyph": "0",
+      "foreground": "#d6b37a",
+      "background": "#3a2d1b"
+    },
     "demo.terrain.general-store-entrance": {
       "glyph": "1",
       "foreground": "#f0ca72",

@@ -1,51 +1,26 @@
 {
   "schemaVersion": 4,
-  "id": "task.pest-control-claim-fur-cloak",
-  "category": "tasks",
+  "id": "town.outpost-shroomery-purchase",
+  "category": "town",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "42",
   "preconditions": {
     "world": "demo.world.middle-earth",
+    "debugClearEntities": true,
     "playerBuildId": "demo.build.warrior",
     "playerPosition": {
-      "x": 26,
-      "y": 13
+      "x": 61,
+      "y": 19
     },
-    "terrainOverrides": [
-      {
-        "position": {
-          "x": 63,
-          "y": 11
-        },
-        "terrainId": "demo.terrain.thieves-hideout-entry-completed"
-      }
-    ],
-    "taskStates": [
-      {
-        "taskId": "demo.task.thieves-hideout",
-        "status": "completed",
-        "stageIndex": 0,
-        "current": 1,
-        "required": 1,
-        "retakesUsed": 0
-      },
-      {
-        "taskId": "demo.task.pest-control",
-        "status": "reward-available",
-        "stageIndex": 0,
-        "current": 8,
-        "required": 8,
-        "retakesUsed": 0
-      }
-    ]
+    "playerGold": 1000000
   },
   "commands": [
     {
       "command": {
-        "type": "claim-task-reward",
-        "facilityId": "demo.town-facility.outpost-count",
-        "taskId": "demo.task.pest-control"
+        "type": "buy-first-from-shop",
+        "shopId": "demo.shop.outpost-shroomery",
+        "quantity": 1
       }
     }
   ],
@@ -212,8 +187,8 @@
             "y": 19
           },
           "entranceTerrainId": "demo.terrain.shroomery-entrance",
-          "visited": false,
-          "playerAtEntrance": false,
+          "visited": true,
+          "playerAtEntrance": true,
           "owner": {
             "id": "demo.shop-owner.outpost-martin",
             "nameKey": "shop-owner-demo-outpost-martin-name",
@@ -222,8 +197,84 @@
             "purchasePriceCap": 10000,
             "priceFactorPercent": 100
           },
-          "stock": [],
-          "sellQuotes": []
+          "stock": [
+            {
+              "id": "generated.item.112",
+              "kindId": "demo.item.cure-poison-mushroom",
+              "displayNameKey": "item-demo-cure-poison-mushroom-name",
+              "quantity": 2,
+              "maximumQuantity": 2,
+              "unitPrice": 120,
+              "weightTenthsPound": 1,
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.113",
+              "kindId": "demo.item.cure-blindness-mushroom",
+              "displayNameKey": "item-demo-cure-blindness-mushroom-name",
+              "quantity": 1,
+              "maximumQuantity": 1,
+              "unitPrice": 30,
+              "weightTenthsPound": 1,
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.114",
+              "kindId": "demo.item.cure-paranoia-mushroom",
+              "displayNameKey": "item-demo-cure-paranoia-mushroom-name",
+              "quantity": 1,
+              "maximumQuantity": 1,
+              "unitPrice": 25,
+              "weightTenthsPound": 1,
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.115",
+              "kindId": "demo.item.cure-confusion-mushroom",
+              "displayNameKey": "item-demo-cure-confusion-mushroom-name",
+              "quantity": 1,
+              "maximumQuantity": 1,
+              "unitPrice": 30,
+              "weightTenthsPound": 1,
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.116",
+              "kindId": "demo.item.fast-recovery-mushroom",
+              "displayNameKey": "item-demo-fast-recovery-mushroom-name",
+              "quantity": 3,
+              "maximumQuantity": 3,
+              "unitPrice": 30,
+              "weightTenthsPound": 2,
+              "quality": "ordinary"
+            }
+          ],
+          "sellQuotes": [
+            {
+              "itemId": "generated.item.1",
+              "kindId": "demo.item.ration-of-food",
+              "unitPrice": 2,
+              "maximumQuantity": 9
+            },
+            {
+              "itemId": "generated.item.169",
+              "kindId": "demo.item.cure-poison-mushroom",
+              "unitPrice": 114,
+              "maximumQuantity": 1
+            },
+            {
+              "itemId": "generated.item.2",
+              "kindId": "demo.item.wooden-torch",
+              "unitPrice": 1,
+              "maximumQuantity": 6
+            },
+            {
+              "itemId": "generated.item.8",
+              "kindId": "demo.item.arrow",
+              "unitPrice": 1,
+              "maximumQuantity": 22
+            }
+          ]
         },
         {
           "id": "demo.shop.outpost-temple",
@@ -289,8 +340,8 @@
         }
       ],
       "playerPosition": {
-        "x": 26,
-        "y": 13
+        "x": 61,
+        "y": 19
       },
       "playerHp": 33,
       "playerMaxHp": 33,
@@ -298,10 +349,10 @@
       "playerDefense": 15,
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
-      "playerCarriedWeightTenthsPound": 744,
+      "playerCarriedWeightTenthsPound": 715,
       "playerCarryCapacityTenthsPound": 1200,
       "playerEncumbranceSpeedPenalty": 0,
-      "playerGold": 346,
+      "playerGold": 999880,
       "playerNutrition": 9999,
       "playerLevel": 1,
       "playerExperience": 0,
@@ -452,31 +503,6 @@
       "equipmentCount": 3,
       "inventory": [
         {
-          "id": "demo.task.pest-control.reward.1",
-          "kindId": "demo.item.fur-cloak",
-          "displayNameKey": "item-demo-fur-cloak-name",
-          "knowledge": "aware",
-          "usable": false,
-          "canReceiveRecharge": false,
-          "canSupplyRecharge": false,
-          "quantity": 1,
-          "weightTenthsPound": 30,
-          "equipmentSlot": "cloak",
-          "modifiers": {
-            "attack": 0,
-            "defense": 3,
-            "maxHp": 0,
-            "strength": 0,
-            "intelligence": 0,
-            "wisdom": 0,
-            "dexterity": 0,
-            "constitution": 0,
-            "charisma": 0,
-            "speed": 0
-          },
-          "identification": "unexamined"
-        },
-        {
           "id": "generated.item.1",
           "kindId": "demo.item.ration-of-food",
           "displayNameKey": "item-demo-ration-of-food-name",
@@ -500,6 +526,32 @@
             "speed": 0
           },
           "identification": "unexamined"
+        },
+        {
+          "id": "generated.item.169",
+          "kindId": "demo.item.cure-poison-mushroom",
+          "displayNameKey": "item-demo-cure-poison-mushroom-name",
+          "knowledge": "aware",
+          "usable": true,
+          "canReceiveRecharge": false,
+          "canSupplyRecharge": false,
+          "quantity": 1,
+          "weightTenthsPound": 1,
+          "equipmentSlot": null,
+          "modifiers": {
+            "attack": 0,
+            "defense": 0,
+            "maxHp": 0,
+            "strength": 0,
+            "intelligence": 0,
+            "wisdom": 0,
+            "dexterity": 0,
+            "constitution": 0,
+            "charisma": 0,
+            "speed": 0
+          },
+          "identification": "identified",
+          "quality": "ordinary"
         },
         {
           "id": "generated.item.2",
@@ -832,6 +884,13 @@
           }
         }
       ],
+      "itemKnowledge": [
+        {
+          "kindId": "demo.item.cure-poison-mushroom",
+          "tried": true,
+          "aware": true
+        }
+      ],
       "itemPropertyKnowledge": [
         {
           "itemId": "demo.item.warrens-light-healing-potion.1",
@@ -839,10 +898,6 @@
         },
         {
           "itemId": "demo.item.warrens-short-sword.1",
-          "discovered": true
-        },
-        {
-          "itemId": "demo.task.pest-control.reward.1",
           "discovered": true
         },
         {
@@ -857,6 +912,12 @@
         },
         {
           "itemId": "generated.item.11",
+          "discovered": true,
+          "appraised": true,
+          "identified": true
+        },
+        {
+          "itemId": "generated.item.169",
           "discovered": true,
           "appraised": true,
           "identified": true
@@ -896,41 +957,28 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 169,
+      "nextItemInstanceSerial": 170,
       "nextGoldPileSerial": 1,
-      "tasks": [
-        {
-          "taskId": "demo.task.pest-control",
-          "status": "completed",
-          "current": 8,
-          "required": 8,
-          "stage": 1,
-          "stages": 1
-        },
-        {
-          "taskId": "demo.task.thieves-hideout",
-          "status": "completed",
-          "current": 1,
-          "required": 1,
-          "stage": 1,
-          "stages": 1
-        }
-      ],
       "campaign": {
         "status": "active",
-        "score": 2000,
+        "score": 0,
         "conqueredDungeons": 0,
-        "completedTasks": 2
+        "completedTasks": 0
       },
-      "stateHash": "bca55bbf36c65d10be51a41428387dd7f977f489ae55705de0fdca35fd92bded"
+      "stateHash": "da4b3f185d5442766cd20ae1d8428eeeff169764d89c2da4fba2929e86bbacfe"
     },
     "events": [
       {
-        "kind": "task.rewarded",
-        "messageKey": "task-rewarded",
+        "kind": "shop.purchase",
+        "messageKey": "shop-purchase-success",
         "args": {
+          "balance": "999880",
+          "item": "generated.item.169",
           "quantity": "1",
-          "target": "demo.item.fur-cloak"
+          "shop": "demo.shop.outpost-shroomery",
+          "target": "demo.item.cure-poison-mushroom",
+          "totalPrice": "120",
+          "unitPrice": "120"
         }
       }
     ]

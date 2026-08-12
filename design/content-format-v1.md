@@ -517,3 +517,11 @@ contract-v260 / 包 1.251.0 激活 Orc Cave dungeon 3：在 `(30,45)` 合成独�
 loot table；严格同步 574 条，content hash 为
 `587db0f265c15d2714c238bb7a0cac4c18c8efa3efd55151bd379a4f1c6bf64f`。协议保持
 1.171，State Hash Schema 保持 v86。
+
+contract-v261 / 包 1.252.0 为 Outpost 增加 `0` 蘑菇店类别、入口与马丁店主，将四种
+既有 `TOWN` 蘑菇从杂货店移入专店，并接入快速恢复蘑菇。该蘑菇按原版执行 2d8
+治疗、`cut / 2 - 50` 流血削减、101–200 标准回合再生和 500 营养；定时再生复用
+既有状态存档并给自然恢复率增加 100%。当前包包含 51 种地形、621 种 actor、257
+种物品、273 个能力、18 家商店；content hash 为
+`1b5be3640793a88c100c9f87f9bcb845f14fbfb421fb3104839ee8fd00097950`。协议升至
+1.172，State Hash Schema 保持 v86。

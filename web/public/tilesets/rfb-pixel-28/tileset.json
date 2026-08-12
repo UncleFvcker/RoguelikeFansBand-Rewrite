@@ -258,6 +258,11 @@
       "background": "#1f3736",
       "tile": { "x": 7, "y": 4 }
     },
+    "demo.terrain.shroomery-entrance": {
+      "foreground": "#d6b37a",
+      "background": "#523b40",
+      "tile": { "x": 0, "y": 5 }
+    },
     "demo.terrain.general-store-entrance": {
       "foreground": "#ffd569",
       "background": "#523b40",

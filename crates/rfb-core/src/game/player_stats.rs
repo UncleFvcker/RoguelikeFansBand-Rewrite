@@ -686,8 +686,18 @@ impl Game {
             .fold(0_i32, |total, mutation| {
                 total.saturating_add(mutation.regeneration_rate_modifier_percent)
             });
-        u64::try_from(100_i32.saturating_add(modifier).max(0))
-            .expect("non-negative regeneration rate must fit u64")
+        let timed_regeneration = if self.player_has_status_kind(STATUS_REGENERATION) {
+            100
+        } else {
+            0
+        };
+        u64::try_from(
+            100_i32
+                .saturating_add(modifier)
+                .saturating_add(timed_regeneration)
+                .max(0),
+        )
+        .expect("non-negative regeneration rate must fit u64")
     }
 
     pub(super) fn player_mutation_light_radius(&self) -> i32 {

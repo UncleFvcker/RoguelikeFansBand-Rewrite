@@ -8709,6 +8709,7 @@
     "ShopCategoryDto": {
       "type": "string",
       "enum": [
+        "shroomery",
         "general-store",
         "armoury",
         "weaponsmith",

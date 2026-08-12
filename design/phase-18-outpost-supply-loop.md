@@ -164,9 +164,13 @@ contract-v166 在北侧独立建筑加入 Home，入口 `(27,8)` 使用原版数
 
 contract-v167 在东南侧加入 Black Market，入口 `(40,14)` 使用原版数字 `7`。固定 Human 店主“公平的托皮(?)”采用 greed `150` 和 `30000` 单件收购上限；Warrior 没有 Burglary/Black Marketeer，买价在普通报价后乘二，卖价减半。首批库存严格选用原版不带 `TOWN` 的 Black Channels 与 Necronomicon；fixture 467、核心测试与桌面 E2E 覆盖入口、价格、购买、库存转移和存档回环。协议升至 `1.134`、内容包升至 `1.157.0`，state hash Schema 保持 `61`。当前开发期不为旧开发存档新增兼容迁移。
 
+contract-v261 在东南空闲地块加入 Shroomery，入口使用原版数字 `0`。固定 Human 店主
+“马丁”采用 greed `108` 和 `10000` 单件收购上限；四种既有 `TOWN` 蘑菇从 Outpost
+General Store 移入专店，并新增快速恢复蘑菇。商店继续复用既有交易、维护和存档管线。
+
 ## 8. 明确暂缓
 
-- Outpost 地图尚未实现的 `0` Shroomery、Museum、`a/b` 两条轮换任务服务线与 `n` Bounty Office；
+- Outpost 地图尚未实现的 Museum、`a/b` 两条轮换任务服务线与 `n` Bounty Office；
 - 原版 shop 系统存在但不在固定 Outpost 地图上的 Jeweler、Dragon；
 - White Horse Inn、城堡、Pest Control、其他任务与建筑服务；
 - 荒野旅行、其他城镇、昼夜、镇民生成和城镇战斗；

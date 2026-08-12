@@ -1,0 +1,28 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/shop.schema.json",
+  "formatVersion": 1,
+  "id": "demo.shop.outpost-shroomery",
+  "nameKey": "shop-demo-outpost-shroomery-name",
+  "descriptionKey": "shop-demo-outpost-shroomery-description",
+  "townId": "demo.town.outpost",
+  "category": "shroomery",
+  "entrancePosition": { "x": 61, "y": 19 },
+  "entranceTerrainId": "demo.terrain.shroomery-entrance",
+  "owner": {
+    "id": "demo.shop-owner.outpost-martin",
+    "nameKey": "shop-owner-demo-outpost-martin-name",
+    "raceId": "demo.race.rfb-human",
+    "greedPercent": 108,
+    "purchasePriceCap": 10000
+  },
+  "stock": [
+    { "itemKindId": "demo.item.cure-poison-mushroom", "initialMinimum": 1, "initialMaximum": 3, "maintenanceMinimum": 1, "maintenanceMaximum": 3 },
+    { "itemKindId": "demo.item.cure-blindness-mushroom", "initialMinimum": 1, "initialMaximum": 3, "maintenanceMinimum": 1, "maintenanceMaximum": 3 },
+    { "itemKindId": "demo.item.cure-paranoia-mushroom", "initialMinimum": 1, "initialMaximum": 3, "maintenanceMinimum": 1, "maintenanceMaximum": 3 },
+    { "itemKindId": "demo.item.cure-confusion-mushroom", "initialMinimum": 1, "initialMaximum": 3, "maintenanceMinimum": 1, "maintenanceMaximum": 3 },
+    { "itemKindId": "demo.item.fast-recovery-mushroom", "initialMinimum": 1, "initialMaximum": 3, "maintenanceMinimum": 1, "maintenanceMaximum": 3 }
+  ],
+  "maintenance": {
+    "intervalWorldTicks": 10000
+  }
+}

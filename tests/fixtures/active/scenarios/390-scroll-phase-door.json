@@ -31,7 +31,7 @@
       "turn": 1,
       "worldTick": 10,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 147,
+      "rngDrawCounter": 148,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -180,6 +180,29 @@
           "sellQuotes": []
         },
         {
+          "id": "demo.shop.outpost-shroomery",
+          "nameKey": "shop-demo-outpost-shroomery-name",
+          "descriptionKey": "shop-demo-outpost-shroomery-description",
+          "category": "shroomery",
+          "entrancePosition": {
+            "x": 61,
+            "y": 19
+          },
+          "entranceTerrainId": "demo.terrain.shroomery-entrance",
+          "visited": false,
+          "playerAtEntrance": false,
+          "owner": {
+            "id": "demo.shop-owner.outpost-martin",
+            "nameKey": "shop-owner-demo-outpost-martin-name",
+            "raceId": "demo.race.rfb-human",
+            "greedPercent": 108,
+            "purchasePriceCap": 10000,
+            "priceFactorPercent": 100
+          },
+          "stock": [],
+          "sellQuotes": []
+        },
+        {
           "id": "demo.shop.outpost-temple",
           "nameKey": "shop-demo-outpost-temple-name",
           "descriptionKey": "shop-demo-outpost-temple-description",
@@ -243,7 +266,7 @@
         }
       ],
       "playerPosition": {
-        "x": 50,
+        "x": 45,
         "y": 7
       },
       "playerHp": 33,
@@ -752,7 +775,7 @@
           "discovered": true
         }
       ],
-      "nextItemInstanceSerial": 168,
+      "nextItemInstanceSerial": 169,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -760,7 +783,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "81393f7ea5cf786d70978ce6c701b12cdf7288a0bd684b9bc8d27dc28e5f64ee"
+      "stateHash": "f1ad88cbeb6f47c07a769b8c45bc710c41549fb2a6370e3c58a8d9d0e6206b62"
     },
     "events": [
       {
@@ -770,7 +793,7 @@
           "fromX": "44",
           "fromY": "16",
           "source": "demo.item.flicker-scroll",
-          "toX": "50",
+          "toX": "45",
           "toY": "7"
         },
         "outcome": {
@@ -781,13 +804,13 @@
               "y": 16
             },
             "to": {
-              "x": 50,
+              "x": 45,
               "y": 7
             }
           }
         }
       }
     ],
-    "saveRoundTripStateHash": "81393f7ea5cf786d70978ce6c701b12cdf7288a0bd684b9bc8d27dc28e5f64ee"
+    "saveRoundTripStateHash": "f1ad88cbeb6f47c07a769b8c45bc710c41549fb2a6370e3c58a8d9d0e6206b62"
   }
 }

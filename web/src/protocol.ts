@@ -289,7 +289,7 @@ export type CampaignStateDto = { status: CampaignStatusDto, score: bigint, conqu
 
 export type TownDto = { id: string, nameKey: string, descriptionKey: string, floorId: string, visited: boolean, };
 
-export type ShopCategoryDto = "general-store" | "armoury" | "weaponsmith" | "temple" | "alchemist" | "magic-shop" | "black-market" | "bookstore";
+export type ShopCategoryDto = "shroomery" | "general-store" | "armoury" | "weaponsmith" | "temple" | "alchemist" | "magic-shop" | "black-market" | "bookstore";
 
 export type ShopOwnerDto = { id: string, nameKey: string, raceId: string, greedPercent: number, purchasePriceCap: number, priceFactorPercent: number, };
 

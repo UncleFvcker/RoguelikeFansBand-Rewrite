@@ -20,6 +20,7 @@
     { "sourceIndex": 17, "sourceName": "Restore Constitution:Grey", "sourceId": "restore-constitution-grey", "itemId": "demo.item.restore-constitution-mushroom", "status": "active", "contract": "phase-19-p3-1-food-status" },
     { "sourceIndex": 18, "sourceName": "Restoring:Light Blue", "sourceId": "restoring-light-blue", "itemId": "demo.item.sixfold-provision", "status": "active", "contract": "contract-v149-restoration-combinations" },
     { "sourceIndex": 19, "sourceName": "Restore Strength:White", "sourceId": "restore-strength-white", "itemId": "demo.item.restore-strength-mushroom", "status": "active", "contract": "phase-19-p3-1-food-status" },
+    { "sourceIndex": 20, "sourceName": "Fast Recovery:Wrinkled", "sourceId": "fast-recovery-wrinkled", "itemId": "demo.item.fast-recovery-mushroom", "status": "active", "contract": "contract-v261-outpost-shroomery" },
     { "sourceIndex": 32, "sourceName": "Ration of Food", "sourceId": "ration-of-food", "itemId": "demo.item.ration-of-food", "status": "active", "contract": "contract-v158-food-hunger" },
     { "sourceIndex": 33, "sourceName": "Hard Biscuit", "sourceId": "hard-biscuit", "itemId": "demo.item.hard-biscuit", "status": "active", "contract": "phase-19-p3-1-food-status" },
     { "sourceIndex": 34, "sourceName": "Strip of Venison", "sourceId": "strip-of-venison", "itemId": "demo.item.strip-of-venison", "status": "active", "contract": "phase-19-p3-1-food-status" },

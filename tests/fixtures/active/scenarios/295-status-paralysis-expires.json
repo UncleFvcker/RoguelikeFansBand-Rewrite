@@ -67,7 +67,7 @@
       "turn": 2,
       "worldTick": 20,
       "lastCommandSeq": 2,
-      "rngDrawCounter": 146,
+      "rngDrawCounter": 147,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -211,6 +211,29 @@
             "greedPercent": 110,
             "purchasePriceCap": 20000,
             "priceFactorPercent": 102
+          },
+          "stock": [],
+          "sellQuotes": []
+        },
+        {
+          "id": "demo.shop.outpost-shroomery",
+          "nameKey": "shop-demo-outpost-shroomery-name",
+          "descriptionKey": "shop-demo-outpost-shroomery-description",
+          "category": "shroomery",
+          "entrancePosition": {
+            "x": 61,
+            "y": 19
+          },
+          "entranceTerrainId": "demo.terrain.shroomery-entrance",
+          "visited": false,
+          "playerAtEntrance": false,
+          "owner": {
+            "id": "demo.shop-owner.outpost-martin",
+            "nameKey": "shop-owner-demo-outpost-martin-name",
+            "raceId": "demo.race.rfb-human",
+            "greedPercent": 108,
+            "purchasePriceCap": 10000,
+            "priceFactorPercent": 100
           },
           "stock": [],
           "sellQuotes": []
@@ -822,7 +845,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 167,
+      "nextItemInstanceSerial": 168,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -830,7 +853,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "22e34b4f4627220dd0129dd176a42338f1387595423fcadedacdb66da6586794"
+      "stateHash": "4efc716c35318b3fe73da2474b104ef6fe48f0d53949efd12be0030eff378a24"
     },
     "events": [
       {
@@ -848,6 +871,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "22e34b4f4627220dd0129dd176a42338f1387595423fcadedacdb66da6586794"
+    "saveRoundTripStateHash": "4efc716c35318b3fe73da2474b104ef6fe48f0d53949efd12be0030eff378a24"
   }
 }

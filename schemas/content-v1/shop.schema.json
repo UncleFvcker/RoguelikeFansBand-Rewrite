@@ -24,6 +24,7 @@
     },
     "ShopCategory": {
       "enum": [
+        "shroomery",
         "general-store",
         "armoury",
         "weaponsmith",

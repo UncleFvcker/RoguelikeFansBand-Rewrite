@@ -11,6 +11,7 @@ const ALCHEMIST_ID: &str = "demo.shop.outpost-alchemist";
 const MAGIC_SHOP_ID: &str = "demo.shop.outpost-magic-shop";
 const BLACK_MARKET_ID: &str = "demo.shop.outpost-black-market";
 const BOOKSTORE_ID: &str = "demo.shop.outpost-bookstore";
+const SHROOMERY_ID: &str = "demo.shop.outpost-shroomery";
 const HOME_ID: &str = "demo.town-facility.outpost-home";
 const ANAMBAR_HOME_ID: &str = "demo.town-facility.anambar-home";
 const ANAMBAR_INN_ID: &str = "demo.shop.anambar-inn";
@@ -66,7 +67,7 @@ fn outpost_shops_are_projected_from_authoritative_content() {
     assert_eq!(town.id, "demo.town.outpost");
     assert_eq!(town.floor_id, "demo.floor.surface");
     assert!(town.visited);
-    assert_eq!(snapshot.shops.len(), 8);
+    assert_eq!(snapshot.shops.len(), 9);
     assert_eq!(snapshot.homes.len(), 1);
     assert_eq!(snapshot.homes[0].id, HOME_ID);
     assert_eq!(
@@ -102,12 +103,80 @@ fn outpost_shops_are_projected_from_authoritative_content() {
     let black_market = projected_shop(&snapshot.shops, BLACK_MARKET_ID);
     assert_eq!(black_market.entrance_position, Position { x: 55, y: 19 });
     assert_eq!(black_market.category, ShopCategoryDto::BlackMarket);
+    let shroomery = projected_shop(&snapshot.shops, SHROOMERY_ID);
+    assert_eq!(shroomery.entrance_position, Position { x: 61, y: 19 });
+    assert_eq!(shroomery.category, ShopCategoryDto::Shroomery);
     assert!(
         snapshot
             .shops
             .iter()
             .all(|shop| !shop.visited && !shop.player_at_entrance)
     );
+}
+
+#[test]
+fn shroomery_trade_maintenance_and_save_round_trip_use_existing_shop_state() {
+    let mut game =
+        Game::new_with_build(42, "demo.build.warrior").expect("Outpost game should start");
+    game.gold = 10_000;
+    game.player.position = Position { x: 61, y: 19 };
+    game.mark_shop_visited_at_player().unwrap();
+
+    let shop = projected_shop(&game.snapshot().shops, SHROOMERY_ID).clone();
+    assert!(shop.visited && shop.player_at_entrance);
+    assert_eq!(shop.owner.name_key, "shop-owner-demo-outpost-martin-name");
+    assert_eq!(
+        shop.stock
+            .iter()
+            .map(|item| item.kind_id.as_str())
+            .collect::<std::collections::BTreeSet<_>>(),
+        std::collections::BTreeSet::from([
+            "demo.item.cure-blindness-mushroom",
+            "demo.item.cure-confusion-mushroom",
+            "demo.item.cure-paranoia-mushroom",
+            "demo.item.cure-poison-mushroom",
+            "demo.item.fast-recovery-mushroom",
+        ])
+    );
+    let mushroom = shop
+        .stock
+        .iter()
+        .find(|item| item.kind_id == "demo.item.fast-recovery-mushroom")
+        .expect("Shroomery should stock Fast Recovery")
+        .clone();
+    dispatch_next(
+        &mut game,
+        GameCommand::BuyFromShop {
+            shop_id: SHROOMERY_ID.to_owned(),
+            item_id: mushroom.id,
+            quantity: 1,
+        },
+    );
+    assert!(game.items.iter().any(|item| {
+        item.kind_id == "demo.item.fast-recovery-mushroom"
+            && item.location == ItemLocation::Inventory
+    }));
+
+    game.shop_states
+        .get_mut(SHROOMERY_ID)
+        .expect("Shroomery state should exist")
+        .inventory
+        .clear();
+    game.world_tick = 10_000;
+    game.maintain_shop_at_player().unwrap();
+    assert_eq!(
+        game.shop_states[SHROOMERY_ID]
+            .inventory
+            .iter()
+            .map(|item| item.kind_id.as_str())
+            .collect::<std::collections::BTreeSet<_>>()
+            .len(),
+        5
+    );
+
+    let restored = Game::from_save(game.to_save()).expect("Shroomery state should round-trip");
+    assert_eq!(restored.shop_states, game.shop_states);
+    assert_eq!(restored.state_hash(), game.state_hash());
 }
 
 #[test]

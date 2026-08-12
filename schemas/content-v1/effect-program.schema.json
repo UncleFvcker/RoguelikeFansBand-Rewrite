@@ -679,6 +679,19 @@
         {
           "additionalProperties": false,
           "properties": {
+            "type": {
+              "const": "apply-fast-recovery",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
             "healingAmount": {
               "format": "uint32",
               "minimum": 0,

@@ -36,7 +36,7 @@
       "turn": 1,
       "worldTick": 10,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 311,
+      "rngDrawCounter": 300,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -185,6 +185,29 @@
           "sellQuotes": []
         },
         {
+          "id": "demo.shop.outpost-shroomery",
+          "nameKey": "shop-demo-outpost-shroomery-name",
+          "descriptionKey": "shop-demo-outpost-shroomery-description",
+          "category": "shroomery",
+          "entrancePosition": {
+            "x": 61,
+            "y": 19
+          },
+          "entranceTerrainId": "demo.terrain.shroomery-entrance",
+          "visited": false,
+          "playerAtEntrance": false,
+          "owner": {
+            "id": "demo.shop-owner.outpost-martin",
+            "nameKey": "shop-owner-demo-outpost-martin-name",
+            "raceId": "demo.race.rfb-human",
+            "greedPercent": 108,
+            "purchasePriceCap": 10000,
+            "priceFactorPercent": 100
+          },
+          "stock": [],
+          "sellQuotes": []
+        },
+        {
           "id": "demo.shop.outpost-temple",
           "nameKey": "shop-demo-outpost-temple-name",
           "descriptionKey": "shop-demo-outpost-temple-description",
@@ -282,14 +305,14 @@
           "strength": {
             "natural": 13,
             "maximumNatural": 13,
-            "potential": 98,
+            "potential": 118,
             "effective": 17,
             "index": 14
           },
           "intelligence": {
             "natural": 13,
             "maximumNatural": 13,
-            "potential": 138,
+            "potential": 108,
             "effective": 11,
             "index": 8
           },
@@ -303,21 +326,21 @@
           "dexterity": {
             "natural": 13,
             "maximumNatural": 13,
-            "potential": 88,
+            "potential": 98,
             "effective": 15,
             "index": 12
           },
           "constitution": {
             "natural": 13,
             "maximumNatural": 13,
-            "potential": 118,
+            "potential": 138,
             "effective": 15,
             "index": 12
           },
           "charisma": {
             "natural": 13,
             "maximumNatural": 13,
-            "potential": 138,
+            "potential": 118,
             "effective": 14,
             "index": 11
           }
@@ -833,7 +856,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 170,
+      "nextItemInstanceSerial": 171,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -841,7 +864,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "c48fa3bc8ad6bb66b2da569b43b272c256c5bdd088927955de32e88d8c78a36f"
+      "stateHash": "a93ce4bb01bf8bc2d57a1e01a32fc7b17abe05c8a076f9b00d2d82603b544bc4"
     },
     "events": [
       {
@@ -853,6 +876,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "c48fa3bc8ad6bb66b2da569b43b272c256c5bdd088927955de32e88d8c78a36f"
+    "saveRoundTripStateHash": "a93ce4bb01bf8bc2d57a1e01a32fc7b17abe05c8a076f9b00d2d82603b544bc4"
   }
 }

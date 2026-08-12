@@ -484,6 +484,7 @@ status-unwell-name = 身体不适
 status-giant-strength-name = 巨人之力
 status-understanding-name = 理解
 status-inventory-protection-name = 物品栏保护
+status-regeneration-name = 再生
 message-item-use-inventory-identified = 你使用{ $source }，鉴定了携带的 { $count } 组物品。
 message-item-auto-identified = 理解状态自动鉴定了新携带的 { $count } 组物品。
 message-item-use-self-knowledge = { $source }揭示了你的状态：等级 { $level }；生命 { $hp }/{ $maxHp }；金币 { $gold }；饱食度 { $nutrition }；攻击 { $attack }；防御 { $defense }；近战 { $meleeSkill }；护甲 { $armorClass }；速度 { $speed }；力量 { $strength }、智力 { $intelligence }、感知 { $wisdom }、敏捷 { $dexterity }、体质 { $constitution }、魅力 { $charisma }；状态 [{ $statuses }]；抗性 [{ $resistances }]；资源 [{ $resources }]。

@@ -23,6 +23,13 @@ const formatter = createPresentationFormatter(localization, () => state, {
   itemCurseSeverityName: () => "?",
 });
 
+test("Fast Recovery uses the localized regeneration status name", () => {
+  assert.equal(formatter.statusName("rfb.status.regeneration"), "regeneration");
+  localization.setLocale("zh-CN");
+  assert.equal(formatter.statusName("rfb.status.regeneration"), "再生");
+  localization.setLocale("en-US");
+});
+
 test("mutation events use their authoritative projected names", () => {
   const gained = {
     kind: "mutation.gained",

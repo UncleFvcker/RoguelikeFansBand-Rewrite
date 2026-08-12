@@ -488,6 +488,7 @@ status-unwell-name = unwell
 status-giant-strength-name = giant strength
 status-understanding-name = understanding
 status-inventory-protection-name = inventory protection
+status-regeneration-name = regeneration
 message-item-use-inventory-identified =
     { $count ->
         [one] You use { $source } and identify 1 carried item stack.

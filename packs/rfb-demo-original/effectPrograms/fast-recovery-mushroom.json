@@ -1,0 +1,10 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/effect-program.schema.json",
+  "formatVersion": 1,
+  "id": "demo.effect.fast-recovery-mushroom",
+  "input": "self",
+  "steps": [
+    { "type": "apply-fast-recovery" },
+    { "type": "increase-nutrition", "amount": 500 }
+  ]
+}

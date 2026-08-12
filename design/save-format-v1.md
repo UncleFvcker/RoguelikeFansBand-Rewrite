@@ -384,3 +384,7 @@ contract-v260 不增加存档字段。玩家从连续荒野进入非城镇地表
 从地牢返回时恢复该层及其世界坐标、视口偏移、实体和地面物品。载入验证只在
 当前世界定义了荒野时允许这个保留 ID。save 容器保持 v1，State Hash Schema
 保持 v86。
+
+contract-v261 不增加存档字段。蘑菇店继续使用既有 `ShopStateSaveDto`，快速恢复的
+定时再生继续使用既有 `StatusSaveDto`；State Hash Schema 保持 v86，save 容器保持
+v1。

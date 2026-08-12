@@ -345,6 +345,66 @@ fn elvish_waybread_uses_normal_and_intolerant_branches() {
 }
 
 #[test]
+fn fast_recovery_mushroom_heals_eases_bleeding_and_grants_timed_regeneration() {
+    const ITEM_KIND_ID: &str = "demo.item.fast-recovery-mushroom";
+    const ITEM_ID: &str = "test.item.fast-recovery-mushroom";
+    let mut game = Game::new(53);
+    clear_monsters(&mut game);
+    game.player.hp = 1;
+    game.player.statuses.push(StatusInstance {
+        kind_id: STATUS_BLEEDING.to_owned(),
+        intensity: 1,
+        remaining_ticks: 100,
+        source_id: Some("test.bleeding".to_owned()),
+        granted_resistances: BTreeMap::new(),
+        granted_brands: BTreeSet::new(),
+        granted_modifiers: StatModifiersDto::default(),
+        granted_equipment_bonuses: EquipmentBonusesDto::default(),
+        granted_status_immunities: BTreeSet::new(),
+        granted_race_id: None,
+        grants_wall_passage: false,
+        incoming_damage_percent: 100,
+    });
+    give_inventory_item(&mut game, ITEM_ID, ITEM_KIND_ID);
+    let draws_before = game.rng_draw_counter();
+
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: ITEM_ID.to_owned(),
+            target: None,
+        },
+    );
+
+    assert!((3..=17).contains(&game.player.hp));
+    assert!(!game.player_has_status_kind(STATUS_BLEEDING));
+    let regeneration = game
+        .player
+        .statuses
+        .iter()
+        .find(|status| status.kind_id == STATUS_REGENERATION)
+        .expect("Fast Recovery should grant regeneration");
+    assert!((1_010..=2_000).contains(&regeneration.remaining_ticks));
+    assert_eq!(game.player_regeneration_rate_percent(), 200);
+    assert_eq!(game.rng_draw_counter(), draws_before + 3);
+    assert!(update.events.iter().any(|event| {
+        event.kind == "item.use-status-reduced"
+            && event.args.get("before").is_some_and(|value| value == "100")
+            && event.args.get("after").is_some_and(|value| value == "0")
+    }));
+    assert!(
+        update
+            .events
+            .iter()
+            .any(|event| event.kind == "item.use-status-applied")
+    );
+
+    let restored = Game::from_save(game.to_save()).expect("regeneration should round-trip");
+    assert_eq!(restored.snapshot(), game.snapshot());
+    assert_eq!(restored.player_regeneration_rate_percent(), 200);
+}
+
+#[test]
 fn digestion_uses_world_tick_and_current_scheduler_speed() {
     let mut normal = Game::new(42);
     normal.nutrition = 9_000;

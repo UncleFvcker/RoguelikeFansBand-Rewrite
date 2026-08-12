@@ -128,6 +128,53 @@ fn elvish_waybread_keeps_original_shape_effect_and_town_acquisition() {
 }
 
 #[test]
+fn fast_recovery_mushroom_keeps_original_shape_effect_and_shroomery_acquisition() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let mushroom = artifact
+        .content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.fast-recovery-mushroom")
+        .expect("Fast Recovery Mushroom should exist");
+
+    assert_eq!(mushroom.glyph, ",");
+    assert_eq!(mushroom.generation_level, 15);
+    assert_eq!(mushroom.weight_tenths_pound, 2);
+    assert_eq!(mushroom.base_value, 30);
+    assert!(matches!(
+        mushroom.use_action.as_ref().map(|action| &action.effect),
+        Some(ItemUseEffectDefinition::Sequence { effects })
+            if effects == &[
+                ItemUseEffectDefinition::ApplyFastRecovery,
+                ItemUseEffectDefinition::IncreaseNutrition { amount: 500 },
+            ]
+    ));
+    let shroomery = artifact
+        .content
+        .shops
+        .iter()
+        .find(|shop| shop.id == "demo.shop.outpost-shroomery")
+        .expect("Outpost Shroomery should exist");
+    assert!(
+        shroomery
+            .stock
+            .iter()
+            .any(|stock| stock.item_kind_id == mushroom.id)
+    );
+    assert!(
+        artifact
+            .content
+            .shops
+            .iter()
+            .find(|shop| shop.id == "demo.shop.outpost-general-store")
+            .expect("General Store should exist")
+            .stock
+            .iter()
+            .all(|stock| !stock.item_kind_id.ends_with("-mushroom"))
+    );
+}
+
+#[test]
 fn restorative_item_sequences_require_bounded_effects_and_known_resources() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let clarity = artifact

@@ -3547,6 +3547,10 @@ fn outpost_has_walls_inner_shops_and_an_exterior_warrens_entrance() {
             "demo.terrain.black-market-entrance",
             ContentPosition { x: 55, y: 19 },
         ),
+        (
+            "demo.terrain.shroomery-entrance",
+            ContentPosition { x: 61, y: 19 },
+        ),
     ];
     for (terrain_id, entrance) in entrances {
         assert!(world.terrain_overrides.iter().any(|terrain| {

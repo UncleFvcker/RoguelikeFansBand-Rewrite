@@ -523,3 +523,7 @@ Hash Schema 保持 v85，save 容器保持 v1。
 逐来源豁免使用。生命力仍复用现有 `CharacterProgress.lifeForce`，但现在参与最大生命
 派生与当前生命同比例缩放。State Hash Schema 升至 v86，save 容器保持 v1；旧开发
 存档不作为兼容边界。完整边界见 [Contract v259](contract-v259-orc-cave-unlife.md)。
+
+协议 1.172 / contract-v261 为 `ShopCategoryDto` 增加 `shroomery`。快速恢复继续复用
+既有物品治疗、状态与商店 DTO，不增加物品专用协议字段；`rfb.status.regeneration`
+通过现有 `StatusDto` 投影。State Hash Schema 保持 v86，save 容器保持 v1。

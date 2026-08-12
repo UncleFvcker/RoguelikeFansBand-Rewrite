@@ -175,6 +175,67 @@ impl Game {
         true
     }
 
+    fn resolve_item_fast_recovery(
+        &mut self,
+        source_kind_id: &str,
+        events: &mut Vec<DomainEvent>,
+    ) -> bool {
+        let healed = self.resolve_item_restorative_resource_effect(
+            source_kind_id,
+            &ItemUseEffectDefinition::HealDice { dice: 2, sides: 8 },
+            events,
+        );
+        let bleeding = if let Some(index) = self
+            .player
+            .statuses
+            .iter()
+            .position(|status| status.kind_id == STATUS_BLEEDING)
+        {
+            let before = self.player.statuses[index].remaining_ticks;
+            let after = (before / 2).saturating_sub(50);
+            if after == 0 {
+                self.player.statuses.remove(index);
+            } else {
+                self.player.statuses[index].remaining_ticks = after;
+            }
+            events.push(DomainEvent::ItemStatusReduced {
+                source_kind_id: source_kind_id.to_owned(),
+                display_name_key: self.item_display_name_key(source_kind_id),
+                status_kind_id: STATUS_BLEEDING.to_owned(),
+                before,
+                after,
+            });
+            true
+        } else {
+            events.push(DomainEvent::ItemStatusReduced {
+                source_kind_id: source_kind_id.to_owned(),
+                display_name_key: self.item_display_name_key(source_kind_id),
+                status_kind_id: STATUS_BLEEDING.to_owned(),
+                before: 0,
+                after: 0,
+            });
+            false
+        };
+        let regeneration = self.resolve_item_status(
+            source_kind_id,
+            STATUS_REGENERATION,
+            1,
+            100,
+            100,
+            AbilityStatusStackingDefinition::KeepStrongest,
+            None,
+            &BTreeMap::new(),
+            &StatModifiers::default(),
+            &EquipmentBonuses::default(),
+            100,
+            events,
+        );
+        if healed || bleeding || regeneration {
+            self.mark_item_aware(source_kind_id);
+        }
+        healed || bleeding || regeneration
+    }
+
     pub(super) fn resolve_item_recall(
         &mut self,
         source_kind_id: String,
@@ -2591,6 +2652,7 @@ impl Game {
             | ItemUseEffectDefinition::RestoreAllVitality { .. }
             | ItemUseEffectDefinition::ApplyRestorativeFeast { .. }
             | ItemUseEffectDefinition::ApplyElvishWaybread { .. }
+            | ItemUseEffectDefinition::ApplyFastRecovery
             | ItemUseEffectDefinition::ApplyLifeRestoration { .. }
             | ItemUseEffectDefinition::DrainAttribute { .. }
             | ItemUseEffectDefinition::RestoreAttribute { .. }
@@ -4403,6 +4465,9 @@ impl Game {
                 *healing_sides,
                 events,
             ),
+            ItemUseEffectDefinition::ApplyFastRecovery => {
+                self.resolve_item_fast_recovery(source_kind_id, events)
+            }
             ItemUseEffectDefinition::DrainAttribute { attribute } => self
                 .resolve_item_drain_attribute(
                     source_kind_id,

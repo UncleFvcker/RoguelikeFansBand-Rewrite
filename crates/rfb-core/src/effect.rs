@@ -35,6 +35,7 @@ pub const STATUS_TSUYOSHI: &str = "rfb.status.tsuyoshi";
 pub const STATUS_UNWELL: &str = "rfb.status.unwell";
 pub const STATUS_TELEPATHY: &str = "rfb.status.telepathy";
 pub const STATUS_WRAITHFORM: &str = "rfb.status.wraithform";
+pub const STATUS_REGENERATION: &str = "rfb.status.regeneration";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct DamagePacket {

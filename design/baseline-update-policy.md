@@ -6,16 +6,16 @@
 
 contract fixture 是规则兼容边界，不能把测试失败简单处理为“刷新预期结果”。政策用于保证每次规则变化只修改真正受影响的场景，同时保留可审查的失败原因。
 
-当前逻辑基线是 `contract-v260`，机器可读政策固定在：
+当前逻辑基线是 `contract-v261`，机器可读政策固定在：
 
 ```text
 tests/fixtures/active/baseline-policy.json
 ```
 
-`contract-v260` 激活 Orc Cave 15–32 层、独立入口、原版偏好分配、奥斯罗德守关
-生命周期及最终战斗之戒。连续荒野离层状态复用既有 `FloorState` 完成存档与返回；
-新增 dungeon 初始状态改变共同初始化，因此统一刷新 22 条 active fixture。协议保持
-1.171，State Hash Schema 保持 v86，save 容器保持 v1。
+`contract-v261` 为 Outpost 增加原版 `0` 蘑菇店，迁移四种既有 `TOWN` 蘑菇库存并
+接入快速恢复蘑菇。商店类别扩展和共同初始化库存改变所有场景可见的商店投影与 RNG，
+因此统一刷新 23 条 active fixture。协议升至 1.172，State Hash Schema 保持 v86，
+save 容器保持 v1。
 
 ## 分类验证
 
@@ -32,7 +32,7 @@ cargo run -p rfb-contract -- verify-category tests/fixtures/active/baseline-poli
 cargo run -p rfb-contract -- refresh-category tests/fixtures/active/baseline-policy.json inventory equipment
 ```
 
-`refresh-category` 会先为选中分类计算全部断言；任一场景计算失败时不会写入该批文件。普通 `cargo test -p rfb-contract` 仍快速检查全部 fixture 的 JSON、schema、分类和 ID 唯一性，但不会运行 22 条完整回放。
+`refresh-category` 会先为选中分类计算全部断言；任一场景计算失败时不会写入该批文件。普通 `cargo test -p rfb-contract` 仍快速检查全部 fixture 的 JSON、schema、分类和 ID 唯一性，但不会运行 23 条完整回放。
 
 只有以下变化默认需要全量回放或刷新：
 

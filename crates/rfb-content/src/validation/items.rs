@@ -64,6 +64,7 @@ pub(crate) fn valid_item_effect(
             healing_dice,
             healing_sides,
         } => (1..=100).contains(healing_dice) && (1..=10_000).contains(healing_sides),
+        ItemUseEffectDefinition::ApplyFastRecovery => true,
         ItemUseEffectDefinition::ApplyLifeRestoration {
             healing_amount,
             life_force_amount,
@@ -386,6 +387,7 @@ pub(crate) fn valid_item_effect(
                             | ItemUseEffectDefinition::SatisfyHunger
                             | ItemUseEffectDefinition::Heal { .. }
                             | ItemUseEffectDefinition::HealDice { .. }
+                            | ItemUseEffectDefinition::ApplyFastRecovery
                             | ItemUseEffectDefinition::ApplyPoison { .. }
                             | ItemUseEffectDefinition::ApplyBlindness { .. }
                             | ItemUseEffectDefinition::ApplyStatus { .. }
@@ -565,6 +567,7 @@ pub(super) fn validate_items(
                     | ItemUseEffectDefinition::RestoreAllVitality { .. }
                     | ItemUseEffectDefinition::ApplyRestorativeFeast { .. }
                     | ItemUseEffectDefinition::ApplyElvishWaybread { .. }
+                    | ItemUseEffectDefinition::ApplyFastRecovery
                     | ItemUseEffectDefinition::ApplyLifeRestoration { .. }
                     | ItemUseEffectDefinition::DrainAttribute { .. }
                     | ItemUseEffectDefinition::RestoreAttribute { .. }

@@ -106,6 +106,7 @@ pub struct ShopMaintenanceDefinition {
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
 pub enum ShopCategory {
+    Shroomery,
     GeneralStore,
     Armoury,
     Weaponsmith,

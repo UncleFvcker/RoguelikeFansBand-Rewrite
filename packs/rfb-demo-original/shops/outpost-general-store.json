@@ -85,34 +85,6 @@
       "initialMaximum": 5,
       "maintenanceMinimum": 1,
       "maintenanceMaximum": 5
-    },
-    {
-      "itemKindId": "demo.item.cure-poison-mushroom",
-      "initialMinimum": 1,
-      "initialMaximum": 3,
-      "maintenanceMinimum": 1,
-      "maintenanceMaximum": 3
-    },
-    {
-      "itemKindId": "demo.item.cure-blindness-mushroom",
-      "initialMinimum": 1,
-      "initialMaximum": 3,
-      "maintenanceMinimum": 1,
-      "maintenanceMaximum": 3
-    },
-    {
-      "itemKindId": "demo.item.cure-paranoia-mushroom",
-      "initialMinimum": 1,
-      "initialMaximum": 3,
-      "maintenanceMinimum": 1,
-      "maintenanceMaximum": 3
-    },
-    {
-      "itemKindId": "demo.item.cure-confusion-mushroom",
-      "initialMinimum": 1,
-      "initialMaximum": 3,
-      "maintenanceMinimum": 1,
-      "maintenanceMaximum": 3
     }
   ],
   "maintenance": {
