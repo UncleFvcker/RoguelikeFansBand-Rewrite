@@ -719,7 +719,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         .iter()
         .filter(|actor| actor.tags.iter().any(|tag| tag == "orc-cave"))
         .collect::<Vec<_>>();
-    assert_eq!(orc_cave.len(), 542);
+    assert_eq!(orc_cave.len(), 543);
 
     for id in [
         "demo.actor.bunyip",
@@ -767,7 +767,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         level_counts,
         [
             16, 14, 12, 17, 24, 17, 19, 17, 18, 21, 7, 12, 29, 15, 27, 28, 19, 19, 11, 42, 12, 6,
-            12, 14, 14, 7, 10, 6, 6, 16, 11, 7, 3, 8, 17, 9,
+            12, 14, 14, 7, 10, 6, 6, 16, 11, 8, 3, 8, 17, 9,
         ]
     );
 
@@ -5013,6 +5013,51 @@ fn p53b_fixed_special_summons_target_reindeer_and_death_pumpkins() {
             .collect::<Vec<_>>(),
         vec![(ActorDamageType::Light, 3, 3)]
     );
+}
+
+#[test]
+fn p54_ancient_roc_uses_the_dedicated_bird_drop_effect() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actor = artifact
+        .content
+        .actors
+        .iter()
+        .find(|actor| actor.id == "demo.actor.the-ancient-roc-of-okeldad")
+        .expect("the Ancient Roc should be imported");
+    assert_eq!(actor.level, 52);
+    assert_eq!(
+        actor
+            .allocation
+            .as_ref()
+            .map(|allocation| allocation.legacy_index),
+        Some(1239)
+    );
+    assert!(actor.movement.modes.contains(&ActorMovementMode::Fly));
+    assert!(
+        actor
+            .monster_casting
+            .as_ref()
+            .expect("the Ancient Roc should retain monster casting")
+            .abilities
+            .iter()
+            .any(|candidate| candidate.ability_id == "rfb-legacy.ability.bird-drop")
+    );
+    let ability = artifact
+        .content
+        .abilities
+        .iter()
+        .find(|ability| ability.id == "rfb-legacy.ability.bird-drop")
+        .expect("bird drop should be imported");
+    assert!(matches!(ability.effect, AbilityEffectDefinition::BirdDrop));
+    assert_eq!(
+        ability.target.modes,
+        vec![
+            AbilityTargetModeDefinition::Position,
+            AbilityTargetModeDefinition::Entity,
+        ]
+    );
+    assert_eq!(ability.target.range, 8);
+    assert!(ability.target.requires_line_of_effect);
 }
 
 #[test]

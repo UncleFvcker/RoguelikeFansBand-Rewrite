@@ -225,6 +225,7 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::CurseDamage { .. }
                     | AbilityEffectDefinition::DeathRay { .. }
                     | AbilityEffectDefinition::TeleportAway { .. }
+                    | AbilityEffectDefinition::BirdDrop
                     | AbilityEffectDefinition::DrainResource { .. }
                     | AbilityEffectDefinition::Amnesia
                     | AbilityEffectDefinition::DarkenRoom

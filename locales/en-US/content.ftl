@@ -4496,3 +4496,7 @@ ability-legacy-summon-reindeer-l52-1d4-name = Summon reindeer
 ability-legacy-summon-reindeer-l52-1d4-description = Summons 1d4 reindeer of level 52 or lower.
 ability-legacy-summon-death-pumpkin-l52-1d4-name = Summon death pumpkins
 ability-legacy-summon-death-pumpkin-l52-1d4-description = Summons 1d4 death pumpkins of level 52 or lower.
+actor-demo-the-ancient-roc-of-okeldad-name = The Ancient Roc of Okeldad
+actor-demo-the-ancient-roc-of-okeldad-description = A creature recorded in the original RFB bestiary as The Ancient Roc of Okeldad.
+ability-legacy-bird-drop-name = Bird drop
+ability-legacy-bird-drop-description = Grabs a target and drops it from the sky, or suddenly flies away.

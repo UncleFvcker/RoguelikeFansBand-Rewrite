@@ -2919,6 +2919,208 @@ fn level_based_jump_damage_uses_no_damage_rng_then_blinks() {
 }
 
 #[test]
+fn bird_drop_flies_away_or_drops_targets_with_levitation_reduction() {
+    fn cast(
+        seed: u64,
+        levitating: bool,
+    ) -> (
+        Game,
+        MonsterAbilityPlanResolution,
+        Vec<DomainEvent>,
+        u64,
+        Position,
+        Position,
+        Position,
+    ) {
+        let mut game = Game::new(seed);
+        clear_monsters(&mut game);
+        for cell in &mut game.terrain {
+            *cell = "demo.terrain.wall".to_owned();
+        }
+        let player = game.player.position;
+        let caster = Position {
+            x: player.x + 3,
+            y: player.y,
+        };
+        let landing = Position {
+            x: caster.x,
+            y: caster.y - 1,
+        };
+        let escape = Position {
+            x: caster.x + 5,
+            y: caster.y,
+        };
+        for position in [
+            player,
+            Position {
+                x: player.x + 1,
+                y: player.y,
+            },
+            Position {
+                x: player.x + 2,
+                y: player.y,
+            },
+            caster,
+            landing,
+            escape,
+        ] {
+            let index = game.index(position).expect("test cell should exist");
+            game.terrain[index] = "demo.terrain.floor".to_owned();
+        }
+        game.player.hp = 1_000;
+        if levitating {
+            game.progress
+                .active_mutation_ids
+                .insert("rfb.mutation.wings".to_owned());
+        }
+        game.entities.push(actor_from_runtime_spawn(
+            "generated.actor.ancient-roc",
+            "demo.actor.the-ancient-roc-of-okeldad",
+            caster,
+            3_872,
+            130,
+            100,
+            true,
+        ));
+        let ability = game
+            .content
+            .ability("rfb-legacy.ability.bird-drop")
+            .expect("P54 bird drop should compile")
+            .clone();
+        assert!(matches!(ability.effect, AbilityEffectDefinition::BirdDrop));
+        let plan = game
+            .monster_ability_target_plan(0, ability, 1)
+            .expect("the player should be a valid bird drop target");
+        let MonsterAbilityTargetPlan::BirdDrop { destination, .. } = &plan.target else {
+            panic!("BIRD_DROP should retain its dedicated target plan");
+        };
+        assert_eq!(*destination, landing);
+        let draws = game.rng_draw_counter();
+        let mut events = Vec::new();
+        let resolution = game.resolve_monster_ability_plan(
+            0,
+            "demo.actor.the-ancient-roc-of-okeldad",
+            &plan,
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        );
+        (game, resolution, events, draws, player, caster, landing)
+    }
+
+    let (fly_seed, fly) = (0..1_000)
+        .find_map(|seed| {
+            let result = cast(seed, false);
+            result.1.effects.is_empty().then_some((seed, result))
+        })
+        .expect("a bounded seed should take the one-in-three escape branch");
+    assert_ne!(fly.0.entities[0].position, fly.5);
+    let escape_distance = fly
+        .5
+        .x
+        .abs_diff(fly.0.entities[0].position.x)
+        .max(fly.5.y.abs_diff(fly.0.entities[0].position.y));
+    assert!((5..=10).contains(&escape_distance));
+    assert_eq!(fly.0.player.position, fly.4);
+    assert_eq!(fly.0.player.hp, 1_000);
+    assert_eq!(fly.0.rng_draw_counter(), fly.3 + 2);
+    assert!(fly.2.iter().any(|event| matches!(
+        event,
+        DomainEvent::MonsterTeleported { resolution, .. }
+            if resolution.actor_id == "generated.actor.ancient-roc"
+    )));
+
+    let drop_seed = (0..1_000)
+        .find(|seed| *seed != fly_seed && !cast(*seed, false).1.effects.is_empty())
+        .expect("a bounded seed should take the drop branch");
+    let (ordinary, ordinary_resolution, ordinary_events, ordinary_draws, player, _, landing) =
+        cast(drop_seed, false);
+    let (levitating, levitating_resolution, _, levitating_draws, _, _, _) = cast(drop_seed, true);
+    let damage = |resolution: &MonsterAbilityPlanResolution| {
+        let AbilityEffectResolutionDto::Damage { resolution, .. } = &resolution.effects[0] else {
+            panic!("the drop branch should resolve physical damage");
+        };
+        resolution.raw_damage
+    };
+    let ordinary_damage = damage(&ordinary_resolution);
+    let levitating_damage = damage(&levitating_resolution);
+    assert!((10..=80).contains(&ordinary_damage));
+    assert!((4..=32).contains(&levitating_damage));
+    assert!(ordinary_damage > levitating_damage);
+    assert_eq!(ordinary.rng_draw_counter(), ordinary_draws + 11);
+    assert_eq!(levitating.rng_draw_counter(), levitating_draws + 5);
+    assert_eq!(ordinary.player.position, landing);
+    assert_eq!(levitating.player.position, landing);
+    assert!(ordinary_events.iter().any(|event| matches!(
+        event,
+        DomainEvent::MonsterDraggedTarget { resolution, .. }
+            if resolution.from == player && resolution.to == landing
+    )));
+
+    let mut flying_target = Game::new(drop_seed);
+    clear_monsters(&mut flying_target);
+    for cell in &mut flying_target.terrain {
+        *cell = "demo.terrain.wall".to_owned();
+    }
+    flying_target.player.position = Position { x: 70, y: 20 };
+    let caster = Position { x: 4, y: 4 };
+    let target = Position { x: 7, y: 4 };
+    let landing = Position { x: 4, y: 3 };
+    for position in [
+        caster,
+        Position { x: 5, y: 4 },
+        Position { x: 6, y: 4 },
+        target,
+        landing,
+    ] {
+        let index = flying_target
+            .index(position)
+            .expect("test cell should exist");
+        flying_target.terrain[index] = "demo.terrain.floor".to_owned();
+    }
+    flying_target.entities.push(actor_from_runtime_spawn(
+        "generated.actor.ancient-roc",
+        "demo.actor.the-ancient-roc-of-okeldad",
+        caster,
+        3_872,
+        130,
+        100,
+        true,
+    ));
+    let mut bat = actor_from_runtime_spawn(
+        "generated.summon.fruit-bat",
+        "demo.actor.fruit-bat",
+        target,
+        1_000,
+        110,
+        100,
+        true,
+    );
+    bat.controller_id = Some(flying_target.player.id.clone());
+    flying_target.entities.push(bat);
+    let ability = flying_target
+        .content
+        .ability("rfb-legacy.ability.bird-drop")
+        .expect("P54 bird drop should compile")
+        .clone();
+    let plan = flying_target
+        .monster_ability_target_plan(0, ability, 1)
+        .expect("the flying summon should be a valid bird drop target");
+    let draws = flying_target.rng_draw_counter();
+    let resolution = flying_target.resolve_monster_ability_plan(
+        0,
+        "demo.actor.the-ancient-roc-of-okeldad",
+        &plan,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    );
+    assert!((4..=32).contains(&damage(&resolution)));
+    assert_eq!(flying_target.rng_draw_counter(), draws + 5);
+    assert_eq!(flying_target.entities[1].position, landing);
+}
+
+#[test]
 fn monster_polymorph_reuses_mutation_and_actor_form_transactions() {
     let ability = Game::new(0)
         .content

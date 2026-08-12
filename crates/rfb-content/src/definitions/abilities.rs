@@ -303,6 +303,7 @@ pub enum AbilityEffectDefinition {
     TeleportAway {
         minimum_distance: u8,
     },
+    BirdDrop,
     DrainResource {
         amount: u32,
     },

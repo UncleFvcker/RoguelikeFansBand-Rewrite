@@ -57,18 +57,18 @@ use rfb_content::{
     AbilityGenocideScopeDefinition, AbilityLevelScalingCurveDefinition,
     AbilityLevelScalingDefinition, AbilityLevelScalingField, AbilityRandomTargetDefinition,
     AbilityStatusStackingDefinition, AbilityTargetDefinition, AbilityTargetModeDefinition,
-    ActorDamageType, ActorResistanceLevel, ActorRole, AffixPropertyBundleDefinition,
-    CastingAttribute, CastingCapacityFormula, CastingFailureFormula, CastingLearningFormula,
-    CastingProfileDefinition, CastingRealmProfileDefinition, ClassAbilityDefinition,
-    ContentCatalog, DungeonInstanceLifecycle, EncounterEntryDefinition, EncounterTableDefinition,
-    EquipmentBonuses, EquipmentPassive, FloorLifecycle, ItemAttributeDefinition,
-    ItemCurseSeverityDefinition, ItemCurseTargetDefinition, ItemEnchantmentRollDefinition,
-    ItemSummonLevelSourceDefinition, ItemSummonSelectorDefinition, ItemUseEffectDefinition,
-    MeleeBlowEffectDefinition, MonsterDropKindDefinition, MonsterPackBehavior,
-    MutationActivationDefinition, MutationPeriodicEffectDefinition, PlayerAbilityDefinition,
-    ProceduralLayoutMode, ProceduralMazeDefinition, ProceduralPitDefinition,
-    ProceduralRoomGeometryDefinition, ProceduralRoomPlacement, ProceduralRoomShape,
-    ProceduralStreamerCandidateDefinition, SkillKind, SlayLevel, SlayTarget,
+    ActorDamageType, ActorMovementMode, ActorResistanceLevel, ActorRole,
+    AffixPropertyBundleDefinition, CastingAttribute, CastingCapacityFormula, CastingFailureFormula,
+    CastingLearningFormula, CastingProfileDefinition, CastingRealmProfileDefinition,
+    ClassAbilityDefinition, ContentCatalog, DungeonInstanceLifecycle, EncounterEntryDefinition,
+    EncounterTableDefinition, EquipmentBonuses, EquipmentPassive, FloorLifecycle,
+    ItemAttributeDefinition, ItemCurseSeverityDefinition, ItemCurseTargetDefinition,
+    ItemEnchantmentRollDefinition, ItemSummonLevelSourceDefinition, ItemSummonSelectorDefinition,
+    ItemUseEffectDefinition, MeleeBlowEffectDefinition, MonsterDropKindDefinition,
+    MonsterPackBehavior, MutationActivationDefinition, MutationPeriodicEffectDefinition,
+    PlayerAbilityDefinition, ProceduralLayoutMode, ProceduralMazeDefinition,
+    ProceduralPitDefinition, ProceduralRoomGeometryDefinition, ProceduralRoomPlacement,
+    ProceduralRoomShape, ProceduralStreamerCandidateDefinition, SkillKind, SlayLevel, SlayTarget,
     StartingItemDefinition, StatModifiers, TaskObjectiveKind, TechniqueAttribute,
     TerrainFeatureEntryDefinition, ThemeVaultCandidateDefinition, WeaponBrand,
     affix_is_compatible_with_item,
@@ -412,6 +412,12 @@ enum MonsterAbilityTargetPlan {
         trace: ProjectileTrace,
         destinations: Vec<Position>,
     },
+    BirdDrop {
+        target: MonsterHostileTarget,
+        trace: ProjectileTrace,
+        destination: Position,
+        escape_destinations: Vec<Position>,
+    },
 }
 
 fn monster_plan_target(target: &MonsterAbilityTargetPlan) -> Option<&MonsterHostileTarget> {
@@ -423,7 +429,8 @@ fn monster_plan_target(target: &MonsterAbilityTargetPlan) -> Option<&MonsterHost
         | MonsterAbilityTargetPlan::TerrainTransform { target, .. }
         | MonsterAbilityTargetPlan::DragTarget { target, .. }
         | MonsterAbilityTargetPlan::BlinkTarget { target, .. }
-        | MonsterAbilityTargetPlan::BanishTarget { target, .. } => Some(target),
+        | MonsterAbilityTargetPlan::BanishTarget { target, .. }
+        | MonsterAbilityTargetPlan::BirdDrop { target, .. } => Some(target),
         MonsterAbilityTargetPlan::SelfTarget
         | MonsterAbilityTargetPlan::JumpDamage { .. }
         | MonsterAbilityTargetPlan::Summon { .. }
@@ -6161,8 +6168,8 @@ fn apply_ability_level_scaling(
 
 fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpecDto {
     match effect {
-        AbilityEffectDefinition::JumpDamage { .. } => {
-            unreachable!("monster-only jump damage is never projected as a player ability")
+        AbilityEffectDefinition::JumpDamage { .. } | AbilityEffectDefinition::BirdDrop => {
+            unreachable!("monster-only effects are never projected as player abilities")
         }
         AbilityEffectDefinition::BlinkSelf { radius } => {
             AbilityEffectSpecDto::BlinkSelf { radius: *radius }

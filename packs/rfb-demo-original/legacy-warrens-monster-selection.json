@@ -5832,6 +5832,12 @@
       "id": "jack-of-lanterns",
       "tags": ["orc-cave"],
       "omittedFlags": ["CAN_SPEAK", "MALE", "POS_TELEPATHY"]
+    },
+    {
+      "sourceIndex": 1239,
+      "id": "the-ancient-roc-of-okeldad",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC", "RES_WALL"]
     }
   ]
 }

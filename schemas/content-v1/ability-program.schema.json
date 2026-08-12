@@ -470,6 +470,19 @@
         {
           "additionalProperties": false,
           "properties": {
+            "type": {
+              "const": "bird-drop",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
             "amount": {
               "format": "uint32",
               "minimum": 0,

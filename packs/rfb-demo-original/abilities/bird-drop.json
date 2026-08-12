@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.bird-drop",
+  "descriptionKey": "ability-legacy-bird-drop-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.bird-drop",
+  "nameKey": "ability-legacy-bird-drop-name",
+  "tags": [
+    "legacy-import",
+    "monster-only"
+  ],
+  "target": {
+    "modes": [
+      "position",
+      "entity"
+    ],
+    "range": 8,
+    "requiresLineOfEffect": true
+  }
+}

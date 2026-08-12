@@ -8742,6 +8742,22 @@ fn map_spell_token(
     caster_kind_id: &str,
     abilities: &mut BTreeMap<String, serde_json::Value>,
 ) -> Option<String> {
+    if token == "BIRD_DROP" {
+        let id = "rfb-legacy.ability.bird-drop".to_owned();
+        abilities.entry(id.clone()).or_insert_with(|| {
+            serde_json::json!({
+                "$schema": format!("{SCHEMA_BASE}/ability.schema.json"),
+                "formatVersion": 1,
+                "id": id,
+                "nameKey": "ability-legacy-bird-drop-name",
+                "descriptionKey": "ability-legacy-bird-drop-description",
+                "target": { "modes": ["position", "entity"], "range": 8, "requiresLineOfEffect": true },
+                "effect": { "type": "bird-drop" },
+                "tags": ["legacy-import", "monster-only"],
+            })
+        });
+        return Some(id);
+    }
     if token == "GAZE" {
         let id = "rfb-legacy.ability.gaze".to_owned();
         abilities.entry(id.clone()).or_insert_with(|| {
@@ -14693,6 +14709,27 @@ S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_ANT | S_SPIDER | S_HYDRA | S_LO
             )
             .is_none()
         );
+    }
+
+    #[test]
+    fn bird_drop_maps_to_its_dedicated_monster_effect() {
+        let mut abilities = BTreeMap::new();
+        let id = map_spell_token(
+            "BIRD_DROP",
+            52,
+            4,
+            "demo.actor.the-ancient-roc-of-okeldad",
+            &mut abilities,
+        )
+        .expect("bird drop should map");
+        assert_eq!(id, "rfb-legacy.ability.bird-drop");
+        assert_eq!(abilities[&id]["effect"]["type"], "bird-drop");
+        assert_eq!(
+            abilities[&id]["target"]["modes"],
+            serde_json::json!(["position", "entity"])
+        );
+        assert_eq!(abilities[&id]["target"]["range"], 8);
+        assert_eq!(abilities[&id]["target"]["requiresLineOfEffect"], true);
     }
 
     #[test]

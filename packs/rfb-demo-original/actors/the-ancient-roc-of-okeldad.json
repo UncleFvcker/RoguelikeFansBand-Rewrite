@@ -1,0 +1,146 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "habitats": [
+      "mountain",
+      "volcano",
+      "wood"
+    ],
+    "legacyIndex": 1239,
+    "maxDepth": 999,
+    "rarity": 3
+  },
+  "attack": 13,
+  "damageDice": 16,
+  "damageSides": 12,
+  "damageType": "physical",
+  "defense": 12,
+  "descriptionKey": "actor-demo-the-ancient-roc-of-okeldad-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 12826,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "B",
+  "hitPointDice": {
+    "dice": 44,
+    "forceMaximum": true,
+    "sides": 88
+  },
+  "id": "demo.actor.the-ancient-roc-of-okeldad",
+  "level": 52,
+  "maxHp": 3872,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 16,
+            "damageSides": 12,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.crush",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 16,
+            "damageSides": 12,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.crush",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 11,
+            "damageSides": 14,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "chancePercent": 55,
+            "durationDice": 5,
+            "durationSides": 5,
+            "type": "bleeding"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 11,
+            "damageSides": 14,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "armorMitigated": false,
+            "damageDice": 8,
+            "damageSides": 12,
+            "damageType": "electricity",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.bird-drop",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 33
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "nameKey": "actor-demo-the-ancient-roc-of-okeldad-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "chaos": "resistant",
+    "electricity": "resistant",
+    "gravity": "resistant",
+    "sound": "resistant",
+    "time": "resistant"
+  },
+  "rideable": true,
+  "role": "monster",
+  "speed": 130,
+  "statusImmunities": [
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "animal",
+    "clear-head",
+    "kin-glyph-66",
+    "legacy-import",
+    "orc-cave",
+    "resist-teleport",
+    "unique"
+  ]
+}

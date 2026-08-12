@@ -4497,3 +4497,7 @@ ability-legacy-summon-reindeer-l52-1d4-name = 召唤驯鹿
 ability-legacy-summon-reindeer-l52-1d4-description = 召唤 1d4 只等级不高于 52 的驯鹿。
 ability-legacy-summon-death-pumpkin-l52-1d4-name = 召唤死亡南瓜
 ability-legacy-summon-death-pumpkin-l52-1d4-description = 召唤 1d4 只等级不高于 52 的死亡南瓜。
+actor-demo-the-ancient-roc-of-okeldad-name = 奥克尔达德远古鹏鸟
+actor-demo-the-ancient-roc-of-okeldad-description = 原版怪物：奥克尔达德远古鹏鸟。
+ability-legacy-bird-drop-name = 空投怪物
+ability-legacy-bird-drop-description = 抓起目标从空中坠落，或突然飞走。

@@ -254,6 +254,7 @@ pub(super) fn validate_abilities(
                 AbilityEffectDefinition::TeleportAway { minimum_distance } => {
                     (1..=64).contains(minimum_distance)
                 }
+                AbilityEffectDefinition::BirdDrop => true,
                 AbilityEffectDefinition::DrainResource { amount } => {
                     (1..=1_000_000).contains(amount)
                 }
@@ -750,6 +751,7 @@ pub(super) fn validate_abilities(
             | AbilityEffectDefinition::ConeDamage { .. }
             | AbilityEffectDefinition::CurseDamage { .. }
             | AbilityEffectDefinition::TeleportAway { .. }
+            | AbilityEffectDefinition::BirdDrop
             | AbilityEffectDefinition::DrainResource { .. }
             | AbilityEffectDefinition::Amnesia
             | AbilityEffectDefinition::TeleportLevel
@@ -1012,6 +1014,7 @@ pub(super) fn validate_abilities(
                 | AbilityEffectDefinition::BoltOrBeamDamage { .. }
                 | AbilityEffectDefinition::CurseDamage { .. }
                 | AbilityEffectDefinition::TeleportAway { .. }
+                | AbilityEffectDefinition::BirdDrop
                 | AbilityEffectDefinition::DrainResource { .. }
                 | AbilityEffectDefinition::Amnesia
                 | AbilityEffectDefinition::TeleportLevel

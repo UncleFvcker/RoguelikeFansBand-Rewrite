@@ -4443,6 +4443,7 @@ impl Game {
             | AbilityEffectDefinition::BreathDamage { .. }
             | AbilityEffectDefinition::CurseDamage { .. }
             | AbilityEffectDefinition::TeleportAway { .. }
+            | AbilityEffectDefinition::BirdDrop
             | AbilityEffectDefinition::DrainResource { .. }
             | AbilityEffectDefinition::Amnesia
             | AbilityEffectDefinition::DarkenRoom
