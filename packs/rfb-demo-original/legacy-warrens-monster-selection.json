@@ -3600,6 +3600,168 @@
       "id": "black-reaver",
       "tags": ["outpost-quest", "royal-crypt"],
       "omittedFlags": ["POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 491,
+      "id": "half-troll",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 496,
+      "id": "cave-troll",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 500,
+      "id": "giant-skeleton-troll",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 509,
+      "id": "water-troll",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 1217,
+      "id": "triceratops",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 514,
+      "id": "night-stalker",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE"]
+    },
+    {
+      "sourceIndex": 515,
+      "id": "velociraptor",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 523,
+      "id": "bloodletter-of-khorne",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 524,
+      "id": "giant-grey-scorpion",
+      "tags": ["orc-cave", "spider"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 990,
+      "id": "pegasus",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 1046,
+      "id": "ulfang-the-black",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 1218,
+      "id": "diplodocus",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 531,
+      "id": "sheer-heart-attack-the-bomb-hand",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["NASTY_GLYPH"]
+    },
+    {
+      "sourceIndex": 532,
+      "id": "dagashi",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 535,
+      "id": "leng-spider",
+      "tags": ["orc-cave", "spider"],
+      "omittedFlags": ["POS_GAIN_AC", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 536,
+      "id": "star-vampire",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["NO_STUN", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 541,
+      "id": "acidic-cytoplasm",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC", "STUPID"]
+    },
+    {
+      "sourceIndex": 547,
+      "id": "wooly-rhinoceros",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 548,
+      "id": "giant-fire-ant",
+      "tags": ["ant", "orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 1034,
+      "id": "the-minotaur-of-the-labyrinth",
+      "tags": ["orc-cave"],
+      "omittedFlags": []
+    },
+    {
+      "sourceIndex": 1219,
+      "id": "ankylosaur",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 550,
+      "id": "xorn",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 551,
+      "id": "rogrog-the-black-troll",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 552,
+      "id": "mist-giant",
+      "tags": ["orc-cave"],
+      "omittedFlags": []
+    },
+    {
+      "sourceIndex": 565,
+      "id": "trapper",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["ATTR_CLEAR", "CHAR_CLEAR", "NASTY_GLYPH"]
+    },
+    {
+      "sourceIndex": 574,
+      "id": "chaos-spawn",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC", "POS_TELEPATHY"]
+    },
+    {
+      "sourceIndex": 1109,
+      "id": "exploding-ant",
+      "tags": ["ant", "orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
     }
   ]
 }

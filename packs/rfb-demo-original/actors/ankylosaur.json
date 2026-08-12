@@ -1,0 +1,109 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "friends": {
+      "chancePercent": 0,
+      "dice": 1,
+      "sides": 4
+    },
+    "habitats": [
+      "grass"
+    ],
+    "legacyIndex": 1219,
+    "maxDepth": 90,
+    "rarity": 2
+  },
+  "attack": 8,
+  "damageDice": 4,
+  "damageSides": 6,
+  "damageType": "physical",
+  "defense": 11,
+  "descriptionKey": "actor-demo-ankylosaur-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 1000,
+  "formatVersion": 1,
+  "glyph": "R",
+  "hitPointDice": {
+    "dice": 128,
+    "sides": 10
+  },
+  "id": "demo.actor.ankylosaur",
+  "level": 35,
+  "maxHp": 704,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 4,
+            "damageSides": 6,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 4,
+            "damageSides": 6,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "armorMitigated": true,
+            "chancePercent": 20,
+            "damageDice": 4,
+            "damageSides": 6,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.crush",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 4,
+            "damageSides": 6,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "chancePercent": 20,
+            "durationDice": 4,
+            "durationSides": 6,
+            "type": "stun"
+          }
+        ],
+        "methodId": "rfb.blow.crush",
+        "toHit": 20
+      }
+    ]
+  },
+  "nameKey": "actor-demo-ankylosaur-name",
+  "rangedMelee": true,
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "rideable": true,
+  "role": "monster",
+  "speed": 108,
+  "tags": [
+    "animal",
+    "kin-glyph-82",
+    "legacy-import",
+    "orc-cave"
+  ]
+}

@@ -1,0 +1,98 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "friends": {
+      "chancePercent": 50,
+      "dice": 3,
+      "sides": 3
+    },
+    "legacyIndex": 548,
+    "maxDepth": 90,
+    "rarity": 1
+  },
+  "attack": 8,
+  "damageDice": 2,
+  "damageSides": 12,
+  "damageType": "physical",
+  "defense": 4,
+  "descriptionKey": "actor-demo-giant-fire-ant-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 350,
+  "formatVersion": 1,
+  "glyph": "a",
+  "hitPointDice": {
+    "dice": 20,
+    "forceMaximum": true,
+    "sides": 10
+  },
+  "id": "demo.actor.giant-fire-ant",
+  "killsWeakerBodies": true,
+  "level": 35,
+  "maxHp": 200,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 2,
+            "damageSides": 12,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "armorMitigated": false,
+            "damageDice": 1,
+            "damageSides": 12,
+            "damageType": "fire",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 2,
+            "damageSides": 12,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "armorMitigated": false,
+            "damageDice": 1,
+            "damageSides": 12,
+            "damageType": "fire",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      }
+    ]
+  },
+  "nameKey": "actor-demo-giant-fire-ant-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "fire": "resistant"
+  },
+  "role": "monster",
+  "speed": 110,
+  "tags": [
+    "animal",
+    "ant",
+    "kin-glyph-97",
+    "legacy-import",
+    "orc-cave",
+    "weird-mind"
+  ]
+}

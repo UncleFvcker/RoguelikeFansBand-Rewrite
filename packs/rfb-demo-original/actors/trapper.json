@@ -1,0 +1,108 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 565,
+    "maxDepth": 999,
+    "rarity": 3
+  },
+  "attack": 9,
+  "damageDice": 3,
+  "damageSides": 8,
+  "damageType": "physical",
+  "defense": 7,
+  "descriptionKey": "actor-demo-trapper-description",
+  "experienceValue": 580,
+  "formatVersion": 1,
+  "glyph": ".",
+  "hitPointDice": {
+    "dice": 60,
+    "forceMaximum": true,
+    "sides": 10
+  },
+  "id": "demo.actor.trapper",
+  "level": 36,
+  "maxHp": 600,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 3,
+            "damageSides": 8,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 3,
+            "damageSides": 8,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 15,
+            "damageSides": 1,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "chancePercent": 50,
+            "type": "paralysis"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 15,
+            "damageSides": 1,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "chancePercent": 50,
+            "type": "paralysis"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "neverMoves": true
+  },
+  "nameKey": "actor-demo-trapper-name",
+  "role": "monster",
+  "speed": 120,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "cold-blooded",
+    "empty-mind",
+    "invisible",
+    "kin-glyph-46",
+    "legacy-import",
+    "orc-cave"
+  ]
+}

@@ -1,0 +1,105 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 574,
+    "maxDepth": 70,
+    "rarity": 2
+  },
+  "attack": 9,
+  "damageDice": 7,
+  "damageSides": 6,
+  "damageType": "physical",
+  "defense": 5,
+  "descriptionKey": "actor-demo-chaos-spawn-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 600,
+  "formatVersion": 1,
+  "glyph": "e",
+  "hitPointDice": {
+    "dice": 26,
+    "forceMaximum": true,
+    "sides": 26
+  },
+  "id": "demo.actor.chaos-spawn",
+  "level": 36,
+  "maxHp": 676,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 7,
+            "damageSides": 6,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.gaze",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 5,
+            "damageSides": 2,
+            "damageType": "disenchant",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.gaze",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 5,
+            "damageSides": 2,
+            "damageType": "physical",
+            "type": "damage",
+            "vampiric": true
+          }
+        ],
+        "methodId": "rfb.blow.gaze",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 5,
+            "damageSides": 2,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "type": "paralysis"
+          }
+        ],
+        "methodId": "rfb.blow.gaze",
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "nameKey": "actor-demo-chaos-spawn-name",
+  "resistances": {
+    "chaos": "resistant"
+  },
+  "role": "monster",
+  "speed": 110,
+  "tags": [
+    "evil",
+    "kin-glyph-101",
+    "legacy-import",
+    "orc-cave"
+  ]
+}

@@ -3444,6 +3444,64 @@ fn p41_ghast_retains_the_authoritative_eldritch_horror_marker() {
 }
 
 #[test]
+fn p42a_direct_monsters_keep_source_identity_without_new_abilities() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    assert_eq!(artifact.content.actors.len(), 672);
+    assert_eq!(artifact.content.abilities.len(), 331);
+
+    for (id, legacy_index, level) in [
+        ("half-troll", 491, 33),
+        ("cave-troll", 496, 33),
+        ("giant-skeleton-troll", 500, 33),
+        ("water-troll", 509, 33),
+        ("triceratops", 1217, 33),
+        ("night-stalker", 514, 34),
+        ("velociraptor", 515, 34),
+        ("bloodletter-of-khorne", 523, 34),
+        ("giant-grey-scorpion", 524, 34),
+        ("pegasus", 990, 34),
+        ("ulfang-the-black", 1046, 34),
+        ("diplodocus", 1218, 34),
+        ("sheer-heart-attack-the-bomb-hand", 531, 35),
+        ("dagashi", 532, 35),
+        ("leng-spider", 535, 35),
+        ("star-vampire", 536, 35),
+        ("acidic-cytoplasm", 541, 35),
+        ("wooly-rhinoceros", 547, 35),
+        ("giant-fire-ant", 548, 35),
+        ("the-minotaur-of-the-labyrinth", 1034, 35),
+        ("ankylosaur", 1219, 35),
+        ("xorn", 550, 36),
+        ("rogrog-the-black-troll", 551, 36),
+        ("mist-giant", 552, 36),
+        ("trapper", 565, 36),
+        ("chaos-spawn", 574, 36),
+        ("exploding-ant", 1109, 36),
+    ] {
+        let actor_id = format!("demo.actor.{id}");
+        let actor = artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == actor_id)
+            .unwrap_or_else(|| panic!("{actor_id} should be imported"));
+        assert_eq!(actor.level, level, "{actor_id} level");
+        assert_eq!(
+            actor
+                .allocation
+                .as_ref()
+                .map(|allocation| allocation.legacy_index),
+            Some(legacy_index),
+            "{actor_id} source index"
+        );
+        assert!(
+            actor.monster_casting.is_none(),
+            "{actor_id} should not gain monster casting"
+        );
+    }
+}
+
+#[test]
 fn outpost_has_walls_inner_shops_and_an_exterior_warrens_entrance() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let world = artifact
