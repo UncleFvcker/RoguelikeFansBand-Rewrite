@@ -48,6 +48,9 @@ const DEMO_MAGE_DROP_TABLE_ID: &str = "demo.loot-table.mage";
 const DEMO_PRIEST_DROP_TABLE_ID: &str = "demo.loot-table.priest";
 const DEMO_EVIL_PRIEST_DROP_TABLE_ID: &str = "demo.loot-table.evil-priest";
 const DEMO_PALADIN_DROP_TABLE_ID: &str = "demo.loot-table.paladin";
+const DEMO_EVIL_PALADIN_DROP_TABLE_ID: &str = "demo.loot-table.evil-paladin";
+const DEMO_SAMURAI_DROP_TABLE_ID: &str = "demo.loot-table.samurai";
+const DEMO_ROGUE_DROP_TABLE_ID: &str = "demo.loot-table.rogue";
 const DEMO_DWARF_DROP_TABLE_ID: &str = "demo.loot-table.dwarf";
 const DEMO_NINJA_DROP_TABLE_ID: &str = "demo.loot-table.ninja";
 const DEMO_CORPSE_ITEM_ID: &str = "demo.item.corpse-remains";
@@ -62,6 +65,9 @@ fn demo_drop_theme_table_id(theme: &str) -> Option<&'static str> {
         "DROP_PRIEST" => Some(DEMO_PRIEST_DROP_TABLE_ID),
         "DROP_PRIEST_EVIL" => Some(DEMO_EVIL_PRIEST_DROP_TABLE_ID),
         "DROP_PALADIN" => Some(DEMO_PALADIN_DROP_TABLE_ID),
+        "DROP_PALADIN_EVIL" => Some(DEMO_EVIL_PALADIN_DROP_TABLE_ID),
+        "DROP_SAMURAI" => Some(DEMO_SAMURAI_DROP_TABLE_ID),
+        "DROP_ROGUE" => Some(DEMO_ROGUE_DROP_TABLE_ID),
         "DROP_DWARF" => Some(DEMO_DWARF_DROP_TABLE_ID),
         "DROP_NINJA" => Some(DEMO_NINJA_DROP_TABLE_ID),
         _ => None,
@@ -211,10 +217,15 @@ fn demo_monster_audit_omission_is_safe(flag: &str) -> bool {
             | "NO_STUN"
             | "POS_GAIN_AC"
             | "POS_HOLD_LIFE"
+            | "POS_BACKSTAB"
             | "POS_SEE_INVIS"
             | "POS_SUST_CON"
+            | "POS_SUST_INT"
             | "POS_SUST_STR"
             | "POS_TELEPATHY"
+            | "EGYPTIAN2"
+            | "HINDU2"
+            | "NORSE2"
             | "RES_WALL"
             | "STUPID"
     )
@@ -6819,6 +6830,7 @@ fn melee_damage_type(token: &str) -> Option<&'static str> {
         "HELL_FIRE" => Some("hell-fire"),
         "ICE" => Some("ice"),
         "WATER" => Some("water"),
+        "POIS" => Some("poison"),
         _ => None,
     }
 }
@@ -7608,6 +7620,9 @@ fn monster_json(
     if entry.glyph == Some('M') {
         tags.push("hydra".to_owned());
     }
+    if matches!(entry.glyph, Some('C' | 'Z')) {
+        tags.push("hound".to_owned());
+    }
     if entry.index == 286 {
         tags.push("gelatinous-cube".to_owned());
     }
@@ -7818,7 +7833,7 @@ fn monster_json(
                 "ACID" => "acid",
                 "ELEC" => "electricity",
                 "FIRE" => "fire",
-                "CAUSE_2" => "curse",
+                "CAUSE_2" | "CAUSE_3" => "curse",
                 _ => return None,
             };
             let (damage_dice, damage_sides) = aura.dice?;
@@ -8133,7 +8148,7 @@ fn demo_monster_json(
         || entry.auras.iter().any(|aura| {
             !matches!(
                 aura.token.as_str(),
-                "POISON" | "ACID" | "ELEC" | "FIRE" | "CAUSE_2"
+                "POISON" | "ACID" | "ELEC" | "FIRE" | "CAUSE_2" | "CAUSE_3"
             ) || aura.dice.is_none()
         })
     {
@@ -8208,6 +8223,14 @@ fn demo_monster_json(
     if entry.flags.iter().any(|flag| flag == "FRIENDLY") {
         value["friendly"] = serde_json::json!(true);
     }
+    // Rolento's grenade exists only as a fixed summon; legacy rarity 255 is
+    // a sentinel, not a low-probability global allocation weight.
+    if entry.index == 1023 {
+        value
+            .as_object_mut()
+            .expect("actor JSON must be an object")
+            .remove("allocation");
+    }
     if entry.flags.iter().any(|flag| flag == "KAGE") {
         value
             .as_object_mut()
@@ -8223,6 +8246,9 @@ fn demo_monster_json(
     }
     if entry.glyph == Some('M') {
         tags.insert("hydra".to_owned());
+    }
+    if matches!(entry.glyph, Some('C' | 'Z')) {
+        tags.insert("hound".to_owned());
     }
     if entry.index == 286 {
         tags.insert("gelatinous-cube".to_owned());
@@ -8685,11 +8711,12 @@ fn map_spell_token(
     }
 }
 
-/// The two dice-based direct-damage shapes harvested from legacy S: lines.
+/// Direct-damage shapes harvested from legacy S: lines.
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum DamageSpellShape {
     Bolt,
     Ball,
+    Beam,
     /// Legacy MSF_BALL4 storms explode with radius four.
     BigBall,
 }
@@ -8699,6 +8726,7 @@ impl DamageSpellShape {
         match self {
             Self::Bolt => "bolt",
             Self::Ball | Self::BigBall => "ball",
+            Self::Beam => "beam",
         }
     }
 
@@ -8707,6 +8735,7 @@ impl DamageSpellShape {
             Self::Bolt => 0,
             Self::Ball => 2,
             Self::BigBall => 4,
+            Self::Beam => 0,
         }
     }
 }
@@ -8719,7 +8748,7 @@ fn damage_spell_defaults(
     base: &str,
     level: u32,
 ) -> Option<(DamageSpellShape, &'static str, (u32, u32, u32))> {
-    use DamageSpellShape::{Ball, BigBall, Bolt};
+    use DamageSpellShape::{Ball, Beam, BigBall, Bolt};
     let entry = match base {
         "BO_ACID" => (Bolt, "acid", (7, 8, level / 3)),
         "BO_ELEC" => (Bolt, "electricity", (4, 8, level / 3)),
@@ -8740,6 +8769,7 @@ fn damage_spell_defaults(
         // Legacy THROW is a radius-zero ball; a single-target bolt is the
         // faithful neutral shape. Its flat damage uses the 1d1+(F-1) identity.
         "THROW" => (Bolt, "physical", (1, 1, (3 * level).saturating_sub(1))),
+        "HELL_LANCE" => (Beam, "hell-fire", (1, 1, (2 * level).saturating_sub(1))),
         "BA_ACID" => (Ball, "acid", (1, 3 * level, 15)),
         "BA_ELEC" => (Ball, "electricity", (1, 3 * level / 2, 8)),
         "BA_FIRE" => (Ball, "fire", (1, 7 * level / 2, 10)),
@@ -8794,6 +8824,7 @@ fn summon_spell_defaults(base: &str) -> Option<(&'static str, (u32, u32, u32))> 
         "S_ANIMAL" => ("animal", (1, 3, 1)),
         "S_ANT" => ("ant", (1, 3, 1)),
         "S_SPIDER" => ("spider", (1, 3, 1)),
+        "S_HOUND" => ("hound", (1, 2, 1)),
         "S_HYDRA" => ("hydra", (1, 3, 1)),
         "S_LOUSE" => ("louse", (1, 3, 1)),
         _ => return None,
@@ -8821,6 +8852,14 @@ fn map_summon_spell_token(
         abilities
             .entry(id.clone())
             .or_insert_with(|| summon_category_ability(suffix, "gelatinous-cube", 16, 1, 3, 0));
+        return Some(id);
+    }
+    if base == "S_SPECIAL" && caster_kind_id.rsplit('.').next() == Some("rolento") {
+        let suffix = "summon-hand-grenade-l38-1d3-1";
+        let id = format!("rfb-legacy.ability.{suffix}");
+        abilities
+            .entry(id.clone())
+            .or_insert_with(|| summon_category_ability(suffix, "hand-grenade", 38, 1, 3, 1));
         return Some(id);
     }
     if base == "S_KIN" {
@@ -9037,6 +9076,7 @@ fn damage_spell_ability(
         "type": match shape {
             DamageSpellShape::Bolt => "damage",
             DamageSpellShape::Ball | DamageSpellShape::BigBall => "area-damage",
+            DamageSpellShape::Beam => "beam-damage",
         },
         "damageDice": dice,
         "damageSides": sides,
@@ -12257,6 +12297,11 @@ mod tests {
             DemoMonsterAuditStatus::Selected
         );
         assert!(demo_monster_audit_omission_is_safe("POS_GAIN_AC"));
+        assert!(demo_monster_audit_omission_is_safe("POS_BACKSTAB"));
+        assert!(demo_monster_audit_omission_is_safe("POS_SUST_INT"));
+        assert!(demo_monster_audit_omission_is_safe("EGYPTIAN2"));
+        assert!(demo_monster_audit_omission_is_safe("HINDU2"));
+        assert!(demo_monster_audit_omission_is_safe("NORSE2"));
         assert!(demo_monster_flag_is_handled("AURA_REVENGE"));
         assert!(demo_monster_flag_is_handled("AURA_FEAR"));
         assert!(demo_monster_flag_is_handled("TANUKI"));
@@ -12628,6 +12673,70 @@ mod tests {
         assert_eq!(
             demo_drop_theme_table_id("DROP_DWARF"),
             Some("demo.loot-table.dwarf")
+        );
+    }
+
+    #[test]
+    fn demo_monster_import_maps_p45_shared_mechanics() {
+        let mut monsters = parse_r_info(
+            "N:1013:Rolento\nG:C:u\nI:150:90d10:70:150:4:170\nW:38:4:999:4000:0:0\nB:HIT:POIS(2d3)\nA:CAUSE_3(3d3)\nF:FORCE_MAXHP | ONLY_ITEM | DROP_1D2 | NORSE2 | POS_BACKSTAB\nO:DROP_ROGUE\nS:1_IN_3 | HELL_LANCE | S_HOUND | S_SPECIAL\n",
+        )
+        .expect("synthetic P45 monster should parse");
+        let mut abilities = BTreeMap::new();
+        let actor = demo_monster_json(
+            &monsters.remove(0),
+            &DemoMonsterSelectionEntry {
+                source_index: 1013,
+                source_id: None,
+                id: "rolento".to_owned(),
+                tags: vec!["orc-cave".to_owned()],
+                omitted_flags: vec!["NORSE2".to_owned(), "POS_BACKSTAB".to_owned()],
+            },
+            &mut abilities,
+        )
+        .expect("P45 mechanics should import directly");
+
+        let effect = &actor["meleeRoutine"]["blows"][0]["effects"][0];
+        assert_eq!(effect["type"], "damage");
+        assert_eq!(effect["damageType"], "poison");
+        assert_eq!(actor["contactAuras"][0]["damageType"], "curse");
+        assert_eq!(actor["deathDrop"]["themeTableId"], "demo.loot-table.rogue");
+        assert!(
+            actor["tags"]
+                .as_array()
+                .is_some_and(|tags| { tags.iter().any(|tag| tag == "hound") })
+        );
+
+        let hell_lance = &abilities["rfb-legacy.ability.beam-hell-fire-1d1-75"];
+        assert_eq!(hell_lance["effect"]["type"], "beam-damage");
+        assert_eq!(hell_lance["effect"]["damageType"], "hell-fire");
+        let hounds = &abilities["rfb-legacy.ability.summon-hound-l38-1d2-1"];
+        assert_eq!(hounds["effect"]["category"], "hound");
+        assert_eq!(hounds["effect"]["countDice"], 1);
+        assert_eq!(hounds["effect"]["countSides"], 2);
+        assert_eq!(hounds["effect"]["countBonus"], 1);
+        let grenades = &abilities["rfb-legacy.ability.summon-hand-grenade-l38-1d3-1"];
+        assert_eq!(grenades["effect"]["category"], "hand-grenade");
+        assert_eq!(grenades["effect"]["countDice"], 1);
+        assert_eq!(grenades["effect"]["countSides"], 3);
+        assert_eq!(grenades["effect"]["countBonus"], 1);
+
+        let explicit = map_spell_token(
+            "HELL_LANCE(66)",
+            33,
+            2,
+            "demo.actor.anti-paladin",
+            &mut abilities,
+        )
+        .expect("explicit hell lance should map through the beam effect");
+        assert_eq!(explicit, "rfb-legacy.ability.beam-hell-fire-1d1-65");
+        assert_eq!(
+            demo_drop_theme_table_id("DROP_PALADIN_EVIL"),
+            Some("demo.loot-table.evil-paladin")
+        );
+        assert_eq!(
+            demo_drop_theme_table_id("DROP_SAMURAI"),
+            Some("demo.loot-table.samurai")
         );
     }
 

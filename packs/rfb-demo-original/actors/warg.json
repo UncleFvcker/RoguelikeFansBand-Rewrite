@@ -31,5 +31,5 @@
     "friends": { "dice": 3, "sides": 3 },
     "randomMovementPercent": 25
   },
-  "tags": ["animal", "beast", "evil", "pest-control", "warrens"]
+  "tags": ["animal", "beast", "evil", "hound", "pest-control", "warrens"]
 }

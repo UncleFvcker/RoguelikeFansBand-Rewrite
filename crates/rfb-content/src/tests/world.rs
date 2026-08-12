@@ -594,7 +594,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         .iter()
         .filter(|actor| actor.tags.iter().any(|tag| tag == "orc-cave"))
         .collect::<Vec<_>>();
-    assert_eq!(orc_cave.len(), 366);
+    assert_eq!(orc_cave.len(), 377);
 
     for id in [
         "demo.actor.bunyip",
@@ -641,7 +641,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
     assert_eq!(
         level_counts,
         [
-            16, 14, 12, 17, 24, 17, 19, 17, 18, 21, 7, 12, 25, 13, 26, 26, 18, 16, 10, 38,
+            16, 14, 12, 17, 24, 17, 19, 17, 18, 21, 7, 12, 29, 14, 26, 27, 19, 18, 10, 40,
         ]
     );
 
@@ -3712,8 +3712,8 @@ fn p44a_monsters_generate_only_parameterized_existing_effects() {
 #[test]
 fn p44b_monsters_complete_the_parameterized_existing_effect_harvest() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
-    assert_eq!(artifact.content.actors.len(), 817);
-    assert_eq!(artifact.content.abilities.len(), 443);
+    assert_eq!(artifact.content.actors.len(), 829);
+    assert_eq!(artifact.content.abilities.len(), 452);
     let ability_ids = artifact
         .content
         .abilities
@@ -3799,6 +3799,134 @@ fn p44b_monsters_complete_the_parameterized_existing_effect_harvest() {
             }),
             "{actor_id} should bind generated parameter records"
         );
+    }
+}
+
+#[test]
+fn p45_monsters_bind_low_risk_shared_mappings() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actor = |id: &str| {
+        artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == format!("demo.actor.{id}"))
+            .unwrap_or_else(|| panic!("{id} should be imported"))
+    };
+    let ability_ids = artifact
+        .content
+        .abilities
+        .iter()
+        .map(|ability| ability.id.as_str())
+        .collect::<BTreeSet<_>>();
+
+    for (id, legacy_index, level) in [
+        ("bert-the-stone-troll", 493, 33),
+        ("bill-the-stone-troll", 494, 33),
+        ("tom-the-stone-troll", 495, 33),
+        ("ishikawa-goemon", 505, 33),
+        ("master-thief", 516, 34),
+        ("nightblade", 564, 36),
+        ("ratatosk-the-world-tree-squirrel", 1357, 37),
+        ("rolento", 1013, 38),
+        ("devil-s-huntsman", 1147, 38),
+        ("malekith-the-accursed", 628, 40),
+        ("marilith", 1130, 40),
+    ] {
+        let actor = actor(id);
+        assert_eq!(actor.level, level, "{id} level");
+        assert_eq!(
+            actor
+                .allocation
+                .as_ref()
+                .map(|allocation| allocation.legacy_index),
+            Some(legacy_index),
+            "{id} source index"
+        );
+    }
+
+    for task_actor in ["anti-paladin", "revenant", "death-knight", "sorcerer"] {
+        assert!(
+            artifact
+                .content
+                .actors
+                .iter()
+                .all(|candidate| candidate.id != format!("demo.actor.{task_actor}")),
+            "{task_actor} remains task-owned"
+        );
+    }
+    for table_id in [
+        "demo.loot-table.evil-paladin",
+        "demo.loot-table.rogue",
+        "demo.loot-table.samurai",
+    ] {
+        assert!(
+            artifact
+                .content
+                .loot_tables
+                .iter()
+                .any(|table| table.id == table_id),
+            "{table_id} should be formal content"
+        );
+    }
+
+    let bert_has_poison_damage = actor("bert-the-stone-troll")
+        .melee_routine
+        .as_ref()
+        .into_iter()
+        .flat_map(|routine| &routine.blows)
+        .flat_map(|blow| &blow.effects)
+        .any(|effect| {
+            matches!(
+                effect,
+                MeleeBlowEffectDefinition::Damage {
+                    damage_type: ActorDamageType::Poison,
+                    ..
+                }
+            )
+        });
+    assert!(bert_has_poison_damage);
+    assert!(
+        actor("malekith-the-accursed")
+            .contact_auras
+            .iter()
+            .any(|aura| aura.damage_type == ActorDamageType::Curse)
+    );
+    assert!(
+        actor("hand-grenade")
+            .tags
+            .iter()
+            .any(|tag| tag == "hand-grenade")
+    );
+    assert_eq!(actor("hand-grenade").level, 38);
+    assert!(actor("hand-grenade").allocation.is_none());
+    for hound in artifact
+        .content
+        .actors
+        .iter()
+        .filter(|candidate| matches!(candidate.glyph.as_str(), "C" | "Z"))
+    {
+        assert!(
+            hound.tags.iter().any(|tag| tag == "hound"),
+            "{} should match the original C/Z hound summon predicate",
+            hound.id
+        );
+    }
+
+    for ability_id in [
+        "rfb-legacy.ability.beam-hell-fire-1d1-75",
+        "rfb-legacy.ability.summon-hand-grenade-l38-1d3-1",
+        "rfb-legacy.ability.summon-hound-l38-1d2-1",
+    ] {
+        assert!(ability_ids.contains(ability_id), "missing {ability_id}");
+    }
+    for id in ["rolento", "devil-s-huntsman", "malekith-the-accursed"] {
+        assert!(actor(id).monster_casting.as_ref().is_some_and(|casting| {
+            casting
+                .abilities
+                .iter()
+                .all(|candidate| ability_ids.contains(candidate.ability_id.as_str()))
+        }));
     }
 }
 

@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/loot-table.schema.json",
+  "formatVersion": 1,
+  "id": "demo.loot-table.rogue",
+  "rolls": 1,
+  "entries": [
+    { "itemKindId": "demo.item.dagger", "weight": 1, "quantity": 1, "minDepth": 0, "maxDepth": 100 },
+    { "itemKindId": "demo.item.small-sword", "weight": 1, "quantity": 1, "minDepth": 0, "maxDepth": 100 },
+    { "itemKindId": "demo.item.sling", "weight": 1, "quantity": 1, "minDepth": 0, "maxDepth": 100 },
+    { "itemKindId": "demo.item.iron-shot", "weight": 1, "quantity": 5, "minDepth": 0, "maxDepth": 100 },
+    { "itemKindId": "demo.item.soft-leather-armour", "weight": 1, "quantity": 1, "minDepth": 0, "maxDepth": 100 },
+    { "itemKindId": "demo.item.cloak", "weight": 1, "quantity": 1, "minDepth": 0, "maxDepth": 100 },
+    { "itemKindId": "demo.item.leather-gloves", "weight": 1, "quantity": 1, "minDepth": 0, "maxDepth": 100 },
+    { "itemKindId": "demo.item.sealed-amulet", "weight": 1, "quantity": 1, "minDepth": 0, "maxDepth": 100 }
+  ],
+  "qualityWeights": [{ "quality": "ordinary", "weight": 1 }],
+  "affixWeights": [{ "weight": 1 }]
+}

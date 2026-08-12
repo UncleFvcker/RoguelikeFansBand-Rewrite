@@ -1,0 +1,58 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "attack": 9,
+  "damageDice": 2,
+  "damageSides": 40,
+  "damageType": "fire",
+  "defense": 0,
+  "descriptionKey": "actor-demo-hand-grenade-description",
+  "experienceValue": 0,
+  "formatVersion": 1,
+  "glyph": "{",
+  "hitPointDice": {
+    "dice": 5,
+    "forceMaximum": true,
+    "sides": 1
+  },
+  "id": "demo.actor.hand-grenade",
+  "level": 38,
+  "maxHp": 5,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 2,
+            "damageSides": 40,
+            "damageType": "fire",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.explode",
+        "selfDestructs": true,
+        "toHit": 20
+      }
+    ]
+  },
+  "nameKey": "actor-demo-hand-grenade-name",
+  "resistances": {
+    "fire": "vulnerable"
+  },
+  "role": "monster",
+  "speed": 130,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "cold-blooded",
+    "empty-mind",
+    "hand-grenade",
+    "kin-glyph-123",
+    "legacy-import",
+    "nonliving",
+    "resist-teleport"
+  ]
+}

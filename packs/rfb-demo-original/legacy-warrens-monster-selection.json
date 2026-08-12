@@ -4632,6 +4632,78 @@
       "id": "spulga-the-troll-priestess",
       "tags": ["orc-cave"],
       "omittedFlags": ["CAN_SPEAK", "FEMALE"]
+    },
+    {
+      "sourceIndex": 493,
+      "id": "bert-the-stone-troll",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 494,
+      "id": "bill-the-stone-troll",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 495,
+      "id": "tom-the-stone-troll",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 505,
+      "id": "ishikawa-goemon",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
+    },
+    {
+      "sourceIndex": 516,
+      "id": "master-thief",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 564,
+      "id": "nightblade",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "POS_BACKSTAB", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 1357,
+      "id": "ratatosk-the-world-tree-squirrel",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "NORSE2", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 1013,
+      "id": "rolento",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
+    },
+    {
+      "sourceIndex": 1023,
+      "id": "hand-grenade",
+      "tags": ["hand-grenade"],
+      "omittedFlags": ["NO_STUN"]
+    },
+    {
+      "sourceIndex": 1147,
+      "id": "devil-s-huntsman",
+      "tags": ["orc-cave"],
+      "omittedFlags": []
+    },
+    {
+      "sourceIndex": 628,
+      "id": "malekith-the-accursed",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 1130,
+      "id": "marilith",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["FEMALE", "HINDU2", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
     }
   ]
 }
