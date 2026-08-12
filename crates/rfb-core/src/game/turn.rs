@@ -3,6 +3,43 @@
 use super::*;
 
 impl Game {
+    pub(super) fn try_trump_blink(
+        &mut self,
+        index: usize,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let trump = self
+            .actor_runtime_definition(&self.entities[index])
+            .is_some_and(|definition| definition.tags.iter().any(|tag| tag == "trump"));
+        if !trump || self.rng.bounded(2) != 0 {
+            return;
+        }
+        if self.entities[index]
+            .statuses
+            .iter()
+            .any(|status| status.kind_id == STATUS_SLEEP)
+        {
+            return;
+        }
+        let actor_id = self.entities[index].id.clone();
+        let source_kind_id = self.entities[index].kind_id.clone();
+        let from = self.entities[index].position;
+        let destinations = self.open_positions_around_for_actor_kind(from, 5, &source_kind_id);
+        if destinations.is_empty() {
+            return;
+        }
+        let choice = usize::try_from(self.rng.bounded(destinations.len() as u64))
+            .expect("trump destination index must fit usize");
+        let to = destinations[choice];
+        self.entities[index].position = to;
+        changed.extend([from, to]);
+        events.push(DomainEvent::MonsterBlinked {
+            source_kind_id,
+            resolution: MonsterDisplacementResolutionDto { actor_id, from, to },
+        });
+    }
+
     pub(super) fn advance_until_player_ready(
         &mut self,
         resting: bool,
@@ -486,6 +523,7 @@ impl Game {
                 continue;
             }
             spend_energy(&mut self.entities[index].energy_need, STANDARD_ACTION_COST);
+            self.try_trump_blink(index, events, changed);
             if self.entities[index]
                 .statuses
                 .iter()

@@ -3454,3 +3454,5 @@ ability-legacy-summon-legacy-import-l37-1d3-1-name = 召唤怪物
 ability-legacy-summon-legacy-import-l37-1d3-1-description = 使用 RFB 原版怪物法术“召唤怪物”。
 ability-legacy-summon-legacy-import-l40-1d3-1-name = 召唤怪物
 ability-legacy-summon-legacy-import-l40-1d3-1-description = 使用 RFB 原版怪物法术“召唤怪物”。
+actor-demo-jurt-the-living-trump-name = 活体王牌尤尔特
+actor-demo-jurt-the-living-trump-description = 一名被混沌魔法变成活体王牌的信徒，身影不断在近处闪现。

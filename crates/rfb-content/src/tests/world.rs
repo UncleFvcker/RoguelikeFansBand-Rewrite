@@ -594,7 +594,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         .iter()
         .filter(|actor| actor.tags.iter().any(|tag| tag == "orc-cave"))
         .collect::<Vec<_>>();
-    assert_eq!(orc_cave.len(), 377);
+    assert_eq!(orc_cave.len(), 378);
 
     for id in [
         "demo.actor.bunyip",
@@ -3712,8 +3712,8 @@ fn p44a_monsters_generate_only_parameterized_existing_effects() {
 #[test]
 fn p44b_monsters_complete_the_parameterized_existing_effect_harvest() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
-    assert_eq!(artifact.content.actors.len(), 829);
-    assert_eq!(artifact.content.abilities.len(), 452);
+    assert_eq!(artifact.content.actors.len(), 830);
+    assert_eq!(artifact.content.abilities.len(), 453);
     let ability_ids = artifact
         .content
         .abilities
@@ -3928,6 +3928,26 @@ fn p45_monsters_bind_low_risk_shared_mappings() {
                 .all(|candidate| ability_ids.contains(candidate.ability_id.as_str()))
         }));
     }
+}
+
+#[test]
+fn p46_trump_monster_keeps_its_source_identity_and_turn_tag() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let jurt = artifact
+        .content
+        .actors
+        .iter()
+        .find(|actor| actor.id == "demo.actor.jurt-the-living-trump")
+        .expect("Jurt should be imported");
+
+    assert_eq!(jurt.level, 34);
+    assert_eq!(
+        jurt.allocation
+            .as_ref()
+            .map(|allocation| allocation.legacy_index),
+        Some(517)
+    );
+    assert!(jurt.tags.iter().any(|tag| tag == "trump"));
 }
 
 #[test]

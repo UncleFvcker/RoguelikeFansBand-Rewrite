@@ -4704,6 +4704,12 @@
       "id": "marilith",
       "tags": ["orc-cave"],
       "omittedFlags": ["FEMALE", "HINDU2", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 517,
+      "id": "jurt-the-living-trump",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE", "POS_SEE_INVIS"]
     }
   ]
 }

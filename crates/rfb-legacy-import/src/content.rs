@@ -7472,6 +7472,7 @@ fn monster_flag_is_mapped(flag: &str) -> bool {
             | "SELF_DARK_1"
             | "SELF_DARK_2"
             | "FORCE_SLEEP"
+            | "TRUMP"
             | "ONLY_ITEM"
             | "ONLY_GOLD"
             | "DROP_60"
@@ -7645,6 +7646,7 @@ fn monster_json(
         ("AURA_FEAR", "aura-fear"),
         ("TANUKI", "tanuki"),
         ("UNIQUE2", "unique2"),
+        ("TRUMP", "trump"),
     ] {
         if entry.flags.iter().any(|value| value == flag) {
             tags.push(tag.to_owned());
@@ -8285,6 +8287,7 @@ fn demo_monster_json(
         ("AURA_FEAR", "aura-fear"),
         ("TANUKI", "tanuki"),
         ("UNIQUE2", "unique2"),
+        ("TRUMP", "trump"),
     ] {
         if entry.flags.iter().any(|candidate| candidate == flag) {
             tags.insert(tag.to_owned());
@@ -12737,6 +12740,32 @@ mod tests {
         assert_eq!(
             demo_drop_theme_table_id("DROP_SAMURAI"),
             Some("demo.loot-table.samurai")
+        );
+    }
+
+    #[test]
+    fn demo_monster_import_maps_trump_as_a_shared_turn_tag() {
+        let mut monsters = parse_r_info(
+            "N:517:Jurt the Living Trump\nG:p:R\nI:120:10d100:20:90:40:150\nW:34:5:999:2662:0:0\nB:HIT:HURT(5d5)\nF:FORCE_MAXHP | TRUMP\n",
+        )
+        .expect("synthetic trump monster should parse");
+        let actor = demo_monster_json(
+            &monsters.remove(0),
+            &DemoMonsterSelectionEntry {
+                source_index: 517,
+                source_id: None,
+                id: "jurt-the-living-trump".to_owned(),
+                tags: vec!["orc-cave".to_owned()],
+                omitted_flags: Vec::new(),
+            },
+            &mut BTreeMap::new(),
+        )
+        .expect("TRUMP should import through the shared tag");
+
+        assert!(
+            actor["tags"]
+                .as_array()
+                .is_some_and(|tags| { tags.iter().any(|tag| tag == "trump") })
         );
     }
 

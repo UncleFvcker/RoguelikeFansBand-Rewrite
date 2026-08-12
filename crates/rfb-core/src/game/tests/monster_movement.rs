@@ -290,6 +290,42 @@ fn ranged_melee_uses_the_melee_routine_at_rfb_two_grid_reach() {
 }
 
 #[test]
+fn living_trump_blinks_for_free_before_its_action() {
+    let mut game = Game::new(0);
+    game.entities.clear();
+    game.push_generated_actor(
+        "test.trump".to_owned(),
+        "demo.actor.jurt-the-living-trump",
+        Position { x: 4, y: 3 },
+    );
+    let origin = game.entities[0].position;
+    let mut events = Vec::new();
+    let mut changed = BTreeSet::new();
+
+    let seed = (0..100)
+        .find(|seed| {
+            let mut trial = game.clone();
+            trial.rng = RfbRng::seeded(*seed);
+            trial.try_trump_blink(0, &mut Vec::new(), &mut BTreeSet::new());
+            trial.entities[0].position != origin
+        })
+        .expect("a deterministic seed should trigger the trump blink");
+    game.rng = RfbRng::seeded(seed);
+    game.try_trump_blink(0, &mut events, &mut changed);
+
+    let destination = game.entities[0].position;
+    assert_ne!(destination, origin);
+    assert_eq!(changed, BTreeSet::from([origin, destination]));
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::MonsterBlinked { source_kind_id, resolution }
+            if source_kind_id == "demo.actor.jurt-the-living-trump"
+                && resolution.from == origin
+                && resolution.to == destination
+    )));
+}
+
+#[test]
 fn never_move_monster_waits_at_range_and_can_attack_adjacent() {
     let mut game = game_with_actor_definition(7, "demo.actor.grey-mold", |actor| {
         actor.attack = 1_000_000;
