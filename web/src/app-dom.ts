@@ -53,6 +53,7 @@ export interface AppDom {
   readonly effectsValue: HTMLElement;
   readonly positionValue: HTMLElement;
   readonly hashValue: HTMLElement;
+  readonly progressionNameValue: HTMLElement;
   readonly progressionLevelValue: HTMLElement;
   readonly progressionExperienceValue: HTMLElement;
   readonly progressionCapValue: HTMLElement;
@@ -156,6 +157,7 @@ export function createAppDom(document: DocumentLookup): Readonly<AppDom> {
     effectsValue: element<HTMLElement>(document, "effects-value"),
     positionValue: element<HTMLElement>(document, "position-value"),
     hashValue: element<HTMLElement>(document, "hash-value"),
+    progressionNameValue: element<HTMLElement>(document, "progression-name-value"),
     progressionLevelValue: element<HTMLElement>(document, "progression-level-value"),
     progressionExperienceValue: element<HTMLElement>(document, "progression-experience-value"),
     progressionCapValue: element<HTMLElement>(document, "progression-cap-value"),

@@ -2834,6 +2834,7 @@ pub(super) fn validate_world(
                 return Err(ContentError::InvalidTownFacility(facility.id.clone()));
             }
         }
+        let mut shop_entrance_positions = BTreeSet::new();
         for shop_id in &town.shop_ids {
             let shop = shops
                 .get(shop_id)
@@ -2844,7 +2845,16 @@ pub(super) fn validate_world(
                 .get(&shop.entrance_position)
                 .copied()
                 .unwrap_or(town_fill_terrain_id);
-            if !entrance_positions.insert(shop.entrance_position)
+            let position_is_new = entrance_positions.insert(shop.entrance_position);
+            let shares_quest_service = town.facility_ids.iter().any(|facility_id| {
+                town_facilities.get(facility_id).is_some_and(|facility| {
+                    facility.category == TownFacilityCategory::QuestGiver
+                        && facility.entrance_position == shop.entrance_position
+                        && facility.entrance_terrain_id == shop.entrance_terrain_id
+                })
+            });
+            if !shop_entrance_positions.insert(shop.entrance_position)
+                || (!position_is_new && !shares_quest_service)
                 || effective_terrain_id != shop.entrance_terrain_id
                 || terrain_walkability.get(effective_terrain_id) != Some(&true)
                 || !terrain_tags

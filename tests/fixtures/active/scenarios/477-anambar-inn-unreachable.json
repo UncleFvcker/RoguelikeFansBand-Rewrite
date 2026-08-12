@@ -24,7 +24,7 @@
       "revision": 1,
       "turn": 1,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 147,
+      "rngDrawCounter": 152,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -44,6 +44,7 @@
             "y": 13
           },
           "entranceTerrainId": "demo.terrain.alchemist-entrance",
+          "innTravelDestinations": [],
           "visited": false,
           "playerAtEntrance": false,
           "owner": {
@@ -67,6 +68,7 @@
             "y": 19
           },
           "entranceTerrainId": "demo.terrain.armoury-entrance",
+          "innTravelDestinations": [],
           "visited": false,
           "playerAtEntrance": false,
           "owner": {
@@ -90,6 +92,7 @@
             "y": 19
           },
           "entranceTerrainId": "demo.terrain.black-market-entrance",
+          "innTravelDestinations": [],
           "visited": false,
           "playerAtEntrance": false,
           "owner": {
@@ -113,6 +116,7 @@
             "y": 13
           },
           "entranceTerrainId": "demo.terrain.bookstore-entrance",
+          "innTravelDestinations": [],
           "visited": false,
           "playerAtEntrance": false,
           "owner": {
@@ -136,6 +140,7 @@
             "y": 13
           },
           "entranceTerrainId": "demo.terrain.general-store-entrance",
+          "innTravelDestinations": [],
           "visited": false,
           "playerAtEntrance": false,
           "owner": {
@@ -159,6 +164,7 @@
             "y": 13
           },
           "entranceTerrainId": "demo.terrain.magic-shop-entrance",
+          "innTravelDestinations": [],
           "visited": false,
           "playerAtEntrance": false,
           "owner": {
@@ -182,6 +188,7 @@
             "y": 19
           },
           "entranceTerrainId": "demo.terrain.shroomery-entrance",
+          "innTravelDestinations": [],
           "visited": false,
           "playerAtEntrance": false,
           "owner": {
@@ -205,6 +212,7 @@
             "y": 19
           },
           "entranceTerrainId": "demo.terrain.temple-entrance",
+          "innTravelDestinations": [],
           "visited": false,
           "playerAtEntrance": false,
           "owner": {
@@ -228,6 +236,7 @@
             "y": 19
           },
           "entranceTerrainId": "demo.terrain.weaponsmith-entrance",
+          "innTravelDestinations": [],
           "visited": false,
           "playerAtEntrance": false,
           "owner": {
@@ -237,6 +246,31 @@
             "greedPercent": 110,
             "purchasePriceCap": 20000,
             "priceFactorPercent": 102
+          },
+          "stock": [],
+          "sellQuotes": []
+        },
+        {
+          "id": "demo.shop.outpost-white-horse",
+          "nameKey": "shop-demo-outpost-white-horse-name",
+          "descriptionKey": "shop-demo-outpost-white-horse-description",
+          "category": "general-store",
+          "entrancePosition": {
+            "x": 63,
+            "y": 13
+          },
+          "entranceTerrainId": "demo.terrain.inn-entrance",
+          "innStayCost": 20,
+          "innTravelDestinations": [],
+          "visited": false,
+          "playerAtEntrance": false,
+          "owner": {
+            "id": "demo.shop-owner.outpost-otik-the-good",
+            "nameKey": "shop-owner-demo-outpost-otik-the-good-name",
+            "raceId": "demo.race.rfb-human",
+            "greedPercent": 100,
+            "purchasePriceCap": 500,
+            "priceFactorPercent": 93
           },
           "stock": [],
           "sellQuotes": []
@@ -837,7 +871,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 169,
+      "nextItemInstanceSerial": 174,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -845,7 +879,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "b359bfcf6215fc720adb7a562fca39bdab9455870250b36dd9a9bf4ac5bf78c7"
+      "stateHash": "6f97d39daca317b2fb79a5ad4d226ae102d493848b0206838fab00a43b493ea2"
     },
     "events": [
       {

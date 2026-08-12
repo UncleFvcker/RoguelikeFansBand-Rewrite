@@ -1,5 +1,9 @@
 # Contract v110：设备自然恢复与主动充能
 
+> 历史合同。contract-v264 / Protocol 1.175 已删除本页的职业
+> `deviceRechargeProfile`、`RechargeItem` 与 Artificer 界面入口；设备自然恢复、
+> `UseItemForRecharge` 和供物品/卷轴复用的底层充能事务仍然有效。
+
 ## 范围
 
 Contract v110 在动态 staff/wand/rod 实例之上建立确定性的自然能量恢复，并增加由职业资源或另一件设备供能的主动充能事务。协议为 `1.110`，demo 内容包为 `1.101.0`，state hash Schema 为 `49`，active baseline 包含 379 条 exact fixtures、零 waiver。内置内容 hash 为 `f2bf96ea4a980a6a9914ca80dff5527a5e04b2e36d25aa668b118e6562c9cad9`。

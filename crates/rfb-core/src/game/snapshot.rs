@@ -3,6 +3,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::{
+    effect::STATUS_ANTI_MAGIC,
     resistance::DamageType,
     save::position_from_content,
     state::ItemLocation,
@@ -16,10 +17,10 @@ use rfb_protocol::{
     AbilityDetectSpecDto, AbilityDto, AbilityLearningDto, AbilitySourceDto, AbilitySummonSpecDto,
     AbilityTerrainTransformSpecDto, AttackProfileDto, AttributeSetDto, AttributeValueDto,
     BodySlotDto, CampaignStateDto, CellDto, CellVisualDto, ContentVisualDto, DamageDiceDto,
-    DeviceRechargeDto, EntityDto, EntityFactionDto, EquipmentItemDto, GameSnapshot,
-    InventoryItemDto, ItemDto, ItemKnowledgeDto, MapScaleDto, MeleeRoutineDto, MutationRatingDto,
-    PROTOCOL_VERSION, PlayerBuildDto, PlayerDto, PlayerMutationDto, PlayerProgressDto, Position,
-    ResistanceDto, ResourcePoolDto, SkillProgressDto, SummonDto, TaskServiceDto, TaskStatusDto,
+    EntityDto, EntityFactionDto, EquipmentItemDto, GameSnapshot, InventoryItemDto, ItemDto,
+    ItemKnowledgeDto, MapScaleDto, MeleeRoutineDto, MutationRatingDto, PROTOCOL_VERSION,
+    PlayerBuildDto, PlayerDto, PlayerMutationDto, PlayerProgressDto, Position, ResistanceDto,
+    ResourcePoolDto, SkillProgressDto, SummonDto, TaskServiceDto, TaskStatusDto,
     TerrainInteractionDto, TerrainInteractionKindDto, VisibilityState, WildernessLocationDto,
     WildernessLocationKindDto,
 };
@@ -88,6 +89,7 @@ impl Game {
             .expect("player actor definition must remain available");
         PlayerDto {
             id: self.player.id.clone(),
+            name: self.player_name.clone(),
             kind_id: self.player.kind_id.clone(),
             position: self.player.position,
             hp: self.player.hp,
@@ -136,12 +138,6 @@ impl Game {
             build: self.player_build_dto(),
             resources: self.player_resource_dtos(),
             mutations: self.player_mutation_dtos(),
-            device_recharge: self
-                .device_recharge_profile()
-                .map(|profile| DeviceRechargeDto {
-                    resource_id: profile.resource_id.clone(),
-                    power: profile.power,
-                }),
             ability_learning: self.player_ability_learning_dto(),
             abilities: self.player_ability_dtos(),
             summon_command: self.summon_command.clone(),
@@ -214,9 +210,6 @@ impl Game {
                     maximum: pool.maximum,
                     wait_recovery_amount: definition.wait_recovery_amount,
                     rest_recovery_amount: definition.rest_recovery_amount,
-                    melee_hit_gain_amount: definition.melee_hit_gain_amount,
-                    melee_kill_gain_amount: definition.melee_kill_gain_amount,
-                    turn_decay_amount: definition.turn_decay_amount,
                 }
             })
             .collect()
@@ -234,11 +227,6 @@ impl Game {
                     .collect::<BTreeSet<_>>()
             })
             .unwrap_or_default();
-        let innate_ability_ids = self
-            .technique_profiles()
-            .iter()
-            .flat_map(|profile| profile.innate_ability_ids.iter().cloned())
-            .collect::<BTreeSet<_>>();
         let mutation_activations = self
             .content
             .mutations()
@@ -249,15 +237,12 @@ impl Game {
         book_ability_ids
             .iter()
             .cloned()
-            .chain(innate_ability_ids.iter().cloned())
             .chain(mutation_activations.keys().cloned())
             .collect::<BTreeSet<_>>()
             .into_iter()
             .filter_map(|ability_id| {
                 let ability = self.content.ability(&ability_id)?;
-                let source = if innate_ability_ids.contains(&ability_id) {
-                    AbilitySourceDto::Technique
-                } else if mutation_activations.contains_key(&ability_id) {
+                let source = if mutation_activations.contains_key(&ability_id) {
                     AbilitySourceDto::Mutation
                 } else {
                     AbilitySourceDto::Learned
@@ -267,7 +252,7 @@ impl Game {
                         casting_profile.expect("book ability requires casting profile"),
                         ability,
                     ),
-                    AbilitySourceDto::Technique | AbilitySourceDto::Mutation => ability.clone(),
+                    AbilitySourceDto::Mutation => ability.clone(),
                 };
                 Self::apply_player_level_scaling(&mut effective_ability, self.progress.level);
                 if source == AbilitySourceDto::Learned
@@ -319,12 +304,7 @@ impl Game {
                         Some(player.resource_id.clone()),
                         player.resource_cost,
                         self.ability_effective_resource_cost(ability, progress),
-                        if source == AbilitySourceDto::Technique {
-                            let profile = self.technique_profile_for_ability(ability)?;
-                            self.technique_failure_percent(profile, ability)
-                        } else {
-                            self.ability_failure_percent(casting_profile?, ability)
-                        },
+                        self.ability_failure_percent(casting_profile?, ability),
                         progress,
                         self.ability_cooldown_remaining(ability),
                         player.cooldown.as_ref().map_or(0, |value| value.turns),
@@ -447,11 +427,12 @@ impl Game {
                             .is_some_and(|learning| learning.remaining_slots > 0),
                     can_forget: source == AbilitySourceDto::Learned && learned,
                     can_cast: match source {
-                        AbilitySourceDto::Technique | AbilitySourceDto::Mutation => {
+                        AbilitySourceDto::Mutation => {
                             level_available && resource_available && cooldown_remaining == 0
                         }
                         AbilitySourceDto::Learned => {
                             learned
+                                && !self.player_has_status_kind(STATUS_ANTI_MAGIC)
                                 && level_available
                                 && resource_available
                                 && cooldown_remaining == 0
@@ -1304,6 +1285,8 @@ impl Game {
                     entrance_position,
                     entrance_terrain_id: facility.entrance_terrain_id.clone(),
                     player_at_entrance,
+                    identify_item_cost: facility.identify_item_cost,
+                    legal_name_change_cost: facility.legal_name_change_cost,
                     tasks,
                 }
             })

@@ -525,3 +525,22 @@ contract-v261 / 包 1.252.0 为 Outpost 增加 `0` 蘑菇店类别、入口与�
 种物品、273 个能力、18 家商店；content hash 为
 `1b5be3640793a88c100c9f87f9bcb845f14fbfb421fb3104839ee8fd00097950`。协议升至
 1.172，State Hash Schema 保持 v86。
+
+contract-v262 / 包 1.253.0 给 `ShopDefinition` 增加可选 `innStayCost`，阿南巴保持
+25 金币，Outpost 白马旅店使用原版 20 金币。白马旅店作为 General Store 库存出售
+现有食物饮料，并在同一入口叠加 Quest Giver，把盗贼巢穴任务迁回旅店。城镇验证只
+允许一个 Shop 与一个 Quest Giver 共享同一入口，且 terrain ID 必须一致；每个城镇
+最多一个可住宿旅店。当前包包含 19 家商店和 4 个 town facility，content hash 为
+`a432587ce358e01513372333270ebb60f85d2db5d57631559ee8a6e10793f24a`。协议升至
+1.173，State Hash Schema 保持 v86。
+
+contract-v263 / 包 1.254.0 给 `TownFacilityDefinition` 增加可选的
+`identifyItemCost` 与 `legalNameChangeCost`。伯爵府用既有 `prerequisiteTaskId` 串联
+害虫控制、下水道、鬼屋和皇家地下室；三个新增任务层继续使用一次性固定地图，不为
+城镇任务增加第二套生成或状态机。协议升至 1.174，State Hash Schema 升至 v87。
+
+contract-v264 / 包 1.255.0 只保留正式 Warrior class/build，删除原创构筑、半成品
+职业原型、节奏资源和两项原创技法。`ClassDefinition` 删除 `techniqueProfiles` 与
+`deviceRechargeProfile`；资源定义删除初始百分比、近战获得和逐回合衰减字段。Mana、
+四本 Death 法术书、设备自然恢复和物品充能效果继续作为独立的正式内容/通用机制保留。
+当前包为 1 class、1 build、1 resource；协议升至 1.175，State Hash Schema 保持 v87。

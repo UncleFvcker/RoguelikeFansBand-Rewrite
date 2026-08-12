@@ -58,6 +58,24 @@
     "id": {
       "type": "string"
     },
+    "identifyItemCost": {
+      "default": null,
+      "format": "uint32",
+      "minimum": 0,
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "legalNameChangeCost": {
+      "default": null,
+      "format": "uint32",
+      "minimum": 0,
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
     "nameKey": {
       "type": "string"
     },

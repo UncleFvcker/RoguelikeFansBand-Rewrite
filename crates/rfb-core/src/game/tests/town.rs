@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use super::*;
-use crate::game::tests::support::dispatch_next;
+use crate::game::tests::support::{dispatch_next, test_caster_game};
 
 const GENERAL_STORE_ID: &str = "demo.shop.outpost-general-store";
 const ARMOURY_ID: &str = "demo.shop.outpost-armoury";
@@ -12,9 +12,11 @@ const MAGIC_SHOP_ID: &str = "demo.shop.outpost-magic-shop";
 const BLACK_MARKET_ID: &str = "demo.shop.outpost-black-market";
 const BOOKSTORE_ID: &str = "demo.shop.outpost-bookstore";
 const SHROOMERY_ID: &str = "demo.shop.outpost-shroomery";
+const WHITE_HORSE_INN_ID: &str = "demo.shop.outpost-white-horse";
 const HOME_ID: &str = "demo.town-facility.outpost-home";
 const ANAMBAR_HOME_ID: &str = "demo.town-facility.anambar-home";
 const ANAMBAR_INN_ID: &str = "demo.shop.anambar-inn";
+const OUTPOST_COUNT_ID: &str = "demo.town-facility.outpost-count";
 
 fn projected_shop<'a>(shops: &'a [ShopDto], shop_id: &str) -> &'a ShopDto {
     shops
@@ -33,7 +35,7 @@ fn store_game(seed: u64) -> Game {
 
 fn anambar_inn_game(seed: u64) -> Game {
     let mut game =
-        Game::new_with_build(seed, "demo.build.scholar").expect("Middle-earth game should start");
+        Game::new_with_build(seed, "demo.build.warrior").expect("Middle-earth game should start");
     dispatch_next(
         &mut game,
         GameCommand::EnterWorldMap {
@@ -46,6 +48,22 @@ fn anambar_inn_game(seed: u64) -> Game {
     game.player.position = Position { x: 45, y: 15 };
     game.mark_shop_visited_at_player().unwrap();
     assert!(projected_shop(&game.snapshot().shops, ANAMBAR_INN_ID).player_at_entrance);
+    game
+}
+
+fn white_horse_inn_game(seed: u64) -> Game {
+    let mut game =
+        Game::new_with_build(seed, "demo.build.warrior").expect("Middle-earth game should start");
+    game.player.position = Position { x: 63, y: 13 };
+    game.mark_shop_visited_at_player().unwrap();
+    assert!(projected_shop(&game.snapshot().shops, WHITE_HORSE_INN_ID).player_at_entrance);
+    game
+}
+
+fn outpost_count_game(seed: u64) -> Game {
+    let mut game =
+        Game::new_with_build(seed, "demo.build.warrior").expect("Middle-earth game should start");
+    game.player.position = Position { x: 26, y: 13 };
     game
 }
 
@@ -67,7 +85,7 @@ fn outpost_shops_are_projected_from_authoritative_content() {
     assert_eq!(town.id, "demo.town.outpost");
     assert_eq!(town.floor_id, "demo.floor.surface");
     assert!(town.visited);
-    assert_eq!(snapshot.shops.len(), 9);
+    assert_eq!(snapshot.shops.len(), 10);
     assert_eq!(snapshot.homes.len(), 1);
     assert_eq!(snapshot.homes[0].id, HOME_ID);
     assert_eq!(
@@ -106,6 +124,10 @@ fn outpost_shops_are_projected_from_authoritative_content() {
     let shroomery = projected_shop(&snapshot.shops, SHROOMERY_ID);
     assert_eq!(shroomery.entrance_position, Position { x: 61, y: 19 });
     assert_eq!(shroomery.category, ShopCategoryDto::Shroomery);
+    let white_horse = projected_shop(&snapshot.shops, WHITE_HORSE_INN_ID);
+    assert_eq!(white_horse.entrance_position, Position { x: 63, y: 13 });
+    assert_eq!(white_horse.inn_stay_cost, Some(20));
+    assert!(white_horse.inn_travel_destinations.is_empty());
     assert!(
         snapshot
             .shops
@@ -303,6 +325,176 @@ fn anambar_inn_rejections_do_not_charge_or_advance_time() {
     assert_eq!(update.events[0].args["reason"], "insufficient-gold");
     assert_eq!(poor.gold, 24);
     assert_eq!(poor.world_tick, tick);
+}
+
+#[test]
+fn white_horse_inn_uses_its_content_price() {
+    let mut game = white_horse_inn_game(42);
+    game.gold = 20;
+    let service = game
+        .snapshot()
+        .task_services
+        .into_iter()
+        .find(|service| service.id == "demo.town-facility.outpost-white-horse")
+        .expect("White Horse should expose its task service at the inn entrance");
+    assert!(service.player_at_entrance);
+    assert_eq!(service.tasks[0].task_id, "demo.task.thieves-hideout");
+
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::StayAtInn {
+            facility_id: WHITE_HORSE_INN_ID.to_owned(),
+        },
+    );
+
+    let event = update
+        .events
+        .iter()
+        .find(|event| event.kind == "inn.stay")
+        .expect("White Horse lodging should succeed");
+    assert_eq!(event.args["cost"], "20");
+    assert_eq!(event.args["balance"], "0");
+    assert_eq!(game.gold, 0);
+}
+
+#[test]
+fn inn_travel_requires_a_visited_town_and_arrives_at_its_inn() {
+    let mut unvisited = white_horse_inn_game(42);
+    unvisited.gold = 500;
+    let rejected = dispatch_next(
+        &mut unvisited,
+        GameCommand::TravelFromInn {
+            facility_id: WHITE_HORSE_INN_ID.to_owned(),
+            destination_town_id: "demo.town.anambar".to_owned(),
+        },
+    );
+    assert_eq!(rejected.events[0].kind, "inn.travel-unavailable");
+    assert_eq!(rejected.events[0].args["reason"], "town-unvisited");
+    assert_eq!(unvisited.gold, 500);
+    assert_eq!(
+        unvisited.wilderness_position,
+        Some(Position { x: 28, y: 52 })
+    );
+
+    let mut game = anambar_inn_game(42);
+    game.gold = 1_000;
+    let to_outpost = dispatch_next(
+        &mut game,
+        GameCommand::TravelFromInn {
+            facility_id: ANAMBAR_INN_ID.to_owned(),
+            destination_town_id: "demo.town.outpost".to_owned(),
+        },
+    );
+    assert_eq!(to_outpost.events[0].kind, "inn.travel");
+    assert_eq!(to_outpost.events[0].args["cost"], "500");
+    assert_eq!(game.gold, 500);
+    assert_eq!(game.wilderness_position, Some(Position { x: 28, y: 52 }));
+    assert_eq!(game.player.position, Position { x: 63, y: 13 });
+    let white_horse = projected_shop(&game.snapshot().shops, WHITE_HORSE_INN_ID).clone();
+    assert!(white_horse.player_at_entrance);
+    assert_eq!(
+        white_horse.inn_travel_destinations[0].town_id,
+        "demo.town.anambar"
+    );
+
+    let to_anambar = dispatch_next(
+        &mut game,
+        GameCommand::TravelFromInn {
+            facility_id: WHITE_HORSE_INN_ID.to_owned(),
+            destination_town_id: "demo.town.anambar".to_owned(),
+        },
+    );
+    assert_eq!(to_anambar.events[0].kind, "inn.travel");
+    assert_eq!(game.gold, 0);
+    assert_eq!(game.wilderness_position, Some(Position { x: 26, y: 39 }));
+    assert_eq!(game.player.position, Position { x: 45, y: 15 });
+    assert!(projected_shop(&game.snapshot().shops, ANAMBAR_INN_ID).player_at_entrance);
+}
+
+#[test]
+fn outpost_count_identifies_carried_items_for_fifty_gold() {
+    let mut game = outpost_count_game(42);
+    game.gold = 100;
+    let item_id = game
+        .items
+        .iter()
+        .find(|item| item.location == ItemLocation::Inventory)
+        .expect("warrior should start with a carried item")
+        .id
+        .clone();
+    game.item_property_knowledge.remove(&item_id);
+
+    let before_tick = game.world_tick;
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::IdentifyAtFacility {
+            facility_id: OUTPOST_COUNT_ID.to_owned(),
+            item_id: item_id.clone(),
+        },
+    );
+    assert_eq!(game.gold, 50);
+    assert_eq!(game.world_tick, before_tick);
+    assert!(game.item_property_knowledge[&item_id].appraised);
+    assert!(update.events.iter().any(|event| {
+        event.kind == "facility.identified"
+            && event.args.get("cost").is_some_and(|cost| cost == "50")
+    }));
+
+    let rejected = dispatch_next(
+        &mut game,
+        GameCommand::IdentifyAtFacility {
+            facility_id: OUTPOST_COUNT_ID.to_owned(),
+            item_id,
+        },
+    );
+    assert_eq!(game.gold, 50);
+    assert_eq!(rejected.events[0].kind, "facility.identify-unavailable");
+}
+
+#[test]
+fn outpost_count_legal_name_change_is_validated_saved_and_projected() {
+    let mut game = outpost_count_game(42);
+    game.gold = 20;
+    let service = game
+        .snapshot()
+        .task_services
+        .into_iter()
+        .find(|service| service.id == OUTPOST_COUNT_ID)
+        .expect("Count service should be projected at its entrance");
+    assert_eq!(service.identify_item_cost, Some(50));
+    assert_eq!(service.legal_name_change_cost, Some(10));
+
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::RenameAtFacility {
+            facility_id: OUTPOST_COUNT_ID.to_owned(),
+            name: "  Elessar  ".to_owned(),
+        },
+    );
+    assert_eq!(game.gold, 10);
+    assert_eq!(game.snapshot().player.name, "Elessar");
+    assert!(
+        update
+            .events
+            .iter()
+            .any(|event| event.kind == "facility.renamed")
+    );
+
+    let restored = Game::from_save(game.to_save()).expect("renamed player should round-trip");
+    assert_eq!(restored.snapshot().player.name, "Elessar");
+    assert_eq!(restored.gold, 10);
+
+    let mut invalid = outpost_count_game(43);
+    invalid.gold = 20;
+    let rejected = dispatch_next(
+        &mut invalid,
+        GameCommand::RenameAtFacility {
+            facility_id: OUTPOST_COUNT_ID.to_owned(),
+            name: "\n".to_owned(),
+        },
+    );
+    assert_eq!(invalid.gold, 20);
+    assert_eq!(rejected.events[0].kind, "facility.rename-unavailable");
 }
 
 #[test]
@@ -821,8 +1013,7 @@ fn temple_purchase_and_alchemist_visit_use_independent_shop_state() {
 
 #[test]
 fn bookstore_purchase_can_supply_an_original_spellbook_for_study() {
-    let mut game =
-        Game::new_with_build(42, "demo.build.scholar").expect("Warrens game should start");
+    let mut game = test_caster_game(42);
     game.gold = 10_000;
     game.items
         .retain(|item| item.location != ItemLocation::Inventory);
@@ -841,8 +1032,8 @@ fn bookstore_purchase_can_supply_an_original_spellbook_for_study() {
             .map(|item| (item.kind_id.as_str(), item.unit_price))
             .collect::<std::collections::BTreeMap<_, _>>(),
         std::collections::BTreeMap::from([
-            ("demo.item.stench-of-death", 129),
-            ("demo.item.sepulchral-ways", 1_290),
+            ("demo.item.stench-of-death", 100),
+            ("demo.item.sepulchral-ways", 1_000),
         ])
     );
     let book = shop
@@ -882,7 +1073,8 @@ fn bookstore_purchase_can_supply_an_original_spellbook_for_study() {
             .any(|ability| { ability.id == "demo.ability.death-detect-evil" && ability.learned })
     );
 
-    let restored = Game::from_save(game.to_save()).expect("bookstore trade should round-trip");
+    let restored = Game::from_save_with_content(game.to_save(), game.content.clone())
+        .expect("bookstore trade should round-trip");
     assert_eq!(restored.snapshot(), game.snapshot());
 }
 

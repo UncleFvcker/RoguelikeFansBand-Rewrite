@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
-use rfb_protocol::{
-    Direction, GameCommand, MapScaleDto, MonsterPackBehaviorDto, Position, TargetSelection,
-};
+use rfb_protocol::{Direction, GameCommand, MapScaleDto, MonsterPackBehaviorDto, Position};
 
 use super::*;
 
@@ -86,51 +84,6 @@ fn item_replay_survives_shop_save_reload() {
     let verification = verify(&replay, replay_initial).expect("sale replay should verify");
 
     assert_eq!(verification.commands_verified, 1);
-    assert_eq!(verification.final_state_hash, final_game.state_hash());
-}
-
-#[test]
-fn ability_replay_preserves_duelist_runtime_state() {
-    let mut payload = Game::new_with_build(42, "demo.build.duelist")
-        .expect("duelist game should start")
-        .to_save();
-    payload.entities.clear();
-    payload.carried_items.clear();
-    payload
-        .player
-        .resources
-        .iter_mut()
-        .find(|resource| resource.id == "demo.resource.tempo")
-        .expect("duelist should own tempo")
-        .current = 20;
-    let mut initial = Game::from_save(payload).expect("ability precondition should restore");
-    initial.debug_set_ability_casts_succeed(true);
-    let mut recorder = ReplayRecorder::new(initial.clone());
-    recorder
-        .dispatch(GameCommand::CastAbility {
-            ability_id: "demo.ability.surging-tempo".to_owned(),
-            target: TargetSelection::SelfTarget,
-        })
-        .expect("technique should execute");
-    let (final_game, replay) = recorder.finish();
-    let verification = verify(&replay, initial).expect("ability replay should verify");
-    let snapshot = final_game.snapshot();
-
-    assert!(
-        snapshot
-            .player
-            .statuses
-            .iter()
-            .any(|status| status.kind_id == "rfb.status.haste")
-    );
-    assert!(
-        snapshot
-            .player
-            .abilities
-            .iter()
-            .find(|ability| ability.id == "demo.ability.surging-tempo")
-            .is_some_and(|ability| ability.cast_count == 1)
-    );
     assert_eq!(verification.final_state_hash, final_game.state_hash());
 }
 

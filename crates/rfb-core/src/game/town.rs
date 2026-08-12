@@ -7,9 +7,9 @@ use rfb_content::{
     TownFacilityCategory, TownFacilityDefinition, WildernessLocationDefinition, WorldDefinition,
 };
 use rfb_protocol::{
-    HomeDto, HomeItemDto, HomeStateSaveDto, ItemEnchantmentsDto, ItemQualityDto, MapScaleDto,
-    Position, ShopCategoryDto, ShopDto, ShopOwnerDto, ShopSellQuoteDto, ShopStateSaveDto,
-    ShopStockItemDto, TownDto, TownStateSaveDto,
+    HomeDto, HomeItemDto, HomeStateSaveDto, InnTravelDestinationDto, ItemEnchantmentsDto,
+    ItemIdentifyResolutionDto, ItemQualityDto, MapScaleDto, Position, ShopCategoryDto, ShopDto,
+    ShopOwnerDto, ShopSellQuoteDto, ShopStateSaveDto, ShopStockItemDto, TownDto, TownStateSaveDto,
 };
 
 use crate::{
@@ -23,8 +23,10 @@ use crate::{
 
 use super::{
     Game, initial_item_curse, initial_item_runtime_state,
-    inventory::{item_instances_stack_compatible, item_properties_match},
-    wilderness,
+    inventory::{
+        ItemIdentificationRequest, item_instances_stack_compatible, item_properties_match,
+    },
+    normalize_player_name, wilderness,
 };
 use crate::save::{
     GENERATED_ITEM_ID_PREFIX, initial_item_fuel, inventory_item_from_dto, inventory_to_save,
@@ -37,8 +39,7 @@ const CHARISMA_PRICE_ADJUST_PERCENT: [u16; 38] = [
 
 pub(super) type TownAndShopStates = (BTreeMap<String, TownState>, BTreeMap<String, ShopState>);
 
-const ANAMBAR_INN_ID: &str = "demo.shop.anambar-inn";
-const ANAMBAR_INN_STAY_COST: u32 = 25;
+const INN_TRAVEL_COST: u32 = 500;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct InnStayOutcome {
@@ -47,6 +48,31 @@ pub(crate) struct InnStayOutcome {
     pub(crate) gold_balance: u32,
     pub(crate) elapsed_ticks: u32,
     pub(crate) world_tick: u32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct InnTravelOutcome {
+    pub(crate) facility_id: String,
+    pub(crate) destination_town_id: String,
+    pub(crate) cost: u32,
+    pub(crate) gold_balance: u32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct FacilityIdentifyOutcome {
+    pub(crate) facility_id: String,
+    pub(crate) cost: u32,
+    pub(crate) gold_balance: u32,
+    pub(crate) resolution: ItemIdentifyResolutionDto,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct FacilityRenameOutcome {
+    pub(crate) facility_id: String,
+    pub(crate) previous_name: String,
+    pub(crate) name: String,
+    pub(crate) cost: u32,
+    pub(crate) gold_balance: u32,
 }
 
 fn world_town_ids(world: &WorldDefinition) -> impl Iterator<Item = &str> {
@@ -89,6 +115,30 @@ fn world_town_at_position<'a>(
             WildernessLocationDefinition::Town { .. }
             | WildernessLocationDefinition::Dungeon { .. } => None,
         })
+}
+
+fn world_town_position(world: &WorldDefinition, town_id: &str) -> Option<Position> {
+    world
+        .wilderness
+        .as_ref()?
+        .locations
+        .iter()
+        .find_map(|location| match location {
+            WildernessLocationDefinition::Town {
+                position,
+                town_id: candidate,
+                ..
+            } if candidate == town_id => Some(position_from_content(*position)),
+            WildernessLocationDefinition::Town { .. }
+            | WildernessLocationDefinition::Dungeon { .. } => None,
+        })
+}
+
+fn town_inn<'a>(town: &TownDefinition, content: &'a ContentCatalog) -> Option<&'a ShopDefinition> {
+    town.shop_ids
+        .iter()
+        .filter_map(|shop_id| content.shop(shop_id))
+        .find(|shop| shop.inn_stay_cost.is_some())
 }
 
 fn home_facilities<'a>(
@@ -1018,14 +1068,115 @@ fn transfer_group_to_shop(
 }
 
 impl Game {
+    pub(super) fn town_facility_accessible(&self, facility_id: &str) -> bool {
+        let Some(facility) = self.content.town_facility(facility_id) else {
+            return false;
+        };
+        let Some(town) = self.current_town() else {
+            return false;
+        };
+        facility.town_id == town.id
+            && town.facility_ids.contains(&facility.id)
+            && self.town_local_to_active_position(
+                &town.id,
+                position_from_content(facility.entrance_position),
+            ) == Some(self.player.position)
+    }
+
+    pub(super) fn identify_at_facility(
+        &mut self,
+        facility_id: &str,
+        item_id: &str,
+    ) -> Result<FacilityIdentifyOutcome, &'static str> {
+        let Some(facility) = self.content.town_facility(facility_id) else {
+            return Err("unknown-facility");
+        };
+        let Some(cost) = facility.identify_item_cost else {
+            return Err("service-unavailable");
+        };
+        if !self.town_facility_accessible(facility_id) {
+            return Err("facility-unreachable");
+        }
+        let Some(item) = self.items.iter().find(|item| {
+            item.id == item_id
+                && item.quantity > 0
+                && matches!(
+                    item.location,
+                    ItemLocation::Inventory | ItemLocation::Equipped { .. }
+                )
+        }) else {
+            return Err("item-unavailable");
+        };
+        if self
+            .item_property_knowledge
+            .get(&item.id)
+            .is_some_and(|knowledge| knowledge.appraised || knowledge.identified)
+        {
+            return Err("already-identified");
+        }
+        if self.gold < cost {
+            return Err("insufficient-gold");
+        }
+
+        let outcome = self.identify_item_instance(item_id, ItemIdentificationRequest::new(false));
+        debug_assert!(outcome.changed);
+        self.gold -= cost;
+        Ok(FacilityIdentifyOutcome {
+            facility_id: facility_id.to_owned(),
+            cost,
+            gold_balance: self.gold,
+            resolution: ItemIdentifyResolutionDto {
+                item_id: outcome.item_id,
+                item_kind_id: outcome.item_kind_id,
+                full: outcome.full,
+                changed: outcome.changed,
+            },
+        })
+    }
+
+    pub(super) fn rename_at_facility(
+        &mut self,
+        facility_id: &str,
+        name: &str,
+    ) -> Result<FacilityRenameOutcome, &'static str> {
+        let Some(facility) = self.content.town_facility(facility_id) else {
+            return Err("unknown-facility");
+        };
+        let Some(cost) = facility.legal_name_change_cost else {
+            return Err("service-unavailable");
+        };
+        if !self.town_facility_accessible(facility_id) {
+            return Err("facility-unreachable");
+        }
+        let Some(name) = normalize_player_name(name) else {
+            return Err("invalid-name");
+        };
+        if name == self.player_name {
+            return Err("unchanged-name");
+        }
+        if self.gold < cost {
+            return Err("insufficient-gold");
+        }
+
+        let previous_name = std::mem::replace(&mut self.player_name, name.clone());
+        self.gold -= cost;
+        Ok(FacilityRenameOutcome {
+            facility_id: facility_id.to_owned(),
+            previous_name,
+            name,
+            cost,
+            gold_balance: self.gold,
+        })
+    }
+
     pub(super) fn stay_at_inn(
         &mut self,
         facility_id: &str,
     ) -> Result<InnStayOutcome, &'static str> {
-        if facility_id != ANAMBAR_INN_ID {
-            return Err("unknown-inn");
-        }
         let Some(inn) = self.content.shop(facility_id).cloned() else {
+            return Err("unknown-inn");
+        };
+        let Some(cost) = inn.inn_stay_cost else {
             return Err("unknown-inn");
         };
         if !shop_accessible(self, &inn) {
@@ -1036,11 +1187,11 @@ impl Game {
         {
             return Err("needs-healer");
         }
-        if self.gold < ANAMBAR_INN_STAY_COST {
+        if self.gold < cost {
             return Err("insufficient-gold");
         }
 
-        self.gold -= ANAMBAR_INN_STAY_COST;
+        self.gold -= cost;
         let before = self.world_tick;
         let half_day = wilderness::WILDERNESS_DAY_TICKS / 2;
         let remaining = half_day - before % half_day;
@@ -1071,10 +1222,108 @@ impl Game {
 
         Ok(InnStayOutcome {
             facility_id: facility_id.to_owned(),
-            cost: ANAMBAR_INN_STAY_COST,
+            cost,
             gold_balance: self.gold,
             elapsed_ticks: self.world_tick - before,
             world_tick: self.world_tick,
+        })
+    }
+
+    pub(super) fn inn_travel_unavailable_reason(
+        &self,
+        facility_id: &str,
+        destination_town_id: &str,
+    ) -> Option<&'static str> {
+        let Some(inn) = self.content.shop(facility_id) else {
+            return Some("unknown-inn");
+        };
+        if inn.inn_stay_cost.is_none() {
+            return Some("unknown-inn");
+        }
+        if !shop_accessible(self, inn) {
+            return Some("inn-unreachable");
+        }
+        if inn.town_id == destination_town_id {
+            return Some("already-here");
+        }
+        let Some(world) = self.content.world(&self.world_id) else {
+            return Some("town-unvisited");
+        };
+        let Some(destination) = self.content.town(destination_town_id) else {
+            return Some("town-unvisited");
+        };
+        if world_town_position(world, destination_town_id).is_none()
+            || !self
+                .town_states
+                .get(destination_town_id)
+                .is_some_and(|state| state.visited)
+            || town_inn(destination, &self.content).is_none()
+        {
+            return Some("town-unvisited");
+        }
+        (self.gold < INN_TRAVEL_COST).then_some("insufficient-gold")
+    }
+
+    pub(super) fn travel_from_inn(
+        &mut self,
+        facility_id: &str,
+        destination_town_id: &str,
+    ) -> Result<InnTravelOutcome, CoreError> {
+        debug_assert!(
+            self.inn_travel_unavailable_reason(facility_id, destination_town_id)
+                .is_none()
+        );
+        let world = self
+            .content
+            .world(&self.world_id)
+            .expect("active world must remain available");
+        let destination_position = world_town_position(world, destination_town_id)
+            .expect("validated inn destination must remain available");
+        let destination_town = self
+            .content
+            .town(destination_town_id)
+            .expect("validated inn destination town must remain available");
+        let destination_inn = town_inn(destination_town, &self.content)
+            .expect("validated inn destination must retain an inn");
+        let destination_inn_position = position_from_content(destination_inn.entrance_position);
+
+        let player_id = self.player.id.clone();
+        let riding_actor_id = self.riding_actor_id.as_deref();
+        let (mut followers, retained): (Vec<_>, Vec<_>) = std::mem::take(&mut self.entities)
+            .into_iter()
+            .partition(|actor| {
+                actor.controller_id.as_deref() == Some(player_id.as_str())
+                    && Some(actor.id.as_str()) != riding_actor_id
+            });
+        self.entities = retained;
+
+        self.store_visible_town_states();
+        self.wilderness_position = Some(destination_position);
+        self.wilderness_view_offset = Position::default();
+        let arrival = self
+            .town_local_to_wilderness_view_position(destination_town_id, destination_inn_position)
+            .ok_or(CoreError::InvalidSave(
+                "inn travel destination is unavailable",
+            ))?;
+        self.activate_wilderness_position(Some(arrival), false)?;
+        self.mark_current_town_visited();
+        self.mark_shop_visited_at_player()?;
+        for follower in &mut followers {
+            follower.position = self.player.position;
+        }
+        self.entities.extend(followers);
+        self.entities.sort_by(|left, right| left.id.cmp(&right.id));
+        if self.summon_command.guard_position.is_some() {
+            self.summon_command.guard_position = Some(self.player.position);
+        }
+        self.world_travel_destination = None;
+        self.gold -= INN_TRAVEL_COST;
+
+        Ok(InnTravelOutcome {
+            facility_id: facility_id.to_owned(),
+            destination_town_id: destination_town_id.to_owned(),
+            cost: INN_TRAVEL_COST,
+            gold_balance: self.gold,
         })
     }
 
@@ -1579,6 +1828,29 @@ impl Game {
                     )
                     .expect("current town shop must retain an active position");
                 let player_at_entrance = self.player.position == entrance_position;
+                let inn_travel_destinations = if player_at_entrance && shop.inn_stay_cost.is_some()
+                {
+                    self.content
+                        .world(&self.world_id)
+                        .into_iter()
+                        .flat_map(world_town_ids)
+                        .filter(|town_id| *town_id != town.id)
+                        .filter(|town_id| {
+                            self.town_states
+                                .get(*town_id)
+                                .is_some_and(|state| state.visited)
+                        })
+                        .filter_map(|town_id| self.content.town(town_id))
+                        .filter(|destination| town_inn(destination, &self.content).is_some())
+                        .map(|destination| InnTravelDestinationDto {
+                            town_id: destination.id.clone(),
+                            town_name_key: destination.name_key.clone(),
+                            cost: INN_TRAVEL_COST,
+                        })
+                        .collect()
+                } else {
+                    Vec::new()
+                };
                 let factor = shop_price_factor(self, shop);
                 let state = self.shop_states.get(&shop.id);
                 let mut stock = if player_at_entrance {
@@ -1665,6 +1937,8 @@ impl Game {
                     category: category_dto(shop.category),
                     entrance_position,
                     entrance_terrain_id: shop.entrance_terrain_id.clone(),
+                    inn_stay_cost: shop.inn_stay_cost,
+                    inn_travel_destinations,
                     visited: self
                         .shop_states
                         .get(&shop.id)

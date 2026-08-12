@@ -3149,8 +3149,7 @@ impl Game {
         request: ResourceRestorationRequest<'_>,
         events: &mut Vec<DomainEvent>,
     ) -> bool {
-        let outcome =
-            apply_resource_restoration(&mut self.resources, &mut self.resources_touched, request);
+        let outcome = apply_resource_restoration(&mut self.resources, request);
         if outcome.recovered > 0 {
             self.mark_item_aware(source_kind_id);
         }
@@ -3551,7 +3550,6 @@ impl Game {
             drained
         });
         if drained > 0 {
-            self.resources_touched.insert(resource_id.to_owned());
             self.mark_item_aware(source_kind_id);
         }
         events.push(DomainEvent::ItemResourceDrained {

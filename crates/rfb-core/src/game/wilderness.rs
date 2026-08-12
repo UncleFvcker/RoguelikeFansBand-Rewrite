@@ -1009,7 +1009,7 @@ impl Game {
         Ok(interesting)
     }
 
-    fn activate_wilderness_position(
+    pub(super) fn activate_wilderness_position(
         &mut self,
         arrival: Option<Position>,
         ambush: bool,

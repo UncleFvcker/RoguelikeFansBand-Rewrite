@@ -29,7 +29,7 @@
       "revision": 1,
       "turn": 1,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 147,
+      "rngDrawCounter": 152,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -49,6 +49,7 @@
             "y": 13
           },
           "entranceTerrainId": "demo.terrain.alchemist-entrance",
+          "innTravelDestinations": [],
           "visited": false,
           "playerAtEntrance": false,
           "owner": {
@@ -72,6 +73,7 @@
             "y": 19
           },
           "entranceTerrainId": "demo.terrain.armoury-entrance",
+          "innTravelDestinations": [],
           "visited": false,
           "playerAtEntrance": false,
           "owner": {
@@ -95,6 +97,7 @@
             "y": 19
           },
           "entranceTerrainId": "demo.terrain.black-market-entrance",
+          "innTravelDestinations": [],
           "visited": false,
           "playerAtEntrance": false,
           "owner": {
@@ -118,6 +121,7 @@
             "y": 13
           },
           "entranceTerrainId": "demo.terrain.bookstore-entrance",
+          "innTravelDestinations": [],
           "visited": false,
           "playerAtEntrance": false,
           "owner": {
@@ -141,6 +145,7 @@
             "y": 13
           },
           "entranceTerrainId": "demo.terrain.general-store-entrance",
+          "innTravelDestinations": [],
           "visited": false,
           "playerAtEntrance": false,
           "owner": {
@@ -164,6 +169,7 @@
             "y": 13
           },
           "entranceTerrainId": "demo.terrain.magic-shop-entrance",
+          "innTravelDestinations": [],
           "visited": false,
           "playerAtEntrance": false,
           "owner": {
@@ -187,6 +193,7 @@
             "y": 19
           },
           "entranceTerrainId": "demo.terrain.shroomery-entrance",
+          "innTravelDestinations": [],
           "visited": false,
           "playerAtEntrance": false,
           "owner": {
@@ -210,6 +217,7 @@
             "y": 19
           },
           "entranceTerrainId": "demo.terrain.temple-entrance",
+          "innTravelDestinations": [],
           "visited": false,
           "playerAtEntrance": false,
           "owner": {
@@ -233,6 +241,7 @@
             "y": 19
           },
           "entranceTerrainId": "demo.terrain.weaponsmith-entrance",
+          "innTravelDestinations": [],
           "visited": false,
           "playerAtEntrance": false,
           "owner": {
@@ -242,6 +251,31 @@
             "greedPercent": 110,
             "purchasePriceCap": 20000,
             "priceFactorPercent": 102
+          },
+          "stock": [],
+          "sellQuotes": []
+        },
+        {
+          "id": "demo.shop.outpost-white-horse",
+          "nameKey": "shop-demo-outpost-white-horse-name",
+          "descriptionKey": "shop-demo-outpost-white-horse-description",
+          "category": "general-store",
+          "entrancePosition": {
+            "x": 63,
+            "y": 13
+          },
+          "entranceTerrainId": "demo.terrain.inn-entrance",
+          "innStayCost": 20,
+          "innTravelDestinations": [],
+          "visited": false,
+          "playerAtEntrance": false,
+          "owner": {
+            "id": "demo.shop-owner.outpost-otik-the-good",
+            "nameKey": "shop-owner-demo-outpost-otik-the-good-name",
+            "raceId": "demo.race.rfb-human",
+            "greedPercent": 100,
+            "purchasePriceCap": 500,
+            "priceFactorPercent": 93
           },
           "stock": [],
           "sellQuotes": []
@@ -261,7 +295,7 @@
           "playerAtEntrance": true,
           "storedItems": [
             {
-              "id": "generated.item.169",
+              "id": "generated.item.174",
               "kindId": "demo.item.ration-of-food",
               "displayNameKey": "item-demo-ration-of-food-name",
               "quantity": 1,
@@ -848,7 +882,7 @@
           "identified": true
         },
         {
-          "itemId": "generated.item.169",
+          "itemId": "generated.item.174",
           "discovered": true
         },
         {
@@ -886,7 +920,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 170,
+      "nextItemInstanceSerial": 175,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -894,7 +928,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "4a36605090c6a3566d1e62ecbfd5b3d55fa8f6e4d9437499c6fc97538453f2a8"
+      "stateHash": "bc9e963779531d631f3d5979b1b696db1aec34fa781cb18aab0bc66700b949bc"
     },
     "events": [
       {
@@ -902,7 +936,7 @@
         "messageKey": "home-deposit-success",
         "args": {
           "facility": "demo.town-facility.outpost-home",
-          "item": "generated.item.169",
+          "item": "generated.item.174",
           "quantity": "1",
           "target": "demo.item.ration-of-food"
         }

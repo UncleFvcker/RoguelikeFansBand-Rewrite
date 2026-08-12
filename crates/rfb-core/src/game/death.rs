@@ -72,6 +72,7 @@ impl Game {
                 MeleeBlowEffectDefinition::Disease { .. }
                 | MeleeBlowEffectDefinition::DrainAttributes { .. }
                 | MeleeBlowEffectDefinition::DrainResource { .. }
+                | MeleeBlowEffectDefinition::DrainCharges { .. }
                 | MeleeBlowEffectDefinition::DrainExperience { .. }
                 | MeleeBlowEffectDefinition::Unlife { .. }
                 | MeleeBlowEffectDefinition::Bleeding { .. }

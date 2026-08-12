@@ -16,6 +16,7 @@ pub const STATUS_BLEEDING: &str = "rfb.status.bleeding";
 pub const STATUS_STUN: &str = "rfb.status.stun";
 pub const STATUS_FEAR: &str = "rfb.status.fear";
 pub const STATUS_CONFUSION: &str = "rfb.status.confusion";
+pub const STATUS_ANTI_MAGIC: &str = "rfb.status.anti-magic";
 pub const STATUS_BLINDNESS: &str = "rfb.status.blindness";
 pub const STATUS_PARALYSIS: &str = "rfb.status.paralysis";
 pub const STATUS_SLEEP: &str = "rfb.status.sleep";

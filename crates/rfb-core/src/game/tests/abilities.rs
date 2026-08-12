@@ -3,6 +3,43 @@ use super::support::*;
 use super::*;
 
 #[test]
+fn anti_magic_status_blocks_learned_spells_without_spending_resources() {
+    let mut game = prepare_death_caster(7, 40, "demo.ability.death-berserk");
+    game.player
+        .statuses
+        .push(monster_combat::melee_status(STATUS_ANTI_MAGIC, 5, "test.anti-magic").status);
+    let mana_before = game.resources["demo.resource.mana"].current;
+    let draws_before = game.rng_draw_counter();
+    let mut events = Vec::new();
+
+    game.resolve_player_ability(
+        "demo.ability.death-berserk",
+        TargetSelection::SelfTarget,
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("anti-magic rejection should resolve cleanly");
+
+    assert_eq!(game.resources["demo.resource.mana"].current, mana_before);
+    assert_eq!(game.rng_draw_counter(), draws_before);
+    assert!(matches!(
+        events.as_slice(),
+        [DomainEvent::AbilityCastUnavailable { reason, .. }] if reason == "anti-magic"
+    ));
+    assert!(
+        !game
+            .snapshot()
+            .player
+            .abilities
+            .iter()
+            .find(|ability| ability.id == "demo.ability.death-berserk")
+            .expect("learned spell should remain projected")
+            .can_cast
+    );
+}
+
+#[test]
 fn damage_bonus_adds_flat_amount_to_monster_cast_damage() {
     let mut game = Game::new(0);
     clear_monsters(&mut game);
@@ -224,8 +261,7 @@ fn spawned_entities_get_content_declared_resistances_stamped() {
 
 #[test]
 fn death_abilities_materialize_player_level_scaling_in_projection() {
-    let mut game =
-        Game::new_with_build(0, "demo.build.scholar").expect("scholar build should create");
+    let mut game = test_caster_game(0);
     game.progress.level = 11;
     let abilities = game
         .snapshot()
@@ -291,8 +327,7 @@ fn death_abilities_materialize_player_level_scaling_in_projection() {
 
 #[test]
 fn death_second_book_materializes_original_mage_scaling_and_beam_profile() {
-    let mut game =
-        Game::new_with_build(0, "demo.build.scholar").expect("scholar build should create");
+    let mut game = test_caster_game(0);
     game.progress.level = 30;
     let abilities = game
         .snapshot()
@@ -380,8 +415,7 @@ fn death_second_book_materializes_original_mage_scaling_and_beam_profile() {
 #[test]
 fn death_third_book_materializes_original_scaling_and_prorated_cap() {
     let projected = |level| {
-        let mut game =
-            Game::new_with_build(0, "demo.build.scholar").expect("scholar build should create");
+        let mut game = test_caster_game(0);
         game.progress.level = level;
         game.snapshot()
             .player
@@ -529,20 +563,17 @@ fn berserk_and_battle_frenzy_roll_independent_durations_and_round_trip() {
     left.progress.level = 1;
     left.progress.max_level = 1;
     left.learned_abilities.remove("demo.ability.death-berserk");
-    let level_one_mana = Game::new_with_build(0, "demo.build.scholar")
-        .expect("level-one scholar should create")
-        .resources["demo.resource.mana"]
-        .maximum;
+    let level_one_mana = test_caster_game(0).resources["demo.resource.mana"].maximum;
     left.resources
         .get_mut("demo.resource.mana")
-        .expect("scholar should keep Mana")
+        .expect("test caster should keep Mana")
         .current = level_one_mana;
     left.resources
         .get_mut("demo.resource.mana")
-        .expect("scholar should keep Mana")
+        .expect("test caster should keep Mana")
         .maximum = level_one_mana;
     assert_eq!(
-        Game::from_save(left.to_save())
+        Game::from_save_with_content(left.to_save(), left.content.clone())
             .expect("Berserk should reload")
             .state_hash(),
         left.state_hash()
@@ -938,10 +969,11 @@ fn genocide_erases_without_rewards_or_corpses_and_uniques_resist() {
         .expect("demo final guardian");
     unique.glyph = "y".to_owned();
     unique.tags.push("unique".to_owned());
+    enable_test_caster(&mut artifact.content);
     let catalog = Arc::new(rfb_content::ContentCatalog::from_artifact(artifact));
     let mut game =
-        Game::from_content_with_build(19, catalog, DEFAULT_WORLD_ID, "demo.build.scholar")
-            .expect("custom scholar build should create");
+        Game::from_content_with_build(19, catalog, DEFAULT_WORLD_ID, "demo.build.warrior")
+            .expect("custom test caster should create");
     clear_monsters(&mut game);
     for (id, kind_id, x) in [
         ("test.actor.normal", "demo.actor.gloom-weaver", 4),
@@ -1388,14 +1420,12 @@ fn temporary_status_resistances_apply_expire_and_round_trip() {
 fn magic_affinity_and_strong_mind_gate_existing_dispel_and_resource_drain_effects() {
     let seed = (0..100)
         .find(|seed| {
-            let game = Game::new_with_build(*seed, "demo.build.scholar")
-                .expect("scholar build should create");
+            let game = test_caster_game(*seed);
             let mut rng = game.rng.clone();
             rng.bounded(100) < 77
         })
         .expect("a deterministic affinity resistance seed should exist");
-    let mut game =
-        Game::new_with_build(seed, "demo.build.scholar").expect("scholar build should create");
+    let mut game = test_caster_game(seed);
     clear_monsters(&mut game);
     game.resolve_item_speed("demo.item.swiftstep-tonic", 0, 1, 10, &mut Vec::new());
     assert!(game.player_has_status_kind(STATUS_HASTE));
@@ -1432,7 +1462,7 @@ fn magic_affinity_and_strong_mind_gate_existing_dispel_and_resource_drain_effect
         .clone();
     let resource_id = game
         .casting_profile()
-        .expect("scholar should have mana")
+        .expect("test caster should have mana")
         .resource_id
         .clone();
     let resource_before = game.resources[&resource_id].current;
@@ -1457,42 +1487,12 @@ fn magic_affinity_and_strong_mind_gate_existing_dispel_and_resource_drain_effect
 }
 
 #[test]
-fn legacy_caster_save_restores_full_resources_without_rng_drift() {
-    let canonical =
-        Game::new_with_build(0, "demo.build.scholar").expect("scholar build should create");
-    let mut legacy = canonical.to_save();
-    legacy.player.resources.clear();
-    legacy.player.learned_ability_ids.clear();
-    legacy.player.ability_progress.clear();
-    let draw_counter = legacy.rng.draw_counter;
-
-    let migrated = Game::from_save(legacy).expect("legacy caster save should migrate");
-    let snapshot = migrated.snapshot();
-    assert_eq!(migrated.rng_draw_counter(), draw_counter);
-    assert_eq!(snapshot.player.resources[0].current, 21);
-    assert_eq!(snapshot.player.resources[0].maximum, 21);
-    assert!(
-        snapshot
-            .player
-            .abilities
-            .iter()
-            .all(|ability| !ability.learned)
-    );
-    assert_eq!(migrated.state_hash(), canonical.state_hash());
-
-    let restored = Game::from_save(migrated.to_save())
-        .expect("migrated caster state should survive another round trip");
-    assert_eq!(restored.state_hash(), migrated.state_hash());
-}
-
-#[test]
 fn waiting_and_resting_recover_mana_until_the_pool_is_full() {
-    let mut game =
-        Game::new_with_build(0, "demo.build.scholar").expect("scholar build should create");
+    let mut game = test_caster_game(0);
     clear_monsters(&mut game);
     game.resources
         .get_mut("demo.resource.mana")
-        .expect("scholar mana pool should exist")
+        .expect("test caster mana pool should exist")
         .current = 10;
     let initial_draws = game.rng_draw_counter();
 
@@ -1509,16 +1509,24 @@ fn waiting_and_resting_recover_mana_until_the_pool_is_full() {
             )
     }));
 
+    let maximum = game.resources["demo.resource.mana"].maximum;
+    let rest_recovery = game
+        .content
+        .resource("demo.resource.mana")
+        .expect("Mana definition should remain available")
+        .rest_recovery_amount;
+    let expected_rest_turns = u16::try_from(maximum.saturating_sub(11).div_ceil(rest_recovery))
+        .expect("test rest duration should fit u16");
     let rested = dispatch_next(&mut game, GameCommand::Rest { turns: 100 });
     let resolution = rest_resolution(&rested);
-    assert_eq!(resolution.completed_turns, 4);
+    assert_eq!(resolution.completed_turns, expected_rest_turns);
     assert_eq!(resolution.stop_reason, RestStopReasonDto::FullResources);
     assert_eq!(resolution.resource_recoveries.len(), 1);
     assert_eq!(resolution.resource_recoveries[0].before, 11);
-    assert_eq!(resolution.resource_recoveries[0].after, 21);
-    assert_eq!(game.resources["demo.resource.mana"].current, 21);
-    assert_eq!(rested.turn, 5);
-    assert_eq!(rested.world_tick, 50);
+    assert_eq!(resolution.resource_recoveries[0].after, maximum);
+    assert_eq!(game.resources["demo.resource.mana"].current, maximum);
+    assert_eq!(rested.turn, 1 + u32::from(expected_rest_turns));
+    assert_eq!(rested.world_tick, 10 * (1 + u32::from(expected_rest_turns)));
     assert_eq!(game.rng_draw_counter(), initial_draws);
 
     let world_tick = game.world_tick;
@@ -1533,7 +1541,8 @@ fn waiting_and_resting_recover_mana_until_the_pool_is_full() {
     assert_eq!(game.world_tick, world_tick);
     assert_eq!(game.rng_draw_counter(), initial_draws);
 
-    let restored = Game::from_save(game.to_save()).expect("recovered mana should reload");
+    let restored = Game::from_save_with_content(game.to_save(), game.content.clone())
+        .expect("recovered mana should reload");
     assert_eq!(restored.state_hash(), game.state_hash());
 }
 
@@ -1609,6 +1618,7 @@ fn mutation_ability_catalog(
         minimum_failure_percent: None,
         ability_id: MUTATION_CONTRACT_ABILITY_ID.to_owned(),
     });
+    enable_test_caster(&mut artifact.content);
     Arc::new(rfb_content::ContentCatalog::from_artifact(
         rfb_content::encode_content(artifact.content)
             .expect("mutation ability contract content should remain valid"),
@@ -1704,16 +1714,16 @@ fn active_mutation_projects_without_learning_progress_or_persistent_cooldown() {
 #[test]
 fn mutation_cast_spills_sp_into_hp_and_keeps_rejections_atomic() {
     let catalog = mutation_ability_catalog(1, 7, 30);
-    let mut mana = mutation_ability_game(catalog.clone(), "demo.build.scholar");
+    let mut mana = mutation_ability_game(catalog.clone(), "test.build.caster");
     mana.debug_set_ability_casts_succeed(true);
     let resource_id = mana
         .casting_profile()
-        .expect("scholar should have a casting profile")
+        .expect("test caster should have a casting profile")
         .resource_id
         .clone();
     mana.resources
         .get_mut(&resource_id)
-        .expect("scholar should have an SP pool")
+        .expect("test caster should have an SP pool")
         .current = 10;
     let hp_before = mana.player.hp;
     let mut events = Vec::new();
@@ -1741,12 +1751,12 @@ fn mutation_cast_spills_sp_into_hp_and_keeps_rejections_atomic() {
             .contains_key(MUTATION_CONTRACT_ABILITY_ID)
     );
 
-    let mut spill = mutation_ability_game(catalog.clone(), "demo.build.scholar");
+    let mut spill = mutation_ability_game(catalog.clone(), "test.build.caster");
     spill.debug_set_ability_casts_succeed(true);
     spill
         .resources
         .get_mut(&resource_id)
-        .expect("scholar should have an SP pool")
+        .expect("test caster should have an SP pool")
         .current = 3;
     let hp_before = spill.player.hp;
     events.clear();
@@ -2026,8 +2036,7 @@ fn active_mutation_batches_project_scaled_costs_and_effects() {
 }
 
 fn active_source_mutation_game(seed: u64, suffix: &str, level: u16) -> Game {
-    let mut game =
-        Game::new_with_build(seed, "demo.build.scholar").expect("scholar build should create");
+    let mut game = test_caster_game(seed);
     clear_monsters(&mut game);
     game.progress.level = level;
     game.progress.max_level = level;
@@ -2037,7 +2046,7 @@ fn active_source_mutation_game(seed: u64, suffix: &str, level: u16) -> Game {
     let mana = game
         .resources
         .get_mut("demo.resource.mana")
-        .expect("scholar should have mana");
+        .expect("test caster should have mana");
     mana.current = mana.maximum;
     game
 }
@@ -2274,7 +2283,8 @@ fn mutation_grow_mold_and_sterility_persist_only_authoritative_state() {
         .expect("Sterility should resolve");
     assert!(sterile.reproduction_suppressed);
     sterile.player.hp = sterile.player.hp.min(sterile.effective_player_max_hp());
-    let restored = Game::from_save(sterile.to_save()).expect("sterility state should reload");
+    let restored = Game::from_save_with_content(sterile.to_save(), sterile.content.clone())
+        .expect("sterility state should reload");
     assert!(restored.reproduction_suppressed);
     assert_eq!(restored.state_hash(), sterile.state_hash());
 }
@@ -2407,7 +2417,8 @@ fn mutation_earthquake_panic_hit_and_polymorph_enforce_their_boundaries() {
                 [AbilityEffectResolutionDto::PolymorphSelf { .. }]
             )
     )));
-    let restored = Game::from_save(polymorph.to_save()).expect("polymorph state should reload");
+    let restored = Game::from_save_with_content(polymorph.to_save(), polymorph.content.clone())
+        .expect("polymorph state should reload");
     assert_eq!(restored.state_hash(), polymorph.state_hash());
 }
 
@@ -2666,173 +2677,6 @@ fn mutation_spit_acid_changes_from_bolt_to_area_at_level_twenty_five() {
         event,
         DomainEvent::AbilityAreaDamage { resolution, .. } if resolution.radius == 2
     )));
-}
-
-#[test]
-fn duelist_initializes_innate_techniques_and_empty_tempo_pool() {
-    let game = Game::new_with_build(0, "demo.build.duelist").expect("duelist build should create");
-    let baseline =
-        Game::new_with_build(0, "demo.build.vanguard").expect("vanguard build should create");
-    assert_eq!(game.rng_draw_counter(), baseline.rng_draw_counter());
-
-    let snapshot = game.snapshot();
-    assert_eq!(snapshot.player.resources.len(), 1);
-    let tempo = &snapshot.player.resources[0];
-    assert_eq!(tempo.id, "demo.resource.tempo");
-    assert_eq!(tempo.current, 0);
-    assert_eq!(tempo.maximum, game.resources["demo.resource.tempo"].maximum);
-    assert!(tempo.maximum > 8);
-    assert_eq!(tempo.wait_recovery_amount, 0);
-    assert_eq!(tempo.rest_recovery_amount, 0);
-    assert_eq!(tempo.melee_hit_gain_amount, 2);
-    assert_eq!(tempo.melee_kill_gain_amount, 3);
-    assert_eq!(tempo.turn_decay_amount, 1);
-
-    assert!(snapshot.player.ability_learning.is_none());
-    assert_eq!(snapshot.player.abilities.len(), 2);
-    for ability in &snapshot.player.abilities {
-        assert_eq!(ability.source, AbilitySourceDto::Technique);
-        assert!(!ability.learned);
-        assert!(!ability.can_study);
-        assert!(!ability.can_forget);
-        assert!(!ability.can_cast, "tempo starts empty");
-        assert_eq!(ability.resource_id.as_deref(), Some("demo.resource.tempo"));
-        assert!(ability.book_item_id.is_none());
-    }
-
-    let restored = Game::from_save(game.to_save()).expect("duelist save should reload");
-    assert_eq!(restored.state_hash(), game.state_hash());
-}
-
-#[test]
-fn duelist_projects_the_complete_crescent_cut_protocol_dto() {
-    let mut game =
-        Game::new_with_build(0, "demo.build.duelist").expect("duelist build should create");
-    game.entities.clear();
-    game.resources
-        .get_mut("demo.resource.tempo")
-        .expect("duelist should own tempo")
-        .current = 7;
-    game.ability_progress.insert(
-        "demo.ability.crescent-cut".to_owned(),
-        AbilityProgress {
-            proficiency: 128,
-            proficiency_cap: 1_600,
-            cast_count: 1,
-            fail_count: 0,
-            cooldown_remaining: 0,
-        },
-    );
-    dispatch_next(&mut game, GameCommand::Wait);
-
-    let snapshot = game.snapshot();
-    let ability = snapshot
-        .player
-        .abilities
-        .iter()
-        .find(|ability| ability.id == "demo.ability.crescent-cut")
-        .expect("duelist should project crescent cut");
-    assert_eq!(
-        serde_json::to_value(ability).expect("ability DTO should serialize"),
-        serde_json::json!({
-            "id": "demo.ability.crescent-cut",
-            "nameKey": "ability-demo-crescent-cut-name",
-            "descriptionKey": "ability-demo-crescent-cut-description",
-            "minimumLevel": 1,
-            "source": "technique",
-            "resourceId": "demo.resource.tempo",
-            "baseResourceCost": 4,
-            "resourceCost": 7,
-            "failurePercent": 2,
-            "proficiency": 128,
-            "proficiencyCap": 1600,
-            "proficiencyRank": "unskilled",
-            "castCount": 1,
-            "failCount": 0,
-            "cooldownRemaining": 0,
-            "cooldownTurns": 0,
-            "effects": [{
-                "type": "damage",
-                "damageDice": 3,
-                "damageSides": 4,
-                "damageBonus": 0,
-                "damageType": "physical"
-            }],
-            "targetSpec": {
-                "modes": ["direction"],
-                "range": 1,
-                "requiresLineOfEffect": true
-            },
-            "learned": false,
-            "canStudy": false,
-            "canForget": false,
-            "canCast": false
-        })
-    );
-}
-
-#[test]
-fn wait_and_rest_never_refill_tempo_and_rest_stops_immediately() {
-    let mut game =
-        Game::new_with_build(0, "demo.build.duelist").expect("duelist build should create");
-    clear_monsters(&mut game);
-    game.resources
-        .get_mut("demo.resource.tempo")
-        .expect("tempo pool should exist")
-        .current = 5;
-    let draws = game.rng_draw_counter();
-
-    let waited = dispatch_next(&mut game, GameCommand::Wait);
-    assert!(
-        waited
-            .events
-            .iter()
-            .all(|event| event.kind != "resource.recovered")
-    );
-    assert_eq!(game.resources["demo.resource.tempo"].current, 4);
-
-    let world_tick = game.world_tick;
-    let rested = dispatch_next(&mut game, GameCommand::Rest { turns: 50 });
-    let resolution = rest_resolution(&rested);
-    assert_eq!(resolution.completed_turns, 0);
-    assert_eq!(resolution.stop_reason, RestStopReasonDto::FullResources);
-    assert!(resolution.resource_recoveries.is_empty());
-    assert_eq!(game.world_tick, world_tick);
-    assert_eq!(game.resources["demo.resource.tempo"].current, 4);
-    assert_eq!(game.rng_draw_counter(), draws);
-}
-
-#[test]
-fn saves_without_technique_pools_migrate_to_initial_fill_without_rng() {
-    let mut payload = Game::new_with_build(0, "demo.build.duelist")
-        .expect("duelist build should create")
-        .to_save();
-    payload.player.resources.clear();
-    payload.player.ability_progress.clear();
-    let migrated = Game::from_save(payload).expect("legacy duelist save should reload");
-    assert_eq!(migrated.resources["demo.resource.tempo"].current, 0);
-    let baseline =
-        Game::new_with_build(0, "demo.build.duelist").expect("duelist build should create");
-    assert_eq!(migrated.rng_draw_counter(), baseline.rng_draw_counter());
-    assert_eq!(migrated.state_hash(), baseline.state_hash());
-
-    let mut unknown = Game::new_with_build(0, "demo.build.duelist")
-        .expect("duelist build should create")
-        .to_save();
-    unknown.player.resources[0].id = "demo.resource.missing".to_owned();
-    assert!(matches!(
-        Game::from_save(unknown),
-        Err(CoreError::InvalidSave("player resource ID is invalid"))
-    ));
-
-    let mut oversized = Game::new_with_build(0, "demo.build.duelist")
-        .expect("duelist build should create")
-        .to_save();
-    oversized.player.resources[0].maximum += 1;
-    assert!(matches!(
-        Game::from_save(oversized),
-        Err(CoreError::InvalidSave("player resource pool is invalid"))
-    ));
 }
 
 #[test]
@@ -3159,8 +3003,7 @@ fn monster_polymorph_reuses_mutation_and_actor_form_transactions() {
 #[test]
 fn death_fourth_book_materializes_original_level_curves() {
     let projected = |level| {
-        let mut game =
-            Game::new_with_build(0, "demo.build.scholar").expect("scholar build should create");
+        let mut game = test_caster_game(0);
         game.progress.level = level;
         game.snapshot()
             .player
@@ -3401,7 +3244,8 @@ fn vampiric_transformation_overlays_race_but_preserves_body_slots() {
         .find(|skill| skill.id == "demo.skill.melee")
         .expect("base melee skill should be projected");
     assert!(transformed_melee.base > base_melee.base);
-    let restored = Game::from_save(game.to_save()).expect("temporary race should reload");
+    let restored = Game::from_save_with_content(game.to_save(), game.content.clone())
+        .expect("temporary race should reload");
     assert_eq!(restored.snapshot(), game.snapshot());
     assert_eq!(restored.body_slots, body_slots);
 }

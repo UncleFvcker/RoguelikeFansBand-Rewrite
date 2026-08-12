@@ -649,8 +649,7 @@ fn new_life_is_one_seeded_transaction_with_locked_mutation_protection() {
     const ITEM_ID: &str = "test.item.new-life.1";
     const KIND_ID: &str = "demo.item.new-life-potion";
 
-    let mut game =
-        Game::new_with_build(705, "demo.build.scholar").expect("scholar build should create");
+    let mut game = test_caster_game(705);
     clear_monsters(&mut game);
     game.apply_unscaled_player_experience(experience_required_for_level(25), &mut Vec::new());
 
@@ -758,7 +757,8 @@ fn new_life_is_one_seeded_transaction_with_locked_mutation_protection() {
         rfb_protocol::ItemKnowledgeDto::Aware
     );
     assert!(!game.items.iter().any(|item| item.id == ITEM_ID));
-    let restored = Game::from_save(game.to_save()).expect("New Life result should round trip");
+    let restored = Game::from_save_with_content(game.to_save(), game.content.clone())
+        .expect("New Life result should round trip");
     assert_eq!(restored.state_hash(), game.state_hash());
 
     assert!(!previous_resources.is_empty());
@@ -856,27 +856,22 @@ fn unlocked_mutation_count_scales_natural_regeneration() {
 
 #[test]
 fn build_skill_growth_experience_multiplier_and_save_identity_are_deterministic() {
-    let mut vanguard =
-        Game::new_with_build(17, "demo.build.vanguard").expect("vanguard build should create");
-    vanguard.apply_player_experience(380, &mut Vec::new());
-    assert_eq!(vanguard.progress.level, 10);
+    let mut warrior =
+        Game::new_with_build(17, "demo.build.warrior").expect("Warrior build should create");
+    warrior.apply_player_experience(380, &mut Vec::new());
+    assert_eq!(warrior.progress.level, 10);
     assert_eq!(
-        vanguard
+        warrior
             .progress
             .skill("demo.skill.melee")
             .map(|skill| skill.current),
-        Some(105)
+        Some(100)
     );
 
-    let mut scholar =
-        Game::new_with_build(17, "demo.build.scholar").expect("scholar build should create");
-    scholar.apply_player_experience(100, &mut Vec::new());
-    assert_eq!(scholar.progress.experience, 156);
-
-    let restored = Game::from_save(vanguard.to_save()).expect("build save should reload");
-    assert_eq!(restored.build, vanguard.build);
-    assert_eq!(restored.progress.skills, vanguard.progress.skills);
-    assert_eq!(restored.snapshot(), vanguard.snapshot());
+    let restored = Game::from_save(warrior.to_save()).expect("build save should reload");
+    assert_eq!(restored.build, warrior.build);
+    assert_eq!(restored.progress.skills, warrior.progress.skills);
+    assert_eq!(restored.snapshot(), warrior.snapshot());
     assert!(matches!(
         Game::new_with_build(17, "demo.build.missing"),
         Err(CoreError::UnknownCharacterBuild(_))
@@ -885,15 +880,14 @@ fn build_skill_growth_experience_multiplier_and_save_identity_are_deterministic(
 
 #[test]
 fn attribute_increase_command_commits_growth_without_rng_or_world_progression() {
-    let mut game =
-        Game::new_with_build(96, "demo.build.scholar").expect("scholar build should create");
+    let mut game = test_caster_game(96);
     game.apply_player_experience(100, &mut Vec::new());
     assert!(game.progress.pending_attribute_increases > 0);
 
     let resource = game
         .resources
         .get_mut("demo.resource.mana")
-        .expect("scholar should have mana");
+        .expect("test caster should have mana");
     resource.current = resource.maximum / 3;
     let resource_before = *resource;
     let natural_before = game.progress.attributes.intelligence;
@@ -913,7 +907,7 @@ fn attribute_increase_command_commits_growth_without_rng_or_world_progression() 
     let resource_after = game
         .resources
         .get("demo.resource.mana")
-        .expect("scholar should retain mana");
+        .expect("test caster should retain mana");
     assert!(game.progress.attributes.intelligence > natural_before);
     assert_eq!(
         game.progress.pending_attribute_increases,
@@ -1050,12 +1044,11 @@ fn attribute_history_migrates_old_saves_and_rejects_inverted_values() {
 
 #[test]
 fn attribute_resource_refresh_scales_the_prechange_current_value_once() {
-    let mut game =
-        Game::new_with_build(96, "demo.build.scholar").expect("scholar build should create");
+    let mut game = test_caster_game(96);
     let before = *game
         .resources
         .get("demo.resource.mana")
-        .expect("scholar should have mana");
+        .expect("test caster should have mana");
     assert_eq!(before.current, before.maximum);
 
     assert!(game.resolve_item_drain_attribute(
@@ -1066,7 +1059,7 @@ fn attribute_resource_refresh_scales_the_prechange_current_value_once() {
     let drained = *game
         .resources
         .get("demo.resource.mana")
-        .expect("scholar should retain mana");
+        .expect("test caster should retain mana");
     assert!(drained.maximum < before.maximum);
     assert_eq!(drained.current, drained.maximum);
 
@@ -1078,7 +1071,7 @@ fn attribute_resource_refresh_scales_the_prechange_current_value_once() {
     let restored = game
         .resources
         .get("demo.resource.mana")
-        .expect("scholar should retain mana");
+        .expect("test caster should retain mana");
     assert_eq!(restored.maximum, before.maximum);
     assert_eq!(restored.current, before.current);
 }

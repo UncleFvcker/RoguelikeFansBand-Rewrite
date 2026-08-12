@@ -6884,6 +6884,7 @@ fn melee_effect_json(effect: &LegacyBlowEffect) -> Option<serde_json::Value> {
                 "amountSides": amount_sides.clamp(1, 10_000),
             })
         }
+        "DRAIN_CHARGES" => serde_json::json!({ "type": "drain-charges" }),
         "DRAIN_EXP" => {
             let (amount_dice, amount_sides) = effect.dice?;
             serde_json::json!({
@@ -7119,6 +7120,26 @@ fn map_misc_spell_token(
                 misc_ability(
                     "dispel",
                     serde_json::json!({"type": "remove-status", "statusKindId": "rfb.status.haste"}),
+                )
+            });
+            Some(id)
+        }
+        "ANTI_MAGIC" => {
+            let id = "rfb-legacy.ability.anti-magic".to_owned();
+            abilities.entry(id.clone()).or_insert_with(|| {
+                misc_ability(
+                    "anti-magic",
+                    serde_json::json!({
+                        "type": "apply-status",
+                        "statusKindId": "rfb.status.anti-magic",
+                        "intensity": 1,
+                        "durationTicks": 3,
+                        "durationDice": 1,
+                        "durationSides": 3,
+                        "stacking": "extend",
+                        "resistanceType": "curse",
+                        "power": level,
+                    }),
                 )
             });
             Some(id)
@@ -10252,33 +10273,18 @@ fn extract_ability_programs_and_player_bindings(
 
 fn imported_player_ability_ids(
     ability_book_files: &[(String, serde_json::Value)],
-    class_files: &[(String, serde_json::Value)],
 ) -> BTreeSet<String> {
-    let book_abilities = ability_book_files.iter().flat_map(|(_, book)| {
-        book.get("abilityIds")
-            .and_then(serde_json::Value::as_array)
-            .into_iter()
-            .flatten()
-            .filter_map(serde_json::Value::as_str)
-            .map(str::to_owned)
-    });
-    let innate_abilities = class_files.iter().flat_map(|(_, class)| {
-        class
-            .get("techniqueProfiles")
-            .and_then(serde_json::Value::as_array)
-            .into_iter()
-            .flatten()
-            .flat_map(|profile| {
-                profile
-                    .get("innateAbilityIds")
-                    .and_then(serde_json::Value::as_array)
-                    .into_iter()
-                    .flatten()
-                    .filter_map(serde_json::Value::as_str)
-                    .map(str::to_owned)
-            })
-    });
-    book_abilities.chain(innate_abilities).collect()
+    ability_book_files
+        .iter()
+        .flat_map(|(_, book)| {
+            book.get("abilityIds")
+                .and_then(serde_json::Value::as_array)
+                .into_iter()
+                .flatten()
+                .filter_map(serde_json::Value::as_str)
+                .map(str::to_owned)
+        })
+        .collect()
 }
 
 pub fn import_content(source: &Path, output: &Path) -> Result<PathBuf, LegacyImportError> {
@@ -10410,8 +10416,7 @@ pub fn import_content(source: &Path, output: &Path) -> Result<PathBuf, LegacyImp
     );
     let effect_program_files = extract_item_effect_programs(&mut outcome.item_files)
         .map_err(|error| std::io::Error::new(std::io::ErrorKind::InvalidData, error))?;
-    let player_ability_ids =
-        imported_player_ability_ids(&outcome.ability_book_files, &outcome.class_files);
+    let player_ability_ids = imported_player_ability_ids(&outcome.ability_book_files);
     let extracted_ability_sources = extract_ability_programs_and_player_bindings(
         &mut outcome.ability_files,
         &player_ability_ids,
@@ -16342,8 +16347,8 @@ F:CHR
 G:u:v
 I:110:5d5:20:10:10:10
 W:20:2:20:9:10:40
-B:HIT:HURT(1d4)
-S:1_IN_3 | TELE_OTHER | DRAIN_MANA | AMNESIA | DISPEL_MAGIC | DARKNESS | ANIM_DEAD
+B:HIT:HURT(1d4):DRAIN_CHARGES
+S:1_IN_3 | TELE_OTHER | DRAIN_MANA | AMNESIA | DISPEL_MAGIC | DARKNESS | ANIM_DEAD | ANTI_MAGIC
 ";
         let monsters = parse_r_info(WARDEN_R_INFO).expect("synthetic warden should parse");
         let outcome = convert_content(
@@ -16370,7 +16375,12 @@ S:1_IN_3 | TELE_OTHER | DRAIN_MANA | AMNESIA | DISPEL_MAGIC | DARKNESS | ANIM_DE
                 "rfb-legacy.ability.dispel",
                 "rfb-legacy.ability.darkness",
                 "rfb-legacy.ability.animate-dead",
+                "rfb-legacy.ability.anti-magic",
             ]
+        );
+        assert_eq!(
+            keeper["meleeRoutine"]["blows"][0]["effects"][1]["type"],
+            "drain-charges"
         );
         assert!(!outcome.report.unmapped_spells.contains_key("DARKNESS"));
         let drain = outcome

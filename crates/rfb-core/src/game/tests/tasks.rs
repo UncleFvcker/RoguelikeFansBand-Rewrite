@@ -370,12 +370,12 @@ fn accepting_thieves_hideout_opens_only_its_northeastern_entry() {
         game.terrain_at(entry),
         "demo.terrain.thieves-hideout-entry-available"
     );
-    game.player.position = Position { x: 26, y: 13 };
+    game.player.position = Position { x: 63, y: 13 };
     let before_draws = game.rng_draw_counter();
     dispatch_next(
         &mut game,
         GameCommand::AcceptTask {
-            facility_id: "demo.town-facility.outpost-count".to_owned(),
+            facility_id: "demo.town-facility.outpost-white-horse".to_owned(),
             task_id: "demo.task.thieves-hideout".to_owned(),
         },
     );
@@ -392,11 +392,11 @@ fn accepting_thieves_hideout_opens_only_its_northeastern_entry() {
 fn clearing_thieves_hideout_closes_the_floor_without_granting_the_reward() {
     let mut game =
         Game::new_with_build(43, "demo.build.warrior").expect("Warrens journey should create");
-    game.player.position = Position { x: 26, y: 13 };
+    game.player.position = Position { x: 63, y: 13 };
     dispatch_next(
         &mut game,
         GameCommand::AcceptTask {
-            facility_id: "demo.town-facility.outpost-count".to_owned(),
+            facility_id: "demo.town-facility.outpost-white-horse".to_owned(),
             task_id: "demo.task.thieves-hideout".to_owned(),
         },
     );
@@ -440,11 +440,11 @@ fn clearing_thieves_hideout_closes_the_floor_without_granting_the_reward() {
 fn leaving_thieves_hideout_uncleared_fails_and_closes_the_entry() {
     let mut game =
         Game::new_with_build(44, "demo.build.warrior").expect("Warrens journey should create");
-    game.player.position = Position { x: 26, y: 13 };
+    game.player.position = Position { x: 63, y: 13 };
     dispatch_next(
         &mut game,
         GameCommand::AcceptTask {
-            facility_id: "demo.town-facility.outpost-count".to_owned(),
+            facility_id: "demo.town-facility.outpost-white-horse".to_owned(),
             task_id: "demo.task.thieves-hideout".to_owned(),
         },
     );
@@ -464,10 +464,10 @@ fn leaving_thieves_hideout_uncleared_fails_and_closes_the_entry() {
 }
 
 #[test]
-fn count_grants_the_warrior_broad_sword_only_when_claimed() {
+fn white_horse_grants_the_warrior_broad_sword_only_when_claimed() {
     let mut game =
         Game::new_with_build(45, "demo.build.warrior").expect("Warrens journey should create");
-    game.player.position = Position { x: 26, y: 13 };
+    game.player.position = Position { x: 63, y: 13 };
     game.task_states.insert(
         "demo.task.thieves-hideout".to_owned(),
         TaskState {
@@ -482,7 +482,7 @@ fn count_grants_the_warrior_broad_sword_only_when_claimed() {
     dispatch_next(
         &mut game,
         GameCommand::ClaimTaskReward {
-            facility_id: "demo.town-facility.outpost-count".to_owned(),
+            facility_id: "demo.town-facility.outpost-white-horse".to_owned(),
             task_id: "demo.task.thieves-hideout".to_owned(),
         },
     );
@@ -768,6 +768,88 @@ fn count_grants_the_fur_cloak_only_when_pest_control_is_claimed() {
             && item.kind_id == "demo.item.fur-cloak"
             && item.location == ItemLocation::Inventory
     }));
+}
+
+#[test]
+fn count_follow_up_tasks_unlock_in_the_original_order() {
+    let mut game =
+        Game::new_with_build(56, "demo.build.warrior").expect("Warrens journey should create");
+    game.player.position = Position { x: 26, y: 13 };
+    let completed = |required| TaskState {
+        status: TaskStatusKindDto::Completed,
+        stage_index: 0,
+        current: required,
+        required,
+        active_floor_id: None,
+        retakes_used: 0,
+    };
+    let sequence = [
+        ("demo.task.thieves-hideout", "demo.task.pest-control", 1),
+        ("demo.task.pest-control", "demo.task.the-sewer", 8),
+        ("demo.task.the-sewer", "demo.task.haunted-house", 1),
+        ("demo.task.haunted-house", "demo.task.royal-crypt", 1),
+    ];
+
+    for (prerequisite, unlocked, required) in sequence {
+        game.task_states
+            .insert(prerequisite.to_owned(), completed(required));
+        let service = game
+            .snapshot()
+            .task_services
+            .into_iter()
+            .find(|service| service.id == "demo.town-facility.outpost-count")
+            .expect("Count should project its task service");
+        assert_eq!(
+            service
+                .tasks
+                .into_iter()
+                .find(|task| task.task_id == unlocked)
+                .expect("next Count task should be projected")
+                .status,
+            TaskStatusKindDto::Available
+        );
+    }
+}
+
+#[test]
+fn royal_crypt_places_five_archliches_on_its_level_seventy_fixed_floor() {
+    let mut game =
+        Game::new_with_build(57, "demo.build.warrior").expect("Warrens journey should create");
+    game.player.position = Position { x: 26, y: 13 };
+    game.task_states.insert(
+        "demo.task.haunted-house".to_owned(),
+        TaskState {
+            status: TaskStatusKindDto::Completed,
+            stage_index: 0,
+            current: 1,
+            required: 1,
+            active_floor_id: None,
+            retakes_used: 0,
+        },
+    );
+    dispatch_next(
+        &mut game,
+        GameCommand::AcceptTask {
+            facility_id: "demo.town-facility.outpost-count".to_owned(),
+            task_id: "demo.task.royal-crypt".to_owned(),
+        },
+    );
+    game.player.position = Position { x: 28, y: 9 };
+    dispatch_next(&mut game, GameCommand::TraverseStairs);
+
+    assert_eq!(game.current_floor_id, "demo.floor.outpost-royal-crypt");
+    assert_eq!(game.floor_depth(&game.current_floor_id), 70);
+    assert_eq!(
+        game.entities
+            .iter()
+            .filter(|actor| actor.kind_id == "demo.actor.archlich")
+            .count(),
+        5
+    );
+    assert_eq!(
+        game.task_states["demo.task.royal-crypt"].status,
+        TaskStatusKindDto::Active
+    );
 }
 
 #[test]

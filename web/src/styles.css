@@ -2649,6 +2649,20 @@ kbd {
   font-weight: 700;
 }
 
+.shop-inn-travel {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.shop-inn-travel[hidden] {
+  display: none;
+}
+
+.shop-inn-travel select {
+  min-width: 0;
+  padding: 0.55rem 0.65rem;
+}
+
 .shop-feedback {
   min-height: 2.25rem;
   margin: 0;

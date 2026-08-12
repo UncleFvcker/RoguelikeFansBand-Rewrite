@@ -1067,14 +1067,6 @@ impl Game {
             && item.charges.is_some_and(|charges| charges.current > 0)
     }
 
-    pub(super) fn recharge_inventory_item_from_resource(
-        &mut self,
-        target_item_id: &str,
-        request: InventoryItemRechargeRequest,
-    ) -> InventoryItemRechargeOutcome {
-        self.recharge_inventory_item_target(target_item_id, request, true)
-    }
-
     pub(super) fn recharge_inventory_item_from_device(
         &mut self,
         target_item_id: &str,
@@ -1130,7 +1122,6 @@ impl Game {
         let target = self.recharge_inventory_item_target(
             target_item_id,
             InventoryItemRechargeRequest::new(attempted, request.power),
-            false,
         );
         DeviceRechargeOutcome {
             source_kind_id,
@@ -1143,7 +1134,6 @@ impl Game {
         &mut self,
         target_item_id: &str,
         request: InventoryItemRechargeRequest,
-        deplete_on_failure: bool,
     ) -> InventoryItemRechargeOutcome {
         let target = self
             .items
@@ -1195,9 +1185,6 @@ impl Game {
             if charges.current == charges.maximum {
                 target.device_recovery_progress = 0;
             }
-        } else if deplete_on_failure {
-            charges.current = 0;
-            target.device_recovery_progress = 0;
         }
         InventoryItemRechargeOutcome {
             target_item_id: target_item_id.to_owned(),

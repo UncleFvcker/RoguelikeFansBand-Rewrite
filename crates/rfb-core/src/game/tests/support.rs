@@ -1,5 +1,102 @@
 // SPDX-License-Identifier: MPL-2.0
+use std::sync::OnceLock;
+
 use super::*;
+
+pub(super) fn enable_test_caster(content: &mut rfb_content::CompiledContentV1) {
+    let mut class = content
+        .classes
+        .iter()
+        .find(|class| class.id == "demo.class.warrior")
+        .expect("Warrior class should remain available")
+        .clone();
+    class.id = "test.class.caster".to_owned();
+    class.name_key = "test-class-caster-name".to_owned();
+    class.description_key = "test-class-caster-description".to_owned();
+    class.modifiers.intelligence = 3;
+    class.modifiers.wisdom = 0;
+    class.uses_spell_scrolls = true;
+    class.casting_profile = Some(rfb_content::CastingProfileDefinition {
+        resource_id: "demo.resource.mana".to_owned(),
+        casting_attribute: rfb_content::CastingAttribute::Intelligence,
+        base_capacity: 4,
+        capacity_per_level: 2,
+        capacity_per_attribute_index: 1,
+        base_learning_capacity: 2,
+        learning_capacity_per_level: 1,
+        learning_capacity_per_attribute_index: 0,
+        learning_capacity_cap: 16,
+        minimum_failure_percent: 5,
+        beam_chance_level_multiplier: 1,
+        beam_chance_level_divisor: 1,
+        beam_chance_bonus: 0,
+        ability_book_ids: vec![
+            "demo.ability-book.stench-of-death".to_owned(),
+            "demo.ability-book.sepulchral-ways".to_owned(),
+            "demo.ability-book.black-channels".to_owned(),
+            "demo.ability-book.necronomicon".to_owned(),
+        ],
+        ability_overrides: Vec::new(),
+    });
+    class.starting_items.extend([
+        rfb_content::StartingItemDefinition {
+            item_kind_id: "demo.item.stench-of-death".to_owned(),
+            quantity: 1,
+            equipped: false,
+        },
+        rfb_content::StartingItemDefinition {
+            item_kind_id: "demo.item.sepulchral-ways".to_owned(),
+            quantity: 1,
+            equipped: false,
+        },
+        rfb_content::StartingItemDefinition {
+            item_kind_id: "demo.item.black-channels".to_owned(),
+            quantity: 1,
+            equipped: false,
+        },
+        rfb_content::StartingItemDefinition {
+            item_kind_id: "demo.item.necronomicon".to_owned(),
+            quantity: 1,
+            equipped: false,
+        },
+    ]);
+    content.classes.push(class);
+    let mut build = content
+        .builds
+        .iter()
+        .find(|build| build.id == "demo.build.warrior")
+        .expect("Warrior build should remain available")
+        .clone();
+    build.id = "test.build.caster".to_owned();
+    build.name_key = "test-build-caster-name".to_owned();
+    build.description_key = "test-build-caster-description".to_owned();
+    build.class_id = "test.class.caster".to_owned();
+    build.first_realm_id = Some("death".to_owned());
+    build.second_realm_id = Some("healing".to_owned());
+    content.builds.push(build);
+}
+
+pub(crate) fn test_caster_game(seed: u64) -> Game {
+    static CONTENT: OnceLock<Arc<rfb_content::ContentCatalog>> = OnceLock::new();
+    let content = CONTENT
+        .get_or_init(|| {
+            let pack_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                .parent()
+                .and_then(std::path::Path::parent)
+                .expect("core crate should be inside the workspace")
+                .join("packs/rfb-demo-original");
+            let mut artifact =
+                rfb_content::compile_pack_dir(&pack_root).expect("demo pack should compile");
+            enable_test_caster(&mut artifact.content);
+            Arc::new(rfb_content::ContentCatalog::from_artifact(
+                rfb_content::encode_content(artifact.content)
+                    .expect("test caster content should remain valid"),
+            ))
+        })
+        .clone();
+    Game::from_content_with_build(seed, content, DEFAULT_WORLD_ID, "test.build.caster")
+        .expect("test caster should create")
+}
 
 pub(super) fn command(seq: u32, revision: u32, command: GameCommand) -> GameCommandEnvelope {
     GameCommandEnvelope {
@@ -90,13 +187,11 @@ pub(super) fn assert_invariant_error_without_mutation(
         other => panic!("expected an invariant error, got {other}"),
     }
     assert_eq!(game.to_save(), before.to_save());
-    assert_eq!(game.resources_touched, before.resources_touched);
     assert_eq!(game.last_visual_cells, before.last_visual_cells);
 }
 
 pub(super) fn prepare_death_caster(seed: u64, level: u16, ability_id: &str) -> Game {
-    let mut game =
-        Game::new_with_build(seed, "demo.build.scholar").expect("scholar build should create");
+    let mut game = test_caster_game(seed);
     clear_monsters(&mut game);
     game.progress.level = level;
     game.progress.max_level = level;
@@ -108,7 +203,7 @@ pub(super) fn prepare_death_caster(seed: u64, level: u16, ability_id: &str) -> G
     let mana = game
         .resources
         .get_mut("demo.resource.mana")
-        .expect("scholar should have Mana");
+        .expect("test caster should have Mana");
     mana.current = 1_000;
     mana.maximum = 1_000;
     game

@@ -5,10 +5,11 @@ use super::*;
 #[test]
 fn restorative_item_sequence_recovers_resource_then_removes_status() {
     const ITEM_ID: &str = "test.item.clarity-draught.1";
-    let mut game = skill_check_game(19, "demo.build.scholar");
+    let mut game = test_caster_game(19);
+    clear_monsters(&mut game);
     game.resources
         .get_mut("demo.resource.mana")
-        .expect("scholar should have mana")
+        .expect("test caster should have mana")
         .current = 0;
     game.player.statuses.push(StatusInstance {
         kind_id: STATUS_CONFUSION.to_owned(),
@@ -52,11 +53,12 @@ fn restorative_item_sequence_recovers_resource_then_removes_status() {
 #[test]
 fn full_resource_restoration_is_deterministic_and_round_trips() {
     const ITEM_ID: &str = "test.item.perfect-focus-elixir.1";
-    let mut game = skill_check_game(23, "demo.build.scholar");
+    let mut game = test_caster_game(23);
+    clear_monsters(&mut game);
     let mana = game
         .resources
         .get_mut("demo.resource.mana")
-        .expect("scholar should have mana");
+        .expect("test caster should have mana");
     mana.current = 1;
     let maximum = mana.maximum;
     game.player.statuses.push(StatusInstance {
@@ -96,17 +98,19 @@ fn full_resource_restoration_is_deterministic_and_round_trips() {
                     && resolution.recovered == maximum - 1
         )
     }));
-    let restored = Game::from_save(game.to_save()).expect("restored resource state should reload");
+    let restored = Game::from_save_with_content(game.to_save(), game.content.clone())
+        .expect("restored resource state should reload");
     assert_eq!(restored.snapshot(), game.snapshot());
 }
 
 #[test]
 fn successful_restoration_reveals_later_no_effect_events() {
     const ITEM_ID: &str = "test.item.perfect-focus-elixir.1";
-    let mut game = skill_check_game(27, "demo.build.scholar");
+    let mut game = test_caster_game(27);
+    clear_monsters(&mut game);
     game.resources
         .get_mut("demo.resource.mana")
-        .expect("scholar should have mana")
+        .expect("test caster should have mana")
         .current = 0;
     give_inventory_item(&mut game, ITEM_ID, "demo.item.perfect-focus-elixir");
 
@@ -132,7 +136,7 @@ fn successful_restoration_reveals_later_no_effect_events() {
 #[test]
 fn missing_player_resource_consumes_restorative_without_claiming_awareness() {
     const ITEM_ID: &str = "test.item.perfect-focus-elixir.1";
-    let mut game = skill_check_game(29, "demo.build.vanguard");
+    let mut game = skill_check_game(29, "demo.build.warrior");
     assert!(!game.resources.contains_key("demo.resource.mana"));
     give_inventory_item(&mut game, ITEM_ID, "demo.item.perfect-focus-elixir");
 
@@ -165,7 +169,7 @@ fn missing_player_resource_consumes_restorative_without_claiming_awareness() {
 #[test]
 fn identify_scroll_rejects_missing_and_self_targets_before_consumption() {
     const SCROLL_ID: &str = "test.item.invalid-identify-scroll.1";
-    let mut game = skill_check_game(41, "demo.build.scholar");
+    let mut game = skill_check_game(41, "demo.build.warrior");
     give_inventory_item(&mut game, SCROLL_ID, "demo.item.appraisal-scroll");
 
     for target_item_id in ["missing.item", SCROLL_ID] {
@@ -194,10 +198,10 @@ fn identify_scroll_rejects_missing_and_self_targets_before_consumption() {
 #[test]
 fn enchantment_artifact_and_ammunition_pile_gates_follow_original_order() {
     let artifact_seed = (0..1_000).find(|seed| {
-        let mut ordinary = skill_check_game(*seed, "demo.build.scholar");
+        let mut ordinary = skill_check_game(*seed, "demo.build.warrior");
         ordinary.rng = RfbRng::seeded(*seed);
         let ordinary = ordinary.resolve_item_enchantment_component(0, 1, 1, false, false);
-        let mut artifact = skill_check_game(*seed, "demo.build.scholar");
+        let mut artifact = skill_check_game(*seed, "demo.build.warrior");
         artifact.rng = RfbRng::seeded(*seed);
         let artifact = artifact.resolve_item_enchantment_component(0, 1, 1, false, true);
         ordinary.successes == 1 && artifact.successes == 0
@@ -205,10 +209,10 @@ fn enchantment_artifact_and_ammunition_pile_gates_follow_original_order() {
     assert_eq!(artifact_seed, Some(0));
 
     let ammunition_seed = (0..1_000).find(|seed| {
-        let mut ordinary = skill_check_game(*seed, "demo.build.scholar");
+        let mut ordinary = skill_check_game(*seed, "demo.build.warrior");
         ordinary.rng = RfbRng::seeded(*seed);
         let ordinary = ordinary.resolve_item_enchantment_component(0, 1, 20, false, false);
-        let mut ammunition = skill_check_game(*seed, "demo.build.scholar");
+        let mut ammunition = skill_check_game(*seed, "demo.build.warrior");
         ammunition.rng = RfbRng::seeded(*seed);
         let ammunition = ammunition.resolve_item_enchantment_component(0, 1, 20, true, false);
         ordinary.successes == 0 && ammunition.successes == 1
@@ -221,7 +225,7 @@ fn curse_scroll_lands_on_equipped_weapon_and_artifact_can_resist() {
     fn run(resisted: bool) -> (Game, GameUpdate, u64) {
         const SCROLL_ID: &str = "test.item.weapon-blight-scroll.1";
         const WEAPON_ID: &str = "test.item.relic-blade.1";
-        let mut game = skill_check_game(61, "demo.build.scholar");
+        let mut game = skill_check_game(61, "demo.build.warrior");
         for item in game
             .items
             .iter_mut()
@@ -299,7 +303,7 @@ fn curse_scroll_lands_on_equipped_weapon_and_artifact_can_resist() {
 #[test]
 fn curse_scroll_without_a_matching_equipped_item_consumes_without_rng_or_awareness() {
     const SCROLL_ID: &str = "test.item.weapon-blight-scroll.no-target";
-    let mut game = skill_check_game(67, "demo.build.scholar");
+    let mut game = skill_check_game(67, "demo.build.warrior");
     for item in game
         .items
         .iter_mut()
@@ -331,7 +335,7 @@ fn cleansing_scrolls_respect_heavy_and_permanent_curse_boundaries() {
     const NORMAL_ID: &str = "test.item.normal-curse";
     const HEAVY_ID: &str = "test.item.heavy-curse";
     const PERMANENT_ID: &str = "test.item.permanent-curse";
-    let mut game = skill_check_game(71, "demo.build.vanguard");
+    let mut game = skill_check_game(71, "demo.build.warrior");
     for item in game
         .items
         .iter_mut()
@@ -343,7 +347,7 @@ fn cleansing_scrolls_respect_heavy_and_permanent_curse_boundaries() {
         (
             NORMAL_ID,
             "demo.item.relic-blade",
-            "weapon",
+            "right-hand",
             ItemCurseSeverityDto::Normal,
         ),
         (
@@ -355,7 +359,7 @@ fn cleansing_scrolls_respect_heavy_and_permanent_curse_boundaries() {
         (
             PERMANENT_ID,
             "demo.item.sealed-amulet",
-            "amulet",
+            "neck",
             ItemCurseSeverityDto::Permanent,
         ),
     ] {
@@ -470,32 +474,31 @@ fn spell_scroll_increases_only_eligible_learning_capacity_without_rng() {
     const ITEM_ID: &str = "test.item.spell-scroll";
     const KIND_ID: &str = "demo.item.spell-scroll";
 
-    let mut scholar =
-        Game::new_with_build(17, "demo.build.scholar").expect("scholar build should create");
-    clear_monsters(&mut scholar);
-    give_inventory_item(&mut scholar, ITEM_ID, KIND_ID);
-    let capacity_before = scholar
+    let mut caster = test_caster_game(17);
+    clear_monsters(&mut caster);
+    give_inventory_item(&mut caster, ITEM_ID, KIND_ID);
+    let capacity_before = caster
         .snapshot()
         .player
         .ability_learning
-        .expect("scholar should expose learning capacity")
+        .expect("test caster should expose learning capacity")
         .capacity;
-    let draws_before = scholar.rng_draw_counter();
+    let draws_before = caster.rng_draw_counter();
     let update = dispatch_next(
-        &mut scholar,
+        &mut caster,
         GameCommand::UseItem {
             item_id: ITEM_ID.to_owned(),
             target: None,
         },
     );
-    assert_eq!(scholar.rng_draw_counter(), draws_before);
-    assert_eq!(scholar.bonus_spell_learning_capacity, 1);
+    assert_eq!(caster.rng_draw_counter(), draws_before);
+    assert_eq!(caster.bonus_spell_learning_capacity, 1);
     assert_eq!(
-        scholar
+        caster
             .snapshot()
             .player
             .ability_learning
-            .expect("scholar should retain learning capacity")
+            .expect("test caster should retain learning capacity")
             .capacity,
         capacity_before + 1
     );
@@ -506,31 +509,29 @@ fn spell_scroll_increases_only_eligible_learning_capacity_without_rng() {
             && event.args.get("before").map(String::as_str) == Some(capacity_before_arg.as_str())
             && event.args.get("after").map(String::as_str) == Some(capacity_after_arg.as_str())
     }));
-    assert_eq!(scholar.item_knowledge_dto(KIND_ID), ItemKnowledgeDto::Aware);
-    let restored = Game::from_save(scholar.to_save()).expect("spell bonus should round trip");
-    assert_eq!(restored.state_hash(), scholar.state_hash());
+    assert_eq!(caster.item_knowledge_dto(KIND_ID), ItemKnowledgeDto::Aware);
+    let restored = Game::from_save_with_content(caster.to_save(), caster.content.clone())
+        .expect("spell bonus should round trip");
+    assert_eq!(restored.state_hash(), caster.state_hash());
 
-    let mut vanguard =
-        Game::new_with_build(17, "demo.build.vanguard").expect("vanguard build should create");
-    clear_monsters(&mut vanguard);
-    give_inventory_item(&mut vanguard, ITEM_ID, KIND_ID);
-    let draws_before = vanguard.rng_draw_counter();
-    let tick_before = vanguard.world_tick;
+    let mut warrior =
+        Game::new_with_build(17, "demo.build.warrior").expect("Warrior build should create");
+    clear_monsters(&mut warrior);
+    give_inventory_item(&mut warrior, ITEM_ID, KIND_ID);
+    let draws_before = warrior.rng_draw_counter();
+    let tick_before = warrior.world_tick;
     let update = dispatch_next(
-        &mut vanguard,
+        &mut warrior,
         GameCommand::UseItem {
             item_id: ITEM_ID.to_owned(),
             target: None,
         },
     );
-    assert_eq!(vanguard.rng_draw_counter(), draws_before);
-    assert_eq!(vanguard.world_tick, tick_before + 10);
-    assert_eq!(vanguard.bonus_spell_learning_capacity, 0);
-    assert!(!vanguard.items.iter().any(|item| item.id == ITEM_ID));
-    assert_eq!(
-        vanguard.item_knowledge_dto(KIND_ID),
-        ItemKnowledgeDto::Aware
-    );
+    assert_eq!(warrior.rng_draw_counter(), draws_before);
+    assert_eq!(warrior.world_tick, tick_before + 10);
+    assert_eq!(warrior.bonus_spell_learning_capacity, 0);
+    assert!(!warrior.items.iter().any(|item| item.id == ITEM_ID));
+    assert_eq!(warrior.item_knowledge_dto(KIND_ID), ItemKnowledgeDto::Aware);
     assert!(
         update
             .events
@@ -538,7 +539,7 @@ fn spell_scroll_increases_only_eligible_learning_capacity_without_rng() {
             .any(|event| { event.kind == "item.use-spell-learning-capacity-no-effect" })
     );
 
-    let mut invalid = vanguard.to_save();
+    let mut invalid = warrior.to_save();
     invalid.player.bonus_spell_learning_capacity = 1;
     assert!(matches!(
         Game::from_save(invalid),
@@ -1016,7 +1017,7 @@ fn mortal_draught_life_loss_bypasses_incoming_damage_reduction_without_rng() {
 
 #[test]
 fn friendly_item_summons_are_permanent_controlled_and_round_trip() {
-    let mut game = skill_check_game(68, "demo.build.vanguard");
+    let mut game = skill_check_game(68, "demo.build.warrior");
     give_inventory_item(
         &mut game,
         "test.item.pet-summoning-scroll.1",
@@ -1090,7 +1091,7 @@ fn visible_actor_scrolls_consume_empty_results_without_rng_or_awareness() {
             "demo.item.banishment-scroll",
         ),
     ] {
-        let mut game = skill_check_game(seed, "demo.build.scholar");
+        let mut game = skill_check_game(seed, "demo.build.warrior");
         give_inventory_item(&mut game, item_id, kind_id);
         game.rng = RfbRng::seeded(seed);
         let mut events = Vec::new();
@@ -1117,7 +1118,7 @@ fn visible_actor_scrolls_consume_empty_results_without_rng_or_awareness() {
 fn mass_genocide_scroll_consumes_empty_result_with_awareness_and_zero_rng() {
     const ITEM_ID: &str = "test.item.severance-scroll.1";
     const KIND_ID: &str = "demo.item.severance-scroll";
-    let mut game = skill_check_game(75, "demo.build.scholar");
+    let mut game = skill_check_game(75, "demo.build.warrior");
     clear_monsters(&mut game);
     give_inventory_item(&mut game, ITEM_ID, KIND_ID);
     let hp_before = game.player.hp;
@@ -1152,7 +1153,7 @@ fn mass_genocide_scroll_consumes_empty_result_with_awareness_and_zero_rng() {
 fn genocide_scroll_rejects_invalid_glyphs_and_consumes_an_empty_selection_without_rng() {
     const ITEM_ID: &str = "test.item.glyph-severance-scroll.1";
     const KIND_ID: &str = "demo.item.glyph-severance-scroll";
-    let mut game = skill_check_game(79, "demo.build.scholar");
+    let mut game = skill_check_game(79, "demo.build.warrior");
     clear_monsters(&mut game);
     give_inventory_item(&mut game, ITEM_ID, KIND_ID);
     assert!(
@@ -1211,7 +1212,7 @@ fn genocide_scroll_rejects_invalid_glyphs_and_consumes_an_empty_selection_withou
 fn adjacent_terrain_creation_consumes_empty_result_as_tried_without_rng() {
     const ITEM_ID: &str = "test.item.stone-ring-scroll.1";
     const KIND_ID: &str = "demo.item.stone-ring-scroll";
-    let mut game = skill_check_game(76, "demo.build.scholar");
+    let mut game = skill_check_game(76, "demo.build.warrior");
     let player_index = game
         .index(game.player.position)
         .expect("player position should be in bounds");
@@ -1268,7 +1269,7 @@ fn adjacent_terrain_creation_consumes_empty_result_as_tried_without_rng() {
 
 #[test]
 fn p3_4_light_and_darkness_reuse_persisted_floor_glow() {
-    let mut game = skill_check_game(206, "demo.build.scholar");
+    let mut game = skill_check_game(206, "demo.build.warrior");
     game.glow.fill(false);
     give_inventory_item(&mut game, "test.item.light.1", "demo.item.light-scroll");
     let hash_before = game.state_hash();
@@ -1325,7 +1326,7 @@ fn p3_4_light_and_darkness_reuse_persisted_floor_glow() {
 
 #[test]
 fn p3_4_rune_requires_clean_floor_and_uses_original_break_threshold() {
-    let mut blocked = skill_check_game(207, "demo.build.scholar");
+    let mut blocked = skill_check_game(207, "demo.build.warrior");
     let blocked_position = blocked.player.position;
     replace_terrain(&mut blocked, blocked_position, "demo.terrain.floor");
     blocked.gold_piles.push(GoldPile {
@@ -1697,7 +1698,7 @@ fn p3_2_invulnerability_and_giant_strength_reuse_status_payloads() {
 #[test]
 fn p3_7_experience_potion_uses_unscaled_relative_gain_and_level_cap() {
     let mut game =
-        Game::new_with_build(701, "demo.build.scholar").expect("scholar build should create");
+        Game::new_with_build(701, "demo.build.warrior").expect("Warrior build should create");
     clear_monsters(&mut game);
     game.apply_unscaled_player_experience(100, &mut Vec::new());
     assert_eq!(game.progress.experience, 100);

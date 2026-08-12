@@ -407,6 +407,7 @@ fn valid_melee_effect(effect: &MeleeBlowEffectDefinition) -> bool {
                     || valid_dice(*damage_dice, *damage_sides))
         }
         MeleeBlowEffectDefinition::Blind { chance_percent }
+        | MeleeBlowEffectDefinition::DrainCharges { chance_percent }
         | MeleeBlowEffectDefinition::Paralysis { chance_percent }
         | MeleeBlowEffectDefinition::Slow { chance_percent }
         | MeleeBlowEffectDefinition::Terrify { chance_percent }

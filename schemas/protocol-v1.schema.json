@@ -3603,7 +3603,6 @@
       "type": "string",
       "enum": [
         "learned",
-        "technique",
         "mutation"
       ]
     },
@@ -4274,56 +4273,6 @@
         "water",
         "psi",
         "curse"
-      ]
-    },
-    "DeviceRechargeDto": {
-      "type": "object",
-      "properties": {
-        "power": {
-          "type": "integer",
-          "format": "uint16",
-          "maximum": 65535,
-          "minimum": 0
-        },
-        "resourceId": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "resourceId",
-        "power"
-      ]
-    },
-    "DeviceRechargeSourceDto": {
-      "oneOf": [
-        {
-          "type": "object",
-          "properties": {
-            "type": {
-              "type": "string",
-              "const": "resource"
-            }
-          },
-          "required": [
-            "type"
-          ]
-        },
-        {
-          "type": "object",
-          "properties": {
-            "itemId": {
-              "type": "string"
-            },
-            "type": {
-              "type": "string",
-              "const": "item"
-            }
-          },
-          "required": [
-            "type",
-            "itemId"
-          ]
-        }
       ]
     },
     "Direction": {
@@ -5427,6 +5376,46 @@
             "facilityId": {
               "type": "string"
             },
+            "itemId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "identify-at-facility"
+            }
+          },
+          "required": [
+            "type",
+            "facilityId",
+            "itemId"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "facilityId": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "rename-at-facility"
+            }
+          },
+          "required": [
+            "type",
+            "facilityId",
+            "name"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "facilityId": {
+              "type": "string"
+            },
             "type": {
               "type": "string",
               "const": "stay-at-inn"
@@ -5440,21 +5429,21 @@
         {
           "type": "object",
           "properties": {
-            "source": {
-              "$ref": "#/$defs/DeviceRechargeSourceDto"
+            "destinationTownId": {
+              "type": "string"
             },
-            "targetItemId": {
+            "facilityId": {
               "type": "string"
             },
             "type": {
               "type": "string",
-              "const": "recharge-item"
+              "const": "travel-from-inn"
             }
           },
           "required": [
             "type",
-            "targetItemId",
-            "source"
+            "facilityId",
+            "destinationTownId"
           ]
         },
         {
@@ -6025,22 +6014,6 @@
             "type": {
               "type": "string",
               "const": "resource-recovery"
-            }
-          },
-          "required": [
-            "type",
-            "resolution"
-          ]
-        },
-        {
-          "type": "object",
-          "properties": {
-            "resolution": {
-              "$ref": "#/$defs/ResourceGainResolutionDto"
-            },
-            "type": {
-              "type": "string",
-              "const": "resource-gain"
             }
           },
           "required": [
@@ -6743,6 +6716,27 @@
         "quantity",
         "maximumQuantity",
         "weightTenthsPound"
+      ]
+    },
+    "InnTravelDestinationDto": {
+      "type": "object",
+      "properties": {
+        "cost": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "townId": {
+          "type": "string"
+        },
+        "townNameKey": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "townId",
+        "townNameKey",
+        "cost"
       ]
     },
     "InventoryItemDto": {
@@ -8068,16 +8062,6 @@
           "format": "int32",
           "default": 0
         },
-        "deviceRecharge": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/DeviceRechargeDto"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
         "encumbranceSpeedPenalty": {
           "type": "integer",
           "format": "uint16",
@@ -8182,6 +8166,9 @@
             "$ref": "#/$defs/PlayerMutationDto"
           }
         },
+        "name": {
+          "type": "string"
+        },
         "nutrition": {
           "type": "integer",
           "format": "uint16",
@@ -8275,6 +8262,7 @@
       },
       "required": [
         "id",
+        "name",
         "kindId",
         "position",
         "hp",
@@ -8539,46 +8527,6 @@
         "immune"
       ]
     },
-    "ResourceGainResolutionDto": {
-      "type": "object",
-      "properties": {
-        "after": {
-          "type": "integer",
-          "format": "uint32",
-          "minimum": 0
-        },
-        "before": {
-          "type": "integer",
-          "format": "uint32",
-          "minimum": 0
-        },
-        "gained": {
-          "type": "integer",
-          "format": "uint32",
-          "minimum": 0
-        },
-        "resourceId": {
-          "type": "string"
-        },
-        "source": {
-          "$ref": "#/$defs/ResourceGainSourceDto"
-        }
-      },
-      "required": [
-        "resourceId",
-        "source",
-        "before",
-        "after",
-        "gained"
-      ]
-    },
-    "ResourceGainSourceDto": {
-      "type": "string",
-      "enum": [
-        "melee-hit",
-        "melee-kill"
-      ]
-    },
     "ResourcePoolDto": {
       "type": "object",
       "properties": {
@@ -8595,16 +8543,6 @@
           "format": "uint32",
           "minimum": 0
         },
-        "meleeHitGainAmount": {
-          "type": "integer",
-          "format": "uint32",
-          "minimum": 0
-        },
-        "meleeKillGainAmount": {
-          "type": "integer",
-          "format": "uint32",
-          "minimum": 0
-        },
         "nameKey": {
           "type": "string"
         },
@@ -8612,11 +8550,6 @@
           "type": "integer",
           "format": "uint32",
           "default": 0,
-          "minimum": 0
-        },
-        "turnDecayAmount": {
-          "type": "integer",
-          "format": "uint32",
           "minimum": 0
         },
         "waitRecoveryAmount": {
@@ -8737,6 +8670,21 @@
         },
         "id": {
           "type": "string"
+        },
+        "innStayCost": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
+        },
+        "innTravelDestinations": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/InnTravelDestinationDto"
+          }
         },
         "nameKey": {
           "type": "string"
@@ -9366,6 +9314,22 @@
         },
         "id": {
           "type": "string"
+        },
+        "identifyItemCost": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
+        },
+        "legalNameChangeCost": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
         },
         "nameKey": {
           "type": "string"

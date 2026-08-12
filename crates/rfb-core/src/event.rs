@@ -11,14 +11,16 @@ use rfb_protocol::{
     ItemCurseResolutionDto, ItemCurseSeverityDto, ItemEnchantmentResolutionDto,
     ItemIdentifyResolutionDto, ItemQualityDto, MonsterAbilityCastResolutionDto,
     MonsterAbilityDecisionResolutionDto, MonsterDisplacementResolutionDto, Position,
-    ProjectileTraceDto, ResourceGainResolutionDto, ResourceGainSourceDto,
-    ResourceRecoveryResolutionDto, RestResolutionDto, RestStopReasonDto, SummonCommandModeDto,
-    SummonCommandResolutionDto,
+    ProjectileTraceDto, ResourceRecoveryResolutionDto, RestResolutionDto, RestStopReasonDto,
+    SummonCommandModeDto, SummonCommandResolutionDto,
 };
 
 use crate::{
     effect::DamageOutcome,
-    game::town::{InnStayOutcome, ShopTransactionOutcome},
+    game::town::{
+        FacilityIdentifyOutcome, FacilityRenameOutcome, InnStayOutcome, InnTravelOutcome,
+        ShopTransactionOutcome,
+    },
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -230,9 +232,6 @@ pub(crate) enum DomainEvent {
     },
     ResourceRecovered {
         resolution: ResourceRecoveryResolutionDto,
-    },
-    ResourceGained {
-        resolution: ResourceGainResolutionDto,
     },
     MonsterBlinked {
         source_kind_id: String,
@@ -479,10 +478,6 @@ pub(crate) enum DomainEvent {
         current: u32,
         maximum: u32,
     },
-    DeviceRechargeUnavailable {
-        target_item_id: String,
-        reason: String,
-    },
     DeviceRechargeResolved {
         target_item_id: String,
         target_kind_id: String,
@@ -560,12 +555,35 @@ pub(crate) enum DomainEvent {
         item_id: String,
         reason: String,
     },
+    FacilityIdentifyUnavailable {
+        facility_id: String,
+        item_id: String,
+        reason: String,
+    },
+    FacilityItemIdentified {
+        outcome: FacilityIdentifyOutcome,
+    },
+    FacilityRenameUnavailable {
+        facility_id: String,
+        reason: String,
+    },
+    FacilityPlayerRenamed {
+        outcome: FacilityRenameOutcome,
+    },
     InnStayUnavailable {
         facility_id: String,
         reason: String,
     },
     InnStayCompleted {
         outcome: InnStayOutcome,
+    },
+    InnTravelUnavailable {
+        facility_id: String,
+        destination_town_id: String,
+        reason: String,
+    },
+    InnTravelCompleted {
+        outcome: InnTravelOutcome,
     },
     HomeItemDeposited {
         outcome: crate::game::town::HomeTransferOutcome,
@@ -1213,6 +1231,15 @@ pub(crate) enum DomainEvent {
         target_kind_id: String,
         amount: u16,
     },
+    MonsterChargesDrained {
+        source_kind_id: String,
+        target_kind_id: String,
+        amount: u32,
+    },
+    MonsterNutritionDrained {
+        source_kind_id: String,
+        amount: u16,
+    },
     MutationAuraHit {
         target_kind_id: String,
         damage: DamageOutcome,
@@ -1810,22 +1837,6 @@ impl DomainEvent {
                 [("source", source_kind_id), ("target", target_kind_id)],
                 GameEventOutcomeDto::MonsterDisplacement { resolution },
             ),
-            Self::ResourceGained { resolution } => dto_with_outcome(
-                "resource.gained",
-                "resource-gained",
-                [
-                    ("target", resolution.resource_id.clone()),
-                    ("amount", resolution.gained.to_string()),
-                    (
-                        "source",
-                        match resolution.source {
-                            ResourceGainSourceDto::MeleeHit => "melee-hit".to_owned(),
-                            ResourceGainSourceDto::MeleeKill => "melee-kill".to_owned(),
-                        },
-                    ),
-                ],
-                GameEventOutcomeDto::ResourceGain { resolution },
-            ),
             Self::RestCompleted { resolution } => dto_with_outcome(
                 "rest.completed",
                 "rest-completed",
@@ -2327,14 +2338,6 @@ impl DomainEvent {
                     ("maximum", maximum.to_string()),
                 ],
             ),
-            Self::DeviceRechargeUnavailable {
-                target_item_id,
-                reason,
-            } => dto(
-                "device.recharge-unavailable",
-                "device-recharge-unavailable",
-                [("targetItem", target_item_id), ("reason", reason)],
-            ),
             Self::DeviceRechargeResolved {
                 target_item_id,
                 target_kind_id,
@@ -2559,6 +2562,54 @@ impl DomainEvent {
                     ("reason", reason.clone()),
                 ],
             ),
+            Self::FacilityIdentifyUnavailable {
+                facility_id,
+                item_id,
+                reason,
+            } => dto(
+                "facility.identify-unavailable",
+                "facility-identify-unavailable",
+                [
+                    ("facility", facility_id.clone()),
+                    ("item", item_id.clone()),
+                    ("reason", reason.clone()),
+                ],
+            ),
+            Self::FacilityItemIdentified { outcome } => dto_with_outcome(
+                "facility.identified",
+                "facility-identify-completed",
+                [
+                    ("facility", outcome.facility_id.clone()),
+                    ("target", outcome.resolution.item_kind_id.clone()),
+                    ("cost", outcome.cost.to_string()),
+                    ("balance", outcome.gold_balance.to_string()),
+                ],
+                GameEventOutcomeDto::ItemIdentify {
+                    resolution: outcome.resolution.clone(),
+                },
+            ),
+            Self::FacilityRenameUnavailable {
+                facility_id,
+                reason,
+            } => dto(
+                "facility.rename-unavailable",
+                "facility-rename-unavailable",
+                [
+                    ("facility", facility_id.clone()),
+                    ("reason", reason.clone()),
+                ],
+            ),
+            Self::FacilityPlayerRenamed { outcome } => dto(
+                "facility.renamed",
+                "facility-rename-completed",
+                [
+                    ("facility", outcome.facility_id.clone()),
+                    ("previousName", outcome.previous_name.clone()),
+                    ("name", outcome.name.clone()),
+                    ("cost", outcome.cost.to_string()),
+                    ("balance", outcome.gold_balance.to_string()),
+                ],
+            ),
             Self::InnStayUnavailable {
                 facility_id,
                 reason,
@@ -2579,6 +2630,29 @@ impl DomainEvent {
                     ("balance", outcome.gold_balance.to_string()),
                     ("elapsedTicks", outcome.elapsed_ticks.to_string()),
                     ("worldTick", outcome.world_tick.to_string()),
+                ],
+            ),
+            Self::InnTravelUnavailable {
+                facility_id,
+                destination_town_id,
+                reason,
+            } => dto(
+                "inn.travel-unavailable",
+                "inn-travel-unavailable",
+                [
+                    ("facility", facility_id.clone()),
+                    ("destinationTown", destination_town_id.clone()),
+                    ("reason", reason.clone()),
+                ],
+            ),
+            Self::InnTravelCompleted { outcome } => dto(
+                "inn.travel",
+                "inn-travel-completed",
+                [
+                    ("facility", outcome.facility_id.clone()),
+                    ("destinationTown", outcome.destination_town_id.clone()),
+                    ("cost", outcome.cost.to_string()),
+                    ("balance", outcome.gold_balance.to_string()),
                 ],
             ),
             Self::HomeItemDeposited { outcome } => dto(
@@ -4543,6 +4617,27 @@ impl DomainEvent {
                     ("target", target_kind_id),
                     ("amount", amount.to_string()),
                 ],
+            ),
+            Self::MonsterChargesDrained {
+                source_kind_id,
+                target_kind_id,
+                amount,
+            } => dto(
+                "monster.charges-drained",
+                "monster-charges-drained",
+                [
+                    ("source", source_kind_id),
+                    ("target", target_kind_id),
+                    ("amount", amount.to_string()),
+                ],
+            ),
+            Self::MonsterNutritionDrained {
+                source_kind_id,
+                amount,
+            } => dto(
+                "monster.nutrition-drained",
+                "monster-nutrition-drained",
+                [("source", source_kind_id), ("amount", amount.to_string())],
             ),
             Self::MutationAuraHit {
                 target_kind_id,

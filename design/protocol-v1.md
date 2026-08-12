@@ -527,3 +527,19 @@ Hash Schema 保持 v85，save 容器保持 v1。
 协议 1.172 / contract-v261 为 `ShopCategoryDto` 增加 `shroomery`。快速恢复继续复用
 既有物品治疗、状态与商店 DTO，不增加物品专用协议字段；`rfb.status.regeneration`
 通过现有 `StatusDto` 投影。State Hash Schema 保持 v86，save 容器保持 v1。
+
+协议 1.173 / contract-v262 在 `ShopDto` 投影可选 `innStayCost` 和仅含已访问城镇的
+`innTravelDestinations`，并增加窄命令 `TravelFromInn { facilityId,
+destinationTownId }`。旅行固定收费 500 金币，直接重建目标城镇的连续地表视口并
+落在目标旅店入口；不进入世界地图、不推进 `wildernessSeed`。住宿继续使用
+`StayAtInn`，价格不再绑定具体内容 ID。State Hash Schema 保持 v86，save 容器保持 v1。
+
+协议 1.174 / contract-v263 增加 `IdentifyAtFacility` 与 `RenameAtFacility`，并由
+`TaskServiceDto` 投影对应内容价格。`PlayerDto.name` 成为必需字段；新建角色输入、伯爵府
+合法改名和存档恢复使用同一 1–32 字符验证。State Hash Schema 升至 v87，save 容器保持 v1。
+
+协议 1.175 / contract-v264 退役原创职业协议：`AbilitySourceDto` 删除 `technique`，
+`ResourcePoolDto` 删除近战获得与逐回合衰减提示，删除职业 `RechargeItem` 命令、
+`PlayerDto.deviceRecharge` 和对应来源 DTO。物品 `UseItemForRecharge`、设备自然恢复、
+`canReceiveRecharge` / `canSupplyRecharge` 及结构化充能结果继续保留，供卷轴和正式物品
+能力复用。没有新增持久状态，State Hash Schema 保持 v87，save 容器保持 v1。

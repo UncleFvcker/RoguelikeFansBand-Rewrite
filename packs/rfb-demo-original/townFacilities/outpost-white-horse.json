@@ -1,0 +1,13 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/town-facility.schema.json",
+  "formatVersion": 1,
+  "id": "demo.town-facility.outpost-white-horse",
+  "nameKey": "town-facility-demo-outpost-white-horse-name",
+  "descriptionKey": "town-facility-demo-outpost-white-horse-description",
+  "townId": "demo.town.outpost",
+  "category": "quest-giver",
+  "ownerNameKey": "shop-owner-demo-outpost-otik-the-good-name",
+  "taskIds": ["demo.task.thieves-hideout"],
+  "entrancePosition": { "x": 63, "y": 13 },
+  "entranceTerrainId": "demo.terrain.inn-entrance"
+}

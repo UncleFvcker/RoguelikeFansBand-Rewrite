@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 
 use crate::state::ResourcePool;
 
@@ -42,7 +42,6 @@ pub(in crate::game) struct ResourceRestorationOutcome {
 
 pub(in crate::game) fn apply_resource_restoration(
     resources: &mut BTreeMap<String, ResourcePool>,
-    resources_touched: &mut BTreeSet<String>,
     request: ResourceRestorationRequest<'_>,
 ) -> ResourceRestorationOutcome {
     let (before, after) = if let Some(pool) = resources.get_mut(request.resource_id) {
@@ -58,9 +57,6 @@ pub(in crate::game) fn apply_resource_restoration(
         (0, 0)
     };
     let recovered = after.saturating_sub(before);
-    if recovered > 0 {
-        resources_touched.insert(request.resource_id.to_owned());
-    }
     ResourceRestorationOutcome {
         resource_id: request.resource_id.to_owned(),
         before,
@@ -82,11 +78,8 @@ mod tests {
                 maximum: 10,
             },
         )]);
-        let mut touched = BTreeSet::new();
-
         let missing = apply_resource_restoration(
             &mut resources,
-            &mut touched,
             ResourceRestorationRequest::amount("test.resource.missing", 4),
         );
         assert_eq!(
@@ -98,11 +91,8 @@ mod tests {
                 recovered: 0,
             }
         );
-        assert!(touched.is_empty());
-
         let bounded = apply_resource_restoration(
             &mut resources,
-            &mut touched,
             ResourceRestorationRequest::amount("test.resource.mana", 9),
         );
         assert_eq!(
@@ -114,15 +104,12 @@ mod tests {
                 recovered: 7,
             }
         );
-        assert!(touched.contains("test.resource.mana"));
-
         resources
             .get_mut("test.resource.mana")
             .expect("test resource should remain available")
             .current = 4;
         let full = apply_resource_restoration(
             &mut resources,
-            &mut touched,
             ResourceRestorationRequest::full("test.resource.mana"),
         );
         assert_eq!(full.before, 4);

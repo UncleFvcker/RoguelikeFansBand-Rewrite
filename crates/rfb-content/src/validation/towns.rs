@@ -69,14 +69,19 @@ pub(super) fn validate_towns_and_shops(
             validate_message_key(owner_name_key)?;
         }
         let unique_task_ids = facility.task_ids.iter().collect::<BTreeSet<_>>();
+        let invalid_service_cost =
+            facility.identify_item_cost == Some(0) || facility.legal_name_change_cost == Some(0);
         if (facility.category == TownFacilityCategory::Home
             && (facility.storage_id.is_none()
                 || facility.owner_name_key.is_some()
-                || !facility.task_ids.is_empty()))
+                || !facility.task_ids.is_empty()
+                || facility.identify_item_cost.is_some()
+                || facility.legal_name_change_cost.is_some()))
             || (facility.category == TownFacilityCategory::QuestGiver
                 && (facility.storage_id.is_some()
                     || facility.owner_name_key.is_none()
                     || facility.task_ids.is_empty()))
+            || invalid_service_cost
             || unique_task_ids.len() != facility.task_ids.len()
             || facility
                 .task_ids
@@ -102,6 +107,7 @@ pub(super) fn validate_towns_and_shops(
         validate_definition_id(&shop.owner.race_id, "race")?;
         if !(100..=500).contains(&shop.owner.greed_percent)
             || !(1..=999_999_999).contains(&shop.owner.purchase_price_cap)
+            || shop.inn_stay_cost.is_some_and(|cost| cost == 0)
             || !refs.races.iter().any(|race| race.id == shop.owner.race_id)
             || shop.maintenance.interval_world_ticks == 0
             || shop.maintenance.interval_world_ticks > 1_000_000
@@ -156,6 +162,16 @@ pub(super) fn validate_towns_and_shops(
             if shop.town_id != town.id {
                 return Err(ContentError::InvalidTown(town.id.clone()));
             }
+        }
+        if town
+            .shop_ids
+            .iter()
+            .filter_map(|shop_id| shops_by_id.get(shop_id))
+            .filter(|shop| shop.inn_stay_cost.is_some())
+            .count()
+            > 1
+        {
+            return Err(ContentError::InvalidTown(town.id.clone()));
         }
     }
     for facility in facilities_by_id.values() {

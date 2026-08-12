@@ -21,6 +21,7 @@ export type PlaytestBuildId = (typeof PLAYTEST_BUILD_IDS)[number];
 export type SessionView = "title" | "new-game" | "load" | "settings";
 
 const MAX_SESSION_SEED = (1n << 64n) - 1n;
+const MAX_CHARACTER_NAME_LENGTH = 32;
 
 type SessionStorage = Pick<NativeSaveStorage, "list" | "load" | "delete">;
 type DocumentLookup = Pick<Document, "getElementById">;
@@ -38,6 +39,7 @@ interface SessionShellDom {
   readonly settingsButton: HTMLButtonElement;
   readonly exitButton: HTMLButtonElement;
   readonly warriorBuild: HTMLInputElement;
+  readonly characterNameInput: HTMLInputElement;
   readonly seedInput: HTMLInputElement;
   readonly randomizeSeedButton: HTMLButtonElement;
   readonly startGameButton: HTMLButtonElement;
@@ -185,7 +187,7 @@ export class SessionShell {
   showNewGame(randomizeSeed = false): void {
     this.#showShell("new-game");
     if (randomizeSeed) this.#dom.seedInput.value = this.#randomSeed();
-    this.#dom.seedInput.focus();
+    this.#dom.characterNameInput.focus();
   }
 
   showLoad(): void {
@@ -236,7 +238,13 @@ export class SessionShell {
       this.#dom.error.textContent = this.#localization.format("session-build-invalid");
       return;
     }
-    void this.#start({ seed, buildId });
+    const playerName = canonicalCharacterName(this.#dom.characterNameInput.value);
+    if (!playerName) {
+      this.#dom.error.textContent = this.#localization.format("session-character-name-invalid");
+      this.#dom.characterNameInput.focus();
+      return;
+    }
+    void this.#start({ seed, buildId, playerName });
   };
 
   readonly #randomizeSeed = (): void => {
@@ -523,6 +531,7 @@ export function createSessionShellDom(document: DocumentLookup): SessionShellDom
     settingsButton: element<HTMLButtonElement>(document, "session-settings"),
     exitButton: element<HTMLButtonElement>(document, "session-exit"),
     warriorBuild: element<HTMLInputElement>(document, "session-build-warrior"),
+    characterNameInput: element<HTMLInputElement>(document, "session-character-name"),
     seedInput: element<HTMLInputElement>(document, "session-seed"),
     randomizeSeedButton: element<HTMLButtonElement>(document, "session-randomize-seed"),
     startGameButton: element<HTMLButtonElement>(document, "session-start-game"),
@@ -549,6 +558,14 @@ export function canonicalSessionSeed(value: string): string | undefined {
   } catch {
     return undefined;
   }
+}
+
+export function canonicalCharacterName(value: string): string | undefined {
+  const name = value.trim();
+  const length = Array.from(name).length;
+  return length > 0 && length <= MAX_CHARACTER_NAME_LENGTH && !/[\u0000-\u001f\u007f]/u.test(name)
+    ? name
+    : undefined;
 }
 
 export function randomSessionSeed(

@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.172";
+pub const PROTOCOL_VERSION: &str = "1.175";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -221,12 +221,20 @@ pub enum GameCommand {
         item_id: String,
         quantity: u32,
     },
+    IdentifyAtFacility {
+        facility_id: String,
+        item_id: String,
+    },
+    RenameAtFacility {
+        facility_id: String,
+        name: String,
+    },
     StayAtInn {
         facility_id: String,
     },
-    RechargeItem {
-        target_item_id: String,
-        source: DeviceRechargeSourceDto,
+    TravelFromInn {
+        facility_id: String,
+        destination_town_id: String,
     },
     RefuelLight {
         target_item_id: String,
@@ -418,18 +426,6 @@ pub struct MogaminatorSaveDto {
     pub dismissed_query_item_ids: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub wanted_actor_kind_ids: Vec<String>,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
-#[serde(
-    tag = "type",
-    rename_all = "kebab-case",
-    rename_all_fields = "camelCase"
-)]
-pub enum DeviceRechargeSourceDto {
-    Resource,
-    Item { item_id: String },
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -759,12 +755,6 @@ pub struct ResourcePoolDto {
     pub wait_recovery_amount: u32,
     #[serde(default)]
     pub rest_recovery_amount: u32,
-    #[serde(default, skip_serializing_if = "is_zero_u32")]
-    pub melee_hit_gain_amount: u32,
-    #[serde(default, skip_serializing_if = "is_zero_u32")]
-    pub melee_kill_gain_amount: u32,
-    #[serde(default, skip_serializing_if = "is_zero_u32")]
-    pub turn_decay_amount: u32,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -1158,7 +1148,6 @@ const fn default_life_force() -> u16 {
 #[serde(rename_all = "kebab-case")]
 pub enum AbilitySourceDto {
     Learned,
-    Technique,
     Mutation,
 }
 
@@ -2225,14 +2214,6 @@ pub struct ResourceRecoveryResolutionDto {
     pub recovered: u32,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
-#[serde(rename_all = "kebab-case")]
-pub enum ResourceGainSourceDto {
-    MeleeHit,
-    MeleeKill,
-}
-
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
@@ -2240,17 +2221,6 @@ pub struct MonsterDisplacementResolutionDto {
     pub actor_id: String,
     pub from: Position,
     pub to: Position,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
-#[serde(rename_all = "camelCase")]
-pub struct ResourceGainResolutionDto {
-    pub resource_id: String,
-    pub source: ResourceGainSourceDto,
-    pub before: u32,
-    pub after: u32,
-    pub gained: u32,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -2338,9 +2308,6 @@ pub enum GameEventOutcomeDto {
     ResourceRecovery {
         resolution: ResourceRecoveryResolutionDto,
     },
-    ResourceGain {
-        resolution: ResourceGainResolutionDto,
-    },
     ItemIdentify {
         resolution: ItemIdentifyResolutionDto,
     },
@@ -2402,6 +2369,7 @@ pub struct StatusDto {
 #[serde(rename_all = "camelCase")]
 pub struct PlayerDto {
     pub id: String,
+    pub name: String,
     pub kind_id: String,
     pub position: Position,
     pub hp: i32,
@@ -2471,8 +2439,6 @@ pub struct PlayerDto {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub mutations: Vec<PlayerMutationDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub device_recharge: Option<DeviceRechargeDto>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub ability_learning: Option<AbilityLearningDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub abilities: Vec<AbilityDto>,
@@ -2506,14 +2472,6 @@ pub struct RecallStateDto {
     pub floor_id: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub remaining_turns: Option<u16>,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
-#[serde(rename_all = "camelCase")]
-pub struct DeviceRechargeDto {
-    pub resource_id: String,
-    pub power: u16,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -3037,6 +2995,15 @@ pub struct ShopSellQuoteDto {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
+pub struct InnTravelDestinationDto {
+    pub town_id: String,
+    pub town_name_key: String,
+    pub cost: u32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
 pub struct ShopDto {
     pub id: String,
     pub name_key: String,
@@ -3044,6 +3011,10 @@ pub struct ShopDto {
     pub category: ShopCategoryDto,
     pub entrance_position: Position,
     pub entrance_terrain_id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub inn_stay_cost: Option<u32>,
+    #[serde(default)]
+    pub inn_travel_destinations: Vec<InnTravelDestinationDto>,
     pub visited: bool,
     pub player_at_entrance: bool,
     pub owner: ShopOwnerDto,
@@ -3097,6 +3068,10 @@ pub struct TaskServiceDto {
     pub entrance_position: Position,
     pub entrance_terrain_id: String,
     pub player_at_entrance: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub identify_item_cost: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub legal_name_change_cost: Option<u32>,
     #[serde(default)]
     pub tasks: Vec<TaskStatusDto>,
 }
@@ -3237,7 +3212,6 @@ pub fn generated_typescript() -> String {
 
     push_declaration!(Direction);
     push_declaration!(PendingMutationDirectionDto);
-    push_declaration!(DeviceRechargeSourceDto);
     push_declaration!(LocaleDto);
     push_declaration!(AutoGetModeDto);
     push_declaration!(MogaminatorDispositionDto);
@@ -3332,15 +3306,12 @@ pub fn generated_typescript() -> String {
     push_declaration!(SummonCommandDto);
     push_declaration!(SummonCommandResolutionDto);
     push_declaration!(ResourceRecoveryResolutionDto);
-    push_declaration!(ResourceGainSourceDto);
     push_declaration!(MonsterDisplacementResolutionDto);
-    push_declaration!(ResourceGainResolutionDto);
     push_declaration!(RestStopReasonDto);
     push_declaration!(RestResolutionDto);
     push_declaration!(HealingResolutionDto);
     push_declaration!(GameEventOutcomeDto);
     push_declaration!(StatusDto);
-    push_declaration!(DeviceRechargeDto);
     push_declaration!(RecallStateDto);
     push_declaration!(NutritionStateDto);
     push_declaration!(MutationRatingDto);
@@ -3378,6 +3349,7 @@ pub fn generated_typescript() -> String {
     push_declaration!(ShopOwnerDto);
     push_declaration!(ShopStockItemDto);
     push_declaration!(ShopSellQuoteDto);
+    push_declaration!(InnTravelDestinationDto);
     push_declaration!(ShopDto);
     push_declaration!(HomeItemDto);
     push_declaration!(HomeDto);
@@ -3416,6 +3388,7 @@ pub struct RngSaveDto {
 #[serde(rename_all = "camelCase")]
 pub struct PlayerSaveDto {
     pub id: String,
+    pub name: String,
     pub kind_id: String,
     pub position: Position,
     pub hp: i32,
@@ -4169,8 +4142,20 @@ mod tests {
                 item_id: "generated.item.1".to_owned(),
                 quantity: 1,
             },
+            GameCommand::IdentifyAtFacility {
+                facility_id: "demo.town-facility.outpost-count".to_owned(),
+                item_id: "generated.item.1".to_owned(),
+            },
+            GameCommand::RenameAtFacility {
+                facility_id: "demo.town-facility.outpost-count".to_owned(),
+                name: "Teleri".to_owned(),
+            },
             GameCommand::StayAtInn {
                 facility_id: "demo.shop.anambar-inn".to_owned(),
+            },
+            GameCommand::TravelFromInn {
+                facility_id: "demo.shop.anambar-inn".to_owned(),
+                destination_town_id: "demo.town.outpost".to_owned(),
             },
             GameCommand::UseItem {
                 item_id: "demo.item.ration-of-food.1".to_owned(),
@@ -4184,16 +4169,6 @@ mod tests {
                 item_id: "demo.item.recharging-scroll.1".to_owned(),
                 source_item_id: "demo.item.magic-missile-wand.1".to_owned(),
                 target_item_id: "demo.item.detect-objects-staff.1".to_owned(),
-            },
-            GameCommand::RechargeItem {
-                target_item_id: "demo.item.detect-objects-staff.1".to_owned(),
-                source: DeviceRechargeSourceDto::Resource,
-            },
-            GameCommand::RechargeItem {
-                target_item_id: "demo.item.detect-objects-staff.1".to_owned(),
-                source: DeviceRechargeSourceDto::Item {
-                    item_id: "demo.item.magic-missile-wand.1".to_owned(),
-                },
             },
             GameCommand::CastAbility {
                 ability_id: "demo.ability.death-dark-bolt".to_owned(),
@@ -4328,6 +4303,7 @@ mod tests {
             player: PlayerDto {
                 id: "demo.player".to_owned(),
                 kind_id: "demo.actor.explorer".to_owned(),
+                name: "Adventurer".to_owned(),
                 position: Position { x: 0, y: 0 },
                 hp: 8,
                 max_hp: 14,
@@ -4372,7 +4348,6 @@ mod tests {
                 build: None,
                 resources: Vec::new(),
                 mutations: Vec::new(),
-                device_recharge: None,
                 ability_learning: None,
                 abilities: Vec::new(),
                 summon_command: SummonCommandDto::default(),
@@ -4559,6 +4534,7 @@ mod tests {
         let player = PlayerSaveDto {
             id: "demo.player".to_owned(),
             kind_id: "demo.actor.explorer".to_owned(),
+            name: "Adventurer".to_owned(),
             position: Position { x: 0, y: 0 },
             hp: 10,
             gold: 0,
@@ -4615,12 +4591,10 @@ mod tests {
         assert!(typescript.contains("{ \"type\": \"check\""));
         assert!(typescript.contains("alerted: boolean"));
         assert!(typescript.contains("equipment: Array<EquipmentItemDto>"));
-        assert!(typescript.contains("deviceRecharge?: DeviceRechargeDto | null"));
         assert!(typescript.contains("mutations?: Array<PlayerMutationDto>"));
         assert!(typescript.contains("canReceiveRecharge: boolean"));
         assert!(typescript.contains("requiresTargetGlyph?: boolean"));
         assert!(typescript.contains("requiresRechargeTargets?: boolean"));
-        assert!(typescript.contains("{ \"type\": \"recharge-item\""));
         assert!(typescript.contains("{ \"type\": \"use-item-by-glyph\""));
         assert!(typescript.contains("{ \"type\": \"use-item-for-recharge\""));
         assert!(typescript.contains("{ \"type\": \"stay-at-inn\""));

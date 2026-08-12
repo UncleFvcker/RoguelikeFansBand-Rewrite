@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.bolt-acid-7d8-12",
+  "descriptionKey": "ability-legacy-bolt-acid-7d8-12-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.bolt-acid-7d8-12",
+  "nameKey": "ability-legacy-bolt-acid-7d8-12-name",
+  "tags": [
+    "legacy-import",
+    "damage"
+  ],
+  "target": {
+    "modes": [
+      "position",
+      "entity"
+    ],
+    "range": 8,
+    "requiresLineOfEffect": true
+  }
+}

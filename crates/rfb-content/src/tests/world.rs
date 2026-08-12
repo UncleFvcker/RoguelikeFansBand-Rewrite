@@ -139,6 +139,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         .actors
         .iter()
         .filter(|actor| !actor.tags.iter().any(|tag| tag == "orc-cave"))
+        .filter(|actor| !actor.tags.iter().any(|tag| tag == "outpost-quest"))
         .filter_map(|actor| {
             actor.allocation.as_ref().map(|entry| {
                 (
@@ -3670,7 +3671,7 @@ fn thieves_hideout_uses_the_original_fixed_map_and_formation_contract() {
         .expect("fixture should contain the thieves' hideout task");
     assert_eq!(
         task.source_facility_id.as_deref(),
-        Some("demo.town-facility.outpost-count")
+        Some("demo.town-facility.outpost-white-horse")
     );
     assert_eq!(task.reward.item_kind_id, "demo.item.broad-sword");
 
@@ -4566,7 +4567,12 @@ fn warrens_stair_ranges_match_floor_topology_and_stay_bounded() {
         .worlds
         .iter_mut()
         .find(|world| world.id == "demo.world.middle-earth")
-        .and_then(|world| world.procedural_floors.last_mut())
+        .and_then(|world| {
+            world
+                .procedural_floors
+                .iter_mut()
+                .find(|floor| floor.id == "demo.floor.warrens-depth-9")
+        })
         .and_then(|floor| floor.layout.as_mut())
         .and_then(|layout| layout.stairs.as_mut())
         .expect("Warrens final floor should retain its up stair range")
@@ -4629,6 +4635,71 @@ fn pest_control_matches_the_original_warrens_contract() {
     assert_eq!(reward.base_value, 200);
     assert_eq!(reward.equipment_slot.as_deref(), Some("cloak"));
     assert_eq!(reward.modifiers.defense, 3);
+}
+
+#[test]
+fn outpost_count_services_and_follow_up_tasks_match_the_original_sequence() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let count = artifact
+        .content
+        .town_facilities
+        .iter()
+        .find(|facility| facility.id == "demo.town-facility.outpost-count")
+        .expect("Outpost should contain the Count's residence");
+    assert_eq!(count.identify_item_cost, Some(50));
+    assert_eq!(count.legal_name_change_cost, Some(10));
+
+    let world = artifact
+        .content
+        .worlds
+        .iter()
+        .find(|world| world.id == "demo.world.middle-earth")
+        .expect("Middle-earth should remain available");
+    let expected = [
+        (
+            "demo.task.the-sewer",
+            "demo.task.pest-control",
+            "demo.floor.outpost-sewer",
+            15,
+        ),
+        (
+            "demo.task.haunted-house",
+            "demo.task.the-sewer",
+            "demo.floor.outpost-haunted-house",
+            45,
+        ),
+        (
+            "demo.task.royal-crypt",
+            "demo.task.haunted-house",
+            "demo.floor.outpost-royal-crypt",
+            70,
+        ),
+    ];
+    for (task_id, prerequisite, floor_id, depth) in expected {
+        let task = world
+            .tasks
+            .iter()
+            .find(|task| task.id == task_id)
+            .expect("follow-up task should remain available");
+        assert_eq!(
+            task.source_facility_id.as_deref(),
+            Some("demo.town-facility.outpost-count")
+        );
+        assert_eq!(task.prerequisite_task_id.as_deref(), Some(prerequisite));
+        assert!(matches!(
+            &task.location,
+            TaskLocationDefinition::DedicatedFloors { floor_ids }
+                if floor_ids == &[floor_id.to_owned()]
+        ));
+        assert_eq!(
+            world
+                .procedural_floors
+                .iter()
+                .find(|floor| floor.id == floor_id)
+                .map(|floor| floor.depth),
+            Some(depth)
+        );
+    }
 }
 
 #[test]

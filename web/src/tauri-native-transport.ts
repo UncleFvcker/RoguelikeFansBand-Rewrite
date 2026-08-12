@@ -13,6 +13,7 @@ export class TauriNativeTransport implements CoreTransport {
     const snapshot = await invoke<GameSnapshot>("initialize_game", {
       seed: request.seed,
       buildId: request.buildId,
+      playerName: request.playerName,
       createdAt: new Date().toISOString(),
     });
     this.#syncSnapshot(snapshot);

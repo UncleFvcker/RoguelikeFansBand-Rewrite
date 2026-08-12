@@ -466,17 +466,11 @@ pub(super) fn profile_resource_maximum(
         .saturating_add(capacity_per_attribute_index.saturating_mul(u32::from(attribute_index)))
 }
 
-pub(super) fn initial_resource_pool(
-    content: &ContentCatalog,
-    resource_id: &str,
-    maximum: u32,
-) -> ResourcePool {
-    let fill_percent = content
-        .resource(resource_id)
-        .map_or(100, |definition| u32::from(definition.initial_fill_percent));
-    let current = u32::try_from(u64::from(maximum) * u64::from(fill_percent) / 100)
-        .expect("initial resource fill must fit u32");
-    ResourcePool { current, maximum }
+pub(super) const fn initial_resource_pool(maximum: u32) -> ResourcePool {
+    ResourcePool {
+        current: maximum,
+        maximum,
+    }
 }
 
 fn plan_attribute_increase(

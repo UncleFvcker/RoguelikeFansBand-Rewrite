@@ -8,6 +8,7 @@
   "category": "general-store",
   "entrancePosition": { "x": 18, "y": 9 },
   "entranceTerrainId": "demo.terrain.inn-entrance",
+  "innStayCost": 25,
   "owner": {
     "id": "demo.shop-owner.anambar-otto",
     "nameKey": "shop-owner-demo-anambar-otto-name",

@@ -43,12 +43,13 @@ impl AppState {
         &self,
         seed: &str,
         build_id: &str,
+        player_name: &str,
         created_at: String,
     ) -> Result<GameSnapshot, String> {
         let seed = seed
             .parse::<u64>()
             .map_err(|error| format!("invalid seed: {error}"))?;
-        let recorder = ReplayRecorder::new(initial_game(seed, build_id)?);
+        let recorder = ReplayRecorder::new(initial_game(seed, build_id, player_name)?);
         let snapshot = recorder.game().snapshot();
         self.replace_session(GameSession {
             recorder,
@@ -95,7 +96,7 @@ impl AppState {
             created_at: session.created_at.clone(),
             saved_at,
             character_summary: CharacterSummary {
-                display_name: "RFB Demo Character".to_owned(),
+                display_name: snapshot.player.name.clone(),
                 level: snapshot.player.progress.level.into(),
                 location_key: session.recorder.game().location_key().to_owned(),
                 turn: snapshot.turn,
@@ -158,8 +159,8 @@ impl AppState {
     }
 }
 
-fn initial_game(seed: u64, build_id: &str) -> Result<Game, String> {
-    Game::new_with_build(seed, build_id).map_err(|error| error.to_string())
+fn initial_game(seed: u64, build_id: &str, player_name: &str) -> Result<Game, String> {
+    Game::new_with_build_and_name(seed, build_id, player_name).map_err(|error| error.to_string())
 }
 
 #[derive(Serialize)]
@@ -212,9 +213,10 @@ fn initialize_game(
     state: tauri::State<'_, AppState>,
     seed: String,
     build_id: String,
+    player_name: String,
     created_at: String,
 ) -> Result<GameSnapshot, String> {
-    state.initialize(&seed, &build_id, created_at)
+    state.initialize(&seed, &build_id, &player_name, created_at)
 }
 
 #[tauri::command(rename_all = "camelCase")]

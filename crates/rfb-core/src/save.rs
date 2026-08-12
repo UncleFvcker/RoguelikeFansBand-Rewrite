@@ -538,12 +538,14 @@ fn validate_item_runtime_state(
 }
 
 pub(crate) fn player_to_save(
+    player_name: &str,
     player: &Actor,
     progress: &CharacterProgress,
     build: Option<&CharacterBuildIdentity>,
 ) -> PlayerSaveDto {
     PlayerSaveDto {
         id: player.id.clone(),
+        name: player_name.to_owned(),
         kind_id: player.kind_id.clone(),
         position: player.position,
         hp: player.hp,

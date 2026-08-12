@@ -17,7 +17,7 @@ use crate::{
         rating_to_combat_value, resolve_armored_damage,
     },
     effect::{
-        DamageOutcome, DamagePacket, EffectOutcome, EffectSpec, EffectTarget,
+        DamageOutcome, DamagePacket, EffectOutcome, EffectSpec, EffectTarget, STATUS_ANTI_MAGIC,
         STATUS_BASIC_RESISTANCE, STATUS_BERSERK, STATUS_BLEEDING, STATUS_BLINDNESS,
         STATUS_CONFUSION, STATUS_FEAR, STATUS_GIANT_STRENGTH, STATUS_HALLUCINATION, STATUS_HASTE,
         STATUS_INVENTORY_PROTECTION, STATUS_INVULNERABILITY, STATUS_PARALYSIS, STATUS_POISON,
@@ -58,9 +58,9 @@ use rfb_content::{
     AbilityLevelScalingDefinition, AbilityLevelScalingField, AbilityRandomTargetDefinition,
     AbilityStatusStackingDefinition, AbilityTargetDefinition, AbilityTargetModeDefinition,
     ActorDamageType, ActorResistanceLevel, ActorRole, AffixPropertyBundleDefinition,
-    CastingAttribute, CastingProfileDefinition, ContentCatalog, DeviceRechargeProfileDefinition,
-    DungeonInstanceLifecycle, EncounterEntryDefinition, EncounterTableDefinition, EquipmentBonuses,
-    EquipmentPassive, FloorLifecycle, ItemAttributeDefinition, ItemCurseSeverityDefinition,
+    CastingAttribute, CastingProfileDefinition, ContentCatalog, DungeonInstanceLifecycle,
+    EncounterEntryDefinition, EncounterTableDefinition, EquipmentBonuses, EquipmentPassive,
+    FloorLifecycle, ItemAttributeDefinition, ItemCurseSeverityDefinition,
     ItemCurseTargetDefinition, ItemEnchantmentRollDefinition, ItemSummonLevelSourceDefinition,
     ItemSummonSelectorDefinition, ItemUseEffectDefinition, MeleeBlowEffectDefinition,
     MonsterDropKindDefinition, MonsterPackBehavior, MutationActivationDefinition,
@@ -68,8 +68,7 @@ use rfb_content::{
     ProceduralMazeDefinition, ProceduralPitDefinition, ProceduralRoomGeometryDefinition,
     ProceduralRoomPlacement, ProceduralRoomShape, ProceduralStreamerCandidateDefinition, SkillKind,
     SlayLevel, SlayTarget, StartingItemDefinition, StatModifiers, TaskObjectiveKind,
-    TechniqueAttribute, TechniqueProfileDefinition, TerrainFeatureEntryDefinition,
-    ThemeVaultCandidateDefinition, WeaponBrand,
+    TechniqueAttribute, TerrainFeatureEntryDefinition, ThemeVaultCandidateDefinition, WeaponBrand,
 };
 use rfb_protocol::{
     AbilityAreaDamageResolutionDto, AbilityBeamDamageResolutionDto, AbilityCastResolutionDto,
@@ -80,18 +79,17 @@ use rfb_protocol::{
     AbilityRandomTargetDto, AbilityRecallActionDto, AbilitySourceDto, AbilityStatusChangeDto,
     AbilityStatusStackingDto, AbilitySummonResolutionDto, AbilityTeleportResolutionDto,
     AbilityTerrainTransformResolutionDto, AbilityVisibleDamageResolutionDto, AttackProfileDto,
-    AutoGetModeDto, CampaignStatusDto, CellLightDto, CellVisualDto, DamageDiceDto,
-    DeviceRechargeSourceDto, Direction, EquipmentBonusesDto, EquipmentPassiveDto,
-    GameCommandEnvelope, GameUpdate, GoldAppearanceDto, HealingResolutionDto, ItemActivationDto,
-    ItemChargesDto, ItemCurseRemovalResolutionDto, ItemCurseResolutionDto, ItemCurseSeverityDto,
-    ItemEnchantmentComponentResolutionDto, ItemEnchantmentResolutionDto, ItemEnchantmentsDto,
-    ItemIdentificationDto, ItemIdentifyResolutionDto, ItemKnowledgeDto, ItemPropertyDto,
-    ItemQualityDto, LocaleDto, MapScaleDto, MeleeBlowDto, MeleeRoutineDto,
-    MonsterAbilityCandidateResolutionDto, MonsterAbilityCastResolutionDto,
-    MonsterAbilityDecisionResolutionDto, MonsterAbilityRejectionReasonDto,
-    MonsterAbilityTargetResolutionDto, MonsterDisplacementResolutionDto, MonsterPackBehaviorDto,
-    MonsterPackRoleDto, PendingMutationDirectionDto, Position, ProjectileProfileDto,
-    RecallStateDto, ResistanceDto, ResourceGainResolutionDto, ResourceGainSourceDto,
+    AutoGetModeDto, CampaignStatusDto, CellLightDto, CellVisualDto, DamageDiceDto, Direction,
+    EquipmentBonusesDto, EquipmentPassiveDto, GameCommandEnvelope, GameUpdate, GoldAppearanceDto,
+    HealingResolutionDto, ItemActivationDto, ItemChargesDto, ItemCurseRemovalResolutionDto,
+    ItemCurseResolutionDto, ItemCurseSeverityDto, ItemEnchantmentComponentResolutionDto,
+    ItemEnchantmentResolutionDto, ItemEnchantmentsDto, ItemIdentificationDto,
+    ItemIdentifyResolutionDto, ItemKnowledgeDto, ItemPropertyDto, ItemQualityDto, LocaleDto,
+    MapScaleDto, MeleeBlowDto, MeleeRoutineDto, MonsterAbilityCandidateResolutionDto,
+    MonsterAbilityCastResolutionDto, MonsterAbilityDecisionResolutionDto,
+    MonsterAbilityRejectionReasonDto, MonsterAbilityTargetResolutionDto,
+    MonsterDisplacementResolutionDto, MonsterPackBehaviorDto, MonsterPackRoleDto,
+    PendingMutationDirectionDto, Position, ProjectileProfileDto, RecallStateDto, ResistanceDto,
     ResourcePoolSaveDto, ResourceRecoveryResolutionDto, RestResolutionDto, RestStopReasonDto,
     SlayDto, SlayLevelDto, SlayTargetDto, StatModifiersDto, SummonCommandDto, SummonCommandModeDto,
     SummonCommandResolutionDto, TargetModeDto, TargetSelection, TargetSpecDto, TaskStatusKindDto,
@@ -155,9 +153,8 @@ use floor::{
 };
 use inventory::{
     CurseEquippedItemRequest, DeviceRechargeRequest, EquippedItemCurseTarget,
-    InventoryItemRechargeOutcome, InventoryItemRechargeRequest, ItemEnchantmentRequest,
-    ItemIdentificationRequest, ItemKnowledgeState, ItemPropertyKnowledgeState, PickUpOutcome,
-    RemoveEquippedCursesRequest,
+    InventoryItemRechargeOutcome, ItemEnchantmentRequest, ItemIdentificationRequest,
+    ItemKnowledgeState, ItemPropertyKnowledgeState, PickUpOutcome, RemoveEquippedCursesRequest,
 };
 use mogaminator::MogaminatorState;
 use mutations::LuckBias;
@@ -193,7 +190,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 86;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 87;
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const VISIBILITY_RADIUS: i32 = 8;
 const BASE_THROW_RANGE_BUDGET: u16 = 50;
@@ -756,6 +753,12 @@ fn initial_item_runtime_state(
     )
 }
 
+fn normalize_player_name(name: &str) -> Option<String> {
+    let name = name.trim();
+    let length = name.chars().count();
+    (length != 0 && length <= 32 && !name.chars().any(char::is_control)).then(|| name.to_owned())
+}
+
 #[derive(Debug, Clone)]
 pub struct Game {
     content: Arc<ContentCatalog>,
@@ -776,13 +779,13 @@ pub struct Game {
     height: u16,
     terrain: Vec<String>,
     glow: Vec<bool>,
+    player_name: String,
     player: Actor,
     riding_actor_id: Option<String>,
     build: Option<CharacterBuildIdentity>,
     body_slots: Vec<BodySlot>,
     progress: CharacterProgress,
     resources: BTreeMap<String, ResourcePool>,
-    resources_touched: BTreeSet<String>,
     last_visual_cells: Option<Vec<CellVisualDto>>,
     bonus_spell_learning_capacity: u16,
     learned_abilities: BTreeSet<String>,
@@ -833,6 +836,8 @@ pub struct Game {
 }
 
 impl Game {
+    pub const DEFAULT_PLAYER_NAME: &'static str = "RFB Demo Character";
+
     #[must_use]
     pub fn new(seed: u64) -> Self {
         Self::from_content(
@@ -852,12 +857,26 @@ impl Game {
         )
     }
 
+    pub fn new_with_build_and_name(
+        seed: u64,
+        build_id: &str,
+        player_name: &str,
+    ) -> Result<Self, CoreError> {
+        Self::from_content_internal(
+            seed,
+            load_built_in_content().expect("built-in content should decode"),
+            DEFAULT_WORLD_ID,
+            Some(build_id),
+            player_name,
+        )
+    }
+
     pub fn from_content(
         seed: u64,
         content: Arc<ContentCatalog>,
         world_id: &str,
     ) -> Result<Self, CoreError> {
-        Self::from_content_internal(seed, content, world_id, None)
+        Self::from_content_internal(seed, content, world_id, None, Self::DEFAULT_PLAYER_NAME)
     }
 
     pub fn from_content_with_build(
@@ -866,7 +885,13 @@ impl Game {
         world_id: &str,
         build_id: &str,
     ) -> Result<Self, CoreError> {
-        Self::from_content_internal(seed, content, world_id, Some(build_id))
+        Self::from_content_internal(
+            seed,
+            content,
+            world_id,
+            Some(build_id),
+            Self::DEFAULT_PLAYER_NAME,
+        )
     }
 
     fn from_content_internal(
@@ -874,7 +899,9 @@ impl Game {
         content: Arc<ContentCatalog>,
         world_id: &str,
         build_id: Option<&str>,
+        player_name: &str,
     ) -> Result<Self, CoreError> {
+        let player_name = normalize_player_name(player_name).ok_or(CoreError::InvalidPlayerName)?;
         let world = content
             .world(world_id)
             .ok_or_else(|| CoreError::UnknownWorld(world_id.to_owned()))?;
@@ -1071,13 +1098,13 @@ impl Game {
             height,
             terrain,
             glow: vec![false; usize::from(width) * usize::from(height)],
+            player_name,
             player,
             riding_actor_id: None,
             build,
             body_slots,
             progress,
             resources: BTreeMap::new(),
-            resources_touched: BTreeSet::new(),
             last_visual_cells: None,
             bonus_spell_learning_capacity: 0,
             learned_abilities: BTreeSet::new(),
@@ -1225,7 +1252,6 @@ impl Game {
         let mut removed_entities = Vec::new();
         let mut map_translation = None;
         let mut mogaminator_diagnostics = Vec::new();
-        self.resources_touched.clear();
         let depleted_device_use = matches!(
             &action,
             GameAction::UseItem { item_id, .. } if self.item_charge_is_insufficient(item_id)
@@ -1253,15 +1279,6 @@ impl Game {
                 if self
                     .cursed_equipment_replaced_by(item_id, slot_id.as_deref())
                     .is_some()
-        );
-        let unavailable_recharge = matches!(
-            &action,
-            GameAction::RechargeItem {
-                target_item_id,
-                source,
-            } if self
-                .device_recharge_unavailable_reason(target_item_id, source)
-                .is_some()
         );
         let unavailable_light_refuel = matches!(
             &action,
@@ -1316,7 +1333,6 @@ impl Game {
             && !zero_time_unavailable_item_use
             && !cursed_unequip
             && !cursed_equip_replacement
-            && !unavailable_recharge
             && !unavailable_light_refuel
             && !unavailable_recharging_item
             && !unavailable_world_travel
@@ -1329,11 +1345,14 @@ impl Game {
                     | GameAction::ClaimTaskReward { .. }
                     | GameAction::DepositAtHome { .. }
                     | GameAction::EnterWorldMap { .. }
+                    | GameAction::IdentifyAtFacility { .. }
                     | GameAction::IncreaseAttribute { .. }
                     | GameAction::LeaveWorldMap
+                    | GameAction::RenameAtFacility { .. }
                     | GameAction::Rest { .. }
                     | GameAction::SellToShop { .. }
                     | GameAction::StayAtInn { .. }
+                    | GameAction::TravelFromInn { .. }
                     | GameAction::WithdrawFromHome { .. }
                     | GameAction::SetSummonCommand { .. }
                     | GameAction::ConfigureMogaminator { .. }
@@ -1450,6 +1469,26 @@ impl Game {
                     reason: reason.to_owned(),
                 }),
             },
+            GameAction::IdentifyAtFacility {
+                facility_id,
+                item_id,
+            } => match self.identify_at_facility(&facility_id, &item_id) {
+                Ok(outcome) => events.push(DomainEvent::FacilityItemIdentified { outcome }),
+                Err(reason) => events.push(DomainEvent::FacilityIdentifyUnavailable {
+                    facility_id,
+                    item_id,
+                    reason: reason.to_owned(),
+                }),
+            },
+            GameAction::RenameAtFacility { facility_id, name } => {
+                match self.rename_at_facility(&facility_id, &name) {
+                    Ok(outcome) => events.push(DomainEvent::FacilityPlayerRenamed { outcome }),
+                    Err(reason) => events.push(DomainEvent::FacilityRenameUnavailable {
+                        facility_id,
+                        reason: reason.to_owned(),
+                    }),
+                }
+            }
             GameAction::StayAtInn { facility_id } => match self.stay_at_inn(&facility_id) {
                 Ok(outcome) => events.push(DomainEvent::InnStayCompleted { outcome }),
                 Err(reason) => events.push(DomainEvent::InnStayUnavailable {
@@ -1457,6 +1496,23 @@ impl Game {
                     reason: reason.to_owned(),
                 }),
             },
+            GameAction::TravelFromInn {
+                facility_id,
+                destination_town_id,
+            } => {
+                if let Some(reason) =
+                    self.inn_travel_unavailable_reason(&facility_id, &destination_town_id)
+                {
+                    events.push(DomainEvent::InnTravelUnavailable {
+                        facility_id,
+                        destination_town_id,
+                        reason: reason.to_owned(),
+                    });
+                } else {
+                    let outcome = self.travel_from_inn(&facility_id, &destination_town_id)?;
+                    events.push(DomainEvent::InnTravelCompleted { outcome });
+                }
+            }
             GameAction::DepositAtHome {
                 facility_id,
                 item_id,
@@ -1681,12 +1737,6 @@ impl Game {
                     &mut changed,
                     &mut removed_entities,
                 )?;
-            }
-            GameAction::RechargeItem {
-                target_item_id,
-                source,
-            } => {
-                self.recharge_inventory_item(&target_item_id, &source, &mut events);
             }
             GameAction::RefuelLight {
                 target_item_id,
@@ -2089,9 +2139,6 @@ impl Game {
                         .into_iter()
                         .map(|resolution| DomainEvent::ResourceRecovered { resolution }),
                 );
-            }
-            if !self.player_is_dead() {
-                self.decay_player_resources();
             }
         }
         self.apply_task_events(&mut events)?;
@@ -3534,117 +3581,6 @@ impl Game {
                 self.item_property_knowledge.insert(id, knowledge);
             }
             Ok(Some(split))
-        }
-    }
-
-    fn device_recharge_unavailable_reason(
-        &self,
-        target_item_id: &str,
-        source: &DeviceRechargeSourceDto,
-    ) -> Option<&'static str> {
-        let Some(profile) = self.device_recharge_profile() else {
-            return Some("no-profile");
-        };
-        let target = self.items.iter().find(|item| {
-            item.id == target_item_id
-                && item.location == ItemLocation::Inventory
-                && item.quantity > 0
-        });
-        let Some(target) = target else {
-            return Some("target-unavailable");
-        };
-        if !self.item_can_receive_recharge(target) {
-            return Some("target-not-rechargeable");
-        }
-        match source {
-            DeviceRechargeSourceDto::Resource => {
-                if self
-                    .resources
-                    .get(&profile.resource_id)
-                    .is_none_or(|pool| pool.current == 0)
-                {
-                    Some("resource-empty")
-                } else {
-                    None
-                }
-            }
-            DeviceRechargeSourceDto::Item { item_id } => {
-                if item_id == target_item_id {
-                    return Some("source-is-target");
-                }
-                self.items
-                    .iter()
-                    .find(|item| {
-                        item.id == *item_id
-                            && item.location == ItemLocation::Inventory
-                            && item.quantity > 0
-                    })
-                    .filter(|item| self.item_can_supply_recharge(item))
-                    .map_or(Some("source-unavailable"), |_| None)
-            }
-        }
-    }
-
-    fn recharge_inventory_item(
-        &mut self,
-        target_item_id: &str,
-        source: &DeviceRechargeSourceDto,
-        events: &mut Vec<DomainEvent>,
-    ) {
-        if let Some(reason) = self.device_recharge_unavailable_reason(target_item_id, source) {
-            events.push(DomainEvent::DeviceRechargeUnavailable {
-                target_item_id: target_item_id.to_owned(),
-                reason: reason.to_owned(),
-            });
-            return;
-        }
-        let profile = self
-            .device_recharge_profile()
-            .cloned()
-            .expect("validated recharge action must retain its class profile");
-        let power = u32::from(profile.power);
-        match source {
-            DeviceRechargeSourceDto::Resource => {
-                let target_charges = self
-                    .items
-                    .iter()
-                    .find(|item| item.id == target_item_id)
-                    .and_then(|item| item.charges)
-                    .expect("preflighted recharge target must carry energy");
-                let missing = target_charges
-                    .maximum
-                    .saturating_sub(target_charges.current);
-                let pool = self
-                    .resources
-                    .get_mut(&profile.resource_id)
-                    .expect("recharge resource must remain initialized");
-                let attempted = power.min(pool.current).min(missing);
-                pool.current -= attempted;
-                self.resources_touched.insert(profile.resource_id.clone());
-                let outcome = self.recharge_inventory_item_from_resource(
-                    target_item_id,
-                    InventoryItemRechargeRequest::new(attempted, power),
-                );
-                events.push(device_recharge_resolved_event(
-                    outcome,
-                    profile.resource_id,
-                    false,
-                    false,
-                ));
-            }
-            DeviceRechargeSourceDto::Item { item_id } => {
-                let outcome = self.recharge_inventory_item_from_device(
-                    target_item_id,
-                    item_id,
-                    DeviceRechargeRequest::new(power, profile.source_item_destruction_one_in),
-                );
-                events.push(device_recharge_resolved_event(
-                    outcome.target,
-                    outcome.source_kind_id,
-                    true,
-                    outcome.source_destroyed,
-                ));
-            }
         }
     }
 

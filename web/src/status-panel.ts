@@ -36,6 +36,7 @@ type StatusDom = Pick<
   | "effectsValue"
   | "positionValue"
   | "hashValue"
+  | "progressionNameValue"
   | "progressionLevelValue"
   | "progressionExperienceValue"
   | "progressionCapValue"
@@ -222,6 +223,7 @@ export class StatusPanel {
       state.player.defense,
       state.player.equipmentModifiers.defense,
     );
+    this.#dom.progressionNameValue.textContent = state.player.name;
     this.#renderProgression(state.player.progress, state.player.build);
     this.#renderMutations(state.player.mutations ?? []);
     this.#renderAbilities(
@@ -579,28 +581,15 @@ export class StatusPanel {
       const fill = document.createElement("span");
       fill.style.width = `${resource.maximum > 0 ? Math.max(0, Math.min(100, resource.current / resource.maximum * 100)) : 0}%`;
       meter.append(fill);
-      const momentumDriven =
-        (resource.meleeHitGainAmount ?? 0) > 0 ||
-        (resource.meleeKillGainAmount ?? 0) > 0 ||
-        (resource.turnDecayAmount ?? 0) > 0;
       const recovery = document.createElement("span");
       recovery.className = "resource-recovery";
-      recovery.textContent = momentumDriven
-        ? this.#localization.format("ability-resource-momentum-value", {
-            resource: name,
-            current: resource.current,
-            maximum: resource.maximum,
-            hit: resource.meleeHitGainAmount ?? 0,
-            kill: resource.meleeKillGainAmount ?? 0,
-            decay: resource.turnDecayAmount ?? 0,
-          })
-        : this.#localization.format("ability-resource-value", {
-            resource: name,
-            current: resource.current,
-            maximum: resource.maximum,
-            wait: resource.waitRecoveryAmount,
-            rest: resource.restRecoveryAmount,
-          });
+      recovery.textContent = this.#localization.format("ability-resource-value", {
+        resource: name,
+        current: resource.current,
+        maximum: resource.maximum,
+        wait: resource.waitRecoveryAmount,
+        rest: resource.restRecoveryAmount,
+      });
       row.append(heading, meter, recovery);
       this.#dom.resourceList.append(row);
     }
@@ -882,7 +871,6 @@ export function mutationRatingMessageKey(rating: PlayerMutationDto["rating"]): M
 export function abilityStatusMessageKey(
   ability: Pick<AbilityDto, "source" | "learned">,
 ): MessageKey {
-  if (ability.source === "technique") return "ability-status-innate";
   if (ability.source === "mutation") return "ability-status-mutation";
   return ability.learned ? "ability-status-learned" : "ability-status-unlearned";
 }

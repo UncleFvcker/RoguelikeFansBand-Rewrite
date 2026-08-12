@@ -29,6 +29,7 @@ export class TaskServicePanel {
   readonly #localization: Localization;
   readonly #dispatch: (command: GameCommand) => Promise<void>;
   readonly #formatEvent: (event: GameEventDto) => string;
+  readonly #visibleItemName: (displayNameKey: string, kindId: string) => string;
   readonly #beforeOpen: () => void;
   readonly #dom: TaskServiceDom;
   #service: TaskServiceDto | undefined;
@@ -42,12 +43,14 @@ export class TaskServicePanel {
     localization: Localization;
     dispatch: (command: GameCommand) => Promise<void>;
     formatEvent: (event: GameEventDto) => string;
+    visibleItemName: (displayNameKey: string, kindId: string) => string;
     beforeOpen: () => void;
   }) {
     this.#state = options.state;
     this.#localization = options.localization;
     this.#dispatch = options.dispatch;
     this.#formatEvent = options.formatEvent;
+    this.#visibleItemName = options.visibleItemName;
     this.#beforeOpen = options.beforeOpen;
     this.#dom = createTaskServiceDom(options.document);
   }
@@ -113,8 +116,33 @@ export class TaskServicePanel {
   readonly #performAction = (event: Event): void => {
     const target = event.target;
     if (!(target instanceof HTMLElement)) return;
-    const button = target.closest<HTMLButtonElement>("[data-task-action]");
+    const facilityButton = target.closest<HTMLButtonElement>("[data-facility-action]");
     const service = this.#service;
+    if (facilityButton && service && !facilityButton.disabled && !this.#state.busy) {
+      this.#feedback = undefined;
+      const action = facilityButton.dataset.facilityAction;
+      if (action === "identify") {
+        const select = this.#dom.list.querySelector<HTMLSelectElement>("[data-identify-item]");
+        if (select?.value) {
+          void this.#dispatch({
+            type: "identify-at-facility",
+            facilityId: service.id,
+            itemId: select.value,
+          });
+        }
+      } else if (action === "rename") {
+        const input = this.#dom.list.querySelector<HTMLInputElement>("[data-player-name]");
+        if (input) {
+          void this.#dispatch({
+            type: "rename-at-facility",
+            facilityId: service.id,
+            name: input.value,
+          });
+        }
+      }
+      return;
+    }
+    const button = target.closest<HTMLButtonElement>("[data-task-action]");
     const taskId = button?.dataset.taskId;
     const action = button?.dataset.taskAction as TaskServiceAction | undefined;
     if (!button || button.disabled || !service || !taskId || !action || this.#state.busy) return;
@@ -145,7 +173,8 @@ export class TaskServicePanel {
   #renderTasks(): void {
     const tasks = this.#service?.tasks ?? [];
     this.#dom.list.replaceChildren();
-    if (tasks.length === 0) {
+    this.#renderFacilityActions();
+    if (tasks.length === 0 && this.#dom.list.childElementCount === 0) {
       const empty = this.#dom.list.ownerDocument.createElement("li");
       empty.className = "task-service-empty";
       empty.textContent = this.#localization.format("task-service-empty");
@@ -153,6 +182,56 @@ export class TaskServicePanel {
       return;
     }
     for (const task of tasks) this.#dom.list.append(this.#taskRow(task));
+  }
+
+  #renderFacilityActions(): void {
+    const service = this.#service;
+    if (!service) return;
+    const document = this.#dom.list.ownerDocument;
+    if (service.identifyItemCost !== undefined && service.identifyItemCost !== null) {
+      const row = document.createElement("li");
+      row.className = "task-service-row";
+      const select = document.createElement("select");
+      select.dataset.identifyItem = "true";
+      const items = [...this.#state.inventory, ...this.#state.equipment]
+        .filter((item) => item.identification !== "identified");
+      for (const item of items) {
+        const option = document.createElement("option");
+        option.value = item.id;
+        option.textContent = this.#visibleItemName(item.displayNameKey, item.kindId);
+        select.append(option);
+      }
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "primary-button task-service-action";
+      button.dataset.facilityAction = "identify";
+      button.disabled = this.#state.busy || items.length === 0;
+      button.textContent = this.#localization.format("action-facility-identify", {
+        cost: service.identifyItemCost,
+      });
+      row.append(select, button);
+      this.#dom.list.append(row);
+    }
+    if (service.legalNameChangeCost !== undefined && service.legalNameChangeCost !== null) {
+      const row = document.createElement("li");
+      row.className = "task-service-row";
+      const input = document.createElement("input");
+      input.type = "text";
+      input.maxLength = 32;
+      input.value = this.#state.status?.player.name ?? "";
+      input.dataset.playerName = "true";
+      input.setAttribute("aria-label", this.#localization.format("facility-rename-label"));
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "primary-button task-service-action";
+      button.dataset.facilityAction = "rename";
+      button.disabled = this.#state.busy;
+      button.textContent = this.#localization.format("action-facility-rename", {
+        cost: service.legalNameChangeCost,
+      });
+      row.append(input, button);
+      this.#dom.list.append(row);
+    }
   }
 
   #taskRow(task: TaskStatusDto): HTMLLIElement {
@@ -219,7 +298,11 @@ function lastTaskServiceEvent(state: GameSnapshot | GameUpdate): GameEventDto | 
       event?.kind === "task.accepted" ||
       event?.kind === "task.accept-unavailable" ||
       event?.kind === "task.rewarded" ||
-      event?.kind === "task.reward-claim-unavailable"
+      event?.kind === "task.reward-claim-unavailable" ||
+      event?.kind === "facility.identify-unavailable" ||
+      event?.kind === "facility.identified" ||
+      event?.kind === "facility.rename-unavailable" ||
+      event?.kind === "facility.renamed"
     ) {
       return event;
     }

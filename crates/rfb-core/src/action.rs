@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use rfb_protocol::{
-    AttributeKindDto, AutoGetModeDto, DeviceRechargeSourceDto, Direction, GameCommand, LocaleDto,
-    SummonCommandModeDto, TargetSelection,
+    AttributeKindDto, AutoGetModeDto, Direction, GameCommand, LocaleDto, SummonCommandModeDto,
+    TargetSelection,
 };
 
 use crate::{scheduler::STANDARD_ACTION_COST, stats::AttributeKind};
@@ -96,10 +96,6 @@ pub(crate) enum GameAction {
     Rest {
         turns: u16,
     },
-    RechargeItem {
-        target_item_id: String,
-        source: DeviceRechargeSourceDto,
-    },
     RefuelLight {
         target_item_id: String,
         source_item_id: String,
@@ -110,8 +106,20 @@ pub(crate) enum GameAction {
         item_id: String,
         quantity: u32,
     },
+    IdentifyAtFacility {
+        facility_id: String,
+        item_id: String,
+    },
+    RenameAtFacility {
+        facility_id: String,
+        name: String,
+    },
     StayAtInn {
         facility_id: String,
+    },
+    TravelFromInn {
+        facility_id: String,
+        destination_town_id: String,
     },
     WithdrawFromHome {
         facility_id: String,
@@ -191,7 +199,10 @@ impl GameAction {
             | Self::LeaveWorldMap
             | Self::Retire
             | Self::SellToShop { .. }
+            | Self::IdentifyAtFacility { .. }
+            | Self::RenameAtFacility { .. }
             | Self::StayAtInn { .. }
+            | Self::TravelFromInn { .. }
             | Self::WithdrawFromHome { .. }
             | Self::SetSummonCommand { .. }
             | Self::ConfigureMogaminator { .. }
@@ -310,13 +321,6 @@ impl From<GameCommand> for GameAction {
             GameCommand::PickUp => Self::PickUp,
             GameCommand::Retire => Self::Retire,
             GameCommand::Rest { turns } => Self::Rest { turns },
-            GameCommand::RechargeItem {
-                target_item_id,
-                source,
-            } => Self::RechargeItem {
-                target_item_id,
-                source,
-            },
             GameCommand::RefuelLight {
                 target_item_id,
                 source_item_id,
@@ -334,7 +338,24 @@ impl From<GameCommand> for GameAction {
                 item_id,
                 quantity,
             },
+            GameCommand::IdentifyAtFacility {
+                facility_id,
+                item_id,
+            } => Self::IdentifyAtFacility {
+                facility_id,
+                item_id,
+            },
+            GameCommand::RenameAtFacility { facility_id, name } => {
+                Self::RenameAtFacility { facility_id, name }
+            }
             GameCommand::StayAtInn { facility_id } => Self::StayAtInn { facility_id },
+            GameCommand::TravelFromInn {
+                facility_id,
+                destination_town_id,
+            } => Self::TravelFromInn {
+                facility_id,
+                destination_town_id,
+            },
             GameCommand::WithdrawFromHome {
                 facility_id,
                 item_id,

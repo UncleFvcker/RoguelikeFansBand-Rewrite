@@ -27,7 +27,7 @@ mod persistence;
 mod progression;
 mod riding;
 mod snapshots;
-mod support;
+pub(crate) mod support;
 mod tasks;
 mod town;
 mod world;

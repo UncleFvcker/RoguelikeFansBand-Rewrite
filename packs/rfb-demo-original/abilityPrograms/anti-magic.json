@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability-program.anti-magic",
+  "input": "cast-target",
+  "steps": [
+    {
+      "durationDice": 1,
+      "durationSides": 3,
+      "durationTicks": 3,
+      "intensity": 1,
+      "power": 64,
+      "resistanceType": "curse",
+      "stacking": "extend",
+      "statusKindId": "rfb.status.anti-magic",
+      "type": "apply-status"
+    }
+  ]
+}

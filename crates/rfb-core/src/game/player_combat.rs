@@ -16,49 +16,6 @@ fn projectile_raw_damage(
 }
 
 impl Game {
-    pub(super) fn gain_player_melee_resources(
-        &mut self,
-        source: ResourceGainSourceDto,
-        events: &mut Vec<DomainEvent>,
-    ) {
-        let resource_ids = self.resources.keys().cloned().collect::<Vec<_>>();
-        for resource_id in resource_ids {
-            let amount = {
-                let definition = self
-                    .content
-                    .resource(&resource_id)
-                    .expect("player resource definition must remain available");
-                match source {
-                    ResourceGainSourceDto::MeleeHit => definition.melee_hit_gain_amount,
-                    ResourceGainSourceDto::MeleeKill => definition.melee_kill_gain_amount,
-                }
-            };
-            if amount == 0 {
-                continue;
-            }
-            // A capped gain still counts as touching the pool so the turn
-            // decay never erodes a resource that is being actively fed.
-            self.resources_touched.insert(resource_id.clone());
-            let pool = self
-                .resources
-                .get_mut(&resource_id)
-                .expect("player resource pool must remain available");
-            let before = pool.current;
-            pool.current = pool.current.saturating_add(amount).min(pool.maximum);
-            if pool.current > before {
-                events.push(DomainEvent::ResourceGained {
-                    resolution: ResourceGainResolutionDto {
-                        resource_id: resource_id.clone(),
-                        source,
-                        before,
-                        after: pool.current,
-                        gained: pool.current - before,
-                    },
-                });
-            }
-        }
-    }
-
     pub(super) fn resolve_player_projectile(
         &mut self,
         target: TargetSelection,
@@ -512,7 +469,6 @@ impl Game {
                         resolution: HealingResolutionDto { requested, applied },
                     });
                 }
-                self.gain_player_melee_resources(ResourceGainSourceDto::MeleeHit, events);
                 if application.fatal {
                     self.resolve_actor_death(
                         index,
@@ -521,7 +477,6 @@ impl Game {
                         changed,
                         removed_entities,
                     )?;
-                    self.gain_player_melee_resources(ResourceGainSourceDto::MeleeKill, events);
                     break 'profiles;
                 }
                 touched_surviving_target = true;
@@ -1041,7 +996,8 @@ impl Game {
                     MeleeBlowEffectDefinition::EatGold { .. }
                     | MeleeBlowEffectDefinition::EatItem { .. }
                     | MeleeBlowEffectDefinition::EatFood { .. }
-                    | MeleeBlowEffectDefinition::EatLight { .. } => None,
+                    | MeleeBlowEffectDefinition::EatLight { .. }
+                    | MeleeBlowEffectDefinition::DrainCharges { .. } => None,
                 };
                 let Some(damage) = damage else {
                     continue;

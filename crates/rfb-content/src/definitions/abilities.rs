@@ -22,19 +22,7 @@ pub struct ResourceDefinition {
     pub wait_recovery_amount: u32,
     #[serde(default)]
     pub rest_recovery_amount: u32,
-    #[serde(default = "default_initial_fill_percent")]
-    pub initial_fill_percent: u8,
-    #[serde(default)]
-    pub melee_hit_gain_amount: u32,
-    #[serde(default)]
-    pub melee_kill_gain_amount: u32,
-    #[serde(default)]
-    pub turn_decay_amount: u32,
     pub tags: Vec<String>,
-}
-
-const fn default_initial_fill_percent() -> u8 {
-    100
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]

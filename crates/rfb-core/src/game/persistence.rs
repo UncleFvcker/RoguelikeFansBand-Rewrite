@@ -42,8 +42,8 @@ use super::{
     BodySlot, CampaignState, DungeonState, Game, ItemKnowledgeState, ItemPropertyKnowledgeState,
     STATE_HASH_SCHEMA_VERSION, TaskState, character_skill_progress, dungeon_instance_id,
     dungeon_instance_storage_key, floor_dungeon_id, initial_dungeon_states, initial_task_states,
-    load_built_in_content, parse_dungeon_instance_ordinal, resolve_body_slots,
-    resolve_character_build, task_definition, task_floors, task_objectives,
+    load_built_in_content, normalize_player_name, parse_dungeon_instance_ordinal,
+    resolve_body_slots, resolve_character_build, task_definition, task_floors, task_objectives,
     tasks::task_initial_state,
 };
 
@@ -937,6 +937,8 @@ impl Game {
         };
         let gold = payload.player.gold;
         let nutrition = payload.player.nutrition;
+        let player_name =
+            normalize_player_name(&payload.player.name).ok_or(CoreError::InvalidPlayerName)?;
         let player = actor_from_player(payload.player, &content)?;
         let entities = payload
             .entities
@@ -1185,6 +1187,7 @@ impl Game {
             height: payload.terrain.height,
             terrain,
             glow: payload.terrain.glow,
+            player_name,
             player,
             riding_actor_id,
             gold,
@@ -1193,7 +1196,6 @@ impl Game {
             body_slots,
             progress,
             resources: BTreeMap::new(),
-            resources_touched: BTreeSet::new(),
             last_visual_cells: None,
             bonus_spell_learning_capacity,
             learned_abilities: BTreeSet::new(),
@@ -1414,7 +1416,12 @@ impl Game {
     }
 
     fn player_save_dto(&self) -> PlayerSaveDto {
-        let mut player = player_to_save(&self.player, &self.progress, self.build.as_ref());
+        let mut player = player_to_save(
+            &self.player_name,
+            &self.player,
+            &self.progress,
+            self.build.as_ref(),
+        );
         player.gold = self.gold;
         player.nutrition = self.nutrition;
         player.resources = self

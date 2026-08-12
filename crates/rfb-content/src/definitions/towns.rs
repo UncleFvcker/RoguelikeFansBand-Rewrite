@@ -40,6 +40,10 @@ pub struct TownFacilityDefinition {
     pub owner_name_key: Option<String>,
     #[serde(default)]
     pub task_ids: Vec<String>,
+    #[serde(default)]
+    pub identify_item_cost: Option<u32>,
+    #[serde(default)]
+    pub legal_name_change_cost: Option<u32>,
     pub entrance_position: ContentPosition,
     pub entrance_terrain_id: String,
 }
@@ -66,6 +70,8 @@ pub struct ShopDefinition {
     pub category: ShopCategory,
     pub entrance_position: ContentPosition,
     pub entrance_terrain_id: String,
+    #[serde(default)]
+    pub inn_stay_cost: Option<u32>,
     pub owner: ShopOwnerDefinition,
     pub stock: Vec<ShopStockDefinition>,
     pub maintenance: ShopMaintenanceDefinition,

@@ -1672,13 +1672,12 @@ mod tests {
 
     #[test]
     fn deferred_predicates_use_content_build_book_and_corpse_data() {
-        let game = Game::new_with_build(19, "demo.build.scholar")
-            .expect("scholar build should remain available");
+        let game = crate::game::tests::support::test_caster_game(19);
         let book = game
             .items
             .iter()
             .find(|item| item.kind_id == "demo.item.sepulchral-ways")
-            .expect("scholar should start with a death book");
+            .expect("test caster should start with a death book");
         assert!(game.mogaminator_predicate_matches(MogaminatorPredicate::FirstRealm, book));
         assert!(game.mogaminator_predicate_matches(MogaminatorPredicate::SecondBook, book));
         assert!(!game.mogaminator_predicate_matches(MogaminatorPredicate::Unreadable, book));

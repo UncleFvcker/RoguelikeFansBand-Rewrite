@@ -5,6 +5,7 @@ import type { GameCommand, GameSnapshot, GameUpdate } from "./protocol";
 export interface NewSessionRequest {
   readonly seed: string;
   readonly buildId: string;
+  readonly playerName: string;
 }
 
 export interface CoreTransport {

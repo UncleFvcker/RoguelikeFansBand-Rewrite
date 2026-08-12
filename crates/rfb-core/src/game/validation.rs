@@ -1213,17 +1213,12 @@ impl Game {
             },
         }
         let casting_profile = self.casting_profile().cloned();
-        let technique_profiles = self.technique_profiles().to_vec();
-        let device_recharge_profile = self.device_recharge_profile().cloned();
         if self.bonus_spell_learning_capacity > 0 && !self.uses_spell_scrolls() {
             return Err(CoreError::InvalidSave(
                 "bonus spell learning capacity is invalid",
             ));
         }
-        if casting_profile.is_some()
-            || !technique_profiles.is_empty()
-            || device_recharge_profile.is_some()
-        {
+        if casting_profile.is_some() {
             let (expected_pool_maxima, expected_ability_ids) = self.player_ability_baseline();
             let pools_valid = self.resources.len() == expected_pool_maxima.len()
                 && expected_pool_maxima.iter().all(|(id, expected_maximum)| {

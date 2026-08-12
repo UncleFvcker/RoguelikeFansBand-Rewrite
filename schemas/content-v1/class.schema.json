@@ -242,54 +242,6 @@
       ],
       "type": "object"
     },
-    "DeviceRechargeProfileDefinition": {
-      "additionalProperties": false,
-      "properties": {
-        "baseCapacity": {
-          "format": "uint32",
-          "minimum": 0,
-          "type": "integer"
-        },
-        "capacityPerAttributeIndex": {
-          "format": "uint32",
-          "minimum": 0,
-          "type": "integer"
-        },
-        "capacityPerLevel": {
-          "format": "uint32",
-          "minimum": 0,
-          "type": "integer"
-        },
-        "governingAttribute": {
-          "$ref": "#/$defs/TechniqueAttribute"
-        },
-        "power": {
-          "format": "uint16",
-          "maximum": 65535,
-          "minimum": 0,
-          "type": "integer"
-        },
-        "resourceId": {
-          "type": "string"
-        },
-        "sourceItemDestructionOneIn": {
-          "format": "uint16",
-          "maximum": 65535,
-          "minimum": 0,
-          "type": "integer"
-        }
-      },
-      "required": [
-        "resourceId",
-        "governingAttribute",
-        "baseCapacity",
-        "capacityPerLevel",
-        "capacityPerAttributeIndex",
-        "power",
-        "sourceItemDestructionOneIn"
-      ],
-      "type": "object"
-    },
     "StartingItemDefinition": {
       "additionalProperties": false,
       "properties": {
@@ -367,65 +319,6 @@
         }
       },
       "type": "object"
-    },
-    "TechniqueAttribute": {
-      "enum": [
-        "strength",
-        "intelligence",
-        "wisdom",
-        "dexterity",
-        "constitution",
-        "charisma"
-      ],
-      "type": "string"
-    },
-    "TechniqueProfileDefinition": {
-      "additionalProperties": false,
-      "properties": {
-        "baseCapacity": {
-          "format": "uint32",
-          "minimum": 0,
-          "type": "integer"
-        },
-        "capacityPerAttributeIndex": {
-          "format": "uint32",
-          "minimum": 0,
-          "type": "integer"
-        },
-        "capacityPerLevel": {
-          "format": "uint32",
-          "minimum": 0,
-          "type": "integer"
-        },
-        "governingAttribute": {
-          "$ref": "#/$defs/TechniqueAttribute"
-        },
-        "innateAbilityIds": {
-          "items": {
-            "type": "string"
-          },
-          "type": "array"
-        },
-        "minimumFailurePercent": {
-          "format": "uint8",
-          "maximum": 255,
-          "minimum": 0,
-          "type": "integer"
-        },
-        "resourceId": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "resourceId",
-        "governingAttribute",
-        "baseCapacity",
-        "capacityPerLevel",
-        "capacityPerAttributeIndex",
-        "minimumFailurePercent",
-        "innateAbilityIds"
-      ],
-      "type": "object"
     }
   },
   "$id": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/class.schema.json",
@@ -453,17 +346,6 @@
     },
     "descriptionKey": {
       "type": "string"
-    },
-    "deviceRechargeProfile": {
-      "anyOf": [
-        {
-          "$ref": "#/$defs/DeviceRechargeProfileDefinition"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null
     },
     "experiencePercent": {
       "default": 100,
@@ -543,13 +425,6 @@
     "tags": {
       "items": {
         "type": "string"
-      },
-      "type": "array"
-    },
-    "techniqueProfiles": {
-      "default": [],
-      "items": {
-        "$ref": "#/$defs/TechniqueProfileDefinition"
       },
       "type": "array"
     },

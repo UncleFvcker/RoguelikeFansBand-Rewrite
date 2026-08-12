@@ -237,7 +237,7 @@ fn stale_revision_is_rejected_without_mutation() {
 #[test]
 fn inventory_item_missing_its_kind_is_an_invariant_error() {
     const ITEM_ID: &str = "test.item.missing-kind";
-    let mut game = skill_check_game(1, "demo.build.vanguard");
+    let mut game = skill_check_game(1, "demo.build.warrior");
     give_inventory_item(&mut game, ITEM_ID, "demo.item.clarity-draught");
     game.items
         .iter_mut()

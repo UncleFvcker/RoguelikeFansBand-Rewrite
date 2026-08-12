@@ -6,9 +6,17 @@ import test from "node:test";
 
 import {
   PLAYTEST_BUILD_IDS,
+  canonicalCharacterName,
   canonicalSessionSeed,
   randomSessionSeed,
 } from "./session-shell.ts";
+
+test("character names are trimmed and bounded", () => {
+  assert.equal(canonicalCharacterName("  Beren  "), "Beren");
+  assert.equal(canonicalCharacterName(""), undefined);
+  assert.equal(canonicalCharacterName("a".repeat(33)), undefined);
+  assert.equal(canonicalCharacterName("bad\nname"), undefined);
+});
 
 test("new character creation exposes only the first RFB Warrior slice", () => {
   assert.deepEqual(PLAYTEST_BUILD_IDS, ["demo.build.warrior"]);

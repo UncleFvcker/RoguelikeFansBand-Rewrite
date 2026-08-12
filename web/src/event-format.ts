@@ -302,11 +302,6 @@ export function createPresentationFormatter(
           resource: contentName(event.args.target),
           amount: event.args.amount ?? "?",
         });
-      case "resource-gained":
-        return localization.format("message-resource-gained", {
-          resource: contentName(event.args.target),
-          amount: event.args.amount ?? "?",
-        });
       case "monster-blinked":
         return localization.format("message-monster-blinked", {
           source: contentName(event.args.source),
@@ -704,6 +699,27 @@ export function createPresentationFormatter(
         return localization.format("shop-transaction-unavailable", {
           reason: shopTransactionReason(event.args.reason),
         });
+      case "facility-identify-completed":
+        return localization.format("facility-identify-completed", {
+          target: visibleItemNameForKind(event.args.target),
+          cost: event.args.cost ?? "?",
+          balance: event.args.balance ?? "?",
+        });
+      case "facility-identify-unavailable":
+        return localization.format("facility-identify-unavailable", {
+          reason: facilityServiceReason(event.args.reason),
+        });
+      case "facility-rename-completed":
+        return localization.format("facility-rename-completed", {
+          previousName: event.args.previousName ?? "?",
+          name: event.args.name ?? "?",
+          cost: event.args.cost ?? "?",
+          balance: event.args.balance ?? "?",
+        });
+      case "facility-rename-unavailable":
+        return localization.format("facility-rename-unavailable", {
+          reason: facilityServiceReason(event.args.reason),
+        });
       case "inn-stay-completed":
         return localization.format("inn-stay-completed", {
           cost: event.args.cost ?? "?",
@@ -712,6 +728,15 @@ export function createPresentationFormatter(
       case "inn-stay-unavailable":
         return localization.format("inn-stay-unavailable", {
           reason: innStayReason(event.args.reason),
+        });
+      case "inn-travel-completed":
+        return localization.format("inn-travel-completed", {
+          cost: event.args.cost ?? "?",
+          balance: event.args.balance ?? "?",
+        });
+      case "inn-travel-unavailable":
+        return localization.format("inn-travel-unavailable", {
+          reason: innTravelReason(event.args.reason),
         });
       case "home-deposit-success":
         return localization.format("home-deposit-success", {
@@ -1228,8 +1253,6 @@ export function createPresentationFormatter(
           current: event.args.current ?? "?",
           maximum: event.args.maximum ?? "?",
         });
-      case "device-recharge-unavailable":
-        return localization.format("message-device-recharge-unavailable");
       case "device-recharge-success": {
         const success = localization.format("message-device-recharge-success", {
           target: visibleItemNameForKind(event.args.target),
@@ -1561,6 +1584,20 @@ export function createPresentationFormatter(
     return localization.hasMessage(localization.locale, key) || localization.hasMessage("en-US", key)
       ? localization.format(key)
       : localization.format("inn-stay-reason-unknown");
+  }
+
+  function facilityServiceReason(reason: string | undefined): string {
+    const key = `facility-service-reason-${reason ?? "unknown"}`;
+    return localization.hasMessage(localization.locale, key) || localization.hasMessage("en-US", key)
+      ? localization.format(key)
+      : localization.format("facility-service-reason-unknown");
+  }
+
+  function innTravelReason(reason: string | undefined): string {
+    const key = `inn-travel-reason-${reason ?? "unknown"}`;
+    return localization.hasMessage(localization.locale, key) || localization.hasMessage("en-US", key)
+      ? localization.format(key)
+      : localization.format("inn-travel-reason-unknown");
   }
 
   function itemDestroyReason(reason: string | undefined): string {

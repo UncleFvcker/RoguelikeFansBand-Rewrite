@@ -339,7 +339,6 @@ pub(crate) fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<
             ability_book_ids: &ability_book_ids,
             ability_books_by_id: &ability_books_by_id,
             ability_resources: &ability_resources,
-            ability_ids: &ability_ids,
             abilities: &content.abilities,
         },
         &mut all_ids,
@@ -349,12 +348,6 @@ pub(crate) fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<
         .ability_books
         .iter()
         .flat_map(|book| book.ability_ids.iter().cloned())
-        .chain(content.classes.iter().flat_map(|class| {
-            class
-                .technique_profiles
-                .iter()
-                .flat_map(|profile| profile.innate_ability_ids.iter().cloned())
-        }))
         .collect::<BTreeSet<_>>();
     let mut mutation_ability_ids = BTreeSet::new();
     for mutation in &content.mutations {

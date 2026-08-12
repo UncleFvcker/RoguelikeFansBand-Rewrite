@@ -154,10 +154,6 @@ pub struct ClassDefinition {
     #[serde(default)]
     pub casting_profile: Option<CastingProfileDefinition>,
     #[serde(default)]
-    pub technique_profiles: Vec<TechniqueProfileDefinition>,
-    #[serde(default)]
-    pub device_recharge_profile: Option<DeviceRechargeProfileDefinition>,
-    #[serde(default)]
     pub starting_items: Vec<StartingItemDefinition>,
     /// Item tags accepted by Mogaminator's favorite-weapon predicate.
     #[serde(default)]
@@ -231,32 +227,6 @@ pub enum TechniqueAttribute {
     Dexterity,
     Constitution,
     Charisma,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schemas", derive(JsonSchema))]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct TechniqueProfileDefinition {
-    pub resource_id: String,
-    pub governing_attribute: TechniqueAttribute,
-    pub base_capacity: u32,
-    pub capacity_per_level: u32,
-    pub capacity_per_attribute_index: u32,
-    pub minimum_failure_percent: u8,
-    pub innate_ability_ids: Vec<String>,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schemas", derive(JsonSchema))]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct DeviceRechargeProfileDefinition {
-    pub resource_id: String,
-    pub governing_attribute: TechniqueAttribute,
-    pub base_capacity: u32,
-    pub capacity_per_level: u32,
-    pub capacity_per_attribute_index: u32,
-    pub power: u16,
-    pub source_item_destruction_one_in: u16,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

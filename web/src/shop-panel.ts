@@ -45,10 +45,11 @@ interface ShopDom {
   readonly weightAfter: HTMLElement;
   readonly confirm: HTMLButtonElement;
   readonly stay: HTMLButtonElement;
+  readonly innTravel: HTMLElement;
+  readonly innDestination: HTMLSelectElement;
+  readonly innTravelConfirm: HTMLButtonElement;
   readonly feedback: HTMLElement;
 }
-
-const ANAMBAR_INN_ID = "demo.shop.anambar-inn";
 
 type Feedback =
   | { readonly source: "message"; readonly key: MessageKey; readonly kind: string }
@@ -117,6 +118,8 @@ export class ShopPanel {
     this.#dom.quantityMaximum.addEventListener("click", this.#maximizeQuantity);
     this.#dom.confirm.addEventListener("click", this.#confirmTransaction);
     this.#dom.stay.addEventListener("click", this.#stayAtInn);
+    this.#dom.innDestination.addEventListener("change", this.#renderTransaction);
+    this.#dom.innTravelConfirm.addEventListener("click", this.#travelFromInn);
   }
 
   dispose(): void {
@@ -133,6 +136,8 @@ export class ShopPanel {
     this.#dom.quantityMaximum.removeEventListener("click", this.#maximizeQuantity);
     this.#dom.confirm.removeEventListener("click", this.#confirmTransaction);
     this.#dom.stay.removeEventListener("click", this.#stayAtInn);
+    this.#dom.innDestination.removeEventListener("change", this.#renderTransaction);
+    this.#dom.innTravelConfirm.removeEventListener("click", this.#travelFromInn);
   }
 
   render(state: GameSnapshot | GameUpdate): void {
@@ -160,7 +165,7 @@ export class ShopPanel {
     if (enteringDifferentShop) {
       this.#mode = "buy";
       this.#selectedItemId = undefined;
-      this.#feedback = undefined;
+      if (!transactionEvent) this.#feedback = undefined;
     }
     this.#renderPanel();
 
@@ -288,6 +293,27 @@ export class ShopPanel {
     });
   };
 
+  readonly #travelFromInn = (): void => {
+    const command = travelFromInnCommand(this.#shop, this.#dom.innDestination.value);
+    if (!command || this.#state.busy) return;
+    this.#feedback = {
+      source: "message",
+      key: "inn-travel-pending",
+      kind: "pending",
+    };
+    this.#renderTransaction();
+    void this.#dispatch(command).then(() => {
+      if (this.#feedback?.source === "message" && this.#feedback.kind === "pending") {
+        this.#feedback = {
+          source: "message",
+          key: "inn-travel-no-response",
+          kind: "error",
+        };
+        this.#renderTransaction();
+      }
+    });
+  };
+
   #setMode(mode: ShopMode): void {
     if (this.#mode === mode) return;
     this.#mode = mode;
@@ -341,8 +367,36 @@ export class ShopPanel {
       this.#localization,
       this.#contentName,
     );
-    this.#dom.stay.hidden = shop.id !== ANAMBAR_INN_ID;
-    this.#dom.stay.textContent = this.#localization.format("action-inn-stay");
+    const isInn = shop.innStayCost !== undefined;
+    this.#dom.stay.hidden = !isInn;
+    this.#dom.stay.textContent = this.#localization.format("action-inn-stay", {
+      cost: shop.innStayCost ?? 0,
+    });
+    this.#dom.innTravel.hidden = !isInn;
+    const selectedTownId = this.#dom.innDestination.value;
+    this.#dom.innDestination.replaceChildren();
+    if (shop.innTravelDestinations.length === 0) {
+      const option = this.#dom.innDestination.ownerDocument.createElement("option");
+      option.textContent = this.#localization.format("inn-travel-no-destinations");
+      option.value = "";
+      this.#dom.innDestination.append(option);
+    } else {
+      for (const destination of shop.innTravelDestinations) {
+        const option = this.#dom.innDestination.ownerDocument.createElement("option");
+        option.value = destination.townId;
+        option.textContent = this.#localization.format("inn-travel-destination", {
+          town: this.#localization.format(destination.townNameKey),
+          cost: destination.cost,
+        });
+        this.#dom.innDestination.append(option);
+      }
+      if (shop.innTravelDestinations.some((destination) => destination.townId === selectedTownId)) {
+        this.#dom.innDestination.value = selectedTownId;
+      }
+    }
+    this.#dom.innDestination.disabled = shop.innTravelDestinations.length === 0;
+    this.#dom.innTravelConfirm.disabled =
+      this.#state.busy || shop.innTravelDestinations.length === 0;
     this.#renderItems();
     this.#renderTransaction();
   }
@@ -552,10 +606,25 @@ export function parseShopQuantity(value: string, maximum: number): number | unde
 }
 
 export function stayAtInnCommand(
-  shop: Pick<ShopDto, "id"> | undefined,
+  shop: Pick<ShopDto, "id" | "innStayCost"> | undefined,
 ): GameCommand | undefined {
-  return shop?.id === ANAMBAR_INN_ID
+  return shop?.innStayCost !== undefined
     ? { type: "stay-at-inn", facilityId: shop.id }
+    : undefined;
+}
+
+export function travelFromInnCommand(
+  shop: Pick<ShopDto, "id" | "innTravelDestinations"> | undefined,
+  destinationTownId: string,
+): GameCommand | undefined {
+  return shop?.innTravelDestinations.some(
+    (destination) => destination.townId === destinationTownId,
+  )
+    ? {
+        type: "travel-from-inn",
+        facilityId: shop.id,
+        destinationTownId,
+      }
     : undefined;
 }
 
@@ -656,6 +725,9 @@ function createShopDom(document: Document): ShopDom {
     weightAfter: element("shop-weight-after"),
     confirm: element("shop-confirm"),
     stay: element("shop-stay"),
+    innTravel: element("shop-inn-travel"),
+    innDestination: element("shop-inn-destination"),
+    innTravelConfirm: element("shop-inn-travel-confirm"),
     feedback: element("shop-feedback"),
   };
 }

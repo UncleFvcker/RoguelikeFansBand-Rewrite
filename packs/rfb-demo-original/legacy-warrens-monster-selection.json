@@ -3456,6 +3456,150 @@
       "id": "othrod-lord-of-the-orcs",
       "tags": ["orc-cave"],
       "omittedFlags": ["CAN_SPEAK", "MALE"]
+    },
+    {
+      "sourceIndex": 776,
+      "id": "archlich",
+      "tags": ["outpost-quest", "royal-crypt", "undead"],
+      "omittedFlags": ["POS_HOLD_LIFE", "POS_SEE_INVIS", "POS_TELEPATHY"]
+    },
+    {
+      "sourceIndex": 508,
+      "id": "spectre",
+      "tags": ["haunted-house", "outpost-quest"],
+      "omittedFlags": ["POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 520,
+      "id": "master-vampire",
+      "tags": ["outpost-quest", "royal-crypt"],
+      "omittedFlags": ["POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 522,
+      "id": "greater-mummy",
+      "tags": ["outpost-quest", "royal-crypt"],
+      "omittedFlags": ["EGYPTIAN2", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 554,
+      "id": "grey-wraith",
+      "tags": ["outpost-quest", "royal-crypt"],
+      "omittedFlags": ["POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 557,
+      "id": "raal-s-tome-of-destruction",
+      "tags": ["haunted-house", "outpost-quest"],
+      "omittedFlags": ["CHAR_MULTI", "NASTY_GLYPH", "POS_GAIN_AC", "POS_SEE_INVIS", "POS_TELEPATHY"]
+    },
+    {
+      "sourceIndex": 571,
+      "id": "ipsissimus",
+      "tags": ["haunted-house", "outpost-quest"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 577,
+      "id": "crypt-thing",
+      "tags": ["outpost-quest", "royal-crypt"],
+      "omittedFlags": ["POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 607,
+      "id": "black-wraith",
+      "tags": ["outpost-quest", "royal-crypt"],
+      "omittedFlags": ["POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 611,
+      "id": "monastic-lich",
+      "tags": ["outpost-quest", "royal-crypt"],
+      "omittedFlags": ["POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 612,
+      "id": "nether-wraith",
+      "tags": ["outpost-quest", "royal-crypt"],
+      "omittedFlags": ["POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 623,
+      "id": "vampire-lord",
+      "tags": ["outpost-quest", "royal-crypt"],
+      "omittedFlags": ["POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 658,
+      "id": "master-lich",
+      "tags": ["outpost-quest", "royal-crypt"],
+      "omittedFlags": ["POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 665,
+      "id": "shadow-demon",
+      "tags": ["haunted-house", "outpost-quest"],
+      "omittedFlags": ["POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 666,
+      "id": "iron-lich",
+      "tags": ["outpost-quest", "royal-crypt"],
+      "omittedFlags": ["POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 690,
+      "id": "dreadmaster",
+      "tags": ["outpost-quest", "royal-crypt"],
+      "omittedFlags": ["POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 694,
+      "id": "legate-of-the-damned",
+      "tags": ["outpost-quest", "royal-crypt"],
+      "omittedFlags": ["POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 705,
+      "id": "spectral-tyrannosaurus",
+      "tags": ["haunted-house", "outpost-quest"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 742,
+      "id": "demilich",
+      "tags": ["outpost-quest", "royal-crypt"],
+      "omittedFlags": ["POS_HOLD_LIFE", "POS_SEE_INVIS", "POS_TELEPATHY"]
+    },
+    {
+      "sourceIndex": 748,
+      "id": "hand-druj",
+      "tags": ["haunted-house", "outpost-quest"],
+      "omittedFlags": ["POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 749,
+      "id": "eye-druj",
+      "tags": ["outpost-quest", "royal-crypt"],
+      "omittedFlags": ["POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 750,
+      "id": "skull-druj",
+      "tags": ["outpost-quest", "royal-crypt"],
+      "omittedFlags": ["POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 774,
+      "id": "shadowlord",
+      "tags": ["outpost-quest", "royal-crypt"],
+      "omittedFlags": ["POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 798,
+      "id": "black-reaver",
+      "tags": ["outpost-quest", "royal-crypt"],
+      "omittedFlags": ["POS_HOLD_LIFE", "POS_SEE_INVIS"]
     }
   ]
 }

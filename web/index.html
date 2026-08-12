@@ -41,6 +41,11 @@
               <span data-l10n-id="build-demo-warrior-description"></span>
             </label>
           </fieldset>
+          <label class="session-seed" for="session-character-name">
+            <span data-l10n-id="session-character-name-label"></span>
+            <input id="session-character-name" type="text" maxlength="32" autocomplete="off" value="RFB Demo Character" required />
+            <small data-l10n-id="session-character-name-help"></small>
+          </label>
           <label class="session-seed" for="session-seed">
             <span data-l10n-id="session-seed-label"></span>
             <span class="session-seed-controls">
@@ -280,6 +285,7 @@
               <span id="progression-title" data-l10n-id="panel-progression-title"></span>
             </div>
             <dl class="status-grid player-identity-grid">
+              <div><dt data-l10n-id="progression-name"></dt><dd id="progression-name-value">--</dd></div>
               <div><dt data-l10n-id="progression-level"></dt><dd id="progression-level-value">--</dd></div>
               <div><dt data-l10n-id="progression-build"></dt><dd id="progression-build-value">--</dd></div>
               <div><dt data-l10n-id="progression-race"></dt><dd id="progression-race-value">--</dd></div>
@@ -534,6 +540,11 @@
               </dl>
               <button id="shop-confirm" class="primary-button shop-confirm" type="button" disabled></button>
               <button id="shop-stay" class="quiet-button shop-confirm" type="button" hidden data-l10n-id="action-inn-stay"></button>
+              <div id="shop-inn-travel" class="shop-inn-travel" hidden>
+                <label for="shop-inn-destination" data-l10n-id="inn-travel-destination-label"></label>
+                <select id="shop-inn-destination"></select>
+                <button id="shop-inn-travel-confirm" class="quiet-button shop-confirm" type="button" disabled data-l10n-id="action-inn-travel"></button>
+              </div>
               <p id="shop-feedback" class="shop-feedback" aria-live="assertive"></p>
             </div>
           </aside>

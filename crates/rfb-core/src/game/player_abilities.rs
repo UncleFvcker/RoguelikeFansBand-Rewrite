@@ -58,11 +58,6 @@ impl Game {
             .is_some_and(|(_, _, class, _)| class.uses_spell_scrolls)
     }
 
-    pub(super) fn device_recharge_profile(&self) -> Option<&DeviceRechargeProfileDefinition> {
-        self.character_definitions()
-            .and_then(|(_, _, class, _)| class.device_recharge_profile.as_ref())
-    }
-
     pub(super) fn effective_casting_ability(
         profile: &CastingProfileDefinition,
         ability: &AbilityDefinition,
@@ -170,13 +165,7 @@ impl Game {
         )
     }
 
-    pub(super) fn technique_profiles(&self) -> &[TechniqueProfileDefinition] {
-        self.character_definitions()
-            .map(|(_, _, class, _)| class.technique_profiles.as_slice())
-            .unwrap_or_default()
-    }
-
-    fn technique_attribute_kind(attribute: TechniqueAttribute) -> AttributeKind {
+    fn mutation_attribute_kind(attribute: TechniqueAttribute) -> AttributeKind {
         match attribute {
             TechniqueAttribute::Strength => AttributeKind::Strength,
             TechniqueAttribute::Intelligence => AttributeKind::Intelligence,
@@ -194,7 +183,7 @@ impl Game {
         if activation.base_failure_percent == 0 {
             return 0;
         }
-        let attribute = Self::technique_attribute_kind(activation.governing_attribute);
+        let attribute = Self::mutation_attribute_kind(activation.governing_attribute);
         let index = usize::from(
             self.effective_player_attributes()
                 .index(attribute)
@@ -229,59 +218,6 @@ impl Game {
             }
         });
         activation.cost.saturating_add(extra)
-    }
-
-    fn technique_resource_maximum(&self, profile: &TechniqueProfileDefinition) -> u32 {
-        profile_resource_maximum(
-            self.progress.level,
-            self.effective_player_attributes()
-                .index(Self::technique_attribute_kind(profile.governing_attribute)),
-            (
-                profile.base_capacity,
-                profile.capacity_per_level,
-                profile.capacity_per_attribute_index,
-            ),
-        )
-    }
-
-    fn device_recharge_resource_maximum(&self, profile: &DeviceRechargeProfileDefinition) -> u32 {
-        profile_resource_maximum(
-            self.progress.level,
-            self.effective_player_attributes()
-                .index(Self::technique_attribute_kind(profile.governing_attribute)),
-            (
-                profile.base_capacity,
-                profile.capacity_per_level,
-                profile.capacity_per_attribute_index,
-            ),
-        )
-    }
-
-    pub(super) fn technique_profile_for_ability(
-        &self,
-        ability: &AbilityDefinition,
-    ) -> Option<&TechniqueProfileDefinition> {
-        let player = ability.player.as_ref()?;
-        self.technique_profiles().iter().find(|profile| {
-            profile.resource_id == player.resource_id
-                && profile
-                    .innate_ability_ids
-                    .iter()
-                    .any(|ability_id| ability_id == &ability.id)
-        })
-    }
-
-    pub(super) fn technique_failure_percent(
-        &self,
-        profile: &TechniqueProfileDefinition,
-        ability: &AbilityDefinition,
-    ) -> u8 {
-        self.profile_failure_percent(
-            Self::technique_attribute_kind(profile.governing_attribute),
-            profile.minimum_failure_percent,
-            ability,
-            0,
-        )
     }
 
     pub(super) fn ability_learning_capacity(&self, profile: &CastingProfileDefinition) -> u16 {
@@ -319,19 +255,6 @@ impl Game {
                     .flat_map(|book| book.ability_ids.iter().cloned()),
             );
         }
-        for profile in self.technique_profiles() {
-            pool_maxima.insert(
-                profile.resource_id.clone(),
-                self.technique_resource_maximum(profile),
-            );
-            ability_ids.extend(profile.innate_ability_ids.iter().cloned());
-        }
-        if let Some(profile) = self.device_recharge_profile() {
-            pool_maxima.insert(
-                profile.resource_id.clone(),
-                self.device_recharge_resource_maximum(profile),
-            );
-        }
         (pool_maxima, ability_ids)
     }
 
@@ -367,10 +290,6 @@ impl Game {
         saved_ability_progress: Vec<AbilityProgressSaveDto>,
     ) -> Result<(), CoreError> {
         self.initialize_player_ability_state();
-        // Saved pools may be a subset of the initialized set: legacy saves
-        // created before a class gained a new resource keep their recorded
-        // pools and the missing ones stay at their content-defined initial
-        // fill without drawing RNG.
         let mut seen = BTreeSet::new();
         for saved in saved_resources {
             let Some(pool) = self.resources.get_mut(&saved.id) else {
@@ -383,6 +302,9 @@ impl Game {
                 return Err(CoreError::InvalidSave("player resource pool is invalid"));
             }
             pool.current = saved.current;
+        }
+        if seen.len() != self.resources.len() {
+            return Err(CoreError::InvalidSave("player resource set is incomplete"));
         }
 
         let casting_profile = self.casting_profile().cloned();
@@ -439,7 +361,7 @@ impl Game {
     pub(super) fn refresh_player_resource_maxima(&mut self) {
         let (pool_maxima, _) = self.player_ability_baseline();
         for (resource_id, maximum) in &pool_maxima {
-            let initial = initial_resource_pool(&self.content, resource_id, *maximum);
+            let initial = initial_resource_pool(*maximum);
             let pool = self.resources.entry(resource_id.clone()).or_insert(initial);
             pool.maximum = *maximum;
             pool.current = pool.current.min(*maximum);
@@ -692,7 +614,6 @@ impl Game {
                 .saturating_add(recovery_amounts[id])
                 .min(pool.maximum);
             if pool.current > before {
-                self.resources_touched.insert(id.clone());
                 recovered.push(ResourceRecoveryResolutionDto {
                     resource_id: id.clone(),
                     before,
@@ -702,27 +623,6 @@ impl Game {
             }
         }
         recovered
-    }
-
-    pub(super) fn decay_player_resources(&mut self) {
-        let resource_ids = self.resources.keys().cloned().collect::<Vec<_>>();
-        for resource_id in resource_ids {
-            if self.resources_touched.contains(&resource_id) {
-                continue;
-            }
-            let decay = self
-                .content
-                .resource(&resource_id)
-                .map_or(0, |definition| definition.turn_decay_amount);
-            if decay == 0 {
-                continue;
-            }
-            let pool = self
-                .resources
-                .get_mut(&resource_id)
-                .expect("player resource pool must remain available");
-            pool.current = pool.current.saturating_sub(decay);
-        }
     }
 
     fn player_has_depleted_recoverable_resource(&self, resting: bool) -> bool {
@@ -791,7 +691,6 @@ impl Game {
                     break RestStopReasonDto::EnemyVisible;
                 }
                 self.recover_player_resources(true);
-                self.decay_player_resources();
                 if !self.player_has_rest_need() {
                     break RestStopReasonDto::FullResources;
                 }

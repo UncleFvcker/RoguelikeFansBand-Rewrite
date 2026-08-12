@@ -331,43 +331,6 @@ fn dynamic_devices_require_stable_profiles_depth_coverage_and_capacity() {
 }
 
 #[test]
-fn device_recharge_profiles_require_distinct_bounded_resources() {
-    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
-    let mut invalid = artifact.content.clone();
-    invalid
-        .classes
-        .iter_mut()
-        .find(|class| class.id == "demo.class.artificer")
-        .and_then(|class| class.device_recharge_profile.as_mut())
-        .expect("artificer should recharge devices")
-        .source_item_destruction_one_in = 1;
-    assert!(matches!(
-        validate_and_normalize(&mut invalid),
-        Err(ContentError::InvalidDeviceRechargeProfile(_))
-    ));
-
-    let mut invalid = artifact.content.clone();
-    let mage = invalid
-        .classes
-        .iter_mut()
-        .find(|class| class.id == "demo.class.mage")
-        .expect("mage class should exist");
-    mage.device_recharge_profile = Some(DeviceRechargeProfileDefinition {
-        resource_id: "demo.resource.mana".to_owned(),
-        governing_attribute: TechniqueAttribute::Intelligence,
-        base_capacity: 1,
-        capacity_per_level: 0,
-        capacity_per_attribute_index: 0,
-        power: 90,
-        source_item_destruction_one_in: 3,
-    });
-    assert!(matches!(
-        validate_and_normalize(&mut invalid),
-        Err(ContentError::InvalidDeviceRechargeProfile(_))
-    ));
-}
-
-#[test]
 fn fuel_items_require_original_capacity_slot_stack_and_radius_shapes() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let item = |id: &str| {

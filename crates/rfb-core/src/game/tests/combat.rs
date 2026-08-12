@@ -348,6 +348,60 @@ fn resource_drain_melee_heals_six_times_the_amount_actually_drained() {
 }
 
 #[test]
+fn charge_drain_melee_consumes_a_carried_device_or_player_nutrition() {
+    let effect = MeleeBlowEffectDefinition::DrainCharges {
+        chance_percent: None,
+    };
+    let mut charged = monster_effect_game(0, effect.clone());
+    give_inventory_item(
+        &mut charged,
+        "test.item.identify-staff",
+        "demo.item.identify-staff",
+    );
+    let charges = charged
+        .items
+        .iter_mut()
+        .find(|item| item.id == "test.item.identify-staff")
+        .and_then(|item| item.charges.as_mut())
+        .expect("identify staff should carry charges");
+    charges.current = 5;
+    charged.entities[0].hp = 1;
+    charged.entities[0].max_hp = 20;
+    let mut events = Vec::new();
+    charged
+        .resolve_monster_melee(0, &mut events, &mut BTreeSet::new(), &mut Vec::new())
+        .expect("charge drain should resolve");
+    assert_eq!(
+        charged
+            .items
+            .iter()
+            .find(|item| item.id == "test.item.identify-staff")
+            .and_then(|item| item.charges)
+            .expect("identify staff should retain its charge pool")
+            .current,
+        4
+    );
+    assert_eq!(charged.entities[0].hp, 2);
+    assert!(
+        events
+            .iter()
+            .any(|event| matches!(event, DomainEvent::MonsterChargesDrained { amount: 1, .. }))
+    );
+
+    let mut hungry = monster_effect_game(0, effect);
+    hungry.nutrition = 9_000;
+    let mut events = Vec::new();
+    hungry
+        .resolve_monster_melee(0, &mut events, &mut BTreeSet::new(), &mut Vec::new())
+        .expect("fallback nutrition drain should resolve");
+    assert_eq!(hungry.nutrition, 6_000);
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::MonsterNutritionDrained { amount: 3_000, .. }
+    )));
+}
+
+#[test]
 fn vampiric_melee_heals_from_applied_damage_but_not_from_nonliving_players() {
     let effect = MeleeBlowEffectDefinition::Damage {
         chance_percent: None,

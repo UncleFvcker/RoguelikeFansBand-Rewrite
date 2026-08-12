@@ -92,13 +92,9 @@ impl Game {
             return Ok(());
         }
         let ability = self.content.ability(ability_id).cloned();
-        let technique_profile = ability
-            .as_ref()
-            .and_then(|ability| self.technique_profile_for_ability(ability).cloned());
         let mutation_activation = self.mutation_activation_for_ability(ability_id).cloned();
         let casting_profile = self.casting_profile().cloned();
-        if technique_profile.is_none() && mutation_activation.is_none() && casting_profile.is_none()
-        {
+        if mutation_activation.is_none() && casting_profile.is_none() {
             events.push(DomainEvent::AbilityCastUnavailable {
                 ability_id: ability_id.to_owned(),
                 reason: "no-casting-profile".to_owned(),
@@ -112,15 +108,20 @@ impl Game {
             });
             return Ok(());
         };
-        let source = if technique_profile.is_some() {
-            AbilitySourceDto::Technique
-        } else if mutation_activation.is_some() {
+        let source = if mutation_activation.is_some() {
             AbilitySourceDto::Mutation
         } else if casting_profile.is_some() {
             AbilitySourceDto::Learned
         } else {
             unreachable!("at least one validated ability source must be available")
         };
+        if source == AbilitySourceDto::Learned && self.player_has_status_kind(STATUS_ANTI_MAGIC) {
+            events.push(DomainEvent::AbilityCastUnavailable {
+                ability_id: ability_id.to_owned(),
+                reason: "anti-magic".to_owned(),
+            });
+            return Ok(());
+        }
         let mut ability = match source {
             AbilitySourceDto::Learned => Self::effective_casting_ability(
                 casting_profile
@@ -128,7 +129,7 @@ impl Game {
                     .expect("learned ability source requires a casting profile"),
                 &ability,
             ),
-            AbilitySourceDto::Technique | AbilitySourceDto::Mutation => ability,
+            AbilitySourceDto::Mutation => ability,
         };
         Self::apply_player_level_scaling(&mut ability, self.progress.level);
         if source == AbilitySourceDto::Learned {
@@ -141,16 +142,6 @@ impl Game {
             );
         }
         let unavailable_reason = match source {
-            AbilitySourceDto::Technique => {
-                let player = Self::player_ability_parameters(&ability);
-                if self.progress.level < player.minimum_level {
-                    Some("level-too-low")
-                } else if self.ability_cooldown_remaining(&ability) > 0 {
-                    Some("cooldown")
-                } else {
-                    None
-                }
-            }
             AbilitySourceDto::Mutation => {
                 let activation = mutation_activation
                     .as_ref()
@@ -237,12 +228,6 @@ impl Game {
             0
         } else {
             match source {
-                AbilitySourceDto::Technique => self.technique_failure_percent(
-                    technique_profile
-                        .as_ref()
-                        .expect("technique ability source requires a profile"),
-                    &ability,
-                ),
                 AbilitySourceDto::Mutation => self.mutation_failure_percent(
                     mutation_activation
                         .as_ref()
@@ -298,7 +283,6 @@ impl Game {
                 .get_mut(id)
                 .expect("positive resource payment requires an available pool");
             pool.current -= resource_paid;
-            self.resources_touched.insert(id.clone());
         }
         if hp_paid > 0 {
             self.player.hp = self.player.hp.saturating_sub(
@@ -2749,7 +2733,6 @@ impl Game {
             && let Some(pool) = self.resources.get_mut(resource_id)
         {
             pool.current = pool.current.saturating_add(drained).min(pool.maximum);
-            self.resources_touched.insert(resource_id.to_owned());
         }
         let resource_after = resource_id
             .as_deref()

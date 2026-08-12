@@ -599,7 +599,7 @@ test("damage event formatting preserves typed resistance outcomes", () => {
   localization.setLocale("en-US");
 });
 
-test("inn stay results use focused bilingual messages", () => {
+test("inn stay and travel results use focused bilingual messages", () => {
   const completed = {
     kind: "inn.stay",
     messageKey: "inn-stay-completed",
@@ -617,7 +617,23 @@ test("inn stay results use focused bilingual messages", () => {
   );
   localization.setLocale("zh-CN");
   assert.equal(formatter.formatEvent(unavailable), "无法住宿：你需要的是治疗师，而不是房间。");
+  assert.equal(
+    formatter.formatEvent({
+      kind: "inn.travel-unavailable",
+      messageKey: "inn-travel-unavailable",
+      args: { reason: "town-unvisited" },
+    }),
+    "无法从旅店出发：只能前往亲自到访过且设有旅店的城镇。",
+  );
   localization.setLocale("en-US");
+  assert.equal(
+    formatter.formatEvent({
+      kind: "inn.travel",
+      messageKey: "inn-travel-completed",
+      args: { cost: "500", balance: "125" },
+    }),
+    "You depart from the inn and arrive at your destination. Paid 500 gold; balance 125.",
+  );
 });
 
 test("Warrens transitions name the Outpost and stairs without legacy Echo text", () => {

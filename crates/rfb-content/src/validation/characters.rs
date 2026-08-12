@@ -35,7 +35,6 @@ pub(super) struct CharacterValidationRefs<'a> {
     pub(super) ability_book_ids: &'a BTreeSet<String>,
     pub(super) ability_books_by_id: &'a BTreeMap<String, AbilityBookDefinition>,
     pub(super) ability_resources: &'a BTreeMap<String, String>,
-    pub(super) ability_ids: &'a BTreeSet<String>,
     pub(super) abilities: &'a [AbilityDefinition],
 }
 
@@ -54,7 +53,6 @@ pub(super) fn validate_characters(
         ability_book_ids,
         ability_books_by_id,
         ability_resources,
-        ability_ids,
         abilities,
     } = refs;
     let item_starting_metadata = items
@@ -300,60 +298,6 @@ pub(super) fn validate_characters(
                     return Err(ContentError::InvalidCastingProfile(class.id.clone()));
                 }
             }
-        }
-        let mut technique_resource_ids = class
-            .casting_profile
-            .as_ref()
-            .map(|profile| profile.resource_id.clone())
-            .into_iter()
-            .collect::<BTreeSet<_>>();
-        if class.technique_profiles.len() > 8 {
-            return Err(ContentError::InvalidTechniqueProfile(class.id.clone()));
-        }
-        for profile in &mut class.technique_profiles {
-            profile.innate_ability_ids.sort();
-            let mut innate = BTreeSet::new();
-            let maximum_capacity = u64::from(profile.base_capacity)
-                .saturating_add(u64::from(profile.capacity_per_level).saturating_mul(100))
-                .saturating_add(
-                    u64::from(profile.capacity_per_attribute_index).saturating_mul(100),
-                );
-            if profile.minimum_failure_percent > 95
-                || profile.innate_ability_ids.is_empty()
-                || profile.innate_ability_ids.len() > 16
-                || profile
-                    .innate_ability_ids
-                    .iter()
-                    .any(|ability_id| !innate.insert(ability_id.clone()))
-                || maximum_capacity == 0
-                || maximum_capacity > 1_000_000_000
-                || !technique_resource_ids.insert(profile.resource_id.clone())
-            {
-                return Err(ContentError::InvalidTechniqueProfile(class.id.clone()));
-            }
-            require_reference(resource_ids, &profile.resource_id, &class.id)?;
-            for ability_id in &profile.innate_ability_ids {
-                require_reference(ability_ids, ability_id, &class.id)?;
-                if ability_resources.get(ability_id) != Some(&profile.resource_id) {
-                    return Err(ContentError::InvalidTechniqueProfile(class.id.clone()));
-                }
-            }
-        }
-        if let Some(profile) = &class.device_recharge_profile {
-            let maximum_capacity = u64::from(profile.base_capacity)
-                .saturating_add(u64::from(profile.capacity_per_level).saturating_mul(100))
-                .saturating_add(
-                    u64::from(profile.capacity_per_attribute_index).saturating_mul(100),
-                );
-            if maximum_capacity == 0
-                || maximum_capacity > 1_000_000_000
-                || !(1..=u16::MAX).contains(&profile.power)
-                || !(2..=u16::MAX).contains(&profile.source_item_destruction_one_in)
-                || !technique_resource_ids.insert(profile.resource_id.clone())
-            {
-                return Err(ContentError::InvalidDeviceRechargeProfile(class.id.clone()));
-            }
-            require_reference(resource_ids, &profile.resource_id, &class.id)?;
         }
         normalize_tags(&class.id, &mut class.favorite_weapon_tags)?;
         normalize_tags(&class.id, &mut class.special_item_tags)?;

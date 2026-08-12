@@ -115,10 +115,6 @@ pub enum ContentError {
     InvalidAbilityBookItem(String),
     #[error("class casting profile is invalid: {0}")]
     InvalidCastingProfile(String),
-    #[error("class technique profile is invalid: {0}")]
-    InvalidTechniqueProfile(String),
-    #[error("class device recharge profile is invalid: {0}")]
-    InvalidDeviceRechargeProfile(String),
     #[error("affix stat modifiers are invalid: {0}")]
     InvalidAffixModifiers(String),
     #[error("skill definition is invalid: {0}")]

@@ -172,7 +172,8 @@ General Store 移入专店，并新增快速恢复蘑菇。商店继续复用既
 
 - Outpost 地图尚未实现的 Museum、`a/b` 两条轮换任务服务线与 `n` Bounty Office；
 - 原版 shop 系统存在但不在固定 Outpost 地图上的 Jeweler、Dragon；
-- White Horse Inn、城堡、Pest Control、其他任务与建筑服务；
+- 城堡、Pest Control、其他任务与建筑服务；
+- 白马旅店的传闻与声望查询，以及尚未导入的后续旅店任务；
 - 荒野旅行、其他城镇、昼夜、镇民生成和城镇战斗；
 - 全部普通食物、投掷油、光源 ego/神器、永久光源和特殊种族消化；
 - Fame、virtue、no-selling、coffee-break 和特殊种族对价格/金币的修正；

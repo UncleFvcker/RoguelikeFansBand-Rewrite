@@ -945,7 +945,6 @@ impl Game {
             return false;
         }
         pool.current -= amount;
-        self.resources_touched.insert(resource_id);
         self.player.hp = self
             .player
             .hp
@@ -972,7 +971,6 @@ impl Game {
             return false;
         }
         pool.current = pool.current.saturating_add(amount).min(pool.maximum);
-        self.resources_touched.insert(resource_id);
         self.player.hp = self
             .player
             .hp

@@ -43,25 +43,6 @@ fn warrior_birth_rolls_five_to_nine_rations_after_gold() {
 }
 
 #[test]
-fn historical_builds_do_not_gain_rations_or_birth_rng_draws() {
-    let game =
-        Game::new_with_build(11, "demo.build.vanguard").expect("historical build should create");
-    assert_eq!(game.gold, 0);
-    assert!(game.items.iter().all(|item| item.kind_id != RATION_KIND_ID));
-    let build = CharacterBuildIdentity {
-        build_id: "demo.build.vanguard".to_owned(),
-        race_id: String::new(),
-        class_id: String::new(),
-        personality_id: String::new(),
-    };
-    let mut rng = RfbRng::seeded(11);
-    let draws_before = rng.draw_counter;
-    assert_eq!(starting_gold(Some(&build), &mut rng), 0);
-    assert_eq!(starting_ration_quantity(Some(&build), &mut rng), None);
-    assert_eq!(rng.draw_counter, draws_before);
-}
-
-#[test]
 fn ration_use_consumes_one_restores_food_and_pays_normal_action_cost() {
     let mut game =
         Game::new_with_build(7, RFB_WARRIOR_BUILD_ID).expect("Warrens Warrior should create");
@@ -162,13 +143,12 @@ fn satisfy_hunger_sets_food_to_the_original_maximum_minus_one() {
 
 #[test]
 fn hallucination_food_applies_status_drains_mana_then_adds_nutrition() {
-    let mut game =
-        Game::new_with_build(37, "demo.build.scholar").expect("scholar should create with mana");
+    let mut game = test_caster_game(37);
     clear_monsters(&mut game);
     game.nutrition = 0;
     game.resources
         .get_mut("demo.resource.mana")
-        .expect("scholar should have mana")
+        .expect("test caster should have mana")
         .current = 50;
     give_inventory_item(
         &mut game,

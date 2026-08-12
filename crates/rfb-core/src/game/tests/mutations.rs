@@ -4,6 +4,7 @@ use rfb_content::{AbilityStatusStackingDefinition, MutationPeriodicEffectDefinit
 
 use super::support::{
     clear_monsters, dispatch_next, game_with_actor_definition, give_inventory_item,
+    test_caster_game,
 };
 use super::*;
 use crate::game::hunger::NUTRITION_WEAK;
@@ -459,12 +460,17 @@ fn m6_a_speed_flux_minor_slow_round_trips_and_feeds_speed() {
 
 #[test]
 fn m6_a_resource_conversion_and_hypochondria_use_existing_stat_resources() {
-    let mut conversion = m6_game("rfb.mutation.sp-to-hp", "demo.build.scholar");
+    let mut conversion = test_caster_game(0);
+    conversion.progress.active_mutation_ids.clear();
+    conversion
+        .progress
+        .active_mutation_ids
+        .insert("rfb.mutation.sp-to-hp".to_owned());
     conversion.player.hp = conversion.effective_player_max_hp() - 5;
     let mana = conversion
         .resources
         .get_mut("demo.resource.mana")
-        .expect("Scholar should have mana");
+        .expect("test caster should have mana");
     mana.current = 7;
     conversion.rng = RfbRng::seeded(seed_matching(|rng| rng.bounded(2_000) == 0));
 

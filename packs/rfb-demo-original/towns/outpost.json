@@ -7,7 +7,8 @@
   "floorId": "demo.floor.surface",
   "facilityIds": [
     "demo.town-facility.outpost-count",
-    "demo.town-facility.outpost-home"
+    "demo.town-facility.outpost-home",
+    "demo.town-facility.outpost-white-horse"
   ],
   "shopIds": [
     "demo.shop.outpost-armoury",
@@ -18,6 +19,7 @@
     "demo.shop.outpost-alchemist",
     "demo.shop.outpost-magic-shop",
     "demo.shop.outpost-shroomery",
+    "demo.shop.outpost-white-horse",
     "demo.shop.outpost-weaponsmith"
   ]
 }

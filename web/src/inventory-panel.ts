@@ -5,7 +5,6 @@ import type { AppState, TargetingIntent } from "./app-state";
 import type { Localization, MessageKey } from "./localization";
 import type {
   BodySlotDto,
-  DeviceRechargeSourceDto,
   EquipmentBonusesDto,
   EquipmentItemDto,
   EquipmentPassiveDto,
@@ -240,17 +239,6 @@ export class InventoryPanel {
     )) {
       checkbox.disabled = this.#state.busy || this.#state.playerDead || worldMap;
     }
-    for (const button of this.#dom.inventoryList.querySelectorAll<HTMLButtonElement>(
-      "button[data-recharge-target-id]",
-    )) {
-      const targetItemId = button.dataset.rechargeTargetId;
-      button.disabled =
-        this.#state.busy ||
-        this.#state.playerDead ||
-        worldMap ||
-        targetItemId === undefined ||
-        this.#rechargeSourceForTarget(targetItemId) === undefined;
-    }
     for (const button of this.#dom.equipmentList.querySelectorAll<HTMLButtonElement>("button")) {
       const refuelTargetId = button.dataset.refuelTargetId;
       button.disabled =
@@ -343,19 +331,6 @@ export class InventoryPanel {
       });
       label.append(checkbox, details, quantity);
       row.append(label);
-      if (item.canReceiveRecharge && this.#state.status?.player.deviceRecharge) {
-        const recharge = document.createElement("button");
-        recharge.type = "button";
-        recharge.className = "inventory-recharge";
-        recharge.dataset.rechargeTargetId = item.id;
-        recharge.textContent = this.#localization.format("action-inventory-recharge");
-        recharge.addEventListener("click", () => {
-          const source = this.#rechargeSourceForTarget(item.id);
-          if (!source) return;
-          void this.#dispatch({ type: "recharge-item", targetItemId: item.id, source });
-        });
-        row.append(recharge);
-      }
       this.#dom.inventoryList.append(row);
     }
   }
@@ -668,21 +643,6 @@ export class InventoryPanel {
 
   #selectedItems(): InventoryItemDto[] {
     return this.#state.inventory.filter((item) => this.#state.selectedInventoryIds.has(item.id));
-  }
-
-  #rechargeSourceForTarget(targetItemId: string): DeviceRechargeSourceDto | undefined {
-    const profile = this.#state.status?.player.deviceRecharge;
-    if (!profile) return undefined;
-    const selectedSources = this.#selectedItems().filter(
-      (item) => item.id !== targetItemId && item.canSupplyRecharge,
-    );
-    if (selectedSources.length > 1) return undefined;
-    const source = selectedSources[0];
-    if (source) return { type: "item", itemId: source.id };
-    const resource = this.#state.status?.player.resources?.find(
-      (pool) => pool.id === profile.resourceId,
-    );
-    return resource && resource.current > 0 ? { type: "resource" } : undefined;
   }
 
   #selectRechargeTarget(itemId: string, sourceItemId: string): void {

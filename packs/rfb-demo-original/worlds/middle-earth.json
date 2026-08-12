@@ -357,7 +357,7 @@
         { "x": 55, "y": 17 }, { "x": 55, "y": 18 },
         { "x": 26, "y": 14 }, { "x": 27, "y": 14 }, { "x": 28, "y": 14 },
         { "x": 29, "y": 14 }, { "x": 30, "y": 14 }, { "x": 31, "y": 14 },
-        { "x": 63, "y": 12 }, { "x": 63, "y": 13 }, { "x": 63, "y": 14 },
+        { "x": 63, "y": 12 }, { "x": 63, "y": 14 },
         { "x": 63, "y": 15 },
         { "x": 61, "y": 17 }, { "x": 61, "y": 18 }
       ]
@@ -460,7 +460,9 @@
         { "x": 62, "y": 8 }, { "x": 63, "y": 8 }, { "x": 64, "y": 8 }, { "x": 65, "y": 8 },
         { "x": 62, "y": 9 }, { "x": 65, "y": 9 },
         { "x": 62, "y": 10 }, { "x": 65, "y": 10 },
-        { "x": 62, "y": 11 }, { "x": 64, "y": 11 }, { "x": 65, "y": 11 }
+        { "x": 62, "y": 11 }, { "x": 64, "y": 11 }, { "x": 65, "y": 11 },
+        { "x": 62, "y": 12 }, { "x": 64, "y": 12 }, { "x": 65, "y": 12 },
+        { "x": 62, "y": 13 }, { "x": 64, "y": 13 }, { "x": 65, "y": 13 }
       ]
     },
     {
@@ -523,8 +525,24 @@
       "positions": [{ "x": 61, "y": 19 }]
     },
     {
+      "terrainId": "demo.terrain.inn-entrance",
+      "positions": [{ "x": 63, "y": 13 }]
+    },
+    {
       "terrainId": "demo.terrain.thieves-hideout-entry-available",
       "positions": [{ "x": 63, "y": 11 }]
+    },
+    {
+      "terrainId": "demo.terrain.outpost-sewer-entry-available",
+      "positions": [{ "x": 24, "y": 9 }]
+    },
+    {
+      "terrainId": "demo.terrain.outpost-haunted-house-entry-available",
+      "positions": [{ "x": 26, "y": 9 }]
+    },
+    {
+      "terrainId": "demo.terrain.outpost-royal-crypt-entry-available",
+      "positions": [{ "x": 28, "y": 9 }]
     },
     {
       "terrainId": "demo.terrain.surface-rock",
@@ -623,7 +641,6 @@
       "positions": [
         { "x": 18, "y": 9 }, { "x": 20, "y": 10 }, { "x": 19, "y": 13 },
         { "x": 17, "y": 20 }, { "x": 19, "y": 22 }, { "x": 21, "y": 23 },
-        { "x": 26, "y": 9 },
         { "x": 61, "y": 9 },
         { "x": 69, "y": 8 }, { "x": 73, "y": 9 }, { "x": 77, "y": 10 },
         { "x": 68, "y": 22 }, { "x": 74, "y": 22 }, { "x": 78, "y": 21 }
@@ -683,7 +700,7 @@
       "id": "demo.task.thieves-hideout",
       "nameKey": "task-demo-thieves-hideout-name",
       "descriptionKey": "task-demo-thieves-hideout-description",
-      "sourceFacilityId": "demo.town-facility.outpost-count",
+      "sourceFacilityId": "demo.town-facility.outpost-white-horse",
       "location": {
         "kind": "dedicated-floors",
         "floorIds": ["demo.floor.thieves-hideout"]
@@ -732,6 +749,37 @@
         "itemKindId": "demo.item.fur-cloak",
         "quantity": 1
       }
+    },
+    {
+      "id": "demo.task.the-sewer",
+      "nameKey": "task-demo-the-sewer-name",
+      "descriptionKey": "task-demo-the-sewer-description",
+      "sourceFacilityId": "demo.town-facility.outpost-count",
+      "prerequisiteTaskId": "demo.task.pest-control",
+      "location": { "kind": "dedicated-floors", "floorIds": ["demo.floor.outpost-sewer"] },
+      "objectives": [{ "kind": "clear-floor", "floorId": "demo.floor.outpost-sewer" }],
+      "reward": { "itemInstanceId": "demo.task.the-sewer.reward.1", "itemKindId": "demo.item.pair-of-hard-leather-boots", "quantity": 1 }
+    },
+    {
+      "id": "demo.task.haunted-house",
+      "nameKey": "task-demo-haunted-house-name",
+      "descriptionKey": "task-demo-haunted-house-description",
+      "sourceFacilityId": "demo.town-facility.outpost-count",
+      "prerequisiteTaskId": "demo.task.the-sewer",
+      "location": { "kind": "dedicated-floors", "floorIds": ["demo.floor.outpost-haunted-house"] },
+      "objectives": [{ "kind": "clear-floor", "floorId": "demo.floor.outpost-haunted-house" }],
+      "reward": { "itemInstanceId": "demo.task.haunted-house.reward.1", "itemKindId": "demo.item.identify-staff", "quantity": 1 }
+    },
+    {
+      "id": "demo.task.royal-crypt",
+      "nameKey": "task-demo-royal-crypt-name",
+      "descriptionKey": "task-demo-royal-crypt-description",
+      "sourceFacilityId": "demo.town-facility.outpost-count",
+      "prerequisiteTaskId": "demo.task.haunted-house",
+      "location": { "kind": "dedicated-floors", "floorIds": ["demo.floor.outpost-royal-crypt"] },
+      "objectives": [{ "kind": "kill-actor-kind", "floorId": "demo.floor.outpost-royal-crypt", "required": 5, "actorKindId": "demo.actor.archlich" }],
+      "targetPlacements": [{ "objectiveIndex": 0, "floorId": "demo.floor.outpost-royal-crypt", "spawnCount": 5 }],
+      "reward": { "itemInstanceId": "demo.task.royal-crypt.reward.1", "itemKindId": "demo.item.ring", "quantity": 1 }
     }
   ],
   "proceduralFloors": [
@@ -2075,6 +2123,134 @@
       },
       "actorSpawns": [],
       "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.outpost-sewer",
+      "nameKey": "floor-demo-outpost-sewer-name",
+      "returnFloorId": "demo.floor.surface",
+      "lifecycle": "one-shot",
+      "taskId": "demo.task.the-sewer",
+      "entryTerrainId": "demo.terrain.outpost-sewer-entry",
+      "availableEntryTerrainId": "demo.terrain.outpost-sewer-entry-available",
+      "completedEntryTerrainId": "demo.terrain.outpost-sewer-entry-completed",
+      "failedEntryTerrainId": "demo.terrain.outpost-sewer-entry-failed",
+      "abandonedEntryTerrainId": "demo.terrain.outpost-sewer-entry-abandoned",
+      "depth": 15, "width": 21, "height": 11,
+      "wallTerrainId": "demo.terrain.wall", "floorTerrainId": "demo.terrain.floor", "upStairTerrainId": "demo.terrain.stairs-up",
+      "closedDoorTerrainId": "demo.terrain.door-closed", "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [], "lootSpawns": [],
+      "inlineMap": {
+        "playerPosition": { "x": 1, "y": 5 },
+        "terrainOverrides": [
+          { "terrainId": "demo.terrain.floor", "positions": [
+            { "x": 10, "y": 1 }, { "x": 10, "y": 2 },
+            { "x": 5, "y": 3 }, { "x": 6, "y": 3 }, { "x": 7, "y": 3 }, { "x": 8, "y": 3 }, { "x": 9, "y": 3 }, { "x": 10, "y": 3 }, { "x": 11, "y": 3 }, { "x": 12, "y": 3 }, { "x": 13, "y": 3 }, { "x": 14, "y": 3 }, { "x": 15, "y": 3 },
+            { "x": 10, "y": 4 },
+            { "x": 2, "y": 5 }, { "x": 3, "y": 5 }, { "x": 4, "y": 5 }, { "x": 5, "y": 5 }, { "x": 6, "y": 5 }, { "x": 7, "y": 5 }, { "x": 8, "y": 5 }, { "x": 9, "y": 5 }, { "x": 10, "y": 5 }, { "x": 11, "y": 5 }, { "x": 12, "y": 5 }, { "x": 13, "y": 5 }, { "x": 14, "y": 5 }, { "x": 15, "y": 5 }, { "x": 16, "y": 5 }, { "x": 17, "y": 5 }, { "x": 18, "y": 5 }, { "x": 19, "y": 5 },
+            { "x": 10, "y": 6 },
+            { "x": 5, "y": 7 }, { "x": 6, "y": 7 }, { "x": 7, "y": 7 }, { "x": 8, "y": 7 }, { "x": 9, "y": 7 }, { "x": 10, "y": 7 }, { "x": 11, "y": 7 }, { "x": 12, "y": 7 }, { "x": 13, "y": 7 }, { "x": 14, "y": 7 }, { "x": 15, "y": 7 },
+            { "x": 10, "y": 8 }, { "x": 10, "y": 9 }
+          ] },
+          { "terrainId": "demo.terrain.stairs-up", "positions": [{ "x": 1, "y": 5 }] }
+        ],
+        "monsterFormation": {
+          "candidateActorKindIds": ["demo.actor.giant-white-rat", "demo.actor.giant-grey-rat", "demo.actor.skaven", "demo.actor.skaven-shaman", "demo.actor.plague-rat", "demo.actor.wererat", "demo.actor.grey-seer"],
+          "drawCount": 12,
+          "placementIndices": [0, 2, 4, 6, 8, 10],
+          "positions": [{ "x": 10, "y": 1 }, { "x": 5, "y": 3 }, { "x": 15, "y": 3 }, { "x": 19, "y": 5 }, { "x": 5, "y": 7 }, { "x": 10, "y": 9 }]
+        }
+      }
+    },
+    {
+      "id": "demo.floor.outpost-haunted-house",
+      "nameKey": "floor-demo-outpost-haunted-house-name",
+      "returnFloorId": "demo.floor.surface",
+      "lifecycle": "one-shot",
+      "taskId": "demo.task.haunted-house",
+      "entryTerrainId": "demo.terrain.outpost-haunted-house-entry",
+      "availableEntryTerrainId": "demo.terrain.outpost-haunted-house-entry-available",
+      "completedEntryTerrainId": "demo.terrain.outpost-haunted-house-entry-completed",
+      "failedEntryTerrainId": "demo.terrain.outpost-haunted-house-entry-failed",
+      "abandonedEntryTerrainId": "demo.terrain.outpost-haunted-house-entry-abandoned",
+      "depth": 45, "width": 25, "height": 13,
+      "wallTerrainId": "demo.terrain.permanent-wall", "floorTerrainId": "demo.terrain.floor", "upStairTerrainId": "demo.terrain.stairs-up",
+      "closedDoorTerrainId": "demo.terrain.door-closed", "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [], "lootSpawns": [],
+      "inlineMap": {
+        "playerPosition": { "x": 1, "y": 6 },
+        "terrainOverrides": [
+          { "terrainId": "demo.terrain.floor", "positions": [
+            { "x": 1, "y": 1 }, { "x": 2, "y": 1 }, { "x": 3, "y": 1 }, { "x": 4, "y": 1 }, { "x": 5, "y": 1 }, { "x": 6, "y": 1 }, { "x": 7, "y": 1 }, { "x": 8, "y": 1 }, { "x": 9, "y": 1 }, { "x": 10, "y": 1 }, { "x": 11, "y": 1 }, { "x": 12, "y": 1 }, { "x": 13, "y": 1 }, { "x": 14, "y": 1 }, { "x": 15, "y": 1 }, { "x": 16, "y": 1 }, { "x": 17, "y": 1 }, { "x": 18, "y": 1 }, { "x": 19, "y": 1 }, { "x": 20, "y": 1 }, { "x": 21, "y": 1 }, { "x": 22, "y": 1 }, { "x": 23, "y": 1 },
+            { "x": 1, "y": 2 }, { "x": 6, "y": 2 }, { "x": 12, "y": 2 }, { "x": 18, "y": 2 }, { "x": 23, "y": 2 },
+            { "x": 1, "y": 3 }, { "x": 6, "y": 3 }, { "x": 12, "y": 3 }, { "x": 18, "y": 3 }, { "x": 23, "y": 3 },
+            { "x": 1, "y": 4 }, { "x": 6, "y": 4 }, { "x": 12, "y": 4 }, { "x": 18, "y": 4 }, { "x": 23, "y": 4 },
+            { "x": 1, "y": 5 }, { "x": 6, "y": 5 }, { "x": 12, "y": 5 }, { "x": 18, "y": 5 }, { "x": 23, "y": 5 },
+            { "x": 2, "y": 6 }, { "x": 3, "y": 6 }, { "x": 4, "y": 6 }, { "x": 5, "y": 6 }, { "x": 6, "y": 6 }, { "x": 7, "y": 6 }, { "x": 8, "y": 6 }, { "x": 9, "y": 6 }, { "x": 10, "y": 6 }, { "x": 11, "y": 6 }, { "x": 12, "y": 6 }, { "x": 13, "y": 6 }, { "x": 14, "y": 6 }, { "x": 15, "y": 6 }, { "x": 16, "y": 6 }, { "x": 17, "y": 6 }, { "x": 18, "y": 6 }, { "x": 19, "y": 6 }, { "x": 20, "y": 6 }, { "x": 21, "y": 6 }, { "x": 22, "y": 6 }, { "x": 23, "y": 6 },
+            { "x": 1, "y": 7 }, { "x": 6, "y": 7 }, { "x": 12, "y": 7 }, { "x": 18, "y": 7 }, { "x": 23, "y": 7 },
+            { "x": 1, "y": 8 }, { "x": 6, "y": 8 }, { "x": 12, "y": 8 }, { "x": 18, "y": 8 }, { "x": 23, "y": 8 },
+            { "x": 1, "y": 9 }, { "x": 6, "y": 9 }, { "x": 12, "y": 9 }, { "x": 18, "y": 9 }, { "x": 23, "y": 9 },
+            { "x": 1, "y": 10 }, { "x": 6, "y": 10 }, { "x": 12, "y": 10 }, { "x": 18, "y": 10 }, { "x": 23, "y": 10 },
+            { "x": 1, "y": 11 }, { "x": 2, "y": 11 }, { "x": 3, "y": 11 }, { "x": 4, "y": 11 }, { "x": 5, "y": 11 }, { "x": 6, "y": 11 }, { "x": 7, "y": 11 }, { "x": 8, "y": 11 }, { "x": 9, "y": 11 }, { "x": 10, "y": 11 }, { "x": 11, "y": 11 }, { "x": 12, "y": 11 }, { "x": 13, "y": 11 }, { "x": 14, "y": 11 }, { "x": 15, "y": 11 }, { "x": 16, "y": 11 }, { "x": 17, "y": 11 }, { "x": 18, "y": 11 }, { "x": 19, "y": 11 }, { "x": 20, "y": 11 }, { "x": 21, "y": 11 }, { "x": 22, "y": 11 }, { "x": 23, "y": 11 }
+          ] },
+          { "terrainId": "demo.terrain.stairs-up", "positions": [{ "x": 1, "y": 6 }] }
+        ],
+        "monsterFormation": {
+          "candidateActorKindIds": ["demo.actor.spectre", "demo.actor.greater-mummy", "demo.actor.ipsissimus", "demo.actor.raal-s-tome-of-destruction", "demo.actor.shadow-demon", "demo.actor.dreadmaster", "demo.actor.spectral-tyrannosaurus"],
+          "drawCount": 16,
+          "placementIndices": [0, 2, 4, 6, 8, 10, 12, 14],
+          "positions": [{ "x": 23, "y": 1 }, { "x": 6, "y": 3 }, { "x": 18, "y": 3 }, { "x": 12, "y": 6 }, { "x": 23, "y": 6 }, { "x": 6, "y": 9 }, { "x": 18, "y": 9 }, { "x": 23, "y": 11 }]
+        }
+      }
+    },
+    {
+      "id": "demo.floor.outpost-royal-crypt",
+      "nameKey": "floor-demo-outpost-royal-crypt-name",
+      "returnFloorId": "demo.floor.surface",
+      "lifecycle": "one-shot",
+      "taskId": "demo.task.royal-crypt",
+      "entryTerrainId": "demo.terrain.outpost-royal-crypt-entry",
+      "availableEntryTerrainId": "demo.terrain.outpost-royal-crypt-entry-available",
+      "completedEntryTerrainId": "demo.terrain.outpost-royal-crypt-entry-completed",
+      "failedEntryTerrainId": "demo.terrain.outpost-royal-crypt-entry-failed",
+      "abandonedEntryTerrainId": "demo.terrain.outpost-royal-crypt-entry-abandoned",
+      "depth": 70, "width": 31, "height": 15,
+      "wallTerrainId": "demo.terrain.permanent-wall", "floorTerrainId": "demo.terrain.floor", "upStairTerrainId": "demo.terrain.stairs-up",
+      "closedDoorTerrainId": "demo.terrain.door-closed", "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [], "lootSpawns": [],
+      "inlineMap": {
+        "playerPosition": { "x": 1, "y": 7 },
+        "terrainOverrides": [
+          { "terrainId": "demo.terrain.floor", "positions": [
+            { "x": 1, "y": 1 }, { "x": 2, "y": 1 }, { "x": 3, "y": 1 }, { "x": 4, "y": 1 }, { "x": 5, "y": 1 }, { "x": 6, "y": 1 }, { "x": 7, "y": 1 }, { "x": 8, "y": 1 }, { "x": 9, "y": 1 }, { "x": 10, "y": 1 }, { "x": 11, "y": 1 }, { "x": 12, "y": 1 }, { "x": 13, "y": 1 }, { "x": 14, "y": 1 }, { "x": 15, "y": 1 }, { "x": 16, "y": 1 }, { "x": 17, "y": 1 }, { "x": 18, "y": 1 }, { "x": 19, "y": 1 }, { "x": 20, "y": 1 }, { "x": 21, "y": 1 }, { "x": 22, "y": 1 }, { "x": 23, "y": 1 }, { "x": 24, "y": 1 }, { "x": 25, "y": 1 }, { "x": 26, "y": 1 }, { "x": 27, "y": 1 }, { "x": 28, "y": 1 }, { "x": 29, "y": 1 },
+            { "x": 1, "y": 2 }, { "x": 8, "y": 2 }, { "x": 15, "y": 2 }, { "x": 22, "y": 2 }, { "x": 29, "y": 2 },
+            { "x": 1, "y": 3 }, { "x": 8, "y": 3 }, { "x": 15, "y": 3 }, { "x": 22, "y": 3 }, { "x": 29, "y": 3 },
+            { "x": 1, "y": 4 }, { "x": 8, "y": 4 }, { "x": 15, "y": 4 }, { "x": 22, "y": 4 }, { "x": 29, "y": 4 },
+            { "x": 1, "y": 5 }, { "x": 8, "y": 5 }, { "x": 15, "y": 5 }, { "x": 22, "y": 5 }, { "x": 29, "y": 5 },
+            { "x": 1, "y": 6 }, { "x": 8, "y": 6 }, { "x": 15, "y": 6 }, { "x": 22, "y": 6 }, { "x": 29, "y": 6 },
+            { "x": 2, "y": 7 }, { "x": 3, "y": 7 }, { "x": 4, "y": 7 }, { "x": 5, "y": 7 }, { "x": 6, "y": 7 }, { "x": 7, "y": 7 }, { "x": 8, "y": 7 }, { "x": 9, "y": 7 }, { "x": 10, "y": 7 }, { "x": 11, "y": 7 }, { "x": 12, "y": 7 }, { "x": 13, "y": 7 }, { "x": 14, "y": 7 }, { "x": 15, "y": 7 }, { "x": 16, "y": 7 }, { "x": 17, "y": 7 }, { "x": 18, "y": 7 }, { "x": 19, "y": 7 }, { "x": 20, "y": 7 }, { "x": 21, "y": 7 }, { "x": 22, "y": 7 }, { "x": 23, "y": 7 }, { "x": 24, "y": 7 }, { "x": 25, "y": 7 }, { "x": 26, "y": 7 }, { "x": 27, "y": 7 }, { "x": 28, "y": 7 }, { "x": 29, "y": 7 },
+            { "x": 1, "y": 8 }, { "x": 8, "y": 8 }, { "x": 15, "y": 8 }, { "x": 22, "y": 8 }, { "x": 29, "y": 8 },
+            { "x": 1, "y": 9 }, { "x": 8, "y": 9 }, { "x": 15, "y": 9 }, { "x": 22, "y": 9 }, { "x": 29, "y": 9 },
+            { "x": 1, "y": 10 }, { "x": 8, "y": 10 }, { "x": 15, "y": 10 }, { "x": 22, "y": 10 }, { "x": 29, "y": 10 },
+            { "x": 1, "y": 11 }, { "x": 8, "y": 11 }, { "x": 15, "y": 11 }, { "x": 22, "y": 11 }, { "x": 29, "y": 11 },
+            { "x": 1, "y": 12 }, { "x": 8, "y": 12 }, { "x": 15, "y": 12 }, { "x": 22, "y": 12 }, { "x": 29, "y": 12 },
+            { "x": 1, "y": 13 }, { "x": 2, "y": 13 }, { "x": 3, "y": 13 }, { "x": 4, "y": 13 }, { "x": 5, "y": 13 }, { "x": 6, "y": 13 }, { "x": 7, "y": 13 }, { "x": 8, "y": 13 }, { "x": 9, "y": 13 }, { "x": 10, "y": 13 }, { "x": 11, "y": 13 }, { "x": 12, "y": 13 }, { "x": 13, "y": 13 }, { "x": 14, "y": 13 }, { "x": 15, "y": 13 }, { "x": 16, "y": 13 }, { "x": 17, "y": 13 }, { "x": 18, "y": 13 }, { "x": 19, "y": 13 }, { "x": 20, "y": 13 }, { "x": 21, "y": 13 }, { "x": 22, "y": 13 }, { "x": 23, "y": 13 }, { "x": 24, "y": 13 }, { "x": 25, "y": 13 }, { "x": 26, "y": 13 }, { "x": 27, "y": 13 }, { "x": 28, "y": 13 }, { "x": 29, "y": 13 }
+          ] },
+          { "terrainId": "demo.terrain.stairs-up", "positions": [{ "x": 1, "y": 7 }] }
+        ],
+        "actorSpawns": [
+          { "instanceId": "demo.task.royal-crypt.archlich.1", "kindId": "demo.actor.archlich", "position": { "x": 8, "y": 1 } },
+          { "instanceId": "demo.task.royal-crypt.archlich.2", "kindId": "demo.actor.archlich", "position": { "x": 15, "y": 1 } },
+          { "instanceId": "demo.task.royal-crypt.archlich.3", "kindId": "demo.actor.archlich", "position": { "x": 22, "y": 1 } },
+          { "instanceId": "demo.task.royal-crypt.archlich.4", "kindId": "demo.actor.archlich", "position": { "x": 1, "y": 13 } },
+          { "instanceId": "demo.task.royal-crypt.archlich.5", "kindId": "demo.actor.archlich", "position": { "x": 15, "y": 13 } }
+        ],
+        "monsterFormation": {
+          "candidateActorKindIds": ["demo.actor.master-vampire", "demo.actor.grey-wraith", "demo.actor.crypt-thing", "demo.actor.black-wraith", "demo.actor.monastic-lich", "demo.actor.nether-wraith", "demo.actor.vampire-lord", "demo.actor.master-lich", "demo.actor.iron-lich", "demo.actor.legate-of-the-damned", "demo.actor.demilich", "demo.actor.eye-druj", "demo.actor.skull-druj", "demo.actor.black-reaver"],
+          "drawCount": 20,
+          "placementIndices": [0, 2, 4, 6, 8, 10, 12, 14, 16, 18],
+          "positions": [{ "x": 29, "y": 1 }, { "x": 8, "y": 3 }, { "x": 22, "y": 3 }, { "x": 15, "y": 5 }, { "x": 8, "y": 7 }, { "x": 22, "y": 7 }, { "x": 15, "y": 9 }, { "x": 8, "y": 11 }, { "x": 22, "y": 11 }, { "x": 29, "y": 13 }]
+        }
+      }
     }
   ]
 }

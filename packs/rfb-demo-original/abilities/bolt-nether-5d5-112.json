@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.bolt-nether-5d5-112",
+  "descriptionKey": "ability-legacy-bolt-nether-5d5-112-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.bolt-nether-5d5-112",
+  "nameKey": "ability-legacy-bolt-nether-5d5-112-name",
+  "tags": [
+    "legacy-import",
+    "damage"
+  ],
+  "target": {
+    "modes": [
+      "position",
+      "entity"
+    ],
+    "range": 8,
+    "requiresLineOfEffect": true
+  }
+}

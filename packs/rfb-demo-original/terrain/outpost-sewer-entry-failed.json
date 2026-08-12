@@ -1,0 +1,5 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/terrain.schema.json", "formatVersion": 1,
+  "id": "demo.terrain.outpost-sewer-entry-failed", "nameKey": "terrain-demo-outpost-sewer-entry-failed-name", "descriptionKey": "terrain-demo-outpost-sewer-entry-failed-description",
+  "glyph": "×", "walkable": true, "blocksSight": false, "tags": ["surface", "task-entry-failed"]
+}

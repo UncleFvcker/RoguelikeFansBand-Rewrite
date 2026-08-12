@@ -62,13 +62,7 @@ pub(super) fn validate_abilities(
         require_format_version(resource.format_version, &resource.id)?;
         validate_definition_id(&resource.id, "resource")?;
         validate_definition_text(&resource.id, &resource.name_key, &resource.description_key)?;
-        if resource.wait_recovery_amount > 1_000_000
-            || resource.rest_recovery_amount > 1_000_000
-            || resource.initial_fill_percent > 100
-            || resource.melee_hit_gain_amount > 1_000_000
-            || resource.melee_kill_gain_amount > 1_000_000
-            || resource.turn_decay_amount > 1_000_000
-        {
+        if resource.wait_recovery_amount > 1_000_000 || resource.rest_recovery_amount > 1_000_000 {
             return Err(ContentError::InvalidResource(resource.id.clone()));
         }
         normalize_tags(&resource.id, &mut resource.tags)?;

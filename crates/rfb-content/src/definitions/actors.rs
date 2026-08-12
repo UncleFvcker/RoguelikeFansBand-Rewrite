@@ -172,6 +172,10 @@ pub enum MeleeBlowEffectDefinition {
         amount_dice: u16,
         amount_sides: u16,
     },
+    DrainCharges {
+        #[serde(default)]
+        chance_percent: Option<u8>,
+    },
     DrainExperience {
         #[serde(default)]
         chance_percent: Option<u8>,

@@ -388,3 +388,16 @@ contract-v260 不增加存档字段。玩家从连续荒野进入非城镇地表
 contract-v261 不增加存档字段。蘑菇店继续使用既有 `ShopStateSaveDto`，快速恢复的
 定时再生继续使用既有 `StatusSaveDto`；State Hash Schema 保持 v86，save 容器保持
 v1。
+
+contract-v262 不增加存档字段。旅店住宿价格来自内容定义，城镇旅行资格直接读取既有
+`TownStateSaveDto.visited`；旅行后仍使用现有 wilderness position、view offset、
+FloorState 与 ShopState。State Hash Schema 保持 v86，save 容器保持 v1。
+
+contract-v263 为 `PlayerSaveDto` 增加必需的 `name`，新游戏与伯爵府合法改名使用同一名称
+验证，读档不保留旧开发存档兼容。名称进入玩家投影和状态哈希，因此 State Hash Schema
+升至 v87；save 容器仍为 v1。
+
+contract-v264 删除节奏技法和原创装置师职业充能后，`PlayerSaveDto.resources` 只接受
+当前职业精确声明的资源集合，不再为已退役职业补建缺失资源池。设备自然恢复余数与
+物品充能继续使用既有字段。删除的资源行为配置、职业投影和瞬时 touched 集合都不在
+state hash 输入中，因此 State Hash Schema 保持 v87；save 容器仍为 v1，不兼容旧开发存档。

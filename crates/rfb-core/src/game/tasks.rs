@@ -12,7 +12,7 @@ use rfb_protocol::{CampaignStatusDto, ItemEnchantmentsDto, ItemQualityDto, TaskS
 use crate::{
     error::CoreError,
     event::DomainEvent,
-    save::{initial_item_fuel, position_from_content},
+    save::initial_item_fuel,
     state::{ItemInstance, ItemLocation},
     stats::CharacterProgress,
 };
@@ -499,19 +499,11 @@ fn plan_campaign_retirement(
 }
 
 fn task_service_accessible(game: &Game, facility_id: &str) -> bool {
-    let Some(town) = game.current_town() else {
-        return false;
-    };
     let Some(facility) = game.content.town_facility(facility_id) else {
         return false;
     };
     facility.category == TownFacilityCategory::QuestGiver
-        && facility.town_id == town.id
-        && town.facility_ids.contains(&facility.id)
-        && game.town_local_to_active_position(
-            &town.id,
-            position_from_content(facility.entrance_position),
-        ) == Some(game.player.position)
+        && game.town_facility_accessible(facility_id)
 }
 
 fn reward_item(

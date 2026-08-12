@@ -7,5 +7,5 @@
   "glyph": "0",
   "walkable": true,
   "blocksSight": false,
-  "tags": ["outdoor", "shop-entrance", "surface"]
+  "tags": ["outdoor", "shop-entrance", "surface", "town-facility-entrance"]
 }

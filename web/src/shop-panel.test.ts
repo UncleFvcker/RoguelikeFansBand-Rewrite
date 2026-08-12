@@ -12,6 +12,7 @@ import {
   parseShopQuantity,
   shopTransactionReason,
   stayAtInnCommand,
+  travelFromInnCommand,
 } from "./shop-panel.ts";
 
 const localization = new Localization("en-US", {
@@ -41,12 +42,27 @@ test("shop previews show post-transaction gold and carried weight without mutati
   });
 });
 
-test("Anambar inn interaction dispatches the narrow stay command", () => {
-  assert.deepEqual(stayAtInnCommand({ id: "demo.shop.anambar-inn" }), {
+test("content-configured inns dispatch narrow stay and visited-town travel commands", () => {
+  assert.deepEqual(stayAtInnCommand({ id: "demo.shop.anambar-inn", innStayCost: 25 }), {
     type: "stay-at-inn",
     facilityId: "demo.shop.anambar-inn",
   });
-  assert.equal(stayAtInnCommand({ id: "demo.shop.outpost-general-store" }), undefined);
+  assert.equal(
+    stayAtInnCommand({ id: "demo.shop.outpost-general-store", innStayCost: undefined }),
+    undefined,
+  );
+  const inn = {
+    id: "demo.shop.outpost-white-horse",
+    innTravelDestinations: [
+      { townId: "demo.town.anambar", townNameKey: "town-demo-anambar-name", cost: 500 },
+    ],
+  };
+  assert.deepEqual(travelFromInnCommand(inn, "demo.town.anambar"), {
+    type: "travel-from-inn",
+    facilityId: "demo.shop.outpost-white-horse",
+    destinationTownId: "demo.town.anambar",
+  });
+  assert.equal(travelFromInnCommand(inn, "demo.town.unknown"), undefined);
 });
 
 test("shop rejection reasons and equipped light summaries are localized", () => {
