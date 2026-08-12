@@ -712,6 +712,9 @@ pub struct ItemDefinition {
     #[serde(default)]
     pub mogaminator_rare: bool,
     pub weight_tenths_pound: u16,
+    /// Original object pval used by the tunneling flag.
+    #[serde(default)]
+    pub tunneling_pval: i16,
     pub max_stack: u32,
     /// Fully-known, plain-instance value used by authoritative shop pricing.
     /// Zero means ordinary stores will not buy the item.

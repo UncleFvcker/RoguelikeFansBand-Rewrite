@@ -7,5 +7,9 @@
   "glyph": "#",
   "walkable": false,
   "blocksSight": true,
+  "digging": {
+    "power": 1,
+    "resolution": "permanent"
+  },
   "tags": ["interior", "permanent", "stone"]
 }

@@ -627,3 +627,9 @@ contract-v275 不增加内容字段或内容 ID，继续使用包 1.275.0 的职
 创建第二份进度。近战、弓与投石索使用 `(current - 4000) / 200`，弩使用
 `current / 400`，命中应用该值的三倍。Protocol 1.178、State Hash Schema v89，active
 baseline contract-v275；角色面板的等级展示留给后续 UI 批次。
+
+contract-v277 / 包 1.276.0 以 `TerrainDefinition.digging` 的
+`resultTerrainId/power/resolution/veinYield` 替换旧的通用挖掘目标/难度对；resolution
+限定为 `soft/hard/permanent`，永久地形不得声明结果，矿脉产出只用于 hard 地形。
+`ItemDefinition.tunnelingPval` 与物品重量共同派生武器/工具挖掘贡献。新增
+`demo.terrain.rubble`，没有新增 item、ability 或 affix ID。

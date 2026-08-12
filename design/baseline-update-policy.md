@@ -97,6 +97,12 @@ State Hash Schema 保持 v89、save v1 和内容包 1.275.0 不变。共享玩�
 21 条 fixture，并新增近战成长、射击成长和存档回放 3 条聚焦契约；active 集共 24 条、
 零 waiver。
 
+`contract-v277` 用 `TerrainDefinition.digging` 恢复原版 soft/hard/permanent 挖掘判定，
+并按力量表及武器/工具最大值派生挖掘力。Warrior 不再从 skill set 获得错误挖掘成长；
+相邻可挖 terrain 的公共交互投影也随之变化。因此统一刷新并复验 24 条 active fixture，
+active 集保持零 waiver。内容包升至 1.276.0；Protocol 保持 1.179、State Hash Schema
+保持 v89、save v1。
+
 ## 分类验证
 
 每条 fixture 必须声明一个受控的主 `category`。分类表示该 fixture 主要保护的行为，不是自由标签；跨系统改动一次选择多个分类即可。当前分类可通过下列命令查询，输出同时给出各类数量：

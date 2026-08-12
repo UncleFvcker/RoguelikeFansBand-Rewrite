@@ -57,7 +57,10 @@ pub(super) fn validate_terrain(
             terrain.walkable
                 || terrain.open_to_terrain_id.is_some()
                 || terrain.bash_to_terrain_id.is_some()
-                || terrain.dig_to_terrain_id.is_some(),
+                || terrain
+                    .digging
+                    .as_ref()
+                    .is_some_and(|digging| digging.result_terrain_id.is_some()),
         );
         terrain_tags.insert(
             terrain.id.clone(),
@@ -87,9 +90,6 @@ pub(super) fn validate_terrain(
         {
             return Err(ContentError::InvalidTerrainTransition(terrain.id.clone()));
         }
-        if terrain.dig_to_terrain_id.is_some() != terrain.dig_check_difficulty.is_some() {
-            return Err(ContentError::InvalidTerrainTransition(terrain.id.clone()));
-        }
         if terrain.concealed_as_terrain_id.is_some() != terrain.search_check_difficulty.is_some() {
             return Err(ContentError::InvalidTerrainTransition(terrain.id.clone()));
         }
@@ -103,9 +103,6 @@ pub(super) fn validate_terrain(
             .is_some_and(|difficulty| !(1..=1_000_000).contains(&difficulty))
             || terrain
                 .bash_check_difficulty
-                .is_some_and(|difficulty| !(1..=1_000_000).contains(&difficulty))
-            || terrain
-                .dig_check_difficulty
                 .is_some_and(|difficulty| !(1..=1_000_000).contains(&difficulty))
             || terrain
                 .search_check_difficulty
@@ -180,19 +177,32 @@ pub(super) fn validate_terrain(
                 return Err(ContentError::InvalidTerrainTransition(terrain.id.clone()));
             }
         }
-        if let Some(target_id) = &terrain.dig_to_terrain_id {
-            require_reference(&terrain_ids, target_id, &terrain.id)?;
-            let target = terrain_definitions
-                .iter()
-                .find(|candidate| candidate.id == *target_id)
-                .expect("validated terrain target must remain available");
-            if target_id == &terrain.id
+        if let Some(digging) = &terrain.digging {
+            let permanent = digging.resolution == TerrainDiggingResolution::Permanent;
+            if digging.power == 0
+                || digging.power > 1_000
+                || permanent != digging.result_terrain_id.is_none()
                 || terrain.walkable
                 || !terrain.blocks_sight
-                || !target.walkable
-                || target.blocks_sight
+                || (digging.vein_yield.is_some()
+                    && digging.resolution != TerrainDiggingResolution::Hard)
             {
                 return Err(ContentError::InvalidTerrainTransition(terrain.id.clone()));
+            }
+            if let Some(target_id) = &digging.result_terrain_id {
+                require_reference(&terrain_ids, target_id, &terrain.id)?;
+                let target = terrain_definitions
+                    .iter()
+                    .find(|candidate| candidate.id == *target_id)
+                    .expect("validated terrain target must remain available");
+                if target_id == &terrain.id
+                    || terrain.walkable
+                    || !terrain.blocks_sight
+                    || !target.walkable
+                    || target.blocks_sight
+                {
+                    return Err(ContentError::InvalidTerrainTransition(terrain.id.clone()));
+                }
             }
         }
         let warding_glyph = terrain.tags.iter().any(|tag| tag == "warding-glyph");

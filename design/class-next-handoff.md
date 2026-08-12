@@ -114,3 +114,16 @@ ammo-slaying ID。若 items 方向随后导入陶器碎片或断木棍，也应�
   `4274e13bce1b7c3e1808267ac12c1fe4f5fa83e6f256c602c693205396767fa2`。
 - active fixture 为 24 条：原 21 条共享投影已刷新，并新增近战成长、射击成长和熟练度
   存档回放。武术、双持、骑乘仍为独立缺口。
+
+## 挖矿系统第一步
+
+- 包 1.276.0 新增 `TerrainDefinition.digging` 与 `ItemDefinition.tunnelingPval`，并占用
+  terrain ID `demo.terrain.rubble`；没有新增 item、ability 或 affix ID。
+- 玩家挖掘力使用 RFB master 的 38 档力量表及装备最大值。Shovel、Pick、Gnomish
+  Shovel、Orcish Pick 分别贡献 46/55/66/75；Warrior skill set 不再错误叠加挖掘成长。
+- soft/hard/permanent 判定、继续挖掘条件、永久墙零 RNG、怪物转普通近战和地面物品不
+  阻塞均已接入。前端通过既有事件 args 的 `retryable` 保留挖掘模式。
+- 共享协调点：pack 1.276.0、Protocol 1.179、State Hash Schema v89、save v1、active
+  baseline contract-v277；content hash 为
+  `ee561b30744f44fd627805d8ed0a45eb64b21ec4c13991033b6f6254b29156b9`。
+- 矿脉财宝、碎石掉落和挖掘疲劳尚未接入，后续不得在职业代码中另建挖矿判定。

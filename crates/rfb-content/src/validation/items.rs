@@ -673,6 +673,12 @@ pub(super) fn validate_items(
         if item.weight_tenths_pound == 0 || item.weight_tenths_pound > 10_000 {
             return Err(ContentError::InvalidItemWeight(item.id.clone()));
         }
+        if !(-100..=100).contains(&item.tunneling_pval)
+            || (item.tunneling_pval != 0
+                && !matches!(item.equipment_slot.as_deref(), Some("weapon" | "tool")))
+        {
+            return Err(ContentError::InvalidItemModifiers(item.id.clone()));
+        }
         if item.max_stack == 0 || item.max_stack > 1_000_000 {
             return Err(ContentError::InvalidItemStack(item.id.clone()));
         }

@@ -4501,8 +4501,9 @@ impl Game {
                     return None;
                 }
                 let target_terrain_id = terrain
-                    .dig_to_terrain_id
+                    .digging
                     .as_ref()
+                    .and_then(|digging| digging.result_terrain_id.as_ref())
                     .or(terrain.monster_destroy_to_terrain_id.as_ref())?
                     .clone();
                 Some(AbilityTargetPlan::ConsumeTerrain {
@@ -4578,8 +4579,9 @@ impl Game {
                     return None;
                 }
                 let target_terrain_id = terrain
-                    .dig_to_terrain_id
+                    .digging
                     .as_ref()
+                    .and_then(|digging| digging.result_terrain_id.as_ref())
                     .or(terrain.monster_destroy_to_terrain_id.as_ref())?
                     .clone();
                 Some(AbilityTargetPlan::CreateAmmunitionFromTerrain {

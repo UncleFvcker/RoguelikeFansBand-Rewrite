@@ -23,6 +23,11 @@
       "background": "#25131a",
       "tile": { "x": 1, "y": 0 }
     },
+    "demo.terrain.rubble": {
+      "foreground": "#969a8c",
+      "background": "#25131a",
+      "tile": { "x": 1, "y": 0 }
+    },
     "demo.terrain.permanent-wall": {
       "foreground": "#91a0ad",
       "background": "#171820",

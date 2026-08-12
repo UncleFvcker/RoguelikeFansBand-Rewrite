@@ -2,9 +2,6 @@
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
   "baseValue": 100,
   "descriptionKey": "item-demo-gnomish-shovel-description",
-  "equipmentBonuses": {
-    "diggingSkill": 3
-  },
   "equipmentSlot": "tool",
   "formatVersion": 1,
   "generationLevel": 20,
@@ -26,5 +23,6 @@
     "tool",
     "weapon"
   ],
+  "tunnelingPval": 3,
   "weightTenthsPound": 60
 }

@@ -266,3 +266,17 @@ git diff --stat
   `4274e13bce1b7c3e1808267ac12c1fe4f5fa83e6f256c602c693205396767fa2`。
 - active fixture 共 24 条，含近战成长、射击成长和熟练度存档回放 3 条聚焦契约。武术、
   双持、骑乘仍是独立缺口。
+
+## 15. main 当前交接（挖矿系统第一步）
+
+- 新增内容字段 `TerrainDefinition.digging` 与 `ItemDefinition.tunnelingPval`；旧
+  `digToTerrainId/digCheckDifficulty` 已删除，其他分支不得继续写入旧字段或复制 resolver。
+- 新占用 terrain ID `demo.terrain.rubble`。本批没有新增 item/ability/affix ID；后续矿脉
+  产出优先引用 items 分支已有内容，新增物品必须先声明 ID。
+- 玩家挖掘力由 38 档力量表、武器/工具单件重量与 pval 最大值、状态原始加值组成；职业
+  skill set 不贡献挖掘。四件现有工具的贡献固定为 46/55/66/75。
+- soft/hard/permanent 判定与 retryable 已接入；永久墙消耗行动但零 RNG，怪物复用普通
+  近战，地面物品不阻塞，门继续拒绝。
+- 共享协调点：pack `1.276.0`、Protocol `1.179`、State Hash Schema v89、save v1、
+  active baseline `contract-v277`，content hash 为
+  `ee561b30744f44fd627805d8ed0a45eb64b21ec4c13991033b6f6254b29156b9`。

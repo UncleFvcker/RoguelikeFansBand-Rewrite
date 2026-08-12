@@ -1531,8 +1531,10 @@ impl Game {
             StatKind::DigSkill,
             StatLayer::Base,
             base_source,
-            if include_equipment && self.build.is_some() {
-                0
+            if include_equipment {
+                i32::from(crate::stats::strength_digging_bonus(
+                    self.effective_player_attributes().strength,
+                ))
             } else {
                 definition.dig_skill
             },
@@ -1576,20 +1578,26 @@ impl Game {
                     add_nonzero_stat(&mut pipeline, kind, StatLayer::Status, &mutation.id, value);
                 }
             }
+            let mut digging_equipment = ("rfb.digging-equipment".to_owned(), 0);
             for item in self
                 .items
                 .iter()
                 .filter(|item| matches!(&item.location, ItemLocation::Equipped { .. }))
             {
-                if matches!(&item.location, ItemLocation::Equipped { slot_id } if self.body_slot_type(slot_id) == Some("tool"))
+                let slot_type = match &item.location {
+                    ItemLocation::Equipped { slot_id } => self.body_slot_type(slot_id),
+                    _ => None,
+                };
+                if matches!(slot_type, Some("weapon" | "tool"))
+                    && let Some(definition) = self.content.item(&item.kind_id)
                 {
-                    let bonuses = self.item_equipment_bonuses(item);
-                    add_equipment_stat(
-                        &mut pipeline,
-                        StatKind::DigSkill,
-                        &item.id,
-                        bonuses.digging_skill,
-                    );
+                    let bonus = i32::from(definition.weight_tenths_pound / 10)
+                        .saturating_add(i32::from(definition.tunneling_pval).saturating_mul(20));
+                    if bonus > digging_equipment.1 {
+                        digging_equipment = (item.id.clone(), bonus);
+                    }
+                }
+                if slot_type == Some("tool") {
                     continue;
                 }
                 let modifiers = self.item_modifiers(item);
@@ -1681,12 +1689,6 @@ impl Game {
                     &item.id,
                     bonuses.disarming_skill,
                 );
-                add_equipment_stat(
-                    &mut pipeline,
-                    StatKind::DigSkill,
-                    &item.id,
-                    bonuses.digging_skill,
-                );
                 let melee_profile = match &item.location {
                     ItemLocation::Equipped { slot_id }
                         if self.body_slot_type(slot_id) == Some("weapon") =>
@@ -1736,6 +1738,12 @@ impl Game {
                     );
                 }
             }
+            add_equipment_stat(
+                &mut pipeline,
+                StatKind::DigSkill,
+                &digging_equipment.0,
+                digging_equipment.1,
+            );
 
             let encumbrance_penalty = self.player_encumbrance_speed_penalty();
             if encumbrance_penalty > 0 {

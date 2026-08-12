@@ -122,7 +122,7 @@ fn shovel_equips_as_a_tool_without_replacing_the_melee_weapon_profile() {
     let equipped = game.player_derived_stats();
     let profile = game.player_melee_profile(&equipped);
     assert_eq!(update.equipment[0].slot_id, "tool");
-    assert_eq!(equipped.dig_skill.value, baseline.dig_skill.value + 2);
+    assert_eq!(equipped.dig_skill.value, baseline.dig_skill.value + 46);
     assert_eq!(equipped.attack.value, baseline.attack.value);
     assert_eq!(equipped.defense.value, baseline.defense.value);
     assert_eq!(equipped.melee_skill.value, baseline.melee_skill.value);
@@ -132,6 +132,53 @@ fn shovel_equips_as_a_tool_without_replacing_the_melee_weapon_profile() {
     );
     assert_eq!((profile.damage_dice, profile.damage_sides), (1, 2));
     assert_eq!(profile.source_item_id, None);
+}
+
+#[test]
+fn original_diggers_use_weight_and_tunneling_pval_without_stacking_with_weapons() {
+    for (kind_id, expected) in [
+        ("demo.item.shovel", 46),
+        ("demo.item.pick", 55),
+        ("demo.item.gnomish-shovel", 66),
+        ("demo.item.orcish-pick", 75),
+    ] {
+        let mut game = Game::new(42);
+        game.items.clear();
+        let baseline = game.player_derived_stats().dig_skill.value;
+        give_inventory_item(&mut game, "test.digger", kind_id);
+        dispatch_next(
+            &mut game,
+            GameCommand::Equip {
+                item_id: "test.digger".to_owned(),
+                slot_id: Some("tool".to_owned()),
+            },
+        );
+        assert_eq!(
+            game.player_derived_stats().dig_skill.value,
+            baseline + expected
+        );
+    }
+
+    let mut game = Game::new(42);
+    game.items.clear();
+    let baseline = game.player_derived_stats().dig_skill.value;
+    give_inventory_item(&mut game, "test.weapon", "demo.item.broad-sword");
+    dispatch_next(
+        &mut game,
+        GameCommand::Equip {
+            item_id: "test.weapon".to_owned(),
+            slot_id: Some("right-hand".to_owned()),
+        },
+    );
+    give_inventory_item(&mut game, "test.tool", "demo.item.orcish-pick");
+    dispatch_next(
+        &mut game,
+        GameCommand::Equip {
+            item_id: "test.tool".to_owned(),
+            slot_id: Some("tool".to_owned()),
+        },
+    );
+    assert_eq!(game.player_derived_stats().dig_skill.value, baseline + 75);
 }
 
 #[test]

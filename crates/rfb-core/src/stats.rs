@@ -128,6 +128,11 @@ const ORIGINAL_STRENGTH_HOLD_POUNDS: [u16; 38] = [
     30, 31, 32, 33, 34, 35, 37, 40, 44, 48, 50, 50, 50,
 ];
 
+const ORIGINAL_STRENGTH_DIGGING_BONUS: [u16; 38] = [
+    0, 0, 1, 2, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 10, 12, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60,
+    65, 70, 75, 80, 85, 90, 95, 100, 100, 100,
+];
+
 #[must_use]
 pub fn carry_capacity_tenths_pound(strength: u16) -> u32 {
     let index = stat_index(strength).min(PRE_VICTORY_ATTRIBUTE_INDEX_CAP);
@@ -138,6 +143,12 @@ pub fn carry_capacity_tenths_pound(strength: u16) -> u32 {
 pub fn strength_hold_pounds(strength: u16) -> u16 {
     let index = stat_index(strength).min(PRE_VICTORY_ATTRIBUTE_INDEX_CAP);
     ORIGINAL_STRENGTH_HOLD_POUNDS[index as usize]
+}
+
+#[must_use]
+pub fn strength_digging_bonus(strength: u16) -> u16 {
+    let index = stat_index(strength).min(PRE_VICTORY_ATTRIBUTE_INDEX_CAP);
+    ORIGINAL_STRENGTH_DIGGING_BONUS[index as usize]
 }
 
 #[must_use]
@@ -1065,6 +1076,16 @@ mod tests {
             modify_attribute_value(VICTORY_ATTRIBUTE_CAP, -60, VICTORY_ATTRIBUTE_CAP),
             PRE_VICTORY_ATTRIBUTE_CAP
         );
+    }
+
+    #[test]
+    fn strength_digging_uses_the_original_38_bucket_table() {
+        assert_eq!(strength_digging_bonus(3), 0);
+        assert_eq!(strength_digging_bonus(5), 1);
+        assert_eq!(strength_digging_bonus(18), 9);
+        assert_eq!(strength_digging_bonus(28), 10);
+        assert_eq!(strength_digging_bonus(PRE_VICTORY_ATTRIBUTE_CAP), 100);
+        assert_eq!(strength_digging_bonus(VICTORY_ATTRIBUTE_CAP), 100);
     }
 
     #[test]

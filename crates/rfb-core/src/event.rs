@@ -544,6 +544,7 @@ pub(crate) enum DomainEvent {
     },
     TerrainDigFailed {
         position: Position,
+        retryable: bool,
     },
     TerrainDigUnavailable,
     DoorClosed {
@@ -2548,10 +2549,17 @@ impl DomainEvent {
                 "terrain-dug",
                 [("x", position.x.to_string()), ("y", position.y.to_string())],
             ),
-            Self::TerrainDigFailed { position } => dto(
+            Self::TerrainDigFailed {
+                position,
+                retryable,
+            } => dto(
                 "terrain.dig-failed",
                 "terrain-dig-failed",
-                [("x", position.x.to_string()), ("y", position.y.to_string())],
+                [
+                    ("x", position.x.to_string()),
+                    ("y", position.y.to_string()),
+                    ("retryable", retryable.to_string()),
+                ],
             ),
             Self::TerrainDigUnavailable => {
                 dto_without_args("terrain.dig-unavailable", "terrain-dig-unavailable")
@@ -5130,6 +5138,18 @@ mod tests {
         };
         assert_eq!(resolution.raw_damage, 7);
         assert_eq!(resolution.final_damage, 7);
+    }
+
+    #[test]
+    fn digging_failure_projects_its_repeat_decision() {
+        let event = DomainEvent::TerrainDigFailed {
+            position: Position { x: 4, y: 7 },
+            retryable: true,
+        }
+        .into_dto();
+
+        assert_eq!(event.kind, "terrain.dig-failed");
+        assert_eq!(event.args["retryable"], "true");
     }
 
     #[test]

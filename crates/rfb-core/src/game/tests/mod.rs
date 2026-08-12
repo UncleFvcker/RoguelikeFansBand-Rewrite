@@ -3,7 +3,8 @@ use crate::effect::StatusInstance;
 use crate::resistance::ResistanceLevel;
 use rfb_protocol::{
     CellVisualDto, DamageTypeDto, Direction, GameCommand, GameCommandEnvelope, GameEventOutcomeDto,
-    GameSnapshot, ResistanceLevelDto, ShopCategoryDto, ShopDto, StatusSaveDto, VisibilityState,
+    GameSnapshot, ResistanceLevelDto, ShopCategoryDto, ShopDto, StatusSaveDto,
+    TerrainInteractionKindDto, VisibilityState,
 };
 
 use super::*;

@@ -38,6 +38,8 @@ pub(crate) struct SourceItemDefinition {
     #[serde(default)]
     mogaminator_rare: bool,
     weight_tenths_pound: u16,
+    #[serde(default)]
+    tunneling_pval: i16,
     max_stack: u32,
     #[serde(default)]
     base_value: u32,
@@ -220,6 +222,7 @@ impl SourceItemDefinition {
             generation_level: self.generation_level,
             mogaminator_rare: self.mogaminator_rare,
             weight_tenths_pound: self.weight_tenths_pound,
+            tunneling_pval: self.tunneling_pval,
             max_stack: self.max_stack,
             base_value: self.base_value,
             equipment_slot: self.equipment_slot,

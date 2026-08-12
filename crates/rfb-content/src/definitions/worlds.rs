@@ -39,9 +39,7 @@ pub struct TerrainDefinition {
     #[serde(default)]
     pub monster_unlock_to_terrain_id: Option<String>,
     #[serde(default)]
-    pub dig_to_terrain_id: Option<String>,
-    #[serde(default)]
-    pub dig_check_difficulty: Option<i32>,
+    pub digging: Option<TerrainDiggingDefinition>,
     /// Result of the original `FF_HURT_DISI` terrain transition.
     #[serde(default)]
     pub monster_destroy_to_terrain_id: Option<String>,
@@ -56,6 +54,35 @@ pub struct TerrainDefinition {
     #[serde(default)]
     pub movement_modes: Vec<ActorMovementMode>,
     pub tags: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct TerrainDiggingDefinition {
+    #[serde(default)]
+    pub result_terrain_id: Option<String>,
+    pub power: u16,
+    pub resolution: TerrainDiggingResolution,
+    #[serde(default)]
+    pub vein_yield: Option<TerrainVeinYield>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum TerrainDiggingResolution {
+    Soft,
+    Hard,
+    Permanent,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum TerrainVeinYield {
+    Ordinary,
+    Treasure,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

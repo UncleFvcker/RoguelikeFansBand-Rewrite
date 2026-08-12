@@ -742,7 +742,7 @@ fn selected_legacy_equipment_keeps_fixed_source_values_and_slots() {
 }
 
 #[test]
-fn selected_legacy_armor_and_gloves_keep_melee_combat_modifiers() {
+fn selected_legacy_equipment_keeps_combat_and_tunneling_modifiers() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let bonuses = |id: &str| {
         &artifact
@@ -764,9 +764,19 @@ fn selected_legacy_armor_and_gloves_keep_melee_combat_modifiers() {
     assert_eq!(gauntlets.melee_skill, 1);
     assert_eq!(gauntlets.melee_damage, 1);
     assert_eq!(bonuses("demo.item.chain-mail").melee_skill, -2);
-    assert_eq!(bonuses("demo.item.shovel").digging_skill, 2);
-    assert_eq!(bonuses("demo.item.pick").digging_skill, 2);
-    assert_eq!(bonuses("demo.item.gnomish-shovel").digging_skill, 3);
+    let tunneling_pval = |id: &str| {
+        artifact
+            .content
+            .items
+            .iter()
+            .find(|item| item.id == id)
+            .unwrap_or_else(|| panic!("{id} should exist"))
+            .tunneling_pval
+    };
+    assert_eq!(tunneling_pval("demo.item.shovel"), 2);
+    assert_eq!(tunneling_pval("demo.item.pick"), 2);
+    assert_eq!(tunneling_pval("demo.item.gnomish-shovel"), 3);
+    assert_eq!(tunneling_pval("demo.item.orcish-pick"), 3);
     assert_eq!(bonuses("demo.item.rhino-hide-armour").melee_skill, -1);
     assert_eq!(bonuses("demo.item.leather-jacket").melee_skill, -1);
     assert_eq!(bonuses("demo.item.ring-mail").melee_skill, -2);

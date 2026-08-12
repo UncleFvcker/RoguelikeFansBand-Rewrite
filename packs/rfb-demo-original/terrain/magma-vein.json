@@ -9,7 +9,11 @@
   "blocksSight": true,
   "allowsWallPassage": true,
   "monsterDestroyToTerrainId": "demo.terrain.floor",
-  "digToTerrainId": "demo.terrain.floor",
-  "digCheckDifficulty": 10,
+  "digging": {
+    "resultTerrainId": "demo.terrain.floor",
+    "power": 10,
+    "resolution": "hard",
+    "veinYield": "ordinary"
+  },
   "tags": ["interior", "stone", "vein", "diggable", "magma"]
 }

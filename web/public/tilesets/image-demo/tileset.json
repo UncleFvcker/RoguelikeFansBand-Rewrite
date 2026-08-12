@@ -23,6 +23,11 @@
       "background": "#26303d",
       "tile": { "x": 1, "y": 0 }
     },
+    "demo.terrain.rubble": {
+      "foreground": "#8f887c",
+      "background": "#242424",
+      "tile": { "x": 1, "y": 0 }
+    },
     "demo.terrain.magma-vein": {
       "foreground": "#a85d3b",
       "background": "#30231f",

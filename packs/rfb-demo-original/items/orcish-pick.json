@@ -2,9 +2,6 @@
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
   "baseValue": 300,
   "descriptionKey": "item-demo-orcish-pick-description",
-  "equipmentBonuses": {
-    "diggingSkill": 3
-  },
   "equipmentSlot": "tool",
   "formatVersion": 1,
   "generationLevel": 30,
@@ -26,5 +23,6 @@
     "tool",
     "weapon"
   ],
+  "tunnelingPval": 3,
   "weightTenthsPound": 150
 }

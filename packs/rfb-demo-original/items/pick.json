@@ -2,9 +2,6 @@
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
   "baseValue": 50,
   "descriptionKey": "item-demo-pick-description",
-  "equipmentBonuses": {
-    "diggingSkill": 2
-  },
   "equipmentSlot": "tool",
   "formatVersion": 1,
   "generationLevel": 5,
@@ -26,5 +23,6 @@
     "tool",
     "weapon"
   ],
+  "tunnelingPval": 2,
   "weightTenthsPound": 150
 }

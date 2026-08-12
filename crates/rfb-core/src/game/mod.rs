@@ -2102,8 +2102,32 @@ impl Game {
                     changed.insert(position);
                     events.push(DomainEvent::TerrainDug { position });
                 }
-                Some(TerrainDigOutcome::Failed { position }) => {
-                    events.push(DomainEvent::TerrainDigFailed { position });
+                Some(TerrainDigOutcome::Failed {
+                    position,
+                    retryable,
+                }) => {
+                    events.push(DomainEvent::TerrainDigFailed {
+                        position,
+                        retryable,
+                    });
+                }
+                Some(TerrainDigOutcome::ActorBlocked { position, index }) => {
+                    changed.insert(position);
+                    if self.actor_is_player_side(&self.entities[index]) {
+                        events.push(DomainEvent::MoveBlocked);
+                    } else if self.player_fear_blocks_melee(index) {
+                        events.push(DomainEvent::PlayerFearBlocked {
+                            status_kind_id: STATUS_FEAR.to_owned(),
+                        });
+                    } else {
+                        self.resolve_player_melee(
+                            index,
+                            true,
+                            &mut events,
+                            &mut changed,
+                            &mut removed_entities,
+                        )?;
+                    }
                 }
                 None => events.push(DomainEvent::TerrainDigUnavailable),
             },

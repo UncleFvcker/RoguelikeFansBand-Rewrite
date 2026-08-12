@@ -47,6 +47,51 @@
       ],
       "type": "string"
     },
+    "TerrainDiggingDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "power": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "resolution": {
+          "$ref": "#/$defs/TerrainDiggingResolution"
+        },
+        "resultTerrainId": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "veinYield": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TerrainVeinYield"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "power",
+        "resolution"
+      ],
+      "type": "object"
+    },
+    "TerrainDiggingResolution": {
+      "enum": [
+        "soft",
+        "hard",
+        "permanent"
+      ],
+      "type": "string"
+    },
     "TerrainTrapDefinition": {
       "additionalProperties": false,
       "properties": {
@@ -87,6 +132,13 @@
         "disarmCheckDifficulty"
       ],
       "type": "object"
+    },
+    "TerrainVeinYield": {
+      "enum": [
+        "ordinary",
+        "treasure"
+      ],
+      "type": "string"
     }
   },
   "$id": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/terrain.schema.json",
@@ -135,20 +187,16 @@
     "descriptionKey": {
       "type": "string"
     },
-    "digCheckDifficulty": {
-      "default": null,
-      "format": "int32",
-      "type": [
-        "integer",
-        "null"
-      ]
-    },
-    "digToTerrainId": {
-      "default": null,
-      "type": [
-        "string",
-        "null"
-      ]
+    "digging": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/TerrainDiggingDefinition"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
     },
     "formatVersion": {
       "format": "uint16",

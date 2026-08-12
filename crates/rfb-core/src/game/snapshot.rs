@@ -1239,15 +1239,16 @@ impl Game {
                     unavailable_reason,
                 });
             }
-            if terrain.dig_to_terrain_id.is_some() {
+            if let Some(digging) = &terrain.digging {
                 interactions.push(TerrainInteractionDto {
                     kind: TerrainInteractionKindDto::DigTerrain,
                     direction,
                     position,
                     terrain_id: terrain.id.clone(),
-                    requires_check: true,
-                    available,
-                    unavailable_reason,
+                    requires_check: digging.resolution
+                        != rfb_content::TerrainDiggingResolution::Permanent,
+                    available: true,
+                    unavailable_reason: None,
                 });
             }
         }

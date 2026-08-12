@@ -2,7 +2,9 @@
 
 use std::collections::BTreeSet;
 
-use rfb_content::{ContentCatalog, TerrainDefinition};
+use rfb_content::{
+    ContentCatalog, TerrainDefinition, TerrainDiggingDefinition, TerrainDiggingResolution,
+};
 use rfb_protocol::{Direction, Position, TerrainInteractionUnavailableReasonDto};
 
 use crate::{
@@ -20,7 +22,8 @@ pub(super) enum TrapDisarmOutcome {
 
 pub(super) enum TerrainDigOutcome {
     Succeeded { position: Position },
-    Failed { position: Position },
+    Failed { position: Position, retryable: bool },
+    ActorBlocked { position: Position, index: usize },
 }
 
 pub(super) enum DoorOpenOutcome {
@@ -116,6 +119,12 @@ struct TerrainSearchPlan {
     difficulty: i32,
 }
 
+struct TerrainDigPlan {
+    position: Position,
+    index: usize,
+    digging: TerrainDiggingDefinition,
+}
+
 fn plan_open_door(
     context: &TerrainInteractionContext<'_>,
     direction: Direction,
@@ -198,19 +207,13 @@ fn plan_disarm_trap(
 fn plan_dig_terrain(
     context: &TerrainInteractionContext<'_>,
     direction: Direction,
-) -> Option<TerrainMutationPlan> {
+) -> Option<TerrainDigPlan> {
     let position = context.position_in_direction(direction);
-    if context.unavailable_reason(position).is_some() {
-        return None;
-    }
     let (index, terrain) = context.known_terrain_at(position)?;
-    Some(TerrainMutationPlan {
+    Some(TerrainDigPlan {
         position,
         index,
-        source_id: terrain.id.clone(),
-        target_id: terrain.dig_to_terrain_id.clone()?,
-        difficulty: Some(terrain.dig_check_difficulty?),
-        clear_revealed: true,
+        digging: terrain.digging.clone()?,
     })
 }
 
@@ -455,15 +458,58 @@ impl Game {
 
     pub(super) fn dig_terrain(&mut self, direction: Direction) -> Option<TerrainDigOutcome> {
         let plan = plan_dig_terrain(&self.terrain_interaction_context(), direction)?;
-        let ability = self.player_derived_stats().dig_skill;
-        if !self.terrain_check_succeeded(&plan, CheckKind::DigTerrain, ability) {
-            return Some(TerrainDigOutcome::Failed {
+        if let Some(index) = self
+            .entities
+            .iter()
+            .position(|entity| entity.position == plan.position)
+        {
+            return Some(TerrainDigOutcome::ActorBlocked {
                 position: plan.position,
+                index,
             });
         }
-        let position = plan.position;
-        self.commit_terrain_mutation(plan);
-        Some(TerrainDigOutcome::Succeeded { position })
+        let dig_skill = self.player_derived_stats().dig_skill.value;
+        let succeeded = match plan.digging.resolution {
+            TerrainDiggingResolution::Permanent => false,
+            TerrainDiggingResolution::Soft => {
+                dig_skill
+                    > i32::try_from(
+                        self.rng
+                            .bounded(u64::from(plan.digging.power).saturating_mul(20)),
+                    )
+                    .unwrap_or(i32::MAX)
+            }
+            TerrainDiggingResolution::Hard => {
+                dig_skill
+                    > i32::from(plan.digging.power).saturating_add(
+                        i32::try_from(
+                            self.rng
+                                .bounded(u64::from(plan.digging.power).saturating_mul(40)),
+                        )
+                        .unwrap_or(i32::MAX),
+                    )
+            }
+        };
+        if !succeeded {
+            let retryable = match plan.digging.resolution {
+                TerrainDiggingResolution::Soft => true,
+                TerrainDiggingResolution::Hard => dig_skill > i32::from(plan.digging.power),
+                TerrainDiggingResolution::Permanent => false,
+            };
+            return Some(TerrainDigOutcome::Failed {
+                position: plan.position,
+                retryable,
+            });
+        }
+        let target_id = plan
+            .digging
+            .result_terrain_id
+            .expect("successful digging must retain a replacement terrain");
+        self.terrain[plan.index] = target_id;
+        self.revealed_terrain.remove(&plan.position);
+        Some(TerrainDigOutcome::Succeeded {
+            position: plan.position,
+        })
     }
 
     pub(super) fn search_hidden_terrain(&mut self) -> Vec<Position> {

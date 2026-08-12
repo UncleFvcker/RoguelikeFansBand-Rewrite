@@ -9,6 +9,7 @@ import {
   terrainInteractionForDirection,
   terrainInteractionsForMode,
   terrainInteractionModeForKey,
+  terrainDigShouldRepeat,
   terrainSearchCommandForKey,
 } from "./terrain-interaction.ts";
 
@@ -23,6 +24,20 @@ test("door interaction keys enter stable open, close, and bash modes", () => {
   assert.equal(terrainInteractionModeForKey("t"), undefined);
   assert.equal(terrainInteractionModeForKey("T"), "dig-terrain");
   assert.equal(terrainInteractionModeForKey("x"), undefined);
+});
+
+test("dig mode repeats only after an authoritative retryable failure", () => {
+  const event = {
+    kind: "terrain.dig-failed",
+    messageKey: "terrain-dig-failed",
+    args: { x: "1", y: "2", retryable: "true" },
+  };
+  assert.equal(terrainDigShouldRepeat([event]), true);
+  assert.equal(
+    terrainDigShouldRepeat([{ ...event, args: { ...event.args, retryable: "false" } }]),
+    false,
+  );
+  assert.equal(terrainDigShouldRepeat([]), false);
 });
 
 test("search uses uppercase S without stealing south movement", () => {

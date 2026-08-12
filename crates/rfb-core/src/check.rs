@@ -13,7 +13,6 @@ pub enum CheckKind {
     BashDoor,
     SearchTerrain,
     DisarmTrap,
-    DigTerrain,
     UseDevice,
     SavingThrow,
     StealthDetection,

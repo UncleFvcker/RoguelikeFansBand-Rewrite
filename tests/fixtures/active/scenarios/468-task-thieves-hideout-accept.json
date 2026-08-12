@@ -380,14 +380,6 @@
             "growthPerTenLevels": 7
           },
           {
-            "id": "demo.skill.digging",
-            "nameKey": "skill-demo-digging-name",
-            "current": 31,
-            "maximum": 1000,
-            "base": 30,
-            "growthPerTenLevels": 10
-          },
-          {
             "id": "demo.skill.disarming",
             "nameKey": "skill-demo-disarming-name",
             "current": 26,
@@ -1586,7 +1578,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "56e9fe164dd86db1aa1d286f092c21fc0bfbf95b8ea95065b63fb415aac5b64a"
+      "stateHash": "5481f16c548e101bc734b0d753109a2ee3d203746cb9de508dd31811ab63480e"
     },
     "events": [
       {

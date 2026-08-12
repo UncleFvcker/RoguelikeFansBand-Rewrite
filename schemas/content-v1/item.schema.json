@@ -1036,6 +1036,13 @@
       ],
       "default": null
     },
+    "tunnelingPval": {
+      "default": 0,
+      "format": "int16",
+      "maximum": 32767,
+      "minimum": -32768,
+      "type": "integer"
+    },
     "useAction": {
       "anyOf": [
         {

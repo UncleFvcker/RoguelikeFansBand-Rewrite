@@ -3,6 +3,7 @@
 import type {
   Direction,
   GameCommand,
+  GameEventDto,
   TerrainInteractionDto,
   TerrainInteractionKindDto,
 } from "./protocol";
@@ -68,5 +69,11 @@ export function terrainInteractionForDirection(
 ): TerrainInteractionDto | undefined {
   return terrainInteractionsForMode(interactions, mode).find(
     (interaction) => interaction.direction === direction,
+  );
+}
+
+export function terrainDigShouldRepeat(events: readonly GameEventDto[]): boolean {
+  return events.some(
+    (event) => event.kind === "terrain.dig-failed" && event.args.retryable === "true",
   );
 }

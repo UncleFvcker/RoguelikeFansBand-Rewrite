@@ -24,6 +24,7 @@ import {
   terrainInteractionCommand,
   terrainInteractionForDirection,
   terrainInteractionsForMode,
+  terrainDigShouldRepeat,
   terrainInteractionModeForKey,
   terrainSearchCommandForKey,
   type TerrainInteractionMode,
@@ -628,7 +629,17 @@ export class InputController {
       );
       return;
     }
-    void this.#dispatch(terrainInteractionCommand(mode, direction));
+    void this.#dispatch(terrainInteractionCommand(mode, direction)).then(() => {
+      const status = this.#state.status;
+      if (
+        mode === "dig-terrain" &&
+        status &&
+        "events" in status &&
+        terrainDigShouldRepeat(status.events)
+      ) {
+        this.#state.terrainInteractionMode = mode;
+      }
+    });
   }
 
   #handleRidingDirection(event: KeyboardEvent): void {

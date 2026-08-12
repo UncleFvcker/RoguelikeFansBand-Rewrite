@@ -1,18 +1,18 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/terrain.schema.json",
   "formatVersion": 1,
-  "id": "demo.terrain.wall",
-  "nameKey": "terrain-demo-wall-name",
-  "descriptionKey": "terrain-demo-wall-description",
-  "glyph": "#",
+  "id": "demo.terrain.rubble",
+  "nameKey": "terrain-demo-rubble-name",
+  "descriptionKey": "terrain-demo-rubble-description",
+  "glyph": ":",
   "walkable": false,
   "blocksSight": true,
   "allowsWallPassage": true,
   "monsterDestroyToTerrainId": "demo.terrain.floor",
   "digging": {
     "resultTerrainId": "demo.terrain.floor",
-    "power": 40,
-    "resolution": "hard"
+    "power": 10,
+    "resolution": "soft"
   },
-  "tags": ["interior", "stone"]
+  "tags": ["interior", "stone", "rubble", "diggable"]
 }

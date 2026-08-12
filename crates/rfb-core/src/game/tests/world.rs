@@ -1151,6 +1151,124 @@ fn terrain_interaction_plans_reject_unsupported_actions_without_rng() {
 }
 
 #[test]
+fn digging_uses_original_soft_hard_and_permanent_resolution() {
+    let mut permanent = Game::new(42);
+    clear_monsters(&mut permanent);
+    let position = permanent.position_in_direction(Direction::North);
+    replace_terrain(&mut permanent, position, "demo.terrain.permanent-wall");
+    let draws = permanent.rng_draw_counter();
+    assert!(matches!(
+        permanent.dig_terrain(Direction::North),
+        Some(TerrainDigOutcome::Failed {
+            retryable: false,
+            ..
+        })
+    ));
+    assert_eq!(permanent.rng_draw_counter(), draws);
+    assert_eq!(
+        permanent.terrain[permanent.index(position).expect("permanent wall index")],
+        "demo.terrain.permanent-wall"
+    );
+
+    let mut hard =
+        Game::new_with_build(42, "demo.build.high-mage-death").expect("High-Mage should create");
+    clear_monsters(&mut hard);
+    hard.items.clear();
+    let position = hard.position_in_direction(Direction::North);
+    replace_terrain(&mut hard, position, "demo.terrain.magma-vein");
+    assert!(hard.player_derived_stats().dig_skill.value <= 10);
+    let draws = hard.rng_draw_counter();
+    assert!(matches!(
+        hard.dig_terrain(Direction::North),
+        Some(TerrainDigOutcome::Failed {
+            retryable: false,
+            ..
+        })
+    ));
+    assert_eq!(hard.rng_draw_counter(), draws + 1);
+
+    let saw_retryable_failure = (0..32).any(|seed| {
+        let mut soft = Game::new_with_build(seed, "demo.build.high-mage-death")
+            .expect("High-Mage should create");
+        clear_monsters(&mut soft);
+        soft.items.clear();
+        let position = soft.position_in_direction(Direction::North);
+        replace_terrain(&mut soft, position, "demo.terrain.rubble");
+        matches!(
+            soft.dig_terrain(Direction::North),
+            Some(TerrainDigOutcome::Failed {
+                retryable: true,
+                ..
+            })
+        )
+    });
+    assert!(saw_retryable_failure);
+}
+
+#[test]
+fn digging_ignores_ground_items_and_turns_a_blocking_monster_into_melee() {
+    let mut ground_item = Game::new(42);
+    clear_monsters(&mut ground_item);
+    let position = ground_item.position_in_direction(Direction::North);
+    replace_terrain(&mut ground_item, position, "demo.terrain.rubble");
+    ground_item.items[0].location = ItemLocation::Ground(position);
+    assert!(ground_item.dig_terrain(Direction::North).is_some());
+
+    let mut blocked = Game::new(42);
+    let position = blocked.position_in_direction(Direction::North);
+    replace_terrain(&mut blocked, position, "demo.terrain.rubble");
+    let definition = blocked
+        .content
+        .actor_definitions()
+        .find(|definition| definition.role == ActorRole::Monster && definition.level >= 20)
+        .expect("demo content should contain a level-20 monster")
+        .clone();
+    blocked.entities.clear();
+    let mut target = actor_from_runtime_spawn(
+        "test.digging-target",
+        &definition.id,
+        position,
+        1_000_000,
+        definition.speed,
+        INITIAL_MONSTER_ENERGY_NEED,
+        true,
+    );
+    target.resistances = definition_resistance_profile(&definition);
+    blocked.entities.push(target);
+
+    let interaction = blocked
+        .snapshot()
+        .terrain_interactions
+        .into_iter()
+        .find(|interaction| {
+            interaction.kind == TerrainInteractionKindDto::DigTerrain
+                && interaction.direction == Direction::North
+        })
+        .expect("blocking monster should keep the dig interaction visible");
+    assert!(interaction.available);
+    assert_eq!(interaction.unavailable_reason, None);
+
+    let update = dispatch_next(
+        &mut blocked,
+        GameCommand::DigTerrain {
+            direction: Direction::North,
+        },
+    );
+    assert!(
+        update
+            .events
+            .iter()
+            .any(|event| matches!(event.kind.as_str(), "combat.hit" | "combat.miss"))
+    );
+    assert!(
+        update
+            .events
+            .iter()
+            .all(|event| event.kind != "terrain.dig-unavailable")
+    );
+}
+
+#[test]
 fn warrens_location_requires_its_local_entrance_and_restores_the_outpost() {
     let mut game =
         Game::new_with_build(42, "demo.build.warrior").expect("Warrens journey should create");

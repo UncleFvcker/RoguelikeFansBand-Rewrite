@@ -383,14 +383,6 @@
             "growthPerTenLevels": 7
           },
           {
-            "id": "demo.skill.digging",
-            "nameKey": "skill-demo-digging-name",
-            "current": 31,
-            "maximum": 1000,
-            "base": 30,
-            "growthPerTenLevels": 10
-          },
-          {
             "id": "demo.skill.disarming",
             "nameKey": "skill-demo-disarming-name",
             "current": 26,
@@ -1519,7 +1511,7 @@
         "victoryTurn": 0,
         "retiredTurn": 1
       },
-      "stateHash": "3b43f295f169ccd23b09b9830bbb705d59cee84cd8d9672bfa5bfbce49d3250d"
+      "stateHash": "60a52b7846ccad08bf7cd7404f588d0e1e48dd3fc1422561955cb998476eef0b"
     },
     "events": [
       {
@@ -1534,9 +1526,9 @@
       {
         "step": 2,
         "kind": "campaign-ended",
-        "stateHash": "3b43f295f169ccd23b09b9830bbb705d59cee84cd8d9672bfa5bfbce49d3250d"
+        "stateHash": "60a52b7846ccad08bf7cd7404f588d0e1e48dd3fc1422561955cb998476eef0b"
       }
     ],
-    "saveRoundTripStateHash": "3b43f295f169ccd23b09b9830bbb705d59cee84cd8d9672bfa5bfbce49d3250d"
+    "saveRoundTripStateHash": "60a52b7846ccad08bf7cd7404f588d0e1e48dd3fc1422561955cb998476eef0b"
   }
 }

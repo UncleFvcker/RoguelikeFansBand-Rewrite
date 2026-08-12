@@ -713,7 +713,11 @@ pub(super) fn validate_tables(
                 .expect("validated terrain feature must remain available");
             let placement_matches_terrain = match entry.placement {
                 TerrainFeaturePlacement::Room => {
-                    terrain.trap.is_some() || terrain.dig_to_terrain_id.is_some()
+                    terrain.trap.is_some()
+                        || terrain
+                            .digging
+                            .as_ref()
+                            .is_some_and(|digging| digging.result_terrain_id.is_some())
                 }
                 TerrainFeaturePlacement::Corridor => terrain.open_to_terrain_id.is_some(),
             };

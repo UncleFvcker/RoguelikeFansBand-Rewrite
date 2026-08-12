@@ -17,6 +17,11 @@
       "foreground": "#8190a3",
       "background": "#26303d"
     },
+    "demo.terrain.rubble": {
+      "glyph": ":",
+      "foreground": "#8f887c",
+      "background": "#242424"
+    },
     "demo.terrain.magma-vein": {
       "glyph": "%",
       "foreground": "#a85d3b",
