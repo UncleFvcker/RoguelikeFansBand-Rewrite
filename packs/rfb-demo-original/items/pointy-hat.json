@@ -2,6 +2,9 @@
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
   "baseValue": 20,
   "descriptionKey": "item-demo-pointy-hat-description",
+  "elementalDestructionVulnerabilities": [
+    "acid"
+  ],
   "equipmentSlot": "head",
   "formatVersion": 1,
   "generationLevel": 3,

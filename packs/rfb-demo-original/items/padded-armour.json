@@ -2,6 +2,10 @@
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
   "baseValue": 50,
   "descriptionKey": "item-demo-padded-armour-description",
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
   "equipmentSlot": "body",
   "formatVersion": 1,
   "generationLevel": 2,

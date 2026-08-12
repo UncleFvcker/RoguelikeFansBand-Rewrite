@@ -1,18 +1,26 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.masterwork-weapon-scroll",
-  "nameKey": "item-demo-masterwork-weapon-scroll-name",
   "appearanceNameKey": "item-demo-masterwork-weapon-scroll-appearance",
-  "descriptionKey": "item-demo-masterwork-weapon-scroll-description",
-  "glyph": "?",
-  "generationLevel": 50,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 5,
-  "maxStack": 20,
   "baseValue": 1000,
+  "descriptionKey": "item-demo-masterwork-weapon-scroll-description",
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 50,
+  "glyph": "?",
+  "id": "demo.item.masterwork-weapon-scroll",
+  "maxStack": 20,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-masterwork-weapon-scroll-name",
+  "tags": [
+    "consumable",
+    "enchantment",
+    "scroll"
+  ],
   "useAction": {
     "effectProgramId": "demo.effect.enchant-masterwork-weapon"
   },
-  "tags": ["consumable", "enchantment", "scroll"]
+  "weightTenthsPound": 5
 }

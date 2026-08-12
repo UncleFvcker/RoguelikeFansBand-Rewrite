@@ -1,0 +1,15 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/effect-program.schema.json",
+  "formatVersion": 1,
+  "id": "demo.effect.venom-draught.shatter",
+  "input": "area",
+  "steps": [
+    {
+      "damageBonus": 3,
+      "damageDice": 0,
+      "damageSides": 0,
+      "damageType": "poison",
+      "type": "damage"
+    }
+  ]
+}

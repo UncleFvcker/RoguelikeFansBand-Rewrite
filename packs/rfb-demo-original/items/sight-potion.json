@@ -1,1 +1,23 @@
-{"$schema":"https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json","formatVersion":1,"id":"demo.item.sight-potion","nameKey":"item-demo-sight-potion-name","appearanceNameKey":"item-demo-sight-potion-appearance","descriptionKey":"item-demo-sight-potion-description","glyph":"!","weightTenthsPound":4,"maxStack":20,"baseValue":50,"useAction":{"effectProgramId":"demo.effect.sight-potion"},"tags":["consumable","potion","rfb-compatibility"]}
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "appearanceNameKey": "item-demo-sight-potion-appearance",
+  "baseValue": 50,
+  "descriptionKey": "item-demo-sight-potion-description",
+  "elementalDestructionVulnerabilities": [
+    "cold"
+  ],
+  "formatVersion": 1,
+  "glyph": "!",
+  "id": "demo.item.sight-potion",
+  "maxStack": 20,
+  "nameKey": "item-demo-sight-potion-name",
+  "tags": [
+    "consumable",
+    "potion",
+    "rfb-compatibility"
+  ],
+  "useAction": {
+    "effectProgramId": "demo.effect.sight-potion"
+  },
+  "weightTenthsPound": 4
+}

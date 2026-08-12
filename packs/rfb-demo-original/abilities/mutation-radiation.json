@@ -1,35 +1,36 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb.ability-program.mutation.radiation",
+  "affectsGroundItems": true,
+  "descriptionKey": "ability-rfb-mutation-radiation-description",
   "formatVersion": 1,
   "id": "rfb.ability.mutation.radiation",
+  "levelScaling": [
+    {
+      "divisor": 1,
+      "effectIndex": 0,
+      "field": "damage-bonus",
+      "levelOffset": 1,
+      "multiplier": 2
+    },
+    {
+      "divisor": 20,
+      "effectIndex": 0,
+      "field": "radius",
+      "multiplier": 1
+    }
+  ],
   "nameKey": "ability-rfb-mutation-radiation-name",
-  "descriptionKey": "ability-rfb-mutation-radiation-description",
+  "tags": [
+    "damage",
+    "mutation",
+    "radiation"
+  ],
   "target": {
     "modes": [
       "self"
     ],
     "range": 0,
     "requiresLineOfEffect": false
-  },
-  "abilityProgramId": "rfb.ability-program.mutation.radiation",
-  "levelScaling": [
-    {
-      "effectIndex": 0,
-      "field": "damage-bonus",
-      "levelOffset": 1,
-      "multiplier": 2,
-      "divisor": 1
-    },
-    {
-      "effectIndex": 0,
-      "field": "radius",
-      "multiplier": 1,
-      "divisor": 20
-    }
-  ],
-  "tags": [
-    "damage",
-    "mutation",
-    "radiation"
-  ]
+  }
 }

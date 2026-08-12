@@ -1,1 +1,23 @@
-{"$schema":"https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json","formatVersion":1,"id":"demo.item.lose-memories-potion","nameKey":"item-demo-lose-memories-potion-name","appearanceNameKey":"item-demo-lose-memories-potion-appearance","descriptionKey":"item-demo-lose-memories-potion-description","glyph":"!","weightTenthsPound":4,"maxStack":20,"baseValue":0,"useAction":{"effectProgramId":"demo.effect.lose-memories-potion"},"tags":["consumable","potion","rfb-compatibility"]}
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "appearanceNameKey": "item-demo-lose-memories-potion-appearance",
+  "baseValue": 0,
+  "descriptionKey": "item-demo-lose-memories-potion-description",
+  "elementalDestructionVulnerabilities": [
+    "cold"
+  ],
+  "formatVersion": 1,
+  "glyph": "!",
+  "id": "demo.item.lose-memories-potion",
+  "maxStack": 20,
+  "nameKey": "item-demo-lose-memories-potion-name",
+  "tags": [
+    "consumable",
+    "potion",
+    "rfb-compatibility"
+  ],
+  "useAction": {
+    "effectProgramId": "demo.effect.lose-memories-potion"
+  },
+  "weightTenthsPound": 4
+}

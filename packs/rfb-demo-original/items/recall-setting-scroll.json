@@ -1,18 +1,27 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.recall-setting-scroll",
-  "nameKey": "item-demo-recall-setting-scroll-name",
   "appearanceNameKey": "item-demo-recall-setting-scroll-appearance",
-  "descriptionKey": "item-demo-recall-setting-scroll-description",
-  "glyph": "?",
-  "generationLevel": 20,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 5,
-  "maxStack": 20,
   "baseValue": 500,
+  "descriptionKey": "item-demo-recall-setting-scroll-description",
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 20,
+  "glyph": "?",
+  "id": "demo.item.recall-setting-scroll",
+  "maxStack": 20,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-recall-setting-scroll-name",
+  "tags": [
+    "consumable",
+    "recall",
+    "scroll",
+    "teleport"
+  ],
   "useAction": {
     "effectProgramId": "demo.effect.reset-recall"
   },
-  "tags": ["consumable", "recall", "scroll", "teleport"]
+  "weightTenthsPound": 5
 }

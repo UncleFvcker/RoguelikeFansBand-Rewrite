@@ -1,18 +1,25 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.valor-tonic",
-  "nameKey": "item-demo-valor-tonic-name",
   "appearanceNameKey": "item-demo-valor-tonic-appearance",
-  "descriptionKey": "item-demo-valor-tonic-description",
-  "glyph": "!",
-  "generationLevel": 1,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 4,
-  "maxStack": 20,
   "baseValue": 35,
+  "descriptionKey": "item-demo-valor-tonic-description",
+  "elementalDestructionVulnerabilities": [
+    "cold"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 1,
+  "glyph": "!",
+  "id": "demo.item.valor-tonic",
+  "maxStack": 20,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-valor-tonic-name",
+  "tags": [
+    "consumable",
+    "heroism",
+    "potion"
+  ],
   "useAction": {
     "effectProgramId": "demo.effect.heroism"
   },
-  "tags": ["consumable", "heroism", "potion"]
+  "weightTenthsPound": 4
 }

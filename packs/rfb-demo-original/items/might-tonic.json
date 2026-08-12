@@ -1,18 +1,25 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.might-tonic",
-  "nameKey": "item-demo-might-tonic-name",
   "appearanceNameKey": "item-demo-might-tonic-appearance",
-  "descriptionKey": "item-demo-might-tonic-description",
-  "glyph": "!",
-  "generationLevel": 30,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 4,
-  "maxStack": 20,
   "baseValue": 25000,
+  "descriptionKey": "item-demo-might-tonic-description",
+  "elementalDestructionVulnerabilities": [
+    "cold"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 30,
+  "glyph": "!",
+  "id": "demo.item.might-tonic",
+  "maxStack": 20,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-might-tonic-name",
+  "tags": [
+    "attribute-increase",
+    "consumable",
+    "potion"
+  ],
   "useAction": {
     "effectProgramId": "demo.effect.increase-strength"
   },
-  "tags": ["attribute-increase", "consumable", "potion"]
+  "weightTenthsPound": 4
 }

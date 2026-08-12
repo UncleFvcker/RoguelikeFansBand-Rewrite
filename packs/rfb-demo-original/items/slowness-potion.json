@@ -1,18 +1,25 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.slowness-potion",
-  "nameKey": "item-demo-slowness-potion-name",
   "appearanceNameKey": "item-demo-slowness-potion-appearance",
-  "descriptionKey": "item-demo-slowness-potion-description",
-  "glyph": "!",
-  "generationLevel": 1,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 4,
-  "maxStack": 20,
   "baseValue": 1,
+  "descriptionKey": "item-demo-slowness-potion-description",
+  "elementalDestructionVulnerabilities": [
+    "cold"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 1,
+  "glyph": "!",
+  "id": "demo.item.slowness-potion",
+  "maxStack": 20,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-slowness-potion-name",
+  "tags": [
+    "consumable",
+    "potion",
+    "slowness"
+  ],
   "useAction": {
     "effectProgramId": "demo.effect.slowness"
   },
-  "tags": ["consumable", "potion", "slowness"]
+  "weightTenthsPound": 4
 }

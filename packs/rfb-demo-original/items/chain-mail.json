@@ -2,6 +2,9 @@
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
   "baseValue": 750,
   "descriptionKey": "item-demo-chain-mail-description",
+  "elementalDestructionVulnerabilities": [
+    "acid"
+  ],
   "equipmentBonuses": {
     "meleeSkill": -2
   },

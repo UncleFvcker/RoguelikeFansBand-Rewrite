@@ -896,6 +896,17 @@ impl Game {
             unreachable!("player projectile damage executor requires a damage effect");
         };
         let (trace, target_index) = self.trace_projectile_path(path);
+        if ability.affects_ground_items {
+            self.resolve_ground_item_projectile_effects(
+                &ability.id,
+                &[trace.landing],
+                DamageType::from(*damage_type),
+                true,
+                events,
+                changed,
+                removed_entities,
+            );
+        }
         let Some(index) = target_index else {
             events.push(DomainEvent::AbilityLanded {
                 ability_id: ability.id.clone(),
@@ -919,6 +930,7 @@ impl Game {
             &ability.id,
             raw_damage,
             DamageType::from(*damage_type),
+            ability.affects_ground_items,
             events,
             changed,
             removed_entities,
@@ -966,6 +978,17 @@ impl Game {
         ))
         .expect("spell-powered Malediction damage must fit i32");
         let (trace, target_index) = self.trace_projectile_path(path.clone());
+        if ability.affects_ground_items {
+            self.resolve_ground_item_projectile_effects(
+                &ability.id,
+                &[trace.landing],
+                DamageType::HellFire,
+                true,
+                events,
+                changed,
+                removed_entities,
+            );
+        }
         if let Some(target_index) = target_index {
             self.resolve_ability_damage_to_entity(
                 target_index,
@@ -1226,6 +1249,7 @@ impl Game {
             *radius,
             target_category.as_deref(),
             base_raw_damage,
+            ability.affects_ground_items,
             events,
             changed,
             removed_entities,
@@ -1242,6 +1266,7 @@ impl Game {
         radius: u8,
         target_category: Option<&str>,
         base_raw_damage: i32,
+        affects_ground_items: bool,
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
@@ -1250,6 +1275,17 @@ impl Game {
         let center = trace.landing;
         let (affected_positions, targets) =
             self.area_damage_targets(center, radius, target_category);
+        if affects_ground_items {
+            self.resolve_ground_item_projectile_effects(
+                source_id,
+                &affected_positions,
+                damage_type,
+                true,
+                events,
+                changed,
+                removed_entities,
+            );
+        }
         changed.extend(affected_positions.iter().copied());
         events.push(DomainEvent::AbilityAreaDamage {
             ability_id: source_id.to_owned(),
@@ -1319,6 +1355,7 @@ impl Game {
             path,
             DamageType::from(*damage_type),
             base_raw_damage,
+            ability.affects_ground_items,
             events,
             changed,
             removed_entities,
@@ -1332,12 +1369,24 @@ impl Game {
         path: Vec<Position>,
         damage_type: DamageType,
         base_raw_damage: i32,
+        affects_ground_items: bool,
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
     ) -> Result<(), CoreError> {
         let (trace, _) = self.trace_projectile_path_with_actor_policy(path, false);
         let affected_positions = trace.traversed.clone();
+        if affects_ground_items {
+            self.resolve_ground_item_projectile_effects(
+                source_id,
+                &affected_positions,
+                damage_type,
+                true,
+                events,
+                changed,
+                removed_entities,
+            );
+        }
         let targets = self.beam_damage_targets(&affected_positions);
         changed.extend(affected_positions.iter().copied());
         events.push(DomainEvent::AbilityBeamDamage {
@@ -1472,6 +1521,17 @@ impl Game {
         if beam {
             let (trace, _) = self.trace_projectile_path_with_actor_policy(path, false);
             let affected_positions = trace.traversed.clone();
+            if ability.affects_ground_items {
+                self.resolve_ground_item_projectile_effects(
+                    &ability.id,
+                    &affected_positions,
+                    damage_type,
+                    true,
+                    events,
+                    changed,
+                    removed_entities,
+                );
+            }
             let targets = self.beam_damage_targets(&affected_positions);
             changed.extend(affected_positions.iter().copied());
             events.push(DomainEvent::AbilityBeamDamage {
@@ -1505,6 +1565,17 @@ impl Game {
             }
         } else {
             let (trace, target_index) = self.trace_projectile_path_with_actor_policy(path, true);
+            if ability.affects_ground_items {
+                self.resolve_ground_item_projectile_effects(
+                    &ability.id,
+                    &[trace.landing],
+                    damage_type,
+                    true,
+                    events,
+                    changed,
+                    removed_entities,
+                );
+            }
             let Some(index) = target_index else {
                 events.push(DomainEvent::AbilityLanded {
                     ability_id: ability.id.clone(),
@@ -1517,6 +1588,7 @@ impl Game {
                 &ability.id,
                 base_raw_damage,
                 damage_type,
+                ability.affects_ground_items,
                 events,
                 changed,
                 removed_entities,
@@ -1599,6 +1671,7 @@ impl Game {
         source_kind_id: &str,
         raw_damage: i32,
         damage_type: DamageType,
+        affects_ground_items: bool,
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
@@ -1669,6 +1742,17 @@ impl Game {
             landing,
             traversed,
         };
+        if affects_ground_items {
+            self.resolve_ground_item_projectile_effects(
+                source_kind_id,
+                &[trace.landing],
+                damage_type,
+                true,
+                events,
+                changed,
+                removed_entities,
+            );
+        }
 
         if hit_player {
             let target = self.player_derived_stats();

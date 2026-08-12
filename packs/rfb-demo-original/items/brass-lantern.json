@@ -1,21 +1,31 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.brass-lantern",
-  "nameKey": "item-demo-brass-lantern-name",
-  "descriptionKey": "item-demo-brass-lantern-description",
-  "glyph": "~",
-  "generationLevel": 3,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 50,
-  "maxStack": 1,
   "baseValue": 30,
+  "descriptionKey": "item-demo-brass-lantern-description",
+  "elementalDestructionImmunities": [
+    "fire"
+  ],
+  "elementalDestructionVulnerabilities": [
+    "fire"
+  ],
   "equipmentSlot": "light",
+  "formatVersion": 1,
   "fuel": {
-    "kind": "lantern",
     "initial": 7500,
-    "maximum": 15000,
-    "lightRadius": 2
+    "kind": "lantern",
+    "lightRadius": 2,
+    "maximum": 15000
   },
-  "tags": ["equipment", "light-source", "lantern"]
+  "generationLevel": 3,
+  "glyph": "~",
+  "id": "demo.item.brass-lantern",
+  "maxStack": 1,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-brass-lantern-name",
+  "tags": [
+    "equipment",
+    "light-source",
+    "lantern"
+  ],
+  "weightTenthsPound": 50
 }

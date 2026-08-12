@@ -1,18 +1,25 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.clarity-draught",
-  "nameKey": "item-demo-clarity-draught-name",
   "appearanceNameKey": "item-demo-clarity-draught-appearance",
-  "descriptionKey": "item-demo-clarity-draught-description",
-  "glyph": "!",
-  "generationLevel": 20,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 4,
-  "maxStack": 20,
   "baseValue": 180,
+  "descriptionKey": "item-demo-clarity-draught-description",
+  "elementalDestructionVulnerabilities": [
+    "cold"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 20,
+  "glyph": "!",
+  "id": "demo.item.clarity-draught",
+  "maxStack": 20,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-clarity-draught-name",
+  "tags": [
+    "clarity",
+    "consumable",
+    "potion"
+  ],
   "useAction": {
     "effectProgramId": "demo.effect.clarity-restoration"
   },
-  "tags": ["clarity", "consumable", "potion"]
+  "weightTenthsPound": 4
 }

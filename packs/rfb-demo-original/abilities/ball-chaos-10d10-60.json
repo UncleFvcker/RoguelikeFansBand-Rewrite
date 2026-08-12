@@ -1,6 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
   "abilityProgramId": "rfb-legacy.ability-program.ball-chaos-10d10-60",
+  "affectsGroundItems": true,
   "descriptionKey": "ability-legacy-ball-chaos-10d10-60-description",
   "formatVersion": 1,
   "id": "rfb-legacy.ability.ball-chaos-10d10-60",

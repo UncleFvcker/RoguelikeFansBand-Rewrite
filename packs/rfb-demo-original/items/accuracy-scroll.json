@@ -1,18 +1,26 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.accuracy-scroll",
-  "nameKey": "item-demo-accuracy-scroll-name",
   "appearanceNameKey": "item-demo-accuracy-scroll-appearance",
-  "descriptionKey": "item-demo-accuracy-scroll-description",
-  "glyph": "?",
-  "generationLevel": 15,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 5,
-  "maxStack": 20,
   "baseValue": 250,
+  "descriptionKey": "item-demo-accuracy-scroll-description",
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 15,
+  "glyph": "?",
+  "id": "demo.item.accuracy-scroll",
+  "maxStack": 20,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-accuracy-scroll-name",
+  "tags": [
+    "consumable",
+    "enchantment",
+    "scroll"
+  ],
   "useAction": {
     "effectProgramId": "demo.effect.enchant-accuracy"
   },
-  "tags": ["consumable", "enchantment", "scroll"]
+  "weightTenthsPound": 5
 }

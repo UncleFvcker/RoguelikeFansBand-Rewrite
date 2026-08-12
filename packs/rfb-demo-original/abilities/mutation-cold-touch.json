@@ -1,29 +1,30 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb.ability-program.mutation.cold-touch",
+  "affectsGroundItems": true,
+  "descriptionKey": "ability-rfb-mutation-cold-touch-description",
   "formatVersion": 1,
   "id": "rfb.ability.mutation.cold-touch",
+  "levelScaling": [
+    {
+      "divisor": 1,
+      "effectIndex": 0,
+      "field": "damage-bonus",
+      "levelOffset": 1,
+      "multiplier": 2
+    }
+  ],
   "nameKey": "ability-rfb-mutation-cold-touch-name",
-  "descriptionKey": "ability-rfb-mutation-cold-touch-description",
+  "tags": [
+    "cold",
+    "damage",
+    "mutation"
+  ],
   "target": {
     "modes": [
       "direction"
     ],
     "range": 1,
     "requiresLineOfEffect": true
-  },
-  "abilityProgramId": "rfb.ability-program.mutation.cold-touch",
-  "levelScaling": [
-    {
-      "effectIndex": 0,
-      "field": "damage-bonus",
-      "levelOffset": 1,
-      "multiplier": 2,
-      "divisor": 1
-    }
-  ],
-  "tags": [
-    "cold",
-    "damage",
-    "mutation"
-  ]
+  }
 }

@@ -177,6 +177,10 @@
     "abilityProgramId": {
       "type": "string"
     },
+    "affectsGroundItems": {
+      "default": false,
+      "type": "boolean"
+    },
     "descriptionKey": {
       "type": "string"
     },

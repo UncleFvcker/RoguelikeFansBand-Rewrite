@@ -1,18 +1,27 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.temperate-tonic",
-  "nameKey": "item-demo-temperate-tonic-name",
   "appearanceNameKey": "item-demo-temperate-tonic-appearance",
-  "descriptionKey": "item-demo-temperate-tonic-description",
-  "glyph": "!",
-  "generationLevel": 1,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 4,
-  "maxStack": 20,
   "baseValue": 120,
+  "descriptionKey": "item-demo-temperate-tonic-description",
+  "elementalDestructionVulnerabilities": [
+    "cold"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 1,
+  "glyph": "!",
+  "id": "demo.item.temperate-tonic",
+  "maxStack": 20,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-temperate-tonic-name",
+  "tags": [
+    "cold",
+    "consumable",
+    "fire",
+    "potion",
+    "resistance"
+  ],
   "useAction": {
     "effectProgramId": "demo.effect.thermal-resistance"
   },
-  "tags": ["cold", "consumable", "fire", "potion", "resistance"]
+  "weightTenthsPound": 4
 }

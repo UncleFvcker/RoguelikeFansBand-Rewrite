@@ -1,1 +1,23 @@
-{"$schema":"https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json","formatVersion":1,"id":"demo.item.water-potion","nameKey":"item-demo-water-potion-name","appearanceNameKey":"item-demo-water-potion-appearance","descriptionKey":"item-demo-water-potion-description","glyph":"!","weightTenthsPound":4,"maxStack":20,"baseValue":1,"useAction":{"effectProgramId":"demo.effect.water-potion"},"tags":["consumable","potion","rfb-compatibility"]}
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "appearanceNameKey": "item-demo-water-potion-appearance",
+  "baseValue": 1,
+  "descriptionKey": "item-demo-water-potion-description",
+  "elementalDestructionVulnerabilities": [
+    "cold"
+  ],
+  "formatVersion": 1,
+  "glyph": "!",
+  "id": "demo.item.water-potion",
+  "maxStack": 20,
+  "nameKey": "item-demo-water-potion-name",
+  "tags": [
+    "consumable",
+    "potion",
+    "rfb-compatibility"
+  ],
+  "useAction": {
+    "effectProgramId": "demo.effect.water-potion"
+  },
+  "weightTenthsPound": 4
+}

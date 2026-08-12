@@ -1,11 +1,17 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "appearanceNameKey": "item-demo-clumsiness-potion-appearance",
   "baseValue": 0,
   "descriptionKey": "item-demo-clumsiness-potion-description",
+  "elementalDestructionVulnerabilities": [
+    "cold"
+  ],
   "formatVersion": 1,
+  "generationLevel": 5,
   "glyph": "!",
   "id": "demo.item.clumsiness-potion",
   "maxStack": 20,
+  "mogaminatorRare": false,
   "nameKey": "item-demo-clumsiness-potion-name",
   "tags": [
     "consumable",
@@ -15,8 +21,5 @@
   "useAction": {
     "effectProgramId": "demo.effect.clumsiness-potion"
   },
-  "generationLevel": 5,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 4,
-  "appearanceNameKey": "item-demo-clumsiness-potion-appearance"
+  "weightTenthsPound": 4
 }

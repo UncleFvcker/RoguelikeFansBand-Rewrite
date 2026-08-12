@@ -1,18 +1,26 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.impact-scroll",
-  "nameKey": "item-demo-impact-scroll-name",
   "appearanceNameKey": "item-demo-impact-scroll-appearance",
-  "descriptionKey": "item-demo-impact-scroll-description",
-  "glyph": "?",
-  "generationLevel": 15,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 5,
-  "maxStack": 20,
   "baseValue": 250,
+  "descriptionKey": "item-demo-impact-scroll-description",
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 15,
+  "glyph": "?",
+  "id": "demo.item.impact-scroll",
+  "maxStack": 20,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-impact-scroll-name",
+  "tags": [
+    "consumable",
+    "enchantment",
+    "scroll"
+  ],
   "useAction": {
     "effectProgramId": "demo.effect.enchant-impact"
   },
-  "tags": ["consumable", "enchantment", "scroll"]
+  "weightTenthsPound": 5
 }

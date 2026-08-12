@@ -192,6 +192,7 @@ impl Game {
             raw_damage,
             trace,
             None,
+            true,
             events,
             changed,
             removed_entities,
@@ -216,6 +217,7 @@ impl Game {
             raw_damage,
             trace,
             Some(ResistanceLevel::Normal),
+            true,
             events,
             changed,
             removed_entities,
@@ -231,6 +233,7 @@ impl Game {
         raw_damage: i32,
         trace: ProjectileTrace,
         resistance_override: Option<ResistanceLevel>,
+        award_player_kill: bool,
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
@@ -264,7 +267,7 @@ impl Game {
         if !application.fatal {
             self.resolve_monster_fear_aura(index, "hurt", true, events);
         }
-        if application.fatal {
+        if application.fatal && award_player_kill {
             self.resolve_actor_death(
                 index,
                 DomainEvent::AbilitySlew {
@@ -277,8 +280,47 @@ impl Game {
                 changed,
                 removed_entities,
             )?;
+        } else if application.fatal {
+            self.resolve_actor_death_without_rewards(
+                index,
+                Some(DomainEvent::AbilitySlew {
+                    ability_id: ability_id.to_owned(),
+                    target_kind_id,
+                    damage,
+                    trace,
+                }),
+                events,
+                changed,
+                removed_entities,
+            )?;
         }
         Ok(damage)
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    pub(super) fn resolve_ability_damage_to_entity_without_rewards(
+        &mut self,
+        index: usize,
+        ability_id: &str,
+        damage_type: DamageType,
+        raw_damage: i32,
+        trace: ProjectileTrace,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<DamageOutcome, CoreError> {
+        self.resolve_ability_damage_to_entity_with_resistance(
+            index,
+            ability_id,
+            damage_type,
+            raw_damage,
+            trace,
+            None,
+            false,
+            events,
+            changed,
+            removed_entities,
+        )
     }
 
     pub(super) fn throw_inventory_item(

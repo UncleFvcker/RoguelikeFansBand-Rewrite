@@ -23,6 +23,7 @@ pub enum EffectProgramInputDefinition {
     #[serde(rename = "self")]
     SelfTarget,
     Actor,
+    Area,
     Item,
     Glyph,
 }
@@ -57,7 +58,7 @@ pub(super) fn compile_effect_program_catalog(
             || definition
                 .steps
                 .iter()
-                .any(|step| effect_program_input_for_step(step) != Some(definition.input))
+                .any(|step| !effect_program_step_accepts_input(step, definition.input))
         {
             return Err(ContentError::InvalidEffectProgram(definition.id));
         }
@@ -108,6 +109,21 @@ fn effect_program_input_for_step(
     }
 }
 
+fn effect_program_step_accepts_input(
+    effect: &ItemUseEffectDefinition,
+    input: EffectProgramInputDefinition,
+) -> bool {
+    if input == EffectProgramInputDefinition::Area {
+        return matches!(
+            effect,
+            ItemUseEffectDefinition::Damage { .. }
+                | ItemUseEffectDefinition::Heal { .. }
+                | ItemUseEffectDefinition::HealDice { .. }
+        );
+    }
+    effect_program_input_for_step(effect) == Some(input)
+}
+
 pub(super) fn resolve_source_item_effect(
     owner_id: &str,
     effect_program_id: String,
@@ -149,6 +165,7 @@ pub(super) fn effect_program_input_matches_device_target(
                 && (1..=64).contains(&target.range)
                 && target.requires_line_of_effect
         }
+        EffectProgramInputDefinition::Area => false,
         EffectProgramInputDefinition::Item => {
             target.modes.as_slice() == [AbilityTargetModeDefinition::Item]
                 && target.range == 0

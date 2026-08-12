@@ -1,18 +1,25 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.fury-draught",
-  "nameKey": "item-demo-fury-draught-name",
   "appearanceNameKey": "item-demo-fury-draught-appearance",
-  "descriptionKey": "item-demo-fury-draught-description",
-  "glyph": "!",
-  "generationLevel": 20,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 4,
-  "maxStack": 20,
   "baseValue": 100,
+  "descriptionKey": "item-demo-fury-draught-description",
+  "elementalDestructionVulnerabilities": [
+    "cold"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 20,
+  "glyph": "!",
+  "id": "demo.item.fury-draught",
+  "maxStack": 20,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-fury-draught-name",
+  "tags": [
+    "berserk",
+    "consumable",
+    "potion"
+  ],
   "useAction": {
     "effectProgramId": "demo.effect.berserk-strength"
   },
-  "tags": ["berserk", "consumable", "potion"]
+  "weightTenthsPound": 4
 }

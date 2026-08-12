@@ -4,6 +4,7 @@
   "id": "demo.item.slayer",
   "nameKey": "item-demo-slayer-name",
   "descriptionKey": "item-demo-slayer-description",
+  "elementalDestructionVulnerabilities": ["acid", "fire"],
   "glyph": "|",
   "generationLevel": 60,
   "weightTenthsPound": 260,
@@ -31,5 +32,6 @@
   },
   "passives": ["hold-life", "regeneration", "vampiric"],
   "resistsMonsterDestruction": true,
+  "resistsProjectionDestruction": true,
   "tags": ["artifact", "equipment", "old-castle-reward", "weapon"]
 }

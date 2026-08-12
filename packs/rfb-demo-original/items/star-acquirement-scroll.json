@@ -1,1 +1,26 @@
-{"$schema":"https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json","formatVersion":1,"id":"demo.item.star-acquirement-scroll","nameKey":"item-demo-star-acquirement-scroll-name","appearanceNameKey":"item-demo-star-acquirement-scroll-appearance","descriptionKey":"item-demo-star-acquirement-scroll-description","glyph":"?","weightTenthsPound":5,"maxStack":20,"baseValue":200000,"useAction":{"effectProgramId":"demo.effect.star-acquirement-scroll"},"tags":["acquirement","consumable","generation","rfb-compatibility","scroll"]}
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "appearanceNameKey": "item-demo-star-acquirement-scroll-appearance",
+  "baseValue": 200000,
+  "descriptionKey": "item-demo-star-acquirement-scroll-description",
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
+  "formatVersion": 1,
+  "glyph": "?",
+  "id": "demo.item.star-acquirement-scroll",
+  "maxStack": 20,
+  "nameKey": "item-demo-star-acquirement-scroll-name",
+  "tags": [
+    "acquirement",
+    "consumable",
+    "generation",
+    "rfb-compatibility",
+    "scroll"
+  ],
+  "useAction": {
+    "effectProgramId": "demo.effect.star-acquirement-scroll"
+  },
+  "weightTenthsPound": 5
+}

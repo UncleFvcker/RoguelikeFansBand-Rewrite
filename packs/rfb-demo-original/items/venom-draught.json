@@ -1,22 +1,27 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.venom-draught",
-  "nameKey": "item-demo-venom-draught-name",
   "appearanceNameKey": "item-demo-venom-draught-appearance",
-  "descriptionKey": "item-demo-venom-draught-description",
-  "glyph": "!",
-  "generationLevel": 3,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 4,
-  "maxStack": 20,
   "baseValue": 0,
-  "useAction": {
-    "effectProgramId": "demo.effect.poison"
-  },
+  "descriptionKey": "item-demo-venom-draught-description",
+  "elementalDestructionVulnerabilities": [
+    "cold"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 3,
+  "glyph": "!",
+  "id": "demo.item.venom-draught",
+  "maxStack": 20,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-venom-draught-name",
+  "shatterEffectProgramId": "demo.effect.venom-draught.shatter",
+  "shatterRadius": 2,
   "tags": [
     "consumable",
     "potion",
     "poison"
-  ]
+  ],
+  "useAction": {
+    "effectProgramId": "demo.effect.poison"
+  },
+  "weightTenthsPound": 4
 }

@@ -1,23 +1,32 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "demo.ability-program.paladin-hell-lance",
+  "affectsGroundItems": true,
+  "descriptionKey": "ability-demo-paladin-hell-lance-description",
   "formatVersion": 1,
   "id": "demo.ability.paladin-hell-lance",
-  "nameKey": "ability-demo-paladin-hell-lance-name",
-  "descriptionKey": "ability-demo-paladin-hell-lance-description",
-  "target": {
-    "modes": ["direction"],
-    "range": 8,
-    "requiresLineOfEffect": true
-  },
-  "abilityProgramId": "demo.ability-program.paladin-hell-lance",
   "levelScaling": [
     {
+      "divisor": 1,
       "effectIndex": 0,
       "field": "damage-bonus",
-      "multiplier": 3,
-      "divisor": 1,
-      "levelOffset": 1
+      "levelOffset": 1,
+      "multiplier": 3
     }
   ],
-  "tags": ["beam", "class-power", "hell-fire", "paladin", "requires-sight"]
+  "nameKey": "ability-demo-paladin-hell-lance-name",
+  "tags": [
+    "beam",
+    "class-power",
+    "hell-fire",
+    "paladin",
+    "requires-sight"
+  ],
+  "target": {
+    "modes": [
+      "direction"
+    ],
+    "range": 8,
+    "requiresLineOfEffect": true
+  }
 }

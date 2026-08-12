@@ -1,18 +1,26 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.verdant-ring-scroll",
-  "nameKey": "item-demo-verdant-ring-scroll-name",
   "appearanceNameKey": "item-demo-verdant-ring-scroll-appearance",
-  "descriptionKey": "item-demo-verdant-ring-scroll-description",
-  "glyph": "?",
-  "generationLevel": 50,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 5,
-  "maxStack": 20,
   "baseValue": 1000,
+  "descriptionKey": "item-demo-verdant-ring-scroll-description",
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 50,
+  "glyph": "?",
+  "id": "demo.item.verdant-ring-scroll",
+  "maxStack": 20,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-verdant-ring-scroll-name",
+  "tags": [
+    "consumable",
+    "scroll",
+    "terrain"
+  ],
   "useAction": {
     "effectProgramId": "demo.effect.create-verdant-ring"
   },
-  "tags": ["consumable", "scroll", "terrain"]
+  "weightTenthsPound": 5
 }

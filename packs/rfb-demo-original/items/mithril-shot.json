@@ -10,6 +10,12 @@
   "baseValue": 15,
   "breakChancePercent": 10,
   "descriptionKey": "item-demo-mithril-shot-description",
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
   "formatVersion": 1,
   "generationLevel": 40,
   "glyph": "{",

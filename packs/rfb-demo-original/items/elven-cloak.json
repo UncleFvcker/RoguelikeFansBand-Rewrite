@@ -2,6 +2,16 @@
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
   "baseValue": 1500,
   "descriptionKey": "item-demo-elven-cloak-description",
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
   "equipmentBonuses": {
     "searchSkill": 1,
     "stealthSkill": 1

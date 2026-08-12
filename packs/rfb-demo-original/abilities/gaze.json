@@ -1,6 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
   "abilityProgramId": "rfb-legacy.ability-program.gaze",
+  "affectsGroundItems": true,
   "descriptionKey": "ability-legacy-gaze-description",
   "formatVersion": 1,
   "id": "rfb-legacy.ability.gaze",

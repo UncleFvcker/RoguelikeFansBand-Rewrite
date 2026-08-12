@@ -1,11 +1,18 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "appearanceNameKey": "item-demo-door-stair-location-scroll-appearance",
   "baseValue": 10,
   "descriptionKey": "item-demo-door-stair-location-scroll-description",
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
   "formatVersion": 1,
+  "generationLevel": 5,
   "glyph": "?",
   "id": "demo.item.door-stair-location-scroll",
   "maxStack": 20,
+  "mogaminatorRare": false,
   "nameKey": "item-demo-door-stair-location-scroll-name",
   "tags": [
     "consumable",
@@ -15,8 +22,5 @@
   "useAction": {
     "effectProgramId": "demo.effect.door-stair-location-scroll"
   },
-  "generationLevel": 5,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 5,
-  "appearanceNameKey": "item-demo-door-stair-location-scroll-appearance"
+  "weightTenthsPound": 5
 }

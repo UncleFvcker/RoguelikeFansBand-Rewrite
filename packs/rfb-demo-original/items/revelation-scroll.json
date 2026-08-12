@@ -1,18 +1,26 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.revelation-scroll",
-  "nameKey": "item-demo-revelation-scroll-name",
   "appearanceNameKey": "item-demo-revelation-scroll-appearance",
-  "descriptionKey": "item-demo-revelation-scroll-description",
-  "glyph": "?",
-  "generationLevel": 30,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 5,
-  "maxStack": 20,
   "baseValue": 1500,
+  "descriptionKey": "item-demo-revelation-scroll-description",
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 30,
+  "glyph": "?",
+  "id": "demo.item.revelation-scroll",
+  "maxStack": 20,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-revelation-scroll-name",
+  "tags": [
+    "consumable",
+    "knowledge",
+    "scroll"
+  ],
   "useAction": {
     "effectProgramId": "demo.effect.reveal-item"
   },
-  "tags": ["consumable", "knowledge", "scroll"]
+  "weightTenthsPound": 5
 }

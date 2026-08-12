@@ -1,18 +1,25 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.granite-tonic",
-  "nameKey": "item-demo-granite-tonic-name",
   "appearanceNameKey": "item-demo-granite-tonic-appearance",
-  "descriptionKey": "item-demo-granite-tonic-description",
-  "glyph": "!",
-  "generationLevel": 50,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 4,
-  "maxStack": 20,
   "baseValue": 10000,
+  "descriptionKey": "item-demo-granite-tonic-description",
+  "elementalDestructionVulnerabilities": [
+    "cold"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 50,
+  "glyph": "!",
+  "id": "demo.item.granite-tonic",
+  "maxStack": 20,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-granite-tonic-name",
+  "tags": [
+    "consumable",
+    "potion",
+    "stone-skin"
+  ],
   "useAction": {
     "effectProgramId": "demo.effect.stone-skin"
   },
-  "tags": ["consumable", "potion", "stone-skin"]
+  "weightTenthsPound": 4
 }

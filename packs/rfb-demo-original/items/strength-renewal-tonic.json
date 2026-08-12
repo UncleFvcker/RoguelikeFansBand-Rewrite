@@ -1,18 +1,25 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.strength-renewal-tonic",
-  "nameKey": "item-demo-strength-renewal-tonic-name",
   "appearanceNameKey": "item-demo-strength-renewal-tonic-appearance",
-  "descriptionKey": "item-demo-strength-renewal-tonic-description",
-  "glyph": "!",
-  "generationLevel": 25,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 4,
-  "maxStack": 20,
   "baseValue": 220,
+  "descriptionKey": "item-demo-strength-renewal-tonic-description",
+  "elementalDestructionVulnerabilities": [
+    "cold"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 25,
+  "glyph": "!",
+  "id": "demo.item.strength-renewal-tonic",
+  "maxStack": 20,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-strength-renewal-tonic-name",
+  "tags": [
+    "attribute-restore",
+    "consumable",
+    "potion"
+  ],
   "useAction": {
     "effectProgramId": "demo.effect.restore-strength"
   },
-  "tags": ["attribute-restore", "consumable", "potion"]
+  "weightTenthsPound": 4
 }

@@ -1,1 +1,23 @@
-{"$schema":"https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json","formatVersion":1,"id":"demo.item.slime-mold-juice","nameKey":"item-demo-slime-mold-juice-name","appearanceNameKey":"item-demo-slime-mold-juice-appearance","descriptionKey":"item-demo-slime-mold-juice-description","glyph":"!","weightTenthsPound":4,"maxStack":20,"baseValue":2,"useAction":{"effectProgramId":"demo.effect.slime-mold-juice"},"tags":["consumable","potion","rfb-compatibility"]}
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "appearanceNameKey": "item-demo-slime-mold-juice-appearance",
+  "baseValue": 2,
+  "descriptionKey": "item-demo-slime-mold-juice-description",
+  "elementalDestructionVulnerabilities": [
+    "cold"
+  ],
+  "formatVersion": 1,
+  "glyph": "!",
+  "id": "demo.item.slime-mold-juice",
+  "maxStack": 20,
+  "nameKey": "item-demo-slime-mold-juice-name",
+  "tags": [
+    "consumable",
+    "potion",
+    "rfb-compatibility"
+  ],
+  "useAction": {
+    "effectProgramId": "demo.effect.slime-mold-juice"
+  },
+  "weightTenthsPound": 4
+}

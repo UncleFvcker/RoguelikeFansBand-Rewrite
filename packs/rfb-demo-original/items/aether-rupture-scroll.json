@@ -1,18 +1,32 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.aether-rupture-scroll",
-  "nameKey": "item-demo-aether-rupture-scroll-name",
   "appearanceNameKey": "item-demo-aether-rupture-scroll-appearance",
-  "descriptionKey": "item-demo-aether-rupture-scroll-description",
-  "glyph": "?",
-  "generationLevel": 90,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 5,
-  "maxStack": 20,
   "baseValue": 10000,
+  "descriptionKey": "item-demo-aether-rupture-scroll-description",
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 90,
+  "glyph": "?",
+  "id": "demo.item.aether-rupture-scroll",
+  "maxStack": 20,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-aether-rupture-scroll-name",
+  "tags": [
+    "consumable",
+    "mana",
+    "scroll"
+  ],
   "useAction": {
     "effectProgramId": "demo.effect.aether-rupture"
   },
-  "tags": ["consumable", "mana", "scroll"]
+  "weightTenthsPound": 5
 }

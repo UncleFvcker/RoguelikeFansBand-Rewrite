@@ -1,30 +1,31 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb.ability-program.mutation.laser-eye",
+  "affectsGroundItems": true,
+  "descriptionKey": "ability-rfb-mutation-laser-eye-description",
   "formatVersion": 1,
   "id": "rfb.ability.mutation.laser-eye",
+  "levelScaling": [
+    {
+      "divisor": 1,
+      "effectIndex": 0,
+      "field": "damage-bonus",
+      "levelOffset": 1,
+      "multiplier": 2
+    }
+  ],
   "nameKey": "ability-rfb-mutation-laser-eye-name",
-  "descriptionKey": "ability-rfb-mutation-laser-eye-description",
+  "tags": [
+    "beam",
+    "damage",
+    "light",
+    "mutation"
+  ],
   "target": {
     "modes": [
       "direction"
     ],
     "range": 8,
     "requiresLineOfEffect": true
-  },
-  "abilityProgramId": "rfb.ability-program.mutation.laser-eye",
-  "levelScaling": [
-    {
-      "effectIndex": 0,
-      "field": "damage-bonus",
-      "levelOffset": 1,
-      "multiplier": 2,
-      "divisor": 1
-    }
-  ],
-  "tags": [
-    "beam",
-    "damage",
-    "light",
-    "mutation"
-  ]
+  }
 }

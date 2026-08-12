@@ -1,18 +1,26 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.armor-tempering-scroll",
-  "nameKey": "item-demo-armor-tempering-scroll-name",
   "appearanceNameKey": "item-demo-armor-tempering-scroll-appearance",
-  "descriptionKey": "item-demo-armor-tempering-scroll-description",
-  "glyph": "?",
-  "generationLevel": 15,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 5,
-  "maxStack": 20,
   "baseValue": 250,
+  "descriptionKey": "item-demo-armor-tempering-scroll-description",
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 15,
+  "glyph": "?",
+  "id": "demo.item.armor-tempering-scroll",
+  "maxStack": 20,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-armor-tempering-scroll-name",
+  "tags": [
+    "consumable",
+    "enchantment",
+    "scroll"
+  ],
   "useAction": {
     "effectProgramId": "demo.effect.enchant-armor"
   },
-  "tags": ["consumable", "enchantment", "scroll"]
+  "weightTenthsPound": 5
 }

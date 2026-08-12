@@ -1,18 +1,29 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.rime-surge-scroll",
-  "nameKey": "item-demo-rime-surge-scroll-name",
   "appearanceNameKey": "item-demo-rime-surge-scroll-appearance",
-  "descriptionKey": "item-demo-rime-surge-scroll-description",
-  "glyph": "?",
-  "generationLevel": 70,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 5,
-  "maxStack": 20,
   "baseValue": 1000,
+  "descriptionKey": "item-demo-rime-surge-scroll-description",
+  "elementalDestructionImmunities": [
+    "cold"
+  ],
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 70,
+  "glyph": "?",
+  "id": "demo.item.rime-surge-scroll",
+  "maxStack": 20,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-rime-surge-scroll-name",
+  "tags": [
+    "cold",
+    "consumable",
+    "scroll"
+  ],
   "useAction": {
     "effectProgramId": "demo.effect.rime-surge"
   },
-  "tags": ["cold", "consumable", "scroll"]
+  "weightTenthsPound": 5
 }

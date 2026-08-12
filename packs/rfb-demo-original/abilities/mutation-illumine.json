@@ -1,41 +1,42 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb.ability-program.mutation.illumine",
+  "affectsGroundItems": true,
+  "descriptionKey": "ability-rfb-mutation-illumine-description",
   "formatVersion": 1,
   "id": "rfb.ability.mutation.illumine",
+  "levelScaling": [
+    {
+      "divisor": 2,
+      "effectIndex": 0,
+      "field": "damage-sides",
+      "levelOffset": 2,
+      "multiplier": 1
+    },
+    {
+      "divisor": 10,
+      "effectIndex": 0,
+      "field": "radius",
+      "multiplier": 1
+    },
+    {
+      "divisor": 10,
+      "effectIndex": 1,
+      "field": "radius",
+      "multiplier": 1
+    }
+  ],
   "nameKey": "ability-rfb-mutation-illumine-name",
-  "descriptionKey": "ability-rfb-mutation-illumine-description",
+  "tags": [
+    "light",
+    "mutation",
+    "utility"
+  ],
   "target": {
     "modes": [
       "self"
     ],
     "range": 0,
     "requiresLineOfEffect": false
-  },
-  "abilityProgramId": "rfb.ability-program.mutation.illumine",
-  "levelScaling": [
-    {
-      "effectIndex": 0,
-      "field": "damage-sides",
-      "levelOffset": 2,
-      "multiplier": 1,
-      "divisor": 2
-    },
-    {
-      "effectIndex": 0,
-      "field": "radius",
-      "multiplier": 1,
-      "divisor": 10
-    },
-    {
-      "effectIndex": 1,
-      "field": "radius",
-      "multiplier": 1,
-      "divisor": 10
-    }
-  ],
-  "tags": [
-    "light",
-    "mutation",
-    "utility"
-  ]
+  }
 }

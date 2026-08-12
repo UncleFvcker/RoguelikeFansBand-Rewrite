@@ -4,6 +4,7 @@
   "id": "demo.item.relic-blade",
   "nameKey": "item-demo-relic-blade-name",
   "descriptionKey": "item-demo-relic-blade-description",
+  "elementalDestructionVulnerabilities": ["acid"],
   "glyph": "/",
   "weightTenthsPound": 35,
   "maxStack": 1,
@@ -16,5 +17,6 @@
     "damageSides": 3,
     "damageType": "physical"
   },
+  "resistsProjectionDestruction": true,
   "tags": ["artifact", "equipment", "weapon"]
 }

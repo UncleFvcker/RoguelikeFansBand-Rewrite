@@ -1,1 +1,29 @@
-{"$schema":"https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json","formatVersion":1,"id":"demo.item.destruction-scroll","nameKey":"item-demo-destruction-scroll-name","appearanceNameKey":"item-demo-destruction-scroll-appearance","descriptionKey":"item-demo-destruction-scroll-description","glyph":"?","weightTenthsPound":5,"maxStack":20,"baseValue":250,"useAction":{"effectProgramId":"demo.effect.destruction-scroll"},"tags":["consumable","destruction","rfb-compatibility","scroll","terrain"]}
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "appearanceNameKey": "item-demo-destruction-scroll-appearance",
+  "baseValue": 250,
+  "descriptionKey": "item-demo-destruction-scroll-description",
+  "elementalDestructionImmunities": [
+    "fire"
+  ],
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
+  "formatVersion": 1,
+  "glyph": "?",
+  "id": "demo.item.destruction-scroll",
+  "maxStack": 20,
+  "nameKey": "item-demo-destruction-scroll-name",
+  "tags": [
+    "consumable",
+    "destruction",
+    "rfb-compatibility",
+    "scroll",
+    "terrain"
+  ],
+  "useAction": {
+    "effectProgramId": "demo.effect.destruction-scroll"
+  },
+  "weightTenthsPound": 5
+}

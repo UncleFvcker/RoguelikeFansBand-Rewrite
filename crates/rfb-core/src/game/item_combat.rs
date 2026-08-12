@@ -57,6 +57,7 @@ impl Game {
             &source_kind_id,
             raw_damage,
             damage_type,
+            false,
             events,
             changed,
             removed_entities,

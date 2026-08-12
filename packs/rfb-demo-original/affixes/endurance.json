@@ -1,0 +1,12 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "formatVersion": 1,
+  "id": "rfb-legacy.affix.endurance",
+  "nameKey": "affix-legacy-endurance-name",
+  "descriptionKey": "affix-legacy-endurance-description",
+  "generationLevel": 40,
+  "elementalDestructionImmunities": ["acid", "electricity", "fire", "cold"],
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "tags": ["ammo", "legacy-import"]
+}

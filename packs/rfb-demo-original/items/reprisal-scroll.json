@@ -1,18 +1,26 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.reprisal-scroll",
-  "nameKey": "item-demo-reprisal-scroll-name",
   "appearanceNameKey": "item-demo-reprisal-scroll-appearance",
-  "descriptionKey": "item-demo-reprisal-scroll-description",
-  "glyph": "?",
-  "generationLevel": 80,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 5,
-  "maxStack": 20,
   "baseValue": 10000,
+  "descriptionKey": "item-demo-reprisal-scroll-description",
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 80,
+  "glyph": "?",
+  "id": "demo.item.reprisal-scroll",
+  "maxStack": 20,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-reprisal-scroll-name",
+  "tags": [
+    "consumable",
+    "retaliation",
+    "scroll"
+  ],
   "useAction": {
     "effectProgramId": "demo.effect.vengeance"
   },
-  "tags": ["consumable", "retaliation", "scroll"]
+  "weightTenthsPound": 5
 }

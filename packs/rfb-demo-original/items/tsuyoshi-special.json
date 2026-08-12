@@ -1,1 +1,24 @@
-{"$schema":"https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json","formatVersion":1,"id":"demo.item.tsuyoshi-special","nameKey":"item-demo-tsuyoshi-special-name","appearanceNameKey":"item-demo-tsuyoshi-special-appearance","descriptionKey":"item-demo-tsuyoshi-special-description","glyph":"!","weightTenthsPound":4,"maxStack":20,"baseValue":0,"useAction":{"effectProgramId":"demo.effect.tsuyoshi-special"},"tags":["consumable","potion","rfb-compatibility","tsuyoshi"]}
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "appearanceNameKey": "item-demo-tsuyoshi-special-appearance",
+  "baseValue": 0,
+  "descriptionKey": "item-demo-tsuyoshi-special-description",
+  "elementalDestructionVulnerabilities": [
+    "cold"
+  ],
+  "formatVersion": 1,
+  "glyph": "!",
+  "id": "demo.item.tsuyoshi-special",
+  "maxStack": 20,
+  "nameKey": "item-demo-tsuyoshi-special-name",
+  "tags": [
+    "consumable",
+    "potion",
+    "rfb-compatibility",
+    "tsuyoshi"
+  ],
+  "useAction": {
+    "effectProgramId": "demo.effect.tsuyoshi-special"
+  },
+  "weightTenthsPound": 4
+}

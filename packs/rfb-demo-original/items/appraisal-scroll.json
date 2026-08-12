@@ -1,18 +1,26 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.appraisal-scroll",
-  "nameKey": "item-demo-appraisal-scroll-name",
   "appearanceNameKey": "item-demo-appraisal-scroll-appearance",
-  "descriptionKey": "item-demo-appraisal-scroll-description",
-  "glyph": "?",
-  "generationLevel": 1,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 5,
-  "maxStack": 20,
   "baseValue": 50,
+  "descriptionKey": "item-demo-appraisal-scroll-description",
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 1,
+  "glyph": "?",
+  "id": "demo.item.appraisal-scroll",
+  "maxStack": 20,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-appraisal-scroll-name",
+  "tags": [
+    "consumable",
+    "knowledge",
+    "scroll"
+  ],
   "useAction": {
     "effectProgramId": "demo.effect.appraise-item"
   },
-  "tags": ["consumable", "knowledge", "scroll"]
+  "weightTenthsPound": 5
 }

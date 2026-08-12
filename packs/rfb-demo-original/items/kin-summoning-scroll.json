@@ -1,18 +1,28 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.kin-summoning-scroll",
-  "nameKey": "item-demo-kin-summoning-scroll-name",
   "appearanceNameKey": "item-demo-kin-summoning-scroll-appearance",
-  "descriptionKey": "item-demo-kin-summoning-scroll-description",
-  "glyph": "?",
-  "generationLevel": 30,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 5,
-  "maxStack": 20,
   "baseValue": 1000,
+  "descriptionKey": "item-demo-kin-summoning-scroll-description",
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 30,
+  "glyph": "?",
+  "id": "demo.item.kin-summoning-scroll",
+  "maxStack": 20,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-kin-summoning-scroll-name",
+  "tags": [
+    "consumable",
+    "kin",
+    "pet",
+    "scroll",
+    "summon"
+  ],
   "useAction": {
     "effectProgramId": "demo.effect.summon-player-kin"
   },
-  "tags": ["consumable", "kin", "pet", "scroll", "summon"]
+  "weightTenthsPound": 5
 }

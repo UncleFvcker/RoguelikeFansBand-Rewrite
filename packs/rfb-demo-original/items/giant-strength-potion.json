@@ -1,1 +1,23 @@
-{"$schema":"https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json","formatVersion":1,"id":"demo.item.giant-strength-potion","nameKey":"item-demo-giant-strength-potion-name","appearanceNameKey":"item-demo-giant-strength-potion-appearance","descriptionKey":"item-demo-giant-strength-potion-description","glyph":"!","weightTenthsPound":4,"maxStack":20,"baseValue":10000,"useAction":{"effectProgramId":"demo.effect.giant-strength-potion"},"tags":["consumable","potion","rfb-compatibility"]}
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "appearanceNameKey": "item-demo-giant-strength-potion-appearance",
+  "baseValue": 10000,
+  "descriptionKey": "item-demo-giant-strength-potion-description",
+  "elementalDestructionVulnerabilities": [
+    "cold"
+  ],
+  "formatVersion": 1,
+  "glyph": "!",
+  "id": "demo.item.giant-strength-potion",
+  "maxStack": 20,
+  "nameKey": "item-demo-giant-strength-potion-name",
+  "tags": [
+    "consumable",
+    "potion",
+    "rfb-compatibility"
+  ],
+  "useAction": {
+    "effectProgramId": "demo.effect.giant-strength-potion"
+  },
+  "weightTenthsPound": 4
+}

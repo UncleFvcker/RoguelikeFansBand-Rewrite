@@ -1,1 +1,25 @@
-{"$schema":"https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json","formatVersion":1,"id":"demo.item.understanding-scroll","nameKey":"item-demo-understanding-scroll-name","appearanceNameKey":"item-demo-understanding-scroll-appearance","descriptionKey":"item-demo-understanding-scroll-description","glyph":"?","weightTenthsPound":5,"maxStack":20,"baseValue":2500,"useAction":{"effectProgramId":"demo.effect.understanding-scroll"},"tags":["consumable","knowledge","scroll","rfb-compatibility"]}
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "appearanceNameKey": "item-demo-understanding-scroll-appearance",
+  "baseValue": 2500,
+  "descriptionKey": "item-demo-understanding-scroll-description",
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
+  "formatVersion": 1,
+  "glyph": "?",
+  "id": "demo.item.understanding-scroll",
+  "maxStack": 20,
+  "nameKey": "item-demo-understanding-scroll-name",
+  "tags": [
+    "consumable",
+    "knowledge",
+    "scroll",
+    "rfb-compatibility"
+  ],
+  "useAction": {
+    "effectProgramId": "demo.effect.understanding-scroll"
+  },
+  "weightTenthsPound": 5
+}

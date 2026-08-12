@@ -1,15 +1,28 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.necronomicon",
-  "nameKey": "item-demo-necronomicon-name",
-  "descriptionKey": "item-demo-necronomicon-description",
-  "glyph": "?",
-  "generationLevel": 80,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 15,
-  "maxStack": 1,
-  "baseValue": 100000,
   "abilityBookId": "demo.ability-book.necronomicon",
-  "tags": ["book", "death", "spellbook"]
+  "baseValue": 100000,
+  "descriptionKey": "item-demo-necronomicon-description",
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "elementalDestructionVulnerabilities": [
+    "fire"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 80,
+  "glyph": "?",
+  "id": "demo.item.necronomicon",
+  "maxStack": 1,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-necronomicon-name",
+  "tags": [
+    "book",
+    "death",
+    "spellbook"
+  ],
+  "weightTenthsPound": 15
 }

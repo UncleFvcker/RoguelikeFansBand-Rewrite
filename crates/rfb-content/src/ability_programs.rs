@@ -53,6 +53,8 @@ pub(super) struct SourceAbilityDefinition {
     description_key: String,
     target: AbilityTargetDefinition,
     ability_program_id: String,
+    #[serde(default)]
+    affects_ground_items: bool,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     level_scaling: Vec<AbilityLevelScalingDefinition>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -393,6 +395,7 @@ impl SourceAbilityDefinition {
             description_key: self.description_key,
             target: self.target,
             effect: program.effect,
+            affects_ground_items: self.affects_ground_items,
             level_scaling: self.level_scaling,
             spell_power_fields: self.spell_power_fields,
             spell_power_bonus: 0,
@@ -436,6 +439,7 @@ mod tests {
             description_key: "ability-demo-test-description".to_owned(),
             target,
             ability_program_id: ability_program_id.to_owned(),
+            affects_ground_items: false,
             level_scaling: Vec::new(),
             spell_power_fields: Vec::new(),
             tags: vec!["test".to_owned()],

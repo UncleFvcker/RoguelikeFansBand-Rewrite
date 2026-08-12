@@ -69,6 +69,16 @@ pub enum EquipmentPassive {
     SustainCharisma,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum ItemDestructionElement {
+    Acid,
+    Electricity,
+    Fire,
+    Cold,
+}
+
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -154,6 +164,15 @@ pub struct AffixDefinition {
     /// Passive capabilities granted while the affixed item is equipped.
     #[serde(default)]
     pub passives: BTreeSet<EquipmentPassive>,
+    /// RFB object elements that can destroy an item carrying this affix.
+    #[serde(default)]
+    pub elemental_destruction_vulnerabilities: BTreeSet<ItemDestructionElement>,
+    /// RFB `OF_IGNORE_*` protections contributed by this affix.
+    #[serde(default)]
+    pub elemental_destruction_immunities: BTreeSet<ItemDestructionElement>,
+    /// Protects instances carrying this affix from projection-driven item destruction.
+    #[serde(default)]
+    pub resists_projection_destruction: bool,
     /// Protects instances from `KILL_ITEM`; used by Endurance ammunition.
     #[serde(default)]
     pub resists_monster_destruction: bool,
@@ -630,6 +649,14 @@ pub struct ItemUseActionDefinition {
     pub effect: ItemUseEffectDefinition,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ItemShatterEffectDefinition {
+    pub radius: u8,
+    pub effect: ItemUseEffectDefinition,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -767,6 +794,10 @@ pub struct ItemDefinition {
     pub throw_profile: Option<ThrowProfileDefinition>,
     #[serde(default)]
     pub use_action: Option<ItemUseActionDefinition>,
+    /// Independent effect executed when an elemental projection destroys this
+    /// item on the ground. It is never inferred from the drinking effect.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub shatter_effect: Option<ItemShatterEffectDefinition>,
     #[serde(default)]
     pub device_generation: Option<ItemDeviceGenerationDefinition>,
     #[serde(default)]
@@ -792,6 +823,15 @@ pub struct ItemDefinition {
     /// Passive capabilities granted while this item is equipped.
     #[serde(default)]
     pub passives: BTreeSet<EquipmentPassive>,
+    /// RFB object elements that can destroy this base kind on the ground.
+    #[serde(default)]
+    pub elemental_destruction_vulnerabilities: BTreeSet<ItemDestructionElement>,
+    /// RFB `OF_IGNORE_*` protections inherent to this base kind.
+    #[serde(default)]
+    pub elemental_destruction_immunities: BTreeSet<ItemDestructionElement>,
+    /// Protects this base kind from projection-driven item destruction.
+    #[serde(default)]
+    pub resists_projection_destruction: bool,
     /// Protects the base kind from `KILL_ITEM`; fixed artifacts use their artifact tag.
     #[serde(default)]
     pub resists_monster_destruction: bool,
@@ -808,20 +848,24 @@ pub fn affix_is_compatible_with_item(
         return false;
     }
 
-    let compatible_tags: &[&str] = match item.equipment_slot.as_deref() {
-        Some("weapon") => &["weapon"],
-        Some("tool") => &["digger"],
-        Some("launcher") => &["bow"],
-        Some("body") => &["body-armor", "dragon-armor", "robe"],
-        Some("head") => &["crown", "helmet"],
-        Some("shield") => &["shield"],
-        Some("cloak") => &["cloak"],
-        Some("gloves") => &["gloves"],
-        Some("boots") => &["boots"],
-        Some("light") => &["lite"],
-        Some("ring") => &["ring"],
-        Some("amulet") => &["amulet"],
-        _ => return false,
+    let compatible_tags: &[&str] = if item.tags.iter().any(|tag| tag == "ammunition") {
+        &["ammo"]
+    } else {
+        match item.equipment_slot.as_deref() {
+            Some("weapon") => &["weapon"],
+            Some("tool") => &["digger"],
+            Some("launcher") => &["bow"],
+            Some("body") => &["body-armor", "dragon-armor", "robe"],
+            Some("head") => &["crown", "helmet"],
+            Some("shield") => &["shield"],
+            Some("cloak") => &["cloak"],
+            Some("gloves") => &["gloves"],
+            Some("boots") => &["boots"],
+            Some("light") => &["lite"],
+            Some("ring") => &["ring"],
+            Some("amulet") => &["amulet"],
+            _ => return false,
+        }
     };
     affix
         .tags

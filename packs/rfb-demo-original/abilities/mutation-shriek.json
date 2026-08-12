@@ -1,29 +1,30 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb.ability-program.mutation.shriek",
+  "affectsGroundItems": true,
+  "descriptionKey": "ability-rfb-mutation-shriek-description",
   "formatVersion": 1,
   "id": "rfb.ability.mutation.shriek",
+  "levelScaling": [
+    {
+      "divisor": 1,
+      "effectIndex": 0,
+      "field": "damage-bonus",
+      "levelOffset": 1,
+      "multiplier": 2
+    }
+  ],
   "nameKey": "ability-rfb-mutation-shriek-name",
-  "descriptionKey": "ability-rfb-mutation-shriek-description",
+  "tags": [
+    "damage",
+    "mutation",
+    "sound"
+  ],
   "target": {
     "modes": [
       "self"
     ],
     "range": 0,
     "requiresLineOfEffect": false
-  },
-  "abilityProgramId": "rfb.ability-program.mutation.shriek",
-  "levelScaling": [
-    {
-      "effectIndex": 0,
-      "field": "damage-bonus",
-      "levelOffset": 1,
-      "multiplier": 2,
-      "divisor": 1
-    }
-  ],
-  "tags": [
-    "damage",
-    "mutation",
-    "sound"
-  ]
+  }
 }

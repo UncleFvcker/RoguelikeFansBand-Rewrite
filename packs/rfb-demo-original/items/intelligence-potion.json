@@ -1,11 +1,17 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "appearanceNameKey": "item-demo-intelligence-potion-appearance",
   "baseValue": 25000,
   "descriptionKey": "item-demo-intelligence-potion-description",
+  "elementalDestructionVulnerabilities": [
+    "cold"
+  ],
   "formatVersion": 1,
+  "generationLevel": 30,
   "glyph": "!",
   "id": "demo.item.intelligence-potion",
   "maxStack": 20,
+  "mogaminatorRare": false,
   "nameKey": "item-demo-intelligence-potion-name",
   "tags": [
     "consumable",
@@ -15,8 +21,5 @@
   "useAction": {
     "effectProgramId": "demo.effect.intelligence-potion"
   },
-  "generationLevel": 30,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 4,
-  "appearanceNameKey": "item-demo-intelligence-potion-appearance"
+  "weightTenthsPound": 4
 }

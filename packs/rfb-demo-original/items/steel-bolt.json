@@ -10,6 +10,9 @@
   "baseValue": 10,
   "breakChancePercent": 10,
   "descriptionKey": "item-demo-steel-bolt-description",
+  "elementalDestructionVulnerabilities": [
+    "acid"
+  ],
   "formatVersion": 1,
   "generationLevel": 40,
   "glyph": "{",

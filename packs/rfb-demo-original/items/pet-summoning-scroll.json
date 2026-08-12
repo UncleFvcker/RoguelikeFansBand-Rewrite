@@ -1,18 +1,27 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.pet-summoning-scroll",
-  "nameKey": "item-demo-pet-summoning-scroll-name",
   "appearanceNameKey": "item-demo-pet-summoning-scroll-appearance",
-  "descriptionKey": "item-demo-pet-summoning-scroll-description",
-  "glyph": "?",
-  "generationLevel": 30,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 5,
-  "maxStack": 20,
   "baseValue": 1000,
+  "descriptionKey": "item-demo-pet-summoning-scroll-description",
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 30,
+  "glyph": "?",
+  "id": "demo.item.pet-summoning-scroll",
+  "maxStack": 20,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-pet-summoning-scroll-name",
+  "tags": [
+    "consumable",
+    "pet",
+    "scroll",
+    "summon"
+  ],
   "useAction": {
     "effectProgramId": "demo.effect.summon-pet"
   },
-  "tags": ["consumable", "pet", "scroll", "summon"]
+  "weightTenthsPound": 5
 }

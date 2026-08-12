@@ -4526,3 +4526,172 @@ fn vampiric_transformation_overlays_race_but_preserves_body_slots() {
     assert_eq!(restored.snapshot(), game.snapshot());
     assert_eq!(restored.body_slots, body_slots);
 }
+
+fn place_test_ground_item(game: &mut Game, id: &str, kind_id: &str, position: Position) {
+    give_inventory_item(game, id, kind_id);
+    game.items
+        .iter_mut()
+        .find(|item| item.id == id)
+        .expect("test ground item should exist")
+        .location = ItemLocation::Ground(position);
+}
+
+fn apply_test_ground_projection(
+    game: &mut Game,
+    positions: &[Position],
+    damage_type: DamageType,
+) -> Vec<DomainEvent> {
+    let mut events = Vec::new();
+    game.resolve_ground_item_projectile_effects(
+        "test.ability.ground-items",
+        positions,
+        damage_type,
+        true,
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    );
+    events
+}
+
+#[test]
+fn ground_item_elements_respect_ignore_flags_and_artifact_protection() {
+    let mut game = Game::new(211);
+    clear_monsters(&mut game);
+    game.items.clear();
+    let position = game.player.position;
+    for (id, kind_id) in [
+        ("test.arrow", "demo.item.arrow"),
+        ("test.elven-cloak", "demo.item.elven-cloak"),
+        ("test.artifact", "demo.item.pain"),
+        ("test.adamantine", "demo.item.adamantine-bolt"),
+        ("test.endurance", "demo.item.arrow"),
+    ] {
+        place_test_ground_item(&mut game, id, kind_id, position);
+    }
+    game.items
+        .iter_mut()
+        .find(|item| item.id == "test.endurance")
+        .expect("Endurance ammunition")
+        .affix_ids
+        .push("rfb-legacy.affix.endurance".to_owned());
+
+    apply_test_ground_projection(&mut game, &[position], DamageType::Fire);
+
+    assert!(!game.items.iter().any(|item| item.id == "test.arrow"));
+    for survivor in [
+        "test.elven-cloak",
+        "test.artifact",
+        "test.adamantine",
+        "test.endurance",
+    ] {
+        assert!(game.items.iter().any(|item| item.id == survivor));
+    }
+    apply_test_ground_projection(&mut game, &[position], DamageType::Mana);
+    assert!(game.items.iter().any(|item| item.id == "test.artifact"));
+    assert!(game.items.iter().any(|item| item.id == "test.endurance"));
+}
+
+#[test]
+fn hell_fire_destroys_only_cursed_ground_items() {
+    let mut game = Game::new(223);
+    clear_monsters(&mut game);
+    game.items.clear();
+    let position = game.player.position;
+    place_test_ground_item(&mut game, "test.clean", "demo.item.arrow", position);
+    place_test_ground_item(&mut game, "test.cursed", "demo.item.arrow", position);
+    game.items
+        .iter_mut()
+        .find(|item| item.id == "test.cursed")
+        .expect("cursed test item")
+        .curse = Some(ItemCurseSeverityDto::Normal);
+
+    apply_test_ground_projection(&mut game, &[position], DamageType::HellFire);
+
+    assert!(game.items.iter().any(|item| item.id == "test.clean"));
+    assert!(!game.items.iter().any(|item| item.id == "test.cursed"));
+}
+
+#[test]
+fn ground_item_destruction_is_ordered_by_position_then_instance_id() {
+    let mut game = Game::new(227);
+    clear_monsters(&mut game);
+    game.items.clear();
+    let positions = [
+        Position { x: 5, y: 2 },
+        Position { x: 5, y: 1 },
+        Position { x: 3, y: 1 },
+    ];
+    for (id, position) in [
+        ("test.z", positions[1]),
+        ("test.a", positions[1]),
+        ("test.m", positions[2]),
+        ("test.last", positions[0]),
+    ] {
+        place_test_ground_item(&mut game, id, "demo.item.arrow", position);
+    }
+
+    let events = apply_test_ground_projection(
+        &mut game,
+        &[positions[0], positions[1], positions[2]],
+        DamageType::Fire,
+    );
+    let destroyed = events
+        .iter()
+        .filter_map(|event| match event {
+            DomainEvent::GroundItemDestroyedByAbility { item_id, .. } => Some(item_id.as_str()),
+            _ => None,
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(destroyed, ["test.m", "test.a", "test.z", "test.last"]);
+}
+
+#[test]
+fn shattered_potion_runs_its_area_program_after_removal() {
+    let mut game = Game::new(229);
+    clear_monsters(&mut game);
+    game.items.clear();
+    let position = game.player.position;
+    place_test_ground_item(&mut game, "test.venom", "demo.item.venom-draught", position);
+    let hp_before = game.player.hp;
+    let draws_before = game.rng_draw_counter();
+
+    let events = apply_test_ground_projection(&mut game, &[position], DamageType::Cold);
+
+    assert!(!game.items.iter().any(|item| item.id == "test.venom"));
+    assert_eq!(game.player.hp, hp_before - 3);
+    assert_eq!(game.rng_draw_counter(), draws_before);
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::AbilityHit { ability_id, .. }
+            if ability_id == "demo.item.venom-draught"
+    )));
+}
+
+#[test]
+fn shattered_potion_healing_uses_area_falloff() {
+    let mut game = Game::new(233);
+    clear_monsters(&mut game);
+    let maximum = game.effective_player_max_hp();
+    game.player.hp = 1;
+    let center = Position {
+        x: game.player.position.x + 1,
+        y: game.player.position.y,
+    };
+    let shatter = ItemShatterEffectDefinition {
+        radius: 2,
+        effect: ItemUseEffectDefinition::Heal { amount: 100 },
+    };
+
+    game.resolve_ground_item_shatter_effect(
+        "test.item.healing-potion",
+        center,
+        &shatter,
+        true,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    );
+
+    assert_eq!(game.player.hp, (1 + 50).min(maximum));
+}

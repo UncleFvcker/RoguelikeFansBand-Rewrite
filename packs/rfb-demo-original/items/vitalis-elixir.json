@@ -1,18 +1,28 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.vitalis-elixir",
-  "nameKey": "item-demo-vitalis-elixir-name",
   "appearanceNameKey": "item-demo-vitalis-elixir-appearance",
-  "descriptionKey": "item-demo-vitalis-elixir-description",
-  "glyph": "!",
-  "generationLevel": 100,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 4,
-  "maxStack": 20,
   "baseValue": 5000,
+  "descriptionKey": "item-demo-vitalis-elixir-description",
+  "elementalDestructionVulnerabilities": [
+    "cold"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 100,
+  "glyph": "!",
+  "id": "demo.item.vitalis-elixir",
+  "maxStack": 20,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-vitalis-elixir-name",
+  "tags": [
+    "attribute-restoration",
+    "consumable",
+    "experience",
+    "healing",
+    "potion",
+    "restoration"
+  ],
   "useAction": {
     "effectProgramId": "demo.effect.life-restoration"
   },
-  "tags": ["attribute-restoration", "consumable", "experience", "healing", "potion", "restoration"]
+  "weightTenthsPound": 4
 }

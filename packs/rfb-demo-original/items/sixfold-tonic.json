@@ -1,18 +1,25 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.sixfold-tonic",
-  "nameKey": "item-demo-sixfold-tonic-name",
   "appearanceNameKey": "item-demo-sixfold-tonic-appearance",
-  "descriptionKey": "item-demo-sixfold-tonic-description",
-  "glyph": "!",
-  "generationLevel": 60,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 4,
-  "maxStack": 20,
   "baseValue": 150000,
+  "descriptionKey": "item-demo-sixfold-tonic-description",
+  "elementalDestructionVulnerabilities": [
+    "cold"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 60,
+  "glyph": "!",
+  "id": "demo.item.sixfold-tonic",
+  "maxStack": 20,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-sixfold-tonic-name",
+  "tags": [
+    "attribute-increase",
+    "consumable",
+    "potion"
+  ],
   "useAction": {
     "effectProgramId": "demo.effect.augment-all-attributes"
   },
-  "tags": ["attribute-increase", "consumable", "potion"]
+  "weightTenthsPound": 4
 }

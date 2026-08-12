@@ -1,6 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
   "abilityProgramId": "rfb-legacy.ability-program.psy-spear-1d90-100",
+  "affectsGroundItems": true,
   "descriptionKey": "ability-legacy-psy-spear-1d90-100-description",
   "formatVersion": 1,
   "id": "rfb-legacy.ability.psy-spear-1d90-100",

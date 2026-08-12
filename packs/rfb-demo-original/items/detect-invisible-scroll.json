@@ -1,11 +1,18 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "appearanceNameKey": "item-demo-detect-invisible-scroll-appearance",
   "baseValue": 5,
   "descriptionKey": "item-demo-detect-invisible-scroll-description",
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
   "formatVersion": 1,
+  "generationLevel": 1,
   "glyph": "?",
   "id": "demo.item.detect-invisible-scroll",
   "maxStack": 20,
+  "mogaminatorRare": false,
   "nameKey": "item-demo-detect-invisible-scroll-name",
   "tags": [
     "consumable",
@@ -15,8 +22,5 @@
   "useAction": {
     "effectProgramId": "demo.effect.detect-invisible-scroll"
   },
-  "generationLevel": 1,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 5,
-  "appearanceNameKey": "item-demo-detect-invisible-scroll-appearance"
+  "weightTenthsPound": 5
 }

@@ -1,18 +1,26 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.seeking-scroll",
-  "nameKey": "item-demo-seeking-scroll-name",
   "appearanceNameKey": "item-demo-seeking-scroll-appearance",
-  "descriptionKey": "item-demo-seeking-scroll-description",
-  "glyph": "?",
-  "generationLevel": 0,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 5,
-  "maxStack": 20,
   "baseValue": 8,
+  "descriptionKey": "item-demo-seeking-scroll-description",
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 0,
+  "glyph": "?",
+  "id": "demo.item.seeking-scroll",
+  "maxStack": 20,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-seeking-scroll-name",
+  "tags": [
+    "consumable",
+    "knowledge",
+    "scroll"
+  ],
   "useAction": {
     "effectProgramId": "demo.effect.detect-items"
   },
-  "tags": ["consumable", "knowledge", "scroll"]
+  "weightTenthsPound": 5
 }

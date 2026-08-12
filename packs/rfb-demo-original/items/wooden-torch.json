@@ -1,21 +1,28 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.wooden-torch",
-  "nameKey": "item-demo-wooden-torch-name",
-  "descriptionKey": "item-demo-wooden-torch-description",
-  "glyph": "~",
-  "generationLevel": 1,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 30,
-  "maxStack": 1,
   "baseValue": 1,
+  "descriptionKey": "item-demo-wooden-torch-description",
+  "elementalDestructionVulnerabilities": [
+    "fire"
+  ],
   "equipmentSlot": "light",
+  "formatVersion": 1,
   "fuel": {
-    "kind": "torch",
     "initial": 4000,
-    "maximum": 5000,
-    "lightRadius": 1
+    "kind": "torch",
+    "lightRadius": 1,
+    "maximum": 5000
   },
-  "tags": ["equipment", "light-source", "torch"]
+  "generationLevel": 1,
+  "glyph": "~",
+  "id": "demo.item.wooden-torch",
+  "maxStack": 1,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-wooden-torch-name",
+  "tags": [
+    "equipment",
+    "light-source",
+    "torch"
+  ],
+  "weightTenthsPound": 30
 }

@@ -10,6 +10,10 @@
   "baseValue": 1,
   "breakChancePercent": 20,
   "descriptionKey": "item-demo-arrow-description",
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
   "formatVersion": 1,
   "generationLevel": 3,
   "glyph": "{",

@@ -1,18 +1,27 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.light-healing-potion",
-  "nameKey": "item-demo-light-healing-potion-name",
   "appearanceNameKey": "item-demo-light-healing-potion-appearance",
-  "descriptionKey": "item-demo-light-healing-potion-description",
-  "glyph": "!",
-  "generationLevel": 0,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 4,
-  "maxStack": 20,
   "baseValue": 20,
+  "descriptionKey": "item-demo-light-healing-potion-description",
+  "elementalDestructionVulnerabilities": [
+    "cold"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 0,
+  "glyph": "!",
+  "id": "demo.item.light-healing-potion",
+  "maxStack": 20,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-light-healing-potion-name",
+  "shatterEffectProgramId": "demo.effect.light-healing-potion.shatter",
+  "shatterRadius": 2,
+  "tags": [
+    "consumable",
+    "healing",
+    "potion"
+  ],
   "useAction": {
     "effectProgramId": "demo.effect.minor-healing"
   },
-  "tags": ["consumable", "healing", "potion"]
+  "weightTenthsPound": 4
 }

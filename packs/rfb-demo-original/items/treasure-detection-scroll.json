@@ -1,1 +1,25 @@
-{"$schema":"https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json","formatVersion":1,"id":"demo.item.treasure-detection-scroll","nameKey":"item-demo-treasure-detection-scroll-name","appearanceNameKey":"item-demo-treasure-detection-scroll-appearance","descriptionKey":"item-demo-treasure-detection-scroll-description","glyph":"?","weightTenthsPound":5,"maxStack":20,"baseValue":8,"useAction":{"effectProgramId":"demo.effect.treasure-detection-scroll"},"tags":["consumable","knowledge","scroll","rfb-compatibility"]}
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "appearanceNameKey": "item-demo-treasure-detection-scroll-appearance",
+  "baseValue": 8,
+  "descriptionKey": "item-demo-treasure-detection-scroll-description",
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
+  "formatVersion": 1,
+  "glyph": "?",
+  "id": "demo.item.treasure-detection-scroll",
+  "maxStack": 20,
+  "nameKey": "item-demo-treasure-detection-scroll-name",
+  "tags": [
+    "consumable",
+    "knowledge",
+    "scroll",
+    "rfb-compatibility"
+  ],
+  "useAction": {
+    "effectProgramId": "demo.effect.treasure-detection-scroll"
+  },
+  "weightTenthsPound": 5
+}

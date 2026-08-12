@@ -1,35 +1,52 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.detect-objects-staff",
-  "nameKey": "item-demo-detect-objects-staff-name",
   "appearanceNameKey": "item-demo-unfamiliar-staff-name",
-  "descriptionKey": "item-demo-detect-objects-staff-description",
-  "glyph": "_",
-  "generationLevel": 5,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 50,
-  "maxStack": 1,
   "baseValue": 1500,
+  "descriptionKey": "item-demo-detect-objects-staff-description",
   "deviceGeneration": {
-    "recovery": { "intervalTicks": 10, "energyPerMille": 10 },
     "activations": [
       {
-        "id": "demo.device-activation.detect-objects",
-        "nameKey": "device-activation-demo-detect-objects-name",
-        "weight": 1,
-        "minDepth": 1,
-        "maxDepth": 100,
+        "charges": {
+          "cost": 4,
+          "maximum": 45,
+          "minimum": 45
+        },
         "deviceCheckDifficulty": 6,
-        "charges": { "minimum": 45, "maximum": 45, "cost": 4 },
+        "effectProgramId": "demo.effect.detect-items",
+        "id": "demo.device-activation.detect-objects",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-demo-detect-objects-name",
         "target": {
-          "modes": ["self"],
+          "modes": [
+            "self"
+          ],
           "range": 0,
           "requiresLineOfEffect": false
         },
-        "effectProgramId": "demo.effect.detect-items"
+        "weight": 1
       }
-    ]
+    ],
+    "recovery": {
+      "energyPerMille": 10,
+      "intervalTicks": 10
+    }
   },
-  "tags": ["device", "rfb", "staff"]
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 5,
+  "glyph": "_",
+  "id": "demo.item.detect-objects-staff",
+  "maxStack": 1,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-detect-objects-staff-name",
+  "tags": [
+    "device",
+    "rfb",
+    "staff"
+  ],
+  "weightTenthsPound": 50
 }

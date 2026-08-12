@@ -1,11 +1,17 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "appearanceNameKey": "item-demo-sickliness-potion-appearance",
   "baseValue": 0,
   "descriptionKey": "item-demo-sickliness-potion-description",
+  "elementalDestructionVulnerabilities": [
+    "cold"
+  ],
   "formatVersion": 1,
+  "generationLevel": 10,
   "glyph": "!",
   "id": "demo.item.sickliness-potion",
   "maxStack": 20,
+  "mogaminatorRare": false,
   "nameKey": "item-demo-sickliness-potion-name",
   "tags": [
     "consumable",
@@ -15,8 +21,5 @@
   "useAction": {
     "effectProgramId": "demo.effect.sickliness-potion"
   },
-  "generationLevel": 10,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 4,
-  "appearanceNameKey": "item-demo-sickliness-potion-appearance"
+  "weightTenthsPound": 4
 }

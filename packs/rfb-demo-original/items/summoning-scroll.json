@@ -1,18 +1,26 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.summoning-scroll",
-  "nameKey": "item-demo-summoning-scroll-name",
   "appearanceNameKey": "item-demo-summoning-scroll-appearance",
-  "descriptionKey": "item-demo-summoning-scroll-description",
-  "glyph": "?",
-  "generationLevel": 1,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 5,
-  "maxStack": 20,
   "baseValue": 0,
+  "descriptionKey": "item-demo-summoning-scroll-description",
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 1,
+  "glyph": "?",
+  "id": "demo.item.summoning-scroll",
+  "maxStack": 20,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-summoning-scroll-name",
+  "tags": [
+    "consumable",
+    "scroll",
+    "summon"
+  ],
   "useAction": {
     "effectProgramId": "demo.effect.summon-hostile-monsters"
   },
-  "tags": ["consumable", "scroll", "summon"]
+  "weightTenthsPound": 5
 }
