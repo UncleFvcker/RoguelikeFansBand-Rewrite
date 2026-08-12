@@ -1,0 +1,72 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 632,
+    "maxDepth": 70,
+    "multiplies": true,
+    "randomMovementPercent": 50,
+    "rarity": 3
+  },
+  "attack": 10,
+  "damageDice": 1,
+  "damageSides": 4,
+  "damageType": "disenchant",
+  "defense": 0,
+  "descriptionKey": "actor-demo-disenchanter-worm-mass-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 30,
+  "formatVersion": 1,
+  "glyph": "w",
+  "hitPointDice": {
+    "dice": 10,
+    "sides": 8
+  },
+  "id": "demo.actor.disenchanter-worm-mass",
+  "level": 40,
+  "light": {
+    "intrinsic": true,
+    "radius": 1
+  },
+  "maxHp": 45,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 1,
+            "damageSides": 4,
+            "damageType": "disenchant",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.crawl",
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "modes": [
+      "swim"
+    ]
+  },
+  "nameKey": "actor-demo-disenchanter-worm-mass-name",
+  "resistances": {
+    "disenchant": "resistant",
+    "light": "vulnerable"
+  },
+  "role": "monster",
+  "speed": 100,
+  "statusImmunities": [
+    "rfb.status.fear"
+  ],
+  "tags": [
+    "animal",
+    "kin-glyph-119",
+    "legacy-import",
+    "orc-cave",
+    "weird-mind"
+  ]
+}

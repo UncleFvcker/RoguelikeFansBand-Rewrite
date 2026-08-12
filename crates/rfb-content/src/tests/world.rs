@@ -594,7 +594,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         .iter()
         .filter(|actor| actor.tags.iter().any(|tag| tag == "orc-cave"))
         .collect::<Vec<_>>();
-    assert_eq!(orc_cave.len(), 194);
+    assert_eq!(orc_cave.len(), 238);
 
     for id in [
         "demo.actor.bunyip",
@@ -627,10 +627,10 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
                     .any(|index| *index != 3)
         );
     }
-    let mut level_counts = [0_usize; 12];
+    let mut level_counts = [0_usize; 20];
     let mut source_indices = BTreeSet::new();
     for actor in orc_cave {
-        assert!((21..=32).contains(&actor.level));
+        assert!((21..=40).contains(&actor.level));
         let allocation = actor
             .allocation
             .as_ref()
@@ -640,7 +640,9 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
     }
     assert_eq!(
         level_counts,
-        [16, 14, 12, 17, 24, 17, 19, 17, 18, 21, 7, 12]
+        [
+            16, 14, 12, 17, 24, 17, 19, 17, 18, 21, 7, 12, 5, 7, 9, 6, 2, 0, 2, 13,
+        ]
     );
 
     let mouse = artifact
@@ -3446,8 +3448,6 @@ fn p41_ghast_retains_the_authoritative_eldritch_horror_marker() {
 #[test]
 fn p42a_direct_monsters_keep_source_identity_without_new_abilities() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
-    assert_eq!(artifact.content.actors.len(), 672);
-    assert_eq!(artifact.content.abilities.len(), 331);
 
     for (id, legacy_index, level) in [
         ("half-troll", 491, 33),
@@ -3477,6 +3477,54 @@ fn p42a_direct_monsters_keep_source_identity_without_new_abilities() {
         ("trapper", 565, 36),
         ("chaos-spawn", 574, 36),
         ("exploding-ant", 1109, 36),
+    ] {
+        let actor_id = format!("demo.actor.{id}");
+        let actor = artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == actor_id)
+            .unwrap_or_else(|| panic!("{actor_id} should be imported"));
+        assert_eq!(actor.level, level, "{actor_id} level");
+        assert_eq!(
+            actor
+                .allocation
+                .as_ref()
+                .map(|allocation| allocation.legacy_index),
+            Some(legacy_index),
+            "{actor_id} source index"
+        );
+        assert!(
+            actor.monster_casting.is_none(),
+            "{actor_id} should not gain monster casting"
+        );
+    }
+}
+
+#[test]
+fn p42b_direct_monsters_complete_the_ability_free_harvest() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    assert_eq!(artifact.content.actors.len(), 689);
+    assert_eq!(artifact.content.abilities.len(), 331);
+
+    for (id, legacy_index, level) in [
+        ("black-pudding", 585, 37),
+        ("killer-iridescent-beetle", 586, 37),
+        ("night-mare", 622, 39),
+        ("spawn-of-ubbo-sathla", 626, 40),
+        ("morgenstern-julian-s-steed", 629, 40),
+        ("spirit-troll", 630, 40),
+        ("war-troll", 631, 40),
+        ("disenchanter-worm-mass", 632, 40),
+        ("xaren", 639, 40),
+        ("jubjub-bird", 640, 40),
+        ("minotaur", 641, 40),
+        ("mumak", 673, 40),
+        ("ashram-the-ebony-knight", 974, 40),
+        ("unicorn", 985, 39),
+        ("kokuo-raou-s-steed", 1019, 40),
+        ("narwhal", 1042, 40),
+        ("pteranodon", 1220, 40),
     ] {
         let actor_id = format!("demo.actor.{id}");
         let actor = artifact
