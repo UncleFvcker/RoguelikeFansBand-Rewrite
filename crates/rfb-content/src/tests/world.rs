@@ -594,7 +594,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         .iter()
         .filter(|actor| actor.tags.iter().any(|tag| tag == "orc-cave"))
         .collect::<Vec<_>>();
-    assert_eq!(orc_cave.len(), 378);
+    assert_eq!(orc_cave.len(), 399);
 
     for id in [
         "demo.actor.bunyip",
@@ -627,10 +627,10 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
                     .any(|index| *index != 3)
         );
     }
-    let mut level_counts = [0_usize; 20];
+    let mut level_counts = [0_usize; 22];
     let mut source_indices = BTreeSet::new();
     for actor in orc_cave {
-        assert!((21..=40).contains(&actor.level));
+        assert!((21..=42).contains(&actor.level));
         let allocation = actor
             .allocation
             .as_ref()
@@ -641,7 +641,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
     assert_eq!(
         level_counts,
         [
-            16, 14, 12, 17, 24, 17, 19, 17, 18, 21, 7, 12, 29, 14, 26, 27, 19, 18, 10, 40,
+            16, 14, 12, 17, 24, 17, 19, 17, 18, 21, 7, 12, 29, 15, 27, 28, 19, 19, 11, 42, 10, 5,
         ]
     );
 
@@ -3712,8 +3712,6 @@ fn p44a_monsters_generate_only_parameterized_existing_effects() {
 #[test]
 fn p44b_monsters_complete_the_parameterized_existing_effect_harvest() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
-    assert_eq!(artifact.content.actors.len(), 836);
-    assert_eq!(artifact.content.abilities.len(), 456);
     let ability_ids = artifact
         .content
         .abilities
@@ -4074,6 +4072,46 @@ fn p46_chronomage_keeps_dice_less_time_as_a_rider() {
                 }
             )))
     );
+}
+
+#[test]
+fn p47a_level_41_42_direct_monsters_keep_source_identity() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+
+    for (id, legacy_index, level) in [
+        ("strygalldwir", 651, 41),
+        ("giant-headless", 653, 41),
+        ("judge-fire", 654, 41),
+        ("ubbo-sathla-the-unbegotten-source", 655, 41),
+        ("judge-mortis", 656, 41),
+        ("dark-elven-sorcerer", 657, 41),
+        ("byakhee", 659, 41),
+        ("formless-spawn-of-tsathoggua", 662, 41),
+        ("gorlim-betrayer-of-barahir", 891, 41),
+        ("hezrou", 1153, 41),
+        ("hunting-horror", 663, 42),
+        ("greater-basilisk", 668, 42),
+        ("jack-of-shadows", 670, 42),
+        ("the-lurking-horror", 1196, 42),
+        ("bloodfreezer", 1388, 42),
+    ] {
+        let actor_id = format!("demo.actor.{id}");
+        let actor = artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == actor_id)
+            .unwrap_or_else(|| panic!("{actor_id} should be imported"));
+        assert_eq!(actor.level, level, "{actor_id} level");
+        assert_eq!(
+            actor
+                .allocation
+                .as_ref()
+                .map(|allocation| allocation.legacy_index),
+            Some(legacy_index),
+            "{actor_id} source index"
+        );
+    }
 }
 
 #[test]

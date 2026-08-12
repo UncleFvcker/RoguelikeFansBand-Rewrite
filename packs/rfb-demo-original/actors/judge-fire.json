@@ -1,0 +1,172 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 654,
+    "maxDepth": 999,
+    "rarity": 3
+  },
+  "attack": 10,
+  "damageDice": 5,
+  "damageSides": 5,
+  "damageType": "fire",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 4,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.warrens",
+    "kind": "items",
+    "minimumQuality": "fine"
+  },
+  "defense": 7,
+  "descriptionKey": "actor-demo-judge-fire-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 11500,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "s",
+  "hitPointDice": {
+    "dice": 18,
+    "forceMaximum": true,
+    "sides": 100
+  },
+  "id": "demo.actor.judge-fire",
+  "level": 41,
+  "light": {
+    "intrinsic": true,
+    "radius": 1
+  },
+  "maxHp": 1800,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 5,
+            "damageSides": 5,
+            "damageType": "fire",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 5,
+            "damageSides": 5,
+            "damageType": "fire",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "amountDice": 80,
+            "amountSides": 6,
+            "type": "drain-experience"
+          }
+        ],
+        "methodId": "rfb.blow.gaze",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "type": "terrify"
+          }
+        ],
+        "methodId": "rfb.blow.wail",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.curse-10d15",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.bolt-fire-18d8-26",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-fire-1d286-20",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-fire-20-900-r2",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.bolt-plasma-8d7-71",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.darkness",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-legacy-import-l41-1d3-1",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-demon-l41-1d3-1",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-undead-l41-1d3-1",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.escape",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.blink",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.scare",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 25
+  },
+  "movesWeakerBodies": true,
+  "nameKey": "actor-demo-judge-fire-name",
+  "resistances": {
+    "cold": "vulnerable",
+    "fire": "immune",
+    "nether": "resistant",
+    "plasma": "resistant",
+    "poison": "immune"
+  },
+  "role": "monster",
+  "speed": 120,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "evil",
+    "kin-glyph-115",
+    "legacy-import",
+    "orc-cave",
+    "undead",
+    "unique"
+  ]
+}

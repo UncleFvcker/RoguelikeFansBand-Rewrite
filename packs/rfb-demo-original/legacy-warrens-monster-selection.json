@@ -4746,6 +4746,96 @@
       "id": "chronomage",
       "tags": ["orc-cave"],
       "omittedFlags": []
+    },
+    {
+      "sourceIndex": 651,
+      "id": "strygalldwir",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 653,
+      "id": "giant-headless",
+      "tags": ["orc-cave"],
+      "omittedFlags": []
+    },
+    {
+      "sourceIndex": 654,
+      "id": "judge-fire",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 655,
+      "id": "ubbo-sathla-the-unbegotten-source",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS", "POS_SUST_CON", "POS_SUST_STR"]
+    },
+    {
+      "sourceIndex": 656,
+      "id": "judge-mortis",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 657,
+      "id": "dark-elven-sorcerer",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 659,
+      "id": "byakhee",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 662,
+      "id": "formless-spawn-of-tsathoggua",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 891,
+      "id": "gorlim-betrayer-of-barahir",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 1153,
+      "id": "hezrou",
+      "tags": ["orc-cave"],
+      "omittedFlags": []
+    },
+    {
+      "sourceIndex": 663,
+      "id": "hunting-horror",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 668,
+      "id": "greater-basilisk",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 670,
+      "id": "jack-of-shadows",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE", "POS_TELEPATHY"]
+    },
+    {
+      "sourceIndex": 1196,
+      "id": "the-lurking-horror",
+      "tags": ["orc-cave"],
+      "omittedFlags": []
+    },
+    {
+      "sourceIndex": 1388,
+      "id": "bloodfreezer",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE", "POS_TELEPATHY"]
     }
   ]
 }
