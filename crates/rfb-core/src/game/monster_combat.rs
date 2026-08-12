@@ -18,6 +18,7 @@ pub(super) fn melee_effect_chance(effect: &MeleeBlowEffectDefinition) -> Option<
         | MeleeBlowEffectDefinition::Confusion { chance_percent, .. }
         | MeleeBlowEffectDefinition::Paralysis { chance_percent }
         | MeleeBlowEffectDefinition::Amnesia { chance_percent }
+        | MeleeBlowEffectDefinition::Time { chance_percent }
         | MeleeBlowEffectDefinition::Slow { chance_percent }
         | MeleeBlowEffectDefinition::Stun { chance_percent, .. }
         | MeleeBlowEffectDefinition::Terrify { chance_percent }
@@ -660,7 +661,8 @@ impl Game {
                     | MeleeBlowEffectDefinition::DrainCharges { .. }
                     | MeleeBlowEffectDefinition::DrainExperience { .. }
                     | MeleeBlowEffectDefinition::Disenchant { .. }
-                    | MeleeBlowEffectDefinition::Amnesia { .. } => None,
+                    | MeleeBlowEffectDefinition::Amnesia { .. }
+                    | MeleeBlowEffectDefinition::Time { .. } => None,
                     MeleeBlowEffectDefinition::Unlife {
                         amount_dice,
                         amount_sides,
@@ -1579,6 +1581,10 @@ impl Game {
                         }
                         None
                     }
+                    MeleeBlowEffectDefinition::Time { .. } => {
+                        self.resolve_time_melee(&kind_id, events);
+                        None
+                    }
                     MeleeBlowEffectDefinition::Slow { .. } => {
                         self.apply_player_melee_status(STATUS_SLOW, 25, &kind_id);
                         None
@@ -1765,6 +1771,91 @@ impl Game {
             self.wake_entity_after_damage(target_index, damage.applied, events);
         }
         Ok(false)
+    }
+
+    pub(super) fn resolve_time_melee(
+        &mut self,
+        source_kind_id: &str,
+        events: &mut Vec<DomainEvent>,
+    ) {
+        let resistance = self
+            .effective_player_resistances()
+            .level(DamageType::Time)
+            .reduction_percent()
+            .max(0) as u64;
+        if self.rng.bounded(100) < resistance {
+            return;
+        }
+        match self.rng.bounded(10) {
+            0..=4 => {
+                let amount =
+                    100_u64.saturating_add(self.progress.experience.saturating_mul(2) / 100);
+                self.apply_player_experience_drain(amount, source_kind_id, events);
+            }
+            5..=8 => {
+                let attributes = [
+                    AttributeKind::Strength,
+                    AttributeKind::Intelligence,
+                    AttributeKind::Wisdom,
+                    AttributeKind::Dexterity,
+                    AttributeKind::Constitution,
+                    AttributeKind::Charisma,
+                ];
+                let index = usize::try_from(self.rng.bounded(attributes.len() as u64))
+                    .expect("time attribute roll must fit usize");
+                self.ravage_time_attributes(&[attributes[index]], 3, 4);
+                events.push(DomainEvent::MonsterTimeRavaged {
+                    source_kind_id: source_kind_id.to_owned(),
+                    attribute_count: 1,
+                });
+            }
+            _ => {
+                self.ravage_time_attributes(
+                    &[
+                        AttributeKind::Strength,
+                        AttributeKind::Intelligence,
+                        AttributeKind::Wisdom,
+                        AttributeKind::Dexterity,
+                        AttributeKind::Constitution,
+                        AttributeKind::Charisma,
+                    ],
+                    7,
+                    8,
+                );
+                events.push(DomainEvent::MonsterTimeRavaged {
+                    source_kind_id: source_kind_id.to_owned(),
+                    attribute_count: 6,
+                });
+            }
+        }
+    }
+
+    fn ravage_time_attributes(
+        &mut self,
+        attributes: &[AttributeKind],
+        numerator: u16,
+        denominator: u16,
+    ) {
+        let previous_max_hp = self.effective_player_max_hp();
+        let previous_resource_maxima = self.player_resource_maxima();
+        let mut changed = false;
+        for attribute in attributes {
+            let current = self.progress.attributes.value(*attribute);
+            let next = current.saturating_mul(numerator) / denominator;
+            let next = next.max(3);
+            changed |= current != next;
+            match attribute {
+                AttributeKind::Strength => self.progress.attributes.strength = next,
+                AttributeKind::Intelligence => self.progress.attributes.intelligence = next,
+                AttributeKind::Wisdom => self.progress.attributes.wisdom = next,
+                AttributeKind::Dexterity => self.progress.attributes.dexterity = next,
+                AttributeKind::Constitution => self.progress.attributes.constitution = next,
+                AttributeKind::Charisma => self.progress.attributes.charisma = next,
+            }
+        }
+        if changed {
+            self.refresh_after_attribute_change(previous_max_hp, &previous_resource_maxima);
+        }
     }
 
     fn resolve_monster_attribute_drain(&mut self, attribute: AttributeKind) {

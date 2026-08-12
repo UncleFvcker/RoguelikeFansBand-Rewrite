@@ -218,6 +218,10 @@ pub enum MeleeBlowEffectDefinition {
         #[serde(default)]
         chance_percent: Option<u8>,
     },
+    Time {
+        #[serde(default)]
+        chance_percent: Option<u8>,
+    },
     Slow {
         #[serde(default)]
         chance_percent: Option<u8>,

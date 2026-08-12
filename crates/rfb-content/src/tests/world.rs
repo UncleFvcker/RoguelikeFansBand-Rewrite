@@ -3712,7 +3712,7 @@ fn p44a_monsters_generate_only_parameterized_existing_effects() {
 #[test]
 fn p44b_monsters_complete_the_parameterized_existing_effect_harvest() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
-    assert_eq!(artifact.content.actors.len(), 835);
+    assert_eq!(artifact.content.actors.len(), 836);
     assert_eq!(artifact.content.abilities.len(), 456);
     let ability_ids = artifact
         .content
@@ -4039,6 +4039,41 @@ fn p46_beholder_keeps_gaze_sleep_and_amnesia() {
             .iter()
             .any(|candidate| candidate.ability_id == "rfb-legacy.ability.gaze")
     }));
+}
+
+#[test]
+fn p46_chronomage_keeps_dice_less_time_as_a_rider() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let chronomage = artifact
+        .content
+        .actors
+        .iter()
+        .find(|actor| actor.id == "demo.actor.chronomage")
+        .expect("Chronomage should be imported");
+
+    assert_eq!(
+        chronomage
+            .allocation
+            .as_ref()
+            .map(|allocation| allocation.legacy_index),
+        Some(1092)
+    );
+    let routine = chronomage
+        .melee_routine
+        .as_ref()
+        .expect("Chronomage should retain its melee routine");
+    assert_eq!(routine.blows.len(), 3);
+    assert!(
+        routine
+            .blows
+            .iter()
+            .all(|blow| blow.effects.iter().any(|effect| matches!(
+                effect,
+                MeleeBlowEffectDefinition::Time {
+                    chance_percent: Some(25)
+                }
+            )))
+    );
 }
 
 #[test]

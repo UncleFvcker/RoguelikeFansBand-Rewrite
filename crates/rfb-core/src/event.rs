@@ -248,6 +248,10 @@ pub(crate) enum DomainEvent {
         source_kind_id: String,
         cleared_cells: u32,
     },
+    MonsterTimeRavaged {
+        source_kind_id: String,
+        attribute_count: u8,
+    },
     MonsterBlinkedTarget {
         source_kind_id: String,
         target_kind_id: String,
@@ -1824,6 +1828,17 @@ impl DomainEvent {
                 [
                     ("source", source_kind_id),
                     ("count", cleared_cells.to_string()),
+                ],
+            ),
+            Self::MonsterTimeRavaged {
+                source_kind_id,
+                attribute_count,
+            } => dto(
+                "monster.time-ravaged",
+                "monster-time-ravaged",
+                [
+                    ("source", source_kind_id),
+                    ("count", attribute_count.to_string()),
                 ],
             ),
             Self::MonsterBlinkedTarget {

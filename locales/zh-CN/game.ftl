@@ -165,6 +165,7 @@ message-monster-blinked = { $source }闪到了近处的新位置。
 message-monster-quantum-vanished = { $source }在量子不确定性中消失了。
 message-monster-earthquake = { $source }震碎了大地！
 message-monster-melee-amnesia = { $source }从你的记忆中抹去了{ $count }处地点。
+message-monster-time-ravaged = { $source }让时间侵蚀了你的{ $count }项属性。
 message-monster-blinked-target = { $source }把{ $target }闪现到了近处的新位置！
 message-monster-teleported = { $source }撕开裂隙消失在远处。
 message-monster-eldritch-horror =

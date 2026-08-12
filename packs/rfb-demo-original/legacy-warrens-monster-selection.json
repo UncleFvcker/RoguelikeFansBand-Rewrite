@@ -4740,6 +4740,12 @@
       "id": "beholder",
       "tags": ["orc-cave"],
       "omittedFlags": ["POS_GAIN_AC", "POS_TELEPATHY"]
+    },
+    {
+      "sourceIndex": 1092,
+      "id": "chronomage",
+      "tags": ["orc-cave"],
+      "omittedFlags": []
     }
   ]
 }

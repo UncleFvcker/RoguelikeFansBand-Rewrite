@@ -165,6 +165,7 @@ message-monster-blinked = { $source } blinks to a nearby spot.
 message-monster-quantum-vanished = { $source } vanishes in quantum uncertainty.
 message-monster-earthquake = { $source } shatters the ground!
 message-monster-melee-amnesia = { $source } tears { $count } remembered places from your mind.
+message-monster-time-ravaged = { $source } turns time against { $count } of your attributes.
 message-monster-blinked-target = { $source } blinks { $target } to a nearby spot!
 message-monster-teleported = { $source } tears open a rift and vanishes into the distance.
 message-monster-eldritch-horror =

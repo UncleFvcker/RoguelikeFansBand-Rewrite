@@ -599,6 +599,72 @@ fn melee_amnesia_uses_the_existing_save_and_floor_memory_wipe() {
 }
 
 #[test]
+fn dice_less_time_uses_exp_or_fractional_attribute_ravaging_without_damage() {
+    let template = Game::new(0);
+    let exp_seed = (0..100)
+        .find(|seed| {
+            let mut trial = template.clone();
+            trial.rng = RfbRng::seeded(*seed);
+            trial.progress.experience = 1_000;
+            trial.progress.maximum_experience = 1_000;
+            let mut events = Vec::new();
+            trial.resolve_time_melee("demo.actor.chronomage", &mut events);
+            events
+                .iter()
+                .any(|event| matches!(event, DomainEvent::ExperienceDrained { .. }))
+        })
+        .expect("a deterministic seed should select TIME experience drain");
+    let mut exp = template.clone();
+    exp.rng = RfbRng::seeded(exp_seed);
+    exp.progress.experience = 1_000;
+    exp.progress.maximum_experience = 1_000;
+    let hp_before = exp.player.hp;
+    exp.resolve_time_melee("demo.actor.chronomage", &mut Vec::new());
+    assert_eq!(exp.progress.experience, 880);
+    assert_eq!(exp.player.hp, hp_before);
+
+    let all_seed = (0..100)
+        .find(|seed| {
+            let mut trial = template.clone();
+            trial.rng = RfbRng::seeded(*seed);
+            let mut events = Vec::new();
+            trial.resolve_time_melee("demo.actor.chronomage", &mut events);
+            events.iter().any(|event| {
+                matches!(
+                    event,
+                    DomainEvent::MonsterTimeRavaged {
+                        attribute_count: 6,
+                        ..
+                    }
+                )
+            })
+        })
+        .expect("a deterministic seed should select all-attribute TIME ravaging");
+    let mut all = template;
+    all.rng = RfbRng::seeded(all_seed);
+    all.progress.attributes = AttributeSet {
+        strength: 16,
+        intelligence: 16,
+        wisdom: 16,
+        dexterity: 16,
+        constitution: 16,
+        charisma: 16,
+    };
+    all.resolve_time_melee("demo.actor.chronomage", &mut Vec::new());
+    assert_eq!(
+        all.progress.attributes,
+        AttributeSet {
+            strength: 14,
+            intelligence: 14,
+            wisdom: 14,
+            dexterity: 14,
+            constitution: 14,
+            charisma: 14,
+        }
+    );
+}
+
+#[test]
 fn unlife_melee_drains_life_force_and_persistently_empowers_the_monster() {
     let effect = MeleeBlowEffectDefinition::Unlife {
         chance_percent: None,

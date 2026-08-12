@@ -880,7 +880,8 @@ impl Game {
                     | MeleeBlowEffectDefinition::DrainResource { .. }
                     | MeleeBlowEffectDefinition::DrainExperience { .. }
                     | MeleeBlowEffectDefinition::Disenchant { .. }
-                    | MeleeBlowEffectDefinition::Amnesia { .. } => None,
+                    | MeleeBlowEffectDefinition::Amnesia { .. }
+                    | MeleeBlowEffectDefinition::Time { .. } => None,
                     MeleeBlowEffectDefinition::Unlife {
                         amount_dice,
                         amount_sides,

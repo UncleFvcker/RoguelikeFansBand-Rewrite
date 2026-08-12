@@ -6880,6 +6880,7 @@ fn melee_effect_json(effect: &LegacyBlowEffect) -> Option<serde_json::Value> {
         }
         "PARALYZE" | "SLEEP" => serde_json::json!({ "type": "paralysis" }),
         "AMNESIA" => serde_json::json!({ "type": "amnesia" }),
+        "TIME" if effect.dice.is_none() => serde_json::json!({ "type": "time" }),
         "SLOW" => serde_json::json!({ "type": "slow" }),
         "STUN" => {
             let (duration_dice, duration_sides) = effect.dice?;
@@ -12889,6 +12890,31 @@ mod tests {
             abilities["rfb-legacy.ability.gaze"]["tags"]
                 .as_array()
                 .is_some_and(|tags| tags.iter().any(|tag| tag == "gaze"))
+        );
+    }
+
+    #[test]
+    fn demo_monster_import_maps_dice_less_time_without_inventing_damage() {
+        let mut monsters = parse_r_info(
+            "N:1092:Chronomage\nG:p:B\nI:120:20d20:30:80:0:200\nW:40:3:999:5000:0:0\nB:HIT:HURT(3d7):TIME(25%)\nF:SMART\n",
+        )
+        .expect("synthetic chronomage should parse");
+        let actor = demo_monster_json(
+            &monsters.remove(0),
+            &DemoMonsterSelectionEntry {
+                source_index: 1092,
+                source_id: None,
+                id: "chronomage".to_owned(),
+                tags: vec!["orc-cave".to_owned()],
+                omitted_flags: Vec::new(),
+            },
+            &mut BTreeMap::new(),
+        )
+        .expect("dice-less TIME should import");
+
+        assert_eq!(
+            actor["meleeRoutine"]["blows"][0]["effects"][1],
+            serde_json::json!({"type": "time", "chancePercent": 25})
         );
     }
 

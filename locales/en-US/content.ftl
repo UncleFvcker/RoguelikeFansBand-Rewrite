@@ -3468,3 +3468,5 @@ actor-demo-beholder-name = Beholder
 actor-demo-beholder-description = A floating eye whose distant gaze carries every cruelty of its close attack.
 ability-legacy-gaze-name = Gaze
 ability-legacy-gaze-description = Projects the caster's complete melee routine along a line of sight.
+actor-demo-chronomage-name = Chronomage
+actor-demo-chronomage-description = A master of time whose touch can turn a victim's life and strength backward.

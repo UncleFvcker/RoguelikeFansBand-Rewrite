@@ -3468,3 +3468,5 @@ actor-demo-beholder-name = 眼魔
 actor-demo-beholder-description = 一只漂浮的巨眼，远处凝视也带有近身攻击的全部恶意。
 ability-legacy-gaze-name = 凝视
 ability-legacy-gaze-description = 沿视线投射施法者的完整近战例程。
+actor-demo-chronomage-name = 时空法师
+actor-demo-chronomage-description = 一位操纵时间的大师，触碰能让受害者的生命与力量倒流。
