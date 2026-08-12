@@ -5076,6 +5076,90 @@
       "id": "emerald-serpent",
       "tags": ["orc-cave"],
       "omittedFlags": ["ATTR_CLEAR", "POS_GAIN_AC", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 710,
+      "id": "itangast-the-fire-drake",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "POS_GAIN_AC", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 711,
+      "id": "death-mold",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC", "POS_TELEPATHY"]
+    },
+    {
+      "sourceIndex": 712,
+      "id": "fafner-the-dragon",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE", "POS_GAIN_AC", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 713,
+      "id": "fangorn",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 714,
+      "id": "zhar-the-twin-obscenity",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 979,
+      "id": "shuten-douji-king-ogre-of-ooe-mountain",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
+    },
+    {
+      "sourceIndex": 1025,
+      "id": "charon-boatman-of-the-styx",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 1213,
+      "id": "amethyst-serpent",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["ATTR_CLEAR", "POS_GAIN_AC", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 1237,
+      "id": "ice-weasel",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 1268,
+      "id": "mummified-sorcerer",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["EGYPTIAN2", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 691,
+      "id": "drolem",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE"]
+    },
+    {
+      "sourceIndex": 715,
+      "id": "glaurung-father-of-the-dragons",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE", "POS_GAIN_AC", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 973,
+      "id": "beld-ruler-of-marmo",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
+    },
+    {
+      "sourceIndex": 1216,
+      "id": "winged-horror",
+      "tags": ["orc-cave"],
+      "omittedFlags": []
     }
   ]
 }

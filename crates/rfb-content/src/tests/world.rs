@@ -594,7 +594,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         .iter()
         .filter(|actor| actor.tags.iter().any(|tag| tag == "orc-cave"))
         .collect::<Vec<_>>();
-    assert_eq!(orc_cave.len(), 439);
+    assert_eq!(orc_cave.len(), 453);
 
     for id in [
         "demo.actor.bunyip",
@@ -627,10 +627,10 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
                     .any(|index| *index != 3)
         );
     }
-    let mut level_counts = [0_usize; 26];
+    let mut level_counts = [0_usize; 28];
     let mut source_indices = BTreeSet::new();
     for actor in orc_cave {
-        assert!((21..=46).contains(&actor.level));
+        assert!((21..=48).contains(&actor.level));
         let allocation = actor
             .allocation
             .as_ref()
@@ -642,7 +642,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         level_counts,
         [
             16, 14, 12, 17, 24, 17, 19, 17, 18, 21, 7, 12, 29, 15, 27, 28, 19, 19, 11, 42, 10, 5,
-            10, 12, 12, 6,
+            10, 12, 12, 6, 10, 4,
         ]
     );
 
@@ -4185,6 +4185,45 @@ fn p48a_level_45_46_direct_monsters_keep_source_identity() {
         ("ent", 708, 46),
         ("grand-master-thief", 1024, 46),
         ("emerald-serpent", 1212, 46),
+    ] {
+        let actor_id = format!("demo.actor.{id}");
+        let actor = artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == actor_id)
+            .unwrap_or_else(|| panic!("{actor_id} should be imported"));
+        assert_eq!(actor.level, level, "{actor_id} level");
+        assert_eq!(
+            actor
+                .allocation
+                .as_ref()
+                .map(|allocation| allocation.legacy_index),
+            Some(legacy_index),
+            "{actor_id} source index"
+        );
+    }
+}
+
+#[test]
+fn p48b_level_47_48_direct_monsters_keep_source_identity() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+
+    for (id, legacy_index, level) in [
+        ("itangast-the-fire-drake", 710, 47),
+        ("death-mold", 711, 47),
+        ("fafner-the-dragon", 712, 47),
+        ("fangorn", 713, 47),
+        ("zhar-the-twin-obscenity", 714, 47),
+        ("shuten-douji-king-ogre-of-ooe-mountain", 979, 47),
+        ("charon-boatman-of-the-styx", 1025, 47),
+        ("amethyst-serpent", 1213, 47),
+        ("ice-weasel", 1237, 47),
+        ("mummified-sorcerer", 1268, 47),
+        ("drolem", 691, 48),
+        ("glaurung-father-of-the-dragons", 715, 48),
+        ("beld-ruler-of-marmo", 973, 48),
+        ("winged-horror", 1216, 48),
     ] {
         let actor_id = format!("demo.actor.{id}");
         let actor = artifact
