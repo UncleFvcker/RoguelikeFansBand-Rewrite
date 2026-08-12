@@ -71,6 +71,7 @@ use rfb_content::{
     ProceduralStreamerCandidateDefinition, SkillKind, SlayLevel, SlayTarget,
     StartingItemDefinition, StatModifiers, TaskObjectiveKind, TechniqueAttribute,
     TerrainFeatureEntryDefinition, ThemeVaultCandidateDefinition, WeaponBrand,
+    affix_is_compatible_with_item,
 };
 use rfb_protocol::{
     AbilityAreaDamageResolutionDto, AbilityBeamDamageResolutionDto, AbilityCastResolutionDto,
@@ -4662,11 +4663,6 @@ impl Game {
             .iter()
             .map(|entry| entry.weight)
             .collect::<Vec<_>>();
-        let affix_weights = table
-            .affix_weights
-            .iter()
-            .map(|entry| entry.weight)
-            .collect::<Vec<_>>();
         let mut roll_count = roll_count_override.unwrap_or(table.rolls);
         if roll_count_override.is_none()
             && roll_table_chance
@@ -4693,10 +4689,46 @@ impl Game {
                 .content
                 .item(&entry.item_kind_id)
                 .is_some_and(|definition| definition.tags.iter().any(|tag| tag == "staff"));
+            let jewelry = self
+                .content
+                .item(&entry.item_kind_id)
+                .and_then(|definition| definition.equipment_slot.as_deref())
+                .is_some_and(|slot| matches!(slot, "ring" | "amulet"));
             let generation_depth = self.luck_adjusted_item_generation_depth(context.depth, staff);
-            let rolled_quality =
-                self.roll_loot_quality(&table.quality_weights, &quality_weights, minimum_quality);
-            let affix_index = self.roll_weighted_index(&affix_weights);
+            let rolled_quality = match table.quality_policy {
+                Some(policy) => self.roll_rfb_depth_loot_quality(
+                    policy,
+                    generation_depth,
+                    jewelry,
+                    minimum_quality,
+                ),
+                None => self.roll_loot_quality(
+                    &table.quality_weights,
+                    &quality_weights,
+                    minimum_quality,
+                ),
+            };
+            let eligible_affixes = table
+                .affix_weights
+                .iter()
+                .filter(|affix_weight| {
+                    affix_weight.affix_id.as_ref().is_none_or(|affix_id| {
+                        self.content.affix(affix_id).is_some_and(|affix| {
+                            self.content.item(&entry.item_kind_id).is_some_and(|item| {
+                                affix_is_compatible_with_item(affix, item, generation_depth)
+                            })
+                        })
+                    })
+                })
+                .collect::<Vec<_>>();
+            let affix_weights = eligible_affixes
+                .iter()
+                .map(|entry| entry.weight)
+                .collect::<Vec<_>>();
+            let rolled_affix_id = (!eligible_affixes.is_empty()).then(|| {
+                let affix_index = self.roll_weighted_index(&affix_weights);
+                eligible_affixes[affix_index].affix_id.clone()
+            });
             let supports_quality = self.content.item(&entry.item_kind_id).is_some_and(|item| {
                 item.max_stack == 1 && item.equipment_slot.is_some() && entry.quantity == 1
             });
@@ -4705,14 +4737,10 @@ impl Game {
             } else {
                 ItemQualityDto::Ordinary
             };
-            let affix_ids = if quality == ItemQualityDto::Ordinary {
-                Vec::new()
+            let affix_ids = if quality_allows_natural_affix(table.quality_policy, quality) {
+                rolled_affix_id.flatten().iter().cloned().collect()
             } else {
-                table.affix_weights[affix_index]
-                    .affix_id
-                    .iter()
-                    .cloned()
-                    .collect()
+                Vec::new()
             };
             let rolled_affixes = self.roll_affix_properties(&affix_ids, generation_depth);
             let (activation, charges) = initial_item_runtime_state(
@@ -4799,6 +4827,39 @@ impl Game {
             rfb_content::ItemQuality::Exceptional
         };
         item_quality_dto(quality.max(minimum))
+    }
+
+    fn roll_rfb_depth_loot_quality(
+        &mut self,
+        policy: rfb_content::LootQualityPolicyDefinition,
+        depth: u16,
+        jewelry: bool,
+        minimum: rfb_content::ItemQuality,
+    ) -> ItemQualityDto {
+        let (good_percent, great_percent) =
+            rfb_depth_quality_percentages(policy, depth, jewelry, self.player_luck_bias());
+        let roll = self.rng.bounded(10_000);
+        let quality = match minimum {
+            rfb_content::ItemQuality::Exceptional => rfb_content::ItemQuality::Exceptional,
+            rfb_content::ItemQuality::Fine => {
+                if roll < great_percent * 100 {
+                    rfb_content::ItemQuality::Exceptional
+                } else {
+                    rfb_content::ItemQuality::Fine
+                }
+            }
+            rfb_content::ItemQuality::Ordinary => {
+                let exceptional_threshold = good_percent * great_percent;
+                if roll < exceptional_threshold {
+                    rfb_content::ItemQuality::Exceptional
+                } else if roll < good_percent * 100 {
+                    rfb_content::ItemQuality::Fine
+                } else {
+                    rfb_content::ItemQuality::Ordinary
+                }
+            }
+        };
+        item_quality_dto(quality)
     }
 
     fn luck_adjusted_item_generation_depth(&mut self, depth: u16, staff: bool) -> u16 {
@@ -5418,6 +5479,44 @@ impl Game {
         self.index(position)
             .and_then(|index| self.content.terrain(&self.terrain[index]))
             .is_some_and(|terrain| terrain.walkable)
+    }
+}
+
+fn rfb_depth_quality_percentages(
+    policy: rfb_content::LootQualityPolicyDefinition,
+    depth: u16,
+    jewelry: bool,
+    luck: LuckBias,
+) -> (u64, u64) {
+    let rfb_content::LootQualityPolicyDefinition::RfbDepth {
+        good_cap_percent,
+        great_cap_percent,
+    } = policy;
+    let mut good_cap = u64::from(good_cap_percent);
+    let mut great_cap = u64::from(great_cap_percent);
+    if luck == LuckBias::Bad {
+        good_cap = good_cap.saturating_sub(5);
+        great_cap = great_cap.saturating_sub(great_cap / 4);
+    }
+    let mut good = (u64::from(depth) + 10).min(good_cap);
+    let mut great = (good * 2 / 3).min(great_cap);
+    if jewelry {
+        good = good.saturating_add(30).min(good_cap);
+    }
+    if luck == LuckBias::Good {
+        good = good.saturating_add(5).min(100);
+        great = great.saturating_add(2).min(100);
+    }
+    (good, great)
+}
+
+fn quality_allows_natural_affix(
+    policy: Option<rfb_content::LootQualityPolicyDefinition>,
+    quality: ItemQualityDto,
+) -> bool {
+    match policy {
+        Some(_) => quality == ItemQualityDto::Exceptional,
+        None => quality != ItemQualityDto::Ordinary,
     }
 }
 

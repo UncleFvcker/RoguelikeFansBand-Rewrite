@@ -1,0 +1,25 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 500,
+  "descriptionKey": "item-demo-ring-mail-description",
+  "equipmentBonuses": {
+    "meleeSkill": -2
+  },
+  "equipmentSlot": "body",
+  "formatVersion": 1,
+  "generationLevel": 20,
+  "glyph": "[",
+  "id": "demo.item.ring-mail",
+  "maxStack": 1,
+  "modifiers": {
+    "defense": 12
+  },
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-ring-mail-name",
+  "tags": [
+    "armor",
+    "equipment",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 200
+}

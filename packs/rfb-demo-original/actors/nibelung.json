@@ -26,7 +26,7 @@
   "terrainInteraction": { "picksUpItems": true },
   "deathDrop": {
     "kind": "items-and-gold",
-    "itemTableId": "demo.loot-table.warrens",
+    "itemTableId": "demo.loot-table.base-items",
     "chanceRolls": [{ "percent": 60 }]
   },
   "remains": {

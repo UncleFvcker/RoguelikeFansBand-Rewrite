@@ -792,7 +792,7 @@
       "lifecycle": "dungeon",
       "dungeonId": "demo.dungeon.warrens",
       "encounterTableId": "demo.encounter-table.warrens",
-      "lootTableId": "demo.loot-table.warrens",
+      "lootTableId": "demo.loot-table.base-items",
       "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
       "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
       "guaranteedItems": [
@@ -841,7 +841,7 @@
       "returnFloorId": "demo.floor.warrens-depth-1",
       "dungeonId": "demo.dungeon.warrens",
       "encounterTableId": "demo.encounter-table.warrens",
-      "lootTableId": "demo.loot-table.warrens",
+      "lootTableId": "demo.loot-table.base-items",
       "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
       "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
       "guaranteedItems": [
@@ -889,7 +889,7 @@
       "returnFloorId": "demo.floor.warrens-depth-2",
       "dungeonId": "demo.dungeon.warrens",
       "encounterTableId": "demo.encounter-table.warrens",
-      "lootTableId": "demo.loot-table.warrens",
+      "lootTableId": "demo.loot-table.base-items",
       "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
       "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
       "guaranteedItems": [
@@ -937,7 +937,7 @@
       "returnFloorId": "demo.floor.warrens-depth-3",
       "dungeonId": "demo.dungeon.warrens",
       "encounterTableId": "demo.encounter-table.warrens",
-      "lootTableId": "demo.loot-table.warrens",
+      "lootTableId": "demo.loot-table.base-items",
       "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
       "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
       "guaranteedItems": [
@@ -985,7 +985,7 @@
       "returnFloorId": "demo.floor.warrens-depth-4",
       "dungeonId": "demo.dungeon.warrens",
       "encounterTableId": "demo.encounter-table.warrens",
-      "lootTableId": "demo.loot-table.warrens",
+      "lootTableId": "demo.loot-table.base-items",
       "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
       "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
       "guaranteedItems": [
@@ -1033,7 +1033,7 @@
       "returnFloorId": "demo.floor.warrens-depth-5",
       "dungeonId": "demo.dungeon.warrens",
       "encounterTableId": "demo.encounter-table.warrens",
-      "lootTableId": "demo.loot-table.warrens",
+      "lootTableId": "demo.loot-table.base-items",
       "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
       "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
       "guaranteedItems": [
@@ -1081,7 +1081,7 @@
       "returnFloorId": "demo.floor.warrens-depth-6",
       "dungeonId": "demo.dungeon.warrens",
       "encounterTableId": "demo.encounter-table.warrens",
-      "lootTableId": "demo.loot-table.warrens",
+      "lootTableId": "demo.loot-table.base-items",
       "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
       "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
       "guaranteedItems": [
@@ -1129,7 +1129,7 @@
       "returnFloorId": "demo.floor.warrens-depth-7",
       "dungeonId": "demo.dungeon.warrens",
       "encounterTableId": "demo.encounter-table.warrens",
-      "lootTableId": "demo.loot-table.warrens",
+      "lootTableId": "demo.loot-table.base-items",
       "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
       "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
       "guaranteedItems": [
@@ -1177,7 +1177,7 @@
       "returnFloorId": "demo.floor.warrens-depth-8",
       "dungeonId": "demo.dungeon.warrens",
       "encounterTableId": "demo.encounter-table.warrens",
-      "lootTableId": "demo.loot-table.warrens",
+      "lootTableId": "demo.loot-table.base-items",
       "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
       "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
       "guaranteedItems": [
@@ -1226,7 +1226,7 @@
       "returnFloorId": "demo.floor.surface",
       "dungeonId": "demo.dungeon.orc-cave",
       "encounterTableId": "demo.encounter-table.orc-cave",
-      "lootTableId": "demo.loot-table.orc-cave",
+      "lootTableId": "demo.loot-table.base-items",
       "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
       "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
       "guaranteedItems": [
@@ -1269,7 +1269,7 @@
       "returnFloorId": "demo.floor.orc-cave-depth-15",
       "dungeonId": "demo.dungeon.orc-cave",
       "encounterTableId": "demo.encounter-table.orc-cave",
-      "lootTableId": "demo.loot-table.orc-cave",
+      "lootTableId": "demo.loot-table.base-items",
       "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
       "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
       "guaranteedItems": [
@@ -1311,7 +1311,7 @@
       "returnFloorId": "demo.floor.orc-cave-depth-16",
       "dungeonId": "demo.dungeon.orc-cave",
       "encounterTableId": "demo.encounter-table.orc-cave",
-      "lootTableId": "demo.loot-table.orc-cave",
+      "lootTableId": "demo.loot-table.base-items",
       "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
       "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
       "guaranteedItems": [
@@ -1353,7 +1353,7 @@
       "returnFloorId": "demo.floor.orc-cave-depth-17",
       "dungeonId": "demo.dungeon.orc-cave",
       "encounterTableId": "demo.encounter-table.orc-cave",
-      "lootTableId": "demo.loot-table.orc-cave",
+      "lootTableId": "demo.loot-table.base-items",
       "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
       "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
       "guaranteedItems": [
@@ -1395,7 +1395,7 @@
       "returnFloorId": "demo.floor.orc-cave-depth-18",
       "dungeonId": "demo.dungeon.orc-cave",
       "encounterTableId": "demo.encounter-table.orc-cave",
-      "lootTableId": "demo.loot-table.orc-cave",
+      "lootTableId": "demo.loot-table.base-items",
       "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
       "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
       "guaranteedItems": [
@@ -1437,7 +1437,7 @@
       "returnFloorId": "demo.floor.orc-cave-depth-19",
       "dungeonId": "demo.dungeon.orc-cave",
       "encounterTableId": "demo.encounter-table.orc-cave",
-      "lootTableId": "demo.loot-table.orc-cave",
+      "lootTableId": "demo.loot-table.base-items",
       "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
       "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
       "guaranteedItems": [
@@ -1479,7 +1479,7 @@
       "returnFloorId": "demo.floor.orc-cave-depth-20",
       "dungeonId": "demo.dungeon.orc-cave",
       "encounterTableId": "demo.encounter-table.orc-cave",
-      "lootTableId": "demo.loot-table.orc-cave",
+      "lootTableId": "demo.loot-table.base-items",
       "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
       "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
       "guaranteedItems": [
@@ -1521,7 +1521,7 @@
       "returnFloorId": "demo.floor.orc-cave-depth-21",
       "dungeonId": "demo.dungeon.orc-cave",
       "encounterTableId": "demo.encounter-table.orc-cave",
-      "lootTableId": "demo.loot-table.orc-cave",
+      "lootTableId": "demo.loot-table.base-items",
       "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
       "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
       "guaranteedItems": [
@@ -1563,7 +1563,7 @@
       "returnFloorId": "demo.floor.orc-cave-depth-22",
       "dungeonId": "demo.dungeon.orc-cave",
       "encounterTableId": "demo.encounter-table.orc-cave",
-      "lootTableId": "demo.loot-table.orc-cave",
+      "lootTableId": "demo.loot-table.base-items",
       "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
       "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
       "guaranteedItems": [
@@ -1605,7 +1605,7 @@
       "returnFloorId": "demo.floor.orc-cave-depth-23",
       "dungeonId": "demo.dungeon.orc-cave",
       "encounterTableId": "demo.encounter-table.orc-cave",
-      "lootTableId": "demo.loot-table.orc-cave",
+      "lootTableId": "demo.loot-table.base-items",
       "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
       "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
       "guaranteedItems": [
@@ -1647,7 +1647,7 @@
       "returnFloorId": "demo.floor.orc-cave-depth-24",
       "dungeonId": "demo.dungeon.orc-cave",
       "encounterTableId": "demo.encounter-table.orc-cave",
-      "lootTableId": "demo.loot-table.orc-cave",
+      "lootTableId": "demo.loot-table.base-items",
       "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
       "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
       "guaranteedItems": [
@@ -1689,7 +1689,7 @@
       "returnFloorId": "demo.floor.orc-cave-depth-25",
       "dungeonId": "demo.dungeon.orc-cave",
       "encounterTableId": "demo.encounter-table.orc-cave",
-      "lootTableId": "demo.loot-table.orc-cave",
+      "lootTableId": "demo.loot-table.base-items",
       "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
       "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
       "guaranteedItems": [
@@ -1731,7 +1731,7 @@
       "returnFloorId": "demo.floor.orc-cave-depth-26",
       "dungeonId": "demo.dungeon.orc-cave",
       "encounterTableId": "demo.encounter-table.orc-cave",
-      "lootTableId": "demo.loot-table.orc-cave",
+      "lootTableId": "demo.loot-table.base-items",
       "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
       "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
       "guaranteedItems": [
@@ -1773,7 +1773,7 @@
       "returnFloorId": "demo.floor.orc-cave-depth-27",
       "dungeonId": "demo.dungeon.orc-cave",
       "encounterTableId": "demo.encounter-table.orc-cave",
-      "lootTableId": "demo.loot-table.orc-cave",
+      "lootTableId": "demo.loot-table.base-items",
       "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
       "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
       "guaranteedItems": [
@@ -1815,7 +1815,7 @@
       "returnFloorId": "demo.floor.orc-cave-depth-28",
       "dungeonId": "demo.dungeon.orc-cave",
       "encounterTableId": "demo.encounter-table.orc-cave",
-      "lootTableId": "demo.loot-table.orc-cave",
+      "lootTableId": "demo.loot-table.base-items",
       "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
       "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
       "guaranteedItems": [
@@ -1857,7 +1857,7 @@
       "returnFloorId": "demo.floor.orc-cave-depth-29",
       "dungeonId": "demo.dungeon.orc-cave",
       "encounterTableId": "demo.encounter-table.orc-cave",
-      "lootTableId": "demo.loot-table.orc-cave",
+      "lootTableId": "demo.loot-table.base-items",
       "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
       "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
       "guaranteedItems": [
@@ -1899,7 +1899,7 @@
       "returnFloorId": "demo.floor.orc-cave-depth-30",
       "dungeonId": "demo.dungeon.orc-cave",
       "encounterTableId": "demo.encounter-table.orc-cave",
-      "lootTableId": "demo.loot-table.orc-cave",
+      "lootTableId": "demo.loot-table.base-items",
       "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
       "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
       "guaranteedItems": [
@@ -1941,7 +1941,7 @@
       "returnFloorId": "demo.floor.orc-cave-depth-31",
       "dungeonId": "demo.dungeon.orc-cave",
       "encounterTableId": "demo.encounter-table.orc-cave",
-      "lootTableId": "demo.loot-table.orc-cave",
+      "lootTableId": "demo.loot-table.base-items",
       "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
       "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
       "guaranteedItems": [
@@ -2100,10 +2100,10 @@
           }
         ],
         "lootSpawns": [
-          { "id": "demo.loot.thieves-hideout.1", "position": { "x": 7, "y": 1 }, "lootTableId": "demo.loot-table.warrens" },
-          { "id": "demo.loot.thieves-hideout.2", "position": { "x": 11, "y": 1 }, "lootTableId": "demo.loot-table.warrens" },
-          { "id": "demo.loot.thieves-hideout.3", "position": { "x": 15, "y": 1 }, "lootTableId": "demo.loot-table.warrens" },
-          { "id": "demo.loot.thieves-hideout.4", "position": { "x": 19, "y": 1 }, "lootTableId": "demo.loot-table.warrens" }
+          { "id": "demo.loot.thieves-hideout.1", "position": { "x": 7, "y": 1 }, "lootTableId": "demo.loot-table.base-items" },
+          { "id": "demo.loot.thieves-hideout.2", "position": { "x": 11, "y": 1 }, "lootTableId": "demo.loot-table.base-items" },
+          { "id": "demo.loot.thieves-hideout.3", "position": { "x": 15, "y": 1 }, "lootTableId": "demo.loot-table.base-items" },
+          { "id": "demo.loot.thieves-hideout.4", "position": { "x": 19, "y": 1 }, "lootTableId": "demo.loot-table.base-items" }
         ],
         "monsterFormation": {
           "candidateActorKindIds": [

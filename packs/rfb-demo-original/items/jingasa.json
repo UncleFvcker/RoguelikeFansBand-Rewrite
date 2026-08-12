@@ -1,0 +1,22 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 60,
+  "descriptionKey": "item-demo-jingasa-description",
+  "equipmentSlot": "head",
+  "formatVersion": 1,
+  "generationLevel": 16,
+  "glyph": "]",
+  "id": "demo.item.jingasa",
+  "maxStack": 1,
+  "modifiers": {
+    "defense": 4
+  },
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-jingasa-name",
+  "tags": [
+    "armor",
+    "equipment",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 30
+}

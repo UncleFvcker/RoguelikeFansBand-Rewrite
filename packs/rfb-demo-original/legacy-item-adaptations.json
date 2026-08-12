@@ -25,6 +25,8 @@
     { "sourceIndex": 33, "sourceName": "Hard Biscuit", "sourceId": "hard-biscuit", "itemId": "demo.item.hard-biscuit", "status": "active", "contract": "phase-19-p3-1-food-status" },
     { "sourceIndex": 34, "sourceName": "Strip of Venison", "sourceId": "strip-of-venison", "itemId": "demo.item.strip-of-venison", "status": "active", "contract": "phase-19-p3-1-food-status" },
     { "sourceIndex": 35, "sourceName": "Slime Mold", "sourceId": "slime-mold", "itemId": "demo.item.slime-mold", "status": "active", "contract": "phase-19-p3-1-food-status" },
+    { "sourceIndex": 36, "sourceName": "Pint of Fine Ale", "sourceId": "pint-of-fine-ale", "itemId": "demo.item.pint-of-fine-ale", "status": "active", "contract": "phase-19-p3-8-fine-drinks" },
+    { "sourceIndex": 37, "sourceName": "Pint of Fine Wine", "sourceId": "pint-of-fine-wine", "itemId": "demo.item.pint-of-fine-wine", "status": "active", "contract": "phase-19-p3-8-fine-drinks" },
     { "sourceIndex": 38, "sourceName": "Piece of Elvish Waybread", "sourceId": "piece-of-elvish-waybread", "itemId": "demo.item.piece-of-elvish-waybread", "status": "active", "contract": "phase-19-p3-8-waybread-intolerance" },
     { "sourceIndex": 39, "sourceName": "Serving of Ambrosia", "sourceId": "serving-of-ambrosia", "itemId": "demo.item.sunlit-feast", "status": "active", "contract": "contract-v149-restoration-combinations" },
     { "sourceIndex": 54, "sourceName": "Sabre", "sourceId": "sabre", "itemId": "demo.item.sabre", "status": "active", "contract": "contract-v164-outpost-armoury-weaponsmith" },
@@ -98,6 +100,7 @@
     { "sourceIndex": 401, "sourceName": "Apple Juice:Light Brown", "sourceId": "apple-juice-light-brown", "itemId": "demo.item.apple-juice", "status": "active", "adaptation": "intentional-no-numeric-effect:no-thirst-system", "contract": "phase-19-p3-2-low-coupling-potions" },
     { "sourceIndex": 402, "sourceName": "Slime Mold Juice:Icky Green", "sourceId": "slime-mold-juice-icky-green", "itemId": "demo.item.slime-mold-juice", "status": "active", "adaptation": "intentional-no-numeric-effect:no-thirst-system", "contract": "phase-19-p3-2-low-coupling-potions" },
     { "sourceIndex": 403, "sourceName": "Slowness:Metallic Blue", "sourceId": "slowness-metallic-blue", "itemId": "demo.item.slowness-potion", "status": "active", "contract": "contract-v133-potion-slowness" },
+    { "sourceIndex": 404, "sourceName": "Salt Water:Orange Speckled", "sourceId": "salt-water-orange-speckled", "itemId": "demo.item.salt-water", "status": "active", "contract": "phase-19-p3-2-salt-water" },
     { "sourceIndex": 405, "sourceName": "Poison:Light Green", "sourceId": "poison-light-green", "itemId": "demo.item.venom-draught", "status": "active", "contract": "contract-v135-potion-poison" },
     { "sourceIndex": 406, "sourceName": "Blindness:Indigo", "sourceId": "blindness-indigo", "itemId": "demo.item.veil-draught", "status": "active", "contract": "contract-v144-potion-blindness" },
     { "sourceIndex": 408, "sourceName": "Sleep:Hazy", "sourceId": "sleep-hazy", "itemId": "demo.item.sleep-potion", "status": "active", "contract": "phase-19-p3-1-food-status" },
@@ -164,6 +167,8 @@
     { "sourceIndex": 543, "sourceName": "[Necromatic Tome]", "sourceId": "necromatic-tome", "itemId": "demo.item.necronomicon", "status": "active", "contract": "contract-v107-death-fourth-book" },
     { "sourceIndex": 600, "sourceName": "Wooden Torch", "sourceId": "wooden-torch", "itemId": "demo.item.wooden-torch", "status": "active", "contract": "contract-v159-fuel-light" },
     { "sourceIndex": 601, "sourceName": "Brass Lantern", "sourceId": "brass-lantern", "itemId": "demo.item.brass-lantern", "status": "active", "contract": "contract-v159-fuel-light" },
-    { "sourceIndex": 602, "sourceName": "Flask of oil", "sourceId": "flask-of-oil", "itemId": "demo.item.flask-of-oil", "status": "active", "contract": "contract-v159-fuel-light" }
+    { "sourceIndex": 602, "sourceName": "Flask of oil", "sourceId": "flask-of-oil", "itemId": "demo.item.flask-of-oil", "status": "active", "contract": "contract-v159-fuel-light" },
+    { "sourceIndex": 702, "sourceName": "Shard of Pottery", "sourceId": "shard-of-pottery", "itemId": "demo.item.shard-of-pottery", "status": "active", "contract": "class-archer-ammunition-crafting" },
+    { "sourceIndex": 703, "sourceName": "Broken Stick", "sourceId": "broken-stick", "itemId": "demo.item.broken-stick", "status": "active", "contract": "class-archer-ammunition-crafting" }
   ]
 }

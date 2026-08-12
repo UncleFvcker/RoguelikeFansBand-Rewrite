@@ -19,7 +19,9 @@
   "stock": [
     { "itemKindId": "demo.item.ration-of-food", "initialMinimum": 1, "initialMaximum": 5, "maintenanceMinimum": 1, "maintenanceMaximum": 5 },
     { "itemKindId": "demo.item.water-potion", "initialMinimum": 1, "initialMaximum": 5, "maintenanceMinimum": 1, "maintenanceMaximum": 5 },
-    { "itemKindId": "demo.item.apple-juice", "initialMinimum": 1, "initialMaximum": 5, "maintenanceMinimum": 1, "maintenanceMaximum": 5 }
+    { "itemKindId": "demo.item.apple-juice", "initialMinimum": 1, "initialMaximum": 5, "maintenanceMinimum": 1, "maintenanceMaximum": 5 },
+    { "itemKindId": "demo.item.pint-of-fine-ale", "initialMinimum": 1, "initialMaximum": 5, "maintenanceMinimum": 1, "maintenanceMaximum": 5 },
+    { "itemKindId": "demo.item.pint-of-fine-wine", "initialMinimum": 1, "initialMaximum": 5, "maintenanceMinimum": 1, "maintenanceMaximum": 5 }
   ],
   "maintenance": { "intervalWorldTicks": 10000 }
 }

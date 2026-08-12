@@ -523,6 +523,14 @@
       "minimum": 0,
       "type": "integer"
     },
+    "generationMaxLevel": {
+      "default": 65535,
+      "description": "Original maximum generation depth. `u16::MAX` means unrestricted.",
+      "format": "uint16",
+      "maximum": 65535,
+      "minimum": 0,
+      "type": "integer"
+    },
     "id": {
       "type": "string"
     },

@@ -32,7 +32,7 @@
         "percent": 90
       }
     ],
-    "itemTableId": "demo.loot-table.warrens",
+    "itemTableId": "demo.loot-table.base-items",
     "kind": "items-and-gold"
   },
   "defense": 4,

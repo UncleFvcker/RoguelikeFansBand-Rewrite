@@ -325,6 +325,91 @@ fn elvish_waybread_uses_normal_and_intolerant_branches() {
 }
 
 #[test]
+fn salt_water_affects_living_players_but_is_inert_for_nonliving_players() {
+    const ITEM_KIND_ID: &str = "demo.item.salt-water";
+    assert!(!Game::salt_water_affects_race(
+        "rfb-legacy.race.mon-jelly",
+        &[]
+    ));
+    assert!(Game::salt_water_affects_race(
+        "rfb-legacy.race.einheri",
+        &["nonliving".to_owned()]
+    ));
+    let poison = || StatusInstance {
+        kind_id: STATUS_POISON.to_owned(),
+        intensity: 1,
+        remaining_ticks: 2_000,
+        source_id: None,
+        granted_resistances: BTreeMap::new(),
+        granted_brands: BTreeSet::new(),
+        granted_modifiers: StatModifiersDto::default(),
+        granted_equipment_bonuses: EquipmentBonusesDto::default(),
+        granted_status_immunities: BTreeSet::new(),
+        granted_race_id: None,
+        grants_wall_passage: false,
+        incoming_damage_percent: 100,
+    };
+
+    let mut living = Game::new_with_build(59, RFB_WARRIOR_BUILD_ID)
+        .expect("living Salt Water test should create");
+    clear_monsters(&mut living);
+    living.nutrition = rfb_protocol::PLAYER_NUTRITION_BIRTH;
+    living.player.statuses.push(poison());
+    give_inventory_item(&mut living, "test.item.salt-water.living", ITEM_KIND_ID);
+    dispatch_next(
+        &mut living,
+        GameCommand::UseItem {
+            item_id: "test.item.salt-water.living".to_owned(),
+            target: None,
+        },
+    );
+    assert_eq!(
+        living.nutrition,
+        crate::game::hunger::NUTRITION_STARVING - 1
+    );
+    assert!(living.player_has_status_kind(STATUS_PARALYSIS));
+    assert!(!living.player_has_status_kind(STATUS_POISON));
+    assert!(
+        living
+            .items
+            .iter()
+            .all(|item| item.id != "test.item.salt-water.living")
+    );
+
+    let mut nonliving = Game::new_with_build(61, RFB_WARRIOR_BUILD_ID)
+        .expect("nonliving Salt Water test should create");
+    clear_monsters(&mut nonliving);
+    nonliving
+        .build
+        .as_mut()
+        .expect("test build should exist")
+        .race_id = "demo.race.vampire-lord".to_owned();
+    nonliving.nutrition = rfb_protocol::PLAYER_NUTRITION_BIRTH;
+    nonliving.player.statuses.push(poison());
+    give_inventory_item(
+        &mut nonliving,
+        "test.item.salt-water.nonliving",
+        ITEM_KIND_ID,
+    );
+    dispatch_next(
+        &mut nonliving,
+        GameCommand::UseItem {
+            item_id: "test.item.salt-water.nonliving".to_owned(),
+            target: None,
+        },
+    );
+    assert_eq!(nonliving.nutrition, rfb_protocol::PLAYER_NUTRITION_BIRTH);
+    assert!(!nonliving.player_has_status_kind(STATUS_PARALYSIS));
+    assert!(nonliving.player_has_status_kind(STATUS_POISON));
+    assert!(
+        nonliving
+            .items
+            .iter()
+            .all(|item| item.id != "test.item.salt-water.nonliving")
+    );
+}
+
+#[test]
 fn fast_recovery_mushroom_heals_eases_bleeding_and_grants_timed_regeneration() {
     const ITEM_KIND_ID: &str = "demo.item.fast-recovery-mushroom";
     const ITEM_ID: &str = "test.item.fast-recovery-mushroom";

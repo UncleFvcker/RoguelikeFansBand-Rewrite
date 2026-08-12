@@ -127,6 +127,9 @@ pub struct AffixDefinition {
     /// Original generation level used by Mogaminator's level predicate.
     #[serde(default)]
     pub generation_level: u16,
+    /// Original maximum generation depth. `u16::MAX` means unrestricted.
+    #[serde(default = "default_u16_max")]
+    pub generation_max_level: u16,
     #[serde(default)]
     pub modifiers: StatModifiers,
     /// Equipment-only combat, skill, and sensory bonuses.
@@ -332,6 +335,7 @@ pub enum ItemUseEffectDefinition {
         healing_dice: u16,
         healing_sides: u16,
     },
+    ApplySaltWater,
     ApplyFastRecovery,
     ApplyLifeRestoration {
         healing_amount: u32,
@@ -767,4 +771,35 @@ pub struct ItemDefinition {
     #[serde(default)]
     pub resists_monster_destruction: bool,
     pub tags: Vec<String>,
+}
+
+/// Returns whether an affix may be generated on an item at the given depth.
+pub fn affix_is_compatible_with_item(
+    affix: &AffixDefinition,
+    item: &ItemDefinition,
+    generation_depth: u16,
+) -> bool {
+    if generation_depth < affix.generation_level || generation_depth > affix.generation_max_level {
+        return false;
+    }
+
+    let compatible_tags: &[&str] = match item.equipment_slot.as_deref() {
+        Some("weapon") => &["weapon"],
+        Some("tool") => &["digger"],
+        Some("launcher") => &["bow"],
+        Some("body") => &["body-armor", "dragon-armor", "robe"],
+        Some("head") => &["crown", "helmet"],
+        Some("shield") => &["shield"],
+        Some("cloak") => &["cloak"],
+        Some("gloves") => &["gloves"],
+        Some("boots") => &["boots"],
+        Some("light") => &["lite"],
+        Some("ring") => &["ring"],
+        Some("amulet") => &["amulet"],
+        _ => return false,
+    };
+    affix
+        .tags
+        .iter()
+        .any(|tag| compatible_tags.contains(&tag.as_str()))
 }

@@ -1,0 +1,22 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 200,
+  "descriptionKey": "item-demo-large-metal-shield-description",
+  "equipmentSlot": "shield",
+  "formatVersion": 1,
+  "generationLevel": 30,
+  "glyph": ")",
+  "id": "demo.item.large-metal-shield",
+  "maxStack": 1,
+  "modifiers": {
+    "defense": 8
+  },
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-large-metal-shield-name",
+  "tags": [
+    "armor",
+    "equipment",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 120
+}

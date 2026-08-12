@@ -1,0 +1,25 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 50,
+  "descriptionKey": "item-demo-pair-of-metal-shod-boots-description",
+  "equipmentBonuses": {
+    "meleeDamage": 2
+  },
+  "equipmentSlot": "boots",
+  "formatVersion": 1,
+  "generationLevel": 20,
+  "glyph": "]",
+  "id": "demo.item.pair-of-metal-shod-boots",
+  "maxStack": 1,
+  "modifiers": {
+    "defense": 4
+  },
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-pair-of-metal-shod-boots-name",
+  "tags": [
+    "armor",
+    "equipment",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 80
+}

@@ -824,6 +824,31 @@ The current mutation status, the missing random-candidate closure gate, and the
 M5--M8 continuation plan are consolidated in
 [`handoff-p3-7-mutation-system.md`](handoff-p3-7-mutation-system.md).
 
+## Items Next Batch 1: Orc Cave Equipment and Fine Drinks
+
+This batch selects ten mechanics-ready equipment kinds from authoritative RFB
+`master` for Orc Cave depths 15--32: Leather Scale Mail, Jingasa, Metal Shod
+Boots, Iron Helm, Spiked Gauntlets, Halberd, Orcish Pick, Elven Cloak, Large
+Metal Shield, and Augmented Chain Mail. All ten enter ordinary Orc Cave loot at
+their source allocation depths. The Warrior theme additionally receives the
+seven kinds accepted by the original Warrior predicate; soft armour, diggers,
+and cloaks remain excluded. Elven Cloak and Orcish Pick retain low loot weight.
+
+P3.8 also activates source items 36 and 37, Pint of Fine Ale and Pint of Fine
+Wine. They preserve the source comma glyph, level 0, weights 0.5/1.0 lb, values
+1/2, exact Chinese names `优质麦酒`/`优质葡萄酒`, and nutrition gains 500/1,000.
+Both use the existing `increase-nutrition` effect and are stocked by both
+General Stores and Anambar Inn. The White Horse shop and reward instances are
+unchanged, as are all class birth kits.
+
+The item audit now reports 258 active, 93 mechanics-ready, and 193 blocked
+source items, with 259 mapped RFB items plus 10 original items. Pack 1.257.0
+contains 269 items and has content hash
+`e0e2a1588a4185e94b9dfcf076ba9dd1bb3da98f99ff6e93c80f11aaeac91621`.
+Protocol 1.175, save v1, and State Hash Schema v87 are unchanged. Added shop
+stock changes common new-game RNG, so shared fixture refresh remains an
+integration-worktree task.
+
 ## M4F-B2/B3 Ill Norm and ESP
 
 Ill Norm now preserves all race, class, personality, equipment, and status

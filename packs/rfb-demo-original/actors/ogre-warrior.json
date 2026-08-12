@@ -21,10 +21,10 @@
         "percent": 90
       }
     ],
-    "itemTableId": "demo.loot-table.warrens",
+    "itemTableId": "demo.loot-table.base-items",
     "kind": "items-and-gold",
     "themeChancePercent": 50,
-    "themeTableId": "demo.loot-table.large-kobold"
+    "themeTableId": "demo.loot-table.warrior"
   },
   "defense": 3,
   "descriptionKey": "actor-demo-ogre-warrior-description",

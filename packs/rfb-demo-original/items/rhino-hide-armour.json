@@ -1,0 +1,25 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 400,
+  "descriptionKey": "item-demo-rhino-hide-armour-description",
+  "equipmentBonuses": {
+    "meleeSkill": -1
+  },
+  "equipmentSlot": "body",
+  "formatVersion": 1,
+  "generationLevel": 15,
+  "glyph": "(",
+  "id": "demo.item.rhino-hide-armour",
+  "maxStack": 1,
+  "modifiers": {
+    "defense": 8
+  },
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-rhino-hide-armour-name",
+  "tags": [
+    "armor",
+    "equipment",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 110
+}

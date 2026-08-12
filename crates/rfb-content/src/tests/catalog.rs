@@ -6,7 +6,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.261.0");
+    assert_eq!(catalog.pack_version(), "1.262.0");
     assert!(catalog.mutation("rfb.mutation.spit-acid").is_some());
     assert!(
         catalog
@@ -65,7 +65,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
             .encounter_table("demo.encounter-table.warrens")
             .is_some()
     );
-    assert!(catalog.loot_table("demo.loot-table.warrens").is_some());
+    assert!(catalog.loot_table("demo.loot-table.base-items").is_some());
     assert!(catalog.item("demo.item.magic-missile-wand").is_some());
     assert!(catalog.affix("demo.affix.regeneration").is_some());
 }

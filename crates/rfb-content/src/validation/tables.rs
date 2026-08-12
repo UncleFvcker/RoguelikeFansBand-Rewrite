@@ -3,11 +3,12 @@
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
 use crate::{
-    ActorRole, ContentError, ContentPosition, ENCOUNTER_TABLE_SCHEMA, EncounterTableDefinition,
-    ItemQuality, LOOT_TABLE_SCHEMA, LootTableDefinition, MonsterPackBehavior, REGION_TABLE_SCHEMA,
-    RegionTableDefinition, TERRAIN_FEATURE_TABLE_SCHEMA, THEME_TABLE_SCHEMA, TerrainDefinition,
-    TerrainFeaturePlacement, TerrainFeatureTableDefinition, ThemeTableDefinition, VAULT_SCHEMA,
-    VaultDefinition,
+    ActorRole, AffixDefinition, ContentError, ContentPosition, ENCOUNTER_TABLE_SCHEMA,
+    EncounterTableDefinition, ItemDefinition, LOOT_TABLE_SCHEMA, LootQualityPolicyDefinition,
+    LootTableDefinition, MonsterPackBehavior, REGION_TABLE_SCHEMA, RegionTableDefinition,
+    TERRAIN_FEATURE_TABLE_SCHEMA, THEME_TABLE_SCHEMA, TerrainDefinition, TerrainFeaturePlacement,
+    TerrainFeatureTableDefinition, ThemeTableDefinition, VAULT_SCHEMA, VaultDefinition,
+    affix_is_compatible_with_item,
 };
 
 use super::shared::{
@@ -28,6 +29,8 @@ pub(super) struct TableDefinitions<'a> {
 pub(super) struct TableValidationRefs<'a> {
     pub(super) item_limits: &'a BTreeMap<String, (u32, bool)>,
     pub(super) affix_ids: &'a BTreeSet<String>,
+    pub(super) items: &'a [ItemDefinition],
+    pub(super) affixes: &'a [AffixDefinition],
     pub(super) actor_loot_table_ids: Vec<(String, String)>,
     pub(super) actor_roles: &'a BTreeMap<String, ActorRole>,
     pub(super) actor_tag_values: &'a BTreeSet<String>,
@@ -56,6 +59,8 @@ pub(super) fn validate_tables(
     let TableValidationRefs {
         item_limits,
         affix_ids,
+        items,
+        affixes,
         actor_loot_table_ids,
         actor_roles,
         actor_tag_values,
@@ -74,6 +79,7 @@ pub(super) fn validate_tables(
         let maximum_rolls = table.roll_dice.map_or(u32::from(table.rolls), |dice| {
             u32::from(table.rolls) + u32::from(dice.dice) * u32::from(dice.sides)
         });
+        let has_quality_weights = !table.quality_weights.is_empty();
         if maximum_rolls == 0
             || maximum_rolls > 16
             || table
@@ -83,9 +89,15 @@ pub(super) fn validate_tables(
                 .roll_dice
                 .is_some_and(|dice| dice.dice == 0 || dice.sides == 0)
             || table.entries.is_empty()
-            || table.entries.len() > 128
-            || table.quality_weights.is_empty()
+            || table.entries.len() > 512
             || table.quality_weights.len() > 3
+            || has_quality_weights == table.quality_policy.is_some()
+            || table.quality_policy.is_some_and(|policy| match policy {
+                LootQualityPolicyDefinition::RfbDepth {
+                    good_cap_percent,
+                    great_cap_percent,
+                } => good_cap_percent > 100 || great_cap_percent > 100,
+            })
             || table.affix_weights.is_empty()
             || table.affix_weights.len() > 64
         {
@@ -96,44 +108,40 @@ pub(super) fn validate_tables(
             left.item_kind_id
                 .cmp(&right.item_kind_id)
                 .then(left.quantity.cmp(&right.quantity))
+                .then(left.min_depth.cmp(&right.min_depth))
+                .then(left.max_depth.cmp(&right.max_depth))
+                .then(left.weight.cmp(&right.weight))
         });
         table.quality_weights.sort_by_key(|entry| entry.quality);
         table
             .affix_weights
             .sort_by(|left, right| left.affix_id.as_deref().cmp(&right.affix_id.as_deref()));
 
-        let mut entry_ids = BTreeSet::new();
+        let mut entry_keys = BTreeSet::new();
         let mut quality_ids = BTreeSet::new();
         let mut affix_entries = BTreeSet::new();
         let mut entry_weight = 0_u64;
         let mut quality_weight = 0_u64;
         let mut affix_weight = 0_u64;
         for entry in &table.entries {
-            let Some((max_stack, equippable)) = item_limits.get(&entry.item_kind_id) else {
+            let Some((max_stack, _)) = item_limits.get(&entry.item_kind_id) else {
                 return Err(ContentError::DanglingReference {
                     owner: table.id.clone(),
                     target: entry.item_kind_id.clone(),
                 });
             };
-            if entry.weight == 0
-                || entry.quantity == 0
+            // RFB's integer 100/chance conversion intentionally leaves its
+            // 1/255 allocations at zero; the table total must still be positive.
+            if entry.quantity == 0
                 || entry.quantity > *max_stack
                 || entry.min_depth > entry.max_depth
-                || !entry_ids.insert(entry.item_kind_id.as_str())
-                || ((table
-                    .quality_weights
-                    .iter()
-                    .any(|quality| quality.quality != ItemQuality::Ordinary)
-                    || table
-                        .affix_weights
-                        .iter()
-                        .any(|affix| affix.affix_id.is_some()))
-                    && (*max_stack != 1 || entry.quantity != 1))
-                || (table
-                    .affix_weights
-                    .iter()
-                    .any(|affix| affix.affix_id.is_some())
-                    && !equippable)
+                || !entry_keys.insert((
+                    entry.item_kind_id.as_str(),
+                    entry.weight,
+                    entry.quantity,
+                    entry.min_depth,
+                    entry.max_depth,
+                ))
             {
                 return Err(ContentError::InvalidLootTable(table.id.clone()));
             }
@@ -165,7 +173,46 @@ pub(super) fn validate_tables(
                 .checked_add(u64::from(entry.weight))
                 .ok_or_else(|| ContentError::InvalidLootTable(table.id.clone()))?;
         }
-        if entry_weight == 0 || quality_weight == 0 || affix_weight == 0 {
+        let named_affixes = table
+            .affix_weights
+            .iter()
+            .filter_map(|entry| entry.affix_id.as_deref())
+            .map(|affix_id| {
+                affixes
+                    .iter()
+                    .find(|affix| affix.id == affix_id)
+                    .expect("validated affix reference must remain available")
+            })
+            .collect::<Vec<_>>();
+        let entry_accepts_affix = |entry: &crate::LootEntryDefinition, affix: &AffixDefinition| {
+            let Some(item) = items.iter().find(|item| item.id == entry.item_kind_id) else {
+                return false;
+            };
+            let generation_depth = entry.min_depth.max(affix.generation_level);
+            generation_depth <= entry.max_depth.min(affix.generation_max_level)
+                && affix_is_compatible_with_item(affix, item, generation_depth)
+        };
+        if named_affixes.iter().any(|affix| {
+            !table
+                .entries
+                .iter()
+                .any(|entry| entry_accepts_affix(entry, affix))
+        }) || (table
+            .affix_weights
+            .iter()
+            .all(|entry| entry.affix_id.is_some())
+            && table.entries.iter().any(|entry| {
+                !named_affixes
+                    .iter()
+                    .any(|affix| entry_accepts_affix(entry, affix))
+            }))
+        {
+            return Err(ContentError::InvalidLootTable(table.id.clone()));
+        }
+        if entry_weight == 0
+            || (table.quality_policy.is_none() && quality_weight == 0)
+            || affix_weight == 0
+        {
             return Err(ContentError::InvalidLootTable(table.id.clone()));
         }
         insert_definition_id(all_ids, &table.id)?;

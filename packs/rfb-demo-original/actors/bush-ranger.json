@@ -33,7 +33,7 @@
         "sides": 2
       }
     ],
-    "itemTableId": "demo.loot-table.warrens",
+    "itemTableId": "demo.loot-table.base-items",
     "kind": "items-and-gold",
     "themeChancePercent": 50,
     "themeTableId": "demo.loot-table.archer"

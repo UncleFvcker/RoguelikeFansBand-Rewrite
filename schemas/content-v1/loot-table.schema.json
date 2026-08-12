@@ -67,6 +67,37 @@
       ],
       "type": "object"
     },
+    "LootQualityPolicyDefinition": {
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "goodCapPercent": {
+              "format": "uint8",
+              "maximum": 100,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "greatCapPercent": {
+              "format": "uint8",
+              "maximum": 100,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "kind": {
+              "const": "rfb-depth",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "goodCapPercent",
+            "greatCapPercent"
+          ],
+          "type": "object"
+        }
+      ]
+    },
     "LootQualityWeightDefinition": {
       "additionalProperties": false,
       "properties": {
@@ -136,7 +167,18 @@
     "id": {
       "type": "string"
     },
+    "qualityPolicy": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/LootQualityPolicyDefinition"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
     "qualityWeights": {
+      "default": [],
       "items": {
         "$ref": "#/$defs/LootQualityWeightDefinition"
       },
@@ -176,7 +218,6 @@
     "id",
     "rolls",
     "entries",
-    "qualityWeights",
     "affixWeights"
   ],
   "title": "LootTableDefinition",

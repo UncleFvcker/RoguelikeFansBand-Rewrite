@@ -79,7 +79,7 @@
           "id": "salt-water",
           "primaryBlockers": ["consumable-effect"],
           "items": [
-            { "sourceIndex": 404, "sourceName": "Salt Water:Orange Speckled", "sourceId": "salt-water-orange-speckled" }
+            { "sourceIndex": 404, "sourceName": "Salt Water:Orange Speckled", "sourceId": "salt-water-orange-speckled", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] }
           ]
         },
         {
@@ -270,8 +270,8 @@
           "primaryBlockers": ["consumable-effect", "food-nutrition"],
           "items": [
             { "sourceIndex": 20, "sourceName": "Fast Recovery:Wrinkled", "sourceId": "fast-recovery-wrinkled", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] },
-            { "sourceIndex": 36, "sourceName": "Pint of Fine Ale", "sourceId": "pint-of-fine-ale" },
-            { "sourceIndex": 37, "sourceName": "Pint of Fine Wine", "sourceId": "pint-of-fine-wine" },
+            { "sourceIndex": 36, "sourceName": "Pint of Fine Ale", "sourceId": "pint-of-fine-ale", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] },
+            { "sourceIndex": 37, "sourceName": "Pint of Fine Wine", "sourceId": "pint-of-fine-wine", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] },
             { "sourceIndex": 38, "sourceName": "Piece of Elvish Waybread", "sourceId": "piece-of-elvish-waybread", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] }
           ]
         },

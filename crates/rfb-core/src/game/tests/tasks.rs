@@ -47,6 +47,122 @@ fn direct_warrens_death_drops(
 }
 
 #[test]
+fn orc_cave_natural_affixes_never_cross_item_slots() {
+    let mut game =
+        Game::new_with_build(67, RFB_WARRIOR_BUILD_ID).expect("Orc Cave loot test should create");
+    let context = LootContext {
+        table_id: "demo.loot-table.base-items".to_owned(),
+        floor_id: "demo.floor.orc-cave-depth-32".to_owned(),
+        depth: 32,
+        source: LootSource::MonsterDeath {
+            actor_id: "test.orc-cave.loot-source".to_owned(),
+        },
+    };
+    let mut saw_slaying = false;
+    let mut saw_fine_incompatible_fallback = false;
+    for _ in 0..20_000 {
+        let drops = game
+            .generate_loot_instances(&context, ItemLocation::Ground(game.player.position))
+            .expect("Orc Cave loot should generate");
+        for item in drops {
+            let definition = game
+                .content
+                .item(&item.kind_id)
+                .expect("generated item definition should exist");
+            if item.affix_ids == ["rfb-legacy.affix.slaying"] {
+                saw_slaying = true;
+                assert_eq!(definition.equipment_slot.as_deref(), Some("weapon"));
+            } else if item.quality == ItemQualityDto::Fine
+                && definition.equipment_slot.as_deref() != Some("weapon")
+            {
+                saw_fine_incompatible_fallback = true;
+                assert!(item.affix_ids.is_empty());
+            }
+        }
+    }
+    assert!(saw_slaying);
+    assert!(saw_fine_incompatible_fallback);
+}
+
+#[test]
+fn shared_base_and_warrior_loot_use_depth_instead_of_dungeon_identity() {
+    let catalog =
+        Game::new_with_build(1, RFB_WARRIOR_BUILD_ID).expect("shared loot catalog should create");
+    let depth_nine_kinds = catalog
+        .content
+        .loot_table("demo.loot-table.base-items")
+        .expect("base item pool should exist")
+        .entries
+        .iter()
+        .filter(|entry| entry.min_depth <= 9 && 9 <= entry.max_depth && entry.weight > 0)
+        .map(|entry| entry.item_kind_id.as_str())
+        .collect::<BTreeSet<_>>();
+    assert!(!depth_nine_kinds.contains("demo.item.bastard-sword"));
+
+    let roll = |table_id: &str, floor_id: &str, depth: u16, seed: u64| {
+        let mut game =
+            Game::new_with_build(1, RFB_WARRIOR_BUILD_ID).expect("shared loot test should create");
+        game.rng = RfbRng::seeded(seed);
+        game.generate_loot_instances(
+            &LootContext {
+                table_id: table_id.to_owned(),
+                floor_id: floor_id.to_owned(),
+                depth,
+                source: LootSource::MonsterDeath {
+                    actor_id: "test.shared-loot.actor".to_owned(),
+                },
+            },
+            ItemLocation::Ground(game.player.position),
+        )
+        .expect("shared loot should resolve")
+        .into_iter()
+        .map(|item| (item.kind_id, item.quality, item.affix_ids))
+        .collect::<Vec<_>>()
+    };
+
+    for seed in 0..256 {
+        let depth_nine = roll(
+            "demo.loot-table.base-items",
+            "demo.floor.warrens-depth-9",
+            9,
+            seed,
+        );
+        assert_eq!(depth_nine.len(), 1);
+        assert!(depth_nine_kinds.contains(depth_nine[0].0.as_str()));
+
+        let warrens = roll(
+            "demo.loot-table.base-items",
+            "demo.floor.warrens-depth-15",
+            15,
+            seed,
+        );
+        let orc_cave = roll(
+            "demo.loot-table.base-items",
+            "demo.floor.orc-cave-depth-15",
+            15,
+            seed,
+        );
+        assert_eq!(warrens.len(), 1);
+        assert_eq!(warrens, orc_cave);
+
+        assert_eq!(
+            roll(
+                "demo.loot-table.warrior",
+                "demo.floor.warrens-depth-20",
+                20,
+                seed,
+            ),
+            roll(
+                "demo.loot-table.warrior",
+                "demo.floor.orc-cave-depth-20",
+                20,
+                seed,
+            )
+        );
+    }
+}
+
+#[test]
 fn warrens_keeper_drop_count_is_one_d_two_and_items_only() {
     let mut saw_one = false;
     let mut saw_two = false;
@@ -135,7 +251,7 @@ fn warrens_monster_drops_follow_original_probability_and_remains_profiles() {
     let outside_depth = surface
         .generate_loot_instances(
             &LootContext {
-                table_id: "demo.loot-table.small-kobold".to_owned(),
+                table_id: "demo.loot-table.warrior".to_owned(),
                 floor_id: "demo.floor.surface".to_owned(),
                 depth: 0,
                 source: LootSource::MonsterDeath {
@@ -1013,7 +1129,7 @@ fn warrens_dungeon_conquest_returns_retires_and_round_trips() {
         .filter(|item| item.quality == ItemQualityDto::Fine)
         .collect::<Vec<_>>();
     assert!((1..=2).contains(&fine_equipment.len()));
-    let allowed_guardian_drop_kinds = ["demo.loot-table.warrens", "demo.loot-table.warrens-keeper"]
+    let allowed_guardian_drop_kinds = ["demo.loot-table.base-items", "demo.loot-table.warrior"]
         .into_iter()
         .flat_map(|table_id| {
             game.content

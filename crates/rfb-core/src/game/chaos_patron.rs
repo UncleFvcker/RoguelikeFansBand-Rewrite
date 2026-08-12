@@ -11,7 +11,7 @@ pub(super) const CHAOS_GIFT_MUTATION_ID: &str = "rfb.mutation.chaos-gift";
 pub(super) const PURPLE_GIFT_MUTATION_ID: &str = "rfb.mutation.purple-gift";
 const POLYMORPH_ABILITY_ID: &str = "rfb.ability.mutation.polymorph";
 const CHAOS_AFFIX_ID: &str = "demo.affix.chaos";
-const PATRON_LOOT_TABLE_ID: &str = "demo.loot-table.warrens";
+const PATRON_LOOT_TABLE_ID: &str = "demo.loot-table.base-items";
 const ATTRIBUTES: [AttributeKind; 6] = [
     AttributeKind::Strength,
     AttributeKind::Intelligence,

@@ -1,0 +1,25 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 700,
+  "descriptionKey": "item-demo-leather-jacket-description",
+  "equipmentBonuses": {
+    "meleeSkill": -1
+  },
+  "equipmentSlot": "body",
+  "formatVersion": 1,
+  "generationLevel": 20,
+  "glyph": "(",
+  "id": "demo.item.leather-jacket",
+  "maxStack": 1,
+  "modifiers": {
+    "defense": 12
+  },
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-leather-jacket-name",
+  "tags": [
+    "armor",
+    "equipment",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 130
+}

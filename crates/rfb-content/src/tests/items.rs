@@ -57,6 +57,103 @@ fn item_shape_validation_uses_current_rfb_content() {
 }
 
 #[test]
+fn natural_affix_compatibility_uses_slot_depth_and_explicit_none_fallback() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let slaying = artifact
+        .content
+        .affixes
+        .iter()
+        .find(|affix| affix.id == "rfb-legacy.affix.slaying")
+        .expect("Slaying should exist");
+    let halberd = artifact
+        .content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.halberd")
+        .expect("halberd should exist");
+    let crossbow = artifact
+        .content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.light-crossbow")
+        .expect("crossbow should exist");
+    assert!(affix_is_compatible_with_item(slaying, halberd, 32));
+    assert!(!affix_is_compatible_with_item(slaying, crossbow, 32));
+
+    let mut bounded = slaying.clone();
+    bounded.generation_level = 20;
+    bounded.generation_max_level = 30;
+    assert!(!affix_is_compatible_with_item(&bounded, halberd, 19));
+    assert!(affix_is_compatible_with_item(&bounded, halberd, 20));
+    assert!(!affix_is_compatible_with_item(&bounded, halberd, 31));
+
+    let mut missing_fallback = artifact.content.clone();
+    missing_fallback
+        .loot_tables
+        .iter_mut()
+        .find(|table| table.id == "demo.loot-table.base-items")
+        .expect("Orc Cave loot should exist")
+        .affix_weights
+        .retain(|entry| entry.affix_id.is_some());
+    assert!(matches!(
+        validate_and_normalize(&mut missing_fallback),
+        Err(ContentError::InvalidLootTable(id)) if id == "demo.loot-table.base-items"
+    ));
+
+    let mut outside_depth = artifact.content.clone();
+    let table = outside_depth
+        .loot_tables
+        .iter_mut()
+        .find(|table| table.id == "demo.loot-table.base-items")
+        .expect("base item pool should exist");
+    table.entries.retain(|entry| entry.min_depth <= 10);
+    table
+        .entries
+        .iter_mut()
+        .for_each(|entry| entry.max_depth = 10);
+    outside_depth
+        .affixes
+        .iter_mut()
+        .find(|affix| affix.id == "rfb-legacy.affix.slaying")
+        .expect("Slaying should exist")
+        .generation_level = 20;
+    assert!(matches!(
+        validate_and_normalize(&mut outside_depth),
+        Err(ContentError::InvalidLootTable(_))
+    ));
+}
+
+#[test]
+fn salt_water_keeps_authoritative_shape_effect_and_shallow_acquisition() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let item = artifact
+        .content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.salt-water")
+        .expect("Salt Water should exist");
+    assert_eq!(item.generation_level, 0);
+    assert_eq!(item.weight_tenths_pound, 4);
+    assert_eq!(item.base_value, 1);
+    assert!(matches!(
+        item.use_action.as_ref().map(|action| &action.effect),
+        Some(ItemUseEffectDefinition::ApplySaltWater)
+    ));
+    let base_items = artifact
+        .content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.base-items")
+        .expect("base item pool should exist");
+    let entry = base_items
+        .entries
+        .iter()
+        .find(|entry| entry.item_kind_id == item.id)
+        .expect("Salt Water should be shallow loot");
+    assert_eq!((entry.min_depth, entry.max_depth), (0, 20));
+}
+
+#[test]
 fn food_effect_requires_positive_bounded_nutrition() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let ration = artifact
@@ -124,6 +221,48 @@ fn elvish_waybread_keeps_original_shape_effect_and_town_acquisition() {
                 .any(|stock| stock.item_kind_id == waybread.id),
             "{shop_id} should stock Elvish Waybread"
         );
+    }
+}
+
+#[test]
+fn fine_drinks_keep_original_shape_effect_and_town_acquisition() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    for (item_id, weight, value, nutrition) in [
+        ("demo.item.pint-of-fine-ale", 5, 1, 500),
+        ("demo.item.pint-of-fine-wine", 10, 2, 1_000),
+    ] {
+        let item = artifact
+            .content
+            .items
+            .iter()
+            .find(|item| item.id == item_id)
+            .unwrap_or_else(|| panic!("{item_id} should exist"));
+        assert_eq!(item.glyph, ",");
+        assert_eq!(item.generation_level, 0);
+        assert_eq!(item.weight_tenths_pound, weight);
+        assert_eq!(item.base_value, value);
+        assert!(matches!(
+            item.use_action.as_ref().map(|action| &action.effect),
+            Some(ItemUseEffectDefinition::IncreaseNutrition { amount }) if *amount == nutrition
+        ));
+        for shop_id in [
+            "demo.shop.outpost-general-store",
+            "demo.shop.anambar-general-store",
+            "demo.shop.anambar-inn",
+        ] {
+            assert!(
+                artifact
+                    .content
+                    .shops
+                    .iter()
+                    .find(|shop| shop.id == shop_id)
+                    .unwrap_or_else(|| panic!("{shop_id} should exist"))
+                    .stock
+                    .iter()
+                    .any(|stock| stock.item_kind_id == item_id),
+                "{shop_id} should stock {item_id}"
+            );
+        }
     }
 }
 
@@ -500,6 +639,55 @@ fn selected_legacy_equipment_keeps_fixed_source_values_and_slots() {
         ("demo.item.hard-leather-cap", 12, 15, "head", 2, None),
         ("demo.item.small-leather-shield", 15, 50, "shield", 3, None),
         ("demo.item.chain-mail", 750, 220, "body", 14, None),
+        ("demo.item.trident", 120, 70, "weapon", 0, Some((1, 10))),
+        ("demo.item.fauchard", 301, 155, "weapon", 0, Some((1, 12))),
+        (
+            "demo.item.broad-spear",
+            240,
+            100,
+            "weapon",
+            0,
+            Some((1, 11)),
+        ),
+        ("demo.item.pike", 358, 160, "weapon", 0, Some((2, 6))),
+        ("demo.item.beaked-axe", 408, 120, "weapon", 0, Some((2, 7))),
+        ("demo.item.broad-axe", 304, 130, "weapon", 0, Some((2, 7))),
+        ("demo.item.glaive", 363, 190, "weapon", 0, Some((2, 7))),
+        ("demo.item.lance", 230, 300, "weapon", 0, Some((2, 10))),
+        ("demo.item.battle-axe", 334, 170, "weapon", 0, Some((2, 9))),
+        ("demo.item.nunchaku", 120, 60, "weapon", 0, Some((2, 4))),
+        (
+            "demo.item.ball-and-chain",
+            200,
+            150,
+            "weapon",
+            0,
+            Some((2, 5)),
+        ),
+        ("demo.item.jo-staff", 200, 70, "weapon", 0, Some((1, 8))),
+        ("demo.item.war-hammer", 225, 120, "weapon", 0, Some((3, 4))),
+        (
+            "demo.item.three-piece-rod",
+            350,
+            120,
+            "weapon",
+            0,
+            Some((4, 3)),
+        ),
+        ("demo.item.flail", 353, 150, "weapon", 0, Some((2, 7))),
+        ("demo.item.bo-staff", 310, 160, "weapon", 0, Some((1, 12))),
+        (
+            "demo.item.lead-filled-mace",
+            502,
+            180,
+            "weapon",
+            0,
+            Some((3, 5)),
+        ),
+        ("demo.item.gnomish-shovel", 100, 60, "tool", 0, Some((1, 3))),
+        ("demo.item.rhino-hide-armour", 400, 110, "body", 8, None),
+        ("demo.item.leather-jacket", 700, 130, "body", 12, None),
+        ("demo.item.ring-mail", 500, 200, "body", 12, None),
     ];
 
     for (id, value, weight, slot, defense, damage) in expected {
@@ -548,6 +736,10 @@ fn selected_legacy_armor_and_gloves_keep_melee_combat_modifiers() {
     assert_eq!(bonuses("demo.item.chain-mail").melee_skill, -2);
     assert_eq!(bonuses("demo.item.shovel").digging_skill, 2);
     assert_eq!(bonuses("demo.item.pick").digging_skill, 2);
+    assert_eq!(bonuses("demo.item.gnomish-shovel").digging_skill, 3);
+    assert_eq!(bonuses("demo.item.rhino-hide-armour").melee_skill, -1);
+    assert_eq!(bonuses("demo.item.leather-jacket").melee_skill, -1);
+    assert_eq!(bonuses("demo.item.ring-mail").melee_skill, -2);
 }
 
 #[test]
@@ -580,7 +772,7 @@ fn supported_legacy_scrolls_and_potions_keep_source_identity_and_values() {
         .collect::<Vec<_>>();
 
     assert_eq!(scrolls.len(), 59);
-    assert_eq!(potions.len(), 64);
+    assert_eq!(potions.len(), 65);
     assert!(scrolls.iter().all(|item| item.weight_tenths_pound == 5));
     assert!(potions.iter().all(|item| item.weight_tenths_pound == 4));
 
@@ -593,7 +785,7 @@ fn supported_legacy_scrolls_and_potions_keep_source_identity_and_values() {
                 .expect("supported consumables should have source flavor")
         })
         .collect::<std::collections::BTreeSet<_>>();
-    assert_eq!(appearance_keys.len(), 123);
+    assert_eq!(appearance_keys.len(), 124);
 
     let added_values = [
         ("demo.item.door-stair-location-scroll", 10),
