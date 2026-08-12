@@ -306,9 +306,9 @@ git diff --stat
 - streamer 先判已知、未命中再判隐藏富矿；隐藏富矿复用 `concealedAsTerrainId` 与搜索。
   玩家挖掘统一按“地形 → 熟练度 → 材料 → 金币 → 额外物品”结算，材料与金币读取增长后
   的熟练度。魔法富矿只生成普通金币，怪物破墙没有玩家收益。
-- 碎石与富矿额外物品复用楼层 loot；碎石物品来源为新增 `rubble`。原版 artifact 尝试、
-  幸运、德行与特殊游戏模式修正仍是共享物品生成缺口，其他分支不得在职业或挖矿代码中
-  建立第二套质量生成器。
+- 碎石与富矿额外物品复用楼层 loot；碎石物品来源为新增 `rubble`。原版 Artifact 重试
+  已由第 19 节完成；幸运、德行与特殊游戏模式修正仍是共享物品生成缺口，其他分支不得
+  在职业或挖矿代码中建立第二套质量生成器。
 - 共享协调点：pack `1.277.0`、Protocol `1.181`、State Hash Schema v90、save v1、
   active baseline `contract-v279`（26 条 exact fixture、零 waiver）；content hash 为
   `9e84e738fecbc3b74933c4a708c5a89cd77dd7bdd000c11b76c7d57184abec26`。
@@ -330,5 +330,21 @@ git diff --stat
 - 共享协调点：pack `1.294.0` / content hash
   `ee2a72864ac9b521e5825f79a9e020cf798ff1a398e887ca2e7a2b1a5b8edbed`、Protocol `1.187`、
   State Hash Schema v93、save v1、active baseline `contract-v283`（26 条 exact fixture、
-  零 waiver）。后续挖矿额外物品应调用 draft 接口完成最多 20 次 Artifact 尝试与 Great
-  回退；丢弃的尝试不得提交实例 ID 或神器唯一状态。
+  零 waiver）。挖矿额外物品已在第 19 节接入该 draft 接口；丢弃的尝试不会提交实例 ID
+  或神器唯一状态。
+
+## 19. main 当前交接（挖矿额外物品品质与固定神器）
+
+- 本批不新增正式 item、ability、material 或 affix ID；固定神器继续只使用
+  `demo.item.crisdurian`、`demo.item.pain`、`demo.item.slayer`，由 items 方向持有。
+- 富矿额外物品以一次 d100 按 Artifact / Great / Good / Ordinary 顺序分段；挖矿熟练度
+  0 时三档概率均为 0，8000 时分别为 5%、20%、40%，沿用原版四舍五入公式。
+- Artifact 档最多调用 20 次共享 Artifact 请求，只采用带正式 `artifactGeneration` 的
+  固定神器。20 次全部失败后只调用一次 Great；丢弃 draft 不占实例序号、不登记神器，
+  固定神器在最终提交时才写入唯一集合，最终来源统一为 `rubble`。
+- 玩家显式挖掘仍按“地形 → 熟练度 → 材料 → 金币 → 额外物品”结算。魔法破墙只生成
+  普通金币，不进入挖矿额外物品或神器路径。
+- 共享协调点保持 pack `1.294.0` / content hash
+  `ee2a72864ac9b521e5825f79a9e020cf798ff1a398e887ca2e7a2b1a5b8edbed`、Protocol `1.187`、
+  State Hash Schema v93、save v1；active baseline 推进至 `contract-v284`。现有 26 条 exact
+  fixture 不进入新增品质分支，逐条及全量 verify 均零漂移，因此不刷新无关快照，零 waiver。

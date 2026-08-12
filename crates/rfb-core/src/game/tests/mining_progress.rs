@@ -228,6 +228,8 @@ fn magic_destruction_of_treasure_veins_only_places_ordinary_gold() {
         .index(position)
         .expect("adjacent position should be valid");
     game.glow[index] = true;
+    let item_serial_before = game.next_item_instance_serial;
+    let generated_artifacts_before = game.generated_artifact_ids.clone();
 
     let mut events = Vec::new();
     game.replace_terrain_from_source(
@@ -241,12 +243,75 @@ fn magic_destruction_of_treasure_veins_only_places_ordinary_gold() {
     assert_eq!(game.progress.mining_proficiency, 3_999);
     assert!(game.progress.materials.is_empty());
     assert!(game.items.is_empty());
+    assert_eq!(game.next_item_instance_serial, item_serial_before);
+    assert_eq!(game.generated_artifact_ids, generated_artifacts_before);
     assert_eq!(game.gold_piles.len(), 1);
     assert!(
         events
             .iter()
             .any(|event| matches!(event, DomainEvent::TerrainFoundSomething))
     );
+}
+
+#[test]
+fn every_visible_and_hidden_treasure_vein_uses_the_mining_item_path() {
+    for terrain_id in [
+        "demo.terrain.magma-treasure",
+        "demo.terrain.magma-hidden-treasure",
+        "demo.terrain.quartz-treasure",
+        "demo.terrain.quartz-hidden-treasure",
+    ] {
+        let mut game = Game::new(0x5645_494e);
+        clear_monsters(&mut game);
+        game.items.clear();
+        game.gold_piles.clear();
+        game.current_floor_id = "demo.floor.orc-cave-depth-32".to_owned();
+        game.progress.mining_proficiency = 8_000;
+        let position = game.position_in_direction(Direction::North);
+        let item_serial = game.next_item_instance_serial;
+        let gold_serial = game.next_gold_pile_serial;
+
+        let seed = (0..10_000)
+            .find(|seed| {
+                game.items.clear();
+                game.gold_piles.clear();
+                game.progress.materials.clear();
+                game.next_item_instance_serial = item_serial;
+                game.next_gold_pile_serial = gold_serial;
+                game.generated_artifact_ids.clear();
+                game.rng = RfbRng::seeded(*seed);
+                replace_terrain(&mut game, position, terrain_id);
+                game.replace_terrain_from_source(
+                    position,
+                    "demo.terrain.floor",
+                    super::super::terrain::TerrainChangeSource::Dig,
+                    &mut Vec::new(),
+                    &mut BTreeSet::new(),
+                );
+                !game.items.is_empty()
+            })
+            .expect("a mining extra-item seed should exist");
+
+        assert!(seed < 10_000);
+        assert_eq!(game.progress.mining_proficiency, 8_000);
+        assert_eq!(game.gold_piles.len(), 1);
+        assert!(
+            game.progress
+                .materials
+                .get("rfb.material.iron-ore")
+                .is_some_and(|quantity| *quantity > 0)
+        );
+        let item = game.items.first().expect("mining item should be placed");
+        assert_eq!(item.origin_kind, Some(ItemOriginKindDto::Rubble));
+        let formal_artifact = game
+            .content
+            .item(&item.kind_id)
+            .is_some_and(|definition| definition.artifact_generation.is_some());
+        assert_eq!(
+            game.generated_artifact_ids.contains(&item.kind_id),
+            formal_artifact
+        );
+    }
 }
 
 #[test]

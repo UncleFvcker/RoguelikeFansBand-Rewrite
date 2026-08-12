@@ -1,13 +1,13 @@
 use std::collections::BTreeSet;
 
-use rfb_content::{ItemQuality, TerrainDefinition, TerrainVeinYield};
+use rfb_content::{TerrainDefinition, TerrainVeinYield};
 use rfb_protocol::{MaterialDto, MiningProficiencyDto, Position};
 
 use crate::{state::ItemLocation, stats::CharacterProgress};
 
 use super::{
-    DomainEvent, Game, LootContext, LootSource, terrain::TerrainChangeSource,
-    weapon_proficiency::proficiency_rank,
+    DomainEvent, Game, GeneratedItemDraft, ItemGenerationMode, LootContext, LootSource,
+    terrain::TerrainChangeSource, weapon_proficiency::proficiency_rank,
 };
 
 pub(super) const MINING_PROFICIENCY_MAXIMUM: u16 = 8_000;
@@ -174,27 +174,62 @@ impl Game {
             .and_then(|floor| floor.loot_table_id.clone())
     }
 
-    fn mining_loot_quality(&mut self) -> ItemQuality {
-        let mining = u32::from(self.progress.mining_proficiency);
+    fn mining_item_generation_mode(&mut self) -> ItemGenerationMode {
+        let roll = u32::try_from(self.rng.bounded(100)).expect("d100 roll must fit u32");
+        Self::mining_item_generation_mode_for_roll(self.progress.mining_proficiency, roll)
+    }
+
+    fn mining_item_generation_mode_for_roll(
+        mining_proficiency: u16,
+        mut roll: u32,
+    ) -> ItemGenerationMode {
+        let mining = u32::from(mining_proficiency.min(MINING_PROFICIENCY_MAXIMUM));
         let scaled = |maximum: u32| (maximum.saturating_mul(mining) + 4_000) / 8_000;
         let artifact = scaled(5);
-        let exceptional = scaled(20);
-        let fine = scaled(40);
-        let roll = u32::try_from(self.rng.bounded(100)).expect("d100 roll must fit u32");
-        if roll < artifact.saturating_add(exceptional) {
-            ItemQuality::Exceptional
-        } else if roll < artifact.saturating_add(exceptional).saturating_add(fine) {
-            ItemQuality::Fine
-        } else {
-            ItemQuality::Ordinary
+        let great = scaled(20);
+        let good = scaled(40);
+        if roll < artifact {
+            return ItemGenerationMode::Artifact;
         }
+        roll -= artifact;
+        if roll < great {
+            return ItemGenerationMode::Great;
+        }
+        roll -= great;
+        if roll < good {
+            return ItemGenerationMode::Good;
+        }
+        ItemGenerationMode::Ordinary
+    }
+
+    fn generate_mining_item_draft(
+        &mut self,
+        context: &LootContext,
+        mode: ItemGenerationMode,
+    ) -> Option<GeneratedItemDraft> {
+        if mode != ItemGenerationMode::Artifact {
+            return self.generate_one_loot_draft(context, mode);
+        }
+        for _ in 0..20 {
+            let Some(draft) = self.generate_one_loot_draft(context, mode) else {
+                continue;
+            };
+            if self
+                .content
+                .item(&draft.kind_id)
+                .is_some_and(|item| item.artifact_generation.is_some())
+            {
+                return Some(draft);
+            }
+        }
+        self.generate_one_loot_draft(context, ItemGenerationMode::Great)
     }
 
     fn place_rubble_item(
         &mut self,
         position: Position,
         generation_level: u16,
-        minimum_quality: ItemQuality,
+        mode: ItemGenerationMode,
     ) -> bool {
         let Some(table_id) = self.current_floor_loot_table_id() else {
             return false;
@@ -205,12 +240,17 @@ impl Game {
             depth: generation_level,
             source: LootSource::Rubble { position },
         };
-        let generated = self
-            .generate_one_loot_instance(&context, ItemLocation::Ground(position), minimum_quality)
+        self.next_item_instance_serial
+            .checked_add(1)
             .expect("validated rubble loot must remain generatable");
-        let found = !generated.is_empty();
-        self.items.extend(generated);
-        found
+        let Some(draft) = self.generate_mining_item_draft(&context, mode) else {
+            return false;
+        };
+        let item = self
+            .commit_generated_item_draft(draft, ItemLocation::Ground(position))
+            .expect("validated rubble loot must remain generatable");
+        self.items.push(item);
+        true
     }
 
     fn current_dungeon_minimum_depth(&self) -> Option<u16> {
@@ -281,8 +321,8 @@ impl Game {
                     .saturating_add(mining / 1_000))
                 .min(20);
                 if self.rng.bounded(100) < u64::from(chance) {
-                    let quality = self.mining_loot_quality();
-                    found |= self.place_rubble_item(position, self.mining_object_level(), quality);
+                    let mode = self.mining_item_generation_mode();
+                    found |= self.place_rubble_item(position, self.mining_object_level(), mode);
                 }
             }
         }
@@ -294,7 +334,8 @@ impl Game {
         {
             let chance = 36_i32.saturating_sub(i32::from(depth)).clamp(1, 24);
             if self.rng.bounded(200) < u64::try_from(chance).expect("positive chance") {
-                found |= self.place_rubble_item(position, depth.max(1), ItemQuality::Ordinary);
+                found |=
+                    self.place_rubble_item(position, depth.max(1), ItemGenerationMode::Ordinary);
             }
         }
 
@@ -310,7 +351,27 @@ impl Game {
 
 #[cfg(test)]
 mod tests {
+    use crate::rng::RfbRng;
+    use rfb_protocol::ItemQualityDto;
+
     use super::*;
+
+    fn artifact_context(game: &Game) -> LootContext {
+        LootContext {
+            table_id: "demo.loot-table.paladin".to_owned(),
+            floor_id: "test.floor.depth-100".to_owned(),
+            depth: 100,
+            source: LootSource::Rubble {
+                position: game.player.position,
+            },
+        }
+    }
+
+    fn formal_artifact(game: &Game, draft: &GeneratedItemDraft) -> bool {
+        game.content
+            .item(&draft.kind_id)
+            .is_some_and(|item| item.artifact_generation.is_some())
+    }
 
     #[test]
     fn original_mining_gain_formulas_use_feature_power_and_floor_depth() {
@@ -326,5 +387,114 @@ mod tests {
         assert!(game.train_mining_proficiency(TerrainVeinYield::Treasure, 20));
         assert_eq!(game.progress.mining_proficiency, MINING_PROFICIENCY_MAXIMUM);
         assert!(!game.train_mining_proficiency(TerrainVeinYield::Treasure, 20));
+    }
+
+    #[test]
+    fn mining_item_mode_uses_original_scaled_adjacent_thresholds() {
+        for roll in [0, 1, 50, 99] {
+            assert_eq!(
+                Game::mining_item_generation_mode_for_roll(0, roll),
+                ItemGenerationMode::Ordinary
+            );
+        }
+        for (roll, expected) in [
+            (0, ItemGenerationMode::Artifact),
+            (4, ItemGenerationMode::Artifact),
+            (5, ItemGenerationMode::Great),
+            (24, ItemGenerationMode::Great),
+            (25, ItemGenerationMode::Good),
+            (64, ItemGenerationMode::Good),
+            (65, ItemGenerationMode::Ordinary),
+            (99, ItemGenerationMode::Ordinary),
+        ] {
+            assert_eq!(
+                Game::mining_item_generation_mode_for_roll(8_000, roll),
+                expected
+            );
+        }
+    }
+
+    #[test]
+    fn mining_artifact_mode_accepts_a_twentieth_attempt_without_allocating_discarded_drafts() {
+        let mut probe = Game::new(9);
+        let context = artifact_context(&probe);
+        let seed = (0..100_000)
+            .find(|seed| {
+                probe.rng = RfbRng::seeded(*seed);
+                (1..=20).find(|_| {
+                    probe
+                        .generate_one_loot_draft(&context, ItemGenerationMode::Artifact)
+                        .is_some_and(|draft| formal_artifact(&probe, &draft))
+                }) == Some(20)
+            })
+            .expect("a seed with its first fixed artifact on attempt twenty should exist");
+
+        let mut game = Game::new(9);
+        let context = artifact_context(&game);
+        game.rng = RfbRng::seeded(seed);
+        let serial_before = game.next_item_instance_serial;
+        let draft = game
+            .generate_mining_item_draft(&context, ItemGenerationMode::Artifact)
+            .expect("the twentieth attempt should produce a fixed artifact");
+        assert!(formal_artifact(&game, &draft));
+        assert_eq!(game.next_item_instance_serial, serial_before);
+        let position = game.player.position;
+        let item = game
+            .commit_generated_item_draft(draft, ItemLocation::Ground(position))
+            .expect("accepted mining artifact should commit once");
+        assert_eq!(
+            item.origin_kind,
+            Some(rfb_protocol::ItemOriginKindDto::Rubble)
+        );
+        assert_eq!(item.quality, ItemQualityDto::Ordinary);
+        assert_eq!(game.next_item_instance_serial, serial_before + 1);
+        assert!(game.generated_artifact_ids.contains(&item.kind_id));
+    }
+
+    #[test]
+    fn mining_artifact_mode_falls_back_once_to_great_when_all_artifacts_are_ineligible() {
+        let seed = 17;
+        let generated = [
+            "demo.item.crisdurian".to_owned(),
+            "demo.item.pain".to_owned(),
+            "demo.item.slayer".to_owned(),
+        ];
+        let run = || {
+            let mut game = Game::new(11);
+            game.generated_artifact_ids.extend(generated.clone());
+            game.rng = RfbRng::seeded(seed);
+            let context = artifact_context(&game);
+            let serial_before = game.next_item_instance_serial;
+            let draft = game
+                .generate_mining_item_draft(&context, ItemGenerationMode::Artifact)
+                .expect("Great fallback should produce an item");
+            assert!(!formal_artifact(&game, &draft));
+            assert!(
+                game.content
+                    .item(&draft.kind_id)
+                    .is_some_and(|item| !item.tags.iter().any(|tag| tag == "artifact"))
+            );
+            assert_eq!(draft.quality, ItemQualityDto::Exceptional);
+            assert_eq!(game.next_item_instance_serial, serial_before);
+            let position = game.player.position;
+            let item = game
+                .commit_generated_item_draft(draft, ItemLocation::Ground(position))
+                .expect("Great fallback should commit once");
+            assert_eq!(
+                item.origin_kind,
+                Some(rfb_protocol::ItemOriginKindDto::Rubble)
+            );
+            game.items.push(item);
+            game
+        };
+
+        let first = run();
+        let second = run();
+        assert_eq!(first.rng, second.rng);
+        assert_eq!(
+            first.next_item_instance_serial,
+            second.next_item_instance_serial
+        );
+        assert_eq!(first.state_hash(), second.state_hash());
     }
 }

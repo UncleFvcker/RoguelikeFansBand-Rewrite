@@ -6,7 +6,7 @@
 
 contract fixture 是规则兼容边界，不能把测试失败简单处理为“刷新预期结果”。政策用于保证每次规则变化只修改真正受影响的场景，同时保留可审查的失败原因。
 
-当前逻辑基线是 `contract-v283`，机器可读政策固定在：
+当前逻辑基线是 `contract-v284`，机器可读政策固定在：
 
 ```text
 tests/fixtures/active/baseline-policy.json
@@ -147,6 +147,14 @@ Protocol 升至 1.183、State Hash Schema 升至 v92；出生初始化新增 RNG
 授予并登记，之后排除随机重复。Protocol 升至 1.187，State Hash Schema 升至 v93，
 save 容器保持 v1，内容包保持 1.294.0。权威状态哈希与公共存档结构变化要求统一刷新
 26 条 active fixture，零 waiver。
+
+`contract-v284` 把富矿额外物品接入共享生成意图。挖矿熟练度按原版线性缩放到
+Artifact 5%、Great 20%、Good 40%，并由同一 d100 依次分段；Artifact 档最多执行
+20 次共享 Artifact 请求，只接受带正式 `artifactGeneration` 的结果，全部失败后额外
+执行一次 Great。丢弃 draft 不占实例序号或唯一神器状态，最终物品继续使用 `rubble`
+来源。Protocol 1.187、State Hash Schema v93、save v1 与内容包 1.294.0 均不变。
+现有 26 条 active fixture 不进入额外物品品质分支，逐条及全量 verify 均零语义漂移，
+因此不刷新无关快照、零 waiver。
 
 ## 分类验证
 
