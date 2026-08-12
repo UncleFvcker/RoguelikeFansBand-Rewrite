@@ -286,6 +286,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.air-hound", 338, 2, 90),
             ("demo.actor.air-spirit", 227, 2, 50),
             ("demo.actor.aquatic-golem", 910, 1, 70),
+            ("demo.actor.asura", 1374, 5, 999),
             ("demo.actor.baby-black-dragon", 166, 2, 40),
             ("demo.actor.baby-blue-dragon", 163, 2, 40),
             ("demo.actor.baby-green-dragon", 165, 2, 40),
@@ -296,6 +297,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.ball-lightning", 300, 1, 60),
             ("demo.actor.bandit", 150, 2, 40),
             ("demo.actor.barracuda", 96, 2, 40),
+            ("demo.actor.behemoth", 716, 3, 999),
             ("demo.actor.berserker", 293, 3, 80),
             ("demo.actor.black-harpy", 157, 1, 60),
             ("demo.actor.black-mamba", 210, 3, 40),
@@ -450,6 +452,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.grape-jelly", 212, 3, 40),
             ("demo.actor.great-eagle", 335, 2, 70),
             ("demo.actor.greater-hell-beast", 39, 6, 999),
+            ("demo.actor.greater-kraken", 775, 2, 999),
             ("demo.actor.green-glutton-ghost", 100, 1, 40),
             ("demo.actor.green-jelly", 66, 1, 30),
             ("demo.actor.green-mold", 146, 2, 40),
@@ -480,6 +483,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.homonculus", 280, 3, 50),
             ("demo.actor.hopper-ant", 1323, 3, 36),
             ("demo.actor.horse", 956, 1, 20),
+            ("demo.actor.hugin-the-scheming-raven", 1346, 4, 999),
             ("demo.actor.hummerhorn", 289, 5, 50),
             ("demo.actor.hunting-hawk-of-julian", 151, 2, 40),
             ("demo.actor.huorn", 329, 1, 70),
@@ -5021,6 +5025,58 @@ fn p59a_nether_jump_and_contact_auras_keep_source_semantics() {
 }
 
 #[test]
+fn p59bc_location_restricted_monsters_keep_source_allocation() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actor = |id: &str| {
+        artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == format!("demo.actor.{id}"))
+            .unwrap_or_else(|| panic!("{id} should be imported"))
+    };
+
+    for (id, legacy_index, level) in [
+        ("greater-kraken", 775, 63),
+        ("behemoth", 716, 64),
+        ("hugin-the-scheming-raven", 1346, 58),
+        ("asura", 1374, 58),
+    ] {
+        let actor = actor(id);
+        assert_eq!(actor.level, level, "{id} level");
+        assert_eq!(
+            actor
+                .allocation
+                .as_ref()
+                .map(|allocation| allocation.legacy_index),
+            Some(legacy_index),
+            "{id} source index"
+        );
+        assert!(!actor.tags.iter().any(|tag| tag == "orc-cave"));
+    }
+
+    for id in ["greater-kraken", "behemoth"] {
+        let actor = actor(id);
+        let allocation = actor.allocation.as_ref().expect("ocean allocation");
+        assert!(allocation.wild_only);
+        assert_eq!(allocation.habitats, vec![ActorHabitat::Ocean]);
+        assert!(allocation.legacy_dungeon_indices.is_empty());
+        assert!(actor.tags.iter().any(|tag| tag == "ocean"));
+    }
+
+    for (id, dungeon_index, tag) in [
+        ("hugin-the-scheming-raven", 39, "asgard"),
+        ("asura", 43, "mount-meru"),
+    ] {
+        let actor = actor(id);
+        let allocation = actor.allocation.as_ref().expect("dungeon allocation");
+        assert!(!allocation.wild_only);
+        assert_eq!(allocation.legacy_dungeon_indices, vec![dungeon_index]);
+        assert!(actor.tags.iter().any(|actor_tag| actor_tag == tag));
+    }
+}
+
+#[test]
 fn p53a_ice_jump_and_angel_summons_reuse_shared_effects() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let actor = |id: &str| {
@@ -6922,7 +6978,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
                     == Some("demo.loot-table.base-items")
             })
             .count(),
-        532
+        535
     );
 }
 
