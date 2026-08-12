@@ -815,11 +815,25 @@ h1 {
 }
 
 .ability-book-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
   margin-top: 0.45rem;
   color: #b7d6ed;
   font-size: 0.78rem;
   font-weight: 700;
   letter-spacing: 0.04em;
+}
+
+.ability-book-heading button {
+  padding: 0.25rem 0.45rem;
+  font-size: 0.7rem;
+}
+
+.ability-book-heading button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
 }
 
 .ability-description {

@@ -548,3 +548,8 @@ destinationTownId }`。旅行固定收费 500 金币，直接重建目标城镇�
 既有制造端点使用同一分组名，前端按 `minimumLevel` 只展示已开放子项；执行仍复用
 `CastAbility` 和既有目标选择。玩家制造弹药物品的持久字段正式纳入 State Hash Schema
 v88，save 容器保持 v1。
+
+协议 1.177 / contract-v272 增加书本级 `StudyPrayer { bookItemId }` 命令，并由
+`AbilityLearningDto.studyMode` 区分玩家点选的 `chosen` 与神授随机的
+`divine-random`。成功继续产生既有 `ability.studied` 事件；没有新增待处理状态、存档
+字段或状态哈希输入，State Hash Schema 保持 v88，save 容器保持 v1。

@@ -6,6 +6,7 @@ import type { Localization, MessageKey } from "./localization";
 import type {
   AbilityDto,
   AbilityLearningDto,
+  AbilityStudyModeDto,
   AttributeKindDto,
   GameCommand,
   GameSnapshot,
@@ -605,14 +606,29 @@ export class StatusPanel {
       });
       this.#dom.resourceList.append(row);
     }
+    const studyMode = learning?.studyMode ?? "chosen";
     for (const entry of abilityPresentation(abilities, playerLevel)) {
       if (entry.type === "heading") {
         const heading = document.createElement("li");
         heading.className = "ability-book-heading";
-        heading.textContent = this.#localization.format(entry.nameKey as MessageKey);
+        const label = document.createElement("span");
+        label.textContent = this.#localization.format(entry.nameKey as MessageKey);
+        heading.append(label);
+        const bookItemId = entry.bookItemId;
+        if (studyMode === "divine-random" && bookItemId) {
+          const study = this.#abilityAction("action-ability-study-prayer", () =>
+            void this.#dispatch({ type: "study-prayer", bookItemId }),
+          );
+          study.disabled =
+            this.#state.busy ||
+            this.#state.playerDead ||
+            this.#state.worldMap ||
+            !entry.canStudy;
+          heading.append(study);
+        }
         this.#dom.abilityList.append(heading);
       } else {
-        this.#dom.abilityList.append(this.#abilityRow(entry.ability));
+        this.#dom.abilityList.append(this.#abilityRow(entry.ability, studyMode));
       }
     }
   }
@@ -727,7 +743,7 @@ export class StatusPanel {
     return this.#state.cellVisibility.get(`${position.x},${position.y}`) === "visible";
   }
 
-  #abilityRow(ability: AbilityDto): HTMLLIElement {
+  #abilityRow(ability: AbilityDto, studyMode: AbilityStudyModeDto): HTMLLIElement {
     const document = this.#dom.abilityList.ownerDocument;
     const row = document.createElement("li");
     row.className = "ability-row";
@@ -788,7 +804,8 @@ export class StatusPanel {
     cast.classList.add("ability-cast-action");
     cast.disabled =
       this.#state.busy || this.#state.playerDead || this.#state.worldMap || !ability.canCast;
-    actions.append(study, forget, cast);
+    if (studyMode === "chosen") actions.append(study);
+    actions.append(forget, cast);
     row.append(details, actions);
     return row;
   }
@@ -891,7 +908,12 @@ export function abilityStatusMessageKey(
 }
 
 export type AbilityPresentationEntry =
-  | { type: "heading"; nameKey: string }
+  | {
+      type: "heading";
+      nameKey: string;
+      bookItemId?: string;
+      canStudy: boolean;
+    }
   | { type: "ability"; ability: AbilityDto };
 
 export function abilityPresentation(
@@ -910,11 +932,25 @@ export function abilityPresentation(
         left.id.localeCompare(right.id),
     );
   const entries: AbilityPresentationEntry[] = [];
+  const studyByHeading = new Map<string, { bookItemId?: string; canStudy: boolean }>();
+  for (const ability of ordered) {
+    if (!ability.bookNameKey) continue;
+    const current = studyByHeading.get(ability.bookNameKey);
+    studyByHeading.set(ability.bookNameKey, {
+      bookItemId: current?.bookItemId ?? ability.bookItemId ?? undefined,
+      canStudy: (current?.canStudy ?? false) || ability.canStudy === true,
+    });
+  }
   let currentHeading: string | undefined;
   for (const ability of ordered) {
     const heading = ability.uiGroupNameKey ?? ability.bookNameKey ?? undefined;
     if (heading && heading !== currentHeading) {
-      entries.push({ type: "heading", nameKey: heading });
+      entries.push({
+        type: "heading",
+        nameKey: heading,
+        bookItemId: studyByHeading.get(heading)?.bookItemId,
+        canStudy: studyByHeading.get(heading)?.canStudy ?? false,
+      });
     }
     currentHeading = heading;
     entries.push({ type: "ability", ability });

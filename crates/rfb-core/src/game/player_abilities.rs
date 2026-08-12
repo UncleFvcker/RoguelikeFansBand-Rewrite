@@ -635,7 +635,10 @@ impl Game {
     ) -> Option<String> {
         self.items
             .iter()
-            .filter(|item| item.location == ItemLocation::Inventory)
+            .filter(|item| {
+                item.location == ItemLocation::Inventory
+                    || item.location == ItemLocation::Ground(self.player.position)
+            })
             .filter_map(|item| {
                 let book_id = self
                     .content

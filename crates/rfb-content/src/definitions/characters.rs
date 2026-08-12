@@ -207,6 +207,21 @@ pub enum CastingLearningFormula {
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
+pub enum CastingStudyMode {
+    #[default]
+    Chosen,
+    DivineRandom,
+}
+
+impl CastingStudyMode {
+    const fn is_chosen(&self) -> bool {
+        matches!(self, Self::Chosen)
+    }
+}
+
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
 pub enum CastingFailureFormula {
     #[default]
     Linear,
@@ -280,6 +295,8 @@ pub struct CastingProfileDefinition {
     pub capacity_percent: u16,
     #[serde(default)]
     pub learning_formula: CastingLearningFormula,
+    #[serde(default, skip_serializing_if = "CastingStudyMode::is_chosen")]
+    pub study_mode: CastingStudyMode,
     #[serde(default)]
     pub failure_formula: CastingFailureFormula,
     pub base_learning_capacity: u16,

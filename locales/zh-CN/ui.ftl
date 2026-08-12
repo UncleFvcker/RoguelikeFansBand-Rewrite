@@ -259,6 +259,7 @@ ability-status-innate = 先天
 ability-status-mutation = 变异
 ability-status-class = 职业能力
 action-ability-study = 研习
+action-ability-study-prayer = 学习祈祷
 action-ability-forget = 遗忘
 action-ability-cast = 施放
 action-resource-rest = 休息至恢复

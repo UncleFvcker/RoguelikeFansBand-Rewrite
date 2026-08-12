@@ -59,16 +59,16 @@ use rfb_content::{
     AbilityStatusStackingDefinition, AbilityTargetDefinition, AbilityTargetModeDefinition,
     ActorDamageType, ActorResistanceLevel, ActorRole, AffixPropertyBundleDefinition,
     CastingAttribute, CastingCapacityFormula, CastingFailureFormula, CastingLearningFormula,
-    CastingProfileDefinition, CastingRealmProfileDefinition, ClassAbilityDefinition,
-    ContentCatalog, DungeonInstanceLifecycle, EncounterEntryDefinition, EncounterTableDefinition,
-    EquipmentBonuses, EquipmentPassive, FloorLifecycle, ItemAttributeDefinition,
-    ItemCurseSeverityDefinition, ItemCurseTargetDefinition, ItemEnchantmentRollDefinition,
-    ItemSummonLevelSourceDefinition, ItemSummonSelectorDefinition, ItemUseEffectDefinition,
-    MeleeBlowEffectDefinition, MonsterDropKindDefinition, MonsterPackBehavior,
-    MutationActivationDefinition, MutationPeriodicEffectDefinition, PlayerAbilityDefinition,
-    ProceduralLayoutMode, ProceduralMazeDefinition, ProceduralPitDefinition,
-    ProceduralRoomGeometryDefinition, ProceduralRoomPlacement, ProceduralRoomShape,
-    ProceduralStreamerCandidateDefinition, SkillKind, SlayLevel, SlayTarget,
+    CastingProfileDefinition, CastingRealmProfileDefinition, CastingStudyMode,
+    ClassAbilityDefinition, ContentCatalog, DungeonInstanceLifecycle, EncounterEntryDefinition,
+    EncounterTableDefinition, EquipmentBonuses, EquipmentPassive, FloorLifecycle,
+    ItemAttributeDefinition, ItemCurseSeverityDefinition, ItemCurseTargetDefinition,
+    ItemEnchantmentRollDefinition, ItemSummonLevelSourceDefinition, ItemSummonSelectorDefinition,
+    ItemUseEffectDefinition, MeleeBlowEffectDefinition, MonsterDropKindDefinition,
+    MonsterPackBehavior, MutationActivationDefinition, MutationPeriodicEffectDefinition,
+    PlayerAbilityDefinition, ProceduralLayoutMode, ProceduralMazeDefinition,
+    ProceduralPitDefinition, ProceduralRoomGeometryDefinition, ProceduralRoomPlacement,
+    ProceduralRoomShape, ProceduralStreamerCandidateDefinition, SkillKind, SlayLevel, SlayTarget,
     StartingItemDefinition, StatModifiers, TaskObjectiveKind, TechniqueAttribute,
     TerrainFeatureEntryDefinition, ThemeVaultCandidateDefinition, WeaponBrand,
     affix_is_compatible_with_item,
@@ -1815,10 +1815,24 @@ impl Game {
             } => match self.study_player_ability(&book_item_id, &ability_id) {
                 Ok(()) => events.push(DomainEvent::AbilityStudied { ability_id }),
                 Err(reason) => events.push(DomainEvent::AbilityStudyUnavailable {
-                    ability_id,
+                    target_id: ability_id,
                     reason: reason.to_owned(),
                 }),
             },
+            GameAction::StudyPrayer { book_item_id } => {
+                let target_id = self
+                    .items
+                    .iter()
+                    .find(|item| item.id == book_item_id)
+                    .map_or_else(|| book_item_id.clone(), |item| item.kind_id.clone());
+                match self.study_random_player_ability(&book_item_id) {
+                    Ok(ability_id) => events.push(DomainEvent::AbilityStudied { ability_id }),
+                    Err(reason) => events.push(DomainEvent::AbilityStudyUnavailable {
+                        target_id,
+                        reason: reason.to_owned(),
+                    }),
+                }
+            }
             GameAction::Retire => {
                 if let Some(score) = self.retire_campaign() {
                     events.push(DomainEvent::CampaignRetired { score });
@@ -2485,6 +2499,12 @@ impl Game {
         let Some(profile) = self.casting_profile().cloned() else {
             return Err("no-casting-profile");
         };
+        if profile.study_mode != CastingStudyMode::Chosen {
+            return Err("study-mode-mismatch");
+        }
+        if let Some(reason) = self.ability_study_unavailable_reason() {
+            return Err(reason);
+        }
         let Some(ability) = self.content.ability(ability_id) else {
             return Err("unknown-ability");
         };
@@ -2501,17 +2521,7 @@ impl Game {
         if self.learned_abilities.len() >= usize::from(self.ability_learning_capacity(&profile)) {
             return Err("learning-capacity-full");
         }
-        let Some(book_id) = self
-            .items
-            .iter()
-            .find(|item| {
-                item.id == book_item_id
-                    && item.location == ItemLocation::Inventory
-                    && item.quantity == 1
-            })
-            .and_then(|item| self.content.item(&item.kind_id))
-            .and_then(|item| item.ability_book_id.as_deref())
-        else {
+        let Some(book_id) = self.study_book_id(book_item_id) else {
             return Err("book-unavailable");
         };
         if !self.active_casting_book_ids().contains(&book_id)
@@ -2524,6 +2534,75 @@ impl Game {
         }
         self.learned_abilities.insert(ability_id.to_owned());
         Ok(())
+    }
+
+    fn study_random_player_ability(&mut self, book_item_id: &str) -> Result<String, &'static str> {
+        let Some(profile) = self.casting_profile().cloned() else {
+            return Err("no-casting-profile");
+        };
+        if profile.study_mode != CastingStudyMode::DivineRandom {
+            return Err("study-mode-mismatch");
+        }
+        if let Some(reason) = self.ability_study_unavailable_reason() {
+            return Err(reason);
+        }
+        if self.learned_abilities.len() >= usize::from(self.ability_learning_capacity(&profile)) {
+            return Err("learning-capacity-full");
+        }
+        let Some(book_id) = self.study_book_id(book_item_id).map(str::to_owned) else {
+            return Err("book-unavailable");
+        };
+        if !self.active_casting_book_ids().contains(&book_id.as_str()) {
+            return Err("book-mismatch");
+        }
+        let candidates = self
+            .content
+            .ability_book(&book_id)
+            .ok_or("book-mismatch")?
+            .ability_ids
+            .iter()
+            .filter_map(|ability_id| {
+                let ability = self.content.ability(ability_id)?;
+                let ability = self.effective_casting_ability(&profile, ability);
+                (!self.learned_abilities.contains(ability_id)
+                    && self.progress.level
+                        >= Self::player_ability_parameters(&ability).minimum_level)
+                    .then(|| ability_id.clone())
+            })
+            .collect::<Vec<_>>();
+        let mut gift = None;
+        for (index, ability_id) in candidates.into_iter().enumerate() {
+            if self.rng.bounded((index + 1) as u64) == 0 {
+                gift = Some(ability_id);
+            }
+        }
+        let ability_id = gift.ok_or("no-learnable-abilities")?;
+        self.learned_abilities.insert(ability_id.clone());
+        Ok(ability_id)
+    }
+
+    fn ability_study_unavailable_reason(&self) -> Option<&'static str> {
+        if self.player_has_status_kind(STATUS_BLINDNESS) {
+            Some("blind")
+        } else if !self.position_is_lit(self.player.position) {
+            Some("no-light")
+        } else if self.player_has_status_kind(STATUS_CONFUSION) {
+            Some("confused")
+        } else {
+            None
+        }
+    }
+
+    fn study_book_id(&self, book_item_id: &str) -> Option<&str> {
+        self.items
+            .iter()
+            .find(|item| {
+                item.id == book_item_id
+                    && (item.location == ItemLocation::Inventory
+                        || item.location == ItemLocation::Ground(self.player.position))
+            })
+            .and_then(|item| self.content.item(&item.kind_id))
+            .and_then(|item| item.ability_book_id.as_deref())
     }
 
     fn forget_player_ability(&mut self, ability_id: &str) -> Result<(), &'static str> {

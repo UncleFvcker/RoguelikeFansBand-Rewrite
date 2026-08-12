@@ -120,7 +120,7 @@ pub(crate) enum DomainEvent {
         reason: String,
     },
     AbilityStudyUnavailable {
-        ability_id: String,
+        target_id: String,
         reason: String,
     },
     AbilityCastUnavailable {
@@ -1438,10 +1438,10 @@ impl DomainEvent {
                 "ability-forget-unavailable",
                 [("target", ability_id), ("reason", reason)],
             ),
-            Self::AbilityStudyUnavailable { ability_id, reason } => dto(
+            Self::AbilityStudyUnavailable { target_id, reason } => dto(
                 "ability.study-unavailable",
                 "ability-study-unavailable",
-                [("target", ability_id), ("reason", reason)],
+                [("target", target_id), ("reason", reason)],
             ),
             Self::AbilityCastUnavailable { ability_id, reason } => dto(
                 "ability.cast-unavailable",

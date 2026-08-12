@@ -10,15 +10,15 @@ use crate::{
     stats::{AttributeKind, CharacterProgress, experience_required_for_level},
 };
 use rfb_content::{
-    AbilityEffectDefinition, ItemUseEffectDefinition, MutationRatingDefinition,
+    AbilityEffectDefinition, CastingStudyMode, ItemUseEffectDefinition, MutationRatingDefinition,
     TownFacilityCategory, WildernessDefinition, WildernessLocationDefinition, WildernessTerrain,
 };
 use rfb_protocol::{
-    AbilityDetectSpecDto, AbilityDto, AbilityLearningDto, AbilitySourceDto, AbilitySummonSpecDto,
-    AbilityTerrainTransformSpecDto, AttackProfileDto, AttributeSetDto, AttributeValueDto,
-    BodySlotDto, CampaignStateDto, CellDto, CellVisualDto, ContentVisualDto, DamageDiceDto,
-    EntityDto, EntityFactionDto, EquipmentItemDto, GameSnapshot, InventoryItemDto, ItemDto,
-    ItemKnowledgeDto, MapScaleDto, MeleeRoutineDto, MutationRatingDto, PROTOCOL_VERSION,
+    AbilityDetectSpecDto, AbilityDto, AbilityLearningDto, AbilitySourceDto, AbilityStudyModeDto,
+    AbilitySummonSpecDto, AbilityTerrainTransformSpecDto, AttackProfileDto, AttributeSetDto,
+    AttributeValueDto, BodySlotDto, CampaignStateDto, CellDto, CellVisualDto, ContentVisualDto,
+    DamageDiceDto, EntityDto, EntityFactionDto, EquipmentItemDto, GameSnapshot, InventoryItemDto,
+    ItemDto, ItemKnowledgeDto, MapScaleDto, MeleeRoutineDto, MutationRatingDto, PROTOCOL_VERSION,
     PlayerBuildDto, PlayerDto, PlayerMutationDto, PlayerProgressDto, Position, ResistanceDto,
     ResourcePoolDto, SkillProgressDto, SummonDto, TaskServiceDto, TaskStatusDto,
     TerrainInteractionDto, TerrainInteractionKindDto, VisibilityState, WildernessLocationDto,
@@ -192,6 +192,10 @@ impl Game {
             learned_count,
             capacity,
             remaining_slots: capacity.saturating_sub(learned_count),
+            study_mode: match profile.study_mode {
+                CastingStudyMode::Chosen => AbilityStudyModeDto::Chosen,
+                CastingStudyMode::DivineRandom => AbilityStudyModeDto::DivineRandom,
+            },
         })
     }
 
@@ -217,6 +221,8 @@ impl Game {
 
     fn player_ability_dtos(&self) -> Vec<AbilityDto> {
         let casting_profile = self.casting_profile();
+        let study_available =
+            casting_profile.is_some() && self.ability_study_unavailable_reason().is_none();
         let ability_books = self
             .active_casting_book_ids()
             .into_iter()
@@ -476,6 +482,7 @@ impl Game {
                         && !learned
                         && level_available
                         && book_item_id.is_some()
+                        && study_available
                         && self
                             .player_ability_learning_dto()
                             .is_some_and(|learning| learning.remaining_slots > 0),

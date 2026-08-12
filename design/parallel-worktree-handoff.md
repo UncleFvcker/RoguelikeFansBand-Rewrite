@@ -1,7 +1,7 @@
 # 并行 worktree 通用交接说明
 
 更新时间：2026-08-12  
-当前集成基线：`main@3fb94bcd`
+当前工作批次起点：`main@bf7d28958`
 
 本说明供新的 Codex 对话接手独立方向时使用。每个写入方向必须使用自己的
 worktree 和分支；`main` 只负责集成、版本与发布收口。
@@ -174,3 +174,19 @@ git diff --stat
   并只在最终 State Hash 版本再刷新一次 fixtures。
 - 明确剩余：Good/Bad Luck、Chance virtue、coffee/special mode、地下城 good/great
   上限和全局 `no_egos` 继续归共享物品生成上下文，不在 Archer 内建立替代规则。
+
+## 9. main 当前交接（神授祈祷底座）
+
+- 本批直接在主工作树推进，起点为 `main@bf7d28958`；后续圣骑士内容应以包含
+  contract-v272 的 main 为起点，不在旧 `codex/class-next` 上重做学习命令。
+- `CastingProfileDefinition.studyMode` 支持默认 `chosen` 与 `divine-random`；高阶法师
+  继续使用默认点选学习。书本级命令为 `StudyPrayer { bookItemId }`，没有新增 ability
+  ID、item ID 或持久状态。
+- 神授候选只来自所选的当前领域能力书，排除已学和等级不足项目；按书内稳定顺序使用
+  唯一 gameplay RNG 做原版 `one_in_(k)` 蓄水池抽样。背包和玩家脚下的书均可使用，
+  失明、无光和混乱会在核心阻止学习。
+- 共享协调点：Protocol `1.177`、State Hash Schema v88、active baseline
+  `contract-v272`、pack `1.272.0`。内容源未改变，content hash 保持
+  `2f88338bb3fe9bfa13ac703d0b58ae4521bade19619805c5fe37da977a8b4858`。
+- 下一步圣骑士内容只需声明 `studyMode: divine-random` 并增加已预留的
+  `demo.ability.paladin-hell-lance`；不新增祈祷菜单状态或第二套 RNG。

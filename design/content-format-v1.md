@@ -593,3 +593,8 @@ contract-v271 / 主树整合包 1.272.0 接入白马旅店 quest 27“旧城堡�
 获得“杀戮者”或“痛苦”，默认“克里斯杜瑞安”保留给后续职业。content hash 为
 `2f88338bb3fe9bfa13ac703d0b58ae4521bade19619805c5fe37da977a8b4858`；协议为
 1.176，State Hash Schema 为 v88。
+
+contract-v272 为 `CastingProfileDefinition` 增加默认 `chosen`、序列化时省略的
+`studyMode`；`divine-random` 让职业从玩家选定书本内的当前可学能力中使用权威 RNG
+随机授予一个。既有职业和内容 hash 不变；协议升至 1.177，State Hash Schema 保持
+v88。

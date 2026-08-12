@@ -35,6 +35,36 @@ test("Archer Create Ammo presents one level-gated menu", () => {
   ]);
 });
 
+test("spellbook headings expose one divine study action", () => {
+  const book = "ability-book-test-prayers-name";
+  const entries = abilityPresentation(
+    [
+      {
+        id: "first",
+        minimumLevel: 1,
+        bookNameKey: book,
+        bookItemId: "item.prayers",
+        canStudy: false,
+      },
+      {
+        id: "second",
+        minimumLevel: 2,
+        bookNameKey: book,
+        bookItemId: "item.prayers",
+        canStudy: true,
+      },
+    ],
+    1,
+  );
+
+  assert.deepEqual(entries[0], {
+    type: "heading",
+    nameKey: book,
+    bookItemId: "item.prayers",
+    canStudy: true,
+  });
+});
+
 test("mutation presentation exposes ratings and the shared ability source", () => {
   assert.equal(mutationRatingMessageKey("awful"), "mutation-rating-awful");
   assert.equal(mutationRatingMessageKey("great"), "mutation-rating-great");

@@ -26,6 +26,7 @@ mod monster_hit_points;
 mod monster_movement;
 mod mutations;
 mod persistence;
+mod prayer_study;
 mod progression;
 mod riding;
 mod snapshots;

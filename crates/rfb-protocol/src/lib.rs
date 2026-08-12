@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.176";
+pub const PROTOCOL_VERSION: &str = "1.177";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -252,6 +252,9 @@ pub enum GameCommand {
     StudyAbility {
         book_item_id: String,
         ability_id: String,
+    },
+    StudyPrayer {
+        book_item_id: String,
     },
     Throw {
         item_id: String,
@@ -764,6 +767,17 @@ pub struct AbilityLearningDto {
     pub learned_count: u16,
     pub capacity: u16,
     pub remaining_slots: u16,
+    #[serde(default)]
+    pub study_mode: AbilityStudyModeDto,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum AbilityStudyModeDto {
+    #[default]
+    Chosen,
+    DivineRandom,
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -3272,6 +3286,7 @@ pub fn generated_typescript() -> String {
     push_declaration!(TargetSpecDto);
     push_declaration!(ResourcePoolDto);
     push_declaration!(AbilityLearningDto);
+    push_declaration!(AbilityStudyModeDto);
     push_declaration!(AbilityProficiencyRankDto);
     push_declaration!(AbilitySourceDto);
     push_declaration!(AbilityStatusStackingDto);
@@ -4235,6 +4250,9 @@ mod tests {
             GameCommand::StudyAbility {
                 book_item_id: "generated.item.2".to_owned(),
                 ability_id: "demo.ability.death-dark-bolt".to_owned(),
+            },
+            GameCommand::StudyPrayer {
+                book_item_id: "generated.item.2".to_owned(),
             },
             GameCommand::ForgetAbility {
                 ability_id: "demo.ability.death-dark-bolt".to_owned(),

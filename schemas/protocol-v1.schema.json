@@ -3663,6 +3663,10 @@
           "format": "uint16",
           "maximum": 65535,
           "minimum": 0
+        },
+        "studyMode": {
+          "$ref": "#/$defs/AbilityStudyModeDto",
+          "default": "chosen"
         }
       },
       "required": [
@@ -3743,6 +3747,13 @@
         "replace",
         "extend",
         "keep-strongest"
+      ]
+    },
+    "AbilityStudyModeDto": {
+      "type": "string",
+      "enum": [
+        "chosen",
+        "divine-random"
       ]
     },
     "AbilitySummonResolutionDto": {
@@ -5651,6 +5662,22 @@
             "type",
             "bookItemId",
             "abilityId"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "bookItemId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "study-prayer"
+            }
+          },
+          "required": [
+            "type",
+            "bookItemId"
           ]
         },
         {

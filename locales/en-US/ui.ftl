@@ -259,6 +259,7 @@ ability-status-innate = Innate
 ability-status-mutation = Mutation
 ability-status-class = Class power
 action-ability-study = Study
+action-ability-study-prayer = Study prayer
 action-ability-forget = Forget
 action-ability-cast = Cast
 action-resource-rest = Rest until recovered

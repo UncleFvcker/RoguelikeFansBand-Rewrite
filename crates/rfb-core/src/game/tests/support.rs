@@ -25,6 +25,7 @@ pub(super) fn enable_test_caster(content: &mut rfb_content::CompiledContentV1) {
         capacity_per_attribute_index: 1,
         capacity_percent: 100,
         learning_formula: rfb_content::CastingLearningFormula::Linear,
+        study_mode: rfb_content::CastingStudyMode::Chosen,
         failure_formula: rfb_content::CastingFailureFormula::Linear,
         base_learning_capacity: 2,
         learning_capacity_per_level: 1,
@@ -113,6 +114,36 @@ pub(crate) fn test_caster_game(seed: u64) -> Game {
         .clone();
     Game::from_content_with_build(seed, content, DEFAULT_WORLD_ID, "test.build.caster")
         .expect("test caster should create")
+}
+
+pub(crate) fn divine_caster_game(seed: u64) -> Game {
+    static CONTENT: OnceLock<Arc<rfb_content::ContentCatalog>> = OnceLock::new();
+    let content = CONTENT
+        .get_or_init(|| {
+            let pack_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                .parent()
+                .and_then(std::path::Path::parent)
+                .expect("core crate should be inside the workspace")
+                .join("packs/rfb-demo-original");
+            let mut artifact =
+                rfb_content::compile_pack_dir(&pack_root).expect("demo pack should compile");
+            enable_test_caster(&mut artifact.content);
+            artifact
+                .content
+                .classes
+                .iter_mut()
+                .find(|class| class.id == "test.class.caster")
+                .and_then(|class| class.casting_profile.as_mut())
+                .expect("test caster should have a casting profile")
+                .study_mode = rfb_content::CastingStudyMode::DivineRandom;
+            Arc::new(rfb_content::ContentCatalog::from_artifact(
+                rfb_content::encode_content(artifact.content)
+                    .expect("divine caster content should remain valid"),
+            ))
+        })
+        .clone();
+    Game::from_content_with_build(seed, content, DEFAULT_WORLD_ID, "test.build.caster")
+        .expect("divine test caster should create")
 }
 
 pub(super) fn command(seq: u32, revision: u32, command: GameCommand) -> GameCommandEnvelope {

@@ -328,6 +328,9 @@
           "maximum": 65535,
           "minimum": 0,
           "type": "integer"
+        },
+        "studyMode": {
+          "$ref": "#/$defs/CastingStudyMode"
         }
       },
       "required": [
@@ -376,6 +379,13 @@
         "abilityBookIds"
       ],
       "type": "object"
+    },
+    "CastingStudyMode": {
+      "enum": [
+        "chosen",
+        "divine-random"
+      ],
+      "type": "string"
     },
     "ClassAbilityDefinition": {
       "additionalProperties": false,
