@@ -6,7 +6,7 @@
 
 contract fixture 是规则兼容边界，不能把测试失败简单处理为“刷新预期结果”。政策用于保证每次规则变化只修改真正受影响的场景，同时保留可审查的失败原因。
 
-当前逻辑基线是 `contract-v274`，机器可读政策固定在：
+当前逻辑基线是 `contract-v275`，机器可读政策固定在：
 
 ```text
 tests/fixtures/active/baseline-policy.json
@@ -81,6 +81,14 @@ fixture 零语义漂移；active 集保持 21 条且零 waiver。
 包 1.275.0 只增加逐武器熟练度内容底座与原版数据审计，尚无战斗消费者、持久状态或
 快照投影。Protocol 1.177、State Hash Schema v88、save v1 与 active baseline
 `contract-v274` 保持不变；现有 fixture 行为不变，不因本次内容建模刷新。
+
+`contract-v275` 接入逐武器熟练度权威状态、原版命中修正与使用成长。近战在一次普通
+攻击命令中按武器训练一次，射击只在弹道碰到怪物时训练；职业上限、怪物等级门槛、
+分段增量和概率余数 RNG 均来自 RFB master。`PlayerProgressSaveDto.weaponProficiencies`
+只保存高于职业出生值的规范基础物品 ID，缺失、重复、别名、未知或越界记录均拒绝。
+Protocol 升至 1.178，State Hash Schema 升至 v89，save 容器保持 v1；权威玩家进度结构
+变化要求统一刷新并复验 21 条 active fixture，active 集保持零 waiver。内容包仍为
+1.275.0。
 
 ## 分类验证
 

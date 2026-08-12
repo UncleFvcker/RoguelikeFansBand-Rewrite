@@ -57,12 +57,32 @@ impl Game {
             let target_kind_id = definition.id.clone();
             self.entities[index].alerted = true;
             let attacker = self.player_derived_stats();
-            let ranged_skill = attacker.ranged_skill.with_modifier(
+            let proficiency_modifier = self
+                .items
+                .iter()
+                .find(|item| item.id == profile.source_item_id)
+                .and_then(|item| self.weapon_proficiency_hit_modifier(&item.kind_id));
+            if let Some(item_kind_id) =
+                self.train_weapon_proficiency(&profile.source_item_id, definition.level)
+            {
+                events.push(DomainEvent::WeaponProficiencyImproved { item_kind_id });
+            }
+            let mut ranged_skill = attacker.ranged_skill.with_modifier(
                 StatLayer::Equipment,
                 profile.ammo_kind_id.clone(),
                 profile.to_hit,
                 StatBounds::NON_NEGATIVE,
             );
+            if let Some((base_item_id, modifier)) = proficiency_modifier
+                && modifier != 0
+            {
+                ranged_skill = ranged_skill.with_modifier(
+                    StatLayer::Class,
+                    base_item_id,
+                    modifier,
+                    StatBounds::NON_NEGATIVE,
+                );
+            }
             let target = self.actor_derived_stats(&self.entities[index], &definition, false);
             changed.insert(self.entities[index].position);
             if !resolve_check(
@@ -348,6 +368,7 @@ impl Game {
     pub(super) fn resolve_player_melee(
         &mut self,
         index: usize,
+        train_weapon: bool,
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
@@ -363,6 +384,12 @@ impl Game {
         let target = self.actor_derived_stats(&self.entities[index], &definition, false);
         let weapon_profile = self.player_melee_profile(&attacker);
         let equipped_weapon_id = weapon_profile.source_item_id.clone();
+        if train_weapon
+            && let Some(item_id) = equipped_weapon_id.as_deref()
+            && let Some(item_kind_id) = self.train_weapon_proficiency(item_id, definition.level)
+        {
+            events.push(DomainEvent::WeaponProficiencyImproved { item_kind_id });
+        }
         let mut profiles = vec![weapon_profile];
         profiles.extend(
             self.player_mutation_innate_attack_profiles(&attacker, equipped_weapon_id.as_deref()),

@@ -659,6 +659,11 @@ impl Game {
             character_skill_progress(&self.content, self.build.as_ref(), self.progress.level)?;
         if !self.progress.validate(victory_cap_unlocked)
             || self.progress.skills != expected_skills
+            || !super::weapon_proficiency::weapon_proficiency_progress_is_valid(
+                &self.content,
+                self.build.as_ref().map(|build| build.class_id.as_str()),
+                &self.progress,
+            )
             || self.progress.hp_progression.first().copied() != Some(self.player.max_hp)
             || self.progress.hp_progression.windows(2).any(|window| {
                 let increase = window[1].saturating_sub(window[0]);

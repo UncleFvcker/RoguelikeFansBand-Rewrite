@@ -235,3 +235,20 @@ git diff --stat
   active baseline `contract-v274`，content hash 为
   `4274e13bce1b7c3e1808267ac12c1fe4f5fa83e6f256c602c693205396767fa2`。
 - 运行时进度、战斗命中/成长、存档和 UI 尚未接入；武术、双持、骑乘仍是独立缺口。
+
+## 13. main 当前交接（逐武器熟练度战斗与存档）
+
+- 沿用第 12 节的内容身份；本批没有新增或占用 item/ability/affix ID，其他方向不得为
+  神器或特殊变体建立第二份熟练度进度。
+- `CharacterProgress.weapon_proficiencies` 只保存高于职业出生值的规范基础物品训练值；
+  `PlayerProgressSaveDto.weaponProficiencies` 必填，严格拒绝缺失、重复、未知、非武器、
+  别名及越界数据，不提供旧开发存档兼容。
+- 普通近战每命令按武器训练一次、未命中也训练；射击只在弹道碰到怪物时训练。职业上限、
+  怪物最低等级/训练上限、成长插值与概率余数 RNG 来自 RFB master `skills.c`。
+- 近战/弓/投石索与弩分别使用原版熟练度命中公式并乘 `BTH_PLUS_ADJ = 3`；该修正不进入
+  射速与弹药破损率。能力触发的额外近战不走普通攻击训练入口。
+- 共享协调点：pack `1.275.0`、Protocol `1.178`、State Hash Schema v89、save v1、
+  active baseline `contract-v275`，content hash 保持
+  `4274e13bce1b7c3e1808267ac12c1fe4f5fa83e6f256c602c693205396767fa2`。
+- 后续 UI 只能投影这份权威稀疏表与职业初始/上限，不得复制成长状态。武术、双持、骑乘
+  仍为独立缺口。

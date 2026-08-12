@@ -87,3 +87,19 @@ ammo-slaying ID。若 items 方向随后导入陶器碎片或断木棍，也应�
 - 当前只完成内容底座；战斗成长、命中修正、存档和 UI 留给后续提交。Protocol 1.177、
   State Hash Schema v88、save v1、active baseline contract-v274 均不变；content hash 为
   `4274e13bce1b7c3e1808267ac12c1fe4f5fa83e6f256c602c693205396767fa2`。
+
+## 逐武器熟练度第二步
+
+- `CharacterProgress.weapon_proficiencies` 已作为规范基础物品 ID 到训练值的独立稀疏表接入；
+  未记录项读取职业出生值，神器/特殊变体只训练其 `weaponProficiencyBaseItemId`。
+- 普通近战每个攻击命令训练一次且未命中也可成长；射击只在弹道碰到怪物时训练。等级
+  门槛、怪物训练上限、成长插值和概率余数 RNG 均忠实使用 RFB master `skills.c`。
+- 近战、弓和投石索应用 `(current - 4000) / 200 × 3` 命中修正，弩应用
+  `current / 400 × 3`；不会把熟练度混入射速或弹药破损率。
+- `PlayerProgressSaveDto.weaponProficiencies` 是必填稀疏数组；读档严格拒绝缺字段、重复、
+  未知/非武器、别名、不高于出生值或超过职业上限的数据，不兼容旧开发存档。
+- 本步没有新增或占用任何内容 ID。共享协调点为 pack 1.275.0、Protocol 1.178、State
+  Hash Schema v89、save v1、active baseline contract-v275；content hash 保持
+  `4274e13bce1b7c3e1808267ac12c1fe4f5fa83e6f256c602c693205396767fa2`。
+- 下一步只需增加角色面板的逐武器列表、等级名称与当前/上限投影；武术、双持、骑乘仍是
+  独立缺口。

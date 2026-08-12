@@ -136,6 +136,7 @@ pub(crate) mod town;
 mod travel;
 mod turn;
 mod validation;
+mod weapon_proficiency;
 mod wilderness;
 mod world;
 
@@ -193,7 +194,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 88;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 89;
 #[cfg(test)]
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const VISIBILITY_RADIUS: i32 = 8;
@@ -1976,6 +1977,7 @@ impl Game {
                         } else {
                             self.resolve_player_melee(
                                 index,
+                                true,
                                 &mut events,
                                 &mut changed,
                                 &mut removed_entities,

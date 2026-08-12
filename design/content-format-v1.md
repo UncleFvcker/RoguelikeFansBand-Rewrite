@@ -621,3 +621,9 @@ State Hash Schema v88 与 save v1 不变。
 战斗成长、存档或 UI，因此 active baseline 保持 contract-v274；Protocol 1.177、State
 Hash Schema v88 与 save v1 不变。content hash 为
 `4274e13bce1b7c3e1808267ac12c1fe4f5fa83e6f256c602c693205396767fa2`。
+
+contract-v275 不增加内容字段或内容 ID，继续使用包 1.275.0 的职业表与基础武器别名。
+核心按当前 Class 解析出生值/上限，并以规范基础物品 ID 保存训练值；神器和特殊变体不会
+创建第二份进度。近战、弓与投石索使用 `(current - 4000) / 200`，弩使用
+`current / 400`，命中应用该值的三倍。Protocol 1.178、State Hash Schema v89，active
+baseline contract-v275；角色面板的等级展示留给后续 UI 批次。

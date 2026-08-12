@@ -3560,7 +3560,7 @@ impl Game {
             .expect("planned panic-hit target must remain available");
         let target_kind_id = self.entities[index].kind_id.clone();
         let player_from = self.player.position;
-        self.resolve_player_melee(index, events, changed, removed_entities)?;
+        self.resolve_player_melee(index, false, events, changed, removed_entities)?;
         let skill =
             u64::try_from(self.player_derived_stats().disarm_skill.value.max(1)).unwrap_or(1);
         let teleport_attempted = self.rng.bounded(skill) >= u64::from(failure_threshold);

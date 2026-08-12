@@ -228,6 +228,9 @@ pub struct CharacterProgress {
     pub pending_attribute_increases: u16,
     pub hp_progression: Vec<i32>,
     pub skills: BTreeMap<String, SkillProgress>,
+    /// Trained values above the active class's birth proficiency, keyed by
+    /// canonical base item kind ID.
+    pub weapon_proficiencies: BTreeMap<String, u16>,
     pub active_mutation_ids: BTreeSet<String>,
     pub locked_mutation_ids: BTreeSet<String>,
 }
@@ -281,6 +284,7 @@ impl CharacterProgress {
             pending_attribute_increases: 0,
             hp_progression,
             skills: BTreeMap::new(),
+            weapon_proficiencies: BTreeMap::new(),
             active_mutation_ids: BTreeSet::new(),
             locked_mutation_ids: BTreeSet::new(),
         }
@@ -752,6 +756,10 @@ impl CharacterProgress {
                     && (-1_000_000..=1_000_000).contains(&skill.base)
                     && (-1_000_000..=1_000_000).contains(&skill.growth_per_ten_levels)
             })
+            && self
+                .weapon_proficiencies
+                .iter()
+                .all(|(id, current)| !id.is_empty() && *current <= 8_000)
             && (self.level == Self::level_cap(victorious)
                 || self.experience < experience_required_for_level(self.level + 1))
     }

@@ -641,6 +641,10 @@ export function createPresentationFormatter(
         return localization.format("message-projectile-ammo-broken", {
           target: visibleItemNameForKind(event.args.target),
         });
+      case "weapon-proficiency-improved":
+        return localization.format("message-weapon-proficiency-improved", {
+          target: visibleItemNameForKind(event.args.target),
+        });
       case "status-player-damage":
         return localization.format("message-status-player-damage", {
           status: statusName(event.args.status),

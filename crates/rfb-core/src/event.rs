@@ -1090,6 +1090,9 @@ pub(crate) enum DomainEvent {
         to_floor_id: String,
     },
     ItemUseUnavailable,
+    WeaponProficiencyImproved {
+        item_kind_id: String,
+    },
     PlayerMeleeMissed {
         target_kind_id: String,
     },
@@ -4281,6 +4284,11 @@ impl DomainEvent {
             Self::ItemUseUnavailable => {
                 dto_without_args("item.use-unavailable", "item-use-unavailable")
             }
+            Self::WeaponProficiencyImproved { item_kind_id } => dto(
+                "progress.weapon-proficiency-improved",
+                "weapon-proficiency-improved",
+                [("target", item_kind_id)],
+            ),
             Self::PlayerMeleeMissed { target_kind_id } => dto(
                 "combat.miss",
                 "combat-player-miss",

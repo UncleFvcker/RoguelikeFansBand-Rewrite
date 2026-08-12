@@ -34,4 +34,5 @@ mod snapshots;
 pub(crate) mod support;
 mod tasks;
 mod town;
+mod weapon_proficiency;
 mod world;

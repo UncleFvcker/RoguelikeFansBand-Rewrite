@@ -26,7 +26,7 @@ use rfb_protocol::{
     NaturalAttributeSetSaveDto, PlayerBuildSaveDto, PlayerProgressSaveDto, PlayerSaveDto, Position,
     ResistanceDto, ResistanceLevelDto, ResistanceSaveDto, RolledAffixSaveDto, SkillProgressSaveDto,
     SlayDto, SlayLevelDto, SlayTargetDto, StatModifiersDto, StatusSaveDto, SummonSaveDto,
-    TargetModeDto, TargetSpecDto, TerrainSaveDto, WeaponBrandDto,
+    TargetModeDto, TargetSpecDto, TerrainSaveDto, WeaponBrandDto, WeaponProficiencySaveDto,
 };
 
 pub(crate) const GENERATED_ITEM_ID_PREFIX: &str = "generated.item.";
@@ -666,6 +666,14 @@ pub(crate) fn player_to_save(
                     maximum: skill.maximum,
                     base: skill.base,
                     growth_per_ten_levels: skill.growth_per_ten_levels,
+                })
+                .collect(),
+            weapon_proficiencies: progress
+                .weapon_proficiencies
+                .iter()
+                .map(|(item_kind_id, current)| WeaponProficiencySaveDto {
+                    item_kind_id: item_kind_id.clone(),
+                    current: *current,
                 })
                 .collect(),
         }),

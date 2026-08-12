@@ -361,6 +361,7 @@ fn restore_character_progress(
     saved_locked_mutation_ids: &[String],
     base_max_hp: i32,
     expected_skills: BTreeMap<String, SkillProgress>,
+    class_id: Option<&str>,
     content: &ContentCatalog,
 ) -> Result<CharacterProgress, CoreError> {
     let active_mutation_ids = saved_active_mutation_ids
@@ -409,6 +410,17 @@ fn restore_character_progress(
     } else if skills != expected_skills {
         return Err(CoreError::InvalidSave("player skill state is invalid"));
     }
+    let mut weapon_proficiencies = BTreeMap::new();
+    for proficiency in &saved.weapon_proficiencies {
+        if weapon_proficiencies
+            .insert(proficiency.item_kind_id.clone(), proficiency.current)
+            .is_some()
+        {
+            return Err(CoreError::InvalidSave(
+                "player weapon proficiency state is invalid",
+            ));
+        }
+    }
     let attributes = AttributeSet {
         strength: saved.attributes.strength,
         intelligence: saved.attributes.intelligence,
@@ -453,7 +465,7 @@ fn restore_character_progress(
     }) {
         return Err(CoreError::InvalidSave("player attribute state is invalid"));
     }
-    Ok(CharacterProgress {
+    let progress = CharacterProgress {
         attributes,
         maximum_attributes,
         attribute_potentials,
@@ -469,9 +481,18 @@ fn restore_character_progress(
         pending_attribute_increases: saved.pending_attribute_increases,
         hp_progression: saved.hp_progression.clone(),
         skills,
+        weapon_proficiencies,
         active_mutation_ids,
         locked_mutation_ids,
-    })
+    };
+    if !super::weapon_proficiency::weapon_proficiency_progress_is_valid(
+        content, class_id, &progress,
+    ) {
+        return Err(CoreError::InvalidSave(
+            "player weapon proficiency state is invalid",
+        ));
+    }
+    Ok(progress)
 }
 
 fn item_knowledge_from_save(
@@ -869,6 +890,7 @@ impl Game {
             &payload.player.locked_mutation_ids,
             player_definition.max_hp,
             expected_skills,
+            build.as_ref().map(|build| build.class_id.as_str()),
             &content,
         )?;
         let saved_resources = payload.player.resources.clone();

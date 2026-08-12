@@ -61,6 +61,19 @@ test("effectless BEG actions remain visible without fake damage", () => {
   localization.setLocale("en-US");
 });
 
+test("weapon proficiency growth localizes the canonical base weapon", () => {
+  const event = {
+    kind: "progress.weapon-proficiency-improved",
+    messageKey: "weapon-proficiency-improved",
+    args: { target: "demo.item.short-bow" },
+  };
+
+  assert.equal(formatter.formatEvent(event), "Your skill with Short Bow is improving.");
+  localization.setLocale("zh-CN");
+  assert.equal(formatter.formatEvent(event), "你的短弓技能正在提升。");
+  localization.setLocale("en-US");
+});
+
 test("Polymorph's rare cure uses the authoritative bilingual message", () => {
   const event = {
     kind: "mutation.all-cured",

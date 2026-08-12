@@ -405,3 +405,9 @@ state hash 输入中，因此 State Hash Schema 保持 v87；save 容器仍为 v
 contract-v266 正式把玩家制造弹药的 `damageDiceOverride`、`originKind` 和
 `discountPercent` 纳入物品权威存档与 State Hash Schema v88。普通物品继续省略默认值，
 save 容器保持 v1；测试只从新存档开始，不增加旧开发存档迁移路径。
+
+contract-v275 为 `PlayerProgressSaveDto` 增加必填 `weaponProficiencies`。每项只保存稳定的
+规范基础物品 ID 与高于当前职业出生值的训练值；职业出生值和训练上限继续来自内容，
+不会重复写入存档。载入严格拒绝字段缺失、重复 ID、未知或非武器 ID、神器/特殊变体别名、
+不高于出生值或超过职业上限的记录，不提供旧开发存档迁移。该稀疏表进入 State Hash
+Schema v89；Protocol 升至 1.178，save 容器保持 v1。

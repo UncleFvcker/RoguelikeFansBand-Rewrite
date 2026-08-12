@@ -1060,32 +1060,53 @@ impl Game {
             self.content
                 .item(&item.kind_id)
                 .and_then(|definition| definition.melee_profile.as_ref())
-                .map(|profile| (item.id.clone(), profile))
+                .map(|profile| (item.id.clone(), item.kind_id.clone(), profile))
         });
-        let (source_item_id, dice, sides, damage_type, to_hit) = equipped_weapon.map_or_else(
-            || {
-                (
-                    None,
-                    definition.damage_dice,
-                    definition.damage_sides,
-                    definition.damage_type,
-                    0,
-                )
-            },
-            |(item_id, profile)| {
-                (
-                    Some(item_id),
-                    profile.damage_dice,
-                    profile.damage_sides,
-                    profile.damage_type,
-                    profile.to_hit,
-                )
-            },
-        );
+        let (source_item_id, source_kind_id, dice, sides, damage_type, to_hit) = equipped_weapon
+            .map_or_else(
+                || {
+                    (
+                        None,
+                        None,
+                        definition.damage_dice,
+                        definition.damage_sides,
+                        definition.damage_type,
+                        0,
+                    )
+                },
+                |(item_id, kind_id, profile)| {
+                    (
+                        Some(item_id),
+                        Some(kind_id),
+                        profile.damage_dice,
+                        profile.damage_sides,
+                        profile.damage_type,
+                        profile.to_hit,
+                    )
+                },
+            );
+        let melee_skill = source_kind_id
+            .as_deref()
+            .and_then(|kind_id| self.weapon_proficiency_hit_modifier(kind_id))
+            .map_or_else(
+                || stats.melee_skill.clone(),
+                |(base_item_id, modifier)| {
+                    if modifier == 0 {
+                        stats.melee_skill.clone()
+                    } else {
+                        stats.melee_skill.with_modifier(
+                            StatLayer::Class,
+                            base_item_id,
+                            modifier,
+                            StatBounds::NON_NEGATIVE,
+                        )
+                    }
+                },
+            );
         ResolvedAttackProfile {
             attacks: u16::try_from(stats.melee_attacks.value)
                 .expect("derived melee attack count must fit u16"),
-            melee_skill: stats.melee_skill.clone(),
+            melee_skill,
             to_hit,
             to_damage: stats.melee_damage_bonus.value,
             damage_dice: dice,
