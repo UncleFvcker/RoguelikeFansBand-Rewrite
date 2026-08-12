@@ -11222,9 +11222,14 @@ pub fn sync_demo_monsters(
 pub fn audit_demo_monsters(
     source: &Path,
     selection_path: &Path,
+    minimum_level: u16,
+    maximum_level: u16,
 ) -> Result<DemoMonsterAuditReport, LegacyImportError> {
-    const MINIMUM_LEVEL: u16 = 21;
-    const MAXIMUM_LEVEL: u16 = 32;
+    if minimum_level > maximum_level {
+        return Err(LegacyImportError::InvalidDemoMonsterSelection(format!(
+            "audit minimum level {minimum_level} exceeds maximum level {maximum_level}"
+        )));
+    }
     let selection: DemoMonsterSelection = serde_json::from_slice(&fs::read(selection_path)?)?;
     if selection.schema_version != 1 || selection.monsters.is_empty() {
         return Err(LegacyImportError::InvalidDemoMonsterSelection(
@@ -11266,7 +11271,7 @@ pub fn audit_demo_monsters(
         .filter(|entry| {
             entry
                 .level
-                .is_some_and(|level| (MINIMUM_LEVEL..=MAXIMUM_LEVEL).contains(&level))
+                .is_some_and(|level| (minimum_level..=maximum_level).contains(&level))
                 && entry.rarity.unwrap_or(0) > 0
                 && entry.glyph.is_some()
                 && !entry.flags.iter().any(|flag| flag == "DEPRECATED")
@@ -11360,8 +11365,8 @@ pub fn audit_demo_monsters(
         schema_version: 1,
         source_ref: LEGACY_CONTENT_REFERENCE,
         source_commit,
-        minimum_level: MINIMUM_LEVEL,
-        maximum_level: MAXIMUM_LEVEL,
+        minimum_level,
+        maximum_level,
         record_count: entries.len(),
         imported_count: entries.iter().filter(|entry| entry.imported).count(),
         selected_count: count(DemoMonsterAuditStatus::Selected),
@@ -12193,6 +12198,15 @@ pub fn sync_demo_items(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn demo_monster_audit_rejects_an_inverted_level_range() {
+        assert!(matches!(
+            audit_demo_monsters(Path::new("unused"), Path::new("unused"), 40, 33),
+            Err(LegacyImportError::InvalidDemoMonsterSelection(detail))
+                if detail == "audit minimum level 40 exceeds maximum level 33"
+        ));
+    }
 
     #[test]
     fn demo_monster_audit_separates_location_scope_from_mechanism_status() {

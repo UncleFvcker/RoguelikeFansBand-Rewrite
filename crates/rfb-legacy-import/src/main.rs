@@ -23,10 +23,10 @@ fn main() -> ExitCode {
 fn run() -> Result<(), Box<dyn std::error::Error>> {
     let mut args = env::args_os().skip(1);
     let mode = args.next().ok_or(
-        "usage: rfb-legacy-import <inspect-prefix|record-catalog|verify-catalog|import-content> <path> | <sync-demo-items|sync-demo-monsters|sync-demo-wilderness> <selection> <output> | audit-demo-monsters <selection> | audit-demo-mutations <plan> | audit-demo-item-names <selection> <en-content.ftl> <zh-content.ftl> | audit-demo-items <selection> <adaptations> <plan> <items>",
+        "usage: rfb-legacy-import <inspect-prefix|record-catalog|verify-catalog|import-content> <path> | <sync-demo-items|sync-demo-monsters|sync-demo-wilderness> <selection> <output> | audit-demo-monsters <selection> <minimum-level> <maximum-level> | audit-demo-mutations <plan> | audit-demo-item-names <selection> <en-content.ftl> <zh-content.ftl> | audit-demo-items <selection> <adaptations> <plan> <items>",
     )?;
     let path = PathBuf::from(args.next().ok_or(
-        "usage: rfb-legacy-import <inspect-prefix|record-catalog|verify-catalog|import-content> <path> | <sync-demo-items|sync-demo-monsters|sync-demo-wilderness> <selection> <output> | audit-demo-monsters <selection> | audit-demo-mutations <plan> | audit-demo-item-names <selection> <en-content.ftl> <zh-content.ftl> | audit-demo-items <selection> <adaptations> <plan> <items>",
+        "usage: rfb-legacy-import <inspect-prefix|record-catalog|verify-catalog|import-content> <path> | <sync-demo-items|sync-demo-monsters|sync-demo-wilderness> <selection> <output> | audit-demo-monsters <selection> <minimum-level> <maximum-level> | audit-demo-mutations <plan> | audit-demo-item-names <selection> <en-content.ftl> <zh-content.ftl> | audit-demo-items <selection> <adaptations> <plan> <items>",
     )?);
     match mode.to_string_lossy().as_ref() {
         "inspect-prefix" => {
@@ -109,15 +109,32 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
             );
         }
         "audit-demo-monsters" => {
+            let minimum_level = args
+                .next()
+                .ok_or("audit-demo-monsters requires minimum and maximum levels")?
+                .into_string()
+                .map_err(|_| "audit-demo-monsters levels must be valid UTF-8 integers")?
+                .parse::<u16>()?;
+            let maximum_level = args
+                .next()
+                .ok_or("audit-demo-monsters requires minimum and maximum levels")?
+                .into_string()
+                .map_err(|_| "audit-demo-monsters levels must be valid UTF-8 integers")?
+                .parse::<u16>()?;
             if args.next().is_some() {
-                return Err("audit-demo-monsters accepts exactly one selection path".into());
+                return Err("audit-demo-monsters accepts one selection path and two levels".into());
             }
             let source = PathBuf::from(env::var_os("RFB_LEGACY_SOURCE").ok_or(
                 "audit-demo-monsters requires RFB_LEGACY_SOURCE to point at the legacy repository",
             )?);
             println!(
                 "{}",
-                serde_json::to_string_pretty(&audit_demo_monsters(&source, &path)?)?
+                serde_json::to_string_pretty(&audit_demo_monsters(
+                    &source,
+                    &path,
+                    minimum_level,
+                    maximum_level,
+                )?)?
             );
         }
         "audit-demo-item-names" => {
