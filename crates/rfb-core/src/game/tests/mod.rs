@@ -13,6 +13,7 @@ mod combat;
 mod deterministic_replay;
 mod generation;
 mod gold;
+mod high_mage;
 mod hunger;
 mod inventory;
 mod items;

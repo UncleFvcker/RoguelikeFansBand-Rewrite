@@ -1232,7 +1232,7 @@ impl Game {
                         <= usize::from(self.ability_learning_capacity(profile))
                         && self.learned_abilities.iter().all(|ability_id| {
                             self.content.ability(ability_id).is_some_and(|ability| {
-                                let ability = Self::effective_casting_ability(profile, ability);
+                                let ability = self.effective_casting_ability(profile, ability);
                                 Self::player_ability_parameters(&ability).minimum_level
                                     <= self.progress.level
                                     && self.profile_supports_ability(profile, ability_id)
@@ -1476,7 +1476,7 @@ impl Game {
                 .map(|mut ability| {
                     if summon.owner_id == self.player.id {
                         if let Some(profile) = self.casting_profile() {
-                            ability = Self::effective_casting_ability(profile, &ability);
+                            ability = self.effective_casting_ability(profile, &ability);
                         }
                         Self::apply_player_level_scaling(&mut ability, self.progress.level);
                     }

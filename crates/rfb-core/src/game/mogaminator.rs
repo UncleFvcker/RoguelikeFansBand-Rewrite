@@ -943,14 +943,10 @@ impl Game {
                 })
             }),
             MogaminatorPredicate::Unreadable => book.is_some_and(|book| {
-                class
-                    .and_then(|class| class.casting_profile.as_ref())
-                    .is_none_or(|profile| {
-                        !profile
-                            .ability_book_ids
-                            .iter()
-                            .any(|book_id| book_id == &book.id)
-                    })
+                class.is_none_or(|class| {
+                    class.casting_profile.is_none()
+                        || !self.active_casting_book_ids().contains(&book.id.as_str())
+                })
             }),
             MogaminatorPredicate::FirstRealm => book.is_some_and(|book| {
                 book.realm_id.as_ref()
@@ -1676,7 +1672,7 @@ mod tests {
         let book = game
             .items
             .iter()
-            .find(|item| item.kind_id == "demo.item.sepulchral-ways")
+            .find(|item| item.kind_id == "demo.item.black-mass")
             .expect("test caster should start with a death book");
         assert!(game.mogaminator_predicate_matches(MogaminatorPredicate::FirstRealm, book));
         assert!(game.mogaminator_predicate_matches(MogaminatorPredicate::SecondBook, book));

@@ -67,7 +67,7 @@ export type AbilityLearningDto = { learnedCount: number, capacity: number, remai
 
 export type AbilityProficiencyRankDto = "unskilled" | "beginner" | "skilled" | "expert" | "master";
 
-export type AbilitySourceDto = "learned" | "mutation";
+export type AbilitySourceDto = "class" | "learned" | "mutation";
 
 export type AbilityStatusStackingDto = "replace" | "extend" | "keep-strongest";
 
@@ -89,7 +89,7 @@ export type AbilityDetectSpecDto = { subject: AbilityDetectSubjectDto, category:
 
 export type AbilityTerrainTransformSpecDto = { sourceTerrainIds: Array<string>, targetTerrainId: string, radius: number, };
 
-export type AbilityDto = { id: string, nameKey: string, descriptionKey: string, minimumLevel: number, source: AbilitySourceDto, resourceId?: string | null, baseResourceCost: number, resourceCost: number, failurePercent: number, proficiency: number, proficiencyCap: number, proficiencyRank: AbilityProficiencyRankDto, castCount: number, failCount: number, cooldownRemaining: number, cooldownTurns: number, cooldownGroupId?: string | null, areaRadius?: number | null, beamDamage?: boolean, coneRadius?: number | null, teleport?: boolean, summon?: AbilitySummonSpecDto | null, detect?: AbilityDetectSpecDto | null, terrainTransform?: AbilityTerrainTransformSpecDto | null, effects: Array<AbilityEffectSpecDto>, targetSpec: TargetSpecDto, learned: boolean, bookItemId?: string | null, canStudy: boolean, canForget: boolean, canCast: boolean, };
+export type AbilityDto = { id: string, nameKey: string, descriptionKey: string, bookNameKey?: string | null, bookRank?: number | null, minimumLevel: number, source: AbilitySourceDto, resourceId?: string | null, baseResourceCost: number, resourceCost: number, failurePercent: number, proficiency: number, proficiencyCap: number, proficiencyRank: AbilityProficiencyRankDto, castCount: number, failCount: number, cooldownRemaining: number, cooldownTurns: number, cooldownGroupId?: string | null, areaRadius?: number | null, beamDamage?: boolean, coneRadius?: number | null, teleport?: boolean, summon?: AbilitySummonSpecDto | null, detect?: AbilityDetectSpecDto | null, terrainTransform?: AbilityTerrainTransformSpecDto | null, effects: Array<AbilityEffectSpecDto>, targetSpec: TargetSpecDto, learned: boolean, bookItemId?: string | null, canStudy: boolean, canForget: boolean, canCast: boolean, };
 
 export type TargetSelection = { "type": "direction", direction: Direction, } | { "type": "position", position: Position, } | { "type": "entity", entityId: string, } | { "type": "item", itemId: string, } | { "type": "self" };
 

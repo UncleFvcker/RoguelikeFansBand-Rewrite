@@ -139,21 +139,61 @@
       ],
       "type": "string"
     },
+    "CastingCapacityFormula": {
+      "enum": [
+        "linear",
+        "rfb-mana"
+      ],
+      "type": "string"
+    },
+    "CastingEncumbranceDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "gloveEncumbrance": {
+          "default": false,
+          "type": "boolean"
+        },
+        "maximumWeightTenthsPound": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "penaltyWeightTenthsPound": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "weaponWeightPercent": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "maximumWeightTenthsPound",
+        "weaponWeightPercent",
+        "penaltyWeightTenthsPound"
+      ],
+      "type": "object"
+    },
+    "CastingFailureFormula": {
+      "enum": [
+        "linear",
+        "rfb-magic"
+      ],
+      "type": "string"
+    },
+    "CastingLearningFormula": {
+      "enum": [
+        "linear",
+        "rfb-single-realm"
+      ],
+      "type": "string"
+    },
     "CastingProfileDefinition": {
       "additionalProperties": false,
       "properties": {
-        "abilityBookIds": {
-          "items": {
-            "type": "string"
-          },
-          "type": "array"
-        },
-        "abilityOverrides": {
-          "items": {
-            "$ref": "#/$defs/AbilityCastingOverrideDefinition"
-          },
-          "type": "array"
-        },
         "baseCapacity": {
           "format": "uint32",
           "minimum": 0,
@@ -186,6 +226,10 @@
           "minimum": 0,
           "type": "integer"
         },
+        "capacityFormula": {
+          "$ref": "#/$defs/CastingCapacityFormula",
+          "default": "linear"
+        },
         "capacityPerAttributeIndex": {
           "format": "uint32",
           "minimum": 0,
@@ -196,8 +240,29 @@
           "minimum": 0,
           "type": "integer"
         },
+        "capacityPercent": {
+          "default": 100,
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
         "castingAttribute": {
           "$ref": "#/$defs/CastingAttribute"
+        },
+        "encumbrance": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CastingEncumbranceDefinition"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "failureFormula": {
+          "$ref": "#/$defs/CastingFailureFormula",
+          "default": "linear"
         },
         "learningCapacityCap": {
           "format": "uint16",
@@ -217,14 +282,52 @@
           "minimum": 0,
           "type": "integer"
         },
+        "learningFormula": {
+          "$ref": "#/$defs/CastingLearningFormula",
+          "default": "linear"
+        },
         "minimumFailurePercent": {
           "format": "uint8",
           "maximum": 255,
           "minimum": 0,
           "type": "integer"
         },
+        "realmProfiles": {
+          "items": {
+            "$ref": "#/$defs/CastingRealmProfileDefinition"
+          },
+          "type": "array"
+        },
         "resourceId": {
           "type": "string"
+        },
+        "resourceRecoveryPercent": {
+          "default": 100,
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "spellDamageBonusBase": {
+          "default": 0,
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "spellDamageBonusLevelDivisor": {
+          "default": 1,
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "spellDamageBonusPerLevel": {
+          "default": 0,
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
         }
       },
       "required": [
@@ -238,7 +341,86 @@
         "learningCapacityPerAttributeIndex",
         "learningCapacityCap",
         "minimumFailurePercent",
+        "realmProfiles"
+      ],
+      "type": "object"
+    },
+    "CastingRealmProfileDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "abilityBookIds": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "abilityOverrides": {
+          "items": {
+            "$ref": "#/$defs/AbilityCastingOverrideDefinition"
+          },
+          "type": "array"
+        },
+        "learningCapacityBonus": {
+          "default": 0,
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "realmId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "realmId",
         "abilityBookIds"
+      ],
+      "type": "object"
+    },
+    "ClassAbilityDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "abilityId": {
+          "type": "string"
+        },
+        "baseFailurePercent": {
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "governingAttribute": {
+          "$ref": "#/$defs/TechniqueAttribute"
+        },
+        "minimumFailurePercent": {
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "minimumLevel": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "resourceCost": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "resourceId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "abilityId",
+        "minimumLevel",
+        "governingAttribute",
+        "resourceId",
+        "resourceCost",
+        "baseFailurePercent",
+        "minimumFailurePercent"
       ],
       "type": "object"
     },
@@ -251,6 +433,14 @@
         },
         "itemKindId": {
           "type": "string"
+        },
+        "maximumQuantity": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
         },
         "quantity": {
           "format": "uint32",
@@ -319,6 +509,17 @@
         }
       },
       "type": "object"
+    },
+    "TechniqueAttribute": {
+      "enum": [
+        "strength",
+        "intelligence",
+        "wisdom",
+        "dexterity",
+        "constitution",
+        "charisma"
+      ],
+      "type": "string"
     }
   },
   "$id": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/class.schema.json",
@@ -327,6 +528,12 @@
   "properties": {
     "$schema": {
       "type": "string"
+    },
+    "abilities": {
+      "items": {
+        "$ref": "#/$defs/ClassAbilityDefinition"
+      },
+      "type": "array"
     },
     "baseHp": {
       "default": 0,

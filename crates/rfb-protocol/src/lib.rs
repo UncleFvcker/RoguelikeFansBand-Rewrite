@@ -1147,6 +1147,7 @@ const fn default_life_force() -> u16 {
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "kebab-case")]
 pub enum AbilitySourceDto {
+    Class,
     Learned,
     Mutation,
 }
@@ -1158,6 +1159,10 @@ pub struct AbilityDto {
     pub id: String,
     pub name_key: String,
     pub description_key: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub book_name_key: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub book_rank: Option<u8>,
     pub minimum_level: u16,
     pub source: AbilitySourceDto,
     #[serde(default, skip_serializing_if = "Option::is_none")]

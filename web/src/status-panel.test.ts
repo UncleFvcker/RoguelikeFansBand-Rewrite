@@ -23,6 +23,10 @@ test("mutation presentation exposes ratings and the shared ability source", () =
     abilityStatusMessageKey({ source: "learned", learned: true }),
     "ability-status-learned",
   );
+  assert.equal(
+    abilityStatusMessageKey({ source: "class", learned: false }),
+    "ability-status-class",
+  );
 });
 
 test("status panel preserves exceptional attribute display values", () => {

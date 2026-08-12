@@ -1032,14 +1032,14 @@ fn bookstore_purchase_can_supply_an_original_spellbook_for_study() {
             .map(|item| (item.kind_id.as_str(), item.unit_price))
             .collect::<std::collections::BTreeMap<_, _>>(),
         std::collections::BTreeMap::from([
-            ("demo.item.stench-of-death", 100),
-            ("demo.item.sepulchral-ways", 1_000),
+            ("demo.item.black-prayers", 100),
+            ("demo.item.black-mass", 1_000),
         ])
     );
     let book = shop
         .stock
         .iter()
-        .find(|item| item.kind_id == "demo.item.stench-of-death")
+        .find(|item| item.kind_id == "demo.item.black-prayers")
         .expect("Bookstore should stock Stench of Death")
         .clone();
 
@@ -1054,7 +1054,7 @@ fn bookstore_purchase_can_supply_an_original_spellbook_for_study() {
     let book_item_id = purchase
         .inventory
         .iter()
-        .find(|item| item.kind_id == "demo.item.stench-of-death")
+        .find(|item| item.kind_id == "demo.item.black-prayers")
         .expect("purchased book should be carried")
         .id
         .clone();

@@ -93,8 +93,10 @@ impl Game {
         }
         let ability = self.content.ability(ability_id).cloned();
         let mutation_activation = self.mutation_activation_for_ability(ability_id).cloned();
+        let class_activation = self.class_ability_activation(ability_id).cloned();
         let casting_profile = self.casting_profile().cloned();
-        if mutation_activation.is_none() && casting_profile.is_none() {
+        if mutation_activation.is_none() && class_activation.is_none() && casting_profile.is_none()
+        {
             events.push(DomainEvent::AbilityCastUnavailable {
                 ability_id: ability_id.to_owned(),
                 reason: "no-casting-profile".to_owned(),
@@ -110,6 +112,8 @@ impl Game {
         };
         let source = if mutation_activation.is_some() {
             AbilitySourceDto::Mutation
+        } else if class_activation.is_some() {
+            AbilitySourceDto::Class
         } else if casting_profile.is_some() {
             AbilitySourceDto::Learned
         } else {
@@ -123,17 +127,24 @@ impl Game {
             return Ok(());
         }
         let mut ability = match source {
-            AbilitySourceDto::Learned => Self::effective_casting_ability(
+            AbilitySourceDto::Learned => self.effective_casting_ability(
                 casting_profile
                     .as_ref()
                     .expect("learned ability source requires a casting profile"),
                 &ability,
             ),
-            AbilitySourceDto::Mutation => ability,
+            AbilitySourceDto::Class | AbilitySourceDto::Mutation => ability,
         };
         Self::apply_player_level_scaling(&mut ability, self.progress.level);
         if source == AbilitySourceDto::Learned {
             Self::apply_casting_profile_effect_scaling(
+                casting_profile
+                    .as_ref()
+                    .expect("learned ability source requires a casting profile"),
+                &mut ability,
+                self.progress.level,
+            );
+            Self::apply_casting_profile_damage_bonus(
                 casting_profile
                     .as_ref()
                     .expect("learned ability source requires a casting profile"),
@@ -146,6 +157,12 @@ impl Game {
                 let activation = mutation_activation
                     .as_ref()
                     .expect("mutation ability source requires an activation");
+                (self.progress.level < activation.minimum_level).then_some("level-too-low")
+            }
+            AbilitySourceDto::Class => {
+                let activation = class_activation
+                    .as_ref()
+                    .expect("class ability source requires an activation");
                 (self.progress.level < activation.minimum_level).then_some("level-too-low")
             }
             AbilitySourceDto::Learned => {
@@ -193,18 +210,18 @@ impl Game {
             fail_count: 0,
             cooldown_remaining: 0,
         };
-        let progress_before = if source == AbilitySourceDto::Mutation {
+        let progress_before = if source != AbilitySourceDto::Learned {
             mutation_progress
         } else {
             self.ability_progress_value(&ability)
         };
-        let cooldown_before = if source == AbilitySourceDto::Mutation {
+        let cooldown_before = if source != AbilitySourceDto::Learned {
             0
         } else {
             self.ability_cooldown_remaining(&ability)
         };
-        let (base_resource_cost, resource_cost, resource_id) =
-            if source == AbilitySourceDto::Mutation {
+        let (base_resource_cost, resource_cost, resource_id) = match source {
+            AbilitySourceDto::Mutation => {
                 let activation = mutation_activation
                     .as_ref()
                     .expect("mutation ability source requires an activation");
@@ -216,14 +233,26 @@ impl Game {
                         .as_ref()
                         .map(|profile| profile.resource_id.clone()),
                 )
-            } else {
+            }
+            AbilitySourceDto::Class => {
+                let activation = class_activation
+                    .as_ref()
+                    .expect("class ability source requires an activation");
+                (
+                    activation.resource_cost,
+                    activation.resource_cost,
+                    Some(activation.resource_id.clone()),
+                )
+            }
+            AbilitySourceDto::Learned => {
                 let player = Self::player_ability_parameters(&ability);
                 (
                     player.resource_cost,
                     self.ability_effective_resource_cost(&ability, progress_before),
                     Some(player.resource_id.clone()),
                 )
-            };
+            }
+        };
         let failure_percent = if self.debug_ability_casts_succeed {
             0
         } else {
@@ -232,6 +261,11 @@ impl Game {
                     mutation_activation
                         .as_ref()
                         .expect("mutation ability source requires an activation"),
+                ),
+                AbilitySourceDto::Class => self.class_ability_failure_percent(
+                    class_activation
+                        .as_ref()
+                        .expect("class ability source requires an activation"),
                 ),
                 AbilitySourceDto::Learned => self.ability_failure_percent(
                     casting_profile
@@ -261,7 +295,11 @@ impl Game {
         } else {
             resource_cost
         };
-        let hp_paid = resource_cost.saturating_sub(resource_paid);
+        let hp_paid = if source == AbilitySourceDto::Mutation {
+            resource_cost.saturating_sub(resource_paid)
+        } else {
+            0
+        };
         let affordable = if source == AbilitySourceDto::Mutation {
             hp_paid <= u32::try_from(self.player.hp.max(0)).unwrap_or(0)
         } else {
@@ -293,7 +331,7 @@ impl Game {
         let percentile_roll =
             u8::try_from(self.rng.bounded(100)).expect("percentile ability roll must fit u8");
         let succeeded = percentile_roll >= failure_percent;
-        let progress_after = if source == AbilitySourceDto::Mutation {
+        let progress_after = if source != AbilitySourceDto::Learned {
             mutation_progress
         } else {
             self.record_ability_cast(&ability, succeeded)
@@ -316,7 +354,7 @@ impl Game {
             cast_count: progress_after.cast_count,
             fail_count: progress_after.fail_count,
             cooldown_before,
-            cooldown_after: if source == AbilitySourceDto::Mutation {
+            cooldown_after: if source != AbilitySourceDto::Learned {
                 0
             } else {
                 self.ability_cooldown_remaining(&ability)

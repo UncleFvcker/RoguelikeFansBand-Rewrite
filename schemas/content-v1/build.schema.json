@@ -60,6 +60,14 @@
         "itemKindId": {
           "type": "string"
         },
+        "maximumQuantity": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
         "quantity": {
           "format": "uint32",
           "minimum": 0,
@@ -110,6 +118,12 @@
     },
     "personalityId": {
       "type": "string"
+    },
+    "playerActorId": {
+      "type": [
+        "string",
+        "null"
+      ]
     },
     "raceId": {
       "type": "string"

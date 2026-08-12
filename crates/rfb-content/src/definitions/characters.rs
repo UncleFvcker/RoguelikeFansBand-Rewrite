@@ -69,6 +69,8 @@ pub struct SkillSetEntryDefinition {
 pub struct StartingItemDefinition {
     pub item_kind_id: String,
     pub quantity: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub maximum_quantity: Option<u32>,
     #[serde(default)]
     pub equipped: bool,
 }
@@ -153,6 +155,8 @@ pub struct ClassDefinition {
     pub uses_spell_scrolls: bool,
     #[serde(default)]
     pub casting_profile: Option<CastingProfileDefinition>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub abilities: Vec<ClassAbilityDefinition>,
     #[serde(default)]
     pub starting_items: Vec<StartingItemDefinition>,
     /// Item tags accepted by Mogaminator's favorite-weapon predicate.
@@ -176,6 +180,46 @@ pub enum CastingAttribute {
     Charisma,
 }
 
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum CastingCapacityFormula {
+    #[default]
+    Linear,
+    RfbMana,
+}
+
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum CastingLearningFormula {
+    #[default]
+    Linear,
+    RfbSingleRealm,
+}
+
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum CastingFailureFormula {
+    #[default]
+    Linear,
+    RfbMagic,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ClassAbilityDefinition {
+    pub ability_id: String,
+    pub minimum_level: u16,
+    pub governing_attribute: TechniqueAttribute,
+    pub resource_id: String,
+    pub resource_cost: u32,
+    pub base_failure_percent: u8,
+    pub minimum_failure_percent: u8,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -191,16 +235,49 @@ pub struct AbilityCastingOverrideDefinition {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct CastingRealmProfileDefinition {
+    pub realm_id: String,
+    pub ability_book_ids: Vec<String>,
+    #[serde(default)]
+    pub learning_capacity_bonus: u16,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub ability_overrides: Vec<AbilityCastingOverrideDefinition>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct CastingEncumbranceDefinition {
+    pub maximum_weight_tenths_pound: u32,
+    pub weapon_weight_percent: u16,
+    pub penalty_weight_tenths_pound: u32,
+    #[serde(default)]
+    pub glove_encumbrance: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct CastingProfileDefinition {
     pub resource_id: String,
     pub casting_attribute: CastingAttribute,
+    #[serde(default)]
+    pub capacity_formula: CastingCapacityFormula,
     pub base_capacity: u32,
     pub capacity_per_level: u32,
     pub capacity_per_attribute_index: u32,
+    #[serde(default = "default_percent")]
+    pub capacity_percent: u16,
+    #[serde(default)]
+    pub learning_formula: CastingLearningFormula,
+    #[serde(default)]
+    pub failure_formula: CastingFailureFormula,
     pub base_learning_capacity: u16,
     pub learning_capacity_per_level: u16,
     pub learning_capacity_per_attribute_index: u16,
     pub learning_capacity_cap: u16,
+    #[serde(default = "default_percent")]
+    pub resource_recovery_percent: u16,
     pub minimum_failure_percent: u8,
     #[serde(default)]
     pub beam_chance_level_multiplier: u8,
@@ -208,9 +285,15 @@ pub struct CastingProfileDefinition {
     pub beam_chance_level_divisor: u8,
     #[serde(default)]
     pub beam_chance_bonus: i8,
-    pub ability_book_ids: Vec<String>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub ability_overrides: Vec<AbilityCastingOverrideDefinition>,
+    #[serde(default)]
+    pub spell_damage_bonus_base: u16,
+    #[serde(default)]
+    pub spell_damage_bonus_per_level: u16,
+    #[serde(default = "default_beam_chance_level_divisor")]
+    pub spell_damage_bonus_level_divisor: u8,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub encumbrance: Option<CastingEncumbranceDefinition>,
+    pub realm_profiles: Vec<CastingRealmProfileDefinition>,
 }
 
 const fn default_beam_chance_level_divisor() -> u8 {
@@ -278,6 +361,8 @@ pub struct CharacterBuildDefinition {
     pub race_id: String,
     pub class_id: String,
     pub personality_id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub player_actor_id: Option<String>,
     #[serde(default)]
     pub subclass_name_key: Option<String>,
     #[serde(default)]

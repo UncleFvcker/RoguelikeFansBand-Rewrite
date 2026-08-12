@@ -603,7 +603,24 @@ export class StatusPanel {
       });
       this.#dom.resourceList.append(row);
     }
-    for (const ability of abilities) this.#dom.abilityList.append(this.#abilityRow(ability));
+    const orderedAbilities = [...abilities].sort((left, right) =>
+      (left.bookRank ?? Number.MAX_SAFE_INTEGER) -
+        (right.bookRank ?? Number.MAX_SAFE_INTEGER) ||
+      (left.bookNameKey ?? "").localeCompare(right.bookNameKey ?? "") ||
+      left.minimumLevel - right.minimumLevel ||
+      left.id.localeCompare(right.id),
+    );
+    let currentBookNameKey: string | undefined;
+    for (const ability of orderedAbilities) {
+      if (ability.bookNameKey && ability.bookNameKey !== currentBookNameKey) {
+        const heading = document.createElement("li");
+        heading.className = "ability-book-heading";
+        heading.textContent = this.#localization.format(ability.bookNameKey as MessageKey);
+        this.#dom.abilityList.append(heading);
+        currentBookNameKey = ability.bookNameKey;
+      }
+      this.#dom.abilityList.append(this.#abilityRow(ability));
+    }
   }
 
   #renderNearby(state: GameSnapshot | GameUpdate): void {
@@ -725,6 +742,9 @@ export class StatusPanel {
     const name = document.createElement("span");
     name.className = "ability-name";
     name.textContent = this.#localization.format(ability.nameKey as MessageKey);
+    const description = document.createElement("span");
+    description.className = "ability-description";
+    description.textContent = this.#localization.format(ability.descriptionKey as MessageKey);
     const summary = document.createElement("span");
     summary.className = "ability-summary";
     summary.textContent = this.#localization.format("ability-summary", {
@@ -747,7 +767,7 @@ export class StatusPanel {
     const status = document.createElement("span");
     status.className = "ability-status";
     status.textContent = this.#localization.format(abilityStatusMessageKey(ability));
-    details.append(name, summary, proficiency, status);
+    details.append(name, description, summary, proficiency, status);
     this.#appendAbilityDetails(details, ability);
     const actions = document.createElement("div");
     actions.className = "ability-actions";
@@ -872,6 +892,7 @@ export function abilityStatusMessageKey(
   ability: Pick<AbilityDto, "source" | "learned">,
 ): MessageKey {
   if (ability.source === "mutation") return "ability-status-mutation";
+  if (ability.source === "class") return "ability-status-class";
   return ability.learned ? "ability-status-learned" : "ability-status-unlearned";
 }
 

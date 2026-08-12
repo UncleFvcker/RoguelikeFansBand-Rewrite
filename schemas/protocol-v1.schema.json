@@ -354,6 +354,21 @@
             "null"
           ]
         },
+        "bookNameKey": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "bookRank": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        },
         "canCast": {
           "type": "boolean"
         },
@@ -3602,6 +3617,7 @@
     "AbilitySourceDto": {
       "type": "string",
       "enum": [
+        "class",
         "learned",
         "mutation"
       ]

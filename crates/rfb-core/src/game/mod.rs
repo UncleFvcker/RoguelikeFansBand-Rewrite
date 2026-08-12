@@ -58,17 +58,19 @@ use rfb_content::{
     AbilityLevelScalingDefinition, AbilityLevelScalingField, AbilityRandomTargetDefinition,
     AbilityStatusStackingDefinition, AbilityTargetDefinition, AbilityTargetModeDefinition,
     ActorDamageType, ActorResistanceLevel, ActorRole, AffixPropertyBundleDefinition,
-    CastingAttribute, CastingProfileDefinition, ContentCatalog, DungeonInstanceLifecycle,
-    EncounterEntryDefinition, EncounterTableDefinition, EquipmentBonuses, EquipmentPassive,
-    FloorLifecycle, ItemAttributeDefinition, ItemCurseSeverityDefinition,
-    ItemCurseTargetDefinition, ItemEnchantmentRollDefinition, ItemSummonLevelSourceDefinition,
-    ItemSummonSelectorDefinition, ItemUseEffectDefinition, MeleeBlowEffectDefinition,
-    MonsterDropKindDefinition, MonsterPackBehavior, MutationActivationDefinition,
-    MutationPeriodicEffectDefinition, PlayerAbilityDefinition, ProceduralLayoutMode,
-    ProceduralMazeDefinition, ProceduralPitDefinition, ProceduralRoomGeometryDefinition,
-    ProceduralRoomPlacement, ProceduralRoomShape, ProceduralStreamerCandidateDefinition, SkillKind,
-    SlayLevel, SlayTarget, StartingItemDefinition, StatModifiers, TaskObjectiveKind,
-    TechniqueAttribute, TerrainFeatureEntryDefinition, ThemeVaultCandidateDefinition, WeaponBrand,
+    CastingAttribute, CastingCapacityFormula, CastingFailureFormula, CastingLearningFormula,
+    CastingProfileDefinition, CastingRealmProfileDefinition, ClassAbilityDefinition,
+    ContentCatalog, DungeonInstanceLifecycle, EncounterEntryDefinition, EncounterTableDefinition,
+    EquipmentBonuses, EquipmentPassive, FloorLifecycle, ItemAttributeDefinition,
+    ItemCurseSeverityDefinition, ItemCurseTargetDefinition, ItemEnchantmentRollDefinition,
+    ItemSummonLevelSourceDefinition, ItemSummonSelectorDefinition, ItemUseEffectDefinition,
+    MeleeBlowEffectDefinition, MonsterDropKindDefinition, MonsterPackBehavior,
+    MutationActivationDefinition, MutationPeriodicEffectDefinition, PlayerAbilityDefinition,
+    ProceduralLayoutMode, ProceduralMazeDefinition, ProceduralPitDefinition,
+    ProceduralRoomGeometryDefinition, ProceduralRoomPlacement, ProceduralRoomShape,
+    ProceduralStreamerCandidateDefinition, SkillKind, SlayLevel, SlayTarget,
+    StartingItemDefinition, StatModifiers, TaskObjectiveKind, TechniqueAttribute,
+    TerrainFeatureEntryDefinition, ThemeVaultCandidateDefinition, WeaponBrand,
 };
 use rfb_protocol::{
     AbilityAreaDamageResolutionDto, AbilityBeamDamageResolutionDto, AbilityCastResolutionDto,
@@ -191,6 +193,7 @@ const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 pub const STATE_HASH_SCHEMA_VERSION: u16 = 87;
+#[cfg(test)]
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const VISIBILITY_RADIUS: i32 = 8;
 const BASE_THROW_RANGE_BUDGET: u16 = 50;
@@ -622,10 +625,17 @@ fn append_starting_item(
         .ok_or(CoreError::ItemIdExhausted)?;
     let (activation, charges) =
         initial_item_runtime_state(content, rng, &starting_item.item_kind_id, 1);
+    let quantity = starting_item
+        .maximum_quantity
+        .map_or(starting_item.quantity, |maximum| {
+            starting_item.quantity
+                + u32::try_from(rng.bounded(u64::from(maximum - starting_item.quantity + 1)))
+                    .expect("validated birth item quantity must fit u32")
+        });
     items.push(ItemInstance {
         id,
         kind_id: starting_item.item_kind_id.clone(),
-        quantity: starting_item.quantity,
+        quantity,
         inscription: None,
         origin_actor_kind_id: None,
         quality: ItemQualityDto::Ordinary,
@@ -925,12 +935,17 @@ impl Game {
                     terrain_override.terrain_id.clone();
             }
         }
+        let player_kind_id = build
+            .as_ref()
+            .and_then(|identity| content.build(&identity.build_id))
+            .and_then(|build| build.player_actor_id.as_deref())
+            .unwrap_or(&world.player.kind_id);
         let player_definition = content
-            .actor(&world.player.kind_id)
-            .ok_or_else(|| CoreError::UnknownActor(world.player.kind_id.clone()))?;
+            .actor(player_kind_id)
+            .ok_or_else(|| CoreError::UnknownActor(player_kind_id.to_owned()))?;
         let player = actor_from_spawn(
             &world.player.instance_id,
-            &world.player.kind_id,
+            player_kind_id,
             world.player.position,
             player_definition.max_hp,
             player_definition.speed,
@@ -1026,6 +1041,7 @@ impl Game {
                 &StartingItemDefinition {
                     item_kind_id: hunger::RATION_ITEM_KIND_ID.to_owned(),
                     quantity,
+                    maximum_quantity: None,
                     equipped: false,
                 },
                 &body_slots,
@@ -1041,6 +1057,7 @@ impl Game {
                     &StartingItemDefinition {
                         item_kind_id: lighting::WOODEN_TORCH_ITEM_KIND_ID.to_owned(),
                         quantity: 1,
+                        maximum_quantity: None,
                         equipped: false,
                     },
                     &body_slots,
@@ -2455,7 +2472,7 @@ impl Game {
         let Some(ability) = self.content.ability(ability_id) else {
             return Err("unknown-ability");
         };
-        let ability = Self::effective_casting_ability(&profile, ability);
+        let ability = self.effective_casting_ability(&profile, ability);
         if self.learned_abilities.contains(ability_id) {
             return Err("already-learned");
         }
@@ -2481,7 +2498,7 @@ impl Game {
         else {
             return Err("book-unavailable");
         };
-        if !profile.ability_book_ids.iter().any(|id| id == book_id)
+        if !self.active_casting_book_ids().contains(&book_id)
             || !self
                 .content
                 .ability_book(book_id)

@@ -4,7 +4,7 @@ use rfb_protocol::{GoldAppearanceDto, GoldPileDto, Position};
 
 use crate::{error::CoreError, rng::RfbRng, state::GoldPile, stats::CharacterBuildIdentity};
 
-use super::{Game, RFB_WARRIOR_BUILD_ID};
+use super::Game;
 
 pub(super) const MAX_PLAYER_GOLD: u32 = 999_999_999;
 const GENERATED_GOLD_ID_PREFIX: &str = "generated.gold.";
@@ -19,7 +19,7 @@ pub(super) struct GoldPickupOutcome {
 }
 
 pub(super) fn starting_gold(build: Option<&CharacterBuildIdentity>, rng: &mut RfbRng) -> u32 {
-    if build.is_none_or(|build| build.build_id != RFB_WARRIOR_BUILD_ID) {
+    if build.is_none() {
         return 0;
     }
     let first = u32::try_from(rng.bounded(300) + 1).expect("birth gold roll must fit u32");
@@ -197,10 +197,10 @@ mod tests {
     use super::*;
 
     #[test]
-    fn warrior_birth_gold_stays_in_the_rfb_range() {
+    fn character_birth_gold_stays_in_the_rfb_range() {
         for seed in 0..64 {
             let build = CharacterBuildIdentity {
-                build_id: RFB_WARRIOR_BUILD_ID.to_owned(),
+                build_id: "test.build.character".to_owned(),
                 race_id: String::new(),
                 class_id: String::new(),
                 personality_id: String::new(),

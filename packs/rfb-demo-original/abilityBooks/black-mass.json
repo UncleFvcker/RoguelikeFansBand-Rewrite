@@ -1,9 +1,9 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-book.schema.json",
   "formatVersion": 1,
-  "id": "demo.ability-book.sepulchral-ways",
-  "nameKey": "ability-book-demo-sepulchral-ways-name",
-  "descriptionKey": "ability-book-demo-sepulchral-ways-description",
+  "id": "demo.ability-book.black-mass",
+  "nameKey": "ability-book-demo-black-mass-name",
+  "descriptionKey": "ability-book-demo-black-mass-description",
   "realmId": "death",
   "rank": 2,
   "abilityIds": [

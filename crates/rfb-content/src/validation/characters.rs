@@ -3,11 +3,11 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::{
-    AbilityBookDefinition, AbilityDefinition, ActorDefinition, BUILD_SCHEMA, CLASS_SCHEMA,
-    CharacterBuildDefinition, ClassDefinition, ContentError, ItemDefinition, PERSONALITY_SCHEMA,
-    PersonalityDefinition, RACE_SCHEMA, RaceDefinition, SKILL_SCHEMA, SKILL_SET_SCHEMA,
-    SkillDefinition, SkillKind, SkillSetDefinition, StartingItemDefinition, StatModifiers,
-    TerrainDefinition, valid_ability_level_scaling,
+    AbilityBookDefinition, AbilityDefinition, ActorDefinition, ActorRole, BUILD_SCHEMA,
+    CLASS_SCHEMA, CharacterBuildDefinition, ClassDefinition, ContentError, ItemDefinition,
+    PERSONALITY_SCHEMA, PersonalityDefinition, RACE_SCHEMA, RaceDefinition, SKILL_SCHEMA,
+    SKILL_SET_SCHEMA, SkillDefinition, SkillKind, SkillSetDefinition, StartingItemDefinition,
+    StatModifiers, TerrainDefinition, valid_ability_level_scaling,
 };
 
 use super::shared::{
@@ -224,12 +224,9 @@ pub(super) fn validate_characters(
             &item_starting_metadata,
         )?;
         if let Some(profile) = &mut class.casting_profile {
-            profile.ability_book_ids.sort();
             profile
-                .ability_overrides
-                .sort_by(|left, right| left.ability_id.cmp(&right.ability_id));
-            let mut books = BTreeSet::new();
-            let mut overrides = BTreeSet::new();
+                .realm_profiles
+                .sort_by(|left, right| left.realm_id.cmp(&right.realm_id));
             let maximum_capacity = u64::from(profile.base_capacity)
                 .saturating_add(u64::from(profile.capacity_per_level).saturating_mul(100))
                 .saturating_add(
@@ -244,60 +241,113 @@ pub(super) fn validate_characters(
                 || profile.beam_chance_level_divisor == 0
                 || profile.beam_chance_level_multiplier > 4
                 || !(-100..=100).contains(&profile.beam_chance_bonus)
-                || profile.ability_book_ids.is_empty()
-                || profile.ability_book_ids.len() > 16
-                || profile
-                    .ability_book_ids
-                    .iter()
-                    .any(|book_id| !books.insert(book_id.clone()))
-                || profile.ability_overrides.len() > 1_024
-                || profile.ability_overrides.iter().any(|override_| {
-                    !overrides.insert(override_.ability_id.clone())
-                        || !(1..=100).contains(&override_.minimum_level)
-                        || !(1..=1_000_000).contains(&override_.resource_cost)
-                        || override_.base_failure_percent > 95
-                })
-                || maximum_capacity == 0
+                || profile.spell_damage_bonus_level_divisor == 0
+                || !(1..=400).contains(&profile.capacity_percent)
+                || !(1..=400).contains(&profile.resource_recovery_percent)
+                || profile.realm_profiles.is_empty()
+                || profile.realm_profiles.len() > 16
+                || (profile.capacity_formula == crate::CastingCapacityFormula::Linear
+                    && maximum_capacity == 0)
                 || maximum_capacity > 1_000_000_000
                 || profile.learning_capacity_cap == 0
                 || profile.base_learning_capacity > profile.learning_capacity_cap
                 || maximum_learning_capacity > u64::from(u16::MAX)
+                || profile.encumbrance.as_ref().is_some_and(|encumbrance| {
+                    encumbrance.maximum_weight_tenths_pound > 1_000_000
+                        || encumbrance.weapon_weight_percent > 1_000
+                        || encumbrance.penalty_weight_tenths_pound == 0
+                })
             {
                 return Err(ContentError::InvalidCastingProfile(class.id.clone()));
             }
             require_reference(resource_ids, &profile.resource_id, &class.id)?;
-            let mut supported_ability_ids = BTreeSet::new();
-            for book_id in &profile.ability_book_ids {
-                require_reference(ability_book_ids, book_id, &class.id)?;
-                let book = ability_books_by_id
-                    .get(book_id)
-                    .expect("validated ability book must remain available");
-                if book.ability_ids.iter().any(|ability_id| {
-                    ability_resources.get(ability_id) != Some(&profile.resource_id)
-                }) {
+            let mut realm_ids = BTreeSet::new();
+            for realm in &mut profile.realm_profiles {
+                realm.ability_book_ids.sort();
+                realm
+                    .ability_overrides
+                    .sort_by(|left, right| left.ability_id.cmp(&right.ability_id));
+                let valid_realm_id = !realm.realm_id.is_empty()
+                    && realm.realm_id.len() <= 64
+                    && realm.realm_id.bytes().all(|byte| {
+                        byte.is_ascii_lowercase()
+                            || byte.is_ascii_digit()
+                            || matches!(byte, b'-' | b'_')
+                    });
+                let mut books = BTreeSet::new();
+                let mut overrides = BTreeSet::new();
+                if !valid_realm_id
+                    || !realm_ids.insert(realm.realm_id.clone())
+                    || realm.ability_book_ids.is_empty()
+                    || realm.ability_book_ids.len() > 16
+                    || realm
+                        .ability_book_ids
+                        .iter()
+                        .any(|book_id| !books.insert(book_id.clone()))
+                    || realm.ability_overrides.len() > 1_024
+                    || realm.ability_overrides.iter().any(|override_| {
+                        !overrides.insert(override_.ability_id.clone())
+                            || !(1..=100).contains(&override_.minimum_level)
+                            || !(1..=1_000_000).contains(&override_.resource_cost)
+                            || override_.base_failure_percent > 95
+                    })
+                {
                     return Err(ContentError::InvalidCastingProfile(class.id.clone()));
                 }
-                supported_ability_ids.extend(book.ability_ids.iter().cloned());
-            }
-            if profile
-                .ability_overrides
-                .iter()
-                .any(|override_| !supported_ability_ids.contains(&override_.ability_id))
-            {
-                return Err(ContentError::InvalidCastingProfile(class.id.clone()));
-            }
-            for override_ in &profile.ability_overrides {
-                if override_.level_scaling.is_empty() {
-                    continue;
+                let mut supported_ability_ids = BTreeSet::new();
+                for book_id in &realm.ability_book_ids {
+                    require_reference(ability_book_ids, book_id, &class.id)?;
+                    let book = ability_books_by_id
+                        .get(book_id)
+                        .expect("validated ability book must remain available");
+                    if book.realm_id.as_deref() != Some(realm.realm_id.as_str())
+                        || book.ability_ids.iter().any(|ability_id| {
+                            ability_resources.get(ability_id) != Some(&profile.resource_id)
+                        })
+                    {
+                        return Err(ContentError::InvalidCastingProfile(class.id.clone()));
+                    }
+                    supported_ability_ids.extend(book.ability_ids.iter().cloned());
                 }
-                let ability = abilities
+                if realm
+                    .ability_overrides
                     .iter()
-                    .find(|ability| ability.id == override_.ability_id)
-                    .expect("supported casting ability must remain available");
-                if !valid_ability_level_scaling(&ability.effect, &override_.level_scaling) {
+                    .any(|override_| !supported_ability_ids.contains(&override_.ability_id))
+                {
                     return Err(ContentError::InvalidCastingProfile(class.id.clone()));
                 }
+                for override_ in &realm.ability_overrides {
+                    if override_.level_scaling.is_empty() {
+                        continue;
+                    }
+                    let ability = abilities
+                        .iter()
+                        .find(|ability| ability.id == override_.ability_id)
+                        .expect("supported casting ability must remain available");
+                    if !valid_ability_level_scaling(&ability.effect, &override_.level_scaling) {
+                        return Err(ContentError::InvalidCastingProfile(class.id.clone()));
+                    }
+                }
             }
+        }
+        class
+            .abilities
+            .sort_by(|left, right| left.ability_id.cmp(&right.ability_id));
+        let mut class_ability_ids = BTreeSet::new();
+        for activation in &class.abilities {
+            if !class_ability_ids.insert(activation.ability_id.clone())
+                || !(1..=100).contains(&activation.minimum_level)
+                || activation.resource_cost > 1_000_000
+                || activation.base_failure_percent > 95
+                || activation.minimum_failure_percent > 95
+                || abilities
+                    .iter()
+                    .find(|ability| ability.id == activation.ability_id)
+                    .is_none_or(|ability| ability.player.is_some())
+            {
+                return Err(ContentError::InvalidCharacterSource(class.id.clone()));
+            }
+            require_reference(resource_ids, &activation.resource_id, &class.id)?;
         }
         normalize_tags(&class.id, &mut class.favorite_weapon_tags)?;
         normalize_tags(&class.id, &mut class.special_item_tags)?;
@@ -404,6 +454,38 @@ pub(super) fn validate_characters(
         {
             return Err(ContentError::InvalidCharacterBuild(build.id.clone()));
         }
+        let selected_realms = [
+            build.first_realm_id.as_deref(),
+            build.second_realm_id.as_deref(),
+        ];
+        match &class.casting_profile {
+            Some(profile)
+                if build.first_realm_id.is_none()
+                    || selected_realms.into_iter().flatten().any(|realm_id| {
+                        !profile
+                            .realm_profiles
+                            .iter()
+                            .any(|profile| profile.realm_id == realm_id)
+                    }) =>
+            {
+                return Err(ContentError::InvalidCharacterBuild(build.id.clone()));
+            }
+            None if build.first_realm_id.is_some() || build.second_realm_id.is_some() => {
+                return Err(ContentError::InvalidCharacterBuild(build.id.clone()));
+            }
+            _ => {}
+        }
+        if let Some(actor_id) = &build.player_actor_id
+            && actors
+                .iter()
+                .find(|actor| actor.id == *actor_id)
+                .is_none_or(|actor| actor.role != ActorRole::Player)
+        {
+            return Err(ContentError::DanglingReference {
+                owner: build.id.clone(),
+                target: actor_id.clone(),
+            });
+        }
         validate_starting_items(
             &build.id,
             &mut build.starting_items,
@@ -485,11 +567,14 @@ fn validate_starting_items(
                 target: item.item_kind_id.clone(),
             });
         };
+        let maximum_quantity = item.maximum_quantity.unwrap_or(item.quantity);
         if item.quantity == 0
-            || item.quantity > *max_stack
+            || maximum_quantity < item.quantity
+            || maximum_quantity > *max_stack
             || !item_ids.insert(item.item_kind_id.clone())
             || (item.equipped
                 && (item.quantity != 1
+                    || maximum_quantity != 1
                     || slot
                         .as_ref()
                         .is_none_or(|slot| !equipment_slots.insert(slot.clone()))))
@@ -517,7 +602,7 @@ fn validate_combined_starting_items<'a>(
             });
         };
         let quantity = quantities.entry(item.item_kind_id.as_str()).or_default();
-        *quantity = quantity.saturating_add(item.quantity);
+        *quantity = quantity.saturating_add(item.maximum_quantity.unwrap_or(item.quantity));
         if *quantity > *max_stack
             || (item.equipped
                 && slot

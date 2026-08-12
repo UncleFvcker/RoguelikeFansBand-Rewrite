@@ -101,6 +101,10 @@
       "foreground": "#8ed8ff",
       "background": "#17324a"
     },
+    "demo.actor.high-mage-player": {
+      "foreground": "#d8a8ff",
+      "background": "#34204a"
+    },
     "core.gold.copper": {
       "glyph": "$",
       "foreground": "#c98254",

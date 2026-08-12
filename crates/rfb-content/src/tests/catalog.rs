@@ -6,7 +6,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.256.0");
+    assert_eq!(catalog.pack_version(), "1.257.0");
     assert!(catalog.mutation("rfb.mutation.spit-acid").is_some());
     assert!(
         catalog
@@ -20,11 +20,13 @@ fn compiled_catalog_indexes_current_rfb_content() {
     );
     assert_eq!(
         catalog
-            .item("demo.item.stench-of-death")
+            .item("demo.item.black-prayers")
             .and_then(|item| item.ability_book_id.as_deref()),
-        Some("demo.ability-book.stench-of-death")
+        Some("demo.ability-book.black-prayers")
     );
     assert!(catalog.class("demo.class.warrior").is_some());
+    assert!(catalog.class("demo.class.high-mage").is_some());
+    assert!(catalog.build("demo.build.high-mage-death").is_some());
     assert!(catalog.class("demo.class.mage").is_none());
     let world = catalog
         .world("demo.world.middle-earth")
