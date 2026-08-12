@@ -4121,6 +4121,154 @@ fn old_man_willow_uses_the_original_map_formation_target_and_elemental_ring() {
 }
 
 #[test]
+fn vapor_quest_uses_the_original_map_formation_jewelry_and_detection_rod() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let world = artifact
+        .content
+        .worlds
+        .iter()
+        .find(|world| world.id == "demo.world.middle-earth")
+        .expect("fixture should contain Middle-earth");
+    let task = world
+        .tasks
+        .iter()
+        .find(|task| task.id == "demo.task.vapor-quest")
+        .expect("fixture should contain the Vapor Quest");
+    assert_eq!(
+        task.source_facility_id.as_deref(),
+        Some("demo.town-facility.outpost-white-horse")
+    );
+    assert_eq!(
+        task.prerequisite_task_id.as_deref(),
+        Some("demo.task.old-man-willow")
+    );
+    assert_eq!(task.objectives[0].kind, TaskObjectiveKind::ClearFloor);
+    assert_eq!(
+        task.reward.entries[0].item_kind_id,
+        "demo.item.detection-rod"
+    );
+
+    let floor = world
+        .procedural_floors
+        .iter()
+        .find(|floor| floor.id == "demo.floor.vapor-quest")
+        .expect("fixture should contain the Vapor Quest cellar");
+    assert_eq!((floor.width, floor.height, floor.depth), (25, 22, 25));
+    let inline_map = floor
+        .inline_map
+        .as_ref()
+        .expect("Vapor Quest should retain its inline map");
+    assert_eq!(inline_map.player_position, ContentPosition { x: 12, y: 20 });
+    assert_eq!(inline_map.actor_spawns.len(), 18);
+    assert_eq!(
+        inline_map
+            .actor_spawns
+            .iter()
+            .map(|spawn| spawn.kind_id.as_str())
+            .fold(BTreeMap::new(), |mut counts, id| {
+                *counts.entry(id).or_insert(0) += 1;
+                counts
+            }),
+        BTreeMap::from([
+            ("demo.actor.air-elemental", 6),
+            ("demo.actor.gas-spore", 1),
+            ("demo.actor.radiation-eye", 8),
+            ("demo.actor.shimmering-vortex", 1),
+            ("demo.actor.weird-fume", 2),
+        ])
+    );
+    assert_eq!(
+        inline_map
+            .item_spawns
+            .iter()
+            .map(|spawn| spawn.kind_id.as_str())
+            .fold(BTreeMap::new(), |mut counts, id| {
+                *counts.entry(id).or_insert(0) += 1;
+                counts
+            }),
+        BTreeMap::from([("demo.item.amulet", 6), ("demo.item.ring", 6)])
+    );
+    let terrain_counts = inline_map
+        .terrain_overrides
+        .iter()
+        .map(|override_| (override_.terrain_id.as_str(), override_.positions.len()))
+        .collect::<BTreeMap<_, _>>();
+    assert_eq!(terrain_counts["demo.terrain.floor"], 207);
+    assert_eq!(terrain_counts["demo.terrain.stairs-up"], 1);
+
+    let rod = artifact
+        .content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.detection-rod")
+        .expect("the fixed quest reward should exist");
+    let activation = &rod
+        .device_generation
+        .as_ref()
+        .expect("the reward should be a device")
+        .activations[0];
+    assert_eq!(activation.device_check_difficulty, 30);
+    assert_eq!(
+        (activation.charges.minimum, activation.charges.maximum),
+        (45, 45)
+    );
+    assert_eq!(activation.charges.cost, 17);
+    let ItemUseEffectDefinition::Sequence { effects } = &activation.effect else {
+        panic!("Detection should retain its ordered five-part effect");
+    };
+    assert_eq!(effects.len(), 5);
+    for (effect, subject, category, persistent) in [
+        (
+            &effects[0],
+            AbilityDetectSubjectDefinition::Terrain,
+            "trap",
+            true,
+        ),
+        (
+            &effects[1],
+            AbilityDetectSubjectDefinition::Terrain,
+            "passage",
+            true,
+        ),
+        (
+            &effects[2],
+            AbilityDetectSubjectDefinition::Gold,
+            "gold",
+            false,
+        ),
+        (
+            &effects[3],
+            AbilityDetectSubjectDefinition::Item,
+            "item",
+            false,
+        ),
+    ] {
+        assert!(matches!(
+            effect,
+            ItemUseEffectDefinition::Detect {
+                subject: actual_subject,
+                category: actual_category,
+                radius: 30,
+                persistent: actual_persistent,
+                through_walls: true,
+            } if *actual_subject == subject
+                && actual_category == category
+                && *actual_persistent == persistent
+        ));
+    }
+    assert!(matches!(
+        &effects[4],
+        ItemUseEffectDefinition::Detect {
+            subject: AbilityDetectSubjectDefinition::Actor,
+            category,
+            radius: 30,
+            persistent: false,
+            through_walls: true,
+        } if category == "any-monster"
+    ));
+}
+
+#[test]
 fn inline_floor_items_reject_duplicate_or_blocked_placements() {
     fn trouble_inline(content: &mut CompiledContentV1) -> &mut InlineFloorMapDefinition {
         content
@@ -5145,7 +5293,8 @@ fn outpost_count_services_and_follow_up_tasks_match_the_original_sequence() {
         [
             "demo.task.trouble-at-home",
             "demo.task.crows-nest",
-            "demo.task.old-man-willow"
+            "demo.task.old-man-willow",
+            "demo.task.vapor-quest"
         ]
     );
 

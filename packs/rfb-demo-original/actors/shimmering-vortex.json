@@ -1,0 +1,76 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 600,
+    "maxDepth": 999,
+    "randomMovementPercent": 75,
+    "rarity": 6
+  },
+  "attack": 9,
+  "damageDice": 1,
+  "damageSides": 1,
+  "damageType": "physical",
+  "defense": 3,
+  "descriptionKey": "actor-demo-shimmering-vortex-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 100,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "v",
+  "hitPointDice": {
+    "dice": 6,
+    "sides": 12
+  },
+  "id": "demo.actor.shimmering-vortex",
+  "level": 38,
+  "light": {
+    "intrinsic": true,
+    "radius": 3
+  },
+  "maxHp": 39,
+  "meleeRoutine": {
+    "blows": []
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.breath-light-17-400-r2",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.shriek",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 15
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "nameKey": "actor-demo-shimmering-vortex-name",
+  "resistances": {
+    "light": "resistant"
+  },
+  "role": "monster",
+  "speed": 140,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "empty-mind",
+    "kin-glyph-118",
+    "legacy-import",
+    "nonliving",
+    "outpost-quest",
+    "resist-teleport",
+    "shimmering-vortex",
+    "vapor-quest",
+    "vortex"
+  ]
+}

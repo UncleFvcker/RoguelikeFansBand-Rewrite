@@ -741,6 +741,119 @@ fn old_man_willow_inline_floor_preserves_the_original_grove_and_formation() {
 }
 
 #[test]
+fn vapor_quest_inline_floor_preserves_the_original_cellar_formation_and_jewelry() {
+    let mut game =
+        Game::new_with_build(42, "demo.build.warrior").expect("Warrens journey should create");
+    let definition = game
+        .content
+        .world(&game.world_id)
+        .expect("Middle-earth world should remain available")
+        .procedural_floors
+        .iter()
+        .find(|floor| floor.id == "demo.floor.vapor-quest")
+        .expect("Vapor Quest cellar should remain available")
+        .clone();
+    let floor = game
+        .generate_procedural_floor(&definition, None)
+        .expect("fixed Vapor Quest floor should generate");
+
+    let rows = floor
+        .terrain
+        .chunks(usize::from(floor.width))
+        .map(|row| {
+            row.iter()
+                .map(|terrain_id| match terrain_id.as_str() {
+                    "demo.terrain.permanent-wall" => '#',
+                    "demo.terrain.floor" => '.',
+                    "demo.terrain.stairs-up" => '<',
+                    other => panic!("unexpected Vapor Quest terrain {other}"),
+                })
+                .collect::<String>()
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(
+        rows,
+        [
+            "#########################",
+            "############.############",
+            "###########...###########",
+            "#########.......#########",
+            "###########...###########",
+            "############.############",
+            "###########...###########",
+            "########.........########",
+            "#######...........#######",
+            "######.............######",
+            "#######...........#######",
+            "##...#.............#...##",
+            "#....##...........##....#",
+            "#.......................#",
+            "#....##...........##....#",
+            "##...#.............#...##",
+            "#######...........#######",
+            "######.............######",
+            "#######...........#######",
+            "########.........########",
+            "###########.<.###########",
+            "#########################",
+        ]
+    );
+    assert_eq!(floor.player_position, Position { x: 12, y: 20 });
+    assert_eq!(floor.entities.len(), 18);
+    assert_eq!(
+        floor
+            .entities
+            .iter()
+            .map(|entity| (entity.kind_id.as_str(), entity.position))
+            .collect::<BTreeSet<_>>(),
+        BTreeSet::from([
+            ("demo.actor.shimmering-vortex", Position { x: 12, y: 1 }),
+            ("demo.actor.air-elemental", Position { x: 9, y: 3 }),
+            ("demo.actor.air-elemental", Position { x: 15, y: 3 }),
+            ("demo.actor.gas-spore", Position { x: 12, y: 6 }),
+            ("demo.actor.radiation-eye", Position { x: 6, y: 9 }),
+            ("demo.actor.radiation-eye", Position { x: 18, y: 9 }),
+            ("demo.actor.air-elemental", Position { x: 4, y: 11 }),
+            ("demo.actor.radiation-eye", Position { x: 6, y: 11 }),
+            ("demo.actor.radiation-eye", Position { x: 18, y: 11 }),
+            ("demo.actor.air-elemental", Position { x: 20, y: 11 }),
+            ("demo.actor.weird-fume", Position { x: 1, y: 13 }),
+            ("demo.actor.weird-fume", Position { x: 23, y: 13 }),
+            ("demo.actor.air-elemental", Position { x: 4, y: 15 }),
+            ("demo.actor.radiation-eye", Position { x: 6, y: 15 }),
+            ("demo.actor.radiation-eye", Position { x: 18, y: 15 }),
+            ("demo.actor.air-elemental", Position { x: 20, y: 15 }),
+            ("demo.actor.radiation-eye", Position { x: 6, y: 17 }),
+            ("demo.actor.radiation-eye", Position { x: 18, y: 17 }),
+        ])
+    );
+    assert_eq!(
+        floor
+            .items
+            .iter()
+            .filter_map(|item| match item.location {
+                ItemLocation::Ground(position) => Some((item.kind_id.as_str(), position)),
+                _ => None,
+            })
+            .collect::<BTreeSet<_>>(),
+        BTreeSet::from([
+            ("demo.item.amulet", Position { x: 2, y: 11 }),
+            ("demo.item.amulet", Position { x: 3, y: 11 }),
+            ("demo.item.amulet", Position { x: 1, y: 12 }),
+            ("demo.item.amulet", Position { x: 1, y: 14 }),
+            ("demo.item.amulet", Position { x: 2, y: 15 }),
+            ("demo.item.amulet", Position { x: 3, y: 15 }),
+            ("demo.item.ring", Position { x: 21, y: 11 }),
+            ("demo.item.ring", Position { x: 22, y: 11 }),
+            ("demo.item.ring", Position { x: 23, y: 12 }),
+            ("demo.item.ring", Position { x: 23, y: 14 }),
+            ("demo.item.ring", Position { x: 21, y: 15 }),
+            ("demo.item.ring", Position { x: 22, y: 15 }),
+        ])
+    );
+}
+
+#[test]
 fn warrens_surface_reentry_starts_a_fresh_expedition_with_new_monsters() {
     let mut game =
         Game::new_with_build(42, "demo.build.warrior").expect("Warrens journey should create");

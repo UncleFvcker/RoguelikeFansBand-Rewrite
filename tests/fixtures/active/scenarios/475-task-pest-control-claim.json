@@ -990,6 +990,13 @@
           "required": 5,
           "stage": 1,
           "stages": 1
+        },
+        {
+          "taskId": "demo.task.vapor-quest",
+          "status": "locked",
+          "required": 1,
+          "stage": 1,
+          "stages": 1
         }
       ],
       "campaign": {
@@ -998,7 +1005,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 2
       },
-      "stateHash": "5c82a27e41a5171977931e2d4be7f122e20c0d25fee1e472011ac8b075e75f2b"
+      "stateHash": "beb3ef6280313e384fbc6066a86e99a51de027fffa873aa17efb34e34d497000"
     },
     "events": [
       {

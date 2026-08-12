@@ -462,7 +462,8 @@ pub(crate) fn valid_item_effect(
                         }
                     }
                     AbilityDetectSubjectDefinition::Actor => {
-                        !persistent && actor_tag_values.contains(category)
+                        !persistent
+                            && (category == "any-monster" || actor_tag_values.contains(category))
                     }
                     AbilityDetectSubjectDefinition::Item => {
                         !persistent && (category == "item" || item_tag_values.contains(category))

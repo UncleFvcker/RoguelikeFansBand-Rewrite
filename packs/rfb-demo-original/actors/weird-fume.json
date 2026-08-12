@@ -1,0 +1,107 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 625,
+    "maxDepth": 70,
+    "randomMovementPercent": 75,
+    "rarity": 3
+  },
+  "attack": 10,
+  "contactAuras": [
+    {
+      "damageDice": 2,
+      "damageSides": 3,
+      "damageType": "electricity"
+    }
+  ],
+  "damageDice": 8,
+  "damageSides": 4,
+  "damageType": "confusion",
+  "defense": 4,
+  "descriptionKey": "actor-demo-weird-fume-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 800,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "#",
+  "hitPointDice": {
+    "dice": 35,
+    "sides": 10
+  },
+  "id": "demo.actor.weird-fume",
+  "level": 40,
+  "maxHp": 192,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "damageDice": 8,
+            "damageSides": 4,
+            "type": "confusion"
+          }
+        ],
+        "methodId": "rfb.blow.engulf",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "damageDice": 8,
+            "damageSides": 4,
+            "type": "confusion"
+          }
+        ],
+        "methodId": "rfb.blow.engulf",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.breath-chaos-17-600-r2",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-nexus-33-250-r2",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-nuke-17-600-r2",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 8
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "nameKey": "actor-demo-weird-fume-name",
+  "resistances": {
+    "chaos": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "nexus": "resistant"
+  },
+  "role": "monster",
+  "speed": 120,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "empty-mind",
+    "kin-glyph-35",
+    "legacy-import",
+    "nonliving",
+    "outpost-quest",
+    "vapor-quest",
+    "weird-fume"
+  ]
+}

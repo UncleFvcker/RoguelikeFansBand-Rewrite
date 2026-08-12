@@ -6,7 +6,7 @@
 
 contract fixture 是规则兼容边界，不能把测试失败简单处理为“刷新预期结果”。政策用于保证每次规则变化只修改真正受影响的场景，同时保留可审查的失败原因。
 
-当前逻辑基线是 `contract-v268`，机器可读政策固定在：
+当前逻辑基线是 `contract-v269`，机器可读政策固定在：
 
 ```text
 tests/fixtures/active/baseline-policy.json
@@ -42,6 +42,12 @@ fixture；active 集保持 21 条且零 waiver。
 Protocol 1.175、State Hash Schema v87 与 save v1 均不变，内容包升级到 1.259.0。
 新增的林地任务入口改变所有新游戏共有的 Outpost 初始地形及状态哈希，因此统一刷新
 21 条 active fixture；active 集保持 21 条且零 waiver。
+
+`contract-v269` 接入白马旅店 quest 20“蒸汽任务”，增加其 25×22 固定地下室、清层
+目标、18 只固定怪物、12 个固定首饰落点和探测魔棒奖励。Protocol 1.175、State Hash
+Schema v87 与 save v1 均不变，内容包升级到 1.260.0。白马旅店墙面新增任务入口状态，
+改变所有新游戏共有的 Outpost 初始地形及状态哈希，因此统一刷新 21 条 active fixture；
+active 集保持 21 条且零 waiver。
 
 ## 分类验证
 

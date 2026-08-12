@@ -1,0 +1,62 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 519,
+    "maxDepth": 60,
+    "rarity": 4
+  },
+  "attack": 8,
+  "damageDice": 40,
+  "damageSides": 2,
+  "damageType": "poison",
+  "defense": 0,
+  "descriptionKey": "actor-demo-gas-spore-description",
+  "experienceValue": 100,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "e",
+  "hitPointDice": {
+    "dice": 25,
+    "sides": 10
+  },
+  "id": "demo.actor.gas-spore",
+  "level": 34,
+  "maxHp": 137,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "damageDice": 40,
+            "damageSides": 2,
+            "type": "poison"
+          }
+        ],
+        "methodId": "rfb.blow.explode",
+        "selfDestructs": true,
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "nameKey": "actor-demo-gas-spore-name",
+  "role": "monster",
+  "speed": 110,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "empty-mind",
+    "gas-spore",
+    "kin-glyph-101",
+    "legacy-import",
+    "outpost-quest",
+    "vapor-quest"
+  ]
+}

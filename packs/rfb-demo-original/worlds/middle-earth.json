@@ -462,7 +462,7 @@
         { "x": 62, "y": 10 }, { "x": 65, "y": 10 },
         { "x": 62, "y": 11 }, { "x": 64, "y": 11 }, { "x": 65, "y": 11 },
         { "x": 62, "y": 12 }, { "x": 64, "y": 12 }, { "x": 65, "y": 12 },
-        { "x": 62, "y": 13 }, { "x": 64, "y": 13 }, { "x": 65, "y": 13 }
+        { "x": 64, "y": 13 }, { "x": 65, "y": 13 }
       ]
     },
     {
@@ -539,6 +539,10 @@
     {
       "terrainId": "demo.terrain.old-man-willow-entry-available",
       "positions": [{ "x": 69, "y": 11 }]
+    },
+    {
+      "terrainId": "demo.terrain.vapor-quest-entry-available",
+      "positions": [{ "x": 62, "y": 13 }]
     },
     {
       "terrainId": "demo.terrain.thieves-hideout-entry-available",
@@ -787,6 +791,26 @@
             "weight": 1,
             "affixIds": ["rfb-legacy.affix.elemental-jewelry"]
           }
+        ]
+      }
+    },
+    {
+      "id": "demo.task.vapor-quest",
+      "nameKey": "task-demo-vapor-quest-name",
+      "descriptionKey": "task-demo-vapor-quest-description",
+      "sourceFacilityId": "demo.town-facility.outpost-white-horse",
+      "prerequisiteTaskId": "demo.task.old-man-willow",
+      "location": {
+        "kind": "dedicated-floors",
+        "floorIds": ["demo.floor.vapor-quest"]
+      },
+      "objectives": [
+        { "kind": "clear-floor", "floorId": "demo.floor.vapor-quest" }
+      ],
+      "reward": {
+        "itemInstanceId": "demo.task.vapor-quest.reward.1",
+        "entries": [
+          { "itemKindId": "demo.item.detection-rod", "quantity": 1, "weight": 1 }
         ]
       }
     },
@@ -4426,6 +4450,100 @@
           { "instanceId": "demo.actor.old-man-willow.sabre-tooth-tiger.2", "kindId": "demo.actor.sabre-tooth-tiger", "position": { "x": 25, "y": 15 } }
         ],
         "itemSpawns": [],
+        "lootSpawns": []
+      },
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.vapor-quest",
+      "nameKey": "floor-demo-vapor-quest-name",
+      "returnFloorId": "demo.floor.surface",
+      "lifecycle": "one-shot",
+      "entryTerrainId": "demo.terrain.vapor-quest-entry",
+      "availableEntryTerrainId": "demo.terrain.vapor-quest-entry-available",
+      "completedEntryTerrainId": "demo.terrain.vapor-quest-entry-completed",
+      "failedEntryTerrainId": "demo.terrain.vapor-quest-entry-failed",
+      "abandonedEntryTerrainId": "demo.terrain.vapor-quest-entry-abandoned",
+      "taskId": "demo.task.vapor-quest",
+      "depth": 25,
+      "width": 25,
+      "height": 22,
+      "wallTerrainId": "demo.terrain.permanent-wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "closedDoorTerrainId": "demo.terrain.door-closed",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "inlineMap": {
+        "playerPosition": { "x": 12, "y": 20 },
+        "terrainOverrides": [
+          {
+            "terrainId": "demo.terrain.floor",
+            "positions": [
+              { "x": 12, "y": 1 }, { "x": 11, "y": 2 }, { "x": 12, "y": 2 }, { "x": 13, "y": 2 }, { "x": 9, "y": 3 }, { "x": 10, "y": 3 }, { "x": 11, "y": 3 }, { "x": 12, "y": 3 },
+              { "x": 13, "y": 3 }, { "x": 14, "y": 3 }, { "x": 15, "y": 3 }, { "x": 11, "y": 4 }, { "x": 12, "y": 4 }, { "x": 13, "y": 4 }, { "x": 12, "y": 5 }, { "x": 11, "y": 6 },
+              { "x": 12, "y": 6 }, { "x": 13, "y": 6 }, { "x": 8, "y": 7 }, { "x": 9, "y": 7 }, { "x": 10, "y": 7 }, { "x": 11, "y": 7 }, { "x": 12, "y": 7 }, { "x": 13, "y": 7 },
+              { "x": 14, "y": 7 }, { "x": 15, "y": 7 }, { "x": 16, "y": 7 }, { "x": 7, "y": 8 }, { "x": 8, "y": 8 }, { "x": 9, "y": 8 }, { "x": 10, "y": 8 }, { "x": 11, "y": 8 },
+              { "x": 12, "y": 8 }, { "x": 13, "y": 8 }, { "x": 14, "y": 8 }, { "x": 15, "y": 8 }, { "x": 16, "y": 8 }, { "x": 17, "y": 8 }, { "x": 6, "y": 9 }, { "x": 7, "y": 9 },
+              { "x": 8, "y": 9 }, { "x": 9, "y": 9 }, { "x": 10, "y": 9 }, { "x": 11, "y": 9 }, { "x": 12, "y": 9 }, { "x": 13, "y": 9 }, { "x": 14, "y": 9 }, { "x": 15, "y": 9 },
+              { "x": 16, "y": 9 }, { "x": 17, "y": 9 }, { "x": 18, "y": 9 }, { "x": 7, "y": 10 }, { "x": 8, "y": 10 }, { "x": 9, "y": 10 }, { "x": 10, "y": 10 }, { "x": 11, "y": 10 },
+              { "x": 12, "y": 10 }, { "x": 13, "y": 10 }, { "x": 14, "y": 10 }, { "x": 15, "y": 10 }, { "x": 16, "y": 10 }, { "x": 17, "y": 10 }, { "x": 2, "y": 11 }, { "x": 3, "y": 11 },
+              { "x": 4, "y": 11 }, { "x": 6, "y": 11 }, { "x": 7, "y": 11 }, { "x": 8, "y": 11 }, { "x": 9, "y": 11 }, { "x": 10, "y": 11 }, { "x": 11, "y": 11 }, { "x": 12, "y": 11 },
+              { "x": 13, "y": 11 }, { "x": 14, "y": 11 }, { "x": 15, "y": 11 }, { "x": 16, "y": 11 }, { "x": 17, "y": 11 }, { "x": 18, "y": 11 }, { "x": 20, "y": 11 }, { "x": 21, "y": 11 },
+              { "x": 22, "y": 11 }, { "x": 1, "y": 12 }, { "x": 2, "y": 12 }, { "x": 3, "y": 12 }, { "x": 4, "y": 12 }, { "x": 7, "y": 12 }, { "x": 8, "y": 12 }, { "x": 9, "y": 12 },
+              { "x": 10, "y": 12 }, { "x": 11, "y": 12 }, { "x": 12, "y": 12 }, { "x": 13, "y": 12 }, { "x": 14, "y": 12 }, { "x": 15, "y": 12 }, { "x": 16, "y": 12 }, { "x": 17, "y": 12 },
+              { "x": 20, "y": 12 }, { "x": 21, "y": 12 }, { "x": 22, "y": 12 }, { "x": 23, "y": 12 }, { "x": 1, "y": 13 }, { "x": 2, "y": 13 }, { "x": 3, "y": 13 }, { "x": 4, "y": 13 },
+              { "x": 5, "y": 13 }, { "x": 6, "y": 13 }, { "x": 7, "y": 13 }, { "x": 8, "y": 13 }, { "x": 9, "y": 13 }, { "x": 10, "y": 13 }, { "x": 11, "y": 13 }, { "x": 12, "y": 13 },
+              { "x": 13, "y": 13 }, { "x": 14, "y": 13 }, { "x": 15, "y": 13 }, { "x": 16, "y": 13 }, { "x": 17, "y": 13 }, { "x": 18, "y": 13 }, { "x": 19, "y": 13 }, { "x": 20, "y": 13 },
+              { "x": 21, "y": 13 }, { "x": 22, "y": 13 }, { "x": 23, "y": 13 }, { "x": 1, "y": 14 }, { "x": 2, "y": 14 }, { "x": 3, "y": 14 }, { "x": 4, "y": 14 }, { "x": 7, "y": 14 },
+              { "x": 8, "y": 14 }, { "x": 9, "y": 14 }, { "x": 10, "y": 14 }, { "x": 11, "y": 14 }, { "x": 12, "y": 14 }, { "x": 13, "y": 14 }, { "x": 14, "y": 14 }, { "x": 15, "y": 14 },
+              { "x": 16, "y": 14 }, { "x": 17, "y": 14 }, { "x": 20, "y": 14 }, { "x": 21, "y": 14 }, { "x": 22, "y": 14 }, { "x": 23, "y": 14 }, { "x": 2, "y": 15 }, { "x": 3, "y": 15 },
+              { "x": 4, "y": 15 }, { "x": 6, "y": 15 }, { "x": 7, "y": 15 }, { "x": 8, "y": 15 }, { "x": 9, "y": 15 }, { "x": 10, "y": 15 }, { "x": 11, "y": 15 }, { "x": 12, "y": 15 },
+              { "x": 13, "y": 15 }, { "x": 14, "y": 15 }, { "x": 15, "y": 15 }, { "x": 16, "y": 15 }, { "x": 17, "y": 15 }, { "x": 18, "y": 15 }, { "x": 20, "y": 15 }, { "x": 21, "y": 15 },
+              { "x": 22, "y": 15 }, { "x": 7, "y": 16 }, { "x": 8, "y": 16 }, { "x": 9, "y": 16 }, { "x": 10, "y": 16 }, { "x": 11, "y": 16 }, { "x": 12, "y": 16 }, { "x": 13, "y": 16 },
+              { "x": 14, "y": 16 }, { "x": 15, "y": 16 }, { "x": 16, "y": 16 }, { "x": 17, "y": 16 }, { "x": 6, "y": 17 }, { "x": 7, "y": 17 }, { "x": 8, "y": 17 }, { "x": 9, "y": 17 },
+              { "x": 10, "y": 17 }, { "x": 11, "y": 17 }, { "x": 12, "y": 17 }, { "x": 13, "y": 17 }, { "x": 14, "y": 17 }, { "x": 15, "y": 17 }, { "x": 16, "y": 17 }, { "x": 17, "y": 17 },
+              { "x": 18, "y": 17 }, { "x": 7, "y": 18 }, { "x": 8, "y": 18 }, { "x": 9, "y": 18 }, { "x": 10, "y": 18 }, { "x": 11, "y": 18 }, { "x": 12, "y": 18 }, { "x": 13, "y": 18 },
+              { "x": 14, "y": 18 }, { "x": 15, "y": 18 }, { "x": 16, "y": 18 }, { "x": 17, "y": 18 }, { "x": 8, "y": 19 }, { "x": 9, "y": 19 }, { "x": 10, "y": 19 }, { "x": 11, "y": 19 },
+              { "x": 12, "y": 19 }, { "x": 13, "y": 19 }, { "x": 14, "y": 19 }, { "x": 15, "y": 19 }, { "x": 16, "y": 19 }, { "x": 11, "y": 20 }, { "x": 13, "y": 20 }
+            ]
+          },
+          { "terrainId": "demo.terrain.stairs-up", "positions": [{ "x": 12, "y": 20 }] }
+        ],
+        "actorSpawns": [
+          { "instanceId": "demo.actor.vapor-quest.shimmering-vortex.1", "kindId": "demo.actor.shimmering-vortex", "position": { "x": 12, "y": 1 } },
+          { "instanceId": "demo.actor.vapor-quest.air-elemental.1", "kindId": "demo.actor.air-elemental", "position": { "x": 9, "y": 3 } },
+          { "instanceId": "demo.actor.vapor-quest.air-elemental.2", "kindId": "demo.actor.air-elemental", "position": { "x": 15, "y": 3 } },
+          { "instanceId": "demo.actor.vapor-quest.gas-spore.1", "kindId": "demo.actor.gas-spore", "position": { "x": 12, "y": 6 } },
+          { "instanceId": "demo.actor.vapor-quest.radiation-eye.1", "kindId": "demo.actor.radiation-eye", "position": { "x": 6, "y": 9 } },
+          { "instanceId": "demo.actor.vapor-quest.radiation-eye.2", "kindId": "demo.actor.radiation-eye", "position": { "x": 18, "y": 9 } },
+          { "instanceId": "demo.actor.vapor-quest.air-elemental.3", "kindId": "demo.actor.air-elemental", "position": { "x": 4, "y": 11 } },
+          { "instanceId": "demo.actor.vapor-quest.radiation-eye.3", "kindId": "demo.actor.radiation-eye", "position": { "x": 6, "y": 11 } },
+          { "instanceId": "demo.actor.vapor-quest.radiation-eye.4", "kindId": "demo.actor.radiation-eye", "position": { "x": 18, "y": 11 } },
+          { "instanceId": "demo.actor.vapor-quest.air-elemental.4", "kindId": "demo.actor.air-elemental", "position": { "x": 20, "y": 11 } },
+          { "instanceId": "demo.actor.vapor-quest.weird-fume.1", "kindId": "demo.actor.weird-fume", "position": { "x": 1, "y": 13 } },
+          { "instanceId": "demo.actor.vapor-quest.weird-fume.2", "kindId": "demo.actor.weird-fume", "position": { "x": 23, "y": 13 } },
+          { "instanceId": "demo.actor.vapor-quest.air-elemental.5", "kindId": "demo.actor.air-elemental", "position": { "x": 4, "y": 15 } },
+          { "instanceId": "demo.actor.vapor-quest.radiation-eye.5", "kindId": "demo.actor.radiation-eye", "position": { "x": 6, "y": 15 } },
+          { "instanceId": "demo.actor.vapor-quest.radiation-eye.6", "kindId": "demo.actor.radiation-eye", "position": { "x": 18, "y": 15 } },
+          { "instanceId": "demo.actor.vapor-quest.air-elemental.6", "kindId": "demo.actor.air-elemental", "position": { "x": 20, "y": 15 } },
+          { "instanceId": "demo.actor.vapor-quest.radiation-eye.7", "kindId": "demo.actor.radiation-eye", "position": { "x": 6, "y": 17 } },
+          { "instanceId": "demo.actor.vapor-quest.radiation-eye.8", "kindId": "demo.actor.radiation-eye", "position": { "x": 18, "y": 17 } }
+        ],
+        "itemSpawns": [
+          { "instanceId": "demo.item.vapor-quest.ring.1", "kindId": "demo.item.ring", "position": { "x": 21, "y": 11 }, "quantity": 1 },
+          { "instanceId": "demo.item.vapor-quest.ring.2", "kindId": "demo.item.ring", "position": { "x": 22, "y": 11 }, "quantity": 1 },
+          { "instanceId": "demo.item.vapor-quest.ring.3", "kindId": "demo.item.ring", "position": { "x": 23, "y": 12 }, "quantity": 1 },
+          { "instanceId": "demo.item.vapor-quest.ring.4", "kindId": "demo.item.ring", "position": { "x": 23, "y": 14 }, "quantity": 1 },
+          { "instanceId": "demo.item.vapor-quest.ring.5", "kindId": "demo.item.ring", "position": { "x": 21, "y": 15 }, "quantity": 1 },
+          { "instanceId": "demo.item.vapor-quest.ring.6", "kindId": "demo.item.ring", "position": { "x": 22, "y": 15 }, "quantity": 1 },
+          { "instanceId": "demo.item.vapor-quest.amulet.1", "kindId": "demo.item.amulet", "position": { "x": 2, "y": 11 }, "quantity": 1 },
+          { "instanceId": "demo.item.vapor-quest.amulet.2", "kindId": "demo.item.amulet", "position": { "x": 3, "y": 11 }, "quantity": 1 },
+          { "instanceId": "demo.item.vapor-quest.amulet.3", "kindId": "demo.item.amulet", "position": { "x": 1, "y": 12 }, "quantity": 1 },
+          { "instanceId": "demo.item.vapor-quest.amulet.4", "kindId": "demo.item.amulet", "position": { "x": 1, "y": 14 }, "quantity": 1 },
+          { "instanceId": "demo.item.vapor-quest.amulet.5", "kindId": "demo.item.amulet", "position": { "x": 2, "y": 15 }, "quantity": 1 },
+          { "instanceId": "demo.item.vapor-quest.amulet.6", "kindId": "demo.item.amulet", "position": { "x": 3, "y": 15 }, "quantity": 1 }
+        ],
         "lootSpawns": []
       },
       "actorSpawns": [],

@@ -384,6 +384,28 @@ mod tests {
     }
 
     #[test]
+    fn vapor_quest_uses_authoritative_chinese_names() {
+        let localizer = Localizer::new(Locale::ZhCn).expect("resources should load");
+        for (key, expected) in [
+            ("task-demo-vapor-quest-name", "蒸汽任务 (前哨镇)"),
+            ("actor-demo-gas-spore-name", "瓦斯孢子"),
+            ("actor-demo-air-elemental-name", "气元素"),
+            ("actor-demo-shimmering-vortex-name", "闪光漩涡"),
+            ("actor-demo-weird-fume-name", "怪异烟雾"),
+            ("item-demo-amulet-name", "护身符"),
+            ("item-demo-detection-rod-name", "探测魔棒"),
+            ("device-activation-demo-detection-name", "探测"),
+        ] {
+            assert_eq!(
+                localizer
+                    .format_exact(Locale::ZhCn, key, None)
+                    .expect("Vapor Quest name should format"),
+                expected
+            );
+        }
+    }
+
+    #[test]
     fn all_item_affix_and_artifact_names_have_exact_matching_messages() {
         let pack = Path::new(env!("CARGO_MANIFEST_DIR"))
             .parent()

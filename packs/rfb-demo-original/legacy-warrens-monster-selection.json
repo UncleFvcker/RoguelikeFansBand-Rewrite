@@ -3614,6 +3614,30 @@
       "omittedFlags": ["MALE"]
     },
     {
+      "sourceIndex": 519,
+      "id": "gas-spore",
+      "tags": ["gas-spore", "outpost-quest", "vapor-quest"],
+      "omittedFlags": ["POS_GAIN_AC", "STUPID"]
+    },
+    {
+      "sourceIndex": 526,
+      "id": "air-elemental",
+      "tags": ["air-elemental", "elemental", "outpost-quest", "vapor-quest"],
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE"]
+    },
+    {
+      "sourceIndex": 600,
+      "id": "shimmering-vortex",
+      "tags": ["outpost-quest", "shimmering-vortex", "vapor-quest", "vortex"],
+      "omittedFlags": ["ATTR_MULTI", "NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE"]
+    },
+    {
+      "sourceIndex": 625,
+      "id": "weird-fume",
+      "tags": ["outpost-quest", "vapor-quest", "weird-fume"],
+      "omittedFlags": ["ATTR_ANY", "ATTR_MULTI"]
+    },
+    {
       "sourceIndex": 206,
       "id": "old-man-willow",
       "tags": ["old-man-willow", "outpost-quest", "tree"],

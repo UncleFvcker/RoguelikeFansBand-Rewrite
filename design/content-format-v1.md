@@ -572,3 +572,11 @@ contract-v268 / 包 1.259.0 接入白马旅店 quest 31“柳树老头任务”�
 `elemental-jewelry` affix：必得一种酸/电/火/冷抗性，并有三分之一概率独立再抽一种。
 content hash 为 `71f9f400d8aacf6363130f6b031e6a7c107ee64101512650285a8e91bfae59a1`；
 协议保持 1.175，State Hash Schema 保持 v87。
+
+contract-v269 / 包 1.260.0 接入白马旅店 quest 20“蒸汽任务”。25×22 固定地图保留
+8 只辐射眼、1 只瓦斯孢子、6 只气元素、1 只闪光漩涡、2 团怪异烟雾，以及两侧
+各 6 个戒指/护身符落点。当前物品表用普通首饰壳保持固定位置，不宣称尚未接入的完整
+RFB 首饰种类与 ego 分配。默认探测魔棒以有序 `detect` 序列探测半径 30 内的陷阱、
+通道、金币、物品和全部怪物，容量 45、单次消耗 17、设备难度 30。content hash 为
+`49ea9859fc399bced90e2eaabda21bc25984885c9ed5cea7b8ce7bb19d5dec19`；协议保持
+1.175，State Hash Schema 保持 v87。
