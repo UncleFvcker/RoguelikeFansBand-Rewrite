@@ -118,6 +118,11 @@
       "background": "#203b2c",
       "tile": { "x": 2, "y": 0 }
     },
+    "demo.actor.paladin-player": {
+      "foreground": "#d9c17f",
+      "background": "#3b2c22",
+      "tile": { "x": 2, "y": 0 }
+    },
     "core.gold.copper": {
       "glyph": "$",
       "foreground": "#c98254",

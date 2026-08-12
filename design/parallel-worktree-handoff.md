@@ -190,3 +190,21 @@ git diff --stat
   `2f88338bb3fe9bfa13ac703d0b58ae4521bade19619805c5fe37da977a8b4858`。
 - 下一步圣骑士内容只需声明 `studyMode: divine-random` 并增加已预留的
   `demo.ability.paladin-hell-lance`；不新增祈祷菜单状态或第二套 RNG。
+
+## 10. main 当前交接（死亡领域圣骑士正式内容）
+
+- 本批继续直接在主工作树推进，基于 contract-v272 的神授祈祷底座导入
+  `demo.class.paladin`、`demo.skill-set.paladin`、`demo.build.paladin-death` 和
+  `demo.actor.paladin-player`。
+- 原版 Paladin 的属性 `+2/-3/+1/0/+2/+2`、生命 110%、经验 135%、基础 HP 12、
+  八项技能及增长、WIS 施法、最低失败率 5 和负重 `450/20/1200` 已进入正式内容；
+  Death 的 32 条职业施法参数逐项来自 `master:lib/edit/m_info.txt`。
+- 出生物只引用既有 `demo.item.broad-sword`、`demo.item.ring-mail`、
+  `demo.item.black-prayers`；本批没有新增或占用 item/ability ID。
+- 新游戏列表、职业中英文案、`demo.actor.paladin-player` 三套 tileset 映射和按书祈祷
+  UI 已接入。职业显示名保持原版“圣骑士”，Death 只作为 build 领域单独显示。
+- 共享协调点：Protocol `1.177`、State Hash Schema v88、active baseline
+  `contract-v273`、pack `1.273.0`，content hash 为
+  `132b2a15ebcd5b74e2949817b45c88e576c0fae37eaa2e72548972249d70e1ae`。
+- 下一步预留 ability ID 仍为 `demo.ability.paladin-hell-lance`；同时补 40 级恐惧抗性。
+  摧毁高级异教书经验和逐武器熟练度继续单列，不在本批伪造。

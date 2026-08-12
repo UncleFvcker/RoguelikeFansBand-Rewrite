@@ -6,7 +6,7 @@
 
 contract fixture 是规则兼容边界，不能把测试失败简单处理为“刷新预期结果”。政策用于保证每次规则变化只修改真正受影响的场景，同时保留可审查的失败原因。
 
-当前逻辑基线是 `contract-v272`，机器可读政策固定在：
+当前逻辑基线是 `contract-v273`，机器可读政策固定在：
 
 ```text
 tests/fixtures/active/baseline-policy.json
@@ -65,6 +65,12 @@ content hash 为 `2f88338bb3fe9bfa13ac703d0b58ae4521bade19619805c5fe37da977a8b48
 `chosen` / `divine-random` 学习模式。Protocol 升至 1.177；没有新增持久状态或状态哈希
 输入，State Hash Schema 保持 v88、save v1 不变。统一重放并复验 21 条 active fixture，
 标准化结果零语义漂移；active 集保持 21 条且零 waiver。
+
+`contract-v273` 导入固定死亡领域的正式圣骑士内容：原版职业属性、技能、出生装备、
+WIS 施法与 32 条死亡祈祷参数，并复用 contract-v272 的神授学习入口。内容包升至
+1.273.0；Protocol 1.177、State Hash Schema v88 与 save v1 不变。新增可选 build 不
+改变既有 Warrior fixture 初始化，统一复验 21 条 active fixture 零语义漂移；active
+集保持 21 条且零 waiver。
 
 ## 分类验证
 

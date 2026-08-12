@@ -598,3 +598,10 @@ contract-v272 为 `CastingProfileDefinition` 增加默认 `chosen`、序列化�
 `studyMode`；`divine-random` 让职业从玩家选定书本内的当前可学能力中使用权威 RNG
 随机授予一个。既有职业和内容 hash 不变；协议升至 1.177，State Hash Schema 保持
 v88。
+
+contract-v273 / 包 1.273.0 新增固定死亡领域的正式圣骑士 class/build/skill set/player
+actor。职业使用 WIS、`rfb-mana`、最低失败率 5、`450/20/1200` 负重、
+`rfb-single-realm` 学习容量和 `divine-random`，四册 32 条死亡祈祷逐项覆盖原版 Paladin
+表；出生引用既有阔剑、环甲和死亡第一册。content hash 为
+`132b2a15ebcd5b74e2949817b45c88e576c0fae37eaa2e72548972249d70e1ae`；协议与 State
+Hash Schema 保持 1.177 / v88。

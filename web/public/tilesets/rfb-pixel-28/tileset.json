@@ -105,6 +105,10 @@
       "foreground": "#8fd6a3",
       "background": "#203b2c"
     },
+    "demo.actor.paladin-player": {
+      "foreground": "#d9c17f",
+      "background": "#3b2c22"
+    },
     "demo.actor.newt": {
       "foreground": "#96c641",
       "tile": { "x": 1, "y": 2 }

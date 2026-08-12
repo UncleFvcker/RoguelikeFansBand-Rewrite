@@ -1,0 +1,24 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/build.schema.json",
+  "formatVersion": 1,
+  "id": "demo.build.paladin-death",
+  "nameKey": "build-demo-paladin-death-name",
+  "descriptionKey": "build-demo-paladin-death-description",
+  "raceId": "demo.race.rfb-human",
+  "classId": "demo.class.paladin",
+  "personalityId": "demo.personality.ordinary",
+  "playerActorId": "demo.actor.paladin-player",
+  "firstRealmId": "death",
+  "startingItems": [
+    { "itemKindId": "demo.item.black-prayers", "quantity": 1 }
+  ],
+  "attributes": {
+    "strength": 13,
+    "intelligence": 13,
+    "wisdom": 13,
+    "dexterity": 13,
+    "constitution": 13,
+    "charisma": 13
+  },
+  "tags": ["caster", "death", "martial", "paladin", "rfb-compatibility"]
+}

@@ -17,6 +17,7 @@ export const PLAYTEST_BUILD_IDS = [
   "demo.build.warrior",
   "demo.build.high-mage-death",
   "demo.build.archer",
+  "demo.build.paladin-death",
 ] as const;
 
 export type PlaytestBuildId = (typeof PLAYTEST_BUILD_IDS)[number];
@@ -43,6 +44,7 @@ interface SessionShellDom {
   readonly warriorBuild: HTMLInputElement;
   readonly highMageDeathBuild: HTMLInputElement;
   readonly archerBuild: HTMLInputElement;
+  readonly paladinDeathBuild: HTMLInputElement;
   readonly characterNameInput: HTMLInputElement;
   readonly seedInput: HTMLInputElement;
   readonly randomizeSeedButton: HTMLButtonElement;
@@ -350,7 +352,12 @@ export class SessionShell {
   }
 
   #selectedBuild(): PlaytestBuildId | undefined {
-    return [this.#dom.warriorBuild, this.#dom.highMageDeathBuild, this.#dom.archerBuild]
+    return [
+      this.#dom.warriorBuild,
+      this.#dom.highMageDeathBuild,
+      this.#dom.archerBuild,
+      this.#dom.paladinDeathBuild,
+    ]
       .find((input) => input.checked)?.value as PlaytestBuildId | undefined;
   }
 
@@ -536,6 +543,7 @@ export function createSessionShellDom(document: DocumentLookup): SessionShellDom
     warriorBuild: element<HTMLInputElement>(document, "session-build-warrior"),
     highMageDeathBuild: element<HTMLInputElement>(document, "session-build-high-mage-death"),
     archerBuild: element<HTMLInputElement>(document, "session-build-archer"),
+    paladinDeathBuild: element<HTMLInputElement>(document, "session-build-paladin-death"),
     characterNameInput: element<HTMLInputElement>(document, "session-character-name"),
     seedInput: element<HTMLInputElement>(document, "session-seed"),
     randomizeSeedButton: element<HTMLButtonElement>(document, "session-randomize-seed"),

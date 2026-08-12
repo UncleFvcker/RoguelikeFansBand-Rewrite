@@ -1,0 +1,96 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/class.schema.json",
+  "formatVersion": 1,
+  "id": "demo.class.paladin",
+  "nameKey": "class-demo-paladin-name",
+  "descriptionKey": "class-demo-paladin-description",
+  "modifiers": {
+    "strength": 2,
+    "intelligence": -3,
+    "wisdom": 1,
+    "dexterity": 0,
+    "constitution": 2,
+    "charisma": 2
+  },
+  "lifePercent": 110,
+  "experiencePercent": 135,
+  "baseHp": 12,
+  "skillSetId": "demo.skill-set.paladin",
+  "usesSpellScrolls": true,
+  "castingProfile": {
+    "resourceId": "demo.resource.mana",
+    "castingAttribute": "wisdom",
+    "capacityFormula": "rfb-mana",
+    "baseCapacity": 0,
+    "capacityPerLevel": 0,
+    "capacityPerAttributeIndex": 0,
+    "capacityPercent": 100,
+    "learningFormula": "rfb-single-realm",
+    "studyMode": "divine-random",
+    "failureFormula": "rfb-magic",
+    "baseLearningCapacity": 1,
+    "learningCapacityPerLevel": 0,
+    "learningCapacityPerAttributeIndex": 0,
+    "learningCapacityCap": 32,
+    "resourceRecoveryPercent": 100,
+    "minimumFailurePercent": 5,
+    "encumbrance": {
+      "maximumWeightTenthsPound": 450,
+      "weaponWeightPercent": 20,
+      "penaltyWeightTenthsPound": 1200,
+      "gloveEncumbrance": false
+    },
+    "realmProfiles": [
+      {
+        "realmId": "death",
+        "abilityBookIds": [
+          "demo.ability-book.black-prayers",
+          "demo.ability-book.black-mass",
+          "demo.ability-book.black-channels",
+          "demo.ability-book.necronomicon"
+        ],
+        "learningCapacityBonus": 4,
+        "abilityOverrides": [
+          { "abilityId": "demo.ability.death-detect-unlife", "minimumLevel": 1, "resourceCost": 1, "baseFailurePercent": 25 },
+          { "abilityId": "demo.ability.death-malediction", "minimumLevel": 3, "resourceCost": 2, "baseFailurePercent": 25 },
+          { "abilityId": "demo.ability.death-detect-evil", "minimumLevel": 4, "resourceCost": 3, "baseFailurePercent": 25 },
+          { "abilityId": "demo.ability.death-stinking-cloud", "minimumLevel": 6, "resourceCost": 5, "baseFailurePercent": 27 },
+          { "abilityId": "demo.ability.death-black-sleep", "minimumLevel": 8, "resourceCost": 8, "baseFailurePercent": 30 },
+          { "abilityId": "demo.ability.death-necromantic-resistance", "minimumLevel": 10, "resourceCost": 11, "baseFailurePercent": 75 },
+          { "abilityId": "demo.ability.death-horrify", "minimumLevel": 12, "resourceCost": 12, "baseFailurePercent": 30 },
+          { "abilityId": "demo.ability.death-enslave-undead", "minimumLevel": 15, "resourceCost": 15, "baseFailurePercent": 40 },
+          { "abilityId": "demo.ability.death-entropy-orb", "minimumLevel": 17, "resourceCost": 17, "baseFailurePercent": 40 },
+          { "abilityId": "demo.ability.death-nether-bolt", "minimumLevel": 19, "resourceCost": 19, "baseFailurePercent": 30 },
+          { "abilityId": "demo.ability.death-cloud-kill", "minimumLevel": 23, "resourceCost": 23, "baseFailurePercent": 50 },
+          { "abilityId": "demo.ability.death-genocide-one", "minimumLevel": 35, "resourceCost": 35, "baseFailurePercent": 60 },
+          { "abilityId": "demo.ability.death-poison-branding", "minimumLevel": 38, "resourceCost": 75, "baseFailurePercent": 90 },
+          { "abilityId": "demo.ability.death-vampiric-drain", "minimumLevel": 40, "resourceCost": 40, "baseFailurePercent": 80 },
+          { "abilityId": "demo.ability.death-animate-dead", "minimumLevel": 45, "resourceCost": 38, "baseFailurePercent": 70 },
+          { "abilityId": "demo.ability.death-genocide", "minimumLevel": 47, "resourceCost": 35, "baseFailurePercent": 95 },
+          { "abilityId": "demo.ability.death-berserk", "minimumLevel": 15, "resourceCost": 20, "baseFailurePercent": 80 },
+          { "abilityId": "demo.ability.death-invoke-spirits", "minimumLevel": 15, "resourceCost": 20, "baseFailurePercent": 80 },
+          { "abilityId": "demo.ability.death-dark-bolt", "minimumLevel": 18, "resourceCost": 20, "baseFailurePercent": 30 },
+          { "abilityId": "demo.ability.death-battle-frenzy", "minimumLevel": 38, "resourceCost": 53, "baseFailurePercent": 80 },
+          { "abilityId": "demo.ability.death-vampiric-branding", "minimumLevel": 40, "resourceCost": 100, "baseFailurePercent": 60 },
+          { "abilityId": "demo.ability.death-vampirism-true", "minimumLevel": 42, "resourceCost": 40, "baseFailurePercent": 70 },
+          { "abilityId": "demo.ability.death-nether-wave", "minimumLevel": 44, "resourceCost": 40, "baseFailurePercent": 60 },
+          { "abilityId": "demo.ability.death-darkness-storm", "minimumLevel": 48, "resourceCost": 50, "baseFailurePercent": 80 },
+          { "abilityId": "demo.ability.death-death-ray", "minimumLevel": 30, "resourceCost": 35, "baseFailurePercent": 75 },
+          { "abilityId": "demo.ability.death-raise-dead", "minimumLevel": 36, "resourceCost": 85, "baseFailurePercent": 90 },
+          { "abilityId": "demo.ability.death-esoteria", "minimumLevel": 38, "resourceCost": 45, "baseFailurePercent": 95 },
+          { "abilityId": "demo.ability.death-vampiric-transformation", "minimumLevel": 45, "resourceCost": 45, "baseFailurePercent": 70 },
+          { "abilityId": "demo.ability.death-restore-life", "minimumLevel": 47, "resourceCost": 52, "baseFailurePercent": 75 },
+          { "abilityId": "demo.ability.death-mass-genocide", "minimumLevel": 48, "resourceCost": 75, "baseFailurePercent": 85 },
+          { "abilityId": "demo.ability.death-hellfire", "minimumLevel": 49, "resourceCost": 90, "baseFailurePercent": 90 },
+          { "abilityId": "demo.ability.death-wraithform", "minimumLevel": 50, "resourceCost": 111, "baseFailurePercent": 95 }
+        ]
+      }
+    ]
+  },
+  "startingItems": [
+    { "itemKindId": "demo.item.broad-sword", "quantity": 1, "equipped": true },
+    { "itemKindId": "demo.item.ring-mail", "quantity": 1, "equipped": true }
+  ],
+  "specialItemTags": ["spellbook"],
+  "tags": ["caster", "martial", "paladin", "rfb-compatibility"]
+}

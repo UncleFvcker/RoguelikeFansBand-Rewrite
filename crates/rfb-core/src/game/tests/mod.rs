@@ -25,6 +25,7 @@ mod monster_ecology;
 mod monster_hit_points;
 mod monster_movement;
 mod mutations;
+mod paladin;
 mod persistence;
 mod prayer_study;
 mod progression;

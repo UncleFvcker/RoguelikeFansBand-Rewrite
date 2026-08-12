@@ -56,3 +56,15 @@ ammo-slaying ID。若 items 方向随后导入陶器碎片或断木棍，也应�
 - `cargo run -p rfb-content --bin rfb-contentc -- verify-source packs/rfb-demo-original`
 - `cargo run -p rfb-contract -- verify-all tests/fixtures/active/baseline-policy.json`
 - `cargo test -p rfb-contract --test contract_fixtures committed_contract_fixtures_pass -- --ignored`
+
+## main 后续批次：死亡领域圣骑士
+
+- 正式内容 ID：`demo.class.paladin`、`demo.skill-set.paladin`、
+  `demo.build.paladin-death`、`demo.actor.paladin-player`。
+- 出生只复用 `demo.item.broad-sword`、`demo.item.ring-mail` 和
+  `demo.item.black-prayers`；没有新增物品或能力 ID。
+- Paladin 的原版属性、八项技能、WIS 施法、`450/20/1200` 负重及 32 条 Death
+  `m_info` 覆盖已导入，学习模式复用 `divine-random`。
+- 当前协调点：pack 1.273.0、Protocol 1.177、State Hash Schema v88、
+  contract-v273；下一职业步骤预留 `demo.ability.paladin-hell-lance`，并补 40 级恐惧
+  抗性，不在其他分支重复占用该 ID。

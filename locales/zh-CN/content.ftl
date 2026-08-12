@@ -6,6 +6,8 @@ build-demo-high-mage-death-name = 高阶法师 · 死亡
 build-demo-high-mage-death-description = 专精死亡领域的单领域高阶法师，接入完整四册法术进程与 RFB 原版高阶法师施法参数。
 build-demo-archer-name = 弓箭手
 build-demo-archer-description = 擅长弓、十字弩与投石索，并能利用地下城材料制造弹药的弓箭手。
+build-demo-paladin-death-name = 圣骑士 · 死亡
+build-demo-paladin-death-description = 选择死亡领域、以感知祈祷并由神明随机赐予新祈祷的圣骑士。
 race-demo-rfb-human-name = 人类
 race-demo-rfb-human-description = 使用 RFB 无修正人类数值与 Standard 类人通用装备身体。
 class-demo-warrior-name = 战士
@@ -15,6 +17,9 @@ class-demo-high-mage-description = 高阶法师是专精于某一特定魔法领
 class-demo-archer-name = 弓箭手
 class-demo-archer-description = 弓箭手之于弓如同战士之于近战。他们是所有使用弓、十字弩或投石索的职业中最优秀的。他们需要大量的弹药，但会学习如何从地下城中发现的垃圾里制造弹药。弓箭手在潜行、察觉、搜索和使用魔法装置方面比战士更强。
     弓箭手拥有一项职业能力——“制造弹药”——可以把碎石转化成石子或弹丸，也可以把骨骸转化成箭和弩箭。
+class-demo-paladin-name = 圣骑士
+class-demo-paladin-description = 圣骑士是战士和牧师的结合体。圣骑士擅长近战，但在远程战斗中表现平平；他们的潜行、察觉和使用魔法装置的技能同样平庸，不过他们与神明的结盟赋予了他们不错的豁免能力。感知决定了圣骑士向其神明祈祷的成功率。
+    圣骑士可以从生命、圣战、恶魔和死亡中选择一个领域。和牧师一样，他们不能选择要学习哪些祈祷，而是由他们的神明赐予新的祈祷。他们可以学习所有法术，但不如牧师快。他们极其厌恶异教，甚至可以通过摧毁高级的异教法术书来获得经验：“异教”对于死亡/恶魔圣骑士来说指的是生命或圣战法术书，而对于生命/圣战圣骑士来说指的是除生命或圣战之外的所有法术书。圣骑士会获得一项职业能力：“神圣长枪”或“地狱长枪”，具体取决于他们领域的阵营。
 personality-demo-ordinary-name = 普通
 personality-demo-ordinary-description = 不提供额外修正的中性性格。
 personality-demo-combat-name = 好战
@@ -1039,6 +1044,8 @@ item-demo-quiver-name = 箭袋
 item-demo-quiver-description = 弹药应放入箭袋，而不是包裹。
 actor-demo-archer-player-name = 弓箭手
 actor-demo-archer-player-description = 一名携带弓、箭袋和自制弹药工具的弓箭手。
+actor-demo-paladin-player-name = 圣骑士
+actor-demo-paladin-player-description = 一名携带阔剑、环甲和死亡祈祷书的圣骑士。
 ability-demo-archer-create-shots-name = 制造弹丸
 ability-demo-archer-create-shots-description = 把相邻的碎石转化成十五至三十枚弹丸。
 ability-demo-archer-create-arrows-name = 制造箭矢

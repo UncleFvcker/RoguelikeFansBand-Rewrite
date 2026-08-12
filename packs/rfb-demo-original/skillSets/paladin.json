@@ -1,0 +1,15 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/skill-set.schema.json",
+  "formatVersion": 1,
+  "id": "demo.skill-set.paladin",
+  "entries": [
+    { "skillId": "demo.skill.device", "base": 24, "growthPerTenLevels": 10 },
+    { "skillId": "demo.skill.disarming", "base": 20, "growthPerTenLevels": 7 },
+    { "skillId": "demo.skill.melee", "base": 68, "growthPerTenLevels": 21 },
+    { "skillId": "demo.skill.perception", "base": 2 },
+    { "skillId": "demo.skill.ranged", "base": 40, "growthPerTenLevels": 18 },
+    { "skillId": "demo.skill.saving-throw", "base": 34, "growthPerTenLevels": 11 },
+    { "skillId": "demo.skill.search", "base": 12 },
+    { "skillId": "demo.skill.stealth", "base": 1 }
+  ]
+}
