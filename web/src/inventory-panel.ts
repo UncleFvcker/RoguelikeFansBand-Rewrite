@@ -253,18 +253,11 @@ export class InventoryPanel {
     excludedItemId: string | undefined,
     onSelect: (itemId: string) => Promise<void>,
   ): void {
-    const candidates = [
-      ...this.#state.inventory
-        .filter((item) => item.id !== excludedItemId)
-        .map((item) => ({
-          id: item.id,
-          label: this.#formatter.visibleItemName(item.displayNameKey, item.kindId),
-        })),
-      ...this.#state.equipment.map((item) => ({
-        id: item.id,
-        label: this.#formatter.visibleItemName(item.displayNameKey, item.kindId),
-      })),
-    ];
+    const candidates = itemTargetCandidates(
+      this.#state,
+      excludedItemId,
+      (displayNameKey, kindId) => this.#formatter.visibleItemName(displayNameKey, kindId),
+    );
     this.#selectItemTargetFrom(candidates, onSelect);
   }
 
@@ -1014,6 +1007,26 @@ export function selectedRechargingItems(
     (candidate) => candidate.id !== item?.id && candidate.canSupplyRecharge,
   );
   return item && source ? { item, source } : undefined;
+}
+
+export function itemTargetCandidates(
+  state: Pick<AppState, "inventory" | "equipment" | "status">,
+  excludedItemId: string | undefined,
+  visibleItemName: (displayNameKey: string, kindId: string) => string,
+): Array<{ id: string; label: string }> {
+  const playerPosition = state.status?.player.position;
+  const groundItems = playerPosition
+    ? state.status?.items.filter(
+        (item) =>
+          item.position.x === playerPosition.x && item.position.y === playerPosition.y,
+      ) ?? []
+    : [];
+  return [...state.inventory, ...state.equipment, ...groundItems]
+    .filter((item) => item.id !== excludedItemId)
+    .map((item) => ({
+      id: item.id,
+      label: visibleItemName(item.displayNameKey, item.kindId),
+    }));
 }
 
 export function parseDropQuantity(value: string, itemQuantity: number): number | undefined {

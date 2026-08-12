@@ -3330,6 +3330,11 @@ fn item_json_with_terrain(
     if entry.tval == 127 {
         tags.push("gold");
     }
+    if entry.flags.iter().any(|flag| flag == "NO_REMOVE")
+        || matches!((entry.tval, entry.sval), (23, 32 | 34))
+    {
+        tags.push("unbrandable");
+    }
     let use_action = fixed_consumable_use_action_with_terrain(entry, terrain_creation);
     let device_generation = legacy_device_generation(entry);
     let behavior_gap = if entry.tval == 70 && entry.sval == 52 {
@@ -3482,6 +3487,9 @@ fn item_json_with_terrain(
     apply_offensive_fold(&mut value, &offense);
     apply_equipment_fold(&mut value, &equipment);
     for flag in &entry.flags {
+        if flag == "NO_REMOVE" {
+            continue;
+        }
         account_item_flag(
             flag,
             &fold,
@@ -5932,6 +5940,11 @@ fn death_spell_ability(
         "range": 8,
         "requiresLineOfEffect": true,
     });
+    let item_target = serde_json::json!({
+        "modes": ["item"],
+        "range": 0,
+        "requiresLineOfEffect": false,
+    });
     let (id, target, effect, level_scaling, tags) = match spell.index {
         0 => (
             "death-detect-unlife",
@@ -6182,14 +6195,12 @@ fn death_spell_ability(
         ),
         12 => (
             "death-poison-branding",
-            self_target.clone(),
+            item_target.clone(),
             serde_json::json!({
-                "type": "apply-status",
-                "statusKindId": "rfb.status.poison-branding",
-                "intensity": 1,
-                "durationTicks": 500,
-                "stacking": "replace",
-                "grantedBrands": ["poison"],
+                "type": "brand-weapon",
+                "affixId": LEGACY_SLAYING_WEAPON_AFFIX_ID,
+                "brand": "poison",
+                "resistance": "poison",
             }),
             Vec::new(),
             vec!["brand", "death", "poison", "spell"],
@@ -6394,8 +6405,8 @@ fn death_spell_ability(
         ),
         20 => (
             "death-vampiric-branding",
-            self_target.clone(),
-            serde_json::json!({"type": "enchant-equipped-weapon", "affixId": LEGACY_DEATH_WEAPON_AFFIX_ID}),
+            item_target,
+            serde_json::json!({"type": "brand-weapon", "affixId": LEGACY_DEATH_WEAPON_AFFIX_ID}),
             Vec::new(),
             vec!["brand", "death", "permanent", "spell", "vampiric"],
         ),
@@ -8552,6 +8563,7 @@ const DEATH_THIRD_BOOK_ID: &str = "rfb-legacy.ability-book.death-black-channels"
 const DEATH_FOURTH_BOOK_ID: &str = "rfb-legacy.ability-book.death-necronomicon";
 const LEGACY_VAMPIRE_LORD_RACE_ID: &str = "rfb-legacy.race.vampire-lord-form";
 const LEGACY_VAMPIRE_LORD_SKILL_SET_ID: &str = "rfb-legacy.skill-set.race-vampire-lord-form";
+const LEGACY_SLAYING_WEAPON_AFFIX_ID: &str = "rfb-legacy.affix.slaying";
 const LEGACY_DEATH_WEAPON_AFFIX_ID: &str = "rfb-legacy.affix.death";
 const LEGACY_CORPSE_ITEM_ID: &str = "rfb-legacy.item.corpse-remains";
 
@@ -13606,6 +13618,38 @@ S:2:0:6000
         assert_eq!(malediction["effect"]["type"], "malediction");
         assert_eq!(malediction["effect"]["damageDice"], 3);
         assert_eq!(malediction["effect"]["damageSides"], 4);
+        let poison_branding = outcome
+            .ability_files
+            .iter()
+            .find(|(name, _)| name == "death-poison-branding.json")
+            .map(|(_, value)| value)
+            .expect("poison branding ability should be generated");
+        assert_eq!(
+            poison_branding["target"]["modes"],
+            serde_json::json!(["item"])
+        );
+        assert_eq!(poison_branding["effect"]["type"], "brand-weapon");
+        assert_eq!(
+            poison_branding["effect"]["affixId"],
+            LEGACY_SLAYING_WEAPON_AFFIX_ID
+        );
+        assert_eq!(poison_branding["effect"]["brand"], "poison");
+        assert_eq!(poison_branding["effect"]["resistance"], "poison");
+        let vampiric_branding = outcome
+            .ability_files
+            .iter()
+            .find(|(name, _)| name == "death-vampiric-branding.json")
+            .map(|(_, value)| value)
+            .expect("vampiric branding ability should be generated");
+        assert_eq!(
+            vampiric_branding["target"]["modes"],
+            serde_json::json!(["item"])
+        );
+        assert_eq!(vampiric_branding["effect"]["type"], "brand-weapon");
+        assert_eq!(
+            vampiric_branding["effect"]["affixId"],
+            LEGACY_DEATH_WEAPON_AFFIX_ID
+        );
         let resistance = outcome
             .ability_files
             .iter()
@@ -14659,6 +14703,38 @@ A:1/1
         assert_eq!(gloves["equipmentBonuses"]["meleeDamage"], 1);
         assert!(gloves["equipmentBonuses"].get("meleeSkill").is_none());
         assert!(gloves.get("meleeProfile").is_none());
+    }
+
+    #[test]
+    fn authoritative_unbrandable_weapons_receive_a_content_tag() {
+        for (sval, name, flags) in [
+            (32, "Poison Needle", Vec::new()),
+            (34, "Rune Sword", Vec::new()),
+            (1, "Sticky Blade", vec!["NO_REMOVE".to_owned()]),
+        ] {
+            let item = item_json(
+                &LegacyItemEntry {
+                    name: name.to_owned(),
+                    glyph: Some('|'),
+                    tval: 23,
+                    sval,
+                    weight_tenths_pound: 10,
+                    flags,
+                    ..LegacyItemEntry::default()
+                },
+                &kebab(name),
+                &LauncherAmmoIndex::default(),
+                None,
+                &mut ContentImportReport::default(),
+            );
+            assert!(
+                item["tags"]
+                    .as_array()
+                    .expect("item tags")
+                    .iter()
+                    .any(|tag| tag == "unbrandable")
+            );
+        }
     }
 
     #[test]

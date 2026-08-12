@@ -6,7 +6,7 @@
   "descriptionKey": "ability-demo-death-vampiric-branding-description",
   "target": {
     "modes": [
-      "self"
+      "item"
     ],
     "range": 0,
     "requiresLineOfEffect": false

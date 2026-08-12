@@ -1973,11 +1973,18 @@
         {
           "type": "object",
           "properties": {
-            "added": {
-              "type": "boolean"
-            },
             "affixId": {
               "type": "string"
+            },
+            "brand": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/WeaponBrandDto"
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
             "effectIndex": {
               "type": "integer",
@@ -1991,9 +1998,25 @@
             "itemKindId": {
               "type": "string"
             },
+            "resistance": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/DamageTypeDto"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "toDamage": {
+              "$ref": "#/$defs/ItemEnchantmentComponentResolutionDto"
+            },
+            "toHit": {
+              "$ref": "#/$defs/ItemEnchantmentComponentResolutionDto"
+            },
             "type": {
               "type": "string",
-              "const": "enchant-equipped-weapon"
+              "const": "brand-weapon"
             }
           },
           "required": [
@@ -2002,7 +2025,8 @@
             "itemId",
             "itemKindId",
             "affixId",
-            "added"
+            "toHit",
+            "toDamage"
           ]
         },
         {
@@ -3664,9 +3688,29 @@
             "affixId": {
               "type": "string"
             },
+            "brand": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/WeaponBrandDto"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "resistance": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/DamageTypeDto"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
             "type": {
               "type": "string",
-              "const": "enchant-equipped-weapon"
+              "const": "brand-weapon"
             }
           },
           "required": [

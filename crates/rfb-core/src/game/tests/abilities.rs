@@ -632,8 +632,11 @@ fn death_second_book_materializes_original_mage_scaling_and_beam_profile() {
         abilities["demo.ability.death-poison-branding"]
             .effects
             .as_slice(),
-        [AbilityEffectSpecDto::ApplyStatus { granted_brands, .. }]
-            if granted_brands == &[WeaponBrandDto::Poison]
+        [AbilityEffectSpecDto::BrandWeapon {
+            affix_id,
+            brand: Some(WeaponBrandDto::Poison),
+            resistance: Some(DamageTypeDto::Poison),
+        }] if affix_id == "rfb-legacy.affix.slaying"
     ));
 
     game.progress.level = 32;
@@ -654,6 +657,168 @@ fn death_second_book_materializes_original_mage_scaling_and_beam_profile() {
             ..
         }] if target_category == "living"
     ));
+}
+
+#[test]
+fn death_weapon_branding_targets_plain_weapons_across_player_locations() {
+    for (ability_id, expected_affix_id, location) in [
+        (
+            "demo.ability.death-poison-branding",
+            "rfb-legacy.affix.slaying",
+            ItemLocation::Inventory,
+        ),
+        (
+            "demo.ability.death-vampiric-branding",
+            "rfb-legacy.affix.death",
+            ItemLocation::Equipped {
+                slot_id: "weapon".to_owned(),
+            },
+        ),
+        (
+            "demo.ability.death-vampiric-branding",
+            "rfb-legacy.affix.death",
+            ItemLocation::Ground(Position { x: 5, y: 5 }),
+        ),
+    ] {
+        let level = if ability_id.ends_with("poison-branding") {
+            30
+        } else {
+            40
+        };
+        let mut game = prepare_death_caster(7, level, ability_id);
+        game.debug_set_ability_casts_succeed(true);
+        game.player.position = Position { x: 5, y: 5 };
+        game.items.retain(|item| {
+            game.content
+                .item(&item.kind_id)
+                .is_some_and(|definition| definition.ability_book_id.is_some())
+        });
+        give_inventory_item(&mut game, "test.brand-target", "demo.item.dagger");
+        game.items
+            .iter_mut()
+            .find(|item| item.id == "test.brand-target")
+            .expect("branding target")
+            .location = location;
+        let mut events = Vec::new();
+
+        game.resolve_player_ability(
+            ability_id,
+            TargetSelection::Item {
+                item_id: "test.brand-target".to_owned(),
+            },
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("legal branding should resolve");
+
+        let item = game
+            .items
+            .iter()
+            .find(|item| item.id == "test.brand-target")
+            .expect("branded target");
+        assert_eq!(item.affix_ids, [expected_affix_id], "{events:#?}");
+        assert_eq!(item.origin_kind, Some(ItemOriginKindDto::PlayerMade));
+        assert_eq!(item.discount_percent, 99);
+        assert_eq!(item.quality, ItemQualityDto::Fine);
+        assert!((0..=6).contains(&item.enchantments.to_hit));
+        assert!((0..=6).contains(&item.enchantments.to_damage));
+        if ability_id.ends_with("poison-branding") {
+            assert_eq!(item.rolled_affixes.len(), 1);
+            assert!(
+                item.rolled_affixes[0]
+                    .properties
+                    .brands
+                    .contains(&WeaponBrand::Poison)
+            );
+            assert_eq!(
+                item.rolled_affixes[0]
+                    .properties
+                    .resistances
+                    .get(&ActorDamageType::Poison),
+                Some(&ActorResistanceLevel::Resistant)
+            );
+        } else {
+            assert!(item.rolled_affixes.is_empty());
+        }
+        let expected_attempts = events
+            .iter()
+            .find_map(|event| match event {
+                DomainEvent::AbilityEffectsResolved { resolution, .. } => {
+                    match resolution.effects.as_slice() {
+                        [
+                            AbilityEffectResolutionDto::BrandWeapon {
+                                to_hit, to_damage, ..
+                            },
+                        ] => {
+                            assert_eq!(to_hit.attempts, to_damage.attempts);
+                            Some(to_hit.attempts)
+                        }
+                        _ => None,
+                    }
+                }
+                _ => None,
+            })
+            .expect("branding resolution should be emitted");
+        assert!((4..=6).contains(&expected_attempts));
+        let knowledge = &game.item_property_knowledge["test.brand-target"];
+        assert!(knowledge.discovered);
+        assert!(knowledge.appraised);
+        assert!(knowledge.identified);
+        assert!(knowledge.known_affix_ids.contains(expected_affix_id));
+    }
+
+    let mut saved = Game::new(12);
+    give_inventory_item(&mut saved, "test.saved-brand", "demo.item.dagger");
+    let ability = saved
+        .content
+        .ability("demo.ability.death-vampiric-branding")
+        .expect("vampiric branding content")
+        .clone();
+    saved.resolve_player_brand_weapon_effect(&ability, "test.saved-brand", &mut Vec::new());
+    Game::from_save(saved.to_save()).expect("branded weapon should round-trip");
+}
+
+#[test]
+fn death_weapon_branding_rejects_nonplain_or_unavailable_weapons_without_rng() {
+    let mut game = prepare_death_caster(9, 40, "demo.ability.death-vampiric-branding");
+    game.debug_set_ability_casts_succeed(true);
+    game.items.retain(|item| {
+        game.content
+            .item(&item.kind_id)
+            .is_some_and(|definition| definition.ability_book_id.is_some())
+    });
+    give_inventory_item(&mut game, "test.brand-target", "demo.item.dagger");
+    game.items
+        .iter_mut()
+        .find(|item| item.id == "test.brand-target")
+        .expect("branding target")
+        .affix_ids
+        .push("rfb-legacy.affix.slaying".to_owned());
+    let mana_before = game.resources["demo.resource.mana"].current;
+    let draws_before = game.rng_draw_counter();
+    let mut events = Vec::new();
+
+    game.resolve_player_ability(
+        "demo.ability.death-vampiric-branding",
+        TargetSelection::Item {
+            item_id: "test.brand-target".to_owned(),
+        },
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("invalid branding target should be rejected cleanly");
+
+    assert_eq!(game.resources["demo.resource.mana"].current, mana_before);
+    assert_eq!(game.rng_draw_counter(), draws_before);
+    assert!(
+        matches!(
+            events.as_slice(),
+            [DomainEvent::AbilityTargetUnavailable { .. }]
+        ),
+        "{events:#?}"
+    );
 }
 
 #[test]

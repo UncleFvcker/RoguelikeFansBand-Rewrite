@@ -585,7 +585,9 @@ fn validate_item_creation_state(
     let ammunition = definition.tags.iter().any(|tag| tag == "ammunition");
     let origin_is_valid = match origin_kind {
         None => discount_percent == 0,
-        Some(ItemOriginKindDto::PlayerMade) => discount_percent == 99 && ammunition,
+        Some(ItemOriginKindDto::PlayerMade) => {
+            discount_percent == 99 && (ammunition || definition.melee_profile.is_some())
+        }
     };
     let damage_override_is_valid =
         damage_dice_override.is_none_or(|dice| (1..=9).contains(&dice) && ammunition);

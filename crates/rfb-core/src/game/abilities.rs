@@ -777,11 +777,8 @@ impl Game {
             (AbilityEffectDefinition::AggravateMonsters, AbilityTargetPlan::SelfTarget) => {
                 self.resolve_player_aggravate_monsters_effect(&ability, events, changed);
             }
-            (
-                AbilityEffectDefinition::EnchantEquippedWeapon { .. },
-                AbilityTargetPlan::SelfTarget,
-            ) => {
-                self.resolve_player_enchant_equipped_weapon_effect(&ability, events);
+            (AbilityEffectDefinition::BrandWeapon { .. }, AbilityTargetPlan::Item { item_id }) => {
+                self.resolve_player_brand_weapon_effect(&ability, &item_id, events);
             }
             (AbilityEffectDefinition::NoOp { .. }, _) => {
                 self.resolve_player_no_op_effect(&ability, events);
@@ -2774,59 +2771,100 @@ impl Game {
         });
     }
 
-    pub(super) fn resolve_player_enchant_equipped_weapon_effect(
+    fn item_is_brandable_weapon(&self, item: &ItemInstance) -> bool {
+        (matches!(
+            &item.location,
+            ItemLocation::Inventory | ItemLocation::Equipped { .. }
+        ) || item.location == ItemLocation::Ground(self.player.position))
+            && item.affix_ids.is_empty()
+            && item.rolled_affixes.is_empty()
+            && self.content.item(&item.kind_id).is_some_and(|definition| {
+                definition.melee_profile.is_some()
+                    && !definition
+                        .tags
+                        .iter()
+                        .any(|tag| matches!(tag.as_str(), "artifact" | "unbrandable"))
+            })
+    }
+
+    pub(super) fn resolve_player_brand_weapon_effect(
         &mut self,
         ability: &AbilityDefinition,
+        item_id: &str,
         events: &mut Vec<DomainEvent>,
     ) {
-        let AbilityEffectDefinition::EnchantEquippedWeapon { affix_id } = &ability.effect else {
-            unreachable!("weapon enchantment executor requires a weapon enchantment effect");
+        let AbilityEffectDefinition::BrandWeapon {
+            affix_id,
+            brand,
+            resistance,
+        } = &ability.effect
+        else {
+            unreachable!("weapon branding executor requires a weapon branding effect");
         };
-        let weapon_index = self.items.iter().position(|item| {
-            let ItemLocation::Equipped { slot_id } = &item.location else {
-                return false;
-            };
-            self.body_slot_type(slot_id) == Some("weapon")
-                && self
-                    .content
-                    .item(&item.kind_id)
-                    .is_some_and(|definition| definition.melee_profile.is_some())
-        });
-        let (item_id, item_kind_id, added) = if let Some(index) = weapon_index {
-            let item_id = self.items[index].id.clone();
-            let item_kind_id = self.items[index].kind_id.clone();
-            let added = if self.items[index].affix_ids.contains(affix_id) {
-                false
-            } else {
-                self.items[index].affix_ids.push(affix_id.clone());
-                self.items[index].affix_ids.sort();
-                self.items[index].quality = ItemQualityDto::Fine;
-                let knowledge = self
-                    .item_property_knowledge
-                    .entry(item_id.clone())
-                    .or_default();
-                knowledge.discovered = true;
-                knowledge.appraised = true;
-                knowledge.identified = true;
-                knowledge.known_affix_ids.insert(affix_id.clone());
-                true
-            };
-            (item_id, item_kind_id, added)
-        } else {
-            (String::new(), String::new(), false)
-        };
+        let item_index = self
+            .items
+            .iter()
+            .position(|item| item.id == item_id)
+            .expect("planned branding target must remain available");
+        let item_kind_id = self.items[item_index].kind_id.clone();
+        let mut properties = AffixPropertyBundleDefinition::default();
+        if let Some(brand) = brand {
+            properties.brands.insert(*brand);
+        }
+        if let Some(resistance) = resistance {
+            properties
+                .resistances
+                .insert(*resistance, ActorResistanceLevel::Resistant);
+        }
+        let item = &mut self.items[item_index];
+        item.affix_ids.push(affix_id.clone());
+        item.affix_ids.sort();
+        if properties != AffixPropertyBundleDefinition::default() {
+            item.rolled_affixes.push(RolledAffixState {
+                affix_id: affix_id.clone(),
+                properties,
+            });
+            item.rolled_affixes
+                .sort_by(|left, right| left.affix_id.cmp(&right.affix_id));
+        }
+        if item.quality == ItemQualityDto::Ordinary {
+            item.quality = ItemQualityDto::Fine;
+        }
+        item.origin_kind = Some(ItemOriginKindDto::PlayerMade);
+        item.discount_percent = 99;
+
+        let enchantment_attempts = u16::try_from(self.rng.bounded(3) + 4)
+            .expect("branding enchantment attempts must fit u16");
+        let enchantment = self.enchant_item_instance(
+            item_id,
+            ItemEnchantmentRequest::new(enchantment_attempts, enchantment_attempts, 0),
+        );
+        self.identify_item_instance(item_id, ItemIdentificationRequest::new(true));
         self.clamp_player_hp_to_effective_max();
         events.push(DomainEvent::AbilityEffectsResolved {
             ability_id: ability.id.clone(),
             resolution: AbilityEffectsResolutionDto {
                 target_entity_id: None,
                 target_kind_id: None,
-                effects: vec![AbilityEffectResolutionDto::EnchantEquippedWeapon {
+                effects: vec![AbilityEffectResolutionDto::BrandWeapon {
                     effect_index: 0,
-                    item_id,
+                    item_id: item_id.to_owned(),
                     item_kind_id,
                     affix_id: affix_id.clone(),
-                    added,
+                    brand: brand.map(weapon_brand_dto),
+                    resistance: resistance.map(DamageType::from).map(Into::into),
+                    to_hit: ItemEnchantmentComponentResolutionDto {
+                        attempts: enchantment.to_hit.attempts,
+                        successes: enchantment.to_hit.successes,
+                        before: enchantment.to_hit.before,
+                        after: enchantment.to_hit.after,
+                    },
+                    to_damage: ItemEnchantmentComponentResolutionDto {
+                        attempts: enchantment.to_damage.attempts,
+                        successes: enchantment.to_damage.successes,
+                        before: enchantment.to_damage.before,
+                        after: enchantment.to_damage.after,
+                    },
                 }],
             },
             trace: None,
@@ -5251,6 +5289,17 @@ impl Game {
                     item_id: item_id.clone(),
                 })
             }
+            AbilityEffectDefinition::BrandWeapon { .. } => {
+                let TargetSelection::Item { item_id } = target else {
+                    return None;
+                };
+                self.items
+                    .iter()
+                    .find(|item| item.id == *item_id && self.item_is_brandable_weapon(item))
+                    .map(|_| AbilityTargetPlan::Item {
+                        item_id: item_id.clone(),
+                    })
+            }
             AbilityEffectDefinition::Detect { .. } => {
                 (matches!(target, TargetSelection::SelfTarget)
                     && ability
@@ -5315,7 +5364,6 @@ impl Game {
             AbilityEffectDefinition::VisibleDamage { .. }
             | AbilityEffectDefinition::VisibleApplyStatus { .. }
             | AbilityEffectDefinition::AggravateMonsters
-            | AbilityEffectDefinition::EnchantEquippedWeapon { .. }
             | AbilityEffectDefinition::NoOp { .. } => {
                 (matches!(target, TargetSelection::SelfTarget)
                     && ability

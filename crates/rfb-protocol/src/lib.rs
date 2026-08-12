@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.178";
+pub const PROTOCOL_VERSION: &str = "1.179";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -1133,8 +1133,12 @@ pub enum AbilityEffectSpecDto {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         target_category: Option<String>,
     },
-    EnchantEquippedWeapon {
+    BrandWeapon {
         affix_id: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        brand: Option<WeaponBrandDto>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        resistance: Option<DamageTypeDto>,
     },
     RandomChoice {
         roll_sides: u16,
@@ -2137,12 +2141,17 @@ pub enum AbilityEffectResolutionDto {
         entity_ids: Vec<String>,
         positions: Vec<Position>,
     },
-    EnchantEquippedWeapon {
+    BrandWeapon {
         effect_index: u8,
         item_id: String,
         item_kind_id: String,
         affix_id: String,
-        added: bool,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        brand: Option<WeaponBrandDto>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        resistance: Option<DamageTypeDto>,
+        to_hit: ItemEnchantmentComponentResolutionDto,
+        to_damage: ItemEnchantmentComponentResolutionDto,
     },
     NoOp {
         effect_index: u8,

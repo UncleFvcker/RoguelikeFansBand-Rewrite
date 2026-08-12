@@ -7,6 +7,7 @@ import test from "node:test";
 import {
   formatTenthsPound,
   itemIdentificationMessageKey,
+  itemTargetCandidates,
   parseDropQuantity,
   selectedRechargingItems,
 } from "./inventory-panel.ts";
@@ -45,4 +46,36 @@ test("inventory recharge pairing remains order-independent", () => {
   assert.deepEqual(selectedRechargingItems([source, target]), { item: target, source });
   assert.equal(selectedRechargingItems([target]), undefined);
   assert.equal(formatTenthsPound(123), "12.3");
+});
+
+test("item targeting includes only ground items at the player's feet", () => {
+  const state = {
+    inventory: [{ id: "pack", kindId: "item.pack", displayNameKey: "pack" }],
+    equipment: [{ id: "worn", kindId: "item.worn", displayNameKey: "worn" }],
+    status: {
+      player: { position: { x: 4, y: 7 } },
+      items: [
+        {
+          id: "floor",
+          kindId: "item.floor",
+          displayNameKey: "floor",
+          position: { x: 4, y: 7 },
+        },
+        {
+          id: "distant",
+          kindId: "item.distant",
+          displayNameKey: "distant",
+          position: { x: 5, y: 7 },
+        },
+      ],
+    },
+  };
+
+  assert.deepEqual(
+    itemTargetCandidates(state, "worn", (name) => name),
+    [
+      { id: "pack", label: "pack" },
+      { id: "floor", label: "floor" },
+    ],
+  );
 });

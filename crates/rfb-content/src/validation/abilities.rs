@@ -668,7 +668,7 @@ pub(super) fn validate_abilities(
                             .as_ref()
                             .is_none_or(|category| actor_tag_values.contains(category))
                 }
-                AbilityEffectDefinition::EnchantEquippedWeapon { affix_id } => {
+                AbilityEffectDefinition::BrandWeapon { affix_id, .. } => {
                     validate_id(affix_id).is_ok()
                 }
                 AbilityEffectDefinition::RandomChoice { .. } => false,
@@ -732,7 +732,6 @@ pub(super) fn validate_abilities(
                                                         | AbilityEffectDefinition::Summon { .. }
                                                         | AbilityEffectDefinition::VisibleDamage { .. }
                                                         | AbilityEffectDefinition::VisibleApplyStatus { .. }
-                                                        | AbilityEffectDefinition::EnchantEquippedWeapon { .. }
                                                         | AbilityEffectDefinition::Earthquake { .. }
                                                         | AbilityEffectDefinition::AreaDestruction { .. }
                                                         | AbilityEffectDefinition::NoOp { .. }
@@ -840,6 +839,7 @@ pub(super) fn validate_abilities(
                 }
             },
             AbilityEffectDefinition::IdentifyItem { .. }
+            | AbilityEffectDefinition::BrandWeapon { .. }
             | AbilityEffectDefinition::TransmuteItemToGold { .. }
             | AbilityEffectDefinition::DrainItemMagic { .. } => item_target_rule,
             AbilityEffectDefinition::AreaDamage { .. } => {
@@ -867,7 +867,6 @@ pub(super) fn validate_abilities(
             | AbilityEffectDefinition::ResistElements { .. }
             | AbilityEffectDefinition::VisibleDamage { .. }
             | AbilityEffectDefinition::VisibleApplyStatus { .. }
-            | AbilityEffectDefinition::EnchantEquippedWeapon { .. }
             | AbilityEffectDefinition::RestoreVitality { .. }
             | AbilityEffectDefinition::ReportMagic
             | AbilityEffectDefinition::Earthquake { .. }
@@ -969,7 +968,7 @@ pub(super) fn validate_abilities(
             if let AbilityEffectDefinition::Summon { actor_kind_id, .. } = effect {
                 require_actor_role(actor_roles, actor_kind_id, ActorRole::Monster, &ability.id)?;
             }
-            if let AbilityEffectDefinition::EnchantEquippedWeapon { affix_id } = effect {
+            if let AbilityEffectDefinition::BrandWeapon { affix_id, .. } = effect {
                 require_reference(affix_ids, affix_id, &ability.id)?;
             }
             if let AbilityEffectDefinition::ApplyStatus {

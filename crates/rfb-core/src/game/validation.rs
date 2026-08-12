@@ -122,7 +122,9 @@ fn item_creation_state_is_valid(
     let player_made_state_is_valid = match item.origin_kind {
         None => item.discount_percent == 0,
         Some(ItemOriginKindDto::PlayerMade) => {
-            item.discount_percent == 99 && definition.tags.iter().any(|tag| tag == "ammunition")
+            item.discount_percent == 99
+                && (definition.tags.iter().any(|tag| tag == "ammunition")
+                    || definition.melee_profile.is_some())
         }
     };
     let damage_override_is_valid = item.damage_dice_override.is_none_or(|dice| {

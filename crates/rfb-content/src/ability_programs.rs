@@ -165,7 +165,6 @@ fn ability_program_top_level_random_choice_is_valid(
                                 | AbilityEffectDefinition::Summon { .. }
                                 | AbilityEffectDefinition::VisibleDamage { .. }
                                 | AbilityEffectDefinition::VisibleApplyStatus { .. }
-                                | AbilityEffectDefinition::EnchantEquippedWeapon { .. }
                                 | AbilityEffectDefinition::Earthquake { .. }
                                 | AbilityEffectDefinition::AreaDestruction { .. }
                                 | AbilityEffectDefinition::NoOp { .. }
@@ -217,7 +216,6 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::RestoreVitality { .. }
                     | AbilityEffectDefinition::VisibleDamage { .. }
                     | AbilityEffectDefinition::VisibleApplyStatus { .. }
-                    | AbilityEffectDefinition::EnchantEquippedWeapon { .. }
                     | AbilityEffectDefinition::BlinkSelf { .. }
                     | AbilityEffectDefinition::TeleportSelf { .. }
                     | AbilityEffectDefinition::ReportMagic
@@ -286,6 +284,7 @@ fn ability_program_input_accepts_step(
             matches!(
                 effect,
                 AbilityEffectDefinition::IdentifyItem { .. }
+                    | AbilityEffectDefinition::BrandWeapon { .. }
                     | AbilityEffectDefinition::TransmuteItemToGold { .. }
                     | AbilityEffectDefinition::DrainItemMagic { .. }
             ) || matches!(

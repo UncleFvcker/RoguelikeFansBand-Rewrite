@@ -542,8 +542,12 @@ pub enum AbilityEffectDefinition {
         #[serde(default)]
         target_category: Option<String>,
     },
-    EnchantEquippedWeapon {
+    BrandWeapon {
         affix_id: String,
+        #[serde(default)]
+        brand: Option<WeaponBrand>,
+        #[serde(default)]
+        resistance: Option<ActorDamageType>,
     },
     RandomChoice {
         roll_sides: u16,

@@ -6620,11 +6620,15 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             power: *power,
             target_category: target_category.clone(),
         },
-        AbilityEffectDefinition::EnchantEquippedWeapon { affix_id } => {
-            AbilityEffectSpecDto::EnchantEquippedWeapon {
-                affix_id: affix_id.clone(),
-            }
-        }
+        AbilityEffectDefinition::BrandWeapon {
+            affix_id,
+            brand,
+            resistance,
+        } => AbilityEffectSpecDto::BrandWeapon {
+            affix_id: affix_id.clone(),
+            brand: brand.map(weapon_brand_dto),
+            resistance: resistance.map(DamageType::from).map(Into::into),
+        },
         AbilityEffectDefinition::RandomChoice {
             roll_sides,
             level_bonus_divisor,

@@ -1900,8 +1900,30 @@
             "affixId": {
               "type": "string"
             },
+            "brand": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/WeaponBrand"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "resistance": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ActorDamageType"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
             "type": {
-              "const": "enchant-equipped-weapon",
+              "const": "brand-weapon",
               "type": "string"
             }
           },
