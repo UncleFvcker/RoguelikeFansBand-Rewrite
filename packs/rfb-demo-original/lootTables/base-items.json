@@ -11,10 +11,42 @@
       "minDepth": 15
     },
     {
+      "itemKindId": "demo.item.acquirement-scroll",
+      "weight": 33,
+      "quantity": 1,
+      "minDepth": 40
+    },
+    {
+      "itemKindId": "demo.item.adamantine-bolt",
+      "weight": 25,
+      "quantity": 1,
+      "minDepth": 100
+    },
+    {
+      "itemKindId": "demo.item.aether-rupture-scroll",
+      "weight": 16,
+      "quantity": 1,
+      "minDepth": 90
+    },
+    {
+      "itemKindId": "demo.item.antidote-potion",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 5,
+      "maxDepth": 50
+    },
+    {
       "itemKindId": "demo.item.appraisal-scroll",
       "weight": 100,
       "quantity": 1,
       "minDepth": 1
+    },
+    {
+      "itemKindId": "demo.item.armor-blight-scroll",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 50,
+      "maxDepth": 70
     },
     {
       "itemKindId": "demo.item.armor-tempering-scroll",
@@ -36,6 +68,18 @@
       "minDepth": 30
     },
     {
+      "itemKindId": "demo.item.awl-pike",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 10
+    },
+    {
+      "itemKindId": "demo.item.banishment-scroll",
+      "weight": 25,
+      "quantity": 1,
+      "minDepth": 50
+    },
+    {
       "itemKindId": "demo.item.basillard",
       "weight": 33,
       "quantity": 1,
@@ -46,6 +90,19 @@
       "weight": 100,
       "quantity": 1,
       "minDepth": 15
+    },
+    {
+      "itemKindId": "demo.item.black-channels",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 45,
+      "maxDepth": 90
+    },
+    {
+      "itemKindId": "demo.item.blade-of-chaos",
+      "weight": 12,
+      "quantity": 1,
+      "minDepth": 70
     },
     {
       "itemKindId": "demo.item.blindness-mushroom",
@@ -59,6 +116,26 @@
       "weight": 100,
       "quantity": 1,
       "minDepth": 1
+    },
+    {
+      "itemKindId": "demo.item.bolt",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 10,
+      "maxDepth": 60
+    },
+    {
+      "itemKindId": "demo.item.brass-lantern",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 3,
+      "maxDepth": 30
+    },
+    {
+      "itemKindId": "demo.item.broad-sword",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 10
     },
     {
       "itemKindId": "demo.item.broken-dagger",
@@ -86,6 +163,24 @@
       "minDepth": 25
     },
     {
+      "itemKindId": "demo.item.charisma-potion",
+      "weight": 16,
+      "quantity": 1,
+      "minDepth": 20
+    },
+    {
+      "itemKindId": "demo.item.charisma-potion",
+      "weight": 33,
+      "quantity": 1,
+      "minDepth": 30
+    },
+    {
+      "itemKindId": "demo.item.cinder-surge-scroll",
+      "weight": 33,
+      "quantity": 1,
+      "minDepth": 50
+    },
+    {
       "itemKindId": "demo.item.clamor-scroll",
       "weight": 100,
       "quantity": 1,
@@ -105,6 +200,19 @@
       "quantity": 1,
       "minDepth": 40,
       "maxDepth": 60
+    },
+    {
+      "itemKindId": "demo.item.claymore",
+      "weight": 50,
+      "quantity": 1,
+      "minDepth": 40
+    },
+    {
+      "itemKindId": "demo.item.cleansing-scroll",
+      "weight": 50,
+      "quantity": 1,
+      "minDepth": 10,
+      "maxDepth": 50
     },
     {
       "itemKindId": "demo.item.cloak",
@@ -146,10 +254,42 @@
       "maxDepth": 30
     },
     {
+      "itemKindId": "demo.item.constitution-potion",
+      "weight": 16,
+      "quantity": 1,
+      "minDepth": 20
+    },
+    {
+      "itemKindId": "demo.item.constitution-potion",
+      "weight": 33,
+      "quantity": 1,
+      "minDepth": 30
+    },
+    {
       "itemKindId": "demo.item.cord-armour",
       "weight": 100,
       "quantity": 1,
       "minDepth": 7
+    },
+    {
+      "itemKindId": "demo.item.crafting-scroll",
+      "weight": 33,
+      "quantity": 1,
+      "minDepth": 60
+    },
+    {
+      "itemKindId": "demo.item.cure-blindness-mushroom",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 10,
+      "maxDepth": 30
+    },
+    {
+      "itemKindId": "demo.item.cure-confusion-mushroom",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 10,
+      "maxDepth": 40
     },
     {
       "itemKindId": "demo.item.cure-critical-wounds-potion",
@@ -157,6 +297,43 @@
       "quantity": 1,
       "minDepth": 20,
       "maxDepth": 60
+    },
+    {
+      "itemKindId": "demo.item.cure-paranoia-mushroom",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 10
+    },
+    {
+      "itemKindId": "demo.item.cure-poison-mushroom",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 10
+    },
+    {
+      "itemKindId": "demo.item.cure-serious-wounds-potion",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 10,
+      "maxDepth": 30
+    },
+    {
+      "itemKindId": "demo.item.curing-potion",
+      "weight": 50,
+      "quantity": 1,
+      "minDepth": 5
+    },
+    {
+      "itemKindId": "demo.item.curing-potion",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 20
+    },
+    {
+      "itemKindId": "demo.item.curing-potion",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 40
     },
     {
       "itemKindId": "demo.item.cutlass",
@@ -191,11 +368,56 @@
       "minDepth": 20
     },
     {
+      "itemKindId": "demo.item.destruction-scroll",
+      "weight": 50,
+      "quantity": 1,
+      "minDepth": 40
+    },
+    {
       "itemKindId": "demo.item.detect-invisible-scroll",
       "weight": 100,
       "quantity": 1,
       "minDepth": 1,
       "maxDepth": 30
+    },
+    {
+      "itemKindId": "demo.item.detect-monsters-scroll",
+      "weight": 50,
+      "quantity": 1,
+      "minDepth": 10,
+      "maxDepth": 50
+    },
+    {
+      "itemKindId": "demo.item.detect-objects-staff",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 10
+    },
+    {
+      "itemKindId": "demo.item.dexterity-potion",
+      "weight": 16,
+      "quantity": 1,
+      "minDepth": 20
+    },
+    {
+      "itemKindId": "demo.item.dexterity-potion",
+      "weight": 33,
+      "quantity": 1,
+      "minDepth": 30
+    },
+    {
+      "itemKindId": "demo.item.disease-mushroom",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 20,
+      "maxDepth": 40
+    },
+    {
+      "itemKindId": "demo.item.dispel-undead-scroll",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 35,
+      "maxDepth": 70
     },
     {
       "itemKindId": "demo.item.door-stair-location-scroll",
@@ -205,16 +427,96 @@
       "maxDepth": 30
     },
     {
+      "itemKindId": "demo.item.dwarven-backpack",
+      "weight": 25,
+      "quantity": 1,
+      "minDepth": 70
+    },
+    {
       "itemKindId": "demo.item.elven-cloak",
       "weight": 25,
       "quantity": 1,
       "minDepth": 30
     },
     {
+      "itemKindId": "demo.item.enlightenment-potion",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 25
+    },
+    {
+      "itemKindId": "demo.item.enlightenment-potion",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 50
+    },
+    {
+      "itemKindId": "demo.item.espadon",
+      "weight": 33,
+      "quantity": 1,
+      "minDepth": 40
+    },
+    {
+      "itemKindId": "demo.item.executioners-sword",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 40
+    },
+    {
+      "itemKindId": "demo.item.experience-potion",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 65
+    },
+    {
+      "itemKindId": "demo.item.fabric-bag",
+      "weight": 33,
+      "quantity": 1,
+      "minDepth": 20,
+      "maxDepth": 40
+    },
+    {
+      "itemKindId": "demo.item.falchion",
+      "weight": 33,
+      "quantity": 1,
+      "minDepth": 40
+    },
+    {
+      "itemKindId": "demo.item.falcon-sword",
+      "weight": 12,
+      "quantity": 1,
+      "minDepth": 65
+    },
+    {
+      "itemKindId": "demo.item.farstep-scroll",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 10
+    },
+    {
+      "itemKindId": "demo.item.fast-recovery-mushroom",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 15
+    },
+    {
       "itemKindId": "demo.item.filthy-rag",
       "weight": 100,
       "quantity": 1,
       "minDepth": 0
+    },
+    {
+      "itemKindId": "demo.item.flamberge",
+      "weight": 50,
+      "quantity": 1,
+      "minDepth": 40
+    },
+    {
+      "itemKindId": "demo.item.flask-of-oil",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 1,
+      "maxDepth": 30
     },
     {
       "itemKindId": "demo.item.flicker-scroll",
@@ -231,10 +533,83 @@
       "maxDepth": 30
     },
     {
+      "itemKindId": "demo.item.fur-cloak",
+      "weight": 50,
+      "quantity": 1,
+      "minDepth": 20
+    },
+    {
+      "itemKindId": "demo.item.fur-cloak",
+      "weight": 50,
+      "quantity": 1,
+      "minDepth": 30
+    },
+    {
+      "itemKindId": "demo.item.fury-draught",
+      "weight": 33,
+      "quantity": 1,
+      "minDepth": 20
+    },
+    {
+      "itemKindId": "demo.item.giant-strength-potion",
+      "weight": 16,
+      "quantity": 1,
+      "minDepth": 30
+    },
+    {
+      "itemKindId": "demo.item.glyph-severance-scroll",
+      "weight": 25,
+      "quantity": 1,
+      "minDepth": 40
+    },
+    {
+      "itemKindId": "demo.item.glyph-severance-scroll",
+      "weight": 25,
+      "quantity": 1,
+      "minDepth": 80
+    },
+    {
+      "itemKindId": "demo.item.granite-tonic",
+      "weight": 33,
+      "quantity": 1,
+      "minDepth": 30
+    },
+    {
+      "itemKindId": "demo.item.great-clarity-potion",
+      "weight": 50,
+      "quantity": 1,
+      "minDepth": 40
+    },
+    {
+      "itemKindId": "demo.item.great-clarity-potion",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 80
+    },
+    {
+      "itemKindId": "demo.item.greater-cleansing-scroll",
+      "weight": 25,
+      "quantity": 1,
+      "minDepth": 35
+    },
+    {
+      "itemKindId": "demo.item.greater-cleansing-scroll",
+      "weight": 50,
+      "quantity": 1,
+      "minDepth": 75
+    },
+    {
       "itemKindId": "demo.item.halberd",
       "weight": 100,
       "quantity": 1,
       "minDepth": 25
+    },
+    {
+      "itemKindId": "demo.item.hallucination-mushroom",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 10,
+      "maxDepth": 30
     },
     {
       "itemKindId": "demo.item.hard-leather-armour",
@@ -247,6 +622,18 @@
       "weight": 100,
       "quantity": 1,
       "minDepth": 3
+    },
+    {
+      "itemKindId": "demo.item.hard-studded-leather",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 10
+    },
+    {
+      "itemKindId": "demo.item.hatchet",
+      "weight": 50,
+      "quantity": 1,
+      "minDepth": 10
     },
     {
       "itemKindId": "demo.item.healing-potion",
@@ -273,6 +660,12 @@
       "minDepth": 40
     },
     {
+      "itemKindId": "demo.item.holy-prayer-scroll",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 25
+    },
+    {
       "itemKindId": "demo.item.homeward-scroll",
       "weight": 100,
       "quantity": 1,
@@ -285,10 +678,41 @@
       "minDepth": 15
     },
     {
+      "itemKindId": "demo.item.intelligence-potion",
+      "weight": 16,
+      "quantity": 1,
+      "minDepth": 20
+    },
+    {
+      "itemKindId": "demo.item.intelligence-potion",
+      "weight": 33,
+      "quantity": 1,
+      "minDepth": 30
+    },
+    {
+      "itemKindId": "demo.item.inventory-protection-scroll",
+      "weight": 50,
+      "quantity": 1,
+      "minDepth": 45
+    },
+    {
+      "itemKindId": "demo.item.invulnerability-potion",
+      "weight": 11,
+      "quantity": 1,
+      "minDepth": 90
+    },
+    {
       "itemKindId": "demo.item.iron-helm",
       "weight": 100,
       "quantity": 1,
       "minDepth": 20
+    },
+    {
+      "itemKindId": "demo.item.iron-shot",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 3,
+      "maxDepth": 70
     },
     {
       "itemKindId": "demo.item.jingasa",
@@ -303,10 +727,28 @@
       "minDepth": 20
     },
     {
+      "itemKindId": "demo.item.khopesh",
+      "weight": 50,
+      "quantity": 1,
+      "minDepth": 10
+    },
+    {
+      "itemKindId": "demo.item.kin-summoning-scroll",
+      "weight": 50,
+      "quantity": 1,
+      "minDepth": 30
+    },
+    {
       "itemKindId": "demo.item.knit-cap",
       "weight": 33,
       "quantity": 1,
       "minDepth": 3
+    },
+    {
+      "itemKindId": "demo.item.large-leather-shield",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 15
     },
     {
       "itemKindId": "demo.item.large-metal-shield",
@@ -319,6 +761,13 @@
       "weight": 100,
       "quantity": 1,
       "minDepth": 1
+    },
+    {
+      "itemKindId": "demo.item.leather-pouch",
+      "weight": 33,
+      "quantity": 1,
+      "minDepth": 50,
+      "maxDepth": 50
     },
     {
       "itemKindId": "demo.item.leather-scale-mail",
@@ -340,13 +789,45 @@
       "maxDepth": 20
     },
     {
+      "itemKindId": "demo.item.light-scroll",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 1,
+      "maxDepth": 40
+    },
+    {
       "itemKindId": "demo.item.long-bow",
       "weight": 50,
       "quantity": 1,
       "minDepth": 30
     },
     {
+      "itemKindId": "demo.item.long-sword",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 10
+    },
+    {
+      "itemKindId": "demo.item.lose-memories-potion",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 10,
+      "maxDepth": 30
+    },
+    {
+      "itemKindId": "demo.item.lucerne-hammer",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 10
+    },
+    {
       "itemKindId": "demo.item.mace",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 5
+    },
+    {
+      "itemKindId": "demo.item.magic-missile-wand",
       "weight": 100,
       "quantity": 1,
       "minDepth": 5
@@ -358,10 +839,121 @@
       "minDepth": 3
     },
     {
+      "itemKindId": "demo.item.masterwork-armor-scroll",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 40
+    },
+    {
+      "itemKindId": "demo.item.masterwork-weapon-scroll",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 40
+    },
+    {
+      "itemKindId": "demo.item.metal-cap",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 10
+    },
+    {
+      "itemKindId": "demo.item.might-tonic",
+      "weight": 16,
+      "quantity": 1,
+      "minDepth": 20
+    },
+    {
+      "itemKindId": "demo.item.might-tonic",
+      "weight": 33,
+      "quantity": 1,
+      "minDepth": 30
+    },
+    {
+      "itemKindId": "demo.item.mithril-arrow",
+      "weight": 50,
+      "quantity": 1,
+      "minDepth": 50
+    },
+    {
+      "itemKindId": "demo.item.mithril-bolt",
+      "weight": 50,
+      "quantity": 1,
+      "minDepth": 60
+    },
+    {
+      "itemKindId": "demo.item.mithril-shot",
+      "weight": 50,
+      "quantity": 1,
+      "minDepth": 40
+    },
+    {
+      "itemKindId": "demo.item.morning-star",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 10
+    },
+    {
+      "itemKindId": "demo.item.mortal-draught",
+      "weight": 25,
+      "quantity": 1,
+      "minDepth": 55
+    },
+    {
+      "itemKindId": "demo.item.mundanity-scroll",
+      "weight": 10,
+      "quantity": 1,
+      "minDepth": 13
+    },
+    {
+      "itemKindId": "demo.item.muse-tonic",
+      "weight": 16,
+      "quantity": 1,
+      "minDepth": 75
+    },
+    {
+      "itemKindId": "demo.item.naivety-mushroom",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 15,
+      "maxDepth": 30
+    },
+    {
+      "itemKindId": "demo.item.naivety-potion",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 20,
+      "maxDepth": 30
+    },
+    {
+      "itemKindId": "demo.item.necronomicon",
+      "weight": 33,
+      "quantity": 1,
+      "minDepth": 80
+    },
+    {
+      "itemKindId": "demo.item.neo-tsuyoshi-special",
+      "weight": 16,
+      "quantity": 1,
+      "minDepth": 15,
+      "maxDepth": 50
+    },
+    {
+      "itemKindId": "demo.item.new-life-potion",
+      "weight": 25,
+      "quantity": 1,
+      "minDepth": 30
+    },
+    {
       "itemKindId": "demo.item.ninjato",
       "weight": 50,
       "quantity": 1,
       "minDepth": 15
+    },
+    {
+      "itemKindId": "demo.item.no-dachi",
+      "weight": 33,
+      "quantity": 1,
+      "minDepth": 35
     },
     {
       "itemKindId": "demo.item.orcish-pick",
@@ -394,11 +986,30 @@
       "minDepth": 7
     },
     {
+      "itemKindId": "demo.item.paralysis-mushroom",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 20,
+      "maxDepth": 40
+    },
+    {
       "itemKindId": "demo.item.paranoia-mushroom",
       "weight": 100,
       "quantity": 1,
       "minDepth": 5,
       "maxDepth": 30
+    },
+    {
+      "itemKindId": "demo.item.perfect-focus-elixir",
+      "weight": 20,
+      "quantity": 1,
+      "minDepth": 25
+    },
+    {
+      "itemKindId": "demo.item.perfect-focus-elixir",
+      "weight": 50,
+      "quantity": 1,
+      "minDepth": 90
     },
     {
       "itemKindId": "demo.item.pet-summoning-scroll",
@@ -412,6 +1023,18 @@
       "quantity": 1,
       "minDepth": 10,
       "maxDepth": 30
+    },
+    {
+      "itemKindId": "demo.item.piece-of-elvish-waybread",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 5
+    },
+    {
+      "itemKindId": "demo.item.piece-of-elvish-waybread",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 10
     },
     {
       "itemKindId": "demo.item.pointy-hat",
@@ -433,10 +1056,28 @@
       "maxDepth": 30
     },
     {
+      "itemKindId": "demo.item.polymorph-potion",
+      "weight": 6,
+      "quantity": 1,
+      "minDepth": 50
+    },
+    {
+      "itemKindId": "demo.item.prismatic-elixir",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 20
+    },
+    {
       "itemKindId": "demo.item.protection-from-evil-scroll",
       "weight": 100,
       "quantity": 1,
       "minDepth": 30
+    },
+    {
+      "itemKindId": "demo.item.quarterstaff",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 10
     },
     {
       "itemKindId": "demo.item.rapier",
@@ -469,6 +1110,91 @@
       "minDepth": 20
     },
     {
+      "itemKindId": "demo.item.recall-setting-scroll",
+      "weight": 33,
+      "quantity": 1,
+      "minDepth": 20,
+      "maxDepth": 60
+    },
+    {
+      "itemKindId": "demo.item.recharging-scroll",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 35
+    },
+    {
+      "itemKindId": "demo.item.renewal-tonic",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 20
+    },
+    {
+      "itemKindId": "demo.item.reprisal-scroll",
+      "weight": 12,
+      "quantity": 1,
+      "minDepth": 80
+    },
+    {
+      "itemKindId": "demo.item.resonance-breach-scroll",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 10,
+      "maxDepth": 30
+    },
+    {
+      "itemKindId": "demo.item.resonance-rod",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 15
+    },
+    {
+      "itemKindId": "demo.item.restore-charisma-potion",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 20,
+      "maxDepth": 60
+    },
+    {
+      "itemKindId": "demo.item.restore-constitution-mushroom",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 20
+    },
+    {
+      "itemKindId": "demo.item.restore-constitution-potion",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 25,
+      "maxDepth": 60
+    },
+    {
+      "itemKindId": "demo.item.restore-dexterity-potion",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 25,
+      "maxDepth": 60
+    },
+    {
+      "itemKindId": "demo.item.restore-intelligence-potion",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 25,
+      "maxDepth": 60
+    },
+    {
+      "itemKindId": "demo.item.restore-strength-mushroom",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 20
+    },
+    {
+      "itemKindId": "demo.item.restore-wisdom-potion",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 25,
+      "maxDepth": 60
+    },
+    {
       "itemKindId": "demo.item.revelation-scroll",
       "weight": 100,
       "quantity": 1,
@@ -479,6 +1205,18 @@
       "weight": 100,
       "quantity": 1,
       "minDepth": 50
+    },
+    {
+      "itemKindId": "demo.item.rime-surge-scroll",
+      "weight": 33,
+      "quantity": 1,
+      "minDepth": 70
+    },
+    {
+      "itemKindId": "demo.item.ring",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 10
     },
     {
       "itemKindId": "demo.item.robe",
@@ -493,6 +1231,45 @@
       "minDepth": 50
     },
     {
+      "itemKindId": "demo.item.rounded-pebble",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 0,
+      "maxDepth": 30
+    },
+    {
+      "itemKindId": "demo.item.ruination-potion",
+      "weight": 12,
+      "quantity": 1,
+      "minDepth": 40,
+      "maxDepth": 80
+    },
+    {
+      "itemKindId": "demo.item.rumour-scroll",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 1,
+      "maxDepth": 30
+    },
+    {
+      "itemKindId": "demo.item.rune-of-protection-scroll",
+      "weight": 16,
+      "quantity": 1,
+      "minDepth": 35
+    },
+    {
+      "itemKindId": "demo.item.rune-of-protection-scroll",
+      "weight": 50,
+      "quantity": 1,
+      "minDepth": 90
+    },
+    {
+      "itemKindId": "demo.item.sabre",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 5
+    },
+    {
       "itemKindId": "demo.item.salt-water",
       "weight": 100,
       "quantity": 1,
@@ -500,11 +1277,48 @@
       "maxDepth": 20
     },
     {
+      "itemKindId": "demo.item.scimitar",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 10
+    },
+    {
+      "itemKindId": "demo.item.seeker-arrow",
+      "weight": 50,
+      "quantity": 1,
+      "minDepth": 70
+    },
+    {
+      "itemKindId": "demo.item.seeker-bolt",
+      "weight": 50,
+      "quantity": 1,
+      "minDepth": 80
+    },
+    {
       "itemKindId": "demo.item.seeking-scroll",
       "weight": 100,
       "quantity": 1,
       "minDepth": 0,
       "maxDepth": 30
+    },
+    {
+      "itemKindId": "demo.item.self-knowledge-potion",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 40
+    },
+    {
+      "itemKindId": "demo.item.sepulchral-ways",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 20,
+      "maxDepth": 50
+    },
+    {
+      "itemKindId": "demo.item.set-of-gauntlets",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 10
     },
     {
       "itemKindId": "demo.item.set-of-spiked-gauntlets",
@@ -519,6 +1333,38 @@
       "minDepth": 5
     },
     {
+      "itemKindId": "demo.item.severance-scroll",
+      "weight": 25,
+      "quantity": 1,
+      "minDepth": 50
+    },
+    {
+      "itemKindId": "demo.item.severance-scroll",
+      "weight": 25,
+      "quantity": 1,
+      "minDepth": 100
+    },
+    {
+      "itemKindId": "demo.item.shatterburst-draught",
+      "weight": 12,
+      "quantity": 1,
+      "minDepth": 60,
+      "maxDepth": 80
+    },
+    {
+      "itemKindId": "demo.item.sheaf-arrow",
+      "weight": 50,
+      "quantity": 1,
+      "minDepth": 30,
+      "maxDepth": 80
+    },
+    {
+      "itemKindId": "demo.item.short-bow",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 10
+    },
+    {
       "itemKindId": "demo.item.short-sword",
       "weight": 100,
       "quantity": 1,
@@ -530,6 +1376,57 @@
       "quantity": 1,
       "minDepth": 5,
       "maxDepth": 10
+    },
+    {
+      "itemKindId": "demo.item.sickle",
+      "weight": 33,
+      "quantity": 1,
+      "minDepth": 10
+    },
+    {
+      "itemKindId": "demo.item.sickliness-potion",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 10,
+      "maxDepth": 20
+    },
+    {
+      "itemKindId": "demo.item.sickness-mushroom",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 10,
+      "maxDepth": 30
+    },
+    {
+      "itemKindId": "demo.item.sight-potion",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 3,
+      "maxDepth": 30
+    },
+    {
+      "itemKindId": "demo.item.sixfold-provision",
+      "weight": 12,
+      "quantity": 1,
+      "minDepth": 20
+    },
+    {
+      "itemKindId": "demo.item.sixfold-provision",
+      "weight": 25,
+      "quantity": 1,
+      "minDepth": 30
+    },
+    {
+      "itemKindId": "demo.item.sixfold-provision",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 40
+    },
+    {
+      "itemKindId": "demo.item.sixfold-tonic",
+      "weight": 8,
+      "quantity": 1,
+      "minDepth": 40
     },
     {
       "itemKindId": "demo.item.sleep-potion",
@@ -553,6 +1450,12 @@
       "maxDepth": 10
     },
     {
+      "itemKindId": "demo.item.sling",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 5
+    },
+    {
       "itemKindId": "demo.item.slowness-potion",
       "weight": 100,
       "quantity": 1,
@@ -564,6 +1467,12 @@
       "weight": 100,
       "quantity": 1,
       "minDepth": 3
+    },
+    {
+      "itemKindId": "demo.item.small-metal-shield",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 10
     },
     {
       "itemKindId": "demo.item.small-sword",
@@ -590,11 +1499,99 @@
       "minDepth": 3
     },
     {
+      "itemKindId": "demo.item.spear",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 5
+    },
+    {
+      "itemKindId": "demo.item.spell-scroll",
+      "weight": 12,
+      "quantity": 1,
+      "minDepth": 10
+    },
+    {
+      "itemKindId": "demo.item.star-acquirement-scroll",
+      "weight": 8,
+      "quantity": 1,
+      "minDepth": 60
+    },
+    {
+      "itemKindId": "demo.item.star-enlightenment-potion",
+      "weight": 25,
+      "quantity": 1,
+      "minDepth": 70
+    },
+    {
+      "itemKindId": "demo.item.star-healing-potion",
+      "weight": 12,
+      "quantity": 1,
+      "minDepth": 40
+    },
+    {
+      "itemKindId": "demo.item.star-healing-potion",
+      "weight": 25,
+      "quantity": 1,
+      "minDepth": 60
+    },
+    {
+      "itemKindId": "demo.item.star-healing-potion",
+      "weight": 50,
+      "quantity": 1,
+      "minDepth": 80
+    },
+    {
+      "itemKindId": "demo.item.steel-bolt",
+      "weight": 50,
+      "quantity": 1,
+      "minDepth": 40
+    },
+    {
+      "itemKindId": "demo.item.stench-of-death",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 10,
+      "maxDepth": 30
+    },
+    {
+      "itemKindId": "demo.item.stone-ring-scroll",
+      "weight": 16,
+      "quantity": 1,
+      "minDepth": 75
+    },
+    {
+      "itemKindId": "demo.item.strength-renewal-tonic",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 25,
+      "maxDepth": 60
+    },
+    {
+      "itemKindId": "demo.item.stupidity-mushroom",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 15,
+      "maxDepth": 30
+    },
+    {
+      "itemKindId": "demo.item.stupidity-potion",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 20,
+      "maxDepth": 30
+    },
+    {
       "itemKindId": "demo.item.summoning-scroll",
       "weight": 100,
       "quantity": 1,
       "minDepth": 1,
       "maxDepth": 30
+    },
+    {
+      "itemKindId": "demo.item.sunlit-feast",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 90
     },
     {
       "itemKindId": "demo.item.swiftstep-tonic",
@@ -636,11 +1633,24 @@
       "maxDepth": 30
     },
     {
+      "itemKindId": "demo.item.treasure-detection-scroll",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 0,
+      "maxDepth": 20
+    },
+    {
       "itemKindId": "demo.item.tsuyoshi-special",
       "weight": 50,
       "quantity": 1,
       "minDepth": 10,
       "maxDepth": 40
+    },
+    {
+      "itemKindId": "demo.item.tulwar",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 5
     },
     {
       "itemKindId": "demo.item.two-handed-sword",
@@ -649,7 +1659,27 @@
       "minDepth": 30
     },
     {
+      "itemKindId": "demo.item.ugliness-potion",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 20,
+      "maxDepth": 30
+    },
+    {
       "itemKindId": "demo.item.undead-summoning-scroll",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 15,
+      "maxDepth": 40
+    },
+    {
+      "itemKindId": "demo.item.understanding-scroll",
+      "weight": 16,
+      "quantity": 1,
+      "minDepth": 40
+    },
+    {
+      "itemKindId": "demo.item.unhealth-mushroom",
       "weight": 100,
       "quantity": 1,
       "minDepth": 15,
@@ -676,6 +1706,12 @@
       "maxDepth": 30
     },
     {
+      "itemKindId": "demo.item.verdant-ring-scroll",
+      "weight": 25,
+      "quantity": 1,
+      "minDepth": 50
+    },
+    {
       "itemKindId": "demo.item.vigor-potion",
       "weight": 50,
       "quantity": 1,
@@ -688,16 +1724,67 @@
       "minDepth": 45
     },
     {
+      "itemKindId": "demo.item.vitalis-elixir",
+      "weight": 12,
+      "quantity": 1,
+      "minDepth": 60
+    },
+    {
+      "itemKindId": "demo.item.vitalis-elixir",
+      "weight": 25,
+      "quantity": 1,
+      "minDepth": 100
+    },
+    {
       "itemKindId": "demo.item.wakizashi",
       "weight": 33,
       "quantity": 1,
       "minDepth": 15
     },
     {
+      "itemKindId": "demo.item.weakness-mushroom",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 10,
+      "maxDepth": 30
+    },
+    {
+      "itemKindId": "demo.item.weapon-blight-scroll",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 50,
+      "maxDepth": 70
+    },
+    {
       "itemKindId": "demo.item.whip",
       "weight": 100,
       "quantity": 1,
       "minDepth": 3
+    },
+    {
+      "itemKindId": "demo.item.wisdom-potion",
+      "weight": 16,
+      "quantity": 1,
+      "minDepth": 20
+    },
+    {
+      "itemKindId": "demo.item.wisdom-potion",
+      "weight": 33,
+      "quantity": 1,
+      "minDepth": 30
+    },
+    {
+      "itemKindId": "demo.item.wooden-torch",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 1,
+      "maxDepth": 20
+    },
+    {
+      "itemKindId": "demo.item.zweihander",
+      "weight": 33,
+      "quantity": 1,
+      "minDepth": 40
     }
   ],
   "qualityPolicy": {

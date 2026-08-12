@@ -1,4 +1,4 @@
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 use super::*;
 
@@ -4075,6 +4075,14 @@ fn supported_legacy_consumables_use_their_source_allocations() {
         ("demo.item.door-stair-location-scroll", 5, 30),
         ("demo.item.confusing-touch-scroll", 5, 40),
         ("demo.item.clumsiness-potion", 5, 20),
+        ("demo.item.hallucination-mushroom", 10, 30),
+        ("demo.item.weakness-mushroom", 10, 30),
+        ("demo.item.sickness-mushroom", 10, 30),
+        ("demo.item.lose-memories-potion", 10, 30),
+        ("demo.item.stupidity-mushroom", 15, 30),
+        ("demo.item.naivety-mushroom", 15, 30),
+        ("demo.item.paralysis-mushroom", 20, 40),
+        ("demo.item.ruination-potion", 40, 80),
     ];
     for (item_id, min_depth, max_depth) in expected {
         let entry = base_items
@@ -4090,11 +4098,21 @@ fn supported_legacy_consumables_use_their_source_allocations() {
             "demo.item.benediction-scroll" | "demo.item.satisfy-hunger-scroll"
         )
     }));
+    assert_eq!(
+        base_items
+            .entries
+            .iter()
+            .filter(|entry| entry.item_kind_id == "demo.item.star-healing-potion")
+            .map(|entry| (entry.min_depth, entry.weight))
+            .collect::<Vec<_>>(),
+        vec![(40, 12), (60, 25), (80, 50)]
+    );
 }
 
 #[test]
 fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
-    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let pack_path = original_pack_path();
+    let artifact = compile_pack_dir(&pack_path).expect("original pack should compile");
     let base_items = artifact
         .content
         .loot_tables
@@ -4102,16 +4120,74 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
         .find(|table| table.id == "demo.loot-table.base-items")
         .expect("base item pool should exist");
 
-    assert_eq!(base_items.entries.len(), 110);
-    assert_eq!(
-        base_items
-            .entries
-            .iter()
-            .map(|entry| entry.item_kind_id.as_str())
-            .collect::<BTreeSet<_>>()
-            .len(),
-        98
-    );
+    assert_eq!(base_items.entries.len(), 283);
+
+    let selection: serde_json::Value = serde_json::from_slice(
+        &std::fs::read(pack_path.join("legacy-item-selection.json"))
+            .expect("item selection should be readable"),
+    )
+    .expect("item selection should be valid JSON");
+    let adaptations: serde_json::Value = serde_json::from_slice(
+        &std::fs::read(pack_path.join("legacy-item-adaptations.json"))
+            .expect("item adaptations should be readable"),
+    )
+    .expect("item adaptations should be valid JSON");
+    let mut active_source_items = BTreeMap::new();
+    for item in selection["items"]
+        .as_array()
+        .expect("item selection should contain items")
+    {
+        active_source_items.insert(
+            item["sourceIndex"]
+                .as_u64()
+                .expect("selected item should have a source index"),
+            format!(
+                "demo.item.{}",
+                item["id"]
+                    .as_str()
+                    .expect("selected item should have an id")
+            ),
+        );
+    }
+    for item in adaptations["items"]
+        .as_array()
+        .expect("item adaptations should contain items")
+        .iter()
+        .filter(|item| item["status"] == "active")
+    {
+        active_source_items
+            .entry(
+                item["sourceIndex"]
+                    .as_u64()
+                    .expect("adapted item should have a source index"),
+            )
+            .or_insert_with(|| {
+                item["itemId"]
+                    .as_str()
+                    .expect("adapted item should have an item id")
+                    .to_owned()
+            });
+    }
+    assert_eq!(active_source_items.len(), 259);
+
+    let source_items_without_allocations =
+        BTreeSet::from([33, 34, 36, 37, 345, 346, 347, 400, 401, 460]);
+    let expected_item_ids = active_source_items
+        .iter()
+        .filter(|(source_index, _)| !source_items_without_allocations.contains(source_index))
+        .map(|(_, item_id)| item_id.as_str())
+        .collect::<BTreeSet<_>>();
+    let actual_item_ids = base_items
+        .entries
+        .iter()
+        .map(|entry| entry.item_kind_id.as_str())
+        .collect::<BTreeSet<_>>();
+    assert_eq!(expected_item_ids.len(), 249);
+    assert_eq!(actual_item_ids, expected_item_ids);
+
+    // Source 313 is one Staff allocation split into two formal adaptations.
+    assert!(actual_item_ids.contains("demo.item.detect-objects-staff"));
+    assert!(!actual_item_ids.contains("demo.item.identify-staff"));
     assert_eq!(
         base_items.quality_policy,
         Some(LootQualityPolicyDefinition::RfbDepth {
@@ -4445,11 +4521,17 @@ fn selected_legacy_equipment_uses_its_shop_and_source_allocation() {
         depth("demo.item.set-of-studded-leather-gloves"),
         Some((5, u16::MAX))
     );
-    assert_eq!(depth("demo.item.metal-cap"), None);
-    assert_eq!(depth("demo.item.small-metal-shield"), None);
-    assert_eq!(depth("demo.item.large-leather-shield"), None);
-    assert_eq!(depth("demo.item.hard-studded-leather"), None);
-    assert_eq!(depth("demo.item.set-of-gauntlets"), None);
+    assert_eq!(depth("demo.item.metal-cap"), Some((10, u16::MAX)));
+    assert_eq!(depth("demo.item.small-metal-shield"), Some((10, u16::MAX)));
+    assert_eq!(
+        depth("demo.item.large-leather-shield"),
+        Some((15, u16::MAX))
+    );
+    assert_eq!(
+        depth("demo.item.hard-studded-leather"),
+        Some((10, u16::MAX))
+    );
+    assert_eq!(depth("demo.item.set-of-gauntlets"), Some((10, u16::MAX)));
 }
 
 #[test]
@@ -4578,6 +4660,12 @@ fn p3_1_allocated_items_all_have_a_shop_or_base_pool_path() {
         "demo.item.blindness-mushroom",
         "demo.item.paranoia-mushroom",
         "demo.item.confusion-mushroom",
+        "demo.item.hallucination-mushroom",
+        "demo.item.paralysis-mushroom",
+        "demo.item.weakness-mushroom",
+        "demo.item.sickness-mushroom",
+        "demo.item.stupidity-mushroom",
+        "demo.item.naivety-mushroom",
         "demo.item.unhealth-mushroom",
         "demo.item.disease-mushroom",
         "demo.item.cure-poison-mushroom",
@@ -4623,6 +4711,8 @@ fn p3_2_items_all_have_a_shop_or_warrens_acquisition_path() {
         "demo.item.water-potion",
         "demo.item.apple-juice",
         "demo.item.slime-mold-juice",
+        "demo.item.lose-memories-potion",
+        "demo.item.ruination-potion",
         "demo.item.sight-potion",
         "demo.item.antidote-potion",
         "demo.item.curing-potion",
