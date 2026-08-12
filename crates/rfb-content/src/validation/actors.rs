@@ -300,6 +300,7 @@ pub(super) fn validate_actors(
                         | ActorDamageType::Cold
                         | ActorDamageType::Electricity
                         | ActorDamageType::Curse
+                        | ActorDamageType::Shards
                 ) || !(1..=100).contains(&aura.damage_dice)
                     || !(1..=10_000).contains(&aura.damage_sides)
                     || aura

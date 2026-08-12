@@ -719,7 +719,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         .iter()
         .filter(|actor| actor.tags.iter().any(|tag| tag == "orc-cave"))
         .collect::<Vec<_>>();
-    assert_eq!(orc_cave.len(), 453);
+    assert_eq!(orc_cave.len(), 459);
 
     for id in [
         "demo.actor.bunyip",
@@ -766,8 +766,8 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
     assert_eq!(
         level_counts,
         [
-            16, 14, 12, 17, 24, 17, 19, 17, 18, 21, 7, 12, 29, 15, 27, 28, 19, 19, 11, 42, 10, 5,
-            10, 12, 12, 6, 10, 4,
+            16, 14, 12, 17, 24, 17, 19, 17, 18, 21, 7, 12, 29, 15, 27, 28, 19, 19, 11, 42, 11, 6,
+            11, 13, 14, 6, 10, 4,
         ]
     );
 
@@ -4366,6 +4366,121 @@ fn p48b_level_47_48_direct_monsters_keep_source_identity() {
 }
 
 #[test]
+fn p49_shared_mappings_import_six_monsters_and_update_fallen_angel() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actor = |id: &str| {
+        artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == format!("demo.actor.{id}"))
+            .unwrap_or_else(|| panic!("demo.actor.{id} should be imported"))
+    };
+
+    for (id, legacy_index, level) in [
+        ("archon", 661, 41),
+        ("undead-beholder", 664, 42),
+        ("quaker-master-of-earth", 679, 43),
+        ("high-priest", 689, 44),
+        ("ultra-elite-paladin", 699, 45),
+        ("nexus-spider", 1172, 45),
+    ] {
+        let actor = actor(id);
+        assert_eq!(actor.level, level, "{id} level");
+        assert_eq!(
+            actor
+                .allocation
+                .as_ref()
+                .map(|allocation| allocation.legacy_index),
+            Some(legacy_index),
+            "{id} source index"
+        );
+    }
+
+    let casting_ids = |id: &str| {
+        actor(id)
+            .monster_casting
+            .as_ref()
+            .expect("P49 caster should retain monster casting")
+            .abilities
+            .iter()
+            .map(|candidate| candidate.ability_id.as_str())
+            .collect::<Vec<_>>()
+    };
+    for id in ["archon", "fallen-angel"] {
+        assert!(
+            casting_ids(id).contains(&"rfb-legacy.ability.invulnerability-self"),
+            "{id} should cast invulnerability"
+        );
+    }
+    assert!(
+        casting_ids("ultra-elite-paladin").contains(&"rfb-legacy.ability.beam-holy-fire-1d1-76")
+    );
+    assert!(casting_ids("nexus-spider").contains(&"rfb-legacy.ability.jump-nexus-l45"));
+
+    let mind_blast = &actor("undead-beholder")
+        .melee_routine
+        .as_ref()
+        .unwrap()
+        .blows[0]
+        .effects;
+    assert!(matches!(
+        mind_blast.first(),
+        Some(MeleeBlowEffectDefinition::Damage {
+            damage_dice: 2,
+            damage_sides: 6,
+            damage_type: ActorDamageType::Psi,
+            ..
+        })
+    ));
+    assert!(matches!(
+        mind_blast.get(1),
+        Some(MeleeBlowEffectDefinition::Confusion {
+            damage_dice: 0,
+            damage_sides: 0,
+            ..
+        })
+    ));
+    let aura = &actor("quaker-master-of-earth").contact_auras[0];
+    assert_eq!(aura.damage_type, ActorDamageType::Shards);
+    assert_eq!((aura.damage_dice, aura.damage_sides), (3, 3));
+
+    let ability = |id: &str| {
+        artifact
+            .content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == id)
+            .unwrap_or_else(|| panic!("{id} should be generated"))
+    };
+    assert!(matches!(
+        ability("rfb-legacy.ability.invulnerability-self").effect,
+        AbilityEffectDefinition::ApplyStatus {
+            ref status_kind_id,
+            duration_ticks: 4,
+            duration_dice: 1,
+            duration_sides: 4,
+            incoming_damage_percent: 0,
+            ..
+        } if status_kind_id == "rfb.status.invulnerability"
+    ));
+    assert!(matches!(
+        ability("rfb-legacy.ability.beam-holy-fire-1d1-76").effect,
+        AbilityEffectDefinition::BeamDamage {
+            damage_type: ActorDamageType::HolyFire,
+            ..
+        }
+    ));
+    assert!(matches!(
+        ability("rfb-legacy.ability.jump-nexus-l45").effect,
+        AbilityEffectDefinition::JumpDamage {
+            damage_type: ActorDamageType::Nexus,
+            ..
+        }
+    ));
+}
+
+#[test]
 fn outpost_has_walls_inner_shops_and_an_exterior_warrens_entrance() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let world = artifact
@@ -5791,7 +5906,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
                     == Some("demo.loot-table.base-items")
             })
             .count(),
-        425
+        428
     );
 }
 

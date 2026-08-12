@@ -224,6 +224,7 @@ fn demo_monster_audit_omission_is_safe(flag: &str) -> bool {
             | "POS_SUST_CON"
             | "POS_SUST_INT"
             | "POS_SUST_STR"
+            | "POS_SUST_WIS"
             | "POS_TELEPATHY"
             | "EGYPTIAN2"
             | "HINDU2"
@@ -6859,6 +6860,7 @@ fn melee_damage_type(token: &str) -> Option<&'static str> {
         "ICE" => Some("ice"),
         "WATER" => Some("water"),
         "POIS" => Some("poison"),
+        "MIND_BLAST" => Some("psi"),
         _ => None,
     }
 }
@@ -6998,6 +7000,23 @@ fn melee_effect_json(effect: &LegacyBlowEffect) -> Option<serde_json::Value> {
         value["chancePercent"] = serde_json::json!(chance_percent);
     }
     Some(value)
+}
+
+fn melee_effects_json(effect: &LegacyBlowEffect) -> Option<Vec<serde_json::Value>> {
+    if effect.token == "MIND_BLAST" {
+        if effect.chance_percent.is_some() {
+            return None;
+        }
+        return Some(vec![
+            melee_effect_json(effect)?,
+            serde_json::json!({
+                "type": "confusion",
+                "damageDice": 0,
+                "damageSides": 0,
+            }),
+        ]);
+    }
+    melee_effect_json(effect).map(|effect| vec![effect])
 }
 
 fn blow_primary_dice(blow: &LegacyBlow) -> Option<(u16, u16)> {
@@ -7260,6 +7279,7 @@ fn map_jump_spell_token(
         "JMP_CONFUSION" => "confusion",
         "JMP_DARK" => "dark",
         "JMP_LIGHT" | "JMP_LITE" => "light",
+        "JMP_NEXUS" => "nexus",
         _ => return None,
     };
     let (damage_dice, damage_sides, damage_bonus) = match explicit {
@@ -7876,6 +7896,7 @@ fn monster_json(
                 "ELEC" => "electricity",
                 "FIRE" => "fire",
                 "CAUSE_2" | "CAUSE_3" => "curse",
+                "SHARDS" => "shards",
                 _ => return None,
             };
             let (damage_dice, damage_sides) = aura.dice?;
@@ -8213,7 +8234,7 @@ fn demo_monster_json(
         || entry.auras.iter().any(|aura| {
             !matches!(
                 aura.token.as_str(),
-                "POISON" | "ACID" | "ELEC" | "FIRE" | "CAUSE_2" | "CAUSE_3"
+                "POISON" | "ACID" | "ELEC" | "FIRE" | "CAUSE_2" | "CAUSE_3" | "SHARDS"
             ) || aura.dice.is_none()
         })
     {
@@ -8245,14 +8266,17 @@ fn demo_monster_json(
             .effects
             .iter()
             .map(|effect| {
-                melee_effect_json(effect).ok_or_else(|| {
+                melee_effects_json(effect).ok_or_else(|| {
                     LegacyImportError::InvalidDemoMonsterSelection(format!(
                         "{} has unsupported blow effect {}",
                         selection.id, effect.token
                     ))
                 })
             })
-            .collect::<Result<Vec<_>, _>>()?;
+            .collect::<Result<Vec<_>, _>>()?
+            .into_iter()
+            .flatten()
+            .collect::<Vec<_>>();
         let mut method = kebab(&blow.method);
         if method.is_empty() {
             method = "strike".to_owned();
@@ -8673,6 +8697,18 @@ fn map_spell_token(
     if let Some(id) = map_misc_spell_token(token, level, abilities) {
         return Some(id);
     }
+    if let Some(amount) = token
+        .strip_prefix("HEAL(")
+        .and_then(|amount| amount.strip_suffix(')'))
+        .and_then(|amount| amount.parse::<u32>().ok())
+        .filter(|amount| (1..=1_000_000).contains(amount))
+    {
+        let id = format!("rfb-legacy.ability.heal-{amount}");
+        abilities
+            .entry(id.clone())
+            .or_insert_with(|| heal_ability(amount));
+        return Some(id);
+    }
     match token {
         "SCARE" => {
             let id = "rfb-legacy.ability.scare".to_owned();
@@ -8714,6 +8750,18 @@ fn map_spell_token(
             abilities
                 .entry(id.clone())
                 .or_insert_with(|| status_ability("haste-self", "haste", true));
+            Some(id)
+        }
+        "INVULN" => {
+            let id = "rfb-legacy.ability.invulnerability-self".to_owned();
+            abilities.entry(id.clone()).or_insert_with(|| {
+                let mut ability = status_ability("invulnerability-self", "invulnerability", true);
+                ability["effect"]["durationTicks"] = serde_json::json!(4);
+                ability["effect"]["durationDice"] = serde_json::json!(1);
+                ability["effect"]["durationSides"] = serde_json::json!(4);
+                ability["effect"]["incomingDamagePercent"] = serde_json::json!(0);
+                ability
+            });
             Some(id)
         }
         "BLINK" => {
@@ -8862,6 +8910,7 @@ fn damage_spell_defaults(
         // faithful neutral shape. Its flat damage uses the 1d1+(F-1) identity.
         "THROW" => (Bolt, "physical", (1, 1, (3 * level).saturating_sub(1))),
         "HELL_LANCE" => (Beam, "hell-fire", (1, 1, (2 * level).saturating_sub(1))),
+        "HOLY_LANCE" => (Beam, "holy-fire", (1, 1, (2 * level).saturating_sub(1))),
         "BA_ACID" => (Ball, "acid", (1, 3 * level, 15)),
         "BA_ELEC" => (Ball, "electricity", (1, 3 * level / 2, 8)),
         "BA_FIRE" => (Ball, "fire", (1, 7 * level / 2, 10)),
@@ -9339,7 +9388,7 @@ fn convert_content_from(
             .filter(|blow| {
                 blow.effects
                     .iter()
-                    .any(|effect| melee_effect_json(effect).is_some())
+                    .any(|effect| melee_effects_json(effect).is_some())
             })
             .collect();
         let intentional_no_melee = expressible.is_empty()
@@ -9366,7 +9415,7 @@ fn convert_content_from(
                 if !blow
                     .effects
                     .iter()
-                    .any(|effect| melee_effect_json(effect).is_some())
+                    .any(|effect| melee_effects_json(effect).is_some())
                 {
                     *report
                         .unmapped_blow_methods
@@ -9387,7 +9436,7 @@ fn convert_content_from(
                         .effects
                         .iter()
                         .filter_map(|effect| {
-                            let mapped = melee_effect_json(effect);
+                            let mapped = melee_effects_json(effect);
                             if mapped.is_none() {
                                 *report
                                     .unmapped_blow_effects
@@ -9396,6 +9445,7 @@ fn convert_content_from(
                             }
                             mapped
                         })
+                        .flatten()
                         .collect::<Vec<_>>();
                     let mut method = kebab(&blow.method);
                     if method.is_empty() {
@@ -12848,6 +12898,83 @@ mod tests {
         assert_eq!(
             demo_drop_theme_table_id("DROP_SAMURAI"),
             Some("demo.loot-table.samurai")
+        );
+    }
+
+    #[test]
+    fn demo_monster_import_maps_p49_shared_mechanics() {
+        let mut monsters = parse_r_info(
+            "N:661:test P49 monster\nG:A:v\nI:130:100d35:30:140:255:170\nW:45:5:999:8000:50000:942\nB:GAZE:MIND_BLAST(2d6)\nA:SHARDS(3d3)\nF:POS_SUST_WIS\nS:1_IN_3 | INVULN | HOLY_LANCE(77) | JMP_NEXUS | HEAL(200)\n",
+        )
+        .expect("synthetic P49 monster should parse");
+        let mut abilities = BTreeMap::new();
+        let actor = demo_monster_json(
+            &monsters.remove(0),
+            &DemoMonsterSelectionEntry {
+                source_index: 661,
+                source_id: None,
+                id: "test-p49-monster".to_owned(),
+                tags: vec!["orc-cave".to_owned()],
+                omitted_flags: vec!["POS_SUST_WIS".to_owned()],
+                omitted_spells: Vec::new(),
+            },
+            &mut abilities,
+        )
+        .expect("P49 mechanics should import directly");
+
+        assert!(demo_monster_audit_omission_is_safe("POS_SUST_WIS"));
+        let effects = actor["meleeRoutine"]["blows"][0]["effects"]
+            .as_array()
+            .expect("mind blast should expand to melee effects");
+        assert_eq!(effects.len(), 2);
+        assert_eq!(effects[0]["damageType"], "psi");
+        assert_eq!(effects[0]["damageDice"], 2);
+        assert_eq!(effects[0]["damageSides"], 6);
+        assert_eq!(effects[1]["type"], "confusion");
+        assert_eq!(effects[1]["damageDice"], 0);
+        assert_eq!(actor["contactAuras"][0]["damageType"], "shards");
+        assert_eq!(actor["contactAuras"][0]["damageDice"], 3);
+        assert_eq!(actor["contactAuras"][0]["damageSides"], 3);
+
+        let ability_ids = actor["monsterCasting"]["abilities"]
+            .as_array()
+            .expect("P49 monster should cast")
+            .iter()
+            .map(|ability| ability["abilityId"].as_str().expect("ability id"))
+            .collect::<Vec<_>>();
+        assert_eq!(
+            ability_ids,
+            [
+                "rfb-legacy.ability.invulnerability-self",
+                "rfb-legacy.ability.beam-holy-fire-1d1-76",
+                "rfb-legacy.ability.jump-nexus-l45",
+                "rfb-legacy.ability.heal-200",
+            ]
+        );
+        let invulnerability = &abilities["rfb-legacy.ability.invulnerability-self"];
+        assert_eq!(
+            invulnerability["target"]["modes"],
+            serde_json::json!(["self"])
+        );
+        assert_eq!(
+            invulnerability["effect"]["statusKindId"],
+            "rfb.status.invulnerability"
+        );
+        assert_eq!(invulnerability["effect"]["durationTicks"], 4);
+        assert_eq!(invulnerability["effect"]["durationDice"], 1);
+        assert_eq!(invulnerability["effect"]["durationSides"], 4);
+        assert_eq!(invulnerability["effect"]["incomingDamagePercent"], 0);
+        assert_eq!(
+            abilities["rfb-legacy.ability.beam-holy-fire-1d1-76"]["effect"]["damageType"],
+            "holy-fire"
+        );
+        assert_eq!(
+            abilities["rfb-legacy.ability.jump-nexus-l45"]["effect"]["damageType"],
+            "nexus"
+        );
+        assert_eq!(
+            abilities["rfb-legacy.ability.heal-200"]["effect"]["amount"],
+            200
         );
     }
 

@@ -520,7 +520,7 @@ pub(super) fn validate_abilities(
                         && granted_race_id
                             .as_ref()
                             .is_none_or(|race_id| validate_id(race_id).is_ok())
-                        && (1..=100).contains(incoming_damage_percent)
+                        && *incoming_damage_percent <= 100
                 }
                 AbilityEffectDefinition::RemoveStatus { status_kind_id } => {
                     validate_id(status_kind_id).is_ok()

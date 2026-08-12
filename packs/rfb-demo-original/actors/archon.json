@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
   "allocation": {
-    "legacyIndex": 652,
+    "legacyIndex": 661,
     "maxDepth": 999,
     "rarity": 5
   },
@@ -23,10 +23,12 @@
     ],
     "itemTableId": "demo.loot-table.base-items",
     "kind": "items",
-    "minimumQuality": "fine"
+    "minimumQuality": "fine",
+    "themeChancePercent": 50,
+    "themeTableId": "demo.loot-table.paladin"
   },
   "defense": 14,
-  "descriptionKey": "actor-demo-fallen-angel-description",
+  "descriptionKey": "actor-demo-archon-description",
   "doorInteraction": {
     "bashes": true,
     "opens": true
@@ -39,7 +41,7 @@
     "dice": 100,
     "sides": 35
   },
-  "id": "demo.actor.fallen-angel",
+  "id": "demo.actor.archon",
   "level": 41,
   "light": {
     "intrinsic": true,
@@ -55,8 +57,10 @@
             "damageDice": 4,
             "damageSides": 4,
             "damageType": "physical",
-            "type": "damage",
-            "vampiric": true
+            "type": "damage"
+          },
+          {
+            "type": "terrify"
           }
         ],
         "methodId": "rfb.blow.gaze",
@@ -69,8 +73,10 @@
             "damageDice": 4,
             "damageSides": 4,
             "damageType": "physical",
-            "type": "damage",
-            "vampiric": true
+            "type": "damage"
+          },
+          {
+            "type": "terrify"
           }
         ],
         "methodId": "rfb.blow.gaze",
@@ -97,13 +103,6 @@
             "damageSides": 6,
             "damageType": "physical",
             "type": "damage"
-          },
-          {
-            "attributes": [
-              "charisma"
-            ],
-            "chancePercent": 50,
-            "type": "drain-attributes"
           }
         ],
         "methodId": "rfb.blow.hit",
@@ -138,11 +137,7 @@
         "weight": 1
       },
       {
-        "abilityId": "rfb-legacy.ability.summon-demon-l41-1d3-1",
-        "weight": 1
-      },
-      {
-        "abilityId": "rfb-legacy.ability.bolt-nether-5d5-111",
+        "abilityId": "rfb-legacy.ability.summon-legacy-import-l41-1d3-1",
         "weight": 1
       },
       {
@@ -159,25 +154,23 @@
     ]
   },
   "movesWeakerBodies": true,
-  "nameKey": "actor-demo-fallen-angel-name",
+  "nameKey": "actor-demo-archon-name",
   "reflectsBolts": true,
   "resistances": {
     "acid": "resistant",
     "cold": "resistant",
-    "dark": "resistant",
     "electricity": "resistant",
     "fire": "resistant",
-    "nether": "resistant",
+    "light": "resistant",
     "poison": "resistant"
   },
   "role": "monster",
   "speed": 130,
   "tags": [
-    "evil",
+    "good",
     "kin-glyph-65",
     "legacy-import",
-    "old-castle",
-    "outpost-quest",
+    "orc-cave",
     "resist-teleport"
   ],
   "terrainInteraction": {

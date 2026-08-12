@@ -5162,6 +5162,42 @@
       "omittedFlags": []
     },
     {
+      "sourceIndex": 661,
+      "id": "archon",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 664,
+      "id": "undead-beholder",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE", "POS_TELEPATHY"]
+    },
+    {
+      "sourceIndex": 679,
+      "id": "quaker-master-of-earth",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE", "POS_GAIN_AC", "POS_HOLD_LIFE"]
+    },
+    {
+      "sourceIndex": 689,
+      "id": "high-priest",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "POS_SUST_WIS"]
+    },
+    {
+      "sourceIndex": 699,
+      "id": "ultra-elite-paladin",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["KNIGHT", "MALE"]
+    },
+    {
+      "sourceIndex": 1172,
+      "id": "nexus-spider",
+      "tags": ["orc-cave", "spider"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
       "sourceIndex": 15,
       "id": "singing-happy-drunk",
       "tags": ["outpost-quest", "trouble-at-home"],
@@ -5279,8 +5315,7 @@
       "sourceIndex": 652,
       "id": "fallen-angel",
       "tags": ["old-castle", "outpost-quest"],
-      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS"],
-      "omittedSpells": ["INVULN"]
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
     },
     {
       "sourceIndex": 701,
