@@ -1943,6 +1943,10 @@
     {
       "affixId": "rfb-legacy.affix.slaying",
       "weight": 1
+    },
+    {
+      "affixId": "rfb-legacy.affix.protection",
+      "weight": 1
     }
   ]
 }

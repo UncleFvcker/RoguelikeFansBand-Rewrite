@@ -4133,14 +4133,14 @@ fn ego_json(
     id: &str,
     report: &mut ContentImportReport,
 ) -> serde_json::Value {
-    // The C: maxima become fixed modifiers: a deterministic ceiling standing
-    // in for the legacy generation-time random rolls (documented difference).
+    // C: maxima become fixed modifiers unless a recipe below materializes the
+    // original generation-time roll.
     let mut modifiers = serde_json::Map::new();
     let attack = entry.max_to_hit.max(entry.max_to_damage);
     if attack != 0 {
         modifiers.insert("attack".to_owned(), serde_json::json!(attack));
     }
-    if entry.max_to_armor != 0 {
+    if entry.max_to_armor != 0 && entry.index != 50 {
         modifiers.insert("defense".to_owned(), serde_json::json!(entry.max_to_armor));
     }
     attribute_modifiers_from_flags(&entry.flags, entry.max_pval, &mut modifiers);
@@ -4226,6 +4226,16 @@ fn apply_ego_roll_recipe(value: &mut serde_json::Value, entry: &LegacyEgoEntry) 
         9 => vec![serde_json::json!({
             "rolls": 2,
             "candidates": elemental_craft_roll_candidates(),
+        })],
+        // Original `of Protection` rolls a uniform +1..+10 armor bonus.
+        50 => vec![serde_json::json!({
+            "rolls": 1,
+            "candidates": (1..=10)
+                .map(|defense| serde_json::json!({
+                    "weight": 1,
+                    "properties": {"modifiers": {"defense": defense}}
+                }))
+                .collect::<Vec<_>>(),
         })],
         // Original boots/ring speed pvals are depth-biased generation rolls.
         // Increasing minDepth thresholds keep high bonuses out of shallow
@@ -15326,6 +15336,40 @@ F:BRAND_VAMP | HOLD_LIFE
         );
         assert!(!outcome.report.unmapped_ego_flags.contains_key("BRAND_VAMP"));
         assert!(!outcome.report.unmapped_ego_flags.contains_key("HOLD_LIFE"));
+    }
+
+    #[test]
+    fn protection_ego_materializes_uniform_armor_rolls() {
+        let egos = parse_e_info(
+            "N:50:of Protection\nT:BODY_ARMOR | SHIELD | CLOAK | HELMET | GLOVES | BOOTS\nW:0:30:2\nC:0:0:10:0\nF:IGNORE_ACID\n",
+        )
+        .expect("Protection ego should parse");
+        let outcome = convert_content(
+            &[],
+            &[],
+            &[],
+            &egos,
+            &[],
+            &LegacyCharacterSources::default(),
+        );
+        let protection = &outcome.affix_files[0].1;
+        assert_eq!(protection["id"], "rfb-legacy.affix.protection");
+        assert_eq!(protection["generationMaxLevel"], 30);
+        assert!(protection.get("modifiers").is_none());
+        let candidates = protection["rollGroups"][0]["candidates"]
+            .as_array()
+            .expect("Protection should retain armor candidates");
+        assert_eq!(candidates.len(), 10);
+        assert_eq!(
+            candidates
+                .iter()
+                .map(|candidate| candidate["properties"]["modifiers"]["defense"]
+                    .as_i64()
+                    .unwrap())
+                .collect::<Vec<_>>(),
+            (1..=10).collect::<Vec<_>>()
+        );
+        assert!(candidates.iter().all(|candidate| candidate["weight"] == 1));
     }
 
     #[test]

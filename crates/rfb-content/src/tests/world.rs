@@ -5717,7 +5717,11 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
             .iter()
             .map(|affix| (affix.affix_id.as_deref(), affix.weight))
             .collect::<Vec<_>>(),
-        vec![(None, 9), (Some("rfb-legacy.affix.slaying"), 1)]
+        vec![
+            (None, 9),
+            (Some("rfb-legacy.affix.protection"), 1),
+            (Some("rfb-legacy.affix.slaying"), 1),
+        ]
     );
     assert!(!artifact.content.loot_tables.iter().any(|table| {
         matches!(
@@ -5828,6 +5832,38 @@ fn formal_drop_themes_use_source_allocations_and_rfb_depth_quality() {
                 .iter()
                 .all(|entry| !matches!(entry.max_depth, 9 | 32)),
             "{table_id} should not retain a dungeon depth cap"
+        );
+    }
+
+    for table_id in [
+        "demo.loot-table.warrior",
+        "demo.loot-table.paladin",
+        "demo.loot-table.dwarf",
+        "demo.loot-table.mage",
+    ] {
+        let table = artifact
+            .content
+            .loot_tables
+            .iter()
+            .find(|table| table.id == table_id)
+            .expect("Protection theme table should exist");
+        let expected = if table_id == "demo.loot-table.warrior" {
+            vec![
+                (None, 9),
+                (Some("rfb-legacy.affix.protection"), 1),
+                (Some("rfb-legacy.affix.slaying"), 1),
+            ]
+        } else {
+            vec![(None, 9), (Some("rfb-legacy.affix.protection"), 1)]
+        };
+        assert_eq!(
+            table
+                .affix_weights
+                .iter()
+                .map(|entry| (entry.affix_id.as_deref(), entry.weight))
+                .collect::<Vec<_>>(),
+            expected,
+            "{table_id}"
         );
     }
 

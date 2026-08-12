@@ -1,7 +1,7 @@
 # Contract v265: global RFB monster drop themes
 
 - `demo.loot-table.warrior` replaces the former Kobold-, Warrens-, and Orc
-  Cave-specific Warrior tables. All 58 existing Warrior theme bindings use it
+  Cave-specific Warrior tables. All 85 existing Warrior theme bindings use it
   with the existing 50 percent theme-selection chance.
 - The formal `warrior`, `archer`, `mage`, `priest`, `evil-priest`, `paladin`,
   `dwarf`, and `ninja` tables contain every currently implemented RFB item that
@@ -11,8 +11,10 @@
   and a positive `W.maximumLevel` as `maxDepth`. Multiple allocation pairs are
   retained and dungeon depth caps are not added.
 - All eight tables use the RFB depth quality policy with good/great caps
-  `75/20`. Warrior retains `9:none / 1:Slaying` as the current ego
-  approximation; the other themes retain an explicit no-affix fallback.
+  `75/20`. Warrior exposes Slaying and Protection, while Paladin, Dwarf, and
+  Mage expose Protection; compatible candidates use `9:none / 1:ego`. This is
+  a current approximation rather than an original RFB frequency claim. Every
+  theme retains an explicit no-affix fallback.
 - The original Warrior hook admits rings and amulets with a per-kind
   `one_in_(3)` check. Static theme membership records kinds that the hook can
   admit and retains their `A:` weights; it does not add a second random filter.
