@@ -256,6 +256,7 @@ struct CategorySummonSpec<'a> {
     count_dice: u8,
     count_sides: u8,
     count_bonus: u8,
+    maximum_count: Option<u8>,
     hostile: bool,
     group_chance_percent: u8,
     group_count_dice: u8,
@@ -2723,7 +2724,10 @@ impl Game {
             .roll_damage(u16::from(dice), u16::from(sides))
             .saturating_add(i32::from(bonus))
             .max(1);
-        let count = usize::try_from(rolled).unwrap_or(1).min(positions.len());
+        let count = usize::try_from(rolled)
+            .unwrap_or(1)
+            .min(spec.maximum_count.map_or(usize::MAX, usize::from))
+            .min(positions.len());
         let mut entity_ids = Vec::with_capacity(count);
         let mut summoned_kind_ids = Vec::with_capacity(count);
         let mut used_positions = Vec::with_capacity(count);
@@ -6410,6 +6414,7 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             count_dice,
             count_sides,
             count_bonus,
+            maximum_count,
             hostile_chance_percent,
             friendly_group_chance_percent,
             hostile_group_chance_percent,
@@ -6427,6 +6432,7 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             count_dice: *count_dice,
             count_sides: *count_sides,
             count_bonus: *count_bonus,
+            maximum_count: *maximum_count,
             hostile_chance_percent: *hostile_chance_percent,
             friendly_group_chance_percent: *friendly_group_chance_percent,
             hostile_group_chance_percent: *hostile_group_chance_percent,

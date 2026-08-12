@@ -8389,6 +8389,12 @@ fn demo_monster_json(
     if entry.flags.iter().any(|flag| flag == "FRIENDLY") {
         value["friendly"] = serde_json::json!(true);
     }
+    if selection.tags.iter().any(|tag| tag == "fixed-placement") {
+        value
+            .as_object_mut()
+            .expect("actor JSON must be an object")
+            .remove("allocation");
+    }
     // Rolento's grenade exists only as a fixed summon; legacy rarity 255 is
     // a sentinel, not a low-probability global allocation weight.
     if entry.index == 1023 {
@@ -9093,26 +9099,67 @@ fn map_summon_spell_token(
         None => (token, None),
     };
     if base == "S_SPECIAL" {
-        let (suffix, category, maximum_level, dice, sides, bonus) = match caster_kind_id
-            .rsplit('.')
-            .next()?
-        {
-            "zoopi-the-cube-king" => (
-                "summon-gelatinous-cube-l16-1d3",
-                "gelatinous-cube",
-                16,
-                1,
-                3,
-                0,
-            ),
-            "rolento" => ("summon-hand-grenade-l38-1d3-1", "hand-grenade", 38, 1, 3, 1),
-            "santa-claus" => ("summon-reindeer-l52-1d4", "reindeer", 52, 1, 4, 0),
-            "jack-of-lanterns" => ("summon-death-pumpkin-l52-1d4", "death-pumpkin", 52, 1, 4, 0),
-            _ => return None,
-        };
+        let (suffix, category, maximum_level, dice, sides, bonus, maximum_count) =
+            match caster_kind_id.rsplit('.').next()? {
+                "zoopi-the-cube-king" => (
+                    "summon-gelatinous-cube-l16-1d3",
+                    "gelatinous-cube",
+                    16,
+                    1,
+                    3,
+                    0,
+                    None,
+                ),
+                "rolento" => (
+                    "summon-hand-grenade-l38-1d3-1",
+                    "hand-grenade",
+                    38,
+                    1,
+                    3,
+                    1,
+                    None,
+                ),
+                "santa-claus" => ("summon-reindeer-l52-1d4", "reindeer", 52, 1, 4, 0, None),
+                "jack-of-lanterns" => (
+                    "summon-death-pumpkin-l52-1d4",
+                    "death-pumpkin",
+                    52,
+                    1,
+                    4,
+                    0,
+                    None,
+                ),
+                "bull-gates" => (
+                    "summon-internet-exploder-l52-1d4",
+                    "internet-exploder",
+                    52,
+                    1,
+                    4,
+                    0,
+                    None,
+                ),
+                "the-gospel-of-mug" => (
+                    "summon-tracking-pixel-l56-1d4-max3",
+                    "tracking-pixel",
+                    56,
+                    1,
+                    4,
+                    0,
+                    Some(3),
+                ),
+                _ => return None,
+            };
         let id = format!("rfb-legacy.ability.{suffix}");
         abilities.entry(id.clone()).or_insert_with(|| {
-            summon_category_ability(suffix, category, maximum_level, dice, sides, bonus)
+            summon_category_ability(
+                suffix,
+                category,
+                maximum_level,
+                dice,
+                sides,
+                bonus,
+                maximum_count,
+            )
         });
         return Some(id);
     }
@@ -9122,7 +9169,7 @@ fn map_summon_spell_token(
         let id = format!("rfb-legacy.ability.{suffix}");
         abilities.entry(id.clone()).or_insert_with(|| {
             if caster_tail == "othrod-lord-of-the-orcs" {
-                summon_category_ability(&suffix, "kin-glyph-111", u32::from(level), 1, 1, 1)
+                summon_category_ability(&suffix, "kin-glyph-111", u32::from(level), 1, 1, 1, None)
             } else {
                 summon_kin_ability(&suffix, caster_kind_id)
             }
@@ -9147,7 +9194,7 @@ fn map_summon_spell_token(
     }
     let id = format!("rfb-legacy.ability.{suffix}");
     abilities.entry(id.clone()).or_insert_with(|| {
-        summon_category_ability(&suffix, category, maximum_level, dice, sides, bonus)
+        summon_category_ability(&suffix, category, maximum_level, dice, sides, bonus, None)
     });
     Some(id)
 }
@@ -9182,6 +9229,7 @@ fn summon_category_ability(
     dice: u32,
     sides: u32,
     bonus: u32,
+    maximum_count: Option<u32>,
 ) -> serde_json::Value {
     let mut effect = serde_json::json!({
         "type": "summon-category",
@@ -9194,6 +9242,9 @@ fn summon_category_ability(
     });
     if bonus > 0 {
         effect["countBonus"] = serde_json::json!(bonus);
+    }
+    if let Some(maximum_count) = maximum_count {
+        effect["maximumCount"] = serde_json::json!(maximum_count);
     }
     serde_json::json!({
         "$schema": format!("{SCHEMA_BASE}/ability.schema.json"),
@@ -14740,6 +14791,11 @@ S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_ANT | S_SPIDER | S_HYDRA | S_LO
                 "rfb-legacy.ability.summon-death-pumpkin-l52-1d4",
                 "death-pumpkin",
             ),
+            (
+                "demo.actor.bull-gates",
+                "rfb-legacy.ability.summon-internet-exploder-l52-1d4",
+                "internet-exploder",
+            ),
         ] {
             let id = map_spell_token("S_SPECIAL", 52, 4, caster, &mut abilities)
                 .unwrap_or_else(|| panic!("{caster} special should map"));
@@ -14751,7 +14807,25 @@ S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_ANT | S_SPIDER | S_HYDRA | S_LO
             assert_eq!(effect["countDice"], 1);
             assert_eq!(effect["countSides"], 4);
             assert!(effect.get("countBonus").is_none());
+            assert!(effect.get("maximumCount").is_none());
         }
+        let gospel_id = map_spell_token(
+            "S_SPECIAL",
+            56,
+            4,
+            "demo.actor.the-gospel-of-mug",
+            &mut abilities,
+        )
+        .expect("The Gospel of Mug special should map");
+        assert_eq!(
+            gospel_id,
+            "rfb-legacy.ability.summon-tracking-pixel-l56-1d4-max3"
+        );
+        let gospel = &abilities[&gospel_id]["effect"];
+        assert_eq!(gospel["category"], "tracking-pixel");
+        assert_eq!(gospel["countDice"], 1);
+        assert_eq!(gospel["countSides"], 4);
+        assert_eq!(gospel["maximumCount"], 3);
         assert!(
             map_spell_token(
                 "S_SPECIAL",
@@ -14762,6 +14836,29 @@ S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_ANT | S_SPIDER | S_HYDRA | S_LO
             )
             .is_none()
         );
+    }
+
+    #[test]
+    fn fixed_placement_monsters_do_not_keep_random_allocation() {
+        let mut monsters = parse_r_info(
+            "N:732:Bull Gates\nG:p:D\nI:140:25d100:40:90:0:140\nW:52:3:999:18000:0:0\nB:CHARGE:HURT(5d5)\nF:FIXED_UNIQUE\nS:1_IN_6 | S_SPECIAL\n",
+        )
+        .expect("synthetic fixed monster should parse");
+        let actor = demo_monster_json(
+            &monsters.remove(0),
+            &DemoMonsterSelectionEntry {
+                source_index: 732,
+                source_id: None,
+                id: "bull-gates".to_owned(),
+                tags: vec!["fixed-placement".to_owned()],
+                omitted_flags: Vec::new(),
+                omitted_spells: Vec::new(),
+            },
+            &mut BTreeMap::new(),
+        )
+        .expect("fixed Bull Gates should import");
+
+        assert!(actor.get("allocation").is_none());
     }
 
     #[test]

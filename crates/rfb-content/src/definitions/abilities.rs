@@ -397,6 +397,8 @@ pub enum AbilityEffectDefinition {
         count_sides: u8,
         #[serde(default)]
         count_bonus: u8,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        maximum_count: Option<u8>,
         #[serde(default)]
         hostile_chance_percent: u8,
         #[serde(default)]

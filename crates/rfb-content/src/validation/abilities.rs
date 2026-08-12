@@ -388,6 +388,7 @@ pub(super) fn validate_abilities(
                     count_dice,
                     count_sides,
                     count_bonus,
+                    maximum_count,
                     hostile_chance_percent,
                     friendly_group_chance_percent,
                     hostile_group_chance_percent,
@@ -421,6 +422,12 @@ pub(super) fn validate_abilities(
                         && u16::from(*count_dice) * u16::from(*count_sides)
                             + u16::from(*count_bonus)
                             <= 8
+                        && maximum_count.is_none_or(|maximum_count| {
+                            (1..=8).contains(&maximum_count)
+                                && u16::from(maximum_count)
+                                    <= u16::from(*count_dice) * u16::from(*count_sides)
+                                        + u16::from(*count_bonus)
+                        })
                         && *hostile_chance_percent <= 100
                         && *friendly_group_chance_percent <= 100
                         && *hostile_group_chance_percent <= 100

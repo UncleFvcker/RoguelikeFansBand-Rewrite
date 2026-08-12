@@ -5237,6 +5237,75 @@ fn p56a_internet_exploder_keeps_its_slow_time_death_explosion() {
 }
 
 #[test]
+fn p56b_task_monsters_stay_fixed_and_keep_exact_special_summons() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actor = |id: &str| {
+        artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == format!("demo.actor.{id}"))
+            .unwrap_or_else(|| panic!("P56B should contain {id}"))
+    };
+
+    for (id, level, task_tag) in [
+        ("bull-gates", 52, "angwil-quest"),
+        ("lord-bovin-of-the-high-tower", 52, "anambar-quest"),
+        ("the-gospel-of-mug", 56, "angwil-quest"),
+    ] {
+        let actor = actor(id);
+        assert_eq!(actor.level, level);
+        assert!(actor.allocation.is_none());
+        assert!(actor.tags.iter().any(|tag| tag == "fixed-placement"));
+        assert!(actor.tags.iter().any(|tag| tag == task_tag));
+    }
+
+    for (actor_id, category, ability_id) in [
+        (
+            "internet-exploder",
+            "internet-exploder",
+            "summon-internet-exploder-l52-1d4",
+        ),
+        (
+            "tracking-pixel",
+            "tracking-pixel",
+            "summon-tracking-pixel-l56-1d4-max3",
+        ),
+    ] {
+        assert!(actor(actor_id).tags.iter().any(|tag| tag == category));
+        let ability = artifact
+            .content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == format!("rfb-legacy.ability.{ability_id}"))
+            .unwrap_or_else(|| panic!("P56B should contain {ability_id}"));
+        assert!(matches!(
+            ability.effect,
+            AbilityEffectDefinition::SummonCategory {
+                category: ref actual_category,
+                count_dice: 1,
+                count_sides: 4,
+                ..
+            } if actual_category == category
+        ));
+    }
+
+    let gospel = artifact
+        .content
+        .abilities
+        .iter()
+        .find(|ability| ability.id == "rfb-legacy.ability.summon-tracking-pixel-l56-1d4-max3")
+        .expect("P56B Gospel summon should compile");
+    assert!(matches!(
+        gospel.effect,
+        AbilityEffectDefinition::SummonCategory {
+            maximum_count: Some(3),
+            ..
+        }
+    ));
+}
+
+#[test]
 fn outpost_has_walls_inner_shops_and_an_exterior_warrens_entrance() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let world = artifact
@@ -6662,7 +6731,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
                     == Some("demo.loot-table.base-items")
             })
             .count(),
-        495
+        498
     );
 }
 

@@ -5578,7 +5578,7 @@
     {
       "sourceIndex": 1291,
       "id": "tracking-pixel",
-      "tags": ["orc-cave"],
+      "tags": ["orc-cave", "tracking-pixel"],
       "omittedFlags": ["CHAR_CLEAR", "NASTY_GLYPH", "NO_STUN", "POS_TELEPATHY"]
     },
     {
@@ -5902,8 +5902,26 @@
     {
       "sourceIndex": 921,
       "id": "internet-exploder",
-      "tags": ["orc-cave"],
+      "tags": ["internet-exploder", "orc-cave"],
       "omittedFlags": ["CAN_SPEAK", "NO_STUN", "RES_WALL"]
+    },
+    {
+      "sourceIndex": 732,
+      "id": "bull-gates",
+      "tags": ["angwil-quest", "fixed-placement"],
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
+    },
+    {
+      "sourceIndex": 1289,
+      "id": "lord-bovin-of-the-high-tower",
+      "tags": ["anambar-quest", "fixed-placement"],
+      "omittedFlags": ["MALE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 1292,
+      "id": "the-gospel-of-mug",
+      "tags": ["angwil-quest", "fixed-placement"],
+      "omittedFlags": ["NASTY_GLYPH", "NO_STUN", "POS_GAIN_AC", "POS_SEE_INVIS", "POS_TELEPATHY"]
     }
   ]
 }

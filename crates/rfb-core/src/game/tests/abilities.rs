@@ -3166,6 +3166,68 @@ fn p55b_eagle_summon_includes_unseen_unique_eagles() {
 }
 
 #[test]
+fn p56b_gospel_summon_caps_one_d_four_at_three_tracking_pixels() {
+    fn summon(seed: u64, capped: bool) -> Vec<String> {
+        let mut game = Game::new(seed);
+        clear_monsters(&mut game);
+        game.terrain.fill("demo.terrain.floor".to_owned());
+        game.player.position = Position { x: 80, y: 20 };
+        game.entities.push(actor_from_runtime_spawn(
+            "generated.actor.gospel",
+            "demo.actor.the-gospel-of-mug",
+            Position { x: 4, y: 3 },
+            1_665,
+            128,
+            100,
+            true,
+        ));
+        let mut ability = game
+            .content
+            .ability("rfb-legacy.ability.summon-tracking-pixel-l56-1d4-max3")
+            .expect("P56B Gospel summon should compile")
+            .clone();
+        assert!(matches!(
+            ability_effect_spec_dto(&ability.effect),
+            AbilityEffectSpecDto::SummonCategory {
+                maximum_count: Some(3),
+                ..
+            }
+        ));
+        if !capped
+            && let AbilityEffectDefinition::SummonCategory { maximum_count, .. } =
+                &mut ability.effect
+        {
+            *maximum_count = None;
+        }
+        let plan = game
+            .monster_ability_target_plan(0, ability, 1)
+            .expect("Gospel special summon should have a target plan");
+        game.resolve_monster_ability_plan(
+            0,
+            "demo.actor.the-gospel-of-mug",
+            &plan,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .summon
+        .expect("Gospel special should summon")
+        .summoned_kind_ids
+    }
+
+    let seed = (0..128)
+        .find(|seed| summon(*seed, false).len() == 4)
+        .expect("a bounded seed should roll four summons");
+    let summoned = summon(seed, true);
+    assert_eq!(summoned.len(), 3);
+    assert!(
+        summoned
+            .iter()
+            .all(|kind_id| kind_id == "demo.actor.tracking-pixel")
+    );
+}
+
+#[test]
 fn monster_polymorph_reuses_mutation_and_actor_form_transactions() {
     let ability = Game::new(0)
         .content

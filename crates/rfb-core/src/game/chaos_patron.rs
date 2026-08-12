@@ -649,6 +649,7 @@ impl Game {
                 count_dice: 0,
                 count_sides: 0,
                 count_bonus: count,
+                maximum_count: None,
                 hostile,
                 group_chance_percent: 0,
                 group_count_dice: 0,

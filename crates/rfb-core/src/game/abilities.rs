@@ -4022,6 +4022,7 @@ impl Game {
             count_dice,
             count_sides,
             count_bonus,
+            maximum_count,
             hostile_chance_percent,
             friendly_group_chance_percent,
             hostile_group_chance_percent,
@@ -4063,6 +4064,7 @@ impl Game {
                 count_dice: *count_dice,
                 count_sides: *count_sides,
                 count_bonus: *count_bonus,
+                maximum_count: *maximum_count,
                 hostile,
                 group_chance_percent: group_chance,
                 group_count_dice: *group_count_dice,
@@ -4716,6 +4718,7 @@ impl Game {
                 count_dice,
                 count_sides,
                 count_bonus,
+                maximum_count,
                 hostile_chance_percent,
                 group_count_dice,
                 group_count_sides,
@@ -4757,10 +4760,13 @@ impl Game {
                 {
                     return None;
                 }
-                let normal_maximum =
-                    usize::from(count_dice) * usize::from(count_sides) + usize::from(count_bonus);
-                let group_maximum = usize::from(group_count_dice) * usize::from(group_count_sides)
-                    + usize::from(group_count_bonus);
+                let normal_maximum = (usize::from(count_dice) * usize::from(count_sides)
+                    + usize::from(count_bonus))
+                .min(maximum_count.map_or(usize::MAX, usize::from));
+                let group_maximum = (usize::from(group_count_dice)
+                    * usize::from(group_count_sides)
+                    + usize::from(group_count_bonus))
+                .min(maximum_count.map_or(usize::MAX, usize::from));
                 let position_candidate_kind_ids = friendly_candidate_kind_ids
                     .iter()
                     .chain(&hostile_candidate_kind_ids)

@@ -2902,6 +2902,15 @@
               "maximum": 255,
               "minimum": 0
             },
+            "maximumCount": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
             "maximumLevel": {
               "type": "integer",
               "format": "uint16",

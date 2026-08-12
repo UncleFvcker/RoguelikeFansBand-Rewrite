@@ -1004,6 +1004,7 @@ impl Game {
                     count_dice,
                     count_sides,
                     count_bonus,
+                    maximum_count,
                     duration_turns,
                     ..
                 } = plan.ability.effect
@@ -1017,7 +1018,10 @@ impl Game {
                     .roll_damage(u16::from(count_dice), u16::from(count_sides))
                     .saturating_add(i32::from(count_bonus))
                     .max(1);
-                let count = usize::try_from(rolled).unwrap_or(1).min(positions.len());
+                let count = usize::try_from(rolled)
+                    .unwrap_or(1)
+                    .min(maximum_count.map_or(usize::MAX, usize::from))
+                    .min(positions.len());
                 let owner_id = self.entities[source_index].id.clone();
                 let mut entity_ids = Vec::with_capacity(count);
                 let mut summoned_kind_ids = Vec::with_capacity(count);
@@ -2008,6 +2012,7 @@ impl Game {
                 count_dice,
                 count_sides,
                 count_bonus,
+                maximum_count,
                 radius,
                 ..
             } => {
@@ -2044,8 +2049,9 @@ impl Game {
                         friendly_risk_count: 0,
                     });
                 }
-                let maximum_count = usize::from(*count_dice) * usize::from(*count_sides)
-                    + usize::from(*count_bonus);
+                let maximum_count = (usize::from(*count_dice) * usize::from(*count_sides)
+                    + usize::from(*count_bonus))
+                .min(maximum_count.map_or(usize::MAX, usize::from));
                 let positions = self
                     .open_positions_around_for_actor_kinds(origin, *radius, &candidate_kind_ids)
                     .into_iter()
