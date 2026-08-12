@@ -7532,6 +7532,7 @@ fn monster_flag_is_mapped(flag: &str) -> bool {
             | "FORCE_SLEEP"
             | "TRUMP"
             | "QUANTUM"
+            | "CLEAR_HEAD"
             | "ONLY_ITEM"
             | "ONLY_GOLD"
             | "DROP_60"
@@ -7707,6 +7708,7 @@ fn monster_json(
         ("UNIQUE2", "unique2"),
         ("TRUMP", "trump"),
         ("QUANTUM", "quantum"),
+        ("CLEAR_HEAD", "clear-head"),
     ] {
         if entry.flags.iter().any(|value| value == flag) {
             tags.push(tag.to_owned());
@@ -8376,6 +8378,7 @@ fn demo_monster_json(
         ("UNIQUE2", "unique2"),
         ("TRUMP", "trump"),
         ("QUANTUM", "quantum"),
+        ("CLEAR_HEAD", "clear-head"),
     ] {
         if entry.flags.iter().any(|candidate| candidate == flag) {
             tags.insert(tag.to_owned());
@@ -13029,6 +13032,33 @@ mod tests {
             actor["tags"]
                 .as_array()
                 .is_some_and(|tags| tags.iter().any(|tag| tag == "quantum"))
+        );
+    }
+
+    #[test]
+    fn demo_monster_import_maps_clear_head_as_a_shared_turn_tag() {
+        let mut monsters = parse_r_info(
+            "N:683:Utgard-Loke\nG:P:w\nI:120:40d100:30:125:15:600\nW:44:3:999:26620:0:0\nB:HIT:HURT(8d12)\nF:FORCE_MAXHP | CLEAR_HEAD | GIANT\n",
+        )
+        .expect("synthetic clear-head monster should parse");
+        let actor = demo_monster_json(
+            &monsters.remove(0),
+            &DemoMonsterSelectionEntry {
+                source_index: 683,
+                source_id: None,
+                id: "utgard-loke".to_owned(),
+                tags: vec!["orc-cave".to_owned()],
+                omitted_flags: Vec::new(),
+                omitted_spells: Vec::new(),
+            },
+            &mut BTreeMap::new(),
+        )
+        .expect("CLEAR_HEAD should import through the shared tag");
+
+        assert!(
+            actor["tags"]
+                .as_array()
+                .is_some_and(|tags| tags.iter().any(|tag| tag == "clear-head"))
         );
     }
 

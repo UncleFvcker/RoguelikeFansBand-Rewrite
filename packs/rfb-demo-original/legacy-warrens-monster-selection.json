@@ -5334,6 +5334,12 @@
       "id": "old-man-willow",
       "tags": ["old-man-willow", "outpost-quest", "tree"],
       "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 683,
+      "id": "utgard-loke",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "POS_SUST_STR"]
     }
   ]
 }
