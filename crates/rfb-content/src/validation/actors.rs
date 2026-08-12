@@ -419,6 +419,7 @@ fn valid_melee_effect(effect: &MeleeBlowEffectDefinition) -> bool {
         | MeleeBlowEffectDefinition::Amnesia { chance_percent }
         | MeleeBlowEffectDefinition::Time { chance_percent }
         | MeleeBlowEffectDefinition::Slow { chance_percent }
+        | MeleeBlowEffectDefinition::Inertia { chance_percent }
         | MeleeBlowEffectDefinition::Terrify { chance_percent }
         | MeleeBlowEffectDefinition::Disenchant { chance_percent }
         | MeleeBlowEffectDefinition::EatGold { chance_percent }

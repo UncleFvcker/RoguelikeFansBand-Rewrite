@@ -20,6 +20,7 @@ pub(super) fn melee_effect_chance(effect: &MeleeBlowEffectDefinition) -> Option<
         | MeleeBlowEffectDefinition::Amnesia { chance_percent }
         | MeleeBlowEffectDefinition::Time { chance_percent }
         | MeleeBlowEffectDefinition::Slow { chance_percent }
+        | MeleeBlowEffectDefinition::Inertia { chance_percent }
         | MeleeBlowEffectDefinition::Stun { chance_percent, .. }
         | MeleeBlowEffectDefinition::Terrify { chance_percent }
         | MeleeBlowEffectDefinition::Disenchant { chance_percent }
@@ -763,6 +764,15 @@ impl Game {
                         None
                     }
                     MeleeBlowEffectDefinition::Slow { .. } => {
+                        self.apply_actor_melee_status(
+                            target_index,
+                            STATUS_SLOW,
+                            25,
+                            &source_kind_id,
+                        );
+                        None
+                    }
+                    MeleeBlowEffectDefinition::Inertia { .. } => {
                         self.apply_actor_melee_status(
                             target_index,
                             STATUS_SLOW,
@@ -1590,6 +1600,15 @@ impl Game {
                     }
                     MeleeBlowEffectDefinition::Slow { .. } => {
                         self.apply_player_melee_status(STATUS_SLOW, 25, &kind_id);
+                        None
+                    }
+                    MeleeBlowEffectDefinition::Inertia { .. } => {
+                        let amount = if self.player_status_immunities().contains(STATUS_PARALYSIS) {
+                            1
+                        } else {
+                            5
+                        };
+                        self.minor_slow = self.minor_slow.saturating_add(amount).min(10);
                         None
                     }
                     MeleeBlowEffectDefinition::Stun {

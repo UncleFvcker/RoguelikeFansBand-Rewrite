@@ -719,7 +719,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         .iter()
         .filter(|actor| actor.tags.iter().any(|tag| tag == "orc-cave"))
         .collect::<Vec<_>>();
-    assert_eq!(orc_cave.len(), 460);
+    assert_eq!(orc_cave.len(), 461);
 
     for id in [
         "demo.actor.bunyip",
@@ -767,7 +767,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         level_counts,
         [
             16, 14, 12, 17, 24, 17, 19, 17, 18, 21, 7, 12, 29, 15, 27, 28, 19, 19, 11, 42, 11, 6,
-            11, 14, 14, 6, 10, 4,
+            12, 14, 14, 6, 10, 4,
         ]
     );
 
@@ -4502,6 +4502,35 @@ fn p50_clear_head_imports_utgard_loke() {
 }
 
 #[test]
+fn p50_inertia_imports_baba_yaga() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actor = artifact
+        .content
+        .actors
+        .iter()
+        .find(|actor| actor.id == "demo.actor.baba-yaga")
+        .expect("Baba Yaga should be imported");
+
+    assert_eq!(actor.level, 43);
+    assert_eq!(
+        actor
+            .allocation
+            .as_ref()
+            .map(|allocation| allocation.legacy_index),
+        Some(1256)
+    );
+    assert!(matches!(
+        actor
+            .melee_routine
+            .as_ref()
+            .expect("Baba Yaga should retain melee")
+            .blows[0]
+            .effects[1],
+        MeleeBlowEffectDefinition::Inertia { .. }
+    ));
+}
+
+#[test]
 fn outpost_has_walls_inner_shops_and_an_exterior_warrens_entrance() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let world = artifact
@@ -5927,7 +5956,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
                     == Some("demo.loot-table.base-items")
             })
             .count(),
-        429
+        430
     );
 }
 

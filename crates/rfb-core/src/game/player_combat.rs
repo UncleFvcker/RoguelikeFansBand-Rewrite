@@ -1037,6 +1037,15 @@ impl Game {
                         );
                         None
                     }
+                    MeleeBlowEffectDefinition::Inertia { .. } => {
+                        self.apply_actor_melee_status(
+                            target_index,
+                            STATUS_SLOW,
+                            25,
+                            &source_kind_id,
+                        );
+                        None
+                    }
                     MeleeBlowEffectDefinition::Stun {
                         duration_dice,
                         duration_sides,

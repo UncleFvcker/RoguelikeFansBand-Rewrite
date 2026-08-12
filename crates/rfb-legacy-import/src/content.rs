@@ -6912,6 +6912,7 @@ fn melee_effect_json(effect: &LegacyBlowEffect) -> Option<serde_json::Value> {
         "AMNESIA" => serde_json::json!({ "type": "amnesia" }),
         "TIME" if effect.dice.is_none() => serde_json::json!({ "type": "time" }),
         "SLOW" => serde_json::json!({ "type": "slow" }),
+        "INERTIA" if effect.dice.is_none() => serde_json::json!({ "type": "inertia" }),
         "STUN" => {
             let (duration_dice, duration_sides) = effect.dice?;
             serde_json::json!({
@@ -13059,6 +13060,32 @@ mod tests {
             actor["tags"]
                 .as_array()
                 .is_some_and(|tags| tags.iter().any(|tag| tag == "clear-head"))
+        );
+    }
+
+    #[test]
+    fn demo_monster_import_maps_dieless_inertia() {
+        let mut monsters = parse_r_info(
+            "N:1256:Baba Yaga\nG:O:G\nI:121:33d66:33:99:5:110\nW:43:1:999:9339:0:0\nB:GAZE:PARALYZE:INERTIA\nF:UNIQUE | FEMALE\n",
+        )
+        .expect("synthetic inertia monster should parse");
+        let actor = demo_monster_json(
+            &monsters.remove(0),
+            &DemoMonsterSelectionEntry {
+                source_index: 1256,
+                source_id: None,
+                id: "baba-yaga".to_owned(),
+                tags: vec!["orc-cave".to_owned()],
+                omitted_flags: vec!["FEMALE".to_owned()],
+                omitted_spells: Vec::new(),
+            },
+            &mut BTreeMap::new(),
+        )
+        .expect("dieless INERTIA should import");
+
+        assert_eq!(
+            actor["meleeRoutine"]["blows"][0]["effects"][1]["type"],
+            "inertia"
         );
     }
 

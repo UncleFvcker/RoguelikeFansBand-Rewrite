@@ -227,6 +227,7 @@ fn projected_blow_damage(effects: &[MeleeBlowEffectDefinition]) -> DamageDiceDto
             | MeleeBlowEffectDefinition::Amnesia { .. }
             | MeleeBlowEffectDefinition::Time { .. }
             | MeleeBlowEffectDefinition::Slow { .. }
+            | MeleeBlowEffectDefinition::Inertia { .. }
             | MeleeBlowEffectDefinition::Stun { .. }
             | MeleeBlowEffectDefinition::Terrify { .. }
             | MeleeBlowEffectDefinition::Disenchant { .. }

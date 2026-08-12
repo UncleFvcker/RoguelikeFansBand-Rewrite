@@ -5340,6 +5340,12 @@
       "id": "utgard-loke",
       "tags": ["orc-cave"],
       "omittedFlags": ["MALE", "POS_SUST_STR"]
+    },
+    {
+      "sourceIndex": 1256,
+      "id": "baba-yaga",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "FEMALE"]
     }
   ]
 }

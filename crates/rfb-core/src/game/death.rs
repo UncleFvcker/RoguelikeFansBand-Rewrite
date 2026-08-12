@@ -83,6 +83,7 @@ impl Game {
                 | MeleeBlowEffectDefinition::Amnesia { .. }
                 | MeleeBlowEffectDefinition::Time { .. }
                 | MeleeBlowEffectDefinition::Slow { .. }
+                | MeleeBlowEffectDefinition::Inertia { .. }
                 | MeleeBlowEffectDefinition::Stun { .. }
                 | MeleeBlowEffectDefinition::Terrify { .. }
                 | MeleeBlowEffectDefinition::Disenchant { .. }

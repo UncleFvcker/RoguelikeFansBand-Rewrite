@@ -389,6 +389,37 @@ fn resource_drain_melee_heals_six_times_the_amount_actually_drained() {
 }
 
 #[test]
+fn inertia_melee_uses_minor_slow_and_free_action_reduces_it() {
+    let inertia = MeleeBlowEffectDefinition::Inertia {
+        chance_percent: None,
+    };
+    let mut ordinary = monster_effect_game(0, inertia.clone());
+    ordinary
+        .resolve_monster_melee(0, &mut Vec::new(), &mut BTreeSet::new(), &mut Vec::new())
+        .expect("inertia melee should resolve");
+    assert_eq!(ordinary.minor_slow, 5);
+
+    let mut free_action = monster_effect_game(0, inertia);
+    give_inventory_item(
+        &mut free_action,
+        "test.item.free-action",
+        "demo.item.calm-pendant",
+    );
+    free_action
+        .items
+        .iter_mut()
+        .find(|item| item.id == "test.item.free-action")
+        .expect("free-action item should exist")
+        .location = ItemLocation::Equipped {
+        slot_id: "amulet".to_owned(),
+    };
+    free_action
+        .resolve_monster_melee(0, &mut Vec::new(), &mut BTreeSet::new(), &mut Vec::new())
+        .expect("free action inertia melee should resolve");
+    assert_eq!(free_action.minor_slow, 1);
+}
+
+#[test]
 fn charge_drain_melee_consumes_a_carried_device_or_player_nutrition() {
     let effect = MeleeBlowEffectDefinition::DrainCharges {
         chance_percent: None,
