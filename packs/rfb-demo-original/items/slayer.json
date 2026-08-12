@@ -1,0 +1,28 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.slayer",
+  "nameKey": "item-demo-slayer-name",
+  "descriptionKey": "item-demo-slayer-description",
+  "glyph": "|",
+  "generationLevel": 60,
+  "weightTenthsPound": 260,
+  "maxStack": 1,
+  "baseValue": 200000,
+  "equipmentSlot": "weapon",
+  "meleeProfile": {
+    "attacks": 3,
+    "toHit": 15,
+    "toDamage": 15,
+    "damageDice": 5,
+    "damageSides": 6
+  },
+  "slays": {
+    "evil": "slay",
+    "human": "slay",
+    "undead": "slay"
+  },
+  "passives": ["hold-life", "regeneration", "vampiric"],
+  "resistsMonsterDestruction": true,
+  "tags": ["artifact", "equipment", "old-castle-reward", "weapon"]
+}

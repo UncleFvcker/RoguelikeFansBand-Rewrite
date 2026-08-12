@@ -54,7 +54,7 @@
       "revision": 1,
       "turn": 1,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 152,
+      "rngDrawCounter": 154,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -930,11 +930,32 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 174,
+      "nextItemInstanceSerial": 175,
       "nextGoldPileSerial": 1,
       "tasks": [
         {
+          "taskId": "demo.task.crows-nest",
+          "status": "locked",
+          "required": 1,
+          "stage": 1,
+          "stages": 1
+        },
+        {
           "taskId": "demo.task.haunted-house",
+          "status": "locked",
+          "required": 1,
+          "stage": 1,
+          "stages": 1
+        },
+        {
+          "taskId": "demo.task.old-castle",
+          "status": "locked",
+          "required": 1,
+          "stage": 1,
+          "stages": 1
+        },
+        {
+          "taskId": "demo.task.old-man-willow",
           "status": "locked",
           "required": 1,
           "stage": 1,
@@ -969,6 +990,20 @@
           "required": 1,
           "stage": 1,
           "stages": 1
+        },
+        {
+          "taskId": "demo.task.trouble-at-home",
+          "status": "available",
+          "required": 5,
+          "stage": 1,
+          "stages": 1
+        },
+        {
+          "taskId": "demo.task.vapor-quest",
+          "status": "locked",
+          "required": 1,
+          "stage": 1,
+          "stages": 1
         }
       ],
       "campaign": {
@@ -977,7 +1012,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 2
       },
-      "stateHash": "b9d29b40112793b5f469e0599194531cdd7640174acde0cfed2c5fea218c8a2d"
+      "stateHash": "be20161cfca5adb83b0e976ffc0cb62829401921c3f9c67c0cb472db4091ce94"
     },
     "events": [
       {

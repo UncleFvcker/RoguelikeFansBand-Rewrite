@@ -399,9 +399,23 @@ pub struct InlineFloorMapDefinition {
     #[serde(default)]
     pub actor_spawns: Vec<ActorSpawn>,
     #[serde(default)]
+    pub item_spawns: Vec<ItemSpawn>,
+    #[serde(default)]
+    pub scrambled_item_pair: Option<[ItemSpawn; 2]>,
+    #[serde(default)]
+    pub scrambled_item_loot_pair: Option<InlineScrambledItemLootPairDefinition>,
+    #[serde(default)]
     pub loot_spawns: Vec<InlineFloorLootSpawnDefinition>,
     #[serde(default)]
     pub monster_formation: Option<InlineMonsterFormationDefinition>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct InlineScrambledItemLootPairDefinition {
+    pub item_spawns: Vec<ItemSpawn>,
+    pub loot_spawns: Vec<InlineFloorLootSpawnDefinition>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

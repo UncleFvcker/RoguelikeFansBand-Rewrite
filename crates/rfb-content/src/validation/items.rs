@@ -72,6 +72,7 @@ pub(crate) fn valid_item_effect(
             life_force_amount,
         } => (1..=1_000_000).contains(healing_amount) && (1..=1_000).contains(life_force_amount),
         ItemUseEffectDefinition::RestoreAllAttributes
+        | ItemUseEffectDefinition::ApplyBooze
         | ItemUseEffectDefinition::DrainAttribute { .. }
         | ItemUseEffectDefinition::RestoreAttribute { .. }
         | ItemUseEffectDefinition::IncreaseAttribute { .. }
@@ -453,7 +454,7 @@ pub(crate) fn valid_item_effect(
                         || byte.is_ascii_digit()
                         || matches!(byte, b'-' | b'_')
                 })
-                && (*radius > 0 && (*radius <= 8 || (*radius == u8::MAX && *through_walls)))
+                && (*radius > 0 && (*radius <= 30 || (*radius == u8::MAX && *through_walls)))
                 && match subject {
                     AbilityDetectSubjectDefinition::Terrain => {
                         if category == "map" {
@@ -463,7 +464,8 @@ pub(crate) fn valid_item_effect(
                         }
                     }
                     AbilityDetectSubjectDefinition::Actor => {
-                        !persistent && actor_tag_values.contains(category)
+                        !persistent
+                            && (category == "any-monster" || actor_tag_values.contains(category))
                     }
                     AbilityDetectSubjectDefinition::Item => {
                         !persistent && (category == "item" || item_tag_values.contains(category))
@@ -572,6 +574,7 @@ pub(super) fn validate_items(
                     | ItemUseEffectDefinition::ApplyRestorativeFeast { .. }
                     | ItemUseEffectDefinition::ApplyElvishWaybread { .. }
                     | ItemUseEffectDefinition::ApplySaltWater
+                    | ItemUseEffectDefinition::ApplyBooze
                     | ItemUseEffectDefinition::ApplyFastRecovery
                     | ItemUseEffectDefinition::ApplyLifeRestoration { .. }
                     | ItemUseEffectDefinition::DrainAttribute { .. }

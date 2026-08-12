@@ -2,7 +2,7 @@
 use std::collections::BTreeSet;
 
 use rfb_content::{
-    ContentCatalog, ContentPosition, EncounterFormation, InlineFloorMapDefinition,
+    ContentCatalog, ContentPosition, EncounterFormation, InlineFloorMapDefinition, ItemSpawn,
     ProceduralFloorDefinition, ProceduralNormalAllocationDefinition, TaskLocationDefinition,
     TerrainFeaturePlacement, VaultDefinition, VaultTransform,
 };
@@ -692,6 +692,43 @@ fn generated_wall_positions(
 }
 
 impl Game {
+    fn inline_item_instance(
+        &mut self,
+        definition: &ProceduralFloorDefinition,
+        spawn: &ItemSpawn,
+        position: ContentPosition,
+    ) -> ItemInstance {
+        let (activation, charges) = initial_item_runtime_state(
+            &self.content,
+            &mut self.rng,
+            &spawn.kind_id,
+            definition.depth,
+        );
+        ItemInstance {
+            id: spawn.instance_id.clone(),
+            kind_id: spawn.kind_id.clone(),
+            quantity: spawn.quantity,
+            inscription: None,
+            origin_actor_kind_id: None,
+            origin_kind: None,
+            damage_dice_override: None,
+            discount_percent: 0,
+            quality: item_quality_dto(spawn.quality),
+            affix_ids: spawn.affix_ids.clone(),
+            rolled_affixes: Vec::new(),
+            enchantments: ItemEnchantmentsDto::default(),
+            curse: initial_item_curse(&self.content, &spawn.kind_id),
+            activation,
+            charges,
+            fuel: initial_item_fuel(&self.content, &spawn.kind_id),
+            device_recovery_progress: 0,
+            location: ItemLocation::Ground(Position {
+                x: i32::from(position.x),
+                y: i32::from(position.y),
+            }),
+        }
+    }
+
     fn generate_inline_floor(
         &mut self,
         definition: &ProceduralFloorDefinition,
@@ -811,7 +848,51 @@ impl Game {
             }
         }
 
-        let mut items = Vec::new();
+        let mut items = inline_map
+            .item_spawns
+            .iter()
+            .map(|spawn| self.inline_item_instance(definition, spawn, spawn.position))
+            .collect::<Vec<_>>();
+        if let Some(pair) = &inline_map.scrambled_item_pair {
+            let swap = self.rng.bounded(2) == 1;
+            for (index, spawn) in pair.iter().enumerate() {
+                let position = pair[if swap { 1 - index } else { index }].position;
+                items.push(self.inline_item_instance(definition, spawn, position));
+            }
+        }
+        if let Some(pair) = &inline_map.scrambled_item_loot_pair {
+            let swap = self.rng.bounded(2) == 1;
+            for (index, spawn) in pair.item_spawns.iter().enumerate() {
+                let position = if swap {
+                    pair.loot_spawns[index].position
+                } else {
+                    spawn.position
+                };
+                items.push(self.inline_item_instance(definition, spawn, position));
+            }
+            for (index, spawn) in pair.loot_spawns.iter().enumerate() {
+                let position = if swap {
+                    pair.item_spawns[index].position
+                } else {
+                    spawn.position
+                };
+                items.extend(self.generate_loot_instances(
+                    &LootContext {
+                        table_id: spawn.loot_table_id.clone(),
+                        floor_id: definition.id.clone(),
+                        depth: definition.depth,
+                        source: LootSource::FloorRoom {
+                            room_id: "inline-map".to_owned(),
+                            spawn_id: spawn.id.clone(),
+                        },
+                    },
+                    ItemLocation::Ground(Position {
+                        x: i32::from(position.x),
+                        y: i32::from(position.y),
+                    }),
+                )?);
+            }
+        }
         for spawn in &inline_map.loot_spawns {
             items.extend(self.generate_loot_instances(
                 &LootContext {

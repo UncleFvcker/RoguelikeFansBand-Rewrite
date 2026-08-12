@@ -29,7 +29,7 @@
       "revision": 1,
       "turn": 1,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 152,
+      "rngDrawCounter": 154,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -237,6 +237,26 @@
               "maximumQuantity": 1,
               "unitPrice": 1,
               "weightTenthsPound": 4,
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.109",
+              "kindId": "demo.item.pint-of-fine-ale",
+              "displayNameKey": "item-demo-pint-of-fine-ale-name",
+              "quantity": 2,
+              "maximumQuantity": 2,
+              "unitPrice": 1,
+              "weightTenthsPound": 5,
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.110",
+              "kindId": "demo.item.pint-of-fine-wine",
+              "displayNameKey": "item-demo-pint-of-fine-wine-name",
+              "quantity": 1,
+              "maximumQuantity": 1,
+              "unitPrice": 2,
+              "weightTenthsPound": 10,
               "quality": "ordinary"
             },
             {
@@ -1058,7 +1078,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 174,
+      "nextItemInstanceSerial": 175,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -1066,7 +1086,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "ef164e03d4bc76cbca99e8576b03523790db7236637a703bf2b5fcc7f73a237e"
+      "stateHash": "4b7ccce549d84c84419ba64da10935944e6da69147f768b5f2c65493eb1248dd"
     },
     "events": [
       {

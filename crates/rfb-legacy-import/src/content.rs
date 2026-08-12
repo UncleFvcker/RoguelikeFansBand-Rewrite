@@ -101,6 +101,8 @@ struct DemoMonsterSelectionEntry {
     tags: Vec<String>,
     #[serde(default)]
     omitted_flags: Vec<String>,
+    #[serde(default)]
+    omitted_spells: Vec<String>,
 }
 
 #[derive(Debug, Serialize, PartialEq, Eq)]
@@ -7647,7 +7649,7 @@ fn monster_json(
     } else {
         (hp_dice.saturating_mul(hp_sides.saturating_add(1)) / 2).max(1)
     };
-    let level = entry.level.unwrap_or(1).max(1);
+    let level = entry.level.unwrap_or(1);
     let (damage_dice, damage_sides) = blow.and_then(blow_primary_dice).unwrap_or((1, 1));
     // Legacy type flags become category tags so summon filters can select
     // by monster class; the shared legacy-import tag doubles as "any".
@@ -8098,6 +8100,19 @@ fn demo_monster_json(
         )));
     }
 
+    let declared_spell_omissions = selection
+        .omitted_spells
+        .iter()
+        .cloned()
+        .collect::<BTreeSet<_>>();
+    if declared_spell_omissions.len() != selection.omitted_spells.len() {
+        return Err(LegacyImportError::InvalidDemoMonsterSelection(format!(
+            "{} contains duplicate omitted spells",
+            selection.id
+        )));
+    }
+    let mut used_spell_omissions = BTreeSet::new();
+
     let mut frequency_percent = None;
     let mut ability_ids = Vec::new();
     let level = entry.level.unwrap_or(1).max(1);
@@ -8145,16 +8160,26 @@ fn demo_monster_json(
                 &format!("demo.actor.{}", selection.id),
                 abilities,
             )
-        }
-        .ok_or_else(|| {
-            LegacyImportError::InvalidDemoMonsterSelection(format!(
+        };
+        let Some(ability_id) = ability_id else {
+            if declared_spell_omissions.contains(spell) {
+                used_spell_omissions.insert(spell.clone());
+                continue;
+            }
+            return Err(LegacyImportError::InvalidDemoMonsterSelection(format!(
                 "{} has unsupported monster spell {spell}",
                 selection.id
-            ))
-        })?;
+            )));
+        };
         if !ability_ids.contains(&ability_id) {
             ability_ids.push(ability_id);
         }
+    }
+    if used_spell_omissions != declared_spell_omissions {
+        return Err(LegacyImportError::InvalidDemoMonsterSelection(format!(
+            "{} omitted spells differ: declared {declared_spell_omissions:?}, unsupported {used_spell_omissions:?}",
+            selection.id
+        )));
     }
     let monster_casting = (!ability_ids.is_empty()).then(|| {
         let mut casting = serde_json::json!({
@@ -11403,6 +11428,7 @@ pub fn audit_demo_monsters(
                 id: suggested_id.clone(),
                 tags: vec!["orc-cave".to_owned()],
                 omitted_flags: omitted_flags.iter().cloned().collect(),
+                omitted_spells: Vec::new(),
             };
             let mut abilities = BTreeMap::new();
             if let Err(error) = demo_monster_json(entry, &audit_selection, &mut abilities) {
@@ -12573,6 +12599,7 @@ mod tests {
                 id: "test-beggar".to_owned(),
                 tags: Vec::new(),
                 omitted_flags: Vec::new(),
+                omitted_spells: Vec::new(),
             },
             &mut BTreeMap::new(),
         )
@@ -12681,6 +12708,23 @@ mod tests {
     }
 
     #[test]
+    fn monster_import_preserves_source_level_zero() {
+        let monsters =
+            parse_r_info("N:1:test townsperson\nG:t:w\nI:110:1d3:8:4:20:10\nW:0:1:0:0:0:0\n")
+                .expect("synthetic level-zero monster should parse");
+        let actor = monster_json(
+            &monsters[0],
+            "test-townsperson",
+            None,
+            "physical",
+            Some(serde_json::json!({ "blows": [] })),
+            None,
+        );
+
+        assert_eq!(actor["level"], 0);
+    }
+
+    #[test]
     fn demo_monster_import_maps_special_mechanics_without_fallbacks() {
         let mut monsters = parse_r_info(
             "N:1:test special monster\nG:j:v\nI:110:1d3:8:4:20:10\nW:12:1:50:40:0:0\nB:TOUCH:DRAIN_EXP(10d6)\nA:POISON(1d2):ACID(2d3):ELEC(3d4):FIRE(4d5):CAUSE_2(5d6)\nF:SHAPECHANGER | MOVE_BODY | REGENERATE | REFLECTING | DUNGEON_31 | DROP_1D2\nO:DROP_WARRIOR_SHOOT\nS:1_IN_5 | POLYMORPH\n",
@@ -12694,6 +12738,7 @@ mod tests {
                 id: "test-special-monster".to_owned(),
                 tags: vec!["warrens".to_owned()],
                 omitted_flags: Vec::new(),
+                omitted_spells: Vec::new(),
             },
             &mut BTreeMap::new(),
         )
@@ -12756,6 +12801,7 @@ mod tests {
                 id: "rolento".to_owned(),
                 tags: vec!["orc-cave".to_owned()],
                 omitted_flags: vec!["NORSE2".to_owned(), "POS_BACKSTAB".to_owned()],
+                omitted_spells: Vec::new(),
             },
             &mut abilities,
         )
@@ -12819,6 +12865,7 @@ mod tests {
                 id: "jurt-the-living-trump".to_owned(),
                 tags: vec!["orc-cave".to_owned()],
                 omitted_flags: Vec::new(),
+                omitted_spells: Vec::new(),
             },
             &mut BTreeMap::new(),
         )
@@ -12845,6 +12892,7 @@ mod tests {
                 id: "quantum-dot".to_owned(),
                 tags: vec!["orc-cave".to_owned()],
                 omitted_flags: vec!["STUPID".to_owned()],
+                omitted_spells: Vec::new(),
             },
             &mut BTreeMap::new(),
         )
@@ -12871,6 +12919,7 @@ mod tests {
                 id: "colossus".to_owned(),
                 tags: vec!["orc-cave".to_owned()],
                 omitted_flags: Vec::new(),
+                omitted_spells: Vec::new(),
             },
             &mut BTreeMap::new(),
         )
@@ -12897,6 +12946,7 @@ mod tests {
                 id: "beholder".to_owned(),
                 tags: vec!["orc-cave".to_owned()],
                 omitted_flags: Vec::new(),
+                omitted_spells: Vec::new(),
             },
             &mut abilities,
         )
@@ -12931,6 +12981,7 @@ mod tests {
                 id: "chronomage".to_owned(),
                 tags: vec!["orc-cave".to_owned()],
                 omitted_flags: Vec::new(),
+                omitted_spells: Vec::new(),
             },
             &mut BTreeMap::new(),
         )
@@ -12940,6 +12991,36 @@ mod tests {
             actor["meleeRoutine"]["blows"][0]["effects"][1],
             serde_json::json!({"type": "time", "chancePercent": 25})
         );
+    }
+
+    #[test]
+    fn demo_monster_import_requires_exact_unsupported_spell_omissions() {
+        let monsters = parse_r_info(
+            "N:1:test old castle caster\nG:p:D\nI:110:1d3:8:4:20:10\nW:40:1:50:40:0:0\nB:HIT:HURT(1d1)\nS:1_IN_5 | TEST_UNSUPPORTED\n",
+        )
+        .expect("synthetic caster should parse");
+        let selection = DemoMonsterSelectionEntry {
+            source_index: 1,
+            source_id: None,
+            id: "test-old-castle-caster".to_owned(),
+            tags: vec!["old-castle".to_owned()],
+            omitted_flags: Vec::new(),
+            omitted_spells: vec!["TEST_UNSUPPORTED".to_owned()],
+        };
+        let actor = demo_monster_json(&monsters[0], &selection, &mut BTreeMap::new())
+            .expect("declared unsupported spell should be omitted");
+        assert!(actor.get("monsterCasting").is_none());
+
+        let mut supported = monsters[0].clone();
+        supported.spells = vec!["SCARE".to_owned()];
+        let stale = DemoMonsterSelectionEntry {
+            omitted_spells: vec!["SCARE".to_owned()],
+            ..selection
+        };
+        assert!(matches!(
+            demo_monster_json(&supported, &stale, &mut BTreeMap::new()),
+            Err(LegacyImportError::InvalidDemoMonsterSelection(_))
+        ));
     }
 
     #[test]
@@ -12960,6 +13041,7 @@ mod tests {
                     id: kebab(&entry.name),
                     tags: vec!["warrens".to_owned()],
                     omitted_flags: Vec::new(),
+                    omitted_spells: Vec::new(),
                 },
                 &mut BTreeMap::new(),
             )
@@ -12979,6 +13061,7 @@ mod tests {
                 id: kebab(&multiple.name),
                 tags: vec!["warrens".to_owned()],
                 omitted_flags: Vec::new(),
+                omitted_spells: Vec::new(),
             },
             &mut BTreeMap::new(),
         )
@@ -13001,6 +13084,7 @@ mod tests {
                 id: "test-o5-monster".to_owned(),
                 tags: vec!["orc-cave".to_owned()],
                 omitted_flags: Vec::new(),
+                omitted_spells: Vec::new(),
             },
             &mut BTreeMap::new(),
         )
@@ -13026,6 +13110,7 @@ mod tests {
                 id: "test-sewer-climber".to_owned(),
                 tags: vec!["warrens".to_owned()],
                 omitted_flags: Vec::new(),
+                omitted_spells: Vec::new(),
             },
             &mut abilities,
         )
@@ -14051,6 +14136,7 @@ S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_ANT | S_SPIDER | S_HYDRA | S_LO
                 id: "test-bone-caller".to_owned(),
                 tags: vec!["warrens".to_owned()],
                 omitted_flags: Vec::new(),
+                omitted_spells: Vec::new(),
             },
             &mut BTreeMap::new(),
         )

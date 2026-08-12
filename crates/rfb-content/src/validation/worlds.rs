@@ -17,6 +17,43 @@ fn valid_procedural_count_range(range: ProceduralCountRangeDefinition) -> bool {
     (1..=8).contains(&range.minimum) && range.minimum <= range.maximum && range.maximum <= 8
 }
 
+fn validate_item_spawn(
+    item: &mut ItemSpawn,
+    owner_id: &str,
+    width: u16,
+    height: u16,
+    item_limits: &BTreeMap<String, (u32, bool)>,
+    affix_ids: &BTreeSet<String>,
+) -> Result<(), ContentError> {
+    validate_id(&item.instance_id)?;
+    let (max_stack, equippable) =
+        item_limits
+            .get(&item.kind_id)
+            .ok_or_else(|| ContentError::DanglingReference {
+                owner: owner_id.to_owned(),
+                target: item.kind_id.clone(),
+            })?;
+    if item.quantity == 0 || item.quantity > *max_stack {
+        return Err(ContentError::InvalidItemQuantity(item.instance_id.clone()));
+    }
+    item.affix_ids.sort();
+    let mut seen_affixes = BTreeSet::new();
+    if (item.quality != ItemQuality::Ordinary && (*max_stack != 1 || item.quantity != 1))
+        || (!item.affix_ids.is_empty()
+            && (*max_stack != 1
+                || !equippable
+                || item.quantity != 1
+                || item.quality == ItemQuality::Ordinary))
+        || item
+            .affix_ids
+            .iter()
+            .any(|affix_id| !affix_ids.contains(affix_id) || !seen_affixes.insert(affix_id))
+    {
+        return Err(ContentError::InvalidItemAffixes(item.instance_id.clone()));
+    }
+    validate_position(item.position, width, height, owner_id)
+}
+
 pub(super) struct WorldValidationRefs<'a> {
     pub(super) terrain_ids: &'a BTreeSet<String>,
     pub(super) terrain: &'a [TerrainDefinition],
@@ -1864,10 +1901,60 @@ pub(super) fn validate_world(
             }
 
             inline_map
+                .item_spawns
+                .sort_by(|left, right| left.instance_id.cmp(&right.instance_id));
+            {
+                let mut validate_inline_item = |spawn: &mut ItemSpawn| {
+                    validate_item_spawn(
+                        spawn,
+                        &procedural.id,
+                        procedural.width,
+                        procedural.height,
+                        item_limits,
+                        affix_ids,
+                    )?;
+                    if !procedural_actor_ids.insert(spawn.instance_id.clone())
+                        || !occupied.insert(spawn.position)
+                        || !terrain_walkability
+                            .get(terrain_at(spawn.position))
+                            .copied()
+                            .unwrap_or(false)
+                    {
+                        return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+                    }
+                    Ok(())
+                };
+                for spawn in &mut inline_map.item_spawns {
+                    validate_inline_item(spawn)?;
+                }
+                if let Some(pair) = &mut inline_map.scrambled_item_pair {
+                    for spawn in pair {
+                        validate_inline_item(spawn)?;
+                    }
+                }
+                if let Some(pair) = &mut inline_map.scrambled_item_loot_pair {
+                    pair.item_spawns.sort_by_key(|spawn| spawn.position);
+                    for spawn in &mut pair.item_spawns {
+                        validate_inline_item(spawn)?;
+                    }
+                }
+            }
+
+            inline_map
                 .loot_spawns
                 .sort_by(|left, right| left.id.cmp(&right.id));
             let mut inline_loot_ids = BTreeSet::new();
-            for spawn in &inline_map.loot_spawns {
+            let scrambled_loot_spawns = if let Some(pair) = &mut inline_map.scrambled_item_loot_pair
+            {
+                if pair.item_spawns.is_empty() || pair.item_spawns.len() != pair.loot_spawns.len() {
+                    return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+                }
+                pair.loot_spawns.sort_by_key(|spawn| spawn.position);
+                pair.loot_spawns.as_slice()
+            } else {
+                &[]
+            };
+            for spawn in inline_map.loot_spawns.iter().chain(scrambled_loot_spawns) {
                 validate_id(&spawn.id)?;
                 validate_position(
                     spawn.position,
@@ -1891,7 +1978,7 @@ pub(super) fn validate_world(
                 formation.candidate_actor_kind_ids.sort();
                 formation.candidate_actor_kind_ids.dedup();
                 if formation.candidate_actor_kind_ids.is_empty()
-                    || formation.candidate_actor_kind_ids.len() > 64
+                    || formation.candidate_actor_kind_ids.len() > 256
                     || formation.draw_count == 0
                     || formation.draw_count > 32
                     || formation.placement_indices.len() != formation.positions.len()
@@ -2690,35 +2777,17 @@ pub(super) fn validate_world(
         .items
         .sort_by(|left, right| left.instance_id.cmp(&right.instance_id));
     for item in &mut world.items {
-        validate_id(&item.instance_id)?;
         if !instance_ids.insert(item.instance_id.clone()) {
             return Err(ContentError::DuplicateInstanceId(item.instance_id.clone()));
         }
-        let (max_stack, equippable) =
-            item_limits
-                .get(&item.kind_id)
-                .ok_or_else(|| ContentError::DanglingReference {
-                    owner: world.id.clone(),
-                    target: item.kind_id.clone(),
-                })?;
-        if item.quantity == 0 || item.quantity > *max_stack {
-            return Err(ContentError::InvalidItemQuantity(item.instance_id.clone()));
-        }
-        item.affix_ids.sort();
-        let mut seen_affixes = BTreeSet::new();
-        if (item.quality != ItemQuality::Ordinary && (*max_stack != 1 || item.quantity != 1))
-            || (!item.affix_ids.is_empty()
-                && (*max_stack != 1
-                    || !equippable
-                    || item.quantity != 1
-                    || item.quality == ItemQuality::Ordinary))
-            || item.affix_ids.iter().any(|affix_id| {
-                !affix_ids.contains(affix_id) || !seen_affixes.insert(affix_id.as_str())
-            })
-        {
-            return Err(ContentError::InvalidItemAffixes(item.instance_id.clone()));
-        }
-        validate_position(item.position, world.width, world.height, &world.id)?;
+        validate_item_spawn(
+            item,
+            &world.id,
+            world.width,
+            world.height,
+            item_limits,
+            affix_ids,
+        )?;
     }
 
     world

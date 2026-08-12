@@ -299,6 +299,22 @@ pub(super) fn game_with_actor_definition(
         .find(|actor| actor.id == actor_kind_id)
         .unwrap_or_else(|| panic!("demo pack should contain {actor_kind_id}"));
     update(actor);
+    // These tests mutate one actor in isolation. Keep unrelated fixed-floor
+    // candidate snapshots from imposing their production depth constraint on
+    // the synthetic actor definition.
+    for world in &mut artifact.content.worlds {
+        for floor in &mut world.procedural_floors {
+            if let Some(formation) = floor
+                .inline_map
+                .as_mut()
+                .and_then(|inline_map| inline_map.monster_formation.as_mut())
+            {
+                formation
+                    .candidate_actor_kind_ids
+                    .retain(|candidate| candidate != actor_kind_id);
+            }
+        }
+    }
     let catalog = Arc::new(rfb_content::ContentCatalog::from_artifact(
         rfb_content::encode_content(artifact.content)
             .expect("custom actor definition should remain valid"),

@@ -279,7 +279,7 @@
           "id": "booze-composite",
           "primaryBlockers": ["consumable-effect"],
           "items": [
-            { "sourceIndex": 407, "sourceName": "Booze:Light Blue", "sourceId": "booze-light-blue" }
+            { "sourceIndex": 407, "sourceName": "Booze:Light Blue", "sourceId": "booze-light-blue", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] }
           ]
         },
         {

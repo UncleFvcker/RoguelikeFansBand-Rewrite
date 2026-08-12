@@ -1,0 +1,22 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.pain",
+  "nameKey": "item-demo-pain-name",
+  "descriptionKey": "item-demo-pain-description",
+  "glyph": "/",
+  "generationLevel": 60,
+  "weightTenthsPound": 190,
+  "maxStack": 1,
+  "baseValue": 50000,
+  "equipmentSlot": "weapon",
+  "meleeProfile": {
+    "attacks": 1,
+    "toHit": 0,
+    "toDamage": 30,
+    "damageDice": 9,
+    "damageSides": 7
+  },
+  "resistsMonsterDestruction": true,
+  "tags": ["artifact", "equipment", "old-castle-reward", "weapon"]
+}

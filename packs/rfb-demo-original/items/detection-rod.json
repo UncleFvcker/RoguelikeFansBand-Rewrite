@@ -1,0 +1,31 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.detection-rod",
+  "nameKey": "item-demo-detection-rod-name",
+  "appearanceNameKey": "item-demo-unfamiliar-rod-name",
+  "descriptionKey": "item-demo-detection-rod-description",
+  "glyph": "-",
+  "generationLevel": 30,
+  "mogaminatorRare": false,
+  "weightTenthsPound": 15,
+  "maxStack": 1,
+  "baseValue": 2000,
+  "deviceGeneration": {
+    "recovery": { "intervalTicks": 1, "energyPerMille": 10 },
+    "activations": [
+      {
+        "id": "demo.device-activation.detection",
+        "nameKey": "device-activation-demo-detection-name",
+        "weight": 1,
+        "minDepth": 1,
+        "maxDepth": 100,
+        "deviceCheckDifficulty": 30,
+        "charges": { "minimum": 45, "maximum": 45, "cost": 17 },
+        "target": { "modes": ["self"], "range": 0, "requiresLineOfEffect": false },
+        "effectProgramId": "demo.effect.detection-rod"
+      }
+    ]
+  },
+  "tags": ["device", "rfb", "rod", "task-reward"]
+}

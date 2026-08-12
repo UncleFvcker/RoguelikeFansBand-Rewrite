@@ -555,3 +555,41 @@ Archer 三个既有制造弹药执行端点投影为一个原版“制造弹药�
 命令或待处理状态。content hash 为
 `846d7565a37113590dcee9e2ea187fdbd4ff2786c0fa85fbe61743834ae89d0a`；协议升至
 1.176，State Hash Schema 升至 v88。
+
+contract-v267 / 包 1.257.0 接入白马旅店 quest 50“家里的麻烦”。38×17 固定地图保留
+5 名目标雇佣兵、7 名非目标醉汉、一个受限随机怪物、固定物品与一次二元物品乱序；
+`InlineFloorMapDefinition` 只增加 `itemSpawns` 和 `scrambledItemPair` 两个窄字段。
+当前 Human/Warrior 的专属奖励为镶钉皮手套，烈酒使用独立效果复刻当前身份可观察的
+混乱、幻觉、失忆与传送分支。包包含 71 种地形、647 种 actor 和 258 种物品，内容
+hash 为 `824828fff84a945b868acb37c48781adc0ab9d7ad8fd3f52beb7cfa3fd5b2c46`。
+协议保持 1.175，State Hash Schema 保持 v87。
+
+contract-v268 / 包 1.258.0 接入白马旅店 quest 62“乌鸦巢”。38×17 固定地图保留
+泥土/石墙地形、6 只乌鸦、2 只杜尔桑的乌鸦、1 只腐肉鸟、5 具固定人类骨架，以及
+10 具骨架与 10 个随机物品位置的整组二元乱序；`InlineFloorMapDefinition` 为此增加
+窄化的 `scrambledItemLootPair`。默认奖励是带 60 点容量、10 点消耗、20 级难度和
+半径 30 地图探测的启明法杖。content hash 为
+`c4ac995bbb20437d110ad78e3dbc6c0431c57e2c8f1a5a4e8c9d6c2dd989073d`；协议保持
+1.175，State Hash Schema 保持 v87。
+
+contract-v269 / 包 1.259.0 接入白马旅店 quest 31“柳树老头任务”。31×20 固定地图
+保留 250 格树木、1 只柳树老头、8 只树人、6 只大脚野人、6 只沃帕尔兔和 2 只
+剑齿虎；任务以 `kill-actor-kind` 追踪唯一目标。固定普通戒指附带窄化的动态
+`elemental-jewelry` affix：必得一种酸/电/火/冷抗性，并有三分之一概率独立再抽一种。
+content hash 为 `71f9f400d8aacf6363130f6b031e6a7c107ee64101512650285a8e91bfae59a1`；
+协议保持 1.175，State Hash Schema 保持 v87。
+
+contract-v270 / 包 1.260.0 接入白马旅店 quest 20“蒸汽任务”。25×22 固定地图保留
+8 只辐射眼、1 只瓦斯孢子、6 只气元素、1 只闪光漩涡、2 团怪异烟雾，以及两侧
+各 6 个戒指/护身符落点。当前物品表用普通首饰壳保持固定位置，不宣称尚未接入的完整
+RFB 首饰种类与 ego 分配。默认探测魔棒以有序 `detect` 序列探测半径 30 内的陷阱、
+通道、金币、物品和全部怪物，容量 45、单次消耗 17、设备难度 30。content hash 为
+`49ea9859fc399bced90e2eaabda21bc25984885c9ed5cea7b8ce7bb19d5dec19`；协议保持
+1.175，State Hash Schema 保持 v87。
+
+contract-v271 / 主树整合包 1.272.0 接入白马旅店 quest 27“旧城堡”。71×28 固定地图保留
+68 只声明顺序固定怪物和 7 个由任务怪物池抽取的位置；三件任务神器直接表达当前
+装备模型支持的权威武器骰、命中/伤害、斩杀、品牌和被动。当前 Warrior 以 1:4 权重
+获得“杀戮者”或“痛苦”，默认“克里斯杜瑞安”保留给后续职业。content hash 为
+`2f88338bb3fe9bfa13ac703d0b58ae4521bade19619805c5fe37da977a8b4858`；协议为
+1.176，State Hash Schema 为 v88。

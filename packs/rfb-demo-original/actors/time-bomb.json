@@ -1,0 +1,66 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 567,
+    "maxDepth": 999,
+    "rarity": 5
+  },
+  "attack": 9,
+  "damageDice": 30,
+  "damageSides": 2,
+  "damageType": "time",
+  "defense": 4,
+  "descriptionKey": "actor-demo-time-bomb-description",
+  "experienceValue": 50,
+  "formatVersion": 1,
+  "glyph": ".",
+  "hitPointDice": {
+    "dice": 12,
+    "forceMaximum": true,
+    "sides": 12
+  },
+  "id": "demo.actor.time-bomb",
+  "level": 36,
+  "maxHp": 144,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 30,
+            "damageSides": 2,
+            "damageType": "time",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.explode",
+        "selfDestructs": true,
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "neverMoves": true
+  },
+  "nameKey": "actor-demo-time-bomb-name",
+  "resistances": {
+    "time": "resistant"
+  },
+  "role": "monster",
+  "speed": 130,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "cold-blooded",
+    "empty-mind",
+    "invisible",
+    "kin-glyph-46",
+    "legacy-import",
+    "old-castle",
+    "outpost-quest"
+  ]
+}

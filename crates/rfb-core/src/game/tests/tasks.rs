@@ -539,10 +539,10 @@ fn task_rewards_use_one_weighted_default_choice_and_class_affix_overrides() {
 }
 
 #[test]
-fn accepting_thieves_hideout_at_the_count_opens_only_its_northeastern_entry() {
+fn accepting_thieves_hideout_at_the_count_opens_its_count_district_entry() {
     let mut game =
         Game::new_with_build(42, "demo.build.warrior").expect("Warrens journey should create");
-    let entry = Position { x: 63, y: 11 };
+    let entry = Position { x: 30, y: 9 };
     assert_eq!(
         game.terrain_at(entry),
         "demo.terrain.thieves-hideout-entry-available"
@@ -566,6 +566,485 @@ fn accepting_thieves_hideout_at_the_count_opens_only_its_northeastern_entry() {
 }
 
 #[test]
+fn trouble_at_home_runs_from_white_horse_targets_only_mercenaries_and_rewards_warrior() {
+    let mut game =
+        Game::new_with_build(142, "demo.build.warrior").expect("Warrens journey should create");
+    let entry = Position { x: 63, y: 11 };
+    assert_eq!(
+        game.terrain_at(entry),
+        "demo.terrain.trouble-at-home-entry-available"
+    );
+    game.player.position = Position { x: 63, y: 13 };
+    dispatch_next(
+        &mut game,
+        GameCommand::AcceptTask {
+            facility_id: "demo.town-facility.outpost-white-horse".to_owned(),
+            task_id: "demo.task.trouble-at-home".to_owned(),
+        },
+    );
+    assert_eq!(
+        game.task_states["demo.task.trouble-at-home"].status,
+        TaskStatusKindDto::Taken
+    );
+    assert_eq!(game.terrain_at(entry), "demo.terrain.trouble-at-home-entry");
+
+    game.player.position = entry;
+    dispatch_next(&mut game, GameCommand::TraverseStairs);
+    assert_eq!(game.current_floor_id, "demo.floor.trouble-at-home");
+    assert_eq!(game.entities.len(), 13);
+    assert_eq!(
+        game.entities
+            .iter()
+            .filter(|actor| actor.kind_id == "demo.actor.mean-looking-mercenary")
+            .count(),
+        5
+    );
+    assert_eq!(
+        game.entities
+            .iter()
+            .filter(|actor| actor.kind_id == "demo.actor.singing-happy-drunk")
+            .count(),
+        7
+    );
+    assert_eq!(
+        game.items
+            .iter()
+            .filter(|item| item.id.starts_with("demo.item.trouble-at-home.waybread."))
+            .count(),
+        4
+    );
+    let scrambled_positions = game
+        .items
+        .iter()
+        .filter(|item| {
+            matches!(
+                item.id.as_str(),
+                "demo.item.trouble-at-home.boldness.1" | "demo.item.trouble-at-home.booze.1"
+            )
+        })
+        .filter_map(|item| match item.location {
+            ItemLocation::Ground(position) => Some(position),
+            _ => None,
+        })
+        .collect::<BTreeSet<_>>();
+    assert_eq!(
+        scrambled_positions,
+        BTreeSet::from([Position { x: 25, y: 1 }, Position { x: 25, y: 2 }])
+    );
+
+    let targets = game
+        .entities
+        .iter()
+        .filter(|actor| actor.kind_id == "demo.actor.mean-looking-mercenary")
+        .map(|actor| ActorDeathRecord {
+            actor_id: actor.id.clone(),
+            actor_kind_id: actor.kind_id.clone(),
+            position: actor.position,
+            credit_player: true,
+        })
+        .collect::<Vec<_>>();
+    game.entities
+        .retain(|actor| actor.kind_id != "demo.actor.mean-looking-mercenary");
+    game.command_actor_deaths.extend(targets);
+    let mut events = Vec::new();
+    game.apply_task_events(&mut events)
+        .expect("five mercenary deaths should complete Trouble at Home");
+    assert_eq!(
+        game.task_states["demo.task.trouble-at-home"].status,
+        TaskStatusKindDto::RewardAvailable
+    );
+    assert_eq!(game.entities.len(), 8);
+
+    game.player.position = Position { x: 25, y: 15 };
+    dispatch_next(&mut game, GameCommand::TraverseStairs);
+    assert_eq!(game.current_floor_id, wilderness::WILDERNESS_FLOOR_ID);
+    assert_eq!(
+        game.terrain_at(entry),
+        "demo.terrain.trouble-at-home-entry-completed"
+    );
+    game.player.position = Position { x: 63, y: 13 };
+    let before_draws = game.rng_draw_counter();
+    dispatch_next(
+        &mut game,
+        GameCommand::ClaimTaskReward {
+            facility_id: "demo.town-facility.outpost-white-horse".to_owned(),
+            task_id: "demo.task.trouble-at-home".to_owned(),
+        },
+    );
+    assert_eq!(
+        game.task_states["demo.task.trouble-at-home"].status,
+        TaskStatusKindDto::Completed
+    );
+    assert_eq!(game.rng_draw_counter(), before_draws);
+    assert!(game.items.iter().any(|item| {
+        item.id == "demo.task.trouble-at-home.reward.1"
+            && item.kind_id == "demo.item.set-of-studded-leather-gloves"
+            && item.location == ItemLocation::Inventory
+    }));
+}
+
+#[test]
+fn crows_nest_unlocks_after_trouble_at_home_clears_all_birds_and_rewards_a_staff() {
+    let mut game =
+        Game::new_with_build(143, "demo.build.warrior").expect("Warrens journey should create");
+    let task_id = "demo.task.crows-nest";
+    let entry = Position { x: 72, y: 23 };
+    assert_eq!(
+        game.terrain_at(entry),
+        "demo.terrain.crows-nest-entry-available"
+    );
+    game.player.position = Position { x: 63, y: 13 };
+    assert_eq!(
+        game.accept_task("demo.town-facility.outpost-white-horse", task_id),
+        Err("task-locked")
+    );
+
+    game.task_states.insert(
+        "demo.task.trouble-at-home".to_owned(),
+        TaskState {
+            status: TaskStatusKindDto::Completed,
+            stage_index: 0,
+            current: 5,
+            required: 5,
+            active_floor_id: None,
+            retakes_used: 0,
+        },
+    );
+    dispatch_next(
+        &mut game,
+        GameCommand::AcceptTask {
+            facility_id: "demo.town-facility.outpost-white-horse".to_owned(),
+            task_id: task_id.to_owned(),
+        },
+    );
+    assert_eq!(game.task_states[task_id].status, TaskStatusKindDto::Taken);
+    assert_eq!(game.terrain_at(entry), "demo.terrain.crows-nest-entry");
+
+    game.player.position = entry;
+    dispatch_next(&mut game, GameCommand::TraverseStairs);
+    assert_eq!(game.current_floor_id, "demo.floor.crows-nest");
+    assert_eq!(game.entities.len(), 9);
+    game.entities.clear();
+    dispatch_next(&mut game, GameCommand::Wait);
+    assert_eq!(
+        game.task_states[task_id].status,
+        TaskStatusKindDto::RewardAvailable
+    );
+
+    game.player.position = Position { x: 2, y: 14 };
+    dispatch_next(&mut game, GameCommand::TraverseStairs);
+    assert_eq!(game.current_floor_id, wilderness::WILDERNESS_FLOOR_ID);
+    assert_eq!(
+        game.terrain_at(entry),
+        "demo.terrain.crows-nest-entry-completed"
+    );
+    game.player.position = Position { x: 63, y: 13 };
+    dispatch_next(
+        &mut game,
+        GameCommand::ClaimTaskReward {
+            facility_id: "demo.town-facility.outpost-white-horse".to_owned(),
+            task_id: task_id.to_owned(),
+        },
+    );
+    assert_eq!(
+        game.task_states[task_id].status,
+        TaskStatusKindDto::Completed
+    );
+    let reward = game
+        .items
+        .iter()
+        .find(|item| item.id == "demo.task.crows-nest.reward.1")
+        .expect("Crow's Nest should grant its fixed reward");
+    assert_eq!(reward.kind_id, "demo.item.enlightenment-staff");
+    assert_eq!(reward.location, ItemLocation::Inventory);
+    assert_eq!(
+        reward
+            .activation
+            .as_ref()
+            .map(|activation| activation.profile_id.as_str()),
+        Some("demo.device-activation.enlightenment")
+    );
+    assert_eq!(
+        reward
+            .charges
+            .map(|charges| (charges.current, charges.maximum)),
+        Some((60, 60))
+    );
+}
+
+#[test]
+fn old_man_willow_unlocks_after_crows_nest_and_rewards_an_elemental_ring() {
+    let mut game =
+        Game::new_with_build(149, "demo.build.warrior").expect("Warrens journey should create");
+    let task_id = "demo.task.old-man-willow";
+    let entry = Position { x: 69, y: 11 };
+    assert_eq!(
+        game.terrain_at(entry),
+        "demo.terrain.old-man-willow-entry-available"
+    );
+    game.player.position = Position { x: 63, y: 13 };
+    assert_eq!(
+        game.accept_task("demo.town-facility.outpost-white-horse", task_id),
+        Err("task-locked")
+    );
+
+    game.task_states.insert(
+        "demo.task.crows-nest".to_owned(),
+        TaskState {
+            status: TaskStatusKindDto::Completed,
+            stage_index: 0,
+            current: 1,
+            required: 1,
+            active_floor_id: None,
+            retakes_used: 0,
+        },
+    );
+    dispatch_next(
+        &mut game,
+        GameCommand::AcceptTask {
+            facility_id: "demo.town-facility.outpost-white-horse".to_owned(),
+            task_id: task_id.to_owned(),
+        },
+    );
+    assert_eq!(game.task_states[task_id].status, TaskStatusKindDto::Taken);
+    assert_eq!(game.terrain_at(entry), "demo.terrain.old-man-willow-entry");
+
+    game.player.position = entry;
+    dispatch_next(&mut game, GameCommand::TraverseStairs);
+    assert_eq!(game.current_floor_id, "demo.floor.old-man-willow");
+    assert_eq!(game.entities.len(), 23);
+    let target = game
+        .entities
+        .iter()
+        .find(|actor| actor.kind_id == "demo.actor.old-man-willow")
+        .expect("Old Man Willow should occupy the original fixed position");
+    let death = ActorDeathRecord {
+        actor_id: target.id.clone(),
+        actor_kind_id: target.kind_id.clone(),
+        position: target.position,
+        credit_player: true,
+    };
+    game.entities
+        .retain(|actor| actor.kind_id != "demo.actor.old-man-willow");
+    game.command_actor_deaths.push(death);
+    let mut events = Vec::new();
+    game.apply_task_events(&mut events)
+        .expect("Old Man Willow's death should complete the objective");
+    assert_eq!(
+        game.task_states[task_id].status,
+        TaskStatusKindDto::RewardAvailable
+    );
+    assert_eq!(game.entities.len(), 22);
+
+    game.player.position = Position { x: 1, y: 18 };
+    dispatch_next(&mut game, GameCommand::TraverseStairs);
+    assert_eq!(game.current_floor_id, wilderness::WILDERNESS_FLOOR_ID);
+    assert_eq!(
+        game.terrain_at(entry),
+        "demo.terrain.old-man-willow-entry-completed"
+    );
+    game.player.position = Position { x: 63, y: 13 };
+    let before_draws = game.rng_draw_counter();
+    dispatch_next(
+        &mut game,
+        GameCommand::ClaimTaskReward {
+            facility_id: "demo.town-facility.outpost-white-horse".to_owned(),
+            task_id: task_id.to_owned(),
+        },
+    );
+    assert_eq!(
+        game.task_states[task_id].status,
+        TaskStatusKindDto::Completed
+    );
+    assert_eq!(game.rng_draw_counter(), before_draws + 2);
+    let reward = game
+        .items
+        .iter()
+        .find(|item| item.id == "demo.task.old-man-willow.reward.1")
+        .expect("Old Man Willow should grant its fixed ring reward");
+    assert_eq!(reward.kind_id, "demo.item.ring");
+    assert_eq!(reward.location, ItemLocation::Inventory);
+    assert_eq!(reward.quality, ItemQualityDto::Fine);
+    assert_eq!(reward.affix_ids, ["rfb-legacy.affix.elemental-jewelry"]);
+    assert_eq!(reward.rolled_affixes.len(), 1);
+    let resistances = &reward.rolled_affixes[0].properties.resistances;
+    assert!((1..=2).contains(&resistances.len()));
+    assert!(resistances.keys().all(|damage_type| matches!(
+        damage_type,
+        ActorDamageType::Acid
+            | ActorDamageType::Cold
+            | ActorDamageType::Electricity
+            | ActorDamageType::Fire
+    )));
+}
+
+#[test]
+fn vapor_quest_unlocks_after_old_man_willow_clears_the_cellar_and_rewards_detection() {
+    let mut game =
+        Game::new_with_build(150, "demo.build.warrior").expect("Warrens journey should create");
+    let task_id = "demo.task.vapor-quest";
+    let entry = Position { x: 62, y: 13 };
+    assert_eq!(
+        game.terrain_at(entry),
+        "demo.terrain.vapor-quest-entry-available"
+    );
+    game.player.position = Position { x: 63, y: 13 };
+    assert_eq!(
+        game.accept_task("demo.town-facility.outpost-white-horse", task_id),
+        Err("task-locked")
+    );
+
+    game.task_states.insert(
+        "demo.task.old-man-willow".to_owned(),
+        TaskState {
+            status: TaskStatusKindDto::Completed,
+            stage_index: 0,
+            current: 1,
+            required: 1,
+            active_floor_id: None,
+            retakes_used: 0,
+        },
+    );
+    dispatch_next(
+        &mut game,
+        GameCommand::AcceptTask {
+            facility_id: "demo.town-facility.outpost-white-horse".to_owned(),
+            task_id: task_id.to_owned(),
+        },
+    );
+    assert_eq!(game.task_states[task_id].status, TaskStatusKindDto::Taken);
+    assert_eq!(game.terrain_at(entry), "demo.terrain.vapor-quest-entry");
+
+    game.player.position = entry;
+    dispatch_next(&mut game, GameCommand::TraverseStairs);
+    assert_eq!(game.current_floor_id, "demo.floor.vapor-quest");
+    assert_eq!(game.entities.len(), 18);
+    assert_eq!(
+        game.items
+            .iter()
+            .filter(|item| item.id.starts_with("demo.item.vapor-quest."))
+            .count(),
+        12
+    );
+    game.entities.clear();
+    dispatch_next(&mut game, GameCommand::Wait);
+    assert_eq!(
+        game.task_states[task_id].status,
+        TaskStatusKindDto::RewardAvailable
+    );
+
+    game.player.position = Position { x: 12, y: 20 };
+    dispatch_next(&mut game, GameCommand::TraverseStairs);
+    assert_eq!(game.current_floor_id, wilderness::WILDERNESS_FLOOR_ID);
+    assert_eq!(
+        game.terrain_at(entry),
+        "demo.terrain.vapor-quest-entry-completed"
+    );
+    game.player.position = Position { x: 63, y: 13 };
+    dispatch_next(
+        &mut game,
+        GameCommand::ClaimTaskReward {
+            facility_id: "demo.town-facility.outpost-white-horse".to_owned(),
+            task_id: task_id.to_owned(),
+        },
+    );
+    assert_eq!(
+        game.task_states[task_id].status,
+        TaskStatusKindDto::Completed
+    );
+    let reward = game
+        .items
+        .iter()
+        .find(|item| item.id == "demo.task.vapor-quest.reward.1")
+        .expect("Vapor Quest should grant its fixed reward");
+    assert_eq!(reward.kind_id, "demo.item.detection-rod");
+    assert_eq!(reward.location, ItemLocation::Inventory);
+    assert_eq!(
+        reward
+            .activation
+            .as_ref()
+            .map(|activation| activation.profile_id.as_str()),
+        Some("demo.device-activation.detection")
+    );
+    assert_eq!(
+        reward
+            .charges
+            .map(|charges| (charges.current, charges.maximum)),
+        Some((45, 45))
+    );
+}
+
+#[test]
+fn old_castle_unlocks_after_vapor_quest_and_rewards_the_warrior_artifact_pool() {
+    let mut game =
+        Game::new_with_build(271, "demo.build.warrior").expect("Warrens journey should create");
+    let task_id = "demo.task.old-castle";
+    let entry = Position { x: 65, y: 13 };
+    assert_eq!(
+        game.terrain_at(entry),
+        "demo.terrain.old-castle-entry-available"
+    );
+    game.player.position = Position { x: 63, y: 13 };
+    assert_eq!(
+        game.accept_task("demo.town-facility.outpost-white-horse", task_id),
+        Err("task-locked")
+    );
+
+    game.task_states.insert(
+        "demo.task.vapor-quest".to_owned(),
+        TaskState {
+            status: TaskStatusKindDto::Completed,
+            stage_index: 0,
+            current: 1,
+            required: 1,
+            active_floor_id: None,
+            retakes_used: 0,
+        },
+    );
+    dispatch_next(
+        &mut game,
+        GameCommand::AcceptTask {
+            facility_id: "demo.town-facility.outpost-white-horse".to_owned(),
+            task_id: task_id.to_owned(),
+        },
+    );
+    assert_eq!(game.task_states[task_id].status, TaskStatusKindDto::Taken);
+    assert_eq!(game.terrain_at(entry), "demo.terrain.old-castle-entry");
+
+    game.player.position = entry;
+    dispatch_next(&mut game, GameCommand::TraverseStairs);
+    assert_eq!(game.current_floor_id, "demo.floor.old-castle");
+    assert!(game.entities.len() >= 75);
+    game.entities.clear();
+    dispatch_next(&mut game, GameCommand::Wait);
+    assert_eq!(
+        game.task_states[task_id].status,
+        TaskStatusKindDto::RewardAvailable
+    );
+
+    game.player.position = Position { x: 31, y: 1 };
+    dispatch_next(&mut game, GameCommand::TraverseStairs);
+    game.player.position = Position { x: 63, y: 13 };
+    dispatch_next(
+        &mut game,
+        GameCommand::ClaimTaskReward {
+            facility_id: "demo.town-facility.outpost-white-horse".to_owned(),
+            task_id: task_id.to_owned(),
+        },
+    );
+    let reward = game
+        .items
+        .iter()
+        .find(|item| item.id == "demo.task.old-castle.reward.1")
+        .expect("Old Castle should grant an artifact");
+    assert!(matches!(
+        reward.kind_id.as_str(),
+        "demo.item.slayer" | "demo.item.pain"
+    ));
+    assert_eq!(reward.location, ItemLocation::Inventory);
+}
+
+#[test]
 fn clearing_thieves_hideout_closes_the_floor_without_granting_the_reward() {
     let mut game =
         Game::new_with_build(43, "demo.build.warrior").expect("Warrens journey should create");
@@ -577,7 +1056,7 @@ fn clearing_thieves_hideout_closes_the_floor_without_granting_the_reward() {
             task_id: "demo.task.thieves-hideout".to_owned(),
         },
     );
-    game.player.position = Position { x: 63, y: 11 };
+    game.player.position = Position { x: 30, y: 9 };
     dispatch_next(&mut game, GameCommand::TraverseStairs);
     assert_eq!(game.current_floor_id, "demo.floor.thieves-hideout");
 
@@ -596,7 +1075,7 @@ fn clearing_thieves_hideout_closes_the_floor_without_granting_the_reward() {
         TaskStatusKindDto::RewardAvailable
     );
     assert_eq!(
-        game.terrain_at(Position { x: 63, y: 11 }),
+        game.terrain_at(Position { x: 30, y: 9 }),
         "demo.terrain.thieves-hideout-entry-completed"
     );
     assert!(
@@ -625,7 +1104,7 @@ fn leaving_thieves_hideout_uncleared_fails_and_closes_the_entry() {
             task_id: "demo.task.thieves-hideout".to_owned(),
         },
     );
-    game.player.position = Position { x: 63, y: 11 };
+    game.player.position = Position { x: 30, y: 9 };
     dispatch_next(&mut game, GameCommand::TraverseStairs);
     game.player.position = Position { x: 1, y: 4 };
     dispatch_next(&mut game, GameCommand::TraverseStairs);
@@ -635,7 +1114,7 @@ fn leaving_thieves_hideout_uncleared_fails_and_closes_the_entry() {
         TaskStatusKindDto::Failed
     );
     assert_eq!(
-        game.terrain_at(Position { x: 63, y: 11 }),
+        game.terrain_at(Position { x: 30, y: 9 }),
         "demo.terrain.thieves-hideout-entry-failed"
     );
 }

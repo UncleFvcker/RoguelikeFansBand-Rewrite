@@ -1,0 +1,30 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "formatVersion": 1,
+  "id": "rfb-legacy.affix.elemental-jewelry",
+  "nameKey": "affix-legacy-elemental-jewelry-name",
+  "descriptionKey": "affix-legacy-elemental-jewelry-description",
+  "generationLevel": 22,
+  "rollGroups": [
+    {
+      "rolls": 1,
+      "candidates": [
+        { "weight": 1, "properties": { "resistances": { "acid": "resistant" } } },
+        { "weight": 1, "properties": { "resistances": { "cold": "resistant" } } },
+        { "weight": 1, "properties": { "resistances": { "electricity": "resistant" } } },
+        { "weight": 1, "properties": { "resistances": { "fire": "resistant" } } }
+      ]
+    },
+    {
+      "rolls": 1,
+      "candidates": [
+        { "weight": 8, "properties": {} },
+        { "weight": 1, "properties": { "resistances": { "acid": "resistant" } } },
+        { "weight": 1, "properties": { "resistances": { "cold": "resistant" } } },
+        { "weight": 1, "properties": { "resistances": { "electricity": "resistant" } } },
+        { "weight": 1, "properties": { "resistances": { "fire": "resistant" } } }
+      ]
+    }
+  ],
+  "tags": ["elemental", "jewelry", "legacy-import", "ring"]
+}

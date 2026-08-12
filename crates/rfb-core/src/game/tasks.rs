@@ -550,7 +550,11 @@ pub(super) fn reward_item(
             )
         })
         .collect();
-    let (activation, charges) = initial_item_runtime_state(content, rng, &entry.item_kind_id, 1);
+    let (activation, mut charges) =
+        initial_item_runtime_state(content, rng, &entry.item_kind_id, 1);
+    if let Some(charges) = &mut charges {
+        charges.current = charges.maximum;
+    }
     ItemInstance {
         id: reward.item_instance_id.clone(),
         kind_id: entry.item_kind_id.clone(),

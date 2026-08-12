@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/terrain.schema.json",
+  "formatVersion": 1,
+  "id": "demo.terrain.crows-nest-entry",
+  "nameKey": "terrain-demo-crows-nest-entry-name",
+  "descriptionKey": "terrain-demo-crows-nest-entry-description",
+  "glyph": ">",
+  "walkable": true,
+  "blocksSight": false,
+  "tags": ["outdoor", "surface", "task-entry"]
+}

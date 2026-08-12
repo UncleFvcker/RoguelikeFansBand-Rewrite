@@ -330,6 +330,103 @@ mod tests {
     }
 
     #[test]
+    fn trouble_at_home_uses_authoritative_chinese_names() {
+        let localizer = Localizer::new(Locale::ZhCn).expect("resources should load");
+        for (key, expected) in [
+            ("task-demo-trouble-at-home-name", "家里的麻烦 (前哨镇)"),
+            ("actor-demo-mean-looking-mercenary-name", "面相凶狠的雇佣兵"),
+            ("actor-demo-singing-happy-drunk-name", "快乐唱歌的醉汉"),
+            ("item-demo-piece-of-elvish-waybread-name", "精灵干粮"),
+            ("item-demo-booze-potion-name", "烈酒"),
+        ] {
+            assert_eq!(
+                localizer
+                    .format_exact(Locale::ZhCn, key, None)
+                    .expect("Trouble at Home name should format"),
+                expected
+            );
+        }
+    }
+
+    #[test]
+    fn crows_nest_uses_authoritative_chinese_names() {
+        let localizer = Localizer::new(Locale::ZhCn).expect("resources should load");
+        for (key, expected) in [
+            ("task-demo-crows-nest-name", "乌鸦巢 (前哨镇)"),
+            ("item-demo-human-skeleton-name", "一具人类骨架"),
+            ("item-demo-enlightenment-staff-name", "启明法杖"),
+            ("device-activation-demo-enlightenment-name", "启示"),
+        ] {
+            assert_eq!(
+                localizer
+                    .format_exact(Locale::ZhCn, key, None)
+                    .expect("Crow's Nest name should format"),
+                expected
+            );
+        }
+    }
+
+    #[test]
+    fn old_man_willow_uses_authoritative_chinese_names() {
+        let localizer = Localizer::new(Locale::ZhCn).expect("resources should load");
+        for (key, expected) in [
+            ("task-demo-old-man-willow-name", "柳树老头任务 (前哨镇)"),
+            ("actor-demo-old-man-willow-name", "柳树老头"),
+            ("affix-legacy-elemental-jewelry-name", "(元素的)"),
+        ] {
+            assert_eq!(
+                localizer
+                    .format_exact(Locale::ZhCn, key, None)
+                    .expect("Old Man Willow name should format"),
+                expected
+            );
+        }
+    }
+
+    #[test]
+    fn vapor_quest_uses_authoritative_chinese_names() {
+        let localizer = Localizer::new(Locale::ZhCn).expect("resources should load");
+        for (key, expected) in [
+            ("task-demo-vapor-quest-name", "蒸汽任务 (前哨镇)"),
+            ("actor-demo-gas-spore-name", "瓦斯孢子"),
+            ("actor-demo-air-elemental-name", "气元素"),
+            ("actor-demo-shimmering-vortex-name", "闪光漩涡"),
+            ("actor-demo-weird-fume-name", "怪异烟雾"),
+            ("item-demo-amulet-name", "护身符"),
+            ("item-demo-detection-rod-name", "探测魔棒"),
+            ("device-activation-demo-detection-name", "探测"),
+        ] {
+            assert_eq!(
+                localizer
+                    .format_exact(Locale::ZhCn, key, None)
+                    .expect("Vapor Quest name should format"),
+                expected
+            );
+        }
+    }
+
+    #[test]
+    fn old_castle_uses_authoritative_chinese_names() {
+        let localizer = Localizer::new(Locale::ZhCn).expect("resources should load");
+        for (key, expected) in [
+            ("task-demo-old-castle-name", "旧城堡 (前哨镇)"),
+            ("actor-demo-anti-paladin-name", "反圣武士"),
+            ("actor-demo-ancient-red-dragon-name", "上古红龙"),
+            ("actor-demo-dracolich-name", "龙巫妖"),
+            ("item-demo-crisdurian-name", "刽子手之剑『克里斯杜瑞安』"),
+            ("item-demo-slayer-name", "刽子手之剑『杀戮者』"),
+            ("item-demo-pain-name", "痛苦之大刀"),
+        ] {
+            assert_eq!(
+                localizer
+                    .format_exact(Locale::ZhCn, key, None)
+                    .expect("Old Castle name should format"),
+                expected
+            );
+        }
+    }
+
+    #[test]
     fn all_item_affix_and_artifact_names_have_exact_matching_messages() {
         let pack = Path::new(env!("CARGO_MANIFEST_DIR"))
             .parent()

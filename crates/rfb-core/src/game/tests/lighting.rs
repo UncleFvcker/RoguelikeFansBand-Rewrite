@@ -472,16 +472,16 @@ fn warrens_light_attempts_are_seeded_walkable_weighted_and_persistent() {
                     && matches!(item.kind_id.as_str(), OIL_KIND_ID | LANTERN_KIND_ID)
             })
             .collect::<Vec<_>>();
-        assert!(supplies.len() <= 1);
-        if let Some(supply) = supplies.first() {
+        if supplies.is_empty() {
+            saw_miss = true;
+        }
+        for supply in supplies {
             let ItemLocation::Ground(position) = supply.location else {
                 unreachable!()
             };
             assert!(left.is_walkable(position));
             saw_oil |= supply.kind_id == OIL_KIND_ID;
             saw_lantern |= supply.kind_id == LANTERN_KIND_ID;
-        } else {
-            saw_miss = true;
         }
         let restored = Game::from_save(left.to_save()).expect("generated light should reload");
         assert_eq!(restored.state_hash(), left.state_hash());

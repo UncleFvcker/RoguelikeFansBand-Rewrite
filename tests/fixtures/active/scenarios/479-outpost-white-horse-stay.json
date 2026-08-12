@@ -29,7 +29,7 @@
       "turn": 1,
       "worldTick": 50000,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 152,
+      "rngDrawCounter": 154,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -279,27 +279,27 @@
           },
           "stock": [
             {
-              "id": "generated.item.169",
+              "id": "generated.item.170",
               "kindId": "demo.item.ration-of-food",
               "displayNameKey": "item-demo-ration-of-food-name",
-              "quantity": 3,
+              "quantity": 5,
               "maximumQuantity": 0,
               "unitPrice": 3,
               "weightTenthsPound": 10,
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.170",
+              "id": "generated.item.171",
               "kindId": "demo.item.hard-biscuit",
               "displayNameKey": "item-demo-hard-biscuit-name",
-              "quantity": 3,
+              "quantity": 2,
               "maximumQuantity": 0,
               "unitPrice": 1,
               "weightTenthsPound": 2,
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.171",
+              "id": "generated.item.172",
               "kindId": "demo.item.strip-of-venison",
               "displayNameKey": "item-demo-strip-of-venison-name",
               "quantity": 5,
@@ -309,17 +309,17 @@
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.172",
+              "id": "generated.item.173",
               "kindId": "demo.item.water-potion",
               "displayNameKey": "item-demo-water-potion-name",
-              "quantity": 2,
+              "quantity": 1,
               "maximumQuantity": 0,
               "unitPrice": 1,
               "weightTenthsPound": 4,
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.173",
+              "id": "generated.item.174",
               "kindId": "demo.item.apple-juice",
               "displayNameKey": "item-demo-apple-juice-name",
               "quantity": 5,
@@ -946,7 +946,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 174,
+      "nextItemInstanceSerial": 175,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -954,7 +954,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "b2515dc4331fdbbf765d141b5fde9fb47d9c70f68b87a614ce18410861964497"
+      "stateHash": "3c003305cc238d45cf800ecdebe076686b9f03f5f0d0056196b825401e1642ab"
     },
     "events": [
       {

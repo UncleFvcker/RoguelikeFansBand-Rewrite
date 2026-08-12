@@ -187,7 +187,7 @@ fn death_high_mage_damage_bonus_and_level_twenty_five_power_are_active() {
     item.activation
         .as_mut()
         .expect("staff should have an activation")
-        .device_check_difficulty = 100;
+        .device_check_difficulty = 120;
     item.charges
         .as_mut()
         .expect("staff should have charges")

@@ -354,6 +354,13 @@
           },
           "type": "array"
         },
+        "itemSpawns": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/ItemSpawn"
+          },
+          "type": "array"
+        },
         "lootSpawns": {
           "default": [],
           "items": {
@@ -374,6 +381,29 @@
         },
         "playerPosition": {
           "$ref": "#/$defs/ContentPosition"
+        },
+        "scrambledItemLootPair": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/InlineScrambledItemLootPairDefinition"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "scrambledItemPair": {
+          "default": null,
+          "items": {
+            "$ref": "#/$defs/ItemSpawn"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": [
+            "array",
+            "null"
+          ]
         },
         "terrainOverrides": {
           "items": {
@@ -424,6 +454,28 @@
         "drawCount",
         "placementIndices",
         "positions"
+      ],
+      "type": "object"
+    },
+    "InlineScrambledItemLootPairDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "itemSpawns": {
+          "items": {
+            "$ref": "#/$defs/ItemSpawn"
+          },
+          "type": "array"
+        },
+        "lootSpawns": {
+          "items": {
+            "$ref": "#/$defs/InlineFloorLootSpawnDefinition"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "itemSpawns",
+        "lootSpawns"
       ],
       "type": "object"
     },

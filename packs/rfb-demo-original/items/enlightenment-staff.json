@@ -1,0 +1,31 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.enlightenment-staff",
+  "nameKey": "item-demo-enlightenment-staff-name",
+  "appearanceNameKey": "item-demo-unfamiliar-staff-name",
+  "descriptionKey": "item-demo-enlightenment-staff-description",
+  "glyph": "_",
+  "generationLevel": 20,
+  "mogaminatorRare": false,
+  "weightTenthsPound": 50,
+  "maxStack": 1,
+  "baseValue": 1000,
+  "deviceGeneration": {
+    "recovery": { "intervalTicks": 10, "energyPerMille": 10 },
+    "activations": [
+      {
+        "id": "demo.device-activation.enlightenment",
+        "nameKey": "device-activation-demo-enlightenment-name",
+        "weight": 1,
+        "minDepth": 1,
+        "maxDepth": 100,
+        "deviceCheckDifficulty": 20,
+        "charges": { "minimum": 60, "maximum": 60, "cost": 10 },
+        "target": { "modes": ["self"], "range": 0, "requiresLineOfEffect": false },
+        "effectProgramId": "demo.effect.enlightenment-staff"
+      }
+    ]
+  },
+  "tags": ["device", "rfb", "staff", "task-reward"]
+}

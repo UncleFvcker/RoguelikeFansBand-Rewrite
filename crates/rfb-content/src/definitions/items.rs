@@ -336,6 +336,7 @@ pub enum ItemUseEffectDefinition {
         healing_sides: u16,
     },
     ApplySaltWater,
+    ApplyBooze,
     ApplyFastRecovery,
     ApplyLifeRestoration {
         healing_amount: u32,

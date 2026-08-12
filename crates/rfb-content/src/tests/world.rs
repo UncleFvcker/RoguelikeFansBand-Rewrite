@@ -3972,14 +3972,8 @@ fn p45_monsters_bind_low_risk_shared_mappings() {
     }
 
     for task_actor in ["anti-paladin", "revenant", "death-knight", "sorcerer"] {
-        assert!(
-            artifact
-                .content
-                .actors
-                .iter()
-                .all(|candidate| candidate.id != format!("demo.actor.{task_actor}")),
-            "{task_actor} remains task-owned"
-        );
+        let task_actor = actor(task_actor);
+        assert!(task_actor.tags.iter().any(|tag| tag == "outpost-quest"));
     }
     for table_id in [
         "demo.loot-table.evil-paladin",
@@ -4656,6 +4650,724 @@ fn thieves_hideout_uses_the_original_fixed_map_and_formation_contract() {
 }
 
 #[test]
+fn trouble_at_home_uses_the_original_map_targets_items_and_warrior_reward() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let world = artifact
+        .content
+        .worlds
+        .iter()
+        .find(|world| world.id == "demo.world.middle-earth")
+        .expect("fixture should contain Middle-earth");
+    let task = world
+        .tasks
+        .iter()
+        .find(|task| task.id == "demo.task.trouble-at-home")
+        .expect("fixture should contain Trouble at Home");
+    assert_eq!(
+        task.source_facility_id.as_deref(),
+        Some("demo.town-facility.outpost-white-horse")
+    );
+    assert_eq!(task.objectives.len(), 1);
+    assert_eq!(task.objectives[0].kind, TaskObjectiveKind::KillActorKind);
+    assert_eq!(task.objectives[0].required, 5);
+    assert_eq!(
+        task.objectives[0].actor_kind_id.as_deref(),
+        Some("demo.actor.mean-looking-mercenary")
+    );
+    assert_eq!(
+        task.reward.entries[0].item_kind_id,
+        "demo.item.hard-studded-leather"
+    );
+    assert_eq!(
+        task.reward.class_overrides[0].class_id,
+        "demo.class.warrior"
+    );
+    assert_eq!(
+        task.reward.class_overrides[0].entries[0].item_kind_id,
+        "demo.item.set-of-studded-leather-gloves"
+    );
+
+    let floor = world
+        .procedural_floors
+        .iter()
+        .find(|floor| floor.id == "demo.floor.trouble-at-home")
+        .expect("fixture should contain the White Horse back room");
+    assert_eq!((floor.width, floor.height, floor.depth), (38, 17, 5));
+    let inline_map = floor
+        .inline_map
+        .as_ref()
+        .expect("Trouble at Home should retain its inline map");
+    assert_eq!(inline_map.player_position, ContentPosition { x: 25, y: 15 });
+    assert_eq!(inline_map.actor_spawns.len(), 12);
+    assert_eq!(
+        inline_map
+            .actor_spawns
+            .iter()
+            .filter(|spawn| spawn.kind_id == "demo.actor.mean-looking-mercenary")
+            .count(),
+        5
+    );
+    assert_eq!(
+        inline_map
+            .actor_spawns
+            .iter()
+            .filter(|spawn| spawn.kind_id == "demo.actor.singing-happy-drunk")
+            .count(),
+        7
+    );
+    for actor_id in [
+        "demo.actor.mean-looking-mercenary",
+        "demo.actor.singing-happy-drunk",
+    ] {
+        assert_eq!(
+            artifact
+                .content
+                .actors
+                .iter()
+                .find(|actor| actor.id == actor_id)
+                .unwrap_or_else(|| panic!("{actor_id} should be imported"))
+                .level,
+            0,
+            "{actor_id} should retain its source level"
+        );
+    }
+    assert_eq!(inline_map.item_spawns.len(), 4);
+    assert!(inline_map.item_spawns.iter().all(|spawn| {
+        spawn.kind_id == "demo.item.piece-of-elvish-waybread" && spawn.quantity == 1
+    }));
+    let pair = inline_map
+        .scrambled_item_pair
+        .as_ref()
+        .expect("boldness and booze should retain their two-position scramble");
+    assert_eq!(
+        pair.iter()
+            .map(|spawn| spawn.kind_id.as_str())
+            .collect::<BTreeSet<_>>(),
+        BTreeSet::from(["demo.item.boldness-potion", "demo.item.booze-potion"])
+    );
+    assert_eq!(inline_map.loot_spawns.len(), 3);
+    assert_eq!(
+        inline_map
+            .terrain_overrides
+            .iter()
+            .find(|override_| override_.terrain_id == "demo.terrain.door-closed")
+            .expect("fixed map should contain closed doors")
+            .positions
+            .len(),
+        9
+    );
+
+    let formation = inline_map
+        .monster_formation
+        .as_ref()
+        .expect("the original random monster cell should be retained");
+    assert_eq!(formation.draw_count, 1);
+    assert_eq!(formation.placement_indices, [0]);
+    assert_eq!(formation.positions, [ContentPosition { x: 6, y: 10 }]);
+    let expected_candidates = artifact
+        .content
+        .actors
+        .iter()
+        .filter(|actor| {
+            let Some(allocation) = &actor.allocation else {
+                return false;
+            };
+            let has_tag = |tag| actor.tags.iter().any(|candidate| candidate == tag);
+            let aquatic = actor.movement.modes.contains(&ActorMovementMode::Aquatic);
+            let flies = actor.movement.modes.contains(&ActorMovementMode::Fly);
+            actor.role == ActorRole::Monster
+                && actor.level <= 10
+                && !has_tag("unique")
+                && !has_tag("guardian")
+                && !has_tag("no-quest")
+                && (!has_tag("outpost-quest") || has_tag("trouble-at-home"))
+                && !allocation.wild_only
+                && (allocation.max_depth == 0 || allocation.max_depth >= 10)
+                && (!allocation.force_depth || actor.level <= 5)
+                && allocation
+                    .task_id
+                    .as_deref()
+                    .is_none_or(|task_id| task_id == "demo.task.trouble-at-home")
+                && allocation.legacy_dungeon_indices.is_empty()
+                && (!aquatic || flies)
+        })
+        .map(|actor| actor.id.as_str())
+        .collect::<BTreeSet<_>>();
+    assert_eq!(expected_candidates.len(), 161);
+    assert_eq!(
+        formation
+            .candidate_actor_kind_ids
+            .iter()
+            .map(String::as_str)
+            .collect::<BTreeSet<_>>(),
+        expected_candidates
+    );
+
+    let booze = artifact
+        .content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.booze-potion")
+        .expect("the original booze potion should be imported");
+    assert_eq!((booze.generation_level, booze.weight_tenths_pound), (0, 4));
+    assert_eq!(booze.base_value, 1);
+    assert!(matches!(
+        booze.use_action.as_ref().map(|action| &action.effect),
+        Some(ItemUseEffectDefinition::ApplyBooze)
+    ));
+}
+
+#[test]
+fn crows_nest_uses_the_original_map_clear_goal_birds_scramble_and_reward() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let world = artifact
+        .content
+        .worlds
+        .iter()
+        .find(|world| world.id == "demo.world.middle-earth")
+        .expect("fixture should contain Middle-earth");
+    let task = world
+        .tasks
+        .iter()
+        .find(|task| task.id == "demo.task.crows-nest")
+        .expect("fixture should contain Crow's Nest");
+    assert_eq!(
+        task.source_facility_id.as_deref(),
+        Some("demo.town-facility.outpost-white-horse")
+    );
+    assert_eq!(
+        task.prerequisite_task_id.as_deref(),
+        Some("demo.task.trouble-at-home")
+    );
+    assert_eq!(task.objectives.len(), 1);
+    assert_eq!(task.objectives[0].kind, TaskObjectiveKind::ClearFloor);
+    assert_eq!(
+        task.reward.entries[0].item_kind_id,
+        "demo.item.enlightenment-staff"
+    );
+
+    let floor = world
+        .procedural_floors
+        .iter()
+        .find(|floor| floor.id == "demo.floor.crows-nest")
+        .expect("fixture should contain Crow's Nest");
+    assert_eq!((floor.width, floor.height, floor.depth), (38, 17, 15));
+    let inline_map = floor
+        .inline_map
+        .as_ref()
+        .expect("Crow's Nest should retain its inline map");
+    assert_eq!(inline_map.player_position, ContentPosition { x: 2, y: 14 });
+    assert_eq!(inline_map.actor_spawns.len(), 9);
+    assert_eq!(
+        inline_map
+            .actor_spawns
+            .iter()
+            .map(|spawn| spawn.kind_id.as_str())
+            .fold(BTreeMap::new(), |mut counts, id| {
+                *counts.entry(id).or_insert(0) += 1;
+                counts
+            }),
+        BTreeMap::from([
+            ("demo.actor.carrion", 1),
+            ("demo.actor.crow", 6),
+            ("demo.actor.crow-of-durthang", 2),
+        ])
+    );
+    assert_eq!(inline_map.item_spawns.len(), 5);
+    assert!(
+        inline_map
+            .item_spawns
+            .iter()
+            .all(|spawn| { spawn.kind_id == "demo.item.human-skeleton" && spawn.quantity == 1 })
+    );
+    let pair = inline_map
+        .scrambled_item_loot_pair
+        .as_ref()
+        .expect("skeleton and random-loot glyphs should retain their group scramble");
+    assert_eq!((pair.item_spawns.len(), pair.loot_spawns.len()), (10, 10));
+    assert!(
+        pair.item_spawns
+            .iter()
+            .all(|spawn| spawn.kind_id == "demo.item.human-skeleton")
+    );
+    assert!(
+        pair.loot_spawns
+            .iter()
+            .all(|spawn| spawn.loot_table_id == "demo.loot-table.base-items")
+    );
+    let terrain_counts = inline_map
+        .terrain_overrides
+        .iter()
+        .map(|override_| (override_.terrain_id.as_str(), override_.positions.len()))
+        .collect::<BTreeMap<_, _>>();
+    assert_eq!(terrain_counts["demo.terrain.floor"], 220);
+    assert_eq!(terrain_counts["demo.terrain.dirt"], 42);
+    assert_eq!(terrain_counts["demo.terrain.stairs-up"], 1);
+
+    let staff = artifact
+        .content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.enlightenment-staff")
+        .expect("the fixed quest reward should exist");
+    let activation = &staff
+        .device_generation
+        .as_ref()
+        .expect("the reward should be a device")
+        .activations[0];
+    assert_eq!(activation.device_check_difficulty, 20);
+    assert_eq!(
+        (activation.charges.minimum, activation.charges.maximum),
+        (60, 60)
+    );
+    assert_eq!(activation.charges.cost, 10);
+}
+
+#[test]
+fn old_man_willow_uses_the_original_map_formation_target_and_elemental_ring() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let world = artifact
+        .content
+        .worlds
+        .iter()
+        .find(|world| world.id == "demo.world.middle-earth")
+        .expect("fixture should contain Middle-earth");
+    let task = world
+        .tasks
+        .iter()
+        .find(|task| task.id == "demo.task.old-man-willow")
+        .expect("fixture should contain Old Man Willow");
+    assert_eq!(
+        task.source_facility_id.as_deref(),
+        Some("demo.town-facility.outpost-white-horse")
+    );
+    assert_eq!(
+        task.prerequisite_task_id.as_deref(),
+        Some("demo.task.crows-nest")
+    );
+    assert_eq!(task.objectives[0].kind, TaskObjectiveKind::KillActorKind);
+    assert_eq!(task.objectives[0].required, 1);
+    assert_eq!(
+        task.objectives[0].actor_kind_id.as_deref(),
+        Some("demo.actor.old-man-willow")
+    );
+    assert_eq!(task.reward.entries[0].item_kind_id, "demo.item.ring");
+    assert_eq!(
+        task.reward.entries[0].affix_ids,
+        ["rfb-legacy.affix.elemental-jewelry"]
+    );
+
+    let floor = world
+        .procedural_floors
+        .iter()
+        .find(|floor| floor.id == "demo.floor.old-man-willow")
+        .expect("fixture should contain Old Man Willow's grove");
+    assert_eq!((floor.width, floor.height, floor.depth), (31, 20, 22));
+    let inline_map = floor
+        .inline_map
+        .as_ref()
+        .expect("Old Man Willow should retain its inline map");
+    assert_eq!(inline_map.player_position, ContentPosition { x: 1, y: 18 });
+    assert_eq!(inline_map.actor_spawns.len(), 23);
+    assert_eq!(
+        inline_map
+            .actor_spawns
+            .iter()
+            .map(|spawn| spawn.kind_id.as_str())
+            .fold(BTreeMap::new(), |mut counts, id| {
+                *counts.entry(id).or_insert(0) += 1;
+                counts
+            }),
+        BTreeMap::from([
+            ("demo.actor.huorn", 8),
+            ("demo.actor.old-man-willow", 1),
+            ("demo.actor.sabre-tooth-tiger", 2),
+            ("demo.actor.sasquatch", 6),
+            ("demo.actor.vorpal-bunny", 6),
+        ])
+    );
+    let terrain_counts = inline_map
+        .terrain_overrides
+        .iter()
+        .map(|override_| (override_.terrain_id.as_str(), override_.positions.len()))
+        .collect::<BTreeMap<_, _>>();
+    assert_eq!(terrain_counts["demo.terrain.permanent-wall"], 98);
+    assert_eq!(terrain_counts["demo.terrain.surface-grass"], 271);
+    assert_eq!(terrain_counts["demo.terrain.stairs-up"], 1);
+
+    let willow = artifact
+        .content
+        .actors
+        .iter()
+        .find(|actor| actor.id == "demo.actor.old-man-willow")
+        .expect("Old Man Willow should be imported");
+    assert_eq!((willow.level, willow.max_hp), (22, 529));
+    assert!(willow.force_sleep);
+    assert!(willow.movement.never_moves);
+    assert_eq!(
+        willow.monster_casting.as_ref().map(|casting| (
+            casting.frequency_percent,
+            casting.abilities[0].ability_id.as_str()
+        )),
+        Some((16, "rfb-legacy.ability.drag"))
+    );
+    assert_eq!(
+        willow.resistances.get(&ActorDamageType::Fire),
+        Some(&ActorResistanceLevel::Vulnerable)
+    );
+
+    let elemental = artifact
+        .content
+        .affixes
+        .iter()
+        .find(|affix| affix.id == "rfb-legacy.affix.elemental-jewelry")
+        .expect("the Elemental jewelry ego should exist");
+    assert_eq!(elemental.generation_level, 22);
+    assert_eq!(elemental.roll_groups.len(), 2);
+    assert_eq!(
+        elemental.roll_groups[0]
+            .candidates
+            .iter()
+            .map(|candidate| candidate.weight)
+            .sum::<u32>(),
+        4
+    );
+    assert_eq!(
+        elemental.roll_groups[1]
+            .candidates
+            .iter()
+            .map(|candidate| candidate.weight)
+            .sum::<u32>(),
+        12
+    );
+}
+
+#[test]
+fn vapor_quest_uses_the_original_map_formation_jewelry_and_detection_rod() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let world = artifact
+        .content
+        .worlds
+        .iter()
+        .find(|world| world.id == "demo.world.middle-earth")
+        .expect("fixture should contain Middle-earth");
+    let task = world
+        .tasks
+        .iter()
+        .find(|task| task.id == "demo.task.vapor-quest")
+        .expect("fixture should contain the Vapor Quest");
+    assert_eq!(
+        task.source_facility_id.as_deref(),
+        Some("demo.town-facility.outpost-white-horse")
+    );
+    assert_eq!(
+        task.prerequisite_task_id.as_deref(),
+        Some("demo.task.old-man-willow")
+    );
+    assert_eq!(task.objectives[0].kind, TaskObjectiveKind::ClearFloor);
+    assert_eq!(
+        task.reward.entries[0].item_kind_id,
+        "demo.item.detection-rod"
+    );
+
+    let floor = world
+        .procedural_floors
+        .iter()
+        .find(|floor| floor.id == "demo.floor.vapor-quest")
+        .expect("fixture should contain the Vapor Quest cellar");
+    assert_eq!((floor.width, floor.height, floor.depth), (25, 22, 25));
+    let inline_map = floor
+        .inline_map
+        .as_ref()
+        .expect("Vapor Quest should retain its inline map");
+    assert_eq!(inline_map.player_position, ContentPosition { x: 12, y: 20 });
+    assert_eq!(inline_map.actor_spawns.len(), 18);
+    assert_eq!(
+        inline_map
+            .actor_spawns
+            .iter()
+            .map(|spawn| spawn.kind_id.as_str())
+            .fold(BTreeMap::new(), |mut counts, id| {
+                *counts.entry(id).or_insert(0) += 1;
+                counts
+            }),
+        BTreeMap::from([
+            ("demo.actor.air-elemental", 6),
+            ("demo.actor.gas-spore", 1),
+            ("demo.actor.radiation-eye", 8),
+            ("demo.actor.shimmering-vortex", 1),
+            ("demo.actor.weird-fume", 2),
+        ])
+    );
+    assert_eq!(
+        inline_map
+            .item_spawns
+            .iter()
+            .map(|spawn| spawn.kind_id.as_str())
+            .fold(BTreeMap::new(), |mut counts, id| {
+                *counts.entry(id).or_insert(0) += 1;
+                counts
+            }),
+        BTreeMap::from([("demo.item.amulet", 6), ("demo.item.ring", 6)])
+    );
+    let terrain_counts = inline_map
+        .terrain_overrides
+        .iter()
+        .map(|override_| (override_.terrain_id.as_str(), override_.positions.len()))
+        .collect::<BTreeMap<_, _>>();
+    assert_eq!(terrain_counts["demo.terrain.floor"], 207);
+    assert_eq!(terrain_counts["demo.terrain.stairs-up"], 1);
+
+    let rod = artifact
+        .content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.detection-rod")
+        .expect("the fixed quest reward should exist");
+    let activation = &rod
+        .device_generation
+        .as_ref()
+        .expect("the reward should be a device")
+        .activations[0];
+    assert_eq!(activation.device_check_difficulty, 30);
+    assert_eq!(
+        (activation.charges.minimum, activation.charges.maximum),
+        (45, 45)
+    );
+    assert_eq!(activation.charges.cost, 17);
+    let ItemUseEffectDefinition::Sequence { effects } = &activation.effect else {
+        panic!("Detection should retain its ordered five-part effect");
+    };
+    assert_eq!(effects.len(), 5);
+    for (effect, subject, category, persistent) in [
+        (
+            &effects[0],
+            AbilityDetectSubjectDefinition::Terrain,
+            "trap",
+            true,
+        ),
+        (
+            &effects[1],
+            AbilityDetectSubjectDefinition::Terrain,
+            "passage",
+            true,
+        ),
+        (
+            &effects[2],
+            AbilityDetectSubjectDefinition::Gold,
+            "gold",
+            false,
+        ),
+        (
+            &effects[3],
+            AbilityDetectSubjectDefinition::Item,
+            "item",
+            false,
+        ),
+    ] {
+        assert!(matches!(
+            effect,
+            ItemUseEffectDefinition::Detect {
+                subject: actual_subject,
+                category: actual_category,
+                radius: 30,
+                persistent: actual_persistent,
+                through_walls: true,
+            } if *actual_subject == subject
+                && actual_category == category
+                && *actual_persistent == persistent
+        ));
+    }
+    assert!(matches!(
+        &effects[4],
+        ItemUseEffectDefinition::Detect {
+            subject: AbilityDetectSubjectDefinition::Actor,
+            category,
+            radius: 30,
+            persistent: false,
+            through_walls: true,
+        } if category == "any-monster"
+    ));
+}
+
+#[test]
+fn old_castle_uses_the_original_map_fixed_formation_and_warrior_artifact_pool() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let world = artifact
+        .content
+        .worlds
+        .iter()
+        .find(|world| world.id == "demo.world.middle-earth")
+        .expect("fixture should contain Middle-earth");
+    let task = world
+        .tasks
+        .iter()
+        .find(|task| task.id == "demo.task.old-castle")
+        .expect("fixture should contain the Old Castle");
+    assert_eq!(
+        task.source_facility_id.as_deref(),
+        Some("demo.town-facility.outpost-white-horse")
+    );
+    assert_eq!(
+        task.prerequisite_task_id.as_deref(),
+        Some("demo.task.vapor-quest")
+    );
+    assert_eq!(task.objectives[0].kind, TaskObjectiveKind::ClearFloor);
+    assert_eq!(task.reward.entries[0].item_kind_id, "demo.item.crisdurian");
+    assert_eq!(task.reward.class_overrides.len(), 1);
+    assert_eq!(
+        task.reward.class_overrides[0]
+            .entries
+            .iter()
+            .map(|entry| (entry.item_kind_id.as_str(), entry.weight))
+            .collect::<BTreeMap<_, _>>(),
+        BTreeMap::from([("demo.item.pain", 4), ("demo.item.slayer", 1)])
+    );
+
+    let floor = world
+        .procedural_floors
+        .iter()
+        .find(|floor| floor.id == "demo.floor.old-castle")
+        .expect("fixture should contain the Old Castle floor");
+    assert_eq!((floor.width, floor.height, floor.depth), (71, 28, 50));
+    let inline_map = floor.inline_map.as_ref().expect("map should stay inline");
+    assert_eq!(inline_map.player_position, ContentPosition { x: 31, y: 1 });
+    assert_eq!(inline_map.actor_spawns.len(), 68);
+    assert_eq!(inline_map.item_spawns.len(), 13);
+    assert_eq!(inline_map.loot_spawns.len(), 72);
+    assert_eq!(
+        inline_map
+            .actor_spawns
+            .iter()
+            .map(|spawn| spawn.kind_id.as_str())
+            .fold(BTreeMap::new(), |mut counts, id| {
+                *counts.entry(id).or_insert(0) += 1;
+                counts
+            })["demo.actor.anti-paladin"],
+        5
+    );
+    assert_eq!(
+        inline_map
+            .monster_formation
+            .as_ref()
+            .expect("seven source-random cells should use the formation roller")
+            .positions
+            .len(),
+        7
+    );
+
+    for (id, dice, sides, to_hit, to_damage) in [
+        ("demo.item.crisdurian", 4, 6, 23, 24),
+        ("demo.item.slayer", 5, 6, 15, 15),
+        ("demo.item.pain", 9, 7, 0, 30),
+    ] {
+        let item = artifact
+            .content
+            .items
+            .iter()
+            .find(|item| item.id == id)
+            .expect("Old Castle artifact should exist");
+        let melee = item
+            .melee_profile
+            .as_ref()
+            .expect("artifact should be a weapon");
+        assert_eq!(
+            (
+                melee.damage_dice,
+                melee.damage_sides,
+                melee.to_hit,
+                melee.to_damage
+            ),
+            (dice, sides, to_hit, to_damage)
+        );
+        assert!(item.tags.iter().any(|tag| tag == "artifact"));
+    }
+}
+
+#[test]
+fn inline_floor_items_reject_duplicate_or_blocked_placements() {
+    fn trouble_inline(content: &mut CompiledContentV1) -> &mut InlineFloorMapDefinition {
+        content
+            .worlds
+            .iter_mut()
+            .find(|world| world.id == "demo.world.middle-earth")
+            .and_then(|world| {
+                world
+                    .procedural_floors
+                    .iter_mut()
+                    .find(|floor| floor.id == "demo.floor.trouble-at-home")
+            })
+            .and_then(|floor| floor.inline_map.as_mut())
+            .expect("Trouble at Home should retain its inline map")
+    }
+
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+
+    let mut duplicate_id = artifact.content.clone();
+    let inline_map = trouble_inline(&mut duplicate_id);
+    inline_map.scrambled_item_pair.as_mut().unwrap()[0].instance_id =
+        inline_map.item_spawns[0].instance_id.clone();
+    assert!(matches!(
+        validate_and_normalize(&mut duplicate_id),
+        Err(ContentError::InvalidProceduralFloor(_))
+    ));
+
+    let mut duplicate_position = artifact.content.clone();
+    let pair = trouble_inline(&mut duplicate_position)
+        .scrambled_item_pair
+        .as_mut()
+        .unwrap();
+    pair[1].position = pair[0].position;
+    assert!(matches!(
+        validate_and_normalize(&mut duplicate_position),
+        Err(ContentError::InvalidProceduralFloor(_))
+    ));
+
+    let mut blocked_position = artifact.content.clone();
+    trouble_inline(&mut blocked_position).item_spawns[0].position = ContentPosition { x: 0, y: 0 };
+    assert!(matches!(
+        validate_and_normalize(&mut blocked_position),
+        Err(ContentError::InvalidProceduralFloor(_))
+    ));
+}
+
+#[test]
+fn scrambled_item_loot_pair_requires_equal_nonempty_disjoint_groups() {
+    fn crows_pair(content: &mut CompiledContentV1) -> &mut InlineScrambledItemLootPairDefinition {
+        content
+            .worlds
+            .iter_mut()
+            .find(|world| world.id == "demo.world.middle-earth")
+            .and_then(|world| {
+                world
+                    .procedural_floors
+                    .iter_mut()
+                    .find(|floor| floor.id == "demo.floor.crows-nest")
+            })
+            .and_then(|floor| floor.inline_map.as_mut())
+            .and_then(|inline_map| inline_map.scrambled_item_loot_pair.as_mut())
+            .expect("Crow's Nest should retain its item/loot scramble")
+    }
+
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+
+    let mut mismatched = artifact.content.clone();
+    crows_pair(&mut mismatched).loot_spawns.pop();
+    assert!(matches!(
+        validate_and_normalize(&mut mismatched),
+        Err(ContentError::InvalidProceduralFloor(_))
+    ));
+
+    let mut overlapping = artifact.content.clone();
+    let pair = crows_pair(&mut overlapping);
+    pair.loot_spawns[0].position = pair.item_spawns[0].position;
+    assert!(matches!(
+        validate_and_normalize(&mut overlapping),
+        Err(ContentError::InvalidProceduralFloor(_))
+    ));
+}
+
+#[test]
 fn general_store_economy_content_enforces_generic_stock_rules() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let store_id = "demo.shop.outpost-general-store";
@@ -4924,7 +5636,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
         .find(|table| table.id == "demo.loot-table.base-items")
         .expect("base item pool should exist");
 
-    assert_eq!(base_items.entries.len(), 306);
+    assert_eq!(base_items.entries.len(), 307);
 
     let selection: serde_json::Value = serde_json::from_slice(
         &std::fs::read(pack_path.join("legacy-item-selection.json"))
@@ -4972,7 +5684,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
                     .to_owned()
             });
     }
-    assert_eq!(active_source_items.len(), 282);
+    assert_eq!(active_source_items.len(), 283);
 
     let source_items_without_allocations =
         BTreeSet::from([33, 34, 36, 37, 345, 346, 347, 400, 401, 460]);
@@ -4986,7 +5698,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
         .iter()
         .map(|entry| entry.item_kind_id.as_str())
         .collect::<BTreeSet<_>>();
-    assert_eq!(expected_item_ids.len(), 272);
+    assert_eq!(expected_item_ids.len(), 273);
     assert_eq!(actual_item_ids, expected_item_ids);
 
     // Source 313 is one Staff allocation split into two formal adaptations.
@@ -5079,7 +5791,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
                     == Some("demo.loot-table.base-items")
             })
             .count(),
-        409
+        425
     );
 }
 
@@ -5144,7 +5856,7 @@ fn formal_drop_themes_use_source_allocations_and_rfb_depth_quality() {
                 .filter(|drop| drop.theme_table_id.as_deref() == Some("demo.loot-table.warrior"))
         })
         .collect::<Vec<_>>();
-    assert_eq!(warrior_drops.len(), 81);
+    assert_eq!(warrior_drops.len(), 85);
     assert!(
         warrior_drops
             .iter()
@@ -6036,15 +6748,21 @@ fn outpost_count_services_and_follow_up_tasks_match_the_original_sequence() {
             "demo.task.royal-crypt",
         ]
     );
-    assert!(
+    assert_eq!(
         artifact
             .content
             .town_facilities
             .iter()
             .find(|facility| facility.id == "demo.town-facility.outpost-white-horse")
             .expect("Outpost should contain the White Horse task service")
-            .task_ids
-            .is_empty()
+            .task_ids,
+        [
+            "demo.task.trouble-at-home",
+            "demo.task.crows-nest",
+            "demo.task.old-man-willow",
+            "demo.task.vapor-quest",
+            "demo.task.old-castle"
+        ]
     );
 
     let world = artifact
@@ -6199,6 +6917,9 @@ fn wilderness_towns_accept_fixed_town_floors_and_derive_world_ownership() {
             },
         ],
         actor_spawns: Vec::new(),
+        item_spawns: Vec::new(),
+        scrambled_item_pair: None,
+        scrambled_item_loot_pair: None,
         loot_spawns: Vec::new(),
         monster_formation: None,
     });

@@ -1184,7 +1184,7 @@ fn food_and_light_eating_consume_one_food_and_leave_one_light_fuel() {
         .fuel
         .as_mut()
         .expect("torch should carry fuel")
-        .current = 300;
+        .current = 250;
     let mut events = Vec::new();
     light
         .resolve_monster_melee(0, &mut events, &mut BTreeSet::new(), &mut Vec::new())
@@ -1199,7 +1199,7 @@ fn food_and_light_eating_consume_one_food_and_leave_one_light_fuel() {
     assert!(
         events
             .iter()
-            .any(|event| matches!(event, DomainEvent::MonsterLightEaten { amount: 299, .. }))
+            .any(|event| matches!(event, DomainEvent::MonsterLightEaten { amount: 249, .. }))
     );
 }
 

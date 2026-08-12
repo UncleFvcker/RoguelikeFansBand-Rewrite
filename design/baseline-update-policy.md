@@ -6,7 +6,7 @@
 
 contract fixture 是规则兼容边界，不能把测试失败简单处理为“刷新预期结果”。政策用于保证每次规则变化只修改真正受影响的场景，同时保留可审查的失败原因。
 
-当前逻辑基线是 `contract-v266`，机器可读政策固定在：
+当前逻辑基线是 `contract-v271`，机器可读政策固定在：
 
 ```text
 tests/fixtures/active/baseline-policy.json
@@ -29,6 +29,37 @@ State Hash Schema v87 与 save v1 均不变，内容包升级到 1.256.0。
 1/10/20 级开放弹丸、箭矢和弩栓。协议升至 1.176。玩家制造弹药的来源、折价和伤害骰
 覆盖已经进入物品持久状态，本批正式将 State Hash Schema 升至 v88；21 条 active
 fixture 全量刷新，save 容器保持 v1，内容包升级到 1.261.0。
+
+`contract-v267` 接入白马旅店 quest 50“家里的麻烦”，增加其固定任务层、目标编队、
+固定/二元乱序物品、烈酒效果和当前 Warrior 的权威奖励。Protocol 1.175、State Hash
+Schema v87 与 save v1 均不变，内容包升级到 1.257.0。任务入口替换改变所有新游戏共有
+的 Outpost 初始地形及状态哈希，因此统一刷新 21 条 active fixture；active 集保持
+21 条且零 waiver。
+
+`contract-v268` 接入白马旅店 quest 62“乌鸦巢”，增加其 38×17 固定任务层、清层
+目标、9 只固定鸟类编队、骨架/随机物品整组二元乱序和启明法杖奖励。Protocol 1.175、
+State Hash Schema v87 与 save v1 均不变，内容包升级到 1.258.0。新增的南侧任务入口
+改变所有新游戏共有的 Outpost 初始地形及状态哈希，因此统一刷新 21 条 active
+fixture；active 集保持 21 条且零 waiver。
+
+`contract-v269` 接入白马旅店 quest 31“柳树老头任务”，增加其 31×20 固定林地、
+击杀柳树老头目标、23 只固定怪物编队和当前 Warrior 可观察的元素戒指奖励。
+Protocol 1.175、State Hash Schema v87 与 save v1 均不变，内容包升级到 1.259.0。
+新增的林地任务入口改变所有新游戏共有的 Outpost 初始地形及状态哈希，因此统一刷新
+21 条 active fixture；active 集保持 21 条且零 waiver。
+
+`contract-v270` 接入白马旅店 quest 20“蒸汽任务”，增加其 25×22 固定地下室、清层
+目标、18 只固定怪物、12 个固定首饰落点和探测魔棒奖励。Protocol 1.175、State Hash
+Schema v87 与 save v1 均不变，内容包升级到 1.260.0。白马旅店墙面新增任务入口状态，
+改变所有新游戏共有的 Outpost 初始地形及状态哈希，因此统一刷新 21 条 active fixture；
+active 集保持 21 条且零 waiver。
+
+`contract-v271` 接入白马旅店 quest 27“旧城堡”，增加其 71×28 固定城堡、68 只
+固定怪物、7 个受限随机怪物位置和当前 Warrior 的 1:4“杀戮者”/“痛苦”神器奖励。
+主树整合后的最终内容包为 1.272.0，Protocol 1.176、State Hash Schema v88、save v1；
+content hash 为 `2f88338bb3fe9bfa13ac703d0b58ae4521bade19619805c5fe37da977a8b4858`。
+白马旅店附近新增任务入口状态与 contract-v266 的共享物品状态输入共同改变状态哈希，
+因此在四个方向全部合入后统一刷新 21 条 active fixture；active 集保持 21 条且零 waiver。
 
 ## 分类验证
 
