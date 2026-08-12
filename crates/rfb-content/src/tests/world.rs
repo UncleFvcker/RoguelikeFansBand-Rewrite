@@ -594,7 +594,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         .iter()
         .filter(|actor| actor.tags.iter().any(|tag| tag == "orc-cave"))
         .collect::<Vec<_>>();
-    assert_eq!(orc_cave.len(), 316);
+    assert_eq!(orc_cave.len(), 366);
 
     for id in [
         "demo.actor.bunyip",
@@ -641,7 +641,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
     assert_eq!(
         level_counts,
         [
-            16, 14, 12, 17, 24, 17, 19, 17, 18, 21, 7, 12, 25, 13, 26, 26, 9, 3, 4, 16,
+            16, 14, 12, 17, 24, 17, 19, 17, 18, 21, 7, 12, 25, 13, 26, 26, 18, 16, 10, 38,
         ]
     );
 
@@ -3632,8 +3632,6 @@ fn p43_monsters_reuse_the_existing_ability_catalog() {
 #[test]
 fn p44a_monsters_generate_only_parameterized_existing_effects() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
-    assert_eq!(artifact.content.actors.len(), 767);
-    assert_eq!(artifact.content.abilities.len(), 377);
     let ability_ids = artifact
         .content
         .abilities
@@ -3681,6 +3679,99 @@ fn p44a_monsters_generate_only_parameterized_existing_effects() {
         ("young-silver-dragon", 1208, 36),
         ("implorington-iii", 1231, 36),
         ("lorgan-chief-of-the-easterlings", 1232, 36),
+    ] {
+        let actor_id = format!("demo.actor.{id}");
+        let actor = artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == actor_id)
+            .unwrap_or_else(|| panic!("{actor_id} should be imported"));
+        assert_eq!(actor.level, level, "{actor_id} level");
+        assert_eq!(
+            actor
+                .allocation
+                .as_ref()
+                .map(|allocation| allocation.legacy_index),
+            Some(legacy_index),
+            "{actor_id} source index"
+        );
+        assert!(
+            actor.monster_casting.as_ref().is_some_and(|casting| {
+                !casting.abilities.is_empty()
+                    && casting
+                        .abilities
+                        .iter()
+                        .all(|candidate| ability_ids.contains(candidate.ability_id.as_str()))
+            }),
+            "{actor_id} should bind generated parameter records"
+        );
+    }
+}
+
+#[test]
+fn p44b_monsters_complete_the_parameterized_existing_effect_harvest() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    assert_eq!(artifact.content.actors.len(), 817);
+    assert_eq!(artifact.content.abilities.len(), 443);
+    let ability_ids = artifact
+        .content
+        .abilities
+        .iter()
+        .map(|ability| ability.id.as_str())
+        .collect::<BTreeSet<_>>();
+
+    for (id, legacy_index, level) in [
+        ("fire-angel", 576, 37),
+        ("flying-polyp", 580, 37),
+        ("the-queen-ant", 581, 37),
+        ("magma-elemental", 584, 37),
+        ("plasma-vortex", 588, 37),
+        ("mature-red-dragon", 589, 37),
+        ("mature-black-dragon", 592, 37),
+        ("bone-dragon", 941, 37),
+        ("mature-silver-dragon", 1209, 37),
+        ("mature-multi-hued-dragon", 593, 38),
+        ("father-dagon", 595, 38),
+        ("mother-hydra", 596, 38),
+        ("mandor-master-of-the-logrus", 598, 38),
+        ("ancient-blue-dragon", 601, 38),
+        ("ancient-bronze-dragon", 602, 38),
+        ("seraph", 605, 38),
+        ("loge-spirit-of-fire", 606, 38),
+        ("nightgaunt", 608, 38),
+        ("baron-of-hell", 609, 38),
+        ("ar-pharazon-the-golden", 978, 38),
+        ("gazhak-the-ogre-tyrant", 1255, 38),
+        ("castamir-the-usurper", 1286, 38),
+        ("fire-vampire", 613, 39),
+        ("kavlax-the-many-headed", 616, 39),
+        ("ancient-white-dragon", 617, 39),
+        ("ancient-green-dragon", 618, 39),
+        ("ettin", 621, 39),
+        ("ancient-black-dragon", 624, 39),
+        ("eldrak", 620, 40),
+        ("rotting-quylthulg", 633, 40),
+        ("9-headed-hydra", 635, 40),
+        ("archpriest", 637, 40),
+        ("jasra-brand-s-mistress", 642, 40),
+        ("ancient-gold-dragon", 645, 40),
+        ("great-crystal-drake", 646, 40),
+        ("wyrd-sister", 647, 40),
+        ("death-quasit", 649, 40),
+        ("dread", 667, 40),
+        ("djinni", 892, 40),
+        ("efreeti", 893, 40),
+        ("troll-king", 894, 40),
+        ("dao", 993, 40),
+        ("high-elven-ranger", 1006, 40),
+        ("m-bison", 1014, 40),
+        ("master-mindcrafter", 1056, 40),
+        ("flame-spider", 1171, 40),
+        ("venom-spider", 1174, 40),
+        ("the-marquis-de-la-tour", 1206, 40),
+        ("ancient-silver-dragon", 1210, 40),
+        ("spulga-the-troll-priestess", 1304, 40),
     ] {
         let actor_id = format!("demo.actor.{id}");
         let actor = artifact
