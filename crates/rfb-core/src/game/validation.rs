@@ -124,6 +124,7 @@ fn item_creation_state_is_valid(
         Some(ItemOriginKindDto::PlayerMade) => {
             item.discount_percent == 99 && definition.tags.iter().any(|tag| tag == "ammunition")
         }
+        Some(ItemOriginKindDto::Rubble) => item.discount_percent == 0,
     };
     let damage_override_is_valid = item.damage_dice_override.is_none_or(|dice| {
         (1..=9).contains(&dice) && definition.tags.iter().any(|tag| tag == "ammunition")

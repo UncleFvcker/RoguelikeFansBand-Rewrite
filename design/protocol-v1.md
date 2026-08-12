@@ -567,3 +567,7 @@ State Hash Schema v89；save 容器保持 v1，不兼容缺少该字段的旧开
 前者投影当前挖掘力、原版等级、当前值和 8000 上限，后者按固定身份投影十种材料数量。
 `PlayerProgressSaveDto` 同步增加必填挖矿熟练度和稀疏材料数组；权威状态进入 State Hash
 Schema v90，save 容器保持 v1。
+
+协议 1.181 / contract-v279 为 `ItemOriginKindDto` 增加 `rubble`，用于投影并持久化碎石
+掉落来源。富矿材料与金币继续使用既有 `PlayerProgressDto.materials` 和 `GoldPileDto`；
+没有新增权威字段，State Hash Schema 保持 v90，save 容器保持 v1。

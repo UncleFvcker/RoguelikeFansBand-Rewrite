@@ -265,7 +265,7 @@ impl Game {
                 self.apply_patron_wrath(&patron.id, level, events, changed);
             }
             ChaosPatronRewardKind::Destruction => {
-                self.apply_patron_destruction(changed, removed_entities);
+                self.apply_patron_destruction(events, changed, removed_entities);
             }
             ChaosPatronRewardKind::Genocide => {
                 self.apply_patron_genocide(false, changed, removed_entities);
@@ -495,13 +495,14 @@ impl Game {
                 removed_entities,
             )?,
             1 => self.high_patron_summon(patron_id, level, events, changed),
-            _ => self.apply_patron_destruction(changed, removed_entities),
+            _ => self.apply_patron_destruction(events, changed, removed_entities),
         }
         Ok(())
     }
 
     fn apply_patron_destruction(
         &mut self,
+        events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
     ) {
@@ -513,7 +514,7 @@ impl Game {
             "demo.terrain.quartz-vein",
             "demo.terrain.magma-vein",
         );
-        self.apply_area_destruction_plan(plan, changed, removed_entities);
+        self.apply_area_destruction_plan(plan, events, changed, removed_entities);
     }
 
     fn apply_patron_genocide(

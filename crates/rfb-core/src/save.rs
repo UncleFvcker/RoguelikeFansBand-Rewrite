@@ -586,6 +586,7 @@ fn validate_item_creation_state(
     let origin_is_valid = match origin_kind {
         None => discount_percent == 0,
         Some(ItemOriginKindDto::PlayerMade) => discount_percent == 99 && ammunition,
+        Some(ItemOriginKindDto::Rubble) => discount_percent == 0,
     };
     let damage_override_is_valid =
         damage_dice_override.is_none_or(|dice| (1..=9).contains(&dice) && ammunition);

@@ -450,6 +450,7 @@ enum LootSource {
     FloorRoom { room_id: String, spawn_id: String },
     Vault { vault_id: String, spawn_id: String },
     ItemUse { item_id: String },
+    Rubble { position: Position },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -2098,46 +2099,48 @@ impl Game {
                 }
                 None => events.push(DomainEvent::TrapDisarmUnavailable),
             },
-            GameAction::DigTerrain { direction } => match self.dig_terrain(direction) {
-                Some(TerrainDigOutcome::Succeeded {
-                    position,
-                    proficiency_improved,
-                }) => {
-                    changed.insert(position);
-                    events.push(DomainEvent::TerrainDug { position });
-                    if proficiency_improved {
-                        events.push(DomainEvent::MiningProficiencyImproved);
+            GameAction::DigTerrain { direction } => {
+                match self.dig_terrain(direction, &mut events, &mut changed) {
+                    Some(TerrainDigOutcome::Succeeded {
+                        position,
+                        proficiency_improved,
+                    }) => {
+                        changed.insert(position);
+                        events.push(DomainEvent::TerrainDug { position });
+                        if proficiency_improved {
+                            events.push(DomainEvent::MiningProficiencyImproved);
+                        }
                     }
-                }
-                Some(TerrainDigOutcome::Failed {
-                    position,
-                    retryable,
-                }) => {
-                    events.push(DomainEvent::TerrainDigFailed {
+                    Some(TerrainDigOutcome::Failed {
                         position,
                         retryable,
-                    });
-                }
-                Some(TerrainDigOutcome::ActorBlocked { position, index }) => {
-                    changed.insert(position);
-                    if self.actor_is_player_side(&self.entities[index]) {
-                        events.push(DomainEvent::MoveBlocked);
-                    } else if self.player_fear_blocks_melee(index) {
-                        events.push(DomainEvent::PlayerFearBlocked {
-                            status_kind_id: STATUS_FEAR.to_owned(),
+                    }) => {
+                        events.push(DomainEvent::TerrainDigFailed {
+                            position,
+                            retryable,
                         });
-                    } else {
-                        self.resolve_player_melee(
-                            index,
-                            true,
-                            &mut events,
-                            &mut changed,
-                            &mut removed_entities,
-                        )?;
                     }
+                    Some(TerrainDigOutcome::ActorBlocked { position, index }) => {
+                        changed.insert(position);
+                        if self.actor_is_player_side(&self.entities[index]) {
+                            events.push(DomainEvent::MoveBlocked);
+                        } else if self.player_fear_blocks_melee(index) {
+                            events.push(DomainEvent::PlayerFearBlocked {
+                                status_kind_id: STATUS_FEAR.to_owned(),
+                            });
+                        } else {
+                            self.resolve_player_melee(
+                                index,
+                                true,
+                                &mut events,
+                                &mut changed,
+                                &mut removed_entities,
+                            )?;
+                        }
+                    }
+                    None => events.push(DomainEvent::TerrainDigUnavailable),
                 }
-                None => events.push(DomainEvent::TerrainDigUnavailable),
-            },
+            }
         }
 
         self.process_chaos_patron_level_rewards(
@@ -4731,6 +4734,9 @@ impl Game {
                     context.depth > 0 && !vault_id.is_empty() && !spawn_id.is_empty()
                 }
                 LootSource::ItemUse { item_id } => !item_id.is_empty(),
+                LootSource::Rubble { position } => {
+                    context.depth > 0 && self.index(*position).is_some()
+                }
             };
         debug_assert!(context_is_valid, "validated loot context must remain valid");
         let table = self
@@ -4867,7 +4873,10 @@ impl Game {
                 quantity: entry.quantity,
                 inscription: None,
                 origin_actor_kind_id: None,
-                origin_kind: None,
+                origin_kind: match &context.source {
+                    LootSource::Rubble { .. } => Some(ItemOriginKindDto::Rubble),
+                    _ => None,
+                },
                 damage_dice_override: None,
                 discount_percent: 0,
                 quality,

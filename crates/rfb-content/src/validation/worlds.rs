@@ -17,6 +17,47 @@ fn valid_procedural_count_range(range: ProceduralCountRangeDefinition) -> bool {
     (1..=8).contains(&range.minimum) && range.minimum <= range.maximum && range.maximum <= 8
 }
 
+fn validate_streamer_treasure(
+    candidate: &ProceduralStreamerCandidateDefinition,
+    terrain_ids: &BTreeSet<String>,
+    terrain: &[TerrainDefinition],
+    terrain_walkability: &BTreeMap<String, bool>,
+    owner_id: &str,
+) -> Result<(), ContentError> {
+    let Some(treasure) = &candidate.treasure else {
+        return Ok(());
+    };
+    require_reference(terrain_ids, &treasure.known_terrain_id, owner_id)?;
+    require_reference(terrain_ids, &treasure.hidden_terrain_id, owner_id)?;
+    let known = terrain
+        .iter()
+        .find(|entry| entry.id == treasure.known_terrain_id);
+    let hidden = terrain
+        .iter()
+        .find(|entry| entry.id == treasure.hidden_terrain_id);
+    if treasure.known_one_in < 2
+        || treasure.hidden_one_in < 2
+        || treasure.known_terrain_id == candidate.terrain_id
+        || treasure.hidden_terrain_id == candidate.terrain_id
+        || treasure.known_terrain_id == treasure.hidden_terrain_id
+        || terrain_walkability.get(&treasure.known_terrain_id) != Some(&false)
+        || terrain_walkability.get(&treasure.hidden_terrain_id) != Some(&false)
+        || hidden.and_then(|entry| entry.concealed_as_terrain_id.as_ref())
+            != Some(&candidate.terrain_id)
+        || known
+            .and_then(|entry| entry.digging.as_ref())
+            .and_then(|digging| digging.vein_yield)
+            != Some(TerrainVeinYield::Treasure)
+        || hidden
+            .and_then(|entry| entry.digging.as_ref())
+            .and_then(|digging| digging.vein_yield)
+            != Some(TerrainVeinYield::Treasure)
+    {
+        return Err(ContentError::InvalidProceduralFloor(owner_id.to_owned()));
+    }
+    Ok(())
+}
+
 fn validate_item_spawn(
     item: &mut ItemSpawn,
     owner_id: &str,
@@ -1210,6 +1251,13 @@ pub(super) fn validate_world(
                             .len();
                         for candidate in &layout.streamers {
                             require_reference(terrain_ids, &candidate.terrain_id, &procedural.id)?;
+                            validate_streamer_treasure(
+                                candidate,
+                                terrain_ids,
+                                terrain,
+                                terrain_walkability,
+                                &procedural.id,
+                            )?;
                         }
                         if layout.streamers.len() > 4
                             || terrain_count != layout.streamers.len()
@@ -1483,6 +1531,13 @@ pub(super) fn validate_world(
                             .len();
                         for candidate in &layout.streamers {
                             require_reference(terrain_ids, &candidate.terrain_id, &procedural.id)?;
+                            validate_streamer_treasure(
+                                candidate,
+                                terrain_ids,
+                                terrain,
+                                terrain_walkability,
+                                &procedural.id,
+                            )?;
                         }
                         if layout.streamers.len() > 4
                             || terrain_count != layout.streamers.len()

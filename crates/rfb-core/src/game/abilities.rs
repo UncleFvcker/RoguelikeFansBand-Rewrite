@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
+use super::terrain::TerrainChangeSource;
 use super::*;
 
 enum EarthquakeSource {
@@ -600,7 +601,14 @@ impl Game {
                 AbilityEffectDefinition::TransformTerrain { .. },
                 AbilityTargetPlan::TerrainTransform { center, positions },
             ) => {
-                self.resolve_terrain_transform_effect(&ability, center, positions, events, changed);
+                self.resolve_terrain_transform_effect(
+                    &ability,
+                    center,
+                    positions,
+                    TerrainChangeSource::Magic,
+                    events,
+                    changed,
+                );
             }
             (
                 AbilityEffectDefinition::ApplyStatus { .. }
@@ -2666,12 +2674,13 @@ impl Game {
         };
         let nutrition_before = self.nutrition;
         self.increase_nutrition(nutrition);
-        let index = self
-            .index(position)
-            .expect("planned consumed terrain must remain in bounds");
-        self.terrain[index].clone_from(&target_terrain_id);
-        self.revealed_terrain.remove(&position);
-        changed.insert(position);
+        self.replace_terrain_from_source(
+            position,
+            &target_terrain_id,
+            TerrainChangeSource::Magic,
+            events,
+            changed,
+        );
         events.push(DomainEvent::AbilityEffectsResolved {
             ability_id: ability.id.clone(),
             resolution: AbilityEffectsResolutionDto {
@@ -2991,12 +3000,13 @@ impl Game {
                 .expect("planned ammunition material must remain destroyable");
         }
         if let Some((position, _, target_terrain_id)) = &source_terrain {
-            let index = self
-                .index(*position)
-                .expect("planned ammunition terrain must remain in bounds");
-            self.terrain[index].clone_from(target_terrain_id);
-            self.revealed_terrain.remove(position);
-            changed.insert(*position);
+            self.replace_terrain_from_source(
+                *position,
+                target_terrain_id,
+                TerrainChangeSource::Magic,
+                events,
+                changed,
+            );
         }
         let destination_item_ids = if self.inventory_quantity_capacity_for(&item, false) >= quantity
         {
@@ -3312,6 +3322,10 @@ impl Game {
             }
         }
         let affected = affected_positions.iter().copied().collect::<BTreeSet<_>>();
+        let terrain_change_source = match &source {
+            EarthquakeSource::Ability(_) => TerrainChangeSource::Magic,
+            EarthquakeSource::Monster(_) => TerrainChangeSource::Monster,
+        };
         let removed_items = self
             .items
             .iter()
@@ -3331,9 +3345,6 @@ impl Game {
         let mut wall_positions = Vec::new();
         let mut floor_positions = Vec::new();
         for position in &affected_positions {
-            let index = self
-                .index(*position)
-                .expect("planned earthquake position must remain in bounds");
             if self.player.position == *position && !self.player_is_dead() {
                 let raw_damage = self.roll_damage(4, 8);
                 let damage = self.reduce_player_damage(resolve_damage(
@@ -3373,10 +3384,14 @@ impl Game {
                         }
                     }
                 }
-                self.terrain[index] = floor_terrain_id.to_owned();
+                self.replace_terrain_from_source(
+                    *position,
+                    floor_terrain_id,
+                    terrain_change_source,
+                    events,
+                    changed,
+                );
                 floor_positions.push(*position);
-                self.revealed_terrain.remove(position);
-                changed.insert(*position);
                 continue;
             }
             let actor_index = self
@@ -3452,7 +3467,13 @@ impl Game {
                         damage,
                     });
                 }
-                self.terrain[index] = floor_terrain_id.to_owned();
+                self.replace_terrain_from_source(
+                    *position,
+                    floor_terrain_id,
+                    terrain_change_source,
+                    events,
+                    changed,
+                );
                 floor_positions.push(*position);
             } else if self.is_walkable(*position) {
                 let roll = self.rng.bounded(100);
@@ -3463,14 +3484,24 @@ impl Game {
                 } else {
                     2
                 };
-                self.terrain[index].clone_from(&wall_terrain_ids[wall_index]);
+                self.replace_terrain_from_source(
+                    *position,
+                    &wall_terrain_ids[wall_index],
+                    terrain_change_source,
+                    events,
+                    changed,
+                );
                 wall_positions.push(*position);
             } else {
-                self.terrain[index] = floor_terrain_id.to_owned();
+                self.replace_terrain_from_source(
+                    *position,
+                    floor_terrain_id,
+                    terrain_change_source,
+                    events,
+                    changed,
+                );
                 floor_positions.push(*position);
             }
-            self.revealed_terrain.remove(position);
-            changed.insert(*position);
         }
         let resolution = AbilityEffectsResolutionDto {
             target_entity_id: None,
@@ -4392,6 +4423,7 @@ impl Game {
         ability: &AbilityDefinition,
         center: Position,
         positions: Vec<Position>,
+        source: TerrainChangeSource,
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
     ) {
@@ -4408,9 +4440,7 @@ impl Game {
                 .index(*position)
                 .expect("planned terrain transformation must remain in bounds");
             debug_assert!(source_terrain_ids.contains(&self.terrain[index]));
-            self.terrain[index].clone_from(target_terrain_id);
-            self.revealed_terrain.remove(position);
-            changed.insert(*position);
+            self.replace_terrain_from_source(*position, target_terrain_id, source, events, changed);
         }
         events.push(DomainEvent::AbilityTerrainTransformed {
             ability_id: ability.id.clone(),

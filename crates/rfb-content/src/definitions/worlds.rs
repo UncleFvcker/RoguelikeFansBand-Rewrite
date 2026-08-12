@@ -869,6 +869,18 @@ pub struct ProceduralDestroyedDefinition {
 pub struct ProceduralStreamerCandidateDefinition {
     pub terrain_id: String,
     pub weight: u32,
+    #[serde(default)]
+    pub treasure: Option<ProceduralStreamerTreasureDefinition>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ProceduralStreamerTreasureDefinition {
+    pub known_terrain_id: String,
+    pub hidden_terrain_id: String,
+    pub known_one_in: u32,
+    pub hidden_one_in: u32,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

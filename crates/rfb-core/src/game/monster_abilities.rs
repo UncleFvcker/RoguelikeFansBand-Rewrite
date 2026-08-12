@@ -816,6 +816,7 @@ impl Game {
                     &plan.ability,
                     *center,
                     positions.clone(),
+                    super::terrain::TerrainChangeSource::Monster,
                     events,
                     changed,
                 );

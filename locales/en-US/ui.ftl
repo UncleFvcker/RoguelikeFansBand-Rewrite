@@ -222,6 +222,7 @@ proficiency-rank-master = Master
 weapon-proficiency-value = { $rank } · { $current } / { $maximum } · { $hit } To Hit
 progression-misc-proficiencies = Miscellaneous Proficiencies
 mining-proficiency = Mining
+terrain-found-something = You have found something!
 mining-proficiency-value = Power { $power } · { $rank } · { $current } / { $maximum }
 progression-materials = Materials
 material-iron-ore = Iron Ore

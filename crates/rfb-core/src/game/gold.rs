@@ -60,6 +60,31 @@ impl Game {
         })
     }
 
+    pub(super) fn generate_mining_gold_pile(
+        &mut self,
+        position: Position,
+        depth: u16,
+        mining: u16,
+    ) -> Result<GoldPile, CoreError> {
+        let object_level = depth
+            .saturating_add((mining / 500).min(20))
+            .saturating_add(depth / 10)
+            .clamp(1, 100);
+        let mut pile = self.generate_gold_pile(position, object_level, false)?;
+        let multiplier = 100_u32
+            .saturating_add(u32::from(depth).saturating_mul(2).min(200))
+            .saturating_add(u32::from(mining / 80));
+        let amount = pile.amount.saturating_mul(multiplier).saturating_div(100);
+        pile.amount = if amount > i16::MAX as u32 {
+            (i16::MAX as u32).saturating_sub(
+                u32::try_from(self.rng.bounded(1_000)).expect("gold cap roll must fit u32"),
+            )
+        } else {
+            amount
+        };
+        Ok(pile)
+    }
+
     pub(super) fn pick_up_gold_at_player(
         &mut self,
         target_id: Option<&str>,
@@ -208,5 +233,26 @@ mod tests {
             let amount = starting_gold(Some(&build), &mut RfbRng::seeded(seed));
             assert!((202..=800).contains(&amount));
         }
+    }
+
+    #[test]
+    fn mining_gold_uses_original_level_and_amount_bonuses() {
+        let position = Position { x: 4, y: 5 };
+        let depth = 32;
+        let mining = 4_075;
+        let object_level = 32 + 8 + 3;
+        let mut ordinary = Game::new(1);
+        ordinary.rng = RfbRng::seeded(99);
+        let ordinary = ordinary
+            .generate_gold_pile(position, object_level, false)
+            .expect("ordinary gold should generate");
+        let mut mined = Game::new(1);
+        mined.rng = RfbRng::seeded(99);
+        let mined = mined
+            .generate_mining_gold_pile(position, depth, mining)
+            .expect("mining gold should generate");
+
+        assert_eq!(mined.appearance, ordinary.appearance);
+        assert_eq!(mined.amount, ordinary.amount * 214 / 100);
     }
 }

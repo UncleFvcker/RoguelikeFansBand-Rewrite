@@ -296,3 +296,19 @@ git diff --stat
 - 共享协调点：pack `1.276.0`、Protocol `1.180`、State Hash Schema v90、save v1、
   active baseline `contract-v278`（25 条 exact fixture、零 waiver）；content hash 保持
   `ee561b30744f44fd627805d8ed0a45eb64b21ec4c13991033b6f6254b29156b9`。
+
+## 17. main 当前交接（矿脉、金币与材料收益）
+
+- 新占用 terrain ID：`demo.terrain.magma-hidden-treasure`、
+  `demo.terrain.quartz-hidden-treasure`、`demo.terrain.magma-treasure`、
+  `demo.terrain.quartz-treasure`。本批没有新增 item/material/ability/affix ID；items 分支
+  不得重复导入这四个 terrain。
+- streamer 先判已知、未命中再判隐藏富矿；隐藏富矿复用 `concealedAsTerrainId` 与搜索。
+  玩家挖掘统一按“地形 → 熟练度 → 材料 → 金币 → 额外物品”结算，材料与金币读取增长后
+  的熟练度。魔法富矿只生成普通金币，怪物破墙没有玩家收益。
+- 碎石与富矿额外物品复用楼层 loot；碎石物品来源为新增 `rubble`。原版 artifact 尝试、
+  幸运、德行与特殊游戏模式修正仍是共享物品生成缺口，其他分支不得在职业或挖矿代码中
+  建立第二套质量生成器。
+- 共享协调点：pack `1.277.0`、Protocol `1.181`、State Hash Schema v90、save v1、
+  active baseline `contract-v279`（26 条 exact fixture、零 waiver）；content hash 为
+  `9e84e738fecbc3b74933c4a708c5a89cd77dd7bdd000c11b76c7d57184abec26`。

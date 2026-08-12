@@ -1659,6 +1659,17 @@
         "terrainId": {
           "type": "string"
         },
+        "treasure": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ProceduralStreamerTreasureDefinition"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
         "weight": {
           "format": "uint32",
           "minimum": 0,
@@ -1668,6 +1679,34 @@
       "required": [
         "terrainId",
         "weight"
+      ],
+      "type": "object"
+    },
+    "ProceduralStreamerTreasureDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "hiddenOneIn": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "hiddenTerrainId": {
+          "type": "string"
+        },
+        "knownOneIn": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "knownTerrainId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "knownTerrainId",
+        "hiddenTerrainId",
+        "knownOneIn",
+        "hiddenOneIn"
       ],
       "type": "object"
     },

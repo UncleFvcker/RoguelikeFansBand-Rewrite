@@ -947,10 +947,9 @@ fn warrens_maps_are_seeded_connected_varied_and_persistent() {
             game.terrain
                 .iter()
                 .filter(|terrain_id| {
-                    matches!(
-                        terrain_id.as_str(),
-                        "demo.terrain.magma-vein" | "demo.terrain.quartz-vein"
-                    )
+                    game.content
+                        .terrain(terrain_id)
+                        .is_some_and(|terrain| terrain.tags.iter().any(|tag| tag == "vein"))
                 })
                 .count(),
             24
@@ -1093,10 +1092,9 @@ fn warrens_every_generated_floor_has_a_normal_descent_and_return_route() {
                 game.terrain
                     .iter()
                     .filter(|terrain_id| {
-                        matches!(
-                            terrain_id.as_str(),
-                            "demo.terrain.magma-vein" | "demo.terrain.quartz-vein"
-                        )
+                        game.content
+                            .terrain(terrain_id)
+                            .is_some_and(|terrain| terrain.tags.iter().any(|tag| tag == "vein"))
                     })
                     .count(),
                 24
@@ -1142,7 +1140,10 @@ fn terrain_interaction_plans_reject_unsupported_actions_without_rng() {
     assert!(game.close_door(Direction::North).is_none());
     assert!(game.bash_door(Direction::North).is_none());
     assert!(game.disarm_trap(Direction::North).is_none());
-    assert!(game.dig_terrain(Direction::North).is_none());
+    assert!(
+        game.dig_terrain(Direction::North, &mut Vec::new(), &mut BTreeSet::new())
+            .is_none()
+    );
     assert!(game.search_hidden_terrain().is_empty());
 
     assert_eq!(game.terrain, terrain_before);
@@ -1158,7 +1159,7 @@ fn digging_uses_original_soft_hard_and_permanent_resolution() {
     replace_terrain(&mut permanent, position, "demo.terrain.permanent-wall");
     let draws = permanent.rng_draw_counter();
     assert!(matches!(
-        permanent.dig_terrain(Direction::North),
+        permanent.dig_terrain(Direction::North, &mut Vec::new(), &mut BTreeSet::new()),
         Some(TerrainDigOutcome::Failed {
             retryable: false,
             ..
@@ -1179,7 +1180,7 @@ fn digging_uses_original_soft_hard_and_permanent_resolution() {
     assert!(hard.player_derived_stats().dig_skill.value <= 10);
     let draws = hard.rng_draw_counter();
     assert!(matches!(
-        hard.dig_terrain(Direction::North),
+        hard.dig_terrain(Direction::North, &mut Vec::new(), &mut BTreeSet::new()),
         Some(TerrainDigOutcome::Failed {
             retryable: false,
             ..
@@ -1195,7 +1196,7 @@ fn digging_uses_original_soft_hard_and_permanent_resolution() {
         let position = soft.position_in_direction(Direction::North);
         replace_terrain(&mut soft, position, "demo.terrain.rubble");
         matches!(
-            soft.dig_terrain(Direction::North),
+            soft.dig_terrain(Direction::North, &mut Vec::new(), &mut BTreeSet::new()),
             Some(TerrainDigOutcome::Failed {
                 retryable: true,
                 ..
@@ -1212,7 +1213,11 @@ fn digging_ignores_ground_items_and_turns_a_blocking_monster_into_melee() {
     let position = ground_item.position_in_direction(Direction::North);
     replace_terrain(&mut ground_item, position, "demo.terrain.rubble");
     ground_item.items[0].location = ItemLocation::Ground(position);
-    assert!(ground_item.dig_terrain(Direction::North).is_some());
+    assert!(
+        ground_item
+            .dig_terrain(Direction::North, &mut Vec::new(), &mut BTreeSet::new())
+            .is_some()
+    );
 
     let mut blocked = Game::new(42);
     let position = blocked.position_in_direction(Direction::North);

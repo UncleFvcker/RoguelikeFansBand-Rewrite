@@ -1184,6 +1184,7 @@ impl Game {
     pub(super) fn apply_area_destruction_plan(
         &mut self,
         plan: AreaDestructionPlan,
+        events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
     ) -> AreaDestructionOutcome {
@@ -1201,11 +1202,15 @@ impl Game {
             let index = self
                 .index(position)
                 .expect("planned destruction position must remain in bounds");
-            self.terrain[index] = terrain_id;
+            self.replace_terrain_from_source(
+                position,
+                &terrain_id,
+                super::terrain::TerrainChangeSource::Magic,
+                events,
+                changed,
+            );
             self.glow[index] = false;
             self.explored[index] = false;
-            self.revealed_terrain.remove(&position);
-            changed.insert(position);
         }
         for entity_id in &plan.entity_ids {
             let Some(index) = self
@@ -1279,7 +1284,7 @@ impl Game {
             quartz_terrain_id,
             magma_terrain_id,
         );
-        let outcome = self.apply_area_destruction_plan(plan, changed, removed_entities);
+        let outcome = self.apply_area_destruction_plan(plan, events, changed, removed_entities);
         self.mark_item_aware(source_kind_id);
         events.push(DomainEvent::ItemAreaDestruction {
             source_kind_id: source_kind_id.to_owned(),

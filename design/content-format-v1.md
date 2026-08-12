@@ -637,3 +637,10 @@ contract-v277 / 包 1.276.0 以 `TerrainDefinition.digging` 的
 contract-v278 不修改内容 schema 或包内容，继续使用包 1.276.0。十种 `rfb.material.*`
 身份属于玩家材料状态，不是 ItemDefinition，也不占用 items 分支的 item ID；内容 hash
 保持 `ee561b30744f44fd627805d8ed0a45eb64b21ec4c13991033b6f6254b29156b9`。
+
+contract-v279 / 包 1.277.0 为 `ProceduralStreamerCandidateDefinition` 增加可选
+`treasure`，以 `knownTerrainId/hiddenTerrainId/knownOneIn/hiddenOneIn` 表达原版 streamer
+先判已知、未命中再判隐藏富矿的顺序。隐藏富矿必须 `concealedAsTerrainId` 指回普通
+矿脉，已知/隐藏目标都必须是 treasure vein。新增四个 `demo.terrain.*-treasure` ID；
+不新增 item、material、ability 或 affix ID。content hash 为
+`9e84e738fecbc3b74933c4a708c5a89cd77dd7bdd000c11b76c7d57184abec26`。

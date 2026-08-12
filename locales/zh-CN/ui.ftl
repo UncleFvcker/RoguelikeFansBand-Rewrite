@@ -222,6 +222,7 @@ proficiency-rank-master = 大师
 weapon-proficiency-value = { $rank } · { $current } / { $maximum } · 命中 { $hit }
 progression-misc-proficiencies = 杂项熟练度
 mining-proficiency = 挖矿
+terrain-found-something = 你发现了一些东西！
 mining-proficiency-value = 挖掘力 { $power } · { $rank } · { $current } / { $maximum }
 progression-materials = 材料
 material-iron-ore = 铁矿石

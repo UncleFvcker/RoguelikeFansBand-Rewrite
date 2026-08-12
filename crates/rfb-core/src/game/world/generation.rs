@@ -4491,6 +4491,22 @@ impl Game {
         selected
     }
 
+    fn roll_streamer_terrain(
+        &mut self,
+        candidate: &ProceduralStreamerCandidateDefinition,
+    ) -> String {
+        let Some(treasure) = &candidate.treasure else {
+            return candidate.terrain_id.clone();
+        };
+        if self.rng.bounded(u64::from(treasure.known_one_in)) == 0 {
+            treasure.known_terrain_id.clone()
+        } else if self.rng.bounded(u64::from(treasure.hidden_one_in)) == 0 {
+            treasure.hidden_terrain_id.clone()
+        } else {
+            candidate.terrain_id.clone()
+        }
+    }
+
     pub(in crate::game) fn generate_streamers(
         &mut self,
         definition: &ProceduralFloorDefinition,
@@ -4524,7 +4540,7 @@ impl Game {
             .iter()
             .map(|candidate| candidate.weight)
             .collect::<Vec<_>>();
-        let mut assignments = BTreeMap::<Position, String>::new();
+        let mut assignments = BTreeMap::<Position, usize>::new();
 
         for _ in 0..placement_count {
             let streamer_index = if streamers.len() == 1 {
@@ -4532,7 +4548,6 @@ impl Game {
             } else {
                 self.roll_weighted_index(&weights)
             };
-            let streamer = &streamers[streamer_index];
             let mut starts = Vec::new();
             for y in (definition.height / 3)..=(definition.height * 2 / 3) {
                 for x in (definition.width / 3)..=(definition.width * 2 / 3) {
@@ -4581,9 +4596,7 @@ impl Game {
                             && terrain[generated_terrain_index(definition.width, position)]
                                 == definition.wall_terrain_id
                         {
-                            assignments
-                                .entry(position)
-                                .or_insert_with(|| streamer.terrain_id.clone());
+                            assignments.entry(position).or_insert(streamer_index);
                         }
                     }
                 }
@@ -4596,11 +4609,11 @@ impl Game {
         while painted.len() < area {
             let mut candidates = assignments
                 .iter()
-                .filter_map(|(position, terrain_id)| {
+                .filter_map(|(position, streamer_index)| {
                     (!painted.contains(position)
                         && terrain[generated_terrain_index(definition.width, *position)]
                             == definition.wall_terrain_id)
-                        .then_some((*position, terrain_id.as_str()))
+                        .then_some((*position, *streamer_index))
                 })
                 .collect::<Vec<_>>();
             candidates.sort_by_key(|(position, _)| (position.y, position.x));
@@ -4621,12 +4634,8 @@ impl Game {
                     .expect("streamer fallback index must fit usize")
                 };
                 let position = fallback[index];
-                set_generated_terrain(
-                    terrain,
-                    definition.width,
-                    position,
-                    &streamers[0].terrain_id,
-                );
+                let terrain_id = self.roll_streamer_terrain(&streamers[0]);
+                set_generated_terrain(terrain, definition.width, position, &terrain_id);
                 painted.insert(position);
                 continue;
             }
@@ -4638,8 +4647,9 @@ impl Game {
                 ))
                 .expect("streamer candidate index must fit usize")
             };
-            let (position, terrain_id) = candidates[index];
-            set_generated_terrain(terrain, definition.width, position, terrain_id);
+            let (position, streamer_index) = candidates[index];
+            let terrain_id = self.roll_streamer_terrain(&streamers[streamer_index]);
+            set_generated_terrain(terrain, definition.width, position, &terrain_id);
             painted.insert(position);
         }
         painted
@@ -4713,4 +4723,54 @@ fn place_generated_floor_connections(
     }
     placed.sort_by(|left, right| left.id.cmp(&right.id));
     Ok(placed)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn streamer_treasure_rolls_known_then_hidden_after_a_miss() {
+        let template = Game::new(1);
+        let candidate = template
+            .content
+            .world(&template.world_id)
+            .and_then(|world| {
+                world
+                    .procedural_floors
+                    .iter()
+                    .find_map(|floor| floor.layout.as_ref())
+            })
+            .and_then(|layout| {
+                layout
+                    .streamers
+                    .iter()
+                    .find(|candidate| candidate.terrain_id == "demo.terrain.magma-vein")
+            })
+            .expect("demo magma streamer must remain available")
+            .clone();
+        let treasure = candidate
+            .treasure
+            .as_ref()
+            .expect("magma streamer must define treasure");
+        assert_eq!(treasure.known_one_in, 60);
+        assert_eq!(treasure.hidden_one_in, 20);
+
+        let mut found = BTreeMap::new();
+        for seed in 0..10_000 {
+            let mut game = Game::new(1);
+            game.rng = RfbRng::seeded(seed);
+            let before = game.rng_draw_counter();
+            let terrain_id = game.roll_streamer_terrain(&candidate);
+            found
+                .entry(terrain_id)
+                .or_insert(game.rng_draw_counter() - before);
+            if found.len() == 3 {
+                break;
+            }
+        }
+        assert_eq!(found.get("demo.terrain.magma-treasure"), Some(&1));
+        assert_eq!(found.get("demo.terrain.magma-hidden-treasure"), Some(&2));
+        assert_eq!(found.get("demo.terrain.magma-vein"), Some(&2));
+    }
 }

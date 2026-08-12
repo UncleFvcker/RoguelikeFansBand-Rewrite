@@ -6677,6 +6677,57 @@ fn warrens_stair_ranges_match_floor_topology_and_stay_bounded() {
 }
 
 #[test]
+fn streamer_treasure_candidates_are_complete_and_validated() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let magma = artifact
+        .content
+        .worlds
+        .iter()
+        .find(|world| world.id == "demo.world.middle-earth")
+        .and_then(|world| {
+            world
+                .procedural_floors
+                .iter()
+                .find(|floor| floor.id == "demo.floor.warrens-depth-1")
+        })
+        .and_then(|floor| floor.layout.as_ref())
+        .and_then(|layout| {
+            layout
+                .streamers
+                .iter()
+                .find(|candidate| candidate.terrain_id == "demo.terrain.magma-vein")
+        })
+        .and_then(|candidate| candidate.treasure.as_ref())
+        .expect("magma streamer treasure should remain available");
+    assert_eq!(magma.known_terrain_id, "demo.terrain.magma-treasure");
+    assert_eq!(
+        magma.hidden_terrain_id,
+        "demo.terrain.magma-hidden-treasure"
+    );
+    assert_eq!((magma.known_one_in, magma.hidden_one_in), (60, 20));
+
+    let mut invalid = artifact.content;
+    invalid.worlds[0]
+        .procedural_floors
+        .iter_mut()
+        .find(|floor| floor.id == "demo.floor.warrens-depth-1")
+        .and_then(|floor| floor.layout.as_mut())
+        .and_then(|layout| {
+            layout
+                .streamers
+                .iter_mut()
+                .find(|candidate| candidate.terrain_id == "demo.terrain.magma-vein")
+        })
+        .and_then(|candidate| candidate.treasure.as_mut())
+        .expect("magma streamer treasure should remain available")
+        .known_one_in = 1;
+    assert!(matches!(
+        validate_and_normalize(&mut invalid),
+        Err(ContentError::InvalidProceduralFloor(_))
+    ));
+}
+
+#[test]
 fn pest_control_matches_the_original_warrens_contract() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let world = artifact

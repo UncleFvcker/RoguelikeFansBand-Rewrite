@@ -1,0 +1,21 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/terrain.schema.json",
+  "formatVersion": 1,
+  "id": "demo.terrain.quartz-hidden-treasure",
+  "nameKey": "terrain-demo-quartz-hidden-treasure-name",
+  "descriptionKey": "terrain-demo-quartz-hidden-treasure-description",
+  "glyph": "%",
+  "walkable": false,
+  "blocksSight": true,
+  "allowsWallPassage": true,
+  "monsterDestroyToTerrainId": "demo.terrain.floor",
+  "concealedAsTerrainId": "demo.terrain.quartz-vein",
+  "searchCheckDifficulty": 8,
+  "digging": {
+    "resultTerrainId": "demo.terrain.floor",
+    "power": 20,
+    "resolution": "hard",
+    "veinYield": "treasure"
+  },
+  "tags": ["interior", "stone", "vein", "diggable", "quartz", "treasure", "hidden"]
+}

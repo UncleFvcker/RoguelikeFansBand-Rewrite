@@ -166,3 +166,106 @@ fn mining_and_material_save_fields_are_required() {
         assert!(serde_json::from_value::<rfb_protocol::SavePayloadV1>(value).is_err());
     }
 }
+
+#[test]
+fn hidden_treasure_veins_use_their_real_yield_for_digging_rewards() {
+    let mut game = Game::new(0x5452_4541_5355_5245);
+    clear_monsters(&mut game);
+    game.items.clear();
+    game.gold_piles.clear();
+    game.current_floor_id = "demo.floor.orc-cave-depth-32".to_owned();
+    game.progress.mining_proficiency = 3_999;
+    game.rng = RfbRng::seeded(7);
+    let position = game.position_in_direction(Direction::North);
+    replace_terrain(&mut game, position, "demo.terrain.magma-hidden-treasure");
+    let index = game
+        .index(position)
+        .expect("adjacent position should be valid");
+    game.glow[index] = true;
+
+    let mut events = Vec::new();
+    let mut changed = BTreeSet::new();
+    let improved = game.replace_terrain_from_source(
+        position,
+        "demo.terrain.floor",
+        super::super::terrain::TerrainChangeSource::Dig,
+        &mut events,
+        &mut changed,
+    );
+
+    assert!(improved);
+    assert_eq!(game.terrain_at(position), "demo.terrain.floor");
+    assert_eq!(game.progress.mining_proficiency, 4_075);
+    assert_eq!(
+        game.progress.materials.get("rfb.material.iron-ore"),
+        Some(&4)
+    );
+    assert_eq!(game.gold_piles.len(), 1);
+    assert!(changed.contains(&position));
+    assert!(
+        events
+            .iter()
+            .any(|event| matches!(event, DomainEvent::TerrainFoundSomething))
+    );
+    assert!(
+        game.items
+            .iter()
+            .all(|item| item.origin_kind == Some(ItemOriginKindDto::Rubble))
+    );
+}
+
+#[test]
+fn magic_destruction_of_treasure_veins_only_places_ordinary_gold() {
+    let mut game = Game::new(0x004d_4147_4943);
+    clear_monsters(&mut game);
+    game.items.clear();
+    game.gold_piles.clear();
+    game.current_floor_id = "demo.floor.orc-cave-depth-32".to_owned();
+    game.progress.mining_proficiency = 3_999;
+    let position = game.position_in_direction(Direction::North);
+    replace_terrain(&mut game, position, "demo.terrain.quartz-treasure");
+    let index = game
+        .index(position)
+        .expect("adjacent position should be valid");
+    game.glow[index] = true;
+
+    let mut events = Vec::new();
+    game.replace_terrain_from_source(
+        position,
+        "demo.terrain.floor",
+        super::super::terrain::TerrainChangeSource::Magic,
+        &mut events,
+        &mut BTreeSet::new(),
+    );
+
+    assert_eq!(game.progress.mining_proficiency, 3_999);
+    assert!(game.progress.materials.is_empty());
+    assert!(game.items.is_empty());
+    assert_eq!(game.gold_piles.len(), 1);
+    assert!(
+        events
+            .iter()
+            .any(|event| matches!(event, DomainEvent::TerrainFoundSomething))
+    );
+}
+
+#[test]
+fn rubble_item_origin_round_trips_on_any_generated_item_kind() {
+    let mut game = Game::new(0x5255_4242_4c45);
+    let item = game
+        .items
+        .first_mut()
+        .expect("character birth should provide an item");
+    item.origin_kind = Some(ItemOriginKindDto::Rubble);
+    let item_id = item.id.clone();
+
+    let restored = Game::from_save(game.to_save()).expect("rubble origin should round-trip");
+    assert_eq!(
+        restored
+            .items
+            .iter()
+            .find(|item| item.id == item_id)
+            .and_then(|item| item.origin_kind),
+        Some(ItemOriginKindDto::Rubble)
+    );
+}

@@ -20,6 +20,13 @@ pub(super) enum TrapDisarmOutcome {
     Failed { position: Position },
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) enum TerrainChangeSource {
+    Dig,
+    Magic,
+    Monster,
+}
+
 pub(super) enum TerrainDigOutcome {
     Succeeded {
         position: Position,
@@ -130,7 +137,6 @@ struct TerrainSearchPlan {
 
 struct TerrainDigPlan {
     position: Position,
-    index: usize,
     digging: TerrainDiggingDefinition,
 }
 
@@ -218,10 +224,9 @@ fn plan_dig_terrain(
     direction: Direction,
 ) -> Option<TerrainDigPlan> {
     let position = context.position_in_direction(direction);
-    let (index, terrain) = context.known_terrain_at(position)?;
+    let (_, terrain) = context.terrain_at(position)?;
     Some(TerrainDigPlan {
         position,
-        index,
         digging: terrain.digging.clone()?,
     })
 }
@@ -256,6 +261,40 @@ fn action_difficulty(source_id: &str, difficulty: i32) -> DerivedStat {
 }
 
 impl Game {
+    pub(super) fn replace_terrain_from_source(
+        &mut self,
+        position: Position,
+        target_id: &str,
+        source: TerrainChangeSource,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) -> bool {
+        let index = self
+            .index(position)
+            .expect("planned terrain replacement must remain in bounds");
+        let source_definition = self
+            .content
+            .terrain(&self.terrain[index])
+            .expect("planned source terrain must remain available")
+            .clone();
+        let target_definition = self
+            .content
+            .terrain(target_id)
+            .expect("planned target terrain must remain available")
+            .clone();
+        self.terrain[index] = target_id.to_owned();
+        self.revealed_terrain.remove(&position);
+        changed.insert(position);
+        self.resolve_terrain_change_rewards(
+            &source_definition,
+            &target_definition,
+            position,
+            source,
+            events,
+            changed,
+        )
+    }
+
     pub(super) fn try_monster_door_interaction(
         &mut self,
         actor_index: usize,
@@ -349,9 +388,13 @@ impl Game {
             return false;
         };
         let source_id = terrain.id.clone();
-        self.terrain[terrain_index] = target_id.clone();
-        self.revealed_terrain.remove(&position);
-        changed.insert(position);
+        self.replace_terrain_from_source(
+            position,
+            &target_id,
+            TerrainChangeSource::Monster,
+            events,
+            changed,
+        );
         events.push(DomainEvent::MonsterTerrainDestroyed {
             source_kind_id: self.entities[actor_index].kind_id.clone(),
             terrain_kind_id: source_id,
@@ -465,7 +508,12 @@ impl Game {
         Some(TrapDisarmOutcome::Succeeded { position })
     }
 
-    pub(super) fn dig_terrain(&mut self, direction: Direction) -> Option<TerrainDigOutcome> {
+    pub(super) fn dig_terrain(
+        &mut self,
+        direction: Direction,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) -> Option<TerrainDigOutcome> {
         let plan = plan_dig_terrain(&self.terrain_interaction_context(), direction)?;
         if let Some(index) = self
             .entities
@@ -510,15 +558,17 @@ impl Game {
                 retryable,
             });
         }
-        let proficiency_improved = plan.digging.vein_yield.is_some_and(|vein_yield| {
-            self.train_mining_proficiency(vein_yield, plan.digging.power)
-        });
         let target_id = plan
             .digging
             .result_terrain_id
             .expect("successful digging must retain a replacement terrain");
-        self.terrain[plan.index] = target_id;
-        self.revealed_terrain.remove(&plan.position);
+        let proficiency_improved = self.replace_terrain_from_source(
+            plan.position,
+            &target_id,
+            TerrainChangeSource::Dig,
+            events,
+            changed,
+        );
         Some(TerrainDigOutcome::Succeeded {
             position: plan.position,
             proficiency_improved,

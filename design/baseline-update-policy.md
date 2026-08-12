@@ -6,7 +6,7 @@
 
 contract fixture 是规则兼容边界，不能把测试失败简单处理为“刷新预期结果”。政策用于保证每次规则变化只修改真正受影响的场景，同时保留可审查的失败原因。
 
-当前逻辑基线是 `contract-v278`，机器可读政策固定在：
+当前逻辑基线是 `contract-v279`，机器可读政策固定在：
 
 ```text
 tests/fixtures/active/baseline-policy.json
@@ -109,6 +109,12 @@ active 集保持零 waiver。内容包升至 1.276.0；Protocol 保持 1.179、S
 `WeaponProficiencyRankDto` 泛化为 `ProficiencyRankDto`。Protocol 升至 1.180，State Hash
 Schema 升至 v90，save 容器保持 v1，内容包/hash 保持 1.276.0 不变。全部 24 条既有
 fixture 刷新并新增 1 条存档回放，active 集共 25 条、零 waiver。
+
+`contract-v279` 为岩浆与石英 streamer 接入已知/隐藏富矿，按 RFB 顺序结算地形、挖矿
+成长、材料、金币和额外物品；魔法摧毁富矿只生成普通金币。`ItemOriginKindDto` 增加
+`rubble`，Protocol 升至 1.181；内容包升至 1.277.0。没有新增权威状态字段，State Hash
+Schema 保持 v90、save 容器保持 v1。新增 1 条隐藏富矿存档回放，active 集共 26 条、
+零 waiver。
 
 ## 分类验证
 

@@ -139,3 +139,17 @@ ammo-slaying ID。若 items 方向随后导入陶器碎片或断木棍，也应�
 - 共享协调点：pack 1.276.0、Protocol 1.180、State Hash Schema v90、save v1、active
   baseline contract-v278（25 条 exact fixture、零 waiver）；content hash 保持
   `ee561b30744f44fd627805d8ed0a45eb64b21ec4c13991033b6f6254b29156b9`。
+
+## 挖矿系统第三步
+
+- 新增四个富矿 terrain ID：`demo.terrain.magma-hidden-treasure`、
+  `demo.terrain.quartz-hidden-treasure`、`demo.terrain.magma-treasure`、
+  `demo.terrain.quartz-treasure`。没有新增 item/material/ability/affix ID，不与 items 分支
+  争用内容身份。
+- streamer、隐藏搜索、玩家材料/金币/额外物品、魔法普通金币和碎石楼层掉落已闭合；所有
+  收益通过来源统一的 terrain change 事务结算，不在职业代码中重复实现。
+- 碎石掉落使用 `ItemOriginKindDto::Rubble`。原版 artifact 尝试、幸运、德行与特殊模式
+  修正仍属于共享物品生成缺口；后续职业只能复用统一生成器。
+- 共享协调点：pack 1.277.0、Protocol 1.181、State Hash Schema v90、save v1、active
+  baseline contract-v279（26 条 exact fixture、零 waiver）；content hash 为
+  `9e84e738fecbc3b74933c4a708c5a89cd77dd7bdd000c11b76c7d57184abec26`。
