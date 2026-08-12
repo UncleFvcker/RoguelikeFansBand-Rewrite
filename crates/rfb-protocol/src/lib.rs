@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.186";
+pub const PROTOCOL_VERSION: &str = "1.187";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -4215,6 +4215,7 @@ pub struct SavePayloadV1 {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub dungeon_states: Vec<DungeonStateSaveDto>,
     pub defeated_unique_actor_kind_ids: Vec<String>,
+    pub generated_artifact_ids: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub town_states: Vec<TownStateSaveDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -4757,6 +4758,7 @@ mod tests {
         current["player"]["lockedMutationIds"] = serde_json::json!([]);
         current["player"]["minorSlowEnergy"] = serde_json::json!(0);
         current["reproductionSuppressed"] = serde_json::json!(false);
+        current["generatedArtifactIds"] = serde_json::json!([]);
         let mut missing_view_offset = current.clone();
         missing_view_offset
             .as_object_mut()

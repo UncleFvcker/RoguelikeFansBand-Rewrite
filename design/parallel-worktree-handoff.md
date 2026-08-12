@@ -312,3 +312,23 @@ git diff --stat
 - 共享协调点：pack `1.277.0`、Protocol `1.181`、State Hash Schema v90、save v1、
   active baseline `contract-v279`（26 条 exact fixture、零 waiver）；content hash 为
   `9e84e738fecbc3b74933c4a708c5a89cd77dd7bdd000c11b76c7d57184abec26`。
+
+## 18. main 当前交接（固定神器统一生成底座）
+
+- 本批不新增正式 item/ability/material/affix ID。随机固定神器池只使用
+  `demo.item.crisdurian`、`demo.item.pain`、`demo.item.slayer`；旧
+  `demo.item.relic-blade` 没有 `artifactGeneration`，不得加入池或写入唯一状态。
+- 核心内部统一使用 `Ordinary / Good / Great / Artifact` 生成意图；`ItemQuality` 与协议
+  品质枚举不增加神器值。生成先返回不占实例 ID 的 draft，调用方接受后才提交实例并登记
+  神器；其他方向不得在挖矿、任务或职业代码中复制第二套质量/神器生成器。
+- Artifact 按 RFB 顺序执行 1/10 瞬时神器入口、`sourceIndex` 顺序、已生成排除、基础物品
+  匹配、神器/基础物品 OOD 和稀有度判定；普通固定神器最多尝试四次，失败草稿按 Great
+  生成。当前没有 `instant=true` 候选，但入口 RNG 顺序已固定。
+- `generated_artifact_ids` 是权威全局唯一集合；`SavePayloadV1.generatedArtifactIds` 必填，
+  严格拒绝重复、未知、非正式神器及缺少登记的神器实例。Old Castle 显式奖励始终强制
+  授予，同时登记集合，从而只排除后续随机重复。
+- 共享协调点：pack `1.294.0` / content hash
+  `ee2a72864ac9b521e5825f79a9e020cf798ff1a398e887ca2e7a2b1a5b8edbed`、Protocol `1.187`、
+  State Hash Schema v93、save v1、active baseline `contract-v283`（26 条 exact fixture、
+  零 waiver）。后续挖矿额外物品应调用 draft 接口完成最多 20 次 Artifact 尝试与 Great
+  回退；丢弃的尝试不得提交实例 ID 或神器唯一状态。

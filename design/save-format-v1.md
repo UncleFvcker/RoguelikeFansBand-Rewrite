@@ -77,6 +77,7 @@ interface SavePayloadV1 {
   inventory: InventoryItemSaveDto[];
   equipment: EquipmentItemSaveDto[];
   carriedItems: CarriedItemSaveDto[];
+  generatedArtifactIds: string[];
   nextItemInstanceSerial: number;
   explored: boolean[];
   rng: RngSaveDto;
@@ -423,3 +424,9 @@ contract-v279 没有增加存档字段。碎石掉落使用既有 `ItemSaveDto.o
 contract-v282 不增加存档字段。宠物维持从既有职业身份、玩家等级、资源池以及 actor 的
 `controllerId` / `summon.ownerId` 派生；解散、消失和转敌直接写回既有 actor 集与控制归属。
 State Hash Schema 保持 v92，save 容器保持 v1。
+
+contract-v283 为 `SavePayloadV1` 增加必填 `generatedArtifactIds`，保存已经提交或由显式
+任务奖励授予的正式 RFB 固定神器 ID。载入拒绝重复、未知、缺少 `artifactGeneration`
+元数据的 ID，以及存在神器实例却缺少相应登记的状态；集合允许保留已经销毁的神器。
+该状态进入 State Hash Schema v93，Protocol 升至 1.187，save 容器保持 v1，不提供旧
+开发存档兼容默认值。

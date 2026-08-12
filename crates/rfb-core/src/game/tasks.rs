@@ -757,6 +757,7 @@ impl Game {
             reward.quantity = remaining;
             self.items.push(reward);
         }
+        self.register_generated_artifact(&outcome.item_kind_id);
         self.task_states
             .get_mut(task_id)
             .expect("preflighted task state must remain available")

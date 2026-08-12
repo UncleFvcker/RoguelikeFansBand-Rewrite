@@ -1123,6 +1123,7 @@ impl Game {
                     item_kind_id: reward.kind_id.clone(),
                     quantity: reward.quantity,
                 });
+                self.register_generated_artifact(&reward.kind_id);
                 destination.items.push(reward);
             }
         }

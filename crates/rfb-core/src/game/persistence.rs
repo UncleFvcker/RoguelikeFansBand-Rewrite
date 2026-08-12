@@ -586,7 +586,7 @@ fn item_property_knowledge_from_save(
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-struct StateHashPayloadV82<'a> {
+struct StateHashPayloadV93<'a> {
     schema_version: u16,
     revision: u32,
     turn: u32,
@@ -613,6 +613,7 @@ struct StateHashPayloadV82<'a> {
     task_states: Vec<TaskStateSaveDto>,
     dungeon_states: Vec<DungeonStateSaveDto>,
     defeated_unique_actor_kind_ids: Vec<&'a str>,
+    generated_artifact_ids: Vec<&'a str>,
     town_states: Vec<TownStateSaveDto>,
     shop_states: Vec<ShopStateSaveDto>,
     home_states: Vec<HomeStateSaveDto>,
@@ -1215,6 +1216,28 @@ impl Game {
                 "defeated unique actor state is invalid",
             ));
         }
+        let generated_artifact_count = payload.generated_artifact_ids.len();
+        let generated_artifact_ids = payload
+            .generated_artifact_ids
+            .into_iter()
+            .collect::<BTreeSet<_>>();
+        if generated_artifact_ids.len() != generated_artifact_count
+            || generated_artifact_ids.iter().any(|kind_id| {
+                content
+                    .item(kind_id)
+                    .is_none_or(|item| item.artifact_generation.is_none())
+            })
+            || allocator_items.iter().any(|item| {
+                content
+                    .item(&item.kind_id)
+                    .is_some_and(|definition| definition.artifact_generation.is_some())
+                    && !generated_artifact_ids.contains(&item.kind_id)
+            })
+        {
+            return Err(CoreError::InvalidSave(
+                "generated artifact state is invalid",
+            ));
+        }
         let mut game = Self {
             content,
             world_id: payload.world_id,
@@ -1257,6 +1280,7 @@ impl Game {
             command_actor_deaths: Vec::new(),
             dungeon_states,
             defeated_unique_actor_kind_ids,
+            generated_artifact_ids,
             town_states,
             shop_states,
             home_states,
@@ -1347,6 +1371,7 @@ impl Game {
                 .iter()
                 .cloned()
                 .collect(),
+            generated_artifact_ids: self.generated_artifact_ids.iter().cloned().collect(),
             town_states: self
                 .town_states
                 .iter()
@@ -1385,7 +1410,7 @@ impl Game {
 
     #[must_use]
     pub fn state_hash(&self) -> String {
-        let payload = StateHashPayloadV82 {
+        let payload = StateHashPayloadV93 {
             schema_version: STATE_HASH_SCHEMA_VERSION,
             revision: self.revision,
             turn: self.turn,
@@ -1417,6 +1442,11 @@ impl Game {
             dungeon_states: self.dungeon_states_to_save(),
             defeated_unique_actor_kind_ids: self
                 .defeated_unique_actor_kind_ids
+                .iter()
+                .map(String::as_str)
+                .collect(),
+            generated_artifact_ids: self
+                .generated_artifact_ids
                 .iter()
                 .map(String::as_str)
                 .collect(),

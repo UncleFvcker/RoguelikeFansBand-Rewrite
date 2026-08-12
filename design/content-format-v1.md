@@ -675,3 +675,7 @@ Schema 保持 v88。
 不可堆叠且不得进入普通 loot table。当前只登记 Crisdurian、Pain 和 Slayer；该字段尚无
 运行时消费者，Protocol 1.186、State Hash Schema v92 与 contract-v282 不变。content
 hash 为 `ee2a72864ac9b521e5825f79a9e020cf798ff1a398e887ca2e7a2b1a5b8edbed`。
+
+contract-v283 开始消费上述 `artifactGeneration`。生成器按 `sourceIndex` 顺序检查正式
+候选，并用 `baseItemKindId`、`generationLevel` 和 `rarityOneIn` 执行 RFB 固定神器分配；
+本批不改变内容包或内容 hash，也不新增神器、基础物品、能力、材料或 affix ID。

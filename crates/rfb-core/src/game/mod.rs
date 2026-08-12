@@ -199,7 +199,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 92;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 93;
 #[cfg(test)]
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const VISIBILITY_RADIUS: i32 = 8;
@@ -453,6 +453,48 @@ struct LootContext {
     floor_id: String,
     depth: u16,
     source: LootSource,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum ItemGenerationMode {
+    Ordinary,
+    Good,
+    Great,
+    Artifact,
+}
+
+impl ItemGenerationMode {
+    const fn minimum_quality(self) -> rfb_content::ItemQuality {
+        match self {
+            Self::Ordinary => rfb_content::ItemQuality::Ordinary,
+            Self::Good => rfb_content::ItemQuality::Fine,
+            Self::Great | Self::Artifact => rfb_content::ItemQuality::Exceptional,
+        }
+    }
+}
+
+impl From<rfb_content::ItemQuality> for ItemGenerationMode {
+    fn from(value: rfb_content::ItemQuality) -> Self {
+        match value {
+            rfb_content::ItemQuality::Ordinary => Self::Ordinary,
+            rfb_content::ItemQuality::Fine => Self::Good,
+            rfb_content::ItemQuality::Exceptional => Self::Great,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct GeneratedItemDraft {
+    kind_id: String,
+    quantity: u32,
+    origin_kind: Option<ItemOriginKindDto>,
+    quality: ItemQualityDto,
+    affix_ids: Vec<String>,
+    rolled_affixes: Vec<RolledAffixState>,
+    curse: Option<ItemCurseSeverityDto>,
+    activation: Option<ItemActivationDto>,
+    charges: Option<ItemChargesDto>,
+    fuel: Option<rfb_protocol::ItemFuelDto>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -831,6 +873,7 @@ pub struct Game {
     command_actor_deaths: Vec<ActorDeathRecord>,
     dungeon_states: BTreeMap<String, DungeonState>,
     defeated_unique_actor_kind_ids: BTreeSet<String>,
+    generated_artifact_ids: BTreeSet<String>,
     town_states: BTreeMap<String, TownState>,
     shop_states: BTreeMap<String, ShopState>,
     home_states: BTreeMap<String, HomeState>,
@@ -1120,6 +1163,15 @@ impl Game {
         let home_states = town::initial_home_states(world, &content);
         let chaos_patron_id = chaos_patron::initial_chaos_patron_id(&content, &mut rng);
         let mogaminator = MogaminatorState::for_character(&content, seed);
+        let generated_artifact_ids = items
+            .iter()
+            .filter(|item| {
+                content
+                    .item(&item.kind_id)
+                    .is_some_and(|definition| definition.artifact_generation.is_some())
+            })
+            .map(|item| item.kind_id.clone())
+            .collect();
         let mut game = Self {
             content,
             world_id: world_id.to_owned(),
@@ -1162,6 +1214,7 @@ impl Game {
             command_actor_deaths: Vec::new(),
             dungeon_states,
             defeated_unique_actor_kind_ids: BTreeSet::new(),
+            generated_artifact_ids,
             town_states,
             shop_states,
             home_states,
@@ -4713,7 +4766,7 @@ impl Game {
             location,
             true,
             None,
-            rfb_content::ItemQuality::Ordinary,
+            ItemGenerationMode::Ordinary,
         )
     }
 
@@ -4727,7 +4780,7 @@ impl Game {
             location,
             false,
             None,
-            rfb_content::ItemQuality::Ordinary,
+            ItemGenerationMode::Ordinary,
         )
     }
 
@@ -4737,7 +4790,13 @@ impl Game {
         location: ItemLocation,
         minimum_quality: rfb_content::ItemQuality,
     ) -> Result<Vec<ItemInstance>, CoreError> {
-        self.generate_loot_instances_internal(context, location, false, Some(1), minimum_quality)
+        self.next_item_instance_serial
+            .checked_add(1)
+            .ok_or(CoreError::ItemIdExhausted)?;
+        let Some(draft) = self.generate_one_loot_draft(context, minimum_quality.into()) else {
+            return Ok(Vec::new());
+        };
+        Ok(vec![self.commit_generated_item_draft(draft, location)?])
     }
 
     fn generate_loot_instances_internal(
@@ -4746,8 +4805,51 @@ impl Game {
         location: ItemLocation,
         roll_table_chance: bool,
         roll_count_override: Option<u16>,
-        minimum_quality: rfb_content::ItemQuality,
+        mode: ItemGenerationMode,
     ) -> Result<Vec<ItemInstance>, CoreError> {
+        let table = self
+            .content
+            .loot_table(&context.table_id)
+            .expect("validated actor loot table must remain available");
+        let maximum_rolls = roll_count_override.map_or_else(
+            || {
+                table.roll_dice.map_or(u32::from(table.rolls), |dice| {
+                    u32::from(table.rolls) + u32::from(dice.dice) * u32::from(dice.sides)
+                })
+            },
+            u32::from,
+        );
+        self.next_item_instance_serial
+            .checked_add(u64::from(maximum_rolls))
+            .ok_or(CoreError::ItemIdExhausted)?;
+        let drafts = self.generate_loot_drafts_internal(
+            context,
+            roll_table_chance,
+            roll_count_override,
+            mode,
+        );
+        drafts
+            .into_iter()
+            .map(|draft| self.commit_generated_item_draft(draft, location.clone()))
+            .collect()
+    }
+
+    fn generate_one_loot_draft(
+        &mut self,
+        context: &LootContext,
+        mode: ItemGenerationMode,
+    ) -> Option<GeneratedItemDraft> {
+        self.generate_loot_drafts_internal(context, false, Some(1), mode)
+            .pop()
+    }
+
+    fn generate_loot_drafts_internal(
+        &mut self,
+        context: &LootContext,
+        roll_table_chance: bool,
+        roll_count_override: Option<u16>,
+        mode: ItemGenerationMode,
+    ) -> Vec<GeneratedItemDraft> {
         let context_is_valid = !context.floor_id.is_empty()
             && match &context.source {
                 LootSource::MonsterCarried { actor_id } | LootSource::MonsterDeath { actor_id } => {
@@ -4770,17 +4872,7 @@ impl Game {
             .loot_table(&context.table_id)
             .expect("validated actor loot table must remain available")
             .clone();
-        let maximum_rolls = roll_count_override.map_or_else(
-            || {
-                table.roll_dice.map_or(u32::from(table.rolls), |dice| {
-                    u32::from(table.rolls) + u32::from(dice.dice) * u32::from(dice.sides)
-                })
-            },
-            u32::from,
-        );
-        self.next_item_instance_serial
-            .checked_add(u64::from(maximum_rolls))
-            .ok_or(CoreError::ItemIdExhausted)?;
+        let minimum_quality = mode.minimum_quality();
         let eligible_entries = table
             .entries
             .iter()
@@ -4796,7 +4888,7 @@ impl Game {
             })
             .collect::<Vec<_>>();
         if eligible_entries.is_empty() {
-            return Ok(Vec::new());
+            return Vec::new();
         }
         let entry_weights = eligible_entries
             .iter()
@@ -4827,6 +4919,12 @@ impl Game {
         }
         let mut generated = Vec::with_capacity(usize::from(roll_count));
         for _ in 0..roll_count {
+            if mode == ItemGenerationMode::Artifact
+                && let Some(kind_id) = self.roll_instant_fixed_artifact_kind_id(context)
+            {
+                generated.push(self.fixed_artifact_draft(context, kind_id));
+                continue;
+            }
             let entry_index = self.roll_weighted_index(&entry_weights);
             let entry = eligible_entries[entry_index];
             let staff = self
@@ -4839,6 +4937,15 @@ impl Game {
                 .and_then(|definition| definition.equipment_slot.as_deref())
                 .is_some_and(|slot| matches!(slot, "ring" | "amulet"));
             let generation_depth = self.luck_adjusted_item_generation_depth(context.depth, staff);
+            if mode == ItemGenerationMode::Artifact {
+                let artifact_kind_id = (0..4).find_map(|_| {
+                    self.roll_fixed_artifact_kind_id(context, Some(&entry.item_kind_id), false)
+                });
+                if let Some(kind_id) = artifact_kind_id {
+                    generated.push(self.fixed_artifact_draft(context, kind_id));
+                    continue;
+                }
+            }
             let rolled_quality = match table.quality_policy {
                 Some(policy) => self.roll_rfb_depth_loot_quality(
                     policy,
@@ -4893,32 +5000,173 @@ impl Game {
                 &entry.item_kind_id,
                 generation_depth,
             );
-            let item = ItemInstance {
-                id: self.allocate_item_instance_id()?,
+            generated.push(GeneratedItemDraft {
                 kind_id: entry.item_kind_id.clone(),
                 quantity: entry.quantity,
-                inscription: None,
-                origin_actor_kind_id: None,
                 origin_kind: match &context.source {
                     LootSource::Rubble { .. } => Some(ItemOriginKindDto::Rubble),
                     _ => None,
                 },
-                damage_dice_override: None,
-                discount_percent: 0,
                 quality,
                 affix_ids,
                 rolled_affixes,
-                enchantments: ItemEnchantmentsDto::default(),
                 curse: initial_item_curse(&self.content, &entry.item_kind_id),
                 activation,
                 charges,
                 fuel: initial_item_fuel(&self.content, &entry.item_kind_id),
-                device_recovery_progress: 0,
-                location: location.clone(),
-            };
-            generated.push(item);
+            });
         }
-        Ok(generated)
+        generated
+    }
+
+    fn roll_instant_fixed_artifact_kind_id(&mut self, context: &LootContext) -> Option<String> {
+        if self.rng.bounded(10) != 0 {
+            return None;
+        }
+        self.roll_fixed_artifact_kind_id(context, None, true)
+    }
+
+    fn fixed_artifact_reference_depth(&self, context: &LootContext) -> u16 {
+        self.content
+            .world(&self.world_id)
+            .and_then(|world| {
+                world
+                    .procedural_floors
+                    .iter()
+                    .find(|floor| floor.id == context.floor_id)
+            })
+            .map_or(context.depth, |floor| floor.depth)
+    }
+
+    fn roll_fixed_artifact_kind_id(
+        &mut self,
+        context: &LootContext,
+        base_item_kind_id: Option<&str>,
+        instant: bool,
+    ) -> Option<String> {
+        let reference_depth = self.fixed_artifact_reference_depth(context);
+        if reference_depth == 0 {
+            return None;
+        }
+        let mut candidates = self
+            .content
+            .item_definitions()
+            .filter_map(|item| {
+                let generation = item.artifact_generation.as_ref()?;
+                Some((
+                    generation.source_index,
+                    item.id.clone(),
+                    item.generation_level,
+                    generation.base_item_kind_id.clone(),
+                    generation.rarity_one_in,
+                    generation.instant,
+                ))
+            })
+            .collect::<Vec<_>>();
+        candidates.sort_by_key(|candidate| candidate.0);
+
+        for (_, kind_id, artifact_level, base_kind_id, rarity_one_in, candidate_instant) in
+            candidates
+        {
+            if candidate_instant != instant
+                || self.generated_artifact_ids.contains(&kind_id)
+                || base_item_kind_id.is_some_and(|expected| expected != base_kind_id)
+            {
+                continue;
+            }
+            if artifact_level > reference_depth {
+                let difference = u64::from(artifact_level - reference_depth);
+                let one_in = if instant {
+                    difference.saturating_mul(2)
+                } else {
+                    difference.saturating_mul(difference)
+                };
+                if self.rng.bounded(one_in) != 0 {
+                    continue;
+                }
+            }
+            if self.rng.bounded(u64::from(rarity_one_in)) != 0 {
+                continue;
+            }
+            if instant {
+                let base_level = self
+                    .content
+                    .item(&base_kind_id)
+                    .expect("validated artifact base item must remain available")
+                    .generation_level;
+                if base_level > context.depth {
+                    let one_in = u64::from(base_level - context.depth).saturating_mul(5);
+                    if self.rng.bounded(one_in) != 0 {
+                        continue;
+                    }
+                }
+            }
+            return Some(kind_id);
+        }
+        None
+    }
+
+    fn fixed_artifact_draft(
+        &mut self,
+        context: &LootContext,
+        kind_id: String,
+    ) -> GeneratedItemDraft {
+        let (activation, charges) =
+            initial_item_runtime_state(&self.content, &mut self.rng, &kind_id, context.depth);
+        GeneratedItemDraft {
+            quantity: 1,
+            origin_kind: match &context.source {
+                LootSource::Rubble { .. } => Some(ItemOriginKindDto::Rubble),
+                _ => None,
+            },
+            quality: ItemQualityDto::Ordinary,
+            affix_ids: Vec::new(),
+            rolled_affixes: Vec::new(),
+            curse: initial_item_curse(&self.content, &kind_id),
+            activation,
+            charges,
+            fuel: initial_item_fuel(&self.content, &kind_id),
+            kind_id,
+        }
+    }
+
+    fn commit_generated_item_draft(
+        &mut self,
+        draft: GeneratedItemDraft,
+        location: ItemLocation,
+    ) -> Result<ItemInstance, CoreError> {
+        let id = self.allocate_item_instance_id()?;
+        self.register_generated_artifact(&draft.kind_id);
+        Ok(ItemInstance {
+            id,
+            kind_id: draft.kind_id,
+            quantity: draft.quantity,
+            inscription: None,
+            origin_actor_kind_id: None,
+            origin_kind: draft.origin_kind,
+            damage_dice_override: None,
+            discount_percent: 0,
+            quality: draft.quality,
+            affix_ids: draft.affix_ids,
+            rolled_affixes: draft.rolled_affixes,
+            enchantments: ItemEnchantmentsDto::default(),
+            curse: draft.curse,
+            activation: draft.activation,
+            charges: draft.charges,
+            fuel: draft.fuel,
+            device_recovery_progress: 0,
+            location,
+        })
+    }
+
+    fn register_generated_artifact(&mut self, kind_id: &str) {
+        if self
+            .content
+            .item(kind_id)
+            .is_some_and(|item| item.artifact_generation.is_some())
+        {
+            self.generated_artifact_ids.insert(kind_id.to_owned());
+        }
     }
 
     fn roll_loot_quality(

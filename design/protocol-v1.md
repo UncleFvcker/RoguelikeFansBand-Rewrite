@@ -592,3 +592,8 @@ State Hash Schema 保持 v92，save 容器保持 v1。
 协议 1.186 / P56B 为 `AbilityEffectSpecDto::SummonCategory` 增加可选
 `maximumCount`，用于保留 `min(1d4, 3)` 这类召唤数量上限。没有新增持久状态，
 State Hash Schema 保持 v88，save 容器保持 v1。
+
+协议 1.187 / contract-v283 为 `SavePayloadV1` 增加必填 `generatedArtifactIds`，按稳定
+物品 ID 保存已生成的 RFB 固定神器。该字段不进入游戏快照，普通物品品质枚举也不增加
+“神器”伪值；固定神器身份继续来自内容定义。权威集合进入 State Hash Schema v93，
+save 容器保持 v1，不兼容缺少该字段的旧开发存档。

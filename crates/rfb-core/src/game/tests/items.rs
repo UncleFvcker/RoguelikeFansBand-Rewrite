@@ -2,6 +2,17 @@
 use super::support::*;
 use super::*;
 
+fn artifact_loot_context(depth: u16) -> LootContext {
+    LootContext {
+        table_id: "demo.loot-table.paladin".to_owned(),
+        floor_id: format!("test.floor.depth-{depth}"),
+        depth,
+        source: LootSource::ItemUse {
+            item_id: "test.item-generation".to_owned(),
+        },
+    }
+}
+
 #[test]
 fn booze_applies_original_confusion_hallucination_and_blackout_ranges() {
     let mut saw_hallucination = false;
@@ -2304,4 +2315,148 @@ fn p3_5_rumour_is_localized_without_core_rng() {
         event.args.get("rumourKey").map(String::as_str),
         Some("rumour-demo-warrens-depths")
     );
+}
+
+#[test]
+fn fixed_artifact_selection_uses_source_order_ood_rarity_and_uniqueness() {
+    let context = artifact_loot_context(60);
+    let mut instant = Game::new(1);
+    instant.rng = RfbRng::seeded(0);
+    assert_eq!(instant.roll_instant_fixed_artifact_kind_id(&context), None);
+    assert_eq!(instant.rng_draw_counter(), 1);
+
+    let crisdurian_seed = (0..10_000)
+        .find(|seed| RfbRng::seeded(*seed).bounded(15) == 0)
+        .expect("a Crisdurian rarity seed should exist");
+    let mut game = Game::new(1);
+    game.rng = RfbRng::seeded(crisdurian_seed);
+    assert_eq!(
+        game.roll_fixed_artifact_kind_id(&context, Some("demo.item.executioners-sword"), false,)
+            .as_deref(),
+        Some("demo.item.crisdurian")
+    );
+    assert_eq!(game.rng_draw_counter(), 1);
+
+    game.generated_artifact_ids
+        .insert("demo.item.crisdurian".to_owned());
+    let slayer_seed = (0..10_000)
+        .find(|seed| RfbRng::seeded(*seed).bounded(60) == 0)
+        .expect("a Slayer rarity seed should exist");
+    game.rng = RfbRng::seeded(slayer_seed);
+    assert_eq!(
+        game.roll_fixed_artifact_kind_id(&context, Some("demo.item.executioners-sword"), false,)
+            .as_deref(),
+        Some("demo.item.slayer")
+    );
+    assert_eq!(game.rng_draw_counter(), 1);
+
+    game.generated_artifact_ids
+        .insert("demo.item.slayer".to_owned());
+    game.rng = RfbRng::seeded(0);
+    assert_eq!(
+        game.roll_fixed_artifact_kind_id(&context, Some("demo.item.executioners-sword"), false,),
+        None
+    );
+    assert_eq!(game.rng_draw_counter(), 0);
+
+    let rarity_rejection_seed = (0..10_000)
+        .find(|seed| {
+            let mut rng = RfbRng::seeded(*seed);
+            rng.bounded(15) != 0 && rng.bounded(60) != 0
+        })
+        .expect("a double rarity rejection seed should exist");
+    game.generated_artifact_ids.clear();
+    game.rng = RfbRng::seeded(rarity_rejection_seed);
+    assert_eq!(
+        game.roll_fixed_artifact_kind_id(&context, Some("demo.item.executioners-sword"), false,),
+        None
+    );
+    assert_eq!(game.rng_draw_counter(), 2);
+
+    let ood_rejection_seed = (0..10_000)
+        .find(|seed| {
+            let mut rng = RfbRng::seeded(*seed);
+            rng.bounded(4) != 0 && rng.bounded(4) != 0
+        })
+        .expect("a double OOD rejection seed should exist");
+    game.rng = RfbRng::seeded(ood_rejection_seed);
+    assert_eq!(
+        game.roll_fixed_artifact_kind_id(
+            &artifact_loot_context(58),
+            Some("demo.item.executioners-sword"),
+            false,
+        ),
+        None
+    );
+    assert_eq!(game.rng_draw_counter(), 2);
+}
+
+#[test]
+fn item_generation_modes_keep_drafts_unallocated_until_commit() {
+    let context = artifact_loot_context(60);
+
+    let mut good = Game::new(2);
+    good.rng = RfbRng::seeded(7);
+    let good_draft = good
+        .generate_one_loot_draft(&context, ItemGenerationMode::Good)
+        .expect("Good generation should produce a draft");
+    assert!(matches!(
+        good_draft.quality,
+        ItemQualityDto::Fine | ItemQualityDto::Exceptional
+    ));
+
+    let mut great = Game::new(2);
+    great.rng = RfbRng::seeded(7);
+    let great_draft = great
+        .generate_one_loot_draft(&context, ItemGenerationMode::Great)
+        .expect("Great generation should produce a draft");
+    assert_eq!(great_draft.quality, ItemQualityDto::Exceptional);
+
+    let mut artifact = Game::new(2);
+    let serial_before = artifact.next_item_instance_serial;
+    let fallback = (0..10_000).find_map(|seed| {
+        artifact.rng = RfbRng::seeded(seed);
+        let draft = artifact.generate_one_loot_draft(&context, ItemGenerationMode::Artifact)?;
+        artifact
+            .content
+            .item(&draft.kind_id)
+            .is_some_and(|item| item.artifact_generation.is_none())
+            .then_some(draft)
+    });
+    let fallback = fallback.expect("an Artifact request fallback should exist");
+    assert_eq!(fallback.quality, ItemQualityDto::Exceptional);
+    assert_eq!(artifact.next_item_instance_serial, serial_before);
+    let committed = artifact
+        .commit_generated_item_draft(fallback, ItemLocation::Ground(artifact.player.position))
+        .expect("an accepted draft should receive an instance ID");
+    assert_eq!(artifact.next_item_instance_serial, serial_before + 1);
+    assert!(
+        artifact
+            .content
+            .item(&committed.kind_id)
+            .is_some_and(|item| item.artifact_generation.is_none())
+    );
+
+    let mut fixed = Game::new(3);
+    fixed.rng = RfbRng::seeded(crisdurian_seed_for_test());
+    let kind_id = fixed
+        .roll_fixed_artifact_kind_id(&context, Some("demo.item.executioners-sword"), false)
+        .expect("Crisdurian should pass its rarity gate");
+    let draft = fixed.fixed_artifact_draft(&context, kind_id);
+    assert_eq!(draft.quality, ItemQualityDto::Ordinary);
+    let item = fixed
+        .commit_generated_item_draft(draft, ItemLocation::Ground(fixed.player.position))
+        .expect("fixed artifact draft should commit");
+    assert_eq!(item.kind_id, "demo.item.crisdurian");
+    assert!(
+        fixed
+            .generated_artifact_ids
+            .contains("demo.item.crisdurian")
+    );
+}
+
+fn crisdurian_seed_for_test() -> u64 {
+    (0..10_000)
+        .find(|seed| RfbRng::seeded(*seed).bounded(15) == 0)
+        .expect("a Crisdurian rarity seed should exist")
 }

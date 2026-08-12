@@ -1716,7 +1716,7 @@ impl Game {
             ItemLocation::Ground(self.player.position),
             false,
             Some(u16::from(count)),
-            rfb_content::ItemQuality::Exceptional,
+            ItemGenerationMode::Great,
         )?;
         let generated_item_ids = generated.iter().map(|item| item.id.clone()).collect();
         let generated_kind_ids = generated.iter().map(|item| item.kind_id.clone()).collect();

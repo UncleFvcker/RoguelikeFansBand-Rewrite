@@ -6,7 +6,7 @@
 
 contract fixture 是规则兼容边界，不能把测试失败简单处理为“刷新预期结果”。政策用于保证每次规则变化只修改真正受影响的场景，同时保留可审查的失败原因。
 
-当前逻辑基线是 `contract-v282`，机器可读政策固定在：
+当前逻辑基线是 `contract-v283`，机器可读政策固定在：
 
 ```text
 tests/fixtures/active/baseline-policy.json
@@ -138,6 +138,15 @@ Protocol 升至 1.183、State Hash Schema 升至 v92；出生初始化新增 RNG
 获得权威记录，旧 demo `relic-blade` 不进入生成池。尚无运行时消费者、持久状态或协议
 投影，因此 Protocol 1.186、State Hash Schema v92、save v1 与 active baseline
 `contract-v282` 均保持不变，现有 fixture 不刷新。
+
+`contract-v283` 增加核心内部 `Ordinary / Good / Great / Artifact` 生成意图，并把
+物品生成拆成不占实例序号的草稿与显式提交。Artifact 请求按 RFB `a_info` 顺序执行
+1/10 瞬时神器入口、基础物品匹配、神器/基础物品 OOD 与稀有度判定；失败回退为 Great，
+不会把固定神器伪装成 Exceptional。`SavePayloadV1.generatedArtifactIds` 保存已生成固定
+神器，载入拒绝重复、未知、非正式神器及缺少登记的神器实例；Old Castle 强制奖励仍会
+授予并登记，之后排除随机重复。Protocol 升至 1.187，State Hash Schema 升至 v93，
+save 容器保持 v1，内容包保持 1.294.0。权威状态哈希与公共存档结构变化要求统一刷新
+26 条 active fixture，零 waiver。
 
 ## 分类验证
 

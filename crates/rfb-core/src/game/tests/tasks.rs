@@ -1052,6 +1052,46 @@ fn old_castle_unlocks_after_vapor_quest_and_rewards_the_warrior_artifact_pool() 
         "demo.item.slayer" | "demo.item.pain"
     ));
     assert_eq!(reward.location, ItemLocation::Inventory);
+    assert!(game.generated_artifact_ids.contains(&reward.kind_id));
+    assert!(
+        game.to_save()
+            .generated_artifact_ids
+            .contains(&reward.kind_id)
+    );
+}
+
+#[test]
+fn old_castle_reward_is_forced_even_when_the_artifact_was_generated_before_claim() {
+    let mut game =
+        Game::new_with_build(271, "demo.build.warrior").expect("Warrens journey should create");
+    game.player.position = Position { x: 63, y: 13 };
+    game.task_states.insert(
+        "demo.task.old-castle".to_owned(),
+        TaskState {
+            status: TaskStatusKindDto::RewardAvailable,
+            stage_index: 0,
+            current: 1,
+            required: 1,
+            active_floor_id: None,
+            retakes_used: 0,
+        },
+    );
+    game.generated_artifact_ids
+        .extend(["demo.item.slayer".to_owned(), "demo.item.pain".to_owned()]);
+
+    let reward = game
+        .claim_task_reward(
+            "demo.town-facility.outpost-white-horse",
+            "demo.task.old-castle",
+        )
+        .expect("explicit artifact reward should remain forced");
+    assert!(matches!(
+        reward.item_kind_id.as_str(),
+        "demo.item.slayer" | "demo.item.pain"
+    ));
+    assert!(game.items.iter().any(|item| {
+        item.id == "demo.task.old-castle.reward.1" && item.kind_id == reward.item_kind_id
+    }));
 }
 
 #[test]

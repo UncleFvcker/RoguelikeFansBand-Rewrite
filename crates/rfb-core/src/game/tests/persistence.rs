@@ -78,3 +78,69 @@ fn save_with_different_content_hash_is_rejected() {
         Err(CoreError::ContentMismatch)
     ));
 }
+
+#[test]
+fn generated_artifact_state_round_trips_and_changes_the_state_hash() {
+    let mut game = Game::new(42);
+    let before = game.state_hash();
+    game.generated_artifact_ids
+        .insert("demo.item.crisdurian".to_owned());
+    let after = game.state_hash();
+    assert_ne!(after, before);
+
+    let payload = game.to_save();
+    assert_eq!(payload.generated_artifact_ids, ["demo.item.crisdurian"]);
+    let restored = Game::from_save(payload).expect("artifact state should restore");
+    assert_eq!(restored.state_hash(), after);
+    assert!(
+        restored
+            .generated_artifact_ids
+            .contains("demo.item.crisdurian")
+    );
+}
+
+#[test]
+fn malformed_generated_artifact_state_is_rejected() {
+    let base = Game::new(42).to_save();
+    for ids in [
+        vec!["demo.item.crisdurian", "demo.item.crisdurian"],
+        vec!["test.item.unknown"],
+        vec!["demo.item.relic-blade"],
+    ] {
+        let mut payload = base.clone();
+        payload.generated_artifact_ids = ids.into_iter().map(str::to_owned).collect();
+        assert!(matches!(
+            Game::from_save(payload),
+            Err(CoreError::InvalidSave(
+                "generated artifact state is invalid"
+            ))
+        ));
+    }
+}
+
+#[test]
+fn fixed_artifact_instance_requires_its_generation_record() {
+    let mut game = Game::new(42);
+    let context = LootContext {
+        table_id: "demo.loot-table.paladin".to_owned(),
+        floor_id: "test.floor.depth-60".to_owned(),
+        depth: 60,
+        source: LootSource::ItemUse {
+            item_id: "test.item-generation".to_owned(),
+        },
+    };
+    let draft = game.fixed_artifact_draft(&context, "demo.item.crisdurian".to_owned());
+    let item = game
+        .commit_generated_item_draft(draft, ItemLocation::Inventory)
+        .expect("fixed artifact should commit");
+    game.items.push(item);
+    let mut payload = game.to_save();
+    payload.generated_artifact_ids.clear();
+
+    assert!(matches!(
+        Game::from_save(payload),
+        Err(CoreError::InvalidSave(
+            "generated artifact state is invalid"
+        ))
+    ));
+}

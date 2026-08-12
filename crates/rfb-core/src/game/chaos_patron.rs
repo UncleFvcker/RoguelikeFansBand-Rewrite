@@ -707,7 +707,7 @@ impl Game {
             ItemLocation::Ground(self.player.position),
             false,
             Some(count),
-            quality,
+            quality.into(),
         )?;
         self.items.extend(generated);
         changed.insert(self.player.position);
