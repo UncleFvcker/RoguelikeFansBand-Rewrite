@@ -729,7 +729,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         .iter()
         .filter(|actor| actor.tags.iter().any(|tag| tag == "orc-cave"))
         .collect::<Vec<_>>();
-    assert_eq!(orc_cave.len(), 543);
+    assert_eq!(orc_cave.len(), 544);
 
     for id in [
         "demo.actor.bunyip",
@@ -777,7 +777,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         level_counts,
         [
             16, 14, 12, 17, 24, 17, 19, 17, 18, 21, 7, 12, 29, 15, 27, 28, 19, 19, 11, 42, 12, 6,
-            12, 14, 14, 7, 10, 6, 6, 16, 11, 8, 3, 8, 17, 9,
+            12, 14, 14, 7, 10, 6, 6, 17, 11, 8, 3, 8, 17, 9,
         ]
     );
 
@@ -5197,6 +5197,43 @@ fn p55b_eagles_keep_their_wilderness_and_summon_boundaries() {
             } if category == "eagle" && maximum_level == level
         ));
     }
+}
+
+#[test]
+fn p56a_internet_exploder_keeps_its_slow_time_death_explosion() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actor = artifact
+        .content
+        .actors
+        .iter()
+        .find(|actor| actor.id == "demo.actor.internet-exploder")
+        .expect("P56A should contain Internet Exploder");
+    assert_eq!(actor.level, 50);
+    let allocation = actor
+        .allocation
+        .as_ref()
+        .expect("Internet Exploder should retain allocation metadata");
+    assert_eq!(allocation.legacy_index, 921);
+    assert_eq!(allocation.rarity, 4);
+    assert_eq!(allocation.max_depth, 999);
+    let blow = actor
+        .melee_routine
+        .as_ref()
+        .and_then(|routine| routine.blows.first())
+        .expect("Internet Exploder should retain its explosion");
+    assert!(blow.self_destructs);
+    assert!(matches!(
+        blow.effects.as_slice(),
+        [
+            MeleeBlowEffectDefinition::Damage {
+                damage_dice: 10,
+                damage_sides: 20,
+                damage_type: ActorDamageType::Time,
+                ..
+            },
+            MeleeBlowEffectDefinition::Slow { .. }
+        ]
+    ));
 }
 
 #[test]

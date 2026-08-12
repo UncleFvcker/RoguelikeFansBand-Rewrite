@@ -5898,6 +5898,12 @@
       "id": "thorondor",
       "tags": ["eagle"],
       "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 921,
+      "id": "internet-exploder",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "NO_STUN", "RES_WALL"]
     }
   ]
 }

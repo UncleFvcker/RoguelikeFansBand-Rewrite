@@ -146,6 +146,7 @@ pub(super) fn validate_actors(
                                     MeleeBlowEffectDefinition::Damage { .. }
                                         | MeleeBlowEffectDefinition::Poison { .. }
                                         | MeleeBlowEffectDefinition::Bomb { .. }
+                                        | MeleeBlowEffectDefinition::Slow { .. }
                                 )
                             }))
                         || (!blow.self_destructs

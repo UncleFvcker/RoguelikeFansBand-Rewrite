@@ -7044,7 +7044,7 @@ fn self_destruct_effect_is_supported(
         effects.iter().all(|effect| {
             matches!(
                 effect.get("type").and_then(serde_json::Value::as_str),
-                Some("damage" | "poison" | "bomb")
+                Some("damage" | "poison" | "bomb" | "slow")
             )
         })
     })
@@ -13317,12 +13317,12 @@ mod tests {
     }
 
     #[test]
-    fn demo_monster_import_rejects_unresolved_self_destruct_riders() {
+    fn demo_monster_import_maps_slow_self_destruct_rider() {
         let mut monsters = parse_r_info(
             "N:921:Internet Exploder\nG:e:B\nI:140:20d20:25:0:1:300\nW:50:4:999:1000:0:0\nB:EXPLODE:TIME(10d20):SLOW\nF:NONLIVING\n",
         )
         .expect("synthetic self-destruct rider should parse");
-        let error = demo_monster_json(
+        let actor = demo_monster_json(
             &monsters.remove(0),
             &DemoMonsterSelectionEntry {
                 source_index: 921,
@@ -13334,13 +13334,21 @@ mod tests {
             },
             &mut BTreeMap::new(),
         )
-        .expect_err("SLOW must not be silently dropped from a self-destruct blow");
+        .expect("SLOW self-destruct rider should import");
 
-        assert!(matches!(
-            error,
-            LegacyImportError::InvalidDemoMonsterSelection(detail)
-                if detail.contains("unsupported self-destruct effect SLOW")
-        ));
+        assert_eq!(
+            actor["meleeRoutine"]["blows"][0]["effects"],
+            serde_json::json!([
+                {
+                    "type": "damage",
+                    "damageDice": 10,
+                    "damageSides": 20,
+                    "damageType": "time",
+                    "armorMitigated": false,
+                },
+                { "type": "slow" },
+            ])
+        );
     }
 
     #[test]

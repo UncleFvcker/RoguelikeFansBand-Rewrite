@@ -6,7 +6,10 @@ use rfb_content::MeleeBlowEffectDefinition;
 use rfb_protocol::{ItemEnchantmentsDto, ItemQualityDto, MonsterPackRoleDto, Position};
 
 use crate::{
-    effect::{DamageOutcome, DamagePacket, STATUS_BLEEDING, STATUS_STUN, resolve_damage},
+    effect::{
+        DamageOutcome, DamagePacket, STATUS_BLEEDING, STATUS_PARALYSIS, STATUS_SLOW, STATUS_STUN,
+        resolve_damage,
+    },
     error::CoreError,
     event::DomainEvent,
     resistance::{DamageType, ResistanceLevel},
@@ -45,7 +48,7 @@ struct BombDamage {
     sound_resisted: bool,
 }
 
-fn resistance_prevents_bomb_status(resistance: ResistanceLevel) -> bool {
+fn resistance_prevents_status(resistance: ResistanceLevel) -> bool {
     matches!(
         resistance,
         ResistanceLevel::Resistant | ResistanceLevel::Strong | ResistanceLevel::Immune
@@ -89,12 +92,65 @@ fn rfb_bomb_damage(
         },
         shard_damage: shards.applied,
         sound_damage: sound.applied,
-        shards_resisted: resistance_prevents_bomb_status(shard_resistance),
-        sound_resisted: resistance_prevents_bomb_status(sound_resistance),
+        shards_resisted: resistance_prevents_status(shard_resistance),
+        sound_resisted: resistance_prevents_status(sound_resistance),
     }
 }
 
 impl Game {
+    fn apply_death_explosion_slow(&mut self, actor: &Actor, cells: &[(u32, Position)]) {
+        if cells
+            .iter()
+            .any(|(_, position)| *position == self.player.position)
+            && !self.player_is_dead()
+            && !self.player_status_immunities().contains(STATUS_PARALYSIS)
+        {
+            self.minor_slow = self.minor_slow.saturating_add(1).min(10);
+        }
+
+        let target_ids = cells
+            .iter()
+            .filter_map(|(_, position)| {
+                self.entities
+                    .iter()
+                    .find(|entity| {
+                        entity.id != actor.id && entity.hp > 0 && entity.position == *position
+                    })
+                    .map(|entity| entity.id.clone())
+            })
+            .collect::<Vec<_>>();
+        for target_id in target_ids {
+            let target_index = self
+                .entities
+                .iter()
+                .position(|entity| entity.id == target_id)
+                .expect("death explosion slow target must remain available");
+            let inertia_resistance = self.entities[target_index]
+                .resistances
+                .level(DamageType::Inertia);
+            let (level, unique) = self
+                .actor_runtime_definition(&self.entities[target_index])
+                .map_or((1, false), |definition| {
+                    (
+                        definition.level.max(1),
+                        definition
+                            .tags
+                            .iter()
+                            .any(|tag| matches!(tag.as_str(), "unique" | "unique2")),
+                    )
+                });
+            if resistance_prevents_status(inertia_resistance) || unique {
+                continue;
+            }
+            let level_roll = self.rng.bounded(u64::from(level)) + 1;
+            let power_roll = self.rng.bounded(62) + 1;
+            if level_roll > power_roll {
+                continue;
+            }
+            self.apply_actor_melee_status(target_index, STATUS_SLOW, 25, &actor.kind_id);
+        }
+    }
+
     fn apply_amberite_blood_curse(&mut self, actor: &Actor) {
         let Some(level) = self.content.actor(&actor.kind_id).and_then(|definition| {
             definition
@@ -139,6 +195,10 @@ impl Game {
         let cells = self.area_damage_cells(actor.position, 3);
         changed.extend(cells.iter().map(|(_, position)| *position));
         for effect in &blow.effects {
+            if matches!(effect, MeleeBlowEffectDefinition::Slow { .. }) {
+                self.apply_death_explosion_slow(actor, &cells);
+                continue;
+            }
             let (damage_dice, damage_sides, damage_type, bomb) = match effect {
                 MeleeBlowEffectDefinition::Damage {
                     damage_dice,

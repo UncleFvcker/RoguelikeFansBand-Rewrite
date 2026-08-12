@@ -4530,3 +4530,5 @@ ability-legacy-summon-eagle-l40-1d3-1-name = Summon eagles
 ability-legacy-summon-eagle-l40-1d3-1-description = Summons 1d3+1 eagles of level 40 or lower.
 ability-legacy-summon-eagle-l55-1d3-1-name = Summon eagles
 ability-legacy-summon-eagle-l55-1d3-1-description = Summons 1d3+1 eagles of level 55 or lower.
+actor-demo-internet-exploder-name = Internet Exploder
+actor-demo-internet-exploder-description = An Internet Exploder recorded in the original RFB bestiary.

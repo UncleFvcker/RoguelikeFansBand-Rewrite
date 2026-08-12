@@ -613,6 +613,87 @@ fn bomb_death_explosion_splits_sound_and_shards_with_status_riders() {
 }
 
 #[test]
+fn slow_death_explosion_uses_radius_free_action_and_monster_saves() {
+    fn slow_game(target_kind_id: Option<&str>, free_action: bool) -> Game {
+        let mut game = game_with_actor_definition(0, "demo.actor.small-kobold", |actor| {
+            actor.melee_routine = Some(rfb_content::MeleeRoutineDefinition {
+                blows: vec![rfb_content::MeleeBlowDefinition {
+                    method_id: "rfb.blow.explode".to_owned(),
+                    to_hit: 20,
+                    self_destructs: true,
+                    effects: vec![MeleeBlowEffectDefinition::Slow {
+                        chance_percent: None,
+                    }],
+                }],
+            });
+        });
+        clear_monsters(&mut game);
+        game.terrain.fill("demo.terrain.floor".to_owned());
+        game.player.position = Position { x: 6, y: 3 };
+        if free_action {
+            give_inventory_item(&mut game, "test.item.free-action", "demo.item.calm-pendant");
+            game.items
+                .iter_mut()
+                .find(|item| item.id == "test.item.free-action")
+                .expect("free-action item should exist")
+                .location = ItemLocation::Equipped {
+                slot_id: "amulet".to_owned(),
+            };
+        }
+        let source = game.generated_actor(
+            "test.actor.exploder".to_owned(),
+            "demo.actor.small-kobold",
+            Position { x: 3, y: 3 },
+        );
+        game.entities.push(source);
+        if let Some(target_kind_id) = target_kind_id {
+            let mut target = game.generated_actor(
+                "test.actor.target".to_owned(),
+                target_kind_id,
+                Position { x: 3, y: 4 },
+            );
+            target.hp = 1_000;
+            target.max_hp = 1_000;
+            game.entities.push(target);
+        }
+        game.resolve_actor_death_without_rewards(
+            0,
+            None,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("slow death explosion should resolve");
+        game
+    }
+
+    let ordinary = slow_game(Some("demo.actor.small-kobold"), false);
+    assert_eq!(
+        ordinary.minor_slow, 1,
+        "radius-three player should be slowed"
+    );
+    assert!(
+        ordinary.entities[0]
+            .statuses
+            .iter()
+            .any(|status| status.kind_id == STATUS_SLOW)
+    );
+
+    let free_action = slow_game(None, true);
+    assert_eq!(free_action.minor_slow, 0);
+
+    for protected_kind_id in ["demo.actor.aether-vortex", "demo.actor.smeagol"] {
+        let protected = slow_game(Some(protected_kind_id), false);
+        assert!(
+            protected.entities[0]
+                .statuses
+                .iter()
+                .all(|status| status.kind_id != STATUS_SLOW)
+        );
+    }
+}
+
+#[test]
 fn charge_drain_melee_consumes_a_carried_device_or_player_nutrition() {
     let effect = MeleeBlowEffectDefinition::DrainCharges {
         chance_percent: None,

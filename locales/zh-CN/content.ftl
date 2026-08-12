@@ -4531,3 +4531,5 @@ ability-legacy-summon-eagle-l40-1d3-1-name = 召唤巨鹰
 ability-legacy-summon-eagle-l40-1d3-1-description = 召唤 1d3+1 只等级不高于 40 的巨鹰。
 ability-legacy-summon-eagle-l55-1d3-1-name = 召唤巨鹰
 ability-legacy-summon-eagle-l55-1d3-1-description = 召唤 1d3+1 只等级不高于 55 的巨鹰。
+actor-demo-internet-exploder-name = 互联网爆炸浏览器
+actor-demo-internet-exploder-description = 原版怪物：互联网爆炸浏览器。
