@@ -4968,6 +4968,114 @@
       "id": "dwar-dog-lord-of-waw",
       "tags": ["orc-cave"],
       "omittedFlags": ["MALE", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 693,
+      "id": "warrior-of-the-dawn",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 695,
+      "id": "zoth-ommog",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 697,
+      "id": "smaug-the-golden",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE", "POS_GAIN_AC", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 698,
+      "id": "the-stormbringer",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CHAR_MULTI", "NASTY_GLYPH"]
+    },
+    {
+      "sourceIndex": 982,
+      "id": "durahan",
+      "tags": ["orc-cave"],
+      "omittedFlags": []
+    },
+    {
+      "sourceIndex": 994,
+      "id": "marid",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_SUST_STR"]
+    },
+    {
+      "sourceIndex": 1041,
+      "id": "chameleon-lord",
+      "tags": ["orc-cave"],
+      "omittedFlags": []
+    },
+    {
+      "sourceIndex": 1048,
+      "id": "stone-dragon",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["NO_STUN", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 1082,
+      "id": "death-beast",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 1156,
+      "id": "nalfeshnee",
+      "tags": ["orc-cave"],
+      "omittedFlags": []
+    },
+    {
+      "sourceIndex": 1211,
+      "id": "ruby-serpent",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["ATTR_CLEAR", "POS_GAIN_AC", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 1300,
+      "id": "death-pumpkin",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 703,
+      "id": "dracolisk",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 706,
+      "id": "yibb-tstll-the-patient-one",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "POS_SUST_STR"]
+    },
+    {
+      "sourceIndex": 707,
+      "id": "ghatanothoa",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC", "RES_WALL"]
+    },
+    {
+      "sourceIndex": 708,
+      "id": "ent",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 1024,
+      "id": "grand-master-thief",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "POS_SEE_INVIS", "POS_TELEPATHY"]
+    },
+    {
+      "sourceIndex": 1212,
+      "id": "emerald-serpent",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["ATTR_CLEAR", "POS_GAIN_AC", "POS_SEE_INVIS"]
     }
   ]
 }

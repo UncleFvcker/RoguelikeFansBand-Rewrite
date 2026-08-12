@@ -594,7 +594,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         .iter()
         .filter(|actor| actor.tags.iter().any(|tag| tag == "orc-cave"))
         .collect::<Vec<_>>();
-    assert_eq!(orc_cave.len(), 421);
+    assert_eq!(orc_cave.len(), 439);
 
     for id in [
         "demo.actor.bunyip",
@@ -627,10 +627,10 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
                     .any(|index| *index != 3)
         );
     }
-    let mut level_counts = [0_usize; 24];
+    let mut level_counts = [0_usize; 26];
     let mut source_indices = BTreeSet::new();
     for actor in orc_cave {
-        assert!((21..=44).contains(&actor.level));
+        assert!((21..=46).contains(&actor.level));
         let allocation = actor
             .allocation
             .as_ref()
@@ -642,7 +642,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         level_counts,
         [
             16, 14, 12, 17, 24, 17, 19, 17, 18, 21, 7, 12, 29, 15, 27, 28, 19, 19, 11, 42, 10, 5,
-            10, 12,
+            10, 12, 12, 6,
         ]
     );
 
@@ -4142,6 +4142,49 @@ fn p47b_level_43_44_direct_monsters_keep_source_identity() {
         ("vore", 888, 44),
         ("kamikaze-hound", 952, 44),
         ("dwar-dog-lord-of-waw", 1009, 44),
+    ] {
+        let actor_id = format!("demo.actor.{id}");
+        let actor = artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == actor_id)
+            .unwrap_or_else(|| panic!("{actor_id} should be imported"));
+        assert_eq!(actor.level, level, "{actor_id} level");
+        assert_eq!(
+            actor
+                .allocation
+                .as_ref()
+                .map(|allocation| allocation.legacy_index),
+            Some(legacy_index),
+            "{actor_id} source index"
+        );
+    }
+}
+
+#[test]
+fn p48a_level_45_46_direct_monsters_keep_source_identity() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+
+    for (id, legacy_index, level) in [
+        ("warrior-of-the-dawn", 693, 45),
+        ("zoth-ommog", 695, 45),
+        ("smaug-the-golden", 697, 45),
+        ("the-stormbringer", 698, 45),
+        ("durahan", 982, 45),
+        ("marid", 994, 45),
+        ("chameleon-lord", 1041, 45),
+        ("stone-dragon", 1048, 45),
+        ("death-beast", 1082, 45),
+        ("nalfeshnee", 1156, 45),
+        ("ruby-serpent", 1211, 45),
+        ("death-pumpkin", 1300, 45),
+        ("dracolisk", 703, 46),
+        ("yibb-tstll-the-patient-one", 706, 46),
+        ("ghatanothoa", 707, 46),
+        ("ent", 708, 46),
+        ("grand-master-thief", 1024, 46),
+        ("emerald-serpent", 1212, 46),
     ] {
         let actor_id = format!("demo.actor.{id}");
         let actor = artifact
