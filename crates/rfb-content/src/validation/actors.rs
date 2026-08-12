@@ -306,6 +306,8 @@ pub(super) fn validate_actors(
                         | ActorDamageType::Cold
                         | ActorDamageType::Ice
                         | ActorDamageType::Light
+                        | ActorDamageType::Nether
+                        | ActorDamageType::HolyFire
                         | ActorDamageType::Electricity
                         | ActorDamageType::Curse
                         | ActorDamageType::Shards

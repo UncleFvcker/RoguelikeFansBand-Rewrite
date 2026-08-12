@@ -6138,6 +6138,24 @@
       "id": "scrupiox-the-nightcrawler",
       "tags": ["orc-cave"],
       "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 1176,
+      "id": "undead-spider",
+      "tags": ["orc-cave", "spider"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 780,
+      "id": "vlad-dracula-prince-of-darkness",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 943,
+      "id": "solar",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
     }
   ]
 }

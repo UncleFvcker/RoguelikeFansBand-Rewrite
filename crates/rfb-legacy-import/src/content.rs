@@ -7475,6 +7475,7 @@ fn map_jump_spell_token(
         "JMP_CONFUSION" => "confusion",
         "JMP_DARK" => "dark",
         "JMP_LIGHT" | "JMP_LITE" => "light",
+        "JMP_NETHER" => "nether",
         "JMP_NEXUS" => "nexus",
         _ => return None,
     };
@@ -8114,6 +8115,8 @@ fn monster_json(
                 "FIRE" => "fire",
                 "ICE" => "ice",
                 "LIGHT" | "LITE" => "light",
+                "NETHER" => "nether",
+                "HOLY_FIRE" => "holy-fire",
                 "CAUSE_2" | "CAUSE_3" => "curse",
                 "SHARDS" => "shards",
                 _ => return None,
@@ -8462,6 +8465,8 @@ fn demo_monster_json(
                     | "ICE"
                     | "LIGHT"
                     | "LITE"
+                    | "NETHER"
+                    | "HOLY_FIRE"
                     | "CAUSE_2"
                     | "CAUSE_3"
                     | "SHARDS"
@@ -13868,6 +13873,32 @@ mod tests {
         assert_eq!(actor["contactAuras"][0]["damageDice"], 3);
         assert_eq!(actor["contactAuras"][0]["damageSides"], 3);
 
+        for (index, token, damage_type) in [(6, "NETHER", "nether"), (7, "HOLY_FIRE", "holy-fire")]
+        {
+            let source = format!(
+                "N:{index}:test P59A aura\nG:p:o\nI:120:6d6:100:30:0:25\nW:63:1:999:50:0:0\nB:HIT:HURT(1d8)\nA:{token}(3d3)\nF:NEVER_MOVE\n"
+            );
+            let entry = parse_r_info(&source)
+                .expect("synthetic P59A aura monster should parse")
+                .remove(0);
+            let actor = demo_monster_json(
+                &entry,
+                &DemoMonsterSelectionEntry {
+                    source_index: entry.index,
+                    source_id: None,
+                    id: kebab(&entry.name),
+                    tags: vec!["orc-cave".to_owned()],
+                    omitted_flags: Vec::new(),
+                    omitted_spells: Vec::new(),
+                },
+                &mut BTreeMap::new(),
+            )
+            .expect("P59A contact aura should import directly");
+            assert_eq!(actor["contactAuras"][0]["damageType"], damage_type);
+            assert_eq!(actor["contactAuras"][0]["damageDice"], 3);
+            assert_eq!(actor["contactAuras"][0]["damageSides"], 3);
+        }
+
         let mut multiple = monsters[0].clone();
         multiple.flags.push("AURA_ELEC".to_owned());
         let actor = demo_monster_json(
@@ -14775,6 +14806,7 @@ S:FREQ_50 | BR_FIRE(40%) | BR_POISON | DETECT_MONSTERS | MAPPING\n";
         for (token, level, suffix, damage_type, dice, sides, bonus) in [
             ("JMP_FIRE", 31, "jump-fire-l31", "fire", 0, 0, 31),
             ("JMP_ICE", 50, "jump-ice-l50", "ice", 0, 0, 50),
+            ("JMP_NETHER", 60, "jump-nether-l60", "nether", 0, 0, 60),
             ("JMP_POISON", 32, "jump-poison-l32", "poison", 0, 0, 32),
             (
                 "JMP_CONFUSION",

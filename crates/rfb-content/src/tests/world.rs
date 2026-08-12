@@ -729,7 +729,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         .iter()
         .filter(|actor| actor.tags.iter().any(|tag| tag == "orc-cave"))
         .collect::<Vec<_>>();
-    assert_eq!(orc_cave.len(), 580);
+    assert_eq!(orc_cave.len(), 583);
 
     for id in [
         "demo.actor.bunyip",
@@ -762,10 +762,10 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
                     .any(|index| *index != 3)
         );
     }
-    let mut level_counts = [0_usize; 43];
+    let mut level_counts = [0_usize; 44];
     let mut source_indices = BTreeSet::new();
     for actor in orc_cave {
-        assert!((21..=63).contains(&actor.level));
+        assert!((21..=64).contains(&actor.level));
         let allocation = actor
             .allocation
             .as_ref()
@@ -777,7 +777,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         level_counts,
         [
             16, 14, 12, 17, 24, 17, 19, 17, 18, 21, 7, 12, 29, 15, 27, 28, 19, 19, 11, 42, 12, 6,
-            12, 14, 14, 7, 10, 6, 6, 17, 11, 8, 3, 8, 17, 9, 1, 6, 4, 16, 3, 3, 3,
+            12, 14, 14, 7, 10, 6, 6, 17, 11, 8, 3, 8, 17, 9, 1, 6, 4, 17, 3, 3, 4, 1,
         ]
     );
 
@@ -4946,6 +4946,81 @@ fn p58_level_61_63_direct_monsters_keep_source_identity() {
 }
 
 #[test]
+fn p59a_nether_jump_and_contact_auras_keep_source_semantics() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actor = |id: &str| {
+        artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == format!("demo.actor.{id}"))
+            .unwrap_or_else(|| panic!("{id} should be imported"))
+    };
+
+    for (id, legacy_index, level) in [
+        ("undead-spider", 1176, 60),
+        ("vlad-dracula-prince-of-darkness", 780, 63),
+        ("solar", 943, 64),
+    ] {
+        let actor = actor(id);
+        assert_eq!(actor.level, level, "{id} level");
+        assert_eq!(
+            actor
+                .allocation
+                .as_ref()
+                .map(|allocation| allocation.legacy_index),
+            Some(legacy_index),
+            "{id} source index"
+        );
+    }
+
+    for (id, damage_type, dice, sides) in [
+        ("undead-spider", ActorDamageType::Nether, 3, 3),
+        (
+            "vlad-dracula-prince-of-darkness",
+            ActorDamageType::Nether,
+            3,
+            6,
+        ),
+        ("solar", ActorDamageType::HolyFire, 3, 3),
+    ] {
+        let aura = &actor(id).contact_auras[0];
+        assert_eq!(aura.damage_type, damage_type, "{id} aura type");
+        assert_eq!((aura.damage_dice, aura.damage_sides), (dice, sides));
+    }
+
+    let undead_spider = actor("undead-spider");
+    assert!(
+        undead_spider
+            .monster_casting
+            .as_ref()
+            .expect("Undead spider should cast")
+            .abilities
+            .iter()
+            .any(|candidate| candidate.ability_id == "rfb-legacy.ability.jump-nether-l60")
+    );
+    let jump = artifact
+        .content
+        .abilities
+        .iter()
+        .find(|ability| ability.id == "rfb-legacy.ability.jump-nether-l60")
+        .expect("Nether jump should be imported");
+    assert!(matches!(
+        jump.effect,
+        AbilityEffectDefinition::JumpDamage {
+            damage_dice: 0,
+            damage_sides: 0,
+            damage_bonus: 60,
+            damage_multiplier_numerator: 5,
+            damage_multiplier_denominator: 4,
+            damage_type: ActorDamageType::Nether,
+            radius: 5,
+            blink_radius: 10,
+        }
+    ));
+}
+
+#[test]
 fn p53a_ice_jump_and_angel_summons_reuse_shared_effects() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let actor = |id: &str| {
@@ -5036,6 +5111,7 @@ fn p53a_ice_jump_and_angel_summons_reuse_shared_effects() {
             "demo.actor.fallen-angel",
             "demo.actor.planetar",
             "demo.actor.seraph",
+            "demo.actor.solar",
         ]
         .into_iter()
         .collect()
@@ -6846,7 +6922,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
                     == Some("demo.loot-table.base-items")
             })
             .count(),
-        530
+        532
     );
 }
 
