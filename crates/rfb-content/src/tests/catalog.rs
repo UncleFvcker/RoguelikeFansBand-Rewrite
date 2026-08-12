@@ -6,7 +6,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.293.0");
+    assert_eq!(catalog.pack_version(), "1.294.0");
     assert!(catalog.mutation("rfb.mutation.spit-acid").is_some());
     assert!(
         catalog
@@ -140,6 +140,63 @@ fn compiled_catalog_indexes_current_rfb_content() {
     assert!(catalog.loot_table("demo.loot-table.base-items").is_some());
     assert!(catalog.item("demo.item.magic-missile-wand").is_some());
     assert!(catalog.affix("demo.affix.regeneration").is_some());
+}
+
+#[test]
+fn elemental_ground_item_rules_compile_as_explicit_content() {
+    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
+    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
+
+    assert!(
+        catalog
+            .ability("rfb-legacy.ability.bolt-fire-9d8-5")
+            .expect("fire bolt")
+            .affects_ground_items
+    );
+    assert!(
+        !catalog
+            .ability("demo.ability.death-berserk")
+            .expect("self buff")
+            .affects_ground_items
+    );
+    let arrow = catalog.item("demo.item.arrow").expect("arrow");
+    assert!(
+        arrow
+            .elemental_destruction_vulnerabilities
+            .contains(&ItemDestructionElement::Fire)
+    );
+    let protection = catalog
+        .affix("rfb-legacy.affix.protection")
+        .expect("Protection affix");
+    assert!(
+        protection
+            .elemental_destruction_immunities
+            .contains(&ItemDestructionElement::Acid)
+    );
+    let endurance = catalog
+        .affix("rfb-legacy.affix.endurance")
+        .expect("Endurance affix");
+    assert!(endurance.resists_projection_destruction);
+    assert!(endurance.resists_monster_destruction);
+    assert!(affix_is_compatible_with_item(endurance, arrow, 40));
+
+    let venom = catalog
+        .item("demo.item.venom-draught")
+        .expect("venom potion");
+    assert!(matches!(
+        venom
+            .use_action
+            .as_ref()
+            .map(|use_action| &use_action.effect),
+        Some(ItemUseEffectDefinition::ApplyPoison { .. })
+    ));
+    assert!(matches!(
+        venom.shatter_effect.as_ref().map(|shatter| &shatter.effect),
+        Some(ItemUseEffectDefinition::Damage {
+            damage_type: ActorDamageType::Poison,
+            ..
+        })
+    ));
 }
 
 #[test]

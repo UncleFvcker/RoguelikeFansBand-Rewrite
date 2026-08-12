@@ -1,18 +1,25 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.booze-potion",
-  "nameKey": "item-demo-booze-potion-name",
   "appearanceNameKey": "item-demo-booze-potion-appearance",
-  "descriptionKey": "item-demo-booze-potion-description",
-  "glyph": "!",
-  "generationLevel": 0,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 4,
-  "maxStack": 20,
   "baseValue": 1,
+  "descriptionKey": "item-demo-booze-potion-description",
+  "elementalDestructionVulnerabilities": [
+    "cold"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 0,
+  "glyph": "!",
+  "id": "demo.item.booze-potion",
+  "maxStack": 20,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-booze-potion-name",
+  "tags": [
+    "consumable",
+    "potion",
+    "rfb-compatibility"
+  ],
   "useAction": {
     "effectProgramId": "demo.effect.booze-potion"
   },
-  "tags": ["consumable", "potion", "rfb-compatibility"]
+  "weightTenthsPound": 4
 }

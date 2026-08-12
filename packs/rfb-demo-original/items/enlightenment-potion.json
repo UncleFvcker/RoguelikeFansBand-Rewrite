@@ -1,1 +1,24 @@
-{"$schema":"https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json","formatVersion":1,"id":"demo.item.enlightenment-potion","nameKey":"item-demo-enlightenment-potion-name","appearanceNameKey":"item-demo-enlightenment-potion-appearance","descriptionKey":"item-demo-enlightenment-potion-description","glyph":"!","weightTenthsPound":4,"maxStack":20,"baseValue":800,"useAction":{"effectProgramId":"demo.effect.enlightenment-potion"},"tags":["consumable","knowledge","potion","rfb-compatibility"]}
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "appearanceNameKey": "item-demo-enlightenment-potion-appearance",
+  "baseValue": 800,
+  "descriptionKey": "item-demo-enlightenment-potion-description",
+  "elementalDestructionVulnerabilities": [
+    "cold"
+  ],
+  "formatVersion": 1,
+  "glyph": "!",
+  "id": "demo.item.enlightenment-potion",
+  "maxStack": 20,
+  "nameKey": "item-demo-enlightenment-potion-name",
+  "tags": [
+    "consumable",
+    "knowledge",
+    "potion",
+    "rfb-compatibility"
+  ],
+  "useAction": {
+    "effectProgramId": "demo.effect.enlightenment-potion"
+  },
+  "weightTenthsPound": 4
+}

@@ -4,6 +4,7 @@
   "id": "demo.item.crisdurian",
   "nameKey": "item-demo-crisdurian-name",
   "descriptionKey": "item-demo-crisdurian-description",
+  "elementalDestructionVulnerabilities": ["acid", "fire"],
   "glyph": "|",
   "generationLevel": 60,
   "weightTenthsPound": 260,
@@ -30,5 +31,6 @@
   "brands": ["poison"],
   "passives": ["see-invisible"],
   "resistsMonsterDestruction": true,
+  "resistsProjectionDestruction": true,
   "tags": ["artifact", "equipment", "old-castle-reward", "weapon"]
 }

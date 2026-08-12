@@ -1,18 +1,26 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.trapfinding-scroll",
-  "nameKey": "item-demo-trapfinding-scroll-name",
   "appearanceNameKey": "item-demo-trapfinding-scroll-appearance",
-  "descriptionKey": "item-demo-trapfinding-scroll-description",
-  "glyph": "?",
-  "generationLevel": 5,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 5,
-  "maxStack": 20,
   "baseValue": 8,
+  "descriptionKey": "item-demo-trapfinding-scroll-description",
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 5,
+  "glyph": "?",
+  "id": "demo.item.trapfinding-scroll",
+  "maxStack": 20,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-trapfinding-scroll-name",
+  "tags": [
+    "consumable",
+    "knowledge",
+    "scroll"
+  ],
   "useAction": {
     "effectProgramId": "demo.effect.detect-traps-through-walls"
   },
-  "tags": ["consumable", "knowledge", "scroll"]
+  "weightTenthsPound": 5
 }

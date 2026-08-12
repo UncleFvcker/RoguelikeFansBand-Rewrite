@@ -1,12 +1,20 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "appearanceNameKey": "item-demo-cure-serious-wounds-potion-appearance",
   "baseValue": 50,
   "descriptionKey": "item-demo-cure-serious-wounds-potion-description",
+  "elementalDestructionVulnerabilities": [
+    "cold"
+  ],
   "formatVersion": 1,
+  "generationLevel": 10,
   "glyph": "!",
   "id": "demo.item.cure-serious-wounds-potion",
   "maxStack": 20,
+  "mogaminatorRare": false,
   "nameKey": "item-demo-cure-serious-wounds-potion-name",
+  "shatterEffectProgramId": "demo.effect.cure-serious-wounds-potion.shatter",
+  "shatterRadius": 2,
   "tags": [
     "consumable",
     "rfb-compatibility",
@@ -15,8 +23,5 @@
   "useAction": {
     "effectProgramId": "demo.effect.cure-serious-wounds-potion"
   },
-  "generationLevel": 10,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 4,
-  "appearanceNameKey": "item-demo-cure-serious-wounds-potion-appearance"
+  "weightTenthsPound": 4
 }

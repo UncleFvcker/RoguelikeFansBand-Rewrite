@@ -1,18 +1,26 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.stone-ring-scroll",
-  "nameKey": "item-demo-stone-ring-scroll-name",
   "appearanceNameKey": "item-demo-stone-ring-scroll-appearance",
-  "descriptionKey": "item-demo-stone-ring-scroll-description",
-  "glyph": "?",
-  "generationLevel": 75,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 5,
-  "maxStack": 20,
   "baseValue": 5000,
+  "descriptionKey": "item-demo-stone-ring-scroll-description",
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 75,
+  "glyph": "?",
+  "id": "demo.item.stone-ring-scroll",
+  "maxStack": 20,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-stone-ring-scroll-name",
+  "tags": [
+    "consumable",
+    "scroll",
+    "terrain"
+  ],
   "useAction": {
     "effectProgramId": "demo.effect.create-stone-ring"
   },
-  "tags": ["consumable", "scroll", "terrain"]
+  "weightTenthsPound": 5
 }

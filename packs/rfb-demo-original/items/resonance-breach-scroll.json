@@ -1,18 +1,26 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.resonance-breach-scroll",
-  "nameKey": "item-demo-resonance-breach-scroll-name",
   "appearanceNameKey": "item-demo-resonance-breach-scroll-appearance",
-  "descriptionKey": "item-demo-resonance-breach-scroll-description",
-  "glyph": "?",
-  "generationLevel": 10,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 5,
-  "maxStack": 20,
   "baseValue": 50,
+  "descriptionKey": "item-demo-resonance-breach-scroll-description",
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 10,
+  "glyph": "?",
+  "id": "demo.item.resonance-breach-scroll",
+  "maxStack": 20,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-resonance-breach-scroll-name",
+  "tags": [
+    "consumable",
+    "scroll",
+    "terrain"
+  ],
   "useAction": {
     "effectProgramId": "demo.effect.resonance-breach"
   },
-  "tags": ["consumable", "scroll", "terrain"]
+  "weightTenthsPound": 5
 }

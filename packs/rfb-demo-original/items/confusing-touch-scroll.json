@@ -1,22 +1,26 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.confusing-touch-scroll",
-  "nameKey": "item-demo-confusing-touch-scroll-name",
   "appearanceNameKey": "item-demo-confusing-touch-scroll-appearance",
-  "descriptionKey": "item-demo-confusing-touch-scroll-description",
-  "glyph": "?",
-  "generationLevel": 5,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 5,
-  "maxStack": 20,
   "baseValue": 30,
-  "useAction": {
-    "effectProgramId": "demo.effect.prepare-confusing-strike"
-  },
+  "descriptionKey": "item-demo-confusing-touch-scroll-description",
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 5,
+  "glyph": "?",
+  "id": "demo.item.confusing-touch-scroll",
+  "maxStack": 20,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-confusing-touch-scroll-name",
   "tags": [
     "consumable",
     "scroll",
     "status"
-  ]
+  ],
+  "useAction": {
+    "effectProgramId": "demo.effect.prepare-confusing-strike"
+  },
+  "weightTenthsPound": 5
 }

@@ -1,45 +1,52 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "demo.ability-program.death-hellfire",
+  "affectsGroundItems": true,
+  "descriptionKey": "ability-demo-death-hellfire-description",
   "formatVersion": 1,
   "id": "demo.ability.death-hellfire",
-  "nameKey": "ability-demo-death-hellfire-name",
-  "descriptionKey": "ability-demo-death-hellfire-description",
-  "target": {
-    "modes": [
-      "direction"
-    ],
-    "range": 8,
-    "requiresLineOfEffect": true
-  },
-  "abilityProgramId": "demo.ability-program.death-hellfire",
   "levelScaling": [
     {
+      "cubicWeight": 2,
+      "curve": "prorated",
+      "divisor": 1,
       "effectIndex": 0,
       "field": "damage-bonus",
       "multiplier": 600,
-      "divisor": 1,
-      "curve": "prorated",
-      "quadraticWeight": 1,
-      "cubicWeight": 2
+      "quadraticWeight": 1
     },
     {
+      "cubicWeight": 2,
+      "curve": "prorated",
+      "divisor": 1,
       "effectIndex": 0,
       "field": "radius",
       "multiplier": 9,
-      "divisor": 1,
-      "curve": "prorated",
-      "quadraticWeight": 1,
-      "cubicWeight": 2
+      "quadraticWeight": 1
     }
   ],
+  "nameKey": "ability-demo-death-hellfire-name",
   "spellPowerFields": [
-    { "effectIndex": 0, "field": "final-damage" },
-    { "effectIndex": 0, "field": "radius" }
+    {
+      "effectIndex": 0,
+      "field": "final-damage"
+    },
+    {
+      "effectIndex": 0,
+      "field": "radius"
+    }
   ],
   "tags": [
     "area",
     "death",
     "nether",
     "spell"
-  ]
+  ],
+  "target": {
+    "modes": [
+      "direction"
+    ],
+    "range": 8,
+    "requiresLineOfEffect": true
+  }
 }

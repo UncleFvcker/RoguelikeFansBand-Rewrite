@@ -2,6 +2,9 @@
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
   "baseValue": 200,
   "descriptionKey": "item-demo-large-metal-shield-description",
+  "elementalDestructionVulnerabilities": [
+    "acid"
+  ],
   "equipmentSlot": "shield",
   "formatVersion": 1,
   "generationLevel": 30,

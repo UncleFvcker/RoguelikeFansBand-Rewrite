@@ -1,1 +1,26 @@
-{"$schema":"https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json","formatVersion":1,"id":"demo.item.rumour-scroll","nameKey":"item-demo-rumour-scroll-name","appearanceNameKey":"item-demo-rumour-scroll-appearance","descriptionKey":"item-demo-rumour-scroll-description","glyph":"?","weightTenthsPound":5,"maxStack":20,"baseValue":10,"useAction":{"effectProgramId":"demo.effect.rumour-scroll"},"tags":["consumable","knowledge","rfb-compatibility","rumour","scroll"]}
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "appearanceNameKey": "item-demo-rumour-scroll-appearance",
+  "baseValue": 10,
+  "descriptionKey": "item-demo-rumour-scroll-description",
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
+  "formatVersion": 1,
+  "glyph": "?",
+  "id": "demo.item.rumour-scroll",
+  "maxStack": 20,
+  "nameKey": "item-demo-rumour-scroll-name",
+  "tags": [
+    "consumable",
+    "knowledge",
+    "rfb-compatibility",
+    "rumour",
+    "scroll"
+  ],
+  "useAction": {
+    "effectProgramId": "demo.effect.rumour-scroll"
+  },
+  "weightTenthsPound": 5
+}

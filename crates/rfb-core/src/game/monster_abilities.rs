@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
+use super::ground_item_effects::ground_item_damage_type_for_ability_effect;
 use super::*;
 
 fn prepare_curse_damage(
@@ -484,6 +485,17 @@ impl Game {
             .roll_damage(*damage_dice, *damage_sides)
             .saturating_add(i32::from(*damage_bonus))
             .max(0);
+        if plan.ability.affects_ground_items {
+            self.resolve_ground_item_projectile_effects(
+                &plan.ability.id,
+                affected_positions,
+                DamageType::from(*damage_type),
+                false,
+                events,
+                changed,
+                removed_entities,
+            );
+        }
         let target_actors =
             self.monster_targets_in_footprint(source_index, target, affected_positions);
         let mut targets = Vec::with_capacity(target_actors.len());
@@ -564,6 +576,17 @@ impl Game {
             .roll_damage(*damage_dice, *damage_sides)
             .saturating_add(i32::from(*damage_bonus))
             .max(0);
+        if plan.ability.affects_ground_items {
+            self.resolve_ground_item_projectile_effects(
+                &plan.ability.id,
+                affected_positions,
+                DamageType::from(*damage_type),
+                false,
+                events,
+                changed,
+                removed_entities,
+            );
+        }
         let target_actors =
             self.monster_targets_in_footprint(source_index, target, affected_positions);
         let mut targets = Vec::with_capacity(target_actors.len());
@@ -880,6 +903,20 @@ impl Game {
                 }
             }
             MonsterAbilityTargetPlan::Projectile { target, trace } => {
+                if plan.ability.affects_ground_items
+                    && let Some(damage_type) =
+                        ground_item_damage_type_for_ability_effect(&plan.ability.effect)
+                {
+                    self.resolve_ground_item_projectile_effects(
+                        &plan.ability.id,
+                        &[trace.landing],
+                        damage_type,
+                        false,
+                        events,
+                        changed,
+                        removed_entities,
+                    );
+                }
                 let floor_id = self.current_floor_id.clone();
                 let effects = self.resolve_monster_hostile_effects(
                     &source_entity_id,

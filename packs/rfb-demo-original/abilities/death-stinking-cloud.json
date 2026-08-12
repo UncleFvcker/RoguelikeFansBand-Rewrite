@@ -1,9 +1,30 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "demo.ability-program.death-stinking-cloud",
+  "affectsGroundItems": true,
+  "descriptionKey": "ability-demo-death-stinking-cloud-description",
   "formatVersion": 1,
   "id": "demo.ability.death-stinking-cloud",
+  "levelScaling": [
+    {
+      "divisor": 2,
+      "effectIndex": 0,
+      "field": "damage-bonus",
+      "multiplier": 1
+    }
+  ],
   "nameKey": "ability-demo-death-stinking-cloud-name",
-  "descriptionKey": "ability-demo-death-stinking-cloud-description",
+  "spellPowerFields": [
+    {
+      "effectIndex": 0,
+      "field": "final-damage"
+    }
+  ],
+  "tags": [
+    "death",
+    "poison",
+    "spell"
+  ],
   "target": {
     "modes": [
       "position",
@@ -11,22 +32,5 @@
     ],
     "range": 8,
     "requiresLineOfEffect": true
-  },
-  "abilityProgramId": "demo.ability-program.death-stinking-cloud",
-  "levelScaling": [
-    {
-      "effectIndex": 0,
-      "field": "damage-bonus",
-      "multiplier": 1,
-      "divisor": 2
-    }
-  ],
-  "spellPowerFields": [
-    { "effectIndex": 0, "field": "final-damage" }
-  ],
-  "tags": [
-    "death",
-    "poison",
-    "spell"
-  ]
+  }
 }

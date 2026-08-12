@@ -81,6 +81,7 @@ message-combat-monster-death-explosion-hit = { $source }的死亡爆炸击中了
 message-combat-monster-death-explosion-slew = { $source }的死亡爆炸杀死了{ $target }。
 message-monster-terrain-destroyed = { $source }摧毁了{ $terrain }。
 message-monster-item-destroyed = { $source }摧毁了{ $quantity }个{ $target }。
+message-ability-ground-item-destroyed = { $source }摧毁了{ $quantity }个{ $target }。
 message-monster-item-picked-up = { $source }捡起了{ $quantity }个{ $target }。
 message-monster-gold-theft-prevented = 你迅速护住了钱袋，没有让{ $source }得手。
 message-monster-item-theft-prevented = 你紧紧抓住了背包，没有让{ $source }得手。

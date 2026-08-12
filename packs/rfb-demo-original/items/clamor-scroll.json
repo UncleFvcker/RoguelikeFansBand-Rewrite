@@ -1,18 +1,26 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.clamor-scroll",
-  "nameKey": "item-demo-clamor-scroll-name",
   "appearanceNameKey": "item-demo-clamor-scroll-appearance",
-  "descriptionKey": "item-demo-clamor-scroll-description",
-  "glyph": "?",
-  "generationLevel": 5,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 5,
-  "maxStack": 20,
   "baseValue": 0,
+  "descriptionKey": "item-demo-clamor-scroll-description",
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 5,
+  "glyph": "?",
+  "id": "demo.item.clamor-scroll",
+  "maxStack": 20,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-clamor-scroll-name",
+  "tags": [
+    "aggravation",
+    "consumable",
+    "scroll"
+  ],
   "useAction": {
     "effectProgramId": "demo.effect.aggravate-monsters"
   },
-  "tags": ["aggravation", "consumable", "scroll"]
+  "weightTenthsPound": 5
 }

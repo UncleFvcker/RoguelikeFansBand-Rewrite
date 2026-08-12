@@ -1,1 +1,23 @@
-{"$schema":"https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json","formatVersion":1,"id":"demo.item.curing-potion","nameKey":"item-demo-curing-potion-name","appearanceNameKey":"item-demo-curing-potion-appearance","descriptionKey":"item-demo-curing-potion-description","glyph":"!","weightTenthsPound":4,"maxStack":20,"baseValue":80,"useAction":{"effectProgramId":"demo.effect.curing-potion"},"tags":["consumable","potion","rfb-compatibility"]}
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "appearanceNameKey": "item-demo-curing-potion-appearance",
+  "baseValue": 80,
+  "descriptionKey": "item-demo-curing-potion-description",
+  "elementalDestructionVulnerabilities": [
+    "cold"
+  ],
+  "formatVersion": 1,
+  "glyph": "!",
+  "id": "demo.item.curing-potion",
+  "maxStack": 20,
+  "nameKey": "item-demo-curing-potion-name",
+  "tags": [
+    "consumable",
+    "potion",
+    "rfb-compatibility"
+  ],
+  "useAction": {
+    "effectProgramId": "demo.effect.curing-potion"
+  },
+  "weightTenthsPound": 4
+}

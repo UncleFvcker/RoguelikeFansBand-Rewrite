@@ -2,6 +2,10 @@
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
   "baseValue": 210,
   "descriptionKey": "item-demo-wakizashi-description",
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
   "equipmentSlot": "weapon",
   "formatVersion": 1,
   "generationLevel": 15,

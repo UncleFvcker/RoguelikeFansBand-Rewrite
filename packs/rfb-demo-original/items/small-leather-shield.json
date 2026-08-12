@@ -2,6 +2,9 @@
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
   "baseValue": 15,
   "descriptionKey": "item-demo-small-leather-shield-description",
+  "elementalDestructionVulnerabilities": [
+    "acid"
+  ],
   "equipmentSlot": "shield",
   "formatVersion": 1,
   "generationLevel": 3,

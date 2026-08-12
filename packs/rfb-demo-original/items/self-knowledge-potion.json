@@ -1,1 +1,24 @@
-{"$schema":"https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json","formatVersion":1,"id":"demo.item.self-knowledge-potion","nameKey":"item-demo-self-knowledge-potion-name","appearanceNameKey":"item-demo-self-knowledge-potion-appearance","descriptionKey":"item-demo-self-knowledge-potion-description","glyph":"!","weightTenthsPound":4,"maxStack":20,"baseValue":2000,"useAction":{"effectProgramId":"demo.effect.self-knowledge-potion"},"tags":["consumable","knowledge","potion","rfb-compatibility"]}
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "appearanceNameKey": "item-demo-self-knowledge-potion-appearance",
+  "baseValue": 2000,
+  "descriptionKey": "item-demo-self-knowledge-potion-description",
+  "elementalDestructionVulnerabilities": [
+    "cold"
+  ],
+  "formatVersion": 1,
+  "glyph": "!",
+  "id": "demo.item.self-knowledge-potion",
+  "maxStack": 20,
+  "nameKey": "item-demo-self-knowledge-potion-name",
+  "tags": [
+    "consumable",
+    "knowledge",
+    "potion",
+    "rfb-compatibility"
+  ],
+  "useAction": {
+    "effectProgramId": "demo.effect.self-knowledge-potion"
+  },
+  "weightTenthsPound": 4
+}

@@ -10,6 +10,15 @@
   "baseValue": 35,
   "breakChancePercent": 10,
   "descriptionKey": "item-demo-adamantine-bolt-description",
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "elementalDestructionVulnerabilities": [
+    "acid"
+  ],
   "formatVersion": 1,
   "generationLevel": 100,
   "glyph": "{",

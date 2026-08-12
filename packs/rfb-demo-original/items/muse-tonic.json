@@ -1,18 +1,25 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.muse-tonic",
-  "nameKey": "item-demo-muse-tonic-name",
   "appearanceNameKey": "item-demo-muse-tonic-appearance",
-  "descriptionKey": "item-demo-muse-tonic-description",
-  "glyph": "!",
-  "generationLevel": 80,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 4,
-  "maxStack": 20,
   "baseValue": 10000,
+  "descriptionKey": "item-demo-muse-tonic-description",
+  "elementalDestructionVulnerabilities": [
+    "cold"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 80,
+  "glyph": "!",
+  "id": "demo.item.muse-tonic",
+  "maxStack": 20,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-muse-tonic-name",
+  "tags": [
+    "consumable",
+    "poetic-inspiration",
+    "potion"
+  ],
   "useAction": {
     "effectProgramId": "demo.effect.poetic-inspiration"
   },
-  "tags": ["consumable", "poetic-inspiration", "potion"]
+  "weightTenthsPound": 4
 }

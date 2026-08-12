@@ -10,6 +10,16 @@
   "baseValue": 20,
   "breakChancePercent": 20,
   "descriptionKey": "item-demo-seeker-arrow-description",
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
   "formatVersion": 1,
   "generationLevel": 70,
   "glyph": "{",

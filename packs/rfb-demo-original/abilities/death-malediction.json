@@ -1,9 +1,39 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "demo.ability-program.death-malediction",
+  "affectsGroundItems": true,
+  "descriptionKey": "ability-demo-death-malediction-description",
   "formatVersion": 1,
   "id": "demo.ability.death-malediction",
+  "levelScaling": [
+    {
+      "divisor": 5,
+      "effectIndex": 0,
+      "field": "damage-dice",
+      "levelOffset": 1,
+      "multiplier": 1
+    }
+  ],
   "nameKey": "ability-demo-death-malediction-name",
-  "descriptionKey": "ability-demo-death-malediction-description",
+  "spellPowerFields": [
+    {
+      "effectIndex": 0,
+      "field": "final-damage"
+    },
+    {
+      "effectIndex": 0,
+      "field": "malediction-death-ray-power"
+    },
+    {
+      "effectIndex": 0,
+      "field": "malediction-fear-power"
+    }
+  ],
+  "tags": [
+    "curse",
+    "death",
+    "spell"
+  ],
   "target": {
     "modes": [
       "position",
@@ -11,25 +41,5 @@
     ],
     "range": 8,
     "requiresLineOfEffect": true
-  },
-  "abilityProgramId": "demo.ability-program.death-malediction",
-  "levelScaling": [
-    {
-      "effectIndex": 0,
-      "field": "damage-dice",
-      "levelOffset": 1,
-      "multiplier": 1,
-      "divisor": 5
-    }
-  ],
-  "spellPowerFields": [
-    { "effectIndex": 0, "field": "final-damage" },
-    { "effectIndex": 0, "field": "malediction-death-ray-power" },
-    { "effectIndex": 0, "field": "malediction-fear-power" }
-  ],
-  "tags": [
-    "curse",
-    "death",
-    "spell"
-  ]
+  }
 }

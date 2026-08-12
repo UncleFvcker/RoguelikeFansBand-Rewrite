@@ -1,11 +1,17 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "appearanceNameKey": "item-demo-blood-potion-appearance",
   "baseValue": 1234,
   "descriptionKey": "item-demo-blood-potion-description",
+  "elementalDestructionVulnerabilities": [
+    "cold"
+  ],
   "formatVersion": 1,
+  "generationLevel": 75,
   "glyph": "!",
   "id": "demo.item.blood-potion",
   "maxStack": 20,
+  "mogaminatorRare": false,
   "nameKey": "item-demo-blood-potion-name",
   "tags": [
     "consumable",
@@ -15,8 +21,5 @@
   "useAction": {
     "effectProgramId": "demo.effect.blood-potion"
   },
-  "generationLevel": 75,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 4,
-  "appearanceNameKey": "item-demo-blood-potion-appearance"
+  "weightTenthsPound": 4
 }

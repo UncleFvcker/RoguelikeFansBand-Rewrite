@@ -12,8 +12,8 @@ use crate::{
     ItemChargeDefinition, ItemCurseSeverityDefinition, ItemDefinition,
     ItemDeviceActivationDefinition, ItemDeviceChargeRangeDefinition,
     ItemDeviceGenerationDefinition, ItemDeviceRecoveryDefinition, ItemFuelDefinition,
-    ItemUseActionDefinition, ProjectileProfileDefinition, SlayLevel, SlayTarget, StatModifiers,
-    ThrowProfileDefinition, WeaponBrand,
+    ItemShatterEffectDefinition, ItemUseActionDefinition, ProjectileProfileDefinition, SlayLevel,
+    SlayTarget, StatModifiers, ThrowProfileDefinition, WeaponBrand,
     effect_programs::{
         ResolvedEffectProgram, effect_program_input_matches_device_target,
         resolve_source_item_effect,
@@ -70,6 +70,10 @@ pub(crate) struct SourceItemDefinition {
     #[serde(default)]
     use_action: Option<SourceItemUseActionDefinition>,
     #[serde(default)]
+    shatter_effect_program_id: Option<String>,
+    #[serde(default)]
+    shatter_radius: u8,
+    #[serde(default)]
     device_generation: Option<SourceItemDeviceGenerationDefinition>,
     #[serde(default)]
     fuel: Option<ItemFuelDefinition>,
@@ -94,6 +98,12 @@ pub(crate) struct SourceItemDefinition {
     /// Passive capabilities granted while this item is equipped.
     #[serde(default)]
     passives: BTreeSet<EquipmentPassive>,
+    #[serde(default)]
+    elemental_destruction_vulnerabilities: BTreeSet<crate::ItemDestructionElement>,
+    #[serde(default)]
+    elemental_destruction_immunities: BTreeSet<crate::ItemDestructionElement>,
+    #[serde(default)]
+    resists_projection_destruction: bool,
     #[serde(default)]
     resists_monster_destruction: bool,
     tags: Vec<String>,
@@ -166,7 +176,7 @@ impl SourceItemDeviceActivationDefinition {
         let (effect, program_input) =
             resolve_source_item_effect(&self.id, self.effect_program_id, programs)?;
         if !effect_program_input_matches_device_target(program_input, &self.target) {
-            return Err(ContentError::InvalidItemUseAction(self.id));
+            return Err(ContentError::InvalidItemUseAction(self.id.clone()));
         }
         Ok(ItemDeviceActivationDefinition {
             id: self.id,
@@ -203,6 +213,9 @@ impl SourceItemDefinition {
         self,
         programs: &BTreeMap<String, ResolvedEffectProgram>,
     ) -> Result<ItemDefinition, ContentError> {
+        if self.shatter_effect_program_id.is_none() && self.shatter_radius != 0 {
+            return Err(ContentError::InvalidItemUseAction(self.id));
+        }
         let use_action = self
             .use_action
             .map(|action| action.into_compiled(&self.id, programs))
@@ -210,6 +223,19 @@ impl SourceItemDefinition {
         let device_generation = self
             .device_generation
             .map(|generation| generation.into_compiled(programs))
+            .transpose()?;
+        let shatter_effect = self
+            .shatter_effect_program_id
+            .map(|program_id| {
+                let (effect, input) = resolve_source_item_effect(&self.id, program_id, programs)?;
+                if input != crate::EffectProgramInputDefinition::Area {
+                    return Err(ContentError::InvalidItemUseAction(self.id.clone()));
+                }
+                Ok(ItemShatterEffectDefinition {
+                    radius: self.shatter_radius,
+                    effect,
+                })
+            })
             .transpose()?;
         Ok(ItemDefinition {
             schema: self.schema,
@@ -237,6 +263,7 @@ impl SourceItemDefinition {
             ammunition_profile: self.ammunition_profile,
             throw_profile: self.throw_profile,
             use_action,
+            shatter_effect,
             device_generation,
             fuel: self.fuel,
             ability_book_id: self.ability_book_id,
@@ -246,6 +273,9 @@ impl SourceItemDefinition {
             slays: self.slays,
             brands: self.brands,
             passives: self.passives,
+            elemental_destruction_vulnerabilities: self.elemental_destruction_vulnerabilities,
+            elemental_destruction_immunities: self.elemental_destruction_immunities,
+            resists_projection_destruction: self.resists_projection_destruction,
             resists_monster_destruction: self.resists_monster_destruction,
             tags: self.tags,
         })

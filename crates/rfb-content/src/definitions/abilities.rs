@@ -914,6 +914,10 @@ pub struct AbilityDefinition {
     pub description_key: String,
     pub target: AbilityTargetDefinition,
     pub effect: AbilityEffectDefinition,
+    /// Whether this projected ability applies RFB object-destruction rules to
+    /// ground items on the bolt, beam, or blast footprint.
+    #[serde(default)]
+    pub affects_ground_items: bool,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub level_scaling: Vec<AbilityLevelScalingDefinition>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]

@@ -1,6 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
   "abilityProgramId": "rfb-legacy.ability-program.bolt-water-10d10-36",
+  "affectsGroundItems": true,
   "descriptionKey": "ability-legacy-bolt-water-10d10-36-description",
   "formatVersion": 1,
   "id": "rfb-legacy.ability.bolt-water-10d10-36",

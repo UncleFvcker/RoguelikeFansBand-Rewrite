@@ -1,23 +1,31 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.sabre",
-  "nameKey": "item-demo-sabre-name",
-  "descriptionKey": "item-demo-sabre-description",
-  "glyph": "|",
-  "generationLevel": 5,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 50,
-  "maxStack": 1,
   "baseValue": 50,
+  "descriptionKey": "item-demo-sabre-description",
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
   "equipmentSlot": "weapon",
+  "formatVersion": 1,
+  "generationLevel": 5,
+  "glyph": "|",
+  "id": "demo.item.sabre",
+  "maxStack": 1,
   "meleeProfile": {
     "attacks": 1,
-    "toHit": 0,
-    "toDamage": 0,
     "damageDice": 1,
     "damageSides": 9,
-    "damageType": "physical"
+    "damageType": "physical",
+    "toDamage": 0,
+    "toHit": 0
   },
-  "tags": ["equipment", "rfb-compatibility", "weapon"]
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-sabre-name",
+  "tags": [
+    "equipment",
+    "rfb-compatibility",
+    "weapon"
+  ],
+  "weightTenthsPound": 50
 }

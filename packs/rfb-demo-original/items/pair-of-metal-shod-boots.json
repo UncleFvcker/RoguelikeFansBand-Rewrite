@@ -2,6 +2,10 @@
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
   "baseValue": 50,
   "descriptionKey": "item-demo-pair-of-metal-shod-boots-description",
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
   "equipmentBonuses": {
     "meleeDamage": 2
   },

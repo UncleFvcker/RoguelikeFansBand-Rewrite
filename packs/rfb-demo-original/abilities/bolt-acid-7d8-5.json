@@ -1,6 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
   "abilityProgramId": "rfb-legacy.ability-program.bolt-acid-7d8-5",
+  "affectsGroundItems": true,
   "descriptionKey": "ability-legacy-bolt-acid-7d8-5-description",
   "formatVersion": 1,
   "id": "rfb-legacy.ability.bolt-acid-7d8-5",

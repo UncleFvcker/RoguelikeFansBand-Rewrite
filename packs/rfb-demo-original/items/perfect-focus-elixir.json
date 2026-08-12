@@ -1,18 +1,27 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.perfect-focus-elixir",
-  "nameKey": "item-demo-perfect-focus-elixir-name",
   "appearanceNameKey": "item-demo-perfect-focus-elixir-appearance",
-  "descriptionKey": "item-demo-perfect-focus-elixir-description",
-  "glyph": "!",
-  "generationLevel": 25,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 4,
-  "maxStack": 20,
   "baseValue": 1000,
+  "descriptionKey": "item-demo-perfect-focus-elixir-description",
+  "elementalDestructionVulnerabilities": [
+    "cold"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 25,
+  "glyph": "!",
+  "id": "demo.item.perfect-focus-elixir",
+  "maxStack": 20,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-perfect-focus-elixir-name",
+  "shatterEffectProgramId": "demo.effect.perfect-focus-elixir.shatter",
+  "shatterRadius": 1,
+  "tags": [
+    "clarity",
+    "consumable",
+    "potion"
+  ],
   "useAction": {
     "effectProgramId": "demo.effect.perfect-focus-restoration"
   },
-  "tags": ["clarity", "consumable", "potion"]
+  "weightTenthsPound": 4
 }

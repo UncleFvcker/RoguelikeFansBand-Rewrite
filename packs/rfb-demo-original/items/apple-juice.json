@@ -1,1 +1,23 @@
-{"$schema":"https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json","formatVersion":1,"id":"demo.item.apple-juice","nameKey":"item-demo-apple-juice-name","appearanceNameKey":"item-demo-apple-juice-appearance","descriptionKey":"item-demo-apple-juice-description","glyph":"!","weightTenthsPound":4,"maxStack":20,"baseValue":1,"useAction":{"effectProgramId":"demo.effect.apple-juice"},"tags":["consumable","potion","rfb-compatibility"]}
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "appearanceNameKey": "item-demo-apple-juice-appearance",
+  "baseValue": 1,
+  "descriptionKey": "item-demo-apple-juice-description",
+  "elementalDestructionVulnerabilities": [
+    "cold"
+  ],
+  "formatVersion": 1,
+  "glyph": "!",
+  "id": "demo.item.apple-juice",
+  "maxStack": 20,
+  "nameKey": "item-demo-apple-juice-name",
+  "tags": [
+    "consumable",
+    "potion",
+    "rfb-compatibility"
+  ],
+  "useAction": {
+    "effectProgramId": "demo.effect.apple-juice"
+  },
+  "weightTenthsPound": 4
+}

@@ -1,22 +1,25 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.mortal-draught",
-  "nameKey": "item-demo-mortal-draught-name",
   "appearanceNameKey": "item-demo-mortal-draught-appearance",
-  "descriptionKey": "item-demo-mortal-draught-description",
-  "glyph": "!",
-  "generationLevel": 55,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 4,
-  "maxStack": 20,
   "baseValue": 0,
-  "useAction": {
-    "effectProgramId": "demo.effect.mortal-life-loss"
-  },
+  "descriptionKey": "item-demo-mortal-draught-description",
+  "elementalDestructionVulnerabilities": [
+    "cold"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 55,
+  "glyph": "!",
+  "id": "demo.item.mortal-draught",
+  "maxStack": 20,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-mortal-draught-name",
   "tags": [
     "consumable",
     "potion",
     "life-loss"
-  ]
+  ],
+  "useAction": {
+    "effectProgramId": "demo.effect.mortal-life-loss"
+  },
+  "weightTenthsPound": 4
 }

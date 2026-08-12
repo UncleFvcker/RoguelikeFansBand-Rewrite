@@ -1,11 +1,17 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "appearanceNameKey": "item-demo-naivety-potion-appearance",
   "baseValue": 0,
   "descriptionKey": "item-demo-naivety-potion-description",
+  "elementalDestructionVulnerabilities": [
+    "cold"
+  ],
   "formatVersion": 1,
+  "generationLevel": 20,
   "glyph": "!",
   "id": "demo.item.naivety-potion",
   "maxStack": 20,
+  "mogaminatorRare": false,
   "nameKey": "item-demo-naivety-potion-name",
   "tags": [
     "consumable",
@@ -15,8 +21,5 @@
   "useAction": {
     "effectProgramId": "demo.effect.naivety-potion"
   },
-  "generationLevel": 20,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 4,
-  "appearanceNameKey": "item-demo-naivety-potion-appearance"
+  "weightTenthsPound": 4
 }

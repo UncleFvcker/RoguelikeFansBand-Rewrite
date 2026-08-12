@@ -219,6 +219,13 @@ pub(crate) enum DomainEvent {
         ability_id: String,
         trace: ProjectileTrace,
     },
+    GroundItemDestroyedByAbility {
+        ability_id: String,
+        item_id: String,
+        target_kind_id: String,
+        quantity: u32,
+        position: Position,
+    },
     AbilityHit {
         ability_id: String,
         target_kind_id: String,
@@ -1743,6 +1750,24 @@ impl DomainEvent {
             Self::AbilityLanded { ability_id, trace } => with_trace(
                 dto("ability.landed", "ability-landed", [("target", ability_id)]),
                 trace,
+            ),
+            Self::GroundItemDestroyedByAbility {
+                ability_id,
+                item_id,
+                target_kind_id,
+                quantity,
+                position,
+            } => dto(
+                "ability.item-destroyed",
+                "ability-ground-item-destroyed",
+                [
+                    ("source", ability_id),
+                    ("itemId", item_id),
+                    ("target", target_kind_id),
+                    ("quantity", quantity.to_string()),
+                    ("x", position.x.to_string()),
+                    ("y", position.y.to_string()),
+                ],
             ),
             Self::AbilityHit {
                 ability_id,

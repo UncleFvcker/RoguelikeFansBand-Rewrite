@@ -1,18 +1,33 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.banishment-scroll",
-  "nameKey": "item-demo-banishment-scroll-name",
   "appearanceNameKey": "item-demo-banishment-scroll-appearance",
-  "descriptionKey": "item-demo-banishment-scroll-description",
-  "glyph": "?",
-  "generationLevel": 50,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 5,
-  "maxStack": 20,
   "baseValue": 5000,
+  "descriptionKey": "item-demo-banishment-scroll-description",
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 50,
+  "glyph": "?",
+  "id": "demo.item.banishment-scroll",
+  "maxStack": 20,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-banishment-scroll-name",
+  "tags": [
+    "banishment",
+    "consumable",
+    "scroll",
+    "teleportation"
+  ],
   "useAction": {
     "effectProgramId": "demo.effect.banish-visible"
   },
-  "tags": ["banishment", "consumable", "scroll", "teleportation"]
+  "weightTenthsPound": 5
 }

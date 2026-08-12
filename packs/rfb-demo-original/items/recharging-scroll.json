@@ -1,18 +1,26 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.recharging-scroll",
-  "nameKey": "item-demo-recharging-scroll-name",
   "appearanceNameKey": "item-demo-recharging-scroll-appearance",
-  "descriptionKey": "item-demo-recharging-scroll-description",
-  "glyph": "?",
-  "generationLevel": 35,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 5,
-  "maxStack": 20,
   "baseValue": 200,
+  "descriptionKey": "item-demo-recharging-scroll-description",
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 35,
+  "glyph": "?",
+  "id": "demo.item.recharging-scroll",
+  "maxStack": 20,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-recharging-scroll-name",
+  "tags": [
+    "consumable",
+    "recharging",
+    "scroll"
+  ],
   "useAction": {
     "effectProgramId": "demo.effect.recharge-from-device"
   },
-  "tags": ["consumable", "recharging", "scroll"]
+  "weightTenthsPound": 5
 }

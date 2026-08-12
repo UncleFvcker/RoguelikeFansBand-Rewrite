@@ -62,6 +62,10 @@ pub(super) fn validate_affixes(
             || !affix.slays.is_empty()
             || !affix.brands.is_empty()
             || !affix.passives.is_empty()
+            || !affix.elemental_destruction_vulnerabilities.is_empty()
+            || !affix.elemental_destruction_immunities.is_empty()
+            || affix.resists_projection_destruction
+            || affix.resists_monster_destruction
             || roll_substance;
         if !has_substance
             || affix.generation_level > affix.generation_max_level

@@ -1,15 +1,28 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.black-channels",
-  "nameKey": "item-demo-black-channels-name",
-  "descriptionKey": "item-demo-black-channels-description",
-  "glyph": "?",
-  "generationLevel": 45,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 15,
-  "maxStack": 1,
-  "baseValue": 15000,
   "abilityBookId": "demo.ability-book.black-channels",
-  "tags": ["book", "death", "spellbook"]
+  "baseValue": 15000,
+  "descriptionKey": "item-demo-black-channels-description",
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "elementalDestructionVulnerabilities": [
+    "fire"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 45,
+  "glyph": "?",
+  "id": "demo.item.black-channels",
+  "maxStack": 1,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-black-channels-name",
+  "tags": [
+    "book",
+    "death",
+    "spellbook"
+  ],
+  "weightTenthsPound": 15
 }

@@ -2,6 +2,9 @@
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
   "baseValue": 225,
   "descriptionKey": "item-demo-war-hammer-description",
+  "elementalDestructionVulnerabilities": [
+    "acid"
+  ],
   "equipmentSlot": "weapon",
   "formatVersion": 1,
   "generationLevel": 5,

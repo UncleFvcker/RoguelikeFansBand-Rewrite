@@ -1,18 +1,26 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.severance-scroll",
-  "nameKey": "item-demo-severance-scroll-name",
   "appearanceNameKey": "item-demo-severance-scroll-appearance",
-  "descriptionKey": "item-demo-severance-scroll-description",
-  "glyph": "?",
-  "generationLevel": 50,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 5,
-  "maxStack": 20,
   "baseValue": 1000,
+  "descriptionKey": "item-demo-severance-scroll-description",
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 50,
+  "glyph": "?",
+  "id": "demo.item.severance-scroll",
+  "maxStack": 20,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-severance-scroll-name",
+  "tags": [
+    "consumable",
+    "genocide",
+    "scroll"
+  ],
   "useAction": {
     "effectProgramId": "demo.effect.mass-genocide"
   },
-  "tags": ["consumable", "genocide", "scroll"]
+  "weightTenthsPound": 5
 }

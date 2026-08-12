@@ -6,6 +6,7 @@
   "descriptionKey": "affix-legacy-protection-description",
   "generationLevel": 0,
   "generationMaxLevel": 30,
+  "elementalDestructionImmunities": ["acid"],
   "rollGroups": [
     {
       "rolls": 1,

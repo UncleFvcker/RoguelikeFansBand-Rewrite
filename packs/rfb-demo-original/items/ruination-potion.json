@@ -1,1 +1,25 @@
-{"$schema":"https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json","formatVersion":1,"id":"demo.item.ruination-potion","nameKey":"item-demo-ruination-potion-name","appearanceNameKey":"item-demo-ruination-potion-appearance","descriptionKey":"item-demo-ruination-potion-description","glyph":"!","weightTenthsPound":4,"maxStack":20,"baseValue":0,"useAction":{"effectProgramId":"demo.effect.ruination-potion"},"tags":["consumable","potion","rfb-compatibility"]}
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "appearanceNameKey": "item-demo-ruination-potion-appearance",
+  "baseValue": 0,
+  "descriptionKey": "item-demo-ruination-potion-description",
+  "elementalDestructionVulnerabilities": [
+    "cold"
+  ],
+  "formatVersion": 1,
+  "glyph": "!",
+  "id": "demo.item.ruination-potion",
+  "maxStack": 20,
+  "nameKey": "item-demo-ruination-potion-name",
+  "shatterEffectProgramId": "demo.effect.ruination-potion.shatter",
+  "shatterRadius": 2,
+  "tags": [
+    "consumable",
+    "potion",
+    "rfb-compatibility"
+  ],
+  "useAction": {
+    "effectProgramId": "demo.effect.ruination-potion"
+  },
+  "weightTenthsPound": 4
+}

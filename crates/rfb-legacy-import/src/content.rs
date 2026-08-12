@@ -3399,6 +3399,15 @@ fn item_json_with_terrain(
         value["maxStack"] = serde_json::json!(1);
         value["deviceGeneration"] = device_generation;
     }
+    if let Some((effect, radius)) = potion_shatter_effect(entry) {
+        value["shatterEffect"] = effect;
+        value["shatterRadius"] = serde_json::json!(radius);
+    } else if potion_has_unimplemented_shatter_effect(entry) {
+        *report
+            .item_behavior_gaps
+            .entry("potion-shatter-effect".to_owned())
+            .or_default() += 1;
+    }
     if let Some(slot) = shape.slot {
         value["equipmentSlot"] = serde_json::json!(slot);
     }
@@ -3506,8 +3515,9 @@ fn item_json_with_terrain(
     apply_defensive_fold(&mut value, &fold);
     apply_offensive_fold(&mut value, &offense);
     apply_equipment_fold(&mut value, &equipment);
+    apply_item_destruction_properties(&mut value, entry.tval, &entry.flags);
     for flag in &entry.flags {
-        if flag == "NO_REMOVE" {
+        if flag == "NO_REMOVE" || item_destruction_flag_is_mapped(flag) {
             continue;
         }
         account_item_flag(
@@ -3520,6 +3530,68 @@ fn item_json_with_terrain(
         );
     }
     value
+}
+
+fn potion_shatter_effect(entry: &LegacyItemEntry) -> Option<(serde_json::Value, u8)> {
+    if entry.tval != 75 {
+        return None;
+    }
+    let (effect, radius) = match entry.sval {
+        6 => (
+            serde_json::json!({
+                "type": "damage",
+                "damageDice": 0,
+                "damageSides": 0,
+                "damageBonus": 3,
+                "damageType": "poison",
+            }),
+            2,
+        ),
+        15 | 22 => (
+            serde_json::json!({
+                "type": "damage",
+                "damageDice": 25,
+                "damageSides": 25,
+                "damageType": "shards",
+            }),
+            2,
+        ),
+        34 => (
+            serde_json::json!({"type": "heal-dice", "dice": 2, "sides": 3}),
+            2,
+        ),
+        35 => (
+            serde_json::json!({"type": "heal-dice", "dice": 4, "sides": 3}),
+            2,
+        ),
+        36 => (
+            serde_json::json!({"type": "heal-dice", "dice": 6, "sides": 3}),
+            2,
+        ),
+        37 => (
+            serde_json::json!({"type": "heal-dice", "dice": 10, "sides": 10}),
+            2,
+        ),
+        38 => (
+            serde_json::json!({"type": "heal-dice", "dice": 50, "sides": 50}),
+            1,
+        ),
+        40 => (
+            serde_json::json!({
+                "type": "damage",
+                "damageDice": 10,
+                "damageSides": 10,
+                "damageType": "mana",
+            }),
+            1,
+        ),
+        _ => return None,
+    };
+    Some((effect, radius))
+}
+
+fn potion_has_unimplemented_shatter_effect(entry: &LegacyItemEntry) -> bool {
+    entry.tval == 75 && matches!(entry.sval, 4 | 7 | 9 | 11 | 12 | 23 | 29 | 39 | 41 | 59)
 }
 
 #[cfg(test)]
@@ -3903,11 +3975,87 @@ fn defensive_resistance_type(token: &str) -> Option<&'static str> {
         .map(|(_, damage_type)| *damage_type)
 }
 
-/// Durability and display flags with no RFB behaviour to express: items
-/// never corrode and names always render from content keys.
+fn item_destruction_vulnerabilities(tval: u16) -> Vec<&'static str> {
+    let mut elements = Vec::new();
+    if matches!(
+        tval,
+        1 | 2
+            | 3
+            | 7
+            | 17
+            | 18
+            | 19
+            | 21
+            | 22
+            | 23
+            | 30
+            | 31
+            | 32
+            | 33
+            | 34
+            | 35
+            | 36
+            | 37
+            | 38
+            | 55
+            | 70
+            | 71
+    ) {
+        elements.push("acid");
+    }
+    if matches!(tval, 45 | 65) {
+        elements.push("electricity");
+    }
+    if matches!(
+        tval,
+        7 | 17 | 19 | 22 | 23 | 30 | 31 | 35 | 36 | 39 | 55 | 70 | 71 | 90..=120
+    ) {
+        elements.push("fire");
+    }
+    if matches!(tval, 2 | 75 | 77) {
+        elements.push("cold");
+    }
+    elements
+}
+
+fn item_destruction_immunities(flags: &[String]) -> Vec<&'static str> {
+    [
+        ("IGNORE_ACID", "acid"),
+        ("IGNORE_ELEC", "electricity"),
+        ("IGNORE_FIRE", "fire"),
+        ("IGNORE_COLD", "cold"),
+    ]
+    .into_iter()
+    .filter_map(|(flag, element)| {
+        flags
+            .iter()
+            .any(|candidate| candidate == flag)
+            .then_some(element)
+    })
+    .collect()
+}
+
+fn item_destruction_flag_is_mapped(flag: &str) -> bool {
+    matches!(
+        flag,
+        "IGNORE_ACID" | "IGNORE_ELEC" | "IGNORE_FIRE" | "IGNORE_COLD"
+    )
+}
+
+fn apply_item_destruction_properties(value: &mut serde_json::Value, tval: u16, flags: &[String]) {
+    let vulnerabilities = item_destruction_vulnerabilities(tval);
+    if !vulnerabilities.is_empty() {
+        value["elementalDestructionVulnerabilities"] = serde_json::json!(vulnerabilities);
+    }
+    let immunities = item_destruction_immunities(flags);
+    if !immunities.is_empty() {
+        value["elementalDestructionImmunities"] = serde_json::json!(immunities);
+    }
+}
+
+/// Display-only object flags with no Rewrite behaviour to express.
 fn item_flag_not_applicable(flag: &str) -> bool {
-    flag.starts_with("IGNORE_")
-        || matches!(flag, "SHOW_MODS" | "HIDE_TYPE" | "FULL_NAME" | "RIDING")
+    matches!(flag, "SHOW_MODS" | "HIDE_TYPE" | "FULL_NAME" | "RIDING")
 }
 
 #[derive(Debug, Default)]
@@ -4215,6 +4363,9 @@ fn ego_json(
         if ego_roll_recipe_consumes(entry, flag) {
             continue;
         }
+        if item_destruction_flag_is_mapped(flag) {
+            continue;
+        }
         account_item_flag(
             flag,
             &fold,
@@ -4251,8 +4402,13 @@ fn ego_json(
     apply_offensive_fold(&mut value, &offense);
     apply_equipment_fold(&mut value, &equipment);
     apply_ego_roll_recipe(&mut value, entry);
+    let destruction_immunities = item_destruction_immunities(&entry.flags);
+    if !destruction_immunities.is_empty() {
+        value["elementalDestructionImmunities"] = serde_json::json!(destruction_immunities);
+    }
     if entry.index == 184 && entry.name == "of Endurance" {
         value["resistsMonsterDestruction"] = serde_json::json!(true);
+        value["resistsProjectionDestruction"] = serde_json::json!(true);
     }
     value
 }
@@ -4408,6 +4564,7 @@ fn artifact_json(
         "weightTenthsPound": entry.weight_tenths_pound.max(1),
         "maxStack": 1,
         "baseValue": entry.base_value,
+        "resistsProjectionDestruction": true,
         "tags": ["artifact", "legacy-import"],
     });
     if let Some(slot) = shape.slot {
@@ -4493,6 +4650,7 @@ fn artifact_json(
     apply_defensive_fold(&mut value, &fold);
     apply_offensive_fold(&mut value, &offense);
     apply_equipment_fold(&mut value, &equipment);
+    apply_item_destruction_properties(&mut value, entry.tval, &entry.flags);
     if entry.has_activation {
         *report
             .item_behavior_gaps
@@ -4502,7 +4660,10 @@ fn artifact_json(
     for flag in &entry.flags {
         // Slotless shapes never applied the attribute or defensive folds,
         // so their flags stay visible in the gap report.
-        if (has_slot && attribute_flag_is_mapped(flag)) || flag == "INSTA_ART" {
+        if (has_slot && attribute_flag_is_mapped(flag))
+            || flag == "INSTA_ART"
+            || item_destruction_flag_is_mapped(flag)
+        {
             continue;
         }
         account_item_flag(
@@ -9569,6 +9730,7 @@ fn damage_spell_ability(
         "resourceCost": 1,
         "baseFailurePercent": 20,
         "target": { "modes": ["position", "entity"], "range": 8, "requiresLineOfEffect": true },
+        "affectsGroundItems": true,
         "effect": effect,
         "tags": ["legacy-import", "damage"],
     })
@@ -10046,6 +10208,10 @@ fn convert_content_from(
             && value.get("slays").is_none()
             && value.get("brands").is_none()
             && value.get("passives").is_none()
+            && value.get("elementalDestructionVulnerabilities").is_none()
+            && value.get("elementalDestructionImmunities").is_none()
+            && value.get("resistsProjectionDestruction").is_none()
+            && value.get("resistsMonsterDestruction").is_none()
             && value.get("rollGroups").is_none()
         {
             *report
@@ -10617,6 +10783,22 @@ fn extract_item_effect_programs(
             }
         }
 
+        if let Some(effect) = item
+            .as_object_mut()
+            .and_then(|item| item.remove("shatterEffect"))
+        {
+            let program_id = format!("rfb-legacy.effect.{stem}.shatter");
+            item["shatterEffectProgramId"] = serde_json::json!(program_id);
+            let mut program = effect_program_from_inline(&program_id, effect)?;
+            program["input"] = serde_json::json!("area");
+            if programs
+                .insert(format!("{stem}-shatter.json"), program)
+                .is_some()
+            {
+                return Err(format!("duplicate shatter effect program for {file_name}"));
+            }
+        }
+
         let Some(activations) = item
             .get_mut("deviceGeneration")
             .and_then(|generation| generation.get_mut("activations"))
@@ -10662,6 +10844,94 @@ struct ExtractedAbilitySources {
     player_binding_files: Vec<(String, serde_json::Value)>,
 }
 
+fn ability_effect_affects_ground_items(effect: &serde_json::Value) -> bool {
+    match effect.get("type").and_then(serde_json::Value::as_str) {
+        Some(
+            "damage"
+            | "malediction"
+            | "area-damage"
+            | "beam-damage"
+            | "bolt-or-beam-damage"
+            | "bolt-or-area-damage",
+        ) => true,
+        Some("sequence") => effect
+            .get("effects")
+            .and_then(serde_json::Value::as_array)
+            .is_some_and(|effects| effects.iter().any(ability_effect_affects_ground_items)),
+        Some("random-choice") => effect
+            .get("branches")
+            .and_then(serde_json::Value::as_array)
+            .is_some_and(|branches| {
+                branches.iter().any(|branch| {
+                    branch
+                        .get("effect")
+                        .is_some_and(ability_effect_affects_ground_items)
+                })
+            }),
+        _ => false,
+    }
+}
+
+pub fn sync_demo_ability_ground_items(
+    abilities_path: &Path,
+    programs_path: &Path,
+) -> Result<usize, LegacyImportError> {
+    let mut programs = BTreeMap::new();
+    for entry in fs::read_dir(programs_path)? {
+        let path = entry?.path();
+        if path.extension().and_then(|extension| extension.to_str()) != Some("json") {
+            continue;
+        }
+        let value: serde_json::Value = serde_json::from_slice(&fs::read(path)?)?;
+        let Some(id) = value.get("id").and_then(serde_json::Value::as_str) else {
+            continue;
+        };
+        let affects_ground_items = value
+            .get("steps")
+            .and_then(serde_json::Value::as_array)
+            .is_some_and(|steps| steps.iter().any(ability_effect_affects_ground_items));
+        programs.insert(id.to_owned(), affects_ground_items);
+    }
+
+    let mut changed = 0;
+    for entry in fs::read_dir(abilities_path)? {
+        let path = entry?.path();
+        if path.extension().and_then(|extension| extension.to_str()) != Some("json") {
+            continue;
+        }
+        let mut value: serde_json::Value = serde_json::from_slice(&fs::read(&path)?)?;
+        let program_id = value
+            .get("abilityProgramId")
+            .and_then(serde_json::Value::as_str)
+            .ok_or_else(|| {
+                LegacyImportError::InvalidDemoMonsterSelection(format!(
+                    "{} has no abilityProgramId",
+                    path.display()
+                ))
+            })?;
+        let affects_ground_items = programs.get(program_id).copied().ok_or_else(|| {
+            LegacyImportError::InvalidDemoMonsterSelection(format!(
+                "{} references missing program {program_id}",
+                path.display()
+            ))
+        })?;
+        let before = value.clone();
+        if affects_ground_items {
+            value["affectsGroundItems"] = serde_json::Value::Bool(true);
+        } else {
+            value
+                .as_object_mut()
+                .expect("ability definitions are JSON objects")
+                .remove("affectsGroundItems");
+        }
+        if value != before {
+            fs::write(path, serde_json::to_string_pretty(&value)? + "\n")?;
+            changed += 1;
+        }
+    }
+    Ok(changed)
+}
+
 fn extract_ability_programs_and_player_bindings(
     ability_files: &mut [(String, serde_json::Value)],
     player_ability_ids: &BTreeSet<String>,
@@ -10691,6 +10961,15 @@ fn extract_ability_programs_and_player_bindings(
             modes if !modes.is_empty() => "cast-target",
             _ => return Err(format!("{file_name} ability source has empty target modes")),
         };
+        let affects_ground_items = ability
+            .get("effect")
+            .is_some_and(ability_effect_affects_ground_items);
+        if affects_ground_items {
+            ability.insert(
+                "affectsGroundItems".to_owned(),
+                serde_json::Value::Bool(true),
+            );
+        }
         let effect = ability
             .remove("effect")
             .ok_or_else(|| format!("{file_name} ability source has no inline effect"))?;
@@ -12813,6 +13092,132 @@ pub fn sync_demo_items(
         )?;
     }
     Ok(files.len())
+}
+
+pub fn sync_demo_item_destruction(
+    source: &Path,
+    selection_path: &Path,
+    adaptations_path: &Path,
+    items_path: &Path,
+) -> Result<usize, LegacyImportError> {
+    let selection: DemoItemSelection = serde_json::from_slice(&fs::read(selection_path)?)?;
+    let adaptations: DemoItemAdaptationLedger =
+        serde_json::from_slice(&fs::read(adaptations_path)?)?;
+    let source_commit = resolve_legacy_content_commit(source)?;
+    let entries = parse_k_info(&read_legacy_object_at(
+        source,
+        &source_commit,
+        K_INFO_SOURCE,
+    )?)?;
+    let entries = entries
+        .iter()
+        .map(|entry| (entry.index, entry))
+        .collect::<BTreeMap<_, _>>();
+    let mut selected = selection
+        .items
+        .iter()
+        .map(|item| (item.source_index, format!("demo.item.{}", item.id)))
+        .collect::<Vec<_>>();
+    selected.extend(
+        adaptations
+            .items
+            .iter()
+            .filter(|item| item.status == DemoItemCoverageStatus::Active)
+            .map(|item| (item.source_index, item.item_id.clone())),
+    );
+    selected.sort();
+    selected.dedup();
+
+    let mut files_by_id = BTreeMap::new();
+    for entry in fs::read_dir(items_path)? {
+        let path = entry?.path();
+        if path.extension().and_then(|extension| extension.to_str()) != Some("json") {
+            continue;
+        }
+        let value: serde_json::Value = serde_json::from_slice(&fs::read(&path)?)?;
+        if let Some(id) = value.get("id").and_then(serde_json::Value::as_str) {
+            files_by_id.insert(id.to_owned(), (path, value));
+        }
+    }
+
+    let effect_programs_path = items_path
+        .parent()
+        .ok_or_else(|| {
+            LegacyImportError::InvalidDemoItemSelection("items path has no parent".to_owned())
+        })?
+        .join("effectPrograms");
+    fs::create_dir_all(&effect_programs_path)?;
+    let mut changed = 0;
+    for (source_index, item_id) in selected {
+        let entry = entries.get(&source_index).ok_or_else(|| {
+            LegacyImportError::InvalidDemoItemSelection(format!(
+                "source index {source_index} is missing from {K_INFO_SOURCE}"
+            ))
+        })?;
+        let (path, value) = files_by_id.get_mut(&item_id).ok_or_else(|| {
+            LegacyImportError::InvalidDemoItemSelection(format!(
+                "active item {item_id} has no JSON definition"
+            ))
+        })?;
+        let before = value.clone();
+        let vulnerabilities = item_destruction_vulnerabilities(entry.tval);
+        if vulnerabilities.is_empty() {
+            value
+                .as_object_mut()
+                .expect("item definitions are JSON objects")
+                .remove("elementalDestructionVulnerabilities");
+        } else {
+            value["elementalDestructionVulnerabilities"] = serde_json::json!(vulnerabilities);
+        }
+        let immunities = item_destruction_immunities(&entry.flags);
+        if immunities.is_empty() {
+            value
+                .as_object_mut()
+                .expect("item definitions are JSON objects")
+                .remove("elementalDestructionImmunities");
+        } else {
+            value["elementalDestructionImmunities"] = serde_json::json!(immunities);
+        }
+        let stem = path
+            .file_stem()
+            .and_then(|stem| stem.to_str())
+            .ok_or_else(|| {
+                LegacyImportError::InvalidDemoItemSelection(format!(
+                    "{} has no UTF-8 file stem",
+                    path.display()
+                ))
+            })?;
+        let shatter_program_path = effect_programs_path.join(format!("{stem}-shatter.json"));
+        if let Some((effect, radius)) = potion_shatter_effect(entry) {
+            let program_id = format!("demo.effect.{stem}.shatter");
+            value["shatterEffectProgramId"] = serde_json::json!(program_id);
+            value["shatterRadius"] = serde_json::json!(radius);
+            let mut program = effect_program_from_inline(&program_id, effect)
+                .map_err(LegacyImportError::InvalidDemoItemSelection)?;
+            program["input"] = serde_json::json!("area");
+            fs::write(
+                shatter_program_path,
+                serde_json::to_string_pretty(&program)? + "\n",
+            )?;
+        } else {
+            value
+                .as_object_mut()
+                .expect("item definitions are JSON objects")
+                .remove("shatterEffectProgramId");
+            value
+                .as_object_mut()
+                .expect("item definitions are JSON objects")
+                .remove("shatterRadius");
+            if shatter_program_path.exists() {
+                fs::remove_file(shatter_program_path)?;
+            }
+        }
+        if *value != before {
+            fs::write(path, serde_json::to_string_pretty(value)? + "\n")?;
+            changed += 1;
+        }
+    }
+    Ok(changed)
 }
 
 #[cfg(test)]
@@ -15397,7 +15802,7 @@ W:5:0:0:150:80
         assert_eq!(arrow["ammunitionProfile"]["ammunitionType"], "arrow");
 
         // Inherent defensive flags fold onto the base item (dragon scale
-        // style); durability flags are not applicable to RFB items.
+        // style); elemental durability flags map to destruction immunity.
         let mail = get("test-chain-mail.json");
         assert_eq!(mail["equipmentSlot"], "body");
         assert_eq!(mail["modifiers"]["defense"], 14);
@@ -15405,7 +15810,16 @@ W:5:0:0:150:80
         assert_eq!(mail["statusImmunities"][0], "rfb.status.paralysis");
         assert!(!outcome.report.unmapped_item_flags.contains_key("RES_ACID"));
         assert!(!outcome.report.unmapped_item_flags.contains_key("FREE_ACT"));
-        assert_eq!(outcome.report.not_applicable_item_flags["IGNORE_FIRE"], 1);
+        assert_eq!(
+            mail["elementalDestructionImmunities"],
+            serde_json::json!(["fire"])
+        );
+        assert!(
+            !outcome
+                .report
+                .not_applicable_item_flags
+                .contains_key("IGNORE_FIRE")
+        );
 
         // Base jewelry is a generic shell: attributes and pval only arrive
         // via egos or fixed artifacts, mirroring the legacy generation model.
@@ -15844,11 +16258,12 @@ A:1/1
 
         assert_eq!(report.source_items_total, 4);
         assert_eq!(report.active_source_items, 2);
-        assert_eq!(report.mechanics_ready_source_items, 1);
-        assert_eq!(report.blocked_source_items, 1);
+        assert_eq!(report.mechanics_ready_source_items, 0);
+        assert_eq!(report.blocked_source_items, 2);
         assert_eq!(report.mapped_formal_items, 3);
         assert_eq!(report.original_formal_items, 1);
         assert_eq!(report.blocker_counts["book-system"], 1);
+        assert_eq!(report.blocker_counts["potion-shatter-effect"], 1);
         assert_eq!(report.original_item_ids, ["demo.item.original"]);
         assert_eq!(report.p3_plan.formal_items_delta, 2);
         assert_eq!(report.p3_plan.mapped_rfb_formal_items_delta, 2);
@@ -15892,6 +16307,20 @@ A:1/1
                     }
                 }),
             ),
+            (
+                "venom.json".to_owned(),
+                serde_json::json!({
+                    "id": "rfb-legacy.item.venom",
+                    "shatterEffect": {
+                        "type": "damage",
+                        "damageDice": 0,
+                        "damageSides": 0,
+                        "damageBonus": 3,
+                        "damageType": "poison"
+                    },
+                    "shatterRadius": 2
+                }),
+            ),
         ];
 
         let programs = extract_item_effect_programs(&mut items)
@@ -15911,7 +16340,7 @@ A:1/1
                 .is_none()
         );
 
-        assert_eq!(programs.len(), 2);
+        assert_eq!(programs.len(), 3);
         let clarity = programs
             .iter()
             .find(|(name, _)| name == "clarity-use.json")
@@ -15930,6 +16359,69 @@ A:1/1
         assert_eq!(frost["input"], "actor");
         assert_eq!(frost["steps"].as_array().map(Vec::len), Some(1));
         assert_eq!(frost["steps"][0]["type"], "damage");
+
+        assert_eq!(
+            items[2].1["shatterEffectProgramId"],
+            "rfb-legacy.effect.venom.shatter"
+        );
+        assert!(items[2].1.get("shatterEffect").is_none());
+        let venom = programs
+            .iter()
+            .find(|(name, _)| name == "venom-shatter.json")
+            .map(|(_, value)| value)
+            .expect("shatter program should be emitted");
+        assert_eq!(venom["input"], "area");
+        assert_eq!(venom["steps"][0]["damageType"], "poison");
+        assert_eq!(venom["steps"][0]["damageDice"], 0);
+        assert_eq!(venom["steps"][0]["damageBonus"], 3);
+    }
+
+    #[test]
+    fn item_destruction_properties_follow_original_tvals_and_ignore_flags() {
+        assert_eq!(item_destruction_vulnerabilities(23), ["acid", "fire"]);
+        assert_eq!(item_destruction_vulnerabilities(45), ["electricity"]);
+        assert_eq!(item_destruction_vulnerabilities(75), ["cold"]);
+        assert_eq!(item_destruction_vulnerabilities(94), ["fire"]);
+        assert!(item_destruction_vulnerabilities(10).is_empty());
+        assert_eq!(
+            item_destruction_immunities(&["IGNORE_ACID".to_owned(), "IGNORE_COLD".to_owned()]),
+            ["acid", "cold"]
+        );
+    }
+
+    #[test]
+    fn potion_shatter_mapping_keeps_drinking_and_breakage_distinct() {
+        let venom = LegacyItemEntry {
+            tval: 75,
+            sval: 6,
+            ..LegacyItemEntry::default()
+        };
+        let (effect, radius) = potion_shatter_effect(&venom).expect("venom should shatter");
+        assert_eq!(effect["type"], "damage");
+        assert_eq!(effect["damageType"], "poison");
+        assert_eq!(effect["damageDice"], 0);
+        assert_eq!(effect["damageBonus"], 3);
+        assert_eq!(radius, 2);
+
+        let healing = LegacyItemEntry {
+            tval: 75,
+            sval: 37,
+            ..LegacyItemEntry::default()
+        };
+        let (effect, radius) = potion_shatter_effect(&healing).expect("healing should shatter");
+        assert_eq!(
+            effect,
+            serde_json::json!({"type": "heal-dice", "dice": 10, "sides": 10})
+        );
+        assert_eq!(radius, 2);
+
+        let salt_water = LegacyItemEntry {
+            tval: 75,
+            sval: 5,
+            ..LegacyItemEntry::default()
+        };
+        assert!(potion_shatter_effect(&salt_water).is_none());
+        assert!(!potion_has_unimplemented_shatter_effect(&salt_water));
     }
 
     #[test]
@@ -16505,6 +16997,10 @@ F:BRAND_VAMP | HOLD_LIFE
         let protection = &outcome.affix_files[0].1;
         assert_eq!(protection["id"], "rfb-legacy.affix.protection");
         assert_eq!(protection["generationMaxLevel"], 30);
+        assert_eq!(
+            protection["elementalDestructionImmunities"],
+            serde_json::json!(["acid"])
+        );
         assert!(protection.get("modifiers").is_none());
         let candidates = protection["rollGroups"][0]["candidates"]
             .as_array()
@@ -16520,6 +17016,24 @@ F:BRAND_VAMP | HOLD_LIFE
             (1..=10).collect::<Vec<_>>()
         );
         assert!(candidates.iter().all(|candidate| candidate["weight"] == 1));
+    }
+
+    #[test]
+    fn endurance_ammunition_ego_resists_projection_destruction() {
+        let egos = parse_e_info("N:184:of Endurance\nT:AMMO\nW:0:*:2\n")
+            .expect("Endurance ego should parse");
+        let outcome = convert_content(
+            &[],
+            &[],
+            &[],
+            &egos,
+            &[],
+            &LegacyCharacterSources::default(),
+        );
+        let endurance = &outcome.affix_files[0].1;
+        assert_eq!(endurance["id"], "rfb-legacy.affix.endurance");
+        assert_eq!(endurance["resistsMonsterDestruction"], true);
+        assert_eq!(endurance["resistsProjectionDestruction"], true);
     }
 
     #[test]

@@ -1,11 +1,18 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "appearanceNameKey": "item-demo-holy-chant-scroll-appearance",
   "baseValue": 40,
   "descriptionKey": "item-demo-holy-chant-scroll-description",
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
   "formatVersion": 1,
+  "generationLevel": 10,
   "glyph": "?",
   "id": "demo.item.holy-chant-scroll",
   "maxStack": 20,
+  "mogaminatorRare": false,
   "nameKey": "item-demo-holy-chant-scroll-name",
   "tags": [
     "consumable",
@@ -15,8 +22,5 @@
   "useAction": {
     "effectProgramId": "demo.effect.holy-chant-scroll"
   },
-  "generationLevel": 10,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 5,
-  "appearanceNameKey": "item-demo-holy-chant-scroll-appearance"
+  "weightTenthsPound": 5
 }

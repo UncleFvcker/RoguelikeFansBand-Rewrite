@@ -1,1 +1,25 @@
-{"$schema":"https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json","formatVersion":1,"id":"demo.item.trap-creation-scroll","nameKey":"item-demo-trap-creation-scroll-name","appearanceNameKey":"item-demo-trap-creation-scroll-appearance","descriptionKey":"item-demo-trap-creation-scroll-description","glyph":"?","weightTenthsPound":5,"maxStack":20,"baseValue":0,"useAction":{"effectProgramId":"demo.effect.trap-creation-scroll"},"tags":["consumable","rfb-compatibility","scroll","terrain"]}
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "appearanceNameKey": "item-demo-trap-creation-scroll-appearance",
+  "baseValue": 0,
+  "descriptionKey": "item-demo-trap-creation-scroll-description",
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
+  "formatVersion": 1,
+  "glyph": "?",
+  "id": "demo.item.trap-creation-scroll",
+  "maxStack": 20,
+  "nameKey": "item-demo-trap-creation-scroll-name",
+  "tags": [
+    "consumable",
+    "rfb-compatibility",
+    "scroll",
+    "terrain"
+  ],
+  "useAction": {
+    "effectProgramId": "demo.effect.trap-creation-scroll"
+  },
+  "weightTenthsPound": 5
+}

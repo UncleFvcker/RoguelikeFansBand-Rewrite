@@ -2,6 +2,10 @@
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
   "baseValue": 150,
   "descriptionKey": "item-demo-hard-leather-armour-description",
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
   "equipmentBonuses": {
     "meleeSkill": -1
   },

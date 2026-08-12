@@ -1,23 +1,31 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.spear",
-  "nameKey": "item-demo-spear-name",
-  "descriptionKey": "item-demo-spear-description",
-  "glyph": "/",
-  "generationLevel": 5,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 50,
-  "maxStack": 1,
   "baseValue": 36,
+  "descriptionKey": "item-demo-spear-description",
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
   "equipmentSlot": "weapon",
+  "formatVersion": 1,
+  "generationLevel": 5,
+  "glyph": "/",
+  "id": "demo.item.spear",
+  "maxStack": 1,
   "meleeProfile": {
     "attacks": 1,
-    "toHit": 0,
-    "toDamage": 0,
     "damageDice": 1,
     "damageSides": 8,
-    "damageType": "physical"
+    "damageType": "physical",
+    "toDamage": 0,
+    "toHit": 0
   },
-  "tags": ["equipment", "rfb-compatibility", "weapon"]
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-spear-name",
+  "tags": [
+    "equipment",
+    "rfb-compatibility",
+    "weapon"
+  ],
+  "weightTenthsPound": 50
 }

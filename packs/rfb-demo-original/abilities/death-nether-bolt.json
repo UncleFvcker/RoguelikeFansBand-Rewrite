@@ -1,28 +1,25 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "demo.ability-program.death-nether-bolt",
+  "affectsGroundItems": true,
+  "descriptionKey": "ability-demo-death-nether-bolt-description",
   "formatVersion": 1,
   "id": "demo.ability.death-nether-bolt",
-  "nameKey": "ability-demo-death-nether-bolt-name",
-  "descriptionKey": "ability-demo-death-nether-bolt-description",
-  "target": {
-    "modes": [
-      "direction"
-    ],
-    "range": 8,
-    "requiresLineOfEffect": true
-  },
-  "abilityProgramId": "demo.ability-program.death-nether-bolt",
   "levelScaling": [
     {
+      "divisor": 4,
       "effectIndex": 0,
       "field": "damage-dice",
       "levelOffset": 5,
-      "multiplier": 1,
-      "divisor": 4
+      "multiplier": 1
     }
   ],
+  "nameKey": "ability-demo-death-nether-bolt-name",
   "spellPowerFields": [
-    { "effectIndex": 0, "field": "final-damage" }
+    {
+      "effectIndex": 0,
+      "field": "final-damage"
+    }
   ],
   "tags": [
     "beam",
@@ -30,5 +27,12 @@
     "death",
     "nether",
     "spell"
-  ]
+  ],
+  "target": {
+    "modes": [
+      "direction"
+    ],
+    "range": 8,
+    "requiresLineOfEffect": true
+  }
 }

@@ -1,1 +1,23 @@
-{"$schema":"https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json","formatVersion":1,"id":"demo.item.great-clarity-potion","nameKey":"item-demo-great-clarity-potion-name","appearanceNameKey":"item-demo-great-clarity-potion-appearance","descriptionKey":"item-demo-great-clarity-potion-description","glyph":"!","weightTenthsPound":4,"maxStack":20,"baseValue":1000,"useAction":{"effectProgramId":"demo.effect.great-clarity-potion"},"tags":["consumable","potion","rfb-compatibility"]}
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "appearanceNameKey": "item-demo-great-clarity-potion-appearance",
+  "baseValue": 1000,
+  "descriptionKey": "item-demo-great-clarity-potion-description",
+  "elementalDestructionVulnerabilities": [
+    "cold"
+  ],
+  "formatVersion": 1,
+  "glyph": "!",
+  "id": "demo.item.great-clarity-potion",
+  "maxStack": 20,
+  "nameKey": "item-demo-great-clarity-potion-name",
+  "tags": [
+    "consumable",
+    "potion",
+    "rfb-compatibility"
+  ],
+  "useAction": {
+    "effectProgramId": "demo.effect.great-clarity-potion"
+  },
+  "weightTenthsPound": 4
+}

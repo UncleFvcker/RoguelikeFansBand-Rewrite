@@ -1,24 +1,28 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "demo.ability-program.death-invoke-spirits",
+  "affectsGroundItems": true,
+  "descriptionKey": "ability-demo-death-invoke-spirits-description",
   "formatVersion": 1,
   "id": "demo.ability.death-invoke-spirits",
   "nameKey": "ability-demo-death-invoke-spirits-name",
-  "descriptionKey": "ability-demo-death-invoke-spirits-description",
-  "target": {
-    "modes": [
-      "direction"
-    ],
-    "range": 8,
-    "requiresLineOfEffect": true
-  },
-  "abilityProgramId": "demo.ability-program.death-invoke-spirits",
   "spellPowerFields": [
-    { "effectIndex": 0, "field": "random-choice-roll" }
+    {
+      "effectIndex": 0,
+      "field": "random-choice-roll"
+    }
   ],
   "tags": [
     "death",
     "random",
     "spell",
     "spirits"
-  ]
+  ],
+  "target": {
+    "modes": [
+      "direction"
+    ],
+    "range": 8,
+    "requiresLineOfEffect": true
+  }
 }

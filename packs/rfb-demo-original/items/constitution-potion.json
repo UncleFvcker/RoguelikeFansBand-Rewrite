@@ -1,11 +1,17 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "appearanceNameKey": "item-demo-constitution-potion-appearance",
   "baseValue": 25000,
   "descriptionKey": "item-demo-constitution-potion-description",
+  "elementalDestructionVulnerabilities": [
+    "cold"
+  ],
   "formatVersion": 1,
+  "generationLevel": 30,
   "glyph": "!",
   "id": "demo.item.constitution-potion",
   "maxStack": 20,
+  "mogaminatorRare": false,
   "nameKey": "item-demo-constitution-potion-name",
   "tags": [
     "consumable",
@@ -15,8 +21,5 @@
   "useAction": {
     "effectProgramId": "demo.effect.constitution-potion"
   },
-  "generationLevel": 30,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 4,
-  "appearanceNameKey": "item-demo-constitution-potion-appearance"
+  "weightTenthsPound": 4
 }

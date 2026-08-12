@@ -1,19 +1,26 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.flask-of-oil",
-  "nameKey": "item-demo-flask-of-oil-name",
-  "descriptionKey": "item-demo-flask-of-oil-description",
-  "glyph": "!",
-  "generationLevel": 1,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 10,
-  "maxStack": 100,
   "baseValue": 3,
+  "descriptionKey": "item-demo-flask-of-oil-description",
+  "elementalDestructionVulnerabilities": [
+    "cold"
+  ],
+  "formatVersion": 1,
   "fuel": {
-    "kind": "oil",
     "initial": 7500,
+    "kind": "oil",
     "maximum": 7500
   },
-  "tags": ["consumable", "fuel", "oil"]
+  "generationLevel": 1,
+  "glyph": "!",
+  "id": "demo.item.flask-of-oil",
+  "maxStack": 100,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-flask-of-oil-name",
+  "tags": [
+    "consumable",
+    "fuel",
+    "oil"
+  ],
+  "weightTenthsPound": 10
 }

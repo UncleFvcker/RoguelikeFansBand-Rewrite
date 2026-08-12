@@ -1,18 +1,26 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.flicker-scroll",
-  "nameKey": "item-demo-flicker-scroll-name",
   "appearanceNameKey": "item-demo-flicker-scroll-appearance",
-  "descriptionKey": "item-demo-flicker-scroll-description",
-  "glyph": "?",
-  "generationLevel": 1,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 5,
-  "maxStack": 20,
   "baseValue": 15,
+  "descriptionKey": "item-demo-flicker-scroll-description",
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 1,
+  "glyph": "?",
+  "id": "demo.item.flicker-scroll",
+  "maxStack": 20,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-flicker-scroll-name",
+  "tags": [
+    "consumable",
+    "scroll",
+    "teleport"
+  ],
   "useAction": {
     "effectProgramId": "demo.effect.random-teleport-short"
   },
-  "tags": ["consumable", "scroll", "teleport"]
+  "weightTenthsPound": 5
 }

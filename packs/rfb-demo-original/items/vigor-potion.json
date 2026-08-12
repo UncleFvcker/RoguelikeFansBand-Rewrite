@@ -1,11 +1,17 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "appearanceNameKey": "item-demo-vigor-potion-appearance",
   "baseValue": 200,
   "descriptionKey": "item-demo-vigor-potion-description",
+  "elementalDestructionVulnerabilities": [
+    "cold"
+  ],
   "formatVersion": 1,
+  "generationLevel": 1,
   "glyph": "!",
   "id": "demo.item.vigor-potion",
   "maxStack": 20,
+  "mogaminatorRare": false,
   "nameKey": "item-demo-vigor-potion-name",
   "tags": [
     "consumable",
@@ -15,8 +21,5 @@
   "useAction": {
     "effectProgramId": "demo.effect.vigor-potion"
   },
-  "generationLevel": 1,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 4,
-  "appearanceNameKey": "item-demo-vigor-potion-appearance"
+  "weightTenthsPound": 4
 }

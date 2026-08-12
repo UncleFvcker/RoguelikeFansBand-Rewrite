@@ -1,15 +1,22 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.black-prayers",
-  "nameKey": "item-demo-black-prayers-name",
-  "descriptionKey": "item-demo-black-prayers-description",
-  "glyph": "?",
-  "generationLevel": 10,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 30,
-  "maxStack": 1,
-  "baseValue": 100,
   "abilityBookId": "demo.ability-book.black-prayers",
-  "tags": ["book", "death", "spellbook"]
+  "baseValue": 100,
+  "descriptionKey": "item-demo-black-prayers-description",
+  "elementalDestructionVulnerabilities": [
+    "fire"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 10,
+  "glyph": "?",
+  "id": "demo.item.black-prayers",
+  "maxStack": 1,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-black-prayers-name",
+  "tags": [
+    "book",
+    "death",
+    "spellbook"
+  ],
+  "weightTenthsPound": 30
 }

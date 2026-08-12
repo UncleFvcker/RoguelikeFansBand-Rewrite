@@ -1,9 +1,15 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "demo.ability-program.psi-lash",
+  "affectsGroundItems": true,
+  "descriptionKey": "ability-demo-psi-lash-description",
   "formatVersion": 1,
   "id": "demo.ability.psi-lash",
   "nameKey": "ability-demo-psi-lash-name",
-  "descriptionKey": "ability-demo-psi-lash-description",
+  "tags": [
+    "psi",
+    "spell"
+  ],
   "target": {
     "modes": [
       "position",
@@ -11,10 +17,5 @@
     ],
     "range": 6,
     "requiresLineOfEffect": true
-  },
-  "abilityProgramId": "demo.ability-program.psi-lash",
-  "tags": [
-    "psi",
-    "spell"
-  ]
+  }
 }

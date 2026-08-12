@@ -430,8 +430,8 @@ pub(crate) fn valid_item_effect(
             damage_bonus,
             ..
         } => {
-            (1..=100).contains(damage_dice)
-                && (1..=10_000).contains(damage_sides)
+            ((*damage_dice == 0 && *damage_sides == 0 && *damage_bonus > 0)
+                || ((1..=100).contains(damage_dice) && (1..=10_000).contains(damage_sides)))
                 && *damage_bonus <= 10_000
         }
         ItemUseEffectDefinition::DispelCategory { category, damage } => {
@@ -910,6 +910,40 @@ pub(super) fn validate_items(
                     && (item.max_stack != 1
                         || action.device_check_difficulty.is_none()
                         || !item.tags.iter().any(|tag| tag == "device")))
+            {
+                return Err(ContentError::InvalidItemUseAction(item.id.clone()));
+            }
+        }
+        if let Some(shatter) = &item.shatter_effect {
+            let valid_shatter_step = |effect: &ItemUseEffectDefinition| {
+                matches!(
+                    effect,
+                    ItemUseEffectDefinition::Damage { .. }
+                        | ItemUseEffectDefinition::Heal { .. }
+                        | ItemUseEffectDefinition::HealDice { .. }
+                )
+            };
+            let valid_shape = match &shatter.effect {
+                ItemUseEffectDefinition::Sequence { effects } => {
+                    !effects.is_empty() && effects.iter().all(valid_shatter_step)
+                }
+                effect => valid_shatter_step(effect),
+            };
+            if !(1..=8).contains(&shatter.radius)
+                || !item.tags.iter().any(|tag| tag == "consumable")
+                || !item
+                    .elemental_destruction_vulnerabilities
+                    .contains(&crate::ItemDestructionElement::Cold)
+                || !valid_shape
+                || !valid_item_effect(
+                    &shatter.effect,
+                    terrain_tags,
+                    actor_tag_values,
+                    item_tag_values,
+                    resource_ids,
+                    affix_ids,
+                    loot_table_ids,
+                )
             {
                 return Err(ContentError::InvalidItemUseAction(item.id.clone()));
             }

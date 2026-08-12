@@ -1,29 +1,30 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb.ability-program.mutation.spit-acid",
+  "affectsGroundItems": true,
+  "descriptionKey": "ability-rfb-mutation-spit-acid-description",
   "formatVersion": 1,
   "id": "rfb.ability.mutation.spit-acid",
+  "levelScaling": [
+    {
+      "divisor": 1,
+      "effectIndex": 0,
+      "field": "damage-bonus",
+      "levelOffset": 1,
+      "multiplier": 2
+    }
+  ],
   "nameKey": "ability-rfb-mutation-spit-acid-name",
-  "descriptionKey": "ability-rfb-mutation-spit-acid-description",
+  "tags": [
+    "acid",
+    "damage",
+    "mutation"
+  ],
   "target": {
     "modes": [
       "direction"
     ],
     "range": 8,
     "requiresLineOfEffect": true
-  },
-  "abilityProgramId": "rfb.ability-program.mutation.spit-acid",
-  "levelScaling": [
-    {
-      "effectIndex": 0,
-      "field": "damage-bonus",
-      "levelOffset": 1,
-      "multiplier": 2,
-      "divisor": 1
-    }
-  ],
-  "tags": [
-    "acid",
-    "damage",
-    "mutation"
-  ]
+  }
 }

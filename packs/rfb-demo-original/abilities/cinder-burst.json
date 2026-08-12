@@ -1,9 +1,16 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "demo.ability-program.cinder-burst",
+  "affectsGroundItems": true,
+  "descriptionKey": "ability-demo-cinder-burst-description",
   "formatVersion": 1,
   "id": "demo.ability.cinder-burst",
   "nameKey": "ability-demo-cinder-burst-name",
-  "descriptionKey": "ability-demo-cinder-burst-description",
+  "tags": [
+    "area",
+    "fire",
+    "spell"
+  ],
   "target": {
     "modes": [
       "position",
@@ -11,11 +18,5 @@
     ],
     "range": 6,
     "requiresLineOfEffect": true
-  },
-  "abilityProgramId": "demo.ability-program.cinder-burst",
-  "tags": [
-    "area",
-    "fire",
-    "spell"
-  ]
+  }
 }

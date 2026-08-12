@@ -64,12 +64,13 @@ use rfb_content::{
     ClassAbilityDefinition, ContentCatalog, DungeonInstanceLifecycle, EncounterEntryDefinition,
     EncounterTableDefinition, EquipmentBonuses, EquipmentPassive, FloorLifecycle,
     ItemAttributeDefinition, ItemCurseSeverityDefinition, ItemCurseTargetDefinition,
-    ItemEnchantmentRollDefinition, ItemSummonLevelSourceDefinition, ItemSummonSelectorDefinition,
-    ItemUseEffectDefinition, MeleeBlowEffectDefinition, MonsterDropKindDefinition,
-    MonsterPackBehavior, MutationActivationDefinition, MutationPeriodicEffectDefinition,
-    PlayerAbilityDefinition, ProceduralLayoutMode, ProceduralMazeDefinition,
-    ProceduralPitDefinition, ProceduralRoomGeometryDefinition, ProceduralRoomPlacement,
-    ProceduralRoomShape, ProceduralStreamerCandidateDefinition, SkillKind, SlayLevel, SlayTarget,
+    ItemDestructionElement, ItemEnchantmentRollDefinition, ItemShatterEffectDefinition,
+    ItemSummonLevelSourceDefinition, ItemSummonSelectorDefinition, ItemUseEffectDefinition,
+    MeleeBlowEffectDefinition, MonsterDropKindDefinition, MonsterPackBehavior,
+    MutationActivationDefinition, MutationPeriodicEffectDefinition, PlayerAbilityDefinition,
+    ProceduralLayoutMode, ProceduralMazeDefinition, ProceduralPitDefinition,
+    ProceduralRoomGeometryDefinition, ProceduralRoomPlacement, ProceduralRoomShape,
+    ProceduralStreamerCandidateDefinition, SkillKind, SlayLevel, SlayTarget,
     StartingItemDefinition, StatModifiers, TaskObjectiveKind, TechniqueAttribute,
     TerrainFeatureEntryDefinition, ThemeVaultCandidateDefinition, WeaponBrand,
     affix_is_compatible_with_item,
@@ -109,6 +110,7 @@ mod death;
 mod environment_combat;
 mod floor;
 mod gold;
+mod ground_item_effects;
 mod hunger;
 mod inventory;
 mod item_combat;

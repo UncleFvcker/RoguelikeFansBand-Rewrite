@@ -1,39 +1,46 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "demo.ability-program.death-cloud-kill",
+  "affectsGroundItems": true,
+  "descriptionKey": "ability-demo-death-cloud-kill-description",
   "formatVersion": 1,
   "id": "demo.ability.death-cloud-kill",
-  "nameKey": "ability-demo-death-cloud-kill-name",
-  "descriptionKey": "ability-demo-death-cloud-kill-description",
-  "target": {
-    "modes": [
-      "self"
-    ],
-    "range": 0,
-    "requiresLineOfEffect": false
-  },
-  "abilityProgramId": "demo.ability-program.death-cloud-kill",
   "levelScaling": [
     {
+      "divisor": 1,
       "effectIndex": 0,
       "field": "damage-bonus",
-      "multiplier": 2,
-      "divisor": 1
+      "multiplier": 2
+    },
+    {
+      "divisor": 10,
+      "effectIndex": 0,
+      "field": "radius",
+      "multiplier": 1
+    }
+  ],
+  "nameKey": "ability-demo-death-cloud-kill-name",
+  "spellPowerFields": [
+    {
+      "effectIndex": 0,
+      "field": "final-damage"
     },
     {
       "effectIndex": 0,
-      "field": "radius",
-      "multiplier": 1,
-      "divisor": 10
+      "field": "radius"
     }
-  ],
-  "spellPowerFields": [
-    { "effectIndex": 0, "field": "final-damage" },
-    { "effectIndex": 0, "field": "radius" }
   ],
   "tags": [
     "area",
     "death",
     "poison",
     "spell"
-  ]
+  ],
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  }
 }

@@ -1,18 +1,26 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.spell-scroll",
-  "nameKey": "item-demo-spell-scroll-name",
   "appearanceNameKey": "item-demo-spell-scroll-appearance",
-  "descriptionKey": "item-demo-spell-scroll-description",
-  "glyph": "?",
-  "generationLevel": 10,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 5,
-  "maxStack": 20,
   "baseValue": 1000,
+  "descriptionKey": "item-demo-spell-scroll-description",
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 10,
+  "glyph": "?",
+  "id": "demo.item.spell-scroll",
+  "maxStack": 20,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-spell-scroll-name",
+  "tags": [
+    "consumable",
+    "learning",
+    "scroll"
+  ],
   "useAction": {
     "effectProgramId": "demo.effect.increase-spell-learning-capacity"
   },
-  "tags": ["consumable", "learning", "scroll"]
+  "weightTenthsPound": 5
 }

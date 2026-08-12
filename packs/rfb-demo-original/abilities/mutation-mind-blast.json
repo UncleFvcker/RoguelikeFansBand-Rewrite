@@ -1,29 +1,30 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb.ability-program.mutation.mind-blast",
+  "affectsGroundItems": true,
+  "descriptionKey": "ability-rfb-mutation-mind-blast-description",
   "formatVersion": 1,
   "id": "rfb.ability.mutation.mind-blast",
+  "levelScaling": [
+    {
+      "divisor": 5,
+      "effectIndex": 0,
+      "field": "damage-dice",
+      "levelOffset": 1,
+      "multiplier": 1
+    }
+  ],
   "nameKey": "ability-rfb-mutation-mind-blast-name",
-  "descriptionKey": "ability-rfb-mutation-mind-blast-description",
+  "tags": [
+    "damage",
+    "mutation",
+    "psi"
+  ],
   "target": {
     "modes": [
       "direction"
     ],
     "range": 8,
     "requiresLineOfEffect": true
-  },
-  "abilityProgramId": "rfb.ability-program.mutation.mind-blast",
-  "levelScaling": [
-    {
-      "effectIndex": 0,
-      "field": "damage-dice",
-      "levelOffset": 1,
-      "multiplier": 1,
-      "divisor": 5
-    }
-  ],
-  "tags": [
-    "damage",
-    "mutation",
-    "psi"
-  ]
+  }
 }

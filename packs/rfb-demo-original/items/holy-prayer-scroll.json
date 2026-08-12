@@ -1,11 +1,18 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "appearanceNameKey": "item-demo-holy-prayer-scroll-appearance",
   "baseValue": 80,
   "descriptionKey": "item-demo-holy-prayer-scroll-description",
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
   "formatVersion": 1,
+  "generationLevel": 25,
   "glyph": "?",
   "id": "demo.item.holy-prayer-scroll",
   "maxStack": 20,
+  "mogaminatorRare": false,
   "nameKey": "item-demo-holy-prayer-scroll-name",
   "tags": [
     "consumable",
@@ -15,8 +22,5 @@
   "useAction": {
     "effectProgramId": "demo.effect.holy-prayer-scroll"
   },
-  "generationLevel": 25,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 5,
-  "appearanceNameKey": "item-demo-holy-prayer-scroll-appearance"
+  "weightTenthsPound": 5
 }

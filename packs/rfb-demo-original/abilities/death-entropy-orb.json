@@ -1,35 +1,31 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "demo.ability-program.death-entropy-orb",
+  "affectsGroundItems": true,
+  "descriptionKey": "ability-demo-death-entropy-orb-description",
   "formatVersion": 1,
   "id": "demo.ability.death-entropy-orb",
-  "nameKey": "ability-demo-death-entropy-orb-name",
-  "descriptionKey": "ability-demo-death-entropy-orb-description",
-  "target": {
-    "modes": [
-      "position",
-      "entity"
-    ],
-    "range": 8,
-    "requiresLineOfEffect": true
-  },
-  "abilityProgramId": "demo.ability-program.death-entropy-orb",
   "levelScaling": [
     {
+      "divisor": 2,
       "effectIndex": 0,
       "field": "damage-bonus",
-      "multiplier": 3,
-      "divisor": 2
+      "multiplier": 3
     },
     {
+      "divisor": 30,
       "effectIndex": 0,
       "field": "radius",
-      "multiplier": 1,
-      "divisor": 30,
-      "maximum": 3
+      "maximum": 3,
+      "multiplier": 1
     }
   ],
+  "nameKey": "ability-demo-death-entropy-orb-name",
   "spellPowerFields": [
-    { "effectIndex": 0, "field": "final-damage" }
+    {
+      "effectIndex": 0,
+      "field": "final-damage"
+    }
   ],
   "tags": [
     "area",
@@ -37,5 +33,13 @@
     "drain",
     "living",
     "spell"
-  ]
+  ],
+  "target": {
+    "modes": [
+      "position",
+      "entity"
+    ],
+    "range": 8,
+    "requiresLineOfEffect": true
+  }
 }

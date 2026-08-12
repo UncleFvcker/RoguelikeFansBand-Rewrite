@@ -1,18 +1,26 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.armor-blight-scroll",
-  "nameKey": "item-demo-armor-blight-scroll-name",
   "appearanceNameKey": "item-demo-armor-blight-scroll-appearance",
-  "descriptionKey": "item-demo-armor-blight-scroll-description",
-  "glyph": "?",
-  "generationLevel": 50,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 5,
-  "maxStack": 20,
   "baseValue": 0,
+  "descriptionKey": "item-demo-armor-blight-scroll-description",
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 50,
+  "glyph": "?",
+  "id": "demo.item.armor-blight-scroll",
+  "maxStack": 20,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-armor-blight-scroll-name",
+  "tags": [
+    "consumable",
+    "curse",
+    "scroll"
+  ],
   "useAction": {
     "effectProgramId": "demo.effect.curse-equipped-armor"
   },
-  "tags": ["consumable", "curse", "scroll"]
+  "weightTenthsPound": 5
 }

@@ -1,18 +1,26 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.cleansing-scroll",
-  "nameKey": "item-demo-cleansing-scroll-name",
   "appearanceNameKey": "item-demo-cleansing-scroll-appearance",
-  "descriptionKey": "item-demo-cleansing-scroll-description",
-  "glyph": "?",
-  "generationLevel": 10,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 5,
-  "maxStack": 20,
   "baseValue": 100,
+  "descriptionKey": "item-demo-cleansing-scroll-description",
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 10,
+  "glyph": "?",
+  "id": "demo.item.cleansing-scroll",
+  "maxStack": 20,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-cleansing-scroll-name",
+  "tags": [
+    "consumable",
+    "curse",
+    "scroll"
+  ],
   "useAction": {
     "effectProgramId": "demo.effect.remove-equipped-curses"
   },
-  "tags": ["consumable", "curse", "scroll"]
+  "weightTenthsPound": 5
 }

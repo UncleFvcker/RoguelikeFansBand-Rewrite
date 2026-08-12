@@ -16,6 +16,24 @@ use super::shared::{
     validate_definition_id, validate_definition_text, validate_id,
 };
 
+fn effect_can_affect_ground_items(effect: &AbilityEffectDefinition) -> bool {
+    match effect {
+        AbilityEffectDefinition::Damage { .. }
+        | AbilityEffectDefinition::Malediction { .. }
+        | AbilityEffectDefinition::AreaDamage { .. }
+        | AbilityEffectDefinition::BeamDamage { .. }
+        | AbilityEffectDefinition::BoltOrBeamDamage { .. }
+        | AbilityEffectDefinition::BoltOrAreaDamage { .. } => true,
+        AbilityEffectDefinition::Sequence { effects } => {
+            effects.iter().any(effect_can_affect_ground_items)
+        }
+        AbilityEffectDefinition::RandomChoice { branches, .. } => branches
+            .iter()
+            .any(|branch| effect_can_affect_ground_items(&branch.effect)),
+        _ => false,
+    }
+}
+
 pub(super) struct AbilityDefinitions<'a> {
     pub(super) resources: &'a mut [ResourceDefinition],
     pub(super) abilities: &'a mut [AbilityDefinition],
@@ -974,6 +992,7 @@ pub(super) fn validate_abilities(
             || !valid_level_scaling
             || !valid_spell_power
             || !directional_target
+            || (ability.affects_ground_items && !effect_can_affect_ground_items(&ability.effect))
         {
             return Err(ContentError::InvalidAbility(ability.id.clone()));
         }

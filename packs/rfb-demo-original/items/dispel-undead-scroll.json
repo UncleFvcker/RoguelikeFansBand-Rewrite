@@ -1,18 +1,27 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.dispel-undead-scroll",
-  "nameKey": "item-demo-dispel-undead-scroll-name",
   "appearanceNameKey": "item-demo-dispel-undead-scroll-appearance",
-  "descriptionKey": "item-demo-dispel-undead-scroll-description",
-  "glyph": "?",
-  "generationLevel": 35,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 5,
-  "maxStack": 20,
   "baseValue": 200,
+  "descriptionKey": "item-demo-dispel-undead-scroll-description",
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 35,
+  "glyph": "?",
+  "id": "demo.item.dispel-undead-scroll",
+  "maxStack": 20,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-dispel-undead-scroll-name",
+  "tags": [
+    "consumable",
+    "dispel",
+    "scroll",
+    "undead"
+  ],
   "useAction": {
     "effectProgramId": "demo.effect.dispel-undead"
   },
-  "tags": ["consumable", "dispel", "scroll", "undead"]
+  "weightTenthsPound": 5
 }

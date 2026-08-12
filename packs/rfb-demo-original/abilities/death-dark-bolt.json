@@ -1,28 +1,25 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "demo.ability-program.death-dark-bolt",
+  "affectsGroundItems": true,
+  "descriptionKey": "ability-demo-death-dark-bolt-description",
   "formatVersion": 1,
   "id": "demo.ability.death-dark-bolt",
-  "nameKey": "ability-demo-death-dark-bolt-name",
-  "descriptionKey": "ability-demo-death-dark-bolt-description",
-  "target": {
-    "modes": [
-      "direction"
-    ],
-    "range": 8,
-    "requiresLineOfEffect": true
-  },
-  "abilityProgramId": "demo.ability-program.death-dark-bolt",
   "levelScaling": [
     {
+      "divisor": 4,
       "effectIndex": 0,
       "field": "damage-dice",
       "levelOffset": 5,
-      "multiplier": 1,
-      "divisor": 4
+      "multiplier": 1
     }
   ],
+  "nameKey": "ability-demo-death-dark-bolt-name",
   "spellPowerFields": [
-    { "effectIndex": 0, "field": "final-damage" }
+    {
+      "effectIndex": 0,
+      "field": "final-damage"
+    }
   ],
   "tags": [
     "beam",
@@ -30,5 +27,12 @@
     "dark",
     "death",
     "spell"
-  ]
+  ],
+  "target": {
+    "modes": [
+      "direction"
+    ],
+    "range": 8,
+    "requiresLineOfEffect": true
+  }
 }

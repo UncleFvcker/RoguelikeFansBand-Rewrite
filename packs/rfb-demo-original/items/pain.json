@@ -4,6 +4,7 @@
   "id": "demo.item.pain",
   "nameKey": "item-demo-pain-name",
   "descriptionKey": "item-demo-pain-description",
+  "elementalDestructionVulnerabilities": ["acid", "fire"],
   "glyph": "/",
   "generationLevel": 60,
   "weightTenthsPound": 190,
@@ -19,5 +20,6 @@
     "damageSides": 7
   },
   "resistsMonsterDestruction": true,
+  "resistsProjectionDestruction": true,
   "tags": ["artifact", "equipment", "old-castle-reward", "weapon"]
 }

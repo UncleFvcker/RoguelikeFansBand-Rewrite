@@ -1,17 +1,24 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.salt-water",
-  "nameKey": "item-demo-salt-water-name",
   "appearanceNameKey": "item-demo-salt-water-appearance",
-  "descriptionKey": "item-demo-salt-water-description",
-  "glyph": "!",
-  "generationLevel": 0,
-  "weightTenthsPound": 4,
-  "maxStack": 20,
   "baseValue": 1,
+  "descriptionKey": "item-demo-salt-water-description",
+  "elementalDestructionVulnerabilities": [
+    "cold"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 0,
+  "glyph": "!",
+  "id": "demo.item.salt-water",
+  "maxStack": 20,
+  "nameKey": "item-demo-salt-water-name",
+  "tags": [
+    "consumable",
+    "potion",
+    "rfb-compatibility"
+  ],
   "useAction": {
     "effectProgramId": "demo.effect.salt-water"
   },
-  "tags": ["consumable", "potion", "rfb-compatibility"]
+  "weightTenthsPound": 4
 }

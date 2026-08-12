@@ -299,6 +299,15 @@
       ],
       "type": "string"
     },
+    "ItemDestructionElement": {
+      "enum": [
+        "acid",
+        "electricity",
+        "fire",
+        "cold"
+      ],
+      "type": "string"
+    },
     "ItemDeviceActivationDefinition": {
       "additionalProperties": false,
       "properties": {
@@ -734,6 +743,22 @@
       ],
       "default": null
     },
+    "elementalDestructionImmunities": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/ItemDestructionElement"
+      },
+      "type": "array",
+      "uniqueItems": true
+    },
+    "elementalDestructionVulnerabilities": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/ItemDestructionElement"
+      },
+      "type": "array",
+      "uniqueItems": true
+    },
     "equipmentBonuses": {
       "$ref": "#/$defs/EquipmentBonuses",
       "default": {
@@ -975,6 +1000,24 @@
     "resistsMonsterDestruction": {
       "default": false,
       "type": "boolean"
+    },
+    "resistsProjectionDestruction": {
+      "default": false,
+      "type": "boolean"
+    },
+    "shatterEffectProgramId": {
+      "default": null,
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "shatterRadius": {
+      "default": 0,
+      "format": "uint8",
+      "maximum": 255,
+      "minimum": 0,
+      "type": "integer"
     },
     "slays": {
       "additionalProperties": false,

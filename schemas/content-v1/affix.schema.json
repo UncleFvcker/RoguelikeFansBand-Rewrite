@@ -397,6 +397,15 @@
       ],
       "type": "string"
     },
+    "ItemDestructionElement": {
+      "enum": [
+        "acid",
+        "electricity",
+        "fire",
+        "cold"
+      ],
+      "type": "string"
+    },
     "SlayLevel": {
       "enum": [
         "slay",
@@ -495,6 +504,24 @@
     },
     "descriptionKey": {
       "type": "string"
+    },
+    "elementalDestructionImmunities": {
+      "default": [],
+      "description": "RFB `OF_IGNORE_*` protections contributed by this affix.",
+      "items": {
+        "$ref": "#/$defs/ItemDestructionElement"
+      },
+      "type": "array",
+      "uniqueItems": true
+    },
+    "elementalDestructionVulnerabilities": {
+      "default": [],
+      "description": "RFB object elements that can destroy an item carrying this affix.",
+      "items": {
+        "$ref": "#/$defs/ItemDestructionElement"
+      },
+      "type": "array",
+      "uniqueItems": true
     },
     "equipmentBonuses": {
       "$ref": "#/$defs/EquipmentBonuses",
@@ -676,6 +703,11 @@
     "resistsMonsterDestruction": {
       "default": false,
       "description": "Protects instances from `KILL_ITEM`; used by Endurance ammunition.",
+      "type": "boolean"
+    },
+    "resistsProjectionDestruction": {
+      "default": false,
+      "description": "Protects instances carrying this affix from projection-driven item destruction.",
       "type": "boolean"
     },
     "rollGroups": {

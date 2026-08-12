@@ -1,9 +1,15 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "demo.ability-program.cinder-bolt",
+  "affectsGroundItems": true,
+  "descriptionKey": "ability-demo-cinder-bolt-description",
   "formatVersion": 1,
   "id": "demo.ability.cinder-bolt",
   "nameKey": "ability-demo-cinder-bolt-name",
-  "descriptionKey": "ability-demo-cinder-bolt-description",
+  "tags": [
+    "fire",
+    "spell"
+  ],
   "target": {
     "modes": [
       "position",
@@ -11,10 +17,5 @@
     ],
     "range": 6,
     "requiresLineOfEffect": true
-  },
-  "abilityProgramId": "demo.ability-program.cinder-bolt",
-  "tags": [
-    "fire",
-    "spell"
-  ]
+  }
 }
