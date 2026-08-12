@@ -128,6 +128,48 @@ fn elvish_waybread_keeps_original_shape_effect_and_town_acquisition() {
 }
 
 #[test]
+fn fine_drinks_keep_original_shape_effect_and_town_acquisition() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    for (item_id, weight, value, nutrition) in [
+        ("demo.item.pint-of-fine-ale", 5, 1, 500),
+        ("demo.item.pint-of-fine-wine", 10, 2, 1_000),
+    ] {
+        let item = artifact
+            .content
+            .items
+            .iter()
+            .find(|item| item.id == item_id)
+            .unwrap_or_else(|| panic!("{item_id} should exist"));
+        assert_eq!(item.glyph, ",");
+        assert_eq!(item.generation_level, 0);
+        assert_eq!(item.weight_tenths_pound, weight);
+        assert_eq!(item.base_value, value);
+        assert!(matches!(
+            item.use_action.as_ref().map(|action| &action.effect),
+            Some(ItemUseEffectDefinition::IncreaseNutrition { amount }) if *amount == nutrition
+        ));
+        for shop_id in [
+            "demo.shop.outpost-general-store",
+            "demo.shop.anambar-general-store",
+            "demo.shop.anambar-inn",
+        ] {
+            assert!(
+                artifact
+                    .content
+                    .shops
+                    .iter()
+                    .find(|shop| shop.id == shop_id)
+                    .unwrap_or_else(|| panic!("{shop_id} should exist"))
+                    .stock
+                    .iter()
+                    .any(|stock| stock.item_kind_id == item_id),
+                "{shop_id} should stock {item_id}"
+            );
+        }
+    }
+}
+
+#[test]
 fn fast_recovery_mushroom_keeps_original_shape_effect_and_shroomery_acquisition() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let mushroom = artifact

@@ -1,0 +1,22 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 75,
+  "descriptionKey": "item-demo-iron-helm-description",
+  "equipmentSlot": "head",
+  "formatVersion": 1,
+  "generationLevel": 20,
+  "glyph": "]",
+  "id": "demo.item.iron-helm",
+  "maxStack": 1,
+  "modifiers": {
+    "defense": 5
+  },
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-iron-helm-name",
+  "tags": [
+    "armor",
+    "equipment",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 75
+}

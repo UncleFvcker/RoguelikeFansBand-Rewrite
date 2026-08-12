@@ -1,0 +1,25 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 900,
+  "descriptionKey": "item-demo-augmented-chain-mail-description",
+  "equipmentBonuses": {
+    "meleeSkill": -2
+  },
+  "equipmentSlot": "body",
+  "formatVersion": 1,
+  "generationLevel": 30,
+  "glyph": "[",
+  "id": "demo.item.augmented-chain-mail",
+  "maxStack": 1,
+  "modifiers": {
+    "defense": 16
+  },
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-augmented-chain-mail-name",
+  "tags": [
+    "armor",
+    "equipment",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 270
+}

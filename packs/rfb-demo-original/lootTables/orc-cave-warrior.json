@@ -13,7 +13,14 @@
     { "itemKindId": "demo.item.chain-mail", "weight": 3, "quantity": 1 },
     { "itemKindId": "demo.item.heavy-crossbow", "weight": 2, "quantity": 1 },
     { "itemKindId": "demo.item.long-bow", "weight": 3, "quantity": 1 },
-    { "itemKindId": "demo.item.two-handed-sword", "weight": 2, "quantity": 1 }
+    { "itemKindId": "demo.item.two-handed-sword", "weight": 2, "quantity": 1 },
+    { "itemKindId": "demo.item.jingasa", "weight": 2, "quantity": 1, "minDepth": 16, "maxDepth": 32 },
+    { "itemKindId": "demo.item.pair-of-metal-shod-boots", "weight": 3, "quantity": 1, "minDepth": 20, "maxDepth": 32 },
+    { "itemKindId": "demo.item.iron-helm", "weight": 3, "quantity": 1, "minDepth": 20, "maxDepth": 32 },
+    { "itemKindId": "demo.item.set-of-spiked-gauntlets", "weight": 2, "quantity": 1, "minDepth": 20, "maxDepth": 32 },
+    { "itemKindId": "demo.item.halberd", "weight": 2, "quantity": 1, "minDepth": 25, "maxDepth": 32 },
+    { "itemKindId": "demo.item.large-metal-shield", "weight": 2, "quantity": 1, "minDepth": 30, "maxDepth": 32 },
+    { "itemKindId": "demo.item.augmented-chain-mail", "weight": 2, "quantity": 1, "minDepth": 30, "maxDepth": 32 }
   ],
   "qualityWeights": [{ "quality": "ordinary", "weight": 1 }],
   "affixWeights": [{ "weight": 1 }]

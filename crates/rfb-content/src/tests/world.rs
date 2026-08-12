@@ -3964,6 +3964,52 @@ fn supported_legacy_consumables_are_available_at_their_source_depths() {
 }
 
 #[test]
+fn orc_cave_equipment_batch_uses_source_depths_and_warrior_theme() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let normal = artifact
+        .content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.orc-cave")
+        .expect("Orc Cave loot should exist");
+    let warrior = artifact
+        .content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.orc-cave-warrior")
+        .expect("Orc Cave Warrior loot should exist");
+
+    for (item_id, min_depth, warrior_item) in [
+        ("demo.item.leather-scale-mail", 15, false),
+        ("demo.item.jingasa", 16, true),
+        ("demo.item.pair-of-metal-shod-boots", 20, true),
+        ("demo.item.iron-helm", 20, true),
+        ("demo.item.set-of-spiked-gauntlets", 20, true),
+        ("demo.item.halberd", 25, true),
+        ("demo.item.orcish-pick", 30, false),
+        ("demo.item.elven-cloak", 30, false),
+        ("demo.item.large-metal-shield", 30, true),
+        ("demo.item.augmented-chain-mail", 30, true),
+    ] {
+        let entry = normal
+            .entries
+            .iter()
+            .find(|entry| entry.item_kind_id == item_id)
+            .unwrap_or_else(|| panic!("{item_id} should be in Orc Cave loot"));
+        assert_eq!((entry.min_depth, entry.max_depth), (min_depth, 32));
+
+        let warrior_entry = warrior
+            .entries
+            .iter()
+            .find(|entry| entry.item_kind_id == item_id);
+        assert_eq!(warrior_entry.is_some(), warrior_item, "{item_id}");
+        if let Some(entry) = warrior_entry {
+            assert_eq!((entry.min_depth, entry.max_depth), (min_depth, 32));
+        }
+    }
+}
+
+#[test]
 fn selected_legacy_equipment_is_exposed_by_its_shop_and_warrens_depth() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let shop_stock = |id: &str| {

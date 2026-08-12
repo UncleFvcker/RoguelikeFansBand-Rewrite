@@ -1,0 +1,26 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 1500,
+  "descriptionKey": "item-demo-elven-cloak-description",
+  "equipmentBonuses": {
+    "searchSkill": 1,
+    "stealthSkill": 1
+  },
+  "equipmentSlot": "cloak",
+  "formatVersion": 1,
+  "generationLevel": 30,
+  "glyph": "(",
+  "id": "demo.item.elven-cloak",
+  "maxStack": 1,
+  "modifiers": {
+    "defense": 8
+  },
+  "mogaminatorRare": true,
+  "nameKey": "item-demo-elven-cloak-name",
+  "tags": [
+    "armor",
+    "equipment",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 5
+}

@@ -85,6 +85,20 @@
       "initialMaximum": 5,
       "maintenanceMinimum": 1,
       "maintenanceMaximum": 5
+    },
+    {
+      "itemKindId": "demo.item.pint-of-fine-ale",
+      "initialMinimum": 1,
+      "initialMaximum": 5,
+      "maintenanceMinimum": 1,
+      "maintenanceMaximum": 5
+    },
+    {
+      "itemKindId": "demo.item.pint-of-fine-wine",
+      "initialMinimum": 1,
+      "initialMaximum": 5,
+      "maintenanceMinimum": 1,
+      "maintenanceMaximum": 5
     }
   ],
   "maintenance": {
