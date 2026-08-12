@@ -367,6 +367,23 @@ mod tests {
     }
 
     #[test]
+    fn old_man_willow_uses_authoritative_chinese_names() {
+        let localizer = Localizer::new(Locale::ZhCn).expect("resources should load");
+        for (key, expected) in [
+            ("task-demo-old-man-willow-name", "柳树老头任务 (前哨镇)"),
+            ("actor-demo-old-man-willow-name", "柳树老头"),
+            ("affix-legacy-elemental-jewelry-name", "(元素的)"),
+        ] {
+            assert_eq!(
+                localizer
+                    .format_exact(Locale::ZhCn, key, None)
+                    .expect("Old Man Willow name should format"),
+                expected
+            );
+        }
+    }
+
+    #[test]
     fn all_item_affix_and_artifact_names_have_exact_matching_messages() {
         let pack = Path::new(env!("CARGO_MANIFEST_DIR"))
             .parent()

@@ -4002,6 +4002,125 @@ fn crows_nest_uses_the_original_map_clear_goal_birds_scramble_and_reward() {
 }
 
 #[test]
+fn old_man_willow_uses_the_original_map_formation_target_and_elemental_ring() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let world = artifact
+        .content
+        .worlds
+        .iter()
+        .find(|world| world.id == "demo.world.middle-earth")
+        .expect("fixture should contain Middle-earth");
+    let task = world
+        .tasks
+        .iter()
+        .find(|task| task.id == "demo.task.old-man-willow")
+        .expect("fixture should contain Old Man Willow");
+    assert_eq!(
+        task.source_facility_id.as_deref(),
+        Some("demo.town-facility.outpost-white-horse")
+    );
+    assert_eq!(
+        task.prerequisite_task_id.as_deref(),
+        Some("demo.task.crows-nest")
+    );
+    assert_eq!(task.objectives[0].kind, TaskObjectiveKind::KillActorKind);
+    assert_eq!(task.objectives[0].required, 1);
+    assert_eq!(
+        task.objectives[0].actor_kind_id.as_deref(),
+        Some("demo.actor.old-man-willow")
+    );
+    assert_eq!(task.reward.entries[0].item_kind_id, "demo.item.ring");
+    assert_eq!(
+        task.reward.entries[0].affix_ids,
+        ["rfb-legacy.affix.elemental-jewelry"]
+    );
+
+    let floor = world
+        .procedural_floors
+        .iter()
+        .find(|floor| floor.id == "demo.floor.old-man-willow")
+        .expect("fixture should contain Old Man Willow's grove");
+    assert_eq!((floor.width, floor.height, floor.depth), (31, 20, 22));
+    let inline_map = floor
+        .inline_map
+        .as_ref()
+        .expect("Old Man Willow should retain its inline map");
+    assert_eq!(inline_map.player_position, ContentPosition { x: 1, y: 18 });
+    assert_eq!(inline_map.actor_spawns.len(), 23);
+    assert_eq!(
+        inline_map
+            .actor_spawns
+            .iter()
+            .map(|spawn| spawn.kind_id.as_str())
+            .fold(BTreeMap::new(), |mut counts, id| {
+                *counts.entry(id).or_insert(0) += 1;
+                counts
+            }),
+        BTreeMap::from([
+            ("demo.actor.huorn", 8),
+            ("demo.actor.old-man-willow", 1),
+            ("demo.actor.sabre-tooth-tiger", 2),
+            ("demo.actor.sasquatch", 6),
+            ("demo.actor.vorpal-bunny", 6),
+        ])
+    );
+    let terrain_counts = inline_map
+        .terrain_overrides
+        .iter()
+        .map(|override_| (override_.terrain_id.as_str(), override_.positions.len()))
+        .collect::<BTreeMap<_, _>>();
+    assert_eq!(terrain_counts["demo.terrain.permanent-wall"], 98);
+    assert_eq!(terrain_counts["demo.terrain.surface-grass"], 271);
+    assert_eq!(terrain_counts["demo.terrain.stairs-up"], 1);
+
+    let willow = artifact
+        .content
+        .actors
+        .iter()
+        .find(|actor| actor.id == "demo.actor.old-man-willow")
+        .expect("Old Man Willow should be imported");
+    assert_eq!((willow.level, willow.max_hp), (22, 529));
+    assert!(willow.force_sleep);
+    assert!(willow.movement.never_moves);
+    assert_eq!(
+        willow.monster_casting.as_ref().map(|casting| (
+            casting.frequency_percent,
+            casting.abilities[0].ability_id.as_str()
+        )),
+        Some((16, "rfb-legacy.ability.drag"))
+    );
+    assert_eq!(
+        willow.resistances.get(&ActorDamageType::Fire),
+        Some(&ActorResistanceLevel::Vulnerable)
+    );
+
+    let elemental = artifact
+        .content
+        .affixes
+        .iter()
+        .find(|affix| affix.id == "rfb-legacy.affix.elemental-jewelry")
+        .expect("the Elemental jewelry ego should exist");
+    assert_eq!(elemental.generation_level, 22);
+    assert_eq!(elemental.roll_groups.len(), 2);
+    assert_eq!(
+        elemental.roll_groups[0]
+            .candidates
+            .iter()
+            .map(|candidate| candidate.weight)
+            .sum::<u32>(),
+        4
+    );
+    assert_eq!(
+        elemental.roll_groups[1]
+            .candidates
+            .iter()
+            .map(|candidate| candidate.weight)
+            .sum::<u32>(),
+        12
+    );
+}
+
+#[test]
 fn inline_floor_items_reject_duplicate_or_blocked_placements() {
     fn trouble_inline(content: &mut CompiledContentV1) -> &mut InlineFloorMapDefinition {
         content
@@ -5023,7 +5142,11 @@ fn outpost_count_services_and_follow_up_tasks_match_the_original_sequence() {
             .find(|facility| facility.id == "demo.town-facility.outpost-white-horse")
             .expect("Outpost should contain the White Horse task service")
             .task_ids,
-        ["demo.task.trouble-at-home", "demo.task.crows-nest"]
+        [
+            "demo.task.trouble-at-home",
+            "demo.task.crows-nest",
+            "demo.task.old-man-willow"
+        ]
     );
 
     let world = artifact

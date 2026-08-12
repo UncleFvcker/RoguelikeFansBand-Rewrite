@@ -3612,6 +3612,12 @@
       "id": "mean-looking-mercenary",
       "tags": ["outpost-quest", "trouble-at-home"],
       "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 206,
+      "id": "old-man-willow",
+      "tags": ["old-man-willow", "outpost-quest", "tree"],
+      "omittedFlags": ["POS_GAIN_AC"]
     }
   ]
 }

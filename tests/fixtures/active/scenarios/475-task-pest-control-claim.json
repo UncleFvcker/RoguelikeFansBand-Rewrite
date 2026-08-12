@@ -948,6 +948,13 @@
           "stages": 1
         },
         {
+          "taskId": "demo.task.old-man-willow",
+          "status": "locked",
+          "required": 1,
+          "stage": 1,
+          "stages": 1
+        },
+        {
           "taskId": "demo.task.pest-control",
           "status": "completed",
           "current": 8,
@@ -991,7 +998,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 2
       },
-      "stateHash": "f2e64159bd8502c2ce73d3b4c4015ae27848aff9934f468119508898e6226a67"
+      "stateHash": "5c82a27e41a5171977931e2d4be7f122e20c0d25fee1e472011ac8b075e75f2b"
     },
     "events": [
       {

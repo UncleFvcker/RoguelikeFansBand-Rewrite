@@ -648,6 +648,99 @@ fn crows_nest_inline_floor_preserves_map_birds_and_group_scramble() {
 }
 
 #[test]
+fn old_man_willow_inline_floor_preserves_the_original_grove_and_formation() {
+    let mut game =
+        Game::new_with_build(42, "demo.build.warrior").expect("Warrens journey should create");
+    let definition = game
+        .content
+        .world(&game.world_id)
+        .expect("Middle-earth world should remain available")
+        .procedural_floors
+        .iter()
+        .find(|floor| floor.id == "demo.floor.old-man-willow")
+        .expect("Old Man Willow's grove should remain available")
+        .clone();
+    let floor = game
+        .generate_procedural_floor(&definition, None)
+        .expect("fixed Old Man Willow floor should generate");
+
+    let rows = floor
+        .terrain
+        .chunks(usize::from(floor.width))
+        .map(|row| {
+            row.iter()
+                .map(|terrain_id| match terrain_id.as_str() {
+                    "demo.terrain.permanent-wall" => '#',
+                    "demo.terrain.surface-grass" => '.',
+                    "demo.terrain.surface-tree" => 'T',
+                    "demo.terrain.stairs-up" => '<',
+                    other => panic!("unexpected Old Man Willow terrain {other}"),
+                })
+                .collect::<String>()
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(
+        rows,
+        [
+            "###############################",
+            "#TTTTTTTTTTTTTTTT.............#",
+            "#T............TTT.TT.TTTTTTTT.#",
+            "#T............TTT...........T.#",
+            "#T............TTTTTTTTTTTTT.T.#",
+            "#T............TTT.........T.T.#",
+            "#T............TTT.TTTTTTT.T.T.#",
+            "#T............TTT.......T.T.T.#",
+            "#T.............TTTTTTTT.T.T.T.#",
+            "#T....................T.T.T.T.#",
+            "#TTTTTTTTTTTTTTTTTTTT.T.T.T.T.#",
+            "#TTTTTTTTTTTTTTTTTTTT...T...T.#",
+            "#TTTTTTTTTTTTTTTTTTTTTTTTTTTT.#",
+            "#.............................#",
+            "#.TTTTTTTTTTTTTTTTTTTTTTTTTTTT#",
+            "#.............................#",
+            "#TT.TTTTTTTTTTTTTTTTTTTTTTTTT.#",
+            "#.............................#",
+            "#<TTTTTTTTTTTTTTTTTTTTTTTTTTTT#",
+            "###############################",
+        ]
+    );
+    assert_eq!(floor.player_position, Position { x: 1, y: 18 });
+    assert_eq!(floor.entities.len(), 23);
+    assert_eq!(
+        floor
+            .entities
+            .iter()
+            .map(|entity| (entity.kind_id.as_str(), entity.position))
+            .collect::<BTreeSet<_>>(),
+        BTreeSet::from([
+            ("demo.actor.old-man-willow", Position { x: 7, y: 5 }),
+            ("demo.actor.huorn", Position { x: 20, y: 2 }),
+            ("demo.actor.huorn", Position { x: 3, y: 3 }),
+            ("demo.actor.huorn", Position { x: 8, y: 3 }),
+            ("demo.actor.huorn", Position { x: 12, y: 5 }),
+            ("demo.actor.huorn", Position { x: 4, y: 6 }),
+            ("demo.actor.huorn", Position { x: 9, y: 6 }),
+            ("demo.actor.huorn", Position { x: 14, y: 8 }),
+            ("demo.actor.huorn", Position { x: 3, y: 16 }),
+            ("demo.actor.sasquatch", Position { x: 11, y: 2 }),
+            ("demo.actor.sasquatch", Position { x: 17, y: 3 }),
+            ("demo.actor.sasquatch", Position { x: 3, y: 8 }),
+            ("demo.actor.sasquatch", Position { x: 8, y: 8 }),
+            ("demo.actor.sasquatch", Position { x: 11, y: 8 }),
+            ("demo.actor.sasquatch", Position { x: 6, y: 9 }),
+            ("demo.actor.vorpal-bunny", Position { x: 26, y: 3 }),
+            ("demo.actor.vorpal-bunny", Position { x: 24, y: 5 }),
+            ("demo.actor.vorpal-bunny", Position { x: 22, y: 7 }),
+            ("demo.actor.vorpal-bunny", Position { x: 1, y: 13 }),
+            ("demo.actor.vorpal-bunny", Position { x: 1, y: 14 }),
+            ("demo.actor.vorpal-bunny", Position { x: 1, y: 15 }),
+            ("demo.actor.sabre-tooth-tiger", Position { x: 28, y: 13 }),
+            ("demo.actor.sabre-tooth-tiger", Position { x: 25, y: 15 }),
+        ])
+    );
+}
+
+#[test]
 fn warrens_surface_reentry_starts_a_fresh_expedition_with_new_monsters() {
     let mut game =
         Game::new_with_build(42, "demo.build.warrior").expect("Warrens journey should create");

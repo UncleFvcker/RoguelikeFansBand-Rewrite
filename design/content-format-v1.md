@@ -565,3 +565,10 @@ contract-v267 / 包 1.258.0 接入白马旅店 quest 62“乌鸦巢”。38×17 
 半径 30 地图探测的启明法杖。content hash 为
 `c4ac995bbb20437d110ad78e3dbc6c0431c57e2c8f1a5a4e8c9d6c2dd989073d`；协议保持
 1.175，State Hash Schema 保持 v87。
+
+contract-v268 / 包 1.259.0 接入白马旅店 quest 31“柳树老头任务”。31×20 固定地图
+保留 250 格树木、1 只柳树老头、8 只树人、6 只大脚野人、6 只沃帕尔兔和 2 只
+剑齿虎；任务以 `kill-actor-kind` 追踪唯一目标。固定普通戒指附带窄化的动态
+`elemental-jewelry` affix：必得一种酸/电/火/冷抗性，并有三分之一概率独立再抽一种。
+content hash 为 `71f9f400d8aacf6363130f6b031e6a7c107ee64101512650285a8e91bfae59a1`；
+协议保持 1.175，State Hash Schema 保持 v87。
