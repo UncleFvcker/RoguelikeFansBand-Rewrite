@@ -699,7 +699,7 @@
     {
       "sourceIndex": 172,
       "id": "eagle",
-      "tags": ["bird", "warrens"],
+      "tags": ["bird", "eagle", "warrens"],
       "omittedFlags": ["POS_GAIN_AC"]
     },
     {
@@ -5873,6 +5873,30 @@
       "sourceIndex": 740,
       "id": "lesser-kraken",
       "tags": ["ocean"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 335,
+      "id": "great-eagle",
+      "tags": ["eagle"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 384,
+      "id": "meneldor-the-swift",
+      "tags": ["eagle"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 410,
+      "id": "gwaihir-the-windlord",
+      "tags": ["eagle"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 468,
+      "id": "thorondor",
+      "tags": ["eagle"],
       "omittedFlags": ["POS_GAIN_AC"]
     }
   ]

@@ -3121,6 +3121,51 @@ fn bird_drop_flies_away_or_drops_targets_with_levitation_reduction() {
 }
 
 #[test]
+fn p55b_eagle_summon_includes_unseen_unique_eagles() {
+    let mut game = Game::new(0);
+    clear_monsters(&mut game);
+    let caster_position = Position {
+        x: game.player.position.x + 4,
+        y: game.player.position.y,
+    };
+    game.entities.push(actor_from_runtime_spawn(
+        "generated.actor.ancient-roc",
+        "demo.actor.the-ancient-roc-of-okeldad",
+        caster_position,
+        3_872,
+        130,
+        100,
+        true,
+    ));
+    let ability = game
+        .content
+        .ability("rfb-legacy.ability.summon-eagle-l55-1d3-1")
+        .expect("P55B eagle summon should compile")
+        .clone();
+    let plan = game
+        .monster_ability_target_plan(0, ability, 1)
+        .expect("unseen eagles should be summon candidates");
+    let MonsterAbilityTargetPlan::SummonCategory {
+        candidate_kind_ids, ..
+    } = plan.target
+    else {
+        panic!("S_EAGLE should retain a category summon plan");
+    };
+    assert_eq!(
+        candidate_kind_ids.into_iter().collect::<BTreeSet<_>>(),
+        [
+            "demo.actor.eagle".to_owned(),
+            "demo.actor.great-eagle".to_owned(),
+            "demo.actor.gwaihir-the-windlord".to_owned(),
+            "demo.actor.meneldor-the-swift".to_owned(),
+            "demo.actor.thorondor".to_owned(),
+        ]
+        .into_iter()
+        .collect()
+    );
+}
+
+#[test]
 fn monster_polymorph_reuses_mutation_and_actor_form_transactions() {
     let ability = Game::new(0)
         .content

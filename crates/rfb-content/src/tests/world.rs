@@ -448,6 +448,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.goomba", 924, 1, 20),
             ("demo.actor.gorbag-the-orc-captain", 315, 3, 999),
             ("demo.actor.grape-jelly", 212, 3, 40),
+            ("demo.actor.great-eagle", 335, 2, 70),
             ("demo.actor.greater-hell-beast", 39, 6, 999),
             ("demo.actor.green-glutton-ghost", 100, 1, 40),
             ("demo.actor.green-jelly", 66, 1, 30),
@@ -464,6 +465,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.grishnakh-the-hill-orc", 186, 3, 999),
             ("demo.actor.grizzly-bear", 191, 1, 45),
             ("demo.actor.guardian-naga", 269, 2, 50),
+            ("demo.actor.gwaihir-the-windlord", 410, 1, 999),
             ("demo.actor.hairy-mold", 190, 2, 40),
             ("demo.actor.half-orc", 264, 3, 50),
             ("demo.actor.hammerhead", 292, 3, 50),
@@ -534,6 +536,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.manes", 128, 2, 40),
             ("demo.actor.master-yeek", 224, 2, 40),
             ("demo.actor.mauhur-the-orc-captain", 1072, 3, 999),
+            ("demo.actor.meneldor-the-swift", 384, 1, 999),
             ("demo.actor.meng-huo-the-king-of-southerings", 1030, 2, 999),
             ("demo.actor.meng-you-the-brother-of-meng-huo", 1073, 2, 999),
             ("demo.actor.metallic-blue-centipede", 67, 1, 30),
@@ -664,6 +667,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.the-borshin", 177, 2, 999),
             ("demo.actor.the-ghost-q", 1003, 3, 999),
             ("demo.actor.the-icky-queen", 909, 5, 999),
+            ("demo.actor.thorondor", 468, 1, 999),
             ("demo.actor.tiger", 230, 2, 50),
             ("demo.actor.tiger-snake", 1310, 1, 50),
             ("demo.actor.time-initiate", 1091, 3, 40),
@@ -5107,6 +5111,91 @@ fn p55a_monsters_retain_their_dedicated_location_boundaries() {
         assert!(allocation.legacy_dungeon_indices.is_empty());
         assert!(actor.tags.iter().any(|tag| tag == "ocean"));
         assert!(!actor.tags.iter().any(|tag| tag == "orc-cave"));
+    }
+}
+
+#[test]
+fn p55b_eagles_keep_their_wilderness_and_summon_boundaries() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actor = |id: &str| {
+        artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == format!("demo.actor.{id}"))
+            .unwrap_or_else(|| panic!("P55B should contain {id}"))
+    };
+
+    assert_eq!(
+        artifact
+            .content
+            .actors
+            .iter()
+            .filter(|actor| actor.tags.iter().any(|tag| tag == "eagle"))
+            .map(|actor| actor.id.as_str())
+            .collect::<BTreeSet<_>>(),
+        [
+            "demo.actor.eagle",
+            "demo.actor.great-eagle",
+            "demo.actor.gwaihir-the-windlord",
+            "demo.actor.meneldor-the-swift",
+            "demo.actor.thorondor",
+        ]
+        .into_iter()
+        .collect()
+    );
+
+    for (id, source_index, level) in [
+        ("great-eagle", 335, 35),
+        ("meneldor-the-swift", 384, 38),
+        ("gwaihir-the-windlord", 410, 40),
+        ("thorondor", 468, 55),
+    ] {
+        let actor = actor(id);
+        assert_eq!(actor.level, level);
+        let allocation = actor
+            .allocation
+            .as_ref()
+            .expect("P55B eagles should retain allocation metadata");
+        assert_eq!(allocation.legacy_index, source_index);
+        assert!(allocation.wild_only);
+        assert!(allocation.legacy_dungeon_indices.is_empty());
+        assert_eq!(
+            allocation.habitats.iter().copied().collect::<BTreeSet<_>>(),
+            [
+                ActorHabitat::Mountain,
+                ActorHabitat::Snow,
+                ActorHabitat::Volcano,
+            ]
+            .into_iter()
+            .collect()
+        );
+        assert!(actor.monster_casting.as_ref().is_some_and(|casting| {
+            casting
+                .abilities
+                .iter()
+                .any(|candidate| candidate.ability_id == "rfb-legacy.ability.bird-drop")
+        }));
+    }
+
+    for level in [38, 40, 55] {
+        let ability = artifact
+            .content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == format!("rfb-legacy.ability.summon-eagle-l{level}-1d3-1"))
+            .unwrap_or_else(|| panic!("P55B should contain the level {level} eagle summon"));
+        assert!(matches!(
+            ability.effect,
+            AbilityEffectDefinition::SummonCategory {
+                ref category,
+                maximum_level,
+                count_dice: 1,
+                count_sides: 3,
+                count_bonus: 1,
+                ..
+            } if category == "eagle" && maximum_level == level
+        ));
     }
 }
 

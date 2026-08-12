@@ -4,38 +4,38 @@
     "habitats": [
       "mountain",
       "snow",
-      "waste",
-      "wood"
+      "volcano"
     ],
-    "legacyIndex": 172,
-    "maxDepth": 40,
-    "rarity": 2,
+    "legacyIndex": 410,
+    "maxDepth": 999,
+    "rarity": 1,
     "wildOnly": true
   },
-  "attack": 2,
-  "damageDice": 1,
-  "damageSides": 4,
+  "attack": 10,
+  "damageDice": 15,
+  "damageSides": 5,
   "damageType": "physical",
-  "defense": 2,
-  "descriptionKey": "actor-demo-eagle-description",
-  "experienceValue": 22,
+  "defense": 6,
+  "descriptionKey": "actor-demo-gwaihir-the-windlord-description",
+  "experienceValue": 8000,
   "formatVersion": 1,
   "glyph": "B",
   "hitPointDice": {
-    "dice": 9,
-    "sides": 9
+    "dice": 22,
+    "forceMaximum": true,
+    "sides": 66
   },
-  "id": "demo.actor.eagle",
-  "level": 9,
-  "maxHp": 45,
+  "id": "demo.actor.gwaihir-the-windlord",
+  "level": 40,
+  "maxHp": 1452,
   "meleeRoutine": {
     "blows": [
       {
         "effects": [
           {
             "armorMitigated": true,
-            "damageDice": 1,
-            "damageSides": 4,
+            "damageDice": 15,
+            "damageSides": 5,
             "damageType": "physical",
             "type": "damage"
           }
@@ -47,8 +47,8 @@
         "effects": [
           {
             "armorMitigated": true,
-            "damageDice": 1,
-            "damageSides": 4,
+            "damageDice": 15,
+            "damageSides": 5,
             "damageType": "physical",
             "type": "damage"
           }
@@ -60,8 +60,8 @@
         "effects": [
           {
             "armorMitigated": true,
-            "damageDice": 1,
-            "damageSides": 6,
+            "damageDice": 5,
+            "damageSides": 10,
             "damageType": "physical",
             "type": "damage"
           }
@@ -71,26 +71,41 @@
       }
     ]
   },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.bird-drop",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-eagle-l40-1d3-1",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 50
+  },
   "movement": {
     "modes": [
       "fly"
     ]
   },
-  "nameKey": "actor-demo-eagle-name",
+  "nameKey": "actor-demo-gwaihir-the-windlord-name",
   "remains": {
     "chanceDenominator": 3,
     "corpseItemKindId": "demo.item.corpse-remains",
     "corpseWeight": 1,
     "skeletonWeight": 0
   },
+  "rideable": true,
   "role": "monster",
-  "speed": 120,
+  "speed": 142,
   "tags": [
     "animal",
-    "bird",
+    "clear-head",
     "eagle",
+    "good",
     "kin-glyph-66",
     "legacy-import",
-    "warrens"
+    "unique"
   ]
 }

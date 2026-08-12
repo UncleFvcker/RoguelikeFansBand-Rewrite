@@ -9071,6 +9071,7 @@ fn summon_spell_defaults(base: &str) -> Option<(&'static str, (u32, u32, u32))> 
         "S_HOUND" => ("hound", (1, 2, 1)),
         "S_HYDRA" => ("hydra", (1, 3, 1)),
         "S_ANGEL" => ("angel", (1, 3, 1)),
+        "S_EAGLE" => ("eagle", (1, 3, 1)),
         "S_LOUSE" => ("louse", (1, 3, 1)),
         _ => return None,
     };
@@ -14683,6 +14684,21 @@ S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_ANT | S_SPIDER | S_HYDRA | S_LO
         assert_eq!(effect["maximumLevel"], 32);
         assert_eq!(effect["countDice"], 1);
         assert_eq!(effect["countSides"], 1);
+        assert_eq!(effect["countBonus"], 1);
+    }
+
+    #[test]
+    fn eagle_summon_uses_the_original_mountain_eagle_category() {
+        let mut abilities = BTreeMap::new();
+        let id = map_spell_token("S_EAGLE", 55, 2, "demo.actor.thorondor", &mut abilities)
+            .expect("S_EAGLE should map");
+        assert_eq!(id, "rfb-legacy.ability.summon-eagle-l55-1d3-1");
+        let effect = &abilities[&id]["effect"];
+        assert_eq!(effect["type"], "summon-category");
+        assert_eq!(effect["category"], "eagle");
+        assert_eq!(effect["maximumLevel"], 55);
+        assert_eq!(effect["countDice"], 1);
+        assert_eq!(effect["countSides"], 3);
         assert_eq!(effect["countBonus"], 1);
     }
 
