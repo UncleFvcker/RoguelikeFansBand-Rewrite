@@ -1822,11 +1822,60 @@
       ],
       "type": "string"
     },
+    "TaskRewardClassOverrideDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "classId": {
+          "type": "string"
+        },
+        "entries": {
+          "items": {
+            "$ref": "#/$defs/TaskRewardEntryDefinition"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "classId",
+        "entries"
+      ],
+      "type": "object"
+    },
     "TaskRewardDefinition": {
       "additionalProperties": false,
       "properties": {
+        "classOverrides": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/TaskRewardClassOverrideDefinition"
+          },
+          "type": "array"
+        },
+        "entries": {
+          "items": {
+            "$ref": "#/$defs/TaskRewardEntryDefinition"
+          },
+          "type": "array"
+        },
         "itemInstanceId": {
           "type": "string"
+        }
+      },
+      "required": [
+        "itemInstanceId",
+        "entries"
+      ],
+      "type": "object"
+    },
+    "TaskRewardEntryDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "affixIds": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
         },
         "itemKindId": {
           "type": "string"
@@ -1835,12 +1884,17 @@
           "format": "uint32",
           "minimum": 0,
           "type": "integer"
+        },
+        "weight": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
         }
       },
       "required": [
-        "itemInstanceId",
         "itemKindId",
-        "quantity"
+        "quantity",
+        "weight"
       ],
       "type": "object"
     },

@@ -7,7 +7,7 @@
   "townId": "demo.town.outpost",
   "category": "quest-giver",
   "ownerNameKey": "town-facility-demo-outpost-count-owner-name",
-  "taskIds": ["demo.task.pest-control", "demo.task.the-sewer", "demo.task.haunted-house", "demo.task.royal-crypt"],
+  "taskIds": ["demo.task.thieves-hideout", "demo.task.pest-control", "demo.task.the-sewer", "demo.task.haunted-house", "demo.task.royal-crypt"],
   "identifyItemCost": 50,
   "legalNameChangeCost": 10,
   "entrancePosition": { "x": 26, "y": 13 },

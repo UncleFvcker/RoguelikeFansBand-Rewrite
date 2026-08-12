@@ -71,6 +71,12 @@ pub(super) fn validate_towns_and_shops(
         let unique_task_ids = facility.task_ids.iter().collect::<BTreeSet<_>>();
         let invalid_service_cost =
             facility.identify_item_cost == Some(0) || facility.legal_name_change_cost == Some(0);
+        let empty_task_service_has_shop = !facility.task_ids.is_empty()
+            || shops.iter().any(|shop| {
+                shop.town_id == facility.town_id
+                    && shop.entrance_position == facility.entrance_position
+                    && shop.entrance_terrain_id == facility.entrance_terrain_id
+            });
         if (facility.category == TownFacilityCategory::Home
             && (facility.storage_id.is_none()
                 || facility.owner_name_key.is_some()
@@ -80,7 +86,7 @@ pub(super) fn validate_towns_and_shops(
             || (facility.category == TownFacilityCategory::QuestGiver
                 && (facility.storage_id.is_some()
                     || facility.owner_name_key.is_none()
-                    || facility.task_ids.is_empty()))
+                    || !empty_task_service_has_shop))
             || invalid_service_cost
             || unique_task_ids.len() != facility.task_ids.len()
             || facility

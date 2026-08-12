@@ -3,9 +3,9 @@
 use std::collections::BTreeMap;
 
 use rfb_content::{
-    CampaignDefinition, ProceduralFloorDefinition, TaskDefinition, TaskLocationDefinition,
-    TaskObjectiveDefinition, TaskObjectiveKind, TaskRewardDefinition, TownFacilityCategory,
-    WorldDefinition,
+    CampaignDefinition, ContentCatalog, ProceduralFloorDefinition, TaskDefinition,
+    TaskLocationDefinition, TaskObjectiveDefinition, TaskObjectiveKind, TaskRewardDefinition,
+    TaskRewardEntryDefinition, TownFacilityCategory, WorldDefinition,
 };
 use rfb_protocol::{CampaignStatusDto, ItemEnchantmentsDto, ItemQualityDto, TaskStatusKindDto};
 
@@ -506,29 +506,71 @@ fn task_service_accessible(game: &Game, facility_id: &str) -> bool {
         && game.town_facility_accessible(facility_id)
 }
 
-fn reward_item(
-    game: &Game,
+fn selected_reward_entry<'a>(
+    reward: &'a TaskRewardDefinition,
+    class_id: Option<&str>,
+    rng: &mut crate::rng::RfbRng,
+) -> &'a TaskRewardEntryDefinition {
+    let entries = reward
+        .class_overrides
+        .iter()
+        .find(|override_| Some(override_.class_id.as_str()) == class_id)
+        .map_or(reward.entries.as_slice(), |override_| {
+            override_.entries.as_slice()
+        });
+    if entries.len() == 1 {
+        return &entries[0];
+    }
+    let weights = entries.iter().map(|entry| entry.weight).collect::<Vec<_>>();
+    &entries[super::roll_weighted_index_with_rng(rng, &weights)]
+}
+
+pub(super) fn reward_item(
+    content: &ContentCatalog,
+    class_id: Option<&str>,
     reward: &TaskRewardDefinition,
-    mut preview_rng: crate::rng::RfbRng,
+    location: ItemLocation,
+    rng: &mut crate::rng::RfbRng,
 ) -> ItemInstance {
-    let (activation, charges) =
-        initial_item_runtime_state(&game.content, &mut preview_rng, &reward.item_kind_id, 1);
+    let entry = selected_reward_entry(reward, class_id, rng).clone();
+    let rolled_affixes = entry
+        .affix_ids
+        .iter()
+        .flat_map(|affix_id| {
+            let depth = content
+                .affix(affix_id)
+                .expect("validated task reward affix must remain available")
+                .generation_level
+                .max(1);
+            super::roll_affix_properties_with_rng(
+                content,
+                rng,
+                std::slice::from_ref(affix_id),
+                depth,
+            )
+        })
+        .collect();
+    let (activation, charges) = initial_item_runtime_state(content, rng, &entry.item_kind_id, 1);
     ItemInstance {
         id: reward.item_instance_id.clone(),
-        kind_id: reward.item_kind_id.clone(),
-        quantity: reward.quantity,
+        kind_id: entry.item_kind_id.clone(),
+        quantity: entry.quantity,
         inscription: None,
         origin_actor_kind_id: None,
-        quality: ItemQualityDto::Ordinary,
-        affix_ids: Vec::new(),
-        rolled_affixes: Vec::new(),
+        quality: if entry.affix_ids.is_empty() {
+            ItemQualityDto::Ordinary
+        } else {
+            ItemQualityDto::Fine
+        },
+        affix_ids: entry.affix_ids,
+        rolled_affixes,
         enchantments: ItemEnchantmentsDto::default(),
-        curse: initial_item_curse(&game.content, &reward.item_kind_id),
+        curse: initial_item_curse(content, &entry.item_kind_id),
         activation,
         charges,
-        fuel: initial_item_fuel(&game.content, &reward.item_kind_id),
+        fuel: initial_item_fuel(content, &entry.item_kind_id),
         device_recovery_progress: 0,
-        location: ItemLocation::Inventory,
+        location,
     }
 }
 
@@ -651,12 +693,33 @@ impl Game {
             return Err("reward-item-id-unavailable");
         }
 
-        let preview = reward_item(self, &task.reward, self.rng.clone());
-        if self.inventory_quantity_capacity_for(&preview, false) < task.reward.quantity {
+        let class_id = self
+            .build
+            .as_ref()
+            .map(|identity| identity.class_id.as_str());
+        let mut preview_rng = self.rng.clone();
+        let preview = reward_item(
+            &self.content,
+            class_id,
+            &task.reward,
+            ItemLocation::Inventory,
+            &mut preview_rng,
+        );
+        if self.inventory_quantity_capacity_for(&preview, false) < preview.quantity {
             return Err("inventory-full");
         }
 
-        let reward = reward_item(self, &task.reward, self.rng.clone());
+        let reward = reward_item(
+            &self.content,
+            class_id,
+            &task.reward,
+            ItemLocation::Inventory,
+            &mut self.rng,
+        );
+        let outcome = TaskRewardOutcome {
+            item_kind_id: reward.kind_id.clone(),
+            quantity: reward.quantity,
+        };
         let mut remaining = reward.quantity;
         let definition = self
             .content
@@ -687,24 +750,11 @@ impl Game {
             reward.quantity = remaining;
             self.items.push(reward);
         }
-        self.rng = {
-            let mut committed = self.rng.clone();
-            let _ = initial_item_runtime_state(
-                &self.content,
-                &mut committed,
-                &task.reward.item_kind_id,
-                1,
-            );
-            committed
-        };
         self.task_states
             .get_mut(task_id)
             .expect("preflighted task state must remain available")
             .status = TaskStatusKindDto::Completed;
-        Ok(TaskRewardOutcome {
-            item_kind_id: task.reward.item_kind_id,
-            quantity: task.reward.quantity,
-        })
+        Ok(outcome)
     }
 
     fn bind_external_tasks_to_floor_transitions(&mut self, events: &[DomainEvent]) {

@@ -7,27 +7,22 @@ use rfb_content::{
     DungeonInstanceLifecycle, FloorLifecycle, ProceduralFloorDefinition, RetakeFloorPolicy,
     TerrainDefinition, WildernessLocationDefinition, WorldDefinition,
 };
-use rfb_protocol::{
-    ItemEnchantmentsDto, ItemQualityDto, Position, RecallStateDto, SummonCommandModeDto,
-    TaskStatusKindDto,
-};
+use rfb_protocol::{Position, RecallStateDto, SummonCommandModeDto, TaskStatusKindDto};
 
 use crate::{
     error::CoreError,
     event::DomainEvent,
-    save::{initial_item_fuel, position_from_content},
+    save::position_from_content,
     state::{Actor, FloorConnectionState, FloorState, ItemInstance, ItemLocation},
 };
 
 use super::tasks::{
-    TaskResolution, TaskState, activated_task_state, floor_task_id, task_definition,
-    task_initial_state, task_objectives, task_resolution_for_departure, task_state_after_departure,
-    task_succeeded,
+    TaskResolution, TaskRewardOutcome, TaskState, activated_task_state, floor_task_id, reward_item,
+    task_definition, task_initial_state, task_objectives, task_resolution_for_departure,
+    task_state_after_departure, task_succeeded,
 };
 use super::wilderness;
-use super::{
-    DungeonState, Game, chebyshev_distance, initial_item_curse, initial_item_runtime_state,
-};
+use super::{DungeonState, Game, chebyshev_distance};
 
 pub(super) type ActorIdentity = (String, String);
 
@@ -43,6 +38,7 @@ pub(super) struct FloorTransitionOutcome {
     pub(super) to_floor_id: String,
     pub(super) expedition_ended: bool,
     pub(super) one_shot_closed: Option<(String, TaskResolution)>,
+    pub(super) task_reward: Option<TaskRewardOutcome>,
     pub(super) task_paused: Option<String>,
     pub(super) task_resumed: Option<String>,
     pub(super) summons_followed: Vec<ActorIdentity>,
@@ -1081,6 +1077,7 @@ impl Game {
             }
         }
 
+        let mut task_reward = None;
         if let Some(departure) = &plan.one_shot_departure
             && let Some(resolution) = departure.resolution
         {
@@ -1106,35 +1103,27 @@ impl Game {
                 }
             }
             if resolution == TaskResolution::Completed
-                && let Some(reward) = self
+                && let Some(definition) = self
                     .content
                     .world(&self.world_id)
                     .and_then(|world| task_definition(world, &departure.task_id))
                     .map(|task| &task.reward)
+                    .cloned()
             {
-                let (activation, charges) = initial_item_runtime_state(
+                let reward = reward_item(
                     &self.content,
+                    self.build
+                        .as_ref()
+                        .map(|identity| identity.class_id.as_str()),
+                    &definition,
+                    ItemLocation::Ground(destination.player_position),
                     &mut self.rng,
-                    &reward.item_kind_id,
-                    1,
                 );
-                destination.items.push(ItemInstance {
-                    id: reward.item_instance_id.clone(),
-                    kind_id: reward.item_kind_id.clone(),
+                task_reward = Some(TaskRewardOutcome {
+                    item_kind_id: reward.kind_id.clone(),
                     quantity: reward.quantity,
-                    inscription: None,
-                    origin_actor_kind_id: None,
-                    quality: ItemQualityDto::Ordinary,
-                    affix_ids: Vec::new(),
-                    rolled_affixes: Vec::new(),
-                    enchantments: ItemEnchantmentsDto::default(),
-                    curse: initial_item_curse(&self.content, &reward.item_kind_id),
-                    activation,
-                    charges,
-                    fuel: initial_item_fuel(&self.content, &reward.item_kind_id),
-                    device_recovery_progress: 0,
-                    location: ItemLocation::Ground(destination.player_position),
                 });
+                destination.items.push(reward);
             }
         }
         if let Some(departure) = &plan.one_shot_departure {
@@ -1174,6 +1163,7 @@ impl Game {
                     .resolution
                     .map(|resolution| (departure.task_id.clone(), resolution))
             }),
+            task_reward,
             task_paused: plan.one_shot_departure.as_ref().and_then(|departure| {
                 (departure.resolution.is_none() && departure.retakeable)
                     .then(|| departure.task_id.clone())
@@ -1242,14 +1232,10 @@ impl Game {
                 },
             });
             if resolution == TaskResolution::Completed
-                && let Some(reward) = self
-                    .content
-                    .world(&self.world_id)
-                    .and_then(|world| task_definition(world, &floor_id))
-                    .map(|task| &task.reward)
+                && let Some(reward) = transition.task_reward
             {
                 events.push(DomainEvent::TaskRewarded {
-                    item_kind_id: reward.item_kind_id.clone(),
+                    item_kind_id: reward.item_kind_id,
                     quantity: reward.quantity,
                 });
             }

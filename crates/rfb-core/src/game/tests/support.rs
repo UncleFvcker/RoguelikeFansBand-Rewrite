@@ -325,8 +325,21 @@ pub(super) fn task_service_game(seed: u64) -> Game {
         completion_exit_terrain_id: None,
         reward: rfb_content::TaskRewardDefinition {
             item_instance_id: "demo.task.test-warrens-depth.reward.1".to_owned(),
-            item_kind_id: "demo.item.ration-of-food".to_owned(),
-            quantity: 1,
+            entries: vec![
+                rfb_content::TaskRewardEntryDefinition {
+                    item_kind_id: "demo.item.ration-of-food".to_owned(),
+                    quantity: 1,
+                    weight: 1,
+                    affix_ids: Vec::new(),
+                },
+                rfb_content::TaskRewardEntryDefinition {
+                    item_kind_id: "demo.item.water-potion".to_owned(),
+                    quantity: 1,
+                    weight: 1,
+                    affix_ids: Vec::new(),
+                },
+            ],
+            class_overrides: Vec::new(),
         },
     });
     let prerequisite_task_id = "demo.task.test-prerequisite";
@@ -353,8 +366,21 @@ pub(super) fn task_service_game(seed: u64) -> Game {
         completion_exit_terrain_id: None,
         reward: rfb_content::TaskRewardDefinition {
             item_instance_id: "demo.task.test-prerequisite.reward.1".to_owned(),
-            item_kind_id: "demo.item.water-potion".to_owned(),
-            quantity: 1,
+            entries: vec![rfb_content::TaskRewardEntryDefinition {
+                item_kind_id: "demo.item.water-potion".to_owned(),
+                quantity: 1,
+                weight: 1,
+                affix_ids: Vec::new(),
+            }],
+            class_overrides: vec![rfb_content::TaskRewardClassOverrideDefinition {
+                class_id: "demo.class.warrior".to_owned(),
+                entries: vec![rfb_content::TaskRewardEntryDefinition {
+                    item_kind_id: "demo.item.broad-sword".to_owned(),
+                    quantity: 1,
+                    weight: 1,
+                    affix_ids: vec!["rfb-legacy.affix.combat".to_owned()],
+                }],
+            }],
         },
     });
     let facility = artifact

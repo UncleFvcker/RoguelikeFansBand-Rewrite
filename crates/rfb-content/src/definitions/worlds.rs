@@ -610,8 +610,28 @@ pub struct TaskTargetPlacementDefinition {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct TaskRewardDefinition {
     pub item_instance_id: String,
+    pub entries: Vec<TaskRewardEntryDefinition>,
+    #[serde(default)]
+    pub class_overrides: Vec<TaskRewardClassOverrideDefinition>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct TaskRewardEntryDefinition {
     pub item_kind_id: String,
     pub quantity: u32,
+    pub weight: u32,
+    #[serde(default)]
+    pub affix_ids: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct TaskRewardClassOverrideDefinition {
+    pub class_id: String,
+    pub entries: Vec<TaskRewardEntryDefinition>,
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]

@@ -700,7 +700,7 @@
       "id": "demo.task.thieves-hideout",
       "nameKey": "task-demo-thieves-hideout-name",
       "descriptionKey": "task-demo-thieves-hideout-description",
-      "sourceFacilityId": "demo.town-facility.outpost-white-horse",
+      "sourceFacilityId": "demo.town-facility.outpost-count",
       "location": {
         "kind": "dedicated-floors",
         "floorIds": ["demo.floor.thieves-hideout"]
@@ -713,8 +713,9 @@
       ],
       "reward": {
         "itemInstanceId": "demo.task.thieves-hideout.reward.1",
-        "itemKindId": "demo.item.broad-sword",
-        "quantity": 1
+        "entries": [
+          { "itemKindId": "demo.item.broad-sword", "quantity": 1, "weight": 1 }
+        ]
       }
     },
     {
@@ -746,8 +747,9 @@
       "completionExitTerrainId": "demo.terrain.stairs-down",
       "reward": {
         "itemInstanceId": "demo.task.pest-control.reward.1",
-        "itemKindId": "demo.item.fur-cloak",
-        "quantity": 1
+        "entries": [
+          { "itemKindId": "demo.item.fur-cloak", "quantity": 1, "weight": 1 }
+        ]
       }
     },
     {
@@ -758,7 +760,7 @@
       "prerequisiteTaskId": "demo.task.pest-control",
       "location": { "kind": "dedicated-floors", "floorIds": ["demo.floor.outpost-sewer"] },
       "objectives": [{ "kind": "clear-floor", "floorId": "demo.floor.outpost-sewer" }],
-      "reward": { "itemInstanceId": "demo.task.the-sewer.reward.1", "itemKindId": "demo.item.pair-of-hard-leather-boots", "quantity": 1 }
+      "reward": { "itemInstanceId": "demo.task.the-sewer.reward.1", "entries": [{ "itemKindId": "demo.item.pair-of-hard-leather-boots", "quantity": 1, "weight": 1 }] }
     },
     {
       "id": "demo.task.haunted-house",
@@ -768,7 +770,7 @@
       "prerequisiteTaskId": "demo.task.the-sewer",
       "location": { "kind": "dedicated-floors", "floorIds": ["demo.floor.outpost-haunted-house"] },
       "objectives": [{ "kind": "clear-floor", "floorId": "demo.floor.outpost-haunted-house" }],
-      "reward": { "itemInstanceId": "demo.task.haunted-house.reward.1", "itemKindId": "demo.item.identify-staff", "quantity": 1 }
+      "reward": { "itemInstanceId": "demo.task.haunted-house.reward.1", "entries": [{ "itemKindId": "demo.item.identify-staff", "quantity": 1, "weight": 1 }] }
     },
     {
       "id": "demo.task.royal-crypt",
@@ -779,7 +781,7 @@
       "location": { "kind": "dedicated-floors", "floorIds": ["demo.floor.outpost-royal-crypt"] },
       "objectives": [{ "kind": "kill-actor-kind", "floorId": "demo.floor.outpost-royal-crypt", "required": 5, "actorKindId": "demo.actor.archlich" }],
       "targetPlacements": [{ "objectiveIndex": 0, "floorId": "demo.floor.outpost-royal-crypt", "spawnCount": 5 }],
-      "reward": { "itemInstanceId": "demo.task.royal-crypt.reward.1", "itemKindId": "demo.item.ring", "quantity": 1 }
+      "reward": { "itemInstanceId": "demo.task.royal-crypt.reward.1", "entries": [{ "itemKindId": "demo.item.ring", "quantity": 1, "weight": 1 }] }
     }
   ],
   "proceduralFloors": [

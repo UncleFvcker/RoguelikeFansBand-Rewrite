@@ -3671,9 +3671,9 @@ fn thieves_hideout_uses_the_original_fixed_map_and_formation_contract() {
         .expect("fixture should contain the thieves' hideout task");
     assert_eq!(
         task.source_facility_id.as_deref(),
-        Some("demo.town-facility.outpost-white-horse")
+        Some("demo.town-facility.outpost-count")
     );
-    assert_eq!(task.reward.item_kind_id, "demo.item.broad-sword");
+    assert_eq!(task.reward.entries[0].item_kind_id, "demo.item.broad-sword");
 
     let floor = world
         .procedural_floors
@@ -4623,7 +4623,7 @@ fn pest_control_matches_the_original_warrens_contract() {
         task.completion_exit_terrain_id.as_deref(),
         Some("demo.terrain.stairs-down")
     );
-    assert_eq!(task.reward.item_kind_id, "demo.item.fur-cloak");
+    assert_eq!(task.reward.entries[0].item_kind_id, "demo.item.fur-cloak");
 
     let reward = artifact
         .content
@@ -4648,6 +4648,26 @@ fn outpost_count_services_and_follow_up_tasks_match_the_original_sequence() {
         .expect("Outpost should contain the Count's residence");
     assert_eq!(count.identify_item_cost, Some(50));
     assert_eq!(count.legal_name_change_cost, Some(10));
+    assert_eq!(
+        count.task_ids,
+        [
+            "demo.task.thieves-hideout",
+            "demo.task.pest-control",
+            "demo.task.the-sewer",
+            "demo.task.haunted-house",
+            "demo.task.royal-crypt",
+        ]
+    );
+    assert!(
+        artifact
+            .content
+            .town_facilities
+            .iter()
+            .find(|facility| facility.id == "demo.town-facility.outpost-white-horse")
+            .expect("Outpost should contain the White Horse task service")
+            .task_ids
+            .is_empty()
+    );
 
     let world = artifact
         .content

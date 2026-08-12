@@ -6,7 +6,7 @@
 
 contract fixture 是规则兼容边界，不能把测试失败简单处理为“刷新预期结果”。政策用于保证每次规则变化只修改真正受影响的场景，同时保留可审查的失败原因。
 
-当前逻辑基线是 `contract-v264`，机器可读政策固定在：
+当前逻辑基线是 `contract-v265`，机器可读政策固定在：
 
 ```text
 tests/fixtures/active/baseline-policy.json
@@ -20,6 +20,10 @@ tests/fixtures/active/baseline-policy.json
 fixture；同时删除节奏技法与原创装置师职业充能的内容、协议和界面入口。协议升至
 1.175，内容包升级到 1.255.0，active fixture 精简为 21 条且零 waiver。删除的运行时
 字段不属于 state hash 输入，State Hash Schema 保持 v87，save 容器保持 v1。
+
+`contract-v265` 将盗贼藏身处任务归还伯爵府，并为任务奖励建立默认加权列表、按
+`classId` 覆盖和固定 affix 列表。单条目奖励保持零额外选择 RNG；Protocol 1.175、
+State Hash Schema v87 与 save v1 均不变，内容包升级到 1.256.0。
 
 ## 分类验证
 

@@ -362,7 +362,68 @@ fn external_task_service_rejects_unavailable_commands_without_rng_or_state_chang
 }
 
 #[test]
-fn accepting_thieves_hideout_opens_only_its_northeastern_entry() {
+fn task_rewards_use_one_weighted_default_choice_and_class_affix_overrides() {
+    let mut saw_food = false;
+    let mut saw_water = false;
+    for seed in 0..32 {
+        let mut game = task_service_game(seed);
+        game.player.position = Position { x: 26, y: 13 };
+        game.task_states.insert(
+            "demo.task.test-warrens-depth".to_owned(),
+            TaskState {
+                status: TaskStatusKindDto::RewardAvailable,
+                stage_index: 0,
+                current: 1,
+                required: 1,
+                active_floor_id: None,
+                retakes_used: 0,
+            },
+        );
+        let before_draws = game.rng_draw_counter();
+        let reward = game
+            .claim_task_reward(
+                "demo.town-facility.outpost-count",
+                "demo.task.test-warrens-depth",
+            )
+            .expect("weighted task reward should resolve");
+        assert_eq!(game.rng_draw_counter(), before_draws + 1);
+        saw_food |= reward.item_kind_id == "demo.item.ration-of-food";
+        saw_water |= reward.item_kind_id == "demo.item.water-potion";
+    }
+    assert!(saw_food && saw_water);
+
+    let mut game = task_service_game(42);
+    game.player.position = Position { x: 26, y: 13 };
+    game.task_states.insert(
+        "demo.task.test-prerequisite".to_owned(),
+        TaskState {
+            status: TaskStatusKindDto::RewardAvailable,
+            stage_index: 0,
+            current: 1,
+            required: 1,
+            active_floor_id: None,
+            retakes_used: 0,
+        },
+    );
+    let reward = game
+        .claim_task_reward(
+            "demo.town-facility.outpost-count",
+            "demo.task.test-prerequisite",
+        )
+        .expect("Warrior reward override should resolve");
+    assert_eq!(reward.item_kind_id, "demo.item.broad-sword");
+    let item = game
+        .items
+        .iter()
+        .find(|item| item.id == "demo.task.test-prerequisite.reward.1")
+        .expect("fixed reward instance should enter inventory");
+    assert_eq!(item.quality, ItemQualityDto::Fine);
+    assert_eq!(item.affix_ids, ["rfb-legacy.affix.combat"]);
+    assert_eq!(item.rolled_affixes.len(), 1);
+}
+
+#[test]
+fn accepting_thieves_hideout_at_the_count_opens_only_its_northeastern_entry() {
     let mut game =
         Game::new_with_build(42, "demo.build.warrior").expect("Warrens journey should create");
     let entry = Position { x: 63, y: 11 };
@@ -370,12 +431,12 @@ fn accepting_thieves_hideout_opens_only_its_northeastern_entry() {
         game.terrain_at(entry),
         "demo.terrain.thieves-hideout-entry-available"
     );
-    game.player.position = Position { x: 63, y: 13 };
+    game.player.position = Position { x: 26, y: 13 };
     let before_draws = game.rng_draw_counter();
     dispatch_next(
         &mut game,
         GameCommand::AcceptTask {
-            facility_id: "demo.town-facility.outpost-white-horse".to_owned(),
+            facility_id: "demo.town-facility.outpost-count".to_owned(),
             task_id: "demo.task.thieves-hideout".to_owned(),
         },
     );
@@ -392,11 +453,11 @@ fn accepting_thieves_hideout_opens_only_its_northeastern_entry() {
 fn clearing_thieves_hideout_closes_the_floor_without_granting_the_reward() {
     let mut game =
         Game::new_with_build(43, "demo.build.warrior").expect("Warrens journey should create");
-    game.player.position = Position { x: 63, y: 13 };
+    game.player.position = Position { x: 26, y: 13 };
     dispatch_next(
         &mut game,
         GameCommand::AcceptTask {
-            facility_id: "demo.town-facility.outpost-white-horse".to_owned(),
+            facility_id: "demo.town-facility.outpost-count".to_owned(),
             task_id: "demo.task.thieves-hideout".to_owned(),
         },
     );
@@ -440,11 +501,11 @@ fn clearing_thieves_hideout_closes_the_floor_without_granting_the_reward() {
 fn leaving_thieves_hideout_uncleared_fails_and_closes_the_entry() {
     let mut game =
         Game::new_with_build(44, "demo.build.warrior").expect("Warrens journey should create");
-    game.player.position = Position { x: 63, y: 13 };
+    game.player.position = Position { x: 26, y: 13 };
     dispatch_next(
         &mut game,
         GameCommand::AcceptTask {
-            facility_id: "demo.town-facility.outpost-white-horse".to_owned(),
+            facility_id: "demo.town-facility.outpost-count".to_owned(),
             task_id: "demo.task.thieves-hideout".to_owned(),
         },
     );
@@ -464,10 +525,10 @@ fn leaving_thieves_hideout_uncleared_fails_and_closes_the_entry() {
 }
 
 #[test]
-fn white_horse_grants_the_warrior_broad_sword_only_when_claimed() {
+fn count_grants_the_warrior_broad_sword_only_when_claimed() {
     let mut game =
         Game::new_with_build(45, "demo.build.warrior").expect("Warrens journey should create");
-    game.player.position = Position { x: 63, y: 13 };
+    game.player.position = Position { x: 26, y: 13 };
     game.task_states.insert(
         "demo.task.thieves-hideout".to_owned(),
         TaskState {
@@ -479,10 +540,11 @@ fn white_horse_grants_the_warrior_broad_sword_only_when_claimed() {
             retakes_used: 0,
         },
     );
+    let before_draws = game.rng_draw_counter();
     dispatch_next(
         &mut game,
         GameCommand::ClaimTaskReward {
-            facility_id: "demo.town-facility.outpost-white-horse".to_owned(),
+            facility_id: "demo.town-facility.outpost-count".to_owned(),
             task_id: "demo.task.thieves-hideout".to_owned(),
         },
     );
@@ -491,6 +553,7 @@ fn white_horse_grants_the_warrior_broad_sword_only_when_claimed() {
         game.task_states["demo.task.thieves-hideout"].status,
         TaskStatusKindDto::Completed
     );
+    assert_eq!(game.rng_draw_counter(), before_draws);
     assert!(game.items.iter().any(|item| {
         item.id == "demo.task.thieves-hideout.reward.1"
             && item.kind_id == "demo.item.broad-sword"
@@ -789,6 +852,17 @@ fn count_follow_up_tasks_unlock_in_the_original_order() {
         ("demo.task.the-sewer", "demo.task.haunted-house", 1),
         ("demo.task.haunted-house", "demo.task.royal-crypt", 1),
     ];
+    assert_eq!(
+        game.snapshot()
+            .task_services
+            .into_iter()
+            .find(|service| service.id == "demo.town-facility.outpost-count")
+            .expect("Count should project its task service")
+            .tasks
+            .first()
+            .map(|task| task.task_id.as_str()),
+        Some("demo.task.thieves-hideout")
+    );
 
     for (prerequisite, unlocked, required) in sequence {
         game.task_states

@@ -349,6 +349,11 @@ pub(crate) fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<
         .iter()
         .flat_map(|book| book.ability_ids.iter().cloned())
         .collect::<BTreeSet<_>>();
+    let class_ids = content
+        .classes
+        .iter()
+        .map(|class| class.id.clone())
+        .collect::<BTreeSet<_>>();
     let mut mutation_ability_ids = BTreeSet::new();
     for mutation in &content.mutations {
         let Some(activation) = &mutation.activation else {
@@ -439,6 +444,7 @@ pub(crate) fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<
                 terrain_feature_tables: &terrain_feature_tables_by_id,
                 vaults: &vaults_by_id,
                 build_ids: &build_ids,
+                class_ids: &class_ids,
                 towns: &towns_by_id,
                 town_facilities: &facilities_by_id,
                 shops: &shops_by_id,

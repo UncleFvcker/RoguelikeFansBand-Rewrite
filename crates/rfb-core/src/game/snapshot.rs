@@ -1245,7 +1245,7 @@ impl Game {
                     )
                     .expect("current town task service must retain an active position");
                 let player_at_entrance = self.player.position == entrance_position;
-                let mut tasks = if player_at_entrance {
+                let tasks = if player_at_entrance {
                     facility
                         .task_ids
                         .iter()
@@ -1273,7 +1273,6 @@ impl Game {
                 } else {
                     Vec::new()
                 };
-                tasks.sort_by(|left, right| left.task_id.cmp(&right.task_id));
                 TaskServiceDto {
                     id: facility.id.clone(),
                     name_key: facility.name_key.clone(),

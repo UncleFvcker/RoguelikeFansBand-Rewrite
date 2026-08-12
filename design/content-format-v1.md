@@ -544,3 +544,8 @@ contract-v264 / 包 1.255.0 只保留正式 Warrior class/build，删除原创�
 `deviceRechargeProfile`；资源定义删除初始百分比、近战获得和逐回合衰减字段。Mana、
 四本 Death 法术书、设备自然恢复和物品充能效果继续作为独立的正式内容/通用机制保留。
 当前包为 1 class、1 build、1 resource；协议升至 1.175，State Hash Schema 保持 v87。
+
+contract-v265 / 包 1.256.0 将 `TaskRewardDefinition` 的固定物品替换为默认加权
+`entries`，并允许按 `classId` 提供覆盖列表。每个条目包含物品、数量、权重和可选固定
+`affixIds`；任务仍只拥有一个固定实例 ID。单条目不消耗选择 RNG，多条目只消耗一次。
+盗贼藏身处归还伯爵府，白马旅店任务服务暂留空列表，等待其独立任务链。

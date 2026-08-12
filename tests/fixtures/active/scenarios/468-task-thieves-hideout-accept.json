@@ -1,6 +1,6 @@
 {
   "schemaVersion": 4,
-  "id": "task.thieves-hideout-accept-at-white-horse",
+  "id": "task.thieves-hideout-accept-at-count",
   "category": "tasks",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
@@ -9,7 +9,7 @@
     "world": "demo.world.middle-earth",
     "playerBuildId": "demo.build.warrior",
     "playerPosition": {
-      "x": 63,
+      "x": 26,
       "y": 13
     }
   },
@@ -17,7 +17,7 @@
     {
       "command": {
         "type": "accept-task",
-        "facilityId": "demo.town-facility.outpost-white-horse",
+        "facilityId": "demo.town-facility.outpost-count",
         "taskId": "demo.task.thieves-hideout"
       }
     }
@@ -265,8 +265,8 @@
           "entranceTerrainId": "demo.terrain.inn-entrance",
           "innStayCost": 20,
           "innTravelDestinations": [],
-          "visited": true,
-          "playerAtEntrance": true,
+          "visited": false,
+          "playerAtEntrance": false,
           "owner": {
             "id": "demo.shop-owner.outpost-otik-the-good",
             "nameKey": "shop-owner-demo-outpost-otik-the-good-name",
@@ -275,78 +275,8 @@
             "purchasePriceCap": 500,
             "priceFactorPercent": 93
           },
-          "stock": [
-            {
-              "id": "generated.item.169",
-              "kindId": "demo.item.ration-of-food",
-              "displayNameKey": "item-demo-ration-of-food-name",
-              "quantity": 3,
-              "maximumQuantity": 3,
-              "unitPrice": 3,
-              "weightTenthsPound": 10,
-              "quality": "ordinary"
-            },
-            {
-              "id": "generated.item.170",
-              "kindId": "demo.item.hard-biscuit",
-              "displayNameKey": "item-demo-hard-biscuit-name",
-              "quantity": 3,
-              "maximumQuantity": 3,
-              "unitPrice": 1,
-              "weightTenthsPound": 2,
-              "quality": "ordinary"
-            },
-            {
-              "id": "generated.item.171",
-              "kindId": "demo.item.strip-of-venison",
-              "displayNameKey": "item-demo-strip-of-venison-name",
-              "quantity": 5,
-              "maximumQuantity": 5,
-              "unitPrice": 2,
-              "weightTenthsPound": 2,
-              "quality": "ordinary"
-            },
-            {
-              "id": "generated.item.172",
-              "kindId": "demo.item.water-potion",
-              "displayNameKey": "item-demo-water-potion-name",
-              "quantity": 2,
-              "maximumQuantity": 2,
-              "unitPrice": 1,
-              "weightTenthsPound": 4,
-              "quality": "ordinary"
-            },
-            {
-              "id": "generated.item.173",
-              "kindId": "demo.item.apple-juice",
-              "displayNameKey": "item-demo-apple-juice-name",
-              "quantity": 5,
-              "maximumQuantity": 5,
-              "unitPrice": 1,
-              "weightTenthsPound": 4,
-              "quality": "ordinary"
-            }
-          ],
-          "sellQuotes": [
-            {
-              "itemId": "generated.item.1",
-              "kindId": "demo.item.ration-of-food",
-              "unitPrice": 2,
-              "maximumQuantity": 9
-            },
-            {
-              "itemId": "generated.item.2",
-              "kindId": "demo.item.wooden-torch",
-              "unitPrice": 1,
-              "maximumQuantity": 6
-            },
-            {
-              "itemId": "generated.item.8",
-              "kindId": "demo.item.arrow",
-              "unitPrice": 1,
-              "maximumQuantity": 22
-            }
-          ]
+          "stock": [],
+          "sellQuotes": []
         }
       ],
       "homes": [
@@ -366,7 +296,7 @@
         }
       ],
       "playerPosition": {
-        "x": 63,
+        "x": 26,
         "y": 13
       },
       "playerHp": 33,
@@ -989,7 +919,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "709329013714b7fc74f3385275ae80dc0ca3a87fd4872993917b9920dc523d74"
+      "stateHash": "f44389d5e6719479bf0863af21be9f72da30601d434e01977ee92b54609b8fad"
     },
     "events": [
       {

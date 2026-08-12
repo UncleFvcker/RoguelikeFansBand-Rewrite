@@ -4779,56 +4779,11 @@ impl Game {
     }
 
     fn roll_affix_properties(&mut self, affix_ids: &[String], depth: u16) -> Vec<RolledAffixState> {
-        let mut rolled_affixes = Vec::new();
-        for affix_id in affix_ids {
-            let roll_groups = self
-                .content
-                .affix(affix_id)
-                .expect("selected affix must remain available")
-                .roll_groups
-                .clone();
-            let mut properties = AffixPropertyBundleDefinition::default();
-            for group in roll_groups {
-                let eligible = group
-                    .candidates
-                    .iter()
-                    .filter(|candidate| {
-                        candidate.min_depth <= depth && depth <= candidate.max_depth
-                    })
-                    .collect::<Vec<_>>();
-                if eligible.is_empty() {
-                    continue;
-                }
-                let weights = eligible
-                    .iter()
-                    .map(|candidate| candidate.weight)
-                    .collect::<Vec<_>>();
-                for _ in 0..group.rolls {
-                    let selected = eligible[self.roll_weighted_index(&weights)];
-                    merge_affix_properties(&mut properties, &selected.properties);
-                }
-            }
-            if properties != AffixPropertyBundleDefinition::default() {
-                rolled_affixes.push(RolledAffixState {
-                    affix_id: affix_id.clone(),
-                    properties,
-                });
-            }
-        }
-        rolled_affixes
+        roll_affix_properties_with_rng(&self.content, &mut self.rng, affix_ids, depth)
     }
 
     fn roll_weighted_index(&mut self, weights: &[u32]) -> usize {
-        let total = weights.iter().map(|weight| u64::from(*weight)).sum();
-        let mut roll = self.rng.bounded(total);
-        for (index, weight) in weights.iter().enumerate() {
-            let weight = u64::from(*weight);
-            if roll < weight {
-                return index;
-            }
-            roll -= weight;
-        }
-        unreachable!("validated positive weighted table must select an entry")
+        roll_weighted_index_with_rng(&mut self.rng, weights)
     }
 
     fn clamp_player_hp_to_effective_max(&mut self) {
@@ -5510,6 +5465,61 @@ const fn attribute_sustain_passive(attribute: AttributeKind) -> EquipmentPassive
         AttributeKind::Constitution => EquipmentPassive::SustainConstitution,
         AttributeKind::Charisma => EquipmentPassive::SustainCharisma,
     }
+}
+
+fn roll_weighted_index_with_rng(rng: &mut RfbRng, weights: &[u32]) -> usize {
+    let total = weights.iter().map(|weight| u64::from(*weight)).sum();
+    let mut roll = rng.bounded(total);
+    for (index, weight) in weights.iter().enumerate() {
+        let weight = u64::from(*weight);
+        if roll < weight {
+            return index;
+        }
+        roll -= weight;
+    }
+    unreachable!("validated positive weighted table must select an entry")
+}
+
+fn roll_affix_properties_with_rng(
+    content: &ContentCatalog,
+    rng: &mut RfbRng,
+    affix_ids: &[String],
+    depth: u16,
+) -> Vec<RolledAffixState> {
+    let mut rolled_affixes = Vec::new();
+    for affix_id in affix_ids {
+        let roll_groups = content
+            .affix(affix_id)
+            .expect("selected affix must remain available")
+            .roll_groups
+            .clone();
+        let mut properties = AffixPropertyBundleDefinition::default();
+        for group in roll_groups {
+            let eligible = group
+                .candidates
+                .iter()
+                .filter(|candidate| candidate.min_depth <= depth && depth <= candidate.max_depth)
+                .collect::<Vec<_>>();
+            if eligible.is_empty() {
+                continue;
+            }
+            let weights = eligible
+                .iter()
+                .map(|candidate| candidate.weight)
+                .collect::<Vec<_>>();
+            for _ in 0..group.rolls {
+                let selected = eligible[roll_weighted_index_with_rng(rng, &weights)];
+                merge_affix_properties(&mut properties, &selected.properties);
+            }
+        }
+        if properties != AffixPropertyBundleDefinition::default() {
+            rolled_affixes.push(RolledAffixState {
+                affix_id: affix_id.clone(),
+                properties,
+            });
+        }
+    }
+    rolled_affixes
 }
 
 fn merge_affix_properties(

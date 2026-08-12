@@ -38,6 +38,7 @@ pub(super) struct WorldValidationRefs<'a> {
     pub(super) terrain_feature_tables: &'a BTreeMap<String, TerrainFeatureTableDefinition>,
     pub(super) vaults: &'a BTreeMap<String, VaultDefinition>,
     pub(super) build_ids: &'a BTreeSet<String>,
+    pub(super) class_ids: &'a BTreeSet<String>,
     pub(super) towns: &'a BTreeMap<String, TownDefinition>,
     pub(super) town_facilities: &'a BTreeMap<String, TownFacilityDefinition>,
     pub(super) shops: &'a BTreeMap<String, ShopDefinition>,
@@ -449,6 +450,7 @@ pub(super) fn validate_world(
         terrain_feature_tables,
         vaults,
         build_ids,
+        class_ids,
         towns,
         town_facilities,
         shops,
@@ -2297,16 +2299,59 @@ pub(super) fn validate_world(
                 task.reward.item_instance_id.clone(),
             ));
         }
-        let (max_stack, _) = item_limits.get(&task.reward.item_kind_id).ok_or_else(|| {
-            ContentError::DanglingReference {
-                owner: task.id.clone(),
-                target: task.reward.item_kind_id.clone(),
+        task.reward
+            .class_overrides
+            .sort_by(|left, right| left.class_id.cmp(&right.class_id));
+        if task.reward.entries.is_empty()
+            || task
+                .reward
+                .class_overrides
+                .windows(2)
+                .any(|pair| pair[0].class_id == pair[1].class_id)
+            || task.reward.class_overrides.iter().any(|override_| {
+                override_.entries.is_empty() || !class_ids.contains(&override_.class_id)
+            })
+        {
+            return Err(ContentError::InvalidTask(task.id.clone()));
+        }
+        for entries in std::iter::once(&mut task.reward.entries).chain(
+            task.reward
+                .class_overrides
+                .iter_mut()
+                .map(|entry| &mut entry.entries),
+        ) {
+            let mut total_weight = 0_u64;
+            for entry in entries {
+                let (max_stack, equippable) =
+                    item_limits.get(&entry.item_kind_id).ok_or_else(|| {
+                        ContentError::DanglingReference {
+                            owner: task.id.clone(),
+                            target: entry.item_kind_id.clone(),
+                        }
+                    })?;
+                entry.affix_ids.sort();
+                let mut seen_affixes = BTreeSet::new();
+                if entry.quantity == 0 || entry.quantity > *max_stack {
+                    return Err(ContentError::InvalidItemQuantity(
+                        task.reward.item_instance_id.clone(),
+                    ));
+                }
+                if entry.weight == 0
+                    || (!entry.affix_ids.is_empty()
+                        && (*max_stack != 1 || !equippable || entry.quantity != 1))
+                    || entry.affix_ids.iter().any(|affix_id| {
+                        !affix_ids.contains(affix_id) || !seen_affixes.insert(affix_id.as_str())
+                    })
+                {
+                    return Err(ContentError::InvalidTask(task.id.clone()));
+                }
+                total_weight = total_weight
+                    .checked_add(u64::from(entry.weight))
+                    .ok_or_else(|| ContentError::InvalidTask(task.id.clone()))?;
             }
-        })?;
-        if task.reward.quantity == 0 || task.reward.quantity > *max_stack {
-            return Err(ContentError::InvalidItemQuantity(
-                task.reward.item_instance_id.clone(),
-            ));
+            if total_weight == 0 {
+                return Err(ContentError::InvalidTask(task.id.clone()));
+            }
         }
     }
     let task_floor_ids = |task: &TaskDefinition| -> BTreeSet<String> {
