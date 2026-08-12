@@ -16,6 +16,16 @@
   "experiencePercent": 130,
   "baseHp": 0,
   "skillSetId": "demo.skill-set.high-mage",
+  "weaponProficiency": {
+    "defaultInitial": 2000,
+    "defaultMaximum": 4000,
+    "overrides": {
+      "demo.item.dagger": { "initial": 4000, "maximum": 8000 },
+      "demo.item.quarterstaff": { "initial": 4000, "maximum": 8000 },
+      "demo.item.sling": { "initial": 4000, "maximum": 6000 },
+      "demo.item.tanto": { "initial": 2000, "maximum": 6000 }
+    }
+  },
   "usesSpellScrolls": true,
   "castingProfile": {
     "resourceId": "demo.resource.mana",

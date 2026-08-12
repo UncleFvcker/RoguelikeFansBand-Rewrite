@@ -151,6 +151,9 @@ pub struct ClassDefinition {
     #[serde(default)]
     pub base_hp: i32,
     pub skill_set_id: String,
+    /// RFB per-base-weapon birth proficiency and class training ceiling.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub weapon_proficiency: Option<WeaponProficiencyDefinition>,
     #[serde(default)]
     pub uses_spell_scrolls: bool,
     #[serde(default)]
@@ -179,6 +182,24 @@ pub struct ClassDefinition {
     #[serde(default)]
     pub special_item_tags: Vec<String>,
     pub tags: Vec<String>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct WeaponProficiencyBoundsDefinition {
+    pub initial: u16,
+    pub maximum: u16,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct WeaponProficiencyDefinition {
+    pub default_initial: u16,
+    pub default_maximum: u16,
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub overrides: BTreeMap<String, WeaponProficiencyBoundsDefinition>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

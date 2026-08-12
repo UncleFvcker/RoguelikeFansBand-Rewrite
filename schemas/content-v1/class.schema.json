@@ -674,6 +674,56 @@
         "charisma"
       ],
       "type": "string"
+    },
+    "WeaponProficiencyBoundsDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "initial": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "maximum": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "initial",
+        "maximum"
+      ],
+      "type": "object"
+    },
+    "WeaponProficiencyDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "defaultInitial": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "defaultMaximum": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "overrides": {
+          "additionalProperties": {
+            "$ref": "#/$defs/WeaponProficiencyBoundsDefinition"
+          },
+          "type": "object"
+        }
+      },
+      "required": [
+        "defaultInitial",
+        "defaultMaximum"
+      ],
+      "type": "object"
     }
   },
   "$id": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/class.schema.json",
@@ -815,6 +865,17 @@
     "usesSpellScrolls": {
       "default": false,
       "type": "boolean"
+    },
+    "weaponProficiency": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/WeaponProficiencyDefinition"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "RFB per-base-weapon birth proficiency and class training ceiling."
     }
   },
   "required": [

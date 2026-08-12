@@ -57,6 +57,36 @@ fn item_shape_validation_uses_current_rfb_content() {
 }
 
 #[test]
+fn weapon_proficiency_content_rejects_invalid_bounds_and_base_aliases() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+
+    let mut invalid = artifact.content.clone();
+    invalid
+        .classes
+        .iter_mut()
+        .find(|class| class.id == "demo.class.warrior")
+        .and_then(|class| class.weapon_proficiency.as_mut())
+        .expect("Warrior weapon proficiency")
+        .default_initial = 8_001;
+    assert!(matches!(
+        validate_and_normalize(&mut invalid),
+        Err(ContentError::InvalidWeaponProficiency(_))
+    ));
+
+    let mut invalid = artifact.content.clone();
+    invalid
+        .items
+        .iter_mut()
+        .find(|item| item.id == "demo.item.crisdurian")
+        .expect("Crisdurian should exist")
+        .weapon_proficiency_base_item_id = Some("demo.item.short-bow".to_owned());
+    assert!(matches!(
+        validate_and_normalize(&mut invalid),
+        Err(ContentError::InvalidWeaponProficiency(_))
+    ));
+}
+
+#[test]
 fn natural_affix_compatibility_uses_slot_depth_and_explicit_none_fallback() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let slaying = artifact

@@ -1047,6 +1047,13 @@
       ],
       "default": null
     },
+    "weaponProficiencyBaseItemId": {
+      "default": null,
+      "type": [
+        "string",
+        "null"
+      ]
+    },
     "weightTenthsPound": {
       "format": "uint16",
       "maximum": 65535,

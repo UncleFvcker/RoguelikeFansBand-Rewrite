@@ -10,6 +10,7 @@
   "maxStack": 1,
   "baseValue": 200000,
   "equipmentSlot": "weapon",
+  "weaponProficiencyBaseItemId": "demo.item.executioners-sword",
   "meleeProfile": {
     "attacks": 3,
     "toHit": 15,

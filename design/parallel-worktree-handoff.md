@@ -219,8 +219,19 @@ git diff --stat
 - `ClassDefinition.levelResistances` 是通用、可选且按等级排序的职业抗性门槛；当前唯一
   内容是圣骑士 40 级恐惧抗性。抗性由 class/level 派生，不新增存档或协议字段。
 - 本批没有新增或占用任何 item ID。摧毁高级异教书经验等待生命/圣战高级书正式导入，
-  禁止为此建立占位书；逐武器熟练度仍是
-  [`legacy-class-import-v1.md`](legacy-class-import-v1.md) 第 3 节记录的共享缺口。
+  禁止为此建立占位书；逐武器熟练度的后续内容底座见第 12 节。
 - 共享协调点：Protocol `1.177`、State Hash Schema v88、save v1、active baseline
   `contract-v274`、pack `1.274.0`，content hash 为
   `e94926512734080f4743341e0eff07e3c96f371fe8cdac674089654b28fa2010`。
+
+## 12. main 当前交接（逐武器熟练度内容底座）
+
+- 新增内容字段 `ClassDefinition.weaponProficiency` 与
+  `ItemDefinition.weaponProficiencyBaseItemId`；其他方向不得建立第二套武器身份表。
+- 没有新增 item/ability ID。神器只引用现有基础物品 ID：克里斯杜瑞安与杀戮者引用
+  `demo.item.executioners-sword`，痛苦引用 `demo.item.glaive`。
+- 四个正式职业已导入权威 `master:s_info.txt` 数据；审计覆盖 67 种已选基础武器。
+- 共享协调点：pack `1.275.0`、Protocol `1.177`、State Hash Schema v88、save v1、
+  active baseline `contract-v274`，content hash 为
+  `4274e13bce1b7c3e1808267ac12c1fe4f5fa83e6f256c602c693205396767fa2`。
+- 运行时进度、战斗命中/成长、存档和 UI 尚未接入；武术、双持、骑乘仍是独立缺口。

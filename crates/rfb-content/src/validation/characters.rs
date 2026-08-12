@@ -64,6 +64,14 @@ pub(super) fn validate_characters(
             )
         })
         .collect::<BTreeMap<_, _>>();
+    let weapon_proficiency_base_item_ids = items
+        .iter()
+        .filter(|item| {
+            item.weapon_proficiency_base_item_id.is_none()
+                && (item.melee_profile.is_some() || item.projectile_profile.is_some())
+        })
+        .map(|item| item.id.as_str())
+        .collect::<BTreeSet<_>>();
     let mut skill_maxima = BTreeMap::new();
     let mut skill_kinds = BTreeSet::new();
     for skill in definitions.skills.iter_mut() {
@@ -223,6 +231,18 @@ pub(super) fn validate_characters(
             &skill_sets_by_id,
             &item_starting_metadata,
         )?;
+        if let Some(profile) = &class.weapon_proficiency {
+            let valid_bounds = |initial: u16, maximum: u16| initial <= maximum && maximum <= 8_000;
+            if !valid_bounds(profile.default_initial, profile.default_maximum)
+                || profile.overrides.len() > 1_024
+                || profile.overrides.iter().any(|(item_id, bounds)| {
+                    !weapon_proficiency_base_item_ids.contains(item_id.as_str())
+                        || !valid_bounds(bounds.initial, bounds.maximum)
+                })
+            {
+                return Err(ContentError::InvalidWeaponProficiency(class.id.clone()));
+            }
+        }
         if let Some(profile) = &mut class.casting_profile {
             profile
                 .realm_profiles

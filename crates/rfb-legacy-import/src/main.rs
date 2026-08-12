@@ -5,7 +5,8 @@ use std::{env, path::PathBuf, process::ExitCode};
 use rfb_legacy_import::{
     content::{
         audit_demo_item_names, audit_demo_items, audit_demo_monsters, audit_demo_mutations,
-        import_content, sync_demo_items, sync_demo_monsters, sync_demo_wilderness,
+        audit_demo_weapon_proficiencies, import_content, sync_demo_items, sync_demo_monsters,
+        sync_demo_wilderness,
     },
     inspect_file, record_catalog, verify_catalog,
 };
@@ -96,6 +97,29 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
                 )?)?
             );
         }
+        "audit-demo-weapon-proficiencies" => {
+            let adaptations = PathBuf::from(args.next().ok_or(
+                "audit-demo-weapon-proficiencies requires selection, adaptations, and classes paths",
+            )?);
+            let classes = PathBuf::from(args.next().ok_or(
+                "audit-demo-weapon-proficiencies requires selection, adaptations, and classes paths",
+            )?);
+            if args.next().is_some() {
+                return Err("audit-demo-weapon-proficiencies accepts exactly three paths".into());
+            }
+            let source = PathBuf::from(env::var_os("RFB_LEGACY_SOURCE").ok_or(
+                "audit-demo-weapon-proficiencies requires RFB_LEGACY_SOURCE to point at the legacy repository",
+            )?);
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&audit_demo_weapon_proficiencies(
+                    &source,
+                    &path,
+                    &adaptations,
+                    &classes,
+                )?)?
+            );
+        }
         "audit-demo-mutations" => {
             if args.next().is_some() {
                 return Err("audit-demo-mutations accepts exactly one plan path".into());
@@ -183,7 +207,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
         }
         _ => {
             return Err(
-                "mode must be inspect-prefix, record-catalog, verify-catalog, import-content, audit-demo-item-names, audit-demo-items, audit-demo-monsters, audit-demo-mutations, sync-demo-items, sync-demo-monsters, or sync-demo-wilderness".into(),
+                "mode must be inspect-prefix, record-catalog, verify-catalog, import-content, audit-demo-item-names, audit-demo-items, audit-demo-weapon-proficiencies, audit-demo-monsters, audit-demo-mutations, sync-demo-items, sync-demo-monsters, or sync-demo-wilderness".into(),
             );
         }
     }

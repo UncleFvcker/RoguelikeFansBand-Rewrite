@@ -16,6 +16,18 @@
   "experiencePercent": 110,
   "baseHp": 12,
   "skillSetId": "demo.skill-set.archer",
+  "weaponProficiency": {
+    "defaultInitial": 2000,
+    "defaultMaximum": 6000,
+    "overrides": {
+      "demo.item.heavy-crossbow": { "initial": 4000, "maximum": 8000 },
+      "demo.item.light-crossbow": { "initial": 4000, "maximum": 8000 },
+      "demo.item.long-bow": { "initial": 4000, "maximum": 8000 },
+      "demo.item.nunchaku": { "initial": 2000, "maximum": 4000 },
+      "demo.item.short-bow": { "initial": 4000, "maximum": 8000 },
+      "demo.item.sling": { "initial": 4000, "maximum": 8000 }
+    }
+  },
   "ammunitionBreakageFactorModifier": -10,
   "projectileCriticalChanceBonusPercentPerLevel": 1,
   "abilities": [

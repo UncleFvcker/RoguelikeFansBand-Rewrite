@@ -719,6 +719,9 @@ pub struct ItemDefinition {
     pub base_value: u32,
     #[serde(default)]
     pub equipment_slot: Option<String>,
+    /// Canonical base item whose RFB weapon proficiency this item shares.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub weapon_proficiency_base_item_id: Option<String>,
     /// Extra shared-pack stack slots granted while this container is equipped.
     #[serde(default)]
     pub inventory_slot_bonus: u16,

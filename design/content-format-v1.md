@@ -612,3 +612,12 @@ contract-v274 / 包 1.274.0 为 `ClassDefinition` 增加可选 `levelResistances
 伤害为 `level × 3 + spellDamageBonus`。content hash 为
 `e94926512734080f4743341e0eff07e3c96f371fe8cdac674089654b28fa2010`；Protocol 1.177、
 State Hash Schema v88 与 save v1 不变。
+
+包 1.275.0 建立逐武器熟练度的内容底座。`ClassDefinition.weaponProficiency` 以职业默认
+起始值/上限和稳定 item ID 覆盖表达 `s_info.txt` 的 `W:` 表；
+`ItemDefinition.weaponProficiencyBaseItemId` 让神器共享基础武器身份，禁止自引用、别名链
+和近战/发射器跨类引用。战士、高阶法师、弓箭手、圣骑士已覆盖当前 67 种权威基础武器，
+并由 `audit-demo-weapon-proficiencies` 从 RFB `master` Git 对象逐项核验。该底座尚未接入
+战斗成长、存档或 UI，因此 active baseline 保持 contract-v274；Protocol 1.177、State
+Hash Schema v88 与 save v1 不变。content hash 为
+`4274e13bce1b7c3e1808267ac12c1fe4f5fa83e6f256c602c693205396767fa2`。

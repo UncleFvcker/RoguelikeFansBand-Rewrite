@@ -874,8 +874,25 @@ pub struct LegacySpellProfile {
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct LegacyProficiencyProfile {
     pub class_index: u16,
-    pub weapon_entries: usize,
+    pub weapon_entries: Vec<LegacyWeaponProficiencyEntry>,
     pub skill_entries: BTreeMap<u16, usize>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct LegacyWeaponProficiencyEntry {
+    pub weapon_type: u16,
+    pub weapon_subtype: u16,
+    pub initial_rank: u8,
+    pub maximum_rank: u8,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DemoWeaponProficiencyAuditReport {
+    pub schema_version: u16,
+    pub source_commit: String,
+    pub classes_checked: usize,
+    pub base_weapons_checked: usize,
 }
 
 #[derive(Debug, Default, Serialize)]
@@ -5323,8 +5340,7 @@ pub fn parse_m_info(text: &str) -> Result<Vec<LegacyMagicProfile>, LegacyImportE
     Ok(profiles)
 }
 
-/// Parses `s_info.txt` only far enough to quantify the proficiency systems
-/// that the current content model cannot yet represent.
+/// Parses the per-class weapon rows and counts the still-unmodeled misc skills.
 pub fn parse_s_info(text: &str) -> Result<Vec<LegacyProficiencyProfile>, LegacyImportError> {
     let mut profiles = Vec::new();
     let mut current: Option<LegacyProficiencyProfile> = None;
@@ -5351,15 +5367,46 @@ pub fn parse_s_info(text: &str) -> Result<Vec<LegacyProficiencyProfile>, LegacyI
                 )
             })?;
             let parts = parse_fields(S_INFO_SOURCE, line_number, "W", rest, 4)?;
-            for (field, value) in [
-                ("W.weaponType", parts.first().copied()),
-                ("W.weaponSubtype", parts.get(1).copied()),
-                ("W.minimum", parts.get(2).copied()),
-                ("W.maximum", parts.get(3).copied()),
-            ] {
-                let _: i64 = parse_number(S_INFO_SOURCE, line_number, field, value)?;
+            let entry = LegacyWeaponProficiencyEntry {
+                weapon_type: parse_number(
+                    S_INFO_SOURCE,
+                    line_number,
+                    "W.weaponType",
+                    parts.first().copied(),
+                )?,
+                weapon_subtype: parse_number(
+                    S_INFO_SOURCE,
+                    line_number,
+                    "W.weaponSubtype",
+                    parts.get(1).copied(),
+                )?,
+                initial_rank: parse_number(
+                    S_INFO_SOURCE,
+                    line_number,
+                    "W.minimum",
+                    parts.get(2).copied(),
+                )?,
+                maximum_rank: parse_number(
+                    S_INFO_SOURCE,
+                    line_number,
+                    "W.maximum",
+                    parts.get(3).copied(),
+                )?,
+            };
+            if entry.weapon_type > 4
+                || entry.weapon_subtype > 63
+                || entry.initial_rank > 4
+                || entry.maximum_rank > 4
+            {
+                return Err(content_parse_error(
+                    S_INFO_SOURCE,
+                    line_number,
+                    "W",
+                    rest,
+                    "weapon proficiency row is outside RFB limits",
+                ));
             }
-            profile.weapon_entries += 1;
+            profile.weapon_entries.push(entry);
         } else if let Some(rest) = line.strip_prefix("S:") {
             let profile = current.as_mut().ok_or_else(|| {
                 content_parse_error(
@@ -10092,11 +10139,11 @@ fn convert_content_from(
     }
     report.proficiency_profiles_total = characters.proficiency_profiles.len();
     for profile in &characters.proficiency_profiles {
-        report.proficiency_weapon_rows += profile.weapon_entries;
+        report.proficiency_weapon_rows += profile.weapon_entries.len();
         *report
             .class_proficiency_gaps
             .entry("weapon-proficiency".to_owned())
-            .or_default() += profile.weapon_entries;
+            .or_default() += profile.weapon_entries.len();
         for (skill_index, count) in &profile.skill_entries {
             let gap = match skill_index {
                 0 => "martial-arts-proficiency".to_owned(),
@@ -12121,6 +12168,138 @@ pub fn audit_demo_items(
     )
 }
 
+fn proficiency_rank_value(rank: u8) -> u16 {
+    [0, 4_000, 6_000, 7_000, 8_000][usize::from(rank)]
+}
+
+/// Checks the four formal class profiles against authoritative `master:s_info.txt`.
+pub fn audit_demo_weapon_proficiencies(
+    source: &Path,
+    selection_path: &Path,
+    adaptations_path: &Path,
+    classes_dir: &Path,
+) -> Result<DemoWeaponProficiencyAuditReport, LegacyImportError> {
+    let source_commit = resolve_legacy_content_commit(source)?;
+    let items = parse_k_info(&read_legacy_object_at(
+        source,
+        &source_commit,
+        K_INFO_SOURCE,
+    )?)?;
+    let profiles = parse_s_info(&read_legacy_object_at(
+        source,
+        &source_commit,
+        S_INFO_SOURCE,
+    )?)?;
+    let selection: DemoItemSelection = serde_json::from_slice(&fs::read(selection_path)?)?;
+    let adaptations: DemoItemAdaptationLedger =
+        serde_json::from_slice(&fs::read(adaptations_path)?)?;
+    if selection.schema_version != 1 || adaptations.schema_version != 1 {
+        return Err(LegacyImportError::InvalidDemoItemAudit(
+            "weapon proficiency audit requires schemaVersion 1 ledgers".to_owned(),
+        ));
+    }
+
+    let items_by_index = items
+        .iter()
+        .map(|item| (item.index, item))
+        .collect::<BTreeMap<_, _>>();
+    let mut base_weapons = BTreeMap::new();
+    for entry in &selection.items {
+        let item = items_by_index.get(&entry.source_index).ok_or_else(|| {
+            LegacyImportError::InvalidDemoItemAudit(format!(
+                "selected source item {} is missing",
+                entry.source_index
+            ))
+        })?;
+        if (19..=23).contains(&item.tval) {
+            base_weapons.insert(format!("demo.item.{}", entry.id), *item);
+        }
+    }
+    for entry in adaptations
+        .items
+        .iter()
+        .filter(|entry| entry.status == DemoItemCoverageStatus::Active)
+    {
+        let Some(item) = items_by_index.get(&entry.source_index) else {
+            continue;
+        };
+        if (19..=23).contains(&item.tval) {
+            base_weapons.insert(entry.item_id.clone(), *item);
+        }
+    }
+
+    for (file_name, class_index) in [
+        ("warrior.json", 0),
+        ("paladin.json", 5),
+        ("high-mage.json", 10),
+        ("archer.json", 15),
+    ] {
+        let class: serde_json::Value =
+            serde_json::from_slice(&fs::read(classes_dir.join(file_name))?)?;
+        let proficiency = &class["weaponProficiency"];
+        let default_initial = proficiency["defaultInitial"].as_u64().ok_or_else(|| {
+            LegacyImportError::InvalidDemoItemAudit(format!(
+                "{file_name} has no weapon proficiency default initial"
+            ))
+        })? as u16;
+        let default_maximum = proficiency["defaultMaximum"].as_u64().ok_or_else(|| {
+            LegacyImportError::InvalidDemoItemAudit(format!(
+                "{file_name} has no weapon proficiency default maximum"
+            ))
+        })? as u16;
+        let overrides = proficiency["overrides"].as_object().ok_or_else(|| {
+            LegacyImportError::InvalidDemoItemAudit(format!(
+                "{file_name} has no weapon proficiency overrides"
+            ))
+        })?;
+        let source_profile = profiles
+            .iter()
+            .find(|profile| profile.class_index == class_index)
+            .ok_or_else(|| {
+                LegacyImportError::InvalidDemoItemAudit(format!(
+                    "s_info has no class {class_index} profile"
+                ))
+            })?;
+
+        for (item_id, item) in &base_weapons {
+            let source_row = source_profile
+                .weapon_entries
+                .iter()
+                .find(|row| row.weapon_type == item.tval - 19 && row.weapon_subtype == item.sval)
+                .ok_or_else(|| {
+                    LegacyImportError::InvalidDemoItemAudit(format!(
+                        "s_info class {class_index} has no row for {item_id}"
+                    ))
+                })?;
+            let expected_maximum = proficiency_rank_value(source_row.maximum_rank);
+            let expected_initial = if source_row.initial_rank == 0 {
+                2_000.min(expected_maximum)
+            } else {
+                proficiency_rank_value(source_row.initial_rank).min(expected_maximum)
+            };
+            let actual = overrides.get(item_id);
+            let actual_initial = actual
+                .and_then(|value| value["initial"].as_u64())
+                .map_or(default_initial, |value| value as u16);
+            let actual_maximum = actual
+                .and_then(|value| value["maximum"].as_u64())
+                .map_or(default_maximum, |value| value as u16);
+            if (actual_initial, actual_maximum) != (expected_initial, expected_maximum) {
+                return Err(LegacyImportError::InvalidDemoItemAudit(format!(
+                    "{file_name} {item_id} is {actual_initial}/{actual_maximum}, expected {expected_initial}/{expected_maximum}"
+                )));
+            }
+        }
+    }
+
+    Ok(DemoWeaponProficiencyAuditReport {
+        schema_version: 1,
+        source_commit,
+        classes_checked: 4,
+        base_weapons_checked: base_weapons.len(),
+    })
+}
+
 fn selected_demo_items<'a>(
     selection: &'a DemoItemSelection,
     entries: &'a [LegacyItemEntry],
@@ -12484,6 +12663,7 @@ mod tests {
             2,
             "S.skillIndex",
         );
+        assert_content_parse_error(parse_s_info("N:1\nW:5:0:0:4\n"), S_INFO_SOURCE, 2, "W");
     }
 
     #[test]
@@ -13457,7 +13637,23 @@ S:2:0:6000
         let proficiency_profiles =
             parse_s_info(S_INFO).expect("synthetic proficiency profiles should parse");
         assert_eq!(proficiency_profiles.len(), 1);
-        assert_eq!(proficiency_profiles[0].weapon_entries, 2);
+        assert_eq!(
+            proficiency_profiles[0].weapon_entries,
+            [
+                LegacyWeaponProficiencyEntry {
+                    weapon_type: 4,
+                    weapon_subtype: 1,
+                    initial_rank: 0,
+                    maximum_rank: 2,
+                },
+                LegacyWeaponProficiencyEntry {
+                    weapon_type: 4,
+                    weapon_subtype: 2,
+                    initial_rank: 0,
+                    maximum_rank: 3,
+                },
+            ]
+        );
         assert_eq!(proficiency_profiles[0].skill_entries.len(), 3);
 
         let characters = LegacyCharacterSources {

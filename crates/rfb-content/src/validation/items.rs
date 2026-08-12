@@ -644,6 +644,19 @@ pub(super) fn validate_items(
                 }
         };
 
+    let proficiency_items = items
+        .iter()
+        .map(|item| {
+            (
+                item.id.clone(),
+                (
+                    item.weapon_proficiency_base_item_id.clone(),
+                    item.melee_profile.is_some(),
+                    item.projectile_profile.is_some(),
+                ),
+            )
+        })
+        .collect::<BTreeMap<_, _>>();
     let mut item_limits = BTreeMap::new();
     for item in items.iter_mut() {
         require_schema(&item.schema, ITEM_SCHEMA, &item.id)?;
@@ -697,6 +710,21 @@ pub(super) fn validate_items(
             && (item.max_stack != 1 || validate_equipment_slot(slot).is_err())
         {
             return Err(ContentError::InvalidEquipmentSlot(item.id.clone()));
+        }
+        if let Some(base_item_id) = &item.weapon_proficiency_base_item_id {
+            let Some((base_alias, base_melee, base_projectile)) =
+                proficiency_items.get(base_item_id)
+            else {
+                return Err(ContentError::InvalidWeaponProficiency(item.id.clone()));
+            };
+            if base_item_id == &item.id
+                || base_alias.is_some()
+                || (item.melee_profile.is_none() && item.projectile_profile.is_none())
+                || item.melee_profile.is_some() != *base_melee
+                || item.projectile_profile.is_some() != *base_projectile
+            {
+                return Err(ContentError::InvalidWeaponProficiency(item.id.clone()));
+            }
         }
         if item.inventory_slot_bonus > 100
             || (item.inventory_slot_bonus > 0

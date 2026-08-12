@@ -78,6 +78,10 @@ WIS 施法与 32 条死亡祈祷参数，并复用 contract-v272 的神授学习
 不变。新增内容与派生职业抗性不改变既有 Warrior fixture 初始化，统一复验 21 条 active
 fixture 零语义漂移；active 集保持 21 条且零 waiver。
 
+包 1.275.0 只增加逐武器熟练度内容底座与原版数据审计，尚无战斗消费者、持久状态或
+快照投影。Protocol 1.177、State Hash Schema v88、save v1 与 active baseline
+`contract-v274` 保持不变；现有 fixture 行为不变，不因本次内容建模刷新。
+
 ## 分类验证
 
 每条 fixture 必须声明一个受控的主 `category`。分类表示该 fixture 主要保护的行为，不是自由标签；跨系统改动一次选择多个分类即可。当前分类可通过下列命令查询，输出同时给出各类数量：

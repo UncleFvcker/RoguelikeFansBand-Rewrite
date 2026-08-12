@@ -91,6 +91,8 @@ pub enum ContentError {
     InvalidAttackProfile(String),
     #[error("item projectile profile is invalid or requires the launcher slot: {0}")]
     InvalidProjectileProfile(String),
+    #[error("weapon proficiency definition or base item reference is invalid: {0}")]
+    InvalidWeaponProficiency(String),
     #[error("item throw profile is invalid: {0}")]
     InvalidThrowProfile(String),
     #[error("item use action is invalid: {0}")]

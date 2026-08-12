@@ -10,6 +10,7 @@
   "maxStack": 1,
   "baseValue": 50000,
   "equipmentSlot": "weapon",
+  "weaponProficiencyBaseItemId": "demo.item.glaive",
   "meleeProfile": {
     "attacks": 1,
     "toHit": 0,

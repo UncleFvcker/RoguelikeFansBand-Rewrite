@@ -16,6 +16,18 @@
   "experiencePercent": 100,
   "baseHp": 18,
   "skillSetId": "demo.skill-set.warrior",
+  "weaponProficiency": {
+    "defaultInitial": 4000,
+    "defaultMaximum": 8000,
+    "overrides": {
+      "demo.item.heavy-crossbow": { "initial": 4000, "maximum": 7000 },
+      "demo.item.light-crossbow": { "initial": 4000, "maximum": 7000 },
+      "demo.item.long-bow": { "initial": 4000, "maximum": 7000 },
+      "demo.item.nunchaku": { "initial": 2000, "maximum": 6000 },
+      "demo.item.short-bow": { "initial": 4000, "maximum": 7000 },
+      "demo.item.sling": { "initial": 4000, "maximum": 7000 }
+    }
+  },
   "startingItems": [
     { "itemKindId": "demo.item.broad-sword", "quantity": 1, "equipped": true },
     { "itemKindId": "demo.item.chain-mail", "quantity": 1, "equipped": true },

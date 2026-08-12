@@ -44,6 +44,8 @@ pub(crate) struct SourceItemDefinition {
     #[serde(default)]
     equipment_slot: Option<String>,
     #[serde(default)]
+    weapon_proficiency_base_item_id: Option<String>,
+    #[serde(default)]
     inventory_slot_bonus: u16,
     #[serde(default)]
     ammunition_capacity: u16,
@@ -221,6 +223,7 @@ impl SourceItemDefinition {
             max_stack: self.max_stack,
             base_value: self.base_value,
             equipment_slot: self.equipment_slot,
+            weapon_proficiency_base_item_id: self.weapon_proficiency_base_item_id,
             inventory_slot_bonus: self.inventory_slot_bonus,
             ammunition_capacity: self.ammunition_capacity,
             initial_curse: self.initial_curse,

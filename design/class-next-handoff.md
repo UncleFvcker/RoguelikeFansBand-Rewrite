@@ -73,5 +73,17 @@ ammo-slaying ID。若 items 方向随后导入陶器碎片或断木棍，也应�
 - 当前最终协调点：pack 1.274.0、Protocol 1.177、State Hash Schema v88、
   contract-v274，content hash 为
   `e94926512734080f4743341e0eff07e3c96f371fe8cdac674089654b28fa2010`。
-- 摧毁高级异教书经验继续等待生命/圣战高级书本，不导入占位书；逐武器熟练度继续是
-  [`legacy-class-import-v1.md`](legacy-class-import-v1.md) 第 3 节记录的共享内容模型缺口。
+- 摧毁高级异教书经验继续等待生命/圣战高级书本，不导入占位书；逐武器熟练度内容
+  底座见下一节，运行时仍待后续提交。
+
+## 逐武器熟练度第一步
+
+- 包 1.275.0 已加入 `ClassDefinition.weaponProficiency` 与
+  `ItemDefinition.weaponProficiencyBaseItemId`，没有新增或占用 item/ability ID。
+- 战士、高阶法师、弓箭手、圣骑士的默认值与覆盖项已按权威 `master:s_info.txt` 导入；
+  克里斯杜瑞安/杀戮者共享斩首剑身份，痛苦共享长柄大刀身份。
+- 审计命令读取 `master` Git 对象并核验 4 个职业、67 种基础武器：
+  `audit-demo-weapon-proficiencies <selection> <adaptations> <classes>`。
+- 当前只完成内容底座；战斗成长、命中修正、存档和 UI 留给后续提交。Protocol 1.177、
+  State Hash Schema v88、save v1、active baseline contract-v274 均不变；content hash 为
+  `4274e13bce1b7c3e1808267ac12c1fe4f5fa83e6f256c602c693205396767fa2`。

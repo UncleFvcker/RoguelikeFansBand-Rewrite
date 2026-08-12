@@ -24,9 +24,9 @@
 
 标准化结果写入 `legacyMagicProfiles/<class>.json`；跨职业领域表写入 `realm-readability.json`；C 侧 `caster_info` 与 `m_info` 挂靠关系汇总到 `class-casting-shells.json`。这些文件是 P53+ 玩家领域法术映射的中间输入，刻意不列入 `pack.json.contentRoots`：当前 `ClassDefinition.castingProfile` 要求真实 resource、ability book 与 ability 引用，本轮不会用占位能力伪造可施放法术。
 
-## 3. s_info 缺口
+## 3. s_info 熟练度状态
 
-`s_info` 当前没有对应的逐武器熟练度、武术、双持与骑乘熟练度内容模型。本轮解析每个职业档案并将差异量化到 `classProficiencyGaps`，不把原版熟练度错误折算成八项通用技能。
+逐武器熟练度已有正式内容模型：解析器保留每条 `W:` 的武器类别、子类、起始等级与上限等级，四个正式职业通过稳定 item ID 声明默认值和例外。`audit-demo-weapon-proficiencies` 从权威 `master` Git 对象读取 `k_info.txt` 与 `s_info.txt`，联结选择/适配账本后逐项核验当前 67 种基础武器。武术、双持与骑乘的 `S:` 行仍只量化到 `classProficiencyGaps`，不折算成八项通用技能。
 
 ## 4. 固定基线结果
 
