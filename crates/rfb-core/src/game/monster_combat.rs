@@ -85,8 +85,11 @@ fn disenchantable_player_status(kind_id: &str) -> bool {
     )
 }
 
-fn reduce_disenchanted_component(rng: &mut RfbRng, value: u16) -> u16 {
-    let mut value = value.saturating_sub(1);
+fn reduce_disenchanted_component(rng: &mut RfbRng, value: i16) -> i16 {
+    if value <= 0 {
+        return value;
+    }
+    let mut value = value - 1;
     if value > 5 && rng.bounded(100) < 20 {
         value -= 1;
     }

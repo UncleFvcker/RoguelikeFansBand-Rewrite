@@ -543,3 +543,8 @@ destinationTownId }`。旅行固定收费 500 金币，直接重建目标城镇�
 `PlayerDto.deviceRecharge` 和对应来源 DTO。物品 `UseItemForRecharge`、设备自然恢复、
 `canReceiveRecharge` / `canSupplyRecharge` 及结构化充能结果继续保留，供卷轴和正式物品
 能力复用。没有新增持久状态，State Hash Schema 保持 v87，save 容器保持 v1。
+
+协议 1.176 / contract-v266 为 `AbilityDto` 增加可选 `uiGroupNameKey`。Archer 的三个
+既有制造端点使用同一分组名，前端按 `minimumLevel` 只展示已开放子项；执行仍复用
+`CastAbility` 和既有目标选择。玩家制造弹药物品的持久字段正式纳入 State Hash Schema
+v88，save 容器保持 v1。

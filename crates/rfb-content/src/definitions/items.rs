@@ -181,6 +181,8 @@ pub struct ProjectileProfileDefinition {
     pub range: u16,
     /// Original launcher multiplier scaled by 100 (x2.50 = 250).
     pub damage_multiplier_percent: u16,
+    /// Original `bow_energy` value; 10_000 is one standard action at one shot.
+    pub shot_energy: u16,
     pub to_hit: i32,
     pub to_damage: i32,
     pub ammunition_type: AmmunitionTypeDefinition,
@@ -715,6 +717,9 @@ pub struct ItemDefinition {
     /// Extra shared-pack stack slots granted while this container is equipped.
     #[serde(default)]
     pub inventory_slot_bonus: u16,
+    /// Ammunition units carried outside the shared pack while this quiver is equipped.
+    #[serde(default)]
+    pub ammunition_capacity: u16,
     /// Curse stamped onto newly generated instances. Save data remains
     /// authoritative after generation and never re-derives this field.
     #[serde(default)]

@@ -401,3 +401,7 @@ contract-v264 删除节奏技法和原创装置师职业充能后，`PlayerSaveD
 当前职业精确声明的资源集合，不再为已退役职业补建缺失资源池。设备自然恢复余数与
 物品充能继续使用既有字段。删除的资源行为配置、职业投影和瞬时 touched 集合都不在
 state hash 输入中，因此 State Hash Schema 保持 v87；save 容器仍为 v1，不兼容旧开发存档。
+
+contract-v266 正式把玩家制造弹药的 `damageDiceOverride`、`originKind` 和
+`discountPercent` 纳入物品权威存档与 State Hash Schema v88。普通物品继续省略默认值，
+save 容器保持 v1；测试只从新存档开始，不增加旧开发存档迁移路径。

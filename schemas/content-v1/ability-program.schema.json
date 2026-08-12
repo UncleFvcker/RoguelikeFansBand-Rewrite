@@ -572,6 +572,50 @@
         {
           "additionalProperties": false,
           "properties": {
+            "itemKindIds": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "quantityMaximum": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "quantityMinimum": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "sourceItemTags": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "sourceTerrainTags": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "type": {
+              "const": "create-ammunition",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "itemKindIds",
+            "quantityMinimum",
+            "quantityMaximum"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
             "type": {
               "const": "transmute-item-to-gold",
               "type": "string"

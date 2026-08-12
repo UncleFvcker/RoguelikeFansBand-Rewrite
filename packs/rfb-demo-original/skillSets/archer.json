@@ -1,0 +1,15 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/skill-set.schema.json",
+  "formatVersion": 1,
+  "id": "demo.skill-set.archer",
+  "entries": [
+    { "skillId": "demo.skill.device", "base": 24, "growthPerTenLevels": 10 },
+    { "skillId": "demo.skill.disarming", "base": 38, "growthPerTenLevels": 12 },
+    { "skillId": "demo.skill.melee", "base": 56, "growthPerTenLevels": 18 },
+    { "skillId": "demo.skill.perception", "base": 16 },
+    { "skillId": "demo.skill.ranged", "base": 82, "growthPerTenLevels": 36 },
+    { "skillId": "demo.skill.saving-throw", "base": 35, "growthPerTenLevels": 10 },
+    { "skillId": "demo.skill.search", "base": 24 },
+    { "skillId": "demo.skill.stealth", "base": 4 }
+  ]
+}

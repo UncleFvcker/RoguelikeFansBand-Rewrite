@@ -18,8 +18,12 @@ test("character names are trimmed and bounded", () => {
   assert.equal(canonicalCharacterName("bad\nname"), undefined);
 });
 
-test("new character creation exposes only the first RFB Warrior slice", () => {
-  assert.deepEqual(PLAYTEST_BUILD_IDS, ["demo.build.warrior"]);
+test("new character creation exposes the formal Warrior, Death High-Mage and Archer slices", () => {
+  assert.deepEqual(PLAYTEST_BUILD_IDS, [
+    "demo.build.warrior",
+    "demo.build.high-mage-death",
+    "demo.build.archer",
+  ]);
   assert.equal(PLAYTEST_BUILD_IDS.some((id) => id.startsWith("rfb-legacy.")), false);
 });
 

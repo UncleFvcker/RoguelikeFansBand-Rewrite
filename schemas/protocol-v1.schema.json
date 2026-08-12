@@ -354,6 +354,21 @@
             "null"
           ]
         },
+        "bookNameKey": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "bookRank": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        },
         "canCast": {
           "type": "boolean"
         },
@@ -502,6 +517,12 @@
             {
               "type": "null"
             }
+          ]
+        },
+        "uiGroupNameKey": {
+          "type": [
+            "string",
+            "null"
           ]
         }
       },
@@ -772,6 +793,58 @@
             "targetTerrainId",
             "nutritionBefore",
             "nutritionAfter"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "destinationItemIds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "itemKindId": {
+              "type": "string"
+            },
+            "quantity": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "sourceItemId": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "sourcePosition": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Position"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": {
+              "type": "string",
+              "const": "create-ammunition"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex",
+            "itemKindId",
+            "quantity",
+            "destinationItemIds"
           ]
         },
         {
@@ -2396,6 +2469,51 @@
         {
           "type": "object",
           "properties": {
+            "itemKindIds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "quantityMaximum": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "quantityMinimum": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "sourceItemTags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "sourceTerrainTags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "type": {
+              "type": "string",
+              "const": "create-ammunition"
+            }
+          },
+          "required": [
+            "type",
+            "itemKindIds",
+            "quantityMinimum",
+            "quantityMaximum",
+            "sourceItemTags",
+            "sourceTerrainTags"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "type": {
               "type": "string",
               "const": "transmute-item-to-gold"
@@ -3602,6 +3720,7 @@
     "AbilitySourceDto": {
       "type": "string",
       "enum": [
+        "class",
         "learned",
         "mutation"
       ]
@@ -7156,9 +7275,9 @@
       "properties": {
         "after": {
           "type": "integer",
-          "format": "uint16",
-          "maximum": 65535,
-          "minimum": 0
+          "format": "int16",
+          "maximum": 32767,
+          "minimum": -32768
         },
         "attempts": {
           "type": "integer",
@@ -7168,9 +7287,9 @@
         },
         "before": {
           "type": "integer",
-          "format": "uint16",
-          "maximum": 65535,
-          "minimum": 0
+          "format": "int16",
+          "maximum": 32767,
+          "minimum": -32768
         },
         "successes": {
           "type": "integer",
@@ -7218,21 +7337,21 @@
       "properties": {
         "toArmor": {
           "type": "integer",
-          "format": "uint16",
-          "maximum": 65535,
-          "minimum": 0
+          "format": "int16",
+          "maximum": 32767,
+          "minimum": -32768
         },
         "toDamage": {
           "type": "integer",
-          "format": "uint16",
-          "maximum": 65535,
-          "minimum": 0
+          "format": "int16",
+          "maximum": 32767,
+          "minimum": -32768
         },
         "toHit": {
           "type": "integer",
-          "format": "uint16",
-          "maximum": 65535,
-          "minimum": 0
+          "format": "int16",
+          "maximum": 32767,
+          "minimum": -32768
         }
       },
       "required": [

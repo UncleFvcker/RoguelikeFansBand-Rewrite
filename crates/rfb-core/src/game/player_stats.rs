@@ -87,16 +87,19 @@ pub(in crate::game) struct ResolvedProjectileProfile {
     pub(in crate::game) range: u16,
     pub(in crate::game) to_hit: i32,
     pub(in crate::game) to_damage: i32,
-    pub(in crate::game) ammunition_to_hit: i32,
     pub(in crate::game) ammunition_to_damage: i32,
     pub(in crate::game) launcher_to_damage: i32,
     pub(in crate::game) damage_multiplier_percent: u16,
     pub(in crate::game) damage_dice: u16,
     pub(in crate::game) damage_sides: u16,
     pub(in crate::game) damage_type: DamageType,
+    pub(in crate::game) ammunition_slays: BTreeMap<SlayTarget, SlayLevel>,
+    pub(in crate::game) ammunition_brands: BTreeSet<WeaponBrand>,
     pub(in crate::game) ammo_item_id: Option<String>,
     pub(in crate::game) ammo_kind_id: String,
+    pub(in crate::game) ammunition_weight_tenths_pound: u16,
     pub(in crate::game) ammo_break_chance_percent: u8,
+    pub(in crate::game) energy_cost: i32,
     pub(in crate::game) source_item_id: String,
 }
 
@@ -885,8 +888,8 @@ impl Game {
             if self.body_slot_type(slot_id) != Some("launcher") {
                 return None;
             }
-            self.content
-                .item(&item.kind_id)?
+            let launcher_definition = self.content.item(&item.kind_id)?;
+            launcher_definition
                 .projectile_profile
                 .as_ref()
                 .and_then(|profile| {
@@ -915,7 +918,67 @@ impl Game {
                             })
                         })?;
                     let ammo_profile = ammo_definition.ammunition_profile.as_ref()?;
-                    let ammo_break_chance_percent = ammo_definition.break_chance_percent;
+                    let mut ammunition_slays = ammo_definition.slays.clone();
+                    let mut ammunition_brands = ammo_definition.brands.clone();
+                    if let Some(ammunition) = ammunition {
+                        for affix_id in &ammunition.affix_ids {
+                            if let Some(affix) = self.content.affix(affix_id) {
+                                ammunition_slays.extend(
+                                    affix.slays.iter().map(|(target, level)| (*target, *level)),
+                                );
+                                ammunition_brands.extend(affix.brands.iter().copied());
+                            }
+                        }
+                        for rolled in &ammunition.rolled_affixes {
+                            ammunition_slays.extend(
+                                rolled
+                                    .properties
+                                    .slays
+                                    .iter()
+                                    .map(|(target, level)| (*target, *level)),
+                            );
+                            ammunition_brands.extend(rolled.properties.brands.iter().copied());
+                        }
+                    }
+                    let ranged_skill = self.player_derived_stats().ranged_skill.value;
+                    let hold = crate::stats::strength_hold_pounds(
+                        self.effective_player_attributes().strength,
+                    );
+                    let launcher_weight_pounds = launcher_definition.weight_tenths_pound / 10;
+                    let heavy_shoot = hold < launcher_weight_pounds;
+                    let heavy_to_hit = if heavy_shoot {
+                        2_i32.saturating_mul(
+                            i32::from(hold).saturating_sub(i32::from(launcher_weight_pounds)),
+                        )
+                    } else {
+                        0
+                    };
+                    let base_shot = if heavy_shoot {
+                        100
+                    } else {
+                        ranged_skill.max(100)
+                    };
+                    let energy_cost = (i32::from(profile.shot_energy) / base_shot).max(1);
+                    let breakage_modifier = if heavy_shoot {
+                        0
+                    } else {
+                        self.character_definitions().map_or(0, |(_, _, class, _)| {
+                            class.ammunition_breakage_factor_modifier
+                        })
+                    };
+                    let breakage_factor = if ranged_skill > 80 {
+                        90_i32.saturating_sub((ranged_skill - 80) / 2)
+                    } else {
+                        100
+                    }
+                    .saturating_add(i32::from(breakage_modifier))
+                    .max(0);
+                    let ammo_break_chance_percent = u8::try_from(
+                        i32::from(ammo_definition.break_chance_percent)
+                            .saturating_mul(breakage_factor)
+                            / 100,
+                    )
+                    .unwrap_or(u8::MAX);
                     let ammunition_to_hit = ammo_profile.to_hit.saturating_add(i32::from(
                         ammunition.map_or(0, |item| item.enchantments.to_hit),
                     ));
@@ -930,21 +993,27 @@ impl Game {
                         to_hit: profile
                             .to_hit
                             .saturating_add(i32::from(item.enchantments.to_hit))
+                            .saturating_add(heavy_to_hit)
                             .saturating_add(ammunition_to_hit),
                         to_damage: ammunition_to_damage
                             .saturating_mul(i32::from(profile.damage_multiplier_percent))
                             / 100
                             + launcher_to_damage,
-                        ammunition_to_hit,
                         ammunition_to_damage,
                         launcher_to_damage,
                         damage_multiplier_percent: profile.damage_multiplier_percent,
-                        damage_dice: ammo_profile.damage_dice,
+                        damage_dice: ammunition
+                            .and_then(|item| item.damage_dice_override)
+                            .unwrap_or(ammo_profile.damage_dice),
                         damage_sides: ammo_profile.damage_sides,
                         damage_type: DamageType::from(ammo_profile.damage_type),
+                        ammunition_slays,
+                        ammunition_brands,
                         ammo_item_id: ammunition.map(|item| item.id.clone()),
                         ammo_kind_id: ammo_definition.id.clone(),
+                        ammunition_weight_tenths_pound: ammo_definition.weight_tenths_pound,
                         ammo_break_chance_percent,
+                        energy_cost,
                         source_item_id: item.id.clone(),
                     })
                 })
@@ -1125,6 +1194,26 @@ impl Game {
                 if target.resistances.level(brand_damage_type(*brand)) != ResistanceLevel::Immune {
                     multiplier = multiplier.max(24);
                 }
+            }
+        }
+        multiplier
+    }
+
+    pub(super) fn player_projectile_damage_multiplier(
+        &self,
+        profile: &ResolvedProjectileProfile,
+        target: &Actor,
+        definition: &rfb_content::ActorDefinition,
+    ) -> i32 {
+        let mut multiplier = 10;
+        for (slay_target, level) in &profile.ammunition_slays {
+            if slay_target_matches(*slay_target, definition) {
+                multiplier = multiplier.max(slay_multiplier(*slay_target, *level));
+            }
+        }
+        for brand in &profile.ammunition_brands {
+            if target.resistances.level(brand_damage_type(*brand)) != ResistanceLevel::Immune {
+                multiplier = multiplier.max(24);
             }
         }
         multiplier

@@ -7,7 +7,7 @@
     { "itemKindId": "demo.item.club", "weight": 1, "quantity": 1, "minDepth": 0, "maxDepth": 9 },
     { "itemKindId": "demo.item.whip", "weight": 1, "quantity": 1, "minDepth": 3, "maxDepth": 9 },
     { "itemKindId": "demo.item.mace", "weight": 1, "quantity": 1, "minDepth": 5, "maxDepth": 9 },
-    { "itemKindId": "demo.item.stench-of-death", "weight": 1, "quantity": 1, "minDepth": 5, "maxDepth": 9 }
+    { "itemKindId": "demo.item.black-prayers", "weight": 1, "quantity": 1, "minDepth": 5, "maxDepth": 9 }
   ],
   "qualityWeights": [{ "quality": "ordinary", "weight": 1 }],
   "affixWeights": [{ "weight": 1 }]

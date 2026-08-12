@@ -14,6 +14,7 @@
     "ammunitionType": "bolt",
     "damageMultiplierPercent": 350,
     "range": 17,
+    "shotEnergy": 12000,
     "toDamage": 0,
     "toHit": 0
   },

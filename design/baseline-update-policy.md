@@ -6,7 +6,7 @@
 
 contract fixture 是规则兼容边界，不能把测试失败简单处理为“刷新预期结果”。政策用于保证每次规则变化只修改真正受影响的场景，同时保留可审查的失败原因。
 
-当前逻辑基线是 `contract-v265`，机器可读政策固定在：
+当前逻辑基线是 `contract-v266`，机器可读政策固定在：
 
 ```text
 tests/fixtures/active/baseline-policy.json
@@ -24,6 +24,11 @@ fixture；同时删除节奏技法与原创装置师职业充能的内容、协�
 `contract-v265` 将盗贼藏身处任务归还伯爵府，并为任务奖励建立默认加权列表、按
 `classId` 覆盖和固定 affix 列表。单条目奖励保持零额外选择 RNG；Protocol 1.175、
 State Hash Schema v87 与 save v1 均不变，内容包升级到 1.256.0。
+
+`contract-v266` 把 Archer 三个既有制造端点投影为原版单一“制造弹药”分组，按
+1/10/20 级开放弹丸、箭矢和弩栓。协议升至 1.176。玩家制造弹药的来源、折价和伤害骰
+覆盖已经进入物品持久状态，本批正式将 State Hash Schema 升至 v88；21 条 active
+fixture 全量刷新，save 容器保持 v1，内容包升级到 1.261.0。
 
 ## 分类验证
 

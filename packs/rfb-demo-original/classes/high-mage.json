@@ -1,0 +1,114 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/class.schema.json",
+  "formatVersion": 1,
+  "id": "demo.class.high-mage",
+  "nameKey": "class-demo-high-mage-name",
+  "descriptionKey": "class-demo-high-mage-description",
+  "modifiers": {
+    "strength": -4,
+    "intelligence": 4,
+    "wisdom": 0,
+    "dexterity": 0,
+    "constitution": -2,
+    "charisma": -2
+  },
+  "lifePercent": 94,
+  "experiencePercent": 130,
+  "baseHp": 0,
+  "skillSetId": "demo.skill-set.high-mage",
+  "usesSpellScrolls": true,
+  "castingProfile": {
+    "resourceId": "demo.resource.mana",
+    "castingAttribute": "intelligence",
+    "capacityFormula": "rfb-mana",
+    "baseCapacity": 0,
+    "capacityPerLevel": 0,
+    "capacityPerAttributeIndex": 0,
+    "capacityPercent": 115,
+    "learningFormula": "rfb-single-realm",
+    "failureFormula": "rfb-magic",
+    "baseLearningCapacity": 1,
+    "learningCapacityPerLevel": 0,
+    "learningCapacityPerAttributeIndex": 0,
+    "learningCapacityCap": 32,
+    "resourceRecoveryPercent": 200,
+    "minimumFailurePercent": 0,
+    "beamChanceLevelMultiplier": 1,
+    "beamChanceLevelDivisor": 1,
+    "spellDamageBonusBase": 5,
+    "spellDamageBonusPerLevel": 1,
+    "spellDamageBonusLevelDivisor": 5,
+    "encumbrance": {
+      "maximumWeightTenthsPound": 430,
+      "weaponWeightPercent": 100,
+      "penaltyWeightTenthsPound": 600,
+      "gloveEncumbrance": true
+    },
+    "realmProfiles": [
+      {
+        "realmId": "death",
+        "abilityBookIds": [
+          "demo.ability-book.black-prayers",
+          "demo.ability-book.black-mass",
+          "demo.ability-book.black-channels",
+          "demo.ability-book.necronomicon"
+        ],
+        "learningCapacityBonus": 4,
+        "abilityOverrides": [
+          { "abilityId": "demo.ability.death-detect-unlife", "minimumLevel": 1, "resourceCost": 1, "baseFailurePercent": 20 },
+          { "abilityId": "demo.ability.death-malediction", "minimumLevel": 1, "resourceCost": 1, "baseFailurePercent": 20 },
+          { "abilityId": "demo.ability.death-detect-evil", "minimumLevel": 2, "resourceCost": 1, "baseFailurePercent": 20 },
+          { "abilityId": "demo.ability.death-stinking-cloud", "minimumLevel": 2, "resourceCost": 2, "baseFailurePercent": 20 },
+          { "abilityId": "demo.ability.death-black-sleep", "minimumLevel": 3, "resourceCost": 3, "baseFailurePercent": 20 },
+          { "abilityId": "demo.ability.death-necromantic-resistance", "minimumLevel": 5, "resourceCost": 9, "baseFailurePercent": 55 },
+          { "abilityId": "demo.ability.death-horrify", "minimumLevel": 7, "resourceCost": 7, "baseFailurePercent": 20 },
+          { "abilityId": "demo.ability.death-enslave-undead", "minimumLevel": 8, "resourceCost": 8, "baseFailurePercent": 20 },
+          { "abilityId": "demo.ability.death-entropy-orb", "minimumLevel": 10, "resourceCost": 10, "baseFailurePercent": 30 },
+          { "abilityId": "demo.ability.death-nether-bolt", "minimumLevel": 11, "resourceCost": 10, "baseFailurePercent": 20 },
+          { "abilityId": "demo.ability.death-cloud-kill", "minimumLevel": 14, "resourceCost": 12, "baseFailurePercent": 40 },
+          { "abilityId": "demo.ability.death-genocide-one", "minimumLevel": 22, "resourceCost": 20, "baseFailurePercent": 75 },
+          { "abilityId": "demo.ability.death-poison-branding", "minimumLevel": 26, "resourceCost": 65, "baseFailurePercent": 70 },
+          { "abilityId": "demo.ability.death-vampiric-drain", "minimumLevel": 30, "resourceCost": 25, "baseFailurePercent": 50 },
+          { "abilityId": "demo.ability.death-animate-dead", "minimumLevel": 32, "resourceCost": 30, "baseFailurePercent": 70 },
+          { "abilityId": "demo.ability.death-genocide", "minimumLevel": 35, "resourceCost": 30, "baseFailurePercent": 85 },
+          { "abilityId": "demo.ability.death-berserk", "minimumLevel": 8, "resourceCost": 15, "baseFailurePercent": 70 },
+          { "abilityId": "demo.ability.death-invoke-spirits", "minimumLevel": 8, "resourceCost": 10, "baseFailurePercent": 70 },
+          { "abilityId": "demo.ability.death-dark-bolt", "minimumLevel": 9, "resourceCost": 9, "baseFailurePercent": 20 },
+          { "abilityId": "demo.ability.death-battle-frenzy", "minimumLevel": 25, "resourceCost": 20, "baseFailurePercent": 65 },
+          { "abilityId": "demo.ability.death-vampiric-branding", "minimumLevel": 31, "resourceCost": 80, "baseFailurePercent": 60 },
+          { "abilityId": "demo.ability.death-vampirism-true", "minimumLevel": 33, "resourceCost": 30, "baseFailurePercent": 50 },
+          { "abilityId": "demo.ability.death-nether-wave", "minimumLevel": 34, "resourceCost": 30, "baseFailurePercent": 60 },
+          { "abilityId": "demo.ability.death-darkness-storm", "minimumLevel": 36, "resourceCost": 35, "baseFailurePercent": 60 },
+          { "abilityId": "demo.ability.death-death-ray", "minimumLevel": 16, "resourceCost": 16, "baseFailurePercent": 65 },
+          { "abilityId": "demo.ability.death-raise-dead", "minimumLevel": 22, "resourceCost": 60, "baseFailurePercent": 85 },
+          { "abilityId": "demo.ability.death-esoteria", "minimumLevel": 26, "resourceCost": 35, "baseFailurePercent": 85 },
+          { "abilityId": "demo.ability.death-vampiric-transformation", "minimumLevel": 32, "resourceCost": 35, "baseFailurePercent": 75 },
+          { "abilityId": "demo.ability.death-restore-life", "minimumLevel": 37, "resourceCost": 40, "baseFailurePercent": 65 },
+          { "abilityId": "demo.ability.death-mass-genocide", "minimumLevel": 38, "resourceCost": 66, "baseFailurePercent": 70 },
+          { "abilityId": "demo.ability.death-hellfire", "minimumLevel": 40, "resourceCost": 53, "baseFailurePercent": 70 },
+          { "abilityId": "demo.ability.death-wraithform", "minimumLevel": 45, "resourceCost": 75, "baseFailurePercent": 80 }
+        ]
+      }
+    ]
+  },
+  "abilities": [
+    {
+      "abilityId": "demo.ability.high-mage-eat-magic",
+      "minimumLevel": 25,
+      "governingAttribute": "intelligence",
+      "resourceId": "demo.resource.mana",
+      "resourceCost": 1,
+      "baseFailurePercent": 90,
+      "minimumFailurePercent": 0
+    }
+  ],
+  "startingItems": [
+    { "itemKindId": "demo.item.dagger", "quantity": 1, "equipped": true },
+    { "itemKindId": "demo.item.robe", "quantity": 1, "equipped": true },
+    { "itemKindId": "demo.item.clarity-draught", "quantity": 10, "maximumQuantity": 20 },
+    { "itemKindId": "demo.item.magic-missile-wand", "quantity": 1 }
+  ],
+  "ickyEquipmentSlots": ["gloves"],
+  "specialItemTags": ["spellbook"],
+  "tags": ["caster", "high-mage", "rfb-compatibility"]
+}

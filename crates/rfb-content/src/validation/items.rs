@@ -510,6 +510,7 @@ pub(super) struct ItemValidationRefs<'a> {
     pub(super) ability_book_ids: &'a BTreeSet<String>,
     pub(super) actor_corpse_item_ids: Vec<(String, String)>,
     pub(super) ability_corpse_item_ids: Vec<(String, String)>,
+    pub(super) ability_created_item_ids: Vec<(String, String)>,
 }
 
 pub(super) fn validate_items(
@@ -527,6 +528,7 @@ pub(super) fn validate_items(
         ability_book_ids,
         actor_corpse_item_ids,
         ability_corpse_item_ids,
+        ability_created_item_ids,
     } = refs;
     let valid_item_effect_target =
         |effect: &ItemUseEffectDefinition, target: &AbilityTargetDefinition| {
@@ -696,6 +698,14 @@ pub(super) fn validate_items(
         {
             return Err(ContentError::InvalidEquipmentSlot(item.id.clone()));
         }
+        if item.ammunition_capacity > 500
+            || (item.ammunition_capacity > 0
+                && (item.equipment_slot.as_deref() != Some("quiver")
+                    || item.max_stack != 1
+                    || item.inventory_slot_bonus > 0))
+        {
+            return Err(ContentError::InvalidEquipmentSlot(item.id.clone()));
+        }
         if item.modifiers.max_hp < 0
             || item.modifiers.max_hp > 1_000_000
             || item.modifiers.attack < -1_000_000
@@ -745,6 +755,7 @@ pub(super) fn validate_items(
                 || profile.range > 32
                 || profile.damage_multiplier_percent < 100
                 || profile.damage_multiplier_percent > 1_000
+                || profile.shot_energy == 0
                 || profile.to_hit < -1_000_000
                 || profile.to_hit > 1_000_000
                 || profile.to_damage < -1_000_000
@@ -981,6 +992,17 @@ pub(super) fn validate_items(
             || !corpse_item.tags.iter().any(|tag| tag == "corpse")
         {
             return Err(ContentError::InvalidItemModifiers(corpse_item.id.clone()));
+        }
+    }
+    for (owner, item_kind_id) in ability_created_item_ids {
+        let Some(item) = items.iter().find(|item| item.id == item_kind_id) else {
+            return Err(ContentError::DanglingReference {
+                owner,
+                target: item_kind_id,
+            });
+        };
+        if item.ammunition_profile.is_none() {
+            return Err(ContentError::InvalidItemModifiers(item.id.clone()));
         }
     }
 

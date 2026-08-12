@@ -557,6 +557,9 @@ pub(super) fn reward_item(
         quantity: entry.quantity,
         inscription: None,
         origin_actor_kind_id: None,
+        origin_kind: None,
+        damage_dice_override: None,
+        discount_percent: 0,
         quality: if entry.affix_ids.is_empty() {
             ItemQualityDto::Ordinary
         } else {

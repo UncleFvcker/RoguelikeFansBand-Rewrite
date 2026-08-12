@@ -517,6 +517,13 @@
           "minimum": 0,
           "type": "integer"
         },
+        "shotEnergy": {
+          "description": "Original `bow_energy` value; 10_000 is one standard action at one shot.",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
         "toDamage": {
           "format": "int32",
           "type": "integer"
@@ -529,6 +536,7 @@
       "required": [
         "range",
         "damageMultiplierPercent",
+        "shotEnergy",
         "toHit",
         "toDamage",
         "ammunitionType"
@@ -659,6 +667,13 @@
         "string",
         "null"
       ]
+    },
+    "ammunitionCapacity": {
+      "default": 0,
+      "format": "uint16",
+      "maximum": 65535,
+      "minimum": 0,
+      "type": "integer"
     },
     "ammunitionProfile": {
       "anyOf": [

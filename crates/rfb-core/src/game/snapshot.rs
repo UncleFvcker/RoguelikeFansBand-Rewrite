@@ -208,8 +208,8 @@ impl Game {
                     name_key: definition.name_key.clone(),
                     current: pool.current,
                     maximum: pool.maximum,
-                    wait_recovery_amount: definition.wait_recovery_amount,
-                    rest_recovery_amount: definition.rest_recovery_amount,
+                    wait_recovery_amount: self.player_resource_recovery_amount(id, false),
+                    rest_recovery_amount: self.player_resource_recovery_amount(id, true),
                 }
             })
             .collect()
@@ -217,14 +217,25 @@ impl Game {
 
     fn player_ability_dtos(&self) -> Vec<AbilityDto> {
         let casting_profile = self.casting_profile();
-        let book_ability_ids = casting_profile
-            .map(|profile| {
-                profile
-                    .ability_book_ids
+        let ability_books = self
+            .active_casting_book_ids()
+            .into_iter()
+            .filter_map(|book_id| self.content.ability_book(book_id))
+            .flat_map(|book| {
+                book.ability_ids
                     .iter()
-                    .filter_map(|book_id| self.content.ability_book(book_id))
-                    .flat_map(|book| book.ability_ids.iter().cloned())
-                    .collect::<BTreeSet<_>>()
+                    .map(move |ability_id| (ability_id.clone(), book))
+            })
+            .collect::<BTreeMap<_, _>>();
+        let book_ability_ids = ability_books.keys().cloned().collect::<BTreeSet<_>>();
+        let class_activations = self
+            .character_definitions()
+            .map(|(_, _, class, _)| {
+                class
+                    .abilities
+                    .iter()
+                    .map(|activation| (activation.ability_id.clone(), activation.clone()))
+                    .collect::<BTreeMap<_, _>>()
             })
             .unwrap_or_default();
         let mutation_activations = self
@@ -237,6 +248,7 @@ impl Game {
         book_ability_ids
             .iter()
             .cloned()
+            .chain(class_activations.keys().cloned())
             .chain(mutation_activations.keys().cloned())
             .collect::<BTreeSet<_>>()
             .into_iter()
@@ -244,15 +256,17 @@ impl Game {
                 let ability = self.content.ability(&ability_id)?;
                 let source = if mutation_activations.contains_key(&ability_id) {
                     AbilitySourceDto::Mutation
+                } else if class_activations.contains_key(&ability_id) {
+                    AbilitySourceDto::Class
                 } else {
                     AbilitySourceDto::Learned
                 };
                 let mut effective_ability = match source {
-                    AbilitySourceDto::Learned => Self::effective_casting_ability(
+                    AbilitySourceDto::Learned => self.effective_casting_ability(
                         casting_profile.expect("book ability requires casting profile"),
                         ability,
                     ),
-                    AbilitySourceDto::Mutation => ability.clone(),
+                    AbilitySourceDto::Class | AbilitySourceDto::Mutation => ability.clone(),
                 };
                 Self::apply_player_level_scaling(&mut effective_ability, self.progress.level);
                 if source == AbilitySourceDto::Learned
@@ -263,11 +277,18 @@ impl Game {
                         &mut effective_ability,
                         self.progress.level,
                     );
+                    Self::apply_casting_profile_damage_bonus(
+                        profile,
+                        &mut effective_ability,
+                        self.progress.level,
+                    );
                 }
                 let ability = &effective_ability;
                 let mutation_activation = mutation_activations.get(&ability_id);
+                let class_activation = class_activations.get(&ability_id);
                 let (
                     minimum_level,
+                    ui_group_name_key,
                     resource_id,
                     base_resource_cost,
                     resource_cost,
@@ -276,43 +297,70 @@ impl Game {
                     cooldown_remaining,
                     cooldown_turns,
                     cooldown_group_id,
-                ) = if source == AbilitySourceDto::Mutation {
-                    let activation = mutation_activation
-                        .expect("mutation ability source requires an activation");
-                    (
-                        activation.minimum_level,
-                        casting_profile.map(|profile| profile.resource_id.clone()),
-                        activation.cost,
-                        self.mutation_resource_cost(activation),
-                        self.mutation_failure_percent(activation),
-                        AbilityProgress {
-                            proficiency: 0,
-                            proficiency_cap: 0,
-                            cast_count: 0,
-                            fail_count: 0,
-                            cooldown_remaining: 0,
-                        },
-                        0,
-                        0,
-                        None,
-                    )
-                } else {
-                    let player = Self::player_ability_parameters(ability);
-                    let progress = self.ability_progress_value(ability);
-                    (
-                        player.minimum_level,
-                        Some(player.resource_id.clone()),
-                        player.resource_cost,
-                        self.ability_effective_resource_cost(ability, progress),
-                        self.ability_failure_percent(casting_profile?, ability),
-                        progress,
-                        self.ability_cooldown_remaining(ability),
-                        player.cooldown.as_ref().map_or(0, |value| value.turns),
-                        player
-                            .cooldown
-                            .as_ref()
-                            .and_then(|value| value.group_id.clone()),
-                    )
+                ) = match source {
+                    AbilitySourceDto::Mutation => {
+                        let activation = mutation_activation
+                            .expect("mutation ability source requires an activation");
+                        (
+                            activation.minimum_level,
+                            None,
+                            casting_profile.map(|profile| profile.resource_id.clone()),
+                            activation.cost,
+                            self.mutation_resource_cost(activation),
+                            self.mutation_failure_percent(activation),
+                            AbilityProgress {
+                                proficiency: 0,
+                                proficiency_cap: 0,
+                                cast_count: 0,
+                                fail_count: 0,
+                                cooldown_remaining: 0,
+                            },
+                            0,
+                            0,
+                            None,
+                        )
+                    }
+                    AbilitySourceDto::Class => {
+                        let activation =
+                            class_activation.expect("class ability source requires an activation");
+                        (
+                            activation.minimum_level,
+                            activation.ui_group_name_key.clone(),
+                            activation.resource_id.clone(),
+                            activation.resource_cost,
+                            activation.resource_cost,
+                            self.class_ability_failure_percent(activation),
+                            AbilityProgress {
+                                proficiency: 0,
+                                proficiency_cap: 0,
+                                cast_count: 0,
+                                fail_count: 0,
+                                cooldown_remaining: 0,
+                            },
+                            0,
+                            0,
+                            None,
+                        )
+                    }
+                    AbilitySourceDto::Learned => {
+                        let player = Self::player_ability_parameters(ability);
+                        let progress = self.ability_progress_value(ability);
+                        (
+                            player.minimum_level,
+                            None,
+                            Some(player.resource_id.clone()),
+                            player.resource_cost,
+                            self.ability_effective_resource_cost(ability, progress),
+                            self.ability_failure_percent(casting_profile?, ability),
+                            progress,
+                            self.ability_cooldown_remaining(ability),
+                            player.cooldown.as_ref().map_or(0, |value| value.turns),
+                            player
+                                .cooldown
+                                .as_ref()
+                                .and_then(|value| value.group_id.clone()),
+                        )
+                    }
                 };
                 let learned = source == AbilitySourceDto::Learned
                     && self.learned_abilities.contains(&ability_id);
@@ -322,8 +370,11 @@ impl Game {
                 } else {
                     None
                 };
+                let book = ability_books.get(&ability_id);
                 let level_available = self.progress.level >= minimum_level;
-                let resource_available = if source == AbilitySourceDto::Mutation {
+                let resource_available = if resource_cost == 0 {
+                    true
+                } else if source == AbilitySourceDto::Mutation {
                     let resource = resource_id
                         .as_deref()
                         .and_then(|id| self.resources.get(id))
@@ -340,6 +391,9 @@ impl Game {
                     id: ability.id.clone(),
                     name_key: ability.name_key.clone(),
                     description_key: ability.description_key.clone(),
+                    ui_group_name_key,
+                    book_name_key: book.map(|book| book.name_key.clone()),
+                    book_rank: book.and_then(|book| book.rank),
                     minimum_level,
                     source,
                     resource_id,
@@ -427,7 +481,7 @@ impl Game {
                             .is_some_and(|learning| learning.remaining_slots > 0),
                     can_forget: source == AbilitySourceDto::Learned && learned,
                     can_cast: match source {
-                        AbilitySourceDto::Mutation => {
+                        AbilitySourceDto::Class | AbilitySourceDto::Mutation => {
                             level_available && resource_available && cooldown_remaining == 0
                         }
                         AbilitySourceDto::Learned => {

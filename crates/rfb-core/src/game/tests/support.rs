@@ -19,44 +19,61 @@ pub(super) fn enable_test_caster(content: &mut rfb_content::CompiledContentV1) {
     class.casting_profile = Some(rfb_content::CastingProfileDefinition {
         resource_id: "demo.resource.mana".to_owned(),
         casting_attribute: rfb_content::CastingAttribute::Intelligence,
+        capacity_formula: rfb_content::CastingCapacityFormula::Linear,
         base_capacity: 4,
         capacity_per_level: 2,
         capacity_per_attribute_index: 1,
+        capacity_percent: 100,
+        learning_formula: rfb_content::CastingLearningFormula::Linear,
+        failure_formula: rfb_content::CastingFailureFormula::Linear,
         base_learning_capacity: 2,
         learning_capacity_per_level: 1,
         learning_capacity_per_attribute_index: 0,
         learning_capacity_cap: 16,
+        resource_recovery_percent: 100,
         minimum_failure_percent: 5,
         beam_chance_level_multiplier: 1,
         beam_chance_level_divisor: 1,
         beam_chance_bonus: 0,
-        ability_book_ids: vec![
-            "demo.ability-book.stench-of-death".to_owned(),
-            "demo.ability-book.sepulchral-ways".to_owned(),
-            "demo.ability-book.black-channels".to_owned(),
-            "demo.ability-book.necronomicon".to_owned(),
-        ],
-        ability_overrides: Vec::new(),
+        spell_damage_bonus_base: 0,
+        spell_damage_bonus_per_level: 0,
+        spell_damage_bonus_level_divisor: 1,
+        encumbrance: None,
+        realm_profiles: vec![rfb_content::CastingRealmProfileDefinition {
+            realm_id: "death".to_owned(),
+            ability_book_ids: vec![
+                "demo.ability-book.black-prayers".to_owned(),
+                "demo.ability-book.black-mass".to_owned(),
+                "demo.ability-book.black-channels".to_owned(),
+                "demo.ability-book.necronomicon".to_owned(),
+            ],
+            learning_capacity_bonus: 0,
+            ability_overrides: Vec::new(),
+        }],
     });
     class.starting_items.extend([
         rfb_content::StartingItemDefinition {
-            item_kind_id: "demo.item.stench-of-death".to_owned(),
+            item_kind_id: "demo.item.black-prayers".to_owned(),
             quantity: 1,
+            maximum_quantity: None,
             equipped: false,
         },
         rfb_content::StartingItemDefinition {
-            item_kind_id: "demo.item.sepulchral-ways".to_owned(),
+            item_kind_id: "demo.item.black-mass".to_owned(),
             quantity: 1,
+            maximum_quantity: None,
             equipped: false,
         },
         rfb_content::StartingItemDefinition {
             item_kind_id: "demo.item.black-channels".to_owned(),
             quantity: 1,
+            maximum_quantity: None,
             equipped: false,
         },
         rfb_content::StartingItemDefinition {
             item_kind_id: "demo.item.necronomicon".to_owned(),
             quantity: 1,
+            maximum_quantity: None,
             equipped: false,
         },
     ]);
@@ -72,7 +89,7 @@ pub(super) fn enable_test_caster(content: &mut rfb_content::CompiledContentV1) {
     build.description_key = "test-build-caster-description".to_owned();
     build.class_id = "test.class.caster".to_owned();
     build.first_realm_id = Some("death".to_owned());
-    build.second_realm_id = Some("healing".to_owned());
+    build.second_realm_id = None;
     content.builds.push(build);
 }
 
@@ -224,6 +241,9 @@ pub(super) fn give_inventory_item(game: &mut Game, id: &str, kind_id: &str) {
         quantity: 1,
         inscription: None,
         origin_actor_kind_id: None,
+        origin_kind: None,
+        damage_dice_override: None,
+        discount_percent: 0,
         quality: ItemQualityDto::Ordinary,
         affix_ids: Vec::new(),
         rolled_affixes: Vec::new(),

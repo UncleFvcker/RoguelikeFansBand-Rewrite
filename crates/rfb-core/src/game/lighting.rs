@@ -27,11 +27,9 @@ pub(super) fn starting_torch_supply(
     build: Option<&CharacterBuildIdentity>,
     rng: &mut RfbRng,
 ) -> Option<StartingTorchSupply> {
-    (build.is_some_and(|build| build.build_id == RFB_WARRIOR_BUILD_ID)).then(|| {
-        StartingTorchSupply {
-            quantity: u32::try_from(rng.bounded(5) + 3).expect("birth torch quantity must fit u32"),
-            fuel: u16::try_from((rng.bounded(5) + 3) * 500).expect("birth torch fuel must fit u16"),
-        }
+    build.is_some().then(|| StartingTorchSupply {
+        quantity: u32::try_from(rng.bounded(5) + 3).expect("birth torch quantity must fit u32"),
+        fuel: u16::try_from((rng.bounded(5) + 3) * 500).expect("birth torch fuel must fit u16"),
     })
 }
 

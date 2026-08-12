@@ -1,0 +1,17 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.leather-scale-mail",
+  "nameKey": "item-demo-leather-scale-mail-name",
+  "descriptionKey": "item-demo-leather-scale-mail-description",
+  "glyph": "(",
+  "generationLevel": 15,
+  "mogaminatorRare": false,
+  "weightTenthsPound": 140,
+  "maxStack": 1,
+  "baseValue": 450,
+  "equipmentSlot": "body",
+  "modifiers": { "defense": 11 },
+  "equipmentBonuses": { "meleeSkill": -1 },
+  "tags": ["armor", "equipment", "rfb-compatibility"]
+}

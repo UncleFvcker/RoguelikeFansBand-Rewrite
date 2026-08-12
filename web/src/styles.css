@@ -814,6 +814,20 @@ h1 {
   color: #dcecff;
 }
 
+.ability-book-heading {
+  margin-top: 0.45rem;
+  color: #b7d6ed;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.ability-description {
+  color: #91a9bd;
+  font-size: 0.72rem;
+  line-height: 1.35;
+}
+
 .ability-summary,
 .ability-status,
 .ability-empty {

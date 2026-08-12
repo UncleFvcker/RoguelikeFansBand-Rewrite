@@ -1,0 +1,12 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.broken-stick",
+  "nameKey": "item-demo-broken-stick-name",
+  "descriptionKey": "item-demo-broken-stick-description",
+  "glyph": "~",
+  "generationLevel": 0,
+  "weightTenthsPound": 3,
+  "maxStack": 10,
+  "tags": ["junk", "rfb-compatibility"]
+}

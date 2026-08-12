@@ -6,7 +6,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.256.0");
+    assert_eq!(catalog.pack_version(), "1.261.0");
     assert!(catalog.mutation("rfb.mutation.spit-acid").is_some());
     assert!(
         catalog
@@ -20,11 +20,29 @@ fn compiled_catalog_indexes_current_rfb_content() {
     );
     assert_eq!(
         catalog
-            .item("demo.item.stench-of-death")
+            .item("demo.item.black-prayers")
             .and_then(|item| item.ability_book_id.as_deref()),
-        Some("demo.ability-book.stench-of-death")
+        Some("demo.ability-book.black-prayers")
     );
     assert!(catalog.class("demo.class.warrior").is_some());
+    assert!(catalog.class("demo.class.high-mage").is_some());
+    assert!(catalog.build("demo.build.high-mage-death").is_some());
+    assert!(catalog.class("demo.class.archer").is_some());
+    assert!(catalog.build("demo.build.archer").is_some());
+    assert!(
+        catalog
+            .class("demo.class.archer")
+            .expect("Archer class")
+            .abilities
+            .iter()
+            .all(|ability| ability.ui_group_name_key.as_deref()
+                == Some("ability-group-demo-archer-create-ammo-name"))
+    );
+    assert!(catalog.item("demo.item.quiver").is_some());
+    assert!(catalog.item("demo.item.shard-of-pottery").is_some());
+    assert!(catalog.item("demo.item.broken-stick").is_some());
+    assert!(catalog.affix("rfb-legacy.affix.slaying").is_some());
+    assert!(catalog.affix("demo.affix.ammo-elemental").is_some());
     assert!(catalog.class("demo.class.mage").is_none());
     let world = catalog
         .world("demo.world.middle-earth")

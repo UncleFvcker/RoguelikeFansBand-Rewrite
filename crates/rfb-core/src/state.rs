@@ -5,8 +5,8 @@ use std::collections::{BTreeMap, BTreeSet};
 use rfb_content::AffixPropertyBundleDefinition;
 use rfb_protocol::{
     GoldAppearanceDto, ItemActivationDto, ItemChargesDto, ItemCurseSeverityDto,
-    ItemEnchantmentsDto, ItemFuelDto, ItemQualityDto, MonsterPackBehaviorDto, MonsterPackRoleDto,
-    Position,
+    ItemEnchantmentsDto, ItemFuelDto, ItemOriginKindDto, ItemQualityDto, MonsterPackBehaviorDto,
+    MonsterPackRoleDto, Position,
 };
 use serde::{Deserialize, Serialize};
 
@@ -78,6 +78,9 @@ pub(crate) struct ItemInstance {
     pub(crate) quantity: u32,
     pub(crate) inscription: Option<String>,
     pub(crate) origin_actor_kind_id: Option<String>,
+    pub(crate) origin_kind: Option<ItemOriginKindDto>,
+    pub(crate) damage_dice_override: Option<u16>,
+    pub(crate) discount_percent: u8,
     pub(crate) quality: ItemQualityDto,
     pub(crate) affix_ids: Vec<String>,
     pub(crate) rolled_affixes: Vec<RolledAffixState>,

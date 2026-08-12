@@ -549,3 +549,9 @@ contract-v265 / 包 1.256.0 将 `TaskRewardDefinition` 的固定物品替换为�
 `entries`，并允许按 `classId` 提供覆盖列表。每个条目包含物品、数量、权重和可选固定
 `affixIds`；任务仍只拥有一个固定实例 ID。单条目不消耗选择 RNG，多条目只消耗一次。
 盗贼藏身处归还伯爵府，白马旅店任务服务暂留空列表，等待其独立任务链。
+
+contract-v266 / 包 1.261.0 为 `ClassAbilityDefinition` 增加可选 `uiGroupNameKey`，把
+Archer 三个既有制造弹药执行端点投影为一个原版“制造弹药”分组。没有新增能力 ID、
+命令或待处理状态。content hash 为
+`846d7565a37113590dcee9e2ea187fdbd4ff2786c0fa85fbe61743834ae89d0a`；协议升至
+1.176，State Hash Schema 升至 v88。

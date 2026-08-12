@@ -19,7 +19,8 @@ pub(super) fn starting_ration_quantity(
     build: Option<&CharacterBuildIdentity>,
     rng: &mut RfbRng,
 ) -> Option<u32> {
-    (build.is_some_and(|build| build.build_id == RFB_WARRIOR_BUILD_ID))
+    build
+        .is_some()
         .then(|| u32::try_from(rng.bounded(5) + 5).expect("birth ration quantity must fit u32"))
 }
 

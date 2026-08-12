@@ -21,7 +21,7 @@
     "finalState": {
       "revision": 1,
       "turn": 1,
-      "worldTick": 10,
+      "worldTick": 9,
       "lastCommandSeq": 1,
       "rngDrawCounter": 152,
       "floorId": "core.floor.wilderness",
@@ -300,7 +300,7 @@
       "playerAttack": 2,
       "playerDefense": 15,
       "playerSpeed": 110,
-      "playerEnergyNeed": 0,
+      "playerEnergyNeed": -2,
       "playerCarriedWeightTenthsPound": 672,
       "playerCarryCapacityTenthsPound": 1200,
       "playerEncumbranceSpeedPenalty": 0,
@@ -847,7 +847,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "211aeb74d918fc4f64cf6775a40c636747b8e7fc5dab75b21e935c067f239e5c"
+      "stateHash": "4a03dad048e9a4f1c57b590dc71048b47f9831b612bcb8b50eb330568d633ee0"
     },
     "events": [
       {

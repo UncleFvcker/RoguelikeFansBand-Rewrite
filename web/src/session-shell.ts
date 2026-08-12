@@ -15,6 +15,8 @@ import type { GameSnapshot } from "./protocol.ts";
 
 export const PLAYTEST_BUILD_IDS = [
   "demo.build.warrior",
+  "demo.build.high-mage-death",
+  "demo.build.archer",
 ] as const;
 
 export type PlaytestBuildId = (typeof PLAYTEST_BUILD_IDS)[number];
@@ -39,6 +41,8 @@ interface SessionShellDom {
   readonly settingsButton: HTMLButtonElement;
   readonly exitButton: HTMLButtonElement;
   readonly warriorBuild: HTMLInputElement;
+  readonly highMageDeathBuild: HTMLInputElement;
+  readonly archerBuild: HTMLInputElement;
   readonly characterNameInput: HTMLInputElement;
   readonly seedInput: HTMLInputElement;
   readonly randomizeSeedButton: HTMLButtonElement;
@@ -346,9 +350,8 @@ export class SessionShell {
   }
 
   #selectedBuild(): PlaytestBuildId | undefined {
-    return this.#dom.warriorBuild.checked
-      ? (this.#dom.warriorBuild.value as PlaytestBuildId)
-      : undefined;
+    return [this.#dom.warriorBuild, this.#dom.highMageDeathBuild, this.#dom.archerBuild]
+      .find((input) => input.checked)?.value as PlaytestBuildId | undefined;
   }
 
   #showView(view: SessionView): void {
@@ -531,6 +534,8 @@ export function createSessionShellDom(document: DocumentLookup): SessionShellDom
     settingsButton: element<HTMLButtonElement>(document, "session-settings"),
     exitButton: element<HTMLButtonElement>(document, "session-exit"),
     warriorBuild: element<HTMLInputElement>(document, "session-build-warrior"),
+    highMageDeathBuild: element<HTMLInputElement>(document, "session-build-high-mage-death"),
+    archerBuild: element<HTMLInputElement>(document, "session-build-archer"),
     characterNameInput: element<HTMLInputElement>(document, "session-character-name"),
     seedInput: element<HTMLInputElement>(document, "session-seed"),
     randomizeSeedButton: element<HTMLButtonElement>(document, "session-randomize-seed"),

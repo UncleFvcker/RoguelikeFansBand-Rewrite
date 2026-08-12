@@ -4088,7 +4088,7 @@ fn bookstore_stocks_original_town_books() {
             .iter()
             .map(|stock| stock.item_kind_id.as_str())
             .collect::<BTreeSet<_>>(),
-        BTreeSet::from(["demo.item.stench-of-death", "demo.item.sepulchral-ways",])
+        BTreeSet::from(["demo.item.black-mass", "demo.item.black-prayers",])
     );
     let values = artifact
         .content
@@ -4097,8 +4097,8 @@ fn bookstore_stocks_original_town_books() {
         .filter(|item| shop.stock.iter().any(|stock| stock.item_kind_id == item.id))
         .map(|item| (item.id.as_str(), item.base_value))
         .collect::<std::collections::BTreeMap<_, _>>();
-    assert_eq!(values["demo.item.stench-of-death"], 100);
-    assert_eq!(values["demo.item.sepulchral-ways"], 1_000);
+    assert_eq!(values["demo.item.black-prayers"], 100);
+    assert_eq!(values["demo.item.black-mass"], 1_000);
 }
 
 #[test]

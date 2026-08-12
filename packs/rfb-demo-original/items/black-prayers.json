@@ -1,15 +1,15 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
   "formatVersion": 1,
-  "id": "demo.item.sepulchral-ways",
-  "nameKey": "item-demo-sepulchral-ways-name",
-  "descriptionKey": "item-demo-sepulchral-ways-description",
+  "id": "demo.item.black-prayers",
+  "nameKey": "item-demo-black-prayers-name",
+  "descriptionKey": "item-demo-black-prayers-description",
   "glyph": "?",
-  "generationLevel": 20,
+  "generationLevel": 10,
   "mogaminatorRare": false,
   "weightTenthsPound": 30,
   "maxStack": 1,
-  "baseValue": 1000,
-  "abilityBookId": "demo.ability-book.sepulchral-ways",
+  "baseValue": 100,
+  "abilityBookId": "demo.ability-book.black-prayers",
   "tags": ["book", "death", "spellbook"]
 }
