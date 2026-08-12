@@ -1,0 +1,128 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "friends": {
+      "chancePercent": 0,
+      "dice": 3,
+      "sides": 3
+    },
+    "legacyIndex": 726,
+    "maxDepth": 999,
+    "rarity": 4
+  },
+  "attack": 12,
+  "damageDice": 2,
+  "damageSides": 12,
+  "damageType": "physical",
+  "defense": 10,
+  "descriptionKey": "actor-demo-plasma-hound-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 1250,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "Z",
+  "hitPointDice": {
+    "dice": 60,
+    "sides": 10
+  },
+  "id": "demo.actor.plasma-hound",
+  "level": 51,
+  "light": {
+    "intrinsic": true,
+    "radius": 2
+  },
+  "maxHp": 330,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 2,
+            "damageSides": 12,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 2,
+            "damageSides": 12,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 2,
+            "damageSides": 12,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 3,
+            "damageSides": 3,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.breath-plasma-17-250-r3",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 10
+  },
+  "nameKey": "actor-demo-plasma-hound-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "electricity": "resistant",
+    "fire": "resistant",
+    "plasma": "resistant"
+  },
+  "role": "monster",
+  "speed": 120,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "animal",
+    "hound",
+    "kin-glyph-90",
+    "legacy-import",
+    "orc-cave"
+  ]
+}
