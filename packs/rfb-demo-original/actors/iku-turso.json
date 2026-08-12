@@ -1,0 +1,205 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 1288,
+    "maxDepth": 999,
+    "rarity": 3
+  },
+  "attack": 15,
+  "damageDice": 2,
+  "damageSides": 25,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 2,
+        "sides": 2
+      },
+      {
+        "dice": 3,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items",
+    "minimumQuality": "fine"
+  },
+  "defense": 12,
+  "descriptionKey": "actor-demo-iku-turso-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 33880,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "H",
+  "hitPointDice": {
+    "dice": 42,
+    "forceMaximum": true,
+    "sides": 121
+  },
+  "id": "demo.actor.iku-turso",
+  "level": 62,
+  "maxHp": 5082,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 2,
+            "damageSides": 25,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "armorMitigated": false,
+            "damageDice": 4,
+            "damageSides": 12,
+            "damageType": "acid",
+            "type": "damage"
+          },
+          {
+            "type": "blind"
+          }
+        ],
+        "methodId": "rfb.blow.spit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 10,
+            "damageSides": 13,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "armorMitigated": false,
+            "damageDice": 4,
+            "damageSides": 7,
+            "damageType": "electricity",
+            "type": "damage"
+          },
+          {
+            "type": "paralysis"
+          }
+        ],
+        "methodId": "rfb.blow.crush",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 7,
+            "damageSides": 12,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "durationDice": 4,
+            "durationSides": 7,
+            "type": "stun"
+          },
+          {
+            "type": "slow"
+          }
+        ],
+        "methodId": "rfb.blow.butt",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 6,
+            "damageSides": 9,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "armorMitigated": false,
+            "damageDice": 4,
+            "damageSides": 12,
+            "damageType": "acid",
+            "type": "damage"
+          },
+          {
+            "durationDice": 6,
+            "durationSides": 9,
+            "type": "bleeding"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.drag",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-water-1d124-62",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-acid-20-900-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-electricity-20-900-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-nexus-33-250-r3",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 50
+  },
+  "movement": {
+    "modes": [
+      "aquatic"
+    ]
+  },
+  "movesWeakerBodies": true,
+  "nameKey": "actor-demo-iku-turso-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "acid": "immune",
+    "chaos": "resistant",
+    "cold": "resistant",
+    "dark": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "sound": "resistant",
+    "time": "resistant",
+    "water": "resistant"
+  },
+  "role": "monster",
+  "speed": 130,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "animal",
+    "evil",
+    "kin-glyph-72",
+    "legacy-import",
+    "orc-cave",
+    "unique"
+  ]
+}

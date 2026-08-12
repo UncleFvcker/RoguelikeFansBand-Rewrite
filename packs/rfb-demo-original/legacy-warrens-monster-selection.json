@@ -6084,6 +6084,60 @@
       "id": "huitzilonevada-the-feathered-boa",
       "tags": ["orc-cave"],
       "omittedFlags": ["NO_STUN", "POS_GAIN_AC", "POS_SEE_INVIS", "POS_TELEPATHY"]
+    },
+    {
+      "sourceIndex": 746,
+      "id": "keeper-of-secrets",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 937,
+      "id": "lems-the-cyborg",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "NO_STUN", "POS_GAIN_AC", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 1287,
+      "id": "angelic-quylthulg",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_SEE_INVIS", "POS_TELEPATHY", "STUPID"]
+    },
+    {
+      "sourceIndex": 936,
+      "id": "kenshirou-the-fist-of-the-north-star",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
+    },
+    {
+      "sourceIndex": 1018,
+      "id": "raou-the-conqueror",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
+    },
+    {
+      "sourceIndex": 1288,
+      "id": "iku-turso",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 736,
+      "id": "great-unclean-one",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 872,
+      "id": "the-yamata-no-orochi",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["ATTR_MULTI", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 1238,
+      "id": "scrupiox-the-nightcrawler",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
     }
   ]
 }

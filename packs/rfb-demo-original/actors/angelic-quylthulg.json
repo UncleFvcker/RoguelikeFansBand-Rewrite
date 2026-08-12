@@ -1,0 +1,66 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 1287,
+    "maxDepth": 999,
+    "rarity": 5
+  },
+  "attack": 15,
+  "damageDice": 1,
+  "damageSides": 1,
+  "damageType": "physical",
+  "defense": 0,
+  "descriptionKey": "actor-demo-angelic-quylthulg-description",
+  "experienceValue": 4477,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "Q",
+  "hitPointDice": {
+    "dice": 22,
+    "forceMaximum": true,
+    "sides": 44
+  },
+  "id": "demo.actor.angelic-quylthulg",
+  "level": 61,
+  "maxHp": 968,
+  "meleeRoutine": {
+    "blows": []
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.blink",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.escape",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-angel-l61-1d3-1",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 50
+  },
+  "movement": {
+    "neverMoves": true
+  },
+  "nameKey": "actor-demo-angelic-quylthulg-name",
+  "role": "monster",
+  "speed": 120,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "animal",
+    "empty-mind",
+    "good",
+    "invisible",
+    "kin-glyph-81",
+    "legacy-import",
+    "orc-cave"
+  ]
+}

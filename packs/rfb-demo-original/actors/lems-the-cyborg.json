@@ -1,0 +1,115 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 937,
+    "maxDepth": 999,
+    "rarity": 3
+  },
+  "attack": 15,
+  "damageDice": 10,
+  "damageSides": 10,
+  "damageType": "physical",
+  "defense": 16,
+  "descriptionKey": "actor-demo-lems-the-cyborg-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 26000,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "g",
+  "hitPointDice": {
+    "dice": 50,
+    "forceMaximum": true,
+    "sides": 100
+  },
+  "id": "demo.actor.lems-the-cyborg",
+  "killsWeakerBodies": true,
+  "level": 61,
+  "maxHp": 5000,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 10,
+            "damageSides": 10,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.punch",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 10,
+            "damageSides": 10,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.punch",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "damageDice": 16,
+            "damageSides": 10,
+            "type": "shatter"
+          }
+        ],
+        "methodId": "rfb.blow.kick",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "damageDice": 16,
+            "damageSides": 10,
+            "type": "shatter"
+          }
+        ],
+        "methodId": "rfb.blow.kick",
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "modes": [
+      "swim"
+    ]
+  },
+  "nameKey": "actor-demo-lems-the-cyborg-name",
+  "regenerates": true,
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "fire": "resistant",
+    "poison": "immune"
+  },
+  "role": "monster",
+  "speed": 130,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "cold-blooded",
+    "kin-glyph-103",
+    "legacy-import",
+    "nonliving",
+    "orc-cave",
+    "unique"
+  ]
+}

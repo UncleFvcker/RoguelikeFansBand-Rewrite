@@ -729,7 +729,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         .iter()
         .filter(|actor| actor.tags.iter().any(|tag| tag == "orc-cave"))
         .collect::<Vec<_>>();
-    assert_eq!(orc_cave.len(), 571);
+    assert_eq!(orc_cave.len(), 580);
 
     for id in [
         "demo.actor.bunyip",
@@ -762,10 +762,10 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
                     .any(|index| *index != 3)
         );
     }
-    let mut level_counts = [0_usize; 40];
+    let mut level_counts = [0_usize; 43];
     let mut source_indices = BTreeSet::new();
     for actor in orc_cave {
-        assert!((21..=60).contains(&actor.level));
+        assert!((21..=63).contains(&actor.level));
         let allocation = actor
             .allocation
             .as_ref()
@@ -777,7 +777,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         level_counts,
         [
             16, 14, 12, 17, 24, 17, 19, 17, 18, 21, 7, 12, 29, 15, 27, 28, 19, 19, 11, 42, 12, 6,
-            12, 14, 14, 7, 10, 6, 6, 17, 11, 8, 3, 8, 17, 9, 1, 6, 4, 16,
+            12, 14, 14, 7, 10, 6, 6, 17, 11, 8, 3, 8, 17, 9, 1, 6, 4, 16, 3, 3, 3,
         ]
     );
 
@@ -4912,6 +4912,40 @@ fn p57b_level_60_direct_monsters_keep_source_identity() {
 }
 
 #[test]
+fn p58_level_61_63_direct_monsters_keep_source_identity() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+
+    for (id, legacy_index, level) in [
+        ("keeper-of-secrets", 746, 61),
+        ("lems-the-cyborg", 937, 61),
+        ("angelic-quylthulg", 1287, 61),
+        ("kenshirou-the-fist-of-the-north-star", 936, 62),
+        ("raou-the-conqueror", 1018, 62),
+        ("iku-turso", 1288, 62),
+        ("great-unclean-one", 736, 63),
+        ("the-yamata-no-orochi", 872, 63),
+        ("scrupiox-the-nightcrawler", 1238, 63),
+    ] {
+        let actor_id = format!("demo.actor.{id}");
+        let actor = artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == actor_id)
+            .unwrap_or_else(|| panic!("{actor_id} should be imported"));
+        assert_eq!(actor.level, level, "{actor_id} level");
+        assert_eq!(
+            actor
+                .allocation
+                .as_ref()
+                .map(|allocation| allocation.legacy_index),
+            Some(legacy_index),
+            "{actor_id} source index"
+        );
+    }
+}
+
+#[test]
 fn p53a_ice_jump_and_angel_summons_reuse_shared_effects() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let actor = |id: &str| {
@@ -6808,7 +6842,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
                     == Some("demo.loot-table.base-items")
             })
             .count(),
-        523
+        530
     );
 }
 
