@@ -6,7 +6,7 @@
 
 contract fixture 是规则兼容边界，不能把测试失败简单处理为“刷新预期结果”。政策用于保证每次规则变化只修改真正受影响的场景，同时保留可审查的失败原因。
 
-当前逻辑基线是 `contract-v273`，机器可读政策固定在：
+当前逻辑基线是 `contract-v274`，机器可读政策固定在：
 
 ```text
 tests/fixtures/active/baseline-policy.json
@@ -71,6 +71,13 @@ content hash 为 `2f88338bb3fe9bfa13ac703d0b58ae4521bade19619805c5fe37da977a8b48
 哈希，并接通死亡领域已有的武器烙印、吸血、召唤亡灵及 Invoke Spirits 调用点。
 Protocol 升至 1.181、State Hash Schema 升至 v90；出生初始化新增 RNG 消费且公共玩家
 投影改变，因此统一刷新 21 条 active fixture。save 容器仍为 v1，零 waiver。
+
+`contract-v274` 接入 RFB 宠物维持与冷落判定。职业内容新增原版 `pets` 除数；只统计
+存活且由玩家控制的实体，普通 `friendly` actor 不计入。维持比例影响既有法力恢复，
+超过 100% 时按普通恢复率产生法力损失，超过 `SAFE_UPKEEP_PCT=484` 且沿用上一行动的
+警告状态时，宠物在自身行动前按原版 RNG 顺序判定消失或转敌。协议升至 1.182，内容包
+升至 1.281.0；没有新增存档字段或状态哈希输入，State Hash Schema 保持 v90。公共玩家
+投影新增派生的维持摘要，因此统一复核并刷新 21 条 active fixture，零 waiver。
 
 ## 分类验证
 

@@ -190,6 +190,23 @@ pub(crate) enum DomainEvent {
     SummonCommandChanged {
         resolution: SummonCommandResolutionDto,
     },
+    PetsDismissed {
+        count: u16,
+        upkeep_percent: u16,
+    },
+    PetUpkeepManaLost {
+        resource_id: String,
+        amount: u32,
+        upkeep_percent: u16,
+    },
+    PetUpkeepDismissalRequired {
+        upkeep_percent: u16,
+    },
+    PetNeglected {
+        entity_id: String,
+        target_kind_id: String,
+        disappeared: bool,
+    },
     SummonFollowedFloor {
         entity_id: String,
         target_kind_id: String,
@@ -1654,6 +1671,52 @@ impl DomainEvent {
                     ("count", resolution.affected_summons.to_string()),
                 ],
                 GameEventOutcomeDto::SummonCommand { resolution },
+            ),
+            Self::PetsDismissed {
+                count,
+                upkeep_percent,
+            } => dto(
+                "summon.dismissed",
+                "pets-dismissed",
+                [
+                    ("count", count.to_string()),
+                    ("upkeep", upkeep_percent.to_string()),
+                ],
+            ),
+            Self::PetUpkeepManaLost {
+                resource_id,
+                amount,
+                upkeep_percent,
+            } => dto(
+                "summon.upkeep-mana-lost",
+                "pet-upkeep-mana-lost",
+                [
+                    ("resource", resource_id),
+                    ("amount", amount.to_string()),
+                    ("upkeep", upkeep_percent.to_string()),
+                ],
+            ),
+            Self::PetUpkeepDismissalRequired { upkeep_percent } => dto(
+                "summon.upkeep-dismissal-required",
+                "pet-upkeep-dismissal-required",
+                [("upkeep", upkeep_percent.to_string())],
+            ),
+            Self::PetNeglected {
+                entity_id,
+                target_kind_id,
+                disappeared,
+            } => dto(
+                if disappeared {
+                    "summon.neglected-disappeared"
+                } else {
+                    "summon.neglected-hostile"
+                },
+                if disappeared {
+                    "pet-neglected-disappeared"
+                } else {
+                    "pet-neglected-hostile"
+                },
+                [("target", entity_id), ("actor", target_kind_id)],
             ),
             Self::SummonFollowedFloor {
                 entity_id,
@@ -4987,6 +5050,7 @@ fn rest_stop_reason(reason: &RestStopReasonDto) -> String {
         RestStopReasonDto::FullResources => "full-resources",
         RestStopReasonDto::InvalidTurns => "invalid-turns",
         RestStopReasonDto::MutationDirectionRequired => "mutation-direction-required",
+        RestStopReasonDto::PetDismissalRequired => "pet-dismissal-required",
         RestStopReasonDto::PlayerDied => "player-died",
         RestStopReasonDto::TurnLimit => "turn-limit",
     }

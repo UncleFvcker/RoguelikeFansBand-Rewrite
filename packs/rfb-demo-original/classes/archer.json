@@ -16,6 +16,7 @@
   "experiencePercent": 110,
   "baseHp": 12,
   "skillSetId": "demo.skill-set.archer",
+  "petUpkeepDivisor": 40,
   "ammunitionBreakageFactorModifier": -10,
   "projectileCriticalChanceBonusPercentPerLevel": 1,
   "abilities": [

@@ -2207,7 +2207,7 @@ fn sleep_power_resolves_then_skips_energy_and_damage_wakes_the_target() {
 
     game.entities[0].energy_need = 0;
     let mut events = Vec::new();
-    game.process_monster_energy_pulse(&mut events, &mut BTreeSet::new(), &mut Vec::new())
+    game.process_monster_energy_pulse(false, &mut events, &mut BTreeSet::new(), &mut Vec::new())
         .expect("sleeping monster energy should resolve");
     assert_eq!(game.entities[0].position, position);
     assert_eq!(game.entities[0].energy_need, 90);

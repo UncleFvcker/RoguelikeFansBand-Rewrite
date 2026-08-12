@@ -125,6 +125,7 @@ mod movement;
 #[allow(dead_code)]
 mod mutations;
 mod persistence;
+mod pet_upkeep;
 mod player_abilities;
 mod player_combat;
 mod player_stats;
@@ -1373,6 +1374,7 @@ impl Game {
                     | GameAction::BuyFromShop { .. }
                     | GameAction::ClaimTaskReward { .. }
                     | GameAction::DepositAtHome { .. }
+                    | GameAction::DismissPets
                     | GameAction::EnterWorldMap { .. }
                     | GameAction::IdentifyAtFacility { .. }
                     | GameAction::IncreaseAttribute { .. }
@@ -1413,6 +1415,7 @@ impl Game {
         action_cost = self.player_mutation_action_energy_cost(&action, action_cost);
         let automatic_pickup_after_move = matches!(&action, GameAction::Move { .. });
         let recover_after_wait = matches!(&action, GameAction::Wait);
+        let pet_neglect_allowed = self.pet_upkeep().unsafe_warning();
         let mut turn_advance = 1_u32;
         if advances_world {
             self.decrement_ability_cooldowns(1);
@@ -2073,6 +2076,13 @@ impl Game {
                     },
                 });
             }
+            GameAction::DismissPets => {
+                let count = self.dismiss_controlled_pets(&mut changed, &mut removed_entities);
+                events.push(DomainEvent::PetsDismissed {
+                    count,
+                    upkeep_percent: self.pet_upkeep().percent,
+                });
+            }
             GameAction::SetInterfaceLocale { locale } => {
                 self.interface_locale = locale;
             }
@@ -2161,6 +2171,7 @@ impl Game {
             self.advance_until_player_ready(
                 false,
                 self.map_scale != MapScaleDto::World,
+                pet_neglect_allowed,
                 &mut events,
                 &mut changed,
                 &mut removed_entities,
@@ -2169,11 +2180,9 @@ impl Game {
                 && !self.player_is_dead()
                 && !self.wilderness_blocks_regeneration()
             {
-                events.extend(
-                    self.recover_player_resources(false)
-                        .into_iter()
-                        .map(|resolution| DomainEvent::ResourceRecovered { resolution }),
-                );
+                self.recover_player_resources(false, &mut events);
+            } else if !self.player_is_dead() && !self.wilderness_blocks_regeneration() {
+                self.apply_pet_upkeep_mana_loss(&mut events);
             }
         }
         self.apply_task_events(&mut events)?;

@@ -74,6 +74,7 @@ export interface AppDom {
   readonly nearbyList: HTMLUListElement;
   readonly summonCommandStatus: HTMLElement;
   readonly summonCommandButtons: Readonly<Record<SummonCommandModeDto, HTMLButtonElement>>;
+  readonly dismissPets: HTMLButtonElement;
   readonly taskLogList: HTMLUListElement;
   readonly campaignStatusValue: HTMLElement;
   readonly campaignScoreValue: HTMLElement;
@@ -190,6 +191,7 @@ export function createAppDom(document: DocumentLookup): Readonly<AppDom> {
       "keep-distance": element<HTMLButtonElement>(document, "summon-command-keep-distance"),
       guard: element<HTMLButtonElement>(document, "summon-command-guard"),
     }),
+    dismissPets: element<HTMLButtonElement>(document, "dismiss-pets"),
     taskLogList: element<HTMLUListElement>(document, "task-log-list"),
     campaignStatusValue: element<HTMLElement>(document, "campaign-status-value"),
     campaignScoreValue: element<HTMLElement>(document, "campaign-score-value"),

@@ -71,6 +71,7 @@ pub(crate) enum GameAction {
     DigTerrain {
         direction: Direction,
     },
+    DismissPets,
     ResolveMutationDirection {
         direction: Direction,
     },
@@ -194,6 +195,7 @@ impl GameAction {
             | Self::AcceptTask { .. }
             | Self::ClaimTaskReward { .. }
             | Self::DepositAtHome { .. }
+            | Self::DismissPets
             | Self::IncreaseAttribute { .. }
             | Self::EnterWorldMap { .. }
             | Self::LeaveWorldMap
@@ -294,6 +296,7 @@ impl From<GameCommand> for GameAction {
             }
             GameCommand::DisarmTrap { direction } => Self::DisarmTrap { direction },
             GameCommand::DigTerrain { direction } => Self::DigTerrain { direction },
+            GameCommand::DismissPets => Self::DismissPets,
             GameCommand::ResolveMutationDirection { direction } => {
                 Self::ResolveMutationDirection { direction }
             }

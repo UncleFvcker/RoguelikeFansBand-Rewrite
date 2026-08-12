@@ -5382,6 +5382,18 @@
         {
           "type": "object",
           "properties": {
+            "type": {
+              "type": "string",
+              "const": "dismiss-pets"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "direction": {
               "$ref": "#/$defs/Direction"
             },
@@ -8297,6 +8309,41 @@
         "resting"
       ]
     },
+    "PetUpkeepDto": {
+      "type": "object",
+      "properties": {
+        "controlledPets": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "dismissalRequired": {
+          "type": "boolean"
+        },
+        "totalLevels": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "unsafeWarning": {
+          "type": "boolean"
+        },
+        "upkeepPercent": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        }
+      },
+      "required": [
+        "controlledPets",
+        "totalLevels",
+        "upkeepPercent",
+        "unsafeWarning",
+        "dismissalRequired"
+      ]
+    },
     "PlayerBuildDto": {
       "type": "object",
       "properties": {
@@ -8553,6 +8600,16 @@
               "type": "null"
             }
           ]
+        },
+        "petUpkeep": {
+          "$ref": "#/$defs/PetUpkeepDto",
+          "default": {
+            "controlledPets": 0,
+            "dismissalRequired": false,
+            "totalLevels": 0,
+            "unsafeWarning": false,
+            "upkeepPercent": 0
+          }
         },
         "position": {
           "$ref": "#/$defs/Position"
@@ -9007,6 +9064,7 @@
         "invalid-turns",
         "player-died",
         "mutation-direction-required",
+        "pet-dismissal-required",
         "turn-limit"
       ]
     },

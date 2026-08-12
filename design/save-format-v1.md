@@ -405,3 +405,7 @@ state hash 输入中，因此 State Hash Schema 保持 v87；save 容器仍为 v
 contract-v266 正式把玩家制造弹药的 `damageDiceOverride`、`originKind` 和
 `discountPercent` 纳入物品权威存档与 State Hash Schema v88。普通物品继续省略默认值，
 save 容器保持 v1；测试只从新存档开始，不增加旧开发存档迁移路径。
+
+contract-v274 不增加存档字段。宠物维持从既有职业身份、玩家等级、资源池以及 actor 的
+`controllerId` / `summon.ownerId` 派生；解散、消失和转敌直接写回既有 actor 集与控制归属。
+State Hash Schema 保持 v90，save 容器保持 v1。

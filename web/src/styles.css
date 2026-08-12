@@ -1283,6 +1283,11 @@ h1 {
   color: #ff9ca5;
 }
 
+.status-pill.warning {
+  color: var(--color-warning, #e8b35a);
+  border-color: currentColor;
+}
+
 .quiet-button {
   border: 0;
   padding: 0.2rem 0.35rem;

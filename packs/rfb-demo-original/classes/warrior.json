@@ -16,6 +16,7 @@
   "experiencePercent": 100,
   "baseHp": 18,
   "skillSetId": "demo.skill-set.warrior",
+  "petUpkeepDivisor": 40,
   "startingItems": [
     { "itemKindId": "demo.item.broad-sword", "quantity": 1, "equipped": true },
     { "itemKindId": "demo.item.chain-mail", "quantity": 1, "equipped": true },

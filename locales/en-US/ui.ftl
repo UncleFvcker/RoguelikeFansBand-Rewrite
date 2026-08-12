@@ -282,7 +282,7 @@ action-ability-forget = Forget
 action-ability-cast = Cast
 action-resource-rest = Rest until recovered
 panel-summon-command-title = Summon Command
-summon-command-status = { $mode } · { $count } active
+summon-command-status = { $mode } · { $count } active · upkeep { $upkeep }%
 summon-command-mode-follow = Follow
 summon-command-mode-attack = Seek and destroy
 summon-command-mode-keep-distance = Keep distance
@@ -291,6 +291,7 @@ action-summon-command-follow = Follow
 action-summon-command-attack = Attack
 action-summon-command-keep-distance = Keep distance
 action-summon-command-guard = Guard here
+action-dismiss-pets = Dismiss all
 panel-inventory-title = HTML INVENTORY LAYER
 inventory-stack-count =
     { $count ->

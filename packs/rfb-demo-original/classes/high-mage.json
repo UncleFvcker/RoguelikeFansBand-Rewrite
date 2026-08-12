@@ -16,6 +16,7 @@
   "experiencePercent": 130,
   "baseHp": 0,
   "skillSetId": "demo.skill-set.high-mage",
+  "petUpkeepDivisor": 25,
   "usesSpellScrolls": true,
   "castingProfile": {
     "resourceId": "demo.resource.mana",

@@ -335,6 +335,7 @@ pub(super) fn validate_characters(
             .sort_by(|left, right| left.ability_id.cmp(&right.ability_id));
         if !(-100..=100).contains(&class.ammunition_breakage_factor_modifier)
             || class.projectile_critical_chance_bonus_percent_per_level > 10
+            || class.pet_upkeep_divisor == 0
         {
             return Err(ContentError::InvalidCharacterSource(class.id.clone()));
         }

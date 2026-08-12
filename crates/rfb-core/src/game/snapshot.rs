@@ -142,6 +142,7 @@ impl Game {
             ability_learning: self.player_ability_learning_dto(),
             abilities: self.player_ability_dtos(),
             summon_command: self.summon_command.clone(),
+            pet_upkeep: self.pet_upkeep_dto(),
             recall: self.recall.clone(),
             riding_actor_id: self.riding_actor_id.clone(),
         }

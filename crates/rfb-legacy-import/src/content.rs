@@ -827,6 +827,7 @@ pub struct LegacyClassEntry {
     pub registration: LegacyClassRegistration,
     pub character: LegacyCharacterEntry,
     pub caster_profile: Option<LegacyCasterProfile>,
+    pub pet_upkeep_divisor: u16,
     pub source_found: bool,
 }
 
@@ -5152,6 +5153,9 @@ pub fn parse_class_block(registration: LegacyClassRegistration, body: &str) -> L
         registration,
         character,
         caster_profile: None,
+        pet_upkeep_divisor: assignment_value(body, "pets")
+            .and_then(|value| value.parse::<u16>().ok())
+            .unwrap_or(40),
         source_found: true,
     }
 }
@@ -5734,6 +5738,7 @@ fn class_json(
         "experiencePercent": character.exp.clamp(25, 500),
         "baseHp": character.base_hp.clamp(-1_000, 1_000),
         "skillSetId": format!("rfb-legacy.skill-set.class-{}", entry.registration.id),
+        "petUpkeepDivisor": entry.pet_upkeep_divisor,
         "tags": tags,
     });
     let modifiers = character_modifiers(character);
@@ -10621,6 +10626,7 @@ pub fn import_content(source: &Path, output: &Path) -> Result<PathBuf, LegacyImp
                 registration,
                 character,
                 caster_profile: None,
+                pet_upkeep_divisor: 40,
                 source_found: false,
             }
         }));
@@ -13454,6 +13460,7 @@ class_t *mage_get_class(void)
     me.life = 95;
     me.base_hp = 0;
     me.exp = 130;
+    me.pets = 25;
     me.flags = CLASS_SENSE1_MED |
                CLASS_REGEN_MANA;
     me.birth = _birth;
@@ -13521,6 +13528,7 @@ S:2:0:6000
         assert_eq!(mage.character.extra_skills, [7, 15, 11, 0, 0, 0, 6, 7]);
         assert_eq!(mage.character.life, 95);
         assert_eq!(mage.character.exp, 130);
+        assert_eq!(mage.pet_upkeep_divisor, 25);
         assert_eq!(
             mage.character.flags,
             ["CLASS_SENSE1_MED", "CLASS_REGEN_MANA"]

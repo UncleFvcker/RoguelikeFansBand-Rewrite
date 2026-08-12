@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.181";
+pub const PROTOCOL_VERSION: &str = "1.182";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -156,6 +156,7 @@ pub enum GameCommand {
     DigTerrain {
         direction: Direction,
     },
+    DismissPets,
     ResolveMutationDirection {
         direction: Direction,
     },
@@ -2312,6 +2313,17 @@ pub struct SummonCommandResolutionDto {
     pub affected_summons: u16,
 }
 
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct PetUpkeepDto {
+    pub controlled_pets: u16,
+    pub total_levels: u32,
+    pub upkeep_percent: u16,
+    pub unsafe_warning: bool,
+    pub dismissal_required: bool,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
@@ -2341,6 +2353,7 @@ pub enum RestStopReasonDto {
     InvalidTurns,
     PlayerDied,
     MutationDirectionRequired,
+    PetDismissalRequired,
     TurnLimit,
 }
 
@@ -2553,6 +2566,8 @@ pub struct PlayerDto {
     pub abilities: Vec<AbilityDto>,
     #[serde(default, skip_serializing_if = "is_default_summon_command")]
     pub summon_command: SummonCommandDto,
+    #[serde(default)]
+    pub pet_upkeep: PetUpkeepDto,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub recall: Option<RecallStateDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -3420,6 +3435,7 @@ pub fn generated_typescript() -> String {
     push_declaration!(SummonCommandModeDto);
     push_declaration!(SummonCommandDto);
     push_declaration!(SummonCommandResolutionDto);
+    push_declaration!(PetUpkeepDto);
     push_declaration!(ResourceRecoveryResolutionDto);
     push_declaration!(MonsterDisplacementResolutionDto);
     push_declaration!(RestStopReasonDto);
@@ -4498,6 +4514,7 @@ mod tests {
                 ability_learning: None,
                 abilities: Vec::new(),
                 summon_command: SummonCommandDto::default(),
+                pet_upkeep: PetUpkeepDto::default(),
                 recall: None,
                 riding_actor_id: None,
             },

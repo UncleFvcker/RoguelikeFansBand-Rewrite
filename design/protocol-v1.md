@@ -558,3 +558,8 @@ Schema 保持 v88，save 容器保持 v1。
 `Invoke Spirits` 最高随机档的一层 self 组合效果。随机分支的等级缩放在服务端物化后
 再投影，不新增客户端配置 DTO、命令、待处理输入或存档字段。State Hash Schema 保持
 v88，save 容器保持 v1。
+
+协议 1.182 / contract-v274 增加零时间 `DismissPets` 命令、派生的
+`PlayerDto.petUpkeep` 摘要，以及宠物维持法力损失、零法力解散要求和冷落结果事件。
+维持摘要不保存；它由当前职业、等级、法力池和存活的玩家控制 actor 重新计算。
+State Hash Schema 保持 v90，save 容器保持 v1。

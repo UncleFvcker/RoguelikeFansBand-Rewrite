@@ -613,3 +613,9 @@ Schema 保持 v88。
 普通 hell-fire `Damage`。content hash 为
 `b3ee9a07221cac567b5f70c3753e9d417f410bdc0e92647bc2cb3a1ecece27a1`；协议保持
 1.178，State Hash Schema 保持 v88。
+
+包 1.281.0 / contract-v274 为职业定义增加 `petUpkeepDivisor`，保存 RFB `class_t.pets`
+的正整数值。运行时用它计算当前受控 actor 的派生维持比例；该字段不声明宠物容量、
+忠诚数值或职业专用宠物类型。content hash 为
+`9b25a4756e96d61660e019ca3aeeacf717949701741091f85500ba74a3428d2a`；协议升至
+1.182，State Hash Schema 保持 v90。

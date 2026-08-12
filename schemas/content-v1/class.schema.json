@@ -641,6 +641,14 @@
     "nameKey": {
       "type": "string"
     },
+    "petUpkeepDivisor": {
+      "default": 40,
+      "description": "RFB class divisor used to convert controlled monster levels into mana upkeep.",
+      "format": "uint16",
+      "maximum": 65535,
+      "minimum": 0,
+      "type": "integer"
+    },
     "projectileCriticalChanceBonusPercentPerLevel": {
       "default": 0,
       "description": "RFB ranged-critical chance bonus gained for each character level.",
