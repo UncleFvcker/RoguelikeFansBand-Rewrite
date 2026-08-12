@@ -1,0 +1,77 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 751,
+    "maxDepth": 999,
+    "randomMovementPercent": 75,
+    "rarity": 7
+  },
+  "attack": 13,
+  "damageDice": 1,
+  "damageSides": 1,
+  "damageType": "physical",
+  "defense": 8,
+  "descriptionKey": "actor-demo-death-vortex-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 1000,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "v",
+  "hitPointDice": {
+    "dice": 32,
+    "sides": 20
+  },
+  "id": "demo.actor.death-vortex",
+  "level": 55,
+  "maxHp": 336,
+  "meleeRoutine": {
+    "blows": []
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.breath-time-33-150-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-disintegrate-17-150-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-nether-14-550-r3",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 16
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "nameKey": "actor-demo-death-vortex-name",
+  "resistances": {
+    "disenchant": "resistant",
+    "disintegrate": "resistant",
+    "nether": "resistant",
+    "time": "resistant"
+  },
+  "role": "monster",
+  "speed": 140,
+  "statusImmunities": [
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "empty-mind",
+    "kin-glyph-118",
+    "legacy-import",
+    "nonliving",
+    "orc-cave"
+  ],
+  "terrainInteraction": {
+    "destroysWalls": true
+  }
+}

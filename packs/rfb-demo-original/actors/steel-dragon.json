@@ -1,0 +1,147 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 1049,
+    "maxDepth": 999,
+    "rarity": 3
+  },
+  "attack": 13,
+  "damageDice": 7,
+  "damageSides": 12,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 3,
+        "sides": 2
+      },
+      {
+        "dice": 4,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items-and-gold"
+  },
+  "defense": 20,
+  "descriptionKey": "actor-demo-steel-dragon-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 10000,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "D",
+  "hitPointDice": {
+    "dice": 100,
+    "forceMaximum": true,
+    "sides": 50
+  },
+  "id": "demo.actor.steel-dragon",
+  "level": 55,
+  "maxHp": 5000,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 7,
+            "damageSides": 12,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 7,
+            "damageSides": 12,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 7,
+            "damageSides": 14,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "chancePercent": 10,
+            "durationDice": 7,
+            "durationSides": 14,
+            "type": "bleeding"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 7,
+            "damageSides": 17,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "armorMitigated": true,
+            "chancePercent": 20,
+            "damageDice": 7,
+            "damageSides": 17,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.crush",
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "movesWeakerBodies": true,
+  "nameKey": "actor-demo-steel-dragon-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "electricity": "resistant",
+    "fire": "resistant",
+    "poison": "resistant",
+    "shards": "resistant"
+  },
+  "rideable": true,
+  "role": "monster",
+  "speed": 120,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "dragon",
+    "evil",
+    "kin-glyph-68",
+    "legacy-import",
+    "orc-cave"
+  ]
+}

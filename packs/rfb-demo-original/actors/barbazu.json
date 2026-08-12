@@ -1,0 +1,129 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "friends": {
+      "chancePercent": 0,
+      "dice": 3,
+      "sides": 4
+    },
+    "legacyIndex": 1157,
+    "maxDepth": 999,
+    "rarity": 4
+  },
+  "attack": 13,
+  "damageDice": 4,
+  "damageSides": 10,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [
+      {
+        "guaranteedForUnique": true,
+        "percent": 90
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items-and-gold"
+  },
+  "defense": 9,
+  "descriptionKey": "actor-demo-barbazu-description",
+  "doorInteraction": {
+    "opens": true
+  },
+  "experienceValue": 3000,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "U",
+  "hitPointDice": {
+    "dice": 70,
+    "sides": 20
+  },
+  "id": "demo.actor.barbazu",
+  "level": 55,
+  "maxHp": 735,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 4,
+            "damageSides": 10,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 4,
+            "damageSides": 10,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 10,
+            "damageSides": 2,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "attributes": [
+              "constitution"
+            ],
+            "type": "drain-attributes"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "damageDice": 5,
+            "damageSides": 5,
+            "type": "poison"
+          }
+        ],
+        "methodId": "rfb.blow.sting",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.scare",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-demon-l55-1d3-1",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 10
+  },
+  "nameKey": "actor-demo-barbazu-name",
+  "resistances": {
+    "poison": "immune"
+  },
+  "role": "monster",
+  "speed": 120,
+  "tags": [
+    "demon",
+    "evil",
+    "kin-glyph-85",
+    "legacy-import",
+    "orc-cave"
+  ]
+}

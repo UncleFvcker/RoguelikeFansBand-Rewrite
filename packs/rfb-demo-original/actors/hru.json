@@ -1,0 +1,130 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "habitats": [
+      "mountain"
+    ],
+    "legacyIndex": 709,
+    "maxDepth": 999,
+    "rarity": 3
+  },
+  "attack": 14,
+  "damageDice": 1,
+  "damageSides": 1,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 4,
+        "sides": 2
+      }
+    ],
+    "kind": "gold"
+  },
+  "defense": 15,
+  "descriptionKey": "actor-demo-hru-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 20000,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "P",
+  "hitPointDice": {
+    "dice": 40,
+    "forceMaximum": true,
+    "sides": 100
+  },
+  "id": "demo.actor.hru",
+  "level": 56,
+  "maxHp": 4000,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "damageDice": 10,
+            "damageSides": 11,
+            "type": "shatter"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "damageDice": 10,
+            "damageSides": 11,
+            "type": "shatter"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "damageDice": 10,
+            "damageSides": 11,
+            "type": "shatter"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "damageDice": 10,
+            "damageSides": 11,
+            "type": "shatter"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.bolt-physical-1d1-167",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 10,
+    "smart": true
+  },
+  "movement": {
+    "modes": [
+      "climb"
+    ]
+  },
+  "movesWeakerBodies": true,
+  "nameKey": "actor-demo-hru-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "disintegrate": "vulnerable",
+    "shards": "resistant"
+  },
+  "role": "monster",
+  "speed": 120,
+  "tags": [
+    "evil",
+    "giant",
+    "kin-glyph-80",
+    "legacy-import",
+    "orc-cave"
+  ],
+  "terrainInteraction": {
+    "destroysItems": true,
+    "destroysWalls": true
+  }
+}

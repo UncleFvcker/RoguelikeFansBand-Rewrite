@@ -719,7 +719,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         .iter()
         .filter(|actor| actor.tags.iter().any(|tag| tag == "orc-cave"))
         .collect::<Vec<_>>();
-    assert_eq!(orc_cave.len(), 511);
+    assert_eq!(orc_cave.len(), 536);
 
     for id in [
         "demo.actor.bunyip",
@@ -752,10 +752,10 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
                     .any(|index| *index != 3)
         );
     }
-    let mut level_counts = [0_usize; 34];
+    let mut level_counts = [0_usize; 36];
     let mut source_indices = BTreeSet::new();
     for actor in orc_cave {
-        assert!((21..=54).contains(&actor.level));
+        assert!((21..=56).contains(&actor.level));
         let allocation = actor
             .allocation
             .as_ref()
@@ -767,7 +767,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         level_counts,
         [
             16, 14, 12, 17, 24, 17, 19, 17, 18, 21, 7, 12, 29, 15, 27, 28, 19, 19, 11, 42, 12, 6,
-            12, 14, 14, 7, 10, 6, 6, 14, 11, 4, 3, 8,
+            12, 14, 14, 7, 10, 6, 6, 14, 11, 4, 3, 8, 16, 9,
         ]
     );
 
@@ -4775,6 +4775,56 @@ fn p52a_level_53_54_direct_monsters_keep_source_identity() {
 }
 
 #[test]
+fn p52b_level_55_56_direct_monsters_keep_source_identity() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+
+    for (id, legacy_index, level) in [
+        ("death-vortex", 751, 55),
+        ("aether-vortex", 752, 55),
+        ("nidhogg-the-hel-drake", 753, 55),
+        ("the-lernean-hydra", 754, 55),
+        ("thuringwethil-the-vampire-messenger", 755, 55),
+        ("great-hell-wyrm", 756, 55),
+        ("hastur-the-unspeakable", 757, 55),
+        ("bloodthirster", 758, 55),
+        ("draconic-quylthulg", 759, 55),
+        ("great-venom-wyrm", 890, 55),
+        ("ansalom-the-dark-wizard", 1005, 55),
+        ("steel-dragon", 1049, 55),
+        ("dionysus-the-munchkin-of-chaos", 1068, 55),
+        ("walken", 1069, 55),
+        ("barbazu", 1157, 55),
+        ("greater-naga", 1162, 55),
+        ("hru", 709, 56),
+        ("nyogtha-the-thing-that-should-not-be", 760, 56),
+        ("ahtu-avatar-of-nyarlathotep", 761, 56),
+        ("fundin-bluecloak", 762, 56),
+        ("dworkin-barimen", 763, 56),
+        ("maeglin-betrayer-of-gondolin", 977, 56),
+        ("elder-storm-giant", 1128, 56),
+        ("takeminakata-drastic-measures", 1133, 56),
+        ("mummy-king", 1267, 56),
+    ] {
+        let actor_id = format!("demo.actor.{id}");
+        let actor = artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == actor_id)
+            .unwrap_or_else(|| panic!("{actor_id} should be imported"));
+        assert_eq!(actor.level, level, "{actor_id} level");
+        assert_eq!(
+            actor
+                .allocation
+                .as_ref()
+                .map(|allocation| allocation.legacy_index),
+            Some(legacy_index),
+            "{actor_id} source index"
+        );
+    }
+}
+
+#[test]
 fn outpost_has_walls_inner_shops_and_an_exterior_warrens_entrance() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let world = artifact
@@ -6200,7 +6250,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
                     == Some("demo.loot-table.base-items")
             })
             .count(),
-        465
+        485
     );
 }
 
