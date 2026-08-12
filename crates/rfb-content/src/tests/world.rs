@@ -3,15 +3,15 @@ use std::collections::BTreeSet;
 use super::*;
 
 #[test]
-fn loot_table_validation_uses_current_warrens_tables() {
+fn loot_table_validation_uses_a_current_static_table() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
 
     let mut invalid = artifact.content.clone();
     invalid
         .loot_tables
         .iter_mut()
-        .find(|table| table.id == "demo.loot-table.warrens")
-        .expect("Warrens loot table should exist")
+        .find(|table| table.id == "demo.loot-table.small-kobold")
+        .expect("small kobold loot table should exist")
         .entries
         .iter_mut()
         .for_each(|entry| entry.weight = 0);
@@ -36,8 +36,8 @@ fn loot_table_validation_uses_current_warrens_tables() {
     let entry = &mut invalid
         .loot_tables
         .iter_mut()
-        .find(|table| table.id == "demo.loot-table.warrens")
-        .expect("Warrens loot table should exist")
+        .find(|table| table.id == "demo.loot-table.small-kobold")
+        .expect("small kobold loot table should exist")
         .entries[0];
     entry.min_depth = 2;
     entry.max_depth = 1;
@@ -54,8 +54,8 @@ fn loot_table_validation_allows_distinct_allocations_for_one_item() {
     let table = valid
         .loot_tables
         .iter_mut()
-        .find(|table| table.id == "demo.loot-table.warrens")
-        .expect("Warrens loot table should exist");
+        .find(|table| table.id == "demo.loot-table.small-kobold")
+        .expect("small kobold loot table should exist");
     let mut second_allocation = table.entries[0].clone();
     second_allocation.min_depth = second_allocation.min_depth.saturating_add(1);
     second_allocation.weight = 0;
@@ -66,8 +66,8 @@ fn loot_table_validation_allows_distinct_allocations_for_one_item() {
     let table = invalid
         .loot_tables
         .iter_mut()
-        .find(|table| table.id == "demo.loot-table.warrens")
-        .expect("Warrens loot table should exist");
+        .find(|table| table.id == "demo.loot-table.small-kobold")
+        .expect("small kobold loot table should exist");
     table.entries.push(table.entries[0].clone());
     assert!(matches!(
         validate_and_normalize(&mut invalid),
@@ -78,8 +78,8 @@ fn loot_table_validation_allows_distinct_allocations_for_one_item() {
     let table = valid
         .loot_tables
         .iter_mut()
-        .find(|table| table.id == "demo.loot-table.warrens")
-        .expect("Warrens loot table should exist");
+        .find(|table| table.id == "demo.loot-table.small-kobold")
+        .expect("small kobold loot table should exist");
     let mut allocation = table.entries[0].clone();
     allocation.max_depth = u16::MAX;
     table.entries = (0..512)
@@ -94,14 +94,14 @@ fn loot_table_validation_allows_distinct_allocations_for_one_item() {
     let table = invalid
         .loot_tables
         .iter_mut()
-        .find(|table| table.id == "demo.loot-table.warrens")
-        .expect("Warrens loot table should exist");
+        .find(|table| table.id == "demo.loot-table.small-kobold")
+        .expect("small kobold loot table should exist");
     allocation.min_depth = 512;
     table.entries = valid
         .loot_tables
         .iter()
-        .find(|table| table.id == "demo.loot-table.warrens")
-        .expect("normalized Warrens loot table should exist")
+        .find(|table| table.id == "demo.loot-table.small-kobold")
+        .expect("normalized small kobold loot table should exist")
         .entries
         .clone();
     table.entries.push(allocation);
@@ -123,8 +123,8 @@ fn loot_table_validation_accepts_exactly_one_quality_source() {
     let table = valid
         .loot_tables
         .iter_mut()
-        .find(|table| table.id == "demo.loot-table.warrens")
-        .expect("Warrens loot table should exist");
+        .find(|table| table.id == "demo.loot-table.small-kobold")
+        .expect("small kobold loot table should exist");
     table.quality_weights.clear();
     table.quality_policy = Some(policy);
     validate_and_normalize(&mut valid).expect("RFB depth policy should replace static weights");
@@ -133,8 +133,8 @@ fn loot_table_validation_accepts_exactly_one_quality_source() {
     invalid
         .loot_tables
         .iter_mut()
-        .find(|table| table.id == "demo.loot-table.warrens")
-        .expect("Warrens loot table should exist")
+        .find(|table| table.id == "demo.loot-table.small-kobold")
+        .expect("small kobold loot table should exist")
         .quality_policy = Some(policy);
     assert!(matches!(
         validate_and_normalize(&mut invalid),
@@ -145,8 +145,8 @@ fn loot_table_validation_accepts_exactly_one_quality_source() {
     invalid
         .loot_tables
         .iter_mut()
-        .find(|table| table.id == "demo.loot-table.warrens")
-        .expect("Warrens loot table should exist")
+        .find(|table| table.id == "demo.loot-table.small-kobold")
+        .expect("small kobold loot table should exist")
         .quality_weights
         .clear();
     assert!(matches!(
@@ -158,8 +158,8 @@ fn loot_table_validation_accepts_exactly_one_quality_source() {
     let table = invalid
         .loot_tables
         .iter_mut()
-        .find(|table| table.id == "demo.loot-table.warrens")
-        .expect("Warrens loot table should exist");
+        .find(|table| table.id == "demo.loot-table.small-kobold")
+        .expect("small kobold loot table should exist");
     table.quality_weights.clear();
     table.quality_policy = Some(LootQualityPolicyDefinition::RfbDepth {
         good_cap_percent: 101,
@@ -876,7 +876,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             .unwrap_or_else(|| panic!("{id} should keep DROP_60"));
         assert_eq!(
             drop.item_table_id.as_deref(),
-            Some("demo.loot-table.warrens")
+            Some("demo.loot-table.base-items")
         );
         assert_eq!(
             drop.chance_rolls
@@ -4046,57 +4046,173 @@ fn temple_and_alchemist_stock_are_strictly_separated() {
 }
 
 #[test]
-fn supported_legacy_consumables_are_available_at_their_source_depths() {
+fn supported_legacy_consumables_use_their_source_allocations() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
-    let warrens = artifact
+    let base_items = artifact
         .content
         .loot_tables
         .iter()
-        .find(|table| table.id == "demo.loot-table.warrens")
-        .expect("Warrens loot table should exist");
+        .find(|table| table.id == "demo.loot-table.base-items")
+        .expect("base item pool should exist");
     let expected = [
-        ("demo.item.seeking-scroll", 0),
-        ("demo.item.veil-draught", 0),
-        ("demo.item.light-healing-potion", 0),
-        ("demo.item.summoning-scroll", 1),
-        ("demo.item.flicker-scroll", 1),
-        ("demo.item.appraisal-scroll", 1),
-        ("demo.item.detect-invisible-scroll", 1),
-        ("demo.item.benediction-scroll", 1),
-        ("demo.item.slowness-potion", 1),
-        ("demo.item.boldness-potion", 1),
-        ("demo.item.swiftstep-tonic", 1),
-        ("demo.item.temperate-tonic", 1),
-        ("demo.item.vigor-potion", 1),
-        ("demo.item.valor-tonic", 1),
-        ("demo.item.venom-draught", 3),
-        ("demo.item.frailty-tonic", 3),
-        ("demo.item.clamor-scroll", 5),
-        ("demo.item.cartography-scroll", 5),
-        ("demo.item.trapfinding-scroll", 5),
-        ("demo.item.door-stair-location-scroll", 5),
-        ("demo.item.confusing-touch-scroll", 5),
-        ("demo.item.clumsiness-potion", 5),
+        ("demo.item.seeking-scroll", 0, 30),
+        ("demo.item.veil-draught", 0, 20),
+        ("demo.item.light-healing-potion", 0, 20),
+        ("demo.item.summoning-scroll", 1, 30),
+        ("demo.item.flicker-scroll", 1, 50),
+        ("demo.item.appraisal-scroll", 1, u16::MAX),
+        ("demo.item.detect-invisible-scroll", 1, 30),
+        ("demo.item.slowness-potion", 1, 20),
+        ("demo.item.boldness-potion", 1, u16::MAX),
+        ("demo.item.swiftstep-tonic", 1, u16::MAX),
+        ("demo.item.temperate-tonic", 1, 60),
+        ("demo.item.vigor-potion", 15, u16::MAX),
+        ("demo.item.valor-tonic", 1, u16::MAX),
+        ("demo.item.venom-draught", 3, 30),
+        ("demo.item.frailty-tonic", 3, 30),
+        ("demo.item.clamor-scroll", 5, 30),
+        ("demo.item.cartography-scroll", 5, 50),
+        ("demo.item.trapfinding-scroll", 5, 30),
+        ("demo.item.door-stair-location-scroll", 5, 30),
+        ("demo.item.confusing-touch-scroll", 5, 40),
+        ("demo.item.clumsiness-potion", 5, 20),
     ];
-    for (item_id, min_depth) in expected {
-        let entry = warrens
+    for (item_id, min_depth, max_depth) in expected {
+        let entry = base_items
             .entries
             .iter()
-            .find(|entry| entry.item_kind_id == item_id)
-            .unwrap_or_else(|| panic!("{item_id} should be available in the Warrens"));
-        assert_eq!((entry.min_depth, entry.max_depth), (min_depth, 9));
+            .find(|entry| entry.item_kind_id == item_id && entry.min_depth == min_depth)
+            .unwrap_or_else(|| panic!("{item_id} should have its source allocation"));
+        assert_eq!(entry.max_depth, max_depth, "{item_id}");
     }
+    assert!(!base_items.entries.iter().any(|entry| {
+        matches!(
+            entry.item_kind_id.as_str(),
+            "demo.item.benediction-scroll" | "demo.item.satisfy-hunger-scroll"
+        )
+    }));
 }
 
 #[test]
-fn orc_cave_equipment_batch_uses_source_depths_and_warrior_theme() {
+fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let base_items = artifact
+        .content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.base-items")
+        .expect("base item pool should exist");
+
+    assert_eq!(base_items.entries.len(), 110);
+    assert_eq!(
+        base_items
+            .entries
+            .iter()
+            .map(|entry| entry.item_kind_id.as_str())
+            .collect::<BTreeSet<_>>()
+            .len(),
+        98
+    );
+    assert_eq!(
+        base_items.quality_policy,
+        Some(LootQualityPolicyDefinition::RfbDepth {
+            good_cap_percent: 75,
+            great_cap_percent: 20,
+        })
+    );
+    assert_eq!(
+        base_items
+            .affix_weights
+            .iter()
+            .map(|affix| (affix.affix_id.as_deref(), affix.weight))
+            .collect::<Vec<_>>(),
+        vec![(None, 9), (Some("rfb-legacy.affix.slaying"), 1)]
+    );
+    assert!(!artifact.content.loot_tables.iter().any(|table| {
+        matches!(
+            table.id.as_str(),
+            "demo.loot-table.warrens" | "demo.loot-table.orc-cave"
+        )
+    }));
+    assert!(
+        artifact
+            .content
+            .loot_tables
+            .iter()
+            .any(|table| table.id == "demo.loot-table.warrens-final-reward")
+    );
+    assert!(
+        artifact
+            .content
+            .loot_tables
+            .iter()
+            .any(|table| table.id == "demo.loot-table.orc-cave-final-reward")
+    );
+
+    let world = artifact
+        .content
+        .worlds
+        .iter()
+        .find(|world| world.id == "demo.world.middle-earth")
+        .expect("Middle-earth should exist");
+    for (dungeon_id, expected_floor_count) in
+        [("demo.dungeon.warrens", 9), ("demo.dungeon.orc-cave", 18)]
+    {
+        let floors = world
+            .procedural_floors
+            .iter()
+            .filter(|floor| floor.dungeon_id.as_deref() == Some(dungeon_id))
+            .collect::<Vec<_>>();
+        assert_eq!(floors.len(), expected_floor_count, "{dungeon_id}");
+        assert!(
+            floors.iter().all(|floor| {
+                floor.loot_table_id.as_deref() == Some("demo.loot-table.base-items")
+            })
+        );
+    }
+    let hideout = world
+        .procedural_floors
+        .iter()
+        .find(|floor| floor.id == "demo.floor.thieves-hideout")
+        .expect("Thieves Hideout should exist");
+    let hideout_loot = &hideout
+        .inline_map
+        .as_ref()
+        .expect("Thieves Hideout should keep its inline map")
+        .loot_spawns;
+    assert_eq!(hideout_loot.len(), 4);
+    assert!(
+        hideout_loot
+            .iter()
+            .all(|spawn| spawn.loot_table_id == "demo.loot-table.base-items")
+    );
+
+    assert_eq!(
+        artifact
+            .content
+            .actors
+            .iter()
+            .filter(|actor| {
+                actor
+                    .death_drop
+                    .as_ref()
+                    .and_then(|drop| drop.item_table_id.as_deref())
+                    == Some("demo.loot-table.base-items")
+            })
+            .count(),
+        235
+    );
+}
+
+#[test]
+fn base_pool_and_orc_warrior_theme_use_source_depths() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let normal = artifact
         .content
         .loot_tables
         .iter()
-        .find(|table| table.id == "demo.loot-table.orc-cave")
-        .expect("Orc Cave loot should exist");
+        .find(|table| table.id == "demo.loot-table.base-items")
+        .expect("base item pool should exist");
     let warrior = artifact
         .content
         .loot_tables
@@ -4120,8 +4236,8 @@ fn orc_cave_equipment_batch_uses_source_depths_and_warrior_theme() {
             .entries
             .iter()
             .find(|entry| entry.item_kind_id == item_id)
-            .unwrap_or_else(|| panic!("{item_id} should be in Orc Cave loot"));
-        assert_eq!((entry.min_depth, entry.max_depth), (min_depth, 32));
+            .unwrap_or_else(|| panic!("{item_id} should be in the base item pool"));
+        assert_eq!((entry.min_depth, entry.max_depth), (min_depth, u16::MAX));
 
         let warrior_entry = warrior
             .entries
@@ -4135,7 +4251,7 @@ fn orc_cave_equipment_batch_uses_source_depths_and_warrior_theme() {
 }
 
 #[test]
-fn selected_legacy_equipment_is_exposed_by_its_shop_and_warrens_depth() {
+fn selected_legacy_equipment_uses_its_shop_and_source_allocation() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let shop_stock = |id: &str| {
         artifact
@@ -4194,47 +4310,50 @@ fn selected_legacy_equipment_is_exposed_by_its_shop_and_warrens_depth() {
         .is_subset(&shop_stock("demo.shop.outpost-armoury"))
     );
 
-    let warrens = artifact
+    let base_items = artifact
         .content
         .loot_tables
         .iter()
-        .find(|table| table.id == "demo.loot-table.warrens")
-        .expect("Warrens loot table should exist");
+        .find(|table| table.id == "demo.loot-table.base-items")
+        .expect("base item pool should exist");
     let depth = |id: &str| {
-        warrens
+        base_items
             .entries
             .iter()
             .find(|entry| entry.item_kind_id == id)
             .map(|entry| (entry.min_depth, entry.max_depth))
     };
-    assert_eq!(depth("demo.item.club"), Some((0, 9)));
-    assert_eq!(depth("demo.item.broken-dagger"), Some((0, 9)));
-    assert_eq!(depth("demo.item.broken-sword"), Some((0, 9)));
-    assert_eq!(depth("demo.item.dagger"), Some((0, 9)));
-    assert_eq!(depth("demo.item.filthy-rag"), Some((0, 9)));
-    assert_eq!(depth("demo.item.cloak"), Some((1, 9)));
-    assert_eq!(depth("demo.item.robe"), Some((1, 9)));
-    assert_eq!(depth("demo.item.shovel"), Some((1, 9)));
-    assert_eq!(depth("demo.item.padded-armour"), Some((2, 9)));
-    assert_eq!(depth("demo.item.knit-cap"), Some((3, 9)));
-    assert_eq!(depth("demo.item.main-gauche"), Some((3, 9)));
-    assert_eq!(depth("demo.item.pointy-hat"), Some((3, 9)));
-    assert_eq!(depth("demo.item.soft-leather-armour"), Some((3, 9)));
-    assert_eq!(depth("demo.item.soft-studded-leather"), Some((3, 9)));
-    assert_eq!(depth("demo.item.tanto"), Some((3, 9)));
-    assert_eq!(depth("demo.item.whip"), Some((3, 9)));
-    assert_eq!(depth("demo.item.cord-armour"), Some((5, 9)));
-    assert_eq!(depth("demo.item.cutlass"), Some((5, 9)));
-    assert_eq!(depth("demo.item.hard-leather-armour"), Some((5, 9)));
-    assert_eq!(depth("demo.item.rapier"), Some((5, 9)));
-    assert_eq!(depth("demo.item.mace"), Some((5, 9)));
-    assert_eq!(depth("demo.item.pair-of-hard-leather-boots"), Some((5, 9)));
-    assert_eq!(depth("demo.item.paper-armour"), Some((5, 9)));
-    assert_eq!(depth("demo.item.pick"), Some((5, 9)));
-    assert_eq!(depth("demo.item.small-sword"), Some((5, 9)));
+    assert_eq!(depth("demo.item.club"), Some((0, u16::MAX)));
+    assert_eq!(depth("demo.item.broken-dagger"), Some((0, u16::MAX)));
+    assert_eq!(depth("demo.item.broken-sword"), Some((0, u16::MAX)));
+    assert_eq!(depth("demo.item.dagger"), Some((0, u16::MAX)));
+    assert_eq!(depth("demo.item.filthy-rag"), Some((0, u16::MAX)));
+    assert_eq!(depth("demo.item.cloak"), Some((1, u16::MAX)));
+    assert_eq!(depth("demo.item.robe"), Some((1, u16::MAX)));
+    assert_eq!(depth("demo.item.shovel"), Some((5, 10)));
+    assert_eq!(depth("demo.item.padded-armour"), Some((5, u16::MAX)));
+    assert_eq!(depth("demo.item.knit-cap"), Some((3, u16::MAX)));
+    assert_eq!(depth("demo.item.main-gauche"), Some((3, u16::MAX)));
+    assert_eq!(depth("demo.item.pointy-hat"), Some((10, u16::MAX)));
+    assert_eq!(depth("demo.item.soft-leather-armour"), Some((3, u16::MAX)));
+    assert_eq!(depth("demo.item.soft-studded-leather"), Some((3, u16::MAX)));
+    assert_eq!(depth("demo.item.tanto"), Some((3, u16::MAX)));
+    assert_eq!(depth("demo.item.whip"), Some((3, u16::MAX)));
+    assert_eq!(depth("demo.item.cord-armour"), Some((7, u16::MAX)));
+    assert_eq!(depth("demo.item.cutlass"), Some((5, u16::MAX)));
+    assert_eq!(depth("demo.item.hard-leather-armour"), Some((5, u16::MAX)));
+    assert_eq!(depth("demo.item.rapier"), Some((5, u16::MAX)));
+    assert_eq!(depth("demo.item.mace"), Some((5, u16::MAX)));
+    assert_eq!(
+        depth("demo.item.pair-of-hard-leather-boots"),
+        Some((5, u16::MAX))
+    );
+    assert_eq!(depth("demo.item.paper-armour"), Some((7, u16::MAX)));
+    assert_eq!(depth("demo.item.pick"), Some((10, 30)));
+    assert_eq!(depth("demo.item.small-sword"), Some((5, u16::MAX)));
     assert_eq!(
         depth("demo.item.set-of-studded-leather-gloves"),
-        Some((5, 9))
+        Some((5, u16::MAX))
     );
     assert_eq!(depth("demo.item.metal-cap"), None);
     assert_eq!(depth("demo.item.small-metal-shield"), None);
@@ -4344,7 +4463,7 @@ fn black_market_stocks_original_non_town_books_and_priced_p3_consumables() {
 }
 
 #[test]
-fn p3_1_items_all_have_a_shop_or_warrens_acquisition_path() {
+fn p3_1_allocated_items_all_have_a_shop_or_base_pool_path() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let shop_items = artifact
         .content
@@ -4358,7 +4477,7 @@ fn p3_1_items_all_have_a_shop_or_warrens_acquisition_path() {
         .filter(|table| {
             matches!(
                 table.id.as_str(),
-                "demo.loot-table.warrens" | "demo.loot-table.kobold"
+                "demo.loot-table.base-items" | "demo.loot-table.kobold"
             )
         })
         .flat_map(|table| {
@@ -4391,7 +4510,6 @@ fn p3_1_items_all_have_a_shop_or_warrens_acquisition_path() {
         "demo.item.hard-biscuit",
         "demo.item.strip-of-venison",
         "demo.item.slime-mold",
-        "demo.item.satisfy-hunger-scroll",
         "demo.item.sleep-potion",
     ] {
         assert!(
@@ -4416,7 +4534,7 @@ fn p3_2_items_all_have_a_shop_or_warrens_acquisition_path() {
         .filter(|table| {
             matches!(
                 table.id.as_str(),
-                "demo.loot-table.warrens" | "demo.loot-table.kobold"
+                "demo.loot-table.base-items" | "demo.loot-table.kobold"
             )
         })
         .flat_map(|table| {
@@ -4484,7 +4602,7 @@ fn p3_4_items_all_have_a_shop_or_warrens_acquisition_path() {
         .content
         .loot_tables
         .iter()
-        .filter(|table| table.id == "demo.loot-table.warrens")
+        .filter(|table| table.id == "demo.loot-table.base-items")
         .flat_map(|table| {
             table
                 .entries
@@ -4588,7 +4706,7 @@ fn p3_7_active_potions_all_have_an_acquisition_path() {
         .content
         .loot_tables
         .iter()
-        .filter(|table| table.id == "demo.loot-table.warrens")
+        .filter(|table| table.id == "demo.loot-table.base-items")
         .flat_map(|table| {
             table
                 .entries

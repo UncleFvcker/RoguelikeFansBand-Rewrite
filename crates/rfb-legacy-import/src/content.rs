@@ -41,7 +41,7 @@ const T_PREF_SOURCE: &str = "lib/edit/t_pref.txt";
 const R_NAME_ZH_SOURCE: &str = "src/monster_name_zh.inc";
 const LEGACY_DROP_TABLE_ID: &str = "rfb-legacy.loot-table.monster-drops";
 const LEGACY_WARRIOR_DROP_TABLE_ID: &str = "rfb-legacy.loot-table.monster-drops-warrior";
-const DEMO_DROP_TABLE_ID: &str = "demo.loot-table.warrens";
+const DEMO_DROP_TABLE_ID: &str = "demo.loot-table.base-items";
 const DEMO_WARRIOR_DROP_TABLE_ID: &str = "demo.loot-table.large-kobold";
 const DEMO_ARCHER_DROP_TABLE_ID: &str = "demo.loot-table.archer";
 const DEMO_MAGE_DROP_TABLE_ID: &str = "demo.loot-table.mage";
@@ -8334,7 +8334,7 @@ fn demo_monster_json(
     if let Some(death_drop) = value.get_mut("deathDrop") {
         if death_drop.get("itemTableId").is_some() {
             death_drop["itemTableId"] = serde_json::json!(if entry.index == 1185 {
-                "demo.loot-table.orc-cave"
+                "demo.loot-table.base-items"
             } else {
                 DEMO_DROP_TABLE_ID
             });

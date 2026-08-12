@@ -29,7 +29,7 @@
         "sides": 2
       }
     ],
-    "itemTableId": "demo.loot-table.warrens",
+    "itemTableId": "demo.loot-table.base-items",
     "kind": "items-and-gold"
   },
   "defense": 6,

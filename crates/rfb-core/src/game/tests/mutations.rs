@@ -218,8 +218,8 @@ fn m4f_c_luck_bias_adjusts_quality_depth_and_attribute_thresholds() {
     assert_eq!(locked_luck.gain_random_mutation(&mut Vec::new()), None);
     let weights = game
         .content
-        .loot_table("demo.loot-table.warrens")
-        .expect("Warrens loot table should exist")
+        .loot_table("demo.loot-table.small-kobold")
+        .expect("static loot table should exist")
         .quality_weights
         .clone();
     let raw_weights = weights.iter().map(|entry| entry.weight).collect::<Vec<_>>();

@@ -30,7 +30,7 @@
         "sides": 2
       }
     ],
-    "itemTableId": "demo.loot-table.warrens",
+    "itemTableId": "demo.loot-table.base-items",
     "kind": "items",
     "minimumQuality": "fine"
   },

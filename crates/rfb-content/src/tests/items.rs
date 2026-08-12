@@ -91,22 +91,32 @@ fn natural_affix_compatibility_uses_slot_depth_and_explicit_none_fallback() {
     missing_fallback
         .loot_tables
         .iter_mut()
-        .find(|table| table.id == "demo.loot-table.orc-cave")
+        .find(|table| table.id == "demo.loot-table.base-items")
         .expect("Orc Cave loot should exist")
         .affix_weights
         .retain(|entry| entry.affix_id.is_some());
     assert!(matches!(
         validate_and_normalize(&mut missing_fallback),
-        Err(ContentError::InvalidLootTable(id)) if id == "demo.loot-table.orc-cave"
+        Err(ContentError::InvalidLootTable(id)) if id == "demo.loot-table.base-items"
     ));
 
     let mut outside_depth = artifact.content.clone();
+    let table = outside_depth
+        .loot_tables
+        .iter_mut()
+        .find(|table| table.id == "demo.loot-table.base-items")
+        .expect("base item pool should exist");
+    table.entries.retain(|entry| entry.min_depth <= 10);
+    table
+        .entries
+        .iter_mut()
+        .for_each(|entry| entry.max_depth = 10);
     outside_depth
         .affixes
         .iter_mut()
         .find(|affix| affix.id == "rfb-legacy.affix.slaying")
         .expect("Slaying should exist")
-        .generation_max_level = 10;
+        .generation_level = 20;
     assert!(matches!(
         validate_and_normalize(&mut outside_depth),
         Err(ContentError::InvalidLootTable(_))
@@ -129,18 +139,18 @@ fn salt_water_keeps_authoritative_shape_effect_and_shallow_acquisition() {
         item.use_action.as_ref().map(|action| &action.effect),
         Some(ItemUseEffectDefinition::ApplySaltWater)
     ));
-    let warrens = artifact
+    let base_items = artifact
         .content
         .loot_tables
         .iter()
-        .find(|table| table.id == "demo.loot-table.warrens")
-        .expect("Warrens loot should exist");
-    let entry = warrens
+        .find(|table| table.id == "demo.loot-table.base-items")
+        .expect("base item pool should exist");
+    let entry = base_items
         .entries
         .iter()
         .find(|entry| entry.item_kind_id == item.id)
         .expect("Salt Water should be shallow loot");
-    assert_eq!((entry.min_depth, entry.max_depth), (0, 9));
+    assert_eq!((entry.min_depth, entry.max_depth), (0, 20));
 }
 
 #[test]

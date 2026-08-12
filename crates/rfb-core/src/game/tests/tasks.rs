@@ -51,7 +51,7 @@ fn orc_cave_natural_affixes_never_cross_item_slots() {
     let mut game =
         Game::new_with_build(67, RFB_WARRIOR_BUILD_ID).expect("Orc Cave loot test should create");
     let context = LootContext {
-        table_id: "demo.loot-table.orc-cave".to_owned(),
+        table_id: "demo.loot-table.base-items".to_owned(),
         floor_id: "demo.floor.orc-cave-depth-32".to_owned(),
         depth: 32,
         source: LootSource::MonsterDeath {
@@ -1051,17 +1051,20 @@ fn warrens_dungeon_conquest_returns_retires_and_round_trips() {
         .filter(|item| item.quality == ItemQualityDto::Fine)
         .collect::<Vec<_>>();
     assert!((1..=2).contains(&fine_equipment.len()));
-    let allowed_guardian_drop_kinds = ["demo.loot-table.warrens", "demo.loot-table.warrens-keeper"]
-        .into_iter()
-        .flat_map(|table_id| {
-            game.content
-                .loot_table(table_id)
-                .expect("guardian drop table should remain available")
-                .entries
-                .iter()
-                .map(|entry| entry.item_kind_id.clone())
-        })
-        .collect::<BTreeSet<_>>();
+    let allowed_guardian_drop_kinds = [
+        "demo.loot-table.base-items",
+        "demo.loot-table.warrens-keeper",
+    ]
+    .into_iter()
+    .flat_map(|table_id| {
+        game.content
+            .loot_table(table_id)
+            .expect("guardian drop table should remain available")
+            .entries
+            .iter()
+            .map(|entry| entry.item_kind_id.clone())
+    })
+    .collect::<BTreeSet<_>>();
     assert!(
         fine_equipment
             .iter()

@@ -19,7 +19,7 @@
   "resistances": { "poison": "resistant" },
   "deathDrop": {
     "kind": "items-and-gold",
-    "itemTableId": "demo.loot-table.warrens",
+    "itemTableId": "demo.loot-table.base-items",
     "themeTableId": "demo.loot-table.large-kobold",
     "themeChancePercent": 50,
     "chanceRolls": [{ "percent": 90, "guaranteedForUnique": true }]

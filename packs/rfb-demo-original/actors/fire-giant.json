@@ -27,7 +27,7 @@
         "sides": 2
       }
     ],
-    "itemTableId": "demo.loot-table.warrens",
+    "itemTableId": "demo.loot-table.base-items",
     "kind": "items",
     "themeChancePercent": 50,
     "themeTableId": "demo.loot-table.large-kobold"
