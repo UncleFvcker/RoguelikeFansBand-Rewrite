@@ -719,7 +719,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         .iter()
         .filter(|actor| actor.tags.iter().any(|tag| tag == "orc-cave"))
         .collect::<Vec<_>>();
-    assert_eq!(orc_cave.len(), 464);
+    assert_eq!(orc_cave.len(), 465);
 
     for id in [
         "demo.actor.bunyip",
@@ -767,7 +767,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         level_counts,
         [
             16, 14, 12, 17, 24, 17, 19, 17, 18, 21, 7, 12, 29, 15, 27, 28, 19, 19, 11, 42, 12, 6,
-            12, 14, 14, 7, 10, 5,
+            12, 14, 14, 7, 10, 6,
         ]
     );
 
@@ -4621,6 +4621,39 @@ fn p50_hand_doom_imports_shadow_fiend() {
 }
 
 #[test]
+fn p50_percent_mana_drain_imports_draugr() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actor = artifact
+        .content
+        .actors
+        .iter()
+        .find(|actor| actor.id == "demo.actor.draugr")
+        .expect("Draugr should be imported");
+
+    assert_eq!(actor.level, 48);
+    assert_eq!(
+        actor
+            .allocation
+            .as_ref()
+            .map(|allocation| allocation.legacy_index),
+        Some(1356)
+    );
+    assert!(matches!(
+        actor
+            .melee_routine
+            .as_ref()
+            .expect("Draugr should retain melee")
+            .blows[0]
+            .effects[2],
+        MeleeBlowEffectDefinition::DrainResource {
+            chance_percent: Some(25),
+            amount_dice: 1,
+            amount_sides: 25,
+        }
+    ));
+}
+
+#[test]
 fn outpost_has_walls_inner_shops_and_an_exterior_warrens_entrance() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let world = artifact
@@ -6046,7 +6079,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
                     == Some("demo.loot-table.base-items")
             })
             .count(),
-        432
+        433
     );
 }
 
@@ -6111,7 +6144,7 @@ fn formal_drop_themes_use_source_allocations_and_rfb_depth_quality() {
                 .filter(|drop| drop.theme_table_id.as_deref() == Some("demo.loot-table.warrior"))
         })
         .collect::<Vec<_>>();
-    assert_eq!(warrior_drops.len(), 85);
+    assert_eq!(warrior_drops.len(), 86);
     assert!(
         warrior_drops
             .iter()

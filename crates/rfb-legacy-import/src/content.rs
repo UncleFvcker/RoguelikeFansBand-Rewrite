@@ -6865,7 +6865,10 @@ fn melee_damage_type(token: &str) -> Option<&'static str> {
     }
 }
 
-fn melee_effect_json(effect: &LegacyBlowEffect) -> Option<serde_json::Value> {
+fn melee_effect_json(
+    effect: &LegacyBlowEffect,
+    monster_level: Option<u16>,
+) -> Option<serde_json::Value> {
     let mut value = match effect.token.as_str() {
         "POISON" => {
             let (damage_dice, damage_sides) = effect.dice?;
@@ -6938,7 +6941,9 @@ fn melee_effect_json(effect: &LegacyBlowEffect) -> Option<serde_json::Value> {
         "EAT_FOOD" => serde_json::json!({ "type": "eat-food" }),
         "EAT_LITE" => serde_json::json!({ "type": "eat-light" }),
         "DRAIN_MANA" => {
-            let (amount_dice, amount_sides) = effect.dice?;
+            let (amount_dice, amount_sides) = effect
+                .dice
+                .or_else(|| monster_level.map(|level| (1, 1 + level / 2)))?;
             serde_json::json!({
                 "type": "drain-resource",
                 "amountDice": amount_dice.clamp(1, 100),
@@ -7011,13 +7016,16 @@ fn melee_effect_json(effect: &LegacyBlowEffect) -> Option<serde_json::Value> {
     Some(value)
 }
 
-fn melee_effects_json(effect: &LegacyBlowEffect) -> Option<Vec<serde_json::Value>> {
+fn melee_effects_json(
+    effect: &LegacyBlowEffect,
+    monster_level: Option<u16>,
+) -> Option<Vec<serde_json::Value>> {
     if effect.token == "MIND_BLAST" {
         if effect.chance_percent.is_some() {
             return None;
         }
         return Some(vec![
-            melee_effect_json(effect)?,
+            melee_effect_json(effect, monster_level)?,
             serde_json::json!({
                 "type": "confusion",
                 "damageDice": 0,
@@ -7025,7 +7033,7 @@ fn melee_effects_json(effect: &LegacyBlowEffect) -> Option<Vec<serde_json::Value
             }),
         ]);
     }
-    melee_effect_json(effect).map(|effect| vec![effect])
+    melee_effect_json(effect, monster_level).map(|effect| vec![effect])
 }
 
 fn blow_primary_dice(blow: &LegacyBlow) -> Option<(u16, u16)> {
@@ -8288,7 +8296,7 @@ fn demo_monster_json(
             .effects
             .iter()
             .map(|effect| {
-                melee_effects_json(effect).ok_or_else(|| {
+                melee_effects_json(effect, entry.level).ok_or_else(|| {
                     LegacyImportError::InvalidDemoMonsterSelection(format!(
                         "{} has unsupported blow effect {}",
                         selection.id, effect.token
@@ -9412,7 +9420,7 @@ fn convert_content_from(
             .filter(|blow| {
                 blow.effects
                     .iter()
-                    .any(|effect| melee_effects_json(effect).is_some())
+                    .any(|effect| melee_effects_json(effect, entry.level).is_some())
             })
             .collect();
         let intentional_no_melee = expressible.is_empty()
@@ -9439,7 +9447,7 @@ fn convert_content_from(
                 if !blow
                     .effects
                     .iter()
-                    .any(|effect| melee_effects_json(effect).is_some())
+                    .any(|effect| melee_effects_json(effect, entry.level).is_some())
                 {
                     *report
                         .unmapped_blow_methods
@@ -9460,7 +9468,7 @@ fn convert_content_from(
                         .effects
                         .iter()
                         .filter_map(|effect| {
-                            let mapped = melee_effects_json(effect);
+                            let mapped = melee_effects_json(effect, entry.level);
                             if mapped.is_none() {
                                 *report
                                     .unmapped_blow_effects
@@ -12640,7 +12648,7 @@ mod tests {
         let effects = blow
             .effects
             .iter()
-            .map(|effect| melee_effect_json(effect).expect("status effect should map"))
+            .map(|effect| melee_effect_json(effect, None).expect("status effect should map"))
             .collect::<Vec<_>>();
 
         assert_eq!(effects[0]["type"], "confusion");
@@ -12687,7 +12695,7 @@ mod tests {
     #[test]
     fn dice_less_hurt_maps_to_exact_zero_damage_only() {
         let hurt = parse_blow("GAZE:HURT", 1).expect("dice-less HURT should parse");
-        let effect = melee_effect_json(&hurt.effects[0]).expect("HURT should map");
+        let effect = melee_effect_json(&hurt.effects[0], None).expect("HURT should map");
 
         assert_eq!(effect["type"], "damage");
         assert_eq!(effect["damageDice"], 0);
@@ -12702,11 +12710,11 @@ mod tests {
         let lite = parse_blow("BITE:LITE(1d3, 20%)", 1).expect("LITE melee damage should parse");
 
         assert_eq!(
-            melee_effect_json(&light.effects[0]),
-            melee_effect_json(&lite.effects[0])
+            melee_effect_json(&light.effects[0], None),
+            melee_effect_json(&lite.effects[0], None)
         );
         assert_eq!(
-            melee_effect_json(&light.effects[0]).expect("LIGHT should map")["damageType"],
+            melee_effect_json(&light.effects[0], None).expect("LIGHT should map")["damageType"],
             "light"
         );
     }
@@ -12714,7 +12722,7 @@ mod tests {
     #[test]
     fn vampiric_melee_maps_to_unarmored_physical_damage_and_healing() {
         let blow = parse_blow("BITE:VAMP(2d6)", 1).expect("VAMP melee should parse");
-        let effect = melee_effect_json(&blow.effects[0]).expect("VAMP melee should map");
+        let effect = melee_effect_json(&blow.effects[0], None).expect("VAMP melee should map");
 
         assert_eq!(effect["type"], "damage");
         assert_eq!(effect["damageDice"], 2);
@@ -12727,7 +12735,7 @@ mod tests {
     #[test]
     fn unlife_melee_maps_to_life_force_drain_instead_of_hp_damage() {
         let blow = parse_blow("TOUCH:UNLIFE(3d4)", 1).expect("UNLIFE melee should parse");
-        let effect = melee_effect_json(&blow.effects[0]).expect("UNLIFE melee should map");
+        let effect = melee_effect_json(&blow.effects[0], None).expect("UNLIFE melee should map");
         assert_eq!(effect["type"], "unlife");
         assert_eq!(effect["amountDice"], 3);
         assert_eq!(effect["amountSides"], 4);
@@ -12737,13 +12745,14 @@ mod tests {
     #[test]
     fn dice_less_disenchant_maps_to_narrow_melee_effect() {
         let blow = parse_blow("GAZE:DISENCHANT", 1).expect("dice-less DISENCHANT should parse");
-        let effect = melee_effect_json(&blow.effects[0]).expect("DISENCHANT should map");
+        let effect = melee_effect_json(&blow.effects[0], None).expect("DISENCHANT should map");
 
         assert_eq!(effect, serde_json::json!({ "type": "disenchant" }));
 
         let damaging =
             parse_blow("GAZE:DISENCHANT(1d4)", 1).expect("damaging DISENCHANT should parse");
-        let effect = melee_effect_json(&damaging.effects[0]).expect("damage should stay mapped");
+        let effect =
+            melee_effect_json(&damaging.effects[0], None).expect("damage should stay mapped");
         assert_eq!(effect["type"], "damage");
         assert_eq!(effect["damageDice"], 1);
         assert_eq!(effect["damageSides"], 4);
@@ -13164,6 +13173,37 @@ mod tests {
                 "type": "bomb",
                 "damageDice": 12,
                 "damageSides": 12,
+            })
+        );
+    }
+
+    #[test]
+    fn demo_monster_import_maps_percent_only_mana_drain_with_level_power() {
+        let mut monsters = parse_r_info(
+            "N:1356:Draugr\nG:z:b\nI:121:12d99:30:145:10:350\nW:48:7:999:6400:0:0\nB:GAZE:TERRIFY(5d5):TERRIFY:DRAIN_MANA(25%)\nF:UNDEAD | EVIL\n",
+        )
+        .expect("synthetic percent mana drain should parse");
+        let actor = demo_monster_json(
+            &monsters.remove(0),
+            &DemoMonsterSelectionEntry {
+                source_index: 1356,
+                source_id: None,
+                id: "draugr".to_owned(),
+                tags: vec!["orc-cave".to_owned()],
+                omitted_flags: Vec::new(),
+                omitted_spells: Vec::new(),
+            },
+            &mut BTreeMap::new(),
+        )
+        .expect("percent-only DRAIN_MANA should import");
+
+        assert_eq!(
+            actor["meleeRoutine"]["blows"][0]["effects"][2],
+            serde_json::json!({
+                "type": "drain-resource",
+                "amountDice": 1,
+                "amountSides": 25,
+                "chancePercent": 25,
             })
         );
     }

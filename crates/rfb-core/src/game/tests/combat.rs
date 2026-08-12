@@ -389,6 +389,38 @@ fn resource_drain_melee_heals_six_times_the_amount_actually_drained() {
 }
 
 #[test]
+fn percent_gated_resource_drain_uses_level_power_and_heals_the_caster() {
+    let game = (0..100_u64)
+        .find_map(|seed| {
+            let mut game = monster_effect_game(
+                seed,
+                MeleeBlowEffectDefinition::DrainResource {
+                    chance_percent: Some(25),
+                    amount_dice: 1,
+                    amount_sides: 25,
+                },
+            );
+            game.resources.insert(
+                "test.resource.mana".to_owned(),
+                ResourcePool {
+                    current: 25,
+                    maximum: 25,
+                },
+            );
+            game.entities[0].hp = 1;
+            game.entities[0].max_hp = 200;
+            game.resolve_monster_melee(0, &mut Vec::new(), &mut BTreeSet::new(), &mut Vec::new())
+                .expect("percent-gated resource drain should resolve");
+            (game.resources["test.resource.mana"].current < 25).then_some(game)
+        })
+        .expect("a deterministic seed should pass the 25% gate");
+
+    let drained = 25 - game.resources["test.resource.mana"].current;
+    assert!((1..=25).contains(&drained));
+    assert_eq!(game.entities[0].hp, 1 + i32::try_from(drained * 6).unwrap());
+}
+
+#[test]
 fn inertia_melee_uses_minor_slow_and_free_action_reduces_it() {
     let inertia = MeleeBlowEffectDefinition::Inertia {
         chance_percent: None,
