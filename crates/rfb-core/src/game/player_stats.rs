@@ -179,6 +179,13 @@ pub(in crate::game) fn actor_melee_routine_dto(
 }
 
 fn projected_blow_damage(effects: &[MeleeBlowEffectDefinition]) -> DamageDiceDto {
+    if effects.is_empty() {
+        return DamageDiceDto {
+            dice: 0,
+            sides: 0,
+            damage_type: DamageType::Physical.into(),
+        };
+    }
     let (dice, sides, damage_type) = effects
         .iter()
         .find_map(|effect| match effect {

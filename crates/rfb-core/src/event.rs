@@ -1169,6 +1169,9 @@ pub(crate) enum DomainEvent {
         method_id: Option<String>,
         damage: DamageOutcome,
     },
+    MonsterBegged {
+        source_kind_id: String,
+    },
     MonsterSelfDestructed {
         source_kind_id: String,
     },
@@ -1272,6 +1275,10 @@ pub(crate) enum DomainEvent {
         target_kind_id: String,
         method_id: Option<String>,
         damage: DamageOutcome,
+    },
+    MonsterBeggedEntity {
+        source_kind_id: String,
+        target_kind_id: String,
     },
     MonsterFled {
         source_kind_id: String,
@@ -4464,6 +4471,11 @@ impl DomainEvent {
                 ),
                 method_id,
             ),
+            Self::MonsterBegged { source_kind_id } => dto(
+                "combat.monster-beg",
+                "combat-monster-beg",
+                [("source", source_kind_id)],
+            ),
             Self::MonsterSelfDestructed { source_kind_id } => dto(
                 "combat.monster-self-destructed",
                 "combat-monster-self-destructed",
@@ -4740,6 +4752,14 @@ impl DomainEvent {
                     },
                 ),
                 method_id,
+            ),
+            Self::MonsterBeggedEntity {
+                source_kind_id,
+                target_kind_id,
+            } => dto(
+                "combat.monster-entity-beg",
+                "combat-monster-entity-beg",
+                [("source", source_kind_id), ("target", target_kind_id)],
             ),
             Self::MonsterFled {
                 source_kind_id,

@@ -495,17 +495,18 @@ impl Game {
                 blow.to_hit,
                 StatBounds::NON_NEGATIVE,
             );
-            if !resolve_check(
-                &mut self.rng,
-                CheckContext {
-                    kind: CheckKind::MeleeHit,
-                    actor_id: self.entities[source_index].id.clone(),
-                    target_id: Some(target.entity_id().to_owned()),
-                    ability,
-                    difficulty: target_stats.armor_class.clone(),
-                },
-            )
-            .succeeded()
+            if !blow.effects.is_empty()
+                && !resolve_check(
+                    &mut self.rng,
+                    CheckContext {
+                        kind: CheckKind::MeleeHit,
+                        actor_id: self.entities[source_index].id.clone(),
+                        target_id: Some(target.entity_id().to_owned()),
+                        ability,
+                        difficulty: target_stats.armor_class.clone(),
+                    },
+                )
+                .succeeded()
             {
                 events.push(DomainEvent::MonsterMeleeEntityMissed {
                     source_kind_id: source_kind_id.clone(),
@@ -532,6 +533,14 @@ impl Game {
                     )?;
                 }
                 break;
+            }
+
+            if blow.effects.is_empty() {
+                events.push(DomainEvent::MonsterBeggedEntity {
+                    source_kind_id: source_kind_id.clone(),
+                    target_kind_id: target.kind_id().to_owned(),
+                });
+                continue;
             }
 
             for effect in &blow.effects {
@@ -1173,17 +1182,18 @@ impl Game {
                 blow.to_hit,
                 StatBounds::NON_NEGATIVE,
             );
-            if !resolve_check(
-                &mut self.rng,
-                CheckContext {
-                    kind: CheckKind::MeleeHit,
-                    actor_id: self.entities[index].id.clone(),
-                    target_id: Some(self.player.id.clone()),
-                    ability,
-                    difficulty: target.armor_class.clone(),
-                },
-            )
-            .succeeded()
+            if !blow.effects.is_empty()
+                && !resolve_check(
+                    &mut self.rng,
+                    CheckContext {
+                        kind: CheckKind::MeleeHit,
+                        actor_id: self.entities[index].id.clone(),
+                        target_id: Some(self.player.id.clone()),
+                        ability,
+                        difficulty: target.armor_class.clone(),
+                    },
+                )
+                .succeeded()
             {
                 events.push(DomainEvent::MonsterMeleeMissed {
                     source_kind_id: kind_id.clone(),
@@ -1202,6 +1212,13 @@ impl Game {
 
             if blow.self_destructs {
                 return Ok(true);
+            }
+
+            if blow.effects.is_empty() {
+                events.push(DomainEvent::MonsterBegged {
+                    source_kind_id: kind_id.clone(),
+                });
+                continue;
             }
 
             for effect in &blow.effects {

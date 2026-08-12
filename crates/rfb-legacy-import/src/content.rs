@@ -8156,9 +8156,9 @@ fn demo_monster_json(
     }
     let mut blows = Vec::with_capacity(entry.blows.len());
     for blow in &entry.blows {
-        // RFB permits purely presentational methods such as DROOL with no
-        // effect payload. They do not create a gameplay blow in this model.
-        if blow.effects.is_empty() {
+        // BEG is an always-successful, observable action despite having no
+        // effect payload. Other presentational methods remain out of scope.
+        if blow.effects.is_empty() && blow.method != "BEG" {
             continue;
         }
         let effects = blow
@@ -12448,6 +12448,29 @@ mod tests {
         assert_eq!(effects[7]["type"], "eat-item");
         assert_eq!(effects[8]["type"], "eat-food");
         assert_eq!(effects[9]["type"], "eat-light");
+    }
+
+    #[test]
+    fn demo_monster_import_preserves_effectless_beg() {
+        let mut monsters =
+            parse_r_info("N:1:test beggar\nG:t:y\nI:110:2d3:10:1:0:175\nW:0:1:0:0:0:0\nB:BEG\n")
+                .expect("synthetic beggar should parse");
+        let actor = demo_monster_json(
+            &monsters.remove(0),
+            &DemoMonsterSelectionEntry {
+                source_index: 1,
+                source_id: None,
+                id: "test-beggar".to_owned(),
+                tags: Vec::new(),
+                omitted_flags: Vec::new(),
+            },
+            &mut BTreeMap::new(),
+        )
+        .expect("BEG should import directly");
+        let blow = &actor["meleeRoutine"]["blows"][0];
+
+        assert_eq!(blow["methodId"], "rfb.blow.beg");
+        assert_eq!(blow["effects"], serde_json::json!([]));
     }
 
     #[test]

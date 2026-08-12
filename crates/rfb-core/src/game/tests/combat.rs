@@ -108,6 +108,47 @@ fn mutation_contact_auras_retaliate_only_against_unresisted_contact_attacks() {
 }
 
 #[test]
+fn effectless_beg_always_succeeds_without_damage_contact_or_rng() {
+    let mut game = game_with_actor_definition(0, "demo.actor.small-kobold", |actor| {
+        actor.attack = 1;
+        actor.melee_routine = Some(rfb_content::MeleeRoutineDefinition {
+            blows: vec![rfb_content::MeleeBlowDefinition {
+                method_id: "rfb.blow.beg".to_owned(),
+                to_hit: -1_000_000,
+                self_destructs: false,
+                effects: Vec::new(),
+            }],
+        });
+    });
+    clear_monsters(&mut game);
+    let beggar = game.generated_actor(
+        "test.monster.beggar".to_owned(),
+        "demo.actor.small-kobold",
+        Position { x: 4, y: 3 },
+    );
+    game.entities.push(beggar);
+    assert!(game.gain_mutation("rfb.mutation.fire-aura", &mut Vec::new()));
+    game.entities[0].hp = 100;
+    game.entities[0].max_hp = 100;
+    let player_hp = game.player.hp;
+    let monster_hp = game.entities[0].hp;
+    let draws = game.rng.draw_counter;
+    let mut events = Vec::new();
+
+    game.resolve_monster_melee(0, &mut events, &mut BTreeSet::new(), &mut Vec::new())
+        .expect("BEG should resolve");
+
+    assert_eq!(game.player.hp, player_hp);
+    assert_eq!(game.entities[0].hp, monster_hp);
+    assert_eq!(game.rng.draw_counter, draws);
+    assert!(matches!(
+        events.as_slice(),
+        [DomainEvent::MonsterBegged { source_kind_id }]
+            if source_kind_id == "demo.actor.small-kobold"
+    ));
+}
+
+#[test]
 fn monster_contact_auras_apply_elemental_damage_and_curse_saves() {
     let template = game_with_actor_definition(0, "demo.actor.small-kobold", |actor| {
         actor.level = 50;
