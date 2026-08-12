@@ -548,3 +548,7 @@ destinationTownId }`。旅行固定收费 500 金币，直接重建目标城镇�
 既有制造端点使用同一分组名，前端按 `minimumLevel` 只展示已开放子项；执行仍复用
 `CastAbility` 和既有目标选择。玩家制造弹药物品的持久字段正式纳入 State Hash Schema
 v88，save 容器保持 v1。
+
+协议 1.177 / P50 为 `AbilityEffectSpecDto::CurseDamage` 增加
+`damageIsCurrentHpPercent` 与 `nonlethal`，用于准确投影“毁灭之手”的当前生命百分比和
+非致死语义。没有新增持久状态，State Hash Schema 保持 v88，save 容器保持 v1。

@@ -292,6 +292,10 @@ pub enum AbilityEffectDefinition {
         damage_sides: u16,
         #[serde(default)]
         damage_bonus: u16,
+        #[serde(default)]
+        damage_is_current_hp_percent: bool,
+        #[serde(default)]
+        nonlethal: bool,
     },
     DeathRay {
         power: u32,

@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.176";
+pub const PROTOCOL_VERSION: &str = "1.177";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -903,6 +903,10 @@ pub enum AbilityEffectSpecDto {
         damage_dice: u16,
         damage_sides: u16,
         damage_bonus: u16,
+        #[serde(default)]
+        damage_is_current_hp_percent: bool,
+        #[serde(default)]
+        nonlethal: bool,
     },
     DeathRay {
         power: u32,

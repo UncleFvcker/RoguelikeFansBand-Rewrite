@@ -719,7 +719,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         .iter()
         .filter(|actor| actor.tags.iter().any(|tag| tag == "orc-cave"))
         .collect::<Vec<_>>();
-    assert_eq!(orc_cave.len(), 463);
+    assert_eq!(orc_cave.len(), 464);
 
     for id in [
         "demo.actor.bunyip",
@@ -767,7 +767,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         level_counts,
         [
             16, 14, 12, 17, 24, 17, 19, 17, 18, 21, 7, 12, 29, 15, 27, 28, 19, 19, 11, 42, 12, 6,
-            12, 14, 14, 7, 10, 4,
+            12, 14, 14, 7, 10, 5,
         ]
     );
 
@@ -4585,6 +4585,42 @@ fn p50_bomb_imports_leprechaun_fanatic() {
 }
 
 #[test]
+fn p50_hand_doom_imports_shadow_fiend() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actor = artifact
+        .content
+        .actors
+        .iter()
+        .find(|actor| actor.id == "demo.actor.the-shadow-fiend")
+        .expect("The Shadow Fiend should be imported");
+
+    assert_eq!(actor.level, 48);
+    assert_eq!(
+        actor
+            .allocation
+            .as_ref()
+            .map(|allocation| allocation.legacy_index),
+        Some(1197)
+    );
+    let ability = artifact
+        .content
+        .abilities
+        .iter()
+        .find(|ability| ability.id == "rfb-legacy.ability.hand-of-doom")
+        .expect("Hand of Doom should be generated");
+    assert!(matches!(
+        ability.effect,
+        AbilityEffectDefinition::CurseDamage {
+            damage_dice: 1,
+            damage_sides: 20,
+            damage_bonus: 40,
+            damage_is_current_hp_percent: true,
+            nonlethal: true,
+        }
+    ));
+}
+
+#[test]
 fn outpost_has_walls_inner_shops_and_an_exterior_warrens_entrance() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let world = artifact
@@ -6010,7 +6046,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
                     == Some("demo.loot-table.base-items")
             })
             .count(),
-        431
+        432
     );
 }
 

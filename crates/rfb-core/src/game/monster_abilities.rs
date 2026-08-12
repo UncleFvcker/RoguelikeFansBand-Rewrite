@@ -2,6 +2,27 @@
 
 use super::*;
 
+fn prepare_curse_damage(
+    rolled: i32,
+    current_hp: i32,
+    damage_is_current_hp_percent: bool,
+    nonlethal: bool,
+) -> i32 {
+    if !damage_is_current_hp_percent {
+        return rolled.max(0);
+    }
+    let current_hp = current_hp.max(0);
+    let damage = i64::from(current_hp)
+        .saturating_mul(i64::from(rolled.max(0)))
+        .saturating_div(100)
+        .clamp(0, i64::from(i32::MAX)) as i32;
+    if nonlethal {
+        damage.min(current_hp.saturating_sub(1))
+    } else {
+        damage
+    }
+}
+
 impl Game {
     fn resolve_monster_animate_dead_effect(
         &mut self,
@@ -1268,24 +1289,48 @@ impl Game {
                     damage_dice,
                     damage_sides,
                     damage_bonus,
+                    damage_is_current_hp_percent,
+                    nonlethal,
                 } => {
                     // Summoned targets have no saving-throw skill; the curse
                     // lands in full (documented v98 simplification).
-                    let raw_damage = self
-                        .roll_damage(*damage_dice, *damage_sides)
-                        .saturating_add(i32::from(*damage_bonus))
-                        .max(0);
-                    self.resolve_monster_damage_to_hostile(
-                        source_entity_id,
-                        source_kind_id,
-                        &ability.id,
-                        effect_index,
-                        raw_damage,
-                        raw_damage,
-                        DamageType::Curse,
-                        target,
-                        events,
-                    )
+                    let target_definition = self
+                        .content
+                        .actor(&self.entities[target_index].kind_id)
+                        .expect("monster target definition must remain available");
+                    if *damage_is_current_hp_percent
+                        && target_definition
+                            .tags
+                            .iter()
+                            .any(|tag| matches!(tag.as_str(), "unique" | "unique2" | "guardian"))
+                    {
+                        AbilityEffectResolutionDto::Skipped {
+                            effect_index,
+                            reason: AbilityEffectSkipReasonDto::Ineligible,
+                        }
+                    } else {
+                        let rolled = self
+                            .roll_damage(*damage_dice, *damage_sides)
+                            .saturating_add(i32::from(*damage_bonus))
+                            .max(0);
+                        let raw_damage = prepare_curse_damage(
+                            rolled,
+                            self.entities[target_index].hp,
+                            *damage_is_current_hp_percent,
+                            *nonlethal,
+                        );
+                        self.resolve_monster_damage_to_hostile(
+                            source_entity_id,
+                            source_kind_id,
+                            &ability.id,
+                            effect_index,
+                            raw_damage,
+                            raw_damage,
+                            DamageType::Curse,
+                            target,
+                            events,
+                        )
+                    }
                 }
                 AbilityEffectDefinition::PolymorphTarget => {
                     let target_entity_id = self.entities[target_index].id.clone();
@@ -1519,6 +1564,8 @@ impl Game {
                     damage_dice,
                     damage_sides,
                     damage_bonus,
+                    damage_is_current_hp_percent,
+                    nonlethal,
                 } => {
                     // A successful saving throw negates the curse before any
                     // damage dice are drawn; difficulty follows the caster's
@@ -1529,10 +1576,16 @@ impl Game {
                             reason: AbilityEffectSkipReasonDto::Saved,
                         }
                     } else {
-                        let raw_damage = self
+                        let rolled = self
                             .roll_damage(*damage_dice, *damage_sides)
                             .saturating_add(i32::from(*damage_bonus))
                             .max(0);
+                        let raw_damage = prepare_curse_damage(
+                            rolled,
+                            self.player.hp,
+                            *damage_is_current_hp_percent,
+                            *nonlethal,
+                        );
                         self.resolve_monster_damage_to_player(
                             source_entity_id,
                             source_kind_id,

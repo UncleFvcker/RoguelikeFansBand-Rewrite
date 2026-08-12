@@ -6270,10 +6270,14 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             damage_dice,
             damage_sides,
             damage_bonus,
+            damage_is_current_hp_percent,
+            nonlethal,
         } => AbilityEffectSpecDto::CurseDamage {
             damage_dice: *damage_dice,
             damage_sides: *damage_sides,
             damage_bonus: *damage_bonus,
+            damage_is_current_hp_percent: *damage_is_current_hp_percent,
+            nonlethal: *nonlethal,
         },
         AbilityEffectDefinition::DeathRay { power } => {
             AbilityEffectSpecDto::DeathRay { power: *power }

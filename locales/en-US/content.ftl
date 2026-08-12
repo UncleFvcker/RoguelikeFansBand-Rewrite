@@ -4068,3 +4068,7 @@ ability-legacy-ball-chaos-10d10-41-name = Chaos ball
 ability-legacy-ball-chaos-10d10-41-description = Uses the Chaos ball monster spell from RFB.
 actor-demo-leprechaun-fanatic-name = Leprechaun fanatic
 actor-demo-leprechaun-fanatic-description = A creature recorded in the original RFB bestiary as Leprechaun fanatic.
+actor-demo-the-shadow-fiend-name = The Shadow Fiend
+actor-demo-the-shadow-fiend-description = A creature recorded in the original RFB bestiary as The Shadow Fiend.
+ability-legacy-hand-of-doom-name = Hand of Doom
+ability-legacy-hand-of-doom-description = Drains 41–60% of the target's current life but cannot kill it.

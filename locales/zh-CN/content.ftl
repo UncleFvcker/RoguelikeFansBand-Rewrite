@@ -4069,3 +4069,7 @@ ability-legacy-ball-chaos-10d10-41-name = 唤起罗格鲁斯
 ability-legacy-ball-chaos-10d10-41-description = 使用 RFB 原版怪物法术“唤起罗格鲁斯”。
 actor-demo-leprechaun-fanatic-name = 狂热矮妖
 actor-demo-leprechaun-fanatic-description = 原版怪物：狂热矮妖。
+actor-demo-the-shadow-fiend-name = 影魔
+actor-demo-the-shadow-fiend-description = 原版怪物：影魔。
+ability-legacy-hand-of-doom-name = 毁灭之手
+ability-legacy-hand-of-doom-description = 吸取目标当前生命值的 41–60%，但不会致死。

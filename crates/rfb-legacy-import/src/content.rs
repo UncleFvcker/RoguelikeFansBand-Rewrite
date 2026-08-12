@@ -7331,7 +7331,7 @@ fn map_jump_spell_token(
 }
 
 /// CAUSE curses gate on the player's saving throw instead of armour or
-/// resistances; HAND_DOOM (percent-of-current-HP) stays a gap.
+/// resistances; HAND_DOOM additionally scales against current HP and cannot kill.
 fn map_curse_spell_token(
     token: &str,
     abilities: &mut BTreeMap<String, serde_json::Value>,
@@ -7345,6 +7345,7 @@ fn map_curse_spell_token(
         "CAUSE_2" => (8, 8, 0),
         "CAUSE_3" => (10, 15, 0),
         "CAUSE_4" => (15, 15, 0),
+        "HAND_DOOM" => (1, 20, 40),
         _ => return None,
     };
     let (dice, sides, bonus) = match explicit {
@@ -7354,8 +7355,12 @@ fn map_curse_spell_token(
     let dice = dice.clamp(1, 100);
     let sides = sides.clamp(1, 10_000);
     let bonus = bonus.min(10_000);
-    let mut suffix = format!("curse-{dice}d{sides}");
-    if bonus > 0 {
+    let mut suffix = if base == "HAND_DOOM" {
+        "hand-of-doom".to_owned()
+    } else {
+        format!("curse-{dice}d{sides}")
+    };
+    if bonus > 0 && base != "HAND_DOOM" {
         suffix.push_str(&format!("-{bonus}"));
     }
     let id = format!("rfb-legacy.ability.{suffix}");
@@ -7367,6 +7372,10 @@ fn map_curse_spell_token(
         });
         if bonus > 0 {
             effect["damageBonus"] = serde_json::json!(bonus);
+        }
+        if base == "HAND_DOOM" {
+            effect["damageIsCurrentHpPercent"] = serde_json::json!(true);
+            effect["nonlethal"] = serde_json::json!(true);
         }
         serde_json::json!({
             "$schema": format!("{SCHEMA_BASE}/ability.schema.json"),
@@ -17316,9 +17325,10 @@ S:1_IN_3 | CAUSE_1 | CAUSE_4 | HAND_DOOM
             [
                 "rfb-legacy.ability.curse-3d8",
                 "rfb-legacy.ability.curse-15d15",
+                "rfb-legacy.ability.hand-of-doom",
             ]
         );
-        assert_eq!(outcome.report.unmapped_spells["HAND_DOOM"], 1);
+        assert!(!outcome.report.unmapped_spells.contains_key("HAND_DOOM"));
         let curse = outcome
             .ability_files
             .iter()
@@ -17329,6 +17339,18 @@ S:1_IN_3 | CAUSE_1 | CAUSE_4 | HAND_DOOM
         assert_eq!(curse["effect"]["damageDice"], 15);
         assert_eq!(curse["effect"]["damageSides"], 15);
         assert!(curse["effect"].get("damageType").is_none());
+        let doom = outcome
+            .ability_files
+            .iter()
+            .find(|(name, _)| name == "hand-of-doom.json")
+            .map(|(_, value)| value)
+            .expect("Hand of Doom should be generated");
+        assert_eq!(doom["effect"]["type"], "curse-damage");
+        assert_eq!(doom["effect"]["damageDice"], 1);
+        assert_eq!(doom["effect"]["damageSides"], 20);
+        assert_eq!(doom["effect"]["damageBonus"], 40);
+        assert_eq!(doom["effect"]["damageIsCurrentHpPercent"], true);
+        assert_eq!(doom["effect"]["nonlethal"], true);
     }
 
     #[test]

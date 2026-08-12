@@ -402,11 +402,19 @@
               "minimum": 0,
               "type": "integer"
             },
+            "damageIsCurrentHpPercent": {
+              "default": false,
+              "type": "boolean"
+            },
             "damageSides": {
               "format": "uint16",
               "maximum": 65535,
               "minimum": 0,
               "type": "integer"
+            },
+            "nonlethal": {
+              "default": false,
+              "type": "boolean"
             },
             "type": {
               "const": "curse-damage",

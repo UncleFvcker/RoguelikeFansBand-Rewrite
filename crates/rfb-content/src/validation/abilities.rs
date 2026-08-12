@@ -233,10 +233,18 @@ pub(super) fn validate_abilities(
                     damage_dice,
                     damage_sides,
                     damage_bonus,
+                    damage_is_current_hp_percent,
+                    nonlethal,
                 } => {
                     (1..=100).contains(damage_dice)
                         && (1..=10_000).contains(damage_sides)
                         && *damage_bonus <= 10_000
+                        && (!*damage_is_current_hp_percent
+                            || u32::from(*damage_dice)
+                                .saturating_mul(u32::from(*damage_sides))
+                                .saturating_add(u32::from(*damage_bonus))
+                                <= 100)
+                        && (!*nonlethal || *damage_is_current_hp_percent)
                 }
                 AbilityEffectDefinition::DeathRay { power } => {
                     (1..=1_000_000).contains(power)

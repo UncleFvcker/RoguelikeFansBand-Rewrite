@@ -1487,6 +1487,68 @@ fn magic_affinity_and_strong_mind_gate_existing_dispel_and_resource_drain_effect
 }
 
 #[test]
+fn hand_of_doom_uses_a_save_gated_nonlethal_percentage_of_current_hp() {
+    let template = Game::new(0);
+    let ability = template
+        .content
+        .ability("rfb-legacy.ability.hand-of-doom")
+        .expect("Hand of Doom should compile")
+        .clone();
+    let (seed, damaged, resolution, events) = (0..1_000_u64)
+        .find_map(|seed| {
+            let mut game = template.clone();
+            game.rng = RfbRng::seeded(seed);
+            game.player.hp = 1_000;
+            game.player.max_hp = 1_000;
+            let mut events = Vec::new();
+            let resolutions = game.resolve_monster_player_effects(
+                "test.monster.shadow-fiend",
+                "demo.actor.the-shadow-fiend",
+                &ability,
+                &mut events,
+                &mut BTreeSet::new(),
+            );
+            let resolution = resolutions.into_iter().next().expect("one effect");
+            matches!(resolution, AbilityEffectResolutionDto::Damage { .. })
+                .then_some((seed, game, resolution, events))
+        })
+        .expect("a deterministic seed should fail the saving throw");
+
+    let AbilityEffectResolutionDto::Damage {
+        resolution: damage, ..
+    } = resolution
+    else {
+        unreachable!()
+    };
+    assert!((410..=600).contains(&damage.raw_damage));
+    assert_eq!(damaged.player.hp, 1_000 - damage.final_damage);
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::SavingThrowChecked {
+            succeeded: false,
+            ..
+        }
+    )));
+
+    let mut nonlethal = template;
+    nonlethal.rng = RfbRng::seeded(seed);
+    nonlethal.player.hp = 1;
+    let resolutions = nonlethal.resolve_monster_player_effects(
+        "test.monster.shadow-fiend",
+        "demo.actor.the-shadow-fiend",
+        &ability,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+    );
+    assert_eq!(nonlethal.player.hp, 1);
+    assert!(matches!(
+        resolutions.as_slice(),
+        [AbilityEffectResolutionDto::Damage { resolution, .. }]
+            if resolution.raw_damage == 0 && resolution.final_damage == 0
+    ));
+}
+
+#[test]
 fn waiting_and_resting_recover_mana_until_the_pool_is_full() {
     let mut game = test_caster_game(0);
     clear_monsters(&mut game);

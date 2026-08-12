@@ -5358,6 +5358,12 @@
       "id": "leprechaun-fanatic",
       "tags": ["orc-cave"],
       "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 1197,
+      "id": "the-shadow-fiend",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
     }
   ]
 }
