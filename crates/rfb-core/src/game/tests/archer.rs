@@ -391,3 +391,214 @@ fn blindness_blocks_create_ammunition_without_consuming_the_source() {
         DomainEvent::AbilityCastUnavailable { reason, .. } if reason == "blind"
     )));
 }
+
+#[test]
+fn create_ammunition_accepts_original_junk_bones_and_skeleton_corpses_on_floor_or_pack() {
+    let mut game = archer_game(37);
+    game.progress.level = 20;
+    game.debug_ability_casts_succeed = true;
+    let cases = [
+        (
+            "test.pottery",
+            "demo.item.shard-of-pottery",
+            ItemLocation::Inventory,
+            None,
+            2,
+        ),
+        (
+            "test.stick",
+            "demo.item.broken-stick",
+            ItemLocation::Ground(game.player.position),
+            None,
+            2,
+        ),
+        (
+            "test.bones",
+            "demo.item.skeleton-remains",
+            ItemLocation::Inventory,
+            None,
+            1,
+        ),
+        (
+            "test.skeleton-corpse",
+            "demo.item.corpse-remains",
+            ItemLocation::Ground(game.player.position),
+            Some("demo.actor.skeleton-orc"),
+            1,
+        ),
+    ];
+    for (id, kind_id, location, origin_actor_kind_id, quantity) in cases {
+        give_inventory_item(&mut game, id, kind_id);
+        let source = game
+            .items
+            .iter_mut()
+            .find(|item| item.id == id)
+            .expect("source material should exist");
+        source.location = location;
+        source.origin_actor_kind_id = origin_actor_kind_id.map(str::to_owned);
+        source.quantity = quantity;
+        let mut events = Vec::new();
+        game.resolve_player_ability(
+            "demo.ability.archer-create-arrows",
+            TargetSelection::Item {
+                item_id: id.to_owned(),
+            },
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("original source material should create arrows");
+        let remaining = game
+            .items
+            .iter()
+            .find(|item| item.id == id)
+            .map_or(0, |item| item.quantity);
+        assert_eq!(remaining, quantity - 1, "only one {kind_id} should be used");
+        let destination_ids = events
+            .iter()
+            .find_map(|event| match event {
+                DomainEvent::AbilityEffectsResolved { resolution, .. } => {
+                    resolution.effects.iter().find_map(|effect| match effect {
+                        AbilityEffectResolutionDto::CreateAmmunition {
+                            source_item_id,
+                            destination_item_ids,
+                            ..
+                        } if source_item_id.as_deref() == Some(id) => {
+                            Some(destination_item_ids.clone())
+                        }
+                        _ => None,
+                    })
+                }
+                _ => None,
+            })
+            .expect("created ammunition should report its destination");
+        assert!(destination_ids.iter().all(|destination_id| {
+            let item = game
+                .items
+                .iter()
+                .find(|item| item.id == *destination_id)
+                .expect("created ammunition should remain available");
+            game.item_identification(item) == ItemIdentificationDto::Identified
+        }));
+    }
+}
+
+#[test]
+fn original_neutral_apply_magic_covers_quality_curses_egos_and_damage_dice() {
+    let mut game = archer_game(41);
+    game.progress.level = 50;
+    let template = game
+        .items
+        .iter()
+        .find(|item| item.kind_id == "demo.item.arrow")
+        .expect("birth arrows should exist")
+        .clone();
+    let mut saw_ordinary = false;
+    let mut saw_fine = false;
+    let mut saw_heavy_curse = false;
+    let mut saw_slaying = false;
+    let mut saw_elemental = false;
+    let mut saw_supercharged = false;
+    let mut persistent_sample = None;
+
+    for seed in 0..20_000 {
+        game.rng = RfbRng::seeded(seed);
+        let mut item = template.clone();
+        game.apply_rfb_ammunition_magic(&mut item);
+        assert_eq!(item.origin_kind, Some(ItemOriginKindDto::PlayerMade));
+        assert_eq!(item.discount_percent, 99);
+        if item.quality == ItemQualityDto::Ordinary && item.curse.is_none() {
+            saw_ordinary = true;
+        }
+        if item.quality == ItemQualityDto::Fine {
+            saw_fine = true;
+            assert!(item.enchantments.to_hit > 0 && item.enchantments.to_damage > 0);
+        }
+        if item.curse == Some(ItemCurseSeverityDto::Heavy) {
+            saw_heavy_curse = true;
+            assert!(item.enchantments.to_hit < 0 && item.enchantments.to_damage < 0);
+        }
+        if item.affix_ids == ["rfb-legacy.affix.slaying"] {
+            saw_slaying = true;
+            assert!(!item.rolled_affixes[0].properties.slays.is_empty());
+        }
+        if item.affix_ids == ["demo.affix.ammo-elemental"] {
+            saw_elemental = true;
+            assert!(!item.rolled_affixes[0].properties.brands.is_empty());
+        }
+        if let Some(dice) = item.damage_dice_override {
+            saw_supercharged = true;
+            assert!((4..=9).contains(&dice));
+        }
+        if persistent_sample.is_none()
+            && item.quality == ItemQualityDto::Exceptional
+            && item.damage_dice_override.is_some()
+        {
+            persistent_sample = Some(item);
+        }
+        if saw_ordinary
+            && saw_fine
+            && saw_heavy_curse
+            && saw_slaying
+            && saw_elemental
+            && saw_supercharged
+            && persistent_sample.is_some()
+        {
+            break;
+        }
+    }
+    assert!(saw_ordinary && saw_fine && saw_heavy_curse);
+    assert!(saw_slaying && saw_elemental && saw_supercharged);
+
+    let sample = persistent_sample.expect("seed search should find a supercharged ego arrow");
+    let saved = crate::save::inventory_to_save(std::slice::from_ref(&sample));
+    let restored = crate::save::inventory_item_from_dto(saved[0].clone(), &game.content)
+        .expect("player-made ammunition should round-trip");
+    assert_eq!(restored.origin_kind, sample.origin_kind);
+    assert_eq!(restored.discount_percent, sample.discount_percent);
+    assert_eq!(restored.damage_dice_override, sample.damage_dice_override);
+    assert_eq!(restored.enchantments, sample.enchantments);
+    assert_eq!(restored.rolled_affixes, sample.rolled_affixes);
+
+    let mut invalid = saved[0].clone();
+    invalid.discount_percent = 50;
+    assert!(crate::save::inventory_item_from_dto(invalid, &game.content).is_err());
+}
+
+#[test]
+fn player_made_ammunition_dice_and_rolled_brands_feed_the_projectile_profile() {
+    let mut game = archer_game(43);
+    let arrows = game
+        .items
+        .iter_mut()
+        .find(|item| item.kind_id == "demo.item.arrow")
+        .expect("birth arrows should exist");
+    let mut properties = AffixPropertyBundleDefinition::default();
+    properties.brands.insert(WeaponBrand::Fire);
+    arrows.origin_kind = Some(ItemOriginKindDto::PlayerMade);
+    arrows.discount_percent = 99;
+    arrows.damage_dice_override = Some(9);
+    arrows.quality = ItemQualityDto::Exceptional;
+    arrows.affix_ids = vec!["demo.affix.ammo-elemental".to_owned()];
+    arrows.rolled_affixes = vec![RolledAffixState {
+        affix_id: "demo.affix.ammo-elemental".to_owned(),
+        properties,
+    }];
+
+    let profile = game
+        .player_projectile_profile()
+        .expect("equipped bow and branded arrows should resolve");
+    assert_eq!(profile.damage_dice, 9);
+    let target = &game.player;
+    let definition = game
+        .actor_runtime_definition(target)
+        .expect("player definition should remain available");
+    assert_ne!(
+        target.resistances.level(DamageType::Fire),
+        ResistanceLevel::Immune
+    );
+    assert_eq!(
+        game.player_projectile_damage_multiplier(&profile, target, definition),
+        24
+    );
+}

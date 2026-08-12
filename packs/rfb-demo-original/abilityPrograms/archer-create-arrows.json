@@ -14,7 +14,7 @@
       ],
       "quantityMinimum": 5,
       "quantityMaximum": 10,
-      "sourceItemTags": ["skeleton"]
+      "sourceItemTags": ["corpse", "junk", "skeleton"]
     }
   ]
 }

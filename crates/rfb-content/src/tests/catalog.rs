@@ -6,7 +6,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.259.0");
+    assert_eq!(catalog.pack_version(), "1.260.0");
     assert!(catalog.mutation("rfb.mutation.spit-acid").is_some());
     assert!(
         catalog
@@ -30,6 +30,10 @@ fn compiled_catalog_indexes_current_rfb_content() {
     assert!(catalog.class("demo.class.archer").is_some());
     assert!(catalog.build("demo.build.archer").is_some());
     assert!(catalog.item("demo.item.quiver").is_some());
+    assert!(catalog.item("demo.item.shard-of-pottery").is_some());
+    assert!(catalog.item("demo.item.broken-stick").is_some());
+    assert!(catalog.affix("rfb-legacy.affix.slaying").is_some());
+    assert!(catalog.affix("demo.affix.ammo-elemental").is_some());
     assert!(catalog.class("demo.class.mage").is_none());
     let world = catalog
         .world("demo.world.middle-earth")

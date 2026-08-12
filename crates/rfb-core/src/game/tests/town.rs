@@ -896,6 +896,47 @@ fn current_warrior_uses_rfb_price_factor_and_trade_values() {
 }
 
 #[test]
+fn player_made_ammunition_keeps_its_ninety_nine_percent_shop_discount() {
+    let mut game = store_game(44);
+    let ammunition = game
+        .items
+        .iter_mut()
+        .find(|item| item.kind_id == "demo.item.arrow")
+        .expect("Warrior should carry arrows");
+    ammunition.kind_id = "demo.item.mithril-arrow".to_owned();
+    ammunition.quantity = 1;
+    ammunition.origin_kind = Some(ItemOriginKindDto::PlayerMade);
+    ammunition.discount_percent = 99;
+    let item_id = ammunition.id.clone();
+
+    let before_sale = game.snapshot();
+    let quote = projected_shop(&before_sale.shops, GENERAL_STORE_ID)
+        .sell_quotes
+        .iter()
+        .find(|quote| quote.item_id == item_id)
+        .expect("player-made ammunition should be legal shop stock");
+    assert_eq!(quote.unit_price, 1);
+    let gold_before = game.gold;
+    let sale = dispatch_next(
+        &mut game,
+        GameCommand::SellToShop {
+            shop_id: GENERAL_STORE_ID.to_owned(),
+            item_id,
+            quantity: 1,
+        },
+    );
+    assert!(sale.events.iter().any(|event| event.kind == "shop.sale"));
+    assert_eq!(game.gold, gold_before + 1);
+    let after_sale = game.snapshot();
+    let stock = projected_shop(&after_sale.shops, GENERAL_STORE_ID)
+        .stock
+        .iter()
+        .find(|item| item.kind_id == "demo.item.mithril-arrow")
+        .expect("sold player-made ammunition should remain discounted in stock");
+    assert_eq!(stock.unit_price, 1);
+}
+
+#[test]
 fn black_market_uses_original_warrior_markup_and_markdown() {
     let mut game =
         Game::new_with_build(42, "demo.build.warrior").expect("Warrens game should start");

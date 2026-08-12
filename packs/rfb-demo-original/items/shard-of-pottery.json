@@ -1,0 +1,12 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.shard-of-pottery",
+  "nameKey": "item-demo-shard-of-pottery-name",
+  "descriptionKey": "item-demo-shard-of-pottery-description",
+  "glyph": "~",
+  "generationLevel": 0,
+  "weightTenthsPound": 5,
+  "maxStack": 10,
+  "tags": ["junk", "rfb-compatibility"]
+}

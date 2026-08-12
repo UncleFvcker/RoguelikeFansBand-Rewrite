@@ -115,6 +115,30 @@ pub(super) fn rolled_affixes_are_valid(item: &ItemInstance) -> bool {
         })
 }
 
+fn item_creation_state_is_valid(
+    item: &ItemInstance,
+    definition: &rfb_content::ItemDefinition,
+) -> bool {
+    let player_made_state_is_valid = match item.origin_kind {
+        None => item.discount_percent == 0,
+        Some(ItemOriginKindDto::PlayerMade) => {
+            item.discount_percent == 99 && definition.tags.iter().any(|tag| tag == "ammunition")
+        }
+    };
+    let damage_override_is_valid = item.damage_dice_override.is_none_or(|dice| {
+        (1..=9).contains(&dice) && definition.tags.iter().any(|tag| tag == "ammunition")
+    });
+    let enchantments_are_valid = [-15..=15, -15..=15, -15..=15]
+        .into_iter()
+        .zip([
+            item.enchantments.to_hit,
+            item.enchantments.to_damage,
+            item.enchantments.to_armor,
+        ])
+        .all(|(range, value)| range.contains(&value));
+    player_made_state_is_valid && damage_override_is_valid && enchantments_are_valid
+}
+
 pub(super) fn floor_regions_are_valid(
     floor_id: &str,
     dimensions: (u16, u16),
@@ -721,7 +745,8 @@ impl Game {
                 && rolled_affixes_are_valid(item)
                 && (item.affix_ids.is_empty()
                     || (supports_quality && item.quality != ItemQualityDto::Ordinary))
-                && (item.quality == ItemQualityDto::Ordinary || supports_quality);
+                && (item.quality == ItemQualityDto::Ordinary || supports_quality)
+                && item_creation_state_is_valid(item, definition);
             let common_valid = instance_ids.insert(item.id.clone()) && item.quantity != 0;
             if !affixes_are_valid {
                 return Err(CoreError::InvalidSave(
@@ -811,7 +836,8 @@ impl Game {
                         .iter()
                         .all(|affix_id| self.content.affix(affix_id).is_some())
                     && rolled_affixes_are_valid(item)
-                    && (item.quality == ItemQualityDto::Ordinary || supports_quality);
+                    && (item.quality == ItemQualityDto::Ordinary || supports_quality)
+                    && item_creation_state_is_valid(item, definition);
                 if !instance_ids.insert(item.id.clone())
                     || item.quantity == 0
                     || item.quantity > definition.max_stack
@@ -841,7 +867,8 @@ impl Game {
                         .iter()
                         .all(|affix_id| self.content.affix(affix_id).is_some())
                     && rolled_affixes_are_valid(item)
-                    && (item.quality == ItemQualityDto::Ordinary || supports_quality);
+                    && (item.quality == ItemQualityDto::Ordinary || supports_quality)
+                    && item_creation_state_is_valid(item, definition);
                 if !instance_ids.insert(item.id.clone())
                     || item.quantity == 0
                     || item.quantity > definition.max_stack
@@ -950,7 +977,8 @@ impl Game {
                     && rolled_affixes_are_valid(item)
                     && (item.affix_ids.is_empty()
                         || (supports_quality && item.quality != ItemQualityDto::Ordinary))
-                    && (item.quality == ItemQualityDto::Ordinary || supports_quality);
+                    && (item.quality == ItemQualityDto::Ordinary || supports_quality)
+                    && item_creation_state_is_valid(item, definition);
                 let location_is_valid = match &item.location {
                     ItemLocation::Ground(position) => {
                         floor_position_is_walkable(floor, *position, &self.content)

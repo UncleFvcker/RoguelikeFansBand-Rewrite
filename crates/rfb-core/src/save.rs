@@ -22,11 +22,11 @@ use rfb_protocol::{
     ActorSaveDto, CarriedItemSaveDto, DamageTypeDto, EquipmentBonusesDto, EquipmentItemSaveDto,
     EquipmentPassiveDto, FloorConnectionSaveDto, FloorRegionSaveDto, FloorSaveDto, GoldPileDto,
     InventoryItemSaveDto, ItemActivationDto, ItemChargesDto, ItemEnchantmentsDto, ItemFuelDto,
-    ItemFuelKindDto, ItemSaveDto, MonsterPackSaveDto, NaturalAttributeSetSaveDto,
-    PlayerBuildSaveDto, PlayerProgressSaveDto, PlayerSaveDto, Position, ResistanceDto,
-    ResistanceLevelDto, ResistanceSaveDto, RolledAffixSaveDto, SkillProgressSaveDto, SlayDto,
-    SlayLevelDto, SlayTargetDto, StatModifiersDto, StatusSaveDto, SummonSaveDto, TargetModeDto,
-    TargetSpecDto, TerrainSaveDto, WeaponBrandDto,
+    ItemFuelKindDto, ItemOriginKindDto, ItemSaveDto, MonsterPackSaveDto,
+    NaturalAttributeSetSaveDto, PlayerBuildSaveDto, PlayerProgressSaveDto, PlayerSaveDto, Position,
+    ResistanceDto, ResistanceLevelDto, ResistanceSaveDto, RolledAffixSaveDto, SkillProgressSaveDto,
+    SlayDto, SlayLevelDto, SlayTargetDto, StatModifiersDto, StatusSaveDto, SummonSaveDto,
+    TargetModeDto, TargetSpecDto, TerrainSaveDto, WeaponBrandDto,
 };
 
 pub(crate) const GENERATED_ITEM_ID_PREFIX: &str = "generated.item.";
@@ -309,6 +309,12 @@ pub(crate) fn item_from_dto(
         item.device_recovery_progress,
         item.enchantments,
     )?;
+    validate_item_creation_state(
+        definition,
+        item.origin_kind,
+        item.damage_dice_override,
+        item.discount_percent,
+    )?;
     let rolled_affixes = rolled_affixes_from_save(item.rolled_affixes, &item.affix_ids)?;
     Ok(ItemInstance {
         id: item.id,
@@ -316,6 +322,9 @@ pub(crate) fn item_from_dto(
         quantity: item.quantity,
         inscription: item.inscription,
         origin_actor_kind_id: item.origin_actor_kind_id,
+        origin_kind: item.origin_kind,
+        damage_dice_override: item.damage_dice_override,
+        discount_percent: item.discount_percent,
         quality: item.quality,
         affix_ids: item.affix_ids,
         rolled_affixes,
@@ -345,6 +354,12 @@ pub(crate) fn inventory_item_from_dto(
         item.device_recovery_progress,
         item.enchantments,
     )?;
+    validate_item_creation_state(
+        definition,
+        item.origin_kind,
+        item.damage_dice_override,
+        item.discount_percent,
+    )?;
     let rolled_affixes = rolled_affixes_from_save(item.rolled_affixes, &item.affix_ids)?;
     Ok(ItemInstance {
         id: item.id,
@@ -352,6 +367,9 @@ pub(crate) fn inventory_item_from_dto(
         quantity: item.quantity,
         inscription: item.inscription,
         origin_actor_kind_id: item.origin_actor_kind_id,
+        origin_kind: item.origin_kind,
+        damage_dice_override: item.damage_dice_override,
+        discount_percent: item.discount_percent,
         quality: item.quality,
         affix_ids: item.affix_ids,
         rolled_affixes,
@@ -386,6 +404,12 @@ pub(crate) fn equipment_item_from_dto(
         item.device_recovery_progress,
         item.enchantments,
     )?;
+    validate_item_creation_state(
+        definition,
+        item.origin_kind,
+        item.damage_dice_override,
+        item.discount_percent,
+    )?;
     let rolled_affixes = rolled_affixes_from_save(item.rolled_affixes, &item.affix_ids)?;
     Ok(ItemInstance {
         id: item.id,
@@ -393,6 +417,9 @@ pub(crate) fn equipment_item_from_dto(
         quantity: item.quantity,
         inscription: item.inscription,
         origin_actor_kind_id: item.origin_actor_kind_id,
+        origin_kind: item.origin_kind,
+        damage_dice_override: item.damage_dice_override,
+        discount_percent: item.discount_percent,
         quality: item.quality,
         affix_ids: item.affix_ids,
         rolled_affixes,
@@ -424,6 +451,12 @@ pub(crate) fn carried_item_from_dto(
         item.device_recovery_progress,
         item.enchantments,
     )?;
+    validate_item_creation_state(
+        definition,
+        item.origin_kind,
+        item.damage_dice_override,
+        item.discount_percent,
+    )?;
     let rolled_affixes = rolled_affixes_from_save(item.rolled_affixes, &item.affix_ids)?;
     Ok(ItemInstance {
         id: item.id,
@@ -431,6 +464,9 @@ pub(crate) fn carried_item_from_dto(
         quantity: item.quantity,
         inscription: item.inscription,
         origin_actor_kind_id: item.origin_actor_kind_id,
+        origin_kind: item.origin_kind,
+        damage_dice_override: item.damage_dice_override,
+        discount_percent: item.discount_percent,
         quality: item.quality,
         affix_ids: item.affix_ids,
         rolled_affixes,
@@ -517,7 +553,10 @@ fn validate_item_runtime_state(
         }
         _ => device_recovery_progress == 0,
     };
-    if enchantments.to_hit > 15 || enchantments.to_damage > 15 || enchantments.to_armor > 15 {
+    if !(-15..=15).contains(&enchantments.to_hit)
+        || !(-15..=15).contains(&enchantments.to_damage)
+        || !(-15..=15).contains(&enchantments.to_armor)
+    {
         return Err(CoreError::InvalidSave("item enchantment state is invalid"));
     }
     let valid_fuel = match (item_fuel_from_definition(definition), fuel) {
@@ -533,7 +572,27 @@ fn validate_item_runtime_state(
     if valid && valid_recovery_progress && valid_fuel {
         Ok(())
     } else {
-        Err(CoreError::InvalidSave("item charge state is invalid"))
+        Err(CoreError::InvalidSave("item runtime state is invalid"))
+    }
+}
+
+fn validate_item_creation_state(
+    definition: &rfb_content::ItemDefinition,
+    origin_kind: Option<ItemOriginKindDto>,
+    damage_dice_override: Option<u16>,
+    discount_percent: u8,
+) -> Result<(), CoreError> {
+    let ammunition = definition.tags.iter().any(|tag| tag == "ammunition");
+    let origin_is_valid = match origin_kind {
+        None => discount_percent == 0,
+        Some(ItemOriginKindDto::PlayerMade) => discount_percent == 99 && ammunition,
+    };
+    let damage_override_is_valid =
+        damage_dice_override.is_none_or(|dice| (1..=9).contains(&dice) && ammunition);
+    if origin_is_valid && damage_override_is_valid {
+        Ok(())
+    } else {
+        Err(CoreError::InvalidSave("item creation state is invalid"))
     }
 }
 
@@ -1227,6 +1286,9 @@ pub(crate) fn items_to_save(items: &[ItemInstance]) -> Vec<ItemSaveDto> {
                 quantity: item.quantity,
                 inscription: item.inscription.clone(),
                 origin_actor_kind_id: item.origin_actor_kind_id.clone(),
+                origin_kind: item.origin_kind,
+                damage_dice_override: item.damage_dice_override,
+                discount_percent: item.discount_percent,
                 quality: item.quality,
                 affix_ids: item.affix_ids.clone(),
                 rolled_affixes: rolled_affixes_to_save(&item.rolled_affixes),
@@ -1256,6 +1318,9 @@ pub(crate) fn inventory_to_save(items: &[ItemInstance]) -> Vec<InventoryItemSave
                 quantity: item.quantity,
                 inscription: item.inscription.clone(),
                 origin_actor_kind_id: item.origin_actor_kind_id.clone(),
+                origin_kind: item.origin_kind,
+                damage_dice_override: item.damage_dice_override,
+                discount_percent: item.discount_percent,
                 quality: item.quality,
                 affix_ids: item.affix_ids.clone(),
                 rolled_affixes: rolled_affixes_to_save(&item.rolled_affixes),
@@ -1285,6 +1350,9 @@ pub(crate) fn equipment_to_save(items: &[ItemInstance]) -> Vec<EquipmentItemSave
                 quantity: item.quantity,
                 inscription: item.inscription.clone(),
                 origin_actor_kind_id: item.origin_actor_kind_id.clone(),
+                origin_kind: item.origin_kind,
+                damage_dice_override: item.damage_dice_override,
+                discount_percent: item.discount_percent,
                 slot_id: slot_id.clone(),
                 quality: item.quality,
                 affix_ids: item.affix_ids.clone(),
@@ -1319,6 +1387,9 @@ pub(crate) fn carried_items_to_save(items: &[ItemInstance]) -> Vec<CarriedItemSa
                 quantity: item.quantity,
                 inscription: item.inscription.clone(),
                 origin_actor_kind_id: item.origin_actor_kind_id.clone(),
+                origin_kind: item.origin_kind,
+                damage_dice_override: item.damage_dice_override,
+                discount_percent: item.discount_percent,
                 actor_id: actor_id.clone(),
                 quality: item.quality,
                 affix_ids: item.affix_ids.clone(),

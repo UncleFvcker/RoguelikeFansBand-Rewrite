@@ -4,6 +4,8 @@
   "id": "demo.loot-table.warrens",
   "rolls": 1,
   "entries": [
+    { "itemKindId": "demo.item.broken-stick", "weight": 1, "quantity": 1, "minDepth": 0, "maxDepth": 9 },
+    { "itemKindId": "demo.item.shard-of-pottery", "weight": 1, "quantity": 1, "minDepth": 0, "maxDepth": 9 },
     { "itemKindId": "demo.item.broken-dagger", "weight": 1, "quantity": 1, "minDepth": 0, "maxDepth": 9 },
     { "itemKindId": "demo.item.broken-sword", "weight": 1, "quantity": 1, "minDepth": 0, "maxDepth": 9 },
     { "itemKindId": "demo.item.club", "weight": 1, "quantity": 1, "minDepth": 0, "maxDepth": 9 },

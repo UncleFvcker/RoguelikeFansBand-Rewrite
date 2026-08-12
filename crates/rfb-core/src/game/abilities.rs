@@ -2688,7 +2688,7 @@ impl Game {
         events.extend(self.relocate_player(position, changed));
     }
 
-    fn roll_rfb_ammunition_tier(&mut self, maximum: u16) -> usize {
+    fn roll_rfb_m_bonus(&mut self, maximum: u16) -> u16 {
         let level = self.progress.level.min(127);
         let product = maximum.saturating_mul(level);
         let mut mean = i32::from(product / 128);
@@ -2702,24 +2702,233 @@ impl Game {
         let value = if deviation == 0 {
             mean
         } else {
-            // For Create Ammo, m_bonus has max 2 or 3, so randnor's
-            // deviation is at most one. These are the exact quarter-table
-            // cutoffs used by RFB's 256-entry normal distribution table.
             let roll = self.rng.bounded(32_768);
-            let offset = match roll {
-                0..=22_245 => 0,
-                22_246..=31_249 => 1,
-                31_250..=32_677 => 2,
-                _ => 3,
-            } * i32::from(deviation);
+            // Only deviations 1..=3 are reachable by Create Ammo's m_bonus
+            // calls. These are the exact category boundaries from RFB's
+            // 256-entry randnor table after scaling by RANDNOR_STD (64).
+            let thresholds: &[u64] = match deviation {
+                1 => &[22_245, 31_249, 32_677],
+                2 => &[12_367, 22_245, 28_323, 31_249, 32_352, 32_677, 32_752],
+                3 => &[
+                    8_621, 16_166, 22_245, 26_818, 29_619, 31_249, 32_129, 32_515, 32_677, 32_740,
+                    32_760,
+                ],
+                _ => unreachable!("Create Ammo m_bonus deviation is bounded by three"),
+            };
+            let offset = i32::try_from(thresholds.partition_point(|threshold| *threshold < roll))
+                .expect("randnor category count fits i32");
             if self.rng.bounded(100) < 50 {
                 mean.saturating_sub(offset)
             } else {
                 mean.saturating_add(offset)
             }
         };
-        usize::try_from(value.clamp(0, i32::from(maximum)))
-            .expect("bounded ammunition tier must fit usize")
+        u16::try_from(value.clamp(0, i32::from(maximum))).expect("bounded RFB bonus must fit u16")
+    }
+
+    fn roll_rfb_ammunition_magic_power(&mut self) -> i8 {
+        let level = self.progress.level.min(127);
+        let good_chance = level.saturating_add(10).min(75);
+        let great_chance = good_chance.saturating_mul(2).saturating_div(3).min(20);
+        if self.rng.bounded(100) < u64::from(good_chance) {
+            return if self.rng.bounded(100) < u64::from(great_chance) {
+                2
+            } else {
+                1
+            };
+        }
+        if self.rng.bounded(100) >= u64::from(good_chance.saturating_add(2) / 3) {
+            return 0;
+        }
+        if self.rng.bounded(100) < u64::from(great_chance) {
+            return -2;
+        }
+        if self.rng.bounded(u64::from(level.max(1))).saturating_add(1) > 10 {
+            0
+        } else {
+            -1
+        }
+    }
+
+    fn roll_rfb_ammunition_ego(&mut self, level: u16) -> RolledAffixState {
+        const SLAYING_AFFIX_ID: &str = "rfb-legacy.affix.slaying";
+        const ELEMENTAL_AFFIX_ID: &str = "demo.affix.ammo-elemental";
+
+        let rarity_weight = |rarity: u32, minimum_level: u16| {
+            let effective = if level < minimum_level {
+                rarity.saturating_add(rarity.saturating_mul(u32::from(minimum_level - level)))
+            } else {
+                rarity
+            };
+            (10_000 / effective).max(1)
+        };
+        let slaying_weight = rarity_weight(2, 10);
+        let elemental_weight = rarity_weight(3, 20);
+        if self
+            .rng
+            .bounded(u64::from(slaying_weight + elemental_weight))
+            < u64::from(slaying_weight)
+        {
+            let mut properties = AffixPropertyBundleDefinition::default();
+            let slays = [
+                (SlayTarget::Orc, 2_u32, 20_u16),
+                (SlayTarget::Troll, 2, 30),
+                (SlayTarget::Giant, 2, 40),
+                (SlayTarget::Dragon, 3, 80),
+                (SlayTarget::Demon, 3, 90),
+                (SlayTarget::Undead, 3, 95),
+                (SlayTarget::Animal, 2, 60),
+                (SlayTarget::Human, 3, 50),
+                (SlayTarget::Evil, 5, 0),
+                (SlayTarget::Good, 5, 0),
+                (SlayTarget::Living, 20, 0),
+            ];
+            let eligible = slays
+                .iter()
+                .copied()
+                .filter(|(_, _, maximum_level)| *maximum_level == 0 || level <= *maximum_level)
+                .collect::<Vec<_>>();
+            let total = eligible
+                .iter()
+                .map(|(_, rarity, _)| (255 / rarity).max(1))
+                .sum::<u32>();
+            let mut rolls = 1_u16.saturating_add(self.roll_rfb_m_bonus(4));
+            if self.rng.bounded(8) == 0 {
+                rolls = rolls.saturating_mul(2);
+            }
+            rolls = rolls.saturating_add(1) / 2;
+            for _ in 0..rolls {
+                let mut choice = u32::try_from(self.rng.bounded(u64::from(total)))
+                    .expect("slaying choice fits u32");
+                let (target, rarity, _) = eligible
+                    .iter()
+                    .copied()
+                    .find(|(_, rarity, _)| {
+                        let weight = (255 / rarity).max(1);
+                        if choice < weight {
+                            true
+                        } else {
+                            choice -= weight;
+                            false
+                        }
+                    })
+                    .expect("positive slaying weight must select a target");
+                let level = if self.rng.bounded(u64::from(rarity.pow(3))) == 0 {
+                    SlayLevel::Kill
+                } else {
+                    SlayLevel::Slay
+                };
+                properties
+                    .slays
+                    .entry(target)
+                    .and_modify(|current| *current = (*current).max(level))
+                    .or_insert(level);
+            }
+            RolledAffixState {
+                affix_id: SLAYING_AFFIX_ID.to_owned(),
+                properties,
+            }
+        } else {
+            let mut properties = AffixPropertyBundleDefinition::default();
+            let mut rolls = 1_u16.saturating_add(self.roll_rfb_m_bonus(4));
+            if self.rng.bounded(8) == 0 {
+                rolls = rolls.saturating_mul(2);
+            }
+            rolls = rolls.saturating_add(1) / 2;
+            for _ in 0..rolls {
+                properties.brands.insert(match self.rng.bounded(5) {
+                    0 => WeaponBrand::Acid,
+                    1 => WeaponBrand::Electricity,
+                    2 => WeaponBrand::Fire,
+                    3 => WeaponBrand::Cold,
+                    _ => WeaponBrand::Poison,
+                });
+            }
+            RolledAffixState {
+                affix_id: ELEMENTAL_AFFIX_ID.to_owned(),
+                properties,
+            }
+        }
+    }
+
+    pub(super) fn apply_rfb_ammunition_magic(&mut self, item: &mut ItemInstance) {
+        let level = self.progress.level.min(127);
+        let power = self.roll_rfb_ammunition_magic_power();
+        item.origin_kind = Some(ItemOriginKindDto::PlayerMade);
+        item.discount_percent = 99;
+        item.quality = match power {
+            1 => ItemQualityDto::Fine,
+            2 => ItemQualityDto::Exceptional,
+            _ => ItemQualityDto::Ordinary,
+        };
+        if power == 0 {
+            return;
+        }
+
+        let primary_to_hit = 1_u16
+            .saturating_add(u16::try_from(self.rng.bounded(5)).expect("d5 roll fits u16"))
+            .saturating_add(self.roll_rfb_m_bonus(5));
+        let primary_to_damage = 1_u16
+            .saturating_add(u16::try_from(self.rng.bounded(5)).expect("d5 roll fits u16"))
+            .saturating_add(self.roll_rfb_m_bonus(5));
+        let extra_to_hit = self.roll_rfb_m_bonus(10).saturating_add(1) / 2;
+        let extra_to_damage = self.roll_rfb_m_bonus(10).saturating_add(1) / 2;
+        let sign = if power < 0 { -1_i16 } else { 1_i16 };
+        item.enchantments.to_hit = sign.saturating_mul(
+            i16::try_from(primary_to_hit.saturating_add(if power.abs() > 1 {
+                extra_to_hit
+            } else {
+                0
+            }))
+            .expect("bounded ammunition enchantment fits i16"),
+        );
+        item.enchantments.to_damage = sign.saturating_mul(
+            i16::try_from(primary_to_damage.saturating_add(if power.abs() > 1 {
+                extra_to_damage
+            } else {
+                0
+            }))
+            .expect("bounded ammunition enchantment fits i16"),
+        );
+        if power < 0 {
+            item.curse = Some(if power < -1 {
+                ItemCurseSeverityDto::Heavy
+            } else {
+                ItemCurseSeverityDto::Normal
+            });
+            return;
+        }
+        if power < 2 {
+            return;
+        }
+
+        let rolled_affix = self.roll_rfb_ammunition_ego(level);
+        item.affix_ids = vec![rolled_affix.affix_id.clone()];
+        item.rolled_affixes = vec![rolled_affix];
+        let (base_dice, sides) = self
+            .content
+            .item(&item.kind_id)
+            .and_then(|definition| definition.ammunition_profile.as_ref())
+            .map(|profile| (profile.damage_dice, profile.damage_sides))
+            .expect("created ammunition kind must remain ammunition");
+        let mut dice = base_dice;
+        if self
+            .rng
+            .bounded(u64::from(5_u16.saturating_add(200 / level.max(1))))
+            == 0
+        {
+            loop {
+                dice = dice.saturating_add(1);
+                let odds = dice.saturating_mul(sides).saturating_div(2).max(1);
+                if self.rng.bounded(u64::from(odds)) != 0 {
+                    break;
+                }
+            }
+            dice = dice.min(9);
+        }
+        if dice != base_dice {
+            item.damage_dice_override = Some(dice);
+        }
     }
 
     fn resolve_player_create_ammunition_effect(
@@ -2741,7 +2950,7 @@ impl Game {
         };
         let maximum_tier = u16::try_from(item_kind_ids.len() - 1)
             .expect("validated ammunition tier count must fit u16");
-        let tier = self.roll_rfb_ammunition_tier(maximum_tier);
+        let tier = usize::from(self.roll_rfb_m_bonus(maximum_tier));
         let item_kind_id = item_kind_ids[tier].clone();
         let quantity = quantity_minimum.saturating_add(
             u32::try_from(
@@ -2750,6 +2959,29 @@ impl Game {
             )
             .expect("validated ammunition quantity must fit u32"),
         );
+
+        let item_id = self.allocate_item_instance_id()?;
+        let mut item = ItemInstance {
+            id: item_id.clone(),
+            kind_id: item_kind_id.clone(),
+            quantity,
+            inscription: None,
+            origin_actor_kind_id: None,
+            origin_kind: None,
+            damage_dice_override: None,
+            discount_percent: 0,
+            quality: ItemQualityDto::Ordinary,
+            affix_ids: Vec::new(),
+            rolled_affixes: Vec::new(),
+            enchantments: ItemEnchantmentsDto::default(),
+            curse: None,
+            activation: None,
+            charges: None,
+            fuel: None,
+            device_recovery_progress: 0,
+            location: ItemLocation::Inventory,
+        };
+        self.apply_rfb_ammunition_magic(&mut item);
 
         if let Some(item_id) = source_item_id.as_deref() {
             self.destroy_item(item_id, 1)
@@ -2763,25 +2995,6 @@ impl Game {
             self.revealed_terrain.remove(position);
             changed.insert(*position);
         }
-
-        let item_id = self.allocate_item_instance_id()?;
-        let mut item = ItemInstance {
-            id: item_id.clone(),
-            kind_id: item_kind_id.clone(),
-            quantity,
-            inscription: None,
-            origin_actor_kind_id: None,
-            quality: ItemQualityDto::Ordinary,
-            affix_ids: Vec::new(),
-            rolled_affixes: Vec::new(),
-            enchantments: ItemEnchantmentsDto::default(),
-            curse: None,
-            activation: None,
-            charges: None,
-            fuel: None,
-            device_recovery_progress: 0,
-            location: ItemLocation::Inventory,
-        };
         let destination_item_ids = if self.inventory_quantity_capacity_for(&item, false) >= quantity
         {
             self.carry_shop_purchase_item(item)
@@ -4183,9 +4396,25 @@ impl Game {
                                     || item.location == ItemLocation::Ground(self.player.position))
                                 && self.can_destroy_item(item).is_ok()
                                 && self.content.item(&item.kind_id).is_some_and(|definition| {
-                                    source_item_tags
-                                        .iter()
-                                        .any(|tag| definition.tags.contains(tag))
+                                    source_item_tags.iter().any(|tag| {
+                                        if tag == "corpse" {
+                                            definition.tags.contains(tag)
+                                                && item.origin_actor_kind_id.as_ref().is_some_and(
+                                                    |actor_id| {
+                                                        self.content.actor(actor_id).is_some_and(
+                                                            |actor| {
+                                                                actor
+                                                                    .tags
+                                                                    .iter()
+                                                                    .any(|tag| tag == "skeleton")
+                                                            },
+                                                        )
+                                                    },
+                                                )
+                                        } else {
+                                            definition.tags.contains(tag)
+                                        }
+                                    })
                                 })
                         })
                         .map(|_| AbilityTargetPlan::CreateAmmunitionFromItem {

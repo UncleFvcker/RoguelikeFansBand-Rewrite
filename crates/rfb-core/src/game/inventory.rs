@@ -87,8 +87,8 @@ impl ItemEnchantmentRequest {
 pub(super) struct ItemEnchantmentComponentOutcome {
     pub(super) attempts: u16,
     pub(super) successes: u16,
-    pub(super) before: u16,
-    pub(super) after: u16,
+    pub(super) before: i16,
+    pub(super) after: i16,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -653,6 +653,9 @@ pub(super) fn item_instances_stack_compatible(left: &ItemInstance, right: &ItemI
     left.kind_id == right.kind_id
         && left.inscription == right.inscription
         && left.origin_actor_kind_id == right.origin_actor_kind_id
+        && left.origin_kind == right.origin_kind
+        && left.damage_dice_override == right.damage_dice_override
+        && left.discount_percent == right.discount_percent
         && left.quality == right.quality
         && left.affix_ids == right.affix_ids
         && left.rolled_affixes == right.rolled_affixes
@@ -993,7 +996,7 @@ impl Game {
 
     pub(super) fn resolve_item_enchantment_component(
         &mut self,
-        before: u16,
+        before: i16,
         attempts: u16,
         quantity: u32,
         ammunition: bool,
@@ -1014,7 +1017,7 @@ impl Game {
                 continue;
             }
             let failure = FAILURE_PER_THOUSAND
-                .get(usize::from(after))
+                .get(usize::try_from(after.max(0)).expect("non-negative enchantment fits usize"))
                 .copied()
                 .unwrap_or(1000);
             if self.rng.bounded(1000).saturating_add(1) <= u64::from(failure) {
@@ -1027,7 +1030,7 @@ impl Game {
         }
         ItemEnchantmentComponentOutcome {
             attempts,
-            successes: after.saturating_sub(before),
+            successes: u16::try_from(after.saturating_sub(before)).unwrap_or_default(),
             before,
             after,
         }

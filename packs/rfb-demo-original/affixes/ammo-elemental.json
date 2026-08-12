@@ -1,0 +1,21 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "formatVersion": 1,
+  "id": "demo.affix.ammo-elemental",
+  "nameKey": "affix-demo-ammo-elemental-name",
+  "descriptionKey": "affix-demo-ammo-elemental-description",
+  "generationLevel": 20,
+  "rollGroups": [
+    {
+      "rolls": 1,
+      "candidates": [
+        { "weight": 1, "properties": { "brands": ["acid"] } },
+        { "weight": 1, "properties": { "brands": ["electricity"] } },
+        { "weight": 1, "properties": { "brands": ["fire"] } },
+        { "weight": 1, "properties": { "brands": ["cold"] } },
+        { "weight": 1, "properties": { "brands": ["poison"] } }
+      ]
+    }
+  ],
+  "tags": ["ammunition", "legacy-import", "offense"]
+}

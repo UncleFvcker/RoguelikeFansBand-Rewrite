@@ -7269,9 +7269,9 @@
       "properties": {
         "after": {
           "type": "integer",
-          "format": "uint16",
-          "maximum": 65535,
-          "minimum": 0
+          "format": "int16",
+          "maximum": 32767,
+          "minimum": -32768
         },
         "attempts": {
           "type": "integer",
@@ -7281,9 +7281,9 @@
         },
         "before": {
           "type": "integer",
-          "format": "uint16",
-          "maximum": 65535,
-          "minimum": 0
+          "format": "int16",
+          "maximum": 32767,
+          "minimum": -32768
         },
         "successes": {
           "type": "integer",
@@ -7331,21 +7331,21 @@
       "properties": {
         "toArmor": {
           "type": "integer",
-          "format": "uint16",
-          "maximum": 65535,
-          "minimum": 0
+          "format": "int16",
+          "maximum": 32767,
+          "minimum": -32768
         },
         "toDamage": {
           "type": "integer",
-          "format": "uint16",
-          "maximum": 65535,
-          "minimum": 0
+          "format": "int16",
+          "maximum": 32767,
+          "minimum": -32768
         },
         "toHit": {
           "type": "integer",
-          "format": "uint16",
-          "maximum": 65535,
-          "minimum": 0
+          "format": "int16",
+          "maximum": 32767,
+          "minimum": -32768
         }
       },
       "required": [

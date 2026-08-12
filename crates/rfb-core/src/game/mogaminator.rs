@@ -999,12 +999,14 @@ impl Game {
             }
             MogaminatorPredicate::MoreBonusThan(value) => {
                 identification != ItemIdentificationDto::Unexamined
-                    && u32::from(
+                    && u32::try_from(
                         item.enchantments
                             .to_hit
                             .max(item.enchantments.to_damage)
                             .max(item.enchantments.to_armor),
-                    ) > value
+                    )
+                    .unwrap_or_default()
+                        > value
             }
             MogaminatorPredicate::MoreWeightThan(value) => {
                 aware && u32::from(definition.weight_tenths_pound) > value.saturating_mul(10)
@@ -1184,6 +1186,9 @@ mod tests {
             quantity: 1,
             inscription: inscription.map(str::to_owned),
             origin_actor_kind_id: None,
+            origin_kind: None,
+            damage_dice_override: None,
+            discount_percent: 0,
             quality: ItemQualityDto::Ordinary,
             affix_ids: Vec::new(),
             rolled_affixes: Vec::new(),
@@ -1474,6 +1479,9 @@ mod tests {
                 quantity: 1,
                 inscription: None,
                 origin_actor_kind_id: None,
+                origin_kind: None,
+                damage_dice_override: None,
+                discount_percent: 0,
                 quality: ItemQualityDto::Ordinary,
                 affix_ids: Vec::new(),
                 rolled_affixes: Vec::new(),

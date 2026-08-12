@@ -93,6 +93,8 @@ pub(in crate::game) struct ResolvedProjectileProfile {
     pub(in crate::game) damage_dice: u16,
     pub(in crate::game) damage_sides: u16,
     pub(in crate::game) damage_type: DamageType,
+    pub(in crate::game) ammunition_slays: BTreeMap<SlayTarget, SlayLevel>,
+    pub(in crate::game) ammunition_brands: BTreeSet<WeaponBrand>,
     pub(in crate::game) ammo_item_id: Option<String>,
     pub(in crate::game) ammo_kind_id: String,
     pub(in crate::game) ammunition_weight_tenths_pound: u16,
@@ -916,6 +918,28 @@ impl Game {
                             })
                         })?;
                     let ammo_profile = ammo_definition.ammunition_profile.as_ref()?;
+                    let mut ammunition_slays = ammo_definition.slays.clone();
+                    let mut ammunition_brands = ammo_definition.brands.clone();
+                    if let Some(ammunition) = ammunition {
+                        for affix_id in &ammunition.affix_ids {
+                            if let Some(affix) = self.content.affix(affix_id) {
+                                ammunition_slays.extend(
+                                    affix.slays.iter().map(|(target, level)| (*target, *level)),
+                                );
+                                ammunition_brands.extend(affix.brands.iter().copied());
+                            }
+                        }
+                        for rolled in &ammunition.rolled_affixes {
+                            ammunition_slays.extend(
+                                rolled
+                                    .properties
+                                    .slays
+                                    .iter()
+                                    .map(|(target, level)| (*target, *level)),
+                            );
+                            ammunition_brands.extend(rolled.properties.brands.iter().copied());
+                        }
+                    }
                     let ranged_skill = self.player_derived_stats().ranged_skill.value;
                     let hold = crate::stats::strength_hold_pounds(
                         self.effective_player_attributes().strength,
@@ -978,9 +1002,13 @@ impl Game {
                         ammunition_to_damage,
                         launcher_to_damage,
                         damage_multiplier_percent: profile.damage_multiplier_percent,
-                        damage_dice: ammo_profile.damage_dice,
+                        damage_dice: ammunition
+                            .and_then(|item| item.damage_dice_override)
+                            .unwrap_or(ammo_profile.damage_dice),
                         damage_sides: ammo_profile.damage_sides,
                         damage_type: DamageType::from(ammo_profile.damage_type),
+                        ammunition_slays,
+                        ammunition_brands,
                         ammo_item_id: ammunition.map(|item| item.id.clone()),
                         ammo_kind_id: ammo_definition.id.clone(),
                         ammunition_weight_tenths_pound: ammo_definition.weight_tenths_pound,
@@ -1166,6 +1194,26 @@ impl Game {
                 if target.resistances.level(brand_damage_type(*brand)) != ResistanceLevel::Immune {
                     multiplier = multiplier.max(24);
                 }
+            }
+        }
+        multiplier
+    }
+
+    pub(super) fn player_projectile_damage_multiplier(
+        &self,
+        profile: &ResolvedProjectileProfile,
+        target: &Actor,
+        definition: &rfb_content::ActorDefinition,
+    ) -> i32 {
+        let mut multiplier = 10;
+        for (slay_target, level) in &profile.ammunition_slays {
+            if slay_target_matches(*slay_target, definition) {
+                multiplier = multiplier.max(slay_multiplier(*slay_target, *level));
+            }
+        }
+        for brand in &profile.ammunition_brands {
+            if target.resistances.level(brand_damage_type(*brand)) != ResistanceLevel::Immune {
+                multiplier = multiplier.max(24);
             }
         }
         multiplier

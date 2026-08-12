@@ -438,6 +438,9 @@ fn plain_shop_item(
         quantity,
         inscription: None,
         origin_actor_kind_id: None,
+        origin_kind: None,
+        damage_dice_override: None,
+        discount_percent: 0,
         quality: ItemQualityDto::Ordinary,
         affix_ids: Vec::new(),
         rolled_affixes: Vec::new(),
@@ -538,6 +541,10 @@ pub(super) fn sell_unit_price(base_value: u32, factor: u16, cap: u32) -> u32 {
         .unwrap_or(u32::MAX)
         .max(1)
         .min(cap)
+}
+
+fn discounted_item_base_value(item: &ItemInstance, base_value: u32) -> u32 {
+    base_value.saturating_sub(base_value.saturating_mul(u32::from(item.discount_percent)) / 100)
 }
 
 fn player_purchase_unit_price(
@@ -1464,7 +1471,7 @@ impl Game {
         let unit_price = player_purchase_unit_price(
             self,
             &shop,
-            definition.base_value,
+            discounted_item_base_value(&item, definition.base_value),
             shop_price_factor(self, &shop),
         );
         let Some(total_price) = unit_price.checked_mul(quantity) else {
@@ -1573,7 +1580,7 @@ impl Game {
         let unit_price = player_sale_unit_price(
             self,
             &shop,
-            definition.base_value,
+            discounted_item_base_value(&item, definition.base_value),
             shop_price_factor(self, &shop),
         );
         let Some(total_price) = unit_price.checked_mul(quantity) else {
@@ -1866,7 +1873,7 @@ impl Game {
                             let unit_price = player_purchase_unit_price(
                                 self,
                                 shop,
-                                definition.base_value,
+                                discounted_item_base_value(item, definition.base_value),
                                 factor,
                             );
                             let affordable = self.gold / unit_price.max(1);
@@ -1911,7 +1918,7 @@ impl Game {
                                         player_sale_unit_price(
                                             self,
                                             shop,
-                                            definition.base_value,
+                                            discounted_item_base_value(item, definition.base_value),
                                             factor,
                                         )
                                     },

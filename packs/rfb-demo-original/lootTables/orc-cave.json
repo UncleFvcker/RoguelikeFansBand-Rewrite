@@ -4,6 +4,8 @@
   "id": "demo.loot-table.orc-cave",
   "rolls": 1,
   "entries": [
+    { "itemKindId": "demo.item.broken-stick", "weight": 1, "quantity": 1, "minDepth": 15, "maxDepth": 32 },
+    { "itemKindId": "demo.item.shard-of-pottery", "weight": 1, "quantity": 1, "minDepth": 15, "maxDepth": 32 },
     { "itemKindId": "demo.item.basillard", "weight": 4, "quantity": 1, "minDepth": 15, "maxDepth": 32 },
     { "itemKindId": "demo.item.bastard-sword", "weight": 3, "quantity": 1, "minDepth": 18, "maxDepth": 32 },
     { "itemKindId": "demo.item.light-crossbow", "weight": 4, "quantity": 1, "minDepth": 15, "maxDepth": 32 },

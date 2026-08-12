@@ -731,8 +731,8 @@ impl Game {
             })
             .map_or(1, |floor| floor.depth.max(1));
         let enchantment = |rng: &mut RfbRng| {
-            3 + u16::try_from(rng.bounded(u64::from(dungeon_depth)) + 1)
-                .expect("enchantment roll must fit u16")
+            3 + i16::try_from(rng.bounded(u64::from(dungeon_depth)) + 1)
+                .expect("enchantment roll must fit i16")
                 % 10
         };
         let extra_resistance = EXTRA_CHAOS_WEAPON_RESISTANCES[usize::try_from(
@@ -753,6 +753,9 @@ impl Game {
             quantity: 1,
             inscription: None,
             origin_actor_kind_id: None,
+            origin_kind: None,
+            damage_dice_override: None,
+            discount_percent: 0,
             quality: ItemQualityDto::Exceptional,
             affix_ids: vec![CHAOS_AFFIX_ID.to_owned()],
             rolled_affixes: vec![RolledAffixState {

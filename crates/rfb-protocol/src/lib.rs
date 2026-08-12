@@ -2670,6 +2670,12 @@ pub enum ItemQualityDto {
     Exceptional,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum ItemOriginKindDto {
+    PlayerMade,
+}
+
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "kebab-case")]
@@ -2694,9 +2700,9 @@ pub struct ItemIdentifyResolutionDto {
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
 pub struct ItemEnchantmentsDto {
-    pub to_hit: u16,
-    pub to_damage: u16,
-    pub to_armor: u16,
+    pub to_hit: i16,
+    pub to_damage: i16,
+    pub to_armor: i16,
 }
 
 impl ItemEnchantmentsDto {
@@ -2712,8 +2718,8 @@ impl ItemEnchantmentsDto {
 pub struct ItemEnchantmentComponentResolutionDto {
     pub attempts: u16,
     pub successes: u16,
-    pub before: u16,
-    pub after: u16,
+    pub before: i16,
+    pub after: i16,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -3663,6 +3669,12 @@ pub struct ItemSaveDto {
     pub inscription: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub origin_actor_kind_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub origin_kind: Option<ItemOriginKindDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub damage_dice_override: Option<u16>,
+    #[serde(default, skip_serializing_if = "is_zero_u8")]
+    pub discount_percent: u8,
     #[serde(default)]
     pub quality: ItemQualityDto,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -3693,6 +3705,12 @@ pub struct InventoryItemSaveDto {
     pub inscription: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub origin_actor_kind_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub origin_kind: Option<ItemOriginKindDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub damage_dice_override: Option<u16>,
+    #[serde(default, skip_serializing_if = "is_zero_u8")]
+    pub discount_percent: u8,
     #[serde(default)]
     pub quality: ItemQualityDto,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -3723,6 +3741,12 @@ pub struct EquipmentItemSaveDto {
     pub inscription: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub origin_actor_kind_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub origin_kind: Option<ItemOriginKindDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub damage_dice_override: Option<u16>,
+    #[serde(default, skip_serializing_if = "is_zero_u8")]
+    pub discount_percent: u8,
     pub slot_id: String,
     #[serde(default)]
     pub quality: ItemQualityDto,
@@ -3754,6 +3778,12 @@ pub struct CarriedItemSaveDto {
     pub inscription: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub origin_actor_kind_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub origin_kind: Option<ItemOriginKindDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub damage_dice_override: Option<u16>,
+    #[serde(default, skip_serializing_if = "is_zero_u8")]
+    pub discount_percent: u8,
     pub actor_id: String,
     #[serde(default)]
     pub quality: ItemQualityDto,
@@ -3926,6 +3956,10 @@ fn is_zero_u32(value: &u32) -> bool {
 }
 
 fn is_zero_u16(value: &u16) -> bool {
+    *value == 0
+}
+
+fn is_zero_u8(value: &u8) -> bool {
     *value == 0
 }
 

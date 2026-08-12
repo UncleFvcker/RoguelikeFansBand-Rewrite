@@ -4,12 +4,15 @@ use super::*;
 
 fn projectile_raw_damage(
     rolled_ammunition_damage: i32,
+    ammunition_slay_multiplier: i32,
     ammunition_to_damage: i32,
     ammunition_critical_multiplier_percent: i32,
     damage_multiplier_percent: u16,
     launcher_to_damage: i32,
 ) -> i32 {
     let ammunition_damage = rolled_ammunition_damage
+        .saturating_mul(ammunition_slay_multiplier)
+        .saturating_div(10)
         .saturating_add(ammunition_to_damage)
         .saturating_mul(ammunition_critical_multiplier_percent)
         / 100;
@@ -84,8 +87,14 @@ impl Game {
                     profile.to_hit,
                     attacker.ranged_skill.value,
                 );
+                let ammunition_slay_multiplier = self.player_projectile_damage_multiplier(
+                    &profile,
+                    &self.entities[index],
+                    &definition,
+                );
                 let raw_damage = projectile_raw_damage(
                     self.roll_damage(profile.damage_dice, profile.damage_sides),
+                    ammunition_slay_multiplier,
                     profile.ammunition_to_damage,
                     ammunition_critical_multiplier,
                     profile.damage_multiplier_percent,
@@ -1102,8 +1111,9 @@ mod tests {
 
     #[test]
     fn ammunition_damage_and_bonus_are_scaled_before_launcher_bonus() {
-        assert_eq!(projectile_raw_damage(7, 2, 100, 250, 3), 25);
-        assert_eq!(projectile_raw_damage(7, 2, 100, 350, 3), 34);
-        assert_eq!(projectile_raw_damage(7, 2, 200, 250, 3), 48);
+        assert_eq!(projectile_raw_damage(7, 10, 2, 100, 250, 3), 25);
+        assert_eq!(projectile_raw_damage(7, 10, 2, 100, 350, 3), 34);
+        assert_eq!(projectile_raw_damage(7, 10, 2, 200, 250, 3), 48);
+        assert_eq!(projectile_raw_damage(7, 24, 2, 100, 250, 3), 48);
     }
 }
