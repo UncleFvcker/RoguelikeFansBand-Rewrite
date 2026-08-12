@@ -6,7 +6,7 @@
 
 contract fixture 是规则兼容边界，不能把测试失败简单处理为“刷新预期结果”。政策用于保证每次规则变化只修改真正受影响的场景，同时保留可审查的失败原因。
 
-当前逻辑基线是 `contract-v279`，机器可读政策固定在：
+当前逻辑基线是 `contract-v282`，机器可读政策固定在：
 
 ```text
 tests/fixtures/active/baseline-policy.json
@@ -115,6 +115,23 @@ fixture 刷新并新增 1 条存档回放，active 集共 25 条、零 waiver。
 `rubble`，Protocol 升至 1.181；内容包升至 1.277.0。没有新增权威状态字段，State Hash
 Schema 保持 v90、save 容器保持 v1。新增 1 条隐藏富矿存档回放，active 集共 26 条、
 零 waiver。
+`contract-v280` 接入 RFB 通用 `spell_power`。装备、affix 与状态的法术强度 modifier
+进入权威投影和状态哈希，32 个死亡法术按源调用点显式声明受缩放字段；Protocol 升至
+1.182、State Hash Schema 升至 v91，集成内容包升级到 1.282.0。公共物品 modifier 投影与
+状态哈希结构变化要求统一刷新 active fixture，零 waiver。
+
+`contract-v281` 接入 RFB Virtue 基础状态：18 种类型、每角色 8 个唯一槽位、职业/种族/
+领域初始化、权威随机补齐和 50/80/100 软上限。Virtue 进入存档、玩家只读投影与状态
+哈希，并接通死亡领域已有的武器烙印、吸血、召唤亡灵及 Invoke Spirits 调用点。
+Protocol 升至 1.183、State Hash Schema 升至 v92；出生初始化新增 RNG 消费且公共玩家
+投影改变，因此统一刷新 active fixture。save 容器仍为 v1，零 waiver。
+
+`contract-v282` 接入 RFB 宠物维持与冷落判定。职业内容新增原版 `pets` 除数；只统计
+存活且由玩家控制的实体，普通 `friendly` actor 不计入。维持比例影响既有法力恢复，
+超过 100% 时按普通恢复率产生法力损失，超过 `SAFE_UPKEEP_PCT=484` 且沿用上一行动的
+警告状态时，宠物在自身行动前按原版 RNG 顺序判定消失或转敌。协议升至 1.184，集成内容包
+升至 1.282.0；没有新增存档字段或状态哈希输入，State Hash Schema 保持 v92。公共玩家
+投影新增派生的维持摘要，因此统一复核并刷新 active fixture，零 waiver。
 
 ## 分类验证
 

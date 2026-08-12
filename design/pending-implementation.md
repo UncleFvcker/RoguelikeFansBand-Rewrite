@@ -1,6 +1,6 @@
 # 待实现内容清单
 
-状态：基于 contract-v1–v226、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
+状态：基于 contract-v1–v274、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
 
 本文件只记录已经在现有设计或原版对比中明确出现、但尚未实现的内容。长期设想仍保留在 [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)，这里用于跟踪可以实际排入后续 contract 的缺口。
 
@@ -360,7 +360,7 @@ contract-v141 后的 importer 维护复用 P84 已有 `apply-poison`，将 tval 
 
 - Race-to-glyph 表对动态怪物种族使用稳定代表值，没有复制依赖运行时形态的原版全局 glyph 切换；后续若导入完整形态系统，应由有效 Race/形态定义直接提供 `kinCategory`；
 - 物品召唤首版只允许永久结果；临时物品召唤若需要加入，必须使用独立稳定来源身份，不能把 item kind ID 伪装成 ability ID；
-- 永久宠物复用首版召唤物 AI 与全局指令；维护费、忠诚、解除控制、宠物容量和独立成长尚未建立；
+- 永久宠物复用首版召唤物 AI 与全局指令；contract-v274 已完成维护费、冷落后的消失/敌对和显式解散，宠物容量、独立成长和主人死亡联动尚未建立；
 - Dispel/Banishment 只消费当前可见且 line of effect 可达的 actor 快照，不建立怪物回忆、跨层感知或通用 actor-effect DSL；
 - Banishment 的 guardian、unique/`RES_TELE` 和普通等级抵抗已固定；反传送区域、玩家反制和追踪传送仍不在本轮；
 - Trap/Door Destruction 只处理相邻权威 terrain；原版箱锁/箱子陷阱分支等待箱子实例事务，不把 kind 或地形 tag 伪装成箱子状态；
@@ -435,7 +435,7 @@ contract-v141 后的 importer 维护复用 P84 已有 `apply-poison`，将 tval 
 ## contract-v107 明确遗留
 
 - Death Ray 首版按活体、unique 门和等级对抗决定即死；尚无更一般的即死抗性、怪物知识或跨效果统一死亡抗性表；
-- Raise Dead 已覆盖升级类别、敌友、群体和敌对 unique，但仍复用首版召唤物 AI；宠物维护、忠诚、解除控制和召唤种群上限尚未建立；
+- Raise Dead 已覆盖升级类别、敌友、群体和敌对 unique，并自动进入 contract-v274 的宠物维持、冷落和解散规则；召唤种群上限与主人死亡联动尚未建立；
 - Esoteria 的物品目标必须在玩家背包/装备中；当前仅复用普通鉴定/完整鉴定知识，不包含批量选择或自动选择 UI；
 - 临时 Race 只覆盖 RaceDefinition 的派生表面，不改身体槽、不写持久技能；叠加多个形态时仍按状态的稳定顺序选择一个有效覆盖；
 - Wraithform 到期时不搬移玩家、不修地图，即使玩家仍位于墙格；后续移动按当时 terrain 与状态规则处理；
@@ -454,7 +454,7 @@ contract-v141 后的 importer 维护复用 P84 已有 `apply-poison`，将 tval 
 ## contract-v105 明确遗留
 
 - Poison Branding 按路线要求实现为临时状态品牌，不永久改写当前武器；原版永久品牌物品的事务与保存边界留给后续物品强化系统；
-- Animate Dead 生成永久受控亡灵，但仍复用现有友方 AI；宠物维护上限、忠诚、解除控制和主人死亡联动尚未建立；
+- Animate Dead 生成永久受控亡灵并自动进入 contract-v274 的宠物维持、冷落和解散规则；独立成长、召唤种群上限和主人死亡联动尚未建立；
 - corpse 首版是不可堆叠通用物品，不保存死者个体属性、装备、腐烂时间或复活原身身份；
 - Genocide 直接移除且不触发普通死亡事务；独立的怪物知识、唯一生态和跨层种群记忆仍未建立；
 - Rogue（Dexterity）、Blood Mage（HP）与 Skillmaster（dynamic caster）继续显式排除，等待通用施法资源与动态档案表面；
@@ -462,12 +462,11 @@ contract-v141 后的 importer 维护复用 P84 已有 `apply-poison`，将 tval 
 
 ## contract-v104 明确遗留
 
-- Malediction 暂无原版 1/5 随机 rider（death ray / fear / confusion / stun）；先保持纯 hell-fire，等待通用随机效果分支；
 - Necromantic Resistance 固定 300 ticks，尚未复刻 `20+1d20` 回合；随机持续时间继续留在真实导入报告；
 - status power 采用稳定的 power/target 双有界骰中性公式，Control 采用 `power-10` 对目标等级的有界检定；两者不是原版所有 GF 的逐函数概率公式；
-- Control 保存 controller identity 并复用召唤物 AI，但没有解除控制时限、宠物维护上限、忠诚或主人死亡联动；
+- Control 保存 controller identity 并复用召唤物 AI，也自动进入 contract-v274 的宠物维持、冷落和解散规则；解除控制时限、召唤种群上限和主人死亡联动尚未建立；
 - actor Detect 只返回瞬时位置与 entity ID，不写地图记忆；怪物回忆/长期知识仍是独立系统；
-- 玩家法术的 `spell_power`、`to_d_spell`、施法负重、精确 Mana 容量和学习容量公式仍未接入。
+- 玩家法术的 `to_d_spell`、施法负重、精确 Mana 容量和学习容量公式仍未接入。
 
 ## contract-v103 明确遗留
 

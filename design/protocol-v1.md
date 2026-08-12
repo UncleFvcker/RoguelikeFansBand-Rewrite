@@ -571,3 +571,17 @@ Schema v90，save 容器保持 v1。
 协议 1.181 / contract-v279 为 `ItemOriginKindDto` 增加 `rubble`，用于投影并持久化碎石
 掉落来源。富矿材料与金币继续使用既有 `PlayerProgressDto.materials` 和 `GoldPileDto`；
 没有新增权威字段，State Hash Schema 保持 v90，save 容器保持 v1。
+协议 1.177 为能力 effect 投影增加窄化的 `light-line` 与 `area-destruction` 规格，
+并为后者增加结构化结算结果；怪物变形与地震继续复用既有 DTO。该变化只完成
+`Invoke Spirits` 的既有随机分支，不增加命令、待处理输入或存档字段。State Hash
+Schema 保持 v88，save 容器保持 v1。
+
+协议 1.178 为 `AbilityEffectSpecDto` 增加窄化的 `sequence` 投影，用于
+`Invoke Spirits` 最高随机档的一层 self 组合效果。随机分支的等级缩放在服务端物化后
+再投影，不新增客户端配置 DTO、命令、待处理输入或存档字段。State Hash Schema 保持
+v88，save 容器保持 v1。
+
+协议 1.184 / contract-v282 增加零时间 `DismissPets` 命令、派生的
+`PlayerDto.petUpkeep` 摘要，以及宠物维持法力损失、零法力解散要求和冷落结果事件。
+维持摘要不保存；它由当前职业、等级、法力池和存活的玩家控制 actor 重新计算。
+State Hash Schema 保持 v92，save 容器保持 v1。

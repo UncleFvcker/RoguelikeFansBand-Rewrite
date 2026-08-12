@@ -26,7 +26,8 @@ use rfb_protocol::{
     NaturalAttributeSetSaveDto, PlayerBuildSaveDto, PlayerProgressSaveDto, PlayerSaveDto, Position,
     ResistanceDto, ResistanceLevelDto, ResistanceSaveDto, RolledAffixSaveDto, SkillProgressSaveDto,
     SlayDto, SlayLevelDto, SlayTargetDto, StatModifiersDto, StatusSaveDto, SummonSaveDto,
-    TargetModeDto, TargetSpecDto, TerrainSaveDto, WeaponBrandDto, WeaponProficiencySaveDto,
+    TargetModeDto, TargetSpecDto, TerrainSaveDto, VirtueDto, WeaponBrandDto,
+    WeaponProficiencySaveDto,
 };
 
 pub(crate) const GENERATED_ITEM_ID_PREFIX: &str = "generated.item.";
@@ -585,7 +586,9 @@ fn validate_item_creation_state(
     let ammunition = definition.tags.iter().any(|tag| tag == "ammunition");
     let origin_is_valid = match origin_kind {
         None => discount_percent == 0,
-        Some(ItemOriginKindDto::PlayerMade) => discount_percent == 99 && ammunition,
+        Some(ItemOriginKindDto::PlayerMade) => {
+            discount_percent == 99 && (ammunition || definition.melee_profile.is_some())
+        }
         Some(ItemOriginKindDto::Rubble) => discount_percent == 0,
     };
     let damage_override_is_valid =
@@ -602,6 +605,7 @@ pub(crate) fn player_to_save(
     player: &Actor,
     progress: &CharacterProgress,
     build: Option<&CharacterBuildIdentity>,
+    virtues: &[VirtueDto],
 ) -> PlayerSaveDto {
     PlayerSaveDto {
         id: player.id.clone(),
@@ -689,6 +693,7 @@ pub(crate) fn player_to_save(
         }),
         active_mutation_ids: progress.active_mutation_ids.iter().cloned().collect(),
         locked_mutation_ids: progress.locked_mutation_ids.iter().cloned().collect(),
+        virtues: virtues.to_vec(),
         build: build.map(|build| PlayerBuildSaveDto {
             build_id: build.build_id.clone(),
             race_id: build.race_id.clone(),
@@ -1006,6 +1011,7 @@ fn stat_modifiers_to_dto(modifiers: &StatModifiers) -> StatModifiersDto {
         constitution: modifiers.constitution,
         charisma: modifiers.charisma,
         speed: modifiers.speed,
+        spell_power_bonus: modifiers.spell_power_bonus,
     }
 }
 
@@ -1021,6 +1027,7 @@ fn stat_modifiers_from_dto(modifiers: StatModifiersDto) -> StatModifiers {
         constitution: modifiers.constitution,
         charisma: modifiers.charisma,
         speed: modifiers.speed,
+        spell_power_bonus: modifiers.spell_power_bonus,
     }
 }
 
@@ -1091,6 +1098,7 @@ fn affix_property_bundle_out_of_range(properties: &AffixPropertyBundleDefinition
             modifiers.constitution,
             modifiers.charisma,
             modifiers.speed,
+            modifiers.spell_power_bonus,
         ]
         .into_iter()
         .any(|value| !(-100..=100).contains(&value))

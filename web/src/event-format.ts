@@ -242,6 +242,29 @@ export function createPresentationFormatter(
           ),
           count: event.args.count ?? "0",
         });
+      case "pets-dismissed":
+        return localization.format("message-pets-dismissed", {
+          count: event.args.count ?? "0",
+          upkeep: event.args.upkeep ?? "0",
+        });
+      case "pet-upkeep-mana-lost":
+        return localization.format("message-pet-upkeep-mana-lost", {
+          resource: contentName(event.args.resource),
+          amount: event.args.amount ?? "0",
+          upkeep: event.args.upkeep ?? "0",
+        });
+      case "pet-upkeep-dismissal-required":
+        return localization.format("message-pet-upkeep-dismissal-required", {
+          upkeep: event.args.upkeep ?? "0",
+        });
+      case "pet-neglected-disappeared":
+        return localization.format("message-pet-neglected-disappeared", {
+          actor: contentName(event.args.actor),
+        });
+      case "pet-neglected-hostile":
+        return localization.format("message-pet-neglected-hostile", {
+          actor: contentName(event.args.actor),
+        });
       case "summon-followed-floor":
         return localization.format("message-summon-followed-floor", {
           actor: contentName(event.args.actor),

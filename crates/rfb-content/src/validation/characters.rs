@@ -368,6 +368,7 @@ pub(super) fn validate_characters(
                 .level_resistances
                 .windows(2)
                 .any(|entries| entries[0].minimum_level == entries[1].minimum_level)
+            || class.pet_upkeep_divisor == 0
         {
             return Err(ContentError::InvalidCharacterSource(class.id.clone()));
         }

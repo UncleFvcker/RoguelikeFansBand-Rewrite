@@ -95,6 +95,12 @@ fn natural_affix_compatibility_uses_slot_depth_and_explicit_none_fallback() {
         .iter()
         .find(|affix| affix.id == "rfb-legacy.affix.slaying")
         .expect("Slaying should exist");
+    let protection = artifact
+        .content
+        .affixes
+        .iter()
+        .find(|affix| affix.id == "rfb-legacy.affix.protection")
+        .expect("Protection should exist");
     let halberd = artifact
         .content
         .items
@@ -109,6 +115,42 @@ fn natural_affix_compatibility_uses_slot_depth_and_explicit_none_fallback() {
         .expect("crossbow should exist");
     assert!(affix_is_compatible_with_item(slaying, halberd, 32));
     assert!(!affix_is_compatible_with_item(slaying, crossbow, 32));
+    assert!(!affix_is_compatible_with_item(protection, halberd, 30));
+    for item_id in [
+        "demo.item.chain-mail",
+        "demo.item.small-metal-shield",
+        "demo.item.cloak",
+        "demo.item.iron-helm",
+        "demo.item.set-of-gauntlets",
+        "demo.item.soft-leather-boots",
+    ] {
+        let item = artifact
+            .content
+            .items
+            .iter()
+            .find(|item| item.id == item_id)
+            .unwrap_or_else(|| panic!("{item_id} should exist"));
+        assert!(
+            affix_is_compatible_with_item(protection, item, 30),
+            "{item_id}"
+        );
+        assert!(
+            !affix_is_compatible_with_item(protection, item, 31),
+            "{item_id}"
+        );
+    }
+    assert_eq!(protection.generation_level, 0);
+    assert_eq!(protection.generation_max_level, 30);
+    assert_eq!(protection.roll_groups.len(), 1);
+    assert_eq!(protection.roll_groups[0].rolls, 1);
+    assert_eq!(
+        protection.roll_groups[0]
+            .candidates
+            .iter()
+            .map(|candidate| (candidate.weight, candidate.properties.modifiers.defense))
+            .collect::<Vec<_>>(),
+        (1..=10).map(|defense| (1, defense)).collect::<Vec<_>>()
+    );
 
     let mut bounded = slaying.clone();
     bounded.generation_level = 20;

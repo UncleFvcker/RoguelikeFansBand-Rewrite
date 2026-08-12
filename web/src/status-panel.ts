@@ -13,6 +13,7 @@ import type {
   GameUpdate,
   PlayerBuildDto,
   PlayerMutationDto,
+  PetUpkeepDto,
   PlayerProgressDto,
   ProficiencyRankDto,
   ResourcePoolDto,
@@ -20,6 +21,7 @@ import type {
   SummonCommandModeDto,
   WeaponProficiencyCategoryDto,
   WeaponProficiencyDto,
+  VirtueDto,
 } from "./protocol";
 import { REST_UNTIL_RECOVERED_TURNS } from "./rest.ts";
 import { goldVisualId } from "./render-world.ts";
@@ -56,6 +58,7 @@ type StatusDom = Pick<
   | "weaponProficiencyLauncherList"
   | "miningProficiencyList"
   | "materialList"
+  | "virtueList"
   | "mutationList"
   | "resourceList"
   | "abilityList"
@@ -64,6 +67,7 @@ type StatusDom = Pick<
   | "nearbyList"
   | "summonCommandStatus"
   | "summonCommandButtons"
+  | "dismissPets"
   | "taskLogList"
   | "campaignStatusValue"
   | "campaignScoreValue"
@@ -170,6 +174,7 @@ export class StatusPanel {
     ][]) {
       button.addEventListener("click", this.#summonCommandHandlers[mode]);
     }
+    this.#dom.dismissPets.addEventListener("click", this.#handleDismissPets);
   }
 
   dispose(): void {
@@ -183,6 +188,7 @@ export class StatusPanel {
     ][]) {
       button.removeEventListener("click", this.#summonCommandHandlers[mode]);
     }
+    this.#dom.dismissPets.removeEventListener("click", this.#handleDismissPets);
   }
 
   render(state: GameSnapshot | GameUpdate): void {
@@ -244,6 +250,7 @@ export class StatusPanel {
     );
     this.#dom.progressionNameValue.textContent = state.player.name;
     this.#renderProgression(state.player.progress, state.player.build);
+    this.#renderVirtues(state.player.virtues);
     this.#renderMutations(state.player.mutations ?? []);
     this.#renderAbilities(
       state.player.abilities ?? [],
@@ -251,7 +258,7 @@ export class StatusPanel {
       state.player.abilityLearning,
       state.player.progress?.level ?? 1,
     );
-    this.#renderSummonCommand(state.player.summonCommand, state.entities);
+    this.#renderSummonCommand(state.player.summonCommand, state.player.petUpkeep);
     this.#renderNearby(state);
     const activeEffects = state.player.statuses.map((status) =>
       this.#localization.format("status-effect-entry", {
@@ -313,6 +320,10 @@ export class StatusPanel {
 
   readonly #handleRest = (): void => {
     void this.#dispatch({ type: "rest", turns: REST_UNTIL_RECOVERED_TURNS });
+  };
+
+  readonly #handleDismissPets = (): void => {
+    void this.#dispatch({ type: "dismiss-pets" });
   };
 
   readonly #summonCommandHandlers: Record<SummonCommandModeDto, () => void> = {
@@ -544,19 +555,19 @@ export class StatusPanel {
 
   #renderSummonCommand(
     command: SummonCommandDto | undefined,
-    entities: GameSnapshot["entities"],
+    upkeep: PetUpkeepDto | undefined,
   ): void {
     const mode = command?.mode ?? "follow";
-    const count = entities.filter(
-      (entity) => entity.faction === "player" && entity.summon != null,
-    ).length;
+    const count = upkeep?.controlledPets ?? 0;
     this.#dom.summonCommandStatus.textContent = this.#localization.format(
       "summon-command-status",
       {
         mode: this.#localization.format(`summon-command-mode-${mode}` as MessageKey),
         count,
+        upkeep: upkeep?.upkeepPercent ?? 0,
       },
     );
+    this.#dom.summonCommandStatus.classList.toggle("warning", upkeep?.unsafeWarning ?? false);
     for (const [buttonMode, button] of Object.entries(this.#dom.summonCommandButtons) as [
       SummonCommandModeDto,
       HTMLButtonElement,
@@ -566,6 +577,26 @@ export class StatusPanel {
         this.#state.busy || this.#state.commandBlocked || this.#state.worldMap || selected;
       button.setAttribute("aria-pressed", String(selected));
     }
+    this.#dom.dismissPets.disabled =
+      this.#state.busy || this.#state.commandBlocked || this.#state.worldMap || count === 0;
+  }
+
+  #renderVirtues(virtues: VirtueDto[]): void {
+    const document = this.#dom.virtueList.ownerDocument;
+    this.#dom.virtueList.replaceChildren(
+      ...virtues.map((virtue) => {
+        const row = document.createElement("li");
+        row.className = "virtue-row";
+        const name = document.createElement("span");
+        name.className = "virtue-name";
+        name.textContent = this.#localization.format(`virtue-${virtue.kind}`);
+        const value = document.createElement("span");
+        value.className = "virtue-value";
+        value.textContent = String(virtue.value);
+        row.append(name, value);
+        return row;
+      }),
+    );
   }
 
   #renderMutations(mutations: PlayerMutationDto[]): void {

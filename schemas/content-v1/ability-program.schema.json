@@ -72,6 +72,40 @@
               "minimum": 0,
               "type": "integer"
             },
+            "type": {
+              "const": "malediction",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "damageDice",
+            "damageSides"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "damageBonus": {
+              "default": 0,
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "damageDice": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "damageSides": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
             "damageType": {
               "$ref": "#/$defs/ActorDamageType",
               "default": "physical"
@@ -196,6 +230,33 @@
             },
             "type": {
               "const": "beam-damage",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "damageDice",
+            "damageSides"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "damageDice": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "damageSides": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "light-line",
               "type": "string"
             }
           },
@@ -721,6 +782,49 @@
             "affectChancePercent",
             "floorTerrainId",
             "wallTerrainIds"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "floorTerrainId": {
+              "type": "string"
+            },
+            "magmaTerrainId": {
+              "type": "string"
+            },
+            "maximumRadius": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "minimumRadius": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "quartzTerrainId": {
+              "type": "string"
+            },
+            "type": {
+              "const": "area-destruction",
+              "type": "string"
+            },
+            "wallTerrainId": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "minimumRadius",
+            "maximumRadius",
+            "floorTerrainId",
+            "wallTerrainId",
+            "quartzTerrainId",
+            "magmaTerrainId"
           ],
           "type": "object"
         },
@@ -1261,6 +1365,7 @@
                 "intelligence": 0,
                 "maxHp": 0,
                 "speed": 0,
+                "spellPowerBonus": 0,
                 "strength": 0,
                 "wisdom": 0
               }
@@ -1796,8 +1901,30 @@
             "affixId": {
               "type": "string"
             },
+            "brand": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/WeaponBrand"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "resistance": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ActorDamageType"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
             "type": {
-              "const": "enchant-equipped-weapon",
+              "const": "brand-weapon",
               "type": "string"
             }
           },
@@ -1888,6 +2015,99 @@
       ],
       "type": "string"
     },
+    "AbilityLevelScalingCurveDefinition": {
+      "enum": [
+        "linear",
+        "prorated"
+      ],
+      "type": "string"
+    },
+    "AbilityLevelScalingDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "cubicWeight": {
+          "default": 0,
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "curve": {
+          "$ref": "#/$defs/AbilityLevelScalingCurveDefinition",
+          "default": "linear"
+        },
+        "divisor": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "effectIndex": {
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "field": {
+          "$ref": "#/$defs/AbilityLevelScalingField"
+        },
+        "levelOffset": {
+          "default": 0,
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "maximum": {
+          "default": null,
+          "format": "uint64",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "multiplier": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "quadraticWeight": {
+          "default": 0,
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "effectIndex",
+        "field",
+        "multiplier",
+        "divisor"
+      ],
+      "type": "object"
+    },
+    "AbilityLevelScalingField": {
+      "enum": [
+        "damage-dice",
+        "damage-sides",
+        "damage-bonus",
+        "death-ray-power",
+        "identify-power",
+        "radius",
+        "beam-chance-percent",
+        "status-intensity",
+        "status-duration-ticks",
+        "status-duration-sides",
+        "status-power",
+        "status-melee-damage",
+        "control-power",
+        "genocide-power",
+        "summon-maximum-level",
+        "maximum-weight"
+      ],
+      "type": "string"
+    },
     "AbilityProgramInputDefinition": {
       "enum": [
         "self",
@@ -1901,6 +2121,12 @@
       "properties": {
         "effect": {
           "$ref": "#/$defs/AbilityEffectDefinition"
+        },
+        "levelScaling": {
+          "items": {
+            "$ref": "#/$defs/AbilityLevelScalingDefinition"
+          },
+          "type": "array"
         },
         "maximumRoll": {
           "format": "uint16",
@@ -2096,6 +2322,11 @@
           "type": "integer"
         },
         "speed": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "spellPowerBonus": {
           "default": 0,
           "format": "int32",
           "type": "integer"

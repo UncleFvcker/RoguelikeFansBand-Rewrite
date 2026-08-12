@@ -32,6 +32,10 @@
       "cubicWeight": 2
     }
   ],
+  "spellPowerFields": [
+    { "effectIndex": 0, "field": "status-duration-ticks" },
+    { "effectIndex": 0, "field": "status-duration-sides" }
+  ],
   "tags": [
     "death",
     "race",

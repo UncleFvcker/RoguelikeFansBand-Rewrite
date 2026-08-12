@@ -217,6 +217,7 @@ mod tests {
                 progress: None,
                 active_mutation_ids: Vec::new(),
                 locked_mutation_ids: Vec::new(),
+                virtues: Vec::new(),
                 build: None,
                 resources: Vec::new(),
                 bonus_spell_learning_capacity: 0,

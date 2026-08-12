@@ -714,6 +714,36 @@ h1 {
   list-style: none;
 }
 
+.virtue-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.35rem 0.8rem;
+  margin: 0;
+  padding: 0.45rem 0.85rem 0.8rem;
+  list-style: none;
+}
+
+.virtue-row {
+  display: flex;
+  min-width: 0;
+  justify-content: space-between;
+  gap: 0.5rem;
+  color: #c8d5e3;
+  font-size: 0.76rem;
+}
+
+.virtue-name {
+  overflow: hidden;
+  color: #9fb5ca;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.virtue-value {
+  color: #e2eef9;
+  font-variant-numeric: tabular-nums;
+}
+
 .mutation-row {
   display: grid;
   gap: 0.25rem;
@@ -1280,6 +1310,11 @@ h1 {
 .status-pill.error {
   border-color: #a34e58;
   color: #ff9ca5;
+}
+
+.status-pill.warning {
+  color: var(--color-warning, #e8b35a);
+  border-color: currentColor;
 }
 
 .quiet-button {

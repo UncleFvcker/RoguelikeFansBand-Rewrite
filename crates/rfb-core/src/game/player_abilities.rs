@@ -134,6 +134,20 @@ impl Game {
     }
 
     pub(super) fn apply_player_level_scaling(ability: &mut AbilityDefinition, level: u16) {
+        if let AbilityEffectDefinition::RandomChoice { branches, .. } = &mut ability.effect {
+            for branch in branches {
+                for scaling in branch.level_scaling.clone() {
+                    let effects = match branch.effect.as_mut() {
+                        AbilityEffectDefinition::Sequence { effects } => effects.as_mut_slice(),
+                        effect => std::slice::from_mut(effect),
+                    };
+                    let effect = effects
+                        .get_mut(usize::from(scaling.effect_index))
+                        .expect("validated random branch scaling index must remain available");
+                    apply_ability_level_scaling(effect, &scaling, level);
+                }
+            }
+        }
         for scaling in ability.level_scaling.clone() {
             let effect = match &mut ability.effect {
                 AbilityEffectDefinition::Sequence { effects } => effects
@@ -145,6 +159,22 @@ impl Game {
                 }
             };
             apply_ability_level_scaling(effect, &scaling, level);
+        }
+    }
+
+    pub(super) fn apply_player_spell_power(ability: &mut AbilityDefinition, bonus: i32) {
+        ability.spell_power_bonus = bonus;
+        for definition in ability.spell_power_fields.clone() {
+            let effect = match &mut ability.effect {
+                AbilityEffectDefinition::Sequence { effects } => effects
+                    .get_mut(usize::from(definition.effect_index))
+                    .expect("validated spell power effect index must remain available"),
+                effect => {
+                    debug_assert_eq!(definition.effect_index, 0);
+                    effect
+                }
+            };
+            apply_ability_spell_power(effect, definition, bonus);
         }
     }
 
@@ -188,6 +218,7 @@ impl Game {
         fn apply(effect: &mut AbilityEffectDefinition, bonus: u16) {
             match effect {
                 AbilityEffectDefinition::Damage { damage_bonus, .. }
+                | AbilityEffectDefinition::Malediction { damage_bonus, .. }
                 | AbilityEffectDefinition::AreaDamage { damage_bonus, .. }
                 | AbilityEffectDefinition::JumpDamage { damage_bonus, .. }
                 | AbilityEffectDefinition::BeamDamage { damage_bonus, .. }
@@ -838,80 +869,61 @@ impl Game {
     pub(super) fn recover_player_resources(
         &mut self,
         resting: bool,
-    ) -> Vec<ResourceRecoveryResolutionDto> {
-        let recovery_amounts = self
+        events: &mut Vec<DomainEvent>,
+    ) {
+        let changes = self
             .resources
             .keys()
             .map(|id| {
-                let definition = self
-                    .content
-                    .resource(id)
-                    .expect("player resource definition must remain available");
-                let amount = if resting {
-                    definition.rest_recovery_amount
-                } else {
-                    definition.wait_recovery_amount
-                };
-                let percent = self.casting_profile().map_or(100, |profile| {
-                    if profile.resource_id == *id {
-                        profile.resource_recovery_percent
-                    } else {
-                        100
-                    }
-                });
-                (id.clone(), amount.saturating_mul(u32::from(percent)) / 100)
+                (
+                    id.clone(),
+                    self.player_resource_recovery_change(id, resting),
+                )
             })
             .collect::<BTreeMap<_, _>>();
-        let mut recovered = Vec::new();
+        let upkeep_percent = self.pet_upkeep().percent;
         for (id, pool) in &mut self.resources {
             let before = pool.current;
-            pool.current = pool
-                .current
-                .saturating_add(recovery_amounts[id])
-                .min(pool.maximum);
+            let change = changes[id];
+            if change >= 0 {
+                pool.current = pool
+                    .current
+                    .saturating_add(u32::try_from(change).unwrap_or(u32::MAX))
+                    .min(pool.maximum);
+            } else {
+                pool.current = pool
+                    .current
+                    .saturating_sub(u32::try_from(-change).unwrap_or(u32::MAX));
+            }
             if pool.current > before {
-                recovered.push(ResourceRecoveryResolutionDto {
+                events.push(DomainEvent::ResourceRecovered {
+                    resolution: ResourceRecoveryResolutionDto {
+                        resource_id: id.clone(),
+                        before,
+                        after: pool.current,
+                        recovered: pool.current - before,
+                    },
+                });
+            } else if pool.current < before {
+                events.push(DomainEvent::PetUpkeepManaLost {
                     resource_id: id.clone(),
-                    before,
-                    after: pool.current,
-                    recovered: pool.current - before,
+                    amount: before - pool.current,
+                    upkeep_percent,
                 });
             }
         }
-        recovered
+        if self.pet_upkeep_dto().dismissal_required {
+            events.push(DomainEvent::PetUpkeepDismissalRequired { upkeep_percent });
+        }
     }
 
     pub(super) fn player_resource_recovery_amount(&self, id: &str, resting: bool) -> u32 {
-        let Some(definition) = self.content.resource(id) else {
-            return 0;
-        };
-        let amount = if resting {
-            definition.rest_recovery_amount
-        } else {
-            definition.wait_recovery_amount
-        };
-        let percent = self.casting_profile().map_or(100, |profile| {
-            if profile.resource_id == id {
-                profile.resource_recovery_percent
-            } else {
-                100
-            }
-        });
-        amount.saturating_mul(u32::from(percent)) / 100
+        u32::try_from(self.player_resource_recovery_change(id, resting).max(0)).unwrap_or(u32::MAX)
     }
 
     fn player_has_depleted_recoverable_resource(&self, resting: bool) -> bool {
         self.resources.iter().any(|(id, pool)| {
-            if pool.current >= pool.maximum {
-                return false;
-            }
-            self.content.resource(id).is_some_and(|definition| {
-                if resting {
-                    definition.rest_recovery_amount > 0
-                } else {
-                    definition.wait_recovery_amount > 0
-                }
-            })
+            pool.current < pool.maximum && self.player_resource_recovery_amount(id, resting) > 0
         })
     }
 
@@ -943,6 +955,8 @@ impl Game {
         let mut completed_turns = 0_u16;
         let stop_reason = if requested_turns == 0 || requested_turns > MAX_REST_TURNS {
             RestStopReasonDto::InvalidTurns
+        } else if self.pet_upkeep_dto().dismissal_required {
+            RestStopReasonDto::PetDismissalRequired
         } else if !self.player_has_rest_need() {
             RestStopReasonDto::FullResources
         } else if self.visible_hostile_exists() {
@@ -950,8 +964,16 @@ impl Game {
         } else {
             loop {
                 let hp_before = self.player.hp;
+                let pet_neglect_allowed = self.pet_upkeep().unsafe_warning();
                 spend_energy(&mut self.player.energy_need, STANDARD_ACTION_COST);
-                self.advance_until_player_ready(true, true, events, changed, removed_entities)?;
+                self.advance_until_player_ready(
+                    true,
+                    true,
+                    pet_neglect_allowed,
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
                 completed_turns = completed_turns.saturating_add(1);
                 if self.pending_mutation_direction.is_some() {
                     break RestStopReasonDto::MutationDirectionRequired;
@@ -965,7 +987,10 @@ impl Game {
                 if self.visible_hostile_exists() {
                     break RestStopReasonDto::EnemyVisible;
                 }
-                self.recover_player_resources(true);
+                self.recover_player_resources(true, events);
+                if self.pet_upkeep_dto().dismissal_required {
+                    break RestStopReasonDto::PetDismissalRequired;
+                }
                 if !self.player_has_rest_need() {
                     break RestStopReasonDto::FullResources;
                 }

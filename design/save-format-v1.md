@@ -420,3 +420,6 @@ contract-v278 为 `PlayerProgressSaveDto` 增加必填 `miningProficiency` 与 `
 contract-v279 没有增加存档字段。碎石掉落使用既有 `ItemSaveDto.originKind` 保存新增枚举值
 `rubble`；矿脉材料、熟练度和金币继续使用 contract-v278 及既有金币堆字段。Protocol
 升至 1.181，State Hash Schema 保持 v90，save 容器保持 v1。
+contract-v282 不增加存档字段。宠物维持从既有职业身份、玩家等级、资源池以及 actor 的
+`controllerId` / `summon.ownerId` 派生；解散、消失和转敌直接写回既有 actor 集与控制归属。
+State Hash Schema 保持 v92，save 容器保持 v1。

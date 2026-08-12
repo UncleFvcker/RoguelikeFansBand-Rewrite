@@ -26,6 +26,7 @@
       "demo.item.tanto": { "initial": 2000, "maximum": 6000 }
     }
   },
+  "petUpkeepDivisor": 25,
   "usesSpellScrolls": true,
   "castingProfile": {
     "resourceId": "demo.resource.mana",

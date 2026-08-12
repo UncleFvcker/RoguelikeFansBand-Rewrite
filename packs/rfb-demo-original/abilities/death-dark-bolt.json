@@ -21,6 +21,9 @@
       "divisor": 4
     }
   ],
+  "spellPowerFields": [
+    { "effectIndex": 0, "field": "final-damage" }
+  ],
   "tags": [
     "beam",
     "bolt",

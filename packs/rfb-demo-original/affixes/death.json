@@ -1,0 +1,10 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "formatVersion": 1,
+  "id": "rfb-legacy.affix.death",
+  "nameKey": "affix-legacy-death-name",
+  "descriptionKey": "affix-legacy-death-description",
+  "generationLevel": 20,
+  "passives": ["vampiric", "hold-life"],
+  "tags": ["digger", "legacy-import", "weapon"]
+}

@@ -52,7 +52,7 @@
       "turn": 2,
       "worldTick": 20,
       "lastCommandSeq": 2,
-      "rngDrawCounter": 159,
+      "rngDrawCounter": 161,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -330,10 +330,10 @@
       "playerDefense": 15,
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
-      "playerCarriedWeightTenthsPound": 774,
+      "playerCarriedWeightTenthsPound": 784,
       "playerCarryCapacityTenthsPound": 1200,
       "playerEncumbranceSpeedPenalty": 0,
-      "playerGold": 482,
+      "playerGold": 450,
       "playerNutrition": 9999,
       "playerLevel": 1,
       "playerExperience": 0,
@@ -1103,15 +1103,15 @@
         ],
         "miningProficiency": {
           "diggingPower": 83,
-          "rank": "beginner",
-          "current": 4059,
+          "rank": "unskilled",
+          "current": 3999,
           "maximum": 8000
         },
         "materials": [
           {
             "materialId": "rfb.material.iron-ore",
             "nameKey": "material-iron-ore",
-            "quantity": 3
+            "quantity": 0
           },
           {
             "materialId": "rfb.material.silver-ore",
@@ -1163,18 +1163,6 @@
       "playerBuildId": "demo.build.warrior",
       "entityCount": 0,
       "groundItemCount": 2,
-      "goldPiles": [
-        {
-          "id": "generated.gold.1",
-          "position": {
-            "x": 44,
-            "y": 15
-          },
-          "amount": 46,
-          "appearance": "silver",
-          "discovered": true
-        }
-      ],
       "inventoryStackCount": 6,
       "equipmentCount": 4,
       "inventory": [
@@ -1186,7 +1174,7 @@
           "usable": true,
           "canReceiveRecharge": false,
           "canSupplyRecharge": false,
-          "quantity": 6,
+          "quantity": 7,
           "weightTenthsPound": 10,
           "equipmentSlot": null,
           "modifiers": {
@@ -1199,7 +1187,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1211,7 +1200,7 @@
           "usable": false,
           "fuel": {
             "kind": "torch",
-            "current": 1500,
+            "current": 3500,
             "maximum": 5000,
             "lightRadius": 1
           },
@@ -1230,7 +1219,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1242,7 +1232,7 @@
           "usable": false,
           "fuel": {
             "kind": "torch",
-            "current": 1500,
+            "current": 3500,
             "maximum": 5000,
             "lightRadius": 1
           },
@@ -1261,7 +1251,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1273,7 +1264,7 @@
           "usable": false,
           "fuel": {
             "kind": "torch",
-            "current": 1500,
+            "current": 3500,
             "maximum": 5000,
             "lightRadius": 1
           },
@@ -1292,7 +1283,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1304,7 +1296,7 @@
           "usable": false,
           "fuel": {
             "kind": "torch",
-            "current": 1500,
+            "current": 3500,
             "maximum": 5000,
             "lightRadius": 1
           },
@@ -1323,7 +1315,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1348,7 +1341,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "unexamined"
         }
@@ -1372,7 +1366,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "equipmentBonuses": {
             "meleeAttacks": 0,
@@ -1411,7 +1406,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "identified",
           "quality": "ordinary",
@@ -1445,7 +1441,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "identified",
           "quality": "ordinary",
@@ -1489,7 +1486,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "identified",
           "quality": "ordinary",
@@ -1564,15 +1562,28 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 176,
-      "nextGoldPileSerial": 2,
+      "nextItemInstanceSerial": 175,
+      "nextGoldPileSerial": 1,
+      "terrainInteractions": [
+        {
+          "kind": "dig-terrain",
+          "direction": "north",
+          "position": {
+            "x": 44,
+            "y": 15
+          },
+          "terrainId": "demo.terrain.magma-vein",
+          "requiresCheck": true,
+          "available": true
+        }
+      ],
       "campaign": {
         "status": "active",
         "score": 0,
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "fc23c1941bc778da265306d26b98a1e380b2efebd90e8b95c75add8f6a08e954"
+      "stateHash": "51e003b604c8046060de9a772ff3d608c63ba3b9cc9d2e39d2ee40b17b214402"
     },
     "events": [
       {
@@ -1584,24 +1595,15 @@
         }
       },
       {
-        "kind": "terrain.found-something",
-        "messageKey": "terrain-found-something",
-        "args": {}
-      },
-      {
-        "kind": "terrain.dug",
-        "messageKey": "terrain-dug",
+        "kind": "terrain.dig-failed",
+        "messageKey": "terrain-dig-failed",
         "args": {
+          "retryable": "true",
           "x": "44",
           "y": "15"
         }
-      },
-      {
-        "kind": "progress.mining-proficiency-improved",
-        "messageKey": "mining-proficiency-improved",
-        "args": {}
       }
     ],
-    "saveRoundTripStateHash": "fc23c1941bc778da265306d26b98a1e380b2efebd90e8b95c75add8f6a08e954"
+    "saveRoundTripStateHash": "51e003b604c8046060de9a772ff3d608c63ba3b9cc9d2e39d2ee40b17b214402"
   }
 }

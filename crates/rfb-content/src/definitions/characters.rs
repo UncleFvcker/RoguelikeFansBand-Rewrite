@@ -121,6 +121,10 @@ const fn default_shop_adjust_percent() -> u16 {
     110
 }
 
+const fn default_pet_upkeep_divisor() -> u16 {
+    40
+}
+
 /// One equipment slot instance on a body: `slot_type` is the item-facing
 /// class (matches `ItemDefinition.equipment_slot`), `id` names the instance
 /// so a body can carry several slots of the same type (e.g. two rings).
@@ -170,6 +174,9 @@ pub struct ClassDefinition {
     /// RFB ranged-critical chance bonus gained for each character level.
     #[serde(default)]
     pub projectile_critical_chance_bonus_percent_per_level: u8,
+    /// RFB class divisor used to convert controlled monster levels into mana upkeep.
+    #[serde(default = "default_pet_upkeep_divisor")]
+    pub pet_upkeep_divisor: u16,
     #[serde(default)]
     pub starting_items: Vec<StartingItemDefinition>,
     /// Item tags accepted by Mogaminator's favorite-weapon predicate.

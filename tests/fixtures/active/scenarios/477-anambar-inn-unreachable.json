@@ -24,7 +24,7 @@
       "revision": 1,
       "turn": 1,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 154,
+      "rngDrawCounter": 165,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -302,7 +302,7 @@
       "playerDefense": 15,
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
-      "playerCarriedWeightTenthsPound": 714,
+      "playerCarriedWeightTenthsPound": 694,
       "playerCarryCapacityTenthsPound": 1200,
       "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 100,
@@ -1145,7 +1145,7 @@
           "usable": true,
           "canReceiveRecharge": false,
           "canSupplyRecharge": false,
-          "quantity": 9,
+          "quantity": 7,
           "weightTenthsPound": 10,
           "equipmentSlot": null,
           "modifiers": {
@@ -1158,7 +1158,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1170,7 +1171,7 @@
           "usable": false,
           "fuel": {
             "kind": "torch",
-            "current": 2000,
+            "current": 1500,
             "maximum": 5000,
             "lightRadius": 1
           },
@@ -1189,7 +1190,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1201,7 +1203,7 @@
           "usable": false,
           "fuel": {
             "kind": "torch",
-            "current": 2000,
+            "current": 1500,
             "maximum": 5000,
             "lightRadius": 1
           },
@@ -1220,7 +1222,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1232,7 +1235,7 @@
           "usable": false,
           "fuel": {
             "kind": "torch",
-            "current": 2000,
+            "current": 1500,
             "maximum": 5000,
             "lightRadius": 1
           },
@@ -1251,7 +1254,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1263,7 +1267,7 @@
           "usable": false,
           "fuel": {
             "kind": "torch",
-            "current": 2000,
+            "current": 1500,
             "maximum": 5000,
             "lightRadius": 1
           },
@@ -1282,7 +1286,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1294,7 +1299,7 @@
           "usable": false,
           "fuel": {
             "kind": "torch",
-            "current": 2000,
+            "current": 1500,
             "maximum": 5000,
             "lightRadius": 1
           },
@@ -1313,7 +1318,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1325,7 +1331,7 @@
           "usable": false,
           "fuel": {
             "kind": "torch",
-            "current": 2000,
+            "current": 1500,
             "maximum": 5000,
             "lightRadius": 1
           },
@@ -1344,7 +1350,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1369,7 +1376,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "unexamined"
         }
@@ -1393,7 +1401,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "equipmentBonuses": {
             "meleeAttacks": 0,
@@ -1432,7 +1441,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "identified",
           "quality": "ordinary",
@@ -1466,7 +1476,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "identified",
           "quality": "ordinary",
@@ -1553,7 +1564,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 175,
+      "nextItemInstanceSerial": 170,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -1561,7 +1572,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "df6acb3b81e1f0431f731d939f0380cbc1852e43d17fd083cff6a2d6b5dea2c8"
+      "stateHash": "25c82f870886c50bae8669c86e86492db3166e7a743f784242cce78ec0e3bddd"
     },
     "events": [
       {

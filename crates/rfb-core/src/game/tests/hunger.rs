@@ -10,14 +10,16 @@ const RATION_KIND_ID: &str = "demo.item.ration-of-food";
 
 #[test]
 fn warrior_birth_rolls_five_to_nine_rations_after_gold() {
+    let content = Game::new(0).content;
     for seed in 0..32 {
         let mut expected_rng = RfbRng::seeded(seed);
         let build = CharacterBuildIdentity {
             build_id: RFB_WARRIOR_BUILD_ID.to_owned(),
-            race_id: String::new(),
-            class_id: String::new(),
-            personality_id: String::new(),
+            race_id: "demo.race.rfb-human".to_owned(),
+            class_id: "demo.class.warrior".to_owned(),
+            personality_id: "demo.personality.ordinary".to_owned(),
         };
+        let _ = crate::game::virtues::initial_virtues(&content, Some(&build), &mut expected_rng);
         let expected_gold = starting_gold(Some(&build), &mut expected_rng);
         let expected_quantity = starting_ration_quantity(Some(&build), &mut expected_rng)
             .expect("Warrior should receive birth rations");

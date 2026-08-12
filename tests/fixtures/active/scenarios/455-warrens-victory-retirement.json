@@ -30,7 +30,7 @@
       "revision": 1,
       "turn": 1,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 154,
+      "rngDrawCounter": 165,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -308,10 +308,10 @@
       "playerDefense": 15,
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
-      "playerCarriedWeightTenthsPound": 714,
+      "playerCarriedWeightTenthsPound": 694,
       "playerCarryCapacityTenthsPound": 1200,
       "playerEncumbranceSpeedPenalty": 0,
-      "playerGold": 346,
+      "playerGold": 405,
       "playerNutrition": 9999,
       "playerLevel": 1,
       "playerExperience": 0,
@@ -1151,7 +1151,7 @@
           "usable": true,
           "canReceiveRecharge": false,
           "canSupplyRecharge": false,
-          "quantity": 9,
+          "quantity": 7,
           "weightTenthsPound": 10,
           "equipmentSlot": null,
           "modifiers": {
@@ -1164,7 +1164,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1176,7 +1177,7 @@
           "usable": false,
           "fuel": {
             "kind": "torch",
-            "current": 2000,
+            "current": 1500,
             "maximum": 5000,
             "lightRadius": 1
           },
@@ -1195,7 +1196,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1207,7 +1209,7 @@
           "usable": false,
           "fuel": {
             "kind": "torch",
-            "current": 2000,
+            "current": 1500,
             "maximum": 5000,
             "lightRadius": 1
           },
@@ -1226,7 +1228,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1238,7 +1241,7 @@
           "usable": false,
           "fuel": {
             "kind": "torch",
-            "current": 2000,
+            "current": 1500,
             "maximum": 5000,
             "lightRadius": 1
           },
@@ -1257,7 +1260,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1269,7 +1273,7 @@
           "usable": false,
           "fuel": {
             "kind": "torch",
-            "current": 2000,
+            "current": 1500,
             "maximum": 5000,
             "lightRadius": 1
           },
@@ -1288,7 +1292,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1300,7 +1305,7 @@
           "usable": false,
           "fuel": {
             "kind": "torch",
-            "current": 2000,
+            "current": 1500,
             "maximum": 5000,
             "lightRadius": 1
           },
@@ -1319,7 +1324,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1331,7 +1337,7 @@
           "usable": false,
           "fuel": {
             "kind": "torch",
-            "current": 2000,
+            "current": 1500,
             "maximum": 5000,
             "lightRadius": 1
           },
@@ -1350,7 +1356,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1375,7 +1382,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "unexamined"
         }
@@ -1399,7 +1407,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "equipmentBonuses": {
             "meleeAttacks": 0,
@@ -1438,7 +1447,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "identified",
           "quality": "ordinary",
@@ -1472,7 +1482,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "identified",
           "quality": "ordinary",
@@ -1559,7 +1570,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 175,
+      "nextItemInstanceSerial": 170,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "retired",
@@ -1569,7 +1580,7 @@
         "victoryTurn": 0,
         "retiredTurn": 1
       },
-      "stateHash": "7e4f9bd5274d9f380e696b5dbe864e44006823983a06730ce6df23fb4853890e"
+      "stateHash": "e2418ed24a93b59a949d14b1cd74f31e5620cb11ba24a6ddc300e9f4d34b4d0e"
     },
     "events": [
       {
@@ -1584,9 +1595,9 @@
       {
         "step": 2,
         "kind": "campaign-ended",
-        "stateHash": "7e4f9bd5274d9f380e696b5dbe864e44006823983a06730ce6df23fb4853890e"
+        "stateHash": "e2418ed24a93b59a949d14b1cd74f31e5620cb11ba24a6ddc300e9f4d34b4d0e"
       }
     ],
-    "saveRoundTripStateHash": "7e4f9bd5274d9f380e696b5dbe864e44006823983a06730ce6df23fb4853890e"
+    "saveRoundTripStateHash": "e2418ed24a93b59a949d14b1cd74f31e5620cb11ba24a6ddc300e9f4d34b4d0e"
   }
 }

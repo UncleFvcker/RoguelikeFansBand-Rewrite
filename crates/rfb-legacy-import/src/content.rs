@@ -827,6 +827,7 @@ pub struct LegacyClassEntry {
     pub registration: LegacyClassRegistration,
     pub character: LegacyCharacterEntry,
     pub caster_profile: Option<LegacyCasterProfile>,
+    pub pet_upkeep_divisor: u16,
     pub source_found: bool,
 }
 
@@ -3347,6 +3348,11 @@ fn item_json_with_terrain(
     if entry.tval == 127 {
         tags.push("gold");
     }
+    if entry.flags.iter().any(|flag| flag == "NO_REMOVE")
+        || matches!((entry.tval, entry.sval), (23, 32 | 34))
+    {
+        tags.push("unbrandable");
+    }
     let use_action = fixed_consumable_use_action_with_terrain(entry, terrain_creation);
     let device_generation = legacy_device_generation(entry);
     let behavior_gap = if entry.tval == 70 && entry.sval == 52 {
@@ -3492,6 +3498,7 @@ fn item_json_with_terrain(
     if fold.speed != 0 {
         modifiers.insert("speed".to_owned(), serde_json::json!(fold.speed));
     }
+    fold_spell_power_modifier(&entry.flags, entry.pval, &mut modifiers, &mut equipment);
     if !modifiers.is_empty() {
         value["modifiers"] = serde_json::Value::Object(modifiers);
     }
@@ -3499,6 +3506,9 @@ fn item_json_with_terrain(
     apply_offensive_fold(&mut value, &offense);
     apply_equipment_fold(&mut value, &equipment);
     for flag in &entry.flags {
+        if flag == "NO_REMOVE" {
+            continue;
+        }
         account_item_flag(
             flag,
             &fold,
@@ -4097,6 +4107,27 @@ fn equipment_fold(flags: &[String], pval: i32) -> EquipmentFold {
     fold
 }
 
+fn fold_spell_power_modifier(
+    flags: &[String],
+    pval: i32,
+    modifiers: &mut serde_json::Map<String, serde_json::Value>,
+    equipment: &mut EquipmentFold,
+) {
+    let pval = pval.clamp(-100, 100);
+    let mut bonus = 0_i32;
+    if flags.iter().any(|flag| flag == "SPELL_POWER") {
+        bonus = bonus.saturating_add(pval);
+        equipment.consumed.insert("SPELL_POWER".to_owned());
+    }
+    if flags.iter().any(|flag| flag == "DEC_SPELL_POWER") {
+        bonus = bonus.saturating_sub(pval);
+        equipment.consumed.insert("DEC_SPELL_POWER".to_owned());
+    }
+    if bonus != 0 {
+        modifiers.insert("spellPowerBonus".to_owned(), serde_json::json!(bonus));
+    }
+}
+
 fn add_equipment_bonus(fold: &mut EquipmentFold, field: &str, amount: i32) {
     if amount == 0 {
         return;
@@ -4150,14 +4181,14 @@ fn ego_json(
     id: &str,
     report: &mut ContentImportReport,
 ) -> serde_json::Value {
-    // The C: maxima become fixed modifiers: a deterministic ceiling standing
-    // in for the legacy generation-time random rolls (documented difference).
+    // C: maxima become fixed modifiers unless a recipe below materializes the
+    // original generation-time roll.
     let mut modifiers = serde_json::Map::new();
     let attack = entry.max_to_hit.max(entry.max_to_damage);
     if attack != 0 {
         modifiers.insert("attack".to_owned(), serde_json::json!(attack));
     }
-    if entry.max_to_armor != 0 {
+    if entry.max_to_armor != 0 && entry.index != 50 {
         modifiers.insert("defense".to_owned(), serde_json::json!(entry.max_to_armor));
     }
     attribute_modifiers_from_flags(&entry.flags, entry.max_pval, &mut modifiers);
@@ -4165,10 +4196,11 @@ fn ego_json(
     // SPEED folds the max pval, resistances and free action are binary.
     let fold = defensive_fold(&entry.flags, entry.max_pval);
     let offense = offensive_fold(&entry.flags);
-    let equipment = equipment_fold(&entry.flags, entry.max_pval);
+    let mut equipment = equipment_fold(&entry.flags, entry.max_pval);
     if fold.speed != 0 {
         modifiers.insert("speed".to_owned(), serde_json::json!(fold.speed));
     }
+    fold_spell_power_modifier(&entry.flags, entry.max_pval, &mut modifiers, &mut equipment);
     if entry.has_activation {
         *report
             .item_behavior_gaps
@@ -4243,6 +4275,16 @@ fn apply_ego_roll_recipe(value: &mut serde_json::Value, entry: &LegacyEgoEntry) 
         9 => vec![serde_json::json!({
             "rolls": 2,
             "candidates": elemental_craft_roll_candidates(),
+        })],
+        // Original `of Protection` rolls a uniform +1..+10 armor bonus.
+        50 => vec![serde_json::json!({
+            "rolls": 1,
+            "candidates": (1..=10)
+                .map(|defense| serde_json::json!({
+                    "weight": 1,
+                    "properties": {"modifiers": {"defense": defense}}
+                }))
+                .collect::<Vec<_>>(),
         })],
         // Original boots/ring speed pvals are depth-biased generation rolls.
         // Increasing minDepth thresholds keep high bonuses out of shallow
@@ -4421,7 +4463,7 @@ fn artifact_json(
     } else {
         OffensiveFold::default()
     };
-    let equipment = if has_slot {
+    let mut equipment = if has_slot {
         equipment_fold(&entry.flags, entry.pval)
     } else {
         EquipmentFold::default()
@@ -4442,6 +4484,7 @@ fn artifact_json(
         if fold.speed != 0 {
             modifiers.insert("speed".to_owned(), serde_json::json!(fold.speed));
         }
+        fold_spell_power_modifier(&entry.flags, entry.pval, &mut modifiers, &mut equipment);
     }
     if !modifiers.is_empty() {
         value["modifiers"] = serde_json::Value::Object(modifiers);
@@ -5127,6 +5170,9 @@ pub fn parse_class_block(registration: LegacyClassRegistration, body: &str) -> L
         registration,
         character,
         caster_profile: None,
+        pet_upkeep_divisor: assignment_value(body, "pets")
+            .and_then(|value| value.parse::<u16>().ok())
+            .unwrap_or(40),
         source_found: true,
     }
 }
@@ -5739,6 +5785,7 @@ fn class_json(
         "experiencePercent": character.exp.clamp(25, 500),
         "baseHp": character.base_hp.clamp(-1_000, 1_000),
         "skillSetId": format!("rfb-legacy.skill-set.class-{}", entry.registration.id),
+        "petUpkeepDivisor": entry.pet_upkeep_divisor,
         "tags": tags,
     });
     let modifiers = character_modifiers(character);
@@ -5955,7 +6002,42 @@ fn death_realm(profile: &LegacyMagicProfile) -> Option<&LegacyRealmProfile> {
         .find(|realm| realm.index == DEATH_REALM_INDEX && realm.readable)
 }
 
-fn death_spell_ability(spell: &LegacySpellProfile) -> Option<(String, serde_json::Value)> {
+fn death_spell_power_fields(spell_index: u8) -> Vec<serde_json::Value> {
+    let field =
+        |effect_index, field| serde_json::json!({"effectIndex": effect_index, "field": field});
+    match spell_index {
+        1 => vec![
+            field(0, "final-damage"),
+            field(0, "malediction-death-ray-power"),
+            field(0, "malediction-fear-power"),
+        ],
+        3 | 8 | 9 | 18 | 21 | 22 => vec![field(0, "final-damage")],
+        4 | 6 => vec![field(0, "status-power")],
+        5 | 16 | 27 | 31 => vec![
+            field(0, "status-duration-ticks"),
+            field(0, "status-duration-sides"),
+        ],
+        7 => vec![field(0, "control-power")],
+        10 | 23 | 30 => vec![field(0, "final-damage"), field(0, "radius")],
+        11 | 15 | 29 => vec![field(0, "genocide-power")],
+        13 => vec![field(0, "damage-sides"), field(0, "damage-bonus")],
+        17 => vec![field(0, "random-choice-roll")],
+        19 => vec![
+            field(0, "status-duration-ticks"),
+            field(0, "status-duration-sides"),
+            field(1, "status-duration-ticks"),
+            field(1, "status-duration-sides"),
+            field(2, "status-duration-ticks"),
+        ],
+        26 => vec![field(0, "identify-power")],
+        _ => Vec::new(),
+    }
+}
+
+fn death_spell_ability(
+    spell: &LegacySpellProfile,
+    terrain_creation: &TerrainCreationImportIds,
+) -> Option<(String, serde_json::Value)> {
     let self_target = serde_json::json!({
         "modes": ["self"],
         "range": 0,
@@ -5966,6 +6048,11 @@ fn death_spell_ability(spell: &LegacySpellProfile) -> Option<(String, serde_json
         "range": 8,
         "requiresLineOfEffect": true,
     });
+    let item_target = serde_json::json!({
+        "modes": ["item"],
+        "range": 0,
+        "requiresLineOfEffect": false,
+    });
     let (id, target, effect, level_scaling, tags) = match spell.index {
         0 => (
             "death-detect-unlife",
@@ -5974,7 +6061,7 @@ fn death_spell_ability(spell: &LegacySpellProfile) -> Option<(String, serde_json
                 "type": "detect",
                 "subject": "actor",
                 "category": "nonliving",
-                "radius": 8,
+                "radius": 30,
             }),
             Vec::new(),
             vec!["death", "detection", "spell"],
@@ -5983,10 +6070,9 @@ fn death_spell_ability(spell: &LegacySpellProfile) -> Option<(String, serde_json
             "death-malediction",
             directional_target.clone(),
             serde_json::json!({
-                "type": "damage",
+                "type": "malediction",
                 "damageDice": 3,
                 "damageSides": 4,
-                "damageType": "hell-fire",
             }),
             vec![serde_json::json!({
                 "effectIndex": 0,
@@ -6004,7 +6090,7 @@ fn death_spell_ability(spell: &LegacySpellProfile) -> Option<(String, serde_json
                 "type": "detect",
                 "subject": "actor",
                 "category": "evil",
-                "radius": 8,
+                "radius": 30,
             }),
             Vec::new(),
             vec!["death", "detection", "spell"],
@@ -6055,7 +6141,9 @@ fn death_spell_ability(spell: &LegacySpellProfile) -> Option<(String, serde_json
                 "type": "apply-status",
                 "statusKindId": "rfb.status.necromantic-resistance",
                 "intensity": 1,
-                "durationTicks": 300,
+                "durationTicks": 20,
+                "durationDice": 1,
+                "durationSides": 20,
                 "stacking": "replace",
                 "grantedResistances": {
                     "cold": "resistant",
@@ -6215,14 +6303,12 @@ fn death_spell_ability(spell: &LegacySpellProfile) -> Option<(String, serde_json
         ),
         12 => (
             "death-poison-branding",
-            self_target.clone(),
+            item_target.clone(),
             serde_json::json!({
-                "type": "apply-status",
-                "statusKindId": "rfb.status.poison-branding",
-                "intensity": 1,
-                "durationTicks": 500,
-                "stacking": "replace",
-                "grantedBrands": ["poison"],
+                "type": "brand-weapon",
+                "affixId": LEGACY_SLAYING_WEAPON_AFFIX_ID,
+                "brand": "poison",
+                "resistance": "poison",
             }),
             Vec::new(),
             vec!["brand", "death", "poison", "spell"],
@@ -6237,6 +6323,7 @@ fn death_spell_ability(spell: &LegacySpellProfile) -> Option<(String, serde_json
                 "damageBonus": 2,
                 "damageType": "physical",
                 "targetCategory": "living",
+                "feeds": true,
             }),
             vec![
                 serde_json::json!({
@@ -6337,26 +6424,52 @@ fn death_spell_ability(spell: &LegacySpellProfile) -> Option<(String, serde_json
                     {"maximumRoll": 7, "target": "self-target", "effect": {"type": "summon", "actorKindId": "rfb-legacy.actor.skeleton-human", "count": 1, "radius": 2, "durationTurns": 0, "hostile": true}},
                     {"maximumRoll": 13, "target": "self-target", "effect": {"type": "apply-status", "statusKindId": "rfb.status.fear", "intensity": 3, "durationTicks": 50, "stacking": "keep-strongest"}},
                     {"maximumRoll": 25, "target": "self-target", "effect": {"type": "apply-status", "statusKindId": "rfb.status.confusion", "intensity": 1, "durationTicks": 4, "durationDice": 1, "durationSides": 4, "stacking": "extend"}},
-                    {"maximumRoll": 30, "effect": {"type": "no-op", "reason": "actor-polymorph-pending"}},
-                    {"maximumRoll": 35, "effect": {"type": "bolt-or-beam-damage", "damageDice": 4, "damageSides": 4, "damageType": "physical", "beamChancePercent": 0}},
-                    {"maximumRoll": 40, "effect": {"type": "apply-status", "statusKindId": "rfb.status.confusion", "intensity": 1, "durationTicks": 10, "stacking": "keep-strongest"}},
-                    {"maximumRoll": 45, "effect": {"type": "area-damage", "damageDice": 1, "damageSides": 1, "damageBonus": 24, "damageType": "poison", "radius": 3}},
-                    {"maximumRoll": 50, "effect": {"type": "no-op", "reason": "line-light-pending"}},
-                    {"maximumRoll": 55, "effect": {"type": "bolt-or-beam-damage", "damageDice": 4, "damageSides": 8, "damageType": "electricity", "beamChancePercent": 0}},
-                    {"maximumRoll": 60, "effect": {"type": "bolt-or-beam-damage", "damageDice": 6, "damageSides": 8, "damageType": "cold", "beamChancePercent": 0}},
-                    {"maximumRoll": 65, "effect": {"type": "bolt-or-beam-damage", "damageDice": 7, "damageSides": 8, "damageType": "acid", "beamChancePercent": 0}},
-                    {"maximumRoll": 70, "effect": {"type": "bolt-or-beam-damage", "damageDice": 9, "damageSides": 8, "damageType": "fire", "beamChancePercent": 0}},
+                    {"maximumRoll": 30, "effect": {"type": "polymorph-target"}},
+                    {"maximumRoll": 35, "effect": {"type": "bolt-or-beam-damage", "damageDice": 3, "damageSides": 4, "damageType": "physical", "beamChancePercent": 0}, "levelScaling": [{"effectIndex": 0, "field": "damage-dice", "levelOffset": 1, "multiplier": 1, "divisor": 5}]},
+                    {"maximumRoll": 40, "effect": {"type": "apply-status", "statusKindId": "rfb.status.confusion", "intensity": 1, "durationTicks": 10, "stacking": "keep-strongest", "power": 1}, "levelScaling": [{"effectIndex": 0, "field": "status-power", "levelOffset": 1, "multiplier": 1, "divisor": 1}]},
+                    {"maximumRoll": 45, "effect": {"type": "area-damage", "damageDice": 1, "damageSides": 1, "damageBonus": 19, "damageType": "poison", "radius": 3}, "levelScaling": [{"effectIndex": 0, "field": "damage-bonus", "multiplier": 1, "divisor": 2}]},
+                    {"maximumRoll": 50, "effect": {"type": "light-line", "damageDice": 6, "damageSides": 8}},
+                    {"maximumRoll": 55, "effect": {"type": "bolt-or-beam-damage", "damageDice": 3, "damageSides": 8, "damageType": "electricity", "beamChancePercent": 0}, "levelScaling": [{"effectIndex": 0, "field": "damage-dice", "levelOffset": 5, "multiplier": 1, "divisor": 4}]},
+                    {"maximumRoll": 60, "effect": {"type": "bolt-or-beam-damage", "damageDice": 5, "damageSides": 8, "damageType": "cold", "beamChancePercent": 0}, "levelScaling": [{"effectIndex": 0, "field": "damage-dice", "levelOffset": 5, "multiplier": 1, "divisor": 4}]},
+                    {"maximumRoll": 65, "effect": {"type": "bolt-or-beam-damage", "damageDice": 6, "damageSides": 8, "damageType": "acid", "beamChancePercent": 0}, "levelScaling": [{"effectIndex": 0, "field": "damage-dice", "levelOffset": 5, "multiplier": 1, "divisor": 4}]},
+                    {"maximumRoll": 70, "effect": {"type": "bolt-or-beam-damage", "damageDice": 8, "damageSides": 8, "damageType": "fire", "beamChancePercent": 0}, "levelScaling": [{"effectIndex": 0, "field": "damage-dice", "levelOffset": 5, "multiplier": 1, "divisor": 4}]},
                     {"maximumRoll": 75, "effect": {"type": "drain-life", "damageDice": 1, "damageSides": 1, "damageBonus": 74, "damageType": "nether", "targetCategory": "living"}},
-                    {"maximumRoll": 80, "effect": {"type": "area-damage", "damageDice": 1, "damageSides": 1, "damageBonus": 34, "damageType": "electricity", "radius": 2}},
-                    {"maximumRoll": 85, "effect": {"type": "area-damage", "damageDice": 1, "damageSides": 1, "damageBonus": 49, "damageType": "acid", "radius": 2}},
-                    {"maximumRoll": 90, "effect": {"type": "area-damage", "damageDice": 1, "damageSides": 1, "damageBonus": 79, "damageType": "ice", "radius": 3}},
-                    {"maximumRoll": 95, "effect": {"type": "area-damage", "damageDice": 1, "damageSides": 1, "damageBonus": 89, "damageType": "fire", "radius": 3}},
-                    {"maximumRoll": 100, "effect": {"type": "drain-life", "damageDice": 1, "damageSides": 1, "damageBonus": 109, "damageType": "nether", "targetCategory": "living"}},
-                    {"maximumRoll": 103, "target": "self-target", "effect": {"type": "no-op", "reason": "earthquake-pending"}},
-                    {"maximumRoll": 105, "target": "self-target", "effect": {"type": "no-op", "reason": "destroy-area-pending"}},
-                    {"maximumRoll": 107, "effect": {"type": "genocide", "scope": "glyph", "power": 60}},
+                    {"maximumRoll": 80, "effect": {"type": "area-damage", "damageDice": 1, "damageSides": 1, "damageBonus": 29, "damageType": "electricity", "radius": 2}, "levelScaling": [{"effectIndex": 0, "field": "damage-bonus", "multiplier": 1, "divisor": 2}]},
+                    {"maximumRoll": 85, "effect": {"type": "area-damage", "damageDice": 1, "damageSides": 1, "damageBonus": 39, "damageType": "acid", "radius": 2}, "levelScaling": [{"effectIndex": 0, "field": "damage-bonus", "multiplier": 1, "divisor": 1}]},
+                    {"maximumRoll": 90, "effect": {"type": "area-damage", "damageDice": 1, "damageSides": 1, "damageBonus": 69, "damageType": "ice", "radius": 3}, "levelScaling": [{"effectIndex": 0, "field": "damage-bonus", "multiplier": 1, "divisor": 1}]},
+                    {"maximumRoll": 95, "effect": {"type": "area-damage", "damageDice": 1, "damageSides": 1, "damageBonus": 79, "damageType": "fire", "radius": 3}, "levelScaling": [{"effectIndex": 0, "field": "damage-bonus", "multiplier": 1, "divisor": 1}]},
+                    {"maximumRoll": 100, "effect": {"type": "drain-life", "damageDice": 1, "damageSides": 1, "damageBonus": 99, "damageType": "nether", "targetCategory": "living"}, "levelScaling": [{"effectIndex": 0, "field": "damage-bonus", "multiplier": 1, "divisor": 1}]},
+                    {"maximumRoll": 103, "target": "self-target", "effect": {
+                        "type": "earthquake",
+                        "radius": 12,
+                        "affectChancePercent": 15,
+                        "floorTerrainId": terrain_creation.floor_terrain_id.as_ref()?,
+                        "wallTerrainIds": [
+                            terrain_creation.wall_terrain_id.as_ref()?,
+                            terrain_creation.quartz_terrain_id.as_ref()?,
+                            terrain_creation.magma_terrain_id.as_ref()?,
+                        ],
+                    }},
+                    {"maximumRoll": 105, "target": "self-target", "effect": {
+                        "type": "area-destruction",
+                        "minimumRadius": 13,
+                        "maximumRadius": 17,
+                        "floorTerrainId": terrain_creation.floor_terrain_id.as_ref()?,
+                        "wallTerrainId": terrain_creation.wall_terrain_id.as_ref()?,
+                        "quartzTerrainId": terrain_creation.quartz_terrain_id.as_ref()?,
+                        "magmaTerrainId": terrain_creation.magma_terrain_id.as_ref()?,
+                    }},
+                    {"maximumRoll": 107, "effect": {"type": "genocide", "scope": "glyph", "power": 50}, "levelScaling": [{"effectIndex": 0, "field": "genocide-power", "multiplier": 1, "divisor": 1}]},
                     {"maximumRoll": 109, "target": "self-target", "effect": {"type": "visible-damage", "damageDice": 1, "damageSides": 1, "damageBonus": 119}},
-                    {"maximumRoll": 120, "target": "self-target", "effect": {"type": "visible-damage", "damageDice": 1, "damageSides": 1, "damageBonus": 149}},
+                    {"maximumRoll": 65535, "target": "self-target", "effect": {"type": "sequence", "effects": [
+                        {"type": "visible-damage", "damageDice": 1, "damageSides": 1, "damageBonus": 149},
+                        {"type": "visible-apply-status", "statusKindId": "rfb.status.slow", "intensity": 1, "durationTicks": 50, "stacking": "extend", "power": 1},
+                        {"type": "visible-apply-status", "statusKindId": "rfb.status.sleep", "intensity": 1, "durationTicks": 500, "stacking": "keep-strongest", "power": 1},
+                        {"type": "heal", "amount": 300},
+                    ]}, "levelScaling": [
+                        {"effectIndex": 1, "field": "status-power", "levelOffset": 1, "multiplier": 1, "divisor": 1},
+                        {"effectIndex": 2, "field": "status-power", "levelOffset": 1, "multiplier": 1, "divisor": 1},
+                    ]},
                 ],
             }),
             Vec::new(),
@@ -6400,8 +6513,8 @@ fn death_spell_ability(spell: &LegacySpellProfile) -> Option<(String, serde_json
         ),
         20 => (
             "death-vampiric-branding",
-            self_target.clone(),
-            serde_json::json!({"type": "enchant-equipped-weapon", "affixId": LEGACY_DEATH_WEAPON_AFFIX_ID}),
+            item_target,
+            serde_json::json!({"type": "brand-weapon", "affixId": LEGACY_DEATH_WEAPON_AFFIX_ID}),
             Vec::new(),
             vec!["brand", "death", "permanent", "spell", "vampiric"],
         ),
@@ -6676,6 +6789,10 @@ fn death_spell_ability(spell: &LegacySpellProfile) -> Option<(String, serde_json
     if !level_scaling.is_empty() {
         ability["levelScaling"] = serde_json::Value::Array(level_scaling);
     }
+    let spell_power_fields = death_spell_power_fields(spell.index);
+    if !spell_power_fields.is_empty() {
+        ability["spellPowerFields"] = serde_json::Value::Array(spell_power_fields);
+    }
     Some((ability_id, ability))
 }
 
@@ -6684,8 +6801,8 @@ fn death_first_book_json(ability_ids: &[String]) -> serde_json::Value {
         "$schema": format!("{SCHEMA_BASE}/ability-book.schema.json"),
         "formatVersion": 1,
         "id": DEATH_FIRST_BOOK_ID,
-        "nameKey": "ability-book-legacy-death-stench-of-death-name",
-        "descriptionKey": "ability-book-legacy-death-stench-of-death-description",
+        "nameKey": "ability-book-legacy-death-black-prayers-name",
+        "descriptionKey": "ability-book-legacy-death-black-prayers-description",
         "realmId": "death",
         "rank": 1,
         "abilityIds": ability_ids,
@@ -6698,8 +6815,8 @@ fn death_second_book_json(ability_ids: &[String]) -> serde_json::Value {
         "$schema": format!("{SCHEMA_BASE}/ability-book.schema.json"),
         "formatVersion": 1,
         "id": DEATH_SECOND_BOOK_ID,
-        "nameKey": "ability-book-legacy-death-sepulchral-ways-name",
-        "descriptionKey": "ability-book-legacy-death-sepulchral-ways-description",
+        "nameKey": "ability-book-legacy-death-black-mass-name",
+        "descriptionKey": "ability-book-legacy-death-black-mass-description",
         "realmId": "death",
         "rank": 2,
         "abilityIds": ability_ids,
@@ -8547,17 +8664,18 @@ pub struct ContentImportOutcome {
 const LEGACY_RESOURCE_ID: &str = "rfb-legacy.resource.essence";
 const LEGACY_MANA_RESOURCE_ID: &str = "rfb-legacy.resource.mana";
 const DEATH_REALM_INDEX: u8 = 4;
-const DEATH_BOOK_TVAL: u16 = 100;
+const DEATH_BOOK_TVAL: u16 = 94;
 const DEATH_FIRST_BOOK_SVAL: u16 = 0;
 const DEATH_SECOND_BOOK_SVAL: u16 = 1;
 const DEATH_THIRD_BOOK_SVAL: u16 = 2;
 const DEATH_FOURTH_BOOK_SVAL: u16 = 3;
-const DEATH_FIRST_BOOK_ID: &str = "rfb-legacy.ability-book.death-stench-of-death";
-const DEATH_SECOND_BOOK_ID: &str = "rfb-legacy.ability-book.death-sepulchral-ways";
+const DEATH_FIRST_BOOK_ID: &str = "rfb-legacy.ability-book.death-black-prayers";
+const DEATH_SECOND_BOOK_ID: &str = "rfb-legacy.ability-book.death-black-mass";
 const DEATH_THIRD_BOOK_ID: &str = "rfb-legacy.ability-book.death-black-channels";
 const DEATH_FOURTH_BOOK_ID: &str = "rfb-legacy.ability-book.death-necronomicon";
 const LEGACY_VAMPIRE_LORD_RACE_ID: &str = "rfb-legacy.race.vampire-lord-form";
 const LEGACY_VAMPIRE_LORD_SKILL_SET_ID: &str = "rfb-legacy.skill-set.race-vampire-lord-form";
+const LEGACY_SLAYING_WEAPON_AFFIX_ID: &str = "rfb-legacy.affix.slaying";
 const LEGACY_DEATH_WEAPON_AFFIX_ID: &str = "rfb-legacy.affix.death";
 const LEGACY_CORPSE_ITEM_ID: &str = "rfb-legacy.item.corpse-remains";
 
@@ -9885,7 +10003,7 @@ fn convert_content_from(
             .spells
             .iter()
             .filter_map(|spell| {
-                let (ability_id, ability) = death_spell_ability(spell)?;
+                let (ability_id, ability) = death_spell_ability(spell, &terrain_creation)?;
                 shared_abilities.entry(ability_id.clone()).or_insert(ability);
                 if spell.index < 8 {
                     has_first_book = true;
@@ -9907,29 +10025,6 @@ fn convert_content_from(
                 ));
                 report.player_spell_parameter_overrides += 1;
                 report.player_spell_mapped_rows += 1;
-                if spell.index == 1 {
-                    *report
-                        .player_spell_behavior_gaps
-                        .entry("malediction-random-rider".to_owned())
-                        .or_default() += 1;
-                } else if spell.index == 5 {
-                    *report
-                        .player_spell_behavior_gaps
-                        .entry("random-resistance-duration".to_owned())
-                        .or_default() += 1;
-                } else if spell.index == 17 {
-                    for gap in [
-                        "invoke-spirits-actor-polymorph",
-                        "invoke-spirits-line-light",
-                        "invoke-spirits-earthquake",
-                        "invoke-spirits-destroy-area",
-                    ] {
-                        *report
-                            .player_spell_behavior_gaps
-                            .entry(gap.to_owned())
-                            .or_default() += 1;
-                    }
-                }
                 let mut override_ = serde_json::json!({
                     "abilityId": ability_id,
                     "minimumLevel": spell.level.max(entry.caster_profile.as_ref()?.minimum_level).max(1),
@@ -10016,7 +10111,7 @@ fn convert_content_from(
         report.player_abilities_imported += ability_ids.len();
         report.player_ability_books_imported += 1;
         ability_book_files.push((
-            "death-stench-of-death.json".to_owned(),
+            "death-black-prayers.json".to_owned(),
             death_first_book_json(&ability_ids),
         ));
     }
@@ -10025,7 +10120,7 @@ fn convert_content_from(
         report.player_abilities_imported += ability_ids.len();
         report.player_ability_books_imported += 1;
         ability_book_files.push((
-            "death-sepulchral-ways.json".to_owned(),
+            "death-black-mass.json".to_owned(),
             death_second_book_json(&ability_ids),
         ));
     }
@@ -10578,6 +10673,7 @@ pub fn import_content(source: &Path, output: &Path) -> Result<PathBuf, LegacyImp
                 registration,
                 character,
                 caster_profile: None,
+                pet_upkeep_divisor: 40,
                 source_found: false,
             }
         }));
@@ -13544,6 +13640,7 @@ class_t *mage_get_class(void)
     me.life = 95;
     me.base_hp = 0;
     me.exp = 130;
+    me.pets = 25;
     me.flags = CLASS_SENSE1_MED |
                CLASS_REGEN_MANA;
     me.birth = _birth;
@@ -13611,6 +13708,7 @@ S:2:0:6000
         assert_eq!(mage.character.extra_skills, [7, 15, 11, 0, 0, 0, 6, 7]);
         assert_eq!(mage.character.life, 95);
         assert_eq!(mage.character.exp, 130);
+        assert_eq!(mage.pet_upkeep_divisor, 25);
         assert_eq!(
             mage.character.flags,
             ["CLASS_SENSE1_MED", "CLASS_REGEN_MANA"]
@@ -13662,7 +13760,23 @@ S:2:0:6000
             proficiency_profiles,
             ..LegacyCharacterSources::default()
         };
-        let outcome = convert_content(&[], &[], &[], &[], &[], &characters);
+        let terrain = ["FLOOR", "GRANITE", "QUARTZ", "MAGMA"]
+            .into_iter()
+            .enumerate()
+            .map(|(index, tag)| LegacyTerrainEntry {
+                index: u32::try_from(index).expect("synthetic terrain index fits u32"),
+                tag: tag.to_owned(),
+                display_name: Some(tag.to_owned()),
+                glyph: Some(if tag == "FLOOR" { '.' } else { '#' }),
+                flags: if tag == "FLOOR" {
+                    vec!["FLOOR".to_owned(), "MOVE".to_owned()]
+                } else {
+                    Vec::new()
+                },
+                destroyed_tag: None,
+            })
+            .collect::<Vec<_>>();
+        let outcome = convert_content(&terrain, &[], &[], &[], &[], &characters);
         assert_eq!(outcome.report.classes_imported, 1);
         assert_eq!(outcome.report.magic_spell_profile_rows, 26);
         assert_eq!(outcome.report.realm_readability["life"], 1);
@@ -13692,9 +13806,17 @@ S:2:0:6000
                 .player_spell_behavior_gaps
                 .contains_key("monster-status-power-resolution")
         );
-        assert_eq!(
-            outcome.report.player_spell_behavior_gaps["random-resistance-duration"],
-            1
+        assert!(
+            !outcome
+                .report
+                .player_spell_behavior_gaps
+                .contains_key("random-resistance-duration")
+        );
+        assert!(
+            !outcome
+                .report
+                .player_spell_behavior_gaps
+                .contains_key("malediction-random-rider")
         );
         for gap in [
             "invoke-spirits-actor-polymorph",
@@ -13702,7 +13824,7 @@ S:2:0:6000
             "invoke-spirits-earthquake",
             "invoke-spirits-destroy-area",
         ] {
-            assert_eq!(outcome.report.player_spell_behavior_gaps[gap], 1);
+            assert!(!outcome.report.player_spell_behavior_gaps.contains_key(gap));
         }
         assert_eq!(
             outcome.report.class_proficiency_gaps["weapon-proficiency"],
@@ -13743,6 +13865,59 @@ S:2:0:6000
             serde_json::json!(["self"])
         );
         assert_eq!(detect_unlife["effect"]["subject"], "actor");
+        assert_eq!(detect_unlife["effect"]["radius"], 30);
+        let detect_evil = outcome
+            .ability_files
+            .iter()
+            .find(|(name, _)| name == "death-detect-evil.json")
+            .map(|(_, value)| value)
+            .expect("detect evil ability should be generated");
+        assert_eq!(detect_evil["effect"]["radius"], 30);
+        let malediction = outcome
+            .ability_files
+            .iter()
+            .find(|(name, _)| name == "death-malediction.json")
+            .map(|(_, value)| value)
+            .expect("Malediction ability should be generated");
+        assert_eq!(malediction["effect"]["type"], "malediction");
+        assert_eq!(malediction["effect"]["damageDice"], 3);
+        assert_eq!(malediction["effect"]["damageSides"], 4);
+        assert_eq!(
+            malediction["spellPowerFields"].as_array().map(Vec::len),
+            Some(3)
+        );
+        let poison_branding = outcome
+            .ability_files
+            .iter()
+            .find(|(name, _)| name == "death-poison-branding.json")
+            .map(|(_, value)| value)
+            .expect("poison branding ability should be generated");
+        assert_eq!(
+            poison_branding["target"]["modes"],
+            serde_json::json!(["item"])
+        );
+        assert_eq!(poison_branding["effect"]["type"], "brand-weapon");
+        assert_eq!(
+            poison_branding["effect"]["affixId"],
+            LEGACY_SLAYING_WEAPON_AFFIX_ID
+        );
+        assert_eq!(poison_branding["effect"]["brand"], "poison");
+        assert_eq!(poison_branding["effect"]["resistance"], "poison");
+        let vampiric_branding = outcome
+            .ability_files
+            .iter()
+            .find(|(name, _)| name == "death-vampiric-branding.json")
+            .map(|(_, value)| value)
+            .expect("vampiric branding ability should be generated");
+        assert_eq!(
+            vampiric_branding["target"]["modes"],
+            serde_json::json!(["item"])
+        );
+        assert_eq!(vampiric_branding["effect"]["type"], "brand-weapon");
+        assert_eq!(
+            vampiric_branding["effect"]["affixId"],
+            LEGACY_DEATH_WEAPON_AFFIX_ID
+        );
         let resistance = outcome
             .ability_files
             .iter()
@@ -13753,6 +13928,23 @@ S:2:0:6000
             resistance["effect"]["grantedResistances"]["poison"],
             "resistant"
         );
+        assert_eq!(resistance["effect"]["durationTicks"], 20);
+        assert_eq!(resistance["effect"]["durationDice"], 1);
+        assert_eq!(resistance["effect"]["durationSides"], 20);
+        assert_eq!(
+            resistance["spellPowerFields"],
+            serde_json::json!([
+                {"effectIndex": 0, "field": "status-duration-ticks"},
+                {"effectIndex": 0, "field": "status-duration-sides"}
+            ])
+        );
+        let vampiric_drain = outcome
+            .ability_files
+            .iter()
+            .find(|(name, _)| name == "death-vampiric-drain.json")
+            .map(|(_, value)| value)
+            .expect("vampiric drain ability should be generated");
+        assert_eq!(vampiric_drain["effect"]["feeds"], true);
         let control = outcome
             .ability_files
             .iter()
@@ -13788,10 +13980,43 @@ S:2:0:6000
             .expect("invoke spirits ability should be generated");
         assert_eq!(invoke_spirits["effect"]["type"], "random-choice");
         assert_eq!(
+            invoke_spirits["spellPowerFields"][0]["field"],
+            "random-choice-roll"
+        );
+        assert_eq!(
             invoke_spirits["effect"]["branches"]
                 .as_array()
                 .map(Vec::len),
             Some(23)
+        );
+        let invoke_branches = invoke_spirits["effect"]["branches"]
+            .as_array()
+            .expect("Invoke Spirits branches should be an array");
+        assert_eq!(invoke_branches[3]["effect"]["type"], "polymorph-target");
+        assert_eq!(invoke_branches[7]["effect"]["type"], "light-line");
+        assert_eq!(invoke_branches[18]["effect"]["type"], "earthquake");
+        assert_eq!(invoke_branches[19]["effect"]["type"], "area-destruction");
+        assert_eq!(invoke_branches[4]["effect"]["damageDice"], 3);
+        assert_eq!(
+            invoke_branches[4]["levelScaling"][0]["field"],
+            "damage-dice"
+        );
+        assert_eq!(invoke_branches[5]["effect"]["power"], 1);
+        assert_eq!(invoke_branches[12]["effect"]["damageBonus"], 74);
+        assert_eq!(invoke_branches[17]["effect"]["damageBonus"], 99);
+        assert_eq!(invoke_branches[20]["effect"]["power"], 50);
+        assert_eq!(invoke_branches[22]["effect"]["type"], "sequence");
+        assert_eq!(
+            invoke_branches[22]["effect"]["effects"]
+                .as_array()
+                .map(Vec::len),
+            Some(4)
+        );
+        assert_eq!(invoke_branches[22]["effect"]["effects"][3]["amount"], 300);
+        assert!(
+            !serde_json::to_string(invoke_branches)
+                .expect("Invoke Spirits branches should serialize")
+                .contains("no-op")
         );
         let vampirism_true = outcome
             .ability_files
@@ -14760,6 +14985,38 @@ A:1/1
     }
 
     #[test]
+    fn authoritative_unbrandable_weapons_receive_a_content_tag() {
+        for (sval, name, flags) in [
+            (32, "Poison Needle", Vec::new()),
+            (34, "Rune Sword", Vec::new()),
+            (1, "Sticky Blade", vec!["NO_REMOVE".to_owned()]),
+        ] {
+            let item = item_json(
+                &LegacyItemEntry {
+                    name: name.to_owned(),
+                    glyph: Some('|'),
+                    tval: 23,
+                    sval,
+                    weight_tenths_pound: 10,
+                    flags,
+                    ..LegacyItemEntry::default()
+                },
+                &kebab(name),
+                &LauncherAmmoIndex::default(),
+                None,
+                &mut ContentImportReport::default(),
+            );
+            assert!(
+                item["tags"]
+                    .as_array()
+                    .expect("item tags")
+                    .iter()
+                    .any(|tag| tag == "unbrandable")
+            );
+        }
+    }
+
+    #[test]
     fn demo_item_selection_can_keep_a_stable_id_distinct_from_the_source_name() {
         let selection: DemoItemSelection = serde_json::from_value(serde_json::json!({
             "schemaVersion": 1,
@@ -15385,6 +15642,7 @@ E:BERSERK:50:100
 N:3:(Test Aura)
 T:WEAPON
 W:50:*:6
+C:0:0:0:2
 F:SPELL_POWER
 
 N:4:of Test Warding
@@ -15414,12 +15672,14 @@ F:BRAND_VAMP | HOLD_LIFE
             &LegacyCharacterSources::default(),
         );
         assert_eq!(outcome.report.egos_total, 6);
-        // The aura ego has no expressible modifier surface: skipped with a
-        // reason while its flag still lands in the gap report.
-        assert_eq!(outcome.report.egos_imported, 5);
-        assert_eq!(outcome.affix_files.len(), 5);
-        assert_eq!(outcome.report.skip_reasons["ego-inexpressible"], 1);
-        assert_eq!(outcome.report.unmapped_ego_flags["SPELL_POWER"], 1);
+        assert_eq!(outcome.report.egos_imported, 6);
+        assert_eq!(outcome.affix_files.len(), 6);
+        assert!(
+            !outcome
+                .report
+                .unmapped_ego_flags
+                .contains_key("SPELL_POWER")
+        );
 
         let (name, testing) = &outcome.affix_files[0];
         assert_eq!(name, "testing.json");
@@ -15451,6 +15711,9 @@ F:BRAND_VAMP | HOLD_LIFE
                 .any(|tag| tag == "amulet")
         );
         assert_eq!(outcome.report.item_behavior_gaps["ego-activation"], 1);
+
+        let (_, aura) = &outcome.affix_files[2];
+        assert_eq!(aura["modifiers"]["spellPowerBonus"], 2);
         assert_eq!(outcome.report.not_applicable_item_flags["HIDE_TYPE"], 1);
         assert!(!outcome.report.unmapped_ego_flags.contains_key("STR"));
         assert!(!outcome.report.unmapped_ego_flags.contains_key("DEC_INT"));
@@ -15474,7 +15737,7 @@ F:BRAND_VAMP | HOLD_LIFE
 
         // A purely defensive ego used to be inexpressible; the flag fold now
         // carries its elemental defenses and status immunities.
-        let (name, warding) = &outcome.affix_files[2];
+        let (name, warding) = &outcome.affix_files[3];
         assert_eq!(name, "test-warding.json");
         assert!(warding.get("modifiers").is_none());
         assert_eq!(warding["resistances"]["fire"], "resistant");
@@ -15493,7 +15756,7 @@ F:BRAND_VAMP | HOLD_LIFE
         assert!(!outcome.report.unmapped_ego_flags.contains_key("VULN_LITE"));
         assert!(!outcome.report.unmapped_ego_flags.contains_key("FREE_ACT"));
 
-        let (_, dragonfire) = &outcome.affix_files[3];
+        let (_, dragonfire) = &outcome.affix_files[4];
         assert_eq!(dragonfire["slays"]["dragon"], "slay");
         assert_eq!(dragonfire["brands"][0], "fire");
         assert!(
@@ -15504,7 +15767,7 @@ F:BRAND_VAMP | HOLD_LIFE
         );
         assert!(!outcome.report.unmapped_ego_flags.contains_key("BRAND_FIRE"));
 
-        let (_, death) = &outcome.affix_files[4];
+        let (_, death) = &outcome.affix_files[5];
         assert_eq!(death["id"], LEGACY_DEATH_WEAPON_AFFIX_ID);
         assert!(
             death["passives"]
@@ -15522,6 +15785,57 @@ F:BRAND_VAMP | HOLD_LIFE
         );
         assert!(!outcome.report.unmapped_ego_flags.contains_key("BRAND_VAMP"));
         assert!(!outcome.report.unmapped_ego_flags.contains_key("HOLD_LIFE"));
+    }
+
+    #[test]
+    fn equipment_flags_map_spell_power_and_its_decrease() {
+        let flags = vec!["SPELL_POWER".to_owned()];
+        let mut modifiers = serde_json::Map::new();
+        let mut equipment = equipment_fold(&flags, 3);
+        fold_spell_power_modifier(&flags, 3, &mut modifiers, &mut equipment);
+        assert_eq!(modifiers["spellPowerBonus"], 3);
+        assert!(equipment.consumed.contains("SPELL_POWER"));
+
+        let flags = vec!["DEC_SPELL_POWER".to_owned()];
+        let mut modifiers = serde_json::Map::new();
+        let mut equipment = equipment_fold(&flags, 4);
+        fold_spell_power_modifier(&flags, 4, &mut modifiers, &mut equipment);
+        assert_eq!(modifiers["spellPowerBonus"], -4);
+        assert!(equipment.consumed.contains("DEC_SPELL_POWER"));
+    }
+
+    #[test]
+    fn protection_ego_materializes_uniform_armor_rolls() {
+        let egos = parse_e_info(
+            "N:50:of Protection\nT:BODY_ARMOR | SHIELD | CLOAK | HELMET | GLOVES | BOOTS\nW:0:30:2\nC:0:0:10:0\nF:IGNORE_ACID\n",
+        )
+        .expect("Protection ego should parse");
+        let outcome = convert_content(
+            &[],
+            &[],
+            &[],
+            &egos,
+            &[],
+            &LegacyCharacterSources::default(),
+        );
+        let protection = &outcome.affix_files[0].1;
+        assert_eq!(protection["id"], "rfb-legacy.affix.protection");
+        assert_eq!(protection["generationMaxLevel"], 30);
+        assert!(protection.get("modifiers").is_none());
+        let candidates = protection["rollGroups"][0]["candidates"]
+            .as_array()
+            .expect("Protection should retain armor candidates");
+        assert_eq!(candidates.len(), 10);
+        assert_eq!(
+            candidates
+                .iter()
+                .map(|candidate| candidate["properties"]["modifiers"]["defense"]
+                    .as_i64()
+                    .unwrap())
+                .collect::<Vec<_>>(),
+            (1..=10).collect::<Vec<_>>()
+        );
+        assert!(candidates.iter().all(|candidate| candidate["weight"] == 1));
     }
 
     #[test]
@@ -15553,29 +15867,39 @@ F:BRAND_VAMP | HOLD_LIFE
     }
 
     #[test]
-    fn death_third_physical_book_maps_to_black_channels() {
-        let item = LegacyItemEntry {
-            tval: DEATH_BOOK_TVAL,
-            sval: DEATH_THIRD_BOOK_SVAL,
-            ..LegacyItemEntry::default()
-        };
+    fn death_physical_books_use_the_master_tval_without_capturing_necromancy() {
         assert_eq!(
-            player_ability_book_for_item(&item),
-            Some(DEATH_THIRD_BOOK_ID)
+            death_first_book_json(&[])["nameKey"],
+            "ability-book-legacy-death-black-prayers-name"
         );
-    }
+        assert_eq!(
+            death_second_book_json(&[])["nameKey"],
+            "ability-book-legacy-death-black-mass-name"
+        );
 
-    #[test]
-    fn death_fourth_physical_book_maps_to_necronomicon() {
-        let item = LegacyItemEntry {
-            tval: DEATH_BOOK_TVAL,
-            sval: DEATH_FOURTH_BOOK_SVAL,
-            ..LegacyItemEntry::default()
-        };
-        assert_eq!(
-            player_ability_book_for_item(&item),
-            Some(DEATH_FOURTH_BOOK_ID)
-        );
+        for (sval, expected_book_id) in [
+            (DEATH_FIRST_BOOK_SVAL, DEATH_FIRST_BOOK_ID),
+            (DEATH_SECOND_BOOK_SVAL, DEATH_SECOND_BOOK_ID),
+            (DEATH_THIRD_BOOK_SVAL, DEATH_THIRD_BOOK_ID),
+            (DEATH_FOURTH_BOOK_SVAL, DEATH_FOURTH_BOOK_ID),
+        ] {
+            let death_book = LegacyItemEntry {
+                tval: DEATH_BOOK_TVAL,
+                sval,
+                ..LegacyItemEntry::default()
+            };
+            assert_eq!(
+                player_ability_book_for_item(&death_book),
+                Some(expected_book_id)
+            );
+
+            let necromancy_book = LegacyItemEntry {
+                tval: 100,
+                sval,
+                ..LegacyItemEntry::default()
+            };
+            assert_eq!(player_ability_book_for_item(&necromancy_book), None);
+        }
     }
 
     #[test]

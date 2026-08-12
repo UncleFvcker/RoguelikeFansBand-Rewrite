@@ -460,6 +460,7 @@ mod tests {
             .initialize(
                 "42",
                 "demo.build.warrior",
+                "Adventurer",
                 "2026-07-15T00:00:00Z".to_owned(),
             )
             .expect("session should initialize");
@@ -480,7 +481,8 @@ mod tests {
             .expect("replay should decode");
         let verification = verify_replay(
             &replay,
-            initial_game(42, "demo.build.warrior").expect("initial game should create"),
+            initial_game(42, "demo.build.warrior", "Adventurer")
+                .expect("initial game should create"),
         )
         .expect("exported replay should verify");
         let restored = AppState::default()
@@ -503,6 +505,7 @@ mod tests {
             .initialize(
                 "42",
                 "demo.build.warrior",
+                "Adventurer",
                 "2026-07-15T00:00:00Z".to_owned(),
             )
             .expect("session should initialize");
@@ -524,6 +527,7 @@ mod tests {
             .initialize(
                 "42",
                 "demo.build.warrior",
+                "Adventurer",
                 "2026-07-15T00:00:00Z".to_owned(),
             )
             .expect("session should initialize");
@@ -568,6 +572,7 @@ mod tests {
             .initialize(
                 "73",
                 "demo.build.warrior",
+                "Adventurer",
                 "2026-08-01T00:00:00Z".to_owned(),
             )
             .expect("Warrior session should initialize");
@@ -589,6 +594,7 @@ mod tests {
             .initialize(
                 "73",
                 "demo.build.warrior",
+                "Adventurer",
                 "2026-08-01T00:00:00Z".to_owned(),
             )
             .expect("Warrior session should initialize");
@@ -600,6 +606,7 @@ mod tests {
             .initialize(
                 "73",
                 "demo.build.warrior",
+                "Adventurer",
                 "2026-08-01T00:05:00Z".to_owned(),
             )
             .expect("same setup should replace the native session");
@@ -621,6 +628,7 @@ mod tests {
             .initialize(
                 "not-a-seed",
                 "demo.build.warrior",
+                "Adventurer",
                 "2026-08-01T00:00:00Z".to_owned(),
             )
             .expect_err("invalid seed should be rejected");
@@ -628,6 +636,7 @@ mod tests {
             .initialize(
                 "73",
                 "rfb-legacy.class.not-present",
+                "Adventurer",
                 "2026-08-01T00:00:00Z".to_owned(),
             )
             .expect_err("unknown build should be rejected");

@@ -3,6 +3,13 @@
 use super::terrain::TerrainChangeSource;
 use super::*;
 
+const DEATH_INVOKE_SPIRITS_ABILITY_ID: &str = "demo.ability.death-invoke-spirits";
+const DEATH_POISON_BRANDING_ABILITY_ID: &str = "demo.ability.death-poison-branding";
+const DEATH_RAISE_DEAD_ABILITY_ID: &str = "demo.ability.death-raise-dead";
+const DEATH_VAMPIRIC_DRAIN_ABILITY_ID: &str = "demo.ability.death-vampiric-drain";
+const DEATH_VAMPIRIC_BRANDING_ABILITY_ID: &str = "demo.ability.death-vampiric-branding";
+const DEATH_VAMPIRISM_TRUE_ABILITY_ID: &str = "demo.ability.death-vampirism-true";
+
 enum EarthquakeSource {
     Ability(String),
     Monster(String),
@@ -173,6 +180,7 @@ impl Game {
         {
             Self::apply_casting_profile_damage_bonus(profile, &mut ability, self.progress.level);
         }
+        Self::apply_player_spell_power(&mut ability, self.effective_player_spell_power_bonus());
         let unavailable_reason = match source {
             AbilitySourceDto::Mutation => {
                 let activation = mutation_activation
@@ -390,19 +398,34 @@ impl Game {
             resolution: resolution.clone(),
         });
 
-        if matches!(
+        let random_branch_index = if matches!(
             &ability.effect,
             AbilityEffectDefinition::RandomChoice { .. }
         ) {
-            self.select_player_random_choice_branch(
+            Some(self.select_player_random_choice_branch(
                 &mut ability,
                 &target,
                 &mut target_plan,
                 events,
-            );
-        }
+            ))
+        } else {
+            None
+        };
 
-        self.resolve_player_ability_effect(ability, target_plan, events, changed, removed_entities)
+        let result = self.resolve_player_ability_effect(
+            ability,
+            target_plan,
+            events,
+            changed,
+            removed_entities,
+        );
+        if result.is_ok()
+            && ability_id == DEATH_INVOKE_SPIRITS_ABILITY_ID
+            && random_branch_index == Some(0)
+        {
+            self.add_virtue(VirtueKindDto::Unlife, 1);
+        }
+        result
     }
 
     fn select_player_random_choice_branch(
@@ -411,7 +434,7 @@ impl Game {
         target: &TargetSelection,
         target_plan: &mut AbilityTargetPlan,
         events: &mut Vec<DomainEvent>,
-    ) {
+    ) -> u16 {
         let AbilityEffectDefinition::RandomChoice {
             roll_sides,
             level_bonus_divisor,
@@ -427,12 +450,31 @@ impl Game {
             .level
             .checked_div(level_bonus_divisor)
             .unwrap_or(0);
-        let roll = base_roll.saturating_add(level_bonus);
+        let mut roll = i32::try_from(spell_powered_ability_value(
+            ability,
+            0,
+            AbilitySpellPowerField::RandomChoiceRoll,
+            u64::from(base_roll.saturating_add(level_bonus)),
+        ))
+        .expect("spell-powered random ability roll must fit i32");
+        if ability.id == DEATH_INVOKE_SPIRITS_ABILITY_ID {
+            roll = self.adjust_roll_by_chance_virtue(roll);
+            if roll < 26 {
+                self.add_virtue(VirtueKindDto::Chance, 1);
+            }
+        }
         let (branch_index, branch) = branches
             .iter()
             .enumerate()
-            .find(|(_, branch)| roll <= branch.maximum_roll)
+            .find(|(_, branch)| roll <= i32::from(branch.maximum_roll))
+            .or_else(|| {
+                (ability.id == DEATH_INVOKE_SPIRITS_ABILITY_ID)
+                    .then(|| branches.iter().enumerate().next_back())
+                    .flatten()
+            })
             .expect("validated random ability branches must cover every roll");
+        let branch_index =
+            u16::try_from(branch_index).expect("validated random branch index must fit u16");
         events.push(DomainEvent::AbilityEffectsResolved {
             ability_id: ability.id.clone(),
             resolution: AbilityEffectsResolutionDto {
@@ -441,8 +483,7 @@ impl Game {
                 effects: vec![AbilityEffectResolutionDto::RandomChoice {
                     effect_index: 0,
                     roll,
-                    branch_index: u16::try_from(branch_index)
-                        .expect("validated random branch index must fit u16"),
+                    branch_index,
                     maximum_roll: branch.maximum_roll,
                 }],
             },
@@ -466,6 +507,7 @@ impl Game {
                     .expect("validated random branch must accept a self target");
             }
         }
+        branch_index
     }
 }
 
@@ -544,6 +586,14 @@ impl Game {
             (AbilityEffectDefinition::Earthquake { .. }, AbilityTargetPlan::SelfTarget) => {
                 self.resolve_player_earthquake_effect(&ability, events, changed, removed_entities)?;
             }
+            (AbilityEffectDefinition::AreaDestruction { .. }, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_player_area_destruction_effect(
+                    &ability,
+                    events,
+                    changed,
+                    removed_entities,
+                );
+            }
             (
                 AbilityEffectDefinition::SuppressMonsterReproduction { .. },
                 AbilityTargetPlan::SelfTarget,
@@ -565,6 +615,10 @@ impl Game {
             (AbilityEffectDefinition::PolymorphSelf, AbilityTargetPlan::SelfTarget) => {
                 self.resolve_player_polymorph_self_effect(&ability, events)
             }
+            (
+                AbilityEffectDefinition::PolymorphTarget,
+                AbilityTargetPlan::Projectile { path, .. },
+            ) => self.resolve_player_polymorph_target_effect(&ability, path, events, changed),
             (AbilityEffectDefinition::SwapPosition, AbilityTargetPlan::Projectile { path, .. }) => {
                 self.resolve_player_swap_position_effect(&ability, path, events, changed)
             }
@@ -645,6 +699,18 @@ impl Game {
                 )?;
             }
             (
+                AbilityEffectDefinition::Malediction { .. },
+                AbilityTargetPlan::Projectile { path, .. },
+            ) => {
+                self.resolve_player_malediction_effect(
+                    &ability,
+                    path,
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+            }
+            (
                 AbilityEffectDefinition::DeathRay { .. },
                 AbilityTargetPlan::Projectile { path, .. },
             ) => {
@@ -677,6 +743,18 @@ impl Game {
                 AbilityTargetPlan::Projectile { path, .. },
             ) => {
                 self.resolve_player_beam_damage_effect(
+                    &ability,
+                    path,
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+            }
+            (
+                AbilityEffectDefinition::LightLine { .. },
+                AbilityTargetPlan::Projectile { path, .. },
+            ) => {
+                self.resolve_player_light_line_effect(
                     &ability,
                     path,
                     events,
@@ -747,11 +825,8 @@ impl Game {
             (AbilityEffectDefinition::AggravateMonsters, AbilityTargetPlan::SelfTarget) => {
                 self.resolve_player_aggravate_monsters_effect(&ability, events, changed);
             }
-            (
-                AbilityEffectDefinition::EnchantEquippedWeapon { .. },
-                AbilityTargetPlan::SelfTarget,
-            ) => {
-                self.resolve_player_enchant_equipped_weapon_effect(&ability, events);
+            (AbilityEffectDefinition::BrandWeapon { .. }, AbilityTargetPlan::Item { item_id }) => {
+                self.resolve_player_brand_weapon_effect(&ability, &item_id, events);
             }
             (AbilityEffectDefinition::NoOp { .. }, _) => {
                 self.resolve_player_no_op_effect(&ability, events);
@@ -832,6 +907,13 @@ impl Game {
             .roll_damage(*damage_dice, *damage_sides)
             .saturating_add(i32::from(*damage_bonus))
             .max(0);
+        let raw_damage = i32::try_from(spell_powered_ability_value(
+            ability,
+            0,
+            AbilitySpellPowerField::FinalDamage,
+            u64::try_from(raw_damage).expect("ability damage must be non-negative"),
+        ))
+        .expect("spell-powered ability damage must fit i32");
         if self.try_reflect_player_bolt(
             index,
             &ability.id,
@@ -854,6 +936,255 @@ impl Game {
             removed_entities,
         )?;
         Ok(())
+    }
+
+    fn resolve_player_malediction_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        path: Vec<Position>,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        let AbilityEffectDefinition::Malediction {
+            damage_dice,
+            damage_sides,
+            damage_bonus,
+        } = ability.effect
+        else {
+            unreachable!("Malediction executor requires a Malediction effect");
+        };
+        let raw_damage = self
+            .roll_damage(damage_dice, damage_sides)
+            .saturating_add(i32::from(damage_bonus))
+            .max(0);
+        let raw_damage = i32::try_from(spell_powered_ability_value(
+            ability,
+            0,
+            AbilitySpellPowerField::FinalDamage,
+            u64::try_from(raw_damage).expect("Malediction damage must be non-negative"),
+        ))
+        .expect("spell-powered Malediction damage must fit i32");
+        let (trace, target_index) = self.trace_projectile_path(path.clone());
+        if let Some(target_index) = target_index {
+            self.resolve_ability_damage_to_entity(
+                target_index,
+                &ability.id,
+                DamageType::HellFire,
+                raw_damage,
+                trace.clone(),
+                events,
+                changed,
+                removed_entities,
+            )?;
+        } else {
+            events.push(DomainEvent::AbilityLanded {
+                ability_id: ability.id.clone(),
+                trace: trace.clone(),
+            });
+        }
+
+        let trigger_roll =
+            u16::try_from(self.rng.bounded(5) + 1).expect("Malediction trigger roll must fit u16");
+        let mut choices = vec![AbilityEffectResolutionDto::RandomChoice {
+            effect_index: 0,
+            roll: i32::from(trigger_roll),
+            branch_index: u16::from(trigger_roll == 1),
+            maximum_roll: 5,
+        }];
+        if trigger_roll != 1 {
+            events.push(DomainEvent::AbilityEffectsResolved {
+                ability_id: ability.id.clone(),
+                resolution: AbilityEffectsResolutionDto {
+                    target_entity_id: None,
+                    target_kind_id: None,
+                    effects: choices,
+                },
+                trace: Some(trace),
+            });
+            return Ok(());
+        }
+
+        let rider_roll = u16::try_from(self.rng.bounded(1_000) + 1)
+            .expect("Malediction rider roll must fit u16");
+        let branch_index = if rider_roll == 666 {
+            0
+        } else if rider_roll < 500 {
+            1
+        } else if rider_roll < 800 {
+            2
+        } else {
+            3
+        };
+        choices.push(AbilityEffectResolutionDto::RandomChoice {
+            effect_index: 0,
+            roll: i32::from(rider_roll),
+            branch_index,
+            maximum_roll: 1_000,
+        });
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: None,
+                target_kind_id: None,
+                effects: choices,
+            },
+            trace: Some(trace),
+        });
+
+        let level = self.progress.level;
+        if rider_roll == 666 {
+            let mut rider = ability.clone();
+            rider.effect = AbilityEffectDefinition::DeathRay {
+                power: u32::try_from(spell_powered_ability_value(
+                    ability,
+                    0,
+                    AbilitySpellPowerField::MaledictionDeathRayPower,
+                    u64::from(level) * 200,
+                ))
+                .expect("spell-powered Malediction death ray must fit u32"),
+            };
+            return self.resolve_player_death_ray_effect(
+                &rider,
+                path,
+                events,
+                changed,
+                removed_entities,
+            );
+        }
+
+        let (status_kind_id, duration_ticks, power) = if rider_roll < 500 {
+            let duration_sides = level / 2;
+            let duration_ticks = if duration_sides == 0 {
+                1
+            } else {
+                u32::try_from(self.rng.bounded(u64::from(duration_sides)) + 1)
+                    .expect("Malediction fear duration roll must fit u32")
+                    .saturating_mul(3)
+                    .saturating_add(1)
+            };
+            let power = u16::try_from(spell_powered_ability_value(
+                ability,
+                0,
+                AbilitySpellPowerField::MaledictionFearPower,
+                u64::from(level),
+            ))
+            .expect("spell-powered Malediction fear power must fit u16");
+            (STATUS_FEAR, duration_ticks, Some(power))
+        } else if rider_roll < 800 {
+            let power = (level / 2)
+                .max(u16::try_from(raw_damage.min(100)).expect("Malediction damage must fit u16"));
+            let duration_sides = power / 2;
+            let duration_ticks = u32::try_from(self.rng.bounded(u64::from(duration_sides)) + 1)
+                .expect("Malediction confusion duration roll must fit u32")
+                .saturating_mul(3)
+                .saturating_add(1);
+            (STATUS_CONFUSION, duration_ticks, Some(power))
+        } else {
+            (
+                STATUS_STUN,
+                u32::try_from(raw_damage).expect("Malediction damage must be non-negative"),
+                None,
+            )
+        };
+        self.resolve_player_malediction_status_rider(
+            &ability.id,
+            path,
+            status_kind_id,
+            duration_ticks,
+            power,
+            events,
+            changed,
+        );
+        Ok(())
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn resolve_player_malediction_status_rider(
+        &mut self,
+        ability_id: &str,
+        path: Vec<Position>,
+        status_kind_id: &str,
+        duration_ticks: u32,
+        power: Option<u16>,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let (trace, target_index) = self.trace_projectile_path(path);
+        let Some(target_index) = target_index else {
+            events.push(DomainEvent::AbilityLanded {
+                ability_id: ability_id.to_owned(),
+                trace: trace.clone(),
+            });
+            events.push(DomainEvent::AbilityEffectsResolved {
+                ability_id: ability_id.to_owned(),
+                resolution: AbilityEffectsResolutionDto {
+                    target_entity_id: None,
+                    target_kind_id: None,
+                    effects: vec![AbilityEffectResolutionDto::Skipped {
+                        effect_index: 0,
+                        reason: AbilityEffectSkipReasonDto::NoTarget,
+                    }],
+                },
+                trace: Some(trace),
+            });
+            return;
+        };
+
+        let target_entity_id = self.entities[target_index].id.clone();
+        let target_kind_id = self.entities[target_index].kind_id.clone();
+        let definition = self
+            .actor_runtime_definition(&self.entities[target_index])
+            .expect("Malediction target definition must remain available");
+        let target_level =
+            definition
+                .level
+                .saturating_add(if definition.tags.iter().any(|tag| tag == "unique") {
+                    3
+                } else {
+                    0
+                });
+        let immunities = if self.actor_has_status_immunity(target_index, status_kind_id) {
+            BTreeSet::from([status_kind_id.to_owned()])
+        } else {
+            BTreeSet::new()
+        };
+        let resistances = ResistanceProfile::default();
+        self.entities[target_index].alerted = true;
+        changed.insert(self.entities[target_index].position);
+        let resolution = apply_ability_status_effect(
+            &mut self.entities[target_index],
+            ability_id,
+            0,
+            status_kind_id,
+            1,
+            duration_ticks,
+            0,
+            0,
+            AbilityStatusStackingDefinition::Extend,
+            None,
+            power,
+            &BTreeMap::new(),
+            &BTreeSet::new(),
+            &StatModifiers::default(),
+            &EquipmentBonuses::default(),
+            &BTreeSet::new(),
+            None,
+            false,
+            100,
+            Some(target_level),
+            Some((&resistances, &immunities)),
+            &mut self.rng,
+        );
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability_id.to_owned(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: Some(target_entity_id),
+                target_kind_id: Some(target_kind_id),
+                effects: vec![resolution],
+            },
+            trace: Some(trace),
+        });
     }
 
     pub(super) fn resolve_player_area_damage_effect(
@@ -880,6 +1211,13 @@ impl Game {
             .roll_damage(*damage_dice, *damage_sides)
             .saturating_add(i32::from(*damage_bonus))
             .max(0);
+        let base_raw_damage = i32::try_from(spell_powered_ability_value(
+            ability,
+            0,
+            AbilitySpellPowerField::FinalDamage,
+            u64::try_from(base_raw_damage).expect("area damage must be non-negative"),
+        ))
+        .expect("spell-powered area damage must fit i32");
         self.resolve_player_area_damage_with_base(
             &ability.id,
             path,
@@ -969,6 +1307,13 @@ impl Game {
             .roll_damage(*damage_dice, *damage_sides)
             .saturating_add(i32::from(*damage_bonus))
             .max(0);
+        let base_raw_damage = i32::try_from(spell_powered_ability_value(
+            ability,
+            0,
+            AbilitySpellPowerField::FinalDamage,
+            u64::try_from(base_raw_damage).expect("beam damage must be non-negative"),
+        ))
+        .expect("spell-powered beam damage must fit i32");
         self.resolve_player_beam_damage_with_base(
             &ability.id,
             path,
@@ -1027,6 +1372,72 @@ impl Game {
         Ok(())
     }
 
+    fn resolve_player_light_line_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        path: Vec<Position>,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        let AbilityEffectDefinition::LightLine {
+            damage_dice,
+            damage_sides,
+        } = ability.effect
+        else {
+            unreachable!("light-line executor requires a light-line effect");
+        };
+        let (trace, _) = self.trace_projectile_path_with_actor_policy(path.clone(), false);
+        let affected_positions = trace.traversed.clone();
+        for position in &affected_positions {
+            if let Some(index) = self.index(*position) {
+                self.glow[index] = true;
+                changed.insert(*position);
+            }
+        }
+        let base_raw_damage = self.roll_damage(damage_dice, damage_sides).max(0);
+        let targets = self
+            .beam_damage_targets(&affected_positions)
+            .into_iter()
+            .filter(|entity_id| {
+                self.entities.iter().any(|entity| {
+                    entity.id == *entity_id
+                        && entity.resistances.level(DamageType::Light)
+                            == ResistanceLevel::Vulnerable
+                })
+            })
+            .collect::<Vec<_>>();
+        events.push(DomainEvent::AbilityBeamDamage {
+            ability_id: ability.id.clone(),
+            resolution: AbilityBeamDamageResolutionDto {
+                base_raw_damage,
+                damage_type: DamageType::Light.into(),
+                affected_positions,
+                target_count: u16::try_from(targets.len()).unwrap_or(u16::MAX),
+            },
+            trace: trace.clone(),
+        });
+        for entity_id in targets {
+            let Some(index) = self
+                .entities
+                .iter()
+                .position(|entity| entity.id == entity_id && entity.hp > 0)
+            else {
+                continue;
+            };
+            self.resolve_weak_light_damage_to_entity(
+                index,
+                &ability.id,
+                base_raw_damage,
+                trace.clone(),
+                events,
+                changed,
+                removed_entities,
+            )?;
+        }
+        Ok(())
+    }
+
     pub(super) fn resolve_player_bolt_or_beam_damage_effect(
         &mut self,
         ability: &AbilityDefinition,
@@ -1051,6 +1462,13 @@ impl Game {
             .roll_damage(*damage_dice, *damage_sides)
             .saturating_add(i32::from(*damage_bonus))
             .max(0);
+        let base_raw_damage = i32::try_from(spell_powered_ability_value(
+            ability,
+            0,
+            AbilitySpellPowerField::FinalDamage,
+            u64::try_from(base_raw_damage).expect("bolt or beam damage must be non-negative"),
+        ))
+        .expect("spell-powered bolt or beam damage must fit i32");
         if beam {
             let (trace, _) = self.trace_projectile_path_with_actor_policy(path, false);
             let affected_positions = trace.traversed.clone();
@@ -1374,6 +1792,13 @@ impl Game {
             .roll_damage(*damage_dice, *damage_sides)
             .saturating_add(i32::from(*damage_bonus))
             .max(0);
+        let base_raw_damage = i32::try_from(spell_powered_ability_value(
+            ability,
+            0,
+            AbilitySpellPowerField::FinalDamage,
+            u64::try_from(base_raw_damage).expect("cone damage must be non-negative"),
+        ))
+        .expect("spell-powered cone damage must fit i32");
         events.push(DomainEvent::AbilityConeDamage {
             ability_id: ability.id.clone(),
             resolution: AbilityConeDamageResolutionDto {
@@ -1448,6 +1873,13 @@ impl Game {
             .roll_damage(*damage_dice, *damage_sides)
             .saturating_add(i32::from(*damage_bonus))
             .max(0);
+        let base_raw_damage = i32::try_from(spell_powered_ability_value(
+            ability,
+            0,
+            AbilitySpellPowerField::FinalDamage,
+            u64::try_from(base_raw_damage).expect("visible damage must be non-negative"),
+        ))
+        .expect("spell-powered visible damage must fit i32");
         events.push(DomainEvent::AbilityVisibleDamage {
             ability_id: ability.id.clone(),
             resolution: AbilityVisibleDamageResolutionDto {
@@ -1628,6 +2060,10 @@ impl Game {
         else {
             unreachable!("drain life executor requires a drain life effect");
         };
+        if ability.id == DEATH_VAMPIRISM_TRUE_ABILITY_ID {
+            self.add_virtue(VirtueKindDto::Sacrifice, -1);
+            self.add_virtue(VirtueKindDto::Vitality, -1);
+        }
         for _ in 0..*repeat {
             let (trace, target_index) = self.trace_projectile_path(path.clone());
             let Some(target_index) = target_index else {
@@ -1675,6 +2111,13 @@ impl Game {
                 .roll_damage(*damage_dice, *damage_sides)
                 .saturating_add(i32::from(*damage_bonus))
                 .max(0);
+            let raw_damage = i32::try_from(spell_powered_ability_value(
+                ability,
+                0,
+                AbilitySpellPowerField::FinalDamage,
+                u64::try_from(raw_damage).expect("drain life damage must be non-negative"),
+            ))
+            .expect("spell-powered drain life damage must fit i32");
             let damage = self.resolve_ability_damage_to_entity(
                 target_index,
                 &ability.id,
@@ -1685,6 +2128,10 @@ impl Game {
                 changed,
                 removed_entities,
             )?;
+            if ability.id == DEATH_VAMPIRIC_DRAIN_ABILITY_ID && damage.applied > 0 {
+                self.add_virtue(VirtueKindDto::Sacrifice, -1);
+                self.add_virtue(VirtueKindDto::Vitality, -1);
+            }
             let requested = if !*feeds || self.nutrition < hunger::NUTRITION_FULL {
                 damage.applied.min(hp_before)
             } else {
@@ -2449,59 +2896,106 @@ impl Game {
         });
     }
 
-    pub(super) fn resolve_player_enchant_equipped_weapon_effect(
+    fn item_is_brandable_weapon(&self, item: &ItemInstance) -> bool {
+        (matches!(
+            &item.location,
+            ItemLocation::Inventory | ItemLocation::Equipped { .. }
+        ) || item.location == ItemLocation::Ground(self.player.position))
+            && item.affix_ids.is_empty()
+            && item.rolled_affixes.is_empty()
+            && self.content.item(&item.kind_id).is_some_and(|definition| {
+                definition.melee_profile.is_some()
+                    && !definition
+                        .tags
+                        .iter()
+                        .any(|tag| matches!(tag.as_str(), "artifact" | "unbrandable"))
+            })
+    }
+
+    pub(super) fn resolve_player_brand_weapon_effect(
         &mut self,
         ability: &AbilityDefinition,
+        item_id: &str,
         events: &mut Vec<DomainEvent>,
     ) {
-        let AbilityEffectDefinition::EnchantEquippedWeapon { affix_id } = &ability.effect else {
-            unreachable!("weapon enchantment executor requires a weapon enchantment effect");
+        let AbilityEffectDefinition::BrandWeapon {
+            affix_id,
+            brand,
+            resistance,
+        } = &ability.effect
+        else {
+            unreachable!("weapon branding executor requires a weapon branding effect");
         };
-        let weapon_index = self.items.iter().position(|item| {
-            let ItemLocation::Equipped { slot_id } = &item.location else {
-                return false;
-            };
-            self.body_slot_type(slot_id) == Some("weapon")
-                && self
-                    .content
-                    .item(&item.kind_id)
-                    .is_some_and(|definition| definition.melee_profile.is_some())
-        });
-        let (item_id, item_kind_id, added) = if let Some(index) = weapon_index {
-            let item_id = self.items[index].id.clone();
-            let item_kind_id = self.items[index].kind_id.clone();
-            let added = if self.items[index].affix_ids.contains(affix_id) {
-                false
-            } else {
-                self.items[index].affix_ids.push(affix_id.clone());
-                self.items[index].affix_ids.sort();
-                self.items[index].quality = ItemQualityDto::Fine;
-                let knowledge = self
-                    .item_property_knowledge
-                    .entry(item_id.clone())
-                    .or_default();
-                knowledge.discovered = true;
-                knowledge.appraised = true;
-                knowledge.identified = true;
-                knowledge.known_affix_ids.insert(affix_id.clone());
-                true
-            };
-            (item_id, item_kind_id, added)
-        } else {
-            (String::new(), String::new(), false)
-        };
+        let item_index = self
+            .items
+            .iter()
+            .position(|item| item.id == item_id)
+            .expect("planned branding target must remain available");
+        let item_kind_id = self.items[item_index].kind_id.clone();
+        let mut properties = AffixPropertyBundleDefinition::default();
+        if let Some(brand) = brand {
+            properties.brands.insert(*brand);
+        }
+        if let Some(resistance) = resistance {
+            properties
+                .resistances
+                .insert(*resistance, ActorResistanceLevel::Resistant);
+        }
+        let item = &mut self.items[item_index];
+        item.affix_ids.push(affix_id.clone());
+        item.affix_ids.sort();
+        if properties != AffixPropertyBundleDefinition::default() {
+            item.rolled_affixes.push(RolledAffixState {
+                affix_id: affix_id.clone(),
+                properties,
+            });
+            item.rolled_affixes
+                .sort_by(|left, right| left.affix_id.cmp(&right.affix_id));
+        }
+        if item.quality == ItemQualityDto::Ordinary {
+            item.quality = ItemQualityDto::Fine;
+        }
+        item.origin_kind = Some(ItemOriginKindDto::PlayerMade);
+        item.discount_percent = 99;
+
+        let enchantment_attempts = u16::try_from(self.rng.bounded(3) + 4)
+            .expect("branding enchantment attempts must fit u16");
+        let enchantment = self.enchant_item_instance(
+            item_id,
+            ItemEnchantmentRequest::new(enchantment_attempts, enchantment_attempts, 0),
+        );
+        if matches!(
+            ability.id.as_str(),
+            DEATH_POISON_BRANDING_ABILITY_ID | DEATH_VAMPIRIC_BRANDING_ABILITY_ID
+        ) {
+            self.add_virtue(VirtueKindDto::Enchantment, 2);
+        }
+        self.identify_item_instance(item_id, ItemIdentificationRequest::new(true));
         self.clamp_player_hp_to_effective_max();
         events.push(DomainEvent::AbilityEffectsResolved {
             ability_id: ability.id.clone(),
             resolution: AbilityEffectsResolutionDto {
                 target_entity_id: None,
                 target_kind_id: None,
-                effects: vec![AbilityEffectResolutionDto::EnchantEquippedWeapon {
+                effects: vec![AbilityEffectResolutionDto::BrandWeapon {
                     effect_index: 0,
-                    item_id,
+                    item_id: item_id.to_owned(),
                     item_kind_id,
                     affix_id: affix_id.clone(),
-                    added,
+                    brand: brand.map(weapon_brand_dto),
+                    resistance: resistance.map(DamageType::from).map(Into::into),
+                    to_hit: ItemEnchantmentComponentResolutionDto {
+                        attempts: enchantment.to_hit.attempts,
+                        successes: enchantment.to_hit.successes,
+                        before: enchantment.to_hit.before,
+                        after: enchantment.to_hit.after,
+                    },
+                    to_damage: ItemEnchantmentComponentResolutionDto {
+                        attempts: enchantment.to_damage.attempts,
+                        successes: enchantment.to_damage.successes,
+                        before: enchantment.to_damage.before,
+                        after: enchantment.to_damage.after,
+                    },
                 }],
             },
             trace: None,
@@ -3258,6 +3752,68 @@ impl Game {
         )
     }
 
+    fn resolve_player_area_destruction_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) {
+        let AbilityEffectDefinition::AreaDestruction {
+            minimum_radius,
+            maximum_radius,
+            ref floor_terrain_id,
+            ref wall_terrain_id,
+            ref quartz_terrain_id,
+            ref magma_terrain_id,
+        } = ability.effect
+        else {
+            unreachable!("area-destruction executor requires an area-destruction effect");
+        };
+        let (
+            protected_floor,
+            affected_positions,
+            removed_entity_count,
+            removed_items,
+            removed_gold_piles,
+        ) = if self.area_destruction_allowed() {
+            let plan = self.plan_area_destruction(
+                minimum_radius,
+                maximum_radius,
+                floor_terrain_id,
+                wall_terrain_id,
+                quartz_terrain_id,
+                magma_terrain_id,
+            );
+            let outcome = self.apply_area_destruction_plan(plan, events, changed, removed_entities);
+            (
+                false,
+                outcome.affected_positions,
+                outcome.removed_entities,
+                outcome.removed_items,
+                outcome.removed_gold_piles,
+            )
+        } else {
+            (true, Vec::new(), 0, 0, 0)
+        };
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: None,
+                target_kind_id: None,
+                effects: vec![AbilityEffectResolutionDto::AreaDestruction {
+                    effect_index: 0,
+                    protected_floor,
+                    affected_positions,
+                    removed_entities: u32::try_from(removed_entity_count).unwrap_or(u32::MAX),
+                    removed_items: u32::try_from(removed_items).unwrap_or(u32::MAX),
+                    removed_gold_piles: u32::try_from(removed_gold_piles).unwrap_or(u32::MAX),
+                }],
+            },
+            trace: None,
+        });
+    }
+
     pub(super) fn resolve_monster_shatter_earthquake(
         &mut self,
         center: Position,
@@ -3637,6 +4193,52 @@ impl Game {
             trace: None,
         });
         Ok(())
+    }
+
+    fn resolve_player_polymorph_target_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        path: Vec<Position>,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let (trace, target_index) = self.trace_projectile_path(path);
+        let Some(target_index) = target_index else {
+            events.push(DomainEvent::AbilityLanded {
+                ability_id: ability.id.clone(),
+                trace: trace.clone(),
+            });
+            events.push(DomainEvent::AbilityEffectsResolved {
+                ability_id: ability.id.clone(),
+                resolution: AbilityEffectsResolutionDto {
+                    target_entity_id: None,
+                    target_kind_id: None,
+                    effects: vec![AbilityEffectResolutionDto::Skipped {
+                        effect_index: 0,
+                        reason: AbilityEffectSkipReasonDto::NoTarget,
+                    }],
+                },
+                trace: Some(trace),
+            });
+            return;
+        };
+        let target_entity_id = self.entities[target_index].id.clone();
+        let target_kind_id = self.entities[target_index].kind_id.clone();
+        let resolution = self.resolve_actor_polymorph_target(
+            target_index,
+            u32::from(self.progress.level),
+            0,
+            changed,
+        );
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: Some(target_entity_id),
+                target_kind_id: Some(target_kind_id),
+                effects: vec![resolution],
+            },
+            trace: Some(trace),
+        });
     }
 
     pub(super) fn resolve_player_polymorph_self_effect(
@@ -4103,6 +4705,9 @@ impl Game {
             positions,
             changed,
         );
+        if ability.id == DEATH_RAISE_DEAD_ABILITY_ID && !resolution.entity_ids.is_empty() {
+            self.add_virtue(VirtueKindDto::Unlife, 1);
+        }
         events.push(DomainEvent::AbilitySummoned {
             ability_id: ability.id.clone(),
             resolution,
@@ -4474,8 +5079,7 @@ impl Game {
             | AbilityEffectDefinition::DrainResource { .. }
             | AbilityEffectDefinition::Amnesia
             | AbilityEffectDefinition::DarkenRoom
-            | AbilityEffectDefinition::JumpDamage { .. }
-            | AbilityEffectDefinition::PolymorphTarget => None,
+            | AbilityEffectDefinition::JumpDamage { .. } => None,
             AbilityEffectDefinition::Teleport => {
                 let TargetSelection::Position { position } = target else {
                     return None;
@@ -4689,6 +5293,7 @@ impl Game {
             }
             AbilityEffectDefinition::ResistElements { .. }
             | AbilityEffectDefinition::ReportMagic
+            | AbilityEffectDefinition::AreaDestruction { .. }
             | AbilityEffectDefinition::SuppressMonsterReproduction { .. }
             | AbilityEffectDefinition::PolymorphSelf => {
                 (matches!(target, TargetSelection::SelfTarget)
@@ -4842,6 +5447,17 @@ impl Game {
                     item_id: item_id.clone(),
                 })
             }
+            AbilityEffectDefinition::BrandWeapon { .. } => {
+                let TargetSelection::Item { item_id } = target else {
+                    return None;
+                };
+                self.items
+                    .iter()
+                    .find(|item| item.id == *item_id && self.item_is_brandable_weapon(item))
+                    .map(|_| AbilityTargetPlan::Item {
+                        item_id: item_id.clone(),
+                    })
+            }
             AbilityEffectDefinition::Detect { .. } => {
                 (matches!(target, TargetSelection::SelfTarget)
                     && ability
@@ -4906,7 +5522,6 @@ impl Game {
             AbilityEffectDefinition::VisibleDamage { .. }
             | AbilityEffectDefinition::VisibleApplyStatus { .. }
             | AbilityEffectDefinition::AggravateMonsters
-            | AbilityEffectDefinition::EnchantEquippedWeapon { .. }
             | AbilityEffectDefinition::NoOp { .. } => {
                 (matches!(target, TargetSelection::SelfTarget)
                     && ability
@@ -4922,7 +5537,10 @@ impl Game {
                         stop_at_actor: true,
                     })
             }
-            AbilityEffectDefinition::Damage { .. } | AbilityEffectDefinition::DeathRay { .. } => {
+            AbilityEffectDefinition::Damage { .. }
+            | AbilityEffectDefinition::Malediction { .. }
+            | AbilityEffectDefinition::DeathRay { .. }
+            | AbilityEffectDefinition::PolymorphTarget => {
                 self.ability_path(ability, target)
                     .map(|path| AbilityTargetPlan::Projectile {
                         path,
@@ -4949,6 +5567,7 @@ impl Game {
                 }
             }
             AbilityEffectDefinition::BeamDamage { .. }
+            | AbilityEffectDefinition::LightLine { .. }
             | AbilityEffectDefinition::BoltOrBeamDamage { .. } => self
                 .beam_ability_path(ability, target)
                 .map(|path| AbilityTargetPlan::Projectile {

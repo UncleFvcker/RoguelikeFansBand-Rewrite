@@ -21,6 +21,9 @@
       "divisor": 2
     }
   ],
+  "spellPowerFields": [
+    { "effectIndex": 0, "field": "final-damage" }
+  ],
   "tags": [
     "death",
     "poison",

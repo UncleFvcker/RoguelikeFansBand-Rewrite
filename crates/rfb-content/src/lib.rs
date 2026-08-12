@@ -19,8 +19,8 @@ pub use ability_programs::{
 };
 pub use artifact::{CompiledArtifact, decode_content, encode_content, read_compiled_file};
 pub use catalog::{CompiledContentV1, ContentCatalog, ContentLockV1, ContentSummary};
-pub(crate) use definitions::valid_ability_level_scaling;
 pub use definitions::*;
+pub(crate) use definitions::{valid_ability_level_scaling, valid_ability_spell_power};
 pub use effect_programs::{
     EffectProgramDefinition, EffectProgramInputDefinition, EffectProgramStepDefinition,
 };

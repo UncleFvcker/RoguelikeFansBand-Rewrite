@@ -26,6 +26,10 @@
       "divisor": 10
     }
   ],
+  "spellPowerFields": [
+    { "effectIndex": 0, "field": "final-damage" },
+    { "effectIndex": 0, "field": "radius" }
+  ],
   "tags": [
     "area",
     "death",

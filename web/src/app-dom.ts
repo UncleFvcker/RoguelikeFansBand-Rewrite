@@ -69,6 +69,7 @@ export interface AppDom {
   readonly weaponProficiencyLauncherList: HTMLUListElement;
   readonly miningProficiencyList: HTMLUListElement;
   readonly materialList: HTMLUListElement;
+  readonly virtueList: HTMLUListElement;
   readonly mutationList: HTMLUListElement;
   readonly resourceList: HTMLUListElement;
   readonly abilityList: HTMLUListElement;
@@ -77,6 +78,7 @@ export interface AppDom {
   readonly nearbyList: HTMLUListElement;
   readonly summonCommandStatus: HTMLElement;
   readonly summonCommandButtons: Readonly<Record<SummonCommandModeDto, HTMLButtonElement>>;
+  readonly dismissPets: HTMLButtonElement;
   readonly taskLogList: HTMLUListElement;
   readonly campaignStatusValue: HTMLElement;
   readonly campaignScoreValue: HTMLElement;
@@ -189,6 +191,7 @@ export function createAppDom(document: DocumentLookup): Readonly<AppDom> {
     ),
     miningProficiencyList: element<HTMLUListElement>(document, "mining-proficiency-list"),
     materialList: element<HTMLUListElement>(document, "material-list"),
+    virtueList: element<HTMLUListElement>(document, "virtue-list"),
     mutationList: element<HTMLUListElement>(document, "mutation-list"),
     resourceList: element<HTMLUListElement>(document, "resource-list"),
     abilityList: element<HTMLUListElement>(document, "ability-list"),
@@ -202,6 +205,7 @@ export function createAppDom(document: DocumentLookup): Readonly<AppDom> {
       "keep-distance": element<HTMLButtonElement>(document, "summon-command-keep-distance"),
       guard: element<HTMLButtonElement>(document, "summon-command-guard"),
     }),
+    dismissPets: element<HTMLButtonElement>(document, "dismiss-pets"),
     taskLogList: element<HTMLUListElement>(document, "task-log-list"),
     campaignStatusValue: element<HTMLElement>(document, "campaign-status-value"),
     campaignScoreValue: element<HTMLElement>(document, "campaign-score-value"),

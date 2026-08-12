@@ -90,6 +90,7 @@ impl Game {
         &mut self,
         resting: bool,
         local_floor_active: bool,
+        pet_neglect_allowed: bool,
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
@@ -123,6 +124,7 @@ impl Game {
             }
             if self.finish_world_tick_after_periodic_mutations(
                 local_floor_active,
+                pet_neglect_allowed,
                 &visible_monster_auras_before_tick,
                 events,
                 changed,
@@ -138,6 +140,7 @@ impl Game {
     fn finish_world_tick_after_periodic_mutations(
         &mut self,
         local_floor_active: bool,
+        pet_neglect_allowed: bool,
         visible_monster_auras_before_tick: &BTreeSet<String>,
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
@@ -159,7 +162,12 @@ impl Game {
                 events,
                 changed,
             );
-            self.process_monster_energy_pulse(events, changed, removed_entities)?;
+            self.process_monster_energy_pulse(
+                pet_neglect_allowed,
+                events,
+                changed,
+                removed_entities,
+            )?;
         }
         if self.player_is_dead() {
             return Ok(true);
@@ -200,6 +208,7 @@ impl Game {
         let visible_monster_auras = self.visible_monster_aura_entity_ids();
         if self.finish_world_tick_after_periodic_mutations(
             local_floor_active,
+            self.pet_upkeep().unsafe_warning(),
             &visible_monster_auras,
             events,
             changed,
@@ -210,6 +219,7 @@ impl Game {
             self.advance_until_player_ready(
                 pending.resting,
                 local_floor_active,
+                self.pet_upkeep().unsafe_warning(),
                 events,
                 changed,
                 removed_entities,
@@ -530,6 +540,7 @@ impl Game {
 
     pub(super) fn process_monster_energy_pulse(
         &mut self,
+        pet_neglect_allowed: bool,
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
@@ -569,6 +580,15 @@ impl Game {
                 continue;
             }
             spend_energy(&mut self.entities[index].energy_need, STANDARD_ACTION_COST);
+            if self.resolve_neglected_pet(
+                index,
+                pet_neglect_allowed,
+                events,
+                changed,
+                removed_entities,
+            ) {
+                continue;
+            }
             self.try_trump_blink(index, events, changed);
             if self.try_quantum_turn(index, events, changed, removed_entities)? {
                 continue;

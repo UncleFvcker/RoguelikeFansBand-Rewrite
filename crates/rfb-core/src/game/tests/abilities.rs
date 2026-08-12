@@ -2,6 +2,10 @@
 use super::support::*;
 use super::*;
 
+fn set_test_virtue(game: &mut Game, slot: usize, kind: VirtueKindDto, value: i16) {
+    game.virtues[slot] = VirtueDto { kind, value };
+}
+
 #[test]
 fn anti_magic_status_blocks_learned_spells_without_spending_resources() {
     let mut game = prepare_death_caster(7, 40, "demo.ability.death-berserk");
@@ -326,6 +330,374 @@ fn death_abilities_materialize_player_level_scaling_in_projection() {
 }
 
 #[test]
+fn spell_power_uses_shared_formula_and_modifier_sources_in_projection() {
+    assert_eq!(spell_power_value(100, -20), 0);
+    assert_eq!(spell_power_value(0, 7), 0);
+    assert_eq!(spell_power_value(10, 1), 10);
+    assert_eq!(spell_power_value(100, 7), 153);
+
+    let mut game = prepare_death_caster(7, 20, "demo.ability.death-stinking-cloud");
+    let equipped = game
+        .items
+        .iter_mut()
+        .find(|item| matches!(item.location, ItemLocation::Equipped { .. }))
+        .expect("test caster should start with equipment");
+    equipped.rolled_affixes.push(RolledAffixState {
+        affix_id: "test.affix.spell-power".to_owned(),
+        properties: AffixPropertyBundleDefinition {
+            modifiers: StatModifiers {
+                spell_power_bonus: 3,
+                ..StatModifiers::default()
+            },
+            ..AffixPropertyBundleDefinition::default()
+        },
+    });
+    game.player.statuses.push(StatusInstance {
+        kind_id: "test.status.blood-rite".to_owned(),
+        intensity: 1,
+        remaining_ticks: 10,
+        source_id: Some("test.ability.blood-rite".to_owned()),
+        granted_modifiers: StatModifiersDto {
+            spell_power_bonus: 7,
+            ..StatModifiersDto::default()
+        },
+        granted_resistances: BTreeMap::new(),
+        granted_brands: BTreeSet::new(),
+        granted_equipment_bonuses: EquipmentBonusesDto::default(),
+        granted_status_immunities: BTreeSet::new(),
+        granted_race_id: None,
+        grants_wall_passage: false,
+        incoming_damage_percent: 100,
+    });
+
+    let abilities = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .map(|ability| (ability.id.clone(), ability))
+        .collect::<BTreeMap<_, _>>();
+    assert!(matches!(
+        abilities["demo.ability.death-stinking-cloud"]
+            .effects
+            .as_slice(),
+        [AbilityEffectSpecDto::AreaDamage {
+            damage_bonus: 19,
+            final_damage_spell_power_bonus: Some(10),
+            ..
+        }]
+    ));
+    assert!(matches!(
+        abilities["demo.ability.death-necromantic-resistance"]
+            .effects
+            .as_slice(),
+        [AbilityEffectSpecDto::ApplyStatus {
+            duration_ticks: 35,
+            duration_sides: 35,
+            ..
+        }]
+    ));
+    assert!(matches!(
+        abilities["demo.ability.death-vampiric-drain"]
+            .effects
+            .as_slice(),
+        [AbilityEffectSpecDto::DrainLife {
+            damage_sides: 70,
+            damage_bonus: 70,
+            ..
+        }]
+    ));
+    assert!(matches!(
+        abilities["demo.ability.death-invoke-spirits"]
+            .effects
+            .as_slice(),
+        [AbilityEffectSpecDto::RandomChoice {
+            roll_spell_power_bonus: Some(10),
+            ..
+        }]
+    ));
+
+    game.debug_set_ability_casts_succeed(true);
+    game.player.position = Position { x: 3, y: 3 };
+    for position in [Position { x: 3, y: 3 }, Position { x: 4, y: 3 }] {
+        replace_terrain(&mut game, position, "demo.terrain.floor");
+    }
+    game.entities.push(actor_from_runtime_spawn(
+        "test.actor.spell-power-target",
+        "demo.actor.cinder-adept",
+        Position { x: 4, y: 3 },
+        100_000,
+        100,
+        100,
+        true,
+    ));
+    let mut events = Vec::new();
+    game.resolve_player_ability(
+        "demo.ability.death-stinking-cloud",
+        TargetSelection::Entity {
+            entity_id: "test.actor.spell-power-target".to_owned(),
+        },
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("spell-powered stinking cloud should resolve");
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::AbilityAreaDamage { resolution, .. }
+            if resolution.base_raw_damage == 35
+    )));
+}
+
+#[test]
+fn malediction_resolves_all_riders_and_skips_the_d1000_when_not_triggered() {
+    #[derive(Clone, Copy)]
+    enum ExpectedRider {
+        None,
+        DeathRay,
+        Fear,
+        Confusion,
+        Stun,
+    }
+
+    let seed_for = |expected| {
+        (0..100_000)
+            .find(|seed| {
+                let mut rng = RfbRng::seeded(*seed);
+                rng.bounded(100);
+                for _ in 0..4 {
+                    rng.bounded(4);
+                }
+                let trigger_roll = rng.bounded(5) + 1;
+                if matches!(expected, ExpectedRider::None) {
+                    return trigger_roll != 1 && rng.draw_counter == 6;
+                }
+                if trigger_roll != 1 {
+                    return false;
+                }
+                let rider_roll = rng.bounded(1_000) + 1;
+                match expected {
+                    ExpectedRider::None => false,
+                    ExpectedRider::DeathRay => rider_roll == 666,
+                    ExpectedRider::Fear => rider_roll < 500 && rider_roll != 666,
+                    ExpectedRider::Confusion => (500..800).contains(&rider_roll),
+                    ExpectedRider::Stun => rider_roll >= 800,
+                }
+            })
+            .expect("bounded seed search should cover every Malediction branch")
+    };
+
+    for expected in [
+        ExpectedRider::None,
+        ExpectedRider::DeathRay,
+        ExpectedRider::Fear,
+        ExpectedRider::Confusion,
+        ExpectedRider::Stun,
+    ] {
+        let seed = seed_for(expected);
+        let mut game = prepare_death_caster(0, 10, "demo.ability.death-malediction");
+        game.debug_set_ability_casts_succeed(true);
+        game.player.position = Position { x: 3, y: 3 };
+        for position in [Position { x: 3, y: 3 }, Position { x: 4, y: 3 }] {
+            replace_terrain(&mut game, position, "demo.terrain.floor");
+        }
+        let target_id = "test.actor.malediction-target";
+        game.entities.push(actor_from_runtime_spawn(
+            target_id,
+            "demo.actor.cinder-adept",
+            Position { x: 4, y: 3 },
+            100_000,
+            100,
+            100,
+            true,
+        ));
+        game.rng = RfbRng::seeded(seed);
+        let mut events = Vec::new();
+
+        game.resolve_player_ability(
+            "demo.ability.death-malediction",
+            TargetSelection::Entity {
+                entity_id: target_id.to_owned(),
+            },
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("Malediction should resolve");
+
+        let raw_damage = events
+            .iter()
+            .find_map(|event| match event {
+                DomainEvent::AbilityHit { damage, .. } => Some(damage.raw),
+                _ => None,
+            })
+            .expect("Malediction should apply its primary hell-fire damage");
+        let random_choices = events
+            .iter()
+            .filter_map(|event| match event {
+                DomainEvent::AbilityEffectsResolved { resolution, .. } => {
+                    Some(resolution.effects.iter().filter_map(|effect| match effect {
+                        AbilityEffectResolutionDto::RandomChoice {
+                            roll,
+                            branch_index,
+                            maximum_roll,
+                            ..
+                        } => Some((*roll, *branch_index, *maximum_roll)),
+                        _ => None,
+                    }))
+                }
+                _ => None,
+            })
+            .flatten()
+            .collect::<Vec<_>>();
+
+        if matches!(expected, ExpectedRider::None) {
+            assert_eq!(game.rng_draw_counter(), 6);
+            assert_eq!(random_choices.len(), 1);
+            assert_ne!(random_choices[0].0, 1);
+            continue;
+        }
+
+        assert_eq!(random_choices.len(), 2);
+        assert_eq!(random_choices[0], (1, 1, 5));
+        assert_eq!(random_choices[1].2, 1_000);
+        let rider_resolution = events.iter().find_map(|event| match event {
+            DomainEvent::AbilityEffectsResolved { resolution, .. } => resolution
+                .effects
+                .iter()
+                .find(|effect| !matches!(effect, AbilityEffectResolutionDto::RandomChoice { .. })),
+            _ => None,
+        });
+        match expected {
+            ExpectedRider::None => unreachable!(),
+            ExpectedRider::DeathRay => assert!(matches!(
+                rider_resolution,
+                Some(AbilityEffectResolutionDto::DeathRay { power: 2_000, .. })
+            )),
+            ExpectedRider::Fear => assert!(matches!(
+                rider_resolution,
+                Some(AbilityEffectResolutionDto::ApplyStatus {
+                    status_kind_id,
+                    power: Some(10),
+                    ..
+                }) if status_kind_id == STATUS_FEAR
+            )),
+            ExpectedRider::Confusion => {
+                let expected_power = 5_u16
+                    .max(u16::try_from(raw_damage.min(100)).expect("damage power should fit u16"));
+                assert!(matches!(
+                    rider_resolution,
+                    Some(AbilityEffectResolutionDto::ApplyStatus {
+                        status_kind_id,
+                        power: Some(power),
+                        ..
+                    }) if status_kind_id == STATUS_CONFUSION && *power == expected_power
+                ));
+            }
+            ExpectedRider::Stun => assert!(matches!(
+                rider_resolution,
+                Some(AbilityEffectResolutionDto::ApplyStatus {
+                    status_kind_id,
+                    requested_duration_ticks,
+                    power: None,
+                    ..
+                }) if status_kind_id == STATUS_STUN
+                    && *requested_duration_ticks == u32::try_from(raw_damage).unwrap()
+            )),
+        }
+    }
+}
+
+#[test]
+fn corrected_death_spells_project_authoritative_values_at_levels_one_twenty_and_fifty() {
+    for level in [1, 20, 50] {
+        let mut game = test_caster_game(0);
+        game.progress.level = level;
+        let abilities = game
+            .snapshot()
+            .player
+            .abilities
+            .into_iter()
+            .map(|ability| (ability.id.clone(), ability))
+            .collect::<BTreeMap<_, _>>();
+
+        for ability_id in [
+            "demo.ability.death-detect-unlife",
+            "demo.ability.death-detect-evil",
+        ] {
+            assert!(matches!(
+                abilities[ability_id].effects.as_slice(),
+                [AbilityEffectSpecDto::Detect { radius: 30, .. }]
+            ));
+        }
+        assert!(matches!(
+            abilities["demo.ability.death-necromantic-resistance"]
+                .effects
+                .as_slice(),
+            [AbilityEffectSpecDto::ApplyStatus {
+                duration_ticks: 20,
+                duration_dice: 1,
+                duration_sides: 20,
+                ..
+            }]
+        ));
+        assert!(matches!(
+            abilities["demo.ability.death-vampiric-drain"]
+                .effects
+                .as_slice(),
+            [AbilityEffectSpecDto::DrainLife {
+                damage_sides,
+                damage_bonus,
+                feeds: true,
+                ..
+            }] if *damage_sides == level * 2 && *damage_bonus == level * 2
+        ));
+    }
+}
+
+#[test]
+fn death_vampiric_drain_heals_and_feeds_up_to_the_original_caps() {
+    let mut game = prepare_death_caster(0, 50, "demo.ability.death-vampiric-drain");
+    set_test_virtue(&mut game, 0, VirtueKindDto::Sacrifice, 0);
+    set_test_virtue(&mut game, 1, VirtueKindDto::Vitality, 0);
+    game.debug_set_ability_casts_succeed(true);
+    let target = Position {
+        x: game.player.position.x + 1,
+        y: game.player.position.y,
+    };
+    replace_terrain(&mut game, target, "demo.terrain.floor");
+    game.entities.push(actor_from_runtime_spawn(
+        "test.actor.death-vampiric-drain",
+        "demo.actor.gnome-mage",
+        target,
+        500,
+        100,
+        100,
+        true,
+    ));
+    let maximum_hp = game.effective_player_max_hp();
+    game.player.hp = maximum_hp - 1;
+    game.nutrition = rfb_protocol::PLAYER_NUTRITION_BIRTH;
+
+    game.resolve_player_ability(
+        "demo.ability.death-vampiric-drain",
+        TargetSelection::Direction {
+            direction: Direction::East,
+        },
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("vampiric drain should resolve");
+
+    assert!(game.entities[0].hp < 500);
+    assert_eq!(game.player.hp, maximum_hp);
+    assert_eq!(game.nutrition, rfb_protocol::PLAYER_NUTRITION_MAXIMUM - 1);
+    assert_eq!(game.virtue_current(VirtueKindDto::Sacrifice), -1);
+    assert_eq!(game.virtue_current(VirtueKindDto::Vitality), -1);
+}
+
+#[test]
 fn death_second_book_materializes_original_mage_scaling_and_beam_profile() {
     let mut game = test_caster_game(0);
     game.progress.level = 30;
@@ -388,8 +760,11 @@ fn death_second_book_materializes_original_mage_scaling_and_beam_profile() {
         abilities["demo.ability.death-poison-branding"]
             .effects
             .as_slice(),
-        [AbilityEffectSpecDto::ApplyStatus { granted_brands, .. }]
-            if granted_brands == &[WeaponBrandDto::Poison]
+        [AbilityEffectSpecDto::BrandWeapon {
+            affix_id,
+            brand: Some(WeaponBrandDto::Poison),
+            resistance: Some(DamageTypeDto::Poison),
+        }] if affix_id == "rfb-legacy.affix.slaying"
     ));
 
     game.progress.level = 32;
@@ -410,6 +785,170 @@ fn death_second_book_materializes_original_mage_scaling_and_beam_profile() {
             ..
         }] if target_category == "living"
     ));
+}
+
+#[test]
+fn death_weapon_branding_targets_plain_weapons_across_player_locations() {
+    for (ability_id, expected_affix_id, location) in [
+        (
+            "demo.ability.death-poison-branding",
+            "rfb-legacy.affix.slaying",
+            ItemLocation::Inventory,
+        ),
+        (
+            "demo.ability.death-vampiric-branding",
+            "rfb-legacy.affix.death",
+            ItemLocation::Equipped {
+                slot_id: "weapon".to_owned(),
+            },
+        ),
+        (
+            "demo.ability.death-vampiric-branding",
+            "rfb-legacy.affix.death",
+            ItemLocation::Ground(Position { x: 5, y: 5 }),
+        ),
+    ] {
+        let level = if ability_id.ends_with("poison-branding") {
+            30
+        } else {
+            40
+        };
+        let mut game = prepare_death_caster(7, level, ability_id);
+        set_test_virtue(&mut game, 0, VirtueKindDto::Enchantment, 0);
+        game.debug_set_ability_casts_succeed(true);
+        game.player.position = Position { x: 5, y: 5 };
+        game.items.retain(|item| {
+            game.content
+                .item(&item.kind_id)
+                .is_some_and(|definition| definition.ability_book_id.is_some())
+        });
+        give_inventory_item(&mut game, "test.brand-target", "demo.item.dagger");
+        game.items
+            .iter_mut()
+            .find(|item| item.id == "test.brand-target")
+            .expect("branding target")
+            .location = location;
+        let mut events = Vec::new();
+
+        game.resolve_player_ability(
+            ability_id,
+            TargetSelection::Item {
+                item_id: "test.brand-target".to_owned(),
+            },
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("legal branding should resolve");
+
+        let item = game
+            .items
+            .iter()
+            .find(|item| item.id == "test.brand-target")
+            .expect("branded target");
+        assert_eq!(item.affix_ids, [expected_affix_id], "{events:#?}");
+        assert_eq!(item.origin_kind, Some(ItemOriginKindDto::PlayerMade));
+        assert_eq!(item.discount_percent, 99);
+        assert_eq!(item.quality, ItemQualityDto::Fine);
+        assert_eq!(game.virtue_current(VirtueKindDto::Enchantment), 2);
+        assert!((0..=6).contains(&item.enchantments.to_hit));
+        assert!((0..=6).contains(&item.enchantments.to_damage));
+        if ability_id.ends_with("poison-branding") {
+            assert_eq!(item.rolled_affixes.len(), 1);
+            assert!(
+                item.rolled_affixes[0]
+                    .properties
+                    .brands
+                    .contains(&WeaponBrand::Poison)
+            );
+            assert_eq!(
+                item.rolled_affixes[0]
+                    .properties
+                    .resistances
+                    .get(&ActorDamageType::Poison),
+                Some(&ActorResistanceLevel::Resistant)
+            );
+        } else {
+            assert!(item.rolled_affixes.is_empty());
+        }
+        let expected_attempts = events
+            .iter()
+            .find_map(|event| match event {
+                DomainEvent::AbilityEffectsResolved { resolution, .. } => {
+                    match resolution.effects.as_slice() {
+                        [
+                            AbilityEffectResolutionDto::BrandWeapon {
+                                to_hit, to_damage, ..
+                            },
+                        ] => {
+                            assert_eq!(to_hit.attempts, to_damage.attempts);
+                            Some(to_hit.attempts)
+                        }
+                        _ => None,
+                    }
+                }
+                _ => None,
+            })
+            .expect("branding resolution should be emitted");
+        assert!((4..=6).contains(&expected_attempts));
+        let knowledge = &game.item_property_knowledge["test.brand-target"];
+        assert!(knowledge.discovered);
+        assert!(knowledge.appraised);
+        assert!(knowledge.identified);
+        assert!(knowledge.known_affix_ids.contains(expected_affix_id));
+    }
+
+    let mut saved = Game::new(12);
+    give_inventory_item(&mut saved, "test.saved-brand", "demo.item.dagger");
+    let ability = saved
+        .content
+        .ability("demo.ability.death-vampiric-branding")
+        .expect("vampiric branding content")
+        .clone();
+    saved.resolve_player_brand_weapon_effect(&ability, "test.saved-brand", &mut Vec::new());
+    Game::from_save(saved.to_save()).expect("branded weapon should round-trip");
+}
+
+#[test]
+fn death_weapon_branding_rejects_nonplain_or_unavailable_weapons_without_rng() {
+    let mut game = prepare_death_caster(9, 40, "demo.ability.death-vampiric-branding");
+    game.debug_set_ability_casts_succeed(true);
+    game.items.retain(|item| {
+        game.content
+            .item(&item.kind_id)
+            .is_some_and(|definition| definition.ability_book_id.is_some())
+    });
+    give_inventory_item(&mut game, "test.brand-target", "demo.item.dagger");
+    game.items
+        .iter_mut()
+        .find(|item| item.id == "test.brand-target")
+        .expect("branding target")
+        .affix_ids
+        .push("rfb-legacy.affix.slaying".to_owned());
+    let mana_before = game.resources["demo.resource.mana"].current;
+    let draws_before = game.rng_draw_counter();
+    let mut events = Vec::new();
+
+    game.resolve_player_ability(
+        "demo.ability.death-vampiric-branding",
+        TargetSelection::Item {
+            item_id: "test.brand-target".to_owned(),
+        },
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("invalid branding target should be rejected cleanly");
+
+    assert_eq!(game.resources["demo.resource.mana"].current, mana_before);
+    assert_eq!(game.rng_draw_counter(), draws_before);
+    assert!(
+        matches!(
+            events.as_slice(),
+            [DomainEvent::AbilityTargetUnavailable { .. }]
+        ),
+        "{events:#?}"
+    );
 }
 
 #[test]
@@ -620,6 +1159,8 @@ fn vampirism_true_retraces_the_path_after_each_kill() {
     let mut selected = None;
     for seed in 0..128 {
         let mut game = prepare_death_caster(seed, 36, ability_id);
+        set_test_virtue(&mut game, 0, VirtueKindDto::Sacrifice, 0);
+        set_test_virtue(&mut game, 1, VirtueKindDto::Vitality, 0);
         for (ordinal, x) in (game.player.position.x + 1..=game.player.position.x + 3).enumerate() {
             let position = Position {
                 x,
@@ -657,6 +1198,8 @@ fn vampirism_true_retraces_the_path_after_each_kill() {
     let (game, events, removed) = selected.expect("a deterministic triple drain should succeed");
     assert_eq!(removed.len(), 3);
     assert!(game.entities.is_empty());
+    assert_eq!(game.virtue_current(VirtueKindDto::Sacrifice), -1);
+    assert_eq!(game.virtue_current(VirtueKindDto::Vitality), -1);
     assert_eq!(
         events
             .iter()
@@ -674,10 +1217,241 @@ fn vampirism_true_retraces_the_path_after_each_kill() {
 }
 
 #[test]
-fn invoke_spirits_records_deterministic_random_no_op_branches() {
+fn invoke_spirits_scales_every_source_formula_without_nested_random_effects() {
+    fn contains_no_op(effect: &AbilityEffectDefinition) -> bool {
+        match effect {
+            AbilityEffectDefinition::NoOp { .. } => true,
+            AbilityEffectDefinition::Sequence { effects } => effects.iter().any(contains_no_op),
+            AbilityEffectDefinition::RandomChoice { branches, .. } => {
+                branches.iter().any(|branch| contains_no_op(&branch.effect))
+            }
+            _ => false,
+        }
+    }
+
+    let game = test_caster_game(0);
+    let source = game
+        .content
+        .ability("demo.ability.death-invoke-spirits")
+        .expect("Invoke Spirits should exist");
+    assert!(!contains_no_op(&source.effect));
+
+    for (level, expected_dice, expected_bonuses) in [
+        (1, [3, 3, 5, 6, 8], [19, 29, 40, 70, 80, 100]),
+        (20, [6, 6, 8, 9, 11], [29, 39, 59, 89, 99, 119]),
+        (50, [12, 14, 16, 17, 19], [44, 54, 89, 119, 129, 149]),
+    ] {
+        let mut ability = source.clone();
+        Game::apply_player_level_scaling(&mut ability, level);
+        let AbilityEffectDefinition::RandomChoice { branches, .. } = &ability.effect else {
+            unreachable!("Invoke Spirits should remain a random choice");
+        };
+        assert_eq!(branches.len(), 23);
+        assert_eq!(
+            branches
+                .iter()
+                .map(|branch| branch.maximum_roll)
+                .collect::<Vec<_>>(),
+            vec![
+                7,
+                13,
+                25,
+                30,
+                35,
+                40,
+                45,
+                50,
+                55,
+                60,
+                65,
+                70,
+                75,
+                80,
+                85,
+                90,
+                95,
+                100,
+                103,
+                105,
+                107,
+                109,
+                u16::MAX,
+            ]
+        );
+        let damage_dice = |index: usize| match branches[index].effect.as_ref() {
+            AbilityEffectDefinition::BoltOrBeamDamage { damage_dice, .. } => *damage_dice,
+            _ => unreachable!("branch {index} should be bolt-or-beam damage"),
+        };
+        assert_eq!(
+            [
+                damage_dice(4),
+                damage_dice(8),
+                damage_dice(9),
+                damage_dice(10),
+                damage_dice(11),
+            ],
+            expected_dice
+        );
+        let damage_bonus = |index: usize| match branches[index].effect.as_ref() {
+            AbilityEffectDefinition::AreaDamage { damage_bonus, .. }
+            | AbilityEffectDefinition::DrainLife { damage_bonus, .. } => *damage_bonus,
+            _ => unreachable!("branch {index} should have a flat damage bonus"),
+        };
+        assert_eq!(
+            [
+                damage_bonus(6),
+                damage_bonus(13),
+                damage_bonus(14),
+                damage_bonus(15),
+                damage_bonus(16),
+                damage_bonus(17),
+            ],
+            expected_bonuses
+        );
+        assert!(matches!(
+            branches[5].effect.as_ref(),
+            AbilityEffectDefinition::ApplyStatus {
+                power: Some(power),
+                ..
+            } if *power == level
+        ));
+        assert!(matches!(
+            branches[12].effect.as_ref(),
+            AbilityEffectDefinition::DrainLife {
+                damage_bonus: 74,
+                ..
+            }
+        ));
+        assert!(matches!(
+            branches[18].effect.as_ref(),
+            AbilityEffectDefinition::Earthquake { radius: 12, .. }
+        ));
+        assert!(matches!(
+            branches[19].effect.as_ref(),
+            AbilityEffectDefinition::AreaDestruction {
+                minimum_radius: 13,
+                maximum_radius: 17,
+                ..
+            }
+        ));
+        assert!(matches!(
+            branches[20].effect.as_ref(),
+            AbilityEffectDefinition::Genocide { power, .. } if *power == level + 50
+        ));
+        let AbilityEffectDefinition::Sequence { effects } = branches[22].effect.as_ref() else {
+            unreachable!("the highest Invoke Spirits branch should be a self sequence");
+        };
+        assert!(matches!(
+            effects.as_slice(),
+            [
+                AbilityEffectDefinition::VisibleDamage {
+                    damage_dice: 1,
+                    damage_sides: 1,
+                    damage_bonus: 149,
+                    ..
+                },
+                AbilityEffectDefinition::VisibleApplyStatus {
+                    status_kind_id: slow,
+                    duration_ticks: 50,
+                    power: Some(slow_power),
+                    ..
+                },
+                AbilityEffectDefinition::VisibleApplyStatus {
+                    status_kind_id: sleep,
+                    duration_ticks: 500,
+                    power: Some(sleep_power),
+                    ..
+                },
+                AbilityEffectDefinition::Heal { amount: 300 },
+            ] if slow == "rfb.status.slow"
+                && sleep == "rfb.status.sleep"
+                && *slow_power == level
+                && *sleep_power == level
+        ));
+    }
+
+    let mut game = test_caster_game(0);
+    game.progress.level = 50;
+    let projected = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .find(|ability| ability.id == "demo.ability.death-invoke-spirits")
+        .expect("Invoke Spirits should be projected");
+    let [AbilityEffectSpecDto::RandomChoice { branches, .. }] = projected.effects.as_slice() else {
+        unreachable!("Invoke Spirits projection should remain a random choice");
+    };
+    assert!(
+        matches!(
+            branches[22].effect.as_ref(),
+            AbilityEffectSpecDto::Sequence { effects }
+                if matches!(
+                    effects.as_slice(),
+                    [
+                        AbilityEffectSpecDto::VisibleDamage { damage_bonus: 149, .. },
+                        AbilityEffectSpecDto::VisibleApplyStatus { power: Some(50), .. },
+                        AbilityEffectSpecDto::VisibleApplyStatus { power: Some(50), .. },
+                        AbilityEffectSpecDto::Heal { amount: 300 },
+                    ]
+                )
+        ),
+        "projected highest branch: {:?}",
+        branches[22].effect
+    );
+}
+
+#[test]
+fn invoke_spirits_resolves_all_twenty_three_branches_deterministically() {
     let ability_id = "demo.ability.death-invoke-spirits";
-    let cast = |seed| {
-        let mut game = prepare_death_caster(seed, 10, ability_id);
+    let prepare = |level| {
+        let mut game = prepare_death_caster(0, level, ability_id);
+        descend_one_floor(&mut game);
+        clear_monsters(&mut game);
+        game.debug_set_ability_casts_succeed(true);
+        game.player.hp = 1;
+        game.player.position = Position { x: 20, y: 10 };
+        for x in 20..=28 {
+            let index = game
+                .index(Position { x, y: 10 })
+                .expect("Invoke Spirits test corridor should remain in bounds");
+            game.terrain[index] = "demo.terrain.floor".to_owned();
+            game.glow[index] = false;
+        }
+        game.entities.push(actor_from_runtime_spawn(
+            "generated.actor.invoke-spirits-target",
+            "demo.actor.cave-orc",
+            Position { x: 22, y: 10 },
+            1_000,
+            100,
+            100,
+            true,
+        ));
+        game.entities
+            .last_mut()
+            .expect("light-vulnerable target should exist")
+            .resistances
+            .set(DamageType::Light, ResistanceLevel::Vulnerable);
+        game.entities.push(actor_from_runtime_spawn(
+            "generated.actor.invoke-spirits-light-immune",
+            "demo.actor.small-kobold",
+            Position { x: 24, y: 10 },
+            1_000,
+            100,
+            100,
+            true,
+        ));
+        game
+    };
+    let low_level = prepare(10);
+    let high_level = prepare(50);
+    let cast = |branch_index, seed| {
+        let mut game = if branch_index <= 18 {
+            low_level.clone()
+        } else {
+            high_level.clone()
+        };
+        game.rng = RfbRng::seeded(seed);
         let mut events = Vec::new();
         game.resolve_player_ability(
             ability_id,
@@ -691,54 +1465,169 @@ fn invoke_spirits_records_deterministic_random_no_op_branches() {
         .expect("Invoke Spirits should resolve");
         (game, events)
     };
-    let seed = (0..512)
+    let maximum_rolls = [
+        7_u16, 13, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 103, 105, 107,
+        109, 120,
+    ];
+    for branch_index in 0_u16..23 {
+        let level = if branch_index <= 18 { 10 } else { 50 };
+        let seed = (0..4_096)
+            .find(|seed| {
+                let mut rng = RfbRng::seeded(*seed);
+                let _failure_roll = rng.bounded(100);
+                let roll = u16::try_from(rng.bounded(100) + 1)
+                    .expect("bounded roll should fit u16")
+                    .saturating_add(level / 5);
+                maximum_rolls.iter().position(|maximum| roll <= *maximum)
+                    == Some(usize::from(branch_index))
+            })
+            .unwrap_or_else(|| panic!("Invoke Spirits branch {branch_index} should be reachable"));
+        let (left, left_events) = cast(branch_index, seed);
+        let (right, right_events) = cast(branch_index, seed);
+        assert_eq!(left_events, right_events);
+        assert_eq!(left.state_hash(), right.state_hash());
+        let selected = left_events
+            .iter()
+            .filter_map(|event| match event {
+                DomainEvent::AbilityEffectsResolved { resolution, .. } => {
+                    match resolution.effects.as_slice() {
+                        [
+                            AbilityEffectResolutionDto::RandomChoice {
+                                branch_index: selected,
+                                ..
+                            },
+                        ] => Some(*selected),
+                        _ => None,
+                    }
+                }
+                _ => None,
+            })
+            .collect::<Vec<_>>();
+        assert_eq!(
+            selected,
+            vec![branch_index],
+            "branch {branch_index} should be selected exactly once; seed {seed}; events {left_events:?}"
+        );
+        assert!(!left_events.iter().any(|event| matches!(
+            event,
+            DomainEvent::AbilityEffectsResolved { resolution, .. }
+                if matches!(
+                    resolution.effects.as_slice(),
+                    [AbilityEffectResolutionDto::NoOp { reason, .. }]
+                        if reason.ends_with("-pending")
+                )
+        )));
+        match branch_index {
+            3 => assert!(left_events.iter().any(|event| matches!(
+                event,
+                DomainEvent::AbilityEffectsResolved { resolution, .. }
+                    if matches!(
+                        resolution.effects.as_slice(),
+                        [AbilityEffectResolutionDto::PolymorphTarget { changed: true, .. }]
+                    )
+            ))),
+            7 => {
+                let lit = left_events.iter().find_map(|event| match event {
+                    DomainEvent::AbilityBeamDamage { resolution, .. }
+                        if resolution.damage_type == DamageTypeDto::Light
+                            && resolution.target_count == 1 =>
+                    {
+                        Some(&resolution.affected_positions)
+                    }
+                    _ => None,
+                });
+                let lit = lit.expect("line-light branch should project weak light damage");
+                assert!(!lit.is_empty());
+                assert!(
+                    lit.iter().all(|position| left
+                        .index(*position)
+                        .is_some_and(|index| left.glow[index]))
+                );
+                assert!(left.entities.iter().any(|entity| {
+                    entity.id == "generated.actor.invoke-spirits-target" && entity.hp < 1_000
+                }));
+                assert_eq!(
+                    left.entities
+                        .iter()
+                        .find(|entity| entity.id == "generated.actor.invoke-spirits-light-immune")
+                        .map(|entity| entity.hp),
+                    Some(1_000)
+                );
+            }
+            18 => assert!(left_events.iter().any(|event| matches!(
+                event,
+                DomainEvent::AbilityEffectsResolved { resolution, .. }
+                    if matches!(
+                        resolution.effects.as_slice(),
+                        [AbilityEffectResolutionDto::Earthquake { radius: 12, .. }]
+                    )
+            ))),
+            19 => assert!(left_events.iter().any(|event| matches!(
+                event,
+                DomainEvent::AbilityEffectsResolved { resolution, .. }
+                    if matches!(
+                        resolution.effects.as_slice(),
+                        [AbilityEffectResolutionDto::AreaDestruction {
+                            protected_floor: false,
+                            affected_positions,
+                            ..
+                        }] if !affected_positions.is_empty()
+                    )
+            ))),
+            22 => {
+                assert!(left.player.hp > 1);
+                assert!(
+                    left_events
+                        .iter()
+                        .any(|event| matches!(event, DomainEvent::AbilityVisibleDamage { .. }))
+                );
+            }
+            _ => {}
+        }
+    }
+}
+
+#[test]
+fn invoke_spirits_lowest_outcome_updates_chance_and_unlife() {
+    let ability_id = "demo.ability.death-invoke-spirits";
+    let mut game = prepare_death_caster(0, 10, ability_id);
+    descend_one_floor(&mut game);
+    clear_monsters(&mut game);
+    game.debug_set_ability_casts_succeed(true);
+    set_test_virtue(&mut game, 0, VirtueKindDto::Chance, 0);
+    set_test_virtue(&mut game, 1, VirtueKindDto::Unlife, 0);
+    let seed = (0..4_096)
         .find(|seed| {
-            let (_, events) = cast(*seed);
-            let selected_pending_branch = events.iter().any(|event| {
-                matches!(
-                    event,
-                    DomainEvent::AbilityEffectsResolved { resolution, .. }
-                        if matches!(
-                            resolution.effects.as_slice(),
-                            [AbilityEffectResolutionDto::RandomChoice { roll, branch_index, .. }]
-                                if *roll > 0 && matches!(*branch_index, 3 | 7)
-                        )
-                )
-            });
-            let recorded_pending_no_op = events.iter().any(|event| {
-                matches!(
-                    event,
-                    DomainEvent::AbilityEffectsResolved { resolution, .. }
-                        if matches!(
-                            resolution.effects.as_slice(),
-                            [AbilityEffectResolutionDto::NoOp { reason, .. }]
-                                if reason.ends_with("-pending")
-                        )
-                )
-            });
-            selected_pending_branch && recorded_pending_no_op
+            let mut rng = RfbRng::seeded(*seed);
+            let _failure_roll = rng.bounded(100);
+            rng.bounded(100) + 1 + 10 / 5 <= 7
         })
-        .expect("a deterministic Invoke Spirits no-op branch should exist");
-    let (left, left_events) = cast(seed);
-    let (right, right_events) = cast(seed);
-    assert_eq!(left_events, right_events);
-    assert_eq!(left.state_hash(), right.state_hash());
-    assert!(left_events.iter().any(|event| matches!(
+        .expect("the lowest Invoke Spirits outcome should be reachable");
+    game.rng = RfbRng::seeded(seed);
+    let mut events = Vec::new();
+
+    game.resolve_player_ability(
+        ability_id,
+        TargetSelection::Direction {
+            direction: Direction::East,
+        },
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Invoke Spirits should resolve");
+
+    assert_eq!(game.virtue_current(VirtueKindDto::Chance), 1);
+    assert_eq!(game.virtue_current(VirtueKindDto::Unlife), 1);
+    assert!(events.iter().any(|event| matches!(
         event,
         DomainEvent::AbilityEffectsResolved { resolution, .. }
             if matches!(
                 resolution.effects.as_slice(),
-                [AbilityEffectResolutionDto::RandomChoice { roll, branch_index, .. }]
-                    if *roll > 0 && matches!(*branch_index, 3 | 7)
-            )
-    )));
-    assert!(left_events.iter().any(|event| matches!(
-        event,
-        DomainEvent::AbilityEffectsResolved { resolution, .. }
-            if matches!(
-                resolution.effects.as_slice(),
-                [AbilityEffectResolutionDto::NoOp { reason, .. }]
-                    if reason.ends_with("-pending")
+                [AbilityEffectResolutionDto::RandomChoice {
+                    branch_index: 0,
+                    ..
+                }]
             )
     )));
 }
@@ -1318,7 +2207,7 @@ fn sleep_power_resolves_then_skips_energy_and_damage_wakes_the_target() {
 
     game.entities[0].energy_need = 0;
     let mut events = Vec::new();
-    game.process_monster_energy_pulse(&mut events, &mut BTreeSet::new(), &mut Vec::new())
+    game.process_monster_energy_pulse(false, &mut events, &mut BTreeSet::new(), &mut Vec::new())
         .expect("sleeping monster energy should resolve");
     assert_eq!(game.entities[0].position, position);
     assert_eq!(game.entities[0].energy_need, 90);
@@ -3103,6 +3992,7 @@ fn death_fourth_book_materializes_original_level_curves() {
 fn raise_dead_is_deterministic_and_enforces_faction_group_and_unique_rules() {
     let cast = |seed: u64, level: u16| {
         let mut game = prepare_death_caster(seed, level, "demo.ability.death-raise-dead");
+        let unlife_before = game.virtue_current(VirtueKindDto::Unlife);
         game.debug_set_ability_casts_succeed(true);
         let mut events = Vec::new();
         game.resolve_player_ability(
@@ -3120,6 +4010,10 @@ fn raise_dead_is_deterministic_and_enforces_faction_group_and_unique_rules() {
                 _ => None,
             })
             .expect("Raise Dead should summon");
+        assert_eq!(
+            game.virtue_current(VirtueKindDto::Unlife),
+            unlife_before + 1
+        );
         (game, resolution)
     };
 

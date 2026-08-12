@@ -12,6 +12,10 @@
     "requiresLineOfEffect": false
   },
   "abilityProgramId": "demo.ability-program.death-necromantic-resistance",
+  "spellPowerFields": [
+    { "effectIndex": 0, "field": "status-duration-ticks" },
+    { "effectIndex": 0, "field": "status-duration-sides" }
+  ],
   "tags": [
     "death",
     "resistance",

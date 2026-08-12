@@ -21,6 +21,9 @@ impl Game {
                     attack: total.attack.saturating_add(affix.modifiers.attack),
                     defense: total.defense.saturating_add(affix.modifiers.defense),
                     max_hp: total.max_hp.saturating_add(affix.modifiers.max_hp),
+                    spell_power_bonus: total
+                        .spell_power_bonus
+                        .saturating_add(affix.modifiers.spell_power_bonus),
                     strength: total.strength.saturating_add(affix.modifiers.strength),
                     intelligence: total
                         .intelligence

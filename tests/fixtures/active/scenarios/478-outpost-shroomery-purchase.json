@@ -29,7 +29,7 @@
       "revision": 1,
       "turn": 1,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 154,
+      "rngDrawCounter": 165,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -206,41 +206,51 @@
           },
           "stock": [
             {
-              "id": "generated.item.115",
-              "kindId": "demo.item.cure-blindness-mushroom",
-              "displayNameKey": "item-demo-cure-blindness-mushroom-name",
+              "id": "generated.item.113",
+              "kindId": "demo.item.cure-poison-mushroom",
+              "displayNameKey": "item-demo-cure-poison-mushroom-name",
               "quantity": 1,
               "maximumQuantity": 1,
+              "unitPrice": 120,
+              "weightTenthsPound": 1,
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.114",
+              "kindId": "demo.item.cure-blindness-mushroom",
+              "displayNameKey": "item-demo-cure-blindness-mushroom-name",
+              "quantity": 2,
+              "maximumQuantity": 2,
               "unitPrice": 30,
               "weightTenthsPound": 1,
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.116",
+              "id": "generated.item.115",
               "kindId": "demo.item.cure-paranoia-mushroom",
               "displayNameKey": "item-demo-cure-paranoia-mushroom-name",
-              "quantity": 3,
-              "maximumQuantity": 3,
+              "quantity": 2,
+              "maximumQuantity": 2,
               "unitPrice": 25,
               "weightTenthsPound": 1,
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.117",
+              "id": "generated.item.116",
               "kindId": "demo.item.cure-confusion-mushroom",
               "displayNameKey": "item-demo-cure-confusion-mushroom-name",
-              "quantity": 1,
-              "maximumQuantity": 1,
+              "quantity": 2,
+              "maximumQuantity": 2,
               "unitPrice": 30,
               "weightTenthsPound": 1,
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.118",
+              "id": "generated.item.117",
               "kindId": "demo.item.fast-recovery-mushroom",
               "displayNameKey": "item-demo-fast-recovery-mushroom-name",
-              "quantity": 3,
-              "maximumQuantity": 3,
+              "quantity": 2,
+              "maximumQuantity": 2,
               "unitPrice": 30,
               "weightTenthsPound": 2,
               "quality": "ordinary"
@@ -251,10 +261,10 @@
               "itemId": "generated.item.1",
               "kindId": "demo.item.ration-of-food",
               "unitPrice": 2,
-              "maximumQuantity": 9
+              "maximumQuantity": 7
             },
             {
-              "itemId": "generated.item.114",
+              "itemId": "generated.item.170",
               "kindId": "demo.item.cure-poison-mushroom",
               "unitPrice": 114,
               "maximumQuantity": 1
@@ -373,7 +383,7 @@
       "playerDefense": 15,
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
-      "playerCarriedWeightTenthsPound": 715,
+      "playerCarriedWeightTenthsPound": 695,
       "playerCarryCapacityTenthsPound": 1200,
       "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 999880,
@@ -1216,7 +1226,7 @@
           "usable": true,
           "canReceiveRecharge": false,
           "canSupplyRecharge": false,
-          "quantity": 9,
+          "quantity": 7,
           "weightTenthsPound": 10,
           "equipmentSlot": null,
           "modifiers": {
@@ -1229,12 +1239,13 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "unexamined"
         },
         {
-          "id": "generated.item.114",
+          "id": "generated.item.170",
           "kindId": "demo.item.cure-poison-mushroom",
           "displayNameKey": "item-demo-cure-poison-mushroom-name",
           "knowledge": "aware",
@@ -1254,7 +1265,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "identified",
           "quality": "ordinary"
@@ -1267,7 +1279,7 @@
           "usable": false,
           "fuel": {
             "kind": "torch",
-            "current": 2000,
+            "current": 1500,
             "maximum": 5000,
             "lightRadius": 1
           },
@@ -1286,7 +1298,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1298,7 +1311,7 @@
           "usable": false,
           "fuel": {
             "kind": "torch",
-            "current": 2000,
+            "current": 1500,
             "maximum": 5000,
             "lightRadius": 1
           },
@@ -1317,7 +1330,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1329,7 +1343,7 @@
           "usable": false,
           "fuel": {
             "kind": "torch",
-            "current": 2000,
+            "current": 1500,
             "maximum": 5000,
             "lightRadius": 1
           },
@@ -1348,7 +1362,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1360,7 +1375,7 @@
           "usable": false,
           "fuel": {
             "kind": "torch",
-            "current": 2000,
+            "current": 1500,
             "maximum": 5000,
             "lightRadius": 1
           },
@@ -1379,7 +1394,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1391,7 +1407,7 @@
           "usable": false,
           "fuel": {
             "kind": "torch",
-            "current": 2000,
+            "current": 1500,
             "maximum": 5000,
             "lightRadius": 1
           },
@@ -1410,7 +1426,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1422,7 +1439,7 @@
           "usable": false,
           "fuel": {
             "kind": "torch",
-            "current": 2000,
+            "current": 1500,
             "maximum": 5000,
             "lightRadius": 1
           },
@@ -1441,7 +1458,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1466,7 +1484,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "unexamined"
         }
@@ -1490,7 +1509,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "equipmentBonuses": {
             "meleeAttacks": 0,
@@ -1529,7 +1549,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "identified",
           "quality": "ordinary",
@@ -1563,7 +1584,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "identified",
           "quality": "ordinary",
@@ -1623,7 +1645,7 @@
           "identified": true
         },
         {
-          "itemId": "generated.item.114",
+          "itemId": "generated.item.170",
           "discovered": true,
           "appraised": true,
           "identified": true
@@ -1663,7 +1685,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 175,
+      "nextItemInstanceSerial": 171,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -1671,7 +1693,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "145ff9cc662c344b1594e3a50d30d837e166ca6820bdcdaac56c94a91588c505"
+      "stateHash": "b8b91f4962ea470a7a98e5b5f826792d236650ab7b8eb499178e663125baaefb"
     },
     "events": [
       {
@@ -1679,7 +1701,7 @@
         "messageKey": "shop-purchase-success",
         "args": {
           "balance": "999880",
-          "item": "generated.item.114",
+          "item": "generated.item.170",
           "quantity": "1",
           "shop": "demo.shop.outpost-shroomery",
           "target": "demo.item.cure-poison-mushroom",

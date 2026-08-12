@@ -28,6 +28,7 @@
       "demo.item.sling": { "initial": 4000, "maximum": 7000 }
     }
   },
+  "petUpkeepDivisor": 40,
   "startingItems": [
     { "itemKindId": "demo.item.broad-sword", "quantity": 1, "equipped": true },
     { "itemKindId": "demo.item.chain-mail", "quantity": 1, "equipped": true },

@@ -22,6 +22,9 @@
       "divisor": 1
     }
   ],
+  "spellPowerFields": [
+    { "effectIndex": 0, "field": "status-power" }
+  ],
   "tags": [
     "death",
     "sleep",

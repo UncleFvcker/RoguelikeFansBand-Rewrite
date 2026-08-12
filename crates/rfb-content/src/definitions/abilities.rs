@@ -122,6 +122,33 @@ pub enum AbilityLevelScalingField {
     MaximumWeight,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum AbilitySpellPowerField {
+    FinalDamage,
+    DamageSides,
+    DamageBonus,
+    Radius,
+    StatusDurationTicks,
+    StatusDurationSides,
+    StatusPower,
+    ControlPower,
+    GenocidePower,
+    IdentifyPower,
+    RandomChoiceRoll,
+    MaledictionDeathRayPower,
+    MaledictionFearPower,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct AbilitySpellPowerDefinition {
+    pub effect_index: u8,
+    pub field: AbilitySpellPowerField,
+}
+
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
@@ -181,6 +208,8 @@ pub struct AbilityRandomBranchDefinition {
     #[serde(default)]
     pub target: AbilityRandomTargetDefinition,
     pub effect: Box<AbilityEffectDefinition>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub level_scaling: Vec<AbilityLevelScalingDefinition>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -221,6 +250,12 @@ pub enum AbilityEffectDefinition {
         #[serde(default)]
         damage_type: ActorDamageType,
     },
+    Malediction {
+        damage_dice: u16,
+        damage_sides: u16,
+        #[serde(default)]
+        damage_bonus: u16,
+    },
     AreaDamage {
         damage_dice: u16,
         damage_sides: u16,
@@ -251,6 +286,10 @@ pub enum AbilityEffectDefinition {
         damage_bonus: u16,
         #[serde(default)]
         damage_type: ActorDamageType,
+    },
+    LightLine {
+        damage_dice: u16,
+        damage_sides: u16,
     },
     BoltOrBeamDamage {
         damage_dice: u16,
@@ -336,6 +375,14 @@ pub enum AbilityEffectDefinition {
         affect_chance_percent: u8,
         floor_terrain_id: String,
         wall_terrain_ids: Vec<String>,
+    },
+    AreaDestruction {
+        minimum_radius: u8,
+        maximum_radius: u8,
+        floor_terrain_id: String,
+        wall_terrain_id: String,
+        quartz_terrain_id: String,
+        magma_terrain_id: String,
     },
     SuppressMonsterReproduction {
         damage_dice: u16,
@@ -522,8 +569,12 @@ pub enum AbilityEffectDefinition {
         #[serde(default)]
         target_category: Option<String>,
     },
-    EnchantEquippedWeapon {
+    BrandWeapon {
         affix_id: String,
+        #[serde(default)]
+        brand: Option<WeaponBrand>,
+        #[serde(default)]
+        resistance: Option<ActorDamageType>,
     },
     RandomChoice {
         roll_sides: u16,
@@ -564,6 +615,7 @@ fn ability_level_scaling_base_and_limit(
     match (effect, field) {
         (
             AbilityEffectDefinition::Damage { damage_dice, .. }
+            | AbilityEffectDefinition::Malediction { damage_dice, .. }
             | AbilityEffectDefinition::AreaDamage { damage_dice, .. }
             | AbilityEffectDefinition::JumpDamage { damage_dice, .. }
             | AbilityEffectDefinition::BeamDamage { damage_dice, .. }
@@ -577,6 +629,7 @@ fn ability_level_scaling_base_and_limit(
         ) => Some((u64::from(*damage_dice), 100)),
         (
             AbilityEffectDefinition::Damage { damage_sides, .. }
+            | AbilityEffectDefinition::Malediction { damage_sides, .. }
             | AbilityEffectDefinition::AreaDamage { damage_sides, .. }
             | AbilityEffectDefinition::JumpDamage { damage_sides, .. }
             | AbilityEffectDefinition::BeamDamage { damage_sides, .. }
@@ -590,6 +643,7 @@ fn ability_level_scaling_base_and_limit(
         ) => Some((u64::from(*damage_sides), 10_000)),
         (
             AbilityEffectDefinition::Damage { damage_bonus, .. }
+            | AbilityEffectDefinition::Malediction { damage_bonus, .. }
             | AbilityEffectDefinition::AreaDamage { damage_bonus, .. }
             | AbilityEffectDefinition::BeamDamage { damage_bonus, .. }
             | AbilityEffectDefinition::BoltOrBeamDamage { damage_bonus, .. }
@@ -737,6 +791,96 @@ pub(crate) fn valid_ability_level_scaling(
         })
 }
 
+pub(crate) fn valid_ability_spell_power(
+    effect: &AbilityEffectDefinition,
+    fields: &[AbilitySpellPowerDefinition],
+) -> bool {
+    let mut unique = BTreeSet::new();
+    fields.len() <= 32
+        && fields.iter().all(|definition| {
+            let Some(effect) = effect
+                .ordered_effects()
+                .get(usize::from(definition.effect_index))
+            else {
+                return false;
+            };
+            let valid = match definition.field {
+                AbilitySpellPowerField::FinalDamage => matches!(
+                    effect,
+                    AbilityEffectDefinition::Damage { .. }
+                        | AbilityEffectDefinition::Malediction { .. }
+                        | AbilityEffectDefinition::AreaDamage { .. }
+                        | AbilityEffectDefinition::BeamDamage { .. }
+                        | AbilityEffectDefinition::BoltOrBeamDamage { .. }
+                        | AbilityEffectDefinition::BoltOrAreaDamage { .. }
+                        | AbilityEffectDefinition::ConeDamage { .. }
+                        | AbilityEffectDefinition::VisibleDamage { .. }
+                        | AbilityEffectDefinition::DrainLife { .. }
+                ),
+                AbilitySpellPowerField::DamageSides => matches!(
+                    effect,
+                    AbilityEffectDefinition::Damage { .. }
+                        | AbilityEffectDefinition::Malediction { .. }
+                        | AbilityEffectDefinition::AreaDamage { .. }
+                        | AbilityEffectDefinition::BeamDamage { .. }
+                        | AbilityEffectDefinition::BoltOrBeamDamage { .. }
+                        | AbilityEffectDefinition::BoltOrAreaDamage { .. }
+                        | AbilityEffectDefinition::ConeDamage { .. }
+                        | AbilityEffectDefinition::VisibleDamage { .. }
+                        | AbilityEffectDefinition::DrainLife { .. }
+                ),
+                AbilitySpellPowerField::DamageBonus => matches!(
+                    effect,
+                    AbilityEffectDefinition::Damage { .. }
+                        | AbilityEffectDefinition::Malediction { .. }
+                        | AbilityEffectDefinition::AreaDamage { .. }
+                        | AbilityEffectDefinition::BeamDamage { .. }
+                        | AbilityEffectDefinition::BoltOrBeamDamage { .. }
+                        | AbilityEffectDefinition::BoltOrAreaDamage { .. }
+                        | AbilityEffectDefinition::ConeDamage { .. }
+                        | AbilityEffectDefinition::VisibleDamage { .. }
+                        | AbilityEffectDefinition::DrainLife { .. }
+                ),
+                AbilitySpellPowerField::Radius => matches!(
+                    effect,
+                    AbilityEffectDefinition::AreaDamage { .. }
+                        | AbilityEffectDefinition::BoltOrAreaDamage { .. }
+                        | AbilityEffectDefinition::ConeDamage { .. }
+                ),
+                AbilitySpellPowerField::StatusDurationTicks => matches!(
+                    effect,
+                    AbilityEffectDefinition::ApplyStatus { .. }
+                        | AbilityEffectDefinition::VisibleApplyStatus { .. }
+                ),
+                AbilitySpellPowerField::StatusDurationSides => {
+                    matches!(effect, AbilityEffectDefinition::ApplyStatus { .. })
+                }
+                AbilitySpellPowerField::StatusPower => matches!(
+                    effect,
+                    AbilityEffectDefinition::ApplyStatus { power: Some(_), .. }
+                        | AbilityEffectDefinition::VisibleApplyStatus { power: Some(_), .. }
+                ),
+                AbilitySpellPowerField::ControlPower => {
+                    matches!(effect, AbilityEffectDefinition::Control { .. })
+                }
+                AbilitySpellPowerField::GenocidePower => {
+                    matches!(effect, AbilityEffectDefinition::Genocide { .. })
+                }
+                AbilitySpellPowerField::IdentifyPower => {
+                    matches!(effect, AbilityEffectDefinition::IdentifyItem { .. })
+                }
+                AbilitySpellPowerField::RandomChoiceRoll => {
+                    matches!(effect, AbilityEffectDefinition::RandomChoice { .. })
+                }
+                AbilitySpellPowerField::MaledictionDeathRayPower
+                | AbilitySpellPowerField::MaledictionFearPower => {
+                    matches!(effect, AbilityEffectDefinition::Malediction { .. })
+                }
+            };
+            valid && unique.insert((definition.effect_index, definition.field))
+        })
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -765,6 +909,11 @@ pub struct AbilityDefinition {
     pub effect: AbilityEffectDefinition,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub level_scaling: Vec<AbilityLevelScalingDefinition>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub spell_power_fields: Vec<AbilitySpellPowerDefinition>,
+    #[serde(skip)]
+    #[cfg_attr(feature = "schemas", schemars(skip))]
+    pub spell_power_bonus: i32,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub player: Option<PlayerAbilityDefinition>,
     pub tags: Vec<String>,

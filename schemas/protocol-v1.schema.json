@@ -565,9 +565,7 @@
             },
             "roll": {
               "type": "integer",
-              "format": "uint16",
-              "maximum": 65535,
-              "minimum": 0
+              "format": "int32"
             },
             "type": {
               "type": "string",
@@ -1054,6 +1052,54 @@
             "affectedPositions",
             "wallPositions",
             "floorPositions",
+            "removedItems",
+            "removedGoldPiles"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "affectedPositions": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Position"
+              }
+            },
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "protectedFloor": {
+              "type": "boolean"
+            },
+            "removedEntities": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "removedGoldPiles": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "removedItems": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "area-destruction"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex",
+            "protectedFloor",
+            "affectedPositions",
+            "removedEntities",
             "removedItems",
             "removedGoldPiles"
           ]
@@ -1925,11 +1971,18 @@
         {
           "type": "object",
           "properties": {
-            "added": {
-              "type": "boolean"
-            },
             "affixId": {
               "type": "string"
+            },
+            "brand": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/WeaponBrandDto"
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
             "effectIndex": {
               "type": "integer",
@@ -1943,9 +1996,25 @@
             "itemKindId": {
               "type": "string"
             },
+            "resistance": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/DamageTypeDto"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "toDamage": {
+              "$ref": "#/$defs/ItemEnchantmentComponentResolutionDto"
+            },
+            "toHit": {
+              "$ref": "#/$defs/ItemEnchantmentComponentResolutionDto"
+            },
             "type": {
               "type": "string",
-              "const": "enchant-equipped-weapon"
+              "const": "brand-weapon"
             }
           },
           "required": [
@@ -1954,7 +2023,8 @@
             "itemId",
             "itemKindId",
             "affixId",
-            "added"
+            "toHit",
+            "toDamage"
           ]
         },
         {
@@ -2018,6 +2088,13 @@
             "damageType": {
               "$ref": "#/$defs/DamageTypeDto"
             },
+            "finalDamageSpellPowerBonus": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int32"
+            },
             "type": {
               "type": "string",
               "const": "damage"
@@ -2054,6 +2131,13 @@
             },
             "damageType": {
               "$ref": "#/$defs/DamageTypeDto"
+            },
+            "finalDamageSpellPowerBonus": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int32"
             },
             "radius": {
               "type": "integer",
@@ -2105,6 +2189,13 @@
             "damageType": {
               "$ref": "#/$defs/DamageTypeDto"
             },
+            "finalDamageSpellPowerBonus": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int32"
+            },
             "type": {
               "type": "string",
               "const": "beam-damage"
@@ -2115,6 +2206,32 @@
             "damageDice",
             "damageSides",
             "damageType"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "damageDice": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "damageSides": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "light-line"
+            }
+          },
+          "required": [
+            "type",
+            "damageDice",
+            "damageSides"
           ]
         },
         {
@@ -2147,6 +2264,13 @@
             },
             "damageType": {
               "$ref": "#/$defs/DamageTypeDto"
+            },
+            "finalDamageSpellPowerBonus": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int32"
             },
             "type": {
               "type": "string",
@@ -2192,6 +2316,13 @@
             "damageType": {
               "$ref": "#/$defs/DamageTypeDto"
             },
+            "finalDamageSpellPowerBonus": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int32"
+            },
             "radius": {
               "type": "integer",
               "format": "uint8",
@@ -2236,6 +2367,13 @@
             },
             "damageType": {
               "$ref": "#/$defs/DamageTypeDto"
+            },
+            "finalDamageSpellPowerBonus": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int32"
             },
             "radius": {
               "type": "integer",
@@ -2616,6 +2754,48 @@
             "affectChancePercent",
             "floorTerrainId",
             "wallTerrainIds"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "floorTerrainId": {
+              "type": "string"
+            },
+            "magmaTerrainId": {
+              "type": "string"
+            },
+            "maximumRadius": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "minimumRadius": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "quartzTerrainId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "area-destruction"
+            },
+            "wallTerrainId": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "minimumRadius",
+            "maximumRadius",
+            "floorTerrainId",
+            "wallTerrainId",
+            "quartzTerrainId",
+            "magmaTerrainId"
           ]
         },
         {
@@ -3055,6 +3235,7 @@
                 "intelligence": 0,
                 "maxHp": 0,
                 "speed": 0,
+                "spellPowerBonus": 0,
                 "strength": 0,
                 "wisdom": 0
               }
@@ -3281,6 +3462,13 @@
               "type": "boolean",
               "default": false
             },
+            "finalDamageSpellPowerBonus": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int32"
+            },
             "repeat": {
               "type": "integer",
               "format": "uint8",
@@ -3465,6 +3653,13 @@
             "damageType": {
               "$ref": "#/$defs/DamageTypeDto"
             },
+            "finalDamageSpellPowerBonus": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int32"
+            },
             "targetCategory": {
               "type": [
                 "string",
@@ -3548,9 +3743,29 @@
             "affixId": {
               "type": "string"
             },
+            "brand": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/WeaponBrandDto"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "resistance": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/DamageTypeDto"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
             "type": {
               "type": "string",
-              "const": "enchant-equipped-weapon"
+              "const": "brand-weapon"
             }
           },
           "required": [
@@ -3579,6 +3794,13 @@
               "maximum": 65535,
               "minimum": 0
             },
+            "rollSpellPowerBonus": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int32"
+            },
             "type": {
               "type": "string",
               "const": "random-choice"
@@ -3589,6 +3811,25 @@
             "rollSides",
             "levelBonusDivisor",
             "branches"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "effects": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/AbilityEffectSpecDto"
+              }
+            },
+            "type": {
+              "type": "string",
+              "const": "sequence"
+            }
+          },
+          "required": [
+            "type",
+            "effects"
           ]
         },
         {
@@ -4724,6 +4965,7 @@
             "intelligence": 0,
             "maxHp": 0,
             "speed": 0,
+            "spellPowerBonus": 0,
             "strength": 0,
             "wisdom": 0
           }
@@ -5146,6 +5388,18 @@
           "required": [
             "type",
             "direction"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "dismiss-pets"
+            }
+          },
+          "required": [
+            "type"
           ]
         },
         {
@@ -7006,6 +7260,7 @@
             "intelligence": 0,
             "maxHp": 0,
             "speed": 0,
+            "spellPowerBonus": 0,
             "strength": 0,
             "wisdom": 0
           }
@@ -7486,6 +7741,7 @@
             "intelligence": 0,
             "maxHp": 0,
             "speed": 0,
+            "spellPowerBonus": 0,
             "strength": 0,
             "wisdom": 0
           }
@@ -8131,6 +8387,41 @@
         "resting"
       ]
     },
+    "PetUpkeepDto": {
+      "type": "object",
+      "properties": {
+        "controlledPets": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "dismissalRequired": {
+          "type": "boolean"
+        },
+        "totalLevels": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "unsafeWarning": {
+          "type": "boolean"
+        },
+        "upkeepPercent": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        }
+      },
+      "required": [
+        "controlledPets",
+        "totalLevels",
+        "upkeepPercent",
+        "unsafeWarning",
+        "dismissalRequired"
+      ]
+    },
     "PlayerBuildDto": {
       "type": "object",
       "properties": {
@@ -8282,6 +8573,7 @@
             "intelligence": 0,
             "maxHp": 0,
             "speed": 0,
+            "spellPowerBonus": 0,
             "strength": 0,
             "wisdom": 0
           }
@@ -8387,6 +8679,16 @@
             }
           ]
         },
+        "petUpkeep": {
+          "$ref": "#/$defs/PetUpkeepDto",
+          "default": {
+            "controlledPets": 0,
+            "dismissalRequired": false,
+            "totalLevels": 0,
+            "unsafeWarning": false,
+            "upkeepPercent": 0
+          }
+        },
         "position": {
           "$ref": "#/$defs/Position"
         },
@@ -8455,6 +8757,12 @@
         },
         "summonCommand": {
           "$ref": "#/$defs/SummonCommandDto"
+        },
+        "virtues": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/VirtueDto"
+          }
         }
       },
       "required": [
@@ -8463,7 +8771,8 @@
         "kindId",
         "position",
         "hp",
-        "maxHp"
+        "maxHp",
+        "virtues"
       ]
     },
     "PlayerMutationDto": {
@@ -8866,6 +9175,7 @@
         "invalid-turns",
         "player-died",
         "mutation-direction-required",
+        "pet-dismissal-required",
         "turn-limit"
       ]
     },
@@ -9240,6 +9550,11 @@
           "format": "int32",
           "default": 0
         },
+        "spellPowerBonus": {
+          "type": "integer",
+          "format": "int32",
+          "default": 0
+        },
         "strength": {
           "type": "integer",
           "format": "int32",
@@ -9291,6 +9606,7 @@
             "intelligence": 0,
             "maxHp": 0,
             "speed": 0,
+            "spellPowerBonus": 0,
             "strength": 0,
             "wisdom": 0
           }
@@ -9792,6 +10108,48 @@
         "descriptionKey",
         "floorId",
         "visited"
+      ]
+    },
+    "VirtueDto": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/VirtueKindDto"
+        },
+        "value": {
+          "type": "integer",
+          "format": "int16",
+          "maximum": 32767,
+          "minimum": -32768
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "value"
+      ]
+    },
+    "VirtueKindDto": {
+      "type": "string",
+      "enum": [
+        "compassion",
+        "honour",
+        "justice",
+        "sacrifice",
+        "knowledge",
+        "faith",
+        "enlightenment",
+        "enchantment",
+        "chance",
+        "nature",
+        "harmony",
+        "vitality",
+        "unlife",
+        "patience",
+        "temperance",
+        "diligence",
+        "valour",
+        "individualism"
       ]
     },
     "VisibilityState": {

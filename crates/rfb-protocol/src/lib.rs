@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.181";
+pub const PROTOCOL_VERSION: &str = "1.184";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -156,6 +156,7 @@ pub enum GameCommand {
     DigTerrain {
         direction: Direction,
     },
+    DismissPets,
     ResolveMutationDirection {
         direction: Direction,
     },
@@ -479,6 +480,8 @@ pub struct StatModifiersDto {
     pub charisma: i32,
     #[serde(default)]
     pub speed: i32,
+    #[serde(default)]
+    pub spell_power_bonus: i32,
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -864,6 +867,8 @@ pub enum AbilityEffectSpecDto {
         #[serde(default)]
         damage_bonus: u16,
         damage_type: DamageTypeDto,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        final_damage_spell_power_bonus: Option<i32>,
     },
     AreaDamage {
         damage_dice: u16,
@@ -874,6 +879,8 @@ pub enum AbilityEffectSpecDto {
         radius: u8,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         target_category: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        final_damage_spell_power_bonus: Option<i32>,
     },
     BeamDamage {
         damage_dice: u16,
@@ -881,6 +888,12 @@ pub enum AbilityEffectSpecDto {
         #[serde(default)]
         damage_bonus: u16,
         damage_type: DamageTypeDto,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        final_damage_spell_power_bonus: Option<i32>,
+    },
+    LightLine {
+        damage_dice: u16,
+        damage_sides: u16,
     },
     BoltOrBeamDamage {
         damage_dice: u16,
@@ -889,6 +902,8 @@ pub enum AbilityEffectSpecDto {
         damage_bonus: u16,
         damage_type: DamageTypeDto,
         beam_chance_percent: u8,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        final_damage_spell_power_bonus: Option<i32>,
     },
     BoltOrAreaDamage {
         damage_dice: u16,
@@ -898,6 +913,8 @@ pub enum AbilityEffectSpecDto {
         damage_type: DamageTypeDto,
         area_from_level: u16,
         radius: u8,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        final_damage_spell_power_bonus: Option<i32>,
     },
     ConeDamage {
         damage_dice: u16,
@@ -906,6 +923,8 @@ pub enum AbilityEffectSpecDto {
         damage_bonus: u16,
         damage_type: DamageTypeDto,
         radius: u8,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        final_damage_spell_power_bonus: Option<i32>,
     },
     BreathDamage {
         hp_percent: u8,
@@ -959,6 +978,14 @@ pub enum AbilityEffectSpecDto {
         affect_chance_percent: u8,
         floor_terrain_id: String,
         wall_terrain_ids: Vec<String>,
+    },
+    AreaDestruction {
+        minimum_radius: u8,
+        maximum_radius: u8,
+        floor_terrain_id: String,
+        wall_terrain_id: String,
+        quartz_terrain_id: String,
+        magma_terrain_id: String,
     },
     SuppressMonsterReproduction {
         damage_dice: u16,
@@ -1088,6 +1115,8 @@ pub enum AbilityEffectSpecDto {
         repeat: u8,
         #[serde(default)]
         feeds: bool,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        final_damage_spell_power_bonus: Option<i32>,
     },
     Genocide {
         scope: AbilityGenocideScopeDto,
@@ -1122,6 +1151,8 @@ pub enum AbilityEffectSpecDto {
         damage_type: DamageTypeDto,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         target_category: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        final_damage_spell_power_bonus: Option<i32>,
     },
     VisibleApplyStatus {
         status_kind_id: String,
@@ -1135,13 +1166,22 @@ pub enum AbilityEffectSpecDto {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         target_category: Option<String>,
     },
-    EnchantEquippedWeapon {
+    BrandWeapon {
         affix_id: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        brand: Option<WeaponBrandDto>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        resistance: Option<DamageTypeDto>,
     },
     RandomChoice {
         roll_sides: u16,
         level_bonus_divisor: u16,
         branches: Vec<AbilityRandomBranchSpecDto>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        roll_spell_power_bonus: Option<i32>,
+    },
+    Sequence {
+        effects: Vec<AbilityEffectSpecDto>,
     },
     NoOp {
         reason: String,
@@ -1408,6 +1448,38 @@ pub struct PlayerMutationDto {
     pub description: String,
     pub rating: MutationRatingDto,
     pub locked: bool,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum VirtueKindDto {
+    Compassion,
+    Honour,
+    Justice,
+    Sacrifice,
+    Knowledge,
+    Faith,
+    Enlightenment,
+    Enchantment,
+    Chance,
+    Nature,
+    Harmony,
+    Vitality,
+    Unlife,
+    Patience,
+    Temperance,
+    Diligence,
+    Valour,
+    Individualism,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct VirtueDto {
+    pub kind: VirtueKindDto,
+    pub value: i16,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -1930,7 +2002,7 @@ pub enum AbilityRecallActionDto {
 pub enum AbilityEffectResolutionDto {
     RandomChoice {
         effect_index: u8,
-        roll: u16,
+        roll: i32,
         branch_index: u16,
         maximum_roll: u16,
     },
@@ -2019,6 +2091,14 @@ pub enum AbilityEffectResolutionDto {
         affected_positions: Vec<Position>,
         wall_positions: Vec<Position>,
         floor_positions: Vec<Position>,
+        removed_items: u32,
+        removed_gold_piles: u32,
+    },
+    AreaDestruction {
+        effect_index: u8,
+        protected_floor: bool,
+        affected_positions: Vec<Position>,
+        removed_entities: u32,
         removed_items: u32,
         removed_gold_piles: u32,
     },
@@ -2186,12 +2266,17 @@ pub enum AbilityEffectResolutionDto {
         entity_ids: Vec<String>,
         positions: Vec<Position>,
     },
-    EnchantEquippedWeapon {
+    BrandWeapon {
         effect_index: u8,
         item_id: String,
         item_kind_id: String,
         affix_id: String,
-        added: bool,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        brand: Option<WeaponBrandDto>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        resistance: Option<DamageTypeDto>,
+        to_hit: ItemEnchantmentComponentResolutionDto,
+        to_damage: ItemEnchantmentComponentResolutionDto,
     },
     NoOp {
         effect_index: u8,
@@ -2300,6 +2385,17 @@ pub struct SummonCommandResolutionDto {
     pub affected_summons: u16,
 }
 
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct PetUpkeepDto {
+    pub controlled_pets: u16,
+    pub total_levels: u32,
+    pub upkeep_percent: u16,
+    pub unsafe_warning: bool,
+    pub dismissal_required: bool,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
@@ -2329,6 +2425,7 @@ pub enum RestStopReasonDto {
     InvalidTurns,
     PlayerDied,
     MutationDirectionRequired,
+    PetDismissalRequired,
     TurnLimit,
 }
 
@@ -2534,12 +2631,15 @@ pub struct PlayerDto {
     pub resources: Vec<ResourcePoolDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub mutations: Vec<PlayerMutationDto>,
+    pub virtues: Vec<VirtueDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub ability_learning: Option<AbilityLearningDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub abilities: Vec<AbilityDto>,
     #[serde(default, skip_serializing_if = "is_default_summon_command")]
     pub summon_command: SummonCommandDto,
+    #[serde(default)]
+    pub pet_upkeep: PetUpkeepDto,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub recall: Option<RecallStateDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -3414,6 +3514,7 @@ pub fn generated_typescript() -> String {
     push_declaration!(SummonCommandModeDto);
     push_declaration!(SummonCommandDto);
     push_declaration!(SummonCommandResolutionDto);
+    push_declaration!(PetUpkeepDto);
     push_declaration!(ResourceRecoveryResolutionDto);
     push_declaration!(MonsterDisplacementResolutionDto);
     push_declaration!(RestStopReasonDto);
@@ -3425,6 +3526,8 @@ pub fn generated_typescript() -> String {
     push_declaration!(NutritionStateDto);
     push_declaration!(MutationRatingDto);
     push_declaration!(PlayerMutationDto);
+    push_declaration!(VirtueKindDto);
+    push_declaration!(VirtueDto);
     push_declaration!(PlayerDto);
     push_declaration!(EntityFactionDto);
     push_declaration!(SummonDto);
@@ -3527,6 +3630,7 @@ pub struct PlayerSaveDto {
     pub progress: Option<PlayerProgressSaveDto>,
     pub active_mutation_ids: Vec<String>,
     pub locked_mutation_ids: Vec<String>,
+    pub virtues: Vec<VirtueDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub build: Option<PlayerBuildSaveDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -4505,9 +4609,11 @@ mod tests {
                 build: None,
                 resources: Vec::new(),
                 mutations: Vec::new(),
+                virtues: Vec::new(),
                 ability_learning: None,
                 abilities: Vec::new(),
                 summon_command: SummonCommandDto::default(),
+                pet_upkeep: PetUpkeepDto::default(),
                 recall: None,
                 riding_actor_id: None,
             },
@@ -4710,6 +4816,7 @@ mod tests {
             progress: None,
             active_mutation_ids: Vec::new(),
             locked_mutation_ids: Vec::new(),
+            virtues: Vec::new(),
             build: None,
             resources: Vec::new(),
             bonus_spell_learning_capacity: 0,
@@ -4749,6 +4856,7 @@ mod tests {
         assert!(typescript.contains("alerted: boolean"));
         assert!(typescript.contains("equipment: Array<EquipmentItemDto>"));
         assert!(typescript.contains("mutations?: Array<PlayerMutationDto>"));
+        assert!(typescript.contains("virtues: Array<VirtueDto>"));
         assert!(typescript.contains("canReceiveRecharge: boolean"));
         assert!(typescript.contains("requiresTargetGlyph?: boolean"));
         assert!(typescript.contains("requiresRechargeTargets?: boolean"));
@@ -4768,5 +4876,11 @@ mod tests {
         .expect("generated protocol schema should be valid JSON");
         assert_eq!(schema["title"], "ProtocolSchemaV1");
         assert!(schema["$defs"]["GameCommand"].is_object());
+        assert_eq!(
+            schema["$defs"]["VirtueKindDto"]["enum"]
+                .as_array()
+                .map(Vec::len),
+            Some(18)
+        );
     }
 }

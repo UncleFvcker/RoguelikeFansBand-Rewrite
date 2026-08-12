@@ -100,6 +100,11 @@
           "format": "int32",
           "type": "integer"
         },
+        "spellPowerBonus": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
         "strength": {
           "default": 0,
           "format": "int32",
@@ -179,6 +184,7 @@
         "intelligence": 0,
         "maxHp": 0,
         "speed": 0,
+        "spellPowerBonus": 0,
         "strength": 0,
         "wisdom": 0
       }

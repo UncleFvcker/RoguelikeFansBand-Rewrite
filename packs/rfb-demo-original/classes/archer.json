@@ -28,6 +28,7 @@
       "demo.item.sling": { "initial": 4000, "maximum": 8000 }
     }
   },
+  "petUpkeepDivisor": 40,
   "ammunitionBreakageFactorModifier": -10,
   "projectileCriticalChanceBonusPercentPerLevel": 1,
   "abilities": [

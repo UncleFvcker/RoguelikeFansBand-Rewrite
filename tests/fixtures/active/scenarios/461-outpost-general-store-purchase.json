@@ -29,7 +29,7 @@
       "revision": 1,
       "turn": 1,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 154,
+      "rngDrawCounter": 165,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -159,26 +159,10 @@
           "stock": [
             {
               "id": "generated.item.101",
-              "kindId": "demo.item.brass-lantern",
-              "displayNameKey": "item-demo-brass-lantern-name",
-              "quantity": 1,
-              "maximumQuantity": 1,
-              "unitPrice": 30,
-              "weightTenthsPound": 50,
-              "fuel": {
-                "kind": "lantern",
-                "current": 7500,
-                "maximum": 15000,
-                "lightRadius": 2
-              },
-              "quality": "ordinary"
-            },
-            {
-              "id": "generated.item.102",
               "kindId": "demo.item.flask-of-oil",
               "displayNameKey": "item-demo-flask-of-oil-name",
-              "quantity": 2,
-              "maximumQuantity": 2,
+              "quantity": 5,
+              "maximumQuantity": 5,
               "unitPrice": 3,
               "weightTenthsPound": 10,
               "fuel": {
@@ -190,7 +174,7 @@
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.103",
+              "id": "generated.item.102",
               "kindId": "demo.item.fabric-bag",
               "displayNameKey": "item-demo-fabric-bag-name",
               "quantity": 2,
@@ -200,29 +184,39 @@
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.105",
+              "id": "generated.item.104",
               "kindId": "demo.item.hard-biscuit",
               "displayNameKey": "item-demo-hard-biscuit-name",
-              "quantity": 5,
-              "maximumQuantity": 5,
+              "quantity": 3,
+              "maximumQuantity": 3,
               "unitPrice": 1,
               "weightTenthsPound": 2,
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.106",
+              "id": "generated.item.105",
               "kindId": "demo.item.strip-of-venison",
               "displayNameKey": "item-demo-strip-of-venison-name",
-              "quantity": 5,
-              "maximumQuantity": 5,
+              "quantity": 3,
+              "maximumQuantity": 3,
               "unitPrice": 2,
               "weightTenthsPound": 2,
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.107",
+              "id": "generated.item.106",
               "kindId": "demo.item.water-potion",
               "displayNameKey": "item-demo-water-potion-name",
+              "quantity": 3,
+              "maximumQuantity": 3,
+              "unitPrice": 1,
+              "weightTenthsPound": 4,
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.107",
+              "kindId": "demo.item.apple-juice",
+              "displayNameKey": "item-demo-apple-juice-name",
               "quantity": 4,
               "maximumQuantity": 4,
               "unitPrice": 1,
@@ -231,26 +225,16 @@
             },
             {
               "id": "generated.item.108",
-              "kindId": "demo.item.apple-juice",
-              "displayNameKey": "item-demo-apple-juice-name",
-              "quantity": 1,
-              "maximumQuantity": 1,
-              "unitPrice": 1,
-              "weightTenthsPound": 4,
-              "quality": "ordinary"
-            },
-            {
-              "id": "generated.item.109",
               "kindId": "demo.item.pint-of-fine-ale",
               "displayNameKey": "item-demo-pint-of-fine-ale-name",
-              "quantity": 2,
-              "maximumQuantity": 2,
+              "quantity": 4,
+              "maximumQuantity": 4,
               "unitPrice": 1,
               "weightTenthsPound": 5,
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.110",
+              "id": "generated.item.109",
               "kindId": "demo.item.pint-of-fine-wine",
               "displayNameKey": "item-demo-pint-of-fine-wine-name",
               "quantity": 1,
@@ -260,17 +244,17 @@
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.97",
+              "id": "generated.item.95",
               "kindId": "demo.item.ration-of-food",
               "displayNameKey": "item-demo-ration-of-food-name",
-              "quantity": 4,
-              "maximumQuantity": 4,
+              "quantity": 1,
+              "maximumQuantity": 1,
               "unitPrice": 3,
               "weightTenthsPound": 10,
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.98",
+              "id": "generated.item.96",
               "kindId": "demo.item.piece-of-elvish-waybread",
               "displayNameKey": "item-demo-piece-of-elvish-waybread-name",
               "quantity": 1,
@@ -280,11 +264,11 @@
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.99",
+              "id": "generated.item.97",
               "kindId": "demo.item.wooden-torch",
               "displayNameKey": "item-demo-wooden-torch-name",
-              "quantity": 1,
-              "maximumQuantity": 1,
+              "quantity": 3,
+              "maximumQuantity": 3,
               "unitPrice": 1,
               "weightTenthsPound": 30,
               "fuel": {
@@ -301,7 +285,7 @@
               "itemId": "generated.item.1",
               "kindId": "demo.item.ration-of-food",
               "unitPrice": 2,
-              "maximumQuantity": 9
+              "maximumQuantity": 7
             },
             {
               "itemId": "generated.item.100",
@@ -471,7 +455,7 @@
       "playerDefense": 15,
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
-      "playerCarriedWeightTenthsPound": 764,
+      "playerCarriedWeightTenthsPound": 744,
       "playerCarryCapacityTenthsPound": 1200,
       "playerEncumbranceSpeedPenalty": 0,
       "playerGold": 999970,
@@ -1314,7 +1298,7 @@
           "usable": true,
           "canReceiveRecharge": false,
           "canSupplyRecharge": false,
-          "quantity": 9,
+          "quantity": 7,
           "weightTenthsPound": 10,
           "equipmentSlot": null,
           "modifiers": {
@@ -1327,7 +1311,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1358,7 +1343,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "identified",
           "quality": "ordinary"
@@ -1371,7 +1357,7 @@
           "usable": false,
           "fuel": {
             "kind": "torch",
-            "current": 2000,
+            "current": 1500,
             "maximum": 5000,
             "lightRadius": 1
           },
@@ -1390,7 +1376,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1402,7 +1389,7 @@
           "usable": false,
           "fuel": {
             "kind": "torch",
-            "current": 2000,
+            "current": 1500,
             "maximum": 5000,
             "lightRadius": 1
           },
@@ -1421,7 +1408,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1433,7 +1421,7 @@
           "usable": false,
           "fuel": {
             "kind": "torch",
-            "current": 2000,
+            "current": 1500,
             "maximum": 5000,
             "lightRadius": 1
           },
@@ -1452,7 +1440,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1464,7 +1453,7 @@
           "usable": false,
           "fuel": {
             "kind": "torch",
-            "current": 2000,
+            "current": 1500,
             "maximum": 5000,
             "lightRadius": 1
           },
@@ -1483,7 +1472,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1495,7 +1485,7 @@
           "usable": false,
           "fuel": {
             "kind": "torch",
-            "current": 2000,
+            "current": 1500,
             "maximum": 5000,
             "lightRadius": 1
           },
@@ -1514,7 +1504,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1526,7 +1517,7 @@
           "usable": false,
           "fuel": {
             "kind": "torch",
-            "current": 2000,
+            "current": 1500,
             "maximum": 5000,
             "lightRadius": 1
           },
@@ -1545,7 +1536,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1570,7 +1562,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "unexamined"
         }
@@ -1594,7 +1587,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "equipmentBonuses": {
             "meleeAttacks": 0,
@@ -1633,7 +1627,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "identified",
           "quality": "ordinary",
@@ -1667,7 +1662,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "identified",
           "quality": "ordinary",
@@ -1760,7 +1756,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 175,
+      "nextItemInstanceSerial": 170,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -1768,7 +1764,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "ee2b6e137bff058b5ddd8053ceffe1bfcbd8d1c0e341d0be2e75a94207e54566"
+      "stateHash": "74cfc9f566ae3f7e432c28db36358784cd756017fd473fcde3a9d0fe85c90862"
     },
     "events": [
       {

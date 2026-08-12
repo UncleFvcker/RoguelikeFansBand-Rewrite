@@ -644,3 +644,27 @@ contract-v279 / 包 1.277.0 为 `ProceduralStreamerCandidateDefinition` 增加�
 矿脉，已知/隐藏目标都必须是 treasure vein。新增四个 `demo.terrain.*-treasure` ID；
 不新增 item、material、ability 或 affix ID。content hash 为
 `9e84e738fecbc3b74933c4a708c5a89cd77dd7bdd000c11b76c7d57184abec26`。
+包 1.276.0 将死亡领域 `Invoke Spirits` 的四个占位分支替换为正式效果：目标怪物
+变形复用变色龙候选与唯一怪/守卫保护，地震复用既有半径 12 事务，`light-line`
+永久照亮光束路径并仅对光弱点怪物造成 6d8 弱光伤害，能力版 `area-destruction`
+复用物品区域毁灭的规划与应用事务。协议升至 1.177；无新增持久字段，State Hash
+Schema 保持 v88。
+
+包 1.277.0 为 `Invoke Spirits` 的每个随机分支增加独立、非递归的 `levelScaling`，并仅
+允许 self 分支包含一层由群体伤害、群体状态与治疗组成的 `Sequence`。23 个阈值保持
+原序，魔法飞弹、元素弹、范围伤害、混乱、吸血与灭族按施法等级物化；最高档依次执行
+150 点群体伤害、群体减速、群体催眠和 300 点治疗。content hash 为
+`a7a3d1e2d87097f95114a416a97217102434c47741c8bb2927e682fe7609fe20`；协议升至
+1.178，State Hash Schema 保持 v88。
+
+包 1.278.0 增加窄化的 `malediction` 能力效果：主投射固定为 hell-fire，并在结算后按
+原版顺序执行 1/5 触发判定与条件性的 1d1000 rider，覆盖死亡射线、恐惧、混乱和震慑。
+该类型只接受既有伤害骰与加值缩放，不开放递归 `RandomChoice`/`Sequence`；协议投影仍为
+普通 hell-fire `Damage`。content hash 为
+`b3ee9a07221cac567b5f70c3753e9d417f410bdc0e92647bc2cb3a1ecece27a1`；协议保持
+1.178，State Hash Schema 保持 v88。
+
+集成包 1.282.0 / contract-v282 为职业定义增加 `petUpkeepDivisor`，保存 RFB `class_t.pets`
+的正整数值。运行时用它计算当前受控 actor 的派生维持比例；该字段不声明宠物容量、
+忠诚数值或职业专用宠物类型。content hash 为
+当前 hash 以 `content.lock.json` 为准；协议升至 1.184，State Hash Schema 保持 v92。

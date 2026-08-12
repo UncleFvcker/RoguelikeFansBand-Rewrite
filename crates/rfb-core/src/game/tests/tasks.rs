@@ -53,12 +53,13 @@ fn orc_cave_natural_affixes_never_cross_item_slots() {
     let context = LootContext {
         table_id: "demo.loot-table.base-items".to_owned(),
         floor_id: "demo.floor.orc-cave-depth-32".to_owned(),
-        depth: 32,
+        depth: 30,
         source: LootSource::MonsterDeath {
             actor_id: "test.orc-cave.loot-source".to_owned(),
         },
     };
     let mut saw_slaying = false;
+    let mut saw_protection = false;
     let mut saw_fine_incompatible_fallback = false;
     for _ in 0..20_000 {
         let drops = game
@@ -72,6 +73,14 @@ fn orc_cave_natural_affixes_never_cross_item_slots() {
             if item.affix_ids == ["rfb-legacy.affix.slaying"] {
                 saw_slaying = true;
                 assert_eq!(definition.equipment_slot.as_deref(), Some("weapon"));
+            } else if item.affix_ids == ["rfb-legacy.affix.protection"] {
+                saw_protection = true;
+                assert!(matches!(
+                    definition.equipment_slot.as_deref(),
+                    Some("body" | "shield" | "cloak" | "head" | "gloves" | "boots")
+                ));
+                let defense = item.rolled_affixes[0].properties.modifiers.defense;
+                assert!((1..=10).contains(&defense));
             } else if item.quality == ItemQualityDto::Fine
                 && definition.equipment_slot.as_deref() != Some("weapon")
             {
@@ -81,6 +90,7 @@ fn orc_cave_natural_affixes_never_cross_item_slots() {
         }
     }
     assert!(saw_slaying);
+    assert!(saw_protection);
     assert!(saw_fine_incompatible_fallback);
 }
 
@@ -924,7 +934,7 @@ fn vapor_quest_unlocks_after_old_man_willow_clears_the_cellar_and_rewards_detect
             .iter()
             .filter(|item| item.id.starts_with("demo.item.vapor-quest."))
             .count(),
-        12
+        11
     );
     game.entities.clear();
     dispatch_next(&mut game, GameCommand::Wait);

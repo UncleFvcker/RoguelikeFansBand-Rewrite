@@ -207,6 +207,7 @@ fn death_paladin_unlocks_hell_lance_and_fear_resistance_at_original_levels() {
             damage_sides: 1,
             damage_bonus: 89,
             damage_type: DamageTypeDto::HellFire,
+            final_damage_spell_power_bonus: None,
         }]
     ));
 
@@ -278,6 +279,7 @@ fn death_paladin_unlocks_hell_lance_and_fear_resistance_at_original_levels() {
             damage_sides: 1,
             damage_bonus: 119,
             damage_type: DamageTypeDto::HellFire,
+            final_damage_spell_power_bonus: None,
         }]
     ));
 }

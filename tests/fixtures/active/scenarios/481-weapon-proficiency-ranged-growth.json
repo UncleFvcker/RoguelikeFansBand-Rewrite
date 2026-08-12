@@ -45,7 +45,7 @@
       "turn": 1,
       "worldTick": 9,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 156,
+      "rngDrawCounter": 168,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -323,10 +323,10 @@
       "playerDefense": 15,
       "playerSpeed": 110,
       "playerEnergyNeed": -2,
-      "playerCarriedWeightTenthsPound": 622,
+      "playerCarriedWeightTenthsPound": 602,
       "playerCarryCapacityTenthsPound": 1200,
       "playerEncumbranceSpeedPenalty": 0,
-      "playerGold": 297,
+      "playerGold": 675,
       "playerNutrition": 9999,
       "playerLevel": 1,
       "playerExperience": 0,
@@ -1162,13 +1162,13 @@
             "x": 46,
             "y": 16
           },
-          "hp": 84,
+          "hp": 71,
           "speed": 109,
           "energyNeed": 19
         }
       ],
       "groundItemCount": 3,
-      "inventoryStackCount": 6,
+      "inventoryStackCount": 5,
       "equipmentCount": 3,
       "inventory": [
         {
@@ -1179,7 +1179,7 @@
           "usable": true,
           "canReceiveRecharge": false,
           "canSupplyRecharge": false,
-          "quantity": 6,
+          "quantity": 7,
           "weightTenthsPound": 10,
           "equipmentSlot": null,
           "modifiers": {
@@ -1192,7 +1192,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1223,7 +1224,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1254,7 +1256,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1285,43 +1288,13 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "unexamined"
         },
         {
           "id": "generated.item.5",
-          "kindId": "demo.item.wooden-torch",
-          "displayNameKey": "item-demo-wooden-torch-name",
-          "knowledge": "aware",
-          "usable": false,
-          "fuel": {
-            "kind": "torch",
-            "current": 3500,
-            "maximum": 5000,
-            "lightRadius": 1
-          },
-          "canReceiveRecharge": false,
-          "canSupplyRecharge": false,
-          "quantity": 1,
-          "weightTenthsPound": 30,
-          "equipmentSlot": "light",
-          "modifiers": {
-            "attack": 0,
-            "defense": 0,
-            "maxHp": 0,
-            "strength": 0,
-            "intelligence": 0,
-            "wisdom": 0,
-            "dexterity": 0,
-            "constitution": 0,
-            "charisma": 0,
-            "speed": 0
-          },
-          "identification": "unexamined"
-        },
-        {
-          "id": "generated.item.6",
           "kindId": "demo.item.arrow",
           "displayNameKey": "item-demo-arrow-name",
           "knowledge": "aware",
@@ -1341,14 +1314,15 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "unexamined"
         }
       ],
       "equipment": [
         {
-          "id": "generated.item.8",
+          "id": "generated.item.7",
           "kindId": "demo.item.chain-mail",
           "displayNameKey": "item-demo-chain-mail-name",
           "knowledge": "aware",
@@ -1365,7 +1339,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "equipmentBonuses": {
             "meleeAttacks": 0,
@@ -1387,7 +1362,7 @@
           "quality": "ordinary"
         },
         {
-          "id": "generated.item.7",
+          "id": "generated.item.6",
           "kindId": "demo.item.broad-sword",
           "displayNameKey": "item-demo-broad-sword-name",
           "knowledge": "aware",
@@ -1404,7 +1379,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "identified",
           "quality": "ordinary",
@@ -1417,11 +1393,11 @@
               "sides": 6,
               "damageType": "physical"
             },
-            "sourceItemId": "generated.item.7"
+            "sourceItemId": "generated.item.6"
           }
         },
         {
-          "id": "generated.item.9",
+          "id": "generated.item.8",
           "kindId": "demo.item.short-bow",
           "displayNameKey": "item-demo-short-bow-name",
           "knowledge": "aware",
@@ -1438,7 +1414,8 @@
             "dexterity": 0,
             "constitution": 0,
             "charisma": 0,
-            "speed": 0
+            "speed": 0,
+            "spellPowerBonus": 0
           },
           "identification": "identified",
           "quality": "ordinary",
@@ -1461,7 +1438,7 @@
               "range": 16,
               "requiresLineOfEffect": true
             },
-            "sourceItemId": "generated.item.9"
+            "sourceItemId": "generated.item.8"
           }
         }
       ],
@@ -1479,7 +1456,7 @@
           "discovered": true
         },
         {
-          "itemId": "generated.item.167",
+          "itemId": "generated.item.172",
           "discovered": true
         },
         {
@@ -1500,7 +1477,9 @@
         },
         {
           "itemId": "generated.item.6",
-          "discovered": true
+          "discovered": true,
+          "appraised": true,
+          "identified": true
         },
         {
           "itemId": "generated.item.7",
@@ -1513,15 +1492,9 @@
           "discovered": true,
           "appraised": true,
           "identified": true
-        },
-        {
-          "itemId": "generated.item.9",
-          "discovered": true,
-          "appraised": true,
-          "identified": true
         }
       ],
-      "nextItemInstanceSerial": 168,
+      "nextItemInstanceSerial": 173,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -1529,14 +1502,26 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "19d839738b082a203b2dd3c95e4aea890a57b1cae21b227c55c0ec6302fcfed9"
+      "stateHash": "fb735e24415dba02698f5f50c401ef52e0d476423b3ae5a18485e9d99e2ad199"
     },
     "events": [
       {
-        "kind": "combat.projectile-miss",
-        "messageKey": "projectile-miss",
+        "kind": "combat.projectile-hit",
+        "messageKey": "projectile-hit",
         "args": {
+          "damage": "13",
           "target": "demo.actor.adobe-golem"
+        },
+        "outcome": {
+          "type": "damage",
+          "resolution": {
+            "rawDamage": 17,
+            "armorReduction": 4,
+            "resistanceAdjustment": 0,
+            "finalDamage": 13,
+            "damageType": "physical",
+            "resistance": "normal"
+          }
         },
         "trace": {
           "origin": {

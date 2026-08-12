@@ -1031,7 +1031,7 @@ impl Game {
         });
     }
 
-    fn area_destruction_allowed(&self) -> bool {
+    pub(super) fn area_destruction_allowed(&self) -> bool {
         let Some(world) = self.content.world(&self.world_id) else {
             return false;
         };

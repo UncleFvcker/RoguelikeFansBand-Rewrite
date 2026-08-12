@@ -10,8 +10,8 @@ mod tables;
 mod towns;
 mod worlds;
 
-pub(crate) use abilities::valid_ability_level_scaling;
 pub use abilities::*;
+pub(crate) use abilities::{valid_ability_level_scaling, valid_ability_spell_power};
 pub use actors::*;
 pub use characters::*;
 pub use items::*;
