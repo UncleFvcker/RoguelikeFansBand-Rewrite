@@ -46,7 +46,7 @@
       "turn": 1,
       "worldTick": 9,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 168,
+      "rngDrawCounter": 167,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -1177,12 +1177,12 @@
             "x": 46,
             "y": 16
           },
-          "hp": 71,
+          "hp": 84,
           "speed": 109,
           "energyNeed": 19
         }
       ],
-      "groundItemCount": 3,
+      "groundItemCount": 2,
       "inventoryStackCount": 5,
       "equipmentCount": 3,
       "inventory": [
@@ -1193,6 +1193,7 @@
           "knowledge": "aware",
           "usable": true,
           "mountUsable": false,
+          "captureBall": false,
           "canReceiveRecharge": false,
           "canSupplyRecharge": false,
           "quantity": 7,
@@ -1220,6 +1221,7 @@
           "knowledge": "aware",
           "usable": false,
           "mountUsable": false,
+          "captureBall": false,
           "fuel": {
             "kind": "torch",
             "current": 3500,
@@ -1253,6 +1255,7 @@
           "knowledge": "aware",
           "usable": false,
           "mountUsable": false,
+          "captureBall": false,
           "fuel": {
             "kind": "torch",
             "current": 3500,
@@ -1286,6 +1289,7 @@
           "knowledge": "aware",
           "usable": false,
           "mountUsable": false,
+          "captureBall": false,
           "fuel": {
             "kind": "torch",
             "current": 3500,
@@ -1319,6 +1323,7 @@
           "knowledge": "aware",
           "usable": false,
           "mountUsable": false,
+          "captureBall": false,
           "canReceiveRecharge": false,
           "canSupplyRecharge": false,
           "quantity": 21,
@@ -1346,6 +1351,7 @@
           "kindId": "demo.item.chain-mail",
           "displayNameKey": "item-demo-chain-mail-name",
           "knowledge": "aware",
+          "captureBall": false,
           "quantity": 1,
           "weightTenthsPound": 220,
           "slotId": "body",
@@ -1386,6 +1392,7 @@
           "kindId": "demo.item.broad-sword",
           "displayNameKey": "item-demo-broad-sword-name",
           "knowledge": "aware",
+          "captureBall": false,
           "quantity": 1,
           "weightTenthsPound": 150,
           "slotId": "right-hand",
@@ -1421,6 +1428,7 @@
           "kindId": "demo.item.short-bow",
           "displayNameKey": "item-demo-short-bow-name",
           "knowledge": "aware",
+          "captureBall": false,
           "quantity": 1,
           "weightTenthsPound": 30,
           "slotId": "shooting",
@@ -1476,10 +1484,6 @@
           "discovered": true
         },
         {
-          "itemId": "generated.item.172",
-          "discovered": true
-        },
-        {
           "itemId": "generated.item.2",
           "discovered": true
         },
@@ -1514,7 +1518,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 173,
+      "nextItemInstanceSerial": 174,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -1522,26 +1526,14 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "5ee5dd828d7413ddce65ae726dece7726d7e68de7a54bbea8062179f9996259e"
+      "stateHash": "e2a20aa90573628582a45a7d40b50258d8f900b3e248c7b2a4a9de4093414542"
     },
     "events": [
       {
-        "kind": "combat.projectile-hit",
-        "messageKey": "projectile-hit",
+        "kind": "combat.projectile-miss",
+        "messageKey": "projectile-miss",
         "args": {
-          "damage": "13",
           "target": "demo.actor.adobe-golem"
-        },
-        "outcome": {
-          "type": "damage",
-          "resolution": {
-            "rawDamage": 17,
-            "armorReduction": 4,
-            "resistanceAdjustment": 0,
-            "finalDamage": 13,
-            "damageType": "physical",
-            "resistance": "normal"
-          }
         },
         "trace": {
           "origin": {
@@ -1569,8 +1561,8 @@
         }
       },
       {
-        "kind": "combat.projectile-ammo-recovered",
-        "messageKey": "projectile-ammo-recovered",
+        "kind": "combat.projectile-ammo-broken",
+        "messageKey": "projectile-ammo-broken",
         "args": {
           "target": "demo.item.arrow"
         }

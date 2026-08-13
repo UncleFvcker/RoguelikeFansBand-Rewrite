@@ -433,6 +433,10 @@ impl Game {
                 .content
                 .item(&target_kind_id)
                 .and_then(|definition| definition.shatter_effect.clone());
+            self.force_open_capture_ball(&item_id, position, false, events, changed);
+            let Some(index) = self.items.iter().position(|item| item.id == item_id) else {
+                continue;
+            };
             self.items.remove(index);
             self.item_property_knowledge.remove(&item_id);
             changed.insert(position);

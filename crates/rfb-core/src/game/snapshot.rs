@@ -6,7 +6,7 @@ use crate::{
     effect::STATUS_ANTI_MAGIC,
     resistance::DamageType,
     save::position_from_content,
-    state::ItemLocation,
+    state::{ItemInstance, ItemLocation},
     stats::{AttributeKind, CharacterProgress, experience_required_for_level},
 };
 use rfb_content::{
@@ -16,13 +16,13 @@ use rfb_content::{
 use rfb_protocol::{
     AbilityDetectSpecDto, AbilityDto, AbilityLearningDto, AbilitySourceDto, AbilityStudyModeDto,
     AbilitySummonSpecDto, AbilityTerrainTransformSpecDto, AttackProfileDto, AttributeSetDto,
-    AttributeValueDto, BodySlotDto, CampaignStateDto, CellDto, CellVisualDto, ContentVisualDto,
-    DamageDiceDto, EntityDto, EntityFactionDto, EquipmentItemDto, GameSnapshot, InventoryItemDto,
-    ItemDto, ItemKnowledgeDto, MapScaleDto, MeleeRoutineDto, MutationRatingDto, PROTOCOL_VERSION,
-    PetDto, PlayerBuildDto, PlayerDto, PlayerMutationDto, PlayerProgressDto, Position,
-    ResistanceDto, ResourcePoolDto, SkillProgressDto, SummonDto, TaskServiceDto, TaskStatusDto,
-    TerrainInteractionDto, TerrainInteractionKindDto, VisibilityState, WildernessLocationDto,
-    WildernessLocationKindDto,
+    AttributeValueDto, BodySlotDto, CampaignStateDto, CapturedActorDto, CellDto, CellVisualDto,
+    ContentVisualDto, DamageDiceDto, EntityDto, EntityFactionDto, EquipmentItemDto, GameSnapshot,
+    InventoryItemDto, ItemDto, ItemKnowledgeDto, MapScaleDto, MeleeRoutineDto, MutationRatingDto,
+    PROTOCOL_VERSION, PetDto, PlayerBuildDto, PlayerDto, PlayerMutationDto, PlayerProgressDto,
+    Position, ResistanceDto, ResourcePoolDto, SkillProgressDto, SummonDto, TaskServiceDto,
+    TaskStatusDto, TerrainInteractionDto, TerrainInteractionKindDto, VisibilityState,
+    WildernessLocationDto, WildernessLocationKindDto,
 };
 
 use super::tasks::projected_task_state;
@@ -814,6 +814,11 @@ impl Game {
                         })
                     }),
                     mount_usable: self.mount_item_is_usable(&item.kind_id),
+                    capture_ball: self
+                        .content
+                        .item(&item.kind_id)
+                        .is_some_and(|definition| definition.capture_ball),
+                    captured_actor: self.captured_actor_dto(item),
                     charges: (self.item_knowledge_dto(&item.kind_id) == ItemKnowledgeDto::Aware)
                         .then_some(item.charges)
                         .flatten(),
@@ -889,6 +894,12 @@ impl Game {
                     kind_id: item.kind_id.clone(),
                     display_name_key: self.item_display_name_key(&item.kind_id),
                     knowledge: self.item_knowledge_dto(&item.kind_id),
+                    capture_ball: self
+                        .content
+                        .item(&item.kind_id)
+                        .is_some_and(|definition| definition.capture_ball),
+                    captured_actor: self.captured_actor_dto(item),
+                    use_target_spec: self.capture_ball_target_spec(item),
                     quantity: item.quantity,
                     inscription: item.inscription.clone(),
                     fuel: item.fuel,
@@ -914,6 +925,22 @@ impl Game {
             .collect::<Vec<_>>();
         equipment.sort_by(|left, right| left.slot_id.cmp(&right.slot_id));
         equipment
+    }
+
+    pub(super) fn captured_actor_dto(&self, item: &ItemInstance) -> Option<CapturedActorDto> {
+        let captured = item.captured_actor.as_ref()?;
+        let definition = self
+            .content
+            .actor(&captured.kind_id)
+            .expect("captured actor definition must remain available");
+        Some(CapturedActorDto {
+            kind_id: captured.kind_id.clone(),
+            name_key: definition.name_key.clone(),
+            speed: captured.speed,
+            hp: captured.hp,
+            max_hp: captured.max_hp,
+            experience: captured.experience,
+        })
     }
 
     #[must_use]

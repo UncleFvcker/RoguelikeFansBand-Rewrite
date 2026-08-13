@@ -820,6 +820,9 @@ pub struct ItemDefinition {
     /// Ammunition units carried outside the shared pack while this quiver is equipped.
     #[serde(default)]
     pub ammunition_capacity: u16,
+    /// Whether this item is RFB's equippable monster capture/release device.
+    #[serde(default)]
+    pub capture_ball: bool,
     /// Curse stamped onto newly generated instances. Save data remains
     /// authoritative after generation and never re-derives this field.
     #[serde(default)]

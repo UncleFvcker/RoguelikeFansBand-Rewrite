@@ -179,3 +179,16 @@ ammo-slaying ID。若 items 方向随后导入陶器碎片或断木棍，也应�
 - 当前协调点：pack `1.302.0`，content hash
   `1dcf89e57968a66dcfce99ba036ad077012e8dcbea8e8a0697aca4756d4b9f70`，Protocol `1.191`，
   State Hash Schema v95，save v1，active baseline `contract-v289`。
+
+## main 当前批次：捕获球与最终闭环
+
+- 新增并由 class 方向拥有 `demo.item.capture-ball`；没有新增 ability、material、affix 或
+  actor ID。items 分支不得重复导入同义物品。正式数据来自 RFB master source index 704：
+  等级 15、`A:15/4`、12.0 磅、价值 1000、不可堆叠、shield 槽；2.0 磅旧计划值已按
+  `W:15:0:0:120:1000` 修正。
+- 捕获/释放复用 `UseItem` 的 entity/direction 目标；球内只保存 kind、速度、生命与经验。
+  当前坐骑捕获、羁绊重置、丢弃/投掷敌对骰、摧毁强制宠物释放、周期恢复和 Unique 生成
+  排除均已闭合。怪物资格来自通用 `capturePolicy`，核心不硬编码 actor ID。
+- 当前协调点：pack `1.303.0`，content hash
+  `538cce0f525d1530dbb109f4cf75074c69130b09eebca10d672628ad770467e5`，Protocol `1.192`，
+  State Hash Schema v96，save v1，active baseline `contract-v290`。

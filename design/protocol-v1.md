@@ -616,3 +616,9 @@ v94，save 容器保持 v1。
 命令继续复用 `UseItem` 与 entity `TargetSelection`。`ActorSaveDto.experience` 和
 `PlayerSaveDto.ridingBond` 为必填权威字段，进入 State Hash Schema v95；save 容器保持
 v1，不兼容缺少字段的旧开发存档。
+
+协议 1.192 / contract-v290 为背包与装备物品投影增加 `captureBall`、可选
+`capturedActor` 和装备侧 `useTargetSpec`，商店库存与家中物品也投影可选 `capturedActor`。
+空球复用既有 `UseItem` 的 entity 目标，满球复用 direction 目标；当前坐骑与玩家同格时仍
+可作为 entity 目标。四种物品 save DTO 均增加必填可空 `capturedActor`，进入 State Hash
+Schema v96；save 容器保持 v1，不兼容缺少字段的旧开发存档。

@@ -127,6 +127,14 @@
       "initialMaximum": 3,
       "maintenanceMinimum": 1,
       "maintenanceMaximum": 3
+    },
+    {
+      "itemKindId": "demo.item.capture-ball",
+      "availabilityPercent": 25,
+      "initialMinimum": 1,
+      "initialMaximum": 1,
+      "maintenanceMinimum": 1,
+      "maintenanceMaximum": 1
     }
   ],
   "maintenance": {

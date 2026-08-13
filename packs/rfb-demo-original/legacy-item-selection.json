@@ -112,6 +112,7 @@
     { "sourceIndex": 271, "id": "ring-mail" },
     { "sourceIndex": 273, "id": "chain-mail" },
     { "sourceIndex": 275, "id": "augmented-chain-mail" },
+    { "sourceIndex": 704, "id": "capture-ball" },
     { "sourceIndex": 722, "id": "fabric-bag" },
     { "sourceIndex": 723, "id": "leather-pouch" },
     { "sourceIndex": 724, "id": "dwarven-backpack" },

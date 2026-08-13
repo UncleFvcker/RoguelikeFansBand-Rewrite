@@ -2188,6 +2188,10 @@ impl Game {
             return Ok(());
         };
         let kind_id = self.items[index].kind_id.clone();
+        if definition.capture_ball {
+            self.use_capture_ball(index, target, events, changed, removed_entities);
+            return Ok(());
+        }
         if self.mount_item_target_is_valid(item_id, target).is_some()
             && let Some(mount_use) = definition.mount_use.clone()
         {

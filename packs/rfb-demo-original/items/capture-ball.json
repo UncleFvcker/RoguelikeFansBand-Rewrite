@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 1000,
+  "captureBall": true,
+  "descriptionKey": "item-demo-capture-ball-description",
+  "equipmentSlot": "shield",
+  "formatVersion": 1,
+  "generationLevel": 15,
+  "glyph": "~",
+  "id": "demo.item.capture-ball",
+  "maxStack": 1,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-capture-ball-name",
+  "tags": [
+    "capture-ball",
+    "equipment",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 120
+}

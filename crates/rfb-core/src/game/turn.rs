@@ -176,6 +176,7 @@ impl Game {
         }
         self.process_equipment_regeneration(events);
         self.process_inventory_device_recovery(events);
+        self.process_captured_actor_regeneration();
         let reality_changed =
             local_floor_active && self.advance_reality_change(events, changed, removed_entities)?;
         if local_floor_active && !reality_changed {

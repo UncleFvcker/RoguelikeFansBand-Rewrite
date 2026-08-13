@@ -442,3 +442,10 @@ null 或稳定 actor ID、当前 kind ID 与 0–10000 羁绊值；载入要求�
 玩家控制的 actor，允许目标暂存于离层状态。进化保留实体 ID、控制和骑乘状态，但将新形态
 羁绊重置为 0。两项状态进入 State Hash Schema v95；Protocol 升至 1.191，save 容器保持
 v1，不提供旧开发存档兼容默认值。
+
+contract-v290 为 `ItemSaveDto`、`InventoryItemSaveDto`、`EquipmentItemSaveDto` 与
+`CarriedItemSaveDto` 增加必填可空 `capturedActor`。非空值只保存稳定 kind ID、速度、当前/
+最大生命和经验；不保存旧实体 ID、临时状态、控制权、召唤或群体关系。载入要求物品是正式
+捕获球、kind 是可捕获怪物、生命与速度有效；未知、免疫或放在普通物品上的状态均严格拒绝。
+该状态进入 State Hash Schema v96；Protocol 升至 1.192，save 容器保持 v1，不提供旧开发
+存档兼容默认值。

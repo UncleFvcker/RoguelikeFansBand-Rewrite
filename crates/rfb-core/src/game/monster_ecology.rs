@@ -1272,6 +1272,32 @@ impl Game {
         {
             return false;
         }
+        let captured_here = self
+            .items
+            .iter()
+            .chain(
+                self.stored_floors
+                    .values()
+                    .flat_map(|floor| floor.items.iter()),
+            )
+            .chain(
+                self.shop_states
+                    .values()
+                    .flat_map(|shop| shop.inventory.iter()),
+            )
+            .chain(
+                self.home_states
+                    .values()
+                    .flat_map(|home| home.inventory.iter()),
+            )
+            .any(|item| {
+                item.captured_actor
+                    .as_ref()
+                    .is_some_and(|captured| captured.kind_id == kind_id)
+            });
+        if captured_here {
+            return false;
+        }
         !self.stored_floors.values().any(|floor| {
             floor
                 .entities

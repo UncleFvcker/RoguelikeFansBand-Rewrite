@@ -700,3 +700,11 @@ RFB `master:k_info.txt` 的 `OF_RIDING` 身份，`lance` 另承载骑乘长枪�
 `demo.skill-set.cavalry`、`demo.build.cavalry`、`demo.actor.cavalry-player`、
 `demo.ability.cavalry-rodeo` 与 `demo.ability-program.cavalry-rodeo`，没有新增物品 ID。
 content hash 为 `bb912c0d2adef96f8930f190e588f6a1a59a94b9df9b70ce59d6634913a4f2d9`。
+
+包 1.303.0 为物品增加默认关闭的 `captureBall`，并为怪物 actor 增加默认 `normal` 的
+`capturePolicy: normal | pet-only | immune`。捕获球必须不可堆叠、占用 shield 槽且不能
+同时声明普通 use/device 效果；非怪物 actor 不能声明非 normal 策略。商店 stock 增加默认
+100 的 `availabilityPercent`，范围 1–100，只在低于 100 时于初始化与维护各消费一次资格骰，
+未通过时本轮目标库存为 0。当前新 ID 只有 `demo.item.capture-ball`；content hash 为
+`538cce0f525d1530dbb109f4cf75074c69130b09eebca10d672628ad770467e5`。Protocol 升至 1.192，
+State Hash Schema 升至 v96，active baseline 为 contract-v290。

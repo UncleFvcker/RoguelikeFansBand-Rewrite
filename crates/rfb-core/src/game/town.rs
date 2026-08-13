@@ -450,6 +450,7 @@ fn plain_shop_item(
         charges,
         fuel: initial_item_fuel(content, item_kind_id),
         device_recovery_progress: 0,
+        captured_actor: None,
         location: ItemLocation::Shop {
             shop_id: shop_id.to_owned(),
         },
@@ -493,6 +494,11 @@ fn roll_shop_stock(
 ) -> Result<Vec<ItemInstance>, CoreError> {
     let mut inventory = Vec::new();
     for stock in &shop.stock {
+        if stock.availability_percent < 100
+            && rng.bounded(100) >= u64::from(stock.availability_percent)
+        {
+            continue;
+        }
         let (minimum, maximum) = if maintenance {
             (stock.maintenance_minimum, stock.maintenance_maximum)
         } else {
@@ -1664,11 +1670,17 @@ impl Game {
                 .filter(|item| item.kind_id == stock.item_kind_id)
                 .map(|item| item.quantity)
                 .sum::<u32>();
-            let target = roll_quantity(
-                &mut self.rng,
-                stock.maintenance_minimum,
-                stock.maintenance_maximum,
-            );
+            let target = if stock.availability_percent < 100
+                && self.rng.bounded(100) >= u64::from(stock.availability_percent)
+            {
+                0
+            } else {
+                roll_quantity(
+                    &mut self.rng,
+                    stock.maintenance_minimum,
+                    stock.maintenance_maximum,
+                )
+            };
             if target > current {
                 append_plain_stock(
                     &mut additions,
@@ -1884,6 +1896,7 @@ impl Game {
                                 display_name_key: definition.name_key.clone(),
                                 quantity,
                                 inscription: item.inscription.clone(),
+                                captured_actor: self.captured_actor_dto(item),
                                 maximum_quantity: quantity.min(affordable).min(slot_carryable),
                                 unit_price,
                                 weight_tenths_pound: definition.weight_tenths_pound,
@@ -2003,6 +2016,7 @@ impl Game {
                                 display_name_key: self.item_display_name_key(&item.kind_id),
                                 quantity,
                                 inscription: item.inscription.clone(),
+                                captured_actor: self.captured_actor_dto(item),
                                 maximum_quantity: quantity.min(slot_carryable),
                                 weight_tenths_pound: definition.weight_tenths_pound,
                                 fuel: item.fuel,
@@ -2027,6 +2041,7 @@ impl Game {
                                 display_name_key: self.item_display_name_key(&item.kind_id),
                                 quantity,
                                 inscription: item.inscription.clone(),
+                                captured_actor: self.captured_actor_dto(item),
                                 maximum_quantity: quantity,
                                 weight_tenths_pound: definition.weight_tenths_pound,
                                 fuel: item.fuel,

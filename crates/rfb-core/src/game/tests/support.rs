@@ -284,6 +284,7 @@ pub(super) fn give_inventory_item(game: &mut Game, id: &str, kind_id: &str) {
         charges,
         fuel: initial_item_fuel(&game.content, kind_id),
         device_recovery_progress: 0,
+        captured_actor: None,
         location: ItemLocation::Inventory,
     });
 }

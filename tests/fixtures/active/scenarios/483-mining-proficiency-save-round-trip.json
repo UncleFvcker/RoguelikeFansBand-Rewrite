@@ -27,7 +27,7 @@
       "revision": 0,
       "turn": 0,
       "lastCommandSeq": 0,
-      "rngDrawCounter": 174,
+      "rngDrawCounter": 175,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -1162,6 +1162,7 @@
           "knowledge": "aware",
           "usable": true,
           "mountUsable": false,
+          "captureBall": false,
           "canReceiveRecharge": false,
           "canSupplyRecharge": false,
           "quantity": 7,
@@ -1189,6 +1190,7 @@
           "knowledge": "aware",
           "usable": false,
           "mountUsable": false,
+          "captureBall": false,
           "fuel": {
             "kind": "torch",
             "current": 2500,
@@ -1222,6 +1224,7 @@
           "knowledge": "aware",
           "usable": false,
           "mountUsable": false,
+          "captureBall": false,
           "fuel": {
             "kind": "torch",
             "current": 2500,
@@ -1255,6 +1258,7 @@
           "knowledge": "aware",
           "usable": false,
           "mountUsable": false,
+          "captureBall": false,
           "fuel": {
             "kind": "torch",
             "current": 2500,
@@ -1288,6 +1292,7 @@
           "knowledge": "aware",
           "usable": false,
           "mountUsable": false,
+          "captureBall": false,
           "fuel": {
             "kind": "torch",
             "current": 2500,
@@ -1321,6 +1326,7 @@
           "knowledge": "aware",
           "usable": false,
           "mountUsable": false,
+          "captureBall": false,
           "canReceiveRecharge": false,
           "canSupplyRecharge": false,
           "quantity": 22,
@@ -1348,6 +1354,7 @@
           "kindId": "demo.item.chain-mail",
           "displayNameKey": "item-demo-chain-mail-name",
           "knowledge": "aware",
+          "captureBall": false,
           "quantity": 1,
           "weightTenthsPound": 220,
           "slotId": "body",
@@ -1388,6 +1395,7 @@
           "kindId": "demo.item.broad-sword",
           "displayNameKey": "item-demo-broad-sword-name",
           "knowledge": "aware",
+          "captureBall": false,
           "quantity": 1,
           "weightTenthsPound": 150,
           "slotId": "right-hand",
@@ -1423,6 +1431,7 @@
           "kindId": "demo.item.short-bow",
           "displayNameKey": "item-demo-short-bow-name",
           "knowledge": "aware",
+          "captureBall": false,
           "quantity": 1,
           "weightTenthsPound": 30,
           "slotId": "shooting",
@@ -1524,8 +1533,8 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "fa2894f9fcf3d109dd8c87ef24248e17ebe097effe01c65c0a7a6cdc137e97e6"
+      "stateHash": "5aeb856cd7f049c104d1e0ba9f378b2ef9e93f580c2814c95beba6dd10bd8759"
     },
-    "saveRoundTripStateHash": "fa2894f9fcf3d109dd8c87ef24248e17ebe097effe01c65c0a7a6cdc137e97e6"
+    "saveRoundTripStateHash": "5aeb856cd7f049c104d1e0ba9f378b2ef9e93f580c2814c95beba6dd10bd8759"
   }
 }

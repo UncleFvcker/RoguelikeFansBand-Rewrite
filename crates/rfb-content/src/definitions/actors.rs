@@ -377,6 +377,16 @@ pub struct ActorEvolutionDefinition {
     pub next_actor_kind_id: String,
 }
 
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum ActorCapturePolicyDefinition {
+    #[default]
+    Normal,
+    PetOnly,
+    Immune,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -394,6 +404,9 @@ pub struct ActorDefinition {
     pub experience_value: u64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub evolution: Option<ActorEvolutionDefinition>,
+    /// Capture-ball eligibility imported from RFB monster flags.
+    #[serde(default)]
+    pub capture_policy: ActorCapturePolicyDefinition,
     pub max_hp: i32,
     #[serde(default)]
     pub hit_point_dice: Option<ActorHitPointDiceDefinition>,

@@ -205,6 +205,12 @@
       "maxDepth": 50
     },
     {
+      "itemKindId": "demo.item.capture-ball",
+      "weight": 25,
+      "quantity": 1,
+      "minDepth": 15
+    },
+    {
       "itemKindId": "demo.item.chain-mail",
       "weight": 100,
       "quantity": 1,

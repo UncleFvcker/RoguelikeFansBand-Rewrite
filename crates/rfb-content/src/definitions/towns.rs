@@ -95,10 +95,16 @@ pub struct ShopOwnerDefinition {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ShopStockDefinition {
     pub item_kind_id: String,
+    #[serde(default = "default_shop_stock_availability_percent")]
+    pub availability_percent: u8,
     pub initial_minimum: u32,
     pub initial_maximum: u32,
     pub maintenance_minimum: u32,
     pub maintenance_maximum: u32,
+}
+
+const fn default_shop_stock_availability_percent() -> u8 {
+    100
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

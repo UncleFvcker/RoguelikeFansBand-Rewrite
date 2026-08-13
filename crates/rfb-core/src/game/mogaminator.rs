@@ -27,6 +27,7 @@ pub(super) enum MogaminatorItemResolution {
         quantity: u32,
         rule_line: u32,
         ground: bool,
+        captured_actor: Option<CapturedActor>,
     },
     DestroyUnavailable {
         item_id: String,
@@ -423,7 +424,7 @@ impl Game {
                 action = new_action;
                 inscription = new_inscription;
             }
-            let Some((quantity, kind_id, uninscribed, ground)) = self
+            let Some((quantity, kind_id, uninscribed, ground, captured_actor)) = self
                 .items
                 .iter()
                 .find(|item| item.id == item_id)
@@ -433,6 +434,7 @@ impl Game {
                         item.kind_id.clone(),
                         item.inscription.is_none(),
                         matches!(item.location, ItemLocation::Ground(_)),
+                        item.captured_actor.clone(),
                     )
                 })
             else {
@@ -460,6 +462,7 @@ impl Game {
                             quantity: outcome.quantity,
                             rule_line: line_number,
                             ground,
+                            captured_actor,
                         }),
                         Err(reason) => {
                             outcomes.push(MogaminatorItemResolution::DestroyUnavailable {
@@ -628,7 +631,7 @@ impl Game {
     }
 
     pub(super) fn record_mogaminator_resolutions(
-        &self,
+        &mut self,
         outcomes: Vec<MogaminatorItemResolution>,
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
@@ -644,7 +647,17 @@ impl Game {
                     quantity,
                     rule_line,
                     ground,
+                    captured_actor,
                 } => {
+                    if let Some(captured_actor) = captured_actor {
+                        self.release_captured_actor_near(
+                            captured_actor,
+                            self.player.position,
+                            false,
+                            events,
+                            changed,
+                        );
+                    }
                     if ground {
                         changed.insert(self.player.position);
                     }
@@ -1198,6 +1211,7 @@ mod tests {
             charges: None,
             fuel: None,
             device_recovery_progress: 0,
+            captured_actor: None,
             location: ItemLocation::Ground(position),
         });
         game.item_property_knowledge.insert(
@@ -1491,6 +1505,7 @@ mod tests {
                 charges: None,
                 fuel: None,
                 device_recovery_progress: 0,
+                captured_actor: None,
                 location: ItemLocation::Ground(game.player.position),
             })
             .collect();

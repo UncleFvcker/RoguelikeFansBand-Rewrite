@@ -326,6 +326,11 @@ message-item-drop-success =
        *[other] You drop { $stacks } stacks containing { $quantity } items.
     }
 message-item-drop-none = None of the selected items can be dropped.
+message-capture-ball-captured = You capture { $target } in the ball.
+message-capture-ball-capture-failed = You fail to capture { $target }.
+message-capture-ball-released = You release { $target } as a pet.
+message-capture-ball-released-hostile = The released { $target } turns hostile!
+message-capture-ball-release-failed = There is no room to release { $target }.
 message-item-use-heal = You use { $target } and recover { $amount } HP.
 message-item-use-no-effect = You use { $target }, but notice no effect.
 message-item-use-status-removed = You use { $target } and clear { $status }.

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import type { AppState } from "./app-state";
-import type { Localization } from "./localization";
+import type { Localization, MessageKey } from "./localization";
 import type { GameCommand, GameEventDto, GameSnapshot, GameUpdate, HomeDto, HomeItemDto } from "./protocol";
 
 type HomeMode = "withdraw" | "deposit";
@@ -214,7 +214,7 @@ export class HomePanel {
       return;
     }
     for (const item of items) {
-      const name = this.#visibleItemName(item.displayNameKey, item.kindId);
+      const name = this.#itemName(item);
       const displayName = item.inscription
         ? this.#localization.format("inventory-inscribed-name", {
             name,
@@ -231,7 +231,7 @@ export class HomePanel {
       button.setAttribute("aria-pressed", String(item.id === this.#selectedItemId));
       button.append(
         span(this.#dom.list, "shop-item-name", displayName),
-        span(this.#dom.list, "shop-item-details", this.#localization.format("shop-item-weight", { weight: formatTenths(item.weightTenthsPound) })),
+        span(this.#dom.list, "shop-item-details", this.#itemDetails(item)),
         span(this.#dom.list, "shop-item-stock", this.#localization.format(this.#mode === "withdraw" ? "home-stored-count" : "shop-owned-count", { quantity: item.quantity })),
       );
       row.append(button);
@@ -257,7 +257,7 @@ export class HomePanel {
       this.#dom.weightAfter.textContent = status ? formatTenths(status.player.carriedWeightTenthsPound) : "--";
     } else {
       this.#dom.selection.textContent = this.#localization.format("shop-selection-summary", {
-        item: this.#visibleItemName(item.displayNameKey, item.kindId),
+        item: this.#itemName(item),
         maximum,
       });
       const delta = item.weightTenthsPound * quantity * (this.#mode === "withdraw" ? 1 : -1);
@@ -276,6 +276,33 @@ export class HomePanel {
   }
   #selection(): HomeItemDto | undefined {
     return this.#items().find((item) => item.id === this.#selectedItemId);
+  }
+  #itemName(item: HomeItemDto): string {
+    const ball = this.#visibleItemName(item.displayNameKey, item.kindId);
+    return item.capturedActor
+      ? this.#localization.format("capture-ball-name-contained", {
+          ball,
+          actor: this.#localization.format(item.capturedActor.nameKey as MessageKey),
+        })
+      : ball;
+  }
+  #itemDetails(item: HomeItemDto): string {
+    const details = [
+      this.#localization.format("shop-item-weight", {
+        weight: formatTenths(item.weightTenthsPound),
+      }),
+    ];
+    if (item.capturedActor) {
+      details.push(
+        this.#localization.format("capture-ball-contained", {
+          actor: this.#localization.format(item.capturedActor.nameKey as MessageKey),
+          hp: item.capturedActor.hp,
+          maximum: item.capturedActor.maxHp,
+          experience: item.capturedActor.experience,
+        }),
+      );
+    }
+    return details.join(" | ");
   }
   #focusSelection(): void {
     this.#dom.list.querySelector<HTMLButtonElement>("[data-home-item-id]:not(:disabled)")?.focus();

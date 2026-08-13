@@ -1,4 +1,5 @@
 {
+  "capturePolicy": "pet-only",
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
   "allocation": {
     "legacyIndex": 1231,

@@ -1,6 +1,42 @@
 use super::*;
 
 #[test]
+fn capture_ball_keeps_rfb_shape_and_low_probability_store_stock() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let item = artifact
+        .content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.capture-ball")
+        .expect("capture ball should exist");
+    assert!(item.capture_ball);
+    assert_eq!(item.generation_level, 15);
+    assert_eq!(item.weight_tenths_pound, 120);
+    assert_eq!(item.base_value, 1_000);
+    assert_eq!(item.max_stack, 1);
+    assert_eq!(item.equipment_slot.as_deref(), Some("shield"));
+
+    for shop_id in [
+        "demo.shop.outpost-general-store",
+        "demo.shop.anambar-general-store",
+    ] {
+        let stock = artifact
+            .content
+            .shops
+            .iter()
+            .find(|shop| shop.id == shop_id)
+            .and_then(|shop| {
+                shop.stock
+                    .iter()
+                    .find(|stock| stock.item_kind_id == item.id)
+            })
+            .unwrap_or_else(|| panic!("{shop_id} should stock capture balls"));
+        assert_eq!(stock.availability_percent, 25);
+        assert_eq!((stock.initial_minimum, stock.initial_maximum), (1, 1));
+    }
+}
+
+#[test]
 fn riding_bond_potions_keep_rfb_thresholds_and_effects() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let item = |id: &str| {

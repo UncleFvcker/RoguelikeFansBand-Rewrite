@@ -675,6 +675,7 @@ pub(super) fn item_instances_stack_compatible(left: &ItemInstance, right: &ItemI
         && left.charges == right.charges
         && left.fuel == right.fuel
         && left.device_recovery_progress == right.device_recovery_progress
+        && left.captured_actor == right.captured_actor
 }
 
 impl Game {

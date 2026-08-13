@@ -21,7 +21,7 @@
       "revision": 0,
       "turn": 0,
       "lastCommandSeq": 0,
-      "rngDrawCounter": 165,
+      "rngDrawCounter": 166,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -1155,6 +1155,7 @@
           "knowledge": "aware",
           "usable": true,
           "mountUsable": false,
+          "captureBall": false,
           "canReceiveRecharge": false,
           "canSupplyRecharge": false,
           "quantity": 7,
@@ -1182,6 +1183,7 @@
           "knowledge": "aware",
           "usable": false,
           "mountUsable": false,
+          "captureBall": false,
           "fuel": {
             "kind": "torch",
             "current": 1500,
@@ -1215,6 +1217,7 @@
           "knowledge": "aware",
           "usable": false,
           "mountUsable": false,
+          "captureBall": false,
           "fuel": {
             "kind": "torch",
             "current": 1500,
@@ -1248,6 +1251,7 @@
           "knowledge": "aware",
           "usable": false,
           "mountUsable": false,
+          "captureBall": false,
           "fuel": {
             "kind": "torch",
             "current": 1500,
@@ -1281,6 +1285,7 @@
           "knowledge": "aware",
           "usable": false,
           "mountUsable": false,
+          "captureBall": false,
           "fuel": {
             "kind": "torch",
             "current": 1500,
@@ -1314,6 +1319,7 @@
           "knowledge": "aware",
           "usable": false,
           "mountUsable": false,
+          "captureBall": false,
           "fuel": {
             "kind": "torch",
             "current": 1500,
@@ -1347,6 +1353,7 @@
           "knowledge": "aware",
           "usable": false,
           "mountUsable": false,
+          "captureBall": false,
           "fuel": {
             "kind": "torch",
             "current": 1500,
@@ -1380,6 +1387,7 @@
           "knowledge": "aware",
           "usable": false,
           "mountUsable": false,
+          "captureBall": false,
           "canReceiveRecharge": false,
           "canSupplyRecharge": false,
           "quantity": 22,
@@ -1407,6 +1415,7 @@
           "kindId": "demo.item.chain-mail",
           "displayNameKey": "item-demo-chain-mail-name",
           "knowledge": "aware",
+          "captureBall": false,
           "quantity": 1,
           "weightTenthsPound": 220,
           "slotId": "body",
@@ -1447,6 +1456,7 @@
           "kindId": "demo.item.broad-sword",
           "displayNameKey": "item-demo-broad-sword-name",
           "knowledge": "aware",
+          "captureBall": false,
           "quantity": 1,
           "weightTenthsPound": 150,
           "slotId": "right-hand",
@@ -1482,6 +1492,7 @@
           "kindId": "demo.item.short-bow",
           "displayNameKey": "item-demo-short-bow-name",
           "knowledge": "aware",
+          "captureBall": false,
           "quantity": 1,
           "weightTenthsPound": 30,
           "slotId": "shooting",
@@ -1583,7 +1594,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 170,
+      "nextItemInstanceSerial": 171,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -1591,13 +1602,13 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "1743441d5b51c8c82ab6e51b34a2dca00551d64e9a4635cdf69ef60a10033ed2"
+      "stateHash": "09119089f97070dcb9b4734ffdad1cdf072122c929e86db0e2a19d7459abddc2"
     },
     "errors": [
       {
         "step": 1,
         "kind": "revision-mismatch",
-        "stateHash": "1743441d5b51c8c82ab6e51b34a2dca00551d64e9a4635cdf69ef60a10033ed2"
+        "stateHash": "09119089f97070dcb9b4734ffdad1cdf072122c929e86db0e2a19d7459abddc2"
       }
     ]
   }

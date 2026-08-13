@@ -3586,6 +3586,7 @@ impl Game {
             charges: None,
             fuel: None,
             device_recovery_progress: 0,
+            captured_actor: None,
             location: ItemLocation::Inventory,
         };
         self.apply_rfb_ammunition_magic(&mut item);
@@ -3983,6 +3984,22 @@ impl Game {
             EarthquakeSource::Ability(_) => TerrainChangeSource::Magic,
             EarthquakeSource::Monster(_) => TerrainChangeSource::Monster,
         };
+        let mut captured_balls = self
+            .items
+            .iter()
+            .filter_map(|item| match item.location {
+                ItemLocation::Ground(position)
+                    if affected.contains(&position) && item.captured_actor.is_some() =>
+                {
+                    Some((item.id.clone(), position))
+                }
+                _ => None,
+            })
+            .collect::<Vec<_>>();
+        captured_balls.sort_by(|left, right| left.0.cmp(&right.0));
+        for (item_id, position) in captured_balls {
+            self.force_open_capture_ball(&item_id, position, false, events, changed);
+        }
         let removed_items = self
             .items
             .iter()
@@ -5369,6 +5386,7 @@ impl Game {
                         item.id == *item_id
                             && (item.location == ItemLocation::Inventory
                                 || item.location == ItemLocation::Ground(self.player.position))
+                            && item.captured_actor.is_none()
                             && self.can_destroy_item(item).is_ok()
                     })
                     .map(|_| AbilityTargetPlan::Item {

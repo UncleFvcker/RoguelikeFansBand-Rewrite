@@ -865,14 +865,22 @@ fn initial_shop_stock_is_seeded_independent_and_persistent() {
             .iter()
             .map(|stock| stock.item_kind_id.as_str())
             .collect::<std::collections::BTreeSet<_>>();
-        assert_eq!(
-            left.shop_states[shop_id.as_str()]
-                .inventory
-                .iter()
-                .map(|item| item.kind_id.as_str())
-                .collect::<std::collections::BTreeSet<_>>(),
-            expected_kinds
-        );
+        let actual_kinds = left.shop_states[shop_id.as_str()]
+            .inventory
+            .iter()
+            .map(|item| item.kind_id.as_str())
+            .collect::<std::collections::BTreeSet<_>>();
+        assert!(actual_kinds.is_subset(&expected_kinds));
+        for guaranteed in left
+            .content
+            .shop(shop_id)
+            .expect("town shop should exist")
+            .stock
+            .iter()
+            .filter(|stock| stock.availability_percent == 100)
+        {
+            assert!(actual_kinds.contains(guaranteed.item_kind_id.as_str()));
+        }
     }
     let restored = Game::from_save(left.to_save()).expect("store stock should round-trip");
     assert_eq!(restored.shop_states, left.shop_states);
@@ -1662,12 +1670,14 @@ fn maintenance_refills_only_after_interval_at_entrance() {
     game.world_tick = 10_000;
     game.maintain_shop_at_player().unwrap();
     let state = &game.shop_states[GENERAL_STORE_ID];
-    let defined_stock_count = game
+    let guaranteed_stock_count = game
         .content
         .shop(GENERAL_STORE_ID)
         .expect("General Store should exist")
         .stock
-        .len();
+        .iter()
+        .filter(|stock| stock.availability_percent == 100)
+        .count();
     assert_eq!(state.last_maintenance_world_tick, 10_000);
     assert_eq!(
         state
@@ -1676,7 +1686,7 @@ fn maintenance_refills_only_after_interval_at_entrance() {
             .map(|item| item.kind_id.as_str())
             .collect::<std::collections::BTreeSet<_>>()
             .len(),
-        defined_stock_count
+        guaranteed_stock_count
     );
     assert!(game.rng_draw_counter() > draws_before);
 }

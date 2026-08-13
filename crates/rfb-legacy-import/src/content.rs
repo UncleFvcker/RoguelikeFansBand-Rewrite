@@ -2100,6 +2100,14 @@ struct ItemShape {
 
 fn item_shape(tval: u16) -> Option<ItemShape> {
     let shape = match tval {
+        11 => ItemShape {
+            slot: Some("shield"),
+            max_stack: 1,
+            tags: vec!["capture-ball", "equipment", "legacy-import"],
+            melee: false,
+            launcher: false,
+            behavior_gap: None,
+        },
         20 => ItemShape {
             slot: Some("tool"),
             max_stack: 1,
@@ -3412,6 +3420,9 @@ fn item_json_with_terrain(
         "baseValue": entry.base_value,
         "tags": tags,
     });
+    if entry.tval == 11 {
+        value["captureBall"] = serde_json::json!(true);
+    }
     if let Some(ability_book_id) = ability_book_id {
         value["maxStack"] = serde_json::json!(1);
         value["abilityBookId"] = serde_json::json!(ability_book_id);
@@ -8217,6 +8228,25 @@ fn monster_json(
         "damageType": damage_type,
         "tags": tags,
     });
+    let capture_policy = if entry
+        .flags
+        .iter()
+        .any(|flag| matches!(flag.as_str(), "UNIQUE2" | "QUESTOR"))
+        || matches!(entry.index, 932..=934)
+    {
+        "immune"
+    } else if entry
+        .flags
+        .iter()
+        .any(|flag| matches!(flag.as_str(), "UNIQUE" | "NAZGUL"))
+    {
+        "pet-only"
+    } else {
+        "normal"
+    };
+    if capture_policy != "normal" {
+        value["capturePolicy"] = serde_json::json!(capture_policy);
+    }
     let resistances = resistances_from_flags(&entry.flags);
     if !resistances.is_empty() {
         value["resistances"] = serde_json::json!(resistances);
@@ -8862,6 +8892,13 @@ fn demo_monster_json(
         }
     }
     value["tags"] = serde_json::json!(tags);
+    if selection
+        .tags
+        .iter()
+        .any(|tag| matches!(tag.as_str(), "guardian" | "questor"))
+    {
+        value["capturePolicy"] = serde_json::json!("immune");
+    }
 
     let status_immunities = [
         ("NO_CONF", "rfb.status.confusion"),
@@ -12336,7 +12373,6 @@ fn item_coverage_system_blocker(tval: u16) -> Option<&'static str> {
         8 => Some("figurine-system"),
         9 => Some("statue-system"),
         10 => Some("corpse-system"),
-        11 => Some("capture-ball-system"),
         39 => Some("light-source-profile"),
         50 => Some("card-system"),
         68 => Some("device-book-system"),
@@ -13837,6 +13873,32 @@ mod tests {
         assert_eq!(actor["deathDrop"]["countDice"][0]["dice"], 1);
         assert_eq!(actor["deathDrop"]["minimumQuality"], "fine");
         assert_eq!(actor["deathDrop"]["themeChancePercent"], 50);
+    }
+
+    #[test]
+    fn monster_capture_policy_follows_unique_questor_and_special_identity() {
+        let policy = |index: u32, flags: &str| {
+            let source = format!(
+                "N:{index}:test capture target\nG:t:w\nI:110:1d3:8:4:20:10\nW:3:1:10:3:0:0\nF:{flags}\n"
+            );
+            let monsters = parse_r_info(&source).expect("synthetic monster should parse");
+            monster_json(
+                &monsters[0],
+                "test-capture-target",
+                None,
+                "physical",
+                Some(serde_json::json!({ "blows": [] })),
+                None,
+            )["capturePolicy"]
+                .clone()
+        };
+
+        assert!(policy(1, "MALE").is_null());
+        assert_eq!(policy(1, "UNIQUE"), "pet-only");
+        assert_eq!(policy(1, "NAZGUL"), "pet-only");
+        assert_eq!(policy(1, "QUESTOR"), "immune");
+        assert_eq!(policy(1, "UNIQUE2"), "immune");
+        assert_eq!(policy(932, "MALE"), "immune");
     }
 
     #[test]

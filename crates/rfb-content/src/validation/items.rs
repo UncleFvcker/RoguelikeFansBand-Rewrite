@@ -787,6 +787,14 @@ pub(super) fn validate_items(
         {
             return Err(ContentError::InvalidEquipmentSlot(item.id.clone()));
         }
+        if item.capture_ball
+            && (item.max_stack != 1
+                || item.equipment_slot.as_deref() != Some("shield")
+                || item.use_action.is_some()
+                || item.device_generation.is_some())
+        {
+            return Err(ContentError::InvalidEquipmentSlot(item.id.clone()));
+        }
         if item.modifiers.max_hp < 0
             || item.modifiers.max_hp > 1_000_000
             || item.modifiers.attack < -1_000_000

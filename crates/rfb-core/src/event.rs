@@ -336,6 +336,20 @@ pub(crate) enum DomainEvent {
         quantity: u64,
     },
     NoItemsDropped,
+    CaptureBallCaptured {
+        target_kind_id: String,
+    },
+    CaptureBallCaptureFailed {
+        target_kind_id: String,
+        reason: String,
+    },
+    CaptureBallReleased {
+        target_kind_id: String,
+        hostile: bool,
+    },
+    CaptureBallReleaseFailed {
+        target_kind_id: String,
+    },
     ItemEquipped {
         target_kind_id: String,
         slot_id: String,
@@ -2124,6 +2138,36 @@ impl DomainEvent {
                 ],
             ),
             Self::NoItemsDropped => dto_without_args("item.drop.none", "item-drop-none"),
+            Self::CaptureBallCaptured { target_kind_id } => dto(
+                "capture-ball.captured",
+                "capture-ball-captured",
+                [("target", target_kind_id)],
+            ),
+            Self::CaptureBallCaptureFailed {
+                target_kind_id,
+                reason,
+            } => dto(
+                "capture-ball.capture-failed",
+                "capture-ball-capture-failed",
+                [("target", target_kind_id), ("reason", reason)],
+            ),
+            Self::CaptureBallReleased {
+                target_kind_id,
+                hostile,
+            } => dto(
+                "capture-ball.released",
+                if hostile {
+                    "capture-ball-released-hostile"
+                } else {
+                    "capture-ball-released"
+                },
+                [("target", target_kind_id)],
+            ),
+            Self::CaptureBallReleaseFailed { target_kind_id } => dto(
+                "capture-ball.release-failed",
+                "capture-ball-release-failed",
+                [("target", target_kind_id)],
+            ),
             Self::ItemEquipped {
                 target_kind_id,
                 slot_id,

@@ -383,11 +383,23 @@ export class InventoryPanel {
       if (item) {
         row.className = "equipment-item";
         const name = document.createElement("span");
-        name.textContent = this.#formatter.visibleItemName(item.displayNameKey, item.kindId);
+        name.textContent = this.#itemName(item);
         details.append(name, slotTag);
         this.#appendInscription(details, item.inscription);
         this.#appendItemFuel(details, item);
         this.#appendKnownDetails(details, item);
+        if (item.captureBall && item.useTargetSpec) {
+          const activate = document.createElement("button");
+          activate.type = "button";
+          activate.className = "equipment-activate";
+          activate.textContent = this.#localization.format("action-equipment-activate");
+          activate.disabled = this.#state.busy;
+          activate.addEventListener("click", () => {
+            if (!item.useTargetSpec) return;
+            this.#startTargeting(item.useTargetSpec, { type: "item", itemId: item.id });
+          });
+          row.append(activate);
+        }
         if (item.fuel && item.fuel.kind !== "oil" && item.fuel.current < item.fuel.maximum) {
           const refuel = document.createElement("button");
           refuel.type = "button";
@@ -428,7 +440,7 @@ export class InventoryPanel {
     const document = container.ownerDocument;
     const name = document.createElement("span");
     name.className = "inventory-item-name";
-    name.textContent = this.#formatter.visibleItemName(item.displayNameKey, item.kindId);
+    name.textContent = this.#itemName(item);
     container.append(name);
     this.#appendInscription(container, item.inscription);
     if (item.equipmentSlot) {
@@ -500,6 +512,19 @@ export class InventoryPanel {
     container: HTMLElement,
     item: InventoryItemDto | EquipmentItemDto,
   ): void {
+    if (item.captureBall) {
+      const captured = container.ownerDocument.createElement("span");
+      captured.className = "capture-ball-status";
+      captured.textContent = item.capturedActor
+        ? this.#localization.format("capture-ball-contained", {
+            actor: this.#localization.format(item.capturedActor.nameKey as MessageKey),
+            hp: item.capturedActor.hp,
+            maximum: item.capturedActor.maxHp,
+            experience: item.capturedActor.experience,
+          })
+        : this.#localization.format("capture-ball-empty");
+      container.append(captured);
+    }
     if ("slotId" in item || item.equipmentSlot !== null) {
       const identification = container.ownerDocument.createElement("span");
       identification.className = `item-identification item-identification-${item.identification}`;
@@ -518,6 +543,16 @@ export class InventoryPanel {
     this.#appendEquipmentPassives(container, item.passives);
     this.#appendItemQuality(container, item.quality);
     this.#appendKnownItemProperties(container, item.knownProperties);
+  }
+
+  #itemName(item: InventoryItemDto | EquipmentItemDto): string {
+    const ball = this.#formatter.visibleItemName(item.displayNameKey, item.kindId);
+    return item.capturedActor
+      ? this.#localization.format("capture-ball-name-contained", {
+          ball,
+          actor: this.#localization.format(item.capturedActor.nameKey as MessageKey),
+        })
+      : ball;
   }
 
   async #equipSelectedItem(): Promise<void> {
@@ -646,7 +681,7 @@ export class InventoryPanel {
     const item = selected[0];
     const quantity = parseDropQuantity(this.#dom.inventoryDropQuantity.value, item.quantity);
     if (quantity === undefined) return;
-    const name = this.#formatter.visibleItemName(item.displayNameKey, item.kindId);
+    const name = this.#itemName(item);
     const confirmed = this.#dom.inventoryList.ownerDocument.defaultView?.confirm(
       this.#localization.format("inventory-destroy-confirm", { name, quantity }),
     );

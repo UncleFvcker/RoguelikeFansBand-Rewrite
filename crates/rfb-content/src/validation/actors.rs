@@ -3,8 +3,8 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::{
-    ACTOR_SCHEMA, ActorDamageType, ActorDefinition, ActorRole, ContentError,
-    MeleeBlowEffectDefinition, MonsterCastingDefinition, MonsterDropKindDefinition,
+    ACTOR_SCHEMA, ActorCapturePolicyDefinition, ActorDamageType, ActorDefinition, ActorRole,
+    ContentError, MeleeBlowEffectDefinition, MonsterCastingDefinition, MonsterDropKindDefinition,
 };
 
 use super::shared::{
@@ -85,6 +85,8 @@ pub(super) fn validate_actors(
                 && (!actor.movement.modes.is_empty() || actor.movement.never_moves))
             || (actor.role != ActorRole::Monster && !actor.status_immunities.is_empty())
             || (actor.role != ActorRole::Monster && actor.reflects_bolts)
+            || (actor.role != ActorRole::Monster
+                && actor.capture_policy != ActorCapturePolicyDefinition::Normal)
         {
             return Err(ContentError::InvalidActorStats(actor.id.clone()));
         }

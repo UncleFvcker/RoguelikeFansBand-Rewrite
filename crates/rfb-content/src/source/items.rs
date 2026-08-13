@@ -56,6 +56,8 @@ pub(crate) struct SourceItemDefinition {
     inventory_slot_bonus: u16,
     #[serde(default)]
     ammunition_capacity: u16,
+    #[serde(default)]
+    capture_ball: bool,
     /// Curse stamped onto newly generated instances. Save data remains
     /// authoritative after generation and never re-derives this field.
     #[serde(default)]
@@ -264,6 +266,7 @@ impl SourceItemDefinition {
             artifact_generation: self.artifact_generation,
             inventory_slot_bonus: self.inventory_slot_bonus,
             ammunition_capacity: self.ammunition_capacity,
+            capture_ball: self.capture_ball,
             initial_curse: self.initial_curse,
             modifiers: self.modifiers,
             equipment_bonuses: self.equipment_bonuses,

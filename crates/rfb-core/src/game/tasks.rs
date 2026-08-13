@@ -577,6 +577,7 @@ pub(super) fn reward_item(
         charges,
         fuel: initial_item_fuel(content, &entry.item_kind_id),
         device_recovery_progress: 0,
+        captured_actor: None,
         location,
     }
 }

@@ -446,6 +446,7 @@ impl Game {
                 charges,
                 fuel: initial_item_fuel(&self.content, &kind_id),
                 device_recovery_progress: 0,
+                captured_actor: None,
                 curse: initial_item_curse(&self.content, &kind_id),
                 kind_id,
                 quantity: 1,

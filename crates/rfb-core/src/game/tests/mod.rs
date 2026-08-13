@@ -11,6 +11,7 @@ use super::*;
 
 mod abilities;
 mod archer;
+mod capture_ball;
 mod cavalry;
 mod combat;
 mod deterministic_replay;

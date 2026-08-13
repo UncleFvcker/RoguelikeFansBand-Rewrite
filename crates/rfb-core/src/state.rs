@@ -98,7 +98,17 @@ pub(crate) struct ItemInstance {
     pub(crate) charges: Option<ItemChargesDto>,
     pub(crate) fuel: Option<ItemFuelDto>,
     pub(crate) device_recovery_progress: u16,
+    pub(crate) captured_actor: Option<CapturedActor>,
     pub(crate) location: ItemLocation,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub(crate) struct CapturedActor {
+    pub(crate) kind_id: String,
+    pub(crate) speed: u16,
+    pub(crate) hp: i32,
+    pub(crate) max_hp: i32,
+    pub(crate) experience: u64,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

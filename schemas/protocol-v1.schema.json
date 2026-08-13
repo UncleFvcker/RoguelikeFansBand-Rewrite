@@ -4454,6 +4454,44 @@
         "retired"
       ]
     },
+    "CapturedActorDto": {
+      "type": "object",
+      "properties": {
+        "experience": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "hp": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "kindId": {
+          "type": "string"
+        },
+        "maxHp": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "nameKey": {
+          "type": "string"
+        },
+        "speed": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        }
+      },
+      "required": [
+        "kindId",
+        "nameKey",
+        "speed",
+        "hp",
+        "maxHp",
+        "experience"
+      ]
+    },
     "CellDto": {
       "type": "object",
       "properties": {
@@ -4942,6 +4980,20 @@
             "$ref": "#/$defs/WeaponBrandDto"
           }
         },
+        "captureBall": {
+          "type": "boolean",
+          "default": false
+        },
+        "capturedActor": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CapturedActorDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "curse": {
           "anyOf": [
             {
@@ -5080,6 +5132,16 @@
           "anyOf": [
             {
               "$ref": "#/$defs/ThrowProfileDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "useTargetSpec": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TargetSpecDto"
             },
             {
               "type": "null"
@@ -7121,6 +7183,16 @@
     "HomeItemDto": {
       "type": "object",
       "properties": {
+        "capturedActor": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CapturedActorDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "displayNameKey": {
           "type": "string"
         },
@@ -7219,6 +7291,20 @@
         "canSupplyRecharge": {
           "type": "boolean",
           "default": false
+        },
+        "captureBall": {
+          "type": "boolean",
+          "default": false
+        },
+        "capturedActor": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CapturedActorDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "charges": {
           "anyOf": [
@@ -9494,6 +9580,16 @@
           "anyOf": [
             {
               "$ref": "#/$defs/ItemActivationDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "capturedActor": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CapturedActorDto"
             },
             {
               "type": "null"

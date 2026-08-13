@@ -112,6 +112,14 @@
       ],
       "type": "object"
     },
+    "ActorCapturePolicyDefinition": {
+      "enum": [
+        "normal",
+        "pet-only",
+        "immune"
+      ],
+      "type": "string"
+    },
     "ActorContactAuraDefinition": {
       "additionalProperties": false,
       "properties": {
@@ -1439,6 +1447,11 @@
       "default": 0,
       "format": "int32",
       "type": "integer"
+    },
+    "capturePolicy": {
+      "$ref": "#/$defs/ActorCapturePolicyDefinition",
+      "default": "normal",
+      "description": "Capture-ball eligibility imported from RFB monster flags."
     },
     "carriedLootTableId": {
       "default": null,

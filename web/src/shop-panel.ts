@@ -61,6 +61,7 @@ interface ShopSelection {
   readonly displayNameKey: string;
   readonly quantity: number;
   readonly inscription?: string;
+  readonly capturedActor?: InventoryItemDto["capturedActor"];
   readonly maximumQuantity: number;
   readonly unitPrice: number;
   readonly weightTenthsPound: number;
@@ -432,7 +433,7 @@ export class ShopPanel {
       button.disabled = selection.maximumQuantity === 0;
       button.setAttribute("aria-pressed", String(selection.id === this.#selectedItemId));
 
-      const plainName = this.#visibleItemName(selection.displayNameKey, selection.kindId);
+      const plainName = this.#itemName(selection);
       const name = this.#span(
         "shop-item-name",
         selection.inscription
@@ -503,7 +504,7 @@ export class ShopPanel {
         ? formatTenthsPound(status.player.carriedWeightTenthsPound)
         : this.#localization.format("value-unavailable");
     } else {
-      const name = this.#visibleItemName(selection.displayNameKey, selection.kindId);
+      const name = this.#itemName(selection);
       const preview = calculateShopTransactionPreview(
         this.#mode,
         quantity,
@@ -550,6 +551,7 @@ export class ShopPanel {
         displayNameKey: item.displayNameKey,
         quantity: item.quantity,
         inscription: item.inscription ?? undefined,
+        capturedActor: item.capturedActor,
         maximumQuantity: item.maximumQuantity,
         unitPrice: item.unitPrice,
         weightTenthsPound: item.weightTenthsPound,
@@ -581,7 +583,27 @@ export class ShopPanel {
         }),
       );
     }
+    if (selection.capturedActor) {
+      details.push(
+        this.#localization.format("capture-ball-contained", {
+          actor: this.#localization.format(selection.capturedActor.nameKey as MessageKey),
+          hp: selection.capturedActor.hp,
+          maximum: selection.capturedActor.maxHp,
+          experience: selection.capturedActor.experience,
+        }),
+      );
+    }
     return details.join(" | ");
+  }
+
+  #itemName(selection: ShopSelection): string {
+    const ball = this.#visibleItemName(selection.displayNameKey, selection.kindId);
+    return selection.capturedActor
+      ? this.#localization.format("capture-ball-name-contained", {
+          ball,
+          actor: this.#localization.format(selection.capturedActor.nameKey as MessageKey),
+        })
+      : ball;
   }
 
   #span(className: string, text: string): HTMLSpanElement {
@@ -679,6 +701,7 @@ function sellSelection(item: InventoryItemDto, quote: ShopSellQuoteDto): ShopSel
     displayNameKey: item.displayNameKey,
     quantity: quote.unavailableReason ? item.quantity : quote.maximumQuantity,
     inscription: item.inscription ?? undefined,
+    capturedActor: item.capturedActor,
     maximumQuantity: quote.maximumQuantity,
     unitPrice: quote.unitPrice,
     weightTenthsPound: item.weightTenthsPound,

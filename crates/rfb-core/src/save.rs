@@ -7,8 +7,8 @@ use crate::{
     error::CoreError,
     resistance::{DamageType, ResistanceLevel, ResistanceProfile},
     state::{
-        Actor, BASE_ACTOR_POWER_PER_MILLE, FloorConnectionState, FloorRegionState, FloorState,
-        GoldPile, ItemInstance, ItemLocation, MonsterPackIdentity, RolledAffixState,
+        Actor, BASE_ACTOR_POWER_PER_MILLE, CapturedActor, FloorConnectionState, FloorRegionState,
+        FloorState, GoldPile, ItemInstance, ItemLocation, MonsterPackIdentity, RolledAffixState,
         SummonIdentity,
     },
     stats::{CharacterBuildIdentity, CharacterProgress},
@@ -19,15 +19,15 @@ use rfb_content::{
     EquipmentPassive, ItemFuelKindDefinition, SlayLevel, SlayTarget, StatModifiers, WeaponBrand,
 };
 use rfb_protocol::{
-    ActorSaveDto, CarriedItemSaveDto, DamageTypeDto, EquipmentBonusesDto, EquipmentItemSaveDto,
-    EquipmentPassiveDto, FloorConnectionSaveDto, FloorRegionSaveDto, FloorSaveDto, GoldPileDto,
-    InventoryItemSaveDto, ItemActivationDto, ItemChargesDto, ItemEnchantmentsDto, ItemFuelDto,
-    ItemFuelKindDto, ItemOriginKindDto, ItemSaveDto, MaterialSaveDto, MonsterPackSaveDto,
-    NaturalAttributeSetSaveDto, PlayerBuildSaveDto, PlayerProgressSaveDto, PlayerSaveDto, Position,
-    ResistanceDto, ResistanceLevelDto, ResistanceSaveDto, RolledAffixSaveDto, SkillProgressSaveDto,
-    SlayDto, SlayLevelDto, SlayTargetDto, StatModifiersDto, StatusSaveDto, SummonSaveDto,
-    TargetModeDto, TargetSpecDto, TerrainSaveDto, VirtueDto, WeaponBrandDto,
-    WeaponProficiencySaveDto,
+    ActorSaveDto, CapturedActorSaveDto, CarriedItemSaveDto, DamageTypeDto, EquipmentBonusesDto,
+    EquipmentItemSaveDto, EquipmentPassiveDto, FloorConnectionSaveDto, FloorRegionSaveDto,
+    FloorSaveDto, GoldPileDto, InventoryItemSaveDto, ItemActivationDto, ItemChargesDto,
+    ItemEnchantmentsDto, ItemFuelDto, ItemFuelKindDto, ItemOriginKindDto, ItemSaveDto,
+    MaterialSaveDto, MonsterPackSaveDto, NaturalAttributeSetSaveDto, PlayerBuildSaveDto,
+    PlayerProgressSaveDto, PlayerSaveDto, Position, ResistanceDto, ResistanceLevelDto,
+    ResistanceSaveDto, RolledAffixSaveDto, SkillProgressSaveDto, SlayDto, SlayLevelDto,
+    SlayTargetDto, StatModifiersDto, StatusSaveDto, SummonSaveDto, TargetModeDto, TargetSpecDto,
+    TerrainSaveDto, VirtueDto, WeaponBrandDto, WeaponProficiencySaveDto,
 };
 
 pub(crate) const GENERATED_ITEM_ID_PREFIX: &str = "generated.item.";
@@ -327,6 +327,7 @@ pub(crate) fn item_from_dto(
         item.discount_percent,
     )?;
     let rolled_affixes = rolled_affixes_from_save(item.rolled_affixes, &item.affix_ids)?;
+    let captured_actor = captured_actor_from_save(item.captured_actor, definition, content)?;
     Ok(ItemInstance {
         id: item.id,
         kind_id: item.kind_id,
@@ -345,6 +346,7 @@ pub(crate) fn item_from_dto(
         charges: item.charges,
         fuel,
         device_recovery_progress: item.device_recovery_progress,
+        captured_actor,
         location: ItemLocation::Ground(item.position),
     })
 }
@@ -372,6 +374,7 @@ pub(crate) fn inventory_item_from_dto(
         item.discount_percent,
     )?;
     let rolled_affixes = rolled_affixes_from_save(item.rolled_affixes, &item.affix_ids)?;
+    let captured_actor = captured_actor_from_save(item.captured_actor, definition, content)?;
     Ok(ItemInstance {
         id: item.id,
         kind_id: item.kind_id,
@@ -390,6 +393,7 @@ pub(crate) fn inventory_item_from_dto(
         charges: item.charges,
         fuel,
         device_recovery_progress: item.device_recovery_progress,
+        captured_actor,
         location: ItemLocation::Inventory,
     })
 }
@@ -422,6 +426,7 @@ pub(crate) fn equipment_item_from_dto(
         item.discount_percent,
     )?;
     let rolled_affixes = rolled_affixes_from_save(item.rolled_affixes, &item.affix_ids)?;
+    let captured_actor = captured_actor_from_save(item.captured_actor, definition, content)?;
     Ok(ItemInstance {
         id: item.id,
         kind_id: item.kind_id,
@@ -440,6 +445,7 @@ pub(crate) fn equipment_item_from_dto(
         charges: item.charges,
         fuel,
         device_recovery_progress: item.device_recovery_progress,
+        captured_actor,
         location: ItemLocation::Equipped {
             slot_id: item.slot_id,
         },
@@ -469,6 +475,7 @@ pub(crate) fn carried_item_from_dto(
         item.discount_percent,
     )?;
     let rolled_affixes = rolled_affixes_from_save(item.rolled_affixes, &item.affix_ids)?;
+    let captured_actor = captured_actor_from_save(item.captured_actor, definition, content)?;
     Ok(ItemInstance {
         id: item.id,
         kind_id: item.kind_id,
@@ -487,10 +494,51 @@ pub(crate) fn carried_item_from_dto(
         charges: item.charges,
         fuel,
         device_recovery_progress: item.device_recovery_progress,
+        captured_actor,
         location: ItemLocation::CarriedBy {
             actor_id: item.actor_id,
         },
     })
+}
+
+fn captured_actor_from_save(
+    value: Option<CapturedActorSaveDto>,
+    item_definition: &rfb_content::ItemDefinition,
+    content: &ContentCatalog,
+) -> Result<Option<CapturedActor>, CoreError> {
+    let Some(value) = value else {
+        return Ok(None);
+    };
+    let valid_kind = content.actor(&value.kind_id).is_some_and(|actor| {
+        actor.role == rfb_content::ActorRole::Monster
+            && actor.capture_policy != rfb_content::ActorCapturePolicyDefinition::Immune
+    });
+    if !item_definition.capture_ball
+        || !valid_kind
+        || value.speed == 0
+        || value.hp <= 0
+        || value.max_hp <= 0
+        || value.hp > value.max_hp
+    {
+        return Err(CoreError::InvalidSave("captured actor state is invalid"));
+    }
+    Ok(Some(CapturedActor {
+        kind_id: value.kind_id,
+        speed: value.speed,
+        hp: value.hp,
+        max_hp: value.max_hp,
+        experience: value.experience,
+    }))
+}
+
+fn captured_actor_to_save(value: &CapturedActor) -> CapturedActorSaveDto {
+    CapturedActorSaveDto {
+        kind_id: value.kind_id.clone(),
+        speed: value.speed,
+        hp: value.hp,
+        max_hp: value.max_hp,
+        experience: value.experience,
+    }
 }
 
 fn validate_item_runtime_state(
@@ -1337,6 +1385,7 @@ pub(crate) fn items_to_save(items: &[ItemInstance]) -> Vec<ItemSaveDto> {
                 charges: item.charges,
                 fuel: item.fuel,
                 device_recovery_progress: item.device_recovery_progress,
+                captured_actor: item.captured_actor.as_ref().map(captured_actor_to_save),
             })
         })
         .collect::<Vec<_>>();
@@ -1369,6 +1418,7 @@ pub(crate) fn inventory_to_save(items: &[ItemInstance]) -> Vec<InventoryItemSave
                 charges: item.charges,
                 fuel: item.fuel,
                 device_recovery_progress: item.device_recovery_progress,
+                captured_actor: item.captured_actor.as_ref().map(captured_actor_to_save),
             })
         })
         .collect::<Vec<_>>();
@@ -1402,6 +1452,7 @@ pub(crate) fn equipment_to_save(items: &[ItemInstance]) -> Vec<EquipmentItemSave
                 charges: item.charges,
                 fuel: item.fuel,
                 device_recovery_progress: item.device_recovery_progress,
+                captured_actor: item.captured_actor.as_ref().map(captured_actor_to_save),
             })
         })
         .collect::<Vec<_>>();
@@ -1439,6 +1490,7 @@ pub(crate) fn carried_items_to_save(items: &[ItemInstance]) -> Vec<CarriedItemSa
                 charges: item.charges,
                 fuel: item.fuel,
                 device_recovery_progress: item.device_recovery_progress,
+                captured_actor: item.captured_actor.as_ref().map(captured_actor_to_save),
             })
         })
         .collect::<Vec<_>>();

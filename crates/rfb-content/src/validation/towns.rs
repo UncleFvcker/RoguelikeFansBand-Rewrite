@@ -131,6 +131,8 @@ pub(super) fn validate_towns_and_shops(
             };
             if !stock_ids.insert(stock.item_kind_id.as_str())
                 || item.base_value == 0
+                || stock.availability_percent == 0
+                || stock.availability_percent > 100
                 || stock.initial_minimum == 0
                 || stock.initial_minimum > stock.initial_maximum
                 || stock.initial_maximum > 1_000

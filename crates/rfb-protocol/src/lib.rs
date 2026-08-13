@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.191";
+pub const PROTOCOL_VERSION: &str = "1.192";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -3004,6 +3004,18 @@ pub struct ItemPropertyDto {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
+pub struct CapturedActorDto {
+    pub kind_id: String,
+    pub name_key: String,
+    pub speed: u16,
+    pub hp: i32,
+    pub max_hp: i32,
+    pub experience: u64,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
 pub struct InventoryItemDto {
     pub id: String,
     pub kind_id: String,
@@ -3015,6 +3027,10 @@ pub struct InventoryItemDto {
     pub usable: bool,
     #[serde(default)]
     pub mount_usable: bool,
+    #[serde(default)]
+    pub capture_ball: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub captured_actor: Option<CapturedActorDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub charges: Option<ItemChargesDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -3091,6 +3107,12 @@ pub struct EquipmentItemDto {
     pub display_name_key: String,
     #[serde(default)]
     pub knowledge: ItemKnowledgeDto,
+    #[serde(default)]
+    pub capture_ball: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub captured_actor: Option<CapturedActorDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub use_target_spec: Option<TargetSpecDto>,
     pub quantity: u32,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub inscription: Option<String>,
@@ -3215,6 +3237,8 @@ pub struct ShopStockItemDto {
     pub quantity: u32,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub inscription: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub captured_actor: Option<CapturedActorDto>,
     pub maximum_quantity: u32,
     pub unit_price: u32,
     pub weight_tenths_pound: u16,
@@ -3285,6 +3309,8 @@ pub struct HomeItemDto {
     pub quantity: u32,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub inscription: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub captured_actor: Option<CapturedActorDto>,
     pub maximum_quantity: u32,
     pub weight_tenths_pound: u16,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -3601,6 +3627,7 @@ pub fn generated_typescript() -> String {
     push_declaration!(ItemCurseResolutionDto);
     push_declaration!(ItemCurseRemovalResolutionDto);
     push_declaration!(ItemPropertyDto);
+    push_declaration!(CapturedActorDto);
     push_declaration!(InventoryItemDto);
     push_declaration!(BodySlotDto);
     push_declaration!(EquipmentItemDto);
@@ -3923,6 +3950,16 @@ pub struct ResistanceSaveDto {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct CapturedActorSaveDto {
+    pub kind_id: String,
+    pub speed: u16,
+    pub hp: i32,
+    pub max_hp: i32,
+    pub experience: u64,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ItemSaveDto {
     pub id: String,
@@ -3957,6 +3994,7 @@ pub struct ItemSaveDto {
     pub activation: Option<ItemActivationDto>,
     #[serde(default, skip_serializing_if = "is_zero_u16")]
     pub device_recovery_progress: u16,
+    pub captured_actor: Option<CapturedActorSaveDto>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -3993,6 +4031,7 @@ pub struct InventoryItemSaveDto {
     pub activation: Option<ItemActivationDto>,
     #[serde(default, skip_serializing_if = "is_zero_u16")]
     pub device_recovery_progress: u16,
+    pub captured_actor: Option<CapturedActorSaveDto>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -4030,6 +4069,7 @@ pub struct EquipmentItemSaveDto {
     pub activation: Option<ItemActivationDto>,
     #[serde(default, skip_serializing_if = "is_zero_u16")]
     pub device_recovery_progress: u16,
+    pub captured_actor: Option<CapturedActorSaveDto>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -4067,6 +4107,7 @@ pub struct CarriedItemSaveDto {
     pub activation: Option<ItemActivationDto>,
     #[serde(default, skip_serializing_if = "is_zero_u16")]
     pub device_recovery_progress: u16,
+    pub captured_actor: Option<CapturedActorSaveDto>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -4729,6 +4770,8 @@ mod tests {
                 knowledge: ItemKnowledgeDto::Aware,
                 usable: false,
                 mount_usable: false,
+                capture_ball: false,
+                captured_actor: None,
                 charges: None,
                 fuel: None,
                 activation: None,
@@ -4767,6 +4810,9 @@ mod tests {
                 kind_id: "demo.item.charm".to_owned(),
                 display_name_key: "item-demo-charm-name".to_owned(),
                 knowledge: ItemKnowledgeDto::Aware,
+                capture_ball: false,
+                captured_actor: None,
+                use_target_spec: None,
                 quantity: 1,
                 inscription: None,
                 fuel: None,
@@ -4927,6 +4973,7 @@ mod tests {
         assert!(typescript.contains("mutations?: Array<PlayerMutationDto>"));
         assert!(typescript.contains("virtues: Array<VirtueDto>"));
         assert!(typescript.contains("canReceiveRecharge: boolean"));
+        assert!(typescript.contains("export type CapturedActorDto"));
         assert!(typescript.contains("requiresTargetGlyph?: boolean"));
         assert!(typescript.contains("requiresRechargeTargets?: boolean"));
         assert!(typescript.contains("{ \"type\": \"use-item-by-glyph\""));

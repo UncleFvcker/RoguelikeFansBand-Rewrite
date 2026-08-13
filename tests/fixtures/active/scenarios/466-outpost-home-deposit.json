@@ -29,7 +29,7 @@
       "revision": 1,
       "turn": 1,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 165,
+      "rngDrawCounter": 166,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -295,7 +295,7 @@
           "playerAtEntrance": true,
           "storedItems": [
             {
-              "id": "generated.item.170",
+              "id": "generated.item.171",
               "kindId": "demo.item.ration-of-food",
               "displayNameKey": "item-demo-ration-of-food-name",
               "quantity": 1,
@@ -1203,6 +1203,7 @@
           "knowledge": "aware",
           "usable": true,
           "mountUsable": false,
+          "captureBall": false,
           "canReceiveRecharge": false,
           "canSupplyRecharge": false,
           "quantity": 6,
@@ -1230,6 +1231,7 @@
           "knowledge": "aware",
           "usable": false,
           "mountUsable": false,
+          "captureBall": false,
           "fuel": {
             "kind": "torch",
             "current": 1500,
@@ -1263,6 +1265,7 @@
           "knowledge": "aware",
           "usable": false,
           "mountUsable": false,
+          "captureBall": false,
           "fuel": {
             "kind": "torch",
             "current": 1500,
@@ -1296,6 +1299,7 @@
           "knowledge": "aware",
           "usable": false,
           "mountUsable": false,
+          "captureBall": false,
           "fuel": {
             "kind": "torch",
             "current": 1500,
@@ -1329,6 +1333,7 @@
           "knowledge": "aware",
           "usable": false,
           "mountUsable": false,
+          "captureBall": false,
           "fuel": {
             "kind": "torch",
             "current": 1500,
@@ -1362,6 +1367,7 @@
           "knowledge": "aware",
           "usable": false,
           "mountUsable": false,
+          "captureBall": false,
           "fuel": {
             "kind": "torch",
             "current": 1500,
@@ -1395,6 +1401,7 @@
           "knowledge": "aware",
           "usable": false,
           "mountUsable": false,
+          "captureBall": false,
           "fuel": {
             "kind": "torch",
             "current": 1500,
@@ -1428,6 +1435,7 @@
           "knowledge": "aware",
           "usable": false,
           "mountUsable": false,
+          "captureBall": false,
           "canReceiveRecharge": false,
           "canSupplyRecharge": false,
           "quantity": 22,
@@ -1455,6 +1463,7 @@
           "kindId": "demo.item.chain-mail",
           "displayNameKey": "item-demo-chain-mail-name",
           "knowledge": "aware",
+          "captureBall": false,
           "quantity": 1,
           "weightTenthsPound": 220,
           "slotId": "body",
@@ -1495,6 +1504,7 @@
           "kindId": "demo.item.broad-sword",
           "displayNameKey": "item-demo-broad-sword-name",
           "knowledge": "aware",
+          "captureBall": false,
           "quantity": 1,
           "weightTenthsPound": 150,
           "slotId": "right-hand",
@@ -1530,6 +1540,7 @@
           "kindId": "demo.item.short-bow",
           "displayNameKey": "item-demo-short-bow-name",
           "knowledge": "aware",
+          "captureBall": false,
           "quantity": 1,
           "weightTenthsPound": 30,
           "slotId": "shooting",
@@ -1597,7 +1608,7 @@
           "identified": true
         },
         {
-          "itemId": "generated.item.170",
+          "itemId": "generated.item.171",
           "discovered": true
         },
         {
@@ -1635,7 +1646,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 171,
+      "nextItemInstanceSerial": 172,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -1643,7 +1654,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "521b2c7614eb0ef11805f0827172df327686866770ab69631901cf57130a3817"
+      "stateHash": "48a619a812c4930142628cbc68d185578e70ca423a571d2d14c2de63fb458de6"
     },
     "events": [
       {
@@ -1651,7 +1662,7 @@
         "messageKey": "home-deposit-success",
         "args": {
           "facility": "demo.town-facility.outpost-home",
-          "item": "generated.item.170",
+          "item": "generated.item.171",
           "quantity": "1",
           "target": "demo.item.ration-of-food"
         }

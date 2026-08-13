@@ -3,6 +3,48 @@ use std::collections::BTreeSet;
 use super::*;
 
 #[test]
+fn capture_policies_distinguish_normal_unique_and_immune_monsters() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let policy = |id: &str| {
+        artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == id)
+            .unwrap_or_else(|| panic!("fixture should contain {id}"))
+            .capture_policy
+    };
+    assert_eq!(
+        policy("demo.actor.horse"),
+        ActorCapturePolicyDefinition::Normal
+    );
+    assert_eq!(
+        policy("demo.actor.smeagol"),
+        ActorCapturePolicyDefinition::PetOnly
+    );
+    assert_eq!(
+        policy("demo.actor.golden-angel"),
+        ActorCapturePolicyDefinition::Immune
+    );
+    assert_eq!(
+        policy("demo.actor.serpent-of-chaos"),
+        ActorCapturePolicyDefinition::Immune
+    );
+
+    let mut invalid = artifact.content.clone();
+    invalid
+        .actors
+        .iter_mut()
+        .find(|actor| actor.role == ActorRole::Player)
+        .expect("fixture should contain a player actor")
+        .capture_policy = ActorCapturePolicyDefinition::PetOnly;
+    assert!(matches!(
+        validate_and_normalize(&mut invalid),
+        Err(ContentError::InvalidActorStats(_))
+    ));
+}
+
+#[test]
 fn rfb_pet_evolution_relations_use_stable_actor_ids() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let evolution_count = artifact

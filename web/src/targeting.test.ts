@@ -95,3 +95,14 @@ test("confirmation prefers a stable entity id then falls back to a position", ()
     undefined,
   );
 });
+
+test("entity targeting can select a mount sharing the player's position", () => {
+  const state = beginTargeting(
+    { x: 3, y: 3 },
+    { modes: ["entity"], range: 8, requiresLineOfEffect: true },
+  )!;
+  assert.deepEqual(
+    targetSelectionAtCursor(state, [{ id: "mount", position: { x: 3, y: 3 } }]),
+    { type: "entity", entityId: "mount" },
+  );
+});

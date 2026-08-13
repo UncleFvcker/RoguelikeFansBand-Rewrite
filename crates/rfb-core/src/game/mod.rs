@@ -43,9 +43,9 @@ use crate::{
         gain_energy, spend_energy,
     },
     state::{
-        Actor, BASE_ACTOR_POWER_PER_MILLE, FloorConnectionState, FloorRegionState, FloorState,
-        GoldPile, HomeState, ItemInstance, ItemLocation, MonsterPackIdentity, ResourcePool,
-        RidingBond, RolledAffixState, ShopState, SummonIdentity, TownState,
+        Actor, BASE_ACTOR_POWER_PER_MILLE, CapturedActor, FloorConnectionState, FloorRegionState,
+        FloorState, GoldPile, HomeState, ItemInstance, ItemLocation, MonsterPackIdentity,
+        ResourcePool, RidingBond, RolledAffixState, ShopState, SummonIdentity, TownState,
     },
     stats::{
         AttributeKind, AttributeSet, CharacterBuildIdentity, CharacterProgress, DerivedStat,
@@ -104,6 +104,7 @@ use rfb_protocol::{
 
 mod abilities;
 mod capabilities;
+mod capture_ball;
 mod chaos_patron;
 mod damage;
 mod death;
@@ -203,7 +204,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 95;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 96;
 #[cfg(test)]
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const VISIBILITY_RADIUS: i32 = 8;
@@ -712,6 +713,7 @@ fn append_starting_item(
         charges,
         fuel: initial_item_fuel(content, &starting_item.item_kind_id),
         device_recovery_progress: 0,
+        captured_actor: None,
         location,
     });
     Ok(())
@@ -1101,6 +1103,7 @@ impl Game {
                     charges,
                     fuel: initial_item_fuel(&content, &spawn.kind_id),
                     device_recovery_progress: 0,
+                    captured_actor: None,
                     location: ItemLocation::Ground(position_from_content(spawn.position)),
                 }
             })
@@ -1678,6 +1681,24 @@ impl Game {
                 )?;
             }
             GameAction::DestroyItem { item_id, quantity } => {
+                let opens_capture_ball = self.items.iter().any(|item| {
+                    item.id == item_id
+                        && quantity > 0
+                        && quantity <= item.quantity
+                        && item.captured_actor.is_some()
+                        && (item.location == ItemLocation::Inventory
+                            || item.location == ItemLocation::Ground(self.player.position))
+                        && self.can_destroy_item(item).is_ok()
+                });
+                if opens_capture_ball {
+                    self.force_open_capture_ball(
+                        &item_id,
+                        self.player.position,
+                        false,
+                        &mut events,
+                        &mut changed,
+                    );
+                }
                 match self.destroy_item(&item_id, quantity) {
                     Ok(outcome) => events.push(DomainEvent::ItemDestroyed {
                         target_kind_id: outcome.kind_id,
@@ -1708,6 +1729,15 @@ impl Game {
             GameAction::Drop { item_ids } => {
                 if let Some((stacks, quantity)) = self.drop_inventory_items(&item_ids) {
                     changed.insert(self.player.position);
+                    for item_id in &item_ids {
+                        self.force_open_capture_ball(
+                            item_id,
+                            self.player.position,
+                            true,
+                            &mut events,
+                            &mut changed,
+                        );
+                    }
                     events.push(DomainEvent::ItemsDropped { stacks, quantity });
                 } else {
                     events.push(DomainEvent::NoItemsDropped);
@@ -1718,6 +1748,13 @@ impl Game {
                     self.drop_inventory_quantity(&item_id, quantity)?
                 {
                     changed.insert(self.player.position);
+                    self.force_open_capture_ball(
+                        &item_id,
+                        self.player.position,
+                        true,
+                        &mut events,
+                        &mut changed,
+                    );
                     events.push(DomainEvent::ItemsDropped {
                         stacks,
                         quantity: dropped_quantity,
@@ -2548,6 +2585,7 @@ impl Game {
             charges,
             fuel: initial_item_fuel(&self.content, kind_id),
             device_recovery_progress: 0,
+            captured_actor: None,
             location: ItemLocation::Inventory,
         });
         Ok(())
@@ -3846,9 +3884,11 @@ impl Game {
         &self,
         item_id: &str,
     ) -> Result<Option<(usize, rfb_content::ItemDefinition)>, CoreError> {
-        let Some(index) = self.items.iter().position(|item| {
-            item.id == item_id && item.location == ItemLocation::Inventory && item.quantity > 0
-        }) else {
+        let Some(index) = self
+            .items
+            .iter()
+            .position(|item| item.id == item_id && item.quantity > 0)
+        else {
             return Ok(None);
         };
         let item = &self.items[index];
@@ -3858,6 +3898,11 @@ impl Game {
                 item.id, item.kind_id
             ))
         })?;
+        if item.location != ItemLocation::Inventory
+            && !(matches!(item.location, ItemLocation::Equipped { .. }) && definition.capture_ball)
+        {
+            return Ok(None);
+        }
         if let Some(activation) = &item.activation
             && definition
                 .device_generation
@@ -5115,6 +5160,7 @@ impl Game {
             charges: draft.charges,
             fuel: draft.fuel,
             device_recovery_progress: 0,
+            captured_actor: None,
             location,
         })
     }

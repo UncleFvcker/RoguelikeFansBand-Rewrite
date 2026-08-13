@@ -186,6 +186,25 @@ fn neglected_pet_checks_preserve_the_original_rng_gate_order() {
         .get_mut("demo.resource.mana")
         .expect("High-Mage should have mana")
         .current = 0;
+    let seed = (0..10_000)
+        .find(|seed| {
+            let mut trial = game.clone();
+            trial.rng = RfbRng::seeded(*seed);
+            let draws_before = trial.rng_draw_counter();
+            let mut events = Vec::new();
+            let disappeared = trial.resolve_neglected_pet(
+                0,
+                true,
+                &mut events,
+                &mut BTreeSet::new(),
+                &mut Vec::new(),
+            );
+            !disappeared
+                && trial.rng_draw_counter() - draws_before == 7
+                && matches!(events.as_slice(), [DomainEvent::PetNeglected { .. }])
+        })
+        .expect("a seed should exercise every neglect gate");
+    game.rng = RfbRng::seeded(seed);
     let draws_before = game.rng_draw_counter();
     let mut events = Vec::new();
     let disappeared =

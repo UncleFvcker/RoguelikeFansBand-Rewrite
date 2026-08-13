@@ -455,3 +455,23 @@ git diff --stat
   `1dcf89e57968a66dcfce99ba036ad077012e8dcbea8e8a0697aca4756d4b9f70`、Protocol `1.191`、
   State Hash Schema v95、save v1、active baseline `contract-v289`（26 条 exact fixture、
   零 waiver）。旧开发存档不兼容。
+
+## 26. main 当前交接（捕获球与最终闭环 Commit 3）
+
+- 新增且由 class 方向拥有 `demo.item.capture-ball`；items 分支不得重复导入同义物品。本批
+  没有新增 ability、material、affix 或 actor ID。固定来源是 RFB `master:k_info.txt`
+  source index 704，正式数据为等级 15、`A:15/4`、12.0 磅、价值 1000、不可堆叠和 shield
+  槽；先前计划中的 2.0 磅是笔误。
+- `ActorDefinition.capturePolicy` 由 monster 导入器按 RFB flags 生成。`normal` 为兼容默认，
+  Unique/Nazgûl 使用 `pet-only`，`UNIQUE2`、questor 及三个特殊合体怪使用 `immune`。后续
+  monsters 分支导入新怪时必须同步该字段；运行时不能靠显示名或原版数字序号判断，来源
+  序号到策略的映射只留在导入审计层。
+- 球内权威状态只保存 kind、speed、hp/maxHp 与 experience；不保存旧实体 ID、临时状态、
+  summon 或 pack。正常释放生成新宠物；捕获当前坐骑强制落马并重置羁绊。丢弃/投掷按
+  `1/4` 敌对骰释放，显式或环境摧毁保持宠物阵营。
+- Unique 生成资格通过遍历 active/stored/shop/home 中所有物品实例派生；其他方向不得增加
+  第二份“球内唯一怪物”计数或存档字段。
+- 当前协调点：pack `1.303.0` / content hash
+  `538cce0f525d1530dbb109f4cf75074c69130b09eebca10d672628ad770467e5`、Protocol `1.192`、
+  State Hash Schema v96、save v1、active baseline `contract-v290`（26 条 exact fixture、
+  零 waiver）。旧开发存档不兼容。

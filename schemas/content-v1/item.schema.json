@@ -882,6 +882,10 @@
       "minimum": 0,
       "type": "integer"
     },
+    "captureBall": {
+      "default": false,
+      "type": "boolean"
+    },
     "descriptionKey": {
       "type": "string"
     },

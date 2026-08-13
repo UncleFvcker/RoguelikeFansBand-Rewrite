@@ -24,7 +24,7 @@ pub mod policy;
 pub mod snapshot;
 
 pub const CONTRACT_SCHEMA_VERSION: u16 = 4;
-pub const ACTIVE_BASELINE: &str = "contract-v289";
+pub const ACTIVE_BASELINE: &str = "contract-v290";
 pub const ACTIVE_FIXTURE_DIRECTORY: &str = "active";
 pub const LEGACY_BASELINE_COMMIT: &str = "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9";
 pub const HISTORICAL_TEST_WORLD: &str = "demo.original-v1";
@@ -749,6 +749,7 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
             enchantments: item.enchantments,
             curse: item.curse,
             device_recovery_progress: item.device_recovery_progress,
+            captured_actor: None,
         });
     }
     for item in &fixture.preconditions.equipment_items {

@@ -191,6 +191,10 @@
     "demo.item.heavy-lance": {
       "glyph": "/",
       "foreground": "#a7acba"
+    },
+    "demo.item.capture-ball": {
+      "glyph": "~",
+      "foreground": "#60a5fa"
     }
   },
   "fallback": {

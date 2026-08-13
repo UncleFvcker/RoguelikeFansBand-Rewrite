@@ -87,6 +87,13 @@
     "ShopStockDefinition": {
       "additionalProperties": false,
       "properties": {
+        "availabilityPercent": {
+          "default": 100,
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "integer"
+        },
         "initialMaximum": {
           "format": "uint32",
           "minimum": 0,

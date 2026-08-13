@@ -29,7 +29,7 @@
       "revision": 1,
       "turn": 1,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 165,
+      "rngDrawCounter": 166,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -249,8 +249,8 @@
               "id": "generated.item.117",
               "kindId": "demo.item.fast-recovery-mushroom",
               "displayNameKey": "item-demo-fast-recovery-mushroom-name",
-              "quantity": 2,
-              "maximumQuantity": 2,
+              "quantity": 3,
+              "maximumQuantity": 3,
               "unitPrice": 30,
               "weightTenthsPound": 2,
               "quality": "ordinary"
@@ -264,7 +264,7 @@
               "maximumQuantity": 7
             },
             {
-              "itemId": "generated.item.170",
+              "itemId": "generated.item.171",
               "kindId": "demo.item.cure-poison-mushroom",
               "unitPrice": 114,
               "maximumQuantity": 1
@@ -1239,6 +1239,7 @@
           "knowledge": "aware",
           "usable": true,
           "mountUsable": false,
+          "captureBall": false,
           "canReceiveRecharge": false,
           "canSupplyRecharge": false,
           "quantity": 7,
@@ -1260,12 +1261,13 @@
           "identification": "unexamined"
         },
         {
-          "id": "generated.item.170",
+          "id": "generated.item.171",
           "kindId": "demo.item.cure-poison-mushroom",
           "displayNameKey": "item-demo-cure-poison-mushroom-name",
           "knowledge": "aware",
           "usable": true,
           "mountUsable": false,
+          "captureBall": false,
           "canReceiveRecharge": false,
           "canSupplyRecharge": false,
           "quantity": 1,
@@ -1294,6 +1296,7 @@
           "knowledge": "aware",
           "usable": false,
           "mountUsable": false,
+          "captureBall": false,
           "fuel": {
             "kind": "torch",
             "current": 1500,
@@ -1327,6 +1330,7 @@
           "knowledge": "aware",
           "usable": false,
           "mountUsable": false,
+          "captureBall": false,
           "fuel": {
             "kind": "torch",
             "current": 1500,
@@ -1360,6 +1364,7 @@
           "knowledge": "aware",
           "usable": false,
           "mountUsable": false,
+          "captureBall": false,
           "fuel": {
             "kind": "torch",
             "current": 1500,
@@ -1393,6 +1398,7 @@
           "knowledge": "aware",
           "usable": false,
           "mountUsable": false,
+          "captureBall": false,
           "fuel": {
             "kind": "torch",
             "current": 1500,
@@ -1426,6 +1432,7 @@
           "knowledge": "aware",
           "usable": false,
           "mountUsable": false,
+          "captureBall": false,
           "fuel": {
             "kind": "torch",
             "current": 1500,
@@ -1459,6 +1466,7 @@
           "knowledge": "aware",
           "usable": false,
           "mountUsable": false,
+          "captureBall": false,
           "fuel": {
             "kind": "torch",
             "current": 1500,
@@ -1492,6 +1500,7 @@
           "knowledge": "aware",
           "usable": false,
           "mountUsable": false,
+          "captureBall": false,
           "canReceiveRecharge": false,
           "canSupplyRecharge": false,
           "quantity": 22,
@@ -1519,6 +1528,7 @@
           "kindId": "demo.item.chain-mail",
           "displayNameKey": "item-demo-chain-mail-name",
           "knowledge": "aware",
+          "captureBall": false,
           "quantity": 1,
           "weightTenthsPound": 220,
           "slotId": "body",
@@ -1559,6 +1569,7 @@
           "kindId": "demo.item.broad-sword",
           "displayNameKey": "item-demo-broad-sword-name",
           "knowledge": "aware",
+          "captureBall": false,
           "quantity": 1,
           "weightTenthsPound": 150,
           "slotId": "right-hand",
@@ -1594,6 +1605,7 @@
           "kindId": "demo.item.short-bow",
           "displayNameKey": "item-demo-short-bow-name",
           "knowledge": "aware",
+          "captureBall": false,
           "quantity": 1,
           "weightTenthsPound": 30,
           "slotId": "shooting",
@@ -1668,7 +1680,7 @@
           "identified": true
         },
         {
-          "itemId": "generated.item.170",
+          "itemId": "generated.item.171",
           "discovered": true,
           "appraised": true,
           "identified": true
@@ -1708,7 +1720,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 171,
+      "nextItemInstanceSerial": 172,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -1716,7 +1728,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "c9cc4d9bea7289550ebb28dcbb011d40fb0b1c9b3ea7db5c72ea0f68352a9b69"
+      "stateHash": "fdffa5bfde19565db1febca647df90ee04b8bf2e6468af055627783d0bd673ff"
     },
     "events": [
       {
@@ -1724,7 +1736,7 @@
         "messageKey": "shop-purchase-success",
         "args": {
           "balance": "999880",
-          "item": "generated.item.170",
+          "item": "generated.item.171",
           "quantity": "1",
           "shop": "demo.shop.outpost-shroomery",
           "target": "demo.item.cure-poison-mushroom",

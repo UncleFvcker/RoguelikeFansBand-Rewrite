@@ -774,6 +774,7 @@ impl Game {
             charges,
             fuel: initial_item_fuel(&self.content, kind_id),
             device_recovery_progress: 0,
+            captured_actor: None,
             location: ItemLocation::Ground(self.player.position),
         });
         changed.insert(self.player.position);

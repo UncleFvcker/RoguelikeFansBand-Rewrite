@@ -455,8 +455,10 @@ impl Game {
             });
         }
         thrown.location = ItemLocation::Ground(landing);
+        let thrown_id = thrown.id.clone();
         self.items.push(thrown);
         changed.insert(landing);
+        self.force_open_capture_ball(&thrown_id, landing, true, events, changed);
         self.apply_easy_tiring_fatigue(STANDARD_ACTION_COST);
         Ok(())
     }

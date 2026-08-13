@@ -102,13 +102,13 @@ export function targetSelectionAtCursor(
   state: TargetingState,
   entities: readonly TargetableEntity[],
 ): TargetSelection | undefined {
-  if (samePosition(state.cursor, state.origin)) return undefined;
   if (state.spec.modes.includes("entity")) {
     const entity = [...entities]
       .filter((candidate) => samePosition(candidate.position, state.cursor))
       .sort((left, right) => left.id.localeCompare(right.id))[0];
     if (entity) return { type: "entity", entityId: entity.id };
   }
+  if (samePosition(state.cursor, state.origin)) return undefined;
   if (state.spec.modes.includes("position")) {
     return { type: "position", position: { ...state.cursor } };
   }

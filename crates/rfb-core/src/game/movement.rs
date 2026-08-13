@@ -254,6 +254,9 @@ impl Game {
             .iter()
             .map(|(item_id, _, _)| item_id.as_str())
             .collect::<BTreeSet<_>>();
+        for (item_id, _, _) in &destroyed {
+            self.force_open_capture_ball(item_id, position, false, events, changed);
+        }
         self.items
             .retain(|item| !destroyed_ids.contains(item.id.as_str()));
         self.gold_piles.retain(|pile| pile.position != position);

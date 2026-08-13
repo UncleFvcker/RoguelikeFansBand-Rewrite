@@ -53,6 +53,7 @@ fn armor_hit_modifier_only_changes_melee_skill() {
         charges: None,
         fuel: None,
         device_recovery_progress: 0,
+        captured_actor: None,
         location: ItemLocation::Equipped {
             slot_id: "body".to_owned(),
         },
@@ -90,6 +91,7 @@ fn gauntlets_add_their_hit_and_damage_modifiers_to_melee() {
         charges: None,
         fuel: None,
         device_recovery_progress: 0,
+        captured_actor: None,
         location: ItemLocation::Equipped {
             slot_id: "hands".to_owned(),
         },
@@ -330,6 +332,7 @@ fn elemental_brand_is_suppressed_only_by_matching_immunity() {
         charges: None,
         fuel: None,
         device_recovery_progress: 0,
+        captured_actor: None,
         location: ItemLocation::Equipped {
             slot_id: "weapon".to_owned(),
         },
@@ -388,6 +391,7 @@ fn offensive_flag_dto_hides_unknown_affix_contributions() {
         charges: None,
         fuel: None,
         device_recovery_progress: 0,
+        captured_actor: None,
         location: ItemLocation::Inventory,
     });
 
