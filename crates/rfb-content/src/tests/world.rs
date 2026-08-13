@@ -494,7 +494,9 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.ixitxachitl", 220, 1, 50),
             ("demo.actor.ixitxachitl-priest", 328, 1, 80),
             ("demo.actor.jackal", 35, 1, 5),
+            ("demo.actor.jambavan-king-of-the-beasts", 1385, 6, 999),
             ("demo.actor.jibaku-ghost", 1012, 2, 40),
+            ("demo.actor.jormungand-the-midgard-serpent", 854, 1, 999),
             ("demo.actor.jumping-fireball", 299, 1, 50),
             ("demo.actor.kamikaze-yeek", 179, 1, 40),
             ("demo.actor.kangaroo", 1317, 2, 50),
@@ -525,6 +527,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.large-yellow-snake", 59, 1, 20),
             ("demo.actor.lemure", 148, 3, 40),
             ("demo.actor.lesser-kraken", 740, 2, 999),
+            ("demo.actor.leviathan", 782, 3, 999),
             ("demo.actor.light-hound", 271, 2, 60),
             ("demo.actor.lion", 1321, 2, 50),
             ("demo.actor.livingstone", 336, 4, 70),
@@ -539,6 +542,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.makara", 1377, 2, 999),
             ("demo.actor.manes", 128, 2, 40),
             ("demo.actor.master-yeek", 224, 2, 40),
+            ("demo.actor.mathmag-the-prince-of-whales", 1251, 2, 999),
             ("demo.actor.mauhur-the-orc-captain", 1072, 3, 999),
             ("demo.actor.meneldor-the-swift", 384, 1, 999),
             ("demo.actor.meng-huo-the-king-of-southerings", 1030, 2, 999),
@@ -687,6 +691,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.unruly-horse", 957, 2, 30),
             ("demo.actor.unstable-worm-mass", 876, 4, 50),
             ("demo.actor.uruk", 313, 1, 60),
+            ("demo.actor.vali-king-of-the-vanaras", 1369, 4, 999),
             ("demo.actor.vanara", 1367, 4, 999),
             ("demo.actor.vanara-sage", 1375, 7, 999),
             ("demo.actor.vlasta", 249, 3, 50),
@@ -5505,6 +5510,86 @@ fn p71_banor_rupart_forms_keep_source_identity_and_shared_transform() {
 }
 
 #[test]
+fn p72_location_bound_monsters_keep_their_allocation_boundaries() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actor = |id: &str| {
+        artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == format!("demo.actor.{id}"))
+            .unwrap_or_else(|| panic!("P72 should contain {id}"))
+    };
+
+    for (id, legacy_index, level) in [
+        ("mathmag-the-prince-of-whales", 1251, 74),
+        ("jormungand-the-midgard-serpent", 854, 75),
+        ("leviathan", 782, 76),
+    ] {
+        let actor = actor(id);
+        let allocation = actor
+            .allocation
+            .as_ref()
+            .expect("ocean monsters should retain wilderness allocation");
+        assert_eq!(
+            (actor.level, allocation.legacy_index),
+            (level, legacy_index)
+        );
+        assert!(allocation.wild_only);
+        assert_eq!(allocation.habitats, vec![ActorHabitat::Ocean]);
+        assert!(actor.tags.iter().any(|tag| tag == "ocean"));
+        assert!(!actor.tags.iter().any(|tag| tag == "orc-cave"));
+    }
+
+    for (id, legacy_index, level) in [
+        ("jambavan-king-of-the-beasts", 1385, 74),
+        ("vali-king-of-the-vanaras", 1369, 76),
+    ] {
+        let actor = actor(id);
+        let allocation = actor
+            .allocation
+            .as_ref()
+            .expect("Mount Meru monsters should retain dungeon allocation");
+        assert_eq!(
+            (actor.level, allocation.legacy_index),
+            (level, legacy_index)
+        );
+        assert_eq!(allocation.legacy_dungeon_indices, vec![43]);
+        assert!(actor.tags.iter().any(|tag| tag == "mount-meru"));
+        assert!(!actor.tags.iter().any(|tag| tag == "orc-cave"));
+    }
+
+    for (id, level) in [("basement-cat", 74), ("eric-the-usurper", 76)] {
+        let actor = actor(id);
+        assert_eq!(actor.level, level);
+        assert!(actor.allocation.is_none());
+        assert!(actor.tags.iter().any(|tag| tag == "fixed-placement"));
+        assert!(actor.tags.iter().any(|tag| tag == "fixed-unique"));
+    }
+
+    for id in ["vanara", "vanara-sage", "vali-king-of-the-vanaras"] {
+        assert!(actor(id).tags.iter().any(|tag| tag == "vanara"), "{id}");
+    }
+    let summon = artifact
+        .content
+        .abilities
+        .iter()
+        .find(|ability| ability.id == "rfb-legacy.ability.summon-vanara-l76-1d3-1")
+        .expect("Vali's vanara summon should compile");
+    assert!(matches!(
+        summon.effect,
+        AbilityEffectDefinition::SummonCategory {
+            ref category,
+            maximum_level: 76,
+            count_dice: 1,
+            count_sides: 3,
+            count_bonus: 1,
+            ..
+        } if category == "vanara"
+    ));
+}
+
+#[test]
 fn p64b_low_risk_mappings_keep_source_semantics() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let actor = |id: &str| {
@@ -7802,7 +7887,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
                     == Some("demo.loot-table.base-items")
             })
             .count(),
-        638
+        643
     );
 }
 

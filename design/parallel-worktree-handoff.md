@@ -521,3 +521,17 @@ git diff --stat
 - 共享协调点：pack `1.310.0` / content hash
   `ea60ac6fbe1c44b29cdaf3b7db63c8bbef39ba56b9f08bf1159906741dd13d2c`；Protocol `1.189`、
   State Hash Schema v94、save v1、active replay baseline `contract-v285` 均不变。
+
+## 34. monsters-next 当前交接（P72 地点受限怪物）
+
+- 导入鲸鱼亲王马斯玛格、尘世巨蟒耶梦加得和利维坦，三者保留 `WILD_OCEAN` 对应的
+  ocean-only 分配；导入兽王贾姆巴万和瓦纳拉之王波林，保留 `legacyDungeonIndices: [43]`，
+  不进入 Orc Cave 或全局地牢分配。
+- 波林的 `S_VANARA` 复用既有 `SummonCategory`，召唤 1d3+1 个不高于 76 级的 `vanara`
+  候选；既有瓦纳拉与瓦纳拉贤者补充同一分类标签，不增加运行时结构。
+- 导入地下室猫与篡位者埃里克，移除随机 allocation 并标记 `fixed-placement`，等待任务地图
+  显式放置。L71–80 审计现为 83 imported、76 selected、0 direct、0 blocked、7 excluded；
+  excluded 仍表示这些 actor 的地点限制，不是内容缺口。
+- 共享协调点：pack `1.311.0` / content hash
+  `7a1bf49cd48f39c0c6238ab67c2ba1d6329e17110bd4bf737a1db525190ca59c`；Protocol `1.189`、
+  State Hash Schema v94、save v1、active replay baseline `contract-v285` 均不变。

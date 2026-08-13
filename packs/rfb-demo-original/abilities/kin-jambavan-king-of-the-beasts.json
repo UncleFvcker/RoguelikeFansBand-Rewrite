@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.kin-jambavan-king-of-the-beasts",
+  "descriptionKey": "ability-legacy-kin-jambavan-king-of-the-beasts-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.kin-jambavan-king-of-the-beasts",
+  "nameKey": "ability-legacy-kin-jambavan-king-of-the-beasts-name",
+  "tags": [
+    "legacy-import",
+    "summon"
+  ],
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  }
+}

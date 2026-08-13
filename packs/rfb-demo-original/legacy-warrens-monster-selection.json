@@ -5842,7 +5842,7 @@
     {
       "sourceIndex": 1367,
       "id": "vanara",
-      "tags": ["mount-meru"],
+      "tags": ["mount-meru", "vanara"],
       "omittedFlags": ["POS_GAIN_AC"]
     },
     {
@@ -5860,7 +5860,7 @@
     {
       "sourceIndex": 1375,
       "id": "vanara-sage",
-      "tags": ["mount-meru"],
+      "tags": ["mount-meru", "vanara"],
       "omittedFlags": ["MALE", "POS_GAIN_AC"]
     },
     {
@@ -6925,6 +6925,48 @@
       "id": "rupart-the-general",
       "tags": ["orc-cave"],
       "omittedFlags": ["CAN_SPEAK", "MALE"]
+    },
+    {
+      "sourceIndex": 782,
+      "id": "leviathan",
+      "tags": ["ocean"],
+      "omittedFlags": ["POS_GAIN_AC", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 813,
+      "id": "eric-the-usurper",
+      "tags": ["fixed-placement"],
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
+    },
+    {
+      "sourceIndex": 854,
+      "id": "jormungand-the-midgard-serpent",
+      "tags": ["ocean"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 1227,
+      "id": "basement-cat",
+      "tags": ["fixed-placement"],
+      "omittedFlags": ["NO_STUN"]
+    },
+    {
+      "sourceIndex": 1251,
+      "id": "mathmag-the-prince-of-whales",
+      "tags": ["ocean"],
+      "omittedFlags": ["MALE", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 1369,
+      "id": "vali-king-of-the-vanaras",
+      "tags": ["mount-meru", "vanara"],
+      "omittedFlags": ["HINDU2", "MALE", "POS_GAIN_AC", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 1385,
+      "id": "jambavan-king-of-the-beasts",
+      "tags": ["mount-meru"],
+      "omittedFlags": ["MALE", "NO_STUN", "POS_GAIN_AC"]
     }
   ]
 }

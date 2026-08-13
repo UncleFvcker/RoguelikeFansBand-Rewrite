@@ -1,0 +1,144 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "habitats": [
+      "ocean"
+    ],
+    "legacyIndex": 854,
+    "maxDepth": 999,
+    "rarity": 1,
+    "wildOnly": true
+  },
+  "attack": 18,
+  "damageDice": 20,
+  "damageSides": 10,
+  "damageType": "physical",
+  "defense": 16,
+  "descriptionKey": "actor-demo-jormungand-the-midgard-serpent-description",
+  "experienceValue": 45000,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "J",
+  "hitPointDice": {
+    "dice": 121,
+    "forceMaximum": true,
+    "sides": 100
+  },
+  "id": "demo.actor.jormungand-the-midgard-serpent",
+  "level": 75,
+  "maxHp": 12100,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 20,
+            "damageSides": 10,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "armorMitigated": true,
+            "chancePercent": 20,
+            "damageDice": 20,
+            "damageSides": 10,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.crush",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 20,
+            "damageSides": 10,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "armorMitigated": true,
+            "chancePercent": 20,
+            "damageDice": 20,
+            "damageSides": 10,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.crush",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 5,
+            "damageSides": 50,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "damageDice": 10,
+            "damageSides": 10,
+            "type": "poison"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.ball-water-1d150-50",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 16
+  },
+  "movement": {
+    "modes": [
+      "swim"
+    ]
+  },
+  "movesWeakerBodies": true,
+  "nameKey": "actor-demo-jormungand-the-midgard-serpent-name",
+  "rangedMelee": true,
+  "regenerates": true,
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "acid": "resistant",
+    "cold": "resistant",
+    "fire": "resistant",
+    "nexus": "resistant",
+    "plasma": "resistant",
+    "poison": "resistant",
+    "water": "resistant"
+  },
+  "rideable": true,
+  "role": "monster",
+  "speed": 130,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "evil",
+    "kin-glyph-74",
+    "legacy-import",
+    "ocean",
+    "unique"
+  ],
+  "terrainInteraction": {
+    "destroysWalls": true
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.kin-mathmag-the-prince-of-whales",
+  "descriptionKey": "ability-legacy-kin-mathmag-the-prince-of-whales-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.kin-mathmag-the-prince-of-whales",
+  "nameKey": "ability-legacy-kin-mathmag-the-prince-of-whales-name",
+  "tags": [
+    "legacy-import",
+    "summon"
+  ],
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  }
+}

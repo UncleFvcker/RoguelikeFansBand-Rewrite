@@ -9534,6 +9534,7 @@ fn summon_spell_defaults(base: &str) -> Option<(&'static str, (u32, u32, u32))> 
         "S_NIGHTMARE" => ("night-mare", (1, 3, 1)),
         "S_AMBERITE" => ("amberite", (1, 2, 0)),
         "S_NAGA" => ("kin-glyph-110", (1, 3, 1)),
+        "S_VANARA" => ("vanara", (1, 3, 1)),
         _ => return None,
     };
     Some(entry)
@@ -16208,6 +16209,27 @@ S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_ANT | S_SPIDER | S_HYDRA | S_LO
                 (bonus > 0).then_some(bonus)
             );
         }
+    }
+
+    #[test]
+    fn p72_vanara_summon_reuses_the_vanara_category() {
+        let mut abilities = BTreeMap::new();
+        let id = map_spell_token(
+            "S_VANARA",
+            76,
+            3,
+            "demo.actor.vali-king-of-the-vanaras",
+            &mut abilities,
+        )
+        .expect("S_VANARA should map");
+        assert_eq!(id, "rfb-legacy.ability.summon-vanara-l76-1d3-1");
+        let effect = &abilities[&id]["effect"];
+        assert_eq!(effect["type"], "summon-category");
+        assert_eq!(effect["category"], "vanara");
+        assert_eq!(effect["maximumLevel"], 76);
+        assert_eq!(effect["countDice"], 1);
+        assert_eq!(effect["countSides"], 3);
+        assert_eq!(effect["countBonus"], 1);
     }
 
     #[test]
