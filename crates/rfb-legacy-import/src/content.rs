@@ -3568,9 +3568,13 @@ fn item_json_with_terrain(
     apply_defensive_fold(&mut value, &fold);
     apply_offensive_fold(&mut value, &offense);
     apply_equipment_fold(&mut value, &equipment);
+    if entry.flags.iter().any(|flag| flag == "REFLECT") {
+        value["reflectsBolts"] = serde_json::json!(true);
+    }
     apply_item_destruction_properties(&mut value, entry.tval, &entry.flags);
     for flag in &entry.flags {
-        if matches!(flag.as_str(), "NO_REMOVE" | "RIDING") || item_destruction_flag_is_mapped(flag)
+        if matches!(flag.as_str(), "NO_REMOVE" | "RIDING" | "REFLECT")
+            || item_destruction_flag_is_mapped(flag)
         {
             continue;
         }
@@ -18466,6 +18470,25 @@ A:1/1
             item_destruction_immunities(&["IGNORE_ACID".to_owned(), "IGNORE_COLD".to_owned()]),
             ["acid", "cold"]
         );
+    }
+
+    #[test]
+    fn mirror_shield_maps_reflection_without_an_import_gap() {
+        let item = parse_k_info(
+            "N:239:& Mirror Shield~\nG:[:B\nI:34:10:0\nW:70:0:0:100:10000\nA:70/8\nP:10:1d1:0:0:10\nF:IGNORE_ACID | REFLECT | RES_LITE\n",
+        )
+        .expect("Mirror Shield source should parse")
+        .pop()
+        .expect("Mirror Shield source should contain one item");
+        let value = demo_item_json(&item, "mirror-shield", &LauncherAmmoIndex::default())
+            .expect("Mirror Shield should be directly importable");
+
+        assert_eq!(value["id"], "demo.item.mirror-shield");
+        assert_eq!(value["equipmentSlot"], "shield");
+        assert_eq!(value["modifiers"]["defense"], 20);
+        assert_eq!(value["reflectsBolts"], true);
+        assert_eq!(value["resistances"]["light"], "resistant");
+        assert_eq!(value["elementalDestructionImmunities"][0], "acid");
     }
 
     #[test]

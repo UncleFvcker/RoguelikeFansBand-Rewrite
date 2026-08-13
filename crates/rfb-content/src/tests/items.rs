@@ -1,6 +1,42 @@
 use super::*;
 
 #[test]
+fn mirror_shield_keeps_original_reflection_and_allocation() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let item = artifact
+        .content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.mirror-shield")
+        .expect("Mirror Shield should exist");
+    assert_eq!(item.generation_level, 70);
+    assert_eq!(item.weight_tenths_pound, 100);
+    assert_eq!(item.base_value, 10_000);
+    assert_eq!(item.equipment_slot.as_deref(), Some("shield"));
+    assert_eq!(item.modifiers.defense, 20);
+    assert!(item.reflects_bolts);
+    assert_eq!(
+        item.resistances.get(&ActorDamageType::Light),
+        Some(&ActorResistanceLevel::Resistant)
+    );
+
+    let allocation = artifact
+        .content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.base-items")
+        .and_then(|table| {
+            table
+                .entries
+                .iter()
+                .find(|entry| entry.item_kind_id == item.id)
+        })
+        .expect("Mirror Shield should retain its base-item allocation");
+    assert_eq!(allocation.weight, 12);
+    assert_eq!((allocation.min_depth, allocation.max_depth), (70, u16::MAX));
+}
+
+#[test]
 fn capture_ball_keeps_rfb_shape_and_low_probability_store_stock() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let item = artifact

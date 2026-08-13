@@ -977,6 +977,12 @@
       "minDepth": 30
     },
     {
+      "itemKindId": "demo.item.mirror-shield",
+      "weight": 12,
+      "quantity": 1,
+      "minDepth": 70
+    },
+    {
       "itemKindId": "demo.item.mithril-arrow",
       "weight": 50,
       "quantity": 1,

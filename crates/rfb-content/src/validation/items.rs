@@ -817,7 +817,8 @@ pub(super) fn validate_items(
                 || !item.status_immunities.is_empty()
                 || !item.slays.is_empty()
                 || !item.brands.is_empty()
-                || !item.passives.is_empty())
+                || !item.passives.is_empty()
+                || item.reflects_bolts)
         {
             return Err(ContentError::InvalidItemModifiers(item.id.clone()));
         }

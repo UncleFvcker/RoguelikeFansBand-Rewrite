@@ -97,6 +97,7 @@
     { "sourceIndex": 236, "id": "small-metal-shield" },
     { "sourceIndex": 237, "id": "large-leather-shield" },
     { "sourceIndex": 238, "id": "large-metal-shield" },
+    { "sourceIndex": 239, "id": "mirror-shield" },
     { "sourceIndex": 246, "id": "filthy-rag" },
     { "sourceIndex": 247, "id": "robe" },
     { "sourceIndex": 248, "id": "paper-armour" },

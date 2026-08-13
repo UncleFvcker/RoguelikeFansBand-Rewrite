@@ -111,7 +111,7 @@ fn reduce_disenchanted_component(rng: &mut RfbRng, value: i16) -> i16 {
 }
 
 impl Game {
-    fn scale_monster_damage(&self, source_entity_id: &str, damage: i32) -> i32 {
+    pub(super) fn scale_monster_damage(&self, source_entity_id: &str, damage: i32) -> i32 {
         let power_per_mille = self
             .entities
             .iter()

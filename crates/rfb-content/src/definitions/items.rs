@@ -873,6 +873,9 @@ pub struct ItemDefinition {
     /// Passive capabilities granted while this item is equipped.
     #[serde(default)]
     pub passives: BTreeSet<EquipmentPassive>,
+    /// Whether this equipped item reflects incoming single-target bolts.
+    #[serde(default)]
+    pub reflects_bolts: bool,
     /// RFB object elements that can destroy this base kind on the ground.
     #[serde(default)]
     pub elemental_destruction_vulnerabilities: BTreeSet<ItemDestructionElement>,
