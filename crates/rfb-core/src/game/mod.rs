@@ -21,9 +21,9 @@ use crate::{
         STATUS_BASIC_RESISTANCE, STATUS_BERSERK, STATUS_BLEEDING, STATUS_BLINDNESS,
         STATUS_CONFUSION, STATUS_FEAR, STATUS_GIANT_STRENGTH, STATUS_HALLUCINATION, STATUS_HASTE,
         STATUS_INVENTORY_PROTECTION, STATUS_INVULNERABILITY, STATUS_PARALYSIS, STATUS_POISON,
-        STATUS_PROTECTION_FROM_EVIL, STATUS_REGENERATION, STATUS_SIGHT, STATUS_SLEEP, STATUS_SLOW,
-        STATUS_STUN, STATUS_TELEPATHY, STATUS_THERMAL_RESISTANCE, STATUS_TSUYOSHI,
-        STATUS_UNDERSTANDING, STATUS_UNWELL, STATUS_VENGEANCE, STATUS_WRAITHFORM,
+        STATUS_PROTECTION_FROM_EVIL, STATUS_REGENERATION, STATUS_SEE_INVISIBLE, STATUS_SIGHT,
+        STATUS_SLEEP, STATUS_SLOW, STATUS_STUN, STATUS_TELEPATHY, STATUS_THERMAL_RESISTANCE,
+        STATUS_TSUYOSHI, STATUS_UNDERSTANDING, STATUS_UNWELL, STATUS_VENGEANCE, STATUS_WRAITHFORM,
         StatusApplication, StatusChange, StatusInstance, StatusStacking, apply_effect,
         apply_status, resolve_damage,
     },
@@ -6471,6 +6471,21 @@ fn apply_ability_level_scaling(
             .expect("validated level-scaled death ray power must fit u32");
         }
         (
+            AbilityEffectDefinition::TeleportAway { power, .. },
+            AbilityLevelScalingField::TeleportAwayPower,
+        )
+        | (
+            AbilityEffectDefinition::RechargeFromPlayer { power },
+            AbilityLevelScalingField::RechargePower,
+        ) => {
+            *power = u16::try_from(scaled_ability_level_value(
+                u64::from(*power),
+                scaling,
+                level,
+            ))
+            .expect("validated level-scaled effect power must fit u16");
+        }
+        (
             AbilityEffectDefinition::IdentifyItem {
                 full_identify_power,
                 ..
@@ -6717,6 +6732,17 @@ fn apply_ability_spell_power(
                 .expect("spell-powered identify power must fit u16");
         }
         (
+            AbilityEffectDefinition::TeleportAway { power, .. },
+            AbilitySpellPowerField::TeleportAwayPower,
+        )
+        | (
+            AbilityEffectDefinition::RechargeFromPlayer { power },
+            AbilitySpellPowerField::RechargePower,
+        ) => {
+            *power = u16::try_from(scaled(u64::from(*power)))
+                .expect("spell-powered effect power must fit u16");
+        }
+        (
             _,
             AbilitySpellPowerField::FinalDamage
             | AbilitySpellPowerField::RandomChoiceRoll
@@ -6908,10 +6934,15 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
         AbilityEffectDefinition::DeathRay { power } => {
             AbilityEffectSpecDto::DeathRay { power: *power }
         }
-        AbilityEffectDefinition::TeleportAway { minimum_distance } => {
-            AbilityEffectSpecDto::TeleportAway {
-                minimum_distance: *minimum_distance,
-            }
+        AbilityEffectDefinition::TeleportAway {
+            minimum_distance,
+            power,
+        } => AbilityEffectSpecDto::TeleportAway {
+            minimum_distance: *minimum_distance,
+            power: *power,
+        },
+        AbilityEffectDefinition::RechargeFromPlayer { power } => {
+            AbilityEffectSpecDto::RechargeFromPlayer { power: *power }
         }
         AbilityEffectDefinition::DrainResource { amount } => {
             AbilityEffectSpecDto::DrainResource { amount: *amount }

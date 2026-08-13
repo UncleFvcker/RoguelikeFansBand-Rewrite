@@ -158,11 +158,24 @@ pub(super) struct RemoveEquippedCursesOutcome {
 pub(super) struct InventoryItemRechargeRequest {
     attempted: u32,
     power: u32,
+    drain_on_failure: bool,
 }
 
 impl InventoryItemRechargeRequest {
     pub(super) const fn new(attempted: u32, power: u32) -> Self {
-        Self { attempted, power }
+        Self {
+            attempted,
+            power,
+            drain_on_failure: false,
+        }
+    }
+
+    pub(super) const fn from_player(attempted: u32, power: u32) -> Self {
+        Self {
+            attempted,
+            power,
+            drain_on_failure: true,
+        }
     }
 }
 
@@ -1158,8 +1171,17 @@ impl Game {
     }
 
     pub(super) fn item_can_receive_recharge(&self, item: &ItemInstance) -> bool {
-        item.location == ItemLocation::Inventory
-            && item.activation.is_some()
+        item.location == ItemLocation::Inventory && self.item_has_recharge_capacity(item)
+    }
+
+    pub(super) fn item_can_receive_player_recharge(&self, item: &ItemInstance) -> bool {
+        (item.location == ItemLocation::Inventory
+            || item.location == ItemLocation::Ground(self.player.position))
+            && self.item_has_recharge_capacity(item)
+    }
+
+    fn item_has_recharge_capacity(&self, item: &ItemInstance) -> bool {
+        item.activation.is_some()
             && self
                 .content
                 .item(&item.kind_id)
@@ -1167,6 +1189,18 @@ impl Game {
             && item
                 .charges
                 .is_some_and(|charges| charges.current < charges.maximum)
+    }
+
+    pub(super) fn recharge_inventory_item_from_player(
+        &mut self,
+        target_item_id: &str,
+        attempted: u32,
+        power: u32,
+    ) -> InventoryItemRechargeOutcome {
+        self.recharge_inventory_item_target(
+            target_item_id,
+            InventoryItemRechargeRequest::from_player(attempted, power),
+        )
     }
 
     pub(super) fn item_can_supply_recharge(&self, item: &ItemInstance) -> bool {
@@ -1296,6 +1330,8 @@ impl Game {
             if charges.current == charges.maximum {
                 target.device_recovery_progress = 0;
             }
+        } else if request.drain_on_failure {
+            charges.current = 0;
         }
         InventoryItemRechargeOutcome {
             target_item_id: target_item_id.to_owned(),

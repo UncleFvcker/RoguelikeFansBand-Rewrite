@@ -2551,7 +2551,9 @@ impl Game {
                     vec![target_position],
                 )
             }
-            AbilityEffectDefinition::TeleportAway { minimum_distance } => {
+            AbilityEffectDefinition::TeleportAway {
+                minimum_distance, ..
+            } => {
                 let trace =
                     self.monster_projectile_trace(source_index, ability, &target, true, false)?;
                 // The banished target lands away from the caster; candidates

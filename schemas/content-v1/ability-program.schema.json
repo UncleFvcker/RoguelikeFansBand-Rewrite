@@ -558,6 +558,13 @@
               "minimum": 0,
               "type": "integer"
             },
+            "power": {
+              "default": 0,
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
             "type": {
               "const": "teleport-away",
               "type": "string"
@@ -566,6 +573,26 @@
           "required": [
             "type",
             "minimumDistance"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "power": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "recharge-from-player",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "power"
           ],
           "type": "object"
         },
@@ -2290,6 +2317,8 @@
         "damage-sides",
         "damage-bonus",
         "death-ray-power",
+        "teleport-away-power",
+        "recharge-power",
         "identify-power",
         "radius",
         "beam-chance-percent",

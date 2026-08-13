@@ -301,8 +301,14 @@ pub(super) fn validate_abilities(
                         || (*power == 0
                             && has_level_scaling(AbilityLevelScalingField::DeathRayPower))
                 }
-                AbilityEffectDefinition::TeleportAway { minimum_distance } => {
-                    (1..=64).contains(minimum_distance)
+                AbilityEffectDefinition::TeleportAway {
+                    minimum_distance,
+                    power,
+                } => (1..=64).contains(minimum_distance) && *power <= 1_000,
+                AbilityEffectDefinition::RechargeFromPlayer { power } => {
+                    (1..=1_000).contains(power)
+                        || (*power == 0
+                            && has_level_scaling(AbilityLevelScalingField::RechargePower))
                 }
                 AbilityEffectDefinition::BirdDrop => true,
                 AbilityEffectDefinition::DrainResource { amount } => {
@@ -907,11 +913,11 @@ pub(super) fn validate_abilities(
             | AbilityEffectDefinition::BirdDrop
             | AbilityEffectDefinition::DrainResource { .. }
             | AbilityEffectDefinition::Amnesia
-            | AbilityEffectDefinition::TeleportLevel
             | AbilityEffectDefinition::PolymorphTarget
             | AbilityEffectDefinition::DrainLife { .. }
             | AbilityEffectDefinition::DeathRay { .. }
             | AbilityEffectDefinition::RandomChoice { .. } => projectile_target_rule,
+            AbilityEffectDefinition::TeleportLevel => self_target_rule || projectile_target_rule,
             AbilityEffectDefinition::FetchItem { .. }
             | AbilityEffectDefinition::ConsumeTerrain { .. }
             | AbilityEffectDefinition::MeleeThenTeleport { .. }
@@ -935,7 +941,8 @@ pub(super) fn validate_abilities(
             AbilityEffectDefinition::IdentifyItem { .. }
             | AbilityEffectDefinition::BrandWeapon { .. }
             | AbilityEffectDefinition::TransmuteItemToGold { .. }
-            | AbilityEffectDefinition::DrainItemMagic { .. } => item_target_rule,
+            | AbilityEffectDefinition::DrainItemMagic { .. }
+            | AbilityEffectDefinition::RechargeFromPlayer { .. } => item_target_rule,
             AbilityEffectDefinition::AreaDamage { .. } => {
                 self_target_rule || projectile_target_rule
             }

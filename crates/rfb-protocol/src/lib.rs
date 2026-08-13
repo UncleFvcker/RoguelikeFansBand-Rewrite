@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.191";
+pub const PROTOCOL_VERSION: &str = "1.192";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -968,6 +968,11 @@ pub enum AbilityEffectSpecDto {
     },
     TeleportAway {
         minimum_distance: u8,
+        #[serde(default)]
+        power: u16,
+    },
+    RechargeFromPlayer {
+        power: u16,
     },
     DrainResource {
         amount: u32,
@@ -2208,6 +2213,17 @@ pub enum AbilityEffectResolutionDto {
         effect_index: u8,
         from_floor_id: String,
         to_floor_id: String,
+    },
+    TeleportAway {
+        effect_index: u8,
+        target_entity_id: String,
+        power: u16,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        resistance_roll: Option<u8>,
+        resisted: bool,
+        from: Position,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        to: Option<Position>,
     },
     ApplyStatus {
         effect_index: u8,

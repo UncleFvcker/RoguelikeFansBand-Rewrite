@@ -670,12 +670,9 @@ impl Game {
             })
             .count();
         equipment_sources
-            + usize::from(
-                self.player
-                    .statuses
-                    .iter()
-                    .any(|status| status.kind_id == STATUS_SIGHT),
-            )
+            + usize::from(self.player.statuses.iter().any(|status| {
+                status.kind_id == STATUS_SIGHT || status.kind_id == STATUS_SEE_INVISIBLE
+            }))
     }
 
     pub(super) fn player_infravision_range(&self) -> i32 {

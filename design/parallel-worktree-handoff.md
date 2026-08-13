@@ -381,3 +381,16 @@ git diff --stat
   传送及 Astral Guide，鉴定和光之射线复用既有实现。
 - 共享协调点推进至 pack `1.300.0` / content hash（见当前 `content.lock.json`）、
   Protocol `1.191`；State Hash Schema v93、save v1、active baseline 仍为 `contract-v284`。
+
+## 23. items-next 奥秘第四册前置能力
+
+- `codex/items-next` 已注册《大师手册》前七个法术：识破隐形、抵抗毒素、传送楼层、
+  传送离开、充能、探测、召回之语；第八个法术尚未实现，因此该书不进入基础物品池、
+  商店、出生装备、任务奖励或其他获取路径。
+- 识破隐形使用独立状态；传送离开按射线路径、power 与原版抵抗规则结算；玩家法力充能
+  在成功施法后再支付额外法力，过载失败清空目标充能但不销毁物品。取消目标、基础施法
+  失败与额外法力不足均保持原子性和既定 RNG 顺序。
+- 共享协调点推进至 pack `1.301.0` / content hash
+  `e18bce609c64e3f4f1875ac434f96956c51dc1052c6df34fdb30dddd6d5e9d9e`、
+  Protocol `1.192`；State Hash Schema v93、save v1、active baseline 仍为 `contract-v284`。
+  协议投影变更后已刷新并复验全部 26 条 active fixture，零 waiver。

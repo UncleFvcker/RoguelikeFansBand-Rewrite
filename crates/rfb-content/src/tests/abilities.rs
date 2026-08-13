@@ -508,3 +508,72 @@ fn arcane_third_book_keeps_the_original_spell_table_and_narrow_effects() {
         .expect("Satisfy Hunger should compile");
     assert_eq!(hunger.effect, AbilityEffectDefinition::SatisfyHunger);
 }
+
+#[test]
+fn arcane_fourth_book_prelude_keeps_original_spells_without_an_acquisition_path() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let content = artifact.content;
+    let book = content
+        .ability_books
+        .iter()
+        .find(|book| book.id == "demo.ability-book.manual-of-mastery")
+        .expect("Arcane fourth book should compile");
+    assert_eq!(book.realm_id.as_deref(), Some("arcane"));
+    assert_eq!(book.rank, Some(4));
+    assert_eq!(book.ability_ids.len(), 7);
+    assert!(book.tags.iter().any(|tag| tag == "incomplete"));
+
+    let item = content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.manual-of-mastery")
+        .expect("Manual of Mastery item should compile");
+    assert_eq!(
+        (
+            item.generation_level,
+            item.weight_tenths_pound,
+            item.base_value,
+            item.ability_book_id.as_deref(),
+        ),
+        (25, 30, 2_500, Some("demo.ability-book.manual-of-mastery"))
+    );
+    assert!(content.loot_tables.iter().all(|table| {
+        table
+            .entries
+            .iter()
+            .all(|entry| entry.item_kind_id != item.id)
+    }));
+    assert!(
+        content
+            .shops
+            .iter()
+            .all(|shop| shop.stock.iter().all(|entry| entry.item_kind_id != item.id))
+    );
+
+    let expected = [
+        ("demo.ability.arcane-see-invisible", 24, 22, 50, 312),
+        ("demo.ability.arcane-resist-poison", 26, 26, 60, 780),
+        ("demo.ability.arcane-teleport-level", 30, 30, 70, 750),
+        ("demo.ability.arcane-teleport-away", 35, 28, 60, 875),
+        ("demo.ability.arcane-recharging", 40, 28, 55, 1_200),
+        ("demo.ability.arcane-detection", 41, 28, 70, 1_640),
+        ("demo.ability.arcane-word-of-recall", 43, 40, 60, 2_150),
+    ];
+    for (id, level, mana, failure, experience) in expected {
+        let player = content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == id)
+            .and_then(|ability| ability.player.as_ref())
+            .unwrap_or_else(|| panic!("{id} should have a player binding"));
+        assert_eq!(
+            (
+                player.minimum_level,
+                player.resource_cost,
+                player.base_failure_percent,
+                player.first_success_experience,
+            ),
+            (level, mana, failure, experience)
+        );
+    }
+}

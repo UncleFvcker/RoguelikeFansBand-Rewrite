@@ -618,3 +618,8 @@ save 容器保持 v1。
 `satisfy-hunger` 规格与结构化结算结果。它们分别承载原版 `1d30+20` 化石为泥、
 `current / 2 - 50` 治疗中伤和 `PY_FOOD_MAX - 1` 充饥；基础鉴定允许以 0/0 表示不掷
 完整鉴定判定。没有新增待处理输入或存档字段，State Hash Schema 保持 v93，save 容器保持 v1。
+
+协议 1.192 / Arcane 第四册前置为 `teleport-away` 增加玩家射线所需的 power，
+并增加窄化的 `recharge-from-player` 能力规格及 Teleport Away 结算结果。充能继续使用
+既有物品目标和装置充能事件，额外消耗能力资源；没有新增持久状态，State Hash Schema
+保持 v93，save 容器保持 v1。

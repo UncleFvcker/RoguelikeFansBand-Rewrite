@@ -108,6 +108,8 @@ pub enum AbilityLevelScalingField {
     DamageSides,
     DamageBonus,
     DeathRayPower,
+    TeleportAwayPower,
+    RechargePower,
     IdentifyPower,
     Radius,
     BeamChancePercent,
@@ -137,6 +139,8 @@ pub enum AbilitySpellPowerField {
     ControlPower,
     GenocidePower,
     IdentifyPower,
+    TeleportAwayPower,
+    RechargePower,
     RandomChoiceRoll,
     MaledictionDeathRayPower,
     MaledictionFearPower,
@@ -366,6 +370,11 @@ pub enum AbilityEffectDefinition {
     },
     TeleportAway {
         minimum_distance: u8,
+        #[serde(default)]
+        power: u16,
+    },
+    RechargeFromPlayer {
+        power: u16,
     },
     BirdDrop,
     DrainResource {
@@ -714,6 +723,14 @@ fn ability_level_scaling_base_and_limit(
             Some((u64::from(*power), 1_000_000))
         }
         (
+            AbilityEffectDefinition::TeleportAway { power, .. },
+            AbilityLevelScalingField::TeleportAwayPower,
+        )
+        | (
+            AbilityEffectDefinition::RechargeFromPlayer { power },
+            AbilityLevelScalingField::RechargePower,
+        ) => Some((u64::from(*power), 1_000)),
+        (
             AbilityEffectDefinition::IdentifyItem {
                 full_identify_power,
                 ..
@@ -929,6 +946,12 @@ pub(crate) fn valid_ability_spell_power(
                 }
                 AbilitySpellPowerField::IdentifyPower => {
                     matches!(effect, AbilityEffectDefinition::IdentifyItem { .. })
+                }
+                AbilitySpellPowerField::TeleportAwayPower => {
+                    matches!(effect, AbilityEffectDefinition::TeleportAway { .. })
+                }
+                AbilitySpellPowerField::RechargePower => {
+                    matches!(effect, AbilityEffectDefinition::RechargeFromPlayer { .. })
                 }
                 AbilitySpellPowerField::RandomChoiceRoll => {
                     matches!(effect, AbilityEffectDefinition::RandomChoice { .. })

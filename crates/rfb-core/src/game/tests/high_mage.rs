@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
-use super::support::{dispatch_next, give_inventory_item};
+use super::support::{
+    clear_monsters, descend_one_floor, dispatch_next, give_inventory_item, replace_terrain,
+};
 use super::*;
 
 const HIGH_MAGE_BUILD_ID: &str = "demo.build.high-mage-death";
@@ -19,6 +21,11 @@ fn arcane_high_mage_game(seed: u64, level: u16, ability_ids: &[&str]) -> Game {
         .extend(ability_ids.iter().map(|id| (*id).to_owned()));
     give_inventory_item(&mut game, "test.minor-arcana", "demo.item.minor-arcana");
     give_inventory_item(&mut game, "test.major-arcana", "demo.item.major-arcana");
+    give_inventory_item(
+        &mut game,
+        "test.manual-of-mastery",
+        "demo.item.manual-of-mastery",
+    );
     game.refresh_player_resource_maxima();
     game.resources
         .get_mut("demo.resource.mana")
@@ -46,6 +53,7 @@ fn arcane_high_mage_birth_keeps_only_the_first_book_and_is_isolated_from_death()
     assert!(carried.contains("demo.item.cantrips-for-beginners"));
     assert!(!carried.contains("demo.item.minor-arcana"));
     assert!(!carried.contains("demo.item.major-arcana"));
+    assert!(!carried.contains("demo.item.manual-of-mastery"));
     assert!(!carried.contains("demo.item.black-prayers"));
 
     let learned = game
@@ -55,7 +63,7 @@ fn arcane_high_mage_birth_keeps_only_the_first_book_and_is_isolated_from_death()
         .into_iter()
         .filter(|ability| ability.source == AbilitySourceDto::Learned)
         .collect::<Vec<_>>();
-    assert_eq!(learned.len(), 24);
+    assert_eq!(learned.len(), 31);
     assert!(
         learned
             .iter()
@@ -589,6 +597,409 @@ fn astral_guide_reduces_successful_arcane_long_teleport_energy_to_one_third() {
 
     assert_eq!(ordinary.world_tick - ordinary_tick, 10);
     assert_eq!(guided.world_tick - guided_tick, 4);
+}
+
+#[test]
+fn arcane_fourth_book_statuses_keep_see_invisible_separate_from_sight() {
+    let mut game = arcane_high_mage_game(
+        0x4152_4341_4e45_3231,
+        30,
+        &[
+            "demo.ability.arcane-see-invisible",
+            "demo.ability.arcane-resist-poison",
+        ],
+    );
+    assert_eq!(game.player_see_invisible_sources(), 0);
+    assert_eq!(game.player_infravision_range(), 0);
+
+    for ability_id in [
+        "demo.ability.arcane-see-invisible",
+        "demo.ability.arcane-resist-poison",
+    ] {
+        game.resources
+            .get_mut("demo.resource.mana")
+            .expect("Arcane High-Mage should retain mana")
+            .current = 100;
+        game.resolve_player_ability(
+            ability_id,
+            TargetSelection::SelfTarget,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("fourth-book status spell should resolve");
+    }
+
+    assert!(game.player_has_status_kind(STATUS_SEE_INVISIBLE));
+    assert!(!game.player_has_status_kind(STATUS_SIGHT));
+    assert_eq!(game.player_see_invisible_sources(), 1);
+    assert_eq!(game.player_infravision_range(), 0);
+    assert!(game.player_has_status_kind("rfb.status.resist-poison"));
+    assert_eq!(
+        game.effective_player_resistances()
+            .level(DamageType::Poison),
+        ResistanceLevel::Resistant
+    );
+}
+
+#[test]
+fn arcane_teleport_away_beams_through_monsters_and_honors_original_resistance() {
+    let mut game = arcane_high_mage_game(
+        0x5445_4c45_4157_4159,
+        50,
+        &["demo.ability.arcane-teleport-away"],
+    );
+    clear_monsters(&mut game);
+    let origin = game.player.position;
+    for step in 1..=8 {
+        replace_terrain(
+            &mut game,
+            Position {
+                x: origin.x + step,
+                y: origin.y,
+            },
+            "demo.terrain.floor",
+        );
+    }
+    let ordinary_from = Position {
+        x: origin.x + 1,
+        y: origin.y,
+    };
+    let unique_from = Position {
+        x: origin.x + 2,
+        y: origin.y,
+    };
+    game.entities.push(actor_from_runtime_spawn(
+        "test.teleport-away.ordinary",
+        "demo.actor.small-kobold",
+        ordinary_from,
+        5,
+        100,
+        100,
+        true,
+    ));
+    game.entities.push(actor_from_runtime_spawn(
+        "test.teleport-away.unique",
+        "demo.actor.alberich-the-nibelung-king",
+        unique_from,
+        40,
+        100,
+        100,
+        true,
+    ));
+
+    let mut events = Vec::new();
+    let mut changed = BTreeSet::new();
+    game.resolve_player_ability(
+        "demo.ability.arcane-teleport-away",
+        TargetSelection::Direction {
+            direction: Direction::East,
+        },
+        &mut events,
+        &mut changed,
+        &mut Vec::new(),
+    )
+    .expect("Teleport Away should resolve");
+
+    let ordinary_after = game
+        .entities
+        .iter()
+        .find(|entity| entity.id == "test.teleport-away.ordinary")
+        .expect("ordinary target should remain")
+        .position;
+    let unique_after = game
+        .entities
+        .iter()
+        .find(|entity| entity.id == "test.teleport-away.unique")
+        .expect("unique target should remain")
+        .position;
+    assert_ne!(ordinary_after, ordinary_from);
+    assert_eq!(unique_after, unique_from);
+    assert!(changed.contains(&ordinary_from));
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::AbilityEffectsResolved { resolution, .. }
+            if resolution.effects.iter().any(|effect| matches!(
+                effect,
+                AbilityEffectResolutionDto::TeleportAway {
+                    target_entity_id,
+                    resisted: true,
+                    ..
+                } if target_entity_id == "test.teleport-away.unique"
+            )) && resolution.effects.iter().any(|effect| matches!(
+                effect,
+                AbilityEffectResolutionDto::TeleportAway {
+                    target_entity_id,
+                    resisted: false,
+                    to: Some(_),
+                    ..
+                } if target_entity_id == "test.teleport-away.ordinary"
+            ))
+    )));
+}
+
+#[test]
+fn arcane_recharging_is_atomic_and_keeps_player_failure_separate_from_device_explosion() {
+    let mut base = arcane_high_mage_game(
+        0x5245_4348_4152_4745,
+        40,
+        &["demo.ability.arcane-recharging"],
+    );
+    give_inventory_item(
+        &mut base,
+        "test.recharge-target",
+        "demo.item.detect-objects-staff",
+    );
+    let target = base
+        .items
+        .iter_mut()
+        .find(|item| item.id == "test.recharge-target")
+        .expect("recharge target should exist");
+    target
+        .activation
+        .as_mut()
+        .expect("staff should have an activation")
+        .device_check_difficulty = 120;
+    target.charges = Some(ItemChargesDto {
+        current: 10,
+        maximum: 100,
+    });
+    let mut recharge_ability = base
+        .content
+        .ability("demo.ability.arcane-recharging")
+        .expect("Recharging should exist")
+        .clone();
+    Game::apply_player_level_scaling(&mut recharge_ability, 40);
+    Game::apply_player_spell_power(
+        &mut recharge_ability,
+        base.effective_player_spell_power_bonus(),
+    );
+    assert!(matches!(
+        recharge_ability.effect,
+        AbilityEffectDefinition::RechargeFromPlayer { power: 60 }
+    ));
+
+    let mut cancelled = base.clone();
+    let cancelled_rng = cancelled.rng.clone();
+    let cancelled_mana = cancelled.resources["demo.resource.mana"].current;
+    cancelled
+        .resolve_player_ability(
+            "demo.ability.arcane-recharging",
+            TargetSelection::Item {
+                item_id: "missing-item".to_owned(),
+            },
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("cancelled recharge target should be rejected");
+    assert_eq!(cancelled.rng, cancelled_rng);
+    assert_eq!(
+        cancelled.resources["demo.resource.mana"].current,
+        cancelled_mana
+    );
+
+    let failed_cast = (0..128_u64)
+        .find_map(|seed| {
+            let mut game = base.clone();
+            game.debug_ability_casts_succeed = false;
+            game.rng = RfbRng::seeded(seed);
+            let mut expected_rng = game.rng.clone();
+            let _ = expected_rng.bounded(100);
+            let mut events = Vec::new();
+            game.resolve_player_ability(
+                "demo.ability.arcane-recharging",
+                TargetSelection::Item {
+                    item_id: "test.recharge-target".to_owned(),
+                },
+                &mut events,
+                &mut BTreeSet::new(),
+                &mut Vec::new(),
+            )
+            .expect("failed Recharging cast should resolve atomically");
+            events
+                .iter()
+                .any(|event| matches!(event, DomainEvent::AbilityCastFailed { .. }))
+                .then_some((game, events, expected_rng))
+        })
+        .expect("a bounded seed should fail the Recharging cast");
+    assert_eq!(failed_cast.0.rng, failed_cast.2);
+    assert_eq!(failed_cast.0.resources["demo.resource.mana"].current, 55);
+    assert_eq!(
+        failed_cast
+            .0
+            .items
+            .iter()
+            .find(|item| item.id == "test.recharge-target")
+            .and_then(|item| item.charges)
+            .expect("failed-cast target should retain charges")
+            .current,
+        10
+    );
+    assert!(
+        !failed_cast
+            .1
+            .iter()
+            .any(|event| matches!(event, DomainEvent::DeviceRechargeResolved { .. }))
+    );
+
+    let mut success = base.clone();
+    success.debug_recharge_attempts_succeed = true;
+    let mut success_rng = success.rng.clone();
+    let _ = success_rng.bounded(100);
+    let mut success_events = Vec::new();
+    success
+        .resolve_player_ability(
+            "demo.ability.arcane-recharging",
+            TargetSelection::Item {
+                item_id: "test.recharge-target".to_owned(),
+            },
+            &mut success_events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("successful player recharge should resolve");
+    assert_eq!(success.resources["demo.resource.mana"].current, 0);
+    assert_eq!(
+        success
+            .items
+            .iter()
+            .find(|item| item.id == "test.recharge-target")
+            .and_then(|item| item.charges)
+            .expect("target should retain charges")
+            .current,
+        65
+    );
+    assert_eq!(success.rng, success_rng);
+
+    let mut failure = base;
+    failure.debug_recharge_attempts_fail = true;
+    failure
+        .items
+        .iter_mut()
+        .find(|item| item.id == "test.recharge-target")
+        .expect("failure target should exist")
+        .location = ItemLocation::Ground(failure.player.position);
+    let mut failure_rng = failure.rng.clone();
+    let _ = failure_rng.bounded(100);
+    let mut failure_events = Vec::new();
+    failure
+        .resolve_player_ability(
+            "demo.ability.arcane-recharging",
+            TargetSelection::Item {
+                item_id: "test.recharge-target".to_owned(),
+            },
+            &mut failure_events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("failed player recharge should resolve");
+    assert_eq!(failure.resources["demo.resource.mana"].current, 0);
+    assert_eq!(failure.rng, failure_rng);
+    assert_eq!(
+        failure
+            .items
+            .iter()
+            .find(|item| item.id == "test.recharge-target")
+            .and_then(|item| item.charges)
+            .expect("failed target should retain charge state")
+            .current,
+        0
+    );
+    assert!(failure_events.iter().any(|event| matches!(
+        event,
+        DomainEvent::DeviceRechargeResolved {
+            source_is_item: false,
+            succeeded: false,
+            failure_roll: None,
+            source_destroyed: false,
+            ..
+        }
+    )));
+    assert!(
+        failure
+            .items
+            .iter()
+            .any(|item| item.id == "test.recharge-target")
+    );
+}
+
+#[test]
+fn arcane_detection_recall_and_level_teleport_reuse_existing_transactions() {
+    let mut game = arcane_high_mage_game(
+        0x4445_5445_4354_3231,
+        50,
+        &[
+            "demo.ability.arcane-detection",
+            "demo.ability.arcane-word-of-recall",
+            "demo.ability.arcane-teleport-level",
+        ],
+    );
+    let detection = game
+        .content
+        .ability("demo.ability.arcane-detection")
+        .expect("Detection should exist");
+    assert_eq!(detection.effect.ordered_effects().len(), 8);
+    let mut detection_events = Vec::new();
+    game.resolve_player_ability(
+        "demo.ability.arcane-detection",
+        TargetSelection::SelfTarget,
+        &mut detection_events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Detection should resolve");
+    assert_eq!(
+        detection_events
+            .iter()
+            .filter(|event| matches!(event, DomainEvent::AbilityDetected { resolution, .. } if resolution.radius == 30))
+            .count(),
+        8
+    );
+
+    descend_one_floor(&mut game);
+    game.resources
+        .get_mut("demo.resource.mana")
+        .expect("Arcane High-Mage should retain mana")
+        .current = 100;
+    game.debug_recall_delay_turns = Some(27);
+    game.recall = Some(RecallStateDto {
+        dungeon_id: "demo.dungeon.warrens".to_owned(),
+        floor_id: "demo.floor.warrens-depth-1".to_owned(),
+        remaining_turns: None,
+    });
+    game.resolve_player_ability(
+        "demo.ability.arcane-word-of-recall",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Word of Recall should resolve");
+    assert_eq!(
+        game.recall
+            .as_ref()
+            .and_then(|recall| recall.remaining_turns),
+        Some(28)
+    );
+
+    game.resources
+        .get_mut("demo.resource.mana")
+        .expect("Arcane High-Mage should retain mana")
+        .current = 100;
+    let from_floor = game.current_floor_id.clone();
+    let (upward, downward) = game.teleport_level_targets();
+    if !upward.is_empty() || !downward.is_empty() {
+        game.resolve_player_ability(
+            "demo.ability.arcane-teleport-level",
+            TargetSelection::SelfTarget,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("Teleport Level should resolve");
+        assert_ne!(game.current_floor_id, from_floor);
+    }
 }
 
 #[test]

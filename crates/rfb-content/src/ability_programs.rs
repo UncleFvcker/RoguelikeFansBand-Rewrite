@@ -233,6 +233,7 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::AreaDestruction { .. }
                     | AbilityEffectDefinition::SuppressMonsterReproduction { .. }
                     | AbilityEffectDefinition::PolymorphSelf
+                    | AbilityEffectDefinition::TeleportLevel
                     | AbilityEffectDefinition::NoOp { .. }
             ) || matches!(
                 effect,
@@ -299,6 +300,7 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::BrandWeapon { .. }
                     | AbilityEffectDefinition::TransmuteItemToGold { .. }
                     | AbilityEffectDefinition::DrainItemMagic { .. }
+                    | AbilityEffectDefinition::RechargeFromPlayer { .. }
             ) || matches!(
                 effect,
                 AbilityEffectDefinition::CreateAmmunition {

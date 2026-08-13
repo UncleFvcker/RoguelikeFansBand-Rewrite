@@ -27,6 +27,7 @@ pub const STATUS_THERMAL_RESISTANCE: &str = "rfb.status.thermal-resistance";
 pub const STATUS_BASIC_RESISTANCE: &str = "rfb.status.basic-resistance";
 pub const STATUS_BERSERK: &str = "rfb.status.berserk";
 pub const STATUS_SIGHT: &str = "rfb.status.sight";
+pub const STATUS_SEE_INVISIBLE: &str = "rfb.status.see-invisible";
 pub const STATUS_POISON_RESISTANCE: &str = "rfb.status.poison-resistance";
 pub const STATUS_INVULNERABILITY: &str = "rfb.status.invulnerability";
 pub const STATUS_GIANT_STRENGTH: &str = "rfb.status.giant-strength";

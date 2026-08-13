@@ -1383,6 +1383,63 @@
         {
           "type": "object",
           "properties": {
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "from": {
+              "$ref": "#/$defs/Position"
+            },
+            "power": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "resistanceRoll": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "resisted": {
+              "type": "boolean"
+            },
+            "targetEntityId": {
+              "type": "string"
+            },
+            "to": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Position"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": {
+              "type": "string",
+              "const": "teleport-away"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex",
+            "targetEntityId",
+            "power",
+            "resisted",
+            "from"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "appliedDurationTicks": {
               "type": "integer",
               "format": "uint32",
@@ -2647,6 +2704,13 @@
               "maximum": 255,
               "minimum": 0
             },
+            "power": {
+              "type": "integer",
+              "format": "uint16",
+              "default": 0,
+              "maximum": 65535,
+              "minimum": 0
+            },
             "type": {
               "type": "string",
               "const": "teleport-away"
@@ -2655,6 +2719,25 @@
           "required": [
             "type",
             "minimumDistance"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "power": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "recharge-from-player"
+            }
+          },
+          "required": [
+            "type",
+            "power"
           ]
         },
         {

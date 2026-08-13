@@ -78,6 +78,8 @@
         "damage-sides",
         "damage-bonus",
         "death-ray-power",
+        "teleport-away-power",
+        "recharge-power",
         "identify-power",
         "radius",
         "beam-chance-percent",
@@ -125,6 +127,8 @@
         "control-power",
         "genocide-power",
         "identify-power",
+        "teleport-away-power",
+        "recharge-power",
         "random-choice-roll",
         "malediction-death-ray-power",
         "malediction-fear-power"

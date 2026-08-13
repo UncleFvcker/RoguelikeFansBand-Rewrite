@@ -79,6 +79,7 @@ pub(super) fn english_item_name(kind_id: &str) -> Option<&'static str> {
         "demo.item.masterwork-armor-scroll" => Some("Scroll of *Enchant Armor*"),
         "demo.item.masterwork-weapon-scroll" => Some("Scroll of *Enchant Weapon*"),
         "demo.item.major-arcana" => Some("[Major Arcana]"),
+        "demo.item.manual-of-mastery" => Some("[Manual of Mastery]"),
         "demo.item.might-tonic" => Some("Potion of Strength"),
         "demo.item.mortal-draught" => Some("Potion of Death"),
         "demo.item.mundanity-scroll" => Some("Scroll of Mundanity"),

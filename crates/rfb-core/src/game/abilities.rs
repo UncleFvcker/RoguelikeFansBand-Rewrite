@@ -52,6 +52,10 @@ pub(super) enum AbilityTargetPlan {
     Recall {
         action: RecallUseAction,
     },
+    TeleportLevel {
+        upward_targets: Vec<FloorTransitionTarget>,
+        downward_targets: Vec<FloorTransitionTarget>,
+    },
     Projectile {
         path: Vec<Position>,
         stop_at_actor: bool,
@@ -339,6 +343,17 @@ impl Game {
             events.push(DomainEvent::AbilityCastUnavailable {
                 ability_id: ability_id.to_owned(),
                 reason: "insufficient-resource".to_owned(),
+            });
+            return Ok(());
+        }
+        if matches!(
+            ability.effect,
+            AbilityEffectDefinition::RechargeFromPlayer { .. }
+        ) && resource_before <= resource_cost
+        {
+            events.push(DomainEvent::AbilityCastUnavailable {
+                ability_id: ability_id.to_owned(),
+                reason: "insufficient-recharge-resource".to_owned(),
             });
             return Ok(());
         }
@@ -647,6 +662,27 @@ impl Game {
             (AbilityEffectDefinition::Recall { .. }, AbilityTargetPlan::Recall { action }) => {
                 self.resolve_player_recall_effect(&ability, action, events)
             }
+            (
+                AbilityEffectDefinition::TeleportLevel,
+                AbilityTargetPlan::TeleportLevel {
+                    upward_targets,
+                    downward_targets,
+                },
+            ) => self.resolve_player_level_teleport_effect(
+                &ability,
+                upward_targets,
+                downward_targets,
+                events,
+                changed,
+            )?,
+            (
+                AbilityEffectDefinition::TeleportAway { .. },
+                AbilityTargetPlan::Projectile { path, .. },
+            ) => self.resolve_player_teleport_away_effect(&ability, path, events, changed),
+            (
+                AbilityEffectDefinition::RechargeFromPlayer { .. },
+                AbilityTargetPlan::Item { item_id },
+            ) => self.resolve_player_recharge_effect(&ability, &item_id, events),
             (AbilityEffectDefinition::ResistElements { .. }, AbilityTargetPlan::SelfTarget) => {
                 self.resolve_player_resist_elements_effect(&ability, events)
             }
@@ -5007,6 +5043,210 @@ impl Game {
         });
     }
 
+    fn resolve_player_level_teleport_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        upward_targets: Vec<FloorTransitionTarget>,
+        downward_targets: Vec<FloorTransitionTarget>,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) -> Result<(), CoreError> {
+        let prefer_upward = self.rng.bounded(2) == 0;
+        let targets = if prefer_upward {
+            if upward_targets.is_empty() {
+                downward_targets
+            } else {
+                upward_targets
+            }
+        } else if downward_targets.is_empty() {
+            upward_targets
+        } else {
+            downward_targets
+        };
+        let target_index = if targets.len() == 1 {
+            0
+        } else {
+            usize::try_from(self.rng.bounded(targets.len() as u64))
+                .expect("bounded floor target index must fit usize")
+        };
+        let target = targets[target_index].clone();
+        let from_floor_id = self.current_floor_id.clone();
+        let transition = self
+            .transition_floor(
+                target.floor_id,
+                target.arrival_connection_id,
+                target.departure_connection_id,
+                false,
+            )?
+            .expect("planned ability floor teleport must remain available");
+        let to_floor_id = transition.to_floor_id.clone();
+        self.record_floor_transition(transition, events, changed);
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: Some(self.player.id.clone()),
+                target_kind_id: Some(self.player.kind_id.clone()),
+                effects: vec![AbilityEffectResolutionDto::TeleportLevel {
+                    effect_index: 0,
+                    from_floor_id,
+                    to_floor_id,
+                }],
+            },
+            trace: None,
+        });
+        Ok(())
+    }
+
+    fn resolve_player_teleport_away_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        path: Vec<Position>,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let AbilityEffectDefinition::TeleportAway {
+            minimum_distance,
+            power,
+        } = ability.effect
+        else {
+            unreachable!("teleport-away executor requires a teleport-away effect");
+        };
+        let (trace, _) = self.trace_projectile_path_with_actor_policy(path, false);
+        let target_ids = self.beam_damage_targets(&trace.traversed);
+        let mut resolutions = Vec::new();
+        for target_entity_id in target_ids {
+            let Some(index) = self
+                .entities
+                .iter()
+                .position(|entity| entity.id == target_entity_id && entity.hp > 0)
+            else {
+                continue;
+            };
+            let from = self.entities[index].position;
+            let definition = self
+                .actor_runtime_definition(&self.entities[index])
+                .expect("teleport-away target definition must remain available");
+            let has_tag = |tag: &str| definition.tags.iter().any(|candidate| candidate == tag);
+            let target_level = definition.level;
+            let resistant = has_tag("resist-teleport");
+            let always_resisted =
+                has_tag("guardian") || (resistant && (has_tag("unique") || has_tag("resist-all")));
+            let resistance_roll = if resistant && !always_resisted {
+                Some(
+                    u8::try_from(self.rng.bounded(100) + 1)
+                        .expect("teleport resistance roll must fit u8"),
+                )
+            } else {
+                None
+            };
+            let resisted = always_resisted
+                || resistance_roll.is_some_and(|roll| target_level > u32::from(roll));
+            let mut to = None;
+            if !resisted {
+                let distance = u32::from(power.max(u16::from(minimum_distance)));
+                let mut minimum = distance / 2;
+                let mut maximum = distance.max(1);
+                for _ in 0..8 {
+                    let candidates =
+                        (0..self.height)
+                            .flat_map(|y| {
+                                (0..self.width).map(move |x| Position {
+                                    x: i32::from(x),
+                                    y: i32::from(y),
+                                })
+                            })
+                            .filter(|position| {
+                                let distance = rfb_distance(from, *position);
+                                distance >= minimum
+                                    && distance <= maximum
+                                    && *position != self.player.position
+                                    && self.actor_can_enter_position(index, *position)
+                                    && !self.entities.iter().enumerate().any(
+                                        |(other_index, entity)| {
+                                            other_index != index
+                                                && entity.hp > 0
+                                                && entity.position == *position
+                                        },
+                                    )
+                            })
+                            .collect::<Vec<_>>();
+                    if !candidates.is_empty() {
+                        let candidate_index = if candidates.len() == 1 {
+                            0
+                        } else {
+                            usize::try_from(self.rng.bounded(candidates.len() as u64))
+                                .expect("bounded teleport destination index must fit usize")
+                        };
+                        to = Some(candidates[candidate_index]);
+                        break;
+                    }
+                    minimum /= 2;
+                    maximum = maximum.saturating_mul(2);
+                }
+            }
+            if let Some(destination) = to {
+                self.entities[index].position = destination;
+                changed.insert(from);
+                changed.insert(destination);
+            }
+            resolutions.push(AbilityEffectResolutionDto::TeleportAway {
+                effect_index: 0,
+                target_entity_id,
+                power,
+                resistance_roll,
+                resisted,
+                from,
+                to,
+            });
+        }
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: None,
+                target_kind_id: None,
+                effects: resolutions,
+            },
+            trace: Some(trace),
+        });
+    }
+
+    fn resolve_player_recharge_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        item_id: &str,
+        events: &mut Vec<DomainEvent>,
+    ) {
+        let AbilityEffectDefinition::RechargeFromPlayer { power } = ability.effect else {
+            unreachable!("recharge executor requires a player recharge effect");
+        };
+        let resource_id = Self::player_ability_parameters(ability).resource_id.clone();
+        let available = self
+            .resources
+            .get(&resource_id)
+            .expect("validated recharge resource must remain available")
+            .current;
+        let missing = self
+            .items
+            .iter()
+            .find(|item| item.id == item_id)
+            .and_then(|item| item.charges)
+            .map(|charges| charges.maximum.saturating_sub(charges.current))
+            .expect("preflighted recharge target must retain charge capacity");
+        let attempted = u32::from(power).min(available).min(missing);
+        self.resources
+            .get_mut(&resource_id)
+            .expect("validated recharge resource must remain available")
+            .current -= attempted;
+        let outcome =
+            self.recharge_inventory_item_from_player(item_id, attempted, u32::from(power));
+        events.push(device_recharge_resolved_event(
+            outcome,
+            ability.id.clone(),
+            false,
+            false,
+        ));
+    }
+
     fn resolve_player_resist_elements_effect(
         &mut self,
         ability: &AbilityDefinition,
@@ -5608,15 +5848,37 @@ impl Game {
             AbilityEffectDefinition::BlinkTarget { .. }
             | AbilityEffectDefinition::TeleportSelf { .. }
             | AbilityEffectDefinition::TeleportTarget
-            | AbilityEffectDefinition::TeleportLevel
             | AbilityEffectDefinition::BreathDamage { .. }
             | AbilityEffectDefinition::CurseDamage { .. }
-            | AbilityEffectDefinition::TeleportAway { .. }
             | AbilityEffectDefinition::BirdDrop
             | AbilityEffectDefinition::DrainResource { .. }
             | AbilityEffectDefinition::Amnesia
             | AbilityEffectDefinition::DarkenRoom
             | AbilityEffectDefinition::JumpDamage { .. } => None,
+            AbilityEffectDefinition::TeleportLevel => {
+                if !matches!(target, TargetSelection::SelfTarget)
+                    || !ability
+                        .target
+                        .modes
+                        .contains(&AbilityTargetModeDefinition::SelfTarget)
+                {
+                    return None;
+                }
+                let (upward_targets, downward_targets) = self.teleport_level_targets();
+                (!upward_targets.is_empty() || !downward_targets.is_empty()).then_some(
+                    AbilityTargetPlan::TeleportLevel {
+                        upward_targets,
+                        downward_targets,
+                    },
+                )
+            }
+            AbilityEffectDefinition::TeleportAway { power, .. } => (power > 0)
+                .then(|| self.beam_ability_path(ability, target))
+                .flatten()
+                .map(|path| AbilityTargetPlan::Projectile {
+                    path,
+                    stop_at_actor: false,
+                }),
             AbilityEffectDefinition::Teleport => {
                 let TargetSelection::Position { position } = target else {
                     return None;
@@ -5789,6 +6051,17 @@ impl Game {
                                 || item.location == ItemLocation::Ground(self.player.position))
                             && item.charges.is_some_and(|charges| charges.current > 0)
                     })
+                    .map(|_| AbilityTargetPlan::Item {
+                        item_id: item_id.clone(),
+                    })
+            }
+            AbilityEffectDefinition::RechargeFromPlayer { .. } => {
+                let TargetSelection::Item { item_id } = target else {
+                    return None;
+                };
+                self.items
+                    .iter()
+                    .find(|item| item.id == *item_id && self.item_can_receive_player_recharge(item))
                     .map(|_| AbilityTargetPlan::Item {
                         item_id: item_id.clone(),
                     })
