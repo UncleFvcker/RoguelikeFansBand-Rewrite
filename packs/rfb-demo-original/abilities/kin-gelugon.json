@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.kin-gelugon",
+  "descriptionKey": "ability-legacy-kin-gelugon-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.kin-gelugon",
+  "nameKey": "ability-legacy-kin-gelugon-name",
+  "tags": [
+    "legacy-import",
+    "summon"
+  ],
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  }
+}

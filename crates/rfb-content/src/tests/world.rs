@@ -733,7 +733,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         .iter()
         .filter(|actor| actor.tags.iter().any(|tag| tag == "orc-cave"))
         .collect::<Vec<_>>();
-    assert_eq!(orc_cave.len(), 610);
+    assert_eq!(orc_cave.len(), 623);
 
     for id in [
         "demo.actor.bunyip",
@@ -766,10 +766,10 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
                     .any(|index| *index != 3)
         );
     }
-    let mut level_counts = [0_usize; 48];
+    let mut level_counts = [0_usize; 50];
     let mut source_indices = BTreeSet::new();
     for actor in orc_cave {
-        assert!((21..=68).contains(&actor.level));
+        assert!((21..=70).contains(&actor.level));
         let allocation = actor
             .allocation
             .as_ref()
@@ -782,6 +782,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         [
             16, 14, 12, 17, 24, 17, 19, 17, 18, 21, 7, 12, 29, 15, 27, 28, 19, 19, 11, 42, 12, 6,
             12, 14, 14, 7, 10, 6, 6, 17, 11, 8, 3, 8, 17, 9, 1, 6, 4, 17, 5, 4, 5, 2, 11, 0, 8, 3,
+            6, 7,
         ]
     );
 
@@ -5042,6 +5043,44 @@ fn p63b_level_67_68_direct_monsters_keep_source_identity() {
 }
 
 #[test]
+fn p64a_level_69_70_direct_monsters_keep_source_identity() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+
+    for (id, legacy_index, level) in [
+        ("julian-master-of-arden-forest", 794, 69),
+        ("old-sorcerer", 1026, 69),
+        ("takemikazuchi-the-thunder", 1137, 69),
+        ("gelugon", 1152, 69),
+        ("steam-powered-mechanical-dragon", 1202, 69),
+        ("kundry-queen-of-the-lost-haven", 1254, 69),
+        ("tiamat-celestial-dragon-of-evil", 795, 70),
+        ("the-norsa", 796, 70),
+        ("rhan-tegoth", 797, 70),
+        ("bouncing-mine", 889, 70),
+        ("iketa-the-brave", 949, 70),
+        ("flying-spaghetti-monster", 1080, 70),
+        ("death-scythe", 1084, 70),
+    ] {
+        let actor_id = format!("demo.actor.{id}");
+        let actor = artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == actor_id)
+            .unwrap_or_else(|| panic!("{actor_id} should be imported"));
+        assert_eq!(actor.level, level, "{actor_id} level");
+        assert_eq!(
+            actor
+                .allocation
+                .as_ref()
+                .map(|allocation| allocation.legacy_index),
+            Some(legacy_index),
+            "{actor_id} source index"
+        );
+    }
+}
+
+#[test]
 fn p59a_nether_jump_and_contact_auras_keep_source_semantics() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let actor = |id: &str| {
@@ -7147,7 +7186,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
                     == Some("demo.loot-table.base-items")
             })
             .count(),
-        557
+        567
     );
 }
 

@@ -6342,6 +6342,84 @@
       "id": "omoikane-spirit-of-wisdom",
       "tags": ["orc-cave"],
       "omittedFlags": ["CAN_SPEAK", "MALE"]
+    },
+    {
+      "sourceIndex": 794,
+      "id": "julian-master-of-arden-forest",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
+    },
+    {
+      "sourceIndex": 1026,
+      "id": "old-sorcerer",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "POS_TELEPATHY"]
+    },
+    {
+      "sourceIndex": 1137,
+      "id": "takemikazuchi-the-thunder",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 1152,
+      "id": "gelugon",
+      "tags": ["orc-cave"],
+      "omittedFlags": []
+    },
+    {
+      "sourceIndex": 1202,
+      "id": "steam-powered-mechanical-dragon",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE"]
+    },
+    {
+      "sourceIndex": 1254,
+      "id": "kundry-queen-of-the-lost-haven",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["FEMALE"]
+    },
+    {
+      "sourceIndex": 795,
+      "id": "tiamat-celestial-dragon-of-evil",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["ATTR_MULTI", "FEMALE", "POS_GAIN_AC", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 796,
+      "id": "the-norsa",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["ATTR_MULTI", "CAN_SPEAK", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 797,
+      "id": "rhan-tegoth",
+      "tags": ["orc-cave", "spider"],
+      "omittedFlags": ["CAN_SPEAK", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 889,
+      "id": "bouncing-mine",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["ATTR_CLEAR", "CHAR_CLEAR", "NASTY_GLYPH", "STUPID"]
+    },
+    {
+      "sourceIndex": 949,
+      "id": "iketa-the-brave",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
+    },
+    {
+      "sourceIndex": 1080,
+      "id": "flying-spaghetti-monster",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["NO_STUN"]
+    },
+    {
+      "sourceIndex": 1084,
+      "id": "death-scythe",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CHAR_MULTI"]
     }
   ]
 }

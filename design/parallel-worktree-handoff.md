@@ -411,3 +411,14 @@ git diff --stat
 - 共享协调点：pack `1.301.0` / content hash
   `c39b143827508a1ea9917f9f45b8e3810f19f03e0ad59b370954677c7a11986d`；Protocol `1.189`、
   State Hash Schema v94、save v1、active replay baseline `contract-v285` 均不变。
+
+## 25. monsters-next 当前交接（P64A L69–70 直接导入）
+
+- 导入 L69–70 的 13 个普通分配 actor：阿登森林领主朱利安、老术士、雷神建御雷神、冰魔、
+  蒸汽驱动的机械龙、失落避风港女王昆德丽、邪恶天龙提亚马特、诺萨、兰-提戈斯、
+  弹跳地雷、勇者池田、飞天面条神怪、死神镰刀。
+- 全部保留 RFB master 的 source index、层级和 Orc Cave 分配；本批只新增 44 组现有运行时
+  可表达的参数化 ability/program，没有新增运行时、协议、存档或 state-hash 字段。
+- 共享协调点：pack `1.302.0` / content hash
+  `0540fb39f3943d390b72fc7815db4e365f68c19e86e3835f91ce4bb04d1c11a0`；Protocol `1.189`、
+  State Hash Schema v94、save v1、active replay baseline `contract-v285` 均不变。

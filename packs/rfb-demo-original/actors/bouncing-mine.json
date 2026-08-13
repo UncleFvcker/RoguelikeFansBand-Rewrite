@@ -1,0 +1,89 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 889,
+    "maxDepth": 999,
+    "rarity": 6
+  },
+  "attack": 17,
+  "damageDice": 15,
+  "damageSides": 5,
+  "damageType": "shards",
+  "defense": 1,
+  "descriptionKey": "actor-demo-bouncing-mine-description",
+  "experienceValue": 2000,
+  "formatVersion": 1,
+  "glyph": ".",
+  "hitPointDice": {
+    "dice": 40,
+    "forceMaximum": true,
+    "sides": 15
+  },
+  "id": "demo.actor.bouncing-mine",
+  "level": 70,
+  "maxHp": 600,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 15,
+            "damageSides": 5,
+            "damageType": "shards",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.explode",
+        "selfDestructs": true,
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.ball-shards-1d1-99",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.bolt-physical-15d10",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.blink",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-poison-17-600-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-chaos-17-600-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-nexus-33-250-r3",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 20
+  },
+  "movement": {
+    "neverMoves": true
+  },
+  "nameKey": "actor-demo-bouncing-mine-name",
+  "resistances": {
+    "acid": "resistant",
+    "chaos": "resistant",
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 120,
+  "tags": [
+    "kin-glyph-46",
+    "legacy-import",
+    "nonliving",
+    "orc-cave"
+  ]
+}
