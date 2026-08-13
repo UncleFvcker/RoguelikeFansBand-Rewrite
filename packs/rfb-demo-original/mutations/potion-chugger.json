@@ -7,5 +7,9 @@
   "rating": "good",
   "sourceIndex": 106,
   "randomWeight": 0,
+  "potionEnergyMultiplier": {
+    "numerator": 1,
+    "denominator": 2
+  },
   "removesOnGain": []
 }

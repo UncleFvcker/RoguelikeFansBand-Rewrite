@@ -601,6 +601,7 @@ impl Game {
         self.clear_riding_bond_for(&dying_actor.id);
         self.entities[index].hp = self.entities[index].hp.min(0);
         events.push(death_event.clone());
+        self.apply_infernal_deal(&dying_actor);
         self.apply_amberite_blood_curse(&dying_actor);
         self.actor_death_explosion(&dying_actor, events, changed, removed_entities)?;
         let index = self

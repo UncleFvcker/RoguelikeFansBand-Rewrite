@@ -823,6 +823,10 @@
     "description": {
       "type": "string"
     },
+    "deviceChargeDrainImmunity": {
+      "default": false,
+      "type": "boolean"
+    },
     "deviceSkill": {
       "default": 0,
       "format": "int32",
@@ -841,8 +845,20 @@
       "minimum": 0,
       "type": "integer"
     },
+    "healingBonusPercent": {
+      "default": 0,
+      "description": "Additive percentage applied by the shared player-healing transaction.",
+      "format": "uint16",
+      "maximum": 65535,
+      "minimum": 0,
+      "type": "integer"
+    },
     "id": {
       "type": "string"
+    },
+    "infernalDeal": {
+      "default": false,
+      "type": "boolean"
     },
     "infravision": {
       "default": 0,
@@ -873,6 +889,12 @@
     },
     "lightRadius": {
       "default": 0,
+      "format": "int32",
+      "type": "integer"
+    },
+    "maxHpPerLevel": {
+      "default": 0,
+      "description": "Adds this many maximum hit points for each player level.",
       "format": "int32",
       "type": "integer"
     },
@@ -934,6 +956,17 @@
           "type": "null"
         }
       ]
+    },
+    "potionEnergyMultiplier": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/MutationRatioDefinition"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
     },
     "randomSelectionEnabled": {
       "default": true,
@@ -1133,6 +1166,16 @@
     "telepathy": {
       "default": false,
       "type": "boolean"
+    },
+    "weaponProficiencyMaximum": {
+      "default": null,
+      "format": "uint16",
+      "maximum": 65535,
+      "minimum": 0,
+      "type": [
+        "integer",
+        "null"
+      ]
     }
   },
   "required": [

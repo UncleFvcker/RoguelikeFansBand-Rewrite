@@ -779,8 +779,17 @@ impl Game {
     }
 
     pub(super) fn effective_player_spell_power_bonus(&self) -> i32 {
+        let mutation_bonus = self
+            .content
+            .mutations()
+            .filter(|mutation| self.progress.active_mutation_ids.contains(&mutation.id))
+            .fold(0_i32, |total, mutation| {
+                total.saturating_add(mutation.modifiers.spell_power_bonus)
+            });
         self.player.statuses.iter().fold(
-            self.equipment_modifiers().spell_power_bonus,
+            self.equipment_modifiers()
+                .spell_power_bonus
+                .saturating_add(mutation_bonus),
             |total, status| total.saturating_add(status.granted_modifiers.spell_power_bonus),
         )
     }
@@ -1663,7 +1672,14 @@ impl Game {
             {
                 let modifiers = &mutation.modifiers;
                 for (kind, value) in [
-                    (StatKind::MaxHp, modifiers.max_hp),
+                    (
+                        StatKind::MaxHp,
+                        modifiers.max_hp.saturating_add(
+                            mutation
+                                .max_hp_per_level
+                                .saturating_mul(i32::from(self.progress.level)),
+                        ),
+                    ),
                     (StatKind::Attack, modifiers.attack),
                     (StatKind::Defense, modifiers.defense),
                     (

@@ -664,3 +664,17 @@ git diff --stat
   `a2fc4f79fbd069387d5fbb9a08364221b2cf15c15a609448056cd4fd4b11a4ca`、Protocol
   `1.199`、State Hash Schema v98、save v1、active baseline `contract-v299`。无新增权威
   状态；现有 26 条 fixture 均未触发 35 级奖励，只复验、不刷新 assertions，零 waiver。
+
+## 40. main 当前交接（Human Commit 4：被动型半神天赋）
+
+- 本批不新增 item、ability、actor、race、class、build、mutation、material 或 affix ID；
+  复用既有不屈不挠、狂饮药水、神圣活力、恐怖巫术、武器多面手、恶魔契约与恶魔之握
+  七项稳定 mutation 身份。其他方向不得创建同义内容。
+- 七项行为已接入现有 HP 派生、物品能量、共享玩家治疗、法术强度、逐武器熟练度、actor
+  死亡和怪物装置充能吸取事务。账本为 132 active / 20 blocked，随机候选仍为 104。
+- Human 20 级原版 `mut_demigod_pred` 尚包含九项缺真实消费者的候选，因此本批不配置
+  `human-talent` 奖励，不把当前已支持子集冒充完整原版候选池。
+- 共享协调点：pack `1.316.0` / content hash
+  `e0e6820f83989f8790a455d6af5656ec833341e03ef84b2005652c898c47e5b3`、Protocol
+  `1.199`、State Hash Schema v98、save v1、active baseline `contract-v300`。无新增权威
+  状态；26 条 fixture 均未持有这些变异，只复验、不刷新 assertions，零 waiver。

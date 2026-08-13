@@ -256,3 +256,13 @@ ammo-slaying ID。若 items 方向随后导入陶器碎片或断木棍，也应�
   接入；降级、重新升级和 save/replay 不重复授予。
 - 协调版本：pack `1.315.0`、Protocol `1.199`、State Hash Schema v98、save v1、
   active baseline `contract-v299`。
+
+## main 当前批次：Human Commit 4 被动型半神天赋
+
+- 不新增正式内容 ID；复用既有七项 `rfb.mutation.*`，完成不屈不挠、狂饮药水、神圣活力、
+  恐怖巫术、武器多面手、恶魔契约与恶魔之握的原版被动行为。
+- 运行时复用现有 HP、物品、治疗、法强、熟练度、死亡和装置事务；无脚本解释器、无新增
+  协议或存档状态。账本推进至 132 active / 20 blocked。
+- Human 20 级完整候选池仍有九项未实现，`demo.race.rfb-human` 暂不配置残缺选择。
+- 协调版本：pack `1.316.0`、Protocol `1.199`、State Hash Schema v98、save v1、
+  active baseline `contract-v300`。

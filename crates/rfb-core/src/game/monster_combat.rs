@@ -1623,51 +1623,52 @@ impl Game {
                         None
                     }
                     MeleeBlowEffectDefinition::DrainCharges { .. } => {
-                        let candidates = self
-                            .items
-                            .iter()
-                            .enumerate()
-                            .filter(|(_, item)| {
-                                item.location == ItemLocation::Inventory
-                                    && item
-                                        .charges
-                                        .as_ref()
-                                        .is_some_and(|charges| charges.current > 0)
-                            })
-                            .map(|(item_index, _)| item_index)
-                            .collect::<Vec<_>>();
-                        if candidates.is_empty() {
-                            let before = self.nutrition;
-                            self.nutrition =
-                                self.nutrition.saturating_sub(1_000).min(before * 2 / 3);
-                            events.push(DomainEvent::MonsterNutritionDrained {
-                                source_kind_id: kind_id.clone(),
-                                amount: before.saturating_sub(self.nutrition),
-                            });
-                        } else {
-                            let candidate =
-                                usize::try_from(self.rng.bounded(candidates.len() as u64))
-                                    .expect("device candidate roll must fit usize");
-                            let item_index = candidates[candidate];
-                            let target_kind_id = self.items[item_index].kind_id.clone();
-                            let charges = self.items[item_index]
-                                .charges
-                                .as_mut()
-                                .expect("selected device must retain charges");
-                            let drained = charges.current.min(definition.level);
-                            charges.current -= drained;
-                            let caster = &mut self.entities[index];
-                            caster.hp = caster.max_hp.min(
-                                caster
-                                    .hp
-                                    .saturating_add(i32::try_from(drained).unwrap_or(i32::MAX)),
-                            );
-                            changed.insert(caster.position);
-                            events.push(DomainEvent::MonsterChargesDrained {
-                                source_kind_id: kind_id.clone(),
-                                target_kind_id,
-                                amount: drained,
-                            });
+                        if !self.player_has_device_charge_drain_immunity() {
+                            let candidates = self
+                                .items
+                                .iter()
+                                .enumerate()
+                                .filter(|(_, item)| {
+                                    item.location == ItemLocation::Inventory
+                                        && item
+                                            .charges
+                                            .as_ref()
+                                            .is_some_and(|charges| charges.current > 0)
+                                })
+                                .map(|(item_index, _)| item_index)
+                                .collect::<Vec<_>>();
+                            if candidates.is_empty() {
+                                let before = self.nutrition;
+                                self.nutrition =
+                                    self.nutrition.saturating_sub(1_000).min(before * 2 / 3);
+                                events.push(DomainEvent::MonsterNutritionDrained {
+                                    source_kind_id: kind_id.clone(),
+                                    amount: before.saturating_sub(self.nutrition),
+                                });
+                            } else {
+                                let candidate =
+                                    usize::try_from(self.rng.bounded(candidates.len() as u64))
+                                        .expect("device candidate roll must fit usize");
+                                let item_index = candidates[candidate];
+                                let target_kind_id = self.items[item_index].kind_id.clone();
+                                let charges = self.items[item_index]
+                                    .charges
+                                    .as_mut()
+                                    .expect("selected device must retain charges");
+                                let drained = charges.current.min(definition.level);
+                                charges.current -= drained;
+                                let caster = &mut self.entities[index];
+                                caster.hp =
+                                    caster.max_hp.min(caster.hp.saturating_add(
+                                        i32::try_from(drained).unwrap_or(i32::MAX),
+                                    ));
+                                changed.insert(caster.position);
+                                events.push(DomainEvent::MonsterChargesDrained {
+                                    source_kind_id: kind_id.clone(),
+                                    target_kind_id,
+                                    amount: drained,
+                                });
+                            }
                         }
                         None
                     }

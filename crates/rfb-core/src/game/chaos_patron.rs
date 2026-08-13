@@ -229,8 +229,7 @@ impl Game {
                 }
             }
             ChaosPatronRewardKind::PolymorphWounds => {
-                let maximum_hp = self.effective_player_max_hp();
-                self.resolve_polymorph_wounds(&patron.id, maximum_hp);
+                self.resolve_polymorph_wounds(&patron.id);
             }
             ChaosPatronRewardKind::FullHealing => self.apply_patron_full_healing(events),
             ChaosPatronRewardKind::HurtBadly => {

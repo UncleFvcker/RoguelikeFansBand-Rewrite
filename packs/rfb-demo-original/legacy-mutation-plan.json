@@ -2142,10 +2142,8 @@
         "lose:mutation-good-luck=>weight-1"
       ],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "weapon-proficiency-system"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -2208,10 +2206,8 @@
         "lose:mutation-good-luck=>weight-1"
       ],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "mutation-cross-system-query"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -2334,10 +2330,8 @@
         "lose:mutation-good-luck=>weight-1"
       ],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "mutation-cross-system-query"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -2402,10 +2396,8 @@
       "removesOnGain": [
         "rfb.mutation.arthritis"
       ],
-      "status": "blocked",
-      "blockers": [
-        "mutation-cross-system-query"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -2444,10 +2436,8 @@
         "lose:mutation-good-luck=>weight-1"
       ],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "mutation-cross-system-query"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -2530,10 +2520,8 @@
         "lose:mutation-good-luck=>weight-1"
       ],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "monster-device-charge-drain-consumer"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -2636,10 +2624,8 @@
         "lose:mutation-good-luck=>weight-1"
       ],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "spell-power-scaling"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {

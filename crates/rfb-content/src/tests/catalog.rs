@@ -8,7 +8,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.315.0");
+    assert_eq!(catalog.pack_version(), "1.316.0");
     assert_eq!(catalog.races().count(), 46);
     let human_weakness = catalog
         .race("demo.race.rfb-human")
@@ -544,7 +544,7 @@ fn mutation_definitions_match_the_frozen_legacy_ledger() {
             .iter()
             .filter(|mutation| mutation["status"] == "active")
             .count(),
-        125
+        132
     );
 }
 
@@ -1068,14 +1068,10 @@ fn fourth_passive_mutation_batch_keeps_innate_attack_and_combat_semantics() {
         assert_eq!(entry["status"], "active", "{id}");
         assert_eq!(entry["blockers"], serde_json::json!([]), "{id}");
     }
-    for (id, blocker) in [
-        ("rfb.mutation.weapon-skills", "weapon-proficiency-system"),
-        ("rfb.mutation.fell-sorcery", "spell-power-scaling"),
-        (
-            "rfb.mutation.vortex-melee",
-            "vortex-race-innate-attack-identity",
-        ),
-    ] {
+    for (id, blocker) in [(
+        "rfb.mutation.vortex-melee",
+        "vortex-race-innate-attack-identity",
+    )] {
         let entry = entries
             .iter()
             .find(|entry| entry["id"] == id)
@@ -1226,6 +1222,102 @@ fn fifth_passive_mutation_batch_keeps_cross_system_semantics_explicit() {
             .unwrap_or_else(|| panic!("{id}"));
         assert_eq!(entry["status"], "blocked", "{id}");
         assert_eq!(entry["blockers"], serde_json::json!([blocker]), "{id}");
+    }
+}
+
+#[test]
+fn sixth_passive_mutation_batch_completes_current_consumers() {
+    let pack = original_pack_path();
+    let catalog = ContentCatalog::from_artifact(
+        compile_pack_dir(&pack).expect("original pack should compile"),
+    );
+
+    assert_eq!(
+        catalog
+            .mutation("rfb.mutation.unyielding")
+            .unwrap()
+            .max_hp_per_level,
+        1
+    );
+    assert_eq!(
+        catalog
+            .mutation("rfb.mutation.potion-chugger")
+            .unwrap()
+            .potion_energy_multiplier,
+        Some(MutationRatioDefinition {
+            numerator: 1,
+            denominator: 2,
+        })
+    );
+    assert_eq!(
+        catalog
+            .mutation("rfb.mutation.sacred-vitality")
+            .unwrap()
+            .healing_bonus_percent,
+        20
+    );
+    let fell_sorcery = catalog.mutation("rfb.mutation.fell-sorcery").unwrap();
+    assert_eq!(
+        (
+            fell_sorcery.modifiers.strength,
+            fell_sorcery.modifiers.dexterity,
+            fell_sorcery.modifiers.constitution,
+            fell_sorcery.modifiers.spell_power_bonus,
+        ),
+        (-1, -1, -1, 2)
+    );
+    assert_eq!(
+        catalog
+            .mutation("rfb.mutation.weapon-skills")
+            .unwrap()
+            .weapon_proficiency_maximum,
+        Some(8_000)
+    );
+    assert!(
+        catalog
+            .mutation("rfb.mutation.infernal-deal")
+            .unwrap()
+            .infernal_deal
+    );
+    assert!(
+        catalog
+            .mutation("rfb.mutation.demonic-grasp")
+            .unwrap()
+            .device_charge_drain_immunity
+    );
+
+    let ledger: serde_json::Value = serde_json::from_slice(
+        &std::fs::read(pack.join("legacy-mutation-plan.json")).expect("ledger should read"),
+    )
+    .expect("ledger should parse");
+    let entries = ledger["mutations"].as_array().expect("mutation entries");
+    for id in [
+        "rfb.mutation.fast-learner",
+        "rfb.mutation.untouchable",
+        "rfb.mutation.loremaster",
+        "rfb.mutation.arcane-mastery",
+        "rfb.mutation.one-with-magic",
+        "rfb.mutation.merchants-friend",
+        "rfb.mutation.fleet-of-foot",
+        "rfb.mutation.weird-mind",
+        "rfb.mutation.black-marketeer",
+        "rfb.mutation.speed-reader",
+        "rfb.mutation.tread-softly",
+        "rfb.mutation.strong-mind",
+        "rfb.mutation.unyielding",
+        "rfb.mutation.potion-chugger",
+        "rfb.mutation.sacred-vitality",
+        "rfb.mutation.fell-sorcery",
+        "rfb.mutation.weapon-skills",
+        "rfb.mutation.infernal-deal",
+        "rfb.mutation.demonic-grasp",
+    ] {
+        let entry = entries
+            .iter()
+            .find(|entry| entry["id"] == id)
+            .unwrap_or_else(|| panic!("{id}"));
+        assert_eq!(entry["status"], "active", "{id}");
+        assert_eq!(entry["blockers"], serde_json::json!([]), "{id}");
     }
 }
 
@@ -1486,7 +1578,7 @@ fn active_mutation_batches_are_bound_to_authoritative_abilities() {
             .iter()
             .filter(|entry| entry["status"] == "active")
             .count(),
-        125
+        132
     );
     assert_eq!(
         entries

@@ -67,12 +67,20 @@ fn resolve_weapon_proficiency(
     if base_item.melee_profile.is_none() && base_item.projectile_profile.is_none() {
         return None;
     }
-    let bounds = profile.overrides.get(base_item_id).copied().unwrap_or(
+    let mut bounds = profile.overrides.get(base_item_id).copied().unwrap_or(
         rfb_content::WeaponProficiencyBoundsDefinition {
             initial: profile.default_initial,
             maximum: profile.default_maximum,
         },
     );
+    if let Some(maximum) = content
+        .mutations()
+        .filter(|mutation| progress.active_mutation_ids.contains(&mutation.id))
+        .filter_map(|mutation| mutation.weapon_proficiency_maximum)
+        .max()
+    {
+        bounds.maximum = bounds.maximum.max(maximum);
+    }
     let crossbow = base_item
         .projectile_profile
         .as_ref()

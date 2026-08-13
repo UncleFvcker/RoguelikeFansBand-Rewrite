@@ -7,5 +7,11 @@
   "rating": "good",
   "sourceIndex": 120,
   "randomWeight": 0,
+  "modifiers": {
+    "strength": -1,
+    "dexterity": -1,
+    "constitution": -1,
+    "spellPowerBonus": 2
+  },
   "removesOnGain": []
 }

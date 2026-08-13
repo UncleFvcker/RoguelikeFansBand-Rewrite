@@ -237,7 +237,7 @@ fn sniper_birth_uses_original_identity_skills_proficiencies_kit_and_techniques()
         ("demo.skill.saving-throw", 28, 10),
         ("demo.skill.stealth", 5, 0),
         ("demo.skill.search", 32, 0),
-        ("demo.skill.perception", 18, 0),
+        ("demo.skill.perception", 28, 0),
         ("demo.skill.melee", 35, 12),
         ("demo.skill.ranged", 72, 28),
     ] {

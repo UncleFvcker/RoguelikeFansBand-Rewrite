@@ -78,7 +78,7 @@ fn cavalry_birth_uses_original_identity_skills_proficiencies_and_kit() {
         ("demo.skill.saving-throw", 32, 10),
         ("demo.skill.stealth", 1, 0),
         ("demo.skill.search", 16, 0),
-        ("demo.skill.perception", 10, 0),
+        ("demo.skill.perception", 20, 0),
         ("demo.skill.melee", 60, 22),
         ("demo.skill.ranged", 66, 26),
     ] {

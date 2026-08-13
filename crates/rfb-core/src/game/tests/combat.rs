@@ -1094,6 +1094,49 @@ fn charge_drain_melee_consumes_a_carried_device_or_player_nutrition() {
         event,
         DomainEvent::MonsterNutritionDrained { amount: 3_000, .. }
     )));
+
+    let mut immune = monster_effect_game(
+        0,
+        MeleeBlowEffectDefinition::DrainCharges {
+            chance_percent: None,
+        },
+    );
+    immune
+        .progress
+        .active_mutation_ids
+        .insert("rfb.mutation.demonic-grasp".to_owned());
+    give_inventory_item(
+        &mut immune,
+        "test.item.immune-identify-staff",
+        "demo.item.identify-staff",
+    );
+    let charges = immune
+        .items
+        .iter_mut()
+        .find(|item| item.id == "test.item.immune-identify-staff")
+        .and_then(|item| item.charges.as_mut())
+        .expect("identify staff should carry charges");
+    charges.current = 5;
+    let nutrition = immune.nutrition;
+    let mut events = Vec::new();
+    immune
+        .resolve_monster_melee(0, &mut events, &mut BTreeSet::new(), &mut Vec::new())
+        .expect("Demonic Grasp charge immunity should resolve");
+    assert_eq!(
+        immune
+            .items
+            .iter()
+            .find(|item| item.id == "test.item.immune-identify-staff")
+            .and_then(|item| item.charges)
+            .expect("identify staff should retain its charge pool")
+            .current,
+        5
+    );
+    assert_eq!(immune.nutrition, nutrition);
+    assert!(!events.iter().any(|event| matches!(
+        event,
+        DomainEvent::MonsterChargesDrained { .. } | DomainEvent::MonsterNutritionDrained { .. }
+    )));
 }
 
 #[test]

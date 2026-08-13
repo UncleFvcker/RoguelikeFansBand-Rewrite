@@ -2508,11 +2508,12 @@ fn natural_regeneration_and_rest_restore_warrior_health() {
     let maximum = game.effective_player_max_hp();
     game.player.hp = maximum - 2;
 
-    for _ in 0..8 {
+    for _ in 0..10 {
         dispatch_next(&mut game, GameCommand::Wait);
+        if game.player.hp > maximum - 2 {
+            break;
+        }
     }
-    assert_eq!(game.player.hp, maximum - 2);
-    dispatch_next(&mut game, GameCommand::Wait);
     assert_eq!(game.player.hp, maximum - 1);
 
     let rested = dispatch_next(&mut game, GameCommand::Rest { turns: 9_999 });

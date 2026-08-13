@@ -125,10 +125,15 @@ pub(crate) fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<
             || !(-64..=64).contains(&mutation.perception_skill)
             || !(-64..=64).contains(&mutation.infravision)
             || !(-1_000..=1_000).contains(&mutation.regeneration_rate_modifier_percent)
+            || !(-10_000..=10_000).contains(&mutation.max_hp_per_level)
+            || mutation.healing_bonus_percent > 1_000
             || !(-8..=8).contains(&mutation.light_radius)
             || !(-100..=100).contains(&mutation.spell_failure_modifier_percent)
             || mutation.kill_experience_bonus_percent > 1_000
             || mutation.dispel_resistance_percent > 100
+            || mutation
+                .weapon_proficiency_maximum
+                .is_some_and(|maximum| maximum > 8_000)
         {
             return Err(ContentError::InvalidMutation(mutation.id.clone()));
         }
@@ -216,6 +221,7 @@ pub(crate) fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<
             mutation.relative_experience_multiplier,
             mutation.movement_energy_multiplier,
             mutation.scroll_energy_multiplier,
+            mutation.potion_energy_multiplier,
         ]
         .into_iter()
         .flatten()

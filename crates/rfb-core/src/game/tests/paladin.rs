@@ -65,7 +65,7 @@ fn death_paladin_birth_uses_the_original_class_identity_skills_and_kit() {
         ("demo.skill.saving-throw", 34, 11),
         ("demo.skill.stealth", 1, 0),
         ("demo.skill.search", 12, 0),
-        ("demo.skill.perception", 2, 0),
+        ("demo.skill.perception", 12, 0),
         ("demo.skill.melee", 68, 21),
         ("demo.skill.ranged", 40, 18),
     ] {

@@ -2557,18 +2557,9 @@ impl Game {
             } else {
                 0
             };
-            let max_hp = self.effective_player_max_hp();
-            let EffectOutcome::Healed { requested, applied } = apply_effect(
-                &mut EffectTarget {
-                    hp: &mut self.player.hp,
-                    max_hp,
-                    resistances: &self.player.resistances,
-                    statuses: &mut self.player.statuses,
-                },
-                EffectSpec::Heal { amount: requested },
-            ) else {
-                unreachable!("drain life healing must produce a healing outcome");
-            };
+            let outcome = self.apply_player_healing(requested);
+            let requested = outcome.requested;
+            let applied = outcome.applied;
             if *feeds && damage.applied > 0 {
                 let nutrition = u16::try_from(raw_damage.saturating_mul(100).min(5_000))
                     .expect("bounded vampiric nutrition must fit u16");
@@ -2933,34 +2924,20 @@ impl Game {
                         u8::try_from(index).expect("validated ability effect index must fit u8");
                     let resolution = match effect {
                         AbilityEffectDefinition::Heal { amount } => {
-                            let max_hp = self.effective_player_max_hp();
                             let amount = i32::try_from(*amount)
                                 .expect("validated healing amount must fit i32");
-                            let outcome = apply_effect(
-                                &mut EffectTarget {
-                                    hp: &mut self.player.hp,
-                                    max_hp,
-                                    resistances: &self.player.resistances,
-                                    statuses: &mut self.player.statuses,
-                                },
-                                EffectSpec::Heal { amount },
-                            );
-                            let EffectOutcome::Healed { requested, applied } = outcome else {
-                                unreachable!("healing effects must produce healing outcomes");
-                            };
+                            let outcome = self.apply_player_healing(amount);
                             AbilityEffectResolutionDto::Heal {
                                 effect_index,
-                                resolution: HealingResolutionDto { requested, applied },
+                                resolution: HealingResolutionDto {
+                                    requested: outcome.requested,
+                                    applied: outcome.applied,
+                                },
                             }
                         }
                         AbilityEffectDefinition::HealDice { dice, sides } => {
                             let amount = self.roll_damage(*dice, *sides).max(0);
-                            let max_hp = self.effective_player_max_hp();
-                            let outcome = apply_healing(
-                                &mut self.player.hp,
-                                max_hp,
-                                HealingRequest::amount(amount),
-                            );
+                            let outcome = self.apply_player_healing(amount);
                             AbilityEffectResolutionDto::Heal {
                                 effect_index,
                                 resolution: HealingResolutionDto {
@@ -3307,8 +3284,7 @@ impl Game {
             unreachable!("player healing executor requires a healing effect");
         };
         let amount = i32::try_from(amount).expect("validated healing amount must fit i32");
-        let max_hp = self.effective_player_max_hp();
-        let outcome = apply_healing(&mut self.player.hp, max_hp, HealingRequest::amount(amount));
+        let outcome = self.apply_player_healing(amount);
         events.push(DomainEvent::AbilityHealed {
             ability_id: ability.id.clone(),
             resolution: HealingResolutionDto {
@@ -3327,8 +3303,7 @@ impl Game {
             unreachable!("player healing-dice executor requires a healing-dice effect");
         };
         let amount = self.roll_damage(dice, sides).max(0);
-        let max_hp = self.effective_player_max_hp();
-        let outcome = apply_healing(&mut self.player.hp, max_hp, HealingRequest::amount(amount));
+        let outcome = self.apply_player_healing(amount);
         events.push(DomainEvent::AbilityHealed {
             ability_id: ability.id.clone(),
             resolution: HealingResolutionDto {
@@ -4978,7 +4953,7 @@ impl Game {
 
         if power > i32::try_from(self.rng.bounded(5)).expect("polymorph roll must fit i32") {
             power -= 5;
-            self.resolve_polymorph_wounds(&ability.id, previous_max_hp);
+            self.resolve_polymorph_wounds(&ability.id);
         }
 
         let mut swapped_attributes = Vec::new();

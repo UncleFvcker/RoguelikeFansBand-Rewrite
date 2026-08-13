@@ -3021,17 +3021,7 @@ impl Game {
                     }
                 }
                 let healing = self.roll_damage(*healing_dice, *healing_sides);
-                let max_hp = self.effective_player_max_hp();
-                let player = &mut self.player;
-                apply_effect(
-                    &mut EffectTarget {
-                        hp: &mut player.hp,
-                        max_hp,
-                        resistances: &player.resistances,
-                        statuses: &mut player.statuses,
-                    },
-                    EffectSpec::Heal { amount: healing },
-                );
+                self.apply_player_healing(healing);
                 self.restore_all_player_attributes();
                 self.restore_player_experience_and_life_force(0, events);
                 self.mark_item_aware(source_kind_id);
@@ -3062,17 +3052,7 @@ impl Game {
                 self.restore_all_player_attributes();
                 let amount = i32::try_from(*healing_amount)
                     .expect("validated life restoration amount must fit i32");
-                let max_hp = self.effective_player_max_hp();
-                let player = &mut self.player;
-                apply_effect(
-                    &mut EffectTarget {
-                        hp: &mut player.hp,
-                        max_hp,
-                        resistances: &player.resistances,
-                        statuses: &mut player.statuses,
-                    },
-                    EffectSpec::Heal { amount },
-                );
+                self.apply_player_healing(amount);
                 self.mark_item_aware(source_kind_id);
                 events.push(DomainEvent::ItemRestorationResolved {
                     source_kind_id: source_kind_id.to_owned(),
@@ -3179,8 +3159,7 @@ impl Game {
         amount: i32,
         events: &mut Vec<DomainEvent>,
     ) -> bool {
-        let max_hp = self.effective_player_max_hp();
-        let outcome = apply_healing(&mut self.player.hp, max_hp, HealingRequest::amount(amount));
+        let outcome = self.apply_player_healing(amount);
         let requested = outcome.requested;
         let applied = outcome.applied;
         if applied > 0 {

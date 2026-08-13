@@ -6,7 +6,7 @@
 
 contract fixture 是规则兼容边界，不能把测试失败简单处理为“刷新预期结果”。政策用于保证每次规则变化只修改真正受影响的场景，同时保留可审查的失败原因。
 
-当前逻辑基线是 `contract-v299`，机器可读政策固定在：
+当前逻辑基线是 `contract-v300`，机器可读政策固定在：
 
 ```text
 tests/fixtures/active/baseline-policy.json
@@ -342,3 +342,9 @@ Protocol 升至 1.199，State Hash Schema v98、内容包 1.314.0 与 save v1 �
 既有 26 条 active fixture 均未达到 35 级且未持有这些弱点，经 `verify-all` 复验零漂移，
 不刷新 assertions、零 waiver。Protocol 1.199、State Hash Schema v98 与 save v1 均不变，
 内容包升至 1.315.0。
+
+`contract-v300` 补齐七项当前已有系统可以忠实承载的被动型半神天赋：逐级生命、药水
+能量、共享治疗、法术强度与属性代价、逐武器熟练度上限、可见敌人死亡回复和装置充能
+吸取免疫。没有新增权威状态、协议投影或公共 RNG；既有 26 条 active fixture 均未持有
+这些变异，经 `verify-all` 复验零漂移，不刷新 assertions、零 waiver。Protocol 1.199、
+State Hash Schema v98 与 save v1 均不变，内容包升至 1.316.0。

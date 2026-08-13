@@ -212,6 +212,12 @@ pub struct MutationDefinition {
     /// Additive percentage adjustment to the natural HP regeneration rate.
     #[serde(default)]
     pub regeneration_rate_modifier_percent: i32,
+    /// Adds this many maximum hit points for each player level.
+    #[serde(default)]
+    pub max_hp_per_level: i32,
+    /// Additive percentage applied by the shared player-healing transaction.
+    #[serde(default)]
+    pub healing_bonus_percent: u16,
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub resistances: BTreeMap<ActorDamageType, ActorResistanceLevel>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -245,11 +251,19 @@ pub struct MutationDefinition {
     #[serde(default)]
     pub scroll_energy_multiplier: Option<MutationRatioDefinition>,
     #[serde(default)]
+    pub potion_energy_multiplier: Option<MutationRatioDefinition>,
+    #[serde(default)]
     pub black_market_standard_prices: bool,
     #[serde(default)]
     pub dispel_resistance_percent: u8,
     #[serde(default)]
     pub resource_drain_immunity: bool,
+    #[serde(default)]
+    pub device_charge_drain_immunity: bool,
+    #[serde(default)]
+    pub weapon_proficiency_maximum: Option<u16>,
+    #[serde(default)]
+    pub infernal_deal: bool,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub removes_on_gain: Vec<String>,
 }

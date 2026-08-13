@@ -7,5 +7,6 @@
   "rating": "good",
   "sourceIndex": 111,
   "randomWeight": 0,
+  "healingBonusPercent": 20,
   "removesOnGain": []
 }

@@ -708,3 +708,11 @@ content hash 为 `bb912c0d2adef96f8930f190e588f6a1a59a94b9df9b70ce59d6634913a4f2
 未通过时本轮目标库存为 0。当前新 ID 只有 `demo.item.capture-ball`；content hash 为
 `538cce0f525d1530dbb109f4cf75074c69130b09eebca10d672628ad770467e5`。Protocol 升至 1.192，
 State Hash Schema 升至 v96，active baseline 为 contract-v290。
+
+包 1.316.0 / contract-v300 为 `MutationDefinition` 增加被动半神天赋实际需要的窄字段：
+`maxHpPerLevel`、`healingBonusPercent`、`potionEnergyMultiplier`、
+`deviceChargeDrainImmunity`、`weaponProficiencyMaximum` 与 `infernalDeal`。恐怖巫术继续复用
+既有 `modifiers.spellPowerBonus` 与三项属性修正。七项字段分别进入现有 HP 派生、物品能量、
+玩家治疗、法术强度、逐武器熟练度、actor 死亡与怪物装置吸取事务，不提供脚本解释器。
+content hash 为 `e0e6820f83989f8790a455d6af5656ec833341e03ef84b2005652c898c47e5b3`；Protocol 保持
+1.199，State Hash Schema 保持 v98。

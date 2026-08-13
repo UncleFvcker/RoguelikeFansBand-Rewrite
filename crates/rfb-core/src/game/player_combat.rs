@@ -1277,20 +1277,12 @@ impl Game {
                         i32::try_from(self.mutation_regeneration_percent())
                             .expect("mutation regeneration percent must fit i32"),
                     ) / 100;
-                    let max_hp = self.effective_player_max_hp();
-                    let EffectOutcome::Healed { requested, applied } = apply_effect(
-                        &mut EffectTarget {
-                            hp: &mut self.player.hp,
-                            max_hp,
-                            resistances: &self.player.resistances,
-                            statuses: &mut self.player.statuses,
-                        },
-                        EffectSpec::Heal { amount: requested },
-                    ) else {
-                        unreachable!("vampiric melee healing must produce a healing outcome");
-                    };
+                    let outcome = self.apply_player_healing(requested);
                     events.push(DomainEvent::PlayerVampiricHealed {
-                        resolution: HealingResolutionDto { requested, applied },
+                        resolution: HealingResolutionDto {
+                            requested: outcome.requested,
+                            applied: outcome.applied,
+                        },
                     });
                 }
                 if application.fatal {

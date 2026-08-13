@@ -105,6 +105,119 @@ fn seed_matching(mut predicate: impl FnMut(&mut RfbRng) -> bool) -> u64 {
 }
 
 #[test]
+fn demigod_passives_apply_level_hp_spell_power_and_attribute_costs() {
+    let mut baseline = m6_game("rfb.mutation.fast-learner", "demo.build.high-mage-death");
+    baseline.progress.active_mutation_ids.clear();
+    baseline.progress.level = 20;
+    let baseline_max_hp = baseline.effective_player_max_hp();
+    let baseline_attributes = baseline.effective_player_attributes();
+
+    let mut unyielding = baseline.clone();
+    unyielding
+        .progress
+        .active_mutation_ids
+        .insert("rfb.mutation.unyielding".to_owned());
+    assert_eq!(unyielding.effective_player_max_hp(), baseline_max_hp + 20);
+
+    let mut fell = baseline;
+    fell.progress
+        .active_mutation_ids
+        .insert("rfb.mutation.fell-sorcery".to_owned());
+    let attributes = fell.effective_player_attributes();
+    assert_eq!(fell.effective_player_spell_power_bonus(), 2);
+    assert_eq!(attributes.strength, baseline_attributes.strength - 1);
+    assert_eq!(attributes.dexterity, baseline_attributes.dexterity - 1);
+    assert_eq!(
+        attributes.constitution,
+        baseline_attributes.constitution - 1
+    );
+}
+
+#[test]
+fn demigod_passives_scale_player_healing_and_potion_energy() {
+    const POTION_ID: &str = "test.item.demigod-potion";
+    let mut game = m6_game("rfb.mutation.sacred-vitality", "demo.build.warrior");
+    game.player.hp = 1;
+    let outcome = game.apply_player_healing(10);
+    assert_eq!((outcome.requested, outcome.applied), (12, 12));
+
+    give_inventory_item(&mut game, POTION_ID, "demo.item.water-potion");
+    game.progress
+        .active_mutation_ids
+        .insert("rfb.mutation.potion-chugger".to_owned());
+    assert_eq!(
+        game.player_mutation_action_energy_cost(
+            &GameAction::UseItem {
+                item_id: POTION_ID.to_owned(),
+                target: None,
+                target_glyph: None,
+            },
+            STANDARD_ACTION_COST,
+        ),
+        STANDARD_ACTION_COST / 2
+    );
+}
+
+#[test]
+fn weapon_skills_raises_every_available_weapon_cap_to_master() {
+    let mut game = m6_game("rfb.mutation.fast-learner", "demo.build.high-mage-death");
+    game.progress.active_mutation_ids.clear();
+    let limited = game
+        .player_weapon_proficiencies()
+        .into_iter()
+        .find(|proficiency| proficiency.maximum < 8_000)
+        .expect("High-Mage should have a non-master weapon cap");
+
+    game.progress
+        .active_mutation_ids
+        .insert("rfb.mutation.weapon-skills".to_owned());
+    let promoted = game
+        .player_weapon_proficiencies()
+        .into_iter()
+        .find(|proficiency| proficiency.item_kind_id == limited.item_kind_id)
+        .expect("the selected base weapon should remain projected");
+    assert_eq!(promoted.maximum, 8_000);
+}
+
+#[test]
+fn infernal_deal_recovers_hp_or_hp_and_casting_resource_on_visible_death() {
+    fn kill_wolf(game: &mut Game) {
+        clear_monsters(game);
+        let actor = game.generated_actor(
+            "test.infernal-deal-wolf".to_owned(),
+            "demo.actor.wolf",
+            game.player.position,
+        );
+        game.entities.push(actor);
+        game.resolve_actor_death_without_credit(
+            0,
+            DomainEvent::Waited,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("visible hostile death should resolve");
+    }
+
+    let mut warrior = m6_game("rfb.mutation.infernal-deal", "demo.build.warrior");
+    warrior.player.hp = 1;
+    kill_wolf(&mut warrior);
+    assert_eq!(warrior.player.hp, 1 + 10 * 2 / 3);
+
+    let mut caster = m6_game("rfb.mutation.infernal-deal", "demo.build.high-mage-death");
+    caster.player.hp = 1;
+    let mana = caster
+        .resources
+        .get_mut("demo.resource.mana")
+        .expect("High-Mage should have Mana");
+    mana.current = 0;
+    mana.maximum = 100;
+    kill_wolf(&mut caster);
+    assert_eq!(caster.player.hp, 1 + 10 * 4 / 9);
+    assert_eq!(caster.resources["demo.resource.mana"].current, 10 * 2 / 9);
+}
+
+#[test]
 fn human_strength_stops_later_criticals_and_adds_one_fifth_action_energy() {
     let mut game = m6_game(HUMAN_STR_MUTATION_ID, "demo.build.warrior");
     game.player.energy_need = 0;

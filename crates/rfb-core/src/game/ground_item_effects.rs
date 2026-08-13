@@ -195,9 +195,7 @@ impl Game {
             .filter(|_| !self.player_is_dead())
         {
             let amount = rfb_area_damage(amount, *distance);
-            let maximum = self.effective_player_max_hp();
-            let outcome =
-                apply_healing(&mut self.player.hp, maximum, HealingRequest::amount(amount));
+            let outcome = self.apply_player_healing(amount);
             changed.insert(self.player.position);
             events.push(DomainEvent::AbilityEffectsResolved {
                 ability_id: source_kind_id.to_owned(),

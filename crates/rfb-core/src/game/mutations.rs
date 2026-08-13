@@ -454,8 +454,7 @@ impl Game {
             }
             MutationPeriodicEffectDefinition::PolymorphWounds => {
                 if self.rng.bounded(3_000) == 0 {
-                    let maximum_hp = self.effective_player_max_hp();
-                    self.resolve_polymorph_wounds(&mutation.id, maximum_hp);
+                    self.resolve_polymorph_wounds(&mutation.id);
                     self.record_periodic_mutation(mutation, events);
                 }
             }
@@ -565,9 +564,9 @@ impl Game {
         Ok(())
     }
 
-    pub(super) fn resolve_polymorph_wounds(&mut self, source_id: &str, maximum_hp: i32) {
+    pub(super) fn resolve_polymorph_wounds(&mut self, source_id: &str) {
         let healing = self.roll_damage(self.progress.level.max(1), 5);
-        self.player.hp = self.player.hp.saturating_add(healing).min(maximum_hp);
+        self.apply_player_healing(healing);
         if self.rng.bounded(5) == 0 {
             self.player.hp = self.player.hp.saturating_sub(healing / 2);
             apply_status(
@@ -708,12 +707,7 @@ impl Game {
             }
         }
         if healing > 0 {
-            let maximum = self.effective_player_max_hp();
-            apply_healing(
-                &mut self.player.hp,
-                maximum,
-                HealingRequest::amount(healing),
-            );
+            self.apply_player_healing(healing);
         }
         self.resolve_player_area_damage_with_base(
             &mutation.id,
@@ -961,11 +955,7 @@ impl Game {
             return false;
         }
         pool.current -= amount;
-        self.player.hp = self
-            .player
-            .hp
-            .saturating_add(i32::try_from(amount).unwrap_or(i32::MAX))
-            .min(maximum_hp);
+        self.apply_player_healing(i32::try_from(amount).unwrap_or(i32::MAX));
         true
     }
 
@@ -1592,6 +1582,21 @@ impl Game {
             .max(10)
     }
 
+    pub(super) fn apply_player_healing(&mut self, amount: i32) -> HealingOutcome {
+        let bonus_percent = self
+            .content
+            .mutations()
+            .filter(|mutation| self.progress.active_mutation_ids.contains(&mutation.id))
+            .fold(0_u16, |total, mutation| {
+                total.saturating_add(mutation.healing_bonus_percent)
+            });
+        let amount = amount
+            .max(0)
+            .saturating_add(amount.max(0).saturating_mul(i32::from(bonus_percent)) / 100);
+        let maximum = self.effective_player_max_hp();
+        apply_healing(&mut self.player.hp, maximum, HealingRequest::amount(amount))
+    }
+
     pub(super) fn player_mutation_action_energy_cost(&self, action: &GameAction, cost: i32) -> i32 {
         let mut mutations = self
             .content
@@ -1602,15 +1607,17 @@ impl Game {
             action,
             GameAction::Move { .. } | GameAction::TravelWorld { .. }
         );
-        let scroll_use = match action {
+        let item_tags = match action {
             GameAction::UseItem { item_id, .. } => self
                 .items
                 .iter()
                 .find(|item| item.id == *item_id)
                 .and_then(|item| self.content.item(&item.kind_id))
-                .is_some_and(|definition| definition.tags.iter().any(|tag| tag == "scroll")),
-            _ => false,
+                .map(|definition| definition.tags.as_slice()),
+            _ => None,
         };
+        let scroll_use = item_tags.is_some_and(|tags| tags.iter().any(|tag| tag == "scroll"));
+        let potion_use = item_tags.is_some_and(|tags| tags.iter().any(|tag| tag == "potion"));
         if walking {
             // RFB applies Limp before Fleet of Foot; descending source order
             // preserves that integer-rounding order without hard-coded IDs.
@@ -1626,6 +1633,10 @@ impl Game {
                 } else if scroll_use {
                     mutation
                         .scroll_energy_multiplier
+                        .map_or(value, |ratio| scale_by_ratio(value, ratio))
+                } else if potion_use {
+                    mutation
+                        .potion_energy_multiplier
                         .map_or(value, |ratio| scale_by_ratio(value, ratio))
                 } else {
                     value
@@ -1667,6 +1678,51 @@ impl Game {
 
     pub(super) fn player_has_mutation(&self, mutation_id: &str) -> bool {
         self.progress.active_mutation_ids.contains(mutation_id)
+    }
+
+    pub(super) fn player_has_device_charge_drain_immunity(&self) -> bool {
+        self.content.mutations().any(|mutation| {
+            mutation.device_charge_drain_immunity
+                && self.progress.active_mutation_ids.contains(&mutation.id)
+        })
+    }
+
+    pub(super) fn apply_infernal_deal(&mut self, actor: &Actor) {
+        let active = self.content.mutations().any(|mutation| {
+            mutation.infernal_deal && self.progress.active_mutation_ids.contains(&mutation.id)
+        });
+        if !active
+            || self.actor_is_player_side(actor)
+            || !has_line_of_sight(self, self.player.position, actor.position)
+        {
+            return;
+        }
+        let level = self
+            .actor_runtime_definition(actor)
+            .map_or(0, |definition| definition.level);
+        let resource_id = self
+            .casting_profile()
+            .map(|profile| profile.resource_id.clone())
+            .filter(|resource_id| {
+                self.resources
+                    .get(resource_id)
+                    .is_some_and(|pool| pool.maximum > 0)
+            });
+        if let Some(resource_id) = resource_id {
+            self.apply_player_healing(
+                i32::try_from(level.saturating_mul(4) / 9).unwrap_or(i32::MAX),
+            );
+            if let Some(pool) = self.resources.get_mut(&resource_id) {
+                pool.current = pool
+                    .current
+                    .saturating_add(level.saturating_mul(2) / 9)
+                    .min(pool.maximum);
+            }
+        } else {
+            self.apply_player_healing(
+                i32::try_from(level.saturating_mul(2) / 3).unwrap_or(i32::MAX),
+            );
+        }
     }
 
     pub(super) fn player_spell_failure_minimum_percent(&self) -> i32 {
