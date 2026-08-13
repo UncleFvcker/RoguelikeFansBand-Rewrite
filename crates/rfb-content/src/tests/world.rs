@@ -739,7 +739,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         .iter()
         .filter(|actor| actor.tags.iter().any(|tag| tag == "orc-cave"))
         .collect::<Vec<_>>();
-    assert_eq!(orc_cave.len(), 749);
+    assert_eq!(orc_cave.len(), 768);
 
     for id in [
         "demo.actor.bunyip",
@@ -772,10 +772,10 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
                     .any(|index| *index != 3)
         );
     }
-    let mut level_counts = [0_usize; 70];
+    let mut level_counts = [0_usize; 107];
     let mut source_indices = BTreeSet::new();
     for actor in orc_cave {
-        assert!((21..=90).contains(&actor.level));
+        assert!((21..=127).contains(&actor.level));
         let allocation = actor
             .allocation
             .as_ref()
@@ -788,7 +788,9 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         [
             16, 14, 12, 17, 24, 17, 19, 17, 18, 21, 7, 12, 29, 15, 27, 28, 19, 19, 11, 42, 12, 6,
             12, 14, 14, 7, 10, 6, 6, 17, 11, 8, 3, 8, 17, 9, 1, 6, 4, 17, 5, 4, 5, 2, 12, 3, 9, 4,
-            6, 9, 10, 7, 5, 4, 6, 7, 7, 9, 7, 13, 1, 3, 2, 3, 10, 5, 4, 4, 3, 8,
+            6, 9, 10, 7, 5, 4, 6, 7, 7, 9, 7, 13, 1, 3, 2, 3, 10, 5, 4, 4, 3, 8, 3, 3, 3, 2, 0, 2,
+            2, 1, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 1,
         ]
     );
 
@@ -5280,6 +5282,50 @@ fn p73_level_81_90_direct_monsters_keep_source_identity() {
 }
 
 #[test]
+fn p74_level_91_127_direct_monsters_keep_source_identity() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+
+    for (id, legacy_index, level) in [
+        ("wiruin-the-maelstrom", 1192, 91),
+        ("festivus-the-teenage-offscreen-ninja-drolem", 1230, 91),
+        ("seth-the-disintegrator", 1260, 91),
+        ("carcharoth-the-jaws-of-thirst", 850, 92),
+        ("umbaba-samahongo", 1170, 92),
+        ("horus-the-ancient", 1244, 92),
+        ("azathoth-seething-nuclear-chaos", 852, 93),
+        ("the-maw-of-hell", 1191, 93),
+        ("c-blue", 1395, 93),
+        ("cerberus-guardian-of-hades", 853, 94),
+        ("the-destroyer", 855, 94),
+        ("the-babbage-analytical-engine", 1205, 96),
+        ("the-etheric-dimensional-phase-automaton", 1207, 96),
+        ("dor", 1181, 97),
+        ("sekhmet-the-mistress-of-fury", 1247, 97),
+        ("michael-the-guardian-overlord", 1179, 98),
+        ("lucifer-father-of-lies", 1195, 100),
+        ("metatron-the-high-angel", 1253, 100),
+        ("monkey-clone", 1095, 127),
+    ] {
+        let actor_id = format!("demo.actor.{id}");
+        let actor = artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == actor_id)
+            .unwrap_or_else(|| panic!("{actor_id} should be imported"));
+        assert_eq!(actor.level, level, "{actor_id} level");
+        assert_eq!(
+            actor
+                .allocation
+                .as_ref()
+                .map(|allocation| allocation.legacy_index),
+            Some(legacy_index),
+            "{actor_id} source index"
+        );
+    }
+}
+
+#[test]
 fn p68_low_risk_mappings_keep_source_semantics() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let actor = |id: &str| {
@@ -6163,6 +6209,9 @@ fn p53a_ice_jump_and_angel_summons_reuse_shared_effects() {
             "demo.actor.azriel-angel-of-death",
             "demo.actor.cherub",
             "demo.actor.fallen-angel",
+            "demo.actor.lucifer-father-of-lies",
+            "demo.actor.metatron-the-high-angel",
+            "demo.actor.michael-the-guardian-overlord",
             "demo.actor.planetar",
             "demo.actor.seraph",
             "demo.actor.solar",
@@ -7978,7 +8027,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
                     == Some("demo.loot-table.base-items")
             })
             .count(),
-        682
+        698
     );
 }
 

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.kin-the-babbage-analytical-engine",
+  "descriptionKey": "ability-legacy-kin-the-babbage-analytical-engine-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.kin-the-babbage-analytical-engine",
+  "nameKey": "ability-legacy-kin-the-babbage-analytical-engine-name",
+  "tags": [
+    "legacy-import",
+    "summon"
+  ],
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  }
+}

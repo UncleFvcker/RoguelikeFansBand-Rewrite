@@ -559,3 +559,16 @@ git diff --stat
   `d8486a55c802382012ad85738f199162cd0bed95bb824b335c89c9fdb42911ea`；Protocol `1.195`、
   State Hash Schema v97、save v1、active baseline `contract-v292`（26 条 exact fixture、
   零 waiver）均不变。
+
+## 34. monsters-next 当前交接（P74 L91–127 直接导入）
+
+- P74A 导入 L91–95 的 11 个普通分配 actor，P74B 导入 L96–127 的 8 个普通分配 actor；
+  全部保留 RFB master 的 source index、层级、权威中文名和 Orc Cave 分配。
+- 本批只新增 42 个由现有运行时表达的参数化 ability/program；没有新增 DTO、协议、存档或
+  state-hash 字段，也不刷新 replay fixture。
+- L81–127 联合审计为 62 selected、0 direct、54 blocked、6 excluded；blocked 留给后续机制
+  批次，excluded 仍表示地点限制。
+- 共享协调点：pack `1.314.0` / content hash
+  `3f329afbe222276e0f6d2b9c7861d5f065af4ec8633774bab3cbc6b1f2490818`；Protocol `1.195`、
+  State Hash Schema v97、save v1、active baseline `contract-v292`（26 条 exact fixture、
+  零 waiver）均不变。

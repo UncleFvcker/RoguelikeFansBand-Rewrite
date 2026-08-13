@@ -7225,6 +7225,120 @@
       "id": "kali-mother-of-rage",
       "tags": ["orc-cave"],
       "omittedFlags": ["FEMALE", "NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SUST_STR", "POS_TELEPATHY"]
+    },
+    {
+      "sourceIndex": 1192,
+      "id": "wiruin-the-maelstrom",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE"]
+    },
+    {
+      "sourceIndex": 1230,
+      "id": "festivus-the-teenage-offscreen-ninja-drolem",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS", "POS_TELEPATHY", "RES_WALL"]
+    },
+    {
+      "sourceIndex": 1260,
+      "id": "seth-the-disintegrator",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["EGYPTIAN", "MALE", "POS_GAIN_AC", "POS_SEE_INVIS", "RES_WALL"]
+    },
+    {
+      "sourceIndex": 850,
+      "id": "carcharoth-the-jaws-of-thirst",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 1170,
+      "id": "umbaba-samahongo",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE", "NO_STUN"]
+    },
+    {
+      "sourceIndex": 1244,
+      "id": "horus-the-ancient",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["EGYPTIAN", "MALE"]
+    },
+    {
+      "sourceIndex": 852,
+      "id": "azathoth-seething-nuclear-chaos",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["ATTR_ANY", "ATTR_MULTI", "POS_GAIN_AC", "POS_HOLD_LIFE", "STUPID"]
+    },
+    {
+      "sourceIndex": 1191,
+      "id": "the-maw-of-hell",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE"]
+    },
+    {
+      "sourceIndex": 1395,
+      "id": "c-blue",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["ATTR_ANY", "ATTR_MULTI", "STUPID"]
+    },
+    {
+      "sourceIndex": 853,
+      "id": "cerberus-guardian-of-hades",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 855,
+      "id": "the-destroyer",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["NORSE2", "NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE", "RES_WALL"]
+    },
+    {
+      "sourceIndex": 1205,
+      "id": "the-babbage-analytical-engine",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE"]
+    },
+    {
+      "sourceIndex": 1207,
+      "id": "the-etheric-dimensional-phase-automaton",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE"]
+    },
+    {
+      "sourceIndex": 1181,
+      "id": "dor",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_TELEPATHY"]
+    },
+    {
+      "sourceIndex": 1247,
+      "id": "sekhmet-the-mistress-of-fury",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "EGYPTIAN", "FEMALE", "POS_GAIN_AC", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 1179,
+      "id": "michael-the-guardian-overlord",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE", "NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 1195,
+      "id": "lucifer-father-of-lies",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE", "NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS", "POS_TELEPATHY"]
+    },
+    {
+      "sourceIndex": 1253,
+      "id": "metatron-the-high-angel",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 1095,
+      "id": "monkey-clone",
+      "tags": ["orc-cave"],
+      "omittedFlags": []
     }
   ]
 }

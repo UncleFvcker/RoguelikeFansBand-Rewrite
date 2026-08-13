@@ -1,0 +1,21 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.bolt-physical-100d1",
+  "affectsGroundItems": true,
+  "descriptionKey": "ability-legacy-bolt-physical-100d1-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.bolt-physical-100d1",
+  "nameKey": "ability-legacy-bolt-physical-100d1-name",
+  "tags": [
+    "legacy-import",
+    "damage"
+  ],
+  "target": {
+    "modes": [
+      "position",
+      "entity"
+    ],
+    "range": 8,
+    "requiresLineOfEffect": true
+  }
+}

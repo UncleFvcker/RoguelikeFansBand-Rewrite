@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.kin-sekhmet-the-mistress-of-fury",
+  "descriptionKey": "ability-legacy-kin-sekhmet-the-mistress-of-fury-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.kin-sekhmet-the-mistress-of-fury",
+  "nameKey": "ability-legacy-kin-sekhmet-the-mistress-of-fury-name",
+  "tags": [
+    "legacy-import",
+    "summon"
+  ],
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  }
+}

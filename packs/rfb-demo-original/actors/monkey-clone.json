@@ -1,0 +1,64 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 1095,
+    "maxDepth": 999,
+    "rarity": 255
+  },
+  "attack": 31,
+  "capturePolicy": "immune",
+  "damageDice": 1,
+  "damageSides": 1,
+  "damageType": "physical",
+  "defense": 8,
+  "descriptionKey": "actor-demo-monkey-clone-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 500,
+  "formatVersion": 1,
+  "glyph": "H",
+  "hitPointDice": {
+    "dice": 60,
+    "forceMaximum": true,
+    "sides": 10
+  },
+  "id": "demo.actor.monkey-clone",
+  "level": 127,
+  "light": {
+    "intrinsic": false,
+    "radius": 2
+  },
+  "maxHp": 600,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 1,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "nameKey": "actor-demo-monkey-clone-name",
+  "role": "monster",
+  "speed": 110,
+  "statusImmunities": [
+    "rfb.status.fear"
+  ],
+  "tags": [
+    "human",
+    "kin-glyph-72",
+    "legacy-import",
+    "orc-cave",
+    "unique2"
+  ]
+}
