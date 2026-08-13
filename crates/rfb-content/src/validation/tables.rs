@@ -241,9 +241,14 @@ pub(super) fn validate_tables(
         if let Some(allocation) = &mut table.global_allocation {
             allocation.preferred_glyphs.sort();
             normalize_tags(&table.id, &mut allocation.preferred_tags)?;
+            allocation.preferred_movement_modes.sort_unstable();
+            allocation.preferred_habitats.sort_unstable();
             let mut glyphs = BTreeSet::new();
             if !table.entries.is_empty()
-                || (allocation.preferred_glyphs.is_empty() && allocation.preferred_tags.is_empty())
+                || (allocation.preferred_glyphs.is_empty()
+                    && allocation.preferred_tags.is_empty()
+                    && allocation.preferred_movement_modes.is_empty()
+                    && allocation.preferred_habitats.is_empty())
                 || allocation.preferred_glyphs.len() > 64
                 || allocation.preferred_tags.len() > 64
                 || allocation.special_div > 64
@@ -256,6 +261,14 @@ pub(super) fn validate_tables(
                 || allocation.preferred_glyphs.iter().any(|glyph| {
                     validate_glyph(&table.id, glyph).is_err() || !glyphs.insert(glyph.clone())
                 })
+                || allocation
+                    .preferred_movement_modes
+                    .windows(2)
+                    .any(|pair| pair[0] == pair[1])
+                || allocation
+                    .preferred_habitats
+                    .windows(2)
+                    .any(|pair| pair[0] == pair[1])
             {
                 return Err(ContentError::InvalidEncounterTable(table.id.clone()));
             }

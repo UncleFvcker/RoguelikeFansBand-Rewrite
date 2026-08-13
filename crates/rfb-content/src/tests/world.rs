@@ -3631,6 +3631,28 @@ fn orc_cave_o7_binds_othrod_depths_ecology_and_final_reward() {
 }
 
 #[test]
+fn p87b_tidal_cave_policy_preserves_the_three_way_legacy_ecology_preference() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let policy = artifact
+        .content
+        .encounter_tables
+        .iter()
+        .find(|table| table.id == "demo.encounter-table.tidal-cave")
+        .and_then(|table| table.global_allocation.as_ref())
+        .expect("Tidal Cave should use global allocation");
+
+    assert!(policy.preferred_glyphs.is_empty());
+    assert!(policy.preferred_tags.is_empty());
+    assert_eq!(
+        policy.preferred_movement_modes,
+        [ActorMovementMode::Aquatic, ActorMovementMode::Swim]
+    );
+    assert_eq!(policy.preferred_habitats, [ActorHabitat::Shore]);
+    assert_eq!(policy.special_div, 16);
+    assert_eq!(policy.ambient_chance_one_in, 160);
+}
+
+#[test]
 fn p86c_camelot_binds_depths_ecology_layout_and_mirror_shield_reward() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let content = &artifact.content;

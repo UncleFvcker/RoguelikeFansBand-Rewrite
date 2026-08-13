@@ -4,7 +4,7 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use super::{ContentPosition, TerrainOverride};
+use super::{ActorHabitat, ActorMovementMode, ContentPosition, TerrainOverride};
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
@@ -115,6 +115,10 @@ pub struct GlobalMonsterAllocationDefinition {
     pub preferred_glyphs: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub preferred_tags: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub preferred_movement_modes: Vec<ActorMovementMode>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub preferred_habitats: Vec<ActorHabitat>,
     /// Weight numerator over the original fixed denominator of 64.
     pub special_div: u8,
     pub ambient_chance_one_in: u16,

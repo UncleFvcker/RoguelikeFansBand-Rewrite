@@ -5,7 +5,7 @@ use crate::game::monster_ecology::{
     actor_matches_surface_habitat,
 };
 use crate::rng::RfbRng;
-use rfb_content::WildernessTerrain;
+use rfb_content::{ActorHabitat, ActorMovementMode, WildernessTerrain};
 
 use super::support::*;
 use super::*;
@@ -522,6 +522,53 @@ fn preferred_glyph_or_tag_uses_full_original_weight_without_rng() {
     actor.tags.clear();
     assert_eq!(game.original_dungeon_weight(&actor, &policy), 100);
     assert_eq!(game.rng.draw_counter, draws_before);
+}
+
+#[test]
+fn p87b_movement_mode_or_habitat_preference_uses_full_original_weight() {
+    let mut game = enter_warrens(87);
+    let policy = game
+        .content
+        .encounter_table("demo.encounter-table.tidal-cave")
+        .and_then(|table| table.global_allocation.as_ref())
+        .expect("Tidal Cave global allocation policy")
+        .clone();
+    let mut actor = game
+        .content
+        .actor("demo.actor.newt")
+        .expect("Newt definition")
+        .clone();
+    actor.movement.modes.clear();
+    actor
+        .allocation
+        .as_mut()
+        .expect("Newt allocation")
+        .habitats
+        .clear();
+
+    assert_eq!(game.original_dungeon_weight(&actor, &policy), 25);
+
+    actor.movement.modes = vec![ActorMovementMode::Aquatic];
+    assert_eq!(game.original_dungeon_weight(&actor, &policy), 100);
+
+    actor.movement.modes = vec![ActorMovementMode::Swim];
+    assert_eq!(game.original_dungeon_weight(&actor, &policy), 100);
+
+    actor.movement.modes.clear();
+    actor.allocation.as_mut().expect("Newt allocation").habitats = vec![ActorHabitat::Shore];
+    assert_eq!(game.original_dungeon_weight(&actor, &policy), 100);
+}
+
+#[test]
+fn p87b_dungeon_definition_excludes_a_tagless_guardian_from_allocation() {
+    let game = enter_warrens(88);
+    let arthur = game
+        .content
+        .actor("demo.actor.arthur-pendragon")
+        .expect("Arthur definition");
+
+    assert!(!arthur.tags.iter().any(|tag| tag == "guardian"));
+    assert!(game.actor_kind_is_dungeon_guardian(&arthur.id));
 }
 
 #[test]

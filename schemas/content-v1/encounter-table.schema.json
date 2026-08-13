@@ -1,5 +1,31 @@
 {
   "$defs": {
+    "ActorHabitat": {
+      "enum": [
+        "all",
+        "grass",
+        "mountain",
+        "ocean",
+        "shore",
+        "snow",
+        "swamp",
+        "town",
+        "volcano",
+        "waste",
+        "wood"
+      ],
+      "type": "string"
+    },
+    "ActorMovementMode": {
+      "enum": [
+        "aquatic",
+        "climb",
+        "fly",
+        "pass-wall",
+        "swim"
+      ],
+      "type": "string"
+    },
     "EncounterEntryDefinition": {
       "additionalProperties": false,
       "properties": {
@@ -207,6 +233,18 @@
         "preferredGlyphs": {
           "items": {
             "type": "string"
+          },
+          "type": "array"
+        },
+        "preferredHabitats": {
+          "items": {
+            "$ref": "#/$defs/ActorHabitat"
+          },
+          "type": "array"
+        },
+        "preferredMovementModes": {
+          "items": {
+            "$ref": "#/$defs/ActorMovementMode"
           },
           "type": "array"
         },
