@@ -685,3 +685,10 @@ RFB `master:lib/edit/s_info.txt` 的 `S:2:start:max`，并满足
 `initial <= maximum <= 8000`。现有四职业分别为 Warrior 0/6000、High-Mage 0/0、
 Archer 0/4000、Paladin 0/6000；未来 Cavalry 的权威来源值为 2000/8000。本批没有新增
 内容 ID；content hash 为 `ce5843c05a1a11cd26f24868777b285ba41363e06e7dcbdfac0615df4e6596cb`。
+
+包 1.299.0 为物品增加可选 `ridingWeaponKind`，只允许 `compatible` 与 `lance`；它保存
+RFB `master:k_info.txt` 的 `OF_RIDING` 身份，`lance` 另承载骑乘长枪的命中与伤害骰规则。
+当前已存在的 15 件匹配武器（含固定神器 Pain）均已登记，不新增物品 ID。职业定义同时增加默认关闭的
+`ridingCombatExpert` 与可选 `mountedNonArrowBaseShotCap`，供 Cavalry/Beastmaster 等正式
+职业内容声明原版骑乘特权，核心不硬编码职业 ID。content hash 为
+`0075e65b38104d4103be9a4de0b798b4f404fb37857ca5359f949021b8401868`。

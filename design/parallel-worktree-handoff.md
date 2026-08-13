@@ -375,3 +375,27 @@ git diff --stat
   `ce5843c05a1a11cd26f24868777b285ba41363e06e7dcbdfac0615df4e6596cb`、Protocol `1.189`、
   State Hash Schema v94、save v1、active baseline `contract-v285`（26 条 exact fixture、
   零 waiver）。
+
+## 22. main 当前交接（骑乘战斗 Commit 2）
+
+- 本批不新增 item、ability、material、affix 或其他正式内容 ID。普通 `Ride` 现在只接受
+  已有宠物，野生怪物不抽 RNG、不改变控制权；未来 Cavalry 的“套马”必须另建正式能力，
+  不得重新放宽普通 `Ride`。
+- 当前包已有的 15 件 RFB `OF_RIDING` 武器（含固定神器 Pain）通过 `ridingWeaponKind`
+  登记；Lance 使用
+  `lance` 语义获得骑乘 `+15` 命中与 `+2` 伤害骰。后续 items 分支导入新的 RIDING 武器
+  时只补该字段，不创建 class 方向的重复物品。
+- 职业字段 `ridingCombatExpert` 与 `mountedNonArrowBaseShotCap` 已为 Cavalry/Beastmaster
+  留出内容接口。未来 Cavalry 必须声明 `true` 与 `100`；核心不得硬编码
+  `demo.class.cavalry`。普通骑手和专家的近战/弹药命中分支、坐骑受控速度均已实现。
+- `resolveRidingFall`（Rust `resolve_riding_fall`）是唯一落马事务：非强制分支先增长骑术，
+  再用旧 current 做两阶段 RNG；强制分支直接进入八方向蓄水池抽样。无落点保持骑乘并
+  结算撞墙伤害；有落点解除骑乘、结算坠落伤害并迁移玩家。怪物近战/能力受伤、坐骑死亡、
+  坐骑变形成不适合骑乘的形态复用该入口；坐骑死亡/删除与召唤到期按 master 保持既有
+  清理路径，只解除骑乘，不额外结算坠落。
+- 尚未实现且不得在 Cavalry 内容中伪造：双手持骑乘落马修正、浮空安全着陆、骑乘羁绊、
+  套马驯服资格/失败落马。这些要在对应共享状态或职业能力批次按 master 单独闭合。
+- 共享协调点：pack `1.299.0` / content hash
+  `0075e65b38104d4103be9a4de0b798b4f404fb37857ca5359f949021b8401868`、Protocol `1.189`、
+  State Hash Schema v94、save v1、active baseline `contract-v286`（26 条 exact fixture、
+  零 waiver）。

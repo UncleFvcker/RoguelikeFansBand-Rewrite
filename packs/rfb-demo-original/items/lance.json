@@ -20,6 +20,7 @@
     "toHit": 0
   },
   "mogaminatorRare": false,
+  "ridingWeaponKind": "lance",
   "nameKey": "item-demo-lance-name",
   "tags": [
     "equipment",

@@ -584,6 +584,14 @@
       ],
       "type": "object"
     },
+    "RidingWeaponKindDefinition": {
+      "description": "RFB weapons carrying `OF_RIDING`; lances additionally receive their\noriginal mounted hit and damage-dice bonuses.",
+      "enum": [
+        "compatible",
+        "lance"
+      ],
+      "type": "string"
+    },
     "SlayLevel": {
       "enum": [
         "slay",
@@ -1047,6 +1055,17 @@
     "resistsProjectionDestruction": {
       "default": false,
       "type": "boolean"
+    },
+    "ridingWeaponKind": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/RidingWeaponKindDefinition"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
     },
     "shatterEffectProgramId": {
       "default": null,

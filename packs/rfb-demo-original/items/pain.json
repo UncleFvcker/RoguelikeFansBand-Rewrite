@@ -9,6 +9,7 @@
   "generationLevel": 60,
   "weightTenthsPound": 190,
   "maxStack": 1,
+  "ridingWeaponKind": "compatible",
   "baseValue": 50000,
   "equipmentSlot": "weapon",
   "weaponProficiencyBaseItemId": "demo.item.glaive",

@@ -4,6 +4,28 @@ use super::support::{
 };
 use super::*;
 
+fn mounted_expert_game(seed: u64) -> Game {
+    let pack_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(std::path::Path::parent)
+        .expect("core crate should be inside the workspace")
+        .join("packs/rfb-demo-original");
+    let mut artifact = rfb_content::compile_pack_dir(&pack_root).expect("demo pack should compile");
+    let class = artifact
+        .content
+        .classes
+        .iter_mut()
+        .find(|class| class.id == "demo.class.archer")
+        .expect("Archer class should remain available");
+    class.riding_combat_expert = true;
+    class.mounted_non_arrow_base_shot_cap = Some(100);
+    let content = Arc::new(rfb_content::ContentCatalog::from_artifact(
+        rfb_content::encode_content(artifact.content).expect("expert test content should encode"),
+    ));
+    Game::from_content_with_build(seed, content, DEFAULT_WORLD_ID, "demo.build.archer")
+        .expect("expert test game should create")
+}
+
 fn mounted_game(seed: u64, mount_level: u32) -> Game {
     let mut game = game_with_actor_definition(seed, "demo.actor.horse", |actor| {
         actor.level = mount_level;
@@ -110,6 +132,7 @@ fn mount_moves_with_player_round_trips_and_dismounts() {
     }
     game.player.position = start;
     game.push_generated_actor("test.mount".to_owned(), "demo.actor.horse", mount_position);
+    game.entities[0].controller_id = Some(game.player.id.clone());
 
     let mut events = Vec::new();
     game.resolve_riding(Direction::East, &mut events, &mut BTreeSet::new());
@@ -161,6 +184,7 @@ fn sheep_preserves_the_authoritative_refusal() {
     };
     replace_terrain(&mut game, target, "demo.terrain.floor");
     game.push_generated_actor("test.sheep".to_owned(), "demo.actor.sheep", target);
+    game.entities[0].controller_id = Some(game.player.id.clone());
     let mut events = Vec::new();
 
     game.resolve_riding(Direction::East, &mut events, &mut BTreeSet::new());
@@ -170,6 +194,206 @@ fn sheep_preserves_the_authoritative_refusal() {
         events.as_slice(),
         [DomainEvent::SheepRidingRefused { response: 0..=2 }]
     ));
+}
+
+#[test]
+fn ordinary_riding_rejects_wild_monsters_without_taming_or_rng() {
+    let mut game = Game::new(420);
+    clear_monsters(&mut game);
+    let target = Position {
+        x: game.player.position.x + 1,
+        y: game.player.position.y,
+    };
+    replace_terrain(&mut game, target, "demo.terrain.floor");
+    game.push_generated_actor("test.wild-horse".to_owned(), "demo.actor.horse", target);
+    let rng_before = game.rng.clone();
+    let mut events = Vec::new();
+
+    game.resolve_riding(Direction::East, &mut events, &mut BTreeSet::new());
+
+    assert_eq!(game.riding_actor_id, None);
+    assert_eq!(game.entities[0].controller_id, None);
+    assert_eq!(game.rng, rng_before);
+    assert!(matches!(
+        events.as_slice(),
+        [DomainEvent::RidingNotPet { .. }]
+    ));
+}
+
+#[test]
+fn mounted_speed_uses_original_riding_control_formula() {
+    let mut novice = game_with_actor_definition(421, "demo.actor.horse", |actor| {
+        actor.level = 20;
+        actor.speed = 130;
+    });
+    clear_monsters(&mut novice);
+    novice.push_generated_actor(
+        "test.fast-mount".to_owned(),
+        "demo.actor.horse",
+        novice.player.position,
+    );
+    novice.entities[0].controller_id = Some(novice.player.id.clone());
+    novice.riding_actor_id = Some("test.fast-mount".to_owned());
+    assert_eq!(novice.player_derived_stats().speed.value, 110);
+
+    novice.progress.level = 50;
+    novice.progress.riding_proficiency = 6_000;
+    assert_eq!(novice.player_derived_stats().speed.value, 128);
+    assert_eq!(riding_proficiency::mounted_speed(130, 8_000, 50), 135);
+}
+
+#[test]
+fn mounted_weapon_and_projectile_rules_match_original_branches() {
+    let mut game = mounted_game(422, 5);
+    let weapon_index = game
+        .items
+        .iter()
+        .position(|item| {
+            matches!(&item.location, ItemLocation::Equipped { slot_id } if slot_id == "right-hand")
+        })
+        .expect("Warrior should start with a weapon");
+
+    game.items[weapon_index].kind_id = "demo.item.short-sword".to_owned();
+    let ordinary = game.player_melee_profile(&game.player_derived_stats());
+    assert_eq!(ordinary.to_hit, -35);
+    assert_eq!(
+        ordinary.melee_skill.value,
+        game.player_derived_stats().melee_skill.value - 35
+    );
+
+    game.items[weapon_index].kind_id = "demo.item.broad-sword".to_owned();
+    let compatible = game.player_melee_profile(&game.player_derived_stats());
+    assert_eq!(compatible.to_hit, 0);
+    assert_eq!(
+        compatible.melee_skill.value,
+        game.player_derived_stats().melee_skill.value
+    );
+
+    game.items[weapon_index].kind_id = "demo.item.lance".to_owned();
+    let lance = game.player_melee_profile(&game.player_derived_stats());
+    assert_eq!(lance.to_hit, 15);
+    assert_eq!(
+        lance.melee_skill.value,
+        game.player_derived_stats().melee_skill.value + 15
+    );
+    assert_eq!(lance.damage_dice, 4);
+
+    assert_eq!(
+        riding_proficiency::mounted_projectile_to_hit_adjustment(
+            true,
+            AmmunitionTypeDefinition::Arrow,
+            50,
+            0,
+        ),
+        0
+    );
+    assert_eq!(
+        riding_proficiency::mounted_projectile_to_hit_adjustment(
+            true,
+            AmmunitionTypeDefinition::Shot,
+            50,
+            0,
+        ),
+        -5
+    );
+    assert_eq!(
+        riding_proficiency::mounted_projectile_to_hit_adjustment(
+            true,
+            AmmunitionTypeDefinition::Bolt,
+            50,
+            0,
+        ),
+        -10
+    );
+
+    let mut expert = mounted_expert_game(423);
+    expert.progress.level = 50;
+    clear_monsters(&mut expert);
+    expert.push_generated_actor(
+        "test.mount".to_owned(),
+        "demo.actor.horse",
+        expert.player.position,
+    );
+    expert.entities[0].controller_id = Some(expert.player.id.clone());
+    expert.riding_actor_id = Some("test.mount".to_owned());
+    let launcher = expert
+        .items
+        .iter_mut()
+        .find(|item| {
+            matches!(&item.location, ItemLocation::Equipped { slot_id } if slot_id == "shooting")
+        })
+        .expect("Archer should start with a launcher");
+    launcher.kind_id = "demo.item.sling".to_owned();
+    let projectile = expert
+        .player_projectile_profile()
+        .expect("sling should resolve a projectile profile");
+    assert_eq!(projectile.to_hit, -5);
+    assert_eq!(projectile.energy_cost, 71);
+}
+
+#[test]
+fn forced_fall_moves_to_an_adjacent_cell_and_collision_stays_mounted() {
+    let mut fall = mounted_game(424, 20);
+    let origin = fall.player.position;
+    let hp_before = fall.player.hp;
+    let mut events = Vec::new();
+    let mut changed = BTreeSet::new();
+    assert!(fall.resolve_riding_fall(0, true, &mut events, &mut changed));
+    assert_eq!(fall.riding_actor_id, None);
+    assert_ne!(fall.player.position, origin);
+    assert_eq!(fall.player.hp, hp_before - 23);
+    assert!(matches!(
+        events.last(),
+        Some(DomainEvent::RidingFell { .. })
+    ));
+
+    let mut collision = mounted_game(425, 20);
+    let origin = collision.player.position;
+    for direction in TERRAIN_INTERACTION_DIRECTIONS {
+        let (dx, dy) = direction.delta();
+        replace_terrain(
+            &mut collision,
+            Position {
+                x: origin.x + dx,
+                y: origin.y + dy,
+            },
+            "demo.terrain.permanent-wall",
+        );
+    }
+    let hp_before = collision.player.hp;
+    let mut events = Vec::new();
+    assert!(!collision.resolve_riding_fall(0, true, &mut events, &mut BTreeSet::new(),));
+    assert_eq!(collision.riding_actor_id.as_deref(), Some("test.mount"));
+    assert_eq!(collision.player.position, origin);
+    assert_eq!(collision.player.hp, hp_before - 23);
+    assert!(matches!(
+        events.last(),
+        Some(DomainEvent::RidingCollided { .. })
+    ));
+}
+
+#[test]
+fn damage_fall_trains_riding_and_mount_death_uses_existing_cleanup() {
+    let mut damaged = mounted_game(428, 20);
+    let mut events = Vec::new();
+    assert!(damaged.resolve_riding_fall(200, false, &mut events, &mut BTreeSet::new(),));
+    assert_eq!(damaged.riding_actor_id, None);
+    assert_eq!(damaged.progress.riding_proficiency, 6);
+
+    let mut death = mounted_game(427, 5);
+    let mut events = Vec::new();
+    let mut changed = BTreeSet::new();
+    let mut removed = Vec::new();
+    death
+        .resolve_actor_death_without_rewards(0, None, &mut events, &mut changed, &mut removed)
+        .expect("mount death should resolve");
+    assert_eq!(death.riding_actor_id, None);
+    assert_eq!(removed, ["test.mount"]);
+    assert!(
+        events
+            .iter()
+            .all(|event| !matches!(event, DomainEvent::RidingFell { .. }))
+    );
 }
 
 #[test]

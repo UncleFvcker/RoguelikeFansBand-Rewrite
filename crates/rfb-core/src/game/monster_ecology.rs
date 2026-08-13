@@ -564,6 +564,7 @@ impl Game {
         target_index: usize,
         caster_level: u32,
         effect_index: u8,
+        events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
     ) -> AbilityEffectResolutionDto {
         let target_entity_id = self.entities[target_index].id.clone();
@@ -596,6 +597,7 @@ impl Game {
         let form_kind_id = self.roll_chameleon_form(&target_kind_id, target_position);
         if let Some(form_kind_id) = &form_kind_id {
             self.apply_polymorph_form(target_index, form_kind_id);
+            self.force_dismount_if_mount_unrideable(target_index, events, changed);
             changed.insert(target_position);
         }
         AbilityEffectResolutionDto::PolymorphTarget {
@@ -606,7 +608,12 @@ impl Game {
         }
     }
 
-    pub(super) fn maybe_change_chameleon_form(&mut self, index: usize) -> bool {
+    pub(super) fn maybe_change_chameleon_form(
+        &mut self,
+        index: usize,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) -> bool {
         let actor_kind_id = self.entities[index].kind_id.clone();
         if !self
             .content
@@ -621,6 +628,7 @@ impl Game {
             return false;
         };
         self.apply_chameleon_form(index, &form_kind_id);
+        self.force_dismount_if_mount_unrideable(index, events, changed);
         true
     }
 

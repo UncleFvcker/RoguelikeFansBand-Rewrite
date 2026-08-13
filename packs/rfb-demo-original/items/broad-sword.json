@@ -21,6 +21,7 @@
     "toHit": 0
   },
   "mogaminatorRare": false,
+  "ridingWeaponKind": "compatible",
   "nameKey": "item-demo-broad-sword-name",
   "tags": [
     "equipment",

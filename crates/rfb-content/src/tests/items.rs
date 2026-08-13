@@ -101,6 +101,74 @@ fn riding_proficiency_content_rejects_invalid_bounds() {
         validate_and_normalize(&mut invalid),
         Err(ContentError::InvalidRidingProficiency(_))
     ));
+
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let mut invalid = artifact.content;
+    invalid
+        .classes
+        .iter_mut()
+        .find(|class| class.id == "demo.class.warrior")
+        .expect("Warrior class")
+        .mounted_non_arrow_base_shot_cap = Some(0);
+    assert!(matches!(
+        validate_and_normalize(&mut invalid),
+        Err(ContentError::InvalidRidingProficiency(_))
+    ));
+}
+
+#[test]
+fn riding_weapons_match_the_existing_rfb_master_subset() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actual = artifact
+        .content
+        .items
+        .iter()
+        .filter_map(|item| item.riding_weapon_kind.map(|kind| (item.id.as_str(), kind)))
+        .collect::<Vec<_>>();
+    assert_eq!(
+        actual,
+        [
+            "demo.item.ball-and-chain",
+            "demo.item.broad-spear",
+            "demo.item.broad-sword",
+            "demo.item.falchion",
+            "demo.item.fauchard",
+            "demo.item.flail",
+            "demo.item.glaive",
+            "demo.item.lance",
+            "demo.item.long-sword",
+            "demo.item.pain",
+            "demo.item.sabre",
+            "demo.item.spear",
+            "demo.item.trident",
+            "demo.item.tulwar",
+            "demo.item.war-hammer",
+        ]
+        .into_iter()
+        .map(|id| {
+            (
+                id,
+                if id == "demo.item.lance" {
+                    RidingWeaponKindDefinition::Lance
+                } else {
+                    RidingWeaponKindDefinition::Compatible
+                },
+            )
+        })
+        .collect::<Vec<_>>()
+    );
+
+    let mut invalid = artifact.content;
+    invalid
+        .items
+        .iter_mut()
+        .find(|item| item.id == "demo.item.lance")
+        .expect("Lance should exist")
+        .melee_profile = None;
+    assert!(matches!(
+        validate_and_normalize(&mut invalid),
+        Err(ContentError::InvalidAttackProfile(_))
+    ));
 }
 
 #[test]

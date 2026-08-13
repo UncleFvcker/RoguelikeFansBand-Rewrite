@@ -998,11 +998,27 @@ impl Game {
                     } else {
                         0
                     };
-                    let base_shot = if heavy_shoot {
+                    let mut base_shot = if heavy_shoot {
                         100
                     } else {
                         ranged_skill.max(100)
                     };
+                    let class = self.character_definitions().map(|(_, _, class, _)| class);
+                    let mounted_to_hit = self.riding_mount_level().map_or(0, |mount_level| {
+                        riding_proficiency::mounted_projectile_to_hit_adjustment(
+                            class.is_some_and(|class| class.riding_combat_expert),
+                            profile.ammunition_type,
+                            mount_level,
+                            self.progress.riding_proficiency,
+                        )
+                    });
+                    if self.riding_actor_id.is_some()
+                        && profile.ammunition_type != AmmunitionTypeDefinition::Arrow
+                        && let Some(cap) = class
+                            .and_then(|class| class.mounted_non_arrow_base_shot_cap.map(i32::from))
+                    {
+                        base_shot = base_shot.min(cap);
+                    }
                     let energy_cost = (i32::from(profile.shot_energy) / base_shot).max(1);
                     let breakage_modifier = if heavy_shoot {
                         0
@@ -1039,6 +1055,7 @@ impl Game {
                             .to_hit
                             .saturating_add(i32::from(item.enchantments.to_hit))
                             .saturating_add(heavy_to_hit)
+                            .saturating_add(mounted_to_hit)
                             .saturating_add(ammunition_to_hit),
                         to_damage: ammunition_to_damage
                             .saturating_mul(i32::from(profile.damage_multiplier_percent))
@@ -1079,11 +1096,19 @@ impl Game {
             }
             self.content
                 .item(&item.kind_id)
-                .and_then(|definition| definition.melee_profile.as_ref())
-                .map(|profile| (item.id.clone(), item.kind_id.clone(), profile))
+                .and_then(|item_definition| {
+                    item_definition.melee_profile.as_ref().map(|profile| {
+                        (
+                            item.id.clone(),
+                            item.kind_id.clone(),
+                            profile,
+                            item_definition.riding_weapon_kind,
+                        )
+                    })
+                })
         });
-        let (source_item_id, source_kind_id, dice, sides, damage_type, to_hit) = equipped_weapon
-            .map_or_else(
+        let (source_item_id, source_kind_id, dice, sides, damage_type, to_hit, mounted_to_hit) =
+            equipped_weapon.map_or_else(
                 || {
                     (
                         None,
@@ -1092,20 +1117,32 @@ impl Game {
                         definition.damage_sides,
                         definition.damage_type,
                         0,
+                        0,
                     )
                 },
-                |(item_id, kind_id, profile)| {
+                |(item_id, kind_id, profile, riding_weapon_kind)| {
+                    let (mounted_to_hit, mounted_dice) =
+                        self.riding_mount_level().map_or((0, 0), |mount_level| {
+                            riding_proficiency::mounted_melee_adjustment(
+                                self.character_definitions()
+                                    .is_some_and(|(_, _, class, _)| class.riding_combat_expert),
+                                riding_weapon_kind,
+                                mount_level,
+                                self.progress.riding_proficiency,
+                            )
+                        });
                     (
                         Some(item_id),
                         Some(kind_id),
-                        profile.damage_dice,
+                        profile.damage_dice.saturating_add(mounted_dice),
                         profile.damage_sides,
                         profile.damage_type,
-                        profile.to_hit,
+                        profile.to_hit.saturating_add(mounted_to_hit),
+                        mounted_to_hit,
                     )
                 },
             );
-        let melee_skill = source_kind_id
+        let mut melee_skill = source_kind_id
             .as_deref()
             .and_then(|kind_id| self.weapon_proficiency_hit_modifier(kind_id))
             .map_or_else(
@@ -1123,6 +1160,14 @@ impl Game {
                     }
                 },
             );
+        if mounted_to_hit != 0 {
+            melee_skill = melee_skill.with_modifier(
+                StatLayer::Class,
+                "rfb.riding",
+                mounted_to_hit,
+                StatBounds::NON_NEGATIVE,
+            );
+        }
         ResolvedAttackProfile {
             attacks: u16::try_from(stats.melee_attacks.value)
                 .expect("derived melee attack count must fit u16"),
@@ -1460,11 +1505,16 @@ impl Game {
             && let Some(mount_id) = self.riding_actor_id.as_deref()
             && let Some(mount) = self.entities.iter().find(|entity| entity.id == mount_id)
         {
+            let mounted_speed = riding_proficiency::mounted_speed(
+                mount.speed,
+                self.progress.riding_proficiency,
+                self.progress.level,
+            );
             pipeline.add(
                 StatKind::Speed,
                 StatLayer::Environment,
                 &mount.id,
-                i32::from(mount.speed).saturating_sub(i32::from(actor.speed)),
+                mounted_speed.saturating_sub(i32::from(actor.speed)),
             );
         }
         pipeline.add(

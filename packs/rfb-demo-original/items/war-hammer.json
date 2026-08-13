@@ -19,6 +19,7 @@
     "toHit": 0
   },
   "mogaminatorRare": false,
+  "ridingWeaponKind": "compatible",
   "nameKey": "item-demo-war-hammer-name",
   "tags": [
     "equipment",

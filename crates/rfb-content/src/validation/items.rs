@@ -704,6 +704,9 @@ pub(super) fn validate_items(
         if item.break_chance_percent > 100 {
             return Err(ContentError::InvalidItemBreakChance(item.id.clone()));
         }
+        if item.riding_weapon_kind.is_some() && item.melee_profile.is_none() {
+            return Err(ContentError::InvalidAttackProfile(item.id.clone()));
+        }
         if let Some(fuel) = item.fuel {
             let valid = fuel.maximum > 0
                 && fuel.initial <= fuel.maximum

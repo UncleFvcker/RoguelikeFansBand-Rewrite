@@ -1237,6 +1237,7 @@ impl Game {
             if only_blow_index.is_some_and(|selected| selected != blow_index) {
                 continue;
             }
+            let player_hp_before = self.player.hp;
             let ability = attacker.melee_skill.with_modifier(
                 StatLayer::Base,
                 blow.method_id.as_deref().unwrap_or(definition.id.as_str()),
@@ -1726,6 +1727,15 @@ impl Game {
                     if self.player_is_dead() {
                         return Ok(false);
                     }
+                }
+            }
+            let blow_damage = player_hp_before
+                .saturating_sub(self.player.hp)
+                .clamp(0, 200);
+            if blow_damage > 0 {
+                self.resolve_riding_fall(blow_damage, false, events, changed);
+                if self.player_is_dead() {
+                    return Ok(false);
                 }
             }
             if melee_method_triggers_contact_aura(blow.method_id.as_deref())

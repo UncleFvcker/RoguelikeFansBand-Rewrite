@@ -874,7 +874,14 @@ impl Game {
         removed_entities: &mut Vec<String>,
     ) -> MonsterAbilityPlanResolution {
         let source_entity_id = self.entities[source_index].id.clone();
-        match &plan.target {
+        let player_hp_before = self.player.hp;
+        let mounted_hp_before = self.riding_actor_id.as_deref().and_then(|mount_id| {
+            self.entities
+                .iter()
+                .find(|entity| entity.id == mount_id)
+                .map(|entity| (mount_id.to_owned(), entity.hp))
+        });
+        let resolution = match &plan.target {
             MonsterAbilityTargetPlan::SelfTarget => {
                 let target_entity_id = self.entities[source_index].id.clone();
                 let target_kind_id = self.entities[source_index].kind_id.clone();
@@ -1366,7 +1373,25 @@ impl Game {
                     trace: Some(trace.clone()),
                 }
             }
+        };
+        let player_damage = player_hp_before
+            .saturating_sub(self.player.hp)
+            .clamp(0, 200);
+        let mounted_damage = mounted_hp_before
+            .and_then(|(mount_id, hp_before)| {
+                self.entities
+                    .iter()
+                    .find(|entity| entity.id == mount_id)
+                    .map(|entity| hp_before.saturating_sub(entity.hp).clamp(0, 200))
+            })
+            .unwrap_or(0);
+        if mounted_damage > 0 && !self.player_is_dead() {
+            self.resolve_riding_fall(mounted_damage, false, events, changed);
         }
+        if player_damage > 0 && !self.player_is_dead() {
+            self.resolve_riding_fall(player_damage, false, events, changed);
+        }
+        resolution
     }
 
     fn monster_targets_in_footprint(
@@ -1558,6 +1583,7 @@ impl Game {
                         target_index,
                         caster_level,
                         effect_index,
+                        events,
                         changed,
                     )
                 }

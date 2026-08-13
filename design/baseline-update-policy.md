@@ -6,7 +6,7 @@
 
 contract fixture 是规则兼容边界，不能把测试失败简单处理为“刷新预期结果”。政策用于保证每次规则变化只修改真正受影响的场景，同时保留可审查的失败原因。
 
-当前逻辑基线是 `contract-v285`，机器可读政策固定在：
+当前逻辑基线是 `contract-v286`，机器可读政策固定在：
 
 ```text
 tests/fixtures/active/baseline-policy.json
@@ -161,6 +161,14 @@ Artifact 5%、Great 20%、Good 40%，并由同一 d100 依次分段；Artifact �
 `riding / 50 + level / 2 + 20`，近战与射击碰撞接入原版成长公式，射击只在满足门槛时
 消耗一次二分 RNG。Protocol 升至 1.189、State Hash Schema 升至 v94，内容包升至
 1.298.0；公共进度投影与状态哈希变化要求统一刷新并复验 26 条 active fixture，零 waiver。
+
+`contract-v286` 完成骑乘战斗闭环。普通 Ride 只接受已有宠物；坐骑速度按骑术与角色
+等级控制，近战、射击、长枪、RIDING 武器及骑兵专用惩罚/射速上限均进入内容驱动派生。
+受伤和形态失去骑乘资格的强制落马统一执行邻格蓄水池抽样与撞墙伤害；受伤分支另执行
+原版两阶段检定及检定前骑术成长，坐骑死亡/删除仍走既有清理。
+本批不新增内容 ID；Protocol 1.189、State Hash Schema v94 与 save v1 均不变，内容包升至
+1.299.0。现有 26 条 fixture 不进入骑乘命令与落马路径，逐条及全量 verify 零漂移，因而
+不刷新无关快照、零 waiver。
 
 ## 分类验证
 

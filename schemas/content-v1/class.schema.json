@@ -855,6 +855,16 @@
         "wisdom": 0
       }
     },
+    "mountedNonArrowBaseShotCap": {
+      "description": "Optional RFB class cap applied to mounted non-arrow shooting speed.",
+      "format": "uint16",
+      "maximum": 65535,
+      "minimum": 0,
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
     "nameKey": {
       "type": "string"
     },
@@ -873,6 +883,11 @@
       "maximum": 255,
       "minimum": 0,
       "type": "integer"
+    },
+    "ridingCombatExpert": {
+      "default": false,
+      "description": "Uses the Beastmaster/Cavalry mounted attack penalties instead of the\nordinary rider formula.",
+      "type": "boolean"
     },
     "ridingProficiency": {
       "$ref": "#/$defs/RidingProficiencyDefinition",

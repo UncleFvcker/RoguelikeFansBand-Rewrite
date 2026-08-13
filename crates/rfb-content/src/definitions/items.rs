@@ -219,6 +219,16 @@ pub enum AmmunitionTypeDefinition {
     Bolt,
 }
 
+/// RFB weapons carrying `OF_RIDING`; lances additionally receive their
+/// original mounted hit and damage-dice bonuses.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum RidingWeaponKindDefinition {
+    Compatible,
+    Lance,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -766,6 +776,9 @@ pub struct ItemDefinition {
     /// Canonical base item whose RFB weapon proficiency this item shares.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub weapon_proficiency_base_item_id: Option<String>,
+    /// Original mounted-combat identity (`OF_RIDING`, with lances distinguished).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub riding_weapon_kind: Option<RidingWeaponKindDefinition>,
     /// Original fixed-artifact allocation identity. Scripted demo artifacts
     /// without an RFB `a_info` record intentionally leave this unset.
     #[serde(default, skip_serializing_if = "Option::is_none")]

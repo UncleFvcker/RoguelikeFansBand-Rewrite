@@ -12,8 +12,9 @@ use crate::{
     EquipmentPassive, ItemChargeDefinition, ItemCurseSeverityDefinition, ItemDefinition,
     ItemDeviceActivationDefinition, ItemDeviceChargeRangeDefinition,
     ItemDeviceGenerationDefinition, ItemDeviceRecoveryDefinition, ItemFuelDefinition,
-    ItemShatterEffectDefinition, ItemUseActionDefinition, ProjectileProfileDefinition, SlayLevel,
-    SlayTarget, StatModifiers, ThrowProfileDefinition, WeaponBrand,
+    ItemShatterEffectDefinition, ItemUseActionDefinition, ProjectileProfileDefinition,
+    RidingWeaponKindDefinition, SlayLevel, SlayTarget, StatModifiers, ThrowProfileDefinition,
+    WeaponBrand,
     effect_programs::{
         ResolvedEffectProgram, effect_program_input_matches_device_target,
         resolve_source_item_effect,
@@ -47,6 +48,8 @@ pub(crate) struct SourceItemDefinition {
     equipment_slot: Option<String>,
     #[serde(default)]
     weapon_proficiency_base_item_id: Option<String>,
+    #[serde(default)]
+    riding_weapon_kind: Option<RidingWeaponKindDefinition>,
     #[serde(default)]
     artifact_generation: Option<ArtifactGenerationDefinition>,
     #[serde(default)]
@@ -255,6 +258,7 @@ impl SourceItemDefinition {
             base_value: self.base_value,
             equipment_slot: self.equipment_slot,
             weapon_proficiency_base_item_id: self.weapon_proficiency_base_item_id,
+            riding_weapon_kind: self.riding_weapon_kind,
             artifact_generation: self.artifact_generation,
             inventory_slot_bonus: self.inventory_slot_bonus,
             ammunition_capacity: self.ammunition_capacity,

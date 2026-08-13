@@ -297,13 +297,13 @@ fn chameleon_change_check_uses_one_in_thirteen_before_selecting_a_form() {
     let miss_seed = first_seed_for(|rng| rng.bounded(13) != 0);
     game.rng = RfbRng::seeded(miss_seed);
     let appearance = game.entities[index].appearance_kind_id.clone();
-    assert!(!game.maybe_change_chameleon_form(index));
+    assert!(!game.maybe_change_chameleon_form(index, &mut Vec::new(), &mut BTreeSet::new(),));
     assert_eq!(game.rng.draw_counter, 1);
     assert_eq!(game.entities[index].appearance_kind_id, appearance);
 
     let change_seed = first_seed_for(|rng| rng.bounded(13) == 0);
     game.rng = RfbRng::seeded(change_seed);
-    assert!(game.maybe_change_chameleon_form(index));
+    assert!(game.maybe_change_chameleon_form(index, &mut Vec::new(), &mut BTreeSet::new(),));
     assert!(game.rng.draw_counter >= 2);
     assert_eq!(game.entities[index].kind_id, "demo.actor.chameleon");
     assert!(game.entities[index].appearance_kind_id.is_some());

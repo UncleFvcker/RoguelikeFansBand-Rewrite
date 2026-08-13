@@ -160,6 +160,13 @@ pub struct ClassDefinition {
     pub weapon_proficiency: Option<WeaponProficiencyDefinition>,
     /// RFB riding proficiency at birth and the class training ceiling.
     pub riding_proficiency: RidingProficiencyDefinition,
+    /// Uses the Beastmaster/Cavalry mounted attack penalties instead of the
+    /// ordinary rider formula.
+    #[serde(default)]
+    pub riding_combat_expert: bool,
+    /// Optional RFB class cap applied to mounted non-arrow shooting speed.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mounted_non_arrow_base_shot_cap: Option<u16>,
     #[serde(default)]
     pub uses_spell_scrolls: bool,
     #[serde(default)]

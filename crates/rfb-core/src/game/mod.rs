@@ -58,8 +58,8 @@ use rfb_content::{
     AbilityLevelScalingDefinition, AbilityLevelScalingField, AbilityRandomTargetDefinition,
     AbilitySpellPowerDefinition, AbilitySpellPowerField, AbilityStatusStackingDefinition,
     AbilityTargetDefinition, AbilityTargetModeDefinition, ActorDamageType, ActorMovementMode,
-    ActorResistanceLevel, ActorRole, AffixPropertyBundleDefinition, CastingAttribute,
-    CastingCapacityFormula, CastingFailureFormula, CastingLearningFormula,
+    ActorResistanceLevel, ActorRole, AffixPropertyBundleDefinition, AmmunitionTypeDefinition,
+    CastingAttribute, CastingCapacityFormula, CastingFailureFormula, CastingLearningFormula,
     CastingProfileDefinition, CastingRealmProfileDefinition, CastingStudyMode,
     ClassAbilityDefinition, ContentCatalog, DungeonInstanceLifecycle, EncounterEntryDefinition,
     EncounterTableDefinition, EquipmentBonuses, EquipmentPassive, FloorLifecycle,
@@ -70,8 +70,8 @@ use rfb_content::{
     MutationActivationDefinition, MutationPeriodicEffectDefinition, PlayerAbilityDefinition,
     ProceduralLayoutMode, ProceduralMazeDefinition, ProceduralPitDefinition,
     ProceduralRoomGeometryDefinition, ProceduralRoomPlacement, ProceduralRoomShape,
-    ProceduralStreamerCandidateDefinition, SkillKind, SlayLevel, SlayTarget,
-    StartingItemDefinition, StatModifiers, TaskObjectiveKind, TechniqueAttribute,
+    ProceduralStreamerCandidateDefinition, RidingWeaponKindDefinition, SkillKind, SlayLevel,
+    SlayTarget, StartingItemDefinition, StatModifiers, TaskObjectiveKind, TechniqueAttribute,
     TerrainFeatureEntryDefinition, ThemeVaultCandidateDefinition, WeaponBrand,
     affix_is_compatible_with_item,
 };
@@ -4004,7 +4004,7 @@ impl Game {
         removed_entities: &mut Vec<String>,
         surround_reservations: &mut BTreeSet<Position>,
     ) -> Result<(), CoreError> {
-        self.maybe_change_chameleon_form(index);
+        self.maybe_change_chameleon_form(index, events, changed);
         self.reroll_shapechanger_appearance(index);
         let never_moves = self
             .actor_runtime_definition(&self.entities[index])
@@ -4476,6 +4476,12 @@ impl Game {
             .content
             .actor(&self.entities[index].kind_id)
             .expect("mount actor definition must remain available");
+        if !self.actor_is_player_aligned(&self.entities[index]) {
+            events.push(DomainEvent::RidingNotPet {
+                target_kind_id: definition.id.clone(),
+            });
+            return;
+        }
         if !definition.rideable {
             events.push(DomainEvent::RidingUnavailable);
             return;
@@ -4500,22 +4506,6 @@ impl Game {
             return;
         }
         let target_entity_id = self.entities[index].id.clone();
-        if let Some(pack) = self.entities[index].pack.clone() {
-            if pack.role == MonsterPackRoleDto::Leader || pack.leader_id == target_entity_id {
-                for entity in &mut self.entities {
-                    if entity
-                        .pack
-                        .as_ref()
-                        .is_some_and(|identity| identity.id == pack.id)
-                    {
-                        entity.pack = None;
-                    }
-                }
-            } else {
-                self.entities[index].pack = None;
-            }
-        }
-        self.entities[index].controller_id = Some(self.player.id.clone());
         self.riding_actor_id = Some(target_entity_id);
         let target_kind_id = definition.id.clone();
         events.extend(self.relocate_player(target, changed));

@@ -19,6 +19,7 @@
     "toHit": 0
   },
   "mogaminatorRare": false,
+  "ridingWeaponKind": "compatible",
   "nameKey": "item-demo-ball-and-chain-name",
   "tags": [
     "equipment",

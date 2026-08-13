@@ -4312,6 +4312,7 @@ impl Game {
             target_index,
             u32::from(self.progress.level),
             0,
+            events,
             changed,
         );
         events.push(DomainEvent::AbilityEffectsResolved {

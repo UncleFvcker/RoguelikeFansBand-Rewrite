@@ -20,6 +20,7 @@
     "toHit": 0
   },
   "mogaminatorRare": false,
+  "ridingWeaponKind": "compatible",
   "nameKey": "item-demo-broad-spear-name",
   "tags": [
     "equipment",

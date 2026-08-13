@@ -672,6 +672,17 @@ pub(crate) enum DomainEvent {
     RidingFailed {
         target_kind_id: String,
     },
+    RidingNotPet {
+        target_kind_id: String,
+    },
+    RidingFell {
+        target_kind_id: String,
+        damage: DamageOutcome,
+    },
+    RidingCollided {
+        target_kind_id: String,
+        damage: DamageOutcome,
+    },
     RidingUnavailable,
     SheepRidingRefused {
         response: u8,
@@ -2924,6 +2935,33 @@ impl DomainEvent {
                 "riding.failed",
                 "riding-failed",
                 [("target", target_kind_id)],
+            ),
+            Self::RidingNotPet { target_kind_id } => dto(
+                "riding.not-pet",
+                "riding-not-pet",
+                [("target", target_kind_id)],
+            ),
+            Self::RidingFell {
+                target_kind_id,
+                damage,
+            } => dto_with_outcome(
+                "riding.fell",
+                "riding-fell",
+                [("target", target_kind_id)],
+                GameEventOutcomeDto::Damage {
+                    resolution: damage.into(),
+                },
+            ),
+            Self::RidingCollided {
+                target_kind_id,
+                damage,
+            } => dto_with_outcome(
+                "riding.collided",
+                "riding-collided",
+                [("target", target_kind_id)],
+                GameEventOutcomeDto::Damage {
+                    resolution: damage.into(),
+                },
             ),
             Self::RidingUnavailable => dto_without_args("riding.unavailable", "riding-unavailable"),
             Self::SheepRidingRefused { response } => dto_without_args(

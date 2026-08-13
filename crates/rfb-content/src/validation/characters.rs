@@ -245,6 +245,9 @@ pub(super) fn validate_characters(
         }
         if class.riding_proficiency.initial > class.riding_proficiency.maximum
             || class.riding_proficiency.maximum > 8_000
+            || class
+                .mounted_non_arrow_base_shot_cap
+                .is_some_and(|cap| cap == 0)
         {
             return Err(ContentError::InvalidRidingProficiency(class.id.clone()));
         }
