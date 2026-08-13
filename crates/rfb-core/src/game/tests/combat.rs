@@ -890,6 +890,50 @@ fn amberite_death_can_curse_equipment_and_apply_multiple_nonlethal_ty_curses() {
 }
 
 #[test]
+fn variant_maintainer_death_leaves_four_software_bugs() {
+    let mut game = Game::new(0);
+    clear_monsters(&mut game);
+    game.terrain.fill("demo.terrain.floor".to_owned());
+    game.player.position = Position { x: 80, y: 20 };
+    let origin = Position { x: 20, y: 20 };
+    let maintainer = game.generated_actor(
+        "test.actor.variant-maintainer".to_owned(),
+        "demo.actor.the-variant-maintainer",
+        origin,
+    );
+    game.entities.push(maintainer);
+    let mut changed = BTreeSet::new();
+    game.resolve_actor_death_without_rewards(
+        0,
+        None,
+        &mut Vec::new(),
+        &mut changed,
+        &mut Vec::new(),
+    )
+    .expect("Variant Maintainer death should resolve");
+
+    assert_eq!(game.entities.len(), 4);
+    for bug in &game.entities {
+        assert_eq!(bug.kind_id, "demo.actor.software-bug");
+        assert!(
+            origin
+                .x
+                .abs_diff(bug.position.x)
+                .max(origin.y.abs_diff(bug.position.y))
+                <= 2
+        );
+        let summon = bug.summon.as_ref().expect("death bugs remain summons");
+        assert_eq!(summon.owner_id, "test.actor.variant-maintainer");
+        assert_eq!(
+            summon.source_ability_id,
+            "rfb-legacy.ability.summon-software-bug-l14-1d3-1"
+        );
+        assert_eq!(summon.remaining_turns, 10_000);
+        assert!(changed.contains(&bug.position));
+    }
+}
+
+#[test]
 fn bomb_death_explosion_splits_sound_and_shards_with_status_riders() {
     fn bomb_game(resistant: bool) -> Game {
         let mut game = game_with_actor_definition(0, "demo.actor.small-kobold", |actor| {

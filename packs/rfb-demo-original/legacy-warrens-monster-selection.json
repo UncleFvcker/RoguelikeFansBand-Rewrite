@@ -7790,6 +7790,12 @@
       "id": "odin-the-all-father",
       "tags": ["orc-cave"],
       "omittedFlags": ["ATTR_MULTI", "MALE", "POS_HOLD_LIFE", "POS_SEE_INVIS", "POS_TELEPATHY"]
+    },
+    {
+      "sourceIndex": 1094,
+      "id": "the-variant-maintainer",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
     }
   ]
 }

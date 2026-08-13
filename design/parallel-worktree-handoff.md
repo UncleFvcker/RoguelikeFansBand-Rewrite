@@ -670,3 +670,17 @@ git diff --stat
   hash `a04b31e159f7c73a8f0a607e85cdeac4f44fd5795c087b548f2ea1359521bc01`；Protocol
   `1.195`、State Hash Schema v97、save v1、active baseline `contract-v292`（26 条 exact
   fixture、零 waiver）均不变，不刷新 replay fixture。
+
+## 41. monsters-next 当前交接（P80 变体维护者）
+
+- P80 导入变体维护者，保留原版 14 级、Unique、33% 施法频率、两次混乱打击、随机移动、
+  飞行、掉落和 Orc Cave 分配；普通 `POLYMORPH` 继续复用既有目标变形能力。
+- `S_SOFTWARE_BUG` 使用既有分类召唤 DTO，固定候选为软件漏洞，数量为原版 `1d3+1`；
+  变体维护者死亡时在半径 2 的合法位置额外尝试生成 4 只软件漏洞。该死亡分支复用现有
+  actor 生成、召唤身份和到期机制，不增加内容 DTO、协议、存档或 state-hash 字段。
+- L1–127 联合审计为 1217 selected、32 direct、1 blocked、113 excluded；唯一 remaining
+  blocker 是 3 级邋遢霍比特人的正式主题掉落表，与 P80 无关。
+- 本批新增 1 个 actor、1 个 ability/program。共享协调点：pack `1.321.0` / content hash
+  `bd1900b263d9419d05285c268ec9da0ee56917af81b2d7d8815179152b8ec2af`；Protocol
+  `1.195`、State Hash Schema v97、save v1、active baseline `contract-v292` 均不变；现有
+  replay fixture 不包含变体维护者，因此不刷新 fixture。

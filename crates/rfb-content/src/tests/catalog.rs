@@ -6,7 +6,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.320.0");
+    assert_eq!(catalog.pack_version(), "1.321.0");
     assert_eq!(catalog.races().count(), 46);
     assert_eq!(
         catalog
@@ -569,6 +569,57 @@ fn p79_norse_and_olympian_summoners_compile_with_original_retinues() {
                 weight: 1,
             },
         ]
+    ));
+}
+
+#[test]
+fn p80_variant_maintainer_compiles_with_software_bug_summon() {
+    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
+    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
+    let actor = catalog
+        .actor("demo.actor.the-variant-maintainer")
+        .expect("Variant Maintainer should compile");
+    assert_eq!(actor.level, 14);
+    assert_eq!(
+        actor
+            .allocation
+            .as_ref()
+            .map(|allocation| allocation.legacy_index),
+        Some(1094)
+    );
+    assert!(actor.tags.iter().any(|tag| tag == "unique"));
+    let casting = actor
+        .monster_casting
+        .as_ref()
+        .expect("Variant Maintainer casting profile");
+    assert_eq!(casting.frequency_percent, 33);
+    assert_eq!(
+        casting
+            .abilities
+            .iter()
+            .map(|entry| entry.ability_id.as_str())
+            .collect::<Vec<_>>(),
+        [
+            "rfb-legacy.ability.summon-software-bug-l14-1d3-1",
+            "rfb-legacy.ability.polymorph-target",
+        ]
+    );
+
+    let summon = catalog
+        .ability("rfb-legacy.ability.summon-software-bug-l14-1d3-1")
+        .expect("software bug summon should compile");
+    assert!(matches!(
+        &summon.effect,
+        AbilityEffectDefinition::SummonCategory {
+            count_dice: 1,
+            count_sides: 3,
+            count_bonus: 1,
+            batch_candidates,
+            ..
+        } if batch_candidates.as_slice() == [AbilitySummonCandidateDefinition {
+            actor_kind_id: "demo.actor.software-bug".to_owned(),
+            weight: 1,
+        }]
     ));
 }
 

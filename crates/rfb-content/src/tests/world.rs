@@ -747,7 +747,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         .iter()
         .filter(|actor| actor.tags.iter().any(|tag| tag == "orc-cave"))
         .collect::<Vec<_>>();
-    assert_eq!(orc_cave.len(), 835);
+    assert_eq!(orc_cave.len(), 836);
 
     for id in [
         "demo.actor.bunyip",
@@ -794,6 +794,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             "demo.actor.rat-ogre",
             "demo.actor.skaven-assassin",
             "demo.actor.swamp-rat",
+            "demo.actor.the-variant-maintainer",
         ]
         .into_iter()
         .collect()
@@ -8296,7 +8297,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
                     == Some("demo.loot-table.base-items")
             })
             .count(),
-        768
+        769
     );
 }
 

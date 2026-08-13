@@ -7024,3 +7024,9 @@ ability-legacy-summon-olympian-l90-1d2-name = 召唤奥林匹斯诸神
 ability-legacy-summon-olympian-l90-1d2-description = 召唤一至两个不高于 90 级的奥林匹斯神明。
 ability-legacy-summon-shambler-l67-1d4-name = 召唤蹒跚怪
 ability-legacy-summon-shambler-l67-1d4-description = 召唤 1d4 个蹒跚怪。
+
+# P80 变体维护者
+actor-demo-the-variant-maintainer-name = 变体维护者
+actor-demo-the-variant-maintainer-description = 一个疲惫不堪、跌跌撞撞的可悲人影。他似乎陷入了深深的困惑，嘴里还嘟囔着关于在 cmd2.c 中发生内存损坏的事情。
+ability-legacy-summon-software-bug-l14-1d3-1-name = 召唤软件漏洞
+ability-legacy-summon-software-bug-l14-1d3-1-description = 召唤 1d3+1 个软件漏洞。

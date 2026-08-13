@@ -4388,6 +4388,54 @@ fn p79_special_summons_keep_hermes_count_and_odin_retinue_choice() {
 }
 
 #[test]
+fn p80_variant_maintainer_cast_summons_only_software_bugs() {
+    let mut game = Game::new(0);
+    clear_monsters(&mut game);
+    game.terrain.fill("demo.terrain.floor".to_owned());
+    game.player.position = Position { x: 80, y: 20 };
+    game.entities.push(actor_from_runtime_spawn(
+        "generated.actor.p80-caster",
+        "demo.actor.the-variant-maintainer",
+        Position { x: 20, y: 20 },
+        225,
+        120,
+        100,
+        true,
+    ));
+    let ability = game
+        .content
+        .ability("rfb-legacy.ability.summon-software-bug-l14-1d3-1")
+        .expect("software bug summon should compile")
+        .clone();
+    game.rng = RfbRng::seeded(
+        (0..128)
+            .find(|seed| {
+                let mut rng = RfbRng::seeded(*seed);
+                rng.bounded(3) == 2
+            })
+            .expect("bounded seeds should cover a four-bug summon"),
+    );
+    let plan = game
+        .monster_ability_target_plan(0, ability, 1)
+        .expect("software bug summon should have space");
+    let summon = game
+        .resolve_monster_ability_plan(
+            0,
+            "demo.actor.the-variant-maintainer",
+            &plan,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .summon
+        .expect("software bug summon should resolve");
+    assert_eq!(
+        summon.summoned_kind_ids,
+        vec!["demo.actor.software-bug".to_owned(); 4]
+    );
+}
+
+#[test]
 fn p71_banor_rupart_split_and_merge_preserve_hp_without_recording_deaths() {
     let mut game = Game::new(0);
     clear_monsters(&mut game);

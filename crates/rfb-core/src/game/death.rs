@@ -13,15 +13,23 @@ use crate::{
     error::CoreError,
     event::DomainEvent,
     resistance::{DamageType, ResistanceLevel},
-    state::{Actor, GoldPile, ItemInstance, ItemLocation},
+    state::{Actor, GoldPile, ItemInstance, ItemLocation, SummonIdentity},
 };
 
 use super::{
     ActorDeathRecord, CurseEquippedItemRequest, EquippedItemCurseTarget, FatalityPolicy, Game,
-    commit_damage_application, initial_item_curse, initial_item_runtime_state,
-    plan_damage_application, rfb_area_damage,
+    INITIAL_MONSTER_ENERGY_NEED, commit_damage_application, initial_item_curse,
+    initial_item_runtime_state, plan_damage_application, rfb_area_damage,
+    spawn_actor_from_definition,
 };
 use crate::save::initial_item_fuel;
+
+const VARIANT_MAINTAINER_KIND_ID: &str = "demo.actor.the-variant-maintainer";
+const SOFTWARE_BUG_KIND_ID: &str = "demo.actor.software-bug";
+const SOFTWARE_BUG_DEATH_SUMMON_SOURCE_ID: &str =
+    "rfb-legacy.ability.summon-software-bug-l14-1d3-1";
+const SOFTWARE_BUG_DEATH_SUMMON_COUNT: usize = 4;
+const LEGACY_SUMMON_DURATION_TURNS: u16 = 10_000;
 
 struct CarriedDrop {
     item_id: String,
@@ -98,6 +106,44 @@ fn rfb_bomb_damage(
 }
 
 impl Game {
+    fn summon_variant_maintainer_software_bugs(
+        &mut self,
+        actor: &Actor,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        if actor.kind_id != VARIANT_MAINTAINER_KIND_ID {
+            return;
+        }
+        let definition = self
+            .content
+            .actor(SOFTWARE_BUG_KIND_ID)
+            .expect("Variant Maintainer requires the Software bug actor")
+            .clone();
+        let positions = self
+            .open_positions_around_for_actor_kind(actor.position, 2, SOFTWARE_BUG_KIND_ID)
+            .into_iter()
+            .take(SOFTWARE_BUG_DEATH_SUMMON_COUNT)
+            .collect::<Vec<_>>();
+        for (ordinal, position) in positions.into_iter().enumerate() {
+            let id = self.summon_entity_id(SOFTWARE_BUG_DEATH_SUMMON_SOURCE_ID, ordinal);
+            let mut entity = spawn_actor_from_definition(
+                &mut self.rng,
+                &definition,
+                &id,
+                position,
+                INITIAL_MONSTER_ENERGY_NEED,
+                true,
+            );
+            entity.summon = Some(SummonIdentity {
+                owner_id: actor.id.clone(),
+                source_ability_id: SOFTWARE_BUG_DEATH_SUMMON_SOURCE_ID.to_owned(),
+                remaining_turns: LEGACY_SUMMON_DURATION_TURNS,
+            });
+            changed.insert(position);
+            self.entities.push(entity);
+        }
+    }
+
     fn apply_death_explosion_slow(&mut self, actor: &Actor, cells: &[(u32, Position)]) {
         if cells
             .iter()
@@ -547,6 +593,7 @@ impl Game {
         }
         self.apply_amberite_blood_curse(&dying_actor);
         self.actor_death_explosion(&dying_actor, events, changed, removed_entities)?;
+        self.summon_variant_maintainer_software_bugs(&dying_actor, changed);
         let index = self
             .entities
             .iter()
@@ -603,6 +650,7 @@ impl Game {
         events.push(death_event.clone());
         self.apply_amberite_blood_curse(&dying_actor);
         self.actor_death_explosion(&dying_actor, events, changed, removed_entities)?;
+        self.summon_variant_maintainer_software_bugs(&dying_actor, changed);
         let index = self
             .entities
             .iter()

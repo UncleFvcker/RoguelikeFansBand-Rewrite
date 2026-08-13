@@ -7022,3 +7022,9 @@ ability-legacy-summon-olympian-l90-1d2-name = Summon Olympians
 ability-legacy-summon-olympian-l90-1d2-description = Summons one or two Olympians of level 90 or lower.
 ability-legacy-summon-shambler-l67-1d4-name = Summon shamblers
 ability-legacy-summon-shambler-l67-1d4-description = Summons 1d4 shamblers.
+
+# P80 Variant Maintainer
+actor-demo-the-variant-maintainer-name = The Variant Maintainer
+actor-demo-the-variant-maintainer-description = A tired and confused maintainer muttering about memory corruption in cmd2.c.
+ability-legacy-summon-software-bug-l14-1d3-1-name = Summon software bugs
+ability-legacy-summon-software-bug-l14-1d3-1-description = Summons 1d3+1 software bugs.

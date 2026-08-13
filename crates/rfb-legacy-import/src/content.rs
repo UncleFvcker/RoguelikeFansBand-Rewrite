@@ -9703,6 +9703,19 @@ fn map_summon_spell_token(
         Some((base, rest)) => (base, Some(rest.strip_suffix(')')?)),
         None => (token, None),
     };
+    if base == "S_SOFTWARE_BUG" {
+        let suffix = "summon-software-bug-l14-1d3-1";
+        let id = format!("rfb-legacy.ability.{suffix}");
+        abilities.entry(id.clone()).or_insert_with(|| {
+            let mut ability = summon_category_ability(suffix, "bug", 14, 1, 3, 1, None);
+            ability["effect"]["batchCandidates"] = serde_json::json!([{
+                "actorKindId": "demo.actor.software-bug",
+                "weight": 1,
+            }]);
+            ability
+        });
+        return Some(id);
+    }
     if base == "S_DEAD_UNIQ" {
         let maximum_level = u32::from(level.max(1));
         let suffix = format!("summon-dead-unique-l{maximum_level}-1d2");
@@ -17199,6 +17212,30 @@ S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_ANT | S_SPIDER | S_HYDRA | S_LO
                 &mut abilities,
             )
             .is_none()
+        );
+    }
+
+    #[test]
+    fn variant_maintainer_summons_only_software_bugs() {
+        let mut abilities = BTreeMap::new();
+        let id = map_spell_token(
+            "S_SOFTWARE_BUG",
+            14,
+            2,
+            "demo.actor.the-variant-maintainer",
+            &mut abilities,
+        )
+        .expect("software bug summon should map");
+        assert_eq!(id, "rfb-legacy.ability.summon-software-bug-l14-1d3-1");
+        let effect = &abilities[&id]["effect"];
+        assert_eq!(effect["countDice"], 1);
+        assert_eq!(effect["countSides"], 3);
+        assert_eq!(effect["countBonus"], 1);
+        assert_eq!(
+            effect["batchCandidates"],
+            serde_json::json!([
+                { "actorKindId": "demo.actor.software-bug", "weight": 1 }
+            ])
         );
     }
 
