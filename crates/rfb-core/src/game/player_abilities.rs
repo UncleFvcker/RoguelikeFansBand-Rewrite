@@ -134,6 +134,47 @@ impl Game {
     }
 
     pub(super) fn apply_player_level_scaling(ability: &mut AbilityDefinition, level: u16) {
+        match &mut ability.effect {
+            AbilityEffectDefinition::IdentifyOrMassIdentify {
+                mass_at_level,
+                upgraded_name_key,
+                upgraded_description_key,
+                mass,
+            } => {
+                *mass = level >= *mass_at_level;
+                if *mass {
+                    ability.name_key.clone_from(upgraded_name_key);
+                    ability.description_key.clone_from(upgraded_description_key);
+                    ability.target.modes = vec![AbilityTargetModeDefinition::SelfTarget];
+                }
+            }
+            AbilityEffectDefinition::MassSleepOrStasis {
+                stasis_at_level,
+                sleep_power_multiplier,
+                stasis_power_multiplier,
+                power_divisor,
+                upgraded_name_key,
+                upgraded_description_key,
+                stasis,
+                power,
+            } => {
+                *stasis = level >= *stasis_at_level;
+                if *stasis {
+                    ability.name_key.clone_from(upgraded_name_key);
+                    ability.description_key.clone_from(upgraded_description_key);
+                }
+                let multiplier = if *stasis {
+                    *stasis_power_multiplier
+                } else {
+                    *sleep_power_multiplier
+                };
+                *power = level
+                    .saturating_mul(multiplier)
+                    .checked_div(*power_divisor)
+                    .expect("validated mass sleep divisor must be positive");
+            }
+            _ => {}
+        }
         if let AbilityEffectDefinition::RandomChoice { branches, .. } = &mut ability.effect {
             for branch in branches {
                 for scaling in branch.level_scaling.clone() {
@@ -160,11 +201,23 @@ impl Game {
             };
             apply_ability_level_scaling(effect, &scaling, level);
         }
+        if let AbilityEffectDefinition::DimensionDoor { range } = &ability.effect {
+            ability.target.range = *range;
+        }
     }
 
     pub(super) fn apply_player_spell_power(ability: &mut AbilityDefinition, bonus: i32) {
         ability.spell_power_bonus = bonus;
         for definition in ability.spell_power_fields.clone() {
+            if definition.effect_index == 0
+                && definition.field == AbilitySpellPowerField::StatusPower
+                && let AbilityEffectDefinition::MassSleepOrStasis { power, .. } =
+                    &mut ability.effect
+            {
+                *power = u16::try_from(spell_power_value(u64::from(*power), bonus))
+                    .expect("validated mass sleep power must fit u16");
+                continue;
+            }
             let effect = match &mut ability.effect {
                 AbilityEffectDefinition::Sequence { effects } => effects
                     .get_mut(usize::from(definition.effect_index))
@@ -175,6 +228,9 @@ impl Game {
                 }
             };
             apply_ability_spell_power(effect, definition, bonus);
+        }
+        if let AbilityEffectDefinition::DimensionDoor { range } = &ability.effect {
+            ability.target.range = *range;
         }
     }
 
@@ -213,6 +269,17 @@ impl Game {
             profile
                 .spell_damage_bonus_per_level
                 .saturating_mul(level / u16::from(profile.spell_damage_bonus_level_divisor)),
+        );
+        let bonus = bonus.saturating_mul(
+            if ability
+                .tags
+                .iter()
+                .any(|tag| tag == "double-spell-damage-bonus")
+            {
+                2
+            } else {
+                1
+            },
         );
         if bonus == 0 {
             return;

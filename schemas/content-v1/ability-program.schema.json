@@ -634,6 +634,115 @@
           "additionalProperties": false,
           "properties": {
             "type": {
+              "const": "probe",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "terrainId": {
+              "type": "string"
+            },
+            "type": {
+              "const": "create-door",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "terrainId"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "devicePowerBonus": {
+              "format": "int32",
+              "type": "integer"
+            },
+            "durationBase": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "device-mastery",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "durationBase",
+            "devicePowerBonus"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "maximumDistance": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "banish",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "maximumDistance"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "durationBonus": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "durationDice": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "durationSides": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "invulnerability",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "durationDice",
+            "durationSides",
+            "durationBonus"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
               "const": "bird-drop",
               "type": "string"
             }
@@ -1206,6 +1315,73 @@
         {
           "additionalProperties": false,
           "properties": {
+            "downTerrainId": {
+              "type": "string"
+            },
+            "type": {
+              "const": "create-stair",
+              "type": "string"
+            },
+            "upTerrainId": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "upTerrainId",
+            "downTerrainId"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "teleport-town",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "self-knowledge",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "range": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "dimension-door",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "range"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
             "actorKindId": {
               "type": "string"
             },
@@ -1540,6 +1716,7 @@
                 "charisma": 0,
                 "constitution": 0,
                 "defense": 0,
+                "devicePowerBonus": 0,
                 "dexterity": 0,
                 "intelligence": 0,
                 "maxHp": 0,
@@ -1619,6 +1796,9 @@
                 "mana": {
                   "$ref": "#/$defs/ActorResistanceLevel"
                 },
+                "meteor": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
                 "nether": {
                   "$ref": "#/$defs/ActorResistanceLevel"
                 },
@@ -1640,6 +1820,9 @@
                 "psi": {
                   "$ref": "#/$defs/ActorResistanceLevel"
                 },
+                "rocket": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
                 "shards": {
                   "$ref": "#/$defs/ActorResistanceLevel"
                 },
@@ -1647,6 +1830,9 @@
                   "$ref": "#/$defs/ActorResistanceLevel"
                 },
                 "storm": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
+                "telekinesis": {
                   "$ref": "#/$defs/ActorResistanceLevel"
                 },
                 "time": {
@@ -1883,6 +2069,34 @@
             "type",
             "fullIdentifyPower",
             "fullIdentifyRollSides"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "massAtLevel": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "identify-or-mass-identify",
+              "type": "string"
+            },
+            "upgradedDescriptionKey": {
+              "type": "string"
+            },
+            "upgradedNameKey": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "massAtLevel",
+            "upgradedNameKey",
+            "upgradedDescriptionKey"
           ],
           "type": "object"
         },
@@ -2150,6 +2364,55 @@
             "intensity",
             "durationTicks",
             "stacking"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "powerDivisor": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "sleepPowerMultiplier": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "stasisAtLevel": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "stasisPowerMultiplier": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "mass-sleep-or-stasis",
+              "type": "string"
+            },
+            "upgradedDescriptionKey": {
+              "type": "string"
+            },
+            "upgradedNameKey": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "stasisAtLevel",
+            "sleepPowerMultiplier",
+            "stasisPowerMultiplier",
+            "powerDivisor",
+            "upgradedNameKey",
+            "upgradedDescriptionKey"
           ],
           "type": "object"
         },
@@ -2433,7 +2696,10 @@
         "control-power",
         "genocide-power",
         "summon-maximum-level",
-        "maximum-weight"
+        "maximum-weight",
+        "banish-distance",
+        "device-mastery-duration-base",
+        "device-power-bonus"
       ],
       "type": "string"
     },
@@ -2441,7 +2707,8 @@
       "enum": [
         "self",
         "cast-target",
-        "item"
+        "item",
+        "town"
       ],
       "type": "string"
     },
@@ -2549,7 +2816,10 @@
         "ice",
         "water",
         "psi",
-        "curse"
+        "curse",
+        "meteor",
+        "rocket",
+        "telekinesis"
       ],
       "type": "string"
     },
@@ -2678,6 +2948,11 @@
           "type": "integer"
         },
         "defense": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "devicePowerBonus": {
           "default": 0,
           "format": "int32",
           "type": "integer"

@@ -304,7 +304,169 @@ impl Game {
                 .and_then(|entity| {
                     self.targeted_projectile_path_through_target(entity.position, range)
                 }),
-            TargetSelection::SelfTarget | TargetSelection::Item { .. } => None,
+            TargetSelection::SelfTarget
+            | TargetSelection::Item { .. }
+            | TargetSelection::Town { .. } => None,
+        }
+    }
+}
+
+fn monster_stun_amount(damage: i32) -> i32 {
+    let damage = damage.max(0);
+    if damage < 1 {
+        return 1;
+    }
+    for ((left_damage, left_stun), (right_damage, right_stun)) in
+        [(1, 1), (10, 10), (100, 25), (500, 50)]
+            .into_iter()
+            .zip([(10, 10), (100, 25), (500, 50)])
+    {
+        if damage < right_damage {
+            return left_stun
+                + (damage - left_damage) * (right_stun - left_stun) / (right_damage - left_damage);
+        }
+    }
+    50
+}
+
+impl Game {
+    fn passive_teleport_actor(
+        &mut self,
+        index: usize,
+        distance: u32,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let from = self.entities[index].position;
+        let mut minimum = distance / 2;
+        let mut maximum = distance.max(1);
+        for _ in 0..8 {
+            let candidates = (0..self.height)
+                .flat_map(|y| {
+                    (0..self.width).map(move |x| Position {
+                        x: i32::from(x),
+                        y: i32::from(y),
+                    })
+                })
+                .filter(|position| {
+                    let actual_distance = rfb_distance(from, *position);
+                    actual_distance >= minimum
+                        && actual_distance <= maximum
+                        && *position != self.player.position
+                        && self.actor_can_enter_position(index, *position)
+                        && !self
+                            .entities
+                            .iter()
+                            .enumerate()
+                            .any(|(other_index, entity)| {
+                                other_index != index
+                                    && entity.hp > 0
+                                    && entity.position == *position
+                            })
+                })
+                .collect::<Vec<_>>();
+            if !candidates.is_empty() {
+                let candidate_index = if candidates.len() == 1 {
+                    0
+                } else {
+                    usize::try_from(self.rng.bounded(candidates.len() as u64))
+                        .expect("bounded passive teleport destination must fit usize")
+                };
+                self.entities[index].position = candidates[candidate_index];
+                changed.insert(from);
+                changed.insert(candidates[candidate_index]);
+                return;
+            }
+            minimum /= 2;
+            maximum = maximum.saturating_mul(2);
+        }
+    }
+
+    fn resolve_ability_damage_rider(
+        &mut self,
+        index: usize,
+        ability_id: &str,
+        damage_type: DamageType,
+        raw_damage: i32,
+        resistance: ResistanceLevel,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let definition = self
+            .actor_runtime_definition(&self.entities[index])
+            .expect("ability target definition must remain available")
+            .clone();
+        let has_tag = |tag: &str| definition.tags.iter().any(|candidate| candidate == tag);
+        let level = u64::from(definition.level);
+        let stun_immune = self.actor_has_status_immunity(index, STATUS_STUN);
+        let stun_amount = monster_stun_amount(raw_damage);
+
+        match damage_type {
+            DamageType::Ice if !stun_immune => {
+                let intensity =
+                    u16::try_from(self.rng.bounded(15) + 1).expect("ice stun roll must fit u16");
+                self.apply_actor_melee_status(index, STATUS_STUN, i32::from(intensity), ability_id);
+            }
+            DamageType::Plasma | DamageType::Water | DamageType::Sound
+                if !stun_immune
+                    && !matches!(
+                        resistance,
+                        ResistanceLevel::Resistant
+                            | ResistanceLevel::Strong
+                            | ResistanceLevel::Immune
+                    ) =>
+            {
+                let save_maximum = (1 + level / 12).saturating_mul(level).max(1);
+                if self.rng.bounded(save_maximum)
+                    < u64::try_from(raw_damage.max(0)).unwrap_or(u64::MAX)
+                {
+                    self.apply_actor_melee_status(index, STATUS_STUN, stun_amount, ability_id);
+                }
+            }
+            DamageType::Inertia
+                if !matches!(
+                    resistance,
+                    ResistanceLevel::Resistant | ResistanceLevel::Strong | ResistanceLevel::Immune
+                ) && !has_tag("unique") =>
+            {
+                let save_sides = u64::try_from((raw_damage - 10).max(1)).unwrap_or(1);
+                if level <= self.rng.bounded(save_sides) + 11 {
+                    self.entities[index].minor_slow =
+                        self.entities[index].minor_slow.saturating_add(5).min(10);
+                }
+            }
+            DamageType::Gravity
+                if !matches!(
+                    resistance,
+                    ResistanceLevel::Resistant | ResistanceLevel::Strong | ResistanceLevel::Immune
+                ) =>
+            {
+                let teleport_resisted = has_tag("guardian")
+                    || (has_tag("resist-teleport")
+                        && (has_tag("unique") || level > self.rng.bounded(100) + 1));
+                if !has_tag("unique") {
+                    let save_sides = u64::try_from((raw_damage - 10).max(1)).unwrap_or(1);
+                    if level <= self.rng.bounded(save_sides) + 11 {
+                        self.apply_actor_melee_status(index, STATUS_SLOW, 50, ability_id);
+                    }
+                    if level <= self.rng.bounded(save_sides) + 11 {
+                        self.apply_actor_melee_status(index, STATUS_STUN, stun_amount, ability_id);
+                    }
+                }
+                if !teleport_resisted {
+                    self.passive_teleport_actor(index, 10, changed);
+                }
+            }
+            DamageType::Telekinesis => {
+                let moves = self.rng.bounded(4) == 0 && !has_tag("guardian");
+                let level_multiplier = if has_tag("unique") { 2_u64 } else { 1 };
+                let save_sides = u64::try_from(raw_damage.max(1)).unwrap_or(1);
+                if level_multiplier * level <= 5 + self.rng.bounded(save_sides) + 1 {
+                    self.apply_actor_melee_status(index, STATUS_STUN, stun_amount, ability_id);
+                }
+                if moves {
+                    self.passive_teleport_actor(index, 7, changed);
+                }
+            }
+            _ => {}
         }
     }
 
@@ -992,8 +1154,24 @@ impl Game {
         self.entities[index].alerted = true;
         changed.insert(self.entities[index].position);
         let target = self.actor_derived_stats(&self.entities[index], &definition, false);
-        let resistance = resistance_override
-            .unwrap_or_else(|| self.entities[index].resistances.level(damage_type));
+        let resistance = resistance_override.unwrap_or_else(|| {
+            let direct = self.entities[index].resistances.level(match damage_type {
+                DamageType::Ice => DamageType::Cold,
+                damage_type => damage_type,
+            });
+            if damage_type == DamageType::Rocket && direct == ResistanceLevel::Normal {
+                match self.entities[index].resistances.level(DamageType::Shards) {
+                    ResistanceLevel::Resistant
+                    | ResistanceLevel::Strong
+                    | ResistanceLevel::Immune => ResistanceLevel::Resistant,
+                    ResistanceLevel::Vulnerable | ResistanceLevel::Normal => {
+                        ResistanceLevel::Normal
+                    }
+                }
+            } else {
+                direct
+            }
+        });
         let damage = resolve_armored_damage(
             raw_damage,
             damage_type,
@@ -1012,6 +1190,14 @@ impl Game {
         self.wake_entity_after_damage(index, damage.applied, events);
         if !application.fatal {
             self.anger_monster_from_spell_damage(index, damage.applied);
+            self.resolve_ability_damage_rider(
+                index,
+                ability_id,
+                damage_type,
+                raw_damage,
+                resistance,
+                changed,
+            );
             self.resolve_monster_fear_aura(index, "hurt", true, events);
         }
         if application.fatal && award_player_kill {

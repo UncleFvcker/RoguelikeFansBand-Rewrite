@@ -1,0 +1,1 @@
+{"$schema":"https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json","formatVersion":1,"id":"demo.ability-program.sorcery-haste-self","input":"self","steps":[{"type":"apply-status","statusKindId":"rfb.status.haste","intensity":1,"durationTicks":0,"durationDice":1,"durationSides":20,"stacking":"extend"}]}

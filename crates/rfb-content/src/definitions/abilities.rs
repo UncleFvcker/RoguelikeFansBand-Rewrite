@@ -33,6 +33,7 @@ pub enum AbilityTargetModeDefinition {
     Position,
     Entity,
     Item,
+    Town,
     #[serde(rename = "self")]
     SelfTarget,
 }
@@ -122,6 +123,9 @@ pub enum AbilityLevelScalingField {
     GenocidePower,
     SummonMaximumLevel,
     MaximumWeight,
+    BanishDistance,
+    DeviceMasteryDurationBase,
+    DevicePowerBonus,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
@@ -144,6 +148,11 @@ pub enum AbilitySpellPowerField {
     RandomChoiceRoll,
     MaledictionDeathRayPower,
     MaledictionFearPower,
+    MaximumWeight,
+    BanishDistance,
+    DeviceMasteryDurationBase,
+    InvulnerabilityDuration,
+    ClairvoyanceDurationSides,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -402,6 +411,22 @@ pub enum AbilityEffectDefinition {
         telepathy_duration_dice: u8,
         telepathy_duration_sides: u16,
     },
+    Probe,
+    CreateDoor {
+        terrain_id: String,
+    },
+    DeviceMastery {
+        duration_base: u16,
+        device_power_bonus: i32,
+    },
+    Banish {
+        maximum_distance: u16,
+    },
+    Invulnerability {
+        duration_dice: u16,
+        duration_sides: u16,
+        duration_bonus: u16,
+    },
     BirdDrop,
     DrainResource {
         amount: u32,
@@ -485,6 +510,15 @@ pub enum AbilityEffectDefinition {
     },
     TeleportTarget,
     TeleportLevel,
+    CreateStair {
+        up_terrain_id: String,
+        down_terrain_id: String,
+    },
+    TeleportTown,
+    SelfKnowledge,
+    DimensionDoor {
+        range: u16,
+    },
     Summon {
         actor_kind_id: String,
         count: u8,
@@ -610,6 +644,14 @@ pub enum AbilityEffectDefinition {
         full_identify_power: u16,
         full_identify_roll_sides: u16,
     },
+    IdentifyOrMassIdentify {
+        mass_at_level: u16,
+        upgraded_name_key: String,
+        upgraded_description_key: String,
+        #[serde(skip)]
+        #[cfg_attr(feature = "schemas", schemars(skip))]
+        mass: bool,
+    },
     RestoreVitality {
         life_force: u16,
     },
@@ -658,6 +700,20 @@ pub enum AbilityEffectDefinition {
         power: Option<u16>,
         #[serde(default)]
         target_category: Option<String>,
+    },
+    MassSleepOrStasis {
+        stasis_at_level: u16,
+        sleep_power_multiplier: u16,
+        stasis_power_multiplier: u16,
+        power_divisor: u16,
+        upgraded_name_key: String,
+        upgraded_description_key: String,
+        #[serde(skip)]
+        #[cfg_attr(feature = "schemas", schemars(skip))]
+        stasis: bool,
+        #[serde(skip)]
+        #[cfg_attr(feature = "schemas", schemars(skip))]
+        power: u16,
     },
     BrandWeapon {
         affix_id: String,
@@ -783,6 +839,9 @@ fn ability_level_scaling_base_and_limit(
         (AbilityEffectDefinition::BlinkSelf { radius }, AbilityLevelScalingField::Radius) => {
             Some((u64::from(*radius), 255))
         }
+        (AbilityEffectDefinition::DimensionDoor { range }, AbilityLevelScalingField::Radius) => {
+            Some((u64::from(*range), 255))
+        }
         (
             AbilityEffectDefinition::BoltOrBeamDamage {
                 beam_chance_percent,
@@ -841,6 +900,20 @@ fn ability_level_scaling_base_and_limit(
             },
             AbilityLevelScalingField::MaximumWeight,
         ) => Some((u64::from(*maximum_weight_tenths_pound), 1_000_000)),
+        (
+            AbilityEffectDefinition::Banish { maximum_distance },
+            AbilityLevelScalingField::BanishDistance,
+        ) => Some((u64::from(*maximum_distance), 1_000)),
+        (
+            AbilityEffectDefinition::DeviceMastery { duration_base, .. },
+            AbilityLevelScalingField::DeviceMasteryDurationBase,
+        ) => Some((u64::from(*duration_base), 1_000)),
+        (
+            AbilityEffectDefinition::DeviceMastery {
+                device_power_bonus, ..
+            },
+            AbilityLevelScalingField::DevicePowerBonus,
+        ) => Some((u64::try_from(*device_power_bonus).ok()?, 1_000)),
         _ => None,
     }
 }
@@ -957,6 +1030,7 @@ pub(crate) fn valid_ability_spell_power(
                     AbilityEffectDefinition::AreaDamage { .. }
                         | AbilityEffectDefinition::BoltOrAreaDamage { .. }
                         | AbilityEffectDefinition::ConeDamage { .. }
+                        | AbilityEffectDefinition::DimensionDoor { .. }
                 ),
                 AbilitySpellPowerField::StatusDurationTicks => matches!(
                     effect,
@@ -970,6 +1044,7 @@ pub(crate) fn valid_ability_spell_power(
                     effect,
                     AbilityEffectDefinition::ApplyStatus { power: Some(_), .. }
                         | AbilityEffectDefinition::VisibleApplyStatus { power: Some(_), .. }
+                        | AbilityEffectDefinition::MassSleepOrStasis { .. }
                 ),
                 AbilitySpellPowerField::ControlPower => {
                     matches!(effect, AbilityEffectDefinition::Control { .. })
@@ -992,6 +1067,21 @@ pub(crate) fn valid_ability_spell_power(
                 AbilitySpellPowerField::MaledictionDeathRayPower
                 | AbilitySpellPowerField::MaledictionFearPower => {
                     matches!(effect, AbilityEffectDefinition::Malediction { .. })
+                }
+                AbilitySpellPowerField::MaximumWeight => {
+                    matches!(effect, AbilityEffectDefinition::FetchItem { .. })
+                }
+                AbilitySpellPowerField::BanishDistance => {
+                    matches!(effect, AbilityEffectDefinition::Banish { .. })
+                }
+                AbilitySpellPowerField::DeviceMasteryDurationBase => {
+                    matches!(effect, AbilityEffectDefinition::DeviceMastery { .. })
+                }
+                AbilitySpellPowerField::InvulnerabilityDuration => {
+                    matches!(effect, AbilityEffectDefinition::Invulnerability { .. })
+                }
+                AbilitySpellPowerField::ClairvoyanceDurationSides => {
+                    matches!(effect, AbilityEffectDefinition::Clairvoyance { .. })
                 }
             };
             valid && unique.insert((definition.effect_index, definition.field))

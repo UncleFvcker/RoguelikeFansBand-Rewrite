@@ -7728,7 +7728,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
         .find(|table| table.id == "demo.loot-table.base-items")
         .expect("base item pool should exist");
 
-    assert_eq!(base_items.entries.len(), 313);
+    assert_eq!(base_items.entries.len(), 321);
 
     let selection: serde_json::Value = serde_json::from_slice(
         &std::fs::read(pack_path.join("legacy-item-selection.json"))
@@ -7776,7 +7776,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
                     .to_owned()
             });
     }
-    assert_eq!(active_source_items.len(), 289);
+    assert_eq!(active_source_items.len(), 297);
 
     let source_items_without_allocations =
         BTreeSet::from([33, 34, 36, 37, 345, 346, 347, 400, 401, 460]);
@@ -7790,7 +7790,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
         .iter()
         .map(|entry| entry.item_kind_id.as_str())
         .collect::<BTreeSet<_>>();
-    assert_eq!(expected_item_ids.len(), 279);
+    assert_eq!(expected_item_ids.len(), 287);
     assert_eq!(actual_item_ids, expected_item_ids);
 
     // Source 313 is one Staff allocation split into two formal adaptations.
@@ -8330,11 +8330,15 @@ fn bookstore_stocks_original_town_books() {
             .map(|stock| stock.item_kind_id.as_str())
             .collect::<BTreeSet<_>>(),
         BTreeSet::from([
+            "demo.item.beginners-handbook",
             "demo.item.black-mass",
             "demo.item.black-prayers",
+            "demo.item.book-of-elements",
             "demo.item.cantrips-for-beginners",
+            "demo.item.earth-wind-and-fire",
             "demo.item.major-arcana",
             "demo.item.manual-of-mastery",
+            "demo.item.master-sorcerers-handbook",
             "demo.item.minor-arcana",
         ])
     );
@@ -8347,7 +8351,11 @@ fn bookstore_stocks_original_town_books() {
         .collect::<std::collections::BTreeMap<_, _>>();
     assert_eq!(values["demo.item.black-prayers"], 100);
     assert_eq!(values["demo.item.black-mass"], 1_000);
+    assert_eq!(values["demo.item.book-of-elements"], 100);
+    assert_eq!(values["demo.item.beginners-handbook"], 100);
+    assert_eq!(values["demo.item.master-sorcerers-handbook"], 1_000);
     assert_eq!(values["demo.item.cantrips-for-beginners"], 100);
+    assert_eq!(values["demo.item.earth-wind-and-fire"], 1_000);
     assert_eq!(values["demo.item.minor-arcana"], 250);
     assert_eq!(values["demo.item.manual-of-mastery"], 2_500);
 }
@@ -8372,14 +8380,18 @@ fn black_market_stocks_original_non_town_books_and_priced_p3_consumables() {
             .collect::<BTreeSet<_>>(),
         BTreeSet::from([
             "demo.item.black-channels",
+            "demo.item.day-of-ragnarok",
             "demo.item.disease-mushroom",
             "demo.item.necronomicon",
+            "demo.item.path-of-destruction",
+            "demo.item.pattern-sorcery",
             "demo.item.restore-constitution-mushroom",
             "demo.item.restore-strength-mushroom",
             "demo.item.unhealth-mushroom",
             "demo.item.invulnerability-potion",
             "demo.item.giant-strength-potion",
             "demo.item.great-clarity-potion",
+            "demo.item.grimoire-of-power",
             "demo.item.understanding-scroll",
             "demo.item.inventory-protection-scroll",
             "demo.item.enlightenment-potion",
@@ -8406,6 +8418,8 @@ fn black_market_stocks_original_non_town_books_and_priced_p3_consumables() {
         .collect::<std::collections::BTreeMap<_, _>>();
     assert_eq!(values["demo.item.black-channels"], 15_000);
     assert_eq!(values["demo.item.necronomicon"], 100_000);
+    assert_eq!(values["demo.item.day-of-ragnarok"], 100_000);
+    assert_eq!(values["demo.item.path-of-destruction"], 15_000);
     assert_eq!(values["demo.item.unhealth-mushroom"], 50);
     assert_eq!(values["demo.item.disease-mushroom"], 50);
     assert_eq!(values["demo.item.restore-constitution-mushroom"], 350);

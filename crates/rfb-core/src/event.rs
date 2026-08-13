@@ -5,14 +5,15 @@ use std::collections::BTreeMap;
 use rfb_protocol::{
     AbilityAreaDamageResolutionDto, AbilityBeamDamageResolutionDto, AbilityCastResolutionDto,
     AbilityConeDamageResolutionDto, AbilityDetectResolutionDto, AbilityEffectsResolutionDto,
-    AbilityMonsterProbeResolutionDto, AbilitySummonResolutionDto, AbilityTeleportResolutionDto,
-    AbilityTerrainTransformResolutionDto, AbilityVisibleDamageResolutionDto, CheckResolutionDto,
-    Direction, GameEventDto, GameEventOutcomeDto, HealingResolutionDto,
-    ItemCurseRemovalResolutionDto, ItemCurseResolutionDto, ItemCurseSeverityDto,
-    ItemEnchantmentResolutionDto, ItemIdentifyResolutionDto, ItemQualityDto,
-    MonsterAbilityCastResolutionDto, MonsterAbilityDecisionResolutionDto,
-    MonsterDisplacementResolutionDto, Position, ProjectileTraceDto, ResourceRecoveryResolutionDto,
-    RestResolutionDto, RestStopReasonDto, SummonCommandModeDto, SummonCommandResolutionDto,
+    AbilityMonsterProbeResolutionDto, AbilityProbeAlignmentDto, AbilityProbeTargetDto,
+    AbilitySummonResolutionDto, AbilityTeleportResolutionDto, AbilityTerrainTransformResolutionDto,
+    AbilityVisibleDamageResolutionDto, CheckResolutionDto, Direction, GameEventDto,
+    GameEventOutcomeDto, HealingResolutionDto, ItemCurseRemovalResolutionDto,
+    ItemCurseResolutionDto, ItemCurseSeverityDto, ItemEnchantmentResolutionDto,
+    ItemIdentifyResolutionDto, ItemQualityDto, MonsterAbilityCastResolutionDto,
+    MonsterAbilityDecisionResolutionDto, MonsterDisplacementResolutionDto, Position,
+    ProjectileTraceDto, ResourceRecoveryResolutionDto, RestResolutionDto, RestStopReasonDto,
+    SummonCommandModeDto, SummonCommandResolutionDto,
 };
 
 use crate::{
@@ -179,6 +180,15 @@ pub(crate) enum DomainEvent {
         ability_id: String,
         resolution: AbilityEffectsResolutionDto,
         trace: Option<ProjectileTrace>,
+    },
+    AbilitySelfKnowledge {
+        ability_id: String,
+        name_key: String,
+        report: SelfKnowledgeReport,
+    },
+    AbilityProbed {
+        ability_id: String,
+        report: AbilityProbeTargetDto,
     },
     MonsterAbilityDecision {
         resolution: MonsterAbilityDecisionResolutionDto,
@@ -1697,6 +1707,58 @@ impl DomainEvent {
                     Some(trace) => with_trace(event, trace),
                     None => event,
                 }
+            }
+            Self::AbilitySelfKnowledge {
+                ability_id,
+                name_key,
+                report,
+            } => dto(
+                "ability.self-knowledge",
+                "item-use-self-knowledge",
+                [
+                    ("source", ability_id),
+                    ("nameKey", name_key),
+                    ("level", report.level.to_string()),
+                    ("hp", report.hp.to_string()),
+                    ("maxHp", report.max_hp.to_string()),
+                    ("gold", report.gold.to_string()),
+                    ("nutrition", report.nutrition.to_string()),
+                    ("attack", report.attack.to_string()),
+                    ("defense", report.defense.to_string()),
+                    ("meleeSkill", report.melee_skill.to_string()),
+                    ("armorClass", report.armor_class.to_string()),
+                    ("speed", report.speed.to_string()),
+                    ("strength", report.attributes[0].clone()),
+                    ("intelligence", report.attributes[1].clone()),
+                    ("wisdom", report.attributes[2].clone()),
+                    ("dexterity", report.attributes[3].clone()),
+                    ("constitution", report.attributes[4].clone()),
+                    ("charisma", report.attributes[5].clone()),
+                    ("statuses", report.statuses),
+                    ("resistances", report.resistances),
+                    ("resources", report.resources),
+                ],
+            ),
+            Self::AbilityProbed { ability_id, report } => {
+                let alignment = match report.alignment {
+                    AbilityProbeAlignmentDto::Neutral => "neutral",
+                    AbilityProbeAlignmentDto::Good => "good",
+                    AbilityProbeAlignmentDto::Evil => "evil",
+                    AbilityProbeAlignmentDto::GoodAndEvil => "good-and-evil",
+                };
+                dto(
+                    "ability.probe",
+                    "ability-probe",
+                    [
+                        ("source", ability_id),
+                        ("target", report.target_kind_id),
+                        ("hp", report.hp.to_string()),
+                        ("maxHp", report.max_hp.to_string()),
+                        ("speed", report.speed.to_string()),
+                        ("alignment", alignment.to_owned()),
+                        ("faction", format!("{:?}", report.faction).to_lowercase()),
+                    ],
+                )
             }
             Self::MonsterAbilityDecision { resolution } => {
                 let target = resolution

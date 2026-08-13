@@ -25,9 +25,12 @@
         "maxHp": 84,
         "baseSpeed": 109,
         "energyNeed": 100,
+        "minorSlow": 0,
         "alerted": false,
         "nice": false,
         "visibleInvisible": false,
+        "anger": 0,
+        "friendly": false,
         "castingCooldownRemaining": 0
       }
     ]
@@ -46,7 +49,7 @@
       "turn": 1,
       "worldTick": 9,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 171,
+      "rngDrawCounter": 178,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -1210,7 +1213,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1244,7 +1248,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1278,7 +1283,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1312,7 +1318,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1340,7 +1347,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "unexamined"
         }
@@ -1366,7 +1374,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "equipmentBonuses": {
             "meleeAttacks": 0,
@@ -1407,7 +1416,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "identified",
           "quality": "ordinary",
@@ -1443,7 +1453,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "identified",
           "quality": "ordinary",
@@ -1518,7 +1529,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 173,
+      "nextItemInstanceSerial": 182,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -1526,7 +1537,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "ffcfcf7baa9d550339bc872f0b1313aff2374f587a44c0749ffb06eb9148c044"
+      "stateHash": "a9f79290c8a0f792e62ac703e5ee9c7b0e0a15d766d19cce728fb37610348cff"
     },
     "events": [
       {

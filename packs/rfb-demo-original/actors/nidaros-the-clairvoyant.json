@@ -128,7 +128,8 @@
   "role": "monster",
   "speed": 121,
   "statusImmunities": [
-    "rfb.status.confusion"
+    "rfb.status.confusion",
+    "rfb.status.stun"
   ],
   "tags": [
     "evil",

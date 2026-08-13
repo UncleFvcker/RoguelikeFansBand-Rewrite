@@ -29,7 +29,7 @@
       "turn": 1,
       "worldTick": 50000,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 170,
+      "rngDrawCounter": 179,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -279,47 +279,47 @@
           },
           "stock": [
             {
-              "id": "generated.item.173",
+              "id": "generated.item.182",
               "kindId": "demo.item.ration-of-food",
               "displayNameKey": "item-demo-ration-of-food-name",
-              "quantity": 4,
+              "quantity": 2,
               "maximumQuantity": 0,
               "unitPrice": 3,
               "weightTenthsPound": 10,
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.174",
+              "id": "generated.item.183",
               "kindId": "demo.item.hard-biscuit",
               "displayNameKey": "item-demo-hard-biscuit-name",
-              "quantity": 2,
+              "quantity": 5,
               "maximumQuantity": 0,
               "unitPrice": 1,
               "weightTenthsPound": 2,
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.175",
+              "id": "generated.item.184",
               "kindId": "demo.item.strip-of-venison",
               "displayNameKey": "item-demo-strip-of-venison-name",
-              "quantity": 4,
+              "quantity": 3,
               "maximumQuantity": 0,
               "unitPrice": 2,
               "weightTenthsPound": 2,
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.176",
+              "id": "generated.item.185",
               "kindId": "demo.item.water-potion",
               "displayNameKey": "item-demo-water-potion-name",
-              "quantity": 2,
+              "quantity": 4,
               "maximumQuantity": 0,
               "unitPrice": 1,
               "weightTenthsPound": 4,
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.177",
+              "id": "generated.item.186",
               "kindId": "demo.item.apple-juice",
               "displayNameKey": "item-demo-apple-juice-name",
               "quantity": 1,
@@ -1250,7 +1250,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1284,7 +1285,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1318,7 +1320,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1352,7 +1355,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1386,7 +1390,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1420,7 +1425,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1454,7 +1460,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1482,7 +1489,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "unexamined"
         }
@@ -1508,7 +1516,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "equipmentBonuses": {
             "meleeAttacks": 0,
@@ -1549,7 +1558,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "identified",
           "quality": "ordinary",
@@ -1585,7 +1595,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "identified",
           "quality": "ordinary",
@@ -1672,7 +1683,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 178,
+      "nextItemInstanceSerial": 187,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -1680,7 +1691,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "dc4a2b550acb6cd2b22de5e97dbb567d106920a19a166e0f000019af469c28f7"
+      "stateHash": "2f122defc517b8bc7a837e5b8e768769dc11ab3abaccdbfc8941cdbf6ba2b1cf"
     },
     "events": [
       {

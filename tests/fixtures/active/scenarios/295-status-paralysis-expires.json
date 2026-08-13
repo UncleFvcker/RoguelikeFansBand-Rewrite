@@ -24,7 +24,8 @@
           "constitution": 0,
           "charisma": 0,
           "speed": 0,
-          "spellPowerBonus": 0
+          "spellPowerBonus": 0,
+          "devicePowerBonus": 0
         },
         "grantedEquipmentBonuses": {
           "meleeAttacks": 0,
@@ -68,7 +69,7 @@
       "turn": 2,
       "worldTick": 20,
       "lastCommandSeq": 2,
-      "rngDrawCounter": 169,
+      "rngDrawCounter": 176,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -1219,7 +1220,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1253,7 +1255,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1287,7 +1290,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1321,7 +1325,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1355,7 +1360,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1389,7 +1395,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1423,7 +1430,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1451,7 +1459,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "unexamined"
         }
@@ -1477,7 +1486,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "equipmentBonuses": {
             "meleeAttacks": 0,
@@ -1518,7 +1528,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "identified",
           "quality": "ordinary",
@@ -1554,7 +1565,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "identified",
           "quality": "ordinary",
@@ -1641,7 +1653,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 178,
+      "nextItemInstanceSerial": 179,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -1649,7 +1661,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "a10234306fe1bab6f4c559a3e1ec7ad247ea29f6ac3e84fed6c966d8d20f55cf"
+      "stateHash": "db2b9890418035b68c6f5083f09901c00e6271b7a3412dbec0da73229d7e8539"
     },
     "events": [
       {
@@ -1667,6 +1679,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "a10234306fe1bab6f4c559a3e1ec7ad247ea29f6ac3e84fed6c966d8d20f55cf"
+    "saveRoundTripStateHash": "db2b9890418035b68c6f5083f09901c00e6271b7a3412dbec0da73229d7e8539"
   }
 }

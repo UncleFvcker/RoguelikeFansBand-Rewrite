@@ -1,0 +1,24 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/build.schema.json",
+  "formatVersion": 1,
+  "id": "demo.build.high-mage-sorcery",
+  "nameKey": "build-demo-high-mage-sorcery-name",
+  "descriptionKey": "build-demo-high-mage-sorcery-description",
+  "raceId": "demo.race.rfb-human",
+  "classId": "demo.class.high-mage",
+  "personalityId": "demo.personality.ordinary",
+  "playerActorId": "demo.actor.high-mage-player",
+  "firstRealmId": "sorcery",
+  "startingItems": [
+    { "itemKindId": "demo.item.beginners-handbook", "quantity": 1 }
+  ],
+  "attributes": {
+    "strength": 13,
+    "intelligence": 13,
+    "wisdom": 13,
+    "dexterity": 13,
+    "constitution": 13,
+    "charisma": 13
+  },
+  "tags": ["caster", "high-mage", "rfb-compatibility", "sorcery"]
+}

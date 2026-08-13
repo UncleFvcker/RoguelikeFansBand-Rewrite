@@ -55,12 +55,16 @@ pub(super) fn apply_ability_status_effect(
     defenses: Option<(&ResistanceProfile, &BTreeSet<String>)>,
     rng: &mut RfbRng,
 ) -> AbilityEffectResolutionDto {
-    let requested_duration_ticks = (0..duration_dice).fold(duration_ticks, |total, _| {
-        total.saturating_add(
-            u32::try_from(rng.bounded(u64::from(duration_sides)) + 1)
-                .expect("status duration roll must fit u32"),
-        )
-    });
+    let requested_duration_ticks = if duration_sides == 0 {
+        duration_ticks
+    } else {
+        (0..duration_dice).fold(duration_ticks, |total, _| {
+            total.saturating_add(
+                u32::try_from(rng.bounded(u64::from(duration_sides)) + 1)
+                    .expect("status duration roll must fit u32"),
+            )
+        })
+    };
     let granted_resistances_dto = granted_resistances
         .iter()
         .map(|(damage_type, level)| ResistanceDto {

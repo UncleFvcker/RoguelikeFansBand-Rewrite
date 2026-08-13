@@ -765,6 +765,8 @@ impl Game {
         stacking: StatusStacking,
         incoming_damage_percent: u8,
     ) {
+        let was_invulnerable = status_kind_id == STATUS_INVULNERABILITY
+            && self.player_has_status_kind(STATUS_INVULNERABILITY);
         apply_status(
             &mut self.player.statuses,
             StatusApplication {
@@ -785,6 +787,12 @@ impl Game {
                 stacking,
             },
         );
+        if status_kind_id == STATUS_INVULNERABILITY
+            && !was_invulnerable
+            && self.player_has_status_kind(STATUS_INVULNERABILITY)
+        {
+            self.apply_invulnerability_opening_virtues();
+        }
     }
 
     fn apply_periodic_berserk(&mut self) {

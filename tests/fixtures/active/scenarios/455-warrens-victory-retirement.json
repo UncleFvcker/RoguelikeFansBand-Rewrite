@@ -30,7 +30,7 @@
       "revision": 1,
       "turn": 1,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 170,
+      "rngDrawCounter": 179,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -1181,7 +1181,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1215,7 +1216,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1249,7 +1251,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1283,7 +1286,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1317,7 +1321,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1351,7 +1356,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1385,7 +1391,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1413,7 +1420,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "unexamined"
         }
@@ -1439,7 +1447,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "equipmentBonuses": {
             "meleeAttacks": 0,
@@ -1480,7 +1489,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "identified",
           "quality": "ordinary",
@@ -1516,7 +1526,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "identified",
           "quality": "ordinary",
@@ -1603,7 +1614,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 178,
+      "nextItemInstanceSerial": 187,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "retired",
@@ -1613,7 +1624,7 @@
         "victoryTurn": 0,
         "retiredTurn": 1
       },
-      "stateHash": "4da6e4d89b540ecebec37f5751308b63bfc16adaeca82da65c207efd86a62e14"
+      "stateHash": "efaa94978140b8ae4c6ffb2af9798df141c6c46e664addf7d55937ba81d6b2dd"
     },
     "events": [
       {
@@ -1628,9 +1639,9 @@
       {
         "step": 2,
         "kind": "campaign-ended",
-        "stateHash": "4da6e4d89b540ecebec37f5751308b63bfc16adaeca82da65c207efd86a62e14"
+        "stateHash": "efaa94978140b8ae4c6ffb2af9798df141c6c46e664addf7d55937ba81d6b2dd"
       }
     ],
-    "saveRoundTripStateHash": "4da6e4d89b540ecebec37f5751308b63bfc16adaeca82da65c207efd86a62e14"
+    "saveRoundTripStateHash": "efaa94978140b8ae4c6ffb2af9798df141c6c46e664addf7d55937ba81d6b2dd"
   }
 }

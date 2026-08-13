@@ -1801,6 +1801,8 @@ fn p3_2_lose_memories_preserves_historical_experience() {
 fn p3_2_invulnerability_and_giant_strength_reuse_status_payloads() {
     let mut game = Game::new(204);
     clear_monsters(&mut game);
+    let honour_before = game.virtue_current(VirtueKindDto::Honour);
+    let valour_before = game.virtue_current(VirtueKindDto::Valour);
     give_inventory_item(
         &mut game,
         "test.item.invulnerability.1",
@@ -1814,6 +1816,14 @@ fn p3_2_invulnerability_and_giant_strength_reuse_status_payloads() {
         },
     );
     assert_eq!(game.player_incoming_damage_percent(), 0);
+    assert_eq!(
+        game.virtue_current(VirtueKindDto::Honour),
+        honour_before - 2
+    );
+    assert_eq!(
+        game.virtue_current(VirtueKindDto::Valour),
+        valour_before - 5
+    );
     assert_eq!(
         game.reduce_player_damage(resolve_damage(
             DamagePacket::new(100, DamageType::Physical),
@@ -1876,6 +1886,7 @@ fn p3_7_experience_potion_uses_unscaled_relative_gain_and_level_cap() {
     clear_monsters(&mut capped);
     capped.apply_unscaled_player_experience(4_500_000, &mut Vec::new());
     assert_eq!(capped.progress.level, 50);
+    choose_human_talent_if_pending(&mut capped);
     give_inventory_item(
         &mut capped,
         "test.item.experience.2",

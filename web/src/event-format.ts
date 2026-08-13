@@ -1251,6 +1251,17 @@ export function createPresentationFormatter(
           ...event.args,
           source: visibleItemName(event.args.nameKey, event.args.source),
         });
+      case "ability-probe":
+        return localization.format("message-ability-probe", {
+          ...event.args,
+          target: contentName(event.args.target),
+          alignment: localization.format(
+            `ability-probe-alignment-${event.args.alignment ?? "neutral"}`,
+          ),
+          faction: localization.format(
+            `ability-probe-faction-${event.args.faction ?? "hostile"}`,
+          ),
+        });
       case "item-use-acquirement":
         return localization.format("message-item-use-acquirement", {
           source: visibleItemName(event.args.nameKey, event.args.source),
@@ -1543,6 +1554,9 @@ export function createPresentationFormatter(
       water: "damage-type-water-name",
       psi: "damage-type-psi-name",
       curse: "damage-type-curse-name",
+      meteor: "damage-type-meteor-name",
+      rocket: "damage-type-rocket-name",
+      telekinesis: "damage-type-telekinesis-name",
     };
     return localization.format(keys[damageType]);
   }

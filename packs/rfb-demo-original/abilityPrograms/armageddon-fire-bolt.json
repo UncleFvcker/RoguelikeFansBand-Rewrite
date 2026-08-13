@@ -1,0 +1,9 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-program.armageddon-fire-bolt",
+  "input": "cast-target",
+  "steps": [
+    { "type": "bolt-or-beam-damage", "damageDice": 5, "damageSides": 8, "damageBonus": 0, "damageType": "fire", "beamChancePercent": 0, "beamChanceModifier": 10 }
+  ]
+}

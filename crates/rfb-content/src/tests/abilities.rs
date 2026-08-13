@@ -188,6 +188,602 @@ fn arcane_first_book_keeps_the_original_spell_table_and_narrow_effects() {
 }
 
 #[test]
+fn armageddon_first_book_keeps_the_original_spell_table_and_elemental_scaling() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let content = artifact.content;
+    let book = content
+        .ability_books
+        .iter()
+        .find(|book| book.id == "demo.ability-book.book-of-elements")
+        .expect("Armageddon first book should compile");
+    assert_eq!(book.realm_id.as_deref(), Some("armageddon"));
+    assert_eq!(book.rank, Some(1));
+    assert_eq!(book.ability_ids.len(), 8);
+
+    let item = content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.book-of-elements")
+        .expect("Book of Elements item should compile");
+    assert_eq!(
+        (
+            item.generation_level,
+            item.weight_tenths_pound,
+            item.base_value,
+            item.ability_book_id.as_deref(),
+        ),
+        (10, 30, 100, Some("demo.ability-book.book-of-elements"))
+    );
+    let allocation = content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.base-items")
+        .and_then(|table| {
+            table
+                .entries
+                .iter()
+                .find(|entry| entry.item_kind_id == item.id)
+        })
+        .expect("Book of Elements should use its original allocation");
+    assert_eq!(
+        (
+            allocation.min_depth,
+            allocation.max_depth,
+            allocation.weight
+        ),
+        (10, 30, 100)
+    );
+    assert_eq!(
+        content
+            .shops
+            .iter()
+            .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
+            .count(),
+        2
+    );
+
+    let expected = [
+        ("demo.ability.armageddon-lightning-bolt", 1, 2, 25, 4),
+        ("demo.ability.armageddon-frost-bolt", 2, 2, 25, 4),
+        ("demo.ability.armageddon-fire-bolt", 3, 3, 30, 1),
+        ("demo.ability.armageddon-acid-bolt", 5, 4, 35, 2),
+        ("demo.ability.armageddon-lightning-ball", 6, 5, 35, 4),
+        ("demo.ability.armageddon-frost-ball", 9, 6, 40, 2),
+        ("demo.ability.armageddon-fire-ball", 11, 8, 40, 6),
+        ("demo.ability.armageddon-acid-ball", 12, 9, 40, 4),
+    ];
+    for (id, level, mana, failure, experience) in expected {
+        let ability = content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == id)
+            .unwrap_or_else(|| panic!("{id} should compile"));
+        let player = ability
+            .player
+            .as_ref()
+            .unwrap_or_else(|| panic!("{id} should have a player binding"));
+        assert_eq!(
+            (
+                player.minimum_level,
+                player.resource_cost,
+                player.base_failure_percent,
+                player.first_success_experience,
+            ),
+            (level, mana, failure, experience)
+        );
+        assert!(ability.affects_ground_items);
+        assert_eq!(ability.spell_power_fields.len(), 1);
+        assert_eq!(ability.level_scaling.len(), 1);
+    }
+
+    for id in [
+        "demo.ability.armageddon-lightning-bolt",
+        "demo.ability.armageddon-frost-bolt",
+        "demo.ability.armageddon-fire-bolt",
+        "demo.ability.armageddon-acid-bolt",
+    ] {
+        let ability = content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == id)
+            .expect("elemental bolt should compile");
+        let AbilityEffectDefinition::BoltOrBeamDamage {
+            damage_sides,
+            beam_chance_modifier,
+            ..
+        } = &ability.effect
+        else {
+            panic!("{id} should use bolt-or-beam damage");
+        };
+        assert_eq!((*damage_sides, *beam_chance_modifier), (8, 10), "{id}");
+        assert_eq!(
+            ability.level_scaling[0].field,
+            AbilityLevelScalingField::DamageDice
+        );
+    }
+    for (id, base_bonus) in [
+        "demo.ability.armageddon-lightning-ball",
+        "demo.ability.armageddon-frost-ball",
+        "demo.ability.armageddon-fire-ball",
+        "demo.ability.armageddon-acid-ball",
+    ]
+    .into_iter()
+    .zip([19_u16, 24, 29, 34])
+    {
+        let ability = content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == id)
+            .expect("elemental ball should compile");
+        assert!(matches!(
+            ability.effect,
+            AbilityEffectDefinition::AreaDamage {
+                damage_dice: 1,
+                damage_sides: 1,
+                damage_bonus,
+                radius: 2,
+                ..
+            } if damage_bonus == base_bonus
+        ));
+        assert_eq!(
+            ability.level_scaling[0].field,
+            AbilityLevelScalingField::DamageBonus
+        );
+    }
+}
+
+#[test]
+fn armageddon_second_book_keeps_the_original_spell_table_and_allocation() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let content = artifact.content;
+    let book = content
+        .ability_books
+        .iter()
+        .find(|book| book.id == "demo.ability-book.earth-wind-and-fire")
+        .expect("Armageddon second book should compile");
+    assert_eq!(book.realm_id.as_deref(), Some("armageddon"));
+    assert_eq!(book.rank, Some(2));
+    assert_eq!(book.ability_ids.len(), 8);
+
+    let item = content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.earth-wind-and-fire")
+        .expect("Earth, Wind and Fire item should compile");
+    assert_eq!(
+        (
+            item.generation_level,
+            item.weight_tenths_pound,
+            item.base_value,
+            item.ability_book_id.as_deref(),
+        ),
+        (20, 30, 1_000, Some("demo.ability-book.earth-wind-and-fire"))
+    );
+    let allocation = content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.base-items")
+        .and_then(|table| {
+            table
+                .entries
+                .iter()
+                .find(|entry| entry.item_kind_id == item.id)
+        })
+        .expect("Earth, Wind and Fire should use its original allocation");
+    assert_eq!(
+        (
+            allocation.min_depth,
+            allocation.max_depth,
+            allocation.weight
+        ),
+        (20, 50, 100)
+    );
+    assert_eq!(
+        content
+            .shops
+            .iter()
+            .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
+            .count(),
+        2
+    );
+
+    let expected = [
+        ("demo.ability.armageddon-shard-bolt", 15, 10, 40, 10),
+        ("demo.ability.armageddon-gravity-bolt", 17, 12, 50, 4),
+        ("demo.ability.armageddon-plasma-bolt", 19, 15, 50, 10),
+        ("demo.ability.armageddon-meteor", 21, 17, 50, 5),
+        ("demo.ability.armageddon-thunderclap", 23, 19, 50, 7),
+        ("demo.ability.armageddon-windblast", 26, 23, 50, 10),
+        ("demo.ability.armageddon-hellstorm", 28, 25, 50, 15),
+        ("demo.ability.armageddon-rocket", 31, 33, 50, 20),
+    ];
+    for (id, level, mana, failure, experience) in expected {
+        let ability = content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == id)
+            .unwrap_or_else(|| panic!("{id} should compile"));
+        let player = ability
+            .player
+            .as_ref()
+            .unwrap_or_else(|| panic!("{id} should have a player binding"));
+        assert_eq!(
+            (
+                player.minimum_level,
+                player.resource_cost,
+                player.base_failure_percent,
+                player.first_success_experience,
+            ),
+            (level, mana, failure, experience)
+        );
+        assert!(ability.affects_ground_items);
+        assert_eq!(ability.spell_power_fields.len(), 1);
+    }
+    assert!(
+        content
+            .actors
+            .iter()
+            .find(|actor| actor.id == "demo.actor.quartz-vein")
+            .expect("quartz vein should compile")
+            .status_immunities
+            .iter()
+            .any(|status| status == "rfb.status.stun")
+    );
+}
+
+#[test]
+fn armageddon_third_book_keeps_the_original_spell_table_and_allocation() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let content = artifact.content;
+    let book = content
+        .ability_books
+        .iter()
+        .find(|book| book.id == "demo.ability-book.path-of-destruction")
+        .expect("Armageddon third book should compile");
+    assert_eq!(book.realm_id.as_deref(), Some("armageddon"));
+    assert_eq!(book.rank, Some(3));
+    assert_eq!(book.ability_ids.len(), 8);
+
+    let item = content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.path-of-destruction")
+        .expect("Path of Destruction item should compile");
+    assert_eq!(
+        (
+            item.generation_level,
+            item.weight_tenths_pound,
+            item.base_value,
+            item.ability_book_id.as_deref(),
+        ),
+        (
+            45,
+            30,
+            15_000,
+            Some("demo.ability-book.path-of-destruction")
+        )
+    );
+    assert_eq!(
+        item.elemental_destruction_immunities,
+        BTreeSet::from([
+            ItemDestructionElement::Acid,
+            ItemDestructionElement::Electricity,
+            ItemDestructionElement::Fire,
+            ItemDestructionElement::Cold,
+        ])
+    );
+    let allocation = content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.base-items")
+        .and_then(|table| {
+            table
+                .entries
+                .iter()
+                .find(|entry| entry.item_kind_id == item.id)
+        })
+        .expect("Path of Destruction should use its original allocation");
+    assert_eq!(
+        (
+            allocation.min_depth,
+            allocation.max_depth,
+            allocation.weight
+        ),
+        (45, 90, 100)
+    );
+    assert_eq!(
+        content
+            .shops
+            .iter()
+            .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
+            .map(|shop| shop.category)
+            .collect::<Vec<_>>(),
+        vec![ShopCategory::BlackMarket, ShopCategory::BlackMarket]
+    );
+
+    let expected = [
+        ("demo.ability.armageddon-ice-bolt", 16, 14, 55, 40),
+        ("demo.ability.armageddon-water-ball", 18, 17, 50, 50),
+        ("demo.ability.armageddon-breathe-lightning", 21, 20, 55, 70),
+        ("demo.ability.armageddon-breathe-frost", 22, 21, 55, 70),
+        ("demo.ability.armageddon-breathe-fire", 24, 22, 60, 120),
+        ("demo.ability.armageddon-breathe-acid", 26, 23, 60, 100),
+        ("demo.ability.armageddon-breathe-plasma", 28, 28, 60, 200),
+        ("demo.ability.armageddon-breathe-gravity", 36, 30, 60, 250),
+    ];
+    for (id, level, mana, failure, experience) in expected {
+        let ability = content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == id)
+            .unwrap_or_else(|| panic!("{id} should compile"));
+        let player = ability
+            .player
+            .as_ref()
+            .unwrap_or_else(|| panic!("{id} should have a player binding"));
+        assert_eq!(
+            (
+                player.minimum_level,
+                player.resource_cost,
+                player.base_failure_percent,
+                player.first_success_experience,
+            ),
+            (level, mana, failure, experience)
+        );
+        assert!(ability.affects_ground_items);
+        assert_eq!(ability.spell_power_fields.len(), 1);
+    }
+}
+
+#[test]
+fn armageddon_fourth_book_keeps_the_original_spell_table_and_allocation() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let content = artifact.content;
+    let book = content
+        .ability_books
+        .iter()
+        .find(|book| book.id == "demo.ability-book.day-of-ragnarok")
+        .expect("Day of Ragnarok should compile");
+    assert_eq!(book.realm_id.as_deref(), Some("armageddon"));
+    assert_eq!(book.rank, Some(4));
+    assert_eq!(book.ability_ids.len(), 8);
+
+    let item = content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.day-of-ragnarok")
+        .expect("Day of Ragnarok item should compile");
+    assert_eq!(
+        (
+            item.generation_level,
+            item.weight_tenths_pound,
+            item.base_value,
+            item.ability_book_id.as_deref(),
+        ),
+        (85, 30, 100_000, Some("demo.ability-book.day-of-ragnarok"))
+    );
+    assert_eq!(
+        item.elemental_destruction_immunities,
+        BTreeSet::from([
+            ItemDestructionElement::Acid,
+            ItemDestructionElement::Electricity,
+            ItemDestructionElement::Fire,
+            ItemDestructionElement::Cold,
+        ])
+    );
+    let allocation = content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.base-items")
+        .and_then(|table| {
+            table
+                .entries
+                .iter()
+                .find(|entry| entry.item_kind_id == item.id)
+        })
+        .expect("Day of Ragnarok should use its original allocation");
+    assert_eq!(
+        (
+            allocation.min_depth,
+            allocation.max_depth,
+            allocation.weight
+        ),
+        (85, u16::MAX, 33)
+    );
+    assert_eq!(
+        content
+            .shops
+            .iter()
+            .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
+            .map(|shop| shop.category)
+            .collect::<Vec<_>>(),
+        vec![ShopCategory::BlackMarket, ShopCategory::BlackMarket]
+    );
+
+    let expected = [
+        ("demo.ability.armageddon-mana-bolt", 19, 12, 45, 80),
+        ("demo.ability.armageddon-plasma-ball", 22, 17, 55, 250),
+        ("demo.ability.armageddon-mana-ball", 30, 22, 65, 100),
+        ("demo.ability.armageddon-breathe-sound", 35, 26, 65, 150),
+        ("demo.ability.armageddon-breathe-inertia", 38, 28, 65, 150),
+        (
+            "demo.ability.armageddon-breathe-disintegration",
+            40,
+            40,
+            70,
+            200,
+        ),
+        ("demo.ability.armageddon-breathe-mana", 42, 43, 75, 200),
+        ("demo.ability.armageddon-breathe-shards", 44, 49, 75, 250),
+    ];
+    for (id, level, mana, failure, experience) in expected {
+        let ability = content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == id)
+            .unwrap_or_else(|| panic!("{id} should compile"));
+        let player = ability
+            .player
+            .as_ref()
+            .unwrap_or_else(|| panic!("{id} should have a player binding"));
+        assert_eq!(
+            (
+                player.minimum_level,
+                player.resource_cost,
+                player.base_failure_percent,
+                player.first_success_experience,
+            ),
+            (level, mana, failure, experience)
+        );
+        assert!(ability.affects_ground_items);
+        assert_eq!(ability.spell_power_fields.len(), 1);
+    }
+}
+
+#[test]
+fn sorcery_first_two_books_keep_the_original_spell_table() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let content = artifact.content;
+    for (book_id, rank) in [
+        ("demo.ability-book.beginners-handbook", 1),
+        ("demo.ability-book.master-sorcerers-handbook", 2),
+    ] {
+        let book = content
+            .ability_books
+            .iter()
+            .find(|book| book.id == book_id)
+            .unwrap_or_else(|| panic!("{book_id} should compile"));
+        assert_eq!(book.realm_id.as_deref(), Some("sorcery"));
+        assert_eq!(book.rank, Some(rank));
+        assert_eq!(book.ability_ids.len(), 8);
+    }
+
+    let expected = [
+        ("demo.ability.sorcery-detect-monsters", 1, 1, 15, 4),
+        ("demo.ability.sorcery-phase-door", 1, 1, 15, 4),
+        ("demo.ability.sorcery-detect-doors-traps", 2, 2, 15, 2),
+        ("demo.ability.sorcery-light-area", 2, 2, 20, 2),
+        ("demo.ability.sorcery-confuse-monster", 3, 3, 20, 3),
+        ("demo.ability.sorcery-teleport", 4, 3, 25, 20),
+        ("demo.ability.sorcery-sleep-monster", 5, 4, 20, 20),
+        ("demo.ability.sorcery-recharging", 5, 5, 65, 45),
+        ("demo.ability.sorcery-magic-mapping", 7, 5, 65, 56),
+        ("demo.ability.sorcery-identify", 7, 5, 65, 56),
+        ("demo.ability.sorcery-slow-monster", 9, 5, 65, 63),
+        ("demo.ability.sorcery-mass-sleep", 9, 5, 40, 54),
+        ("demo.ability.sorcery-teleport-away", 13, 8, 50, 104),
+        ("demo.ability.sorcery-haste-self", 17, 10, 50, 136),
+        ("demo.ability.sorcery-true-detection", 24, 15, 60, 360),
+        ("demo.ability.sorcery-true-identify", 28, 20, 65, 560),
+    ];
+    for (id, level, mana, failure, experience) in expected {
+        let player = content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == id)
+            .and_then(|ability| ability.player.as_ref())
+            .unwrap_or_else(|| panic!("{id} should have a player binding"));
+        assert_eq!(
+            (
+                player.minimum_level,
+                player.resource_cost,
+                player.base_failure_percent,
+                player.first_success_experience,
+            ),
+            (level, mana, failure, experience)
+        );
+    }
+}
+
+#[test]
+fn sorcery_third_book_keeps_the_original_spell_table_and_acquisition() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let content = artifact.content;
+    let book = content
+        .ability_books
+        .iter()
+        .find(|book| book.id == "demo.ability-book.pattern-sorcery")
+        .expect("Pattern Sorcery should compile");
+    assert_eq!(book.realm_id.as_deref(), Some("sorcery"));
+    assert_eq!(book.rank, Some(3));
+    assert_eq!(book.ability_ids.len(), 8);
+
+    let item = content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.pattern-sorcery")
+        .expect("Pattern Sorcery item should compile");
+    assert_eq!(
+        (
+            item.generation_level,
+            item.weight_tenths_pound,
+            item.base_value,
+            item.ability_book_id.as_deref(),
+        ),
+        (45, 30, 15_000, Some("demo.ability-book.pattern-sorcery"))
+    );
+    let allocation = content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.base-items")
+        .and_then(|table| {
+            table
+                .entries
+                .iter()
+                .find(|entry| entry.item_kind_id == item.id)
+        })
+        .expect("Pattern Sorcery should use its original allocation");
+    assert_eq!(
+        (
+            allocation.min_depth,
+            allocation.max_depth,
+            allocation.weight
+        ),
+        (45, 90, 100)
+    );
+    assert_eq!(
+        content
+            .shops
+            .iter()
+            .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
+            .count(),
+        2
+    );
+
+    let expected = [
+        ("demo.ability.sorcery-inventory-protection", 2, 2, 20, 30),
+        ("demo.ability.sorcery-create-stair", 8, 8, 70, 320),
+        ("demo.ability.sorcery-esp", 12, 9, 50, 300),
+        ("demo.ability.sorcery-teleport-town", 15, 25, 60, 600),
+        ("demo.ability.sorcery-self-knowledge", 15, 12, 65, 750),
+        ("demo.ability.sorcery-teleport-level", 17, 12, 50, 425),
+        ("demo.ability.sorcery-word-of-recall", 20, 20, 65, 380),
+        ("demo.ability.sorcery-dimension-door", 36, 35, 70, 3_600),
+    ];
+    for (id, level, mana, failure, experience) in expected {
+        let player = content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == id)
+            .and_then(|ability| ability.player.as_ref())
+            .unwrap_or_else(|| panic!("{id} should have a player binding"));
+        assert_eq!(
+            (
+                player.minimum_level,
+                player.resource_cost,
+                player.base_failure_percent,
+                player.first_success_experience,
+            ),
+            (level, mana, failure, experience)
+        );
+    }
+    assert!(content.abilities.iter().all(|ability| {
+        !book.ability_ids.contains(&ability.id)
+            || !matches!(ability.effect, AbilityEffectDefinition::NoOp { .. })
+    }));
+}
+
+#[test]
 fn arcane_second_book_keeps_the_original_spell_table_and_narrow_effects() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let content = artifact.content;
@@ -630,4 +1226,111 @@ fn arcane_fourth_book_completes_the_original_realm_and_acquisition() {
             telepathy_duration_sides: 30,
         }
     ));
+}
+
+#[test]
+fn sorcery_fourth_book_completes_the_original_realm_and_keeps_rare_books_out_of_bookstores() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let content = artifact.content;
+    let books = content
+        .ability_books
+        .iter()
+        .filter(|book| book.realm_id.as_deref() == Some("sorcery"))
+        .collect::<Vec<_>>();
+    assert_eq!(books.len(), 4);
+    assert!(books.iter().all(|book| book.ability_ids.len() == 8));
+    let ability_ids = books
+        .iter()
+        .flat_map(|book| book.ability_ids.iter())
+        .collect::<BTreeSet<_>>();
+    assert_eq!(ability_ids.len(), 32);
+    assert!(
+        content
+            .abilities
+            .iter()
+            .filter(|ability| ability_ids.contains(&ability.id))
+            .all(|ability| ability
+                .effect
+                .ordered_effects()
+                .iter()
+                .all(|effect| !matches!(effect, AbilityEffectDefinition::NoOp { .. })))
+    );
+
+    let fourth = books
+        .iter()
+        .find(|book| book.rank == Some(4))
+        .expect("Sorcery fourth book should compile");
+    assert_eq!(fourth.id, "demo.ability-book.grimoire-of-power");
+    let item = content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.grimoire-of-power")
+        .expect("Grimoire of Power item should compile");
+    assert_eq!(
+        (
+            item.generation_level,
+            item.weight_tenths_pound,
+            item.base_value,
+            item.ability_book_id.as_deref(),
+        ),
+        (80, 30, 100_000, Some(fourth.id.as_str()))
+    );
+    let allocation = content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.base-items")
+        .and_then(|table| {
+            table
+                .entries
+                .iter()
+                .find(|entry| entry.item_kind_id == item.id)
+        })
+        .expect("Grimoire of Power should use its original allocation");
+    assert_eq!(
+        (
+            allocation.min_depth,
+            allocation.max_depth,
+            allocation.weight
+        ),
+        (80, u16::MAX, 33)
+    );
+    let stocked = content
+        .shops
+        .iter()
+        .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
+        .collect::<Vec<_>>();
+    assert_eq!(stocked.len(), 2);
+    assert!(
+        stocked
+            .iter()
+            .all(|shop| shop.category == ShopCategory::BlackMarket)
+    );
+
+    let expected = [
+        ("demo.ability.sorcery-probe", 8, 8, 30, 160),
+        ("demo.ability.sorcery-create-door", 18, 20, 75, 1_800),
+        ("demo.ability.sorcery-fetch", 20, 20, 65, 1_400),
+        ("demo.ability.sorcery-clairvoyance", 25, 30, 70, 3_000),
+        ("demo.ability.sorcery-device-mastery", 37, 55, 75, 3_700),
+        ("demo.ability.sorcery-alchemy", 40, 40, 80, 7_000),
+        ("demo.ability.sorcery-banish", 41, 43, 50, 8_200),
+        ("demo.ability.sorcery-invulnerability", 42, 65, 75, 10_500),
+    ];
+    for (id, level, mana, failure, experience) in expected {
+        let player = content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == id)
+            .and_then(|ability| ability.player.as_ref())
+            .unwrap_or_else(|| panic!("{id} should have a player binding"));
+        assert_eq!(
+            (
+                player.minimum_level,
+                player.resource_cost,
+                player.base_failure_percent,
+                player.first_success_experience,
+            ),
+            (level, mana, failure, experience)
+        );
+    }
 }

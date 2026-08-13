@@ -1,0 +1,10 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/player-ability-binding.schema.json",
+  "formatVersion": 1,
+  "abilityId": "demo.ability.armageddon-mana-bolt",
+  "minimumLevel": 19,
+  "resourceId": "demo.resource.mana",
+  "resourceCost": 12,
+  "baseFailurePercent": 45,
+  "firstSuccessExperience": 80
+}

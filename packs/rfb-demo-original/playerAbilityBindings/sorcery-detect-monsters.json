@@ -1,0 +1,1 @@
+{"$schema":"https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/player-ability-binding.schema.json","formatVersion":1,"abilityId":"demo.ability.sorcery-detect-monsters","minimumLevel":1,"resourceId":"demo.resource.mana","resourceCost":1,"baseFailurePercent":15,"firstSuccessExperience":4}

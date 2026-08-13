@@ -85,6 +85,7 @@ pub(super) struct SettledItemUse {
     pub(super) profile_id: Option<String>,
     pub(super) effect: ItemUseEffectDefinition,
     pub(super) plan: ItemUsePlan,
+    pub(super) device_power_bonus: i32,
 }
 
 impl Game {
@@ -1940,6 +1941,15 @@ impl Game {
         events: &mut Vec<DomainEvent>,
     ) -> bool {
         self.mark_item_aware(source_kind_id);
+        events.push(DomainEvent::ItemSelfKnowledge {
+            source_kind_id: source_kind_id.to_owned(),
+            display_name_key: self.item_display_name_key(source_kind_id),
+            report: self.self_knowledge_report(),
+        });
+        true
+    }
+
+    pub(super) fn self_knowledge_report(&self) -> SelfKnowledgeReport {
         let player = self.player_dto();
         let attribute = |value: rfb_protocol::AttributeValueDto| {
             format!(
@@ -1971,34 +1981,29 @@ impl Game {
             .collect::<Vec<_>>();
         resources.sort();
         let attributes = player.progress.attributes;
-        events.push(DomainEvent::ItemSelfKnowledge {
-            source_kind_id: source_kind_id.to_owned(),
-            display_name_key: self.item_display_name_key(source_kind_id),
-            report: SelfKnowledgeReport {
-                level: player.progress.level,
-                hp: player.hp,
-                max_hp: player.max_hp,
-                gold: player.gold,
-                nutrition: player.nutrition,
-                attack: player.attack,
-                defense: player.defense,
-                melee_skill: player.melee_skill,
-                armor_class: player.armor_class,
-                speed: player.speed,
-                attributes: [
-                    attribute(attributes.strength),
-                    attribute(attributes.intelligence),
-                    attribute(attributes.wisdom),
-                    attribute(attributes.dexterity),
-                    attribute(attributes.constitution),
-                    attribute(attributes.charisma),
-                ],
-                statuses: statuses.join(","),
-                resistances: resistances.join(","),
-                resources: resources.join(","),
-            },
-        });
-        true
+        SelfKnowledgeReport {
+            level: player.progress.level,
+            hp: player.hp,
+            max_hp: player.max_hp,
+            gold: player.gold,
+            nutrition: player.nutrition,
+            attack: player.attack,
+            defense: player.defense,
+            melee_skill: player.melee_skill,
+            armor_class: player.armor_class,
+            speed: player.speed,
+            attributes: [
+                attribute(attributes.strength),
+                attribute(attributes.intelligence),
+                attribute(attributes.wisdom),
+                attribute(attributes.dexterity),
+                attribute(attributes.constitution),
+                attribute(attributes.charisma),
+            ],
+            statuses: statuses.join(","),
+            resistances: resistances.join(","),
+            resources: resources.join(","),
+        }
     }
 
     fn resolve_item_sequence(
@@ -2311,12 +2316,16 @@ impl Game {
         } else {
             self.items[index].quantity -= 1;
         }
+        let device_power_bonus = difficulty
+            .map(|_| self.effective_player_device_power_bonus())
+            .unwrap_or(0);
         self.resolve_inventory_item_effect(
             SettledItemUse {
                 kind_id,
                 profile_id,
                 effect,
                 plan,
+                device_power_bonus,
             },
             events,
             changed,
@@ -2336,6 +2345,7 @@ impl Game {
             profile_id,
             effect,
             plan,
+            device_power_bonus,
         } = settled;
         match (effect, plan) {
             (
@@ -2579,6 +2589,7 @@ impl Game {
                 profile_id,
                 effect,
                 plan,
+                device_power_bonus,
                 events,
                 changed,
                 removed_entities,
@@ -3253,6 +3264,8 @@ impl Game {
         incoming_damage_percent: u8,
         events: &mut Vec<DomainEvent>,
     ) -> bool {
+        let was_invulnerable = status_kind_id == STATUS_INVULNERABILITY
+            && self.player_has_status_kind(STATUS_INVULNERABILITY);
         let resisted = self.player_status_immunities().contains(status_kind_id)
             || resistance_type
                 .is_some_and(|damage_type| self.item_status_resisted(damage_type, status_kind_id));
@@ -3301,6 +3314,12 @@ impl Game {
         };
         if noticed {
             self.mark_item_aware(source_kind_id);
+        }
+        if status_kind_id == STATUS_INVULNERABILITY
+            && !was_invulnerable
+            && self.player_has_status_kind(STATUS_INVULNERABILITY)
+        {
+            self.apply_invulnerability_opening_virtues();
         }
         events.push(DomainEvent::ItemStatusResolved {
             source_kind_id: source_kind_id.to_owned(),

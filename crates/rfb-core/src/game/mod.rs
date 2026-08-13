@@ -21,13 +21,14 @@ use crate::{
     effect::{
         DamageOutcome, DamagePacket, EffectOutcome, EffectSpec, EffectTarget, STATUS_ANTI_MAGIC,
         STATUS_BASIC_RESISTANCE, STATUS_BERSERK, STATUS_BLEEDING, STATUS_BLINDNESS,
-        STATUS_CONFUSION, STATUS_FEAR, STATUS_GIANT_STRENGTH, STATUS_HALLUCINATION, STATUS_HASTE,
-        STATUS_INVENTORY_PROTECTION, STATUS_INVULNERABILITY, STATUS_PARALYSIS,
-        STATUS_PLAYER_POLYMORPH, STATUS_POISON, STATUS_PROTECTION_FROM_EVIL, STATUS_REGENERATION,
-        STATUS_SEE_INVISIBLE, STATUS_SIGHT, STATUS_SLEEP, STATUS_SLOW, STATUS_STUN,
-        STATUS_TELEPATHY, STATUS_THERMAL_RESISTANCE, STATUS_TSUYOSHI, STATUS_UNDERSTANDING,
-        STATUS_UNWELL, STATUS_VENGEANCE, STATUS_WRAITHFORM, StatusApplication, StatusChange,
-        StatusInstance, StatusStacking, apply_effect, apply_status, resolve_damage,
+        STATUS_CONFUSION, STATUS_DEVICE_MASTERY, STATUS_FEAR, STATUS_GIANT_STRENGTH,
+        STATUS_HALLUCINATION, STATUS_HASTE, STATUS_INVENTORY_PROTECTION, STATUS_INVULNERABILITY,
+        STATUS_PARALYSIS, STATUS_PLAYER_POLYMORPH, STATUS_POISON, STATUS_PROTECTION_FROM_EVIL,
+        STATUS_REGENERATION, STATUS_SEE_INVISIBLE, STATUS_SIGHT, STATUS_SLEEP, STATUS_SLOW,
+        STATUS_STUN, STATUS_TELEPATHY, STATUS_THERMAL_RESISTANCE, STATUS_TSUYOSHI,
+        STATUS_UNDERSTANDING, STATUS_UNWELL, STATUS_VENGEANCE, STATUS_WRAITHFORM,
+        StatusApplication, StatusChange, StatusInstance, StatusStacking, apply_effect,
+        apply_status, resolve_damage,
     },
     error::CoreError,
     event::{
@@ -79,22 +80,23 @@ use rfb_content::{
     ThemeVaultCandidateDefinition, WeaponBrand, affix_is_compatible_with_item,
 };
 use rfb_protocol::{
-    AbilityAreaDamageResolutionDto, AbilityBeamDamageResolutionDto, AbilityCastResolutionDto,
-    AbilityConeDamageResolutionDto, AbilityControlOutcomeDto, AbilityDetectResolutionDto,
-    AbilityDetectSubjectDto, AbilityEffectResolutionDto, AbilityEffectSkipReasonDto,
-    AbilityEffectSpecDto, AbilityEffectsResolutionDto, AbilityGenocideScopeDto,
-    AbilityMonsterProbeResolutionDto, AbilityProficiencyRankDto, AbilityProgressSaveDto,
+    AbilityAreaDamageResolutionDto, AbilityBanishTargetDto, AbilityBeamDamageResolutionDto,
+    AbilityCastResolutionDto, AbilityConeDamageResolutionDto, AbilityControlOutcomeDto,
+    AbilityDetectResolutionDto, AbilityDetectSubjectDto, AbilityEffectResolutionDto,
+    AbilityEffectSkipReasonDto, AbilityEffectSpecDto, AbilityEffectsResolutionDto,
+    AbilityGenocideScopeDto, AbilityMonsterProbeResolutionDto, AbilityProbeAlignmentDto,
+    AbilityProbeTargetDto, AbilityProficiencyRankDto, AbilityProgressSaveDto,
     AbilityRandomBranchSpecDto, AbilityRandomTargetDto, AbilityRecallActionDto, AbilitySourceDto,
     AbilityStatusChangeDto, AbilityStatusStackingDto, AbilitySummonCandidateSpecDto,
     AbilitySummonResolutionDto, AbilityTeleportResolutionDto, AbilityTerrainBeamOperationDto,
     AbilityTerrainTransformResolutionDto, AbilityVisibleDamageResolutionDto, AttackProfileDto,
     AutoGetModeDto, CampaignStatusDto, CellLightDto, CellVisualDto, DamageDiceDto, Direction,
-    EquipmentBonusesDto, EquipmentPassiveDto, GameCommandEnvelope, GameUpdate, GoldAppearanceDto,
-    HealingResolutionDto, ItemActivationDto, ItemChargesDto, ItemCurseRemovalResolutionDto,
-    ItemCurseResolutionDto, ItemCurseSeverityDto, ItemEnchantmentComponentResolutionDto,
-    ItemEnchantmentResolutionDto, ItemEnchantmentsDto, ItemIdentificationDto,
-    ItemIdentifyResolutionDto, ItemKnowledgeDto, ItemOriginKindDto, ItemPropertyDto,
-    ItemQualityDto, LocaleDto, MapScaleDto, MeleeBlowDto, MeleeRoutineDto,
+    EntityFactionDto, EquipmentBonusesDto, EquipmentPassiveDto, GameCommandEnvelope, GameUpdate,
+    GoldAppearanceDto, HealingResolutionDto, ItemActivationDto, ItemChargesDto,
+    ItemCurseRemovalResolutionDto, ItemCurseResolutionDto, ItemCurseSeverityDto,
+    ItemEnchantmentComponentResolutionDto, ItemEnchantmentResolutionDto, ItemEnchantmentsDto,
+    ItemIdentificationDto, ItemIdentifyResolutionDto, ItemKnowledgeDto, ItemOriginKindDto,
+    ItemPropertyDto, ItemQualityDto, LocaleDto, MapScaleDto, MeleeBlowDto, MeleeRoutineDto,
     MonsterAbilityCandidateResolutionDto, MonsterAbilityCastResolutionDto,
     MonsterAbilityDecisionResolutionDto, MonsterAbilityRejectionReasonDto,
     MonsterAbilityTargetResolutionDto, MonsterAlignmentDto, MonsterDisplacementResolutionDto,
@@ -214,7 +216,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 99;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 100;
 #[cfg(test)]
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const VISIBILITY_RADIUS: i32 = 8;
@@ -1558,6 +1560,20 @@ impl Game {
             }
             _ => None,
         };
+        let dimension_door = match &action {
+            GameAction::CastAbility { ability_id, .. }
+                if !self.player_has_astral_guide()
+                    && self.content.ability(ability_id).is_some_and(|ability| {
+                        matches!(
+                            ability.effect,
+                            AbilityEffectDefinition::DimensionDoor { .. }
+                        )
+                    }) =>
+            {
+                Some(ability_id.clone())
+            }
+            _ => None,
+        };
         let automatic_pickup_after_move = matches!(&action, GameAction::Move { .. });
         let recover_after_wait = matches!(&action, GameAction::Wait);
         let pet_neglect_allowed = self.pet_upkeep().unsafe_warning();
@@ -2437,6 +2453,33 @@ impl Game {
                 })
             }) {
                 action_cost /= 3;
+            }
+            if let Some(ability_id) = dimension_door {
+                let failed = events.iter().find_map(|event| match event {
+                    DomainEvent::AbilityEffectsResolved {
+                        ability_id: resolved_id,
+                        resolution,
+                        ..
+                    } if *resolved_id == ability_id => {
+                        resolution.effects.iter().find_map(|effect| match effect {
+                            AbilityEffectResolutionDto::DimensionDoor { failed, .. } => {
+                                Some(*failed)
+                            }
+                            _ => None,
+                        })
+                    }
+                    _ => None,
+                });
+                if let Some(failed) = failed {
+                    let extra = STANDARD_ACTION_COST
+                        .saturating_mul(i32::from(60_u16.saturating_sub(self.progress.level)))
+                        / 100;
+                    action_cost = action_cost.saturating_add(extra).saturating_add(if failed {
+                        extra
+                    } else {
+                        0
+                    });
+                }
             }
             spend_energy(&mut self.player.energy_need, action_cost);
             self.advance_until_player_ready(
@@ -3617,6 +3660,7 @@ impl Game {
             TargetSelection::Position { .. } => AbilityTargetModeDefinition::Position,
             TargetSelection::Entity { .. } => AbilityTargetModeDefinition::Entity,
             TargetSelection::Item { .. } => AbilityTargetModeDefinition::Item,
+            TargetSelection::Town { .. } => AbilityTargetModeDefinition::Town,
             TargetSelection::SelfTarget => AbilityTargetModeDefinition::SelfTarget,
         };
         if !ability.target.modes.contains(&mode) {
@@ -3635,6 +3679,7 @@ impl Game {
             TargetSelection::Position { .. } => AbilityTargetModeDefinition::Position,
             TargetSelection::Entity { .. } => AbilityTargetModeDefinition::Entity,
             TargetSelection::Item { .. } => AbilityTargetModeDefinition::Item,
+            TargetSelection::Town { .. } => AbilityTargetModeDefinition::Town,
             TargetSelection::SelfTarget => AbilityTargetModeDefinition::SelfTarget,
         };
         if !ability.target.modes.contains(&mode) {
@@ -3657,6 +3702,7 @@ impl Game {
             }
             TargetSelection::SelfTarget => None,
             TargetSelection::Item { .. } => None,
+            TargetSelection::Town { .. } => None,
         }
     }
 
@@ -3689,6 +3735,7 @@ impl Game {
             }
             TargetSelection::SelfTarget => None,
             TargetSelection::Item { .. } => None,
+            TargetSelection::Town { .. } => None,
         }
     }
 
@@ -3766,6 +3813,15 @@ impl Game {
         path: Vec<Position>,
         stop_at_actor: bool,
     ) -> (ProjectileTrace, Option<usize>) {
+        self.trace_projectile_path_with_damage_policy(path, stop_at_actor, None)
+    }
+
+    fn trace_projectile_path_with_damage_policy(
+        &self,
+        path: Vec<Position>,
+        stop_at_actor: bool,
+        damage_type: Option<DamageType>,
+    ) -> (ProjectileTrace, Option<usize>) {
         let origin = self.player.position;
         let mut impact = origin;
         let mut landing = origin;
@@ -3773,7 +3829,17 @@ impl Game {
         let mut target_index = None;
         for position in path {
             impact = position;
-            if self.index(position).is_none() || !self.is_walkable(position) {
+            let traversable = self.index(position).is_some_and(|index| {
+                if damage_type == Some(DamageType::Disintegrate) {
+                    !self
+                        .content
+                        .terrain(&self.terrain[index])
+                        .is_some_and(|terrain| terrain.tags.iter().any(|tag| tag == "permanent"))
+                } else {
+                    self.is_walkable(position)
+                }
+            });
+            if !traversable {
                 break;
             }
             landing = position;
@@ -3868,8 +3934,15 @@ impl Game {
         centerline: &[Position],
         direction: Direction,
         radius: u8,
+        damage_type: DamageType,
     ) -> (Vec<Position>, Vec<(String, u32)>) {
-        let cells = self.cone_damage_cells(self.player.position, centerline, direction, radius);
+        let cells = self.cone_damage_cells(
+            self.player.position,
+            centerline,
+            direction,
+            radius,
+            damage_type,
+        );
         let affected_positions = cells.iter().map(|(_, _, position)| *position).collect();
         let targets = cells
             .iter()
@@ -3889,6 +3962,7 @@ impl Game {
         centerline: &[Position],
         direction: Direction,
         radius: u8,
+        damage_type: DamageType,
     ) -> Vec<(i32, u32, Position)> {
         let depth = i32::try_from(centerline.len()).unwrap_or(i32::MAX);
         if depth == 0 {
@@ -3926,7 +4000,11 @@ impl Game {
                         || forward <= 0
                         || lateral > forward
                         || self.index(position).is_none()
-                        || !has_line_of_effect(self, origin, position)
+                        || if damage_type == DamageType::Disintegrate {
+                            !has_disintegration_line_of_effect(self, origin, position)
+                        } else {
+                            !has_line_of_effect(self, origin, position)
+                        }
                     {
                         continue;
                     }
@@ -4129,6 +4207,7 @@ impl Game {
             TargetSelection::Position { .. } => AbilityTargetModeDefinition::Position,
             TargetSelection::Entity { .. } => AbilityTargetModeDefinition::Entity,
             TargetSelection::Item { .. } => AbilityTargetModeDefinition::Item,
+            TargetSelection::Town { .. } => AbilityTargetModeDefinition::Town,
             TargetSelection::SelfTarget => AbilityTargetModeDefinition::SelfTarget,
         };
         target_definition
@@ -6115,6 +6194,7 @@ fn stat_modifiers_dto(modifiers: &StatModifiers) -> StatModifiersDto {
         charisma: modifiers.charisma,
         speed: modifiers.speed,
         spell_power_bonus: modifiers.spell_power_bonus,
+        device_power_bonus: modifiers.device_power_bonus,
     }
 }
 
@@ -6132,6 +6212,9 @@ fn add_stat_modifiers_dto(total: &mut StatModifiersDto, addition: &StatModifiers
     total.spell_power_bonus = total
         .spell_power_bonus
         .saturating_add(addition.spell_power_bonus);
+    total.device_power_bonus = total
+        .device_power_bonus
+        .saturating_add(addition.device_power_bonus);
 }
 
 fn equipment_bonuses_dto(bonuses: &EquipmentBonuses) -> EquipmentBonusesDto {
@@ -6662,6 +6745,14 @@ fn apply_ability_level_scaling(
             ))
             .expect("validated level-scaled radius must fit u8");
         }
+        (AbilityEffectDefinition::DimensionDoor { range }, AbilityLevelScalingField::Radius) => {
+            *range = u16::try_from(scaled_ability_level_value(
+                u64::from(*range),
+                scaling,
+                level,
+            ))
+            .expect("validated level-scaled dimension door range must fit u16");
+        }
         (
             AbilityEffectDefinition::ApplyStatus { intensity, .. }
             | AbilityEffectDefinition::VisibleApplyStatus { intensity, .. },
@@ -6746,6 +6837,42 @@ fn apply_ability_level_scaling(
             .expect("validated level-scaled fetch weight must fit u32");
         }
         (
+            AbilityEffectDefinition::Banish { maximum_distance },
+            AbilityLevelScalingField::BanishDistance,
+        ) => {
+            *maximum_distance = u16::try_from(scaled_ability_level_value(
+                u64::from(*maximum_distance),
+                scaling,
+                level,
+            ))
+            .expect("validated level-scaled banish distance must fit u16");
+        }
+        (
+            AbilityEffectDefinition::DeviceMastery { duration_base, .. },
+            AbilityLevelScalingField::DeviceMasteryDurationBase,
+        ) => {
+            *duration_base = u16::try_from(scaled_ability_level_value(
+                u64::from(*duration_base),
+                scaling,
+                level,
+            ))
+            .expect("validated device mastery duration must fit u16");
+        }
+        (
+            AbilityEffectDefinition::DeviceMastery {
+                device_power_bonus, ..
+            },
+            AbilityLevelScalingField::DevicePowerBonus,
+        ) => {
+            *device_power_bonus = i32::try_from(scaled_ability_level_value(
+                u64::try_from(*device_power_bonus)
+                    .expect("validated device power bonus must be non-negative"),
+                scaling,
+                level,
+            ))
+            .expect("validated device power bonus must fit i32");
+        }
+        (
             AbilityEffectDefinition::ApplyStatus {
                 granted_equipment_bonuses,
                 ..
@@ -6768,6 +6895,12 @@ fn spell_power_value(value: u64, bonus: i32) -> u64 {
     let value = i128::from(value);
     let adjusted = value + value * i128::from(bonus) / 13;
     u64::try_from(adjusted.max(0)).expect("non-negative spell power must fit u64")
+}
+
+fn device_power_value(value: u64, bonus: i32) -> u64 {
+    let value = i128::from(value);
+    let adjusted = value + value * i128::from(bonus) / 20;
+    u64::try_from(adjusted.max(0)).expect("non-negative device power must fit u64")
 }
 
 fn apply_ability_spell_power(
@@ -6820,6 +6953,10 @@ fn apply_ability_spell_power(
         ) => {
             *radius =
                 u8::try_from(scaled(u64::from(*radius))).expect("spell-powered radius must fit u8");
+        }
+        (AbilityEffectDefinition::DimensionDoor { range }, AbilitySpellPowerField::Radius) => {
+            *range = u16::try_from(scaled(u64::from(*range)))
+                .expect("spell-powered dimension door range must fit u16");
         }
         (
             AbilityEffectDefinition::ApplyStatus { duration_ticks, .. }
@@ -6875,11 +7012,46 @@ fn apply_ability_spell_power(
                 .expect("spell-powered effect power must fit u16");
         }
         (
+            AbilityEffectDefinition::FetchItem {
+                maximum_weight_tenths_pound,
+            },
+            AbilitySpellPowerField::MaximumWeight,
+        ) => {
+            *maximum_weight_tenths_pound =
+                u32::try_from(scaled(u64::from(*maximum_weight_tenths_pound)))
+                    .expect("spell-powered fetch weight must fit u32");
+        }
+        (
+            AbilityEffectDefinition::Banish { maximum_distance },
+            AbilitySpellPowerField::BanishDistance,
+        ) => {
+            *maximum_distance = u16::try_from(scaled(u64::from(*maximum_distance)))
+                .expect("spell-powered banish distance must fit u16");
+        }
+        (
+            AbilityEffectDefinition::DeviceMastery { duration_base, .. },
+            AbilitySpellPowerField::DeviceMasteryDurationBase,
+        ) => {
+            *duration_base = u16::try_from(scaled(u64::from(*duration_base)))
+                .expect("spell-powered device mastery duration must fit u16");
+        }
+        (
+            AbilityEffectDefinition::Clairvoyance {
+                telepathy_duration_sides,
+                ..
+            },
+            AbilitySpellPowerField::ClairvoyanceDurationSides,
+        ) => {
+            *telepathy_duration_sides = u16::try_from(scaled(u64::from(*telepathy_duration_sides)))
+                .expect("spell-powered clairvoyance duration must fit u16");
+        }
+        (
             _,
             AbilitySpellPowerField::FinalDamage
             | AbilitySpellPowerField::RandomChoiceRoll
             | AbilitySpellPowerField::MaledictionDeathRayPower
-            | AbilitySpellPowerField::MaledictionFearPower,
+            | AbilitySpellPowerField::MaledictionFearPower
+            | AbilitySpellPowerField::InvulnerabilityDuration,
         ) => {}
         _ => unreachable!("content validation must reject incompatible spell power fields"),
     }
@@ -6927,6 +7099,18 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
         }
         AbilityEffectDefinition::TeleportTarget => AbilityEffectSpecDto::TeleportTarget,
         AbilityEffectDefinition::TeleportLevel => AbilityEffectSpecDto::TeleportLevel,
+        AbilityEffectDefinition::CreateStair {
+            up_terrain_id,
+            down_terrain_id,
+        } => AbilityEffectSpecDto::CreateStair {
+            up_terrain_id: up_terrain_id.clone(),
+            down_terrain_id: down_terrain_id.clone(),
+        },
+        AbilityEffectDefinition::TeleportTown => AbilityEffectSpecDto::TeleportTown,
+        AbilityEffectDefinition::SelfKnowledge => AbilityEffectSpecDto::SelfKnowledge,
+        AbilityEffectDefinition::DimensionDoor { range } => {
+            AbilityEffectSpecDto::DimensionDoor { range: *range }
+        }
         AbilityEffectDefinition::Damage {
             damage_dice,
             damage_sides,
@@ -7084,6 +7268,30 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             telepathy_duration_ticks: *telepathy_duration_ticks,
             telepathy_duration_dice: *telepathy_duration_dice,
             telepathy_duration_sides: *telepathy_duration_sides,
+        },
+        AbilityEffectDefinition::Probe => AbilityEffectSpecDto::Probe,
+        AbilityEffectDefinition::CreateDoor { terrain_id } => AbilityEffectSpecDto::CreateDoor {
+            terrain_id: terrain_id.clone(),
+        },
+        AbilityEffectDefinition::DeviceMastery {
+            duration_base,
+            device_power_bonus,
+        } => AbilityEffectSpecDto::DeviceMastery {
+            duration_base: *duration_base,
+            device_power_bonus: *device_power_bonus,
+        },
+        AbilityEffectDefinition::Banish { maximum_distance } => AbilityEffectSpecDto::Banish {
+            maximum_distance: *maximum_distance,
+        },
+        AbilityEffectDefinition::Invulnerability {
+            duration_dice,
+            duration_sides,
+            duration_bonus,
+        } => AbilityEffectSpecDto::Invulnerability {
+            duration_dice: *duration_dice,
+            duration_sides: *duration_sides,
+            duration_bonus: *duration_bonus,
+            duration_spell_power_bonus: None,
         },
         AbilityEffectDefinition::DrainResource { amount } => {
             AbilityEffectSpecDto::DrainResource { amount: *amount }
@@ -7408,6 +7616,16 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             full_identify_power: *full_identify_power,
             full_identify_roll_sides: *full_identify_roll_sides,
         },
+        AbilityEffectDefinition::IdentifyOrMassIdentify { mass, .. } => {
+            if *mass {
+                AbilityEffectSpecDto::MassIdentify
+            } else {
+                AbilityEffectSpecDto::IdentifyItem {
+                    full_identify_power: 0,
+                    full_identify_roll_sides: 0,
+                }
+            }
+        }
         AbilityEffectDefinition::RestoreVitality { life_force } => {
             AbilityEffectSpecDto::RestoreVitality {
                 life_force: *life_force,
@@ -7473,6 +7691,25 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             power: *power,
             target_category: target_category.clone(),
         },
+        AbilityEffectDefinition::MassSleepOrStasis { stasis, power, .. } => {
+            AbilityEffectSpecDto::VisibleApplyStatus {
+                status_kind_id: if *stasis {
+                    STATUS_PARALYSIS.to_owned()
+                } else {
+                    STATUS_SLEEP.to_owned()
+                },
+                intensity: 1,
+                duration_ticks: if *stasis { 20 } else { 500 },
+                stacking: if *stasis {
+                    AbilityStatusStackingDto::Extend
+                } else {
+                    AbilityStatusStackingDto::KeepStrongest
+                },
+                resistance_type: None,
+                power: Some(*power),
+                target_category: None,
+            }
+        }
         AbilityEffectDefinition::BrandWeapon {
             affix_id,
             brand,
@@ -7576,6 +7813,20 @@ fn player_ability_effect_spec_dto(
         };
         *roll_spell_power_bonus = Some(ability.spell_power_bonus);
     }
+    if ability_has_spell_power_field(
+        ability,
+        effect_index,
+        AbilitySpellPowerField::InvulnerabilityDuration,
+    ) {
+        let AbilityEffectSpecDto::Invulnerability {
+            duration_spell_power_bonus,
+            ..
+        } = &mut spec
+        else {
+            unreachable!("validated invulnerability marker must project invulnerability");
+        };
+        *duration_spell_power_bonus = Some(ability.spell_power_bonus);
+    }
     spec
 }
 
@@ -7593,6 +7844,7 @@ fn target_spec_dto(target: &AbilityTargetDefinition) -> TargetSpecDto {
                 AbilityTargetModeDefinition::Position => TargetModeDto::Position,
                 AbilityTargetModeDefinition::Entity => TargetModeDto::Entity,
                 AbilityTargetModeDefinition::Item => TargetModeDto::Item,
+                AbilityTargetModeDefinition::Town => TargetModeDto::Town,
                 AbilityTargetModeDefinition::SelfTarget => TargetModeDto::SelfTarget,
             })
             .collect(),
@@ -7870,6 +8122,43 @@ fn has_line_of_effect(game: &Game, from: Position, to: Position) -> bool {
         }
         if game.index(Position { x, y }).is_none() {
             return false;
+        }
+    }
+}
+
+fn has_disintegration_line_of_effect(game: &Game, from: Position, to: Position) -> bool {
+    let mut x = from.x;
+    let mut y = from.y;
+    let dx = (to.x - from.x).abs();
+    let dy = (to.y - from.y).abs();
+    let step_x = if from.x < to.x { 1 } else { -1 };
+    let step_y = if from.y < to.y { 1 } else { -1 };
+    let mut error = dx - dy;
+
+    loop {
+        let position = Position { x, y };
+        let Some(index) = game.index(position) else {
+            return false;
+        };
+        if position != from
+            && game
+                .content
+                .terrain(&game.terrain[index])
+                .is_some_and(|terrain| terrain.tags.iter().any(|tag| tag == "permanent"))
+        {
+            return false;
+        }
+        if position == to {
+            return true;
+        }
+        let double_error = error * 2;
+        if double_error > -dy {
+            error -= dy;
+            x += step_x;
+        }
+        if double_error < dx {
+            error += dx;
+            y += step_y;
         }
     }
 }

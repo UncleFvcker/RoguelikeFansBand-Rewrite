@@ -39,6 +39,9 @@ pub enum DamageType {
     Water,
     Psi,
     Curse,
+    Meteor,
+    Rocket,
+    Telekinesis,
 }
 
 /// A compact first-pass resistance scale.
@@ -132,6 +135,9 @@ impl From<DamageType> for DamageTypeDto {
             DamageType::Water => Self::Water,
             DamageType::Psi => Self::Psi,
             DamageType::Curse => Self::Curse,
+            DamageType::Meteor => Self::Meteor,
+            DamageType::Rocket => Self::Rocket,
+            DamageType::Telekinesis => Self::Telekinesis,
         }
     }
 }
@@ -171,6 +177,9 @@ impl From<DamageTypeDto> for DamageType {
             DamageTypeDto::Water => Self::Water,
             DamageTypeDto::Psi => Self::Psi,
             DamageTypeDto::Curse => Self::Curse,
+            DamageTypeDto::Meteor => Self::Meteor,
+            DamageTypeDto::Rocket => Self::Rocket,
+            DamageTypeDto::Telekinesis => Self::Telekinesis,
         }
     }
 }
@@ -210,6 +219,9 @@ impl From<rfb_content::ActorDamageType> for DamageType {
             rfb_content::ActorDamageType::Water => Self::Water,
             rfb_content::ActorDamageType::Psi => Self::Psi,
             rfb_content::ActorDamageType::Curse => Self::Curse,
+            rfb_content::ActorDamageType::Meteor => Self::Meteor,
+            rfb_content::ActorDamageType::Rocket => Self::Rocket,
+            rfb_content::ActorDamageType::Telekinesis => Self::Telekinesis,
         }
     }
 }

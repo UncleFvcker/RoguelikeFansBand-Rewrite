@@ -26,6 +26,7 @@ pub enum AbilityProgramInputDefinition {
     SelfTarget,
     CastTarget,
     Item,
+    Town,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -226,6 +227,7 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::RestoreVitality { .. }
                     | AbilityEffectDefinition::VisibleDamage { .. }
                     | AbilityEffectDefinition::VisibleApplyStatus { .. }
+                    | AbilityEffectDefinition::MassSleepOrStasis { .. }
                     | AbilityEffectDefinition::BlinkSelf { .. }
                     | AbilityEffectDefinition::TeleportSelf { .. }
                     | AbilityEffectDefinition::ReportMagic
@@ -234,10 +236,17 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::SuppressMonsterReproduction { .. }
                     | AbilityEffectDefinition::PolymorphSelf
                     | AbilityEffectDefinition::TeleportLevel
+                    | AbilityEffectDefinition::CreateStair { .. }
+                    | AbilityEffectDefinition::SelfKnowledge
                     | AbilityEffectDefinition::Clairvoyance { .. }
                     | AbilityEffectDefinition::MeleeAdjacent
                     | AbilityEffectDefinition::ProbeMonsters
                     | AbilityEffectDefinition::Concentrate
+                    | AbilityEffectDefinition::Probe
+                    | AbilityEffectDefinition::CreateDoor { .. }
+                    | AbilityEffectDefinition::DeviceMastery { .. }
+                    | AbilityEffectDefinition::Banish { .. }
+                    | AbilityEffectDefinition::Invulnerability { .. }
                     | AbilityEffectDefinition::NoOp { .. }
             ) || matches!(
                 effect,
@@ -280,6 +289,7 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::BlinkTarget { .. }
                     | AbilityEffectDefinition::TeleportTarget
                     | AbilityEffectDefinition::TeleportLevel
+                    | AbilityEffectDefinition::DimensionDoor { .. }
                     | AbilityEffectDefinition::PolymorphTarget
                     | AbilityEffectDefinition::SniperShot { .. }
                     | AbilityEffectDefinition::Rodeo
@@ -303,6 +313,7 @@ fn ability_program_input_accepts_step(
             matches!(
                 effect,
                 AbilityEffectDefinition::IdentifyItem { .. }
+                    | AbilityEffectDefinition::IdentifyOrMassIdentify { .. }
                     | AbilityEffectDefinition::BrandWeapon { .. }
                     | AbilityEffectDefinition::TransmuteItemToGold { .. }
                     | AbilityEffectDefinition::DrainItemMagic { .. }
@@ -314,6 +325,9 @@ fn ability_program_input_accepts_step(
                     ..
                 } if !source_item_tags.is_empty()
             )
+        }
+        AbilityProgramInputDefinition::Town => {
+            matches!(effect, AbilityEffectDefinition::TeleportTown)
         }
     }
 }
@@ -345,6 +359,7 @@ fn ability_program_step_is_composable(
                 | AbilityEffectDefinition::RemoveStatus { .. }
         ),
         AbilityProgramInputDefinition::Item => false,
+        AbilityProgramInputDefinition::Town => false,
     }
 }
 
@@ -382,10 +397,19 @@ fn ability_program_input_matches_target(
                 && !target.modes.contains(&AbilityTargetModeDefinition::Item)
                 && (1..=64).contains(&target.range)
                 && (target.requires_line_of_effect
-                    || matches!(effect, AbilityEffectDefinition::DarkenRoom))
+                    || matches!(
+                        effect,
+                        AbilityEffectDefinition::DarkenRoom
+                            | AbilityEffectDefinition::DimensionDoor { .. }
+                    ))
         }
         AbilityProgramInputDefinition::Item => {
             target.modes.as_slice() == [AbilityTargetModeDefinition::Item]
+                && target.range == 0
+                && !target.requires_line_of_effect
+        }
+        AbilityProgramInputDefinition::Town => {
+            target.modes.as_slice() == [AbilityTargetModeDefinition::Town]
                 && target.range == 0
                 && !target.requires_line_of_effect
         }

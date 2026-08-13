@@ -1193,6 +1193,7 @@ fn shatter_melee_uses_the_shared_earthquake_only_above_the_damage_threshold() {
     );
     strong.player.hp = 10_000;
     strong.player.max_hp = 10_000;
+    strong.rng = RfbRng::seeded(0);
     let mut events = Vec::new();
     strong
         .resolve_monster_melee(0, &mut events, &mut BTreeSet::new(), &mut Vec::new())

@@ -697,3 +697,17 @@ git diff --stat
 - 按用户要求，本批未运行全量测试或 fixture replay；只完成新增测试、生成/内容校验、变异
   审计和 Web 类型检查。因 actor save/hash 结构变化，26 条 active fixture 必须在明确要求
   合并验收时刷新并复验。
+
+## 42. main 当前交接（items 咒术与毁灭增量整合）
+
+- `codex/items-next` 的完整咒术与毁灭领域已与 main 的狙击手、Human 弱点和半神天赋合并；
+  双方新增的能力效果、协议 DTO、actor 状态与战斗事务均保留，没有用一侧实现覆盖另一侧。
+- 咒术四册与毁灭四册各含 32 个正式法术，并保留各自 High Mage 构筑、原版书籍分配和商店
+  获取路径；出生构筑仍只携带本领域第一册。
+- 合并后的共享协调点为 pack `1.320.0`、Protocol `1.201`、State Hash Schema v100、
+  save v1、active baseline `contract-v302`，content hash
+  `9eba1bb25bb87e06d1396b5393f8c080c10b847186e59b79401b11b5e658a537`。装置强度修正、
+  怪物 `minorSlow` 与 main 已有的 `anger` / `friendly` 都是必填权威状态；不兼容缺字段的
+  旧开发存档。
+- `codex/items-next` 分支及工作树继续保留。内容 hash 与 26 条 active fixture 在本次合并
+  验收中统一重新生成并复验。

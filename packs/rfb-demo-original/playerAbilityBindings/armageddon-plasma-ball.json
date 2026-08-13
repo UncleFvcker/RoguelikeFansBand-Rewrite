@@ -1,0 +1,10 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/player-ability-binding.schema.json",
+  "formatVersion": 1,
+  "abilityId": "demo.ability.armageddon-plasma-ball",
+  "minimumLevel": 22,
+  "resourceId": "demo.resource.mana",
+  "resourceCost": 17,
+  "baseFailurePercent": 55,
+  "firstSuccessExperience": 250
+}

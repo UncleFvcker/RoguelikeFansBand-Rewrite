@@ -3,6 +3,20 @@
 use super::*;
 
 impl Game {
+    pub(super) fn process_monster_minor_slow_recovery(&mut self, index: usize) {
+        let minor_slow = self.entities[index].minor_slow;
+        if minor_slow == 0 {
+            return;
+        }
+        let regenerates = self
+            .actor_runtime_definition(&self.entities[index])
+            .is_some_and(|definition| definition.regenerates);
+        let denominator = if regenerates { 50 } else { 100 };
+        if self.rng.bounded(denominator) < u64::from(minor_slow) {
+            self.entities[index].minor_slow -= 1;
+        }
+    }
+
     pub(super) fn try_clear_monster_confusion(
         &mut self,
         index: usize,
@@ -477,6 +491,10 @@ impl Game {
             self.player.statuses.iter().any(|status| {
                 status.kind_id == STATUS_PLAYER_POLYMORPH && status.remaining_ticks <= 1
             });
+        let invulnerability_expiring =
+            self.player.statuses.iter().any(|status| {
+                status.kind_id == STATUS_INVULNERABILITY && status.remaining_ticks <= 1
+            });
         let player_damage_percent = self.player_incoming_damage_percent();
         let player_tick = process_actor_status_tick(&mut self.player, false, player_damage_percent);
         let player_status_expired = !player_tick.expired.is_empty();
@@ -506,6 +524,9 @@ impl Game {
         if player_race_status_expiring {
             let body_slots = resolve_body_slots(&self.content, self.build.as_ref())?;
             self.reconcile_player_body_slots(body_slots);
+        }
+        if invulnerability_expiring {
+            spend_energy(&mut self.player.energy_need, STANDARD_ACTION_COST);
         }
         if player_status_expired {
             self.refresh_player_resource_maxima();
@@ -615,6 +636,7 @@ impl Game {
                 continue;
             }
             spend_energy(&mut self.entities[index].energy_need, STANDARD_ACTION_COST);
+            self.process_monster_minor_slow_recovery(index);
             if self.resolve_neglected_pet(
                 index,
                 pet_neglect_allowed,

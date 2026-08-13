@@ -1082,6 +1082,13 @@
       "minDepth": 5
     },
     {
+      "itemKindId": "demo.item.pattern-sorcery",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 45,
+      "maxDepth": 90
+    },
+    {
       "itemKindId": "demo.item.pair-of-hard-leather-boots",
       "weight": 100,
       "quantity": 1,
@@ -1692,6 +1699,26 @@
       "maxDepth": 30
     },
     {
+      "itemKindId": "demo.item.beginners-handbook",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 10,
+      "maxDepth": 30
+    },
+    {
+      "itemKindId": "demo.item.master-sorcerers-handbook",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 20,
+      "maxDepth": 50
+    },
+    {
+      "itemKindId": "demo.item.grimoire-of-power",
+      "weight": 33,
+      "quantity": 1,
+      "minDepth": 80
+    },
+    {
       "itemKindId": "demo.item.cantrips-for-beginners",
       "weight": 100,
       "quantity": 1,
@@ -1717,6 +1744,33 @@
       "weight": 100,
       "quantity": 1,
       "minDepth": 25
+    },
+    {
+      "itemKindId": "demo.item.book-of-elements",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 10,
+      "maxDepth": 30
+    },
+    {
+      "itemKindId": "demo.item.earth-wind-and-fire",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 20,
+      "maxDepth": 50
+    },
+    {
+      "itemKindId": "demo.item.path-of-destruction",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 45,
+      "maxDepth": 90
+    },
+    {
+      "itemKindId": "demo.item.day-of-ragnarok",
+      "weight": 33,
+      "quantity": 1,
+      "minDepth": 85
     },
     {
       "itemKindId": "demo.item.stone-ring-scroll",

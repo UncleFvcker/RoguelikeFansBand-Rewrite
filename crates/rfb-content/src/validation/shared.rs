@@ -162,6 +162,7 @@ pub(super) fn attribute_modifiers_out_of_range(modifiers: &StatModifiers) -> boo
         modifiers.constitution,
         modifiers.charisma,
         modifiers.spell_power_bonus,
+        modifiers.device_power_bonus,
     ]
     .into_iter()
     .any(|value| !(-100..=100).contains(&value))

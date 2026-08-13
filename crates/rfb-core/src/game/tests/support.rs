@@ -164,6 +164,26 @@ pub(super) fn dispatch_next(game: &mut Game, command_value: GameCommand) -> Game
     .expect("test command should execute")
 }
 
+pub(super) fn choose_human_talent_if_pending(game: &mut Game) {
+    let Some(pending) = game.snapshot().player.pending_race_mutation_choice else {
+        return;
+    };
+    assert_eq!(pending.reward_id, "human-talent");
+    assert!(
+        pending
+            .candidates
+            .iter()
+            .any(|candidate| candidate.id == "rfb.mutation.sacred-vitality")
+    );
+    dispatch_next(
+        game,
+        GameCommand::ChooseRaceMutation {
+            reward_id: pending.reward_id,
+            mutation_id: "rfb.mutation.sacred-vitality".to_owned(),
+        },
+    );
+}
+
 pub(super) fn descend_one_floor(game: &mut Game) {
     let down_index = game
         .terrain

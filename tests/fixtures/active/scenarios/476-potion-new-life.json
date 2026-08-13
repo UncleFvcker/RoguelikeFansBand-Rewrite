@@ -36,7 +36,7 @@
       "turn": 1,
       "worldTick": 10,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 378,
+      "rngDrawCounter": 364,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -339,42 +339,42 @@
           "strength": {
             "natural": 13,
             "maximumNatural": 13,
-            "potential": 138,
+            "potential": 108,
             "effective": 17,
             "index": 14
           },
           "intelligence": {
             "natural": 13,
             "maximumNatural": 13,
-            "potential": 108,
+            "potential": 118,
             "effective": 11,
             "index": 8
           },
           "wisdom": {
             "natural": 13,
             "maximumNatural": 13,
-            "potential": 108,
+            "potential": 98,
             "effective": 11,
             "index": 8
           },
           "dexterity": {
             "natural": 13,
             "maximumNatural": 13,
-            "potential": 138,
+            "potential": 128,
             "effective": 15,
             "index": 12
           },
           "constitution": {
             "natural": 13,
             "maximumNatural": 13,
-            "potential": 128,
+            "potential": 118,
             "effective": 15,
             "index": 12
           },
           "charisma": {
             "natural": 13,
             "maximumNatural": 13,
-            "potential": 88,
+            "potential": 138,
             "effective": 14,
             "index": 11
           }
@@ -1187,7 +1187,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1221,7 +1222,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1255,7 +1257,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1289,7 +1292,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1323,7 +1327,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1357,7 +1362,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1391,7 +1397,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1425,7 +1432,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1453,7 +1461,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "unexamined"
         }
@@ -1479,7 +1488,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "equipmentBonuses": {
             "meleeAttacks": 0,
@@ -1520,7 +1530,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "identified",
           "quality": "ordinary",
@@ -1556,7 +1567,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "identified",
           "quality": "ordinary",
@@ -1654,7 +1666,7 @@
           "discovered": true
         }
       ],
-      "nextItemInstanceSerial": 181,
+      "nextItemInstanceSerial": 185,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -1662,7 +1674,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "37b7d4261958ce10d4cbb43af691836b0b3a8378c7e462abe5190cfc6b725554"
+      "stateHash": "5d4b0159631561917187b4d8ea624020a46057513b6c0dfe1ba1dec4a185e621"
     },
     "events": [
       {
@@ -1674,6 +1686,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "37b7d4261958ce10d4cbb43af691836b0b3a8378c7e462abe5190cfc6b725554"
+    "saveRoundTripStateHash": "5d4b0159631561917187b4d8ea624020a46057513b6c0dfe1ba1dec4a185e621"
   }
 }

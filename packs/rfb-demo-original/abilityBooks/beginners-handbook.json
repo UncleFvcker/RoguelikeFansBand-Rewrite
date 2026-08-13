@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-book.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-book.beginners-handbook",
+  "nameKey": "ability-book-demo-beginners-handbook-name",
+  "descriptionKey": "ability-book-demo-beginners-handbook-description",
+  "realmId": "sorcery",
+  "rank": 1,
+  "abilityIds": [
+    "demo.ability.sorcery-detect-monsters",
+    "demo.ability.sorcery-phase-door",
+    "demo.ability.sorcery-detect-doors-traps",
+    "demo.ability.sorcery-light-area",
+    "demo.ability.sorcery-confuse-monster",
+    "demo.ability.sorcery-teleport",
+    "demo.ability.sorcery-sleep-monster",
+    "demo.ability.sorcery-recharging"
+  ],
+  "tags": ["sorcery", "spellbook"]
+}

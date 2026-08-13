@@ -680,3 +680,9 @@ save 或 State Hash。待选择期间核心只接受该选择命令，State Hash
 普通近战事务；`ActorSaveDto` 增加必填 `anger` 与 `friendly`。前者保存远程伤害触发的
 0–100 怒气，后者保存“个人崇拜”产生的运行时友好阵营。两项进入 State Hash Schema v99；
 save 容器保持 v1，不提供旧开发存档默认值。
+
+协议 1.201 / contract-v302 合并咒术与毁灭领域的分支协议增量：增加批量鉴定、城镇目标、
+造楼梯、城镇传送、角色自省、次元门、探知、造门、装置精通、放逐、无敌结界等窄化能力
+投影及结构化结果。`StatModifiersDto` 增加装置强度修正，`EntityDto` 与 `ActorSaveDto`
+增加必填的 0..10 `minorSlow`；后两项权威状态与 contract-v301 的怒气、友好状态共同进入
+State Hash Schema v100。save 容器保持 v1，不为缺少这些字段的旧开发存档提供兼容默认值。

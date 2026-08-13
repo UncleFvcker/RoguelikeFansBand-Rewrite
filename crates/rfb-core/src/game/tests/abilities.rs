@@ -2814,6 +2814,7 @@ fn mutation_level_and_failure_paths_do_not_create_ability_progress() {
     let fail_catalog = mutation_ability_catalog(1, 1, 95);
     let mut failed = mutation_ability_game(fail_catalog, "demo.build.warrior");
     failed.player.hp = 20;
+    failed.rng = RfbRng::seeded(0);
     events.clear();
     failed
         .resolve_player_ability(

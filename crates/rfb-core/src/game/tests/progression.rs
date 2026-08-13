@@ -930,6 +930,7 @@ fn new_life_is_one_seeded_transaction_with_locked_mutation_protection() {
     let mut game = test_caster_game(705);
     clear_monsters(&mut game);
     game.apply_unscaled_player_experience(experience_required_for_level(25), &mut Vec::new());
+    choose_human_talent_if_pending(&mut game);
 
     let previous_attribute_max_hp = game.effective_player_max_hp();
     let previous_attribute_resources = game.player_resource_maxima();
@@ -995,7 +996,10 @@ fn new_life_is_one_seeded_transaction_with_locked_mutation_protection() {
     }
     assert_eq!(
         game.progress.active_mutation_ids,
-        BTreeSet::from(["rfb.mutation.puny".to_owned()])
+        BTreeSet::from([
+            "rfb.mutation.puny".to_owned(),
+            "rfb.mutation.sacred-vitality".to_owned(),
+        ])
     );
     assert_eq!(
         update

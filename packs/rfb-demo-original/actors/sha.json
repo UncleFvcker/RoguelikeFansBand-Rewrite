@@ -153,7 +153,8 @@
   "role": "monster",
   "speed": 144,
   "statusImmunities": [
-    "rfb.status.confusion"
+    "rfb.status.confusion",
+    "rfb.status.stun"
   ],
   "tags": [
     "animal",

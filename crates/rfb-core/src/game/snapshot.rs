@@ -569,6 +569,9 @@ impl Game {
                         })
                         .collect(),
                     target_spec,
+                    town_targets: matches!(ability.effect, AbilityEffectDefinition::TeleportTown)
+                        .then(|| self.teleport_town_targets())
+                        .unwrap_or_default(),
                     learned,
                     book_item_id: book_item_id.clone(),
                     can_study: source == AbilitySourceDto::Learned
@@ -732,6 +735,7 @@ impl Game {
                     max_hp: entity.max_hp,
                     speed: derived_speed(&stats.speed),
                     energy_need: entity.energy_need,
+                    minor_slow: entity.minor_slow,
                     alerted: entity.alerted,
                     casting_cooldown_remaining: entity.casting_cooldown_remaining,
                     observed_player_resistances: if fuzzy {

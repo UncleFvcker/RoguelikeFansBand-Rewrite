@@ -246,7 +246,8 @@
   "statusImmunities": [
     "rfb.status.confusion",
     "rfb.status.fear",
-    "rfb.status.sleep"
+    "rfb.status.sleep",
+    "rfb.status.stun"
   ],
   "tags": [
     "aura-fear",

@@ -33,7 +33,10 @@
         "ice",
         "water",
         "psi",
-        "curse"
+        "curse",
+        "meteor",
+        "rocket",
+        "telekinesis"
       ],
       "type": "string"
     },

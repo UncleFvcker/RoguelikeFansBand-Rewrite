@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
-use super::support::{clear_monsters, dispatch_next, give_inventory_item};
+use super::support::{
+    choose_human_talent_if_pending, clear_monsters, dispatch_next, give_inventory_item,
+};
 use super::*;
 
 const ARCHER_BUILD_ID: &str = "demo.build.archer";
@@ -313,6 +315,7 @@ fn archer_shooting_energy_and_heavy_launcher_rules_match_original() {
     clear_monsters(&mut expert);
     expert.progress.level = 50;
     expert.progress.max_level = 50;
+    choose_human_talent_if_pending(&mut expert);
     let expert_profile = expert
         .player_projectile_profile()
         .expect("expert bow should resolve");

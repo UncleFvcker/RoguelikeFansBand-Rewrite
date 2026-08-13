@@ -23,7 +23,8 @@ fn effect_can_affect_ground_items(effect: &AbilityEffectDefinition) -> bool {
         | AbilityEffectDefinition::AreaDamage { .. }
         | AbilityEffectDefinition::BeamDamage { .. }
         | AbilityEffectDefinition::BoltOrBeamDamage { .. }
-        | AbilityEffectDefinition::BoltOrAreaDamage { .. } => true,
+        | AbilityEffectDefinition::BoltOrAreaDamage { .. }
+        | AbilityEffectDefinition::ConeDamage { .. } => true,
         AbilityEffectDefinition::Sequence { effects } => {
             effects.iter().any(effect_can_affect_ground_items)
         }
@@ -319,6 +320,26 @@ pub(super) fn validate_abilities(
                         && (1..=100).contains(telepathy_duration_dice)
                         && (1..=10_000).contains(telepathy_duration_sides)
                 }
+                AbilityEffectDefinition::Probe => true,
+                AbilityEffectDefinition::CreateDoor { terrain_id } => !terrain_id.is_empty(),
+                AbilityEffectDefinition::DeviceMastery {
+                    duration_base,
+                    device_power_bonus,
+                } => (1..=1_000).contains(duration_base) && (1..=100).contains(device_power_bonus),
+                AbilityEffectDefinition::Banish { maximum_distance } => {
+                    (1..=1_000).contains(maximum_distance)
+                        || (*maximum_distance == 0
+                            && has_level_scaling(AbilityLevelScalingField::BanishDistance))
+                }
+                AbilityEffectDefinition::Invulnerability {
+                    duration_dice,
+                    duration_sides,
+                    duration_bonus,
+                } => {
+                    (1..=100).contains(duration_dice)
+                        && (1..=10_000).contains(duration_sides)
+                        && *duration_bonus <= 10_000
+                }
                 AbilityEffectDefinition::BirdDrop => true,
                 AbilityEffectDefinition::DrainResource { amount } => {
                     (1..=1_000_000).contains(amount)
@@ -338,6 +359,18 @@ pub(super) fn validate_abilities(
                 }
                 AbilityEffectDefinition::TeleportTarget
                 | AbilityEffectDefinition::TeleportLevel => true,
+                AbilityEffectDefinition::CreateStair {
+                    up_terrain_id,
+                    down_terrain_id,
+                } => {
+                    !up_terrain_id.is_empty()
+                        && !down_terrain_id.is_empty()
+                        && up_terrain_id != down_terrain_id
+                }
+                AbilityEffectDefinition::TeleportTown | AbilityEffectDefinition::SelfKnowledge => {
+                    true
+                }
+                AbilityEffectDefinition::DimensionDoor { range } => (1..=255).contains(range),
                 AbilityEffectDefinition::FetchItem {
                     maximum_weight_tenths_pound,
                 } => {
@@ -625,7 +658,11 @@ pub(super) fn validate_abilities(
                         && *duration_dice <= 100
                         && ((*duration_dice == 0 && *duration_sides == 0)
                             || (*duration_dice > 0 && (1..=1_000_000).contains(duration_sides)))
-                        && power.is_none_or(|power| (1..=1_000).contains(&power))
+                        && power.is_none_or(|power| {
+                            (1..=1_000).contains(&power)
+                                || (power == 0
+                                    && has_level_scaling(AbilityLevelScalingField::StatusPower))
+                        })
                         && granted_resistances.len() <= 29
                         && granted_brands.len() <= 5
                         && granted_modifiers.max_hp.abs() <= 1_000_000
@@ -707,6 +744,16 @@ pub(super) fn validate_abilities(
                                 && has_level_scaling(AbilityLevelScalingField::IdentifyPower)))
                             && (1..=1_000).contains(full_identify_roll_sides))
                 }
+                AbilityEffectDefinition::IdentifyOrMassIdentify {
+                    mass_at_level,
+                    upgraded_name_key,
+                    upgraded_description_key,
+                    ..
+                } => {
+                    (1..=100).contains(mass_at_level)
+                        && !upgraded_name_key.is_empty()
+                        && !upgraded_description_key.is_empty()
+                }
                 AbilityEffectDefinition::RestoreVitality { life_force } => {
                     (1..=1_000).contains(life_force)
                 }
@@ -771,6 +818,22 @@ pub(super) fn validate_abilities(
                         && target_category
                             .as_ref()
                             .is_none_or(|category| actor_tag_values.contains(category))
+                }
+                AbilityEffectDefinition::MassSleepOrStasis {
+                    stasis_at_level,
+                    sleep_power_multiplier,
+                    stasis_power_multiplier,
+                    power_divisor,
+                    upgraded_name_key,
+                    upgraded_description_key,
+                    ..
+                } => {
+                    (1..=100).contains(stasis_at_level)
+                        && (1..=1_000).contains(sleep_power_multiplier)
+                        && (1..=1_000).contains(stasis_power_multiplier)
+                        && (1..=1_000).contains(power_divisor)
+                        && !upgraded_name_key.is_empty()
+                        && !upgraded_description_key.is_empty()
                 }
                 AbilityEffectDefinition::BrandWeapon { affix_id, .. } => {
                     validate_id(affix_id).is_ok()
@@ -914,6 +977,10 @@ pub(super) fn validate_abilities(
             == [AbilityTargetModeDefinition::Item]
             && ability.target.range == 0
             && !ability.target.requires_line_of_effect;
+        let town_target_rule = ability.target.modes.as_slice()
+            == [AbilityTargetModeDefinition::Town]
+            && ability.target.range == 0
+            && !ability.target.requires_line_of_effect;
         let valid_target = match &ability.effect {
             AbilityEffectDefinition::Damage { .. }
             | AbilityEffectDefinition::Malediction { .. }
@@ -934,6 +1001,12 @@ pub(super) fn validate_abilities(
             | AbilityEffectDefinition::SniperShot { .. }
             | AbilityEffectDefinition::RandomChoice { .. } => projectile_target_rule,
             AbilityEffectDefinition::TeleportLevel => self_target_rule || projectile_target_rule,
+            AbilityEffectDefinition::DimensionDoor { .. } => {
+                ability.target.modes.as_slice() == [AbilityTargetModeDefinition::Position]
+                    && (1..=255).contains(&ability.target.range)
+                    && !ability.target.requires_line_of_effect
+            }
+            AbilityEffectDefinition::TeleportTown => town_target_rule,
             AbilityEffectDefinition::FetchItem { .. }
             | AbilityEffectDefinition::ConsumeTerrain { .. }
             | AbilityEffectDefinition::MeleeThenTeleport { .. }
@@ -955,6 +1028,7 @@ pub(super) fn validate_abilities(
                 }
             },
             AbilityEffectDefinition::IdentifyItem { .. }
+            | AbilityEffectDefinition::IdentifyOrMassIdentify { .. }
             | AbilityEffectDefinition::BrandWeapon { .. }
             | AbilityEffectDefinition::TransmuteItemToGold { .. }
             | AbilityEffectDefinition::DrainItemMagic { .. }
@@ -987,6 +1061,11 @@ pub(super) fn validate_abilities(
             | AbilityEffectDefinition::ReduceStatus { .. }
             | AbilityEffectDefinition::SatisfyHunger
             | AbilityEffectDefinition::Clairvoyance { .. }
+            | AbilityEffectDefinition::Probe
+            | AbilityEffectDefinition::CreateDoor { .. }
+            | AbilityEffectDefinition::DeviceMastery { .. }
+            | AbilityEffectDefinition::Banish { .. }
+            | AbilityEffectDefinition::Invulnerability { .. }
             | AbilityEffectDefinition::RefuelEquippedLight { .. }
             | AbilityEffectDefinition::LightArea { .. }
             | AbilityEffectDefinition::AggravateMonsters
@@ -994,12 +1073,15 @@ pub(super) fn validate_abilities(
             | AbilityEffectDefinition::ResistElements { .. }
             | AbilityEffectDefinition::VisibleDamage { .. }
             | AbilityEffectDefinition::VisibleApplyStatus { .. }
+            | AbilityEffectDefinition::MassSleepOrStasis { .. }
             | AbilityEffectDefinition::RestoreVitality { .. }
             | AbilityEffectDefinition::ReportMagic
             | AbilityEffectDefinition::Earthquake { .. }
             | AbilityEffectDefinition::AreaDestruction { .. }
             | AbilityEffectDefinition::SuppressMonsterReproduction { .. }
             | AbilityEffectDefinition::PolymorphSelf
+            | AbilityEffectDefinition::CreateStair { .. }
+            | AbilityEffectDefinition::SelfKnowledge
             | AbilityEffectDefinition::NoOp { .. } => self_target_rule,
             AbilityEffectDefinition::Detect { .. } => {
                 ability.target.modes.as_slice() == [AbilityTargetModeDefinition::SelfTarget]
@@ -1195,6 +1277,17 @@ pub(super) fn validate_abilities(
             for wall_terrain_id in wall_terrain_ids {
                 require_reference(terrain_ids, wall_terrain_id, &ability.id)?;
             }
+        }
+        if let AbilityEffectDefinition::CreateStair {
+            up_terrain_id,
+            down_terrain_id,
+        } = &ability.effect
+        {
+            require_reference(terrain_ids, up_terrain_id, &ability.id)?;
+            require_reference(terrain_ids, down_terrain_id, &ability.id)?;
+        }
+        if let AbilityEffectDefinition::CreateDoor { terrain_id } = &ability.effect {
+            require_reference(terrain_ids, terrain_id, &ability.id)?;
         }
         normalize_tags(&ability.id, &mut ability.tags)?;
         insert_definition_id(all_ids, &ability.id)?;

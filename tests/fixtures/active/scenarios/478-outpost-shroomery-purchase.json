@@ -29,7 +29,7 @@
       "revision": 1,
       "turn": 1,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 170,
+      "rngDrawCounter": 179,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -206,7 +206,7 @@
           },
           "stock": [
             {
-              "id": "generated.item.117",
+              "id": "generated.item.125",
               "kindId": "demo.item.cure-poison-mushroom",
               "displayNameKey": "item-demo-cure-poison-mushroom-name",
               "quantity": 2,
@@ -216,27 +216,27 @@
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.118",
+              "id": "generated.item.126",
               "kindId": "demo.item.cure-blindness-mushroom",
               "displayNameKey": "item-demo-cure-blindness-mushroom-name",
-              "quantity": 1,
-              "maximumQuantity": 1,
+              "quantity": 2,
+              "maximumQuantity": 2,
               "unitPrice": 30,
               "weightTenthsPound": 1,
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.119",
+              "id": "generated.item.127",
               "kindId": "demo.item.cure-paranoia-mushroom",
               "displayNameKey": "item-demo-cure-paranoia-mushroom-name",
-              "quantity": 3,
-              "maximumQuantity": 3,
+              "quantity": 1,
+              "maximumQuantity": 1,
               "unitPrice": 25,
               "weightTenthsPound": 1,
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.120",
+              "id": "generated.item.128",
               "kindId": "demo.item.cure-confusion-mushroom",
               "displayNameKey": "item-demo-cure-confusion-mushroom-name",
               "quantity": 1,
@@ -246,11 +246,11 @@
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.121",
+              "id": "generated.item.129",
               "kindId": "demo.item.fast-recovery-mushroom",
               "displayNameKey": "item-demo-fast-recovery-mushroom-name",
-              "quantity": 2,
-              "maximumQuantity": 2,
+              "quantity": 1,
+              "maximumQuantity": 1,
               "unitPrice": 30,
               "weightTenthsPound": 2,
               "quality": "ordinary"
@@ -264,7 +264,7 @@
               "maximumQuantity": 7
             },
             {
-              "itemId": "generated.item.178",
+              "itemId": "generated.item.187",
               "kindId": "demo.item.cure-poison-mushroom",
               "unitPrice": 114,
               "maximumQuantity": 1
@@ -1256,12 +1256,13 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "unexamined"
         },
         {
-          "id": "generated.item.178",
+          "id": "generated.item.187",
           "kindId": "demo.item.cure-poison-mushroom",
           "displayNameKey": "item-demo-cure-poison-mushroom-name",
           "knowledge": "aware",
@@ -1284,7 +1285,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "identified",
           "quality": "ordinary"
@@ -1319,7 +1321,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1353,7 +1356,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1387,7 +1391,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1421,7 +1426,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1455,7 +1461,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1489,7 +1496,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1517,7 +1525,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "unexamined"
         }
@@ -1543,7 +1552,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "equipmentBonuses": {
             "meleeAttacks": 0,
@@ -1584,7 +1594,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "identified",
           "quality": "ordinary",
@@ -1620,7 +1631,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "identified",
           "quality": "ordinary",
@@ -1680,7 +1692,7 @@
           "identified": true
         },
         {
-          "itemId": "generated.item.178",
+          "itemId": "generated.item.187",
           "discovered": true,
           "appraised": true,
           "identified": true
@@ -1720,7 +1732,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 179,
+      "nextItemInstanceSerial": 188,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -1728,7 +1740,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "8fb5c11ee7d032caed075c554a938b68552c81e90a7a5c0b4f678928ef7b2d6e"
+      "stateHash": "6f2d8f81f965ea7d88f7fb848282a51c06f3d0fd39f9915b80f4c7e452454bac"
     },
     "events": [
       {
@@ -1736,7 +1748,7 @@
         "messageKey": "shop-purchase-success",
         "args": {
           "balance": "999880",
-          "item": "generated.item.178",
+          "item": "generated.item.187",
           "quantity": "1",
           "shop": "demo.shop.outpost-shroomery",
           "target": "demo.item.cure-poison-mushroom",

@@ -1,0 +1,1 @@
+{"$schema":"https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json","formatVersion":1,"id":"demo.ability-program.sorcery-device-mastery","input":"self","steps":[{"type":"device-mastery","durationBase":3,"devicePowerBonus":4}]}

@@ -51,7 +51,10 @@
         "ice",
         "water",
         "psi",
-        "curse"
+        "curse",
+        "meteor",
+        "rocket",
+        "telekinesis"
       ],
       "type": "string"
     },
@@ -1005,6 +1008,7 @@
                 "charisma": 0,
                 "constitution": 0,
                 "defense": 0,
+                "devicePowerBonus": 0,
                 "dexterity": 0,
                 "intelligence": 0,
                 "maxHp": 0,
@@ -1077,6 +1081,9 @@
                 "mana": {
                   "$ref": "#/$defs/ActorResistanceLevel"
                 },
+                "meteor": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
                 "nether": {
                   "$ref": "#/$defs/ActorResistanceLevel"
                 },
@@ -1098,6 +1105,9 @@
                 "psi": {
                   "$ref": "#/$defs/ActorResistanceLevel"
                 },
+                "rocket": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
                 "shards": {
                   "$ref": "#/$defs/ActorResistanceLevel"
                 },
@@ -1105,6 +1115,9 @@
                   "$ref": "#/$defs/ActorResistanceLevel"
                 },
                 "storm": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
+                "telekinesis": {
                   "$ref": "#/$defs/ActorResistanceLevel"
                 },
                 "time": {
@@ -2390,6 +2403,11 @@
           "type": "integer"
         },
         "defense": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "devicePowerBonus": {
           "default": 0,
           "format": "int32",
           "type": "integer"

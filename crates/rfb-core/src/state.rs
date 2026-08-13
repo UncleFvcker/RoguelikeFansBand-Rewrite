@@ -27,6 +27,7 @@ pub(crate) struct Actor {
     pub(crate) power_per_mille: u16,
     pub(crate) speed: u16,
     pub(crate) energy_need: i32,
+    pub(crate) minor_slow: u8,
     pub(crate) alerted: bool,
     pub(crate) nice: bool,
     pub(crate) visible_invisible: bool,

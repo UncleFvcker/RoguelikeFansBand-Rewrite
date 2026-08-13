@@ -1043,10 +1043,32 @@ export class StatusPanel {
     );
     forget.disabled =
       this.#state.busy || this.#state.playerDead || this.#state.worldMap || !ability.canForget;
-    const cast = this.#abilityAction("action-ability-cast", () => this.#castAbility(ability));
+    let townTarget: HTMLSelectElement | undefined;
+    if (ability.targetSpec.modes.includes("town")) {
+      townTarget = document.createElement("select");
+      townTarget.className = "ability-town-target";
+      townTarget.setAttribute(
+        "aria-label",
+        this.#localization.format("action-ability-town-target"),
+      );
+      for (const target of ability.townTargets ?? []) {
+        const option = document.createElement("option");
+        option.value = target.townId;
+        option.textContent = this.#localization.format(target.townNameKey as MessageKey);
+        townTarget.append(option);
+      }
+      actions.append(townTarget);
+    }
+    const cast = this.#abilityAction("action-ability-cast", () =>
+      this.#castAbility(ability, townTarget?.value),
+    );
     cast.classList.add("ability-cast-action");
     cast.disabled =
-      this.#state.busy || this.#state.playerDead || this.#state.worldMap || !ability.canCast;
+      this.#state.busy ||
+      this.#state.playerDead ||
+      this.#state.worldMap ||
+      !ability.canCast ||
+      (ability.targetSpec.modes.includes("town") && (ability.townTargets?.length ?? 0) === 0);
     if (studyMode === "chosen") actions.append(study);
     actions.append(forget, cast);
     row.append(details, actions);
@@ -1114,7 +1136,16 @@ export class StatusPanel {
     return button;
   }
 
-  #castAbility(ability: AbilityDto): void {
+  #castAbility(ability: AbilityDto, townId?: string): void {
+    if (ability.targetSpec.modes.includes("town")) {
+      if (!townId) return;
+      void this.#dispatch({
+        type: "cast-ability",
+        abilityId: ability.id,
+        target: { type: "town", townId },
+      });
+      return;
+    }
     if (ability.targetSpec.modes.includes("self")) {
       void this.#dispatch({
         type: "cast-ability",

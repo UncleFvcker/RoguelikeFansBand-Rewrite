@@ -1,0 +1,24 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/build.schema.json",
+  "formatVersion": 1,
+  "id": "demo.build.high-mage-armageddon",
+  "nameKey": "build-demo-high-mage-armageddon-name",
+  "descriptionKey": "build-demo-high-mage-armageddon-description",
+  "raceId": "demo.race.rfb-human",
+  "classId": "demo.class.high-mage",
+  "personalityId": "demo.personality.ordinary",
+  "playerActorId": "demo.actor.high-mage-player",
+  "firstRealmId": "armageddon",
+  "startingItems": [
+    { "itemKindId": "demo.item.book-of-elements", "quantity": 1 }
+  ],
+  "attributes": {
+    "strength": 13,
+    "intelligence": 13,
+    "wisdom": 13,
+    "dexterity": 13,
+    "constitution": 13,
+    "charisma": 13
+  },
+  "tags": ["armageddon", "caster", "high-mage", "rfb-compatibility"]
+}

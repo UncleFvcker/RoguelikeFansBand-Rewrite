@@ -400,6 +400,7 @@ impl Game {
                 charisma: definition.modifiers.charisma,
                 speed: definition.modifiers.speed,
                 spell_power_bonus: definition.modifiers.spell_power_bonus,
+                device_power_bonus: definition.modifiers.device_power_bonus,
             })
     }
 
@@ -596,6 +597,9 @@ impl Game {
                     spell_power_bonus: total
                         .spell_power_bonus
                         .saturating_add(affix.modifiers.spell_power_bonus),
+                    device_power_bonus: total
+                        .device_power_bonus
+                        .saturating_add(affix.modifiers.device_power_bonus),
                 }
             },
         );
@@ -774,6 +778,9 @@ impl Game {
                     spell_power_bonus: total
                         .spell_power_bonus
                         .saturating_add(item.spell_power_bonus),
+                    device_power_bonus: total
+                        .device_power_bonus
+                        .saturating_add(item.device_power_bonus),
                 }
             })
     }
@@ -791,6 +798,13 @@ impl Game {
                 .spell_power_bonus
                 .saturating_add(mutation_bonus),
             |total, status| total.saturating_add(status.granted_modifiers.spell_power_bonus),
+        )
+    }
+
+    pub(super) fn effective_player_device_power_bonus(&self) -> i32 {
+        self.player.statuses.iter().fold(
+            self.equipment_modifiers().device_power_bonus,
+            |total, status| total.saturating_add(status.granted_modifiers.device_power_bonus),
         )
     }
 
@@ -1553,6 +1567,25 @@ impl Game {
             base_source,
             i32::from(actor.speed),
         );
+        if actor.minor_slow > 0 {
+            let has_slow = actor
+                .statuses
+                .iter()
+                .any(|status| status.kind_id == STATUS_SLOW);
+            let penalty = if has_slow {
+                actor.minor_slow / 4
+            } else {
+                actor.minor_slow
+            };
+            if penalty > 0 {
+                pipeline.add(
+                    StatKind::Speed,
+                    StatLayer::Status,
+                    "rfb.status.monster-minor-slow",
+                    -i32::from(penalty),
+                );
+            }
+        }
         if include_equipment
             && let Some(mount_id) = self.riding_actor_id.as_deref()
             && let Some(mount) = self.entities.iter().find(|entity| entity.id == mount_id)

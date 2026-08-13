@@ -84,6 +84,7 @@ pub(crate) fn actor_from_spawn(
         power_per_mille: BASE_ACTOR_POWER_PER_MILLE,
         speed,
         energy_need,
+        minor_slow: 0,
         alerted,
         nice: false,
         visible_invisible: false,
@@ -121,6 +122,7 @@ pub(crate) fn actor_from_runtime_spawn(
         power_per_mille: BASE_ACTOR_POWER_PER_MILLE,
         speed,
         energy_need,
+        minor_slow: 0,
         alerted,
         nice: false,
         visible_invisible: false,
@@ -171,6 +173,7 @@ pub(crate) fn actor_from_player(
         power_per_mille: BASE_ACTOR_POWER_PER_MILLE,
         speed: player.base_speed,
         energy_need: player.energy_need,
+        minor_slow: 0,
         alerted: true,
         nice: false,
         visible_invisible: false,
@@ -263,6 +266,9 @@ pub(crate) fn actor_from_entity(
     if entity.anger > 100 {
         return Err(CoreError::InvalidSave("entity anger is invalid"));
     }
+    if entity.minor_slow > 10 {
+        return Err(CoreError::InvalidSave("entity minor slow is invalid"));
+    }
     if definition.evolution.as_ref().map_or_else(
         || entity.experience != 0,
         |evolution| entity.experience >= evolution.required_experience,
@@ -284,6 +290,7 @@ pub(crate) fn actor_from_entity(
         power_per_mille: entity.power_per_mille,
         speed: entity.base_speed,
         energy_need: entity.energy_need,
+        minor_slow: entity.minor_slow,
         alerted: entity.alerted.unwrap_or_else(|| {
             runtime_definition
                 .awareness
@@ -581,6 +588,7 @@ fn validate_item_runtime_state(
                                 AbilityTargetModeDefinition::Position => TargetModeDto::Position,
                                 AbilityTargetModeDefinition::Entity => TargetModeDto::Entity,
                                 AbilityTargetModeDefinition::Item => TargetModeDto::Item,
+                                AbilityTargetModeDefinition::Town => TargetModeDto::Town,
                                 AbilityTargetModeDefinition::SelfTarget => {
                                     TargetModeDto::SelfTarget
                                 }
@@ -799,6 +807,7 @@ pub(crate) fn actors_to_save(entities: &[Actor]) -> Vec<ActorSaveDto> {
             power_per_mille: entity.power_per_mille,
             base_speed: entity.speed,
             energy_need: entity.energy_need,
+            minor_slow: entity.minor_slow,
             alerted: Some(entity.alerted),
             nice: entity.nice,
             visible_invisible: entity.visible_invisible,
@@ -1088,6 +1097,7 @@ fn stat_modifiers_to_dto(modifiers: &StatModifiers) -> StatModifiersDto {
         charisma: modifiers.charisma,
         speed: modifiers.speed,
         spell_power_bonus: modifiers.spell_power_bonus,
+        device_power_bonus: modifiers.device_power_bonus,
     }
 }
 
@@ -1104,6 +1114,7 @@ fn stat_modifiers_from_dto(modifiers: StatModifiersDto) -> StatModifiers {
         charisma: modifiers.charisma,
         speed: modifiers.speed,
         spell_power_bonus: modifiers.spell_power_bonus,
+        device_power_bonus: modifiers.device_power_bonus,
     }
 }
 
@@ -1175,6 +1186,7 @@ fn affix_property_bundle_out_of_range(properties: &AffixPropertyBundleDefinition
             modifiers.charisma,
             modifiers.speed,
             modifiers.spell_power_bonus,
+            modifiers.device_power_bonus,
         ]
         .into_iter()
         .any(|value| !(-100..=100).contains(&value))
@@ -1217,6 +1229,9 @@ const fn damage_type_dto(value: ActorDamageType) -> DamageTypeDto {
         ActorDamageType::Water => DamageTypeDto::Water,
         ActorDamageType::Psi => DamageTypeDto::Psi,
         ActorDamageType::Curse => DamageTypeDto::Curse,
+        ActorDamageType::Meteor => DamageTypeDto::Meteor,
+        ActorDamageType::Rocket => DamageTypeDto::Rocket,
+        ActorDamageType::Telekinesis => DamageTypeDto::Telekinesis,
     }
 }
 
@@ -1254,6 +1269,9 @@ const fn actor_damage_type(value: DamageTypeDto) -> Option<ActorDamageType> {
         DamageTypeDto::Water => ActorDamageType::Water,
         DamageTypeDto::Psi => ActorDamageType::Psi,
         DamageTypeDto::Curse => ActorDamageType::Curse,
+        DamageTypeDto::Meteor => ActorDamageType::Meteor,
+        DamageTypeDto::Rocket => ActorDamageType::Rocket,
+        DamageTypeDto::Telekinesis => ActorDamageType::Telekinesis,
     })
 }
 

@@ -202,7 +202,8 @@
   "role": "monster",
   "speed": 131,
   "statusImmunities": [
-    "rfb.status.confusion"
+    "rfb.status.confusion",
+    "rfb.status.stun"
   ],
   "tags": [
     "kin-glyph-112",

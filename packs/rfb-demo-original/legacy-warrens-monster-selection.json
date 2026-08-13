@@ -1847,7 +1847,7 @@
       "sourceIndex": 911,
       "id": "quartz-vein",
       "tags": ["warrens"],
-      "omittedFlags": ["NASTY_GLYPH", "NO_STUN"]
+      "omittedFlags": ["NASTY_GLYPH", ]
     },
     {
       "sourceIndex": 925,
@@ -1967,7 +1967,7 @@
       "sourceIndex": 884,
       "id": "noxious-fume",
       "tags": ["warrens"],
-      "omittedFlags": ["NO_STUN"]
+      "omittedFlags": []
     },
     {
       "sourceIndex": 984,
@@ -2255,13 +2255,13 @@
       "sourceIndex": 354,
       "id": "fire-vortex",
       "tags": ["orc-cave"],
-      "omittedFlags": ["NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE"]
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE"]
     },
     {
       "sourceIndex": 355,
       "id": "water-vortex",
       "tags": ["orc-cave"],
-      "omittedFlags": ["NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE"]
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE"]
     },
     {
       "sourceIndex": 356,
@@ -2273,13 +2273,13 @@
       "sourceIndex": 358,
       "id": "cold-vortex",
       "tags": ["orc-cave"],
-      "omittedFlags": ["NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE"]
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE"]
     },
     {
       "sourceIndex": 359,
       "id": "energy-vortex",
       "tags": ["orc-cave"],
-      "omittedFlags": ["NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE"]
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE"]
     },
     {
       "sourceIndex": 360,
@@ -2627,7 +2627,7 @@
       "sourceIndex": 902,
       "id": "magma-intrusion",
       "tags": ["orc-cave"],
-      "omittedFlags": ["NO_STUN", "NASTY_GLYPH"]
+      "omittedFlags": ["NASTY_GLYPH"]
     },
     {
       "sourceIndex": 903,
@@ -3125,7 +3125,7 @@
       "sourceIndex": 898,
       "id": "granite-wall",
       "tags": ["orc-cave"],
-      "omittedFlags": ["NASTY_GLYPH", "NO_STUN"]
+      "omittedFlags": ["NASTY_GLYPH", ]
     },
     {
       "sourceIndex": 926,
@@ -3323,7 +3323,7 @@
       "sourceIndex": 1234,
       "id": "xylibbogaz-the-disembodied-mouth",
       "tags": ["orc-cave"],
-      "omittedFlags": ["FEMALE", "NO_STUN", "POS_TELEPATHY"]
+      "omittedFlags": ["FEMALE", "POS_TELEPATHY"]
     },
     {
       "sourceIndex": 927,
@@ -3695,7 +3695,7 @@
       "sourceIndex": 536,
       "id": "star-vampire",
       "tags": ["orc-cave"],
-      "omittedFlags": ["NO_STUN", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+      "omittedFlags": ["POS_HOLD_LIFE", "POS_SEE_INVIS"]
     },
     {
       "sourceIndex": 541,
@@ -3947,7 +3947,7 @@
       "sourceIndex": 897,
       "id": "shard-vortex",
       "tags": ["orc-cave"],
-      "omittedFlags": ["NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE"]
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE"]
     },
     {
       "sourceIndex": 1047,
@@ -4037,7 +4037,7 @@
       "sourceIndex": 587,
       "id": "nexus-vortex",
       "tags": ["orc-cave"],
-      "omittedFlags": ["NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE"]
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE"]
     },
     {
       "sourceIndex": 590,
@@ -4061,7 +4061,7 @@
       "sourceIndex": 599,
       "id": "time-vortex",
       "tags": ["orc-cave"],
-      "omittedFlags": ["NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE"]
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE"]
     },
     {
       "sourceIndex": 604,
@@ -4169,7 +4169,7 @@
       "sourceIndex": 1240,
       "id": "nidaros-the-clairvoyant",
       "tags": ["orc-cave"],
-      "omittedFlags": ["MALE","NO_STUN","POS_TELEPATHY"]
+      "omittedFlags": ["MALE","POS_TELEPATHY"]
     },
     {
       "sourceIndex": 525,
@@ -4301,7 +4301,7 @@
       "sourceIndex": 572,
       "id": "the-greater-hell-magic-mushroom-were-quylthulg",
       "tags": ["orc-cave"],
-      "omittedFlags": ["NO_STUN","POS_GAIN_AC","POS_HOLD_LIFE","POS_SEE_INVIS","RES_WALL"]
+      "omittedFlags": ["POS_GAIN_AC","POS_HOLD_LIFE","POS_SEE_INVIS","RES_WALL"]
     },
     {
       "sourceIndex": 573,
@@ -4361,7 +4361,7 @@
       "sourceIndex": 588,
       "id": "plasma-vortex",
       "tags": ["orc-cave"],
-      "omittedFlags": ["NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE"]
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE"]
     },
     {
       "sourceIndex": 589,
@@ -4379,7 +4379,7 @@
       "sourceIndex": 941,
       "id": "bone-dragon",
       "tags": ["orc-cave"],
-      "omittedFlags": ["NO_STUN", "POS_GAIN_AC"]
+      "omittedFlags": ["POS_GAIN_AC"]
     },
     {
       "sourceIndex": 1209,
@@ -4469,7 +4469,7 @@
       "sourceIndex": 613,
       "id": "fire-vampire",
       "tags": ["orc-cave"],
-      "omittedFlags": ["NO_STUN", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+      "omittedFlags": ["POS_HOLD_LIFE", "POS_SEE_INVIS"]
     },
     {
       "sourceIndex": 616,
@@ -4685,7 +4685,7 @@
       "sourceIndex": 1023,
       "id": "hand-grenade",
       "tags": ["hand-grenade"],
-      "omittedFlags": ["NO_STUN"]
+      "omittedFlags": []
     },
     {
       "sourceIndex": 1147,
@@ -4715,7 +4715,7 @@
       "sourceIndex": 863,
       "id": "quantum-dot",
       "tags": ["orc-cave"],
-      "omittedFlags": ["ATTR_ANY", "ATTR_MULTI", "NASTY_GLYPH", "NO_STUN", "STUPID"]
+      "omittedFlags": ["ATTR_ANY", "ATTR_MULTI", "NASTY_GLYPH", "STUPID"]
     },
     {
       "sourceIndex": 558,
@@ -4769,7 +4769,7 @@
       "sourceIndex": 655,
       "id": "ubbo-sathla-the-unbegotten-source",
       "tags": ["orc-cave"],
-      "omittedFlags": ["CAN_SPEAK", "NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS", "POS_SUST_CON", "POS_SUST_STR"]
+      "omittedFlags": ["CAN_SPEAK", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS", "POS_SUST_CON", "POS_SUST_STR"]
     },
     {
       "sourceIndex": 656,
@@ -4877,7 +4877,7 @@
       "sourceIndex": 678,
       "id": "colour-out-of-space",
       "tags": ["orc-cave"],
-      "omittedFlags": ["ATTR_ANY", "ATTR_MULTI", "CHAR_CLEAR", "NASTY_GLYPH", "NO_STUN"]
+      "omittedFlags": ["ATTR_ANY", "ATTR_MULTI", "CHAR_CLEAR", "NASTY_GLYPH", ]
     },
     {
       "sourceIndex": 999,
@@ -4895,7 +4895,7 @@
       "sourceIndex": 1262,
       "id": "eskimo",
       "tags": ["orc-cave"],
-      "omittedFlags": ["MALE", "NO_STUN", "POS_TELEPATHY"]
+      "omittedFlags": ["MALE", "POS_TELEPATHY"]
     },
     {
       "sourceIndex": 680,
@@ -5015,7 +5015,7 @@
       "sourceIndex": 1048,
       "id": "stone-dragon",
       "tags": ["orc-cave"],
-      "omittedFlags": ["NO_STUN", "POS_GAIN_AC"]
+      "omittedFlags": ["POS_GAIN_AC"]
     },
     {
       "sourceIndex": 1082,
@@ -5225,7 +5225,7 @@
       "sourceIndex": 600,
       "id": "shimmering-vortex",
       "tags": ["outpost-quest", "shimmering-vortex", "vapor-quest", "vortex"],
-      "omittedFlags": ["ATTR_MULTI", "NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE"]
+      "omittedFlags": ["ATTR_MULTI", "POS_GAIN_AC", "POS_HOLD_LIFE"]
     },
     {
       "sourceIndex": 625,
@@ -5375,7 +5375,7 @@
       "sourceIndex": 669,
       "id": "charybdis",
       "tags": ["orc-cave"],
-      "omittedFlags": ["NO_STUN", "POS_GAIN_AC"]
+      "omittedFlags": ["POS_GAIN_AC"]
     },
     {
       "sourceIndex": 717,
@@ -5579,7 +5579,7 @@
       "sourceIndex": 1291,
       "id": "tracking-pixel",
       "tags": ["orc-cave", "tracking-pixel"],
-      "omittedFlags": ["CHAR_CLEAR", "NASTY_GLYPH", "NO_STUN", "POS_TELEPATHY"]
+      "omittedFlags": ["CHAR_CLEAR", "NASTY_GLYPH", "POS_TELEPATHY"]
     },
     {
       "sourceIndex": 734,
@@ -5651,13 +5651,13 @@
       "sourceIndex": 751,
       "id": "death-vortex",
       "tags": ["orc-cave"],
-      "omittedFlags": ["NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE"]
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE"]
     },
     {
       "sourceIndex": 752,
       "id": "aether-vortex",
       "tags": ["orc-cave"],
-      "omittedFlags": ["ATTR_ANY", "ATTR_MULTI", "NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE", "RES_WALL"]
+      "omittedFlags": ["ATTR_ANY", "ATTR_MULTI", "POS_GAIN_AC", "POS_HOLD_LIFE", "RES_WALL"]
     },
     {
       "sourceIndex": 753,
@@ -5717,7 +5717,7 @@
       "sourceIndex": 1049,
       "id": "steel-dragon",
       "tags": ["orc-cave"],
-      "omittedFlags": ["NO_STUN", "POS_GAIN_AC"]
+      "omittedFlags": ["POS_GAIN_AC"]
     },
     {
       "sourceIndex": 1068,
@@ -5819,7 +5819,7 @@
       "sourceIndex": 1394,
       "id": "greater-dokkaebi",
       "tags": ["orc-cave"],
-      "omittedFlags": ["NO_STUN", "POS_SEE_INVIS", "POS_TELEPATHY"]
+      "omittedFlags": ["POS_SEE_INVIS", "POS_TELEPATHY"]
     },
     {
       "sourceIndex": 733,
@@ -5903,7 +5903,7 @@
       "sourceIndex": 921,
       "id": "internet-exploder",
       "tags": ["internet-exploder", "orc-cave"],
-      "omittedFlags": ["CAN_SPEAK", "NO_STUN", "RES_WALL"]
+      "omittedFlags": ["CAN_SPEAK", "RES_WALL"]
     },
     {
       "sourceIndex": 732,
@@ -5921,7 +5921,7 @@
       "sourceIndex": 1292,
       "id": "the-gospel-of-mug",
       "tags": ["angwil-quest", "fixed-placement"],
-      "omittedFlags": ["NASTY_GLYPH", "NO_STUN", "POS_GAIN_AC", "POS_SEE_INVIS", "POS_TELEPATHY"]
+      "omittedFlags": ["NASTY_GLYPH", "POS_GAIN_AC", "POS_SEE_INVIS", "POS_TELEPATHY"]
     },
     {
       "sourceIndex": 1261,
@@ -5957,7 +5957,7 @@
       "sourceIndex": 1201,
       "id": "countess-bathory",
       "tags": ["orc-cave"],
-      "omittedFlags": ["CAN_SPEAK", "FEMALE", "NO_STUN", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+      "omittedFlags": ["CAN_SPEAK", "FEMALE", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
     },
     {
       "sourceIndex": 1269,
@@ -6083,7 +6083,7 @@
       "sourceIndex": 1248,
       "id": "huitzilonevada-the-feathered-boa",
       "tags": ["orc-cave"],
-      "omittedFlags": ["NO_STUN", "POS_GAIN_AC", "POS_SEE_INVIS", "POS_TELEPATHY"]
+      "omittedFlags": ["POS_GAIN_AC", "POS_SEE_INVIS", "POS_TELEPATHY"]
     },
     {
       "sourceIndex": 746,
@@ -6095,7 +6095,7 @@
       "sourceIndex": 937,
       "id": "lems-the-cyborg",
       "tags": ["orc-cave"],
-      "omittedFlags": ["MALE", "NO_STUN", "POS_GAIN_AC", "POS_SEE_INVIS"]
+      "omittedFlags": ["MALE", "POS_GAIN_AC", "POS_SEE_INVIS"]
     },
     {
       "sourceIndex": 1287,
@@ -6245,7 +6245,7 @@
       "sourceIndex": 1045,
       "id": "disintegrate-vortex",
       "tags": ["orc-cave"],
-      "omittedFlags": ["NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE"]
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE"]
     },
     {
       "sourceIndex": 1151,
@@ -6257,19 +6257,19 @@
       "sourceIndex": 1198,
       "id": "bronze-golem",
       "tags": ["orc-cave"],
-      "omittedFlags": ["NO_STUN"]
+      "omittedFlags": []
     },
     {
       "sourceIndex": 1199,
       "id": "bone-golem",
       "tags": ["orc-cave"],
-      "omittedFlags": ["NO_STUN"]
+      "omittedFlags": []
     },
     {
       "sourceIndex": 1270,
       "id": "sha",
       "tags": ["orc-cave"],
-      "omittedFlags": ["EGYPTIAN", "EGYPTIAN2", "NO_STUN", "POS_GAIN_AC", "RES_WALL"]
+      "omittedFlags": ["EGYPTIAN", "EGYPTIAN2", "POS_GAIN_AC", "RES_WALL"]
     },
     {
       "sourceIndex": 1345,
@@ -6299,7 +6299,7 @@
       "sourceIndex": 788,
       "id": "glaaki",
       "tags": ["orc-cave"],
-      "omittedFlags": ["ATTR_MULTI", "CAN_SPEAK", "NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+      "omittedFlags": ["ATTR_MULTI", "CAN_SPEAK", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
     },
     {
       "sourceIndex": 789,
@@ -6413,7 +6413,7 @@
       "sourceIndex": 1080,
       "id": "flying-spaghetti-monster",
       "tags": ["orc-cave"],
-      "omittedFlags": ["NO_STUN"]
+      "omittedFlags": []
     },
     {
       "sourceIndex": 1084,
@@ -6503,7 +6503,7 @@
       "sourceIndex": 1233,
       "id": "muru-siloch-the-spinning-abomination",
       "tags": ["orc-cave"],
-      "omittedFlags": ["NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE", "RES_WALL"]
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE", "RES_WALL"]
     },
     {
       "sourceIndex": 785,
@@ -6515,7 +6515,7 @@
       "sourceIndex": 803,
       "id": "null-the-living-void",
       "tags": ["orc-cave"],
-      "omittedFlags": ["NASTY_GLYPH", "NO_STUN"]
+      "omittedFlags": ["NASTY_GLYPH", ]
     },
     {
       "sourceIndex": 804,
@@ -6563,7 +6563,7 @@
       "sourceIndex": 1272,
       "id": "flying-fishrooster",
       "tags": ["orc-cave"],
-      "omittedFlags": ["NO_STUN", "POS_GAIN_AC", "RES_WALL"]
+      "omittedFlags": ["POS_GAIN_AC", "RES_WALL"]
     },
     {
       "sourceIndex": 793,
@@ -6785,7 +6785,7 @@
       "sourceIndex": 1085,
       "id": "spellwarp-automaton",
       "tags": ["orc-cave"],
-      "omittedFlags": ["NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE"]
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE"]
     },
     {
       "sourceIndex": 1087,
@@ -6815,7 +6815,7 @@
       "sourceIndex": 1250,
       "id": "polyphemus-the-blind-cyclops",
       "tags": ["orc-cave"],
-      "omittedFlags": ["MALE", "NO_STUN", "POS_SUST_STR"]
+      "omittedFlags": ["MALE", "POS_SUST_STR"]
     },
     {
       "sourceIndex": 1361,
@@ -6839,7 +6839,7 @@
       "sourceIndex": 1264,
       "id": "nephthys-lady-of-the-night",
       "tags": ["orc-cave"],
-      "omittedFlags": ["EGYPTIAN", "FEMALE", "NO_STUN", "POS_SEE_INVIS", "POS_TELEPATHY", "RES_WALL"]
+      "omittedFlags": ["EGYPTIAN", "FEMALE", "POS_SEE_INVIS", "POS_TELEPATHY", "RES_WALL"]
     },
     {
       "sourceIndex": 1177,
@@ -6857,14 +6857,14 @@
       "sourceIndex": 871,
       "id": "metal-babble",
       "tags": ["orc-cave"],
-      "omittedFlags": ["KILL_EXP", "NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS", "POS_SUST_CHR", "POS_SUST_CON", "POS_SUST_DEX", "POS_SUST_INT", "POS_SUST_STR", "POS_SUST_WIS"]
+      "omittedFlags": ["KILL_EXP", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS", "POS_SUST_CHR", "POS_SUST_CON", "POS_SUST_DEX", "POS_SUST_INT", "POS_SUST_STR", "POS_SUST_WIS"]
     },
     {
       "sourceIndex": 1110,
       "sourceId": "metal-babble",
       "id": "metal-babble-unique",
       "tags": ["orc-cave"],
-      "omittedFlags": ["KILL_EXP", "NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS", "POS_SUST_CHR", "POS_SUST_CON", "POS_SUST_DEX", "POS_SUST_INT", "POS_SUST_STR", "POS_SUST_WIS"]
+      "omittedFlags": ["KILL_EXP", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS", "POS_SUST_CHR", "POS_SUST_CON", "POS_SUST_DEX", "POS_SUST_INT", "POS_SUST_STR", "POS_SUST_WIS"]
     },
     {
       "sourceIndex": 1355,
@@ -6876,19 +6876,19 @@
       "sourceIndex": 1359,
       "id": "magni-son-of-thor",
       "tags": ["orc-cave"],
-      "omittedFlags": ["MALE", "NO_STUN", "POS_GAIN_AC", "POS_SUST_STR"]
+      "omittedFlags": ["MALE", "POS_GAIN_AC", "POS_SUST_STR"]
     },
     {
       "sourceIndex": 1378,
       "id": "ganesha-the-elephant-god",
       "tags": ["orc-cave"],
-      "omittedFlags": ["MALE", "NO_STUN", "POS_GAIN_AC", "RES_WALL"]
+      "omittedFlags": ["MALE", "POS_GAIN_AC", "RES_WALL"]
     },
     {
       "sourceIndex": 1363,
       "id": "agni-the-threefold-fire",
       "tags": ["orc-cave"],
-      "omittedFlags": ["CAN_SPEAK", "MALE", "NO_STUN", "POS_SEE_INVIS", "POS_TELEPATHY"]
+      "omittedFlags": ["CAN_SPEAK", "MALE", "POS_SEE_INVIS", "POS_TELEPATHY"]
     },
     {
       "sourceIndex": 1348,
@@ -6948,7 +6948,7 @@
       "sourceIndex": 1227,
       "id": "basement-cat",
       "tags": ["fixed-placement"],
-      "omittedFlags": ["NO_STUN"]
+      "omittedFlags": []
     },
     {
       "sourceIndex": 1251,
@@ -6966,7 +6966,7 @@
       "sourceIndex": 1385,
       "id": "jambavan-king-of-the-beasts",
       "tags": ["mount-meru"],
-      "omittedFlags": ["MALE", "NO_STUN", "POS_GAIN_AC"]
+      "omittedFlags": ["MALE", "POS_GAIN_AC"]
     }
   ]
 }
