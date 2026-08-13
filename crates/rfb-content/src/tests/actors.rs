@@ -3,6 +3,27 @@ use std::collections::BTreeSet;
 use super::*;
 
 #[test]
+fn rfb_pet_evolution_relations_use_stable_actor_ids() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let evolution_count = artifact
+        .content
+        .actors
+        .iter()
+        .filter(|actor| actor.evolution.is_some())
+        .count();
+    assert_eq!(evolution_count, 315);
+    let horse = artifact
+        .content
+        .actors
+        .iter()
+        .find(|actor| actor.id == "demo.actor.horse")
+        .expect("Horse should be imported");
+    let evolution = horse.evolution.as_ref().expect("Horse should evolve");
+    assert_eq!(evolution.required_experience, 70);
+    assert_eq!(evolution.next_actor_kind_id, "demo.actor.unruly-horse");
+}
+
+#[test]
 fn p11_actor_facts_remain_explicit_and_narrow() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let actor = |id: &str| {

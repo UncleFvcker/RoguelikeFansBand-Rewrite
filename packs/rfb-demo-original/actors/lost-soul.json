@@ -25,6 +25,10 @@
   },
   "defense": 1,
   "descriptionKey": "actor-demo-lost-soul-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.moaning-spirit",
+    "requiredExperience": 150
+  },
   "experienceValue": 18,
   "formatVersion": 1,
   "glyph": "G",

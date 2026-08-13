@@ -11,6 +11,10 @@
   "damageType": "disenchant",
   "defense": 6,
   "descriptionKey": "actor-demo-disenchanter-beast-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.unicorn",
+    "requiredExperience": 8000
+  },
   "experienceValue": 250,
   "formatVersion": 1,
   "glyph": "q",

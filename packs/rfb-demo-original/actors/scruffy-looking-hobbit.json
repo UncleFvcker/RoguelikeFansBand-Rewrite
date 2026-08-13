@@ -5,6 +5,10 @@
   "role": "monster",
   "nameKey": "actor-demo-scruffy-looking-hobbit-name",
   "descriptionKey": "actor-demo-scruffy-looking-hobbit-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.halfling-slinger",
+    "requiredExperience": 5000
+  },
   "glyph": "h",
   "level": 3,
   "experienceValue": 5,

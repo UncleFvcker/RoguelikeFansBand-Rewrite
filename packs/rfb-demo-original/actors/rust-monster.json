@@ -11,6 +11,10 @@
   "damageType": "acid",
   "defense": 5,
   "descriptionKey": "actor-demo-rust-monster-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.disenchanter-beast",
+    "requiredExperience": 500
+  },
   "experienceValue": 50,
   "formatVersion": 1,
   "glyph": "q",

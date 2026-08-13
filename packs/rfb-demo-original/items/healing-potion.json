@@ -12,6 +12,16 @@
   "id": "demo.item.healing-potion",
   "maxStack": 20,
   "mogaminatorRare": false,
+  "mountUse": {
+    "type": "heal",
+    "minimumBond": 2500,
+    "amount": 300,
+    "clearStatuses": [
+      "rfb.status.confusion",
+      "rfb.status.fear",
+      "rfb.status.stun"
+    ]
+  },
   "nameKey": "item-demo-healing-potion-name",
   "shatterEffectProgramId": "demo.effect.healing-potion.shatter",
   "shatterRadius": 2,

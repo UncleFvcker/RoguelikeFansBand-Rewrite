@@ -14,6 +14,10 @@
   "damageType": "physical",
   "defense": 5,
   "descriptionKey": "actor-demo-hammerhead-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.white-shark",
+    "requiredExperience": 300
+  },
   "experienceValue": 40,
   "formatVersion": 1,
   "glyph": "l",

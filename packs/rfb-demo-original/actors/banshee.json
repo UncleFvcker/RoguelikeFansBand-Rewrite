@@ -23,6 +23,10 @@
   },
   "defense": 2,
   "descriptionKey": "actor-demo-banshee-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.ghost",
+    "requiredExperience": 600
+  },
   "experienceValue": 60,
   "formatVersion": 1,
   "glyph": "G",

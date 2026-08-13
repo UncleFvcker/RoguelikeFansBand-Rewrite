@@ -22,6 +22,10 @@
   },
   "defense": 4,
   "descriptionKey": "actor-demo-hardened-warrior-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.dagashi",
+    "requiredExperience": 2500
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

@@ -45,7 +45,7 @@ use crate::{
     state::{
         Actor, BASE_ACTOR_POWER_PER_MILLE, FloorConnectionState, FloorRegionState, FloorState,
         GoldPile, HomeState, ItemInstance, ItemLocation, MonsterPackIdentity, ResourcePool,
-        RolledAffixState, ShopState, SummonIdentity, TownState,
+        RidingBond, RolledAffixState, ShopState, SummonIdentity, TownState,
     },
     stats::{
         AttributeKind, AttributeSet, CharacterBuildIdentity, CharacterProgress, DerivedStat,
@@ -134,6 +134,7 @@ mod player_abilities;
 mod player_combat;
 mod player_stats;
 mod progression;
+mod riding_bond;
 mod riding_proficiency;
 mod snapshot;
 mod status_effects;
@@ -202,7 +203,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 94;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 95;
 #[cfg(test)]
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const VISIBILITY_RADIUS: i32 = 8;
@@ -856,6 +857,7 @@ pub struct Game {
     player_name: String,
     player: Actor,
     riding_actor_id: Option<String>,
+    riding_bond: Option<RidingBond>,
     build: Option<CharacterBuildIdentity>,
     body_slots: Vec<BodySlot>,
     progress: CharacterProgress,
@@ -1198,6 +1200,7 @@ impl Game {
             player_name,
             player,
             riding_actor_id: None,
+            riding_bond: None,
             build,
             body_slots,
             progress,
@@ -2798,6 +2801,7 @@ impl Game {
             if self.riding_actor_id.as_deref() == Some(removed.id.as_str()) {
                 self.riding_actor_id = None;
             }
+            self.clear_riding_bond_for(&removed.id);
             if let Some(pack_id) = removed
                 .pack
                 .as_ref()
@@ -3906,6 +3910,9 @@ impl Game {
         target: Option<&TargetSelection>,
         target_glyph: Option<&str>,
     ) -> bool {
+        if let Some(valid) = self.mount_item_target_is_valid(source_item_id, target) {
+            return !valid;
+        }
         let Some((effect, target_definition)) = self.inventory_item_use_effect(source_item_id)
         else {
             return false;
@@ -4444,6 +4451,7 @@ impl Game {
                 .position(|entity| entity.id == mount_id && entity.hp > 0)
             else {
                 self.riding_actor_id = None;
+                self.clear_riding_bond_for(&mount_id);
                 events.push(DomainEvent::RidingUnavailable);
                 return;
             };

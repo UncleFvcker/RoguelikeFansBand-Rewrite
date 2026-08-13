@@ -32,6 +32,10 @@
   },
   "defense": 6,
   "descriptionKey": "actor-demo-algroth-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.ice-troll",
+    "requiredExperience": 1200
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

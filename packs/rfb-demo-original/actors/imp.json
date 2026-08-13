@@ -23,6 +23,10 @@
   },
   "defense": 3,
   "descriptionKey": "actor-demo-imp-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.bodak",
+    "requiredExperience": 1000
+  },
   "doorInteraction": {
     "bashes": true
   },

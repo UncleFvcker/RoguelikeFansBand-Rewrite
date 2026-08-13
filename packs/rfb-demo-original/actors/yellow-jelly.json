@@ -11,6 +11,10 @@
   "damageType": "physical",
   "defense": 0,
   "descriptionKey": "actor-demo-yellow-jelly-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.green-jelly",
+    "requiredExperience": 6
+  },
   "experienceValue": 12,
   "formatVersion": 1,
   "glyph": "j",

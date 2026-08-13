@@ -29,6 +29,10 @@
   },
   "defense": 5,
   "descriptionKey": "actor-demo-headless-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.giant-headless",
+    "requiredExperience": 6000
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

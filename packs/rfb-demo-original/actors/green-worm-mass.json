@@ -5,6 +5,10 @@
   "role": "monster",
   "nameKey": "actor-demo-green-worm-mass-name",
   "descriptionKey": "actor-demo-green-worm-mass-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.slimy-worm-mass",
+    "requiredExperience": 5
+  },
   "glyph": "w",
   "level": 1,
   "experienceValue": 4,

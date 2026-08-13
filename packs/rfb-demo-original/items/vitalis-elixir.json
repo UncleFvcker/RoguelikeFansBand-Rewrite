@@ -12,6 +12,16 @@
   "id": "demo.item.vitalis-elixir",
   "maxStack": 20,
   "mogaminatorRare": false,
+  "mountUse": {
+    "type": "heal",
+    "minimumBond": 2500,
+    "full": true,
+    "clearStatuses": [
+      "rfb.status.confusion",
+      "rfb.status.fear",
+      "rfb.status.stun"
+    ]
+  },
   "nameKey": "item-demo-vitalis-elixir-name",
   "tags": [
     "attribute-restoration",

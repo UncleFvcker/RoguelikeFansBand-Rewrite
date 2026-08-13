@@ -35,6 +35,10 @@
   },
   "defense": 5,
   "descriptionKey": "actor-demo-young-white-dragon-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.mature-white-dragon",
+    "requiredExperience": 4000
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

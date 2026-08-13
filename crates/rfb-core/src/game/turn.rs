@@ -437,6 +437,7 @@ impl Game {
                 if self.riding_actor_id.as_deref() == Some(removed_id.as_str()) {
                     self.riding_actor_id = None;
                 }
+                self.clear_riding_bond_for(&removed_id);
                 changed.insert(position);
                 removed_entities.push(removed_id.clone());
                 events.push(DomainEvent::SummonExpired {

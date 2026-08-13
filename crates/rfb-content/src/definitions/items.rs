@@ -231,6 +231,37 @@ pub enum RidingWeaponKindDefinition {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(
+    tag = "type",
+    rename_all = "kebab-case",
+    rename_all_fields = "camelCase",
+    deny_unknown_fields
+)]
+pub enum ItemMountUseDefinition {
+    Heal {
+        minimum_bond: u16,
+        #[serde(default)]
+        dice: u16,
+        #[serde(default)]
+        sides: u16,
+        #[serde(default)]
+        amount: u32,
+        #[serde(default)]
+        full: bool,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        clear_statuses: Vec<String>,
+    },
+    Haste {
+        minimum_bond: u16,
+        duration_dice: u16,
+        duration_sides: u16,
+        duration_bonus: u16,
+        extension: u16,
+    },
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct AmmunitionProfileDefinition {
     pub ammunition_type: AmmunitionTypeDefinition,
@@ -807,6 +838,9 @@ pub struct ItemDefinition {
     pub throw_profile: Option<ThrowProfileDefinition>,
     #[serde(default)]
     pub use_action: Option<ItemUseActionDefinition>,
+    /// Alternate RFB potion effect when fed to the current bonded mount.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mount_use: Option<ItemMountUseDefinition>,
     /// Independent effect executed when an elemental projection destroys this
     /// item on the ground. It is never inferred from the drinking effect.
     #[serde(default, skip_serializing_if = "Option::is_none")]

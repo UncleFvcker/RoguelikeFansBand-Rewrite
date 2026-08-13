@@ -28,6 +28,10 @@
   },
   "defense": 6,
   "descriptionKey": "actor-demo-cherub-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.seraph",
+    "requiredExperience": 5000
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

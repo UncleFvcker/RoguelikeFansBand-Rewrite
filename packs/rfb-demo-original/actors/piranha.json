@@ -19,6 +19,10 @@
   "damageType": "physical",
   "defense": 0,
   "descriptionKey": "actor-demo-piranha-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.giant-piranha",
+    "requiredExperience": 40
+  },
   "experienceValue": 9,
   "formatVersion": 1,
   "glyph": "l",

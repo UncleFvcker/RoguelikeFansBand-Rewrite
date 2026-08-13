@@ -33,7 +33,8 @@ pub(super) fn validate_actors(
     let mut actor_monster_casting = Vec::new();
     let mut actor_corpse_item_ids = Vec::new();
     let mut allocation_indices = BTreeSet::new();
-    for actor in actors {
+    let mut actor_evolutions = Vec::new();
+    for actor in &mut *actors {
         require_schema(&actor.schema, ACTOR_SCHEMA, &actor.id)?;
         require_format_version(actor.format_version, &actor.id)?;
         validate_definition_id(&actor.id, "actor")?;
@@ -86,6 +87,17 @@ pub(super) fn validate_actors(
             || (actor.role != ActorRole::Monster && actor.reflects_bolts)
         {
             return Err(ContentError::InvalidActorStats(actor.id.clone()));
+        }
+        if let Some(evolution) = &actor.evolution {
+            if actor.role != ActorRole::Monster
+                || evolution.required_experience == 0
+                || evolution.required_experience > u64::from(u32::MAX)
+                || evolution.next_actor_kind_id == actor.id
+                || validate_id(&evolution.next_actor_kind_id).is_err()
+            {
+                return Err(ContentError::InvalidActorEvolution(actor.id.clone()));
+            }
+            actor_evolutions.push((actor.id.clone(), evolution.next_actor_kind_id.clone()));
         }
         if (actor.role == ActorRole::Player
             && (actor.inventory_slot_capacity == 0 || actor.inventory_slot_capacity > 1_000))
@@ -327,6 +339,11 @@ pub(super) fn validate_actors(
         insert_definition_id(all_ids, &actor.id)?;
         actor_roles.insert(actor.id.clone(), actor.role);
         actor_levels.insert(actor.id.clone(), actor.level);
+    }
+    for (actor_id, target_id) in actor_evolutions {
+        if actor_roles.get(&target_id) != Some(&ActorRole::Monster) {
+            return Err(ContentError::InvalidActorEvolution(actor_id));
+        }
     }
     Ok(ActorValidationOutputs {
         actor_roles,

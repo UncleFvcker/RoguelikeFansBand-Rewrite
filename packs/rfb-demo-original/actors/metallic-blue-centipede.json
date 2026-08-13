@@ -15,6 +15,10 @@
   "damageType": "physical",
   "defense": 0,
   "descriptionKey": "actor-demo-metallic-blue-centipede-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.metallic-red-centipede",
+    "requiredExperience": 15
+  },
   "doorInteraction": {
     "bashes": true
   },

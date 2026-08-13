@@ -12,6 +12,14 @@
   "id": "demo.item.swiftstep-tonic",
   "maxStack": 20,
   "mogaminatorRare": false,
+  "mountUse": {
+    "type": "haste",
+    "minimumBond": 5000,
+    "durationDice": 1,
+    "durationSides": 25,
+    "durationBonus": 15,
+    "extension": 5
+  },
   "nameKey": "item-demo-swiftstep-tonic-name",
   "tags": [
     "consumable",

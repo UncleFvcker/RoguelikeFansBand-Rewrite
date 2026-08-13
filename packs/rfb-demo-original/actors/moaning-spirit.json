@@ -25,6 +25,10 @@
   },
   "defense": 2,
   "descriptionKey": "actor-demo-moaning-spirit-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.ghost",
+    "requiredExperience": 600
+  },
   "experienceValue": 44,
   "forceSleep": true,
   "formatVersion": 1,

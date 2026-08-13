@@ -26,6 +26,10 @@
   },
   "defense": 6,
   "descriptionKey": "actor-demo-master-mystic-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.grand-master-mystic",
+    "requiredExperience": 50000
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

@@ -5,6 +5,10 @@
   "role": "monster",
   "nameKey": "actor-demo-chiokovo-name",
   "descriptionKey": "actor-demo-chiokovo-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.black-chiokovo",
+    "requiredExperience": 600
+  },
   "glyph": "B",
   "level": 8,
   "experienceValue": 20,

@@ -5,6 +5,10 @@
   "role": "monster",
   "nameKey": "actor-demo-black-naga-name",
   "descriptionKey": "actor-demo-black-naga-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.green-naga",
+    "requiredExperience": 40
+  },
   "glyph": "n",
   "level": 3,
   "experienceValue": 22,

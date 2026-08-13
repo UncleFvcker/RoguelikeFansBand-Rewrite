@@ -12,6 +12,10 @@
   "damageType": "physical",
   "defense": 4,
   "descriptionKey": "actor-demo-giant-grey-ant-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.giant-blue-ant",
+    "requiredExperience": 800
+  },
   "doorInteraction": {
     "bashes": true
   },

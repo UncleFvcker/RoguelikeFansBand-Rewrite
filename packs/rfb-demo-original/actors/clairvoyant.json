@@ -22,6 +22,10 @@
   },
   "defense": 5,
   "descriptionKey": "actor-demo-clairvoyant-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.archpriest",
+    "requiredExperience": 6000
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

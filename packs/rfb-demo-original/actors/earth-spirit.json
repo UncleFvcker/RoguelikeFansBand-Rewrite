@@ -12,6 +12,10 @@
   "damageType": "physical",
   "defense": 4,
   "descriptionKey": "actor-demo-earth-spirit-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.earth-elemental",
+    "requiredExperience": 1200
+  },
   "experienceValue": 64,
   "formatVersion": 1,
   "glyph": "E",

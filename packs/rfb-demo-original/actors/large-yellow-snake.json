@@ -15,6 +15,10 @@
   "damageType": "physical",
   "defense": 3,
   "descriptionKey": "actor-demo-large-yellow-snake-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.large-grey-snake",
+    "requiredExperience": 15
+  },
   "doorInteraction": {
     "bashes": true
   },

@@ -15,6 +15,10 @@
   "damageType": "physical",
   "defense": 0,
   "descriptionKey": "actor-demo-metallic-red-centipede-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.giant-clear-centipede",
+    "requiredExperience": 150
+  },
   "doorInteraction": {
     "bashes": true
   },

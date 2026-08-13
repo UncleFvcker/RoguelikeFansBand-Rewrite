@@ -187,6 +187,9 @@ impl Game {
             return None;
         }
         self.riding_actor_id = Some(self.entities[index].id.clone());
+        if self.actor_is_player_aligned(&self.entities[index]) {
+            self.ensure_riding_bond(index);
+        }
         events.extend(self.relocate_player(position, changed));
         events.push(DomainEvent::RidingMounted { target_kind_id });
         Some(index)
@@ -265,6 +268,7 @@ impl Game {
                 }
             }
             self.entities[index].controller_id = Some(self.player.id.clone());
+            self.ensure_riding_bond(index);
             changed.insert(self.player.position);
             events.push(DomainEvent::RodeoTamed { target_kind_id });
         } else {

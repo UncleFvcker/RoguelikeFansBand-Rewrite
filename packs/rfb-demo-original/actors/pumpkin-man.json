@@ -20,6 +20,10 @@
   "damageType": "physical",
   "defense": 5,
   "descriptionKey": "actor-demo-pumpkin-man-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.death-pumpkin",
+    "requiredExperience": 20000
+  },
   "experienceValue": 150,
   "formatVersion": 1,
   "glyph": "g",

@@ -16,6 +16,10 @@
   "damageType": "physical",
   "defense": 1,
   "descriptionKey": "actor-demo-raven-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.hunting-hawk-of-julian",
+    "requiredExperience": 100
+  },
   "experienceValue": 9,
   "formatVersion": 1,
   "glyph": "B",

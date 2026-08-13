@@ -28,6 +28,10 @@
   },
   "defense": 9,
   "descriptionKey": "actor-demo-cyclops-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.biclops",
+    "requiredExperience": 2000
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

@@ -18,6 +18,10 @@
   "damageType": "physical",
   "defense": 2,
   "descriptionKey": "actor-demo-eagle-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.great-eagle",
+    "requiredExperience": 400
+  },
   "experienceValue": 22,
   "formatVersion": 1,
   "glyph": "B",

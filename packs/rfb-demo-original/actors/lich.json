@@ -24,6 +24,10 @@
   },
   "defense": 6,
   "descriptionKey": "actor-demo-lich-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.crypt-thing",
+    "requiredExperience": 4000
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

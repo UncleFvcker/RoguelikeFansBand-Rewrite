@@ -16,7 +16,7 @@ use crate::{
         gold_piles_to_save, inventory_item_from_dto, inventory_to_save, item_from_dto,
         items_to_save, player_to_save, revealed_terrain_from_save,
     },
-    state::{Actor, FloorState, ItemInstance, ItemLocation},
+    state::{Actor, FloorState, ItemInstance, ItemLocation, RidingBond},
     stats::{AttributeKind, AttributeSet, CharacterProgress, SkillProgress},
 };
 use rfb_content::{ContentCatalog, FloorLifecycle, TaskObjectiveKind, WildernessTerrain};
@@ -939,6 +939,11 @@ impl Game {
         let summon_command = payload.player.summon_command.clone();
         let recall = payload.player.recall.clone();
         let riding_actor_id = payload.player.riding_actor_id.clone();
+        let riding_bond = payload.player.riding_bond.clone().map(|bond| RidingBond {
+            actor_id: bond.actor_id,
+            actor_kind_id: bond.actor_kind_id,
+            value: bond.value,
+        });
         let confusing_strike_ready = payload.player.confusing_strike_ready;
         let minor_slow = payload.player.minor_slow;
         if minor_slow > 10 {
@@ -1086,6 +1091,47 @@ impl Game {
                     .and_then(|state| state.retained_instance_id.as_deref())
                     == stored.dungeon_instance_id.as_deref()
             });
+        }
+        if riding_actor_id.as_ref().is_some_and(|actor_id| {
+            !entities.iter().any(|actor| {
+                actor.id == *actor_id
+                    && actor.hp > 0
+                    && (actor.controller_id.as_deref() == Some(player.id.as_str())
+                        || actor
+                            .summon
+                            .as_ref()
+                            .is_some_and(|summon| summon.owner_id == player.id))
+                    && content
+                        .actor(&actor.kind_id)
+                        .is_some_and(|definition| definition.rideable)
+            })
+        }) {
+            return Err(CoreError::InvalidSave("riding actor state is invalid"));
+        }
+        if riding_bond.as_ref().is_some_and(|bond| {
+            bond.value > super::riding_bond::RIDING_BOND_MAX
+                || !entities
+                    .iter()
+                    .chain(
+                        stored_floors
+                            .values()
+                            .flat_map(|floor| floor.entities.iter()),
+                    )
+                    .any(|actor| {
+                        actor.id == bond.actor_id
+                            && actor.kind_id == bond.actor_kind_id
+                            && actor.hp > 0
+                            && (actor.controller_id.as_deref() == Some(player.id.as_str())
+                                || actor
+                                    .summon
+                                    .as_ref()
+                                    .is_some_and(|summon| summon.owner_id == player.id))
+                            && content
+                                .actor(&actor.kind_id)
+                                .is_some_and(|definition| definition.rideable)
+                    })
+        }) {
+            return Err(CoreError::InvalidSave("riding bond state is invalid"));
         }
         let mut allocator_entities = entities.clone();
         let mut allocator_items = items.clone();
@@ -1273,6 +1319,7 @@ impl Game {
             player_name,
             player,
             riding_actor_id,
+            riding_bond,
             gold,
             nutrition,
             build,
@@ -1542,6 +1589,14 @@ impl Game {
         player.summon_command = self.summon_command.clone();
         player.recall = self.recall.clone();
         player.riding_actor_id = self.riding_actor_id.clone();
+        player.riding_bond =
+            self.riding_bond
+                .as_ref()
+                .map(|bond| rfb_protocol::RidingBondSaveDto {
+                    actor_id: bond.actor_id.clone(),
+                    actor_kind_id: bond.actor_kind_id.clone(),
+                    value: bond.value,
+                });
         player.confusing_strike_ready = self.confusing_strike_ready;
         player.minor_slow = self.minor_slow;
         player.minor_slow_energy = self.minor_slow_energy;

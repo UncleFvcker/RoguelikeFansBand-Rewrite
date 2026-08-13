@@ -12,6 +12,16 @@
   "id": "demo.item.cure-critical-wounds-potion",
   "maxStack": 20,
   "mogaminatorRare": false,
+  "mountUse": {
+    "type": "heal",
+    "minimumBond": 2500,
+    "dice": 12,
+    "sides": 8,
+    "clearStatuses": [
+      "rfb.status.fear",
+      "rfb.status.stun"
+    ]
+  },
   "nameKey": "item-demo-cure-critical-wounds-potion-name",
   "shatterEffectProgramId": "demo.effect.cure-critical-wounds-potion.shatter",
   "shatterRadius": 2,

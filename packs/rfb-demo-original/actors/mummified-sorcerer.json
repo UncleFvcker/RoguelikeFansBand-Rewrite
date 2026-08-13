@@ -24,6 +24,10 @@
   },
   "defense": 7,
   "descriptionKey": "actor-demo-mummified-sorcerer-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.mummy-king",
+    "requiredExperience": 36300
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

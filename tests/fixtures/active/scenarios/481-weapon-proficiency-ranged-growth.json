@@ -16,6 +16,7 @@
       {
         "id": "contract.weapon-proficiency-target",
         "kindId": "demo.actor.adobe-golem",
+        "experience": 0,
         "position": {
           "x": 46,
           "y": 16
@@ -743,6 +744,15 @@
             "hitBonus": 10
           },
           {
+            "itemKindId": "demo.item.heavy-lance",
+            "nameKey": "item-demo-heavy-lance-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
             "itemKindId": "demo.item.jo-staff",
             "nameKey": "item-demo-jo-staff-name",
             "category": "melee",
@@ -1182,6 +1192,7 @@
           "displayNameKey": "item-demo-ration-of-food-name",
           "knowledge": "aware",
           "usable": true,
+          "mountUsable": false,
           "canReceiveRecharge": false,
           "canSupplyRecharge": false,
           "quantity": 7,
@@ -1208,6 +1219,7 @@
           "displayNameKey": "item-demo-wooden-torch-name",
           "knowledge": "aware",
           "usable": false,
+          "mountUsable": false,
           "fuel": {
             "kind": "torch",
             "current": 3500,
@@ -1240,6 +1252,7 @@
           "displayNameKey": "item-demo-wooden-torch-name",
           "knowledge": "aware",
           "usable": false,
+          "mountUsable": false,
           "fuel": {
             "kind": "torch",
             "current": 3500,
@@ -1272,6 +1285,7 @@
           "displayNameKey": "item-demo-wooden-torch-name",
           "knowledge": "aware",
           "usable": false,
+          "mountUsable": false,
           "fuel": {
             "kind": "torch",
             "current": 3500,
@@ -1304,6 +1318,7 @@
           "displayNameKey": "item-demo-arrow-name",
           "knowledge": "aware",
           "usable": false,
+          "mountUsable": false,
           "canReceiveRecharge": false,
           "canSupplyRecharge": false,
           "quantity": 21,
@@ -1507,7 +1522,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "b320005c97d4a7273655c5a19770bcad6bf1d635cd98e5e7c2cf39fa8547010a"
+      "stateHash": "5ee5dd828d7413ddce65ae726dece7726d7e68de7a54bbea8062179f9996259e"
     },
     "events": [
       {

@@ -11,6 +11,10 @@
   "damageType": "physical",
   "defense": 3,
   "descriptionKey": "actor-demo-frumious-bandersnatch-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.carrion-crawler",
+    "requiredExperience": 600
+  },
   "doorInteraction": {
     "bashes": true
   },

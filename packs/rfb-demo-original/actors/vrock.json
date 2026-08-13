@@ -25,6 +25,10 @@
   },
   "defense": 7,
   "descriptionKey": "actor-demo-vrock-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.clubber-demon",
+    "requiredExperience": 2000
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

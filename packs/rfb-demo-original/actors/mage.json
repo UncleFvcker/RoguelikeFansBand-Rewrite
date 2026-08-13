@@ -24,6 +24,10 @@
   },
   "defense": 4,
   "descriptionKey": "actor-demo-mage-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.ipsissimus",
+    "requiredExperience": 2500
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

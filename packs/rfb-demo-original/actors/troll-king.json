@@ -30,6 +30,10 @@
   },
   "defense": 9,
   "descriptionKey": "actor-demo-troll-king-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.storm-troll",
+    "requiredExperience": 18000
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

@@ -13,6 +13,10 @@
   "damageType": "cold",
   "defense": 1,
   "descriptionKey": "actor-demo-white-worm-mass-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.red-worm-mass",
+    "requiredExperience": 20
+  },
   "experienceValue": 5,
   "formatVersion": 1,
   "glyph": "w",

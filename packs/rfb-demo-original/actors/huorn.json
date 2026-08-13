@@ -24,6 +24,10 @@
   },
   "defense": 4,
   "descriptionKey": "actor-demo-huorn-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.ent",
+    "requiredExperience": 15000
+  },
   "experienceValue": 75,
   "formatVersion": 1,
   "glyph": "#",

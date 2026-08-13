@@ -5,6 +5,10 @@
   "role": "monster",
   "nameKey": "actor-demo-agent-of-black-market-name",
   "descriptionKey": "actor-demo-agent-of-black-market-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.novice-rogue",
+    "requiredExperience": 10
+  },
   "glyph": "t",
   "level": 0,
   "experienceValue": 0,

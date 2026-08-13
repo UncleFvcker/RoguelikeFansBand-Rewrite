@@ -32,6 +32,10 @@
   },
   "defense": 3,
   "descriptionKey": "actor-demo-black-ogre-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.ogre-warrior",
+    "requiredExperience": 400
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

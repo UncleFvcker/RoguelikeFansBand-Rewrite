@@ -15,6 +15,10 @@
   "damageType": "physical",
   "defense": 0,
   "descriptionKey": "actor-demo-clear-icky-thing-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.blubbering-icky-thing",
+    "requiredExperience": 7
+  },
   "experienceValue": 3,
   "formatVersion": 1,
   "glyph": "i",

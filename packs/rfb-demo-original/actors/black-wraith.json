@@ -26,6 +26,10 @@
   },
   "defense": 5,
   "descriptionKey": "actor-demo-black-wraith-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.nether-wraith",
+    "requiredExperience": 5000
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

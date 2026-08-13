@@ -12,6 +12,10 @@
   "damageType": "physical",
   "defense": 2,
   "descriptionKey": "actor-demo-water-spirit-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.water-elemental",
+    "requiredExperience": 1200
+  },
   "doorInteraction": {
     "bashes": true
   },

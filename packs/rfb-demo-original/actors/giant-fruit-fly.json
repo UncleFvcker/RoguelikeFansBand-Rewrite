@@ -13,6 +13,10 @@
   "damageType": "physical",
   "defense": 1,
   "descriptionKey": "actor-demo-giant-fruit-fly-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.hummerhorn",
+    "requiredExperience": 70
+  },
   "experienceValue": 4,
   "formatVersion": 1,
   "glyph": "I",

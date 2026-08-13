@@ -27,6 +27,10 @@
   },
   "defense": 3,
   "descriptionKey": "actor-demo-ghost-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.spectre",
+    "requiredExperience": 800
+  },
   "experienceValue": 100,
   "forceSleep": true,
   "formatVersion": 1,

@@ -11,6 +11,10 @@
   "damageType": "physical",
   "defense": 5,
   "descriptionKey": "actor-demo-carrion-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.winged-horror",
+    "requiredExperience": 30000
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

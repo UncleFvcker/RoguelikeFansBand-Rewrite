@@ -11,6 +11,10 @@
   "damageType": "poison",
   "defense": 0,
   "descriptionKey": "actor-demo-green-jelly-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.silver-jelly",
+    "requiredExperience": 20
+  },
   "experienceValue": 13,
   "formatVersion": 1,
   "glyph": "j",

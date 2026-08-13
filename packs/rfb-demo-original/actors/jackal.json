@@ -5,6 +5,10 @@
   "role": "monster",
   "nameKey": "actor-demo-jackal-name",
   "descriptionKey": "actor-demo-jackal-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.wolf",
+    "requiredExperience": 40
+  },
   "glyph": "C",
   "level": 1,
   "experienceValue": 3,

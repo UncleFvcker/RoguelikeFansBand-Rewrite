@@ -34,6 +34,10 @@
   },
   "defense": 6,
   "descriptionKey": "actor-demo-young-red-dragon-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.mature-red-dragon",
+    "requiredExperience": 5000
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

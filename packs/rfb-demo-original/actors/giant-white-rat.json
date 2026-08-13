@@ -13,6 +13,10 @@
   "damageType": "poison",
   "defense": 0,
   "descriptionKey": "actor-demo-giant-white-rat-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.giant-grey-rat",
+    "requiredExperience": 20
+  },
   "experienceValue": 2,
   "formatVersion": 1,
   "glyph": "r",

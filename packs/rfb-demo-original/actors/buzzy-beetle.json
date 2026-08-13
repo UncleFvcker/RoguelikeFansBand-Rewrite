@@ -20,6 +20,10 @@
   },
   "defense": 9,
   "descriptionKey": "actor-demo-buzzy-beetle-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.hammer-brother",
+    "requiredExperience": 600
+  },
   "doorInteraction": {
     "bashes": true
   },

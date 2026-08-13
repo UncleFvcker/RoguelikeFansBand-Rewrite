@@ -17,6 +17,10 @@
   "damageType": "physical",
   "defense": 0,
   "descriptionKey": "actor-demo-giant-green-frog-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.giant-pink-frog",
+    "requiredExperience": 30
+  },
   "doorInteraction": {
     "bashes": true
   },

@@ -32,6 +32,10 @@
   },
   "defense": 14,
   "descriptionKey": "actor-demo-ultra-elite-paladin-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.knight-templar",
+    "requiredExperience": 10000
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

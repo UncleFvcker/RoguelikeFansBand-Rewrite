@@ -14,6 +14,10 @@
   "damageType": "physical",
   "defense": 3,
   "descriptionKey": "actor-demo-horse-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.unruly-horse",
+    "requiredExperience": 70
+  },
   "doorInteraction": {
     "bashes": true
   },

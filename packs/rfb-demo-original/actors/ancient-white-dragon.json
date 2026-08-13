@@ -31,6 +31,10 @@
   },
   "defense": 9,
   "descriptionKey": "actor-demo-ancient-white-dragon-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.great-ice-wyrm",
+    "requiredExperience": 100000
+  },
   "doorInteraction": {
     "bashes": true
   },

@@ -34,6 +34,10 @@
   },
   "defense": 6,
   "descriptionKey": "actor-demo-young-green-dragon-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.mature-green-dragon",
+    "requiredExperience": 4000
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

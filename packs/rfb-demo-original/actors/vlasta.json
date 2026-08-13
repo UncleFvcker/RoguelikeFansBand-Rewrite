@@ -11,6 +11,10 @@
   "damageType": "physical",
   "defense": 2,
   "descriptionKey": "actor-demo-vlasta-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.tyrannosaurus",
+    "requiredExperience": 800
+  },
   "doorInteraction": {
     "opens": true
   },

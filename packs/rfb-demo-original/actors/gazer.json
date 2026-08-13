@@ -14,6 +14,10 @@
   "damageType": "physical",
   "defense": 1,
   "descriptionKey": "actor-demo-gazer-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.spectator",
+    "requiredExperience": 300
+  },
   "experienceValue": 40,
   "formatVersion": 1,
   "glyph": "e",

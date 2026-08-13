@@ -26,6 +26,10 @@
   },
   "defense": 8,
   "descriptionKey": "actor-demo-ancient-blue-dragon-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.great-storm-wyrm",
+    "requiredExperience": 100000
+  },
   "doorInteraction": {
     "bashes": true
   },

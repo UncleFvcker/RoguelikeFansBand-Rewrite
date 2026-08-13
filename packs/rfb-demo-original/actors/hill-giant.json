@@ -27,6 +27,10 @@
   },
   "defense": 4,
   "descriptionKey": "actor-demo-hill-giant-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.stone-giant",
+    "requiredExperience": 400
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

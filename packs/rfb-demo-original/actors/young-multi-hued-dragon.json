@@ -26,6 +26,10 @@
   },
   "defense": 6,
   "descriptionKey": "actor-demo-young-multi-hued-dragon-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.mature-multi-hued-dragon",
+    "requiredExperience": 7000
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

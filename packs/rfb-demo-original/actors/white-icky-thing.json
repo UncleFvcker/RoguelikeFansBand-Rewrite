@@ -5,6 +5,10 @@
   "role": "monster",
   "nameKey": "actor-demo-white-icky-thing-name",
   "descriptionKey": "actor-demo-white-icky-thing-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.blubbering-icky-thing",
+    "requiredExperience": 7
+  },
   "glyph": "i",
   "level": 1,
   "experienceValue": 3,

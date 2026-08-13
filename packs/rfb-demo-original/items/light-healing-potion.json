@@ -12,6 +12,12 @@
   "id": "demo.item.light-healing-potion",
   "maxStack": 20,
   "mogaminatorRare": false,
+  "mountUse": {
+    "type": "heal",
+    "minimumBond": 2500,
+    "dice": 4,
+    "sides": 8
+  },
   "nameKey": "item-demo-light-healing-potion-name",
   "shatterEffectProgramId": "demo.effect.light-healing-potion.shatter",
   "shatterRadius": 2,

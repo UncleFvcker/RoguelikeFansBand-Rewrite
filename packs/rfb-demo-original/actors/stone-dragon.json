@@ -22,6 +22,10 @@
   },
   "defense": 17,
   "descriptionKey": "actor-demo-stone-dragon-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.steel-dragon",
+    "requiredExperience": 40000
+  },
   "doorInteraction": {
     "bashes": true
   },

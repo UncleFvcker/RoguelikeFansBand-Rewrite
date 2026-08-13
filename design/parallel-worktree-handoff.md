@@ -434,3 +434,24 @@ git diff --stat
   `b7e20a37795ab1381bb3f3d6e8e9d991215ee04a7ad0bd1b83cde948c1b2b08a`、Protocol `1.190`、
   State Hash Schema v94、save v1、active baseline `contract-v287`。本批只增加内容，不改变
   协议、权威状态或共享初始化；现有 exact fixtures 不需要刷新。
+
+## 25. main 当前交接（坐骑经验、进化与骑乘羁绊 Commit 2）
+
+- 本批不新增 item、ability、material 或 affix ID。坐骑用药复用现有 7 个正式药水 ID；
+  items 分支只需维护这些物品的普通生成与效果，不得另建“坐骑药水”同义物品。
+- 新内容字段 `ActorDefinition.evolution` 由 class 方向的 RFB r_info 导入器维护。master 的
+  348 条进化关系中，320 条本地两端均存在；5 组同名重复原版记录折叠后生成 315 个稳定
+  actor 定义。13 个缺失目标（其中 7 条可骑乘链）保留为后续 monsters 分支交接项，未创建
+  占位 actor。七条可骑乘缺口为 Chaos/Law/Balance drake、Death drake、Ancient
+  multi-hued dragon、Fastitocalon、Unicorn，目标分别是对应 Great Wyrm、Spectral Wyrm、
+  Great Wyrm of Many Colours、Leviathan 与 Kirin；其余目标为 Master rogue、Old sorcerer、
+  Ultimate beholder、Warp demon、Greater Balrog、Grand Fearlord。
+- 权威状态为 `Actor.experience` 与玩家单一 `RidingBond(actorId, actorKindId, value)`。
+  普通下马和同一实体楼层往返保留；更换坐骑、死亡、解散、失控或进化重置。进化保留实体
+  ID、控制和骑乘，按生命比例换形，并为新 kind 建立 0 羁绊。
+- 宠物击杀、玩家满羁绊击杀、2500/5000/10000 门槛、治疗与速度药水 RNG 均按 master
+  接入。物品使用继续复用 `UseItem` + entity target，前端没有新增命令协议或待处理状态。
+- 当前协调点：pack `1.302.0` / content hash
+  `1dcf89e57968a66dcfce99ba036ad077012e8dcbea8e8a0697aca4756d4b9f70`、Protocol `1.191`、
+  State Hash Schema v95、save v1、active baseline `contract-v289`（26 条 exact fixture、
+  零 waiver）。旧开发存档不兼容。

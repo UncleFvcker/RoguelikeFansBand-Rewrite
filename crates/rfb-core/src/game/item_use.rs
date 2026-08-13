@@ -1225,6 +1225,7 @@ impl Game {
             if self.riding_actor_id.as_deref() == Some(removed.id.as_str()) {
                 self.riding_actor_id = None;
             }
+            self.clear_riding_bond_for(&removed.id);
             if let Some(pack_id) = removed
                 .pack
                 .as_ref()
@@ -2187,6 +2188,12 @@ impl Game {
             return Ok(());
         };
         let kind_id = self.items[index].kind_id.clone();
+        if self.mount_item_target_is_valid(item_id, target).is_some()
+            && let Some(mount_use) = definition.mount_use.clone()
+        {
+            self.use_inventory_mount_item(index, &kind_id, &mount_use, target, events, changed);
+            return Ok(());
+        }
         let activation = self.items[index].activation.clone();
         let (profile_id, difficulty, cost, effect, plan) =
             if let Some(activation) = activation.as_ref() {

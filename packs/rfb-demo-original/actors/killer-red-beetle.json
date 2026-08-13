@@ -14,6 +14,10 @@
   "damageType": "physical",
   "defense": 4,
   "descriptionKey": "actor-demo-killer-red-beetle-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.killer-slicer-beetle",
+    "requiredExperience": 800
+  },
   "doorInteraction": {
     "bashes": true
   },

@@ -14,6 +14,10 @@
   "damageType": "physical",
   "defense": 6,
   "descriptionKey": "actor-demo-killer-slicer-beetle-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.death-watch-beetle",
+    "requiredExperience": 800
+  },
   "doorInteraction": {
     "bashes": true
   },

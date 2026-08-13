@@ -24,6 +24,10 @@
   },
   "defense": 5,
   "descriptionKey": "actor-demo-ipsissimus-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.sorcerer",
+    "requiredExperience": 6000
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

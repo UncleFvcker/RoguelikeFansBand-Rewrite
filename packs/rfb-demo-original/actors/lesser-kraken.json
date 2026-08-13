@@ -27,6 +27,10 @@
   },
   "defense": 15,
   "descriptionKey": "actor-demo-lesser-kraken-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.greater-kraken",
+    "requiredExperience": 100000
+  },
   "doorInteraction": {
     "bashes": true
   },

@@ -28,6 +28,10 @@
   },
   "defense": 10,
   "descriptionKey": "actor-demo-death-knight-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.hell-knight",
+    "requiredExperience": 15000
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

@@ -17,6 +17,10 @@
   "damageType": "physical",
   "defense": 4,
   "descriptionKey": "actor-demo-giant-army-ant-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.giant-fire-ant",
+    "requiredExperience": 1200
+  },
   "doorInteraction": {
     "bashes": true
   },

@@ -15,6 +15,10 @@
   "damageType": "physical",
   "defense": 2,
   "descriptionKey": "actor-demo-rattlesnake-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.king-cobra",
+    "requiredExperience": 80
+  },
   "doorInteraction": {
     "bashes": true
   },

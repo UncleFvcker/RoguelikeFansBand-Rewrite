@@ -22,6 +22,10 @@
   "damageType": "cold",
   "defense": 3,
   "descriptionKey": "actor-demo-frost-spirit-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.ice-elemental",
+    "requiredExperience": 1200
+  },
   "doorInteraction": {
     "bashes": true
   },

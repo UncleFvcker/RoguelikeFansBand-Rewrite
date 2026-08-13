@@ -24,6 +24,10 @@
   },
   "defense": 3,
   "descriptionKey": "actor-demo-mindcrafter-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.master-mindcrafter",
+    "requiredExperience": 5000
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

@@ -839,6 +839,8 @@ impl Game {
                 commit_damage_application(&mut self.entities[target_index], &application);
                 self.wake_entity_after_damage(target_index, damage.applied, events);
                 if application.fatal {
+                    let slain = self.entities[target_index].clone();
+                    self.reward_controlled_actor_kill(&source_entity_id, &slain, events);
                     self.resolve_actor_death_without_rewards(
                         target_index,
                         Some(DomainEvent::MonsterMeleeEntitySlew {

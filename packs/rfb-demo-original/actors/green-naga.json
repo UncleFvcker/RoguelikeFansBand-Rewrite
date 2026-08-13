@@ -24,6 +24,10 @@
   },
   "defense": 4,
   "descriptionKey": "actor-demo-green-naga-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.pink-naga",
+    "requiredExperience": 40
+  },
   "doorInteraction": {
     "bashes": true
   },

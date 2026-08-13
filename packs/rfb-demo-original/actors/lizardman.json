@@ -28,6 +28,10 @@
   },
   "defense": 4,
   "descriptionKey": "actor-demo-lizardman-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.lizard-king",
+    "requiredExperience": 800
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

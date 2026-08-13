@@ -15,6 +15,10 @@
   "damageType": "physical",
   "defense": 3,
   "descriptionKey": "actor-demo-snow-leopard-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.sabre-tooth-tiger",
+    "requiredExperience": 900
+  },
   "doorInteraction": {
     "bashes": true
   },

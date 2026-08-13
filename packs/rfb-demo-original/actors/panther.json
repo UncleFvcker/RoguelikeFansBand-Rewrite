@@ -15,6 +15,10 @@
   "damageType": "physical",
   "defense": 3,
   "descriptionKey": "actor-demo-panther-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.tiger",
+    "requiredExperience": 150
+  },
   "doorInteraction": {
     "bashes": true
   },

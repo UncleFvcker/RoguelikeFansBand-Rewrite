@@ -16,6 +16,10 @@
   "damageType": "physical",
   "defense": 5,
   "descriptionKey": "actor-demo-sabre-tooth-tiger-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.nine-tailed-fox",
+    "requiredExperience": 20000
+  },
   "doorInteraction": {
     "bashes": true
   },

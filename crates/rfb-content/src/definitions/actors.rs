@@ -372,6 +372,14 @@ pub struct MonsterDropDefinition {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ActorEvolutionDefinition {
+    pub required_experience: u64,
+    pub next_actor_kind_id: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ActorDefinition {
     #[serde(rename = "$schema")]
     pub schema: String,
@@ -384,6 +392,8 @@ pub struct ActorDefinition {
     pub level: u32,
     #[serde(default)]
     pub experience_value: u64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub evolution: Option<ActorEvolutionDefinition>,
     pub max_hp: i32,
     #[serde(default)]
     pub hit_point_dice: Option<ActorHitPointDiceDefinition>,

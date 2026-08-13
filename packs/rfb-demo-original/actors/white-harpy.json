@@ -15,6 +15,10 @@
   "damageType": "physical",
   "defense": 1,
   "descriptionKey": "actor-demo-white-harpy-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.black-harpy",
+    "requiredExperience": 30
+  },
   "experienceValue": 7,
   "formatVersion": 1,
   "glyph": "H",

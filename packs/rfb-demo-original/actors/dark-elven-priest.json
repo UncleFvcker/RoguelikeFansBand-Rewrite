@@ -24,6 +24,10 @@
   },
   "defense": 3,
   "descriptionKey": "actor-demo-dark-elven-priest-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.dark-elven-druid",
+    "requiredExperience": 600
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

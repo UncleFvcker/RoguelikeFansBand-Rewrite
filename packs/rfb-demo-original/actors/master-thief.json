@@ -29,6 +29,10 @@
   },
   "defense": 3,
   "descriptionKey": "actor-demo-master-thief-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.grand-master-thief",
+    "requiredExperience": 3000
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

@@ -229,6 +229,7 @@ impl Game {
         if disappears {
             self.remove_pet_at(index, changed, removed_entities);
         } else {
+            self.clear_riding_bond_for(&entity_id);
             self.entities[index].controller_id = None;
             self.entities[index].summon = None;
         }
@@ -255,6 +256,7 @@ impl Game {
         if self.riding_actor_id.as_deref() == Some(removed.id.as_str()) {
             self.riding_actor_id = None;
         }
+        self.clear_riding_bond_for(&removed.id);
         let carried_item_ids = self
             .items
             .iter()

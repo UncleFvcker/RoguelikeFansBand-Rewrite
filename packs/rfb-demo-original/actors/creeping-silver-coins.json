@@ -25,6 +25,10 @@
   },
   "defense": 3,
   "descriptionKey": "actor-demo-creeping-silver-coins-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.creeping-gold-coins",
+    "requiredExperience": 50
+  },
   "doorInteraction": {
     "bashes": true
   },

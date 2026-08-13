@@ -29,6 +29,10 @@
   },
   "defense": 15,
   "descriptionKey": "actor-demo-planetar-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.solar",
+    "requiredExperience": 100000
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

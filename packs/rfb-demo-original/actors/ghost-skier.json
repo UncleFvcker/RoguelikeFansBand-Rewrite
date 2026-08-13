@@ -27,6 +27,10 @@
   },
   "defense": 3,
   "descriptionKey": "actor-demo-ghost-skier-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.spectre",
+    "requiredExperience": 1200
+  },
   "experienceValue": 160,
   "formatVersion": 1,
   "glyph": "G",

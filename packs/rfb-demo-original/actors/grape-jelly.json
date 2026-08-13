@@ -11,6 +11,10 @@
   "damageType": "physical",
   "defense": 0,
   "descriptionKey": "actor-demo-grape-jelly-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.ochre-jelly",
+    "requiredExperience": 200
+  },
   "experienceValue": 60,
   "formatVersion": 1,
   "glyph": "j",

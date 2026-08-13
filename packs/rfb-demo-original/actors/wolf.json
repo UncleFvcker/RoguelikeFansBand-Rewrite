@@ -22,6 +22,10 @@
   "damageType": "physical",
   "defense": 3,
   "descriptionKey": "actor-demo-wolf-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.white-wolf",
+    "requiredExperience": 100
+  },
   "doorInteraction": {
     "bashes": true
   },

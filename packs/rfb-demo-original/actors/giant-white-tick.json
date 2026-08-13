@@ -11,6 +11,10 @@
   "damageType": "physical",
   "defense": 4,
   "descriptionKey": "actor-demo-giant-white-tick-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.giant-red-tick",
+    "requiredExperience": 500
+  },
   "doorInteraction": {
     "bashes": true
   },

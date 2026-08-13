@@ -11,6 +11,10 @@
   "damageType": "physical",
   "defense": 8,
   "descriptionKey": "actor-demo-beholder-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.undead-beholder",
+    "requiredExperience": 8000
+  },
   "doorInteraction": {
     "bashes": true
   },

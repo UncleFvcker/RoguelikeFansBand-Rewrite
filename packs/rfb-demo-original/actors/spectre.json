@@ -28,6 +28,10 @@
   },
   "defense": 3,
   "descriptionKey": "actor-demo-spectre-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.dread",
+    "requiredExperience": 1500
+  },
   "experienceValue": 350,
   "forceSleep": true,
   "formatVersion": 1,

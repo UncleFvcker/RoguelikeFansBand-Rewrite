@@ -26,6 +26,10 @@
   },
   "defense": 4,
   "descriptionKey": "actor-demo-vampire-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.master-vampire",
+    "requiredExperience": 2000
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

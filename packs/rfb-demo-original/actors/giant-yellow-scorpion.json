@@ -14,6 +14,10 @@
   "damageType": "physical",
   "defense": 3,
   "descriptionKey": "actor-demo-giant-yellow-scorpion-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.giant-grey-scorpion",
+    "requiredExperience": 700
+  },
   "doorInteraction": {
     "bashes": true
   },

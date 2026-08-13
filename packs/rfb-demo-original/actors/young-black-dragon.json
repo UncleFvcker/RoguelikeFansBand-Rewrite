@@ -33,6 +33,10 @@
   },
   "defense": 6,
   "descriptionKey": "actor-demo-young-black-dragon-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.mature-black-dragon",
+    "requiredExperience": 4000
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

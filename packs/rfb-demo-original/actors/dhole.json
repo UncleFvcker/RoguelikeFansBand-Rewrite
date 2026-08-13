@@ -11,6 +11,10 @@
   "damageType": "acid",
   "defense": 6,
   "descriptionKey": "actor-demo-dhole-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.chthonian",
+    "requiredExperience": 4000
+  },
   "experienceValue": 500,
   "formatVersion": 1,
   "glyph": "w",

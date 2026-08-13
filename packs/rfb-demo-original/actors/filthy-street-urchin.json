@@ -5,6 +5,10 @@
   "role": "monster",
   "nameKey": "actor-demo-filthy-street-urchin-name",
   "descriptionKey": "actor-demo-filthy-street-urchin-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.agent-of-black-market",
+    "requiredExperience": 10
+  },
   "glyph": "t",
   "level": 0,
   "experienceValue": 0,

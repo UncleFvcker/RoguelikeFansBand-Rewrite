@@ -11,6 +11,10 @@
   "damageType": "physical",
   "defense": 1,
   "descriptionKey": "actor-demo-hairy-mold-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.disenchanter-mold",
+    "requiredExperience": 80
+  },
   "experienceValue": 32,
   "formatVersion": 1,
   "glyph": "m",

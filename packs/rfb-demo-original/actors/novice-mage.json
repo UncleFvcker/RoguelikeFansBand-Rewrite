@@ -30,6 +30,10 @@
   },
   "defense": 0,
   "descriptionKey": "actor-demo-novice-mage-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.illusionist",
+    "requiredExperience": 100
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

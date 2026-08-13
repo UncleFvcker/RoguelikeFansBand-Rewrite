@@ -25,6 +25,10 @@
   },
   "defense": 1,
   "descriptionKey": "actor-demo-druid-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.jade-monk",
+    "requiredExperience": 700
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

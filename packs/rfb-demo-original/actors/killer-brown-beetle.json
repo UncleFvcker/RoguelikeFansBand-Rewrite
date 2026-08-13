@@ -11,6 +11,10 @@
   "damageType": "physical",
   "defense": 4,
   "descriptionKey": "actor-demo-killer-brown-beetle-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.killer-white-beetle",
+    "requiredExperience": 400
+  },
   "doorInteraction": {
     "bashes": true
   },

@@ -15,6 +15,10 @@
   "damageType": "fire",
   "defense": 2,
   "descriptionKey": "actor-demo-salamander-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.giant-salamander",
+    "requiredExperience": 50
+  },
   "experienceValue": 12,
   "formatVersion": 1,
   "glyph": "R",

@@ -13,6 +13,10 @@
   "damageType": "physical",
   "defense": 0,
   "descriptionKey": "actor-demo-yellow-worm-mass-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.white-worm-mass",
+    "requiredExperience": 10
+  },
   "experienceValue": 5,
   "formatVersion": 1,
   "glyph": "w",

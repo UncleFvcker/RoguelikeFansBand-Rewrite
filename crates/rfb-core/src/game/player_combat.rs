@@ -1222,14 +1222,16 @@ impl Game {
                 changed.insert(target_position);
                 self.wake_entity_after_damage(target_index, damage.applied, events);
                 if application.fatal {
-                    self.resolve_actor_death(
+                    let slain = self.entities[target_index].clone();
+                    self.reward_controlled_actor_kill(&source_entity_id, &slain, events);
+                    self.resolve_actor_death_without_rewards(
                         target_index,
-                        DomainEvent::SummonSlew {
+                        Some(DomainEvent::SummonSlew {
                             source_kind_id: source_kind_id.clone(),
                             target_kind_id: target_kind_id.clone(),
                             method_id: blow.method_id.clone(),
                             damage,
-                        },
+                        }),
                         events,
                         changed,
                         removed_entities,

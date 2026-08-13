@@ -16,6 +16,10 @@
   "damageType": "physical",
   "defense": 2,
   "descriptionKey": "actor-demo-rotting-corpse-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.zombified-human",
+    "requiredExperience": 50
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

@@ -24,6 +24,10 @@
   },
   "defense": 12,
   "descriptionKey": "actor-demo-magma-intrusion-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.granite-wall",
+    "requiredExperience": 700
+  },
   "experienceValue": 100,
   "formatVersion": 1,
   "glyph": "%",

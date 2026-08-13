@@ -29,6 +29,10 @@
   },
   "defense": 9,
   "descriptionKey": "actor-demo-7-headed-hydra-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.9-headed-hydra",
+    "requiredExperience": 9000
+  },
   "doorInteraction": {
     "bashes": true
   },

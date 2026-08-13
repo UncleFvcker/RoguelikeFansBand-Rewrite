@@ -508,6 +508,108 @@
       ],
       "type": "string"
     },
+    "ItemMountUseDefinition": {
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "amount": {
+              "default": 0,
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "clearStatuses": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "dice": {
+              "default": 0,
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "full": {
+              "default": false,
+              "type": "boolean"
+            },
+            "minimumBond": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "sides": {
+              "default": 0,
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "heal",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "minimumBond"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "durationBonus": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "durationDice": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "durationSides": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "extension": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "minimumBond": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "haste",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "minimumBond",
+            "durationDice",
+            "durationSides",
+            "durationBonus",
+            "extension"
+          ],
+          "type": "object"
+        }
+      ]
+    },
     "ItemUseActionDefinition": {
       "additionalProperties": false,
       "properties": {
@@ -920,6 +1022,17 @@
     "mogaminatorRare": {
       "default": false,
       "type": "boolean"
+    },
+    "mountUse": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ItemMountUseDefinition"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
     },
     "nameKey": {
       "type": "string"

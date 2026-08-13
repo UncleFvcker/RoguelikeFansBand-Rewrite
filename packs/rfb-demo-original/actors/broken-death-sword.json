@@ -11,6 +11,10 @@
   "damageType": "physical",
   "defense": 2,
   "descriptionKey": "actor-demo-broken-death-sword-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.death-sword",
+    "requiredExperience": 130
+  },
   "experienceValue": 15,
   "formatVersion": 1,
   "glyph": "|",

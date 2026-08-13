@@ -21,6 +21,10 @@
   },
   "defense": 10,
   "descriptionKey": "actor-demo-rock-giant-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.hru",
+    "requiredExperience": 25000
+  },
   "doorInteraction": {
     "bashes": true
   },

@@ -677,6 +677,8 @@ pub struct LegacyMonsterEntry {
     pub rarity: Option<u32>,
     pub max_level: Option<u16>,
     pub experience: Option<u64>,
+    pub evolution_experience: Option<u64>,
+    pub evolution_target_index: Option<u32>,
     pub blows: Vec<LegacyBlow>,
     pub auras: Vec<LegacyBlowEffect>,
     pub flags: Vec<String>,
@@ -1072,6 +1074,14 @@ fn kebab(raw: &str) -> String {
         id.pop();
     }
     id
+}
+
+fn actor_file_stem(raw: &str) -> String {
+    kebab(
+        &raw.chars()
+            .filter(|ch| !matches!(ch, '\'' | '’'))
+            .collect::<String>(),
+    )
 }
 
 fn resolve_legacy_content_commit(source: &Path) -> Result<String, LegacyImportError> {
@@ -1863,12 +1873,18 @@ pub fn parse_r_info(text: &str) -> Result<Vec<LegacyMonsterEntry>, LegacyImportE
                 "W.experience",
                 parts.get(3).copied(),
             )?);
-            for (field, value) in [
-                ("W.evolution", parts.get(4).copied()),
-                ("W.nextEvolution", parts.get(5).copied()),
-            ] {
-                let _: i64 = parse_number(R_INFO_SOURCE, line_number, field, value)?;
-            }
+            entry.evolution_experience = Some(parse_number(
+                R_INFO_SOURCE,
+                line_number,
+                "W.evolution",
+                parts.get(4).copied(),
+            )?);
+            entry.evolution_target_index = Some(parse_number(
+                R_INFO_SOURCE,
+                line_number,
+                "W.nextEvolution",
+                parts.get(5).copied(),
+            )?);
         } else if let Some(rest) = line.strip_prefix("B:") {
             entry.blows.push(parse_blow(rest, line_number)?);
         } else if let Some(rest) = line.strip_prefix("A:") {
@@ -11935,6 +11951,52 @@ pub fn sync_demo_monsters(
         .iter()
         .map(|monster| monster.source_index)
         .collect::<BTreeSet<_>>();
+    let mut actor_ids_by_source_name = BTreeMap::new();
+    for monster in &selection.monsters {
+        let source = by_index.get(&monster.source_index).ok_or_else(|| {
+            LegacyImportError::InvalidDemoMonsterSelection(format!(
+                "unknown legacy source index {}",
+                monster.source_index
+            ))
+        })?;
+        if actor_ids_by_source_name
+            .insert(
+                actor_file_stem(&source.name),
+                format!("demo.actor.{}", monster.id),
+            )
+            .is_some()
+        {
+            return Err(LegacyImportError::InvalidDemoMonsterSelection(
+                "selected monster source names must be unique".to_owned(),
+            ));
+        }
+    }
+    if output.is_dir() {
+        for file in fs::read_dir(output)? {
+            let file = file?;
+            let path = file.path();
+            if path.extension().and_then(|extension| extension.to_str()) != Some("json") {
+                continue;
+            }
+            let stem = path
+                .file_stem()
+                .and_then(|stem| stem.to_str())
+                .ok_or_else(|| {
+                    LegacyImportError::InvalidDemoMonsterSelection(
+                        "actor file name is not valid UTF-8".to_owned(),
+                    )
+                })?;
+            let actor: serde_json::Value = serde_json::from_slice(&fs::read(&path)?)?;
+            let Some(actor_id) = actor["id"].as_str() else {
+                continue;
+            };
+            if actor_id == format!("demo.actor.{stem}") {
+                actor_ids_by_source_name
+                    .entry(stem.to_owned())
+                    .or_insert_with(|| actor_id.to_owned());
+            }
+        }
+    }
     let mut deprecated_indexes = BTreeSet::new();
     let mut replacement_indexes = BTreeSet::new();
     for replacement in &selection.deprecated_replacements {
@@ -12021,6 +12083,46 @@ pub fn sync_demo_monsters(
             output.join(name),
             serde_json::to_string_pretty(value)? + "\n",
         )?;
+    }
+    for entry in &entries {
+        let source_name = actor_file_stem(&entry.name);
+        let Some(actor_id) = actor_ids_by_source_name.get(&source_name) else {
+            continue;
+        };
+        let actor_path = output.join(format!(
+            "{}.json",
+            actor_id
+                .strip_prefix("demo.actor.")
+                .expect("formal actor id must use the actor prefix")
+        ));
+        let mut actor: serde_json::Value = serde_json::from_slice(&fs::read(&actor_path)?)?;
+        let before = actor.clone();
+        actor
+            .as_object_mut()
+            .expect("actor JSON must be an object")
+            .remove("evolution");
+        if let (Some(required_experience), Some(target_index)) =
+            (entry.evolution_experience, entry.evolution_target_index)
+            && required_experience > 0
+            && target_index > 0
+        {
+            let target = by_index.get(&target_index).ok_or_else(|| {
+                LegacyImportError::InvalidDemoMonsterSelection(format!(
+                    "{actor_id} references unknown evolution target {target_index}"
+                ))
+            })?;
+            if let Some(next_actor_kind_id) =
+                actor_ids_by_source_name.get(&actor_file_stem(&target.name))
+            {
+                actor["evolution"] = serde_json::json!({
+                    "requiredExperience": required_experience,
+                    "nextActorKindId": next_actor_kind_id,
+                });
+            }
+        }
+        if actor != before {
+            fs::write(actor_path, serde_json::to_string_pretty(&actor)? + "\n")?;
+        }
     }
     let pack_root = output.parent().ok_or_else(|| {
         LegacyImportError::InvalidDemoMonsterSelection(
@@ -13322,6 +13424,14 @@ pub fn sync_demo_item_destruction(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn monster_w_line_retains_evolution_fields() {
+        let actors = parse_r_info("N:956:Horse\nG:q:w\nW:5:1:20:25:70:957\n")
+            .expect("synthetic Horse should parse");
+        assert_eq!(actors[0].evolution_experience, Some(70));
+        assert_eq!(actors[0].evolution_target_index, Some(957));
+    }
 
     #[test]
     fn demo_monster_audit_rejects_an_inverted_level_range() {

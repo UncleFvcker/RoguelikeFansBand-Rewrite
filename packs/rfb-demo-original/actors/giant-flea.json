@@ -13,6 +13,10 @@
   "damageType": "physical",
   "defense": 0,
   "descriptionKey": "actor-demo-giant-flea-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.hummerhorn",
+    "requiredExperience": 200
+  },
   "experienceValue": 3,
   "formatVersion": 1,
   "glyph": "I",

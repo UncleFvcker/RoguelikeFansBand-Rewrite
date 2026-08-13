@@ -5,6 +5,10 @@
   "role": "monster",
   "nameKey": "actor-demo-hunting-hawk-of-julian-name",
   "descriptionKey": "actor-demo-hunting-hawk-of-julian-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.eagle",
+    "requiredExperience": 50
+  },
   "glyph": "B",
   "level": 8,
   "experienceValue": 22,

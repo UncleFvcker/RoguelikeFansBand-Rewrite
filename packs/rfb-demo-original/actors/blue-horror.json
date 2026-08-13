@@ -16,6 +16,10 @@
   "damageType": "physical",
   "defense": 3,
   "descriptionKey": "actor-demo-blue-horror-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.pink-horror",
+    "requiredExperience": 200
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

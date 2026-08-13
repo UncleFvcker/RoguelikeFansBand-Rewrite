@@ -11,6 +11,10 @@
   "damageType": "acid",
   "defense": 0,
   "descriptionKey": "actor-demo-slimy-jelly-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.pink-jelly",
+    "requiredExperience": 40
+  },
   "experienceValue": 18,
   "formatVersion": 1,
   "glyph": "j",

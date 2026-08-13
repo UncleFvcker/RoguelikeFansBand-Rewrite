@@ -76,6 +76,7 @@ pub(crate) fn actor_from_spawn(
     Actor {
         id: id.to_owned(),
         kind_id: kind_id.to_owned(),
+        experience: 0,
         appearance_kind_id: None,
         position: position_from_content(position),
         hp: max_hp,
@@ -110,6 +111,7 @@ pub(crate) fn actor_from_runtime_spawn(
     Actor {
         id: id.to_owned(),
         kind_id: kind_id.to_owned(),
+        experience: 0,
         appearance_kind_id: None,
         position,
         hp: max_hp,
@@ -157,6 +159,7 @@ pub(crate) fn actor_from_player(
     Ok(Actor {
         id: player.id,
         kind_id: player.kind_id,
+        experience: 0,
         appearance_kind_id: None,
         position: player.position,
         hp: player.hp,
@@ -251,6 +254,12 @@ pub(crate) fn actor_from_entity(
     if entity.power_per_mille < 100 {
         return Err(CoreError::InvalidSave("entity power is invalid"));
     }
+    if definition.evolution.as_ref().map_or_else(
+        || entity.experience != 0,
+        |evolution| entity.experience >= evolution.required_experience,
+    ) {
+        return Err(CoreError::InvalidSave("entity experience is invalid"));
+    }
     let statuses = statuses_from_save(entity.statuses)?;
     let resistances = resistances_from_save(entity.resistances)?;
     let observed_player_resistances =
@@ -258,6 +267,7 @@ pub(crate) fn actor_from_entity(
     Ok(Actor {
         id: entity.id,
         kind_id: entity.kind_id,
+        experience: entity.experience,
         appearance_kind_id: entity.appearance_kind_id,
         position: entity.position,
         hp: entity.hp,
@@ -708,6 +718,7 @@ pub(crate) fn player_to_save(
         summon_command: Default::default(),
         recall: None,
         riding_actor_id: None,
+        riding_bond: None,
         // Filled by the game's save path, which owns the body template.
         body_slots: Vec::new(),
     }
@@ -719,6 +730,7 @@ pub(crate) fn actors_to_save(entities: &[Actor]) -> Vec<ActorSaveDto> {
         .map(|entity| ActorSaveDto {
             id: entity.id.clone(),
             kind_id: entity.kind_id.clone(),
+            experience: entity.experience,
             appearance_kind_id: entity.appearance_kind_id.clone(),
             position: entity.position,
             hp: entity.hp,

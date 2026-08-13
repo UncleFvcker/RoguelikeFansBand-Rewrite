@@ -21,6 +21,10 @@
   },
   "defense": 0,
   "descriptionKey": "actor-demo-cheerful-leprechaun-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.leprechaun-fanatic",
+    "requiredExperience": 2000
+  },
   "doorInteraction": {
     "opens": true
   },

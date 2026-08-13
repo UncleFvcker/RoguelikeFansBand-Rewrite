@@ -33,6 +33,10 @@
   },
   "defense": 6,
   "descriptionKey": "actor-demo-greater-mummy-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.mummified-sorcerer",
+    "requiredExperience": 16000
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

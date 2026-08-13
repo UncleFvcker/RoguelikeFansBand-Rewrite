@@ -5,6 +5,10 @@
   "role": "monster",
   "nameKey": "actor-demo-cave-lizard-name",
   "descriptionKey": "actor-demo-cave-lizard-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.night-lizard",
+    "requiredExperience": 30
+  },
   "glyph": "R",
   "level": 4,
   "experienceValue": 9,

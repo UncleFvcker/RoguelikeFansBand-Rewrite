@@ -22,6 +22,10 @@
   },
   "defense": 1,
   "descriptionKey": "actor-demo-orc-warlock-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.dark-elven-sorcerer",
+    "requiredExperience": 20000
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

@@ -11,6 +11,10 @@
   "damageType": "fire",
   "defense": 1,
   "descriptionKey": "actor-demo-red-mold-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.death-mold",
+    "requiredExperience": 5000
+  },
   "experienceValue": 64,
   "formatVersion": 1,
   "glyph": "m",

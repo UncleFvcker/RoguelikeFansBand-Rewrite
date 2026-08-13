@@ -24,6 +24,10 @@
   "damageType": "physical",
   "defense": 4,
   "descriptionKey": "actor-demo-lion-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.sabre-tooth-tiger",
+    "requiredExperience": 500
+  },
   "doorInteraction": {
     "bashes": true
   },

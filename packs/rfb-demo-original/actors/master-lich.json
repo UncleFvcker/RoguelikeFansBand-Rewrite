@@ -28,6 +28,10 @@
   },
   "defense": 8,
   "descriptionKey": "actor-demo-master-lich-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.demilich",
+    "requiredExperience": 30000
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

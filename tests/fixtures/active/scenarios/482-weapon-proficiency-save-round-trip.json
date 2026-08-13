@@ -720,6 +720,15 @@
             "hitBonus": 10
           },
           {
+            "itemKindId": "demo.item.heavy-lance",
+            "nameKey": "item-demo-heavy-lance-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
             "itemKindId": "demo.item.jo-staff",
             "nameKey": "item-demo-jo-staff-name",
             "category": "melee",
@@ -1147,6 +1156,7 @@
           "displayNameKey": "item-demo-ration-of-food-name",
           "knowledge": "aware",
           "usable": true,
+          "mountUsable": false,
           "canReceiveRecharge": false,
           "canSupplyRecharge": false,
           "quantity": 9,
@@ -1173,6 +1183,7 @@
           "displayNameKey": "item-demo-wooden-torch-name",
           "knowledge": "aware",
           "usable": false,
+          "mountUsable": false,
           "fuel": {
             "kind": "torch",
             "current": 2000,
@@ -1205,6 +1216,7 @@
           "displayNameKey": "item-demo-wooden-torch-name",
           "knowledge": "aware",
           "usable": false,
+          "mountUsable": false,
           "fuel": {
             "kind": "torch",
             "current": 2000,
@@ -1237,6 +1249,7 @@
           "displayNameKey": "item-demo-wooden-torch-name",
           "knowledge": "aware",
           "usable": false,
+          "mountUsable": false,
           "fuel": {
             "kind": "torch",
             "current": 2000,
@@ -1269,6 +1282,7 @@
           "displayNameKey": "item-demo-wooden-torch-name",
           "knowledge": "aware",
           "usable": false,
+          "mountUsable": false,
           "fuel": {
             "kind": "torch",
             "current": 2000,
@@ -1301,6 +1315,7 @@
           "displayNameKey": "item-demo-wooden-torch-name",
           "knowledge": "aware",
           "usable": false,
+          "mountUsable": false,
           "fuel": {
             "kind": "torch",
             "current": 2000,
@@ -1333,6 +1348,7 @@
           "displayNameKey": "item-demo-wooden-torch-name",
           "knowledge": "aware",
           "usable": false,
+          "mountUsable": false,
           "fuel": {
             "kind": "torch",
             "current": 2000,
@@ -1365,6 +1381,7 @@
           "displayNameKey": "item-demo-wooden-torch-name",
           "knowledge": "aware",
           "usable": false,
+          "mountUsable": false,
           "fuel": {
             "kind": "torch",
             "current": 2000,
@@ -1397,6 +1414,7 @@
           "displayNameKey": "item-demo-arrow-name",
           "knowledge": "aware",
           "usable": false,
+          "mountUsable": false,
           "canReceiveRecharge": false,
           "canSupplyRecharge": false,
           "quantity": 22,
@@ -1612,8 +1630,8 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "0a5f92b74413cc1a43462f4645ca0e0849162d9716d9571991b7936e23e23265"
+      "stateHash": "5f9d276e94caf48ec908c5ffdbb692248bdfc4b6cbf0d9fcf41dbb94bb4c0f06"
     },
-    "saveRoundTripStateHash": "0a5f92b74413cc1a43462f4645ca0e0849162d9716d9571991b7936e23e23265"
+    "saveRoundTripStateHash": "5f9d276e94caf48ec908c5ffdbb692248bdfc4b6cbf0d9fcf41dbb94bb4c0f06"
   }
 }

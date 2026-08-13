@@ -21,6 +21,10 @@
   },
   "defense": 1,
   "descriptionKey": "actor-demo-dark-elf-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.dark-elven-lord",
+    "requiredExperience": 700
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

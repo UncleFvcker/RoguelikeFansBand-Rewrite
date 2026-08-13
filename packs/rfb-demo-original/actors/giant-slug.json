@@ -14,6 +14,10 @@
   "damageType": "acid",
   "defense": 2,
   "descriptionKey": "actor-demo-giant-slug-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.wereworm",
+    "requiredExperience": 800
+  },
   "experienceValue": 25,
   "formatVersion": 1,
   "glyph": "w",

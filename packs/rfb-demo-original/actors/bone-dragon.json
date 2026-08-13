@@ -22,6 +22,10 @@
   },
   "defense": 5,
   "descriptionKey": "actor-demo-bone-dragon-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.dracolich",
+    "requiredExperience": 30000
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

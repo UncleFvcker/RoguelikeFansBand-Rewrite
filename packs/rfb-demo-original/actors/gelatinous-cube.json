@@ -26,6 +26,10 @@
   },
   "defense": 1,
   "descriptionKey": "actor-demo-gelatinous-cube-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.acidic-cytoplasm",
+    "requiredExperience": 800
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

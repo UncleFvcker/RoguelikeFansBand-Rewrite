@@ -11,6 +11,10 @@
   "damageType": "acid",
   "defense": 1,
   "descriptionKey": "actor-demo-ochre-jelly-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.gelatinous-cube",
+    "requiredExperience": 400
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

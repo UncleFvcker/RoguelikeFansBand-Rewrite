@@ -227,6 +227,7 @@ mod tests {
                 body_slots: Vec::new(),
                 recall: None,
                 riding_actor_id: None,
+                riding_bond: None,
             },
             entities: Vec::<ActorSaveDto>::new(),
             items: Vec::<ItemSaveDto>::new(),

@@ -27,6 +27,10 @@
   },
   "defense": 3,
   "descriptionKey": "actor-demo-swordsman-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.hardened-warrior",
+    "requiredExperience": 400
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

@@ -11,6 +11,10 @@
   "damageType": "physical",
   "defense": 5,
   "descriptionKey": "actor-demo-bonsai-kraken-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.lesser-kraken",
+    "requiredExperience": 70000
+  },
   "experienceValue": 200,
   "formatVersion": 1,
   "glyph": "l",

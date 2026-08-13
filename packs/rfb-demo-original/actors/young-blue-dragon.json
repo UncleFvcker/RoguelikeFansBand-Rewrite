@@ -34,6 +34,10 @@
   },
   "defense": 5,
   "descriptionKey": "actor-demo-young-blue-dragon-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.mature-blue-dragon",
+    "requiredExperience": 4000
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

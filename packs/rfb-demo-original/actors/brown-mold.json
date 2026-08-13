@@ -11,6 +11,10 @@
   "damageType": "physical",
   "defense": 1,
   "descriptionKey": "actor-demo-brown-mold-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.green-mold",
+    "requiredExperience": 50
+  },
   "experienceValue": 20,
   "formatVersion": 1,
   "glyph": "m",

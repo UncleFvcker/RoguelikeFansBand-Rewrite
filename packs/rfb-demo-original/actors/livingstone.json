@@ -17,6 +17,10 @@
   "damageType": "physical",
   "defense": 2,
   "descriptionKey": "actor-demo-livingstone-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.lesser-wall-monster",
+    "requiredExperience": 700
+  },
   "experienceValue": 30,
   "formatVersion": 1,
   "glyph": "#",

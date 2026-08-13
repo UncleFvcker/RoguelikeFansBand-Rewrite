@@ -11,6 +11,10 @@
   "damageType": "physical",
   "defense": 6,
   "descriptionKey": "actor-demo-mezzodaemon-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.nycadaemon",
+    "requiredExperience": 50000
+  },
   "experienceValue": 800,
   "forceSleep": true,
   "formatVersion": 1,

@@ -30,6 +30,10 @@
   },
   "defense": 3,
   "descriptionKey": "actor-demo-goblin-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.snaga",
+    "requiredExperience": 30
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

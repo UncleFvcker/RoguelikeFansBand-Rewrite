@@ -5,6 +5,10 @@
   "role": "monster",
   "nameKey": "actor-demo-bandit-name",
   "descriptionKey": "actor-demo-bandit-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.tax-collector",
+    "requiredExperience": 100
+  },
   "glyph": "p",
   "level": 8,
   "experienceValue": 26,

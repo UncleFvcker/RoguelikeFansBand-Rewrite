@@ -11,6 +11,10 @@
   "damageType": "disenchant",
   "defense": 2,
   "descriptionKey": "actor-demo-disenchanter-mold-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.red-mold",
+    "requiredExperience": 500
+  },
   "experienceValue": 40,
   "formatVersion": 1,
   "glyph": "m",

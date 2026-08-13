@@ -26,6 +26,10 @@
   },
   "defense": 5,
   "descriptionKey": "actor-demo-creeping-mithril-coins-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.creeping-adamantite-coins",
+    "requiredExperience": 500
+  },
   "doorInteraction": {
     "bashes": true
   },

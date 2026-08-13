@@ -28,6 +28,10 @@
   },
   "defense": 5,
   "descriptionKey": "actor-demo-fire-troll-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.algroth",
+    "requiredExperience": 800
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

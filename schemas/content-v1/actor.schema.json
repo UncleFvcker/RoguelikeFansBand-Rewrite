@@ -199,6 +199,24 @@
       },
       "type": "object"
     },
+    "ActorEvolutionDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "nextActorKindId": {
+          "type": "string"
+        },
+        "requiredExperience": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "requiredExperience",
+        "nextActorKindId"
+      ],
+      "type": "object"
+    },
     "ActorFriendsDefinition": {
       "additionalProperties": false,
       "properties": {
@@ -1497,6 +1515,16 @@
       "default": 0,
       "format": "int32",
       "type": "integer"
+    },
+    "evolution": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ActorEvolutionDefinition"
+        },
+        {
+          "type": "null"
+        }
+      ]
     },
     "experienceValue": {
       "default": 0,

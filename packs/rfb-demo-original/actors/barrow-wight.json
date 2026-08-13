@@ -25,6 +25,10 @@
   },
   "defense": 4,
   "descriptionKey": "actor-demo-barrow-wight-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.emperor-wight",
+    "requiredExperience": 4000
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

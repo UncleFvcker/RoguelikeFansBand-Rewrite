@@ -30,6 +30,10 @@
   },
   "defense": 8,
   "descriptionKey": "actor-demo-ancient-green-dragon-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.great-venom-wyrm",
+    "requiredExperience": 100000
+  },
   "doorInteraction": {
     "bashes": true
   },

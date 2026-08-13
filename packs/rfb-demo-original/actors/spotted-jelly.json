@@ -11,6 +11,10 @@
   "damageType": "acid",
   "defense": 1,
   "descriptionKey": "actor-demo-spotted-jelly-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.ochre-jelly",
+    "requiredExperience": 200
+  },
   "experienceValue": 33,
   "formatVersion": 1,
   "glyph": "j",

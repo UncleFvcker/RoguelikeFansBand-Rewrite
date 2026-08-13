@@ -696,6 +696,17 @@ pub(crate) enum DomainEvent {
     RodeoThrownOff {
         target_kind_id: String,
     },
+    RidingBondMaxed {
+        target_kind_id: String,
+    },
+    PetEvolved {
+        previous_kind_id: String,
+        target_kind_id: String,
+    },
+    MountPotionUsed {
+        item_kind_id: String,
+        target_kind_id: String,
+    },
     RidingUnavailable,
     SheepRidingRefused {
         response: u8,
@@ -2996,6 +3007,27 @@ impl DomainEvent {
                 "rodeo.thrown-off",
                 "rodeo-thrown-off",
                 [("target", target_kind_id)],
+            ),
+            Self::RidingBondMaxed { target_kind_id } => dto(
+                "riding.bond-maxed",
+                "riding-bond-maxed",
+                [("target", target_kind_id)],
+            ),
+            Self::PetEvolved {
+                previous_kind_id,
+                target_kind_id,
+            } => dto(
+                "pet.evolved",
+                "pet-evolved",
+                [("source", previous_kind_id), ("target", target_kind_id)],
+            ),
+            Self::MountPotionUsed {
+                item_kind_id,
+                target_kind_id,
+            } => dto(
+                "riding.mount-potion-used",
+                "riding-mount-potion-used",
+                [("item", item_kind_id), ("target", target_kind_id)],
             ),
             Self::RidingUnavailable => dto_without_args("riding.unavailable", "riding-unavailable"),
             Self::SheepRidingRefused { response } => dto_without_args(

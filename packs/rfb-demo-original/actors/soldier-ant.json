@@ -5,6 +5,10 @@
   "role": "monster",
   "nameKey": "actor-demo-soldier-ant-name",
   "descriptionKey": "actor-demo-soldier-ant-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.giant-black-ant",
+    "requiredExperience": 5
+  },
   "glyph": "a",
   "level": 1,
   "experienceValue": 6,

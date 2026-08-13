@@ -27,6 +27,10 @@
   },
   "defense": 7,
   "descriptionKey": "actor-demo-efreeti-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.elder-fire-giant",
+    "requiredExperience": 25000
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

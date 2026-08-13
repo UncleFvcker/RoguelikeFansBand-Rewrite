@@ -26,6 +26,10 @@
   },
   "defense": 3,
   "descriptionKey": "actor-demo-quartz-vein-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.magma-intrusion",
+    "requiredExperience": 500
+  },
   "experienceValue": 40,
   "formatVersion": 1,
   "glyph": "%",

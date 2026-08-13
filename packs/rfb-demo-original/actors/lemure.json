@@ -16,6 +16,10 @@
   "damageType": "physical",
   "defense": 3,
   "descriptionKey": "actor-demo-lemure-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.homonculus",
+    "requiredExperience": 150
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

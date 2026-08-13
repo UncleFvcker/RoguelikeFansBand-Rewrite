@@ -22,6 +22,10 @@
   },
   "defense": 1,
   "descriptionKey": "actor-demo-slimy-ooze-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.slush-pile",
+    "requiredExperience": 15
+  },
   "experienceValue": 5,
   "formatVersion": 1,
   "glyph": "j",

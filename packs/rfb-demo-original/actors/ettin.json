@@ -29,6 +29,10 @@
   },
   "defense": 8,
   "descriptionKey": "actor-demo-ettin-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.eldrak",
+    "requiredExperience": 4000
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

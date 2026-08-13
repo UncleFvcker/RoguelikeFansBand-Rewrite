@@ -13,6 +13,10 @@
   "damageType": "physical",
   "defense": 2,
   "descriptionKey": "actor-demo-software-bug-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.internet-exploder",
+    "requiredExperience": 1000
+  },
   "doorInteraction": {
     "bashes": true
   },

@@ -28,6 +28,10 @@
   },
   "defense": 2,
   "descriptionKey": "actor-demo-mean-looking-mercenary-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.novice-warrior",
+    "requiredExperience": 8
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

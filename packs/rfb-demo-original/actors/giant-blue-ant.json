@@ -15,6 +15,10 @@
   "damageType": "electricity",
   "defense": 5,
   "descriptionKey": "actor-demo-giant-blue-ant-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.giant-army-ant",
+    "requiredExperience": 1000
+  },
   "doorInteraction": {
     "bashes": true
   },

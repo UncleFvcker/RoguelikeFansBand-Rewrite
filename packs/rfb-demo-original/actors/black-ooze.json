@@ -22,6 +22,10 @@
   },
   "defense": 0,
   "descriptionKey": "actor-demo-black-ooze-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.spawn-of-ubbo-sathla",
+    "requiredExperience": 1000
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

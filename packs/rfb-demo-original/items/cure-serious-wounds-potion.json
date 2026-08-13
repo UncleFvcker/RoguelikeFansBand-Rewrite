@@ -12,6 +12,12 @@
   "id": "demo.item.cure-serious-wounds-potion",
   "maxStack": 20,
   "mogaminatorRare": false,
+  "mountUse": {
+    "type": "heal",
+    "minimumBond": 2500,
+    "dice": 8,
+    "sides": 8
+  },
   "nameKey": "item-demo-cure-serious-wounds-potion-name",
   "shatterEffectProgramId": "demo.effect.cure-serious-wounds-potion.shatter",
   "shatterRadius": 2,

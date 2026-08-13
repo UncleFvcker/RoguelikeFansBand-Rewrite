@@ -22,6 +22,10 @@
   },
   "defense": 4,
   "descriptionKey": "actor-demo-white-wraith-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.grey-wraith",
+    "requiredExperience": 2000
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

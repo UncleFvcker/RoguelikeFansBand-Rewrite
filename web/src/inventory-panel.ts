@@ -27,6 +27,7 @@ type InventoryDom = Pick<
   | "inventoryCount"
   | "inventorySelectionCount"
   | "inventoryUse"
+  | "inventoryUseOnMount"
   | "inventoryAppraise"
   | "inventoryEquip"
   | "inventoryDrop"
@@ -106,6 +107,7 @@ export class InventoryPanel {
     if (this.#installed) return;
     this.#installed = true;
     this.#dom.inventoryUse.addEventListener("click", this.#handleUse);
+    this.#dom.inventoryUseOnMount.addEventListener("click", this.#handleUseOnMount);
     this.#dom.inventoryAppraise.addEventListener("click", this.#handleAppraise);
     this.#dom.inventoryEquip.addEventListener("click", this.#handleEquip);
     this.#dom.inventoryDrop.addEventListener("click", this.#handleDrop);
@@ -118,6 +120,7 @@ export class InventoryPanel {
     if (!this.#installed) return;
     this.#installed = false;
     this.#dom.inventoryUse.removeEventListener("click", this.#handleUse);
+    this.#dom.inventoryUseOnMount.removeEventListener("click", this.#handleUseOnMount);
     this.#dom.inventoryAppraise.removeEventListener("click", this.#handleAppraise);
     this.#dom.inventoryEquip.removeEventListener("click", this.#handleEquip);
     this.#dom.inventoryDrop.removeEventListener("click", this.#handleDrop);
@@ -191,6 +194,13 @@ export class InventoryPanel {
           !selected[0].requiresRechargeTargets) ||
         selectedRechargingItems(selected)
       );
+    this.#dom.inventoryUseOnMount.disabled =
+      this.#state.busy ||
+      this.#state.playerDead ||
+      worldMap ||
+      selected.length !== 1 ||
+      !selected[0]?.mountUsable ||
+      !this.#state.status?.player.ridingActorId;
     this.#dom.inventoryAppraise.disabled =
       this.#state.busy ||
       this.#state.playerDead ||
@@ -263,6 +273,10 @@ export class InventoryPanel {
 
   readonly #handleUse = (): void => {
     void this.#useSelectedItem();
+  };
+
+  readonly #handleUseOnMount = (): void => {
+    void this.#useSelectedItemOnMount();
   };
 
   readonly #handleAppraise = (): void => {
@@ -587,6 +601,17 @@ export class InventoryPanel {
       return;
     }
     await this.#dispatch({ type: "use-item", itemId: item.id });
+  }
+
+  async #useSelectedItemOnMount(): Promise<void> {
+    const [item] = this.#selectedItems();
+    const entityId = this.#state.status?.player.ridingActorId;
+    if (this.#state.busy || !item?.mountUsable || !entityId) return;
+    await this.#dispatch({
+      type: "use-item",
+      itemId: item.id,
+      target: { type: "entity", entityId },
+    });
   }
 
   async #dropSelectedItems(): Promise<void> {

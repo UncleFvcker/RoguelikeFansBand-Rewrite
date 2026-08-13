@@ -11,6 +11,10 @@
   "damageType": "physical",
   "defense": 2,
   "descriptionKey": "actor-demo-goomba-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.buzzy-beetle",
+    "requiredExperience": 100
+  },
   "experienceValue": 5,
   "formatVersion": 1,
   "glyph": ",",

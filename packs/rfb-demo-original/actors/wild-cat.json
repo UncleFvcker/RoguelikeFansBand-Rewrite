@@ -5,6 +5,10 @@
   "role": "monster",
   "nameKey": "actor-demo-wild-cat-name",
   "descriptionKey": "actor-demo-wild-cat-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.panther",
+    "requiredExperience": 80
+  },
   "glyph": "f",
   "level": 2,
   "experienceValue": 10,

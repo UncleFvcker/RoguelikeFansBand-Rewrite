@@ -18,6 +18,10 @@
   "damageType": "cold",
   "defense": 6,
   "descriptionKey": "actor-demo-ice-elemental-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.bloodfreezer",
+    "requiredExperience": 3000
+  },
   "doorInteraction": {
     "bashes": true
   },

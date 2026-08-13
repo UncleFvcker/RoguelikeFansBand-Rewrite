@@ -16,6 +16,10 @@
   "damageType": "physical",
   "defense": 3,
   "descriptionKey": "actor-demo-lynx-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.snow-leopard",
+    "requiredExperience": 300
+  },
   "doorInteraction": {
     "bashes": true
   },

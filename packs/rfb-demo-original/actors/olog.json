@@ -27,6 +27,10 @@
   },
   "defense": 5,
   "descriptionKey": "actor-demo-olog-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.ettin",
+    "requiredExperience": 4000
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

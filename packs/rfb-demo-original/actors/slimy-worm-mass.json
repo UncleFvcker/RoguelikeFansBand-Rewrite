@@ -13,6 +13,10 @@
   "damageType": "acid",
   "defense": 0,
   "descriptionKey": "actor-demo-slimy-worm-mass-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.yellow-worm-mass",
+    "requiredExperience": 8
+  },
   "experienceValue": 5,
   "formatVersion": 1,
   "glyph": "w",

@@ -25,6 +25,10 @@
   },
   "defense": 2,
   "descriptionKey": "actor-demo-green-glutton-ghost-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.lost-soul",
+    "requiredExperience": 15
+  },
   "experienceValue": 15,
   "formatVersion": 1,
   "glyph": "G",

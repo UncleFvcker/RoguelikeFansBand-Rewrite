@@ -28,6 +28,10 @@
   },
   "defense": 3,
   "descriptionKey": "actor-demo-ogre-warrior-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.cave-ogre",
+    "requiredExperience": 800
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

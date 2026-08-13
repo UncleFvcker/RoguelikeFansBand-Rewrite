@@ -12,9 +12,9 @@ use crate::{
     EquipmentPassive, ItemChargeDefinition, ItemCurseSeverityDefinition, ItemDefinition,
     ItemDeviceActivationDefinition, ItemDeviceChargeRangeDefinition,
     ItemDeviceGenerationDefinition, ItemDeviceRecoveryDefinition, ItemFuelDefinition,
-    ItemShatterEffectDefinition, ItemUseActionDefinition, ProjectileProfileDefinition,
-    RidingWeaponKindDefinition, SlayLevel, SlayTarget, StatModifiers, ThrowProfileDefinition,
-    WeaponBrand,
+    ItemMountUseDefinition, ItemShatterEffectDefinition, ItemUseActionDefinition,
+    ProjectileProfileDefinition, RidingWeaponKindDefinition, SlayLevel, SlayTarget, StatModifiers,
+    ThrowProfileDefinition, WeaponBrand,
     effect_programs::{
         ResolvedEffectProgram, effect_program_input_matches_device_target,
         resolve_source_item_effect,
@@ -74,6 +74,8 @@ pub(crate) struct SourceItemDefinition {
     throw_profile: Option<ThrowProfileDefinition>,
     #[serde(default)]
     use_action: Option<SourceItemUseActionDefinition>,
+    #[serde(default)]
+    mount_use: Option<ItemMountUseDefinition>,
     #[serde(default)]
     shatter_effect_program_id: Option<String>,
     #[serde(default)]
@@ -270,6 +272,7 @@ impl SourceItemDefinition {
             ammunition_profile: self.ammunition_profile,
             throw_profile: self.throw_profile,
             use_action,
+            mount_use: self.mount_use,
             shatter_effect,
             device_generation,
             fuel: self.fuel,

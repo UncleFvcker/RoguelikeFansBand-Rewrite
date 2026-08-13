@@ -1,6 +1,46 @@
 use super::*;
 
 #[test]
+fn riding_bond_potions_keep_rfb_thresholds_and_effects() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let item = |id: &str| {
+        artifact
+            .content
+            .items
+            .iter()
+            .find(|item| item.id == id)
+            .unwrap_or_else(|| panic!("fixture should contain {id}"))
+    };
+    assert!(matches!(
+        item("demo.item.light-healing-potion").mount_use,
+        Some(ItemMountUseDefinition::Heal {
+            minimum_bond: 2_500,
+            dice: 4,
+            sides: 8,
+            ..
+        })
+    ));
+    assert!(matches!(
+        item("demo.item.vitalis-elixir").mount_use,
+        Some(ItemMountUseDefinition::Heal {
+            minimum_bond: 2_500,
+            full: true,
+            ..
+        })
+    ));
+    assert!(matches!(
+        item("demo.item.swiftstep-tonic").mount_use,
+        Some(ItemMountUseDefinition::Haste {
+            minimum_bond: 5_000,
+            duration_dice: 1,
+            duration_sides: 25,
+            duration_bonus: 15,
+            extension: 5,
+        })
+    ));
+}
+
+#[test]
 fn item_shape_validation_uses_current_rfb_content() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
 

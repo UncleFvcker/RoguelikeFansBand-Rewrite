@@ -30,6 +30,10 @@
   },
   "defense": 1,
   "descriptionKey": "actor-demo-novice-paladin-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.paladin",
+    "requiredExperience": 500
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

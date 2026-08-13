@@ -16,6 +16,10 @@
   "damageType": "physical",
   "defense": 6,
   "descriptionKey": "actor-demo-mumak-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.behemoth",
+    "requiredExperience": 50000
+  },
   "doorInteraction": {
     "bashes": true
   },

@@ -168,3 +168,14 @@ ammo-slaying ID。若 items 方向随后导入陶器碎片或断木棍，也应�
 - 当前协调点：pack `1.300.0`，content hash
   `bb912c0d2adef96f8930f190e588f6a1a59a94b9df9b70ce59d6634913a4f2d9`，Protocol `1.190`，
   State Hash Schema v94，save v1，active baseline `contract-v287`。
+
+## main 当前批次：坐骑经验、进化与骑乘羁绊
+
+- 未新增正式内容 ID；复用现有七个 RFB 药水 ID。`ActorDefinition.evolution` 以稳定 actor
+  ID 表达，当前导入 320 条可用原版关系，对应 315 个独立定义；13 个缺失目标留待怪物内容
+  补齐，禁止在 class 方向创建占位 actor。
+- actor 经验、羁绊、宠物击杀经验分配、进化换形和 2500/5000/10000 门槛已闭合。普通
+  下马和楼层往返保留同一实体羁绊，进化为新 kind 后从 0 重新培养。
+- 当前协调点：pack `1.302.0`，content hash
+  `1dcf89e57968a66dcfce99ba036ad077012e8dcbea8e8a0697aca4756d4b9f70`，Protocol `1.191`，
+  State Hash Schema v95，save v1，active baseline `contract-v289`。

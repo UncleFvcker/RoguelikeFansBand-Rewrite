@@ -12,6 +12,16 @@
   "id": "demo.item.star-healing-potion",
   "maxStack": 20,
   "mogaminatorRare": false,
+  "mountUse": {
+    "type": "heal",
+    "minimumBond": 2500,
+    "amount": 1000,
+    "clearStatuses": [
+      "rfb.status.confusion",
+      "rfb.status.fear",
+      "rfb.status.stun"
+    ]
+  },
   "nameKey": "item-demo-star-healing-potion-name",
   "shatterEffectProgramId": "demo.effect.star-healing-potion.shatter",
   "shatterRadius": 1,

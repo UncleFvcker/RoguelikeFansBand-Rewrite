@@ -34,6 +34,10 @@
   },
   "defense": 5,
   "descriptionKey": "actor-demo-frost-giant-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.ice-giant",
+    "requiredExperience": 25000
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

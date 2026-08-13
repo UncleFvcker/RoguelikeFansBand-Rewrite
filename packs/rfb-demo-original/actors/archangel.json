@@ -24,6 +24,10 @@
   },
   "defense": 6,
   "descriptionKey": "actor-demo-archangel-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.cherub",
+    "requiredExperience": 2500
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

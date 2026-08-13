@@ -26,6 +26,10 @@
   },
   "defense": 7,
   "descriptionKey": "actor-demo-vampire-lord-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.elder-vampire",
+    "requiredExperience": 20000
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

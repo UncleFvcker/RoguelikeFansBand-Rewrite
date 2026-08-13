@@ -35,6 +35,10 @@
   },
   "defense": 6,
   "descriptionKey": "actor-demo-storm-giant-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.elder-storm-giant",
+    "requiredExperience": 30000
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

@@ -29,6 +29,10 @@
   },
   "defense": 10,
   "descriptionKey": "actor-demo-demilich-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.archlich",
+    "requiredExperience": 80000
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

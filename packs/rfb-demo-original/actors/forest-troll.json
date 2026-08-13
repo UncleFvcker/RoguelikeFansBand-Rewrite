@@ -30,6 +30,10 @@
   },
   "defense": 5,
   "descriptionKey": "actor-demo-forest-troll-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.stone-troll",
+    "requiredExperience": 500
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

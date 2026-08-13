@@ -5,6 +5,10 @@
   "role": "monster",
   "nameKey": "actor-demo-warg-name",
   "descriptionKey": "actor-demo-warg-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.werewolf",
+    "requiredExperience": 500
+  },
   "glyph": "C",
   "level": 14,
   "experienceValue": 40,

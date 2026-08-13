@@ -5,6 +5,10 @@
   "role": "monster",
   "nameKey": "actor-demo-small-kobold-name",
   "descriptionKey": "actor-demo-small-kobold-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.kobold",
+    "requiredExperience": 8
+  },
   "glyph": "k",
   "level": 1,
   "experienceValue": 10,

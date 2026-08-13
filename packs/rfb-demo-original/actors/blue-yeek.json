@@ -5,6 +5,10 @@
   "role": "monster",
   "nameKey": "actor-demo-blue-yeek-name",
   "descriptionKey": "actor-demo-blue-yeek-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.brown-yeek",
+    "requiredExperience": 30
+  },
   "glyph": "y",
   "level": 2,
   "experienceValue": 6,

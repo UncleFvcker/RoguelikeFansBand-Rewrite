@@ -22,6 +22,10 @@
   "damageType": "fire",
   "defense": 5,
   "descriptionKey": "actor-demo-fire-elemental-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.magma-elemental",
+    "requiredExperience": 2400
+  },
   "doorInteraction": {
     "bashes": true
   },

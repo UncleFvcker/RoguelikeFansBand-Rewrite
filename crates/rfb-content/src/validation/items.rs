@@ -5,7 +5,8 @@ use std::collections::{BTreeMap, BTreeSet};
 use crate::{
     AbilityDetectSubjectDefinition, AbilityTargetDefinition, AbilityTargetModeDefinition,
     ContentError, EquipmentBonuses, ITEM_SCHEMA, ItemDefinition, ItemEnchantmentRollDefinition,
-    ItemFuelKindDefinition, ItemSummonSelectorDefinition, ItemUseEffectDefinition, StatModifiers,
+    ItemFuelKindDefinition, ItemMountUseDefinition, ItemSummonSelectorDefinition,
+    ItemUseEffectDefinition, StatModifiers,
 };
 
 use super::shared::{
@@ -951,6 +952,50 @@ pub(super) fn validate_items(
                         || action.device_check_difficulty.is_none()
                         || !item.tags.iter().any(|tag| tag == "device")))
             {
+                return Err(ContentError::InvalidItemUseAction(item.id.clone()));
+            }
+        }
+        if let Some(mount_use) = &item.mount_use {
+            let valid = item.use_action.is_some()
+                && item.equipment_slot.is_none()
+                && item.tags.iter().any(|tag| tag == "potion")
+                && match mount_use {
+                    ItemMountUseDefinition::Heal {
+                        minimum_bond,
+                        dice,
+                        sides,
+                        amount,
+                        full,
+                        clear_statuses,
+                    } => {
+                        (1..=10_000).contains(minimum_bond)
+                            && ((*full && *dice == 0 && *sides == 0 && *amount == 0)
+                                || (!*full
+                                    && (((1..=100).contains(dice)
+                                        && (1..=10_000).contains(sides)
+                                        && *amount == 0)
+                                        || (*dice == 0
+                                            && *sides == 0
+                                            && (1..=1_000_000).contains(amount)))))
+                            && clear_statuses
+                                .iter()
+                                .all(|status| validate_id(status).is_ok())
+                    }
+                    ItemMountUseDefinition::Haste {
+                        minimum_bond,
+                        duration_dice,
+                        duration_sides,
+                        duration_bonus,
+                        extension,
+                    } => {
+                        (1..=10_000).contains(minimum_bond)
+                            && (1..=100).contains(duration_dice)
+                            && (1..=10_000).contains(duration_sides)
+                            && *duration_bonus <= 10_000
+                            && (1..=10_000).contains(extension)
+                    }
+                };
+            if !valid {
                 return Err(ContentError::InvalidItemUseAction(item.id.clone()));
             }
         }

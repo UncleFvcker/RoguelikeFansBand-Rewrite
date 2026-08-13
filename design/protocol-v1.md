@@ -610,3 +610,9 @@ save 容器保持 v1，不兼容缺少该字段的旧开发存档。
 能投影正式骑兵职业能力。命令继续使用既有 `UseAbility` 与方向 `TargetSelection`，事件
 继续使用通用 `GameEventDto`；没有新增存档字段或权威状态结构，State Hash Schema 保持
 v94，save 容器保持 v1。
+
+协议 1.191 / contract-v289 增加 `PetDto` 列表，投影受控 actor 的种类、等级、进化经验、
+骑乘状态与当前羁绊；`InventoryItemDto.mountUsable` 只投影当前坐骑已解锁的药水入口。
+命令继续复用 `UseItem` 与 entity `TargetSelection`。`ActorSaveDto.experience` 和
+`PlayerSaveDto.ridingBond` 为必填权威字段，进入 State Hash Schema v95；save 容器保持
+v1，不兼容缺少字段的旧开发存档。

@@ -14,6 +14,10 @@
   "damageType": "physical",
   "defense": 1,
   "descriptionKey": "actor-demo-chimera-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.gorgimera",
+    "requiredExperience": 800
+  },
   "doorInteraction": {
     "bashes": true
   },

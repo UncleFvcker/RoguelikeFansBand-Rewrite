@@ -14,6 +14,7 @@ import type {
   PlayerBuildDto,
   PlayerMutationDto,
   PetUpkeepDto,
+  PetDto,
   PlayerProgressDto,
   ProficiencyRankDto,
   ResourcePoolDto,
@@ -68,6 +69,7 @@ type StatusDom = Pick<
   | "summonCommandStatus"
   | "summonCommandButtons"
   | "dismissPets"
+  | "petList"
   | "taskLogList"
   | "campaignStatusValue"
   | "campaignScoreValue"
@@ -258,7 +260,11 @@ export class StatusPanel {
       state.player.abilityLearning,
       state.player.progress?.level ?? 1,
     );
-    this.#renderSummonCommand(state.player.summonCommand, state.player.petUpkeep);
+    this.#renderSummonCommand(
+      state.player.summonCommand,
+      state.player.petUpkeep,
+      state.player.pets ?? [],
+    );
     this.#renderNearby(state);
     const activeEffects = state.player.statuses.map((status) =>
       this.#localization.format("status-effect-entry", {
@@ -570,6 +576,7 @@ export class StatusPanel {
   #renderSummonCommand(
     command: SummonCommandDto | undefined,
     upkeep: PetUpkeepDto | undefined,
+    pets: PetDto[],
   ): void {
     const mode = command?.mode ?? "follow";
     const count = upkeep?.controlledPets ?? 0;
@@ -593,6 +600,36 @@ export class StatusPanel {
     }
     this.#dom.dismissPets.disabled =
       this.#state.busy || this.#state.commandBlocked || this.#state.worldMap || count === 0;
+    const document = this.#dom.petList.ownerDocument;
+    this.#dom.petList.replaceChildren(
+      ...pets.map((pet) => {
+        const row = document.createElement("li");
+        row.className = "ability-row";
+        const name = document.createElement("span");
+        name.className = "ability-name";
+        name.textContent = this.#localization.format(pet.nameKey as MessageKey);
+        const details = document.createElement("span");
+        details.className = "ability-details";
+        const experience =
+          pet.requiredExperience == null
+            ? this.#localization.format("pet-experience-none")
+            : this.#localization.format("pet-experience-value", {
+                current: pet.experience,
+                required: pet.requiredExperience,
+              });
+        details.textContent = this.#localization.format("pet-status-value", {
+          level: pet.level,
+          experience,
+          riding: pet.riding ? this.#localization.format("pet-riding") : "",
+          bond:
+            pet.bondPercent == null
+              ? ""
+              : this.#localization.format("pet-bond-value", { percent: pet.bondPercent }),
+        });
+        row.append(name, details);
+        return row;
+      }),
+    );
   }
 
   #renderVirtues(virtues: VirtueDto[]): void {

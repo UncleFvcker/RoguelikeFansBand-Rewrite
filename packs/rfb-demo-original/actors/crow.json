@@ -16,6 +16,10 @@
   "damageType": "physical",
   "defense": 1,
   "descriptionKey": "actor-demo-crow-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.raven",
+    "requiredExperience": 10
+  },
   "experienceValue": 10,
   "formatVersion": 1,
   "glyph": "B",

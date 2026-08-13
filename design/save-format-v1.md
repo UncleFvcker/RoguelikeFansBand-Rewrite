@@ -435,3 +435,10 @@ contract-v285 为 `PlayerProgressSaveDto` 增加必填 `ridingProficiency`。载
 内容严格校验 `initial <= current <= maximum <= 8000`；无职业构筑时只允许 0，不为缺少
 字段或低于职业出生值的旧开发存档补默认值。该状态进入 State Hash Schema v94，Protocol
 升至 1.189，save 容器保持 v1。
+
+contract-v289 为每个 `ActorSaveDto` 增加必填 `experience`，无进化关系的 actor 只允许 0，
+有进化关系的 actor 必须低于当前形态阈值。`PlayerSaveDto.ridingBond` 也是必填字段，值为
+null 或稳定 actor ID、当前 kind ID 与 0–10000 羁绊值；载入要求目标仍是存活、可骑乘且由
+玩家控制的 actor，允许目标暂存于离层状态。进化保留实体 ID、控制和骑乘状态，但将新形态
+羁绊重置为 0。两项状态进入 State Hash Schema v95；Protocol 升至 1.191，save 容器保持
+v1，不提供旧开发存档兼容默认值。

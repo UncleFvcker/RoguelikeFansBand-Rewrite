@@ -16,6 +16,7 @@
       {
         "id": "contract.weapon-proficiency-target",
         "kindId": "demo.actor.adobe-golem",
+        "experience": 0,
         "position": {
           "x": 45,
           "y": 16
@@ -743,6 +744,15 @@
             "hitBonus": 10
           },
           {
+            "itemKindId": "demo.item.heavy-lance",
+            "nameKey": "item-demo-heavy-lance-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
             "itemKindId": "demo.item.jo-staff",
             "nameKey": "item-demo-jo-staff-name",
             "category": "melee",
@@ -1182,6 +1192,7 @@
           "displayNameKey": "item-demo-ration-of-food-name",
           "knowledge": "aware",
           "usable": true,
+          "mountUsable": false,
           "canReceiveRecharge": false,
           "canSupplyRecharge": false,
           "quantity": 6,
@@ -1208,6 +1219,7 @@
           "displayNameKey": "item-demo-wooden-torch-name",
           "knowledge": "aware",
           "usable": false,
+          "mountUsable": false,
           "fuel": {
             "kind": "torch",
             "current": 2500,
@@ -1240,6 +1252,7 @@
           "displayNameKey": "item-demo-wooden-torch-name",
           "knowledge": "aware",
           "usable": false,
+          "mountUsable": false,
           "fuel": {
             "kind": "torch",
             "current": 2500,
@@ -1272,6 +1285,7 @@
           "displayNameKey": "item-demo-wooden-torch-name",
           "knowledge": "aware",
           "usable": false,
+          "mountUsable": false,
           "fuel": {
             "kind": "torch",
             "current": 2500,
@@ -1304,6 +1318,7 @@
           "displayNameKey": "item-demo-wooden-torch-name",
           "knowledge": "aware",
           "usable": false,
+          "mountUsable": false,
           "fuel": {
             "kind": "torch",
             "current": 2500,
@@ -1336,6 +1351,7 @@
           "displayNameKey": "item-demo-arrow-name",
           "knowledge": "aware",
           "usable": false,
+          "mountUsable": false,
           "canReceiveRecharge": false,
           "canSupplyRecharge": false,
           "quantity": 22,
@@ -1539,7 +1555,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "acc35dd0ca93640adfbc02359c641398a68ca1b1675bf3330d7c7c45a5c65abe"
+      "stateHash": "6704b0518e18ebc8a06840c2d800a597e7942624bb230d492f8daed1a6999b99"
     },
     "events": [
       {

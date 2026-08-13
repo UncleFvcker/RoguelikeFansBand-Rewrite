@@ -31,6 +31,10 @@
   },
   "defense": 8,
   "descriptionKey": "actor-demo-lesser-titan-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.greater-titan",
+    "requiredExperience": 25000
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

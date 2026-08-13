@@ -27,6 +27,10 @@
   },
   "defense": 10,
   "descriptionKey": "actor-demo-doom-drake-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.mature-red-dragon",
+    "requiredExperience": 3000
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

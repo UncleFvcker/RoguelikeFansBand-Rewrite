@@ -5,6 +5,10 @@
   "role": "monster",
   "nameKey": "actor-demo-grey-mold-name",
   "descriptionKey": "actor-demo-grey-mold-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.yellow-mold",
+    "requiredExperience": 6
+  },
   "glyph": "m",
   "level": 1,
   "experienceValue": 6,

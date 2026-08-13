@@ -32,6 +32,10 @@
   },
   "defense": 0,
   "descriptionKey": "actor-demo-blubbering-icky-thing-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.grey-icky-thing",
+    "requiredExperience": 12
+  },
   "experienceValue": 8,
   "formatVersion": 1,
   "glyph": "i",

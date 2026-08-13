@@ -24,6 +24,10 @@
   },
   "defense": 4,
   "descriptionKey": "actor-demo-paladin-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.white-knight",
+    "requiredExperience": 800
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

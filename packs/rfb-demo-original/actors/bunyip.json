@@ -33,6 +33,10 @@
   },
   "defense": 6,
   "descriptionKey": "actor-demo-bunyip-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.greater-basilisk",
+    "requiredExperience": 10000
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

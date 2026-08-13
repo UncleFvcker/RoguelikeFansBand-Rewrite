@@ -14,6 +14,10 @@
   "damageType": "poison",
   "defense": 3,
   "descriptionKey": "actor-demo-ixitxachitl-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.vampiric-ixitxachitl",
+    "requiredExperience": 600
+  },
   "experienceValue": 40,
   "formatVersion": 1,
   "glyph": "l",

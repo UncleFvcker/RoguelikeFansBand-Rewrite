@@ -23,6 +23,10 @@
   "damageType": "physical",
   "defense": 7,
   "descriptionKey": "actor-demo-giant-mutant-ant-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.giant-fire-ant",
+    "requiredExperience": 1500
+  },
   "doorInteraction": {
     "bashes": true
   },

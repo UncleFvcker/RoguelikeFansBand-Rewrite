@@ -20,6 +20,10 @@
   },
   "defense": 1,
   "descriptionKey": "actor-demo-brown-yeek-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.master-yeek",
+    "requiredExperience": 120
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

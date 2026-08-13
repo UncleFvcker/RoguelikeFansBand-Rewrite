@@ -11,6 +11,10 @@
   "damageType": "physical",
   "defense": 0,
   "descriptionKey": "actor-demo-spectator-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.beholder",
+    "requiredExperience": 4000
+  },
   "experienceValue": 150,
   "forceSleep": true,
   "formatVersion": 1,

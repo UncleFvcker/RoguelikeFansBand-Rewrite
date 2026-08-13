@@ -11,6 +11,10 @@
   "damageType": "physical",
   "defense": 3,
   "descriptionKey": "actor-demo-homonculus-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.quasit",
+    "requiredExperience": 200
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

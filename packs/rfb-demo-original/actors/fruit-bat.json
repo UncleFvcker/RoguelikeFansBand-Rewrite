@@ -5,6 +5,10 @@
   "role": "monster",
   "nameKey": "actor-demo-fruit-bat-name",
   "descriptionKey": "actor-demo-fruit-bat-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.giant-brown-bat",
+    "requiredExperience": 20
+  },
   "glyph": "b",
   "level": 1,
   "experienceValue": 3,

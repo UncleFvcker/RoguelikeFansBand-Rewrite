@@ -19,6 +19,7 @@ pub(crate) const BASE_ACTOR_POWER_PER_MILLE: u16 = 1_000;
 pub(crate) struct Actor {
     pub(crate) id: String,
     pub(crate) kind_id: String,
+    pub(crate) experience: u64,
     pub(crate) appearance_kind_id: Option<String>,
     pub(crate) position: Position,
     pub(crate) hp: i32,
@@ -38,6 +39,13 @@ pub(crate) struct Actor {
     pub(crate) pack: Option<MonsterPackIdentity>,
     pub(crate) controller_id: Option<String>,
     pub(crate) summon: Option<SummonIdentity>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct RidingBond {
+    pub(crate) actor_id: String,
+    pub(crate) actor_kind_id: String,
+    pub(crate) value: u16,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

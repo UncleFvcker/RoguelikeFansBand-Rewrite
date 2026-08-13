@@ -5,6 +5,10 @@
   "role": "monster",
   "nameKey": "actor-demo-night-lizard-name",
   "descriptionKey": "actor-demo-night-lizard-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.vlasta",
+    "requiredExperience": 200
+  },
   "glyph": "R",
   "level": 7,
   "experienceValue": 35,

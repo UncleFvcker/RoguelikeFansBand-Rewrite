@@ -28,6 +28,10 @@
   },
   "defense": 1,
   "descriptionKey": "actor-demo-orc-shaman-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.orc-warlock",
+    "requiredExperience": 600
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

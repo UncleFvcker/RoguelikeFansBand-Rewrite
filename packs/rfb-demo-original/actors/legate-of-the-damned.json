@@ -23,6 +23,10 @@
   },
   "defense": 12,
   "descriptionKey": "actor-demo-legate-of-the-damned-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.black-reaver",
+    "requiredExperience": 100000
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

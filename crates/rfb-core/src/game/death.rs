@@ -528,6 +528,7 @@ impl Game {
         if self.riding_actor_id.as_deref() == Some(dying_actor.id.as_str()) {
             self.riding_actor_id = None;
         }
+        self.clear_riding_bond_for(&dying_actor.id);
         let carried_item_ids = self
             .items
             .iter()
@@ -594,6 +595,7 @@ impl Game {
         if self.riding_actor_id.as_deref() == Some(dying_actor.id.as_str()) {
             self.riding_actor_id = None;
         }
+        self.clear_riding_bond_for(&dying_actor.id);
         self.entities[index].hp = self.entities[index].hp.min(0);
         events.push(death_event.clone());
         self.apply_amberite_blood_curse(&dying_actor);
@@ -643,6 +645,7 @@ impl Game {
             self.player_kill_experience_reward(removed_definition.experience_value);
         if credit_player {
             self.apply_player_experience(experience_value, events);
+            self.reward_player_kill_riding_bond(&removed, events);
         }
         self.command_actor_deaths.push(ActorDeathRecord {
             actor_id: removed.id.clone(),

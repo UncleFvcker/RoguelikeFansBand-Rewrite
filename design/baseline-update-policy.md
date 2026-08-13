@@ -6,7 +6,7 @@
 
 contract fixture 是规则兼容边界，不能把测试失败简单处理为“刷新预期结果”。政策用于保证每次规则变化只修改真正受影响的场景，同时保留可审查的失败原因。
 
-当前逻辑基线是 `contract-v287`，机器可读政策固定在：
+当前逻辑基线是 `contract-v289`，机器可读政策固定在：
 
 ```text
 tests/fixtures/active/baseline-policy.json
@@ -304,3 +304,8 @@ Random Telepathy、Nausea、Warning 与 Wraithform 复用变异移除、属性�
 增加公共初始化 RNG 与存档字段，因此协议升至 1.168、State Hash Schema 升至 v85，
 21 个 fixture 全量刷新。奖励选择、最高等级门槛和混沌武器等级表由 Core 聚焦测试
 覆盖；104 个随机候选至此全部 active。
+
+`contract-v289` 导入坐骑经验、怪物进化与骑乘羁绊。所有 actor 新增必填经验状态，玩家
+新增可空羁绊身份和值；Protocol 升至 1.191、State Hash Schema 升至 v95、内容包升至
+1.302.0。公共 save/state-hash 投影变化，因此全部 26 条 active fixture 刷新；进化、满羁绊
+经验共享和坐骑药水 RNG 由 Core 聚焦测试覆盖，零 waiver。

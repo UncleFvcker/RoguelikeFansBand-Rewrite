@@ -5,6 +5,10 @@
   "role": "monster",
   "nameKey": "actor-demo-giant-white-mouse-name",
   "descriptionKey": "actor-demo-giant-white-mouse-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.giant-white-rat",
+    "requiredExperience": 5
+  },
   "glyph": "r",
   "level": 1,
   "experienceValue": 3,

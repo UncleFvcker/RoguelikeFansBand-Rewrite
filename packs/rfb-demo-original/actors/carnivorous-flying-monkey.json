@@ -15,6 +15,10 @@
   "damageType": "physical",
   "defense": 2,
   "descriptionKey": "actor-demo-carnivorous-flying-monkey-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.owlbear",
+    "requiredExperience": 100
+  },
   "experienceValue": 30,
   "formatVersion": 1,
   "glyph": "H",

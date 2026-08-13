@@ -22,6 +22,10 @@
   },
   "defense": 5,
   "descriptionKey": "actor-demo-logrus-master-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.lord-of-chaos",
+    "requiredExperience": 150000
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

@@ -12,6 +12,10 @@
   "damageType": "physical",
   "defense": 4,
   "descriptionKey": "actor-demo-air-spirit-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.air-elemental",
+    "requiredExperience": 800
+  },
   "doorInteraction": {
     "bashes": true
   },

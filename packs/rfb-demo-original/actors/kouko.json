@@ -25,6 +25,10 @@
   },
   "defense": 3,
   "descriptionKey": "actor-demo-kouko-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.white-wraith",
+    "requiredExperience": 1000
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

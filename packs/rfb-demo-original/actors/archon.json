@@ -29,6 +29,10 @@
   },
   "defense": 14,
   "descriptionKey": "actor-demo-archon-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.planetar",
+    "requiredExperience": 50000
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

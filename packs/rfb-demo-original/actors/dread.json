@@ -32,6 +32,10 @@
   },
   "defense": 3,
   "descriptionKey": "actor-demo-dread-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.dreadmaster",
+    "requiredExperience": 6000
+  },
   "experienceValue": 600,
   "forceSleep": true,
   "formatVersion": 1,

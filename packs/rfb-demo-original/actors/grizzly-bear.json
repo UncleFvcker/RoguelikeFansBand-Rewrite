@@ -16,6 +16,10 @@
   "damageType": "physical",
   "defense": 4,
   "descriptionKey": "actor-demo-grizzly-bear-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.mad-bear",
+    "requiredExperience": 300
+  },
   "doorInteraction": {
     "bashes": true
   },

@@ -45,7 +45,9 @@ test("the application DOM registry is immutable and preserves stable element IDs
   assert.equal(dom.materialList.id, "material-list");
   assert.equal(dom.summonCommandButtons["keep-distance"].id, "summon-command-keep-distance");
   assert.equal(dom.dismissPets.id, "dismiss-pets");
-  assert.equal(elements.size, 109);
+  assert.equal(dom.petList.id, "pet-list");
+  assert.equal(dom.inventoryUseOnMount.id, "inventory-use-on-mount");
+  assert.equal(elements.size, 111);
   assert.equal(Object.isFrozen(dom), true);
   assert.equal(Object.isFrozen(dom.summonCommandButtons), true);
 });

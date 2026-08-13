@@ -750,6 +750,15 @@
             "hitBonus": 10
           },
           {
+            "itemKindId": "demo.item.heavy-lance",
+            "nameKey": "item-demo-heavy-lance-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
             "itemKindId": "demo.item.jo-staff",
             "nameKey": "item-demo-jo-staff-name",
             "category": "melee",
@@ -1177,6 +1186,7 @@
           "displayNameKey": "item-demo-ration-of-food-name",
           "knowledge": "aware",
           "usable": true,
+          "mountUsable": false,
           "canReceiveRecharge": false,
           "canSupplyRecharge": false,
           "quantity": 7,
@@ -1203,6 +1213,7 @@
           "displayNameKey": "item-demo-wooden-torch-name",
           "knowledge": "aware",
           "usable": false,
+          "mountUsable": false,
           "fuel": {
             "kind": "torch",
             "current": 3500,
@@ -1235,6 +1246,7 @@
           "displayNameKey": "item-demo-wooden-torch-name",
           "knowledge": "aware",
           "usable": false,
+          "mountUsable": false,
           "fuel": {
             "kind": "torch",
             "current": 3500,
@@ -1267,6 +1279,7 @@
           "displayNameKey": "item-demo-wooden-torch-name",
           "knowledge": "aware",
           "usable": false,
+          "mountUsable": false,
           "fuel": {
             "kind": "torch",
             "current": 3500,
@@ -1299,6 +1312,7 @@
           "displayNameKey": "item-demo-wooden-torch-name",
           "knowledge": "aware",
           "usable": false,
+          "mountUsable": false,
           "fuel": {
             "kind": "torch",
             "current": 3500,
@@ -1331,6 +1345,7 @@
           "displayNameKey": "item-demo-arrow-name",
           "knowledge": "aware",
           "usable": false,
+          "mountUsable": false,
           "canReceiveRecharge": false,
           "canSupplyRecharge": false,
           "quantity": 22,
@@ -1588,7 +1603,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "88db9b142c98c1dd57ce17b130733472bc4cfe85dbcdcc480b51e45119b09eb8"
+      "stateHash": "bb1eb1b40241bfe6535cb2841a8ac35d1eb7bcff77cdd9321efa49c0140269d0"
     },
     "events": [
       {
@@ -1609,6 +1624,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "88db9b142c98c1dd57ce17b130733472bc4cfe85dbcdcc480b51e45119b09eb8"
+    "saveRoundTripStateHash": "bb1eb1b40241bfe6535cb2841a8ac35d1eb7bcff77cdd9321efa49c0140269d0"
   }
 }

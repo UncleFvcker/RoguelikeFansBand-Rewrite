@@ -34,6 +34,7 @@ mod pet_upkeep;
 mod prayer_study;
 mod progression;
 mod riding;
+mod riding_bond;
 mod snapshots;
 pub(crate) mod support;
 mod tasks;

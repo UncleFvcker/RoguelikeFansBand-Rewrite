@@ -7319,6 +7319,10 @@
             "wisdom": 0
           }
         },
+        "mountUsable": {
+          "type": "boolean",
+          "default": false
+        },
         "passives": {
           "type": "array",
           "items": {
@@ -8441,6 +8445,59 @@
         "resting"
       ]
     },
+    "PetDto": {
+      "type": "object",
+      "properties": {
+        "actorId": {
+          "type": "string"
+        },
+        "actorKindId": {
+          "type": "string"
+        },
+        "bondPercent": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        },
+        "experience": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "level": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "nameKey": {
+          "type": "string"
+        },
+        "requiredExperience": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint64",
+          "minimum": 0
+        },
+        "riding": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "actorId",
+        "actorKindId",
+        "nameKey",
+        "level",
+        "experience",
+        "riding"
+      ]
+    },
     "PetUpkeepDto": {
       "type": "object",
       "properties": {
@@ -8741,6 +8798,12 @@
             "totalLevels": 0,
             "unsafeWarning": false,
             "upkeepPercent": 0
+          }
+        },
+        "pets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PetDto"
           }
         },
         "position": {

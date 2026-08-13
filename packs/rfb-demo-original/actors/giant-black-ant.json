@@ -16,6 +16,10 @@
   "damageType": "physical",
   "defense": 2,
   "descriptionKey": "actor-demo-giant-black-ant-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.giant-pink-ant",
+    "requiredExperience": 40
+  },
   "doorInteraction": {
     "bashes": true
   },

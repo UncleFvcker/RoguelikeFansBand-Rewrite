@@ -27,6 +27,10 @@
   },
   "defense": 12,
   "descriptionKey": "actor-demo-eldrak-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.troll-king",
+    "requiredExperience": 5000
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

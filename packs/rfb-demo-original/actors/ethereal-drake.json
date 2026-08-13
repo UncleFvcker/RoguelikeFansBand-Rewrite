@@ -22,6 +22,10 @@
   },
   "defense": 10,
   "descriptionKey": "actor-demo-ethereal-drake-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.ethereal-dragon",
+    "requiredExperience": 20000
+  },
   "experienceValue": 700,
   "forceSleep": true,
   "formatVersion": 1,

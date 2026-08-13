@@ -11,6 +11,10 @@
   "damageType": "physical",
   "defense": 5,
   "descriptionKey": "actor-demo-silver-angel-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.golden-angel",
+    "requiredExperience": 10000
+  },
   "doorInteraction": {
     "opens": true
   },

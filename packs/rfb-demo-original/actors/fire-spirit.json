@@ -22,6 +22,10 @@
   "damageType": "fire",
   "defense": 3,
   "descriptionKey": "actor-demo-fire-spirit-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.fire-elemental",
+    "requiredExperience": 1200
+  },
   "doorInteraction": {
     "bashes": true
   },

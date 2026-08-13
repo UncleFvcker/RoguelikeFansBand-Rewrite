@@ -29,6 +29,10 @@
   },
   "defense": 7,
   "descriptionKey": "actor-demo-dark-elven-sorcerer-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.dark-elven-shade",
+    "requiredExperience": 30000
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

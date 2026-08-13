@@ -137,6 +137,7 @@ impl Game {
         let effects = vec![effect];
         self.remove_defeated_monster_targets(
             std::iter::once(target.entity_id()),
+            source_entity_id,
             events,
             changed,
             removed_entities,
@@ -438,6 +439,7 @@ impl Game {
             targets
                 .iter()
                 .map(|target| target.target_entity_id.as_str()),
+            source_entity_id,
             events,
             changed,
             removed_entities,
@@ -528,6 +530,7 @@ impl Game {
             targets
                 .iter()
                 .map(|target| target.target_entity_id.as_str()),
+            source_entity_id,
             events,
             changed,
             removed_entities,
@@ -626,6 +629,7 @@ impl Game {
             targets
                 .iter()
                 .map(|target| target.target_entity_id.as_str()),
+            source_entity_id,
             events,
             changed,
             removed_entities,
@@ -714,6 +718,7 @@ impl Game {
             targets
                 .iter()
                 .map(|target| target.target_entity_id.as_str()),
+            source_entity_id,
             events,
             changed,
             removed_entities,
@@ -948,6 +953,7 @@ impl Game {
                         targets
                             .iter()
                             .map(|target| target.target_entity_id.as_str()),
+                        &source_entity_id,
                         events,
                         changed,
                         removed_entities,
@@ -1416,6 +1422,7 @@ impl Game {
     fn remove_defeated_monster_targets<'a>(
         &mut self,
         target_entity_ids: impl Iterator<Item = &'a str>,
+        source_entity_id: &str,
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
@@ -1438,6 +1445,8 @@ impl Game {
             else {
                 continue;
             };
+            let slain = self.entities[index].clone();
+            self.reward_controlled_actor_kill(source_entity_id, &slain, events);
             self.resolve_actor_death_without_rewards(
                 index,
                 None,

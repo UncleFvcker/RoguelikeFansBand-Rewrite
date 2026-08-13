@@ -13,6 +13,10 @@
   "damageType": "physical",
   "defense": 7,
   "descriptionKey": "actor-demo-lesser-wall-monster-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.greater-wall-monster",
+    "requiredExperience": 2000
+  },
   "doorInteraction": {
     "bashes": true
   },

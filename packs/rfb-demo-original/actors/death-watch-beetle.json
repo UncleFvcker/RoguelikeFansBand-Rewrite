@@ -14,6 +14,10 @@
   "damageType": "physical",
   "defense": 6,
   "descriptionKey": "actor-demo-death-watch-beetle-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.killer-iridescent-beetle",
+    "requiredExperience": 2000
+  },
   "doorInteraction": {
     "bashes": true
   },

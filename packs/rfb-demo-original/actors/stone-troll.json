@@ -27,6 +27,10 @@
   },
   "defense": 4,
   "descriptionKey": "actor-demo-stone-troll-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.algroth",
+    "requiredExperience": 800
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

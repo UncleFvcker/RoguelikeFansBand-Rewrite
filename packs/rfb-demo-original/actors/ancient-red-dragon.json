@@ -30,6 +30,10 @@
   },
   "defense": 10,
   "descriptionKey": "actor-demo-ancient-red-dragon-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.great-hell-wyrm",
+    "requiredExperience": 100000
+  },
   "doorInteraction": {
     "bashes": true
   },

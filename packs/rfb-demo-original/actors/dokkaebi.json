@@ -28,6 +28,10 @@
   },
   "defense": 4,
   "descriptionKey": "actor-demo-dokkaebi-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.greater-dokkaebi",
+    "requiredExperience": 40000
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

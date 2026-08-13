@@ -30,6 +30,10 @@
   },
   "defense": 9,
   "descriptionKey": "actor-demo-ancient-black-dragon-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.great-bile-wyrm",
+    "requiredExperience": 100000
+  },
   "doorInteraction": {
     "bashes": true
   },

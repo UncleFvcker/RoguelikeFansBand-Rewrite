@@ -5,6 +5,10 @@
   "role": "monster",
   "nameKey": "actor-demo-large-white-snake-name",
   "descriptionKey": "actor-demo-large-white-snake-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.large-brown-snake",
+    "requiredExperience": 5
+  },
   "glyph": "J",
   "level": 1,
   "experienceValue": 4,

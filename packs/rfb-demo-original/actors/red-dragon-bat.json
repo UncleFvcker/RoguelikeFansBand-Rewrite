@@ -12,6 +12,10 @@
   "damageType": "fire",
   "defense": 2,
   "descriptionKey": "actor-demo-red-dragon-bat-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.doombat",
+    "requiredExperience": 2000
+  },
   "doorInteraction": {
     "bashes": true
   },

@@ -28,6 +28,10 @@
   },
   "defense": 6,
   "descriptionKey": "actor-demo-seraph-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.archon",
+    "requiredExperience": 8000
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

@@ -11,6 +11,10 @@
   "damageType": "physical",
   "defense": 11,
   "descriptionKey": "actor-demo-hand-druj-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.eye-druj",
+    "requiredExperience": 20000
+  },
   "experienceValue": 2000,
   "forceSleep": true,
   "formatVersion": 1,

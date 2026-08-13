@@ -11,6 +11,10 @@
   "damageType": "physical",
   "defense": 2,
   "descriptionKey": "actor-demo-lurker-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.trapper",
+    "requiredExperience": 1200
+  },
   "experienceValue": 80,
   "formatVersion": 1,
   "glyph": ".",

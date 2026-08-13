@@ -11,6 +11,10 @@
   "damageType": "physical",
   "defense": 3,
   "descriptionKey": "actor-demo-minotaur-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.maulotaur",
+    "requiredExperience": 12000
+  },
   "doorInteraction": {
     "bashes": true
   },

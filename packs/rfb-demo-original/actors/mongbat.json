@@ -16,6 +16,10 @@
   "damageType": "physical",
   "defense": 8,
   "descriptionKey": "actor-demo-mongbat-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.bat-of-gorgoroth",
+    "requiredExperience": 700
+  },
   "experienceValue": 65,
   "formatVersion": 1,
   "glyph": "b",

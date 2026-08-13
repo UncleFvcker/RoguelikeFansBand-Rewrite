@@ -19,8 +19,8 @@ use rfb_protocol::{
     AttributeValueDto, BodySlotDto, CampaignStateDto, CellDto, CellVisualDto, ContentVisualDto,
     DamageDiceDto, EntityDto, EntityFactionDto, EquipmentItemDto, GameSnapshot, InventoryItemDto,
     ItemDto, ItemKnowledgeDto, MapScaleDto, MeleeRoutineDto, MutationRatingDto, PROTOCOL_VERSION,
-    PlayerBuildDto, PlayerDto, PlayerMutationDto, PlayerProgressDto, Position, ResistanceDto,
-    ResourcePoolDto, SkillProgressDto, SummonDto, TaskServiceDto, TaskStatusDto,
+    PetDto, PlayerBuildDto, PlayerDto, PlayerMutationDto, PlayerProgressDto, Position,
+    ResistanceDto, ResourcePoolDto, SkillProgressDto, SummonDto, TaskServiceDto, TaskStatusDto,
     TerrainInteractionDto, TerrainInteractionKindDto, VisibilityState, WildernessLocationDto,
     WildernessLocationKindDto,
 };
@@ -145,7 +145,38 @@ impl Game {
             pet_upkeep: self.pet_upkeep_dto(),
             recall: self.recall.clone(),
             riding_actor_id: self.riding_actor_id.clone(),
+            pets: self.pet_dtos(),
         }
+    }
+
+    fn pet_dtos(&self) -> Vec<PetDto> {
+        let mut pets = self
+            .entities
+            .iter()
+            .filter(|actor| actor.hp > 0 && self.actor_is_player_aligned(actor))
+            .filter_map(|actor| {
+                let definition = self.actor_runtime_definition(actor)?;
+                let bond_percent = self.riding_bond.as_ref().and_then(|bond| {
+                    (bond.actor_id == actor.id && bond.actor_kind_id == actor.kind_id)
+                        .then(|| u8::try_from(bond.value / 100).unwrap_or(100))
+                });
+                Some(PetDto {
+                    actor_id: actor.id.clone(),
+                    actor_kind_id: actor.kind_id.clone(),
+                    name_key: definition.name_key.clone(),
+                    level: definition.level,
+                    experience: actor.experience,
+                    required_experience: definition
+                        .evolution
+                        .as_ref()
+                        .map(|evolution| evolution.required_experience),
+                    riding: self.riding_actor_id.as_deref() == Some(actor.id.as_str()),
+                    bond_percent,
+                })
+            })
+            .collect::<Vec<_>>();
+        pets.sort_by(|left, right| left.actor_id.cmp(&right.actor_id));
+        pets
     }
 
     fn player_mutation_dtos(&self) -> Vec<PlayerMutationDto> {
@@ -782,6 +813,7 @@ impl Game {
                                 .is_some_and(|state| state.current >= activation.cost)
                         })
                     }),
+                    mount_usable: self.mount_item_is_usable(&item.kind_id),
                     charges: (self.item_knowledge_dto(&item.kind_id) == ItemKnowledgeDto::Aware)
                         .then_some(item.charges)
                         .flatten(),

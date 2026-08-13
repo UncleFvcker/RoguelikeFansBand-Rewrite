@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.190";
+pub const PROTOCOL_VERSION: &str = "1.191";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -2672,6 +2672,24 @@ pub struct PlayerDto {
     pub recall: Option<RecallStateDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub riding_actor_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub pets: Vec<PetDto>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct PetDto {
+    pub actor_id: String,
+    pub actor_kind_id: String,
+    pub name_key: String,
+    pub level: u32,
+    pub experience: u64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub required_experience: Option<u64>,
+    pub riding: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bond_percent: Option<u8>,
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -2995,6 +3013,8 @@ pub struct InventoryItemDto {
     pub knowledge: ItemKnowledgeDto,
     #[serde(default)]
     pub usable: bool,
+    #[serde(default)]
+    pub mount_usable: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub charges: Option<ItemChargesDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -3545,6 +3565,7 @@ pub fn generated_typescript() -> String {
     push_declaration!(SummonCommandDto);
     push_declaration!(SummonCommandResolutionDto);
     push_declaration!(PetUpkeepDto);
+    push_declaration!(PetDto);
     push_declaration!(ResourceRecoveryResolutionDto);
     push_declaration!(MonsterDisplacementResolutionDto);
     push_declaration!(RestStopReasonDto);
@@ -3678,6 +3699,15 @@ pub struct PlayerSaveDto {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub recall: Option<RecallStateDto>,
     pub riding_actor_id: Option<String>,
+    pub riding_bond: Option<RidingBondSaveDto>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct RidingBondSaveDto {
+    pub actor_id: String,
+    pub actor_kind_id: String,
+    pub value: u16,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -3782,6 +3812,7 @@ pub struct MaterialSaveDto {
 pub struct ActorSaveDto {
     pub id: String,
     pub kind_id: String,
+    pub experience: u64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub appearance_kind_id: Option<String>,
     pub position: Position,
@@ -4648,6 +4679,7 @@ mod tests {
                 pet_upkeep: PetUpkeepDto::default(),
                 recall: None,
                 riding_actor_id: None,
+                pets: Vec::new(),
             },
             entities: vec![EntityDto {
                 id: "demo.monster.1".to_owned(),
@@ -4696,6 +4728,7 @@ mod tests {
                 display_name_key: "item-demo-charm-name".to_owned(),
                 knowledge: ItemKnowledgeDto::Aware,
                 usable: false,
+                mount_usable: false,
                 charges: None,
                 fuel: None,
                 activation: None,
@@ -4779,11 +4812,13 @@ mod tests {
         );
         let mut current = serde_json::to_value(&legacy).expect("fixture should serialize");
         current["entities"][0]["nice"] = serde_json::json!(false);
+        current["entities"][0]["experience"] = serde_json::json!(0);
         current["player"]["activeMutationIds"] = serde_json::json!([]);
         current["player"]["lockedMutationIds"] = serde_json::json!([]);
         current["player"]["minorSlowEnergy"] = serde_json::json!(0);
         current["reproductionSuppressed"] = serde_json::json!(false);
         current["generatedArtifactIds"] = serde_json::json!([]);
+        current["player"]["ridingBond"] = serde_json::Value::Null;
         let mut missing_view_offset = current.clone();
         missing_view_offset
             .as_object_mut()
@@ -4859,6 +4894,7 @@ mod tests {
             body_slots: Vec::new(),
             recall: None,
             riding_actor_id: None,
+            riding_bond: None,
         };
 
         let encoded = to_msgpack(&player).expect("player save should encode");

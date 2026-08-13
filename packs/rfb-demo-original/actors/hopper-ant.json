@@ -23,6 +23,10 @@
   "damageType": "physical",
   "defense": 4,
   "descriptionKey": "actor-demo-hopper-ant-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.giant-mutant-ant",
+    "requiredExperience": 500
+  },
   "doorInteraction": {
     "bashes": true
   },

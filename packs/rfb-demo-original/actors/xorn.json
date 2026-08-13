@@ -11,6 +11,10 @@
   "damageType": "physical",
   "defense": 8,
   "descriptionKey": "actor-demo-xorn-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.xaren",
+    "requiredExperience": 4000
+  },
   "experienceValue": 400,
   "formatVersion": 1,
   "glyph": "X",

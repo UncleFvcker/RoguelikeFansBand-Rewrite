@@ -20,6 +20,10 @@
   },
   "defense": 1,
   "descriptionKey": "actor-demo-chaos-shapechanger-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.chaos-beastman",
+    "requiredExperience": 350
+  },
   "experienceValue": 38,
   "formatVersion": 1,
   "glyph": "H",

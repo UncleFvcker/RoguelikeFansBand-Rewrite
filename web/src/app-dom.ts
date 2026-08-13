@@ -79,6 +79,7 @@ export interface AppDom {
   readonly summonCommandStatus: HTMLElement;
   readonly summonCommandButtons: Readonly<Record<SummonCommandModeDto, HTMLButtonElement>>;
   readonly dismissPets: HTMLButtonElement;
+  readonly petList: HTMLUListElement;
   readonly taskLogList: HTMLUListElement;
   readonly campaignStatusValue: HTMLElement;
   readonly campaignScoreValue: HTMLElement;
@@ -88,6 +89,7 @@ export interface AppDom {
   readonly inventoryCount: HTMLElement;
   readonly inventorySelectionCount: HTMLElement;
   readonly inventoryUse: HTMLButtonElement;
+  readonly inventoryUseOnMount: HTMLButtonElement;
   readonly inventoryAppraise: HTMLButtonElement;
   readonly inventoryEquip: HTMLButtonElement;
   readonly inventoryDrop: HTMLButtonElement;
@@ -206,6 +208,7 @@ export function createAppDom(document: DocumentLookup): Readonly<AppDom> {
       guard: element<HTMLButtonElement>(document, "summon-command-guard"),
     }),
     dismissPets: element<HTMLButtonElement>(document, "dismiss-pets"),
+    petList: element<HTMLUListElement>(document, "pet-list"),
     taskLogList: element<HTMLUListElement>(document, "task-log-list"),
     campaignStatusValue: element<HTMLElement>(document, "campaign-status-value"),
     campaignScoreValue: element<HTMLElement>(document, "campaign-score-value"),
@@ -215,6 +218,7 @@ export function createAppDom(document: DocumentLookup): Readonly<AppDom> {
     inventoryCount: element<HTMLElement>(document, "inventory-count"),
     inventorySelectionCount: element<HTMLElement>(document, "inventory-selection-count"),
     inventoryUse: element<HTMLButtonElement>(document, "inventory-use"),
+    inventoryUseOnMount: element<HTMLButtonElement>(document, "inventory-use-on-mount"),
     inventoryAppraise: element<HTMLButtonElement>(document, "inventory-appraise"),
     inventoryEquip: element<HTMLButtonElement>(document, "inventory-equip"),
     inventoryDrop: element<HTMLButtonElement>(document, "inventory-drop"),

@@ -11,6 +11,10 @@
   "damageType": "physical",
   "defense": 5,
   "descriptionKey": "actor-demo-skeletal-tyrannosaurus-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.spectral-tyrannosaurus",
+    "requiredExperience": 40000
+  },
   "doorInteraction": {
     "bashes": true,
     "opens": true

@@ -23,6 +23,10 @@
   },
   "defense": 3,
   "descriptionKey": "actor-demo-quasit-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.death-quasit",
+    "requiredExperience": 10000
+  },
   "doorInteraction": {
     "bashes": true
   },
