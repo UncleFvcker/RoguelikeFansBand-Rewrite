@@ -733,7 +733,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         .iter()
         .filter(|actor| actor.tags.iter().any(|tag| tag == "orc-cave"))
         .collect::<Vec<_>>();
-    assert_eq!(orc_cave.len(), 587);
+    assert_eq!(orc_cave.len(), 610);
 
     for id in [
         "demo.actor.bunyip",
@@ -766,10 +766,10 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
                     .any(|index| *index != 3)
         );
     }
-    let mut level_counts = [0_usize; 44];
+    let mut level_counts = [0_usize; 48];
     let mut source_indices = BTreeSet::new();
     for actor in orc_cave {
-        assert!((21..=64).contains(&actor.level));
+        assert!((21..=68).contains(&actor.level));
         let allocation = actor
             .allocation
             .as_ref()
@@ -781,7 +781,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         level_counts,
         [
             16, 14, 12, 17, 24, 17, 19, 17, 18, 21, 7, 12, 29, 15, 27, 28, 19, 19, 11, 42, 12, 6,
-            12, 14, 14, 7, 10, 6, 6, 17, 11, 8, 3, 8, 17, 9, 1, 6, 4, 17, 5, 4, 5, 1,
+            12, 14, 14, 7, 10, 6, 6, 17, 11, 8, 3, 8, 17, 9, 1, 6, 4, 17, 5, 4, 5, 2, 11, 0, 8, 3,
         ]
     );
 
@@ -4969,6 +4969,79 @@ fn p58_level_61_63_direct_monsters_keep_source_identity() {
 }
 
 #[test]
+fn p63a_level_64_65_direct_monsters_keep_source_identity() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+
+    for (id, legacy_index, level) in [
+        ("wadjet-the-protector", 1257, 64),
+        ("jabberwock", 778, 65),
+        ("chaos-hound", 779, 65),
+        ("locke-the-superman", 881, 65),
+        ("layzark-the-emperor", 882, 65),
+        ("clone-of-locke-the-superman", 930, 65),
+        ("disintegrate-vortex", 1045, 65),
+        ("osyluth", 1151, 65),
+        ("bronze-golem", 1198, 65),
+        ("bone-golem", 1199, 65),
+        ("sha", 1270, 65),
+        ("valkyrie", 1345, 65),
+    ] {
+        let actor_id = format!("demo.actor.{id}");
+        let actor = artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == actor_id)
+            .unwrap_or_else(|| panic!("{actor_id} should be imported"));
+        assert_eq!(actor.level, level, "{actor_id} level");
+        assert_eq!(
+            actor
+                .allocation
+                .as_ref()
+                .map(|allocation| allocation.legacy_index),
+            Some(legacy_index),
+            "{actor_id} source index"
+        );
+    }
+}
+
+#[test]
+fn p63b_level_67_68_direct_monsters_keep_source_identity() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+
+    for (id, legacy_index, level) in [
+        ("great-wyrm-of-chaos", 783, 67),
+        ("great-wyrm-of-law", 784, 67),
+        ("shambler", 786, 67),
+        ("glaaki", 788, 67),
+        ("bleys-master-of-manipulation", 789, 67),
+        ("jisisl-of-ice", 946, 67),
+        ("invisible-pink-unicorn", 1079, 67),
+        ("okuninushi-the-conqueror", 1135, 67),
+        ("great-wyrm-of-many-colours", 790, 68),
+        ("fiona-the-sorceress", 791, 68),
+        ("omoikane-spirit-of-wisdom", 1136, 68),
+    ] {
+        let actor_id = format!("demo.actor.{id}");
+        let actor = artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == actor_id)
+            .unwrap_or_else(|| panic!("{actor_id} should be imported"));
+        assert_eq!(actor.level, level, "{actor_id} level");
+        assert_eq!(
+            actor
+                .allocation
+                .as_ref()
+                .map(|allocation| allocation.legacy_index),
+            Some(legacy_index),
+            "{actor_id} source index"
+        );
+    }
+}
+
+#[test]
 fn p59a_nether_jump_and_contact_auras_keep_source_semantics() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let actor = |id: &str| {
@@ -7074,7 +7147,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
                     == Some("demo.loot-table.base-items")
             })
             .count(),
-        539
+        557
     );
 }
 
@@ -7171,7 +7244,7 @@ fn formal_drop_themes_use_source_allocations_and_rfb_depth_quality() {
                 .filter(|drop| drop.theme_table_id.as_deref() == Some("demo.loot-table.warrior"))
         })
         .collect::<Vec<_>>();
-    assert_eq!(warrior_drops.len(), 89);
+    assert_eq!(warrior_drops.len(), 91);
     assert!(
         warrior_drops
             .iter()

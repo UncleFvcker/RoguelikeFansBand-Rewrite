@@ -398,3 +398,16 @@ git diff --stat
 - 共享协调点：pack `1.300.0` / content hash
   `87f34f4581da4c9065385295f76bd2cfe2a9ae2540cc474bba9777331f7f416a`；Protocol `1.189`、
   State Hash Schema v94、save v1、active replay baseline `contract-v285` 均不变。
+
+## 24. monsters-next 当前交接（P63 L64–68 直接导入）
+
+- P63A 导入 L64–65 的 12 个普通分配 actor：守护神瓦吉特、炸脖龙、混沌猎犬、超人洛克、
+  皇帝雷扎克、超人洛克的克隆体、解离漩涡、骨魔、青铜魔像、骸骨魔像、赛特之兽、女武神。
+- P63B 导入 L67–68 的 11 个普通分配 actor：混沌巨龙、律法巨龙、蹒跚怪、格拉基、
+  操纵大师布雷斯、冰之吉西斯尔、隐形粉红独角兽、征服者大国主、多彩巨龙、女巫师菲奥娜、
+  智慧之神思金神。全部保留 RFB master 的 source index、层级和 Orc Cave 分配。
+- 本批只新增 40 组既有运行时可表达的参数化 ability/program；没有新增运行时、协议、存档或
+  state-hash 字段，也不刷新无关 replay fixture。
+- 共享协调点：pack `1.301.0` / content hash
+  `c39b143827508a1ea9917f9f45b8e3810f19f03e0ad59b370954677c7a11986d`；Protocol `1.189`、
+  State Hash Schema v94、save v1、active replay baseline `contract-v285` 均不变。
